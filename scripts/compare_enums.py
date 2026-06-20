@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-compare_enums.py - compare survarium:: enum definitions between the BASE and
-TARGET pdb-parser structure dumps.
+compare_enums.py - compare enum definitions between the BASE and TARGET
+pdb-parser structure dumps.
 
 The pdb-parser (see scripts/generate_structure.py) emits, for each enum, a block
 of the form
@@ -18,8 +18,7 @@ class-qualified name like `survarium::game::debug_window_enum`). Forward
 declarations end in `;` on the `enum ...` line and carry no body - they are
 skipped.
 
-This script parses every such block from both dumps, restricts to the
-survarium:: namespace, and reports:
+This script parses every such block from both dumps and reports:
 
   (a) MISSING    - enums present in TARGET but absent from BASE.
   (b) MISMATCHED - enums present in BOTH whose enumerator names or values differ.
@@ -30,8 +29,23 @@ For each mismatch it prints a per-enumerator diff line:
 
 TARGET is the original game PDB (ground truth); BASE is our compiled source.
 
+By default it reports across ALL namespaces. Restrict to one or more qualified
+prefixes with --prefix (repeatable). Convenience presets:
+
+  --game-core   -> survarium:: and vostok::  (game_core sources live under both;
+                   there is no vostok::game_core:: namespace)
+  --network     -> vostok::network_core:: and vostok::network::
+
+CRITICAL: the parser emits each enum in several forms across different headers -
+a fully-populated body, an empty `{ }` name-only reference, and (in the BASE PDB
+only) occasionally a STALE older copy with fewer enumerators. parse_enums()
+collapses to the MOST-POPULATED body per qualified name before comparing, so the
+empty/stale forms do not produce bogus mismatches.
+
 Usage:
   python3 scripts/compare_enums.py
+  python3 scripts/compare_enums.py --prefix vostok::network_core:: --prefix vostok::network::
+  python3 scripts/compare_enums.py --network
   python3 scripts/compare_enums.py --base DIR --target DIR
 """
 
@@ -45,9 +59,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
 STRUCTURE_DIR = VOSTOK_DIR / "binaries" / "structure"
 
-# `enum survarium::foo` or `enum survarium::cls::foo` opening a definition.
-# A trailing `;` means a forward declaration (no body) - excluded by the regex.
-ENUM_OPEN_RE = re.compile(r"^enum\s+(survarium::[\w:]+)\s*$")
+# `enum NS::foo` or `enum NS::cls::foo` opening a definition. A trailing `;`
+# means a forward declaration (no body) - excluded by the regex.
+ENUM_OPEN_RE = re.compile(r"^enum\s+([\w:]+::[\w:]+)\s*$")
 # An enumerator line inside the body: `name = 0x1,` (value may be negative hex).
 ENUMERATOR_RE = re.compile(r"^\s*(\w+)\s*=\s*(-?0[xX][0-9a-fA-F]+|-?\d+)\s*,?\s*$")
 
@@ -64,13 +78,14 @@ def _parse_value(text: str) -> int:
 
 def parse_enums(headers_dir: Path) -> dict[str, list[tuple[str, int]]]:
     """Return {qualified_enum_name: [(enumerator_name, value), ...]} for every
-    survarium:: enum DEFINITION (with a body) found under headers_dir.
+    enum DEFINITION (with a body) found under headers_dir.
 
     A name may appear in many headers (the parser duplicates declarations across
     the files that need them). The real bodies are identical, but the parser also
-    emits an EMPTY `enum X { };` form in headers that only need the type by name;
-    so for a given enum we keep the definition with the MOST enumerators (the
-    populated body), not merely the first one seen.
+    emits an EMPTY `enum X { };` form in headers that only need the type by name,
+    and (base only) a STALE older copy via a compiland that includes the real
+    header; so for a given enum we keep the definition with the MOST enumerators
+    (the most-populated body), not merely the first one seen.
     """
     enums: dict[str, list[tuple[str, int]]] = {}
 
@@ -108,21 +123,31 @@ def parse_enums(headers_dir: Path) -> dict[str, list[tuple[str, int]]]:
     return enums
 
 
+def _match_prefix(name: str, prefixes: list[str] | None) -> bool:
+    if not prefixes:
+        return True
+    return any(name.startswith(p) for p in prefixes)
+
+
 def diff_enums(
     base: dict[str, list[tuple[str, int]]],
     target: dict[str, list[tuple[str, int]]],
+    prefixes: list[str] | None = None,
 ) -> tuple[list[str], list[tuple[str, list[str]]]]:
-    """Return (missing, mismatched).
+    """Return (missing, mismatched), restricted to qualified names matching one
+    of `prefixes` (all names when prefixes is None/empty).
 
     missing    - sorted target-only enum names.
     mismatched - [(enum_name, [per-enumerator diff lines]), ...] for enums in
                  both whose member name/value sequence differs.
     """
-    missing = sorted(name for name in target if name not in base)
+    missing = sorted(
+        name for name in target if name not in base and _match_prefix(name, prefixes)
+    )
 
     mismatched: list[tuple[str, list[str]]] = []
     for name in sorted(target):
-        if name not in base:
+        if name not in base or not _match_prefix(name, prefixes):
             continue
         b_members = base[name]
         t_members = target[name]
@@ -131,7 +156,9 @@ def diff_enums(
 
         b_map = dict(b_members)
         t_map = dict(t_members)
-        all_names = list(dict.fromkeys([m for m, _ in t_members] + [m for m, _ in b_members]))
+        all_names = list(
+            dict.fromkeys([m for m, _ in t_members] + [m for m, _ in b_members])
+        )
 
         diff_lines: list[str] = []
         for em in all_names:
@@ -161,10 +188,36 @@ def _fmt(v: int) -> str:
 
 
 def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    ap = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     ap.add_argument("--base", type=Path, default=STRUCTURE_DIR / "base" / "headers")
     ap.add_argument("--target", type=Path, default=STRUCTURE_DIR / "target" / "headers")
+    ap.add_argument(
+        "--prefix",
+        action="append",
+        default=[],
+        metavar="QUALIFIED::",
+        help="restrict to enums whose qualified name starts with this prefix "
+        "(repeatable); default is all namespaces",
+    )
+    ap.add_argument(
+        "--game-core",
+        action="store_true",
+        help="preset: survarium:: + vostok:: (game_core sources span both)",
+    )
+    ap.add_argument(
+        "--network",
+        action="store_true",
+        help="preset: vostok::network_core:: + vostok::network::",
+    )
     args = ap.parse_args()
+
+    prefixes = list(args.prefix)
+    if args.game_core:
+        prefixes += ["survarium::", "vostok::"]
+    if args.network:
+        prefixes += ["vostok::network_core::", "vostok::network::"]
 
     for side, d in (("base", args.base), ("target", args.target)):
         if not d.is_dir():
@@ -178,9 +231,13 @@ def main() -> int:
     base = parse_enums(args.base)
     target = parse_enums(args.target)
 
-    missing, mismatched = diff_enums(base, target)
+    missing, mismatched = diff_enums(base, target, prefixes)
 
-    print(f"survarium:: enums - base={len(base)} target={len(target)}\n")
+    scope = ", ".join(prefixes) if prefixes else "(all namespaces)"
+    print(
+        f"enum compare - scope: {scope}\n"
+        f"  total enums parsed: base={len(base)} target={len(target)}\n"
+    )
 
     print(f"=== MISMATCHED ({len(mismatched)}) ===")
     if not mismatched:
