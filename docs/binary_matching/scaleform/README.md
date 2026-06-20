@@ -186,6 +186,40 @@ deep, duplicate-symbol-prone reimplementation of that lib = real step-4+ work,
 deliberately NOT attempted here (assess-first). The header swap + build wiring
 is committed; the prebuilt-lib replacement is the open next step.
 
+### Pilot result: the 44 base-render LNK2001 are CLEARED
+
+Built `libgfx.lib` from the 212-TU 4.2.22 recipe below (all 212 compile, the lib
+links), staged it over the prebuilt 4.0.15 one, and relinked the exe. **All 44
+base-render LNK2001 are gone** (Render::HAL / MatrixState / TextureManager /
+Texture / RenderSync / RBGenericImpl / SysAlloc all resolve at 4.2.22 ABI). What
+remains, by class:
+
+1. **ws2_32 winsock (~38)** - the 4.0.15 prebuilt libgfx carried a
+   `#pragma comment(lib,"ws2_32.lib")` (via its AMP socket objects) that
+   accidentally satisfied network_core's Winsock imports. SF_BUILD_SHIPPING
+   compiles AMP out (matching the shipped binary, which has ZERO AMP symbols), so
+   the pragma is gone and network_core's `__imp__WSA*` go unresolved. This is a
+   latent exe-wiring gap the foreign lib was masking, NOT a libgfx defect: add
+   `ws2_32.lib` to the exe vcproj's Master Gold `AdditionalDependencies` (the
+   config already `/delayload:ws2_32.dll`).
+2. **jpeg/png codec (~12)** - `libgfx.lib(JPEG_ImageReader/Common.obj)` and
+   `PNG_ImageReader.obj` call `jpeg_*` / `png_*`; the prebuilt 4.0.15
+   `libgfx_libjpeg.lib`/`libgfx_libpng.lib` don't satisfy them (version skew). This
+   is the concrete 9-lib-suite boundary: those two sibling libs need the same
+   4.2.22 rebuild treatment (jpeg-8d / libpng-1.5.13 sources are in 3rdParty).
+3. **Render::Texture::Copy (1)** - AMP-gated (`#ifdef SF_AMP_SERVER` in
+   Render_Image.cpp), so absent under SF_BUILD_SHIPPING - and absent from the
+   shipped binary too. The render engine's in-tree 4.2.22 D3D1x_Texture.cpp
+   references it; that reference is a render-side reconciliation quirk to fix on
+   the render engine, not in libgfx.
+
+So the pilot proved out: the base-render ABI mismatch is solved by a from-source
+4.2.22 libgfx, and the residual link work is (a) two trivial exe/codec-lib wiring
+items and (b) one render-engine D3D1x reconciliation - none of them a libgfx
+byte/build problem. By analogy the remaining 8 libs are the same pattern: build
+each from its TU set with the GFx Shipping + MASTER_GOLD flags below, stage over
+the prebuilt, relink.
+
 ### Rebuilding libgfx.lib from 4.2.22 source (the verified recipe)
 
 `sources/vostok/libgfx/sources/libgfx.vcproj` rebuilds the base GFx lib from the
@@ -196,18 +230,24 @@ clear. This is the pilot for the wider 9-lib GFx suite.
   `scripts/libgfx_tus.txt`, which is exactly the Msvc10 `GFx.vcxproj` `<ClCompile>`
   set == `Projects/libgfx.txt` resolved for Win32 (they agree). Regenerate the
   vcproj from it with `scripts/gen_libgfx_vcproj.py`.
-- **Config = the survarium MASTER_GOLD module flags, NOT the stock GFx Shipping
-  vsprops.** The vcproj clones the `scaleform` module's `Master Gold|Win32` config
+- **Config = GFx Shipping flags AND the survarium MASTER_GOLD module flags
+  together.** The vcproj clones the `scaleform` module's `Master Gold|Win32` config
   (the one that already compiles GFx TUs): `/Od /Ob2 /Oi /Ot /Oy /GT /GL`,
-  `RuntimeLibrary` `/MT`, `/GS-`, `/arch:SSE2 /fp:fast`, plus the `GFx_Lib`
-  defines `WIN32;_WINDOWS;SF_BUILD_STATICLIB` and `NDEBUG;VOSTOK_STATIC_LIBRARIES;
-  MASTER_GOLD`. `SF_BUILD_SHIPPING` is **not** defined - the byte-affecting patch
-  below is `MASTER_GOLD`-gated (a define the GFx vsprops never set), and the
-  shipped binary proves that gate is live (see the target asm below). `/Z7`
-  (DebugInformationFormat=1, == the GFx vsprops value) is used instead of `/Zi`:
-  the `/Zi` mspdbsrv PDB path raises `fatal error C1121: call to CryptoAPI failed`
-  under Wine at scale; `/Z7` embeds debug info in the .obj and has no such
-  dependency.
+  `RuntimeLibrary` `/MT`, `/GS-`, `/arch:SSE2 /fp:fast`, the `GFx_Lib` defines
+  `WIN32;_WINDOWS;SF_BUILD_STATICLIB`, plus `NDEBUG;VOSTOK_STATIC_LIBRARIES;
+  MASTER_GOLD` **and `SF_BUILD_SHIPPING`**. Both define classes are load-bearing
+  and confirmed empirically:
+  - `MASTER_GOLD` gates the byte-affecting HeapMH patch below (a define the GFx
+    vsprops never set), and the shipped target asm proves that gate is live.
+  - `SF_BUILD_SHIPPING` is required: it undefines `SF_AMP_SERVER`, gutting the
+    `Amp_*.cpp` TUs. The shipped binary has ZERO AMP symbols
+    (`Scaleform::AMP::*`, `AmpServer::*`), and without it the AMP socket TU pulls
+    Winsock and the exe link breaks. So survarium built libgfx with BOTH defines:
+    the GFx Shipping config + their MASTER_GOLD flavor.
+  `/Z7` (DebugInformationFormat=1, == the GFx Shipping vsprops value) is used
+  instead of `/Zi`: the `/Zi` mspdbsrv PDB path raises `fatal error C1121: call to
+  CryptoAPI failed` under Wine at scale; `/Z7` embeds debug info in the .obj and
+  has no such dependency.
 - **The one libgfx byte-affecting patch is replicated.** `HeapMH_SysAllocMalloc.h`
   routes Win32 `Alloc`/`Free`/`Realloc` through `vostok::memory::g_mt_allocator`
   (`VOSTOK_MALLOC_IMPL`). The shipped binary confirms it: target
@@ -238,11 +278,22 @@ clear. This is the pilot for the wider 9-lib GFx suite.
   lib replaces the prebuilt 4.0.15 one with no link-path change. Do NOT rerun
   `setup-toolchain.py --force libs` after building: it re-stages the 4.0.15 blob
   from `VOSTOK_LIBS_DIR` and clobbers the freshly built lib.
-- **Build cost.** 212 serial TUs under Wine, some large XML/Render TUs taking
-  minutes each (no real parallelism: vcproj2ninja emits `pool depth=1`), so the
-  full lib build is slow (tens of minutes). It is NOT a hang - large TUs just
-  compile slowly. Build the lib target directly:
-  `python3 scripts/ninja_build.py "Z:.../binaries.prebuilt/Win32/libraries/shipping/libgfx.lib"`.
+- **Build with the direct driver, NOT ninja.** `ninja.exe` under Wine DEADLOCKS
+  after ~70-80 cl spawns (it sleeps with no live child and never progresses), so
+  the in-graph libgfx build never finishes - the same trap a full `rebuild.py`
+  hits once it decides libgfx is dirty. Each INDIVIDUAL `wine cmd /c cl @rsp` is
+  reliable, so `scripts/build_libgfx_direct.py` compiles the 212 TUs one at a time
+  with the EXACT vcproj2ninja flags (from `binaries/ninja/rsp/libgfx_cl_0.rsp`,
+  so the bytes match the in-graph build), skips already-built objs, then `lib`s
+  them. Idempotent - re-run to resume. 212 serial TUs under Wine (no parallelism:
+  `pool depth=1`), some large XML/Render TUs taking minutes each, so it is slow
+  (~40 min) but does not hang. Build it with:
+  `nix develop --command python3 scripts/build_libgfx_direct.py`
+  (run `regen_ninja.py` first if the vcproj changed, so the rsp is current).
+  Reaching the exe link still needs ninja, but ninja will NOT recompile libgfx
+  once all 212 objs are current and only re-libs + links (verify with
+  `ninja_build.py -n ...`); if it insists on recompiling (stale .d deps), link the
+  exe directly via `cmd /c link @rsp/survarium_-_PC_-_DirectX_11_link.rsp`.
 
 **Byte-match measurement gap:** the delinker strips a single engine-path prefix
 (`c:/survarium/sources` for target), but the GFx compilands are recorded under
