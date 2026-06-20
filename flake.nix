@@ -11,10 +11,11 @@
 
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
-    # Pinned to the extract-all-enums-and-unions commit (vostok-pdb-parser#28)
-    # pending its merge to master; re-point to bare master + `nix flake update
-    # vostok-pdb-parser-src` once #28 lands.
     vostok-pdb-parser-src = {
+      # Pinned to the extract-all-enums-and-unions commit (vostok-pdb-parser#28):
+      # walks the type stream directly so all 918 enums + 164 unions are emitted
+      # (was ~8/0). Carries the scaleform-carcass-dump fix. Re-track master once
+      # #28 lands. Output is gitignored/reference-only (zero match risk).
       url = "github:srp-survarium/vostok-pdb-parser/4c3ed5b6d0afc1022b23ec36c006f16d129389b4";
       flake = false;
     };
@@ -112,7 +113,7 @@
         pname = "vcproj2ninja";
         version = "0.1.0";
         src = vcproj2ninja-src;
-        cargoHash = "sha256-SKEVJ/2wEmEfevCJe8WtVief3BL25K2OmsYjWv9SSC4=";
+        cargoHash = "sha256-Fc30XVO4LYQT5HHHXm0J99QZgYXh4VNzeNukWV4sFeg=";
 
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER =
           "${mingw.stdenv.cc}/bin/${mingw.stdenv.cc.targetPrefix}cc";
@@ -332,6 +333,11 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+
+          # clangd - source navigation/LSP over the generated
+          # compile_commands.json (clang is a READER here; MSVC8 under Wine
+          # stays the only build truth)
+          pkgs.clang-tools
 
           # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
