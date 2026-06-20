@@ -197,9 +197,9 @@ its single writer).
   `docs/binary_matching/patterns/` + one `patterns/INDEX.md` line, same commit (schema + tags in
   `assembly_patterns.md`; merge into an existing pattern file when it is the same lesson). A
   rebuild-saving trick goes to `loop_performance.md`.
-- **Never force-push or rewrite a pushed branch** (`--force`/`--amend` after first push
-  orphans stacked PRs and destroys the before/after). Pre-first-push squash is fine;
-  after that, revise by a NEW commit + plain push.
+- **You never push.** The orchestrator pushes your branch and owns the PR/stack, so there
+  is no pushed branch for you to force-push or amend - just make ONE clean commit (squash
+  WIP locally first). Branching, pushing, and the PR are entirely the orchestrator's.
 
 ## Finish - commit your match, return your result line
 Your worktree is already on the unit's branch, indexes warm. Just commit your work:
