@@ -186,6 +186,73 @@ deep, duplicate-symbol-prone reimplementation of that lib = real step-4+ work,
 deliberately NOT attempted here (assess-first). The header swap + build wiring
 is committed; the prebuilt-lib replacement is the open next step.
 
+### Rebuilding libgfx.lib from 4.2.22 source (the verified recipe)
+
+`sources/vostok/libgfx/sources/libgfx.vcproj` rebuilds the base GFx lib from the
+212 Win32 SDK TUs so the exe links a 4.2.22-ABI `libgfx.lib` and the 44 LNK2001
+clear. This is the pilot for the wider 9-lib GFx suite.
+
+- **TU set = 212 .cpp** (76 GFx + 49 Kernel + 87 Render). Ground truth:
+  `scripts/libgfx_tus.txt`, which is exactly the Msvc10 `GFx.vcxproj` `<ClCompile>`
+  set == `Projects/libgfx.txt` resolved for Win32 (they agree). Regenerate the
+  vcproj from it with `scripts/gen_libgfx_vcproj.py`.
+- **Config = the survarium MASTER_GOLD module flags, NOT the stock GFx Shipping
+  vsprops.** The vcproj clones the `scaleform` module's `Master Gold|Win32` config
+  (the one that already compiles GFx TUs): `/Od /Ob2 /Oi /Ot /Oy /GT /GL`,
+  `RuntimeLibrary` `/MT`, `/GS-`, `/arch:SSE2 /fp:fast`, plus the `GFx_Lib`
+  defines `WIN32;_WINDOWS;SF_BUILD_STATICLIB` and `NDEBUG;VOSTOK_STATIC_LIBRARIES;
+  MASTER_GOLD`. `SF_BUILD_SHIPPING` is **not** defined - the byte-affecting patch
+  below is `MASTER_GOLD`-gated (a define the GFx vsprops never set), and the
+  shipped binary proves that gate is live (see the target asm below). `/Z7`
+  (DebugInformationFormat=1, == the GFx vsprops value) is used instead of `/Zi`:
+  the `/Zi` mspdbsrv PDB path raises `fatal error C1121: call to CryptoAPI failed`
+  under Wine at scale; `/Z7` embeds debug info in the .obj and has no such
+  dependency.
+- **The one libgfx byte-affecting patch is replicated.** `HeapMH_SysAllocMalloc.h`
+  routes Win32 `Alloc`/`Free`/`Realloc` through `vostok::memory::g_mt_allocator`
+  (`VOSTOK_MALLOC_IMPL`). The shipped binary confirms it: target
+  `Scaleform::SysAllocMalloc::Alloc(uint,uint)` (rva 0x9ea00, 18 bytes, mapped to
+  `heapmh_sysallocmalloc.h:69`) is `push size; push &g_mt_allocator; call
+  vostok::memory::...malloc_helper; add esp,8` - a 2-arg cdecl call into the
+  engine allocator, **not** `_aligned_malloc`. So the patch is in the shipped lib
+  and `MASTER_GOLD` (the gate) was defined for the real libgfx build.
+- **The engine memory env is force-included.** The patched header needs
+  `VOSTOK_MALLOC_IMPL` / `g_mt_allocator` / `pvoid` in scope, and the GFx headers
+  pull the real `<windows.h>` (the fake-`HANDLE`-macro cascade the scaleform pch
+  already documents). `sources/vostok/libgfx/sources/pch.h` is the same engine
+  preamble (`<vostok/extensions.h>` + the `os_preinclude`->`os_include` ritual).
+  vcproj2ninja **rejects** the `ForcedIncludeFiles` attribute (it aborts the whole
+  ninja regen), so the preamble can't be `/FI`-injected via the vcproj; instead
+  `scripts/setup_libgfx_build.py` prepends `#include "pch.h"` to each build-tree TU.
+- **Build SDK overlay tree (gitignored).** The 202 TUs the curated
+  `sources/scaleform/` doesn't carry come from the external 4.2.22 SDK, so
+  `scripts/setup_libgfx_build.py` stages `sources/scaleform_build/` = the full
+  external SDK (`Src` + `Include` + `3rdParty`, ~148M) overlaid with the repo's
+  survarium patches + the preamble prepend. The vcproj include dirs and source
+  paths point at it. Regenerate with
+  `python3 scripts/setup_libgfx_build.py --sdk /path/to/scaleform_sdk`.
+- **Wiring.** `libgfx.vcproj` is registered in `vostok v2.0.sln`; `game_core`
+  depends on it (puts it in the exe build cone so vcproj2ninja emits its `.ninja`).
+  `OutputFile` is `binaries.prebuilt/Win32/libraries/shipping/libgfx.lib` - exactly
+  where the exe's `#pragma comment(lib,"libgfx.lib")` resolves it - so the rebuilt
+  lib replaces the prebuilt 4.0.15 one with no link-path change. Do NOT rerun
+  `setup-toolchain.py --force libs` after building: it re-stages the 4.0.15 blob
+  from `VOSTOK_LIBS_DIR` and clobbers the freshly built lib.
+- **Build cost.** 212 serial TUs under Wine, some large XML/Render TUs taking
+  minutes each (no real parallelism: vcproj2ninja emits `pool depth=1`), so the
+  full lib build is slow (tens of minutes). It is NOT a hang - large TUs just
+  compile slowly. Build the lib target directly:
+  `python3 scripts/ninja_build.py "Z:.../binaries.prebuilt/Win32/libraries/shipping/libgfx.lib"`.
+
+**Byte-match measurement gap:** the delinker strips a single engine-path prefix
+(`c:/survarium/sources` for target), but the GFx compilands are recorded under
+`C:\w\...\GFx_4.2.21\Src\...`, so they do NOT map into `binaries/objdiff/target`
+and the libgfx TUs do not auto-pair in `report.json` / `match.db`. The match-score
+table will not move when libgfx links. Byte-match must instead be checked directly
+against the shipped exe code region (the `binaries/rich/target/index.jsonl` carries
+the libgfx symbols + VAs, as the `SysAllocMalloc::Alloc` check above shows). Wiring
+the GFx prefix into the delinker is the follow-up to make the suite measurable.
+
 ### PDB source-checksum confirms 4.2.22 == shipped 4.2.21 (no drift)
 
 The game PDB records the GFx source under
