@@ -28,11 +28,9 @@ LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vo
 SRC         = LIBS_DIR   / "sources"
 DEST        = VOSTOK_DIR / "binaries.prebuilt"
 
-# `COPYING.LIB` is the LGPL license TEXT (cell SDK), not a binary blob; the
-# `*.lib` ext glob catches it, but it belongs with the SDK source, so it stays
-# under sources/ (gitignore keeps a matching exception). Routed there, not to
-# binaries.prebuilt/.
-SOURCES_DIR    = VOSTOK_DIR / "sources"
+# `COPYING.LIB` is LGPL license TEXT (cell SDK), not a binary blob - the `*.lib`
+# ext glob catches it. It is committed as normal source under sources/, so we
+# SKIP it here rather than staging a copy (no special destination needed).
 LICENSE_NAMES  = {"COPYING.LIB"}
 
 # The GFx libs the exe links, remapped onto the shipped game's layout
@@ -51,13 +49,10 @@ GFX_DST = Path("Win32/libraries/shipping")
 def dest_for(rel_path: Path, dest: Path) -> Path:
     """Resolve the absolute target path for a source-relative blob.
 
-    License text (COPYING.LIB) stays under sources/; the GFx Release libs land
-    on the shipped game's `Win32/libraries/shipping/` layout; everything else
-    (tool SDKs the exe doesn't link, plus the other GFx configs) keeps its
-    source-relative subpath under `dest` so nothing is lost.
+    The GFx Release libs land on the shipped game's `Win32/libraries/shipping/`
+    layout; everything else (tool SDKs the exe doesn't link, plus the other GFx
+    configs) keeps its source-relative subpath under `dest` so nothing is lost.
     """
-    if rel_path.name in LICENSE_NAMES:
-        return SOURCES_DIR / rel_path
     if rel_path.parent == GFX_SRC:
         return dest / GFX_DST / rel_path.name
     return dest / rel_path
@@ -89,7 +84,8 @@ def main():
     total_bytes = 0
 
     for file in src.rglob("*"):
-        if file.is_file() and file.suffix.lower() in EXTS:
+        # License text (COPYING.LIB) is committed source, not a staged blob - skip it.
+        if file.is_file() and file.suffix.lower() in EXTS and file.name not in LICENSE_NAMES:
             rel_path = file.relative_to(src)
             target = dest_for(rel_path, dest)
             target.parent.mkdir(parents=True, exist_ok=True)
