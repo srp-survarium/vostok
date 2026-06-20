@@ -1,6 +1,6 @@
 ---
 name: orchestrator
-description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, dispatches matcher workers (one TU each) in parallel across sibling worktrees on a stacked-PR chain, then structure-verifiers to audit and fix each unit. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
+description: Drives a whole Vostok module (game_core, network_core, or other non-optimized modules) to a matched state - builds the queue of unmatched functions, fans out matcher workers (one TU each) in parallel across sibling worktrees, integrates each worker's commit into a SINGLE linear stacked-PR chain (building before every PR so each carries a current DB), and after every 10-15 matchers runs one structure-verifier to audit and fix the batch. It does not match functions itself; run it as the top-level agent. Use when asked to match a whole module rather than a single function.
 tools: Agent, Bash, Read, Write, Grep, Glob, TaskCreate, TaskUpdate, TaskList
 model: inherit
 ---
@@ -10,9 +10,13 @@ do NOT match functions yourself. You build the queue and dispatch `matcher` work
 (one TU per worker - all its open functions), up to N in parallel (the run's worker cap, default 3),
 each in its own sibling worktree branched off the **TOP of the stack** (the newest match branch, so each
 worker inherits all prior matches - percentages compound). When a worker returns you
-**open its PR** (the worker just commits - opening/maintaining PRs is your meta job)
-and dispatch a `structure-verifier` onto the **same branch** so each PR carries two
-commits (match, then verify+fix). PRs are **stacked**: the human reviews them
+**integrate its commit into the single stack** (rebase it onto the current tip),
+**rebuild so its `match.db` snapshot is current, THEN open its PR** based on the unit
+below it (the worker just commits - integrating, building, and PR-ing is your meta job).
+You maintain ONE linear PR chain - each PR based on the one below it - and **never fan
+multiple PRs into the same base branch**. You dispatch a `structure-verifier` only
+**after a batch of 10-15 matchers has landed**, run once over that batch on the stack
+tip - NOT once per unit. PRs are **stacked**: the human reviews them
 **bottom-up** and merges one at a time. You keep your own context small (a ledger).
 
 ## The loop - this is your whole plan
@@ -45,7 +49,8 @@ the DB from an already-built `report.json`, no build). NEVER build the integrati
 4. **Rebuild + snapshot the DB** - `python3 scripts/rebuild.py` (builds the new top
    incrementally + regenerates the DB at the end), then COMMIT the updated `match.db` onto
    the tip. EVERY stack commit must carry a measured DB snapshot - that is what makes the
-   per-step `diff` work. Rebuild BEFORE you mark, so marking reads the MEASURED state.
+   per-step `diff` work, and it is why you **build BEFORE opening the unit's PR**: every PR
+   must carry an up-to-date, measured DB. Rebuild BEFORE you mark AND before you open the PR.
 5. **Mark functions** - from the regenerated DB: `match_db.py tried --unit <tu>` (marks the
    WHOLE TU, even ones already at 100%, so the diff shows the whole TU was touched); flag
    parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP); upgrade
@@ -166,22 +171,27 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    To retry a parked function: `match_db.py flag <mangled> --requeue`.
    `list --presence TARGET_ONLY|BASE_ONLY` and the report's `suspicious` column
    surface unpaired symbols and NEAR_MISS mangling mismatches worth queuing.
-2. **STACKED PRs - dispatch off the TOP, the human reviews from the BOTTOM.** Every
-   unit stacks on the previous one. Each worker branches off the current **stack tip**
-   (the newest match branch), so it inherits all prior matched source / anchors / notes
-   - percentages **compound**, `temp_include_all.cpp` edits don't conflict, and the
-   worker always has the freshest state. Its PR targets the tip it branched from. Track
-   the tip (start: the latest match branch, or `feature/agentic-matching-loop-2` to root
-   a fresh stack); `git checkout <tip>` before each dispatch and name it as the worker's
-   branch point. The completed unit's branch (matcher commit + structure-verifier commit)
-   becomes the new tip.
-   - **YOU open the PR**, not the worker (it's meta - your job). After the unit's two
-     commits are on its branch, `gh pr create --base <tip-it-branched-from>` with a
+2. **ONE linear stacked-PR chain - fan the WORKERS, serialize the OUTPUT.** You MAY fan
+   out matchers (several parallel workers off the same tip - encouraged for throughput).
+   But their OUTPUTS must land as a SINGLE LINEAR CHAIN: integrate each finished matcher's
+   commit onto the current tip ONE AT A TIME, and open its PR **based on the unit directly
+   below it** - so every PR's base is the previous unit's branch. **NEVER open multiple PRs
+   that all target the same base branch (a fan).** That fan is the exact failure mode to
+   avoid: it forces a painful re-linearization later (rebase each branch onto its
+   predecessor and rebuild each at its real position). Each worker branches off the current
+   **stack tip** (the newest match branch), so it inherits all prior matched source /
+   anchors / notes - percentages **compound** and `temp_include_all.cpp` edits don't
+   conflict. Track the tip (start: the latest match branch, or `feature/agentic-matching-loop-2`
+   to root a fresh stack); `git checkout <tip>` before each dispatch.
+   - **Matchers never open PRs.** The worker only commits (its prompt says do NOT
+     branch/push/PR). Integrating, building, and PR-ing is YOUR meta job.
+   - **YOU integrate, build, THEN open the PR** - in that order (build before the PR so the
+     DB it carries is current; step 4). `gh pr create --base <the-unit-below>` with a
      **minimal description: just the functions and their %s, no prose**.
-   - **The human reviews the stack bottom-up** and merges one PR at a time. Use the
-     `pr-verifier` agent to recreate each bottom PR on the advanced integration tip
-     (cherry-pick its OWN commits, never merge-in), re-verify it, and hand it over for
-     the human to merge - looping up the stack (see "Reviewing/landing the stack" below).
+   - **The human reviews the stack bottom-up.** When the whole stack is approved it lands
+     into `feature/agentic-matching-loop-2` by a single fast-forward of the linear chain
+     (all commits preserved, no squash) - see "Landing the stack" below. The per-PR
+     pr-verifier landing dance is retired.
 3. **For each unit (a TU), filling the 3 worktree slots:**
    - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
      matcher's context lean (it never reasons about branches/tips/stacking): in a free
@@ -211,39 +221,36 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      disassembly, or diffs into your context.
    - If the worker reports a regression, decide: queue a follow-up fix or flag it
      for the human - do not silently move on.
-4. **Per-unit completion pipeline (matcher -> PR -> structure-verifier on the SAME PR).**
+4. **Per-unit completion pipeline (matcher -> integrate -> build -> PR), in THIS order.**
    When a matcher returns:
-   a. **Stack it.** A single serial worker is already on the tip - nothing to rebase. If
-      you dispatched parallel matchers off the SAME tip they are siblings: stack them one
-      at a time, in dependency order - the first becomes the new tip as-is; each later
-      sibling is rebased onto the new tip by cherry-picking ITS OWN commit (never `git
-      merge` a sibling in, never force-push its in-flight branch), **resolving the same-top
-      sibling conflicts** in the append-only shared files (`temp_include_all.cpp` anchors
-      deduped by name + braces balanced; the module `.vcproj`).
-   b. **Push + open the PR** (step 2): `git -C vostok_<N> push -u origin match/<module>-<unit>`
-      then `gh pr create --base <the-branch-point>`, minimal body (functions + %s).
-   c. **Dispatch the `structure-verifier` on the SAME branch/worktree** - it verifies and
-      (phase 2) fixes, then pushes a SECOND commit to the same PR, so every PR is exactly
-      `match` + `verify` (details under "Audit a matcher's work").
-   d. **Dispatch the `reviewer` on the SAME branch** - cheap, diff-only: it strips stray
-      logs and enforces lean comments (a 3rd commit ONLY if it changes source) and posts a
-      PR comment flagging any NEW struct/class/enum/function the diff added. See
-      `.claude/agents/reviewer.md`.
-   e. **Regenerate the DB from the unit's worktree, then booktrack it - do
-      this PER UNIT, never as an end-of-run sweep.** The SV/reviewer's `rebuild.py`
-      already regenerated the DB from a fresh `report.json` for the tip; if you need
-      to re-derive it (e.g. you only have an already-built `report.json` from another
-      step) run `match_db.py refresh` against it. Either way you capture this unit's
-      matches AND any LTCG/LTO walls the match LIFTED in OTHER units. Whole-program
-      optimization means matching unit A can flip the inlining budget so a banked
-      "95% LTCG residual" in unit B compiles to 100% - re-check previously-banked
-      residuals after every rebuild and clear/upgrade the ones that lifted. The
-      regenerated DB records each function's compile-measured status (DONE is
-      READ from it, never hand-flagged); you only hand-write PARKs - `flag <mangled>
-      --requeue` any now-matched fn that still carried a stale SKIP, and `flag
-      <mangled> --flag OUT_OF_SCOPE --cause "<blocker + next step>"` every genuinely
-      BLOCKED fn. Commit `docs/binary_matching/match.db`.
-   f. The unit's branch is the **new stack tip**; the next matcher branches off it.
+   a. **Integrate it into the single stack.** A serial worker is already on the tip -
+      nothing to rebase. Parallel siblings landed off the SAME tip: integrate them ONE AT A
+      TIME, in dependency order - the first becomes the new tip as-is; each later sibling is
+      rebased onto the new tip by cherry-picking ITS OWN commit (never `git merge` a sibling
+      in, never force-push its in-flight branch), **resolving the same-top sibling conflicts**
+      in the append-only shared files (`temp_include_all.cpp` anchors deduped by name +
+      braces balanced; the module `.vcproj`).
+   b. **Build, THEN snapshot the DB - BEFORE the PR.** `python3 scripts/rebuild.py` (builds
+      the new top incrementally + regenerates `match.db` from a fresh `report.json`), then
+      booktrack and COMMIT `docs/binary_matching/match.db` (+ refreshed README) onto the
+      unit's branch. **Building before the PR is the rule: every PR must carry an
+      up-to-date, measured DB** so `match_db.py diff` works on the chain and the human reads
+      real per-PR numbers. This regen also captures any LTCG/LTO wall this match LIFTED in
+      OTHER units (whole-program optimization can flip the inlining budget so a banked "95%
+      residual" in unit B now compiles to 100%) - re-check previously-banked residuals and
+      clear/upgrade the ones that lifted. DONE is READ from the rebuilt DB, never
+      hand-flagged; you only hand-write PARKs - `flag <mangled> --requeue` a now-matched fn
+      that still carried a stale SKIP, and `flag <mangled> --flag OUT_OF_SCOPE --cause
+      "<blocker + next step>"` every genuinely BLOCKED fn.
+   c. **Open the PR** (the worker never did): `git -C vostok_<N> push -u origin
+      match/<module>-<unit>` then `gh pr create --base <the-unit-below>`, minimal body
+      (functions + %s). ONE PR, based on the unit directly below it - the linear chain,
+      never a fan into a shared base.
+   d. The unit's branch is the **new stack tip**; the next matcher branches off it.
+
+   **The structure-verifier is NOT in this per-unit loop.** Dispatch it only after a BATCH
+   of 10-15 matchers has landed - once, over that batch, on the current tip. See "Audit a
+   batch with the structure-verifier" below.
 5. **Stop** when every queue entry is `DONE` or parked (`BLOCKED` / `SKIPPED`)
    with a reason. Report: counts + the full ledger.
 
@@ -305,46 +312,27 @@ Per worker:
 - The ledger is yours alone (held in your context); the worker records its result in
   its commit message - there is no tracked PROGRESS.md.
 
-## Reviewing / landing the stack (via `pr-verifier`) - the base is PR-only
-The human reviews the stack **bottom-up** and merges one PR at a time. Run the
-`pr-verifier` agent to prepare each bottom PR for them: it finds the current bottom,
-recreates it on the advanced integration tip (cherry-pick its OWN commits, never
-merge-in), re-runs the structure-verifier, and **hands you each prepared PR - then WAITS
-for the human to merge** before advancing up the stack. See `.claude/agents/pr-verifier.md`.
-The integration branch (`feature/agentic-matching-loop-2`) is updated **only by
-merging PRs**, never by a direct commit. So:
-- Guideline / doc updates also go through a PR (an agent PR based on its work), not
-  a direct edit to the base.
-- The base advances one PR at a time on merge. To land/refresh the next PR onto the
-  advanced base, **cherry-pick that PR's OWN commits onto a fresh checkout of the base**:
-  ```
-  git checkout -B <pr-branch> origin/<base> && git tag -f backup/<pr> <old-pr-tip>
-  git reset --hard origin/<base>
-  git cherry-pick <the PR's own match + review commits>   # NOT the whole stacked history
-  ```
-  This applies ONLY the PR's own diff, so there is usually **nothing to resolve**. Do NOT
-  merge the base into the PR (`git merge` drags in every inherited file and its 3-way can
-  mangle `temp_include_all.cpp`), and do NOT rebase the whole stack.
-  - **Preserve the per-step `match.db` commit - NEVER drop it when landing.** Each unit's
-    own commits INCLUDE its `match_db: per-step DB refresh (<unit>)` commit; carry it
-    across so `match_db.py diff <base>..<merged>` keeps working *on the integration
-    branch* - that per-step visibility is the whole reason the DB commits exist. If the
-    `match.db` blob conflicts on cherry-pick, resolve it by taking the unit's side and
-    re-running `match_db.py refresh` (regen-only) in the worktree against its already-built
-    `report.json` (the DB is deterministic, so a regen reconciles it; `rebuild.py` first if
-    the artifacts moved) - resolving by dropping the DB change loses the diff trail.
-    (If a stack was already landed source-only, the dropped per-step lineage can be
-    preserved out-of-band with `git tag stack/<module>-per-step-db <old-tip>`.)
-  After cherry-picking:
-  - verify `temp_include_all.cpp` braces balance (`{` count == `}` count) - an older matcher
-    commit sometimes inserted a new anchor *before* a function's closing `}` (nesting it);
-    add the one missing `}` if so;
-  - `git push --force-with-lease` THIS one branch and repoint its PR base to the
-    integration branch, then squash-merge it.
-  This per-PR force-push is safe **only done strictly in order**: each PR is re-created
-  from the base in its turn, so nothing downstream relies on the old branch. (Contrast
-  the matcher rule - a *matcher* never force-pushes its in-progress branch, which would
-  orphan the live stack mid-work; this is the orchestrator's controlled, in-order landing.)
+## Landing the stack - fast-forward into the integration branch (no pr-verifier)
+The human reviews the stack **bottom-up**, one PR at a time. When the stack is approved it
+lands into `feature/agentic-matching-loop-2` by a single **fast-forward merge** of the
+stack tip (`git merge --ff-only <tip>`): because the stack is ONE linear chain rooted on
+the integration branch, this is a clean fast-forward that **preserves every commit** - no
+squash, no merge commit, no rebase. Then close the stack PRs (their code is now on feature)
+and delete their branches.
+- The per-PR `pr-verifier` landing dance is **retired.** It existed to recreate a
+  fan/independent stack PR-by-PR on an advancing base; a true linear chain fast-forwarded
+  whole has nothing to recreate.
+- Keeping the chain linear is what makes this trivial. If you ever let the PRs FAN (several
+  all based on the same branch), the fast-forward is impossible until you **re-linearize** -
+  rebase each branch onto its predecessor and rebuild each so its DB is correct at its real
+  stack position. That rework is exactly what the one-linear-chain rule exists to prevent.
+- The integration branch advances ONLY by this fast-forward (or by merging an approved PR),
+  never by a direct commit; guideline/doc updates also go through a PR.
+- **Preserve the per-step `match.db` commits** the chain carries - they keep
+  `match_db.py diff <base>..<tip>` working on the integration branch after landing. If a
+  `match.db` blob ever conflicts during integration, resolve by taking the unit's side and
+  re-running `match_db.py refresh` (regen-only) against its built `report.json` - the DB is
+  deterministic, so a regen reconciles it; never resolve by dropping the DB change.
 
 ## Keep the README match score current (the human's no-run regression tracker)
 README.md carries an auto-generated score block (`<!-- match-score:start/end -->`):
@@ -363,31 +351,28 @@ so commit the refreshed README alongside the `match.db` snapshot at the same mil
 - Commit it as its own small housekeeping commit/PR (it is generated bookkeeping, not a
   source match) so it never muddies a match PR's one-commit shape.
 
-## Audit a matcher's work, then ACT ON the findings (the loop does NOT end at review)
-This is step 4c: once a matcher's PR is open, dispatch the `structure-verifier` onto the
-**SAME branch/worktree** - it runs `pdb_fetch --view structure-diff` (on demand, never
-embedded in source), records the verdict in the commit message + its result line,
-calls out a presented-as-done function whose source STRUCTURE is actually wrong
+## Audit a batch with the structure-verifier (after 10-15 matchers, NOT per unit)
+Run the `structure-verifier` periodically - **only after every 10-15 matchers have landed
+on the stack** - ONCE over that batch, on the current stack tip. (Do NOT dispatch an SV
+after each match; per-unit SV is retired - it is wasteful, and structure only needs an
+audit once a meaningful batch of real bodies exists.) It runs `pdb_fetch --view
+structure-diff` (on demand, never embedded in source) over the batch's non-100% matched
+functions - **skipping STUB carcasses, auditing only real matched bodies** - records its
+verdict, calls out a presented-as-done function whose source STRUCTURE is actually wrong
 (the trap a high % hides), AND then (its phase 2) becomes the matcher and FIXES that
-divergence - rebuilding and re-diffing until the structure matches or only an LTCG residual
-remains. It pushes the **SECOND commit to the unit's PR branch** (no `--amend`, no
-force-push), so every PR reads `match` then `verify`. See `.claude/agents/structure-verifier.md`.
-Then (step 4d) the `reviewer`: it strips stray logs, enforces the lean-comment policy, and
-posts a PR comment flagging any NEW struct/class/enum/function the matcher added. It commits
-to the same branch ONLY if it fixed source (logs/comments); the symbol flags are a PR
-comment, not source. Neither merges.
+divergence, rebuilding and re-diffing until the structure matches or only an LTCG residual
+remains. Its fixes land as commits on the stack tip (a new unit - build before its PR, same
+as a matcher), not folded back into the individual match PRs. See
+`.claude/agents/structure-verifier.md`.
 
-**The structure-verifier now CLOSES its own structure findings** (phase 2 applies the
-fix, rebuilds, re-diffs), so a structure verdict is no longer a ticket you hand to a
-separate matcher. You still **queue a follow-up `matcher`** for what the verifier can't
-reach: a `reviewer` note (target/base confusion, a wrongly-banked LTCG residual, a
-%-accuracy fix), or a structure fix the verifier explicitly PUNTED as out of its scope
-(e.g. it needs ANOTHER unit's symbol anchored first - matching that belongs to that unit's
-PR). Don't let those sit - an identified fix nobody acts on is wasted verification. A
-function is done when the verdict is STRUCTURE MATCH or the sole residual is a genuine
-non-steerable artifact (LTCG argument passing / whole-program inline). The full loop per
-unit: **match -> land -> audit (structure-verifier verifies AND fixes ∥ reviewer flags) ->
-act on any out-of-scope / reviewer finding -> re-audit -> done.**
+The structure-verifier CLOSES its own structure findings (phase 2 applies the fix), so a
+verdict is not a ticket to hand off. You still **queue a follow-up `matcher`** for what the
+verifier explicitly PUNTED as out of its scope (e.g. it needs ANOTHER unit's symbol anchored
+first - matching that belongs to that unit). A function is done when the verdict is STRUCTURE
+MATCH or the sole residual is a genuine non-steerable artifact (LTCG argument passing /
+whole-program inline). The full loop: **fan matchers -> integrate each into the linear stack
+-> build -> PR -> (every 10-15 units) audit the batch with the structure-verifier -> act on
+any punted finding -> done.**
 
 ## Dispatch hygiene
 - Hand each worker its TU plus the open-function list FROM `match_db.py queue` with a
@@ -398,7 +383,9 @@ act on any out-of-scope / reviewer finding -> re-audit -> done.**
   task (it may touch one as a side effect of a header change - that's fine - but never
   TELL it to). The queue keeps what has real work: low-% fns and high-% `QUANTITY` (wrong
   statement count - the trap). The worker does the matching: target asm, write the bodies,
-  wire reachability, build, diff, iterate, and **commit + push its branch** (NO PR).
-- **YOU open and maintain the PR** for each unit (step 4b) and dispatch the
-  structure-verifier onto its branch (step 4c). You sequence the units, resolve same-top
-  sibling conflicts, and read back each worker's one-line result.
+  wire reachability, build, diff, iterate, and **make ONE commit** - it does NOT branch,
+  push, or open a PR (that is yours).
+- **YOU integrate, build, then open the PR** for each unit (step 4) - one linear chain,
+  each PR based on the unit below it, the DB built before the PR. You sequence the units,
+  resolve same-top sibling conflicts, and read back each worker's one-line result. The
+  `structure-verifier` runs per BATCH (every 10-15 units), not per unit.
