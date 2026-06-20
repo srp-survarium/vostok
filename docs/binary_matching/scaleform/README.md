@@ -294,6 +294,22 @@ clear. This is the pilot for the wider 9-lib GFx suite.
   once all 212 objs are current and only re-libs + links (verify with
   `ninja_build.py -n ...`); if it insists on recompiling (stale .d deps), link the
   exe directly via `cmd /c link @rsp/survarium_-_PC_-_DirectX_11_link.rsp`.
+- **The direct drivers reap mspdbsrv per TU (`scripts/gfx_mspdbsrv.py`).** Each
+  `wine cmd /c cl @rsp` spawns `mspdbsrv.exe` (touched even under `/Z7` by the
+  `/FD` + `/Fd"vc90.pdb"` minimal-PDB write), which then idles ~10 MINUTES after
+  the compile before exiting and inherits the compile's stdout/stderr fds - so a
+  driver capturing output only sees pipe EOF when mspdbsrv finally dies. Every
+  fresh TU therefore "compiled in seconds, then HUNG ~10 min", and the 8-lib
+  build effectively never finished (libgfx itself didn't trip this only because
+  its objs were already cached, so it just re-libbed - no fresh compile). This is
+  the same pipe-EOF stall `ninja_build.py` already kills for the in-graph build
+  (PR #280); the direct drivers bypass `ninja_build.py`, so the fix is ported into
+  `gfx_mspdbsrv.py`: spawn each compile in its own session writing output to a
+  FILE (no inherited pipe to block on), poll for the expected `.obj`, and once it
+  is written kill the WINEPREFIX-scoped `mspdbsrv.exe` + reap the wine children so
+  the wait returns immediately. Validated on `libgfx_zlib`: 3 fresh C TUs compile
+  + lib in 5s total (was ~10 min EACH). With this in place the full 8-lib build
+  runs end to end at seconds-per-TU.
 
 **Byte-match measurement gap:** the delinker strips a single engine-path prefix
 (`c:/survarium/sources` for target), but the GFx compilands are recorded under
