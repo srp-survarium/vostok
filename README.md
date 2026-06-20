@@ -69,6 +69,8 @@ The first entry fetches/builds everything and runs `scripts/setup-toolchain.py`,
 which:
 
 - pins the toolchain, libs, and game binaries as gcroots under `binaries/nix-store/`,
+- stages the prebuilt third-party `.lib`/`.dll` blobs into `binaries.prebuilt/`
+  (gitignored; mirrors the shipped game's layout - not the `sources/` tree),
 - initialises the Wine prefix and registry (PATH / INCLUDE / LIB),
 - generates the ninja build graph from the `.sln` via `vcproj2ninja`, and
 - generates the **target-side** diff inputs once from the original game
