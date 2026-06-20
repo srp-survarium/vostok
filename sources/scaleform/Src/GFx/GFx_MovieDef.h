@@ -301,6 +301,10 @@ public:
     {
         SF_ASSERT(Memory::GetHeapByAddress(this) == Memory::GetGlobalHeap());
     }
+    ~LoadUpdateSync()
+    {
+        //@DBG printf("~LoadUpdateSync\n");
+    }
 
     Mutex&          GetMutex()      { return mMutex; }
     void            UpdateNotify()  { WC.NotifyAll(); }
@@ -626,8 +630,9 @@ public:
         unsigned            GetVersion() const          { return Header.Version; }
         const ExporterInfo* GetExporterInfo() const { return Header.mExporterInfo.GetExporterInfo(); }
 
+#ifdef SF_ENABLE_THREADS
         LoadUpdateSync*     GetFrameUpdateSync() const  { return pFrameUpdate; }
-
+#endif
         
         // ** Loading
 
@@ -700,8 +705,8 @@ public:
         // Labels the frame currently being loaded with the given name.
         // A copy of the name string is made and kept in this object.    
         virtual void        AddFrameName(const String& name, LogState *plog);
-        virtual void        SetLoadingPlaylistFrame(const Frame& frame);
-        virtual void        SetLoadingInitActionFrame(const Frame& frame);  
+        virtual void        SetLoadingPlaylistFrame(const Frame& frame, LogState *plog);
+        virtual void        SetLoadingInitActionFrame(const Frame& frame, LogState *plog);  
 
         bool                GetLabeledFrame(const char* label, unsigned* frameNumber, bool translateNumbers = 1) const;
         const String*       GetFrameLabel(unsigned frameNumber, unsigned* exactFrameNumberForLabel = NULL) const;
@@ -899,11 +904,7 @@ public:
 
     // Create a key for an SWF file corresponding to MovieDef.
     // Note that ImageCreator is only used as a key if is not null.
-    static  ResourceKey  CreateMovieFileKey(const char* pfilename,
-                                               SInt64 modifyTime,
-                                               FileOpener* pfileOpener,
-                                               ImageCreator* pimageCreator,
-                                               PreprocessParams* ppreprocessParams);
+    static ResourceKey CreateMovieFileKey(const char* pfilename, SInt64 modifyTime, FileOpener* pfileOpener, ImageCreator* pimageCreator);
 
     // *** Resource implementation
     
@@ -949,32 +950,32 @@ public:
     Ptr<ImageFileHandlerRegistry> pImageFileHandlerRegistry;
     Ptr<ImportVisitor>       pImportVisitor;
     Ptr<FontPackParams>      pFontPackParams;
-    Ptr<PreprocessParams>    pPreprocessParams;
     Ptr<FontCompactorParams> pFontCompactorParams;
     Ptr<ImagePackParamsBase> pImagePackParams;
 
     MovieDefBindStates(StateBag* psharedState)
     {        
         // Get multiple states at once to avoid extra locking.
-        State*                        pstates[8]    = {0,0,0,0,0,0,0,0};
-        const static State::StateType stateQuery[8] =
-          { State::State_FileOpener,     State::State_URLBuilder,
-            State::State_ImageCreator,   State::State_ImportVisitor,
-            State::State_FontPackParams,
-            State::State_PreprocessParams, State::State_FontCompactorParams,
-            State::State_ImagePackerParams
-          };
+        State*                        pstates[7]    = {0,0,0,0,0,0,0};
+        const static State::StateType stateQuery[7] =
+        { State::State_FileOpener,     
+        State::State_URLBuilder,
+        State::State_ImageCreator,   
+        State::State_ImportVisitor,
+        State::State_FontPackParams,
+        State::State_FontCompactorParams,
+        State::State_ImagePackerParams
+        };
 
         // Get states and assign them locally.
-        psharedState->GetStatesAddRef(pstates, stateQuery, 8);
+        psharedState->GetStatesAddRef(pstates, stateQuery, 7);
         pFileOpener          = *(FileOpener*)          pstates[0];
         pURLBulider          = *(URLBuilder*)          pstates[1];
         pImageCreator        = *(ImageCreator*)        pstates[2];
         pImportVisitor       = *(ImportVisitor*)       pstates[3];
         pFontPackParams      = *(FontPackParams*)      pstates[4];
-        pPreprocessParams    = *(PreprocessParams*)    pstates[5];
-        pFontCompactorParams = *(FontCompactorParams*) pstates[6];
-        pImagePackParams     = *(ImagePackParamsBase*) pstates[7];
+        pFontCompactorParams = *(FontCompactorParams*) pstates[5];
+        pImagePackParams     = *(ImagePackParamsBase*) pstates[6];
     }
 
     MovieDefBindStates(MovieDefBindStates *pother)
@@ -984,7 +985,6 @@ public:
         pImageCreator       = pother->pImageCreator;
         pImportVisitor      = pother->pImportVisitor;
         pFontPackParams     = pother->pFontPackParams;
-        pPreprocessParams   = pother->pPreprocessParams;
         pFontCompactorParams = pother->pFontCompactorParams;
         pImagePackParams  = pother->pImagePackParams;
         // Leave pDataDef uninitialized since this is used
@@ -1092,7 +1092,6 @@ public:
 
     FileOpener*          GetFileOpener() const       { return pBindStates->pFileOpener;  }
     FontPackParams*      GetFontPackParams() const   { return pBindStates->pFontPackParams; }
-    PreprocessParams*    GetPreprocessParams() const { return pBindStates->pPreprocessParams; }
 
 #ifdef GFX_ENABLE_VIDEO
     Video::VideoBase*    GetVideoPlayerState() const { return pVideoPlayerState; }
@@ -1319,8 +1318,14 @@ public:
         BindStateType       GetBindStateType() const { return (BindStateType) (BindState & BS_StateMask); }
         unsigned            GetBindStateFlags() const { return BindState & ~BS_StateMask; }
 
+#ifdef SF_ENABLE_THREADS
         LoadUpdateSync*     GetBindUpdateSync() const  { return pBindUpdate; }
-
+        void                ReleaseBindUpdateSync() 
+        { 
+            //SF_ASSERT(pBindUpdate->IsLoadFinished());
+            pBindUpdate = NULL; 
+        }
+#endif
         // Wait for for bind state flag or error. Return true for success,
         // false if bind state was changed to error without setting the flags.
         bool                WaitForBindStateFlags(unsigned flags);
@@ -1385,8 +1390,8 @@ public:
 
     // Create a movie instance.
     MemoryContext*  CreateMemoryContext(const char* heapName, const MemoryParams& memParams, bool debugHeap);
-    Movie*          CreateInstance(const MemoryParams& memParams, bool initFirstFrame, ActionControl* actionControl);
-    Movie*          CreateInstance(MemoryContext* memContext, bool initFirstFrame, ActionControl* actionControl); 
+    Movie*          CreateInstance(const MemoryParams& memParams, bool initFirstFrame, ActionControl* actionControl, Render::ThreadCommandQueue* renderQueue);
+    Movie*          CreateInstance(MemoryContext* memContext, bool initFirstFrame, ActionControl* actionControl, Render::ThreadCommandQueue* renderQueue); 
 
     //  TBD: Should rename for Memory API cleanup
     virtual MemoryHeap*     GetLoadDataHeap() const { return pBindData->pDataDef->GetHeap(); }
@@ -1921,6 +1926,7 @@ public:
 
     enum PlaceObject3Flags
     {
+        PO3_Invisible       = 0x20,
         PO3_HasImage        = 0x10,
         PO3_HasClassName    = 0x08,
         PO3_BitmapCaching   = 0x04,

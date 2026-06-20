@@ -13,7 +13,8 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
 
-#include "D3D9_MeshCache.h"
+#include "Render/D3D9/D3D9_MeshCache.h"
+#include "Render/D3D9/D3D9_ShaderDescs.h"
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_Alg.h"
 #include "Kernel/SF_HeapNew.h"
@@ -42,7 +43,7 @@ inline UPInt calcIBGranularity(UPInt granularity, UPInt vbGranularity)
 MeshCache::MeshCache(MemoryHeap* pheap,
                      const MeshCacheParams& params)
  : Render::MeshCache(pheap, params),
-   pDevice(0), CacheList(getThis()),
+   pDevice(0), CacheList(getThis()), BufferCreateFlags(0),
    VertexBuffers(pheap, calcVBGranularity(params.MemGranularity)),
    IndexBuffers(pheap, calcIBGranularity(params.MemGranularity,
                                          VertexBuffers.GetGranularity())),
@@ -58,10 +59,18 @@ MeshCache::~MeshCache()
 
 // Initializes MeshCache for operation, including allocation of the reserve
 // buffer. Typically called from SetVideoMode.
-bool MeshCache::Initialize(IDirect3DDevice9* pdevice)
+bool MeshCache::Initialize(IDirect3DDevice9* pdevice, bool dynamicMeshes)
 {
     SF_ASSERT(!pDevice);    
     adjustMeshCacheParams(&Params, pdevice);
+
+    // If SetDevice fails, it means that creating queries failed, fallback to using static meshes.
+    if ( !RSync.SetDevice(pdevice))
+    {
+        SF_DEBUG_WARNING(1, "RenderSync initialization failed. Using static buffers in MeshCache.");
+        dynamicMeshes = false;
+    }
+    BufferCreateFlags = dynamicMeshes ? Buffer_Dynamic : 0;
 
     if (!StagingBuffer.Initialize(pHeap, Params.StagingBufferSize))
         return false;
@@ -85,12 +94,15 @@ bool MeshCache::Initialize(IDirect3DDevice9* pdevice)
 
 void MeshCache::Reset()
 {
+    // This must happen before destroying buffers. If the device is lost, then the WaitFence implementation
+    // depends on the RenderSync to be reset before any meshes are destroy. Otherwise and infinite wait may occur.
+    RSync.SetDevice(0);
+
     if (pDevice)
         destroyBuffers();
     // Unconditional to simplify Initialize fail logic:
     pInstancingVertexBuffer.Clear();
     pMaskEraseBatchVertexBuffer.Clear();
-    pUVSquareVertexBuffer.Clear();
     pDevice.Clear();
     StagingBuffer.Reset();
 }
@@ -172,13 +184,15 @@ void MeshCache::adjustMeshCacheParams(MeshCacheParams* p, IDirect3DDevice9* pdev
         }
 
         // Determine the maximum number of batches/instances we can have, depending on the number of shader
-        // constants we have. It should not exceed SF_RENDER_D3D9_INSTANCE_MATRICES, otherwise we may create
+        // constants we have. It should not exceed SF_RENDER_MAX_BATCHES, otherwise we may create
         // batches which are too large.
-        if (p->MaxBatchInstances > SF_RENDER_D3D9_INSTANCE_MATRICES)
-            p->MaxBatchInstances = SF_RENDER_D3D9_INSTANCE_MATRICES;
+        if (p->MaxBatchInstances > SF_RENDER_MAX_BATCHES)
+            p->MaxBatchInstances = SF_RENDER_MAX_BATCHES;
+
+        // TEMP
         // -1, because we use one VS register for a solid color constant.
-        unsigned maxInstances = (caps.MaxVertexShaderConst-1) / SF_RENDER_D3D9_ROWS_PER_INSTANCE;
-        p->MaxBatchInstances = Alg::Min(p->MaxBatchInstances, maxInstances);
+        //unsigned maxInstances = (caps.MaxVertexShaderConst-1) / SF_RENDER_D3D9_ROWS_PER_INSTANCE;
+        //p->MaxBatchInstances = Alg::Min(p->MaxBatchInstances, maxInstances);
     }
 
     if (p->VBLockEvictSizeLimit < 1024 * 256)
@@ -191,11 +205,60 @@ void MeshCache::adjustMeshCacheParams(MeshCacheParams* p, IDirect3DDevice9* pdev
 }
 
 
+void MeshCache::destroyPendingBuffers()
+{
+    // Destroy any pending buffers that are waiting to be destroyed (if possible).
+    List<Render::MeshBuffer> remainingBuffers;
+    MeshBuffer* p = (MeshBuffer*)PendingDestructionBuffers.GetFirst();
+    while (!PendingDestructionBuffers.IsNull(p))
+    {
+        MeshCacheListSet::ListSlot& pendingFreeList = CacheList.GetSlot(MCL_PendingFree);
+        MeshCacheItem* pitem = (MeshCacheItem*)pendingFreeList.GetFirst();
+        bool itemsRemaining = false;
+        MeshBuffer* pNext = (D3D9::MeshBuffer*)p->pNext;
+        p->RemoveNode();
+        while (!pendingFreeList.IsNull(pitem))
+        {
+            if ((pitem->pVertexBuffer == p) || (pitem->pIndexBuffer == p))
+            {
+                // If the fence is still pending, cannot destroy the buffer.
+                if ( pitem->GPUFence && pitem->GPUFence->IsPending(FenceType_Vertex) )
+                {
+                    itemsRemaining = true;
+                    remainingBuffers.PushFront(p);
+                    break;
+                }
+            }
+            pitem = (MeshCacheItem*)pitem->pNext;
+        }
+        if ( !itemsRemaining )
+        {
+            delete p;
+        }
+        p = pNext;
+    }
+    PendingDestructionBuffers.PushListToFront(remainingBuffers);
+}
+
+void MeshCache::BeginFrame()
+{
+    RSync.BeginFrame();
+}
+
 void MeshCache::EndFrame()
 {
     SF_AMP_SCOPE_RENDER_TIMER(__FUNCTION__, Amp_Profile_Level_Medium);
 
+    RSync.EndFrame();
+
     CacheList.EndFrame();
+
+    // Try and reclaim memory from items that have already been destroyed, but not freed.
+    CacheList.EvictPendingFree(IndexBuffers.Allocator);
+    CacheList.EvictPendingFree(VertexBuffers.Allocator);
+
+    destroyPendingBuffers();
+
 
     // Simple Heuristic used to shrink cache. Shrink is possible once the
     // (Total_Frame_Size + LRUTailSize) exceed the allocated space by more then
@@ -222,9 +285,14 @@ void MeshCache::EndFrame()
 
             MeshBufferSet&  mbs = (p->GetBufferType() == MeshBuffer::Buffer_Vertex) ?
                                   (MeshBufferSet&)VertexBuffers : (MeshBufferSet&)IndexBuffers;
-            // Evict first!
-            evictMeshesInBuffer(CacheList.GetSlots(), MCL_ItemCount, p);
-            mbs.DestroyBuffer(p);
+
+            // Evict first! This may fail if a query is pending on a mesh inside the buffer. In that case,
+            // simply store the buffer to be destroyed later.
+            bool allEvicted = evictMeshesInBuffer(CacheList.GetSlots(), MCL_ItemCount, p);
+            mbs.DestroyBuffer(p, allEvicted);
+            if ( !allEvicted )
+                PendingDestructionBuffers.PushBack(p);
+
 
 #ifdef SF_RENDER_LOG_CACHESIZE
             LogDebugMessage(Log_Message,
@@ -257,10 +325,10 @@ bool MeshCache::allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsign
     UPInt ibsize = calcIBGranularity(size, vbsize);
 
     VertexBuffer *pvb = (VertexBuffer*)VertexBuffers.CreateBuffer(vbsize, type, arena,
-                                                                  pHeap, pDevice);
+                                                                  pHeap, pDevice, BufferCreateFlags);
     if (!pvb)
         return false;
-    MeshBuffer   *pib = IndexBuffers.CreateBuffer(ibsize, type, arena, pHeap, pDevice);
+    MeshBuffer   *pib = IndexBuffers.CreateBuffer(ibsize, type, arena, pHeap, pDevice, BufferCreateFlags);
     if (!pib)
     {
         VertexBuffers.DestroyBuffer(pvb);
@@ -276,16 +344,14 @@ bool MeshCache::allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsign
 bool MeshCache::createStaticVertexBuffers(IDirect3DDeviceX* pdevice)
 {
     return createInstancingVertexBuffer(pdevice) && 
-           createMaskEraseBatchVertexBuffer(pdevice) &&
-           createUVSquareVertexBuffer(pdevice);
+           createMaskEraseBatchVertexBuffer(pdevice);
 }
 
 bool MeshCache::createInstancingVertexBuffer(IDirect3DDeviceX* pdevice)
 {
     HRESULT              createResult;
     DWORD                lockFlags = 0;
-    unsigned             bufferSize = sizeof(Render_InstanceData) *
-                                      SF_RENDER_D3D9_INSTANCE_MATRICES;
+    unsigned             bufferSize = sizeof(Render_InstanceData) * SF_RENDER_MAX_BATCHES;
     Render_InstanceData* pbuffer = 0;
 
     createResult = pdevice->CreateVertexBuffer(bufferSize, D3DUSAGE_WRITEONLY,
@@ -300,9 +366,8 @@ bool MeshCache::createInstancingVertexBuffer(IDirect3DDeviceX* pdevice)
         pInstancingVertexBuffer = 0;
         return false;        
     }
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    for(unsigned i = 0; i< SF_RENDER_D3D9_INSTANCE_MATRICES; i++)
+
+    for(unsigned i = 0; i< SF_RENDER_MAX_BATCHES; i++)
         pbuffer[i].Instance = i; // low byte
 
     pInstancingVertexBuffer->Unlock();
@@ -313,7 +378,7 @@ bool MeshCache::createMaskEraseBatchVertexBuffer(IDirect3DDeviceX* pdevice)
 {
     HRESULT      createResult;
     DWORD        lockFlags = 0;
-    unsigned     bufferSize = sizeof(VertexXY16iAlpha) * 6 * MaxEraseBatchCount;
+    unsigned     bufferSize = sizeof(VertexXY16iAlpha) * 6 * SF_RENDER_MAX_BATCHES;
     VertexXY16iAlpha* pbuffer = 0;
 
     createResult = pdevice->CreateVertexBuffer(bufferSize, D3DUSAGE_WRITEONLY,
@@ -328,86 +393,10 @@ bool MeshCache::createMaskEraseBatchVertexBuffer(IDirect3DDeviceX* pdevice)
         pMaskEraseBatchVertexBuffer = 0;
         return false;        
     }
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    for(unsigned i = 0; i< MaxEraseBatchCount; i++)
-    {
-        // This assumes Alpha in first byte. Effect may depend on byte order and
-        // ShaderManager vertex format mapping (offset assigned for VET_Instance8
-        // for ShaderManager::registerVertexFormat).
-        pbuffer[i * 6 + 0].x  = 0;
-        pbuffer[i * 6 + 0].y  = 1;
-        pbuffer[i * 6 + 0].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 1].x  = 0;
-        pbuffer[i * 6 + 1].y  = 0;
-        pbuffer[i * 6 + 1].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 2].x  = 1;
-        pbuffer[i * 6 + 2].y  = 0;
-        pbuffer[i * 6 + 2].Alpha[0] = (UByte)i;
 
-        pbuffer[i * 6 + 3].x  = 0;
-        pbuffer[i * 6 + 3].y  = 1;
-        pbuffer[i * 6 + 3].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 4].x  = 1;
-        pbuffer[i * 6 + 4].y  = 0;
-        pbuffer[i * 6 + 4].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 5].x  = 1;
-        pbuffer[i * 6 + 5].y  = 1;
-        pbuffer[i * 6 + 5].Alpha[0] = (UByte)i;
-    }
+    fillMaskEraseVertexBuffer<VertexXY16iAlpha>(pbuffer, SF_RENDER_MAX_BATCHES);
 
     pMaskEraseBatchVertexBuffer->Unlock();
-    return true;
-}
-
-bool MeshCache::createUVSquareVertexBuffer(IDirect3DDeviceX* pdevice)
-{
-    HRESULT      createResult;
-    DWORD        lockFlags = 0;
-    unsigned     bufferSize = sizeof(VertexXY16iUV) * 6;
-    VertexXY16iUV* pbuffer = 0;
-
-    createResult = pdevice->CreateVertexBuffer(bufferSize, D3DUSAGE_WRITEONLY,
-                                               0, D3DPOOL_DEFAULT,
-                                               &pUVSquareVertexBuffer.GetRawRef(), 0);
-    if (createResult != D3D_OK)
-        return false;
-
-    if (FAILED(pUVSquareVertexBuffer->Lock(0, bufferSize, (void**)&pbuffer, lockFlags)))
-    {
-        SF_DEBUG_WARNING(1, "D3D9::MeshCache - VertexBuffer lock failed");
-        pUVSquareVertexBuffer = 0;
-        return false;        
-    }
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    pbuffer[0].x  = 0;
-    pbuffer[0].y  = 1;
-    pbuffer[0].UV[0] = 0;
-    pbuffer[0].UV[1] = 1.0f;
-    pbuffer[1].x  = 0;
-    pbuffer[1].y  = 0;
-    pbuffer[1].UV[0] = 0;
-    pbuffer[1].UV[1] = 0;
-    pbuffer[2].x  = 1;
-    pbuffer[2].y  = 0;
-    pbuffer[2].UV[0] = 1.0f;
-    pbuffer[2].UV[1] = 0;
-
-    pbuffer[3].x  = 0;
-    pbuffer[3].y  = 1;
-    pbuffer[3].UV[0] = 0;
-    pbuffer[3].UV[1] = 1.0f;
-    pbuffer[4].x  = 1;
-    pbuffer[4].y  = 0;
-    pbuffer[4].UV[0] = 1.0f;
-    pbuffer[4].UV[1] = 0;
-    pbuffer[5].x  = 1;
-    pbuffer[5].y  = 1;
-    pbuffer[5].UV[0] = 1.0f;
-    pbuffer[5].UV[1] = 1.0f;
-
-    pUVSquareVertexBuffer->Unlock();
     return true;
 }
 
@@ -431,9 +420,10 @@ void MeshCache::UnlockBuffers()
 }
 
 
-void MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
+bool MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
                                     MeshBuffer* pbuffer)
 {
+    bool evictionFailed = false;
     for (unsigned i=0; i< count; i++)
     {
         MeshCacheItem* pitem = (MeshCacheItem*)plist[i].GetFirst();
@@ -441,31 +431,64 @@ void MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt cou
         {
             if ((pitem->pVertexBuffer == pbuffer) || (pitem->pIndexBuffer == pbuffer))
             {
+                // Evict returns the number of bytes released. If this is zero, it means the mesh
+                // was still in use. 
+                if ( Evict(pitem) == 0 )
+                {
+                    evictionFailed = true;
+                    SF_ASSERT(pitem->Type == MeshCacheItem::Mesh_Destroyed);
+
+                    // We still need to delete all the addresses allocated in the buffer, because it is 
+                    // going to be deleted, and AllocAddr will break otherwise.
+                    if ( pitem->pVertexBuffer == pbuffer)
+                    {
+                        VertexBuffers.Free(pitem->VBAllocSize, pitem->pVertexBuffer, pitem->VBAllocOffset);
+                        pitem->pVertexBuffer = 0;
+                    }
+                    if ( pitem->pIndexBuffer == pbuffer)
+                    {
+                        IndexBuffers.Free(pitem->IBAllocSize, pitem->pIndexBuffer, pitem->IBAllocOffset);
+                        pitem->pIndexBuffer = 0;
+                    }
+                }
+
                 // Evict may potentially modify the cache items, so start again.
                 // This is less than ideal, but better than accessing a dangling pointer.
-                Evict(pitem);
                 pitem = (MeshCacheItem*)plist[i].GetFirst();
+                continue;
             }
-            else
-            {
-                pitem = (MeshCacheItem*)pitem->pNext;
-            }
+            pitem = (MeshCacheItem*)pitem->pNext;
         }
     }
+    return !evictionFailed;
 }
 
 
 UPInt MeshCache::Evict(Render::MeshCacheItem* pbatch, AllocAddr* pallocator, MeshBase* pskipMesh)
 {
     MeshCacheItem* p = (MeshCacheItem*)pbatch;
-    // - Free allocator data.
-    UPInt vbfree = VertexBuffers.Free(p->VBAllocSize, p->pVertexBuffer, p->VBAllocOffset);
-    UPInt ibfree = IndexBuffers.Free(p->IBAllocSize, p->pIndexBuffer, p->IBAllocOffset);
-    UPInt freedSize = (&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree;
+
+    // If a fence is not pending, then the memory for the item can be reclaimed immediately.
+    if ( !UsesDynamicMeshes() || !p->GPUFence || !p->GPUFence->IsPending(FenceType_Vertex))
+    {
+        // - Free allocator data.
+        UPInt vbfree = p->pVertexBuffer ? VertexBuffers.Free(p->VBAllocSize, p->pVertexBuffer, p->VBAllocOffset) : 0;
+        UPInt ibfree = p->pIndexBuffer  ? IndexBuffers.Free(p->IBAllocSize, p->pIndexBuffer, p->IBAllocOffset) : 0;
+        UPInt freedSize = pallocator ? ((&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree) : vbfree + ibfree;
     
-    VBSizeEvictedInLock += (unsigned)  p->VBAllocSize;
-    p->Destroy(pskipMesh);
-    return freedSize;
+        VBSizeEvictedInLock += (unsigned)  p->VBAllocSize;
+        p->Destroy(pskipMesh, true);
+        return freedSize;
+    }
+    else
+    {
+        // Still in use, push it on the pending to delete list.
+        // It should be valid for this to be called multiple times for a single mesh (for example, in a PendingFree situation).
+        p->Destroy(pskipMesh, false);
+        CacheList.PushFront(MCL_PendingFree, p);
+        return 0;
+    }
+
 }
 
 
@@ -481,7 +504,12 @@ bool MeshCache::allocBuffer(UPInt* poffset, MeshBuffer** pbuffer,
     // If allocation failed... need to apply swapping or grow buffer.
     MeshCacheItem* pitems;
 
-    // 1) First, apply LRU (least recently used) swapping from data stale in
+    // #1. Try and reclaim memory from items that have already been destroyed, but not freed.
+    //     These cannot be reused, so it is best to evict their memory first, if possible.
+    if (CacheList.EvictPendingFree(mbs.Allocator))
+        goto alloc_size_available;
+
+    // #2. Then, apply LRU (least recently used) swapping from data stale in
     //    earlier frames until the total size 
   
     if ((getTotalSize() + MinSupportedGranularity) <= Params.MemLimit)
@@ -498,7 +526,7 @@ bool MeshCache::allocBuffer(UPInt* poffset, MeshBuffer** pbuffer,
         UPInt allocSize = Alg::PMin(Params.MemLimit - getTotalSize(), mbs.GetGranularity());
         if (size <= allocSize)
         {
-            MeshBuffer* pbuff = mbs.CreateBuffer(allocSize, MeshBuffer::AT_Chunk, 0, pHeap, pDevice);
+            MeshBuffer* pbuff = mbs.CreateBuffer(allocSize, MeshBuffer::AT_Chunk, 0, pHeap, pDevice, BufferCreateFlags);
             if (pbuff)
             {
                 ChunkBuffers.PushBack(pbuff);
@@ -516,22 +544,30 @@ bool MeshCache::allocBuffer(UPInt* poffset, MeshBuffer** pbuffer,
     if (VBSizeEvictedInLock > Params.VBLockEvictSizeLimit)
         return false;
 
-    // 2) Apply MRU (most recently used) swapping to the current frame content.
+    // #3. Apply MRU (most recently used) swapping to the current frame content.
     // NOTE: MRU (GetFirst(), pNext iteration) gives
     //       2x improvement here with "Stars" test swapping.
     MeshCacheListSet::ListSlot& prevFrameList = CacheList.GetSlot(MCL_PrevFrame);
     pitems = (MeshCacheItem*)prevFrameList.GetFirst();
     while(!prevFrameList.IsNull(pitems))
     {
-        if (Evict(pitems, &mbs.GetAllocator()) >= size)
-            goto alloc_size_available;
+        if (!UsesDynamicMeshes() || !pitems->GPUFence || !pitems->GPUFence->IsPending(FenceType_Vertex))
+        {
+            if (Evict(pitems, &mbs.GetAllocator()) >= size)
+                goto alloc_size_available;
+        }
         pitems = (MeshCacheItem*)prevFrameList.GetFirst();
     }
 
+    // #4. If MRU swapping didn't work for ThisFrame items due to them still
+    // being processed by the GPU and we are being asked to wait, wait
+    // until fences are passed to evict items.
     MeshCacheListSet::ListSlot& thisFrameList = CacheList.GetSlot(MCL_ThisFrame);
     pitems = (MeshCacheItem*)thisFrameList.GetFirst();
-    while(!thisFrameList.IsNull(pitems))
+    while(waitForCache && !thisFrameList.IsNull(pitems))
     {
+        if ( UsesDynamicMeshes() && pitems->GPUFence )
+            pitems->GPUFence->WaitFence(FenceType_Vertex);
         if (Evict(pitems, &mbs.GetAllocator()) >= size)
             goto alloc_size_available;
         pitems = (MeshCacheItem*)thisFrameList.GetFirst();

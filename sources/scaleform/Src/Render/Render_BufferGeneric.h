@@ -50,6 +50,14 @@ enum RBCacheListType
     RBCL_ItemCount
 };
 
+// RenderBuffer DSSizeMode; used to indicate depth-stencil size preference.
+enum DSSizeMode
+{
+    DSSM_None,          // Use the default depth stencil size mode
+    DSSM_Exact,         // Depth stencil requests must be identical to potential matches
+    DSSM_EqualOrBigger  // Depth stencil requests must be identical to color sizes
+};
+
 
 class RenderTarget;
 class DepthStencilBuffer;
@@ -75,7 +83,7 @@ public:
     inline RenderTarget*       GetRenderTarget() const;
     inline DepthStencilBuffer* GetDepthStencilBuffer() const;
 
-    bool Match(const ImageSize& size, bool exact, RenderBufferType type, ImageFormat format) const;
+    bool Match(const ImageSize& size, DSSizeMode sizeMode, RenderBufferType type, ImageFormat format) const;
 };
 
 
@@ -98,7 +106,7 @@ public:
         ReuseLimit_ScreenSize  = 0xFFFFFFFF
     };
 
-    RenderBufferManager(bool requireExactDepthStencil = false,
+    RenderBufferManager(DSSizeMode depthStencilSizeMode = DSSM_None,
                         UPInt memReuseLimit = ReuseLimit_ScreenSize,
                         UPInt memAbsoluteLimit = 0);
 
@@ -174,7 +182,7 @@ protected:
     UPInt               AllocSize; // Currently allocated size
     ImageFormat         DefImageFormat;
     bool                RequirePow2;
-    bool                RequireExactDepthStencil;   // If true, allocated depth stencil buffers will match requested dimensions exactly.
+    DSSizeMode          DepthStencilSizeMode;
 
     List<CacheData> BufferCache[RBCL_ItemCount];
 };

@@ -19,9 +19,9 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 // GFx Version(s)
 #define GFX_MAJOR_VERSION        4
-#define GFX_MINOR_VERSION        0
-#define GFX_BUILD_VERSION        15
+#define GFX_MINOR_VERSION        2
+#define GFX_BUILD_VERSION        22
 
-#define GFX_VERSION_STRING       "4.0.15"
+#define GFX_VERSION_STRING       "4.2.22"
 
 #endif

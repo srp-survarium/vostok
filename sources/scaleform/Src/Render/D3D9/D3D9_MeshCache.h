@@ -20,13 +20,9 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_Array.h"
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_HeapNew.h"
+#include "Render/D3D9/D3D9_Sync.h"
 #include <d3d9.h>
 
-
-// If SF_RENDER_D3D9_INSTANCE_MATRICES is decreased, make sure to update MeshCacheConfig defaults.
-static const int SF_RENDER_D3D9_INSTANCE_MATRICES = 30;
-static const int SF_RENDER_D3D9_ROWS_PER_INSTANCE = 10; // Number of registers per instance.
-static const int SF_RENDER_D3D9_INSTANCE_DATAROWS = SF_RENDER_D3D9_INSTANCE_MATRICES * SF_RENDER_D3D9_ROWS_PER_INSTANCE;
 
 #define SF_RENDER_D3D9_INDEX_FMT         D3DFMT_INDEX16
 
@@ -100,12 +96,17 @@ enum {
     MeshCache_AllocatorUnit       = 1 << MeshCache_AllocatorUnitShift
 };
 
+enum MeshBufferCreateFlags
+{
+    Buffer_Dynamic  = 0x1,
+};
 
 class MeshBuffer : public Render::MeshBuffer
 {
 protected:    
-    UPInt       Index; // Index in MeshBufferSet::Buffers array.
+    UPInt       Index;      // Index in MeshBufferSet::Buffers array.
     MeshBuffer* pNextLock;
+    unsigned    Flags;      // Flags, see MeshBufferCreateFlags
 
 public:
 
@@ -115,8 +116,8 @@ public:
         Buffer_Index,
     };
 
-    MeshBuffer(UPInt size, AllocType type, unsigned arena)
-        : Render::MeshBuffer(size, type, arena)
+    MeshBuffer(UPInt size, AllocType type, unsigned arena, unsigned flags = 0)
+        : Render::MeshBuffer(size, type, arena), Flags(flags)
     { }
     virtual ~MeshBuffer() { }
     
@@ -193,7 +194,8 @@ public:
     inline UPInt        GetTotalSize() const    { return TotalSize; }
 
     virtual MeshBuffer* CreateBuffer(UPInt size, AllocType type, unsigned arena,
-                                     MemoryHeap* pheap, IDirect3DDeviceX* pdevice) = 0;
+                                     MemoryHeap* pheap, IDirect3DDeviceX* pdevice,
+                                     unsigned flags) = 0;
 
     // Destroys all buffers of specified type; all types are destroyed if AT_None is passed.
     void        DestroyBuffers(AllocType type = MeshBuffer::AT_None)
@@ -227,13 +229,16 @@ public:
     }
 
 
-    void        DestroyBuffer(MeshBuffer* pbuffer)
+    void        DestroyBuffer(MeshBuffer* pbuffer, bool deleteBuffer = true)
     {
         Allocator.RemoveSegment(pbuffer->GetIndex() << MeshCache_AddressToIndexShift,
                                 SizeToAllocatorUnit(pbuffer->GetSize()));
         TotalSize -= pbuffer->GetSize();
         Buffers[pbuffer->GetIndex()] = 0;
-        delete pbuffer;
+        if ( deleteBuffer )
+        {
+            delete pbuffer;
+        }
     }
 
 
@@ -265,12 +270,13 @@ public:
         : MeshBufferSet(pheap, granularity)
     { }      
     virtual MeshBuffer* CreateBuffer(UPInt size, AllocType type, unsigned arena,
-                                     MemoryHeap* pheap, IDirect3DDeviceX* pdevice)
+                                     MemoryHeap* pheap, IDirect3DDeviceX* pdevice,
+                                     unsigned flags)
     {
         // Single buffer can't be bigger then (1<<MeshCache_AddressToIndexShift)
         // size due to the way addresses are masked.
         SF_ASSERT(size <= (1<<(MeshCache_AddressToIndexShift+MeshCache_AllocatorUnitShift)));
-        return  Buffer::Create(size, type, arena, pheap, pdevice, *this);
+        return  Buffer::Create(size, type, arena, pheap, pdevice, flags, *this);
     }
 };
 
@@ -283,8 +289,8 @@ protected:
     Ptr<BType>              pBuffer;
 public:
 
-    MeshBufferImpl(UPInt size, AllocType type, unsigned arena)
-        : MeshBuffer(size, type, arena)
+    MeshBufferImpl(UPInt size, AllocType type, unsigned arena, unsigned flags)
+        : MeshBuffer(size, type, arena, flags)
     { }
 
     inline BType* GetHWBuffer() const { return pBuffer.GetPtr(); }
@@ -292,7 +298,7 @@ public:
     bool   DoLock()
     {
         SF_ASSERT(!pData);
-        DWORD lockFlags = 0;  // D3DLOCK_DISCARD not applicable for static buffers?
+        DWORD lockFlags = (Flags & Buffer_Dynamic) ? D3DLOCK_NOOVERWRITE : 0;
         return (!FAILED(pBuffer->Lock(0, (UINT)Size, &pData, lockFlags)));
     }
     void    Unlock()
@@ -306,7 +312,7 @@ public:
 
     static Derived* Create(UPInt size, AllocType type, unsigned arena,
                            MemoryHeap* pheap, IDirect3DDeviceX* pdevice,
-                           MeshBufferSet& mbs)
+                           unsigned flags, MeshBufferSet& mbs)
     {
         // Determine which address index we'll use in the allocator.
         UPInt index = 0;
@@ -318,7 +324,7 @@ public:
         // Round-up to Allocator unit.
         size = ((size + MeshCache_AllocatorUnit-1) >> MeshCache_AllocatorUnitShift) << MeshCache_AllocatorUnitShift;
 
-        Derived* p = SF_HEAP_NEW(pheap) Derived(size, type, arena);
+        Derived* p = SF_HEAP_NEW(pheap) Derived(size, type, arena, flags);
         if (!p) return 0;
 
         if (!p->allocBuffer(pdevice))
@@ -343,15 +349,14 @@ public:
 class VertexBuffer : public MeshBufferImpl<IDirect3DVertexBufferX, VertexBuffer>
 {
 public:
-    VertexBuffer(UPInt size, AllocType atype, unsigned arena)
-        : Base(size, atype, arena)
+    VertexBuffer(UPInt size, AllocType atype, unsigned arena, unsigned flags)
+        : Base(size, atype, arena, flags)
     { }
 
     virtual bool allocBuffer(IDirect3DDeviceX* pdevice)
     {
-        return pdevice->CreateVertexBuffer(
-                (UINT)Size, D3DUSAGE_WRITEONLY, //|D3DUSAGE_DYNAMIC,
-                0, D3DPOOL_DEFAULT, &pBuffer.GetRawRef(), 0) == D3D_OK;
+        unsigned usage = D3DUSAGE_WRITEONLY | ((Flags & Buffer_Dynamic) ? D3DUSAGE_DYNAMIC : 0);
+        return pdevice->CreateVertexBuffer((UINT)Size, usage, 0, D3DPOOL_DEFAULT, &pBuffer.GetRawRef(), 0) == D3D_OK;
     }
     virtual BufferType GetBufferType() const { return Buffer_Vertex; }
 };
@@ -359,14 +364,14 @@ public:
 class IndexBuffer : public MeshBufferImpl<IDirect3DIndexBufferX, IndexBuffer>
 {
 public:
-    IndexBuffer(UPInt size, AllocType atype, unsigned arena)
-        : Base(size, atype, arena)
+    IndexBuffer(UPInt size, AllocType atype, unsigned arena, unsigned flags)
+        : Base(size, atype, arena, flags)
     { }
 
     virtual bool allocBuffer(IDirect3DDeviceX* pdevice)
     {
-        return pdevice->CreateIndexBuffer(
-            (UINT)Size, D3DUSAGE_WRITEONLY, SF_RENDER_D3D9_INDEX_FMT,
+        unsigned usage = D3DUSAGE_WRITEONLY | ((Flags & Buffer_Dynamic) ? D3DUSAGE_DYNAMIC : 0);
+        return pdevice->CreateIndexBuffer((UINT)Size, usage, SF_RENDER_D3D9_INDEX_FMT,
             D3DPOOL_DEFAULT, &pBuffer.GetRawRef(), 0) == D3D_OK;
     }
     virtual BufferType GetBufferType() const { return Buffer_Index; }
@@ -386,14 +391,16 @@ class MeshCache : public Render::MeshCache
     friend class HAL;    
     
     enum {
-        MinSupportedGranularity = 16*1024,
-        MaxEraseBatchCount = (10 > SF_RENDER_D3D9_INSTANCE_MATRICES) ?
-                              10 : SF_RENDER_D3D9_INSTANCE_MATRICES
+        MinSupportedGranularity = 16*1024
     };
 
     Ptr<IDirect3DDeviceX>       pDevice;    
     MeshCacheListSet            CacheList;
-    
+
+    // Handles synchronization between CPU writing of GPU resources (only with dynamic meshes)
+    RenderSync                  RSync;
+    unsigned                    BufferCreateFlags;
+
     // Allocators managing the buffers. 
     VertexBufferSet             VertexBuffers;
     IndexBufferSet              IndexBuffers;
@@ -406,12 +413,14 @@ class MeshCache : public Render::MeshCache
     // freeing them in the opposite order (to support proper IB/VB balancing).
     // NOTE: Must use base MeshBuffer type for List<> to work with internal casts.
     List<Render::MeshBuffer>    ChunkBuffers;
+    // If a MeshBuffer could not be immediately destroyed (the GPU is using one of its meshes)
+    // It is temporarily stored in this list until it is no longer in use.
+    List<Render::MeshBuffer>    PendingDestructionBuffers;
 
     // Vertex buffer used for instancing. Right now it is simply
     // allocated to have constant values.
     Ptr<IDirect3DVertexBufferX> pInstancingVertexBuffer;
     Ptr<IDirect3DVertexBufferX> pMaskEraseBatchVertexBuffer;
-    Ptr<IDirect3DVertexBufferX> pUVSquareVertexBuffer;
     
     inline MeshCache* getThis() { return this; }
 
@@ -423,12 +432,11 @@ class MeshCache : public Render::MeshCache
     bool            createStaticVertexBuffers(IDirect3DDeviceX* pdevice);
     bool            createInstancingVertexBuffer(IDirect3DDeviceX* pdevice);
     bool            createMaskEraseBatchVertexBuffer(IDirect3DDeviceX* pdevice);
-    bool            createUVSquareVertexBuffer(IDirect3DDeviceX* pdevice);
 
     // Allocates Vertex/Index buffer of specified size and adds it to free list.
     bool            allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsigned arena = 0);
 
-    void            evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
+    bool            evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
                                         MeshBuffer* pbuffer);
 
     // Allocates a number of bytes in the specified buffer, while evicting LRU data.
@@ -442,6 +450,10 @@ class MeshCache : public Render::MeshCache
     // Valid device is specified once MeshCache is initialized.
     void            adjustMeshCacheParams(MeshCacheParams* p, IDirect3DDevice9* device = 0);
 
+    // If buffers could not be deleted immediately (their meshes were still in use), they are stored
+    // in PendingDestructionBuffers and destroyed in this function (if possible).
+    void            destroyPendingBuffers();
+
 public:
 
     MeshCache(MemoryHeap* pheap,
@@ -450,7 +462,7 @@ public:
 
     // Initializes MeshCache for operation, including allocation of the reserve
     // buffer. Typically called from SetVideoMode.
-    bool            Initialize(IDirect3DDeviceX* pdevice);
+    bool            Initialize(IDirect3DDeviceX* pdevice, bool dynamicMeshes );
     // Resets MeshCache, releasing all buffers.
     void            Reset();    
 
@@ -461,7 +473,7 @@ public:
     virtual void    ClearCache();
     virtual bool    SetParams(const MeshCacheParams& params);
 
-
+    virtual void    BeginFrame();
     virtual void    EndFrame();
     // Adds a fixed-size buffer to cache reserve; expected to be released at Release.
     //virtual bool    AddReserveBuffer(unsigned size, unsigned arena = 0);
@@ -485,6 +497,9 @@ public:
                                       bool waitForCache, const VertexFormat* pDestFormat);
 
     virtual void GetStats(Stats* stats);
+
+    RenderSync*     GetRenderSync()     { return &RSync; }
+    bool            UsesDynamicMeshes() { return (BufferCreateFlags & Buffer_Dynamic) != 0; }
 };
 
 

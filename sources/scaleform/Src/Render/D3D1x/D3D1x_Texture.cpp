@@ -12,6 +12,7 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
+
 #include "pch.h"
 
 #include "D3D1x_Texture.h"
@@ -20,13 +21,12 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 namespace Scaleform { namespace Render { namespace D3D1x {
 
-extern TextureFormat::Mapping D3D1xTextureFormatMapping[];
+extern TextureFormat::Mapping TextureFormatMapping[];
 
 Texture::Texture(TextureManagerLocks* pmanagerLocks, const TextureFormat* pformat,
                  unsigned mipLevels, const ImageSize& size, unsigned use,
                  ImageBase* pimage) : 
-    Render::Texture(pmanagerLocks, size, (UByte)mipLevels, (UInt16)use, pimage), 
-    pFormat(pformat), pMap(0)
+    Render::Texture(pmanagerLocks, size, (UByte)mipLevels, (UInt16)use, pimage, pformat)
 {
     TextureCount = (UByte) pformat->GetPlaneCount();
     if (TextureCount > 1)
@@ -42,8 +42,7 @@ Texture::Texture(TextureManagerLocks* pmanagerLocks, const TextureFormat* pforma
 }
 
 Texture::Texture(TextureManagerLocks* pmanagerLocks, ID3D1x(Texture2D)* ptexture, ImageSize size, ImageBase* image) :
-    Render::Texture(pmanagerLocks, size, 0, 0, image ), 
-    pFormat(0), pMap(0)
+    Render::Texture(pmanagerLocks, size, 0, 0, image, 0 )
 {
     TextureFlags |= TF_UserAlloc;
     ptexture->AddRef();
@@ -51,6 +50,7 @@ Texture::Texture(TextureManagerLocks* pmanagerLocks, ID3D1x(Texture2D)* ptexture
     pTextures[0].pTexture = ptexture;
     pTextures[0].pView    = 0;
     pTextures[0].Size     = size;
+    pTextures[0].pStagingTexture = 0;
 }
 
 Texture::~Texture()
@@ -82,32 +82,6 @@ void Texture::GetUVGenMatrix(Matrix2F* mat) const
     const ImageSize& sz = (TextureFlags & TF_Rescale) ? ImgSize : pTextures[0].Size;
     *mat = Matrix2F::Scaling(1.0f / (float)sz.Width, 1.0f / (float)sz.Height);
 }
-
-
-void    Texture::LoseManager()
-{        
-    SF_ASSERT(pMap == 0);
-    Render::Texture::LoseManager();
-    pFormat = 0; // Users can't access Format any more ?
-}
-
-void Texture::LoseTextureData()
-{
-    SF_ASSERT(pMap == 0);
-
-    Lock::Locker lock(&pManagerLocks->ImageLock);
-    ReleaseHWTextures();
-    State   = State_Lost;
-    
-    if (pImage)
-    {
-        // TextureLost may release 'this' Texture, so do it last.
-        SF_ASSERT(pImage->GetImageType() != Image::Type_ImageBase);
-        Image* pimage = (Image*)pImage;
-        pimage->TextureLost(Image::TLR_DeviceLost);
-    }
-}
-
 
 bool IsD3DFormatRescaleCompatible(DXGI_FORMAT format,
                                   ImageFormat *ptargetImageFormat,
@@ -210,7 +184,7 @@ bool Texture::Initialize()
     if (Use & ImageUse_GenMipmaps)
     {
         SF_ASSERT(MipLevels == 1);
-        if (IsD3DFormatMipGenCompatible(pFormat->GetD3DFormat()))
+        if (IsD3DFormatMipGenCompatible(GetTextureFormat()->GetD3DFormat()))
         {            
             TextureFlags |= TF_SWMipGen;
             // If using SW MipGen, determine how many mip-levels we should have.
@@ -256,7 +230,7 @@ bool Texture::Initialize()
         desc.Height             = tdesc.Size.Height;
         desc.MipLevels          = MipLevels;
         desc.ArraySize          = 1;
-        desc.Format             = pFormat->GetD3DFormat();
+        desc.Format             = GetTextureFormat()->GetD3DFormat();
         desc.Usage              = usage;
         desc.BindFlags          = bindFlags;
         desc.CPUAccessFlags     = cpu;
@@ -276,14 +250,14 @@ initialize_texture_fail_after_create:
     }
 
     // Upload image content to texture, if any.
-    if (pImage && !Update())
+    if (pImage && !Render::Texture::Update())
     {
         SF_DEBUG_ERROR(1, "CreateTexture failed - couldn't initialize texture");
         goto initialize_texture_fail_after_create;
     }
 
     State = State_Valid;
-    return true;
+    return Render::Texture::Initialize();
 }
 
 bool Texture::Initialize(ID3D1x(Texture2D)* ptexture)
@@ -315,7 +289,7 @@ bool Texture::Initialize(ID3D1x(Texture2D)* ptexture)
     if ( pFormat == 0 )
     {
         TextureFormat::Mapping* pmapping;
-        for (pmapping = D3D1xTextureFormatMapping; pmapping->Format != Image_None; pmapping++)
+        for (pmapping = TextureFormatMapping; pmapping->Format != Image_None; pmapping++)
         {
             if ( pmapping->D3DFormat == texDesc.Format )
             {
@@ -348,169 +322,24 @@ bool Texture::Initialize(ID3D1x(Texture2D)* ptexture)
     }
 
     State = State_Valid;
-    return true;
+    return Render::Texture::Initialize();
 }
 
-bool Texture::Update()
+void Texture::computeUpdateConvertRescaleFlags( bool rescale, bool swMipGen, ImageFormat inputFormat, ImageRescaleType &rescaleType, 
+                                                ImageFormat &rescaleBuffFromat, bool &convert )
 {
-    SF_AMP_SCOPE_TIMER(GetManager()->RenderThreadId == GetCurrentThreadId() ? AmpServer::GetInstance().GetDisplayStats() : NULL, __FUNCTION__, Amp_Profile_Level_Medium);
-
-    ImageFormat     format   = GetImageFormat();
-    TextureManager* pmanager = GetManager();
-    bool            rescale  = (TextureFlags & TF_Rescale) ? true : false;
-    bool            swMipGen = (TextureFlags & TF_SWMipGen) ? true : false;
-    bool            convert  = false;
-    ImageData       *psource;
-    ImageData       *pdecodeTarget = 0, *prescaleTarget = 0;
-    ImageData       imageData1, imageData2;
-    Ptr<RawImage>   pimage1, pimage2;
-    unsigned        sourceMipLevels = GetMipmapCount(); // May be different from MipLevels    
-
-    // Texture update proceeds in four (optional) steps:
-    //   1. Image::Decode - Done unless rescaling directly from RawImage.
-    //   2. Rescale       - Done if non-pow2 textures are not supported as necessary.
-    //   3. Convert       - Needed if conversion wasn't applied in Decode.
-    //   4. SW Mipmap Gen - Loop to generate SW mip-maps, may also have a convert step.
-
-    // Although Decode can do scan-line conversion, Convert step is necessary
-    // because our Rescale and GenerateMipLevel functions don't support all D3D1x
-    // destination formats. If non-supported format is encountered, conversion
-    // is delayed till after rescale (which, of course, requires an extra image buffer).
-
-    ImageFormat      rescaleBuffFromat = format;
-    ImageRescaleType rescaleType = ResizeNone;
-    
-    if (rescale && !IsD3DFormatRescaleCompatible(pFormat->pMapping->D3DFormat,
+    SF_UNUSED(inputFormat);
+    if (rescale && !IsD3DFormatRescaleCompatible(GetTextureFormat()->GetD3DFormat(),
                                                  &rescaleBuffFromat, &rescaleType))
         convert = true;
-    if (swMipGen && !IsD3DFormatMipGenCompatible(pFormat->pMapping->D3DFormat))
+    if (swMipGen && !IsD3DFormatMipGenCompatible(GetTextureFormat()->GetD3DFormat()))
         convert = true;
-   
-    
-    // *** 1. Decode from source pImage to Image1/MappedTexture
-
-    Lock::Locker  imageLock(&pManagerLocks->ImageLock);
-
-    if (!pImage)
-        return false;
-
-    // Decode is not needed if RawImage is used directly as a source for rescale.
-    if (! ((pImage->GetImageType() == Image::Type_RawImage) && rescale) )
-    {
-        // Determine decodeTarget -> Image1 if rescale / convert will take place
-        if (rescale || convert)
-        {
-            pimage1 = *RawImage::Create(rescaleBuffFromat, sourceMipLevels, ImgSize, 0);
-            if (!pimage1) return false;
-            pimage1->GetImageData(&imageData1);
-            imageData1.Format = (ImageFormat)(format | ImageFormat_Convertible);
-            pdecodeTarget = &imageData1;
-        }
-        else
-        {
-            if (!pmanager->mapTexture(this))
-                return false;
-            pdecodeTarget = &pMap->Data;
-        }
-
-        // Decode to decode_Target (Image1 or MappedTexture)
-        pImage->Decode(pdecodeTarget, 
-            convert ? &Image::CopyScanlineDefault : pFormat->pMapping->CopyFunc);
-        psource = pdecodeTarget;
-    }
-    else
-    {
-        ((RawImage*)pImage->GetAsImage())->GetImageData(&imageData1);
-        psource = &imageData1;
-    }
-
-    // *** 2. Rescale - from source to Image2/MappedTexture
-
-    if (rescale)
-    {
-        if (convert)
-        {
-            pimage2 = *RawImage::Create(format, sourceMipLevels, pTextures[0].Size, 0);
-            if (!pimage2) return false;
-            pimage2->GetImageData(&imageData2);
-            prescaleTarget = &imageData2;
-        }
-        else
-        {
-            if (!pmanager->mapTexture(this))
-                return false;
-            prescaleTarget = &pMap->Data;
-        }
-
-        if (rescaleType == ResizeNone)
-        {
-            rescaleType = GetImageFormatRescaleType(format);
-            SF_ASSERT(rescaleType != ResizeNone);
-        }        
-        RescaleImageData(*prescaleTarget, *psource, rescaleType);
-        psource = prescaleTarget;
-    }
-
-    // *** 3. Convert - from temp source to MappedTexture
-
-    if (convert)
-    {
-        if (!pmanager->mapTexture(this))
-            return false;
-        ConvertImageData(pMap->Data, *psource, pFormat->pMapping->CopyFunc);
-    }
-
-    // *** 4. Generate Mip-Levels
-
-    if (swMipGen)
-    {        
-        unsigned formatPlaneCount = ImageData::GetFormatPlaneCount(format);
-        SF_ASSERT(sourceMipLevels == 1);
-
-        // For each level, generate next mip-map from source to target.
-        // Source may be either RawImage, Image1/2, or even MappedTexture itself.
-        // Target will be Image1/2 if conversion is needed, MappedTexture otherwise.
-
-        for (unsigned iplane=0; iplane < formatPlaneCount; iplane++)
-        {
-            ImagePlane splane, tplane;
-            psource->GetMipLevelPlane(0, iplane, &splane);
-
-            for (unsigned level = 1; level < MipLevels; level++)
-            {
-                pMap->Data.GetMipLevelPlane(level, iplane, &tplane);
-
-                if (!convert)
-                {
-                    GenerateMipLevel(tplane, splane, format, iplane);
-                    // If we generated directly into MappedTexture,
-                    // texture will be used as source for next iteration.
-                    splane = tplane;
-                }
-                else
-                {
-                    // Extra conversion step means, source has only one level.
-                    // We reuse it through GenerateMipLevel, which allows source
-                    // and destination to be the same.
-                    ImagePlane dplane(splane);
-                    dplane.SetNextMipSize();
-                    GenerateMipLevel(dplane, splane, format, iplane);
-                    ConvertImagePlane(tplane, dplane, format, iplane,
-                                      pFormat->pMapping->CopyFunc, psource->GetColorMap());
-                    splane.Width  = dplane.Width;
-                    splane.Height = dplane.Height;
-                }
-            }
-        }
-    }
-
-    pmanager->unmapTexture(this);
-    return true;
 }
 
-
-void Texture::ReleaseHWTextures()
+void Texture::ReleaseHWTextures(bool staging)
 {
+    Render::Texture::ReleaseHWTextures(staging);
+
     TextureManager* pmanager = GetManager();
     bool useKillList = (pmanager->RenderThreadId == 0 || 
         GetCurrentThreadId() != pmanager->RenderThreadId);
@@ -519,6 +348,7 @@ void Texture::ReleaseHWTextures()
     {
         ID3D1x(Texture2D)* ptexture = pTextures[itex].pTexture;
         ID3D1x(ShaderResourceView)* pview = pTextures[itex].pView;
+        ID3D1x(Texture2D)* pstaging = staging ? pTextures[itex].pStagingTexture : 0;
 
         if (ptexture)
         {
@@ -526,61 +356,38 @@ void Texture::ReleaseHWTextures()
             {
                 pmanager->D3DTextureKillList.PushBack(ptexture);
                 pmanager->D3DTexViewKillList.PushBack(pview);
+                if (pstaging)
+                    pmanager->D3DTextureKillList.PushBack(pstaging);
             }
             else
             {
                 ptexture->Release();
                 pview->Release();
+                if (pstaging)
+                    pstaging->Release();
             }
         }
         pTextures[itex].pTexture = 0;
         pTextures[itex].pView    = 0;
+        if (staging)
+            pTextures[itex].pStagingTexture = 0;
     }
 }
 
 // Applies a texture to device starting at pstageIndex, advances index
-void    Texture::ApplyTexture(DWORD stageIndex, ImageFillMode fm)
+void    Texture::ApplyTexture(unsigned stageIndex, const ImageFillMode& fm)
 {
+    Render::Texture::ApplyTexture(stageIndex, fm);
+
     TextureManager* pmanager = GetManager();
-    ID3D1x(DeviceContext)* pcontext = pmanager->pDeviceContext;
     ID3D1x(SamplerState)* sampler = pmanager->SamplerStates[fm.Fill];
     ID3D1x(ShaderResourceView) * views[MaxTextureCount];
     for ( unsigned view = 0; view < TextureCount; ++view )
         views[view] = pTextures[view].pView;
 
     // Assumption: all textures in a stage use the same sampler.
-    pcontext->PSSetSamplers( stageIndex, 1, &sampler );
-    pcontext->PSSetShaderResources( stageIndex, TextureCount, views );
+    pmanager->SetSamplerState(stageIndex, TextureCount, views, sampler);
 }
-
-
-bool    Texture::Map(ImageData* pdata, unsigned mipLevel, unsigned levelCount)
-{
-    SF_ASSERT((Use & ImageUse_Map_Mask) != 0);
-    SF_ASSERT(!pMap);
-
-    if (levelCount == 0)
-        levelCount = MipLevels - mipLevel;
-    
-    if (!GetManager()->mapTexture(this, mipLevel, levelCount))
-    {
-        SF_DEBUG_WARNING(1, "Texture::Map failed - couldn't map texture");
-        return false;
-    }
-
-    pdata->Initialize(GetImageFormat(), levelCount,
-                      pMap->Data.pPlanes, pMap->Data.RawPlaneCount, true);
-    pdata->Use = Use;
-    return true;
-}
-
-bool    Texture::Unmap()
-{
-    if (!pMap) return false;
-    GetManager()->unmapTexture(this);
-    return true;
-}
-
 
 bool    Texture::Update(const UpdateDesc* updates, unsigned count, unsigned mipLevel)
 {
@@ -601,66 +408,22 @@ bool    Texture::Update(const UpdateDesc* updates, unsigned count, unsigned mipL
         
         pMap->Data.GetPlane(desc.PlaneIndex, &dplane);
         dplane.pData += desc.DestRect.y1 * dplane.Pitch +
-                        desc.DestRect.x1 * pFormat->pMapping->BytesPerPixel;
+                        desc.DestRect.x1 * GetTextureFormat()->pMapping->BytesPerPixel;
 
         splane.SetSize(desc.DestRect.GetSize());
         dplane.SetSize(desc.DestRect.GetSize());
         ConvertImagePlane(dplane, splane, format, desc.PlaneIndex,
-                          pFormat->pMapping->CopyFunc, 0);
+                          pFormat->GetScanlineCopyFn(), 0);
     }
 
     GetManager()->unmapTexture(this);
     return true;
 }
 
-#ifdef SF_AMP_SERVER
-bool Texture::Copy(ImageData* pdata)
-{
-    Image::CopyScanlineFunc puncopyFunc = pFormat->pMapping->UncopyFunc;
-    if ( !GetManager() || pFormat->pMapping->Format != pdata->Format || !puncopyFunc)
-    {
-        // - No texture manager, OR 
-        // - Output format is different from the source input format of this texture (unexpected, because
-        //   we should be copying back into the image's original source format) OR
-        // - We don't know how to uncopy this format.
-        return false;
-    }
-
-    // Map the texture.
-    bool alreadyMapped = (pMap != 0);
-    unsigned mipCount = GetMipmapCount();
-    if (!alreadyMapped && !GetManager()->mapTexture(this, 0, mipCount))
-    {
-        SF_DEBUG_WARNING(1, "Texture::Copy failed - couldn't map texture");
-        return false;
-    }
-    SF_ASSERT(pMap);
-
-    // Copy the planes into pdata, using the reverse copy function.
-    SF_ASSERT( pdata->GetPlaneCount() == pMap->Data.GetPlaneCount() );
-    int ip;
-    for ( ip = 0; ip < pdata->RawPlaneCount; ip++ )
-    {
-        ImagePlane splane, dplane;
-        pdata->GetPlane(ip, &dplane);
-        pMap->Data.GetPlane(ip, &splane);
-
-        ConvertImagePlane(dplane, splane, GetFormat(), ip, puncopyFunc, 0);
-    }
-
-    // Unmap the texture, if we mapped it.
-    if ( !alreadyMapped )
-        GetManager()->unmapTexture(this);
-
-    return true;
-}
-#endif
-
 // ***** DepthStencilSurface
 
 DepthStencilSurface::DepthStencilSurface(TextureManagerLocks* pmanagerLocks, const ImageSize& size) :
-    Render::DepthStencilSurface(pmanagerLocks), Size(size), pDepthStencilSurface(0), pDepthStencilSurfaceView(0),
-    State(Texture::State_InitPending)
+    Render::DepthStencilSurface(pmanagerLocks, size), pDepthStencilSurface(0), pDepthStencilSurfaceView(0)
 {
 }
 
@@ -698,7 +461,7 @@ bool DepthStencilSurface::Initialize()
 
 // ***** MappedTexture
 
-bool MappedTexture::Map(Texture* ptexture, ID3D1x(Device)* pdevice, ID3D1x(DeviceContext)* pcontext, unsigned mipLevel, unsigned levelCount)
+bool MappedTexture::Map(Render::Texture* ptexture, unsigned mipLevel, unsigned levelCount)
 {
     SF_ASSERT(!IsMapped());
     SF_ASSERT((mipLevel + levelCount) <= ptexture->MipLevels);
@@ -709,16 +472,19 @@ bool MappedTexture::Map(Texture* ptexture, ID3D1x(Device)* pdevice, ID3D1x(Devic
     else if (!Data.Initialize(ptexture->GetImageFormat(), levelCount, true))
         return false;
 
-    pTexture        = ptexture;
-    pDeviceContext  = pcontext;
-    StartMipLevel   = mipLevel;
-    LevelCount      = levelCount;
+    D3D1x::Texture* d3dTexture                  = reinterpret_cast<Texture*>(ptexture);
+    TextureManager* pmgr                        = d3dTexture->GetManager();
+    Ptr<ID3D1x(Device)> pdevice                 = pmgr->GetDevice();
+    Ptr<ID3D1x(DeviceContext)> pdeviceContext   = pmgr->GetDeviceContext();
+    pTexture                                    = ptexture;
+    StartMipLevel                               = mipLevel;
+    LevelCount                                  = levelCount;
 
     unsigned textureCount = ptexture->TextureCount;
 
     for (unsigned itex = 0; itex < textureCount; itex++)
     {
-        Texture::HWTextureDesc &tdesc = pTexture->pTextures[itex];
+        Texture::HWTextureDesc &tdesc = d3dTexture->pTextures[itex];
         ImagePlane              plane(tdesc.Size, 0);
 
         for(unsigned i = 0; i < StartMipLevel; i++)
@@ -732,14 +498,48 @@ bool MappedTexture::Map(Texture* ptexture, ID3D1x(Device)* pdevice, ID3D1x(Devic
         stagingDesc.Usage           = D3D1x(USAGE_STAGING);
         stagingDesc.BindFlags       = 0;
 
-        if ( FAILED(pdevice->CreateTexture2D(&stagingDesc, 0, &pStagingTextures[itex] )))
-            return false;
+        if (!tdesc.pStagingTexture)
+        {
+            if ( FAILED(pdevice->CreateTexture2D(&stagingDesc, 0, &tdesc.pStagingTexture)))
+                return false;
+        }
 
-        pDeviceContext->CopyResource(pStagingTextures[itex], tdesc.pTexture);
+        // The only case where we need to copy the GPU resource to the CPU is in the case of RenderTargets.
+        // RenderTargets (presumably) will be updated the by the GPU, and therefore the CPU needs the updated
+        // contents. Things that will only be updated by the CPU (eg. GlyphCache) will always have the most
+        // updated results in the staging texture, and therefore do not need the copyback. Note that on feature
+        // levels lower than 10_0, CopyResource GPU->CPU is not supported, so give a warning in this case and skip it.
+        if ((ptexture->Use & (ImageUse_MapRenderThread|ImageUse_RenderTarget)) == (ImageUse_MapRenderThread|ImageUse_RenderTarget))
+        {
+            static bool checkHandleCopyResource = false;
+            static bool canHandleCopyResource = true;       // assume capability
+
+            // Now check, based on feature level of the device.
+            if (!checkHandleCopyResource)
+            {
+                D3D10
+                ( 
+                    Ptr<ID3D1x(Device1)> d3d10Device1;
+                    if ( SUCCEEDED(pdevice->QueryInterface(IID_ID3D10Device1, (void**)&d3d10Device1.GetRawRef())) && d3d10Device1)
+                        canHandleCopyResource = (d3d10Device1->GetFeatureLevel() >= D3D10_FEATURE_LEVEL_10_0);
+                );
+                D3D11
+                ( 
+                    canHandleCopyResource = pdevice->GetFeatureLevel() >= D3D_FEATURE_LEVEL_10_0;
+                )
+                checkHandleCopyResource = true;
+            }
+
+            SF_DEBUG_WARNONCE(!canHandleCopyResource, "Attempt to Map a texture with ImageUse_RenderTarget, but device feature level "
+                "does not support CopyResource, skipping copy (GPU operations may be invalidated).");
+            if (canHandleCopyResource)
+                pdeviceContext->CopyResource(tdesc.pStagingTexture, tdesc.pTexture);
+        }
+
         for (unsigned level = 0; level < levelCount; level++)
         {
             D3D1x(MAPPED_TEXTURE2D) mappedResource;
-            if ( SUCCEEDED( D3D1xMapTexture2D(pDeviceContext, pStagingTextures[itex], level, D3D1x(MAP_WRITE), 0, &mappedResource)))
+            if ( SUCCEEDED( D3D1xMapTexture2D(pdeviceContext, tdesc.pStagingTexture, level, D3D1x(MAP_WRITE), 0, &mappedResource)))
             {
                 plane.Pitch    = mappedResource.RowPitch;
                 plane.pData    = (UByte*)mappedResource.pData;
@@ -763,30 +563,34 @@ bool MappedTexture::Map(Texture* ptexture, ID3D1x(Device)* pdevice, ID3D1x(Devic
     return true;
 }
 
-void MappedTexture::Unmap()
+void MappedTexture::Unmap(bool applyUpdate)
 {
-    unsigned textureCount = pTexture->TextureCount;
+    Texture* d3dTexture                         = reinterpret_cast<Texture*>(pTexture);
+    TextureManager* pmgr                        = d3dTexture->GetManager();
+    Ptr<ID3D1x(DeviceContext)> pdeviceContext   = pmgr->GetDeviceContext();
 
+    unsigned textureCount = pTexture->TextureCount;
     for (unsigned itex = 0; itex < textureCount; itex++)
     {
-        Texture::HWTextureDesc &tdesc = pTexture->pTextures[itex];
+        Texture::HWTextureDesc &tdesc = d3dTexture->pTextures[itex];
         ImagePlane plane;
 
         // Unmap the entire resource first.
         for (int level = 0; level < LevelCount; level++)
-            D3D1xUnmapTexture2D(pDeviceContext, pStagingTextures[itex], level);
+            D3D1xUnmapTexture2D(pdeviceContext, tdesc.pStagingTexture, level);
 
-        for (int level = 0; level < LevelCount; level++)
+        if (applyUpdate)
         {
-            Data.GetPlane(level * textureCount + itex, &plane);
-            if (plane.pData)
+            for (int level = 0; level < LevelCount; level++)
             {
-                pDeviceContext->CopySubresourceRegion(tdesc.pTexture, level + StartMipLevel, 0, 0, 0, pStagingTextures[itex], level, 0);
-                plane.pData = 0;
+                Data.GetPlane(level * textureCount + itex, &plane);
+                if (plane.pData)
+                {
+                    pdeviceContext->CopySubresourceRegion(tdesc.pTexture, level + StartMipLevel, 0, 0, 0, tdesc.pStagingTexture, level, 0);
+                    plane.pData = 0;
+                }
             }
         }
-        pStagingTextures[itex]->Release();
-        pStagingTextures[itex] = 0;
     }
 
     pTexture->pMap = 0;
@@ -799,16 +603,11 @@ void MappedTexture::Unmap()
 TextureManager::TextureManager(ID3D1x(Device)* pdevice,
                                ID3D1x(DeviceContext)* pcontext,
                                ThreadId renderThreadId, 
-                               ThreadCommandQueue* commandQueue) : 
-    Render::TextureManager(),
-    pDevice(pdevice), pDeviceContext(pcontext), 
-    pRTCommandQueue(commandQueue)
+                               ThreadCommandQueue* commandQueue,
+                               TextureCache* texCache) : 
+    Render::TextureManager(renderThreadId, commandQueue, texCache),
+    pDevice(pdevice), pDeviceContext(pcontext)
 {
-    if (renderThreadId)
-        RenderThreadId = renderThreadId;
-    else
-        RenderThreadId = GetCurrentThreadId();
-
     initTextureFormats();
 
     // Precreate the sampler states.
@@ -883,6 +682,48 @@ void TextureManager::Reset()
     pDevice = 0;
 }
 
+void TextureManager::SetSamplerState( unsigned stage, unsigned viewCount, ID3D1x(ShaderResourceView)** views, ID3D1x(SamplerState)* state)
+{
+	bool loadSamplers = false;
+	bool loadTextures = false;
+	ID3D1x(SamplerState)* states[16];
+	for ( unsigned i = 0; i < viewCount; ++i)
+	{
+		states[i] = state;
+		if ( CurrentSamplers[i+stage] != state )
+		{
+			loadSamplers = true;
+		}
+
+		if ( CurrentTextures[i+stage] != views[i] )
+		{
+			loadTextures = true;
+		}
+	}
+	if ( loadSamplers )
+	{
+		pDeviceContext->PSSetSamplers( stage, viewCount, states );
+		memcpy(&CurrentSamplers[stage], states, viewCount*sizeof(ID3D1x(SamplerState)*));
+	}
+	if ( loadTextures )
+	{
+		pDeviceContext->PSSetShaderResources( stage, viewCount, views );
+		memcpy(&CurrentTextures[stage], views, viewCount*sizeof(ID3D1x(ShaderResourceView)*));
+	}
+}
+
+void TextureManager::BeginScene()
+{
+    memset(CurrentSamplers, 0, sizeof(CurrentSamplers));
+    memset(CurrentTextures, 0, sizeof(CurrentTextures));
+    ID3D1x(ShaderResourceView)* views[MaximumStages];
+    ID3D1x(SamplerState)* states[MaximumStages];
+    memset(views, 0, sizeof(views));
+    memset(states, 0, sizeof(states));
+    pDeviceContext->PSSetSamplers( 0, MaximumStages, states);
+    pDeviceContext->PSSetShaderResources( 0, MaximumStages, views);
+}
+
 
 // ***** D3D1x Format mapping and conversion functions
 
@@ -928,40 +769,40 @@ void SF_STDCALL D3D1x(CopyScanline16_Retract_A4R4G4B4_A8)(UByte* pd, const UByte
 // Image to Texture format conversion and mapping table,
 // organized by the order of preferred image conversions.
 
-TextureFormat::Mapping D3D1xTextureFormatMapping[] = 
+TextureFormat::Mapping TextureFormatMapping[] = 
 {
     // Warning: Different versions of the same ImageFormat must go right after each-other,
     // as initTextureFormats relies on that fact to skip them during detection.
-    { Image_R8G8B8A8,   DXGI_FORMAT_R8G8B8A8_UNORM, 4, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
-    { Image_B8G8R8A8,   DXGI_FORMAT_B8G8R8A8_UNORM, 4, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
-    { Image_R8G8B8,     DXGI_FORMAT_R8G8B8A8_UNORM, 4, true,  &Image_CopyScanline24_Extend_RGB_RGBA,   &Image_CopyScanline32_Retract_RGBA_RGB },
-    { Image_B8G8R8,     DXGI_FORMAT_B8G8R8A8_UNORM, 4, true,  &Image_CopyScanline24_Extend_RGB_RGBA,   &Image_CopyScanline32_Retract_RGBA_RGB },
-    { Image_A8,         DXGI_FORMAT_A8_UNORM,       1, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
+    { Image_R8G8B8A8,   DXGI_FORMAT_R8G8B8A8_UNORM, 4, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
+    { Image_B8G8R8A8,   DXGI_FORMAT_B8G8R8A8_UNORM, 4, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
+    { Image_R8G8B8,     DXGI_FORMAT_R8G8B8A8_UNORM, 4, &Image_CopyScanline24_Extend_RGB_RGBA,   &Image_CopyScanline32_Retract_RGBA_RGB },
+    { Image_B8G8R8,     DXGI_FORMAT_B8G8R8A8_UNORM, 4, &Image_CopyScanline24_Extend_RGB_RGBA,   &Image_CopyScanline32_Retract_RGBA_RGB },
+    { Image_A8,         DXGI_FORMAT_R8_UNORM,       1, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
 
     // Compressed formats.
-    { Image_DXT1,       DXGI_FORMAT_BC1_UNORM,      0, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
-    { Image_DXT3,       DXGI_FORMAT_BC2_UNORM,      0, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
-    { Image_DXT5,       DXGI_FORMAT_BC3_UNORM,      0, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
+    { Image_DXT1,       DXGI_FORMAT_BC1_UNORM,      0, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
+    { Image_DXT3,       DXGI_FORMAT_BC2_UNORM,      0, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
+    { Image_DXT5,       DXGI_FORMAT_BC3_UNORM,      0, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault},
 
     // Video formats.
-    { Image_Y8_U2_V2,   DXGI_FORMAT_A8_UNORM,       1, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
-    { Image_Y8_U2_V2_A8,DXGI_FORMAT_A8_UNORM,       1, true,  &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
+    { Image_Y8_U2_V2,   DXGI_FORMAT_R8_UNORM,       1, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
+    { Image_Y8_U2_V2_A8,DXGI_FORMAT_R8_UNORM,       1, &Image::CopyScanlineDefault,             &Image::CopyScanlineDefault },
 
-    { Image_None,       DXGI_FORMAT_UNKNOWN,        0, false, 0,                                       0 }
+    { Image_None,       DXGI_FORMAT_UNKNOWN,        0, 0,                                       0 }
 };
 
 
 void        TextureManager::initTextureFormats()
 {
     TextureFormat::Mapping* pmapping = 0;
-    for (pmapping = D3D1xTextureFormatMapping; pmapping->Format != Image_None; pmapping++)
+    for (pmapping = TextureFormatMapping; pmapping->Format != Image_None; pmapping++)
     {
         UINT formatSupport;
         // See if format is supported.        
         if (SUCCEEDED( pDevice->CheckFormatSupport(pmapping->D3DFormat, &formatSupport) ) &&
             formatSupport & D3D1x(FORMAT_SUPPORT_TEXTURE2D) )
         {
-            TextureFormat tf = { pmapping, 0 };
+            TextureFormat* tf = SF_HEAP_AUTO_NEW(this) TextureFormat(pmapping, 0);
             // And now check its capabilities to assign extra Usage.
             if (formatSupport & D3D1x(FORMAT_SUPPORT_MIP_AUTOGEN) )
             {
@@ -974,47 +815,8 @@ void        TextureManager::initTextureFormats()
                 pmapping++;
         }
     }
-
-    // Add Image_None, which should always come last.
-    TextureFormat tf = {pmapping, 0};
-    TextureFormats.PushBack(tf);
 }
 
-const Render::TextureFormat*  TextureManager::getTextureFormat(ImageFormat format) const
-{
-    for (unsigned i = 0; i< TextureFormats.GetSize(); i++)    
-        if (TextureFormats[i].GetImageFormat() == format)
-            return (Render::TextureFormat*)&TextureFormats[i];
-    return 0;
-}
-
-
-MappedTexture* TextureManager::mapTexture(Texture* ptexture, unsigned mipLevel, unsigned levelCount)
-{
-    MappedTexture* pmap;
-
-    if (MappedTexture0.Reserve())
-        pmap = &MappedTexture0;
-    else
-    {
-        pmap = SF_HEAP_AUTO_NEW(this) MappedTexture;
-        if (!pmap) return 0;
-    }
-    
-    if (pmap->Map(ptexture, pDevice, pDeviceContext, mipLevel, levelCount))
-        return pmap;
-    if (pmap != &MappedTexture0)
-        delete pmap;
-    return 0;  
-}
-
-void           TextureManager::unmapTexture(Texture *ptexture)
-{
-    MappedTexture *pmap = ptexture->pMap;
-    pmap->Unmap();
-    if (pmap != &MappedTexture0)
-        delete pmap;
-}
 
 void    TextureManager::processTextureKillList()
 {
@@ -1035,7 +837,7 @@ void    TextureManager::processInitTextures()
     {
         while (!TextureInitQueue.IsEmpty())
         {
-            Texture* ptexture = TextureInitQueue.GetFirst();
+            Render::Texture* ptexture = TextureInitQueue.GetFirst();
             ptexture->RemoveNode();
             ptexture->pPrev = ptexture->pNext = 0;
             if (ptexture->Initialize())
@@ -1043,7 +845,7 @@ void    TextureManager::processInitTextures()
         } 
         while (!DepthStencilInitQueue.IsEmpty())
         {
-            DepthStencilSurface* pdss = DepthStencilInitQueue.GetFirst();
+            Render::DepthStencilSurface* pdss = DepthStencilInitQueue.GetFirst();
             pdss->RemoveNode();
             pdss->pPrev = pdss->pNext = 0;
             pdss->Initialize();
@@ -1071,57 +873,8 @@ Render::Texture* TextureManager::CreateTexture(ImageFormat format, unsigned mipL
 
     Texture* ptexture = 
         SF_HEAP_AUTO_NEW(this) Texture(pLocks, ptformat, mipLevels, size, use, pimage);
-    if (!ptexture)
-        return false;
-    if (!ptexture->IsValid())
-    {
-        ptexture->Release();
-        return false;
-    }
 
-    Mutex::Locker lock(&pLocks->TextureMutex);
-
-    if (!IsMultiThreaded() || (GetCurrentThreadId() == RenderThreadId))
-    {
-        // Before initializing texture, process previous requests, if any.
-        if (!IsMultiThreaded())
-        {
-            processTextureKillList();
-            processInitTextures();
-        }
-        if (ptexture->Initialize())
-            Textures.PushBack(ptexture);
-    }
-    else
-    {
-        TextureInitQueue.PushBack(ptexture);
-        if (pRTCommandQueue)
-        {
-            pLocks->TextureMutex.Unlock();
-            pRTCommandQueue->PushThreadCommand(&ServiceCommandInstance);
-            pLocks->TextureMutex.DoLock();
-        }
-        while(ptexture->State == Texture::State_InitPending)
-            pLocks->TextureInitWC.Wait(&pLocks->TextureMutex);
-    }
-
-    // Clear out 'pImage' reference if it's not supposed to be kept. It is safe to do this
-    // without ImageLock because texture hasn't been returned yet, so this is the only
-    // thread which has access to it. Also free the data if it is a RawImage.
-    if (use & ImageUse_InitOnly)
-    {
-        if ( ptexture->pImage && ptexture->pImage->GetImageType() == Image::Type_RawImage )
-            ((Render::RawImage*)ptexture->pImage)->freeData();
-        ptexture->pImage = 0;
-    }
-
-    // If texture was properly initialized, it would've been added to list.
-    if (ptexture->State == Texture::State_InitFailed)
-    {
-        ptexture->Release();
-        return 0;
-    }
-    return ptexture;
+    return postCreateTexture(ptexture, use);
 }
 
 Render::Texture* TextureManager::CreateTexture(ID3D1x(Texture2D)* pd3dtexture, ImageSize imgSize, ImageBase* image )
@@ -1130,47 +883,8 @@ Render::Texture* TextureManager::CreateTexture(ID3D1x(Texture2D)* pd3dtexture, I
         return 0;
 
     Texture* ptexture = SF_HEAP_AUTO_NEW(this) Texture(pLocks, pd3dtexture, imgSize, image);
-    if (!ptexture)
-        return 0;
 
-    if (!ptexture->IsValid())
-    {
-        ptexture->Release();
-        return 0;
-    }
-
-    Mutex::Locker lock(&pLocks->TextureMutex);
-    if (!IsMultiThreaded() || (GetCurrentThreadId() == RenderThreadId))
-    {
-        // Before initializing texture, process previous requests, if any.
-        if (!IsMultiThreaded())
-        {
-            processTextureKillList();
-            processInitTextures();
-        }
-        if (ptexture->Initialize())
-            Textures.PushBack(ptexture);
-    }
-    else
-    {
-        TextureInitQueue.PushBack(ptexture);
-        if (pRTCommandQueue)
-        {
-            pLocks->TextureMutex.Unlock();
-            pRTCommandQueue->PushThreadCommand(&ServiceCommandInstance);
-            pLocks->TextureMutex.DoLock();
-        }
-        while(ptexture->State == Texture::State_InitPending)
-            pLocks->TextureInitWC.Wait(&pLocks->TextureMutex);
-    }
-
-    // If texture was properly initialized, it would've been added to list.
-    if (ptexture->State == Texture::State_InitFailed)
-    {
-        ptexture->Release();
-        return 0;
-    }
-    return ptexture;
+    return postCreateTexture(ptexture, 0);
 }
 
 unsigned TextureManager::GetTextureUseCaps(ImageFormat format)
@@ -1183,8 +897,8 @@ unsigned TextureManager::GetTextureUseCaps(ImageFormat format)
     const Render::TextureFormat* ptformat = getTextureFormat(format);
     if (!ptformat)
         return 0;
-    if (isMappable(ptformat))
-        use |= ImageUse_MapInUpdate;
+    if (isScanlineCompatible(ptformat))
+        use |= ImageUse_MapRenderThread;
     return use;   
 }
 
@@ -1198,33 +912,7 @@ Render::DepthStencilSurface* TextureManager::CreateDepthStencilSurface(const Ima
     }
 
     DepthStencilSurface* pdss = SF_HEAP_AUTO_NEW(this) DepthStencilSurface(pLocks, size);
-    if (!pdss)
-        return 0;
-
-    Mutex::Locker lock(&pLocks->TextureMutex);
-    if (!IsMultiThreaded() || (GetCurrentThreadId() == RenderThreadId))
-    {
-        // Before initializing texture, process previous requests, if any.
-        if (!IsMultiThreaded())
-        {
-            processTextureKillList();
-            processInitTextures();
-        }
-        pdss->Initialize();
-    }
-    else
-    {
-        DepthStencilInitQueue.PushBack(pdss);
-        if (pRTCommandQueue)
-        {
-            pLocks->TextureMutex.Unlock();
-            pRTCommandQueue->PushThreadCommand(&ServiceCommandInstance);
-            pLocks->TextureMutex.DoLock();
-        }
-        while(pdss->State == Texture::State_InitPending)
-            pLocks->TextureInitWC.Wait(&pLocks->TextureMutex);
-    }
-    return pdss;
+    return postCreateDepthStencilSurface(pdss);
 }
 
 Render::DepthStencilSurface* TextureManager::CreateDepthStencilSurface(ID3D1x(Texture2D)* psurface)

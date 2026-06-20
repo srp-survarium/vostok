@@ -74,7 +74,9 @@ void flash_renderer::on_reset_device(  )
 			Scaleform::Render::D3D1x::HALInitParams(
 				device::ref().d3d_device(),
 				device::ref().d3d_context(),
-				Scaleform::Render::D3D1x::HALConfig_DynamicShaderCompile
+				// GFx 4.2 dropped HALConfig_DynamicShaderCompile (shaders are
+				// precompiled descs now); HALConfigFlags is empty -> pass 0.
+				0
 			)
 		);
 	else

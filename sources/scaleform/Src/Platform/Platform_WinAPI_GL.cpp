@@ -115,7 +115,7 @@ bool DeviceImpl::setFullScreenMode(const ViewConfig& config)
         screenSettings.dmSize       = sizeof(screenSettings);
         screenSettings.dmPelsWidth  = config.ViewSize.Width;
         screenSettings.dmPelsHeight = config.ViewSize.Height;
-        screenSettings.dmBitsPerPel = SF_APP_GL_COLOR_BITS;    // bits per pixel
+        screenSettings.dmBitsPerPel = config.ColorBits == -1 ? SF_APP_GL_COLOR_BITS : config.ColorBits;    // bits per pixel
         screenSettings.dmFields     = DM_BITSPERPEL | DM_PELSWIDTH | DM_PELSHEIGHT;
 
         // Attempt to switch to the resolution and bit depth we've selected
@@ -201,12 +201,12 @@ void DeviceImpl::calculatePixelFormat(const ViewConfig& config, PIXELFORMATDESCR
     pfd.nSize =         sizeof(PIXELFORMATDESCRIPTOR);
     pfd.nVersion =      1;
     pfd.dwFlags =       PFD_DRAW_TO_WINDOW |  // Window drawing support
-        PFD_SUPPORT_OPENGL |  // OpenGL support
-        PFD_DOUBLEBUFFER;
+                        PFD_SUPPORT_OPENGL |  // OpenGL support
+                        PFD_DOUBLEBUFFER;
     pfd.iPixelType =    PFD_TYPE_RGBA;
-    pfd.cColorBits =    (BYTE)(config.BitDepth == 0 ? SF_APP_GL_COLOR_BITS : config.BitDepth);
-    pfd.cDepthBits =    SF_APP_GL_DEPTH_BITS;
-    pfd.cStencilBits =  SF_APP_GL_STENCIL_BITS;
+    pfd.cColorBits   =  (BYTE)(config.ColorBits == -1 ? SF_APP_GL_COLOR_BITS : config.ColorBits);
+    pfd.cDepthBits   =  (BYTE)(config.DepthBits == -1 ? SF_APP_GL_DEPTH_BITS : config.DepthBits);
+    pfd.cStencilBits =  (BYTE)(config.StencilBits == -1 ? SF_APP_GL_STENCIL_BITS : config.StencilBits);
     pfd.cAccumBits =    SF_APP_GL_ACCUM_BITS;
     pfd.iLayerType =    PFD_MAIN_PLANE;
 }
@@ -218,9 +218,9 @@ void DeviceImpl::calculatePixelFormat(const ViewConfig& config, GLint * intDest,
 
     GLint intAttributes[] = 
     {
-        WGL_COLOR_BITS_ARB,     SF_APP_GL_COLOR_BITS,
-        WGL_DEPTH_BITS_ARB,     SF_APP_GL_DEPTH_BITS,
-        WGL_STENCIL_BITS_ARB,   SF_APP_GL_STENCIL_BITS,
+        WGL_COLOR_BITS_ARB,     config.ColorBits   == -1 ? SF_APP_GL_COLOR_BITS : config.ColorBits,
+        WGL_DEPTH_BITS_ARB,     config.DepthBits   == -1 ? SF_APP_GL_DEPTH_BITS : config.DepthBits,
+        WGL_STENCIL_BITS_ARB,   config.StencilBits == -1 ? SF_APP_GL_STENCIL_BITS : config.StencilBits,
         WGL_ACCUM_BITS_ARB,     SF_APP_GL_ACCUM_BITS,
         WGL_SAMPLE_BUFFERS_ARB, GL_TRUE,
         WGL_SAMPLES_ARB,        4,       // Just use 4x FSAA.
@@ -229,10 +229,6 @@ void DeviceImpl::calculatePixelFormat(const ViewConfig& config, GLint * intDest,
 
     memcpy( intDest, intAttributes, sizeof intAttributes );
     memcpy( floatDest, floatAttributes, sizeof floatAttributes );
-
-    // Override things from the config.
-    if ( config.BitDepth != 0 )
-        intDest[1] = config.BitDepth;
 }
 
 // Sets up the pixel format according to the settings. Note that, FSAA is supported
@@ -287,6 +283,15 @@ bool DeviceImpl::setupPixelFormat(const ViewConfig& config)
                     "OpenGLApp Error", MB_OK | MB_ICONEXCLAMATION );
             return false;
         }
+    }
+
+    // Compare what we got, with what we requested.
+    PIXELFORMATDESCRIPTOR chosenPFD;
+    if (DescribePixelFormat(hDC, pixelFormat, sizeof(PIXELFORMATDESCRIPTOR), &chosenPFD))
+    {
+        SF_DEBUG_WARNING2(chosenPFD.cColorBits   != pfd.cColorBits,   "Using %dbit color buffer (%dbit was requested)",   chosenPFD.cColorBits,   pfd.cColorBits);
+        SF_DEBUG_WARNING2(chosenPFD.cDepthBits   != pfd.cDepthBits,   "Using %dbit depth buffer (%dbit was requested)",   chosenPFD.cDepthBits,   pfd.cDepthBits);
+        SF_DEBUG_WARNING2(chosenPFD.cStencilBits != pfd.cStencilBits, "Using %dbit stencil buffer (%dbit was requested)", chosenPFD.cStencilBits, pfd.cStencilBits);
     }
 
     // Set pixel format to device context
@@ -373,17 +378,46 @@ bool DeviceImpl::initGraphics(const ViewConfig& config, Device::Window* window, 
         return false;
     }
 
-    // Create OpenGL rendering context and make it active.
-    if ((hGLRC = wglCreateContext(hDC))==0)
+    hGLRC = 0;
+    PFNWGLCREATECONTEXTATTRIBSARBPROC wglCreateContextAttribsARB = (PFNWGLCREATECONTEXTATTRIBSARBPROC)wglGetProcAddress("wglCreateContextAttribsARB");
+    
+    // Don't create a context with Core (3.x) attributes if the user has requested a Legacy (2.x) context.
+    if (config.ViewFlags & View_GL20)
     {
-        if (pApp && pApp->GetArgs().GetBool("NoDebugPopups"))
-            fprintf(stderr, "Unable to create OpenGL rendering context\n");
-        else
-            MessageBoxA(NULL, "Unable to create OpenGL rendering context",
-                "OpenGLApp Error",MB_OK | MB_ICONEXCLAMATION);
-        return false;
+        wglCreateContextAttribsARB = NULL;
     }
 
+    if (wglCreateContextAttribsARB)
+    {
+        const int MaxCreateAttributes = 10;
+        int currentAttribute = 0;
+        int createAttributes[MaxCreateAttributes];
+
+        // wglCreateContextAttribsARB will always return us a with all the features of the context we request.
+        // Request 3.2, as it will return us a core profile, without the legacy features.
+        createAttributes[currentAttribute++] = WGL_CONTEXT_MAJOR_VERSION_ARB;
+        createAttributes[currentAttribute++] = 3;
+        createAttributes[currentAttribute++] = WGL_CONTEXT_MINOR_VERSION_ARB;
+        createAttributes[currentAttribute++] = 2;
+        createAttributes[currentAttribute++] = WGL_CONTEXT_PROFILE_MASK_ARB;
+        createAttributes[currentAttribute++] = WGL_CONTEXT_CORE_PROFILE_BIT_ARB;
+        createAttributes[currentAttribute++] = 0;
+        hGLRC = wglCreateContextAttribsARB(hDC, NULL, createAttributes);
+    }
+    
+    if (hGLRC == 0)
+    {
+        // Create OpenGL rendering context and make it active.
+        if ((hGLRC = wglCreateContext(hDC))==0)
+        {
+            if (pApp && pApp->GetArgs().GetBool("NoDebugPopups"))
+                fprintf(stderr, "Unable to create OpenGL rendering context\n");
+            else
+                MessageBoxA(NULL, "Unable to create OpenGL rendering context",
+                "OpenGLApp Error",MB_OK | MB_ICONEXCLAMATION);
+            return false;
+        }
+    }
     // Get the FSAA check context.
     HGLRC holdglrc = wglGetCurrentContext();
 
@@ -401,12 +435,6 @@ bool DeviceImpl::initGraphics(const ViewConfig& config, Device::Window* window, 
     // Delete the FSAA context (if it exists).
     if ( holdglrc )
         wglDeleteContext(holdglrc);
-
-    // Setup matrices.
-    glMatrixMode(GL_PROJECTION);
-    glOrtho(-OVERSIZE, OVERSIZE, OVERSIZE, -OVERSIZE, -1, 1);
-    glMatrixMode(GL_MODELVIEW);
-    glLoadIdentity();
 
     // Set VSync, depending on the flag
     setVSync(config.HasFlag(View_VSync));
@@ -480,6 +508,8 @@ DeviceStatus Device::GetStatus() const
     return pImpl->Status;
 }
 
+void Device::ResizeFrame(void*) { }
+    
 bool Device::GraphicsConfigOnMainThread() const
 {
     // GL does not require that the window config happens on the main thread.
@@ -513,22 +543,14 @@ Size<unsigned> Device::GetDefaultViewSize()
 
 //------------------------------------------------------------------------
 
-static void Color32ToFloat(float *prgba, unsigned int color)
-{
-    float scalar = 1.0f / 255.0f;
-    prgba[3] =  (color >> 24) * scalar;
-    prgba[0] =  ((color >> 16) & 0xFF) * scalar;
-    prgba[1] =  ((color >> 8) & 0xFF) * scalar;
-    prgba[2] =  (color & 0xFF) * scalar;
-}
-
 void Device::Clear(UInt32 color)
 {
     float   rgba[4];
     GLboolean scissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
     if (scissorEnabled)
         glDisable(GL_SCISSOR_TEST);
-    Color32ToFloat(rgba, color);
+    Render::Color c(color);
+    c.GetRGBAFloat(rgba);
     glClearColor(rgba[0], rgba[1], rgba[2], rgba[3]);
     glClear(GL_COLOR_BUFFER_BIT);
     if (scissorEnabled)
@@ -556,7 +578,7 @@ void Device::BeginFrame()
 
 void Device::PresentFrame(unsigned)
 {
-    SF_AMP_SCOPE_RENDER_TIMER("Device::PresentFrame", Amp_Profile_Level_Low);
+    SF_AMP_SCOPE_RENDER_TIMER_ID("Device::PresentFrame", Amp_Native_Function_Id_Present);
     ::SwapBuffers(pImpl->hDC);
 }
 

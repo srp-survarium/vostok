@@ -13,10 +13,11 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 ----------------------------------------------------------------------
-----The code of these classes was taken from the Anti-Grain Geometry
-Project and modified for the use by Scaleform.
-Permission to use without restrictions is hereby granted to
-Scaleform Corporation by the author of Anti-Grain Geometry Project.
+// The code of these classes was taken from the Anti-Grain Geometry
+// Project and modified for the use by Scaleform/Autodesk. 
+// Permission to use without restrictions is hereby granted to 
+// Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+// See http://antigrain.com for details.
 **************************************************************************/
 
 #ifndef INC_SF_Render_Stroker_H
@@ -28,6 +29,8 @@ Scaleform Corporation by the author of Anti-Grain Geometry Project.
 #include "Render_Containers.h"
 #include "Render_Math2D.h"
 #include "Render_TessDefs.h"
+#include "Render_ShapeDataDefs.h"
+#include "Render_ToleranceParams.h"
 
 namespace Scaleform { namespace Render {
 
@@ -147,7 +150,7 @@ public:
 
 
 //-----------------------------------------------------------------------
-class Stroker : public StrokerTypes
+class Stroker : public StrokerTypes, public TessBase
 {
 public:
     typedef Scaleform::Render::CoordType CoordType;
@@ -164,14 +167,30 @@ public:
     void    SetEndLineCap(LineCapType v)    { EndLineCap = v; }
     void    SetMiterLimit(CoordType v)      { MiterLimit = v; }
 
-    // Add vertices and generate the stroke
+
+    // TessDef interface
     //---------------------
-    void        Clear();
-    CoordType   GetLastX() const { return Path.GetLastX(); }
-    CoordType   GetLastY() const { return Path.GetLastY(); }
-    void        AddVertex(CoordType x, CoordType y);
-    void        ClosePath();
-    void        FinalizePath(TessBase* tess);
+    virtual void        Clear();
+    virtual CoordType   GetLastX() const { return Path.GetLastX(); }
+    virtual CoordType   GetLastY() const { return Path.GetLastY(); }
+    virtual void        AddVertex(CoordType x, CoordType y);
+    virtual void        ClosePath();
+
+    void                GenerateStroke(TessBase* tess);
+
+    // TessDef compatibility
+    //---------------------
+    virtual void        FinalizePath(unsigned, unsigned, bool, bool) {}
+    virtual void        Transform(const Matrix2F&) {}
+    virtual Matrix2F    StretchTo(float, float, float, float) { return Matrix2F(); }
+    virtual unsigned    GetVertexCount() const { return 0; }
+    virtual unsigned    GetMeshCount() const { return 0; }
+    virtual unsigned    GetMeshVertexCount(unsigned) const { return 0; }
+    virtual unsigned    GetMeshTriangleCount(unsigned) const { return 0; }
+    virtual void        GetMesh(unsigned, TessMesh*) const {}
+    virtual unsigned    GetVertices(TessMesh*, TessVertex*, unsigned) const { return 0; }
+    virtual void        GetTrianglesI16(unsigned, UInt16*, unsigned, unsigned) const {}
+
     void        CalcEquidistant(TessBase* tess, EquidistantDir dir);
 
 private:
@@ -230,7 +249,7 @@ inline void Stroker::AddVertex(CoordType x, CoordType y)
 }
 
 
-class StrokeScaler
+class StrokeScaler : public TessBase
 {
     Stroker &Str;
     float ScaleX, ScaleY;
@@ -239,15 +258,32 @@ public:
     StrokeScaler(Stroker& str, float scaleX, float scaleY) : 
       Str(str), ScaleX(scaleX), ScaleY(scaleY), LastX(0), LastY(0) {}
 
-    float   GetLastX() const { return LastX; }
-    float   GetLastY() const { return LastY; }
-
-    void    AddVertex(float x, float y)
+    // TessDef interface
+    //---------------------
+    virtual void        Clear() {}
+    virtual CoordType   GetLastX() const { return LastX; }
+    virtual CoordType   GetLastY() const { return LastY; }
+    virtual void        AddVertex(CoordType x, CoordType y)
     {
         LastX = x;
         LastY = y;
         Str.AddVertex(x * ScaleX, y * ScaleY);
     }
+    virtual void        ClosePath() {}
+
+    // TessDef compatibility
+    //---------------------
+    virtual void        FinalizePath(unsigned, unsigned, bool, bool) {}
+    virtual void        Transform(const Matrix2F&) {}
+    virtual Matrix2F    StretchTo(float, float, float, float) { return Matrix2F(); }
+    virtual unsigned    GetVertexCount() const { return 0; }
+    virtual unsigned    GetMeshCount() const { return 0; }
+    virtual unsigned    GetMeshVertexCount(unsigned) const { return 0; }
+    virtual unsigned    GetMeshTriangleCount(unsigned) const { return 0; }
+    virtual void        GetMesh(unsigned, TessMesh*) const {}
+    virtual unsigned    GetVertices(TessMesh*, TessVertex*, unsigned) const { return 0; }
+    virtual void        GetTrianglesI16(unsigned, UInt16*, unsigned, unsigned) const {}
+
 private:
     void operator = (StrokeScaler&);
 };
@@ -264,29 +300,76 @@ private:
 // This class sorts the paths and constructs as long chains as 
 // possible.
 //-----------------------------------------------------------------------
-class StrokeSorter
+class StrokeSorter : public TessBase
 {
+    enum
+    {
+        NumVerMask  = 0x0FFFFFFF,
+        VisitedFlag = 0x40000000,
+        ClosedFlag  = 0x20000000
+    };
+
+    struct PathType
+    {
+        unsigned start;
+        unsigned numVer;
+    };
+
+    struct SortedPathType
+    {
+        CoordType   x, y;
+        PathType*   thisPath;
+    };
+
 public:
     typedef Scaleform::Render::CoordType CoordType;
 
     struct VertexType
     {
         CoordType x, y;
+        CoordType Dist;
         UInt8     segType;
         bool      snapX;
         bool      snapY;
     };
 
+    typedef ArrayPaged<VertexType, 4, 16> VertexArrayType;
+    typedef ArrayPaged<PathType,   4, 16> PathArrayType;
+
+
+    //---------------------
     StrokeSorter(LinearHeap* heap);
 
-    void Clear();
-    void AddVertex(CoordType x, CoordType y, unsigned segType=Math2D::Seg_LineTo);
+    // TessDef interface
+    //---------------------
+    virtual void        Clear();
+    virtual CoordType   GetLastX() const { return SrcVertices.Back().x; }
+    virtual CoordType   GetLastY() const { return SrcVertices.Back().y; }
+    virtual void        AddVertex(CoordType x, CoordType y);
+    virtual void        FinalizePath(unsigned closeFlag, unsigned, bool, bool);
+
+    // TessDef compatibility
+    //---------------------
+    virtual void        ClosePath() {}
+    virtual void        Transform(const Matrix2F&) {}
+    virtual Matrix2F    StretchTo(float, float, float, float) { return Matrix2F(); }
+    virtual unsigned    GetVertexCount() const { return 0; }
+    virtual unsigned    GetMeshCount() const { return 0; }
+    virtual unsigned    GetMeshVertexCount(unsigned) const { return 0; }
+    virtual unsigned    GetMeshTriangleCount(unsigned) const { return 0; }
+    virtual void        GetMesh(unsigned, TessMesh*) const {}
+    virtual unsigned    GetVertices(TessMesh*, TessVertex*, unsigned) const { return 0; }
+    virtual void        GetTrianglesI16(unsigned, UInt16*, unsigned, unsigned) const {}
+
+    void AddVertexNV(CoordType x, CoordType y, unsigned segType=Math2D::Seg_LineTo);
     void AddQuad(CoordType x2, CoordType y2, CoordType x3, CoordType y3);
-    void FinalizePath();
+    void AddCubic(CoordType x2, CoordType y2, CoordType x3, CoordType y3, CoordType x4, CoordType y4);
+
     void Sort();
     void AddOffset(CoordType offsetX, CoordType offsetY);
+    void Transform(const TransformerBase* tr);
     void Snap(CoordType offsetX, CoordType offsetY);
-
+    void GenerateDashes(const DashArray* da, const ToleranceParams& param, float scale);
 
     unsigned GetPathCount() const 
     { 
@@ -311,27 +394,6 @@ public:
     }
 
 private:
-    enum
-    {
-        NumVerMask  = 0x0FFFFFFF,
-        InverseFlag = 0x80000000,
-        VisitedFlag = 0x40000000,
-        ClosedFlag  = 0x20000000,
-        PrependFlag = 0x10000000
-    };
-
-    struct PathType
-    {
-        unsigned start;
-        unsigned numVer;
-    };
-
-    struct SortedPathType
-    {
-        CoordType   x, y;
-        PathType*   thisPath;
-    };
-
     static bool cmpPaths(const SortedPathType& a, const SortedPathType& b)
     {
         if (a.x != b.x) return a.x < b.x;
@@ -350,13 +412,55 @@ private:
 
 private:
     LinearHeap*                     pHeap;
-    ArrayPaged<VertexType, 4, 16>   SrcVertices;
-    ArrayPaged<PathType,   4, 16>   SrcPaths;
+    VertexArrayType                 SrcVertices;
+    PathArrayType                   SrcPaths;
     ArrayUnsafe<SortedPathType>     SortedPaths;
-    ArrayPaged<VertexType, 4, 16>   OutVertices;
-    ArrayPaged<PathType,   4, 16>   OutPaths;
+    VertexArrayType                 OutVertices;
+    PathArrayType                   OutPaths;
     unsigned                        LastVertex;
 };
+
+
+
+//-----------------------------------------------------------------------
+class DashGenerator
+{
+    enum DashStatus
+    {
+        Status_Ready,
+        Status_Polyline,
+        Status_Stop
+    };
+
+public:
+    DashGenerator(const float* dashArray, unsigned dashCount, float dashStart, 
+                  StrokeSorter::VertexType* ver, unsigned verCount, bool closed);
+
+
+    unsigned GetVertex(float* x, float* y);
+
+private:
+    DashGenerator(const DashGenerator&);
+    const DashGenerator& operator = (const DashGenerator&);
+
+    const float* pDashArray;
+    unsigned     DashCount;
+    float        DashStart;
+    unsigned     CurrDash;
+    float        CurrRest;
+    float        CurrDashStart;
+    StrokeSorter::VertexType* Vertices;
+    unsigned     VerCount;
+
+    const StrokeSorter::VertexType* Ver1;
+    const StrokeSorter::VertexType* Ver2;
+
+    bool         Closed;
+    DashStatus   Status;
+    unsigned     SrcVertex;
+};
+
+
 
 }} // Scaleform::Render
 

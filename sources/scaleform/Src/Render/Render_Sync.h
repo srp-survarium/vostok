@@ -31,7 +31,7 @@ class FenceFrame;
 class RenderSync;
 
 // Represents the type of fence. For most platforms, these are equivalent, because fragment and vertex 
-// processing happen in parallel; fences are not 'passed' until both have completed. However, on NGP 
+// processing happen in parallel; fences are not 'passed' until both have completed. However, on PSVITA 
 // for example, there are separate vertex and fragment passes, so they are not equivalent on those systems.
 enum FenceType
 {
@@ -192,6 +192,12 @@ protected:
     // Can be overridden on platforms whose fences may wraparound. If the handle is high enough,
     // wraparound should be performed on the API handle values. Return true if wraparound occurs.
     virtual bool CheckWraparound(UInt64 handle) { SF_UNUSED(handle); return false; }
+
+    // Can be overridden on platforms that require a release for the API specific fence objects.
+    virtual void   ReleaseFence(UInt64 apiHandle) { SF_UNUSED(apiHandle); };
+
+    // Destroys all frames, regardless if they are passed or not (useful with reset/shutdown).
+    void           ReleaseOutstandingFrames();
 
     List<FenceFrame>            FenceFrames;        // The list of fence frames currently tracked by the system.
     ListAllocLH<FenceFrame>     FenceFrameAlloc;    // Paged allocator for FenceFrames objects.

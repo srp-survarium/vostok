@@ -121,12 +121,78 @@ fills the bodies anyway. The canonical dumps themselves are NOT drop-in
 compilable (mangled-name include guards, `void (*)(...)` return-type syntax,
 no includes), so they stay reference-only.
 
+## SDK swapped 4.0.15 -> 4.2.22 (2026-06-20)
+
+The binary links GFx **4.2.21** (the exe embeds "4.2.21"; `Render::HAL` is
+`STATIC_SIZE_ASSERT 0x1D0`), so the vendored tree was upgraded 4.0.15 ->
+**4.2.22** (one build off 4.2.21, the closest checkout available;
+`/home/sheep/Projects/scaleform_sdk`, `Include/GFxVersion.h` = `"4.2.22"`). This
+**reverses the 2026-06-13 "not a newer SDK" conclusion below** - the divergence
+is real and lives in the SHARED base render classes (`Render::HAL`,
+`Render::Texture`/`TextureManager`/`MappedTextureBase`, `Render::MatrixState`,
+the new `Render/Render_ShaderHAL.h`), not just `D3D1x/`.
+
+The swap (379 files, +425k/-283k lines):
+
+- Replaced the 340 vendored files that exist at the same relpath in 4.2.22;
+  removed 21 obsolete 4.0.15-only files (the D3D9/GL/D3D1x shader files the 4.2
+  unified-shader framework reorganized, plus `GFx_FontProvider_NGP.h`); added 18
+  new-in-4.2 files the include closure needs (`Render_ShaderHAL.h`,
+  `Render_TextureCache*.h`, `Render_DrawableImage.h`, `Render_Events.h`, the new
+  `D3D1x_Shader{Binary,Descs}.cpp` + `D3D1x_Events.h`/`D3D1x_Sync.h`/
+  `D3D1x_ShaderDescs.h`, and a handful of platform headers). Scope mirrors the
+  curated vendored subset (NOT the whole multi-thousand-file SDK); driven by the
+  transitive `#include` closure from the engine's GFx entry headers.
+- The vendored tree carries **survarium patches** that a blind file-replace
+  reverts; these were re-applied onto 4.2.22:
+  (a) `Src/Kernel/HeapMH/HeapMH_SysAllocMalloc.h` Win32 `Alloc`/`Free`/`Realloc`
+  route through `vostok::memory::g_mt_allocator` (the engine `#define`s
+  `_aligned_malloc` to a `void` unreachable-code trap);
+  (b) `Src/Render/D3D1x/D3D1x_Config.h` hardcodes `#define SF_D3D_VERSION 11`
+  (4.2 made it a required build-config define; the build config doesn't set it);
+  (c) every D3D1x `.cpp` the **render engine** compiles gets `#include "pch.h"`
+  first (`render_engine_pc_dx11.vcproj` forces `/Yu"pch.h"`).
+- Build wiring: `render_engine_pc_dx11.vcproj`'s `hal` filter was retargeted to
+  the 4.2.22 D3D1x file set (HALSetup/ShaderManager/Shaders dropped;
+  ShaderBinary/ShaderDescs/Events/Sync added). `flash_renderer.cpp`'s
+  `InitHAL(HALInitParams(dev, ctx, HALConfig_DynamicShaderCompile))` was changed
+  to pass `0` - 4.2 dropped that config flag (`HALConfigFlags` is now empty;
+  shaders are precompiled descs).
+
+### Result: compiles 100%, link blocked on the prebuilt 4.0.15 libgfx.lib
+
+After the swap **every TU compiles** (0 C-errors across the full
+`survarium.exe`: the whole 4.2.22 SDK, the render engine's D3D1x HAL, the
+flash-glue, all engine code). The EXE link fails with **44 `LNK2001`
+unresolved-external** symbols - all base render classes the render engine's
+4.2.22 D3D1x HAL derives from (`Render::HAL::{initHAL,applyBlendMode,BeginScene,
+EndScene,FinishFrame,...}`, `Render::MatrixState::*` (ctor now takes `HAL*`,
+several methods virtualized `QAE`->`UAE`), `Render::TextureManager::*`,
+`Render::Texture::*`, `MappedTextureBase::Unmap`, `RenderSync`,
+`RBGenericImpl::RenderBufferManager`, `SysAlloc::shutdownHeapEngine`).
+
+Root cause: the exe links a **prebuilt 4.0.15 `libgfx.lib`** (208 MB, untracked,
+`sources/scaleform/Lib/Win32/Msvc90/Release/`, pulled by
+`#pragma comment(lib,"libgfx.lib")` in `engine_scaleform_initialize.cpp`). It
+DOES define those base classes - but at **4.0.15 ABI** (e.g.
+`?initHAL@HAL@...@@IAE_N...` vs 4.2.22 `MAE`; `MatrixState` ctor `@@QAE@XZ` vs
+`@@QAE@PAVHAL@...`; `shutdownHeapEngine` on `SysAllocBase`/`SysAllocPaged`
+returning `void` vs `SysAlloc` returning `bool`). The base-render ABI changed
+between versions, so the 4.0.15 lib cannot satisfy 4.2.22 D3D1x. **Reaching a
+GREEN link needs a 4.2.22 `libgfx.lib`** - the 4.2.22 SDK ships NO prebuilt
+`libgfx*.lib` (only its own Projects to build them), and compiling the base
+`Render_*.cpp`/`SF_System.cpp` from source into the render engine instead is a
+deep, duplicate-symbol-prone reimplementation of that lib = real step-4+ work,
+deliberately NOT attempted here (assess-first). The header swap + build wiring
+is committed; the prebuilt-lib replacement is the open next step.
+
 ## What is stubbed / deferred
 
 - **The `d3d1x_*` render HAL is survarium's IN-TREE COPY of the vendored
   Scaleform 4.0.15 D3D11 HAL - NOT a different SDK version** (an earlier note
   here called it "a newer SDK"; that was an over-conclusion, corrected
-  2026-06-13). Evidence: the vendored SDK at `sources/scaleform/` is 4.0.15
+  2026-06-13 - and now **re-corrected 2026-06-20: it IS a newer SDK, 4.2.x**,
+  see the swap section above). Evidence: the vendored SDK at `sources/scaleform/` is 4.0.15
   (`Include/GFxVersion.h`) and already ships the D3D1x HAL
   (`Src/Render/D3D1x/D3D1x_*.{h,cpp}`); the shipped `D3D1x::HAL` symbols match
   4.0.15 exactly - same base `Render::HAL` (`class HAL : public Render::HAL`),

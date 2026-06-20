@@ -49,12 +49,21 @@ template <typename T> SF_INLINE int     Chop(T f)
 template <typename T> SF_INLINE T       Lerp(T a, T b, T f) 
     { return (b - a) * f + a; }
 
+// Lerp between two objects, based on a third of another type. For example, 
+// for Color and UByte, this formula is acceptable. Same for Point/Size<T> and T.
+template <typename T, typename S> SF_INLINE T       Lerp(T a, T b, S f) 
+{ return (T)((b - a) * f + a); }
+
 template <typename T> SF_INLINE int     IRound(const T a)
     { return (a > 0.0) ? (int)(a + 0.5) : (int)(a - 0.5); }
 
 template <typename T> SF_INLINE unsigned URound(const T a)
     { return (unsigned)(a + 0.5); }
 
+template <typename T> SF_INLINE bool    ToleranceEqual(const T a, const T b, const T tolerance)
+{
+    return (a + tolerance >= b) && (a - tolerance <= b);
+}
 // These functions stand to fix a stupid VC++ warning (with /Wp64 on):
 // "warning C4267: 'argument' : conversion from 'size_t' to 'const unsigned', possible loss of data"
 // Use these functions instead of gmin/gmax if the argument has size
@@ -83,6 +92,15 @@ template <typename T>   SF_INLINE const T Abs(const T v)
     { return (v>=0) ? v : -v; }
 
 
+// 'Aligns' a value (with a literal/const) and other version with a parameter
+template <int alignment, typename T>   SF_INLINE const T Align(const T v)
+{
+    return v + (alignment-1) & ~(alignment-1);
+}
+template <typename T> SF_INLINE const T Align(const T v, UInt32 alignment)
+{
+    return v + (alignment-1) & ~(alignment-1);
+}
 // ***** OperatorLess
 //
 //------------------------------------------------------------------------
@@ -101,10 +119,11 @@ template<class T> struct OperatorLess
 // The range is specified with start, end, where "end" is exclusive!
 // The comparison predicate must be specified.
 //
-// The code of QuickSort, was taken from the 
-// Anti-Grain Geometry Project and modified for the use by Scaleform. 
+// The code of these classes was taken from the Anti-Grain Geometry
+// Project and modified for the use by Scaleform/Autodesk. 
 // Permission to use without restrictions is hereby granted to 
-// Scaleform Corp. by the author of Anti-Grain Geometry Project.
+// Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+// See http://antigrain.com for details.
 //------------------------------------------------------------------------
 template<class Array, class Less> 
 void QuickSortSliced(Array& arr, UPInt start, UPInt end, Less less)

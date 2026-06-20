@@ -43,7 +43,7 @@ See http://www.freetype.org for details.
 namespace Scaleform { namespace Render {
 
 
-class Rasterizer
+class Rasterizer : public TessBase
 {
 public:
     enum
@@ -73,19 +73,34 @@ public:
     void            SetFillRule(FillRuleType f) { FillRule = f; }
     FillRuleType    GetFillRule() const         { return FillRule; }
 
-    void            SetGamma(float g);
-    float           GetGamma() const            { return Gamma; }
+    void            SetGamma1(float g);
+    float           GetGamma1() const            { return Gamma1; }
 
-    // "rasterization interface
-    //-----------------------------------
-    void Clear();
-    void MoveTo(float x, float y);
-    void LineTo(float x, float y);
-    void AddVertex(float x, float y) { LineTo(x, y); } // Alias
-    void ClosePolygon();
+    void            SetGamma2(float g);
+    float           GetGamma2() const            { return Gamma2; }
 
-    float GetLastX() const { return LastXf; }
-    float GetLastY() const { return LastYf; }
+    // TessDef interface
+    //---------------------
+    virtual void        Clear();
+    void                MoveTo(float x, float y);
+    void                LineTo(float x, float y);
+    virtual void        AddVertex(CoordType x, CoordType y)  { LineTo(x, y); } // Alias
+    virtual CoordType   GetLastX() const { return LastXf; }
+    virtual CoordType   GetLastY() const { return LastYf; }
+    virtual void        ClosePath();
+
+    // TessDef compatibility
+    //---------------------
+    virtual void        FinalizePath(unsigned, unsigned, bool, bool) {}
+    virtual void        Transform(const Matrix2F&) {}
+    virtual Matrix2F    StretchTo(float, float, float, float) { return Matrix2F(); }
+    virtual unsigned    GetVertexCount() const { return 0; }
+    virtual unsigned    GetMeshCount() const { return 0; }
+    virtual unsigned    GetMeshVertexCount(unsigned) const { return 0; }
+    virtual unsigned    GetMeshTriangleCount(unsigned) const { return 0; }
+    virtual void        GetMesh(unsigned, TessMesh*) const {}
+    virtual unsigned    GetVertices(TessMesh*, TessVertex*, unsigned) const { return 0; }
+    virtual void        GetTrianglesI16(unsigned, UInt16*, unsigned, unsigned) const {}
 
     // After AddShape() or MoveTo()/LineTo() the 
     // bounding box is valid, as well as the number of 
@@ -117,7 +132,7 @@ public:
     // }
     //-----------------------------------
     void SweepScanline(unsigned scanline, unsigned char* raster,
-                       unsigned numChannels = 1) const;
+                       unsigned numChannels = 1, int gammaIdx = 0) const;
 
     void SweepScanlineThreshold(unsigned scanline, unsigned char* raster,
                                 unsigned numChannels = 1, 
@@ -133,6 +148,7 @@ private:
         unsigned Start, Count; 
     };
 
+    void setGamma(int idx, float g);
     void line(int x1, int y1, int x2, int y2);
     void horLine(int ey, int x1, int y1, int x2, int y2);
 
@@ -156,7 +172,7 @@ private:
         return a->x < b->x;
     }
 
-    SF_INLINE unsigned calcAlpha(int area) const
+    SF_INLINE unsigned calcAlpha(int area, int gammaIdx) const
     {
         int alpha = area >> (SubpixelShift * 2 + 1 - AntiAliasShift);
 
@@ -170,7 +186,7 @@ private:
         }
         if (alpha > AntiAliasMask) 
             alpha = AntiAliasMask;
-        return GammaLut[alpha];
+        return GammaLut[gammaIdx][alpha];
     }
     
     SF_INLINE unsigned calcAlpha(int area, unsigned threshold) const
@@ -190,8 +206,9 @@ private:
 
     LinearHeap                  LHeap;
     FillRuleType                FillRule;
-    float                       Gamma;
-    UByte                       GammaLut[256];
+    float                       Gamma1;
+    float                       Gamma2;
+    UByte                       GammaLut[2][256];
     ArrayPaged<Cell, 4, 16>     Cells;
     ArrayUnsafe<Cell*>          SortedCells;
     ArrayUnsafe<SortedY>        SortedYs;

@@ -31,26 +31,28 @@ namespace Scaleform { namespace Render { namespace D3D1x {
 // Format includes allowed usage capabilities and ImageFormat
 // from which texture is supposed to be initialized.
 
-struct TextureFormat
+struct TextureFormat : public Render::TextureFormat
 {
     struct Mapping
     {
         ImageFormat              Format;
         DXGI_FORMAT              D3DFormat;
         UByte                    BytesPerPixel;
-        bool                     Mappable;
         Image::CopyScanlineFunc  CopyFunc;
         Image::CopyScanlineFunc  UncopyFunc;
     };
 
+    TextureFormat(const Mapping* mapping, DWORD d3dusage) : pMapping(mapping), D3DUsage(d3dusage) { }
+
     const Mapping*  pMapping;
     DWORD           D3DUsage;
 
-    ImageFormat     GetImageFormat() const { return pMapping->Format; }
-    DXGI_FORMAT     GetD3DFormat() const   { return pMapping->D3DFormat; }
+    virtual ImageFormat             GetImageFormat() const      { return pMapping->Format; }
+    virtual Image::CopyScanlineFunc GetScanlineCopyFn() const   { return pMapping->CopyFunc; }
+    virtual Image::CopyScanlineFunc GetScanlineUncopyFn() const { return pMapping->UncopyFunc; }
 
-    unsigned        GetPlaneCount() const
-    { return ImageData::GetFormatPlaneCount(GetImageFormat()); }
+    // D3D1x Specific.
+    DXGI_FORMAT             GetD3DFormat() const   { return pMapping->D3DFormat; }
 };
 
 class MappedTexture;
@@ -62,26 +64,14 @@ class TextureManager;
 class Texture : public Render::Texture
 {
 public:
-    // Bits stored in TextureFlags.
-    enum TextureFlagBits
-    {
-        TF_Rescale    = 0x01,
-        TF_SWMipGen   = 0x02,
-        TF_UserAlloc  = 0x04,
-    };
-
-    const TextureFormat*    pFormat;
-    
     static const UByte      MaxTextureCount = 4;
 
-    // If texture is currently mapped, it is here.
-    MappedTexture*          pMap;
-    
     struct HWTextureDesc
     {        
         ImageSize                   Size;
-        ID3D1x(Texture2D)*            pTexture;
-        ID3D1x(ShaderResourceView)*   pView;
+        ID3D1x(Texture2D)*          pTexture;
+        ID3D1x(ShaderResourceView)* pView;
+        ID3D1x(Texture2D)*          pStagingTexture;
     };
 
     // TextureDesc array is allocated if more then one is needed.
@@ -93,36 +83,31 @@ public:
     Texture(TextureManagerLocks* pmanagerLocks, ID3D1x(Texture2D)* ptexture, ImageSize imgSize, ImageBase* pimage);
     ~Texture();
 
-    ImageFormat             GetImageFormat() const { return pFormat->pMapping->Format; }
-    TextureManager*         GetManager() const     { return (TextureManager*)pManagerLocks->pManager; }
-    bool                    IsValid() const        { return pTextures != 0; }
+    virtual ImageSize       GetTextureSize(unsigned plane =0) const { return pTextures[plane].Size; }
+    TextureManager*         GetManager() const                      { return (TextureManager*)pManagerLocks->pManager; }
+    bool                    IsValid() const                         { return pTextures != 0; }
 
-    void                    LoseManager();
-    void                    LoseTextureData();
     bool                    Initialize();
     bool                    Initialize(ID3D1x(Texture2D)* ptexture);
-    void                    ReleaseHWTextures();
+    void                    ReleaseHWTextures(bool staging = true);
 
     // Applies a texture to device starting at pstageIndex, advances index
     // TBD: Texture matrix may need to be adjusted if image scaling is done.
-    void                    ApplyTexture(DWORD stageIndex, ImageFillMode fm);
+    void                    ApplyTexture(unsigned stageIndex, const ImageFillMode& fm);
 
     // *** Interface implementation
-
-    virtual Image*          GetImage() const
-    { SF_ASSERT(!pImage || (pImage->GetImageType() != Image::Type_ImageBase)); return (Image*)pImage; }
-    virtual ImageFormat     GetFormat() const         { return GetImageFormat(); }
+    virtual Image*                  GetImage() const                { SF_ASSERT(!pImage || (pImage->GetImageType() != Image::Type_ImageBase)); return (Image*)pImage; }
+    virtual ImageFormat             GetFormat() const               { return GetImageFormat(); }
+    const TextureFormat*            GetTextureFormat() const        { return reinterpret_cast<const TextureFormat*>(pFormat); }
+    const TextureFormat::Mapping*   GetTextureFormatMapping() const { return pFormat ? reinterpret_cast<const TextureFormat*>(pFormat)->pMapping : 0; }
 
     virtual void            GetUVGenMatrix(Matrix2F* mat) const;
     
-    virtual bool            Map(ImageData* pdata, unsigned mipLevel, unsigned levelCount);
-    virtual bool            Unmap();
-
     virtual bool            Update(const UpdateDesc* updates, unsigned count = 1, unsigned mipLevel = 0);    
-    virtual bool            Update();
 
-    // Copies the image data from the hardware.
-    SF_AMP_CODE( virtual bool Copy(ImageData* pdata); )
+protected:
+    virtual void            computeUpdateConvertRescaleFlags( bool rescale, bool swMipGen, ImageFormat inputFormat, 
+                                                              ImageRescaleType &rescaleType, ImageFormat &rescaleBuffFromat, bool &convert );
 };
 
 // D3D9 DepthStencilSurface implementation. 
@@ -132,53 +117,23 @@ public:
     DepthStencilSurface(TextureManagerLocks* pmanagerLocks, const ImageSize& size);
     ~DepthStencilSurface();
 
-    virtual ImageSize               GetSize() const { return Size; }
     bool                            Initialize();
 
-    ImageSize                 Size;
     ID3D1x(Texture2D)*        pDepthStencilSurface;
     ID3D1x(DepthStencilView)* pDepthStencilSurfaceView;
-    Texture::CreateState      State;
-
 };
 
-// MappedTexture object repents a Texture mapped into memory with Texture::Map() call;
-// it is also used internally during updates.
-// The key part of this class is the Data object, stored Locked texture level plains.
-
-class MappedTexture : public NewOverrideBase<StatRender_TextureManager_Mem>
+// *** MappedTexture
+class MappedTexture : public MappedTextureBase
 {
     friend class Texture;
 
-    Texture*                  pTexture;
-    ID3D1x(DeviceContext)*    pDeviceContext;
-    ID3D1x(Texture2D)*        pStagingTextures[Texture::MaxTextureCount];
-
-    // We support mapping sub-range of levels, in which case
-    // StartMipLevel may be non-zero.
-    unsigned      StartMipLevel;
-    int           LevelCount;
-    // Pointer data that can be copied to.
-    ImageData     Data;
-
-    enum { PlaneReserveSize = 4 };
-    ImagePlane    Planes[PlaneReserveSize];
-
 public:
-    MappedTexture()
-        : pTexture(0), StartMipLevel(false), LevelCount(0) { memset(pStagingTextures, 0, sizeof pStagingTextures); }
-    ~MappedTexture()
-    {
-        SF_ASSERT(!IsMapped());
-    }
+    MappedTexture() : MappedTextureBase() { }
 
-    bool        Reserve()  { AtomicOps<int>::CompareAndSet_Sync(&LevelCount, 0, -1); return LevelCount == -1; }
-    bool        IsMapped() { return (LevelCount > 0); }
-    bool        Map(Texture* ptexture, ID3D1x(Device)* pdevice, ID3D1x(DeviceContext)* pcontext, unsigned mipLevel, unsigned levelCount);
-    void        Unmap();
+    virtual bool Map(Render::Texture* ptexture, unsigned mipLevel, unsigned levelCount);
+    virtual void Unmap(bool applyUpdate = true);
 };
-
-
 
 
 // D3D11 Texture Manger.
@@ -198,37 +153,27 @@ class TextureManager : public Render::TextureManager
     typedef ArrayLH<ID3D1x(View)*,
                     StatRender_TextureManager_Mem,
                     KillListArrayPolicy>    D3DViewArray;
-    typedef List<Texture, Render::Texture>  TextureList;
-    typedef List<DepthStencilSurface, Render::DepthStencilSurface> DepthStencilList;
-
+    
     ID3D1x(Device)*         pDevice;
     ID3D1x(DeviceContext)*  pDeviceContext;
-    ThreadId                RenderThreadId;
     MappedTexture           MappedTexture0;    
-    ThreadCommandQueue*     pRTCommandQueue;    
 
     // Lists protected by TextureManagerLocks::TextureMutex.
-    TextureList               Textures;
-    TextureList               TextureInitQueue;
-    DepthStencilList          DepthStencilInitQueue;
     D3DResourceArray          D3DTextureKillList;
     D3DViewArray              D3DTexViewKillList;
     
-    // Texture format table, organized by supported HW features.
-    ArrayLH<TextureFormat>   TextureFormats;
-
     static const unsigned       SamplerTypeCount = (Sample_Count * Wrap_Count);
     ID3D1x(SamplerState)*       SamplerStates[SamplerTypeCount];
 
-    // Detects supported D3DFormats and capabilities.
-    void            initTextureFormats();
-    const Render::TextureFormat* getTextureFormat(ImageFormat format) const;    
-    virtual bool    isMappable(const Render::TextureFormat* ptformat) { return ((TextureFormat*)ptformat)->pMapping->Mappable; }
+    // Detecting redundant sampler/address setting.
+    static const int MaximumStages = 4;
+    ID3D1x(SamplerState)*       CurrentSamplers[MaximumStages];
+    ID3D1x(View)*               CurrentTextures[MaximumStages];
 
-    // Texture Memory-mapping support.
-    MappedTexture*  mapTexture(Texture* p, unsigned mipLevel, unsigned levelCount);
-    MappedTexture*  mapTexture(Texture* p) { return mapTexture(p, 0, p->MipLevels); }
-    void            unmapTexture(Texture *ptexture);    
+    // Detects supported D3DFormats and capabilities.
+    void                         initTextureFormats();
+    virtual MappedTextureBase&   getDefaultMappedTexture() { return MappedTexture0; }
+    virtual MappedTextureBase*   createMappedTexture()     { return SF_HEAP_AUTO_NEW(this) MappedTexture; }
     
     virtual void    processTextureKillList();
     virtual void    processInitTextures();    
@@ -238,11 +183,17 @@ public:
     TextureManager(ID3D1x(Device)* pdevice,
                    ID3D1x(DeviceContext) * pcontext,
                    ThreadId renderThreadId, 
-                   ThreadCommandQueue* commandQueue = 0);
+                   ThreadCommandQueue* commandQueue = 0,
+                   TextureCache* texCache = 0);
     ~TextureManager();
 
     // Used once texture manager is no longer necessary.
     void    Reset();
+
+    // Does rendundancy checking on state setting.
+    void            SetSamplerState( unsigned stage, unsigned viewCount, ID3D1x(ShaderResourceView)** views, ID3D1x(SamplerState)* state = 0);
+
+    virtual void    BeginScene();
 
     // *** TextureManager
     virtual Render::Texture* CreateTexture(ImageFormat format, unsigned mipLevels,
@@ -258,6 +209,11 @@ public:
     virtual Render::DepthStencilSurface* CreateDepthStencilSurface(const ImageSize& size,
                                                            MemoryManager* manager = 0);
     virtual Render::DepthStencilSurface* CreateDepthStencilSurface(ID3D1x(Texture2D)* psurface);
+
+	virtual bool			IsDrawableImageFormat(ImageFormat format) const { return (format == Image_B8G8R8A8) || (format == Image_R8G8B8A8); }
+
+    ID3D1x(Device)*         GetDevice() const           { return pDevice; }
+    ID3D1x(DeviceContext)*  GetDeviceContext() const    { return pDeviceContext; }
 };
 
 

@@ -276,13 +276,13 @@ public:
     bool    EvictLRU(MeshCacheListType ltype, AllocAddr& a, UPInt size)
     {
         // Cannot call this function on MCL_PendingFree, as it may requeue items.
-        SF_ASSERT(ltype != MCL_PendingFree);
+        SF_ASSERT(ltype != MCL_PendingFree && ltype < MCL_ItemCount);
         return EvictLRU(Slots[ltype], a, size);
     }
     bool    EvictLRUTillLimit(MeshCacheListType ltype, AllocAddr& a, UPInt size, UPInt limit)
     {
         // Cannot call this function on MCL_PendingFree, as it may requeue items.
-        SF_ASSERT(ltype != MCL_PendingFree);
+        SF_ASSERT(ltype != MCL_PendingFree && ltype < MCL_ItemCount);
         return EvictLRUTillLimit(Slots[ltype], a, size, limit);
     }
       
@@ -657,8 +657,41 @@ public:
     };
 
     virtual void GetStats(Stats*) {};
+
+protected:
+    template<class VFormat>
+    static void fillMaskEraseVertexBuffer(VFormat* buffer, unsigned count);
 };
 
+template<class VFormat>
+inline void MeshCache::fillMaskEraseVertexBuffer(VFormat* pbuffer, unsigned count)
+{
+    for(unsigned i = 0; i< count; i++)
+    {
+        // This assumes Alpha in first byte. Effect may depend on byte order and
+        // ShaderManager vertex format mapping (offset assigned for VET_Instance8
+        // for ShaderManager::registerVertexFormat).
+        pbuffer[i * 6 + 0].x  = 0;
+        pbuffer[i * 6 + 0].y  = 1;
+        pbuffer[i * 6 + 0].Alpha[0] = (UByte)i;
+        pbuffer[i * 6 + 1].x  = 0;
+        pbuffer[i * 6 + 1].y  = 0;
+        pbuffer[i * 6 + 1].Alpha[0] = (UByte)i;
+        pbuffer[i * 6 + 2].x  = 1;
+        pbuffer[i * 6 + 2].y  = 0;
+        pbuffer[i * 6 + 2].Alpha[0] = (UByte)i;
+
+        pbuffer[i * 6 + 3].x  = 0;
+        pbuffer[i * 6 + 3].y  = 1;
+        pbuffer[i * 6 + 3].Alpha[0] = (UByte)i;
+        pbuffer[i * 6 + 4].x  = 1;
+        pbuffer[i * 6 + 4].y  = 0;
+        pbuffer[i * 6 + 4].Alpha[0] = (UByte)i;
+        pbuffer[i * 6 + 5].x  = 1;
+        pbuffer[i * 6 + 5].y  = 1;
+        pbuffer[i * 6 + 5].Alpha[0] = (UByte)i;
+    }
+}
 
 }};  // namespace Scaleform::Render
 

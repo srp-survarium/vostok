@@ -56,6 +56,7 @@ struct TextFilter : public RefCountBaseNTS<TextFilter, StatRender_Text_Mem>
         return  BlurX         ==  f.BlurX &&
                 BlurY         ==  f.BlurY &&
                 BlurStrength  ==  f.BlurStrength &&
+                ShadowParams.EqualsAll(f.ShadowParams) &&
                 ShadowFlags   ==  f.ShadowFlags &&
                 ShadowAlpha   ==  f.ShadowAlpha &&
                 ShadowAngle   ==  f.ShadowAngle &&

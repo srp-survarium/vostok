@@ -99,7 +99,16 @@ void RenderThread::setToleranceParams(const Render::ToleranceParams& params)
 {
     TolParams = params;
     if (pRenderer)
+	{
         pRenderer->SetToleranceParams(TolParams);
+		pRenderer->GetHAL()->GetMeshCache().ClearCache();
+	}
+}
+
+void RenderThread::getToleranceParams(Render::ToleranceParams* params)
+{
+	if (pRenderer && params)
+		*params = pRenderer->GetToleranceParams();
 }
 
 void RenderThread::addDisplayHandle(const DisplayHandleType& root, DisplayHandleCategory cat, bool clearBeforeAdd,
@@ -206,10 +215,15 @@ RenderThread::DHContainerType& RenderThread::DisplayWindow::getDHContainer(Displ
     }
 }
 
+void RenderThread::finishFrame()
+{
+    pRenderer->FinishFrame();
+}
+
 void RenderThread::drawFrame()
 {
     {   // Scope timer should not include AmpServer::AdvanceFrame, where stats are reported
-        SF_AMP_SCOPE_RENDER_TIMER_ID("RenderThread::drawFrame", Amp_Native_Function_Id_Display);
+        SF_AMP_SCOPE_RENDER_TIMER("RenderThread::drawFrame", Amp_Profile_Level_Low);
 
         DrawFrameDone.PulseEvent();
 
@@ -298,7 +312,8 @@ void RenderThread::drawFrame1(DisplayWindow* pDispWin, bool capture)
 
     pHal->BeginScene();
 	{
-		pDevice->Clear(getBackgroundColor().ToColor32());
+		if (!(ViewportFlags & Render::Viewport::View_Stereo_AnySplit) || pHal->GetMatrices()->S3DDisplay != Render::StereoRight)
+			pDevice->Clear(getBackgroundColor().ToColor32());
 
 		// Normal handles
 		for (unsigned i = 0; i < pDispWin->NormalHandles.GetSize(); i++)
@@ -497,5 +512,13 @@ void RenderThread::ResetRasterizationCount()
     pRenderer->GetImpl()->GetGlyphCache()->ResetRasterizationCount();
 }
 
+
+void RenderThread::GetRenderInterfaces(Render::Interfaces* p)
+{
+    p->pRenderer2D = pRenderer;
+    p->pHAL = pRenderer->GetHAL();
+    p->pTextureManager = p->pHAL->GetTextureManager();
+    p->RenderThreadID = p->pHAL->GetRenderThreadId();
+}
 
 }} // Scaleform::Platform

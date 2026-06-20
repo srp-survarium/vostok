@@ -12,19 +12,12 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
+
 #include "pch.h"
 
 #include "Render/D3D1x/D3D1x_Shader.h"
 #include "Render/D3D1x/D3D1x_HAL.h"
 #include "Kernel/SF_Debug.h"
-
-// Generated .cpp files.
-#include "Render/D3D1x/D3D1x_Config.h"
-#include "Render/D3D1x/D3D1x_Shaders.h"
-#include "Render/D3D1x/D3D1x_BinaryShaders.inl"
-#include "Render/D3D1x/D3D1x_Shaders.inl"
-#include <D3Dcompiler.h>
-#include <D3D11Shader.h>
 
 namespace Scaleform { namespace Render { namespace D3D1x {
 
@@ -36,6 +29,7 @@ bool VertexShader::Init(ID3D1x(Device)* pdevice, const VertexShaderDesc* pd)
     if ( FAILED( D3D1xCreateVertexShader(pdevice, pDesc->pBinary, pDesc->BinarySize, &pProg.GetRawRef())))
         return false;
 
+#if 0 && !defined(SF_OS_WINMETRO)
     // Need to parse the constant table to find out where the constant offsets are. They might not be as
     // reported in the Desc, because the shader compiler can align things in a way it doesn't predict.
     ID3D1x(ShaderReflection)* preflector;
@@ -54,11 +48,19 @@ bool VertexShader::Init(ID3D1x(Device)* pdevice, const VertexShaderDesc* pd)
         D3D1x(SHADER_VARIABLE_DESC) varDesc;
         if ( !pvar || FAILED(pvar->GetDesc(&varDesc)))
         {
+            SF_ASSERT(pd->Uniforms[uniform].Location == -1);
             UniformOffset[uniform] = -1;
             continue;
         }
         UniformOffset[uniform] = varDesc.StartOffset;
+        SF_DEBUG_ASSERT2((int)varDesc.StartOffset == pd->Uniforms[uniform].Location * 16, "shader %d uniform %d location differs", pDesc->Type, uniform);
     }
+#else
+    for ( unsigned uniform = 0; uniform < Uniform::SU_Count; ++uniform)
+    {
+        UniformOffset[uniform] = pd->Uniforms[uniform].Location * 16;
+    }
+#endif
     return true;
 }
 
@@ -73,7 +75,8 @@ bool FragShader::Init(ID3D1x(Device)* pdevice, const FragShaderDesc* pd)
     if ( !SUCCEEDED( D3D1xCreatePixelShader(pdevice, pDesc->pBinary, pDesc->BinarySize, &pProg.GetRawRef())) )
         return false;
 
-    // Need to parse the constant table to find out where the constant offsets are. They might not be as
+#if 0 && !defined(SF_OS_WINMETRO)
+	// Need to parse the constant table to find out where the constant offsets are. They might not be as
     // reported in the Desc, because the shader compiler can align things in a way it doesn't predict.
     ID3D1x(ShaderReflection)* preflector;
 #if SF_D3D_VERSION == 11
@@ -91,12 +94,20 @@ bool FragShader::Init(ID3D1x(Device)* pdevice, const FragShaderDesc* pd)
         D3D1x(SHADER_VARIABLE_DESC) varDesc;
         if ( !pvar || FAILED(pvar->GetDesc(&varDesc)))
         {
+            // Can't actually check this because of texture uniforms.
+            //SF_ASSERT(pd->Uniforms[uniform].Location == -1);
             UniformOffset[uniform] = -1;
             continue;
         }
         UniformOffset[uniform] = varDesc.StartOffset;
+        SF_DEBUG_ASSERT2((int)varDesc.StartOffset == pd->Uniforms[uniform].Location * 16, "shader %d uniform %d location differs", pDesc->Type, uniform);
     }
-
+#else
+    for ( unsigned uniform = 0; uniform < Uniform::SU_Count; ++uniform)
+    {
+        UniformOffset[uniform] = pd->Uniforms[uniform].Location * 16;
+    }
+#endif
     return true;
 }
 
@@ -154,12 +165,12 @@ SysVertexFormat::SysVertexFormat(ID3D1x(Device)* pdevice, const VertexFormat* vf
     memcpy(VertexElements, builder.Elements, sizeof VertexElements);
 }
 
-bool ShaderInterface::SetStaticShader(VertexShaderDesc::ShaderType vshader, FragShaderDesc::ShaderType shader, const VertexFormat* pformat)
+bool ShaderInterface::SetStaticShader(ShaderDesc::ShaderType shader, const VertexFormat* pformat)
 {
     CurShaders.pVFormat = pformat;
-    CurShaders.pVS      = &pHal->StaticVShaders[vshader];
+    CurShaders.pVS      = &pHal->SManager.StaticVShaders[VertexShaderDesc::GetShaderIndex(shader, pHal->SManager.ShaderModel)];
     CurShaders.pVDesc   = CurShaders.pVS->pDesc;
-    CurShaders.pFS      = &pHal->StaticFShaders[shader];
+    CurShaders.pFS      = &pHal->SManager.StaticFShaders[FragShaderDesc::GetShaderIndex(shader, pHal->SManager.ShaderModel)];
     CurShaders.pFDesc   = CurShaders.pFS->pDesc;
 
     if ( pformat && !pformat->pSysFormat )
@@ -168,11 +179,13 @@ bool ShaderInterface::SetStaticShader(VertexShaderDesc::ShaderType vshader, Frag
     return (bool)CurShaders;
 }
 
-void ShaderInterface::SetTexture(Shader, unsigned stage, Render::Texture* ptexture, ImageFillMode fm)
+void ShaderInterface::SetTexture(Shader, unsigned var, Render::Texture* ptexture, ImageFillMode fm, unsigned index)
 {
     D3D1x::Texture *pd3dTexture = (D3D1x::Texture*)ptexture;
-    SF_ASSERT(CurShaders.pFDesc->Uniforms[CurShaders.pFDesc->TexParams[stage]].Location >= 0 ); // Expected texture uniform does not exist in this shader.
-    pd3dTexture->ApplyTexture(CurShaders.pFDesc->Uniforms[CurShaders.pFDesc->TexParams[stage]].Location, fm);
+    SF_ASSERT(CurShaders.pFDesc->Uniforms[var].Location >= 0 );
+    SF_ASSERT(CurShaders.pFDesc->Uniforms[var].Location + CurShaders.pFDesc->Uniforms[var].Size >= 
+        (short)(index + ptexture->TextureCount));
+    pd3dTexture->ApplyTexture(CurShaders.pFDesc->Uniforms[var].Location + index, fm);
 }
 
 // Record the min/max shader constant registers, and just set the entire buffer in one call,
@@ -241,6 +254,7 @@ void ShaderInterface::Finish(unsigned meshCount)
 
     shaderConstantRangeVS.Finish(false);
     shaderConstantRangeFS.Finish(true);
+    memset(UniformSet, 0, sizeof(UniformSet));
 
     ID3D1x(DeviceContext)* pdevice = pHal->pDeviceContext;
     if (pLastVS != CurShaders.pVS->pProg)
@@ -263,101 +277,190 @@ void ShaderInterface::Finish(unsigned meshCount)
     }
 }
 
-// *** FilterShaderManager
-bool FilterShaderManager::HasInstancingSupport() const
+void ShaderInterface::BeginScene()
 {
-    return false;
+    // Disable compute, domain, geometry and hull pipeline stages.
+    ID3D1x(DeviceContext)* pdevice = pHal->pDeviceContext;
+    D3D1xCSSetShader(pdevice, 0);
+    D3D1xDSSetShader(pdevice, 0);
+    D3D1xGSSetShader(pdevice, 0);
+    D3D1xHSSetShader(pdevice, 0);
+
+    pLastVS = 0;
+    pLastDecl = 0;
+    pLastFS = 0;
 }
 
-void FilterShaderManager::MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
+// *** ShaderManager
+ShaderManager::ShaderManager( ProfileViews* prof ) : 
+    StaticShaderManager(prof), pDevice(0), ShaderModel(ShaderDesc::ShaderVersion_Default)
+{
+    memset(StaticVShaders, 0, sizeof(StaticVShaders));
+    memset(StaticFShaders, 0, sizeof(StaticFShaders));
+}
+
+bool ShaderManager::HasInstancingSupport() const
+{
+    // Only FeatureLevel 10.0+ has instancing (but it always has it).
+    return ShaderModel >= ShaderDesc::ShaderVersion_D3D1xFL10X;
+}
+
+void ShaderManager::MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
                                     const VertexFormat** single, const VertexFormat** batch, 
                                     const VertexFormat** instanced)
 {
-    unsigned                fillflags = 0;
-    FragShaderType          shader = this->StaticShaderForFill(fill, fillflags, 0);
-    const VertexShaderDesc* pshader = VertexShaderDesc::Descs_[FragShaderDesc::VShaderForFShader[shader]];
-    const VertexShaderDesc::VertexAttrDesc*   psvf = pshader->Attributes;
-    const unsigned          maxVertexElements = 8;
-    VertexElement           outf[maxVertexElements];
-    unsigned                size = 0;
-    int                     j = 0;
-
-    for (int i = 0; i < pshader->NumAttribs; i++)
+    // D3D1x's shader input types need to match their input layouts. So, just convert all position data
+    // to float (instead of using short). Extra shaders could be generated to support both, however, that
+    // would require double the number of vertex shaders.
+    VertexElement floatPositionElements[8];
+    VertexFormat floatPositionFormat;
+    floatPositionFormat.pElements = floatPositionElements;
+    floatPositionFormat.pSysFormat = 0;
+    unsigned offset = 0;
+    unsigned i;
+    for ( i = 0; sourceFormat->pElements[i].Attribute != VET_None; ++i )
     {
-        if ((psvf[i].Attr & (VET_Usage_Mask | VET_Index_Mask | VET_Components_Mask)) == (VET_Color | (1 << VET_Index_Shift) | 4))
+        floatPositionElements[i].Attribute = sourceFormat->pElements[i].Attribute;
+        if ( (floatPositionElements[i].Attribute&VET_Usage_Mask) == VET_Pos)
         {
-            // XXX - change shaders to use .rg instead of .ra for these
-            outf[j].Offset = size;
-            outf[j].Attribute = VET_T0Weight8;
-            j++;
-            outf[j].Offset = size+3;
-            outf[j].Attribute = VET_FactorAlpha8;
-            j++;
-            size += 4;
-            continue;
+            floatPositionElements[i].Attribute &= ~VET_CompType_Mask;
+            floatPositionElements[i].Attribute |= VET_F32;
+            floatPositionElements[i].Offset = sourceFormat->pElements[i].Offset + offset;
+            if ( (floatPositionElements[i].Attribute&VET_CompType_Mask) == VET_S16)
+                offset += 4;
         }
-
-        const VertexElement* pv = sourceFormat->GetElement(psvf[i].Attr & (VET_Usage_Mask|VET_Index_Mask), VET_Usage_Mask|VET_Index_Mask);
-        if (!pv)
+        else
         {
-            *batch = *single = *instanced = NULL;
-            return;
+            floatPositionElements[i].Offset = sourceFormat->pElements[i].Offset + offset;
         }
-        outf[j] = *pv;
-        outf[j].Offset = size;
-        SF_ASSERT((outf[j].Attribute & VET_Components_Mask) > 0 && (outf[j].Attribute & VET_Components_Mask) <= 4);
-        size += outf[j].Size();
-        j++;
     }
-    outf[j].Attribute = VET_None;
-    outf[j].Offset = 0;
-    *single = GetVertexFormat(outf, j+1, size);
+    floatPositionElements[i].Attribute = VET_None;
+    floatPositionElements[i].Offset    = 0;
 
-    // Add in the batch instance after the factor arguments, if they are present.
-    // Otherwise, add it at the end.
-    bool instanceWithFactors = false;
-    for ( int k = 0; k < j; k++ )
+    // Now let the base class actually do the mapping.
+    Base::MapVertexFormat(fill, &floatPositionFormat, single, batch, instanced, 
+        (HasInstancingSupport() ? MVF_HasInstancing : 0) | MVF_Align);
+}
+
+bool ShaderManager::Initialize(HAL* phal)
+{
+    pDevice = phal->GetDevice();
+
+#if (SF_D3D_VERSION == 10 )
+    // We should be compiling with D3D10.1 header at least, so we should be able to query 
+    // if the device is a 10, or 10.1 device. If it is only 10, we must have FL 10, otherwise,
+    // we may have a lower feature level and require lower level shaders.
+    Ptr<ID3D1x(Device1)> d3d10Device1;
+    ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
+    if ( SUCCEEDED(pDevice->QueryInterface(IID_ID3D10Device1, (void**)&d3d10Device1.GetRawRef())) && d3d10Device1)
     {
-        if (outf[k].Attribute == VET_T0Weight8)
+        D3D10_FEATURE_LEVEL1 featureLevel = pDevice->GetFeatureLevel();
+        switch(featureLevel)
         {
-            memmove(&outf[k+2], &outf[k+1], (sizeof VertexElement)*(maxVertexElements-k-2));
-            outf[k+1].Attribute = VET_Instance8;
-            outf[k+1].Offset    = outf[k].Offset+1;
-            instanceWithFactors = true;
+        case D3D10_FEATURE_LEVEL_9_1:
+        case D3D10_FEATURE_LEVEL_9_2:
+            ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL91;
+            break;
+        case D3D10_FEATURE_LEVEL_9_3:
+            ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL93;
+            break;
+        default:
             break;
         }
     }
-    if ( !instanceWithFactors )
+#elif (SF_D3D_VERSION == 11)
+    ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL11X;
+    switch(pDevice->GetFeatureLevel())
     {
-        outf[j].Attribute = VET_Instance8;
-        outf[j].Offset = size;
-        size +=4;
+    case D3D_FEATURE_LEVEL_9_1:
+    case D3D_FEATURE_LEVEL_9_2:
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL91;
+        break;
+    case D3D_FEATURE_LEVEL_9_3:
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL93;
+        break;
+    case D3D_FEATURE_LEVEL_10_0:
+    case D3D_FEATURE_LEVEL_10_1:
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
+        break;
+    default:
+        break;
     }
-    outf[j+1].Attribute = VET_None;
-    outf[j+1].Offset = 0;
-    *batch = GetVertexFormat(outf, j+2, size);
+#else
+    #error SF_D3D_VERSION must be 10 or 11.
+#endif
 
-    *instanced = 0;
-}
+    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL11X && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
+    {
+        SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_11_0+ was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_10_0.");
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
+    }
+    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL10X && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
+    {
+        SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_10_0+ was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_9_3.");
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL93;
+    }
+    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL93 && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
+    {
+        SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_9_3 was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_9_1.");
+        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL91;
+    }
+    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL91 && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
+    {
+        SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_9_1 was not included when running GFxShaderMaker. Failing.");
+        return false;
+    }
 
-bool FilterShaderManager::Initialize(HAL* phal)
-{
-    pDevice = phal->GetDevice();
+    // Now, initialize all the shaders that use our current ShaderModel version.
+    for (unsigned i = 0; i < VertexShaderDesc::VSI_Count; i++)
+    {
+        const VertexShaderDesc* desc = VertexShaderDesc::Descs[i];
+        if ( desc && desc->Version == ShaderModel && desc->pBinary)
+        {
+            if (!StaticVShaders[i].Init(pDevice, desc))
+                return false;
+        }
+    }
+
+    for (unsigned i = 0; i < FragShaderDesc::FSI_Count; i++)
+    {
+        const FragShaderDesc* desc = FragShaderDesc::Descs[i];
+        if (desc && desc->Version == ShaderModel && desc->pBinary)
+        {
+            if ( !StaticFShaders[i].Init(pDevice, desc) )
+                return false;
+        }
+    }
+
     return true;
 }
 
-void FilterShaderManager::BeginScene()
+void ShaderManager::BeginScene()
 {
     
 }
 
-void FilterShaderManager::EndScene()
+void ShaderManager::EndScene()
 {
 
 }
 
-void FilterShaderManager::Reset()
+void ShaderManager::Reset()
 {
+    for (unsigned i = 0; i < VertexShaderDesc::VSI_Count; i++)
+    {
+        const VertexShaderDesc* desc = VertexShaderDesc::Descs[i];
+        if ( desc && desc->pBinary)
+            StaticVShaders[i].Shutdown();
+    }
+
+    for (unsigned i = 0; i < FragShaderDesc::FSI_Count; i++)
+    {
+        const FragShaderDesc* desc = FragShaderDesc::Descs[i];
+        if (desc && desc->pBinary)
+            StaticFShaders[i].Shutdown();
+    }
+
     pDevice = 0;
     VFormats.Clear();
 }

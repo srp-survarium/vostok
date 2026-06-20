@@ -213,7 +213,9 @@ typedef GFx::UserEventHandler           GFxUserEventHandler;
 typedef GFx::URLBuilder                 GFxURLBuilder;
 typedef GFx::TextClipboard              GFxTextClipboard;
 typedef GFx::ParseControl               GFxParseControl;
+#ifdef SF_ENABLE_THREADS
 typedef GFx::ThreadedTaskManager        GFxThreadedTaskManager;
+#endif
 #ifdef SF_OS_WIN32
 typedef GFx::FontProviderWin32          GFxFontProviderWin32;
 #endif

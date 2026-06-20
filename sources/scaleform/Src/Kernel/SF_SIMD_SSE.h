@@ -25,6 +25,9 @@ otherwise accompanies this software in either electronic or hard copy form.
     // MSVC style alignment.
     #pragma warning (disable : 4324) // warning C4324: 'struct' : structure was padded due to __declspec(align())
     #define SF_SIMD_ALIGN(x)  __declspec(align(16)) x
+    #ifndef _WIN64
+        #include <intrin.h>
+    #endif
 #elif defined(__GNUC__)
     // GCC style alignment
     #define SF_SIMD_ALIGN(x) x __attribute__((aligned(16)))
@@ -43,6 +46,39 @@ namespace SSE {
 class InstructionSet
 {
 public:
+
+    static bool HasSSE2Support()
+    {
+#if defined(_MSC_VER)
+    #if defined(_WIN64)
+            return true;
+    #else
+            int CPUInfo[4] = {-1};
+            __cpuid(CPUInfo, 1);
+            return ((CPUInfo[3] & (1 << 26)) != 0);        
+    #endif
+#elif defined(SF_CC_GNU)
+    #if defined(__SSE2__) && __SSE2__
+        // The compiler is only compiling for processors that have SSE2 support.
+        return true;
+    #else
+        int CPUInfo[4] = {-1};
+        asm("cpuid": "=a" (CPUInfo[0]), "=b" (CPUInfo[1]), "=c" (CPUInfo[2]), "=d" (CPUInfo[3]) : "a" (1));
+        return ((CPUInfo[3] & (1 << 26)) != 0);
+    #endif
+#else
+        return false;
+#endif
+    }
+
+    // Any function overrides which use LoadAligned(Vector4i), or StreamAligned(Vector4i) Add16, Set1
+    // must check the result of this function, to determine whether these instructions are supported.
+    static bool SupportsIntegerIntrinsics()
+    {
+        static bool HasSSE2 = HasSSE2Support();
+        return HasSSE2;
+    }
+
     // Loads a value from aligned memory, and returns it.
     static Vector4f LoadAligned( const float * p )
     {

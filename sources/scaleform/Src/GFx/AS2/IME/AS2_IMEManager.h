@@ -78,7 +78,12 @@ public:
 		if (CandListPath.GetLength()) 
 		{
 			String fullPath = CandListPath + "." + ppathToMethod;
-			return pMovie->Invoke(fullPath, presult, pargs, numArgs);
+			bool retVal = false;
+			if (pMovie)
+			{
+				retVal = pMovie->Invoke(fullPath, presult, pargs, numArgs);
+			}
+			return retVal;
 		}
 		return false;
 	}
@@ -88,11 +93,14 @@ public:
 		if (CandListPath)
 		{
 			String fullPath = CandListPath + "." + ppathToMethod;
-			va_list args;
-			bool retVal;
-			va_start(args, pargFmt);
-			retVal = pMovie->InvokeArgs(fullPath.ToCStr(), NULL, pargFmt, args);
-			va_end(args);
+			bool retVal = false;
+			if (pMovie)
+			{
+				va_list args;
+				va_start(args, pargFmt);
+				retVal = pMovie->InvokeArgs(fullPath.ToCStr(), NULL, pargFmt, args);
+				va_end(args);
+			}
 			return retVal;
 		}
 		return false;

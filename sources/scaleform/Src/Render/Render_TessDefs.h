@@ -152,7 +152,16 @@ private:
 };
 
 
-
+//------------------------------------------------------------------------
+class TransformerBase
+{
+public:
+    virtual ~TransformerBase() {}
+    virtual void Transform(float* x, float* y) const = 0;
+    virtual float GetScale() const = 0;
+    virtual float GetXScale() const = 0;
+    virtual float GetYScale() const = 0;
+};
 
 
 }} // Scaleform::Render

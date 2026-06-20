@@ -30,13 +30,17 @@ class TreeShape : public TreeNode
 public:
 
     class NodeData : public ContextData_ImplMixin<NodeData, TreeNode::NodeData>
-    {
+    {      
+        typedef ContextData_ImplMixin<NodeData, TreeNode::NodeData> BaseClass;
     public:
-        NodeData() : ContextData_ImplMixin<NodeData, TreeNode::NodeData>(ET_Shape), MorphRatio(0)
+        NodeData() : BaseClass(ET_Shape), MorphRatio(0)
         { }
         NodeData(ShapeMeshProvider* meshProvider)
-            :  ContextData_ImplMixin<NodeData, TreeNode::NodeData>(ET_Shape),
-              pMeshProvider(meshProvider), MorphRatio(0)
+            :  BaseClass(ET_Shape), pMeshProvider(meshProvider), MorphRatio(0)
+        { }
+        NodeData(NonlocalCloneArg<NodeData> src)
+            :  BaseClass(NonlocalCloneArg<BaseClass>(*src.pC)),
+               pMeshProvider(src->pMeshProvider), MorphRatio(src->MorphRatio)
         { }
         ~NodeData()
         {
@@ -48,6 +52,10 @@ public:
 
         virtual TreeCacheNode*  updateCache(TreeCacheNode* pparent, TreeCacheNode* pinsert,
                                             TreeNode* pnode, UInt16 depth) const;
+
+        // Clone TreeNode, potentially in new context.
+        virtual TreeNode* CloneCreate(Context* context) const;
+        //virtual bool      CloneInit(TreeNode* node, Context* context) const;
     };
 
     SF_RENDER_CONTEXT_ENTRY_INLINES(NodeData)

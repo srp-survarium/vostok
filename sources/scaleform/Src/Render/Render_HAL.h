@@ -30,9 +30,11 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Render/Render_Viewport.h"
 #include "Render/Render_States.h"
 #include "Render/Render_Buffer.h"
+#include "Render/Render_DrawableImage.h"
 #include "Render/Render_ThreadCommandQueue.h"
 #include "Render/Render_Bundle.h"
 #include "Render/Render_Queue.h"
+#include "Render/Render_Events.h"
 #include "Render/Renderer2D.h"
 
 namespace Scaleform { namespace Render {
@@ -60,68 +62,60 @@ struct StereoParams
 };
 
 
-struct MatrixState
+class MatrixState : public RefCountBase<MatrixState, StatRender_Mem>
 {
-    Matrix2F View2D;
-    Matrix3F View3D;
-    Matrix4F Proj3D;
-    mutable Matrix4F Proj3DLeft;        // 3D stereo support
-    mutable Matrix4F Proj3DRight;       // 3D stereo support
+public:
+    Matrix2F            View2D;
+    Matrix3F            View3D;
+    Matrix4F            Proj3D;
+    mutable Matrix4F    Proj3DLeft;        // 3D stereo support
+    mutable Matrix4F    Proj3DRight;       // 3D stereo support
 
-    Matrix2F User;
-    Matrix2F User3D;
-    Matrix2F Orient2D;
-    Matrix4F Orient3D;
+    Matrix2F            User;
+    Matrix2F            User3D;
+    Matrix2F            Orient2D;
+    Matrix4F            Orient3D;
 
-    Rect<int>         ViewRectOriginal;      // 'full screen' view rectangle.
-    mutable Rect<int> ViewRect;              // Current viewport rectangle.
+    Rect<int>           ViewRectOriginal;       // 'full screen' view rectangle.
+    mutable Rect<int>   ViewRect;               // Current viewport rectangle.
 
-    mutable Matrix2F  UserView;
-    mutable Matrix4F  UVPO;
+    mutable Matrix2F    UserView;               // 'Final' concattenated User x View x Orientation matrix (for 2D shapes).
+    mutable Matrix4F    UVPO;                   // 'Final' concattenated User x View x Projection x Orientation matrix (for 3D shapes).
 
-    mutable Matrix4F  ViewRectCompensated3D; // Matrix compensating for cullrect changes.
+    mutable Matrix4F    ViewRectCompensated3D;  // Matrix compensating for cullrect changes (reduced sized viewports).
 
-    mutable bool     UVPOChanged;
-    bool             OrientationSet;
+    mutable bool        UVPOChanged;
+    bool                OrientationSet;
 
     // 3D stereo support
-    StereoParams  S3DParams;
-    StereoDisplay S3DDisplay; 
+    StereoParams        S3DParams;
+    StereoDisplay       S3DDisplay; 
 
-    MatrixState()
-    {
-        UVPOChanged = 0;
-        OrientationSet = 0;
-        S3DDisplay = StereoCenter;
-    }
+    HAL*                pHAL;
 
-    const Matrix4F& GetUVP() const
-    {
-        recalculateUVPOC();
-        return UVPO;
-    }
+    MatrixState(HAL* phal);
+    MatrixState();
 
-    const Matrix4F& GetUVP( const Rect<int> & viewRect ) const
-    {
-        if ( viewRect != ViewRect )
-        {
-            ViewRect = viewRect;
-            UVPOChanged = true;
-        }
-        recalculateUVPOC();
-        return UVPO;
-    }
+    const Matrix4F&     GetUVP() const;
+    const Matrix4F&     GetUVP( const Rect<int> & viewRect ) const;
+    virtual Matrix2F&   GetFullViewportMatrix();
 
-    void     SetUserMatrix(const Matrix2F& user);
-    void     SetViewportMatrix(const Matrix2F& vp);
-    Viewport SetOrientation(const Viewport& vp);
+    virtual void        SetUserMatrix(const Matrix2F& user);
+    virtual void        SetViewportMatrix(const Matrix2F& vp);
+    virtual Viewport    SetOrientation(const Viewport& vp);
+    virtual void        CopyFrom(MatrixState* state);
+    virtual void        CopyTo(MatrixState* state);
 
-private:
-    void recalculateUVPOC() const;
+    static void         Copy(MatrixState* outmat, MatrixState* inmat);
+    
+protected:
+    virtual void        recalculateUVPOC() const;
+    
     // 3D stereo support
-    void getStereoProjectionMatrix(Matrix4F *left, Matrix4F *right, const Matrix4F &original, float screenDist, float factor = 1.0f) const;
-    const Matrix4F& updateStereoProjection(float factor = 1.0f) const;
+    void                getStereoProjectionMatrix(Matrix4F *left, Matrix4F *right, const Matrix4F &original, float screenDist, float factor = 1.0f) const;
+    const               Matrix4F& updateStereoProjection(float factor = 1.0f) const;
 
+    Matrix2F            FullViewportMVP;        // MVP for a 2D quad to fill the entire viewport.
 };
 
 
@@ -161,8 +155,9 @@ public:
         Channel_Flags  = 48,
         Profile_Fill   = 0x100,
         Profile_Mask   = 0x200,
-        Profile_Clear  = 0x400,
+        Profile_Filter = 0x400,
         Profile_Batch  = 0x800,
+        Profile_Blend  = 0x1000,
 
         ProfileFlag_NoFilterCaching = 0x00000001,   // Flag that disables caching of filters (sent in Channel_Flags).
     };
@@ -172,7 +167,7 @@ private:
     BlendMode OverrideBlend;
     bool      OverrideMasks, FillMode;
     unsigned  BatchMode;
-    Cxform    FillCxforms[3];
+    Cxform    FillCxforms[4];
 
     int       DrawMode;
     Color     BatchColor;
@@ -207,6 +202,11 @@ public:
     void      SetBatch(UPInt batchKey, unsigned batchIndex)
     {
         BatchColor = GetColorForBatch(batchKey, batchIndex);
+    }
+    void      SetFillFlags(unsigned fillFlags)
+    {
+        if (DrawMode == 0 || DrawMode == 3)
+            DrawMode = (fillFlags & FF_Blending) ? 3 : 0;
     }
 
     Color     GetClearColor(Color c) const
@@ -275,6 +275,7 @@ public:
     Color             GetColor(Color color) const { return color; }
     bool              IsCxformChanged() const { return false; }
     Cxform            GetCxform(const Cxform& cx) const { return cx; }
+    void              SetFillFlags(unsigned) { } 
 
     bool              ShouldDrawMask() const { return true; }
 
@@ -346,12 +347,12 @@ public:
 
     struct Stats
     {
-        unsigned Primitives;
-        unsigned Meshes;
-        unsigned Triangles;
-        unsigned Masks;
-        unsigned RTChanges; // number of internal render target changes needed; does not count HAL::SetRenderTarget itself
-        unsigned Filters;
+        unsigned Primitives;    // Number of actual graphics API 'draw' calls performed (eg. DrawIndexedPrimitive)
+        unsigned Meshes;        // Number of meshes drawn (including the number of instances for instanced draws)
+        unsigned Triangles;     // Number of triangles rendered in all draw calls.
+        unsigned Masks;         // Number of masks rendered.
+        unsigned RTChanges;     // Number of internal render target changes needed; does not count HAL::SetRenderTarget itself
+        unsigned Filters;       // Number of filters rendered, does not include cached filter rendering.
 
         Stats() : Primitives(0), Meshes(0), Triangles(0), Masks(0), RTChanges(0), Filters(0) { }
 
@@ -359,17 +360,19 @@ public:
     };
 
 
-    // initHAL - a non-virtual platform-specific function provided in every
-    // back end. Must be called before initialization. The base class implementation
-    // does very basic initialization.
 protected:
-    bool        initHAL(const HALInitParams& params);
 
-public:
+    // initHAL - a platform-specific function provided in every back end. Must be 
+    // called before initialization. The base class implementation does very basic 
+    // initialization.
+    virtual bool initHAL(const HALInitParams& params);
 
     // Platform-specific function called to shutdown an initialized HAL;
     // implemented in every back-end.
-    // void        ShutdownHAL().
+    virtual bool shutdownHAL();
+
+public:
+
 
     // Returns true if HAL has been initialized through a call to InitHAL.
     virtual bool        IsInitialized() const { return (HALState & HS_ModeSet) != 0; }
@@ -381,6 +384,7 @@ public:
     // must always be called around BeginScene/EndScene.
     virtual bool        BeginFrame();
     virtual void        EndFrame();
+    virtual void        FinishFrame();
 
     // Flush performs all queued rendering. This must be called for any rendering results
     // to be displayed (generally before Present is called). It is called automatically from
@@ -395,8 +399,8 @@ public:
     // BeginDisplay and EndDisplay, explicitly. Calling them externally is more
     // efficient if multiple BeginDisplay/EndDisplay blocks will take place, as it
     // optimizes state changes and eliminates queue flush.
-    virtual bool        BeginScene() = 0;
-    virtual void        EndScene() = 0;
+    virtual bool        BeginScene();
+    virtual bool        EndScene();
 
     // Bracket rendering of a display unit that potentially has its own
     // viewport, such Render::TreeNode (GFx::MovieView).
@@ -404,16 +408,19 @@ public:
     void                BeginDisplay(Color backgroundColor,
                                      const Viewport& viewport);
     void                EndDisplay();
-    virtual void        beginDisplay(BeginDisplayData* data) = 0;
-    virtual void        endDisplay() = 0;
+    virtual void        beginDisplay(BeginDisplayData* data);
+    virtual void        endDisplay();
 
     // Set "User" matrix that is applied to shift the view just before viewport.
     // Should be called before BeginDisplay.
-    virtual void        SetUserMatrix(const Matrix& m) { Matrices.SetUserMatrix(m); }
+    virtual void        SetUserMatrix(const Matrix& m) { Matrices->SetUserMatrix(m); }
+
+    // Caclulates the 2D view/projection matrix, given a view rectangle, and a window offset.
+    virtual void        CalcHWViewMatrix(unsigned vpFlags, Matrix* pmatrix, const Rect<int>& viewRect, int dx, int dy);
 
     // Get the matrix used to adjust the viewport. The inverse of this is useful for translating
     // input mouse/touch position.
-    virtual Matrix2F    GetOrientationMatrix() const { return Matrices.Orient2D; }
+    virtual Matrix2F    GetOrientationMatrix() const { return Matrices->Orient2D; }
 
     // Updates the hardware viewport based on current settings of HALState and VP/ViewRect.
     virtual void        updateViewport() = 0;
@@ -438,18 +445,27 @@ public:
     virtual RenderTarget* CreateTempRenderTarget(const ImageSize& size, bool needsStencil) = 0;
 
     // *** Render target state management
+
+    // Flags available to the PushRenderTarget method (defaults to none).
+    enum PushRenderTargetFlags
+    {
+        PRT_NoClear     = 0x01,     // Do not clear the render target being pushed (clear is done by default).
+        PRT_Resolve     = 0x02,     // Resolve the current backbuffer to a texture before rendering (X360).
+    };
+
     // Applies render target; should be called before BeginDisplay, If called successfully 
     // before InitHAL, the HAL will not attempt to create a default render target by querying 
     // the target API during InitHAL (when the platform allows this). 
     virtual bool    SetRenderTarget(RenderTarget* target, bool setState = 1) = 0;
 
     // Begin rendering to the specified target; frameRect is the ortho projection.
-    // Texture referenced by prt must not be used until PopRenderTarget.
-    virtual void    PushRenderTarget(const RectF& frameRect, RenderTarget* prt) = 0;
+    // Texture referenced by prt must not be used until PopRenderTarget. Flags are available,
+    // see PushRenderTargetFlags.
+    virtual void    PushRenderTarget(const RectF& frameRect, RenderTarget* prt, unsigned flags = 0) = 0;
 
     // Restore previous render target. Contents of Texture in popped render target are now available
-    // for rendering.
-    virtual void    PopRenderTarget() = 0;
+    // for rendering. Flags are available, see PushRenderTargetFlags.
+    virtual void    PopRenderTarget(unsigned flags = 0) = 0;
 
     // Creates the default RenderTarget, on platforms that can query the current render surface(s) from
     // the device directly. On platforms where this is not possible, an explicit call to SetRenderTarget
@@ -459,11 +475,8 @@ public:
     // Destroys the default render targets.
     virtual void    destroyRenderBuffers();
 
-    // Creates / Destroys mesh and DP data 
-
-    virtual PrimitiveFill*  CreatePrimitiveFill(const PrimitiveFillData& data) = 0;    
-
-
+	// Allocates a PrimitiveFill initialized with the given data.
+    virtual PrimitiveFill*  CreatePrimitiveFill(const PrimitiveFillData& data);    
 
     // Most platforms do not require the prepass step (except X360/Wii), their HALs override this function. 
     // Otherwise, if both passes are requested at once, (and prepass is not required), the prepass rendering 
@@ -497,10 +510,48 @@ public:
     virtual void        EndMaskSubmit() = 0;
     virtual void        PopMask() = 0;
 
-    // BlendMode
-    virtual void        PushBlendMode(BlendMode mode);
-    virtual void        PopBlendMode();
-    virtual void        applyBlendMode(BlendMode mode, bool sourceAc = false, bool forceAc = false) = 0;
+    // *** BlendMode
+    enum BlendOp
+    {
+        BlendOp_ADD,
+        BlendOp_MAX,
+        BlendOp_MIN,
+        BlendOp_REVSUBTRACT,
+        BlendOp_Count
+    };
+    enum BlendFactor
+    {
+        BlendFactor_ZERO,
+        BlendFactor_ONE,
+        BlendFactor_SRCALPHA,
+        BlendFactor_INVSRCALPHA,
+        BlendFactor_DESTCOLOR,
+        BlendFactor_INVDESTCOLOR,
+        BlendFactor_Count
+    };
+    struct BlendModeDescriptor
+    {
+        BlendOp         Operator;
+        BlendFactor     SourceColor;
+        BlendFactor     DestColor;
+        BlendFactor     SourceAlpha;
+        BlendFactor     DestAlpha;
+    };
+    static BlendModeDescriptor BlendModeTable[Blend_Count];
+
+    struct HALBlendState
+    {
+        HALBlendState() : Mode(Blend_None), SourceAc(false), ForceAc(false) { }
+        BlendMode Mode;
+        bool      SourceAc;
+        bool      ForceAc;
+    };
+
+    virtual void          PushBlendMode(BlendMode mode);
+    virtual void          PopBlendMode();
+    void                  applyBlendMode(BlendMode mode, bool sourceAc = false, bool forceAc = false);
+    void                  applyBlendMode(const HALBlendState& state);
+    virtual void          applyBlendModeImpl(BlendMode mode, bool sourceAc = false, bool forceAc = false) = 0;
 
     // *** Filters
     struct FilterStackEntry;
@@ -510,14 +561,51 @@ public:
     virtual void        drawUncachedFilter(const FilterStackEntry&)  { };
     virtual void        drawCachedFilter(FilterPrimitive*)           { };
 
+    // *** DrawableImage
+
+    // Retrieves the capabilities of this HAL to perform the DICommand wrt the GPU (See DICommand::RenderCaps).
+    // The default implementation reports the most common HAL implementations capabilities.
+    virtual unsigned    DrawableCommandGetFlags(const DICommand* pcmd) const;
+
+    // DrawableImage hardware commands
+    virtual void        DrawableCxform( Texture** tex, const Matrix2F* texgen, const Cxform* cx) 
+                        { SF_UNUSED3( tex, texgen, cx ); }
+    virtual void        DrawableCompare( Texture** tex, const Matrix2F* texgen) 
+                        { SF_UNUSED2( tex, texgen ); }
+    virtual void        DrawableCopyChannel( Texture** tex, const Matrix2F* texgen, const Matrix4F* cxmul ) 
+                        { SF_UNUSED3( tex, cxmul, texgen ); }
+    virtual void        DrawableMerge( Texture** tex, const Matrix2F* texgen, const Matrix4F* cxmul ) 
+                        { SF_UNUSED3( tex, cxmul, texgen ); }
+    virtual void        DrawableCopyPixels( Texture** tex, const Matrix2F* texgen, const Matrix2F& mvp, 
+                                            bool mergeAlpha, bool destAlpha ) 
+                        { SF_UNUSED5( tex, texgen, mvp, mergeAlpha, destAlpha ); }
+    virtual void        DrawablePaletteMap( Texture** tex, const Matrix2F* texgen, const Matrix2F& mvp, 
+                                            unsigned channelMask, const UInt32* values) 
+                        { SF_UNUSED5( tex, texgen, mvp, channelMask, values ); }
+    virtual void        DrawableCopyback( Texture* tex, const Matrix2F& mvp, const Matrix2F& texgen ) 
+                        { SF_UNUSED3(tex, mvp, texgen); }
 
     virtual void        GetStats(Stats* pstats, bool clear = true);
+
+    // *** Events
+
+    // Generic rendering event API - default implementation does nothing.
+    // Override this in a HAL to provide overloaded event types.
+    virtual RenderEvent& GetEvent(EventType) 
+    { 
+        static RenderEvent defaultEvent;
+        return defaultEvent;
+    };
 
     // Texture manager
     virtual TextureManager*           GetTextureManager() const = 0;
     virtual class MeshCache&          GetMeshCache() = 0;
     virtual RQCacheInterface&         GetRQCacheInterface() { return QueueProcessor.GetQueueCachesRef(); }
     virtual RenderQueueProcessor&     GetRQProcessor()      { return QueueProcessor; }
+
+    // Returns the RenderSync object, used for synchronizing the CPU and GPU. Not all platforms require
+    // this object, it is valid for this function to return 0.
+    virtual RenderSync*               GetRenderSync() const { return 0; }
 
     // Obtains formats that renderer will use for single, batches and instanced rendering of
     // the specified source format.
@@ -552,47 +640,45 @@ public:
             sParams.DisplayWidthCm = sParams.DisplayDiagInches / sqrt(1.0f + 1.f/sParams.DisplayAspectRatio * 
             1.f/sParams.DisplayAspectRatio) * 2.54f /* inches to cm */; 
         }
-        Matrices.S3DParams = sParams;
+        Matrices->S3DParams = sParams;
     }
 
     virtual void SetStereoDisplay(StereoDisplay sDisplay, bool setstate = 0) 
-    { Matrices.S3DDisplay = sDisplay;  Matrices.UVPOChanged = 1; SF_UNUSED(setstate); }
+    { Matrices->S3DDisplay = sDisplay;  Matrices->UVPOChanged = 1; SF_UNUSED(setstate); }
 
     // Pushes a 3D view matrix onto the stack when rendering.  Generally used along with 3D perspective.
-    void PushView3D(const Matrix3F &m) { Matrices.View3D = m; Matrices.UVPOChanged = 1; ViewMatrix3DStack.PushBack(m); }
-
+    void PushView3D(const Matrix3F &m);
     // Pushes a 3D projection matrix onto the stack when rendering.  Generally used for 3D perspective.
-    void PushProj3D(const Matrix4F &m) { Matrices.Proj3D = m; Matrices.UVPOChanged = 1; ProjectionMatrix3DStack.PushBack(m); }
-
+    void PushProj3D(const Matrix4F &m);
     // Restore previous 3D View matrix.
-    void PopView3D() 
-    { 
-        ViewMatrix3DStack.PopBack(); 
-        Matrices.View3D = ViewMatrix3DStack.GetSize() ? ViewMatrix3DStack.Back() : Matrix3F::Identity;  
-        Matrices.UVPOChanged = 1;  
-    }
-
+    void PopView3D();
     // Restore previous 3D projection matrix.
-    void PopProj3D() 
-    { 
-        ProjectionMatrix3DStack.PopBack(); 
-        Matrices.Proj3D = ProjectionMatrix3DStack.GetSize() ? ProjectionMatrix3DStack.Back() : Matrix4F::Identity;  
-        Matrices.UVPOChanged = 1; 
-    }
+    void PopProj3D();
 
-    void SetFullViewRect(const Rect<int> &r) { Matrices.ViewRectOriginal = r; Matrices.UVPOChanged = 1; }
+    void SetFullViewRect(const Rect<int> &r) { Matrices->ViewRectOriginal = r; Matrices->UVPOChanged = 1; }
 
-    const Matrix3F &GetView3D() const { return Matrices.View3D; }
-    const Matrix4F &GetProj3D() const { return Matrices.Proj3D; }
+    const Matrix3F &GetView3D() const { return Matrices->View3D; }
+    const Matrix4F &GetProj3D() const { return Matrices->Proj3D; }
 
-    const MatrixState& GetMatrices() const { return Matrices; }
+    // Most platforms require a negative scale when mapping a quad to the screen. Others (GL based)
+    // which do not should override this function and return 1.0f.
+    virtual float GetViewportScaling() const { return -1.0f; }
+
+    MatrixState* GetMatrices() const { return Matrices; }
     unsigned GetHALState() const { return HALState; }
 
     UInt32 GetConfigFlags() const { return VMCFlags; }
+    ThreadId GetRenderThreadId() const { return RenderThreadID; }
 
     // Returns render thread command queue, if any, used to post commands that must be
     // executed by the render thread.
     ThreadCommandQueue* GetThreadCommandQueue() const { return pRTCommandQueue; }
+
+    // *** UserData. The following Push/Pop user data set in the render tree into the HAL.
+    // The default implementation does nothing with this data, except store it. The expectation 
+    // is that users will use the data contained within the stack, to affect the fills in some way.
+    virtual void PushUserData(const UserDataState::Data* data);
+    virtual void PopUserData();
 
     // HAL State flags are checked for during most API calls to ensure that
     // state is valid for the operation. Check is done by checkState(bits),
@@ -613,9 +699,9 @@ public:
 
         HS_DeviceValid      = 0x01000,  // If not valid, device is Lost (3DS/D3D9 only).
         HS_ReadyForReset    = 0x02000,  // Set when reset-dependent resources are released (D3D9/D3D1x only).
-        HS_InGxmScene       = 0x10000,  // Currently in a gxm scene (NGP only).
-        HS_SceneChanged     = 0x20000,  // The gxm scene was changed after BeginDisplay (NGP only).
-        HS_LeaveSceneActive = 0x40000,  // Leave a scene with the current render target active (NGP only).
+        HS_InGxmScene       = 0x10000,  // Currently in a gxm scene (PSVITA only).
+        HS_SceneChanged     = 0x20000,  // The gxm scene was changed after BeginDisplay (PSVITA only).
+        HS_LeaveSceneActive = 0x40000,  // Leave a scene with the current render target active (PSVITA only).
     };
 
 protected:
@@ -647,19 +733,31 @@ protected:
         return true;
     }
 
-
     // Self-accessor used to avoid constructor warning.
     HAL*      getThis() { return this; }
+
+    // Returns whether the profile can render any of the filters contained in the FilterPrimitive
+    // By default, always return true. Platforms can override this if they have conditional support
+    // for filters.
+    virtual bool shouldRenderFilters(const FilterPrimitive*) const { return true; }
+
+    // Simply sets a quad vertex buffer and draws (uniforms, etc, need to be set already).
+    virtual void drawScreenQuad() = 0;
+
 
     unsigned                 HALState;       // See HALStateFlags above
     DisplayPass              CurrentPass;    // Current display pass.
     List<HALNotify>          NotifyList;
-    MatrixState              Matrices;
+    Ptr<MatrixState>         Matrices;
     ProfileViews             Profiler;
     Stats                    AccumulatedStats;
 
-    // Video Mode Configuration Flags (HALConfigFlags)
-    UInt32                   VMCFlags;
+    
+    UInt32                   VMCFlags;      // Video Mode Configuration Flags (HALConfigFlags - varies per platform)
+    UInt32                   FillFlags;     // Flags applicable to the current fill being rendered (see PrimitiveFillFlags)
+
+    // ThreadId of the render thread (may be 0, or equal to the main thread's ID in single threaded mode).
+    ThreadId                 RenderThreadID;    
 
     MemoryHeap*              pHeap;
 
@@ -679,6 +777,9 @@ protected:
 
     typedef ArrayLH<Matrix4F, Stat_Default_Mem, NeverShrinkPolicy> ProjectionMatrix3DStackType;
     ProjectionMatrix3DStackType ProjectionMatrix3DStack;
+
+    // The current state of alpha blending. Used for redundancy checking.
+    HALBlendState CurrentBlendState;
 
 public:
     // BlendModeStack (holds blend modes).
@@ -737,7 +838,10 @@ public:
 
     typedef ListAllocLH_POD<BeginDisplayData> BeginDisplayDataType;
     BeginDisplayDataType BeginDisplayDataList;  // Holds data passed to BeginScene.
-    
+
+    typedef ArrayLH<const UserDataState::Data*, Stat_Default_Mem, NeverShrinkPolicy> UserDataStackType;
+    UserDataStackType UserDataStack;    // Holds the UserDataState::Data objects passed to the HAL.
+
     Viewport                 VP;        // Output size.
     Rect<int>                ViewRect;    
 

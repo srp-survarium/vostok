@@ -326,8 +326,8 @@ public:
     void            SetMatrix3D(const Matrix3F& m);
     // Writes user data into HMatrix. Size limited to Pool_UserDataSize (16*3 bytes)
     // Initially added to support distance field font shader arguments.
-    void            SetUserData(void* data, UPInt size);
-    void            SetUserDataFloat(float *data, UPInt count)
+    void            SetUserData(const void* data, UPInt size);
+    void            SetUserDataFloat(const float *data, UPInt count)
     { SetUserData(data, count * sizeof(float)); }
     
     const Matrix3F& GetMatrix3D() const 

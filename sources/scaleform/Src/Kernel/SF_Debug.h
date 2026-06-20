@@ -82,6 +82,14 @@ void LogDebugMessage(LogMessageId id, const char* fmt, ...) SF_LOG_VAARG_ATTRIBU
 #define SF_DEBUG_WARNING4(cond, str, p1, p2, p3, p4)           SF_DEBUG_OUTPUT4(cond, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4)
 #define SF_DEBUG_WARNING5(cond, str, p1, p2, p3, p4, p5)       SF_DEBUG_OUTPUT5(cond, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4,p5)
 #define SF_DEBUG_WARNING6(cond, str, p1, p2, p3, p4, p5, p6)   SF_DEBUG_OUTPUT6(cond, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4,p5,p6)
+// Conditional warnings - "SF Warning: " prefix - only warns once per session.
+#define SF_DEBUG_WARNONCE(cond, str)                            { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT( warned, Scaleform::Log_DebugWarning, str); }}
+#define SF_DEBUG_WARNONCE1(cond, str, p1)                       { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT1(warned, Scaleform::Log_DebugWarning, str,  p1); }}
+#define SF_DEBUG_WARNONCE2(cond, str, p1, p2)                   { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT2(warned, Scaleform::Log_DebugWarning, str,  p1,p2); }}
+#define SF_DEBUG_WARNONCE3(cond, str, p1, p2, p3)               { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT3(warned, Scaleform::Log_DebugWarning, str,  p1,p2,p3); }}
+#define SF_DEBUG_WARNONCE4(cond, str, p1, p2, p3, p4)           { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT4(warned, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4); }}
+#define SF_DEBUG_WARNONCE5(cond, str, p1, p2, p3, p4, p5)       { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT5(warned, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4,p5); }}
+#define SF_DEBUG_WARNONCE6(cond, str, p1, p2, p3, p4, p5, p6)   { static bool warned = false; if (!warned) { warned = (cond); SF_DEBUG_OUTPUT6(warned, Scaleform::Log_DebugWarning, str,  p1,p2,p3,p4,p5,p6); }}
 // Conditional errors - "SF Error: " prefix
 #define SF_DEBUG_ERROR(cond, str)                              SF_DEBUG_OUTPUT(cond,  Scaleform::Log_DebugError, str)
 #define SF_DEBUG_ERROR1(cond, str, p1)                         SF_DEBUG_OUTPUT1(cond, Scaleform::Log_DebugError, str,  p1)

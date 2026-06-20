@@ -26,6 +26,7 @@ See http://antigtain.com for details.
 #include "ft2build.h"
 #include FT_FREETYPE_H
 
+#include "Kernel/SF_Threads.h"
 #include "Render/Render_Font.h"
 
 namespace Scaleform { namespace Render { 
@@ -171,6 +172,9 @@ private:
     bool                ExtLibFlag;
     Array<FontType>     Fonts;
     unsigned            NamesEndIdx;
+#ifdef SF_ENABLE_THREADS
+    mutable Mutex       LockMutex;
+#endif
 };
 
 }}

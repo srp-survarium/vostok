@@ -58,7 +58,7 @@ protected:
         ContainerType   Container;
     };
 protected: // only MovieImpl can create DrawingContext
-    DrawingContext(MemoryHeap* pheap, Render::Context&, ImageCreator* imgCreator);
+    DrawingContext(Render::Context&, ImageCreator* imgCreator);
 public:
     ~DrawingContext();
 
@@ -149,8 +149,9 @@ protected:
                                                   unsigned caps,
                                                   unsigned joins,
                                                   float miterLimit) const;
+    MemoryHeap*                     GetHeap() const { return RenContext.GetHeap(); }
+
 protected:
-    MemoryHeap*                 pHeap;
     Ptr<TreeContainer>          pTreeContainer;
     Render::Context&            RenContext;
     Ptr<ImageCreator>           ImgCreator;

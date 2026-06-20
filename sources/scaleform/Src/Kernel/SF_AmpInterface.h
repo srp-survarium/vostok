@@ -25,17 +25,27 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #if defined(SF_PROFILE_GPA)
     #include <ittnotify.h>
+    #define SF_GPA_ITT_DOMAIN                       __itt_domain
+    #define SF_GPA_ITT_DOMAIN_CREATEA(Name)         __itt_domain_createA(Name)
+    #define SF_GPA_ITT_STRING_HANDLE                __itt_string_handle
+    #define SF_GPA_ITT_STRING_HANDLE_CREATEA(Name)  __itt_string_handle_createA(Name)
+    #define SF_GPA_ITT_NULL                         __itt_null
+    #define SF_GPA_ITT_ID                           __itt_id
+    #define SF_GPA_ID_MAKE(Ptr, X)                  __itt_id_make(Ptr, X)
+    #define SF_GPA_ID_CREATE(Domain, ID)            __itt_id_create(Domain, ID)
+    #define SF_GPA_ID_DESTROY(Domain, ID)           __itt_id_destroy(Domain, ID)
+    #define SF_GPA_TASK_GROUP(Domain, GroupID, ParentID, Name)  __itt_task_group(Domain, GroupID, ParentID, Name)
 #else
-    #define __itt_domain void
-    #define __itt_domain_createA( Name ) NULL
-    #define __itt_string_handle void
-    #define __itt_string_handle_createA( Name ) NULL
-    #define __itt_null 0
-    #define __itt_id unsigned int
-    #define __itt_id_make( Ptr, X ) 0
-    #define __itt_id_create( Domain, ID )
-    #define __itt_id_destroy( Domain, ID )
-    #define __itt_task_group( Domain, GroupID, ParentID, Name )
+    #define SF_GPA_ITT_DOMAIN void
+    #define SF_GPA_ITT_DOMAIN_CREATEA(Name) NULL
+    #define SF_GPA_ITT_STRING_HANDLE void
+    #define SF_GPA_ITT_STRING_HANDLE_CREATEA(Name) NULL
+    #define SF_GPA_ITT_NULL 0
+    #define SF_GPA_ITT_ID unsigned int
+    #define SF_GPA_ID_MAKE(Ptr, X) 0
+    #define SF_GPA_ID_CREATE(Domain, ID)
+    #define SF_GPA_ID_DESTROY(Domain, ID)
+    #define SF_GPA_TASK_GROUP( Domain, GroupID, ParentID, Name )
 #endif
 
 namespace Scaleform {
@@ -67,7 +77,17 @@ enum AmpNativeFunctionId
     Amp_Native_Function_Id_ProcessInput,
     Amp_Native_Function_Id_ProcessMouse,
 
+    Amp_Native_Function_Id_GcCollect,
+    Amp_Native_Function_Id_GcMarkInCycle,
+    Amp_Native_Function_Id_GcScanInUse,
+    Amp_Native_Function_Id_GcFreeGarbage,
+    Amp_Native_Function_Id_GcFinalize,
+    Amp_Native_Function_Id_GcDelayedCleanup,
+
     Amp_Native_Function_Id_Display,
+    Amp_Native_Function_Id_NextCapture,
+    Amp_Native_Function_Id_Draw,
+    Amp_Native_Function_Id_Present,
     Amp_Native_Function_Id_Tessellate,
     Amp_Native_Function_Id_GlyphTextureMapper_Create,
     Amp_Native_Function_Id_GradientFill,
@@ -115,6 +135,11 @@ enum AmpNativeFunctionId
     Amp_Native_Function_Id_ObjectInterface_AttachMovie,
     Amp_Native_Function_Id_ObjectInterface_ToString,
     Amp_Native_Function_Id_ObjectInterface_GetWorldMatrix,
+    Amp_Native_Function_Id_ObjectInterface_InvokeClosure,
+    Amp_Native_Function_Id_ObjectInterface_IsByteArray,
+    Amp_Native_Function_Id_ObjectInterface_GetByteArraySize,
+    Amp_Native_Function_Id_ObjectInterface_ReadFromByteArray,
+    Amp_Native_Function_Id_ObjectInterface_WriteToByteArray,
     Amp_Native_Function_Id_End_ObjectInterface,
 
     Amp_Num_Native_Function_Ids
@@ -144,6 +169,9 @@ public:
     // AdvanceFrame needs to be called once per frame
     // It is called from GRenderer::EndFrame
     virtual void AdvanceFrame() = 0;
+
+    // Called from movie advance thread
+    virtual void MovieAdvance(GFx::MovieImpl* movie) = 0;
 
     static AmpServer& SF_STDCALL    GetInstance();
     static void SF_STDCALL          Init();
@@ -194,6 +222,8 @@ public:
     // AMP keeps track of active Movie Views
     virtual void        AddMovie(GFx::MovieImpl* movie) = 0;
     virtual void        RemoveMovie(GFx::MovieImpl* movie) = 0;
+    // note: the returned movie is AddRef-ed!
+    virtual bool        FindMovieByHeap(MemoryHeap* heap, GFx::MovieImpl** movie) = 0;
 
     // AMP keeps track of images
     virtual void        AddImage(GFx::ImageResource* image) = 0;
@@ -234,8 +264,8 @@ public:
     virtual AmpStats*   GetDisplayStats() = 0;
 
     // GPA integration
-    virtual __itt_id        GetGpaGroupId() = 0;
-    virtual __itt_domain*   GetGpaDomain() = 0;
+    virtual SF_GPA_ITT_ID        GetGpaGroupId() = 0;
+    virtual SF_GPA_ITT_DOMAIN*   GetGpaDomain() = 0;
 
 protected:
     static AmpServer* AmpServerSingleton;
@@ -248,6 +278,8 @@ public:
 
     virtual void    NativePushCallstack(const char* functionName, AmpNativeFunctionId functionId, UInt64 funcTime) = 0;
     virtual void    NativePopCallstack(UInt64 time) = 0;
+    virtual void    AddGcRoots(UInt32 numRoots) = 0;
+    virtual void    AddGcFreedRoots(UInt32 numFreedRoots) = 0;
 };
 
 
@@ -257,7 +289,7 @@ public:
 class GPAScopedTask
 {
 public:
-    __itt_domain* m_pDomain;
+    SF_GPA_ITT_DOMAIN* m_pDomain;
 
     inline GPAScopedTask(const char* szFunctionName)
     {

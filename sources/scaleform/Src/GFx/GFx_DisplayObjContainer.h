@@ -54,6 +54,8 @@ public:
         return mDisplayList.GetBounds(t); 
     }
     virtual CharacterDef*   GetCharacterDef() const { return NULL; }
+    virtual void            PropagateScale9GridExists();
+    virtual void            SetScale9Grid(const RectF& rect);
 
     // Returns character bounds excluding stroke
     virtual RectF           GetRectBounds(const Matrix &t) const 

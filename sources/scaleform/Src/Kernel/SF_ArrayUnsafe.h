@@ -32,10 +32,11 @@ namespace Scaleform {
 // check for memory overrun, but the address persistence is guaranteed.
 // Use with CAUTION! 
 //
-// The code of this class template was taken from the Anti-Grain Geometry
-// Project and modified for the use by Scaleform. 
+// The code of these classes was taken from the Anti-Grain Geometry
+// Project and modified for the use by Scaleform/Autodesk. 
 // Permission to use without restrictions is hereby granted to 
-// Scaleform Corp. by the author of Anti-Grain Geometry Project.
+// Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+// See http://antigrain.com for details.
 //------------------------------------------------------------------------
 template<class T, class Allocator> class ArrayUnsafeBase
 {

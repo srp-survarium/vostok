@@ -47,10 +47,8 @@ struct ListNode
     {
         pPrev->pNext = pNext;
         pNext->pPrev = pPrev;
-#ifdef SF_BUILD_DEBUG
         pPrev = reinterpret_cast<T*>(~UPInt(0));
         pNext = reinterpret_cast<T*>(~UPInt(0));
-#endif
     }
 
     // Removes us from the list and inserts pnew there instead.
@@ -60,10 +58,8 @@ struct ListNode
         pNext->pPrev = pnew;
         pnew->pPrev = pPrev;
         pnew->pNext = pNext;
-#ifdef SF_BUILD_DEBUG
         pPrev = reinterpret_cast<T*>(~UPInt(0));
         pNext = reinterpret_cast<T*>(~UPInt(0));
-#endif
     }
        
     // Inserts the argument linked list node after us in the list.

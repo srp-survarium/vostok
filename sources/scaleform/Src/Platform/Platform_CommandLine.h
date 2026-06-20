@@ -16,6 +16,10 @@ otherwise accompanies this software in either electronic or hard copy form.
 #ifndef INC_SF_Platform_CommandLine_H
 #define INC_SF_Platform_CommandLine_H
 
+#if defined(SF_OS_WINMETRO)
+	#define Platform SFPlatform
+#endif
+
 #include "Kernel/SF_RefCount.h"
 #include "Kernel/SF_Array.h"
 #include "Kernel/SF_String.h"
