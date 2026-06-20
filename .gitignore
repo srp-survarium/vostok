@@ -6,24 +6,23 @@ binaries/
 target/
 debug/
 
+## Prebuilt 3rd-party libraries (staged from vostok-libs by copy_lib_files.py;
+## mirrors the shipped game's binaries.prebuilt/ layout - blobs, not source)
+binaries.prebuilt/
+
 # rustfmt backup files
 **/*.rs.bk
 
-## Libraries are stored in a different repository
-*.pdb
-*.exe
-*.dll
-*.a
-*.lib
+## Binary blobs (prebuilt libs, build outputs) live ONLY under binaries/ and
+## binaries.prebuilt/ (both ignored above). We deliberately do NOT ignore
+## *.lib/*.exe/*.pdb/*.dll globally: ignoring by type hides the bug instead of
+## the artifact - a binary that appears anywhere else is a misplacement we WANT
+## to surface in `git status`, not silence.
 
 # Claude Code local state (keep shared agents + commands, ignore the rest)
 .claude/*
 !.claude/agents/
 !.claude/commands/
-
-# LGPL license files staged from vostok-libs into the cell SDK tree
-sources/cell/host-win32/ppu/COPYING.LIB
-sources/cell/host-win32/spu/COPYING.LIB
 
 # Python
 **/__pycache__/
