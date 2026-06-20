@@ -21,6 +21,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import gfx_libs as G
+from gfx_mspdbsrv import kill_mspdbsrv, wine_cl
 
 VOSTOK = G.VOSTOK_DIR
 RSP_DIR = VOSTOK / "binaries/ninja/rsp"
@@ -29,11 +30,14 @@ DEFAULT_ORDER = ["libgfxexpat", "libgfxsound_fmod", "libgfx_zlib", "libgfx_libpn
                  "libgfx_libjpeg", "libgfx_as2", "libgfx_air", "libgfx_as3"]
 
 
-def wine_cmd(cmdline, cwd):
+def wine_lib(cmdline, cwd):
+    """`lib` has no obj-completion sentinel, so just reap mspdbsrv after it."""
     env = dict(os.environ)
     env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    return subprocess.run(["wine", "cmd", "/c", cmdline], cwd=str(cwd), env=env,
-                          capture_output=True, text=True)
+    r = subprocess.run(["wine", "cmd", "/c", cmdline], cwd=str(cwd), env=env,
+                       capture_output=True, text=True)
+    kill_mspdbsrv()
+    return r
 
 
 def build_one(name):
@@ -63,7 +67,8 @@ def build_one(name):
             skipped += 1
             continue
         per_tu_rsp.write_text(f'{flags_line}\n"{tu}"\n')
-        r = wine_cmd(f"cl {per_tu_arg} /nologo /errorReport:prompt", cwd=proj_dir)
+        r = wine_cl(f"cl {per_tu_arg} /nologo /errorReport:prompt",
+                    cwd=proj_dir, obj_path=obj)
         if obj.is_file() and obj.stat().st_size > 0:
             built += 1
             print(f"[{name}] [{i}/{len(tus)}] OK   {obj.name}")
@@ -81,7 +86,7 @@ def build_one(name):
 
     print(f"[{name}] Linking {name}.lib ...")
     lib_arg = "@Z:" + str(lib_rsp).replace("/", "\\")
-    r = wine_cmd(f"lib {lib_arg} /NOLOGO", cwd=proj_dir)
+    r = wine_lib(f"lib {lib_arg} /NOLOGO", cwd=proj_dir)
     if out_lib.is_file():
         print(f"[{name}] {name}.lib: {out_lib.stat().st_size} bytes")
         return 0

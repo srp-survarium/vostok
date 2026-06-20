@@ -16,6 +16,9 @@ import subprocess
 import sys
 from pathlib import Path
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from gfx_mspdbsrv import kill_mspdbsrv, wine_cl
+
 VOSTOK = Path("/home/sheep/Projects/surv/vostok_4")
 PROJ_DIR = VOSTOK / "sources/vostok/libgfx/sources"
 RSP_DIR = VOSTOK / "binaries/ninja/rsp"
@@ -24,17 +27,14 @@ CL_RSP = RSP_DIR / "libgfx_cl_0.rsp"
 LIB_RSP = RSP_DIR / "libgfx_lib.rsp"
 
 
-def wine_cmd(cmdline, cwd):
-    """Invoke a Windows tool the way ninja does: `wine cmd /c <cmdline>`.
-
-    The bare `wine cl ...` form routes through start.exe, which deadlocks under
-    this Wine after many spawns; `cmd /c` launches the tool directly and is what
-    the working ninja graph uses.
-    """
+def wine_lib(cmdline, cwd):
+    """`lib` (no per-obj completion sentinel): run, then reap mspdbsrv."""
     env = dict(os.environ)
     env.setdefault("WINEDEBUG", "fixme-all,err-kerberos")
-    return subprocess.run(["wine", "cmd", "/c", cmdline], cwd=str(cwd), env=env,
-                          capture_output=True, text=True)
+    r = subprocess.run(["wine", "cmd", "/c", cmdline], cwd=str(cwd), env=env,
+                       capture_output=True, text=True)
+    kill_mspdbsrv()
+    return r
 
 
 def main():
@@ -62,7 +62,8 @@ def main():
             skipped += 1
             continue
         per_tu_rsp.write_text(f'{flags_line}\n"{tu}"\n')
-        r = wine_cmd(f"cl {per_tu_arg} /nologo /errorReport:prompt", cwd=PROJ_DIR)
+        r = wine_cl(f"cl {per_tu_arg} /nologo /errorReport:prompt",
+                    cwd=PROJ_DIR, obj_path=obj)
         if obj.is_file() and obj.stat().st_size > 0:
             built += 1
             print(f"[{i}/{len(tus)}] OK   {obj_name}")
@@ -81,7 +82,7 @@ def main():
     # All objs present -> lib them.
     print("Linking libgfx.lib ...")
     lib_arg = "@Z:" + str(LIB_RSP).replace("/", "\\")
-    r = wine_cmd(f"lib {lib_arg} /NOLOGO", cwd=PROJ_DIR)
+    r = wine_lib(f"lib {lib_arg} /NOLOGO", cwd=PROJ_DIR)
     out = VOSTOK / "binaries.prebuilt/Win32/libraries/shipping/libgfx.lib"
     if out.is_file():
         print(f"libgfx.lib: {out.stat().st_size} bytes")
