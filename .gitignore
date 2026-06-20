@@ -6,6 +6,10 @@ binaries/
 target/
 debug/
 
+## Prebuilt 3rd-party libraries (staged from vostok-libs by copy_lib_files.py;
+## mirrors the shipped game's binaries.prebuilt/ layout - blobs, not source)
+binaries.prebuilt/
+
 # rustfmt backup files
 **/*.rs.bk
 

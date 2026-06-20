@@ -1,5 +1,14 @@
 """
-copy_lib_files.py - Copy 3rd party libraries ('.dll's and '.lib's) into the project.
+copy_lib_files.py - Stage prebuilt 3rd party libraries ('.dll's, '.lib's, ...)
+into the repo.
+
+These are binary blobs, not source, so they land in a top-level
+`binaries.prebuilt/` tree (gitignored) that mirrors how the shipped game stored
+them - NOT in `sources/`, which is the SDK source tree. The GFx (Scaleform)
+Shipping libs are remapped onto the original game's layout
+(`binaries.prebuilt/Win32/libraries/shipping/`); every other blob keeps its
+source-relative subpath under `binaries.prebuilt/`. Include dirs still point at
+`sources/` (the SDK headers), so only the link search path moves.
 """
 
 import argparse
@@ -17,7 +26,41 @@ VOSTOK_DIR = SCRIPT_DIR.parent
 LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vostok-libs")))
 
 SRC         = LIBS_DIR   / "sources"
-DEST        = VOSTOK_DIR / "sources"
+DEST        = VOSTOK_DIR / "binaries.prebuilt"
+
+# `COPYING.LIB` is the LGPL license TEXT (cell SDK), not a binary blob; the
+# `*.lib` ext glob catches it, but it belongs with the SDK source, so it stays
+# under sources/ (gitignore keeps a matching exception). Routed there, not to
+# binaries.prebuilt/.
+SOURCES_DIR    = VOSTOK_DIR / "sources"
+LICENSE_NAMES  = {"COPYING.LIB"}
+
+# The GFx libs the exe links, remapped onto the shipped game's layout
+# (`Win32/libraries/shipping/`) so the bare-name `#pragma comment(lib,
+# "libgfx.lib")` resolves off it. The destination dir mirrors the original
+# game's `shipping/` path, but we source the *Release* config: our 4.0.15 GFx
+# distribution's Shipping libs strip the AMP/ProfileViews profiling symbols that
+# the render_engine objects reference (AmpServer::GetInstance,
+# ProfileViews::Set/GetColorForBatch), so only Release links. The original game
+# linked its own 4.2.21 Shipping libs, which kept those symbols - the
+# config/version mismatch is the expected prebuilt-vs-target signal.
+GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Release")
+GFX_DST = Path("Win32/libraries/shipping")
+
+
+def dest_for(rel_path: Path, dest: Path) -> Path:
+    """Resolve the absolute target path for a source-relative blob.
+
+    License text (COPYING.LIB) stays under sources/; the GFx Release libs land
+    on the shipped game's `Win32/libraries/shipping/` layout; everything else
+    (tool SDKs the exe doesn't link, plus the other GFx configs) keeps its
+    source-relative subpath under `dest` so nothing is lost.
+    """
+    if rel_path.name in LICENSE_NAMES:
+        return SOURCES_DIR / rel_path
+    if rel_path.parent == GFX_SRC:
+        return dest / GFX_DST / rel_path.name
+    return dest / rel_path
 
 
 def human_size(n: int) -> str:
@@ -48,7 +91,7 @@ def main():
     for file in src.rglob("*"):
         if file.is_file() and file.suffix.lower() in EXTS:
             rel_path = file.relative_to(src)
-            target = dest / rel_path
+            target = dest_for(rel_path, dest)
             target.parent.mkdir(parents=True, exist_ok=True)
 
             # Prior copies came from /nix/store (read-only). Atomically remove any

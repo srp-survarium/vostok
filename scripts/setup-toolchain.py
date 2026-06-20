@@ -5,7 +5,7 @@ setup-toolchain.py
 Installs the Vostok build environment so that later `wine ninja.exe` invocations
 in binaries/ninja/ can build the project. Steps:
 
-  1. Copy vostok-libs into sources/
+  1. Stage vostok-libs (prebuilt blobs) into binaries.prebuilt/
   2. Initialise the Wine prefix
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
@@ -201,12 +201,12 @@ def ensure_target_side(force: bool = False) -> None:
 
 
 def copy_libs(libs_dir: Path) -> None:
-    log("Copying vostok-libs -> sources/ ...")
+    log("Staging vostok-libs -> binaries.prebuilt/ ...")
     subprocess.check_call([
         sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
-        str(libs_dir / "sources"), str(VOSTOK_DIR / "sources"),
+        str(libs_dir / "sources"), str(VOSTOK_DIR / "binaries.prebuilt"),
     ])
-    log("Library files copied.")
+    log("Library files staged.")
 
 
 def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
