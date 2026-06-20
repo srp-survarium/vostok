@@ -33,28 +33,25 @@ DEST        = VOSTOK_DIR / "binaries.prebuilt"
 # SKIP it here rather than staging a copy (no special destination needed).
 LICENSE_NAMES  = {"COPYING.LIB"}
 
-# The GFx libs the exe links, remapped onto the shipped game's layout
-# (`Win32/libraries/shipping/`) so the bare-name `#pragma comment(lib,
-# "libgfx.lib")` resolves off it. The destination dir mirrors the original
-# game's `shipping/` path, but we source the *Release* config: our 4.0.15 GFx
-# distribution's Shipping libs strip the AMP/ProfileViews profiling symbols that
-# the render_engine objects reference (AmpServer::GetInstance,
-# ProfileViews::Set/GetColorForBatch), so only Release links. The original game
-# linked its own 4.2.21 Shipping libs, which kept those symbols - the
-# config/version mismatch is the expected prebuilt-vs-target signal.
+# The foreign GFx libs (libgfx*.lib under this Release dir) are NOT staged. We
+# build our OWN from-source 4.2.22 GFx suite into `Win32/libraries/shipping/`
+# (build_gfx_lib_direct.py) to byte-match the shipped 4.2.21 - the exe links them
+# via `#pragma comment(lib,"libgfx.lib")` off that dir. Staging the 4.0.15
+# distribution libs here would CLOBBER those builds on every setup (their ABI
+# differs from 4.2.22, breaking the render-engine link), so skip everything under
+# GFX_SRC.
 GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Release")
-GFX_DST = Path("Win32/libraries/shipping")
 
 
-def dest_for(rel_path: Path, dest: Path) -> Path:
-    """Resolve the absolute target path for a source-relative blob.
+def dest_for(rel_path: Path, dest: Path):
+    """Resolve the absolute target path for a source-relative blob, or None to skip.
 
-    The GFx Release libs land on the shipped game's `Win32/libraries/shipping/`
-    layout; everything else (tool SDKs the exe doesn't link, plus the other GFx
-    configs) keeps its source-relative subpath under `dest` so nothing is lost.
+    Foreign GFx libs (under GFX_SRC) are skipped - the 4.2.22 suite is built from
+    source into shipping/ separately. Everything else keeps its source-relative
+    subpath under `dest` so nothing is lost.
     """
     if rel_path.parent == GFX_SRC:
-        return dest / GFX_DST / rel_path.name
+        return None
     return dest / rel_path
 
 
@@ -88,6 +85,8 @@ def main():
         if file.is_file() and file.suffix.lower() in EXTS and file.name not in LICENSE_NAMES:
             rel_path = file.relative_to(src)
             target = dest_for(rel_path, dest)
+            if target is None:          # foreign GFx lib - we build our own from source
+                continue
             target.parent.mkdir(parents=True, exist_ok=True)
 
             # Prior copies came from /nix/store (read-only). Atomically remove any
