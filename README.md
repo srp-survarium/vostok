@@ -166,10 +166,13 @@ session** - it spawns worker subagents, so it cannot run as a nested subagent - 
 ```
 
 Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a
-`matcher` (up to the worker cap, default 3), runs the `structure-verifier` + `reviewer` onto the same
-branch, and opens a **stacked PR** (match + verify commits, minimal body). Matchers spawn
-off the **top** of the stack so percentages compound; you review the stack **bottom-up** and
-merge one PR at a time (the `pr-verifier` agent prepares each onto the advancing base).
+`matcher` (fanning out up to the worker cap, default 3), integrates each finished matcher's
+commit into a single linear stack, and **builds before opening that unit's PR** so each PR
+carries a current `match.db`. Matchers spawn off the **top** of the stack so percentages
+compound; their PRs form **one linear chain** (each based on the unit below it, never fanned
+into a shared base). After every 10-15 matchers it runs one `structure-verifier` over the
+batch. You review the stack **bottom-up**; when approved it lands into the integration branch
+by a single fast-forward (all commits preserved).
 Prereqs: worktrees `vostok_1..3` clean + warm (`binaries/rich/target` + `binaries/objdiff`
 present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md).
 
