@@ -681,20 +681,7 @@ void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_rend
 
 void game::load_config_query( pcstr cfg_name, bool create_renderer )
 {
-	resources::request requests[]	=
-	{
-		resources::create_request	( cfg_name, resources::raw_data_class ),
-	};
-
-	resources::query_resources_and_wait	(
-		requests,
-		1,
-		boost::bind					( &game::on_config_loaded, this, _1, create_renderer ),
-		g_allocator,
-		NULL,
-		NULL,
-		assert_on_fail_false
-	);
+	resources::query_resources_and_wait	( &resources::create_request( cfg_name, resources::raw_data_class ), 1, boost::bind( &game::on_config_loaded, this, _1, create_renderer ), g_allocator, NULL, NULL, assert_on_fail_false );
 }
 
 void game::register_console_commands( )
@@ -1053,6 +1040,17 @@ void game::switch_to_login( login_menu_status_enum status )
 	switch_to_scene					( m_login_menu );
 }
 
+// claude@NOTE: cook inventory + order verified EXACT against the target disasm
+// (0x5e5940): the 7 statics and the 3 explicit register_cook calls all appear in
+// target order - this is NOT a content/order divergence. The residual is all
+// non-steerable codegen: (1) `mov esi,eax` this-in-eax convention - the fn is
+// reached only via the member-fn-ptr anchor in anchor_game_world.cpp (address-take,
+// not a direct call); (2) animated_model_instance_cook ctor inline-vs-call (base
+// inlines its body, target out-of-lines it - cross-module knob); (3) the free
+// resources::register_cook(cook) is inlined into resources_manager::register_cook
+// in the target but CALLed in our base x3 (cross-module inline knob); (4) the
+// s_victory_item_cook ctor is this-const-folded in the target (see
+// victory_item_cooker.cpp note). None steerable from this TU.
 void game::register_cooks( )
 {
 	static animated_model_instance_cook				s_animated_model_instance_cook;
@@ -1255,19 +1253,7 @@ scaleform_movie_cook::scaleform_movie_cook( flash_factory& factory )
 
 void scaleform_movie_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	resources::request requests[]	=
-	{
-		resources::create_request	( parent.get_requested_path( ), resources::raw_data_class ),
-	};
-
-	resources::query_resources		(
-		requests,
-		1,
-		boost::bind					( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ),
-		g_allocator,
-		NULL,
-		&parent
-	);
+	resources::query_resources		( &resources::create_request( parent.get_requested_path( ), resources::raw_data_class ), 1, boost::bind( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ), g_allocator, NULL, &parent );
 }
 
 // claude@NOTE: 2-statement target. `delete movie` byte-residual: our scaleform/flash_movie.h
