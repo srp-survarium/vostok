@@ -1062,7 +1062,6 @@ void game::clear_resources( )
 	{
 		m_network_client->unload	( );
 		DELETE						( m_network_client );
-		m_network_client			= 0;
 	}
 
 	m_input_world->clear_resources	( );
