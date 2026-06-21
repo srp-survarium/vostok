@@ -5,6 +5,9 @@
 #ifndef INVENTORY_ITEM_INSTANCE_H_INCLUDED
 #define INVENTORY_ITEM_INSTANCE_H_INCLUDED
 
+#include <vostok/game_core/slot_serialize_mode_enum.h>
+#include <vostok/network_core/packet_reader.h>
+
 namespace vostok {
 namespace network_core {
 	class udp_match_packet;
@@ -14,14 +17,22 @@ namespace network_core {
 
 namespace survarium {
 
-enum slot_serialize_mode_enum {};
-
 struct inventory_item_instance {
 public:
 	inline	explicit	inventory_item_instance	( ) { /* no source */ }
 
 	inline	void		serialize				( network_core::udp_match_packet& arg_0, slot_serialize_mode_enum arg_1 ) const { /* no source */ }
-	inline	void		deserialize				( network_core::packet_reader& arg_0, slot_serialize_mode_enum arg_1 ) { /* no source */ }
+	inline	void		deserialize				( network_core::packet_reader& reader, slot_serialize_mode_enum mode )
+	{
+		dict_id	= reader.r< u16 >( );
+		id		= reader.r< u32 >( );
+
+		if ( mode != serialize_just_amount_values )
+			condition_or_stack	= reader.r< u16 >( );
+
+		if ( mode != serialize_just_condition_stack_values )
+			amount_in_inventory	= reader.r< u32 >( );
+	}
 
 
 public:
