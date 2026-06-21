@@ -87,7 +87,10 @@ void   particle_system_wrapper_cook::on_resource_ready	(queries_result & result)
 	unmanaged_resource_ptr resource		=	result[0].get_unmanaged_resource();
 
 	if ( resource )
+	{
+		resource->set_deleter_object			(this, allocate_thread_id());
 		parent->set_unmanaged_resource		(resource, resource->memory_usage());
+	}
 
 	parent->finish_query					(result[0].get_error_type(), result.assert_on_fail());
 }

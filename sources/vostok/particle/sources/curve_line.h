@@ -328,6 +328,11 @@ struct curve_line_ranged_xyz_float
 	}
 	inline void load_binary(vostok::mutable_buffer& buffer)
 	{
+		u8 tmp;
+		vostok::memory::copy(&tmp, sizeof(tmp), buffer.c_ptr(), sizeof(tmp));
+		buffer += sizeof(tmp);
+		m_evaluate_type = (enum_evaluate_type)tmp;
+
 		m_line_x.load_binary(buffer);
 		m_line_y.load_binary(buffer);
 		m_line_z.load_binary(buffer);
