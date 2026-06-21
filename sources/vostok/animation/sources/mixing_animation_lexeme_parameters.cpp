@@ -64,6 +64,15 @@ u32 animation_lexeme_parameters::animation_intervals_count	( skeleton_animation_
 	return							channel.domains_count( );
 }
 
+// claude@NOTE: structure matches the target's local set (pinned_animation,
+// animation_length, const start_time - no `length` local) and the two-return /
+// single-merged-ctor shape (both `return animation_interval(...)` share one ctor
+// site). Residual: (1) the target out-of-lines `animation_interval::animation_interval`
+// while our base inlines it (intrusive_ptr::set + the three field stores) - an
+// inline-threshold/LTCG effect, not source-steerable; (2) the target materializes
+// `channel_id != u32(-1)` as a standalone statement (`setne`, its own source line)
+// ahead of the channel resolution - a condition-split quirk no faithful spelling
+// reproduces without a phantom bool local the target does not record.
 vostok::animation::mixing::animation_interval animation_lexeme_parameters::create_animation_interval( skeleton_animation_ptr const& animation, const u32 interval_id )
 {
 	cubic_spline_skeleton_animation_pinned pinned_animation( animation );
@@ -71,17 +80,13 @@ vostok::animation::mixing::animation_interval animation_lexeme_parameters::creat
 
 	u32 const channel_id			= pinned_animation->event_channels().get_channel_id( animation_intervals_channel_id );
 
-	float start_time				= 0.f;
-	float length					= animation_length;
-	if ( channel_id != u32(-1) ) {
-		event_channel const& channel	= pinned_animation->event_channels().channel( channel_id );
-		if ( channel.knots_count() ) {
-			start_time				= channel.knot( interval_id )/default_fps;
-			length					= ( interval_id + 1 < channel.knots_count() ) ?
-				channel.knot( interval_id + 1 )/default_fps - start_time :
-				animation_length - start_time;
-		}
+	event_channel const* const channel	= ( channel_id != u32(-1) ) ? &pinned_animation->event_channels().channel( channel_id ) : 0;
+	if ( channel && channel->knots_count() ) {
+		float const start_time			= channel->knot( interval_id )/default_fps;
+		return						animation_interval( animation, start_time, ( interval_id + 1 < channel->knots_count() ) ?
+			channel->knot( interval_id + 1 )/default_fps - start_time :
+			animation_length - start_time );
 	}
 
-	return							animation_interval( animation, start_time, length );
+	return							animation_interval( animation, 0.f, animation_length );
 }
