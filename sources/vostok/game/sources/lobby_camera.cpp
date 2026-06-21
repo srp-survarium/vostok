@@ -4,6 +4,12 @@
 
 #include "pch.h"
 #include "lobby_camera.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/input/mouse.h>
+#include <vostok/input/world.h>
+#include <vostok/physics/world.h>
+#include <vostok/physics/ray_result.h>
 
 namespace survarium {
 
@@ -20,7 +26,6 @@ namespace survarium {
 	m_rotation_delta = float2( 0.0f, 0.0f );
 }
 
-// STATE[STUB]
 bool lobby_camera::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -28,14 +33,8 @@ bool lobby_camera::on_keyboard_action(
 )
 {
 	return false;
-
-	// FUNCTION BODY[0x5c3e80]: 2
-	// <0>
-	// <0x5c3e80>|0x000|+0x002:'35'
-	// ******
 }
 
-// STATE[STUB]
 bool lobby_camera::on_gamepad_action(
 	input::world*					input_world,
 	input::gamepad_button			button,
@@ -43,50 +42,42 @@ bool lobby_camera::on_gamepad_action(
 )
 {
 	return false;
-
-	// FUNCTION BODY[0x5c3e70]: 2
-	// <0>
-	// <0x5c3e70>|0x000|+0x002:'41'
-	// ******
 }
 
-// STATE[STUB]
 bool lobby_camera::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
 	input::enum_mouse_key_action	actions_mask
 )
 {
-	// CALL SITE INFO
-	// <0x5c3e2b> -> bool < unknown >()
-	// ******
+	if ( get_game_scene( ).is_mouse_over_ui( ) )
+		return false;
+
+	// sushi@TODO: 0x152 is the shipped mouse_button enumerator, absent from the legacy
+	// reconstructed input/mouse.h (values 1..128); emitted as the literal (fn is byte-
+	// exact 100%) until the real enum constant is recovered. See review_todos.md.
+	if ( button == input::mouse_button( 0x152 ) )
+	{
+		if ( !m_capture_move && actions_mask == input::ms_key_down )
+			m_capture_move	= true;
+		else if ( actions_mask == input::ms_key_up )
+			m_capture_move	= false;
+
+		return true;
+	}
 
 	return false;
-
-	// FUNCTION BODY[0x5c3e20]: 15
-	// <0x5c3e20>|0x000|+0x003:'45'	{
-	// <0>
-	// <0x5c3e23>|0x003|+0x00c:'47'
-	// <0x5c3e2f>|0x00f|+0x002:'48'
-	// <0>
-	// <0x5c3e31>|0x011|+0x00a:'50'
-	// <0>
-	// <0x5c3e3b>|0x01b|+0x00d:'52'
-	// <0x5c3e48>|0x028|+0x00a:'53'
-	// <0x5c3e52>|0x032|+0x005:'54'
-	// <0x5c3e57>|0x037|-0x00b:'55'
-	// <0>
-	// <0x5c3e4c>|0x02c|+0x00f:'57'
-	// <0x5c3e5b>|0x03b|+0x006:'57'
-	// <0>
-	// <1>
-	// <0x5c3e61>|0x041|-0x012:'60'
-	// <0x5c3e4f>|0x02f|+0x00f:'61'
-	// <0x5c3e5e>|0x03e|+0x006:'61'
-	// <0x5c3e64>|0x044|      :'61'	}
-	// ******
 }
 
+// claude@NOTE: PARKED on a cross-module wall. The body reads the namespace-scope
+// global survarium::g_mouse_sensitivity (?g_mouse_sensitivity@survarium@@3MA), whose
+// definition is owned by key_binder.cpp (still a stub TU); referencing it here would
+// leave it undefined at link, same wall as player_input_handler::on_mouse_move.
+// Recovered shape (10 stmts): if (!get_game_scene().is_mouse_over_ui()) m_z_mouse_axis
+// -= z * <epsilon>; if (!m_capture_move) return false; float2 render_window_size =
+// get_game_scene().get_game().engine().get_render_window_size(); then update m_yaw via
+// x*g_mouse_sensitivity*pi*<k> and m_pitch via (y/window)*... and (-z)*... ; return true.
+// Next step: match key_binder.cpp (defines g_mouse_sensitivity), then reconstruct.
 // STATE[STUB]
 bool lobby_camera::on_mouse_move(
 	input::world*		input_world,
@@ -95,172 +86,86 @@ bool lobby_camera::on_mouse_move(
 	s32					z
 )
 {
-	// LOCALS
-	// float2 							render_window_size
-	// ******
-
-	// CALL SITE INFO
-	// <0x5c3d4e> -> bool < unknown >()
-	// <0x5c3d95> -> float2 < unknown >() const
-	// ******
-
 	return false;
-
-	// FUNCTION BODY[0x5c3d40]: 16
-	// <0x5c3d40>|0x000|+0x006:'64'	{
-	// <0x5c3d46>|0x006|+0x00e:'65'
-	// <0x5c3d54>|0x014|+0x01c:'66'
-	// <0>
-	// <0x5c3d70>|0x030|+0x006:'68'
-	// <0x5c3d76>|0x036|+0x009:'69'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c3d7f>|0x03f|+0x018:'73'
-	// <0x5c3d97>|0x057|+0x010:'74'
-	// <0>
-	// <1>
-	// <0x5c3da7>|0x067|+0x03b:'77'
-	// <0x5c3de2>|0x0a2|+0x033:'78'
-	// <0>
-	// <0x5c3e15>|0x0d5|-0x09c:'80'
-	// <0x5c3d79>|0x039|+0x09f:'81'
-	// <0x5c3e18>|0x0d8|      :'81'	}
-	// ******
 }
 
-// STATE[STUB]
 void lobby_camera::on_before_processing( input::world* input_world, const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x5c3d10]: 3
-	// <0>
-	// <0x5c3d13>|0x003|+0x01e:'86'
-	// <0x5c3d31>|0x021|+0x005:'87'
-	// ******
+	m_rotation_delta	= float2( 0.0f, 0.0f );
+	m_z_mouse_axis		= 0.0f;
 }
 
-// STATE[STUB]
 void lobby_camera::on_after_processing( input::world* input_world )
 {
-	// FUNCTION BODY[0x5c3d00]: 1
-	// <0x5c3d00>|0x000|+0x000:'91'	{
-	// <0>
-	// <0x5c3d00>|0x000|      :'93'	}
-	// ******
 }
 
-// STATE[STUB]
 s32 lobby_camera::input_priority( )
 {
-	return 0;
-
-	// FUNCTION BODY[0x5c3c90]: 1
-	// <0x5c3c90>|0x000|+0x005:'97'
-	// ******
+	return 10;
 }
 
-// STATE[STUB]
 void lobby_camera::on_activate( camera_director* cd )
 {
-	// FUNCTION BODY[0x5c3cf0]: 1
-	// <0x5c3cf0>|0x000|+0x000:'101'	{
-	// <0>
-	// <0x5c3cf0>|0x000|      :'103'	}
-	// ******
 }
 
-// STATE[STUB]
 void lobby_camera::on_deactivate( )
 {
-	// FUNCTION BODY[0x5c3c80]
-	// <0x5c3c80>|0x000|      :'106'	{
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: 14/14 statement STRUCTURE MATCH. Residual is a 0x10 frame-size delta:
+// the target folds the inline float3(m_pitch,0,0) temp into the freed mul4x3 output
+// area, shifting every later [esp+N] offset (and an edx/eax choice in the position
+// store) - an LTCG scheduling artifact, not source-steerable.
 void lobby_camera::tick( )
 {
-	// LOCALS
-	// float3 							ray_direction
-	// float4x4 						new_inverted_view
-	// ******
+	m_yaw	+= m_rotation_delta.x;
+	m_pitch	+= m_rotation_delta.y;
 
-	// FUNCTION BODY[0x5c3fc0]: 23
-	// <0>
-	// <0x5c3fcf>|0x00f|+0x00f:'111'
-	// <0x5c3fde>|0x01e|+0x00f:'112'
-	// <0>
-	// <0x5c3fed>|0x02d|+0x029:'114'
-	// <0>
-	// <0x5c4016>|0x056|+0x009:'116'
-	// <0x5c401f>|0x05f|+0x02a:'117'
-	// <0>
-	// <1>
-	// <0x5c4049>|0x089|+0x022:'120'
-	// <0>
-	// <0x5c406b>|0x0ab|+0x00e:'122'
-	// <0x5c4079>|0x0b9|+0x033:'123'
-	// <0x5c40ac>|0x0ec|+0x061:'124'
-	// <0>
-	// <0x5c410d>|0x14d|+0x00c:'126'
-	// <0x5c4119>|0x159|+0x062:'127'
-	// <0x5c417b>|0x1bb|+0x019:'128'
-	// <0>
-	// <0x5c4194>|0x1d4|+0x052:'130'
-	// <0x5c41e6>|0x226|+0x01e:'131'
-	// <0>
-	// ******
+	if ( !math::is_zero( m_z_mouse_axis ) )
+	{
+		m_target_distance_to_focus_point	= m_current_distance_to_focus_point + m_z_mouse_axis;
+		math::clamp	( m_target_distance_to_focus_point, 1.5f, 40.0f );
+	}
+
+	math::clamp	( m_pitch, -math::pi_d3, math::pi_d3 );
+
+	float4x4 new_inverted_view	= float4x4( ).identity( );
+	new_inverted_view			= new_inverted_view * math::create_rotation_y( m_yaw );
+	new_inverted_view			= new_inverted_view * math::create_rotation( float3( m_pitch, 0.0f, 0.0f ) );
+
+	m_current_distance_to_focus_point	= m_target_distance_to_focus_point;
+
+	float3 ray_direction		= -new_inverted_view.k.xyz( );
+
+	process_collision	( m_target_point, ray_direction, m_current_distance_to_focus_point );
+
+	new_inverted_view.c.xyz( )	= m_target_point - ray_direction * m_current_distance_to_focus_point;
+
+	m_inverted_view_matrix		= new_inverted_view;
 }
 
-// STATE[STUB]
 void lobby_camera::process_collision(
 	float3 const&		target_point,
 	float3 const&		direction,
 	float&				distance_to_focus_point
 )
 {
-	// LOCALS
-	// physics::closest_ray_result 		result
-	// ******
+	physics::closest_ray_result result = get_game_scene( ).get_physics_world( )->ray_test(
+		target_point, direction, distance_to_focus_point, 16, 8 );
 
-	// CALL SITE INFO
-	// <0x5c3f56> -> physics::closest_ray_result < unknown >( float3 const&, float3 const&, const float, u16, u16 )
-	// ******
-
-	// FUNCTION BODY[0x5c3f30]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c3f30>|0x000|+0x028:'141'
-	// <0>
-	// <0x5c3f58>|0x028|+0x006:'143'
-	// <0x5c3f5e>|0x02e|+0x04d:'144'
-	// ******
+	if ( result.object )
+		distance_to_focus_point = ( result.hit_point_world - target_point ).length( );
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH. Sole residual is a vtable-slot delta: target calls
+// game::input_world() at slot [edx+28h], our game.h declares it at [edx+20h]. That is
+// a game.h virtual-ordering divergence (another unit's structure) - not fixable here.
 void lobby_camera::on_focus( bool b_focus_enter )
 {
-	// CALL SITE INFO
-	// <0x5c3cb8> -> input::world& < unknown >()
-	// <0x5c3cc5> -> void < unknown >( input::handler& )
-	// <0x5c3cd9> -> input::world& < unknown >()
-	// <0x5c3ce6> -> void < unknown >( input::handler& )
-	// ******
-
-	// FUNCTION BODY[0x5c3ca0]: 6
-	// <0x5c3ca0>|0x000|+0x000:'148'	{
-	// <0>
-	// <1>
-	// <0x5c3ca0>|0x000|+0x00a:'151'
-	// <0x5c3caa>|0x00a|+0x012:'152'
-	// <0>
-	// <0x5c3cbc>|0x01c|+0x00f:'154'
-	// <0x5c3ccb>|0x02b|-0x003:'154'
-	// <0x5c3cc8>|0x028|+0x021:'155'
-	// <0x5c3ce9>|0x049|      :'155'	}
-	// ******
+	if ( b_focus_enter )
+		get_game_scene().get_game().input_world().add_handler	( *this );
+	else
+		get_game_scene().get_game().input_world().remove_handler	( *this );
 }
 
 } // namespace survarium
