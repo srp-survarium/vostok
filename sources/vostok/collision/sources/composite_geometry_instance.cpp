@@ -96,8 +96,7 @@ bool composite_geometry_instance::ray_query			( object const* object, math::floa
 		if ( (*i)->ray_query	( object, new_origin, new_direction, max_distance, new_max_distance, triangles, triangles_predicate_type( &helper, &composite_ray_query_helper::predicate) ) )
 		{
 			res = true;
-			u32  ray_triangle_result_count_new = triangles.size();
-			for ( u32 j = ray_triangle_result_count ; j < ray_triangle_result_count_new ; ++j )
+			for ( u32 j = ray_triangle_result_count, ray_triangle_result_count_new = triangles.size() ; j < ray_triangle_result_count_new ; ++j )
 			{
 				triangles[j].triangle_id = id >> 2;
 			}
