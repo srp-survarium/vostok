@@ -18,6 +18,14 @@ Worked examples (all logging, all STRUCTURE MATCH, PARKED):
 - `compare_nodes::operator()(node_base,node_base)` (70%): `left.name < right.name` -> target inlines
   `buffer_string::operator<` (c_str + strcmp_s + `==-1`), base keeps `call vostok::operator<`.
   (Here the polarity is reversed — target inlines, base calls — same wall, opposite cut.)
+- `game_world::add_decal` (54%, game): `float4x4 transform = create_rotation( direction, normal );`
+  -> the TARGET inlines the whole `inline`-marked two-vector `create_rotation` (math_float4x4_inline.h:328
+  — the `(normal ^ direction).normalize()` cross-product + the i/j/k/c row stores, 0x124 of math) while
+  base OUT-LINES it to a single 0x13 `call vostok::math::create_rotation`. One SIZE -0x111 row, ~33% of
+  the function's bytes, over an otherwise perfect 7/7 statement structure. A big-inline reversed cut. The
+  `(normal^direction).normalize()`/axis+angle re-spellings score WORSE (they pull the math inline but
+  break the surrounding statements that pair under the plain two-vector call): the faithful source is
+  `create_rotation(direction, normal)`, parked at the inline cut.
 
 The source spelling (`x.find(y) == 0`, `math::min(a,b)`, `a < b`) is already correct and faithful.
 You CANNOT steer the inline cut from the consuming TU at /Od without distorting the natural code
