@@ -29,3 +29,16 @@ so it belongs to a deliberate network_core de-inline pass, not the consuming uni
 family as `strip_pointer<>` (FREE/ALLOC readers, `strip-pointer-delete-resource.md`) and
 the `boost::function` safe-bool / `operator()` out-of-lining: the target out-lined a
 header-`inline` helper our build inlines. Leave the consumer at the inline-vs-call %.
+
+DTOR variant (the INVERSE knob, same family): `messaging_client_process_messagess.cpp`'s
+`query_for_friend_list / query_for_friends_status / add_to_friend_list /
+remove_from_friend_list / query_for_ignore_list / add_to_ignore_list /
+remove_from_ignore_list / find_players_by_name` all STRUCTURE-MATCH (5 stmts) with the
+ctor `call` matching, but the TARGET INLINES `~tcp_packet` at the epilogue (the
+`mov eax,[buffer]; test; add eax,-3; je; mov ecx,[allocator]; mov edx,[ecx]; mov
+eax,[edx+18h]; call eax` = `if(buffer()){ free_helper(m_allocator, buffer()-3) }` with
+`free_helper` -> the allocator's virtual deallocate, all inlined) while our `/Ob2 /GL`
+build OUT-lines it (`mov ecx,edi; call tcp_packet::~tcp_packet`). Caps these builders at
+~75-79%, ~25/37 instructions equal, all 12 differing instructions in the dtor tail. Same
+header-inline knob (`~tcp_packet` is `inline` in `tcp_packet_inline.h`); flipping it is the
+same engine-wide network_core de-inline pass. Leave the consumers at the inline-vs-call %.

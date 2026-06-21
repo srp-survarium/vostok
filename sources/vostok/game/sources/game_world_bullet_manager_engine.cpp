@@ -4,62 +4,51 @@
 
 #include "pch.h"
 #include "game_world.h"
+#include "game.h"
+
+#include <vostok/game_core/bullet_manager.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 
 namespace survarium {
 
 // STATE[STUB]
+// claude@NOTE: parked - render-facade tracer wall. Recovered body picks a tracer
+// slot (s_tracer_idx % m_bullet_tracers.size()), stores the bullet there, stamps
+// bullet->m_tracer_idx, and registers a tracer with the renderer via
+// scene_renderer().add_tracer( render_scene(), slot.tracer, initial_tracer_matrix )
+// where initial_tracer_matrix is a function-local static float4x4().identity().
+// scene_renderer::add_tracer is declared/implemented only in the shipped binary's
+// vostok/render/facade/sources/scene_renderer.cpp - our reconstruction of that
+// compiland lacks the tracer methods (LNK2001). Unblock once the render-facade
+// add_tracer/remove_tracer/update_tracer are reconstructed.
 bool game_world::attach_tracer( ::survarium::bullet* bullet )
 {
-	// STATICS
-	// static float4x4 					initial_tracer_matrix = <0x4c2b5c8>;
-	// static u16 						s_tracer_idx = <0x4c2662c>;
-	// ******
-
 	return false;
-
-	// FUNCTION BODY[0x79a390]: 12
-	// <0x79a399>|0x009|+0x02c:'21'
-	// <0>
-	// <0x79a3c5>|0x035|+0x01a:'23'
-	// <0>
-	// <0x79a3df>|0x04f|+0x00f:'25'
-	// <0>
-	// <0x79a3ee>|0x05e|+0x007:'27'
-	// <0x79a3f5>|0x065|+0x002:'28'
-	// <0x79a3f7>|0x067|+0x01d:'29'
-	// <0x79a414>|0x084|+0x007:'30'
-	// <0>
-	// <1>
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - render-facade tracer wall (same as attach_tracer).
+// Recovered body indexes m_bullet_tracers[ bullet->m_tracer_idx ], and if its
+// .bullet matches, calls scene_renderer().remove_tracer( render_scene(),
+// slot.tracer ) + clears the slot, else LOG_ERROR( "case when
+// bullet_tracer.bullet != bullet" ); finally stamps bullet->m_tracer_idx=0xFFFF.
+// scene_renderer::remove_tracer lives only in the shipped render-facade
+// scene_renderer.cpp (not reconstructed; LNK2001). Unblock with the render facade.
 bool game_world::detach_tracer( ::survarium::bullet* bullet )
 {
 	return false;
-
-	// FUNCTION BODY[0x79a460]: 13
-	// <0x79a460>|0x000|+0x009:'36'	{
-	// <0>
-	// <0x79a469>|0x009|+0x019:'38'
-	// <0x79a482>|0x022|+0x004:'39'
-	// <0>
-	// <0x79a486>|0x026|+0x033:'41'
-	// <0>
-	// <1>
-	// <2>
-	// <0x79a4b9>|0x059|-0x016:'45'
-	// <0>
-	// <0x79a4a3>|0x043|+0x0ce:'47'
-	// <0x79a571>|0x111|-0x0c3:'47'
-	// <0>
-	// <0x79a4ae>|0x04e|+0x002:'49'
-	// <0x79a4b0>|0x050|+0x0ca:'50'
-	// <0x79a57a>|0x11a|      :'50'	}
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - render-facade tracer wall (same as attach/detach_tracer).
+// Recovered structure (6 stmts, local float4x4 m): builds m from
+// create_translation(position) + a direction-derived orthonormal rotation (the
+// 0x26-0xd1 cross-product block) + m.set_scale( float3( length, .. ) ), then calls
+// scene_renderer().update_tracer( render_scene(), m_bullet_tracers[tracer_idx].tracer,
+// m ). scene_renderer::update_tracer is declared/implemented only in the shipped
+// render-facade scene_renderer.cpp (not reconstructed here; LNK2001 if called).
+// Unblock with the render-facade add/update/remove_tracer reconstruction.
 void game_world::update_tracer(
 	const u16			tracer_idx,
 	float3 const&		position,
@@ -67,43 +56,41 @@ void game_world::update_tracer(
 	const float			length
 )
 {
-	// LOCALS
-	// float4x4 						m
-	// ******
-
-	// FUNCTION BODY[0x79a240]: 8
-	// <0>
-	// <0x79a249>|0x009|+0x013:'55'
-	// <0x79a25c>|0x01c|+0x00a:'56'
-	// <0>
-	// <0x79a266>|0x026|+0x051:'58'
-	// <0x79a2b7>|0x077|+0x060:'59'
-	// <0x79a317>|0x0d7|+0x037:'60'
-	// <0x79a34e>|0x10e|+0x02b:'61'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - sound-facade arg-shape wall + regression risk. Recovered
+// structure (3 stmts, local sound::sound_emitter_ptr sound):
+//   if ( resource )                    // [esp+4]->[..] guard, plus an emitter c_ptr guard
+//   {
+//       sound = static_cast_resource_ptr< sound::sound_emitter_ptr >( resource );
+//       sound->emit_and_play_once(
+//           get_sound_scene(),                                   // engine_base-0x28 = m_sound_scene
+//           get_game().get_sound_world().get_logic_world_user(), // m_game[+0x84] -> vtable+0x8
+//           position );
+//   }
+// The emit_and_play_once arg block in the target pushes THREE zero dwords +
+// sound before the get_logic_world_user() vcall (0x37-0x3d), which does not map to
+// the header's emit_and_play_once( scene, user, float3 const& position, producer=0,
+// receiver=0 ) by-ref signature - position appears spilled by value and the
+// producer/receiver defaults interleave, so the sound-facade call boundary is the
+// same by-value-vs-const& family as play_particle_system. A naive const&
+// reconstruction diverges enough that objdiff drops the pairing (unpaired, like
+// play_particle). Unblock when the sound::sound_emitter emit_and_play_once arg
+// convention / world_user accessor shape is settled in its own match phase.
 void game_world::play_sound( resources::unmanaged_resource_ptr const& resource, float3 const& position )
 {
-	// LOCALS
-	// sound::sound_emitter_ptr 		sound
-	// ******
-
-	// CALL SITE INFO
-	// <0x799e31> -> sound::world_user& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x799df0]: 5
-	// <0x799df0>|0x000|+0x016:'66'
-	// <0>
-	// <0x799e06>|0x016|+0x012:'68'
-	// <0x799e18>|0x028|+0x02b:'69'
-	// <0x799e43>|0x053|+0x01c:'70'
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (3 stmts, create_rotation + translation row +
+// play). The play_particle_system call boundary carries the render-facade
+// signature residual (same as weapon::play_weapon_fire_pfx / object_solid_visual):
+// the PDB / render::engine::world_pc take in_instance BY VALUE so the target owns
+// the temp particle_system_instance_ptr, but scene_renderer.h's facade spells it
+// const& so our base constructs AND destroys the temp in the caller (+0x2c bytes).
+// objdiff loses the fuzzy pairing on that residual (shows unpaired) but the rich
+// structure-diff pairs it cleanly. Recovers when the facade play_particle_system
+// signature is corrected (its own render-facade match phase).
 void game_world::play_particle(
 	resources::unmanaged_resource_ptr const&	particle,
 	float3 const&		position,
@@ -111,18 +98,25 @@ void game_world::play_particle(
 	float3 const&		normal
 )
 {
-	// LOCALS
-	// float4x4 						m
-	// ******
+	float4x4 m		= create_rotation( direction, normal );
+	m.c.xyz( )		= position;
 
-	// FUNCTION BODY[0x79a1d0]: 3
-	// <0x79a1d9>|0x009|+0x014:'75'
-	// <0x79a1ed>|0x01d|+0x00a:'76'
-	// <0x79a1f7>|0x027|+0x037:'77'
-	// ******
+	scene_renderer( ).play_particle_system( render_scene( ), static_cast_resource_ptr< particle::particle_system_instance_ptr >( particle ), m );
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - large (0x352, 7 stmts) decal-transform builder, deferred to
+// keep this commit focused on the matched forwarders. Recovered structure (locals
+// float4x4 transform, render::decal_properties properties):
+//   render::decal_properties properties;     // ctor: [esp+38h], m_? = 0
+//   transform = create_rotation( direction, normal );  // line 90, the big cross-product block
+//   transform.c.xyz() = position;            // line 91, translation row
+//   properties.<size/depth/is_front_face fields> = ...;   // lines 93/95/101
+//   scene_renderer().add_decal( render_scene(), id, properties );   // line 105
+// scene_renderer::add_decal facade is const& (resolves; matches), so this one is
+// NOT facade-walled - it is just a sizable transform-math reconstruction. Pick up
+// in a follow-up: model the create_rotation(direction,normal) cross-product +
+// decal_properties field fill against --view target 0x799e70.
 void game_world::add_decal(
 	resources::unmanaged_resource_ptr const&	decal,
 	const u32			id,
@@ -134,50 +128,19 @@ void game_world::add_decal(
 	const bool			is_front_face
 )
 {
-	// LOCALS
-	// float4x4 						transform
-	// render::decal_properties 		properties
-	// ******
-
-	// FUNCTION BODY[0x799e70]: 17
-	// <0x799e7f>|0x00f|+0x014:'89'
-	// <0x799e93>|0x023|+0x124:'90'
-	// <0x799fb7>|0x147|+0x080:'91'
-	// <0>
-	// <0x79a037>|0x1c7|+0x076:'93'
-	// <0>
-	// <0x79a0ad>|0x23d|+0x039:'95'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x79a0e6>|0x276|+0x015:'101'
-	// <0>
-	// <1>
-	// <2>
-	// <0x79a0fb>|0x28b|+0x09f:'105'
-	// ******
 }
 
-// STATE[STUB]
 void game_world::remove_decal( u32 id )
 {
-	// FUNCTION BODY[0x79a430]: 1
-	// <0x79a430>|0x000|+0x01e:'110'
-	// ******
+	scene_renderer( ).remove_decal( render_scene( ), id );
 }
 
-// STATE[STUB]
 void game_world::tick_bullet_manager_engine( bool is_game_paused )
 {
-	// FUNCTION BODY[0x799dc0]: 5
-	// <0x799dc0>|0x000|+0x00a:'115'
-	// <0>
-	// <0x799dca>|0x00a|+0x007:'117'
-	// <0x799dd1>|0x011|+0x015:'118'
-	// <0>
-	// ******
+	if ( m_bullet_manager == NULL || is_game_paused )
+		return;
+
+	m_bullet_manager->tick( get_game( ).game_time_ms( ) );
 }
 
 
