@@ -30,6 +30,11 @@
 #include <vostok/ai/api.h>			// ai::create_world (ctor)
 #include <vostok/ai_navigation/api.h>	// ai::navigation::create_world (ctor)
 #include <vostok/render/facade/game_renderer.h>	// renderer().debug() (ctor)
+#include <vostok/render/facade/common_types.h>	// render::scene_configuration (load)
+#include <vostok/sound/sound_scene_creation_params.h>	// sound::sound_scene_creation_params (load)
+#include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
+#include <vostok/buffer_vector.h>	// buffer_vector (load)
+#include <vostok/fixed_string.h>	// fixed_string<8> name (load)
 // register_cooks: the cook family + the resources::register_cook free function
 #include "sound_player_cook.h"
 #include "human_npc_cook.h"
@@ -41,6 +46,21 @@
 #include "damage_zone_cook.h"
 #include "rifle_scope_cook.h"
 #include "empty_hands_cook.h"
+
+using namespace vostok;
+
+// file-scope debug console commands (global namespace - mangled @@3IA / @@3_NA);
+// s_max_tracers_count caps the per-frame bullet-tracer request fan-out in load()
+static u32	s_max_tracers_count		= 8;
+static bool	s_draw_respawn_debug	= false;
+static bool	s_draw_game_match_stats	= false;
+
+static console_commands::cc_u32		bullet_tracers_max_count_cc(
+	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
+static console_commands::cc_bool	draw_respawn_debug_cc(
+	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_engine_internal );
+static console_commands::cc_bool	draw_match_stats_cc(
+	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_engine_internal );
 
 namespace survarium {
 
@@ -194,19 +214,20 @@ bool game_world::empty( )
 	return m_game_project == NULL;
 }
 
-// claude@NOTE: parked - 43-stmt / 0xb06-byte resource-loaded handler. Reads the
-// project + scene/sound/portal resources out of `data`, wires game_ui (initialize,
-// initialize_resources, initialize_minimap, show_capture_progress), the camera
-// (set_position_direction / switch_to_camera), the bullet_manager, the text
-// manager, and re-queries the npc/victory sub-resources via query_resources. Needs
-// the same cross-unit overloads as on_portal_system_loaded (4-arg
-// set_active_sound_scene, scene_renderer::set_portal_system) plus
-// game_world_ui::initialize_resources/initialize/initialize_minimap and the
-// variant<32>::set / buffer_vector machinery; nearly every callee is a sibling-unit
-// stub today, so a faithful structure would still score low. Next: match the
-// game_world_ui + render/sound callees, then reconstruct from the rich asm
-// (RVA 0x5d0f40); locals: resource_index, user_data variant<32>, camera_position/
-// _direction float3, two loop counters.
+// claude@NOTE: parked - 43-stmt / 0xb06-byte resource-loaded handler (RVA 0x5d0f40).
+// Reads the project + scene/sound/portal resources out of `data`, wires game_ui
+// (initialize, initialize_resources, initialize_minimap, show_capture_progress), the
+// camera (set_position_direction / switch_to_camera), the bullet_manager, the text
+// manager, and re-queries the npc/victory sub-resources via query_resources.
+// BLOCKED on cross-unit symbols still missing/stripped: the 4-arg
+// sound::world_user::set_active_sound_scene(scene, portal, u32, u32) overload and
+// render::scene_renderer::set_portal_system are not declared in our headers; and the
+// callees game_world_ui::initialize / initialize_minimap / show_capture_progress are
+// UNPAIRED (empty stubs in game_world_ui.cpp - they /Od-inline to nothing and collapse
+// the wiring guards). NEXT: add the 4-arg set_active_sound_scene + set_portal_system
+// overloads (do that in on_portal_system_loaded's unit first, same wall), match the
+// three game_world_ui setup methods, then reconstruct from the rich asm. Locals:
+// resource_index, user_data variant<32>, camera_position/_direction float3, two loops.
 // STATE[STUB]
 void game_world::on_project_loaded(
 	resources::queries_result&		data,
@@ -249,17 +270,6 @@ void game_world::unload( )
 	game_ui.on_unload( );
 }
 
-// claude@NOTE: parked - 48-stmt / 0x7cf-byte loader. Builds buffer_vectors of
-// requests + user_datas (the project request prepended to [requests_begin,
-// requests_end)), fills a render::scene_configuration and a
-// sound::sound_scene_creation_params, names the scene via fixed_string<8>, sets
-// m_is_loading, then query_resources(...) with the on_project_loaded callback bound.
-// 13 named locals (requests_count, scene_configuration, user_data_ptrs,
-// victory_items_count, user_datas, requests, sound_configuration, name, ...). Needs
-// render::scene_configuration + sound::sound_scene_creation_params complete and the
-// buffer_vector machinery; nearly every callee is a sibling-unit stub today. Next:
-// reconstruct from the rich asm (RVA 0x5d1a50) once those types/callees land.
-// STATE[STUB]
 void game_world::load(
 	pcstr						project_resource_name,
 	resources::request*			requests_begin,
@@ -268,6 +278,94 @@ void game_world::load(
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
 {
+	m_is_loading = true;
+
+	const u8 victory_items_count = get_game( ).get_network_client( )->match_options( ).victory_items_count;
+
+	const u32 user_datas_count = victory_items_count + s_max_tracers_count + 23;
+	const u32 requests_count = ( requests_end - requests_begin ) + user_datas_count;
+
+	buffer_vector< resources::request >		requests		( ALLOCA( requests_count * sizeof( resources::request ) ), requests_count );
+	buffer_vector< variant< 32 > >			user_datas		( ALLOCA( user_datas_count * sizeof( variant< 32 > ) ), user_datas_count );
+	buffer_vector< variant< 32 > const* >	user_data_ptrs	( ALLOCA( requests_count * sizeof( variant< 32 > const* ) ), requests_count );
+
+	for ( resources::request* it = requests_begin; it != requests_end; ++it, ++user_datas_begin )
+	{
+		requests.push_back( *it );
+		user_data_ptrs.push_back( *user_datas_begin );
+	}
+
+	render::scene_configuration scene_configuration;
+	scene_configuration.m_create_terrain			= false;
+	scene_configuration.m_create_particle_world		= true;
+	scene_configuration.m_create_speedtree_world	= false;
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( scene_configuration );
+
+	sound::sound_scene_creation_params sound_configuration;
+	sound_configuration.proxies_count		= 0x80;
+	sound_configuration.propagators_count	= 0xc4;
+	sound_configuration.receivers_count		= 0;
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( sound_configuration );
+
+	requests.push_back( resources::create_request( "game_scene", resources::scene_class ) );
+	user_data_ptrs.push_back( &user_datas[0] );
+
+	requests.push_back( resources::create_request( "game_scene_view", resources::scene_view_class ) );
+	user_data_ptrs.push_back( NULL );
+
+	requests.push_back( resources::create_request( "game_sound_scene", resources::sound_scene_class ) );
+	user_data_ptrs.push_back( &user_datas[1] );
+
+	requests.push_back( resources::create_request( "resources/flash_movies/hud.swf", resources::flash_movie_class ) );
+	user_data_ptrs.push_back( NULL );
+
+	for ( u32 i = 0; i < s_max_tracers_count; ++i )
+	{
+		requests.push_back( resources::create_request( "weapons/trace", resources::tracer_model_instance_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	for ( u8 i = 0; i < victory_items_count; ++i )
+	{
+		requests.push_back( resources::create_request( "player_death", resources::particle_system_instance_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	if ( m_game_project )
+		unload( );
+
+	LOG_INFO( "game_world::load: %s", project_resource_name );
+
+	if ( !m_game_material_manager )
+	{
+		requests.push_back( resources::create_request( "game_material_manager", resources::game_material_manager_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( static_cast< base_game_scene* >( this ) );
+
+	requests.push_back( resources::create_request( project_resource_name, resources::client_game_project_class ) );
+	user_data_ptrs.push_back( &user_datas.back( ) );
+
+	for ( u8 i = 0; i < victory_items_count; ++i )
+	{
+		fixed_string< 8 > name;
+		name.assignf( "vp_%d", i );
+		requests.push_back( resources::create_request( name.c_str( ), resources::victory_item_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	resources::query_resources(
+		requests.begin( ),
+		requests.size( ),
+		boost::bind( &game_world::on_project_loaded, this, _1, requests_end - requests_begin, callback ),
+		g_allocator,
+		user_data_ptrs.begin( ) );
 }
 
 // claude@NOTE: structure recovered (4 stmts: assign m_portal_sector_structure
