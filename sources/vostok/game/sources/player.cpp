@@ -484,23 +484,20 @@ void player::apply_input(
 	// ******
 }
 
-// claude@NOTE: body fully reversed (6 stmts, 1 reference local `item`):
-//   client_player_history_item& item = m_history.new_item( );
-//   item.time_in_ms                  = current_time_in_ms;             // +0x5C
-//   item.action.input                = m_input;                       // +0x00
-//   item.action.state.transform      = m_target.transform;            // +0x14
-//   item.action.state.look_pitch     = m_target.look_pitch;           // +0x54
-//   item.action.weapon_state.slot_id = inventory( ).get_active_slot( );// +0x58
-// WALLED cross-unit: circular_buffer<T>::new_item (game_core template, in
-// circular_buffer_inline.h) is an empty STUB - instantiating it for
-// client_player_history_item gives C4716 (must return a value). new_item itself
-// placement-news the slot's player_input + weapon_state, which needs
-// client_player_history_item's ctor (also a STUB). Body new_item +
-// client_player_history_item::ctor first, then this compiles & matches.
-// STATE[STUB]
+// claude@NOTE: unblocked + builds now that circular_buffer<T>::new_item and the
+// client_player_history_item ctor are bodied (was C4716). Body is faithful to
+// target 0x5e23b0 (6 stmts, 0 named locals - the `item` reference elides). Our
+// LTCG inlines new_item here (target keeps it out-of-line via `call`), so this
+// absorbs the ring-buffer logic and is unpaired against the target's call-shape.
+// Inline-vs-call wall, not source-steerable from this unit.
 void player::serialize_current_state( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x5e23b0]: 6 stmts (lines 519-524) - see note above
+	client_player_history_item& item = m_history.new_item( );
+	item.time_in_ms						= current_time_in_ms;
+	item.action.input					= m_input;
+	item.action.state.transform			= m_target.transform;
+	item.action.state.look_pitch		= m_target.look_pitch;
+	item.action.weapon_state.slot_id	= inventory( ).get_active_slot( );
 }
 
 // STATE[STUB]
