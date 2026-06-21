@@ -90,13 +90,17 @@ static pbyte allocate				( u32 const size )
 
 static RETURN_TYPE CALLBACK window_procedure ( HWND window_handle, UINT msg, WPARAM wp, LPARAM lp)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( wp, lp, window_handle );
+	VOSTOK_UNREFERENCED_PARAMETERS	( lp, window_handle );
 
 	switch( msg ){
-		case WM_DESTROY: {
+		case WM_DESTROY:
 			PostQuitMessage	( 0 );
 			return					( FALSE );
-		}
+
+		case WM_CTLCOLORSTATIC:
+			SetTextColor			( (HDC)wp, RGB( 255, 255, 255 ) );
+			SetBkMode				( (HDC)wp, TRANSPARENT );
+			return					( (RETURN_TYPE)GetStockObject( NULL_BRUSH ) );
 	}
 
 	return							( FALSE );
