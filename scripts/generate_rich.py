@@ -18,6 +18,7 @@ signature name; the objdiff backend additionally reads binaries/objdiff/.
 Usage:
   python3 scripts/generate_rich.py base
   python3 scripts/generate_rich.py target
+  python3 scripts/generate_rich.py all     # both sides (e.g. after a parser bump)
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN - directory containing the original survarium.{pdb,exe} (target)
@@ -121,9 +122,16 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description="Build the base/target rich function index via pdb_rich_context."
     )
-    ap.add_argument("side", choices=["base", "target"])
+    # `all` regenerates BOTH sides - use it after bumping vostok-pdb-parser, when
+    # the one-time target index needs to pick up new extraction (e.g. local scope).
+    # A normal build only refreshes `base` (the target retail binary never changes
+    # between recompiles, so rebuild.py reuses it); `all`/`target` is the manual
+    # path to refresh it on a parser change.
+    ap.add_argument("side", choices=["base", "target", "all"])
     try:
-        generate(ap.parse_args().side)
+        side = ap.parse_args().side
+        for s in (["base", "target"] if side == "all" else [side]):
+            generate(s)
     except (RuntimeError, subprocess.CalledProcessError) as e:
         print(f"[rich] ERROR: {e}", file=sys.stderr)
         sys.exit(1)
