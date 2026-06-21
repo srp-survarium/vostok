@@ -24,13 +24,12 @@ static u32 get_bones_count	( vostok::configs::binary_config_value const& value, 
 
 	if ( value.id )
 		bones_ids_buffer_length	+= (vostok::strings::length( value.id ) + 1) * sizeof(char);
-	else
-		R_ASSERT			( !bones_ids_buffer_length );
 
 	vostok::configs::binary_config_value::const_iterator i		= value.begin();
 	vostok::configs::binary_config_value::const_iterator const e	= value.end();
-	for ( ; i != e; ++i, ++count )
-		count				+= get_bones_count( *i, bones_ids_buffer_length );
+	for ( ; i != e; ++i )
+		if ( i->type == vostok::configs::t_table_named || i->type == vostok::configs::t_table_indexed )
+			count			+= get_bones_count( *i, bones_ids_buffer_length ) + 1;
 
 	return					count;
 }
@@ -46,7 +45,13 @@ static void add_bone		(
 	)
 {
 	vostok::configs::binary_config_value const value	= *config;
-	u32 const children_count = value.size();
+
+	vostok::configs::binary_config_value::const_iterator i	= value.begin();
+	vostok::configs::binary_config_value::const_iterator e	= value.end();
+	u32 children_count		= 0;
+	for ( ; i != e; ++i )
+		if ( i->type == vostok::configs::t_table_named || i->type == vostok::configs::t_table_indexed )
+			++children_count;
 
 	u32 const bone_id_buffer_size	= (vostok::strings::length( config->key() ) + 1)*sizeof(char);
 	vostok::memory::copy	( bones_ids_buffer, bones_ids_buffer_size, config->key(), bone_id_buffer_size );
@@ -55,7 +60,8 @@ static void add_bone		(
 		bones_ids_buffer,
 		parent,
 		children_count ? bones_begin + last_index : 0,
-		children_count ? bones_begin + last_index + children_count : 0
+		children_count ? bones_begin + last_index + children_count : 0,
+		value.value_exists( "mask" ) ? u32( value["mask"] ) : u32(-1)
 	);
 
 	bones_ids_buffer		+= bone_id_buffer_size;
@@ -66,9 +72,10 @@ static void add_bone		(
 
 	bone_index_type const old_last_index = last_index;
 	last_index				+= children_count;
-	vostok::configs::binary_config_value::const_iterator i	= value.begin();
-	for (u32 new_index = old_last_index, n = new_index + children_count; new_index != n; ++new_index, ++i )
-		add_bone			( bones_begin + index, bones_begin, new_index, last_index, i, bones_ids_buffer, bones_ids_buffer_size );
+	i						= value.begin();
+	for ( u32 new_index = old_last_index; i != e; ++i )
+		if ( i->type == vostok::configs::t_table_named || i->type == vostok::configs::t_table_indexed )
+			add_bone		( bones_begin + index, bones_begin, new_index++, last_index, i, bones_ids_buffer, bones_ids_buffer_size );
 }
 
 void skeleton_cook::on_sub_resources_loaded	( vostok::resources::queries_result& result )

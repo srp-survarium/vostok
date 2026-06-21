@@ -9,15 +9,17 @@
 
 using vostok::animation::skeleton_bone;
 
-skeleton_bone::skeleton_bone( 
+skeleton_bone::skeleton_bone(
 		pcstr const id,
 		skeleton_bone const* const parent,
 		skeleton_bone const* const children_begin,
-		skeleton_bone const* const children_end
+		skeleton_bone const* const children_end,
+		u32 const mask
 	) :
 	m_id					( id ),
 	m_parent				( parent ),
 	m_children_begin		( children_begin ),
-	m_children_end			( children_end )
+	m_children_end			( children_end ),
+	m_mask					( mask )
 {
 }
