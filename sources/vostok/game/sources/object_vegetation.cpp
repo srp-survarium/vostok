@@ -7,6 +7,13 @@
 
 namespace survarium {
 
+// claude@NOTE: this whole TU is walled by render-facade infra absent from our
+// source tree. load needs render::grass_loading_data + resources::query_resources
+// wiring; insert/remove call render::scene_renderer::set_grass / reset_grass.
+// None are declared in our render facade (they live in the vostok/render/facade
+// unit - scene_renderer.cpp + its headers). Blocked until the render-facade grass
+// cook lands in its own PR; all four bodies left STUB and not anchored.
+
 // STATE[STUB]
  object_vegetation::object_vegetation( base_game_scene& s ) :
 	game_object_( s )

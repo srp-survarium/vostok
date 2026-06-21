@@ -4,8 +4,15 @@
 
 #include "pch.h"
 #include "object_volume_fog.h"
+#include "game_object_static.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
+
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
 // STATE[STUB]
  object_volume_fog::object_volume_fog( base_game_scene& w ) :
@@ -35,54 +42,52 @@ namespace survarium {
 	// ******
 }
 
-// STATE[STUB]
 void object_volume_fog::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// FUNCTION BODY[0x78e480]: 38
-	// <0x78e482>|0x002|+0x018:'43'
-	// <0>
-	// <0x78e49a>|0x01a|+0x010:'45'
-	// <0x78e4aa>|0x02a|+0x023:'46'
-	// <0>
-	// <0x78e4cd>|0x04d|+0x015:'48'
-	// <0x78e4e2>|0x062|+0x024:'49'
-	// <0>
-	// <0x78e506>|0x086|+0x010:'51'
-	// <0x78e516>|0x096|+0x024:'52'
-	// <0>
-	// <0x78e53a>|0x0ba|+0x010:'54'
-	// <0x78e54a>|0x0ca|+0x024:'55'
-	// <0>
-	// <0x78e56e>|0x0ee|+0x010:'57'
-	// <0x78e57e>|0x0fe|+0x024:'58'
-	// <0>
-	// <0x78e5a2>|0x122|+0x010:'60'
-	// <0x78e5b2>|0x132|+0x01f:'61'
-	// <0>
-	// <0x78e5d1>|0x151|+0x010:'63'
-	// <0x78e5e1>|0x161|+0x024:'64'
-	// <0>
-	// <0x78e605>|0x185|+0x010:'66'
-	// <0x78e615>|0x195|+0x024:'67'
-	// <0>
-	// <1>
-	// <2>
-	// <0x78e639>|0x1b9|+0x010:'71'
-	// <0x78e649>|0x1c9|+0x024:'72'
-	// <0>
-	// <1>
-	// <2>
-	// <0x78e66d>|0x1ed|+0x010:'76'
-	// <0x78e67d>|0x1fd|+0x024:'77'
-	// <0>
-	// <1>
-	// <0x78e6a1>|0x221|+0x00d:'80'
-	// ******
+	load_transform( t, m_transform );
+
+	if ( t.value_exists( "color" ) )
+		m_color = t["color"];
+
+	if ( t.value_exists( "density" ) )
+		m_density = t["density"];
+
+	if ( t.value_exists( "speed" ) )
+		m_speed = t["speed"];
+
+	if ( t.value_exists( "noise_scale" ) )
+		m_noise_scale = t["noise_scale"];
+
+	if ( t.value_exists( "wave_length" ) )
+		m_wave_length = t["wave_length"];
+
+	if ( t.value_exists( "direction" ) )
+		m_direction = t["direction"];
+
+	if ( t.value_exists( "near_density" ) )
+		m_near_density = t["near_density"];
+
+	if ( t.value_exists( "transparency_multiplier" ) )
+		m_transparency_multiplier = t["transparency_multiplier"];
+
+	if ( t.value_exists( "density_offset" ) )
+		m_density_offset = t["density_offset"];
+
+	if ( t.value_exists( "height_falloff_offset" ) )
+		m_height_falloff_offset = t["height_falloff_offset"];
+
+	cb( *this );
 }
+
+// claude@NOTE: insert/remove need render::volume_fog_parameters and call
+// render::scene_renderer::update_volume_fog / remove_volume_fog, none of which
+// are declared in our render-facade headers (they live in the vostok/render/facade
+// unit - scene_renderer.cpp). Blocked until that facade cook lands in its own PR;
+// left STUB.
 
 // STATE[STUB]
 void object_volume_fog::insert( )
