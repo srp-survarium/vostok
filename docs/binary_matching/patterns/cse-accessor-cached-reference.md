@@ -55,3 +55,14 @@ showed the cached `lobby_menu& menu` keeps `locals (0)` and lifts
 of a scaleform-stubbed callee). Lesson: re-test "scores lower" local-vs-inline
 verdicts after the neighbourhood changes — and verify with `--view info`, not the
 guess that any reference local must be phantom.
+
+Precedent: `player_input_handler::alt_is_held` (player_input_handler.cpp). The
+accessor here is a whole VIRTUAL-call chain
+(`m_game_world.get_game().input_world().get_keyboard()`, `input_world()` and
+`get_keyboard()` both virtual), so /Ox would NOT CSE it across the two
+`is_key_down()` calls — the target evaluates the chain ONCE into esi and reuses it
+for both `is_key_down(key_rmenu)` / `is_key_down(key_lmenu)`. Caching
+`input::keyboard const& keyboard = *...get_keyboard();` keeps `locals (0)` and is a
+STRUCTURE MATCH (46% -> 99.97%). The `*` deref of the returned `raw<keyboard
+const>::ptr` binds the reference to the pointed-to object, and the reference alias
+enregisters with no recorded local.
