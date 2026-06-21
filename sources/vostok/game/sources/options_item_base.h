@@ -44,7 +44,7 @@ public:
 
 	inline								~options_item_base	( ) { /* no source */ }
 
-private:
+protected:
 	/* 0x0000 */	/* flash_function_handler */
 	/* 0x0008 */	/* boost::noncopyable */
 	/* 0x0008 */	console_commands::console_command*		m_console_command;
