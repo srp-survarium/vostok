@@ -18,6 +18,7 @@
 
 #include "weapon.h"
 #include "weapon_cook.h"
+#include "shotgun_weapon_reload_state_cook.h"
 #include "object_weapon.h"
 #include "sound_player_cook.h"
 #include "project_cooker_simple.h"
@@ -57,6 +58,7 @@ namespace vostok
 			static sound::world* volatile				s_snd	= 0;
 			survarium::weapon					wpn( 0u, 0u, 0u );
 			survarium::weapon_cook				wcook( *s_game );
+			survarium::shotgun_weapon_reload_state_cook	srcook;
 			survarium::sound_player_cook		scook( s_snd, resources::class_id_enum( 0 ) );
 			survarium::project_cooker_simple	pcook( false );
 		}
@@ -106,6 +108,13 @@ namespace vostok
 		keep( &wc::delete_resource );
 		keep( &wc::cooked_object_size );
 		survarium::weapon_cook::register_cooks_for_logic_states( );
+
+		// ---- shotgun_weapon_reload_state_cook --------------------------------
+		typedef survarium::shotgun_weapon_reload_state_cook src;
+		keep( &src::allocate_resource );
+		keep( &src::deallocate_resource );
+		keep( &src::create_resource );
+		keep( &src::destroy_resource );
 
 		// ---- object_weapon ---------------------------------------------------
 		typedef survarium::object_weapon ow;

@@ -4,100 +4,86 @@
 
 #include "pch.h"
 #include "rifle_scope_cook.h"
+#include "rifle_scope.h"
 
 namespace survarium {
 
-// STATE[STUB]
- rifle_scope_cook::rifle_scope_cook( ) :
-	// buildability: matcher supplies real class/reuse/thread args
+rifle_scope_cook::rifle_scope_cook( ) :
 	resources::translate_query_cook( resources::rifle_scope_class, reuse_false, use_current_thread_id )
 {
-	// FUNCTION BODY[0x766d70]: 1
-	// <0x766da8>|0x038|+0x029:'17'
-	// ******
+	resources::register_cook( this );
 }
 
-// STATE[STUB]
 void rifle_scope_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// fs_new::virtual_path_string 		config_name
-	// ******
+	fs_new::virtual_path_string config_name;
+	config_name.assignf( "resources/%s", parent.get_requested_path( ) );
 
-	// FUNCTION BODY[0x767170]: 11
-	// <0>
-	// <0x76717d>|0x00d|+0x04c:'23'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x7671c9>|0x059|+0x090:'32'
-	// ******
+	resources::query_resource(
+		config_name.c_str( ),
+		resources::binary_config_class_impl,
+		boost::bind( &rifle_scope_cook::on_config_loaded, this, _1 ),
+		g_allocator,
+		NULL,
+		&parent
+	);
 }
 
-// STATE[STUB]
 void rifle_scope_cook::on_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// resources::request[2] 			requests
-	// ******
+	if ( data.size( ) != 1 )
+	{
+		data.get_parent_query( )->finish_query( result_error );
+		return;
+	}
 
-	// FUNCTION BODY[0x767000]: 21
-	// <0x767000>|0x000|+0x00a:'36'	{
-	// <0x76700a>|0x00a|+0x011:'37'
-	// <0>
-	// <0x76701b>|0x01b|+0x017:'39'
-	// <0>
-	// <1>
-	// <2>
-	// <0x767032>|0x032|+0x043:'43'
-	// <0x767075>|0x075|+0x016:'44'
-	// <0>
-	// <1>
-	// <0x76708b>|0x08b|+0x013:'47'
-	// <0x76709e>|0x09e|+0x016:'48'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x7670b4>|0x0b4|-0x08b:'57'
-	// <0x767029>|0x029|+0x116:'58'
-	// <0x76713f>|0x13f|      :'58'	}
-	// ******
+	configs::binary_config_ptr config			= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	configs::binary_config_value const& cfg_data	= config->get_root( )["data"];
+
+	resources::request requests[2] = {
+		{ (pcstr)cfg_data["idle_model"],	resources::static_model_instance_class },
+		{ (pcstr)cfg_data["aimed_model"],	resources::static_model_instance_class },
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &rifle_scope_cook::on_subresources_loaded, this, _1, config ),
+		g_allocator,
+		NULL,
+		data.get_parent_query( ),
+		assert_on_fail_true
+	);
 }
 
-// STATE[STUB]
+// claude@NOTE: parked at structure level. Target has 5 statements / 2 locals (the
+// params only): line 64 (4-byte trivial), line 76 (the whole `new rifle_scope(...)`
+// construction reading the two models + 4 config fields), then set_unmanaged_resource
+// at line 78 and finish_query at line 79 as SEPARATE statements with NO extra named
+// local for the rifle_scope* or the parent. The asm reads the ["data"] node once and
+// reuses it, fetches results.get_parent_query() once (held in edi across set+finish),
+// and the new pointer flows through eax with no slot. The exact source line-split that
+// yields the new (76) separate from the set call (78) while keeping 0 extra locals
+// isn't reproduced by the inline form below. NEXT: find the construct (likely a single
+// multi-line set_unmanaged_resource( new ... ) whose PDB line table breaks at 76/78)
+// that emits the 5-statement shape without a named rifle_scope*/parent local.
 void rifle_scope_cook::on_subresources_loaded( resources::queries_result& results, configs::binary_config_ptr const& config )
 {
-	// FUNCTION BODY[0x766de0]: 19
-	// <0>
-	// <1>
-	// <0x766deb>|0x00b|+0x004:'64'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x766def>|0x00f|+0x189:'76'
-	// <0>
-	// <0x766f78>|0x198|+0x006:'78'
-	// <0x766f7e>|0x19e|+0x02b:'79'
-	// <0x766fa9>|0x1c9|+0x00b:'80'
-	// ******
+	configs::binary_config_value const& data = config->get_root( )["data"];
+
+	results.get_parent_query( )->set_unmanaged_resource(
+		VOSTOK_NEW_IMPL( g_allocator, rifle_scope )(
+			static_cast_resource_ptr< render::static_model_ptr >( results[0].get_unmanaged_resource( ) ),
+			static_cast_resource_ptr< render::static_model_ptr >( results[1].get_unmanaged_resource( ) ),
+			(float)data["change_scope_factor"],
+			(bool)data["hide_weapon_on_aim"],
+			(float)data["fov_factor"],
+			(float)data["near_plane_factor"]
+		),
+		resources::nocache_memory,
+		sizeof( rifle_scope )
+	);
+
+	results.get_parent_query( )->finish_query( result_success );
 }
 
 } // namespace survarium
