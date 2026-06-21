@@ -57,6 +57,7 @@ void use_game_player_input( )
 	player_input_handler&			h		= *s_handler;
 	client_player_history_item&		item	= *s_item;
 	client_player_state&			state	= *s_state;
+	state.update_transform( );
 	server_player_update const&		update	= *s_update;
 	float4x4&						xf		= *s_xf;
 	player_input const&				input	= *s_input;

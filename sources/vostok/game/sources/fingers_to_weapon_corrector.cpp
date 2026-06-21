@@ -5,6 +5,8 @@
 #include "pch.h"
 #include "fingers_to_weapon_corrector.h"
 
+#include <vostok/game_core/ik_utils.h>	// mix_transformations
+
 namespace survarium {
 
 // STATE[STUB]
@@ -95,7 +97,6 @@ void fingers_to_weapon_corrector::initialize_locators( render::render_model_inst
 	// ******
 }
 
-// STATE[STUB]
 void interpolate_hand_matrices(
 	float4x4 const*		locator_matrices,
 	u32 const*			bone_indices,
@@ -104,54 +105,32 @@ void interpolate_hand_matrices(
 	float4x4*			result_matrices
 )
 {
-	// FUNCTION BODY[0xacde0]: 3
-	// <0xacde5>|0x005|+0x008:'107'
-	// <0xacded>|0x00d|+0x04c:'108'
-	// <0>
-	// ******
+	for ( u32 i = 0; i < phalanges_count; ++i )
+		result_matrices[bone_indices[i]] = mix_transformations( result_matrices[bone_indices[i]], locator_matrices[i], iterpolation_coeff );
 }
 
-// STATE[STUB]
 void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x4* matrices ) const
 {
-	// CALL SITE INFO
-	// <0x5bc963> -> float < unknown >( float ) const
-	// <0x5bc96b> -> float < unknown >( float ) const
-	// ******
-
-	// FUNCTION BODY[0x5bc8c0]: 10
-	// <0x5bc8cc>|0x00c|+0x024:'114'
-	// <0x5bc8f0>|0x030|+0x00d:'115'
-	// <0x5bc8fd>|0x03d|+0x009:'116'
-	// <0x5bc906>|0x046|+0x02a:'117'
-	// <0>
-	// <0x5bc930>|0x070|+0x00a:'119'
-	// <0x5bc93a>|0x07a|+0x033:'120'
-	// <0x5bc96d>|0x0ad|+0x033:'121'
-	// <0>
-	// <1>
-	// ******
+	for ( hand const* current_hand = m_hands; current_hand != m_hands + hands_count; ++current_hand )
+	{
+		if ( current_hand->start_transition_time_in_ms + 100 <= current_time_in_ms )
+		{
+			if ( current_hand->is_active )
+				for ( u32 i = 0; i < 15; ++i ) matrices[current_hand->phalanges_bones_indices[i]] = current_hand->phalanges_matrices[i];
+		}
+		else
+		{
+			const float interpolation_coeff = get_hand_coefficient( ( current_time_in_ms - current_hand->start_transition_time_in_ms ) * math::epsilon_3, current_hand->is_active );
+			interpolate_hand_matrices( current_hand->phalanges_matrices, current_hand->phalanges_bones_indices, 15, interpolation_coeff, matrices );
+		}
+	}
 }
 
-// STATE[STUB]
 float fingers_to_weapon_corrector::get_hand_coefficient( const float hand_transition_time, const bool hand_active ) const
 {
-	// LOCALS
-	// const float 						interpolation_coeff
-	// ******
-
-	// CALL SITE INFO
-	// <0x5bc6b2> -> float < unknown >( float ) const
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY[0x5bc6a0]: 4
-	// <0>
-	// <1>
-	// <0x5bc6a0>|0x000|+0x023:'130'
-	// <0x5bc6c3>|0x023|+0x006:'131'
-	// ******
+	return hand_active
+		? 1.0f - m_interpolator.interpolated_value( hand_transition_time )
+		: m_interpolator.interpolated_value( hand_transition_time );
 }
 
 // STATE[STUB]
