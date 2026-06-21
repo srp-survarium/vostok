@@ -68,6 +68,9 @@ class game : public engine_user::world , public input::engine , public ui::engin
 	// game_world reaches game's private hide_game_stats directly (game_world::
 	// update_npc_stats writes it) - the original befriends its game_world scene.
 	friend class game_world;
+	// network_client::connect_to_login inlines game's private switch_to_scene
+	// (codegen-neutral friendship; PDB does not record it)
+	friend class network_client;
 public:
 	enum debug_window_enum
 	{
