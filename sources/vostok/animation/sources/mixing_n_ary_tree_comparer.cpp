@@ -37,14 +37,9 @@ bool n_ary_tree_comparer::equal( ) const
 	return						m_equal;
 }
 
-// STATE[STUB]
 u32 n_ary_tree_comparer::needed_buffer_size( ) const
 {
 	return						m_needed_buffer_size;
-
-	// FUNCTION BODY
-	// <0x56d850>|0x000|+0x003:'68'
-	// ******
 }
 
 comparison_result_enum animation_comparer_predicate::operator()(
@@ -316,17 +311,10 @@ void n_ary_tree_comparer::new_animation(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition( float from, float to )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56d870>|0x000|+0x004:'321'
-	// <0x56d874>|0x004|+0x004:'322'
-	// ******
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node ) + 2 * sizeof( n_ary_tree_weight_node );
+	m_equal						= false;
 }
 
 // STATE[STUB]
@@ -457,28 +445,16 @@ void n_ary_tree_comparer::remove_animation(
 }
 
 // STATE[STUB]
+// claude@NOTE: parked. 7-stmt loop (lines 426,427,439,431,432,433,438) calls the still-empty
+// remove_animation stub, so any body here collapses (the callee inlines to nothing, like
+// add_weight_synchronization_group did). Line-426 guard is an FP weight compare on
+// begin->m_weight_interpolator (offset 0x20) vtbl[0xc]() vs 0.0 with a `test ah,44h; jp`
+// whose polarity I could not confirm against the m_equal=false/early-return path - bodying
+// it risks an inverted guard (wrong structure). Body remove_animation first, then revisit:
+// the loop is remove_animation(*i, weight_driving, !i->is_transitting_to_zero()) over
+// begin..end with weight_driving = (begin->wsgid==-1)?NULL:begin.
 void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// CALL SITE INFO
-	// <0x56f143> -> float < unknown >() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x56f137>|0x007|+0x01c:'426'
-	// <0x56f153>|0x023|+0x00c:'427'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f15f>|0x02f|+0x014:'431'
-	// <0x56f173>|0x043|+0x003:'432'
-	// <0x56f176>|0x046|+0x010:'433'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56f186>|0x056|-0x02f:'438'
-	// <0x56f157>|0x027|+0x04c:'439'
-	// ******
 }
 
 // STATE[STUB]
@@ -524,16 +500,12 @@ void n_ary_tree_comparer::add_animation(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// FUNCTION BODY
-	// <0x56f0ff>|0x00f|+0x004:'474'
-	// <0>
-	// <0x56f103>|0x013|+0x00a:'476'
-	// <0x56f10d>|0x01d|+0x004:'477'
-	// <0x56f111>|0x021|+0x010:'478'
-	// ******
+	m_equal						= false;
+	n_ary_tree_animation_node* const weight_driving_animation	= ( begin->weight_synchronization_group_id() == u32( -1 ) ) ? 0 : begin;
+	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_weight_animation )
+		add_animation			( *i, weight_driving_animation );
 }
 
 // STATE[STUB]
@@ -1283,6 +1255,15 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 }
 
 // STATE[STUB]
+// claude@NOTE: parked. 8-stmt body (lines 1052,1053,1057,1059,1061,1070) is reconstructible
+// in shape - if(to_begin->weight_synchronization_group_id()==u32(-1)) merge_weight_asynchronous_groups()
+// else: find_animation(from_begin,from_end,*to_begin); conditional new_weight_driving_animation();
+// merge_weight_synchronization_groups(...). BUT every callee is still an empty stub so the body
+// collapses to 1 surviving statement (find_animation) - its structure cannot be verified, and a
+// trial body STOLE merge_trees' objdiff pairing (37%->unpaired) for only ~15% here. Body the
+// callees (merge_weight_asynchronous_groups, new_weight_driving_animation x2,
+// merge_weight_synchronization_groups) first, then reconstruct + confirm the 5th merge arg and
+// the is_new_driving_animation flag (asm reads to-side is_transitting_to_zero @0x51).
 void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1290,29 +1271,6 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		to_end
 )
 {
-	// FUNCTION BODY
-	// <0x56f1b7>|0x007|+0x008:'1052'
-	// <0x56f1bf>|0x00f|+0x016:'1053'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f1d5>|0x025|+0x009:'1057'
-	// <0>
-	// <0x56f1de>|0x02e|+0x01d:'1059'
-	// <0>
-	// <0x56f1fb>|0x04b|-0x00a:'1061'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x56f1f1>|0x041|+0x010:'1070'
-	// <0x56f201>|0x051|-0x034:'1070'
-	// <0x56f1cd>|0x01d|+0x055:'1071'
-	// ******
 }
 
 void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const& to )
