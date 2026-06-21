@@ -10,6 +10,10 @@
 #include <vostok/game_core/scheduler.h>
 #include <vostok/render/facade/model.h>
 
+// anchor_game_booby_trap.cpp's /OPT:REF keep() needs to address-take the private
+// helpers; the friend decl is codegen-neutral (emits no bytes). Retire with the anchor.
+namespace vostok { void use_game_booby_trap( ); }
+
 namespace survarium {
 
 class game_world;
@@ -17,12 +21,14 @@ class game_world;
 // void* booby_trap_set::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x96b50]: <0x96a90>|0x000|      :'41'	{
 
 class booby_trap_set : public booby_trap_set_core {
+	friend void ::vostok::use_game_booby_trap( );
 public:
 			void									on_trap_placed_message		( u8 index, float3 const& position, float3 const& angles );
 			void									on_trap_removed_message		( u8 index );
 			void									on_trap_fired_message		( u8 index );
 			void									on_trap_disarmed_message	( u8 index );
 
+private:
 	virtual	game_material_manager const&			get_game_material_manager	( ) override;
 
 	virtual	void									action						( bool key_down ) override;
@@ -39,6 +45,9 @@ public:
 
 			void									on_player_death				( );
 
+	// target keeps the tick()/action() call sites out-of-line (push 0; call), so the
+	// base must not inline the small body here
+	__declspec( noinline )
 			void									toggle_ghost_model			( bool enable );
 	// PDB spells the models vostok::render::static_model_instance_ptr - the
 	// same resource_ptr type our render tree typedefs as static_model_ptr
