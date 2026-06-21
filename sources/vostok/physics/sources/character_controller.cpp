@@ -11,12 +11,16 @@
 #include <vostok/physics/bullet_utils.h>
 #include <vostok/physics/world.h>
 
+namespace survarium {
+	extern vostok::memory::doug_lea_allocator_type*	g_allocator;
+} // namespace survarium
+
 namespace vostok {
 namespace physics {
 
 bt_character_controller* create_character_controller( vostok::memory::base_allocator& allocator, world* w )
 {
-	return VOSTOK_NEW_IMPL( allocator, bt_character_controller )( w );
+	return VOSTOK_NEW_IMPL( static_cast<vostok::memory::base_allocator&>( *::survarium::g_allocator ), bt_character_controller )( w );
 }
 
 bt_character_controller::bt_character_controller( world* w ) :
@@ -63,6 +67,10 @@ void bt_character_controller::deactivate( )
 	m_bt_controller->remove( m_bt_controller->m_collision_world );
 }
 
+// claude@NOTE: STRUCTURE MATCH (1 stmt). Residual is non-steerable register scheduling:
+// the target's bullet_character_controller::get_transform is an optimized COMDAT taking
+// this in a register (no push), so the caller keeps m_bt_controller in edx/eax; our /Od
+// base pushes it and spills through esi. Convention lives in bullet_character_controller.cpp.
 float4x4 bt_character_controller::get_transform( )
 {
 	return from_bullet( m_bt_controller->get_transform( ) );
