@@ -103,6 +103,15 @@ void player_cook::on_subresources_loaded(
 	);
 }
 
+// claude@NOTE: byte-residual concentrates on params->damage_model = ... : our base
+// emits the heavy resource_ptr copy-temp + intrusive_ptr<...>::dec path and reads
+// data[0]'s unmanaged resource 8 bytes high (0x134 vs the target's 0x12C), while the
+// sibling object_sound::on_sound_resources_ready (identical static_cast_resource_ptr
+// idiom, but on unmanaged_resource_ptr) matches 99.98%. The delta is the game_core
+// damage_model_ptr type (damage_model is a game_core stub on this branch) + the same
+// query_result struct-offset gap seen in object_wire::resources_ready - cross-module,
+// recovers when game_core's damage_model and the resources query_result layout land.
+// The NEW( player ) / finish_query / set_unmanaged_resource tail is structurally faithful.
 void player_cook::on_hit_params_loaded( resources::queries_result& data, player_creation_params* params )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();

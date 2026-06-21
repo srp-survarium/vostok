@@ -67,6 +67,7 @@
 #include "object_sky.h"
 #include "object_environment.h"
 #include "object_particle_visual.h"
+#include "object_sound.h"
 #include "object_volumetric_sound.h"
 #include "object_lpv_occluder.h"
 #include "object_ambient_volume.h"
@@ -353,6 +354,11 @@ namespace vostok
 		particle.load( cfg, "", cb );
 		particle.insert( );
 		particle.remove( );
+
+		survarium::object_sound			sound_obj( scene );
+		sound_obj.load( cfg, "", cb );
+		sound_obj.insert( );
+		sound_obj.remove( );
 
 		// object_volumetric_sound derives object_sound + link_resolver; reference
 		// its load / insert / resolve_links (the link_resolver virtual) too.
