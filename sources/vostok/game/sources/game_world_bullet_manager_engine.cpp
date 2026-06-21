@@ -9,6 +9,7 @@
 #include <vostok/game_core/bullet_manager.h>
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
+#include <vostok/render/facade/decal_properties.h>
 
 namespace survarium {
 
@@ -104,19 +105,14 @@ void game_world::play_particle(
 	scene_renderer( ).play_particle_system( render_scene( ), static_cast_resource_ptr< particle::particle_system_instance_ptr >( particle ), m );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - large (0x352, 7 stmts) decal-transform builder, deferred to
-// keep this commit focused on the matched forwarders. Recovered structure (locals
-// float4x4 transform, render::decal_properties properties):
-//   render::decal_properties properties;     // ctor: [esp+38h], m_? = 0
-//   transform = create_rotation( direction, normal );  // line 90, the big cross-product block
-//   transform.c.xyz() = position;            // line 91, translation row
-//   properties.<size/depth/is_front_face fields> = ...;   // lines 93/95/101
-//   scene_renderer().add_decal( render_scene(), id, properties );   // line 105
-// scene_renderer::add_decal facade is const& (resolves; matches), so this one is
-// NOT facade-walled - it is just a sizable transform-math reconstruction. Pick up
-// in a follow-up: model the create_rotation(direction,normal) cross-product +
-// decal_properties field fill against --view target 0x799e70.
+// claude@NOTE: STRUCTURE MATCH (7 stmts, all paired - no BASE_ONLY/TRGT_ONLY).
+// Residual is inline-vs-call on line 90: the target INLINES create_rotation(
+// direction, normal ) (0x124 of cross-product / normalize matrix math) while our
+// /Od build OUT-LINES it to a single `call` (0x13) - the od-helper-inline-depth
+// wall, not source-steerable. Line 105 (update_decal) carries the decal_properties
+// inline field-fill + call-boundary residual (5 projection bools re-set to 1,
+// alpha/clip = -1) that the target folds into the call site. Both are byte caps
+// over the correct shape, not structure gaps.
 void game_world::add_decal(
 	resources::unmanaged_resource_ptr const&	decal,
 	const u32			id,
@@ -128,6 +124,19 @@ void game_world::add_decal(
 	const bool			is_front_face
 )
 {
+	render::decal_properties	properties;
+
+	float4x4 transform			= create_rotation( direction, normal );
+	transform.c.xyz( )			= position + normal * depth * 0.5f;
+
+	properties.material			= is_front_face ? resources::unmanaged_resource_ptr( ) : decal;
+
+	properties.transform		= transform;
+	properties.transform.set_scale( float3( 1.0f, 1.0f, 1.0f ) );
+
+	properties.width_height_far_distance	= float3( size, size, depth * 2.0f ) * 0.5f;
+
+	scene_renderer( ).update_decal( render_scene( ), id, properties );
 }
 
 void game_world::remove_decal( u32 id )
