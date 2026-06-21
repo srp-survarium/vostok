@@ -12,8 +12,10 @@
 namespace survarium {
 
 class game;
+class console_command_bind;
 
 class key_binder : public boost::noncopyable {
+	friend class console_command_bind;
 public:
 			explicit				key_binder			( game& g );
 
@@ -39,16 +41,18 @@ public:
 
 			s32						get_action_dik		( game_action_id _action_id, s32 idx );
 	inline	s32						keyname_to_dik		( pcstr arg_0 ) { /* no source */ return 0; }
+
+	inline	bool					is_binded			( game_action_id arg_0, s32 arg_1 ) { /* no source */ return false; }
+
+	inline							~key_binder			( ) { /* no source */ }
+
+private:
 			keyboard_key_descr*		keyname_to_ptr		( pcstr _name );
 
 			game_action_id			action_name_to_id	( pcstr _name );
 			game_action_descr*		action_name_to_ptr	( pcstr _name );
 
 			void					remap_keys			( );
-
-	inline	bool					is_binded			( game_action_id arg_0, s32 arg_1 ) { /* no source */ return false; }
-
-	inline							~key_binder			( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */
