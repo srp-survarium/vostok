@@ -181,8 +181,8 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 
 		// if (normalMag != 0.0) // sushi@NOTE: While LTCG should get rid of it, this reduces the match
 		{
-			// btVector3 perpComponent = perpindicularDir * btScalar ( normalMag * movement_length );
-			result +=  perpindicularDir * btScalar ( normalMag * movement_length );
+			btVector3 perpComponent = perpindicularDir * btScalar ( normalMag * movement_length );
+			result += perpComponent;
 		}
 
 		// sushi@NOTE: Based on the `vostok_structure` this makes more sense, but when I do that assembly breaks in other places.
@@ -289,7 +289,7 @@ float bullet_character_controller::recover_from_penetration( )
 						btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
 
                         float pos_on_shape_y = ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y;
-						float weight = math::pow( pos_on_shape_y, 3 ); // on decomp.me the fix was to manually unroll `pow`. Sadly it didn't help here
+						float weight = pos_on_shape_y * pos_on_shape_y * pos_on_shape_y; // gold inlines math::pow( x, 3 ) as x*x*x
 
 						btVector3 displacement = contact.m_normalWorldOnB * directionSign * dist;
 						btVector3 weighedDisplacement = displacement * btVector3( weight, 1.0f - weight, weight );
