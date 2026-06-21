@@ -79,6 +79,9 @@ private:
 	// game_world walks m_respawn_points directly (clear_player_spawn_info);
 	// PDB does not record friendship, codegen-neutral
 	friend class game_world;
+	// game_world_ui reads m_config directly (initialize_minimap project_name lookup);
+	// PDB does not record friendship, codegen-neutral
+	friend class game_world_ui;
 	// project_cooker_simple reads m_loaded / m_objects directly (on_object_loaded);
 	// PDB does not record friendship, codegen-neutral
 	friend class project_cooker_simple;
