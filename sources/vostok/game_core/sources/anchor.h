@@ -39,6 +39,11 @@ namespace vostok
 	void anchor_animation_animation_time_calculator( );
 	void anchor_animation_time_in_ms_calculator( );
 
+	// animation_player carcass anchor - the player's public surface is only reached
+	// by the game animation-controller graph (not fully wired in this build); defined
+	// in animation/sources/anchor_animation_player.cpp.
+	void anchor_animation_player( );
+
 	// shared opaque sink: escapes addresses so LTCG observes member stores.
 	// Defined once in anchor_network_core.cpp; used by every anchor TU.
 	void example_callback( const char* name );
