@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.76% fuzzy (+2.45%) &middot; 4,642 / 12,915 functions exact (35.94%, +346 best-ever).**
+**Overall: 52.80% fuzzy (+2.44%) &middot; 4,643 / 12,915 functions exact (35.95%, +346 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -22,9 +22,9 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `render`        |   351 | 354 / 2,647 (13.4%) |           382 (+28) | 30.3% |     +2.1% |
 | `game`          |   141 | 274 / 1,498 (18.3%) |            274 (+0) | 32.1% |     +0.6% |
 | `core`          |   136 | 641 / 1,320 (48.6%) |           672 (+31) | 75.9% |     +3.5% |
-| `vostok`        |   112 | 491 / 1,252 (39.2%) |           558 (+67) | 53.3% |     +5.8% |
-| `game_core`     |   189 | 483 / 1,171 (41.2%) |          587 (+104) | 75.8% |     +8.4% |
-| `animation`     |   102 |   183 / 763 (24.0%) |           194 (+11) | 18.6% |     +0.8% |
+| `vostok`        |   112 | 490 / 1,252 (39.1%) |           557 (+67) | 53.4% |     +5.6% |
+| `game_core`     |   189 | 483 / 1,171 (41.2%) |          587 (+104) | 76.0% |     +8.3% |
+| `animation`     |   102 |   185 / 763 (24.2%) |           196 (+11) | 19.0% |     +0.9% |
 | `ai`            |   124 |   405 / 690 (58.7%) |           444 (+39) | 86.2% |     +1.1% |
 | `sound`         |    69 |   205 / 509 (40.3%) |            208 (+3) | 50.1% |     +0.1% |
 | `collision`     |    52 |   408 / 503 (81.1%) |            411 (+3) | 94.7% |     +0.3% |
