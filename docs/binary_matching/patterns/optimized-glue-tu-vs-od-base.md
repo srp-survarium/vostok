@@ -34,3 +34,18 @@ flash_function_handler / flash_external_handler glue over GFx::Value/Movie). `gf
 const*)` target 0x5bab70 = 1 byte / 0 stmts; GetUInt/GetInt/GetBool = `mov eax,[eax+8]; ret`;
 every setter b_stmts = t_stmts+1 (the inlined gfx() call); Call pairs 7/7 statements
 SIZE-only. Earlier wall note: match/scaleform-flash-text branch commit 499284df.
+
+Sibling evidence: vostok/scaleform/sources/movie.cpp flash_text/flash_text_manager glue over
+GFx::DrawText/DrawTextManager. get_width/get_height = `text_impl->GetRect().Width()/Height()`
+(target reads RectF.x2-x1 / y2-y1 inline, frameless); set_text/set_position/set_font_size /
+create_text(_w) build a `flash_text` and call GetTextExtent / GetRect / SetRect / CreateText.
+Faithful structure pairs in order (`size += 5.f`, the RectF SetRect, owner->need_capture=true);
+residual is /Od artifacts NOT source-steerable: (a) the NRVO return-object ctor folds in target
+(create_text 6 t-stmts vs 8 b-stmts), (b) the optimizer SPLITS one SetRect call across two
+statements while /Od keeps it one (multi-line arg formatting does NOT make /Od split it), (c)
+target folds GetRect into the padding line. TWO REACHABILITY TRAPS unique here: the WRONG-STRUCTURE
+do-nothing stub scored HIGHER (set_position stub 41% vs faithful 4/4-stmt body unpaired; set_text
+stub 11.5% vs 0.9%) - take the faithful body anyway. And the game module's OWN flash_text.h /
+flash_text_manager.h inline-stub get_width/get_height/set_font_size/create_text_w, so those four
+scaleform out-of-line bodies are /OPT:REF-stripped (UNPAIRED on reachability, not matching); they
+need a scaleform-module anchor chain that does not yet exist - park as cross-module reachability.
