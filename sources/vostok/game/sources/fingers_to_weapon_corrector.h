@@ -19,6 +19,10 @@ namespace animation {
 namespace survarium {
 
 class fingers_to_weapon_corrector : public core::noncopyable {
+	// /OPT:REF reachability anchor (anchor_game_fingers.cpp); references the private
+	// out-of-line bodies so the linker keeps them for the delinker to score.
+	friend void use_game_fingers( );
+
 public:
 	enum hands_enum {
 		left			= 0x0,
@@ -60,11 +64,13 @@ public:
 							const u32			current_time_in_ms
 						);
 
+private:
 			float		get_hand_coefficient		( const float hand_transition_time, const bool hand_active ) const;
 
 			void		initialize_bones_indices	( animation::skeleton const& character_skeleton );
 			void		initialize_locators			( render::render_model_instance const& weapon_model, const bool first_person_view );
 
+public:
 	inline	void		set_first_person_view		( const bool arg_0 ) { /* no source */ }
 
 	inline				~fingers_to_weapon_corrector( ) { /* no source */ }

@@ -19,6 +19,12 @@ namespace survarium {
 	// ******
 }
 
+// claude@NOTE: parked - render-facade-walled. Calls scene_renderer::
+// begin_render_options_changing( long* ) / end_render_options_changing( ... ),
+// both absent from our render/facade/scene_renderer.h (target-only) -> LNK2001 if
+// referenced. Completes once the render facade exposes the render-options-changing
+// pair. (console_commands::find / command_line::iterate_keys / resources_manager
+// ticks all exist already.)
 // STATE[STUB]
 void generate_shaders_world::generate_renderer_shaders( )
 {
@@ -107,6 +113,9 @@ void generate_shaders_world::generate_renderer_shaders( )
 	// ******
 }
 
+// claude@NOTE: parked - same wall as generate_renderer_shaders: scene_renderer::
+// begin_render_options_changing / end_render_options_changing are target-only,
+// absent from our render/facade tree -> LNK2001 if referenced.
 // STATE[STUB]
 void generate_shaders_world::generate_materials_shaders( )
 {
@@ -166,40 +175,21 @@ void generate_shaders_world::generate_materials_shaders( )
 	// ******
 }
 
+// claude@NOTE: parked - render-facade-walled. Body recovered:
+//   if ( !m_first_call_reset_renderer ) { m_renderer.scene().reset_renderer();
+//     generate_renderer_shaders(); generate_materials_shaders();
+//     m_first_call_reset_renderer = true; }
+//   static u32 tick_id; if ( tick_id % 100 == 0 )
+//     LOG_INFO( "pending_queries_count: %d", resources::pending_queries_count() );
+//   debug::debug_message_box( "shaders generated" ); debug::terminate( "" );
+//   ++tick_id; m_renderer.end_frame();
+// scene_renderer::reset_renderer() is absent from our render/facade tree (defined in
+// the target's scene_renderer.cpp line 873) -> calling it would LNK2001. Completes
+// once the render facade exposes reset_renderer.
 // STATE[STUB]
 void generate_shaders_world::tick( u32 current_frame_id )
 {
-	// STATICS
-	// static u32 						tick_id = <0x4c265c0>;
-	// ******
-
 	// FUNCTION BODY[0x748450]: 25
-	// <0x748461>|0x011|+0x009:'135'
-	// <0>
-	// <0x74846a>|0x01a|+0x00c:'137'
-	// <0>
-	// <0x748476>|0x026|+0x006:'139'
-	// <0x74847c>|0x02c|+0x006:'140'
-	// <0>
-	// <0x748482>|0x032|+0x004:'142'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x748486>|0x036|+0x01b:'147'
-	// <0>
-	// <0x7484a1>|0x051|+0x016:'149'
-	// <0x7484b7>|0x067|+0x0be:'150'
-	// <0>
-	// <1>
-	// <0x748575>|0x125|+0x00d:'153'
-	// <0x748582>|0x132|+0x00a:'154'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x74858c>|0x13c|+0x012:'159'
-	// ******
 }
 
 } // namespace survarium
