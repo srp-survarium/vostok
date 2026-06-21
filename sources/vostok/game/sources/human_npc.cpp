@@ -410,15 +410,13 @@ void human_npc::hit(
 }
 
 // STATE[STUB]
-// claude@NOTE: cross-unit blocked. Body is: if ( m_current_movement_target ) {
+// claude@NOTE: AI-side wall now removed (ai::world::select_new_goal added at vtable+0x54,
+// on_animation_finish back at +0x50; ai_world override + brain_unit::select_new_goal at 100%).
+// These four (on_movement_end / on_animation_end / select_new_goal / enable) are now CALLABLE
+// and ready to fill here in the game TU. Body for on_movement_end: if ( m_current_movement_target ) {
 //   LOG_INFO( "target reached: [%.2f][%.2f][%.2f]", m_current_movement_target->target_position.{x,y,z} );
 //   m_current_movement_target = 0; m_ai_world.select_new_goal( m_brain_unit ); }
-// The trailing call is ai::world vtable+0x54 = ai_world::select_new_goal( brain_unit_res_ptr )
-// (a target-only/unpaired symbol). Our vostok/ai/world.h lacks that virtual (on_animation_finish
-// currently sits at +0x54 instead of +0x50), so there is no method to call. Same wall hits
-// on_animation_end / select_new_goal / enable. Fix is in the AI module: add
-// ai::world::select_new_goal( brain_unit_res_ptr ) as the last pure virtual (after
-// on_animation_finish) + the ai_world override, then these four pair here.
+// (the trailing call resolves to ai::world vtable+0x54 = ai_world::select_new_goal( brain_unit_res_ptr )).
 void human_npc::on_movement_end( )
 {
 }

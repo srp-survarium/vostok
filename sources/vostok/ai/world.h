@@ -67,8 +67,8 @@ struct VOSTOK_NOVTABLE world
 	virtual	character_type get_character_attributes_by_index( u32 const index ) const			= 0;
 
 	virtual	void	fill_npc_stats			( npc_statistics& stats, brain_unit_res_ptr brain ) const	= 0;
-	virtual	u32		get_current_time_in_ms	( ) const					= 0;
 	virtual	void	on_animation_finish		( animation_item const* const target, brain_unit_res_ptr brain ) = 0;
+	virtual	void	select_new_goal			( brain_unit_res_ptr brain )= 0;
 
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR	( world );

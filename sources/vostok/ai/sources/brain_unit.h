@@ -65,6 +65,8 @@ public:
 			void	clear_resources			( );
 			void	stop_activity			( );
 
+			void	select_new_goal			( );
+
 			void	on_sensed_hit			( sensors::sensed_object const& hit_object );
 			void	on_sensed_sound			( sensors::sensed_object const& sound_object ) const;
 			void	on_seen_object			( sensors::sensed_object const& visual_object ) const;
