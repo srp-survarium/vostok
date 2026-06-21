@@ -13,16 +13,16 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.76% fuzzy (+2.45%) &middot; 4,641 / 12,915 functions exact (35.93%, +347 best-ever).**
+**Overall: 52.76% fuzzy (+2.45%) &middot; 4,642 / 12,915 functions exact (35.94%, +346 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact max | Fuzzy | Fuzzy max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 355 / 2,647 (13.4%) |           382 (+27) | 30.3% |     +2.1% |
+| `render`        |   351 | 354 / 2,647 (13.4%) |           382 (+28) | 30.3% |     +2.1% |
 | `game`          |   141 | 274 / 1,498 (18.3%) |            274 (+0) | 32.1% |     +0.6% |
 | `core`          |   136 | 641 / 1,320 (48.6%) |           672 (+31) | 75.9% |     +3.5% |
-| `vostok`        |   112 | 490 / 1,252 (39.1%) |           558 (+68) | 53.4% |     +5.7% |
+| `vostok`        |   112 | 491 / 1,252 (39.2%) |           558 (+67) | 53.3% |     +5.8% |
 | `game_core`     |   189 | 483 / 1,171 (41.2%) |          587 (+104) | 75.8% |     +8.4% |
 | `animation`     |   102 |   183 / 763 (24.0%) |           194 (+11) | 18.6% |     +0.8% |
 | `ai`            |   124 |   405 / 690 (58.7%) |           444 (+39) | 86.2% |     +1.1% |
@@ -40,7 +40,7 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `debug`         |    16 |   110 / 122 (90.2%) |            110 (+0) | 96.6% |     +0.0% |
 | `logging`       |    10 |     34 / 72 (47.2%) |             34 (+0) | 90.4% |     +0.5% |
 | `input`         |     9 |     24 / 53 (45.3%) |             28 (+4) | 65.9% |     +2.6% |
-| `survarium`     |     5 |     12 / 22 (54.5%) |             13 (+1) | 82.2% |     +0.8% |
+| `survarium`     |     5 |     13 / 22 (59.1%) |             13 (+0) | 83.8% |     +0.0% |
 | `ai_navigation` |     3 |     11 / 14 (78.6%) |             11 (+0) | 93.8% |     +0.0% |
 
 _Updated 2026-06-21 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
