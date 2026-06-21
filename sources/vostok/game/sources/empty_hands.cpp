@@ -4,74 +4,44 @@
 
 #include "pch.h"
 #include "empty_hands.h"
+#include <vostok/game_core/base_player.h>
 
 namespace survarium {
 
-// STATE[STUB]
- empty_hands::empty_hands( resources::managed_resource_ptr* const animations, const u32 animations_count ) :
-	// const members from the same-named params - a matcher confirms when this
-	// TU is enabled
+ empty_hands::empty_hands( resources::managed_resource_ptr* animations, const u32 animations_count ) :
+	m_user( 0 ),
 	m_animations( animations ),
 	m_animations_count( animations_count )
 {
-	// FUNCTION BODY[0x5bca70]: 1
-	// <0x5bca9c>|0x02c|+0x011:'28'
-	// ******
+	m_transform.identity( );
 }
 
-// STATE[STUB]
 void empty_hands::activate( base_player& user, engine& engine )
 {
-	// CALL SITE INFO
-	// <0x5bca56> -> float4x4 const& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5bca40]: 3
-	// <0>
-	// <0x5bca40>|0x000|+0x008:'34'
-	// <0x5bca48>|0x008|+0x021:'35'
-	// ******
+	m_user		= &user;
+	m_transform	= user.get_transform( );
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - walled by the animation-lexeme subsystem (the
+// create_animation_interval / mixing_animation_lexeme_parameters wall). Target builds
+// an animation_lexeme over m_animations (animation_lexeme_parameters::
+// animation_intervals_count / create_animation_intervals), wraps it in a
+// binary_tree_animation_node + a linear_interpolator, and returns
+// expression( lexeme ) cloned_in_buffer( buffer ). NEXT: unblock once the lexeme
+// builders are implemented (see create-animation-interval-lexeme-wall memory note).
 animation::mixing::expression empty_hands::selected_animations( mutable_buffer& buffer, const bool is_third_view ) const
 {
 	VOSTOK_UNREACHABLE_CODE( );	// buildability device - expression has no default ctor (the booby_trap_set_core precedent)
-
-	// LOCALS
-	// animation::mixing::animation_lexeme lexeme
-	// animation::linear_interpolator 	l_interpolator
-	// ******
-
-	// FUNCTION BODY[0x5bcac0]: 24
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <0x5bcad0>|0x010|+0x13e:'61'
-	// <0>
-	// <0x5bcc0e>|0x14e|+0x017:'63'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - target computes the user-hand bones: __find_if the bone by id,
+// n_ary_tree::compute_bones_local_matrices + convert_to_object_matrices over the
+// animation_player tree, then mul4x3 / calculated_head_matrix to place the result into
+// character_head_transform / character_transform using user_transform (a float4x4 const&
+// accessor on the skeleton at 0x5bcc83). NEXT: recover the n_ary_tree accessors + the
+// bone-search predicate (lines 78-87).
 void empty_hands::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,
@@ -82,28 +52,6 @@ void empty_hands::update_bones_matrices(
 	animation::animation_player const&		animation_player
 )
 {
-	// LOCALS
-	// float4x4 const& 					user_transform
-	// ******
-
-	// CALL SITE INFO
-	// <0x5bcc83> -> float4x4 const& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5bcc30]: 12
-	// <0>
-	// <1>
-	// <0x5bcc3a>|0x00a|+0x026:'78'
-	// <0x5bcc60>|0x030|+0x014:'79'
-	// <0>
-	// <0x5bcc74>|0x044|+0x011:'81'
-	// <0>
-	// <0x5bcc85>|0x055|+0x05d:'83'
-	// <0x5bcce2>|0x0b2|+0x01b:'84'
-	// <0>
-	// <0x5bccfd>|0x0cd|+0x00f:'86'
-	// <0x5bcd0c>|0x0dc|+0x081:'87'
-	// ******
 }
 
 } // namespace survarium

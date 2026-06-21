@@ -13,9 +13,12 @@ namespace resources {
 } // namespace resources
 } // namespace vostok
 
+namespace vostok { void use_game_small_utils( ); }
+
 namespace survarium {
 
 class text_translator {
+	friend void ::vostok::use_game_small_utils( );
 public:
 			text_translator			( );
 			~text_translator		( );
