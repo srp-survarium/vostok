@@ -5,11 +5,23 @@
 #include "pch.h"
 #include "network_client.h"
 
+#include <boost/bind.hpp>
+
 // m_local_player (player_ptr) / m_net_players (boost::array<player_desc>)
 // instantiate resource_ptr<player> dtors here, needing the complete player type
 #include "player.h"
 
 #include "game.h"			// m_game.get_game_world() / m_game.lobby_menu()
+#include "login_menu_status_enum.h"	// on_connected_to_login -> game::switch_to_login( status )
+#include <vostok/console_command.h>	// console_commands::cc_delegate
+
+namespace vostok {
+namespace network_core {
+	// network_core_entry_point.h pulls boost::asio; forward-declare the one free
+	// function on_http_result_ready needs
+	bool get_connection_info_from_string( pcstr buffer, char* const dest_host, u16& dest_port );
+} // namespace network_core
+} // namespace vostok
 
 namespace survarium {
 
@@ -25,65 +37,56 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 }
 */
 
-// STATE[STUB]
+// claude@NOTE: the bind setters + member inits are structurally exact; the byte/statement
+// residual is the anchor's concrete network_client( g, false ) instantiation - LTCG propagates
+// is_spectator==false and prunes the m_is_spectator/m_is_player_ticked/m_is_time_synchronized_
+// first_time stores and the whole `if ( m_is_spectator ) { static cc_delegate s_attach/s_detach }`
+// block (lines 56/63/70), leaving 5 base statements vs the target's 8. The pruned tail and the
+// boost::function::operator= inlining lift when the real game owner constructs the client and the
+// anchor is removed (same wall as base_network_client's ctor).
  network_client::network_client( game& g, const bool is_spectator ) :
 	base_network_client( g ),
-	// the client members have no default ctors; the world placeholders are
-	// buildability only - a matcher supplies the real network world when this
-	// TU is enabled
-	m_login_client( *( network::world* )NULL ),
+	m_login_client( g.get_network_world( ) ),
 	m_lobby_client( g ),
-	m_match_client( *( network::world* )NULL ),
+	m_match_client( g.get_network_world( ) ),
 	m_messaging_client( g ),
-	m_http_client( *( network::world* )NULL )
+	m_http_client( g.get_network_world( ) )
 {
-	// STATICS
-	// static console_commands::cc_delegate s_attach_to_player = <0x4c2bad8>;
-	// static console_commands::cc_delegate s_detach_to_player = <0x4c2ba78>;
-	// ******
+	m_match_client.set_on_packet_received	( boost::bind( &network_client::on_match_packet_received, this, _1, _2 ) );
+	m_lobby_client.set_on_packet_received	( boost::bind( &network_client::on_lobby_packet_received, this, _1 ) );
+	m_lobby_client.set_on_connected			( boost::bind( &network_client::on_connected_to_lobby, this ) );
+	m_lobby_client.set_on_disconnected		( boost::bind( &network_client::on_disconnected_from_lobby, this ) );
+	m_http_client.set_on_error				( boost::bind( &network_client::on_http_error, this, _1 ) );
 
-	// FUNCTION BODY[0x705000]: 21
-	// <0x705186>|0x186|+0x079:'51'
-	// <0x7051ff>|0x1ff|+0x067:'52'
-	// <0x705266>|0x266|+0x066:'53'
-	// <0x7052cc>|0x2cc|+0x066:'54'
-	// <0x705332>|0x332|+0x049:'55'
-	// <0x70537b>|0x37b|+0x00c:'56'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x705387>|0x387|+0x08e:'63'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x705415>|0x415|+0x08d:'70'
-	// <0>
-	// ******
+	m_is_spectator						= is_spectator;
+	m_is_player_ticked					= false;
+	m_is_time_synchronized_first_time	= false;
+
+	if ( m_is_spectator )
+	{
+		static console_commands::cc_delegate s_attach_to_player(
+			"attach_to_player",
+			boost::bind( &base_network_client::attach_to_player_cc, this, _1 ),
+			true,
+			console_commands::command_type_engine_internal
+		);
+
+		static console_commands::cc_delegate s_detach_to_player(
+			"detach_from_player",
+			boost::bind( &base_network_client::detach_from_player, this ),
+			false,
+			console_commands::command_type_engine_internal
+		);
+	}
 }
 
-// STATE[STUB]
+// claude@NOTE: the body is the empty `{}` the target compiled - all member destruction is
+// compiler-generated. The target emits 5 inlined flash_text member dtors (Scaleform::
+// RefCountNTSImpl::Release on m_*_caption/value at 0x413C..0x4160); our base emits 0 because
+// flash_text's dtor is a `{}` stub in this tree (the real Scaleform Release glue is still
+// stubbed) - the 5 statements come back once that glue is built. Source shape is correct.
  network_client::~network_client( )
 {
-	// FUNCTION BODY[0x704970]: 12
-	// <0x704975>|0x005|+0x019:'76'
-	// <0>
-	// <1>
-	// <2>
-	// <0x70498e>|0x01e|+0x021:'80'
-	// <0x7049af>|0x03f|+0x021:'81'
-	// <0x7049d0>|0x060|+0x021:'82'
-	// <0x7049f1>|0x081|+0x021:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
 }
 
 // claude@NOTE: target walks m_net_players by pointer (no index local) and reads the
@@ -98,400 +101,243 @@ void network_client::apply_use_physics_controller_for_current( )
 			player_ptr( static_cast< player* >( it->player.c_ptr( ) ) )->set_use_physics_controller_for_current( m_use_physics_controller_for_current );
 }
 
-// STATE[STUB]
+// claude@NOTE: the nested connection/handshaking/socket/message_type switch is structurally
+// exact (28 statements, --view structure-diff is a clean shape match against the target). The
+// per-statement byte residual is shared with every other LOG_ERROR site in the engine: each
+// LOG_ERROR expands to the g_log_filter_tree / has_passed_filters / stored_vtable / append
+// machinery, which is inlined slightly smaller here than in the target (the log-callback boost
+// glue is partially stubbed). on_connected_to_login below has the same wall.
 void network_client::on_connected_to_match(
-	const connection_error_types_enum		arg_0 /* connection_error_types_enum connection_error */,
-	const handshaking_error_types_enum		arg_1 /* handshaking_error_types_enum handshaking_error */,
-	const socket_error_types_enum			arg_2 /* socket_error_types_enum socket_error */,
-	const lobby_server_message_types_enum	arg_3 /* lobby_server_message_types_enum message_type */
+	const connection_error_types_enum		connection_error,
+	const handshaking_error_types_enum		handshaking_error,
+	const socket_error_types_enum			socket_error,
+	const lobby_server_message_types_enum	message_type
 )
 {
-	// CALL SITE INFO
-	// <0x7048aa> -> lobby_client& < unknown >()
-	// ******
+	switch ( connection_error )
+	{
+	case successfully_connected:
+		switch ( handshaking_error )
+		{
+		case successfully_handshaked:
+		case no_handshake:
+			switch ( socket_error )
+			{
+			case no_socket_error:
+				switch ( message_type )
+				{
+				case connection_successful:
+					if ( !m_is_spectator )
+						lobby_client( ).disconnect( );
 
-	// FUNCTION BODY[0x704120]: 95
-	// <0x704120>|0x000|+0x009:'104'	{
-	// <0x704129>|0x009|+0x0f1:'105'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x70421a>|0x0fa|-0x0d6:'112'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x704144>|0x024|+0x1a2:'118'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7042e6>|0x1c6|+0x0ca:'123'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7043b0>|0x290|-0x0ad:'130'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x704303>|0x1e3|+0x15a:'139'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x70445d>|0x33d|+0x172:'144'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7045cf>|0x4af|-0x0a8:'151'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x704527>|0x407|-0x0b3:'157'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x704474>|0x354|+0x208:'163'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x70467c>|0x55c|+0x221:'168'
-	// <0>
-	// <1>
-	// <2>
-	// <0x70489d>|0x77d|+0x008:'172'
-	// <0x7048a5>|0x785|+0x00c:'173'
-	// <0x7048b1>|0x791|+0x00c:'174'
-	// <0x7048bd>|0x79d|-0x0c8:'175'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7047f5>|0x6d5|-0x0ab:'181'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x70474a>|0x62a|-0x0b6:'188'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x704694>|0x574|-0x483:'195'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x704211>|0x0f1|+0x0cc:'200'
-	// <0x7042dd>|0x1bd|+0x0ca:'200'
-	// <0x7043a7>|0x287|+0x0ad:'200'
-	// <0x704454>|0x334|+0x0ca:'200'
-	// <0x70451e>|0x3fe|+0x0a8:'200'
-	// <0x7045c6>|0x4a6|+0x0ad:'200'
-	// <0x704673>|0x553|+0x0ce:'200'
-	// <0x704741>|0x621|+0x0ab:'200'
-	// <0x7047ec>|0x6cc|+0x0a8:'200'
-	// <0x704894>|0x774|+0x047:'200'
-	// <0x7048db>|0x7bb|      :'200'	}
-	// ******
+					m_player_inputs.clear( );
+					m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x41 ) );
+					m_match_client.m_are_there_any_packets_to_send = true;
+					break;
+
+				case invalid_session_id:
+					LOG_ERROR( "game: invalid session id" );
+					break;
+
+				case invalid_password:
+					LOG_ERROR( "game: invalid password" );
+					break;
+
+				default:
+					LOG_ERROR( "game: unexpected message type" );
+					break;
+				}
+				break;
+
+			case unable_to_write_to_socket:
+				LOG_ERROR( "game: unable to write to socket" );
+				break;
+
+			case unable_to_read_from_socket:
+				LOG_ERROR( "game: unable to read from socket" );
+				break;
+
+			default:
+				LOG_ERROR( "game: unexpected socket error type" );
+				break;
+			}
+			break;
+
+		case cannot_handshake:
+			LOG_ERROR( "game: SSL certificate verification failed" );
+			break;
+
+		default:
+			LOG_ERROR( "game: unexpected SSL error" );
+			break;
+		}
+		break;
+
+	case cannot_connect:
+		LOG_ERROR( "game: cannot connect to server" );
+		break;
+
+	default:
+		LOG_ERROR( "game: unexpected socket error type" );
+		break;
+	}
 }
 
-// STATE[STUB]
 void network_client::on_connected_to_login(
-	const connection_error_types_enum		arg_0 /* connection_error_types_enum connection_error */,
-	const handshaking_error_types_enum		arg_1 /* handshaking_error_types_enum handshaking_error */,
-	const socket_error_types_enum			arg_2 /* socket_error_types_enum socket_error */,
-	const login_server_message_types_enum	arg_3 /* login_server_message_types_enum message_type */
+	const connection_error_types_enum		connection_error,
+	const handshaking_error_types_enum		handshaking_error,
+	const socket_error_types_enum			socket_error,
+	const login_server_message_types_enum	message_type
 )
 {
-	// STATICS
-	// static < NoType > 				 = <0x703ba4>;
-	// ******
+	switch ( connection_error )
+	{
+	case successfully_connected:
+		switch ( handshaking_error )
+		{
+		case successfully_handshaked:
+		case no_handshake:
+			switch ( socket_error )
+			{
+			case no_socket_error:
+				{
+					login_menu_status_enum status;
+					switch ( message_type )
+					{
+					case servers_connection_info_message_type:
+						LOG_INFO( "on_connected_to_login." );
+						m_game.switch_to_lobby( );
+						return;
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f2573 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f2627 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f26e1 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN6") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f279b }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f286e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f292b }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x6f29fe }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// ******
+					case sign_in_user_already_signed_in:
+						LOG_ERROR( "sign in: user already signed in" );
+						status = login_menu_status_sign_in_already_online;
+						break;
 
-	// FUNCTION BODY[0x703030]: 123
-	// <0x703030>|0x000|+0x00c:'208'	{
-	// <0x70303c>|0x00c|+0x0f1:'209'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x70312d>|0x0fd|+0x0c2:'216'
-	// <0>
-	// <0x7031ef>|0x1bf|-0x193:'218'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x70305c>|0x02c|+0x0cc:'223'
-	// <0>
-	// <0x703128>|0x0f8|+0x0cc:'225'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7031f4>|0x1c4|+0x0c1:'229'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7032b5>|0x285|+0x09f:'236'
-	// <0>
-	// <0x703354>|0x324|-0x143:'238'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x703211>|0x1e1|+0x09f:'246'
-	// <0>
-	// <0x7032b0>|0x280|+0x0a9:'248'
-	// <0>
-	// <1>
-	// <2>
-	// <0x703359>|0x329|+0x160:'252'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7034b9>|0x489|+0x09f:'259'
-	// <0>
-	// <0x703558>|0x528|-0x13e:'261'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x70341a>|0x3ea|+0x09a:'266'
-	// <0>
-	// <0x7034b4>|0x484|-0x144:'268'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x703370>|0x340|+0x0a5:'273'
-	// <0>
-	// <0x703415>|0x3e5|+0x148:'275'
-	// <0>
-	// <1>
-	// <2>
-	// <0x70355d>|0x52d|+0x016:'279'
-	// <0>
-	// <1>
-	// <2>
-	// <0x703573>|0x543|+0x09f:'283'
-	// <0x703612>|0x5e2|+0x015:'284'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x703627>|0x5f7|+0x0ba:'290'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7036e1>|0x6b1|+0x0ba:'296'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x70379b>|0x76b|+0x0d3:'302'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x70386e>|0x83e|+0x0bd:'308'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x70392b>|0x8fb|+0x0d3:'314'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7039fe>|0x9ce|+0x0d3:'320'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x703ad1>|0xaa1|-0x407:'327'
-	// <0x7036ca>|0x69a|+0x0ba:'328'
-	// <0x703784>|0x754|+0x0d3:'328'
-	// <0x703857>|0x827|+0x0bd:'328'
-	// <0x703914>|0x8e4|+0x0d3:'328'
-	// <0x7039e7>|0x9b7|+0x0d3:'328'
-	// <0x703aba>|0xa8a|+0x0d3:'328'
-	// <0x703b8d>|0xb5d|-0x56f:'328'
-	// <0>
-	// <1>
-	// <2>
-	// <0x70361e>|0x5ee|+0x0ba:'332'
-	// <0x7036d8>|0x6a8|+0x0ba:'332'
-	// <0x703792>|0x762|+0x0d3:'332'
-	// <0x703865>|0x835|+0x0bd:'332'
-	// <0x703922>|0x8f2|+0x0d3:'332'
-	// <0x7039f5>|0x9c5|+0x0d3:'332'
-	// <0x703ac8>|0xa98|+0x0d2:'332'
-	// <0x703b9a>|0xb6a|      :'332'	}
-	// ******
+					case sign_in_invalid_version:
+						LOG_ERROR( "sign in: invalid version" );
+						status = login_menu_status_invalid_version;
+						break;
+
+					case invalid_user_name_or_password_message_type:
+						LOG_ERROR( "sign in: invalid user name or password" );
+						status = login_menu_status_invalid_user_or_password;
+						break;
+
+					case user_banned_message_type:
+						LOG_ERROR( "sign in: user banned" );
+						status = login_menu_status_user_banned;
+						break;
+
+					case user_restricted_by_access_level_message_type:
+						LOG_ERROR( "sign in: user access level restriction" );
+						status = login_menu_status_access_level_restriction;
+						break;
+
+					case sign_in_attempt_interval_violated_message_type:
+						LOG_ERROR( "sign in: attempt interval is violated" );
+						status = login_menu_status_sign_in_attempt_interval_violated;
+						break;
+
+					default:
+						LOG_ERROR( "sign in: unexpected message type" );
+						status = login_menu_status_error_connection;
+						break;
+					}
+					m_game.switch_to_login( status );
+				}
+				break;
+
+			case unable_to_write_to_socket:
+				LOG_ERROR( "game: unable to write to socket" );
+				break;
+
+			case unable_to_read_from_socket:
+				LOG_ERROR( "game: unable to read from socket" );
+				break;
+
+			default:
+				LOG_ERROR( "game: unexpected socket error type" );
+				break;
+			}
+			break;
+
+		case cannot_handshake:
+			LOG_ERROR( "game: SSL certificate verification failed" );
+			break;
+
+		default:
+			LOG_ERROR( "game: unexpected SSL error" );
+			break;
+		}
+		break;
+
+	case cannot_connect:
+		LOG_ERROR( "game: cannot connect to login server" );
+		break;
+
+	default:
+		LOG_ERROR( "game: unexpected socket error type" );
+		break;
+	}
 }
 
+
+// claude@NOTE: PARKED on a genuinely-missing cross-unit symbol. The recovered body is
+//   fixed_string< 512 > client_str;
+//   if ( s_net_login_client.is_set_as_string( &client_str ) ) {
+//       if ( m_http_client.busy( ) )
+//           return false;
+//       char request_str[ 512 ];
+//       sprintf_s( request_str, "%s&type=%d&local_ip=%s&login_ip=%s",
+//           m_login_client.server_browser_initial_query( ), type,
+//           login_client( ).local_ip_address( ), login_client( ).host_ip_address( ) );
+//       m_http_client.get( m_login_client.server_browser_address( ), request_str,
+//           boost::bind( &network_client::on_http_result_ready, this, _1, type ) );
+//   } else {
+//       if ( type == 2 ) on_http_result_ready( "188.93.23.27:25101", 2 );
+//       else if ( type == 4 ) on_http_result_ready( "188.93.23.27:25102", 4 );
+//   }
+//   return true;
+// Blocker: `s_net_login_client` is the global `vostok::command_line::key` whose canonical
+// home (game.cpp) still parks it as a compiler-generated `dynamic initializer` STUB - the
+// symbol is undefined, so referencing it would not link, and its ctor initializer cannot be
+// recovered from the PDB to define it here (and defining it here would put the symbol in the
+// wrong TU). Restore the body once game.cpp materializes s_net_login_client.
 // STATE[STUB]
 bool network_client::http_query_server_connection_info( u8 type )
 {
-	// LOCALS
-	// fixed_string< 512 > 				client_str
-	// char[512] 						request_str
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( type );
 
-	// CALL SITE INFO
-	// <0x704f07> -> network::login_client& < unknown >()
-	// <0x704f14> -> network::login_client& < unknown >()
-	// ******
-
+	// buildability return
 	return false;
-
-	// FUNCTION BODY[0x704e90]: 29
-	// <0x704e90>|0x000|+0x00e:'335'	{
-	// <0x704e9e>|0x00e|+0x017:'336'
-	// <0x704eb5>|0x025|+0x01f:'337'
-	// <0>
-	// <0x704ed4>|0x044|+0x009:'339'
-	// <0x704edd>|0x04d|+0x00e:'340'
-	// <0>
-	// <0x704eeb>|0x05b|+0x00a:'342'
-	// <0x704ef5>|0x065|+0x00b:'343'
-	// <0x704f00>|0x070|+0x00d:'344'
-	// <0x704f0d>|0x07d|+0x010:'345'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x704f1d>|0x08d|+0x022:'353'
-	// <0x704f3f>|0x0af|+0x08b:'354'
-	// <0>
-	// <1>
-	// <0x704fca>|0x13a|+0x005:'357'
-	// <0x704fcf>|0x13f|+0x007:'358'
-	// <0x704fd6>|0x146|+0x002:'359'
-	// <0x704fd8>|0x148|+0x005:'360'
-	// <0x704fdd>|0x14d|-0x021:'361'
-	// <0>
-	// <1>
-	// <0x704fbc>|0x12c|-0x0dd:'364'
-	// <0x704edf>|0x04f|+0x0df:'365'
-	// <0x704fbe>|0x12e|+0x02d:'365'
-	// <0x704feb>|0x15b|      :'365'	}
-	// ******
 }
 
-// STATE[STUB]
 void network_client::on_http_result_ready( pcstr content, u8 type )
 {
-	// LOCALS
-	// server_connection_info 			connection_info
-	// ******
-
-	// CALL SITE INFO
-	// <0x704da4> -> network::login_client& < unknown >()
-	// <0x704dc0> -> network::login_client& < unknown >()
-	// <0x704e06> -> lobby_client& < unknown >()
-	// <0x704e1f> -> messaging_client& < unknown >()
-	// <0x704e3d> -> lobby_client& < unknown >()
-	// <0x704e4d> -> lobby_client& < unknown >()
-	// <0x704e68> -> messaging_client& < unknown >()
-	// <0x704e78> -> messaging_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x704d90]: 29
-	// <0x704d90>|0x000|+0x00f:'368'	{
-	// <0>
-	// <0x704d9f>|0x00f|+0x012:'370'
-	// <0>
-	// <1>
-	// <0x704db1>|0x021|+0x025:'373'
-	// <0x704dd6>|0x046|+0x019:'374'
-	// <0>
-	// <0x704def>|0x05f|+0x002:'376'
-	// <0>
-	// <0x704df1>|0x061|+0x009:'378'
-	// <0x704dfa>|0x06a|+0x01a:'379'
-	// <0>
-	// <0x704e14>|0x084|+0x004:'381'
-	// <0x704e18>|0x088|+0x01a:'382'
-	// <0>
-	// <1>
-	// <0x704e32>|0x0a2|+0x004:'385'
-	// <0>
-	// <0x704e36>|0x0a6|+0x010:'387'
-	// <0x704e46>|0x0b6|+0x017:'388'
-	// <0>
-	// <1>
-	// <0x704e5d>|0x0cd|+0x004:'391'
-	// <0>
-	// <0x704e61>|0x0d1|-0x00d:'393'
-	// <0x704e54>|0x0c4|+0x01d:'394'
-	// <0x704e71>|0x0e1|-0x064:'394'
-	// <0>
-	// <1>
-	// <2>
-	// <0x704e0d>|0x07d|+0x01e:'398'
-	// <0x704e2b>|0x09b|+0x02b:'398'
-	// <0x704e56>|0x0c6|+0x029:'398'
-	// <0x704e7f>|0x0ef|      :'398'	}
-	// ******
+	server_connection_info connection_info;
+	connection_info.session_id = login_client( ).session_id( );
+	strcpy_s( connection_info.password, login_client( ).account_password( ) );
+	if ( network_core::get_connection_info_from_string( content, connection_info.host, connection_info.port ) )
+	{
+		if ( type == 2 )
+			lobby_client( ).connect( connection_info );
+		else if ( type == 4 )
+			messaging_client( ).connect( connection_info );
+	}
+	else
+	{
+		if ( type == 2 )
+		{
+			lobby_client( ).connection_info( ).need_resolve = true;
+			++lobby_client( ).connection_info( ).connection_error_count;
+		}
+		else if ( type == 4 )
+		{
+			messaging_client( ).connection_info( ).need_resolve = true;
+			++messaging_client( ).connection_info( ).connection_error_count;
+		}
+	}
 }
 
 void network_client::on_http_error( boost::system::error_code __formal )
@@ -521,7 +367,6 @@ void network_client::on_match_disconnected( network_core::disconnect_event_types
 	}
 }
 
-// STATE[STUB]
 void network_client::connect_to_login(
 	pcstr const		host,
 	const u16		port,
@@ -529,42 +374,19 @@ void network_client::connect_to_login(
 	pcstr			account_password
 )
 {
-	// CALL SITE INFO
-	// <0x704c53> -> < unknown >
-	// ******
+	if ( m_is_spectator )
+	{
+		m_last_tick_time_in_ms = m_game.game_time_ms( );
 
-	// FUNCTION BODY[0x704af0]: 27
-	// <0x704af0>|0x000|+0x012:'421'	{
-	// <0x704b02>|0x012|+0x010:'422'
-	// <0>
-	// <1>
-	// <0x704b12>|0x022|+0x00f:'425'
-	// <0x704b21>|0x031|+0x0ce:'426'
-	// <0>
-	// <0x704bef>|0x0ff|+0x069:'428'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x704c58>|0x168|+0x07a:'434'
-	// <0>
-	// <0x704cd2>|0x1e2|+0x039:'436'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x704d0b>|0x21b|-0x009:'447'
-	// <0>
-	// <0x704d02>|0x212|+0x07e:'449'
-	// <0x704d80>|0x290|      :'449'	}
-	// ******
+		LOG_INFO( "[R] connect_to_game_server: %s: %d game time is %d", host, port, m_last_tick_time_in_ms );
+
+		m_match_client.set_on_disconnect( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
+		m_match_client.connect( host, port, 0, m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
+
+		m_game.switch_to_scene( &m_game.get_game_world( ) );
+	}
+	else
+		m_login_client.sign_in( host, port, account_name, account_password, boost::bind( &network_client::on_connected_to_login, this, _1, _2, _3, _4 ) );
 }
 
 game_world& network_client::get_game_world( )
@@ -572,110 +394,45 @@ game_world& network_client::get_game_world( )
 	return m_game.get_game_world( );
 }
 
+// claude@NOTE: PARKED for budget - this is a 46-statement HUD renderer, not blocked by a
+// missing symbol but unusually heavy to make faithful. Recovered structure (build it later):
+//   static bool first_time = true;                                   // 458
+//   if ( first_time ) {
+//       flash_text_manager& mgr = m_game.get_game_world( ).text_manager( );   // [m_game+0x13C]=game_world(+0x98).m_text_manager(+0xA4)  // 459
+//       // 477-482: six m_sent/m_sent_low_level/m_resent/m_received/m_received_low_level/
+//       // m_received_duplicated .create( mgr, caption, start_width, ... , color ) with
+//       // captions "sent :"/"sent (low level) :"/"re-sent :"/"received :"/
+//       // "received (low level) :"/"received (duplicates) :", start_width 200/240/280/220/
+//       // 260/300, colors 0xFFFFFF00 (yellow) / 0xFF00FFFF (cyan) alternating
+//       // 484-502: four flash_text setups via mgr.create_text(...) + set_color + set_position
+//       //   m_max_local_sequence_difference_caption = mgr.create_text("max seq-diff :"); set_color(0xFF,0xFF,0,0xFF); set_position(150,320)
+//       //   m_max_local_sequence_difference_value   = mgr.create_text("");               set_color(0xFF,0xFF,0,0xFF); set_position(325,320)
+//       //   m_unacknowledged_packets_caption        = mgr.create_text("unacknowledged :"); set_color(0,0xFF,0xFF,0xFF); set_position(150,340)
+//       //   m_unacknowledged_packets_value          = mgr.create_text("");               set_color(0,0xFF,0xFF,0xFF); set_position(325,340)
+//       first_time = false;
+//   }
+//   // 505-510: six m_sent*/m_received* .set_visible( <stats_row default> )
+//   // 512-515: four flash_text set_visible( s_show_network_statistics )  (the TU-static cc bool
+//   //          toggled by s_show_network_statistics_comand - that console command + bool are the
+//   //          other unpaired symbols in this TU; recover them together)
+//   // 518-523: six .set_text( current_time_in_ms, <m_previous_stats stream>, ... )
+//   // 525-526: udp_match_stats difference = m_previous_stats - get_stats; sprintf<256>(text,"%3d packets",...)
+//   // 530-534: m_max_local_sequence_difference_value.set_text / m_unacknowledged_packets_value.set_text
+// The create() arg marshalling (10 params, most constant-folded) and the s_show_network_statistics
+// console-command static still need pinning before this is byte-faithful.
 // STATE[STUB]
 void network_client::draw_stats( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// network_core::udp_match_stats 	difference
-	// char[256] 						text
-	// ******
-
-	// STATICS
-	// static bool 						first_time = <0xa7d45f>;
-	// ******
-
-	// FUNCTION BODY[0x703be0]: 77
-	// <0x703be6>|0x006|+0x01d:'458'
-	// <0x703c03>|0x023|+0x011:'459'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <0x703c14>|0x034|+0x031:'477'
-	// <0x703c45>|0x065|+0x02b:'478'
-	// <0x703c70>|0x090|+0x02a:'479'
-	// <0x703c9a>|0x0ba|+0x026:'480'
-	// <0x703cc0>|0x0e0|+0x02a:'481'
-	// <0x703cea>|0x10a|+0x026:'482'
-	// <0>
-	// <0x703d10>|0x130|+0x022:'484'
-	// <0x703d32>|0x152|+0x01a:'485'
-	// <0x703d4c>|0x16c|+0x01f:'486'
-	// <0x703d6b>|0x18b|+0x021:'487'
-	// <0>
-	// <0x703d8c>|0x1ac|+0x022:'489'
-	// <0x703dae>|0x1ce|+0x01a:'490'
-	// <0x703dc8>|0x1e8|+0x01f:'491'
-	// <0x703de7>|0x207|+0x021:'492'
-	// <0>
-	// <0x703e08>|0x228|+0x022:'494'
-	// <0x703e2a>|0x24a|+0x01a:'495'
-	// <0x703e44>|0x264|+0x01f:'496'
-	// <0x703e63>|0x283|+0x021:'497'
-	// <0>
-	// <0x703e84>|0x2a4|+0x022:'499'
-	// <0x703ea6>|0x2c6|+0x01a:'500'
-	// <0x703ec0>|0x2e0|+0x01f:'501'
-	// <0x703edf>|0x2ff|+0x021:'502'
-	// <0>
-	// <1>
-	// <0x703f00>|0x320|+0x00d:'505'
-	// <0x703f0d>|0x32d|+0x00b:'506'
-	// <0x703f18>|0x338|+0x00b:'507'
-	// <0x703f23>|0x343|+0x00b:'508'
-	// <0x703f2e>|0x34e|+0x00b:'509'
-	// <0x703f39>|0x359|+0x00b:'510'
-	// <0>
-	// <0x703f44>|0x364|+0x039:'512'
-	// <0x703f7d>|0x39d|+0x034:'513'
-	// <0x703fb1>|0x3d1|+0x034:'514'
-	// <0x703fe5>|0x405|+0x02c:'515'
-	// <0>
-	// <1>
-	// <0x704011>|0x431|+0x01c:'518'
-	// <0x70402d>|0x44d|+0x018:'519'
-	// <0x704045>|0x465|+0x018:'520'
-	// <0x70405d>|0x47d|+0x018:'521'
-	// <0x704075>|0x495|+0x018:'522'
-	// <0x70408d>|0x4ad|+0x018:'523'
-	// <0>
-	// <0x7040a5>|0x4c5|+0x00f:'525'
-	// <0x7040b4>|0x4d4|+0x015:'526'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7040c9>|0x4e9|+0x01b:'530'
-	// <0x7040e4>|0x504|+0x00f:'531'
-	// <0>
-	// <0x7040f3>|0x513|+0x013:'533'
-	// <0x704106>|0x526|+0x00c:'534'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( current_time_in_ms );
 }
 
-// claude@NOTE: body is a 20-entry strcmp loop over m_match_client.get_match_options()
-// .player_profiles[i].name returning .team (else team_invalid). PARKED on the game carcass:
-// struct match_options and struct player_profile are only forward-declared in the game module
-// (canonical match_options.h / player_profile not yet rebuilt as carcass headers), so the
-// player_profiles[20] array (stride 0x1B8, name +0x8, team +0x1B0) can't be indexed. Restore
-// once those structs are pulled into the game carcass.
-// STATE[STUB]
 game_team_id network_client::get_player_team( pcstr player_profile_name )
 {
-	// buildability return
-	return team_invalid;
+	for ( u8 i = 0; i < 20; ++i )
+		if ( strcmp( m_match_client.get_match_options( ).player_profiles[ i ].profile_name, player_profile_name ) == 0 )
+			return m_match_client.get_match_options( ).player_profiles[ i ].team;
+
+	return team_undefined;
 }
 
 } // namespace survarium
