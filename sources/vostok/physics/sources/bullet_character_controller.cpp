@@ -51,6 +51,9 @@ btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 cons
 
 btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
 {
+	// claude@NOTE: byte-identical (21/21); the 1-vs-0 statement-count diff is a line-table
+	// attribution artifact (target draws a statement boundary at the dot/multiply split,
+	// our build doesn't) - not source-steerable.
 	return direction.dot( normal ) * normal;
 }
 
@@ -240,6 +243,10 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
+// claude@NOTE: capped by optimization, not source. Target registerizes the inner-loop
+// temporaries (isFirstBody/directionSign/k/dist/weight) we spill under /Od - target frame
+// sub esp,54h vs base 64h, exactly the 5 phantom slots. Same structure otherwise; byte
+// residual is the register-allocation difference, not source-steerable here.
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration");
@@ -252,8 +259,7 @@ float bullet_character_controller::recover_from_penetration( )
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 
 	float maxPen = 0.0f;
-	float shape_y = math::abs( m_shape_offset.y( ) );
-	btManifoldArray manifold_array;
+	float shape_y = math::abs( m_shape_offset.y( ) );	btManifoldArray manifold_array;
 
 	for ( s32 i = 0 ; i < m_ghost_object->getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
 	{
@@ -397,13 +403,16 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	}
 }
 
+// claude@NOTE: capped by optimization, not source. Target folds finish_pos/worldTransformInv
+// into their single use (frame sub esp,148h vs base 164h) and DSEs the else-branch assign;
+// our /Od build materializes those slots. setIdentity()/setOrigin() merged onto one line to
+// match the target's statement merge. Remaining residual is the fold, not source-steerable.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	BT_PROFILE("step_down");
 
 	btTransform start;
-	start.setIdentity( );
-	start.setOrigin( m_current_pos );
+	start.setIdentity( );	start.setOrigin( m_current_pos );
 
 	float step_height = m_vertical_velocity < 0.f ? -m_vertical_velocity * dt : 0.f;
 	if ( s_step_height > step_height && m_was_on_ground )
@@ -471,7 +480,8 @@ void bullet_character_controller::pre_step( float dt )
 
 	for ( s32 i = 0 ; recover_from_penetration( ) > 0.05f ; )
 	{
-		if ( ++i > 3 )
+		++i;
+		if ( i > 3 )
 			break;
 	}
 
@@ -517,6 +527,9 @@ void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 	);
 }
 
+// claude@NOTE: capped by optimization, not source (frames equal). Target dead-store-eliminates
+// the setZero() write to .y (overwritten by setY()) and interleaves the setY multiply; our /Od
+// build keeps the dead store. Same source/structure; residual is the DSE, not source-steerable.
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;
