@@ -16,10 +16,16 @@
 #include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/damage_model.h>
 #include <vostok/game_core/client_player_update.h>
+#include <vostok/game_core/server_player_update.h>	// process_player_action: action.deserialize / state.transform
+#include <vostok/game_core/player_initial_info.h>	// query_players: info filled per player
 #include <vostok/game_core/profile_slot_enum.h>
 #include <vostok/game_core/affect_event_type_enum.h>
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/network_core/udp_match_packet.h>
+#include <vostok/buffer_vector.h>					// query_players: ALLOCA buffer_vectors
+#include <vostok/resources_queries_result.h>		// on_players_ready: data[ i ]
+#include <vostok/resources_query_result.h>			// query_result_for_user::get_unmanaged_resource
+#include <boost/bind.hpp>							// query_players: bind on_players_ready callback
 
 namespace survarium {
 
@@ -53,104 +59,65 @@ void network_client::process_match_info( network_core::packet_reader& reader )
 	match_client( ).get_match_options( ).received_players_count = 0;
 }
 
-// STATE[STUB]
+// claude@NOTE: on_players_ready / query_players are STRUCTURE matches; the byte residual
+// is the resources inlining wall this single-TU base cannot reproduce - the variant<32>
+// machinery, buffer_vector::push_back, the resource_ptr refcount blocks and boost::bind
+// are out-of-line here but whole-program-inlined in the target. query_players' tail also
+// emits one extra target instruction (m_game.m_lpv_geometry_builded = false, a private
+// game member that needs friendship not yet in game.h) that is not reproduced. The two
+// on_players_ready LOG_INFO format strings are guessed (the exact text lives only in the
+// shipped rdata; it does not change the instruction bytes).
 void network_client::on_players_ready( resources::queries_result& data, const u32 players_count )
 {
-	// FUNCTION BODY[0x5c4e30]: 26
-	// <0x5c4e39>|0x009|+0x0d1:'99'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c4f0a>|0x0da|+0x01c:'103'
-	// <0>
-	// <0x5c4f26>|0x0f6|+0x059:'105'
-	// <0>
-	// <0x5c4f7f>|0x14f|+0x082:'107'
-	// <0>
-	// <0x5c5001>|0x1d1|+0x0e1:'109'
-	// <0x5c50e2>|0x2b2|+0x006:'110'
-	// <0>
-	// <0x5c50e8>|0x2b8|+0x045:'112'
-	// <0>
-	// <0x5c512d>|0x2fd|+0x030:'114'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5c515d>|0x32d|+0x017:'122'
-	// <0x5c5174>|0x344|+0x01f:'123'
-	// <0x5c5193>|0x363|+0x01b:'124'
-	// ******
+	LOG_INFO( "network_client::on_players_ready" );
+
+	for ( u32 i = 0; i < players_count; ++i )
+	{
+		player_ptr player = static_cast_resource_ptr< player_ptr >( data[ i ].get_unmanaged_resource( ) );
+
+		m_net_players[ player->id ].player = static_cast_resource_ptr< resources::unmanaged_resource_ptr >( player );
+
+		LOG_INFO( "network_client::on_players_ready %s player created %d", player->is_local ? "local" : "remote", player->id );
+
+		if ( player->is_local )
+			m_local_player = player;
+	}
+
+	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x48 ) );
+	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x42 ) );
+	m_match_client.send_queued_packets( m_last_tick_time_in_ms );
 }
 
-// STATE[STUB]
 void network_client::query_players( )
 {
-	// LOCALS
-	// buffer_vector< variant< 32 > const* > user_data_ptrs
-	// const u32 						players_count
-	// buffer_vector< variant< 32 > > 	user_datas
-	// buffer_vector< resources::request > requests
-	// u8 								i
-	// player_initial_info 				info
-	// variant< 32 > 					ud
-	// ******
+	const u32 players_count = match_client( ).get_match_options( ).players_count;
 
-	// CALL SITE INFO
-	// <0x5c66e4> -> match_client& < unknown >()
-	// <0x5c6746> -> match_client& < unknown >()
-	// <0x5c68b5> -> match_client& < unknown >()
-	// ******
+	buffer_vector< resources::request >		requests		( ALLOCA( players_count * sizeof( resources::request ) ), players_count );
+	buffer_vector< variant< 32 > >			user_datas		( ALLOCA( players_count * sizeof( variant< 32 > ) ), players_count );
+	buffer_vector< variant< 32 > const* >	user_data_ptrs	( ALLOCA( players_count * sizeof( variant< 32 > const* ) ), players_count );
 
-	// FUNCTION BODY[0x5c66d0]: 43
-	// <0x5c66dc>|0x00c|+0x00a:'129'
-	// <0>
-	// <1>
-	// <0x5c66e6>|0x016|+0x007:'132'
-	// <0x5c66ed>|0x01d|+0x017:'133'
-	// <0x5c6704>|0x034|+0x013:'134'
-	// <0x5c6717>|0x047|+0x014:'135'
-	// <0>
-	// <0x5c672b>|0x05b|+0x121:'137'
-	// <0x5c684c>|0x17c|-0x113:'137'
-	// <0>
-	// <0x5c6739>|0x069|+0x003:'139'
-	// <0x5c673c>|0x06c|+0x01b:'140'
-	// <0>
-	// <0x5c6757>|0x087|+0x014:'142'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c676b>|0x09b|+0x006:'146'
-	// <0x5c6771>|0x0a1|+0x00a:'147'
-	// <0x5c677b>|0x0ab|+0x041:'148'
-	// <0x5c67bc>|0x0ec|-0x085:'149'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c6737>|0x067|+0x09d:'153'
-	// <0x5c67d4>|0x104|+0x01c:'154'
-	// <0>
-	// <1>
-	// <0x5c67f0>|0x120|+0x02e:'157'
-	// <0x5c681e>|0x14e|+0x031:'158'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x5c684f>|0x17f|+0x104:'171'
-	// ******
+	for ( u8 i = 0; i < players_count; ++i )
+	{
+		player_initial_info info;
+		info.profile		= &match_client( ).get_match_options( ).player_profiles[ i ];
+		info.id				= i;
+		info.game_scene		= &m_game.get_game_world( );
+		info.is_demo_player	= false;
+
+		user_datas.push_back( variant< 32 >( ) );
+		user_datas.back( ).set( info );
+		user_data_ptrs.push_back( &user_datas.back( ) );
+		requests.push_back( resources::create_request( "gameplay/players/default.player", resources::player_class ) );
+
+		m_net_players[ i ].player = NULL;
+		m_net_players[ i ].is_connected = false;
+	}
+
+	m_game.get_game_world( ).load(
+		m_game.project_resource_name( ),
+		requests.begin( ), requests.end( ),
+		user_data_ptrs.begin( ),
+		boost::bind( &network_client::on_players_ready, this, _1, players_count ) );
 }
 
 // claude@NOTE: parked at link, not structure. Body recovered:
@@ -270,6 +237,20 @@ void network_client::process_player_respawn( network_core::packet_reader& packet
 		attach_to_player( player );
 }
 
+// claude@NOTE: PARKED - structure recovered but not written (high mis-structure risk +
+// heavy inline residual). Shape (lines 270-312):
+//   const s8 team_1 = packet.r<s8>(); const s8 team_2 = packet.r<s8>();
+//   m_game.get_game_world().game_ui.set_victory_points( team_1, team_2 );
+//   const u8 count = packet.r<u8>();
+//   for ( u8 i = 0; i < count; ++i ) {
+//       const u8 slot = packet.r<u8>(); const u8 item_id = packet.r<u8>();
+//       float3 position = packet.r<float3>();
+//       if ( slot == 0xFF ) { float4x4 transform = create_translation(position)*create_rotation(float3(0,0,0)); m_game.get_game_world().put_victory_item(item_id, transform); }
+//       else { item = m_game.get_game_world().get_victory_items()[item_id]; get_player(slot).inventory().set_victory_item(item.c_ptr()); if (m_current_player && m_current_player->id==slot) m_game.get_game_world().game_ui.show_item_container(slot); } }
+//   then a SECOND outer/inner/innermost triple-nested loop (lines 298-312) reading three
+//   more byte counts that searches get_victory_items() by [vi+0x34]==id and dispatches two
+//   victory_item virtuals (vtable +0x24 / +0x20) under a [vi+0x16C] guard. NEXT: resolve the
+//   two victory_item vtable slots + the [+0x16C] flag and the container target before writing.
 // STATE[STUB]
 void network_client::process_initialize_victory_items( network_core::packet_reader& packet )
 {
@@ -380,6 +361,18 @@ void `dynamic atexit destructor for 'cc_warmup_camera_position''( )
 }
 */
 
+// claude@NOTE: PARKED - 8 statements but heavy inlined float4x4 matrix math against two TU
+// statics (cc_warmup_camera_position / cc_warmup_camera_target, whose dynamic initializers
+// + atexit dtors are also unmatched). Shape (lines 353-371):
+//   float3 target   = m_local_player->transform.transform_position( cc_warmup_camera_target );
+//   float3 position = m_local_player->transform.transform_position( cc_warmup_camera_position );
+//   float3 direction = position - target;
+//   const float length = direction.magnitude();        // sqrtf
+//   physics::closest_ray_result ray_result( ... );      // ray cast from position along -direction/length
+//   if ( ray_result hit ) position = ray_result.point + direction/length * 0.01f; (the 3c23d70a const)
+//   m_game.get_game_world().get_game_camera().set_position_direction( position, direction );
+// NEXT: recover the two float3 statics' initializer values from their dynamic-init asm, then
+// the inlined transform_position SSE sequence; the player transform lives at player+0x8770.
 // STATE[STUB]
 void network_client::setup_camera_for_warmup( )
 {
@@ -457,6 +450,20 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
+// claude@NOTE: PARKED - 35 statements, deeply nested branches + a Scaleform::GFx::Movie::Invoke
+// ("root.hide_container_icon") + victory_item search/refcount machinery (high mis-structure
+// risk). Shape (lines 413-470): reads item_id(dl), team_2(dl), slot(bl=[esp+10h]),
+// item_id2(bl=[esp+6Ch]); if (slot != 0 && item_id2 == 0xFF) packet.r<float3>() (skip);
+// then victory_item item = get_game_world().get_victory_items()[item_id]; a search of the
+// victory_items vector by [vi+0x34]==item_id2 sets `current` (esi); if (current) update
+// victory points via game_ui.add_victory_points; then a take-vs-put split keyed on slot==0:
+//   put path: get_player(slot).inventory().set_victory_item(item.c_ptr()); show_item_container;
+//             item->vtable+0x24(); item[+0x170]=3; OR current->vtable+0x24();
+//   take path: inventory().set_victory_item(NULL); GFx Invoke("root.hide_container_icon");
+//             build item_transform from player transform (player+0x8770) and put it back;
+// finally game_ui.on_victory_item_put_take( item_id, !!slot, current != NULL ). NEXT: resolve
+// the victory_item vtable slots (+0x20/+0x24), the [vi+0x16C]/[vi+0x34] fields, and the GFx
+// movie accessor chain ([game_ui+0x270]->[..+0x108]->[..+4]) before writing.
 // STATE[STUB]
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
@@ -582,80 +589,37 @@ void network_client::send_local_player_input(
 	m_player_inputs.push_back( update );
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is two cross-TU inline
+// walls: player::set_character_transform is still an empty STUB in player.cpp, so its body
+// inlines to nothing here and only the get_angles arg-setup survives (the call vanishes);
+// and base_player::is_alive() is a direct out-of-line call here but the target inlines the
+// m_is_alive load. Both lift once those callees are matched / whole-program inlining is
+// reproduced. The set_character_transform position arg (transform.c.xyz()) is the best
+// guess - the stubbed callee makes it unverifiable for now.
 void network_client::process_player_action( network_core::packet_reader& packet, const u32 time_in_ms )
 {
-	// LOCALS
-	// server_player_update 			action
-	// player_ptr 						player
-	// ******
+	const u8 id = packet.r< u8 >( );
+	player_ptr player = get_player( id );
 
-	// CALL SITE INFO
-	// <0x5c523d> -> player_ptr < unknown >( const u8 ) const
-	// ******
+	server_player_update action;
+	action.deserialize( packet );
 
-	// FUNCTION BODY[0x5c5210]: 56
-	// <0x5c5210>|0x000|+0x00c:'521'	{
-	// <0x5c521c>|0x00c|+0x00d:'522'
-	// <0x5c5229>|0x019|+0x016:'523'
-	// <0>
-	// <0x5c523f>|0x02f|+0x015:'525'
-	// <0x5c5254>|0x044|+0x00a:'526'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5c525e>|0x04e|+0x00e:'533'
-	// <0>
-	// <0x5c526c>|0x05c|+0x0e6:'535'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c5352>|0x142|+0x008:'539'
-	// <0>
-	// <0x5c535a>|0x14a|+0x045:'541'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <0x5c539f>|0x18f|-0x062:'559'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <0x5c533d>|0x12d|+0x04d:'578'
-	// <0x5c538a>|0x17a|+0x028:'578'
-	// <0x5c53b2>|0x1a2|      :'578'	}
-	// ******
+	if ( !player )
+	{
+		LOG_WARNING( "player not found %d", id );
+		return;
+	}
+
+	if ( !player->is_alive( ) )
+	{
+		player->set_character_transform(
+			action.state.transform.c.xyz( ),
+			action.state.transform.get_angles( math::rotation_zxy ).y,
+			action.state.look_pitch );
+		return;
+	}
+
+	player->time_warp( action, time_in_ms );
 }
 
 void network_client::send_player_inputs( )
@@ -669,6 +633,14 @@ void network_client::send_player_inputs( )
 	m_player_inputs.clear( );
 }
 
+// claude@NOTE: PARKED - the 122-statement dispatch tick (largest in the TU). Carcass below
+// retains the per-statement listing; the shape is the per-frame client pump: resolve the
+// lobby/messaging clients on a throttle (the two static u32 *_resolve_time + min_time_delta
+// statics), m_last_tick_time_in_ms = current_time_in_ms, then login/lobby/match/messaging
+// client tick + send_queued_packets, the player-input throttle and a get_player(id) walk.
+// Deferred for budget; needs the static-throttle timers, the client tick ordering and the
+// send-input cadence reconstructed against the rich asm before writing. NEXT: decode the
+// throttle block (lines 602-657) then the match/messaging tick + input-send cadence.
 // STATE[STUB]
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
@@ -915,6 +887,22 @@ void network_client::game_world_object_state_arrived( network_core::packet_reade
 	player->deserialize_game_world_object( reader );
 }
 
+// claude@NOTE: PARKED - 18 statements with two inlined vector-clearing walks over types not
+// yet resolved (high mis-structure risk). Shape (lines 996-1023):
+//   m_player_inputs.clear();                                            // 996
+//   for ( u8 id = 0; id < 20; ++id ) {                                 // 998
+//       player_ptr player = get_player( id );                          // 1000
+//       if ( player && player->has_been_inserted() ) {                 // 1001
+//           player->remove();                                          // 1004 ([player+0x11B] gate)
+//           if ( player->inventory().get_victory_item() )              // 1005 ([inv+0x15C])
+//               player->inventory().set_victory_item( NULL ); } }      // 1006
+//   // walk A (1009-1012): m_game.get_game_world().m_game_project's path vector at +0x1A0..+0x1A4 is
+//   //   cleared element-by-element (__copy_ptrs + _Destroy<virtual_path_string>) - an inlined clear();
+//   // walk B (1015-1019): m_game.get_game_world().m_victory_items (game_world+0x2C4) iterated, each
+//   //   calling a victory_item virtual (vtable +0x24) under a [vi+0x16C] guard - an inlined loop;
+//   m_match_client.enqueue( m_match_client.new_packet( 0x4A ) );       // 1023 (+ [+0x239C]=1 flag)
+// NEXT: name the m_game_project member at +0x1A0 (a virtual_path_string vector) and the
+// victory_item +0x16C guard / vtable-+0x24 slot, then the two clears become real member calls.
 // STATE[STUB]
 void network_client::on_world_sync_request( )
 {
