@@ -68,6 +68,10 @@
 #include "object_environment.h"
 #include "object_particle_visual.h"
 #include "object_volumetric_sound.h"
+#include "object_lpv_occluder.h"
+#include "object_ambient_volume.h"
+#include "object_environment_probe.h"
+#include "object_volume_fog.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
 
@@ -350,6 +354,38 @@ namespace vostok
 		volumetric_sound.load( cfg, "", cb );
 		volumetric_sound.insert( );
 		volumetric_sound.resolve_links( static_cast< survarium::base_project* >( NULL ), cfg );
+
+		// object_lpv_occluder: only load is matched (facade-free); insert/remove are
+		// render-facade-walled stubs. Construct + reference all four so load pairs and
+		// the vtable/ctor/dtor stay past /OPT:REF.
+		survarium::object_lpv_occluder	lpv_occluder( scene );
+		lpv_occluder.load( cfg, "", cb );
+		lpv_occluder.insert( );
+		lpv_occluder.remove( );
+
+		// object_ambient_volume: only load is matched (facade-free); insert/remove are
+		// render-facade-walled stubs (ambient_volume_properties + the scene_renderer
+		// cook methods). Same construct + reference pattern.
+		survarium::object_ambient_volume	ambient_volume( scene );
+		ambient_volume.load( cfg, "", cb );
+		ambient_volume.insert( );
+		ambient_volume.remove( );
+
+		// object_environment_probe: only load is matched (facade-free); insert/remove
+		// are render-facade-walled stubs (environment_probe_properties + scene_renderer
+		// cook methods). Same construct + reference pattern.
+		survarium::object_environment_probe	environment_probe( scene );
+		environment_probe.load( cfg, "", cb );
+		environment_probe.insert( );
+		environment_probe.remove( );
+
+		// object_volume_fog: only load is matched (facade-free); insert/remove are
+		// render-facade-walled stubs (volume_fog_parameters + scene_renderer cook
+		// methods). Same construct + reference pattern.
+		survarium::object_volume_fog	volume_fog( scene );
+		volume_fog.load( cfg, "", cb );
+		volume_fog.insert( );
+		volume_fog.remove( );
 	}
 
 	// menu non-virtual method reachability anchor (anchor_game_menus.cpp)
