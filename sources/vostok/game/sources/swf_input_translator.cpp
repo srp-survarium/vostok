@@ -5,6 +5,10 @@
 #include "pch.h"
 #include "swf_input_translator.h"
 #include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/input/world.h>
+#include <vostok/input/keyboard.h>
+#include <locale.h>
+#include <string.h>
 
 namespace survarium {
 
@@ -13,13 +17,13 @@ namespace survarium {
 	initialize( );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - LTCG-customized calling convention (ret 0Ch cleans only 3
-// args, HandleMouseBtn called with no visible `mov ecx, movie`). Target maps the
-// (button, action) pair to a flash_movie::mouse_btn_action via a switch on
-// (action - 0x151) -> {.2:0, .1:1, default: code+2}, then movie->HandleMouseBtn(
-// mouse_btn_action, button_as_u32, x, y); return true. NEXT: reconcile the switch
-// constants + the register-passed args once the calling-convention shift is mapped.
+// claude@NOTE: capped - LTCG-customized calling convention. Target switches a
+// const-propagated value in EAX (0x151/0x152/0x153 -> {0,1,code+2}, default 0)
+// to a flash_movie::mouse_btn_action, then movie->HandleMouseBtn( action, button,
+// x, y ); return true. The switched value is propagated from the (specialized)
+// caller, so our /Od base (standard thiscall, switch on `action`) cannot reproduce
+// the register-passed args / immediates. Structure (switch -> call -> return) is
+// faithful; the byte residual is the convention wall.
 bool swf_input_translator::process_mouse_btn(
 	input::world*					__formal,
 	input::mouse_button				button,
@@ -29,7 +33,16 @@ bool swf_input_translator::process_mouse_btn(
 	flash_movie*					movie
 )
 {
-	return false;
+	flash_movie::mouse_btn_action	mouse_action = flash_movie::mouse_btn_down;
+	switch ( action )
+	{
+		case input::ms_key_down:	mouse_action = ( flash_movie::mouse_btn_action )0;	break;
+		case input::ms_key_up:		mouse_action = ( flash_movie::mouse_btn_action )1;	break;
+		case input::ms_key_hold:	mouse_action = ( flash_movie::mouse_btn_action )2;	break;
+	}
+
+	movie->HandleMouseBtn( mouse_action, button, x, y );
+	return true;
 }
 
 bool swf_input_translator::process_mouse_move(
@@ -44,12 +57,14 @@ bool swf_input_translator::process_mouse_move(
 	return true;
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - 61-statement keyboard dispatch. Reads input_world->keyboard()
-// twice for the shift state (is_shift_now), looks up get_bind(key), and routes
-// down/up/repeat actions to movie->HandleKeyboard / HandleChar using the bound
-// dik_to_swf_bind (translate_key_action for character output). NEXT: recover the
-// keyboard()/is_key_down() accessors + the action-branch structure (lines 53-115).
+// claude@NOTE: capped - structure recovered/bodied except ONE statement (the L99
+// navigation-key dispatch): the target builds a raw Scaleform::GFx::KeyEvent
+// {type=5, key=bind->scan} and calls movie->m_movie's vtable slot 0x88
+// (Movie::HandleEvent). That needs the GFx headers in the GAME module (a layering
+// violation - scaleform is the deferred layer), so it is left as a documented gap.
+// This whole COMDAT is also LTCG-optimized (and esp,-8, register-passed args) so
+// /Od bytes still diverge even where the structure matches. NEXT: emit the L99 GFx
+// dispatch once the scaleform GFx layer is wired into the game module.
 bool swf_input_translator::process_keyboard(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -58,7 +73,62 @@ bool swf_input_translator::process_keyboard(
 	u32								time_current_ms
 )
 {
-	return false;
+	if ( action == input::kb_key_down || action == input::kb_key_up )
+	{
+		dik_to_swf_bind* bind	= get_bind( key );
+		if ( !bind )
+			return false;
+
+		movie->HandleKeyboard( ( flash_movie::keyb_btn_action )action, bind->scan );
+
+		if ( bind->is_character && action == input::kb_key_down )
+		{
+			bool is_shift_now	= input_world->get_keyboard( )->is_key_down( input::key_lshift ) ||
+								  input_world->get_keyboard( )->is_key_down( input::key_rshift );
+
+			wchar_t c			= translate_key_action( input_world, is_shift_now, *bind );
+			if ( c )
+				movie->HandleChar( c );
+		}
+
+		movie->m_last_keyb_hold_time	= time_current_ms + 0x1f4;
+	}
+
+	if ( action == input::kb_key_hold && movie->m_last_keyb_hold_time + 100 < time_current_ms )
+	{
+		input::keyboard const* keyboard	= &*input_world->get_keyboard( );
+
+		bool is_shift_now				= keyboard->is_key_down( input::key_lshift ) ||
+										  keyboard->is_key_down( input::key_rshift );
+
+		for ( u32 i = 0; i < 0x100; ++i )
+		{
+			if ( !keyboard->is_key_down( ( input::enum_keyboard )i ) )
+				continue;
+
+			dik_to_swf_bind* bind	= get_bind( ( input::enum_keyboard )i );
+			if ( !bind )
+				continue;
+
+			if ( i == input::key_back || i == input::key_delete || i == input::key_left || i == input::key_right )
+			{
+				// claude@NOTE: WALL - raw Scaleform::GFx::KeyEvent{type=5,key=bind->scan}
+				// dispatched to movie->m_movie (Movie::HandleEvent); needs GFx headers
+				// in the game module. Left as a gap (one missing statement vs target).
+			}
+
+			if ( !bind->is_character )
+				continue;
+
+			wchar_t c	= translate_key_action( input_world, is_shift_now, *bind );
+			if ( c )
+				movie->HandleChar( c );
+		}
+
+		movie->m_last_keyb_hold_time	= time_current_ms;
+	}
+
+	return true;
 }
 
 dik_to_swf_bind* swf_input_translator::get_bind( input::enum_keyboard key )
@@ -69,15 +139,38 @@ dik_to_swf_bind* swf_input_translator::get_bind( input::enum_keyboard key )
 	return &char_map[ key ];
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - converts a bound key to its localized character. Uses a
-// wchar_t[64] buff + the CRT current_locale, calls input_world->keyboard()->... to
-// get the scancode-to-char mapping (the GetKeyNameText-style accessor at 0x5de589),
-// honours is_shift_now to pick current.c vs current.c_shift. NEXT: recover the
-// keyboard char-translation accessor signature + the buff/locale shape (lines 127-157).
+// claude@NOTE: capped - LTCG-optimized COMDAT (and esp,-8, esi=this, edi/bl
+// register-passed args, `result` enregistered into ebp so the PDB records no
+// `result` local). Our /Od base spills these to the frame, so the bytes diverge;
+// the structure (early non-translate return, locale-guarded init, get_dik_unicode,
+// shift-keyed wcsupr/wcslwr) is faithful.
 wchar_t swf_input_translator::translate_key_action( input::world* input_world, bool is_shift_now, dik_to_swf_bind& current )
 {
-	return 0;
+	wchar_t result = is_shift_now ? current.c_shift : current.c;
+
+	if ( !current.translate )
+		return is_shift_now ? current.c_shift : current.c;
+
+	wchar_t buff[ 64 ];
+
+	static _locale_t current_locale = _create_locale( LC_ALL, "" );
+
+	if ( !input_world->get_keyboard( )->get_dik_unicode( current.key, buff, sizeof( buff ) ) )
+		return result;
+
+	if ( is_shift_now )
+	{
+		if ( buff[ 0 ] == current.c )
+			buff[ 0 ] = result;
+
+		_wcsupr_s_l( buff, 64, current_locale );
+		return buff[ 0 ];
+	}
+	else
+	{
+		_wcslwr_s_l( buff, 64, current_locale );
+		return buff[ 0 ];
+	}
 }
 
 void swf_input_translator::initialize( )
