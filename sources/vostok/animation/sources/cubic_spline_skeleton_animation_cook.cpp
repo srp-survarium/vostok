@@ -35,6 +35,12 @@ u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::co
 	*/
 }
 
+// claude@NOTE: PARKED - cross-module wall. Target line 59 builds the animation in place
+// (cubic_spline_skeleton_animation::new_animation(pinned_ptr.c_ptr(), *static_cast_checked<
+// bi_spline_skeleton_animation const*>(buffer.c_ptr())) + set_file_name) then finish_query.
+// The non-baked `bi_spline_skeleton_animation` class is forward-declared-only everywhere
+// (never defined in sources/) so new_animation(pvoid,...) and the static_cast can't compile.
+// Unblock = reconstruct that type, then body lines 45/59/67 per the sushi@TODO below.
 void cubic_spline_skeleton_animation_cook::create_resource					(
 		vostok::resources::query_result_for_cook& in_out_query,
 		vostok::const_buffer bi_spline_skeleton_animation_buffer,

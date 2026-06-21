@@ -27,6 +27,8 @@ public:
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	configs::binary_config_ptr		m_bones_names;
+
+	friend class bi_spline_skeleton_animation_impl_cook;
 }; // class bi_spline_skeleton_animation_baked
 
 STATIC_SIZE_ASSERT(bi_spline_skeleton_animation_baked, 0x110);
