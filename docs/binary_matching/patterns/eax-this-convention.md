@@ -18,4 +18,12 @@ add eax,120h; call reset            ; this in EAX, no lea ecx
 ; callee: xorps xmm0,xmm0; mov dword[eax],0; movss [eax+4],xmm0; ret   ; frameless
 ```
 The closest reproducible shape is an EMPTY-stub callee (lets /Od elide the call cleanly); genuine inline-vs-call residual, caller PARTIAL.
-evidence-basis: negative result; all steering attempts verified ineffective (PR #124)
+
+UPDATE (game.cpp): when the eax/esi/edi-this standalone copy is reached ONLY through the
+`/OPT:REF` anchor, there IS an effective device - a guarded DIRECT CALL through a volatile
+`this`-pointer (`if(s_run) s_g->method();`), NOT an address-take sink. The direct call lets
+LTCG reproduce the same non-ecx convention; nine survarium::game methods went 65-97%/unpaired
+-> 100% this way. See anchor-direct-call-this-convention.md. The INEFFECTIVE verdict above
+stands only for functions with REAL same-module callers (PR #124), where you cannot insert
+an anchor call.
+evidence-basis: negative for real-caller functions (PR #124); positive via anchor direct-call (game.cpp, see variant)

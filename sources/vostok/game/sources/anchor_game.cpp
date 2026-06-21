@@ -273,18 +273,10 @@ namespace vostok
 		void ( survarium::game::* const m_enable )( bool )			= &survarium::game::enable;
 		void ( survarium::game::* const m_clear )( )				= &survarium::game::clear_resources;
 		void ( survarium::game::* const m_unload )( pcstr, bool )	= &survarium::game::unload;
-		void ( survarium::game::* const m_toggle )( )				= &survarium::game::toggle_console;
-		void ( survarium::game::* const m_lobby )( )				= &survarium::game::switch_to_lobby;
-		void ( survarium::game::* const m_clobby )( )				= &survarium::game::create_lobby_menu;
-		void ( survarium::game::* const m_clogin )( )				= &survarium::game::create_login_menu;
 		s_sink = *( pcvoid const* )&m_tick;
 		s_sink = *( pcvoid const* )&m_enable;
 		s_sink = *( pcvoid const* )&m_clear;
 		s_sink = *( pcvoid const* )&m_unload;
-		s_sink = *( pcvoid const* )&m_toggle;
-		s_sink = *( pcvoid const* )&m_lobby;
-		s_sink = *( pcvoid const* )&m_clobby;
-		s_sink = *( pcvoid const* )&m_clogin;
 	}
 
 	// Keep the object-skeleton base cone past /OPT:REF. game_object_static is
