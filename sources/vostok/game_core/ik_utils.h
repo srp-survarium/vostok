@@ -35,11 +35,23 @@ inline float get_angle( float adjacent0, float adjacent1, float opposite )
 
 // STATE[STUB]
 // vostok::math::float4x4 survarium::mix_transformations(vostok::math::float4x4 const&, vostok::math::float4x4 const&, const float, const float)
+// claude@NOTE: structure decoded from the target body (3 statements, 0 named locals):
+//   line 23 - lerp the translation column .c per-component:
+//       first.c * position_coeff + second.c * ( 1.0f - position_coeff )
+//       (target: eax=first weighted by position_coeff, ecx/esi=second by 1-position_coeff)
+//   line 24 - quaternion(first), quaternion(second) [explicit quaternion(float4x4 const&)],
+//       then slerp_optimized( q_first, q_second, orientation_coeff ) [fld [ebp+8]=orient]
+//   line 25 - return math::create_matrix( slerped_rotation, lerped_translation )
+//   The two unnamed temps (translation float3, slerped quaternion) are evaluated as the
+//   create_matrix args; whole thing is one returned expression spread over 3 lines (0 locals).
+//   Helpers all exist: math::slerp_optimized (math_quaternion.h:190),
+//   math::create_matrix(quaternion,float3) (math_float4x4.h:106), quaternion(float4x4 const&)
+//   (math_quaternion.h:159). Needs careful arg-eval-order iteration to byte-match; left stubbed.
 inline float4x4 mix_transformations(
 	float4x4 const&		first,
 	float4x4 const&		second,
-	float				position_coeff,
-	float				orientation_coeff
+	const float			position_coeff,
+	const float			orientation_coeff
 )
 {
 	return vostok::math::float4x4();
