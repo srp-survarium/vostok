@@ -220,3 +220,17 @@ quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion cons
 	Scale1		*= sign;
 	return		quaternion( q0.vector*Scale0 + q1.vector*Scale1 );
 }
+
+quaternion vostok::math::extrapolated_slerp ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
+{
+	quaternion	result	= begin->first;
+	float		weight	= begin->second;
+	for ( std::pair< quaternion, float > const* i = begin + 1; i != end; ++i ) {
+		if ( i->second > epsilon_5 ) {
+			result	= slerp_optimized( result, i->first, i->second / ( i->second + weight ) );
+			weight	+= i->second;
+		}
+	}
+
+	return		result;
+}
