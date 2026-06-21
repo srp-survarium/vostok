@@ -97,6 +97,10 @@ namespace survarium {
 	// the lobby-menu UI carcass anchor (anchor_game_lobby_ui.cpp); self-guarded.
 	void use_game_lobby_ui( );
 
+	// the lobby character-preview scene carcass anchor (anchor_game_lobby_scene.cpp);
+	// self-guarded, never runs.
+	void use_game_lobby_scene( );
+
 	// the survarium::player carcass anchor (anchor_game_player.cpp); pins the
 	// player out-of-line bodies so /OPT:REF keeps them for the delinker.
 	void anchor_game_player( );
@@ -409,6 +413,7 @@ namespace vostok
 		survarium::use_game_options( );
 		survarium::use_game_options_items( );
 		survarium::use_game_lobby_ui( );
+		survarium::use_game_lobby_scene( );
 		survarium::use_game_player_cook( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
