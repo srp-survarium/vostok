@@ -101,7 +101,7 @@ public:
 	void			populate_speedtree_forest		( scene_ptr const& scene );
 	
 	// particles
-	void			play_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance, math::float4x4 const& transform );
+	void			play_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr in_instance, math::float4x4 const& transform );
 	void			stop_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance );
 	void			remove_particle_system_instance ( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance );
 	void			update_particle_system_instance	( scene_ptr const& scene, particle::particle_system_instance_ptr const& instance, math::float4x4 const& transform, bool visible = true, bool paused = false);
