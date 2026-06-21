@@ -59,8 +59,8 @@ public:
 	virtual	void		serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const = 0;
 	virtual	void		deserialize					( network_core::packet_reader& reader ) = 0;
 
-	virtual	weapon_core const*	cast_weapon_core			( ) const { return NULL; }
 	virtual	weapon_core*		cast_weapon_core			( ) { return NULL; }
+	virtual	weapon_core const*	cast_weapon_core			( ) const { return NULL; }
 }; // class interactive_object
 
 STATIC_SIZE_ASSERT(interactive_object, 0x108);

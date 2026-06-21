@@ -188,8 +188,8 @@ public:
 	inline	void								set_double_handed				( bool is_double_handed ) { m_is_double_handed = is_double_handed; }
 	inline	void								set_chamber_a_round_on_reload	( bool chamber_a_round_on_reload ) { m_chamber_a_round_on_reload = chamber_a_round_on_reload; }
 
+	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return this; }
-	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }				// STATE[STUB]
 
 			bool								could_be_used					( base_player const& user ) const;
 			bool								could_be_aimed					( base_player const& user ) const;
