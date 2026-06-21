@@ -12,6 +12,11 @@
 #include "game.h"			// m_game.get_game_world( ).game_ui HUD forwarding
 
 #include "booby_trap_set.h"			// trap-message dispatch via inventory slots
+#include "victory_items_container.h"	// on_world_sync_request: clear each container's m_victory_items
+#include <vostok/console_command.h>				// setup_camera_for_warmup: cc_float3 console values
+#include <vostok/physics/ray_result.h>			// setup_camera_for_warmup: closest_ray_result from ray_test
+#include <vostok/physics/world.h>				// setup_camera_for_warmup: physics::world::ray_test
+#include "free_fly_camera.h"						// setup_camera_for_warmup: game_camera::set_position_direction
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/damage_model.h>
@@ -237,83 +242,53 @@ void network_client::process_player_respawn( network_core::packet_reader& packet
 		attach_to_player( player );
 }
 
-// claude@NOTE: PARKED - structure recovered but not written (high mis-structure risk +
-// heavy inline residual). Shape (lines 270-312):
-//   const s8 team_1 = packet.r<s8>(); const s8 team_2 = packet.r<s8>();
-//   m_game.get_game_world().game_ui.set_victory_points( team_1, team_2 );
-//   const u8 count = packet.r<u8>();
-//   for ( u8 i = 0; i < count; ++i ) {
-//       const u8 slot = packet.r<u8>(); const u8 item_id = packet.r<u8>();
-//       float3 position = packet.r<float3>();
-//       if ( slot == 0xFF ) { float4x4 transform = create_translation(position)*create_rotation(float3(0,0,0)); m_game.get_game_world().put_victory_item(item_id, transform); }
-//       else { item = m_game.get_game_world().get_victory_items()[item_id]; get_player(slot).inventory().set_victory_item(item.c_ptr()); if (m_current_player && m_current_player->id==slot) m_game.get_game_world().game_ui.show_item_container(slot); } }
-//   then a SECOND outer/inner/innermost triple-nested loop (lines 298-312) reading three
-//   more byte counts that searches get_victory_items() by [vi+0x34]==id and dispatches two
-//   victory_item virtuals (vtable +0x24 / +0x20) under a [vi+0x16C] guard. NEXT: resolve the
-//   two victory_item vtable slots + the [+0x16C] flag and the container target before writing.
-// STATE[STUB]
 void network_client::process_initialize_victory_items( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// float3 							position
-	// float4x4 						transform
-	// ******
+	const s8 team_1 = packet.r< s8 >( );
+	const s8 team_2 = packet.r< s8 >( );
 
-	// CALL SITE INFO
-	// <0x5c5881> -> player_ptr < unknown >( const u8 ) const
-	// <0x5c59f1> -> void < unknown >()
-	// <0x5c59fb> -> void < unknown >( victory_item_core* )
-	// ******
+	m_game.get_game_world( ).game_ui.set_victory_points( team_1, team_2 );
 
-	// FUNCTION BODY[0x5c56c0]: 44
-	// <0x5c56cf>|0x00f|+0x00a:'270'
-	// <0x5c56d9>|0x019|+0x008:'271'
-	// <0>
-	// <0x5c56e1>|0x021|+0x026:'273'
-	// <0>
-	// <0x5c5707>|0x047|+0x009:'275'
-	// <0x5c5710>|0x050|+0x1f7:'276'
-	// <0x5c5907>|0x247|-0x1e7:'276'
-	// <0>
-	// <0x5c5720>|0x060|+0x009:'278'
-	// <0x5c5729>|0x069|+0x006:'279'
-	// <0x5c572f>|0x06f|+0x01b:'280'
-	// <0>
-	// <1>
-	// <0x5c574a>|0x08a|+0x009:'283'
-	// <0>
-	// <1>
-	// <0x5c5753>|0x093|+0x0ab:'286'
-	// <0x5c57fe>|0x13e|+0x03e:'287'
-	// <0>
-	// <0x5c583c>|0x17c|+0x00c:'289'
-	// <0>
-	// <0x5c5848>|0x188|+0x028:'291'
-	// <0x5c5870>|0x1b0|+0x052:'292'
-	// <0x5c58c2>|0x202|+0x019:'293'
-	// <0x5c58db>|0x21b|+0x00e:'294'
-	// <0x5c58e9>|0x229|+0x029:'295'
-	// <0>
-	// <1>
-	// <0x5c5912>|0x252|+0x009:'298'
-	// <0>
-	// <0x5c591b>|0x25b|+0x103:'300'
-	// <0x5c5a1e>|0x35e|-0x0ee:'300'
-	// <0>
-	// <0x5c5930>|0x270|+0x009:'302'
-	// <0x5c5939>|0x279|+0x060:'303'
-	// <0x5c5999>|0x2d9|+0x009:'304'
-	// <0x5c59a2>|0x2e2|+0x075:'305'
-	// <0x5c5a17>|0x357|-0x067:'305'
-	// <0>
-	// <0x5c59b0>|0x2f0|+0x009:'307'
-	// <0x5c59b9>|0x2f9|+0x028:'308'
-	// <0x5c59e1>|0x321|+0x009:'309'
-	// <0x5c59ea>|0x32a|+0x009:'310'
-	// <0x5c59f3>|0x333|+0x00a:'311'
-	// <0x5c59fd>|0x33d|+0x02c:'312'
-	// <0>
-	// ******
+	const u8 count = packet.r< u8 >( );
+	for ( u8 i = 0; i < count; ++i )
+	{
+		const u8 slot = packet.r< u8 >( );
+		const u8 item_id = packet.r< u8 >( );
+		float3 position = packet.r< float3 >( );
+
+		if ( slot == 0xFF )
+		{
+			float4x4 transform = create_scale( float3( 1.f, 1.f, 1.f ) ) * create_rotation( float3( 0.f, 0.f, 0.f ) ) * create_translation( position );
+			m_game.get_game_world( ).put_victory_item( item_id, transform );
+		}
+		else
+		{
+			victory_item_ptr item = m_game.get_game_world( ).get_victory_items( )[ item_id ];
+			get_player( slot )->inventory( ).set_victory_item( item.c_ptr( ) );
+			if ( m_current_player && m_current_player->id == slot )
+				m_game.get_game_world( ).game_ui.show_item_container( slot );
+		}
+	}
+
+	const u8 containers_count = packet.r< u8 >( );
+	for ( u8 i = 0; i < containers_count; ++i )
+	{
+		const u8 container_id = packet.r< u8 >( );
+
+		victory_items_container_core* container = m_game.get_game_world( ).get_project( )->get_items_container( container_id );
+
+		const u8 items_count = packet.r< u8 >( );
+		for ( u8 j = 0; j < items_count; ++j )
+		{
+			const u8 victory_item_id = packet.r< u8 >( );
+
+			victory_item_ptr item = m_game.get_game_world( ).get_victory_items( )[ victory_item_id ];
+			if ( item->is_inserted( ) )
+				item->unload( );
+
+			container->put_item( item.c_ptr( ) );
+		}
+	}
 }
 
 void network_client::process_base_capture_progress( network_core::packet_reader& packet )
@@ -340,77 +315,33 @@ void network_client::process_match_wait_timer( network_core::packet_reader& pack
 		m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
 }
 
-// TU static console value behind setup_camera_for_warmup (compiler-generated
-// dynamic initializer + atexit destructor); a matcher recovers its type/
-// initializer from the init asm when this TU is enabled.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'cc_warmup_camera_position''( )
-{
-	// FUNCTION BODY[0x7d8d60]
-	// <0x7d8d60>|0x000|      :'346'	{
-	// ******
-}
+// TU console values backing setup_camera_for_warmup: cc_float3 console commands
+// (the warmup camera offset relative to the local player); the warmup function
+// reads each via the float3 value the cc_float3 references.
+static float3							s_warmup_camera_position( 0.f, 0.f, 0.f );
+static float3							s_warmup_camera_target( 0.f, 0.f, 0.f );
+static console_commands::cc_float3		cc_warmup_camera_position(
+											"warmup_camera_position", s_warmup_camera_position,
+											float3( -1000, -1000, -1000 ), float3( 1000, 1000, 1000 ),
+											false, console_commands::command_type_user_specific );
+static console_commands::cc_float3		cc_warmup_camera_target(
+											"warmup_camera_target", s_warmup_camera_target,
+											float3( -1000, -1000, -1000 ), float3( 1000, 1000, 1000 ),
+											false, console_commands::command_type_user_specific );
 
-// STATE[STUB]
-void `dynamic atexit destructor for 'cc_warmup_camera_position''( )
-{
-	// FUNCTION BODY[0x7f0880]
-	// <0x7d8e10>|0x000|      :'347'	{
-	// ******
-}
-*/
-
-// claude@NOTE: PARKED - 8 statements but heavy inlined float4x4 matrix math against two TU
-// statics (cc_warmup_camera_position / cc_warmup_camera_target, whose dynamic initializers
-// + atexit dtors are also unmatched). Shape (lines 353-371):
-//   float3 target   = m_local_player->transform.transform_position( cc_warmup_camera_target );
-//   float3 position = m_local_player->transform.transform_position( cc_warmup_camera_position );
-//   float3 direction = position - target;
-//   const float length = direction.magnitude();        // sqrtf
-//   physics::closest_ray_result ray_result( ... );      // ray cast from position along -direction/length
-//   if ( ray_result hit ) position = ray_result.point + direction/length * 0.01f; (the 3c23d70a const)
-//   m_game.get_game_world().get_game_camera().set_position_direction( position, direction );
-// NEXT: recover the two float3 statics' initializer values from their dynamic-init asm, then
-// the inlined transform_position SSE sequence; the player transform lives at player+0x8770.
-// STATE[STUB]
 void network_client::setup_camera_for_warmup( )
 {
-	// LOCALS
-	// float3 							target
-	// physics::closest_ray_result 		ray_result
-	// float3 							direction
-	// float3 							position
-	// const float 						length
-	// ******
+	float3 target = m_local_player->get_current( ).transform.transform_position( s_warmup_camera_target );
+	float3 position = m_local_player->get_current( ).transform.transform_position( s_warmup_camera_position );
 
-	// CALL SITE INFO
-	// <0x5c4661> -> physics::closest_ray_result < unknown >( float3 const&, float3 const&, const float, u16, u16 )
-	// ******
+	float3 direction = position - target;
+	const float length = direction.length( );
 
-	// FUNCTION BODY[0x5c43f0]: 21
-	// <0>
-	// <1>
-	// <0x5c43f3>|0x003|+0x042:'353'
-	// <0x5c4435>|0x045|+0x13f:'354'
-	// <0>
-	// <0x5c4574>|0x184|+0x018:'356'
-	// <0x5c458c>|0x19c|+0x04a:'357'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5c45d6>|0x1e6|+0x08d:'366'
-	// <0>
-	// <0x5c4663>|0x273|+0x007:'368'
-	// <0x5c466a>|0x27a|+0x066:'369'
-	// <0>
-	// <0x5c46d0>|0x2e0|+0x017:'371'
-	// ******
+	physics::closest_ray_result ray_result = m_game.get_game_world( ).get_physics_world( )->ray_test( position, -direction / length, length, 16, 8 );
+	if ( ray_result.object )
+		position = ray_result.hit_point_world + direction * 0.01f;
+
+	m_game.get_game_world( ).get_free_fly_camera( )->set_position_direction( position, direction );
 }
 
 void network_client::process_game_status( network_core::packet_reader& packet )
@@ -450,20 +381,37 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
-// claude@NOTE: PARKED - 35 statements, deeply nested branches + a Scaleform::GFx::Movie::Invoke
-// ("root.hide_container_icon") + victory_item search/refcount machinery (high mis-structure
-// risk). Shape (lines 413-470): reads item_id(dl), team_2(dl), slot(bl=[esp+10h]),
-// item_id2(bl=[esp+6Ch]); if (slot != 0 && item_id2 == 0xFF) packet.r<float3>() (skip);
-// then victory_item item = get_game_world().get_victory_items()[item_id]; a search of the
-// victory_items vector by [vi+0x34]==item_id2 sets `current` (esi); if (current) update
-// victory points via game_ui.add_victory_points; then a take-vs-put split keyed on slot==0:
-//   put path: get_player(slot).inventory().set_victory_item(item.c_ptr()); show_item_container;
-//             item->vtable+0x24(); item[+0x170]=3; OR current->vtable+0x24();
-//   take path: inventory().set_victory_item(NULL); GFx Invoke("root.hide_container_icon");
-//             build item_transform from player transform (player+0x8770) and put it back;
-// finally game_ui.on_victory_item_put_take( item_id, !!slot, current != NULL ). NEXT: resolve
-// the victory_item vtable slots (+0x20/+0x24), the [vi+0x16C]/[vi+0x34] fields, and the GFx
-// movie accessor chain ([game_ui+0x270]->[..+0x108]->[..+4]) before writing.
+// claude@NOTE: PARKED - 35 statements, deeply nested take-vs-put branches + a
+// Scaleform::GFx::Movie::Invoke ("root.hide_container_icon") + multiple unresolved
+// victory_item/victory_items_container vtable slots (high mis-structure risk). Shape
+// (lines 413-470), reusing idioms now PROVEN in process_initialize_victory_items above:
+//   413 const s8 team_1_points = packet.r<s8>();  414 const s8 team_2_points = packet.r<s8>();
+//   415 const u8 slot = packet.r<u8>();            416 const u8 item_id = packet.r<u8>();
+//   419 if ( slot == 0 && item_id == 0xFF )  420 packet.r<float3>();  // read+discard a float3
+//   422 victory_item_ptr item = m_game.get_game_world().get_victory_items()[ team_1_points ];
+//        // NB: indexed by team_1_points (dl), NOT item_id - matches the binary, do not "fix"
+//   424 victory_items_container_core* current =
+//        m_game.get_game_world().get_project()->get_items_container( item_id );  // inlined search
+//   426-430 if ( current ) game_ui.add_victory_points( ... );  // two current-> virtuals: team()
+//        at vtable+0x28 (game_team_id) and one at +0x28 again, results -> add_victory_points
+//   433 if ( slot ) {  // PUT path
+//     434 get_player(slot)->inventory().set_victory_item( item.c_ptr() );  436-437 player dtor +
+//          if ( m_current_player && m_current_player->id == slot ) game_ui.show_item_container(slot);
+//     439 if ( !current ) { 441 item->take()/vtbl+0x24(); 444 item[+0x170] = 3; }
+//          446 else current->take_item()/vtbl+0x24();
+//   } else {  // TAKE path (slot == 0)
+//     449 get_player(slot)->inventory().set_victory_item( NULL );
+//     451-452 if ( m_current_player && m_current_player->id == slot )
+//          [game_ui+0x270]->[+0x108]->[+4]->Scaleform::GFx::Movie::Invoke("root.hide_container_icon",0,0,0);
+//     454 if ( !current ) { 455 item[+0x170] = item->vtbl+0x48()/put-return;
+//          461 float4x4 item_transform = get_player(slot)->get_current().transform; (player+0x8770)
+//               put it back: get_victory_items()[..]->put( physics_world, item_transform, scheduler );
+//          } else { 465 item[+0x170] = 3; 466 current->put_item( item.c_ptr() ); }
+//   }
+//   470 game_ui.on_victory_item_put_take( item_id, slot != 0, current != NULL );
+// NEXT: name the victory_item vtable slots (+0x24 take, +0x28 a game_team_id getter, +0x48 a
+// put-return), the container's [+0x34]==item_id key (already get_items_container), and the GFx
+// movie accessor chain [game_ui+0x270]->[+0x108]->[+4]; then write it like the sibling above.
 // STATE[STUB]
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
@@ -887,68 +835,31 @@ void network_client::game_world_object_state_arrived( network_core::packet_reade
 	player->deserialize_game_world_object( reader );
 }
 
-// claude@NOTE: PARKED - 18 statements with two inlined vector-clearing walks over types not
-// yet resolved (high mis-structure risk). Shape (lines 996-1023):
-//   m_player_inputs.clear();                                            // 996
-//   for ( u8 id = 0; id < 20; ++id ) {                                 // 998
-//       player_ptr player = get_player( id );                          // 1000
-//       if ( player && player->has_been_inserted() ) {                 // 1001
-//           player->remove();                                          // 1004 ([player+0x11B] gate)
-//           if ( player->inventory().get_victory_item() )              // 1005 ([inv+0x15C])
-//               player->inventory().set_victory_item( NULL ); } }      // 1006
-//   // walk A (1009-1012): m_game.get_game_world().m_game_project's path vector at +0x1A0..+0x1A4 is
-//   //   cleared element-by-element (__copy_ptrs + _Destroy<virtual_path_string>) - an inlined clear();
-//   // walk B (1015-1019): m_game.get_game_world().m_victory_items (game_world+0x2C4) iterated, each
-//   //   calling a victory_item virtual (vtable +0x24) under a [vi+0x16C] guard - an inlined loop;
-//   m_match_client.enqueue( m_match_client.new_packet( 0x4A ) );       // 1023 (+ [+0x239C]=1 flag)
-// NEXT: name the m_game_project member at +0x1A0 (a virtual_path_string vector) and the
-// victory_item +0x16C guard / vtable-+0x24 slot, then the two clears become real member calls.
-// STATE[STUB]
 void network_client::on_world_sync_request( )
 {
-	// LOCALS
-	// u8 								id
-	// player_ptr 						player
-	// ******
+	m_player_inputs.clear( );
 
-	// CALL SITE INFO
-	// <0x5c5d91> -> player_ptr < unknown >( const u8 ) const
-	// <0x5c5f00> -> void < unknown >()
-	// ******
+	for ( u8 id = 0; id < 20; ++id )
+	{
+		player_ptr player = get_player( id );
+		if ( player && player->has_been_inserted( ) )
+		{
+			player->remove( );
+			if ( player->inventory( ).get_victory_item( ) )
+				player->inventory( ).set_victory_item( NULL );
+		}
+	}
 
-	// FUNCTION BODY[0x5c5d60]: 30
-	// <0>
-	// <1>
-	// <0x5c5d67>|0x007|+0x00a:'996'
-	// <0>
-	// <0x5c5d71>|0x011|+0x00f:'998'
-	// <0>
-	// <0x5c5d80>|0x020|+0x013:'1000'
-	// <0x5c5d93>|0x033|+0x043:'1001'
-	// <0x5c5dd6>|0x076|-0x032:'1002'
-	// <0>
-	// <0x5c5da4>|0x044|+0x005:'1004'
-	// <0x5c5da9>|0x049|+0x010:'1005'
-	// <0x5c5db9>|0x059|+0x00b:'1006'
-	// <0x5c5dc4>|0x064|+0x04d:'1007'
-	// <0>
-	// <0x5c5e11>|0x0b1|+0x03f:'1009'
-	// <0x5c5e50>|0x0f0|+0x07e:'1010'
-	// <0x5c5ece>|0x16e|-0x038:'1010'
-	// <0>
-	// <0x5c5e96>|0x136|+0x040:'1012'
-	// <0>
-	// <1>
-	// <0x5c5ed6>|0x176|+0x009:'1015'
-	// <0x5c5edf>|0x17f|+0x011:'1016'
-	// <0>
-	// <0x5c5ef0>|0x190|+0x00b:'1018'
-	// <0x5c5efb>|0x19b|+0x015:'1019'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c5f10>|0x1b0|+0x017:'1023'
-	// ******
+	for ( vector< victory_items_container* >::iterator i = m_game.get_game_world( ).get_project( )->m_victory_items_containers.begin( );
+		i != m_game.get_game_world( ).get_project( )->m_victory_items_containers.end( ); ++i )
+		( *i )->m_victory_items.clear( );
+
+	for ( vectora< victory_item_ptr >::iterator it = m_game.get_game_world( ).get_victory_items( ).begin( );
+		it != m_game.get_game_world( ).get_victory_items( ).end( ); ++it )
+		if ( ( *it )->is_inserted( ) )
+			( *it )->unload( );
+
+	m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x4A ) );
 }
 
 void network_client::damage_model_state_arrived( network_core::packet_reader& packet )

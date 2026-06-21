@@ -85,6 +85,9 @@ private:
 	// project_cooker_simple reads m_loaded / m_objects directly (on_object_loaded);
 	// PDB does not record friendship, codegen-neutral
 	friend class project_cooker_simple;
+	// network_client walks m_victory_items_containers directly (on_world_sync_request);
+	// PDB does not record friendship, codegen-neutral
+	friend class network_client;
 
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */
