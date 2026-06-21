@@ -31,13 +31,10 @@ public:
 	};
 
 	struct hand {
-		// STATE[STUB]
-		inline		hand( )
+		inline		hand( ) :
+			start_transition_time_in_ms	( 0 ),
+			is_active					( true )
 		{
-			// FUNCTION BODY[0xacce0]: 0
-			// <0xacce0>|0x000|+0x013:'42'	{
-			// <0xaccf3>|0x013|      :'43'	}
-			// ******
 		}
 
 	public:
