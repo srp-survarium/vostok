@@ -61,12 +61,12 @@ public:
 													boost::function< void( enum network_core::disconnect_event_types_enum ) > const&	arg_0
 												) { /* no source */ }
 
-	inline	bool								is_connected						( ) const { /* no source */ return false; }
-	inline	bool								is_disconnected						( ) const { /* no source */ return false; }
+	inline	bool								is_connected						( ) const { return m_client.is_connected( ); }
+	inline	bool								is_disconnected						( ) const { return m_client.is_disconnected( ); }
 
 	inline	network_core::udp_match_stats const&	get_stats							( ) const { /* no source */ return m_client.get_stats( ); }
 
-	inline	u32									last_receive_time_in_ms				( ) const { /* no source */ return 0; }
+	inline	u32									last_receive_time_in_ms				( ) const { return m_client.last_receive_time_in_ms( ); }
 
 	inline	match_options&						get_match_options					( ) { /* no source */ return m_match_options; }
 
