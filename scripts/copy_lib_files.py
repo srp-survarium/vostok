@@ -33,25 +33,24 @@ DEST        = VOSTOK_DIR / "binaries.prebuilt"
 # SKIP it here rather than staging a copy (no special destination needed).
 LICENSE_NAMES  = {"COPYING.LIB"}
 
-# The foreign GFx libs (libgfx*.lib under this Release dir) are NOT staged. We
-# build our OWN from-source 4.2.22 GFx suite into `Win32/libraries/shipping/`
-# (build_gfx_lib_direct.py) to byte-match the shipped 4.2.21 - the exe links them
-# via `#pragma comment(lib,"libgfx.lib")` off that dir. Staging the 4.0.15
-# distribution libs here would CLOBBER those builds on every setup (their ABI
-# differs from 4.2.22, breaking the render-engine link), so skip everything under
-# GFX_SRC.
-GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Release")
+# Our from-source 4.2.22 GFx suite (built per the shipped PDB's recipe - non-/GL,
+# /Ox, pristine SDK; see build_gfx_suite.py) ships inside vostok-libs at the shipped
+# Win32 Shipping config path. Remap it onto the game's binaries.prebuilt layout
+# (`Win32/libraries/shipping/`), where the exe's `#pragma comment(lib,"libgfx.lib")`
+# resolves it. The foreign 4.0.15 GFx libs were removed from vostok-libs and replaced
+# by these - no skip/clobber dance needed.
+GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Shipping")
+GFX_DST = Path("Win32/libraries/shipping")
 
 
-def dest_for(rel_path: Path, dest: Path):
-    """Resolve the absolute target path for a source-relative blob, or None to skip.
+def dest_for(rel_path: Path, dest: Path) -> Path:
+    """Resolve the absolute target path for a source-relative blob.
 
-    Foreign GFx libs (under GFX_SRC) are skipped - the 4.2.22 suite is built from
-    source into shipping/ separately. Everything else keeps its source-relative
-    subpath under `dest` so nothing is lost.
+    The GFx Shipping libs remap onto the game's `Win32/libraries/shipping/` layout;
+    everything else keeps its source-relative subpath under `dest`.
     """
     if rel_path.parent == GFX_SRC:
-        return None
+        return dest / GFX_DST / rel_path.name
     return dest / rel_path
 
 
@@ -85,8 +84,6 @@ def main():
         if file.is_file() and file.suffix.lower() in EXTS and file.name not in LICENSE_NAMES:
             rel_path = file.relative_to(src)
             target = dest_for(rel_path, dest)
-            if target is None:          # foreign GFx lib - we build our own from source
-                continue
             target.parent.mkdir(parents=True, exist_ok=True)
 
             # Prior copies came from /nix/store (read-only). Atomically remove any

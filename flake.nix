@@ -176,13 +176,15 @@
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
-      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b.zip --repo srp-survarium/vostok-build-env
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx422.zip --repo srp-survarium/vostok-build-env
+      # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
+      # (built per the shipped PDB recipe; see docs + scripts/build_gfx_suite.py).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         src = pkgs.fetchurl {
-          name = "vostok-libs-v0.100b.zip";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b.zip";
-          sha256 = "0rr63ifgv0mkpwy2acm6zrn7ni4qk3ls5gy52fmizf02yr8jivb2";
+          name = "vostok-libs-v0.100b-gfx422.zip";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx422.zip";
+          sha256 = "0qpnmx0jhk9bclzxjzzjk8kbgpg5k640138cxmhnkz2nbi4447b1";
         };
         nativeBuildInputs = [ pkgs.unzip ];
       } ''
