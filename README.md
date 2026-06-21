@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.82% fuzzy (+2.42%) &middot; 4,653 / 12,915 functions exact (36.03%, +335 best-ever).**
+**Overall: 52.84% fuzzy (+2.42%) &middot; 4,654 / 12,915 functions exact (36.04%, +335 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -27,7 +27,7 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `animation`     |   102 |   185 / 763 (24.2%) |           196 (+11) | 19.0% |     +0.9% |
 | `ai`            |   124 |   405 / 690 (58.7%) |           444 (+39) | 86.2% |     +1.1% |
 | `sound`         |    69 |   205 / 509 (40.3%) |            208 (+3) | 50.1% |     +0.1% |
-| `collision`     |    52 |   408 / 503 (81.1%) |            411 (+3) | 94.7% |     +0.3% |
+| `collision`     |    52 |   409 / 503 (81.3%) |            412 (+3) | 95.4% |     +0.2% |
 | `scaleform`     |    47 |   187 / 453 (41.3%) |            196 (+9) | 53.1% |     +1.2% |
 | `particle`      |    25 |   213 / 400 (53.2%) |            217 (+4) | 78.1% |     +1.0% |
 | `vfs`           |    71 |   162 / 390 (41.5%) |            168 (+6) | 84.8% |     +1.7% |

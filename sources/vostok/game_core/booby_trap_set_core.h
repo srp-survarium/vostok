@@ -58,7 +58,9 @@ public:
 		/* 0x001a */	bool		material_can_stick_test;
 	}; // struct booby_trap_set_core::config_params
 
-	// STATE[STUB]
+	// claude@NOTE: config()/traps() carry the correct one-line bodies and pair in this TU,
+	// but the target compiled them /Ox (frameless, this in eax/ecx, no ebp frame) while
+	// our base is /Od; the residual is the optimization-level wall, not source-steerable.
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
 
@@ -76,17 +78,16 @@ public:
 												) const;
 
 private:
-	// STATE[STUB]
+	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
+	// virtuals that ICF-fold to shared targets (no distinct symbol in either index), so they
+	// are unpairable as standalones; the idiomatic bodies below are the faithful shapes.
 	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
-	// STATE[STUB]
 	virtual	void								deactivate						( ) override { VOSTOK_UNREACHABLE_CODE( ); }
-	// STATE[STUB]
 	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								tick							( ) override { /* no source */ }
 	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
 
-	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override  { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added			( ) override { /* no source */ }
