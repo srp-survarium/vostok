@@ -64,6 +64,8 @@ void use_game_player_input( )
 
 	static volatile u32 v = 0;
 	const u32 any_u32 = v;
+	static volatile float fv = 0.f;
+	const float any_float = fv;
 	bool b = s_run;
 
 	// player_input_handler out-of-line members.
@@ -79,11 +81,11 @@ void use_game_player_input( )
 	p.history_lower_bound_index( any_u32 );
 	p.remove_oldest_history_item( );
 	p.remove_oldest_history_items( any_u32 );
-	p.smooth( 0.f );
+	p.smooth( any_float );
 	p.restore_history_item( item );
 	p.update_history_item_from_previous( item, item, xf );
 	p.update_history_item( item, s_item, update, any_u32, xf, b );
-	p.apply_input_before_new_transform( state, input, 0.f );
+	p.apply_input_before_new_transform( state, input, any_float );
 	p.replay_history( any_u32, xf );
 	p.time_warp( update, any_u32 );
 	p.tick( any_u32 );
