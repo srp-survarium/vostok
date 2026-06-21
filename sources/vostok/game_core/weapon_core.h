@@ -91,9 +91,7 @@ public:
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
 	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
-			// claude@NOTE: out-of-line (target symbol @0x0ac370) so callers emit `call ready_to_reload`
-			// instead of inlining the stub; matches can_and_must_reload_predicate's `call ready_to_reload`.
-			bool								ready_to_reload					( ) const;			// STATE[STUB] sushi@TODO: A LOT OF LOGIC
+			bool								ready_to_reload					( ) const;
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
 			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
