@@ -66,7 +66,6 @@ bool ShaderDesc::IsShaderVersionSupported(ShaderVersion ver)
         case ShaderVersion_D3D1xFL91: return true;
         case ShaderVersion_D3D1xFL93: return true;
         case ShaderVersion_D3D1xFL10X: return true;
-        case ShaderVersion_D3D1xFL11X: return true;
         default: return false;
     }
 };
@@ -32812,11 +32811,20 @@ const VertexShaderDesc* VertexShaderDesc::Descs[VSI_Count] = {
     &ShaderDesc_VS_D3D1xFL11X_VDrawableCopyPixelsAlpha,          // 330
 };
 
+// claude@NOTE: unpaired because it tail-calls VertexShaderDesc::GetShaderIndex
+// (parked giant switch below). Target: xor ecx,ecx; call GetShaderIndex; mov
+// eax,[eax*4+Descs]; ret -- ver constant-folded to 0 (ShaderVersion_Default).
+// Source is already faithful; will pair once the survarium GetShaderIndex table
+// is recovered. Blocked on the same generated-table divergence.
 const VertexShaderDesc* VertexShaderDesc::GetDesc(ShaderDesc::ShaderType shader, ShaderDesc::ShaderVersion ver)
 {
     return Descs[GetShaderIndex(shader, ver)];
 };
 
+// claude@NOTE: target is a survarium-specific generated switch of 506 statements
+// (0x33c4 bytes, source lines ~7400-7900) -- NOT the stock SDK ShaderIndexingData
+// lookup. Out of scope for hand-matching (1000+/giant generated table); recovering
+// it from asm would be a mechanical transcription of a 506-case switch. PARKED.
 VertexShaderDesc::ShaderIndex VertexShaderDesc::GetShaderIndex(ShaderDesc::ShaderType shader, ShaderDesc::ShaderVersion ver)
 {
     ShaderDesc::ShaderIndex index = ShaderDesc::GetShaderIndex(shader);
@@ -50926,6 +50934,10 @@ const FragShaderDesc* FragShaderDesc::GetDesc(ShaderDesc::ShaderType shader, Sha
     return Descs[GetShaderIndex(shader, ver)];
 };
 
+// claude@NOTE: target is a survarium-specific generated switch of 1237 statements
+// (0x3d74 bytes) -- NOT the stock SDK ShaderIndexingData lookup. Out of scope for
+// hand-matching (giant generated table); recovering it from asm would be a
+// mechanical transcription of a 1237-case switch. PARKED.
 FragShaderDesc::ShaderIndex FragShaderDesc::GetShaderIndex(ShaderDesc::ShaderType shader, ShaderDesc::ShaderVersion ver)
 {
     ShaderDesc::ShaderIndex index = ShaderDesc::GetShaderIndex(shader);
