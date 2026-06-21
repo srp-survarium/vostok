@@ -7,96 +7,47 @@
 
 namespace survarium {
 
-// TU static 's_localization' (compiler-generated atexit destructor); a matcher
-// recovers its type/initializer from the load_text_localization asm.
-/*
-// STATE[STUB]
-void `dynamic atexit destructor for 's_localization''( )
-{
-	// FUNCTION BODY[0x7f0190]
-	// <0x7d8380>|0x000|      :'13'	{
-	// ******
-}
-*/
+// claude@NOTE: parked - the TU has a file-static 's_localization' (a binary_config_ptr or
+// similar) with a compiler-generated dynamic initializer + atexit destructor. Recovering it
+// (the `dynamic initializer for 's_localization'` / `dynamic atexit destructor` symbols)
+// requires the load_text_localization body, which is itself parked. NEXT: declare the static
+// once load_text_localization is recovered.
 
-// STATE[STUB]
  text_translator::text_translator( )
 {
-	// FUNCTION BODY[0x79c3b0]: 0
-	// <0x79c3b0>|0x000|+0x006:'19'	{
-	// <0x79c3b6>|0x006|      :'20'	}
-	// ******
 }
 
-// STATE[STUB]
  text_translator::~text_translator( )
 {
-	// FUNCTION BODY[0x79c380]: 0
-	// <0x79c380>|0x000|+0x001:'22'	{
-	// <0x79c381>|0x001|      :'23'	}
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - builds a 1-element resources::request[1] for the localization
+// config (a STR_JOIN'd identifier), then fires an async query whose completion routes to
+// on_texts_ready (boost::function bind). Named locals: requests[1] + the STR_JOINA tuples
+// temp. NEXT: recover the request-array build + the query-fire idiom (lines 29/48) - same
+// shape as the cook's request build (see empty_hands_cook).
 void text_translator::load_text_localization( )
 {
-	// LOCALS
-	// resources::request[1] 			requests
-	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
-	// ******
-
-	// FUNCTION BODY[0x79c450]: 22
-	// <0>
-	// <1>
-	// <0x79c457>|0x007|+0x029:'29'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <0x79c480>|0x030|+0x063:'48'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - reads m_text_data["strings"][text_id]; when value_exists is false
+// it LOGs "There is no available localization ..." (the g_log_* append path) and falls back
+// to text_id, else mbstowcs_s( translated_text, 0x200, m_text_data["strings"][text_id], -1 )
+// to widen the UTF-8 string. NEXT: recover the LOG_* macro form + the binary_config_value
+// operator[] chain (lines 54-63).
 void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
 {
-	// FUNCTION BODY[0x79c240]: 11
-	// <0>
-	// <0x79c24f>|0x00f|+0x026:'54'
-	// <0>
-	// <0x79c275>|0x035|+0x0bb:'56'
-	// <0x79c330>|0x0f0|+0x002:'57'
-	// <0>
-	// <0x79c332>|0x0f2|+0x002:'59'
-	// <0x79c334>|0x0f4|+0x01c:'60'
-	// <0>
-	// <1>
-	// <0x79c350>|0x110|+0x021:'63'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - the async-query completion: stores the loaded localization config
+// into m_text_data from the queries_result (the single statement at line 70 is the
+// m_text_data = data[...].get_config()-style assignment). NEXT: recover the
+// queries_result accessor that yields the binary_config_ptr.
 void text_translator::on_texts_ready( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x79c3c0]: 3
-	// <0>
-	// <1>
-	// <0x79c3c3>|0x003|+0x07b:'70'
-	// ******
 }
 
 } // namespace survarium

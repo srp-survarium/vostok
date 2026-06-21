@@ -17,6 +17,8 @@ namespace input {
 } // namespace input
 } // namespace vostok
 
+namespace vostok { void use_game_small_utils( ); }
+
 namespace survarium {
 
 // must be complete here: the stlport map member instantiates
@@ -40,6 +42,7 @@ STATIC_SIZE_ASSERT(dik_to_swf_bind, 0x10);
 struct flash_movie;
 
 class swf_input_translator {
+	friend void ::vostok::use_game_small_utils( );
 public:
 								swf_input_translator	( );
 
@@ -66,6 +69,7 @@ public:
 									flash_movie*		movie
 								);
 
+protected:
 			void				initialize				( );
 
 			dik_to_swf_bind*	get_bind				( input::enum_keyboard key );
@@ -82,6 +86,7 @@ public:
 								);
 			void				register_char_bind		( input::enum_keyboard key, s32 scan, bool translate );
 
+public:
 	inline						~swf_input_translator	( ) { /* no source */ }
 
 private:
