@@ -268,7 +268,7 @@ void scene::update_decal(u32 id, render::decal_properties const& properties)
 void scene::remove_decal(u32 id)
 {
 	decal_instance*	instance				= m_decals.front();
-	
+
 	while (instance)
 	{
 		if (instance->m_id == id)
@@ -279,6 +279,22 @@ void scene::remove_decal(u32 id)
 		}
 		instance							= m_decals.get_next_of_object(instance);
 	}
+}
+
+void scene::update_lpv_occluder( u32 id, float4x4 const& transform )
+{
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
+	if ( i == m_lpv_occluders.end( ) || id < i->first )
+		m_lpv_occluders.insert			( std::make_pair( id, transform ) );
+	else
+		i->second						= transform;
+}
+
+void scene::remove_lpv_occluder( u32 id )
+{
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
+	if ( i != m_lpv_occluders.end( ) && i->first == id )
+		m_lpv_occluders.erase			( i );
 }
 
 void scene::set_slomo			( float time_multiplier )
