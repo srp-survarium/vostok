@@ -69,11 +69,18 @@ namespace vostok
 			survarium::shotgun_weapon_reload_state_cook	srcook;
 			survarium::sound_player_cook		scook( s_snd, resources::class_id_enum( 0 ) );
 			survarium::project_cooker_simple	pcook( false );
+
+			// play_weapon_shell_pfx / play_weapon_fire_pfx receive `this` in esi
+			// under LTCG (no push/pop of the this-reg); a guarded DIRECT CALL
+			// through a volatile this-ptr reproduces that convention, where the
+			// address-take sink below would force a stock __thiscall (this in ecx).
+			static survarium::weapon* volatile			s_wpn_pfx	= 0;
+			s_wpn_pfx->play_weapon_shell_pfx( );
+			s_wpn_pfx->play_weapon_fire_pfx( );
 		}
 
 		// ---- weapon ----------------------------------------------------------
 		typedef survarium::weapon w;
-		keep( &w::play_weapon_shell_pfx );
 		keep( &w::update_dispersion_visual_representation );
 		keep( &w::load_weapon );
 		keep( &w::set_fire_bullet_transform );
@@ -86,7 +93,6 @@ namespace vostok
 		keep( &w::show_crosshair );
 		keep( &w::hide_crosshair );
 		keep( &w::update_pfx_transform );
-		keep( &w::play_weapon_fire_pfx );
 		keep( &w::show_laser_pointer );
 		keep( &w::set_ui_ammo );
 		keep( &w::activate );

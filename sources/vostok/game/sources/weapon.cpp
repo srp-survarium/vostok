@@ -465,12 +465,12 @@ void weapon::set_target(
 	// ******
 }
 
-// claude@NOTE: the play_particle_system call boundary carries the same render-facade
-// signature residual as object_particle_visual::insert - the PDB / render::engine::world_pc
-// take in_instance BY VALUE so the target builds a temp particle_system_instance_ptr
-// (intrusive_ptr::set), but scene_renderer.h's facade spells it const& so the base elides
-// that temp. Statement shape (guard, play, ++id, wrap-to-zero) is faithful; recovers when
-// the facade play_particle_system signature is corrected (its own match phase).
+// claude@NOTE: play_weapon_fire_pfx / play_weapon_shell_pfx are STRUCTURE MATCH; the
+// LTCG this-in-esi convention is now reproduced (anchor_game_weapons direct-call) and
+// access mangles AAE/QAE correctly. Residual is the play_particle_system call-boundary
+// register cascade: target keeps get_game_scene() in eax and computes render_scene()
+// (`lea ecx,[eax+4]`) early; the base lands it in ecx with a late `add ecx,4`. Same
+// non-steerable /Od arg-eval scheduling as object_particle_visual::insert (96%).
 void weapon::play_weapon_fire_pfx( )
 {
 	if ( m_fire_pfx_list )

@@ -64,11 +64,12 @@ void object_particle_visual::on_visual_ready( resources::queries_result& data, b
 	cb( *this );
 }
 
-// claude@NOTE: insert byte-residual is a render-facade signature gap, not a source
-// shape issue - the PDB (and render::engine::world_pc) take play_particle_system's
-// in_instance BY VALUE, but scene_renderer.h's facade declaration spells it const&,
-// so the base elides the temp intrusive_ptr copy the target builds. Recovers when
-// the render-facade play_particle_system signature is corrected (its own match phase).
+// claude@NOTE: STRUCTURE MATCH (1 stmt). The facade by-value play_particle_system fix
+// has landed, so the temp intrusive_ptr copy is no longer the wall. Residual is the
+// call-boundary register cascade: target keeps get_game_scene() in esi and computes
+// render_scene() (`lea ecx,[esi+4]`) last, using edx for the renderer().scene() chain;
+// the base uses ecx for the chain and `add esi,4`. Non-steerable /Od arg-eval
+// scheduling, same as weapon::play_weapon_*_pfx.
 void object_particle_visual::insert( )
 {
 	get_game_scene().renderer().scene().play_particle_system( get_game_scene().render_scene(), m_particle_system_instance_ptr, m_transform );
