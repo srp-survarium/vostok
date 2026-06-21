@@ -5,55 +5,47 @@
 #include "pch.h"
 #include "match_client.h"
 
+#include <vostok/command_line_extensions.h>
 #include <vostok/network_core/udp_network_flow_emulator_options.h>
 #include <vostok/network_core/udp_match_packet.h>
 
-namespace survarium {
+// the flow-emulator command-line keys live at file (global) scope - the target's
+// dynamic initializers demangle without a survarium:: qualifier. Their string
+// members are constant-initialized in .data, so each dynamic initializer is just
+// the key ctor's protected_call( protected_key_construct, this ) tail. Read by
+// network_flow_emulator_options() outside MASTER_GOLD; literal names are a
+// best-guess (the .data they fill is unscored, only the dynamic init scores).
+static vostok::command_line::key	s_flow_emulator	( "net_flow_emulator", "", "network", "enable the network flow emulator" );
+static vostok::command_line::key	s_lost_packets	( "net_lost_packets", "", "network", "network flow emulator lost packet probability" );
+static vostok::command_line::key	s_min_ping		( "net_min_ping", "", "network", "network flow emulator minimum ping in ms" );
+static vostok::command_line::key	s_max_ping		( "net_max_ping", "", "network", "network flow emulator maximum ping in ms" );
 
-// TU statics behind the flow-emulator console commands (compiler-generated
-// dynamic initializers); a matcher recovers their types/initializers from the
-// init asm when this TU is enabled.
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_flow_emulator''( )
-{
-	// FUNCTION BODY[0x7d8c20]
-	// <0x7d8c20>|0x000|      :'13'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_lost_packets''( )
-{
-	// FUNCTION BODY[0x7d8c40]
-	// <0x7d8c40>|0x000|      :'14'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_min_ping''( )
-{
-	// FUNCTION BODY[0x7d8c60]
-	// <0x7d8c60>|0x000|      :'15'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_max_ping''( )
-{
-	// FUNCTION BODY[0x7d8c80]
-	// <0x7d8c80>|0x000|      :'16'	{
-	// ******
-}
-*/
-
-// the flow-emulator console vars (s_flow_emulator/s_lost_packets/s_min_ping/
-// s_max_ping) and the options assembled from them are compiled out in
-// MASTER_GOLD; the function collapses to returning no options
-network_core::udp_network_flow_emulator_options const* network_flow_emulator_options( )
+// the flow-emulator options assembled from the keys are compiled out in
+// MASTER_GOLD; the function collapses to returning no options. STATIC at file
+// (global) scope - the target delinks it under a plain unmangled name (no
+// survarium:: qualifier), so it pairs only as a global-scope file-static; its
+// sole caller is the survarium::match_client ctor init-list.
+static vostok::network_core::udp_network_flow_emulator_options const* network_flow_emulator_options( )
 {
 	return NULL;
 }
+
+namespace survarium {
+
+// claude@NOTE: this TU's structure is matched; the residual is non-steerable
+// tooling/LTCG, banked until networking is fully enabled and the anchors retire:
+//  - ctor (STRUCTURE MATCH, byte-capped): the target inlines the orderer ctor to
+//    a vtable store and out-of-lines match_options::match_options; our /Od base
+//    makes the opposite inline choices (LTCG inline wall, not source-steerable).
+//  - connect (STRUCTURE MATCH, byte-capped): the anchor is the sole caller, so
+//    LTCG gives the target a custom calling convention (ret 18h) our base can't
+//    reproduce; lifts when the real game call graph reaches connect.
+//  - the 4 s_*-key dynamic initializers are byte-correct (0x13 bytes) but stay
+//    "unpaired": the delinker names the target's compiler-generated dynamic
+//    initializers with friendly symbols (no @@ mangling) that objdiff can't pair
+//    against our raw ??__E... names - a delinker naming wall hitting EVERY game
+//    dynamic initializer (cf. weapon.cpp s_attach_fingers_to_weapon_cc), not a
+//    source defect.
 
  match_client::match_client( network::world& world ) :
 	m_client( world, m_packets_orderer, network_flow_emulator_options( ) ),
