@@ -19,6 +19,11 @@ namespace survarium {
 
 class animation_space_graph;
 
+// graph-build config folds (defined in animation_space_graph_cook.cpp; external
+// linkage in the shipped binary, used by on_animations_loaded)
+u32						get_animation_vertices_count	( configs::binary_config_value const& groups_config );
+std::pair< u32, u32 >	get_animation_mixes_count		( configs::binary_config_value const& groups_config );
+
 class animation_space_graph_cook : public resources::translate_query_cook , public boost::noncopyable {
 public:
 			explicit	animation_space_graph_cook	( ai::navigation::world& navigation_world );
@@ -28,12 +33,13 @@ public:
 
 	virtual	void		delete_resource				( resources::resource_base* resource ) override;
 
+	virtual				~animation_space_graph_cook	( ) { /* no source */ }
+
+private:
 			void		on_options_received			( resources::queries_result& data );
 			void		on_animations_loaded		( resources::queries_result& data, configs::binary_config_ptr config );
 
 			void		generate_graph_edges		( animation_space_graph* graph );
-
-	virtual				~animation_space_graph_cook	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */

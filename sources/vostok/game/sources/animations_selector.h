@@ -20,6 +20,7 @@ namespace ai {
 namespace animation {
 	class animation_player;
 } // namespace animation
+void use_game_npc( );
 } // namespace vostok
 
 namespace survarium {
@@ -42,6 +43,9 @@ public:
 
 			void	debug_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const;
 
+	inline			~animations_selector		( ) { /* no source */ }
+
+private:
 			animation::callback_return_type_enum	on_animation_interval_end	( animation::animation_callback_params& params );
 
 			void	set_animation_player_target	( animation::mixing::expression const& target_expression, u32 time_in_ms );
@@ -49,8 +53,6 @@ public:
 			void	reset_animation_controller	( u32 time_in_ms );
 
 			void	on_set_target				( );
-
-	inline			~animations_selector		( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */
@@ -65,6 +67,9 @@ private:
 	/* 0x00e4 */	game_world const&					m_game_world;
 	/* 0x00e8 */	human_npc&							m_owner;
 	/* 0x00ec */	resources::managed_resource_ptr		m_default_animation;
+
+	// reachability anchor needs the addresses of the private callbacks
+	friend void ::vostok::use_game_npc( );
 }; // class animations_selector
 
 STATIC_SIZE_ASSERT(animations_selector, 0xF0);

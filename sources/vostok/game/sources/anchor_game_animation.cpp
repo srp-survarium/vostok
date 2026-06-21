@@ -18,10 +18,13 @@
 
 #include <vostok/animation/mixing_expression.h>
 
+#include <vostok/configs_binary_config_value.h>
+
 #include "simple_animation_controller.h"
 #include "single_position_animation_controller.h"
 #include "animations_search_service.h"
 #include "animation_space_graph.h"
+#include "animation_space_graph_cook.h"
 #include "human_npc.h"
 
 namespace vostok {
@@ -75,6 +78,34 @@ void use_game_animation( )
 	{
 		survarium::animations_search_service service;
 		service.search( graph, ( survarium::vector< u32 >* )NULL, *( survarium::animation_space_vertex_id* )NULL, *( survarium::animation_space_vertex_id* )NULL );
+	}
+
+	// ----- animation_space_graph : the cook allocates the vertex/mix/edge arrays
+	// behind the object, so the graph members have no reachable caller until the cook
+	// is wired; reference each out-of-line symbol to keep the carcass in the base EXE.
+	{
+		static vostok::ai::navigation::world* volatile			s_navworld	= 0;
+		static vostok::animation::animation_player* volatile	s_player	= 0;
+		static float volatile									s_radius	= 0.0f;
+		static u32 volatile										s_count		= 0;
+		static pcstr volatile									s_path		= 0;
+		static survarium::animation_space_vertex const* volatile	s_vertex	= 0;
+		vostok::ai::navigation::world&							navworld	= *s_navworld;
+		vostok::animation::animation_player&					player		= *s_player;
+
+		survarium::animation_space_graph	space_graph( navworld, s_radius, s_count, s_count, s_count );
+		space_graph.edge( s_count );
+		space_graph.get_animation_by_path( s_path );
+		space_graph.max_speed( );
+		survarium::animation_space_graph::get_movement( player, s_vertex, s_vertex, s_radius );
+
+		static vostok::resources::managed_resource_ptr* volatile	s_anim	= 0;
+		survarium::animation_space_vertex	vertex( *s_anim, s_path );
+		( void )vertex;
+
+		static vostok::configs::binary_config_value const* volatile	s_groups	= 0;
+		survarium::get_animation_vertices_count( *s_groups );
+		survarium::get_animation_mixes_count( *s_groups );
 	}
 }
 
