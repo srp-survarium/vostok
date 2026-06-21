@@ -22,6 +22,8 @@ public:
 						weapon_user_animations_selector&	owner
 					);
 
+private:
+	// PDB mangles these overrides E* (private virtual), unlike the public ctor/dtor.
 	// STATE[STUB]
 	virtual	void	initialize					( ) override
 	{
@@ -39,13 +41,16 @@ public:
 						const bool								is_third_view
 					) const override;
 
+public:
 	virtual			~player_logic_preview_state	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* player_logic_base_state */
 	/* 0x0028 */	resources::managed_resource_ptr* const	m_animations;
 	/* 0x002c */	const u32			m_animations_count;
-	/* 0x0030 */	math::random32		m_random;
+	// selected_animations() is const but advances the generator (the random
+	// animation pick), so the seed member is mutable.
+	/* 0x0030 */	mutable math::random32	m_random;
 }; // class player_logic_preview_state
 
 STATIC_SIZE_ASSERT(player_logic_preview_state, 0x34);

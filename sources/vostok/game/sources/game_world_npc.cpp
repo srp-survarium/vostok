@@ -151,6 +151,13 @@ u32 game_world::get_node_by_name( pcstr node_name ) const
 	return u32( -1 );
 }
 
+// claude@NOTE: source is byte-identical to the target (STRUCTURE MATCH, 0x8d==0x8d,
+// clean --view diff). Reports "unpaired" only because the delinker emits this free
+// function's TARGET symbol DEMANGLED ("survarium::delete_weapons") while the base
+// obj has the mangled "?delete_weapons@survarium@@YAX...", so objdiff can't pair the
+// two. Systemic delinker gap for game-module free functions (create_wire_visual_source
+// / parse_resolution / delete_weapons all hit it), NOT a matching gap - nothing to fix
+// in source. NEXT: delinker target-side name recovery for namespace-scoped free funcs.
 void delete_weapons( human_npc_ptr& owner )
 {
 	while ( object_weapon* weapon = owner->pop_weapon( ) )
