@@ -171,6 +171,26 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    To retry a parked function: `match_db.py flag <mangled> --requeue`.
    `list --presence TARGET_ONLY|BASE_ONLY` and the report's `suspicious` column
    surface unpaired symbols and NEAR_MISS mangling mismatches worth queuing.
+
+   **DISPATCH ONLY ON GENUINE STRUCTURAL MISMATCHES (sushi 2026-06-21).** `struct_class`
+   already separates real work from ceiling: `MATCH` and `SIZE` both mean the **structure
+   already reproduces the target** - `SIZE` is only per-statement BYTE residual (LTCG /
+   inlining / FPO-alignment), which is NOT source-steerable. Dispatching a matcher on a
+   `SIZE`/`MATCH` function just re-derives "STRUCTURE MATCH, capped" and burns the wave (the
+   collision geometry-instance unit: all 4 were `SIZE`@74-91% = already STRUCTURE MATCH,
+   cross-module cuboid-ctor reg-conv + FPO walls, zero gain). Build the queue from the
+   genuine structural mismatches only:
+   ```
+   python3 scripts/match_db.py list --module <m> --class QUANTITY,SPLIT   # real structural work
+   ```
+   plus real-body `--presence TARGET_ONLY` (skip dummy/d3d1x measurement artifacts) and
+   hand-picked **low-% `SIZE`** (≲60%, where a low fuzzy usually hides a real per-statement
+   divergence despite a matching statement count - verify with `pdb_fetch --view
+   structure-diff` first). NEVER queue `MATCH` or high-% `SIZE`. This is MANDATORY for the
+   optimized modules (render is matched LAST; physics/collision are also optimized - most of
+   their non-100 is `SIZE`-capped, so only their ~20-50 `QUANTITY`/`SPLIT` fns are real work).
+   Module priority: animation (prime) > physics/collision (QUANTITY/SPLIT only) + game STUBs
+   > render (last).
 2. **ONE linear stacked-PR chain - fan the WORKERS, serialize the OUTPUT.** You MAY fan
    out matchers (several parallel workers off the same tip - encouraged for throughput).
    But their OUTPUTS must land as a SINGLE LINEAR CHAIN: integrate each finished matcher's
