@@ -47,7 +47,7 @@ public:
 
 	inline	bool			is_inserted					( ) { return m_is_inserted; }
 
-private:
+protected:
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	/* resources::unmanaged_resource */
 	/* 0x0128 */	u8				id;
