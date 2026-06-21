@@ -47,94 +47,63 @@ u32 n_ary_tree_comparer::needed_buffer_size( ) const
 	// ******
 }
 
-// STATE[STUB]
 comparison_result_enum animation_comparer_predicate::operator()(
 	n_ary_tree_animation_node const& left,
 	n_ary_tree_animation_node const& right
 ) const
 {
-	// FUNCTION BODY
-	// <0x56e2e2>|0x002|+0x013:'76'
-	// <0x56e2f5>|0x015|+0x006:'77'
-	// <0>
-	// <0x56e2fb>|0x01b|+0x004:'79'
-	// <0x56e2ff>|0x01f|+0x009:'80'
-	// <0>
-	// <0x56e308>|0x028|+0x008:'82'
-	// <0x56e310>|0x030|+0x002:'83'
-	// <0>
-	// <1>
-	// <0x56e312>|0x032|+0x002:'86'
-	// <0>
-	// <0x56e314>|0x034|+0x008:'88'
-	// <0x56e31c>|0x03c|+0x002:'89'
-	// <0>
-	// <1>
-	// <0x56e31e>|0x03e|+0x002:'92'
-	// <0>
-	// <0x56e320>|0x040|+0x008:'94'
-	// <0x56e328>|0x048|+0x002:'95'
-	// <0>
-	// <1>
-	// <0x56e32a>|0x04a|+0x002:'98'
-	// <0>
-	// <0x56e32c>|0x04c|+0x008:'100'
-	// <0x56e334>|0x054|+0x002:'101'
-	// <0>
-	// <1>
-	// <0x56e336>|0x056|+0x002:'104'
-	// <0>
-	// <0x56e338>|0x058|+0x011:'106'
-	// <0x56e349>|0x069|+0x00a:'107'
-	// <0x56e353>|0x073|+0x009:'108'
-	// <0x56e35c>|0x07c|+0x011:'109'
-	// <0x56e36d>|0x08d|+0x002:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x56e36f>|0x08f|+0x008:'126'
-	// <0x56e377>|0x097|+0x002:'127'
-	// <0>
-	// <1>
-	// <0x56e379>|0x099|+0x002:'130'
-	// <0>
-	// <0x56e37b>|0x09b|+0x017:'132'
-	// <0>
-	// <1>
-	// <0x56e392>|0x0b2|+0x008:'135'
-	// <0x56e39a>|0x0ba|+0x006:'136'
-	// <0>
-	// <0x56e3a0>|0x0c0|-0x017:'138'
-	// <0x56e389>|0x0a9|+0x02e:'139'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56e3b7>|0x0d7|+0x006:'145'
-	// <0x56e3bd>|0x0dd|+0x00a:'146'
-	// <0x56e3c7>|0x0e7|+0x002:'147'
-	// <0>
-	// <0x56e3c9>|0x0e9|+0x008:'149'
-	// <0x56e3d1>|0x0f1|+0x008:'150'
-	// <0>
-	// <1>
-	// <0x56e3d9>|0x0f9|-0x0d4:'153'
-	// <0x56e305>|0x025|+0x08a:'154'
-	// <0x56e38f>|0x0af|+0x04d:'154'
-	// ******
+	if ( left.weight_synchronization_group_id() > right.weight_synchronization_group_id() )
+		return									less;
+	if ( left.weight_synchronization_group_id() < right.weight_synchronization_group_id() )
+		return									more;
+
+	if ( left.time_synchronization_group_id() > right.time_synchronization_group_id() )
+		return									less;
+	if ( left.time_synchronization_group_id() < right.time_synchronization_group_id() )
+		return									more;
+
+	if ( left.animated_object() > right.animated_object() )
+		return									less;
+	if ( left.animated_object() < right.animated_object() )
+		return									more;
+
+	if ( left.bones_mask() > right.bones_mask() )
+		return									less;
+	if ( left.bones_mask() < right.bones_mask() )
+		return									more;
+
+	if ( left.playback_type() > right.playback_type() )
+		return									less;
+	if ( left.playback_type() < right.playback_type() )
+		return									more;
+
+	if ( m_use_synchronized_animations && ( left.weight_driving_animation() || right.weight_driving_animation() ) ) {
+		switch ( ( *this )(
+			right.weight_driving_animation() ? *right.weight_driving_animation() : right,
+			left.weight_driving_animation() ? *left.weight_driving_animation() : left
+		) ) {
+			case less:	return				less;
+			case more:	return				more;
+		}
+	}
+
+	if ( left.unique_animation_id() > right.unique_animation_id() )
+		return									less;
+	if ( left.unique_animation_id() < right.unique_animation_id() )
+		return									more;
+
+	if ( left.can_generate_events() != right.can_generate_events() )
+		return									left.can_generate_events() ? less : more;
+
+	switch ( compare_animation_intervals( left, right ) ) {
+		case less:	return					less;
+		case more:	return					more;
+	}
+
+	if ( m_use_overriding_animations && left.override_existing_animation() != right.override_existing_animation() )
+		return									left.override_existing_animation() ? less : more;
+
+	return										equal;
 }
 
 // STATE[STUB]
@@ -1392,17 +1361,15 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	m_from					( from ),
 	m_to					( to ),
 	m_equal					( true ),
-	m_needed_buffer_size	( 4 ) // sushi@TODO
+	m_needed_buffer_size	( 4 )
 {
 
 	process_interpolators( from, to );
 
-	m_animated_objects = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( to.animated_objects_count() + from.animated_objects_count() ) );
-	m_animated_objects_end = m_animated_objects;
+	m_animated_objects = m_animated_objects_end = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( from.animated_objects_count() + to.animated_objects_count() ) );
 	merge_trees( from, to );
-	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
 
-	m_needed_buffer_size += m_animations_count * sizeof( animation_state );
+	m_needed_buffer_size += m_animations_count * sizeof( animation_state ) + ( m_animated_objects_count = m_animated_objects_end - m_animated_objects ) * sizeof( animated_object_holder );
 }
 
 } // namespace mixing

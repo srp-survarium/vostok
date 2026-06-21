@@ -17,6 +17,7 @@ IncludeAll::IncludeAll()
 	vostok::anchor_logging( );
 	vostok::anchor_ai_navigation( );
 	vostok::anchor_game( );
+	vostok::anchor_animation_comparer( );
 
 	Callback1 cb1;
 	Callback2 cb2;

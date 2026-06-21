@@ -753,6 +753,10 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath=".\anchor_animation_comparer.cpp"
+			>
+		</File>
 		<Filter
 			Name="core"
 			>
