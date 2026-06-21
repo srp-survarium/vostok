@@ -133,19 +133,17 @@ float fingers_to_weapon_corrector::get_hand_coefficient( const float hand_transi
 		: m_interpolator.interpolated_value( hand_transition_time );
 }
 
-// STATE[STUB]
 void fingers_to_weapon_corrector::activate_hand(
-	const fingers_to_weapon_corrector::hands_enum	arg_0 /* fingers_to_weapon_corrector::hands_enum hand */,
+	const fingers_to_weapon_corrector::hands_enum	hand,
 	const bool		is_active,
 	const u32		current_time_in_ms
 )
 {
-	// FUNCTION BODY[0x5bc670]: 4
-	// <0x5bc670>|0x000|+0x014:'141'
-	// <0x5bc684>|0x014|+0x006:'142'
-	// <0x5bc68a>|0x01a|+0x00a:'143'
-	// <0>
-	// ******
+	if ( m_hands[ hand ].is_active != is_active )
+	{
+		m_hands[ hand ].is_active = is_active;
+		m_hands[ hand ].start_transition_time_in_ms = current_time_in_ms;
+	}
 }
 
 } // namespace survarium
