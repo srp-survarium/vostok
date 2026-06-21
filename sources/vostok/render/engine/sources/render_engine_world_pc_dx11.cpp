@@ -1007,6 +1007,20 @@ void engine::world::remove_decal( vostok::render::scene_ptr const& in_scene, u32
 	scene->remove_decal	( id);
 }
 
+void engine::world::update_lpv_occluder( vostok::render::scene_ptr const& in_scene, u32 id, math::float4x4 const& transform)
+{
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_lpv_occluder	( id, transform);
+}
+
+void engine::world::remove_lpv_occluder( vostok::render::scene_ptr const& in_scene, u32 id)
+{
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_lpv_occluder	( id);
+}
+
 void engine::world::terrain_add_cell( vostok::render::scene_ptr const& in_scene,  render::render_model_instance_ptr const& v )
 {
 	vostok::render::scene* scene			 = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());

@@ -224,6 +224,38 @@ void scene_renderer::remove_decal( scene_ptr const& scene, u32 id)
 	);
 }
 
+void scene_renderer::update_lpv_occluder( scene_ptr const& scene, u32 id, vostok::math::float4x4 const& transform)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			transform
+		)
+	);
+}
+
+void scene_renderer::remove_lpv_occluder( scene_ptr const& scene, u32 id)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
 void scene_renderer::add_light( scene_ptr const& scene, u32 id, vostok::render::light_props const& props)
 {
 	R_ASSERT	( scene );
@@ -405,28 +437,45 @@ void scene_renderer::draw_render_statistics( vostok::ui::world& ui_world, vostok
 }
 #endif // #ifndef MASTER_GOLD
 
-// claude@NOTE: the object-cook facade methods (update/remove_lpv_occluder,
-// update/remove_ambient_volume, update/remove_volume_fog,
-// update/remove_environment_probe, update/remove_sky_ambient_occlusion,
-// add/remove/update_tracer, set/reset_grass, set_portal_system,
-// build_lpv_geometry, add_vegetation_trample, begin/end_render_options_changing,
-// reset_renderer) are all single-statement deferred commands in the target
-// (functor_command, or functor_with_big_buffer_to_copy_command<T> for the
-// property-carrying update_*) that bind to engine::world::<same name>. They stay
-// TARGET_ONLY here because the engine::world (and scene) side of each cook is not
-// reconstructed - none of those world methods exist in world_pc.h / the world
-// impl TUs, so binding to &world::update_lpv_occluder et al. would be an
-// unresolved external at exe link. The update_* cooks additionally need the
-// embedded-string property structs (volume_fog_parameters, ambient_volume_properties,
-// environment_probe_properties, sky_ambient_occlusion_properties, trample_desc),
-// which are also absent from the tree and feed the big_buffer copy. Recover this
-// whole world/scene/facade chain (per cook) in a render-engine batch; that unblocks
-// the game object_* cooks (object_volume_fog/ambient_volume/environment_probe/
-// lpv_occluder/vegetation insert+remove). add_light/update_light(light_props*) are
-// blocked the same way - the world add_light is light_props& in our tree but
-// light_props* in the target, a cross-TU light-flow refactor (world decl+impl,
-// scene, the game object_light caller). play_particle_system is matched (the only
-// cook whose world method already exists: by-value in_instance was the divergence).
+// claude@NOTE: lpv_occluder cook chain is now reconstructed end-to-end
+// (scene::update/remove_lpv_occluder over m_lpv_occluders assoc_vector ->
+// engine::world::update/remove_lpv_occluder forwarders -> these facade
+// update/remove_lpv_occluder deferred commands), which paired the game
+// object_lpv_occluder::insert/remove at 100%.
+//
+// The other object-cook facade methods (update/remove_ambient_volume,
+// update/remove_volume_fog, update/remove_environment_probe,
+// update/remove_sky_ambient_occlusion, add/remove/update_tracer, set/reset_grass,
+// set_portal_system, build_lpv_geometry, add_vegetation_trample,
+// begin/end_render_options_changing, reset_renderer) follow the SAME deferred-command
+// shape (functor_command, or functor_with_big_buffer_to_copy_command<T> for the
+// property-carrying update_*) binding to engine::world::<same name>. They stay
+// TARGET_ONLY because each remaining chain is deeper than lpv and not yet built:
+//   - volume_fog: needs struct volume_fog_parameters (0x74, all-POD floats); scene
+//     keeps an associative_vector<u32, volume_fog_parameters> at 0x13c (m_volume_fogs),
+//     so the scene cooks mirror the lpv lower_bound/insert/erase idiom once the struct
+//     and member exist.
+//   - ambient_volume: needs struct ambient_volume_properties (0x48) AND the heap
+//     vostok::render::ambient_volume object + find_by_id_predicate<ambient_volume>;
+//     scene m_ambient_volumes is a vector< ambient_volume* > at 0x360, remove walks it
+//     with __find_if then destroys+frees+erases the pointee.
+//   - environment_probe: needs struct environment_probe_properties (0x178, embeds a
+//     fixed_string<260> texture_name) + the environment_probe heap object +
+//     find_environment_probe_predicate; scene m_environment_probes is a
+//     vector< environment_probe* > at 0x37c. The game object_environment_probe::insert
+//     additionally constructs the whole properties struct field-by-field on the stack
+//     (fixed_string<260>::operator=, all float/bool fields) before the facade call.
+// (The property struct layouts are recoverable from binaries/structure/target/headers/
+// vostok/render/{volume_fog_parameters,ambient_volume_properties,
+// environment_probe_properties}.h.) Recover each remaining chain (struct + scene member
+// + scene cook + world forwarder + facade method) in a follow-up render-engine batch;
+// that unblocks the matching game object_* insert+remove cooks.
+//
+// add_light/update_light(light_props*) are blocked separately - the world add_light is
+// light_props& in our tree but light_props* in the target, a cross-TU light-flow
+// refactor (world decl+impl, scene, the game object_light caller). play_particle_system
+// is matched (the cook whose world method already existed: by-value in_instance was the
+// divergence).
 
 // claude@NOTE: load_props_impl is a real render-facade cook (RVA 0x45344, ~1664
 // bytes, this compiland in the target) called out-of-line by object_light::load.
