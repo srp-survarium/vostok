@@ -14,6 +14,11 @@
 
 namespace survarium {
 
+// owned by key_binder.cpp (cc_float/cc_bool console-command init); the mouse-input
+// consumers here read them at namespace scope.
+extern float	g_mouse_sensitivity;
+extern bool		g_mouse_invert;
+
  player_input_handler::player_input_handler( game_world& world ) :
 	game_camera( world ),		// base needs base_game_scene& (game_world derives from it)
 	m_game_world( world ),		// ref member - the owner
@@ -30,6 +35,11 @@ namespace survarium {
 {
 }
 
+// claude@NOTE: STRUCTURE MATCH (switch case order + the kb_key_down/hold/up arms all
+// align). Residual is non-steerable LTCG: the target keeps `this` in ebx and game_action
+// in esi (callee-saved) where the base uses esi/edi, and MSVC folds the two identical
+// console_commands::execute() case tails (serialize/deserialize) into one shared call in
+// the base but emits them separately in the target. Register choice + /Od ICF, not source.
 bool player_input_handler::on_keyboard_action(
 	input::world* const				input_world,
 	input::enum_keyboard			key,
@@ -86,6 +96,11 @@ bool player_input_handler::on_gamepad_action(
 	return false;
 }
 
+// claude@NOTE: STRUCTURE MATCH (ms_key_down hold||toggle push + ms_key_hold hold push both
+// align). Residual is non-steerable LTCG register allocation: the target keeps `this` in
+// ebx and materialises toggle_action(1) into edi early (`cmp ecx,edi`) where the base keeps
+// `this` in esi and compares the literal (`cmp ecx,1`) - callee-save register choice, not
+// source-steerable.
 bool player_input_handler::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
@@ -114,12 +129,6 @@ bool player_input_handler::on_mouse_key_action(
 	return false;
 }
 
-// claude@NOTE: blocked by key_binder.cpp (a still-stub TU): the body reads the
-// namespace-scope globals survarium::g_mouse_sensitivity / g_mouse_invert, whose
-// definitions (set_mouse_sensitivity_cc dynamic-init) are owned by key_binder.cpp.
-// Referencing them as externs here would leave them undefined at link until
-// key_binder.cpp is matched. Kept a buildable stub; re-match once key_binder.cpp
-// defines the globals.
 bool player_input_handler::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -127,7 +136,16 @@ bool player_input_handler::on_mouse_move(
 	s32					z
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( input_world, x, y, z );
+	VOSTOK_UNREFERENCED_PARAMETER( input_world );
+
+	const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+	float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
+	if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+
+	m_rotation_delta.x	-= ( ( float( x ) / 180.0f ) * math::pi ) * horizontal_sensitivity;
+	m_rotation_delta.y	-= ( ( float( y ) / 180.0f ) * math::pi ) * vertical_sensitivity;
+	m_z_mouse_axis		-= float( z ) * math::epsilon_3;
+
 	return false;
 }
 
@@ -139,16 +157,11 @@ void player_input_handler::on_before_processing( input::world* const input_world
 
 	m_rotation_delta	= float2( 0.0f, 0.0f );
 
-	m_time_delta_in_ms		= current_time_in_ms - m_current_time_in_ms;
+	m_z_mouse_axis = 0.0f;	m_input.actions_mask = 0;	m_time_delta_in_ms		= current_time_in_ms - m_current_time_in_ms;
 
 	m_current_time_in_ms	= current_time_in_ms;
 }
 
-// claude@NOTE: instruction stream matches the target; the only residual is
-// register allocation around the process_*_person_mode tail calls (target keeps
-// `this` in eax + edi-as-callee-save, base keeps ecx + esi) - an LTCG scheduling
-// choice, not source-steerable. The `const float2&` binds the velocity temporary
-// so it is computed ONCE (no phantom local; --view info still reports 2 locals).
 void player_input_handler::on_after_processing( input::world* input_world )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
@@ -191,25 +204,141 @@ struct first_predicate {
 
 STATIC_SIZE_ASSERT(first_predicate< enum game_action_id >, 0x4);
 
-// claude@NOTE: PARKED. 144-statement first-person camera/input integrator: reads
-// g_mouse_sensitivity (key_binder.cpp-owned global, see on_mouse_move cap), walks
-// m_game_actions with a first_predicate<game_action_id> __find_if for each bound
-// action, and folds rotation/move into m_input. Two caps stack here: (1) the
-// g_mouse_sensitivity global is undefined until key_binder.cpp is matched, and (2)
-// the bulk depends on m_game_actions content which on_keyboard/on_mouse_key only
-// populate once key_binder's get_binded_action returns a real (non-constant) action.
-// Next step: match key_binder.cpp first, then reconstruct the per-action find_if.
-// STATE[STUB]
-void player_input_handler::process_first_person_mode( const bool use_mouse_move )
+// inlined into process_first_person_mode (no standalone symbol); first_predicate is
+// TU-local so the body lives here, not in the header
+inline bool player_input_handler::action_present( const game_action_id action, action_state_enum& state ) const
 {
-	VOSTOK_UNREFERENCED_PARAMETER( use_mouse_move );
+	fixed_vector< std::pair< game_action_id, action_state_enum >, 32 >::const_iterator const found =
+		std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( action ) );
+
+	if ( found == m_game_actions.end( ) )
+		return false;
+
+	state	= found->second;
+	return true;
 }
 
-// claude@NOTE: callee-stub-blocked. The two process_first_person_mode() calls fold
-// away (process_first_person_mode is an empty STUB until key_binder/player land, so
-// LTCG inlines its {} ), which the target keeps as real calls (TRGT_ONLY in the
-// structure-diff). The fuzzy % here is unstable regalloc noise around those folded
-// calls; it cannot reach 100% until process_first_person_mode has its real body.
+// claude@NOTE: residual is the inline __find_if instantiation: this non-const method's
+// m_game_actions.begin()/.end() deduce a NON-const iterator (pair*), but the target's
+// __find_if takes pair CONST* (the source iterated m_game_actions const). The emitted
+// bytes are identical; only the called __find_if<pair*,..> vs <pair const*,..> symbol
+// differs. action_present (const) already yields const* for the quick_use sites; the
+// simple/rotation inline finds keep the * residual. Const-qualifying the whole iteration
+// here without adding a named local is the open lever.
+void player_input_handler::process_first_person_mode( const bool use_mouse_move )
+{
+	if ( m_game_actions.begin( ) == m_game_actions.end( ) && m_input.is_empty( ) )
+		return;
+
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kFWD ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x1;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kBACK ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x2;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kR_STRAFE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x8;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kL_STRAFE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x4;
+
+	if ( use_mouse_move )
+	{
+		const float horizontal_sensitivity	= m_fov_factor * g_mouse_sensitivity * 0.1f;
+		float vertical_sensitivity			= ( m_game_world.get_game( ).engine( ).get_render_window_size( ).y / m_game_world.get_game( ).engine( ).get_render_window_size( ).x ) * horizontal_sensitivity * 0.95492965f;
+		if ( g_mouse_invert )	vertical_sensitivity	= -vertical_sensitivity;
+
+		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kUP ) ) != m_game_actions.end( ) )
+			m_rotation_delta.x	+= vertical_sensitivity * 0.0174532924f;
+		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kDOWN ) ) != m_game_actions.end( ) )
+			m_rotation_delta.x	-= vertical_sensitivity * 0.0174532924f;
+		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kRIGHT ) ) != m_game_actions.end( ) )
+			m_rotation_delta.y	-= horizontal_sensitivity * 0.0174532924f;
+		if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kLEFT ) ) != m_game_actions.end( ) )
+			m_rotation_delta.y	+= horizontal_sensitivity * 0.0174532924f;
+	}
+
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kJUMP ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x10;
+
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kWPN_FIRE ) ) != m_game_actions.end( ) )
+	{
+		if ( alt_is_held( ) )
+			vostok::console_commands::execute( "remove_player", vostok::console_commands::execution_filter_all );
+		else
+			m_input.actions_mask	|= 0x20;
+	}
+
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kWPN_RELOAD ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x40;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kWPN_AIM ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x80;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kCROUCH ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x100;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kACCEL ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x200;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kSET_NEXT_FIRE_QUEUE_TYPE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x400;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kSET_NEXT_AMMO_TYPE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x800;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kWPN_1 ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x1000;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kWPN_2 ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x2000;
+
+	action_state_enum	state;
+	if ( action_present( kQUICK_USE_1, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x4000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x8000;
+	}
+	if ( action_present( kQUICK_USE_2, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x10000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x20000;
+	}
+	if ( action_present( kQUICK_USE_3, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x40000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x80000;
+	}
+	if ( action_present( kQUICK_USE_4, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x100000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x200000;
+	}
+	if ( action_present( kQUICK_USE_5, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x400000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x800000;
+	}
+	if ( action_present( kQUICK_USE_6, state ) )
+	{
+		if ( state == down )
+			m_input.actions_mask	|= 0x1000000;
+		else if ( state == up )
+			m_input.actions_mask	|= 0x2000000;
+	}
+
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kBACK_SLOT_USE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x4000000;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kDELAY_BREATH ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x8000000;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kUSE ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x10000000;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kDROP ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x40000000;
+	if ( std::find_if( m_game_actions.begin( ), m_game_actions.end( ), first_predicate< game_action_id >( kMISSILE_WPN ) ) != m_game_actions.end( ) )
+		m_input.actions_mask	|= 0x20000000;
+}
+
 void player_input_handler::process_third_person_mode( )
 {
 	m_distance_to_focus_point	+= m_z_mouse_axis;
@@ -230,18 +359,28 @@ void player_input_handler::process_third_person_mode( )
 		process_first_person_mode( true );
 }
 
-// claude@NOTE: PARKED. Builds new_inverted_view = player_head_transform composed
-// with create_rotation_y( m_yaw ) and create_rotation( pitch axis ) scaled by
-// m_distance_to_focus_point, then writes it into game_camera::m_inverted_view_matrix
-// and clears m_input_mode_changed. Blocked: the store targets game_camera's PRIVATE
-// m_inverted_view_matrix (offset 0x8) directly - there is no public/protected setter
-// on game_camera (only get_inverted_view_matrix() const), so the exact write needs a
-// game_camera mutator that game_camera.cpp (not this TU) must expose. Next step:
-// confirm the game_camera setter / friend when game_camera.cpp is matched.
-// STATE[STUB]
+// claude@NOTE: paired (was an unpaired STUB). m_inverted_view_matrix is PROTECTED in the
+// game_camera base, so the write is direct (the old "needs a setter" park was wrong). The
+// math/members match the target asm (yaw via create_rotation_y, pitch via create_rotation
+// around the right vector i.xyz, third-person offset c.xyz = head + dist*(i*0.2 - k)). The
+// residual is statement BOUNDARIES: the target spreads the body over 8 line-table rows
+// (small per-call rows at lines 330-333) where this compact spelling emits 5 fat rows -
+// the original source broke the rotation/offset across more physical lines (no extra named
+// local; only new_inverted_view is recorded). Next: recover the exact per-line breaks.
 void player_input_handler::update_inverted_view( float4x4 const& player_head_transform )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( player_head_transform );
+	float4x4 new_inverted_view	= player_head_transform;
+
+	if ( m_input_mode != first_person_mode )
+	{
+		new_inverted_view	= math::mul4x3( new_inverted_view, math::create_rotation_y( m_yaw ) );
+		new_inverted_view	= math::mul4x3( new_inverted_view, math::create_rotation( new_inverted_view.i.xyz( ), m_pitch ) );
+
+		new_inverted_view.c.xyz( )	= player_head_transform.c.xyz( ) + m_distance_to_focus_point * ( new_inverted_view.i.xyz( ) * 0.2f - new_inverted_view.k.xyz( ) );
+	}
+
+	m_inverted_view_matrix		= new_inverted_view;
+	m_input_mode_changed		= false;
 }
 
 // claude@NOTE: blocked by player.cpp (a still-stub TU): the body ignores its 3

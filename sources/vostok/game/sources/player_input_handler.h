@@ -51,7 +51,7 @@ public:
 
 			bool					alt_is_held					( ) const;
 
-	inline	bool					action_present				( const game_action_id arg_0, action_state_enum& arg_1 ) const { /* no source */ return false; }
+	inline	bool					action_present				( const game_action_id arg_0, action_state_enum& arg_1 ) const;
 
 private:
 	// the canonical dump prints these public; the mangled symbols say private
