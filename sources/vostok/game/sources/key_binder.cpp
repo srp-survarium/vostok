@@ -68,6 +68,14 @@ void console_command_bind::save_to( console_commands::save_storage& f, memory::b
 	}
 }
 
+// This TU owns the namespace-scope mouse-input globals; recovered defaults from
+// .data/.bss: g_mouse_sensitivity = 1.0f (VA 0x9c8950, raw 0000803f),
+// g_mouse_invert = false (zero-init .bss). Consumed by lobby_camera::on_mouse_move
+// and player_input_handler::on_mouse_move / process_first_person_mode (parked on
+// this definition's absence until now).
+float	g_mouse_sensitivity	= 1.0f;
+bool	g_mouse_invert		= false;
+
 // claude@NOTE: PARKED - file-scope mouse console-command statics
 // (set_mouse_sensitivity_cc / set_mouse_invert_cc) and their compiler-emitted
 // dynamic init + atexit. The cc_float dynamic init proves min=0.01f
@@ -78,6 +86,8 @@ void console_command_bind::save_to( console_commands::save_storage& f, memory::b
 // cc_value/console_command base ctor which the linker placed out of the init),
 // so the registered name is unrecoverable from this TU's asm alone. Reconstruct
 // once the name strings surface (a sibling consumer or the cc_value base ctor).
+// The two GLOBALS above are independently faithful and unblock the mouse-input
+// consumers without the cc statics.
 
 // TU-local action table; the ctor populates per-action m_keyboard slots through it.
 game_action_descr	actions[] = {
@@ -260,6 +270,14 @@ void key_binder::remap_keys( )
 	}
 }
 
+// claude@NOTE: this TU's small key_binder accessors (id_to_action_name,
+// dik_to_keyname, dik_to_ptr, keyname_to_ptr, get_binding_group, get_binded_action,
+// set_default_controls) are structurally faithful but capped below 100% by the
+// shipped LTCG custom calling convention: the target passes args - and sometimes
+// `this` itself - in registers and cleans the stack (`ret`/`ret 4` vs base
+// `ret 4`/`ret 8`), so each carries a register-vs-slot / ret-imm byte residual at
+// the call boundary. id_to_action_name / keyname_to_ptr additionally diverge only
+// in the inlined-LOG_INFO layout. Not source-steerable - argument-passing LTCG.
 pcstr key_binder::id_to_action_name( game_action_id _id ) const
 {
 	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
@@ -402,7 +420,7 @@ void key_binder::bind_key( pcstr args, s32 bind_number )
 		key_binding*	binding			= &m_key_bindings[idx];
 		if ( binding == curr_pbinding )	continue;
 
-		bool b_conflict = ( binding->m_action->key_group & curr_pbinding->m_action->key_group ) != 0;
+		bool b_conflict = binding->m_action && ( binding->m_action->key_group & curr_pbinding->m_action->key_group );
 
 		if ( binding->m_keyboard[0] == pkeyboard && b_conflict )
 			binding->m_keyboard[0] = NULL;
