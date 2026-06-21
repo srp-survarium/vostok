@@ -13,6 +13,19 @@ using vostok::animation::skeleton_animation_ptr;
 
 static char animation_intervals_channel_id[] = "anim_intervals";
 
+// claude@NOTE: target is a fully optimized LTCG COMDAT (base is /Od), so the
+// residual is overwhelmingly inline-vs-call: the target inlines the pinned_ptr
+// ctor + the refcount-dance dtor, length_in_frames(), get_channel_id(),
+// channel(), channel.knot(), the placement-new animation_interval ctor, and
+// start_time()/length(); base CALLs every one. On top of that the target SOURCE
+// structures the interval build differently from this faithful reconstruction:
+// the single-interval fallback also covers channel->knots_count()==0 (here an
+// assert), the per-knot loop carries NO in-body start_time()+length() check, and
+// the final ("tail") interval is constructed AFTER the loop with the start-check
+// applied to it (target records a `const volatile float tail` local). The
+// optimized loop's bound/tail-index arithmetic does not resolve unambiguously
+// from the asm, so the tail-after-loop shape is NOT reconstructed here to avoid a
+// confidently-wrong structure; left at the faithful inside-loop-with-break form.
 void animation_lexeme_parameters::create_animation_intervals( skeleton_animation_ptr const& animation )
 {
 	animation_interval* const animation_intervals	= static_cast<animation_interval*>( m_buffer.c_ptr() );
@@ -52,6 +65,12 @@ void animation_lexeme_parameters::create_animation_intervals( skeleton_animation
 	}
 }
 
+// claude@NOTE: structure + locals faithful; residual is inline-vs-call from the
+// target being an optimized COMDAT (base /Od). Target inlines the pinned_ptr ctor,
+// event_channels() (a +8 offset, no operator void** call), channel() (imul 2Ch +
+// member read of m_domains_count at +0x20), and the pinned_ptr destructor at each
+// return path; base CALLs them. The two early/final returns ICF-share a `mov eax,1`
+// + conditional `mov eax,domains_count` tail - a layout fold, not a source diff.
 u32 animation_lexeme_parameters::animation_intervals_count	( skeleton_animation_ptr const& animation )
 {
 	cubic_spline_skeleton_animation_pinned pinned_animation( animation );
