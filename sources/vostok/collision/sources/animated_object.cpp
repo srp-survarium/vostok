@@ -18,6 +18,12 @@
 namespace vostok {
 namespace collision {
 
+// claude@NOTE: structure divergence (target 12 stmts / 2 locals vs base 11 / 3, extra
+// root_bones_count) is driven by get_bone_index inlining __find_if + the index math and
+// the compiler scheduling its pieces across the assign/`-=` line records differently
+// (target combines find_if + subtract on one line, base inlines get_bone twice). Not
+// source-steerable from this TU; root_bones_count == get_root_bones_count() and the local
+// naming is register-allocation, not a phantom-temp to drop.
 animated_object::animated_object(
 		configs::binary_config_value const& config,
 		animation::skeleton_ptr const& model_skeleton,
@@ -68,8 +74,7 @@ void animated_object::destroy		( memory::base_allocator* allocator )
 	bone_collision_data* begin_data	= m_geometries_data.begin();
 	VOSTOK_FREE_IMPL					( allocator, begin_data );
 	
-	geometry_instance* const* begin	= geometry->begin();
-	geometry_instance* const* end	= geometry->end();
+	geometry_instance* const* begin	= geometry->begin(); geometry_instance* const* end = geometry->end();
 
 	size_t const instances_count	= std::distance( begin, end );
 	size_t const buffer_size		= instances_count * sizeof( geometry_instance* );
@@ -84,9 +89,6 @@ void animated_object::destroy		( memory::base_allocator* allocator )
 		delete_geometry_instance	( allocator, instances[i] );
 }
 
-
-//    iter + i outside + size() x2 -> 63%
-// no iter + i inside  + size() x2 -> 76% | from_vostok in target uses regs, while base stack
 void animated_object::update	( float4x4 const* const bones_matrices_begin, float4x4 const* const bones_matrices_end )
 {	
 	VOSTOK_UNREFERENCED_PARAMETER( bones_matrices_end );
@@ -178,7 +180,8 @@ float3 animated_object::get_eyes_direction( ) const
 	}
 	else
 	{
-		float3 direction = m_body->get_bone_transform(m_head_bone_index).k.xyz();
+		float4x4 const& matrix = m_body->get_bone_transform(m_head_bone_index);
+		float3 direction = matrix.k.xyz();
 		return direction.normalize();
 	}
 }
