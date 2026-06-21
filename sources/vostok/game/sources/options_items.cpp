@@ -12,6 +12,8 @@
 #include "options_monitor_index_selector.h"
 #include "options_resolution_selector.h"
 #include "options_tab.h"
+#include "game.h"
+#include "text_translator.h"
 #include "game_memory.h"
 #include <vostok/console_command_processor.h>
 #include <vostok/console_command.h>
@@ -79,30 +81,18 @@ void options_item_int::initialize( )
 	m_current_value	= m_source_value;
 }
 
-// STATE[STUB]
 void options_item_int::fill_data( flash_value& val )
 {
-	// LOCALS
-	// u8 								i
-	// flash_value 						str_val
-	// wchar_t[512] 					val_txt
-	// ******
+	for ( u8 i = 0; i < m_values_count; ++i )
+	{
+		wchar_t val_txt[ 512 ];
+		m_parent_tab.get_game( ).text_translator( ).translate_text( m_values[ i ], val_txt );
 
-	// FUNCTION BODY[0x5caf90]: 13
-	// <0x5caf9f>|0x00f|+0x011:'147'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5cafb0>|0x020|+0x02a:'155'
-	// <0x5cafda>|0x04a|+0x06c:'156'
-	// <0>
-	// <0x5cb046>|0x0b6|+0x016:'158'
-	// <0x5cb05c>|0x0cc|+0x031:'159'
-	// ******
+		flash_value str_val;
+		str_val.SetStringW( val_txt );
+
+		val.SetElement( i, str_val );
+	}
 }
 
 // claude@NOTE: scaleform cap (applies to every flash_value setter call in this TU -
@@ -198,27 +188,23 @@ void options_item_float::initialize( )
 	m_current_value	= m_source_value;
 }
 
-// STATE[STUB]
+// claude@NOTE: structure is the 3 SetMember pairs (snapInterval/minimum/maximum).
+// Base shows one extra statement vs target: the single reused slider_data_member's
+// default ctor folds into line 245 in the target (flash_value ctor inlined there) but
+// emits a distinct statement here because our flash_value ctor is out-of-line - the
+// same scaleform cap that bounds the bytes.
 void options_item_float::fill_data( flash_value& val )
 {
-	// LOCALS
-	// flash_value 						slider_data_member
-	// ******
+	flash_value slider_data_member;
 
-	// FUNCTION BODY[0x5ca070]: 12
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5ca079>|0x009|+0x006:'245'
-	// <0x5ca07f>|0x00f|+0x04a:'246'
-	// <0>
-	// <0x5ca0c9>|0x059|+0x03d:'248'
-	// <0x5ca106>|0x096|+0x03e:'249'
-	// <0>
-	// <0x5ca144>|0x0d4|+0x042:'251'
-	// <0x5ca186>|0x116|+0x03e:'252'
-	// ******
+	slider_data_member.SetNumber( m_step );
+	val.SetMember( "snapInterval", slider_data_member );
+
+	slider_data_member.SetNumber( m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_min( ) : 0.0f );
+	val.SetMember( "minimum", slider_data_member );
+
+	slider_data_member.SetNumber( m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_max( ) : 100.0f );
+	val.SetMember( "maximum", slider_data_member );
 }
 
 void options_item_float::fill_value( flash_value& val )
@@ -291,8 +277,7 @@ void options_item_bool::revert( )
 
 void options_item_bool::call( flash_function_handler_params& params )
 {
-	m_current_value = params.pArgs[ 0 ].GetBool( );
-	params.pRetVal->SetBoolean( m_current_value );
+	params.pRetVal->SetBoolean( m_current_value = params.pArgs[ 0 ].GetBool( ) );
 }
 
 // claude@NOTE: STATE[STUB]. Body reads params.pArgs[0].GetNumber() into
@@ -436,32 +421,27 @@ void options_resolution_selector::apply( )
 	// ******
 }
 
-// STATE[STUB]
 void options_monitor_index_selector::call( flash_function_handler_params& params )
 {
-	// FUNCTION BODY[0x5caf00]: 2
-	// <0x5caf00>|0x000|+0x00d:'452'
-	// <0x5caf0d>|0x00d|+0x024:'453'
-	// ******
+	options_item_int::call( params );
+	refill_resolutions_data( );
 }
 
-// STATE[STUB]
 void options_monitor_index_selector::revert( )
 {
-	// FUNCTION BODY[0x5caec0]: 1
-	// <0x5caec3>|0x003|+0x00b:'458'
-	// ******
+	options_item_int::revert( ); refill_resolutions_data( );
 }
 
-// STATE[STUB]
+// claude@NOTE: refill_resolutions_data is STRUCTURE MATCH; revert/call inline it.
+// Byte residual: fill_resolutions is still a STUB (render-blocked - it enumerates
+// resolutions via render display-mode data we do not expose), and refill_item_data is
+// tail-called with this passed in eax + the two u8 args elided by LTCG (the allowed
+// argument-passing exception). refill_item_data itself is scaleform-capped in
+// game_options.cpp.
 void options_monitor_index_selector::refill_resolutions_data( )
 {
-	// FUNCTION BODY[0x5cae90]: 4
-	// <0>
-	// <1>
-	// <0x5cae90>|0x000|+0x013:'466'
-	// <0>
-	// ******
+	( ( options_resolution_selector* )m_parent_tab.option_by_id( 1 ) )->fill_resolutions( m_current_value );
+	m_parent_tab.get_game( ).get_game_options( ).refill_item_data( m_parent_tab.type( ), m_option_item_id );
 }
 
 // claude@NOTE: graphics_quality_data is a .rdata pcstr[6] table absent from the
