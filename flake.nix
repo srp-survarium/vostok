@@ -32,9 +32,16 @@
       url = "github:srp-survarium/vostok-resources-db";
       flake = false;
     };
+    # pdb_fetch.nvim - the in-editor match views (:Vostok). Auto-loaded into nvim
+    # by the dev shell's shim (see shellHook). Bump with `nix flake update
+    # pdb-fetch-nvim-src` to pick up new plugin versions on the next `nix develop`.
+    pdb-fetch-nvim-src = {
+      url = "github:srp-survarium/pdb_fetch.nvim";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src, pdb-fetch-nvim-src }:
     let
       system = "x86_64-linux";
 
@@ -336,6 +343,9 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+          # sqlite3 CLI - pdb_fetch.nvim reads docs/binary_matching/match.db for
+          # per-function match metrics (cur %, best %, structure, retries).
+          pkgs.sqlite
 
           # clangd - source navigation/LSP over the generated
           # compile_commands.json (clang is a READER here; MSVC8 under Wine
@@ -399,6 +409,24 @@
           done
 
           python3 "$VOSTOK_DIR/scripts/setup-toolchain.py"
+
+          # Wrap nvim to auto-load pdb_fetch.nvim (:Vostok match views), leaving the
+          # user's own config intact. A wrapper SCRIPT on PATH (not a shell function)
+          # survives `nix develop --command fish`; the real nvim is resolved before we
+          # shadow it, VOSTOK_NVIM_WRAPPED guards nested shells, and rtp points at the
+          # flake-pinned plugin so `nix flake update pdb-fetch-nvim-src` ships new
+          # versions on the next `nix develop`.
+          if [ -z "''${VOSTOK_NVIM_WRAPPED:-}" ] && command -v nvim >/dev/null 2>&1; then
+            _vnv_real="$(command -v nvim)"
+            _vnv_bin="$VOSTOK_DIR/binaries/nvim-shim"
+            mkdir -p "$_vnv_bin"
+            printf '#!/bin/sh\nexec "%s" --cmd "set rtp^=%s" "$@"\n' \
+              "$_vnv_real" "${pdb-fetch-nvim-src}" > "$_vnv_bin/nvim"
+            chmod +x "$_vnv_bin/nvim"
+            export PATH="$_vnv_bin:$PATH"
+            export VOSTOK_NVIM_WRAPPED=1
+            echo "[vostok] nvim       : WRAPPED -> auto-loads pdb_fetch.nvim (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
+          fi
         '';
       };
     };
