@@ -155,8 +155,10 @@ void sound_voice::refill_buffers	( )
 
 		sound_buffer* buffer = m_world_user.get_sound_world()->get_sound_buffer( m_current_sound_quality, m_stream_cursor_pcm, m_stream_cursor_pcm );
 		m_voice->submit_source_buffer	( buffer, m_buffer_playing_offset );
-		if ( m_buffer_playing_offset )
-			 m_buffer_playing_offset = 0;
+		// m_buffer_playing_offset reset was disabled in the shipped build (target
+		// has no such guard in the refill loop):
+		//if ( m_buffer_playing_offset )
+		//	 m_buffer_playing_offset = 0;
 		if ( m_mode == looped && pcm_total == m_stream_cursor_pcm )
 		{
 			submit_muted_buffers		( m_before_playing_quiet + m_after_playing_quiet );
@@ -248,9 +250,9 @@ void sound_voice::set_output_matrix	( float const* level_matrix )
 u32 sound_voice::find_nearest_adjective_pcm_offset	( ) const
 {
 	u32 pcm_cursor					= time_in_msec_to_pcm( m_current_sound_quality, m_playing_offset );
-	LOG_DEBUG						( "find_nearest_adjective_pcm_offset" );
-	LOG_DEBUG						( "pcm_cursor: %d", pcm_cursor );
-	LOG_DEBUG						( "m_playing_offset: %d", m_playing_offset );
+	//LOG_DEBUG						( "find_nearest_adjective_pcm_offset" );
+	//LOG_DEBUG						( "pcm_cursor: %d", pcm_cursor );
+	//LOG_DEBUG						( "m_playing_offset: %d", m_playing_offset );
 	return ( pcm_cursor / ( sound_buffer_size / m_current_sound_quality->get_bytes_per_sample( ))) * ( sound_buffer_size / m_current_sound_quality->get_bytes_per_sample( ) );
 }
 
@@ -266,7 +268,7 @@ sound_scene const& sound_voice::get_sound_scene	( ) const
 
 void sound_voice::set_quality	( u32 quality )
 {
-	LOG_DEBUG		( "set_quality requested" );
+	//LOG_DEBUG		( "set_quality requested" );
 
 	if ( quality == m_current_quality )
 		return;
@@ -286,7 +288,9 @@ void sound_voice::set_quality	( u32 quality )
 	m_target_sound_quality		= m_emitter.dbg_get_encoded_sound( quality );
 	m_current_quality			= quality;
 
-	threading::interlocked_exchange( m_conv_state, conversion_requested );
+	// Final conv-state flip was disabled in the shipped build (target ends after
+	// the m_current_quality store):
+	//threading::interlocked_exchange( m_conv_state, conversion_requested );
 }
 
 void sound_voice::submit_muted_buffers	( u32 msec )
