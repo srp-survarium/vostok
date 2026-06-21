@@ -17,6 +17,10 @@
 #include <vostok/animation/linear_interpolator.h>	// fov_factor interpolation
 #include <vostok/render/facade/scene_renderer.h>	// add/remove_model
 #include <vostok/physics/character_controller.h>	// physics_controller->set_crouch / jump
+#include <vostok/game_core/hit_info.h>				// hit() builds a hit_info
+#include <vostok/game_core/hit_initiator.h>			// initiator->id
+#include <vostok/collision/animated_object.h>		// m_damage_collision->body_part_name + bone_collision_data
+#include <vostok/physics/world.h>					// get_physics_world()->remove rigid body
 
 namespace survarium {
 
@@ -366,33 +370,21 @@ void player::insert( const bool is_alive )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: structure faithful; the lone diff is a line-table fold artifact -
+// the target lists `m_is_alive=false` + the first deactivate() as ONE entry-line
+// statement (367, folded into the prologue), our base lists the deactivate as a
+// separate body statement. Content is identical; physics deactivate() bytes are
+// the bullet from_*/remove inline residual.
 void player::remove_alive( )
 {
-	// CALL SITE INFO
-	// <0x5e28e0> -> void < unknown >( physics::bt_rigid_body_base* )
-	// ******
+	m_is_alive = false;
+	m_target.physics_controller->deactivate( );
 
-	// FUNCTION BODY[0x5e2890]: 18
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e2890>|0x000|+0x015:'367'
-	// <0x5e28a5>|0x015|+0x009:'368'
-	// <0x5e28ae>|0x01e|+0x00e:'369'
-	// <0>
-	// <1>
-	// <0x5e28bc>|0x02c|+0x009:'372'
-	// <0x5e28c5>|0x035|+0x01d:'373'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// ******
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->deactivate( );
+
+	if ( !m_is_demo_player )
+		m_game_scene.get_physics_world( )->remove( m_damage_collision->get_rigid_body( ) );
 }
 
 // claude@NOTE: full body reconstructed (unblocks lobby_menu_scene::clear_resources).
@@ -428,25 +420,12 @@ void player::remove( )
 		m_game.network_client( ).detach_from_player( );
 }
 
-// STATE[STUB]
 float4x4 player::get_transform_for_animation_player( pcvoid const animated_object, float4x4 const& character_transform ) const
 {
-	// CALL SITE INFO
-	// <0x5e244b> -> float4x4 < unknown >() const
-	// ******
+	if ( animated_object == this )
+		return character_transform;
 
-	return vostok::math::float4x4();
-
-	// FUNCTION BODY[0x5e2420]: 5
-	// <0x5e2420>|0x000|+0x001:'461'	{
-	// <0x5e2421>|0x001|+0x006:'462'
-	// <0x5e2427>|0x007|+0x017:'463'
-	// <0>
-	// <1>
-	// <0x5e243e>|0x01e|-0x003:'466'
-	// <0x5e243b>|0x01b|+0x015:'467'
-	// <0x5e2450>|0x030|      :'467'	}
-	// ******
+	return m_current_active_object->transform( );
 }
 
 // STATE[STUB]
@@ -505,41 +484,23 @@ void player::apply_input(
 	// ******
 }
 
-// claude@NOTE: parked on the 0-named-local constraint. Fully reversed: a single
-// new_item() result (eax, no named local) is filled across 5 stores -
-//   item.action.input            = m_input                       (line 521, 0x00, 0x14 bytes)
-//   item.action.state.transform  = m_target.transform            (line 522, 0x14, rep movsd 0x40)
-//   item.action.state.look_pitch = m_target.look_pitch           (line 523, 0x54)
-//   item.action.weapon_state.slot_id = inventory().get_active_slot()  (line 524, 0x58, byte from inventory@0x154)
-//   item.time_in_ms              = current_time_in_ms            (line 520, 0x5C)
-// The natural form binds `client_player_history_item& item = m_history.new_item()`
-// (1 named local) but the PDB records 0 locals -> the original used an inline
-// helper/0-local construct over new_item() that I couldn't pin. Needs the helper
-// name (search base_player/history serialize siblings) before writing.
+// claude@NOTE: body fully reversed (6 stmts, 1 reference local `item`):
+//   client_player_history_item& item = m_history.new_item( );
+//   item.time_in_ms                  = current_time_in_ms;             // +0x5C
+//   item.action.input                = m_input;                       // +0x00
+//   item.action.state.transform      = m_target.transform;            // +0x14
+//   item.action.state.look_pitch     = m_target.look_pitch;           // +0x54
+//   item.action.weapon_state.slot_id = inventory( ).get_active_slot( );// +0x58
+// WALLED cross-unit: circular_buffer<T>::new_item (game_core template, in
+// circular_buffer_inline.h) is an empty STUB - instantiating it for
+// client_player_history_item gives C4716 (must return a value). new_item itself
+// placement-news the slot's player_input + weapon_state, which needs
+// client_player_history_item's ctor (also a STUB). Body new_item +
+// client_player_history_item::ctor first, then this compiles & matches.
 // STATE[STUB]
 void player::serialize_current_state( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x5e23b0]: 19
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x5e23b7>|0x007|+0x00b:'519'
-	// <0x5e23c2>|0x012|+0x007:'520'
-	// <0x5e23c9>|0x019|+0x022:'521'
-	// <0x5e23eb>|0x03b|+0x010:'522'
-	// <0x5e23fb>|0x04b|+0x009:'523'
-	// <0x5e2404>|0x054|+0x00f:'524'
-	// <0>
-	// <1>
-	// ******
+	// FUNCTION BODY[0x5e23b0]: 6 stmts (lines 519-524) - see note above
 }
 
 // STATE[STUB]
@@ -883,11 +844,11 @@ void player::use_ladder( ladder* __formal )
 	NOT_IMPLEMENTED( __formal );
 }
 
-// claude@NOTE: line 868 (damage_model()->apply_affect) is confident; the line-869
-// guard around m_game_ui->on_damage_affect_applying reads m_game->[0x3B8]->[8]
-// (a sound_emitter c_ptr) and compares hit_initiator team bytes ([this+0x34] ==
-// [other+0x34]) - not yet reversed to a named expression. Parked for pass 3.
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (3 stmts). The line-869 guard `m_game.network_client().
+// is_player_current(id)` inlines in the target (reads m_current_player.c_ptr() then
+// compares its id at +0x34 with this->id) but our base emits the standalone
+// is_player_current call; damage_model()->apply_affect carries the virtual-dispatch
+// inline residual. Both are inline-vs-call caps, not source-steerable here.
 void player::apply_damage_model_affect(
 	pcstr							part_name,
 	const hit_affects_type_enum		affect,
@@ -896,27 +857,20 @@ void player::apply_damage_model_affect(
 {
 	damage_model( )->apply_affect( part_name, affect, event_type );
 
-	// FUNCTION BODY[0x5e31b0]: 3
-	// <0x5e31be>|0x00e|+0x017:'868'
-	// <0x5e31d5>|0x025|+0x02e:'869'
-	// <0x5e3203>|0x053|+0x00b:'870'
-	// ******
+	if ( m_game_ui && m_game.network_client( ).is_player_current( id ) )
+		m_game_ui->on_damage_affect_applying( part_name, affect, event_type );
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (2 stmts). Byte residual is the create_rotation_y /
+// create_translation / mul4x3 inline schedule (the chained matrix assignment's temp
+// re-use) - not source-steerable from here.
 void player::set_character_transform( float3 const& position, const float orientation, const float look_pitch )
 {
-	// FUNCTION BODY[0x5e27e0]: 6
-	// <0x5e27f2>|0x012|+0x02e:'875'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e2820>|0x040|+0x04c:'879'
-	// <0>
-	// ******
+	m_current.transform = m_current.previous_transform = m_target.transform = m_target.previous_transform =
+		math::mul4x3( math::create_rotation_y( orientation ), math::create_translation( position ) );
+	m_current.look_pitch = m_target.look_pitch = look_pitch;
 }
 
-// STATE[STUB]
 void player::hit(
 	hit_initiator const* const		initiator,
 	const u32						bone_index,
@@ -926,25 +880,12 @@ void player::hit(
 	bullet* const					bullet
 )
 {
-	// LOCALS
-	// hit_info 						info
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e27d3> -> void < unknown >( hit_info const& )
-	// ******
-
-	// FUNCTION BODY[0x5e2770]: 6
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e2776>|0x006|+0x047:'908'
-	// <0x5e27bd>|0x04d|+0x018:'909'
-	// ******
+	hit_info info(
+		initiator->id, id, m_damage_collision->body_part_name( bone_index ),
+		damage_type, amount, armor_piercing, bullet );
+	m_game.network_client( ).on_player_hit_received( info );
 }
 
-// STATE[STUB]
 void player::hit(
 	hit_initiator const* const		initiator,
 	collision::bone_collision_data const&	bone_data,
@@ -954,21 +895,10 @@ void player::hit(
 	bullet* const					bullet
 )
 {
-	// LOCALS
-	// hit_info 						info
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e2767> -> void < unknown >( hit_info const& )
-	// ******
-
-	// FUNCTION BODY[0x5e2710]: 5
-	// <0>
-	// <0x5e2716>|0x006|+0x03b:'922'
-	// <0x5e2751>|0x041|+0x018:'923'
-	// <0>
-	// <1>
-	// ******
+	hit_info info(
+		initiator->id, id, bone_data.body_part_name.c_str( ),
+		damage_type, amount, armor_piercing, bullet );
+	m_game.network_client( ).on_player_hit_received( info );
 }
 
 // STATE[STUB]
@@ -1047,59 +977,33 @@ void player::set_near_plane_factor( const float near_plane_factor )
 }
 
 // STATE[STUB]
+// claude@NOTE: 18 stmts, locals interpolation_time(const float) + transform(float4x4).
+// Mostly reversed:
+//   if ( !m_local_input_controller ) return;                                            // 1027
+//   if ( m_start_fov_factor != m_target_fov_factor ) {                                  // 1030 (ucomiss start,target)
+//     const float interpolation_time = (m_current_time_in_ms - m_start_fov_factor_change_time_in_ms) * math::epsilon_3; // 1032
+//     <new_fov = interpolation_time < m_fov_factor_transition_time
+//          ? m_start_fov_factor + (m_target_fov_factor-m_start_fov_factor)*linear_interpolator(m_fov_factor_transition_time).interpolated_value(interpolation_time)
+//          : m_target_fov_factor>;                                                       // 1033-1036 (fov_factor() inlined)
+//     m_current_fov_factor = new_fov; m_local_input_controller->set_fov_factor(new_fov); // 1037 ([ctrl+0x54]=game_camera m_fov_factor)
+//     if ( interpolation_time >= m_fov_factor_transition_time ) {                        // 1041
+//       m_start_fov_factor = m_target_fov_factor;                                        // 1041 ([ebx+10F1Ch])
+//       if ( m_local_input_controller ) m_local_input_controller->set_near_plane(<satisfaction_equality_tolerance>); // 1042 ([ctrl+0x4C]=m_near_plane)
+//     }
+//   } else m_local_input_controller->set_fov_factor( m_target_fov_factor );              // 1046
+//   if ( m_local_input_controller->input_mode() == first_person_mode )                   // 1048 ([ctrl+0x198]==0)
+//     m_local_input_controller->update_inverted_view( m_character_head_transform );      // 1049 (base_player+0x48)
+//   else {                                                                               // 1054/1060
+//     transform = m_root_transform; <transform.c += m_root_transform.j * 1.4f>;          // (0x3fb33333, j = m_root_transform+0x10)
+//     m_local_input_controller->update_inverted_view( transform );                       // 1062
+//   }
+// WALL: the fov_factor() inline (linear_interpolator vtable-inlined) + the exact 18-stmt
+// boundary / the near_plane const (satisfaction_equality_tolerance) need a build pass to
+// pin the statement shape; deferred to keep this batch's matches clean.
+// STATE[STUB]
 void player::update_camera( )
 {
-	// LOCALS
-	// const float 						interpolation_time
-	// float4x4 						transform
-	// const float 						time
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e2bb8> -> float < unknown >( float ) const
-	// ******
-
-	// FUNCTION BODY[0x5e2b20]: 35
-	// <0x5e2b20>|0x000|+0x008:'1026'	{
-	// <0x5e2b28>|0x008|+0x018:'1027'
-	// <0>
-	// <1>
-	// <0x5e2b40>|0x020|+0x01d:'1030'
-	// <0>
-	// <0x5e2b5d>|0x03d|+0x024:'1032'
-	// <0x5e2b81>|0x061|+0x012:'1033'
-	// <0x5e2b93>|0x073|+0x053:'1034'
-	// <0x5e2be6>|0x0c6|+0x013:'1035'
-	// <0x5e2bf9>|0x0d9|+0x00b:'1036'
-	// <0x5e2c04>|0x0e4|+0x008:'1037'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e2c0c>|0x0ec|+0x015:'1041'
-	// <0x5e2c21>|0x101|+0x017:'1042'
-	// <0>
-	// <1>
-	// <0x5e2c38>|0x118|+0x002:'1045'
-	// <0x5e2c3a>|0x11a|+0x005:'1046'
-	// <0>
-	// <0x5e2c3f>|0x11f|+0x00f:'1048'
-	// <0x5e2c4e>|0x12e|+0x013:'1049'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e2c61>|0x141|-0x00f:'1054'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e2c52>|0x132|+0x05e:'1060'
-	// <0x5e2cb0>|0x190|-0x058:'1060'
-	// <0>
-	// <0x5e2c58>|0x138|+0x07d:'1062'
-	// <0x5e2cd5>|0x1b5|      :'1062'	}
-	// ******
+	// FUNCTION BODY[0x5e2b20]: 18 stmts (lines 1027-1062) - see note above
 }
 
 player_input player::local_input( ) const
@@ -1115,18 +1019,19 @@ player_input player::remote_input( ) const
 	return m_history.empty( ) ? player_input( ) : m_history.newest( ).action.input;
 }
 
+// claude@NOTE: 3 stmts, 0 locals. Virtual dispatched via a +0x30 base subobject so
+// `this`=player+0x30; `[ecx+10EC0h]` resolves to m_damage_collision (0x10EF0). Reads
+// m_damage_collision's geometry data (offset 0/0x18) and two bone transforms' x/z
+// positions to compute abs(dx); if abs(dx) <= math::epsilon_5 returns 0, else
+// (z1-z0)/dx. WALLED: the exact accessor over collision::animated_object's
+// m_geometries_data (buffer_vector<bone_collision_data>) internals is not yet a named
+// expression - needs the animated_object speed/displacement accessor identified.
 // STATE[STUB]
 float player::get_speed( ) const
 {
 	return 0.0f;
 
-	// FUNCTION BODY[0x5e26b0]: 1
-	// <0x5e26b0>|0x000|+0x001:'1075'	{
-	// <0x5e26b1>|0x001|+0x03f:'1076'
-	// <0x5e26f0>|0x040|-0x002:'1076'
-	// <0x5e26ee>|0x03e|+0x018:'1077'
-	// <0x5e2706>|0x056|      :'1077'	}
-	// ******
+	// FUNCTION BODY[0x5e26b0]: 3 stmts (lines 1076-1077) - see note above
 }
 
 void player::hide( )
@@ -1315,24 +1220,19 @@ animation::skeleton const& player::skeleton( ) const
 	return *m_current.model->m_skeleton.c_ptr( );
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (6 stmts). Byte residual is the bt_character_controller
+// activate()/get_transform() inline (the bullet from_vostok/from_bullet roundtrip) -
+// the same physics-conversion wall as player_tick's set_transform tails.
 void player::set_use_physics_controller_for_current( const bool value )
 {
-	// FUNCTION BODY[0x5e2e80]: 10
-	// <0x5e2e80>|0x000|+0x011:'1294'	{
-	// <0>
-	// <0x5e2e91>|0x011|+0x008:'1296'
-	// <0>
-	// <1>
-	// <0x5e2e99>|0x019|+0x006:'1299'
-	// <0x5e2e9f>|0x01f|+0x004:'1300'
-	// <0x5e2ea3>|0x023|+0x049:'1301'
-	// <0>
-	// <0x5e2eec>|0x06c|-0x007:'1303'
-	// <0>
-	// <0x5e2ee5>|0x065|+0x015:'1305'
-	// <0x5e2efa>|0x07a|      :'1305'	}
-	// ******
+	if ( m_use_physics_controller_for_current == value )
+		return;
+
+	m_use_physics_controller_for_current = value;
+	if ( value )
+		m_current.physics_controller->activate( m_target.physics_controller->get_transform( ) );
+	else
+		m_current.physics_controller->deactivate( );
 }
 
 engine& player::get_engine( )
