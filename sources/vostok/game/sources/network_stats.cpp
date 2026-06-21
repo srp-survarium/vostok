@@ -12,24 +12,21 @@
 
 namespace survarium {
 
-// claude@NOTE: the whole network_stats HUD-row cluster (stats_stream/stats_row
-// create + set_text + dtors) is parked on the flash-glue /Od wall. Each builds /
-// updates a column of flash_text labels through flash_text_manager::create_text
-// and the flash_text accessors (set_visible / set_color / set_position /
-// set_text). Those accessors are now DECLARED out-of-line in the game-side
-// flash_text.h / flash_text_manager.h (their real GFx::DrawText bodies live in the
-// scaleform glue, movie.cpp) so we resolve to that single definition - but at /Od
-// the target INLINES the glue while we emit a `call`, so each statement is far
-// smaller here (the inline-vs-call wall that holds scaleform/value.cpp glue at
-// 14-34%). stats_graph::cumulative_time and the inline new+ctor of stats_graph are
-// likewise inlined in the target but out-of-line here (and `delete` routes through
-// global operator delete instead of the engine allocator's mspace_free). The
-// column-width params also fold to the caller's literal 100 under LTCG. Structure
-// (statement count/order, create_text + set_* sequence, named-local set) is
-// recovered and faithful; the bytes are walled until the flash_text glue is matched
-// in an optimized TU. Reachability is held by anchor_game_clients.cpp. The
-// stats_row dtor reports `unpaired` in objdiff = ICF fold-rep churn on the inline
-// COMDAT (its structure pairs cleanly via two-sided structure-diff), not a gap.
+// claude@NOTE: the network_stats HUD-row cluster (stats_stream/stats_row create +
+// set_text + dtors) drives a column of flash_text labels via create_text and the
+// flash_text accessors (set_visible / set_color / set_position / set_text). With the
+// scaleform glue now compiled /Ox (Master Gold, /GL), those accessors INLINE here as
+// the GFx DrawText vtable dispatch (`call eax`/`call edx`), matching the target - the
+// old flash /Od wall is LIFTED (create 27->42%, set_text 77->80% / 76->85%). The
+// remaining residual is NOT flash: the inline `new stats_graph` routes through global
+// operator new (`??2@YAPAXI@Z`) while the target inlines the engine allocator's
+// doug_lea_allocator::malloc_impl (mspace), and graph->add_value / cumulative_* fold
+// into adjacent statements with slightly different scheduling. Structure (statement
+// count/order, create_text + set_* sequence, named-local set) is faithful;
+// reachability is held by anchor_game_clients.cpp. The dtors stay low - their `delete`
+// routes through global operator delete instead of the allocator's mspace_free (same
+// allocator-inline wall), and report low/oscillating pairing = ICF fold-rep churn on
+// the inline COMDAT, not a structural gap.
 
 stats_stream::~stats_stream( )
 {
