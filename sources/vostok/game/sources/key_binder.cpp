@@ -8,15 +8,131 @@
 #include "game_action_descr.h"
 #include "keyboard_key_descr.h"
 #include <vostok/console_command.h>
+#include <vostok/strings_concatenations.h>
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
 #include <vostok/input/mouse.h>
 
 namespace survarium {
 
-// TU-local key-name table (lineage-preserved from the legacy module); the
-// ctor wires it into the per-action bindings (a matcher recovers the actions[]
-// side - reshaped to the canonical 5-field game_action_descr - when enabled)
+enum keyboard_key_group
+{
+	_sp			= 0x01,
+	_menu		= 0x02,
+	_mp			= 0x04,
+	_both		= 0x05,
+	_chat		= 0x08,
+};
+
+// TU-local console-command type (canonical headers/console_command_bind.h); the
+// ctor wires the per-binder s_bind_*_command statics through it.
+class console_command_bind : public console_commands::cc_delegate {
+public:
+					console_command_bind	( key_binder* binder, s32 type );
+
+	virtual	void	save_to					( console_commands::save_storage& f, memory::base_allocator* a ) const override;
+
+	virtual			~console_command_bind	( ) { /* no source */ }
+
+private:
+	/* 0x0000 */	/* console_commands::cc_delegate */
+	/* 0x0060 */	s32				m_type;
+	/* 0x0064 */	key_binder*		m_binder;
+}; // class console_command_bind
+
+STATIC_SIZE_ASSERT(console_command_bind, 0x68);
+
+console_command_bind::console_command_bind( key_binder* binder, s32 type )
+	: console_commands::cc_delegate(
+		( type == 0 ) ? "bind" : "bind_sec",
+		boost::bind( &key_binder::bind_key, binder, _1, type ),
+		true
+	),
+	m_type		( type ),
+	m_binder	( binder )
+{
+}
+
+void console_command_bind::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
+{
+	VOSTOK_UNREFERENCED_PARAMETER( a );
+	for ( s32 idx = 0; idx < 64; ++idx ) {
+		key_binding* binding	= &m_binder->m_key_bindings[idx];
+		if ( binding->m_keyboard[m_type] == NULL )
+			continue;
+		if ( binding->m_keyboard[m_type]->key_name == NULL )
+			continue;
+		pcstr out_str	= NULL;
+		STR_JOINA		( out_str, m_name, " ", binding->m_action->action_name, " ", binding->m_keyboard[m_type]->key_name );
+		f.add_line		( out_str );
+	}
+}
+
+// claude@NOTE: PARKED - file-scope mouse console-command statics
+// (set_mouse_sensitivity_cc / set_mouse_invert_cc) and their compiler-emitted
+// dynamic init + atexit. The cc_float dynamic init proves min=0.01f
+// (__real@3c23d70a), max=10.0f (the shared .rdata constant the delinker labels
+// c_fUncompressWindScalar), value=&g_mouse_sensitivity, serializable=true; the
+// cc_bool init proves value=&g_mouse_invert, serializable=true. The command-NAME
+// string for each does not appear in either init body (it is stored by the
+// cc_value/console_command base ctor which the linker placed out of the init),
+// so the registered name is unrecoverable from this TU's asm alone. Reconstruct
+// once the name strings surface (a sibling consumer or the cc_value base ctor).
+
+// TU-local action table; the ctor populates per-action m_keyboard slots through it.
+game_action_descr	actions[] = {
+	{ "left",						kLEFT,						_both,	hold_action,	"kLEFT"		},
+	{ "right",						kRIGHT,						_both,	hold_action,	"kRIGHT"	},
+	{ "up",							kUP,						_both,	hold_action,	"kUP"		},
+	{ "down",						kDOWN,						_both,	hold_action,	"kDOWN"		},
+	{ "jump",						kJUMP,						_both,	hold_action,	"kSPACE"	},
+	{ "crouch",						kCROUCH,					_both,	hold_action,	"kLCONTROL"	},
+	{ "accel",						kACCEL,						_sp,	hold_action,	"kLSHIFT"	},
+	{ "sprint_toggle",				kSPRINT_TOGGLE,				_both,	toggle_action,	"kX"		},
+	{ "set_next_fire_queue_type",	kSET_NEXT_FIRE_QUEUE_TYPE,	_both,	toggle_action,	"kN"		},
+	{ "set_next_ammo_type",			kSET_NEXT_AMMO_TYPE,		_both,	toggle_action,	"kM"		},
+	{ "forward",					kFWD,						_both,	hold_action,	"kW"		},
+	{ "back",						kBACK,						_both,	hold_action,	"kS"		},
+	{ "lstrafe",					kL_STRAFE,					_both,	hold_action,	"kA"		},
+	{ "rstrafe",					kR_STRAFE,					_both,	hold_action,	"kD"		},
+	{ "llookout",					kL_LOOKOUT,					_both,	hold_action,	"kQ"		},
+	{ "rlookout",					kR_LOOKOUT,					_both,	hold_action,	"kE"		},
+	{ "cam_1",						kCAM_1,						_both,	toggle_action,	"kF1"		},
+	{ "torch",						kTORCH,						_both,	toggle_action,	NULL		},
+	{ "night_vision",				kNIGHT_VISION,				_both,	toggle_action,	NULL		},
+	{ "show_detector",				kDETECTOR,					_both,	toggle_action,	NULL		},
+	{ "wpn_1",						kWPN_1,						_both,	toggle_action,	"k1"		},
+	{ "wpn_2",						kWPN_2,						_both,	toggle_action,	"k2"		},
+	{ "missile_wpn",				kMISSILE_WPN,				_both,	hold_action,	"kG"		},
+	{ "artefact",					kARTEFACT,					_both,	toggle_action,	NULL		},
+	{ "wpn_next",					kWPN_NEXT,					_both,	toggle_action,	NULL		},
+	{ "wpn_fire",					kWPN_FIRE,					_both,	hold_action,	"mouse1"	},
+	{ "wpn_reload",					kWPN_RELOAD,				_both,	hold_action,	"kR"		},
+	{ "wpn_aim",					kWPN_AIM,					_both,	hold_action,	"mouse2"	},
+	{ "delay_breath",				kDELAY_BREATH,				_mp,	hold_action,	"kLSHIFT"	},
+	{ "pause",						kPAUSE,						_both,	toggle_action,	"kPAUSE"	},
+	{ "serialize_player_state",		kSERIALIZE_PLAYER_STATE,	_both,	toggle_action,	"kO"		},
+	{ "deserialize_player_state",	kDESERIALIZE_PLAYER_STATE,	_both,	toggle_action,	"kP"		},
+	{ "quick_use_1",				kQUICK_USE_1,				_both,	hold_action,	"k3"		},
+	{ "quick_use_2",				kQUICK_USE_2,				_both,	hold_action,	"k4"		},
+	{ "quick_use_3",				kQUICK_USE_3,				_both,	hold_action,	"k5"		},
+	{ "quick_use_4",				kQUICK_USE_4,				_both,	hold_action,	"k6"		},
+	{ "quick_use_5",				kQUICK_USE_5,				_both,	hold_action,	"k7"		},
+	{ "quick_use_6",				kQUICK_USE_6,				_both,	hold_action,	"k8"		},
+	{ "back_slot_use",				kBACK_SLOT_USE,				_both,	toggle_action,	"k9"		},
+	{ "chat",						kCHAT,						_both,	toggle_action,	"kT"		},
+	{ "use",						kUSE,						_both,	hold_action,	"kE"		},
+	{ "drop",						kDROP,						_both,	hold_action,	"kV"		},
+	{ "character",					kCHARACTER,					_menu,	hold_action,	"kC"		},
+	{ "inventory",					kINVENTORY,					_menu,	hold_action,	"kI"		},
+	{ "shop",						kSHOP,						_menu,	hold_action,	"kS"		},
+	{ "options",					kOPTIONS,					_menu,	hold_action,	"kO"		},
+	{ "friends",					kFRIENDS,					_menu,	hold_action,	"kF"		},
+	{ "send_message",				kSEND_MESSAGE,				_chat,	hold_action,	"kRETURN"	},
+	{ "send_to",					kSELECT_SEND_TO,			_chat,	hold_action,	"kTAB"		},
+	{ "ptt",						kPTT,						_chat,	hold_action,	"kP"		},
+};
+
 keyboard_key_descr keyboards[] = {
 	{ "kESCAPE",		input::key_escape		},	{ "k1",				input::key_1			},
 	{ "k2",				input::key_2			},	{ "k3",				input::key_3			},
@@ -79,6 +195,8 @@ keyboard_key_descr keyboards[] = {
 	{ "kDELETE",		input::key_delete		},	{ "kLWIN",			input::key_lwin			},
 	{ "kRWIN",			input::key_rwin			},	{ "kAPPS",			input::key_apps			},
 	{ "kPAUSE",			input::key_pause		},
+	{ "kO",				input::key_o			},	{ "kP",				input::key_p			},
+	{ "kN",				input::key_n			},	{ "kM",				input::key_m			},
 	{ "mouse1",			input::mouse_button_left		},
 	{ "mouse2",			input::mouse_button_right		},
 	{ "mouse3",			input::mouse_button_middle		},
@@ -90,134 +208,44 @@ keyboard_key_descr keyboards[] = {
 	{ NULL,				0						}
 };
 
-// TU-local (canonical headers/console_command_bind.h; owner mapping in
-// temp/triage_log.md) - the type of the ctor's s_bind_*_command statics
-class console_command_bind : public console_commands::cc_delegate {
-public:
-					console_command_bind	( key_binder* binder, s32 type );
+s32 const bindings_count = 50;
 
-	virtual	void	save_to					( console_commands::save_storage& f, memory::base_allocator* a ) const override;
+int bRemapped = FALSE;
 
-	virtual			~console_command_bind	( ) { /* no source */ }
+key_binder::key_binder( game& g )
+	: m_game( g )
+{
+	memset( m_key_bindings, 0, sizeof( m_key_bindings ) );
 
-private:
-	/* 0x0000 */	/* console_commands::cc_delegate */
-	/* 0x0060 */	s32				m_type;
-	/* 0x0064 */	key_binder*		m_binder;
-}; // class console_command_bind
+	for ( s32 idx = 0; idx < bindings_count; ++idx )
+		m_key_bindings[actions[idx].id].m_action = &actions[idx];
 
-STATIC_SIZE_ASSERT(console_command_bind, 0x68);
+	static console_command_bind s_bind_key_command( this, 0 );
+	static console_command_bind s_bind_sec_key_command( this, 1 );
 
-// STATE[STUB]
- console_command_bind::console_command_bind( key_binder* binder, s32 type )
-	: console_commands::cc_delegate(
-		( type == 0 ) ? "bind" : "bind_sec",
-		boost::bind( &key_binder::bind_key, binder, _1, type ),
+	static console_commands::cc_delegate s_unbind_key_command(
+		"unbind",
+		boost::bind( &key_binder::unbind_key, this, _1, 0 ),
 		true
-	),
-	m_type		( type ),
-	m_binder	( binder )
-{
-	// FUNCTION BODY[0x91980]: 1
-	// <0x91980>|0x000|+0x0ab:'32'	{
-	// <0>
-	// <0x91a2b>|0x0ab|      :'34'	}
-	// ******
+	);
+	static console_commands::cc_delegate s_unbind_second_key_command(
+		"unbind_sec",
+		boost::bind( &key_binder::unbind_key, this, _1, 1 ),
+		true
+	);
+
+	set_default_controls( );
 }
 
-// STATE[STUB]
-void console_command_bind::save_to( console_commands::save_storage& f, memory::base_allocator* a ) const
-{
-	// LOCALS
-	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
-	// ******
-
-	// FUNCTION BODY[0x91a40]: 11
-	// <0>
-	// <0x91a4b>|0x00b|+0x002:'42'
-	// <0>
-	// <0x91a4d>|0x00d|+0x003:'44'
-	// <0x91a50>|0x010|+0x017:'45'
-	// <0>
-	// <1>
-	// <0x91a67>|0x027|+0x042:'48'
-	// <0x91aa9>|0x069|+0x014:'49'
-	// <0>
-	// <1>
-	// ******
-}
-
-// TU static 'set_mouse_sensitivity_cc' (compiler-generated dynamic
-// initializer + atexit destructor); a matcher recovers its type/initializer
-// from the asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'set_mouse_sensitivity_cc''( )
-{
-	// FUNCTION BODY[0x7d8400]
-	// <0x7d8400>|0x000|      :'218'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 'set_mouse_sensitivity_cc''( )
-{
-	// FUNCTION BODY[0x7f01d0]
-	// <0x7d8470>|0x000|      :'220'	{
-	// ******
-}
-*/
-
-// STATE[STUB]
- key_binder::key_binder( game& g )
-	: m_game( g ) // buildability: ref member must be init'd
-{
-	// STATICS
-	// static console_commands::cc_delegate s_unbind_key_command = <0x4c2b208>;
-	// static console_command_bind 		s_bind_key_command = <0x4c2b2d0>;
-	// static console_command_bind 		s_bind_sec_key_command = <0x4c2b268>;
-	// static console_commands::cc_delegate s_unbind_second_key_command = <0x4c2b1a8>;
-	// ******
-
-	// FUNCTION BODY[0x5db6e0]: 16
-	// <0x5db6e5>|0x005|+0x017:'225'
-	// <0>
-	// <1>
-	// <0x5db6fc>|0x01c|+0x005:'228'
-	// <0>
-	// <1>
-	// <0x5db701>|0x021|+0x013:'231'
-	// <0>
-	// <1>
-	// <0x5db714>|0x034|+0x02c:'234'
-	// <0x5db740>|0x060|+0x029:'235'
-	// <0>
-	// <0x5db769>|0x089|+0x153:'237'
-	// <0x5db8bc>|0x1dc|+0x153:'238'
-	// <0>
-	// <0x5dba0f>|0x32f|+0x006:'240'
-	// ******
-}
-
-// STATE[STUB]
 void key_binder::set_default_controls( )
 {
-	// LOCALS
-	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
-	// ******
-
-	// FUNCTION BODY[0x5db670]: 10
-	// <0>
-	// <0x5db679>|0x009|+0x002:'246'
-	// <0>
-	// <0x5db67b>|0x00b|+0x00a:'248'
-	// <0>
-	// <1>
-	// <0x5db685>|0x015|+0x035:'251'
-	// <0x5db6ba>|0x04a|+0x016:'252'
-	// <0>
-	// <1>
-	// ******
+	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
+		if ( actions[idx].default_key ) {
+			pcstr arg	= NULL;
+			STR_JOINA	( arg, actions[idx].action_name, " ", actions[idx].default_key );
+			bind_key	( arg, 0 );
+		}
+	}
 }
 
 void key_binder::remap_keys( )
@@ -226,36 +254,24 @@ void key_binder::remap_keys( )
 	string128	buff;
 	while ( keyboards[idx].key_name ) {
 		buff[0]						= 0;
-		keyboard_key_descr&	kb		= keyboards[idx];
-		bool res					= m_game.input_world().get_keyboard()->get_dik_name( kb.dik, buff, sizeof( buff ) );
+		bool res					= m_game.input_world( ).get_keyboard( )->get_dik_name( keyboards[idx].dik, buff, sizeof( buff ) );
 		if ( res )
-			strings::copy	( kb.key_local_name, buff );
+			strings::copy	( keyboards[idx].key_local_name, buff );
 		else
-			strings::copy	( kb.key_local_name, kb.key_name );
+			strings::copy	( keyboards[idx].key_local_name, keyboards[idx].key_name );
 		++idx;
 	}
-
 }
 
-// STATE[STUB]
 pcstr key_binder::id_to_action_name( game_action_id _id ) const
 {
-	return NULL;
+	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
+		if ( actions[idx].id == _id )
+			return actions[idx].action_name;
+	}
+	LOG_INFO	( "can't find corresponding [action_name] for id" );
 
-	// FUNCTION BODY[0x5db350]: 8
-	// <0x5db350>|0x000|+0x00c:'272'	{
-	// <0>
-	// <0x5db35c>|0x00c|+0x009:'274'
-	// <0>
-	// <0x5db365>|0x015|+0x06c:'276'
-	// <0x5db3d1>|0x081|-0x059:'277'
-	// <0>
-	// <0x5db378>|0x028|+0x069:'279'
-	// <0x5db3e1>|0x091|-0x006:'279'
-	// <0>
-	// <0x5db3db>|0x08b|+0x06c:'281'
-	// <0x5db447>|0x0f7|      :'281'	}
-	// ******
+	return NULL;
 }
 
 game_action_id key_binder::action_name_to_id( pcstr _name )
@@ -267,25 +283,15 @@ game_action_id key_binder::action_name_to_id( pcstr _name )
 		return kNOTBINDED;
 }
 
-// STATE[STUB]
 game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 {
-	return NULL;
+	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
+		if ( !_stricmp( _name, actions[idx].action_name ) )
+			return &actions[idx];
+	}
+	LOG_INFO	( "! cant find corresponding [id] for action_name", _name );
 
-	// FUNCTION BODY[0x5db210]: 8
-	// <0x5db210>|0x000|+0x00e:'293'	{
-	// <0>
-	// <0x5db21e>|0x00e|+0x008:'295'
-	// <0>
-	// <0x5db226>|0x016|+0x07e:'297'
-	// <0x5db2a4>|0x094|-0x05b:'298'
-	// <0>
-	// <0x5db249>|0x039|+0x06e:'300'
-	// <0x5db2b7>|0x0a7|-0x009:'300'
-	// <0>
-	// <0x5db2ae>|0x09e|+0x073:'302'
-	// <0x5db321>|0x111|      :'302'	}
-	// ******
+	return NULL;
 }
 
 pcstr key_binder::dik_to_keyname( s32 _dik )
@@ -299,14 +305,14 @@ pcstr key_binder::dik_to_keyname( s32 _dik )
 
 keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 {
+	VOSTOK_UNREFERENCED_PARAMETER( bSafe );
 	s32 idx = 0;
 	while ( keyboards[idx].key_name ) {
 		if ( keyboards[idx].dik == _dik )
 			return &keyboards[idx];
 		++idx;
 	}
-	if ( !bSafe )
-		LOG_INFO	( "! cant find corresponding [keyboard_key_descr] for dik" );
+
 	return NULL;
 }
 
@@ -320,42 +326,29 @@ keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 	}
 
 	LOG_INFO	( "! cant find corresponding [keyboard_key_descr*] for keyname %s", _name );
+
 	return NULL;
 }
 
-// STATE[STUB]
 s32 key_binder::get_action_dik( game_action_id _action_id, s32 idx )
 {
-	return 0;
+	VOSTOK_UNREFERENCED_PARAMETER( idx );
+	key_binding* pbinding = &m_key_bindings[_action_id];
 
-	// FUNCTION BODY[0x5dafd0]: 15
-	// <0x5dafd0>|0x000|+0x000:'367'	{
-	// <0x5dafd0>|0x000|+0x006:'368'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5dafd6>|0x006|+0x007:'372'
-	// <0x5dafdd>|0x00d|+0x004:'373'
-	// <0>
-	// <0x5dafe1>|0x011|+0x007:'375'
-	// <0x5dafe8>|0x018|+0x004:'376'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5dafec>|0x01c|-0x00c:'382'
-	// <0x5dafe0>|0x010|+0x00b:'383'
-	// <0x5dafeb>|0x01b|+0x003:'383'
-	// <0x5dafee>|0x01e|      :'383'	}
-	// ******
+	if ( pbinding->m_keyboard[0] )
+		return pbinding->m_keyboard[0]->dik;
+
+	if ( pbinding->m_keyboard[1] )
+		return pbinding->m_keyboard[1]->dik;
+
+	return 0;
 }
 
 game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const
 {
-	for ( s32 i = 0; i < 64; ++i )
+	for ( s32 idx = 0; idx < 64; ++idx )
 	{
-		key_binding const& binding	= m_key_bindings[i];
+		key_binding const& binding	= m_key_bindings[idx];
 		if ( !binding.m_action || !( binding.m_action->key_group & key_group_mask ) )
 			continue;
 
@@ -373,95 +366,59 @@ game_action_id key_binder::get_binded_action( s32 _dik, toggle_action_enum& acti
 	return kNOTBINDED;
 }
 
-// STATE[STUB]
 void key_binder::bind_key( pcstr args, s32 bind_number )
 {
-	// LOCALS
-	// char[256] 						action
-	// char[256] 						key
-	// ******
+	char	action[256];
+	char	key[256];
+	*action								= 0;
+	*key								= 0;
 
-	// FUNCTION BODY[0x5db4a0]: 47
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5db4ac>|0x00c|+0x03a:'444'
-	// <0x5db4e6>|0x046|+0x00b:'445'
-	// <0>
-	// <1>
-	// <0x5db4f1>|0x051|+0x00e:'448'
-	// <0>
-	// <1>
-	// <0x5db4ff>|0x05f|+0x009:'451'
-	// <0x5db508>|0x068|+0x006:'452'
-	// <0x5db50e>|0x06e|+0x00a:'453'
-	// <0>
-	// <1>
-	// <0x5db518>|0x078|+0x012:'456'
-	// <0>
-	// <1>
-	// <0x5db52a>|0x08a|+0x015:'459'
-	// <0x5db53f>|0x09f|+0x009:'460'
-	// <0>
-	// <1>
-	// <0x5db548>|0x0a8|+0x00c:'463'
-	// <0x5db554>|0x0b4|+0x0f6:'464'
-	// <0>
-	// <1>
-	// <0x5db64a>|0x1aa|-0x0ec:'467'
-	// <0>
-	// <0x5db55e>|0x0be|+0x0ef:'469'
-	// <0>
-	// <1>
-	// <0x5db64d>|0x1ad|-0x0d7:'472'
-	// <0>
-	// <1>
-	// <0x5db576>|0x0d6|+0x036:'475'
-	// <0x5db5ac>|0x10c|+0x034:'475'
-	// <0x5db5e0>|0x140|+0x035:'475'
-	// <0x5db615>|0x175|-0x098:'475'
-	// <0>
-	// <0x5db57d>|0x0dd|+0x036:'477'
-	// <0x5db5b3>|0x113|+0x034:'477'
-	// <0x5db5e7>|0x147|+0x035:'477'
-	// <0x5db61c>|0x17c|-0x088:'477'
-	// <0>
-	// <0x5db594>|0x0f4|+0x036:'479'
-	// <0x5db5ca>|0x12a|+0x033:'479'
-	// <0x5db5fd>|0x15d|+0x035:'479'
-	// <0x5db632>|0x192|-0x095:'479'
-	// <0x5db59d>|0x0fd|+0x036:'480'
-	// <0x5db5d3>|0x133|+0x033:'480'
-	// <0x5db606>|0x166|+0x035:'480'
-	// <0x5db63b>|0x19b|-0x09b:'480'
-	// <0>
-	// <0x5db5a0>|0x100|+0x036:'482'
-	// <0x5db5d6>|0x136|+0x033:'482'
-	// <0x5db609>|0x169|+0x035:'482'
-	// <0x5db63e>|0x19e|-0x095:'482'
-	// <0x5db5a9>|0x109|+0x035:'483'
-	// <0x5db5de>|0x13e|+0x034:'483'
-	// <0x5db612>|0x172|+0x035:'483'
-	// <0x5db647>|0x1a7|+0x011:'483'
-	// <0>
-	// <1>
-	// ******
+	sscanf_s							( args, "%255s %255s", action, sizeof( action ), key, sizeof( key ) );
+	if ( !*action )
+		return;
+
+	if ( !*key )
+		return;
+
+	if ( !bRemapped ) {
+		remap_keys	( );
+		bRemapped	= TRUE;
+	}
+
+	if ( !action_name_to_ptr( action ) )
+		return;
+
+	s32 action_id						= action_name_to_id( action );
+	if ( action_id == kNOTBINDED )
+		return;
+
+	keyboard_key_descr*	pkeyboard		= keyname_to_ptr( key );
+	if ( !pkeyboard )
+		return;
+
+	key_binding*	curr_pbinding		= &m_key_bindings[action_id];
+
+	curr_pbinding->m_keyboard[bind_number]	= pkeyboard;
+
+	for ( s32 idx = 0; idx < 64; ++idx )
+	{
+		key_binding*	binding			= &m_key_bindings[idx];
+		if ( binding == curr_pbinding )	continue;
+
+		bool b_conflict = ( binding->m_action->key_group & curr_pbinding->m_action->key_group ) != 0;
+
+		if ( binding->m_keyboard[0] == pkeyboard && b_conflict )
+			binding->m_keyboard[0] = NULL;
+
+		if ( binding->m_keyboard[1] == pkeyboard && b_conflict )
+			binding->m_keyboard[1] = NULL;
+	}
 }
 
-// STATE[STUB]
 void key_binder::unbind_key( pcstr args, s32 bind_number )
 {
-	// FUNCTION BODY[0x5db450]: 3
-	// <0x5db450>|0x000|+0x000:'489'	{
-	// <0x5db450>|0x000|+0x014:'490'
-	// <0>
-	// <0x5db464>|0x014|+0x015:'492'
-	// <0x5db479>|0x029|-0x004:'492'
-	// <0x5db475>|0x025|+0x01a:'493'
-	// <0x5db48f>|0x03f|      :'493'	}
-	// ******
+	game_action_id	action_id	= action_name_to_id( args );
+	m_key_bindings[action_id].m_keyboard[bind_number]	= NULL;
 }
 
 s32 key_binder::get_binding_group( game_action_id _id )
