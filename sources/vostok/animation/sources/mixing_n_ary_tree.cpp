@@ -132,6 +132,14 @@ void n_ary_tree::destroy( )
 }
 
 // STATE[STUB]
+// claude@NOTE: get_object_transform(pcvoid) - 4 stmts, local `float4x4 left`. Structure:
+// std::find the animated_object_holder, then two guarded `if(m_animation_states)` blocks each
+// constructing a bone_matrices_computer(left/result, m_animation_states, 0|1, animated_object, this)
+// and calling its get_object_transform, with a mul4x3(result, holder->transform, that) in the
+// second. PARKED: bone_matrices_computer ctor/get_object_transform are STUBs in
+// bone_matrices_computer.cpp (other TU) so the whole expression DCE-collapses; faithful body also
+// needs the exact ctor arg signature + mul4x3 operand order decoded. Next: body
+// bone_matrices_computer.cpp first, then reconstruct here.
 float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 {
 	// LOCALS
@@ -164,6 +172,17 @@ float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: set_object_transform(node&) - 16 stmts, locals current_frame_position frame_position
+// + pinned_ptr_const<cubic_spline_skeleton_animation> pinned_animation. It pins the animation
+// (animation_node.animation_state(), m_animation_states[m_animation_intervals at +5Ch]), calls
+// evaluate_frame( animation_time*default_fps, intervals, frame, frame_position ) then writes the
+// computed object_movement (quaternion(rotation) @ state bone_matrices_computer +0/+8, translation,
+// scale) into the animation_state's bone_matrices_computer_data, branching on
+// state.are_there_any_weight_transitions (+74h). PARKED: animation-evaluation math - needs
+// current_frame_position layout, evaluate_frame semantics, the object_movement quaternion/float3
+// field offsets, and pinned_ptr_const machinery decoded; high risk to fabricate. Bodying this
+// un-DCEs the loops in set_object_transform(pcvoid)/set_objects_transform/tick. Next: decode
+// evaluate_frame + object_movement writes from the rich asm against cubic_spline_skeleton_animation.
 void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node )
 {
 	// LOCALS
