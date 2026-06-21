@@ -255,10 +255,7 @@ void key_binder::remap_keys( )
 	while ( keyboards[idx].key_name ) {
 		buff[0]						= 0;
 		bool res					= m_game.input_world( ).get_keyboard( )->get_dik_name( keyboards[idx].dik, buff, sizeof( buff ) );
-		if ( res )
-			strings::copy	( keyboards[idx].key_local_name, buff );
-		else
-			strings::copy	( keyboards[idx].key_local_name, keyboards[idx].key_name );
+		strings::copy	( keyboards[idx].key_local_name, res ? buff : keyboards[idx].key_name );
 		++idx;
 	}
 }
