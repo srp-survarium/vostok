@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 51.85% fuzzy (+2.81%) &middot; 4,514 / 12,915 functions exact (34.95%, +372 best-ever).**
+**Overall: 51.85% fuzzy (+2.79%) &middot; 4,514 / 12,915 functions exact (34.95%, +369 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -32,7 +32,7 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `particle`      |    25 |   186 / 400 (46.5%) |            190 (+4) | 77.3% |     +1.1% |
 | `vfs`           |    71 |   162 / 390 (41.5%) |            168 (+6) | 84.7% |     +1.7% |
 | `ui`            |    27 |   143 / 227 (63.0%) |            147 (+4) | 77.3% |     +3.9% |
-| `physics`       |    14 |    81 / 197 (41.1%) |            98 (+17) | 67.0% |     +5.1% |
+| `physics`       |    14 |    81 / 197 (41.1%) |            95 (+14) | 67.0% |     +3.8% |
 | `fs`            |    25 |    65 / 165 (39.4%) |             68 (+3) | 78.7% |     +3.3% |
 | `engine`        |    22 |    53 / 162 (32.7%) |             53 (+0) | 80.7% |     +1.0% |
 | `network`       |    25 |    67 / 158 (42.4%) |             74 (+7) | 84.9% |     +0.9% |
