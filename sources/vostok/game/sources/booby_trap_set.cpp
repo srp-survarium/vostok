@@ -6,75 +6,73 @@
 #include "booby_trap_set.h"
 #include "booby_trap.h"
 #include "game_world.h" // get_game_material_manager() needs complete type
+#include "game.h"					// network_client()
+#include "base_network_client.h"	// has_bandwidth() / is_player_current()
+#include <vostok/game_core/base_player.h>		// cast_to_base_player()->id
+#include <vostok/game_core/inventory_holder.h>	// cast_to_base_player()
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
 namespace survarium {
 
+// claude@NOTE: the ctor (+ remove / on_player_death / remove_current_ghost_model) carry a
+// cluster-wide codegen residual: the target frames these with an 8-byte-aligned stack
+// (`push ebp; mov ebp,esp; and esp,0FFFFFFF8h`) - the alignment the boost::function /
+// scheduler buffer copy (the `movq xmm0` moves) wants - where our /Ox base uses a plain
+// `sub esp` frame and tail-calls the trailing base call. The bodies match; the frame
+// shape + tail-call are an MSVC stack-alignment heuristic difference, not a body change.
+// (The ctor also pairs against the anchor's guarded construction, hence a stray s_world load.)
 booby_trap_set::booby_trap_set( game_world& game_world ) :
 	m_player_death_subscriber( boost::bind( &booby_trap_set::on_player_death, this ) ),
 	m_game_world( game_world )
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - couples to base_network_client current-player internals.
-// asm: line 33 m_game_world.get_game().network_client().has_bandwidth() gate; line 36
-// try_place_trap(); line 40 m_inventory->holder().cast_to_base_player(); line 43
-// compares that player's id byte [+0x34] against network_client().m_current_player
-// ([+8], read directly w/o refcount) [+0x34] AND a sound_emitter resource_ptr null
-// check; line 46 if(m_amount); line 49 toggle_ghost_model(key_down). NEXT: need the
-// base_network_client current-player accessor that compiles to a direct [+8] member
-// load (not the by-value get_current_player()) and base_player::id() -> [+0x34], both
-// from the network-client layer which is the divergent carcass module.
+// claude@NOTE: 5/7 statements; is_player_current() inlines (its m_current_player [+8] +
+// ->id [+0x34] body is direct, matching the target) once base_network_client.h is
+// complete here. The `player` reference is captured first so the cast (line 40) and the
+// is_player_current test (line 43) split into the target's separate statements. Residual:
+// the two-condition guard fuses into one stmt under /Ox (vs the target's split lines) and
+// the holder() chain rides the inventory::holder() inliner wall (another unit).
 void booby_trap_set::action( bool key_down )
 {
-	// FUNCTION BODY[0x740770]: 17
-	// <0x740774>|0x004|+0x021:'33'
-	// <0x740795>|0x025|+0x004:'35'
-	// <0x740799>|0x029|+0x007:'36'
-	// <0x7407a0>|0x030|+0x013:'40'
-	// <0x7407b3>|0x043|+0x02a:'43'
-	// <0x7407dd>|0x06d|+0x00a:'46'
-	// <0x7407e7>|0x077|+0x00a:'49'
-	// ******
+	if ( !m_game_world.get_game( ).network_client( ).has_bandwidth( )
+		&& !key_down )
+		booby_trap_set_core::try_place_trap( );
+
+	base_player* player = m_inventory->holder( ).cast_to_base_player( );
+	if ( m_game_world.get_game( ).network_client( ).is_player_current( player->id )
+		&& m_amount )
+		toggle_ghost_model( key_down );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - the back half couples to base_network_client current-player
-// internals. asm: line 58 booby_trap_core_ptr trap = traps()[index]; line 62 float4x4
-// transform = mul4x3(create_rotation(angles), create_translation(position)); line 64
-// insert_trap(*trap, transform) (vtable [+0x78]); line 68 --m_amount + holder().
-// cast_to_base_player(); lines 71-72 the same network_client().m_current_player [+0x34]
-// id compare as action(), then push the player's profile_slot_enum into a vectora
-// (_M_insert_overflow_aux). NEXT: same base_network_client current-player accessor wall
-// as action(); the front half (trap fetch + transform + insert_trap) is matchable once
-// the network-client layer's current-player accessor lands.
+// claude@NOTE: front half (lines 58-68) reconstructed; the back half is a cross-module
+// wall. The target's last two statements (lines 71-72) push this->profile_slot_id() into
+// a vectora held on base_network_client::m_current_player ([client+8] -> player[+0x208]),
+// gated by is_player_current(player->id). m_current_player is a PROTECTED member of
+// base_network_client (network-client carcass module) and the target reuses the same
+// player register the inlined is_player_current() leaves behind, so the push cannot be
+// expressed here without either friending base_network_client or a public accessor that
+// returns the live current player. NEXT: add a base_network_client accessor (or friend)
+// exposing m_current_player + the player's placed-slot vectora, both in the network-client
+// layer, then the if(is_player_current(...)) { current_player->...push_back(profile_slot_id()) }.
 void booby_trap_set::on_trap_placed_message( u8 index, float3 const& position, float3 const& angles )
 {
-	// LOCALS
-	// float4x4 						transform
-	// ******
+	booby_trap_core_ptr trap = traps( )[ index ];
 
-	// FUNCTION BODY[0x740280]: 19
-	// <0x740289>|0x009|+0x028:'58'
-	// <0x7402b1>|0x031|+0x035:'62'
-	// <0x7402e6>|0x066|+0x012:'64'
-	// <0x7402f8>|0x078|+0x01f:'68'
-	// <0x740317>|0x097|+0x02a:'71'
-	// <0x740341>|0x0c1|+0x031:'72'
-	// ******
+	float4x4	transform = mul4x3( create_rotation( angles ), create_translation( position ) );
+
+	insert_trap( *trap, transform );
+
+	--m_amount;
 }
 
-// claude@NOTE: the three on_trap_*_message bodies are structurally correct but walled
-// low by two cross-unit inline gaps, not a source issue here: (1) the booby_trap method
-// they call (on_trap_fired_message / on_trap_disarmed_message) is still a STUB in
-// booby_trap.cpp, so the call inlines to nothing (target inlines switch_to_state +
-// play_fired_effects); (2) booby_trap_set_core::traps() is emitted OUT-OF-LINE in our
-// base build (call traps + buffer_vector::operator[]) where the target inlines it to a
-// direct m_traps load ([this+0x118]) - the same inliner-heuristic wall as
-// inventory::holder(). NEXT: recovers when booby_trap.cpp is matched and the traps()
-// inline wall is resolved (both other units).
+// claude@NOTE: the three on_trap_*_message bodies are structurally faithful (1 stmt,
+// only the `index` param local). The byte residual is the booby_trap_set_core::traps()
+// inliner wall: our base emits `call traps` + `buffer_vector::operator[]` out-of-line
+// where the target inlines them to a direct m_traps load ([this+0x118]) + index. Same
+// inliner-heuristic wall as inventory::holder(); not steerable from this unit (would
+// require forcing the accessors inline in game_core/booby_trap_set_core.h).
 void booby_trap_set::on_trap_removed_message( u8 index )
 {
 	booby_trap_core_ptr trap = traps( )[ index ];
@@ -136,15 +134,13 @@ render::static_model_ptr booby_trap_set::pick_ghost_model( bool is_placing_allow
 	return is_placing_allowed ? m_model_ghost_allowed : m_model_ghost_denied;
 }
 
-// claude@NOTE: parked at structure level. The selected model is held in a register
-// (ebx) across the whole body but the PDB records only 3 named locals
-// (transform, is_placing_allowed, scheduler) - NO `model` local. pick_ghost_model()
-// returns static_model_ptr BY VALUE, so a temporary cannot legally outlive its
-// full-expression to be reused by add_model + the m_current assignment; yet the asm
-// reuses ebx throughout. The faithful 3-local shape (model as an unnamed temp) is not
-// expressible without a 4th named local. Needs the exact original construct (likely a
-// pick_ghost_model variant returning a reference, or RVO into m_current). Body below is
-// buildable but carries the extra `model` local.
+// claude@NOTE: 12/12 statements but two byte residuals remain. (1) The early-out
+// `if (model == m_current) return false;` is a separate statement in our base; the target
+// folds the model-temp release into a SHARED epilogue (a single ret path), so our explicit
+// `return false` emits its own model dtor + ret. (2) The boost::bind register_for_update
+// argument block (TRGT_ONLY rows) schedules differently. The `model` by-value local is fine
+// (this build is /Ox, the named local is elided from the PDB like action's `player`). The
+// shape is faithful; the residual is the early-return cleanup + boost::bind scheduling.
 bool booby_trap_set::pick_current_ghost_model( float4x4 const& transform, bool is_placing_allowed )
 {
 	render::static_model_ptr model = pick_ghost_model( is_placing_allowed );

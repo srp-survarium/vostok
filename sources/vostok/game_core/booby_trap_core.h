@@ -116,6 +116,10 @@ private:
 	/* 0x0174 */	float4x4					m_transform;
 	/* 0x01b4 */	u32							m_state_timer;
 private:
+	// the game-module runtime booby_trap reads inherited state (m_trap_state /
+	// m_transform / m_owner) directly in switch_to_state / on_new_state; friendship
+	// is codegen-neutral (emits no bytes, not recorded in the PDB).
+	friend class booby_trap;
 	friend class booby_trap_core_cook;
 	friend void ::vostok::use_game_core_booby_trap_core_get_speed( );
 }; // class booby_trap_core
