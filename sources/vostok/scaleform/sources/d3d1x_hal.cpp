@@ -350,6 +350,11 @@ void HAL::updateViewport()
     pDeviceContext->RSSetViewports(1, &vp);
 }
 
+PrimitiveFill* HAL::CreatePrimitiveFill(const PrimitiveFillData& data)
+{
+    return SF_HEAP_NEW(pHeap) PrimitiveFill(data);
+}
+
 // Class used with ProfileViews to change the rendering method of mask geometry.
 class ProfileViewScopedOMChange
 {
@@ -378,6 +383,12 @@ public:
 };
 
 // Draws a range of pre-cached and preprocessed primitives
+// claude@NOTE: structure matches the target (29/29 stmts, no TRGT/BASE-only).
+// Residual is the trailing MoveToCacheListFront(MCL_ThisFrame): the target fully
+// inlines it (0x47 bytes) while our build emits a standalone
+// MeshCacheItem::MoveToCacheListFront (base symbol 0x102ca0 in render_meshcache.h)
+// and call here. That out-lining is a MeshCache header/TU codegen property, not
+// steerable from this .cpp; the rest is minor LTCG scheduling.
 void HAL::DrawProcessedPrimitive(Primitive* pprimitive,
                                  PrimitiveBatch* pstart, PrimitiveBatch *pend)
 {
@@ -450,6 +461,13 @@ void HAL::DrawProcessedPrimitive(Primitive* pprimitive,
     }
 }
 
+// claude@NOTE: source structure matched to the vostok target (batchType declared
+// without the DP_Single init; no startIndex local - direct matrices[i] indexing).
+// Residual 82% is codegen, not steerable here: (1) MoveToCacheListFront is out-lined
+// in our build but inlined in target (same MeshCache-header cause as
+// DrawProcessedPrimitive), (2) the target inlines the IASetVertexBuffers 5-arg setup
+// and spills more locals (register pressure) than our build. fillCount is
+// source-declared but the optimizer elides it here (kept named in target).
 void HAL::DrawProcessedComplexMeshes(ComplexMesh* complexMesh,
                                      const StrideArray<HMatrix>& matrices)
 {
@@ -475,7 +493,7 @@ void HAL::DrawProcessedComplexMeshes(ComplexMesh* complexMesh,
     unsigned    fillCount     = complexMesh->GetFillRecordCount();
     unsigned    instanceCount = (unsigned)matrices.GetSize();
     unsigned    indexBufferOffset   = (unsigned)(pmesh->IBAllocOffset / sizeof(IndexType));
-    BatchType   batchType = PrimitiveBatch::DP_Single;
+    BatchType   batchType;
     unsigned    formatIndex;
     unsigned    maxDrawCount = 1;
     unsigned    vertexBaseIndex = 0;
@@ -503,7 +521,6 @@ void HAL::DrawProcessedComplexMeshes(ComplexMesh* complexMesh,
         Profiler.SetBatch((UPInt)complexMesh, fillIndex);
 
         unsigned fillFlags = FillFlags;
-        unsigned startIndex = 0;
         if ( instanceCount > 0 )
         {
             const HMatrix& hm = matrices[0];
@@ -511,7 +528,7 @@ void HAL::DrawProcessedComplexMeshes(ComplexMesh* complexMesh,
 
             for (unsigned i = 0; i < instanceCount; i++)
             {
-                const HMatrix& hm = matrices[startIndex + i];
+                const HMatrix& hm = matrices[i];
                 if (!(Profiler.GetCxform(hm.GetCxform()) == Cxform::Identity))
                     fillFlags |= FF_Cxform;
             }
@@ -544,7 +561,7 @@ void HAL::DrawProcessedComplexMeshes(ComplexMesh* complexMesh,
 
         for (unsigned i = 0; i < instanceCount; i++)
         {
-            const HMatrix& hm = matrices[startIndex + i];
+            const HMatrix& hm = matrices[i];
 
             ShaderData.SetMatrix(pso, Uniform::SU_mvp, complexMesh->GetVertexMatrix(), hm, Matrices, 0, i%maxDrawCount);
             if (solid)
@@ -919,24 +936,6 @@ struct BlendModeDescAlpha
 
 bool HAL::createBlendStates()
 {
-    static const D3D1x(BLEND_OP) BlendOps[BlendOp_Count] =
-    {
-        D3D1x(BLEND_OP_ADD),            // BlendOp_ADD
-        D3D1x(BLEND_OP_MAX),            // BlendOp_MAX
-        D3D1x(BLEND_OP_MIN),            // BlendOp_MIN
-        D3D1x(BLEND_OP_REV_SUBTRACT),   // BlendOp_REVSUBTRACT
-    };
-
-    static const D3D1x(BLEND) BlendFactors[BlendFactor_Count] =
-    {
-        D3D1x(BLEND_ZERO),              // BlendFactor_ZERO
-        D3D1x(BLEND_ONE),               // BlendFactor_ONE
-        D3D1x(BLEND_SRC_ALPHA),         // BlendFactor_SRCALPHA
-        D3D1x(BLEND_INV_SRC_ALPHA),     // BlendFactor_INVSRCALPHA
-        D3D1x(BLEND_DEST_COLOR),        // BlendFactor_DESTCOLOR
-        D3D1x(BLEND_INV_DEST_COLOR),    // BlendFactor_INVDESTCOLOR
-    };
-
     memset(BlendStates, 0, sizeof BlendStates);
     for (unsigned i = 0; i < BlendTypeCount; ++i )
     {
@@ -982,12 +981,12 @@ bool HAL::createBlendStates()
         }
         mode %= Blend_Count;
 
-        rt0.BlendOp        = BlendOps[BlendModeTable[mode].Operator];
-        rt0.SrcBlend       = BlendFactors[BlendModeTable[mode].SourceColor];
-        rt0.DestBlend      = BlendFactors[BlendModeTable[mode].DestColor];
-        rt0.BlendOpAlpha   = BlendOps[BlendModeTable[mode].Operator];
-        rt0.SrcBlendAlpha  = BlendFactors[BlendModeTable[mode].SourceAlpha];
-        rt0.DestBlendAlpha = BlendFactors[BlendModeTable[mode].DestAlpha];
+        rt0.BlendOp        = (D3D1x(BLEND_OP))BlendModeTable[mode].Operator;
+        rt0.SrcBlend       = (D3D1x(BLEND))BlendModeTable[mode].SourceColor;
+        rt0.DestBlend      = (D3D1x(BLEND))BlendModeTable[mode].DestColor;
+        rt0.BlendOpAlpha   = (D3D1x(BLEND_OP))BlendModeTable[mode].Operator;
+        rt0.SrcBlendAlpha  = (D3D1x(BLEND))BlendModeTable[mode].SourceAlpha;
+        rt0.DestBlendAlpha = (D3D1x(BLEND))BlendModeTable[mode].DestAlpha;
 
         if ( sourceAc && rt0.SrcBlend == D3D1x(BLEND_SRC_ALPHA) )
             rt0.SrcBlend        = D3D1x(BLEND_ONE);
