@@ -137,19 +137,24 @@ namespace vostok
 		keep( &ow::local_to_cell );
 
 		// ---- sound_player_cook ----------------------------------------------
+		// on_sounds_loaded / on_config_loaded are private (AAE); reached
+		// transitively from the public translate_query bind chain, so /OPT:REF
+		// keeps them without an (inaccessible) explicit keep().
 		typedef survarium::sound_player_cook spc;
 		keep( &spc::translate_query );
 		keep( &spc::delete_resource );
-		keep( &spc::on_sounds_loaded );
-		keep( &spc::on_config_loaded );
 
 		// ---- project_cooker_simple ------------------------------------------
+		// on_game_project_loaded / create_game_objects / on_damage_zones_loaded /
+		// on_ladders_loaded / on_collision_and_visuals_loaded are private (AAE);
+		// reached transitively from the public translate_query bind chain, so
+		// /OPT:REF keeps them. on_object_loaded has a matched body but its sole
+		// bind site is in the still-stubbed create_game_objects, so address-take it
+		// directly (use_game_weapons is a friend of project_cooker_simple).
 		typedef survarium::project_cooker_simple pcs;
 		keep( &pcs::translate_query );
 		keep( &pcs::delete_resource );
-		keep( &pcs::on_game_project_loaded );
 		keep( &pcs::on_object_loaded );
-		keep( &pcs::create_game_objects );
 
 		// ---- key_binder ------------------------------------------------------
 		typedef survarium::key_binder kb;

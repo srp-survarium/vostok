@@ -113,6 +113,7 @@ namespace survarium {
 
 	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
 	void use_game_player_cook( );
+	void use_game_animated_model_cook( );	// anchor_game_animated_model_cook.cpp
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -419,6 +420,7 @@ namespace vostok
 		survarium::use_game_lobby_ui( );
 		survarium::use_game_lobby_scene( );
 		survarium::use_game_player_cook( );
+		survarium::use_game_animated_model_cook( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
