@@ -4,147 +4,95 @@
 
 #include "pch.h"
 #include "shotgun_weapon_reload_state_cook.h"
+#include "shotgun_weapon_reload_state.h"
+#include <vostok/game_core/weapon_state_creation_params.h>
 
 namespace survarium {
 
-// STATE[STUB]
- shotgun_weapon_reload_state_cook::shotgun_weapon_reload_state_cook( ) :
-	// buildability: matcher supplies real class/reuse/thread args
+shotgun_weapon_reload_state_cook::shotgun_weapon_reload_state_cook( ) :
 	resources::unmanaged_cook( resources::weapon_shotgun_reload_state_class, reuse_false, use_current_thread_id, use_current_thread_id )
 {
-	// FUNCTION BODY[0x5bd6f0]: 1
-	// <0x5bd728>|0x038|+0x026:'25'
-	// ******
+	resources::register_cook( this );
 }
 
-// STATE[STUB]
- shotgun_weapon_reload_state_cook::~shotgun_weapon_reload_state_cook( )
+shotgun_weapon_reload_state_cook::~shotgun_weapon_reload_state_cook( )
 {
-	// FUNCTION BODY[0x5bd6e0]: 1
-	// <0x5bd6e0>|0x000|+0x000:'29'	{
-	// <0>
-	// <0x5bd6e0>|0x000|      :'31'	}
-	// ******
 }
 
-// STATE[STUB]
 mutable_buffer shotgun_weapon_reload_state_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
 	bool									file_exist
 )
 {
-	return mutable_buffer::zero( );
-
-	// FUNCTION BODY[0x5bd780]: 2
-	// <0>
-	// <0x5bd787>|0x007|+0x023:'36'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETERS( in_query, raw_file_data, file_exist );
+	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( shotgun_weapon_reload_state ), "shotgun_weapon_reload_state" ), sizeof( shotgun_weapon_reload_state ) );
 }
 
-// STATE[STUB]
 void shotgun_weapon_reload_state_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY[0x5bd760]: 1
-	// <0x5bd760>|0x000|+0x01c:'41'
-	// ******
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)buffer );
 }
 
-// STATE[STUB]
 void shotgun_weapon_reload_state_cook::create_resource(
 	resources::query_result_for_cook&		parent,
 	const_buffer							raw_file_data,
 	mutable_buffer							in_out_unmanaged_resource_buffer
 )
 {
-	// LOCALS
-	// variant< 32 > const*[3] 			user_data_ptrs
-	// configs::binary_config_value 	cfg
-	// variant< 32 >[3] 				user_data
-	// weapon_state_creation_params const* params
-	// resources::creation_request[3] 	requests
-	// ******
+	// claude@NOTE: parked - 12 target statements vs my 9. The three creation_requests
+	// carry a per-request USER_DATA variant (the cfg["start_substate"] / ["reload_one_
+	// substate"] / ["finish_substate"] config_value sub-nodes built as variant<32>[3] via
+	// `vector constructor iterator`), passed alongside the requests array to
+	// query_create_resources - my version uses raw_file_data as the request data with no
+	// user_data array. There are also TRGT_ONLY statements (an ASSERT after try_get, the
+	// user_data-array fill). NEXT: build the variant<32> user_data[3] = { cfg["..."], ... }
+	// and pass it to query_create_resources (see asm 0x80-0x179 at 0x5bd9a0).
+	weapon_state_creation_params const*	params	= static_cast< weapon_state_creation_params const* >( raw_file_data.c_ptr( ) );
+	configs::binary_config_value		cfg;
+	if ( !parent.user_data( )->try_get( cfg ) )
+	{
+		DEBUG_BREAK		( );
+		parent.finish_query( result_error );
+		return;
+	}
 
-	// FUNCTION BODY[0x5bd9a0]: 36
-	// <0x5bd9a0>|0x000|+0x015:'45'	{
-	// <0x5bd9b5>|0x015|+0x00c:'46'
-	// <0x5bd9c1>|0x021|+0x01a:'47'
-	// <0x5bd9db>|0x03b|+0x028:'48'
-	// <0x5bda03>|0x063|+0x001:'49'
-	// <0x5bda04>|0x064|+0x016:'50'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x5bda1a>|0x07a|+0x006:'60'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5bda20>|0x080|+0x090:'64'
-	// <0>
-	// <0x5bdab0>|0x110|+0x069:'66'
-	// <0>
-	// <1>
-	// <0x5bdb19>|0x179|+0x00b:'69'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5bdb24>|0x184|+0x0e2:'80'
-	// <0x5bdc06>|0x266|-0x1f5:'81'
-	// <0x5bda11>|0x071|+0x1ff:'82'
-	// <0x5bdc10>|0x270|      :'82'	}
-	// ******
+	resources::creation_request requests[3] = {
+		resources::creation_request( "start_substate",		raw_file_data, resources::weapon_shotgun_reload_start_substate_class ),
+		resources::creation_request( "reload_one_substate",	raw_file_data, resources::weapon_shotgun_reload_one_substate_class ),
+		resources::creation_request( "finish_substate",		raw_file_data, resources::weapon_shotgun_reload_finish_substate_class ),
+	};
+
+	resources::query_create_resources(
+		requests,
+		boost::bind( &shotgun_weapon_reload_state_cook::on_substates_ready, this, _1, in_out_unmanaged_resource_buffer, params ),
+		g_allocator,
+		NULL,
+		&parent
+	);
+	parent.finish_query( result_postponed );
 }
 
-// STATE[STUB]
+void shotgun_weapon_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
+{
+	shotgun_weapon_reload_state* wpn_state = static_cast< shotgun_weapon_reload_state* >( resource );
+	wpn_state->~shotgun_weapon_reload_state( );
+}
+
 void shotgun_weapon_reload_state_cook::on_substates_ready(
 	resources::queries_result&				data,
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params
 )
 {
-	// LOCALS
-	// weapon_core_shotgun_reload_base_substate_ptr reload_one_substate
-	// weapon_core_shotgun_reload_base_substate_ptr start_substate
-	// weapon_core_shotgun_reload_base_substate_ptr finish_substate
-	// ******
+	weapon_core_shotgun_reload_base_substate_ptr start_substate		= static_cast_resource_ptr< weapon_core_shotgun_reload_base_substate_ptr >( data[0].get_unmanaged_resource( ) );
+	weapon_core_shotgun_reload_base_substate_ptr reload_one_substate	= static_cast_resource_ptr< weapon_core_shotgun_reload_base_substate_ptr >( data[1].get_unmanaged_resource( ) );
+	weapon_core_shotgun_reload_base_substate_ptr finish_substate	= static_cast_resource_ptr< weapon_core_shotgun_reload_base_substate_ptr >( data[2].get_unmanaged_resource( ) );
 
-	// FUNCTION BODY[0x5bd7c0]: 10
-	// <0>
-	// <0x5bd7c9>|0x009|+0x058:'87'
-	// <0x5bd821>|0x061|+0x050:'88'
-	// <0x5bd871>|0x0b1|+0x04e:'89'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5bd8bf>|0x0ff|+0x022:'93'
-	// <0x5bd8e1>|0x121|+0x03c:'94'
-	// <0x5bd91d>|0x15d|+0x00e:'95'
-	// ******
-}
+	shotgun_weapon_reload_state* object_to_cook = new ( buffer.c_ptr( ) ) shotgun_weapon_reload_state( params->weapon, start_substate, reload_one_substate, finish_substate );
 
-// STATE[STUB]
-void shotgun_weapon_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
-{
-	// CALL SITE INFO
-	// <0x5bd6db> -> void* < unknown >( u32 )
-	// ******
-
-	// FUNCTION BODY[0x5bd6c0]: 1
-	// <0x5bd6c0>|0x000|+0x00f:'100'
-	// ******
+	data.get_parent_query( )->set_unmanaged_resource( object_to_cook, resources::memory_usage_type( resources::nocache_memory, sizeof( *this ) ) );
+	data.get_parent_query( )->finish_query( result_success );
 }
 
 } // namespace survarium
