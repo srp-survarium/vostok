@@ -8,7 +8,12 @@ of the Scaleform D3D11 render HAL (`d3d1x_*`). Scaffolded in game **batch 12**
 - Namespace: mostly `survarium::` (the flash wrappers - same shared namespace as
   `game` / `game_core`), with the render-HAL fork in the SDK's own
   `Scaleform::Render::D3D1x::` namespace.
-- Build: `/Od` + LTCG, `Master Gold` - see [../MATCHING.md](../MATCHING.md).
+- Build: `/Ox` (`Optimization=3`) + `SF_BUILD_SHIPPING` + LTCG, `Master Gold` -
+  matches render_engine's settings (the shipped scaleform objects, incl. the
+  D3D1x SDK files, were built optimized; the shipped `BeginScene` etc. are clearly
+  `/Ox`). The earlier `/Od` config was a fabrication that left every scaleform TU
+  Od-vs-Ox mismatched (all unpaired/low-%); flipping to `/Ox`+`SF_BUILD_SHIPPING`
+  lifted the whole module. See [../MATCHING.md](../MATCHING.md).
 - Sources: `sources/vostok/scaleform/` (infra at module root: `api.h`,
   `library_linkage.h`; everything else under `sources/`).
 - Include dirs add the Scaleform SDK (`$(SolutionDir)/scaleform/Include`,
@@ -95,13 +100,13 @@ Re-excluded (kept `ExcludedFromBuild="true"` for `Master Gold|Win32`) -
 SDK-template reconciliation is real matcher-loop work, not cheap buildability
 stubbing, so deferred to keep the module green:
 
-- `d3d1x_meshcache.cpp`, `d3d1x_texture.cpp` - the fabricated
-  `d3d1x_meshcache.h`/`d3d1x_texture.h`/`d3d1x_sync.h` carcass headers diverge
-  from the vendored 4.0.15 `Render/*` templates: a wave of C3668 (override
-  drift), C2512 (no default ctor on `MeshBuffer`/`MeshCache`/`AllocAddr`
-  template bases), C2146/C2253 (missing `GetBufferType`/`BufferType`),
-  C2118 negative subscript (STATIC_SIZE_ASSERT against a wrong fabricated
-  layout), and `SU_TotalSize`/`SU_Count` not-a-member in `Render_Shader.h`.
+- `d3d1x_meshcache.cpp` - the fabricated `d3d1x_meshcache.h`/`d3d1x_sync.h`
+  carcass headers diverge from the vendored 4.0.15 `Render/*` templates: a wave
+  of C3668 (override drift), C2512 (no default ctor on
+  `MeshBuffer`/`MeshCache`/`AllocAddr` template bases), C2146/C2253 (missing
+  `GetBufferType`/`BufferType`), C2118 negative subscript (STATIC_SIZE_ASSERT
+  against a wrong fabricated layout), and `SU_TotalSize`/`SU_Count` not-a-member
+  in `Render_Shader.h`.
 - `d3d1x_hal.cpp` - **no canonical carcass** (parser skips `D3D1x_HAL.obj` with
   a PDB `UnexpectedEof`); the fabricated `d3d1x_hal.h` `#include`s
   `Render/Render_ShaderHAL.h` that the vendored SDK doesn't ship (C1083), and
@@ -109,6 +114,38 @@ stubbing, so deferred to keep the module green:
 - `d3d1x_shader.cpp` - **no canonical carcass** (parser skips
   `D3D1x_Shader.obj`); same `Render_Shader.h` `SU_*` / `StaticShaderManager`
   template drift as meshcache.
+
+## d3d1x_texture SDK-seed pilot (2026-06-21)
+
+`d3d1x_texture.cpp` is now **built vostok-local + measurable + matched** (26/30
+out-of-line fns at 100%, the rest 75-99%). The SDK-seed recipe (sushi pilot):
+
+1. The vostok `d3d1x_texture.cpp` is the vendored SDK `D3D1x_Texture.cpp` body
+   verbatim (line numbers preserved, so PDB line attribution matches the
+   target), including the **real SDK header** `Render/D3D1x/D3D1x_Texture.h`
+   instead of the fabricated `d3d1x_texture.h` carcass. The whole scaleform
+   include env (`scaleform/Src` + `scaleform/Include`) already resolves every SF
+   `Render/*` / `Kernel/*` include - render_engine compiles the same SDK file.
+2. Unexclude it for `Master Gold|Win32` in `scaleform.vcproj`.
+3. Exclude the SDK `D3D1x_Texture.cpp` from `render_engine_pc_dx11.vcproj`
+   (Master Gold only) so the **vostok object wins ICF** and the base PDB records
+   the `vostok/scaleform/sources/d3d1x_texture.cpp` path (the dummy-paired unit
+   becomes really paired).
+4. **The optimization fix is load-bearing**: a per-file `Optimization=3` override
+   is *ignored* (C4653: inconsistent with the Od precompiled header), so the
+   whole scaleform config must be `/Ox` + `SF_BUILD_SHIPPING` (= render_engine's
+   settings). Built at Od, the vostok object is *lower quality* than the SDK Ox
+   object it displaces under ICF -> the shared folded SDK COMDATs lose their Ox
+   owner and the headline regresses (-15 exact). At Ox the vostok object is
+   byte-identical to the SDK object, so the ICF fold is harmless and the whole
+   scaleform module lifts (+47 exact; overall +58).
+
+The remaining `d3d1x_*` HAL TUs (meshcache/hal/shader) should follow the same
+recipe: seed from the vendored SDK `.cpp`/`.h` instead of the fabricated carcass
+headers, exclude the SDK twin from render_engine, build at the now-Ox config.
+The `d3d1x_texture.h` carcass header stays (only `d3d1x_hal.h`, still excluded,
+includes it); its inline-fn `.h` unit is still dummy-paired (the inlines now emit
+from the SDK header path) - a separate follow-up.
 
 Canonical-carcass reconciliation: 8 of the 10 compilands now have real canonical
 carcasses under `binaries/structure/target/sources/vostok/scaleform/sources/`
