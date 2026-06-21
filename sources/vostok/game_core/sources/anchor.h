@@ -30,6 +30,11 @@ namespace vostok
 	// game/sources/anchor_game.cpp, not game_core.
 	void anchor_game( );
 
+	// animation module's n_ary_tree_comparer carcass anchor - defined in
+	// animation/sources/anchor_animation_comparer.cpp (the comparer visitor has no
+	// reachable constructor; mixer.cpp is not compiled in this build).
+	void anchor_animation_comparer( );
+
 	// shared opaque sink: escapes addresses so LTCG observes member stores.
 	// Defined once in anchor_network_core.cpp; used by every anchor TU.
 	void example_callback( const char* name );

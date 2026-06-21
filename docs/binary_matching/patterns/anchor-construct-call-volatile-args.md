@@ -50,3 +50,27 @@ Evidence (game small-utils cluster): the `keep()` form left every symbol `unpair
 construct+call+all-volatile form paired them in one rebuild - step_manager ctor 100%,
 text_translator ctor/dtor 100%, empty_hands activate 100%, swf process_mouse_move 100%,
 register_ctl_bind 99%, initialize 87%.
+
+CROSS-MODULE anchor (carcass class lives in a non-game .lib, e.g. animation's
+n_ary_tree_comparer): put the `void anchor_<thing>( )` in a NEW TU *inside that module's*
+sources/ (so its private headers resolve locally - the game vcproj does NOT have the other
+module's sources/ on its `/I` path), add the TU to that module's `.vcproj`, declare
+`void anchor_<thing>( );` in game_core's anchor.h, and CALL it from
+`survarium::IncludeAll::IncludeAll()` (anchor.cpp - the real EXE-rooted dispatcher). The EXE
+link resolves the cross-lib symbol. Worked for animation n_ary_tree_comparer: ctor 82.6%,
+equal/needed_buffer_size 100%, predicate operator() 69%.
+
+TWO TRAPS specific to anchoring a CARCASS that still has STUB bodies:
+- **C4716 `must return a value` at LTCG codegen.** Referencing a non-void function whose
+  body is still an empty STUB (no `return`) forces the optimiser to actually codegen it ->
+  hard error during "Generating code" (link stage), failing the WHOLE build. The comparer
+  anchor tripped this on `animation_comparer_predicate::operator()` (a 37-stmt STUB). Either
+  reconstruct that function's body first, or DON'T reference it from the anchor until it has
+  one. (void STUBs are fine - they need no return.)
+- **An empty STUB body inlines away and stays `unpaired` even WITH the anchor.** The
+  construct+call only pairs a function whose body is non-trivial enough to emit standalone.
+  A void STUB with an empty `{}` either emits as a 1-byte `ret` (pairs at ~0%, QUANTITY) or
+  gets inlined into its caller (no symbol -> stays TARGET_ONLY). So a reachability anchor
+  PAIRS the bodied functions (and reconstructed ones) but does NOT pair the still-empty
+  family - those need their real bodies before the anchor can score them. The anchor is
+  necessary but not sufficient: reachability THEN body reconstruction.
