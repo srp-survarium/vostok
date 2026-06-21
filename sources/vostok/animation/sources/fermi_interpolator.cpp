@@ -16,12 +16,21 @@ using vostok::animation::interpolator_visitor;
 using vostok::animation::instant_interpolator;
 using vostok::animation::linear_interpolator;
 
+// claude@NOTE: cross-module LTCG wall. Target ctor is an optimized COMDAT with the
+// eax-this frameless convention (this in eax, transition_time in xmm0, epsilon on
+// stack, ret 4) reached only via game::legs_ik_processor::set_*_on_ground. Our /Od
+// base never emits a standalone ctor (inlined at every site) so report pairs it with
+// an ICF fold-rep (spurious call log_format). Structure/init-list already faithful.
 fermi_interpolator::fermi_interpolator			( float const transition_time, float const epsilon ) :
 	m_total_transition_time	( transition_time ),
 	m_epsilon				( epsilon )
 {
 }
 
+// claude@NOTE: optimized-COMDAT wall. Target inlines __libm_sse2_log / expf and the
+// clamp_r as an SSE comiss/jb chain (frameless, register temps - only t0 named), our
+// /Od base calls math::log/math::exp with named stack locals. Statement structure is
+// faithful; residual is /Od-vs-LTCG codegen, not source-steerable from this TU.
 float fermi_interpolator::interpolated_value			( float current_transition_time ) const
 {
 	R_ASSERT				( current_transition_time < m_total_transition_time );
@@ -44,16 +53,9 @@ fermi_interpolator* fermi_interpolator::clone	( vostok::mutable_buffer& buffer )
 	return					clone_impl< fermi_interpolator >( buffer );
 }
 
-// STATE[STUB]
 fermi_interpolator* fermi_interpolator::clone( vostok::animation::mixing::n_ary_tree_transition_tree_constructor& constructor ) const
 {
-	return NULL;
-
-	// FUNCTION BODY
-	// <0x56f540>|0x000|+0x02c:'49'
-	// <0x56f56c>|0x02c|-0x003:'49'
-	// <0x56f569>|0x029|+0x00f:'50'
-	// ******
+	return					clone_impl< fermi_interpolator >( constructor.m_buffer );
 }
 
 void fermi_interpolator::accept						( interpolator_visitor& visitor ) const
