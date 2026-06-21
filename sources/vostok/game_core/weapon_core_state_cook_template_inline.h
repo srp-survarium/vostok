@@ -15,7 +15,7 @@ inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( ) :
 }
 
 template < typename T >
-weapon_core_state_cook_template<T>::~weapon_core_state_cook_template( )
+inline weapon_core_state_cook_template<T>::~weapon_core_state_cook_template( )
 {
 }
 
