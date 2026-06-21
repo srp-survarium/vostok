@@ -205,6 +205,13 @@ static void splash_screen_main		( )
 	if ( previous_bitmap )
 		DeleteObject				( previous_bitmap );
 
+	// claude@NOTE: STRUCTURE MISMATCH (quantity, 6 TRGT_ONLY rows) - the target
+	// CENTERS the splash on the desktop instead of SWP_NOMOVE: it calls
+	// GetWindowRect( GetDesktopWindow(), &rect ) and passes
+	// x = (rect.right-rect.left - biWidth)/2, y = (rect.bottom-rect.top - biHeight)/2,
+	// HWND_TOPMOST (-1), SWP_SHOWWINDOW (0x40, no SWP_NOMOVE). The rest of the
+	// 90% residual is the LOG_ERROR __FILE__ path-wall (SIZE -0x3 noise). Centering
+	// reconstruction deferred - larger logic change, not a localized resteer.
 	SetWindowPos					(
 		s_splash_screen,
 #ifndef MASTER_GOLD
@@ -243,6 +250,16 @@ static void splash_screen_main		( )
 }
 #pragma warning(pop)
 
+// claude@NOTE: STRUCTURE MISMATCH (quantity) - base 4 stmts / target 5. The
+// target declared decode_finger_print as `void(char (&)[64])` (mangled
+// ?decode_finger_print@@YAXAAY0EA@D@Z), fills a 64-byte LOCAL, then a 5th stmt
+// `s_finger_print = local;` (buffer_string::operator=). Our finger_print.cpp
+// keeps the old `void(fixed_string512*)` signature (unpaired, name differs) and
+// writes the global directly, so the assign stmt is absent. Fixing this needs
+// the char[64]& signature + body rewrite in finger_print.cpp AND resolving the
+// s_finger_print name collision there (its `static u8 const s_finger_print[48]`
+// vs this 512-byte fixed_string the target's decode also strcpy_s's into).
+// Cross-unit refactor with ambiguous symbol resolution - capped, not steered.
 void application::preinitialize					( )
 {
 	vostok::engine::preinitialize		( m_game_proxy, GetCommandLine( ), "survarium", __DATE__ );
