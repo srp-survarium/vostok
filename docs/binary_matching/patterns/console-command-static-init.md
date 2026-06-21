@@ -26,6 +26,21 @@ push <atexit dtor>; call atexit
 ```
 Evidence: dispersion_calculator.cpp s_dispersion_enabled_cc (None|DONE), bullet.cpp; cc_float byte-identical, cc_bool's only diff = ctor passing command_type/filter in registers under LTCG.
 
+### cc_bool init residual: two extra console_command-base bool stores (+0x3C/+0x3D)
+The shipped `console_command` base sets TWO more bool members than our `console_command.h`
+declares: the target cc_bool dynamic initializer emits `mov byte ptr [this+0x3C],0` +
+`mov byte ptr [this+0x3D],1` AFTER the m_value pointer store (value ptr at +0x38), which our
+base never produces (target init ~0x4f bytes vs base ~0x43). This residual is SHARED by every
+repo cc_bool static (human_npc s_npc_debug_draw_command, login_menu s_store_user_pass_cc,
+base_game_scene s_freeze_culling) - a cross-module core/console_command.h layout gap, NOT
+steerable from the consuming TU. The atexit destructor (??__F) is byte-exact (resets vtable to
+console_command base, cleans the functor at +0x18 / +0x20). NOTE: the command NAME string,
+command_type and default value are constant-initialized into `.data` (a separate object), so
+they do NOT appear in the ??__E/??__F function bytes - a best-guess name still byte-matches the
+SCORED init/dtor symbols. A namespace-scoped static (`survarium::s_NAME`) delinks WITH the
+`survarium::` prefix; put it INSIDE the namespace block and fully-qualify the cc_bool type
+(`vostok::console_commands::cc_bool`, since `survarium` is top-level, not nested in `vostok`).
+
 ## Sibling idiom: file-static `command_line::key` (the protected_call form)
 
 A file-static `command_line::key` (header <vostok/command_line_extensions.h>) registers a
