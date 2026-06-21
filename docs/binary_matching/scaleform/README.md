@@ -140,9 +140,34 @@ out-of-line fns at 100%, the rest 75-99%). The SDK-seed recipe (sushi pilot):
    byte-identical to the SDK object, so the ICF fold is harmless and the whole
    scaleform module lifts (+47 exact; overall +58).
 
-The remaining `d3d1x_*` HAL TUs (meshcache/hal/shader) should follow the same
-recipe: seed from the vendored SDK `.cpp`/`.h` instead of the fabricated carcass
-headers, exclude the SDK twin from render_engine, build at the now-Ox config.
+## d3d1x rest SDK-seed (2026-06-21)
+
+The remaining four `d3d1x_*` TUs now follow the same recipe and are **built
+vostok-local + measurable**. Their SDK twins already `#include "pch.h"` and use
+the full `Render/D3D1x/*` include paths, so the seed is a verbatim copy of the
+SDK `.cpp` (CR + trailing-whitespace stripped; line numbers preserved); no
+include rewrite was needed (unlike texture's bare `"D3D1x_Texture.h"`). Each is
+unexcluded for `Master Gold|Win32` in `scaleform.vcproj` and its SDK twin is
+excluded from `render_engine_pc_dx11.vcproj` (Master Gold). exe links green.
+
+- `d3d1x_meshcache.cpp` - 19/22 out-of-line fns at 100% (the 3 misses 88-97%).
+- `d3d1x_shader.cpp` - 8/17 at 100%; rest 79-99% (codegen residual).
+- `d3d1x_hal.cpp` - the big one (45 fns); 3 byte-exact but ~35 sit at 99.5-99.9%
+  (instruction-scheduling/LTCG residual over a clean structure); a few real
+  divergences (`CreatePrimitiveFill` 0, `DrawProcessed*` 82-86%,
+  `createBlendStates` 90%) where vostok routed DX access through its own renderer.
+- `d3d1x_shaderdescs.cpp` - built + measurable but **fundamentally divergent**:
+  the shipped `GetShaderIndex` is a 1237-stmt / 0x3d74-byte fully-inlined giant
+  switch over a *different generated shader-descriptor table* than the SDK twin
+  (which compiles to a 1-stmt stub). `IsShaderVersionSupported` is a STRUCTURE
+  MATCH but bytes diverge. Left built (measurable beats an unmeasurable carcass);
+  matching its generated table is out of scope for the seed pass.
+
+Net (DB byte-exact): scaleform exact 103 -> 180 (+77); overall 4,356 -> 4,445
+(+89). The 77 report-changes "regressions" are ICF fold-rep churn (`scalar
+deleting destructor` / vcall-thunk closures across unrelated modules); best-ever
+(max) columns held, no true byte-exact loss (196 improved vs 77 churn).
+
 The `d3d1x_texture.h` carcass header stays (only `d3d1x_hal.h`, still excluded,
 includes it); its inline-fn `.h` unit is still dummy-paired (the inlines now emit
 from the SDK header path) - a separate follow-up.
