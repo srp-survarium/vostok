@@ -35,6 +35,8 @@ class player_parameters_cooker_data;
 class profile_player_character;
 class relocate_item_func;
 
+void use_game_lobby_ui( );	// /OPT:REF anchor (anchor_game_lobby_ui.cpp), friend below
+
 class simple_game_project;
 typedef resources::resource_ptr<
 	simple_game_project,
@@ -47,6 +49,9 @@ class lobby_menu : public base_game_scene , public input::handler {
 	// codegen-neutral: lets the /OPT:REF reachability anchor (anchor_game_menus.cpp)
 	// address-take the private menu methods until the real menu call graph reaches them
 	friend void ::vostok::use_game_menus( );
+	// the lobby-menu UI carcass anchor (anchor_game_lobby_ui.cpp) address-takes the
+	// private fill_*/update_*/on_* UI methods; codegen-neutral friend.
+	friend void ::survarium::use_game_lobby_ui( );
 	// network_client toggles m_is_connected_to_lobby directly on (dis)connect
 	friend class network_client;
 public:

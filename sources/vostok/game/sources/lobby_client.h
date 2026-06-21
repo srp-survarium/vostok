@@ -145,6 +145,10 @@ public:
 	inline	u8										get_player_reputations_count		( ) { /* no source */ return m_player_reputations_count; }
 	inline	fixed_string< 32 > const&				get_player_name						( ) const { /* no source */ return m_player_name; }
 
+	// inline accessor for the offset-0 account_nickname_ (reset_account_money reads it
+	// raw); no out-of-line symbol so the access char is irrelevant.
+	inline	pcstr									account_name						( ) const { /* no source */ return account_nickname_; }
+
 			void									ping_server							( );
 
 	// claude@MATCH: private from here - the on_*/sign_in_on_packet_received/

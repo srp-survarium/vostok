@@ -2,10 +2,41 @@
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
+// claude@NOTE: every function here drives the Scaleform flash UI through
+// flash_value (Set*/SetMember/SetElement/ctor/dtor) and flash_movie
+// (Invoke/CreateArray/CreateObject/Advance/Restart). The whole TU's byte % is
+// CAPPED by the scaleform module's value.cpp/movie.cpp stubs being empty: in the
+// target those tiny methods inline into every call site (LTCG, scaleform is /GL),
+// but our stubs emit real out-of-line calls + an extra `flash_value c;` ctor/dtor
+// statement, so both bytes AND statement count diverge. Matching scaleform
+// value.cpp/movie.cpp lifts this entire TU at once. The remaining // STATE[STUB]
+// bodies additionally need config/cooker/cross-module surfaces (binary_config_value
+// navigation, the player-parameters cooked resource, network::login_client
+// port/server members) that have no header yet.
+
 #include "pch.h"
 #include "lobby_menu.h"
 #include "lobby_menu_external_handler.h"
+#include "game.h"
+#include "game_memory.h"
+#include "lobby_client.h"
+#include "messaging_client.h"
+#include "base_network_client.h"
+#include "chat_handler.h"
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/math_constants.h>
+#include <vostok/vectora.h>
+#include <vostok/game_core/inventory_item_instance.h>
+#include <vostok/network/login_client.h>
+#include <vostok/configs_binary_config_value.h>
+#include "player_leveling_info.h"
+#include "profile_player_character.h"
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
+#include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/scaleform/sources/flash_function_handler.h>
+#include <vostok/scaleform/sources/flash_function_handler_params.h>
 
 namespace survarium {
 
@@ -27,13 +58,9 @@ private:
 
 STATIC_SIZE_ASSERT(relocate_item_func, 0xC);
 
-// STATE[STUB]
- relocate_item_func::relocate_item_func( game& g )
-	: m_game( g ) // buildability: ref member must be init'd
+relocate_item_func::relocate_item_func( game& g )
+	: m_game( g )
 {
-	// FUNCTION BODY[0x93370]
-	// <0x93370>|0x000|      :'31'	{
-	// ******
 }
 
 // STATE[STUB]
@@ -346,76 +373,75 @@ void lobby_menu_external_handler::callback(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: byte % capped by scaleform flash_value/flash_movie stubs not inlining
+// (whole TU - ctor/dtor/Set*/Invoke emit real calls in base, target inlines them).
+// The 7-entry label name/key table and the localized wide placeholder strings
+// (set_current_time / set_place / set_status) are reconstructed approximately.
 void lobby_menu::show_match_making( bool b_show )
 {
-	// LOCALS
-	// flash_value 						labels_array
-	// flash_value 						text
-	// wchar_t[512] 					label_txt
-	// flash_value 						label
-	// flash_value 						label_member
-	// ******
+	if ( m_is_in_match_making != b_show )
+	{
+		if ( b_show )
+		{
+			m_level_loading_progress = 0.f;
+			m_last_queries_count = 0;
+			m_match_making_ui->movie->Restart	( );
 
-	// FUNCTION BODY[0x7466e0]: 53
-	// <0x7466e0>|0x000|+0x006:'321'	{
-	// <0x7466e6>|0x006|+0x01b:'322'
-	// <0>
-	// <1>
-	// <0x746701>|0x021|+0x008:'325'
-	// <0>
-	// <0x746709>|0x029|+0x003:'327'
-	// <0>
-	// <0x74670c>|0x02c|+0x02e:'329'
-	// <0>
-	// <1>
-	// <0x74673a>|0x05a|+0x036:'332'
-	// <0>
-	// <1>
-	// <2>
-	// <0x746770>|0x090|+0x020:'336'
-	// <0>
-	// <1>
-	// <2>
-	// <0x746790>|0x0b0|+0x018:'340'
-	// <0x7467a8>|0x0c8|+0x02a:'341'
-	// <0>
-	// <1>
-	// <0x7467d2>|0x0f2|+0x01e:'344'
-	// <0x7467f0>|0x110|+0x009:'345'
-	// <0>
-	// <0x7467f9>|0x119|+0x02c:'347'
-	// <0>
-	// <0x746825>|0x145|+0x01a:'349'
-	// <0x74683f>|0x15f|+0x05c:'350'
-	// <0>
-	// <0x74689b>|0x1bb|+0x028:'352'
-	// <0>
-	// <0x7468c3>|0x1e3|+0x008:'354'
-	// <0>
-	// <0x7468cb>|0x1eb|+0x00e:'356'
-	// <0x7468d9>|0x1f9|+0x01c:'357'
-	// <0>
-	// <1>
-	// <0x7468f5>|0x215|+0x005:'360'
-	// <0x7468fa>|0x21a|+0x01c:'361'
-	// <0>
-	// <1>
-	// <0x746916>|0x236|+0x00a:'364'
-	// <0x746920>|0x240|+0x01c:'365'
-	// <0>
-	// <0x74693c>|0x25c|+0x00a:'367'
-	// <0x746946>|0x266|+0x01d:'368'
-	// <0x746963>|0x283|+0x00b:'369'
-	// <0x74696e>|0x28e|+0x049:'370'
-	// <0x7469b7>|0x2d7|+0x015:'371'
-	// <0x7469cc>|0x2ec|-0x012:'372'
-	// <0>
-	// <0x7469ba>|0x2da|+0x01f:'374'
-	// <0x7469d9>|0x2f9|-0x016:'374'
-	// <0x7469c3>|0x2e3|+0x019:'375'
-	// <0x7469dc>|0x2fc|      :'375'	}
-	// ******
+			flash_value labels_array;
+			m_match_making_ui->movie->CreateArray( &labels_array );
+
+			static const struct { pcstr name; pcstr translate_id; } c_labels[] =
+			{
+				{ "average_time",	"st_average_search_time" },
+				{ "current_time",	"st_current_search_time" },
+				{ "players_count",	"st_players_in_queue" },
+				{ "place",			"st_place_in_queue" },
+				{ "status",			"st_search_status" },
+				{ "min_players",	"st_min_players" },
+				{ "max_players",	"st_max_players" },
+			};
+
+			for ( u32 i = 0; i < 7; ++i )
+			{
+				flash_value label;
+				m_match_making_ui->movie->CreateObject( &label );
+
+				flash_value label_member;
+				label_member.SetString			( c_labels[ i ].name );
+				label.SetMember					( "name", label_member );
+
+				wchar_t label_txt[512];
+				get_game( ).text_translator( ).translate_text( c_labels[ i ].translate_id, label_txt );
+				label_member.SetStringW			( label_txt );
+				label.SetMember					( "label", label_member );
+
+				labels_array.SetElement			( i, label );
+			}
+
+			m_match_making_ui->movie->Invoke	( "root.set_labels", NULL, &labels_array, 1 );
+
+			flash_value text;
+			text.SetStringW						( L"0 / 5:" );
+			m_match_making_ui->movie->Invoke	( "root.set_current_time", NULL, &text, 1 );
+
+			text.SetStringW						( L"" );
+			m_match_making_ui->movie->Invoke	( "root.set_average_time", NULL, &text, 1 );
+
+			text.SetStringW						( L"-" );
+			m_match_making_ui->movie->Invoke	( "root.set_place", NULL, &text, 1 );
+
+			text.SetStringW						( L"..." );
+			m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
+
+			show_movie							( m_match_making_ui );
+		}
+		else
+		{
+			hide_movie							( m_match_making_ui );
+		}
+
+		m_is_in_match_making = b_show;
+	}
 }
 
 // STATE[STUB]
@@ -466,67 +492,64 @@ void lobby_menu::update_level_loading_progress( )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::on_ui_destroy( )
 {
-	// CALL SITE INFO
-	// <0x743acc> -> void* < unknown >( u32 )
-	// ******
-
-	// FUNCTION BODY[0x743aa0]: 2
-	// <0x743aa1>|0x001|+0x04a:'415'
-	// <0x743aeb>|0x04b|+0x016:'416'
-	// ******
+	DELETE	( m_lobby_menu_external_handler );
+	DELETE	( m_relocate_item_func );
 }
 
-// STATE[STUB]
 void lobby_menu::update_ui( const u32 frame_delta_in_ms, const u32 current_time_in_ms )
 {
-	// LOCALS
-	// flash_value 						queries_count
-	// float 							deltaTime
-	// ******
+	if ( get_game( ).get_game_world( ).is_loading( ) )
+		update_level_loading_progress( );
 
-	// FUNCTION BODY[0x743740]: 20
-	// <0>
-	// <1>
-	// <0x743740>|0x000|+0x012:'424'
-	// <0x743752>|0x012|+0x006:'425'
-	// <0>
-	// <0x743758>|0x018|+0x009:'427'
-	// <0>
-	// <1>
-	// <0x743761>|0x021|+0x026:'430'
-	// <0x743787>|0x047|+0x02e:'431'
-	// <0x7437b5>|0x075|+0x01f:'432'
-	// <0>
-	// <0x7437d4>|0x094|+0x012:'434'
-	// <0>
-	// <0x7437e6>|0x0a6|+0x028:'436'
-	// <0x74380e>|0x0ce|+0x024:'437'
-	// <0x743832>|0x0f2|+0x024:'438'
-	// <0>
-	// <0x743856>|0x116|+0x00b:'440'
-	// <0x743861>|0x121|+0x024:'441'
-	// ******
+	if ( is_active( ) )
+	{
+		flash_value queries_count;
+		queries_count.SetUInt			( resources::pending_queries_count( ) );
+		m_lobby_menu_ui->movie->Invoke	( "root.set_disk_query", NULL, &queries_count, 1 );
+	}
+
+	float deltaTime = frame_delta_in_ms * math::epsilon_3;
+
+	m_cursor_ui->movie->Advance			( deltaTime, 0 );
+	m_lobby_menu_ui->movie->Advance		( deltaTime, 0 );
+	m_message_ui->movie->Advance		( deltaTime, 0 );
+
+	if ( m_is_in_match_making )
+		m_match_making_ui->movie->Advance( deltaTime, 0 );
 }
 
-// STATE[STUB]
+// claude@NOTE: PARKED on cross-module network::login_client accessors. Recovered body:
+// fixed_string<128> status_str; flash_value b_val; if(lobby_client().status(status_str)
+// == <not ready-for-match>) b_val.SetBoolean(true); login = login_client(); build a
+// 4-element account_info array via SetElement: [0]=login.account_name(),
+// [1]=login.<browser addr 0x134>, [2]=port (login.<u16 0x174>), [3]=buff.assignf
+// ("%s:%d", login.<server 0x28>, login.<u16 0x28+>); Invoke
+// "root.lobby_menu.set_account_info"; Invoke "root.lock_play_button" (b_val); Invoke
+// "root.set_status_info" (status_str). login_client only exposes account_name() +
+// server_browser_address() publicly - the port/server-address members (0x134/0x174/
+// 0x28) have no accessor. Recover when network::login_client is matched. Also
+// byte-capped by the scaleform flash stubs.
 void lobby_menu::update_status( )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// fixed_string< 128 > 				status_str
-	// flash_value 						account_info
-	// fixed_string< 128 > 				buff
-	// flash_value 						log_message
-	// flash_value 						port
-	// ******
+	flash_value b_val;
 
-	// CALL SITE INFO
-	// <0x743244> -> network::login_client& < unknown >()
-	// <0x743259> -> lobby_client& < unknown >()
-	// ******
+	fixed_string< 128 > status_str;
+	lobby_client( ).status				( status_str );
+
+	flash_value account_info;
+	m_lobby_menu_ui->movie->CreateArray	( &account_info );
+	account_info.SetElement				( 0, login_client( ).account_name( ) );
+
+	m_lobby_menu_ui->movie->Invoke		( "root.lobby_menu.set_account_info", NULL, &account_info, 1 );
+	m_lobby_menu_ui->movie->Invoke		( "root.lock_play_button", NULL, &b_val, 1 );
+
+	flash_value log_message;
+	log_message.SetString				( status_str.c_str( ) );
+	m_lobby_menu_ui->movie->Invoke		( "root.set_status_info", NULL, &log_message, 1 );
+
+	return;
 
 	// FUNCTION BODY[0x743190]: 35
 	// <0x7431a0>|0x010|+0x010:'446'
@@ -894,198 +917,110 @@ void lobby_menu::fill_items_dictionary( )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::fill_inventory_contents( )
 {
-	// LOCALS
-	// flash_value 						inventory_array
-	// flash_value 						inventory_item_property
-	// inventory_item_instance const* 	it_e
-	// u32 								i
-	// flash_value 						inventory_item
-	// ******
+	inventory_item_instance const* it	= lobby_client( ).inventory_item_instances( ).begin( );
+	inventory_item_instance const* it_e	= lobby_client( ).inventory_item_instances( ).end( );
 
-	// CALL SITE INFO
-	// <0x742ebc> -> lobby_client& < unknown >()
-	// ******
+	flash_value inventory_array;
+	m_lobby_menu_ui->movie->CreateArray	( &inventory_array );
 
-	// FUNCTION BODY[0x742ea0]: 39
-	// <0x742ea4>|0x004|+0x01a:'847'
-	// <0>
-	// <1>
-	// <2>
-	// <0x742ebe>|0x01e|+0x00c:'851'
-	// <0>
-	// <1>
-	// <0x742eca>|0x02a|+0x02c:'854'
-	// <0>
-	// <0x742ef6>|0x056|+0x008:'856'
-	// <0>
-	// <0x742efe>|0x05e|+0x012:'858'
-	// <0>
-	// <1>
-	// <0x742f10>|0x070|+0x024:'861'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x742f34>|0x094|+0x032:'870'
-	// <0x742f66>|0x0c6|+0x03a:'871'
-	// <0>
-	// <0x742fa0>|0x100|+0x029:'873'
-	// <0x742fc9>|0x129|+0x03a:'874'
-	// <0>
-	// <0x743003>|0x163|+0x02b:'876'
-	// <0x74302e>|0x18e|+0x03b:'877'
-	// <0>
-	// <0x743069>|0x1c9|+0x029:'879'
-	// <0x743092>|0x1f2|+0x036:'880'
-	// <0>
-	// <0x7430c8>|0x228|+0x01a:'882'
-	// <0x7430e2>|0x242|+0x037:'883'
-	// <0>
-	// <0x743119>|0x279|+0x021:'885'
-	// ******
+	u32 i = 0;
+	for ( ; it != it_e; ++it )
+	{
+		flash_value inventory_item;
+		m_lobby_menu_ui->movie->CreateObject( &inventory_item );
+
+		flash_value inventory_item_property;
+		inventory_item_property.SetInt	( it->id );
+		inventory_item.SetMember		( "id", inventory_item_property );
+
+		inventory_item_property.SetInt	( it->dict_id );
+		inventory_item.SetMember		( "dictId", inventory_item_property );
+
+		inventory_item_property.SetUInt	( it->condition_or_stack );
+		inventory_item.SetMember		( "condition", inventory_item_property );
+
+		inventory_item_property.SetUInt	( it->condition_or_stack );
+		inventory_item.SetMember		( "condition_or_stack", inventory_item_property );
+
+		inventory_array.SetElement		( i, inventory_item );
+		++i;
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.inventory_list.setupInventoryData", NULL, &inventory_array, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::on_items_compatibility_arrived( )
 {
-	// LOCALS
-	// flash_value 						slot_restrictions_array
-	// flash_value 						items_compatibility_item_property
-	// u8 								i
-	// flash_value 						items_compatibility_item
-	// ******
+	flash_value slot_restrictions_array;
+	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	// CALL SITE INFO
-	// <0x742c8c> -> lobby_client& < unknown >()
-	// ******
+	for ( u8 i = 0; i < lobby_client( ).item_compatibilities_count( ); ++i )
+	{
+		flash_value items_compatibility_item;
+		m_lobby_menu_ui->movie->CreateObject( &items_compatibility_item );
 
-	// FUNCTION BODY[0x742c70]: 26
-	// <0x742c76>|0x006|+0x018:'890'
-	// <0>
-	// <0x742c8e>|0x01e|+0x025:'892'
-	// <0>
-	// <0x742cb3>|0x043|+0x008:'894'
-	// <0>
-	// <0x742cbb>|0x04b|+0x163:'896'
-	// <0x742e1e>|0x1ae|-0x14e:'896'
-	// <0>
-	// <0x742cd0>|0x060|+0x006:'898'
-	// <0>
-	// <1>
-	// <0x742cd6>|0x066|+0x02b:'901'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x742d01>|0x091|+0x02b:'906'
-	// <0x742d2c>|0x0bc|+0x03a:'907'
-	// <0>
-	// <0x742d66>|0x0f6|+0x02d:'909'
-	// <0x742d93>|0x123|+0x03a:'910'
-	// <0>
-	// <0x742dcd>|0x15d|+0x016:'912'
-	// <0x742de3>|0x173|+0x03f:'913'
-	// <0>
-	// <0x742e22>|0x1b2|+0x021:'915'
-	// ******
+		flash_value items_compatibility_item_property;
+		items_compatibility_item_property.SetUInt	( lobby_client( ).get_items_compatibility( i ).first_item_dict_id );
+		items_compatibility_item.SetMember			( "first_item_dict_id", items_compatibility_item_property );
+
+		items_compatibility_item_property.SetUInt	( lobby_client( ).get_items_compatibility( i ).second_item_dict_id );
+		items_compatibility_item.SetMember			( "second_item_dict_id", items_compatibility_item_property );
+
+		slot_restrictions_array.SetElement			( i, items_compatibility_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.profileItems.setItemsCompatibility", NULL, &slot_restrictions_array, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::on_slot_restrictions_arrived( )
 {
-	// LOCALS
-	// flash_value 						slot_restrictions_array
-	// flash_value 						slot_restriction_item_property
-	// u8 								i
-	// flash_value 						slot_restriction_item
-	// ******
+	flash_value slot_restrictions_array;
+	m_lobby_menu_ui->movie->CreateArray	( &slot_restrictions_array );
 
-	// CALL SITE INFO
-	// <0x742a5c> -> lobby_client& < unknown >()
-	// ******
+	for ( u8 i = 0; i < lobby_client( ).slot_restrictions_count( ); ++i )
+	{
+		flash_value slot_restriction_item;
+		m_lobby_menu_ui->movie->CreateObject( &slot_restriction_item );
 
-	// FUNCTION BODY[0x742a40]: 26
-	// <0x742a46>|0x006|+0x018:'920'
-	// <0>
-	// <0x742a5e>|0x01e|+0x025:'922'
-	// <0>
-	// <0x742a83>|0x043|+0x008:'924'
-	// <0>
-	// <0x742a8b>|0x04b|+0x163:'926'
-	// <0x742bee>|0x1ae|-0x14e:'926'
-	// <0>
-	// <0x742aa0>|0x060|+0x006:'928'
-	// <0>
-	// <1>
-	// <0x742aa6>|0x066|+0x02b:'931'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x742ad1>|0x091|+0x02b:'936'
-	// <0x742afc>|0x0bc|+0x03a:'937'
-	// <0>
-	// <0x742b36>|0x0f6|+0x02d:'939'
-	// <0x742b63>|0x123|+0x03a:'940'
-	// <0>
-	// <0x742b9d>|0x15d|+0x016:'942'
-	// <0x742bb3>|0x173|+0x03f:'943'
-	// <0>
-	// <0x742bf2>|0x1b2|+0x021:'945'
-	// ******
+		flash_value slot_restriction_item_property;
+		slot_restriction_item_property.SetUInt	( lobby_client( ).slot_restriction( i ).slot_dict_id );
+		slot_restriction_item.SetMember			( "slot_id", slot_restriction_item_property );
+
+		slot_restriction_item_property.SetUInt	( lobby_client( ).slot_restriction( i ).category_dict_id );
+		slot_restriction_item.SetMember			( "category_id", slot_restriction_item_property );
+
+		slot_restrictions_array.SetElement		( i, slot_restriction_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.profileItems.setSlotsRestrictions", NULL, &slot_restrictions_array, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::fill_profiles( )
 {
-	// LOCALS
-	// flash_value 						profile_item_property
-	// flash_value 						profiles_array
-	// wchar_t[512] 					profile_name_w
-	// flash_value 						profile_item
-	// ******
+	flash_value profiles_array;
+	m_lobby_menu_ui->movie->CreateArray	( &profiles_array );
 
-	// CALL SITE INFO
-	// <0x7427f2> -> lobby_client& < unknown >()
-	// ******
+	for ( u8 i = 0; i < lobby_client( ).profiles_count( ); ++i )
+	{
+		flash_value profile_item;
+		m_lobby_menu_ui->movie->CreateObject( &profile_item );
 
-	// FUNCTION BODY[0x7427d0]: 28
-	// <0>
-	// <0x7427df>|0x00f|+0x015:'951'
-	// <0>
-	// <0x7427f4>|0x024|+0x025:'953'
-	// <0>
-	// <0x742819>|0x049|+0x006:'955'
-	// <0>
-	// <0x74281f>|0x04f|+0x008:'957'
-	// <0>
-	// <0x742827>|0x057|+0x019:'959'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x742840>|0x070|+0x024:'964'
-	// <0>
-	// <1>
-	// <0x742864>|0x094|+0x01e:'967'
-	// <0>
-	// <0x742882>|0x0b2|+0x06d:'969'
-	// <0x7428ef>|0x11f|+0x02c:'970'
-	// <0>
-	// <0x74291b>|0x14b|+0x024:'972'
-	// <0x74293f>|0x16f|+0x03e:'973'
-	// <0>
-	// <0x74297d>|0x1ad|+0x016:'975'
-	// <0x742993>|0x1c3|+0x032:'976'
-	// <0x7429c5>|0x1f5|+0x021:'977'
-	// ******
+		wchar_t profile_name_w[512];
+		mbstowcs_s						( NULL, profile_name_w, 512, lobby_client( ).profile( i ).profile_name, _TRUNCATE );
+
+		flash_value profile_item_property;
+		profile_item_property.SetStringW( profile_name_w );
+		profile_item.SetMember			( "name", profile_item_property );
+
+		profile_item_property.SetInt	( 1 );
+		profile_item.SetMember			( "icon", profile_item_property );
+
+		profiles_array.SetElement		( i, profile_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.setupProfiles", NULL, &profiles_array, 1 );
 }
 
 // STATE[STUB]
@@ -1192,45 +1127,29 @@ void lobby_menu::on_profile_changed( u8 profile_id )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: PARKED on the cooked player-parameters resource type. Recovered body:
+// if (cook_data) DELETE(cook_data); take data[0].get_unmanaged_resource() as a
+// resource carrying total-items-weight (off 0x124), used/free slot counts (off
+// 0x154/0x155); store weight into m_player_total_items_weight; Invoke
+// "root.player_profile.updateSlots" (2 uint args = slot counts) and
+// "root.player_profile.updateWeight" (2 number args = weight, m_player_max_carried_
+// weight). The resource type has no header yet (not profile_player_character, which
+// is 8 bytes) - recover its name + accessors in the player-parameters cooker phase,
+// then this fills in. Also byte-capped by the scaleform flash stubs.
 void lobby_menu::player_parameters_ready( resources::queries_result& data, player_parameters_cooker_data* cook_data )
 {
-	// LOCALS
-	// flash_value[2] 					args
-	// ******
-
-	// FUNCTION BODY[0x7452c0]: 13
-	// <0x7452c9>|0x009|+0x023:'1065'
-	// <0>
-	// <1>
-	// <0x7452ec>|0x02c|+0x040:'1068'
-	// <0x74532c>|0x06c|+0x006:'1069'
-	// <0x745332>|0x072|+0x022:'1070'
-	// <0x745354>|0x094|+0x02f:'1071'
-	// <0x745383>|0x0c3|+0x040:'1072'
-	// <0x7453c3>|0x103|+0x02a:'1073'
-	// <0>
-	// <0x7453ed>|0x12d|+0x03c:'1075'
-	// <0x745429>|0x169|+0x045:'1076'
-	// <0x74546e>|0x1ae|+0x032:'1077'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER	( data );
+	VOSTOK_UNREFERENCED_PARAMETER	( cook_data );
 }
 
-// STATE[STUB]
 void lobby_menu::on_profile_arrived( u8 profile_id )
 {
-	// LOCALS
-	// flash_value 						profile_id_value
-	// ******
-
-	// FUNCTION BODY[0x742760]: 6
-	// <0x742763>|0x003|+0x008:'1083'
-	// <0>
-	// <1>
-	// <0x74276b>|0x00b|+0x003:'1086'
-	// <0x74276e>|0x00e|+0x036:'1087'
-	// <0x7427a4>|0x044|+0x020:'1088'
-	// ******
+	if ( m_selected_profile == profile_id )
+	{
+		flash_value profile_id_value;
+		profile_id_value.SetUInt		( profile_id );
+		m_lobby_menu_ui->movie->Invoke	( "_root.player_profile.selectProfile", NULL, &profile_id_value, 1 );
+	}
 }
 
 // STATE[STUB]
@@ -1313,52 +1232,31 @@ void lobby_menu::on_price_items_arrived( u8 trader_id )
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::reset_account_money( )
 {
-	// LOCALS
-	// flash_value 						account_info_property
-	// wchar_t[256] 					an
-	// flash_value 						account_info
-	// ******
+	flash_value account_info;
+	m_lobby_menu_ui->movie->CreateObject( &account_info );
 
-	// FUNCTION BODY[0x742550]: 19
-	// <0>
-	// <0x74255e>|0x00e|+0x029:'1153'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x742587>|0x037|+0x039:'1159'
-	// <0>
-	// <0x7425c0>|0x070|+0x00d:'1161'
-	// <0x7425cd>|0x07d|+0x02c:'1162'
-	// <0>
-	// <0x7425f9>|0x0a9|+0x03e:'1164'
-	// <0x742637>|0x0e7|+0x03b:'1165'
-	// <0>
-	// <0x742672>|0x122|+0x03e:'1167'
-	// <0x7426b0>|0x160|+0x036:'1168'
-	// <0>
-	// <0x7426e6>|0x196|+0x021:'1170'
-	// ******
+	wchar_t an[256];
+	mbstowcs_s						( NULL, an, 256, lobby_client( ).account_name( ), _TRUNCATE );
+
+	flash_value account_info_property;
+	account_info_property.SetStringW( an );
+	account_info.SetMember			( "nickname", account_info_property );
+
+	account_info_property.SetUInt	( lobby_client( ).get_account_money( ).generic_money );
+	account_info.SetMember			( "generic_money", account_info_property );
+
+	account_info_property.SetUInt	( lobby_client( ).get_account_money( ).premium_money );
+	account_info.SetMember			( "premium_money", account_info_property );
+
+	m_lobby_menu_ui->movie->Invoke	( "root.setPlayerInfo", NULL, &account_info, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::on_shop_ui_ready( )
 {
-	// CALL SITE INFO
-	// <0x743b32> -> lobby_client& < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x743b10]: 5
-	// <0>
-	// <0x743b17>|0x007|+0x009:'1176'
-	// <0>
-	// <0x743b20>|0x010|+0x020:'1178'
-	// <0>
-	// ******
+	for ( u32 trader_id = 1; trader_id <= 3; ++trader_id )
+		lobby_client( ).query_prices( trader_id );
 }
 
 // STATE[STUB]
@@ -1561,268 +1459,177 @@ void lobby_menu::fill_skills_tree( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: byte % capped by scaleform flash stubs (whole TU). The "trees" member
+// (per-skill perk grouping, total_points_in_tree) + "perks" array are reconstructed
+// approximately; the skills array, the leveling-info members (points_available,
+// points_unlocked, experience_current/next_level/delta) and the fill_char_info Invoke
+// are faithful.
 void lobby_menu::fill_character_data( )
 {
-	// LOCALS
-	// flash_value 						player_skills_value_prop
-	// flash_value 						player_skills_value
-	// u8 								total_points_in_tree
-	// flash_value 						skill_value_prop
-	// u8 								i
-	// flash_value 						skill_value
-	// flash_value 						perk_value
-	// ******
+	flash_value player_skills_value;
+	m_lobby_menu_ui->movie->CreateObject( &player_skills_value );
 
-	// FUNCTION BODY[0x741ee0]: 60
-	// <0>
-	// <0x741ee3>|0x003|+0x029:'1345'
-	// <0>
-	// <1>
-	// <0x741f0c>|0x02c|+0x021:'1348'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x741f2d>|0x04d|+0x1ab:'1354'
-	// <0x7420d8>|0x1f8|-0x176:'1354'
-	// <0>
-	// <0x741f62>|0x082|+0x01e:'1356'
-	// <0>
-	// <0x741f80>|0x0a0|+0x027:'1358'
-	// <0>
-	// <1>
-	// <2>
-	// <0x741fa7>|0x0c7|+0x02c:'1362'
-	// <0x741fd3>|0x0f3|+0x038:'1363'
-	// <0>
-	// <0x74200b>|0x12b|+0x02c:'1365'
-	// <0x742037>|0x157|+0x03a:'1366'
-	// <0>
-	// <0x742071>|0x191|+0x016:'1368'
-	// <0>
-	// <1>
-	// <0x742087>|0x1a7|+0x053:'1371'
-	// <0x7420da>|0x1fa|+0x02c:'1372'
-	// <0>
-	// <0x742106>|0x226|+0x046:'1374'
-	// <0x74214c>|0x26c|+0x039:'1375'
-	// <0>
-	// <0x742185>|0x2a5|+0x03f:'1377'
-	// <0x7421c4>|0x2e4|+0x036:'1378'
-	// <0>
-	// <0x7421fa>|0x31a|+0x059:'1380'
-	// <0x742253>|0x373|+0x036:'1381'
-	// <0>
-	// <0x742289>|0x3a9|+0x013:'1383'
-	// <0x74229c>|0x3bc|+0x01f:'1384'
-	// <0>
-	// <0x7422bb>|0x3db|+0x02f:'1386'
-	// <0x7422ea>|0x40a|+0x036:'1387'
-	// <0>
-	// <0x742320>|0x440|+0x02b:'1389'
-	// <0x74234b>|0x46b|+0x036:'1390'
-	// <0>
-	// <0x742381>|0x4a1|+0x019:'1392'
-	// <0>
-	// <0x74239a>|0x4ba|+0x0df:'1394'
-	// <0x742479>|0x599|-0x0b9:'1394'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7423c0>|0x4e0|+0x056:'1398'
-	// <0x742416>|0x536|+0x022:'1399'
-	// <0x742438>|0x558|+0x045:'1400'
-	// <0x74247d>|0x59d|+0x02c:'1401'
-	// <0>
-	// <0x7424a9>|0x5c9|+0x021:'1403'
-	// ******
+	flash_value player_skills_value_prop;
+	flash_value skill_value;
+	flash_value skill_value_prop;
+	flash_value perk_value;
+
+	for ( u8 i = 0; i < lobby_client( ).player_skills_count( ); ++i )
+	{
+		m_lobby_menu_ui->movie->CreateObject( &skill_value );
+
+		skill_value_prop.SetUInt		( lobby_client( ).player_skill( i ).skill_id );
+		skill_value.SetMember			( "id", skill_value_prop );
+
+		skill_value_prop.SetUInt		( lobby_client( ).player_skill( i ).skill_points );
+		skill_value.SetMember			( "points", skill_value_prop );
+
+		u8 total_points_in_tree = 0;
+		skill_value_prop.SetUInt		( total_points_in_tree );
+		skill_value.SetMember			( "trees", skill_value_prop );
+
+		player_skills_value.SetElement	( i, skill_value );
+	}
+	player_skills_value.SetMember		( "skills", player_skills_value );
+
+	player_leveling_info const& leveling = lobby_client( ).get_player_leveling( );
+
+	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
+	player_skills_value.SetMember		( "points_available", player_skills_value_prop );
+
+	player_skills_value_prop.SetUInt	( leveling.total_skill_points );
+	player_skills_value.SetMember		( "points_unlocked", player_skills_value_prop );
+
+	player_skills_value_prop.SetUInt	( leveling.total_experience );
+	player_skills_value.SetMember		( "experience_current", player_skills_value_prop );
+
+	player_skills_value_prop.SetUInt	( leveling.next_level_experience );
+	player_skills_value.SetMember		( "experience_next_level", player_skills_value_prop );
+
+	player_skills_value_prop.SetUInt	( leveling.next_level_experience - leveling.prev_level_experience );
+	player_skills_value.SetMember		( "experience_delta", player_skills_value_prop );
+
+	for ( u8 i = 0; i < lobby_client( ).player_perks_count( ); ++i )
+	{
+		perk_value.SetUInt				( lobby_client( ).player_perk( i ) );
+		player_skills_value.SetElement	( i, perk_value );
+	}
+	player_skills_value.SetMember		( "perks", player_skills_value );
+
+	m_lobby_menu_ui->movie->Invoke		( "root.fill_char_info", NULL, &player_skills_value, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::fill_service_prices( )
 {
-	// LOCALS
-	// flash_value 						reroll_cost_value
-	// ******
-
-	// FUNCTION BODY[0x741e60]: 5
-	// <0x741e63>|0x003|+0x013:'1408'
-	// <0>
-	// <0x741e76>|0x016|+0x00e:'1410'
-	// <0x741e84>|0x024|+0x002:'1411'
-	// <0x741e86>|0x026|+0x02d:'1412'
-	// ******
+	flash_value reroll_cost_value;
+	reroll_cost_value.SetUInt		( lobby_client( ).get_service_prices( ).reroll_cost );
+	m_lobby_menu_ui->movie->Invoke	( "root.set_reroll_cost", NULL, &reroll_cost_value, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::fill_friend_list( )
 {
-	// LOCALS
-	// vectora< account_list_item > const& players_list
-	// flash_value 						array_value
-	// flash_value 						value
-	// u32 								i
-	// wchar_t[512] 					player_name_w
-	// flash_value 						list_item
-	// ******
+	vectora< account_list_item > const& players_list = messaging_client( ).get_friend_list( );
 
-	// FUNCTION BODY[0x741ae0]: 32
-	// <0x741ae8>|0x008|+0x075:'1417'
-	// <0x741b5d>|0x07d|-0x059:'1417'
-	// <0>
-	// <0x741b04>|0x024|+0x02f:'1419'
-	// <0>
-	// <0x741b33>|0x053|+0x008:'1421'
-	// <0x741b3b>|0x05b|+0x025:'1422'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x741b60>|0x080|+0x024:'1427'
-	// <0>
-	// <0x741b84>|0x0a4|+0x028:'1429'
-	// <0x741bac>|0x0cc|+0x038:'1430'
-	// <0>
-	// <1>
-	// <2>
-	// <0x741be4>|0x104|+0x022:'1434'
-	// <0>
-	// <0x741c06>|0x126|+0x071:'1436'
-	// <0x741c77>|0x197|+0x02c:'1437'
-	// <0>
-	// <0x741ca3>|0x1c3|+0x024:'1439'
-	// <0x741cc7>|0x1e7|+0x03f:'1440'
-	// <0>
-	// <0x741d06>|0x226|+0x034:'1442'
-	// <0x741d3a>|0x25a|+0x034:'1443'
-	// <0>
-	// <0x741d6e>|0x28e|+0x01a:'1445'
-	// <0>
-	// <0x741d88>|0x2a8|+0x054:'1447'
-	// <0x741ddc>|0x2fc|+0x021:'1448'
-	// ******
+	flash_value array_value;
+	m_lobby_menu_ui->movie->CreateArray	( &array_value );
+
+	for ( u32 i = 0; i < players_list.size( ); ++i )
+	{
+		flash_value list_item;
+		m_lobby_menu_ui->movie->CreateObject( &list_item );
+
+		flash_value value;
+		value.SetUInt					( players_list[ i ].account_id );
+		list_item.SetMember				( "id", value );
+
+		wchar_t player_name_w[512];
+		mbstowcs_s						( NULL, player_name_w, 512, players_list[ i ].account_name.c_str( ), _TRUNCATE );
+		value.SetStringW				( player_name_w );
+		list_item.SetMember				( "name", value );
+
+		value.SetUInt					( 3 );
+		list_item.SetMember				( "icon", value );
+
+		value.SetUInt					( players_list[ i ].online ? 0 : 2 );
+		list_item.SetMember				( "status", value );
+
+		array_value.SetElement			( i, list_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.set_friends_list", NULL, &array_value, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::fill_ignore_list( )
 {
-	// LOCALS
-	// flash_value 						array_value
-	// flash_value 						value
-	// flash_value 						list_item
-	// ******
+	flash_value array_value;
+	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	// FUNCTION BODY[0x741800]: 22
-	// <0x741804>|0x004|+0x06b:'1453'
-	// <0x74186f>|0x06f|-0x051:'1453'
-	// <0>
-	// <0x74181e>|0x01e|+0x02b:'1455'
-	// <0>
-	// <0x741849>|0x049|+0x008:'1457'
-	// <0x741851>|0x051|+0x20a:'1458'
-	// <0x741a5b>|0x25b|-0x1ea:'1458'
-	// <0>
-	// <1>
-	// <0x741871>|0x071|+0x028:'1461'
-	// <0>
-	// <0x741899>|0x099|+0x02e:'1463'
-	// <0x7418c7>|0x0c7|+0x03a:'1464'
-	// <0>
-	// <0x741901>|0x101|+0x06e:'1466'
-	// <0x74196f>|0x16f|+0x02c:'1467'
-	// <0>
-	// <0x74199b>|0x19b|+0x028:'1469'
-	// <0x7419c3>|0x1c3|+0x03e:'1470'
-	// <0>
-	// <0x741a01>|0x201|+0x016:'1472'
-	// <0x741a17>|0x217|+0x048:'1473'
-	// <0x741a5f>|0x25f|+0x021:'1474'
-	// ******
+	for ( u32 i = 0; i < messaging_client( ).get_ignore_list( ).size( ); ++i )
+	{
+		flash_value list_item;
+		m_lobby_menu_ui->movie->CreateObject( &list_item );
+
+		flash_value value;
+		value.SetUInt					( messaging_client( ).get_ignore_list( )[ i ].account_id );
+		list_item.SetMember				( "id", value );
+
+		value.SetString					( messaging_client( ).get_ignore_list( )[ i ].account_name.c_str( ) );
+		list_item.SetMember				( "name", value );
+
+		value.SetUInt					( 3 );
+		list_item.SetMember				( "icon", value );
+
+		array_value.SetElement			( i, list_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.set_ignored_list", NULL, &array_value, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::fill_found_players( )
 {
-	// LOCALS
-	// flash_value 						array_value
-	// flash_value 						value
-	// const u32 						count
-	// u32 								i
-	// flash_value 						list_item
-	// ******
+	flash_value array_value;
+	m_lobby_menu_ui->movie->CreateArray	( &array_value );
 
-	// FUNCTION BODY[0x7415a0]: 16
-	// <0x7415a6>|0x006|+0x06f:'1479'
-	// <0x741615>|0x075|-0x057:'1479'
-	// <0>
-	// <0x7415be>|0x01e|+0x02b:'1481'
-	// <0x7415e9>|0x049|+0x008:'1482'
-	// <0x7415f1>|0x051|+0x01a:'1483'
-	// <0x74160b>|0x06b|+0x00c:'1484'
-	// <0>
-	// <0x741617>|0x077|+0x024:'1486'
-	// <0x74163b>|0x09b|+0x02a:'1487'
-	// <0x741665>|0x0c5|+0x038:'1488'
-	// <0>
-	// <0x74169d>|0x0fd|+0x06a:'1490'
-	// <0x741707>|0x167|+0x02c:'1491'
-	// <0x741733>|0x193|+0x01a:'1492'
-	// <0x74174d>|0x1ad|+0x037:'1493'
-	// <0x741784>|0x1e4|+0x021:'1494'
-	// ******
+	const u32 count = messaging_client( ).get_found_players_list( ).size( );
+	for ( u32 i = 0; i < count; ++i )
+	{
+		flash_value list_item;
+		m_lobby_menu_ui->movie->CreateObject( &list_item );
+
+		flash_value value;
+		value.SetUInt					( messaging_client( ).get_found_players_list( )[ i ].account_id );
+		list_item.SetMember				( "id", value );
+
+		value.SetString					( messaging_client( ).get_found_players_list( )[ i ].account_name.c_str( ) );
+		list_item.SetMember				( "name", value );
+
+		array_value.SetElement			( i, list_item );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.fill_players_search", NULL, &array_value, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::set_cursor( u8 id )
 {
-	// LOCALS
-	// flash_value 						c_id
-	// ******
-
-	// FUNCTION BODY[0x741540]: 3
-	// <0>
-	// <0x741543>|0x003|+0x003:'1500'
-	// <0x741546>|0x006|+0x036:'1501'
-	// ******
+	flash_value c_id;
+	c_id.SetUInt					( id );
+	m_cursor_ui->movie->Invoke		( "root.setCursor", NULL, &c_id, 1 );
 }
 
-// STATE[STUB]
 void lobby_menu::set_fps_stats( float fps )
 {
-	// LOCALS
-	// flash_value 						f_val
-	// ******
-
-	// FUNCTION BODY[0x7414d0]: 3
-	// <0>
-	// <0x7414d3>|0x003|+0x009:'1507'
-	// <0x7414dc>|0x00c|+0x03a:'1508'
-	// ******
+	flash_value f_val;
+	f_val.SetUInt					( ( u16 )fps );
+	m_lobby_menu_ui->movie->Invoke	( "root.set_fps", NULL, &f_val, 1 );
 }
 
-// STATE[STUB]
 bool lobby_menu::is_mouse_over_ui( )
 {
-	// LOCALS
-	// flash_value 						is_mouse_over_val
-	// ******
-
-	return false;
-
-	// FUNCTION BODY[0x741420]: 10
-	// <0>
-	// <0x74142b>|0x00b|+0x034:'1513'
-	// <0>
-	// <1>
-	// <2>
-	// <0x74145f>|0x03f|+0x02f:'1517'
-	// <0>
-	// <1>
-	// <2>
-	// <0x74148e>|0x06e|+0x02f:'1521'
-	// ******
+	flash_value is_mouse_over_val;
+	m_lobby_menu_ui->movie->Invoke					( "root.get_mouse_over", &is_mouse_over_val, NULL, 0 );
+	bool is_over_lobby = is_mouse_over_val.GetBool	( );
+	get_game( ).get_chat_handler( ).get_movie( )->movie->Invoke( "root.get_mouse_over", &is_mouse_over_val, NULL, 0 );
+	return is_over_lobby || is_mouse_over_val.GetBool( );
 }
 
 // STATE[STUB]
@@ -1999,96 +1806,70 @@ void lobby_menu::on_stats_message_arrived(
 	// ******
 }
 
-// STATE[STUB]
 void lobby_menu::show_disconnected_message( bool b_show )
 {
-	// LOCALS
-	// wchar_t[512] 					message_txt
-	// flash_value[4] 					v
-	// flash_value 						window_id
-	// ******
+	if ( b_show )
+	{
+		flash_value v[4];
+		v[0].SetUInt					( 13 );
+		v[1].SetString					( "noclose" );
 
-	// FUNCTION BODY[0x743b50]: 18
-	// <0x743b50>|0x000|+0x00c:'1681'	{
-	// <0x743b5c>|0x00c|+0x010:'1682'
-	// <0>
-	// <0x743b6c>|0x01c|+0x013:'1684'
-	// <0x743b7f>|0x02f|+0x029:'1685'
-	// <0x743ba8>|0x058|+0x01e:'1686'
-	// <0>
-	// <0x743bc6>|0x076|+0x01d:'1688'
-	// <0x743be3>|0x093|+0x010:'1689'
-	// <0x743bf3>|0x0a3|+0x029:'1690'
-	// <0>
-	// <0x743c1c>|0x0cc|+0x032:'1692'
-	// <0x743c4e>|0x0fe|+0x01c:'1693'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x743c6a>|0x11a|+0x03a:'1698'
-	// <0x743ca4>|0x154|-0x043:'1699'
-	// <0x743c61>|0x111|+0x064:'1700'
-	// <0x743cc5>|0x175|      :'1700'	}
-	// ******
+		wchar_t message_txt[512];
+		get_game( ).text_translator( ).translate_text( "st_disconnected_from_lobby", message_txt );
+		v[2].SetStringW					( message_txt );
+		v[3].SetBoolean					( true );
+
+		m_message_ui->movie->Invoke		( "root.showMessage", NULL, v, 4 );
+	}
+	else
+	{
+		flash_value window_id;
+		window_id.SetUInt				( 13 );
+		m_message_ui->movie->Invoke		( "root.close", NULL, &window_id, 1 );
+	}
 }
 
-// STATE[STUB]
+// claude@NOTE: config part PARKED on items_dictionary::dict_config being private with
+// no accessor (game_core, can't edit here). Recovered body: per reputation_id in
+// lobby_client().get_player_reputations_count(): faction_str = sprintf("faction_%d",
+// reputation.faction_id); faction_levels = items_dictionary().dict_config->get_root()
+// ["factions_dict"][faction_str]["levels"]; walk faction_levels, player_reputation_
+// level = highest level i where reputation_points >= levels[i]["value"]; build
+// player_progress_args[3] (faction/level/points uints) and Invoke
+// "root.setup_player_progress". Restore the config nav once items_dictionary exposes
+// dict_config (or lobby_menu is friended). Also byte-capped by the scaleform stubs.
 void lobby_menu::on_player_reputations_arrived( )
 {
-	// LOCALS
-	// u8 								reputation_id
-	// u8 								player_reputation_level
-	// flash_value[3] 					player_progress_args
-	// char[32] 						faction_str
-	// u8 								current_reputation_level
-	// ******
+	for ( u8 reputation_id = 0; reputation_id < lobby_client( ).get_player_reputations_count( ); ++reputation_id )
+	{
+		char faction_str[32];
+		sprintf_s						( faction_str, "faction_%d", lobby_client( ).get_player_reputation( reputation_id ).faction_id );
 
-	// FUNCTION BODY[0x743890]: 28
-	// <0>
-	// <0x743894>|0x004|+0x02c:'1705'
-	// <0>
-	// <0x7438c0>|0x030|+0x01e:'1707'
-	// <0x7438de>|0x04e|+0x008:'1708'
-	// <0>
-	// <1>
-	// <0x7438e6>|0x056|+0x012:'1711'
-	// <0x7438f8>|0x068|+0x03f:'1712'
-	// <0>
-	// <0x743937>|0x0a7|+0x01e:'1714'
-	// <0>
-	// <0x743955>|0x0c5|+0x005:'1716'
-	// <0>
-	// <0x74395a>|0x0ca|+0x037:'1718'
-	// <0x743991>|0x101|-0x02e:'1718'
-	// <0>
-	// <0x743963>|0x0d3|+0x015:'1720'
-	// <0x743978>|0x0e8|+0x020:'1721'
-	// <0>
-	// <1>
-	// <2>
-	// <0x743998>|0x108|+0x01c:'1725'
-	// <0x7439b4>|0x124|+0x025:'1726'
-	// <0>
-	// <0x7439d9>|0x149|+0x037:'1728'
-	// <0>
-	// <0x743a10>|0x180|+0x029:'1730'
-	// <0x743a39>|0x1a9|+0x05b:'1731'
-	// ******
+		u8 player_reputation_level = 0;
+
+		flash_value player_progress_args[3];
+		player_progress_args[0].SetUInt	( reputation_id );
+		player_progress_args[1].SetUInt	( player_reputation_level );
+		player_progress_args[2].SetUInt	( lobby_client( ).get_player_reputation( reputation_id ).reputation_points );
+		m_lobby_menu_ui->movie->Invoke	( "root.setup_player_progress", NULL, player_progress_args, 3 );
+	}
 }
 
-// STATE[STUB]
 void lobby_menu::set_ping( u32 ping_val )
 {
-	// LOCALS
-	// flash_value 						args
-	// ******
+	flash_value args; args.SetUInt( ping_val ); m_lobby_menu_ui->movie->Invoke( "root.set_ping", NULL, &args, 1 );
+}
 
-	// FUNCTION BODY[0x741080]: 3
-	// <0>
-	// <1>
-	// <0x741083>|0x003|+0x036:'1738'
-	// ******
+// /OPT:REF anchor hook for the TU-local relocate_item_func (no public header);
+// see anchor_game_lobby_ui.cpp.
+void use_game_relocate_item_func( game& g )
+{
+	static volatile bool s_run = false;
+	if( !s_run )
+		return;
+
+	relocate_item_func func( g );
+	func.call( *( flash_function_handler_params* )NULL );
 }
 
 } // namespace survarium
