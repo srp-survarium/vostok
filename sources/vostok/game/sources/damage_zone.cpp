@@ -54,9 +54,15 @@ void damage_zone::load(
 	// ******
 }
 
-// claude@NOTE: structure recovered (get_shapes_centers, then per-center
-// play_particle_system at create_translation( center )). Byte residual is the same
-// render-facade signature wall as stop_particles (in_instance by-value vs const&).
+// claude@NOTE: PARKED on a loop-structure residual, NOT the facade (the facade
+// play_particle_system by-value fix has landed). The target computes
+// shapes_centers.size() in its OWN statement (line 64) BEFORE the for (line 66) -
+// a /Od size-hoist with NO named local (target records only particles + shapes_centers,
+// no i, no count) - so the bound caching cannot be reproduced by a named-count loop
+// (that would add a local the target lacks) nor by our folded `for ( i < .size(); )`
+// (base attributes size to the for header). Tried: nothing reproduces the unnamed
+// hoisted-size 7-statement split. Next: needs the original loop spelling that CSEs
+// .size() out of the condition under /Od (likely an accessor-inlining order quirk).
 void damage_zone::play_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
 	vectora< float3 > shapes_centers( g_allocator );
@@ -69,11 +75,13 @@ void damage_zone::play_particles( vector< resources::unmanaged_resource_ptr > co
 			create_translation( shapes_centers[ i ] ) );
 }
 
-// claude@NOTE: structure recovered (loop over particles -> scene_renderer.
-// remove_particle_system_instance). Byte residual is the render-facade signature
-// wall the whole game tree carries (weapon.cpp / object_solid_visual.cpp): the PDB
-// takes in_instance BY VALUE, the scene_renderer.h facade decl spells it const&, so
-// the base elides the temp intrusive_ptr copy. Recovers with the facade phase.
+// claude@NOTE: PARKED on the same loop-structure residual as play_particles, NOT the
+// facade (remove_particle_system_instance doesn't take in_instance by value anyway).
+// The target splits the for into 3 statements - particles.size() hoisted into a
+// separate init statement (line 76) then a tiny cond+incr (line 77) then the body
+// (line 78) - with NO named loop counter recorded. Our folded `for ( i < .size(); )`
+// keeps the size in the for header (2 statements). Same unnamed-size-hoist /Od quirk
+// as play_particles; not reproducible from the loop header alone.
 void damage_zone::stop_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
 	for ( u32 i = 0; i < particles.size( ); ++i )

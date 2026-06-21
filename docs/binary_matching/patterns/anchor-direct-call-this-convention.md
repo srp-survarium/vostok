@@ -56,4 +56,16 @@ This supersedes the eax-this-convention.md "VERIFIED INEFFECTIVE" verdict for th
 reachable-only-via-anchor case: the methods it tried (header split, __declspec(noinline),
 the member-fn-ptr sink) all FORCE __thiscall; the guarded direct call is the device that
 reproduces the eax/esi/edi convention instead.
-evidence-basis: positive (vostok game, game.cpp/anchor_game_world.cpp, 9 methods 65-97%/unpaired -> 100%)
+
+INTERLOCK with access mangling: a method that mangles PRIVATE (AAE/EAE) but is declared
+public in our header stays UNPAIRED (QAE vs AAE/EAE = different mangled name, objdiff can't
+pair it) - the convention fix alone won't close it. Fix BOTH: (1) set the header access to
+the target's mangled letter (often a `private:` block interleaved to preserve declaration
+order); (2) the /OPT:REF anchor that address-takes / direct-calls those now-private methods
+needs `friend void ::vostok::use_<module>();` on the class (codegen-neutral, no symbol/layout
+impact - mirror the existing project_cooker_simple precedent). Verified: weapon::play_weapon_
+fire_pfx (esi this-conv) was unpaired until BOTH the direct-call anchor AND making it private
+(+friend) landed -> 91.6% STRUCTURE MATCH (residual = a separate non-steerable call-boundary
+arg-eval register cascade). play_weapon_shell_pfx (esi, already QAE-public) went 79.6->91.6
+on the convention fix alone.
+evidence-basis: positive (vostok game, game.cpp/anchor_game_world.cpp 9 methods 65-97%->100%; weapon.cpp play_weapon_*_pfx 79.6/unpaired->91.6 STRUCTURE MATCH)
