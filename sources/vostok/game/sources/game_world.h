@@ -114,6 +114,10 @@ class game_world : public base_game_scene , public ai::engine , public ai::navig
 	// private game_ui (m_game.get_game_world().game_ui.set_*()); the original reaches
 	// it directly. Codegen-neutral - friendship is not recorded in the PDB.
 	friend class network_client;
+	// base_network_client::attach_to_player / detach_from_player reach the private
+	// game_ui the same way (on_attached_to_player / show_ammo_indicator / show_quick_slots);
+	// the original reaches it directly. Codegen-neutral - friendship is not in the PDB.
+	friend class base_network_client;
 public:
 	// canonical dump prints the nested type standalone (game_world__bullet_tracer.h)
 	struct bullet_tracer {
