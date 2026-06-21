@@ -387,7 +387,12 @@ void particle_system_instance_impl::add_emitter_instance( u32 lod_index, particl
 	new_instance->m_particle_system_instance = this;
 	
 	m_lods[lod_index].m_emitter_instance_list.push_back(new_instance);
-	
+
+	// claude@NOTE: QUANTITY -2 vs target. After push_back the target emits a guarded
+	//   `if ( m_is_playing /*+0x2A4*/ ) prepare_render_resources();` (cmp [this+2A4h],0/je;
+	//   call particle_system_instance_impl::prepare_render_resources). prepare_render_resources
+	//   is a real 13-stmt target member NOT yet reconstructed in our source (absent from base);
+	//   the 2-stmt guard cannot be added until that method body is recovered (would not link).
 	//new_instance->process_event(particle_event::on_play,m_transform.lines[3].xyz());
 }
 
