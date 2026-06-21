@@ -189,3 +189,34 @@ quaternion vostok::math::slerp ( quaternion const& left, quaternion const& right
 	Scale1		*= sign;
 	return		quaternion( left.vector*Scale0 + right.vector*Scale1 );
 }
+
+quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion const& q1, float const time_delta )
+{
+	float cosom	=  q0.x * q1.x +
+				   q0.y * q1.y +
+				   q0.z * q1.z +
+				   q0.w * q1.w;
+
+	float		Scale0, Scale1, sign;
+	if ( cosom < 0.f ) {
+		cosom	= -cosom;
+		sign	= -1.f;
+	} else {
+		sign	= 1.f;
+	}
+
+	if ( (1.0f - cosom) > epsilon_5 ) {
+		const float	omega	= acos( cosom );
+		const float	i_sinom = 1.f / sin( omega );
+		const float	t_omega	= time_delta*omega;
+		Scale0	= sin( omega - 	t_omega ) * i_sinom;
+		Scale1	= sin( t_omega			) * i_sinom;
+	}
+	else {
+		Scale0	= 1.0f - time_delta;
+		Scale1	= time_delta;
+	}
+
+	Scale1		*= sign;
+	return		quaternion( q0.vector*Scale0 + q1.vector*Scale1 );
+}
