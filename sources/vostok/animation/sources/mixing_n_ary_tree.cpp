@@ -315,32 +315,6 @@ void n_ary_tree::accumulate_object_movement(
 }
 
 // STATE[STUB]
-animation_state& animation_state::operator=( animation_state const& __that )
-{
-	// FUNCTION BODY
-	// <0x11c680>|0x000|+0x000:'785'	{
-	// <0x11c680>|0x000|+0x014:'786'
-	// <0>
-	// <1>
-	// <0x11c694>|0x014|+0x027:'789'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x11c6bb>|0x03b|-0x003:'800'
-	// <0>
-	// <0x11c6b8>|0x038|+0x038:'802'
-	// <0x11c6f0>|0x070|      :'802'	}
-	// ******
-}
-
-// STATE[STUB]
 void n_ary_tree::update_synchronization_group_using_integration(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						start_time_in_ms,
