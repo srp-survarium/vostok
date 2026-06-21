@@ -2926,6 +2926,14 @@
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_HAL.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_HAL.h"
@@ -2934,6 +2942,14 @@
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_MeshCache.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_MeshCache.h"
@@ -2942,6 +2958,14 @@
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Shader.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Shader.h"
@@ -2954,6 +2978,14 @@
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderDescs.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderDescs.h"
