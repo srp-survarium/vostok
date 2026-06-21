@@ -5,6 +5,7 @@
 3rdParty/jpeg-8d/jccoefct.c
 3rdParty/jpeg-8d/jccolor.c
 3rdParty/jpeg-8d/jcdctmgr.c
+3rdParty/jpeg-8d/jchuff.c
 3rdParty/jpeg-8d/jcinit.c
 3rdParty/jpeg-8d/jcmainct.c
 3rdParty/jpeg-8d/jcmarker.c
@@ -38,9 +39,12 @@
 3rdParty/jpeg-8d/jidctflt.c
 3rdParty/jpeg-8d/jidctfst.c
 3rdParty/jpeg-8d/jidctint.c
+3rdParty/jpeg-8d/jmemansi.c
+3rdParty/jpeg-8d/jmemdos.c
+3rdParty/jpeg-8d/jmemmac.c
 3rdParty/jpeg-8d/jmemmgr.c
+3rdParty/jpeg-8d/jmemname.c
 3rdParty/jpeg-8d/jmemnobs.c
-3rdParty/jpeg-8d/jpegtran.c
 3rdParty/jpeg-8d/jquant1.c
 3rdParty/jpeg-8d/jquant2.c
 3rdParty/jpeg-8d/jutils.c
