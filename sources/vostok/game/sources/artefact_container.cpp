@@ -7,42 +7,31 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// claude@NOTE: structure correct (base-ctor + m_game_scene(w) ref init + compiler
+// vtable stores). Residual is the anchor-sole-caller convention wall
+// (anchor-sole-caller-convention.md): the only reachable construction is the
+// /OPT:REF anchor (anchor_game_victory_item.cpp), so LTCG specialises the ctor to
+// read the scene from the anchor's static `s_scene` (`mov edi,[s_scene]`, `ret`)
+// instead of the real `[esp+4]` thiscall param (`ret 4`). Pairs at the real
+// convention once create_game_objects (project_cooker_simple, parked) constructs it.
 artefact_container::artefact_container( base_game_scene& w ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
 	m_game_scene( w )
 {
-	// FUNCTION BODY[0x777c70]
-	// <0x777c70>|0x000|      :'18'	{
-	// ******
 }
 
-// STATE[STUB]
 void artefact_container::load( configs::binary_config_value const& cfg )
 {
-	// FUNCTION BODY[0x777c60]: 0
-	// <0x777c60>|0x000|+0x000:'21'	{
-	// <0x777c60>|0x000|      :'22'	}
-	// ******
+	artefact_container_core::load( cfg );
 }
 
-// STATE[STUB]
 void artefact_container::activate( generic_anomaly_core* owner, physics::world* world, scheduler& scheduler )
 {
-	// FUNCTION BODY[0x777c50]: 0
-	// <0x777c50>|0x000|+0x000:'29'	{
-	// <0x777c50>|0x000|      :'30'	}
-	// ******
+	artefact_container_core::activate( owner, world, scheduler );
 }
 
-// STATE[STUB]
 void artefact_container::deactivate( )
 {
-	// FUNCTION BODY[0x777c40]: 0
-	// <0x777c40>|0x000|+0x000:'44'	{
-	// <0x777c40>|0x000|      :'45'	}
-	// ******
+	artefact_container_core::deactivate( );
 }
 
 
