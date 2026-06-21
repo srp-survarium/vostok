@@ -757,6 +757,10 @@
 			RelativePath=".\anchor_animation_comparer.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\anchor_animation_weaver.cpp"
+			>
+		</File>
 		<Filter
 			Name="core"
 			>
