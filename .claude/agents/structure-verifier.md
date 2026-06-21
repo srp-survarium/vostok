@@ -94,6 +94,21 @@ bytes (a ctor re-schedule), the 1-statement / 0-local STRUCTURE is still correct
 residual is the recoverable part. Precedent: weapon_and_hands_expression - 0-local 90% over
 2-local 100%.
 
+**RELEASE / OPTIMIZED TARGETS - the structure view is the POST-OPTIMIZATION projection
+(sushi 2026-06-21).** The "Names are NOT elided / recorded set is ground truth" rule above
+holds for NON-optimized targets. When the target TU was compiled optimized (release / LTCG /
+`/Ox` - render, scaleform Master Gold, any aggressively-inlined module), its PDB records ONLY
+the statements and locals that SURVIVED optimization, NOT the full source set (the optimizer
+folds statements and spills locals into registers, dropping their names). So on a RELEASE
+target a *smaller* target statement-or-local count can be the optimizer, NOT a
+source-with-fewer - do NOT flag a phantom-local / QUANTITY divergence and delete a real source
+local just to hit the reduced release count. **But the structure that DOES show is STILL
+STEERABLE** - "in release structure doesn't show all statements nor locals, it only shows
+non-optimized ones; still, structure is steerable" (sushi). Verify and FIX the visible
+statement shape, order, and surviving local set, and keep steering - do NOT close a release
+divergence as "non-steerable LTCG / optimized-COMDAT / inline residual" until you have actually
+steered the visible structure to match.
+
 **If the diff is large** - many SIZE rows - it's already only the divergences, but you can
 still drill each one with per-statement `--address` slices (below) for the rows that
 actually matter and compare those one at a time.

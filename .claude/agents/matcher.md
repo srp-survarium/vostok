@@ -164,6 +164,20 @@ its single writer).
     Leave your function at the inline-vs-call %, note the wall, move on.
   When in doubt run `--view structure-diff` even on a 100% function and trust its shape verdict
   over the score.
+- **RELEASE / OPTIMIZED TARGETS - the structure view is the POST-OPTIMIZATION projection
+  (sushi 2026-06-21).** When the target TU was compiled optimized (release / LTCG / `/Ox` -
+  render, scaleform Master Gold, and any module whose target aggressively inlines), its PDB
+  records ONLY the statements and locals that SURVIVED optimization - NOT the full source set
+  (the optimizer folds/elides statements and spills locals into registers, dropping their
+  names). So the "recorded set is GROUND TRUTH / locals don't lie" rule above is for the
+  NON-optimized targets; on a RELEASE target a *smaller* target statement-or-local count is
+  often the optimizer, NOT a source-with-fewer - do NOT delete a real source local/statement
+  just to hit the reduced release count. **But the structure that DOES show is STILL
+  STEERABLE.** "In release structure doesn't show all statements nor locals - it only shows
+  non-optimized ones. Still, structure is steerable" (sushi). Match the visible statement
+  shape, order, and surviving local set, and KEEP STEERING - do NOT bank a release divergence
+  as a "non-steerable LTCG / optimized-COMDAT / inline wall" until you have actually steered
+  the visible structure to match. The optimizer hiding statements is not a licence to stop.
 - **LTCG is an excuse ONLY for function ARGUMENTS.** The only diffs you may bank as
   LTCG are at a call boundary: an argument dropped (proven constant) or passed in a
   register instead of its slot. EVERYTHING else - register choice, `[ebp-XX]` slot,
