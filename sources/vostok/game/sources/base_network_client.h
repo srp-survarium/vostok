@@ -94,7 +94,7 @@ public:
 
 	virtual	void						close_current_match					( bool arg_0 ) = 0;
 
-	inline	void						attach_to_player_cc					( pcstr const arg_0 ) { /* no source */ }
+			void						attach_to_player_cc					( pcstr const arg_0 );
 			void						attach_to_player					( player_ptr player );
 			void						detach_from_player					( );
 

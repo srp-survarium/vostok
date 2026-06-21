@@ -86,6 +86,11 @@ void anchor_game_network_clients( game& g )
 		base.get_current_player( );
 		base.use_physics_controller_for_current( "" );
 		base.attach_to_player( player_ptr( ) );
+		// launder the string arg through a volatile so LTCG cannot const-fold the
+		// literal into attach_to_player_cc (a constant "" lets it drop the sscanf_s
+		// parse entirely, scoring against folded codegen instead of the real body)
+		static pcstr volatile s_args = "";
+		base.attach_to_player_cc( s_args );
 		base.detach_from_player( );
 
 		client.connect_to_login( "host", 0, "account", "password" );
