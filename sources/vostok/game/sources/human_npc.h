@@ -440,8 +440,8 @@ private:
 	/* 0x028c */	ai::weapon const*						m_current_weapon;
 	/* 0x0290 */	bool									m_is_patrolling;
 	/* 0x0298 */	affect_subscriber						m_affects_subscription;
-	/* 0x02c0 */	bool									m_sound_perceived;
-	/* 0x02c1 */	bool									m_sound_produced;
+	/* 0x02c0 */	mutable bool							m_sound_perceived;
+	/* 0x02c1 */	mutable bool							m_sound_produced;
 	/* 0x02c2 */	bool									m_dbg_sound;
 	/* 0x02c4 */	resources::managed_resource_ptr			m_default_animation;
 	/* 0x02c8 */	animation_space_graph_ptr				m_animation_space_graph;
