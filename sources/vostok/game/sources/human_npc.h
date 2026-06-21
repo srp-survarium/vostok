@@ -400,8 +400,8 @@ public:
 
 			void								on_affect_event				(
 													pcstr							body_part_name,
-													const hit_affects_type_enum		arg_1 /* hit_affects_type_enum affect_type */,
-													const affect_event_type_enum	arg_2 /* affect_event_type_enum event_type */
+													const hit_affects_type_enum		affect_type,
+													const affect_event_type_enum	event_type
 												) const;
 
 	virtual	float								get_speed					( ) const override { /* no source */ return 0.0f; }
