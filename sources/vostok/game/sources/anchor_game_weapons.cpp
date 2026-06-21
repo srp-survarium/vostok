@@ -39,6 +39,7 @@ namespace survarium {
 	// file-local free helpers in weapon.cpp (no public header)
 	bool is_dead( base_player*& user );
 	bool is_alive( base_player*& user );
+	float freeze_at_end_time_calculator( float, float, u32, u32, u32, float );
 	// free helper in weapon_sound_effect.cpp (no public header)
 	void on_sound_finished( buffer_vector< sound::sound_instance_proxy_ptr >& instances, sound::sound_instance_proxy const& instance );
 } // namespace survarium
@@ -174,6 +175,7 @@ namespace vostok
 		// weapon.cpp file-local free helpers
 		keep( &survarium::is_dead );
 		keep( &survarium::is_alive );
+		keep( &survarium::freeze_at_end_time_calculator );
 
 		// ---- weapon_sound_effect --------------------------------------------
 		typedef survarium::weapon_sound_effect wse;

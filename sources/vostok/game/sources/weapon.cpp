@@ -8,35 +8,19 @@
 
 #include "weapon_user_dead_state.h"
 
+#include <vostok/math_constants.h>
+#include <vostok/console_command.h>
+
+#include "base_game_scene.h"
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
+
+// TU-local console-command statics (file scope, no namespace prefix in the PDB).
+// finger_corrector_enable gates weapon::process_finger_correction.
+static bool s_enable_finger_corrector_value = true;
+static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
+
 namespace survarium {
-
-// console-command statics: each emits a compiler-generated dynamic initializer
-// (+ atexit destructor); a matcher recovers the cc kinds/args from the init asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'dispersion_magic_coef_cc''( )
-{
-	// FUNCTION BODY[0x7d8f70]
-	// <0x7d8f70>|0x000|      :'35'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_attach_fingers_to_weapon_cc''( )
-{
-	// FUNCTION BODY[0x7d8fd0]
-	// <0x7d8fd0>|0x000|      :'38'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 'dispersion_magic_coef_cc''( )
-{
-	// FUNCTION BODY[0x7f0940]
-	// <0x7d9020>|0x000|      :'41'	{
-	// ******
-}
-*/
 
 // STATE[STUB]
  weapon::weapon(
@@ -178,7 +162,6 @@ bool is_alive( base_player*& user )
 	return user->is_alive( );
 }
 
-// STATE[STUB]
 float freeze_at_end_time_calculator(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -188,13 +171,7 @@ float freeze_at_end_time_calculator(
 	float		time_scale
 )
 {
-	return 0.0f;
-
-	// FUNCTION BODY[0x5c1530]: 3
-	// <0>
-	// <1>
-	// <0x5c1530>|0x000|+0x028:'204'
-	// ******
+	return animation_time_before_time_scale_starts + ( target_time_in_ms - time_scale_start_time_in_ms ) * time_scale * math::epsilon_3;
 }
 
 // STATE[STUB]
@@ -488,36 +465,32 @@ void weapon::set_target(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: the play_particle_system call boundary carries the same render-facade
+// signature residual as object_particle_visual::insert - the PDB / render::engine::world_pc
+// take in_instance BY VALUE so the target builds a temp particle_system_instance_ptr
+// (intrusive_ptr::set), but scene_renderer.h's facade spells it const& so the base elides
+// that temp. Statement shape (guard, play, ++id, wrap-to-zero) is faithful; recovers when
+// the facade play_particle_system signature is corrected (its own match phase).
 void weapon::play_weapon_fire_pfx( )
 {
-	// FUNCTION BODY[0x5c23a0]: 9
-	// <0x5c23a0>|0x000|+0x00a:'425'
-	// <0>
-	// <1>
-	// <0x5c23aa>|0x00a|+0x03e:'428'
-	// <0>
-	// <0x5c23e8>|0x048|+0x00c:'430'
-	// <0>
-	// <0x5c23f4>|0x054|+0x008:'432'
-	// <0x5c23fc>|0x05c|+0x007:'433'
-	// ******
+	if ( m_fire_pfx_list )
+	{
+		get_game_scene( )->renderer( ).scene( ).play_particle_system( get_game_scene( )->render_scene( ), m_fire_pfx_list[ m_current_fire_pfx_id ], m_barrel_transform );
+		++m_current_fire_pfx_id;
+		if ( m_current_fire_pfx_id == m_fire_pfx_count )
+			m_current_fire_pfx_id = 0;
+	}
 }
 
-// STATE[STUB]
 void weapon::play_weapon_shell_pfx( )
 {
-	// FUNCTION BODY[0x5c2330]: 9
-	// <0x5c2330>|0x000|+0x00a:'438'
-	// <0>
-	// <1>
-	// <0x5c233a>|0x00a|+0x03e:'441'
-	// <0>
-	// <0x5c2378>|0x048|+0x00c:'443'
-	// <0>
-	// <0x5c2384>|0x054|+0x008:'445'
-	// <0x5c238c>|0x05c|+0x007:'446'
-	// ******
+	if ( m_shells_pfx_list )
+	{
+		get_game_scene( )->renderer( ).scene( ).play_particle_system( get_game_scene( )->render_scene( ), m_shells_pfx_list[ m_current_shell_pfx_id ], m_scope_transform );
+		++m_current_shell_pfx_id;
+		if ( m_current_shell_pfx_id == m_shells_pfx_count )
+			m_current_shell_pfx_id = 0;
+	}
 }
 
 // claude@NOTE: target structure records 6 statements that all compile away in
@@ -771,14 +744,15 @@ void weapon::on_skeleton_matrices_changed(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: faithful body (finger_corrector_enable guard + tail-call to
+// fingers_to_weapon_corrector::process). Walled: process() is an empty STUB in
+// fingers_to_weapon_corrector.cpp (a separate TU), so LTCG inlines its empty body and DCE
+// drops the whole guarded statement, leaving our base a bare `ret 8`. Recovers once that
+// process() lands a real body; do NOT collapse the guard to hold a % - structure is correct.
 void weapon::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
 {
-	// FUNCTION BODY[0x5c1910]: 3
-	// <0x5c1910>|0x000|+0x009:'657'
-	// <0x5c1919>|0x009|+0x00b:'658'
-	// <0>
-	// ******
+	if ( s_enable_finger_corrector_value )
+		m_fingers_corrector.process( current_time_in_ms, user_matrices );
 }
 
 // STATE[STUB]
@@ -795,20 +769,14 @@ animation::callback_return_type_enum weapon::on_hand_correction_event(
 	// FUNCTION BODY[0x5c15c0]: 5
 }
 
-// STATE[STUB]
+// claude@NOTE: faithful body (play_weapon_shell_pfx + return call_me_again). Residual is
+// an LTCG prologue-frame choice: the target reserves a 4-byte slot (push ecx) and preserves
+// `this` in esi across the call; our LTCG build, seeing the full play_weapon_shell_pfx def,
+// emits the leaf-minimal form (no esi save). Structure is correct (2 statements).
 animation::callback_return_type_enum weapon::on_shell_extraction_event( animation::animation_callback_params& params )
 {
+	play_weapon_shell_pfx( );
 	return animation::callback_return_type_call_me_again;
-
-	// FUNCTION BODY[0x5c25e0]: 7
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c25e2>|0x002|+0x007:'677'
-	// <0>
-	// <0x5c25e9>|0x009|+0x002:'679'
-	// ******
 }
 
 // STATE[STUB]
