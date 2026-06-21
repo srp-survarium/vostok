@@ -7,6 +7,7 @@
 
 #include "stats_graph.h"
 #include "flash_text_manager.h"
+#include "game_memory.h"		// NEW / DELETE ( survarium::g_allocator )
 #include <vostok/network_core/udp_match_stats.h>
 #include <vostok/math_constants.h>
 
@@ -14,26 +15,29 @@ namespace survarium {
 
 // claude@NOTE: the network_stats HUD-row cluster (stats_stream/stats_row create +
 // set_text + dtors) drives a column of flash_text labels via create_text and the
-// flash_text accessors (set_visible / set_color / set_position / set_text). With the
-// scaleform glue now compiled /Ox (Master Gold, /GL), those accessors INLINE here as
-// the GFx DrawText vtable dispatch (`call eax`/`call edx`), matching the target - the
-// old flash /Od wall is LIFTED (create 27->42%, set_text 77->80% / 76->85%). The
-// remaining residual is NOT flash: the inline `new stats_graph` routes through global
-// operator new (`??2@YAPAXI@Z`) while the target inlines the engine allocator's
-// doug_lea_allocator::malloc_impl (mspace), and graph->add_value / cumulative_* fold
-// into adjacent statements with slightly different scheduling. Structure (statement
-// count/order, create_text + set_* sequence, named-local set) is faithful;
-// reachability is held by anchor_game_clients.cpp. The dtors stay low - their `delete`
-// routes through global operator delete instead of the allocator's mspace_free (same
-// allocator-inline wall), and report low/oscillating pairing = ICF fold-rep churn on
-// the inline COMDAT, not a structural gap.
+// flash_text accessors. Structure (statement count/order, create_text + set_*
+// sequence, named-local set, allocator routing) is faithful; reachability is held by
+// anchor_game_clients.cpp. The graph alloc/free now matches the target: NEW/DELETE
+// route through doug_lea_allocator malloc_impl / vostok_mspace_free (was global
+// operator new/delete - the dtors jumped 17/20% -> 37/56% on that fix alone).
+// The DOMINANT remaining wall is CROSS-MODULE: three scaleform helpers are STUBs in
+// vostok/scaleform/sources/movie.cpp - flash_text::set_visible, flash_text::set_color
+// and flash_text_manager::destroy_text - so they inline to nothing on our base while
+// the target inlines real GFx DrawText vtable dispatch. That empties the per-text
+// set_visible/set_color line records in create (folds them into the next set_position
+// statement, the SIZE +0x40 rows + TRGT_ONLY pairs) and drops all four destroy_text
+// statements from each dtor (the TRGT_ONLY rows). Bodying those three movie.cpp stubs
+// is the scaleform module's matching task; until then create/dtors are capped here.
+// set_text (80/85%) has no allocator/destroy_text dependency: its residual is the
+// inline scheduling of the (already-matched) flash_text::set_text + stats_graph
+// add_value/cumulative_* helpers - STRUCTURE MATCH, capped.
 
 stats_stream::~stats_stream( )
 {
 	if( text_manager )
 	{
-		delete bytes_per_second_graph;
-		delete graph;
+		DELETE( bytes_per_second_graph );
+		DELETE( graph );
 
 		text_manager->destroy_text( count_per_second );
 		text_manager->destroy_text( bits_per_second );
@@ -74,8 +78,8 @@ void stats_stream::create(
 	count_per_second.set_color		( color.get_R( ), color.get_G( ), color.get_B( ), color.get_A( ) );
 	count_per_second.set_position	( start_width + column0_width + column1_width + column2_width, start_height );
 
-	graph					= new stats_graph( 3.f, math::infinity, 256.f, 1024.f, 0xFF00FF00 );
-	bytes_per_second_graph	= new stats_graph( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
+	graph					= NEW( stats_graph )( 3.f, math::infinity, 256.f, 1024.f, 0xFF00FF00 );
+	bytes_per_second_graph	= NEW( stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
 }
 
 void stats_stream::set_text(
@@ -112,7 +116,7 @@ stats_row::~stats_row( )
 {
 	if( text_manager )
 	{
-		delete data_bytes_per_second_graph;
+		DELETE( data_bytes_per_second_graph );
 
 		text_manager->destroy_text( messages_per_second );
 		text_manager->destroy_text( data_bits_per_message );
@@ -163,7 +167,7 @@ void stats_row::create(
 	messages_per_second.set_color		( color.get_R( ), color.get_G( ), color.get_B( ), color.get_A( ) );
 	messages_per_second.set_position	( 1305.f, start_height );
 
-	data_bytes_per_second_graph	= new stats_graph( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
+	data_bytes_per_second_graph	= NEW( stats_graph )( 3.f, math::infinity, 2048.f, 8192.f, 0xFF00FF00 );
 }
 
 void stats_row::set_text(
