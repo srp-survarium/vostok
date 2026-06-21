@@ -4,8 +4,15 @@
 
 #include "pch.h"
 #include "object_environment_probe.h"
+#include "game_object_static.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
+
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
 // STATE[STUB]
  object_environment_probe::object_environment_probe( base_game_scene& w ) :
@@ -26,34 +33,36 @@ namespace survarium {
 	// ******
 }
 
-// STATE[STUB]
 void object_environment_probe::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// FUNCTION BODY[0x78edd0]: 13
-	// <0x78edd0>|0x000|+0x001:'36'	{
-	// <0x78edd1>|0x001|+0x018:'37'
-	// <0>
-	// <0x78ede9>|0x019|+0x014:'39'
-	// <0x78edfd>|0x02d|+0x01d:'40'
-	// <0x78ee1a>|0x04a|+0x025:'41'
-	// <0x78ee3f>|0x06f|+0x025:'42'
-	// <0x78ee64>|0x094|+0x017:'43'
-	// <0x78ee7b>|0x0ab|+0x033:'44'
-	// <0x78eeae>|0x0de|+0x00f:'45'
-	// <0x78eebd>|0x0ed|+0x018:'46'
-	// <0x78eed5>|0x105|+0x03c:'47'
-	// <0x78ef11>|0x141|-0x00f:'47'
-	// <0>
-	// <0x78ef02>|0x132|+0x017:'49'
-	// <0x78ef19>|0x149|-0x00b:'49'
-	// <0x78ef0e>|0x13e|+0x017:'50'
-	// <0x78ef25>|0x155|      :'50'	}
-	// ******
+	load_transform( t, m_transform );
+
+	m_cubemap_resolution	= t["cubemap_resolution"];
+	m_radius				= t["radius"];
+	m_diffuse_multiplier	= t["diffuse_multiplier"];
+	m_specular_multiplier	= t["specular_multiplier"];
+	m_enabled				= t["enabled"];
+	m_texture_name			= pcstr( t["texture"] );
+	m_clip_by_normal		= t["clip_by_normal"];
+	m_with_shadows			= t["with_shadows"];
+
+	if ( t.value_exists( "geometry" ) )
+		m_geometry = t["geometry"];
+	else
+		m_geometry = 0;
+
+	cb( *this );
 }
+
+// claude@NOTE: insert/remove need render::environment_probe_properties and call
+// render::scene_renderer::update_environment_probe / remove_environment_probe,
+// none of which are declared in our render-facade headers (they live in the
+// vostok/render/facade unit - scene_renderer.cpp). Blocked until that facade cook
+// lands in its own PR; left STUB.
 
 // STATE[STUB]
 void object_environment_probe::insert( )

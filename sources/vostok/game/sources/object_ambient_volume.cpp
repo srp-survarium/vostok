@@ -4,8 +4,21 @@
 
 #include "pch.h"
 #include "object_ambient_volume.h"
+#include "game_object_static.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
+
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
+
+// claude@NOTE: clear_value file-static float; init value is not encoded in the
+// load asm (referenced only by address) and cannot be recovered from the
+// disassembly. Guessed 0.0f - does not affect load's codegen, only the unmatched
+// data initializer.
+static float clear_value = 0.0f;
 
 // STATE[STUB]
  object_ambient_volume::object_ambient_volume( base_game_scene& w ) :
@@ -25,25 +38,29 @@ namespace survarium {
 	// ******
 }
 
-// STATE[STUB]
 void object_ambient_volume::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// FUNCTION BODY[0x78e9d0]: 9
-	// <0x78e9da>|0x00a|+0x014:'34'
-	// <0>
-	// <0x78e9ee>|0x01e|+0x00f:'36'
-	// <0x78e9fd>|0x02d|+0x026:'37'
-	// <0>
-	// <0x78ea23>|0x053|+0x01e:'39'
-	// <0x78ea41>|0x071|+0x007:'40'
-	// <0>
-	// <0x78ea48>|0x078|+0x009:'42'
-	// ******
+	load_transform( t, m_transform );
+
+	m_enabled				= t["enabled"];
+	m_ambient_multiplier	= t["ambient_multiplier"];
+
+	if ( !m_enabled || m_ambient_multiplier != clear_value )
+		m_valid = false;
+
+	cb( *this );
 }
+
+// claude@NOTE: insert/remove need render::ambient_volume_properties and call
+// render::scene_renderer::update_ambient_volume / remove_ambient_volume, none of
+// which are declared in our render-facade headers (the type + the cook methods
+// live in the vostok/render/facade unit - vostok/render/facade/sources/
+// scene_renderer.cpp). Blocked until the render-facade ambient-volume cook lands
+// in its own PR; left STUB.
 
 // STATE[STUB]
 void object_ambient_volume::insert( )
