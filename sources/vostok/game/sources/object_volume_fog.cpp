@@ -9,6 +9,9 @@
 #include "game.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 
 namespace survarium {
 
@@ -83,43 +86,33 @@ void object_volume_fog::load(
 	cb( *this );
 }
 
-// claude@NOTE: insert/remove need render::volume_fog_parameters and call
-// render::scene_renderer::update_volume_fog / remove_volume_fog, none of which
-// are declared in our render-facade headers (they live in the vostok/render/facade
-// unit - scene_renderer.cpp). Blocked until that facade cook lands in its own PR;
-// left STUB.
-
-// STATE[STUB]
 void object_volume_fog::insert( )
 {
-	// LOCALS
-	// render::volume_fog_parameters 	v
-	// ******
+	render::volume_fog_parameters	v;
 
-	// FUNCTION BODY[0x78e7a0]: 14
-	// <0x78e7af>|0x00f|+0x00c:'85'
-	// <0>
-	// <0x78e7bb>|0x01b|+0x025:'87'
-	// <0x78e7e0>|0x040|+0x00e:'88'
-	// <0x78e7ee>|0x04e|+0x008:'89'
-	// <0x78e7f6>|0x056|+0x035:'90'
-	// <0x78e82b>|0x08b|+0x008:'91'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x78e833>|0x093|+0x08e:'98'
-	// ******
+	v.transform					= m_transform;
+	v.fog_color					= m_color;
+	v.density					= m_density;
+	v.speed						= m_speed;
+	v.direction					= math::normalize_safe( m_direction, float2( 0.0f, 0.0f ) );
+	v.noise_scale				= m_noise_scale;
+
+	v.wave_length				= m_wave_length;
+	v.near_density				= m_near_density;
+	v.transparency_multiplier	= m_transparency_multiplier;
+	v.density_offset			= m_density_offset;
+	v.height_falloff_offset		= m_height_falloff_offset;
+
+	get_game_scene().renderer().scene().update_volume_fog(
+		get_game_scene().render_scene(),
+		m_volume_fog_id,
+		v
+	);
 }
 
-// STATE[STUB]
 void object_volume_fog::remove( )
 {
-	// FUNCTION BODY[0x78e8d0]: 1
-	// <0x78e8d0>|0x000|+0x026:'103'
-	// ******
+	get_game_scene().renderer().scene().remove_volume_fog( get_game_scene().render_scene(), m_volume_fog_id );
 }
 
 } // namespace survarium
