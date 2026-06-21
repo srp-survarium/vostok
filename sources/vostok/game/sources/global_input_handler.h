@@ -39,14 +39,9 @@ public:
 							s32					z
 						) override;
 
-	// STATE[STUB]
 	virtual	s32			input_priority			( ) override
 	{
-		return 0;
-
-		// FUNCTION BODY[0xb53b0]
-		// <0xb53b0>|0x000|      :'26'	{
-		// ******
+		return 1;
 	}
 
 private:

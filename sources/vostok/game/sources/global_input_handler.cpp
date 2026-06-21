@@ -4,83 +4,57 @@
 
 #include "pch.h"
 #include "global_input_handler.h"
+#include "game.h"
+#include <vostok/input/world.h>
+#include <vostok/input/keyboard.h>
 
 namespace survarium {
 
-// STATE[STUB]
+// claude@NOTE: the target ctor is the constant-folded static-init for the single
+// `static global_input_handler g_input_handler` inside game::on_base_resources_created
+// (still a STUB): `this` folds to the global address, so it stores straight to
+// [g_input_handler]/[g_input_handler+4] instead of via ecx. Built from the anchor's
+// generic local it emits the register form (82.5%); reaches 100% once
+// on_base_resources_created bodies the static and the real call graph reaches it.
 global_input_handler::global_input_handler( game& game ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
 	m_game( game )
 {
-	// FUNCTION BODY[0x705590]: 0
-	// <0x705590>|0x000|+0x00f:'21'	{
-	// <0x70559f>|0x00f|      :'22'	}
-	// ******
 }
 
-// STATE[STUB]
- global_input_handler::~global_input_handler( )
+global_input_handler::~global_input_handler( )
 {
-	// FUNCTION BODY[0x705580]: 0
-	// <0x705580>|0x000|+0x006:'25'	{
-	// <0x705586>|0x006|      :'26'	}
-	// ******
 }
 
-// STATE[STUB]
 bool global_input_handler::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		action
 )
 {
-	// CALL SITE INFO
-	// <0x70550a> -> input::keyboard const* < unknown >()
-	// <0x705514> -> bool < unknown >( input::enum_keyboard ) const
-	// <0x705521> -> input::keyboard const* < unknown >()
-	// <0x70552e> -> bool < unknown >( input::enum_keyboard ) const
-	// ******
+	if ( action != input::kb_key_down )
+		return false;
 
-	return false;
+	switch ( key )
+	{
+		case input::key_f4:
+			if ( input_world->get_keyboard()->is_key_down( input::key_lalt ) ||
+				 input_world->get_keyboard()->is_key_down( input::key_ralt ) )
+				m_game.exit( "quit" );
+			else
+				return false;
+			break;
 
-	// FUNCTION BODY[0x7054e0]: 23
-	// <0x7054e0>|0x000|+0x000:'33'	{
-	// <0x7054e0>|0x000|+0x00a:'34'
-	// <0x7054ea>|0x00a|+0x006:'35'
-	// <0>
-	// <0x7054f0>|0x010|+0x00f:'37'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7054ff>|0x01f|+0x03c:'42'
-	// <0>
-	// <0x70553b>|0x05b|+0x014:'44'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x70554f>|0x06f|+0x022:'51'
-	// <0x705571>|0x091|-0x028:'51'
-	// <0x705549>|0x069|+0x022:'52'
-	// <0x70556b>|0x08b|+0x00c:'52'
-	// <0x705577>|0x097|-0x042:'52'
-	// <0>
-	// <1>
-	// <2>
-	// <0x705535>|0x055|-0x048:'56'
-	// <0x7054ed>|0x00d|+0x04b:'57'
-	// <0x705538>|0x058|+0x014:'57'
-	// <0x70554c>|0x06c|+0x022:'57'
-	// <0x70556e>|0x08e|+0x00c:'57'
-	// <0x70557a>|0x09a|      :'57'	}
-	// ******
+		case input::key_grave:
+			m_game.toggle_console( );
+			break;
+
+		default:
+			return false;
+	}
+
+	return true;
 }
 
-// STATE[STUB]
 bool global_input_handler::on_gamepad_action(
 	input::world*					input_world,
 	input::gamepad_button			button,
@@ -88,14 +62,8 @@ bool global_input_handler::on_gamepad_action(
 )
 {
 	return false;
-
-	// FUNCTION BODY[0x7054d0]: 2
-	// <0>
-	// <0x7054d0>|0x000|+0x002:'62'
-	// ******
 }
 
-// STATE[STUB]
 bool global_input_handler::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
@@ -103,14 +71,8 @@ bool global_input_handler::on_mouse_key_action(
 )
 {
 	return false;
-
-	// FUNCTION BODY[0x7054c0]: 2
-	// <0>
-	// <0x7054c0>|0x000|+0x002:'68'
-	// ******
 }
 
-// STATE[STUB]
 bool global_input_handler::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -119,11 +81,6 @@ bool global_input_handler::on_mouse_move(
 )
 {
 	return false;
-
-	// FUNCTION BODY[0x7054b0]: 2
-	// <0>
-	// <0x7054b0>|0x000|+0x002:'74'
-	// ******
 }
 
 
