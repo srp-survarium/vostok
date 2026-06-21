@@ -1910,23 +1910,13 @@ void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::get_time_driving_animation(unsigned int) const
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::get_time_driving_animation( u32 time_synchronization_group_id ) const
 {
-	return NULL;
+	for ( n_ary_tree_animation_node** i = m_time_driving_animations_begin; i != m_time_driving_animations_end; ++i )
+		if ( (*i)->time_synchronization_group_id( ) == time_synchronization_group_id )
+			return				*i;
 
-	// FUNCTION BODY
-	// <0x6e97f0>|0x000|+0x010:'1542'
-	// <0>
-	// <0x6e9800>|0x010|+0x012:'1544'
-	// <0x6e9812>|0x022|-0x004:'1545'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6e980e>|0x01e|+0x003:'1549'
-	// <0x6e9811>|0x021|+0x004:'1550'
-	// ******
+	return						NULL;
 }
 
 // STATE[STUB]
