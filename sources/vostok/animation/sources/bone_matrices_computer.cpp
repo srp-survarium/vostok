@@ -80,13 +80,12 @@ STATIC_SIZE_ASSERT(bone_transform, 0x2C);
 namespace vostok {
 namespace animation {
 
-// STATE[STUB]
-// claude@NOTE: init list matched; body is a loop over m_animations selecting those whose
-// event_iterator animation node targets m_animated_object, accumulating m_layers_count via
-// math::max and pinning each cubic_spline_skeleton_animation. Needs n_ary_tree_animation_node
-// + cubic_spline animation accessors (esi=*(anim+0xAC), cmp [esi+24h]==m_animated_object,
-// max(m_layers_count,[esi+48h])); large pinned_ptr/event-iterator reconstruction - parked.
- bone_matrices_computer::bone_matrices_computer(
+// claude@NOTE: 7-stmt STRUCTURE MATCH (capped ~30%). Residual is inlining-environment only:
+// target keeps a real `call vostok::math::max` + register-promotes m_layers_count to ebx
+// (single write-back + ++), base inlines max branchless and read/writes the member each pass;
+// target inlines the intrusive_ptr ref-count dance into the pinned_ptr assignment while base
+// keeps pinned_ptr_const::operator=/dtor calls. Same statements, different inline decomposition.
+bone_matrices_computer::bone_matrices_computer(
 	pcvoid const						animated_object,
 	skeleton const*						skeleton,
 	mixing::animation_state* const		animations,
@@ -99,27 +98,18 @@ namespace animation {
 	m_layers_count				( 0 ),
 	m_overweighting_detected	( false )
 {
-	// LOCALS
-	// mixing::animation_state* 		e
-	// ******
+	for ( mixing::animation_state* i = animations, * const e = animations + animations_count; i != e; ++i ) {
+		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation();
+		if ( animation_node.animated_object() != m_animated_object )
+			continue;
 
-	// FUNCTION BODY
-	// <0x6edf40>|0x000|+0x03b:'92'	{
-	// <0x6edf7b>|0x03b|-0x02b:'92'
-	// <0>
-	// <0x6edf50>|0x010|+0x030:'94'
-	// <0x6edf80>|0x040|+0x003:'95'
-	// <0x6edf83>|0x043|+0x00c:'96'
-	// <0>
-	// <1>
-	// <0x6edf8f>|0x04f|+0x00c:'99'
-	// <0x6edf9b>|0x05b|+0x00e:'100'
-	// <0x6edfa9>|0x069|+0x0c1:'101'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ee06a>|0x12a|      :'105'	}
-	// ******
+		m_layers_count	= math::max( m_layers_count, animation_node.additivity_priority() );
+		i->bone_matrices_computer.pinned_animation	= cubic_spline_skeleton_animation_pinned(
+			( animation_node.animation_intervals() + i->animation_interval_id )->animation()
+		);
+	}
+
+	++m_layers_count;
 }
 
 bone_matrices_computer::~bone_matrices_computer( )
@@ -138,87 +128,38 @@ float3 mix_translations( buffer_vector< std::pair< float3, float > > const& tran
 }
 
 // STATE[STUB]
-// claude@NOTE: ~0x1f9-byte weighted quaternion blend (axis-angle log/exp accumulation with
-// total_weight + optional final normalization). Large FP reconstruction; reachable once
-// computed_local_bone_transform / get_object_transform are bodied (its only callers) - parked.
+// claude@NOTE: ~0x1f9-byte weighted quaternion blend. STRUCTURE FULLY RECOVERED from target
+// asm (0x6eca10), 26 stmts, lines 200-247; parked ONLY because both its callers
+// (computed_local_bone_transform / get_object_transform) are still stubs so it DCE-strips and
+// can't be scored. Ready-to-paste body (verify once a caller is bodied):
+//   typedef buffer_vector< std::pair< quaternion, float > > rotations_type;
+//   rotations_type rotations( ALLOCA( sizeof(rotations_type::value_type) * transforms.size() ), transforms.size() );
+//   for ( pair<float3,float> const* i=transforms.begin(), * const e=transforms.end(); i!=e; ++i ) {
+//       if ( math::abs( i->second ) < epsilon_5 ) continue;              // line 211: comiss epsilon,abs; ja skip
+//       rotations.push_back( std::make_pair( quaternion( i->first ), i->second ) ); }   // 212
+//   if ( rotations.empty() ) return quaternion( float4(0,0,0,1) );      // 214/215 -> .1 fills 0,0,0,clear_value
+//   if ( rotations.size() == 1 ) {                                       // 217: count==1
+//       if ( do_normalization ) return rotations.front().first;          // 218/219 (je .6: false->axis/angle)
+//       float angle; float3 direction;
+//       rotations.front().first.get_axis_and_angle( direction, angle );  // 224
+//       return quaternion( direction, angle * rotations.front().second );} // 225 (.7 shared ctor tail)
+//   if ( rotations.size() == 2 ) {                                       // 228: count==2
+//       const float total_weight = rotations.front().second + rotations.back().second;          // 229
+//       quaternion mix = slerp_optimized( rotations.front().first, rotations.back().first,
+//                                         rotations.back().second / total_weight );              // 235
+//       if ( do_normalization ) return mix;                              // 237/238
+//       float angle; float3 direction; mix.get_axis_and_angle( direction, angle );               // 242
+//       return quaternion( direction, angle * total_weight ); }          // 243 (jmp .7)
+//   return extrapolated_slerp( rotations.begin(), rotations.end() );     // 246
+// CROSS-UNIT DEP: extrapolated_slerp( pair<quaternion,float> const*, const* ) returns quaternion,
+//   GLOBAL namespace, DEFINED (still a STUB) in core/sources/math_quaternion.cpp; NOT declared in
+//   any header -> needs a file-scope forward decl here when un-stubbed.
 math::quaternion mix_rotations(
 	buffer_vector< std::pair< float3, float > >&	arg_0 /* vostok::buffer_vector< std::pair< float3, float > >& transforms */,
 	const bool		do_normalization
 )
 {
-	// LOCALS
-	// float 							angle
-	// float3 							direction
-	// vostok::math::quaternion 		mix
-	// float 							angle
-	// const float 						total_weight
-	// float3 							direction
-	// ******
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::buffer_vector< std::pair< vostok::math::quaternion, float > >
-	// 	rotations_type;
-
-	// ******
-
 	return vostok::math::quaternion();
-
-	// FUNCTION BODY
-	// <0x6eca10>|0x000|+0x008:'200'	{
-	// <0>
-	// <1>
-	// <0x6eca18>|0x008|+0x00d:'203'
-	// <0x6eca25>|0x015|+0x03f:'204'
-	// <0>
-	// <1>
-	// <0x6eca64>|0x054|+0x01a:'207'
-	// <0>
-	// <1>
-	// <0x6eca7e>|0x06e|+0x004:'210'
-	// <0x6eca82>|0x072|+0x028:'211'
-	// <0x6ecaaa>|0x09a|+0x04b:'212'
-	// <0>
-	// <0x6ecaf5>|0x0e5|+0x002:'214'
-	// <0x6ecaf7>|0x0e7|+0x006:'215'
-	// <0>
-	// <0x6ecafd>|0x0ed|+0x01a:'217'
-	// <0x6ecb17>|0x107|+0x004:'218'
-	// <0x6ecb1b>|0x10b|+0x021:'219'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ecb3c>|0x12c|+0x01e:'224'
-	// <0x6ecb5a>|0x14a|+0x02a:'225'
-	// <0>
-	// <1>
-	// <0x6ecb84>|0x174|+0x005:'228'
-	// <0x6ecb89>|0x179|+0x00e:'229'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ecb97>|0x187|+0x01d:'235'
-	// <0>
-	// <0x6ecbb4>|0x1a4|+0x006:'237'
-	// <0x6ecbba>|0x1aa|+0x020:'238'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ecbda>|0x1ca|+0x00f:'242'
-	// <0x6ecbe9>|0x1d9|-0x071:'243'
-	// <0>
-	// <1>
-	// <0x6ecb78>|0x168|+0x080:'246'
-	// <0x6ecbf8>|0x1e8|-0x19e:'246'
-	// <0x6eca5a>|0x04a|+0x0d8:'247'
-	// <0x6ecb32>|0x122|+0x048:'247'
-	// <0x6ecb7a>|0x16a|+0x056:'247'
-	// <0x6ecbd0>|0x1c0|+0x039:'247'
-	// <0x6ecc09>|0x1f9|      :'247'	}
-	// ******
 }
 
 float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )
@@ -240,10 +181,33 @@ frame identity_frame( )
 }
 
 // STATE[STUB]
-// claude@NOTE: 27-stmt 0x41c-byte per-bone mixer: allocates rotations/scales buffer_vectors,
-// loops m_animations sampling each bone_frame at frame_position for animation_layer_id,
-// accumulates weighted (translation,weight)/(rotation,weight)/(scale,weight), then returns a
-// bone_transform from mix_translations/mix_rotations/mix_scales. Large; parked.
+// claude@NOTE: 27-stmt 0x41c per-bone mixer (target 0x6ed2b0, lines 275-353). STRUCTURE DECODED;
+// parked - big FP reconstruction + a local-set puzzle that needs a build iteration to settle.
+// Named locals (PDB, 4): rotations, scales, e (animation_state*), frame_position. NOTE only
+// rotations + scales are buffers although the asm allocas THREE buffer_vectors and inline-mixes
+// the third (translations) via the .16 loop at line 348 -> the translations buffer is UNNAMED
+// (its mix_translations got inlined). Match the recorded 4-local set, do NOT add a named
+// translations local.
+// Shape:
+//   buffer_vector<pair<float3,float>> rotations( ALLOCA, m_animations_count );   // 275
+//   buffer_vector<pair<float3,float>> scales   ( ALLOCA, m_animations_count );   // 276 (+ inline translations buf)
+//   for ( animation_state* i=m_animations, * const e=m_animations+m_animations_count; i!=e; ++i ) {  // 277/279
+//       n_ary_tree_animation_node& node = i->event_iterator.animation();         // 280  ([edi+0xAC])
+//       if ( i->weight == 0.f ) continue;                                        // 281  ([edi+0x68])
+//       if ( node.additivity_priority() != animation_layer_id ) continue;        // 284  ([ecx+0x48] vs [ebp+0x18])
+//       if ( !( node.bones_mask() & bone_mask ) ) continue;                      // 287  ([ecx+0x4C] & [ebp+0x14])
+//       <evaluate frame>: idx = bone_names::bone_index( pinned_anim->bone_names, bone.id() );  // 290
+//         if idx==-1 -> identity_frame(); else evaluate_frame( i->animation_time*default_fps,  // ([edi+0x6C])
+//                       pinned_anim->bone(idx).channels, frame, frame_position );
+//       translations.push_back( make_pair( frame.translation, weight ) );        // 297
+//       rotations.push_back   ( make_pair( frame.rotation,    weight ) );        // 298
+//       scales.push_back      ( make_pair( frame.scale,       weight ) ); }      // 299
+//   <overweighting>: total = sum(rotations weights); if ( |total-1| > epsilon ) normalize-rotations // 302-311
+//     then re-sum & if ( !m_overweighting_detected && |1-total| >= 0.5f ) m_overweighting_detected=true; // 314-324
+//   return bone_transform( mix_translations(translations), mix_rotations(rotations,!m_overweighting_detected),  // 348
+//                          mix_scales(scales) );                                  // visibility=true ([ecx+28h]=1) // 353
+// (evaluate_frame is in bone_animation_inline.h; bone_names::bone_index, frame layout
+//  translation/rotation/scale 0xC each + visibility @ anim_track_common.h.)
 bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_bone const& bone, const u32 bone_mask, const u32 animation_layer_id ) const
 {
 	// LOCALS
@@ -337,11 +301,24 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 }
 
 // STATE[STUB]
-// claude@NOTE: builds a buffer_vector<bone_transform>(bone.mask()) via
-// computed_local_bone_transform per layer, reduces with bone_transform::apply (translation+=,
-// rotation*=, scale*=), then returns mul4x3( create_scale(scale)*quat_to_matrix(rotation),
-// create_translation(translation) ). Load-bearing for compute_skeleton_branch[_local] but they
-// pair via the real call even while this is a stub; matrix reduction reconstruction parked.
+// claude@NOTE: 11-stmt 0x40f bone_transform->matrix reduction (target 0x6ed6d0, lines 359-372).
+// STRUCTURE DECODED; parked - big inline FP (the create_matrix(quaternion,float3) expansion at
+// line 370 is the 0x1cc-byte xmm block 0x232-0x3d7, ending in mul4x3+create_translation+mul4x3).
+// Only named local (PDB): `result` (bone_transform). The bone_transforms buffer is UNNAMED.
+// Shape:
+//   buffer_vector<bone_transform> bone_transforms( ALLOCA(sizeof(bone_transform)*m_layers_count), m_layers_count ); // 359
+//   for ( u32 i=0; i<m_layers_count; ++i )                                              // 360  (loop bound [this+0x10])
+//       bone_transforms.push_back( computed_local_bone_transform( bone, bone_mask, i ) );// 361
+//   bone_transform result = bone_transforms.front();                                    // 364/365 (copy first elem)
+//   for ( bone_transform const* i=bone_transforms.begin()+1; i!=bone_transforms.end(); ++i ) // 367
+//       result.apply( *i );                                                             // 368 (transl+=, rot*=, scale*=, vis&=)
+//   return mul4x3( create_matrix( result.rotation, result.scale-as-scale ) ... ,        // 370 - actually:
+//                  create_translation( result.translation ) );
+//   => the 0x232 block builds create_matrix(result.rotation,float3(0)) scaled by result.scale,
+//      via mul4x3( <quat-to-3x3 * scale>, create_translation(result.translation) ); confirm exact
+//      create_scale/create_matrix nesting against math_float4x4_inline.h on the matching pass.
+// ABI note: this thiscall returns float4x4 by value; [ebp+8] is reused as the buffer base after
+// ebx=this is read; [ebp+0Ch]=sret. m_layers_count drives the layer loop (NOT bone.mask()).
 float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const& bone, const u32 bone_mask ) const
 {
 	// LOCALS
@@ -469,9 +446,29 @@ void bone_matrices_computer::convert_to_object_matrices( float4x4* begin, float4
 }
 
 // STATE[STUB]
-// claude@NOTE: 19-stmt 0x689-byte object-movement mixer: allocates translations/rotations/scales
-// buffer_vectors, loops m_animations accumulating each weighted accumulated_object_movement, then
-// composes create_scale*quat_to_matrix*create_translation from mix_* results. Large; parked.
+// claude@NOTE: 19-stmt 0x689 object-movement mixer (target 0x6ecc20, lines 492-536). STRUCTURE
+// DECODED; parked - big FP (create_matrix/get_angles_xyz per anim @519 0x144, the final compose
+// @529 0x1e6). Named locals (PDB, 6, in this order): rotations, translations, scales,
+// e (animation_state*), i (animation_state*), frame_position. THREE buffers ALL named here
+// (contrast computed_local_bone_transform where translations is unnamed).
+// Shape:
+//   buffer_vector<pair<float3,float>> rotations   ( ALLOCA, m_animations_count );  // 492 ([this+0x0C])
+//   buffer_vector<pair<float3,float>> translations( ALLOCA, m_animations_count );  // 493
+//   buffer_vector<pair<float3,float>> scales      ( ALLOCA, m_animations_count );  // 494
+//   for ( animation_state* i=m_animations, * const e=m_animations+m_animations_count; i!=e; ++i ) { // 496
+//       node = i->event_iterator.animation();                                      // ([i+0x78+...]=[ebx+0x78])
+//       if ( node.animated_object() != m_animated_object ) continue;               // 497 ([edx+0x24] vs [this])
+//       if ( pinned->animation_type() != 0 ) continue;                             // 500 (cubic_spline_skeleton_animation::animation_type, [ebx+0x20]=this)
+//       if ( !( node.can_generate_events() ) ) continue;                           // 503 ([edx+0x4C]&1)  -- confirm accessor
+//       if ( i->event_iterator.are_there_any_weight_transitions() ) {              // 506 ([ebx+0x40])
+//           <use previous_object_movement>; translations/rotations/scales.push_back(...); }  // 507-509
+//       else { <use accumulated_object_movement w/ create_matrix(rot, float3(0)) + get_angles_xyz>;  // 511-518
+//           translations/rotations/scales.push_back( make_pair(component, i->weight) ); } }
+//   return mul4x3/compose from mix_translations(translations) / mix_rotations(rotations,true) /
+//          mix_scales(scales): create_scale * quat_to_matrix * create_translation.            // 529/536
+// (object_movement layout @mixing_animation_state.h: rotation 0x10, translation 0x10, scale; the
+//  bone_matrices_computer_data accumulated/previous_object_movement offsets drive [ebx+0x10..0x40].)
+// Helpers: math::create_matrix(quaternion,float3) + float4x4::get_angles_xyz @math_float4x4*.h.
 float4x4 bone_matrices_computer::get_object_transform( ) const
 {
 	// LOCALS
