@@ -16,6 +16,7 @@
 #include "game_project.h"
 #include "render_visual.h"
 #include "base_game_scene.h"
+#include "login_menu_status_enum.h"	// switch_to_login arg (anchor direct call)
 #include <vostok/game_core/scheduler.h>
 
 namespace survarium {
@@ -64,16 +65,37 @@ namespace survarium {
 		if ( s_run_pr )
 			parse_resolution( s_res );
 
+		// These game methods are only ever called internally in the shipped EXE, so
+		// LTCG gives their standalone copies a specialized this-in-register convention
+		// (this in eax/esi/edi, not the __thiscall ecx). Address-taking a method forces
+		// a stock __thiscall copy that mismatches that convention; a guarded DIRECT call
+		// (never executed - s_run_g stays false) keeps the symbol past /OPT:REF AND lets
+		// LTCG pick the same specialized convention, so they pair byte-exact. Pattern:
+		// patterns/anchor-direct-call-this-convention.md.
+		static survarium::game* volatile s_g = 0;
+		static volatile bool s_run_g = false;
+		// source switch_to_login's status through a volatile so LTCG cannot prove the
+		// constant this anchor passes and propagate it into the body (it reads the param).
+		static survarium::login_menu_status_enum volatile s_status = survarium::login_menu_status_connected;
+		if ( s_run_g )
+		{
+			s_g->respawn_local_player( );
+			s_g->discard_current_match( );
+			s_sink = &s_g->get_flash_factory( );
+			s_g->toggle_console( );
+			s_g->switch_to_lobby( );
+			s_g->switch_to_login( s_status );
+			s_g->switch_to_main_menu( );
+			s_g->switch_to_game_world( );
+			s_g->create_debug_window( );
+			s_g->activate_main_menu( );
+			s_g->deactivate_main_menu( );
+			s_g->create_lobby_menu( );
+			s_g->create_login_menu( );
+		}
+
 		void ( survarium::game::* const m_commit )( )			= &survarium::game::commit_suicide;
-		void ( survarium::game::* const m_respawn )( )			= &survarium::game::respawn_local_player;
-		void ( survarium::game::* const m_discard )( )			= &survarium::game::discard_current_match;
 		void ( survarium::game::* const m_exit )( pcstr )		= &survarium::game::exit;
-		void ( survarium::game::* const m_sw_world )( )			= &survarium::game::switch_to_game_world;
-		void ( survarium::game::* const m_sw_main )( )			= &survarium::game::switch_to_main_menu;
-		void ( survarium::game::* const m_sw_login )( login_menu_status_enum )	= &survarium::game::switch_to_login;
-		void ( survarium::game::* const m_act_menu )( )			= &survarium::game::activate_main_menu;
-		void ( survarium::game::* const m_deact_menu )( )		= &survarium::game::deactivate_main_menu;
-		survarium::flash_factory& ( survarium::game::* const m_flash )( )		= &survarium::game::get_flash_factory;
 		void ( survarium::game::* const m_caanc )( vostok::fixed_string< 512 >, const bool )	= &survarium::game::create_and_assign_network_client;
 		void ( survarium::game::* const m_oqbncsr )( survarium::scene_ready_type )	= &survarium::game::on_queried_by_network_client_scene_ready;
 		void ( survarium::game::* const m_cnc )( const bool )	= &survarium::game::create_network_client;
@@ -101,15 +123,7 @@ namespace survarium {
 			boost::function< void( resources::queries_result& ) > const& )	= &survarium::game_world::load;
 
 		s_sink = *( pcvoid const* )&m_commit;
-		s_sink = *( pcvoid const* )&m_respawn;
-		s_sink = *( pcvoid const* )&m_discard;
 		s_sink = *( pcvoid const* )&m_exit;
-		s_sink = *( pcvoid const* )&m_sw_world;
-		s_sink = *( pcvoid const* )&m_sw_main;
-		s_sink = *( pcvoid const* )&m_sw_login;
-		s_sink = *( pcvoid const* )&m_act_menu;
-		s_sink = *( pcvoid const* )&m_deact_menu;
-		s_sink = *( pcvoid const* )&m_flash;
 		s_sink = *( pcvoid const* )&m_caanc;
 		s_sink = *( pcvoid const* )&m_oqbncsr;
 		s_sink = *( pcvoid const* )&m_cnc;
