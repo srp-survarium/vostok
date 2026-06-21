@@ -52,18 +52,29 @@ void flash_movie::Advance( const float time_delta, const u32 frame_catch_up_coun
 	VOSTOK_UNREFERENCED_PARAMETERS	( time_delta, frame_catch_up_count );
 }
 
-// STATE[STUB]
+// claude@NOTE: flash_text glue /Od-vs-optimized wall. The shipped movie.cpp was
+// compiled OPTIMIZED (GFx::Movie / DrawText / DrawTextManager / RectF / SizeF
+// chains inlined AND statement-folded); our base builds /Od, so every GetRect /
+// SetRect / GetTextExtent stays an out-of-line call and the NRVO return-object
+// ctor / temp construction never folds. The SOURCE STRUCTURE is faithful
+// (set_position pairs 4/4 statements, set_text/create_text/set_font_size pair
+// SetText/GetTextExtent/`size += 5.f`/SetRect in order); the residual is the
+// /Od fold of the ctor (+1 stmt) and the optimizer's RectF-arg statement split
+// (target splits SetRect across two lines, /Od keeps it one) - not source-steerable.
+// get_width/get_height/set_font_size/create_text_w are UNPAIRED on reachability,
+// not matching: game's own flash_text.h / flash_text_manager.h inline-stub these
+// four, so the scaleform out-of-line bodies are /OPT:REF-stripped (no caller).
+// Pairing them needs a scaleform-module anchor chain (none exists; set_position
+// is referenced yet still unpaired by /Od size divergence, so an anchor would
+// likely not pair them either) - parked, cross-module reachability work.
 float flash_text::get_height( )
 {
-	// FUNCTION BODY[0x5bb190]
-	return 0.f;
+	return text_impl->GetRect( ).Height( );
 }
 
-// STATE[STUB]
 float flash_text::get_width( )
 {
-	// FUNCTION BODY[0x5bb1c0]
-	return 0.f;
+	return text_impl->GetRect( ).Width( );
 }
 
 // STATE[STUB]
@@ -93,18 +104,37 @@ void flash_movie::SetViewport( u32 width, u32 height )
 	VOSTOK_UNREFERENCED_PARAMETERS	( width, height );
 }
 
-// STATE[STUB]
 void flash_text::set_text( pcstr text )
 {
-	// FUNCTION BODY[0x5bb2f0]
-	VOSTOK_UNREFERENCED_PARAMETER	( text );
+	text_impl->SetText( text );
+	Scaleform::Render::SizeF	size	= owner->text_manager_impl->GetTextExtent( text );
+	size	+= 5.f;
+
+	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
+	text_impl->SetRect( Scaleform::Render::RectF(
+		rect.x1,
+		rect.y1,
+		rect.x1 + size.Width,
+		rect.y1 + size.Height
+	) );
+	owner->need_capture	= true;
 }
 
-// STATE[STUB]
 void flash_text::set_position( const float x, const float y )
 {
-	// FUNCTION BODY[0x5bb390]
-	VOSTOK_UNREFERENCED_PARAMETERS	( x, y );
+	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
+
+	const float	screen_position_x	= x;
+	const float	screen_position_y	= y;
+
+	text_impl->SetRect( Scaleform::Render::RectF(
+		screen_position_x,
+		screen_position_y,
+		screen_position_x + rect.Width( ),
+		screen_position_y + rect.Height( )
+	) );
+
+	owner->need_capture	= true;
 }
 
 // STATE[STUB]
@@ -128,20 +158,36 @@ void flash_text_manager::set_viewport( u32 width, u32 height )
 	VOSTOK_UNREFERENCED_PARAMETERS	( width, height );
 }
 
-// STATE[STUB]
 flash_text flash_text_manager::create_text_w( wchar_t* text )
 {
-	// FUNCTION BODY[0x5bb4a0]
-	VOSTOK_UNREFERENCED_PARAMETER	( text );
-	return flash_text( );
+	flash_text	result;
+	Scaleform::Render::SizeF	extent	= text_manager_impl->GetTextExtent( text );
+	extent.Width	+= 5.f;
+
+	result.text_impl	= text_manager_impl->CreateText( text, Scaleform::Render::RectF( 0.f, 0.f, extent.Width, extent.Height ) );
+
+	result.visible		= true;
+
+	need_capture		= true;
+	result.owner		= this;
+
+	return result;
 }
 
-// STATE[STUB]
 flash_text flash_text_manager::create_text( pcstr text )
 {
-	// FUNCTION BODY[0x5bb530]
-	VOSTOK_UNREFERENCED_PARAMETER	( text );
-	return flash_text( );
+	flash_text	result;
+	Scaleform::Render::SizeF	extent	= text_manager_impl->GetTextExtent( text );
+	extent.Width	+= 5.f;
+
+	result.text_impl	= text_manager_impl->CreateText( text, Scaleform::Render::RectF( 0.f, 0.f, extent.Width, extent.Height ) );
+
+	result.visible		= true;
+
+	need_capture		= true;
+	result.owner		= this;
+
+	return result;
 }
 
 // STATE[STUB]
@@ -177,11 +223,24 @@ flash_text_manager::flash_text_manager( Scaleform::GFx::Loader* loader )
 	VOSTOK_UNREFERENCED_PARAMETER	( loader );
 }
 
-// STATE[STUB]
 void flash_text::set_font_size( const float font_size )
 {
-	// FUNCTION BODY[0x5bb810]
-	VOSTOK_UNREFERENCED_PARAMETER	( font_size );
+	text_impl->SetFontSize( font_size );
+
+	Scaleform::GFx::DrawTextManager::TextParams	params	= owner->text_manager_impl->GetDefaultTextParams( );
+
+	params.FontSize	= font_size;
+	Scaleform::Render::SizeF	size	= owner->text_manager_impl->GetTextExtent( text_impl->GetText( ), 0.f, &params );
+	size	+= 5.f;
+
+	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
+	text_impl->SetRect( Scaleform::Render::RectF(
+		rect.x1,
+		rect.y1,
+		rect.x1 + size.Width,
+		rect.y1 + size.Height
+	) );
+	owner->need_capture	= true;
 }
 
 } // namespace survarium
