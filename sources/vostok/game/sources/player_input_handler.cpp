@@ -144,14 +144,20 @@ void player_input_handler::on_before_processing( input::world* const input_world
 	m_current_time_in_ms	= current_time_in_ms;
 }
 
+// claude@NOTE: instruction stream matches the target; the only residual is
+// register allocation around the process_*_person_mode tail calls (target keeps
+// `this` in eax + edi-as-callee-save, base keeps ecx + esi) - an LTCG scheduling
+// choice, not source-steerable. The `const float2&` binds the velocity temporary
+// so it is computed ONCE (no phantom local; --view info still reports 2 locals).
 void player_input_handler::on_after_processing( input::world* input_world )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
 	const float time_delta = m_time_delta_in_ms / 1000.0f;
 
-	m_rotation_delta.x	= m_rotation_delta.x * time_delta;
-	m_rotation_delta.y	= m_rotation_delta.y * time_delta;
+	const float2& angular_velocity = m_rotation_delta / time_delta;
+	m_input.angular_acceleration	= ( angular_velocity - m_input.angular_velocity ) * 2.0f / time_delta;
+	m_input.angular_velocity		= angular_velocity;
 
 	if( m_input_mode == first_person_mode )
 		process_first_person_mode( true );
@@ -161,8 +167,9 @@ void player_input_handler::on_after_processing( input::world* input_world )
 
 bool player_input_handler::alt_is_held( ) const
 {
-	return m_game_world.get_game( ).input_world( ).get_keyboard( )->is_key_down( input::key_rmenu ) ||
-		   m_game_world.get_game( ).input_world( ).get_keyboard( )->is_key_down( input::key_lmenu );
+	input::keyboard const& keyboard = *m_game_world.get_game( ).input_world( ).get_keyboard( );
+	return keyboard.is_key_down( input::key_rmenu ) ||
+		   keyboard.is_key_down( input::key_lmenu );
 }
 
 // TU-local primary template (canonical "headers/first_predicate_enum
@@ -198,6 +205,11 @@ void player_input_handler::process_first_person_mode( const bool use_mouse_move 
 	VOSTOK_UNREFERENCED_PARAMETER( use_mouse_move );
 }
 
+// claude@NOTE: callee-stub-blocked. The two process_first_person_mode() calls fold
+// away (process_first_person_mode is an empty STUB until key_binder/player land, so
+// LTCG inlines its {} ), which the target keeps as real calls (TRGT_ONLY in the
+// structure-diff). The fuzzy % here is unstable regalloc noise around those folded
+// calls; it cannot reach 100% until process_first_person_mode has its real body.
 void player_input_handler::process_third_person_mode( )
 {
 	m_distance_to_focus_point	+= m_z_mouse_axis;
