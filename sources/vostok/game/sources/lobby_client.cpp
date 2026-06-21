@@ -9,6 +9,7 @@
 
 #include "game.h"
 #include "game_memory.h"
+#include "lobby_menu.h"
 #include "price_item.h"
 #include <vostok/login_server/message_types.h>
 #include <vostok/game_core/game_net_defines.h>
@@ -72,9 +73,7 @@ void lobby_client::clear_profile_info( )
 	m_profiles_count	= 0;
 	m_inventory_item_instances.clear	( );
 
-	m_account_money.generic_money		= 0;
-	m_account_money.premium_money		= 0;
-	m_account_money.total_skill_points	= 0;
+	m_account_money.generic_money	= m_account_money.premium_money	= m_account_money.total_skill_points	= 0;
 
 	FREE	( m_player_skills );
 	FREE	( m_player_reputations );
@@ -201,6 +200,12 @@ void lobby_client::query_profile_contents(
 	m_packet_client.send	( packet );
 }
 
+// claude@NOTE: the read_*/send handlers below are STRUCTURE-MATCHed but byte-capped:
+// network_core::packet_reader::r<T>()/r_string()/eof() and tcp_packet::append()/send()
+// are whole-program-inlined in the target but emitted as calls in our base (network_core
+// not yet fully built), and the carcass anchor (anchor_game_clients.cpp) supplies
+// artificial reachability. Both lift when all networking is matched and the network/
+// network_core anchors are removed - do not chase these bytes here.
 bool lobby_client::read_status_info( network_core::packet_reader& reader )
 {
 	m_status	= (lobby::client_state_enum)reader.r< u8 >( );
@@ -500,30 +505,23 @@ void lobby_client::discard_playing_order( )
 	m_packet_client.send	( packet );
 }
 
-// claude@NOTE: PARKED - blocked on cross-unit symbols absent from our tree.
-// Recovered body (target asm 0x5c7b90):
-//   if ( !m_net_client_connected ) return;
-//   network_core::tcp_packet packet( memory::g_mt_allocator );
-//   packet.append( (u8)ping_server );
-//   packet.append( m_game.<current-time-accessor>( ) );  // game m_current_time_in_ms @0x3f4
-//   m_packet_client.send( packet );
-// game.h lacks the m_current_time_in_ms member / its accessor (game.cpp is matched,
-// so its layout cannot be touched here). Restore once game.h gains that member.
 void lobby_client::ping_server( )
 {
+	if ( !m_net_client_connected )
+		return;
+
+	network_core::tcp_packet packet( memory::g_mt_allocator );
+	packet.append	( (u8)vostok::ping_server );
+	packet.append	( m_game.game_time_ms( ) );
+	m_packet_client.send	( packet );
 }
 
-// claude@NOTE: PARKED - blocked on cross-unit symbols absent from our tree.
-// Recovered body (target asm 0x5c76f0):
-//   u32 const sent_time = reader.r< u32 >( );
-//   float const ping = ( m_game.<current-time>( ) - sent_time ) * 0.5f;
-//   m_game.lobby_menu( ).set_ping( (s64)ping );  // lobby_menu::set_ping(u32) @ structure
-//   return true;
-// blocked on game m_current_time_in_ms (above) and lobby_menu::set_ping (in the
-// canonical lobby_menu structure, absent from our carcass lobby_menu.h).
 bool lobby_client::read_ping_server_answer( network_core::packet_reader& reader )
 {
-	return false;
+	u32 const sent_time	= reader.r< u32 >( );
+	float const ping	= ( m_game.game_time_ms( ) - sent_time ) * 0.5f;
+	m_game.lobby_menu( ).set_ping	( (s64)ping );
+	return true;
 }
 
 } // namespace survarium
