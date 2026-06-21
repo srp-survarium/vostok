@@ -5,6 +5,9 @@
 #include "pch.h"
 #include "network_client.h"
 
+#include <boost/bind.hpp>							// on_lobby_packet_received's match-connect callbacks
+#include <vostok/network_core/packet_reader.h>		// reader.r<>() / r_string() in the lobby dispatch
+
 // network_client's player_ptr / player_desc members instantiate
 // resource_ptr<player> dtors here, needing the complete player type
 #include "player.h"
@@ -14,15 +17,129 @@
 
 namespace survarium {
 
-// claude@NOTE: large server->client lobby dispatch (152 stmts, 6 locals: host[64], type,
-// faction_id, op_id x2, description[512]). Reads an op_id and switches into lobby_client read_*
-// handlers (read_status_info/read_enumerate_profiles_info/read_price_items/...) + messaging_client
-// and lobby_menu refresh calls - all deps are on the base. Parked (NOT cross-module capped) as a
-// large focused follow-up: the switch case set + 6-local frame layout need careful byte-exact
-// reconstruction. lobby_client/messaging_client are matched on base, so this is reproducible.
-// STATE[STUB]
+// claude@NOTE: residual here is entirely LTCG/WPO inlining the target's delinked .obj reflects but
+// our base .obj does not reproduce: (1) packet_reader::r<>()/r_string() are inlined to raw byte
+// reads + memcpy in the target, called out-of-line in the base (the build-wide r<> residual noted in
+// packet_reader_inline.h - their address-of anchor keeps them as COMDATs); (2) the LOG_* sites inline
+// the filter_tree/callback/append idiom + boost::function1<char const*>::clear, where the base instead
+// emits the helper boost::function ctor/dtor; (3) messaging_client::assign_match_channel_order is
+// inlined into the connect case (the guarded match_id/team_id update + update_channel_subscriptions).
+// These also drive the target's 8-byte stack alignment (and esp,-8). Structure is matched: the outer
+// op_id switch is a bounds-check-free jump table (NODEFAULT), the client-status sub-dispatch is the
+// source if/else-if chain the target emits, and every read/handler/log statement is reproduced.
 void network_client::on_lobby_packet_received( network_core::packet_reader& reader )
 {
+	lobby_server_message_types_enum const op_id = (lobby_server_message_types_enum)reader.r< u8 >( );
+
+	switch ( op_id )
+	{
+		case connect_to_match_server:
+		{
+			char host[ 64 ];
+			reader.r_string	( host );
+
+			u16 const port						= reader.r< u16 >( );
+			lobby_client( ).match_id( )			= reader.r< u32 >( );
+			lobby_client( ).team_id( )			= (game_team_id)reader.r< u8 >( );
+			lobby_client( ).status( )			= lobby::in_match;
+
+			m_last_tick_time_in_ms				= m_game.game_time_ms( );
+
+			LOG_ERROR	( "[R] connect_to_game_server: %s: %d game time is %d", host, port, m_last_tick_time_in_ms );
+
+			m_match_client.set_on_disconnect	( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
+			m_match_client.connect	(
+				host,
+				port,
+				lobby_client( ).session_id( ),
+				m_last_tick_time_in_ms,
+				boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 )
+			);
+
+			if ( messaging_client( ).local_player_team( ) != lobby_client( ).team_id( ) && lobby_client( ).match_id( ) != u32( -1 ) )
+				messaging_client( ).assign_match_channel_order	( lobby_client( ).match_id( ), lobby_client( ).team_id( ) );
+
+			m_game.lobby_menu( ).switch_to_level_loading	( );
+			break;
+		}
+		case client_status:
+		{
+			lobby::query_info_types const type = (lobby::query_info_types)reader.r< u8 >( );
+
+			if ( type == 0 )
+			{
+				lobby_client( ).read_status_info	( reader );
+				messaging_client( ).assign_match_channel_order	( lobby_client( ).match_id( ), lobby_client( ).team_id( ) );
+			}
+			else if ( type == 1 )
+				lobby_client( ).read_enumerate_profiles_info	( reader );
+			else if ( type == 2 )
+				m_game.lobby_menu( ).on_profile_arrived	( lobby_client( ).read_profile_content_info( reader ) );
+			else if ( type == 3 )
+				lobby_client( ).read_enumerate_inventory_info	( reader );
+			else if ( type == 4 )
+				lobby_client( ).read_profile_slots_restrictions	( reader );
+			else if ( type == 5 )
+				lobby_client( ).read_items_compatibility	( reader );
+			else if ( type == 8 )
+				lobby_client( ).read_player_skills	( reader );
+			else if ( type == 11 )
+				lobby_client( ).read_player_reputations	( reader );
+			else if ( type == 9 )
+				lobby_client( ).read_player_skills_tree	( reader );
+			else if ( type == 6 )
+				m_game.lobby_menu( ).on_price_items_arrived	( lobby_client( ).read_price_items( reader ) );
+			else if ( type == 7 )
+				lobby_client( ).read_account_money	( reader );
+			else if ( type == 10 )
+				lobby_client( ).read_service_prices	( reader );
+			else
+				LOG_ERROR	( "Unknown client state received [%d]", type );
+
+			m_game.lobby_menu( ).on_client_status_received	( type );
+			break;
+		}
+		case operation_permitted:
+		{
+			lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );
+
+			LOG_INFO	( "[R] operation_permitted: %d", op_id );
+
+			switch ( op_id )
+			{
+				case shop_action:
+					process_shop_action	( reader );
+					break;
+				case skills_tree_action:
+					if ( reader.r< u8 >( ) == 1 )
+						lobby_client( ).query_client_status	( (lobby::query_info_types)7 );
+					lobby_client( ).query_client_status	( (lobby::query_info_types)8 );
+					break;
+				default:
+					m_game.lobby_menu( ).on_operation_permitted_received	( op_id );
+					break;
+			}
+			break;
+		}
+		case operation_denied:
+		{
+			lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );
+			reader.r< u8 >( );
+
+			char description[ 512 ];
+			reader.r_string	( description );
+
+			LOG_INFO	( "[R] operation_denied: %d", op_id );
+
+			m_game.lobby_menu( ).on_operation_denied_received	( op_id, description );
+			break;
+		}
+		case ping_server_answer:
+			lobby_client( ).read_ping_server_answer	( reader );
+			break;
+		default:
+			NODEFAULT( );
+	}
 }
 
 // claude@NOTE: the target CSEs m_game.lobby_menu() into one held pointer across the
@@ -53,39 +170,53 @@ void network_client::on_disconnected_from_lobby( )
 	}
 }
 
-// claude@NOTE: recovered structure (all deps present, good follow-up target):
-//   if ( packet.r<u8>() ) return;               // 284 - shop op code; non-zero returns
-//   inventory_item_instance new_item;           // local
-//   new_item.dict_id = packet.r<u16>();         // 286
-//   new_item.id      = packet.r<u32>();         // 292 (ebx)
-//   new_item.condition_or_stack = packet.r<u32>(); // 293 (ebp), amount_in_inventory=0
-//   // 296..308: find id in lobby_client().inventory_item_instances() (vectora at +0x788);
-//   //   if present: existing.condition_or_stack += new_item.condition_or_stack;
-//   //   else: push_back(new_item)  (emits _M_insert_overflow on overflow)
-//   lobby_menu().fill_inventory_contents();      // 310 (m_game.lobby_menu())
-//   lobby_client().query_client_status( (lobby::query_info_types)7 ); // 311
-// Parked NOT capped: the find-or-update-or-insert over the inventory vector with only the
-// 2 target locals (packet, new_item) needs careful byte-exact iteration of the inline search
-// + _M_insert_overflow; left as a focused follow-up to avoid a speculative low-fidelity body.
-// STATE[STUB]
+// claude@NOTE: structure-faithful (14/14 stmts). Residual is LTCG inline direction the base .obj
+// can't reproduce: the four packet.r<>() reads are out-of-line calls here but inlined in the target,
+// and our base inlines lobby_client::query_client_status (pulling in tcp_packet ctor/append/send)
+// where the target keeps it a plain call. The inventory find-or-update-or-insert + push_back idiom
+// itself matches (cmp [it+8],id / add [it],condition_or_stack).
 void network_client::process_shop_action( network_core::packet_reader& packet )
 {
+	if ( packet.r< u8 >( ) )
+		return;
+
+	inventory_item_instance new_item;
+	new_item.dict_id			= packet.r< u16 >( );
+	new_item.id					= packet.r< u32 >( );
+	new_item.condition_or_stack	= packet.r< u32 >( );
+	new_item.amount_in_inventory	= 0;
+
+	vectora< inventory_item_instance >::iterator i = lobby_client( ).inventory_item_instances( ).begin( );
+	for ( ; i != lobby_client( ).inventory_item_instances( ).end( ); ++i )
+		if ( i->id == new_item.id )
+			break;
+
+	if ( i == lobby_client( ).inventory_item_instances( ).end( ) )
+		lobby_client( ).inventory_item_instances( ).push_back( new_item );
+	else
+		i->condition_or_stack	+= new_item.condition_or_stack;
+
+	m_game.lobby_menu( ).fill_inventory_contents	( );
+	lobby_client( ).query_client_status	( (lobby::query_info_types)7 );
 }
 
-// claude@NOTE: recovered structure:
-//   m_game_status = game_status_inactive;                 // 320
-//   if ( match_client().is_connected() ) match_client().disconnect();  // 321/323
-//   m_game.get_game_world().unload();                      // 325
-//   if ( user_initiate ) lobby_client().<+0x86C> = true;   // 327
-//   if ( !lobby_client().<+0x194> ) lobby_client().<+0xA0> = true;  // 330/331
-//   if ( !m_game.<+0x35A> ) m_game.switch_to_lobby();      // 334/335
-// PARKED on the game carcass: m_game.<+0x35A> (a game bool gating switch_to_lobby) is absent
-// from the simplified game.h, and the lobby_client +0x86C/+0x194/+0xA0 members are private with
-// no accessor in lobby_client.h. Completes once the game layout + those lobby_client members are
-// available; the match_client()/get_game_world().unload() parts are already local.
-// STATE[STUB]
 void network_client::close_current_match( bool user_initiate )
 {
+	m_game_status	= game_status_inactive;
+
+	if ( match_client( ).is_connected( ) )
+		match_client( ).disconnect( );
+
+	m_game.get_game_world( ).unload( );
+
+	if ( user_initiate )
+		lobby_client( ).discard_playing_order_on_connected( );
+
+	if ( !lobby_client( ).net_connected( ) )
+		lobby_client( ).connection_info( ).need_resolve	= true;
+
+	if ( !m_game.get_game_world( ).is_loading( ) )
+		m_game.switch_to_lobby( );
 }
 
 void network_client::process_match_finished( network_core::packet_reader& __formal )
