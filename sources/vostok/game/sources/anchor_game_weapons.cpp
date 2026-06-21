@@ -147,10 +147,9 @@ namespace vostok
 		keep( &kb::dik_to_keyname );
 		keep( &kb::get_binding_group );
 		keep( &kb::get_action_dik );
-		keep( &kb::keyname_to_ptr );
-		keep( &kb::action_name_to_id );
-		keep( &kb::action_name_to_ptr );
-		keep( &kb::remap_keys );
+		// keyname_to_ptr / action_name_to_id / action_name_to_ptr / remap_keys are
+		// private (AAE) and reached transitively from the public bind_key/unbind_key
+		// chain, so /OPT:REF keeps them without an explicit (and inaccessible) keep().
 
 		// weapon.cpp file-local free helpers
 		keep( &survarium::is_dead );
