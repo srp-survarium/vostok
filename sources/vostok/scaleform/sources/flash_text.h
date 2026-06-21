@@ -27,8 +27,10 @@ struct flash_text {
 	};
 
 	// all out-of-line in movie.cpp per the rich index, except the ctor and
-	// set_alignment (unaddressed - true inlines)
-	inline				flash_text		( ) { /* no source */ }
+	// set_alignment (unaddressed - true inlines). The ctor zero-inits all three
+	// members: create_text's carcass shows the return slot zeroed at construction
+	// (text_impl/owner = 0, visible = false) before the fields are filled in.
+	inline				flash_text		( ) : text_impl( NULL ), owner( NULL ), visible( false ) { }
 
 			float		get_width		( );
 			float		get_height		( );
