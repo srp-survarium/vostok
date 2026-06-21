@@ -32,16 +32,12 @@ struct stats_stream : public boost::noncopyable {
 						math::color const&		color
 					);
 
-	// STATE[STUB]
-	// addressed carcass from the network_stats.h dump (this type's original home)
 	inline	void	set_visible		( const bool value )
 	{
-		// FUNCTION BODY[0x91d20]: 4
-		// <0x91d25>|0x005|+0x01c:'43'
-		// <0x91d41>|0x021|+0x01d:'44'
-		// <0x91d5e>|0x03e|+0x01d:'45'
-		// <0x91d7b>|0x05b|+0x01e:'46'
-		// ******
+		count.set_visible			( value );
+		bytes.set_visible			( value );
+		bits_per_second.set_visible	( value );
+		count_per_second.set_visible( value );
 	}
 			void	set_text		(
 						const u32		current_time_in_ms,

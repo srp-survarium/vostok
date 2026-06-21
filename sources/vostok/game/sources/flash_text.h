@@ -31,17 +31,20 @@ struct flash_text {
 	inline	float		get_width		( ) { /* no source */ return 0.f; }
 	inline	float		get_height		( ) { /* no source */ return 0.f; }
 
-	inline	void		set_visible		( bool arg_0 ) { /* no source */ }
+	// real out-of-line bodies live in the scaleform glue (movie.cpp); declared
+	// (not inlined) here so game-side callers resolve to that single definition
+	// instead of emitting a clashing COMDAT copy (LNK2005 vs movie.obj)
+			void		set_visible		( bool arg_0 );
 	inline	void		set_font_size	( const float arg_0 ) { /* no source */ }
-	inline	void		set_position	( const float arg_0, const float arg_1 ) { /* no source */ }
+			void		set_position	( const float arg_0, const float arg_1 );
 	inline	void		set_alignment	( flash_text::alignment arg_0 ) { /* no source */ }
-	inline	void		set_color		(
+			void		set_color		(
 							u8		arg_0,
 							u8		arg_1,
 							u8		arg_2,
 							u8		arg_3
-						) { /* no source */ }
-	inline	void		set_text		( pcstr arg_0 ) { /* no source */ }
+						);
+			void		set_text		( pcstr arg_0 );
 
 public:
 	/* 0x0000 */	Scaleform::GFx::DrawText*		text_impl;
