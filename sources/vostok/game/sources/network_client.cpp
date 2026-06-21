@@ -37,20 +37,24 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 }
 */
 
-// claude@NOTE: the bind setters + member inits are structurally exact; the byte/statement
-// residual is the anchor's concrete network_client( g, false ) instantiation - LTCG propagates
-// is_spectator==false and prunes the m_is_spectator/m_is_player_ticked/m_is_time_synchronized_
-// first_time stores and the whole `if ( m_is_spectator ) { static cc_delegate s_attach/s_detach }`
-// block (lines 56/63/70), leaving 5 base statements vs the target's 8. The pruned tail and the
-// boost::function::operator= inlining lift when the real game owner constructs the client and the
-// anchor is removed (same wall as base_network_client's ctor).
+// claude@NOTE: the bind setters + member inits are structurally exact. m_is_player_ticked /
+// m_is_time_synchronized_first_time are in the member-init list (the target attributes them to
+// the ctor decl line, not body assignments) - that closed a 2-statement QUANTITY gap. The one
+// remaining base-only `if ( m_is_spectator )` breakpoint is a /Od line-table scheduling artifact:
+// the target folds the m_is_spectator store into the following guard test (the line-56 statement
+// disassembles to `cmp [ebp+4184h],bl; je`), but our build - where is_spectator is a live param,
+// not the anchor's const false - emits the store and the test as separate breakpoints. The
+// boost::function::operator= inlining and that fold lift when the real game owner constructs the
+// client (is_spectator const-propagated) and the anchor is removed (same wall as base_network_client's ctor).
  network_client::network_client( game& g, const bool is_spectator ) :
 	base_network_client( g ),
 	m_login_client( g.get_network_world( ) ),
 	m_lobby_client( g ),
 	m_match_client( g.get_network_world( ) ),
 	m_messaging_client( g ),
-	m_http_client( g.get_network_world( ) )
+	m_http_client( g.get_network_world( ) ),
+	m_is_player_ticked( false ),
+	m_is_time_synchronized_first_time( false )
 {
 	m_match_client.set_on_packet_received	( boost::bind( &network_client::on_match_packet_received, this, _1, _2 ) );
 	m_lobby_client.set_on_packet_received	( boost::bind( &network_client::on_lobby_packet_received, this, _1 ) );
@@ -59,8 +63,6 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	m_http_client.set_on_error				( boost::bind( &network_client::on_http_error, this, _1 ) );
 
 	m_is_spectator						= is_spectator;
-	m_is_player_ticked					= false;
-	m_is_time_synchronized_first_time	= false;
 
 	if ( m_is_spectator )
 	{

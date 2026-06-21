@@ -42,13 +42,8 @@ void messaging_client::update_channel_subscriptions( )
 		return;
 
 	u32 channel_subscriptions[ messaging::max_channel_num ] = {
-		0,
-		( u32 )-1,
-		( u32 )-1,
-		0,
-		0,
-		m_match_channel_id_ != ( u32 )-1 ? m_match_channel_id_ : 0,
-	};
+		0, ( u32 )-1, ( u32 )-1, 0, 0,
+		m_match_channel_id_ != ( u32 )-1 ? m_match_channel_id_ : 0 };
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC5 );
