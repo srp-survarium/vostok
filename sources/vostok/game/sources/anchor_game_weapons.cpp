@@ -23,7 +23,11 @@
 #include "sound_player_cook.h"
 #include "project_cooker_simple.h"
 #include "key_binder.h"
+#include "weapon_sound_effect.h"
+#include "weapon_sound_events_handler_state_cook.h"
 #include "game.h"
+
+#include <vostok/game_core/weapon_state_creation_params.h>
 
 #include <vostok/math_float4x4.h>
 #include <vostok/resources_query_result.h>
@@ -35,6 +39,8 @@ namespace survarium {
 	// file-local free helpers in weapon.cpp (no public header)
 	bool is_dead( base_player*& user );
 	bool is_alive( base_player*& user );
+	// free helper in weapon_sound_effect.cpp (no public header)
+	void on_sound_finished( buffer_vector< sound::sound_instance_proxy_ptr >& instances, sound::sound_instance_proxy const& instance );
 } // namespace survarium
 
 namespace vostok
@@ -163,5 +169,29 @@ namespace vostok
 		// weapon.cpp file-local free helpers
 		keep( &survarium::is_dead );
 		keep( &survarium::is_alive );
+
+		// ---- weapon_sound_effect --------------------------------------------
+		typedef survarium::weapon_sound_effect wse;
+		keep( &wse::initialize );
+		keep( &wse::finalize );
+		keep( &wse::on_sound_event );
+		keep( &survarium::on_sound_finished );
+		if( s_run )
+		{
+			// volatile args so the inlined construction is not constant-folded
+			// (which would shadow the real out-of-line ctor in objdiff)
+			static survarium::weapon* volatile			s_wpn	= 0;
+			static sound::sound_emitter_ptr* volatile		s_emit	= 0;
+			static sound::sound_instance_proxy_ptr* volatile	s_inst	= 0;
+			static u8 volatile							s_count	= 0;
+			static bool volatile						s_flag	= false;
+			survarium::weapon_sound_effect		wse_inst( *s_wpn, s_emit, s_count, s_inst, s_count, s_emit, s_count, s_inst, s_count, s_flag, s_count );
+		}
+
+		// ---- animation time-scale calculators (cdecl free functions) --------
+		keep( &survarium::reload_animation_time_scale_calculator );
+		keep( &survarium::fire_animation_time_scale_calculator );
+		keep( &survarium::shotgun_reload_timescale_calculator );
+		keep( &survarium::always_unit_timescale_calculator );
 	}
 }
