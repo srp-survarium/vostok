@@ -110,6 +110,10 @@ class game_world : public base_game_scene , public ai::engine , public ai::navig
 	// the real game call graph does not yet reach (anchor_game_world_npc.cpp);
 	// codegen-neutral. Retire once tick/load/unload bodies reach these for real.
 	friend void anchor_game_world_npc( game_world& w );
+	// the network client's packet handlers forward HUD updates straight into the
+	// private game_ui (m_game.get_game_world().game_ui.set_*()); the original reaches
+	// it directly. Codegen-neutral - friendship is not recorded in the PDB.
+	friend class network_client;
 public:
 	// canonical dump prints the nested type standalone (game_world__bullet_tracer.h)
 	struct bullet_tracer {

@@ -9,6 +9,8 @@
 // resource_ptr<player> dtors here, needing the complete player type
 #include "player.h"
 
+#include "game.h"			// m_game.get_game_world( ).game_ui HUD forwarding
+
 #include <vostok/network_core/packet_reader.h>
 #include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/damage_model.h>
@@ -183,12 +185,20 @@ void network_client::process_player_profile( network_core::packet_reader& reader
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: the HUD-forwarding packet handlers below (process_team_bases /
+// process_match_time / process_respawn_timer / process_match_wait_timer /
+// process_base_capture_progress / process_player_kd_stats) are structurally exact
+// (read u32/u8 from the packet, forward into m_game.get_game_world( ).game_ui.set_*);
+// structure-diff confirms STRUCTURE MATCH. The byte residual is two environmental
+// LTCG walls this single-TU base cannot reproduce: (1) packet_reader::r<T> inlines to
+// a direct *(T*)m_pointer load in the target but compiles to an out-of-line call here
+// (documented in packet_reader_inline.h), and (2) game_world_ui::initialize_base_points
+// and set_base_capture_progress are still STUBs in game_world_ui.cpp, so their empty
+// bodies inline away the forwarding call entirely in the base. Both lift when whole-
+// program inlining is reproduced / those game_world_ui bodies are matched.
 void network_client::process_team_bases( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY[0x5c4750]: 1
-	// <0x5c4751>|0x001|+0x010:'185'
-	// ******
+	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
 }
 
 // STATE[STUB]
@@ -377,41 +387,28 @@ void network_client::process_initialize_victory_items( network_core::packet_read
 	// ******
 }
 
-// STATE[STUB]
 void network_client::process_base_capture_progress( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY[0x5c4720]: 3
-	// <0x5c4721>|0x001|+0x00c:'318'
-	// <0x5c472d>|0x00d|+0x008:'319'
-	// <0x5c4735>|0x015|+0x015:'320'
-	// ******
+	const u32 progress = packet.r< u32 >( );
+	const u32 point_id = packet.r< u32 >( );
+	m_game.get_game_world( ).game_ui.set_base_capture_progress( progress, point_id );
 }
 
-// STATE[STUB]
 void network_client::process_match_time( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY[0x5c43c0]: 1
-	// <0x5c43c0>|0x000|+0x00b:'325'
-	// ******
+	m_game.get_game_world( ).game_ui.set_match_time( packet.r< u32 >( ) );
 }
 
-// STATE[STUB]
 void network_client::process_respawn_timer( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY[0x5c4390]: 2
-	// <0x5c4390>|0x000|+0x00b:'331'
-	// <0x5c439b>|0x00b|+0x00d:'332'
-	// ******
+	m_game.get_game_world( ).game_ui.set_respawn_time( packet.r< u32 >( ) );
 }
 
-// STATE[STUB]
 void network_client::process_match_wait_timer( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY[0x5c4770]: 3
-	// <0x5c4770>|0x000|+0x00d:'338'
-	// <0x5c477d>|0x00d|+0x008:'339'
-	// <0x5c4785>|0x015|+0x01b:'340'
-	// ******
+	const u32 time_left = packet.r< u32 >( );
+	m_game.get_game_world( ).game_ui.set_pregame(
+		m_game_status == game_status_final_countdown ? "st_final_countdown" : "st_waiting_for_players", time_left );
 }
 
 // TU static console value behind setup_camera_for_warmup (compiler-generated
@@ -510,16 +507,12 @@ void network_client::process_game_status( network_core::packet_reader& packet )
 	// ******
 }
 
-// STATE[STUB]
 void network_client::process_player_kd_stats( network_core::packet_reader& packet )
 {
-	// FUNCTION BODY[0x5c4350]: 5
-	// <0x5c4351>|0x001|+0x00c:'404'
-	// <0x5c435d>|0x00d|+0x009:'405'
-	// <0x5c4366>|0x016|+0x008:'406'
-	// <0x5c436e>|0x01e|+0x004:'407'
-	// <0x5c4372>|0x022|+0x016:'408'
-	// ******
+	const u8 player_id = packet.r< u8 >( );
+	const u32 kills = packet.r< u32 >( );
+	const u32 deaths = packet.r< u32 >( );
+	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
 // STATE[STUB]

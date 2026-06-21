@@ -86,18 +86,16 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	// ******
 }
 
-// claude@NOTE: structure is a loop over m_net_players that builds a player_ptr per
-// entry and calls set_use_physics_controller_for_current. The target records 0 named
-// locals and walks the array by pointer (no index/temp local), so the real source is
-// likely a 0-local array-walk idiom (std::for_each / pointer loop) rather than this
-// indexed get_player(i) form; the if-init scopes the player_ptr release into the if
-// (target line 94) but still introduces a named local. Faithful loop shape is here;
-// the 0-local exact spelling is the residual.
+// claude@NOTE: target walks m_net_players by pointer (no index local) and reads the
+// player_desc's resource_ptr directly (inlined c_ptr), not get_player(i); it records
+// 0 named locals. The 0-local pointer-walk over boost::array below reproduces that
+// structure (3 statements). Residual bytes are the resource_ptr/intrusive c_ptr LTCG
+// inlining shared with the other player-touching handlers in this TU.
 void network_client::apply_use_physics_controller_for_current( )
 {
-	for ( u8 i = 0; i < 20; ++i )
-		if ( player_ptr player = get_player( i ) )
-			player->set_use_physics_controller_for_current( m_use_physics_controller_for_current );
+	for ( boost::array< player_desc, 20 >::const_iterator it = m_net_players.begin( ); it != m_net_players.end( ); ++it )
+		if ( it->player )
+			player_ptr( static_cast< player* >( it->player.c_ptr( ) ) )->set_use_physics_controller_for_current( m_use_physics_controller_for_current );
 }
 
 // STATE[STUB]
@@ -501,20 +499,26 @@ void network_client::on_http_error( boost::system::error_code __formal )
 	LOG_ERROR( "http client error!" );
 }
 
-// claude@NOTE: line 407 clears a boost::function<void(char const*)> callback inside
-// m_match_client.m_client (network::match_client + 0xC8) - that low-level member + its
-// clearing path live in the still-stub vostok::network module, so the assign won't
-// byte-match until network_core's match_client is built. The close_current_match dispatch
-// (the rest) is local.
+// claude@NOTE: the switch dispatch is structurally exact (target compiles the same
+// 0/{1,2} range-check switch + close_current_match(false/true)). The byte residual is
+// set_on_disconnect: it clears a boost::function inside m_match_client.m_client
+// (network::match_client, a still-stub vostok::network type), so the assign emits a
+// shorter body here than the target's inlined boost::function::operator=. Lifts when
+// network_core's match_client is built.
 void network_client::on_match_disconnected( network_core::disconnect_event_types_enum disconnect_event_type )
 {
 	m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );
 
-	if ( disconnect_event_type == network_core::disconnected_by_timeout )
+	switch ( disconnect_event_type )
+	{
+	case network_core::disconnected_by_timeout:
 		close_current_match( false );
-	else if ( disconnect_event_type == network_core::disconnected_by_connection_lost ||
-			  disconnect_event_type == network_core::disconnected_by_initiator )
+		break;
+	case network_core::disconnected_by_connection_lost:
+	case network_core::disconnected_by_initiator:
 		close_current_match( true );
+		break;
+	}
 }
 
 // STATE[STUB]
