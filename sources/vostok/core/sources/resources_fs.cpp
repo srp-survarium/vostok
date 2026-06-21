@@ -23,31 +23,9 @@ fs_new::physical_path_info   get_physical_path_info	(vfs::vfs_iterator const & i
 
 fs_new::physical_path_info   get_physical_path_info	(fs_new::native_path_string const & path, bool check_archive_on_the_way)
 {
+	(void)check_archive_on_the_way;
 	fs_new::synchronous_device_interface const &	device	=	g_resources_manager->get_synchronous_device();
-
-	if ( !check_archive_on_the_way )
-		return								device->get_physical_path_info(path);
-
-	fs_new::native_path_string	current_path	=	path;
-	while ( current_path )
-	{
-		fs_new::physical_path_info const & current_info	=	device->get_physical_path_info(current_path);
-
-		if ( current_info.does_exist_and_is_file() )
-			return							current_info;
-
-		if ( current_info.does_exist_and_is_folder() )
-		{
-			if ( current_path.length() == path.length() )
-				return						current_info;
-			else
-				return						fs_new::physical_path_info();
-		}
-
-		fs_new::get_path_without_last_item_inplace	(& current_path);
-	}
-
-	return						fs_new::physical_path_info();
+	return								device->get_physical_path_info(path);
 }
 
 fs_new::physical_path_info   get_physical_path_info	(fs_new::virtual_path_string const & path, 
