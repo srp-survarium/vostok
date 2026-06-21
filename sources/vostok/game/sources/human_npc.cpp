@@ -5,6 +5,7 @@
 #include "pch.h"
 #include "human_npc.h"
 #include "game_world.h"				// base game_object_ + ref members source off game_world
+#include "game.h"					// ctor: game_world.get_game().get_sound_world()/renderer()
 #include "animated_model_instance.h"	// resource_ptr member dtor needs complete type
 #include "animation_space_graph.h"		// resource_ptr member dtor needs complete type
 #include "animations_selector.h"		// dtor DELETEs m_animations_selector
@@ -18,6 +19,7 @@
 #include <vostok/ai/sensed_hit_object.h>
 #include <vostok/collision/animated_object.h>
 #include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/debug_renderer.h>	// draw: debug().draw_origin/draw_arrow/draw_line_ellipsoid
 #include <vostok/render/facade/scene_renderer.h>	// set_transform: scene().update_model
 #include <vostok/animation/animation_player.h>		// set_transform: animation_player::set_object_transform
 #include <vostok/sound/world.h>				// enable: get_logic_world_user
@@ -53,7 +55,6 @@ void `dynamic atexit destructor for 's_npc_debug_draw_command''( )
 }
 */
 
-// STATE[STUB]
  human_npc::npc_game_attributes::npc_game_attributes( ) :
 	initial_position		( float3( 0.f, 0.f, 0.f ) ),
 	initial_scale			( float3( 1.f, 1.f, 1.f ) ),
@@ -92,17 +93,18 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 	return *this;
 }
 
-// STATE[STUB]
-// init-list sources off the owning game_world (its base_game_scene supplies the
-// physics/renderer) - buildability shapes; a matcher confirms the real sources.
  human_npc::human_npc( game_world& game_world ) :
-	game_object_( game_world ),								// base needs base_game_scene&
+	game_object_( game_world ),
 	m_ai_world( game_world.get_ai_world( ) ),
-	m_sound_world( game_world.get_sound_world( ) ),
+	m_sound_world( game_world.get_game( ).get_sound_world( ) ),
 	m_physics_world( *game_world.get_physics_world( ) ),
 	m_game_world( game_world ),
-	m_renderer( game_world.renderer( ) ),
-	m_visibility_parameters( 0.0f )							// buildability: matcher supplies real value
+	m_renderer( game_world.get_game( ).renderer( ) ),
+	m_visibility_parameters( 0.0f ),
+	m_scene( game_world.render_scene( ) ),
+	m_sound_scene( game_world.get_sound_scene( ) ),
+	m_affects_subscription( boost::bind( &human_npc::on_affect_event, this, _1, _2, _3 ) ),
+	m_feet_adjustment_speed( 1.f )
 {
 }
 
@@ -111,9 +113,17 @@ human_npc::npc_game_attributes& human_npc::npc_game_attributes::operator=( human
 	DELETE						( m_animations_selector );
 }
 
-// STATE[STUB]
 void human_npc::clear_resources( )
 {
+	m_model_instance->m_damage_model->unsubscribe_from_affect	( affects_type_death, &m_affects_subscription );
+
+	m_sound_world.get_logic_world_user( ).unregister_receiver	( m_sound_scene, *this );
+
+	m_renderer.scene( ).remove_model	( m_scene, m_model_instance->m_render_model->m_model );
+	m_physics_world.remove				( m_model_instance->m_damage_collision->get_rigid_body() );
+
+	m_ai_world.on_destruction_event		( *this );
+	m_ai_world.remove_brain_unit		( m_brain_unit );
 }
 
 void human_npc::set_brain_unit( resources::unmanaged_resource_ptr const& brain_unit )
@@ -241,14 +251,39 @@ float4x4 human_npc::local_to_cell( float3 const& requester ) const
 	return m_transform;
 }
 
-// STATE[STUB]
 void human_npc::draw_damage_model( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( render, scene );
+
+	for ( u32 i = 0; i < m_model_instance->m_damage_collision->get_bones_count(); ++i )
+		m_model_instance->m_damage_model->get_body_part( m_model_instance->m_damage_collision->body_part_name( i ) );
 }
 
-// STATE[STUB]
 void human_npc::draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
+	draw_damage_model				( render, scene );
+
+	m_renderer.debug( ).draw_origin	( m_scene, m_transform, 3.f );
+	m_renderer.debug( ).draw_arrow	(
+		m_scene,
+		get_eyes_position( ),
+		get_eyes_position( ) + get_eyes_direction( ) * 3.f,
+		math::color( 0, 0, 255 )
+	);
+
+	if ( m_sound_perceived )
+	{
+		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, create_translation( get_eyes_position( ) ), math::color( 0, 0, 255 ) );
+		m_sound_perceived			= false;
+	}
+
+	if ( m_sound_produced )
+	{
+		m_renderer.debug( ).draw_line_ellipsoid	( m_scene, m_transform, math::color( 0, 255, 0 ) );
+		m_sound_produced			= false;
+	}
+
+	m_animations_selector->debug_draw	( render, scene );
 }
 
 void human_npc::set_transform( float4x4 const& transform )
@@ -260,14 +295,43 @@ void human_npc::set_transform( float4x4 const& transform )
 	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure recovered from target (9 stmts: clamp dt, if(!paused){move/
+// set_position/damage tick/anim tick}, if(debug_draw_allowed) draw, store last tick).
+// time_delta is a named local here but the target records only the 2 params (locals
+// are structure) - the clamp is an inline temp/hoist in the original. Inline it once a
+// build is possible (the branch can't relink the EXE: pre-existing animation-module
+// STUB n_ary_tree_transition_tree_constructor::computed_tree returns no value ->
+// C4716/LNK1257, so no base side to diff against on this worktree).
 void human_npc::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
+	const u32 time_delta		= current_time_in_ms > m_last_tick_time_in_ms ? current_time_in_ms - m_last_tick_time_in_ms : 0;
+
+	if ( !is_game_paused )
+	{
+		m_physics_world.move				( m_model_instance->m_damage_collision->get_rigid_body(), m_transform );
+		set_position						( get_position() );
+		m_model_instance->m_damage_model->tick	( time_delta, current_time_in_ms );
+		tick_animation_player				( current_time_in_ms );
+	}
+
+	if ( debug_draw_allowed() )
+		draw							( m_renderer, m_scene );
+
+	m_last_tick_time_in_ms		= current_time_in_ms;
 }
 
-// STATE[STUB]
 void human_npc::render_model( )
 {
+	animation::animation_player* animation_player	= m_model_instance->m_animation_player;
+
+	u32 const bone_matrices_count	= m_model_instance->m_physics_model->m_skeleton->get_non_root_bones_count();
+	float4x4* const bone_matrices	= static_cast< float4x4* >( ALLOCA( bone_matrices_count * sizeof( float4x4 ) ) );
+	animation_player->compute_bones_matrices	( *m_model_instance->m_physics_model->m_skeleton, bone_matrices, bone_matrices + bone_matrices_count, 0, NULL );
+
+	m_renderer.scene( ).update_model	( m_scene, m_model_instance->m_render_model->m_model, m_transform );
+	m_renderer.scene( ).update_skeleton	( m_model_instance->m_render_model->m_model, bone_matrices, bone_matrices_count );
+
+	m_model_instance->m_damage_collision->update	( bone_matrices, bone_matrices + bone_matrices_count );
 }
 
 object_weapon* human_npc::pop_weapon( )
@@ -423,7 +487,6 @@ void human_npc::on_animation_end( )
 	}
 }
 
-// STATE[STUB]
 void human_npc::hit(
 	hit_initiator const* const		initiator,
 	const u32						bone_index,
@@ -433,9 +496,17 @@ void human_npc::hit(
 	bullet* const					bullet
 )
 {
+	m_model_instance->m_damage_model->hit_body_part	(
+		initiator->id,
+		m_model_instance->m_damage_collision->body_part_name( bone_index ),
+		damage_type,
+		amount,
+		armor_piercing,
+		m_last_tick_time_in_ms,
+		bullet
+	);
 }
 
-// STATE[STUB]
 void human_npc::hit(
 	hit_initiator const* const		initiator,
 	collision::bone_collision_data const&	bone_data,
@@ -445,6 +516,15 @@ void human_npc::hit(
 	bullet* const					bullet
 )
 {
+	m_model_instance->m_damage_model->hit_body_part	(
+		initiator->id,
+		bone_data.body_part_name.c_str( ),
+		damage_type,
+		amount,
+		armor_piercing,
+		m_last_tick_time_in_ms,
+		bullet
+	);
 }
 
 // claude@NOTE: structure + body correct (3 stmts match); residual is the LOG-callback ctor
@@ -475,15 +555,39 @@ void human_npc::play_animation( ai::animation_item const* const target )
 	LOG_INFO							( "%s: playing animation %s", get_name(), m_current_animation->name.c_str() );
 }
 
-// STATE[STUB]
 void human_npc::tick_animation_player( const u32 current_time_in_ms )
 {
+	m_model_instance->m_animation_player->tick					( current_time_in_ms );
+	m_transform					= m_model_instance->m_animation_player->get_object_transform( 0 );
+	up_to_terrain				( );
+	render_model				( );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure recovered (ray_test down, if(hit) set feet_target, if(feet!=pos)
+// lerp toward feet by last_frame_time*speed/dist clamped to 1 -> set_translation). Target
+// records only `result` as a named local; `offset`/`factor` here are phantom locals to
+// inline once buildable. Ray length (2.f) and y-offset (+1.f) are immediate-value guesses
+// (asm folds them into a shared rdata constant pool, value not resolvable via pdb_fetch);
+// confirm against the diff. Blocked on the EXE-relink wall (see tick note).
 void human_npc::up_to_terrain( )
 {
+	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test(
+		float3( get_position().x, get_position().y + 1.f, get_position().z ),
+		float3( 0.f, -1.f, 0.f ),
+		2.f,
+		0x20,
+		2
+	);
 
+	if ( result.object )
+		m_feet_target			= result.hit_point_world;
+
+	if ( m_feet_target != get_position() )
+	{
+		float3 const offset		= m_feet_target - get_position();
+		float const factor		= math::min( m_game_world.get_game().last_frame_time() * m_feet_adjustment_speed / length( offset ), 1.f );
+		set_translation			( create_translation( get_position() + offset * factor ) );
+	}
 }
 
 // claude@NOTE: body byte-identical (11/14 instrs); the only diff is the prologue/epilogue -
