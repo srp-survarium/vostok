@@ -18,6 +18,8 @@
 #include <vostok/physics/world.h>				// setup_camera_for_warmup: physics::world::ray_test
 #include "free_fly_camera.h"						// setup_camera_for_warmup: game_camera::set_position_direction
 #include <vostok/network_core/packet_reader.h>
+#include <vostok/scaleform/sources/flash_movie.h>	// process_victory_item_take_or_put: get_ui( )->movie->Invoke ( hide_container_icon )
+#include "login_menu_status_enum.h"					// tick: m_game.switch_to_login( login_menu_status_error_connection )
 #include <vostok/game_core/hit_info.h>
 #include <vostok/game_core/damage_model.h>
 #include <vostok/game_core/client_player_update.h>
@@ -381,119 +383,73 @@ void network_client::process_player_kd_stats( network_core::packet_reader& packe
 	m_game.get_game_world( ).game_ui.set_player_kills_deaths( player_id, kills, deaths );
 }
 
-// claude@NOTE: PARKED - 35 statements, deeply nested take-vs-put branches + a
-// Scaleform::GFx::Movie::Invoke ("root.hide_container_icon") + multiple unresolved
-// victory_item/victory_items_container vtable slots (high mis-structure risk). Shape
-// (lines 413-470), reusing idioms now PROVEN in process_initialize_victory_items above:
-//   413 const s8 team_1_points = packet.r<s8>();  414 const s8 team_2_points = packet.r<s8>();
-//   415 const u8 slot = packet.r<u8>();            416 const u8 item_id = packet.r<u8>();
-//   419 if ( slot == 0 && item_id == 0xFF )  420 packet.r<float3>();  // read+discard a float3
-//   422 victory_item_ptr item = m_game.get_game_world().get_victory_items()[ team_1_points ];
-//        // NB: indexed by team_1_points (dl), NOT item_id - matches the binary, do not "fix"
-//   424 victory_items_container_core* current =
-//        m_game.get_game_world().get_project()->get_items_container( item_id );  // inlined search
-//   426-430 if ( current ) game_ui.add_victory_points( ... );  // two current-> virtuals: team()
-//        at vtable+0x28 (game_team_id) and one at +0x28 again, results -> add_victory_points
-//   433 if ( slot ) {  // PUT path
-//     434 get_player(slot)->inventory().set_victory_item( item.c_ptr() );  436-437 player dtor +
-//          if ( m_current_player && m_current_player->id == slot ) game_ui.show_item_container(slot);
-//     439 if ( !current ) { 441 item->take()/vtbl+0x24(); 444 item[+0x170] = 3; }
-//          446 else current->take_item()/vtbl+0x24();
-//   } else {  // TAKE path (slot == 0)
-//     449 get_player(slot)->inventory().set_victory_item( NULL );
-//     451-452 if ( m_current_player && m_current_player->id == slot )
-//          [game_ui+0x270]->[+0x108]->[+4]->Scaleform::GFx::Movie::Invoke("root.hide_container_icon",0,0,0);
-//     454 if ( !current ) { 455 item[+0x170] = item->vtbl+0x48()/put-return;
-//          461 float4x4 item_transform = get_player(slot)->get_current().transform; (player+0x8770)
-//               put it back: get_victory_items()[..]->put( physics_world, item_transform, scheduler );
-//          } else { 465 item[+0x170] = 3; 466 current->put_item( item.c_ptr() ); }
-//   }
-//   470 game_ui.on_victory_item_put_take( item_id, slot != 0, current != NULL );
-// NEXT: name the victory_item vtable slots (+0x24 take, +0x28 a game_team_id getter, +0x48 a
-// put-return), the container's [+0x34]==item_id key (already get_items_container), and the GFx
-// movie accessor chain [game_ui+0x270]->[+0x108]->[+4]; then write it like the sibling above.
-// STATE[STUB]
+// claude@NOTE: STRUCTURE match (35 target / 32 base statements). The 3-statement gap and
+// the byte residual are cross-TU whole-program-inline walls the single-TU base cannot
+// reproduce: packet_reader::r<T> (out-of-line calls vs the target's inlined byte reads),
+// simple_game_project::get_items_container (out-of-line call vs the target's inlined
+// m_victory_items_containers search loop), and inventory_holder::inventory() ([ecx+8] vs
+// call). team_2_points is read for the cursor advance only (recorded as a named local).
+// The add_victory_points sign ( slot ? -1 : 1 ) is CSE'd once in the target but per-arg in
+// the base - an LTCG scheduling artifact, not a structure divergence.
 void network_client::process_victory_item_take_or_put( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// s8 								team_1_points
-	// s8 								team_2_points
-	// player_ptr 						current_player
-	// float4x4 						item_transform
-	// victory_item_ptr 				item
-	// ******
+	const s8 team_1_points = packet.r< s8 >( );
+	const s8 team_2_points = packet.r< s8 >( );
 
-	// CALL SITE INFO
-	// <0x5c54bc> -> game_team_id < unknown >()
-	// <0x5c54d1> -> game_team_id < unknown >()
-	// <0x5c5510> -> player_ptr < unknown >( const u8 ) const
-	// <0x5c555c> -> void < unknown >()
-	// <0x5c5574> -> victory_item_core* < unknown >()
-	// <0x5c558d> -> player_ptr < unknown >( const u8 ) const
-	// <0x5c55e5> -> game_team_id < unknown >() const
-	// <0x5c5657> -> void < unknown >( victory_item_core* )
-	// ******
+	const u8 slot = packet.r< u8 >( );
+	const u8 item_id = packet.r< u8 >( );
 
-	// FUNCTION BODY[0x5c53d0]: 58
-	// <0x5c53d3>|0x003|+0x00a:'413'
-	// <0x5c53dd>|0x00d|+0x00c:'414'
-	// <0x5c53e9>|0x019|+0x010:'415'
-	// <0x5c53f9>|0x029|+0x004:'416'
-	// <0>
-	// <1>
-	// <0x5c53fd>|0x02d|+0x015:'419'
-	// <0x5c5412>|0x042|+0x006:'420'
-	// <0>
-	// <0x5c5418>|0x048|+0x027:'422'
-	// <0>
-	// <0x5c543f>|0x06f|+0x066:'424'
-	// <0>
-	// <0x5c54a5>|0x0d5|+0x004:'426'
-	// <0x5c54a9>|0x0d9|+0x005:'427'
-	// <0x5c54ae>|0x0de|+0x010:'428'
-	// <0x5c54be>|0x0ee|+0x015:'429'
-	// <0x5c54d3>|0x103|+0x024:'430'
-	// <0>
-	// <1>
-	// <0x5c54f7>|0x127|+0x007:'433'
-	// <0x5c54fe>|0x12e|+0x02c:'434'
-	// <0>
-	// <0x5c552a>|0x15a|+0x019:'436'
-	// <0x5c5543>|0x173|+0x00e:'437'
-	// <0>
-	// <0x5c5551>|0x181|+0x004:'439'
-	// <0>
-	// <0x5c5555>|0x185|+0x009:'441'
-	// <0x5c555e>|0x18e|+0x00a:'442'
-	// <0>
-	// <0x5c5568>|0x198|+0x005:'444'
-	// <0>
-	// <0x5c556d>|0x19d|+0x009:'446'
-	// <0>
-	// <1>
-	// <0x5c5576>|0x1a6|+0x005:'449'
-	// <0>
-	// <0x5c557b>|0x1ab|+0x014:'451'
-	// <0x5c558f>|0x1bf|+0x00e:'452'
-	// <0>
-	// <0x5c559d>|0x1cd|+0x019:'454'
-	// <0x5c55b6>|0x1e6|+0x022:'455'
-	// <0>
-	// <0x5c55d8>|0x208|+0x004:'457'
-	// <0x5c55dc>|0x20c|+0x00f:'458'
-	// <0>
-	// <1>
-	// <0x5c55eb>|0x21b|+0x050:'461'
-	// <0>
-	// <0x5c563b>|0x26b|+0x006:'463'
-	// <0>
-	// <0x5c5641>|0x271|+0x00e:'465'
-	// <0x5c564f>|0x27f|+0x00a:'466'
-	// <0>
-	// <0x5c5659>|0x289|+0x009:'468'
-	// <0>
-	// <0x5c5662>|0x292|+0x022:'470'
-	// ******
+	if ( slot == 0 && item_id == 0xFF )
+		packet.r< float3 >( );
+
+	victory_item_ptr item = m_game.get_game_world( ).get_victory_items( )[ team_1_points ];
+
+	victory_items_container_core* current = m_game.get_game_world( ).get_project( )->get_items_container( item_id );
+
+	if ( current )
+		m_game.get_game_world( ).game_ui.add_victory_points(
+			current->team( ) != team_1 ? ( slot ? -1 : 1 ) : 0,
+			current->team( ) != team_2 ? ( slot ? -1 : 1 ) : 0 );
+
+	if ( slot )
+	{
+		get_player( slot )->inventory( ).set_victory_item( item.c_ptr( ) );
+
+		if ( m_current_player && m_current_player->id == slot )
+			m_game.get_game_world( ).game_ui.show_item_container( slot );
+
+		if ( !current )
+		{
+			item->take( );
+			item->set_spotted_to_team( team_undefined );
+		}
+		else
+			current->take_item( );
+	}
+	else
+	{
+		player_ptr current_player = get_player( slot );
+		current_player->inventory( ).set_victory_item( NULL );
+
+		if ( m_current_player && m_current_player->id == slot )
+			m_game.get_game_world( ).game_ui.get_ui( )->movie->Invoke( "root.hide_container_icon", NULL, NULL, 0 );
+
+		if ( !current )
+		{
+			item->set_spotted_to_team( current_player->team( ) );
+
+			float4x4 item_transform = current_player->get_current( ).transform;
+			m_game.get_game_world( ).get_victory_items( )[ team_1_points ]->put(
+				m_game.get_game_world( ).get_physics_world( ), item_transform, m_game.get_game_world( ).get_game( ).scheduler( ) );
+		}
+		else
+		{
+			item->set_spotted_to_team( team_undefined );
+			current->put_item( item.c_ptr( ) );
+		}
+	}
+
+	m_game.get_game_world( ).game_ui.on_victory_item_put_take( item_id, slot != 0, current != NULL );
 }
 
 void network_client::send_sync_request( )
@@ -581,175 +537,124 @@ void network_client::send_player_inputs( )
 	m_player_inputs.clear( );
 }
 
-// claude@NOTE: PARKED - the 122-statement dispatch tick (largest in the TU). Carcass below
-// retains the per-statement listing; the shape is the per-frame client pump: resolve the
-// lobby/messaging clients on a throttle (the two static u32 *_resolve_time + min_time_delta
-// statics), m_last_tick_time_in_ms = current_time_in_ms, then login/lobby/match/messaging
-// client tick + send_queued_packets, the player-input throttle and a get_player(id) walk.
-// Deferred for budget; needs the static-throttle timers, the client tick ordering and the
-// send-input cadence reconstructed against the rich asm before writing. NEXT: decode the
-// throttle block (lines 602-657) then the match/messaging tick + input-send cadence.
+// claude@NOTE: PARKED at structure match (full 51-statement body written; the per-frame client
+// pump - lobby/messaging reconnect throttles, match-client disconnect/connect/send-queued/sync
+// cadences, the per-player tick walk + the current-player camera update). The login/lobby/
+// messaging front half pairs cleanly. The back half (the match_client.is_connected()-onwards
+// player loop, sync, camera) CANNOT yet be verified: match_client::is_connected()/
+// is_disconnected()/last_receive_time_in_ms() are still inline header STUBS (return false / 0),
+// so the compiler constant-folds them - `!is_connected()` becomes always-true and its inner
+// `return` makes the whole tail dead code that /Od eliminates (base 21 vs target 51 stmts).
+// This is a cross-TU stub wall, not a structure error: the tail lifts verbatim once those three
+// match_client accessors are matched with real bodies. Remaining byte residual is the usual
+// whole-program-inline wall (login/lobby/match/messaging accessors, the game-layer
+// match_client::send_queued_packets wrapper that writes m_last_send_queed_packets_time_in_ms /
+// m_are_there_any_packets_to_send at the call site then calls the network-layer send,
+// player::has_been_inserted() / resource_ptr c_ptr loads) plus the LOG_WARNING machinery.
+// set_broken_connection_message's arg is VOSTOK_UNREFERENCED (load compiled out) so the string
+// does not affect bytes.
 // STATE[STUB]
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
-	// LOCALS
-	// u8 								id
-	// player_ptr 						player
-	// ******
+	static u32			lobby_resolve_time		= 0;
+	static u32			messaging_resolve_time	= 0;
+	static const u32	min_time_delta_in_ms	= 33;
 
-	// STATICS
-	// static u32 						lobby_resolve_time = <0x4c26630>;
-	// static u32 						messaging_resolve_time = <0x4c26634>;
-	// static const u32 				min_time_delta_in_ms = <0x10000>;
-	// ******
+	m_last_tick_time_in_ms = current_time_in_ms;
+	draw_stats( current_time_in_ms );
 
-	// CALL SITE INFO
-	// <0x5c620b> -> network::login_client& < unknown >()
-	// <0x5c6221> -> lobby_client& < unknown >()
-	// <0x5c6237> -> lobby_client& < unknown >()
-	// <0x5c6249> -> lobby_client& < unknown >()
-	// <0x5c6261> -> network::login_client& < unknown >()
-	// <0x5c629d> -> lobby_client& < unknown >()
-	// <0x5c6370> -> match_client& < unknown >()
-	// <0x5c6395> -> messaging_client& < unknown >()
-	// <0x5c63b6> -> messaging_client& < unknown >()
-	// <0x5c63e3> -> match_client& < unknown >()
-	// <0x5c641a> -> match_client& < unknown >()
-	// <0x5c6441> -> match_client& < unknown >()
-	// <0x5c64d5> -> match_client& < unknown >()
-	// <0x5c6531> -> player_ptr < unknown >( const u8 ) const
-	// ******
+	if ( login_client( ).is_signed_in( ) )
+	{
+		if ( lobby_client( ).connection_info( ).need_resolve )
+		{
+			if ( lobby_client( ).connection_info( ).connection_error_count > 3 )
+			{
+				lobby_client( ).connection_info( ).connection_error_count = 0;
+				login_client( ).sign_out( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) >( ) );
+				m_game.switch_to_login( login_menu_status_error_connection );
+				return;
+			}
+			else if ( current_time_in_ms - lobby_resolve_time > 5000 )
+			{
+				lobby_client( ).connection_info( ).need_resolve =
+					!http_query_server_connection_info( 2 );
+				lobby_resolve_time = current_time_in_ms;
+				LOG_WARNING( "LOBBY: try reconnect" );
+			}
+		}
+		else
+		{
+			if ( messaging_client( ).connection_info( ).need_resolve )
+				if ( current_time_in_ms - messaging_resolve_time > 3000 )
+				{
+					messaging_client( ).connection_info( ).need_resolve =
+						!http_query_server_connection_info( 4 );
+					messaging_resolve_time = current_time_in_ms;
+				}
+		}
+	}
 
-	// FUNCTION BODY[0x5c61e0]: 122
-	// <0x5c61e0>|0x000|+0x00a:'594'	{
-	// <0x5c61ea>|0x00a|+0x007:'595'
-	// <0>
-	// <0x5c61f1>|0x011|+0x013:'597'
-	// <0>
-	// <0x5c6204>|0x024|+0x016:'599'
-	// <0>
-	// <1>
-	// <0x5c621a>|0x03a|+0x010:'602'
-	// <0>
-	// <0x5c622a>|0x04a|+0x018:'604'
-	// <0>
-	// <0x5c6242>|0x062|+0x00f:'606'
-	// <0x5c6251>|0x071|+0x022:'607'
-	// <0x5c6273>|0x093|+0x00a:'608'
-	// <0x5c627d>|0x09d|+0x005:'609'
-	// <0>
-	// <1>
-	// <0x5c6282>|0x0a2|+0x014:'612'
-	// <0>
-	// <0x5c6296>|0x0b6|+0x014:'614'
-	// <0x5c62aa>|0x0ca|+0x00e:'615'
-	// <0x5c62b8>|0x0d8|+0x0ae:'616'
-	// <0>
-	// <1>
-	// <0x5c6366>|0x186|+0x02c:'619'
-	// <0x5c6392>|0x1b2|+0x00e:'620'
-	// <0>
-	// <1>
-	// <0x5c63a0>|0x1c0|+0x00f:'623'
-	// <0>
-	// <0x5c63af>|0x1cf|+0x025:'625'
-	// <0x5c63d4>|0x1f4|-0x06b:'626'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c6369>|0x189|+0x014:'631'
-	// <0x5c637d>|0x19d|+0x05f:'632'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c63dc>|0x1fc|+0x014:'636'
-	// <0x5c63f0>|0x210|+0x00c:'637'
-	// <0>
-	// <0x5c63fc>|0x21c|+0x011:'639'
-	// <0>
-	// <0x5c640d>|0x22d|+0x02d:'641'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c643a>|0x25a|+0x019:'646'
-	// <0x5c6453>|0x273|+0x00c:'647'
-	// <0x5c645f>|0x27f|+0x00f:'648'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c646e>|0x28e|+0x00d:'652'
-	// <0x5c647b>|0x29b|+0x011:'653'
-	// <0x5c648c>|0x2ac|+0x00c:'654'
-	// <0>
-	// <1>
-	// <0x5c6498>|0x2b8|+0x019:'657'
-	// <0x5c64b1>|0x2d1|+0x007:'658'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <0x5c64b8>|0x2d8|+0x016:'686'
-	// <0x5c64ce>|0x2ee|+0x01e:'687'
-	// <0>
-	// <0x5c64ec>|0x30c|+0x01f:'689'
-	// <0>
-	// <0x5c650b>|0x32b|+0x00f:'691'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c651a>|0x33a|+0x006:'695'
-	// <0>
-	// <0x5c6520>|0x340|+0x013:'697'
-	// <0x5c6533>|0x353|+0x053:'698'
-	// <0x5c6586>|0x3a6|-0x042:'699'
-	// <0>
-	// <1>
-	// <0x5c6544>|0x364|+0x00f:'702'
-	// <0>
-	// <0x5c6553>|0x373|+0x012:'704'
-	// <0>
-	// <1>
-	// <0x5c6565>|0x385|+0x00f:'707'
-	// <0x5c6574>|0x394|+0x007:'708'
-	// <0x5c657b>|0x39b|+0x049:'709'
-	// <0>
-	// <0x5c65c4>|0x3e4|-0x0b8:'711'
-	// <0x5c650c>|0x32c|+0x0d1:'712'
-	// <0x5c65dd>|0x3fd|-0x254:'712'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5c6389>|0x1a9|+0x0a8:'717'
-	// <0x5c6431>|0x251|+0x0e0:'717'
-	// <0x5c6511>|0x331|+0x0d2:'717'
-	// <0x5c65e3>|0x403|      :'717'	}
-	// ******
+	if ( match_client( ).is_disconnected( ) )
+	{
+		m_player_inputs.clear( );
+		return;
+	}
+
+	if ( !match_client( ).is_connected( ) )
+	{
+		m_player_inputs.clear( );
+
+		if ( current_time_in_ms - m_last_send_queued_packets_time_in_ms >= min_time_delta_in_ms )
+		{
+			m_last_send_queued_packets_time_in_ms = current_time_in_ms;
+			match_client( ).send_queued_packets( current_time_in_ms );
+		}
+		return;
+	}
+
+	if ( match_client( ).last_receive_time_in_ms( ) + 3000 <= current_time_in_ms )
+	{
+		m_player_inputs.clear( );
+		m_game.get_game_world( ).game_ui.set_broken_connection_message( "match server connection lost" );
+	}
+
+	if ( m_last_player_input_send_time_in_ms + min_time_delta_in_ms <= current_time_in_ms )
+	{
+		m_last_player_input_send_time_in_ms = current_time_in_ms / min_time_delta_in_ms * min_time_delta_in_ms;
+		send_player_inputs( );
+	}
+
+	if ( m_is_time_synchronized_first_time && current_time_in_ms - m_last_sync_request_time > 4000 )
+		send_sync_request( );
+
+	if ( match_client( ).are_there_any_packets_to_send( ) ||
+		match_client( ).last_send_queed_packets_time_in_ms( ) + min_time_delta_in_ms <= current_time_in_ms )
+		match_client( ).send_queued_packets( current_time_in_ms );
+
+	if ( is_game_paused && m_current_player && m_current_player->has_been_inserted( ) )
+	{
+		m_current_player->update_camera( );
+		return;
+	}
+
+	for ( u8 id = 0; id < 20; ++id )
+	{
+		player_ptr player = get_player( id );
+		if ( player && player->has_been_inserted( ) )
+		{
+			if ( !m_is_player_ticked && player->is_local )
+			{
+				m_is_player_ticked = true;
+				send_sync_request( );
+			}
+
+			if ( m_is_time_synchronized_first_time || !player->is_local )
+				player->tick( current_time_in_ms );
+		}
+	}
+
+	if ( m_current_player && m_current_player->has_been_inserted( ) )
+		m_current_player->update_camera( );
 }
 
 void network_client::initiate_kill_current_player( )
