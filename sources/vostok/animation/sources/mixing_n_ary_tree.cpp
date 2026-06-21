@@ -28,7 +28,6 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[STUB]
  n_ary_tree::n_ary_tree(
 	n_ary_tree_animation_node* const	weight_root,
 	n_ary_tree_animation_node* const	time_root,
@@ -41,14 +40,33 @@ namespace mixing {
 	const u32							animated_objects_count,
 	const u32							interpolators_count,
 	const u32							current_time_in_ms
-)
+) :
+	m_reference_counter		( reference_counter ),
+	m_weight_root			( weight_root ),
+	m_time_root				( time_root ),
+	m_interpolators			( interpolators ),
+	m_animation_states		( animation_states ),
+	m_animation_events		( animation_events ),
+	m_animated_objects		( animated_objects ),
+	m_animations_count		( animations_count ),
+	m_animated_objects_count( animated_objects_count ),
+	m_interpolators_count	( interpolators_count ),
+	m_tree_actual_time_in_ms( current_time_in_ms ),
+	m_is_logging_enabled	( false )
 {
-	// FUNCTION BODY
-	// <0x6ef337>|0x047|+0x013:'480'
-	// ******
+	initialize					( );
 }
 
 // STATE[STUB]
+// claude@NOTE: initialize() is the ctor's only body statement; the ctor's init-list is already
+// structure-faithful but unpaired because (a) this initialize() is an empty stub and (b) the
+// single_threading_policy intrusive_ptr(T*) ctor is inlined in target / called in base (global
+// inline-vs-call knob). Parked: initialize()'s loop (492 sort + per-state set_object_transform(node&))
+// reads event_iterator internals (animation_event copy, test event_type & 0x80 =
+// time_event_weight_transitions_started) and calls the still-stubbed node-overload
+// set_object_transform; faithful spelling needs the event_iterator operator*/animation() API
+// decoded. Next step: body event_iterator_predicate (file-static) + the node set_object_transform,
+// then sort = std::sort(m_animation_events, +count, event_iterator_predicate()).
 void n_ary_tree::initialize( )
 {
 	// FUNCTION BODY
@@ -61,86 +79,55 @@ void n_ary_tree::initialize( )
 	// ******
 }
 
-// STATE[STUB]
 n_ary_tree& n_ary_tree::operator=( n_ary_tree const& other )
 {
-	return *this;
-	// FUNCTION BODY
-	// <0>
-	// <0x6ee290>|0x000|+0x006:'503'
-	// <0>
-	// <0x6ee296>|0x006|+0x005:'505'
-	// <0>
-	// <0x6ee29b>|0x00b|+0x016:'507'
-	// <0x6ee2b1>|0x021|+0x006:'508'
-	// <0x6ee2b7>|0x027|+0x006:'509'
-	// <0x6ee2bd>|0x02d|+0x006:'510'
-	// <0x6ee2c3>|0x033|+0x006:'511'
-	// <0x6ee2c9>|0x039|+0x006:'512'
-	// <0x6ee2cf>|0x03f|+0x006:'513'
-	// <0x6ee2d5>|0x045|+0x006:'514'
-	// <0x6ee2db>|0x04b|+0x006:'515'
-	// <0x6ee2e1>|0x051|+0x006:'516'
-	// <0x6ee2e7>|0x057|+0x006:'517'
-	// <0x6ee2ed>|0x05d|+0x006:'518'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee2f3>|0x063|+0x002:'523'
-	// ******
+	if ( this == &other )
+		return *this;
+
+	destroy						( );
+
+	m_reference_counter			= other.m_reference_counter;
+	m_weight_root				= other.m_weight_root;
+	m_time_root					= other.m_time_root;
+	m_interpolators				= other.m_interpolators;
+	m_animation_states			= other.m_animation_states;
+	m_animation_events			= other.m_animation_events;
+	m_animated_objects			= other.m_animated_objects;
+	m_animations_count			= other.m_animations_count;
+	m_animated_objects_count	= other.m_animated_objects_count;
+	m_interpolators_count		= other.m_interpolators_count;
+	m_tree_actual_time_in_ms	= other.m_tree_actual_time_in_ms;
+	m_is_logging_enabled		= other.m_is_logging_enabled;
+
+	return						*this;
 }
 
-// STATE[STUB]
  n_ary_tree::~n_ary_tree( )
 {
-	// FUNCTION BODY
-	// <0x6ee280>|0x000|+0x007:'528'
-	// ******
+	destroy						( );
 }
 
-// STATE[STUB]
 void n_ary_tree::destroy( )
 {
-	// LOCALS
-	// n_ary_tree_destroyer 			tree_destroyer
-	// ******
+	if ( !m_weight_root )
+		return;
 
-	// CALL SITE INFO
-	// <0x6ee1df> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6ee208> -> void* < unknown >( u32 )
-	// ******
+	if ( m_reference_counter->reference_count() > 1 ) {
+		m_reference_counter		= 0;
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x6ee1a0>|0x000|+0x006:'532'	{
-	// <0x6ee1a6>|0x006|+0x00d:'533'
-	// <0>
-	// <1>
-	// <0x6ee1b3>|0x013|+0x007:'536'
-	// <0x6ee1ba>|0x01a|+0x011:'537'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ee1cb>|0x02b|+0x008:'544'
-	// <0>
-	// <0x6ee1d3>|0x033|+0x015:'546'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee1e8>|0x048|+0x018:'551'
-	// <0x6ee200>|0x060|+0x011:'552'
-	// <0>
-	// <0x6ee211>|0x071|+0x003:'554'
-	// <0x6ee214>|0x074|+0x00b:'555'
-	// <0x6ee21f>|0x07f|+0x004:'556'
-	// <0x6ee223>|0x083|-0x05a:'557'
-	// <0x6ee1c9>|0x029|+0x0af:'558'
-	// <0x6ee278>|0x0d8|      :'558'	}
-	// ******
+	n_ary_tree_destroyer		tree_destroyer;
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		i->accept				( tree_destroyer );
+
+	for ( base_interpolator const* const* i = m_interpolators, * const* const e = i + m_interpolators_count; i != e; ++i )
+		(*i)->~base_interpolator( );
+
+	animation_state* i			= m_animation_states;
+	animation_state* const e	= m_animation_states + m_animations_count;
+	for ( ; i != e; ++i )
+		(*i).~animation_state	( );
 }
 
 // STATE[STUB]
@@ -220,21 +207,15 @@ void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node
 }
 
 // STATE[STUB]
+// claude@NOTE: set_object_transform(pcvoid,float4x4&) - structure recovered (5 stmts):
+// for(i=m_weight_root; i; i=i->m_next_weight_animation) if(i->animated_object()==animated_object) set_object_transform(*i);
+// then std::find over m_animated_objects[..count] writes the float4x4 into the holder's
+// transform field (offset 0). Parked: animated_object_holder::transform is private in the
+// reconstructed header with no accessor; writing it faithfully needs the real accessor name
+// (cannot fabricate). Next step: recover the holder's transform accessor (get_object_transform
+// reads the same field) then write j->transform()=object_transform.
 void n_ary_tree::set_object_transform( pcvoid const animated_object, float4x4 const& object_transform )
 {
-	// FUNCTION BODY
-	// <0x6ef9d9>|0x009|+0x007:'697'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef9e0>|0x010|+0x005:'701'
-	// <0x6ef9e5>|0x015|+0x00e:'702'
-	// <0>
-	// <0x6ef9f3>|0x023|+0x017:'704'
-	// <0>
-	// <1>
-	// <0x6efa0a>|0x03a|+0x00d:'707'
-	// ******
 }
 
 // STATE[STUB]
@@ -246,7 +227,12 @@ void n_ary_tree::set_objects_transform( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: the three bone-matrix forwarders below are STRUCTURE-faithful (temporary
+// bone_matrices_computer for convert_to_object_matrices/compute_bones_matrices = 1 stmt no
+// local; named `computer` local for compute_bones_local_matrices = 2 stmts, per --view
+// structure). They are unpaired/~20% only because bone_matrices_computer's ctor/dtor/methods
+// are empty STUBs in bone_matrices_computer.cpp (other TU) -> the whole expression DCE-collapses
+// to a 1-byte ret. Pairs once that TU is bodied; off-limits to touch here.
 void n_ary_tree::compute_bones_matrices(
 	pcvoid const		animated_object,
 	skeleton const&		skeleton,
@@ -255,12 +241,9 @@ void n_ary_tree::compute_bones_matrices(
 	u32* const			bones_masks
 ) const
 {
-	// FUNCTION BODY
-	// <0x6ef996>|0x006|+0x02e:'718'
-	// ******
+	bone_matrices_computer( animated_object, &skeleton, m_animation_states, m_animations_count ).compute_bones_matrices( begin, end, bones_masks );
 }
 
-// STATE[STUB]
 void n_ary_tree::compute_bones_local_matrices(
 	pcvoid				animated_object,
 	skeleton const&		skeleton,
@@ -269,23 +252,10 @@ void n_ary_tree::compute_bones_local_matrices(
 	u32* const			bones_masks
 ) const
 {
-	// LOCALS
-	// bone_matrices_computer 			computer
-	// ******
-
-	// FUNCTION BODY
-	// <0x6ef956>|0x006|+0x018:'723'
-	// <0x6ef96e>|0x01e|+0x012:'724'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+	bone_matrices_computer computer( animated_object, &skeleton, m_animation_states, m_animations_count );
+	computer.compute_bones_local_matrices( begin, end, bones_masks );
 }
 
-// STATE[STUB]
 void n_ary_tree::convert_to_object_matrices(
 	pcvoid				animated_object,
 	skeleton const&		skeleton,
@@ -293,9 +263,7 @@ void n_ary_tree::convert_to_object_matrices(
 	float4x4* const		end
 ) const
 {
-	// FUNCTION BODY
-	// <0x6ef916>|0x006|+0x029:'735'
-	// ******
+	bone_matrices_computer( animated_object, &skeleton, m_animation_states, m_animations_count ).convert_to_object_matrices( begin, end );
 }
 
 // STATE[STUB]
@@ -1502,6 +1470,16 @@ u32 n_ary_tree::nearest_event_time_in_ms( ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: adjust_animation_events_times - structure recovered (9 stmts): a
+// `for(animation_state* i=other.m_animation_states, e=i+other.m_animations_count; i!=e; ++i)`
+// loop whose body copies this->m_animation_states[k] INTO other's state (calls
+// bone_matrices_computer_data::operator= then inlines the scalar+event_iterator field copies,
+// with neg/sbb/and bool-normalizations on three event_iterator fields), then a
+// `std::sort(other.m_animation_events, +count, event_iterator_predicate())`. Parked: the per-state
+// copy is the INLINED animation_state::operator= (itself a STUB at line ~307) over
+// n_ary_tree_event_iterator's nested private sub-iterators (offsets 0x88/0x8C/0x90/0xAC); faithful
+// reconstruction needs that operator= + event_iterator internals decoded, plus the file-static
+// event_iterator_predicate defined. Not steerable without inventing the field/operator structure.
 void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 {
 	// LOCALS
@@ -1531,6 +1509,22 @@ void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 }
 
 // STATE[STUB]
+// claude@NOTE: tick() structure fully recovered from asm (25 stmts, local `e`,
+// `user_handled_callbacks`): guard `if(!m_weight_root){ m_tree_actual_time_in_ms=target; return
+// false; }`, then a `for(; (*m_animation_events)->event_iterator->event_time_in_ms<=target; )`
+// loop: `if(m_tree_actual_time_in_ms<event_time) update_animation_states(...)`,
+// `need_new_transform(event_time)` -> process_events(event_time, 1) + holder loop
+// (i->new_transform=get_object_transform(i->animated_object)) + process_events(event_time,0x1FE)
+// + holder loop (set_object_transform(i->animated_object,i->new_transform); i->need_new_transform=false)
+// OR else process_events(event_time,0x1FF); then
+// update_event_iterators_and_dispatch_callbacks(...) into user_handled_callbacks;
+// m_tree_actual_time_in_ms=event_time. Tail: `if(m_weight_root && m_tree_actual_time_in_ms!=target)
+// update_animation_states(...); m_tree_actual_time_in_ms=target;` return user_handled_callbacks.
+// Parked: the two holder loops read/write animated_object_holder private fields (new_transform@0x40,
+// animated_object@0x80, need_new_transform@0x84) and the body inlines empty-stub callees
+// (get/set_object_transform, process_events, update_animation_states,
+// update_event_iterators_and_dispatch_callbacks). Needs the holder's accessors (reconstructed
+// header marks them private, no API) + those callees bodied. Cannot fabricate accessor names.
 bool n_ary_tree::tick(
 	const u32				target_time_in_ms,
 	subscribed_channel*&	channels_head,
