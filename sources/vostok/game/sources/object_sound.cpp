@@ -4,106 +4,91 @@
 
 #include "pch.h"
 #include "object_sound.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/math_float4x4.h>
+#include <vostok/sound/world.h>
+#include <vostok/sound/sound_instance_proxy.h>
 
 namespace survarium {
 
-// STATE[STUB]
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
+
  object_sound::object_sound( base_game_scene& w ) :
 	game_object_static( w )
 {
-	// FUNCTION BODY[0x777e30]: 0
-	// <0x777e30>|0x000|+0x027:'18'	{
-	// <0x777e57>|0x027|      :'19'	}
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: dtor byte-residual is the inlined base-class dtor chain - the target
+// tail-jmps ~unmanaged_resource without re-writing the game_object_ vtable, while our
+// base inlines ~game_object_ (header-inline {}) which emits that extra vtable store.
+// A game_object_ dtor-codegen artifact, not steerable from this TU.
  object_sound::~object_sound( )
 {
-	// FUNCTION BODY[0x777dc0]: 0
-	// <0x777dc0>|0x000|+0x00a:'22'	{
-	// <0x777dca>|0x00a|      :'23'	}
-	// ******
 }
 
-// STATE[STUB]
 void object_sound::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
 	boost::function< void( game_object_& ) >&	cb
 )
 {
-	// LOCALS
-	// resources::class_id_enum 		resource_id
-	// ******
+	load_transform		( t, m_transform );
+	m_sound_name		= t["sound_name"];
+	m_sound_emitter_type	= t["sound_type"];
+	resources::class_id_enum resource_id = resources::class_id_enum( s32( t["resource_id"] ) );
 
-	// FUNCTION BODY[0x777f20]: 12
-	// <0x777f2b>|0x00b|+0x017:'27'
-	// <0>
-	// <0x777f42>|0x022|+0x014:'29'
-	// <0x777f56>|0x036|+0x00e:'30'
-	// <0x777f64>|0x044|+0x014:'31'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x777f78>|0x058|+0x0a2:'38'
-	// ******
+	resources::request r[] =
+	{
+		{ m_sound_name, resource_id },
+	};
+
+	resources::query_resources(
+		r,
+		1,
+		boost::bind( &object_sound::on_sound_resources_ready, this, _1, cb ),
+		g_allocator
+	);
 }
 
-// STATE[STUB]
 void object_sound::on_sound_resources_ready(
 	resources::queries_result&		data,
 	boost::function< void( game_object_& ) >&	callback
 )
 {
-	// FUNCTION BODY[0x777e60]: 3
-	// <0x777e61>|0x001|+0x0ab:'43'
-	// <0>
-	// <0x777f0c>|0x0ac|+0x00a:'45'
-	// ******
+	m_sound_emitter = static_cast_resource_ptr< sound::sound_emitter_ptr >( data[0].get_unmanaged_resource() );
+
+	callback( *this );
 }
 
-// STATE[STUB]
+// claude@NOTE: insert is a STRUCTURE MATCH (7 stmts); the byte-residual is a CSE/
+// scheduling difference - the target hoists the get_sound_scene() + get_sound_world()
+// .get_logic_world_user() chain (shared by both emit branches) out of the if/else and
+// computes it once, our base recomputes it per branch. No named locals on either side,
+// so this is a compiler optimization scheduling delta, not source-steerable here.
 void object_sound::insert( )
 {
-	// CALL SITE INFO
-	// <0x777d0d> -> sound::world_user& < unknown >() const
-	// <0x777d59> -> void < unknown >( float3 const&, float3 const& )
-	// <0x777d5d> -> sound::world_user& < unknown >() const
-	// <0x777da2> -> void < unknown >( float3 const& )
-	// <0x777db3> -> void < unknown >( sound::playback_mode, sound::sound_producer const* const, sound::sound_receiver const* const )
-	// ******
+	if ( m_sound_emitter_type == 1 )
+	{
+		m_sound_instance = m_sound_emitter->emit_spot_sound( get_game_scene().get_sound_scene(), get_game_scene().get_game().get_sound_world().get_logic_world_user(), sound::human );
+		m_sound_instance->set_position_and_direction( m_transform.c.xyz(), m_transform.k.xyz() );
+	}
+	else
+	{
+		m_sound_instance = m_sound_emitter->emit_point_sound( get_game_scene().get_sound_scene(), get_game_scene().get_game().get_sound_world().get_logic_world_user() );
+		m_sound_instance->set_position( m_transform.c.xyz() );
+	}
 
-	// FUNCTION BODY[0x777cd0]: 13
-	// <0x777cd8>|0x008|+0x007:'50'
-	// <0>
-	// <0x777cdf>|0x00f|+0x065:'52'
-	// <0x777d44>|0x074|+0x017:'53'
-	// <0x777d5b>|0x08b|+0x002:'54'
-	// <0>
-	// <1>
-	// <0x777d5d>|0x08d|+0x037:'57'
-	// <0x777d94>|0x0c4|+0x010:'58'
-	// <0>
-	// <1>
-	// <2>
-	// <0x777da4>|0x0d4|+0x015:'62'
-	// ******
+	m_sound_instance->play( sound::looped );
 }
 
-// STATE[STUB]
 void object_sound::remove( )
 {
-	// FUNCTION BODY[0x777c90]: 1
-	// <0x777c90>|0x000|+0x001:'66'	{
-	// <0x777c91>|0x001|+0x02d:'67'
-	// <0x777cbe>|0x02e|-0x003:'67'
-	// <0x777cbb>|0x02b|+0x005:'68'
-	// <0x777cc0>|0x030|      :'68'	}
-	// ******
+	m_sound_instance = NULL;
 }
 
 } // namespace survarium
