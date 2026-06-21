@@ -121,6 +121,8 @@ namespace survarium {
 	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
 	void use_game_player_cook( );
 	void use_game_animated_model_cook( );	// anchor_game_animated_model_cook.cpp
+	// player_logic_preview_state carcass anchor (anchor_game_player_logic.cpp); self-guarded.
+	void use_game_player_logic( );
 
 	// file-local free function defined in object.cpp (no public header); the
 	// game_object_static::load impl calls it.
@@ -416,6 +418,7 @@ namespace vostok
 		use_game_victory_item( );
 		use_game_small_utils( );
 		use_game_animation( );
+		survarium::use_game_player_logic( );
 		survarium::use_game_options( );
 		survarium::use_game_options_items( );
 		survarium::use_game_lobby_ui( );

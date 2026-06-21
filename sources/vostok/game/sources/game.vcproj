@@ -1045,6 +1045,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_player_logic.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_player_input.cpp"
 				>
 			</File>

@@ -114,6 +114,9 @@ private:
 	// game_world reads the inherited m_inverted_view_matrix directly
 	// (on_after_tick / on_activate); PDB does not record friendship, codegen-neutral
 	friend class game_world;
+	// lobby_menu reads the inherited m_mouse_pos directly (its input handlers,
+	// lobby_menu_input.cpp); same codegen-neutral friendship.
+	friend class lobby_menu;
 
 	/* 0x0000 */	/* game_scene */
 	/* 0x000c */	/* engine */

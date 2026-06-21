@@ -4,6 +4,12 @@
 
 #include "pch.h"
 #include "damage_zone.h"
+#include "game_world.h"
+#include "game_memory.h"
+
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
+#include <vostok/math_float4x4_inline.h>
 
 namespace survarium {
 
@@ -48,37 +54,30 @@ void damage_zone::load(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: structure recovered (get_shapes_centers, then per-center
+// play_particle_system at create_translation( center )). Byte residual is the same
+// render-facade signature wall as stop_particles (in_instance by-value vs const&).
 void damage_zone::play_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
-	// LOCALS
-	// vectora< float3 > 				shapes_centers
-	// ******
+	vectora< float3 > shapes_centers( g_allocator );
+	get_shapes_centers( shapes_centers );
 
-	// FUNCTION BODY[0x5bd030]: 10
-	// <0x5bd039>|0x009|+0x049:'62'
-	// <0x5bd082>|0x052|-0x041:'62'
-	// <0x5bd041>|0x011|+0x025:'63'
-	// <0x5bd066>|0x036|+0x01a:'64'
-	// <0>
-	// <0x5bd080>|0x050|+0x070:'66'
-	// <0x5bd0f0>|0x0c0|-0x06a:'66'
-	// <0>
-	// <0x5bd086>|0x056|+0x06c:'68'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	for ( u32 i = 0; i < shapes_centers.size( ); ++i )
+		m_game_world.renderer( ).scene( ).play_particle_system(
+			m_game_world.render_scene( ),
+			static_cast_resource_ptr< particle::particle_system_instance_ptr >( particles[ i ] ),
+			create_translation( shapes_centers[ i ] ) );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure recovered (loop over particles -> scene_renderer.
+// remove_particle_system_instance). Byte residual is the render-facade signature
+// wall the whole game tree carries (weapon.cpp / object_solid_visual.cpp): the PDB
+// takes in_instance BY VALUE, the scene_renderer.h facade decl spells it const&, so
+// the base elides the temp intrusive_ptr copy. Recovers with the facade phase.
 void damage_zone::stop_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
-	// FUNCTION BODY[0x5bcfa0]: 3
-	// <0x5bcfac>|0x00c|+0x009:'76'
-	// <0x5bcfb5>|0x015|+0x00d:'77'
-	// <0x5bcfc2>|0x022|+0x02b:'78'
-	// ******
+	for ( u32 i = 0; i < particles.size( ); ++i )
+		m_game_world.renderer( ).scene( ).remove_particle_system_instance( m_game_world.render_scene( ), particles[ i ] );
 }
 
 // STATE[STUB]
