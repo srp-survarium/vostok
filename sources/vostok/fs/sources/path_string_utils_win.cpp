@@ -29,6 +29,7 @@ native_path_string const &	get_current_directory ()
 	string_path								path;
 	GetCurrentDirectory						(sizeof(path), path);
 	s_current_directory.assign_with_conversion	(path);
+	s_current_directory.make_lowercase		();
 	s_current_directory.rtrim				(s_current_directory.separator);
 	s_current_directory.make_lowercase		();
 	s_initialized						=	true;
