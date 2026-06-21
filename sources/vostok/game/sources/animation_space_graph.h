@@ -6,6 +6,7 @@
 #define ANIMATION_SPACE_GRAPH_H_INCLUDED
 
 #include "animation_space_edge.h"
+#include "animation_space_vertex.h"
 #include <vostok/resources_unmanaged_resource.h>
 
 namespace vostok {
@@ -36,14 +37,13 @@ public:
 
 			animation_space_edge const&			edge					( const u32 index ) const;
 
-	inline	u32									get_animations_count	( ) const { /* no source */ return m_animations_count; }
-	inline	u32									get_mixes_count			( ) const { /* no source */ return m_mixes_count; }
-	inline	u32									get_edges_count			( ) const { /* no source */ return m_edges_count; }
-	// the vertex/mix/edge arrays have no named members - the cook allocates them
-	// behind the object; buildability stubs until a matcher recovers the layout math
-	inline	animation_space_vertex const*		get_animations			( ) const { /* no source */ return NULL; }
-	inline	std::pair< animation_space_vertex const*, animation_space_vertex const* > const*	get_mixes				( ) const { /* no source */ return NULL; }
-	inline	animation_space_edge const*			get_edges				( ) const { /* no source */ return NULL; }
+	inline	u32									get_animations_count	( ) const { return m_animations_count; }
+	inline	u32									get_mixes_count			( ) const { return m_mixes_count; }
+	inline	u32									get_edges_count			( ) const { return m_edges_count; }
+	// the vertex/mix/edge arrays are allocated contiguously behind the object
+	inline	animation_space_vertex const*		get_animations			( ) const { return reinterpret_cast< animation_space_vertex const* >( this + 1 ); }
+	inline	std::pair< animation_space_vertex const*, animation_space_vertex const* > const*	get_mixes				( ) const { return reinterpret_cast< std::pair< animation_space_vertex const*, animation_space_vertex const* > const* >( get_animations( ) + m_animations_count ); }
+	inline	animation_space_edge const*			get_edges				( ) const { return reinterpret_cast< animation_space_edge const* >( get_mixes( ) + m_mixes_count ); }
 
 	inline	float								agent_radius			( ) const { /* no source */ return m_agent_radius; }
 
