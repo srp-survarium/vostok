@@ -139,9 +139,13 @@ void profile_player_character::update( const u32 current_time_in_ms )
 		m_player->tick( current_time_in_ms );
 }
 
-// claude@NOTE: faithful body; pairs at 62% only because player::remove (player.cpp) is still
-// an empty stub - LTCG inlines it away so the if(m_player) m_player->remove() half collapses,
-// leaving the m_player=NULL release. Reaches 100% once player::remove gets a real body.
+// claude@NOTE: faithful body, structure + byte-size match. Residual is a pure eax/ecx swap in
+// the inlined if(m_player) guard: the TARGET's player::remove uses the LTCG this-in-eax
+// convention (mov esi,eax) so m_player loads into eax (the call's this), while our base
+// player::remove is __thiscall (this in ecx) because anchor_game_player.cpp pins it via an
+// address-take (ANCHOR_PIN(&player::remove)). Flipping that to a guarded direct call (the
+// anchor-direct-call-this-convention pattern) would fix this but is a DIFFERENT unit's anchor
+// and would re-converge every other player method on its own convention - out of scope here.
 void profile_player_character::clear_resources( )
 {
 	if ( m_player )
@@ -309,14 +313,21 @@ void profile_character::character_animation_ready( resources::queries_result& da
 	// ******
 }
 
-// STATE[STUB]
-float4x4 identity_transform_functor( pcvoid __formal )
+// internal-linkage scene-load functor (the original is a file-local static: the PDB
+// records only an S_LPROC32 for it, no mangled COFF symbol). Originally referenced by
+// query_scene_resources (still a STUB), so pin its address from this TU to keep
+// /OPT:REF from stripping the standalone body until that call site is recovered.
+static float4x4 identity_transform_functor( pcvoid )
 {
-	return vostok::math::float4x4();
+	return float4x4( ).identity( );
+}
 
-	// FUNCTION BODY[0x73f340]: 1
-	// <0x73f34b>|0x00b|+0x017:'339'
-	// ******
+void pin_lobby_menu_scene_statics( )
+{
+	static pcvoid volatile s_sink = 0;
+	static volatile bool s_run = false;
+	if ( s_run )
+		s_sink = ( pcvoid )&identity_transform_functor;
 }
 
 } // namespace survarium
