@@ -25,16 +25,14 @@ public:
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
-	// claude@NOTE: holder/item_in_slot/get_active_slot parked unpaired - the target
-	// keeps LTCG custom-convention copies (this in eax, no frame); our /GL inlines
-	// every real call site, and the address-taken anchor in temp_include_all can
-	// only emit the standard-thiscall /Od-shaped COMDAT (right unit, 0% bytes).
-	// STATE[STUB]
+	// claude@NOTE: holder/item_in_slot/get_active_slot carry the correct one-line bodies
+	// but pair only as the optimized-COMDAT convention wall - the target keeps /Ox copies
+	// (this in eax/ecx, no frame, args from [esp+N]); our /Od base emits the standard
+	// thiscall ebp-frame COMDAT (right unit, structure matches, bytes differ by frame).
+	// Not source-steerable.
 			inventory_holder&					holder						( ) { return *m_holder; }
 
-	// STATE[STUB]
 			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
-	// STATE[STUB]
 	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );
@@ -42,7 +40,6 @@ public:
 
 			bool								action						( profile_slot_enum slot_id, bool key_down );
 
-	// STATE[STUB]
 			profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
 
 			void								setup_from_profile			( player_profile& profile, items_dictionary const& dict );

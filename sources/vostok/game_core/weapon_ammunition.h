@@ -34,18 +34,17 @@ public:
 	inline	bool		tracer						( ) const { return m_tracer; }
 
 			void		load						( configs::binary_config_value const& cfg );
-	// STATE[STUB]
+	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
+	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones;
+	// the idiomatic bodies below are the faithful shapes.
 	virtual	void		activate					( base_player& user, engine& engine ) override { VOSTOK_UNREFERENCED_PARAMETERS( user, engine ); }
-	// STATE[STUB]
 	virtual	void		deactivate					( ) override { }
-	// STATE[STUB]
 	virtual	float4x4	transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void		tick						( ) override { /* no source */ }
 
 	virtual	bool		is_ready_to_be_deactivated	( ) const override { return true; /* sushi@TODO no source */ }
 
-	// STATE[STUB]
 	virtual	animation::mixing::expression
 						selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREFERENCED_PARAMETERS( buffer, is_third_view ); VOSTOK_UNREACHABLE_CODE( ); }
 
