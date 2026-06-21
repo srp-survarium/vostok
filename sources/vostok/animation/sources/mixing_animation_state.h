@@ -62,8 +62,6 @@ struct VOSTOK_ANIMATION_API animation_state {
 								);
 	inline animation_state&		get_this		( ) { return *this; }
 
-			animation_state&	operator=		( animation_state const& __that );
-
 public:
 	/* 0x0000 */	bone_matrices_computer_data		bone_matrices_computer;
 	/* 0x005c */	u32								animation_interval_id;
