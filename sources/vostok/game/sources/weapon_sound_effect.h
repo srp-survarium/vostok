@@ -28,7 +28,7 @@ public:
 				sounds_instances	( arg_2, arg_3 )
 		{ /* no source */ }
 
-		inline	void	clear_instances	( ) { /* no source */ }
+		inline	void	clear_instances	( ) { sounds_instances.clear( ); }
 
 		inline			~sounds			( ) { /* no source */ }
 
