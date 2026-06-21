@@ -26,6 +26,7 @@
 #include "animation_space_graph.h"
 #include "animation_space_graph_cook.h"
 #include "human_npc.h"
+#include "animation_controller_parameters.h"
 
 namespace vostok {
 
@@ -106,6 +107,23 @@ void use_game_animation( )
 		static vostok::configs::binary_config_value const* volatile	s_groups	= 0;
 		survarium::get_animation_vertices_count( *s_groups );
 		survarium::get_animation_mixes_count( *s_groups );
+	}
+
+	// ----- the free comparison operators on the parameter structs have no reachable
+	// caller (set_target compares the emitter members inline), so /OPT:REF strips them;
+	// reference each through volatile placeholders to keep them in the base EXE.
+	{
+		static survarium::simple_animation_controller_parameters* volatile	s_simple	= 0;
+		static survarium::movement_animation_controller_parameters* volatile	s_movement	= 0;
+		static bool volatile												s_sink		= false;
+
+		survarium::simple_animation_controller_parameters const&	simple		= *s_simple;
+		survarium::movement_animation_controller_parameters const&	movement	= *s_movement;
+
+		s_sink	= ( simple == simple );
+		s_sink	= ( simple != simple );
+		s_sink	= ( movement == movement );
+		s_sink	= ( movement != movement );
 	}
 }
 

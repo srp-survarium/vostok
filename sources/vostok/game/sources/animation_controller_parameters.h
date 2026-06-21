@@ -31,6 +31,9 @@ public:
 
 STATIC_SIZE_ASSERT(simple_animation_controller_parameters, 0x8);
 
+bool	operator==	( simple_animation_controller_parameters const& first, simple_animation_controller_parameters const& second );
+bool	operator!=	( simple_animation_controller_parameters const& first, simple_animation_controller_parameters const& second );
+
 struct movement_animation_controller_parameters : public animation_controller_parameters {
 	virtual	void	reset	( ) override;
 
@@ -46,6 +49,9 @@ public:
 }; // struct movement_animation_controller_parameters
 
 STATIC_SIZE_ASSERT(movement_animation_controller_parameters, 0x2C);
+
+bool	operator==	( movement_animation_controller_parameters const& first, movement_animation_controller_parameters const& second );
+bool	operator!=	( movement_animation_controller_parameters const& first, movement_animation_controller_parameters const& second );
 
 } // namespace survarium
 
