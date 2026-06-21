@@ -10,7 +10,10 @@
 namespace vostok {
 namespace physics {
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (3 stmts). Residual is non-steerable: optimized-COMDAT
+// convention (this-in-esi, ret 4); register_cook() is an out-of-line call in the target
+// but /GL inlines its body in our base; and the translate_query_cook base-ctor resolves
+// thread_id_unset to a direct GetCurrentThreadId() in the target vs a cached global here.
 collision_shape_cook::collision_shape_cook( bool static_object ):
 	resources::translate_query_cook			(
 		static_object ? resources::collision_bt_shape_class_static : resources::collision_bt_shape_class_dynamic,
@@ -20,7 +23,7 @@ collision_shape_cook::collision_shape_cook( bool static_object ):
 	),
 	m_static_object	( static_object )
 {
-	register_cook( this );	// <0x72d2e5>|0x000|0x000:'29'
+	register_cook( this );
 }
 
 // * `set_length` didn't inline.
@@ -80,6 +83,15 @@ void collision_shape_cook::translate_query( resources::query_result_for_cook& pa
 	);
 }
 
+// claude@NOTE: PARTIAL reconstruction (~35%). Target is 69 stmts / 28 locals / 0xc81
+// bytes (release-optimized: intrusive_ptr::set + lock-xadd refcounting all inlined).
+// The vertices/indices/face_data chunk-reader -> btBvhTriangleMeshShape / btCompoundShape
+// build (target source lines ~119-184) is NOT yet reconstructed: missing locals tri_shape,
+// compound_shape, remap_table, child_local_transform (btTransform), game_mtl
+// (fixed_string<260>), icount/tcount/vcount. The carcass-locals list below was the
+// recovery seed. Next step: read --view target 0x71d420 offset 0x23a..0x6f1 to recover
+// the triangle-mesh build + material remap loop, then re-measure. Parked to finish the
+// rest of the unit.
 void collision_shape_cook::on_collision_sources_loaded( resources::queries_result& data, collision_shape_cook::cook_data* cd )
 {
 	configs::binary_config_ptr primitives_cfg = static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );

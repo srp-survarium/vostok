@@ -9,11 +9,12 @@
 #include <vostok/physics/world.h>
 
 /*
- * This is heavily based on the original xr2 source code.
- * Match percentage is low, however.
- * This is because of how differently `intrusive_ptr` was compiled.
- * And I currently do not have fixes for this.
- * Hopefully the problem will solve itself once overall matching percentage is better.
+ * Based on the original xr2 source. The query-translation handlers
+ * (translate_query / on_config_loaded / on_skeleton_config_loaded) match ~100%.
+ * on_subresources_loaded is STRUCTURE MATCH but capped on a non-steerable release wall:
+ * the target inlines the resource_ptr / intrusive_ptr refcount machinery (lock xadd)
+ * that our /Od base still CALLs; the ctor + delete_resource carry the same inline-vs-call
+ * delta plus the optimized-COMDAT this-convention.
  */
 
 namespace vostok {
@@ -119,14 +120,6 @@ void animated_model_instance_cook::on_subresources_loaded( resources::queries_re
 
 	animated_model_instance* new_model_instance		= VOSTOK_NEW_IMPL( m_allocator, animated_model_instance );
 	new_model_instance->m_skeleton					= static_cast_resource_ptr< animation::skeleton_ptr >( data[0].get_unmanaged_resource() );
-
-	R_ASSERT( parent );
-	resources::user_data_variant* user_data = parent->user_data();
-	R_ASSERT( user_data );
-	world *physics_world = 0;
-	bool res_user_data = user_data->try_get( physics_world );
-	R_ASSERT( res_user_data );
-	R_ASSERT( physics_world );
 
 	parent->set_unmanaged_resource					(
 				new_model_instance,
