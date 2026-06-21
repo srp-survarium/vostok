@@ -13,14 +13,14 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.81% fuzzy (+2.44%) &middot; 4,651 / 12,915 functions exact (36.01%, +340 best-ever).**
+**Overall: 52.82% fuzzy (+2.42%) &middot; 4,653 / 12,915 functions exact (36.03%, +335 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact max | Fuzzy | Fuzzy max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
 | `render`        |   351 | 355 / 2,647 (13.4%) |           382 (+27) | 30.3% |     +2.1% |
-| `game`          |   141 | 276 / 1,498 (18.4%) |            276 (+0) | 32.1% |     +0.6% |
+| `game`          |   141 | 276 / 1,498 (18.4%) |            276 (+0) | 32.2% |     +0.6% |
 | `core`          |   136 | 641 / 1,320 (48.6%) |           672 (+31) | 75.9% |     +3.5% |
 | `vostok`        |   112 | 491 / 1,252 (39.2%) |           559 (+68) | 53.4% |     +5.7% |
 | `game_core`     |   189 | 483 / 1,171 (41.2%) |          587 (+104) | 76.0% |     +8.3% |
@@ -32,7 +32,7 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `particle`      |    25 |   213 / 400 (53.2%) |            217 (+4) | 78.1% |     +1.0% |
 | `vfs`           |    71 |   162 / 390 (41.5%) |            168 (+6) | 84.8% |     +1.7% |
 | `ui`            |    27 |   145 / 227 (63.9%) |            145 (+0) | 77.6% |     +3.6% |
-| `physics`       |    14 |    81 / 197 (41.1%) |            93 (+12) | 67.5% |     +3.7% |
+| `physics`       |    14 |    83 / 197 (42.1%) |             90 (+7) | 67.6% |     +2.9% |
 | `fs`            |    25 |    65 / 165 (39.4%) |             68 (+3) | 79.3% |     +3.3% |
 | `engine`        |    22 |    53 / 162 (32.7%) |             53 (+0) | 82.7% |     +0.4% |
 | `network`       |    25 |    67 / 158 (42.4%) |             74 (+7) | 84.9% |     +0.9% |
