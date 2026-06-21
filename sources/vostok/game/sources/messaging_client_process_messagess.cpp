@@ -100,21 +100,69 @@ messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_
 	return messaging::player_private_channel;
 }
 
-// STATE[STUB]
-// claude@NOTE: deps now all present (chat_handler.h exists) - parked as a large
-// focused follow-up, NOT a symbol wall. Recovered body (33 stmts, 7 locals incl.
-// tcp_packet): detect a direct receiver (wcsstr the leading L"/ " token, wcsncpy_s
-// the name, sete has_direct_receiver), resolve the channel via
-// parse_receiver_channel (or swprintf_s a blank receiver when channel==4), then if
-// m_connection_state==client_connected mbstowcs_s the receiver name, echo locally
-// via m_chat_handler.add_message + add_to_recent_list, wcstombs_s the body+name
-// (strcpy_s "##text/name conversion error##" on failure), build a 0xC1 tcp_packet
-// (append channel byte, then length-prefixed receiver_name and message_body),
-// tcp_packet_client::send, and on the system/private channels run the
-// "not connected to messaging server" LOG. The byte-exact tcp_packet append
-// sequencing + the channel jump table make this a careful reconstruction.
+// claude@NOTE: bodied from the target (was a STUB). Structure-complete modulo three
+// byte-capped residuals: (1) the packet<>::append/tcp_packet ctor/dtor + send chain is
+// whole-program-inlined in gold but /Od here (the network template inline wall); the
+// trailing inlined packet dtor offsets the append-row pairing. (2) the wcstombs_s error
+// guard `(ret != 0 && ret != STRUNCATE)` emits TWO calls in /Od (no PDB local for the
+// errno, so it is spelled inline) where gold CSEs to one. (3) input_text reassignment to
+// the message-body pointer is scheduled early (line 132) by the optimizer; /Od keeps it
+// after the wcsncpy that needs the original prefix, so it pairs one row off. None are
+// structural divergences.
 void messaging_client::on_message_typed( wchar_t const* input_text, messaging::message_channel_enum message_chanel )
 {
+	wchar_t			w_receiver_name[32];
+	bool			has_direct_receiver;
+
+	if ( ( has_direct_receiver = ( input_text[0] == L'/' ) )
+			&& wcsstr( input_text, L" " ) )
+	{
+		wcsncpy_s		( w_receiver_name, input_text + 1, ( wcsstr( input_text, L" " ) - input_text ) / 2 - 1 );
+
+		message_chanel	= parse_receiver_channel( w_receiver_name, m_chat_handler.in_match( ) );
+		input_text		= wcsstr( input_text, L" " ) + 1;
+	}
+
+	if ( message_chanel != messaging::player_private_channel )
+		swprintf_s		( w_receiver_name, L"" );
+
+	if ( m_connection_state == messaging::client_connected )
+	{
+		wchar_t w_sender_name[32];
+		mbstowcs_s		( NULL, w_sender_name, m_local_name, _TRUNCATE );
+
+		m_chat_handler.add_message		( message_chanel, input_text, w_sender_name );
+		if ( message_chanel == messaging::player_private_channel )
+			m_chat_handler.add_to_recent_list	( w_receiver_name );
+
+		char message_body[256];
+		if ( wcstombs_s( NULL, message_body, input_text, _TRUNCATE ) && wcstombs_s( NULL, message_body, input_text, _TRUNCATE ) != STRUNCATE )
+			strcpy_s	( message_body, "##text conversion error##" );
+
+		char receiver_name[32];
+		if ( wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE ) && wcstombs_s( NULL, receiver_name, w_receiver_name, _TRUNCATE ) != STRUNCATE )
+			strcpy_s	( message_body, "##name conversion error##" );
+
+		switch ( message_chanel )
+		{
+			case messaging::player_match_channel:
+			case messaging::player_team1_channel:
+			case messaging::player_team2_channel:
+				if ( m_match_channel_id_ == u32( -1 ) )
+					return;
+				break;
+		}
+
+		network_core::tcp_packet	packet( memory::g_mt_allocator );
+		packet.append	( ( u8 )0xC1 );
+		packet.append	( m_match_channel_id_ );
+		packet.append	( receiver_name );
+		packet.append	( ( u8 )message_chanel );
+		packet.append	( message_body );
+		m_network_client.send	( packet );
+	}
+	else
+		m_chat_handler.add_message		( messaging::player_system_channel, L"not connected to messaging server", L"System" );
 }
 
 void messaging_client::query_for_friend_list( )
@@ -210,6 +258,12 @@ void messaging_client::find_players_by_name( pcstr player_name )
 	m_network_client.send	( packet );
 }
 
+// claude@NOTE: anchor-capped. The target builds a single `bool` (set by the
+// type==account && find!=end() test) and returns its negation through one unified
+// epilogue (sete); our base compiles to 0 statements because the carcass anchor's
+// freshly-built client has an empty m_ignore_list (begin==end), so LTCG const-folds
+// the whole find away to `return true`. Lifts once a real client with a populated
+// ignore list reaches this and the anchor is removed.
 bool messaging_client::accept_message_from( const u32 sender_account_id, messaging::client_type_enum sender_type )
 {
 	if ( sender_type == messaging::account_client_type )
@@ -218,6 +272,12 @@ bool messaging_client::accept_message_from( const u32 sender_account_id, messagi
 	return true;
 }
 
+// claude@NOTE: structure-near-match (14/17). Two residuals: (1) the target INLINES
+// accept_message_from here (the stlp __find expands in-line) where our base keeps the
+// call - an inline-vs-call wall, not a source shape to change; (2) the target records a
+// 4th local `body[256]` (a message_body staging/reference the gold build materialises
+// from the inlined r_string path) that the /Od base does not. Both trace to the
+// whole-program inlining of accept_message_from / packet_reader::r_string.
 void messaging_client::process_incoming_text_message( network_core::packet_reader& reader )
 {
 	messaging::send_message_params	params;
