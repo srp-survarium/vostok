@@ -25,27 +25,31 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 {
 }
 
-// claude@NOTE: residual is a menu reload - the target holds m_game.lobby_menu()
-// (an inline *m_lobby_menu) in a callee-saved reg across query_lobby_info /
-// show_disconnected_message; MSVC re-loads m_lobby_menu here. The target records 0
-// named locals, so the faithful 0-local form is kept over a cached-reference form
-// (which adds a phantom local AND scores lower).
+// claude@NOTE: the target CSEs m_game.lobby_menu() into one held pointer across the
+// body, so the faithful source caches the lobby_menu& once (the reference enregisters
+// with 0 named locals - matches the target's recorded local set). Residual is the
+// cross-TU LTCG inline of show_disconnected_message: in the base its scaleform Set*/
+// Invoke calls are still empty stubs so it is tiny and the LTCG inliner folds its
+// constant-pruned branch in here, whereas the target (real GFx ops) keeps it a call.
+// Lifts once scaleform value.cpp/movie.cpp are matched.
 void network_client::on_connected_to_lobby( )
 {
-	m_game.lobby_menu( ).query_lobby_info( );
-	if ( !m_game.lobby_menu( ).m_is_connected_to_lobby )
+	lobby_menu& menu = m_game.lobby_menu( );
+	menu.query_lobby_info( );
+	if ( !menu.m_is_connected_to_lobby )
 	{
-		m_game.lobby_menu( ).m_is_connected_to_lobby = true;
-		m_game.lobby_menu( ).show_disconnected_message( false );
+		menu.m_is_connected_to_lobby = true;
+		menu.show_disconnected_message( false );
 	}
 }
 
 void network_client::on_disconnected_from_lobby( )
 {
-	if ( m_game.lobby_menu( ).m_is_connected_to_lobby )
+	lobby_menu& menu = m_game.lobby_menu( );
+	if ( menu.m_is_connected_to_lobby )
 	{
-		m_game.lobby_menu( ).m_is_connected_to_lobby = false;
-		m_game.lobby_menu( ).show_disconnected_message( true );
+		menu.m_is_connected_to_lobby = false;
+		menu.show_disconnected_message( true );
 	}
 }
 
