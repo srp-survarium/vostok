@@ -22,6 +22,7 @@ extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, cha
 #include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
 #include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
+#include "network_client.h"	// NEW( network_client ) (create_network_client)
 #include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 #include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
@@ -640,21 +641,29 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 		create_network_client		( false );
 }
 
-// claude@NOTE: structure recovered (6 stmts), target body:
-//   pcstr const separator = strchr( m_network_client_options.c_str( ), ':' );
-//   if ( !separator )  return;
-//   const u32 offset = separator - m_network_client_options.c_str( );
-//   fixed_string< 512 > host;  m_network_client_options.substr( 0, offset, &host );
-//   const u16 port = atoi( m_network_client_options.c_str( ) + offset + 1 );
-//   base_network_client* const client = NEW( class network_client )( *this, is_spectator );
-//   set_network_client( client, host.c_str( ), port, is_spectator );
-// Parked: constructing network_client here pulls its vtable into game.obj and
-// re-folds the whole network-client ICF family (messaging/lobby/base_network_client
-// ctors + buffer_string::operator=), a net -37/-0.05% regression in that sibling
-// cluster. Restore once the network-client cluster owns + stabilizes those objects.
-// STATE[STUB]
+// claude@NOTE: structure + 6 stmts match. Residual is LTCG convention only - the
+// target passes `this` ON THE STACK (ret 8, mov ebx,[esp+42Ch]) and pushes
+// is_spectator to the network_client ctor; base keeps __thiscall (this in ecx,
+// ret 4) and the ctor's is_spectator goes via register. The 4-byte frame shift
+// cascades through every [esp+XX] slot. Not source-steerable (arg-passing).
 void game::create_network_client( const bool is_spectator )
 {
+	fixed_string< 512 > host;
+
+	const u32 offset				= m_network_client_options.find( ':' );
+	if ( offset == u32( -1 ) )
+		return;
+
+	host							= m_network_client_options.substr( 0, offset );
+
+	const u16 port					= atoi( m_network_client_options.c_str( ) + offset + 1 );
+
+	set_network_client				(
+		NEW( class network_client )	( *this, is_spectator ),
+		host.c_str					( ),
+		port,
+		is_spectator
+	);
 }
 
 void game::create_lobby_menu( )
@@ -1304,7 +1313,6 @@ void game::resume( )
 	// ******
 }
 
-// STATE[STUB]
 void game::set_network_client(
 	base_network_client* const		network_client,
 	pcstr							host,
@@ -1312,42 +1320,25 @@ void game::set_network_client(
 	const bool						is_spectator
 )
 {
-	// LOCALS
-	// fixed_string< 128 > 				name
-	// fixed_string< 128 > 				password
-	// ******
+	m_network_client				= network_client;
 
-	// CALL SITE INFO
-	// <0x5e5ba4> -> bool < unknown >() const
-	// <0x5e5bcf> -> void < unknown >( pcstr, const u16, pcstr, pcstr )
-	// <0x5e5be0> -> network::login_client& < unknown >()
-	// ******
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
 
-	// FUNCTION BODY[0x5e5b80]: 20
-	// <0x5e5b80>|0x000|+0x010:'1208'	{
-	// <0>
-	// <0x5e5b90>|0x010|+0x00f:'1210'
-	// <0>
-	// <0x5e5b9f>|0x01f|+0x00f:'1212'
-	// <0>
-	// <0x5e5bae>|0x02e|+0x008:'1214'
-	// <0x5e5bb6>|0x036|+0x027:'1215'
-	// <0>
-	// <1>
-	// <0x5e5bdd>|0x05d|+0x007:'1218'
-	// <0x5e5be4>|0x064|+0x012:'1219'
-	// <0>
-	// <0x5e5bf6>|0x076|+0x04f:'1221'
-	// <0x5e5c45>|0x0c5|+0x060:'1222'
-	// <0>
-	// <1>
-	// <0x5e5ca5>|0x125|-0x0d4:'1225'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e5bd1>|0x051|+0x0e2:'1229'
-	// <0x5e5cb3>|0x133|      :'1229'	}
-	// ******
+	if ( is_spectator )
+	{
+		m_network_client->connect_to_login( host, port, "", "" );
+		return;
+	}
+
+	network::login_client& login_client	= m_network_client->login_client( );
+	strings::copy					( login_client.m_server_host, host );
+	login_client.m_server_port		= port;
+
+	fixed_string< 128 > name		= login_client.account_name( );
+	fixed_string< 128 > password	= login_client.account_password( );
+
+	switch_to_login					( login_menu_status_disconnected );
 }
 
 void game::commit_suicide( )
