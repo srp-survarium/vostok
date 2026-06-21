@@ -2966,6 +2966,14 @@
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Texture.cpp"
 							>
+							<FileConfiguration
+								Name="Master Gold|Win32"
+								ExcludedFromBuild="true"
+								>
+								<Tool
+									Name="VCCLCompilerTool"
+								/>
+							</FileConfiguration>
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Texture.h"
