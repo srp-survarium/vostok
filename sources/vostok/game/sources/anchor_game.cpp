@@ -138,6 +138,10 @@ namespace survarium {
 	// every out-of-line game_options body + swf_input_translator::process_keyboard
 	// past /OPT:REF until game::activate_main_menu's input path is matched.
 	void use_game_options( );
+
+	// the generic_anomaly / object_vegetation world-object carcass anchor
+	// (anchor_game_anomaly_veg.cpp); self-guarded, never runs.
+	void use_game_anomaly_veg( );
 }
 
 namespace vostok
@@ -433,6 +437,7 @@ namespace vostok
 		survarium::use_game_fingers( );
 		survarium::use_game_player_cook( );
 		survarium::use_game_animated_model_cook( );
+		survarium::use_game_anomaly_veg( );
 
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).

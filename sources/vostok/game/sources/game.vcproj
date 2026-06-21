@@ -1065,6 +1065,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_anomaly_veg.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_options.cpp"
 				>
 			</File>
