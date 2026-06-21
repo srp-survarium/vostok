@@ -167,8 +167,7 @@ SysVertexFormat::SysVertexFormat(ID3D1x(Device)* pdevice, const VertexFormat* vf
 
 bool ShaderInterface::SetStaticShader(ShaderDesc::ShaderType shader, const VertexFormat* pformat)
 {
-    CurShaders.pVFormat = pformat;
-    CurShaders.pVS      = &pHal->SManager.StaticVShaders[VertexShaderDesc::GetShaderIndex(shader, pHal->SManager.ShaderModel)];
+    CurShaders.pVFormat = pformat; CurShaders.pVS      = &pHal->SManager.StaticVShaders[VertexShaderDesc::GetShaderIndex(shader, pHal->SManager.ShaderModel)];
     CurShaders.pVDesc   = CurShaders.pVS->pDesc;
     CurShaders.pFS      = &pHal->SManager.StaticFShaders[FragShaderDesc::GetShaderIndex(shader, pHal->SManager.ShaderModel)];
     CurShaders.pFDesc   = CurShaders.pFS->pDesc;
@@ -378,10 +377,6 @@ bool ShaderManager::Initialize(HAL* phal)
         break;
     case D3D_FEATURE_LEVEL_9_3:
         ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL93;
-        break;
-    case D3D_FEATURE_LEVEL_10_0:
-    case D3D_FEATURE_LEVEL_10_1:
-        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
         break;
     default:
         break;
