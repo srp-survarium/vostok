@@ -114,9 +114,14 @@ void capsule_geometry_instance::render( render::scene_ptr const& scene, render::
 	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
-void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const 
+// claude@NOTE: STRUCTURE MATCH (2 stmts, 0 extra named locals). Capped because the target
+// establishes a frame pointer + 8-byte stack alignment (push ebp; mov ebp,esp; and esp,~7) and
+// addresses args via [ebp+N], while our /Od base omits the frame pointer and uses esp-relative
+// slots; the float3/color temps schedule identically otherwise. FPO/alignment prologue codegen
+// difference, not source-steerable. The 3-arg render has no alignment on either side -> 100%.
+void capsule_geometry_instance::render( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform, math::color const& color ) const
 {
-	renderer.draw_solid_capsule ( scene, transform, float3( m_radius, m_half_length, m_radius ), color ); 
+	renderer.draw_solid_capsule ( scene, transform, float3( m_radius, m_half_length, m_radius ), color );
 	renderer.draw_line_capsule	( scene, transform, float3( m_radius, m_half_length, m_radius ), math::color( 255u, 255u, 255u, 255u ) );
 }
 
