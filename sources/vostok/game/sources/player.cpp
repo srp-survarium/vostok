@@ -8,9 +8,13 @@
 #include "base_game_scene.h"			// game_scene supplies game / scheduler
 #include "game.h"						// m_game.network_client()
 #include "base_network_client.h"		// network_client().is_player_current
+#include "flash_text_manager.h"			// text_manager().destroy_text( m_text ) in remove
+#include <vostok/game_core/game_net_defines.h>		// match_options::player_profiles[] in remove
 #include "game_world_ui.h"				// m_game_ui->fill_quick_slots
 #include "player_input_handler.h"		// m_local_input_controller->set_near_plane
 #include "game_memory.h"				// g_allocator for circular_buffer member
+#include <vostok/game_core/weapon_core.h>			// cast_weapon_core()->could_be_used (quick slots)
+#include <vostok/animation/linear_interpolator.h>	// fov_factor interpolation
 #include <vostok/render/facade/scene_renderer.h>	// add/remove_model
 #include <vostok/physics/character_controller.h>	// physics_controller->set_crouch / jump
 
@@ -391,79 +395,37 @@ void player::remove_alive( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: full body reconstructed (unblocks lobby_menu_scene::clear_resources).
+// Residual is cross-module: flash_text_manager::destroy_text is a STUB in scaleform
+// (target inlines the GFx Release + flash_text zero + need_capture=1), so our line
+// 403 emits `call destroy_text` vs the target's inline; plus the intrusive_ptr/
+// item_in_slot accessor-inlining cap shared with the quick-slot fns.
 void player::remove( )
 {
-	// CALL SITE INFO
-	// <0x5e51b3> -> void < unknown >()
-	// <0x5e51c6> -> void < unknown >( interactive_object_ptr const&, resources::resource_ptr< interactive_object, resources::unmanaged_intrusive_base > const& ) const
-	// <0x5e5254> -> match_options& < unknown >()
-	// ******
+	m_has_been_inserted = false;
 
-	// FUNCTION BODY[0x5e5150]: 59
-	// <0x5e5150>|0x000|+0x007:'398'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <0x5e5157>|0x007|+0x009:'420'
-	// <0>
-	// <0x5e5160>|0x010|+0x008:'422'
-	// <0x5e5168>|0x018|+0x02d:'423'
-	// <0>
-	// <0x5e5195>|0x045|+0x008:'425'
-	// <0x5e519d>|0x04d|+0x00b:'426'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e51a8>|0x058|+0x00d:'430'
-	// <0x5e51b5>|0x065|+0x039:'431'
-	// <0x5e51ee>|0x09e|+0x01f:'432'
-	// <0x5e520d>|0x0bd|+0x021:'433'
-	// <0>
-	// <0x5e522e>|0x0de|+0x008:'435'
-	// <0>
-	// <0x5e5236>|0x0e6|+0x005:'437'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x5e523b>|0x0eb|+0x008:'447'
-	// <0>
-	// <0x5e5243>|0x0f3|+0x013:'449'
-	// <0x5e5256>|0x106|+0x022:'450'
-	// <0>
-	// <1>
-	// <0x5e5278>|0x128|+0x008:'453'
-	// <0>
-	// <1>
-	// <0x5e5280>|0x130|+0x02a:'456'
-	// <0x5e52aa>|0x15a|-0x006:'457'
-	// <0x5e52a4>|0x154|+0x00b:'458'
-	// <0x5e52af>|0x15f|      :'458'	}
-	// ******
+	if ( !m_is_demo_player )
+		m_game_scene.text_manager( ).destroy_text( m_text );
+
+	if ( m_is_visible )
+		hide( );
+
+	m_current_active_object->deactivate( );
+	on_before_active_object_changed( interactive_object_ptr( ), m_current_active_object );
+	m_current_active_object = interactive_object_ptr( );
+	m_target_active_object = interactive_object_ptr( );
+
+	if ( m_is_alive )
+		remove_alive( );
+
+	if ( !m_is_demo_player )
+		inventory( ).unload_to_profile(
+			m_game.network_client( ).match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
+
+	inventory( ).remove( );
+
+	if ( m_game.network_client( ).is_player_current( id ) )
+		m_game.network_client( ).detach_from_player( );
 }
 
 // STATE[STUB]
@@ -1064,28 +1026,14 @@ void player::set_target_fov_factor( const float target_fov_factor, const float t
 	m_target_fov_factor						= target_fov_factor;
 }
 
-// STATE[STUB]
 float player::fov_factor( const u32 current_time_in_ms ) const
 {
-	// LOCALS
-	// const float 						time
-	// ******
+	const float time = ( current_time_in_ms - m_start_fov_factor_change_time_in_ms ) * math::epsilon_3;
+	if ( time >= m_fov_factor_transition_time )
+		return m_target_fov_factor;
 
-	// CALL SITE INFO
-	// <0x5e260f> -> float < unknown >( float ) const
-	// ******
-
-	return 0.0f;
-
-	// FUNCTION BODY[0x5e25b0]: 3
-	// <0x5e25b0>|0x000|+0x00a:'1013'	{
-	// <0x5e25ba>|0x00a|+0x01c:'1014'
-	// <0x5e25d6>|0x026|+0x00b:'1015'
-	// <0x5e25e1>|0x031|+0x018:'1016'
-	// <0x5e25f9>|0x049|-0x004:'1016'
-	// <0x5e25f5>|0x045|+0x040:'1017'
-	// <0x5e2635>|0x085|      :'1017'	}
-	// ******
+	return m_start_fov_factor + ( m_target_fov_factor - m_start_fov_factor )
+		* animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( time );
 }
 
 // claude@NOTE: inline-vs-store cap - the [controller+0x4C] store is game_camera::
@@ -1159,14 +1107,12 @@ player_input player::local_input( ) const
 	return m_local_input_controller ? m_local_input_controller->get_input( ) : player_input( );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches; residual is the LTCG custom calling convention
+// (this in eax, struct-return buffer in a register vs base's stack slot + ret 4) -
+// an argument-passing artifact, not a source-steerable diff. Same cap on local_input.
 player_input player::remote_input( ) const
 {
-	return m_input;	// buildability return
-
-	// FUNCTION BODY[0x5e2530]: 1
-	// <0x5e2530>|0x000|+0x057:'1071'
-	// ******
+	return m_history.empty( ) ? player_input( ) : m_history.newest( ).action.input;
 }
 
 // STATE[STUB]
@@ -1361,6 +1307,9 @@ void player::take_inventory_item( inventory_item_ptr const& item )
 	}
 }
 
+// claude@NOTE: structure correct; residual is the intrusive_ptr c_ptr() out-of-line
+// cap - target inlines to `mov eax,[eax+10Ch]`, our base emits `add ecx,10Ch; jmp
+// c_ptr`. Same accessor-inlining wall as the quick-slot fns; not TU-steerable.
 animation::skeleton const& player::skeleton( ) const
 {
 	return *m_current.model->m_skeleton.c_ptr( );
@@ -1391,175 +1340,151 @@ engine& player::get_engine( )
 	return m_game_scene;
 }
 
-// STATE[STUB]
+// claude@NOTE: weapon-swap blocks (0x1000/0x2000) + 6 quick-slot blocks + back_slot,
+// driven by remote_input() flag bits (raw masks - no named bit enum in this engine).
+// Residual: inventory().item_in_slot()/intrusive_ptr c_ptr stay out-of-line in our
+// base (target inlines the slot load to `mov eax,[esi+8]; cmp [eax+124h],0`); same
+// intrusive_ptr accessor-inlining cap that walls player::skeleton. cast_weapon_core
+// slot now matches after the interactive_object vtable reorder.
 void player::process_quick_slots_for_proxy_player( )
 {
-	// LOCALS
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// ******
+	if ( remote_input( ).actions_mask & 0x1000 )
+	{
+		weapon_core* const active_weapon = m_current_active_object->cast_weapon_core( );
+		weapon_core* const slot_weapon = inventory( ).item_in_slot( weapon1_slot )
+			? inventory( ).item_in_slot( weapon1_slot )->cast_weapon_core( ) : NULL;
+		if ( slot_weapon && active_weapon != slot_weapon && slot_weapon->could_be_used( *this ) )
+			inventory( ).action( weapon1_slot, true );
+	}
 
-	// CALL SITE INFO
-	// <0x5e3f50> -> weapon_core* < unknown >()
-	// <0x5e3f76> -> weapon_core* < unknown >()
-	// <0x5e3fb4> -> weapon_core* < unknown >()
-	// <0x5e3fda> -> weapon_core* < unknown >()
-	// ******
+	if ( remote_input( ).actions_mask & 0x2000 )
+	{
+		weapon_core* const active_weapon = m_current_active_object->cast_weapon_core( );
+		weapon_core* const slot_weapon = inventory( ).item_in_slot( weapon2_slot )
+			? inventory( ).item_in_slot( weapon2_slot )->cast_weapon_core( ) : NULL;
+		if ( slot_weapon && active_weapon != slot_weapon && slot_weapon->could_be_used( *this ) )
+			inventory( ).action( weapon2_slot, true );
+	}
 
-	// FUNCTION BODY[0x5e3f30]: 45
-	// <0x5e3f34>|0x004|+0x014:'1314'
-	// <0x5e3f48>|0x018|+0x00c:'1315'
-	// <0x5e3f54>|0x024|+0x024:'1316'
-	// <0x5e3f78>|0x048|+0x008:'1317'
-	// <0x5e3f80>|0x050|+0x00c:'1318'
-	// <0x5e3f8c>|0x05c|+0x00c:'1319'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e3f98>|0x068|+0x014:'1323'
-	// <0x5e3fac>|0x07c|+0x00c:'1324'
-	// <0x5e3fb8>|0x088|+0x024:'1325'
-	// <0x5e3fdc>|0x0ac|+0x008:'1326'
-	// <0x5e3fe4>|0x0b4|+0x00c:'1327'
-	// <0x5e3ff0>|0x0c0|+0x00c:'1328'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e3ffc>|0x0cc|+0x014:'1332'
-	// <0x5e4010>|0x0e0|+0x018:'1333'
-	// <0x5e4028>|0x0f8|+0x00f:'1334'
-	// <0>
-	// <0x5e4037>|0x107|+0x014:'1336'
-	// <0x5e404b>|0x11b|+0x014:'1337'
-	// <0x5e405f>|0x12f|+0x00f:'1338'
-	// <0>
-	// <0x5e406e>|0x13e|+0x014:'1340'
-	// <0x5e4082>|0x152|+0x00e:'1341'
-	// <0x5e4090>|0x160|+0x019:'1342'
-	// <0>
-	// <0x5e40a9>|0x179|+0x014:'1344'
-	// <0x5e40bd>|0x18d|+0x018:'1345'
-	// <0x5e40d5>|0x1a5|+0x00f:'1346'
-	// <0>
-	// <0x5e40e4>|0x1b4|+0x014:'1348'
-	// <0x5e40f8>|0x1c8|+0x017:'1349'
-	// <0x5e410f>|0x1df|+0x00f:'1350'
-	// <0>
-	// <0x5e411e>|0x1ee|+0x014:'1352'
-	// <0x5e4132>|0x202|+0x00e:'1353'
-	// <0x5e4140>|0x210|+0x016:'1354'
-	// <0>
-	// <0x5e4156>|0x226|+0x015:'1356'
-	// <0x5e416b>|0x23b|+0x00c:'1357'
-	// <0>
-	// ******
+	if ( remote_input( ).actions_mask & 0xC000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 14 ) & 1;
+		inventory( ).action( quick_slot1, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0x30000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 16 ) & 1;
+		inventory( ).action( quick_slot2, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0xC0000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 18 ) & 1;
+		inventory( ).action( quick_slot3, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0x300000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 20 ) & 1;
+		inventory( ).action( quick_slot4, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0xC00000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 22 ) & 1;
+		inventory( ).action( quick_slot5, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0x3000000 )
+	{
+		const bool key_down = ( remote_input( ).actions_mask >> 24 ) & 1;
+		inventory( ).action( quick_slot6, key_down );
+	}
+
+	if ( remote_input( ).actions_mask & 0x4000000 )
+		inventory( ).action( back_slot, true );
 }
 
-// STATE[STUB]
+// claude@NOTE: current-player variant (unblocks player_tick::time_warp): like the
+// proxy but driven by input() (virtual) and richer - weapon blocks show a "could not
+// be used" screen message on failure, quick-slot blocks feed add_quick_slot_to_update
+// when action() succeeds. Same item_in_slot/intrusive_ptr accessor-inlining residual.
 void player::process_quick_slots_for_current_player( )
 {
-	// LOCALS
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// bool 							key_down
-	// ******
+	if ( input( ).actions_mask & 0x1000 )
+	{
+		weapon_core* const active_weapon = m_current_active_object->cast_weapon_core( );
+		weapon_core* const slot_weapon = inventory( ).item_in_slot( weapon1_slot )
+			? inventory( ).item_in_slot( weapon1_slot )->cast_weapon_core( ) : NULL;
+		if ( slot_weapon && active_weapon != slot_weapon )
+		{
+			if ( slot_weapon->could_be_used( *this ) )
+				inventory( ).action( weapon1_slot, true );
+			else if ( m_game_ui )
+				m_game_ui->show_screen_message( "st_weapon_could_not_be_used" );
+		}
+	}
 
-	// CALL SITE INFO
-	// <0x5e3c49> -> player_input const& < unknown >() const
-	// <0x5e3c5c> -> weapon_core* < unknown >()
-	// <0x5e3c82> -> weapon_core* < unknown >()
-	// <0x5e3cc2> -> player_input const& < unknown >() const
-	// <0x5e3cd5> -> weapon_core* < unknown >()
-	// <0x5e3cfb> -> weapon_core* < unknown >()
-	// <0x5e3d3b> -> player_input const& < unknown >() const
-	// <0x5e3d4d> -> player_input const& < unknown >() const
-	// <0x5e3d87> -> player_input const& < unknown >() const
-	// <0x5e3d99> -> player_input const& < unknown >() const
-	// <0x5e3dcf> -> player_input const& < unknown >() const
-	// <0x5e3de1> -> player_input const& < unknown >() const
-	// <0x5e3e1a> -> player_input const& < unknown >() const
-	// <0x5e3e2c> -> player_input const& < unknown >() const
-	// <0x5e3e65> -> player_input const& < unknown >() const
-	// <0x5e3e77> -> player_input const& < unknown >() const
-	// <0x5e3eb0> -> player_input const& < unknown >() const
-	// <0x5e3ec2> -> player_input const& < unknown >() const
-	// <0x5e3ef8> -> player_input const& < unknown >() const
-	// ******
+	if ( input( ).actions_mask & 0x2000 )
+	{
+		weapon_core* const active_weapon = m_current_active_object->cast_weapon_core( );
+		weapon_core* const slot_weapon = inventory( ).item_in_slot( weapon2_slot )
+			? inventory( ).item_in_slot( weapon2_slot )->cast_weapon_core( ) : NULL;
+		if ( slot_weapon && active_weapon != slot_weapon )
+		{
+			if ( slot_weapon->could_be_used( *this ) )
+				inventory( ).action( weapon2_slot, true );
+			else if ( m_game_ui )
+				m_game_ui->show_screen_message( "st_weapon_could_not_be_used" );
+		}
+	}
 
-	// FUNCTION BODY[0x5e3c40]: 65
-	// <0x5e3c41>|0x001|+0x013:'1363'
-	// <0x5e3c54>|0x014|+0x00c:'1364'
-	// <0x5e3c60>|0x020|+0x024:'1365'
-	// <0x5e3c84>|0x044|+0x008:'1366'
-	// <0x5e3c8c>|0x04c|+0x00c:'1367'
-	// <0x5e3c98>|0x058|+0x00c:'1368'
-	// <0x5e3ca4>|0x064|+0x002:'1369'
-	// <0x5e3ca6>|0x066|+0x00a:'1370'
-	// <0x5e3cb0>|0x070|+0x00b:'1371'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e3cbb>|0x07b|+0x012:'1375'
-	// <0x5e3ccd>|0x08d|+0x00c:'1376'
-	// <0x5e3cd9>|0x099|+0x024:'1377'
-	// <0x5e3cfd>|0x0bd|+0x008:'1378'
-	// <0x5e3d05>|0x0c5|+0x00c:'1379'
-	// <0x5e3d11>|0x0d1|+0x00c:'1380'
-	// <0x5e3d1d>|0x0dd|+0x002:'1381'
-	// <0x5e3d1f>|0x0df|+0x00a:'1382'
-	// <0x5e3d29>|0x0e9|+0x00b:'1383'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e3d34>|0x0f4|+0x012:'1387'
-	// <0x5e3d46>|0x106|+0x016:'1388'
-	// <0x5e3d5c>|0x11c|+0x013:'1389'
-	// <0x5e3d6f>|0x12f|+0x00a:'1390'
-	// <0x5e3d79>|0x139|+0x007:'1391'
-	// <0>
-	// <0x5e3d80>|0x140|+0x012:'1393'
-	// <0x5e3d92>|0x152|+0x00c:'1394'
-	// <0x5e3d9e>|0x15e|+0x019:'1395'
-	// <0x5e3db7>|0x177|+0x00a:'1396'
-	// <0x5e3dc1>|0x181|+0x007:'1397'
-	// <0>
-	// <0x5e3dc8>|0x188|+0x012:'1399'
-	// <0x5e3dda>|0x19a|+0x00c:'1400'
-	// <0x5e3de6>|0x1a6|+0x01c:'1401'
-	// <0x5e3e02>|0x1c2|+0x00a:'1402'
-	// <0x5e3e0c>|0x1cc|+0x007:'1403'
-	// <0>
-	// <0x5e3e13>|0x1d3|+0x012:'1405'
-	// <0x5e3e25>|0x1e5|+0x00c:'1406'
-	// <0x5e3e31>|0x1f1|+0x01c:'1407'
-	// <0x5e3e4d>|0x20d|+0x00a:'1408'
-	// <0x5e3e57>|0x217|+0x007:'1409'
-	// <0>
-	// <0x5e3e5e>|0x21e|+0x012:'1411'
-	// <0x5e3e70>|0x230|+0x00c:'1412'
-	// <0x5e3e7c>|0x23c|+0x01c:'1413'
-	// <0x5e3e98>|0x258|+0x00a:'1414'
-	// <0x5e3ea2>|0x262|+0x007:'1415'
-	// <0>
-	// <0x5e3ea9>|0x269|+0x012:'1417'
-	// <0x5e3ebb>|0x27b|+0x00c:'1418'
-	// <0x5e3ec7>|0x287|+0x019:'1419'
-	// <0x5e3ee0>|0x2a0|+0x00a:'1420'
-	// <0x5e3eea>|0x2aa|+0x007:'1421'
-	// <0>
-	// <0x5e3ef1>|0x2b1|+0x012:'1423'
-	// <0x5e3f03>|0x2c3|+0x010:'1424'
-	// <0x5e3f13>|0x2d3|+0x00a:'1425'
-	// <0x5e3f1d>|0x2dd|+0x007:'1426'
-	// <0>
-	// ******
+	if ( input( ).actions_mask & 0xC000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 14 ) & 1;
+		if ( inventory( ).action( quick_slot1, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot1 );
+	}
+
+	if ( input( ).actions_mask & 0x30000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 16 ) & 1;
+		if ( inventory( ).action( quick_slot2, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot2 );
+	}
+
+	if ( input( ).actions_mask & 0xC0000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 18 ) & 1;
+		if ( inventory( ).action( quick_slot3, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot3 );
+	}
+
+	if ( input( ).actions_mask & 0x300000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 20 ) & 1;
+		if ( inventory( ).action( quick_slot4, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot4 );
+	}
+
+	if ( input( ).actions_mask & 0xC00000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 22 ) & 1;
+		if ( inventory( ).action( quick_slot5, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot5 );
+	}
+
+	if ( input( ).actions_mask & 0x3000000 )
+	{
+		const bool key_down = ( input( ).actions_mask >> 24 ) & 1;
+		if ( inventory( ).action( quick_slot6, key_down ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( quick_slot6 );
+	}
+
+	if ( input( ).actions_mask & 0x4000000 )
+		if ( inventory( ).action( back_slot, true ) && m_game_ui )
+			m_game_ui->add_quick_slot_to_update( back_slot );
 }
 
 physics::world* player::get_physics_world( )

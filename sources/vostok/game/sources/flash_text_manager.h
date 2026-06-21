@@ -26,7 +26,7 @@ struct flash_text_manager {
 	inline	flash_text		create_text			( pcstr arg_0 ) { /* no source */ return flash_text( ); }
 	inline	flash_text		create_text_w		( wchar_t* arg_0 ) { /* no source */ return flash_text( ); }
 
-	inline	void			destroy_text		( flash_text& arg_0 ) { /* no source */ }
+			void			destroy_text		( flash_text& arg_0 );	// out-of-line: real body in scaleform movie.cpp (avoids LNK2005 vs player.obj)
 
 	inline	void			capture				( ) { /* no source */ }
 

@@ -31,8 +31,8 @@ public:
 	inline	T const&	oldest				( ) const { /* no source */ return m_history[ m_tail ]; }
 	inline	T&			oldest				( ) { /* no source */ return m_history[ m_tail ]; }
 
-	inline	T const&	newest				( ) const { /* no source */ }
-	inline	T&			newest				( ) { /* no source */ }
+	inline	T const&	newest				( ) const { /* no source */ return m_history[ previous( m_head ) ]; }
+	inline	T&			newest				( ) { /* no source */ return m_history[ previous( m_head ) ]; }
 
 	inline	bool		empty				( ) const { /* no source */ return m_head == m_tail; }
 	inline	bool		full				( ) const { /* no source */ }
