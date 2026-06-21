@@ -9,6 +9,8 @@
 #include <vostok/login_server/login_structures.h>
 #include <vostok/login_server/message_types.h>
 
+namespace survarium { class game; }
+
 namespace vostok {
 
 // the game_core reachability anchor (temp_include_all.cpp); befriended below so
@@ -107,6 +109,9 @@ private:
 
 private:
 	friend void ::vostok::use_network_clients( );
+	// game::set_network_client writes m_server_host/m_server_port directly
+	// (codegen-neutral friend; emits no bytes)
+	friend class ::survarium::game;
 
 private:
 	sign_up_info				m_sign_up_info;
