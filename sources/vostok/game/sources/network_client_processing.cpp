@@ -672,9 +672,7 @@ void network_client::unload( )
 
 bool network_client::is_player_local( const u8 player_id ) const
 {
-	if ( m_local_player && m_local_player->id == player_id )
-		return true;
-	return false;
+	return m_local_player && m_local_player->id == player_id;
 }
 
 void network_client::player_visibility_change( network_core::packet_reader& packet )
