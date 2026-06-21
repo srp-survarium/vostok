@@ -30,6 +30,7 @@ public:
 								) override;
 	virtual	void				destroy_resource					( resources::unmanaged_resource* resource ) override;
 
+private:
 			void				on_substates_ready					(
 									resources::queries_result&				data,
 									mutable_buffer							buffer,

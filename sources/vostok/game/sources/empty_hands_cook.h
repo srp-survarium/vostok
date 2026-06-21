@@ -13,14 +13,15 @@ class empty_hands_cook : public resources::translate_query_cook , public boost::
 public:
 					empty_hands_cook				( );
 
+	virtual			~empty_hands_cook				( ) { /* no source */ }
+
+private:
 	virtual	void	translate_query					( resources::query_result_for_cook& parent ) override;
 
 	virtual	void	delete_resource					( resources::resource_base* resource ) override;
 
 			void	on_empty_hands_config_loaded	( resources::queries_result& data );
 			void	on_empty_hands_animations_loaded( resources::queries_result& data );
-
-	virtual			~empty_hands_cook				( ) { /* no source */ }
 }; // class empty_hands_cook
 
 STATIC_SIZE_ASSERT(empty_hands_cook, 0x20);
