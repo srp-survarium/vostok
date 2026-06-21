@@ -24,8 +24,15 @@
 
 namespace survarium {
 
+// pins lobby_menu_scene.cpp's file-local statics (the identity_transform_functor
+// scene-load functor) - it cannot be reached cross-TU by address, so the TU anchors
+// it itself and we just keep that anchor alive.
+void pin_lobby_menu_scene_statics( );
+
 void use_game_lobby_scene( )
 {
+	pin_lobby_menu_scene_statics( );
+
 	static volatile bool s_run = false;
 	if( !s_run )
 		return;
