@@ -342,14 +342,17 @@ every build** (next to the `match.db` regen), so it tracks `report.json` on its 
 you never run `match_score.py` by hand. It is **report-derived** (the source carries no
 status markers; per-function status lives in the match DB) - this is how the human
 tracks progress and spots regressions *without running anything*, by diffing the block
-across commits. The block and `match.db` move together: every `rebuild.py` advances both,
-so commit the refreshed README alongside the `match.db` snapshot at the same milestones.
-- **Rule:** the block is current whenever you have rebuilt - so just `git add README.md`
-  with the `match.db` snapshot. If it conflicts on a merge/cherry-pick, do NOT hand-resolve:
-  take either side and rerun `rebuild.py` (it regenerates the block deterministically), the
-  same way you reconcile a conflicted `match.db`.
-- Commit it as its own small housekeeping commit/PR (it is generated bookkeeping, not a
-  source match) so it never muddies a match PR's one-commit shape.
+across commits. The block and `match.db` move together: every `rebuild.py` advances both.
+- **Rule (sushi 2026-06-21): update the DB + README on EVERY matcher commit - do NOT batch.**
+  After you cherry-pick a finished matcher onto the tip, `rebuild.py`, then **fold the
+  regenerated `docs/binary_matching/match.db` + `README.md` INTO that matcher's commit**
+  (`git add docs/binary_matching/match.db README.md && git commit --amend --no-edit`). So
+  EVERY matcher integration commit carries its own measured DB snapshot AND its README score
+  delta - `git diff <prev>..<this>` shows the README block moving for that single matcher.
+  Never defer the DB/README to a later batched "snapshot" commit across several matchers (it
+  hides which matcher moved the score and breaks the per-step `match_db.py diff`).
+- If the README/`match.db` blob conflicts on a cherry-pick, do NOT hand-resolve: take either
+  side and rerun `rebuild.py` (it regenerates both deterministically), same as `match.db`.
 
 ## Audit a batch with the structure-verifier (after 10-15 matchers, NOT per unit)
 Run the `structure-verifier` periodically - **only after every 10-15 matchers have landed
