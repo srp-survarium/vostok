@@ -9,36 +9,32 @@
 #include <vostok/resources_managed_resource.h>
 #include <vostok/math_randoms_generator.h>	// math::random32
 
+namespace vostok { void use_game_small_utils( ); }
+
 namespace survarium {
 
+class empty_hands_cook;
+
 class empty_hands : public interactive_object {
-public:
+	friend void ::vostok::use_game_small_utils( );
+	friend class empty_hands_cook;
+private:
 												empty_hands					( resources::managed_resource_ptr* animations, u32 animations_count );
 
 	virtual	void								activate					( base_player& user, engine& engine ) override;
 
 	virtual	void								deactivate					( ) override { /* no source */ }
 
-	// STATE[STUB]
 	virtual	float4x4							transform					( ) const override
 	{
-		return m_transform;	// buildability return
-
-		// FUNCTION BODY[0xacc70]
-		// <0xacc70>|0x000|      :'32'	{
-		// ******
+		return m_transform;
 	}
 
 	virtual	void								tick						( ) override { /* no source */ }
 
-	// STATE[STUB]
 	virtual	bool								is_ready_to_be_deactivated	( ) const override
 	{
 		return false;
-
-		// FUNCTION BODY[0x22700]
-		// <0x22700>|0x000|      :'34'	{
-		// ******
 	}
 
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, const bool is_third_view ) const override;
@@ -56,44 +52,26 @@ public:
 													animation::animation_player const&		animation_player
 												) override;
 
-	// STATE[STUB]
 	virtual	bool								is_sprinting				( ) const override
 	{
 		return false;
-
-		// FUNCTION BODY[0xb2740]
-		// <0xb2740>|0x000|      :'47'	{
-		// ******
 	}
 
 	// STATE[STUB]
+	// claude@NOTE: parked - empty in MASTER_GOLD ($LN7/$LN8 unreachable labels only); the
+	// real packet write is compiled out. Faithful empty body.
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override
 	{
-		// OTHER SYMBOLS
-		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
-		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
-		// ******
-
-		// FUNCTION BODY[0xaea00]
-		// <0xaea00>|0x000|      :'49'	{
-		// ******
 	}
 
 	// STATE[STUB]
+	// claude@NOTE: parked - empty in MASTER_GOLD ($LN3 unreachable label only). Faithful
+	// empty body.
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override
 	{
-		// OTHER SYMBOLS
-		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x111e20 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-		// ******
-
-		// FUNCTION BODY[0x122e20]
-		// <0x122e20>|0x000|      :'50'	{
-		// ******
 	}
 
 	virtual										~empty_hands				( ) { /* no source */ }
-
-	// void* empty_hands::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x607c0]: <0x4f210>|0x000|      :'31'	{
 
 private:
 	/* 0x0000 */	/* interactive_object */
