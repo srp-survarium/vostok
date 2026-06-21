@@ -81,7 +81,6 @@ void brain_unit::stop_activity	( )
 	if ( m_current_sound )
 		on_finish_sound_playing	( );
 
-	m_npc.stop_animation_playing( );
 	m_blackboard.clear			( );
 
 	m_goal_selector->finalize	( );
@@ -313,6 +312,9 @@ void brain_unit::play_animation_with_sound			(
 		animation_to_be_played->name.c_str(),
 		sound_to_be_played->name.c_str()
 	);
+
+	play_animation					( animation_to_be_played );
+	play_sound						( sound_to_be_played );
 }
 
 bool brain_unit::is_playing_animation	( ) const

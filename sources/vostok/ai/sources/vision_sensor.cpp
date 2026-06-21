@@ -157,8 +157,9 @@ struct update_visibility_predicate : private boost::noncopyable
 		if ( parameters.object_to_ignore->debug_draw_allowed() )
 			world.draw_ray						( parameters.npc_position, point_in_world_frame, ray_query_succeeded );
 		
+		npc const* npc_object					= visual_object->object->cast_npc();
 		u32 const time_delta					= ( world.get_current_time_in_ms() - parameters.last_update_time ) / 1000;
-		visual_object->distance					= ray_query_succeeded ? ( point_in_world_frame - parameters.npc_position ).length() : ( visual_object->object->get_collision_object()->get_origin() - parameters.npc_position ).length();
+		visual_object->distance					= ray_query_succeeded ? ( point_in_world_frame - parameters.npc_position ).length() : ( npc_object->get_position( float3( 0, 0, 0 ) ) - parameters.npc_position ).length();
 		visual_object->own_position				= parameters.npc_position;
 		visual_object->was_visible_last_time	= ray_query_succeeded;
 		if ( !ray_query_succeeded )
