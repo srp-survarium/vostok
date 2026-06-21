@@ -643,7 +643,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
-				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;SF_BUILD_SHIPPING;"
 				StringPooling="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
