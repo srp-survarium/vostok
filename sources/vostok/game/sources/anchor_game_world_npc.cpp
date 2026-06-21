@@ -40,6 +40,7 @@ void anchor_game_world_npc( game_world& w )
 	void ( game_world::* const m_query_dict )( )				= &game_world::query_npc_dictionary;
 	void ( game_world::* const m_tick_npcs )( const u32, const bool )	= &game_world::tick_npcs;
 	void ( game_world::* const m_on_attrs )( configs::binary_config_value const&, human_npc_ptr )	= &game_world::on_npc_attributes_received;
+	void ( game_world::* const m_tick_bm )( bool )				= &game_world::tick_bullet_manager_engine;
 
 	s_sink = *( pcvoid const* )&m_init_ai;
 	s_sink = *( pcvoid const* )&m_init_nav;
@@ -49,6 +50,7 @@ void anchor_game_world_npc( game_world& w )
 	s_sink = *( pcvoid const* )&m_query_dict;
 	s_sink = *( pcvoid const* )&m_tick_npcs;
 	s_sink = *( pcvoid const* )&m_on_attrs;
+	s_sink = *( pcvoid const* )&m_tick_bm;
 
 	// static method + free function: plain function pointers.
 	void ( * const m_kill )( human_npc_ptr& )	= &game_world::kill_npc;
