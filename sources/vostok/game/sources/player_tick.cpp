@@ -109,13 +109,6 @@ void player::restore_history_item( client_player_history_item& item )
 	m_target.physics_controller->set_transform( m_target.transform );
 }
 
-// claude@NOTE: PARKED. Reconstructs an interpolated history item from server_action
-// (transform/look_pitch blend between item and next_item over the action time delta),
-// writing item.action.state and previous_transform. Math-heavy (transform blend +
-// quaternion interpolation) over client_player_state internals; not yet reconstructed.
-// Next step: decode the per-statement blend; restore_history_item / replay_history are
-// the matched siblings that establish the m_target/state access idiom.
-// STATE[STUB]
 void player::update_history_item(
 	client_player_history_item&		item,
 	client_player_history_item const* const	next_item,
@@ -125,7 +118,23 @@ void player::update_history_item(
 	bool&							__formal
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( item, next_item, server_action, server_action_time_in_ms, previous_transform, __formal );
+	restore_history_item( item );
+
+	const u32 time_delta = server_action_time_in_ms - item.time_in_ms;
+	previous_transform = math::lerp(
+		item.action.state.transform,
+		next_item->action.state.transform,
+		float( time_delta ) / float( next_item->time_in_ms - item.time_in_ms )
+	);
+
+	item.action = server_action;
+
+	m_target.transform		= server_action.state.transform;
+	m_target.look_pitch		= server_action.state.look_pitch;
+	m_target.physics_controller->set_transform( m_target.transform );
+
+	if( item.time_in_ms != server_action_time_in_ms )
+		item.time_in_ms = server_action_time_in_ms;
 }
 
 // claude@NOTE: PARKED. Quaternion-interpolation reconstruction of item_to_update's
@@ -143,29 +152,104 @@ void player::update_history_item_from_previous(
 	VOSTOK_UNREFERENCED_PARAMETERS( previous_item, item_to_update, previous_transform );
 }
 
-// claude@NOTE: PARKED. Walks the history ring from from_index to head, calling
-// update_history_item_from_previous (PARKED) + inventory::action per item, then
-// set_object_transform on the animation n_ary_tree. Structure is decoded (the ring
-// walk uses the same previous()/% idiom as the matched history helpers) but it depends
-// on update_history_item_from_previous and the cross-module inventory::action /
-// animation::mixing::n_ary_tree::set_object_transform calls. Next step: match
-// update_history_item_from_previous, then wire the walk.
+// claude@NOTE: PARKED on a stub-inlining wall. Structure is reconstructed (ring walk
+// from_index->head, update_history_item_from_previous + inventory().action per item,
+// then m_target.animation_player.set_object_transform). But the
+// update_history_item_from_previous CALL and the final set_object_transform statement
+// both vanish at /Od because their callees are still empty STUBs (an empty body inlines
+// to nothing): update_history_item_from_previous is the parked 15-stmt quaternion-blend,
+// and m_target.animation_player.set_object_transform forwards into a stub tree method.
+// Next step: give update_history_item_from_previous a real body, then re-score - the two
+// dropped statements should reappear. (inventory() also out-lines here vs the target's
+// inlined [this+8] deref - a secondary /Od inlining diff to revisit after.)
 // STATE[STUB]
 void player::replay_history( const u32 from_index, float4x4& previous_transform )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( from_index, previous_transform );
+	u32 index = from_index;
+	while( index != m_history.head( ) )
+	{
+		update_history_item_from_previous( m_history[ m_history.previous( index ) ], m_history[ index ], previous_transform );
+		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );
+		index = m_history.next( index );
+	}
+
+	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
 }
 
-// claude@NOTE: PARKED. Public entry: clamps server_action time, locates the history
-// lower-bound (history_lower_bound_index, MATCHED), restores that item
-// (restore_history_item, MATCHED) and replays forward (replay_history, PARKED) into
-// previous_transform/transform. 127-statement body with 3 locals; capped by the parked
-// replay_history / update_history_item_from_previous it drives. Next step: match those
-// helpers, then assemble the clamp + lower-bound + restore + replay sequence.
-// STATE[STUB]
+// claude@NOTE: Reconstructed and PAIRED, but capped below a full structure match by
+// two stub-inlining walls in sibling units: player::process_quick_slots_for_proxy_player
+// (player.cpp) is still an empty STUB, so its call in the !is_local proxy path inlines to
+// nothing; and replay_history's inner update_history_item_from_previous / set_object_transform
+// calls drop for the same reason (see replay_history note). The tick/restore/clamp/min/
+// lower-bound/replay control flow and the transform-translation-preserving tail all match.
+// Residual also includes the dropped unused bool& __formal arg to update_history_item
+// (LTCG arg-drop). Next step: give process_quick_slots_for_proxy_player +
+// update_history_item_from_previous real bodies, then re-score.
 void player::time_warp( server_player_update const& action, u32 time_in_ms )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( action, time_in_ms );
+	if( m_last_server_correction_time && time_in_ms < m_last_server_correction_time )
+		return;
+
+	if( m_history.empty( ) )
+		return;
+
+	if( !is_local )
+	{
+		time_in_ms = math::min( time_in_ms, m_current_time_in_ms );
+		m_history[ m_history.previous( m_history.head( ) ) ].time_in_ms = time_in_ms;
+
+		m_history[ m_history.previous( m_history.head( ) ) ].action = action;
+
+		m_target.transform		= action.state.transform;
+		m_target.look_pitch		= action.state.look_pitch;
+		m_target.physics_controller->set_transform( m_target.transform );
+
+		process_quick_slots_for_proxy_player( );
+
+		m_last_server_correction_time = time_in_ms;
+		return;
+	}
+
+	if( time_in_ms > m_history[ m_history.previous( m_history.head( ) ) ].time_in_ms )
+		return;
+
+	if( time_in_ms + 1000 < m_history[ m_history.previous( m_history.tail( ) ) ].time_in_ms )
+		return;
+
+	time_in_ms = math::min( time_in_ms, m_current_time_in_ms );
+
+	const u32 lower_bound_index = history_lower_bound_index( time_in_ms );
+	if( lower_bound_index == (u32)-1 )
+		return;
+
+	if( m_history.next( lower_bound_index ) == m_history.head( ) )
+		return;
+
+	float4x4 transform = m_target.transform;
+
+	m_is_replaying_history = true;
+
+	remove_oldest_history_items( m_history[ lower_bound_index ].time_in_ms );
+
+	float4x4 previous_transform;
+	update_history_item(
+		m_history[ lower_bound_index ],
+		is_local ? &m_history[ m_history.next( lower_bound_index ) ] : NULL,
+		action,
+		time_in_ms,
+		previous_transform,
+		m_is_replaying_history
+	);
+
+	replay_history( m_history.next( m_history.tail( ) ), previous_transform );
+
+	const float3 position = m_target.transform.c.xyz( );
+	m_target.transform = transform;
+	m_target.transform.c.xyz( ) = position;
+	m_target.physics_controller->set_transform( m_target.transform );
+
+	m_is_replaying_history = false;
+	m_last_server_correction_time = time_in_ms;
 }
 
 // claude@NOTE: Master Gold strips the LOG body to a bare `ret` (target size 1).
