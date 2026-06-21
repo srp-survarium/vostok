@@ -391,9 +391,9 @@ namespace vostok
 		environment_probe.insert( );
 		environment_probe.remove( );
 
-		// object_volume_fog: only load is matched (facade-free); insert/remove are
-		// render-facade-walled stubs (volume_fog_parameters + scene_renderer cook
-		// methods). Same construct + reference pattern.
+		// object_volume_fog: load + insert + remove all matched now that the render
+		// volume_fog cook chain (volume_fog_parameters + scene_renderer cook methods)
+		// is reconstructed. Same construct + reference pattern keeps it past /OPT:REF.
 		survarium::object_volume_fog	volume_fog( scene );
 		volume_fog.load( cfg, "", cb );
 		volume_fog.insert( );

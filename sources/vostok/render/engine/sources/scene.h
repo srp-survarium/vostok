@@ -11,6 +11,7 @@
 #include <vostok/render/engine/vertex_colored.h>
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/associative_vector.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 #include "render_model.h"
 #include "decal_instance.h"
 
@@ -85,6 +86,9 @@ public:
 
 			void		update_lpv_occluder				( u32 id, float4x4 const& transform );
 			void		remove_lpv_occluder				( u32 id );
+
+			void		update_volume_fog				( u32 id, render::volume_fog_parameters const& in_parameters );
+			void		remove_volume_fog				( u32 id );
 	
 			void		select_models					( float4x4 const & mat_vp, render_surface_instances& selection );
 			void		select_terrain_cells			( float4x4 const & mat_vp, render::vector< terrain_render_model_instance_ptr > & cells);
@@ -195,6 +199,7 @@ private:
 	bool								m_sky_enabled;
 
 	associative_vector< u32, float4x4, vector, std::less< u32 > >	m_lpv_occluders;
+	associative_vector< u32, render::volume_fog_parameters, vector, std::less< u32 > >	m_volume_fogs;
 }; // class scene
 
 
