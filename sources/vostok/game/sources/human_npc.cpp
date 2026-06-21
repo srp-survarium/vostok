@@ -18,6 +18,8 @@
 #include <vostok/ai/sensed_hit_object.h>
 #include <vostok/collision/animated_object.h>
 #include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>	// set_transform: scene().update_model
+#include <vostok/animation/animation_player.h>		// set_transform: animation_player::set_object_transform
 #include <vostok/console_command.h>
 
 static bool s_npc_debug_draw		= false;
@@ -220,9 +222,13 @@ void human_npc::draw( render::game::renderer& render, render::scene_ptr const& s
 {
 }
 
-// STATE[STUB]
 void human_npc::set_transform( float4x4 const& transform )
 {
+	m_transform					= transform;
+	m_feet_target				= transform.c.xyz();
+
+	m_renderer.scene( ).update_model	( m_scene, m_model_instance->m_render_model->m_model, m_transform );
+	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
 }
 
 // STATE[STUB]
@@ -343,9 +349,12 @@ void human_npc::get_available_weapons( vectora< ai::weapon* >& list_to_be_filled
 		list_to_be_filled.push_back		( weapon );
 }
 
-// STATE[STUB]
 void human_npc::set_translation( float4x4 const& new_translation )
 {
+	float4x4 new_transform		= create_scale( m_transform.get_scale() ) *
+								  create_rotation( m_transform.get_angles_xyz() ) *
+								  new_translation;
+	set_transform				( new_transform );
 }
 
 void human_npc::set_behaviour( resources::unmanaged_resource_ptr new_behaviour )
@@ -401,6 +410,15 @@ void human_npc::hit(
 }
 
 // STATE[STUB]
+// claude@NOTE: cross-unit blocked. Body is: if ( m_current_movement_target ) {
+//   LOG_INFO( "target reached: [%.2f][%.2f][%.2f]", m_current_movement_target->target_position.{x,y,z} );
+//   m_current_movement_target = 0; m_ai_world.select_new_goal( m_brain_unit ); }
+// The trailing call is ai::world vtable+0x54 = ai_world::select_new_goal( brain_unit_res_ptr )
+// (a target-only/unpaired symbol). Our vostok/ai/world.h lacks that virtual (on_animation_finish
+// currently sits at +0x54 instead of +0x50), so there is no method to call. Same wall hits
+// on_animation_end / select_new_goal / enable. Fix is in the AI module: add
+// ai::world::select_new_goal( brain_unit_res_ptr ) as the last pure virtual (after
+// on_animation_finish) + the ai_world override, then these four pair here.
 void human_npc::on_movement_end( )
 {
 }
@@ -432,13 +450,14 @@ void human_npc::select_new_goal( )
 {
 }
 
-// STATE[STUB]
 void human_npc::on_affect_event(
 	pcstr							body_part_name,
-	const hit_affects_type_enum		arg_1 /* hit_affects_type_enum affect_type */,
-	const affect_event_type_enum	arg_2 /* affect_event_type_enum event_type */
+	const hit_affects_type_enum		affect_type,
+	const affect_event_type_enum	event_type
 ) const
 {
+	pcstr event					= event_type == affect_applying ? "applied" : "recalled";
+	LOG_INFO					( "[%s] - death affect %s on body part %s", get_name(), event, body_part_name );
 }
 
 } // namespace survarium
