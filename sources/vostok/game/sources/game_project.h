@@ -79,6 +79,9 @@ private:
 	// game_world walks m_respawn_points directly (clear_player_spawn_info);
 	// PDB does not record friendship, codegen-neutral
 	friend class game_world;
+	// project_cooker_simple reads m_loaded / m_objects directly (on_object_loaded);
+	// PDB does not record friendship, codegen-neutral
+	friend class project_cooker_simple;
 
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* base_project */

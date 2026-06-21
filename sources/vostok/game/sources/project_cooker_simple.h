@@ -8,6 +8,8 @@
 #include <vostok/resources_cook_classes.h>
 #include <vostok/configs.h>	// configs::binary_config_ptr (by-value param)
 
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
+
 namespace survarium {
 
 class game_object_;
@@ -20,6 +22,14 @@ public:
 	virtual	void		translate_query					( resources::query_result_for_cook& parent ) override;
 
 	virtual	void		delete_resource					( resources::resource_base* resource ) override;
+
+	virtual				~project_cooker_simple			( ) { /* no source */ }
+
+private:
+	// reachability anchor (anchor_game_weapons.cpp) address-takes the private
+	// callbacks that the real bind sites (in still-stubbed create_game_objects)
+	// don't yet reach; codegen-neutral friend.
+	friend	void	::vostok::use_game_weapons	( );
 
 			void		on_game_project_loaded			( resources::queries_result& data, resources::query_result_for_cook* parent );
 			void		on_object_loaded				(
@@ -36,8 +46,6 @@ public:
 			void		on_damage_zones_loaded			( simple_game_project* project, resources::queries_result& data );
 			void		on_ladders_loaded				( simple_game_project* project, resources::queries_result& data );
 			void		on_collision_and_visuals_loaded	( resources::queries_result& data, simple_game_project* project );
-
-	virtual				~project_cooker_simple			( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */

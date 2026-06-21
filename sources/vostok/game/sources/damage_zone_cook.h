@@ -25,8 +25,10 @@ public:
 
 	virtual	void		delete_resource			( resources::resource_base* resource ) override;
 
+private:
 			void		on_sub_resources_loaded	( resources::queries_result& data, configs::binary_config_value const& cfg_val );
 
+public:
 	virtual				~damage_zone_cook		( ) { /* no source */ }
 
 private:
