@@ -184,8 +184,10 @@ public:
         File_ETC    = 22,
         File_SIF    = 23,
         File_GXT    = 24,
+        File_GTX    = 25,
 
         File_NextAvail,
+        File_MultiFormat = 65534,
         File_Original  = 65535
     };
 };

@@ -643,7 +643,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="$(SolutionDir)/stlport;$(SolutionDir);$(SolutionDir)/scaleform/Include;$(SolutionDir)/scaleform/Src"
-				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;"
+				PreprocessorDefinitions="WIN32;NDEBUG;VOSTOK_STATIC_LIBRARIES;MASTER_GOLD;SF_BUILD_SHIPPING;"
 				StringPooling="true"
 				MinimalRebuild="false"
 				ExceptionHandling="0"
@@ -2916,11 +2916,11 @@
 						Name="hal"
 						>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_BinaryShaders.inl"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Config.h"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Config.h"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Events.h"
 							>
 						</File>
 						<File
@@ -2929,10 +2929,6 @@
 						</File>
 						<File
 							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_HAL.h"
-							>
-						</File>
-						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_HALSetup.cpp"
 							>
 						</File>
 						<File
@@ -2952,19 +2948,19 @@
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderManager.cpp"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderBinary.cpp"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderManager.h"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderDescs.cpp"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Shaders.h"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_ShaderDescs.h"
 							>
 						</File>
 						<File
-							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Shaders.inl"
+							RelativePath="..\..\..\..\scaleform\Src\Render\D3D1x\D3D1x_Sync.h"
 							>
 						</File>
 						<File

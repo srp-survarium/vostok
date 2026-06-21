@@ -18,15 +18,11 @@ otherwise accompanies this software in either electronic or hard copy form.
 #pragma once
 
 #include "Render/D3D1x/D3D1x_Config.h"
+#include "Render/D3D1x/D3D1x_Sync.h"
 #include "Render/Render_MeshCache.h"
 #include "Kernel/SF_Array.h"
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_HeapNew.h"
-
-// If SF_RENDER_D3D1x(INSTANCE_MATRICES) is changed, make sure to update MeshCacheConfig defaults.
-static const int SF_RENDER_D3D1x_INSTANCE_MATRICES = 24;
-static const int SF_RENDER_D3D1x_ROWS_PER_INSTANCE = 10; // Number of registers per instance.
-static const int SF_RENDER_D3D1x_INSTANCE_DATAROWS = SF_RENDER_D3D1x_INSTANCE_MATRICES * SF_RENDER_D3D1x_ROWS_PER_INSTANCE;
 
 namespace Scaleform { namespace Render { namespace D3D1x {
 
@@ -36,6 +32,7 @@ class VertexBuffer;
 class IndexBuffer;
 class MeshCache;
 class HAL;
+class ShaderManager;
 
 
 // D3D1x version of MeshCacheItem. In D3D1x index and vertex buffers
@@ -196,13 +193,16 @@ public:
         return (size + MeshCache_AllocatorUnit - 1) >> MeshCache_AllocatorUnitShift;
     }
 
-    void        DestroyBuffer(MeshBuffer* pbuffer)
+    void        DestroyBuffer(MeshBuffer* pbuffer, bool deleteBuffer = true)
     {
         Allocator.RemoveSegment(pbuffer->GetIndex() << MeshCache_AddressToIndexShift,
                                 SizeToAllocatorUnit(pbuffer->GetSize()));
         TotalSize -= pbuffer->GetSize();
         Buffers[pbuffer->GetIndex()] = 0;
-        delete pbuffer;
+        if ( deleteBuffer )
+        {
+            delete pbuffer;
+        }
     }
 
 
@@ -324,7 +324,7 @@ public:
     {
         D3D1x(BUFFER_DESC) vbdesc;
         vbdesc.ByteWidth            = (UINT)Size;
-        vbdesc.Usage                = D3D1x(USAGE_DYNAMIC); // TODO: should not be dynamic.
+        vbdesc.Usage                = D3D1x(USAGE_DYNAMIC);
         vbdesc.BindFlags            = D3D1x(BIND_VERTEX_BUFFER);
         vbdesc.CPUAccessFlags       = D3D1x(CPU_ACCESS_WRITE);
         vbdesc.MiscFlags            = 0;
@@ -345,7 +345,7 @@ public:
     {
         D3D1x(BUFFER_DESC) ibdesc;
         ibdesc.ByteWidth            = (UINT)Size;
-        ibdesc.Usage                = D3D1x(USAGE_DYNAMIC); // TODO: should not be dynamic.
+        ibdesc.Usage                = D3D1x(USAGE_DYNAMIC);
         ibdesc.BindFlags            = D3D1x(BIND_INDEX_BUFFER);
         ibdesc.CPUAccessFlags       = D3D1x(CPU_ACCESS_WRITE);
         ibdesc.MiscFlags            = 0;
@@ -370,14 +370,16 @@ class MeshCache : public Render::MeshCache
     
     enum {
         MinSupportedGranularity = 16*1024,
-        MaxEraseBatchCount = (10 > SF_RENDER_D3D1x_INSTANCE_MATRICES) ?
-                              10 : SF_RENDER_D3D1x_INSTANCE_MATRICES
     };
 
-    Ptr<ID3D1x(Device)>           pDevice;
-    Ptr<ID3D1x(DeviceContext)>    pDeviceContext;
+    Ptr<ID3D1x(Device)>         pDevice;
+    Ptr<ID3D1x(DeviceContext)>  pDeviceContext;
+    ShaderManager*              pShaderManager;
     MeshCacheListSet            CacheList;
     
+    // Handles synchronization between CPU writing of GPU resources
+    RenderSync                  RSync;
+
     // Allocators managing the buffers. 
     VertexBufferSet             VertexBuffers;
     IndexBufferSet              IndexBuffers;
@@ -390,9 +392,11 @@ class MeshCache : public Render::MeshCache
     // freeing them in the opposite order (to support proper IB/VB balancing).
     // NOTE: Must use base MeshBuffer type for List<> to work with internal casts.
     List<Render::MeshBuffer>    ChunkBuffers;
+    // If a MeshBuffer could not be immediately destroyed (the GPU is using one of its meshes)
+    // It is temporarily stored in this list until it is no longer in use.
+    List<Render::MeshBuffer>    PendingDestructionBuffers;
 
     Ptr<ID3D1x(Buffer)> pMaskEraseBatchVertexBuffer;
-    Ptr<ID3D1x(Buffer)> pSquareVertexBuffer;
     
     inline MeshCache* getThis() { return this; }
 
@@ -403,12 +407,11 @@ class MeshCache : public Render::MeshCache
    
     bool            createStaticVertexBuffers(ID3D1x(Device)* pdevice);
     bool            createMaskEraseBatchVertexBuffer(ID3D1x(Device)* pdevice);
-    bool            createUVSquareVertexBuffer(ID3D1x(Device)* pdevice);
 
     // Allocates Vertex/Index buffer of specified size and adds it to free list.
     bool            allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsigned arena = 0);
 
-    void            evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
+    bool            evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
                                         MeshBuffer* pbuffer);
 
     // Allocates a number of bytes in the specified buffer, while evicting LRU data.
@@ -420,6 +423,10 @@ class MeshCache : public Render::MeshCache
 
     void            adjustMeshCacheParams(MeshCacheParams* p);    
 
+    // If buffers could not be deleted immediately (their meshes were still in use), they are stored
+    // in PendingDestructionBuffers and destroyed in this function (if possible).
+    void            destroyPendingBuffers();
+
 public:
 
     MeshCache(MemoryHeap* pheap,
@@ -428,7 +435,7 @@ public:
 
     // Initializes MeshCache for operation, including allocation of the reserve
     // buffer. Typically called from SetVideoMode.
-    bool            Initialize(ID3D1x(Device)* pdevice, ID3D1x(DeviceContext) *pcontext);
+    bool            Initialize(ID3D1x(Device)* pdevice, ID3D1x(DeviceContext) *pcontext, ShaderManager* psm);
     // Resets MeshCache, releasing all buffers.
     void            Reset();    
 
@@ -439,7 +446,7 @@ public:
     virtual void    ClearCache();
     virtual bool    SetParams(const MeshCacheParams& params);
 
-
+    virtual void    BeginFrame();
     virtual void    EndFrame();
     // Adds a fixed-size buffer to cache reserve; expected to be released at Release.
     //virtual bool    AddReserveBuffer(unsigned size, unsigned arena = 0);
@@ -463,6 +470,8 @@ public:
                                       bool waitForCache, const VertexFormat* pDestFormat);
 
     virtual void GetStats(Stats* stats);
+
+    RenderSync*     GetRenderSync()     { return &RSync; }
 };
 
 

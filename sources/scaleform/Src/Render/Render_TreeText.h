@@ -32,6 +32,8 @@ public:
 
     class NodeData : public ContextData_ImplMixin<NodeData, TreeNode::NodeData>
     {
+        typedef ContextData_ImplMixin<NodeData, TreeNode::NodeData> BaseClass;
+
     public:
         Ptr<Text::DocView>  pDocView;
         Ptr<TextLayout>     pLayout;   // pLayout should come after DocView, so ~DocView called after ~Layout
@@ -42,24 +44,18 @@ public:
         UInt8               TextFlags;
 
         NodeData();
-        /*
-        NodeData(ShapeMeshProvider* meshProvider)
-            :  ContextData_ImplMixin<NodeData, TreeNode::NodeData>(ET_Text),
-              pMeshProvider(meshProvider)
-        { }
-        */
+        NodeData(NonlocalCloneArg<NodeData> src);
         ~NodeData();
 
         // Textfield data should be stored here,
         // with main-thread data being separated.
 
-       // Ptr<ShapeMeshProvider> pMeshProvider;
-
-
         virtual bool            PropagateUp(Entry* entry) const;
 
         virtual TreeCacheNode*  updateCache(TreeCacheNode* pparent, TreeCacheNode* pinsert,
                                             TreeNode* pnode, UInt16 depth) const;
+
+        virtual TreeNode*       CloneCreate(Context* context) const;
     };
 
     SF_RENDER_CONTEXT_ENTRY_INLINES(NodeData)

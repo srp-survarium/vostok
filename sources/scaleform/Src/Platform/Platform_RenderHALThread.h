@@ -107,6 +107,7 @@ public:
 
     bool    InitGraphics(const ViewConfig& config, Device::Window* window,
                          ThreadId renderThreadId = 0);
+    void    ResizeFrame(void* layer);
     bool    ReconfigureGraphics(const ViewConfig& config);
     void    DestroyGraphics();
 
@@ -143,6 +144,7 @@ public:
 
     void    DrawFrame();
     void    WaitForOutstandingDrawFrame();
+    void    FinishFrame();
     
     void    ToggleWireframe()
     {
@@ -204,6 +206,7 @@ protected:
     
     virtual bool initGraphics(const ViewConfig& config, Device::Window* window,
                               ThreadId renderThreadId);
+    virtual void resizeFrame(void* layer);
     virtual bool reconfigureGraphics(const ViewConfig& config);
     virtual void destroyGraphics();
     void         blockForGraphicsInit();
@@ -215,6 +218,7 @@ protected:
     Render::HAL* getHAL() const { return pDevice->GetHAL(); }   
 
     virtual void drawFrame() = 0;
+    virtual void finishFrame() = 0;
     virtual void createCursorPrimitives(Render::HAL*) {};
     virtual void updateCursor(const Point<int> mousePos, SystemCursorState state);
     virtual void getMeshCacheParams(Render::MeshCacheParams* params);
@@ -276,6 +280,14 @@ protected:
     SystemCursorState       CursorState;                    // Holds current cursor state (copied from main thread's manager).
     Ptr<Render::Primitive>  CursorPrims[Cursor_Type_Count]; // Primitives for rendering software cursors.
     Render::HMatrix         CursorMats[Cursor_Type_Count];  // Matrices for cursors
+
+
+    volatile unsigned       WatchDogTrigger;                // Indicates whether the watchdog is satisfied (false == unsatisfied)
+    static const int        WatchDogInterval = 5000;        // Time between watchdog checks (ms)
+    static const int        WatchDogMaxFailureCount = 12;   // Maximum number of watchdog failures before killing.
+    Thread                  WatchDogThread;                 // Thread object performing watchdog checks.
+
+    static int              watchDogThreadFn(Thread* thread, void* trigger);
 };
 
 

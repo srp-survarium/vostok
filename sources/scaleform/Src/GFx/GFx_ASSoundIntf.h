@@ -27,12 +27,16 @@ class ASSoundIntf
 public:
     virtual ~ASSoundIntf() {}
 
-    virtual void ExecuteOnSoundComplete() = 0;
-    virtual void ReleaseTarget() = 0;
+    virtual void    ReleaseTarget() = 0;
+    virtual void    ExecuteOnSoundComplete() = 0;
 
+    virtual void*   GetOwner() { return NULL; }
+
+    virtual bool    HasPrivateOverride() { return false; }
+    virtual int     PrivateVolume() { return 100; }
+    virtual int     PrivatePan()    { return 0; }
 };
 
 }} // Scaleform::GFx
 
 #endif // INC_SF_GFX__ASSOUNDINTF_H
-

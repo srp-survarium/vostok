@@ -28,6 +28,7 @@ namespace Scaleform { namespace GFx {
 
 class FontManager;
 class MovieDefImpl;
+class MovieImpl;
 
 class FontHandle : public Render::Text::FontHandle
 {
@@ -84,9 +85,7 @@ private:
 class FontManager : public Render::Text::FontManagerBase
 {
     friend class FontHandle;    
-
-protected:
-    
+public:
     // Make a hash-set entry that tracks font handle nodes.
     struct FontKey 
     {
@@ -103,7 +102,6 @@ protected:
             return (hash ^ (fontFlags & Font::FF_Style_Mask));
         }
     };
-
     struct NodePtr
     {
         FontHandle* pNode;
@@ -116,12 +114,12 @@ protected:
         // non-device font was requested with the same style and name: need to check
         // if non-device font exists.
         mutable bool SearchedForNonDeviceFont;
-               
+
         NodePtr() { }
         NodePtr(FontHandle* pnode) : pNode(pnode), SearchedForNonDeviceFont(false) { }
         NodePtr(const NodePtr& other) : pNode(other.pNode),
             SearchedForNonDeviceFont(other.SearchedForNonDeviceFont) { }
-        
+
         // Two nodes are identical if their fonts match.
         bool operator == (const NodePtr& other) const
         {
@@ -133,17 +131,17 @@ protected:
             unsigned ourFlags   = pNode->GetFontFlags() & FontFlagsMask;
             unsigned otherFlags = other.pNode->GetFontFlags() & FontFlagsMask;
             return ((ourFlags == otherFlags) &&
-                    !String::CompareNoCase(pNode->GetFontName(), other.pNode->GetFontName()));
+                !String::CompareNoCase(pNode->GetFontName(), other.pNode->GetFontName()));
         }        
 
         // Key search uses MatchFont to ensure that DeviceFont flag is handled correctly.
         bool operator == (const FontKey &key) const
         {
             return (Font::MatchFontFlags_Static(pNode->GetFontFlags(), key.FontStyle) &&
-                    !String::CompareNoCase(pNode->GetFontName(), key.pFontName));
+                !String::CompareNoCase(pNode->GetFontName(), key.pFontName));
         }
     };
-    
+
     struct NodePtrHashOp
     {                
         // Hash code is computed based on a state key.
@@ -167,13 +165,17 @@ protected:
         }
     };
 
-
     // State hash
     typedef HashSetLH<NodePtr, NodePtrHashOp, NodePtrHashOp> FontSet;
+protected:
 
     // Keep a hash of all allocated nodes, so that we can find one when necessary.
     // Nodes automatically remove themselves when all their references die.
     FontSet                 CreatedFonts;
+
+    // A list of MovieDataDef pointers to movies
+    // that serve as a source for fonts
+    Array<Ptr<MovieDataDef> >  FontMovies;
 
     // MovieDefImpl which this font manager is associated with. We look up
     // fonts here by default before considering pFontProvider. Note that this
@@ -192,6 +194,9 @@ protected:
     // FontMap Entry temporary; here to avoid extra constructor/destructor calls.
     FontMap::MapEntry       FontMapEntry;
 
+    // a pointer back to movieImpl to search within registered fonts.
+    MovieImpl*              pMovie;
+
 #ifndef SF_NO_IME_SUPPORT
     Ptr<FontHandle>      pIMECandidateFont;
 #endif //#ifdef SF_NO_IME_SUPPORT
@@ -204,39 +209,39 @@ protected:
 private:
     void commonInit();
 public:
-    FontManager(MovieDefImpl *pdefImpl,
-                   FontManagerStates* pState);
-    FontManager(ResourceWeakLib *pweakLib,
-                   FontManagerStates* pState);
+    FontManager(MovieImpl* movie, MovieDefImpl *pdefImpl, FontManagerStates* pState);
+    FontManager(ResourceWeakLib *pweakLib, FontManagerStates* pState);
     ~FontManager();
 
 
     // Returns font by name and style. If a non-NULL searchInfo passed to the method
     // it assumes that it was called only for a diagnostic purpose and in this case font
     // will not be searched in the internal cache and a created font handle will not be cached.
-    virtual FontHandle*         CreateFontHandle(const char* pfontName, unsigned matchFontFlags, 
-                                                 bool allowListOfFonts = true, FontSearchPathInfo* searchInfo = NULL); 
+    virtual FontHandle*     CreateFontHandle(const char* pfontName, unsigned matchFontFlags, 
+                                             bool allowListOfFonts = true, FontSearchPathInfo* searchInfo = NULL); 
 
 	// Helper function to remove handle from CreatedFonts when it dies.
-	void                    RemoveFontHandle(FontHandle *phandle);
+	void                        RemoveFontHandle(FontHandle *phandle);
 
     // Returns any font with the font name 'pfontName' or the first one
     // in the hash.
     //FontHandle*          CreateAnyFontHandle(const char* pfontName, FontSearchPathInfo* searchInfo = NULL);
 
-    virtual FontHandle*         GetEmptyFont();
+    virtual FontHandle*     GetEmptyFont();
 
     // Clean internal cache. This method is called from Advance method of 
     // MovieRoot then it detects that FontLib, FontMap, FontProvider or Translator 
     // is changed
-    virtual void                CleanCache();
-    void                        CleanCacheFor(MovieDefImpl* pdefImpl);
+    virtual void            CleanCache();
+    void                    CleanCacheFor(MovieDefImpl* pdefImpl);
 
-    void                        SetIMECandidateFont(FontHandle* pfont);
+    void                    SetIMECandidateFont(FontHandle* pfont);
 
-#ifndef SF_NO_IME_SUPPORT
-#endif //#ifdef SF_NO_IME_SUPPORT
-
+    MovieDefImpl*           GetDefImpl() const { return pDefImpl; }
+#if defined(SF_BUILD_DEBUG) || defined(SF_BUILD_DEBUGOPT)
+    // Required for AS3::ObjectCollector only. Don't use for anything else!
+    const FontSet&          GetCreatedFonts() const { return CreatedFonts; }
+#endif
 };
 
 

@@ -63,6 +63,11 @@ public:
     virtual void            GetRange(BundleEntryRange* result) = 0;
 
     typedef CacheEffect* (*CreateFunc)(TreeCacheNode*, const State*, CacheEffect* next);
+
+protected:
+    // A default implementation of ChainNext which inserts the StartEntry before the input chain,
+    // the EndEntry after the chain. This is the general behavior of creating an effect chain.
+    void ChainNextDefault(BundleEntryRange* chain, BundleEntry& StartEntry, BundleEntry& EndEntry);
 };
 
 class MaskEffect;
@@ -199,9 +204,7 @@ class BlendModeEffect : public CacheEffect
 {
 public:
     BlendModeEffect(TreeCacheNode* node, const BlendState& state, CacheEffect* next);
-    ~BlendModeEffect();
 
-    // CacheEffect will typically have at least two entrys.
     BundleEntry  StartEntry, EndEntry;
 
     virtual StateType      GetType() const { return State_BlendMode; }
@@ -218,15 +221,13 @@ class FilterEffect : public CacheEffect
 {
 public:
     FilterEffect(TreeCacheNode* node, const HMatrix& m, const FilterState& state, CacheEffect* next);
-    ~FilterEffect();
 
-    // CacheEffect will typically have at least two entrys.
     bool                    Contributing;
     BundleEntry             StartEntry, EndEntry;
     HMatrix                 BoundsMatrix;
 
     HMatrix                GetBoundsMatrix() const { return BoundsMatrix; }
-    void                   UpdateMatrix(const Matrix2F& boundsMatrix);
+    bool                   UpdateMatrix(const Matrix2F& boundsMatrix, const Matrix2F& nodeMatrix, bool forceUncache = false);
     void                   UpdateCxform(const Cxform& cx);
     virtual StateType      GetType() const { return State_Filter; }
     virtual TreeCacheNode* GetSourceNode() const { return StartEntry.pSourceNode; }
@@ -248,13 +249,9 @@ class ViewMatrix3DEffect : public CacheEffect
 {
 public:
     ViewMatrix3DEffect(TreeCacheNode* node, const ViewMatrix3DState& state, CacheEffect* next);
-    ~ViewMatrix3DEffect();
 
-    // CacheEffect will typically have at least two entrys.
     BundleEntry             StartEntry, EndEntry;
-//    Matrix3F                ViewMatrix;
 
-//    const Matrix3F &        GetViewMatrix() const { return ViewMatrix; }
     virtual StateType       GetType() const { return State_ViewMatrix3D; }
     virtual TreeCacheNode*  GetSourceNode() const { return StartEntry.pSourceNode; }
     virtual bool            Update(const State*);
@@ -273,13 +270,8 @@ class ProjectionMatrix3DEffect : public CacheEffect
 {
 public:
     ProjectionMatrix3DEffect(TreeCacheNode* node, const ProjectionMatrix3DState& state, CacheEffect* next);
-    ~ProjectionMatrix3DEffect();
 
-    // CacheEffect will typically have at least two entrys.
     BundleEntry             StartEntry, EndEntry;
-//    Matrix4F                ProjMatrix;
-
-//    const Matrix4F &        GetProjectionMatrix() const { return ProjMatrix; }
 
     virtual StateType       GetType() const { return State_ProjectionMatrix3D; }
     virtual TreeCacheNode*  GetSourceNode() const { return StartEntry.pSourceNode; }
@@ -288,6 +280,26 @@ public:
     virtual void            GetRange(BundleEntryRange* result);
 
     static CacheEffect*     Create(TreeCacheNode*, const State*, CacheEffect* next);
+};
+
+// UserDataEffect is used for attaching user data to a render node. This is used with the
+// setRenderString/setRenderFloat extensions.
+class UserDataEffect : public CacheEffect
+{
+public:
+    UserDataEffect(TreeCacheNode* node, const UserDataState& state, CacheEffect* next);
+
+    virtual StateType       GetType() const { return State_UserData; }
+    virtual TreeCacheNode*  GetSourceNode() const { return StartEntry.pSourceNode; }
+    virtual bool            Update(const State*);
+    virtual void            ChainNext(BundleEntryRange* chain, BundleEntryRange*);
+    virtual void            GetRange(BundleEntryRange* result);
+
+    static CacheEffect*     Create(TreeCacheNode*, const State*, CacheEffect* next);
+
+protected:
+    void                    rebuildBundles(const UserDataState& state);
+    BundleEntry             StartEntry, EndEntry;
 };
 
 

@@ -141,8 +141,8 @@ class IMEManagerBase : public State
 	SPInt               CursorPosition;
 	String              CandidateSwfPath;
 	bool                IMEDisabled;
-	Hash<Movie*, ASIMEManager*> MovieASIMEManagerHash;
-	typedef Hash<Movie*, ASIMEManager*> MovieASIMEManagerHashDef; 
+	Hash<Movie*, Ptr<ASIMEManager> > MovieASIMEManagerHash;
+	typedef Hash<Movie*, Ptr<ASIMEManager> > MovieASIMEManagerHashDef; 
 protected: 
 	bool				bCheckIMEExists;
 public:
@@ -163,7 +163,7 @@ public:
 	~IMEManagerBase();
 
 
-	virtual UInt32 Init(Log* plog, FileOpener* fileOpener = NULL, const char* xmlFileName = NULL, bool bcheckIMEExists = true)
+	virtual UInt32 Init(Log* plog, FileOpenerBase* fileOpener = NULL, const char* xmlFileName = NULL, bool bcheckIMEExists = true)
 	{ 
 		SF_UNUSED3(fileOpener, xmlFileName, bcheckIMEExists); 
 		bCheckIMEExists = bcheckIMEExists;
@@ -365,6 +365,9 @@ public:
 
 	// SetCompositionString
 	virtual bool SetCompositionString(const char* pCompString) { SF_UNUSED(pCompString); return false; }; 
+
+	// GetCompositionString
+	virtual const wchar_t* GetCompositionString(); 
 	
 	void Reset() { pTextField = NULL; pMovie = NULL; }
 

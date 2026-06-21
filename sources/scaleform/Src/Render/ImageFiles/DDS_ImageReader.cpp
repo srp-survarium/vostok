@@ -147,7 +147,6 @@ class DDSFileImageSource : public FileImageSource
 {
     UByte           ImageDesc; 
     DDSHeaderInfo   HeaderInfo;
-    ImageData       Data;
     
 public:
     DDSFileImageSource(File* file, ImageFormat format)
@@ -158,8 +157,6 @@ public:
     bool ReadHeader();
     virtual bool Decode(ImageData* pdest, CopyScanlineFunc copyScanline, void* arg) const;
     virtual unsigned        GetMipmapCount() const { return HeaderInfo.MipmapCount; }
-
-    SF_AMP_CODE(virtual UPInt GetBytes(int* memRegion) const { if (memRegion) *memRegion = 0; return (Data.GetBitsPerPixel() * Data.GetSize().Area()) / 8; })
 };
 
 

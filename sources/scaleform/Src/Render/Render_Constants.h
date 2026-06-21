@@ -56,6 +56,7 @@ enum TreeNodeFlags
     NF_HasFilter            = 0x0400,       // indicates that the node has filter applied
     NF_HasViewMatrix3D      = 0x0800,       // indicates that the node has a ViewMatrix set
     NF_HasProjectionMatrix3D= 0x1000,       // indicates that the node has a ProjMatrix set
+    NF_HasOrigScale9Parent  = 0x2000,       // indicates that the node has a original mask's parent set
 
 
     // EdgeAA flags are stored TreeNode, with cache values propagated through
@@ -81,16 +82,19 @@ enum TreeNodeFlags
     // Propagated the same way as NF_PartOfMask, but also on Change_State_Scale9 change.
     NF_PartOfScale9     = 0x0080,
 
+    NF_PartOf3D         = 0x0100,
+    NF_PartOfFilter     = 0x0200,
 
     // This flag is set if SortParentBounds have been expanded,
     // typically to accommodate a mask.
-    NF_ExpandedBounds   = 0x0100,
+    NF_ExpandedBounds   = 0x0400,
 
     // Masks
-    NF_TreeNode_Mask    = NF_Visible | NF_HasMask | NF_MaskNode | NF_3D | NF_EdgeAA_Mask | NF_HasFilter 
-                        | NF_HasViewMatrix3D | NF_HasProjectionMatrix3D,
+    NF_TreeNode_Mask    = NF_Visible | NF_HasMask | NF_MaskNode | NF_3D | NF_EdgeAA_Mask | NF_HasFilter |
+                          NF_HasViewMatrix3D | NF_HasProjectionMatrix3D | NF_HasOrigScale9Parent,
     NF_CacheNode_Mask   = NF_TreeNode_Mask | 
-                          NF_Culled | NF_PartOfMask | NF_PartOfScale9 | NF_ExpandedBounds | NF_3D
+                          NF_Culled | NF_PartOfMask | NF_PartOfScale9 | NF_ExpandedBounds | NF_3D |
+                          NF_HasOrigScale9Parent | NF_PartOf3D | NF_PartOfFilter
 };
 
 // Helper function: maps NF_MaskNode flag to NF_PartOfMask.
@@ -149,12 +153,13 @@ enum TreeChangeConstants
     Change_State_ViewMatrix3D       = 0x00080000,
     Change_State_ProjectionMatrix3D = 0x00100000,
     Change_State_Filter             = 0x00200000,
+    Change_State_UserData           = 0x00400000,
     Change_State_Mask               = 0x00FF0000,
 
     // Mask that combines all states that may require an effect update
     // for the tree node.
     Change_State_Effect_Mask= Change_State_BlendMode | Change_State_MaskNode | Change_State_Filter | 
-                              Change_State_ViewMatrix3D | Change_State_ProjectionMatrix3D,
+                              Change_State_ViewMatrix3D | Change_State_ProjectionMatrix3D | Change_State_UserData,
     
     // Change mask copied to UpdateFlags.
     //Change_Mask             = Change_Node_Mask | Change_State_Mask,

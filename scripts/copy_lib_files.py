@@ -33,25 +33,21 @@ DEST        = VOSTOK_DIR / "binaries.prebuilt"
 # SKIP it here rather than staging a copy (no special destination needed).
 LICENSE_NAMES  = {"COPYING.LIB"}
 
-# The GFx libs the exe links, remapped onto the shipped game's layout
-# (`Win32/libraries/shipping/`) so the bare-name `#pragma comment(lib,
-# "libgfx.lib")` resolves off it. The destination dir mirrors the original
-# game's `shipping/` path, but we source the *Release* config: our 4.0.15 GFx
-# distribution's Shipping libs strip the AMP/ProfileViews profiling symbols that
-# the render_engine objects reference (AmpServer::GetInstance,
-# ProfileViews::Set/GetColorForBatch), so only Release links. The original game
-# linked its own 4.2.21 Shipping libs, which kept those symbols - the
-# config/version mismatch is the expected prebuilt-vs-target signal.
-GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Release")
+# Our from-source 4.2.22 GFx suite (built per the shipped PDB's recipe - non-/GL,
+# /Ox, pristine SDK; see build_gfx_suite.py) ships inside vostok-libs at the shipped
+# Win32 Shipping config path. Remap it onto the game's binaries.prebuilt layout
+# (`Win32/libraries/shipping/`), where the exe's `#pragma comment(lib,"libgfx.lib")`
+# resolves it. The foreign 4.0.15 GFx libs were removed from vostok-libs and replaced
+# by these - no skip/clobber dance needed.
+GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Shipping")
 GFX_DST = Path("Win32/libraries/shipping")
 
 
 def dest_for(rel_path: Path, dest: Path) -> Path:
     """Resolve the absolute target path for a source-relative blob.
 
-    The GFx Release libs land on the shipped game's `Win32/libraries/shipping/`
-    layout; everything else (tool SDKs the exe doesn't link, plus the other GFx
-    configs) keeps its source-relative subpath under `dest` so nothing is lost.
+    The GFx Shipping libs remap onto the game's `Win32/libraries/shipping/` layout;
+    everything else keeps its source-relative subpath under `dest`.
     """
     if rel_path.parent == GFX_SRC:
         return dest / GFX_DST / rel_path.name

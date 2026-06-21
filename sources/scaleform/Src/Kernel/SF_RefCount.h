@@ -323,6 +323,12 @@ public:
         //other.pV = NULL;
         return *this;
     }
+#if 0
+    operator bool() const
+    {
+        return pV != NULL;
+    }
+#endif
 
 public:
     T* GetPtr() const { return pV; }

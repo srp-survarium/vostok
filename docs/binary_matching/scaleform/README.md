@@ -121,12 +121,153 @@ fills the bodies anyway. The canonical dumps themselves are NOT drop-in
 compilable (mangled-name include guards, `void (*)(...)` return-type syntax,
 no includes), so they stay reference-only.
 
+## SDK swapped 4.0.15 -> 4.2.22 (2026-06-20)
+
+The binary links GFx **4.2.21** (the exe embeds "4.2.21"; `Render::HAL` is
+`STATIC_SIZE_ASSERT 0x1D0`), so the vendored tree was upgraded 4.0.15 ->
+**4.2.22** (one build off 4.2.21, the closest checkout available;
+`/home/sheep/Projects/scaleform_sdk`, `Include/GFxVersion.h` = `"4.2.22"`). This
+**reverses the 2026-06-13 "not a newer SDK" conclusion below** - the divergence
+is real and lives in the SHARED base render classes (`Render::HAL`,
+`Render::Texture`/`TextureManager`/`MappedTextureBase`, `Render::MatrixState`,
+the new `Render/Render_ShaderHAL.h`), not just `D3D1x/`.
+
+The swap (379 files, +425k/-283k lines):
+
+- Replaced the 340 vendored files that exist at the same relpath in 4.2.22;
+  removed 21 obsolete 4.0.15-only files (the D3D9/GL/D3D1x shader files the 4.2
+  unified-shader framework reorganized, plus `GFx_FontProvider_NGP.h`); added 18
+  new-in-4.2 files the include closure needs (`Render_ShaderHAL.h`,
+  `Render_TextureCache*.h`, `Render_DrawableImage.h`, `Render_Events.h`, the new
+  `D3D1x_Shader{Binary,Descs}.cpp` + `D3D1x_Events.h`/`D3D1x_Sync.h`/
+  `D3D1x_ShaderDescs.h`, and a handful of platform headers). Scope mirrors the
+  curated vendored subset (NOT the whole multi-thousand-file SDK); driven by the
+  transitive `#include` closure from the engine's GFx entry headers.
+- The vendored tree (`sources/scaleform/`, consumed by the render engine's
+  in-tree D3D1x HAL) carries render-side reconciliation patches:
+  `Src/Render/D3D1x/D3D1x_Config.h` hardcodes `#define SF_D3D_VERSION 11` (4.2
+  made it a required build-config define; the build config doesn't set it), and
+  every D3D1x `.cpp` the render engine compiles gets `#include "pch.h"` first
+  (`render_engine_pc_dx11.vcproj` forces `/Yu"pch.h"`). **NOTE:** the from-source
+  GFx-lib build (see the recipe section) is PRISTINE and standalone - it does NOT
+  apply these, nor any HeapMH `g_mt_allocator` allocator patch (the earlier
+  recipe's misread - the engine feeds GFx an allocator at runtime via
+  `Scaleform::SysAlloc`), nor the engine `pch.h`. The render-side `pch`/config
+  patches stay because the render engine compiles those D3D1x TUs as engine
+  compilands; the GFx libs are a separate, unpatched prebuilt.
+- Build wiring: `render_engine_pc_dx11.vcproj`'s `hal` filter was retargeted to
+  the 4.2.22 D3D1x file set (HALSetup/ShaderManager/Shaders dropped;
+  ShaderBinary/ShaderDescs/Events/Sync added). `flash_renderer.cpp`'s
+  `InitHAL(HALInitParams(dev, ctx, HALConfig_DynamicShaderCompile))` was changed
+  to pass `0` - 4.2 dropped that config flag (`HALConfigFlags` is now empty;
+  shaders are precompiled descs).
+
+### The GFx lib suite is a PREBUILT, not part of the engine LTCG (CORRECTED 2026-06-21)
+
+The shipped PDB's build records are authoritative for every compiland's exact
+`cl` flags (`pdb_build_info --pdb $SURVARIUM_BIN/survarium.pdb --grep libgfx
+--full`). They overturn the earlier GUESSED recipe (this section previously
+described a `/Od` + `/GL` + `MASTER_GOLD` + HeapMH-allocator-patch + engine-`pch.h`
+build). The records show the GFx libs were built:
+
+- **NON-`/GL`, `/Ox`** - finished machine code, staged to
+  `C:\survarium\binaries.prebuilt\Win32\libraries\shipping\` exactly like
+  boost / openssl, **NOT in the engine whole-program LTCG**. The wrong `/GL`
+  recipe pulled GFx INTO the engine LTCG and regressed ~293 engine math / physics
+  / bullet / collision functions (`vostok::math::sin/cos/tan/pow`,
+  `float3_pod::normalize`, `float4x4::create_*`, the bullet/collision inline
+  bodies) from 100% as the cross-module inliner repartitioned. Taking GFx out of
+  the LTCG fixes that regression, the 2 GB-contiguous `lib` OOM (machine-code
+  archives are small, so no as3 4-way split), and the flag drift - all at once.
+- **From PRISTINE 4.2.22 SDK source, standalone** - no survarium patches (no
+  HeapMH `g_mt_allocator` routing: the engine feeds GFx an allocator at RUNTIME
+  via `Scaleform::SysAlloc` / `GFx::System::Init`, see the `xrSysAllocMalloc` in
+  `engine_scaleform_initialize.cpp`), no engine `pch.h` prepend (the fake-`HANDLE`
+  macro cascade came from survarium's `extensions.h`, which a standalone GFx build
+  never includes), no `MASTER_GOLD`, no `VOSTOK_STATIC_LIBRARIES`, no `/arch`,
+  no `/Od`.
+
+**The suite (from the PDB project set), staged to `shipping/`:**
+
+| lib            | TUs | note |
+| :------------- | --: | :--- |
+| `libgfx`       | 177 | GFx + Kernel + Render + Text; AMP_* TUs compile empty under `SF_BUILD_SHIPPING` |
+| `libgfx_as2`   |   6 | SCU: `AS2_All.cpp` + IME/XML/Support |
+| `libgfx_as3`   |  25 | SCU: `AS3_All.cpp`, `AS3_Abc*`, `AS3_Obj_*_All.cpp` (the amalgamation TUs - NOT 272 per-class files) |
+| `libgfxexpat`  |   1 | `XML_Expat.cpp` |
+
+There is **NO `libgfx_air` and NO `libgfxsound_fmod`** in the shipped binary (zero
+such projects/symbols). The codec C libs (`libjpeg`/`libpng`/`pcre`/`zlib`) carry
+**no debug `cmd` record** in the PDB - they are not engine-matchable; they only
+need to RESOLVE the `jpeg_*` / `png_*` / `inflate` symbols `libgfx` pulls. We
+build `libgfx_zlib` / `libgfx_libpng` / `libgfx_libjpeg` from the SDK `3rdParty`
+source as plain Release C static libs (the exe `#pragma comment(lib,...)` names
+them with the `libgfx_` prefix).
+
+**The C++ recipe (libgfx / as2 / as3, identical config):**
+
+    -Ox -Ob2 -Ot -Zp8 -Z7 -MT -W4 -GS- -Gy -GR- -GF -WX -Zl -FD -MP
+    -errorreport:none -TP  + -w44264 -w44062 -w44265 -w44287 -w44289 -w44296
+    -w44431 -w44545 -w44546 -w44547 -w44548 -w44549 -w44623
+    defines: WIN32 _WINDOWS SF_BUILD_STATICLIB NDEBUG SF_BUILD_SHIPPING _MBCS
+             _VC80_UPGRADE=0x0710
+    -I Include Src 3rdParty/{zlib-1.2.7,jpeg-8d,libpng-1.5.13,expat-2.1.0/lib,
+       pcre,glext,PlatformSDK,cri/pc/include,fmod/pc/Win32/inc} + DXSDK Include
+
+`SF_BUILD_SHIPPING` `#undef`s `SF_AMP_SERVER`, gutting the `Amp_*` TUs - the
+shipped binary has ZERO AMP symbols (`Scaleform::AMP` / `AmpServer` / `Amp_*` all
+absent), which is also why the render engine's `render_engine_pc_dx11.vcproj`
+carries `SF_BUILD_SHIPPING` (its D3D1x HAL consumes GFx headers; the `Render::
+Texture::Copy` / AMP references the foreign 4.0.15 lib used to mask are gone).
+
+**The build (`scripts/build_gfx_suite.py`):** authors a per-lib `cl` response file
+straight from this recipe and compiles each TU directly under Wine
+(`wine cmd /c cl @rsp`), then `lib`s the objects - **NO vcproj2ninja / sln /
+ninja**. `ninja.exe` under Wine deadlocks after ~70-80 `cl` spawns, and a direct
+machine-code build has no in-graph step anyway. System includes (VC / WinSDK /
+DXSDK) come from Wine's `%INCLUDE%` (set in the Wine registry by
+`setup-toolchain.py`), so the rsp lists only the GFx `-I` dirs. The per-TU
+mspdbsrv pipe-EOF reaper (`scripts/gfx_mspdbsrv.py`, PR #280 ported to the direct
+driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
+
+    nix develop --command python3 scripts/build_gfx_suite.py
+
+  Source is the PRISTINE external SDK (`/home/sheep/Projects/scaleform_sdk`,
+  4.2.22; `$SCALEFORM_SDK` overrides). No `scaleform_build/` overlay (deleted -
+  it existed only to carry the now-removed survarium patches + pch prepend).
+
+**Staging.** Output is `binaries.prebuilt/Win32/libraries/shipping/<name>.lib`,
+where the exe's `#pragma comment(lib,"<name>.lib")` resolves it. The libs are
+plain prebuilts: un-wired from the sln, `game_core` takes no dependency edge, and
+`copy_lib_files.py` skips the foreign 4.0.15 distribution `libgfx*.lib` under
+`scaleform/Lib/.../Release/` so a `setup-toolchain.py` pass never clobbers them.
+Do NOT run `setup-toolchain.py --force libs` after building.
+
+### PDB source-checksum confirms 4.2.22 == shipped 4.2.21 (no drift)
+
+The game PDB records the GFx source under
+`C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Src\...` - the shipped
+exe was built from GFx **4.2.21**. `pdb_diff --source-dir` (per-compiland MD5) of
+the vendored 4.2.22 tree vs the game PDB reports `matched=7 diff=0` - every SDK
+file the game compiled is byte-identical between 4.2.22 and 4.2.21, so 4.2.22 is
+the correct source.
+
+**Byte-match measurement gap:** the delinker strips a single engine-path prefix
+(`c:/survarium/sources` for target), but the GFx compilands are recorded under
+`C:\w\...\GFx_4.2.21\Src\...`, so they do NOT map into
+`binaries/objdiff/target` and the GFx TUs do not auto-pair in `report.json` /
+`match.db`. The GFx libs do not move the match-score table; the point of building
+them is a GREEN exe link with GFx OUT of the LTCG so the ~293 engine functions the
+bad `/GL` build poisoned recover. Per-symbol GFx byte-match would need the GFx
+prefix wired into the delinker (follow-up).
+
 ## What is stubbed / deferred
 
 - **The `d3d1x_*` render HAL is survarium's IN-TREE COPY of the vendored
   Scaleform 4.0.15 D3D11 HAL - NOT a different SDK version** (an earlier note
   here called it "a newer SDK"; that was an over-conclusion, corrected
-  2026-06-13). Evidence: the vendored SDK at `sources/scaleform/` is 4.0.15
+  2026-06-13 - and now **re-corrected 2026-06-20: it IS a newer SDK, 4.2.x**,
+  see the swap section above). Evidence: the vendored SDK at `sources/scaleform/` is 4.0.15
   (`Include/GFxVersion.h`) and already ships the D3D1x HAL
   (`Src/Render/D3D1x/D3D1x_*.{h,cpp}`); the shipped `D3D1x::HAL` symbols match
   4.0.15 exactly - same base `Render::HAL` (`class HAL : public Render::HAL`),

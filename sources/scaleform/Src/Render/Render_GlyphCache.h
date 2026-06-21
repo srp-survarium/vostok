@@ -291,6 +291,7 @@ public:
     int CmpFills(unsigned texId1, unsigned texId2) const
     {
         if (texId1 == texId2) return 0;
+        SF_ASSERT(texId1 < TexturePoolSize && texId2 < TexturePoolSize);
         const PrimitiveFill* f1 = Textures[texId1].GetFill();
         const PrimitiveFill* f2 = Textures[texId2].GetFill();
         return (f1 < f2) ? -1 : 1;

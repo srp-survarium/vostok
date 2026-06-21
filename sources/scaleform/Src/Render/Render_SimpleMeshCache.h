@@ -126,12 +126,15 @@ protected:
         Cache_NeverShrink = 1,
     };
 
-    MeshCacheListSet        CacheList;
-    AllocAddr               Allocator;
-    UPInt                   TotalSize;
-    List<Render::MeshBuffer> Buffers; // Use base MeshBuffer to avoid List<> problems.
-    RenderSync*             pRenderSync;
-    UInt32                  CacheFlags;
+    MeshCacheListSet            CacheList;
+    AllocAddr                   Allocator;
+    UPInt                       TotalSize;
+    List<Render::MeshBuffer>    Buffers;            // Use base MeshBuffer to avoid List<> problems.
+    RenderSync*                 pRenderSync;
+    UInt32                      CacheFlags;
+    UInt16                      VBAlignment;        // The required alignment for vertex buffer section allocations (defaults to 16).
+    UInt16                      IBAlignment;        // The required alignment for index buffer section allocations (defaults to 16).
+    UInt16                      BufferAlignment;    // The required overall alignment buffer allocations (defaults to 16).
     
     inline MeshCache*   getThis() { return this; }
 
@@ -174,13 +177,20 @@ public:
     virtual void    BeginFrame();
     virtual void    EndFrame();
 
-    // Adds a fixed-size buffer to cache reserve; expected to be released at Release.
-    //virtual bool    AddReserveBuffer(unsigned size, unsigned arena = 0);
-    //virtual bool    ReleaseReserveBuffer(unsigned size, unsigned arena = 0);
-    
     virtual UPInt   Evict(Render::MeshCacheItem* p, AllocAddr* pallocator = 0, MeshBase* pmesh = 0);
 
-    RenderSync*     GetRenderSync() { return pRenderSync; }
+    virtual AllocResult AllocCacheItem(MeshCacheItem** pdata,
+        UByte** pvertexDataStart, IndexType** pindexDataStart,
+        MeshCacheItem::MeshType meshType,
+        MeshCacheItem::MeshBaseContent &mc,
+        UPInt vertexBufferSize,
+        unsigned vertexCount, unsigned indexCount,
+        bool waitForCache,
+        const VertexFormat* pDestFormat);
+
+    virtual bool    PreparePrimitive(PrimitiveBatch* pbatch, MeshCacheItem::MeshContent &mc, bool waitForCache);
+
+    RenderSync*     GetRenderSync() const { return pRenderSync; }
 
     virtual void    GetStats(Stats* stats);
 };

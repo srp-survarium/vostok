@@ -242,7 +242,8 @@ enum ASBuiltinType
     // Movieclip user data properties
     ASBuiltin_rendererString,
     ASBuiltin_rendererFloat,
-    ASBuiltin_rendererMatrix,
+    ASBuiltin_disableBatching,
+    //ASBuiltin_rendererMatrix,
 
     // AMP
     ASBuiltin_Amp,

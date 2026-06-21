@@ -39,9 +39,6 @@ public:
         : Bundle(0), pRoot(proot), pRenderer2D(pr2d)
     { }
 
-#ifndef SF_CC_ARM
-    inline
-#endif
     HAL*  GetHAL() const;
     inline Renderer2DImpl* GetRenderer() const { return pRenderer2D; }
 
@@ -190,6 +187,17 @@ public:
     ProjectionMatrix3DBundle(HAL* hal, Matrix4FRef *projMat);
 
     void    Draw(HAL* hal)   {        hal->Draw(&Prim);    }
+};
+
+// ***** UserDataBundle
+
+// UserDataStringBundle passes string supplied by the user to the HAL.
+class UserDataBundle : public Bundle
+{
+public:    
+    UserDataPrimitive Prim;
+    UserDataBundle(HAL* hal, UserDataState::Data* data );
+    void    Draw(HAL* hal)   { hal->Draw(&Prim); }
 };
 
 }} // Scaleform::Render

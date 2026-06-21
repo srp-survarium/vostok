@@ -61,59 +61,63 @@ public:
     } ; 
 
     Log*		pLog;
-	SInt32		CandidateListState;
-	GFx::Value	CandListVal;
-	Ptr<ASIMEManager::IMEFuncHandler> pCustomFunc;
+    SInt32		CandidateListState;
+    GFx::Value	CandListVal;
+    Ptr<ASIMEManager::IMEFuncHandler> pCustomFunc;
     IMEManager();
     virtual ~IMEManager()
-	{
-	};
-	
-	virtual void ShutDown()
-	{
-		CandListVal.SetUndefined();
-	};
-	virtual UInt32 Init(Log* plog){ plog = 0; return 1;};
+    {
+    };
 
-	void			Reset(); 
-	
-	virtual bool Invoke(const char* pmethodName, GFx::Value *presult, const GFx::Value* pargFmt, unsigned numArgs)
-	{
-		if (CandListVal.IsUndefined() || CandListVal.IsNull()) 
-                      return false;
+    virtual void ShutDown()
+    {
+        CandListVal.SetUndefined(); pMovie = 0;
+    };
+    virtual UInt32 Init(Log* plog){ plog = 0; return 1;};
 
-		char *result	= NULL;
-		int len			= static_cast<int>(SFstrlen(pmethodName));
-		char* tmpBuf	= (char*)SF_ALLOC((len+1), StatIME_Mem);
-		char* pcommand	= 0;
-		char* context	= 0;
-		memcpy(tmpBuf, pmethodName, len);
-		tmpBuf[len] = 0;
+    void Reset(); 
+
+    virtual bool Invoke(const char* pmethodName, GFx::Value *presult, const GFx::Value* pargFmt, unsigned numArgs)
+    {
+        if (!pMovie || CandListVal.IsUndefined() || CandListVal.IsNull()) 
+            return false;
+
+        char *result	= NULL;
+        int len			= static_cast<int>(SFstrlen(pmethodName));
+        char* tmpBuf	= (char*)SF_ALLOC((len+1), StatIME_Mem);
+        char* pcommand	= 0;
+        char* context	= 0;
+        memcpy(tmpBuf, pmethodName, len);
+        tmpBuf[len] = 0;
 #ifdef SF_MSVC_SAFESTRING
-		result			= strtok_s( tmpBuf, ".", &context);
+        result			= strtok_s( tmpBuf, ".", &context);
 #else
         SF_UNUSED(context);
-		result			= strtok( tmpBuf, ".");
+        result			= strtok( tmpBuf, ".");
 #endif
-		GFx::Value mem	= CandListVal;
-		GFx::Value func = CandListVal;
-		while( result != NULL )
-		{
-			mem = func;
-			pcommand = result;
-			mem.GetMember(result, &func);
+        GFx::Value mem	= CandListVal;
+        GFx::Value func = CandListVal;
+        while( !mem.IsNull() && (result != NULL) )
+        {
+            mem = func;
+            pcommand = result;
+            mem.GetMember(result, &func);
 #ifdef SF_MSVC_SAFESTRING
-			result = strtok_s(NULL, ".", &context);
+            result = strtok_s(NULL, ".", &context);
 #else
-			result = strtok(NULL, ".");
+            result = strtok(NULL, ".");
 #endif
-		}
-	//	CandListVal.GetMember()
-		bool retVal = mem.Invoke(pcommand, presult, pargFmt, numArgs);
-		SF_FREE(tmpBuf);
-		return retVal;
-	}
-    
+        }
+        //	CandListVal.GetMember()
+        bool retVal = false;
+        if (!mem.IsNull())
+        {
+            mem.Invoke(pcommand, presult, pargFmt, numArgs);
+        }
+        SF_FREE(tmpBuf);
+        return retVal;
+    }
+
     // Returns true, if text field is currently focused.
     bool IsTextFieldFocused() const;
 
@@ -122,42 +126,42 @@ public:
 
     // Checks if candidate list is loaded
     virtual bool IsCandidateListLoaded() const;
-	
-	bool SetCandidateListStyle(const IMECandidateListStyle& st);
 
-	// Gets the sprite corresponding to the candidate list
-	Sprite* GetCandidateListSprite();
+    bool SetCandidateListStyle(const IMECandidateListStyle& st);
+
+    // Gets the sprite corresponding to the candidate list
+    Sprite* GetCandidateListSprite();
 
     // Sets candidate list movie path
     void SetIMEMoviePath(const char* pcandidateSwfPath);
 
     // Gets candidate list path for logging
     bool GetIMEMoviePath(String& candidateSwfPath);
-	
-	virtual void ASRootMovieCreated(Ptr<Sprite> spr) ;
 
-	virtual void SetActiveMovie(Movie* pmovie)
-	{
-		
-		
-		ASIMEManager::SetActiveMovie(pmovie);
-/*
-		AS3::MovieRoot* pmovieRoot = AS3::ToAS3Root((MovieImpl*)(pmovie));
-		pmovie->CreateFunction(&func, CustomFuncLanguageBar);
-		pmovieRoot->Value2ASValue(func, &asFunc);
-		AvmSprite* avmSpr = AS3::ToAvmSprite(pmovieRoot->Get);
-		avmSpr->SetMember(avmSpr->GetASEnvironment(), pmovieRoot->GetStringManager()->CreateConstString("SendLangBarMessage"), 
-			asFunc);
-*/
-		// Important Language Bar related Note: The language bar uses the SendLangBarMessage function 
-		// to send notifications to IME core. We use the function injection mechanism to inject a 
-		// C++ implementation for this function. However this injection can't take place at this point,
-		// since the advance on the root movie has not been called yet (assuming we get here from the 
-		// first SetFocus call right when the movie is loaded), and the avmDispObj has not been created.
-		// The solution is for the parent swf to send a Language Bar Init request, in response to which
-		// the appropriate C++ callback is injected. 
-		
-	}
+    virtual void ASRootMovieCreated(Ptr<Sprite> spr) ;
+
+    virtual void SetActiveMovie(Movie* pmovie)
+    {
+
+
+        ASIMEManager::SetActiveMovie(pmovie);
+        /*
+        AS3::MovieRoot* pmovieRoot = AS3::ToAS3Root((MovieImpl*)(pmovie));
+        pmovie->CreateFunction(&func, CustomFuncLanguageBar);
+        pmovieRoot->Value2ASValue(func, &asFunc);
+        AvmSprite* avmSpr = AS3::ToAvmSprite(pmovieRoot->Get);
+        avmSpr->SetMember(avmSpr->GetASEnvironment(), pmovieRoot->GetStringManager()->CreateConstString("SendLangBarMessage"), 
+        asFunc);
+        */
+        // Important Language Bar related Note: The language bar uses the SendLangBarMessage function 
+        // to send notifications to IME core. We use the function injection mechanism to inject a 
+        // C++ implementation for this function. However this injection can't take place at this point,
+        // since the advance on the root movie has not been called yet (assuming we get here from the 
+        // first SetFocus call right when the movie is loaded), and the avmDispObj has not been created.
+        // The solution is for the parent swf to send a Language Bar Init request, in response to which
+        // the appropriate C++ callback is injected. 
+
+    }
 
     void ShowUnsupportedIMEWindows(unsigned unsupportedIMEWindowsFlag) {UnsupportedIMEWindowsFlag = unsupportedIMEWindowsFlag;};
 
@@ -238,7 +242,7 @@ public:
     virtual void OnShutdown() {}
 
 private:
-	void	DispatchEvent(const char* message, const char* messageType, const char* type);
+    void	DispatchEvent(const char* message, const char* messageType, const char* type);
 
 };
 

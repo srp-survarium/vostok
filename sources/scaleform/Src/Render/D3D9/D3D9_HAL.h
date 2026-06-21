@@ -16,11 +16,10 @@ otherwise accompanies this software in either electronic or hard copy form.
 #ifndef INC_SF_Render_D3D9_HAL_H
 #define INC_SF_Render_D3D9_HAL_H
 
-#include "Render/Render_HAL.h"
 #include "Render/D3D9/D3D9_MeshCache.h"
 #include "Render/D3D9/D3D9_Texture.h"
-#include "Render/D3D9/D3D9_ShaderManager.h"
-#include "Render/D3D9/D3D9_Shader.h" // FilterShaderManager
+#include "Render/D3D9/D3D9_Shader.h"    // ShaderManager
+#include "Render/Render_ShaderHAL.h"    // Must be included after platform specific shader includes.
 
 #include <d3d9.h>
 
@@ -40,9 +39,14 @@ enum HALConfigFlags
     // Use D3DUSAGE_DYNAMIC updaeable textures for compatibility with some broken drivers
     HALConfig_UseDynamicTex         = 0x00000004,
 
-    // Only compile shaders when they are actually used. This can reduce startup-times,
-    // however, compiling shaders dynamically can cause performance spikes during playback.
-    HALConfig_DynamicShaderCompile  = 0x00000008,
+    // Use static buffers in the mesh cache. This has no visible impact, however, it may
+    // have performance implications. Rendering from static buffers generally has faster 
+    // throughput, but can cause significant latency issues with dynamic content. This also 
+    // may be used silently, if the underlying hardware does not support D3D9 queries.
+    HALConfig_StaticBuffers         = 0x00000010,
+
+    // Forces the shader system to use ShaderModel 2.0 shaders (even if it is capable of 3.0)
+    HALConfig_ShaderModel20         = 0x00000020,
 };
 
 
@@ -70,25 +74,19 @@ struct HALInitParams : public Render::HALInitParams
 
 
 
-class HAL : public Render::HAL
+class HAL : public Render::ShaderHAL<ShaderManager, ShaderInterface>
 {
 public:
 
     // Direct3D Device we are using.
-    IDirect3DDeviceX*   pDevice;
-	UInt16				FillFlags;
+    IDirect3DDeviceX*        pDevice;
 
     // Presentation parameters specified to configure the mode.
-    D3DPRESENT_PARAMETERS   PresentParams;
+    D3DPRESENT_PARAMETERS    PresentParams;
 
-    MeshCache            Cache;
+    MeshCache                Cache;
 
-    ShaderManager            SManager;
     Ptr<TextureManager>      pTextureManager;
-    FilterShaderManager      FSManager;
-    FragShader               StaticFShaders[FragShaderDesc::FS_Count];
-    VertexShader             StaticVShaders[VertexShaderDesc::VS_Count];
-    ShaderInterface          ShaderData;
     
     // Previous batching mode
     PrimitiveBatch::BatchType PrevBatchType;
@@ -117,44 +115,19 @@ public:
 
 
     // *** Rendering
-
-    virtual bool        BeginFrame();
-    virtual void        EndFrame();
     virtual bool        BeginScene();
-    virtual void        EndScene();
-
-    // Bracket the displaying of a frame from a movie (executed from render queue).
-    virtual void        beginDisplay(BeginDisplayData* data);
-    virtual void        endDisplay();
-
-    void                CalcHWViewMatrix(Matrix* pmatrix, const Rect<int>& viewRect,
-                                         int dx, int dy);
+    virtual bool        EndScene();
 
     // Updates D3D HW Viewport and ViewportMatrix based on the current
     // values of VP, ViewRect and ViewportValid.
     virtual void        updateViewport();
 
 
-    // Creates / Destroys mesh and DP data 
-
-    virtual PrimitiveFill*  CreatePrimitiveFill(const PrimitiveFillData& data);    
-
     virtual void        DrawProcessedPrimitive(Primitive* pprimitive,
                                                PrimitiveBatch* pstart, PrimitiveBatch *pend);
 
     virtual void        DrawProcessedComplexMeshes(ComplexMesh* p,
                                                    const StrideArray<HMatrix>& matrices);
-
-    template< class MatrixUpdateAdapter >
-    void                applyMatrixConstants(const MatrixUpdateAdapter & input);
-
-    void                applyRawMatrixConstants(const Matrix& m, const Cxform& cx);
-    void                applyRawMatrixConstants(const Matrix& m, const Cxform& cx, const Matrix& tm);
-
-    template< class MatrixType >
-    static void         calculateTransform(const Matrix & m, const HMatrix& hm, 
-                                           const MatrixState & mstate, float (* dest)[4]);
-
     
     // Stream Source modification
 
@@ -208,14 +181,13 @@ public:
     }
 
     bool    checkMaskBufferCaps();
-    void    drawMaskClearRectangles(const HMatrix* matrices, UPInt count);
 
     // Background clear helper, expects viewport coordinates.
     virtual void        clearSolidRectangle(const Rect<int>& r, Color color);
 
 
     // *** BlendMode
-    virtual void        applyBlendMode(BlendMode mode, bool sourceAc = false, bool forceAc = false);
+    virtual void        applyBlendModeImpl(BlendMode mode, bool sourceAc = false, bool forceAc = false);
 
 
 
@@ -231,14 +203,13 @@ public:
     virtual RenderTarget*   CreateRenderTarget(Render::Texture* texture, bool needsStencil);
     virtual RenderTarget*   CreateTempRenderTarget(const ImageSize& size, bool needsStencil);
     virtual bool            SetRenderTarget(RenderTarget* target, bool setState = 1);
-    virtual void            PushRenderTarget(const RectF& frameRect, RenderTarget* prt);
-    virtual void            PopRenderTarget();
+    virtual void            PushRenderTarget(const RectF& frameRect, RenderTarget* prt, unsigned flags=0);
+    virtual void            PopRenderTarget(unsigned flags = 0);
     
     virtual bool            createDefaultRenderBuffer();
 
     // *** Filters
     virtual void            PushFilters(FilterPrimitive* primitive);
-    virtual void            PopFilters();
     virtual void            drawUncachedFilter(const FilterStackEntry& e);
     virtual void            drawCachedFilter(FilterPrimitive* primitive);
 
@@ -248,14 +219,32 @@ public:
                                     const VertexFormat** single,
                                     const VertexFormat** batch, const VertexFormat** instanced, unsigned)
     {
-        return SManager.MapVertexFormat(fill, sourceFormat,
-                                        single, batch, instanced);
+        SManager.MapVertexFormat(fill, sourceFormat, single, batch, instanced, 
+            MVF_Align | MVF_ReverseColor | (SManager.HasInstancingSupport() ? MVF_HasInstancing : 0));
     }
+
+protected:
+
+    virtual void        setBatchUnitSquareVertexStream();
+    virtual void        drawPrimitive(unsigned indexCount, unsigned meshCount);
+    void                drawIndexedPrimitive( unsigned indexCount, unsigned vertexCount, unsigned meshCount, UPInt indexOffset, unsigned vertexBaseIndex);
+    void                drawIndexedInstanced( unsigned indexCount, unsigned vertexCount, unsigned meshCount, UPInt indexOffset, unsigned vertexBaseIndex);
+
+    // Returns whether the profile can render any of the filters contained in the FilterPrimitive.
+    // If a profile does not support dynamic looping (Cap_NoDynamicLoops), no blur/shadow type filters
+    // can be rendered, in which case this may return false, however, ColorMatrix filters can still be rendered.
+    bool                shouldRenderFilters(const FilterPrimitive* prim) const;
+
+    // Simply sets a quad vertex buffer and draws.
+    virtual void        drawScreenQuad();
+
+    // *** Events
+    virtual Render::RenderEvent& GetEvent(EventType eventType);
 };
 
 //--------------------------------------------------------------------
-// HALData, used for both RenderTargets and DepthStencilSurface implementations.
-class HALData : public RenderBuffer::HALData
+// RenderTargetData, used for both RenderTargets and DepthStencilSurface implementations.
+class RenderTargetData : public RenderBuffer::RenderTargetData
 {
 public:
     friend class HAL;
@@ -268,11 +257,11 @@ public:
         if ( !buffer )
             return;
 
-        HALData* poldHD = (D3D9::HALData*)buffer->GetHALData();
+        RenderTargetData* poldHD = (D3D9::RenderTargetData*)buffer->GetRenderTargetData();
         if ( !poldHD )
         {
-            poldHD = SF_NEW HALData(buffer, prt, pdsb, pdss);
-            buffer->SetHALData(poldHD);
+            poldHD = SF_NEW RenderTargetData(buffer, prt, pdsb, pdss);
+            buffer->SetRenderTargetData(poldHD);
             return;
         }
 
@@ -291,7 +280,7 @@ public:
         poldHD->CacheID             = 0;
     }
 
-    virtual ~HALData()
+    virtual ~RenderTargetData()
     {
         if ( pRenderSurface )
             pRenderSurface->Release();
@@ -301,38 +290,13 @@ public:
     }
 
 private:
-    HALData( RenderBuffer* buffer, IDirect3DSurface9* prt, DepthStencilBuffer* pdsb, IDirect3DSurface9* pdss) : 
-      RenderBuffer::HALData(buffer, pdsb), pRenderSurface(prt), pDSSurface(pdss)
+    RenderTargetData( RenderBuffer* buffer, IDirect3DSurface9* prt, DepthStencilBuffer* pdsb, IDirect3DSurface9* pdss) : 
+      RenderBuffer::RenderTargetData(buffer, pdsb), pRenderSurface(prt), pDSSurface(pdss)
     {
         if ( pRenderSurface )
             pRenderSurface->AddRef();
         if ( pDSSurface )
             pDSSurface->AddRef();        
-    }
-};
-
-// Used to create heirarchies in PIX captures.
-class PixMarker
-{
-public:
-    PixMarker( LPCWSTR eventName, bool trigger = true )
-    {
-        // Colors aren't shown in PIX.
-        if ( trigger )
-            Begin(eventName);
-    }
-    void Begin( LPCWSTR eventName)
-    {
-        D3DPERF_BeginEvent(D3DCOLOR_XRGB(0,0,0), eventName);
-    }
-    void End()
-    {
-        D3DPERF_EndEvent();
-    }
-
-    ~PixMarker( )
-    {
-        End();
     }
 };
 

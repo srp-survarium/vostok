@@ -421,6 +421,7 @@ public:
 
     bool         GetMovieInfo(const char *pfilename, MovieInfo *pinfo,
         bool getTagCount, unsigned loadLibConstants);    
+    bool         IsMovieLoaded(const char *pfilename, unsigned loadConstants);
     MovieDef*    CreateMovie(const char* filename, unsigned loadConstants, UPInt memoryArena = 0);    
 
     // The actual creation function; called from CreateMovie.
@@ -506,6 +507,12 @@ public:
 
     static Render::ImageFileFormat 
         FileFormat2RenderImageFile(FileTypeConstants::FileFormatType format);
+
+    // Returns true if url specifies an image to be used with image protocol
+    // (has one of the prefixes: img://, imgps://, simg://, simgps://)
+    // bilinear is set to false if imgps or simgps is used;
+    // sync is set to true if simg or simgps is used.
+    static bool IsProtocolImage(const String& url, bool *bilinear = NULL, bool* sync = NULL);
 
 private:
     LoaderImpl& operator =(const LoaderImpl&);

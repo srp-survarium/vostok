@@ -87,7 +87,7 @@ public:
     void ResizeInternal(UPInt _size, bool flag = false);
 
     void SetString(const wchar_t* pstr, UPInt length = SF_MAX_UPINT);
-    void SetString(const char* putf8str, UPInt utf8Len = SF_MAX_UPINT);
+    void SetString(const char* putf8str, UPInt utf8Sz = SF_MAX_UPINT);
 
     void StripTrailingNewLines();
 };

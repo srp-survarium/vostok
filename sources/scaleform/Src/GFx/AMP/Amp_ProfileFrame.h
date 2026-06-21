@@ -100,6 +100,7 @@ public:
     void                GetAllFunctions(HashSet<UInt64>* functionIds) const;
     const FuncTreeItem* GetTreeItem(UInt32 treeItemId) const;
     void                ResetTreeIds(FuncTreeItem* other);
+    int                 GetNumItems();
 
     template<typename T>
     void Visit(T& visitor)
@@ -122,6 +123,8 @@ public:
 // The stats are organized in an array with one element per ActionScript function
 // and a hash map from function ID to function name
 //
+struct MovieFunctionStats;
+
 struct MovieFunctionTreeStats : public RefCountBase<MovieFunctionTreeStats, Stat_Default_Mem>
 {
     StringLH                            ViewName;
@@ -136,7 +139,9 @@ struct MovieFunctionTreeStats : public RefCountBase<MovieFunctionTreeStats, Stat
     // Serialization
     void        Read(File& str, UInt32 version);
     void        Write(File& str, UInt32 version) const;
-    void        Print(Log* log) const;
+
+    MovieFunctionStats* Accumulate(bool includeActionscipt) const;
+    void                Print(Log* log) const;
 };
 
 
@@ -287,6 +292,8 @@ public:
     UInt64  TimeStamp;
 
     UInt32  FramesPerSecond;
+    UInt32  ProfilingLevel;
+    bool    DetailedMemReport;
 
     // CPU graph
     UInt32  AdvanceTime;
@@ -294,10 +301,17 @@ public:
     UInt32      TimelineTime;
     UInt32      InputTime;
     UInt32          MouseTime;
+    UInt32      GcCollectTime;
+    UInt32          GcMarkInCycleTime;
+    UInt32          GcScanInUseTime;
+    UInt32          GcFreeGarbageTime;
+    UInt32          GcFinalizeTime;
+    UInt32          GcDelayedCleanupTime;
     UInt32  GetVariableTime;
     UInt32  SetVariableTime;
     UInt32  InvokeTime;
     UInt32  DisplayTime;
+    UInt32      PresentTime;
     UInt32      TesselationTime;
     UInt32      GradientGenTime;
     UInt32  UserTime;
@@ -337,6 +351,10 @@ public:
     UInt32  SoundMemory;
     UInt32  OtherMemory;
 
+    // Garbage collector
+    UInt32  GcRootsNumber;
+    UInt32  GcFreedRootsNumber;
+
     ArrayLH< Ptr<MovieProfile> >    MovieStats;
     Ptr<MovieFunctionStats>         DisplayStats;
     Ptr<MovieFunctionTreeStats>     DisplayFunctionStats;
@@ -360,7 +378,12 @@ public:
     // Serialization
     void        Read(File& str, UInt32 version);
     void        Write(File& str, UInt32 version) const;
+
+    // Debug
     void        Print(Log* log) const;
+    int         GetNumFunctionTreeStats() const;
+
+    void        AccumulateTreeFunctionStats(bool includeActionScript);
 };
 
 // This struct holds the current state of AMP

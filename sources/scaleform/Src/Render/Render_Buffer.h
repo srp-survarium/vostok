@@ -50,7 +50,7 @@ enum RenderBufferType
 // Features:
 // - RenderBuffer reference counting is custom due to potential caching,
 //   allowing released buffers to survive and be reused when applicable.
-// - Each RenderBuffer may have associated HALData allocated, which will
+// - Each RenderBuffer may have associated RenderTargetData allocated, which will
 //   get deleted whenever RenderBuffer actually dies or its associated
 //   HW resource (texture, etc) is lost.
 // - ListNode base and RBCacheListType are stored in base class for
@@ -63,18 +63,25 @@ class RenderBuffer : public NewOverrideBase<StatRender_TextureManager_Mem>, publ
 public:
     RenderBuffer(RenderBufferManager* manager, RenderBufferType type,
                  const ImageSize& bufferSize)
-        : RefCountVImpl(), Type(type), pManager(manager), pHALData(0), BufferSize(bufferSize) { }
+        : RefCountVImpl(), Type(type), pManager(manager), pRenderTargetData(0), BufferSize(bufferSize) { }
     virtual ~RenderBuffer()
-    { destroyHALData(); }
+    { destroyRenderTargetData(); }
 
-    virtual void AddRef() { }
-    virtual void Release() { }
+    virtual void AddRef() 
+    {
+        AtomicOps<int>::ExchangeAdd_NoSync(&RefCount, 1);
+    }
+    virtual void Release()
+    {
+        if ((AtomicOps<int>::ExchangeAdd_NoSync(&RefCount, -1) - 1) == 0)
+            delete this;
+    }
 
-    // HALData represents HW resource associated with render buffer,
+    // RenderTargetData represents HW resource associated with render buffer,
     // allocated explicitly by the relevant HAL back end.
-    // HALData will be deleted when RenderBuffer or its data destroyed;
+    // RenderTargetData will be deleted when RenderBuffer or its data destroyed;
     // back end detects this in destructor.
-    class HALData : public NewOverrideBase<StatRender_TextureManager_Mem>
+    class RenderTargetData : public NewOverrideBase<StatRender_TextureManager_Mem>
     {
     protected:
         RenderBuffer*           pBuffer;
@@ -82,14 +89,14 @@ public:
         Ptr<DepthStencilBuffer> pDepthStencilBuffer;    // Depth stencil buffer used with this render target (0 if not required).
         UPInt                   CacheID;                // Stores information about cached results.
 
-        HALData(RenderBuffer* buffer, DepthStencilBuffer* pdsb);
-        virtual ~HALData();
+        RenderTargetData(RenderBuffer* buffer, DepthStencilBuffer* pdsb);
+        virtual ~RenderTargetData();
     };
 
-    // SetHALData assigns ownership to RenderBuffer which will destroy
+    // SetRenderTargetData assigns ownership to RenderBuffer which will destroy
     // it when no longer relevant.
-    void        SetHALData(HALData* data)  { pHALData = data; }
-    HALData*    GetHALData() const         { return pHALData; }
+    void        SetRenderTargetData(RenderTargetData* data)  { pRenderTargetData = data; }
+    RenderTargetData*    GetRenderTargetData() const         { return pRenderTargetData; }
 
     //RenderBufferManager* GetBufferManager() const { return pManager; }
     RenderBufferType     GetType() const          { return Type; }
@@ -104,13 +111,13 @@ protected:
     // to null them out on RenderBufferManager::Destroy.
     RenderBufferManager* getManager() const { return pManager; }
 
-    inline void destroyHALData();
+    inline void destroyRenderTargetData();
     // avoid warning.
     void operator = (const RenderBuffer&) { }
     
     const RenderBufferType Type;
     RenderBufferManager*   pManager;
-    HALData*               pHALData;
+    RenderTargetData*               pRenderTargetData;
     ImageSize              BufferSize;
 };
 
@@ -273,20 +280,20 @@ public:
 
 
 //---------------------------------------------------------------------------------------
-void RenderBuffer::destroyHALData()
+void RenderBuffer::destroyRenderTargetData()
 {
-    if (pHALData)
+    if (pRenderTargetData)
     {
-        delete pHALData;
-        pHALData = 0;
+        delete pRenderTargetData;
+        pRenderTargetData = 0;
     }
 }
-inline RenderBuffer::HALData::HALData(RenderBuffer* buffer, DepthStencilBuffer* pdsb) : 
+inline RenderBuffer::RenderTargetData::RenderTargetData(RenderBuffer* buffer, DepthStencilBuffer* pdsb) : 
 pBuffer(buffer), pDepthStencilBuffer(pdsb), CacheID(0) 
 {
 }
 
-inline RenderBuffer::HALData::~HALData() 
+inline RenderBuffer::RenderTargetData::~RenderTargetData() 
 {
 
 }

@@ -53,10 +53,17 @@ struct Scale9GridInfo : public RefCountBase<Scale9GridInfo, Stat_Default_Mem>
  
     Scale9GridInfo() {}
     Scale9GridInfo(const Scale9GridData* s9g, const Matrix2F& viewMtx);
+    Scale9GridInfo(const RectF& s9Rect, const Matrix2F& s9gMtx, 
+                  const Matrix2F& shapeMtx, const RectF& bounds);
 
     unsigned    Transform(float* x, float* y) const;
+    float       GetScale() const;
+    float       GetXScale() const;
+    float       GetYScale() const;
     unsigned    GetAreaCode(float x, float y) const;
     RectF       AdjustBounds(const RectF& bounds) const;
+
+    void        Compute();
 };
 
 

@@ -316,8 +316,9 @@ public:
     // of the heap-specific CreateRootHeap() static function. ReleaseRootHeap is
     // called during System::Destroy before the global heap is reset.
     // Its implementation may or may not include ref-counting semantics.
-    static void SF_STDCALL ReleaseRootHeapPT();
-    static void SF_STDCALL ReleaseRootHeapMH();
+    // Returns true for clean shutdown; false if there were memory leaks.
+    static bool SF_STDCALL ReleaseRootHeapPT();
+    static bool SF_STDCALL ReleaseRootHeapMH();
 
 
     // *** Operations with memory arenas

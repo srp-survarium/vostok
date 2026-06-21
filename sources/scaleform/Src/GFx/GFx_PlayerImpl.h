@@ -50,13 +50,27 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_HeapNew.h"
 
 #include "GFx/GFx_Input.h"
+
+
 #include "GFx/GFx_ASMovieRootBase.h"
 #include "GFx/AMP/Amp_ViewStats.h"
 
 #include "Render/Render_Context.h"
+#include "Render/Render_DrawableImage.h"
 #include "GFx/GFx_DrawingContext.h"
 
 #include "Render/Render_ScreenToWorld.h"
+
+#if defined(SF_SHOW_WATERMARK)
+#include "Render/Text/Text_FontManager.h"
+#include "Render/Render_TreeNode.h"
+#include "Render/Render_TreeText.h"
+#include "Render/FontProvider/Render_FontProviderHUD.h"
+#endif
+
+#ifdef GFX_GESTURE_RECOGNIZE
+#include "GFx/GFx_Gesture.h"
+#endif
 
 #define GFX_MAX_CONTROLLERS_SUPPORTED 16
 #define DEFAULT_FLASH_FOV 55.0f
@@ -90,6 +104,10 @@ class RemoveObject2Tag;
 class SetBackgroundColorTag;
 // class GASDoAction;           - in GFxAction.cpp
 // class GFxStartSoundTag;      - in GFxSound.cpp
+
+#ifdef GFX_GESTURE_RECOGNIZE
+	class GestureRecognizer
+#endif
 
 // ***** External Classes
 class Loader;
@@ -383,15 +401,17 @@ public:
         // The difference between character origin and mouse location
         // at the time of dragStart, used and computed if LockCenter == 0.
         PointF              CenterDelta;
+        unsigned            MouseIndex;
 
         DragState()
             : pCharacter(0), LockCenter(0), Bound(0), 
-              BoundLT(0.0), BoundRB(0.0), CenterDelta(0.0)
+              BoundLT(0.0), BoundRB(0.0), CenterDelta(0.0),
+              MouseIndex(~0u)
             { }
 
         // Initializes lockCenter and mouse centering delta
         // based on the character.
-        void InitCenterDelta(bool lockCenter);
+        void InitCenterDelta(bool lockCenter, unsigned mouseIndex = 0);
     };
 
     // Sticky variable hash link node.
@@ -478,7 +498,9 @@ public:
     enum Flags2Type
     {
         Flag2_AcceptAnimMovesWith3D          = 0x0001,
-        Flag2_FontLibChangedByAS             = 0x0002
+        Flag2_RegisteredFontsChanged         = 0x0002,
+        Flag2_Restarting                     = 0x0004,
+        Flag2_OptAdvListMarker               = 0x0008
 
     };
 
@@ -560,11 +582,17 @@ public:
 
     
     // Dragging support.
-    void                SetDragState(const DragState& st)   { CurrentDragState = st; }
-    void                GetDragState(DragState* st)         { *st = CurrentDragState; }
-    void                StopDrag()                          { CurrentDragState.pCharacter = NULL; }
-    bool                IsDraggingCharacter(const InteractiveObject* ch) const { return CurrentDragState.pCharacter == ch; }
+    void                SetDragState(const DragState& st);
+    void                GetDragState(unsigned mouseIndex, DragState* st);
+    void                StopAllDrags();
+    void                StopDrag(unsigned mouseIndex);
+    bool                IsDragging(unsigned mi) const;
+    bool                IsDraggingCharacter(const InteractiveObject* ch, unsigned* pmouseIndex = 0) const;
+    void                StopDragCharacter(const InteractiveObject* ch);
+    bool                IsDraggingMouseIndex(unsigned mouseIndex) const;
 
+	// Internal use by the AS3 VM to force Shapes into TreeShapes
+	void				UpdateAllRenderNodes();
 
     // Internal use in characters, etc.
     // Use this to retrieve the last state of the mouse.
@@ -706,13 +734,36 @@ public:
 
     // ShutdownRendering support.
     virtual void    ShutdownRendering(bool wait) { RenderContext.Shutdown(wait); }
-    virtual bool    IsShutdownRenderingComplete() const { return RenderContext.IsShutdownComplete(); }
+    virtual bool    IsShutdownRenderingComplete() const 
+	{ 
+		return (RenderContext.IsShutdownComplete() && (!DIContext || DIContext->IsShutdownComplete())); 
+	}
 
 
     // An internal method that advances frames for movieroot's sprites
     void                AdvanceFrame(bool nextFrame, float framePos);
     void                InvalidateOptAdvanceList() { G_SetFlag<Flag_OptimizedAdvanceListInvalid>(Flags, true); }
     bool                IsOptAdvanceListInvalid() const { return G_IsFlagSet<Flag_OptimizedAdvanceListInvalid>(Flags); }
+    bool                GetOptAdvListMarker() const { return (Flags2 & Flag2_OptAdvListMarker) != 0; }
+#if defined(GFX_CHECK_PLAYLIST_DEBUG)
+    // a safety counter to avoid hang up
+    int                 _PLCheckCnt;
+    
+    // set this value to 100 if need to check playlist consistency more often per frame
+    // setting it to 0 will still execute the consistency check once per frame.
+    enum { PLCheckCnt_Limit_Per_Frame = 0 }; 
+
+    void                CheckOptPlaylistConsistency(InteractiveObject* mustBeInList = 0,
+                                                    InteractiveObject* mustBeOutOfList = 0,
+                                                    bool enforce = false);
+    void                CheckPlaylistConsistency(bool enforce = false);
+#else
+    void                CheckOptPlaylistConsistency(InteractiveObject* = 0,
+                                                    InteractiveObject* = 0,
+                                                    bool = false) {}
+    void                CheckPlaylistConsistency(bool = false) {}
+#endif
+
     void                ProcessUnloadQueue();
     // Releases list of unloaded characters
     void                ReleaseUnloadList();
@@ -741,7 +792,7 @@ public:
     void                ClearIntervalTimer(int timerId);      
     void                ShutdownTimers();
     void                ShutdownTimersForMovieDef(MovieDefImpl* defimpl);
-    bool                IsShutdowning() const { return !pRenderRoot.GetPtr(); }
+    bool                IsShutdowning() const { return !pRenderRoot.GetPtr() || G_IsFlagSet<Flag2_Restarting>(Flags2); }
 
 #ifdef GFX_ENABLE_VIDEO
     void                AddVideoProvider(Video::VideoProvider*);
@@ -761,11 +812,12 @@ public:
     
     virtual unsigned    GetCurrentFrame() const;
     virtual bool        HasLooped() const;  
-    virtual void        Restart();  
+    virtual void        Restart(bool advance0 = true);  
     virtual void        GotoFrame(unsigned targetFrameNumber);
     virtual bool        GotoLabeledFrame(const char* label, int offset = 0);
 
     virtual void        SetPause(bool pause);
+    virtual bool        IsPaused() const { return G_IsFlagSet<Flag_Paused>(Flags); }
 
     virtual void        SetPlayState(PlayState s);
     virtual PlayState   GetPlayState() const;
@@ -790,7 +842,22 @@ public:
     virtual MemoryHeap* GetHeap() const { return pHeap; }
 
     // Forces to run garbage collection, if it is enabled. Does nothing otherwise.
-    virtual void        ForceCollectGarbage();
+    // 'gcFlags' parameter allows to control the speed of GC. GCF_Quick is fastest
+    // but less memory is recovered, whereas GCF_Full is slowest but all possible 
+    // memory is recovered.
+    virtual void        ForceCollectGarbage(unsigned gcFlags = GCF_Full);
+
+    // Additional GC control functions. 
+    // SuspendGC suspends/resumes garbage collection. It is counted operation, meaning
+    // if it was suspended N-times then it should be re-enabled N-times to restore normal operation.
+    virtual void        SuspendGC(bool suspend);
+
+    // Schedule garbage collection. Unlike ForceCollectGarbage it doesn't execute collection immediately;
+    // instead, it will be executed when next Advance is called.
+    // 'gcFlags' parameter allows to control the speed of GC. GCF_Quick is fastest
+    // but less memory is recovered, whereas GCF_Full is slowest but all possible 
+    // memory is recovered.
+    virtual void        ScheduleGC(unsigned gcFlags = GCF_Full);
 
     // Prints out a report about objects and links between them.
     virtual void        PrintObjectsReport(UInt32 flags = 0, 
@@ -814,6 +881,16 @@ public:
     // Forces render tree to be updated in order to apply all possible changes
     // related to images and/or textures.
     virtual void        ForceUpdateImages();
+
+    virtual void        MakeAreaVisible(const Render::RectF& screenRect, 
+                                        const Render::RectF& box,
+                                        UInt32 flags = 0);
+    // Resets ViewportMatrix and sets it on TreeRoot.
+    virtual void        RestoreViewport();
+
+    // Unlike RestoreViewport, this method just recalc the ViewportMatrix but does not
+    // set it on treeroot.
+    void                ResetViewportMatrix();
 
     void                SetNoInvisibleAdvanceFlag(bool f) { G_SetFlag<Flag_NoInvisibleAdvanceFlag>(Flags, f); }
     void                ClearNoInvisibleAdvanceFlag()     { SetNoInvisibleAdvanceFlag(false); }
@@ -846,6 +923,10 @@ public:
     bool                IsDisableFocusKeysSet() const;
     void                SetDisableFocusKeys(bool f);
 
+#if defined(SF_SHOW_WATERMARK)
+    bool                IsValidEval() const;
+#endif
+
     // Focus related functionality
     // Focus-related methods
     void                InitFocusKeyInfo(ProcessFocusKeyInfo* pfocusInfo, 
@@ -868,6 +949,8 @@ public:
     void                ProcessGamePadAnalog(const InputEventsQueue::QueueEntry* qe);
 #endif
 #ifdef GFX_MULTITOUCH_SUPPORT_ENABLE
+    // Returns a mouse index associated with the touchID. -1, if not found.
+    int                 FindMouseStateIndexByTouchID(unsigned touchID);
     void                ProcessTouch(const InputEventsQueue::QueueEntry* qe, 
                                      ProcessFocusKeyInfo* focusKeyInfo);
     void                ProcessGesture(const InputEventsQueue::QueueEntry* qe);
@@ -931,6 +1014,9 @@ public:
     // to specified character, as well as focus rect will not be drawn.
     // return false, if focus change was prevented by NotifyOnFocusChange
     bool                SetFocusTo(InteractiveObject*, unsigned controllerIdx, FocusMovedType fmt);
+
+    // Resets input focus the the specified controller. If a textField has a focus it will lose it.
+    virtual void        ResetInputFocus(unsigned controllerIdx);
 
     // sets LastFocused to NULL
     void                ResetFocus(unsigned controllerIdx) 
@@ -1033,6 +1119,8 @@ public:
     bool                FindExportedResource(MovieDefImpl* localDef, ResourceBindData *pdata, const String& symbol);
 
     Render::Context&    GetRenderContext() { return RenderContext; }
+    Render::DrawableImageContext* GetDrawableImageContext();
+    void                SetThreadCommandQueue(Render::ThreadCommandQueue* p) { pRTCommandQueue = p; }
     Render::TreeRoot*   GetRenderRoot()    { return pRenderRoot; }
 
     DrawingContext*     CreateDrawingContext();
@@ -1097,13 +1185,27 @@ public:
     void                ClearIndirectTransformPairs();
     void                UpdateTransformParent(DisplayObjectBase* obj, DisplayObjectBase* transfParent);
 
-    bool                IsFontLibChangedByAS() const { return G_IsFlagSet<Flag2_FontLibChangedByAS>(Flags2); }
-    void                SetFontLibChangedByASFlag(bool v = true)
+    bool                AreRegisteredFontsChanged() const { return G_IsFlagSet<Flag2_RegisteredFontsChanged>(Flags2); }
+    void                SetRegisteredFontsChanged(bool v = true)
     {
-        G_SetFlag<Flag2_FontLibChangedByAS>(Flags2, v); 
+        G_SetFlag<Flag2_RegisteredFontsChanged>(Flags2, v); 
     }
+
+    // Functionality for AS3 Font.registerFont.
+    // Register a single font resource. Used by AS3 Font.registerFont.
+    bool                RegisterFont(MovieDef* md, FontResource* fontRes);
+
+    // find registered font by name and flags (see FontManager)
+    FontResource*       FindRegisteredFont(const char* pfontName, 
+                                           unsigned matchFontFlags,
+                                           MovieDef** ppsrcMovieDef) const;
+
     // Unregister fonts from the pdefImpl, cleaning fontmanagers' cache.
     void                UnregisterFonts(MovieDefImpl* pdefImpl);
+
+    // Adds all registered fonts into the hash 'fonts'.
+    void                LoadRegisteredFonts(HashSet<Ptr<Render::Font> >& fonts);
+
 public: // data
 
     // *** Complex object interface support
@@ -1184,7 +1286,11 @@ public: // data
 
     unsigned                    ForceFrameCatchUp;
 
-    GFx::InputEventsQueue       InputEventsQueue;
+    GFx::InputEventsQueue			InputEventsQueue;
+
+#ifdef GFX_GESTURE_RECOGNIZE
+	GFx::GestureRecognizer			GestureRecognizer;
+#endif
 
     Color                       BackgroundColor;
     MouseState                  mMouseState[GFX_MAX_MICE_SUPPORTED];
@@ -1205,7 +1311,7 @@ public:
     // Instance name assignment counter.
     UInt32                      InstanceNameCount;
 
-    DragState                   CurrentDragState;   // @@ fold this into GFxMouseButtonState?
+    DragState                   CurrentDragStates[GFX_MAX_MICE_SUPPORTED];
 
     // Sticky variable clip hash table.
     ASStringHash<StickyVarNode*> StickyVariables;
@@ -1246,6 +1352,23 @@ public:
 #endif
 
     LoadQueueEntryMT*                       pLoadQueueMTHead;
+
+    struct FontDesc
+    {
+        Ptr<MovieDef>       pMovieDef;
+        Ptr<FontResource>   pFont;
+    };
+    // Keeps registered fonts (by AS3 Font.registerFont).
+    ArrayLH<FontDesc>                       RegisteredFonts;
+
+#if defined(SF_SHOW_WATERMARK)
+    Ptr<Render::TreeText>       pWMCopyrightText;
+    Ptr<Render::TreeText>       pWMWarningText;
+    Ptr<Render::TreeText>       pWMDateText;
+    Ptr<Render::FontProvider>   pWMFontProvider;
+    Ptr<Render::Font>           pWMFont;
+#endif
+
 private:
     // A list of all drawing context to be updated at the end of Advance
     List<DrawingContext>                    DrawingContextList;
@@ -1269,6 +1392,8 @@ private:
     // should be defined last to make sure its dtor is called first.
     Render::Context                         RenderContext; 
     char                                    PreviouslyCaptured;
+    Ptr<Render::DrawableImageContext>       DIContext;
+    Render::ThreadCommandQueue*             pRTCommandQueue;
 
     // Multitouch
     Ptr<MultitouchInterface>                MultitouchHAL;

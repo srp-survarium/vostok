@@ -75,6 +75,7 @@ class GASImeCtorFunction : public CFunctionObject
     static void GetConversionMode(const FnCall& fn);
     static void GetEnabled(const FnCall& fn);
     static void SetCompositionString(const FnCall& fn);
+	static void GetCompositionString(const FnCall& fn);
     static void SetConversionMode(const FnCall& fn);
     static void SetEnabled(const FnCall& fn);
 	static void SendLangBarMessage(const FnCall& fn);

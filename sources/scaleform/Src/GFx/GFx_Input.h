@@ -24,8 +24,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "GFx/GFx_InteractiveObject.h"
 #include "GFx/GFx_Event.h"
 
-#define GFX_MAX_MICE_SUPPORTED 4
-
 #define GFX_DOUBLE_CLICK_TIME_MS 300  // in ms
 
 
@@ -497,6 +495,10 @@ public:
         Event_TouchEnd,
         Event_TouchMove,
         Event_TouchTap,
+        Event_TouchOver,
+        Event_TouchOut,
+        Event_TouchRollOver,
+        Event_TouchRollOut,
 
         Event_GestureBegin, // 0x100001B
         Event_GestureEnd,

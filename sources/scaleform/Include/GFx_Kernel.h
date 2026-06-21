@@ -64,7 +64,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #ifdef SF_OS_WII
 	#include "../Src/Kernel/HeapPT/HeapPT_SysAllocWii.h" 		
 #endif
-#ifdef SF_OS_WIN32
+#if defined(SF_OS_WIN32) && !defined(SF_OS_WINMETRO)
 	#include "../Src/Kernel/HeapPT/HeapPT_SysAllocWinAPI.h" 		
 #endif		
  

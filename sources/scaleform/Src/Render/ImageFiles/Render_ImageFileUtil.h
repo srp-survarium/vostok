@@ -43,7 +43,6 @@ public:
 
     virtual Render::Image* GetAsImage() { return NULL; }
     SF_AMP_CODE(
-        virtual UPInt   GetBytes(int* memRegion) const { if (memRegion) *memRegion = 0; return (ImageData::GetFormatBitsPerPixel(Format) * Size.Area()) / 8; }
         virtual UInt32  GetImageId() const { return ImageId; }
         virtual UInt32  GetBaseImageId() const { return 0; }
     )
@@ -99,7 +98,6 @@ public:
 
 
     SF_AMP_CODE(
-        virtual UPInt   GetBytes(int* memRegion) const { if (memRegion) *memRegion = 0; return (ImageData::GetFormatBitsPerPixel(Format) * Size.Area()) / 8; }
         virtual UInt32  GetImageId() const { return ImageId; }
         virtual UInt32  GetBaseImageId() const { return 0; }
     )

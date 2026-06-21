@@ -26,13 +26,13 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include <AK/AkWwiseSDKVersion.h>
 #include <AK/SoundEngine/Common/AkSoundEngine.h>
-#include <AK/SoundFrame/SF.h>
-
-namespace Scaleform { namespace Sound {
 
 #if defined(SF_OS_WIN32)
 
+#include <AK/SoundFrame/SF.h>
 #include "Kernel/SF_UTF8Util.h"
+
+namespace Scaleform { namespace Sound {
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -100,7 +100,12 @@ private:
 
     AK::SoundFrame::ISoundFrame* pSoundFrame;
 };
-#endif
+
+}} // Scaleform::Sound
+
+#endif // SF_OS_WIN32
+
+namespace Scaleform { namespace Sound {
 
 //////////////////////////////////////////////////////////////////////////
 //

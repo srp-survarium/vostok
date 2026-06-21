@@ -13,8 +13,6 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
-#pragma warning( push )
-#pragma warning( disable : 4995 )
 
 #ifndef INC_SF_Render_FilterParams_H
 #define INC_SF_Render_FilterParams_H
@@ -25,9 +23,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 //#include "Render/Render_Stats.h"
 #include "Render/Render_Types2D.h"
 #include "Render/Render_Color.h"
-
-
-
 
 namespace Scaleform { namespace Render {
 
@@ -53,7 +48,9 @@ enum FilterType
     // Non-blur filter implementations.
     Filter_ColorMatrix      = 8,
     Filter_Convolution      = 9,
-    Filter_DisplacementMap  = 10
+    Filter_DisplacementMap  = 10,
+
+    Filter_CacheAsBitmap,
 };
 
 
@@ -90,6 +87,7 @@ struct BlurFilterParams
         : Mode(0), Passes(1), BlurX(100), BlurY(100), Offset(0,0), Strength(1)
     {
         Colors[0].SetRGBA(0,0,0,0xFF);
+        Colors[1].SetRGBA(0,0,0,0);
     }
     BlurFilterParams(unsigned mode, float x, float y, unsigned passCount = 1,
                      PointF offset = PointF(0,0), Color color = Color(),
@@ -98,6 +96,7 @@ struct BlurFilterParams
           Offset(offset), Strength(strength)
     {
         Colors[0] = color;
+        Colors[1].SetRGBA(0,0,0,0);
     }
 
     BlurFilterParams(unsigned mode, float x, float y,
@@ -106,11 +105,18 @@ struct BlurFilterParams
           Offset(0,0), Strength(strength)
     {
         Colors[0].SetRGBA(0,0,0,0xFF);
+        Colors[1].SetRGBA(0,0,0,0);
     }
 
     bool operator==(const BlurFilterParams& b) const
     {
         return (Mode == b.Mode && BlurX == b.BlurX && BlurY == b.BlurY && Passes == b.Passes);
+    }
+
+    bool EqualsAll(const BlurFilterParams& b) const 
+    {
+        return *this == b && Offset == b.Offset && Strength == b.Strength && 
+            Colors[0] == b.Colors[0] && Colors[1] == b.Colors[1];
     }
 
     FilterType GetFilterType() const { return (FilterType)(Mode & Mode_FilterMask); }
@@ -132,7 +138,5 @@ struct BlurFilterParams
 };
 
 }}
-
-#pragma warning( pop )
 
 #endif // INC_SF_Render_FilterParams_H

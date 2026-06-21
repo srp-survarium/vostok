@@ -802,7 +802,7 @@ void        SGMLParser<Char>::SkipName()
     {
         // look for either > / or space
         while (!Iter.IsFinished() && 
-            *Iter != '=' && *Iter != '>' && *Iter != '<' && *Iter != '>' && *Iter != '/' && !Iter.IsSpace(*Iter))
+            *Iter != '=' && *Iter != '>' && *Iter != '<' && *Iter != '/' && !Iter.IsSpace(*Iter))
         {
             ++Iter;
         }
@@ -878,7 +878,7 @@ template <class Char>
 void        SGMLParser<Char>::SkipComment()
 {
     int state = 0;
-    while(*Iter != 0 && state != 3)
+    while(!Iter.IsFinished() && *Iter != 0 && state != 3)
     {
         ++Iter;
         if (*Iter == '-')
