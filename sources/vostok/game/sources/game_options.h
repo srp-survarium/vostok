@@ -37,15 +37,10 @@ public:
 			explicit				game_options				( game& g );
 	virtual							~game_options				( );
 
-	// STATE[STUB]
 	// game_options' own virtual (not in the input::handler interface)
 	virtual	input::handler&			input_handler				( )
 	{
-		return *this;	// buildability return
-
-		// FUNCTION BODY[0xab350]
-		// <0xab350>|0x000|      :'27'	{
-		// ******
+		return *this;
 	}
 
 	virtual	bool					on_keyboard_action			(
