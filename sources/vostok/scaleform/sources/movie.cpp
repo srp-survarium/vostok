@@ -52,21 +52,20 @@ void flash_movie::Advance( const float time_delta, const u32 frame_catch_up_coun
 	VOSTOK_UNREFERENCED_PARAMETERS	( time_delta, frame_catch_up_count );
 }
 
-// claude@NOTE: flash_text glue /Od-vs-optimized wall. The shipped movie.cpp was
-// compiled OPTIMIZED (GFx::Movie / DrawText / DrawTextManager / RectF / SizeF
-// chains inlined AND statement-folded); our base builds /Od, so every GetRect /
-// SetRect / GetTextExtent stays an out-of-line call and the NRVO return-object
-// ctor / temp construction never folds. The SOURCE STRUCTURE is faithful
-// (set_position pairs 4/4 statements, set_text/create_text/set_font_size pair
-// SetText/GetTextExtent/`size += 5.f`/SetRect in order); the residual is the
-// /Od fold of the ctor (+1 stmt) and the optimizer's RectF-arg statement split
-// (target splits SetRect across two lines, /Od keeps it one) - not source-steerable.
-// get_width/get_height/set_font_size/create_text_w are UNPAIRED on reachability,
+// claude@NOTE: this TU now builds /Ox (Master Gold Optimization=3). The flash_text
+// glue SOURCE STRUCTURE is faithful (set_position records the same 3 locals
+// [screen_position_x/y, rect]; set_text/create_text pair SetText/GetTextExtent/
+// `size += 5.f`/GetRect/SetRect in order). The residual is a genuine /Ox line-table
+// difference, NOT /Od and NOT source-steerable: the target emits the inline RectF
+// temp construction and the SetRect(temp) call as TWO separate statements (the
+// TRGT_ONLY rows), while our /Ox folds the const-float copies and the RectF-arg
+// build into the SetRect statement. The target keeps NO extra RectF local (only
+// the 3), so we cannot add a named temp to force the split without a LOCALS diff.
+// get_width/get_height/set_font_size/create_text_w stay UNPAIRED on reachability,
 // not matching: game's own flash_text.h / flash_text_manager.h inline-stub these
 // four, so the scaleform out-of-line bodies are /OPT:REF-stripped (no caller).
-// Pairing them needs a scaleform-module anchor chain (none exists; set_position
-// is referenced yet still unpaired by /Od size divergence, so an anchor would
-// likely not pair them either) - parked, cross-module reachability work.
+// Pairing them needs a scaleform-module anchor chain (none exists) - parked,
+// cross-module reachability work.
 float flash_text::get_height( )
 {
 	return text_impl->GetRect( ).Height( );
