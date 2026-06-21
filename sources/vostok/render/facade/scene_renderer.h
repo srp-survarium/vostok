@@ -45,6 +45,7 @@ typedef	resources::resource_ptr<
 > speedtree_instance_ptr;
 
 struct decal_properties;
+struct volume_fog_parameters;
 
 namespace editor {
 	class renderer;
@@ -121,6 +122,10 @@ public:
 	// lpv occluders
 	void			update_lpv_occluder				( scene_ptr const& scene, u32 id, math::float4x4 const& transform );
 	void			remove_lpv_occluder				( scene_ptr const& scene, u32 id );
+
+	// volume fog
+	void			update_volume_fog				( scene_ptr const& scene, u32 id, render::volume_fog_parameters const& parameters );
+	void			remove_volume_fog				( scene_ptr const& scene, u32 id );
 
 	// terrain
 	void			terrain_add_cell				( scene_ptr const& scene, render::render_model_instance_ptr const& v );

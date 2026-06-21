@@ -1021,6 +1021,20 @@ void engine::world::remove_lpv_occluder( vostok::render::scene_ptr const& in_sce
 	scene->remove_lpv_occluder	( id);
 }
 
+void engine::world::update_volume_fog( vostok::render::scene_ptr const& in_scene, u32 id, render::volume_fog_parameters const& in_parameters)
+{
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_volume_fog	( id, in_parameters);
+}
+
+void engine::world::remove_volume_fog( vostok::render::scene_ptr const& in_scene, u32 id)
+{
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_volume_fog	( id);
+}
+
 void engine::world::terrain_add_cell( vostok::render::scene_ptr const& in_scene,  render::render_model_instance_ptr const& v )
 {
 	vostok::render::scene* scene			 = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());

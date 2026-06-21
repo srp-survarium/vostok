@@ -297,6 +297,22 @@ void scene::remove_lpv_occluder( u32 id )
 		m_lpv_occluders.erase			( i );
 }
 
+void scene::update_volume_fog( u32 id, render::volume_fog_parameters const& in_parameters )
+{
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
+	if ( i == m_volume_fogs.end( ) || id < i->first )
+		m_volume_fogs.insert			( std::make_pair( id, in_parameters ) );
+	else
+		i->second						= in_parameters;
+}
+
+void scene::remove_volume_fog( u32 id )
+{
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
+	if ( i != m_volume_fogs.end( ) && i->first == id )
+		m_volume_fogs.erase			( i );
+}
+
 void scene::set_slomo			( float time_multiplier )
 {
 	m_scene_slomo = time_multiplier;

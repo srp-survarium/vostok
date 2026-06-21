@@ -9,6 +9,7 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/decal_properties.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 #include <vostok/render/facade/one_way_render_channel.h>
 #include "functor_command.h"
 #include "functor_with_big_buffer_to_copy_command.h"
@@ -256,6 +257,36 @@ void scene_renderer::remove_lpv_occluder( scene_ptr const& scene, u32 id)
 	);
 }
 
+void scene_renderer::update_volume_fog( scene_ptr const& scene, u32 id, vostok::render::volume_fog_parameters const& parameters)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< volume_fog_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			parameters
+		)
+	);
+}
+
+void scene_renderer::remove_volume_fog( scene_ptr const& scene, u32 id)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
 void scene_renderer::add_light( scene_ptr const& scene, u32 id, vostok::render::light_props const& props)
 {
 	R_ASSERT	( scene );
@@ -443,33 +474,50 @@ void scene_renderer::draw_render_statistics( vostok::ui::world& ui_world, vostok
 // update/remove_lpv_occluder deferred commands), which paired the game
 // object_lpv_occluder::insert/remove at 100%.
 //
+// volume_fog is now reconstructed end-to-end too: struct volume_fog_parameters
+// (vostok/render/facade/volume_fog_parameters.h, 0x74, default ctor inits transform
+// to identity + the floats to a file-static clear_value) -> scene m_volume_fogs
+// associative_vector<u32, volume_fog_parameters> + scene::update/remove_volume_fog
+// (lpv lower_bound/insert/erase idiom over the 0x74 value) -> engine::world forwarders
+// -> these facade update/remove_volume_fog deferred commands. That paired the game
+// object_volume_fog::insert/remove at 100% (scene cooks ~75% - the member sits at the
+// END of our smaller scene, not the target's 0x13c, so the offset bytes differ;
+// facade ~96-97% functor-closure residual, same as lpv).
+//
 // The other object-cook facade methods (update/remove_ambient_volume,
-// update/remove_volume_fog, update/remove_environment_probe,
-// update/remove_sky_ambient_occlusion, add/remove/update_tracer, set/reset_grass,
-// set_portal_system, build_lpv_geometry, add_vegetation_trample,
-// begin/end_render_options_changing, reset_renderer) follow the SAME deferred-command
-// shape (functor_command, or functor_with_big_buffer_to_copy_command<T> for the
-// property-carrying update_*) binding to engine::world::<same name>. They stay
-// TARGET_ONLY because each remaining chain is deeper than lpv and not yet built:
-//   - volume_fog: needs struct volume_fog_parameters (0x74, all-POD floats); scene
-//     keeps an associative_vector<u32, volume_fog_parameters> at 0x13c (m_volume_fogs),
-//     so the scene cooks mirror the lpv lower_bound/insert/erase idiom once the struct
-//     and member exist.
+// update/remove_environment_probe, update/remove_sky_ambient_occlusion,
+// add/remove/update_tracer, set/reset_grass, set_portal_system, build_lpv_geometry,
+// add_vegetation_trample, begin/end_render_options_changing, reset_renderer) follow the
+// SAME deferred-command shape (functor_command, or functor_with_big_buffer_to_copy_command<T>
+// for the property-carrying update_*) binding to engine::world::<same name>. They stay
+// TARGET_ONLY because each remaining chain is a HEAP-CLASS chain (deeper than the POD
+// volume_fog/lpv assoc_vector chains) and not yet built:
 //   - ambient_volume: needs struct ambient_volume_properties (0x48) AND the heap
-//     vostok::render::ambient_volume object + find_by_id_predicate<ambient_volume>;
-//     scene m_ambient_volumes is a vector< ambient_volume* > at 0x360, remove walks it
-//     with __find_if then destroys+frees+erases the pointee.
-//   - environment_probe: needs struct environment_probe_properties (0x178, embeds a
-//     fixed_string<260> texture_name) + the environment_probe heap object +
-//     find_environment_probe_predicate; scene m_environment_probes is a
-//     vector< environment_probe* > at 0x37c. The game object_environment_probe::insert
-//     additionally constructs the whole properties struct field-by-field on the stack
-//     (fixed_string<260>::operator=, all float/bool fields) before the facade call.
-// (The property struct layouts are recoverable from binaries/structure/target/headers/
-// vostok/render/{volume_fog_parameters,ambient_volume_properties,
-// environment_probe_properties}.h.) Recover each remaining chain (struct + scene member
-// + scene cook + world forwarder + facade method) in a follow-up render-engine batch;
-// that unblocks the matching game object_* insert+remove cooks.
+//     vostok::render::ambient_volume class (: resource_intrusive_base, boost::noncopyable;
+//     ctor(properties,id) sets m_aabb to (min=-1, max=clear_value) + m_occlusion_info_index
+//     = -1 + m_occluded = false then set_properties; set_properties rep-copies the 0x48
+//     props then m_aabb.modify(transform.c) -> aabb::modify; is_occluded reads an
+//     options occlusion flag at options+0x120 our options.h does not yet model) AND a NEW
+//     find_by_id_predicate<ambient_volume> template (operator() compares obj->m_id at +0x64);
+//     scene m_ambient_volumes is vector< ambient_volume* > at 0x360. update = std::find_if
+//     -> if end push_back(NEW(ambient_volume)(props,id)) else (*i)->set_properties(props);
+//     remove = find_if -> DELETE pointee + __copy_ptrs erase.
+//   - environment_probe: ALL of the above PLUS collision integration - the heap
+//     environment_probe class takes a collision::space_partitioning_tree*, owns
+//     m_collision_geometry/m_collision_object + res_texture_ptr m_texture/m_texture_depth,
+//     and has a real (non-empty) dtor + remove_collision; needs find_environment_probe_predicate;
+//     scene m_environment_probes is vector< environment_probe* > at 0x37c with its own
+//     m_environment_probes_tree at 0x38c. The game object_environment_probe::insert also
+//     constructs the 0x178 properties field-by-field (fixed_string<260>::operator= for
+//     texture_name + all float/bool fields) before the facade call.
+// (Property struct layouts: binaries/structure/target/headers/vostok/render/
+// {ambient_volume_properties,environment_probe_properties}.h; heap-class layouts in
+// {ambient_volume,environment_probe}.h there.) Each is a self-contained render-engine
+// unit (new property header + new find predicate template + new heap class .h/.cpp +
+// scene vector member + scene cook + world forwarder + facade method), then the matching
+// game object_* insert/remove pair at ~100% (independent of scene layout - they go
+// through the facade indirection, not direct scene member offsets - exactly as volume_fog
+// and lpv proved).
 //
 // add_light/update_light(light_props*) are blocked separately - the world add_light is
 // light_props& in our tree but light_props* in the target, a cross-TU light-flow
