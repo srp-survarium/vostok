@@ -23,6 +23,12 @@ particle_system_instance_cook::particle_system_instance_cook()
 
 void particle_system_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	// claude@NOTE: QUANTITY base +4. The target is a SINGLE statement: just the query_resource
+	//   call with a 2-arg bind `boost::bind(&on_sub_resources_loaded, this, _1)` (NO p_world). The
+	//   target has no p_world lookup / if(user_data) / try_get / ASSERT_CMP. Closing this requires
+	//   dropping the p_world parameter from on_sub_resources_loaded (target sig is 1-arg,
+	//   queries_result& only; 43-stmt body obtains the world differently) - a coordinated
+	//   multi-function rework, not a localized resteer.
 	particle::world* p_world = 0;
 	
 	if( parent.user_data() )
