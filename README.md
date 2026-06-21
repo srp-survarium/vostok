@@ -13,16 +13,16 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 52.53% fuzzy (+2.47%) &middot; 4,581 / 12,915 functions exact (35.47%, +353 best-ever).**
+**Overall: 52.55% fuzzy (+2.46%) &middot; 4,581 / 12,915 functions exact (35.47%, +352 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact max | Fuzzy | Fuzzy max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
 | `render`        |   351 | 354 / 2,647 (13.4%) |           382 (+28) | 30.3% |     +2.1% |
-| `game`          |   141 | 272 / 1,498 (18.2%) |            273 (+1) | 31.8% |     +0.5% |
+| `game`          |   141 | 272 / 1,498 (18.2%) |            272 (+0) | 32.0% |     +0.6% |
 | `core`          |   136 | 636 / 1,320 (48.2%) |           668 (+32) | 75.6% |     +3.5% |
-| `vostok`        |   112 | 489 / 1,252 (39.1%) |           556 (+67) | 53.4% |     +5.7% |
+| `vostok`        |   112 | 489 / 1,252 (39.1%) |           556 (+67) | 53.4% |     +5.6% |
 | `game_core`     |   189 | 482 / 1,171 (41.2%) |          586 (+104) | 75.8% |     +8.4% |
 | `animation`     |   102 |   182 / 763 (23.9%) |           193 (+11) | 17.9% |     +0.8% |
 | `ai`            |   124 |   404 / 690 (58.6%) |           444 (+40) | 86.1% |     +1.1% |
