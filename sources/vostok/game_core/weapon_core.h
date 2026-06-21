@@ -48,9 +48,15 @@ struct hit_receiver;
 struct base_player;
 class bullet_manager;
 struct weapon_ammo_info;
+class weapon;	// game module; reads weapon_core members directly (see friend below)
 
 
 class weapon_core : public inventory_item {
+	// the game-module weapon reads m_ammo_in_magazine / m_is_round_chambered /
+	// m_fire_queue_type / m_weapon_fire_queue_types / m_ammo_slot INLINE (direct
+	// member loads in weapon::set_ui_ammo, set_next_*_type, on_chamber_a_round,
+	// on_after_fire); codegen-neutral friend, no layout/symbol impact
+	friend class weapon;
 public:
 			explicit							weapon_core						( );
 	virtual										~weapon_core					( );
