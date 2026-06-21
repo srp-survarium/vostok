@@ -285,6 +285,10 @@ void weapon::on_before_fire( )
 {
 }
 
+// claude@NOTE: the 2nd guard is ONE statement target-side (if+body on one line); split
+// across two lines it emitted a spurious BASE_ONLY body row (4/5). Residual is the same
+// set_ammo_in_magazine LTCG register-arg / tail-jmp wall as on_chamber_a_round (16-bit
+// `add ax,[47A]` + tail-call vs our 32-bit add + push/call); not source-steerable.
 void weapon::on_after_fire( )
 {
 	if ( m_game_ui )
@@ -292,8 +296,7 @@ void weapon::on_after_fire( )
 
 	play_weapon_fire_pfx( );
 
-	if ( m_game_ui && m_inventory )
-		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
+	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
 }
 
 void weapon::set_target( const weapon_targets new_target )
