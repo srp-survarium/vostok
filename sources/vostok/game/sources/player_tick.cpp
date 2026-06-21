@@ -4,8 +4,19 @@
 
 #include "pch.h"
 #include "player.h"
+#include "game.h"
+#include "base_game_scene.h"
+#include "base_network_client.h"
+#include "game_world.h"
+#include "camera_director.h"
+#include "game_camera.h"
+#include "game_world_ui.h"
+#include "player_input_handler.h"
+#include "weapon.h"
 #include <vostok/game_core/server_player_update.h>
 #include <vostok/game_core/player_state.h>
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/damage_model.h>
 #include <vostok/physics/character_controller.h>
 
 namespace survarium {
@@ -19,6 +30,15 @@ namespace survarium {
 static float s_smooth_linear_speed;
 static float s_smooth_angular_speed;
 static float s_smooth_pitch_speed;
+
+// claude@NOTE: backing storage for tick's cc_bool / cc_float config commands (the
+// command objects + their dynamic init/atexit pairing are a separate config-machinery
+// unit, mirror of the s_smooth_* block above).
+static bool s_is_local_player_random_input_enabled;
+static bool s_is_test_players_random_input_enabled;
+static float s_player_name_min_font_size;
+static float s_player_name_max_font_size;
+static float s_player_name_decrease_koef;
 
 // TU statics (compiler-generated dynamic initializers / atexit
 // destructors); a matcher recovers their types/initializers from the asm.
@@ -379,126 +399,153 @@ void player::smooth( const float time_delta )
 	}
 }
 
-// claude@NOTE: PARKED on a CROSS-MODULE LTCG LINK WALL, not a structure gap. The full
-// 86-statement skeleton (target 0x5c62b0, 0x8aa bytes, source lines 601-855) is decoded,
-// every member offset + accessor verified against the PDB, and the body written verbatim
-// in the recipe below. Restoring it as the live body compiles fine but FAILS THE FINAL
-// LINK:
-//   mixing_n_ary_tree_transition_tree_constructor.cpp(2121): error C4716
-//     'n_ary_tree_transition_tree_constructor::computed_tree' must return a value
-//   => LINK : fatal error LNK1257: code generation failed
-// Cause: tick newly calls m_target.animation_player.tick( ), which inlines
-// animation_player::skip_time_if_needed -> references animation_player::serialize_state ->
-// calls the still-EMPTY-bodied n_ary_tree_transition_tree_constructor::computed_tree( ).
-// tick is the FIRST caller of animation_player::tick in matched code, so this is the first
-// time that empty return-by-value stub enters the /GL LTCG codegen set; C4716 then kills
-// the link. The target's computed_tree (0x6eae70) is a trivial 1-statement
-// `return n_ary_tree( <11 members> );` - mirror of the ALREADY-MATCHED sibling
-// n_ary_tree_transition_constructor::computed_tree (transition_constructor.cpp:429).
-// NEXT STEP (animation owner / orchestrator sequencing): give that computed_tree its real
-// body first, then re-dispatch tick - the recipe body links and scores. Do NOT fix
-// computed_tree from this unit (another TU's match).
-//
-// Recipe (paste as the body once the wall lifts; needs these extra includes in this TU:
-//   game.h, base_game_scene.h, base_network_client.h, game_world.h, camera_director.h,
-//   game_camera.h, game_world_ui.h, player_input_handler.h, weapon.h,
-//   game_core/weapon_core.h, game_core/damage_model.h ; and these static backings, mirror
-//   of the s_smooth_* block - cc_bool / cc_float config-machinery values:
-//     static bool s_is_local_player_random_input_enabled, s_is_test_players_random_input_enabled;
-//     static float s_player_name_min_font_size, s_player_name_max_font_size, s_player_name_decrease_koef; )
-//
-//	if( m_is_first_tick ) { m_is_first_tick = false; m_current_time_in_ms = current_time_in_ms; }
-//	const u32 previous_time_in_ms = is_local ? m_current_time_in_ms
-//		: ( m_history.empty( ) ? m_current_time_in_ms : math::max( m_current_time_in_ms, m_history.newest( ).time_in_ms ) );
-//	m_current_time_in_ms = current_time_in_ms;
-//	const u32 time_delta_in_ms = current_time_in_ms > previous_time_in_ms ? current_time_in_ms - previous_time_in_ms : 0;
-//	m_target.update_transform( );
-//	if( m_use_physics_controller_for_current ) {
-//		m_current.update_transform( );
-//		if( m_target.physics_controller->has_updates( )
-//			&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f ) {
-//			m_current.transform = m_target.transform;
-//			m_current.physics_controller->set_transform( m_current.transform );
-//		}
-//	}
-//	if( m_target.physics_controller->has_updates( ) || m_current.physics_controller->has_updates( ) )
-//		smooth( time_delta_in_ms * 0.001f );
-//	const bool is_current = m_game.network_client( ).is_player_current( id );
-//	const player_input previous_input = m_input;
-//	m_input = m_is_alive ? ( is_local ? local_input( ) : remote_input( ) ) : player_input( );
-//	if( is_local ) {
-//		if( ( s_is_local_player_random_input_enabled && is_current ) || ( s_is_test_players_random_input_enabled && !is_current ) ) {
-//			static math::random32 random;
-//			m_input.actions_mask = random.random( u32( -1 ) );
-//		}
-//	}
-//	if( m_is_alive )
-//		m_stamina.tick( current_time_in_ms, m_stamina.can_be_spent( ) && m_current_active_object->is_sprinting( ) );
-//	if( is_current ) {
-//		process_quick_slots_for_current_player( );
-//		if( m_game_ui ) m_game_ui->set_health( damage_model( )->get_total_health( ) );
-//		if( weapon* const w = static_cast< weapon* >( m_current_active_object->cast_weapon_core( ) ) )
-//			w->update_dispersion_visual_representation( );
-//	}
-//	u32 time_in_ms = previous_time_in_ms;
-//	bool are_there_any_callbacks = false;       // PDB: const bool, but loop-assigned + read after
-//	do {
-//		if( time_in_ms != previous_time_in_ms || m_input.actions_mask != previous_input.actions_mask || m_force_animation_selection ) {
-//			m_force_animation_selection = false; select_animations( time_in_ms );
-//		}
-//		if( m_force_bones_recompute ) { m_force_bones_recompute = false; compute_bones( time_in_ms ); }
-//		if( m_current_active_object && m_current_active_object != m_empty_hands )
-//			m_current.animation_player.set_object_transform( float4x4( ).identity( ), m_current_active_object.c_ptr( ) );
-//		m_current.animation_player.set_object_transform( m_current.transform, this );
-//		m_target.animation_player.set_object_transform( m_target.transform, this );
-//		are_there_any_callbacks = m_target.animation_player.tick_to_nearest_user_handled_callback( current_time_in_ms );
-//		time_in_ms = m_current.animation_player.last_tick_time_in_ms( );
-//		apply_input_before_new_transform( m_current, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
-//		m_target.animation_player.tick( time_in_ms );      // <-- this inlines skip_time_if_needed -> the WALL
-//		apply_input_before_new_transform( m_target, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
-//		m_input.angular_velocity.x = previous_input.angular_velocity.x + m_input.angular_acceleration.x * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
-//		m_input.angular_velocity.y = previous_input.angular_velocity.y + m_input.angular_acceleration.y * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
-//	} while( time_in_ms != current_time_in_ms );   // no top guard in target => do/while
-//	if( are_there_any_callbacks ) select_animations( current_time_in_ms );
-//	if( ( is_local && m_is_alive ) || !m_history.empty( ) ) serialize_current_state( current_time_in_ms );
-//	if( is_local && m_is_alive )
-//		m_game_scene.get_game( ).network_client( ).send_local_player_input( m_input, current_time_in_ms, m_target.transform, m_target.look_pitch );
-//	set_physics_controller_walk_vector( m_target );
-//	if( m_use_physics_controller_for_current ) set_physics_controller_walk_vector( m_current );
-//	notify_actions_subscribers( );
-//	render( current_time_in_ms, current_time_in_ms );
-//	if( m_is_alive ) damage_model( )->tick( time_delta_in_ms, current_time_in_ms );
-//	if( m_game_ui && is_current && m_is_alive ) {
-//		update_speed_info( ); detect_usable_objects( current_time_in_ms );
-//		if( usable_object_user_data( )->current_object && usable_object_user_data( )->current_progress != u32( -1 ) )
-//			m_game_ui->set_using_progress_message( usable_object_user_data( )->current_progress );
-//	}
-//	const bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
-//	camera_director& cd = m_game.get_game_world( ).get_camera_director( );
-//	if( name_visible && m_game.network_client( ).current_player_team( ) == m_team_id && cd.get_active_camera( ) ) {
-//		float2 screen_p( math::SNaN, math::SNaN );
-//		float3 const p( m_character_head_transform.c.x, m_character_head_transform.c.y, m_character_head_transform.c.z + 0.2f );  // +0.2 placement = residual
-//		if( m_game_scene.point_to_screen( p, screen_p ) ) {
-//			game_camera const* const camera = cd.get_active_camera( );
-//			const float distance = ( m_character_head_transform.c.xyz( ) - camera->get_inverted_view_matrix( ).c.xyz( ) ).length( );
-//			const float font_size = math::max(
-//				s_player_name_max_font_size - ( distance - camera->get_near_plane( ) ) / camera->get_far_plane( ) * 1000.f * s_player_name_decrease_koef,
-//				s_player_name_min_font_size );
-//			m_text.set_font_size( font_size );
-//			m_text.set_position( screen_p.x - m_text.get_width( ) * 0.5f, screen_p.y - m_text.get_height( ) );
-//			return;
-//		}
-//	}
-//	if( m_text.visible ) m_text.set_visible( false );
-//
-// Byte residuals once it links (control flow is faithful): (A) apply_input_before_new_transform
-// is itself a parked quaternion-blend STUB - its two calls inline to nothing until matched;
-// (B) the angular_velocity integration schedule (721-723); (C) the SNaN-seeded point_to_screen
-// float3 + the camera-distance font clamp (826-855).
-// STATE[STUB]
+// claude@NOTE: live + paired (target 0x5c62b0, 86 stmts; control flow faithful, structure
+// pairs). The cross-module C4716/LNK1257 link wall is RESOLVED - computed_tree
+// (mixing_n_ary_tree_transition_tree_constructor.cpp) now returns a value, so the
+// animation_player::tick -> skip_time_if_needed -> serialize_state -> computed_tree chain
+// links. Byte residuals (all stub-inlining or optimizer-schedule, not structure):
+//  (A) apply_input_before_new_transform is itself a parked quaternion-blend STUB - its two
+//      calls inline to nothing until matched (the bulk of the TRGT_ONLY statement block);
+//  (B) the camera-name tail (SNaN-seeded point_to_screen float3 + the distance/font clamp,
+//      +0.2 head-z placement) and the angular_velocity integration schedule;
+//  (C) send_local_player_input / set_using_progress_message schedule-reordered (BASE_ONLY at
+//      earlier line, TRGT_ONLY later) - optimizer ordering, callee-driven.
+// PDB records are_there_any_callbacks as const bool but it is loop-assigned then read after.
 void player::tick( const u32 current_time_in_ms )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( current_time_in_ms );
+	if( m_is_first_tick )
+	{
+		m_is_first_tick = false;
+		m_current_time_in_ms = current_time_in_ms;
+	}
+
+	const u32 previous_time_in_ms = is_local ? m_current_time_in_ms
+		: ( m_history.empty( ) ? m_current_time_in_ms : math::max( m_current_time_in_ms, m_history.newest( ).time_in_ms ) );
+	m_current_time_in_ms = current_time_in_ms;
+	const u32 time_delta_in_ms = current_time_in_ms > previous_time_in_ms ? current_time_in_ms - previous_time_in_ms : 0;
+
+	m_target.update_transform( );
+	if( m_use_physics_controller_for_current )
+	{
+		m_current.update_transform( );
+		if( m_target.physics_controller->has_updates( )
+			&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f )
+		{
+			m_current.transform = m_target.transform;
+			m_current.physics_controller->set_transform( m_current.transform );
+		}
+	}
+
+	if( m_target.physics_controller->has_updates( ) || m_current.physics_controller->has_updates( ) )
+		smooth( time_delta_in_ms * 0.001f );
+
+	const bool is_current = m_game.network_client( ).is_player_current( id );
+
+	const player_input previous_input = m_input;
+	m_input = m_is_alive ? ( is_local ? local_input( ) : remote_input( ) ) : player_input( );
+
+	if( is_local )
+	{
+		if( ( s_is_local_player_random_input_enabled && is_current ) || ( s_is_test_players_random_input_enabled && !is_current ) )
+		{
+			static math::random32 random;
+			m_input.actions_mask = random.random( u32( -1 ) );
+		}
+	}
+
+	if( m_is_alive )
+		m_stamina.tick( current_time_in_ms, m_stamina.can_be_spent( ) && m_current_active_object->is_sprinting( ) );
+
+	if( is_current )
+	{
+		process_quick_slots_for_current_player( );
+		if( m_game_ui )
+			m_game_ui->set_health( damage_model( )->get_total_health( ) );
+		if( weapon* const w = static_cast< weapon* >( m_current_active_object->cast_weapon_core( ) ) )
+			w->update_dispersion_visual_representation( );
+	}
+
+	u32 time_in_ms = previous_time_in_ms;
+	bool are_there_any_callbacks = false;
+	do
+	{
+		if( time_in_ms != previous_time_in_ms || m_input.actions_mask != previous_input.actions_mask || m_force_animation_selection )
+		{
+			m_force_animation_selection = false;
+			select_animations( time_in_ms );
+		}
+
+		if( m_force_bones_recompute )
+		{
+			m_force_bones_recompute = false;
+			compute_bones( time_in_ms );
+		}
+
+		if( m_current_active_object && m_current_active_object != m_empty_hands )
+			m_current.animation_player.set_object_transform( float4x4( ).identity( ), m_current_active_object.c_ptr( ) );
+		m_current.animation_player.set_object_transform( m_current.transform, this );
+		m_target.animation_player.set_object_transform( m_target.transform, this );
+
+		are_there_any_callbacks = m_target.animation_player.tick_to_nearest_user_handled_callback( current_time_in_ms );
+		time_in_ms = m_current.animation_player.last_tick_time_in_ms( );
+
+		apply_input_before_new_transform( m_current, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
+		m_target.animation_player.tick( time_in_ms );
+		apply_input_before_new_transform( m_target, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
+
+		m_input.angular_velocity.x = previous_input.angular_velocity.x + m_input.angular_acceleration.x * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
+		m_input.angular_velocity.y = previous_input.angular_velocity.y + m_input.angular_acceleration.y * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
+	}
+	while( time_in_ms != current_time_in_ms );
+
+	if( are_there_any_callbacks )
+		select_animations( current_time_in_ms );
+
+	if( ( is_local && m_is_alive ) || !m_history.empty( ) )
+		serialize_current_state( current_time_in_ms );
+
+	if( is_local && m_is_alive )
+		m_game_scene.get_game( ).network_client( ).send_local_player_input( m_input, current_time_in_ms, m_target.transform, m_target.look_pitch );
+
+	set_physics_controller_walk_vector( m_target );
+	if( m_use_physics_controller_for_current )
+		set_physics_controller_walk_vector( m_current );
+
+	notify_actions_subscribers( );
+	render( current_time_in_ms, current_time_in_ms );
+
+	if( m_is_alive )
+		damage_model( )->tick( time_delta_in_ms, current_time_in_ms );
+
+	if( m_game_ui && is_current && m_is_alive )
+	{
+		update_speed_info( );
+		detect_usable_objects( current_time_in_ms );
+		if( usable_object_user_data( )->current_object && usable_object_user_data( )->current_progress != u32( -1 ) )
+			m_game_ui->set_using_progress_message( usable_object_user_data( )->current_progress );
+	}
+
+	const bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
+	camera_director& cd = m_game.get_game_world( ).get_camera_director( );
+	if( name_visible && m_game.network_client( ).current_player_team( ) == m_team_id && cd.get_active_camera( ) )
+	{
+		float2 screen_p( math::SNaN, math::SNaN );
+		float3 const p( m_character_head_transform.c.x, m_character_head_transform.c.y, m_character_head_transform.c.z + 0.2f );
+		if( m_game_scene.point_to_screen( p, screen_p ) )
+		{
+			game_camera const* const camera = cd.get_active_camera( );
+			const float distance = ( m_character_head_transform.c.xyz( ) - camera->get_inverted_view_matrix( ).c.xyz( ) ).length( );
+			const float font_size = math::max(
+				s_player_name_max_font_size - ( distance - camera->get_near_plane( ) ) / camera->get_far_plane( ) * 1000.f * s_player_name_decrease_koef,
+				s_player_name_min_font_size );
+			m_text.set_font_size( font_size );
+			m_text.set_position( screen_p.x - m_text.get_width( ) * 0.5f, screen_p.y - m_text.get_height( ) );
+			return;
+		}
+	}
+
+	if( m_text.visible )
+		m_text.set_visible( false );
 }
 
 } // namespace survarium
