@@ -290,3 +290,33 @@ prefix wired into the delinker (follow-up).
   (`d3d1x_hal.cpp` ~= `D3D1x_HAL.cpp` + `D3D1x_HALSetup.cpp`).
 - All function bodies are `// FUNCTION BODY[0xVA]` stubs (no functional
   reconstruction) - matchers fill them once the TUs are enabled.
+
+### Render_Shader.h / Render_ShaderHAL.h D3D1x template wall (2026-06-21)
+
+The `StaticShaderManager<D3D1x::...>` and `ShaderHAL<D3D1x::...>` member
+instantiations are real, built, scored template members (50-100% across the two
+headers). After the source SHAPE is matched, the residual on the non-100% ones
+is the **survarium-modified GFx SDK**, which our vendored 4.0.15 `Render_*.h`
+does not carry - NOT a source-shape gap, so park it:
+- **ShaderDesc / FF_ enum VALUES diverge.** survarium's shader-permutation enum
+  values are ~half the stock ones (`ST_DrawableMerge` 0x7000 vs stock 0xE000;
+  the `ST_base_*` permutation bases shifted one bit), and the `FF_*` fillflags
+  differ too (`FF_Blending` 0x10 vs our 0x20, `FF_Cxform` 0x04 vs 0x08,
+  `FF_AlphaWrite|FF_Cxform` 0x06 vs 0x0C). Every `SetStaticShader`/`shader += ...`
+  immediate is therefore off by a constant - the whole SetDrawable*/SetFill/
+  SetPrimitiveFill/StaticShaderForFill byte residual. This is the
+  `ST_base_CxformAc vs stock ST_base_Inv` swap: survarium dropped the Invert
+  shader permutation - the stock `if (fillflags & FF_Invert) shader +=
+  ST_base_Inv;` line is ABSENT from survarium's `StaticShaderForFill` (removing it
+  is a faithful SHAPE fix, took it 94->98.8% STRUCTURE MATCH; the rest is the
+  enum values). Same for SetPrimitiveFill's stock outer `(fillFlags &
+  (FF_Blending|FF_Cxform)) != ...` guard around the cxform loop - absent in
+  survarium (removed: 41->40 stmts vs 35 target).
+- **Class LAYOUT / virtuality diverge.** `D3D1x::ShaderManager` is ~0xC000 bytes
+  smaller in target (fewer permutation slots), shifting EVERY `ShaderHAL` member
+  offset by 0xBF64 (the ctor + every Drawable* method residual). The
+  render-target-stack element is 0x2F0 vs our 0x310. `MatrixState::GetUVP` is a
+  VIRTUAL call in target (`call [vtbl+0x18]`) but non-virtual in our header (the
+  SetMatrix residual). These are vendored-SDK type diffs - fixing them edits the
+  GFx headers/enum (out of scope per the matcher brief); leave the % at the
+  shape ceiling.
