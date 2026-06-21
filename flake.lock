@@ -16,9 +16,26 @@
         "type": "github"
       }
     },
+    "pdb-fetch-nvim-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1782075380,
+        "narHash": "sha256-V/g9421CWRS0qEMj8bcYpNWgDFJM5jecFkA3MkETGt0=",
+        "owner": "srp-survarium",
+        "repo": "pdb_fetch.nvim",
+        "rev": "182129415b51c07f517c5f4e9bb3ca1b2409a451",
+        "type": "github"
+      },
+      "original": {
+        "owner": "srp-survarium",
+        "repo": "pdb_fetch.nvim",
+        "type": "github"
+      }
+    },
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "pdb-fetch-nvim-src": "pdb-fetch-nvim-src",
         "rust-overlay": "rust-overlay",
         "vcproj2ninja-src": "vcproj2ninja-src",
         "vostok-delinker-src": "vostok-delinker-src",

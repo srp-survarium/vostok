@@ -147,6 +147,15 @@ def regenerate_compdb(dry_run: bool = False) -> list[str]:
         for name in COMPDB_FILES:
             # the overlay path inside the commands points at the temp dir
             text = (tmp_dir / name).read_text().replace(str(tmp_dir), str(VOSTOK_DIR))
+            if name == "compile_commands.json":
+                # vcproj2ninja joins the -ivfsoverlay path with a Windows
+                # separator even for the native clangd target, so the flag reads
+                # `<repo>\clangd-vfs.yaml`. clang takes the command as a Unix path,
+                # the stray backslash points at a file that doesn't exist, and the
+                # whole TU fails with `error: missing_vfs_overlay_file`. Every
+                # other path here is already '/'-separated; normalise just this one
+                # (the JSON-escaped "\\" -> "/").
+                text = text.replace("\\\\clangd-vfs.yaml", "/clangd-vfs.yaml")
             dst = VOSTOK_DIR / name
             if dst.is_file() and dst.read_text() == text:
                 continue
