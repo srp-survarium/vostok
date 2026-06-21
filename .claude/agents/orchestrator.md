@@ -371,6 +371,14 @@ across commits. The block and `match.db` move together: every `rebuild.py` advan
   delta - `git diff <prev>..<this>` shows the README block moving for that single matcher.
   Never defer the DB/README to a later batched "snapshot" commit across several matchers (it
   hides which matcher moved the score and breaks the per-step `match_db.py diff`).
+  - **NO "comment-only" skip (sushi 2026-06-21).** Rebuild+amend EVERY integrated commit,
+    including structure-verification / note-only / park commits. A "comment-only" change is NOT
+    guaranteed byte-neutral: adding/removing source LINES shifts `__LINE__` in every
+    `LOG_INFO`/`ASSERT`/`__FILE__`/`__LINE__` site below it, which moves bytes - so its README
+    *can* change, and skipping the rebuild leaves a stale DB at that commit AND a commit with no
+    README diff (the thing this rule exists to provide). One `rebuild.py` per integrated commit,
+    serialized through the main worktree (see [[serialize-integration-rebuilds-one-worktree]]) -
+    no exceptions, even for zero-`%` verification commits.
 - If the README/`match.db` blob conflicts on a cherry-pick, do NOT hand-resolve: take either
   side and rerun `rebuild.py` (it regenerates both deterministically), same as `match.db`.
 
