@@ -13,19 +13,32 @@
 #include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
-#include <vostok/resources.h>	// query_resources / request (query_base_resources)
+#include <vostok/resources.h>	// query_resources / request (query_base_resources) + fill_stats (draw_debug_window)
+#include <vostok/text_tree.h>	// strings::text_tree (draw_debug_window)
+#include <vostok/tasks_system.h>	// tasks::fill_stats (draw_debug_window)
+#include <vostok/ui/ui.h>	// ui::window::remove_all_childs (draw_debug_window)
 
 // SetWindowTextA (USER32) is stripped from os_include.h by NOUSER; declare the import
 // directly for on_application_activate's title-bar update.
 extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, char const* lpString );
 
 #include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
+#include <vostok/scaleform/sources/flash_factory.h>	// m_factory.build_movie (on_raw_data_loaded)
+#include <vostok/scaleform/sources/flash_movie_resource.h>	// flash_movie_resource (delete_resource)
+#include <vostok/scaleform/sources/flash_movie.h>	// delete movie (delete_resource)
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
 #include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
 #include "network_client.h"	// NEW( network_client ) (create_network_client)
 #include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 #include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
+#include "animated_model_instance_cook.h"	// register_cooks function-statics
+#include <vostok/game_core/game_material_manager_cook.h>
+#include "project_cooker_simple.h"
+#include <vostok/game_core/animation_analysis_result_cook.h>
+#include <vostok/game_core/ladder_cook.h>
+#include <vostok/game_core/weapon_user_animations_container_cook.h>
+#include "victory_item_cook.h"
 
 namespace survarium {
 
@@ -116,7 +129,6 @@ private:
 
 STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
 
-// STATE[STUB]
  max_angular_velocity_command::max_angular_velocity_command(
 	pcstr			name,
 	const float		min,
@@ -125,14 +137,10 @@ STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
 	const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
 	const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
 ) :
-	// the cc_float base stores this->m_value by ref; the remaining base args
-	// come straight from the params - a matcher confirms when a TU instantiates
-	console_commands::cc_float( name, m_value, min, max, serializable, arg_4, arg_5 )
+	console_commands::cc_float( name, m_value, min, max, serializable, arg_4, arg_5 ),
+	m_engine( NULL ),
+	m_value( 720.f )
 {
-	// FUNCTION BODY[0x8d940]: 0
-	// <0x8d940>|0x000|+0x050:'87'	{
-	// <0x8d990>|0x050|      :'88'	}
-	// ******
 }
 
 // TU static 's_max_angular_velocity_command' (compiler-generated; a matcher recovers its type
@@ -147,26 +155,21 @@ void `dynamic initializer for 's_max_angular_velocity_command''( )
 }
 */
 
+// claude@NOTE: target body is
+//   console_commands::save( "user.cfg", command_type_user_specific, s_engine->allocator( ) );
+// where s_engine is a file-static engine pointer (the engine virtual at vtable+0x4C
+// yields the allocator). That static is compiler-generated and NOT in our source, so
+// the allocator arg cannot be reproduced; we approximate with g_mt_allocator. The path
+// + command_type ARE matched. Restore the engine-allocator form once s_engine is recovered.
 // STATE[STUB]
 void cfg_save_user( )
 {
-	vostok::console_commands::save( NULL, vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
-
-	// FUNCTION BODY[0x5e5e30]: 1
-	// <0x5e5e30>|0x000|+0x01a:'118'
-	// ******
+	vostok::console_commands::save( "user.cfg", vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
 }
 
-// STATE[STUB]
+// target body is empty (single `ret`); the system-save logic is compiled out in this build.
 void cfg_save_system( )
 {
-	vostok::console_commands::save( NULL, vostok::console_commands::command_type_engine_internal, memory::g_mt_allocator );
-
-	// FUNCTION BODY[0x5e5e20]: 1
-	// <0x5e5e20>|0x000|+0x000:'122'	{
-	// <0>
-	// <0x5e5e20>|0x000|      :'124'	}
-	// ******
 }
 
 // TU static 'cfg_save_system_cc' (compiler-generated; a matcher recovers its type
@@ -502,109 +505,40 @@ void game::on_render_output_window_created( resources::queries_result& data )
 	);
 }
 
+// claude@NOTE: 28-statement central init. Structure FULLY decoded from 0x5e7200; two
+// classes of blocker stop a clean body, so it stays a STUB (bodying it with the parts
+// below would emit the high-leverage `static global_input_handler g_input_handler(*this)`
+// that unblocks the global_input_handler ctor 82%->100%, but the residual pieces are
+// unrecoverable and risk fabrication):
+//   399 m_items_dictionary = static_cast_resource_ptr<items_dictionary_ptr>( data[0].get_unmanaged_resource() );
+//   403 static global_input_handler g_input_handler( *this );    // <- the leverage point
+//   404 m_input_world->add_handler( g_input_handler );
+//   406 register_cooks( );
+//   408 m_game_options.initialize( );
+//   410 m_chat_handler->initialize( data[1].get_unmanaged_resource() );
+//   412 m_text_wnd = m_ui_world->create_window( );
+//   413 m_text_wnd->set_position( float2( 300.f, 0.f ) );
+//   414 m_text_wnd->set_size( float2( 600.f, 600.f ) );
+//   415 m_text_wnd->set_visible( true );
+//   417 m_console = m_engine.create_game_console( ui_world( ), input_world( ) );
+//   418 m_stats = NEW(stats)( *m_ui_world ); m_stats->create( );
+//   422 m_fps_graph = NEW(stats_graph)( <t>, math::infinity, <fps>, 60.f, 0xFF00FF00 );  // <t>,<fps> = UNRESOLVED float pool consts (clear_value/default_fps)
+//   424 m_main_menu = NEW(main_menu)( *this ); m_main_menu->query_resources( );
+//   426 create_debug_window( );
+//   428 m_viewport = rectangle<float2>( float2(0,0), float2(<v>,<v>) );   // <v> = UNRESOLVED (clear_value)
+//   433 enable( m_enabled );
+//   435/438 if ( m_is_active ) { on_application_deactivate( ); m_is_active = false; }
+//   446-471 if ( s_net_login_client.is_set_as_string( &client_str ) && strchr(client_str,':') )
+//             create_and_assign_network_client( client_str, s_is_spectator.is_set( ) );
+//           else create_and_assign_network_client( "188.93.23.27:5100", false );
+// BLOCKERS: (1) the m_fps_graph/m_viewport float pool constants resolve only to delinker
+// symbol names (clear_value/default_fps), not literal values; (2) the s_net_login_client /
+// s_is_spectator command_line::key statics' ctor strings live in the data section, not the
+// init asm, so declaring them (and their own dynamic-initializer STUBs) would be a guess.
+// Finish once those data-section strings + float literals are recovered.
 // STATE[STUB]
 void game::on_base_resources_created( resources::queries_result& data )
 {
-	// LOCALS
-	// fixed_string< 512 > 				client_str
-	// fixed_string< 512 > 				host
-	// ******
-
-	// STATICS
-	// static global_input_handler 		g_input_handler = <0x4c26c38>;
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e72fa> -> void < unknown >( input::handler& )
-	// <0x5e7361> -> ui::window* < unknown >()
-	// <0x5e738b> -> void < unknown >( float2 const& )
-	// <0x5e73b1> -> void < unknown >( float2 const& )
-	// <0x5e73c0> -> void < unknown >( bool )
-	// <0x5e73d1> -> input::world& < unknown >()
-	// <0x5e73db> -> ui::world& < unknown >()
-	// <0x5e73e3> -> engine::console* < unknown >( ui::world&, input::world& )
-	// <0x5e7500> -> void < unknown >( bool )
-	// <0x5e7517> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x5e7200]: 72
-	// <0x5e7200>|0x000|+0x00c:'398'	{
-	// <0x5e720c>|0x00c|+0x0aa:'399'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e72b6>|0x0b6|+0x034:'403'
-	// <0x5e72ea>|0x0ea|+0x012:'404'
-	// <0>
-	// <0x5e72fc>|0x0fc|+0x007:'406'
-	// <0>
-	// <0x5e7303>|0x103|+0x00c:'408'
-	// <0>
-	// <0x5e730f>|0x10f|+0x047:'410'
-	// <0>
-	// <0x5e7356>|0x156|+0x00d:'412'
-	// <0x5e7363>|0x163|+0x02a:'413'
-	// <0x5e738d>|0x18d|+0x026:'414'
-	// <0x5e73b3>|0x1b3|+0x00f:'415'
-	// <0>
-	// <0x5e73c2>|0x1c2|+0x023:'417'
-	// <0x5e73e5>|0x1e5|+0x03d:'418'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e7422>|0x222|+0x063:'422'
-	// <0>
-	// <0x5e7485>|0x285|+0x047:'424'
-	// <0>
-	// <0x5e74cc>|0x2cc|+0x007:'426'
-	// <0>
-	// <0x5e74d3>|0x2d3|+0x003:'428'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e74d6>|0x2d6|+0x02c:'433'
-	// <0>
-	// <0x5e7502>|0x302|+0x008:'435'
-	// <0>
-	// <1>
-	// <0x5e750a>|0x30a|+0x00f:'438'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e7519>|0x319|+0x015:'446'
-	// <0x5e752e>|0x32e|+0x01e:'447'
-	// <0>
-	// <0x5e754c>|0x34c|+0x010:'449'
-	// <0x5e755c>|0x35c|+0x037:'450'
-	// <0x5e7593>|0x393|+0x009:'451'
-	// <0>
-	// <0x5e759c>|0x39c|+0x044:'453'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e75e0>|0x3e0|+0x012:'460'
-	// <0x5e75f2>|0x3f2|-0x009:'460'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5e75e9>|0x3e9|+0x049:'471'
-	// <0x5e7632>|0x432|      :'471'	}
-	// ******
 }
 
 void game::create_and_assign_network_client( fixed_string< 512 > client_options, const bool is_spectator )
@@ -714,73 +648,53 @@ void game::on_renderer_created( resources::queries_result& data )
 {
 }
 
-// STATE[STUB]
 void game::on_config_loaded( resources::queries_result& data, bool create_renderer )
 {
-	// FUNCTION BODY[0x5e6b00]: 7
-	// <0x5e6b00>|0x000|+0x009:'596'	{
-	// <0x5e6b09>|0x009|+0x019:'597'
-	// <0>
-	// <0x5e6b22>|0x022|+0x0c2:'599'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e6be4>|0x0e4|-0x008:'603'
-	// <0x5e6bdc>|0x0dc|+0x023:'604'
-	// <0x5e6bff>|0x0ff|      :'604'	}
-	// ******
+	if ( !data.is_successful( ) )
+	{
+		LOG_ERROR					( "config file loading FAILED" );
+		return;
+	}
+
+	load_cc_script					( data[0].get_managed_resource( ), create_renderer );
 }
 
+// claude@NOTE: 9-statement body, two halves. First half (608-615) is clean + recoverable:
+//   if ( cfg && cfg.c_ptr( ) ) {
+//     resources::pinned_ptr_const<u8> pinned_data( cfg );
+//     memory::reader F( pinned_data.c_ptr( ), pinned_data.size( ) );
+//     console_commands::load( F, console_commands::execution_filter_general );
+//   }
+// Second half (618-629) is BLOCKED: `if ( create_renderer )` builds a "renderer" creation
+// request whose user_data is the render ENGINE world read straight off the renderer facade
+// (asm: mov ecx,[m_renderer]; mov esi,[ecx+4] == render::game::renderer::m_render_engine_world)
+// then query_create_resources( ..., on_renderer_created, ... ). m_render_engine_world is a
+// PRIVATE member of render::game::renderer with no accessor and game is not a friend, so the
+// exact `[m_renderer+4]` load cannot be produced from game.cpp (m_render_world.engine_world()
+// reads a different slot). Writing only the first half would give the wrong (truncated)
+// structure, so the whole function stays a STUB. Lifts once the render cluster exposes the
+// renderer's engine world (an accessor or friend).
 // STATE[STUB]
 void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_renderer )
 {
-	// LOCALS
-	// resources::pinned_ptr_const< u8 > pinned_data
-	// memory::reader 					F
-	// mutable_buffer 					creation_buffer
-	// variant< 32 > 					ud
-	// ******
-
-	// FUNCTION BODY[0x5e6980]: 22
-	// <0x5e6986>|0x006|+0x013:'608'
-	// <0>
-	// <0x5e6999>|0x019|+0x035:'610'
-	// <0x5e69ce>|0x04e|+0x00c:'611'
-	// <0x5e69da>|0x05a|+0x010:'612'
-	// <0x5e69ea>|0x06a|+0x008:'613'
-	// <0>
-	// <0x5e69f2>|0x072|+0x00a:'615'
-	// <0>
-	// <1>
-	// <0x5e69fc>|0x07c|+0x01f:'618'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x5e6a1b>|0x09b|+0x0be:'628'
-	// <0x5e6ad9>|0x159|+0x012:'629'
-	// ******
 }
 
-// STATE[STUB]
 void game::load_config_query( pcstr cfg_name, bool create_renderer )
 {
-	// FUNCTION BODY[0x5e6c60]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5e6c69>|0x009|+0x099:'642'
-	// ******
+	resources::request requests[]	=
+	{
+		resources::create_request	( cfg_name, resources::raw_data_class ),
+	};
+
+	resources::query_resources_and_wait	(
+		requests,
+		1,
+		boost::bind					( &game::on_config_loaded, this, _1, create_renderer ),
+		g_allocator,
+		NULL,
+		NULL,
+		assert_on_fail_false
+	);
 }
 
 void game::register_console_commands( )
@@ -1083,7 +997,6 @@ void game::unload_cmd( pcstr s )
 	unload							( s, false );
 }
 
-// STATE[STUB]
 void game::load(
 	pcstr const						project_resource_name,
 	resources::request* const		requests_begin,
@@ -1092,17 +1005,11 @@ void game::load(
 	boost::function< void( resources::queries_result& ) > const&	callback
 )
 {
-	// FUNCTION BODY[0x5e6c10]: 9
-	// <0x5e6c10>|0x000|+0x01f:'914'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e6c2f>|0x01f|+0x023:'921'
-	// <0x5e6c52>|0x042|+0x007:'922'
-	// ******
+	m_project_resource_name			= project_resource_name;
+
+	m_game_world.load				( project_resource_name, requests_begin, requests_end, user_datas_begin, callback );
+
+	m_lpv_geometry_builded			= false;
 }
 
 void game::load( pcstr const project_resource_name )
@@ -1146,24 +1053,22 @@ void game::switch_to_login( login_menu_status_enum status )
 	switch_to_scene					( m_login_menu );
 }
 
-// claude@NOTE: BLOCKED on sibling cook TUs not enabled. Target body (structure
-// recovered from the $S9-guarded function-static cook block + atexit dtors):
-//   static animated_model_instance_cook          s_animated_model_instance_cook;
-//   static game_material_manager_cook            s_material_manager_cook( false );
-//   static project_cooker_simple                 s_simple_project_cook( engine( ).command_line_editor( ) );
-//   static animation_analysis_result_cook        s_animation_analysis_result_cook;
-//   resources::register_cook( &s_animation_analysis_result_cook );
-//   static ladder_cook                           s_ladder_cook;
-//   resources::register_cook( &s_ladder_cook );
-//   static weapon_user_animations_container_cook  s_animation_container_cook;
-//   resources::register_cook( &s_animation_container_cook );
-//   static victory_item_cook                     s_victory_item_cook( m_game_world );
-// Constructing s_simple_project_cook needs project_cooker_simple's vtable, whose
-// delete_resource() body lives in the (still-excluded) project_cooker_simple.cpp
-// sibling TU -> LNK2001. Re-enable + match once that cook cluster is built.
-// STATE[STUB]
 void game::register_cooks( )
 {
+	static animated_model_instance_cook				s_animated_model_instance_cook;
+	static game_material_manager_cook				s_material_manager_cook( false );
+	static project_cooker_simple					s_simple_project_cook( engine( ).command_line_editor( ) );
+
+	static animation_analysis_result_cook			s_animation_analysis_result_cook;
+	resources::register_cook						( &s_animation_analysis_result_cook );
+
+	static ladder_cook								s_ladder_cook;
+	resources::register_cook						( &s_ladder_cook );
+
+	static weapon_user_animations_container_cook	s_animation_container_cook;
+	resources::register_cook						( &s_animation_container_cook );
+
+	static victory_item_cook						s_victory_item_cook( m_game_world );
 }
 
 void game::on_application_activate( )
@@ -1202,33 +1107,18 @@ void game::on_fullscreen_alttab( bool first )
 	// ******
 }
 
-// STATE[STUB]
 void game::draw_debug_window( )
 {
-	// LOCALS
-	// strings::text_tree 				tree
-	// ******
+	u32 const buffer_size			= u32( 64 * Kb );
+	pvoid const buffer				= ALLOCA( buffer_size );
+	strings::text_tree tree			( buffer, buffer_size, "resources stats" );
 
-	// CALL SITE INFO
-	// <0x5e5f43> -> void < unknown >()
-	// ******
+	if ( m_debug_window_type == debug_window_resources )
+		resources::fill_stats		( tree.root( ) );
+	else
+		tasks::fill_stats			( tree.root( ) );
 
-	// FUNCTION BODY[0x5e5ee0]: 14
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e5ee9>|0x009|+0x00c:'1134'
-	// <0x5e5ef5>|0x015|+0x016:'1135'
-	// <0>
-	// <0x5e5f0b>|0x02b|+0x009:'1137'
-	// <0x5e5f14>|0x034|+0x013:'1138'
-	// <0>
-	// <0x5e5f27>|0x047|+0x011:'1140'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e5f38>|0x058|+0x00d:'1144'
-	// ******
+	m_debug_window->remove_all_childs	( );
 }
 
 void game::create_debug_window( )
@@ -1355,68 +1245,53 @@ bool game::is_loading( ) const
 	return m_game_world.is_loading( );
 }
 
-// STATE[STUB]
 scaleform_movie_cook::scaleform_movie_cook( flash_factory& factory )
 :
-	// base args are buildability placeholders (the game_core cook convention);
-	// a matcher confirms when this TU is enabled
 	resources::translate_query_cook( resources::flash_movie_class, reuse_false, use_current_thread_id ),
 	m_factory( factory )
 {
-	// FUNCTION BODY[0x5e5880]: 1
-	// <0x5e58c1>|0x041|+0x029:'1261'
-	// ******
+	resources::register_cook		( this );
 }
 
-// STATE[STUB]
 void scaleform_movie_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x5e68c0]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e68ca>|0x00a|+0x0a9:'1273'
-	// ******
+	resources::request requests[]	=
+	{
+		resources::create_request	( parent.get_requested_path( ), resources::raw_data_class ),
+	};
+
+	resources::query_resources		(
+		requests,
+		1,
+		boost::bind					( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ),
+		g_allocator,
+		NULL,
+		&parent
+	);
 }
 
-// STATE[STUB]
+// claude@NOTE: 2-statement target. `delete movie` byte-residual: our scaleform/flash_movie.h
+// declares flash_movie with a TRIVIAL dtor, so the delete folds into operator-delete only; the
+// target's flash_movie dtor zeroes its 3 leading members first (its own statement) -> base
+// merges line 1279 into 1280. The VOSTOK_DELETE_IMPL half is the usual inline-vs-call allocator
+// wall (delete_helper out-of-line). Both are cross-module, not steerable from here.
 void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
 {
-	// CALL SITE INFO
-	// <0x5e5de0> -> void* < unknown >( u32 )
-	// ******
+	delete							static_cast< flash_movie_resource* >( resource )->movie;
 
-	// FUNCTION BODY[0x5e5da0]: 3
-	// <0>
-	// <0x5e5da2>|0x002|+0x025:'1279'
-	// <0x5e5dc7>|0x027|+0x030:'1280'
-	// ******
+	VOSTOK_DELETE_IMPL				( g_allocator, resource );
 }
 
-// STATE[STUB]
 void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
-	// LOCALS
-	// resources::pinned_ptr_const< u8 > pinned
-	// resources::managed_resource_ptr 	raw_data
-	// ******
+	resources::pinned_ptr_const< u8 > pinned( data[0].get_managed_resource( ) );
 
-	// FUNCTION BODY[0x5e5fa0]: 10
-	// <0>
-	// <0x5e5fa6>|0x006|+0x02a:'1286'
-	// <0x5e5fd0>|0x030|+0x03b:'1287'
-	// <0>
-	// <0x5e600b>|0x06b|+0x029:'1289'
-	// <0>
-	// <0x5e6034>|0x094|+0x023:'1291'
-	// <0>
-	// <0x5e6057>|0x0b7|+0x02d:'1293'
-	// <0x5e6084>|0x0e4|+0x00b:'1294'
-	// ******
+	flash_movie_resource* const resource	= VOSTOK_NEW_IMPL( g_allocator, flash_movie_resource );
+
+	resource->movie					= m_factory.build_movie( (void*)pinned.c_ptr( ), pinned.size( ), parent->reusable_request_name( ).c_str( ) );
+
+	parent->set_unmanaged_resource	( resource, resources::nocache_memory, 0x110 );
+	parent->finish_query			( result_success );
 }
 
 // claude@NOTE: BLOCKED on sibling game_options.cpp - unpaired. The target out-of-lines
