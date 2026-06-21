@@ -27,6 +27,11 @@ object_wire::object_wire( base_game_scene& w ) :
 {
 }
 
+// claude@NOTE: dtor byte-residual is the inlined base-class dtor chain - the target
+// tail-jmps ~unmanaged_resource without re-writing the game_object_ vtable, while our
+// base inlines ~game_object_ (header-inline {}) which emits that extra vtable store
+// plus an unconditional esi/ecx save. A game_object_ dtor-codegen artifact, not
+// steerable from this TU.
 object_wire::~object_wire( )
 {
 	FREE( m_points );
@@ -66,6 +71,14 @@ static void create_wire_visual_source(
 	writer.close_chunk		( );
 }
 
+// claude@NOTE: load is a 22-statement STRUCTURE MATCH; the byte-residual is a cascade
+// of inline-vs-outline divergences on SHARED library types that shift every downstream
+// offset (target frame 0x1BC vs base 0xAC): the target inlines binary_config_value::
+// operator float (m_wire_width = t["wire_width"]) to cmp-type-tag + movss/cvtsi2ss while
+// our base calls it out-of-line; likewise it inlines the memory::writer ctor
+// (vectora_allocator) and the fixed_string<32> default-ctor that our base out-lines.
+// These are compiler inline-budget decisions on configs/memory/fixed_string headers -
+// not steerable from object_wire.cpp without editing those shared headers.
 void object_wire::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -130,6 +143,12 @@ void object_wire::remove( )
 		get_game_scene().renderer().scene().remove_model( get_game_scene().render_scene(), m_visual );
 }
 
+// claude@NOTE: resources_ready byte-residual is two shared-header divergences: (1) our
+// base's query_result layout reads m_creation_data_from_user 8 bytes high (0x128 vs the
+// target's 0x120) - a resources_query_result.h struct-offset gap; (2) DELETE/const_buffer
+// c_ptr() expand to the heavier platform_pointer_selector + call_destructor_predicate
+// path in our base vs a direct mspace_free in the target. m_visual's assignment (0x12C)
+// matches. Not steerable from this TU.
 void object_wire::resources_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
 	const_buffer user_data_to_create	= data[0].creation_data_from_user();

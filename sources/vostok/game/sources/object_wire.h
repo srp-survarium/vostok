@@ -31,6 +31,7 @@ public:
 	virtual	void		insert			( ) override;
 	virtual	void		remove			( ) override;
 
+protected:
 			void		resources_ready	( resources::queries_result& data, boost::function< void( game_object_& ) >& cb );
 
 private:
