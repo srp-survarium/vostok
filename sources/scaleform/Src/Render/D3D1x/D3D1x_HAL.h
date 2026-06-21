@@ -107,6 +107,7 @@ public:
     // values of VP, ViewRect and ViewportValid.
     virtual void        updateViewport();
 
+    virtual PrimitiveFill* CreatePrimitiveFill(const PrimitiveFillData& data);
 
     virtual void        DrawProcessedPrimitive(Primitive* pprimitive,
                                                PrimitiveBatch* pstart, PrimitiveBatch *pend);
