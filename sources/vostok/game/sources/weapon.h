@@ -24,6 +24,8 @@ namespace resources {
 } // namespace resources
 } // namespace vostok
 
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
+
 namespace survarium {
 
 class base_game_scene;
@@ -31,6 +33,9 @@ class game_world_ui;
 class player;
 
 class weapon : public weapon_core {
+	// /OPT:REF anchor reaches the private (AAE/EAE) methods below by address-take;
+	// codegen-neutral friend, no layout/symbol impact
+	friend	void	::vostok::use_game_weapons	( );
 public:
 								weapon								(
 									u32		first_view_death_animations_count,
@@ -47,6 +52,9 @@ public:
 	inline	u32					third_view_death_animations_count	( ) const { return m_third_view_death_animations_count; }
 	inline	u32					preview_animations_count			( ) const { return m_preview_animations_count; }
 
+	// the methods below mangle private (AAE / EAE) in the shipped PDB - declaring
+	// them private keeps each out-of-line symbol pairable with the target
+private:
 			void				load_weapon							(
 									render::skeleton_model_ptr const&	base_model,
 									rifle_scope_ptr const&		rifle_scope
