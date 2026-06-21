@@ -44,11 +44,15 @@ void damage_zone::load(
 		m_particles.push_back( resources[ i ] );
 }
 
-// claude@NOTE: capped on inline-vs-call + reg-alloc residual. The size hoist (target
-// computes shapes_centers.size() once, off the for-condition, with NO named loop local) is
-// reproduced by the multi-line comma for-init - n enregisters without a PDB local. One
-// target statement (the hoisted size) still lands a line earlier than ours (a /Od scheduling
-// quirk of the float3 magic-divide size); the dominant residual is the renderer facade
+// claude@NOTE: capped on inline-vs-call + reg-alloc residual + a /Od local-spill the
+// target enregisters. The target hoists shapes_centers.size() once (off the condition) with
+// NO named loop local; the comma for-init reproduces the SHAPE, but unlike the sibling
+// stop_particles/load (size off a by-ref PARAM), here the size comes off the body-scope
+// vectora local `shapes_centers` whose lifetime spans the loop, so under /Od `n` spills to a
+// NAMED slot (base records 3 locals incl. n; target 2). Both for-init orders were tried
+// (i=0,n=size vs n=size,i=0): neither drops `n` under /Od (it is a frame-allocation effect of
+// the live body vectora, not a source-shape error) and `n=size,i=0` also costs ~2% (62->60),
+// so the i=0-first form is kept. Dominant residual is the renderer facade
 // scene()->play_particle_system inline-vs-call depth + a size/index register swap.
 void damage_zone::play_particles( vector< resources::unmanaged_resource_ptr > const& particles ) const
 {
