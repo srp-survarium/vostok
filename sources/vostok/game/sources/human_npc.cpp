@@ -20,6 +20,10 @@
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>	// set_transform: scene().update_model
 #include <vostok/animation/animation_player.h>		// set_transform: animation_player::set_object_transform
+#include <vostok/sound/world.h>				// enable: get_logic_world_user
+#include <vostok/sound/world_user.h>			// enable: register_receiver
+#include <vostok/physics/world.h>				// enable: m_physics_world.add
+#include "game_memory.h"						// enable: NEW( animations_selector )
 #include <vostok/console_command.h>
 
 static bool s_npc_debug_draw		= false;
@@ -135,9 +139,34 @@ void human_npc::set_default_animation( resources::managed_resource_ptr const& de
 	m_default_animation			= default_animation;
 }
 
-// STATE[STUB]
 void human_npc::enable( )
 {
+	m_ai_world.add_brain_unit			( m_brain_unit );
+
+	m_sound_world.get_logic_world_user( ).register_receiver	( m_sound_scene, *this );
+	set_position						( get_position() );
+
+	m_physics_world.add					( m_model_instance->m_damage_collision->get_rigid_body(), 0x40, 0xffff );
+	m_renderer.scene( ).add_model		( m_scene, m_model_instance->m_render_model->m_model, m_transform );
+	// claude@NOTE: this statement (target line 159, 0x19 bytes) is dropped from our object:
+	// animation_player::set_object_transform inlines its body, whose mixing::n_ary_tree::
+	// set_object_transform( pcvoid, float4x4 const& ) is an empty STUB in our tree, so the
+	// call inlines to nothing. Reappears (and enable pairs higher) once that animation-module
+	// function gets its real body. Same wall caps set_transform.
+	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
+
+	m_feet_target						= get_position();
+
+	m_animations_selector				= NEW( animations_selector )(
+		*m_model_instance->m_animation_player,
+		m_animation_space_graph,
+		m_default_animation,
+		m_game_world.get_ai_navigation_world( ),
+		m_game_world,
+		*this
+	);
+
+	m_ai_world.select_new_goal			( m_brain_unit );
 }
 
 void human_npc::on_sound_event( sound::sound_producer const& sound_source )
@@ -380,9 +409,18 @@ void human_npc::move_to_position( ai::movement_target const* const target )
 	m_animations_selector->set_target	( *m_current_movement_target );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure + body correct; residual is the LOG-callback ctor inline-vs-call
+// wall (log-callback-ctor-schedule.md): target inlines the boost::function ctor at block
+// entry, our inline-budget here out-of-lines it (call boost::function::function), same as
+// on_movement_end. Also the pushed __LINE__ immediate differs (source layout). Non-steerable.
 void human_npc::on_animation_end( )
 {
+	if ( m_current_animation )
+	{
+		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name.c_str() );
+		m_ai_world.on_animation_finish	( m_current_animation, m_brain_unit );
+		m_current_animation				= 0;	m_ai_world.select_new_goal( m_brain_unit );
+	}
 }
 
 // STATE[STUB]
@@ -409,16 +447,21 @@ void human_npc::hit(
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: AI-side wall now removed (ai::world::select_new_goal added at vtable+0x54,
-// on_animation_finish back at +0x50; ai_world override + brain_unit::select_new_goal at 100%).
-// These four (on_movement_end / on_animation_end / select_new_goal / enable) are now CALLABLE
-// and ready to fill here in the game TU. Body for on_movement_end: if ( m_current_movement_target ) {
-//   LOG_INFO( "target reached: [%.2f][%.2f][%.2f]", m_current_movement_target->target_position.{x,y,z} );
-//   m_current_movement_target = 0; m_ai_world.select_new_goal( m_brain_unit ); }
-// (the trailing call resolves to ai::world vtable+0x54 = ai_world::select_new_goal( brain_unit_res_ptr )).
+// claude@NOTE: structure + body correct (3 stmts match); residual is the LOG-callback ctor
+// inline-vs-call wall (log-callback-ctor-schedule.md) + the pushed __LINE__ immediate.
+// Non-steerable LTCG inline-budget; same wall as on_animation_end.
 void human_npc::on_movement_end( )
 {
+	if ( m_current_movement_target )
+	{
+		LOG_INFO						(
+			"target reached: [%.2f][%.2f][%.2f]",
+			m_current_movement_target->target_position.x,
+			m_current_movement_target->target_position.y,
+			m_current_movement_target->target_position.z
+		);
+		m_current_movement_target		= 0;	m_ai_world.select_new_goal( m_brain_unit );
+	}
 }
 
 // claude@NOTE: structure matches (m_current_animation=target; animation_emitter built;
@@ -443,9 +486,12 @@ void human_npc::up_to_terrain( )
 
 }
 
-// STATE[STUB]
+// claude@NOTE: body byte-identical (11/14 instrs); the only diff is the prologue/epilogue -
+// the shipped build out-lined this with `this` already in esi (no `mov esi, ecx`), an LTCG
+// codegen artifact no normal source emits. Body structure (one select_new_goal forward) is right.
 void human_npc::select_new_goal( )
 {
+	m_ai_world.select_new_goal	( m_brain_unit );
 }
 
 void human_npc::on_affect_event(
