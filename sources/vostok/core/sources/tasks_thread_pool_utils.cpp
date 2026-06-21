@@ -310,19 +310,20 @@ void   on_new_task ()
 
 void   on_current_thread_locks ()
 {
-	if ( s_thread_pool.initialized() )
+	if ( s_thread_pool.initialized() && threading::current_thread_affinity() != u32(-1) )
 		s_thread_pool->on_current_thread_locks		();
 }
 
 void   on_current_thread_unlocks ()
 {
-	if ( s_thread_pool.initialized() )
+	if ( s_thread_pool.initialized() && threading::current_thread_affinity() != u32(-1) )
 		s_thread_pool->on_current_thread_unlocks	();
 }
 
 void   register_current_thread_as_core_user	()
 {
-	s_thread_pool->register_current_thread_as_core_user	();
+	if ( s_thread_pool.initialized() )
+		s_thread_pool->register_current_thread_as_core_user	();
 }
 
 void   initialize (u32 const max_task_threads,
