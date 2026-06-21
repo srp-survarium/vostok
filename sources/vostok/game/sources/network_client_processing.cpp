@@ -537,20 +537,19 @@ void network_client::send_player_inputs( )
 	m_player_inputs.clear( );
 }
 
-// claude@NOTE: PARKED at structure match (full 51-statement body written; the per-frame client
-// pump - lobby/messaging reconnect throttles, match-client disconnect/connect/send-queued/sync
-// cadences, the per-player tick walk + the current-player camera update). The login/lobby/
-// messaging front half pairs cleanly. The back half (the match_client.is_connected()-onwards
-// player loop, sync, camera) CANNOT yet be verified: match_client::is_connected()/
-// is_disconnected()/last_receive_time_in_ms() are still inline header STUBS (return false / 0),
-// so the compiler constant-folds them - `!is_connected()` becomes always-true and its inner
-// `return` makes the whole tail dead code that /Od eliminates (base 21 vs target 51 stmts).
-// This is a cross-TU stub wall, not a structure error: the tail lifts verbatim once those three
-// match_client accessors are matched with real bodies. Remaining byte residual is the usual
-// whole-program-inline wall (login/lobby/match/messaging accessors, the game-layer
-// match_client::send_queued_packets wrapper that writes m_last_send_queed_packets_time_in_ms /
-// m_are_there_any_packets_to_send at the call site then calls the network-layer send,
-// player::has_been_inserted() / resource_ptr c_ptr loads) plus the LOG_WARNING machinery.
+// claude@NOTE: PARKED at structure match. Full per-frame client pump - lobby/messaging reconnect
+// throttles, match-client disconnect/connect/send-queued/sync cadences, the per-player tick walk
+// + the current-player camera update. Both halves are now LIVE: bodying the three game-layer
+// match_client accessors (is_connected/is_disconnected/last_receive_time_in_ms, which delegate to
+// the network-layer match_client) stopped the compiler constant-folding them, so the back half no
+// longer /Od-eliminates (base lifted 21 -> 41 stmts, 4 locals matching target). Structure matches
+// target's 51-stmt shape (the residual stmt-count delta is MSVC statement-boundary splitting of
+// the LOG_WARNING block + the player-loop resource_ptr scope, not missing source).
+// Remaining byte residual is the whole-program-inline wall, banked: login/lobby/match/messaging
+// accessors inline via vtable dispatch ([this] indirect), the game-layer send_queued_packets
+// wrapper writes m_last_send_queed_packets_time_in_ms / m_are_there_any_packets_to_send at the call
+// site then tail-calls the network send, player::has_been_inserted() / resource_ptr c_ptr loads,
+// the two m_current_player->update_camera() calls tail-merge, plus the LOG_WARNING machinery.
 // set_broken_connection_message's arg is VOSTOK_UNREFERENCED (load compiled out) so the string
 // does not affect bytes.
 // STATE[STUB]
