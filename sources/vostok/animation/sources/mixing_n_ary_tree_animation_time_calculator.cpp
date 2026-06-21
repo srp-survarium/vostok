@@ -74,6 +74,47 @@ void n_ary_tree_animation_time_calculator::visit		( n_ary_tree_time_scale_node& 
 	R_ASSERT_CMP							( m_animation_time, <=, m_animation_interval_length );
 }
 
+float n_ary_tree_animation_time_calculator::computed_animation_time	(
+		const float		animation_time_before_scale_starts,
+		const u32		time_scale_start_time_in_ms,
+		const u32		current_time_in_ms,
+		const u32		target_time_in_ms,
+		const float		time_scale
+	)
+{
+	if ( !m_animation.time_calculator() )
+		return								animation_time_before_scale_starts + (current_time_in_ms - time_scale_start_time_in_ms)*time_scale/1000.f;
+
+	return									m_animation.time_calculator()(
+												animation_time_before_scale_starts,
+												m_animation.animation_intervals()->length(),
+												time_scale_start_time_in_ms,
+												current_time_in_ms,
+												target_time_in_ms,
+												time_scale
+											);
+}
+
+void n_ary_tree_animation_time_calculator::fill_time	(
+		float		time_scale,
+		float		animation_time_before_scale_starts,
+		u32			time_scale_start_time_in_ms
+	)
+{
+	m_animation_time						= computed_animation_time(
+												animation_time_before_scale_starts,
+												time_scale_start_time_in_ms,
+												m_start_time_in_ms,
+												m_target_time_in_ms,
+												time_scale
+											);
+	m_animation_time						=
+		math::min(
+			math::max( m_animation_time, 0.f ),
+			m_animation_interval_length
+		);
+}
+
 void n_ary_tree_animation_time_calculator::visit		( n_ary_tree_time_scale_transition_node& node )
 {
 	m_animation_time						= m_start_animation_time;
