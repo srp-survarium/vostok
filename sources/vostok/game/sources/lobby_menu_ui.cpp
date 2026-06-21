@@ -58,6 +58,8 @@ private:
 
 STATIC_SIZE_ASSERT(relocate_item_func, 0xC);
 
+static float const	clear_value		= 1.0f;
+
 relocate_item_func::relocate_item_func( game& g )
 	: m_game( g )
 {
@@ -444,52 +446,44 @@ void lobby_menu::show_match_making( bool b_show )
 	}
 }
 
-// STATE[STUB]
+// claude@NOTE: byte % capped by the scaleform flash_value (SetStringW) / flash_movie
+// (Invoke) glue not inlining in our /Od build (whole-TU wall). Structure is faithful.
+// sushi@TODO: the level-name localization key L"st_loading_level" is a LENGTH-matched
+// guess (16 wide chars => the 4x movq + word copy the target emits); content is loaded
+// from rdata and does not affect this function's bytes, but the exact key is unverified.
 void lobby_menu::update_level_loading_progress( )
 {
-	// LOCALS
-	// wchar_t[512] 					queries_count
-	// flash_value 						progress
-	// wchar_t[512] 					w_text
-	// char[64] 						buff
-	// wchar_t[512] 					level_name
-	// flash_value 						text
-	// ******
+	char buff[64];
+	vostok::sprintf						( buff, "(%d)", resources::pending_queries_count( ) );
 
-	// FUNCTION BODY[0x743440]: 32
-	// <0>
-	// <0x743440>|0x000|+0x034:'380'
-	// <0>
-	// <0x743474>|0x034|+0x021:'382'
-	// <0>
-	// <0x743495>|0x055|+0x019:'384'
-	// <0x7434ae>|0x06e|+0x03e:'385'
-	// <0>
-	// <1>
-	// <0x7434ec>|0x0ac|+0x018:'388'
-	// <0>
-	// <0x743504>|0x0c4|+0x066:'390'
-	// <0>
-	// <1>
-	// <2>
-	// <0x74356a>|0x12a|+0x030:'394'
-	// <0x74359a>|0x15a|+0x025:'395'
-	// <0>
-	// <0x7435bf>|0x17f|+0x01d:'397'
-	// <0x7435dc>|0x19c|+0x01a:'398'
-	// <0x7435f6>|0x1b6|+0x01d:'399'
-	// <0>
-	// <1>
-	// <0x743613>|0x1d3|+0x018:'402'
-	// <0x74362b>|0x1eb|+0x01f:'403'
-	// <0>
-	// <1>
-	// <2>
-	// <0x74364a>|0x20a|+0x02b:'407'
-	// <0>
-	// <1>
-	// <0x743675>|0x235|+0x067:'410'
-	// ******
+	if ( m_last_queries_count > resources::pending_queries_count( ) )
+		m_level_loading_progress += ( 1.0f - m_level_loading_progress ) *
+			( float )( m_last_queries_count - resources::pending_queries_count( ) ) / ( float )m_last_queries_count;
+
+	m_last_queries_count = resources::pending_queries_count( );
+
+	wchar_t w_text[512] = L"st_loading_level";
+
+	wchar_t level_name[512];
+	mbstowcs_s							( NULL, level_name, 512, get_game( ).project_resource_name( ), _TRUNCATE );
+
+	wchar_t queries_count[512];
+	mbstowcs_s							( NULL, queries_count, 512, buff, _TRUNCATE );
+
+	wcscat_s							( w_text, level_name );
+	wcscat_s							( w_text, L"=" );
+	wcscat_s							( w_text, queries_count );
+
+	flash_value text;
+	text.SetStringW						( w_text );
+	m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
+
+	if ( clear_value - m_level_loading_progress < math::epsilon_3 )
+		m_level_loading_progress = clear_value;
+
+	flash_value progress;
+	progress.SetUInt					( ( u32 )( m_level_loading_progress * 100.0f ) );
+	m_match_making_ui->movie->Invoke	( "root.set_percent", NULL, &progress, 1 );
 }
 
 void lobby_menu::on_ui_destroy( )
@@ -590,6 +584,11 @@ void lobby_menu::update_status( )
 	// ******
 }
 
+// claude@NOTE: PARKED - heavy cross-subsystem wall (sound::world_user listener setup,
+// render::scene_renderer::add_model, game::create_network_client, flash_external_handler
+// ctor + CreateFunction/GetVariable glue) plus the scaleform flash /Od inline wall. The
+// camera/scene wiring members have no header here. Recover with the render/sound scene
+// surfaces.
 // STATE[STUB]
 void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 {
@@ -704,6 +703,11 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 	// ******
 }
 
+// claude@NOTE: PARKED - loops over the file-scope survarium::lobby_labels[0x49] ui_label
+// array (a {name,label} cstring pair per label); that data symbol is not in our tree and
+// the 73 string pairs are not recoverable from the binary without fabrication (same wall
+// as login_menu::fill_labels). Also scaleform flash /Od inline wall. Recover with the
+// lobby_labels data.
 // STATE[STUB]
 void lobby_menu::fill_inventory_labels( )
 {
@@ -736,6 +740,11 @@ void lobby_menu::fill_inventory_labels( )
 	// ******
 }
 
+// claude@NOTE: PARKED - navigates items_dictionary()'s private dict_config binary_config
+// (items_dictionary::dict_config has no accessor; game_core class, can't edit here) and
+// iterates its dictionary_item map (the dictionary_item type/ctor/dtor/copy live with the
+// dict, not yet headered here). Also scaleform flash /Od inline wall. Recover once
+// items_dictionary exposes dict_config + dictionary_item.
 // STATE[STUB]
 void lobby_menu::fill_items_dictionary( )
 {
@@ -1023,6 +1032,11 @@ void lobby_menu::fill_profiles( )
 	m_lobby_menu_ui->movie->Invoke		( "root.player_profile.setupProfiles", NULL, &profiles_array, 1 );
 }
 
+// claude@NOTE: PARKED - builds a player_parameters_query_path + queues a cooked-resource
+// query (resources::query_resources with a player_parameters_cooker_data* user_data via
+// profile_player_character::query_profile_contents) and walks player_profile slot items;
+// the cooked player-parameters resource type + the profile/slot-item layout have no header
+// here. Also scaleform flash /Od inline wall. Recover in the player-parameters cooker phase.
 // STATE[STUB]
 void lobby_menu::on_profile_changed( u8 profile_id )
 {
@@ -1152,6 +1166,10 @@ void lobby_menu::on_profile_arrived( u8 profile_id )
 	}
 }
 
+// claude@NOTE: PARKED - navigates items_dictionary()'s private dict_config
+// (["factions_dict"]["faction_%d"]["levels"]); items_dictionary::dict_config has no
+// accessor (game_core class, can't edit here). Also scaleform flash /Od inline wall.
+// Recover once items_dictionary exposes dict_config.
 // STATE[STUB]
 void lobby_menu::on_price_items_arrived( u8 trader_id )
 {
@@ -1259,6 +1277,10 @@ void lobby_menu::on_shop_ui_ready( )
 		lobby_client( ).query_prices( trader_id );
 }
 
+// claude@NOTE: PARKED - large config-driven builder navigating items_dictionary()'s
+// private dict_config binary_config (skills tree / boosters / perks tables);
+// items_dictionary::dict_config has no accessor (game_core class, can't edit here). Also
+// scaleform flash /Od inline wall. Recover once items_dictionary exposes dict_config.
 // STATE[STUB]
 void lobby_menu::fill_skills_tree( )
 {
@@ -1632,89 +1654,70 @@ bool lobby_menu::is_mouse_over_ui( )
 	return is_over_lobby || is_mouse_over_val.GetBool( );
 }
 
-// STATE[STUB]
+// claude@NOTE: byte % capped by the scaleform flash_value (ctor/dtor/SetStringW/
+// SetMember/SetUInt) + flash_movie (CreateObject/Invoke) glue not inlining in our /Od
+// build (whole-TU wall). Structure (the three independent message blocks) is faithful.
+// sushi@TODO: the L"joined"/L"left"/L"in_queue"/L"team" wcsstr prefix literals are
+// length-matched guesses (loaded from rdata; do not affect this function's bytes), exact
+// keys unverified.
 void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 {
-	// LOCALS
-	// game_team_id 					team
-	// wchar_t const* 					player_left_message
-	// wchar_t const* 					queue_state_message
-	// wchar_t[8] 						w_player_team
-	// wchar_t[16] 						w_player_in_queue
-	// wchar_t[32] 						w_player_name
-	// flash_value[2] 					add_player_args
-	// flash_value 						player_member_value
-	// flash_value 						player_name_val
-	// flash_value 						players_in_queue_val
-	// ******
+	wchar_t const* player_joined_message	= wcsstr( w_text, L"joined" );
+	wchar_t const* player_left_message		= wcsstr( w_text, L"joined" );
+	wchar_t const* queue_state_message		= wcsstr( w_text, L"in_queue" );
 
-	// FUNCTION BODY[0x7410e0]: 63
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7410f3>|0x013|+0x00b:'1537'
-	// <0x7410fe>|0x01e|+0x00d:'1538'
-	// <0x74110b>|0x02b|+0x00f:'1539'
-	// <0>
-	// <0x74111a>|0x03a|+0x011:'1541'
-	// <0>
-	// <0x74112b>|0x04b|+0x00b:'1543'
-	// <0>
-	// <0x741136>|0x056|+0x01b:'1545'
-	// <0>
-	// <0x741151>|0x071|+0x00d:'1547'
-	// <0x74115e>|0x07e|+0x00b:'1548'
-	// <0>
-	// <1>
-	// <0x741169>|0x089|+0x01b:'1551'
-	// <0x741184>|0x0a4|+0x010:'1552'
-	// <0>
-	// <0x741194>|0x0b4|+0x017:'1554'
-	// <0>
-	// <0x7411ab>|0x0cb|+0x01c:'1556'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7411c7>|0x0e7|+0x018:'1560'
-	// <0x7411df>|0x0ff|+0x02a:'1561'
-	// <0>
-	// <0x741209>|0x129|+0x022:'1563'
-	// <0x74122b>|0x14b|+0x03b:'1564'
-	// <0>
-	// <0x741266>|0x186|+0x029:'1566'
-	// <0>
-	// <0x74128f>|0x1af|+0x029:'1568'
-	// <0>
-	// <0x7412b8>|0x1d8|+0x03c:'1570'
-	// <0x7412f4>|0x214|+0x008:'1571'
-	// <0>
-	// <0x7412fc>|0x21c|+0x00b:'1573'
-	// <0>
-	// <0x741307>|0x227|+0x01e:'1575'
-	// <0>
-	// <1>
-	// <0x741325>|0x245|+0x018:'1578'
-	// <0x74133d>|0x25d|+0x01f:'1579'
-	// <0>
-	// <0x74135c>|0x27c|+0x01f:'1581'
-	// <0x74137b>|0x29b|+0x00c:'1582'
-	// <0>
-	// <0x741387>|0x2a7|+0x00b:'1584'
-	// <0>
-	// <1>
-	// <0x741392>|0x2b2|+0x022:'1587'
-	// <0>
-	// <1>
-	// <0x7413b4>|0x2d4|+0x015:'1590'
-	// <0x7413c9>|0x2e9|+0x01f:'1591'
-	// <0x7413e8>|0x308|+0x01f:'1592'
-	// <0>
-	// ******
+	wchar_t w_player_name[32];
+	flash_value player_name_val;
+
+	if ( player_joined_message )
+	{
+		wcsncpy_s			( w_player_name, player_joined_message + 6, ( wcsstr( player_joined_message, L" =" ) - player_joined_message ) / 2 - 6 );
+
+		wchar_t const* player_team = wcsstr( w_text, L"team" );
+		wchar_t w_player_team[8];
+		wcsncpy_s			( w_player_team, player_team + 4, ( wcsstr( player_team, L"=" ) - player_team ) / 2 - 4 );
+
+		game_team_id team = ( game_team_id )_wtoi( w_player_team );
+
+		flash_value add_player_args[2];
+		m_match_making_ui->movie->CreateObject( &add_player_args[1] );
+
+		player_name_val.SetStringW	( w_player_name );
+		add_player_args[1].SetMember( "name", player_name_val );
+
+		flash_value player_member_value;
+		player_member_value.SetUInt	( team );
+		add_player_args[1].SetMember( "icon", player_member_value );
+
+		add_player_args[0].SetUInt	( team );
+		m_match_making_ui->movie->Invoke( "root.add_player", NULL, add_player_args, 2 );
+	}
+
+	if ( player_left_message )
+	{
+		wcsncpy_s			( w_player_name, player_left_message + 6, ( wcsstr( player_left_message, L" =" ) - player_left_message ) / 2 - 6 );
+
+		player_name_val.SetStringW	( w_player_name );
+		m_match_making_ui->movie->Invoke( "root.remove_player", NULL, &player_name_val, 1 );
+	}
+
+	if ( queue_state_message )
+	{
+		wchar_t w_player_in_queue[16];
+		wcsncpy_s			( w_player_in_queue, queue_state_message + 4, ( wcsstr( queue_state_message, L"=" ) - queue_state_message ) / 2 - 4 );
+
+		flash_value players_in_queue_val;
+		players_in_queue_val.SetStringW	( w_player_in_queue );
+		m_match_making_ui->movie->Invoke( "root.set_place", NULL, &players_in_queue_val, 1 );
+	}
 }
 
+// claude@NOTE: PARKED - parses player_id/player_exp/match_count/player_count prefixes out
+// of w_text (wcsstr/wcsncpy/wcstombs) then forwards via chat_handler::add_message and
+// lobby_client::query_client_status(7/8). The add_message path and the player-name strcmp
+// target are reached through members with no usable header here (the chat_handler wall, see
+// messaging_client.cpp). Also scaleform flash /Od inline wall (set_games_online Invoke).
+// Recover once chat_handler is headered.
 // STATE[STUB]
 void lobby_menu::on_stats_message_arrived(
 	wchar_t const*						w_text,
