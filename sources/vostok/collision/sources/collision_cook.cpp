@@ -19,6 +19,10 @@
 namespace vostok {
 namespace collision {
 
+// claude@NOTE: BASE_ONLY register_cook stmt. Target tail-CALLs register_cook
+// (jmp resources_manager::register_cook); base INLINES its body (reads the manager
+// global + stores the cook slot directly). Cross-module inline-vs-call: register_cook
+// lives in resources, so out-lining it is not this unit's change.
 void initialize( )
 {
 	static collision_cook	collision_cooker;
@@ -152,6 +156,10 @@ void collision_cook::on_triangle_mesh_collision_loaded( resources::queries_resul
 	parent_query->finish_query				( result_success );
 }
 
+// claude@NOTE: STRUCTURE MATCH, delete_geometry line SIZE-capped. Base folds
+// strip_pointer as `call boost::get_pointer<weapon_user_animations_selector>` +
+// extra allocator push before the virtual free; target inlines it. The strip_pointer
+// inline-vs-call wall (patterns/strip-pointer-delete-resource.md), not source-steerable.
 void collision_cook::delete_resource( resources::resource_base* resource )
 {
 	collision::geometry* geom			= static_cast_checked<collision::geometry*>(resource);
