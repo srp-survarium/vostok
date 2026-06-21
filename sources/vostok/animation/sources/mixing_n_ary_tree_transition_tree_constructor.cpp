@@ -2116,26 +2116,27 @@ n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree vostok::animation::mixing::n_ary_tree_transition_tree_constructor::computed_tree()
+// claude@NOTE: structure matches (single `return n_ary_tree( <11 members> )`, mirror of
+// the matched sibling n_ary_tree_transition_constructor::computed_tree). Byte residual: the
+// 11-arg n_ary_tree constructor is still an empty STUB (mixing_n_ary_tree.cpp), so the base
+// INLINES it to nothing - only the implicit intrusive_ptr member-ctor survives, dropping all
+// 11 arg pushes + the out-of-line `call`. Reappears once that constructor gets a real body.
 n_ary_tree n_ary_tree_transition_tree_constructor::computed_tree( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6eae70>|0x000|+0x03d:'1742'
-	// ******
+	return
+		n_ary_tree(
+			m_weight_root,
+			m_time_root,
+			m_cloner.interpolators(),
+			m_animation_states,
+			m_animation_events,
+			m_animated_objects,
+			m_reference_counter,
+			m_animations_count,
+			m_animated_objects_count,
+			m_cloner.interpolators_count(),
+			m_current_time_in_ms
+		);
 }
 
 } // namespace mixing
