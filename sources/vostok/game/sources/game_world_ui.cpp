@@ -284,10 +284,8 @@ void game_world_ui::set_respawn_time( u32 time_left )
 
 void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths )
 {
-	flash_value out_event;
-	get_ui( )->movie->CreateObject( &out_event );
-	flash_value out_event_property;
-	get_ui( )->movie->CreateObject( &out_event_property );
+	flash_value out_event;				get_ui( )->movie->CreateObject( &out_event );
+	flash_value out_event_property;		get_ui( )->movie->CreateObject( &out_event_property );
 
 	out_event_property.SetUInt( player_id );
 	out_event.SetMember( "id", out_event_property );

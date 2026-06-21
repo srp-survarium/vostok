@@ -61,8 +61,7 @@ void empty_hands_cook::on_empty_hands_animations_loaded( resources::queries_resu
 // computation seen at 0x766ac0.
 void empty_hands_cook::on_empty_hands_config_loaded( resources::queries_result& data )
 {
-	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
-	configs::binary_config_value const& animations_node	= config->get_root( )["user_animations"];
+	configs::binary_config_ptr config					= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );	configs::binary_config_value animations_node		= config->get_root( )["user_animations"];
 
 	u32 const animations_count = animations_node.size( );
 	resources::request* requests = (resources::request*)alloca( animations_count * sizeof( resources::request ) );

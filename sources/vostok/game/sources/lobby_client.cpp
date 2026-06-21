@@ -107,8 +107,7 @@ void lobby_client::on_error(
 
 	disconnect	( );
 
-	++m_connection_info.connection_error_count;
-	m_connection_info.need_resolve	= true;
+	++m_connection_info.connection_error_count;	m_connection_info.need_resolve	= true;
 }
 
 void lobby_client::connect( server_connection_info const& lobby_connection_info )
