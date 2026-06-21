@@ -66,8 +66,9 @@ void destroy_ghost_object( bt_ghost_object* obj )
 
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
-	btCollisionObject* bt_test_object = object->get_bt_collision_obect( );
-	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, bt_test_object, contact_result_callback( &predicate ) );
+	// claude@NOTE: one statement, no bt_test_object local (target has 0 body locals) -> STRUCTURE MATCH.
+	// Residual is arg-eval-order: target inlines get_bt_collision_obect() and schedules it first; not steerable.
+	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, object->get_bt_collision_obect( ), contact_result_callback( &predicate ) );
 }
 
 bool bt_ghost_object::contact_test( world* world )
@@ -125,7 +126,9 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );
-	// bt_collision_shape* shape = m_shape.c_ptr( );											// sushi@NOTE: Why not `m_shape->get_bt_shape( );`
+	// claude@NOTE: target keeps m_shape's operator* deref as its own out-of-line CALL
+	// (a 3rd statement at line +1); our /Od base inlines the deref into the call line.
+	// intrusive_ptr operator* inline-vs-call wall (strip_pointer family); not steerable.
 	get_non_compound_shapes_centers( m_shape->get_bt_shape( ), transform, centres_results );
 }
 
