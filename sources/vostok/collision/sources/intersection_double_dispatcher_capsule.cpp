@@ -17,14 +17,23 @@
 namespace vostok{
 namespace collision{
 
+float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement )
+{
+	float domen_value	= ( ( point - segment_origin ) | segment_displacement ) / segment_displacement.squared_length( );
+	math::clamp			( domen_value, 0.f, 1.f );
+
+	return segment_origin + segment_displacement * domen_value;
+}
+
 /*
    Calculate the line segment PaPb that is the shortest route between
    two lines P1P2 and P3P4. Calculate also the values of mua and mub where
       Pa = P1 + mua (P2 - P1)
       Pb = P3 + mub (P4 - P3)
    Return FALSE if no solution exists.
+	https://paulbourke.net/geometry/pointlineplane/lineline.c
 */
-bool line_line_intersect ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
+bool line_line_intersect_non_parallel ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
 {
 	R_ASSERT( !math::is_zero( d1.x ) || !math::is_zero( d1.y ) || !math::is_zero( d1.z ) );
 	R_ASSERT( !math::is_zero( d2.x ) || !math::is_zero( d2.y ) || !math::is_zero( d2.z ) );
@@ -38,8 +47,7 @@ bool line_line_intersect ( float3 const& p1, float3 const& d1, float3 const& p2,
 	float const		d1212	= p12 | p12;
 
 	float const		denom	= d1212 * d3434 - d3412 * d3412;
-	if ( math::is_zero( denom ) )
-	   return false;
+	R_ASSERT( !math::is_zero( denom ) );
 
 	float const		d3134	= p31 | p34;
 	float const		d3112	= p31 | p12;
@@ -69,7 +77,10 @@ bool segment_segment_intersect ( float3 const& p1, float3 const& p2, float3 cons
 		float	mua;
 		float	mub;
 
-		line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub );
+		// sushi@TODO: qualified to bind the collision-local copy (target calls
+		// vostok::collision::); a recovery-added vostok::math:: decl in
+		// math_functions.h makes the bare call ADL-ambiguous here.
+		collision::line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub );
 
 		if( ( pa - pb ).squared_length( ) > max_distance_squared )
 			return false;
@@ -78,17 +89,17 @@ bool segment_segment_intersect ( float3 const& p1, float3 const& p2, float3 cons
 		if( mua > 0 && mua < 1 && mub > 0 && mub < 1 )
 			return true;
 	}
-	
-	if( ( p1 - closest_point_on_segment( p1, p3, d2 ) ).squared_length( ) < max_distance_squared )
+
+	if( ( p1 - collision::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p2 - closest_point_on_segment( p2, p3, d2 ) ).squared_length( ) < max_distance_squared )
+	if( ( p2 - collision::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p3 - closest_point_on_segment( p3, p1, d1 ) ).squared_length( ) < max_distance_squared )
+	if( ( p3 - collision::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
-	if( ( p4 - closest_point_on_segment( p4, p1, d1 ) ).squared_length( ) < max_distance_squared )
+	if( ( p4 - collision::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ) < max_distance_squared )
 		return true;
 
 	return false;
