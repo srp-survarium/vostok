@@ -12,6 +12,7 @@
 // real game call graph (game_module::create_world) reaches these for itself.
 
 #include "game.h"
+#include "game_world.h"
 #include "game_project.h"
 #include "render_visual.h"
 #include "base_game_scene.h"
@@ -91,6 +92,14 @@ namespace survarium {
 		void ( survarium::game::* const m_qbr )( )				= &survarium::game::query_base_resources;
 		void ( survarium::game::* const m_orowc )( resources::queries_result& )	= &survarium::game::on_render_output_window_created;
 
+		// game_world::load + its on_project_loaded callback are non-virtual and not yet
+		// reached by the real call graph (game_module loader is still a stub), so address-
+		// take them through the sink to keep them past /OPT:REF for pairing.
+		void ( survarium::game_world::* const m_gw_load )(
+			pcstr, resources::request*, resources::request*,
+			vostok::variant< 32 > const**,
+			boost::function< void( resources::queries_result& ) > const& )	= &survarium::game_world::load;
+
 		s_sink = *( pcvoid const* )&m_commit;
 		s_sink = *( pcvoid const* )&m_respawn;
 		s_sink = *( pcvoid const* )&m_discard;
@@ -112,6 +121,7 @@ namespace survarium {
 		s_sink = *( pcvoid const* )&m_on_rend;
 		s_sink = *( pcvoid const* )&m_qbr;
 		s_sink = *( pcvoid const* )&m_orowc;
+		s_sink = *( pcvoid const* )&m_gw_load;
 	}
 
 } // namespace survarium
