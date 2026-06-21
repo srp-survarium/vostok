@@ -189,6 +189,11 @@ void free_fly_camera::on_activate( camera_director* cd )
 	m_inverted_view_matrix		= cd->get_inverted_view_matrix( );
 }
 
+// claude@NOTE: residual is non-steerable. target LOG_INFO bakes __LINE__ 180 (push 0B4h);
+// ours is at line 208 -> whole fn sits ~31 lines later than the original (target stmt #1 is
+// line 163 vs our 194). Plus the LOG callback's boost::function is built inline in target vs
+// a `call boost::function<...>::function<...>` here (LTCG inlining). Structure otherwise
+// matches. Next step: only via restoring the original above-fn line layout (risky, cross-fn).
 void free_fly_camera::tick( )
 {
 	float const current_time_delta	= float( get_game_scene().get_game().game_permanent_time_ms( ) - m_prev_time_ms );
