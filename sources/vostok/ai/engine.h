@@ -49,7 +49,8 @@ struct VOSTOK_NOVTABLE engine
 					) const = 0;
 	virtual	u32		get_node_by_name		( pcstr node_name ) const									= 0;
 	virtual	void	get_available_weapons	( npc* owner, weapons_list& list_to_be_filled ) const		= 0;
-	
+	virtual	u32		get_current_time_in_ms	( ) const													= 0;
+
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR	( engine );
 }; // struct engine

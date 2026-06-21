@@ -247,6 +247,7 @@ public:
 
 	virtual	u32									get_node_by_name				( pcstr node_name ) const override;
 	virtual	void								get_available_weapons			( ai::npc* owner, vectora< ai::weapon* >& list_to_be_filled ) const override;
+	virtual	u32									get_current_time_in_ms			( ) const override;
 
 			void								load							(
 													pcstr						project_resource_name,
@@ -277,9 +278,6 @@ public:
 	inline	free_fly_camera*					get_free_fly_camera				( ) const { /* no source */ return m_free_fly_camera; }
 			void								set_local_player_camera			( player_input_handler* camera );
 
-	// PDB marks it virtual but no base in our tree declares it (interface
-	// drift, the engine_user::world::load family) - no `override`
-	virtual	u32									get_current_time_in_ms			( ) const;
 	inline	const simple_game_project_ptr		get_project						( ) const { /* no source */ return m_game_project; }
 
 	// STATE[STUB]
