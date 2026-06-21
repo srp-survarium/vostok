@@ -24,7 +24,7 @@ public:
 
 			void							initialize_data	( flash_movie_resource_ptr& movie );
 
-	inline	options_item_base*				option_by_id	( u8 arg_0 ) { /* no source */ return NULL; }
+	inline	options_item_base*				option_by_id	( u8 arg_0 ) { return m_options[ arg_0 ]; }
 
 	inline	options_enum					type			( ) { /* no source */ return m_type; }
 
