@@ -30,26 +30,28 @@ protected:
 			void								switch_passive_mode_impl	( bool switch_on );
 			void								activate_impl				( );
 			bool								protect_affect				( pcstr __formal, hit_affects_type_enum affect );
-public:
-	// STATE[STUB]
+private:
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
-	// STATE[STUB]
 	virtual	void								deactivate					( ) override {}
 
-	// STATE[STUB]
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								tick						( ) override { /* no source */ }
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { return true; /* no source */ }
 
-	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
 
-	// STATE[STUB]
+	// claude@NOTE: target body is a 101-byte ASSERT-guarded forward (rva 0xbc810, folds
+	// across oxygen_tank+medkit): assert; copy the two float4x4 by value; call
+	// <folded helper>( user_skeleton.get(), user_matrices, user_matrices_count,
+	// current_time_in_ms, head_transform, transform, &animation_player ). PDB records
+	// 0 statements (optimized); the forward callee folds to finalize_impl so the exact
+	// body can't be reconstructed/verified yet. Access (private @@EAE) now matches the
+	// target; body left empty -> pairs at size-residual until the helper is named.
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
