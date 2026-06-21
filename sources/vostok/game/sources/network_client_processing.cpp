@@ -125,18 +125,18 @@ void network_client::query_players( )
 		boost::bind( &network_client::on_players_ready, this, _1, players_count ) );
 }
 
-// claude@NOTE: parked at link, not structure. Body recovered:
-//   match_options& options = match_client().get_match_options();
-//   options.player_profiles[options.received_players_count++].deserialize(reader);
-//   if (options.received_players_count == options.players_count) query_players();
-// but player_profile::deserialize has no definition (its body is commented out in
-// game_net_defines.h as a sushi@TODO - "move to player_profile's own TU"), so the call
-// is an unresolved external (LNK2001) that fails the EXE link. Unblocks once
-// player_profile::deserialize lands in its TU.
-// STATE[STUB]
+// claude@NOTE: structure matches (4 statements; player_profile::deserialize now defined
+// in game_net_defines.h so this links + pairs). The byte residual is codegen-only: the
+// target keeps this in ebx/edi and ends with call query_players + ret 4, while the base
+// allocates esi/edi and tail-jmps query_players (last-statement tail-call). The regalloc
+// + tail-call choice is whole-program-driven and not source-steerable in this single TU.
 void network_client::process_player_profile( network_core::packet_reader& reader )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( reader );
+	struct match_options& options = match_client( ).get_match_options( );
+	options.player_profiles[ options.received_players_count++ ].deserialize( reader );
+
+	if ( options.received_players_count == options.players_count )
+		query_players( );
 }
 
 // claude@NOTE: the HUD-forwarding packet handlers below (process_team_bases /
