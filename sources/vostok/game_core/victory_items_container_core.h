@@ -39,6 +39,9 @@ private:
 	// network_client clears m_victory_items directly (on_world_sync_request);
 	// PDB does not record friendship, codegen-neutral
 	friend class network_client;
+	// victory_items_container::use_info reads m_owner_team / m_victory_items
+	// directly (target [this+30h] / [this+20h..24h], no accessor call); codegen-neutral
+	friend class victory_items_container;
 
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	vectora<victory_item_core *>	m_victory_items;
