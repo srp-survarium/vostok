@@ -143,15 +143,18 @@ The swap (379 files, +425k/-283k lines):
   `D3D1x_ShaderDescs.h`, and a handful of platform headers). Scope mirrors the
   curated vendored subset (NOT the whole multi-thousand-file SDK); driven by the
   transitive `#include` closure from the engine's GFx entry headers.
-- The vendored tree carries **survarium patches** that a blind file-replace
-  reverts; these were re-applied onto 4.2.22:
-  (a) `Src/Kernel/HeapMH/HeapMH_SysAllocMalloc.h` Win32 `Alloc`/`Free`/`Realloc`
-  route through `vostok::memory::g_mt_allocator` (the engine `#define`s
-  `_aligned_malloc` to a `void` unreachable-code trap);
-  (b) `Src/Render/D3D1x/D3D1x_Config.h` hardcodes `#define SF_D3D_VERSION 11`
-  (4.2 made it a required build-config define; the build config doesn't set it);
-  (c) every D3D1x `.cpp` the **render engine** compiles gets `#include "pch.h"`
-  first (`render_engine_pc_dx11.vcproj` forces `/Yu"pch.h"`).
+- The vendored tree (`sources/scaleform/`, consumed by the render engine's
+  in-tree D3D1x HAL) carries render-side reconciliation patches:
+  `Src/Render/D3D1x/D3D1x_Config.h` hardcodes `#define SF_D3D_VERSION 11` (4.2
+  made it a required build-config define; the build config doesn't set it), and
+  every D3D1x `.cpp` the render engine compiles gets `#include "pch.h"` first
+  (`render_engine_pc_dx11.vcproj` forces `/Yu"pch.h"`). **NOTE:** the from-source
+  GFx-lib build (see the recipe section) is PRISTINE and standalone - it does NOT
+  apply these, nor any HeapMH `g_mt_allocator` allocator patch (the earlier
+  recipe's misread - the engine feeds GFx an allocator at runtime via
+  `Scaleform::SysAlloc`), nor the engine `pch.h`. The render-side `pch`/config
+  patches stay because the render engine compiles those D3D1x TUs as engine
+  compilands; the GFx libs are a separate, unpatched prebuilt.
 - Build wiring: `render_engine_pc_dx11.vcproj`'s `hal` filter was retargeted to
   the 4.2.22 D3D1x file set (HALSetup/ShaderManager/Shaders dropped;
   ShaderBinary/ShaderDescs/Events/Sync added). `flash_renderer.cpp`'s
@@ -159,193 +162,104 @@ The swap (379 files, +425k/-283k lines):
   to pass `0` - 4.2 dropped that config flag (`HALConfigFlags` is now empty;
   shaders are precompiled descs).
 
-### Result: compiles 100%, link blocked on the prebuilt 4.0.15 libgfx.lib
+### The GFx lib suite is a PREBUILT, not part of the engine LTCG (CORRECTED 2026-06-21)
 
-After the swap **every TU compiles** (0 C-errors across the full
-`survarium.exe`: the whole 4.2.22 SDK, the render engine's D3D1x HAL, the
-flash-glue, all engine code). The EXE link fails with **44 `LNK2001`
-unresolved-external** symbols - all base render classes the render engine's
-4.2.22 D3D1x HAL derives from (`Render::HAL::{initHAL,applyBlendMode,BeginScene,
-EndScene,FinishFrame,...}`, `Render::MatrixState::*` (ctor now takes `HAL*`,
-several methods virtualized `QAE`->`UAE`), `Render::TextureManager::*`,
-`Render::Texture::*`, `MappedTextureBase::Unmap`, `RenderSync`,
-`RBGenericImpl::RenderBufferManager`, `SysAlloc::shutdownHeapEngine`).
+The shipped PDB's build records are authoritative for every compiland's exact
+`cl` flags (`pdb_build_info --pdb $SURVARIUM_BIN/survarium.pdb --grep libgfx
+--full`). They overturn the earlier GUESSED recipe (this section previously
+described a `/Od` + `/GL` + `MASTER_GOLD` + HeapMH-allocator-patch + engine-`pch.h`
+build). The records show the GFx libs were built:
 
-Root cause: the exe links a **prebuilt 4.0.15 `libgfx.lib`** (208 MB, untracked,
-`sources/scaleform/Lib/Win32/Msvc90/Release/`, pulled by
-`#pragma comment(lib,"libgfx.lib")` in `engine_scaleform_initialize.cpp`). It
-DOES define those base classes - but at **4.0.15 ABI** (e.g.
-`?initHAL@HAL@...@@IAE_N...` vs 4.2.22 `MAE`; `MatrixState` ctor `@@QAE@XZ` vs
-`@@QAE@PAVHAL@...`; `shutdownHeapEngine` on `SysAllocBase`/`SysAllocPaged`
-returning `void` vs `SysAlloc` returning `bool`). The base-render ABI changed
-between versions, so the 4.0.15 lib cannot satisfy 4.2.22 D3D1x. **Reaching a
-GREEN link needs a 4.2.22 `libgfx.lib`** - the 4.2.22 SDK ships NO prebuilt
-`libgfx*.lib` (only its own Projects to build them), and compiling the base
-`Render_*.cpp`/`SF_System.cpp` from source into the render engine instead is a
-deep, duplicate-symbol-prone reimplementation of that lib = real step-4+ work,
-deliberately NOT attempted here (assess-first). The header swap + build wiring
-is committed; the prebuilt-lib replacement is the open next step.
+- **NON-`/GL`, `/Ox`** - finished machine code, staged to
+  `C:\survarium\binaries.prebuilt\Win32\libraries\shipping\` exactly like
+  boost / openssl, **NOT in the engine whole-program LTCG**. The wrong `/GL`
+  recipe pulled GFx INTO the engine LTCG and regressed ~293 engine math / physics
+  / bullet / collision functions (`vostok::math::sin/cos/tan/pow`,
+  `float3_pod::normalize`, `float4x4::create_*`, the bullet/collision inline
+  bodies) from 100% as the cross-module inliner repartitioned. Taking GFx out of
+  the LTCG fixes that regression, the 2 GB-contiguous `lib` OOM (machine-code
+  archives are small, so no as3 4-way split), and the flag drift - all at once.
+- **From PRISTINE 4.2.22 SDK source, standalone** - no survarium patches (no
+  HeapMH `g_mt_allocator` routing: the engine feeds GFx an allocator at RUNTIME
+  via `Scaleform::SysAlloc` / `GFx::System::Init`, see the `xrSysAllocMalloc` in
+  `engine_scaleform_initialize.cpp`), no engine `pch.h` prepend (the fake-`HANDLE`
+  macro cascade came from survarium's `extensions.h`, which a standalone GFx build
+  never includes), no `MASTER_GOLD`, no `VOSTOK_STATIC_LIBRARIES`, no `/arch`,
+  no `/Od`.
 
-### Pilot result: the 44 base-render LNK2001 are CLEARED
+**The suite (from the PDB project set), staged to `shipping/`:**
 
-Built `libgfx.lib` from the 212-TU 4.2.22 recipe below (all 212 compile, the lib
-links), staged it over the prebuilt 4.0.15 one, and relinked the exe. **All 44
-base-render LNK2001 are gone** (Render::HAL / MatrixState / TextureManager /
-Texture / RenderSync / RBGenericImpl / SysAlloc all resolve at 4.2.22 ABI). What
-remains, by class:
+| lib            | TUs | note |
+| :------------- | --: | :--- |
+| `libgfx`       | 177 | GFx + Kernel + Render + Text; AMP_* TUs compile empty under `SF_BUILD_SHIPPING` |
+| `libgfx_as2`   |   6 | SCU: `AS2_All.cpp` + IME/XML/Support |
+| `libgfx_as3`   |  25 | SCU: `AS3_All.cpp`, `AS3_Abc*`, `AS3_Obj_*_All.cpp` (the amalgamation TUs - NOT 272 per-class files) |
+| `libgfxexpat`  |   1 | `XML_Expat.cpp` |
 
-1. **ws2_32 winsock (~38)** - the 4.0.15 prebuilt libgfx carried a
-   `#pragma comment(lib,"ws2_32.lib")` (via its AMP socket objects) that
-   accidentally satisfied network_core's Winsock imports. SF_BUILD_SHIPPING
-   compiles AMP out (matching the shipped binary, which has ZERO AMP symbols), so
-   the pragma is gone and network_core's `__imp__WSA*` go unresolved. This is a
-   latent exe-wiring gap the foreign lib was masking, NOT a libgfx defect: add
-   `ws2_32.lib` to the exe vcproj's Master Gold `AdditionalDependencies` (the
-   config already `/delayload:ws2_32.dll`).
-2. **jpeg/png codec (~12)** - `libgfx.lib(JPEG_ImageReader/Common.obj)` and
-   `PNG_ImageReader.obj` call `jpeg_*` / `png_*`; the prebuilt 4.0.15
-   `libgfx_libjpeg.lib`/`libgfx_libpng.lib` don't satisfy them (version skew). This
-   is the concrete 9-lib-suite boundary: those two sibling libs need the same
-   4.2.22 rebuild treatment (jpeg-8d / libpng-1.5.13 sources are in 3rdParty).
-3. **Render::Texture::Copy (1)** - AMP-gated (`#ifdef SF_AMP_SERVER` in
-   Render_Image.cpp), so absent under SF_BUILD_SHIPPING - and absent from the
-   shipped binary too. The render engine's in-tree 4.2.22 D3D1x_Texture.cpp
-   references it; that reference is a render-side reconciliation quirk to fix on
-   the render engine, not in libgfx.
+There is **NO `libgfx_air` and NO `libgfxsound_fmod`** in the shipped binary (zero
+such projects/symbols). The codec C libs (`libjpeg`/`libpng`/`pcre`/`zlib`) carry
+**no debug `cmd` record** in the PDB - they are not engine-matchable; they only
+need to RESOLVE the `jpeg_*` / `png_*` / `inflate` symbols `libgfx` pulls. We
+build `libgfx_zlib` / `libgfx_libpng` / `libgfx_libjpeg` from the SDK `3rdParty`
+source as plain Release C static libs (the exe `#pragma comment(lib,...)` names
+them with the `libgfx_` prefix).
 
-So the pilot proved out: the base-render ABI mismatch is solved by a from-source
-4.2.22 libgfx, and the residual link work is (a) two trivial exe/codec-lib wiring
-items and (b) one render-engine D3D1x reconciliation - none of them a libgfx
-byte/build problem. By analogy the remaining 8 libs are the same pattern: build
-each from its TU set with the GFx Shipping + MASTER_GOLD flags below, stage over
-the prebuilt, relink.
+**The C++ recipe (libgfx / as2 / as3, identical config):**
 
-### Rebuilding libgfx.lib from 4.2.22 source (the verified recipe)
+    -Ox -Ob2 -Ot -Zp8 -Z7 -MT -W4 -GS- -Gy -GR- -GF -WX -Zl -FD -MP
+    -errorreport:none -TP  + -w44264 -w44062 -w44265 -w44287 -w44289 -w44296
+    -w44431 -w44545 -w44546 -w44547 -w44548 -w44549 -w44623
+    defines: WIN32 _WINDOWS SF_BUILD_STATICLIB NDEBUG SF_BUILD_SHIPPING _MBCS
+             _VC80_UPGRADE=0x0710
+    -I Include Src 3rdParty/{zlib-1.2.7,jpeg-8d,libpng-1.5.13,expat-2.1.0/lib,
+       pcre,glext,PlatformSDK,cri/pc/include,fmod/pc/Win32/inc} + DXSDK Include
 
-`sources/vostok/libgfx/sources/libgfx.vcproj` rebuilds the base GFx lib from the
-212 Win32 SDK TUs so the exe links a 4.2.22-ABI `libgfx.lib` and the 44 LNK2001
-clear. This is the pilot for the wider 9-lib GFx suite.
+`SF_BUILD_SHIPPING` `#undef`s `SF_AMP_SERVER`, gutting the `Amp_*` TUs - the
+shipped binary has ZERO AMP symbols (`Scaleform::AMP` / `AmpServer` / `Amp_*` all
+absent), which is also why the render engine's `render_engine_pc_dx11.vcproj`
+carries `SF_BUILD_SHIPPING` (its D3D1x HAL consumes GFx headers; the `Render::
+Texture::Copy` / AMP references the foreign 4.0.15 lib used to mask are gone).
 
-- **TU set = 212 .cpp** (76 GFx + 49 Kernel + 87 Render). Ground truth:
-  `scripts/libgfx_tus.txt`, which is exactly the Msvc10 `GFx.vcxproj` `<ClCompile>`
-  set == `Projects/libgfx.txt` resolved for Win32 (they agree). Regenerate the
-  vcproj from it with `scripts/gen_libgfx_vcproj.py`.
-- **Config = GFx Shipping flags AND the survarium MASTER_GOLD module flags
-  together.** The vcproj clones the `scaleform` module's `Master Gold|Win32` config
-  (the one that already compiles GFx TUs): `/Od /Ob2 /Oi /Ot /Oy /GT /GL`,
-  `RuntimeLibrary` `/MT`, `/GS-`, `/arch:SSE2 /fp:fast`, the `GFx_Lib` defines
-  `WIN32;_WINDOWS;SF_BUILD_STATICLIB`, plus `NDEBUG;VOSTOK_STATIC_LIBRARIES;
-  MASTER_GOLD` **and `SF_BUILD_SHIPPING`**. Both define classes are load-bearing
-  and confirmed empirically:
-  - `MASTER_GOLD` gates the byte-affecting HeapMH patch below (a define the GFx
-    vsprops never set), and the shipped target asm proves that gate is live.
-  - `SF_BUILD_SHIPPING` is required: it undefines `SF_AMP_SERVER`, gutting the
-    `Amp_*.cpp` TUs. The shipped binary has ZERO AMP symbols
-    (`Scaleform::AMP::*`, `AmpServer::*`), and without it the AMP socket TU pulls
-    Winsock and the exe link breaks. So survarium built libgfx with BOTH defines:
-    the GFx Shipping config + their MASTER_GOLD flavor.
-  `/Z7` (DebugInformationFormat=1, == the GFx Shipping vsprops value) is used
-  instead of `/Zi`: the `/Zi` mspdbsrv PDB path raises `fatal error C1121: call to
-  CryptoAPI failed` under Wine at scale; `/Z7` embeds debug info in the .obj and
-  has no such dependency.
-- **The one libgfx byte-affecting patch is replicated.** `HeapMH_SysAllocMalloc.h`
-  routes Win32 `Alloc`/`Free`/`Realloc` through `vostok::memory::g_mt_allocator`
-  (`VOSTOK_MALLOC_IMPL`). The shipped binary confirms it: target
-  `Scaleform::SysAllocMalloc::Alloc(uint,uint)` (rva 0x9ea00, 18 bytes, mapped to
-  `heapmh_sysallocmalloc.h:69`) is `push size; push &g_mt_allocator; call
-  vostok::memory::...malloc_helper; add esp,8` - a 2-arg cdecl call into the
-  engine allocator, **not** `_aligned_malloc`. So the patch is in the shipped lib
-  and `MASTER_GOLD` (the gate) was defined for the real libgfx build.
-- **The engine memory env is force-included.** The patched header needs
-  `VOSTOK_MALLOC_IMPL` / `g_mt_allocator` / `pvoid` in scope, and the GFx headers
-  pull the real `<windows.h>` (the fake-`HANDLE`-macro cascade the scaleform pch
-  already documents). `sources/vostok/libgfx/sources/pch.h` is the same engine
-  preamble (`<vostok/extensions.h>` + the `os_preinclude`->`os_include` ritual).
-  vcproj2ninja **rejects** the `ForcedIncludeFiles` attribute (it aborts the whole
-  ninja regen), so the preamble can't be `/FI`-injected via the vcproj; instead
-  `scripts/setup_libgfx_build.py` prepends `#include "pch.h"` to each build-tree TU.
-- **Build SDK overlay tree (gitignored).** The 202 TUs the curated
-  `sources/scaleform/` doesn't carry come from the external 4.2.22 SDK, so
-  `scripts/setup_libgfx_build.py` stages `sources/scaleform_build/` = the full
-  external SDK (`Src` + `Include` + `3rdParty`, ~148M) overlaid with the repo's
-  survarium patches + the preamble prepend. The vcproj include dirs and source
-  paths point at it. Regenerate with
-  `python3 scripts/setup_libgfx_build.py --sdk /path/to/scaleform_sdk`.
-- **Wiring.** `libgfx.vcproj` is registered in `vostok v2.0.sln`; `game_core`
-  depends on it (puts it in the exe build cone so vcproj2ninja emits its `.ninja`).
-  `OutputFile` is `binaries.prebuilt/Win32/libraries/shipping/libgfx.lib` - exactly
-  where the exe's `#pragma comment(lib,"libgfx.lib")` resolves it - so the rebuilt
-  lib replaces the prebuilt 4.0.15 one with no link-path change. Do NOT rerun
-  `setup-toolchain.py --force libs` after building: it re-stages the 4.0.15 blob
-  from `VOSTOK_LIBS_DIR` and clobbers the freshly built lib.
-- **Build with the direct driver, NOT ninja.** `ninja.exe` under Wine DEADLOCKS
-  after ~70-80 cl spawns (it sleeps with no live child and never progresses), so
-  the in-graph libgfx build never finishes - the same trap a full `rebuild.py`
-  hits once it decides libgfx is dirty. Each INDIVIDUAL `wine cmd /c cl @rsp` is
-  reliable, so `scripts/build_libgfx_direct.py` compiles the 212 TUs one at a time
-  with the EXACT vcproj2ninja flags (from `binaries/ninja/rsp/libgfx_cl_0.rsp`,
-  so the bytes match the in-graph build), skips already-built objs, then `lib`s
-  them. Idempotent - re-run to resume. 212 serial TUs under Wine (no parallelism:
-  `pool depth=1`), some large XML/Render TUs taking minutes each, so it is slow
-  (~40 min) but does not hang. Build it with:
-  `nix develop --command python3 scripts/build_libgfx_direct.py`
-  (run `regen_ninja.py` first if the vcproj changed, so the rsp is current).
-  Reaching the exe link still needs ninja, but ninja will NOT recompile libgfx
-  once all 212 objs are current and only re-libs + links (verify with
-  `ninja_build.py -n ...`); if it insists on recompiling (stale .d deps), link the
-  exe directly via `cmd /c link @rsp/survarium_-_PC_-_DirectX_11_link.rsp`.
-- **The direct drivers reap mspdbsrv per TU (`scripts/gfx_mspdbsrv.py`).** Each
-  `wine cmd /c cl @rsp` spawns `mspdbsrv.exe` (touched even under `/Z7` by the
-  `/FD` + `/Fd"vc90.pdb"` minimal-PDB write), which then idles ~10 MINUTES after
-  the compile before exiting and inherits the compile's stdout/stderr fds - so a
-  driver capturing output only sees pipe EOF when mspdbsrv finally dies. Every
-  fresh TU therefore "compiled in seconds, then HUNG ~10 min", and the 8-lib
-  build effectively never finished (libgfx itself didn't trip this only because
-  its objs were already cached, so it just re-libbed - no fresh compile). This is
-  the same pipe-EOF stall `ninja_build.py` already kills for the in-graph build
-  (PR #280); the direct drivers bypass `ninja_build.py`, so the fix is ported into
-  `gfx_mspdbsrv.py`: spawn each compile in its own session writing output to a
-  FILE (no inherited pipe to block on), poll for the expected `.obj`, and once it
-  is written kill the WINEPREFIX-scoped `mspdbsrv.exe` + reap the wine children so
-  the wait returns immediately. Validated on `libgfx_zlib`: 3 fresh C TUs compile
-  + lib in 5s total (was ~10 min EACH). With this in place the full 8-lib build
-  runs end to end at seconds-per-TU.
+**The build (`scripts/build_gfx_suite.py`):** authors a per-lib `cl` response file
+straight from this recipe and compiles each TU directly under Wine
+(`wine cmd /c cl @rsp`), then `lib`s the objects - **NO vcproj2ninja / sln /
+ninja**. `ninja.exe` under Wine deadlocks after ~70-80 `cl` spawns, and a direct
+machine-code build has no in-graph step anyway. System includes (VC / WinSDK /
+DXSDK) come from Wine's `%INCLUDE%` (set in the Wine registry by
+`setup-toolchain.py`), so the rsp lists only the GFx `-I` dirs. The per-TU
+mspdbsrv pipe-EOF reaper (`scripts/gfx_mspdbsrv.py`, PR #280 ported to the direct
+driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
 
-**Byte-match measurement gap:** the delinker strips a single engine-path prefix
-(`c:/survarium/sources` for target), but the GFx compilands are recorded under
-`C:\w\...\GFx_4.2.21\Src\...`, so they do NOT map into `binaries/objdiff/target`
-and the libgfx TUs do not auto-pair in `report.json` / `match.db`. The match-score
-table will not move when libgfx links. Byte-match must instead be checked directly
-against the shipped exe code region (the `binaries/rich/target/index.jsonl` carries
-the libgfx symbols + VAs, as the `SysAllocMalloc::Alloc` check above shows). Wiring
-the GFx prefix into the delinker is the follow-up to make the suite measurable.
+    nix develop --command python3 scripts/build_gfx_suite.py
+
+  Source is the PRISTINE external SDK (`/home/sheep/Projects/scaleform_sdk`,
+  4.2.22; `$SCALEFORM_SDK` overrides). No `scaleform_build/` overlay (deleted -
+  it existed only to carry the now-removed survarium patches + pch prepend).
+
+**Staging.** Output is `binaries.prebuilt/Win32/libraries/shipping/<name>.lib`,
+where the exe's `#pragma comment(lib,"<name>.lib")` resolves it. The libs are
+plain prebuilts: un-wired from the sln, `game_core` takes no dependency edge, and
+`copy_lib_files.py` skips the foreign 4.0.15 distribution `libgfx*.lib` under
+`scaleform/Lib/.../Release/` so a `setup-toolchain.py` pass never clobbers them.
+Do NOT run `setup-toolchain.py --force libs` after building.
 
 ### PDB source-checksum confirms 4.2.22 == shipped 4.2.21 (no drift)
 
 The game PDB records the GFx source under
-`C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Src\...` - the shipped exe
-was built from GFx **4.2.21**. `pdb_diff --source-dir` (per-compiland MD5) of our
-vendored 4.2.22 tree against the game PDB:
+`C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Src\...` - the shipped
+exe was built from GFx **4.2.21**. `pdb_diff --source-dir` (per-compiland MD5) of
+the vendored 4.2.22 tree vs the game PDB reports `matched=7 diff=0` - every SDK
+file the game compiled is byte-identical between 4.2.22 and 4.2.21, so 4.2.22 is
+the correct source.
 
-    pdb_diff --target-pdb $SURVARIUM_BIN/survarium.pdb \
-      --target-engine-path 'C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21' \
-      --source-dir sources/scaleform
-    # matched=7  diff=0  base-only=0  target-only=197
-
-**`diff=0`**: every SDK file we vendor that the game compiled is byte-identical
-between 4.2.22 and the shipped 4.2.21 (the 7 explicit MATCHes are the
-`Render/ImageFiles/*.cpp`; the rest of our subset is headers, which carry no
-PDB checksum). So 4.2.22 is the correct source - no hidden point-release drift.
-
-**`target-only=197`** (88 gfx, 69 render, 40 kernel `.cpp`): the full SDK
-compiland set that the shipped binary built into `libgfx.lib` but our curated
-subset does not carry as compiled TUs - including exactly the base-render TUs the
-4.2.22 D3D1x HAL link needs (`render_hal.cpp`, `render_image.cpp`,
-`render_cxform.cpp`, `render_sync.cpp`, `render_buffergeneric.cpp`,
-`render_meshcache.cpp`). This 197-file set is the concrete inventory for the
-step-4+ "rebuild libgfx.lib at 4.2.22" decision: re-render the prebuilt lib from
-these (the SDK ships only its own Projects, no prebuilt `libgfx*.lib`), or pull
-the needed subset into the build as compiled TUs.
+**Byte-match measurement gap:** the delinker strips a single engine-path prefix
+(`c:/survarium/sources` for target), but the GFx compilands are recorded under
+`C:\w\...\GFx_4.2.21\Src\...`, so they do NOT map into
+`binaries/objdiff/target` and the GFx TUs do not auto-pair in `report.json` /
+`match.db`. The GFx libs do not move the match-score table; the point of building
+them is a GREEN exe link with GFx OUT of the LTCG so the ~293 engine functions the
+bad `/GL` build poisoned recover. Per-symbol GFx byte-match would need the GFx
+prefix wired into the delinker (follow-up).
 
 ## What is stubbed / deferred
 
