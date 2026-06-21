@@ -7,13 +7,16 @@
 
 namespace survarium {
 
-// STATE[STUB]
 template < typename T >
-inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
+inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( ) :
+	resources::unmanaged_cook( weapon_core_state_cook_class< T >( ), reuse_false, use_current_thread_id, use_current_thread_id )
 {
-	// FUNCTION BODY
-	// <0x9acb8>|0x038|+0x026:'16'
-	// ******
+	resources::register_cook( this );
+}
+
+template < typename T >
+weapon_core_state_cook_template<T>::~weapon_core_state_cook_template( )
+{
 }
 
 template < typename T >
@@ -25,7 +28,7 @@ inline mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( res
 template < typename T >
 inline void weapon_core_state_cook_template<T>::deallocate_resource( void* arg_0 )
 {
-	// sushi@TODO
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)arg_0 );
 }
 
 
@@ -74,17 +77,10 @@ inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources
 	data.get_parent_query( )->finish_query( result_success );
 }
 
-// STATE[STUB]
 template < typename T >
 inline void weapon_core_state_cook_template<T>::destroy_resource( resources::unmanaged_resource* resource )
 {
-	// CALL SITE INFO
-	// <0x9d47b> -> void* <unknown>(u32)
-	// ******
-
-	// FUNCTION BODY
-	// <0x9d460>|0x000|+0x00f:'98'
-	// ******
+	static_cast< T* >( resource )->~T( );
 }
 
 } // namespace survarium
