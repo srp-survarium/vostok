@@ -51,8 +51,13 @@ public:
     public:
         NodeData(Context::EntryData::EntryType type = ET_Base)
             : Context::EntryData(type, NF_Visible) { }
+        // "Copy constructor" for cloning. States aren't copied easily, so leave them for later.
+        NodeData(NonlocalCloneArg<NodeData> src)
+            : Context::EntryData(NonlocalCloneArg<Context::EntryData>(*src.pC)),
+              M34(src->M34), Cx(src->Cx),
+              AproxLocalBounds(src->AproxLocalBounds), AproxParentBounds(src->AproxParentBounds) { }
 
-        StateBag    States;        
+        StateBag    States;
         Cxform      Cx;
         // Propagated LocalBounds approximation. This is not precise since it uses
         // cumulatively enclosed rectangles (not the precise matrix). Intended for
@@ -74,6 +79,8 @@ public:
 
         // expandByFilterBounds - Helper function to expand the local bounds based on a node's FilterSet.
         bool expandByFilterBounds(RectF* bounds, bool boundsEmpty) const;
+        static void expandByFilterBounds( const Filter* filter, RectF* bounds );
+
         // contractByFilterBounds - Helper function to contract the local bounds based on a node's FilterSet.
         // Used to return bounds to their original state after having expandByFilterBounds called on them.
         void contractByFilterBounds(RectF* bounds) const;
@@ -121,12 +128,21 @@ public:
 
         // copies all matrices, cxform, visibility from src to 'this' node.
         virtual void CopyGeomData(TreeNode* destNode, const TreeNode& srcNode);
+
+        // Clone TreeNode, potentially in new context.
+        virtual TreeNode* CloneCreate(Context* context) const;
+        virtual bool      CloneInit(TreeNode* node, Context* context) const;
     };
 
     SF_RENDER_CONTEXT_ENTRY_INLINES(NodeData)
 
     // copies all matrices, cxform, visibility from src to 'this' node.
     void CopyGeomData(const TreeNode& src);
+
+    // Clone TreeNode and subtree, potentially in new context.
+    // Used by DrawableImage to capture tree state. Shared data (such as Shapes and
+    // images) will be AddRefed.
+    TreeNode* Clone(Context* context) const;
 
     bool HasChanges(unsigned cb) const 
     { 
@@ -238,6 +254,13 @@ public:
         return state ? state->GetFilters() : 0;
     }
 
+    void              SetOrigScale9Parent(TreeNode* origParent);
+    TreeNode*         GetOrigScale9Parent() const
+    {
+        const OrigScale9ParentState* state = GetState<OrigScale9ParentState>();
+        return state ? state->GetNode() : 0;
+    }
+
     // Treat this TreeNode as 2D only
     void        Clear3D();
     // Determine if this TreeNode has a 3D transform
@@ -274,6 +297,13 @@ public:
     {
         return GetReadOnlyData()->AproxParentBounds;
     }
+
+    void SetRendererString(const char* str);
+    const char* GetRendererString() const;
+    void SetRendererFloat(float f);
+    float GetRendererFloat() const;
+    void DisableBatching(bool b);
+    bool IsBatchingDisabled() const;
 
     // Internal CalcViewMatrix helper.
     void        appendAncestorMatrices(Matrix2F *m) const;
@@ -467,6 +497,8 @@ public:
             :  BaseClass(type) { }
     public:
         NodeData() : BaseClass(ET_Container) { }
+        NodeData(NonlocalCloneArg<NodeData> src)
+            : BaseClass(NonlocalCloneArg<BaseClass>(*src.pC)) { }
         
         TreeNodeArray Children;
 
@@ -482,6 +514,9 @@ public:
 
         virtual TreeCacheNode*  updateCache(TreeCacheNode* pparent, TreeCacheNode* pinsert,
                                             TreeNode* pnode, UInt16 depth) const;
+
+        virtual TreeNode* CloneCreate(Context* context) const;
+        virtual bool      CloneInit(TreeNode* node, Context* context) const;
     };
 
     SF_RENDER_CONTEXT_ENTRY_INLINES(NodeData)

@@ -62,8 +62,6 @@ class GlobalContext;
 class ASRefCountCollector;
 
 class ASStringContext;
-enum  ASBuiltinType;
-
 
 class ExecutionContext;
 

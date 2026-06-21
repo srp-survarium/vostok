@@ -293,6 +293,7 @@ struct GlyphRunData
     Matrix2F            DirMtx;
     Matrix2F            InvMtx;
     float               HeightRatio;
+    unsigned            HintedNomHeight;
     const ShapeDataInterface* pShape;
     const GlyphRaster*        pRaster;
 };

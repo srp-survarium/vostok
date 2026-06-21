@@ -475,7 +475,7 @@
 				OutputFile="$(SolutionDir)../binaries/$(PlatformName)/survarium-dx11-win32-gold.exe"
 				Version=""
 				LinkIncremental="1"
-				AdditionalDependencies="libeay32-vc90-mt-s.lib ssleay32-vc90-mt-s.lib"
+				AdditionalDependencies="libeay32-vc90-mt-s.lib ssleay32-vc90-mt-s.lib ws2_32.lib"
 				AdditionalLibraryDirectories="&quot;$(SolutionDir)../binaries/$(PlatformName)/libraries/&quot;;&quot;$(SolutionDir)../binaries.prebuilt/speedtree/lib/windows/vc9&quot;;&quot;$(SolutionDir)../binaries.prebuilt/stlport/libraries/$(PlatformName)&quot;;&quot;$(SolutionDir)../binaries.prebuilt/Win32/libraries/shipping/&quot;;&quot;$(SolutionDir)../binaries.prebuilt/boost/libraries&quot;;&quot;$(SolutionDir)../binaries.prebuilt/openssl/libraries&quot;"
 				IgnoreDefaultLibraryNames="vostok_maya_animation-static-gold"
 				DelayLoadDLLs=""

@@ -122,7 +122,9 @@ enum SortKeyType
     // ProjectionMatrix3D
     SortKey_ProjectionMatrix3DStart = 13,
     SortKey_ProjectionMatrix3DEnd   = 14,
-
+    // UserData (setRenderString/Float)
+    SortKey_UserDataStart           = 15,
+    SortKey_UserDataEnd             = 16,
 };
 
 // Separate mask-type alias is declared for masks to enable
@@ -219,6 +221,7 @@ public:
     SortKey(SortKeyType filterKeyType, const FilterSet* filters);
     SortKey(SortKeyType viewKeyType, const Matrix3FRef* viewMatrix);
     SortKey(SortKeyType projKeyType, const Matrix4FRef* projMatrix);
+    SortKey(SortKeyType projKeyType, UserDataState::Data* data);
 
 
     SortKeyType GetType() const { return pImpl->Type; }

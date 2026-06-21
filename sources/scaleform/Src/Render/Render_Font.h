@@ -52,14 +52,17 @@ class GlyphShape : public ShapeDataPacked<ArrayLH_POD<UByte> >
 {
     typedef ArrayLH_POD<UByte> ContainerType;
 public:
-    GlyphShape() : ShapeDataPacked<ArrayLH_POD<UByte> > (&Data, 0, 1.0f), GlyphSize(0) {}
+    GlyphShape() : ShapeDataPacked<ArrayLH_POD<UByte> > (&Data, 0, 1.0f), HintedSize(0) {}
 
     void         Clear()         { Data.Clear(); }
     virtual bool IsEmpty() const { return Data.GetSize() == 0; }
 
+    void     SetHintedSize(unsigned size) { HintedSize = size; }
+    unsigned GetHintedSize() const { return HintedSize; }
+
 private:
     ContainerType   Data;
-    unsigned        GlyphSize;
+    unsigned        HintedSize;
     RectF           Bounds;
 };
 

@@ -445,6 +445,11 @@ public:
     {        
         return StringPool.CreateString(str, len);
     }
+    template<size_t N>
+    DOMString CreateString(const char (&str)[N])
+    {        
+        return StringPool.CreateString(str, N-1);
+    }
     DOMString EmptyString()
     {
         return StringPool.CreateEmptyString();

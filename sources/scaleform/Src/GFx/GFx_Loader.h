@@ -86,6 +86,7 @@ class   MemoryContext;
 class   LogState;
 class   ExternalInterface;
 class   MultitouchInterface;
+class   VirtualKeyboardInterface;
 class   ImportVisitor;
 class   TaskManager;
 class   FontLib;
@@ -153,6 +154,7 @@ public:
         State_FSCommandHandler,
         State_ExternalInterface,
         State_MultitouchInterface,
+        State_VirtualKeyboardInterface,
 
         // *** Loading - related states.
         State_FileOpener,
@@ -164,12 +166,12 @@ public:
         State_ImportVisitor,
         State_FontPackParams,
         State_FontLib,
+        State_DefaultFontLibName,
         State_FontProvider,
         State_FontMap,
         State_TaskManager,
         State_TextClipboard,
         State_TextKeyMap,
-        State_PreprocessParams,
         State_IMEManager,
         State_XMLSupport,
         State_ZlibSupport,
@@ -179,6 +181,7 @@ public:
         State_Video,
         State_TestStream,
         State_SharedObject,
+        State_UrlNavigator,
         State_LocSupport,
 
         State_AS2Support,
@@ -222,10 +225,14 @@ public:
     {
         WWT_Default       = 0,   // OnWordWrapping will not be invoked
         WWT_Asian         = WordWrapHelper::WWT_Asian, // mostly Chinese
-        WWT_Prohibition   = WordWrapHelper::WWT_Prohibition, // Japanese prohibition rule
+        WWT_Prohibition   = WordWrapHelper::WWT_Prohibition, // Prohibits certain chars at start/end of line ("Japanese prohibition rule") 
         WWT_NoHangulWrap  = WordWrapHelper::WWT_NoHangulWrap, // Korean-specific rule
         WWT_Hyphenation   = (WordWrapHelper::WWT_Last<<1), // very simple hyphenation; for demo only
-        WWT_Custom        = 0x80 // user defined word-wrapping.
+        WWT_Custom        = 0x80, // user defined word-wrapping.
+
+        WWT_Korean        = WWT_Prohibition | WWT_NoHangulWrap,
+        WWT_Japanese      = WWT_Prohibition,
+        WWT_Chinese       = WWT_Prohibition | WWT_Asian
     };
     unsigned               WWMode; // combination of WWT_- flags
 
@@ -655,35 +662,6 @@ public:
     };
     // The method is called the a tag has just been load from the file.
     virtual void    LoadTagUpdate(const TagInfo& info, bool calledFromDefSprite) { SF_UNUSED2(info, calledFromDefSprite); }
-};
-
-// ***** PreprocessParams
-
-// If not null the shapes are pre-tessellated when loading 
-// (see GFx_DefineShapeLoader). TessellateScale defines the 
-// overall master scale at which the tessellation and EdgeAA occurs.
-// TessellateEdgeAA defines whether on not EdgeAA is used. 
-class PreprocessParams : public State
-{
-    float   TessellateScale;
-    bool    TessellateEdgeAA;
-
-public:
-    PreprocessParams(float tessScale=1.0f, bool tessEdgeAA=true)
-        : State(State_PreprocessParams)
-    {
-        TessellateScale  = tessScale;
-        TessellateEdgeAA = tessEdgeAA;
-    }
-
-    inline float    GetTessellateScale() const      { return TessellateScale; }
-    inline void     SetTessellateScale(float scale) { TessellateScale = scale; }   
-
-    // It's highly recommended that the EdgeAA flag should match the one
-    // used in RenderConfig. Otherwise the pre-tessellated shapes will
-    // be ignored.
-    inline bool     GetTessellateEdgeAA() const      { return TessellateEdgeAA; }
-    inline void     SetTessellateEdgeAA(bool edgeAA) { TessellateEdgeAA = edgeAA; }   
 };
 
 // Forward Declarations
@@ -1171,6 +1149,16 @@ public:
 };
 
 
+// ***** UrlNavigator
+// Interface for url navigation. Intended to open URLs in current OS/environment from AS3
+class UrlNavigator : public State
+{
+public:
+    UrlNavigator() : State(State_UrlNavigator) {}
+
+    virtual void NavigateToUrl(const String& url) = 0;
+};
+
 
 // ***** GFxStateBag
 
@@ -1259,6 +1247,10 @@ public:
     inline void                 SetMultitouchInterface(MultitouchInterface* p);
     inline Ptr<MultitouchInterface> GetMultitouchInterface() const;
 
+    // Sets the virtual keyboard interface used - implemented in GFxPlayer.h.
+    inline void                 SetVirtualKeyboardInterface(VirtualKeyboardInterface* p);
+    inline Ptr<VirtualKeyboardInterface> GetVirtualKeyboardInterface() const;
+
     // Installs a callback function that is always used by GFxLoader
     // for opening various files based on a path or url string.
     // If not specified, the system file input will be used
@@ -1299,6 +1291,9 @@ public:
     inline void                 SetFontLib(FontLib* pfl);
     inline Ptr<FontLib>         GetFontLib() const;
 
+    void                        SetDefaultFontLibName(const char* defaultFontLib);
+    const char*                 GetDefaultFontLibName() const;
+
     inline void                 SetFontProvider(FontProvider *ptr)       { SetState(State::State_FontProvider, ptr); }
     inline Ptr<FontProvider>    GetFontProvider() const                    { return *(FontProvider*) GetStateAddRef(State::State_FontProvider); }
 
@@ -1309,10 +1304,6 @@ public:
      inline void                 SetImagePackParams(ImagePackParams *ptr) { SetState(State::State_ImagePackerParams, ptr); }
      inline Ptr<ImagePackParams> GetImagePackerParams() const          { return *(ImagePackParams*) GetStateAddRef(State::State_ImagePackerParams); }
 
-    // Sets an interface to Preprocess params.
-    //@TODO: temporarily disabled, will be re-enabled in later releases.
-//     inline void                 SetPreprocessParams(PreprocessParams *ptr) { SetState(State::State_PreprocessParams, ptr); }
-//     inline Ptr<PreprocessParams> GetPreprocessParams() const        { return *(PreprocessParams*) GetStateAddRef(State::State_PreprocessParams); }
 
     // Sets a task manager - used to issue I/O and general processing tasks on other threads.
     inline void                 SetTaskManager(TaskManager *ptr);
@@ -1335,9 +1326,8 @@ public:
     inline void                 SetZlibSupport(ZlibSupportBase *ptr) { SetState(State::State_ZlibSupport, ptr); }
     inline Ptr<ZlibSupportBase> GetZlibSupport() const              { return *(ZlibSupportBase*) GetStateAddRef(State::State_ZlibSupport); }
 
-    //@TODO: temporarily disabled, will be re-enabled in later releases.
-//     inline void                 SetFontCompactorParams(FontCompactorParams *ptr) { SetState(State::State_FontCompactorParams, ptr); }
-//     inline Ptr<FontCompactorParams> GetFontCompactorParams() const  { return *(FontCompactorParams*) GetStateAddRef(State::State_FontCompactorParams); }
+    inline void                 SetFontCompactorParams(FontCompactorParams *ptr) { SetState(State::State_FontCompactorParams, ptr); }
+    inline Ptr<FontCompactorParams> GetFontCompactorParams() const  { return *(FontCompactorParams*) GetStateAddRef(State::State_FontCompactorParams); }
 
 #ifdef GFX_ENABLE_VIDEO
     // defined in VideoBase.h
@@ -1348,6 +1338,9 @@ public:
     inline void                 SetSharedObjectManager(SharedObjectManagerBase *ptr);
     inline Ptr<SharedObjectManagerBase> GetSharedObjectManager() const;
 #endif
+
+    inline void                 SetUrlNavigator(UrlNavigator *ptr)  { SetState(State::State_UrlNavigator, ptr); }
+    inline Ptr<UrlNavigator>    GetUrlNavigator() const             { return *(UrlNavigator*) GetStateAddRef(State::State_UrlNavigator); }
 
     inline void                 SetAS2Support(ASSupport *ptr) { SetState(State::State_AS2Support, ptr); }
     inline Ptr<ASSupport>       GetAS2Support() const         { return *(ASSupport*) GetStateAddRef(State::State_AS2Support); }

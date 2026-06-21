@@ -27,8 +27,6 @@ namespace Scaleform { namespace Render {
 
 // ***** Rescale Support
 
-typedef ResizeImageType ImageRescaleType;
-
 ImageRescaleType SF_STDCALL GetImageFormatRescaleType(ImageFormat format);
 void    SF_STDCALL  RescaleImageData(ImageData& dest, ImageData& src,
                                      ImageRescaleType resizeType);
@@ -59,6 +57,20 @@ void    SF_STDCALL  GenerateMipLevel(ImagePlane& dplane, ImagePlane& splane,
 Image::CopyScanlineFunc SF_STDCALL GetImageConvertFunc(ImageFormat destFormat, ImageFormat sourceFormat);
 
 // ***** General scan-line conversion functions
+
+// Generalized swizzle. The template parameters correspond to the destination channels of the source values in order.
+// Eg. If the input is ARGB, and you do Image_CopyScanline32_Swizzle<1,2,3,0>(...), the output will be RGBA.
+template<int d0, int d1, int d2, int d3>
+void    SF_STDCALL  Image_CopyScanline32_Swizzle(UByte* pd, const UByte* ps, UPInt size, Palette*, void*)
+{
+    for (UPInt i = 0; i< size; i+=4, pd+=4, ps+=4)
+    {
+        pd[d0] = ps[0];
+        pd[d1] = ps[1];
+        pd[d2] = ps[2];
+        pd[d3] = ps[3];
+    }
+}
 
 void    SF_STDCALL  Image_CopyScanline24_SwapBR(UByte* pd, const UByte* ps, UPInt size, Palette*, void*);
 void    SF_STDCALL  Image_CopyScanline32_SwapBR(UByte* pd, const UByte* ps, UPInt size, Palette*, void*);

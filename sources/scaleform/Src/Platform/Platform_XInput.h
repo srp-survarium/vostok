@@ -152,6 +152,8 @@ static struct
     {VK_OEM_102,   Key::OEM_102},  //  "<>" or "\|" on RT 102-key kbd.
     {VK_ICO_HELP,  Key::ICO_HELP}, //  Help key on ICO
     {VK_ICO_00,	   Key::ICO_00},	//  00 key on ICO
+
+    {VK_SNAPSHOT,  Key::PrintScreen},
     // Terminator
     {0,            Key::None }
 };

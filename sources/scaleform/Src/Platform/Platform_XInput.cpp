@@ -50,9 +50,6 @@ void GamePad::Update( XInputEventAdapter& app )
 
 	for (unsigned k = 0; k < XUSER_MAX_COUNT; ++k)
 	{
-        if ( !IsConnected(k))
-            continue;
-
 		XINPUT_STATE newState;
 		int mbutton = -1;
 		int rthumbbutton = -1;
@@ -308,6 +305,10 @@ void GamePad::Update( XInputEventAdapter& app )
 
 			memcpy(&Pads[k].InputState, &newState, sizeof(XINPUT_STATE));
 		}
+        else
+        {
+            Pads[k].PadConnected = false;
+        }
 
 		Pads[k].LastMsgTime = msgtime;
 		if (didrepeat)

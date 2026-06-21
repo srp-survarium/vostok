@@ -87,8 +87,10 @@ public:
 
     // These methods are implemented only in shapes with styles, i.e.
     // it is not needed for glyph shapes.
-//    RectF   GetRectBoundsLocal() const { return Bound; }
-//    void    SetRectBoundsLocal(const RectF& r) { Bound = r; }
+    virtual RectF   GetBoundsLocal() const          { return RectF(0,0,0,0); }
+    virtual void    SetBoundsLocal(const RectF&)    { }
+    virtual RectF   GetRectBoundsLocal() const { return RectF(0,0,0,0); }
+    virtual void    SetRectBoundsLocal(const RectF&) {}
 
     void    ComputeBound(RectF* r) const;
     bool    DefPointTestLocal(Render::ShapeMeshProvider* pshapeMeshProvider, const Render::PointF &pt, 
@@ -183,6 +185,12 @@ public:
     ConstShapeWithStyles(const ConstShapeWithStyles&);
     virtual ~ConstShapeWithStyles();
 
+    virtual RectF  GetBoundsLocal() const          { return Bound; }
+    virtual void   SetBoundsLocal(const RectF& r)  { Bound = r; }
+
+    virtual RectF  GetRectBoundsLocal() const          { return RectBound; }
+    virtual void   SetRectBoundsLocal(const RectF& r)  { RectBound = r; }
+
     virtual unsigned GetFillStyleCount()   const { return FillStylesNum; }
     virtual unsigned GetStrokeStyleCount() const { return StrokeStylesNum; }
 
@@ -206,6 +214,8 @@ private:
     UByte*                  Styles;
     unsigned                FillStylesNum; 
     unsigned                StrokeStylesNum;
+    RectF                   Bound;
+    RectF                   RectBound; // Smaller bounds without stroke, SWF 8
 };
 
 class SwfShapeCharacterDef : public ShapeBaseCharacterDef
@@ -215,12 +225,12 @@ protected:
 public:
     SwfShapeCharacterDef(ShapeDataBase* shp);
 
-    virtual RectF   GetBoundsLocal() const;
+    virtual RectF   GetBoundsLocal(float morphRatio = 0) const;
 
     // These methods are implemented only in shapes with styles, i.e.
     // it is not needed for glyph shapes.
-    virtual RectF   GetRectBoundsLocal() const { return GetBoundsLocal() ;  } //???
-    //virtual void    SetRectBoundsLocal(const RectF& r) { pShape->SetRectBoundsLocal(r); }
+    virtual RectF   GetRectBoundsLocal(float morphRatio = 0) const;
+    virtual void    SetRectBoundsLocal(const RectF& r) { pShape->SetRectBoundsLocal(r); }
 
     //virtual void    ComputeBound(RectF* r) const { pShape->ComputeBound(r); }
     virtual bool    DefPointTestLocal(const Render::PointF &pt, bool testShape = 0, 
@@ -245,7 +255,7 @@ class ImageShapeCharacterDef : public ShapeBaseCharacterDef
 public:
     ImageShapeCharacterDef(ImageResource* pimage, ImageCreator* imgCreator, bool bilinear);
 
-    virtual RectF   GetBoundsLocal() const
+    virtual RectF   GetBoundsLocal(float =0) const
     {
         SF_ASSERT(pShapeMeshProvider);
         return pShapeMeshProvider->GetIdentityBounds();
@@ -253,7 +263,7 @@ public:
 
     // These methods are implemented only in shapes with styles, i.e.
     // it is not needed for glyph shapes.
-    virtual RectF   GetRectBoundsLocal() const { return GetBoundsLocal() ;  } //???
+    virtual RectF   GetRectBoundsLocal(float =0) const { return GetBoundsLocal() ;  } //???
     //virtual void    SetRectBoundsLocal(const RectF& r) { pShape->SetRectBoundsLocal(r); }
 
     //virtual void    ComputeBound(RectF* r) const { pShape->ComputeBound(r); }

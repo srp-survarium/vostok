@@ -13,15 +13,12 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 ----------------------------------------------------------------------
-----The code of these classes was taken from the Anti-Grain Geometry
-Project and modified for the use by Scaleform. 
+The code of these classes was taken from the Anti-Grain Geometry
+Project and modified for the use by Scaleform/Autodesk. 
 Permission to use without restrictions is hereby granted to 
-Scaleform Corporation by the author of Anti-Grain Geometry Project.
-See http://antigtain.com for details.
+Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+See http://antigrain.com for details.
 **************************************************************************/
-
-#pragma warning( push )
-#pragma warning( disable : 4995 )
 
 #ifndef INC_SF_Render_ResizeImage_H
 #define INC_SF_Render_ResizeImage_H
@@ -541,6 +538,8 @@ enum ResizeImageType
     ResizeGray          // 8-bit gray scale
 };
 
+typedef ResizeImageType ImageRescaleType;
+
 
 void SF_STDCALL ResizeImageBox(UByte* pDst, 
                                int dstWidth, int dstHeight, int dstPitch,
@@ -565,7 +564,4 @@ void SF_STDCALL ResizeImage(UByte* pDst,
 }}
 
 #endif
-
-#pragma warning( pop )
-
 

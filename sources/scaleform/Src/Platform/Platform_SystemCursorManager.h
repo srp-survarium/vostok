@@ -17,6 +17,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #define INC_SF_PLATFORM_SYSTEMCURSORMANAGER_H
 #pragma once
 
+#include "Platform_CommandLine.h"
 #include "Render/Render_Primitive.h"
 #include "Render/Render_Types2D.h"
 

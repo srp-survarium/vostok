@@ -87,12 +87,12 @@ MemoryBufferImage::MemoryBufferImage(ImageFormat format, const ImageSize& size, 
 
 Texture* MemoryBufferImage::GetTexture(TextureManager* pmanager)
 {
-    if (pTexture)
+    if (pTexture && pTexture->GetTextureManager() == pmanager)
     {
-        SF_ASSERT(pTexture->GetTextureManager() == pmanager);
         return pTexture;
     }
 
+    pTexture = 0;
     Texture* ptexture = pmanager->CreateTexture(Format, 1, Size, Use, this);
     initTexture_NoAddRef(ptexture);
     return ptexture;

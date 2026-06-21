@@ -47,6 +47,12 @@ enum BlendMode
     Blend_Erase         = 12,
     Blend_Overlay       = 13,
     Blend_HardLight     = 14,
+
+    // These do not have equivalents in flash, but are used internally in GFx.
+    Blend_Overwrite,          // No blending occurs; a straight blit (RGB).
+    Blend_OverwriteAll,       // No blending occurs; a straight blit (RGBA - must use sourceAc=true).
+    Blend_FullAdditive,       // Adds both colors (non-multiplied) and alphas.
+
     Blend_Count
 };
 
@@ -135,10 +141,60 @@ public:
     static Interface InterfaceImpl;
     static StateType GetType_Static() { return State_ProjectionMatrix3D; }
 
-    ProjectionMatrix3DState(const Matrix4FRef* mat3D) : State(&InterfaceImpl, (RefCountBase<Matrix3F, Stat_Default_Mem>*)mat3D)
+    ProjectionMatrix3DState(const Matrix4FRef* mat3D) : State(&InterfaceImpl, (RefCountBase<Matrix4F, Stat_Default_Mem>*)mat3D)
     { SF_ASSERT(mat3D);}
 
     const Matrix4FRef *GetProjectionMatrix3D() const    { return (Matrix4FRef*)(RefCountBase<Matrix4F, Stat_Default_Mem>*)GetData(); }
+};
+
+//--------------------------------------------------------------------
+// ***** UserDataState
+class UserDataState : public State
+{
+public:
+    struct Data : RefCountBase<Data, Stat_Default_Mem>
+    {
+        enum DataFlags
+        {
+            Data_String     = 0x01,
+            Data_Float      = 0x02,
+            Data_Batching   = 0x04
+        };
+        StringLH RendererString;
+        float    RendererFloat;
+        bool     BatchingDisabled;
+        unsigned Flags;
+
+        Data() : RendererFloat(0), BatchingDisabled(false), Flags(0) {}
+    };
+    typedef State::Interface_RefCountImpl Interface;
+    static Interface InterfaceImpl;
+    static StateType GetType_Static() { return State_UserData; }
+
+    UserDataState(const Data* data) : State(&InterfaceImpl, (RefCountBase<Data, Stat_Default_Mem>*)data)
+    { SF_ASSERT(data);}
+
+    Data *GetUserData() const    { return (Data*)(RefCountBase<Data, Stat_Default_Mem>*)GetData(); }
+};
+
+// Original Mask's parent
+class OrigScale9ParentState : public State
+{
+public:
+    class Interface : public State::Interface
+    {
+    public:
+        Interface() : State::Interface(State_OrigScale9Parent) { }
+        virtual void AddRef(void* data, RefBehaviour b);
+        virtual void Release(void* data, RefBehaviour b);
+    };
+    static Interface InterfaceImpl;
+    static StateType GetType_Static() { return State_OrigScale9Parent; }
+
+    OrigScale9ParentState(const TreeNode* op) : State(&InterfaceImpl, (void*)op)
+    { SF_ASSERT(op);}
+
+    TreeNode *GetNode() const    { return (TreeNode*)pData; }
 };
 
 // MaskOwner - This stores a pointer to mask owner TreeNode, without AddRef.

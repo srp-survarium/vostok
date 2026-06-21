@@ -18,16 +18,16 @@ otherwise accompanies this software in either electronic or hard copy form.
 #define INC_SF_GFX_SharedObjectState_H
 
 #include "GFxConfig.h"
-#ifdef GFX_AS2_ENABLE_SHAREDOBJECT
+#if defined(GFX_AS2_ENABLE_SHAREDOBJECT)
 
 #include "Kernel/SF_Memory.h"
 #include "GFx/GFx_PlayerStats.h"
 #include "GFx/GFx_Loader.h"
 #include "GFx/GFx_Player.h"
 
-// ***** GFxSharedObjectState
-class GASGlobalContext;
-class ASStringContext;
+namespace Scaleform { namespace GFx {
+
+// ***** SharedObjectState
 class SharedObjectManagerBase;
 
 //
@@ -39,7 +39,7 @@ class SharedObjectManagerBase;
 // method is invoked. Writing occurs from ActionScript when the
 // SharedObject.flush method is invoked.
 //
-class GFxSharedObjectVisitor : public RefCountBaseNTS<GFxSharedObjectVisitor, Stat_Default_Mem>
+class SharedObjectVisitor : public RefCountBaseNTS<SharedObjectVisitor, Stat_Default_Mem>
 {
 public:
     virtual void Begin() = 0;
@@ -67,16 +67,16 @@ public:
 
     virtual bool            LoadSharedObject(const String& name, 
                                              const String& localPath, 
-                                             GFxSharedObjectVisitor* psobj,
+                                             SharedObjectVisitor* psobj,
                                              FileOpenerBase* pfo) = 0;
     
     //
     // Return a new writer to save the shared object data
     //
     // The returned pointer should be assigned using the following pattern:
-    //  Ptr<GFxSharedObjectVisitor> ptr = *pSharedObjManager->CreateWriter(name, localPath);
+    //  Ptr<SharedObjectVisitor> ptr = *pSharedObjManager->CreateWriter(name, localPath);
     //
-    virtual GFxSharedObjectVisitor* CreateWriter(const String& name, const String& localPath,
+    virtual SharedObjectVisitor* CreateWriter(const String& name, const String& localPath,
         FileOpenerBase* pfileOpener) = 0;
 };
 
@@ -93,6 +93,7 @@ inline Ptr<SharedObjectManagerBase> StateBag::GetSharedObjectManager() const
     return *(SharedObjectManagerBase*) GetStateAddRef(State::State_SharedObject); 
 }
 
+}} // namespace Scaleform::GFx
 
 #endif // SF_NO_FXPLAYER_AS_SHAREDOBJECT
 

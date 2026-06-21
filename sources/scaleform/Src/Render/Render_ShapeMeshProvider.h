@@ -22,6 +22,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Render_Primitive.h"
 #include "Render_ShapeDataDefs.h"
 #include "Render_MeshKey.h"
+#include "Render_TessDefs.h"
 #include "Render_ShapeDataFloat.h"
 
 namespace Scaleform { namespace Render {
@@ -32,14 +33,6 @@ struct ToleranceParams;
 class TessBase;
 
 
-//------------------------------------------------------------------------
-class TransformerBase
-{
-public:
-    virtual ~TransformerBase() {}
-    virtual void Transform(float* x, float* y) const = 0;
-};
-
 template<class TransformerType>
 class TransformerWrapper : public TransformerBase
 {
@@ -48,6 +41,9 @@ public:
     TransformerWrapper() : Tr(0) {}
     TransformerWrapper(const TransformerType* tr) : Tr(tr) {}
     virtual void Transform(float* x, float* y) const { Tr->Transform(x, y); }
+    virtual float GetScale() const { return Tr->GetScale(); }
+    virtual float GetXScale() const { return Tr->GetXScale(); }
+    virtual float GetYScale() const { return Tr->GetYScale(); }
 };
 
 
@@ -116,7 +112,13 @@ public:
                                      StrokeGenerator* gen, const ToleranceParams* tol) const;
 
     virtual bool    HitTestShape(const Matrix2F& m, float x, float y, float morphRatio,
-                                 StrokeGenerator* gen, const ToleranceParams* tol) const;
+        StrokeGenerator* gen, const ToleranceParams* tol) const
+    {
+        return HitTestShape(m, x, y, morphRatio, gen, tol, NULL);
+    }
+
+    bool            HitTestShape(const Matrix2F& m, float x, float y, float morphRatio,
+                                 StrokeGenerator* gen, const ToleranceParams* tol, Scale9GridInfo* s9g) const;
 
     virtual unsigned    GetLayerCount() const { return (unsigned)DrawLayers.GetSize(); }
     virtual unsigned    GetFillCount(unsigned drawLayer, unsigned meshGenFlags) const;
@@ -140,6 +142,7 @@ public:
     }
 
     bool     HasGradientMorph() const { return GradientMorph; }
+    bool     HasStrokes() const { return Strokes; }
 
     const ShapeDataInterface* GetShapeData() const { return pShapeData; }
 private:
@@ -192,6 +195,7 @@ private:
                  float morphRatio);
 
     void addToStrokeSorter(MeshGenerator* gen,
+                           const ToleranceParams& param,
                            const TransformerBase* tr, unsigned startPos,
                            unsigned strokeStyleIdx, float snapOffset,
                            float morphRatio);
@@ -201,15 +205,10 @@ private:
                    unsigned strokeStyleIdx, float snapOffset, 
                    float morphRatio);
 
-    void addHairline(MeshGenerator* gen, const ToleranceParams& param,
-                     const TransformerBase* tr, unsigned startPos,
-                     unsigned strokeStyleIdx, float snapOffset, 
-                     float morphRatio);
-
-    void addStrokeAA(MeshGenerator* gen, const ToleranceParams& param,
-                     const TransformerBase* tr, unsigned startPos,
-                     unsigned strokeStyleIdx, float snapOffset, 
-                     float morphRatio);
+    void addStroke(MeshGenerator* gen, TessBase* stroker, const ToleranceParams& param,
+                   const TransformerBase* tr, unsigned startPos,
+                   unsigned strokeStyleIdx, float snapOffset, 
+                   float morphRatio);
 
     SF_AMP_CODE(void clearStrokeCount();)
 
@@ -219,6 +218,7 @@ private:
     Ptr<MorphShapeData>         pMorphData;
     RectF                       IdentityBounds;
     bool                        GradientMorph;
+    bool                        Strokes;
 };
 
 

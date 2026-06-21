@@ -74,7 +74,12 @@ void flash_renderer::on_reset_device(  )
 			Scaleform::Render::D3D1x::HALInitParams(
 				device::ref().d3d_device(),
 				device::ref().d3d_context(),
-				Scaleform::Render::D3D1x::HALConfig_DynamicShaderCompile
+				// GFx 4.2 dropped HALConfig_DynamicShaderCompile (shaders are
+				// precompiled descs now); HALConfigFlags is empty -> pass 0.
+				// sushi@TODO: the 0 is inferred from the 4.2 API change, not verified
+				// against the target's on_reset_device InitHAL - confirm no other 4.2
+				// HALConfigFlags is set (fn is unmeasured render carcass for now).
+				0
 			)
 		);
 	else

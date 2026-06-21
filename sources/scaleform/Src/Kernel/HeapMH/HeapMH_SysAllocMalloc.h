@@ -25,6 +25,9 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include <malloc.h>
 #elif defined(SF_OS_WII)
 #include <string.h>
+#elif defined(SF_OS_WIIU)
+#include <cafe/mem.h>
+#include <string.h>
 #elif defined(SF_OS_3DS)
 #include <nn/os.h>
 #include <stdlib.h>
@@ -33,6 +36,8 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include <stdlib.h>
 #include <string.h>
 #endif
+#include <stdio.h>
+
 
 namespace Scaleform {
 
@@ -60,6 +65,9 @@ public:
     virtual ~SysAllocMalloc() {}
 
 #if defined(SF_OS_WIN32) || defined(SF_OS_WINCE) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+    // survarium: route Scaleform heap traffic through the engine allocator
+    // instead of the CRT (the engine #defines _aligned_malloc/_aligned_free to
+    // a void unreachable-code trap, see memory_override_operators.h).
     virtual void* Alloc(UPInt size, UPInt /*align*/)
     {
         //return _aligned_malloc(size, align);
@@ -107,6 +115,29 @@ public:
     {
         SF_UNUSED(oldSize);
         return reallocalign(oldPtr, newSize, align);
+    }
+
+#elif defined(SF_OS_WIIU)
+    void* Alloc(UPInt size, UPInt align)
+    {
+        return MEMAllocFromDefaultHeapEx(size, align);
+    }
+
+    void Free(void* ptr, UPInt size, UPInt align)
+    {
+        SF_UNUSED2(size, align);
+        MEMFreeToDefaultHeap(ptr);
+    }
+
+    void* Realloc(void* oldPtr, UPInt oldSize, UPInt newSize, UPInt align)
+    {
+        void* newPtr = MEMAllocFromDefaultHeapEx(newSize, align);
+        if (newPtr)
+        {
+            memcpy(newPtr, oldPtr, (newSize < oldSize) ? newSize : oldSize);
+            MEMFreeToDefaultHeap(oldPtr);
+        }
+        return newPtr;
     }
 
 #elif defined(SF_OS_WII) || defined(SF_OS_3DS)
@@ -174,7 +205,6 @@ private:
     }
 #endif
 };
-
 
 } // Scaleform
 

@@ -39,7 +39,8 @@ protected:
     // Initializes heap system, creating and initializing GlobalHeap.
     virtual bool initHeapEngine(const void* heapDesc) { SF_UNUSED(heapDesc); return false; }
     // Shuts down heap system, clearing out global heap.
-    virtual void shutdownHeapEngine() { }
+    // Returns true if there were no memory leaks (success), false in case of leaks.
+    virtual bool shutdownHeapEngine() { return true; }
 };
 
 
@@ -79,7 +80,7 @@ public:
 protected:
     // Implementation of SysAllocBase based on MemoryHeapMH.
     virtual bool initHeapEngine(const void* heapDesc);
-    virtual void shutdownHeapEngine();
+    virtual bool shutdownHeapEngine();
 };
 
 
@@ -197,7 +198,7 @@ public:
 protected:
     // Implementation of SysAllocBase based on MemoryHeapPT.
     virtual bool initHeapEngine(const void* heapDesc);
-    virtual void shutdownHeapEngine();
+    virtual bool shutdownHeapEngine();
 };
 
 
@@ -293,15 +294,16 @@ public:
     }
 
 protected:
-    virtual void shutdownHeapEngine()
+    virtual bool shutdownHeapEngine()
     {
-        B::shutdownHeapEngine();
+        bool hasNoLeaks = B::shutdownHeapEngine();
         if (pContainer)
         {
             pContainer->Initialized = false;
             ((B*)this)->~B();
             pContainer = 0;
         }
+        return hasNoLeaks;
     }
 };
 

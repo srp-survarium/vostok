@@ -66,7 +66,7 @@ public:
     }
     static bool SF_STDCALL IsNonStartingChar(unsigned wwMode, wchar_t c) 
     { 
-        return FindCharWithFlags(wwMode, c, CBI_NonStartingChar); 
+        return IsWhiteSpaceChar(c) || FindCharWithFlags(wwMode, c, CBI_NonStartingChar); 
     }
     static bool SF_STDCALL IsNonTerminatingChar(unsigned wwMode, wchar_t c)    
     { 

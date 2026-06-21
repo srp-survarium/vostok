@@ -126,12 +126,39 @@ struct MemoryParams
     // collection.
     unsigned    FramesBetweenCollections;
 
+    // An initial limit of the heap (by default it is equal to INITIAL_DYNAMIC_LIMIT (128K)).
+    // This is the limit when OnExceedLimit will be invoked first time, even if Desc.Limit is
+    // set to a higher value. Desc.Limit will be used as an 'user limit', meaning the limit when
+    // Collect will be enforced. But even if Desc.Limit is not set or not reached yet the OnExceedLimit
+    // still may call Collect in the case when size of new allocations exceeds current
+    // memory footprint * HeapLimitMutliplier (which is likely for low HeapLimitMutliplier value and/or
+    // for complex content at the start). To prevent these Collect calls the value of the 'InitialDynamicLimit'
+    // can be set to higher value (for example, equal to Heap.Limit). The downside of the higher value 
+    // of 'InitialDynamicLimit' is higher memory consumption at the start; 
+    // the benefit - faster execution due to less calls to Collect.
+    unsigned    InitialDynamicLimit;
+
+    // Controls 'generations' in GC (AS3 only).
+    // RunsToUpgradeGen - is the number of regular calls to GC (excluding ones forced by the user)
+    // before generations are upgraded by one step ('newborn' -> 'young', 'young' -> 'old').
+    unsigned    RunsToUpgradeGen;
+    // RunsToCollectYoung - is the number of regular calls to GC (excluding ones forced by the user)
+    // before GC collects 'young' objects.
+    unsigned    RunsToCollectYoung;
+    // RunsToCollectYoung - is the number of regular calls to GC (excluding ones forced by the user)
+    // before GC collects 'old' objects.
+    unsigned    RunsToCollectOld;
+
     MemoryParams(UPInt memoryArena = 0)
     {
         Desc.Arena                 = memoryArena;
         HeapLimitMultiplier        = 0.25; // 25%
         MaxCollectionRoots         = ~0u; // Default value will be used.
         FramesBetweenCollections   = ~0u; // Default value will be used.
+        InitialDynamicLimit        = ~0u; // Default value will be used.
+        RunsToUpgradeGen           = ~0u; // Default value will be used.
+        RunsToCollectYoung         = ~0u; // Default value will be used.
+        RunsToCollectOld           = ~0u; // Default value will be used.
     }
 };
 
@@ -222,28 +249,34 @@ public:
     //                      populating the display list. If false, the display list
     //                      will be empty until the first Advance call.
     //   - actionControl :  ActionScript verbosity / etc (mostly for debugging)
+    //   - queue :          Render thread queue; required for BitmapData commands. Can be provided later,
+    //                      except if initFirstFrame is true, and BitmapData commands execute on frame 0.
     //
     // Ex:  Ptr<Movie> pmovie = *pdef->CreateInstance();    
     virtual Movie*   CreateInstance(const MemoryParams& memParams, bool initFirstFrame,
-                                    ActionControl* actionControl)  = 0;
+                                    ActionControl* actionControl, Render::ThreadCommandQueue* queue = 0)  = 0;
 
     //   - memContext :     Memory context that encapsulates the common MovieView heap, as well as 
     //                      other shared objects, such as the garbage collector.
     //   - actionControl :  ActionScript verbosity / etc (mostly for debugging)
+    //   - queue :          Render thread queue; required for BitmapData commands. Can be provided later,
+    //                      except if initFirstFrame is true, and BitmapData commands execute on frame 0.
     virtual Movie*   CreateInstance(MemoryContext* memContext, bool initFirstFrame,
-                                    ActionControl* actionControl) = 0;
+                                    ActionControl* actionControl, Render::ThreadCommandQueue* queue = 0) = 0;
 
     //   - initFirstFrame : Set this to 'true' to to initialize objects of frame 1,
     //                      populating the display list. If false, the display list
     //                      will be empty until the first Advance call.
     //   - memoryArena :    Index of memory arena to be used for memory allocations.
     //   - actionControl :  ActionScript verbosity / etc (mostly for debugging)
+    //   - queue :          Render thread queue; required for BitmapData commands. Can be provided later,
+    //                      except if initFirstFrame is true, and BitmapData commands execute on frame 0.
     SF_INLINE  Movie*   CreateInstance(bool initFirstFrame = false, UPInt memoryArena = 0, 
-                                       ActionControl* actionControl = NULL)
+                                        ActionControl* actionControl = NULL, Render::ThreadCommandQueue* queue = 0)
     {
         MemoryParams memParams;
         memParams.Desc.Arena = memoryArena;
-        return CreateInstance(memParams, initFirstFrame, actionControl);
+        return CreateInstance(memParams, initFirstFrame, actionControl, queue);
     }
 
 
@@ -574,7 +607,6 @@ public:
         Double              XScale;
         Double              YScale;
         Double              Alpha;
-        bool                Visible;
         Double              Z;
         Double              XRotation;
         Double              YRotation;
@@ -584,6 +616,7 @@ public:
         Matrix4F            ProjectionMatrix3D;
         Render::EdgeAAMode  EdgeAAMode;
         UInt16              VarsSet;
+        bool                Visible;
 
         SF_INLINE void    SetFlags(unsigned flags)              { VarsSet |= flags; }
         SF_INLINE void    ClearFlags(unsigned flags)            { VarsSet &= ~flags; }
@@ -618,6 +651,12 @@ protected:
         {
         public:
             virtual ~ObjVisitor() {}
+
+            // AS3 only: By default public members defined in a class are not returned by the visitor.
+            //           Returning true will include public members (inherited ones as well) + getters.
+            //           This is not applicable to AS2 as AVM1 does not store scope/ns information.
+            virtual bool    IncludeAS3PublicMembers() const  { return false; }
+
             virtual void    Visit(const char* name, const Value& val) = 0;
         };
         class ArrVisitor
@@ -653,6 +692,11 @@ protected:
         GFX_VM_ABSTRACT(bool    PushBack(void* pdata, const Value& value));
         GFX_VM_ABSTRACT(bool    PopBack(void* pdata, Value* pval));
         GFX_VM_ABSTRACT(bool    RemoveElements(void* pdata, unsigned idx, int count));
+
+        GFX_VM_ABSTRACT(bool    IsByteArray(void* pdata) const);
+        GFX_VM_ABSTRACT(unsigned GetByteArraySize(void* pdata) const);
+        GFX_VM_ABSTRACT(bool    ReadFromByteArray(void* pdata, UByte *destBuff, UPInt destBuffSz) const);
+        GFX_VM_ABSTRACT(bool    WriteToByteArray(void* pdata, const UByte *srcBuff, UPInt writeSize));
 
         GFX_VM_ABSTRACT(bool    IsDisplayObjectActive(void* pdata) const);
         GFX_VM_ABSTRACT(bool    GetDisplayInfo(void* pdata, DisplayInfo* pinfo) const);
@@ -802,8 +846,8 @@ public:
 
     bool operator == (const GFx::Value& other) const
     {
-        if (Type != other.Type) return false;
-        switch (Type & 0x0F)
+        if (GetType() != other.GetType()) return false;
+        switch (GetType())
         {
         case VT_Undefined:   
         case VT_Null:
@@ -1027,6 +1071,36 @@ public:
     SF_INLINE bool        RemoveElement(unsigned idx)                     { return RemoveElements(idx, 1); }
     SF_INLINE bool        ClearElements()                             { return RemoveElements(0); }
 
+    // ----------------------------------------------------------------
+    // AS3 ByteArray support. These methods are valid only for the AS3
+    // ByteArray type
+    //
+#ifdef GFX_AS3_SUPPORT
+    SF_INLINE bool          IsByteArray() const 
+    {
+        SF_ASSERT(IsObject());
+        return pObjectInterface->IsByteArray(mValue.pData);
+    }
+    SF_INLINE unsigned      GetByteArraySize() const
+    {
+        // If not of ByteArray type, then returns 0. Use IsByteArray for type checking
+        return pObjectInterface->GetByteArraySize(mValue.pData);
+    }
+    SF_INLINE bool          ReadFromByteArray(UByte *destBuff, UPInt destBuffSz)
+    {
+        // This method will read destBuffSz bytes from the ByteArray object, or if
+        // the ByteArray is smaller, then GetByteArraySize() bytes will be read into
+        // the destination buffer.
+        //
+        // If false is returned, then the object is not a ByteArray type
+        return pObjectInterface->ReadFromByteArray(mValue.pData, destBuff, destBuffSz);
+    }
+    SF_INLINE bool          WriteToByteArray(const UByte *srcBuff, UPInt writeSize)
+    {
+        // If false is returned, then the object is not a ByteArray type
+        return pObjectInterface->WriteToByteArray(mValue.pData, srcBuff, writeSize);
+    }
+#endif  // GFX_AS3_SUPPORT
 
     // ----------------------------------------------------------------
     // AS display object (MovieClips, Buttons, TextFields) support. These
@@ -1216,6 +1290,18 @@ public:
     }
 
 
+    // ----------------------------------------------------------------
+    // Retrieve the Movie instance that owns this object. This is only valid
+    // from Values that contain references to complex types such as Object,
+    // Array, DisplayObject, etc. It returns NULL for primitive types, as they
+    // do not contain a reference to the ObjectInterface.
+    //
+    SF_INLINE Movie*    GetMovie() const   
+    {
+        SF_ASSERT(IsObject());
+        return (Movie*)pObjectInterface->GetMovieImpl();
+    }
+
 protected:
     ObjectInterface*     pObjectInterface;
 
@@ -1396,6 +1482,31 @@ public:
 
     virtual void    Call(const Params& params)      = 0;  
 };
+
+// *** VirtualKeyboardInterface State
+
+class VirtualKeyboardInterface : public State
+{
+public:
+    VirtualKeyboardInterface() : State(State_VirtualKeyboardInterface) { }
+
+    // Invoked when an input textfield recieves focus.
+    // 'textBox' contains bounds of a textfield in world coordinates (stage), in pixels.
+    virtual void    OnInputTextfieldFocusIn(bool multiline, const Render::RectF& textBox) =0;
+
+    // Invoked when an input textfield loses focus
+    virtual void    OnInputTextfieldFocusOut() =0;
+};
+
+// Sets the external interface used.
+SF_INLINE void StateBag::SetVirtualKeyboardInterface(VirtualKeyboardInterface* p)
+{
+    SetState(State::State_VirtualKeyboardInterface, p);
+}
+SF_INLINE Ptr<VirtualKeyboardInterface> StateBag::GetVirtualKeyboardInterface() const
+{
+    return *(VirtualKeyboardInterface*) GetStateAddRef(State::State_VirtualKeyboardInterface);
+}
 
 // *** ExternalInterface State
 
@@ -1777,7 +1888,7 @@ public:
     virtual void           SetSoundPlayer(SoundRenderer* ps) = 0;
     virtual SoundRenderer*  GetSoundPlayer() const = 0;
 */
-    virtual void        Restart() = 0;
+    virtual void        Restart(bool advance0 = true) = 0;
 
     // Advance a movie based on the time that has passed since th last
     // advance call, in seconds. In general, the time interval should
@@ -1822,6 +1933,8 @@ public:
 
     // pause/unpause the movie
     virtual void    SetPause(bool pause) = 0;
+    // returns true if the movie is paused.
+    virtual bool    IsPaused() const = 0;
 
 
     // *** Background color interface
@@ -1920,8 +2033,29 @@ public:
 
     virtual MemoryHeap* GetHeap() const = 0;    
 
+    enum GCFlags
+    {
+        GCF_Quick  = 0, // quick collect, only relatively new nodes are iterated
+        GCF_Medium = 1, // medium collect, older nodes are collected too
+        GCF_Full   = 2  // full collect, all nodes are iterated
+    };
     // Forces to run garbage collection, if it is enabled. Does nothing otherwise.
-    virtual void        ForceCollectGarbage() = 0;
+    // 'gcFlags' parameter allows to control the speed of GC. GCF_Quick is fastest
+    // but less memory is recovered, whereas GCF_Full is slowest but all possible 
+    // memory is recovered.
+    virtual void        ForceCollectGarbage(unsigned gcFlags = GCF_Full) = 0;
+
+    // Additional GC control functions. 
+    // SuspendGC suspends/resumes garbage collection. It is counted operation, meaning
+    // if it was suspended N-times then it should be re-enabled N-times to restore normal operation.
+    virtual void        SuspendGC(bool suspend) =0;
+
+    // Schedule garbage collection. Unlike ForceCollectGarbage it doesn't execute collection immediately;
+    // instead, it will be executed when next Advance is called.
+    // 'gcFlags' parameter allows to control the speed of GC. GCF_Quick is fastest
+    // but less memory is recovered, whereas GCF_Full is slowest but all possible 
+    // memory is recovered.
+    virtual void        ScheduleGC(unsigned gcFlags = GCF_Full) =0;
 
     enum ReportFlags
     {
@@ -1935,7 +2069,13 @@ public:
         Report_SuppressOverallStats = 0x0004,
 
         // display addresses only for anonymous objects (the ones that do not have any name)
-        Report_AddressesForAnonymObjsOnly = 0x0008
+        Report_AddressesForAnonymObjsOnly = 0x0008,
+
+        // suppress displaying moviedefs held by imports and fonts.
+        Report_SuppressMovieDefsStats = 0x0010,
+
+        // don't replace common parts by ellipsis
+        Report_NoEllipsis             = 0x0020
     };
     // Prints out a report about objects and links between them.
     // 'flags' - bit masks that controls the output, see ReportFlags enum above.
@@ -1975,6 +2115,9 @@ public:
     // returns focus group associated with a controller
     virtual unsigned GetControllerFocusGroup(unsigned controllerIdx) const =0;
 
+    // Resets input focus the the specified controller. If a textField has a focus it will lose it.
+    virtual void    ResetInputFocus(unsigned controllerIdx) =0;
+
     // Release method for custom behavior
     void            Release();   
 
@@ -1995,6 +2138,25 @@ public:
     // Forces render tree to be updated in order to apply all possible changes
     // related to images and/or textures.
     virtual void    ForceUpdateImages() =0;
+
+    // Scrolls viewport to make 'box' fully visible inside the 'screenRect'.
+    // 'screenRect' represents a rectangle in screen pixels;
+    // 'box' represents the area that should become visible, in stage pixel coordinates.
+    // 'flags' - bit flags (see below)
+    // This method changes Viewport matrix; if viewport is reset all changes done by this
+    // method are lost. The viewport matrix can be forcedly reset to its original state
+    // by calling RestoreViewport.
+    enum    
+    {
+        MAVF_DontScaleDown = 0x1, // Don't scale down if box doesn't fit completely in screenRect
+        MAVF_ScaleUp50     = 0x2, // Scale up if box's area is less than 50% of the screenRect
+        MAVF_LeftTopToZero = 0x4  // left-top corner of box in (0,0) of screenRect (not center as by default)
+    };
+    virtual void    MakeAreaVisible(const Render::RectF& screenRect, 
+                                    const Render::RectF& box,
+                                    UInt32 flags = 0) =0;
+    // Restores viewport matrix changed by MakeAreaVisible to its original state. 
+    virtual void    RestoreViewport() =0;
 };
 
 // *** Inline Implementation - Movie

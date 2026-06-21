@@ -522,8 +522,8 @@ SoundSampleFMODImplAux::SoundSampleFMODImplAux(SoundRendererFMODImpl* pp,
         return;
     }
     unsigned int sl = 0;
-    pSound->getLength(&sl, FMOD_TIMEUNIT_PCMBYTES);
-    SF_ASSERT(sl == SoundLength);
+    result = pSound->getLength(&sl, FMOD_TIMEUNIT_PCMBYTES);
+    pPlayer->LogError(result);
 }
 
 SoundSampleFMODImplAux::~SoundSampleFMODImplAux()
@@ -564,8 +564,11 @@ void SoundSampleFMODImplAux::ClearSoundBuffer()
     {
         Alg::MemUtil::Set(ptr1, 0, len1);
         ret = pSound->unlock(ptr1, ptr2, len1, len2);
-        SF_ASSERT(ret == FMOD_OK);
-        SF_UNUSED(ret);
+        if (ret != FMOD_OK)
+        {
+            pPlayer->LogError(ret);
+            return;
+        }
     }
 }
 
@@ -628,8 +631,11 @@ unsigned SoundSampleFMODImplAux::ReadAndFillSound()
             Alg::MemUtil::Set(ptr2, 0, len2);
         }
         ret = pSound->unlock(ptr1, ptr2, len1, len2);
-        SF_ASSERT(ret == FMOD_OK);
-        SF_UNUSED(ret);
+        if (ret != FMOD_OK)
+        {
+            pPlayer->LogError(ret);
+            return 0;
+        }
     }
 
     TotatBytesRead += got_bytes;
@@ -756,11 +762,13 @@ void SoundChannelFMODImplAux::Pause(bool pause)
 float SoundChannelFMODImplAux::Update()
 {
     Lock::Locker lock(&ChannelLock);
-    SF_ASSERT(pSample);
+    
     if (!IsPlaying())
         return 0.5f;
     if (Paused)
         return 0.1f;
+
+    SF_ASSERT(pSample);
     SoundSampleFMODImplAux* psample = (SoundSampleFMODImplAux*)pSample;
     UInt64 totalTicksRead = psample->GetTotalBytesReadInTicks();
     UInt64 curtick = Timer::GetProfileTicks();
@@ -771,16 +779,20 @@ float SoundChannelFMODImplAux::Update()
         StopTick = curtick;
         TotalTicks = totalTicksRead;
     }
+
     unsigned dist = 0;
     if (!Starving)
     {
         unsigned fmodpos = 0;
         FMOD_RESULT ret = pChan->getPosition(&fmodpos, FMOD_TIMEUNIT_PCMBYTES);
-        SF_ASSERT(ret == FMOD_OK);
-        SF_UNUSED(ret);
-        SF_ASSERT(fmodpos <= psample->SoundLength);
+        if (ret != FMOD_OK)
+        {
+            pPlayer->LogError(ret);
+            return 0.0f;
+        }
         dist = psample->DistToFillBuffPos(fmodpos);
     }
+
     if (dist < psample->BlockSize / 3 )
     {
         unsigned got_bytes = 0;
@@ -970,6 +982,9 @@ SoundSampleFMODImpl* SoundRendererFMODImpl::CreateSampleFromFile(const char* fna
     }
 
     FMOD_MODE flags = FMOD_SOFTWARE | FMOD_LOOP_OFF | FMOD_2D;
+#if defined(SF_OS_WINMETRO)
+    flags |= FMOD_NONBLOCKING;
+#endif
     FMOD_RESULT result;
     if (streaming)
         result = pDevice->createStream(fname, flags, NULL, &(psample->pSound));

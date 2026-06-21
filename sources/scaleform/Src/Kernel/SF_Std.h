@@ -274,6 +274,11 @@ inline double SF_CDECL SFatof(const char* string)
 // Implemented in GStd.cpp in platform-specific manner.
 int SF_CDECL SFstricmp(const char* dest, const char* src);
 int SF_CDECL SFstrnicmp(const char* dest, const char* src, UPInt count);
+#if defined(SF_CC_MSVC) && defined(SF_MSVC_SAFESTRING)
+    #define SFsscanf sscanf_s
+#else
+    #define SFsscanf sscanf
+#endif
 
 inline UPInt SF_CDECL SFsprintf(char *dest, UPInt destsize, const char* format, ...)
 {
@@ -320,16 +325,14 @@ inline UPInt SF_CDECL SFvsprintf(char *dest, UPInt destsize, const char * format
         else
             ret = (UPInt)rv;
     #else
-        SF_UNUSED(destsize);
         int rv = _vsnprintf(dest, destsize - 1, format, argList);
-        SF_ASSERT(rv != -1);
         ret = (UPInt)rv;
         dest[destsize-1] = 0;
     #endif
 #else
-    SF_UNUSED(destsize);
-    ret = (UPInt)vsprintf(dest, format, argList);
-    SF_ASSERT(ret < destsize);
+    int rv = vsnprintf(dest, destsize, format, argList);
+    ret = (UPInt)rv;
+    dest[destsize-1] = 0;
 #endif
     return ret;
 }

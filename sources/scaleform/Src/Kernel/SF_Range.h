@@ -646,7 +646,11 @@ void RangeDataArray<T, Array>::SetRange(const TypedRangeData& range)
         if (!firstRangeIt.IsFinished())
         {
             if (firstRangeIt->IsEmpty())
+            {
+                // need to correct the insertionPoint accordingly
+                --insertionPoint;
                 firstRangeIt.Remove();
+            }
             else  if (firstRangeIt->NextIndex() == range.Index && firstRangeIt->IsDataEqual(insertionPoint->GetData()))
             {
                 // expand first range by the range.Length

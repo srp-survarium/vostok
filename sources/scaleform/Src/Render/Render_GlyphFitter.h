@@ -18,11 +18,12 @@ otherwise accompanies this software in either electronic or hard copy form.
 #define INC_SF_Render_GlyphFitter_H
 
 #include "Render_Containers.h"
+#include "Render_TessDefs.h"
 
 namespace Scaleform { namespace Render {
 
 //------------------------------------------------------------------------
-class GlyphFitter
+    class GlyphFitter : public TessBase
 {
     enum DirType
     { 
@@ -52,14 +53,29 @@ public:
 
     void SetNominalFontHeight(int height) { NominalFontHeight = height; }
 
-    void Clear();
-    void MoveTo(float x, float y);
-    void LineTo(float x, float y);
-    void AddVertex(float x, float y) { LineTo(x, y); } // Alias
-    void ClosePolygon();
+    // TessDef interface
+    //---------------------
+    virtual void        Clear();
+    void                MoveTo(float x, float y);
+    void                LineTo(float x, float y);
+    virtual void        AddVertex(CoordType x, CoordType y)  { LineTo(x, y); } // Alias
+    virtual CoordType   GetLastX() const { return LastXf; }
+    virtual CoordType   GetLastY() const { return LastYf; }
+    virtual void        ClosePath();
 
-    float GetLastX() const { return LastXf; }
-    float GetLastY() const { return LastYf; }
+    // TessDef compatibility
+    //---------------------
+    virtual void        FinalizePath(unsigned, unsigned, bool, bool) {}
+    virtual void        Transform(const Matrix2F&) {}
+    virtual Matrix2F    StretchTo(float, float, float, float) { return Matrix2F(); }
+    virtual unsigned    GetVertexCount() const { return 0; }
+    virtual unsigned    GetMeshCount() const { return 0; }
+    virtual unsigned    GetMeshVertexCount(unsigned) const { return 0; }
+    virtual unsigned    GetMeshTriangleCount(unsigned) const { return 0; }
+    virtual void        GetMesh(unsigned, TessMesh*) const {}
+    virtual unsigned    GetVertices(TessMesh*, TessVertex*, unsigned) const { return 0; }
+    virtual void        GetTrianglesI16(unsigned, UInt16*, unsigned, unsigned) const {}
+
 
     int  ComputeTopY() { computeBounds(); return MaxY; }
     void FitGlyph(int heightInPixels, int widthInPixels, 

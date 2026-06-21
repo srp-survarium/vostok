@@ -463,6 +463,10 @@ Font* FontProviderFT2::CreateFont(const char* name, unsigned fontFlags)
     if (Lib == 0)
         return 0;
 
+#ifdef SF_ENABLE_THREADS
+    Mutex::Locker lock(&LockMutex);
+#endif
+
     // Mask flags to be safe.
     fontFlags &= Font::FF_CreateFont_Mask;
     fontFlags |= Font::FF_DeviceFont | Font::FF_NativeHinting;

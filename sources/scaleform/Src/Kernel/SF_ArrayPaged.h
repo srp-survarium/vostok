@@ -116,10 +116,11 @@ template<typename T, int SID> struct AllocatorPagedCC : AllocatorBaseLH<SID>, Co
 // value by PtrPoolInc. 
 // 
 //-------------------
-// The code of this class template was taken from the Anti-Grain Geometry
-// Project and modified for the use by Scaleform. 
+// The code of these classes was taken from the Anti-Grain Geometry
+// Project and modified for the use by Scaleform/Autodesk. 
 // Permission to use without restrictions is hereby granted to 
-// Scaleform Corp. by the author of Anti-Grain Geometry Project.
+// Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+// See http://antigrain.com for details.
 //------------------------------------------------------------------------
 template<class T, int PageSh, int PtrPoolInc, class Allocator>
 class ArrayPagedBase : public Allocator

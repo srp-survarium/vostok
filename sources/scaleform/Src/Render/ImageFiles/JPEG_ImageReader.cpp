@@ -195,8 +195,10 @@ private:
     static void TermSource(j_decompress_ptr ) {}
 
 public:
-    bool    CompressorOpened;
-    bool    ErrorOccurred;
+    bool    CompressorOpened :1;
+    bool    ErrorOccurred    :1;
+    bool    Initialized      :1;
+
 
     enum SWF_DEFINE_BITS_JPEG2 { SWF_JPEG2 };
     enum SWF_DEFINE_BITS_JPEG2_HEADER_ONLY { SWF_JPEG2_HEADER_ONLY };
@@ -206,7 +208,7 @@ public:
     // prepare to read data.
     JPEGInputImpl_jpeglib(File* pin)      
     {
-        CompressorOpened = ErrorOccurred = false;
+        Initialized = CompressorOpened = ErrorOccurred = false;
 
         CInfo.err = SetupJpegErr(&JErr);
 
@@ -218,6 +220,7 @@ public:
 
         if (!StartImage())
             return;
+        Initialized = true;
     }
 
 
@@ -231,7 +234,7 @@ public:
     {
         SF_UNUSED(e);
 
-        CompressorOpened = ErrorOccurred = false;
+        Initialized = CompressorOpened = ErrorOccurred = false;
 
         CInfo.err = SetupJpegErr(&JErr);
 
@@ -247,6 +250,7 @@ public:
 
         // Don't start reading any image data!
         // App does that manually using StartImage.
+        Initialized = true;
     }
 
     JPEGInputImpl_jpeglib(SWF_DEFINE_BITS_JPEG2_HEADER_ONLY e, const UByte* pbuf, UPInt bufSize)
@@ -259,7 +263,7 @@ public:
         smgr.init_source            = InitSource;
         smgr.term_source            = TermSource;
 
-        CompressorOpened = ErrorOccurred = false;
+        Initialized = CompressorOpened = ErrorOccurred = false;
 
         CInfo.err = SetupJpegErr(&JErr);
 
@@ -275,6 +279,7 @@ public:
 
         // Don't start reading any image data!
         // App does that manually using StartImage.
+        Initialized = true;
     }
 
     // Destructor.  Clean up our jpeg reader state.
@@ -291,6 +296,7 @@ public:
     }
 
     bool HasError() const { return ErrorOccurred; }
+    bool IsValid() const { return Initialized && !HasError(); }
 
     // Discard any data sitting in our JPEGInput Buffer.  Use
     // this before/after reading headers or partial image
@@ -522,6 +528,8 @@ bool ImageSource::ReadHeader()
     {
         // used by swf jpeg w/splitted header
         pOriginalInput = FileReader::Instance.CreateSwfJpeg2HeaderOnly(pExtraData->Data, pExtraData->Size);
+        if (!pOriginalInput)
+            return false;
         struct jpeg_decompress_struct* cinfo = static_cast<struct jpeg_decompress_struct*>(pOriginalInput->GetCInfo());
         // replace source by file.
         GJPEGUtil_ReplaceRwSource(cinfo, pFile);
@@ -619,14 +627,10 @@ bool MemoryBufferImage::Decode(ImageData* pdest, CopyScanlineFunc copyScanline, 
     Input*     jin;
     if (GetExtraData() == 0)
     {
-        if ((GetFlags() | Flag_Headers) == 0) // reg jpeg from file
-            jin = FileReader::Instance.CreateInput(&file);
-        else
-        {
-            // swf jpeg no alpha
-            jin = FileReader::Instance.CreateSwfJpeg2HeaderOnly(&file);
+        // swf jpeg no alpha
+        jin = FileReader::Instance.CreateSwfJpeg2HeaderOnly(&file);
+        if (jin)
             jin->StartImage();
-        }
     }
     else
     {
@@ -635,7 +639,8 @@ bool MemoryBufferImage::Decode(ImageData* pdest, CopyScanlineFunc copyScanline, 
         struct jpeg_decompress_struct* cinfo = static_cast<struct jpeg_decompress_struct*>(jin->GetCInfo());
         // replace source by file.
         GJPEGUtil_ReplaceRwSource(cinfo, &file);
-        jin->StartImage();
+        if (jin)
+            jin->StartImage();
     }
 
     if (!jin) return 0;
@@ -691,11 +696,10 @@ bool WrapperImageSource::ReadHeader()
         img->GetImageDataBits(&fileData, &fileSz);
 
         pOriginalInput = FileReader::Instance.CreateSwfJpeg2HeaderOnly(fileData, fileSz);
-
-        pOriginalInput->StartImage();
-
         if (!pOriginalInput)
             return false;
+
+        pOriginalInput->StartImage();
         img->SetImageSize(pOriginalInput->GetSize());
         if (img->GetFormat() == Image_None)
             img->SetFormat(Image_R8G8B8);
@@ -767,17 +771,29 @@ Render::ImageSource* FileReader::ReadImageSource(File* file, const ImageCreateAr
 Input* FileReader::CreateInput(File* pin) const
 {
     if (!pin || !pin->IsValid()) return 0;
-    return SF_NEW JPEGInputImpl_jpeglib(pin);
+    JPEGInputImpl_jpeglib* jpegInput = SF_NEW JPEGInputImpl_jpeglib(pin);
+    if (jpegInput && jpegInput->IsValid())
+        return jpegInput;
+    delete jpegInput;
+    return NULL;
 }
 Input* FileReader::CreateSwfJpeg2HeaderOnly(File* pin) const
 {
     if (!pin || !pin->IsValid()) return 0;
-    return SF_NEW JPEGInputImpl_jpeglib(JPEGInputImpl_jpeglib::SWF_JPEG2_HEADER_ONLY, pin);
+    JPEGInputImpl_jpeglib* jpegInput = SF_NEW JPEGInputImpl_jpeglib(JPEGInputImpl_jpeglib::SWF_JPEG2_HEADER_ONLY, pin);
+    if (jpegInput && jpegInput->IsValid())
+        return jpegInput;
+    delete jpegInput;
+    return NULL;
 }
 Input* FileReader::CreateSwfJpeg2HeaderOnly(const UByte* pbuffer, UPInt bufSize) const
 {
-    return SF_NEW JPEGInputImpl_jpeglib(JPEGInputImpl_jpeglib::SWF_JPEG2_HEADER_ONLY,
-                                        pbuffer, bufSize);
+    JPEGInputImpl_jpeglib* jpegInput = SF_NEW JPEGInputImpl_jpeglib(JPEGInputImpl_jpeglib::SWF_JPEG2_HEADER_ONLY,
+                                                                    pbuffer, bufSize);
+    if (jpegInput && jpegInput->IsValid())
+        return jpegInput;
+    delete jpegInput;
+    return NULL;
 }
 
 // Singleton instance.
