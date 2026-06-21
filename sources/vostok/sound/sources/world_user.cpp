@@ -196,7 +196,7 @@ bool world_user::is_producer_deleted			( u64 address ) const
 
 void	world_user::on_producer_deleted		( u64 address )
 {
-	LOG_DEBUG						( "world_user::on_sound_producer_deleted" );
+	//LOG_DEBUG						( "world_user::on_sound_producer_deleted" );
 
 	functor_response* resp			= VOSTOK_NEW_IMPL( g_allocator, functor_response )
 	( 
