@@ -9,88 +9,46 @@
 
 namespace survarium {
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (0 stmts, base-ctor call + vtable store + m_game init).
+// Capped ~89%: reached only via the carcass anchor's singleton s_weapon_cook, so the
+// target loads `this` as the absolute &s_weapon_cook instead of the register the real
+// caller (game_world) would pass. Anchor-convention residual, not source-steerable.
 weapon_cook::weapon_cook( game& g ) :
-	// ref member; the same-named param is the obvious source - a matcher confirms
 	m_game( g )
 {
-	// FUNCTION BODY[0x5cd730]: 0
-	// <0x5cd730>|0x000|+0x01d:'55'	{
-	// <0x5cd74d>|0x01d|      :'56'	}
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: structure recovered (28 function-local `static <CookType> s_*;` in the
+// $S6-guard order: inactive, idle, aimed, show, hide, reload, chamber_a_round,
+// chamber_a_round_aimed, fire, aimed_fire, shotgun_reload, shotgun_{start,one_round,
+// finish}, double_barreled {idle, aimed_idle, show, hide, reload, fire, aimed_fire},
+// pistol {idle, aimed_idle, show, hide, reload, fire, aimed_fire}). Each declaration is
+// a magic-statics guard + cook ctor + atexit(dtor). BLOCKED: emitting the bodies forces
+// instantiation of the cook-template ctors (weapon_core_state_cook_template<T>::ctor in
+// weapon_core_state_cook_template_inline.h and weapon_sound_events_handler_state_cook<T>::
+// ctor in weapon_sound_events_handler_state_cook_inline.h), which are themselves STUBs:
+// their empty bodies implicitly default-construct the base resources::unmanaged_cook,
+// which has NO default ctor (C2512). NEXT: recover those two template cook ctors first
+// (each needs `unmanaged_cook( <per-T class_id>, reuse_false, use_current_thread_id,
+// use_current_thread_id )` + register_cook(this), per weapon_core_inactive_state_cook.cpp),
+// then the 28-static body here builds and pairs.
 void weapon_cook::register_cooks_for_logic_states( )
 {
-	// STATICS
-	// static weapon_core_state_cook_template< weapon_core_idle_state > s_weapon_core_idle_state_cook = <0x4c275b0>;
-	// static weapon_core_state_cook_template< pistol_weapon_core_idle_state > s_pistol_weapon_core_idle_state_cook = <0x4c273d0>;
-	// static weapon_core_state_cook_template< double_barreled_weapon_core_idle_state > s_double_barreled_weapon_core_idle_state_cook = <0x4c27470>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_show_state > > s_pistol_show_state_cook = <0x4c27630>;
-	// static shotgun_weapon_reload_state_cook s_shotgun_weapon_reload_state_cook = <0x4c27284>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_fire_state > > s_double_barreled_fire_cook = <0x4c27410>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_hide_state > > s_pistol_hide_state_cook = <0x4c27610>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_reload_state > > s_double_barreled_reload_cook = <0x4c27430>;
-	// static weapon_core_state_cook_template< weapon_core_aimed_state > s_weapon_core_aimed_state_cook = <0x4c27590>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_hide_state > > s_hide_state_cook = <0x4c27650>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_fire_state > > s_fire_cook = <0x4c27510>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_aimed_fire_state > > s_aimed_fire_cook = <0x4c274f0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_fire_state > > s_pistol_fire_cook = <0x4c27370>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_show_state > > s_show_state_cook = <0x4c27670>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_reload_state > > s_pistol_reload_cook = <0x4c27390>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_chamber_a_round_aimed_state > > s_chamber_a_round_aimed_cook = <0x4c27530>;
-	// static weapon_core_state_cook_template< double_barreled_weapon_core_aimed_idle_state > s_double_barreled_weapon_core_aimed_idle_state_cook = <0x4c27450>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_reload_state > > s_reload_cook = <0x4c27570>;
-	// static weapon_core_inactive_state_cook s_weapon_core_inactive_state_cook = <0x4c27690>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_aimed_fire_state > > s_double_barreled_aimed_fire_cook = <0x4c273f0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_chamber_a_round_state > > s_chamber_a_round_cook = <0x4c27550>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_one_round_substate > > s_shotgun_reload_one_round_substate_cook = <0x4c274b0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_finish_substate > > s_shotgun_reload_finish_substate_cook = <0x4c27490>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state > > s_double_barreled_hide_state_cook = <0x4c275d0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_start_substate > > s_shotgun_reload_start_substate_cook = <0x4c274d0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_show_state > > s_double_barreled_show_state_cook = <0x4c275f0>;
-	// static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_aimed_fire_state > > s_pistol_aimed_fire_cook = <0x4c27350>;
-	// static weapon_core_state_cook_template< pistol_weapon_core_aimed_idle_state > s_pistol_weapon_core_aimed_idle_state_cook = <0x4c273b0>;
-	// ******
-
-	// FUNCTION BODY[0x5cd320]: 32
-	// <0x5cd320>|0x000|+0x02a:'60'
-	// <0>
-	// <0x5cd34a>|0x02a|+0x025:'62'
-	// <0x5cd36f>|0x04f|+0x025:'63'
-	// <0x5cd394>|0x074|+0x025:'64'
-	// <0x5cd3b9>|0x099|+0x025:'65'
-	// <0x5cd3de>|0x0be|+0x025:'66'
-	// <0x5cd403>|0x0e3|+0x025:'67'
-	// <0x5cd428>|0x108|+0x025:'68'
-	// <0x5cd44d>|0x12d|+0x025:'69'
-	// <0x5cd472>|0x152|+0x025:'70'
-	// <0>
-	// <0x5cd497>|0x177|+0x025:'72'
-	// <0x5cd4bc>|0x19c|+0x025:'73'
-	// <0x5cd4e1>|0x1c1|+0x025:'74'
-	// <0x5cd506>|0x1e6|+0x025:'75'
-	// <0>
-	// <0x5cd52b>|0x20b|+0x025:'77'
-	// <0x5cd550>|0x230|+0x025:'78'
-	// <0x5cd575>|0x255|+0x025:'79'
-	// <0x5cd59a>|0x27a|+0x025:'80'
-	// <0x5cd5bf>|0x29f|+0x025:'81'
-	// <0x5cd5e4>|0x2c4|+0x025:'82'
-	// <0x5cd609>|0x2e9|+0x025:'83'
-	// <0>
-	// <0x5cd62e>|0x30e|+0x025:'85'
-	// <0x5cd653>|0x333|+0x025:'86'
-	// <0x5cd678>|0x358|+0x025:'87'
-	// <0x5cd69d>|0x37d|+0x025:'88'
-	// <0x5cd6c2>|0x3a2|+0x025:'89'
-	// <0x5cd6e7>|0x3c7|+0x025:'90'
-	// <0x5cd70c>|0x3ec|+0x023:'91'
-	// ******
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - large (71-stmt) weapon-config parser. Now PAIRS (access fixed to
+// private EAE). Recovers as: read config_ptr = data[0] (sound_emitter::set + destroy on the
+// intrusive temp); cfg = config_ptr root; fire_pfx_count = particles/bullet_shells_count
+// (default 0Ah), shells/shoot_pfx_count = particles/shoot_pfx_count (default 3); count the
+// request slots ((fire+shells+4) plus a rifle_scope_dict_id addon via items_dictionary::
+// item_by_id when addons/rifle_scope_dict_id exists); build the request array on alloca
+// (leupold scope model 0x5A, object/model 0x14, then user_animations_in_place/death_hud,
+// /death, /preview each iterated by binary_config_value array stride 0x18, class 0x3D);
+// malloc the weapon block (sizeof(weapon)+sum*4) + placement weapon(counts); query_resources
+// bound to on_weapon_subresources_ready. NEXT: reconstruct statement-by-statement against
+// the carcass line records below (lines 96-166).
 void weapon_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
@@ -181,6 +139,15 @@ void weapon_cook::on_weapon_config_loaded( resources::queries_result& data )
 }
 
 // STATE[STUB]
+// claude@NOTE: parked - large (60-stmt) subresource installer. Now PAIRS (access fixed to
+// private AAE). Recovers as: extract scope = rifle_scope from data when addons/
+// rifle_scope_dict_id exists (resource_ptr::operator= over the queried item, with the
+// intrusive_base destroy dance); then iterate the user_animations_in_place death_hud/death/
+// preview config arrays (binary_config_value stride 0x18), storing each queried managed
+// animation into the weapon's appended intrusive_ptr array at object+0xFF0 and into the
+// pfx/shells slots (object+0xFAC iterated by [object+0xFB1]=m_shells_pfx_count); finally
+// load_weapon( base_model, scope ) + weapon_core_cook::process_loading_weapon_core. NEXT:
+// reconstruct statement-by-statement against the carcass line records below (lines 171-230).
 void weapon_cook::on_weapon_subresources_ready(
 	resources::queries_result&		data,
 	configs::binary_config_ptr		config_ptr,
@@ -263,35 +230,28 @@ void weapon_cook::on_weapon_subresources_ready(
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (cast, count, ~weapon, the two pfx-array deletes, the
+// appended-animations dtor loop). Capped ~77%: the final free is the strip_pointer/
+// delete_helper inline-vs-call wall. Target emits TWO statements - __RTCastToVoid
+// (dynamic_cast<pvoid> via get_top_pointer, line 249) then mspace_free under an if(cast)
+// guard (line 250) - whereas VOSTOK_FREE_IMPL's free_helper passes (remove_cv*)pointer
+// (a static cast, no dynamic_cast) and folds to ONE statement. The target free_helper
+// variant routes the pointer through get_top_pointer; not reproducible from this header.
 void weapon_cook::delete_resource( resources::resource_base* const resource )
 {
-	// carcass signature is const-ptr; delete_helper takes a non-const ref - matcher reconciles
-	resources::resource_base* to_delete	= resource;
-	VOSTOK_DELETE_IMPL					( g_allocator, to_delete );
+	weapon* to_delete = static_cast< weapon* >( resource );
 
-	// CALL SITE INFO
-	// <0x5cd781> -> void* < unknown >( u32 )
-	// ******
+	u32 const animations_count	= to_delete->m_first_view_death_animations_count + to_delete->m_third_view_death_animations_count + to_delete->m_preview_animations_count;
+	to_delete->~weapon( );
 
-	// FUNCTION BODY[0x5cd760]: 16
-	// <0>
-	// <1>
-	// <2>
-	// <0x5cd762>|0x002|+0x004:'238'
-	// <0>
-	// <0x5cd766>|0x006|+0x01d:'240'
-	// <0>
-	// <0x5cd783>|0x023|+0x019:'242'
-	// <0x5cd79c>|0x03c|+0x01d:'243'
-	// <0>
-	// <0x5cd7b9>|0x059|+0x006:'245'
-	// <0x5cd7bf>|0x05f|+0x004:'246'
-	// <0x5cd7c3>|0x063|+0x00f:'247'
-	// <0>
-	// <0x5cd7d2>|0x072|+0x009:'249'
-	// <0x5cd7db>|0x07b|+0x019:'250'
-	// ******
+	VOSTOK_DELETE_ARRAY_IMPL( g_allocator, to_delete->m_shells_pfx_list );
+	VOSTOK_DELETE_ARRAY_IMPL( g_allocator, to_delete->m_fire_pfx_list );
+
+	resources::managed_resource_ptr* const animations = ( resources::managed_resource_ptr* )( to_delete + 1 );
+	for ( u32 i = 0; i != animations_count; ++i )
+		animations[ i ].~resource_ptr( );
+
+	VOSTOK_FREE_IMPL( g_allocator, to_delete );
 }
 
 u32 weapon_cook::cooked_object_size( weapon_core& object_to_cook ) const

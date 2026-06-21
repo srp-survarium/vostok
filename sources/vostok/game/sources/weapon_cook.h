@@ -7,15 +7,22 @@
 
 #include <vostok/game_core/weapon_core_cook.h>
 
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
+
 namespace survarium {
 
 class game;
 class weapon_core;
 
 class weapon_cook : public weapon_core_cook {
+	// /OPT:REF anchor address-takes the private methods below; codegen-neutral friend
+	friend	void	::vostok::use_game_weapons	( );
 public:
 			explicit	weapon_cook					( game& g );
 
+	// these methods mangle private (AAE / EAE / EBE) in the shipped PDB; declaring
+	// them private keeps each out-of-line symbol pairable with the target
+private:
 			void		on_weapon_subresources_ready(
 							resources::queries_result&		data,
 							configs::binary_config_ptr		config_ptr,
@@ -27,6 +34,7 @@ public:
 
 	virtual	u32			cooked_object_size			( weapon_core& object_to_cook ) const override;
 
+public:
 	virtual				~weapon_cook				( ) { /* no source */ }
 
 	static	void		register_cooks_for_logic_states( );

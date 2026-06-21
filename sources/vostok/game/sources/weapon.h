@@ -32,10 +32,15 @@ class base_game_scene;
 class game_world_ui;
 class player;
 
+class weapon_cook;
+
 class weapon : public weapon_core {
 	// /OPT:REF anchor reaches the private (AAE/EAE) methods below by address-take;
 	// codegen-neutral friend, no layout/symbol impact
 	friend	void	::vostok::use_game_weapons	( );
+	// the cook constructs/tears down weapon directly, touching private pfx/animation
+	// members; codegen-neutral
+	friend	class	weapon_cook;
 public:
 								weapon								(
 									u32		first_view_death_animations_count,
