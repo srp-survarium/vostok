@@ -28,10 +28,7 @@ static void show_help(console_command* command)
 
 console_command* find(pcstr str)
 {
-	console_command* result = NULL;
-
 	console_command* current = s_console_command_root;
-
 	while(current)
 	{
 		if( strings::equal(current->name(), str) )
@@ -39,8 +36,7 @@ console_command* find(pcstr str)
 
 		current = current->prev();
 	}
-	result	= current;
-	return	result;
+	return	current;
 }
 
 u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
