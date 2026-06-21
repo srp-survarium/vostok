@@ -567,21 +567,21 @@ protected:
         FormatCacheCapacityDelta = 10
     };
     typedef HashSetLH<TextFormatPtr, TextFormatPtr::HashFunctor,
-                       TextFormatPtr::HashFunctor, StatRender_Text_Mem>                   TextFormatStorageType;
+                       TextFormatPtr::HashFunctor, StatRender_Text_Mem> TextFormatStorageType;
 
     typedef HashSetLH<ParagraphFormatPtr, ParagraphFormatPtr::HashFunctor,
-                       ParagraphFormatPtr::HashFunctor, StatRender_Text_Mem>          ParagraphFormatStorageType;
+                       ParagraphFormatPtr::HashFunctor, StatRender_Text_Mem> ParagraphFormatStorageType;
 
-    TextFormatStorageType           TextFormatStorage;
-    ParagraphFormatStorageType      ParagraphFormatStorage;
-    unsigned                        TextFormatStorageCap;
-    unsigned                        ParagraphFormatStorageCap;
-    UInt32                          NewParagraphId;
-    MemoryHeap*                    pHeap;
+    TextFormatStorageType       TextFormatStorage;
+    ParagraphFormatStorageType  ParagraphFormatStorage;
+    unsigned                    TextFormatStorageCap;
+    unsigned                    ParagraphFormatStorageCap;
+    UInt32                      NewParagraphId;
+    MemoryHeap*                 pHeap;
    
     // Default text format used for heap-correct format allocation.
-    TextFormat                   EntryTextFormat;
-    UInt8                           Flags;
+    TextFormat                  EntryTextFormat;
+    UInt8                       Flags;
 
 public:
     Allocator(MemoryHeap* pheap, UInt8 flags = 0)
@@ -633,6 +633,15 @@ public:
     // Set 'noAllocationsAllowed' to true if need to prevent new allocations
     // (for example, when calling from OnExceedLimit handler).
     bool FlushParagraphFormatCache(bool noAllocationsAllowed = false);
+
+    struct TextFormatVisitor
+    {
+        virtual ~TextFormatVisitor() {}
+        // return 'true' to keep the entry in the cache;
+        // 'false' otherwise.
+        virtual bool Visit(const TextFormat&) = 0;
+    };
+    void VisitTextFormatCache(TextFormatVisitor&);
 
     Paragraph* AllocateParagraph();
     Paragraph* AllocateParagraph(const Paragraph& srcPara);

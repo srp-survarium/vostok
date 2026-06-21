@@ -31,20 +31,29 @@ namespace ASUtils
     void Escape(const char* psrc, UPInt length, String *pescapedStr);
     void Unescape(const char* psrc, UPInt length, String *punescapedStr);
 
+    bool IsWhiteSpace(UInt32 c);
     // Used in AS3 parseInt, parseDouble and ConvertToNumber
-    UInt32 SkipWhiteSpace( const String& str);
+    // Return *character index* of first not whitespace char.
+    UInt32 SkipWhiteSpace(const String& str);
+    // Return pointer to a first not whitespace char.
+    const char* SkipWhiteSpace(const char* str, UPInt len);
 
     namespace AS3
     {
         // psrc must be an UTF8 encoded string.
-        void EscapeWithMask(const char* psrc, UPInt length, String& escapedStr, const unsigned* escapeMask);
+        // useUtf8 param indicates that string will be encoded as UTF8 string first and then 
+        // escaped; if the param is false then Unicode string will be used for escaping. The difference
+        // between these two approaches will be something like "%D0%3e" vs "%u0420".
+        void EscapeWithMask
+            (const char* psrc, UPInt length, String& escapedStr, const unsigned* escapeMask, bool useUtf8 = false);
         // psrc must be an UTF8 encoded string.
-        void Escape(const char* psrc, UPInt length, String& escapedStr);
-        void EncodeURI(const char* psrc, UPInt length, String& escapedStr);
-        void EncodeURIComponent(const char* psrc, UPInt length, String& escapedStr);
+        void Escape(const char* psrc, UPInt length, String& escapedStr, bool useUtf8 = false);
+        void EncodeVar(const char* psrc, UPInt length, String& escapedStr, bool useUtf8 = false);
+        void EncodeURI(const char* psrc, UPInt length, String& escapedStr, bool useUtf8 = false);
+        void EncodeURIComponent(const char* psrc, UPInt length, String& escapedStr, bool useUtf8 = false);
         // psrc must be an UTF8 encoded string.
         // Return true in case of success.
-        bool Unescape(const char* psrc, UPInt length, String& unescapedStr);
+        bool Unescape(const char* psrc, UPInt length, String& unescapedStr, bool useUtf8 = false);
     }
 }
 

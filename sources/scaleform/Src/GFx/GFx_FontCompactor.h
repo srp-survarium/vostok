@@ -20,17 +20,18 @@ otherwise accompanies this software in either electronic or hard copy form.
 #define INC_SF_GFxFontCompactor_H
 
 #include "GFxConfig.h"
-#if defined(GFX_ENABLE_COMPACTED_FONTS) || defined(GFX_ENABLE_FONT_COMPACTOR)
 #include "Kernel/SF_Array.h"
 #include "Kernel/SF_Hash.h"
 #include "Render/Render_Types2D.h"
 #include "Kernel/SF_ArrayUnsafe.h"
 #include "Kernel/SF_ArrayPaged.h"
 #include "Kernel/SF_RefCount.h"
-#include "GFx/GFx_Font.h"
-#include "GFx/GFx_PathDataStorage.h"
+#include "Render/Render_Font.h"
+#include "GFx_PathDataStorage.h"
 
 namespace Scaleform { namespace GFx {
+
+#if defined(GFX_ENABLE_COMPACTED_FONTS) || defined(GFX_ENABLE_FONT_COMPACTOR)
 
 // Font collection data structure:
 //------------------------------------------------------------------------
@@ -395,7 +396,7 @@ template<class ContainerType>
 bool CompactedFont<ContainerType>::MatchFont(const char* name, unsigned flags) const
 {
     return String::CompareNoCase(&Name[0], name) == 0 && 
-        (flags & Font::FF_Style_Mask) == (Flags & Font::FF_Style_Mask);
+        (flags & Render::Font::FF_Style_Mask) == (Flags & Render::Font::FF_Style_Mask);
 }
 
 //------------------------------------------------------------------------
@@ -446,8 +447,8 @@ unsigned CompactedFont<ContainerType>::AcquireFont(unsigned startPos)
     return pos - startPos;
 }
 
-
 #ifdef GFX_ENABLE_FONT_COMPACTOR
+
 //------------------------------------------------------------------------
 class FontCompactor : public RefCountBaseNTS<FontCompactor, StatMD_Fonts_Mem>
 {
@@ -613,12 +614,11 @@ private:
     unsigned                                        FontTotalGlyphBytes;
     unsigned                                        FontStartGlyphs;
 };
+
+#endif // GFX_ENABLE_FONT_COMPACTOR
+#endif // defined(GFX_ENABLE_COMPACTED_FONTS) || defined(GFX_ENABLE_FONT_COMPACTOR)
+
 }} // Scaleform::GFx
-#endif //SF_NO_FONTCOMPACTOR_SUPPORT
-
-
-#endif //defined(GFX_ENABLE_COMPACTED_FONTS) || defined(GFX_ENABLE_FONT_COMPACTOR)
-
 
 #endif // INC_SF_GFxFontCompactor_H
 

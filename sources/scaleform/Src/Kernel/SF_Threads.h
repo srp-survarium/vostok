@@ -22,6 +22,13 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "SF_RefCount.h"
 #include "SF_Array.h"
 
+#if defined(SF_OS_WINMETRO)
+#include <ppl.h>
+#if defined(SF_USE_STD11_THREADS)
+#include <thread>
+#endif
+#endif
+
 #if defined(SF_OS_WII) || defined(SF_OS_WIIU)
 #include <setjmp.h>
 #include "SF_List.h"
@@ -50,6 +57,151 @@ class   WaitCondition;
 class   Event;
 class   Semaphore;
 
+#else
+//
+// declare stubs for non threaded build
+//
+
+typedef void* ThreadId;
+
+// Returns the unique Id of a thread it is called on, intended for
+// comparison purposes.
+ThreadId GetCurrentThreadId();
+
+// Mutex
+class Mutex 
+{
+public:
+   Mutex(bool recursive = 1, bool multiWait = 0) { SF_UNUSED2(recursive, multiWait); }
+   void  DoLock()    { }
+   bool  TryLock()   { return false; }
+   void  Unlock()    { }
+   bool  IsLockedByAnotherThread()       { return false; }
+   bool    IsSignaled() const    { return false; }
+   void* GetAcquireInterface()   { return NULL; }
+   bool    CanAcquire()          { return false; }
+   bool    TryAcquire()          { return false; }  
+   bool    TryAcquireCommit()    { return false; }
+   bool    TryAcquireCancel()    { return false; }
+
+    class Locker
+    {
+    public:
+        Mutex *pMutex;
+        Locker(Mutex *pmutex) { SF_UNUSED(pmutex); }
+    };
+};
+
+// WaitCondition
+class WaitCondition 
+{
+public:
+    bool    Wait(Mutex *pmutex, unsigned delay = SF_WAIT_INFINITE) { SF_UNUSED2(pmutex, delay); return false; }
+    void    Notify()      { }
+    void    NotifyAll()   { }
+};
+
+// Thread
+class Thread : public RefCountBase<Thread, Stat_Default_Mem>
+{
+public:
+    enum ThreadState
+    {
+        NotRunning  = 0,
+        Running     = 1,
+        Suspended   = 2
+    };
+    enum ThreadPriority
+    {
+        CriticalPriority,
+        HighestPriority,
+        AboveNormalPriority,
+        NormalPriority,
+        BelowNormalPriority,
+        LowestPriority,
+        IdlePriority,
+    };
+    typedef int (*ThreadFn)(Thread *pthread, void* h);
+    struct CreateParams
+    {
+        CreateParams(ThreadFn func = 0, void* hand = 0, UPInt ssize = 128 * 1024, 
+            int proc = -1, ThreadState state = NotRunning, ThreadPriority prior = NormalPriority) 
+        { SF_UNUSED6(func, hand, ssize, proc, state, prior); }
+    };
+
+    Thread(UPInt stackSize = 128 * 1024, int processor = -1) { SF_UNUSED2(stackSize, processor); }
+    Thread(ThreadFn threadFunction, void*  userHandle = 0, UPInt stackSize = 128 * 1024,
+        int processor = -1, ThreadState initialState = NotRunning) { SF_UNUSED5(threadFunction, userHandle, stackSize, processor, initialState); }
+    explicit SF_EXPORT Thread(const CreateParams& params) { SF_UNUSED(params); }
+    static  void SF_CDECL FinishAllThreads() { }
+    int   Run()   { return 0; }
+    void  OnExit(){ }
+    bool  Start(ThreadState initialState = Running) { SF_UNUSED(initialState); return true; }
+    void  Exit(int exitCode=0)    { SF_UNUSED(exitCode); }
+    bool  Suspend()   { return true; }
+    bool  Resume()    { return true; }
+
+    bool          GetExitFlag() const     { return true; }
+    void          SetExitFlag(bool exitFlag) { SF_UNUSED(exitFlag); }
+    bool          IsFinished() const      { return true; }
+    bool          IsSuspended() const     { return false; }
+    ThreadState   GetThreadState() const  { return NotRunning; }
+    static int GetCPUCount()              { return 1; }
+    SF_INLINE int           GetExitCode() const { return 0; }
+
+    // Returns an OS handle 
+#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+    void*          GetOSHandle() const { return NULL; }
+#elif defined(SF_OS_WII) || defined(SF_OS_WIIU)
+    OSThread *     GetOSHandle() const { return NULL; }
+#elif defined(SF_OS_PS3)
+    sys_ppu_thread_t GetOSHandle() const { return 0; }
+#elif defined(SF_OS_PSVITA)
+    SceUID         GetOSHandle() const { return 0; }
+#elif defined(SF_OS_3DS)
+    nn::os::Thread* GetOSHandle() const { return NULL; }
+#else
+    pthread_t      GetOSHandle() const { return 0; }
+#endif
+
+    ThreadId       GetThreadId() const { return 0; }
+
+    static int               GetOSPriority(ThreadPriority)  { return 0; }
+    static bool    Sleep(unsigned secs)           { SF_UNUSED(secs); return false; }
+    static bool    MSleep(unsigned msecs)         { SF_UNUSED(msecs); return false; }
+
+    bool   IsSignaled() const {  return false; }
+    void*  GetAcquireInterface() { return this; }
+    bool    CanAcquire() { return IsSignaled(); }
+    bool    TryAcquire() { return IsSignaled(); }
+    void    SetThreadName( const char* name ) { SF_UNUSED(name); }
+#if defined(SF_OS_WII) || defined(SF_OS_WIIU)
+public: // for Wii compiler 4.3 145
+    struct ThreadDataWii : public ListNode<ThreadDataWii>
+    {
+        OSThread        ThreadHandle;
+        jmp_buf         ExitJmp;
+        UByte           Stack[32] __attribute__((aligned(32)));
+    };
+#endif
+};
+
+// Event
+class Event
+{
+public:
+    Event(bool setInitially = 0, bool multiWait = 0) { SF_UNUSED2(setInitially, multiWait); }
+    bool  Wait(unsigned delay = SF_WAIT_INFINITE) { SF_UNUSED(delay); return true; } 
+    void  SetEvent()  { }
+    void  ResetEvent(){ }
+    void  PulseEvent(){ }
+    bool  IsSignaled() const  { return false; }
+    void*  GetAcquireInterface() { return NULL; }
+    bool    CanAcquire()      { return false; }
+    bool    TryAcquire()      { return false; }
+    bool    TryAcquireCommit(){ return false; }
+    bool    TryAcquireCancel(){ return false; }
+};
 #endif
 
 
@@ -497,8 +649,14 @@ public:
 // Thread::GetThreadId.
 #if defined(SF_OS_PS3)
 typedef sys_ppu_thread_t ThreadId;
-#elif defined(SF_OS_NGP)
+#elif defined(SF_OS_PSVITA)
 typedef SceUID ThreadId;
+#elif defined(SF_OS_WINMETRO)
+#if   defined(SF_USE_STD11_THREADS)
+typedef size_t ThreadId;
+#else
+typedef const concurrency::task_group* ThreadId;
+#endif
 #else
 typedef void* ThreadId;
 #endif
@@ -639,28 +797,40 @@ public:
     SF_EXPORT ThreadState   GetThreadState() const;
 
     // Returns the number of available CPUs on the system 
-    SF_EXPORT static int GetCPUCount();
+    SF_EXPORT static int    GetCPUCount();
 
     // Returns the thread exit code. Exit code is initialized to 0,
     // and set to the return value if Run function after the thread is finished.
     SF_INLINE int           GetExitCode() const { return ExitCode; }
     // Returns an OS handle 
-#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+#if (defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)) && !defined(SF_OS_WINMETRO)
     void*          GetOSHandle() const { return ThreadHandle; }
-#elif defined(SF_OS_WII) || defined(SF_OS_WIIU)
-    OSThread *     GetOSHandle() const { return ThreadData ? const_cast<OSThread*>(&ThreadData->ThreadHandle) : 0; }
-#elif defined(SF_OS_PS3)
-    sys_ppu_thread_t GetOSHandle() const { return ThreadHandle; }
-#elif defined(SF_OS_NGP)
-    SceUID         GetOSHandle() const { return ThreadHandle; }
-#elif defined(SF_OS_3DS)
-    nn::os::Thread* GetOSHandle() const { return ThreadHandle; }
+#elif defined(SF_OS_WINMETRO)
+#if   defined(SF_USE_STD11_THREADS)
+    std::thread*        GetOSHandle() const { return ThreadHandle; }
 #else
-    pthread_t      GetOSHandle() const { return ThreadHandle; }
+    ThreadId	        GetOSHandle() const { return &ThreadHandle; }
+#endif
+#elif defined(SF_OS_WII) || defined(SF_OS_WIIU)
+    OSThread *          GetOSHandle() const { return ThreadData ? const_cast<OSThread*>(&ThreadData->ThreadHandle) : 0; }
+#elif defined(SF_OS_PS3)
+    sys_ppu_thread_t    GetOSHandle() const { return ThreadHandle; }
+#elif defined(SF_OS_PSVITA)
+    SceUID              GetOSHandle() const { return ThreadHandle; }
+#elif defined(SF_OS_3DS)
+    nn::os::Thread*     GetOSHandle() const { return ThreadHandle; }
+#else
+    pthread_t           GetOSHandle() const { return ThreadHandle; }
 #endif
 
-#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+#if (defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)) && !defined(SF_OS_WINMETRO)
     ThreadId       GetThreadId() const { return IdValue; }
+#elif defined(SF_OS_WINMETRO)
+#if   defined(SF_USE_STD11_THREADS)
+    ThreadId       GetThreadId() const { return IdValue != std::thread::id() ? IdValue.hash() : 0; }
+#else
+    ThreadId       GetThreadId() const { return (ThreadId)GetOSHandle(); }
+#endif
 #else
     ThreadId       GetThreadId() const { return (ThreadId)GetOSHandle(); }
 #endif
@@ -692,16 +862,22 @@ public:
     //SF_EXPORT   virtual bool    TryAcquireCancel();
 
     // *** Debugging functionality
-#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX360)
+#if (defined(SF_OS_WIN32) || defined(SF_OS_XBOX360)) && !defined(SF_OS_WINMETRO)
     virtual void    SetThreadName( const char* name );
 #else
     virtual void    SetThreadName( const char* name ) { SF_UNUSED(name); }
 #endif
 
 private:
-#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+#if (defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)) && ! defined(SF_OS_WINMETRO)
     friend unsigned WINAPI Thread_Win32StartFn(void *pthread);
 
+#elif defined(SF_OS_WINMETRO)
+#if   defined(SF_USE_STD11_THREADS)
+    friend void Thread_Std11StartFunc(void *phandle);
+#else
+    friend void WINAPIV Thread_WinRTStartFn(void *pthread);
+#endif
 #elif defined(SF_OS_WII)
     friend void *Thread_PthreadStartFn(void * phandle);
     friend class ThreadList;
@@ -716,7 +892,7 @@ private:
 #elif defined(SF_OS_PS3)
     friend void Thread_PpuThreadStartFn(uint64_t phandle);
 
-#elif defined(SF_OS_NGP)
+#elif defined(SF_OS_PSVITA)
     friend int Thread_Psp2ThreadStartFn(SceSize size, void* phandle);
 
 #else
@@ -733,15 +909,23 @@ protected:
     UPInt               StackSize;
 
     // Hardware processor which this thread is running on.
-    int            Processor;
-    ThreadPriority Priority;
+    int                 Processor;
+    ThreadPriority      Priority;
 
-#if defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
+#if (defined(SF_OS_WIN32) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)) && !defined(SF_OS_WINMETRO)
     void*               ThreadHandle;
     volatile ThreadId   IdValue;
 
     // System-specific cleanup function called from destructor
     void                CleanupSystemThread();
+
+#elif defined(SF_OS_WINMETRO)
+#if   defined(SF_USE_STD11_THREADS)
+    std::thread*        ThreadHandle;
+    std::thread::id     IdValue;
+#else
+    concurrency::task_group ThreadHandle;
+#endif
 
 #elif defined(SF_OS_WII) || defined(SF_OS_WIIU)
 public: // for Wii compiler 4.3 145
@@ -758,7 +942,7 @@ protected:
     nn::os::Thread*     ThreadHandle;
 #elif defined(SF_OS_PS3)
     sys_ppu_thread_t    ThreadHandle;
-#elif defined(SF_OS_NGP)
+#elif defined(SF_OS_PSVITA)
     SceUID              ThreadHandle;
 #else
     pthread_t           ThreadHandle;
@@ -768,22 +952,19 @@ protected:
     int                 ExitCode;
 
     // Internal run function.
-    int                     PRun();    
+    int                 PRun();    
     // Finishes the thread and releases internal reference to it.
-    void                    FinishAndRelease();
+    void                FinishAndRelease();
 
-    void                    Init(const CreateParams& params);
+    void                Init(const CreateParams& params);
 
     // Protected copy constructor
     Thread(const Thread &source) : Waitable(1) { SF_UNUSED(source); }
-
-
 };
 
 // Returns the unique Id of a thread it is called on, intended for
 // comparison purposes.
 ThreadId GetCurrentThreadId();
-
 
 
 #endif // SF_ENABLE_THREADS

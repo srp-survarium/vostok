@@ -22,7 +22,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 namespace Scaleform { namespace Render { namespace PVR {
 
 // The following taken from PVRSDK's PVRTexture.h
-enum PixelType
+enum PVR2PixelType
 {
 	MGLPT_ARGB_4444 = 0x00,
 	MGLPT_ARGB_1555,
@@ -232,20 +232,9 @@ enum PixelType
 
 };
 
-/**************************************************************************
-
-Filename    :   PVR_ImageReader.cpp
-Content     :   PVR Image file format reader implementation
-Created     :   Mar 2011
-Authors     :   Bart Muzzin
-
-Copyright   :   Copyright 2011 Autodesk, Inc. All Rights reserved.
-
-Use of this software is subject to the terms of the Autodesk license
-agreement provided at the time of installation or download, or which
-otherwise accompanies this software in either electronic or hard copy form.
-
-**************************************************************************/
+/*****************************************************************************
+* constants
+*****************************************************************************/
 
 const UInt32 PVRTEX_MIPMAP		    = (1<<8);		// has mip map levels
 const UInt32 PVRTEX_TWIDDLE		    = (1<<9);		// is twiddled
@@ -272,6 +261,81 @@ const UInt32 ETC_MIN_TEXHEIGHT		= 4;
 const UInt32 DXT_MIN_TEXWIDTH		= 4;
 const UInt32 DXT_MIN_TEXHEIGHT		= 4;
 
+enum PVR3PixelType
+{
+        ePVRTPF_PVRTCI_2bpp_RGB,
+        ePVRTPF_PVRTCI_2bpp_RGBA,
+        ePVRTPF_PVRTCI_4bpp_RGB,
+        ePVRTPF_PVRTCI_4bpp_RGBA,
+        ePVRTPF_PVRTCII_2bpp,
+        ePVRTPF_PVRTCII_4bpp,
+        ePVRTPF_ETC1,
+        ePVRTPF_DXT1,
+        ePVRTPF_DXT2,
+        ePVRTPF_DXT3,
+        ePVRTPF_DXT4,
+        ePVRTPF_DXT5,
+
+        //These formats are identical to some DXT formats.
+        ePVRTPF_BC1 = ePVRTPF_DXT1,
+        ePVRTPF_BC2 = ePVRTPF_DXT3,
+        ePVRTPF_BC3 = ePVRTPF_DXT5,
+
+        //These are currently unsupported:
+        ePVRTPF_BC4,
+        ePVRTPF_BC5,
+        ePVRTPF_BC6,
+        ePVRTPF_BC7,
+        ePVRTPF_UYVY,
+        ePVRTPF_YUY2,
+        ePVRTPF_BW1bpp,
+        ePVRTPF_SharedExponentR9G9B9E5,
+        ePVRTPF_RGBG8888,
+        ePVRTPF_GRGB8888,
+        ePVRTPF_ETC2_RGB,
+        ePVRTPF_ETC2_RGBA,
+        ePVRTPF_ETC2_RGB_A1,
+        ePVRTPF_EAC_R11_Unsigned,
+        ePVRTPF_EAC_R11_Signed,
+        ePVRTPF_EAC_RG11_Unsigned,
+        ePVRTPF_EAC_RG11_Signed,
+        ePVRTPF_NumCompressedPFs
+};
+
+enum EPVRTColourSpace
+{
+    ePVRTCSpacelRGB,
+    ePVRTCSpacesRGB
+};
+
+enum EPVRTVariableType
+{
+    ePVRTVarTypeUnsignedByteNorm,
+    ePVRTVarTypeSignedByteNorm,
+    ePVRTVarTypeUnsignedByte,
+    ePVRTVarTypeSignedByte,
+    ePVRTVarTypeUnsignedShortNorm,
+    ePVRTVarTypeSignedShortNorm,
+    ePVRTVarTypeUnsignedShort,
+    ePVRTVarTypeSignedShort,
+    ePVRTVarTypeUnsignedIntegerNorm,
+    ePVRTVarTypeSignedIntegerNorm,
+    ePVRTVarTypeUnsignedInteger,
+    ePVRTVarTypeSignedInteger,
+    ePVRTVarTypeFloat,
+    ePVRTVarTypeNumVarTypes
+};
+
+union PixelType
+{
+    struct LowHigh
+    {
+        UInt32 Low;
+        UInt32 High;
+    } Part;
+    UInt64 PixelTypeID;
+    UInt8 PixelTypeChar[8];
+};
 
 struct PVRHeaderInfo
 {
@@ -290,6 +354,15 @@ struct PVRHeaderInfo
     UInt32 NumSurfs;			/*!< the number of surfaces present in the pvr */   
 
     ImageFormat Format;         // Added: The image format.
+
+    //PVR3
+    UInt32  Version;
+    UInt64  PVR3Format;
+    UInt32  ColorSpace;
+    UInt32  ChannelType;
+    UInt32  Depth;
+    UInt32  NumFases;
+    UInt32  MetaDataSize;
 };
 
 // Temporary PVR image class used as a data source, allowing
@@ -299,7 +372,6 @@ class PVRFileImageSource : public FileImageSource
 {
     UByte             ImageDesc; 
     PVRHeaderInfo   HeaderInfo;
-    ImageData         Data;
     
 public:
     PVRFileImageSource(File* file, ImageFormat format)
@@ -310,8 +382,6 @@ public:
     bool ReadHeader();
     virtual bool Decode(ImageData* pdest, CopyScanlineFunc copyScanline, void* arg) const;
     virtual unsigned        GetMipmapCount() const { return Alg::Max<unsigned>(1, HeaderInfo.MipMapCount); }
-
-    SF_AMP_CODE(virtual UPInt GetBytes(int* memRegion) const { if (memRegion) *memRegion = 0; return Data.GetBitsPerPixel() * Data.GetSize().Area() / 8; })
 };
 
 
@@ -323,13 +393,77 @@ static const UByte* ParseUInt32(const UByte* buf, UInt32* pval)
     return buf + 4;
 }
 
+static const UByte* ParseUInt64(const UByte* buf, UInt64* pval)
+{
+    *pval = Alg::ByteUtil::LEToSystem(*(UInt64*)buf);    
+    return buf + 8;
+}
+
 static bool Image_ParsePVRHeader(PVRHeaderInfo* pinfo, const UByte* buf, const UByte** pdata)
 {
     SF_UNUSED(pdata);
     ImagePlane p0;
+    UInt32 head;
+    buf = ParseUInt32(buf, &head);
+    if(head == 0x50565203 ||
+        head == 0x03525650) //PVR3
+    {
+        pinfo->Version = head; 
+        buf = ParseUInt32(buf, &pinfo->pfFlags);
+        buf = ParseUInt64(buf,&pinfo->PVR3Format);
+        buf = ParseUInt32(buf, &pinfo->ColorSpace);
+        buf = ParseUInt32(buf, &pinfo->ChannelType);
+        buf = ParseUInt32(buf, &pinfo->Height);
+        buf = ParseUInt32(buf, &pinfo->Width);
+        buf = ParseUInt32(buf, &pinfo->Depth);
+        buf = ParseUInt32(buf, &pinfo->NumSurfs);
+        buf = ParseUInt32(buf, &pinfo->NumFases);
+        buf = ParseUInt32(buf, &pinfo->MipMapCount);
+        buf = ParseUInt32(buf, &pinfo->MetaDataSize);
+        pinfo->Format = Image_None;
 
-    buf = ParseUInt32(buf, &pinfo->HeaderSize);
-    SF_ASSERT( pinfo->HeaderSize == PVRTEX_V2_HEADER_SIZE ); // Only support PVR v2.
+        PixelType pt;
+        pt.PixelTypeID = pinfo->PVR3Format;
+        if (pt.Part.High == 0)
+        {
+            switch(pt.PixelTypeID)
+            {
+            case ePVRTPF_PVRTCI_2bpp_RGBA:
+                pinfo->Format = Image_PVRTC_RGBA_2BPP;
+                break;
+            case ePVRTPF_PVRTCI_2bpp_RGB:
+                pinfo->Format = Image_PVRTC_RGB_2BPP;
+                break;
+            case ePVRTPF_PVRTCI_4bpp_RGBA:
+                pinfo->Format = Image_PVRTC_RGBA_4BPP;
+                break;
+            case ePVRTPF_PVRTCI_4bpp_RGB:
+                pinfo->Format = Image_PVRTC_RGB_4BPP;
+                break;
+            case ePVRTPF_ETC1:
+                pinfo->Format = Image_ETC1_RGB_4BPP; break;
+
+            }
+        }
+        else
+        {
+            char* c = (char*)pt.PixelTypeChar;
+            // can be replaced with if (pt.PixelTypeID == 578721384203708274)
+            if (c[0]=='r' && c[1]=='g' && c[2] == 'b' && c[3] == 'a' && 
+                c[4] == 8 && c[5] == 8 && c[6] == 8 && c[7] == 8)
+                pinfo->Format = Image_R8G8B8A8;
+            else if (c[0]=='r' && c[1]=='g' && c[2] == 'b' && c[3] == 0 && 
+                c[4] == 8 && c[5] == 8 && c[6] == 8 && c[7] == 0)
+                pinfo->Format = Image_R8G8B8;
+            else if (c[0]=='a' && c[1]==0 && c[2] == 0 && c[3] == 0 && 
+                c[4] == 8 && c[5] == 0 && c[6] == 0 && c[7] == 0)
+                pinfo->Format = Image_A8;
+        }
+    }
+    else //PVR2
+    {
+        pinfo->HeaderSize = head;
+        SF_ASSERT( pinfo->HeaderSize == PVRTEX_V2_HEADER_SIZE ); 
     buf = ParseUInt32(buf, &pinfo->Height);
     buf = ParseUInt32(buf, &pinfo->Width);
     buf = ParseUInt32(buf, &pinfo->MipMapCount);
@@ -373,7 +507,7 @@ static bool Image_ParsePVRHeader(PVRHeaderInfo* pinfo, const UByte* buf, const U
     case OGL_RGB_888:         pinfo->Format = Image_R8G8B8; break;
     case OGL_I_8:              pinfo->Format = Image_A8; break;        
     }
-
+    }
     SF_ASSERT(pinfo->Format != Image_None); // Unsupported format
     return pinfo->Format != Image_None;
 }
@@ -383,23 +517,31 @@ bool PVRFileImageSource::Decode( ImageData* pdest, CopyScanlineFunc copyScanline
     SF_UNUSED2(arg, copyScanline);
     if (!seekFileToDecodeStart())
         return false;
-
-    unsigned mipWidth = Size.Width;
-    unsigned mipHeight = Size.Height;
-    for (unsigned m = 0; m < pdest->GetMipLevelCount(); m++)
+    if (HeaderInfo.Version == 0x50565203) // Skip metadata for PVR3
     {
-        ImagePlane mipPlane;
-        if (pdest->HasSeparateMipmaps())
+        pFile->LSeek(FilePos + HeaderInfo.MetaDataSize);
+    }
+    if (pdest->HasSeparateMipmaps())
+    {
+        unsigned mipWidth = Size.Width;
+        unsigned mipHeight = Size.Height;
+        for (unsigned m = 0; m < pdest->GetMipLevelCount(); m++)
+        {
+            ImagePlane mipPlane;
             pdest->GetMipLevelPlane(m, 0, &mipPlane);
-        else
-            pdest->GetPlaneRef().GetMipLevel(pdest->GetFormat(), m, &mipPlane);
-
-        //For compressed formats copy mipmap data directly (only compressed types are supported right now).
-        SF_ASSERT(pdest->Format == Format);
-        if (pFile->Read(mipPlane.pData, (int)mipPlane.DataSize) != (int)mipPlane.DataSize)
+            //For compressed formats copy mipmap data directly (only compressed types are supported right now).
+            SF_ASSERT(pdest->Format == Format);
+            if (pFile->Read(mipPlane.pData, (int)mipPlane.DataSize) != (int)mipPlane.DataSize)
+                return false;
+            mipWidth /= 2;
+            mipHeight /= 2;
+        }
+    }
+    else
+    {
+        //SF_ASSERT(pdest->pPlanes->DataSize == HeaderInfo.TextureDataSize);
+        if (pFile->Read(pdest->pPlanes->pData, (int)pdest->pPlanes->DataSize) != (int)pdest->pPlanes->DataSize)
             return false;
-        mipWidth /= 2;
-        mipHeight /= 2;
     }
     return true;
 
@@ -426,8 +568,11 @@ bool FileReader::MatchFormat(File* file, UByte* headerArg, UPInt headerArgSize) 
     if (!header)
         return false;
     UInt32* headerData = (UInt32*)header.GetPtr();
-    if (headerData[0]  != PVRTEX_V2_HEADER_SIZE || 
-        headerData[11] != PVRTEX_IDENTIFIER)
+    if ((headerData[0]  != PVRTEX_V2_HEADER_SIZE || //PVR V2 
+        headerData[11] != PVRTEX_IDENTIFIER) &&
+        (headerData[0] != 0x50565203 &&          //PVR V3
+        headerData[0] != 0x03525650)            
+        )
         return false;
     return true;
 }

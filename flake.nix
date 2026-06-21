@@ -12,11 +12,12 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Pinned to the extract-all-enums-and-unions commit (vostok-pdb-parser#28):
-      # walks the type stream directly so all 918 enums + 164 unions are emitted
-      # (was ~8/0). Carries the scaleform-carcass-dump fix. Re-track master once
-      # #28 lands. Output is gitignored/reference-only (zero match risk).
-      url = "github:srp-survarium/vostok-pdb-parser/4c3ed5b6d0afc1022b23ec36c006f16d129389b4";
+      # Pinned to the structure-builder commit: extract-all-enums-and-unions
+      # (vostok-pdb-parser#28) PLUS emit the engine's own vostok/scaleform/sources
+      # compilands (the broad '\scaleform\' module filter is dropped; modules with
+      # unresolvable cross-module debug info are skipped, not aborted). Re-track
+      # master once these land. Output is gitignored/reference-only (zero match risk).
+      url = "github:srp-survarium/vostok-pdb-parser/b6159cc49734f77eb3356eda982aa3f3cdb9291c";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -175,13 +176,15 @@
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
-      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b.zip --repo srp-survarium/vostok-build-env
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx422.zip --repo srp-survarium/vostok-build-env
+      # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
+      # (built per the shipped PDB recipe; see docs + scripts/build_gfx_suite.py).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         src = pkgs.fetchurl {
-          name = "vostok-libs-v0.100b.zip";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b.zip";
-          sha256 = "0rr63ifgv0mkpwy2acm6zrn7ni4qk3ls5gy52fmizf02yr8jivb2";
+          name = "vostok-libs-v0.100b-gfx422.zip";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx422.zip";
+          sha256 = "0qpnmx0jhk9bclzxjzzjk8kbgpg5k640138cxmhnkz2nbi4447b1";
         };
         nativeBuildInputs = [ pkgs.unzip ];
       } ''

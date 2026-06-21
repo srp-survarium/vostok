@@ -12,16 +12,17 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
+
 #include "pch.h"
 
-#include "D3D1x_MeshCache.h"
+#include "Render/D3D1x/D3D1x_MeshCache.h"
+#include "Render/D3D1x/D3D1x_ShaderDescs.h"
+#include "Render/D3D1x/D3D1x_Shader.h"
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_Alg.h"
 #include "Kernel/SF_HeapNew.h"
 
 //#define SF_RENDER_LOG_CACHESIZE
-
-#include <stdio.h>
 
 namespace Scaleform { namespace Render { namespace D3D1x {
 
@@ -58,12 +59,21 @@ MeshCache::~MeshCache()
 
 // Initializes MeshCache for operation, including allocation of the reserve
 // buffer. Typically called from SetVideoMode.
-bool MeshCache::Initialize(ID3D1x(Device)* pdevice, ID3D1x(DeviceContext) *pcontext)
+bool MeshCache::Initialize(ID3D1x(Device)* pdevice, ID3D1x(DeviceContext) *pcontext, ShaderManager* psm)
 {
-    SF_ASSERT(!pDevice || !pDeviceContext);
+    SF_ASSERT(!pDevice || !pDeviceContext || !psm);
 
     pDevice = pdevice;
     pDeviceContext = pcontext;
+    pShaderManager = psm;
+
+    adjustMeshCacheParams(&Params);
+
+    // If SetDevice fails, it means that creating queries failed.
+    if ( !RSync.SetDevice(pdevice, pcontext))
+    {
+        SF_DEBUG_WARNING(1, "RenderSync initialization failed. Using static buffers in MeshCache.");
+    }
 
     if (!StagingBuffer.Initialize(pHeap, Params.StagingBufferSize))
         return false;
@@ -86,11 +96,14 @@ bool MeshCache::Initialize(ID3D1x(Device)* pdevice, ID3D1x(DeviceContext) *pcont
 
 void MeshCache::Reset()
 {
+    // This must happen before destroying buffers. If the device is lost, then the WaitFence implementation
+    // depends on the RenderSync to be reset before any meshes are destroy. Otherwise and infinite wait may occur.
+    RSync.SetDevice(0, 0);
+
     if (pDevice)
         destroyBuffers();
     // Unconditional to simplify Initialize fail logic:
     pMaskEraseBatchVertexBuffer.Clear();
-    pSquareVertexBuffer.Clear();
     pDevice.Clear();
     pDeviceContext.Clear();
     StagingBuffer.Reset();
@@ -161,25 +174,74 @@ bool MeshCache::SetParams(const MeshCacheParams& argParams)
 
 void MeshCache::adjustMeshCacheParams(MeshCacheParams* p)
 {
-    // TBD: Detect/record HW instancing capability.
-    
-    if (p->MaxBatchInstances > SF_RENDER_D3D1x_INSTANCE_MATRICES)
-        p->MaxBatchInstances = SF_RENDER_D3D1x_INSTANCE_MATRICES;
-    if (p->VBLockEvictSizeLimit < 1024 * 256)
-        p->VBLockEvictSizeLimit = 1024 * 256;
+    p->MaxBatchInstances    = Alg::Clamp<unsigned>(p->MaxBatchInstances, 1, SF_RENDER_MAX_BATCHES);
+    p->VBLockEvictSizeLimit = Alg::Clamp<UPInt>(p->VBLockEvictSizeLimit, 0, p->VBLockEvictSizeLimit = 1024 * 256);
 
     UPInt maxStagingItemSize = p->MaxVerticesSizeInBatch +
                                sizeof(UInt16) * p->MaxIndicesInBatch;
     if (maxStagingItemSize * 2 > p->StagingBufferSize)
         p->StagingBufferSize = maxStagingItemSize * 2;
+
+    // If we have a shader manager, we can query whether we have instancing. If not, disable it.
+    if (!pShaderManager->HasInstancingSupport())
+        p->InstancingThreshold = 0;
 }
 
+
+void MeshCache::destroyPendingBuffers()
+{
+    // Destroy any pending buffers that are waiting to be destroyed (if possible).
+    List<Render::MeshBuffer> remainingBuffers;
+    MeshBuffer* p = (MeshBuffer*)PendingDestructionBuffers.GetFirst();
+    while (!PendingDestructionBuffers.IsNull(p))
+    {
+        MeshCacheListSet::ListSlot& pendingFreeList = CacheList.GetSlot(MCL_PendingFree);
+        MeshCacheItem* pitem = (MeshCacheItem*)pendingFreeList.GetFirst();
+        bool itemsRemaining = false;
+        MeshBuffer* pNext = (D3D1x::MeshBuffer*)p->pNext;
+        p->RemoveNode();
+        while (!pendingFreeList.IsNull(pitem))
+        {
+            if ((pitem->pVertexBuffer == p) || (pitem->pIndexBuffer == p))
+            {
+                // If the fence is still pending, cannot destroy the buffer.
+                if ( pitem->GPUFence && pitem->GPUFence->IsPending(FenceType_Vertex) )
+                {
+                    itemsRemaining = true;
+                    remainingBuffers.PushFront(p);
+                    break;
+                }
+            }
+            pitem = (MeshCacheItem*)pitem->pNext;
+        }
+        if ( !itemsRemaining )
+        {
+            delete p;
+        }
+        p = pNext;
+    }
+    PendingDestructionBuffers.PushListToFront(remainingBuffers);
+}
+
+void MeshCache::BeginFrame()
+{
+    RSync.BeginFrame();
+}
 
 void MeshCache::EndFrame()
 {
     SF_AMP_SCOPE_RENDER_TIMER(__FUNCTION__, Amp_Profile_Level_Medium);
 
+    RSync.EndFrame();
+
     CacheList.EndFrame();
+
+    // Try and reclaim memory from items that have already been destroyed, but not freed.
+    CacheList.EvictPendingFree(IndexBuffers.Allocator);
+    CacheList.EvictPendingFree(VertexBuffers.Allocator);
+
+    destroyPendingBuffers();
+
 
     // Simple Heuristic used to shrink cache. Shrink is possible once the
     // (Total_Frame_Size + LRUTailSize) exceed the allocated space by more then
@@ -206,9 +268,14 @@ void MeshCache::EndFrame()
 
             MeshBufferSet&  mbs = (p->GetBufferType() == MeshBuffer::Buffer_Vertex) ?
                                   (MeshBufferSet&)VertexBuffers : (MeshBufferSet&)IndexBuffers;
-            // Evict first!
-            evictMeshesInBuffer(CacheList.GetSlots(), MCL_ItemCount, p);
-            mbs.DestroyBuffer(p);
+
+            // Evict first! This may fail if a query is pending on a mesh inside the buffer. In that case,
+            // simply store the buffer to be destroyed later.
+            bool allEvicted = evictMeshesInBuffer(CacheList.GetSlots(), MCL_ItemCount, p);
+            mbs.DestroyBuffer(p, allEvicted);
+            if ( !allEvicted )
+                PendingDestructionBuffers.PushBack(p);
+
 
 #ifdef SF_RENDER_LOG_CACHESIZE
             LogDebugMessage(Log_Message,
@@ -259,15 +326,14 @@ bool MeshCache::allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsign
 
 bool MeshCache::createStaticVertexBuffers(ID3D1x(Device)* pdevice)
 {
-    return createMaskEraseBatchVertexBuffer(pdevice) &&
-           createUVSquareVertexBuffer(pdevice);
+    return createMaskEraseBatchVertexBuffer(pdevice);
 }
 
 bool MeshCache::createMaskEraseBatchVertexBuffer(ID3D1x(Device)* pdevice)
 {
-    static const unsigned     bufferSize = sizeof(VertexXY16iAlpha) * 6 * MaxEraseBatchCount;
+    static const unsigned     bufferSize = sizeof(VertexXY16fAlpha) * 6 * SF_RENDER_MAX_BATCHES;
 
-    VertexXY16iAlpha pbuffer[6 * MaxEraseBatchCount];
+    VertexXY16fAlpha pbuffer[6 * SF_RENDER_MAX_BATCHES];
     HRESULT      createResult;
     D3D1x(BUFFER_DESC) vbdesc;
 
@@ -278,78 +344,13 @@ bool MeshCache::createMaskEraseBatchVertexBuffer(ID3D1x(Device)* pdevice)
     vbdesc.MiscFlags            = 0;
     D3D11(vbdesc.StructureByteStride  = 0;)
 
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    for(unsigned i = 0; i< MaxEraseBatchCount; i++)
-    {
-        // This assumes Alpha in first byte. Effect may depend on byte order and
-        // ShaderManager vertex format mapping (offset assigned for VET_Instance8
-        // for ShaderManager::registerVertexFormat).
-        pbuffer[i * 6 + 0].x  = 0;
-        pbuffer[i * 6 + 0].y  = 1;
-        pbuffer[i * 6 + 0].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 1].x  = 0;
-        pbuffer[i * 6 + 1].y  = 0;
-        pbuffer[i * 6 + 1].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 2].x  = 1;
-        pbuffer[i * 6 + 2].y  = 0;
-        pbuffer[i * 6 + 2].Alpha[0] = (UByte)i;
-
-        pbuffer[i * 6 + 3].x  = 0;
-        pbuffer[i * 6 + 3].y  = 1;
-        pbuffer[i * 6 + 3].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 4].x  = 1;
-        pbuffer[i * 6 + 4].y  = 0;
-        pbuffer[i * 6 + 4].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 5].x  = 1;
-        pbuffer[i * 6 + 5].y  = 1;
-        pbuffer[i * 6 + 5].Alpha[0] = (UByte)i;
-    }
+    fillMaskEraseVertexBuffer<VertexXY16fAlpha>(pbuffer, SF_RENDER_MAX_BATCHES);
 
     D3D1x(SUBRESOURCE_DATA) initData;
     initData.pSysMem            = pbuffer;
     initData.SysMemPitch        = 0;
     initData.SysMemSlicePitch   = 0;
     createResult = pdevice->CreateBuffer(&vbdesc, &initData, &pMaskEraseBatchVertexBuffer.GetRawRef() );
-
-    return SUCCEEDED(createResult);
-}
-
-bool MeshCache::createUVSquareVertexBuffer(ID3D1x(Device)* pdevice)
-{
-    HRESULT      createResult;
-    static const unsigned     bufferSize = sizeof(VertexXY16f) * 6;
-    VertexXY16f pbuffer[6];
-    D3D1x(BUFFER_DESC) vbdesc;
-
-    vbdesc.ByteWidth            = bufferSize;
-    vbdesc.Usage                = D3D1x(USAGE_IMMUTABLE);
-    vbdesc.BindFlags            = D3D1x(BIND_VERTEX_BUFFER);
-    vbdesc.CPUAccessFlags       = 0;
-    vbdesc.MiscFlags            = 0;
-    D3D11(vbdesc.StructureByteStride  = 0;)
-
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    pbuffer[0].x  = 0;
-    pbuffer[0].y  = 1;
-    pbuffer[1].x  = 0;
-    pbuffer[1].y  = 0;
-    pbuffer[2].x  = 1;
-    pbuffer[2].y  = 0;
-
-    pbuffer[3].x  = 0;
-    pbuffer[3].y  = 1;
-    pbuffer[4].x  = 1;
-    pbuffer[4].y  = 0;
-    pbuffer[5].x  = 1;
-    pbuffer[5].y  = 1;
-
-    D3D1x(SUBRESOURCE_DATA) initData;
-    initData.pSysMem            = pbuffer;
-    initData.SysMemPitch        = 0;
-    initData.SysMemSlicePitch   = 0;
-    createResult = pdevice->CreateBuffer(&vbdesc, &initData, &pSquareVertexBuffer.GetRawRef() );
 
     return SUCCEEDED(createResult);
 }
@@ -374,9 +375,10 @@ void MeshCache::UnlockBuffers()
 }
 
 
-void MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
+bool MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt count,
                                     MeshBuffer* pbuffer)
 {
+    bool evictionFailed = false;
     for (unsigned i=0; i< count; i++)
     {
         MeshCacheItem* pitem = (MeshCacheItem*)plist[i].GetFirst();
@@ -384,31 +386,64 @@ void MeshCache::evictMeshesInBuffer(MeshCacheListSet::ListSlot* plist, UPInt cou
         {
             if ((pitem->pVertexBuffer == pbuffer) || (pitem->pIndexBuffer == pbuffer))
             {
+                // Evict returns the number of bytes released. If this is zero, it means the mesh
+                // was still in use. 
+                if ( Evict(pitem) == 0 )
+                {
+                    evictionFailed = true;
+                    SF_ASSERT(pitem->Type == MeshCacheItem::Mesh_Destroyed);
+
+                    // We still need to delete all the addresses allocated in the buffer, because it is 
+                    // going to be deleted, and AllocAddr will break otherwise.
+                    if ( pitem->pVertexBuffer == pbuffer)
+                    {
+                        VertexBuffers.Free(pitem->VBAllocSize, pitem->pVertexBuffer, pitem->VBAllocOffset);
+                        pitem->pVertexBuffer = 0;
+                    }
+                    if ( pitem->pIndexBuffer == pbuffer)
+                    {
+                        IndexBuffers.Free(pitem->IBAllocSize, pitem->pIndexBuffer, pitem->IBAllocOffset);
+                        pitem->pIndexBuffer = 0;
+                    }
+                }
+
                 // Evict may potentially modify the cache items, so start again.
                 // This is less than ideal, but better than accessing a dangling pointer.
-                Evict(pitem);
                 pitem = (MeshCacheItem*)plist[i].GetFirst();
+                continue;
             }
-            else
-            {
                 pitem = (MeshCacheItem*)pitem->pNext;
             }
         }
-    }
+    return !evictionFailed;
 }
 
 
 UPInt MeshCache::Evict(Render::MeshCacheItem* pbatch, AllocAddr* pallocator, MeshBase* pskipMesh)
 {
     MeshCacheItem* p = (MeshCacheItem*)pbatch;
-    // - Free allocator data.
-    UPInt vbfree = VertexBuffers.Free(p->VBAllocSize, p->pVertexBuffer, p->VBAllocOffset);
-    UPInt ibfree = IndexBuffers.Free(p->IBAllocSize, p->pIndexBuffer, p->IBAllocOffset);
-    UPInt freedSize = (&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree;
-    
-    VBSizeEvictedInLock += (unsigned)  p->VBAllocSize;
-    p->Destroy(pskipMesh);
-    return freedSize;
+
+    // If a fence is not pending, then the memory for the item can be reclaimed immediately.
+    if ( !p->GPUFence || !p->GPUFence->IsPending(FenceType_Vertex))
+    {
+        // - Free allocator data.
+        UPInt vbfree = p->pVertexBuffer ? VertexBuffers.Free(p->VBAllocSize, p->pVertexBuffer, p->VBAllocOffset) : 0;
+        UPInt ibfree = p->pIndexBuffer  ? IndexBuffers.Free(p->IBAllocSize, p->pIndexBuffer, p->IBAllocOffset) : 0;
+        UPInt freedSize = pallocator ? ((&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree) : vbfree + ibfree;
+        
+        VBSizeEvictedInLock += (unsigned)  p->VBAllocSize;
+        p->Destroy(pskipMesh, true);
+        return freedSize;
+    }
+    else
+    {
+        // Still in use, push it on the pending to delete list.
+        // It should be valid for this to be called multiple times for a single mesh (for example, in a PendingFree situation).
+        p->Destroy(pskipMesh, false);
+        CacheList.PushFront(MCL_PendingFree, p);
+        return 0;
+    }
+
 }
 
 
@@ -424,7 +459,12 @@ bool MeshCache::allocBuffer(UPInt* poffset, MeshBuffer** pbuffer,
     // If allocation failed... need to apply swapping or grow buffer.
     MeshCacheItem* pitems;
 
-    // 1) First, apply LRU (least recently used) swapping from data stale in
+    // #1. Try and reclaim memory from items that have already been destroyed, but not freed.
+    //     These cannot be reused, so it is best to evict their memory first, if possible.
+    if (CacheList.EvictPendingFree(mbs.Allocator))
+        goto alloc_size_available;
+
+    // #2. Then, apply LRU (least recently used) swapping from data stale in
     //    earlier frames until the total size 
   
     if ((getTotalSize() + MinSupportedGranularity) <= Params.MemLimit)
@@ -459,22 +499,30 @@ bool MeshCache::allocBuffer(UPInt* poffset, MeshBuffer** pbuffer,
     if (VBSizeEvictedInLock > Params.VBLockEvictSizeLimit)
         return false;
 
-    // 2) Apply MRU (most recently used) swapping to the current frame content.
+    // #3. Apply MRU (most recently used) swapping to the current frame content.
     // NOTE: MRU (GetFirst(), pNext iteration) gives
     //       2x improvement here with "Stars" test swapping.
     MeshCacheListSet::ListSlot& prevFrameList = CacheList.GetSlot(MCL_PrevFrame);
     pitems = (MeshCacheItem*)prevFrameList.GetFirst();
     while(!prevFrameList.IsNull(pitems))
     {
+        if (!pitems->GPUFence || !pitems->GPUFence->IsPending(FenceType_Vertex))
+        {
         if (Evict(pitems, &mbs.GetAllocator()) >= size)
             goto alloc_size_available;
+        }
         pitems = (MeshCacheItem*)prevFrameList.GetFirst();
     }
 
+    // #4. If MRU swapping didn't work for ThisFrame items due to them still
+    // being processed by the GPU and we are being asked to wait, wait
+    // until fences are passed to evict items.
     MeshCacheListSet::ListSlot& thisFrameList = CacheList.GetSlot(MCL_ThisFrame);
     pitems = (MeshCacheItem*)thisFrameList.GetFirst();
-    while(!thisFrameList.IsNull(pitems))
+    while(waitForCache && !thisFrameList.IsNull(pitems))
     {
+        if ( pitems->GPUFence )
+            pitems->GPUFence->WaitFence(FenceType_Vertex);
         if (Evict(pitems, &mbs.GetAllocator()) >= size)
             goto alloc_size_available;
         pitems = (MeshCacheItem*)thisFrameList.GetFirst();
@@ -554,10 +602,6 @@ bool MeshCache::PreparePrimitive(PrimitiveBatch* pbatch,
    
     unsigned    i;
     unsigned    indexStart = 0;
-
-    //printf("Writing to: mesh=%p vsz=%02d vc=%d AOffset=%d pdest=%p SOffset=%d\n",
-    //       batchData, destVertexSize, totalVertexCount, ((MeshCacheItem*)batchData)->VBAllocOffset,
-    //       pvertexDataStart, mc[0]->StagingBufferOffset); 
 
     for(i = 0; i< mc.GetMeshCount(); i++)
     {

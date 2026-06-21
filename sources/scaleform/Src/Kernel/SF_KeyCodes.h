@@ -130,11 +130,19 @@ public:
         Up,
         Right,
         Down,
+        PrintScreen     = 44,
         Insert          = 45,
         Delete,
         Help,
         NumLock         = 144, // Toggle
         ScrollLock      = 145, // Toggle
+
+        LeftShift       = 160,
+        RightShift,
+        LeftControl,
+        RightControl,
+        LeftAlt,
+        RightAlt,
 
         Semicolon       = 186,
         Equal           = 187,

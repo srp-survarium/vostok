@@ -102,6 +102,10 @@ enum BuiltinType
     AS3Builtin_timerComplete,
     AS3Builtin_complete,
     AS3Builtin_progress,
+    AS3Builtin_socketData,
+#ifdef SF_AS3_VERSION_AIR
+    AS3Builtin_outputProgress,
+#endif
     AS3Builtin_open,
     AS3Builtin_init,
     AS3Builtin_render,
@@ -127,6 +131,10 @@ enum BuiltinType
     AS3Builtin_touchEnd,
     AS3Builtin_touchMove,
     AS3Builtin_touchTap,
+    AS3Builtin_touchOver,
+    AS3Builtin_touchOut,
+    AS3Builtin_touchRollOver,
+    AS3Builtin_touchRollOut,
 #endif
 
 #ifdef GFX_ENABLE_ANALOG_GAMEPAD

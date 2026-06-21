@@ -31,6 +31,44 @@ namespace Scaleform { namespace Render {
 // used to determine whether 16-bit integer indices are ok or not. This
 // result depend on matrix scale (similar to mesh quality).
 
+enum VertexElementDataType
+{
+    VEDT_None,
+    VEDT_U8N,
+    VEDT_U8,            
+    VEDT_S16,            
+    VEDT_U16,            
+    VEDT_U32,            
+    VEDT_F32,             
+    VEDT_I8,
+    VEDT_I16,
+};
+
+enum VertexElementUsageType
+{
+    VEUT_None,
+    VETT_Pos,
+    VETT_Color,
+    VETT_TexCoord,
+    VETT_Instance,
+};
+
+enum VertexElementIndexType
+{
+    VEIT_None,
+    VEIT_Index1,
+    VEIT_Index2,
+};
+
+struct AttributeType
+{
+    unsigned                Components : 4;     // Number of components in the element.
+    VertexElementDataType   DataType   : 4;     // Element data type
+    VertexElementUsageType  UsageType  : 4;     // Element usage type
+    VertexElementIndexType  IndexType  : 4;     // Element index type
+    unsigned                Argument   : 1;     // Element argument
+};
+
 enum VertexElementType
 {
     // If this flag is set, all the vertex elements of this type will
@@ -83,7 +121,11 @@ static unsigned VertexTypeSizes[] = {1,1,2,2,4,4};
 struct VertexElement
 {
     unsigned Offset;
-    unsigned Attribute;
+    union
+    {
+        unsigned Attribute;
+        AttributeType AttributeNice;
+    };
 
     inline unsigned CompSize() const
     {
@@ -126,10 +168,26 @@ struct VertexFormat
 
     bool operator == (const VertexFormat& o) const
     {
-        if (Size != o.Size) return false;
         const VertexElement *e0, *e1;
-        for (e0 = pElements, e1 = o.pElements; e0->Attribute != VET_None; e0++, e1++)
+        for (e0 = pElements, e1 = o.pElements; ; e0++, e1++)
         {
+            // Don't test I8 or I16 in equality, as they do not affect the buffer format.
+            if (((e0->Attribute&VET_CompType_Mask) == VET_I8 ) ||
+                ((e0->Attribute&VET_CompType_Mask) == VET_I16 ))
+            {
+                e0++;
+            }
+            if (((e1->Attribute&VET_CompType_Mask) == VET_I8 ) ||
+                ((e1->Attribute&VET_CompType_Mask) == VET_I16 ))
+            {
+                e1++;
+            }
+            if ( e0->Attribute == VET_None ||
+                 e1->Attribute == VET_None )
+            {
+                 break;
+            }
+
             if (*e0 != *e1)
                 return false;
         }
@@ -205,6 +263,17 @@ struct VertexXY16i
 struct VertexXY16f
 {
     float x,y;
+
+    static VertexElement VertexElements[3];
+    static VertexFormat  Format;
+};
+
+// Vertex with coordinates (floating point) and alpha
+//------------------------------------------------------------------------
+struct VertexXY16fAlpha
+{
+    float   x,y;
+    UInt8   Alpha[4];
 
     static VertexElement VertexElements[3];
     static VertexFormat  Format;

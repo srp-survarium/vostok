@@ -13,11 +13,11 @@ agreement provided at the time of installation or download, or which
 otherwise accompanies this software in either electronic or hard copy form.
 
 ----------------------------------------------------------------------
-----The code of these classes was taken from the Anti-Grain Geometry
-Project and modified for the use by Scaleform.
-Permission to use without restrictions is hereby granted to
-Scaleform Corporation by the author of Anti-Grain Geometry Project.
-See http://antigtain.com for details.
+The code of these classes was taken from the Anti-Grain Geometry
+Project and modified for the use by Scaleform/Autodesk. 
+Permission to use without restrictions is hereby granted to 
+Scaleform/Autodesk by the author of Anti-Grain Geometry Project.
+See http://antigrain.com for details.
 **************************************************************************/
 
 #ifndef INC_SF_Render_FontProviderHUD_H

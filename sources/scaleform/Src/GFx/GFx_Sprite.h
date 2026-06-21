@@ -331,9 +331,6 @@ public:
 
     void                        SetHitAreaHolder(Sprite* phitAreaHolder) {pHitAreaHolder = phitAreaHolder ;}
     void                        SetHitArea (Sprite* phitArea);
-    void                        SetRendererString(ASString str);
-    void                        SetRendererFloat(float num);
-    void                        SetRendererMatrix(float *m, unsigned count = 16);
     void                        SetPause(bool pause);
     void                        SetPlayState(PlayState s);
     // this method is called only with threaded loading to set correct values
@@ -359,23 +356,15 @@ public:
     }
 
 #if defined(GFX_ENABLE_SOUND) 
-    // check if load sound is already playing
-    bool              IsSoundPlaying(ASSoundIntf* psobj);
-    // add an active sound
-    void              AddActiveSound(Sound::SoundChannel* pchan, ASSoundIntf* psobj, SoundResource* pres);
-    // add a streaming sound
+    // Add a streaming sound
     void              SetStreamingSound(Sound::SoundChannel* pchan);
-    // return a streaming sound
+    // Return a streaming sound
     Sound::SoundChannel* GetStreamingSound() const;
-    // Detach an AS sound object from this sprite
-    void              DetachSoundObject(ASSoundIntf*);
-    // Return a sound pan which is saved inside this object.
-    // It is used just for displaying this value
-    int               GetSoundPan();
-    // Return a calculated sound volume.
-    float             GetRealSoundPan();
-    // Save the new sound volume and propagate it to the child movieclip
-    void              SetSoundPan(int volume);
+    // Stop streaming sound
+    void              StopStreamSound();
+
+    // Save the new sound volume and propagate it to the child MovieClip
+    void              SetSoundVolume(int volume, int subvol = 100);
     // Return a sound volume which is saved inside this object.
     // It is used just for displaying this value
     int               GetSoundVolume();
@@ -385,33 +374,47 @@ public:
     float             GetRealSoundVolume();
     // Return a calculated sound volume for SubAudio track.
     float             GetRealSubSoundVolume();
-    // Save the new sound volume and propagate it to the child movieclip
-    void              SetSoundVolume(int volume, int subvol = 100);
-    // Stop all active sound in this movieclip and all child clips
+    // Update the volume of all sound started by this sprite
+    void              UpdateActiveSoundVolume();
+
+    // Save the new sound volume and propagate it to the child MovieClip
+    void              SetSoundPan(int volume);
+    // Return a sound pan which is saved inside this object.
+    // It is used just for displaying this value
+    int               GetSoundPan();
+    // Return a calculated sound volume.
+    float             GetRealSoundPan();
+    // Update the pan of all sound started by this sprite
+    void              UpdateActiveSoundPan();
+
+    // Add an active sound
+    void              AddActiveSound(Sound::SoundChannel* pchan, ASSoundIntf* psobj, SoundResource* pres);
+    // Check if load sound is already playing
+    bool              IsSoundPlaying(ASSoundIntf* psobj);
+    // Attach an active sound released by ReleaseActiveSound method.
+    void              AttachActiveSound(ActiveSoundItem* pitem);
+    // Release an active sound which is attached to this sprite. It is used to pass
+    // active sounds between MovieClips with MovieClip.attachAudio method
+    ActiveSoundItem*  ReleaseActiveSound(Sound::SoundChannel* pchan);
+    // Register an AS sound object which is attached to this sprite
+    void              AttachSoundObject(ASSoundIntf* psobj);
+    // Detach an AS sound object from this sprite
+    void              DetachSoundObject(ASSoundIntf* psobj);
+    // Return an active sound playing position
+    float             GetActiveSoundPosition(ASSoundIntf* psobj);
+    // Stop all active sound in this MovieClip and all child clips
     virtual void      StopActiveSounds();
     // Stop active sound with given resource in this sprite
     virtual void      StopActiveSounds(SoundResource* pres);
     // Stop active sound with given sound object in this sprite
-    virtual void      StopActiveSounds(ASSoundIntf* psndobj);
-    // update the volume of all sound started by this sprite
-    void              UpdateActiveSoundVolume();
-    // update the pan of all sound started by this sprite
-    void              UpdateActiveSoundPan();
-    // release an active sound which is attached to this sprite. It is used to pass
-    // active sounds between movieclips with MovieClip.attachAudio method
-    ActiveSoundItem*  ReleaseActiveSound(Sound::SoundChannel*);
-    // attach an active sound released by ReleaseActiveSound mehtod.
-    void              AttachActiveSound(ActiveSoundItem*);
-    // register an AS sound object which is attached to this sprite
-    void              AttachSoundObject(ASSoundIntf*);
-    // return an active sound playing position
-    float             GetActiveSoundPosition(ASSoundIntf* psobj);
-    // stop streaming sound
-    void              StopStreamSound();
+    virtual void      StopActiveSounds(ASSoundIntf* psobj);
     // Go through the list of active sounds and remove sounds that are not 
     // playing anymore (will call Sound.onSoundComplete event handler)
     // this method should be called from AdvenceFrame.
     void              CheckActiveSounds();
+
+    // Release all AS sound objects with given MovieDefImpl from this sprite
+    void              ReleaseAllSounds(MovieDefImpl* powner);
 #endif // GFX_ENABLE_SOUND
 
 	SF_INLINE MemoryHeap*       GetMovieHeap() const; // impl in cpp

@@ -61,6 +61,7 @@ class LoadProcess;
 using Render::Font;
 using Render::TextureGlyph;
 using Render::ShapeDataInterface;
+using Render::GlyphShape;
 
 #ifndef GFX_FONT_CACHE_TEXTURE_SIZE_MINIMUM
 #define GFX_FONT_CACHE_TEXTURE_SIZE_MINIMUM 32
@@ -332,36 +333,24 @@ public:
 
     // *** Font implementation
 
-    int                     GetGlyphIndex(UInt16 code) const;
-    bool                    IsHintedVectorGlyph(unsigned, unsigned) const { return false; }
-    bool                    IsHintedRasterGlyph(unsigned, unsigned) const { return false; }
-    ShapeDataBase*              GetGlyphShape(unsigned glyphIndex, unsigned glyphSize);
-    GlyphRaster*            GetGlyphRaster(unsigned, unsigned) { return 0; }
-    float                   GetAdvance(unsigned glyphIndex) const;
-    float                   GetKerningAdjustment(unsigned lastCode, unsigned thisCode) const;
-
-    int                     GetCharValue(unsigned glyphIndex) const;
-
-    unsigned                GetGlyphShapeCount() const;
-
-    float                   GetGlyphWidth(unsigned glyphIndex) const;
-    float                   GetGlyphHeight(unsigned glyphIndex) const;
-    RectF&             GetGlyphBounds(unsigned glyphIndex, RectF* prect) const;
-
-    // Slyph/State access.
+    // Glyph/State access.
     virtual const char*     GetName() const;
 
-    // Only used for diagnostic purpose
-    virtual String         GetCharRanges() const;
+    int                     GetGlyphIndex(UInt16 code);
+    float                   GetAdvance(unsigned glyphIndex) const;
+    float                   GetKerningAdjustment(unsigned lastCode, unsigned thisCode) const;
+    float                   GetGlyphWidth(unsigned glyphIndex) const;
+    float                   GetGlyphHeight(unsigned glyphIndex) const;
+    RectF&                  GetGlyphBounds(unsigned glyphIndex, RectF* prect) const;
+    const ShapeDataInterface* GetPermanentGlyphShape(unsigned) const { return 0; }
+    bool                    GetTemporaryGlyphShape(unsigned glyphIndex, unsigned hintedSize, GlyphShape* shape);
 
-//     TextureGlyphData*       GetTextureGlyphData() const { return pTextureGlyphData;  }
-//     // TextureGlyphData access - only available if loaded from file.   
-//     void                    SetTextureGlyphData(TextureGlyphData* pdata)
-//     {
-//         SF_ASSERT(pdata->IsLoadedFromFile());
-//         pTextureGlyphData = pdata;
-//     }
-    // *** Other APIs
+    int                     GetCharValue(unsigned glyphIndex) const;
+    unsigned                GetGlyphShapeCount() const;
+
+
+    // Only used for diagnostic purpose
+    virtual String          GetCharRanges() const;
 
     bool                    HasVectorOrRasterGlyphs() const;
 
@@ -387,7 +376,6 @@ private:
 //
 // This is used for DefineCompactedFont tag. This tag is created
 // by gfxexport when font is converted into a compact form.
-
 class FontDataCompactedGfx : public Font
 {
 public:
@@ -402,37 +390,23 @@ public:
 
     // *** Font implementation
 
-    int                     GetGlyphIndex(UInt16 code) const;
-    bool                    IsHintedVectorGlyph(unsigned, unsigned) const { return false; }
-    bool                    IsHintedRasterGlyph(unsigned, unsigned) const { return false; }
-    ShapeDataBase*              GetGlyphShape(unsigned glyphIndex, unsigned glyphSize);
-    GlyphRaster*            GetGlyphRaster(unsigned, unsigned) { return 0; }
+    // Glyph/State access.
+    virtual const char*     GetName() const;
+    int                     GetGlyphIndex(UInt16 code);
     float                   GetAdvance(unsigned glyphIndex) const;
     float                   GetKerningAdjustment(unsigned lastCode, unsigned thisCode) const;
+    float                   GetGlyphWidth(unsigned glyphIndex) const;
+    float                   GetGlyphHeight(unsigned glyphIndex) const;
+    RectF&                  GetGlyphBounds(unsigned glyphIndex, RectF* prect) const;
+    const ShapeDataInterface* GetPermanentGlyphShape(unsigned) const { return 0; }
+    bool                    GetTemporaryGlyphShape(unsigned glyphIndex, unsigned hintedSize, GlyphShape* shape);
 
     int                     GetCharValue(unsigned glyphIndex) const;
 
     unsigned                GetGlyphShapeCount() const;
 
-    float                   GetGlyphWidth(unsigned glyphIndex) const;
-    float                   GetGlyphHeight(unsigned glyphIndex) const;
-    RectF&             GetGlyphBounds(unsigned glyphIndex, RectF* prect) const;
-
-    // Slyph/State access.
-    virtual const char*     GetName() const;
-
     // Only used for diagnostic purpose
     virtual String          GetCharRanges() const;
-
-//     TextureGlyphData*       GetTextureGlyphData() const { return pTextureGlyphData;  }
-//     // TextureGlyphData access - only available if loaded from file.   
-//     void                    SetTextureGlyphData(TextureGlyphData* pdata)
-//     {
-//         SF_ASSERT(pdata->IsLoadedFromFile());
-//         pTextureGlyphData = pdata;
-//     }
-
-    // *** Other APIs
 
     bool                    HasVectorOrRasterGlyphs() const;
 
@@ -448,6 +422,7 @@ private:
     ContainerType     Container;
     CompactedFontType CompactedFontValue;
 };
+
 #endif //#ifdef GFX_ENABLE_COMPACTED_FONTS
 
 //

@@ -117,11 +117,11 @@ public:
     { SF_UNUSED3(pt, testShape, pinst); return false; }  
 
     // Obtains character bounds in local coordinate space.
-    virtual RectF      GetBoundsLocal() const
-    { return RectF(0); }   
+    virtual RectF      GetBoundsLocal(float morphRatio = 0) const
+    { SF_UNUSED(morphRatio); return RectF(0); }   
 
-    virtual RectF      GetRectBoundsLocal() const
-    { return RectF(0); }   
+    virtual RectF      GetRectBoundsLocal(float morphRatio = 0) const
+    { SF_UNUSED(morphRatio); return RectF(0); }   
        
     virtual unsigned    GetVersion() const
     { SF_ASSERT(0); return 0; }
@@ -212,11 +212,11 @@ public:
 
     // Adds frames to list. Frame tag / tag pointer list ownership is passed to TimelineDef.
     // TimeDef is responsible for destructing tags, however, memory belongs to MovieDataDef.
-    virtual void                SetLoadingPlaylistFrame(const Frame& frame)       = 0;
+    virtual void                SetLoadingPlaylistFrame(const Frame& frame, LogState *plog)       = 0;
     virtual void                AddFrameName(const String& name, LogState *plog)  = 0;
 
     // Not supported by SpriteDef and thus not included here.
-    // virtual void                SetLoadingInitActionFrame(const Frame& frame) = 0;
+    // virtual void                SetLoadingInitActionFrame(const Frame& frame, LogState *plog) = 0;
 };
 
 

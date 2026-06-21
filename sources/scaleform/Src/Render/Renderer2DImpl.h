@@ -91,6 +91,7 @@ public:
     // Delegated interface.
     bool    BeginFrame();
     void    EndFrame();
+    void    FinishFrame();
     bool    BeginScene()    { return pHal->BeginScene(); }
     void    EndScene()      { pHal->EndScene(); }
 
@@ -130,11 +131,7 @@ protected:
     void UpdateComplexMeshes();
 };
 
-
-inline HAL* DrawableBundle::GetHAL() const
-{
-    return pRenderer2D->GetHAL();
-}
+extern const UInt8 Factors[4];
 
 }} // Scaleform::Render
 

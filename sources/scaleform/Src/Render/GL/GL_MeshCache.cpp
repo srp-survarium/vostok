@@ -18,17 +18,24 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_Alg.h"
 #include "Kernel/SF_HeapNew.h"
 
-#if defined(GL_ES_VERSION_2_0)
-#include "Render/GL/GLES_ExtensionMacros.h"
+#if defined(SF_USE_GLES)
+    #include "Render/GL/GLES11_ExtensionMacros.h"
+    // GLES 1.1 does not have batching (or shaders), so just set the max batches to 1
+    #if !defined SF_RENDER_MAX_BATCHES
+        #define SF_RENDER_MAX_BATCHES 1
+    #endif
+#elif defined(GL_ES_VERSION_2_0)
+    #include "Render/GL/GLES_ExtensionMacros.h"
 #else
-#include "Render/GL/GL_ExtensionMacros.h"
+    #include "Render/GL/GL_ExtensionMacros.h"
 #endif
 
 //#define SF_RENDER_LOG_CACHESIZE
 
 namespace Scaleform { namespace Render { namespace GL {
 
-
+GLuint MeshBuffer::CurrentBuffer;
+    
 MeshBuffer::~MeshBuffer()
 {
     if (Buffer)
@@ -42,7 +49,19 @@ bool MeshBuffer::DoMap()
     SF_ASSERT(!pData);
     if (pHal->Caps & Cap_MapBuffer)
     {
-        glBindBuffer(Type, Buffer);
+#if !defined(SF_USE_GLES_ANY)
+        // Unbind the current VAO, so it doesn't get modified if this is an index buffer.
+        if (GetHAL()->CheckGLVersion(3,0) && !(GetHAL()->Caps & Cap_NoVAO))
+            glBindVertexArray(0);
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+        glBindVertexArrayOES(0);
+#endif
+
+        //if (Buffer != MeshBuffer::CurrentBuffer)
+        {
+            glBindBuffer(Type, Buffer);
+            MeshBuffer::CurrentBuffer = Buffer;
+        }
         pData = glMapBuffer(Type, GL_WRITE_ONLY);
     }
     else
@@ -58,7 +77,19 @@ void MeshBuffer::Unmap()
 {
     if (pData && Buffer)
     {
-        glBindBuffer(Type, Buffer);
+#if !defined(SF_USE_GLES_ANY)
+        // Unbind the current VAO, so it doesn't get modified if this is an index buffer.
+        if (GetHAL()->CheckGLVersion(3,0) && !(GetHAL()->Caps & Cap_NoVAO))
+            glBindVertexArray(0);
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+        glBindVertexArrayOES(0);
+#endif
+
+        //if (Buffer != MeshBuffer::CurrentBuffer)
+        {
+            glBindBuffer(Type, Buffer);
+            MeshBuffer::CurrentBuffer = Buffer;
+        }
         if (pHal->Caps & Cap_MapBuffer)
         {
             GLboolean result = glUnmapBuffer(Type); // XXX - data loss can occur here
@@ -73,10 +104,23 @@ void MeshBuffer::Unmap()
     pData = 0;
 }
 
+UByte*  MeshBuffer::GetBufferBase() const
+{
+    return (pHal->Caps & Cap_UseMeshBuffers) ? 0 : BufferData;
+}
+
 bool MeshBuffer::allocBuffer()
 {
     if (Buffer)
         glDeleteBuffers(1, &Buffer);
+
+#if !defined(SF_USE_GLES_ANY)
+    // Unbind the current VAO, so it doesn't get modified if this is an index buffer.
+    if (GetHAL()->CheckGLVersion(3,0) && !(GetHAL()->Caps & Cap_NoVAO))
+        glBindVertexArray(0);
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+    glBindVertexArrayOES(0);
+#endif
 
     if (pHal->Caps & Cap_UseMeshBuffers)
     {
@@ -84,8 +128,12 @@ bool MeshBuffer::allocBuffer()
 
         // Binding to the array or element target at creation is supposed to let drivers that need
         // separate vertex/index storage to know what the buffer will be used for.
-        glBindBuffer(Type, Buffer);
-        glBufferData(Type, Size, 0, GL_STATIC_DRAW);
+        //if (Buffer != MeshBuffer::CurrentBuffer)
+        {
+            MeshBuffer::CurrentBuffer = Buffer;
+            glBindBuffer(Type, Buffer);
+        }
+        glBufferData(Type, Size, 0, GL_DYNAMIC_DRAW);
     }
     return 1;
 }
@@ -113,7 +161,8 @@ MeshCache::MeshCache(MemoryHeap* pheap, const MeshCacheParams& params)
     IndexBuffers(GL_ELEMENT_ARRAY_BUFFER, pheap,
                  calcIBGranularity(params.MemGranularity, VertexBuffers.GetGranularity())),
     Mapped(false), VBSizeEvictedInMap(0),
-    MaskEraseBatchVertexBuffer(0)
+    MaskEraseBatchVertexBuffer(0),
+    MaskEraseBatchVAO(0)
 {
 }
 
@@ -126,13 +175,14 @@ MeshCache::~MeshCache()
 // buffer. Typically called from SetVideoMode.
 bool    MeshCache::Initialize(HAL* phal)
 {
+    pHal = phal;
+
     // Determine GL-capability settings. Needs to be called after the GL context is created.
     adjustMeshCacheParams(&Params);
 
     if (!StagingBuffer.Initialize(pHeap, Params.StagingBufferSize))
         return false;
 
-    pHal = phal;
     UseSeparateIndexBuffers = true;
 
     if (!createStaticVertexBuffers())
@@ -158,6 +208,14 @@ void MeshCache::Reset(bool lost)
         destroyBuffers(MeshBuffer::AT_None, lost);
         if (MaskEraseBatchVertexBuffer)
             glDeleteBuffers(1, &MaskEraseBatchVertexBuffer);
+#if !defined(SF_USE_GLES_ANY)
+        if (MaskEraseBatchVAO)
+            glDeleteVertexArrays(1, &MaskEraseBatchVAO);
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+        glDeleteVertexArraysOES(1, &MaskEraseBatchVAO);
+#endif
+
+        MaskEraseBatchVAO = 0;
         MaskEraseBatchVertexBuffer = 0;
         pHal = 0;
     }
@@ -231,17 +289,19 @@ void MeshCache::adjustMeshCacheParams(MeshCacheParams* p)
 {
     // TBD: Detect/record HW instancing capability.
 
+    // No shaders on GLES 1.1, so detecting the number of batches is not possible, because it's 1.
+#if !defined(SF_USE_GLES)
     // Get the maximum number of uniforms, which will determine the maximum batch count.
     // This can be as low as 128 on GLES2.0 platforms.
-    GLint maxUniforms = 0;
-#if !defined(GL_MAX_VERTEX_UNIFORM_VECTORS)
-    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_COMPONENTS, &maxUniforms);
-#else
-    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxUniforms);
-#endif
-    SF_ASSERT(maxUniforms >= 128); // should be guaranteed by both GL and GLES.
-    unsigned maxInstances = Alg::Min<unsigned>(SF_RENDER_GL_INSTANCE_MATRICES, 
+
+    GLint maxUniforms = (pHal->Caps & Cap_MaxUniforms) >> Cap_MaxUniforms_Shift;
+
+    SF_ASSERT(maxUniforms >= 64); // should be guaranteed by both GL and GLES.
+    unsigned maxInstances = Alg::Min<unsigned>(SF_RENDER_MAX_BATCHES, 
     maxUniforms / ShaderInterface::GetMaximumRowsPerInstance());
+#else
+    unsigned maxInstances = 1;
+#endif
 
     if (p->MaxBatchInstances > maxInstances)
         p->MaxBatchInstances = maxInstances;
@@ -343,8 +403,7 @@ bool MeshCache::allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsign
 bool MeshCache::createStaticVertexBuffers()
 {
     return createInstancingVertexBuffer() &&
-           createMaskEraseBatchVertexBuffer() &&
-           createUVSquareVertexBuffer();
+           createMaskEraseBatchVertexBuffer();
 }
 
 bool MeshCache::createInstancingVertexBuffer()
@@ -354,82 +413,43 @@ bool MeshCache::createInstancingVertexBuffer()
 
 bool MeshCache::createMaskEraseBatchVertexBuffer()
 {
-    VertexXY16iAlpha pbuffer[6 * MaxEraseBatchCount];
-
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    for(unsigned i = 0; i< MaxEraseBatchCount; i++)
-    {
-        // This assumes Alpha in first byte. Effect may depend on byte order and
-        // ShaderManager vertex format mapping (offset assigned for VET_Instance8
-        // for ShaderManager::registerVertexFormat).
-        pbuffer[i * 6 + 0].x  = 0;
-        pbuffer[i * 6 + 0].y  = 1;
-        pbuffer[i * 6 + 0].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 1].x  = 0;
-        pbuffer[i * 6 + 1].y  = 0;
-        pbuffer[i * 6 + 1].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 2].x  = 1;
-        pbuffer[i * 6 + 2].y  = 0;
-        pbuffer[i * 6 + 2].Alpha[0] = (UByte)i;
-
-        pbuffer[i * 6 + 3].x  = 0;
-        pbuffer[i * 6 + 3].y  = 1;
-        pbuffer[i * 6 + 3].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 4].x  = 1;
-        pbuffer[i * 6 + 4].y  = 0;
-        pbuffer[i * 6 + 4].Alpha[0] = (UByte)i;
-        pbuffer[i * 6 + 5].x  = 1;
-        pbuffer[i * 6 + 5].y  = 1;
-        pbuffer[i * 6 + 5].Alpha[0] = (UByte)i;
-    }
+    VertexXY16iAlpha pbuffer[6 * SF_RENDER_MAX_BATCHES];
+    fillMaskEraseVertexBuffer<VertexXY16iAlpha>(pbuffer, SF_RENDER_MAX_BATCHES);
 
     glGenBuffers(1, &MaskEraseBatchVertexBuffer);
+#if !defined(SF_USE_GLES_ANY)
+    if (GetHAL()->CheckGLVersion(3, 0) && !(GetHAL()->Caps & Cap_NoVAO))
+    {
+        glGenVertexArrays(1, &MaskEraseBatchVAO);
+        glBindVertexArray(MaskEraseBatchVAO);
+    }
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+    glGenVertexArraysOES(1, &MaskEraseBatchVAO);
+    glBindVertexArrayOES(MaskEraseBatchVAO);
+#endif
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, MaskEraseBatchVertexBuffer);
     glBufferData(GL_ARRAY_BUFFER, sizeof(pbuffer), pbuffer, GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-    return true;
-}
-
-bool MeshCache::createUVSquareVertexBuffer()
-{
-    VertexXY16iUV pbuffer[6];
-
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-
-    // For now we create a buffer with a list of const values so that it can be
-    // used to carry matrix index. TBD: Perhaps there is a shader value we can use instead?
-    pbuffer[0].x  = 0;
-    pbuffer[0].y  = 1;
-    pbuffer[0].UV[0] = 0;
-    pbuffer[0].UV[1] = 1.0f;
-    pbuffer[1].x  = 0;
-    pbuffer[1].y  = 0;
-    pbuffer[1].UV[0] = 0;
-    pbuffer[1].UV[1] = 0;
-    pbuffer[2].x  = 1;
-    pbuffer[2].y  = 0;
-    pbuffer[2].UV[0] = 1.0f;
-    pbuffer[2].UV[1] = 0;
-
-    pbuffer[3].x  = 0;
-    pbuffer[3].y  = 1;
-    pbuffer[3].UV[0] = 0;
-    pbuffer[3].UV[1] = 1.0f;
-    pbuffer[4].x  = 1;
-    pbuffer[4].y  = 0;
-    pbuffer[4].UV[0] = 1.0f;
-    pbuffer[4].UV[1] = 0;
-    pbuffer[5].x  = 1;
-    pbuffer[5].y  = 1;
-    pbuffer[5].UV[0] = 1.0f;
-    pbuffer[5].UV[1] = 1.0f;
-
-    glGenBuffers(1, &UVSquareVertexBuffer);
-    glBindBuffer(GL_ARRAY_BUFFER, UVSquareVertexBuffer);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(pbuffer), pbuffer, GL_STATIC_DRAW);
+#if !defined(SF_USE_GLES_ANY)
+    if (GetHAL()->CheckGLVersion(3, 0) && !(GetHAL()->Caps & Cap_NoVAO))
+    {
+        // Fill out the VAO now.
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(0, 2, GL_SHORT, false, VertexXY16iAlpha::Format.Size, 0);
+        glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, false, VertexXY16iAlpha::Format.Size, (GLvoid*)4);
+        glBindVertexArray(0);
+    }
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+    // Fill out the VAO now.
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 2, GL_SHORT, false, VertexXY16iAlpha::Format.Size, 0);
+    glVertexAttribPointer(1, 1, GL_UNSIGNED_BYTE, false, VertexXY16iAlpha::Format.Size, (GLvoid*)4);
+    glBindVertexArrayOES(0);
+#endif
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     return true;
@@ -485,8 +505,17 @@ UPInt MeshCache::Evict(Render::MeshCacheItem* pbatch, AllocAddr* pallocator, Mes
     // - Free allocator data.
     UPInt vbfree = VertexBuffers.Free(p->VBAllocSize, p->pVertexBuffer, p->VBAllocOffset);
     UPInt ibfree = IndexBuffers.Free(p->IBAllocSize, p->pIndexBuffer, p->IBAllocOffset);
-    UPInt freedSize = (&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree;
-    
+    UPInt freedSize = pallocator ? ((&VertexBuffers.GetAllocator() == pallocator) ? vbfree : ibfree) : vbfree + ibfree;
+
+    // If we are using VAOs, then destroy the VAO now, it will not be used again.
+#if !defined(SF_USE_GLES_ANY)
+    if (GetHAL()->CheckGLVersion(3,0) && !(GetHAL()->Caps & Cap_NoVAO) && p->VAO != 0)
+        glDeleteVertexArrays(1, &p->VAO);
+#elif defined(GL_ES_VERSION_2_0) && defined(SF_OS_IPHONE)
+    glDeleteVertexArraysOES(1, &p->VAO);
+#endif
+    p->VAO = 0;
+
     VBSizeEvictedInMap += (unsigned)  p->VBAllocSize;
     p->Destroy(pskipMesh);
     return freedSize;

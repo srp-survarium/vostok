@@ -35,6 +35,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Render/Render_Math2D.h"
 #include "Render/Render_Filters.h"
 #include "Render/Render_Buffer.h"
+#include "Render/Render_States.h" // UserDataState::Data.
 
 namespace Scaleform { namespace Render {
 
@@ -439,13 +440,18 @@ enum PrimitiveFillType
 };
 
 // Modifier Flags applied to PrimitiveFill (which affect the shaders).
-// 16 bits available
 enum PrimitiveFillFlags
 {
-    FF_Multiply     = 0x01,
-    FF_AlphaWrite   = 0x02,
-    FF_Cxform       = 0x04,
-    FF_3DProjection = 0x08,
+    FF_Multiply     = 0x01,     // Multiply blend mode applied (requires different color output).
+    FF_Invert       = 0x02,     // Invert blend mode applied (requires different color output).
+    FF_AlphaWrite   = 0x04,     // The alpha channel should be written to.
+    FF_Cxform       = 0x08,     // The fill requires a color transform.
+    FF_3DProjection = 0x10,     // The fill is for a 3D object.
+    FF_Blending     = 0x20,     // Blending operations need to be performed for the fill.
+    FF_LeaveOpen    = 0x40,     // Leaves the primitive uniform update open (eg. does not call Finish).
+                                // This is used on X360, because it may need to set the instSize variable.
+
+    FF_BlendMask    = FF_Multiply | FF_Invert,     // Bitmask, which covers the fillflags associated with different blend modes.
 };
 
 class Texture;
@@ -532,6 +538,40 @@ struct PrimitiveFillData
                pFormat->Size;
     }
 
+    bool RequiresBlend() const
+    {
+        switch (Type)
+        {
+        case PrimFill_None:
+        case PrimFill_Mask:
+            return false;
+        case PrimFill_SolidColor:
+            return (SolidColor.GetAlpha() != 255);
+
+        case PrimFill_Texture:
+        case PrimFill_UVTexture:
+        case PrimFill_2Texture:
+            for (int i = 0; i < 2; i++)
+                if (Textures[i])
+                    switch (Textures[i]->GetFormat())
+                    {
+                    case Image_R8G8B8:
+                    case Image_B8G8R8:
+                    case Image_PVRTC_RGB_2BPP:
+                    case Image_PVRTC_RGB_4BPP:
+                    case Image_ATCIC:
+                    case Image_Y8_U2_V2:
+                        break;
+                    default:
+                        return true;
+                    }
+            return false;
+
+        default:
+            return true;
+        }
+    }
+
     // Debugging functions - verifies that format has channel need for the fillType.
     // Will return false and output debug messages if there is a mismatch.
     static bool CheckVertexFormat(PrimitiveFillType fill, const VertexFormat* format);
@@ -604,6 +644,7 @@ public:
     const VertexFormat* GetVertexFormat() const             { return Data.pFormat; }
     UByte               GetTextureCount() const             { return Data.GetTextureCount(); }
     UPInt               GetHashValue() const                { return Data.GetHashValue(); }
+    bool                RequiresBlend() const               { return Data.RequiresBlend(); }
 
     const PrimitiveFillData& GetData() const { return Data; }
 
@@ -948,7 +989,10 @@ public:
         // This mesh failed mesh-gen, so can not be displayed. Can have multiple instances.
         DP_Failed,
         // No BatchType was used
-        DP_None
+        DP_None,
+
+        // The number of batch types that are renderable.
+        DP_DrawableCount = DP_Instanced+1,
     };
 
     MeshCacheItemUseNode MeshNode;
@@ -1291,6 +1335,22 @@ private:
     bool            bHasProjectionMatrix;
 };
 
+//--------------------------------------------------------------------
+// ***** UserData Primitive. Used with the setRenderString/setRenderFloat extensions.
+class UserDataPrimitive : public RefCountBase<UserDataPrimitive, StatRender_Primitive_Mem>,
+    public RenderQueueItem::Interface    
+{
+public:
+    UserDataPrimitive(HAL* hal) : pHAL(hal), pUserData(0) { }
+    UserDataPrimitive(HAL* hal, UserDataState::Data* data) : pHAL(hal), pUserData(data) { }
+    ~UserDataPrimitive() { }
+
+    // RenderQueueItem::Interface impl
+    virtual void    EmitToHAL(RenderQueueItem&, RenderQueueProcessor&);
+private:
+    HAL*                        pHAL;
+    Ptr<UserDataState::Data>    pUserData;
+};
 
 }} // Scaleform::Render
 

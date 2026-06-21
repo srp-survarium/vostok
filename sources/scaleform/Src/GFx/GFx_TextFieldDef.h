@@ -228,7 +228,7 @@ public:
 
     void    Read(LoadProcess* p, TagType tagType);
 
-    virtual RectF   GetBoundsLocal() const { return TextRect; }
+    virtual RectF   GetBoundsLocal(float =0) const { return TextRect; }
 
     virtual bool    DefPointTestLocal(const Render::PointF &pt, bool testShape = 0, const DisplayObjectBase *pinst = 0) const;
 

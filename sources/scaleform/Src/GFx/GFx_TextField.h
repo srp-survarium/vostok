@@ -264,6 +264,7 @@ public:
     // Override AdvanceFrame so that variable dependencies can be updated.
     virtual void            AdvanceFrame(bool nextFrame, float framePos);
     virtual RectF           GetBounds(const Matrix &t) const;
+    virtual RectF           GetRectBounds(const Matrix &t) const { return GetBounds(t); }
     virtual CharacterDef*   GetCharacterDef() const { return pDef; }
     virtual unsigned        GetCursorType() const;
     virtual CharacterDef::CharacterDefType GetType() const { return CharacterDef::TextField; }
@@ -304,11 +305,13 @@ public:
     virtual bool            IsFocusRectEnabled() const { return false; }
     virtual bool            IsTabable() const;
     virtual bool            OnMouseEvent(const EventId& event);
+#ifdef GFX_ENABLE_KEYBOARD
+    virtual bool            OnKeyEvent(const EventId& id, int* pkeyMask);
     virtual bool            OnCharEvent(UInt32 wcharCode, unsigned controllerIdx);
+#endif
     virtual bool            IsFocusAllowed(MovieImpl* proot, unsigned controllerIdx) const;
     virtual bool            IsFocusAllowed(MovieImpl* proot, unsigned controllerIdx);
     virtual void            OnFocus(FocusEventType event, InteractiveObject* oldOrNewFocusCh, unsigned controllerIdx, FocusMovedType fmt);
-    virtual bool            OnKeyEvent(const EventId& id, int* pkeyMask);
     virtual bool            OnLosingKeyboardFocus(InteractiveObject*, unsigned controllerIdx, FocusMovedType fmt);
     // Special event handler; mouse wheel support
     virtual bool            OnMouseWheelEvent(int mwDelta);
@@ -427,7 +430,11 @@ public:
     unsigned                GetMaxLength() const { return (unsigned)pDocument->GetMaxLength(); }
     unsigned                GetMaxVScroll() const { return pDocument->GetMaxVScroll(); }
     const StringLH&         GetOriginalTextValue() const { return OriginalTextValue; }
+    // Returns text or html. If reqHtml = true but the textfield is not HTML-enabled
+    // it still will return plain text (default behavior in AS2). 
     ASString                GetText(bool reqHtml) const; 
+    // Returns html. Unlike GetText(true), this method will return HTML regardless.
+    ASString                GetHtml() const ;
     Text::DocView::ViewTextAutoSize GetTextAutoSize() const { return pDocument->GetTextAutoSize(); }
     UPInt                   GetTextLength() const { return pDocument->GetLength(); }
     SF_INLINE TextFieldDef* GetTextFieldDef() const { return pDef; }
@@ -603,6 +610,7 @@ public:
     //******** IME related methods
     void                    ClearCompositionString();
     void                    CommitCompositionString(const wchar_t* pstr, UPInt len);
+	const wchar_t*			GetCompositionString();
     void                    CreateCompositionString();
     FontResource*           GetFontResource();
 	void					SetCandidateListFont(Sprite* psprite);

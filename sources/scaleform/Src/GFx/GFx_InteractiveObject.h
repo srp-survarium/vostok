@@ -77,8 +77,10 @@ protected:
         Mask_TabChildrenDisabled= 0x008000, 
         Mask_ChangedFlags       = 0x0F0000, // State changed flags (see StateChangedFlags)
         Mask_ReqPartialAdvance  = 0x100000, // should get partial advance calls
-        Mask_OptAdvancedList    = 0x200000, // is in optimized advance list
+        Mask_OptAdvList         = 0x200000, // is in optimized advance list
         Mask_MarkedToRemoveFromOptAdvList = 0x400000,
+        Mask_OptAdvListMarker   = 0x800000, // must be equal to pMovieImpl->Flag2_OptAdvListMarker
+                                            // to be considered as 'valid' member of opt list.
 
         Shift_ChangedFlags      = 16
     };
@@ -93,9 +95,9 @@ public:
     void ClearNoAdvanceLocalFlag()             { SetNoAdvanceLocalFlag(false); }
     bool IsNoAdvanceLocalFlagSet() const       { return (Flags & Mask_NoAdvanceLocal) != 0; }
 
-    void SetOptAdvancedListFlag(bool v = true) { (v) ? Flags |= Mask_OptAdvancedList : Flags &= (~Mask_OptAdvancedList); }
-    void ClearOptAdvancedListFlag()            { SetOptAdvancedListFlag(false); }
-    bool IsOptAdvancedListFlagSet() const      { return (Flags & Mask_OptAdvancedList) != 0; }
+    void SetOptAdvListFlag(bool v = true)      { (v) ? Flags |= Mask_OptAdvList : Flags &= (~Mask_OptAdvList); }
+    void ClearOptAdvListFlag()                 { SetOptAdvListFlag(false); }
+    bool IsOptAdvListFlagSet() const           { return (Flags & Mask_OptAdvList) != 0; }
 
     void SetReqPartialAdvanceFlag(bool v = true) { (v) ? Flags |= Mask_ReqPartialAdvance : Flags &= (~Mask_ReqPartialAdvance); }
     void ClearReqPartialAdvanceFlag()            { SetReqPartialAdvanceFlag(false); }
@@ -172,6 +174,10 @@ public:
     void MarkToRemoveFromOptimizedPlayList()           { Flags |= Mask_MarkedToRemoveFromOptAdvList;  }
     void ClearMarkToRemoveFromOptimizedPlayListFlag()  { Flags &= (~Mask_MarkedToRemoveFromOptAdvList); }
     bool IsMarkedToRemoveFromOptimizedPlayList() const { return (Flags & Mask_MarkedToRemoveFromOptAdvList) != 0; }
+
+    bool GetOptAdvListMarker() const { return (Flags & Mask_OptAdvListMarker) != 0; }
+    void SetOptAdvListMarker(bool v) { (v) ? Flags |= Mask_OptAdvListMarker : Flags &= (~Mask_OptAdvListMarker); }
+    bool IsValidOptAdvListMember(MovieImpl* proot) const;
 
     // Display callbacks
     void                    (SF_CDECL *pDisplayCallback)(void*);
@@ -302,7 +308,7 @@ public:
     }
 
     // Utility.
-    void                    DoMouseDrag();
+    void                    DoMouseDrag(unsigned mouseIndex);
 
     // Returns 0 if nothing to do
     // 1 - if need to add to optimized play list
@@ -312,7 +318,7 @@ public:
     void                    ModifyOptimizedPlayList()
     {
         //if (proot->IsOptAdvanceListInvalid()) return;
-        switch (CheckAdvanceStatus(IsOptAdvancedListFlagSet() && !IsMarkedToRemoveFromOptimizedPlayList()))
+        switch (CheckAdvanceStatus(IsOptAdvListFlagSet() && !IsMarkedToRemoveFromOptimizedPlayList()))
         {
         case 1:  AddToOptimizedPlayList();            break;
         // delayed removal from optimized list; required for AS3 to execute frames even
@@ -325,7 +331,7 @@ public:
     void                    ModifyOptimizedPlayListLocal()
     {
         //if (proot->IsOptAdvanceListInvalid()) return;
-        switch (static_cast<T*>(this)->T::CheckAdvanceStatus(IsOptAdvancedListFlagSet() && !IsMarkedToRemoveFromOptimizedPlayList()))
+        switch (static_cast<T*>(this)->T::CheckAdvanceStatus(IsOptAdvListFlagSet() && !IsMarkedToRemoveFromOptimizedPlayList()))
         {
         case 1:  AddToOptimizedPlayList();            break;
         // delayed removal from optimized list; required for AS3 to execute frames even

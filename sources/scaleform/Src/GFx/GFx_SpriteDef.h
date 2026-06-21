@@ -99,7 +99,6 @@ public:
     virtual float           GetHeight() const           { return 1; }
     virtual bool            DefPointTestLocal
         (const Render::PointF &pt, bool testShape = 0, const DisplayObjectBase *pinst = 0) const;
-    //virtual RectF        GetBoundsLocal() const                                      { return RectF(0); }   
     virtual unsigned        GetFrameCount() const       { return FrameCount; }
     virtual float           GetFrameRate() const        { return pMovieDef->GetFrameRate(); }
     virtual RectF           GetFrameRect() const        { return RectF(0,0,1,1); }
@@ -127,8 +126,15 @@ public:
     // given name.  A copy of the name string is made and
     // kept in this object.
     virtual void            AddFrameName(const String& name, LogState *plog);  
-    virtual void            SetLoadingPlaylistFrame(const Frame& frame)
+    virtual void            SetLoadingPlaylistFrame(const Frame& frame, LogState *plog)
     {
+        if (int(Playlist.GetSize()) <= LoadingFrame)
+        {
+            if (plog && plog->GetLog())
+                plog->GetLog()->LogError("Invalid SWF file: failed to load sprite's frame #%d since total frames counter is %d",
+                int(LoadingFrame + 1), int(Playlist.GetSize()));
+            return;
+        }
         SF_ASSERT(Playlist[LoadingFrame].TagCount == 0);
         Playlist[LoadingFrame] = frame;
     }

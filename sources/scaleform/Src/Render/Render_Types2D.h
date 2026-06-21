@@ -58,6 +58,10 @@ public:
     inline void SetHeight(T h)                 { Height= h; }                                                
     inline void Clear()                        { Width=0; Height=0; }
     
+    // Casting
+    template<class S>
+    inline operator Size<S>() const            { return Size<S>((S)Width, (S)Height); }
+
     // Swaps the two sizes
     inline void Swap(Size<T> *psz);
     inline void Transpose()            { Alg::Swap(Width, Height); }
@@ -200,6 +204,10 @@ public:
     inline void SetPoint(BoundsType bt);                                                                
     inline void Clear()                        { x=y=0; }
     inline void Swap(Point<T> *ppt);
+
+    // Casting
+    template<class S>
+    inline operator Point<S>() const            { return Point<S>((S)x, (S)x); }
 
     // Set to a + (b - a) * t
     inline Point<T>& SetLerp(const Point<T>& a, const Point<T>& b, T t);
@@ -367,7 +375,11 @@ public:
     inline void SetRect(T x, T y, const Size<T> &sz)             { SetRect(x, y, x+sz.Width, y+sz.Height); }
     inline void SetRect(const Point<T> &tl, const Size<T> &sz)   { SetRect(tl.x, tl.y, sz); }    
     inline void SetRect(BoundsType bt);     
-    
+
+    // Casting.
+    template<class S>
+    inline operator Rect<S>() const                              { return Rect<S>((S)x1, (S)y1, (S)x2, (S)y2); }
+
     // Set to a + (b - a) * t
     inline Rect<T>& SetLerp(const Rect<T>& a, const Rect<T>& b, T t); 
 

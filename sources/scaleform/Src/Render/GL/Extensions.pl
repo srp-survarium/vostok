@@ -47,12 +47,20 @@ while (<EXTS>)
         next;
     }
     
-    if (/(\?)?\s*(gl\w+)(?:\s+([A-Z]+\s*)*)?/) 
+    # Read the definitions.
+    if (/(\?)?\s*(!)?\s*(gl\w+)(?:\s+(\w+\s*)*)/) 
     {
-        $extfns{$2}->{'otherNames'} = [split(/\s+/, $3)];
+        my ($optional, $required, $function, $defines) = ($1, $2, $3, $4);
+        $extfns{$3}->{'defined'} = 1;
         if ($1 eq "?")
         {
-            $extfns{$2}->{'optional'} = 1;
+            my @defines = split(/\s+/, $4);
+            $extfns{$3}->{'extensionDefine'} = \@defines;
+            $extfns{$3}->{'optional'} = 1;
+        }
+        if ($2 eq "!")
+        {
+            $extfns{$3}->{'canfail'} = 1;
         }
     }
     else
@@ -74,11 +82,12 @@ unless (-f $glexth)
 open(GLEXT, "<$glexth");
 while (<GLEXT>) 
 {   
-    if (/(?:GLAPI\s+)?([\w*]+)\s+(?:(?:GL_)?APIENTRY\s+)?(gl\w+) *\((.*)\)/) 
+    if (/(?:GLAPI\s+)?(.*?)\s+(?:(?:GL_)?APIENTRY\s+)?(gl\w+) *\((.*)\)/) 
     {
         if ($extfns{$2}) 
         {
             my ($ret,$name,$proto) = ($1,$2,$3);
+			print "Found extension: $name\n";
             
             # Split the prototype into individual parameters, and strip off the identifier, if it exists.
             my @protoparams = split(/\s*,\s*/, $proto);
@@ -104,8 +113,8 @@ if ( $usep4 )
 }
 
 open(OUTH, ">$exth") or die "Couldn't open $exth: $!\n";
-open(OUTM, ">$extmacroh") or die "Couldn't open $extcpp: $!\n";
-open(OUTC, ">$extcpp") or die "Couldn't open $extmacroh: $!\n";
+open(OUTC, ">$extcpp") or die "Couldn't open $extcpp: $!\n";
+open(OUTM, ">$extmacroh") or die "Couldn't open $extmacroh: $!\n";
 
 print OUTH <<"EOF";
 /**********************************************************************
@@ -131,6 +140,7 @@ print OUTH "#define INC_SF_Render_GL$ver". "_Extensions_H\n";
 print OUTH <<"EOF";
 
 #include "Kernel/SF_Debug.h"
+#include "Render/GL/GL_Common.h"
 
 namespace Scaleform { namespace Render { namespace GL {
 
@@ -189,10 +199,10 @@ EOF
 print OUTM "#ifndef INC_SF_Render_GL$ver". "_ExtensionMacros_H\n";
 print OUTM "#define INC_SF_Render_GL$ver". "_ExtensionMacros_H\n";
 
-if ( $ver eq 'ES10' )
+if ( $ver eq 'ES11' )
 {
     # GLES 1.0 has a different HAL than other GL versions.
-    print OUTM "#include \"Render/GL/GLES10_HAL.h\"\n\n#ifdef SF_GL_RUNTIME_LINK\n\n";
+    print OUTM "#include \"Render/GL/GLES11_HAL.h\"\n\n#ifdef SF_GL_RUNTIME_LINK\n\n";
 }
 else
 {
@@ -207,6 +217,7 @@ foreach my $fn (keys %extfns)
 $maxlen += 7;
 
 my @calls = ();
+my $OptionalMacros = "";
 
 foreach my $fn (keys %extfns) 
 {
@@ -224,29 +235,91 @@ foreach my $fn (keys %extfns)
   }
 
     my $pfn = uc("PFN${fn}PROC");
+
+    # Setup the preprocessor define that determines whether the function prototype/function pointer typedef will exist.
+    my $extIfDef = undef;
+    if ($extfns{$fn}->{'extensionDefine'} ne undef) 
+    { 
+        $extIfDef = "#if " . (join " && ", map { "defined(" . $_ . ")" } @{$extfns{$fn}->{'extensionDefine'}});
+    }
+
+    if ($extIfDef ne undef)
+    {
+        print OUTH "    $extIfDef\n";
+    }
     printf OUTH "    %-${maxlen}s p_$fn;\n", $pfn;
-    print OUTM "#define $fn GetHAL()->$fn\n";
+    if ($extIfDef ne undef)
+    {
+        print OUTH "    #endif\n";
+    }
+    
+    print OUTM "    #define $fn GetHAL()->$fn\n";
+    if ($extfns{$fn}->{'optional'} != undef)
+    {
+        print OUTM "    #define Has_$fn GetHAL()->Has_$fn\n";
+    }
 
     my $c = sprintf "    %s %s(%s)\n    {\n", $ret, $fn, join(', ', @pargs);
-    $c .= "        ScopedGLErrorCheck check(__FUNCTION__);\n";
+    if ( $extfns{$fn}->{'canfail'} == undef )
+    {
+        $c .= "        ScopedGLErrorCheck check(__FUNCTION__);\n";
+    }
+
+    if ($extIfDef ne undef)
+    {
+        $c .= "        $extIfDef\n";
+    }    
     if ($ret ne 'void')
     {
-        $c .= '        return ' ;
+        $c .= "        return p_$fn(" . join(', ', @params). ");\n";
     }
     else
     {
-        $c .= '        ' ;
+        $c .= "        p_$fn(".join(', ', @params).");\n";
     }
-    $c .= "p_$fn(".join(', ', @params).");\n    }\n\n";
+    if ($extIfDef ne undef)
+    {
+        $c .= "        #else\n";
+        $c .= "        SF_DEBUG_ASSERT(1, \"glext.h did not contain required preprocessor defines to \"\n" .
+              "                           \"use the $fn extension function (" . $extIfDef .")\");\n";
+        if ($ret ne 'void')
+        {
+        $c .= "        return $ret(0);\n";
+        }
+        $c .= "        #endif\n";
+    } 
+    $c .="    }\n\n";
 
+    # If it's optional, make another method which tells you whether it exists or not.
+    if ( $extfns{$fn}->{'optional'} != undef )
+    {
+        if ($extIfDef ne undef)
+        {
+            $c .= "    " .$extIfDef. "\n";
+        }
+        
+        $c .= "    bool Has_$fn() const { return p_$fn != 0; }\n\n";
+        if ($extIfDef ne undef)
+        {
+            $c .= "    #else\n";
+            $c .= "    bool Has_$fn() const { return false; }\n";
+            $c .= "    #endif\n\n";
+        }        
+    }
+    
     push @calls, $c;
 
     my $reqValue = "true";
     if ( $extfns{$fn}->{'optional'} != undef )
     {
         $reqValue = "false";
+        $OptionalMacros .= "    inline bool Has_$fn() { return true; }\n";
     }
     
+    if ($extIfDef ne undef)
+    {
+        print OUTC "    $extIfDef\n";
+    }
     print OUTC "    p_$fn = ($pfn) SF_GL_RUNTIME_LINK(\"$fn\");\n";
     if (!($fn =~ /(?:EXT|ARB|OES)$/)) 
     {
@@ -263,6 +336,10 @@ foreach my $fn (keys %extfns)
         }
 EOF
     }
+    if ($extIfDef ne undef)
+    {
+        print OUTC "    #endif\n";
+    }    
     print OUTC "\n";
 }
 
@@ -275,13 +352,17 @@ public:
     public:
         ScopedGLErrorCheck(const char* func) : FuncName(func)
         {
+        #ifdef SF_BUILD_DEBUG
             GLenum error = glGetError(); SF_UNUSED(error);
             SF_DEBUG_ASSERT2(!error, "GL error before function %s (error code = %d)\\n", FuncName, error );
+        #endif
         }
         ~ScopedGLErrorCheck()
         {
+        #ifdef SF_BUILD_DEBUG
             GLenum error = glGetError(); SF_UNUSED(error);
             SF_DEBUG_ASSERT2(!error, "GL error after function %s (error code = %d)\\n", FuncName, error );
+        #endif
         }
     private:
         const char * FuncName;
@@ -294,7 +375,7 @@ foreach (@calls) {
 
 print OUTH "};\n\n}}}\n#endif\n";
 print OUTC "    return result;\n}\n\n}}}\n\n#endif\n";
-print OUTM "\n#endif\n#endif\n";
+print OUTM "\n#else\n$OptionalMacros\n#endif\n#endif\n";
 close(OUTH);
 close(OUTC);
 close(OUTM);
