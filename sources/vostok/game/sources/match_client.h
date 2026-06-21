@@ -25,7 +25,12 @@ namespace network_core {
 
 namespace survarium {
 
+class network_client;
+
 class match_client : public boost::noncopyable {
+	// network_client::on_connected_to_match drives the private send-queue flag
+	// directly (codegen-neutral friendship; PDB does not record it)
+	friend class network_client;
 public:
 			explicit							match_client						( network::world& world );
 												~match_client						( );
