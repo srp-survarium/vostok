@@ -136,6 +136,11 @@ void brain_unit::tick			( )
 	}
 }
 
+void brain_unit::select_new_goal	( )
+{
+	m_goal_selector->set_current_goal( m_world.get_search_service(), *m_specified_problem, m_behaviour, m_blackboard );
+}
+
 void brain_unit::subscribe_on_sensors_events		( perceptors::sensors_subscriber& subscriber )
 {
 	m_perceptors_subscriptions_manager.subscribe	( subscriber );
