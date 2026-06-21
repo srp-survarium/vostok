@@ -13,9 +13,17 @@
 
 #include "GFx.h"
 
+// claude@NOTE: the target's flash glue was compiled OPTIMIZED (the shipped
+// value.cpp records "0 stmts / 1 byte" for the gfx() helpers and most getters,
+// i.e. gfx() + the SF_INLINE GFx::Value chain were inlined AND emitted
+// standalone, statement info collapsed). Our base builds /Od, so gfx() stays a
+// real call (an extra statement) and every wrapper carries frame/call overhead.
+// Structure is faithful (Call pairs 7/7 stmts, the ctors/dtors/SetElement pair
+// clean SIZE-only); the byte/QUANTITY residual is that /Od-vs-optimized wall,
+// not a source shape to steer.
+
 namespace survarium {
 
-// STATE[STUB]
 void flash_external_handler_impl::Callback(
 		Scaleform::GFx::Movie*			movie,
 		pcstr							method_name,
@@ -23,270 +31,212 @@ void flash_external_handler_impl::Callback(
 		u32								args_count
 	)
 {
-	// FUNCTION BODY[0x0ae920]
-	VOSTOK_UNREFERENCED_PARAMETERS	( movie, method_name, args, args_count );
+	owner.callback(
+		( flash_movie* )movie->GetUserData( ),
+		method_name,
+		( flash_value const* )args,
+		args_count
+	);
 }
 
-// STATE[STUB]
 flash_function_handler::~flash_function_handler( )
 {
-	// FUNCTION BODY[0x5baac0]
+	if ( impl )
+		delete impl;
 }
 
-// STATE[STUB]
 void flash_function_handler_impl::Call( Scaleform::GFx::FunctionHandler::Params const& params )
 {
-	// FUNCTION BODY[0x5baae0]
-	VOSTOK_UNREFERENCED_PARAMETER	( params );
+	flash_function_handler_params	p;
+	p.pRetVal	= ( flash_value* )params.pRetVal;
+	p.pArgs		= ( flash_value* )params.pArgs;
+	p.pMovie	= ( flash_movie* )params.pMovie->GetUserData( );
+	p.ArgCount	= params.ArgCount;
+
+	owner.call( p );
 }
 
-// STATE[STUB]
 flash_external_handler::~flash_external_handler( )
 {
-	// FUNCTION BODY[0x5bab30]
+	if ( impl )
+		delete impl;
 }
 
-// STATE[STUB]
 void flash_movie::SetExternalInterface( flash_external_handler* handler )
 {
-	// FUNCTION BODY[0x5bab50]
-	VOSTOK_UNREFERENCED_PARAMETER	( handler );
+	m_movie->SetExternalInterface( handler->impl );
 }
 
 // the flash_value <-> GFx::Value bridge helpers (addressed free functions;
 // flash_value::body is the opaque GFx::Value storage)
-// STATE[STUB]
 Scaleform::GFx::Value* gfx( flash_value const* value )
 {
-	// FUNCTION BODY[0x5bab70]
 	return ( Scaleform::GFx::Value* )( value->body );
 }
 
-// STATE[STUB]
 Scaleform::GFx::Value& gfx( flash_value const& value )
 {
-	// FUNCTION BODY[0x5bab80]
 	return *( Scaleform::GFx::Value* )( value.body );
 }
 
-// STATE[STUB]
 void flash_movie::CreateFunction( flash_value* value, flash_function_handler* handler )
 {
-	// FUNCTION BODY[0x5bab90]
-	VOSTOK_UNREFERENCED_PARAMETERS	( value, handler );
+	m_movie->CreateFunction( gfx( value ), handler->impl );
 }
 
-// STATE[STUB]
 void flash_movie::CreateObject( flash_value* value )
 {
-	// FUNCTION BODY[0x5babb0]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	m_movie->CreateObject( gfx( value ) );
 }
 
-// STATE[STUB]
 void flash_movie::CreateArray( flash_value* value )
 {
-	// FUNCTION BODY[0x5babc0]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	m_movie->CreateArray( gfx( value ) );
 }
 
-// STATE[STUB]
 bool flash_movie::Invoke( pcstr method_name, flash_value* result, flash_value const* args, u32 args_count )
 {
-	// FUNCTION BODY[0x5babd0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( method_name, result, args, args_count );
-	return false;
+	return m_movie->Invoke( method_name, gfx( result ), gfx( args ), args_count );
 }
 
-// STATE[STUB]
 void flash_movie::GetVariable( flash_value* value, pcstr path )
 {
-	// FUNCTION BODY[0x5babf0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( value, path );
+	m_movie->GetVariable( gfx( value ), path );
 }
 
-// STATE[STUB]
 void flash_movie::SetVariable( pcstr path, flash_value const& value )
 {
-	// FUNCTION BODY[0x5bac10]
-	VOSTOK_UNREFERENCED_PARAMETERS	( path, value );
+	m_movie->SetVariable( path, gfx( value ) );
 }
 
-// STATE[STUB]
 void flash_movie::SetVariable( pcstr path, pcstr value )
 {
-	// FUNCTION BODY[0x5bac30]
-	VOSTOK_UNREFERENCED_PARAMETERS	( path, value );
+	m_movie->SetVariable( path, value );
 }
 
-// STATE[STUB]
 u32 flash_value::GetUInt( ) const
 {
-	// FUNCTION BODY[0x5bac90]
-	return 0;
+	return gfx( this )->GetUInt( );
 }
 
-// STATE[STUB]
 s32 flash_value::GetInt( ) const
 {
-	// FUNCTION BODY[0x5baca0]
-	return 0;
+	return gfx( this )->GetInt( );
 }
 
-// STATE[STUB]
 wchar_t const* flash_value::GetStringW( ) const
 {
-	// FUNCTION BODY[0x5bacb0]
-	return NULL;
+	return gfx( this )->GetStringW( );
 }
 
-// STATE[STUB]
 void flash_value::SetConvertStringW( )
 {
-	// FUNCTION BODY[0x5bacc0]
+	gfx( this )->SetConvertStringW( );
 }
 
-// STATE[STUB]
 pcstr flash_value::GetString( ) const
 {
-	// FUNCTION BODY[0x5bacf0]
-	return NULL;
+	return gfx( this )->GetString( );
 }
 
-// STATE[STUB]
 u32 flash_value::GetArraySize( )
 {
-	// FUNCTION BODY[0x5bad10]
-	return 0;
+	return gfx( this )->GetArraySize( );
 }
 
-// STATE[STUB]
 void flash_value::GetElement( u32 index, flash_value* value )
 {
-	// FUNCTION BODY[0x5bad20]
-	VOSTOK_UNREFERENCED_PARAMETERS	( index, value );
+	gfx( this )->GetElement( index, gfx( value ) );
 }
 
-// STATE[STUB]
 void flash_value::PushBack( flash_value& value )
 {
-	// FUNCTION BODY[0x5bad40]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->PushBack( gfx( value ) );
 }
 
-// STATE[STUB]
 void flash_value::SetElement( u32 index, pcstr value )
 {
-	// FUNCTION BODY[0x5bad50]
-	VOSTOK_UNREFERENCED_PARAMETERS	( index, value );
+	gfx( this )->SetElement( index, Scaleform::GFx::Value( value ) );
 }
 
-// STATE[STUB]
 void flash_value::SetElement( u32 index, flash_value& value )
 {
-	// FUNCTION BODY[0x5badb0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( index, value );
+	gfx( this )->SetElement( index, gfx( value ) );
 }
 
-// STATE[STUB]
 void flash_value::GetMember( pcstr member_name, flash_value* value )
 {
-	// FUNCTION BODY[0x5badd0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( member_name, value );
+	gfx( this )->GetMember( member_name, gfx( value ) );
 }
 
-// STATE[STUB]
 bool flash_value::GetBool( )
 {
-	// FUNCTION BODY[0x5bae10]
-	return false;
+	return gfx( this )->GetBool( );
 }
 
-// STATE[STUB]
 float flash_value::GetNumber( )
 {
-	// FUNCTION BODY[0x5bae20]
-	return 0.f;
+	return ( float )gfx( this )->GetNumber( );
 }
 
-// STATE[STUB]
 void flash_value::SetNumber( float value )
 {
-	// FUNCTION BODY[0x5bae30]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetNumber( value );
 }
 
-// STATE[STUB]
 void flash_value::SetUInt( u32 value )
 {
-	// FUNCTION BODY[0x5bae70]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetUInt( value );
 }
 
-// STATE[STUB]
 void flash_value::SetInt( s32 value )
 {
-	// FUNCTION BODY[0x5baea0]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetInt( value );
 }
 
-// STATE[STUB]
 void flash_value::SetStringW( wchar_t const* value )
 {
-	// FUNCTION BODY[0x5baed0]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetStringW( value );
 }
 
-// STATE[STUB]
 void flash_value::SetString( pcstr value )
 {
-	// FUNCTION BODY[0x5baf30]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetString( value );
 }
 
-// STATE[STUB]
 void flash_value::SetBoolean( bool value )
 {
-	// FUNCTION BODY[0x5baf90]
-	VOSTOK_UNREFERENCED_PARAMETER	( value );
+	gfx( this )->SetBoolean( value );
 }
 
-// STATE[STUB]
 flash_value::~flash_value( )
 {
-	// FUNCTION BODY[0x5bafd0]
+	gfx( this )->~Value( );
 }
 
-// STATE[STUB]
 flash_value::flash_value( )
 {
-	// FUNCTION BODY[0x5bb000]
+	new ( body ) Scaleform::GFx::Value( );
 }
 
-// STATE[STUB]
 void flash_value::SetMember( pcstr member_name, flash_value& value )
 {
-	// FUNCTION BODY[0x5bb020]
-	VOSTOK_UNREFERENCED_PARAMETERS	( member_name, value );
+	gfx( this )->SetMember( member_name, gfx( value ) );
 }
 
-// STATE[STUB]
 flash_function_handler_impl::flash_function_handler_impl( flash_function_handler& handler )
 	:	owner	( handler )
 {
-	// FUNCTION BODY[0x5bb060]
 }
 
-// STATE[STUB]
 flash_function_handler::flash_function_handler( )
 {
-	// FUNCTION BODY[0x5bb080]
+	impl = SF_NEW flash_function_handler_impl( *this );
 }
 
-// STATE[STUB]
 flash_external_handler::flash_external_handler( )
 {
-	// FUNCTION BODY[0x5bb0c0]
+	impl = SF_NEW flash_external_handler_impl( *this );
 }
 
 } // namespace survarium
