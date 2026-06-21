@@ -38,6 +38,8 @@ public:
 	virtual				~victory_item	( ) { /* no source */ }
 
 private:
+	friend class victory_item_cook;
+
 	/* 0x0000 */	/* victory_item_core */
 	/* 0x0178 */	scheduler::identifier					m_scheduler_identifier;
 	/* 0x017c */	scheduler*								m_scheduler;

@@ -1,0 +1,49 @@
+#include "pch.h"
+
+// Game-module /OPT:REF reachability anchor for the VICTORY-ITEM cluster:
+//   victory_item, victory_item_cook.
+//
+// These carcass TUs compile into game.lib but no reachable engine call graph
+// touches them yet (game_world registers the core cook, not these runtime
+// objects), so /OPT:REF strips them from the EXE and objdiff reports their
+// target symbols as "unpaired". use_game_victory_item() address-takes each
+// method through a volatile sink so the linker keeps the symbol; the ctors are
+// pinned by a self-guarded construction. Retire once the real game call graph
+// reaches these for itself.
+
+#include "victory_item.h"
+#include "victory_item_cook.h"
+#include "game_world.h"
+
+namespace vostok
+{
+	static pcvoid volatile s_victory_item_sink = 0;
+
+	template < typename T >
+	static void keep( T m ) { s_victory_item_sink = *( pcvoid const* )&m; }
+
+	void use_game_victory_item( )
+	{
+		static volatile bool s_run = false;
+		if ( s_run )
+		{
+			static survarium::game_world* volatile	s_world = 0;
+			survarium::victory_item			item( *s_world );
+			survarium::victory_item_cook	cook( *s_world );
+		}
+
+		// ---- victory_item ----------------------------------------------------
+		typedef survarium::victory_item vi;
+		keep( &vi::tick );
+		keep( &vi::put );
+		keep( &vi::use_info );
+		keep( &vi::take );
+		keep( &vi::unload );
+
+		// ---- victory_item_cook -----------------------------------------------
+		typedef survarium::victory_item_cook vic;
+		keep( &vic::create_resource );
+		keep( &vic::on_config_loaded );
+		keep( &vic::on_subresources_loaded );
+	}
+} // namespace vostok

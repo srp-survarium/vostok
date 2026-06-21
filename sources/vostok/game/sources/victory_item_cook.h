@@ -19,7 +19,7 @@ public:
 	virtual	victory_item_core*		create_resource			( ) override;
 
 	virtual	void					on_config_loaded		( resources::queries_result& data ) override;
-			void					on_subresources_loaded	( resources::queries_result& data, victory_item* object_to_cook );
+	virtual	void					on_subresources_loaded	( resources::queries_result& data, victory_item* object_to_cook );
 
 	virtual							~victory_item_cook		( ) { /* no source */ }
 

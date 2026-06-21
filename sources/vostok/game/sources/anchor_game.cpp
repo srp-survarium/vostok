@@ -396,6 +396,7 @@ namespace vostok
 	void use_game_menus( );
 	void use_game_weapons( );
 	void use_game_booby_trap( );	// anchor_game_booby_trap.cpp
+	void use_game_victory_item( );	// anchor_game_victory_item.cpp
 
 	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
 	void anchor_game( )
@@ -411,6 +412,7 @@ namespace vostok
 		survarium::use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 		use_game_weapons( );
 		use_game_booby_trap( );
+		use_game_victory_item( );
 		use_game_animation( );
 		survarium::use_game_options( );
 		survarium::use_game_options_items( );

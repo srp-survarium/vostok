@@ -4,103 +4,71 @@
 
 #include "pch.h"
 #include "victory_item_cook.h"
+#include "victory_item.h"
+#include "game_world.h"
+#include <vostok/render/facade/model.h>
 
 namespace survarium {
 
-// STATE[STUB]
+// claude@NOTE: residual is `this`-constant-folding. The target's only emitted
+// ctor instance is the one specialized for the single function-local-static
+// cook object (this == &s_victory_item_cook, game_world arg read off the stack);
+// our anchor builds a generic-`this` ctor. register_cooks() does NOT construct
+// it (verified: no victory_item_cook ctor in its callees), so the real
+// static-init site lives in some other game TU not yet wired. Structure is
+// faithful; restore the % once that construction site is found.
 victory_item_cook::victory_item_cook( game_world& game_world ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
 	m_game_world( game_world )
 {
-	// FUNCTION BODY[0x768fe0]: 0
-	// <0x768fe0>|0x000|+0x01d:'17'	{
-	// <0x768ffd>|0x01d|      :'18'	}
-	// ******
 }
 
-// STATE[STUB]
 victory_item_core* victory_item_cook::create_resource( )
 {
-	return NULL;
-
-	// FUNCTION BODY[0x769220]: 1
-	// <0x769220>|0x000|+0x003:'21'	{
-	// <0x769223>|0x003|+0x020:'22'
-	// <0x769243>|0x023|-0x001:'22'
-	// <0x769242>|0x022|+0x004:'23'
-	// <0x769246>|0x026|      :'23'	}
-	// ******
+	return VOSTOK_NEW_IMPL( g_allocator, victory_item )( m_game_world );
 }
 
-// STATE[STUB]
 void victory_item_cook::on_config_loaded( resources::queries_result& data )
 {
-	// LOCALS
-	// configs::binary_config_ptr 		cfg
-	// resources::query_result_for_cook* const parent
-	// resources::request[1] 			requests
-	// ******
+	resources::query_result_for_cook* const parent = data.get_parent_query( );
 
-	// CALL SITE INFO
-	// <0x7692b1> -> victory_item_core* < unknown >()
-	// <0x7692c7> -> void < unknown >( configs::binary_config_value const& )
-	// ******
+	configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 
-	// FUNCTION BODY[0x769250]: 22
-	// <0x769259>|0x009|+0x00b:'27'
-	// <0>
-	// <0x769264>|0x014|+0x046:'29'
-	// <0>
-	// <0x7692aa>|0x05a|+0x009:'31'
-	// <0>
-	// <0x7692b3>|0x063|+0x016:'33'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7692c9>|0x079|+0x008:'38'
-	// <0x7692d1>|0x081|+0x016:'39'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x7692e7>|0x097|+0x080:'48'
-	// ******
+	victory_item* object_to_cook = static_cast< victory_item* >( create_resource( ) );
+	object_to_cook->load( cfg->get_root( ) );
+
+	resources::request requests[1] = {
+		{ (pcstr)cfg->get_root( )["model"], resources::static_model_instance_class },
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &victory_item_cook::on_subresources_loaded, this, _1, object_to_cook ),
+		g_allocator,
+		NULL,
+		parent,
+		assert_on_fail_true
+	);
 }
 
-// STATE[STUB]
 void victory_item_cook::on_subresources_loaded( resources::queries_result& data, victory_item* object_to_cook )
 {
-	// LOCALS
-	// resources::query_result_for_cook* const parent
-	// ******
+	resources::query_result_for_cook* const parent = data.get_parent_query( );
 
-	// FUNCTION BODY[0x769010]: 14
-	// <0x769010>|0x000|+0x00b:'52'	{
-	// <0x76901b>|0x00b|+0x003:'53'
-	// <0>
-	// <0x76901e>|0x00e|+0x03d:'55'
-	// <0>
-	// <0x76905b>|0x04b|+0x0ab:'57'
-	// <0x769106>|0x0f6|+0x018:'58'
-	// <0>
-	// <1>
-	// <2>
-	// <0x76911e>|0x10e|-0x0f7:'62'
-	// <0>
-	// <1>
-	// <0x769027>|0x017|+0x1a2:'65'
-	// <0x7691c9>|0x1b9|-0x0b9:'65'
-	// <0x769110>|0x100|+0x0f3:'66'
-	// <0x769203>|0x1f3|-0x0ee:'66'
-	// <0x769115>|0x105|+0x0f9:'67'
-	// <0x76920e>|0x1fe|      :'67'	}
-	// ******
+	if ( data.size( ) != 1 )
+	{
+		LOG_ERROR( "Wrong data in [%s]", data[0].get_requested_path( ) );
+		parent->finish_query( resources::query_result_for_user::error_type_cook_failed );
+		return;
+	}
+
+	object_to_cook->m_model = static_cast_resource_ptr< render::static_model_ptr >( data[0].get_unmanaged_resource( ) );
+
+	parent->set_unmanaged_resource(
+		object_to_cook,
+		resources::memory_usage_type( resources::nocache_memory, sizeof( victory_item_core ) )
+	);
+
+	parent->finish_query( result_success );
 }
 
 
