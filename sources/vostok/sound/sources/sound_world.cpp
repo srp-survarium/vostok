@@ -378,7 +378,10 @@ IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
 void sound_world::free_submix_voice	( IXAudio2SubmixVoice* voice ) const
 {
 	if ( voice )
+	{
+		voice->SetOutputVoices	( NULL );
 		voice->DestroyVoice		( );
+	}
 }
 
 void sound_world::hdr_audio_test	( u32 time_delta_in_msec )
