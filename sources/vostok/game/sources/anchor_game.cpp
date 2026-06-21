@@ -101,6 +101,13 @@ namespace survarium {
 	// self-guarded, never runs.
 	void use_game_lobby_scene( );
 
+	// the lobby_camera carcass anchor (anchor_game_lobby_camera.cpp); self-guarded.
+	void use_game_lobby_camera( );
+
+	// the fingers_to_weapon_corrector carcass anchor (anchor_game_fingers.cpp);
+	// self-guarded.
+	void use_game_fingers( );
+
 	// the survarium::player carcass anchor (anchor_game_player.cpp); pins the
 	// player out-of-line bodies so /OPT:REF keeps them for the delinker.
 	void anchor_game_player( );
@@ -419,6 +426,8 @@ namespace vostok
 		survarium::use_game_options_items( );
 		survarium::use_game_lobby_ui( );
 		survarium::use_game_lobby_scene( );
+		survarium::use_game_lobby_camera( );
+		survarium::use_game_fingers( );
 		survarium::use_game_player_cook( );
 		survarium::use_game_animated_model_cook( );
 

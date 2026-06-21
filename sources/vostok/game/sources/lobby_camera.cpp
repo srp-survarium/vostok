@@ -7,15 +7,17 @@
 
 namespace survarium {
 
-// STATE[STUB]
  lobby_camera::lobby_camera( base_game_scene& w ) :
-	// game_camera has no default ctor; the same-named param is the obvious
-	// source - a matcher confirms when this TU is enabled
-	game_camera( w )
+	game_camera( w ),
+	m_target_point( 0.0f, 1.5f, 0.0f ),
+	m_capture_move( false ),
+	m_yaw( 0.0f ),
+	m_pitch( 0.0f ),
+	m_target_distance_to_focus_point( 1.5f ),
+	m_current_distance_to_focus_point( 1.5f ),
+	m_z_mouse_axis( 0.0f )
 {
-	// FUNCTION BODY[0x5c3e90]: 1
-	// <0x5c3eeb>|0x05b|+0x038:'29'
-	// ******
+	m_rotation_delta = float2( 0.0f, 0.0f );
 }
 
 // STATE[STUB]
