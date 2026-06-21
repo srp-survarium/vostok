@@ -4,15 +4,17 @@
 
 // claude@NOTE: every function here drives the Scaleform flash UI through
 // flash_value (Set*/SetMember/SetElement/ctor/dtor) and flash_movie
-// (Invoke/CreateArray/CreateObject/Advance/Restart). The whole TU's byte % is
-// CAPPED by the scaleform module's value.cpp/movie.cpp stubs being empty: in the
-// target those tiny methods inline into every call site (LTCG, scaleform is /GL),
-// but our stubs emit real out-of-line calls + an extra `flash_value c;` ctor/dtor
-// statement, so both bytes AND statement count diverge. Matching scaleform
-// value.cpp/movie.cpp lifts this entire TU at once. The remaining // STATE[STUB]
-// bodies additionally need config/cooker/cross-module surfaces (binary_config_value
-// navigation, the player-parameters cooked resource, network::login_client
-// port/server members) that have no header yet.
+// (Invoke/CreateArray/CreateObject/Advance/Restart). With the scaleform glue now
+// compiled /Ox (Master Gold, /GL), those tiny methods INLINE into the call sites
+// here under LTCG - the old flash /Od wall is LIFTED (several methods reached 100%,
+// most ~doubled). The remaining caps are NOT flash: the // STATE[STUB] bodies still
+// need config/cooker/cross-module surfaces (items_dictionary::dict_config
+// binary_config navigation, the player-parameters cooked resource, network::
+// login_client port/server members, the chat_handler add_message path, the
+// lobby_labels/login_labels string tables) that have no header / are not recoverable
+// from the binary; the structure-recovered bodies that stay <100% are capped by
+// allocator-inline (new/delete routing through global operator new vs the engine
+// mspace) and minor LTCG instruction scheduling, not the flash glue.
 
 #include "pch.h"
 #include "lobby_menu.h"
@@ -375,10 +377,12 @@ void lobby_menu_external_handler::callback(
 	// ******
 }
 
-// claude@NOTE: byte % capped by scaleform flash_value/flash_movie stubs not inlining
-// (whole TU - ctor/dtor/Set*/Invoke emit real calls in base, target inlines them).
-// The 7-entry label name/key table and the localized wide placeholder strings
-// (set_current_time / set_place / set_status) are reconstructed approximately.
+// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL), so the
+// inline-vs-call wall is lifted; residual is LTCG statement scheduling around the
+// inlined flash_value ctor/dtor (base merges a few of the dtor cleanups the target
+// keeps as separate statements). The 7-entry label name/key table and the localized
+// wide placeholder strings (set_current_time / set_place / set_status) are
+// reconstructed approximately.
 void lobby_menu::show_match_making( bool b_show )
 {
 	if ( m_is_in_match_making != b_show )
@@ -446,8 +450,9 @@ void lobby_menu::show_match_making( bool b_show )
 	}
 }
 
-// claude@NOTE: byte % capped by the scaleform flash_value (SetStringW) / flash_movie
-// (Invoke) glue not inlining in our /Od build (whole-TU wall). Structure is faithful.
+// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); structure
+// is faithful and the residual is LTCG scheduling of the inlined flash_value
+// ctor/dtor, not the old inline-vs-call wall.
 // sushi@TODO: the level-name localization key L"st_loading_level" is a LENGTH-matched
 // guess (16 wide chars => the 4x movq + word copy the target emits); content is loaded
 // from rdata and does not affect this function's bytes, but the exact key is unverified.
@@ -1481,7 +1486,8 @@ void lobby_menu::fill_skills_tree( )
 	// ******
 }
 
-// claude@NOTE: byte % capped by scaleform flash stubs (whole TU). The "trees" member
+// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); residual is
+// LTCG scheduling of the inlined flash_value ctor/dtor. The "trees" member
 // (per-skill perk grouping, total_points_in_tree) + "perks" array are reconstructed
 // approximately; the skills array, the leveling-info members (points_available,
 // points_unlocked, experience_current/next_level/delta) and the fill_char_info Invoke
@@ -1654,9 +1660,10 @@ bool lobby_menu::is_mouse_over_ui( )
 	return is_over_lobby || is_mouse_over_val.GetBool( );
 }
 
-// claude@NOTE: byte % capped by the scaleform flash_value (ctor/dtor/SetStringW/
-// SetMember/SetUInt) + flash_movie (CreateObject/Invoke) glue not inlining in our /Od
-// build (whole-TU wall). Structure (the three independent message blocks) is faithful.
+// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL); structure
+// (the three independent message blocks) is faithful and the residual is LTCG
+// scheduling of the inlined flash_value ctor/dtor + SetStringW/SetMember/SetUInt, not
+// the old inline-vs-call wall.
 // sushi@TODO: the L"joined"/L"left"/L"in_queue"/L"team" wcsstr prefix literals are
 // length-matched guesses (loaded from rdata; do not affect this function's bytes), exact
 // keys unverified.
