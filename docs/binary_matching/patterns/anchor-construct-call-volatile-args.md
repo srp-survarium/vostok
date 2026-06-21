@@ -46,6 +46,17 @@ a registered `*_cook` that placement-news it) does NOT need the anchor for that 
 it DOES need the `friend` if you made the ctor private to match a `private:` demangled
 access (the cook's `new (p) C(...)` breaks otherwise).
 
+CONSTRUCTION pins the VTABLE (every virtual override emits) but NOT non-virtual privates.
+A private NON-VIRTUAL helper with no reachable caller (e.g. a visitor's `fill_time` whose
+only caller is the uncompiled mixer) stays TARGET_ONLY unless the anchor calls it directly
+- which needs a `friend void ::vostok::anchor_*( );` grant on the class (forward-declare the
+anchor in the class's own header, ABOVE the class, in `namespace vostok`). Calling such a
+helper transitively pins the private helpers IT calls (so calling void `fill_time` pinned
+float-returning `computed_animation_time` too, dodging the C4716 the direct reference would
+have caused). Evidence: n_ary_tree_animation_time_calculator - the friend+`fill_time( )`
+call paired fill_time 99.9% (STRUCTURE MATCH after splitting the clamp across source lines)
+and computed_animation_time 95.3% (STRUCTURE MATCH, residual = FastDelegate invoke regs).
+
 Evidence (game small-utils cluster): the `keep()` form left every symbol `unpaired`; the
 construct+call+all-volatile form paired them in one rebuild - step_manager ctor 100%,
 text_translator ctor/dtor 100%, empty_hands activate 100%, swf process_mouse_move 100%,
