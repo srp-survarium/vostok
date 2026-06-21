@@ -5,96 +5,107 @@
 #include "pch.h"
 #include "fingers_to_weapon_corrector.h"
 
+#include <vostok/animation/skeleton.h>
+#include <vostok/render/facade/model.h>
 #include <vostok/game_core/ik_utils.h>	// mix_transformations
+#include <vostok/fixed_string.h>
+#include <vostok/math_float4x4.h>
+#include <string.h>
 
 namespace survarium {
 
-// STATE[STUB]
- fingers_to_weapon_corrector::fingers_to_weapon_corrector( ) :
-	// buildability: linear_interpolator has only explicit(float); matcher supplies real time
-	m_interpolator( 0.0f )
+// The phalange bone identifiers per hand (left/right). The arm fingers correspond
+// to the skeleton bone ids; the locator pass appends "_loc" and looks the matching
+// locator up in the weapon model. The trailing 16th slot per row pads the stride to
+// the float4x4 array the locator pass fills (only the first 15 feed the bone indices).
+static pcstr s_arm_fingers_phalanges[fingers_to_weapon_corrector::hands_count][16] =
 {
-	// FUNCTION BODY[0x5bca00]: 0
-	// <0x5bca00>|0x000|+0x03a:'47'	{
-	// <0x5bca3a>|0x03a|      :'48'	}
-	// ******
+	{
+		"LeftHandThumb1",  "LeftHandThumb2",  "LeftHandThumb3",
+		"LeftHandIndex1",  "LeftHandIndex2",  "LeftHandIndex3",
+		"LeftHandMiddle1", "LeftHandMiddle2", "LeftHandMiddle3",
+		"LeftHandRing1",   "LeftHandRing2",   "LeftHandRing3",
+		"LeftHandPinky1",  "LeftHandPinky2",  "LeftHandPinky3",
+		"LeftHand",
+	},
+	{
+		"RightHandThumb1",  "RightHandThumb2",  "RightHandThumb3",
+		"RightHandIndex1",  "RightHandIndex2",  "RightHandIndex3",
+		"RightHandMiddle1", "RightHandMiddle2", "RightHandMiddle3",
+		"RightHandRing1",   "RightHandRing2",   "RightHandRing3",
+		"RightHandPinky1",  "RightHandPinky2",  "RightHandPinky3",
+		"RightHand",
+	},
+};
+
+// Parent matrix index of each phalange in the locator chain (15 phalanges).
+static u32 s_index_of_parent[15] =
+{
+	15, 0, 1, 15, 3, 4, 15, 6, 7, 15, 9, 10, 15, 12, 13,
+};
+
+// claude@NOTE: init-list ctor, 0 body statements - structurally correct. Residual is an
+// inline-vs-call wall on linear_interpolator::linear_interpolator(float): the target inlines
+// it (writes the vtable + m_total_transition_time directly), our base emits a call. The
+// decision is LTCG-driven and flips per call site (the sibling hand_to_weapon_ik_processor
+// ctor shows the opposite: target calls, base inlines). Not source-steerable without
+// __forceinline on the shared interpolator header (off-limits - other units' call sites).
+ fingers_to_weapon_corrector::fingers_to_weapon_corrector( ) :
+	m_interpolator( 0.1f )
+{
 }
 
-// STATE[STUB]
 void fingers_to_weapon_corrector::activate(
 	animation::skeleton const&				character_skeleton,
 	render::render_model_instance_ptr		weapon_model,
 	const bool								first_person_view
 )
 {
-	// FUNCTION BODY[0x5bc9b0]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <0x5bc9b1>|0x001|+0x008:'55'
-	// <0x5bc9b9>|0x009|+0x010:'56'
-	// ******
+	initialize_bones_indices							( character_skeleton );
+	initialize_locators									( *weapon_model, first_person_view );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (3 stmts, nested for + get_bone_index-get_root_bones_count).
+// Residual is register allocation: the target keeps character_skeleton in a callee-saved
+// reg (ebp, surviving the inlined __find_if call) and the bone-index / root-count divides
+// are scheduled in the opposite order to our base. Not source-steerable.
 void fingers_to_weapon_corrector::initialize_bones_indices( animation::skeleton const& character_skeleton )
 {
-	// FUNCTION BODY[0x5bc7f0]: 5
-	// <0x5bc7fa>|0x00a|+0x026:'61'
-	// <0x5bc820>|0x030|+0x010:'62'
-	// <0x5bc830>|0x040|+0x07e:'63'
-	// <0>
-	// <1>
-	// ******
+	for ( u32 hand = 0; hand < hands_count; ++hand )
+		for ( u32 i = 0; i < 15; ++i )
+			m_hands[hand].phalanges_bones_indices[i] = character_skeleton.get_bone_index( s_arm_fingers_phalanges[hand][i] ) - character_skeleton.get_root_bones_count( );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (10 stmts). Residual is stack-slot coloring: the target
+// places the mul4x3 return temporary at the lowest local slot (pushing current_item +0x40
+// up), while our base colors current_item lowest and the temp high. Same locals, same
+// statements - the slot assignment order is a compiler choice, not source-steerable.
 void fingers_to_weapon_corrector::initialize_locators( render::render_model_instance const& weapon_model, const bool first_person_view )
 {
-	// LOCALS
-	// float4x4[16] 					matrices
-	// float4x4[16] 					inverted_matrices
-	// render::model_locator_item 		current_item
-	// ******
+	typedef fixed_string< 256 >		locator_name_string_type;
 
-	// TYPEDEFS
-	// typedef
-	// 	fixed_string< 256 >
-	// 	locator_name_string_type;
+	m_first_person_view									= first_person_view;
 
-	// ******
+	float4x4							matrices[16];
+	float4x4							inverted_matrices[16];
+	render::model_locator_item			current_item;
 
-	// CALL SITE INFO
-	// <0x5bc724> -> bool < unknown >( pcstr, render::model_locator_item& ) const
-	// ******
+	for ( u32 hand = 0; hand < hands_count; ++hand )
+	{
+		for ( u32 i = 0; i < 16; ++i )
+		{
+			locator_name_string_type const	locator_name	= locator_name_string_type::createf( "%s_loc", s_arm_fingers_phalanges[hand][i] );
+			weapon_model.get_locator		( locator_name.c_str(), current_item );
 
-	// FUNCTION BODY[0x5bc6d0]: 25
-	// <0x5bc6da>|0x00a|+0x006:'70'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x5bc6e0>|0x010|+0x011:'81'
-	// <0x5bc6f1>|0x021|+0x002:'82'
-	// <0x5bc6f3>|0x023|+0x015:'83'
-	// <0x5bc708>|0x038|+0x01e:'84'
-	// <0>
-	// <0x5bc726>|0x056|+0x017:'86'
-	// <0x5bc73d>|0x06d|+0x01b:'87'
-	// <0>
-	// <1>
-	// <0x5bc758>|0x088|+0x01c:'90'
-	// <0x5bc774>|0x0a4|+0x037:'91'
-	// <0>
-	// <0x5bc7ab>|0x0db|+0x02f:'93'
-	// <0>
-	// ******
+			matrices[i]						= current_item.m_offset;
+			matrices[i].try_invert			( inverted_matrices[i] );
+		}
+
+		for ( u32 i = 0; i < 15; ++i )
+			matrices[i]						= math::mul4x3( matrices[i], inverted_matrices[s_index_of_parent[i]] );
+
+		memmove								( m_hands[hand].phalanges_matrices, matrices, sizeof( m_hands[hand].phalanges_matrices ) );
+	}
 }
 
 void interpolate_hand_matrices(
@@ -109,6 +120,10 @@ void interpolate_hand_matrices(
 		result_matrices[bone_indices[i]] = mix_transformations( result_matrices[bone_indices[i]], locator_matrices[i], iterpolation_coeff );
 }
 
+// claude@NOTE: structure matches (7 stmts, if/else over the per-hand transition). Residual
+// is the is_active fast-path copy loop: our base unrolls it 5x (15 = 5*3) while the target
+// keeps it rolled (15 iterations, one rep movsd each). The unroll factor is an optimizer
+// heuristic on the constant trip count, not source-steerable.
 void fingers_to_weapon_corrector::process( const u32 current_time_in_ms, float4x4* matrices ) const
 {
 	for ( hand const* current_hand = m_hands; current_hand != m_hands + hands_count; ++current_hand )
