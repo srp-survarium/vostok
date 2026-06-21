@@ -111,6 +111,17 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 	}
 }
 
+// claude@NOTE: structure matches the target (statement count + named-local set
+// verified via structure-diff). Residual is the engine-wide strip_pointer
+// inline-vs-call LTCG wall: the gold build inlines memory::strip_pointer at every
+// VOSTOK_NEW/MALLOC/DELETE_IMPL site here (delinker renders the folded out-of-line
+// copy as boost::get_pointer<weapon_user_animations_selector>), our /Ox+/GL base
+// keeps the call. Proven decisive: a global __forceinline strip_pointer drives this
+// TU's allocation fns to 100% but regresses ~170 functions across ai/network/
+// particle/logging, so it is NOT a blanket forceinline - it is context-specific
+// LTCG we cannot reproduce per-site from source. Same cause in new_animated_rigid_body,
+// new_compound_shape_from_hit_targets_config, new_animated_bt_hit_model (docs/binary_matching
+// /patterns/strip-pointer-delete-resource.md).
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
@@ -131,6 +142,11 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
+// claude@NOTE: 12 statements + locals match the target. Beyond the strip_pointer
+// wall (see new_bt_element_joint), the gold build also INLINES new_bt_element_joint,
+// the bone_collision_data ctor (two fixed_string base-ctors) and buffer_vector::push_back
+// into the loop body (target 0x485 bytes vs base 0x142, base CALLs each helper). That is
+// LTCG inline-budget, not source-steerable; the loop's brace/statement shape is faithful.
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];
@@ -206,6 +222,12 @@ u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_con
 	return result;
 }
 
+// claude@NOTE: 6 statements + locals match the target. Two LTCG walls on top of the
+// strip_pointer one (see new_bt_element_joint): the gold build CALLs the
+// bt_animated_rigid_body ctor here while our base inlines it, and that ctor is itself
+// an optimized/frameless COMDAT (it inlines loose_ptr_base::loose_ptr_base -> pt3malloc,
+// ret 8, no ebp frame; our base CALLs loose_ptr_base instead). Both are inline-budget
+// decisions, not source-steerable.
 bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
 {
 	btVector3	local_inertia( 0.f, 0.f, 0.f );
