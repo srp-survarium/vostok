@@ -266,6 +266,7 @@ namespace vostok
 		director.apply( );
 
 		camera.set_position_direction( vec, vec );
+		camera.get_vertical_fov( );
 
 		stats_obj.draw( ui_renderer, scene_view );
 		stats_obj.set_fps_stats( 0.f );
