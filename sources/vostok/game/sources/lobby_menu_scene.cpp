@@ -12,6 +12,11 @@
 namespace survarium {
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Body iterates m_lobby_game_project's scenes / static_collisions
+// (simple_game_project members not declared in our tree) calling scene_renderer::remove_model
+// + static_collision::remove, then releases m_character (profile_player_character) and calls
+// a base_game_scene virtual. Walled by simple_game_project's scene/collision container layout.
+// NEXT: declare simple_game_project's scene_view + static_collision arrays, then reconstruct.
 void lobby_menu::clear_resources( )
 {
 	// CALL SITE INFO
@@ -48,6 +53,11 @@ void lobby_menu::clear_resources( )
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Large body building sound::sound_scene_creation_params +
+// render::scene_configuration, a resources::request[9] array and variant<32> data[10],
+// then resources::query_resources with an on_render_scenes_ready boost::bind callback.
+// Walled by the request-array assembly + scene_configuration/sound_scene_creation_params
+// field layout. NEXT: recover the request array fill order from --view target then reconstruct.
 void lobby_menu::query_scene_resources( )
 {
 	// LOCALS
@@ -115,48 +125,45 @@ void lobby_menu::query_scene_resources( )
 	// ******
 }
 
-// STATE[STUB]
- profile_player_character::profile_player_character( lobby_menu& lobby_menu )
-	: m_lobby_menu( lobby_menu ) // buildability: ref member must be init'd
+profile_player_character::profile_player_character( lobby_menu& lobby_menu )
+	: m_lobby_menu( lobby_menu )
 {
-	// FUNCTION BODY[0x73f5c0]: 0
-	// <0x73f5c0>|0x000|+0x009:'107'	{
-	// <0x73f5c9>|0x009|      :'108'	}
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: faithful body but currently /OPT:REF-collapses to `ret` (unpaired) because
+// player::tick is still an empty stub (player_tick.cpp) - LTCG inlines the empty callee and
+// drops the if(m_player) guard. Pairs once player::tick gets a real body.
 void profile_player_character::update( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x73fda0]: 2
-	// <0x73fda1>|0x001|+0x00f:'112'
-	// <0x73fdb0>|0x010|+0x008:'113'
-	// ******
+	if ( m_player )
+		m_player->tick( current_time_in_ms );
 }
 
-// STATE[STUB]
+// claude@NOTE: faithful body; pairs at 62% only because player::remove (player.cpp) is still
+// an empty stub - LTCG inlines it away so the if(m_player) m_player->remove() half collapses,
+// leaving the m_player=NULL release. Reaches 100% once player::remove gets a real body.
 void profile_player_character::clear_resources( )
 {
-	// FUNCTION BODY[0x73faa0]: 7
-	// <0x73faa3>|0x003|+0x00f:'118'
-	// <0>
-	// <1>
-	// <0x73fab2>|0x012|+0x005:'121'
-	// <0>
-	// <1>
-	// <0x73fab7>|0x017|+0x028:'124'
-	// ******
+	if ( m_player )
+		m_player->remove( );
+
+	m_player = NULL;
 }
 
-// STATE[STUB]
+// claude@NOTE: faithful one-line forward; /OPT:REF-collapses to `ret` (unpaired) because the
+// callee query_profile_contents is itself a /OPT:REF-stripped stub (parked below). Pairs once
+// query_profile_contents gets a real body.
 void profile_player_character::profile_changed( player_profile const* profile )
 {
-	// FUNCTION BODY[0x73ff10]: 1
-	// <0x73ff11>|0x001|+0x007:'129'
-	// ******
+	query_profile_contents( profile );
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Body deep-copies the player_profile (doug_lea malloc 0x1B8 +
+// player_profile ctor + memcpy) into a player_initial_info, then resources::query_resources
+// with an on_player_ready boost::bind callback (the bind_t/mf2/list3 vtable assign_to is
+// the heavy part). Walled by the boost::bind callback-object construction sequence.
+// NEXT: model the query_resources<player_initial_info> + bind on_player_ready idiom.
 void profile_player_character::query_profile_contents( player_profile const* profile )
 {
 	// LOCALS
@@ -188,6 +195,9 @@ void profile_player_character::query_profile_contents( player_profile const* pro
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Callback fired by query_profile_contents' query_resources; cooks the
+// player from the queries_result + profile_to_cook. Depends on the player_cook / player ctor
+// path and queries_result accessors. NEXT: pair with query_profile_contents (shared bind type).
 void profile_player_character::on_player_ready( resources::queries_result& data, player_profile* profile_to_cook )
 {
 	// FUNCTION BODY[0x73fc30]: 7
@@ -202,6 +212,10 @@ void profile_player_character::on_player_ready( resources::queries_result& data,
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Pulls the skeleton_model_instance from the queries_result and stores
+// it into m_character_model + m_skeleton, adds it to the scene via m_scene_renderer. Walled
+// by the render::facade model/scene_renderer accessors + queries_result result extraction.
+// NEXT: recover the queries_result -> skeleton_model_ptr extraction + scene_renderer::add_model.
 void profile_character::character_model_ready( resources::queries_result& data )
 {
 	// FUNCTION BODY[0x73f8f0]: 16
@@ -225,6 +239,10 @@ void profile_character::character_model_ready( resources::queries_result& data )
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Builds the two preview_weapon entries (model + addon + animation +
+// model_locator_item) from the queries_result, resolving an addon bone via the unknown
+// 'bool(pcstr, render::model_locator_item&) const' locator query. Walled by the render facade
+// model_locator + queries_result result extraction. NEXT: identify the locator-lookup accessor.
 void profile_character::weapon_resources_ready( resources::queries_result& data )
 {
 	// CALL SITE INFO
@@ -267,6 +285,10 @@ void profile_character::weapon_resources_ready( resources::queries_result& data 
 }
 
 // STATE[STUB]
+// claude@NOTE: PARKED. Iterates the queries_result animations into m_character_animation[2]
+// behind a logging::has_passed_filters("game") guarded LOG and feeds the animation_player.
+// Walled by the LOG idiom + queries_result animation iteration + animation_player accessors.
+// NEXT: recover the LOG("game", ...) statement + the result-loop into the animation player.
 void profile_character::character_animation_ready( resources::queries_result& data )
 {
 	// LOCALS
