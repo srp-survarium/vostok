@@ -151,6 +151,14 @@ bool messaging_client::read_friend_list( network_core::packet_reader& reader )
 	return true;
 }
 
+// claude@NOTE: read_ignore_list / read_found_players read only account_id + the
+// name string per item (NO `online` field - unlike read_friend_list, confirmed by
+// the target loop body: stride 0x34, stores at item+0x0 and item+0x10 only, no
+// [item+0x30] online store). Structure now matches the target (7 stmts). Residual
+// is the packet_reader::r<T>/r_string inline wall: the target whole-program-inlines
+// them (memory::copy collapses to a direct mov for small POD sizes), our build
+// emits out-of-line `call`s - a network_core header/memory::copy inlining cap, not
+// steerable here (see packet_reader_inline.h).
 bool messaging_client::read_ignore_list( network_core::packet_reader& reader )
 {
 	const u32 ignore_count	= reader.r< u16 >( );
@@ -159,7 +167,6 @@ bool messaging_client::read_ignore_list( network_core::packet_reader& reader )
 		account_list_item& item	= m_ignore_list[ i ];
 		item.account_id	= reader.r< u32 >( );
 		reader.r_string	( item.account_name.get_buffer( ), ( u8 )item.account_name.get_buffer_size( ) );
-		item.online	= reader.r< bool >( );
 	}
 	return true;
 }
@@ -172,7 +179,6 @@ bool messaging_client::read_found_players( network_core::packet_reader& reader )
 		account_list_item& item	= m_found_players_list[ i ];
 		item.account_id	= reader.r< u32 >( );
 		reader.r_string	( item.account_name.get_buffer( ), ( u8 )item.account_name.get_buffer_size( ) );
-		item.online	= reader.r< bool >( );
 	}
 	return true;
 }
