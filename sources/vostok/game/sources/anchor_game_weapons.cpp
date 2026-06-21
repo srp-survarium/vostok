@@ -25,6 +25,7 @@
 #include "key_binder.h"
 #include "weapon_sound_effect.h"
 #include "weapon_sound_events_handler_state_cook.h"
+#include "damage_zone.h"
 #include "game.h"
 
 #include <vostok/game_core/weapon_state_creation_params.h>
@@ -200,5 +201,15 @@ namespace vostok
 		keep( &survarium::fire_animation_time_scale_calculator );
 		keep( &survarium::shotgun_reload_timescale_calculator );
 		keep( &survarium::always_unit_timescale_calculator );
+
+		// ---- damage_zone -----------------------------------------------------
+		// the ctor/dtor reach via damage_zone_cook, but load / play_particles /
+		// stop_particles / deactivate have no reachable call site yet (zone_group
+		// activation is still a carcass), so /OPT:REF would strip them.
+		typedef survarium::damage_zone dz;
+		keep( &dz::load );
+		keep( &dz::play_particles );
+		keep( &dz::stop_particles );
+		keep( &dz::deactivate );
 	}
 }
