@@ -184,6 +184,9 @@ public:
 			void			update_decal				( scene_ptr const& scene, u32 id, render::decal_properties const& properties );
 			void			remove_decal				( scene_ptr const& scene, u32 id );
 
+			void			update_lpv_occluder			( scene_ptr const& scene, u32 id, math::float4x4 const& transform );
+			void			remove_lpv_occluder			( scene_ptr const& scene, u32 id );
+
 			void			update_skeleton				( render::render_model_instance_ptr const& v, math::float4x4* matrices, u32 count );
 
 			void			terrain_add_cell			( scene_ptr const& scene, render::render_model_instance_ptr const& v);
