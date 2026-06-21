@@ -291,6 +291,12 @@ void particle_system_instance_impl::remove_emitter_instances()
 
 bool particle_system_instance_impl::is_finished()
 {
+	// claude@NOTE: ~95% structural (42 target / 40 base). Target has 2 extra tail statements
+	//   (lines run to ~378 vs our 358) and names the finished local `ps_finished` not `finished`.
+	//   Its emitter list local is intrusive_list<...,224,single_threading_policy,size_policy,
+	//   no_debug_policy> (the same offset-based/no_debug list-typedef root cause as particle_world).
+	//   Closing needs the missing tail body reconstructed + the list typedef corrected - not a
+	//   localized resteer.
 	if (m_no_more_create)
 	{
 		particle_emitter_instance* instance = m_lods[m_current_lod].m_emitter_instance_list.front();
