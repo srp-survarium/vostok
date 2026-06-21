@@ -11,21 +11,69 @@
 #include <vostok/network_core/tcp_packet.h>
 #include <vostok/network_core/packet_reader.h>
 
+#include "game.h"			// m_game.lobby_menu()
+#include "lobby_menu.h"		// on_friendship_status_recivied / on_*_message_arrived
+#include "chat_handler.h"	// m_chat_handler.add_message / add_to_recent_list
+#include "messaging_enums.h"
+
 namespace survarium {
 
-// STATE[STUB]
-// claude@NOTE: parked - lobby_menu wall. Recovered body is a switch on the
-// leading message-type byte: case 0xC9 -> process_incoming_text_message(reader);
-// case 0xCC -> a sub-switch on the next byte dispatching read_friend_list (5),
-// read_friend_status (7), read_ignore_list (6), read_found_players (4), and the
-// friend/ignore add/remove ops (0..3) which read an ack byte and either call
-// query_for_friend_list / query_for_ignore_list (ack==0x34='4') or LOG_ERROR the
-// "<op>: operation denied" message; default -> LOG_ERROR "received unknown". The
-// 0xCC tail then notifies m_game.lobby_menu().on_friendship_status_recivied( op,
-// found ) - lobby_menu is trimmed (lacks that method) and lives at game+0x374
-// (game-layout wall). Unblock once lobby_menu is reconstructed.
+// claude@NOTE: logging residual is the repo-wide wall - the target ICF-folds
+// has_passed_filters/append onto empty_stub while the base emits the real logging
+// bodies; structure/verbosity/strings are from the asm. The incoming message-type
+// bytes (0xC9 text, 0xCC friendship) have no named constant in this trimmed tree.
 void messaging_client::on_packet_received( network_core::packet_reader& reader )
 {
+	const u8 message_type = reader.r< u8 >( );
+	switch ( message_type )
+	{
+		case 0xC9:
+			process_incoming_text_message( reader );
+			break;
+
+		case 0xCC:
+		{
+			const messaging::friendship_actions_enum action = messaging::friendship_actions_enum( reader.r< u8 >( ) );
+			if ( action == messaging::query_friend_list_action )
+				read_friend_list( reader );
+			else if ( action == messaging::query_friends_status_action )
+				read_friend_status( reader );
+			else if ( action == messaging::query_ignore_list_action )
+				read_ignore_list( reader );
+			else if ( action == messaging::find_players_action )
+				read_found_players( reader );
+			else
+			{
+				const u8 result = reader.r< u8 >( );
+				if ( action == messaging::add_friend_action )
+				{
+					if ( result == '4' )	query_for_friend_list( );
+					else					LOG_ERROR( "add_friend: operation denied" );
+				}
+				else if ( action == messaging::remove_friend_action )
+				{
+					if ( result == '4' )	query_for_friend_list( );
+					else					LOG_ERROR( "remove_friend: operation denied" );
+				}
+				else if ( action == messaging::add_to_ignore_action )
+				{
+					if ( result == '4' )	query_for_ignore_list( );
+					else					LOG_ERROR( "add_ignorable: operation denied" );
+				}
+				else
+				{
+					if ( result == '4' )	query_for_ignore_list( );
+					else					LOG_ERROR( "remove_ignorable: operation denied" );
+				}
+			}
+
+			m_game.lobby_menu( ).on_friendship_status_recivied( action );
+			break;
+		}
+
+		default:
+			LOG_ERROR( "messaging_client received unknown message %d", message_type );
+	}
 }
 
 // the localized substrings are the Russian + English channel-name tags
@@ -53,14 +101,18 @@ messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_
 }
 
 // STATE[STUB]
-// claude@NOTE: parked - chat_handler wall. Recovered body parses the receiver
-// channel from input_text (wcsstr "/w "-style direct-receiver detection +
-// parse_receiver_channel), formats the body, sends the typed message as a 0xC6
-// packet (append channel, receiver_name, message_body), and echoes it locally via
-// m_chat_handler.add_message(...) + add_to_recent_list(...). add_message/
-// add_to_recent_list need chat_handler, which has no header in this tree
-// (forward-declared only) - unresolved external at link. Unblock once
-// chat_handler is reconstructed.
+// claude@NOTE: deps now all present (chat_handler.h exists) - parked as a large
+// focused follow-up, NOT a symbol wall. Recovered body (33 stmts, 7 locals incl.
+// tcp_packet): detect a direct receiver (wcsstr the leading L"/ " token, wcsncpy_s
+// the name, sete has_direct_receiver), resolve the channel via
+// parse_receiver_channel (or swprintf_s a blank receiver when channel==4), then if
+// m_connection_state==client_connected mbstowcs_s the receiver name, echo locally
+// via m_chat_handler.add_message + add_to_recent_list, wcstombs_s the body+name
+// (strcpy_s "##text/name conversion error##" on failure), build a 0xC1 tcp_packet
+// (append channel byte, then length-prefixed receiver_name and message_body),
+// tcp_packet_client::send, and on the system/private channels run the
+// "not connected to messaging server" LOG. The byte-exact tcp_packet append
+// sequencing + the channel jump table make this a careful reconstruction.
 void messaging_client::on_message_typed( wchar_t const* input_text, messaging::message_channel_enum message_chanel )
 {
 }
@@ -166,16 +218,34 @@ bool messaging_client::accept_message_from( const u32 sender_account_id, messagi
 	return true;
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - chat_handler / lobby_menu walls. Recovered body reads the
-// message header (sender account id + type via accept_message_from, channel,
-// sender name, body), widens the text (mbstowcs_s), and dispatches: match/stats
-// channels -> m_game.lobby_menu().on_match_message_arrived / on_stats_message_
-// arrived; otherwise m_chat_handler.add_message(...) + add_to_recent_list(...).
-// chat_handler has no header and lobby_menu is trimmed (no on_*_arrived) - both
-// unresolved at link. Unblock once chat_handler + lobby_menu are reconstructed.
 void messaging_client::process_incoming_text_message( network_core::packet_reader& reader )
 {
+	messaging::send_message_params	params;
+	params.sender_type			= messaging::client_type_enum( reader.r< u8 >( ) );
+	params.sender_account_id	= reader.r< u32 >( );
+
+	if ( !accept_message_from( params.sender_account_id, params.sender_type ) )
+		return;
+
+	reader.r_string			( params.sender_name );
+	params.message_channel	= messaging::message_channel_enum( reader.r< u8 >( ) );
+	reader.r_string			( params.message_body );
+
+	wchar_t w_sender_name[32];
+	mbstowcs_s				( NULL, w_sender_name, params.sender_name, _TRUNCATE );
+
+	wchar_t w_text[1024];
+	mbstowcs_s				( NULL, w_text, params.message_body, _TRUNCATE );
+
+	if ( params.message_channel == messaging::player_team2_channel )
+		m_game.lobby_menu( ).on_match_message_arrived( w_text );
+	else if ( params.message_channel == messaging::player_squad_channel )
+		m_game.lobby_menu( ).on_stats_message_arrived( w_text, w_sender_name, params.message_channel );
+	else
+	{
+		m_chat_handler.add_message( params.message_channel, w_text, w_sender_name );
+		m_chat_handler.add_to_recent_list( w_sender_name );
+	}
 }
 
 } // namespace survarium

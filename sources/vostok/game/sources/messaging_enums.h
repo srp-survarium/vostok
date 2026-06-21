@@ -67,6 +67,18 @@ enum client_type_enum
 	stats_processor_server_client_type		= 0x8,
 };
 
+// canonical: headers/others/messaging__send_message_params.h
+// (process_incoming_text_message's params local)
+struct send_message_params {
+	/* 0x0000 */	u32						receiver_account_id;
+	/* 0x0004 */	char					receiver_name[32];
+	/* 0x0024 */	u32						sender_account_id;
+	/* 0x0028 */	char					sender_name[32];
+	/* 0x0048 */	client_type_enum		sender_type;
+	/* 0x004c */	message_channel_enum	message_channel;
+	/* 0x0050 */	char					message_body[256];
+};
+
 } // namespace messaging
 
 #endif // #ifndef MESSAGING_ENUMS_H_INCLUDED
