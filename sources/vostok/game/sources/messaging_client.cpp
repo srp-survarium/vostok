@@ -8,6 +8,7 @@
 #include "game_memory.h"	// g_allocator for the vectora<> buildability init
 #include "game.h"			// game::network_client() -> login_client()
 #include "base_network_client.h"
+#include "chat_handler.h"	// m_chat_handler.add_message in on_error
 
 #include <vostok/network_core/tcp_packet.h>
 #include <vostok/network_core/packet_reader.h>
@@ -17,12 +18,24 @@
 
 namespace survarium {
 
+// claude@NOTE: banked residuals across this TU (structure matches the target;
+// the leftover bytes are non-steerable from here):
+//  - packet_reader::r<T>()/r_string and tcp_packet::append/send: the target
+//    whole-program-inlines them (small-POD copies collapse to direct mov), our
+//    build emits out-of-line `call`s - a network_core inlining cap. Drives the
+//    read_*() loop-body folds and the friend-status r<u16> standalone-stmt gap.
+//  - boost::function default-construct / assign_to: same inline cap (set_on_*,
+//    set_on_packet_received).
+//  - logging::append (LOG_ERROR/LOG_WARNING) embeds __LINE__ + the demangled
+//    signature; those only byte-match when this file's line layout matches the
+//    shipped source exactly, which we do not have.
+//  - ctor / connect statement-count (5-vs-6, 6-vs-7): /Od line-table folds
+//    (connection_info-init + sprintf merge; the m_active test hoisted into the
+//    struct-copy statement) - a compiler scheduling artifact, not source shape.
+
  messaging_client::messaging_client( game& g ) :
 	m_game( g ),
-	// claude@NOTE: the real m_chat_handler source is g's chat handler (target
-	// member at game+0x37c) - chat_handler is incomplete in this tree, so a
-	// buildability NULL ref stands in (a chat_handler/game-layout wall)
-	m_chat_handler( *( chat_handler* )NULL ),
+	m_chat_handler( g.get_chat_handler( ) ),
 	m_connection_state( messaging::client_disconnected ),
 	m_network_client( g.get_network_world( ) ),
 	m_match_channel_id_( ( u32 )-1 ),
@@ -106,19 +119,15 @@ void messaging_client::on_disconnected( )
 	m_network_client.set_on_packet_received	( boost::function< void ( network_core::packet_reader& ) >( ) );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - chat_handler wall. Body is: m_chat_handler.add_message(
-// 0, L"Lost connection to messaging ser...", L"System" ); LOG_ERROR( "%s",
-// system_error_code.message().c_str() ); disconnect(); m_connection_info.
-// connection_error_count++; m_connection_info.need_resolve = true;  The first
-// statement needs chat_handler::add_message but chat_handler has no header in
-// this tree (forward-declared only) - calling it is an unresolved external at
-// link. Unblock once chat_handler is reconstructed.
 void messaging_client::on_error(
 	network_core::client_error_codes_enum	client_error_code,
 	boost::system::error_code		system_error_code
 )
 {
+	m_chat_handler.add_message	( messaging::player_system_channel, L"Lost connection to messaging server. Reconnecting...", L"System" );
+	LOG_ERROR	( "%s", system_error_code.message( ).c_str( ) );
+	disconnect		( );
+	m_connection_info.connection_error_count++; m_connection_info.need_resolve = true;
 }
 
 bool messaging_client::read_friend_status( network_core::packet_reader& reader )
@@ -154,11 +163,8 @@ bool messaging_client::read_friend_list( network_core::packet_reader& reader )
 // claude@NOTE: read_ignore_list / read_found_players read only account_id + the
 // name string per item (NO `online` field - unlike read_friend_list, confirmed by
 // the target loop body: stride 0x34, stores at item+0x0 and item+0x10 only, no
-// [item+0x30] online store). Structure now matches the target (7 stmts). Residual
-// is the packet_reader::r<T>/r_string inline wall: the target whole-program-inlines
-// them (memory::copy collapses to a direct mov for small POD sizes), our build
-// emits out-of-line `call`s - a network_core header/memory::copy inlining cap, not
-// steerable here (see packet_reader_inline.h).
+// [item+0x30] online store). 7 stmts each, matches the target; byte residual is
+// the r<T>/r_string inline wall noted at the top of the file.
 bool messaging_client::read_ignore_list( network_core::packet_reader& reader )
 {
 	const u32 ignore_count	= reader.r< u16 >( );
