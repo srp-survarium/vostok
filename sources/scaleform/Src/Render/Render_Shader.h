@@ -385,8 +385,6 @@ public:
 
         if (fillflags & FF_Multiply)
             shader += ShaderDesc::ST_base_Mul;
-        if (fillflags & FF_Invert)
-            shader += ShaderDesc::ST_base_Inv;
 
         if (fillflags & FF_3DProjection)
             shader += ShaderDesc::ST_base_Position3d;
@@ -565,6 +563,12 @@ public:
         VertexFormatComputedHash.Set(sourceKey, result);
     }
 
+    // claude@NOTE: structure-fixed (removed the stock outer FF_Blending|FF_Cxform guard
+    // around the cxform loop - survarium's instantiation runs it unconditionally). Byte
+    // residual is the survarium-modified GFx ShaderDesc/FF_ enum divergence: FF_Blending
+    // is 0x10 here vs 0x20 in our Render_Primitive.h, and the blending flag is read/written
+    // through pfill rather than the fillFlags reference. Needs survarium's modified GFx
+    // shader header / FF_ enum to close further.
     const Shader& SetPrimitiveFill(PrimitiveFill* pfill, unsigned& fillFlags, unsigned batchType, const VertexFormat* pvf, unsigned meshCount,
                                    const MatrixState* Matrices, const Primitive::MeshEntry* pmeshes, ShaderInterface* psi)
     {
@@ -573,19 +577,16 @@ public:
         if ((fillFlags & FF_Blending) == 0 && pfill->RequiresBlend())
             fillFlags |= FF_Blending;
 
-        // If we do not have CxForms, or blending, check the color transforms of the matrices to determine if we will need to apply them.
-        if ((fillFlags & (FF_Blending|FF_Cxform)) != (FF_Blending|FF_Cxform))
+        // Check the color transforms of the matrices to determine if we will need to apply them.
+        for (unsigned i = 0; i < meshCount; i++)
         {
-            for (unsigned i = 0; i < meshCount; i++)
+            Cxform finalCx = Profiler->GetCxform(pmeshes[i].M.GetCxform());
+            if (finalCx != Cxform::Identity)
             {
-                Cxform finalCx = Profiler->GetCxform(pmeshes[i].M.GetCxform());
-                if (finalCx != Cxform::Identity)
-                {
-                    fillFlags |= FF_Cxform;
-                    if (finalCx.RequiresBlend())
-                        fillFlags |= FF_Blending;
-                    break;
-                }
+                fillFlags |= FF_Cxform;
+                if (finalCx.RequiresBlend())
+                    fillFlags |= FF_Blending;
+                break;
             }
         }
 
