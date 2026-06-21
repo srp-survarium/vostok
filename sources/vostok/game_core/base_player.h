@@ -91,15 +91,12 @@ public:
 	inline	void								set_movement_speed_factor		( float movement_speed_factor ) { m_movement_speed_factor = movement_speed_factor; }
 	inline	float								get_movement_speed_factor		( ) const { return m_movement_speed_factor; }
 
-	// STATE[STUB]
 			bool								is_alive						( ) const { return m_is_alive; }
 
 	virtual	base_player*						cast_to_base_player				( ) override { return this; }
 	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
-	// STATE[STUB]
 	virtual	inventory_holder*					cast_to_inventory_holder		( ) override { return this; }
 
-	// STATE[STUB]
 			void								force_animation_selection		( ) { m_force_animation_selection = true; }
 
 	inline	bool								has_been_inserted				( ) const { return m_has_been_inserted; }
@@ -137,12 +134,13 @@ public:
 
 	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
 
+	// claude@NOTE: STUB body is a placeholder. Target (@0x8e... in base_player) has a REAL
+	// body: reads result.{0,4} + mask + this, pushes 4 dwords, calls a 4-arg fn (fold-misnamed
+	// finalize_impl) - a forwarder, not VOSTOK_UNREACHABLE_CODE. Needs the callee identified.
 	// STATE[STUB]
 	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
 
-	// STATE[STUB]
 	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
-	// STATE[STUB]
 	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
 
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );

@@ -75,12 +75,12 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const;	// STATE[STUB] target keeps this out-of-line (called from the double-barreled ctor ASSERT_CMP_U)
+			u16									get_magazine_capacity			( ) const;	// out-of-line: target emits `call get_magazine_capacity` @0x09cc20 (double-barreled ctor ASSERT_CMP_U); optimized-COMDAT wall
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from the idle-state getters)
+			u16									ammo_in_magazine				( ) const;	// out-of-line: target emits `call ammo_in_magazine` @0x09b270 (idle-state getters); optimized-COMDAT wall
 	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
@@ -94,7 +94,7 @@ public:
 			bool								ready_to_reload					( ) const;
 
 	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
-			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
+			weapon_targets						get_target						( ) const { return m_target; }										// target out-lines+optimizes this trivial getter (inline-vs-call wall)
 
 	inline	void								set_fire_queue_type				( u8 arg_0 ) { /* no source */ }
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
@@ -103,8 +103,8 @@ public:
 			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
-	virtual	float4x4							transform						( ) const override { return m_transform; }							// STATE[STUB]
-	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// STATE[STUB]
+	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
 
 	inline	hit_initiator const*				hit_initiator_holder			( ) const { /* no source */ }
 	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
@@ -112,7 +112,7 @@ public:
 	virtual	void								set_next_fire_queue_type		( );
 	virtual	void								set_next_ammo_type				( );
 
-	virtual	void								on_ammo_empty					( ) { }																// STATE[STUB]
+	virtual	void								on_ammo_empty					( ) { }
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) override;
 
 			profile_slot_enum					get_ammo_slot					( ammo_id_enum slot_id );
@@ -124,7 +124,7 @@ public:
 			calculator_functor					vertical_recoil_time_calculator		( );
 
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
-			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// STATE[STUB]
+			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
 
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override;
 
@@ -152,7 +152,7 @@ public:
 	virtual	void								activate						( base_player& user, engine& engine ) override;
 	virtual	void								deactivate						( ) override;
 
-	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// STATE[STUB]
+	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
 			void								reset_fire_queue				( );
 
 			bool								is_aimed						( ) const;	// out-of-line: target emits `call is_aimed` @0x09b310 (e.g. from the recoil-value getters)
@@ -209,7 +209,7 @@ public:
 	// weapon_state_creation_params `bool& shown` binds &m_is_shown (lea object+487h).
 	inline	bool&								is_shown						( ) { return m_is_shown; }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
-			bool								round_is_chambered				( ) const;	// STATE[STUB] target keeps this out-of-line (called, not inlined, from reload_state_base::initialize @0x09b360)
+			bool								round_is_chambered				( ) const;	// out-of-line: target emits `call round_is_chambered` @0x09b360 (reload_state_base::initialize); optimized-COMDAT wall
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
@@ -218,7 +218,7 @@ public:
 
 private:
 	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
-			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]
+			bool								target_predicate						( weapon_targets target ) const { return m_target == target; }
 			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
 
@@ -235,7 +235,7 @@ private:
 
 			animation::callback_return_type_enum	on_animation_ik_interval		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
-			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; } // STATE[STUB]
+			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; }
 
 private:
 	virtual	void								on_player_model_added			( ) override;
