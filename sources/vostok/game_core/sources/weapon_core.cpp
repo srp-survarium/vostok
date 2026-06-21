@@ -984,10 +984,10 @@ bool weapon_core::is_sprinting( ) const
 }
 
 // STATE[STUB]
-// claude@NOTE: PARK. Whole body is `if (<cc_bool debug flag, read via the finalize_impl/empty_stub
-// accessor>) <compiled-out debug-draw call>(...)`. Walled by the console_command flag-read machinery
-// and the compiled-out draw call - same wall as process_finger_correction and the recoil-time trio.
-// void survarium::weapon_core::on_skeleton_matrices_changed(const unsigned int, vostok::math::float4x4 const&, vostok::math::float4x4 const* const, vostok::math::float4x4 const* const, vostok::math::float4x4 const&, vostok::math::float4x4* const, vostok::math::float4x4* const, vostok::math::float4x4 const&)
+// claude@NOTE: PARK. Single-statement body = `if (<flag>) <debug-draw>( ...all the matrices by
+// value... )`. The flag-read folds to an empty accessor (mov byte[ebp-1],0;lea;call finalize_impl;
+// movzx;test;je) and the draw call folds to finalize_impl (universal empty-fn). Neither the flag
+// nor the draw helper is nameable from this TU, so the whole body is the debug-machinery wall.
 void weapon_core::on_skeleton_matrices_changed(
 	u32						current_time_in_ms,
 	float4x4 const&			weapon_transform,
@@ -999,20 +999,14 @@ void weapon_core::on_skeleton_matrices_changed(
 	float4x4 const&			user_weapon_transform
 )
 {
-	// FUNCTION BODY
-	// <0x5a2e8b>|0x00b|+0x05f:'1047'
-	// ******
 }
 
 // STATE[STUB]
-// claude@NOTE: PARK. Whole body is `if (<cc_bool debug flag>) <compiled-out debug call>(
-// current_time_in_ms, user_matrices)`. Same console_command-flag-read wall as on_skeleton_matrices_changed.
-// void survarium::weapon_core::process_finger_correction(const unsigned int, vostok::math::float4x4* const)
+// claude@NOTE: PARK. Single-statement body = `if (<flag>) <debug-draw>( current_time_in_ms,
+// user_matrices )`. Same debug-machinery wall as on_skeleton_matrices_changed (folded flag-read +
+// folded draw call, neither nameable here).
 void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* const user_matrices )
 {
-	// FUNCTION BODY
-	// <0x5a2e49>|0x009|+0x023:'1055'
-	// ******
 }
 
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
@@ -1129,13 +1123,11 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// STATE[STUB]
-// claude@NOTE: PARK. Body recovered (line 1: if(s_recoil_*_eanble cc_bool) LOG(...); update_recoil(
-// target_time_in_ms,time_scale); update_breath_vibration((input.actions_mask&0x80)&&(&0x8000000),
-// target_time_in_ms,time_scale); return backward_recoil_value()*animation_length). Walled by the
-// compiled-out cc_bool flag-read + LOG (line 1) whose exact bytes need the console_command accessor
-// and format string - not reconstructable here without matching that debug machinery first.
-// float survarium::weapon_core::computed_backward_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
+// claude@NOTE: stmts 2-4 pair (update_recoil/update_breath_vibration/return). Stmt 1 is a
+// debug `if(<flag>) <call>( animation_time_before, current_time_in_ms, target_time_in_ms )`
+// whose flag-read folds to an empty accessor (mov byte[ebp-1],0;lea;call finalize_impl;movzx;
+// test;je) and whose body call folds to finalize_impl (universal empty-fn) - the exact source
+// spelling of the flag/call is not nameable, so stmt 1's bytes are the debug-machinery wall.
 float weapon_core::computed_backward_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1145,22 +1137,14 @@ float weapon_core::computed_backward_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3e83> -> player_input const& <unknown>() const
-	// ******
+	update_recoil( target_time_in_ms, time_scale );
 
-	return 0.0f;
+	player_input const& input = m_user->input( );
+	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
 
-	// FUNCTION BODY
-	// <0x5a3e29>|0x009|+0x030:'1203'
-	// <0x5a3e59>|0x039|+0x013:'1204'
-	// <0x5a3e6c>|0x04c|+0x060:'1205'
-	// <0x5a3ecc>|0x0ac|+0x047:'1206'
-	// ******
+	return math::clamp_r( m_recoil_calculator.get_back_coeff( ), epsilon, clear_value - epsilon ) * animation_length;
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::computed_horizontal_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
 float weapon_core::computed_horizontal_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1170,22 +1154,14 @@ float weapon_core::computed_horizontal_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3dc3> -> player_input const& <unknown>() const
-	// ******
+	update_recoil( target_time_in_ms, time_scale );
 
-	return 0.0f;
+	player_input const& input = m_user->input( );
+	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
 
-	// FUNCTION BODY
-	// <0x5a3d69>|0x009|+0x030:'1218'
-	// <0x5a3d99>|0x039|+0x013:'1219'
-	// <0x5a3dac>|0x04c|+0x060:'1220'
-	// <0x5a3e0c>|0x0ac|+0x00b:'1221'
-	// ******
+	return horizontal_recoil_value( ) * animation_length;
 }
 
-// STATE[STUB]
-// float survarium::weapon_core::computed_vertical_recoil_time(const float, const float, const unsigned int, const unsigned int, const unsigned int, const float)
 float weapon_core::computed_vertical_recoil_time(
 	float		animation_length,
 	float		animation_time_before_time_scale_starts,
@@ -1195,18 +1171,12 @@ float weapon_core::computed_vertical_recoil_time(
 	float		time_scale
 )
 {
-	// CALL SITE INFO
-	// <0x5a3d03> -> player_input const& <unknown>() const
-	// ******
+	update_recoil( target_time_in_ms, time_scale );
 
-	return 0.0f;
+	player_input const& input = m_user->input( );
+	update_breath_vibration( ( input.actions_mask & 0x80 ) != 0 && ( input.actions_mask & 0x8000000 ) != 0, target_time_in_ms, time_scale );
 
-	// FUNCTION BODY
-	// <0x5a3ca9>|0x009|+0x030:'1233'
-	// <0x5a3cd9>|0x039|+0x013:'1234'
-	// <0x5a3cec>|0x04c|+0x060:'1235'
-	// <0x5a3d4c>|0x0ac|+0x00b:'1236'
-	// ******
+	return vertical_recoil_value( ) * animation_length;
 }
 
 weapon_core::calculator_functor weapon_core::backward_recoil_time_calculator( )
@@ -1304,11 +1274,20 @@ bool weapon_core::is_not_trying_to_aim_predicate( ) const
 	return !is_trying_to_aim( );
 }
 
-// STATE[STUB]: out-of-line stub (target @0x0ac370 has the real "A LOT OF LOGIC" body, not matched
-// here). Defined so callers like can_and_must_reload_predicate emit `call ready_to_reload`.
+// claude@NOTE: release COMDAT (target 0 PDB statements, fully folded -> objdiff leaves it
+// "unpaired"). Body is byte-recovered: filtering the uniform [ebp-N] slot-alloc shift and the
+// ICF assert-fold name, the ONLY residual is one folded-empty assert call named
+// unreferenced_parameter_helper (base) vs finalize_impl (target) - the same compiled-out
+// resource_ptr::operator-> non-null assert. ammunition() returns a resource_ptr by value (each
+// call = an inc/dec copy); the && chain short-circuits to a common false sink.
 bool weapon_core::ready_to_reload( ) const
 {
-	return true;
+	u16 const current_ammo = m_ammo_in_magazine + ( m_is_round_chambered != false );
+	return current_ammo != maximum_ammo_in_weapon( )
+		&& ammunition( )
+		&& ammunition( )->amount( ) != 0
+		&& !m_is_in_sprint_transition
+		&& !m_user_animations_selector.is_in_jump( );
 }
 
 // record and no read - not source-pinnable. claude@NOTE
