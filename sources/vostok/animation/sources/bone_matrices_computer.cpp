@@ -81,6 +81,11 @@ namespace vostok {
 namespace animation {
 
 // STATE[STUB]
+// claude@NOTE: init list matched; body is a loop over m_animations selecting those whose
+// event_iterator animation node targets m_animated_object, accumulating m_layers_count via
+// math::max and pinning each cubic_spline_skeleton_animation. Needs n_ary_tree_animation_node
+// + cubic_spline animation accessors (esi=*(anim+0xAC), cmp [esi+24h]==m_animated_object,
+// max(m_layers_count,[esi+48h])); large pinned_ptr/event-iterator reconstruction - parked.
  bone_matrices_computer::bone_matrices_computer(
 	pcvoid const						animated_object,
 	skeleton const*						skeleton,
@@ -117,34 +122,25 @@ namespace animation {
 	// ******
 }
 
-// STATE[STUB]
- bone_matrices_computer::~bone_matrices_computer( )
+bone_matrices_computer::~bone_matrices_computer( )
 {
-	// FUNCTION BODY
-	// <0x6ede94>|0x004|+0x018:'109'
-	// <0x6edeac>|0x01c|+0x083:'110'
-	// ******
+	for ( mixing::animation_state* i = m_animations, * const e = m_animations + m_animations_count; i != e; ++i )
+		i->bone_matrices_computer.pinned_animation	= cubic_spline_skeleton_animation_pinned( 0 );
+}
+
+float3 mix_translations( buffer_vector< std::pair< float3, float > > const& transforms )
+{
+	float3	result( 0.f, 0.f, 0.f );
+	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
+		result	+= i->first * i->second;
+
+	return	result;
 }
 
 // STATE[STUB]
-float3 mix_translations(
-	buffer_vector< std::pair< float3, float > > const&	arg_0 /* vostok::buffer_vector< std::pair< float3, float > > const& transforms */
-)
-{
-	return vostok::math::float3(1., 1., 1.);
-
-	// FUNCTION BODY
-	// <0>
-	// <0x6ec800>|0x000|+0x005:'118'
-	// <0x6ec805>|0x005|+0x011:'119'
-	// <0x6ec816>|0x016|+0x00a:'120'
-	// <0x6ec820>|0x020|+0x046:'121'
-	// <0>
-	// <1>
-	// ******
-}
-
-// STATE[STUB]
+// claude@NOTE: ~0x1f9-byte weighted quaternion blend (axis-angle log/exp accumulation with
+// total_weight + optional final normalization). Large FP reconstruction; reachable once
+// computed_local_bone_transform / get_object_transform are bodied (its only callers) - parked.
 math::quaternion mix_rotations(
 	buffer_vector< std::pair< float3, float > >&	arg_0 /* vostok::buffer_vector< std::pair< float3, float > >& transforms */,
 	const bool		do_normalization
@@ -225,37 +221,29 @@ math::quaternion mix_rotations(
 	// ******
 }
 
-// STATE[STUB]
-float3 mix_scales(
-	buffer_vector< std::pair< float3, float > > const&	arg_0 /* vostok::buffer_vector< std::pair< float3, float > > const& transforms */
-)
+float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )
 {
-	return vostok::math::float3(1., 1., 1.);
+	float3	result( 1.f, 1.f, 1.f );
+	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
+		result	*= math::pow( i->first, i->second );
 
-	// FUNCTION BODY
-	// <0x6ec970>|0x000|+0x00c:'251'
-	// <0>
-	// <0x6ec97c>|0x00c|+0x014:'253'
-	// <0x6ec990>|0x020|+0x004:'254'
-	// <0x6ec994>|0x024|+0x068:'255'
-	// <0>
-	// <1>
-	// ******
+	return	result;
 }
 
-// STATE[STUB]
 frame identity_frame( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x11dfb3>|0x003|+0x01d:'263'
-	// <0x11dfd0>|0x020|+0x01f:'264'
-	// <0x11dfef>|0x03f|+0x034:'265'
-	// <0>
-	// ******
+	frame	result;
+	result.translation	= float3( 0.f, 0.f, 0.f );
+	result.rotation		= float3( 0.f, 0.f, 0.f );
+	result.scale		= float3( 1.f, 1.f, 1.f );
+	return	result;
 }
 
 // STATE[STUB]
+// claude@NOTE: 27-stmt 0x41c-byte per-bone mixer: allocates rotations/scales buffer_vectors,
+// loops m_animations sampling each bone_frame at frame_position for animation_layer_id,
+// accumulates weighted (translation,weight)/(rotation,weight)/(scale,weight), then returns a
+// bone_transform from mix_translations/mix_rotations/mix_scales. Large; parked.
 bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_bone const& bone, const u32 bone_mask, const u32 animation_layer_id ) const
 {
 	// LOCALS
@@ -349,6 +337,11 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 }
 
 // STATE[STUB]
+// claude@NOTE: builds a buffer_vector<bone_transform>(bone.mask()) via
+// computed_local_bone_transform per layer, reduces with bone_transform::apply (translation+=,
+// rotation*=, scale*=), then returns mul4x3( create_scale(scale)*quat_to_matrix(rotation),
+// create_translation(translation) ). Load-bearing for compute_skeleton_branch[_local] but they
+// pair via the real call even while this is a stub; matrix reduction reconstruction parked.
 float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const& bone, const u32 bone_mask ) const
 {
 	// LOCALS
@@ -385,7 +378,6 @@ float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const
 	// ******
 }
 
-// STATE[STUB]
 void bone_matrices_computer::compute_skeleton_branch(
 	skeleton_bone const&	bone,
 	float4x4* const			result,
@@ -394,27 +386,19 @@ void bone_matrices_computer::compute_skeleton_branch(
 	u32 const* const		result_masks
 ) const
 {
-	// LOCALS
-	// skeleton_bone const* const 		e
-	// ******
+	*result	= mul4x3( computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() ), parent );
 
-	// FUNCTION BODY
-	// <0x6edbb6>|0x006|+0x055:'383'
-	// <0>
-	// <1>
-	// <0x6edc0b>|0x05b|+0x00d:'386'
-	// <0x6edc18>|0x068|+0x00c:'387'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6edc24>|0x074|+0x07d:'394'
-	// ******
+	skeleton_bone const* const e	= bone.children_end();
+	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+		compute_skeleton_branch(
+			*i,
+			result + ( i - &bone ),
+			*result,
+			result_masks ? result_masks + ( bone.children_begin() - &bone ) : 0,
+			result_masks ? result_masks + ( i - &bone ) : 0
+		);
 }
 
-// STATE[STUB]
 void bone_matrices_computer::compute_skeleton_branch_local(
 	skeleton_bone const&	bone,
 	float4x4* const			result,
@@ -422,119 +406,72 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 	u32 const* const		result_masks
 ) const
 {
-	// LOCALS
-	// skeleton_bone const* const 		e
-	// ******
+	*result	= computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() );
 
-	// FUNCTION BODY
-	// <0x6edae3>|0x003|+0x035:'404'
-	// <0>
-	// <1>
-	// <0x6edb18>|0x038|+0x00a:'407'
-	// <0x6edb22>|0x042|+0x008:'408'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6edb2a>|0x04a|+0x071:'414'
-	// ******
+	skeleton_bone const* const e	= bone.children_end();
+	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+		compute_skeleton_branch_local(
+			*i,
+			result + ( i - &bone ),
+			bone_mask ? bone_mask + ( bone.children_begin() - &bone ) : 0,
+			bone_mask ? bone_mask + ( i - &bone ) : 0
+		);
 }
 
-// STATE[STUB]
 void bone_matrices_computer::convert_skeleton_branch( skeleton_bone const& bone, float4x4* const result, float4x4 const& parent ) const
 {
-	// FUNCTION BODY
-	// <0x6ec873>|0x003|+0x01c:'419'
-	// <0x6ec88f>|0x01f|+0x014:'420'
-	// <0x6ec8a3>|0x033|+0x006:'421'
-	// <0x6ec8a9>|0x039|+0x008:'422'
-	// <0x6ec8b1>|0x041|+0x02c:'423'
-	// ******
+	*result	= mul4x3( *result, parent );
+
+	skeleton_bone const* const e	= bone.children_end();
+	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+		convert_skeleton_branch( *i, result + ( i - &bone ), *result );
 }
 
-// STATE[STUB]
 void bone_matrices_computer::compute_bones_matrices( float4x4* const begin, float4x4* const end, u32 const* const bones_masks ) const
 {
-	// LOCALS
-	// skeleton_bone const* const 		roots_end
-	// skeleton_bone const* const 		roots_begin
-	// skeleton_bone const* const 		children_end
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x6edda3>|0x003|+0x014:'430'
-	// <0x6eddb7>|0x017|+0x00c:'431'
-	// <0x6eddc3>|0x023|+0x00f:'432'
-	// <0>
-	// <0x6eddd2>|0x032|+0x009:'434'
-	// <0x6edddb>|0x03b|+0x019:'435'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6eddf4>|0x054|+0x092:'443'
-	// <0>
-	// ******
+	skeleton_bone const* const roots_begin	= &m_skeleton->get_root();
+	skeleton_bone const* const roots_end	= roots_begin->children_begin();
+	for ( skeleton_bone const* i = roots_begin; i != roots_end; ++i ) {
+		skeleton_bone const* const children_end	= i->children_end();
+		for ( skeleton_bone const* j = i->children_begin(); j != children_end; ++j )
+			compute_skeleton_branch(
+				*j,
+				begin + ( j - i->children_begin() ),
+				float4x4( ).identity( ),
+				bones_masks ? bones_masks + ( j - roots_begin ) : 0,
+				bones_masks ? bones_masks + ( j - i->children_begin() ) : 0
+			);
+	}
 }
 
-// STATE[STUB]
 void bone_matrices_computer::compute_bones_local_matrices( float4x4* const begin, float4x4* const end, u32 const* const bones_masks ) const
 {
-	// LOCALS
-	// skeleton_bone const* const 		roots_end
-	// skeleton_bone const* const 		roots_begin
-	// skeleton_bone const* const 		children_end
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x6edcb3>|0x003|+0x013:'450'
-	// <0x6edcc6>|0x016|+0x00c:'451'
-	// <0x6edcd2>|0x022|+0x00f:'452'
-	// <0>
-	// <1>
-	// <0x6edce1>|0x031|+0x009:'455'
-	// <0x6edcea>|0x03a|+0x01a:'456'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6edd04>|0x054|+0x088:'463'
-	// <0>
-	// ******
+	skeleton_bone const* const roots_begin	= &m_skeleton->get_root();
+	skeleton_bone const* const roots_end	= roots_begin->children_begin();
+	for ( skeleton_bone const* i = roots_begin; i != roots_end; ++i ) {
+		skeleton_bone const* const children_end	= i->children_end();
+		for ( skeleton_bone const* j = i->children_begin(); j != children_end; ++j )
+			compute_skeleton_branch_local(
+				*j,
+				begin + ( j - i->children_begin() ),
+				bones_masks ? bones_masks + ( j - roots_begin ) : 0,
+				bones_masks ? bones_masks + ( j - i->children_begin() ) : 0
+			);
+	}
 }
 
-// STATE[STUB]
-void bone_matrices_computer::convert_to_object_matrices( float4x4* const begin, float4x4* const end ) const
+void bone_matrices_computer::convert_to_object_matrices( float4x4* begin, float4x4* const end ) const
 {
-	// LOCALS
-	// skeleton_bone const* const 		roots_end
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x6ec8fb>|0x00b|+0x002:'470'
-	// <0x6ec8fd>|0x00d|+0x008:'471'
-	// <0x6ec905>|0x015|+0x00a:'472'
-	// <0x6ec90f>|0x01f|+0x011:'473'
-	// <0>
-	// <1>
-	// <0x6ec920>|0x030|+0x003:'476'
-	// <0x6ec923>|0x033|+0x00d:'477'
-	// <0x6ec930>|0x040|+0x033:'478'
-	// <0>
-	// ******
+	skeleton_bone const* const roots_end	= m_skeleton->get_root().children_begin();
+	for ( skeleton_bone const* i = &m_skeleton->get_root(); i != roots_end; ++i )
+		for ( skeleton_bone const* j = i->children_begin(); j != i->children_end(); ++j, ++begin )
+			convert_skeleton_branch( *j, begin, float4x4( ).identity( ) );
 }
 
 // STATE[STUB]
+// claude@NOTE: 19-stmt 0x689-byte object-movement mixer: allocates translations/rotations/scales
+// buffer_vectors, loops m_animations accumulating each weighted accumulated_object_movement, then
+// composes create_scale*quat_to_matrix*create_translation from mix_* results. Large; parked.
 float4x4 bone_matrices_computer::get_object_transform( ) const
 {
 	// LOCALS
