@@ -8,6 +8,10 @@
 
 namespace survarium {
 
+// claude@NOTE: STRUCTURE MATCH (1 stmt). Capped ~82%: target inlines interactive_object's
+// implicit default ctor and calls unmanaged_resource::unmanaged_resource(1) directly, while
+// base emits interactive_object::interactive_object() out-of-line. Inline-vs-call of a
+// different unit's (interactive_object) implicit ctor - not steerable from here.
  empty_hands::empty_hands( resources::managed_resource_ptr* animations, const u32 animations_count ) :
 	m_user( 0 ),
 	m_animations( animations ),
