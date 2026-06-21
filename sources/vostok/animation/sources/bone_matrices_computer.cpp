@@ -385,8 +385,9 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 {
 	*result	= computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() );
 
+	skeleton_bone const* i			= bone.children_begin();
 	skeleton_bone const* const e	= bone.children_end();
-	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+	for ( ; i != e; ++i )
 		compute_skeleton_branch_local(
 			*i,
 			result + ( i - &bone ),
@@ -399,8 +400,9 @@ void bone_matrices_computer::convert_skeleton_branch( skeleton_bone const& bone,
 {
 	*result	= mul4x3( *result, parent );
 
+	skeleton_bone const* i			= bone.children_begin();
 	skeleton_bone const* const e	= bone.children_end();
-	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+	for ( ; i != e; ++i )
 		convert_skeleton_branch( *i, result + ( i - &bone ), *result );
 }
 
