@@ -21,13 +21,12 @@ struct flash_text_manager;
 
 struct stats_row : public boost::noncopyable {
 	// STATE[STUB]
-	// addressed carcass from the network_stats.h dump (this type's original home)
+	// claude@NOTE: body is empty `{ }`; the whole-object zeroing the target shows
+	// comes from the flash_text / stats_stream member default ctors, which are
+	// `{ /* no source */ }` placeholders in this tree (the real zeroing ctors are
+	// part of the still-stubbed flash glue) - so the member init is byte-walled here.
 	inline			stats_row	( )
 	{
-		// FUNCTION BODY[0x91da0]: 0
-		// <0x91da0>|0x000|+0x0c1:'69'	{
-		// <0x91e61>|0x0c1|      :'70'	}
-		// ******
 	}
 					~stats_row	( );
 
@@ -44,24 +43,16 @@ struct stats_row : public boost::noncopyable {
 						math::color const&		color
 					);
 
-	// STATE[STUB]
-	// addressed carcass from the network_stats.h dump; PDB names the param via a
-	// `const bool value` local
-	inline	void	set_visible	( const bool arg_0 )
+	inline	void	set_visible	( const bool value )
 	{
-		// LOCALS
-		// const bool 						value
-		// ******
+		caption.set_visible					( value );
+		data_bytes.set_visible				( value );
+		data_bits_per_second.set_visible	( value );
+		data_bits_per_message.set_visible	( value );
+		messages_per_second.set_visible		( value );
 
-		// FUNCTION BODY[0x91e70]: 7
-		// <0x91e72>|0x002|+0x02f:'88'
-		// <0x91ea1>|0x031|+0x021:'89'
-		// <0x91ec2>|0x052|+0x01d:'90'
-		// <0x91edf>|0x06f|+0x01d:'91'
-		// <0x91efc>|0x08c|+0x01d:'92'
-		// <0x91f19>|0x0a9|+0x009:'93'
-		// <0x91f22>|0x0b2|+0x00c:'94'
-		// ******
+		packets.set_visible					( value );
+		messages.set_visible				( value );
 	}
 			void	set_text	(
 						const u32		current_time_in_ms,

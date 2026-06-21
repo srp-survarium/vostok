@@ -23,7 +23,9 @@ struct flash_text_manager {
 
 	inline	void			set_viewport		( u32 arg_0, u32 arg_1 ) { /* no source */ }
 
-	inline	flash_text		create_text			( pcstr arg_0 ) { /* no source */ return flash_text( ); }
+	// real out-of-line bodies live in the scaleform glue (movie.cpp); declared
+	// (not inlined) so game-side callers resolve to movie.obj (avoids LNK2005)
+			flash_text		create_text			( pcstr arg_0 );
 	inline	flash_text		create_text_w		( wchar_t* arg_0 ) { /* no source */ return flash_text( ); }
 
 			void			destroy_text		( flash_text& arg_0 );	// out-of-line: real body in scaleform movie.cpp (avoids LNK2005 vs player.obj)
