@@ -4,21 +4,21 @@
 
 #include "pch.h"
 #include "project_cooker_simple.h"
+#include "game_project.h"
+#include <vostok/game_core/base_project.h>
+#include <vostok/resources.h>
 #include <vostok/resources_query_result.h>
 #include <vostok/resources_queries_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
-// STATE[STUB]
  project_cooker_simple::project_cooker_simple( bool editor_present ) :
-	// base args are the legacy prior (translate_query_cook has no default ctor);
-	// a matcher confirms when this TU is enabled
 	translate_query_cook( resources::game_project_simple_class, reuse_true, use_any_thread_id ),
 	m_editor_present( editor_present )
 {
-	// FUNCTION BODY[0x5d74d0]: 1
-	// <0x5d74ee>|0x01e|+0x04b:'48'
-	// ******
+	resources::register_cook( this );
 }
 
 // claude@NOTE: STUB body to provide the vtable symbol (the cook ctor emits the
@@ -32,119 +32,56 @@ namespace survarium {
 void project_cooker_simple::delete_resource( resources::resource_base* resource )
 {
 	DELETE( resource );
-
-	// FUNCTION BODY[0x5d7540]
 }
 
-// STATE[STUB]
 void project_cooker_simple::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// fs_new::virtual_path_string 		game_proj_path
-	// fs_new::virtual_path_string 		project_name
-	// ******
+	fs_new::virtual_path_string project_name( parent.get_requested_path( ) );
 
-	// FUNCTION BODY[0x5d98a0]: 49
-	// <0x5d98ad>|0x00d|+0x02b:'53'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <0x5d98d8>|0x038|+0x00a:'90'
-	// <0x5d98e2>|0x042|+0x038:'91'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5d991a>|0x07a|+0x094:'100'
-	// <0>
-	// ******
+	fs_new::virtual_path_string game_proj_path;
+	game_proj_path.assignf( "%sprojects/%s/client_project", "resources/", project_name.c_str( ) );
+
+	resources::query_resource(
+		game_proj_path.c_str( ),
+		resources::binary_config_class,
+		boost::bind( &project_cooker_simple::on_game_project_loaded, this, _1, &parent ),
+		g_allocator,
+		NULL,
+		&parent
+	);
 }
 
-// STATE[STUB]
 void project_cooker_simple::on_game_project_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
 	R_ASSERT( data.is_successful() );
 
-	resources::query_result_for_user const& result	= data[0];
-
-	configs::binary_config_ptr game_proj_ptr	= static_cast_resource_ptr<configs::binary_config_ptr>( result.get_unmanaged_resource() );
-
-	create_game_objects( game_proj_ptr, parent );
+	configs::binary_config_ptr game_proj_ptr	= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
+	create_game_objects				( game_proj_ptr, parent );
 
 	parent->finish_query			( result_success );
-
-	// LOCALS
-	// configs::binary_config_ptr 		game_proj_ptr
-	// ******
-
-	// FUNCTION BODY[0x5d9800]: 6
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d9801>|0x001|+0x050:'150'
-	// <0>
-	// <0x5d9851>|0x051|+0x01e:'152'
-	// ******
 }
 
-// STATE[STUB]
 void project_cooker_simple::on_object_loaded(
 	game_object_&							__formal,
 	simple_game_project*					project,
 	resources::query_result_for_cook*		parent_query
 )
 {
-	// CALL SITE INFO
-	// <0x5d7e8a> -> void < unknown >()
-	// ******
+	++project->m_loaded.loaded_count;
 
-	// FUNCTION BODY[0x5d7e30]: 8
-	// <0x5d7e34>|0x004|+0x00a:'383'
-	// <0x5d7e3e>|0x00e|+0x03d:'384'
-	// <0>
-	// <0x5d7e7b>|0x04b|+0x011:'386'
-	// <0>
-	// <0x5d7e8c>|0x05c|+0x024:'388'
-	// <0x5d7eb0>|0x080|+0x00b:'389'
-	// <0>
-	// ******
+	if ( project->m_loaded.visuals_loaded &&
+		 project->m_loaded.collision_loaded &&
+		 project->m_loaded.loaded_count == project->m_objects.size( ) &&
+		 project->m_loaded.all_queried )
+	{
+		project->resolve_links( );
+
+		parent_query->set_unmanaged_resource(
+			resources::unmanaged_resource_ptr( project ),
+			resources::memory_usage_type( resources::nocache_memory, sizeof( simple_game_project ) )
+		);
+		parent_query->finish_query( result_success );
+	}
 }
 
 // STATE[STUB]

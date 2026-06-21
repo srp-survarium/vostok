@@ -20,11 +20,12 @@ public:
 
 	virtual	void	delete_resource					( resources::resource_base* resource ) override;
 
+	virtual			~animated_model_instance_cook	( ) { /* no source */ }
+
+private:
 			void	on_config_loaded				( resources::queries_result& data );
 			void	on_subresources_loaded			( resources::queries_result& data );
 			void	on_hit_params_loaded			( resources::queries_result& data, animated_model_instance* new_model );
-
-	virtual			~animated_model_instance_cook	( ) { /* no source */ }
 }; // class animated_model_instance_cook
 
 STATIC_SIZE_ASSERT(animated_model_instance_cook, 0x20);
