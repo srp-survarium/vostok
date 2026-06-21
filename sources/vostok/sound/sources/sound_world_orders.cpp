@@ -112,7 +112,7 @@ void sound_world::try_process_order	( sound_instance_proxy_order* order	)
 void	sound_world::process_destroy_sound_instance_proxy (destroy_sound_instance_proxy_order* order )
 {
 	R_ASSERT											( order );
-	LOG_DEBUG											( "process_destroy_sound_instance_proxy" );
+	//LOG_DEBUG											( "process_destroy_sound_instance_proxy" );
 
 	sound_instance_proxy_internal* proxy				= &order->get_proxy();
 	proxy->get_sound_scene().stop_propagate_sound		( *proxy );

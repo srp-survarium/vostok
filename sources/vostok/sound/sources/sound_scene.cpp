@@ -108,12 +108,12 @@ sound_scene::~sound_scene	( )
 
 	R_ASSERT					( m_receivers.empty( ) );
 
-	LOG_DEBUG					( "~sound_scene() id: %d", m_dbg_id );
+	//LOG_DEBUG					( "~sound_scene() id: %d", m_dbg_id );
 }
 
 void sound_scene::stop		( )
 {
-	LOG_DEBUG									( "sound_scene::stop" );
+	//LOG_DEBUG									( "sound_scene::stop" );
 	sound_instance_proxy_internal* proxy		= m_active_proxies.front( );
 	while ( proxy )
 	{
@@ -1014,41 +1014,39 @@ void sound_scene::pause_propagate_sound	( sound_instance_proxy_internal& proxy )
 
 void sound_scene::resume_produce_sound	( sound_instance_proxy_internal& proxy )
 {
-	LOG_DEBUG						( "sound_scene::resume_produce_sound" );
-	std::list<sound_propagator*>	temp_propagators;
-
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
-	while ( prop )
-	{
-		if ( prop->is_state_preserved_for_resume( ) )
-		{
-			sound_propagator* new_propagator			= create_sound_propagator
-			(
-				prop->get_propagator_emitter( ),
-				proxy,
-				prop->get_playback_mode( ),
-				prop->get_playing_offset( ),
-				prop->get_before_palying_offset( ),
-				prop->get_after_palying_offset( ),
-				prop->get_producer( ),
-				prop->get_ignorable_receiver( )
-				);
-
-			new_propagator->set_as_callback_executer	( prop->is_callback_executer( ) );
-			prop->set_as_callback_executer				( false );
-			temp_propagators.push_back					( new_propagator );
-			prop->clear_preservation_state_for_resume	( );
-		}
-		prop						= proxy.get_propagators( ).get_next_of_object( prop );
-	}
-
-	std::list<sound_propagator*>::iterator it			= temp_propagators.begin( );
-	std::list<sound_propagator*>::const_iterator it_end	= temp_propagators.end( );
-	while ( it != it_end )
-	{
-		proxy.add_sound_propagator					( *(*it) );
-		++it;
-	}
+	// Resume-produce propagator rebuild was disabled in the shipped build (target body is empty):
+	//	LOG_DEBUG						( "sound_scene::resume_produce_sound" );
+	//	std::list<sound_propagator*>	temp_propagators;
+	//	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	//	while ( prop )
+	//	{
+	//		if ( prop->is_state_preserved_for_resume( ) )
+	//		{
+	//			sound_propagator* new_propagator			= create_sound_propagator
+	//			(
+	//				prop->get_propagator_emitter( ),
+	//				proxy,
+	//				prop->get_playback_mode( ),
+	//				prop->get_playing_offset( ),
+	//				prop->get_before_palying_offset( ),
+	//				prop->get_after_palying_offset( ),
+	//				prop->get_producer( ),
+	//				prop->get_ignorable_receiver( )
+	//				);
+	//			new_propagator->set_as_callback_executer	( prop->is_callback_executer( ) );
+	//			prop->set_as_callback_executer				( false );
+	//			temp_propagators.push_back					( new_propagator );
+	//			prop->clear_preservation_state_for_resume	( );
+	//		}
+	//		prop						= proxy.get_propagators( ).get_next_of_object( prop );
+	//	}
+	//	std::list<sound_propagator*>::iterator it			= temp_propagators.begin( );
+	//	std::list<sound_propagator*>::const_iterator it_end	= temp_propagators.end( );
+	//	while ( it != it_end )
+	//	{
+	//		proxy.add_sound_propagator					( *(*it) );
+	//		++it;
+	//	}
 }
 
 void sound_scene::resume_propagate_sound	( sound_instance_proxy_internal& proxy ) const
@@ -1103,7 +1101,7 @@ void sound_scene::fade_in	( sound_world& world, u32 time_in_msec )
 
 void sound_scene::fade_out	( u32 time_in_msec )
 {
-	LOG_DEBUG				( "sound_scene::fade_out" );
+	//LOG_DEBUG				( "sound_scene::fade_out" );
 	R_ASSERT				( m_is_active );
 	m_fade_state			= fade_out_state;
 	m_fade_out_time			= time_in_msec;

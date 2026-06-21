@@ -77,7 +77,7 @@ sound_instance_proxy_internal::sound_instance_proxy_internal	(
 
 sound_instance_proxy_internal::~sound_instance_proxy_internal	( )
 {
-	LOG_DEBUG		( "~sound_instance_proxy_internal" );
+	//LOG_DEBUG		( "~sound_instance_proxy_internal" );
 }
 
 void sound_instance_proxy_internal::play	(	playback_mode mode,
@@ -237,8 +237,8 @@ void sound_instance_proxy_internal::free_object	( )
 	threading::interlocked_exchange		( m_destruction_pending, true );
 	m_callback.clear					( );
 
-	LOG_DEBUG							( "sound_instance_proxy_internal::free_object" );
-	destroy_sound_instance_proxy_order* order = 
+	//LOG_DEBUG							( "sound_instance_proxy_internal::free_object" );
+	destroy_sound_instance_proxy_order* order =
 		VOSTOK_NEW_IMPL ( m_user.get_allocator( ), destroy_sound_instance_proxy_order )
 		( m_user, *this, &m_scene );
 
@@ -282,68 +282,56 @@ struct erase_unaudible_predicate
 
 void sound_instance_proxy_internal::notify_receivers	( collision::space_partitioning_tree& spatial_tree )
 {
-	sound_propagator* prop			= m_propagators.front( );
-	while ( prop )
-	{
-		sound_producer const* const producer			= prop->get_producer( );
-
-		if ( prop->is_propagation_finished( ) || prop->is_propagation_paused( ) || producer == 0 )
-		{
-			prop			= m_propagators.get_next_of_object( prop );
-			continue;
-		}
-
-		float outer_radius			= prop->get_propagation_outer_radius( );
-
-		collision::objects_type query_result	( g_allocator );
-		float3 position							= get_position( );
-		get_receivers_in_radius					( spatial_tree, position, outer_radius, query_result );
-
-		float inner_radius			( prop->get_propagation_inner_radius( ) );
-
-		//LOG_DEBUG					( "inner_radius %f", inner_radius );
-		if ( !math::is_zero( inner_radius ) )
-		{
-
-			collision::objects_type out_query_result	( g_allocator );
-			get_receivers_in_radius	( spatial_tree, position, inner_radius, out_query_result );
-
-			query_result.erase
-			(
-				std::remove_if
-				(
-					query_result.begin( ),
-					query_result.end( ),
-					erase_unaudible_predicate( &out_query_result )
-				),
-				query_result.end( )
-			);
-		}
-
-		collision::objects_type::iterator query_it			= query_result.begin( );
-		collision::objects_type::const_iterator query_end	= query_result.end( );
-
-		for( ; query_it != query_end; ++query_it )
-		{
-			sound::receiver_collision* receiver			= static_cast_checked<sound::receiver_collision*>( (*query_it)->user_data( ) );
-			sound_receiver const* ignorable_receiver	= prop->get_ignorable_receiver( );
-
-			if ( ignorable_receiver != receiver->get_sound_receiver( ) ) 
-			{
-				notify_receiver_command* cmd	= VOSTOK_NEW_IMPL( g_allocator, notify_receiver_command )
-				(
-					boost::bind ( &sound_receiver::on_sound_event, receiver->get_sound_receiver( ), boost::ref( *producer )),
-					m_user,
-					(u64)producer,
-					(u64)receiver
-				);
-
-				m_user.add_response( cmd );
-			}
-		}
-
-		prop			= m_propagators.get_next_of_object( prop );
-	}
+	// Receiver-notification walk was disabled in the shipped build (target body is empty):
+	//	sound_propagator* prop			= m_propagators.front( );
+	//	while ( prop )
+	//	{
+	//		sound_producer const* const producer			= prop->get_producer( );
+	//		if ( prop->is_propagation_finished( ) || prop->is_propagation_paused( ) || producer == 0 )
+	//		{
+	//			prop			= m_propagators.get_next_of_object( prop );
+	//			continue;
+	//		}
+	//		float outer_radius			= prop->get_propagation_outer_radius( );
+	//		collision::objects_type query_result	( g_allocator );
+	//		float3 position							= get_position( );
+	//		get_receivers_in_radius					( spatial_tree, position, outer_radius, query_result );
+	//		float inner_radius			( prop->get_propagation_inner_radius( ) );
+	//		if ( !math::is_zero( inner_radius ) )
+	//		{
+	//			collision::objects_type out_query_result	( g_allocator );
+	//			get_receivers_in_radius	( spatial_tree, position, inner_radius, out_query_result );
+	//			query_result.erase
+	//			(
+	//				std::remove_if
+	//				(
+	//					query_result.begin( ),
+	//					query_result.end( ),
+	//					erase_unaudible_predicate( &out_query_result )
+	//				),
+	//				query_result.end( )
+	//			);
+	//		}
+	//		collision::objects_type::iterator query_it			= query_result.begin( );
+	//		collision::objects_type::const_iterator query_end	= query_result.end( );
+	//		for( ; query_it != query_end; ++query_it )
+	//		{
+	//			sound::receiver_collision* receiver			= static_cast_checked<sound::receiver_collision*>( (*query_it)->user_data( ) );
+	//			sound_receiver const* ignorable_receiver	= prop->get_ignorable_receiver( );
+	//			if ( ignorable_receiver != receiver->get_sound_receiver( ) )
+	//			{
+	//				notify_receiver_command* cmd	= VOSTOK_NEW_IMPL( g_allocator, notify_receiver_command )
+	//				(
+	//					boost::bind ( &sound_receiver::on_sound_event, receiver->get_sound_receiver( ), boost::ref( *producer )),
+	//					m_user,
+	//					(u64)producer,
+	//					(u64)receiver
+	//				);
+	//				m_user.add_response( cmd );
+	//			}
+	//		}
+	//		prop			= m_propagators.get_next_of_object( prop );
+	//	}
 }
 
 void sound_instance_proxy_internal::get_receivers_in_radius			
@@ -375,7 +363,7 @@ void sound_instance_proxy_internal::execute_callback	( )
 
 void sound_instance_proxy_internal::on_finish_callback	( sound_instance_proxy_ptr last_reference )
 {
-	LOG_DEBUG						( "on_finish_callback" );
+	//LOG_DEBUG						( "on_finish_callback" );
 	// we must be sure that all m_callback binded parameters are destroyed and last_reference
 	// parameter is really the last
 	m_callback.clear				( );

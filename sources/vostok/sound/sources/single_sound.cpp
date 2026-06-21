@@ -20,7 +20,7 @@ single_sound::single_sound	( encoded_sound_with_qualities_ptr const& encoded_sou
 	m_old_address									= (u64)get_sound_propagator_emitter	( );
 
 	m_encoded_sound.initialize_and_set_parent( this, encoded_sound.c_ptr() );
-	LOG_DEBUG					( "ss: 0x%8x", get_sound_propagator_emitter() );
+	//LOG_DEBUG					( "ss: 0x%8x", get_sound_propagator_emitter() );
 //	LOG_DEBUG					( "single_sound address: 0x%8x", this );
 }
 
