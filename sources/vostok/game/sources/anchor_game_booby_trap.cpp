@@ -31,18 +31,35 @@ namespace vostok
 			static survarium::game_world* volatile	s_world = 0;
 			survarium::booby_trap			trap( *s_world );
 			survarium::booby_trap_set		set( *s_world );
+
+			// on_trap_fired_message is a non-virtual the target only ever calls
+			// internally (inlined into bts::on_trap_fired_message), so LTCG gives the
+			// standalone copy a custom this-in-esi convention. An address-take sink would
+			// pin stock __thiscall (ecx) and diverge; a guarded DIRECT CALL participates
+			// in the LTCG call graph as a normal call and reproduces the convention.
+			// (see patterns/anchor-direct-call-this-convention.md)
+			trap.on_trap_fired_message( );
+
+			// pick_ghost_model(bool) is reached only internally (inlined into
+			// pick_current_ghost_model); the target gives the standalone copy a custom
+			// convention (this in ecx, sret in eax, ret 4). An address-take sink forces a
+			// stack-sret/ret-8 copy that diverges; the guarded direct call reproduces it.
+			static bool volatile s_flag = false;
+			keep( set.pick_ghost_model( s_flag ) );
 		}
 
 		// ---- booby_trap ------------------------------------------------------
 		typedef survarium::booby_trap bt;
-		keep( &bt::on_trap_fired_message );
 		keep( &bt::on_trap_disarmed_message );
 		keep( &bt::defuse_completed );
 		keep( &bt::switch_to_state );
 		keep( &bt::register_tick );
 		keep( &bt::unregister_tick );
-		keep( &bt::on_new_state );
-		keep( &bt::play_fired_effects );
+		// on_trap_fired_message reached by the guarded direct call above (custom
+		// this-register convention). on_new_state / play_fired_effects are reached
+		// transitively (switch_to_state -> on_new_state -> play_fired_effects;
+		// on_trap_fired_message -> both); address-taking any of these would pin stock
+		// __thiscall, so they are kept by the call graph, not a member-fn-ptr sink.
 
 		// ---- booby_trap_set --------------------------------------------------
 		typedef survarium::booby_trap_set bts;
@@ -58,7 +75,8 @@ namespace vostok
 		keep( &bts::tick );
 		keep( &bts::on_player_death );
 		keep( &bts::toggle_ghost_model );
-		keep( &bts::pick_ghost_model );
+		// pick_ghost_model reached by the guarded direct call above (custom sret/ret-4
+		// convention); address-taking it would pin the stack-sret/ret-8 stock copy.
 		keep( &bts::pick_current_ghost_model );
 		keep( &bts::remove_current_ghost_model );
 	}
