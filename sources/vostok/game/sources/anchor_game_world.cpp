@@ -92,6 +92,16 @@ namespace survarium {
 			s_g->deactivate_main_menu( );
 			s_g->create_lobby_menu( );
 			s_g->create_login_menu( );
+
+			// private AAE module-lifecycle helpers (game_initialize.cpp). Their
+			// standalone target copies read this from a specialized register (esi/eax/
+			// edi, not __thiscall ecx) because they are only ever reached internally;
+			// a guarded direct call (never executed) keeps the symbol past /OPT:REF AND
+			// lets LTCG pick the same convention. patterns/anchor-direct-call-this-convention.md
+			s_g->initialize_input( );
+			s_g->initialize_ui( );
+			s_g->initialize_modules( );
+			s_g->deinitialize_modules( );
 		}
 
 		void ( survarium::game::* const m_commit )( )			= &survarium::game::commit_suicide;
