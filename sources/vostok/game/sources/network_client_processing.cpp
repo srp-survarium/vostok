@@ -157,9 +157,8 @@ void network_client::process_team_bases( network_core::packet_reader& reader )
 	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
 }
 
-// STATE[STUB]
 // TU-local sign-out callback; PDB: all four params __formal (genuinely
-// unused) - they would collide, left unnamed
+// unused) - they would collide, left unnamed. Empty body (0 statements) = matched.
 void on_signed_out(
 	connection_error_types_enum,
 	handshaking_error_types_enum,
@@ -552,7 +551,6 @@ void network_client::send_player_inputs( )
 // the two m_current_player->update_camera() calls tail-merge, plus the LOG_WARNING machinery.
 // set_broken_connection_message's arg is VOSTOK_UNREFERENCED (load compiled out) so the string
 // does not affect bytes.
-// STATE[STUB]
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	static u32			lobby_resolve_time		= 0;
@@ -656,6 +654,11 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 		m_current_player->update_camera( );
 }
 
+// claude@NOTE: STRUCTURE match (if-guard + enqueue). The target folds this to a single PDB
+// statement because get_current_player( ) inlines to a direct [this]+8 member load (no call
+// boundary), and the game-layer enqueue wrapper writes m_are_there_any_packets_to_send at the
+// call site then tail-calls the network enqueue; this single-TU base emits get_current_player( )
+// out-of-line, splitting the if from the body. Inline-wall, not source-steerable here.
 void network_client::initiate_kill_current_player( )
 {
 	if ( m_local_player && get_current_player( ) )
@@ -674,6 +677,10 @@ bool network_client::is_player_local( const u8 player_id ) const
 	return m_local_player && m_local_player->id == player_id;
 }
 
+// claude@NOTE: STRUCTURE match. The TRGT_ONLY rows are resource_ptr<player> destructor
+// cleanup blocks (lock xadd refcount + unmanaged_intrusive_base::destroy) the target whole-
+// program-inlines at each early-return tail, plus the packet_reader::r<T> inline split; the
+// base emits a single out-of-line ~resource_ptr / r<T> call. Lifts with networking inlining.
 void network_client::player_visibility_change( network_core::packet_reader& packet )
 {
 	const u8 id = packet.r< u8 >( );
