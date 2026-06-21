@@ -74,7 +74,7 @@ sound_voice::sound_voice	(	s32 playing_offset_in_msec,
 
 sound_voice::~sound_voice	( )
 {
-	LOG_DEBUG						("sound_voice::~sound_voice(): %d", m_dbg_id );
+	//LOG_DEBUG						("sound_voice::~sound_voice(): %d", m_dbg_id );
 //	m_voice->stop					( );
 //	m_voice->flush_source_buffers	( );
 	R_ASSERT						( m_buffers_queued == 0 );
@@ -132,12 +132,12 @@ void sound_voice::play		( playback_mode mode )
 
 void sound_voice::stop		( )
 {
-	LOG_DEBUG						("sound_voice::stop start");
+	//LOG_DEBUG						("sound_voice::stop start");
 	m_is_playing					= false;
 	m_voice->stop					( );
 	m_voice->flush_source_buffers	( );
 
-	LOG_DEBUG						("sound_voice::stop end");
+	//LOG_DEBUG						("sound_voice::stop end");
 }
 
 void sound_voice::refill_buffers	( )

@@ -16,7 +16,7 @@ m_collection					( buffer, (buffer_vector< sounds_type >::size_type)max_count ),
 m_random_number					( last_time )
 {
 	m_old_address				= (u64)get_sound_propagator_emitter	( );
-	LOG_DEBUG					( "composite_sound address: 0x%8x", get_sound_propagator_emitter() );
+	//LOG_DEBUG					( "composite_sound address: 0x%8x", get_sound_propagator_emitter() );
 }
 
 composite_sound::~composite_sound	( )

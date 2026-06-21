@@ -72,12 +72,14 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 voice_bridge::~voice_bridge( )
 {
 	m_source_voice->DestroyVoice( );
-	LOG_INFO("voice_bridge destroyed");
+	//LOG_INFO("voice_bridge destroyed");
 }
 
 void voice_bridge::set_handler ( voice_callback_handler* handler )
 {
 	m_handler = handler;
+	if ( !m_handler )
+		stop( );
 }
 
 channels_type voice_bridge::get_channels_type ( ) const
@@ -212,8 +214,9 @@ void voice_bridge::set_low_pass_filter_params		( float coeff )
 	params.Frequency		= coeff;
 	params.OneOverQ			= 1.0f;
 
-	HRESULT hr				= m_source_voice->SetFilterParameters( &params );
-	R_ASSERT_U				(!FAILED(hr));
+	// SetFilterParameters call was disabled in the shipped build (target builds params only):
+	//HRESULT hr				= m_source_voice->SetFilterParameters( &params );
+	//R_ASSERT_U				(!FAILED(hr));
 }
 
 void voice_bridge::set_frequency_ratio				( float ratio )
@@ -231,21 +234,15 @@ u8 voice_bridge::get_bytes_per_second( ) const
 
 void voice_bridge::OnVoiceProcessingPassStart	( UINT32 BytesRequired )
 {
-	R_ASSERT_U					(m_handler);
-	m_handler->on_voice_processing_pass_start( BytesRequired );
 }
 
 void voice_bridge::OnVoiceProcessingPassEnd	( )
 {
-	R_ASSERT_U					(m_handler);
-	m_handler->on_voice_processing_pass_end( );
-
 }
 
 void voice_bridge::OnStreamEnd	( )
 {
 	R_ASSERT_U					(m_handler);
-	m_handler->on_stream_end	( );
 }
 
 void voice_bridge::OnBufferStart( void* pBufferContext )
