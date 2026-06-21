@@ -18,6 +18,9 @@ class booby_trap_cook : public booby_trap_core_cook {
 public:
 			explicit			booby_trap_cook				( game_world& gw );
 
+	virtual						~booby_trap_cook			( ) { /* no source */ }
+
+private:
 	// STATE[STUB]
 	virtual	booby_trap_core*	new_derived_resource		( ) override
 	{
@@ -45,8 +48,6 @@ public:
 								) override;
 
 			void				on_models_ready				( resources::queries_result& data, booby_trap* game_resource );
-
-	virtual						~booby_trap_cook			( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* booby_trap_core_cook */

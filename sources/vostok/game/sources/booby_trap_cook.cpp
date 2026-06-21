@@ -4,65 +4,41 @@
 
 #include "pch.h"
 #include "booby_trap_cook.h"
+#include "booby_trap.h"
 
 namespace survarium {
 
-// STATE[STUB]
 booby_trap_cook::booby_trap_cook( game_world& gw ) :
-	// ref member; the same-named param is the obvious source - a matcher
-	// confirms when this TU is enabled
 	m_game_world( gw )
 {
-	// FUNCTION BODY[0x767270]
-	// <0x767270>|0x000|      :'14'	{
-	// ******
 }
 
-// STATE[STUB]
 void booby_trap_cook::query_for_derived_resources(
 	resources::query_result_for_cook*		parent,
 	booby_trap_core*						resource,
 	configs::binary_config_ptr				config
 )
 {
-	// LOCALS
-	// resources::request[5] 			requests
-	// ******
+	configs::binary_config_value const& data = config->get_root( )["data"];
 
-	// FUNCTION BODY[0x767640]: 32
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x767649>|0x009|+0x019:'31'
-	// <0>
-	// <0x767662>|0x022|+0x017:'33'
-	// <0x767679>|0x039|+0x01b:'34'
-	// <0x767694>|0x054|+0x01b:'35'
-	// <0>
-	// <0x7676af>|0x06f|+0x01b:'37'
-	// <0>
-	// <0x7676ca>|0x08a|+0x012:'39'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x7676dc>|0x09c|+0x08f:'49'
-	// ******
+	resources::request requests[5] = {
+		{ (pcstr)data["model_armed"],		resources::static_model_instance_class },
+		{ (pcstr)data["model_fired"],		resources::static_model_instance_class },
+		{ (pcstr)data["model_disarmed"],	resources::static_model_instance_class },
+
+		{ (pcstr)data["particle_fired"],	resources::particle_system_instance_class },
+
+		{ (pcstr)data["sound_fired"],		resources::single_sound_class },
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &booby_trap_cook::on_models_ready, this, _1, static_cast< booby_trap* >( resource ) ),
+		g_allocator,
+		NULL,
+		parent,
+		assert_on_fail_true
+	);
 }
 
 // STATE[STUB]

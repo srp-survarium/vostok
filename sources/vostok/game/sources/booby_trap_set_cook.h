@@ -19,6 +19,9 @@ public:
 	inline	explicit				booby_trap_set_cook			( game_world& arg_0 ) :
 		m_game_world( arg_0 ) { /* no source */ }
 
+	virtual							~booby_trap_set_cook		( ) { /* no source */ }
+
+private:
 	// STATE[STUB]
 	virtual	void					delete_resource				( resources::resource_base* resource ) override
 	{
@@ -47,8 +50,6 @@ public:
 									) override;
 
 			void					on_models_ready				( resources::queries_result& data, booby_trap_set* game_resource );
-
-	virtual							~booby_trap_set_cook		( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* booby_trap_set_core_cook */

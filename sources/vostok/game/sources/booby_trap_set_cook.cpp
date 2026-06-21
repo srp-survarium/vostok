@@ -4,10 +4,10 @@
 
 #include "pch.h"
 #include "booby_trap_set_cook.h"
+#include "booby_trap_set.h"
 
 namespace survarium {
 
-// STATE[STUB]
 void booby_trap_set_cook::query_for_derived_resources(
 	resources::query_result_for_cook*		parent,
 	booby_trap_set_core*					resource,
@@ -15,40 +15,27 @@ void booby_trap_set_cook::query_for_derived_resources(
 	configs::binary_config_ptr				config
 )
 {
-	// LOCALS
-	// resources::request[2] 			requests
-	// ******
+	if ( !cook_data.is_local_player )
+	{
+		finish_query( parent, resource );
+		return;
+	}
 
-	// FUNCTION BODY[0x7b20b0]: 28
-	// <0x7b20b6>|0x006|+0x00f:'17'
-	// <0>
-	// <0x7b20c5>|0x015|+0x00f:'19'
-	// <0x7b20d4>|0x024|+0x005:'20'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x7b20d9>|0x029|+0x015:'31'
-	// <0>
-	// <0x7b20ee>|0x03e|+0x017:'33'
-	// <0x7b2105>|0x055|+0x012:'34'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x7b2117>|0x067|+0x08f:'44'
-	// ******
+	configs::binary_config_value const& data = config->get_root( )["data"];
+
+	resources::request requests[2] = {
+		{ (pcstr)data["model_ghost_allowed"],	resources::static_model_instance_class },
+		{ (pcstr)data["model_ghost_denied"],	resources::static_model_instance_class },
+	};
+
+	resources::query_resources(
+		requests,
+		boost::bind( &booby_trap_set_cook::on_models_ready, this, _1, static_cast< booby_trap_set* >( resource ) ),
+		g_allocator,
+		NULL,
+		parent,
+		assert_on_fail_true
+	);
 }
 
 // STATE[STUB]
