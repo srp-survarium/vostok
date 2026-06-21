@@ -10,6 +10,16 @@
 
 namespace survarium {
 
+// claude@NOTE: backing storage for the smooth() config commands. The cc_float
+// command objects themselves (and the dynamic init / atexit pairing of the first
+// TU-statics block) are a separate config-machinery unit; recovered values are:
+//   smooth_linear_speed : min 0, max 10.f, serializable, engine_internal
+//   smooth_angular_speed: min 0, max 720.f
+//   smooth_pitch_speed  : min 0, max 720.f
+static float s_smooth_linear_speed;
+static float s_smooth_angular_speed;
+static float s_smooth_pitch_speed;
+
 // TU statics (compiler-generated dynamic initializers / atexit
 // destructors); a matcher recovers their types/initializers from the asm.
 /*
@@ -137,11 +147,21 @@ void player::update_history_item(
 		item.time_in_ms = server_action_time_in_ms;
 }
 
-// claude@NOTE: PARKED. Quaternion-interpolation reconstruction of item_to_update's
-// transform from previous_item (target_rotation local is a math::quaternion built from
-// the blended angles, then create_matrix). 75-statement math body over the history
-// item / server_player_update state; not yet reconstructed. Called by replay_history
-// (matched). Next step: decode the slerp/create_matrix blend statement-by-statement.
+// claude@NOTE: PARKED on the manual quaternion-product expansion (math-inline wall).
+// 15 statements (lines 186-255), single named local target_rotation (quaternion).
+// Args (delinker frame): ebx=this, [ebp+0Ch]=previous_item, [ebp+10h]=item_to_update,
+// [ebp+14h]=previous_transform. Structure decoded:
+//   L186: quaternion( previous_transform.get_angles_xyz() )      // get_angles + quaternion(float3)
+//   L187: quaternion( item_to_update.action.state.transform.get_angles_xyz() ) // [ebp+10h]+0x14 = action.state.transform
+//   L188: the 0xf3-byte w/x/y/z quaternion product (math::operator*(quaternion,quaternion) inlined)
+//   L189: quaternion( previous_item.action.state.transform.get_angles_xyz() ) // [ebp+0Ch]+0x14 ; another product -> target_rotation
+//   L198: target_rotation = create_matrix( target_rotation, float3(0,0,0) ); write -> m_target.transform ([this+0x10D44])
+//   L199-207: m_target.look_pitch = item_to_update...; set_physics_controller_walk_vector( m_target ); ([this+0x10DCC] pitch)
+//   L240-255: a physics get_transform / from_bullet roundtrip (bullet_character_controller::get_transform
+//             -> from_bullet -> previous_transform = <result>; a [this+0x10DC8] controller call via vtable [edx])
+// Walls: byte-exact product schedule + the from_bullet/get_transform physics tail
+// (cross-module callee set). Next step: write the get_angles/operator*/create_matrix
+// chain and the physics roundtrip, accept the product residual.
 // STATE[STUB]
 void player::update_history_item_from_previous(
 	client_player_history_item const&		previous_item,
@@ -261,11 +281,26 @@ void player::log_active_object( pcstr const header ) const
 	VOSTOK_UNREFERENCED_PARAMETER( header );
 }
 
-// claude@NOTE: PARKED. Applies previous_input angular velocity to player_state's
-// transform: builds previous_rotation (quaternion), an angle, a new_rotation around
-// axe (float3), composes new_transform. 18-statement quaternion/float4x4 math over
-// client_player_state. Next step: decode the rotation compose statement-by-statement
-// (the matched smooth/restore siblings establish the math::quaternion/create_matrix idiom).
+// claude@NOTE: PARKED on the manual quaternion-product expansion (math-inline wall).
+// 12 statements (lines 512-529), locals: previous_rotation, angle, new_rotation,
+// new_transform, axe. Structure decoded:
+//   L512: float4x4 src = player_state.animation_player.are_there_any_animations()
+//           ? player_state.animation_player.get_object_transform( this )
+//           : player_state.transform;          // cmp [tree+0x1C]=m_animations_count,0; jbe
+//   L513: quaternion previous_rotation( src ); // quaternion(float4x4 const&)
+//   L514: quaternion new_rotation( <float3 input> ); // quaternion(float3)
+//   L515: new_rotation = previous_rotation * new_rotation; new_rotation.get_axis_and_angle( axe, angle );
+//           (the 0x100-byte w/x/y/z product is math::operator*(quaternion,quaternion) inlined)
+//   L518: player_state.animation_player.set_object_transform( <node>, this );
+//   L519: if( is_local ) {                     // cmp [this+0x35]=hit_initiator.is_local
+//   L521-523:  apply_input( player_state, float2( m_input.angular_acceleration.* * dt*0.5 + previous_input.angular_velocity.*, ... ) * dt );
+//   L525: if( fabs(angle) >= epsilon ) {        // and ecx,0x7FFFFFFF; comiss <eps>
+//   L528:   new_transform = math::mul4x3( create_matrix( <rot>, float3(0,0,0) ), <node> );
+//   L529:   player_state.previous_transform = new_transform; set_object_transform( <node>, new_transform ); }
+// Walls: (1) the float3 input to new_rotation at L514 (esp+14 origin not statically
+// resolvable through the sub-esp/push stack juggling); (2) the byte-exact w/x/y/z
+// product schedule. Next step: simulate the stack to pin esp+14, then write the
+// operator* form and accept the residual.
 // STATE[STUB]
 void player::apply_input_before_new_transform(
 	client_player_state&	player_state,
@@ -304,17 +339,44 @@ void `dynamic atexit destructor for 's_net_max_position_discrepancy_command''( )
 }
 */
 
-// claude@NOTE: PARKED. Slerps m_target toward m_current over time_delta: builds
-// left/right_rotation quaternions from each transform's angles, slerp_optimized
-// between them gated by per-axis equality, and a linear blend of position into
-// result, written via create_matrix. 15-statement quaternion/matrix body with its
-// own TU statics (s_smooth_linear/angular/pitch_speed config). Next step: reconstruct
-// the slerp + create_matrix sequence (callees: get_angles_xyz, slerp_optimized,
-// create_matrix - all decoded in the asm).
-// STATE[STUB]
+// claude@NOTE: structure reconstructed and paired (~71%). All statements/calls present:
+// the != angle/position guards, slerp_optimized + create_matrix rotation, per-component
+// position lerp and pitch blend. Residual is optimizer-schedule, not structure:
+//  - the angular factor is deg2rad( s_smooth_angular_speed ) inlined (the target inlines
+//    it; our LTCG emits a `call` to the standalone deg2rad, costing ~7%, so it is written
+//    as deg2rad's body s/180*pi to force the inline). The base still folds 1/180*pi and
+//    reassociates *time_delta earlier than the target's (1/180),(pi),(dt) order.
+//  - the two get_angles_xyz() results live as named locals here but as anonymous temps in
+//    the target (PDB records only 3 named locals: result/right/left_rotation), shifting the
+//    frame +8 and hoisting the `this` load out of the time_delta guard.
 void player::smooth( const float time_delta )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( time_delta );
+	if( time_delta > 0.f )
+	{
+		float4x4 result;
+
+		const float3 current_angles	= m_current.transform.get_angles_xyz( );
+		const float3 target_angles	= m_target.transform.get_angles_xyz( );
+		if( current_angles != target_angles )
+		{
+			math::quaternion left_rotation( current_angles );
+			math::quaternion right_rotation( target_angles );
+			result = math::create_matrix( math::slerp_optimized( left_rotation, right_rotation, math::min( ( s_smooth_angular_speed / 180.f * math::pi ) * time_delta, 0.f ) ), float3( 0.f, 0.f, 0.f ) );
+		}
+		else
+			result = m_current.transform;
+
+		if( m_current.transform.c.xyz( ) != m_target.transform.c.xyz( ) )
+		{
+			const float linear_factor = math::min( s_smooth_linear_speed * time_delta, 0.f );
+			result.c.xyz( ) = ( m_target.transform.c.xyz( ) - m_current.transform.c.xyz( ) ) * linear_factor + m_current.transform.c.xyz( );
+		}
+		else
+			result.c.xyz( ) = m_current.transform.c.xyz( );
+
+		m_current.transform = result;
+		m_current.look_pitch += math::min( s_smooth_pitch_speed * time_delta, 0.f ) * ( m_target.look_pitch - m_current.look_pitch );
+	}
 }
 
 // claude@NOTE: PARKED. The 265-statement per-frame tick: name-visibility/font sizing,
