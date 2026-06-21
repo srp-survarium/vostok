@@ -6,36 +6,31 @@
 #include "game_world_ui.h"
 #include "game_world.h"	// m_game_world.get_game()
 #include "game.h"		// game::text_translator() / get_network_client()
+#include "game_project.h"	// complete simple_game_project for get_project()->m_config
+#include "camera_director.h"	// get_camera_director().get_inverted_view_matrix()
 #include "base_network_client.h"	// match_options() / get_player() / current_player_team()
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
+#include <vostok/configs_binary_config.h>	// binary_config::get_root() (project_name lookup)
+#include <vostok/network_core/packet_reader.h>	// packet.r<u32>() (initialize_base_points)
 #include <vostok/game_core/game_net_defines.h>	// complete match_options / player_profile
 #include <vostok/game_core/weapon_core.h>		// get_ammo_info() / cast_weapon_core()
 #include <vostok/game_core/weapon_ammo_info.h>
+#include <vostok/game_core/inventory_item_props.h>	// create_slot_value item props
+#include <vostok/game_core/dictionary_item.h>		// item_by_id().item_cfg
+#include "key_binder.h"			// get_action_dik / dik_to_ptr (create_slot_value hotkey)
+#include "keyboard_key_descr.h"	// keyboard_key_descr::key_name
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
+#include <vostok/console_command.h>
 
 namespace survarium {
 
-// TU statics 'is_ui_minimap_rotable_old' / 's_is_ui_minimap_rotable'
-// (compiler-generated dynamic initializer + atexit destructor); a matcher
-// recovers their types/initializers from the init asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'is_ui_minimap_rotable_old''( )
-{
-	// FUNCTION BODY[0x7d8a60]
-	// <0x7d8a60>|0x000|      :'28'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 's_is_ui_minimap_rotable''( )
-{
-	// FUNCTION BODY[0x7f0600]
-	// <0x7d8a70>|0x000|      :'35'	{
-	// ******
-}
-*/
+static bool is_ui_minimap_rotable		= true;
+static bool is_ui_minimap_rotable_old	= is_ui_minimap_rotable;
+// claude@NOTE: cc_bool console-command registration is /Od + cross-module-walled
+// (the ctor inlines into a dynamic initializer + atexit destructor; the cc_bool
+// vtable/console-command-root linkage is the known cross-module cc_bool park).
+static console_commands::cc_bool s_is_ui_minimap_rotable( "is_ui_minimap_rotable", is_ui_minimap_rotable, true, console_commands::command_type_user_specific );
 
 game_world_ui::game_world_ui( game_world& w ) :
 	m_game_world( w ),
@@ -150,37 +145,23 @@ void game_world_ui::initialize( match_options& options )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::initialize_base_points( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// u32 								point_id
-	// base_point_stats 				stats
-	// ******
+	u32 const points_count = packet.r< u32 >( );
+	for ( u32 i = 0; i < points_count; ++i )
+	{
+		u32 point_id				= packet.r< u32 >( );
+		base_point_stats stats;
+		stats.point_owner			= (game_team_id)packet.r< u32 >( );
+		stats.team_points_amount	= packet.r< u32 >( );
+		stats.capture_progress		= packet.r< u32 >( );
 
-	// FUNCTION BODY[0x5d19d0]: 20
-	// <0x5d19d0>|0x000|+0x011:'156'
-	// <0>
-	// <0x5d19e1>|0x011|+0x002:'158'
-	// <0>
-	// <1>
-	// <0x5d19e3>|0x013|+0x070:'161'
-	// <0x5d1a53>|0x083|-0x063:'161'
-	// <0>
-	// <1>
-	// <0x5d19f0>|0x020|+0x00b:'164'
-	// <0x5d19fb>|0x02b|+0x008:'165'
-	// <0x5d1a03>|0x033|+0x008:'166'
-	// <0x5d1a0b>|0x03b|+0x008:'167'
-	// <0>
-	// <0x5d1a13>|0x043|+0x01b:'169'
-	// <0>
-	// <1>
-	// <0x5d1a2e>|0x05e|+0x016:'172'
-	// <0>
-	// <0x5d1a44>|0x074|+0x016:'174'
-	// <0>
-	// ******
+		if ( m_game_mode != capture_neutral_base || stats.point_owner == team_neutral )
+		{
+			m_base_points[point_id] = stats;
+			set_base_capture_progress( stats.capture_progress, point_id );
+		}
+	}
 }
 
 void game_world_ui::add_victory_points( s8 team_1_points, s8 team_2_points )
@@ -219,44 +200,36 @@ game_world_ui::~game_world_ui( )
 {
 }
 
-// STATE[STUB]
+// claude@NOTE: flash /Od wall - the two flash_value[3] branches share a folded
+// SetString/Invoke tail; the percent fistp + flash glue is /Od-shaped.
 void game_world_ui::set_base_capture_progress( u32 progress, u32 point_id )
 {
-	// LOCALS
-	// char[64] 						buff
-	// flash_value[3] 					args
-	// flash_value[3] 					args
-	// ******
+	base_point_stats& stats = m_base_points[point_id];
 
-	// FUNCTION BODY[0x5d1800]: 27
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d1817>|0x017|+0x011:'225'
-	// <0>
-	// <0x5d1828>|0x028|+0x002:'227'
-	// <0x5d182a>|0x02a|+0x01d:'228'
-	// <0x5d1847>|0x047|+0x002:'229'
-	// <0x5d1849>|0x049|+0x00f:'230'
-	// <0>
-	// <0x5d1858>|0x058|+0x022:'232'
-	// <0>
-	// <0x5d187a>|0x07a|+0x038:'234'
-	// <0x5d18b2>|0x0b2|+0x013:'235'
-	// <0x5d18c5>|0x0c5|+0x02c:'236'
-	// <0x5d18f1>|0x0f1|+0x004:'237'
-	// <0>
-	// <1>
-	// <0x5d18f5>|0x0f5|+0x002:'240'
-	// <0x5d18f7>|0x0f7|+0x009:'241'
-	// <0>
-	// <0x5d1900>|0x100|+0x013:'243'
-	// <0x5d1913>|0x113|+0x02c:'244'
-	// <0x5d193f>|0x13f|+0x016:'245'
-	// <0x5d1955>|0x155|+0x02f:'246'
-	// <0x5d1984>|0x184|+0x02b:'247'
-	// <0x5d19af>|0x1af|+0x013:'248'
-	// ******
+	char buff[64];
+	if ( progress == stats.team_points_amount )
+		vostok::sprintf( buff, "captured!" );
+	else
+		vostok::sprintf( buff, "(%d/%d)", progress, stats.team_points_amount );
+
+	u32 const percent = (u32)math::floor( ( (float)progress / (float)stats.team_points_amount ) * 100.0f );
+
+	if ( m_game_mode == capture_enemy_base )
+	{
+		flash_value args[3];
+		args[0].SetUInt( stats.point_owner );
+		args[1].SetString( buff );
+		args[2].SetUInt( percent );
+		get_ui( )->movie->Invoke( "root.set_capture_progress", NULL, args, 3 );
+	}
+	else if ( m_game_mode == capture_neutral_base )
+	{
+		flash_value args[3];
+		args[0].SetUInt( 3 );
+		args[1].SetString( "" );
+		args[2].SetUInt( percent );
+		get_ui( )->movie->Invoke( "root.set_capture_progress", NULL, args, 3 );
+	}
 }
 
 void game_world_ui::set_match_time( u32 time_left_ms )
@@ -406,34 +379,23 @@ void game_world_ui::set_health( u8 health_in_percentage )
 	get_ui( )->movie->Invoke( "root.set_player_hp", NULL, &value, 1 );
 }
 
-// STATE[STUB]
+// claude@NOTE: flash /Od wall - the trailing flash_value[2] SetNumber/Invoke glue
+// and the angle-conversion constant are /Od-shaped (structure faithful, bytes parked).
 void game_world_ui::on_hit_from_pos( float3 position )
 {
-	// LOCALS
-	// float4x4 						actor_camera_matrix
-	// float4x4 						initiator_matrix
-	// float 							angle
-	// float3 							direction_vector
-	// flash_value[2] 					args
-	// ******
+	float4x4 const actor_camera_matrix = m_game_world.get_camera_director( ).get_inverted_view_matrix( );
 
-	// FUNCTION BODY[0x5d1510]: 15
-	// <0>
-	// <0x5d151c>|0x00c|+0x00c:'408'
-	// <0>
-	// <0x5d1528>|0x018|+0x04c:'410'
-	// <0x5d1574>|0x064|+0x041:'411'
-	// <0>
-	// <0x5d15b5>|0x0a5|+0x0e8:'413'
-	// <0>
-	// <0x5d169d>|0x18d|+0x02f:'415'
-	// <0>
-	// <0x5d16cc>|0x1bc|+0x01c:'417'
-	// <0x5d16e8>|0x1d8|+0x02a:'418'
-	// <0x5d1712>|0x202|+0x045:'419'
-	// <0x5d1757>|0x247|+0x033:'420'
-	// <0>
-	// ******
+	float3 direction_vector = -( position - actor_camera_matrix.c.xyz( ) );
+	direction_vector.normalize( );
+
+	float4x4 const initiator_matrix = math::invert4x3( math::create_camera_direction( position, direction_vector, float3( 0.0f, 1.0f, 0.0f ) ) );
+
+	float const angle = initiator_matrix.get_angles( math::rotation_zxy ).y - actor_camera_matrix.get_angles( math::rotation_zxy ).y;
+
+	flash_value args[2];
+	args[0].SetNumber( angle );
+	args[1].SetNumber( -angle - math::pi_d2 );
+	get_ui( )->movie->Invoke( "root.hit_player", NULL, args, 2 );
 }
 
 void game_world_ui::show_parametrized_message(
@@ -833,31 +795,27 @@ void game_world_ui::update_minimap_objects( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: flash /Od wall - project_name fetch reuses one get_project() temp in
+// the target (register-only, unrecorded local); the value_exists/operator[] ternary +
+// CreateObject/SetMember/Invoke glue is /Od-shaped. Structure faithful, bytes parked.
 void game_world_ui::initialize_minimap( )
 {
-	// LOCALS
-	// flash_value 						minimap_props_value_property
-	// flash_value 						minimap_props_value
-	// ******
+	pcstr const project_name = m_game_world.get_project( )->m_config->get_root( ).value_exists( "project_name" )
+		? m_game_world.get_project( )->m_config->get_root( )[ "project_name" ]
+		: "";
 
-	// FUNCTION BODY[0x5d5250]: 15
-	// <0x5d5258>|0x008|+0x076:'792'
-	// <0>
-	// <1>
-	// <0x5d52ce>|0x07e|+0x021:'795'
-	// <0>
-	// <0x5d52ef>|0x09f|+0x021:'797'
-	// <0>
-	// <0x5d5310>|0x0c0|+0x009:'799'
-	// <0x5d5319>|0x0c9|+0x02a:'800'
-	// <0>
-	// <0x5d5343>|0x0f3|+0x01e:'802'
-	// <0>
-	// <0x5d5361>|0x111|+0x006:'804'
-	// <0>
-	// <0x5d5367>|0x117|+0x007:'806'
-	// ******
+	flash_value minimap_props_value;
+	get_ui( )->movie->CreateObject( &minimap_props_value );
+	flash_value minimap_props_value_property;
+	get_ui( )->movie->CreateObject( &minimap_props_value_property );
+
+	minimap_props_value_property.SetString( project_name );
+	minimap_props_value.SetMember( "map", minimap_props_value_property );
+
+	get_ui( )->movie->Invoke( "root.set_minimap_props", NULL, &minimap_props_value, 1 );
+
+	update_minimap_objects( );
+	reset_map_rotatable( );
 }
 
 // STATE[STUB]
@@ -975,19 +933,11 @@ void game_world_ui::update_minimap_local_player( )
 	// ******
 }
 
-// STATE[STUB]
 void game_world_ui::reset_map_rotatable( )
 {
-	// LOCALS
-	// flash_value 						b_val
-	// ******
-
-	// FUNCTION BODY[0x5d0a90]: 4
-	// <0>
-	// <0x5d0a93>|0x003|+0x005:'887'
-	// <0x5d0a98>|0x008|+0x033:'888'
-	// <0>
-	// ******
+	flash_value b_val;
+	b_val.SetBoolean( is_ui_minimap_rotable );
+	get_ui( )->movie->Invoke( "root.set_rotable", NULL, &b_val, 1 );	is_ui_minimap_rotable_old = is_ui_minimap_rotable;
 }
 
 void game_world_ui::set_ammo_total_count( u32 first_type_count, u32 second_type_count )
@@ -1005,70 +955,46 @@ void game_world_ui::show_quick_slots( bool b_show )
 	m_slots_to_update.clear( );
 }
 
-// STATE[STUB]
+// claude@NOTE: flash /Od wall - the SetMember/CreateObject glue and the hotkey
+// switch -> key_binder lookup are /Od-shaped; structure faithful, bytes parked.
 void game_world_ui::create_slot_value(
 	profile_slot_enum			slot,
 	inventory_item_props&		item_props,
 	flash_value&				slot_descr_value
 )
 {
-	// LOCALS
-	// flash_value 						slot_descr_valuec_property
-	// bool 							enabled
-	// u8 								item_icon
-	// ******
+	u8 const item_icon	= m_game_world.get_game( ).items_dictionary( ).item_by_id( item_props.m_dict_id ).item_cfg->get_root( )[ "ui_desc" ][ "icon" ];
 
-	// STATICS
-	// static < NoType > 				 = <0x5d20d8>;
-	// ******
+	bool const enabled	= item_props.m_amount > 0;
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0ea4 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN6") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0eab }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0eb2 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0eb9 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0ec0 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x5c0ec7 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1") })
-	// ******
+	pcstr hotkey = "";
+	switch ( slot )
+	{
+		case quick_slot1:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_1, 0 ), false )->key_name;	break;
+		case quick_slot2:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_2, 0 ), false )->key_name;	break;
+		case quick_slot3:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_3, 0 ), false )->key_name;	break;
+		case quick_slot4:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_4, 0 ), false )->key_name;	break;
+		case quick_slot5:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_5, 0 ), false )->key_name;	break;
+		case quick_slot6:	hotkey = m_game_world.get_game( ).get_key_binder( ).dik_to_ptr( m_game_world.get_game( ).get_key_binder( ).get_action_dik( kQUICK_USE_6, 0 ), false )->key_name;	break;
+	}
 
-	// FUNCTION BODY[0x5d1e20]: 36
-	// <0x5d1e23>|0x003|+0x048:'914'
-	// <0>
-	// <0x5d1e6b>|0x04b|+0x004:'916'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5d1e6f>|0x04f|+0x013:'921'
-	// <0>
-	// <0x5d1e82>|0x062|+0x022:'923'
-	// <0>
-	// <0x5d1ea4>|0x084|+0x007:'925'
-	// <0x5d1eab>|0x08b|+0x007:'926'
-	// <0x5d1eb2>|0x092|+0x007:'927'
-	// <0x5d1eb9>|0x099|+0x007:'928'
-	// <0x5d1ec0>|0x0a0|+0x007:'929'
-	// <0x5d1ec7>|0x0a7|+0x01b:'930'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d1ee2>|0x0c2|+0x025:'934'
-	// <0>
-	// <0x5d1f07>|0x0e7|+0x029:'936'
-	// <0x5d1f30>|0x110|+0x036:'937'
-	// <0>
-	// <0x5d1f66>|0x146|+0x028:'939'
-	// <0x5d1f8e>|0x16e|+0x033:'940'
-	// <0>
-	// <0x5d1fc1>|0x1a1|+0x02b:'942'
-	// <0x5d1fec>|0x1cc|+0x033:'943'
-	// <0>
-	// <0x5d201f>|0x1ff|+0x029:'945'
-	// <0x5d2048>|0x228|+0x035:'946'
-	// <0>
-	// <0x5d207d>|0x25d|+0x009:'948'
-	// <0x5d2086>|0x266|+0x029:'949'
-	// ******
+	flash_value slot_descr_valuec_property;
+	get_ui( )->movie->CreateObject( &slot_descr_valuec_property );
+
+	slot_descr_valuec_property.SetUInt( item_icon );
+	slot_descr_value.SetMember( "icon", slot_descr_valuec_property );
+
+	slot_descr_valuec_property.SetUInt( item_props.m_amount );
+	slot_descr_value.SetMember( "count", slot_descr_valuec_property );
+
+	slot_descr_valuec_property.SetUInt( 0 );
+	slot_descr_value.SetMember( "cooldown", slot_descr_valuec_property );
+
+	slot_descr_valuec_property.SetBoolean( enabled );
+	slot_descr_value.SetMember( "enabled", slot_descr_valuec_property );
+
+	slot_descr_valuec_property.SetString( hotkey );
+	slot_descr_value.SetMember( "hotkey", slot_descr_valuec_property );
 }
 
 // STATE[STUB]
