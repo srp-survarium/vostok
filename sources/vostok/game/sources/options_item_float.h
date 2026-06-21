@@ -31,7 +31,7 @@ public:
 
 	inline			~options_item_float	( ) { /* no source */ }
 
-private:
+protected:
 	/* 0x0000 */	/* options_item_base */
 	/* 0x0018 */	float		m_step;
 	/* 0x001c */	float		m_current_value;

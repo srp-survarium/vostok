@@ -1053,6 +1053,14 @@
 				>
 			</File>
 			<File
+				RelativePath=".\anchor_game_options_items.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\anchor_game_lobby_ui.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\anchor_game_world_npc.cpp"
 				>
 			</File>

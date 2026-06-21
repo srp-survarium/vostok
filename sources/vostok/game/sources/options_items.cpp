@@ -12,48 +12,54 @@
 #include "options_monitor_index_selector.h"
 #include "options_resolution_selector.h"
 #include "options_tab.h"
+#include "game_memory.h"
+#include <vostok/console_command_processor.h>
+#include <vostok/console_command.h>
+#include <vostok/fixed_string.h>
+#include <vostok/scaleform/sources/flash_value.h>
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_function_handler_params.h>
 
 namespace survarium {
 
-// STATE[STUB]
+// claude@NOTE: structure matches (3 stmts: find, null-check, LOG_ERROR). Byte
+// residual is the flash_function_handler base ctor, which the target INLINES (the
+// Scaleform GlobalHeap alloc + flash_function_handler_impl construction); our
+// scaleform::flash_function_handler::flash_function_handler is an out-of-line stub
+// in value.cpp so the compiler emits a call instead - a cross-module scaleform cap.
  options_item_base::options_item_base(
 	options_tab&				parent_tab,
 	pcstr						console_command,
 	u8							option_item_id,
 	option_item_type_enum		type
 )
-	: m_parent_tab( parent_tab ) // buildability: ref member must be init'd
+	: m_type( type )
+	, m_parent_tab( parent_tab )
+	, m_option_item_id( option_item_id )
 {
-	// FUNCTION BODY[0x5cad50]: 3
-	// <0x5cadb0>|0x060|+0x008:'109'
-	// <0x5cadb8>|0x068|+0x008:'110'
-	// <0x5cadc0>|0x070|+0x0c1:'111'
-	// ******
+	m_console_command = console_commands::find( console_command );
+
+	if ( m_console_command == NULL )
+		LOG_ERROR( "Console command [%s] not found for option item", console_command );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches (flash_value[4] + 3 SetUInt + fill_value + Invoke).
+// Byte residual is the inlined scaleform flash_value setters/dtors + the inlined
+// flash_movie::Invoke (-> Scaleform::GFx::Movie::Invoke), an SDK cap we do not
+// reproduce. Matching this (real body, not inlined) also makes the derived
+// options_item_{int,float,bool}::revert emit their tail-jmp to it.
 void options_item_base::revert( )
 {
-	// LOCALS
-	// flash_value[4] 					source_data
-	// ******
+	flash_value source_data[ 4 ];
 
-	// CALL SITE INFO
-	// <0x5ca45b> -> void < unknown >( flash_value& )
-	// ******
+	source_data[ 0 ].SetUInt( m_parent_tab.type( ) );
+	source_data[ 1 ].SetUInt( m_option_item_id );
+	fill_value( source_data[ 2 ] );
+	source_data[ 3 ].SetUInt( 1 );
 
-	// FUNCTION BODY[0x5ca3c0]: 7
-	// <0x5ca3c8>|0x008|+0x01c:'116'
-	// <0x5ca3e4>|0x024|+0x02b:'117'
-	// <0x5ca40f>|0x04f|+0x034:'118'
-	// <0x5ca443>|0x083|+0x01a:'119'
-	// <0x5ca45d>|0x09d|+0x024:'120'
-	// <0>
-	// <0x5ca481>|0x0c1|+0x033:'122'
-	// ******
+	m_parent_tab.get_movie( )->movie->Invoke( "root.set_value", NULL, source_data, 4 );
 }
 
-// STATE[STUB]
  options_item_int::options_item_int(
 	options_tab&	parent_tab,
 	pcstr			console_command,
@@ -61,32 +67,16 @@ void options_item_base::revert( )
 	pcstr*			values,
 	u8				values_count
 )
-	// buildability: base has no default ctor; matcher supplies real args
-	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
+	: options_item_base( parent_tab, console_command, option_item_id, string_selector )
+	, m_values( values )
+	, m_values_count( values_count )
 {
-	// FUNCTION BODY[0x5cb0a0]: 2
-	// <0>
-	// <0x5cb0b2>|0x012|+0x014:'130'
-	// ******
 }
 
-// STATE[STUB]
 void options_item_int::initialize( )
 {
-	// FUNCTION BODY[0x5c9e10]: 8
-	// <0x5c9e10>|0x000|+0x000:'134'	{
-	// <0x5c9e10>|0x000|+0x007:'135'
-	// <0>
-	// <0x5c9e17>|0x007|+0x00e:'137'
-	// <0>
-	// <1>
-	// <0x5c9e25>|0x015|-0x009:'140'
-	// <0>
-	// <0x5c9e1c>|0x00c|+0x00d:'142'
-	// <0x5c9e29>|0x019|-0x005:'142'
-	// <0x5c9e24>|0x014|+0x00b:'143'
-	// <0x5c9e2f>|0x01f|      :'143'	}
-	// ******
+	m_source_value	= m_console_command ? ( u8 )( ( console_commands::cc_u32* )m_console_command )->get_value( ) : 0;
+	m_current_value	= m_source_value;
 }
 
 // STATE[STUB]
@@ -115,43 +105,33 @@ void options_item_int::fill_data( flash_value& val )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: scaleform cap (applies to every flash_value setter call in this TU -
+// fill_value/fill_data/apply/call/revert). The target INLINES flash_value::SetUInt/
+// SetNumber/SetBoolean/... (canonical flash_value.h declares them inline; the GFx::
+// Value body lives in the Scaleform SDK we do not reproduce). Our value.cpp has them
+// out-of-line, so the compiler emits a call - byte residual on an otherwise-correct
+// 1-statement structure.
 void options_item_int::fill_value( flash_value& val )
 {
-	// FUNCTION BODY[0x5c9dd0]: 1
-	// <0x5c9dd1>|0x001|+0x033:'164'
-	// ******
+	val.SetUInt( m_current_value );
 }
 
-// STATE[STUB]
 void options_item_int::apply( )
 {
-	// LOCALS
-	// fixed_string< 8 > 				args
-	// ******
+	m_source_value = m_current_value;
 
-	// CALL SITE INFO
-	// <0x5ca860> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5ca810]: 7
-	// <0>
-	// <1>
-	// <0x5ca816>|0x006|+0x00c:'170'
-	// <0x5ca822>|0x012|+0x00a:'171'
-	// <0x5ca82c>|0x01c|+0x024:'172'
-	// <0x5ca850>|0x040|+0x013:'173'
-	// <0>
-	// ******
+	if ( m_console_command )
+	{
+		fixed_string< 8 > args;
+		args.assignf( "%d", m_current_value );
+		m_console_command->execute( args.c_str( ) );
+	}
 }
 
-// STATE[STUB]
 void options_item_int::revert( )
 {
-	// FUNCTION BODY[0x5ca800]: 2
-	// <0x5ca800>|0x000|+0x006:'178'
-	// <0>
-	// ******
+	m_current_value = m_source_value;
+	options_item_base::revert( );
 }
 
 // STATE[STUB]
@@ -201,38 +181,21 @@ void options_item_int::call( flash_function_handler_params& params )
 	// ******
 }
 
-// STATE[STUB]
  options_item_float::options_item_float(
 	options_tab&	parent_tab,
 	pcstr			console_command,
 	u8				option_item_id,
 	float			step
 )
-	// buildability: base has no default ctor; matcher supplies real args
-	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
+	: options_item_base( parent_tab, console_command, option_item_id, slider_selector )
+	, m_step( step )
 {
-	// FUNCTION BODY[0x5caf60]: 1
-	// <0x5caf60>|0x000|+0x024:'225'	{
-	// <0>
-	// <0x5caf84>|0x024|      :'227'	}
-	// ******
 }
 
-// STATE[STUB]
 void options_item_float::initialize( )
 {
-	// FUNCTION BODY[0x5c9da0]: 6
-	// <0x5c9da0>|0x000|+0x000:'230'	{
-	// <0x5c9da0>|0x000|+0x007:'231'
-	// <0x5c9da7>|0x007|+0x00f:'232'
-	// <0>
-	// <0x5c9db6>|0x016|-0x007:'234'
-	// <0>
-	// <0x5c9daf>|0x00f|+0x00f:'236'
-	// <0x5c9dbe>|0x01e|-0x009:'236'
-	// <0x5c9db5>|0x015|+0x00f:'237'
-	// <0x5c9dc4>|0x024|      :'237'	}
-	// ******
+	m_source_value	= m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_value( ) : 0.0f;
+	m_current_value	= m_source_value;
 }
 
 // STATE[STUB]
@@ -258,164 +221,96 @@ void options_item_float::fill_data( flash_value& val )
 	// ******
 }
 
-// STATE[STUB]
 void options_item_float::fill_value( flash_value& val )
 {
-	// FUNCTION BODY[0x5c9d50]: 1
-	// <0x5c9d57>|0x007|+0x03f:'257'
-	// ******
+	val.SetNumber( m_current_value );
 }
 
-// STATE[STUB]
 void options_item_float::apply( )
 {
-	// LOCALS
-	// fixed_string< 8 > 				args
-	// ******
+	m_source_value = m_current_value;
 
-	// CALL SITE INFO
-	// <0x5ca7eb> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5ca790]: 7
-	// <0>
-	// <1>
-	// <0x5ca796>|0x006|+0x010:'263'
-	// <0x5ca7a6>|0x016|+0x004:'264'
-	// <0x5ca7aa>|0x01a|+0x031:'265'
-	// <0x5ca7db>|0x04b|+0x013:'266'
-	// <0>
-	// ******
+	if ( m_console_command )
+	{
+		fixed_string< 8 > args;
+		args.assignf( "%.2f", m_current_value );
+		m_console_command->execute( args.c_str( ) );
+	}
 }
 
-// STATE[STUB]
 void options_item_float::revert( )
 {
-	// FUNCTION BODY[0x5ca780]: 2
-	// <0x5ca780>|0x000|+0x006:'271'
-	// <0>
-	// ******
+	m_current_value = m_source_value;
+	options_item_base::revert( );
 }
 
-// STATE[STUB]
 void options_item_float::call( flash_function_handler_params& params )
 {
-	// FUNCTION BODY[0x5c9cf0]: 5
-	// <0x5c9cf7>|0x007|+0x00c:'278'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c9d03>|0x013|+0x041:'282'
-	// ******
+	m_current_value = ( float )params.pArgs[ 0 ].GetNumber( );
+	params.pRetVal->SetNumber( m_current_value );
 }
 
-// STATE[STUB]
  options_item_bool::options_item_bool( options_tab& parent_tab, pcstr console_command, u8 option_item_id )
-	// buildability: base has no default ctor; matcher supplies real args
 	: options_item_base( parent_tab, console_command, option_item_id, bool_selector )
 {
-	// FUNCTION BODY[0x5caf40]: 0
-	// <0x5caf40>|0x000|+0x018:'289'	{
-	// <0x5caf58>|0x018|      :'290'	}
-	// ******
 }
 
-// STATE[STUB]
 void options_item_bool::initialize( )
 {
-	// FUNCTION BODY[0x5c9cd0]: 6
-	// <0x5c9cd0>|0x000|+0x000:'293'	{
-	// <0x5c9cd0>|0x000|+0x007:'294'
-	// <0x5c9cd7>|0x007|+0x00e:'295'
-	// <0>
-	// <0x5c9ce5>|0x015|-0x009:'297'
-	// <0>
-	// <0x5c9cdc>|0x00c|+0x00d:'299'
-	// <0x5c9ce9>|0x019|-0x005:'299'
-	// <0x5c9ce4>|0x014|+0x00b:'300'
-	// <0x5c9cef>|0x01f|      :'300'	}
-	// ******
+	m_source_value	= m_console_command ? ( ( console_commands::cc_value< bool >* )m_console_command )->get_value( ) : false;
+	m_current_value	= m_source_value;
 }
 
-// STATE[STUB]
 void options_item_bool::fill_data( flash_value& __formal )
 {
-	// FUNCTION BODY[0x5c9c40]: 2
-	// <0x5c9c40>|0x000|+0x000:'303'	{
-	// <0>
-	// <1>
-	// <0x5c9c40>|0x000|      :'306'	}
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 }
 
-// STATE[STUB]
 void options_item_bool::fill_value( flash_value& val )
 {
-	// FUNCTION BODY[0x5c9c90]: 1
-	// <0x5c9c91>|0x001|+0x032:'310'
-	// ******
+	val.SetBoolean( m_current_value );
 }
 
-// STATE[STUB]
 void options_item_bool::apply( )
 {
-	// LOCALS
-	// fixed_string< 8 > 				args
-	// ******
+	m_source_value = m_current_value;
 
-	// CALL SITE INFO
-	// <0x5ca770> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5ca720]: 7
-	// <0>
-	// <1>
-	// <0x5ca726>|0x006|+0x00c:'316'
-	// <0x5ca732>|0x012|+0x00a:'317'
-	// <0x5ca73c>|0x01c|+0x024:'318'
-	// <0x5ca760>|0x040|+0x013:'319'
-	// <0>
-	// ******
+	if ( m_console_command )
+	{
+		fixed_string< 8 > args;
+		args.assignf( "%d", m_current_value );
+		m_console_command->execute( args.c_str( ) );
+	}
 }
 
-// STATE[STUB]
 void options_item_bool::revert( )
 {
-	// FUNCTION BODY[0x5ca710]: 2
-	// <0x5ca710>|0x000|+0x006:'324'
-	// <0>
-	// ******
+	m_current_value = m_source_value;
+	options_item_base::revert( );
 }
 
-// STATE[STUB]
 void options_item_bool::call( flash_function_handler_params& params )
 {
-	// FUNCTION BODY[0x5c9c50]: 5
-	// <0x5c9c50>|0x000|+0x00f:'331'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5c9c5f>|0x00f|+0x02c:'335'
-	// ******
+	m_current_value = params.pArgs[ 0 ].GetBool( );
+	params.pRetVal->SetBoolean( m_current_value );
 }
 
-// STATE[STUB]
+// claude@NOTE: STATE[STUB]. Body reads params.pArgs[0].GetNumber() into
+// m_current_value then calls the same render gamma chain as revert - blocked by the
+// same missing render::scene_renderer::set_gamma_correction_factor (cross-module
+// render cap).
 void options_gamma_selector::call( flash_function_handler_params& params )
 {
-	// FUNCTION BODY[0x5ca950]: 3
-	// <0x5ca959>|0x009|+0x051:'341'
-	// <0>
-	// <0x5ca9aa>|0x05a|+0x028:'343'
-	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: STATE[STUB]. Body is options_item_float::revert() then
+// m_parent_tab.get_game().renderer().scene().set_gamma_correction_factor(m_current_value),
+// but render::scene_renderer::set_gamma_correction_factor(const float) is in the
+// canonical render structure yet NOT declared/defined in our render module
+// (render/facade scene_renderer.h+.cpp) - calling it would LNK2001. Cross-module
+// render cap: blocked until the render module exposes set_gamma_correction_factor.
 void options_gamma_selector::revert( )
 {
-	// FUNCTION BODY[0x5ca910]: 2
-	// <0x5ca913>|0x003|+0x00b:'348'
-	// <0x5ca91e>|0x00e|+0x029:'349'
-	// ******
 }
 
 // STATE[STUB]
@@ -514,18 +409,10 @@ void options_resolution_selector::initialize( )
 	// ******
 }
 
-// STATE[STUB]
 void options_resolution_selector::apply( )
 {
-	// CALL SITE INFO
-	// <0x5c9c3b> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5c9c20]: 3
-	// <0x5c9c22>|0x002|+0x003:'428'
-	// <0>
-	// <0x5c9c25>|0x005|+0x019:'430'
-	// ******
+	m_source_value = m_current_value;
+	m_console_command->execute( m_values[ m_current_value ] );
 }
 
 // STATE[STUB]
@@ -577,16 +464,24 @@ void options_monitor_index_selector::refill_resolutions_data( )
 	// ******
 }
 
-// STATE[STUB]
- options_graphics_quality_selector::options_graphics_quality_selector( options_tab& parent_tab )
-	// buildability: base has no default ctor; matcher supplies real args
-	: options_item_int( parent_tab, NULL, 0, NULL, 0 )
+// claude@NOTE: graphics_quality_data is a .rdata pcstr[6] table absent from the
+// canonical dump; the exact preset strings are NOT recoverable from the available
+// binary/PDB, so these placeholders are best-guesses. The ctor match only needs the
+// table SYMBOL (it relocates the pointer); the table's own string bytes score as a
+// separate data symbol and will not match until the real strings are recovered.
+static pcstr graphics_quality_data[ 6 ] =
 {
-	// FUNCTION BODY[0x5cb0d0]: 1
-	// <0x5cb0d0>|0x000|+0x023:'480'	{
-	// <0>
-	// <0x5cb0f3>|0x023|      :'482'	}
-	// ******
+	"minimal",
+	"low",
+	"medium",
+	"high",
+	"max",
+	"extreme"
+};
+
+ options_graphics_quality_selector::options_graphics_quality_selector( options_tab& parent_tab )
+	: options_item_int( parent_tab, "r_graphics_quality", 8, graphics_quality_data, 6 )
+{
 }
 
 // STATE[STUB]
@@ -716,60 +611,30 @@ void options_graphics_quality_selector::call( flash_function_handler_params& par
 	// ******
 }
 
-// STATE[STUB]
  options_tab::~options_tab( )
 {
-	// FUNCTION BODY[0x5ca870]: 5
-	// <0x5ca870>|0x000|+0x064:'580'
-	// <0x5ca8d4>|0x064|-0x054:'580'
-	// <0>
-	// <0x5ca880>|0x010|+0x061:'582'
-	// <0>
-	// <0x5ca8e1>|0x071|+0x028:'584'
-	// ******
+	for ( u8 i = 0; i < m_options_count; ++i )
+		DELETE( m_options[ i ] );
+
+	DELETE( m_options );
 }
 
-// STATE[STUB]
+// claude@NOTE: STATE[STUB]. Body: for-each option apply(); if(m_type==
+// video_options_type) m_game.renderer().scene().end_render_options_changing(...);
+// console_commands::find("cfg_save_user")->execute(""); initialize_data(movie).
+// Blocked by render::scene_renderer::end_render_options_changing (cross-module
+// render cap, same as the gamma chain - not declared/defined in our render module)
+// and depends on initialize_data (still STUB).
 void options_tab::apply( flash_movie_resource_ptr& movie )
 {
-	// CALL SITE INFO
-	// <0x5cbaad> -> void < unknown >()
-	// <0x5cbb1f> -> void < unknown >( pcstr )
-	// ******
-
-	// FUNCTION BODY[0x5cba90]: 16
-	// <0x5cba97>|0x007|+0x009:'589'
-	// <0>
-	// <0x5cbaa0>|0x010|+0x016:'591'
-	// <0>
-	// <1>
-	// <0x5cbab6>|0x026|+0x006:'594'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5cbabc>|0x02c|+0x04d:'599'
-	// <0>
-	// <1>
-	// <0x5cbb09>|0x079|+0x018:'602'
-	// <0>
-	// <0x5cbb21>|0x091|+0x00b:'604'
-	// ******
 }
 
-// STATE[STUB]
 void options_tab::revert( flash_movie_resource_ptr& movie )
 {
-	// CALL SITE INFO
-	// <0x5c9c15> -> void < unknown >()
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( movie );
 
-	// FUNCTION BODY[0x5c9c00]: 4
-	// <0x5c9c01>|0x001|+0x007:'609'
-	// <0>
-	// <0x5c9c08>|0x008|+0x017:'611'
-	// <0>
-	// ******
+	for ( u8 i = 0; i < m_options_count; ++i )
+		m_options[ i ]->revert( );
 }
 
 // STATE[STUB]

@@ -32,7 +32,7 @@ public:
 
 	inline			~options_item_int	( ) { /* no source */ }
 
-private:
+protected:
 	/* 0x0000 */	/* options_item_base */
 	/* 0x0018 */	pcstr*		m_values;
 	/* 0x001c */	u8			m_values_count;
