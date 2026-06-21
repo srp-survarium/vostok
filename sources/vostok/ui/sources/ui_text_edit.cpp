@@ -141,7 +141,8 @@ void ui_text_edit::draw(vostok::render::ui::renderer& render, vostok::render::sc
 {
 	super::draw_internal	(render, scene_view, m_sel_start, m_sel_end, 0xff010101); //argb
 	draw_highlighted_rect	(render, scene_view);
-	draw_cursor				(render, scene_view);
+	if ( w()->get_focused() )
+		draw_cursor			(render, scene_view);
 }
 
 void ui_text_edit::draw_highlighted_rect(vostok::render::ui::renderer& render, vostok::render::scene_view_ptr const& scene_view)
@@ -201,8 +202,7 @@ float ui_text_edit::get_local_position	(u16 const pos) const
 
 void ui_text_edit::select_all()
 {
-	m_sel_start			= 0;
-	m_sel_end			= m_text.length();
+	m_sel_start			= 0;	m_sel_end			= m_text.length();
 }
 
 void ui_text_edit::reset_selection()
@@ -514,7 +514,8 @@ bool ui_text_edit::on_keyb_action(window* w, int p1, int p2)
 void ui_text_edit::tick()
 {
 	super::tick();
-	
+
+	if ( w()->get_focused() )
 	if(m_last_action && (m_last_action_time+0.3f < m_ui_world.timer().get_elapsed_sec()) )
 	{
 		m_last_action_time = m_ui_world.timer().get_elapsed_sec()-0.2f;
