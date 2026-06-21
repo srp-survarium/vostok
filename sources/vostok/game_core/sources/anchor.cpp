@@ -22,6 +22,7 @@ IncludeAll::IncludeAll()
 	vostok::anchor_animation_cloner( );
 	vostok::anchor_animation_animation_time_calculator( );
 	vostok::anchor_animation_time_in_ms_calculator( );
+	vostok::anchor_animation_player( );
 
 	Callback1 cb1;
 	Callback2 cb2;

@@ -7,6 +7,9 @@
 
 namespace vostok {
 namespace animation {
+
+class animation_player;
+
 namespace mixing {
 
 class animated_object_holder {
@@ -19,6 +22,9 @@ private:
 	/* 0x0040 */	float4x4	new_transform;
 	/* 0x0080 */	pcvoid		animated_object;
 	/* 0x0084 */	bool		need_new_transform;
+
+private:
+	friend class ::vostok::animation::animation_player;
 }; // class animated_object_holder
 
 STATIC_SIZE_ASSERT(animated_object_holder, 0x88);
