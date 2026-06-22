@@ -383,15 +383,17 @@ void player_input_handler::update_inverted_view( float4x4 const& player_head_tra
 	m_input_mode_changed		= false;
 }
 
-// claude@NOTE: blocked by player.cpp (a still-stub TU): the body ignores its 3
-// params and copies the namespace-scope death-camera config statics
-// s_death_camera_yaw / _pitch / _distance into m_yaw / m_pitch /
-// m_distance_to_focus_point. Those statics (cc_death_camera_* dynamic-init) are
-// owned by player.cpp; referencing them as externs would be undefined at link
-// until player.cpp is matched. Kept a buildable stub; re-match after player.cpp.
+// claude@NOTE: the faithful body copies the 3 params into m_yaw / m_pitch /
+// m_distance_to_focus_point. The target's standalone copy reads the player.cpp
+// death-camera statics (s_death_camera_yaw/_pitch/_distance) DIRECTLY because LTCG
+// const-propagated kill()'s args (the sole caller passes exactly those globals) into
+// this body - so the byte residual here is an LTCG arg-source artifact, NOT a source
+// difference; do not read the globals here (that would fabricate the LTCG into source).
 void player_input_handler::set_yaw_pitch_distance( const float yaw, const float arg_1, const float arg_2 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( yaw, arg_1, arg_2 );
+	m_yaw						= yaw;
+	m_pitch						= arg_1;
+	m_distance_to_focus_point	= arg_2;
 }
 
 void player_input_handler::set_input_mode(

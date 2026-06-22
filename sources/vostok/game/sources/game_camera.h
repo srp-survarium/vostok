@@ -23,10 +23,10 @@ public:
 	inline	float4x4 const&		get_inverted_view_matrix( ) const { /* no source */ return m_inverted_view_matrix; }
 
 			void				set_position_direction	( float3 const& p, float3 const& d );
-	inline	void				set_fov_factor			( const float arg_0 ) { /* no source */ }
+	inline	void				set_fov_factor			( const float arg_0 ) { m_fov_factor = arg_0; }
 	inline	float				get_fov_factor			( ) const { /* no source */ return m_fov_factor; }
 
-	inline	void				set_near_plane			( const float arg_0 ) { /* no source */ }
+	inline	void				set_near_plane			( const float arg_0 ) { m_near_plane = arg_0; }
 	inline	float				get_near_plane			( ) const { /* no source */ return m_near_plane; }
 	inline	float				get_far_plane			( ) const { /* no source */ return m_far_plane; }
 
