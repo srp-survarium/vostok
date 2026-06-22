@@ -10,6 +10,7 @@
 #include "base_network_client.h"		// network_client().is_player_current
 #include "flash_text_manager.h"			// text_manager().destroy_text( m_text ) in remove
 #include <vostok/game_core/game_net_defines.h>		// match_options::player_profiles[] in remove
+#include "game_world.h"					// kill() casts m_game_scene to game_world for switch_camera_mode
 #include "game_world_ui.h"				// m_game_ui->fill_quick_slots
 #include "player_input_handler.h"		// m_local_input_controller->set_near_plane
 #include "game_memory.h"				// g_allocator for circular_buffer member
@@ -23,6 +24,14 @@
 #include <vostok/physics/world.h>					// get_physics_world()->remove rigid body
 
 namespace survarium {
+
+// claude@NOTE: backing storage for the death-camera cc_float config commands
+// (kill() reads these). The cc_float command objects + their dynamic init/atexit
+// pairing are a separate config-machinery unit (mirror of player_tick's s_smooth_*
+// block); recovered defaults are yaw -pi (min -pi, max pi), pitch, distance.
+static float s_death_camera_yaw;
+static float s_death_camera_pitch;
+static float s_death_camera_distance;
 
 // TU statics (compiler-generated dynamic initializers / atexit
 // destructors); a matcher recovers their types/initializers from the asm.
@@ -973,34 +982,43 @@ void player::set_near_plane_factor( const float near_plane_factor )
 		m_local_input_controller->set_near_plane( near_plane_factor * 0.05f );
 }
 
-// STATE[STUB]
-// claude@NOTE: 18 stmts, locals interpolation_time(const float) + transform(float4x4).
-// Mostly reversed:
-//   if ( !m_local_input_controller ) return;                                            // 1027
-//   if ( m_start_fov_factor != m_target_fov_factor ) {                                  // 1030 (ucomiss start,target)
-//     const float interpolation_time = (m_current_time_in_ms - m_start_fov_factor_change_time_in_ms) * math::epsilon_3; // 1032
-//     <new_fov = interpolation_time < m_fov_factor_transition_time
-//          ? m_start_fov_factor + (m_target_fov_factor-m_start_fov_factor)*linear_interpolator(m_fov_factor_transition_time).interpolated_value(interpolation_time)
-//          : m_target_fov_factor>;                                                       // 1033-1036 (fov_factor() inlined)
-//     m_current_fov_factor = new_fov; m_local_input_controller->set_fov_factor(new_fov); // 1037 ([ctrl+0x54]=game_camera m_fov_factor)
-//     if ( interpolation_time >= m_fov_factor_transition_time ) {                        // 1041
-//       m_start_fov_factor = m_target_fov_factor;                                        // 1041 ([ebx+10F1Ch])
-//       if ( m_local_input_controller ) m_local_input_controller->set_near_plane(<satisfaction_equality_tolerance>); // 1042 ([ctrl+0x4C]=m_near_plane)
-//     }
-//   } else m_local_input_controller->set_fov_factor( m_target_fov_factor );              // 1046
-//   if ( m_local_input_controller->input_mode() == first_person_mode )                   // 1048 ([ctrl+0x198]==0)
-//     m_local_input_controller->update_inverted_view( m_character_head_transform );      // 1049 (base_player+0x48)
-//   else {                                                                               // 1054/1060
-//     transform = m_root_transform; <transform.c += m_root_transform.j * 1.4f>;          // (0x3fb33333, j = m_root_transform+0x10)
-//     m_local_input_controller->update_inverted_view( transform );                       // 1062
-//   }
-// WALL: the fov_factor() inline (linear_interpolator vtable-inlined) + the exact 18-stmt
-// boundary / the near_plane const (satisfaction_equality_tolerance) need a build pass to
-// pin the statement shape; deferred to keep this batch's matches clean.
-// STATE[STUB]
+// claude@NOTE: 18-stmt structure + the 2 named locals (interpolation_time, transform)
+// match. Byte residual is the fov-ternary statement split (target records L1033/1034/1035
+// as 3 statements for the conditional fov computation; our base folds it to fewer) plus
+// the linear_interpolator::interpolated_value vtable-inline schedule - a math/codegen
+// inline residual, not source-steerable from this TU.
 void player::update_camera( )
 {
-	// FUNCTION BODY[0x5e2b20]: 18 stmts (lines 1027-1062) - see note above
+	if ( !m_local_input_controller )
+		return;
+
+	if ( m_start_fov_factor != m_target_fov_factor )
+	{
+		const float interpolation_time = ( m_current_time_in_ms - m_start_fov_factor_change_time_in_ms ) * math::epsilon_3;
+		m_current_fov_factor = interpolation_time < m_fov_factor_transition_time
+			? m_start_fov_factor + ( m_target_fov_factor - m_start_fov_factor ) * animation::linear_interpolator( m_fov_factor_transition_time ).interpolated_value( interpolation_time )
+			: m_target_fov_factor;
+
+		m_local_input_controller->set_fov_factor( m_current_fov_factor );
+
+		if ( interpolation_time >= m_fov_factor_transition_time )
+		{
+			m_start_fov_factor = m_target_fov_factor;
+			if ( m_target_fov_factor == 1.0f )
+				set_near_plane_factor( 1.0f );
+		}
+	}
+	else
+		m_local_input_controller->set_fov_factor( m_target_fov_factor );
+
+	if ( m_local_input_controller->input_mode( ) == first_person_mode )
+		m_local_input_controller->update_inverted_view( m_character_head_transform );
+	else
+	{
+		float4x4 transform = m_root_transform;
+		transform.c.xyz( ) += m_root_transform.j.xyz( ) * 1.4f;
+		m_local_input_controller->update_inverted_view( transform );
+	}
 }
 
 player_input player::local_input( ) const
@@ -1450,32 +1468,35 @@ void `dynamic atexit destructor for 's_player_show_animations_command''( )
 }
 */
 
-// STATE[STUB]
+// claude@NOTE: structure + the camera/UI gate (is_player_current) match. Byte residuals:
+//  - select_animations() inlines to nothing (it is still a STUB) -> the final call is the
+//    TRGT_ONLY statement; reappears once select_animations is bodied;
+//  - set_yaw_pitch_distance args are LTCG const-propagated to the s_death_camera_* globals
+//    inside the standalone callee (arg-passing residual);
+//  - set_input_mode third_person inline schedule.
 void player::kill( const u32 current_time_in_ms )
 {
-	// FUNCTION BODY[0x5e54d0]: 18
-	// <0x5e54d6>|0x006|+0x02c:'1466'
-	// <0>
-	// <0x5e5502>|0x032|+0x007:'1468'
-	// <0x5e5509>|0x039|+0x007:'1469'
-	// <0>
-	// <0x5e5510>|0x040|+0x008:'1471'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e5518>|0x048|+0x031:'1476'
-	// <0x5e5549>|0x079|+0x036:'1477'
-	// <0x5e557f>|0x0af|+0x010:'1478'
-	// <0x5e558f>|0x0bf|+0x017:'1479'
-	// <0x5e55a6>|0x0d6|+0x016:'1480'
-	// <0>
-	// <1>
-	// <0x5e55bc>|0x0ec|+0x00b:'1483'
-	// ******
+	const bool is_local_player = m_game.network_client( ).is_player_current( id );
+
+	remove_alive( );
+	on_player_death( );
+
+	if ( is_local_player )
+	{
+		m_local_input_controller->set_input_mode( third_person_mode );
+		m_local_input_controller->set_yaw_pitch_distance( s_death_camera_yaw, s_death_camera_pitch, s_death_camera_distance );
+		m_local_input_controller->set_key_binder_context( 16 );
+		static_cast< game_world& >( m_game_scene ).switch_camera_mode( m_local_input_controller->input_mode( ) );
+		m_game_ui->show_ammo_indicator( false ); m_game_ui->show_quick_slots( false );
+	}
+
+	select_animations( current_time_in_ms );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure matches except the assign_game_ui (L1493) + member-store
+// block (L1519) merge into our prologue (target keeps them as 2 statements separated
+// by a source-line gap we cannot reproduce) and the intrusive_ptr/assign inline; the
+// if-alive input-mode/key-binder gate and the camera wiring all pair.
 void player::attach_controller(
 	player_input_handler*		handler,
 	stats_graph*				linear_speed,
@@ -1483,111 +1504,76 @@ void player::attach_controller(
 	game_world_ui*				ui
 )
 {
-	// CALL SITE INFO
-	// <0x5e32a0> -> void < unknown >( game_world_ui* )
-	// ******
+	m_current_active_object->assign_game_ui( m_game_ui = ui );
 
-	// FUNCTION BODY[0x5e3290]: 42
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e3291>|0x001|+0x011:'1493'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <0x5e32a2>|0x012|+0x023:'1519'
-	// <0x5e32c5>|0x035|+0x02b:'1520'
-	// <0x5e32f0>|0x060|+0x010:'1521'
-	// <0x5e3300>|0x070|+0x002:'1522'
-	// <0x5e3302>|0x072|+0x02b:'1523'
-	// <0x5e332d>|0x09d|+0x010:'1524'
-	// <0>
-	// <0x5e333d>|0x0ad|+0x012:'1526'
-	// <0x5e334f>|0x0bf|+0x017:'1527'
-	// <0>
-	// <0x5e3366>|0x0d6|+0x008:'1529'
-	// ******
+	m_local_input_controller	= handler;
+	m_linear_speed_graph		= linear_speed;
+	m_angular_speed_graph		= angular_speed;
+
+	if ( m_is_alive )
+	{
+		m_local_input_controller->set_input_mode( first_person_mode );
+		m_local_input_controller->set_key_binder_context( 1 );
+	}
+	else
+	{
+		m_local_input_controller->set_input_mode( third_person_mode );
+		m_local_input_controller->set_key_binder_context( 16 );
+	}
+
+	static_cast< game_world& >( m_game_scene ).set_local_player_camera( m_local_input_controller );
+	static_cast< game_world& >( m_game_scene ).switch_camera_mode( m_local_input_controller->input_mode( ) );
+	m_force_animation_selection = true;
 }
 
-// STATE[STUB]
+// claude@NOTE: 4-stmt structure matches. Byte residual is the intrusive_ptr operator-bool
+// inline (target folds the m_current_active_object null-check into the assign_game_ui
+// statement / prologue; our base emits a separate `if` line) - the same intrusive_ptr
+// accessor inline-vs-call wall as skeleton()/the quick-slot fns; not TU-steerable.
 void player::detach_controller( )
 {
-	// CALL SITE INFO
-	// <0x5e3239> -> void < unknown >( game_world_ui* )
-	// ******
+	if ( m_current_active_object )
+		m_current_active_object->assign_game_ui( NULL );
 
-	// FUNCTION BODY[0x5e3220]: 14
-	// <0>
-	// <1>
-	// <0x5e3220>|0x000|+0x013:'1536'
-	// <0x5e3233>|0x013|+0x008:'1537'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e323b>|0x01b|+0x024:'1544'
-	// <0x5e325f>|0x03f|+0x027:'1545'
-	// <0>
-	// <0x5e3286>|0x066|+0x007:'1547'
-	// ******
+	m_game_ui					= NULL;
+	m_local_input_controller	= NULL;
+	m_linear_speed_graph		= NULL;
+	m_angular_speed_graph		= NULL;
+	static_cast< game_world& >( m_game_scene ).set_local_player_camera( NULL );
+
+	static_cast< game_world& >( m_game_scene ).switch_to_free_fly_camera( );
+
+	m_force_animation_selection = true;
 }
 
+// claude@NOTE: PARKED on a missing render-module overload. 9 stmts (target 0x5e4840):
+//   if ( m_player_head_visible != is_visible ) {                         // [esi+10F78h]
+//     m_player_head_visible = is_visible;
+//     const u32 mode = is_visible ? 2 : 3;                               // visible:2 hidden:3
+//     m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 0, mode );
+//     ... ( body parts 6, 7, 5 )
+//   }
+// The four calls use scene_renderer::set_model_visible( render_model_instance_ptr
+// const&, u32 body_part_index, u32 visibility_mode ) - a REAL target symbol
+// (render scene_renderer, 0x6e0950) but NOT declared in scene_renderer.h (only the
+// (model, subsurface_name, bool) overload exists). Declaring + bodying that overload
+// is a render-module change (render matches last); cannot link without its body.
+// Next step: add the (model,u32,u32) overload + body in the render scene_renderer
+// PR, then this pairs.
 // STATE[STUB]
 void player::set_head_visibility( bool is_visible )
 {
-	// FUNCTION BODY[0x5e4840]: 14
-	// <0x5e4841>|0x001|+0x00c:'1552'
-	// <0>
-	// <1>
-	// <0x5e484d>|0x00d|+0x006:'1555'
-	// <0>
-	// <0x5e4853>|0x013|+0x005:'1557'
-	// <0>
-	// <0x5e4858>|0x018|+0x004:'1559'
-	// <0x5e485c>|0x01c|+0x005:'1560'
-	// <0>
-	// <0x5e4861>|0x021|+0x02a:'1562'
-	// <0x5e488b>|0x04b|+0x02b:'1563'
-	// <0x5e48b6>|0x076|+0x02b:'1564'
-	// <0x5e48e1>|0x0a1|+0x02a:'1565'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( is_visible );
 }
 
-// STATE[STUB]
+// claude@NOTE: file-static default callback; target is `xor eax,eax; ret`
+// (returns callback_return_type_call_me_again = 0). Unpaired in our base because
+// the two subscribe_animation_player overloads that reference it are still STUBs
+// (an empty body DCE-collapses the reference); it pairs once they are bodied.
 animation::callback_return_type_enum empty_callback( animation::animation_callback_params& params )
 {
-	return animation::callback_return_type_call_me_again;	// buildability return
-
-	// FUNCTION BODY[0x5e2220]: 2
-	// <0>
-	// <0x5e2220>|0x000|+0x002:'1576'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( params );
+	return animation::callback_return_type_call_me_again;
 }
 
 // STATE[STUB]
