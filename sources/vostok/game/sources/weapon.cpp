@@ -14,6 +14,7 @@
 #include <vostok/console_command.h>
 
 #include "base_game_scene.h"
+#include "game_camera.h"
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
@@ -21,6 +22,18 @@
 // finger_corrector_enable gates weapon::process_finger_correction.
 static bool s_enable_finger_corrector_value = true;
 static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_corrector_enable", s_enable_finger_corrector_value, false, vostok::console_commands::command_type_user_specific );
+
+// hide_crosshair_on_aim gates the crosshair in update_dispersion_visual_representation;
+// s_dispersion_gui_scale_coef_value scales the crosshair size by the dispersion. The
+// cc_float registration (dispersion_magic_coef_cc) takes the value's address, which keeps
+// the coef load alive in update_dispersion (without it MSVC folds the 1.0 default away).
+// sushi@TODO: the s_hide_crosshair_on_aim_value/s_dispersion_gui_scale_coef_value seeds and
+// the dispersion_magic_coef_cc command-name string are unrecoverable from the asm (data
+// section); cc_float min/max (0/10000) recovered from the initializer; function bytes are
+// seed/name-independent.
+static bool s_hide_crosshair_on_aim_value = true;
+static float s_dispersion_gui_scale_coef_value = 1.0f;
+static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_magic_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_user_specific );	// sushi@TODO: name string + min/max source unverified
 
 namespace survarium {
 
@@ -126,11 +139,17 @@ std::pair< animation::mixing::expression, animation::mixing::animation_lexeme > 
 	const bool								is_third_view
 ) const
 {
-	// claude@NOTE: STUB - parked. Builds a (expression, animation_lexeme) pair: a death_lexeme local
-	// (animation::mixing::animation_lexeme) from the weapon animation parameters + an expression, returned
-	// as the pair. VOSTOK_UNREACHABLE_CODE is the buildability device (the pair element types have no
-	// default ctor - empty_hands precedent). Needs the animation::mixing lexeme/expression builders +
-	// the create_animation_interval lexeme wall (shared with the *_state TUs) before it can be bodied.
+	// claude@NOTE: STUB - parked (large reconstruction ~0x1c7 bytes, 1 named local death_lexeme).
+	// Inlines weapon_animation_parameters from the params, an LCG random (imul 8088405h) picks the death
+	// animation index from m_first/third_view_death_animations_count, binds freeze_at_end_time_calculator
+	// via FastDelegate6, calls animation_lexeme_parameters::animation_intervals_count +
+	// create_animation_intervals, constructs a binary_tree_animation_node, cloned_in_buffer, an
+	// intrusive_ptr cleanup loop, then animation_lexeme + expression<animation_lexeme> + make_pair.
+	// The create_animation_interval wall is RESOLVED (now in mixing_animation_lexeme_parameters.h) and all
+	// 9 callees exist - this is now a pure multi-statement reconstruction, NOT a symbol wall.
+	// VOSTOK_UNREACHABLE_CODE is the buildability device (pair element types have no default ctor -
+	// empty_hands precedent). NEXT: recover group-by-group (mirror a *_state selected_animations); too
+	// large for this batch.
 	VOSTOK_UNREACHABLE_CODE( );
 }
 
@@ -153,20 +172,18 @@ void weapon::load_weapon(
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: STUB - 6 stmts, NRV float4x4 return. Magic-static `add = math::create_rotation_y( pi )`
-// (line 290), reads locator.m_bone (+0x60), then composes via math::mul4x3 of locator.m_offset (+0x20),
-// `add`, and m_transform (weapon_core +0x158) - with matrices[locator.m_bone] folded in when m_bone !=
-// 0xFFFF, else the identity/transform-only path. Parked: the exact mul4x3 nesting + operand order and
-// the NRV stack-temp scheduling need several diff cycles to pin; pure math, no cross-module wall.
-// STATE[STUB]
 float4x4 weapon::calculate_locator(
 	render::model_locator_item const&		locator,
 	float4x4 const*							matrices,
 	const u32								matrices_count
 )
 {
-	return vostok::math::float4x4( );
+	static float4x4 add = math::create_rotation_y( math::pi );
+
+	if ( locator.m_bone == 0xffff )
+		return math::mul4x3( math::mul4x3( locator.m_offset, add ), weapon_core::m_transform );
+
+	return math::mul4x3( math::mul4x3( matrices[ locator.m_bone ], weapon_core::m_transform ), math::mul4x3( locator.m_offset, add ) );
 }
 
 // claude@NOTE: last statement (line 318) is STUB - it sets the player_input_handler aim/input
@@ -489,21 +506,18 @@ animation::callback_return_type_enum weapon::on_shell_extraction_event( animatio
 	return animation::callback_return_type_call_me_again;
 }
 
-// claude@NOTE: STUB - structure recovered but parked on unrecoverable constants.
-// Body (7 stmts): function-local magic-static cc_bool s_hide_crosshair_on_aim_cc over
-// s_hide_crosshair_on_aim_value (line 685), then
-//   if ( m_game_ui ) {
-//     m_game_ui->show_crosshair( !( s_hide_crosshair_on_aim_value && m_aimed ) );  // m_aimed @0x488
-//     const float crosshair_size = s_dispersion_gui_scale_coef_value / default_vertical_fov * get_dispersion( );
-//     m_game_ui->set_crosshair_size( crosshair_size );
-//   }
-// Walls: survarium::default_vertical_fov (?default_vertical_fov@survarium@@3MA) has no home TU in
-// the corpus and an unknown seed; s_dispersion_gui_scale_coef_value + the cc_value<bool> ctor args +
-// the s_hide_crosshair_on_aim_value seed are also unrecoverable. Defining default_vertical_fov here
-// with a guessed value would fabricate a cross-cutting global - left parked.
-// STATE[STUB]
 void weapon::update_dispersion_visual_representation( )
 {
+	static console_commands::cc_bool s_hide_crosshair_on_aim_cc( "hide_crosshair_on_aim", s_hide_crosshair_on_aim_value, true, console_commands::command_type_user_specific, console_commands::execution_filter_general );
+
+	if ( m_game_ui )
+	{
+		m_game_ui->show_crosshair( !( s_hide_crosshair_on_aim_value && m_aimed ) );
+
+		const float crosshair_size = s_dispersion_gui_scale_coef_value / default_vertical_fov
+			* get_dispersion( );
+		m_game_ui->set_crosshair_size( crosshair_size );
+	}
 }
 
 // claude@NOTE: structure correct (base call + 2 inlined activate_hand). The target records a
