@@ -6,6 +6,10 @@
 #include "animation_space_graph_cook.h"
 #include "animation_space_graph.h"
 #include "animation_space_vertex.h"
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
@@ -40,14 +44,16 @@ void animation_space_graph_cook::translate_query( resources::query_result_for_co
 	);
 }
 
-// STATE[STUB]
-// claude@NOTE: casts to animation_space_graph*, destructs the trailing vertex array
-// (get_animations()[0..m_animations_count) intrusive_ptr dtors), then
-// VOSTOK_DELETE_IMPL(g_allocator, graph). Target records 0 named locals, so the vertex
-// destruct loop is an inlined helper (std::for_each / destroy_range). Needs that 0-local
-// destruct form to match.
 void animation_space_graph_cook::delete_resource( resources::resource_base* resource )
 {
+	animation_space_graph* graph = static_cast< animation_space_graph* >( resource );
+
+	animation_space_vertex const* it = graph->get_animations( ), * const end = it + graph->get_animations_count( );
+	for ( ; it != end; ++it )
+		it->~animation_space_vertex( );
+
+	graph->~animation_space_graph( );
+	VOSTOK_FREE_IMPL( g_allocator, graph );
 }
 
 // claude@NOTE: target records 0 named locals (sum + iterators are temps), so the
@@ -83,13 +89,45 @@ std::pair< u32, u32 > get_animation_mixes_count( configs::binary_config_value co
 	return mixes_count;
 }
 
-// STATE[STUB]
-// claude@NOTE: config-driven graph builder - iterates the groups config, allocates the
-// animation_space_graph behind a g_allocator buffer sized by get_animation_vertices_count /
-// get_animation_mixes_count, then dispatches the animation query. Needs the graph-layout
-// allocation + 0-local config-fold forms; cross-depends on on_animations_loaded.
 void animation_space_graph_cook::on_options_received( resources::queries_result& data )
 {
+	resources::query_result_for_cook* const	parent	= data.get_parent_query();
+	if ( data.size() != 1 )
+	{
+		parent->finish_query							( resources::query_result_for_user::error_type_cook_failed );
+		return;
+	}
+
+	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr const>( data[0].get_unmanaged_resource() );
+	configs::binary_config_value const& groups_config	= (*config)["animation_space_graph"]["groups"];
+
+	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * get_animation_vertices_count( groups_config ) ), get_animation_vertices_count( groups_config ) );
+
+	configs::binary_config_value const* it_groups		= groups_config.begin();
+	configs::binary_config_value const* it_end_groups	= groups_config.end();
+	for ( ; it_groups != it_end_groups; ++it_groups )
+	{
+		configs::binary_config_value const& vertices_config	= (*it_groups)["vertices"];
+
+		configs::binary_config_value const* it_vertices		= vertices_config.begin();
+		configs::binary_config_value const* it_end_vertices	= vertices_config.end();
+		for ( ; it_vertices != it_end_vertices; ++it_vertices )
+		{
+			resources::request								request;
+			request.path									= *it_vertices;
+			request.id										= resources::animation_class;
+			requests.push_back								( request );
+		}
+	}
+
+	resources::query_resources	(
+		&requests.front(),
+		requests.size(),
+		boost::bind( &animation_space_graph_cook::on_animations_loaded, this, _1, config ),
+		g_allocator,
+		NULL,
+		parent
+	);
 }
 
 // STATE[STUB]
