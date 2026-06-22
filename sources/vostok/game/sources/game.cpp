@@ -22,6 +22,12 @@
 // directly for on_application_activate's title-bar update.
 extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, char const* lpString );
 
+using vostok::console_commands::cc_bool;
+using vostok::console_commands::cc_u32;
+using vostok::console_commands::cc_delegate;
+using vostok::console_commands::command_type_user_specific;
+using vostok::console_commands::command_type_engine_internal;
+
 #include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
 #include <vostok/scaleform/sources/flash_factory.h>	// m_factory.build_movie (on_raw_data_loaded)
 #include <vostok/scaleform/sources/flash_movie_resource.h>	// flash_movie_resource (delete_resource)
@@ -29,6 +35,10 @@ extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, cha
 #include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
 #include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
 #include "network_client.h"	// NEW( network_client ) (create_network_client)
+#include "stats.h"	// DELETE( m_stats ) (~game)
+#include "stats_graph.h"	// DELETE( m_fps_graph ) (~game)
+#include "key_binder.h"	// DELETE( m_key_binder ) (~game)
+#include "chat_handler.h"	// DELETE( m_chat_handler ) (~game)
 #include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 #include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
@@ -39,6 +49,50 @@ extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, cha
 #include <vostok/game_core/ladder_cook.h>
 #include <vostok/game_core/weapon_user_animations_container_cook.h>
 #include "victory_item_cook.h"
+
+// File-scope console-command statics + their command functions. The PDB mangles these
+// undecorated (global scope, not survarium::); the dynamic initializers / atexit
+// destructors the compiler emits for each are the matched targets. Source order (init
+// line numbers): draw_snd_stats(58), draw_stats(70), show_profiler(74), cfg_save pair
+// (126/127), particle commands (138/141).
+
+// claude@NOTE: PARKED - 's_draw_snd_stats' (sound-debug cc_bool): its command-name
+// string + command_type are not recoverable from the init asm (the name string lives
+// in the data section, not the init function). A guessed name would fabricate
+// data-section bytes. Recover once the data-section string is read.
+
+static bool s_draw_stats_value = true;
+static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
+
+// claude@NOTE: PARKED - 's_show_profiler_command' (profiler cc_bool): command-name
+// string + command_type unrecoverable (data-section string), same as s_draw_snd_stats.
+
+// claude@NOTE: cfg_save_user is GLOBAL (?cfg_save_user@@YAXXZ); target body is
+//   console_commands::save( "user.cfg", command_type_user_specific, s_engine->allocator( ) );
+// where s_engine is a file-static engine pointer (the engine virtual at vtable+0x4C
+// yields the allocator). That static is compiler-generated and NOT in our source, so
+// the allocator arg cannot be reproduced; we approximate with g_mt_allocator. The path
+// + command_type ARE matched. Restore the engine-allocator form once s_engine is recovered.
+// sushi@TODO: recover the s_engine file-static (+ its write site) to lift cfg_save_user
+// AND game::~game line 279 to byte-exact - see docs/binary_matching/review_todos.md.
+void cfg_save_user( )
+{
+	vostok::console_commands::save( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
+}
+
+// target body is empty (single `ret`); the system-save logic is compiled out in this build.
+void cfg_save_system( )
+{
+}
+
+static cc_delegate cfg_save_system_cc( "cfg_save_system", boost::bind( &cfg_save_system ), false );
+static cc_delegate cfg_save_user_cc( "cfg_save_user", boost::bind( &cfg_save_user ), false );
+
+static u32 s_max_particles_value = 100;
+static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, true, command_type_engine_internal );
+
+static u32 s_particle_lod_value = 0;
+static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
 
 namespace survarium {
 
@@ -62,42 +116,6 @@ void `dynamic initializer for 's_is_spectator''( )
 {
 	// FUNCTION BODY[0x7d79e0]
 	// <0x7d79e0>|0x000|      :'55'	{
-	// ******
-}
-*/
-
-// TU static 's_draw_snd_stats' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_draw_snd_stats''( )
-{
-	// FUNCTION BODY[0x7d7a00]
-	// <0x7d7a00>|0x000|      :'58'	{
-	// ******
-}
-*/
-
-// TU static 's_draw_stats' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_draw_stats''( )
-{
-	// FUNCTION BODY[0x7d7a50]
-	// <0x7d7a50>|0x000|      :'70'	{
-	// ******
-}
-*/
-
-// TU static 's_show_profiler_command' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_show_profiler_command''( )
-{
-	// FUNCTION BODY[0x7d7aa0]
-	// <0x7d7aa0>|0x000|      :'74'	{
 	// ******
 }
 */
@@ -151,71 +169,6 @@ void `dynamic initializer for 's_max_angular_velocity_command''( )
 {
 	// FUNCTION BODY[0x7d7af0]
 	// <0x7d7af0>|0x000|      :'114'	{
-	// ******
-}
-*/
-
-// claude@NOTE: target body is
-//   console_commands::save( "user.cfg", command_type_user_specific, s_engine->allocator( ) );
-// where s_engine is a file-static engine pointer (the engine virtual at vtable+0x4C
-// yields the allocator). That static is compiler-generated and NOT in our source, so
-// the allocator arg cannot be reproduced; we approximate with g_mt_allocator. The path
-// + command_type ARE matched. Restore the engine-allocator form once s_engine is recovered.
-// STATE[STUB]
-void cfg_save_user( )
-{
-	vostok::console_commands::save( "user.cfg", vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
-}
-
-// target body is empty (single `ret`); the system-save logic is compiled out in this build.
-void cfg_save_system( )
-{
-}
-
-// TU static 'cfg_save_system_cc' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 'cfg_save_system_cc''( )
-{
-	// FUNCTION BODY[0x7d7b10]
-	// <0x7d7b10>|0x000|      :'126'	{
-	// ******
-}
-*/
-
-// TU static 'cfg_save_user_cc' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 'cfg_save_user_cc''( )
-{
-	// FUNCTION BODY[0x7d7be0]
-	// <0x7d7be0>|0x000|      :'127'	{
-	// ******
-}
-*/
-
-// TU static 's_max_particles' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_max_particles''( )
-{
-	// FUNCTION BODY[0x7d7cb0]
-	// <0x7d7cb0>|0x000|      :'138'	{
-	// ******
-}
-*/
-
-// TU static 's_particle_lod' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_particle_lod''( )
-{
-	// FUNCTION BODY[0x7d7d10]
-	// <0x7d7d10>|0x000|      :'141'	{
 	// ******
 }
 */
@@ -359,41 +312,26 @@ void game::build_lpv_geometry( )
 	// ******
 }
 
-// STATE[STUB]
  game::~game( )
 {
-	// CALL SITE INFO
-	// <0x5e6415> -> void* < unknown >( u32 )
-	// <0x5e6455> -> void* < unknown >( u32 )
-	// <0x5e6495> -> void* < unknown >( u32 )
-	// <0x5e64d5> -> void* < unknown >( u32 )
-	// <0x5e650f> -> void* < unknown >( u32 )
-	// <0x5e65d1> -> void* < unknown >( u32 )
-	// ******
+	// claude@NOTE: line 279 calls console_commands::save( "user.cfg", ..., s_engine->allocator() )
+	// where s_engine is the same unrecoverable file-static as cfg_save_user (see its note +
+	// review_todos.md); approximated with g_mt_allocator. Remaining 11 statements are exact.
+	vostok::console_commands::save	( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 
-	// FUNCTION BODY[0x5e63c0]: 21
-	// <0x5e63c4>|0x004|+0x029:'279'
-	// <0>
-	// <1>
-	// <0x5e63ed>|0x02d|+0x041:'282'
-	// <0>
-	// <0x5e642e>|0x06e|+0x040:'284'
-	// <0x5e646e>|0x0ae|+0x040:'285'
-	// <0x5e64ae>|0x0ee|+0x040:'286'
-	// <0x5e64ee>|0x12e|+0x037:'287'
-	// <0x5e6525>|0x165|+0x02e:'288'
-	// <0x5e6553>|0x193|+0x026:'289'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e6579>|0x1b9|+0x013:'295'
-	// <0x5e658c>|0x1cc|+0x01e:'296'
-	// <0x5e65aa>|0x1ea|+0x040:'297'
-	// <0>
-	// <0x5e65ea>|0x22a|+0x007:'299'
-	// ******
+	DELETE							( m_network_client );
+	DELETE							( m_main_menu );
+	DELETE							( m_lobby_menu );
+	DELETE							( m_login_menu );
+	DELETE							( m_console );
+	DELETE							( m_stats );
+	DELETE							( m_fps_graph );
+
+	DELETE							( m_flash_factory );
+	DELETE							( m_key_binder );
+	DELETE							( m_chat_handler );
+
+	deinitialize_modules			( );
 }
 
 math::uint2 parse_resolution( pcstr in_str )
