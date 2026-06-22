@@ -188,52 +188,21 @@ void player::remove_models_from_scene( )
 		m_game_scene.scene_renderer( ).remove_model( scene, m_target.model->m_render_model );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure faithful (two if-guarded assign_game_ui virtual calls,
+// NULL then m_game_ui). Capped by the intrusive_ptr<interactive_object> c_ptr()
+// inline-vs-call: the target inlines c_ptr() (the guard + call fold into one stmt
+// each), our base out-lines it, splitting the call into its own statement. Core
+// template-instantiation inline decision, not steerable from player.cpp.
 void player::on_before_active_object_changed(
 	interactive_object_ptr const&		current_active_object,
 	interactive_object_ptr const&		target_active_object
 ) const
 {
-	// CALL SITE INFO
-	// <0x5e247d> -> void < unknown >( game_world_ui* )
-	// <0x5e249e> -> void < unknown >( game_world_ui* )
-	// ******
+	if ( current_active_object.c_ptr() )
+		current_active_object.c_ptr()->assign_game_ui( NULL );
 
-	// FUNCTION BODY[0x5e2460]: 33
-	// <0x5e2460>|0x000|+0x016:'201'
-	// <0x5e2476>|0x016|+0x009:'202'
-	// <0>
-	// <0x5e247f>|0x01f|+0x013:'204'
-	// <0x5e2492>|0x032|+0x00f:'205'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// ******
+	if ( target_active_object.c_ptr() )
+		target_active_object.c_ptr()->assign_game_ui( m_game_ui );
 }
 
 // STATE[STUB]
@@ -437,23 +406,29 @@ float4x4 player::get_transform_for_animation_player( pcvoid const animated_objec
 	return m_current_active_object->transform( );
 }
 
-// STATE[STUB]
+// claude@NOTE: paired ~62%. Math chain reconstructed (create_rotation x2 / mul4x3 x2
+// / create_translation building player_state.transform, then a 3-way clamp of
+// look_pitch). Two residuals: (1) the target attributes the create_rotation/mul4x3
+// sub-calls to 3 separate source LINES (474/475/476) - our single multi-line
+// assignment statement carries the same bytes but on fewer line records (line-break
+// formatting, not a real structural divergence); (2) the look_pitch clamp is exactly
+// clamp_r's 3-branch body (if v<=-1 ret -1; if v<=hi ret v; ret hi) but our clamp_r
+// emits its ASSERT(min<=max) where the optimized target folds the constant assert
+// away (+0x2a bytes), and the upper bound is the unresolved float-pool symbol
+// `clear_value` (guessed 1.f). sushi@TODO below.
 void player::apply_input( client_player_state& player_state, float2 const& rotation_to_apply )
 {
-	// FUNCTION BODY[0x5e2ce0]: 8
-	// <0x5e2ce0>|0x000|+0x006:'470'	{
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e2ce6>|0x006|+0x038:'474'
-	// <0x5e2d1e>|0x03e|+0x056:'475'
-	// <0x5e2d74>|0x094|+0x046:'476'
-	// <0x5e2dba>|0x0da|-0x00d:'476'
-	// <0>
-	// <1>
-	// <0x5e2dad>|0x0cd|+0x01d:'479'
-	// <0x5e2dca>|0x0ea|      :'479'	}
-	// ******
+	player_state.transform = math::mul4x3(
+		math::mul4x3(
+			math::create_rotation( float3( 0.f, rotation_to_apply.x, 0.f ) ),
+			math::create_rotation( player_state.transform.get_angles_xyz() )
+		),
+		math::create_translation( player_state.transform.c.xyz() )
+	);
+
+	// sushi@TODO: upper clamp bound is the unresolved float-pool const `clear_value`
+	// (delinker symbol); literal value unconfirmed - guessed 1.f.
+	player_state.look_pitch = math::clamp_r( player_state.look_pitch + rotation_to_apply.y, -1.f, 1.f );
 }
 
 // STATE[STUB]
@@ -1088,7 +1063,13 @@ void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 // 0-local structure. (NB: on_fire/jump pass action 3/2 via the SAME enum, which
 // under the current header = jump/sprint - the real enum is walk0/run1/jump2/
 // shoot3/character_hit4; the header's sprint=2 is mis-positioned, a game_core fix.)
-// STATE[STUB]
+// LAYOUT RESOLVED: notify/on_fire/jump all iterate m_player_actions_subscribers at
+// player+0x10E10; the differing literal offsets (notify 0x10E10, on_fire 0x10DE0,
+// subscribe_on_actions 0x10DD8) are the virtual-override `this` adjustments (notify
+// is a plain method this=player; on_fire overrides hit_initiator::on_fire so
+// this=player+0x30; subscribe_on_actions overrides hit_receiver:: so this=player+0x38).
+// The receiver arg is static_cast<hit_receiver const*>(this) (player+0x38). Wall is
+// the for_each functor form (0 iterator locals), not the layout. STATE[STUB]
 void player::notify_actions_subscribers( )
 {
 	// LOCALS
@@ -1567,16 +1548,20 @@ void player::set_head_visibility( bool is_visible )
 }
 
 // claude@NOTE: file-static default callback; target is `xor eax,eax; ret`
-// (returns callback_return_type_call_me_again = 0). Unpaired in our base because
-// the two subscribe_animation_player overloads that reference it are still STUBs
-// (an empty body DCE-collapses the reference); it pairs once they are bodied.
+// (returns callback_return_type_call_me_again = 0). The two subscribe_animation_player
+// overloads below reference it (as the m_target.animation_player.subscribe callback).
 animation::callback_return_type_enum empty_callback( animation::animation_callback_params& params )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( params );
 	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
+// claude@NOTE: structure correct (2 stmts: m_current subscribe with the passed
+// callback, m_target subscribe with empty_callback). Capped because
+// animation::animation_player::subscribe is itself a STUB in the animation module -
+// the empty body DCE-collapses the call, leaving only the empty_callback boost::function
+// construct/destruct. Pairs once animation_player::subscribe is bodied (like
+// unsubscribe_animation_player's note).
 void player::subscribe_animation_player(
 	pcstr			channel_id,
 	boost::function< enum animation::callback_return_type_enum( animation::animation_callback_params& ) > const&	callback,
@@ -1586,20 +1571,10 @@ void player::subscribe_animation_player(
 	pcvoid const	animated_object
 )
 {
-	// CALL SITE INFO
-	// <0x5e377c> -> < unknown >
-	// <0x5e37e5> -> < unknown >
-	// ******
-
-	// FUNCTION BODY[0x5e3730]: 4
-	// <0x5e3739>|0x009|+0x028:'1589'
-	// <0>
-	// <0x5e3761>|0x031|+0x089:'1591'
-	// <0>
-	// ******
+	m_current.animation_player.subscribe( channel_id, callback, callback_uid, animation, event_type, animated_object );
+	m_target.animation_player.subscribe( channel_id, empty_callback, callback_uid, animation, event_type, animated_object );
 }
 
-// STATE[STUB]
 void player::subscribe_animation_player(
 	animation::reserved_channel_ids_enum	channel_id,
 	boost::function< enum animation::callback_return_type_enum( animation::animation_callback_params& ) > const&	callback,
@@ -1608,17 +1583,8 @@ void player::subscribe_animation_player(
 	pcvoid const	animated_object
 )
 {
-	// CALL SITE INFO
-	// <0x5e389a> -> < unknown >
-	// <0x5e3911> -> < unknown >
-	// ******
-
-	// FUNCTION BODY[0x5e3840]: 4
-	// <0x5e3849>|0x009|+0x036:'1603'
-	// <0>
-	// <0x5e387f>|0x03f|+0x097:'1605'
-	// <0>
-	// ******
+	m_current.animation_player.subscribe( channel_id, callback, callback_uid, animation, animated_object );
+	m_target.animation_player.subscribe( channel_id, empty_callback, callback_uid, animation, animated_object );
 }
 
 // claude@NOTE: capped on animation::animation_player::unsubscribe being a stub
