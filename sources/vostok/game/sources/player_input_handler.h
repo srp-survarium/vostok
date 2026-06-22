@@ -41,7 +41,7 @@ public:
 			void					set_input_mode				(
 										const input_mode_type_enum		arg_0 /* input_mode_type_enum input_mode */
 									);
-	inline	void					set_key_binder_context		( s32 arg_0 ) { /* no source */ }
+	inline	void					set_key_binder_context		( s32 arg_0 ) { m_key_binder_context = arg_0; }
 
 			void					update_inverted_view		( float4x4 const& player_head_transform );
 
