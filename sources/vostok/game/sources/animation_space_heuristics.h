@@ -36,8 +36,8 @@ private:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	animation_space_graph_ptr const&	m_graph;
 	/* 0x0004 */	animation_space_vertex_id const&	m_target_vertex_id;
-	/* 0x0008 */	animation_space_vertex_id			m_best_vertex_id;
-	/* 0x0024 */	float								m_min_heuristics_value;
+	/* 0x0008 */	mutable	animation_space_vertex_id	m_best_vertex_id;
+	/* 0x0024 */	mutable	float						m_min_heuristics_value;
 	/* 0x0028 */	const float							m_max_speed;
 }; // class animation_space_heuristics
 
