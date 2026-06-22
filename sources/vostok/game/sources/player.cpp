@@ -205,49 +205,33 @@ void player::on_before_active_object_changed(
 		target_active_object.c_ptr()->assign_game_ui( m_game_ui );
 }
 
-// STATE[STUB]
 void player::insert_alive( )
 {
-	// CALL SITE INFO
-	// <0x5e30a4> -> void < unknown >( float4x4 const& )
-	// <0x5e30c5> -> void < unknown >( physics::bt_rigid_body_base*, u16, u16 )
-	// <0x5e3133> -> damage_model_ptr const& < unknown >() const
-	// ******
+	m_is_first_tick	= true;
+	m_input			= player_input( );
 
-	// FUNCTION BODY[0x5e3000]: 32
-	// <0>
-	// <0x5e300f>|0x00f|+0x010:'239'
-	// <0>
-	// <0x5e301f>|0x01f|+0x02b:'241'
-	// <0x5e304a>|0x04a|+0x03c:'242'
-	// <0>
-	// <1>
-	// <0x5e3086>|0x086|+0x009:'245'
-	// <0>
-	// <0x5e308f>|0x08f|+0x017:'247'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e30a6>|0x0a6|+0x021:'251'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e30c7>|0x0c7|+0x031:'256'
-	// <0x5e30f8>|0x0f8|+0x009:'257'
-	// <0x5e3101>|0x101|+0x02b:'258'
-	// <0>
-	// <1>
-	// <0x5e312c>|0x12c|+0x010:'261'
-	// <0x5e313c>|0x13c|+0x00b:'262'
-	// <0x5e3147>|0x147|+0x020:'263'
-	// <0>
-	// <0x5e3167>|0x167|+0x00e:'265'
-	// <0x5e3175>|0x175|+0x023:'266'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	if ( m_local_input_controller )
+		m_local_input_controller->set_position_direction(
+			m_current.transform.c.xyz( ),
+			math::create_rotation_y( m_current.transform.get_angles( math::rotation_zxy ).y ).k.xyz( ) );
+
+	if ( !m_is_demo_player )
+	{
+		m_damage_collision->get_rigid_body( )->set_transform( m_current.transform );
+		m_game_scene.get_physics_world( )->add( m_damage_collision->get_rigid_body( ), 0x68, 0x11 );
+	}
+
+	m_target.physics_controller->activate( m_target.transform );
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->activate( m_current.transform );
+
+	damage_model( )->reset( );
+	m_stamina.reset( );
+	reset_fov_factor( );
+
+	while ( !m_history.empty( ) )
+		m_history.pop_tail( );
+	m_is_alive = true;
 }
 
 // STATE[STUB]
@@ -431,7 +415,11 @@ void player::apply_input( client_player_state& player_state, float2 const& rotat
 	player_state.look_pitch = math::clamp_r( player_state.look_pitch + rotation_to_apply.y, -1.f, 1.f );
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (2 stmts, 1 local rotation_to_apply). Builds the
+// per-component rotation increment ( accel * dt * 0.5 + prev_velocity ) * dt and
+// forwards to the 2-arg apply_input. Byte residual is inherited from that callee's
+// create_rotation/mul4x3 inline schedule (see the 2-arg note) plus the LTCG custom
+// calling convention (time_delta/accel/velocity arrive in xmm0/eax/ecx, not slots).
 void player::apply_input(
 	client_player_state&	player_state,
 	float2 const&			previous_velocity,
@@ -439,33 +427,12 @@ void player::apply_input(
 	const float				time_delta
 )
 {
-	// LOCALS
-	// float2 							rotation_to_apply
-	// ******
+	float2 rotation_to_apply(
+		( current_acceleration.x * time_delta * 0.5f + previous_velocity.x ) * time_delta,
+		( current_acceleration.y * time_delta * 0.5f + previous_velocity.y ) * time_delta
+	);
 
-	// FUNCTION BODY[0x5e2de0]: 21
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x5e2de3>|0x003|+0x033:'495'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e2e16>|0x036|+0x018:'503'
-	// ******
+	apply_input( player_state, rotation_to_apply );
 }
 
 // claude@NOTE: unblocked + builds now that circular_buffer<T>::new_item and the
@@ -707,30 +674,23 @@ void player::update_speed_info( )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: paired ~93%. Reads the bullet controller transform (bt_character_controller::
+// get_transform = from_bullet(...) inlined), keeps its translation while taking state.transform's
+// rotation, pushes it back (set_transform = from_vostok(...) inlined) and feeds the residual
+// position delta as the walk direction (set_walk_direction = set_desired_walk_vector(from_vostok)
+// inlined). Residual is a single statement-fusion boundary: the target keeps the rotation-copy
+// temp build (L726) and set_transform (L731) as two statements; our /Od compile fuses the c
+// override into the set_transform statement (1 fewer stmt). Non-steerable line-boundary artifact.
 void player::set_physics_controller_walk_vector( client_player_state& state )
 {
-	// LOCALS
-	// float4x4 						physics_transform
-	// ******
+	float4x4 physics_transform = state.physics_controller->get_transform( );
 
-	// FUNCTION BODY[0x5e2f10]: 15
-	// <0>
-	// <0x5e2f20>|0x010|+0x01c:'723'
-	// <0>
-	// <1>
-	// <0x5e2f3c>|0x02c|+0x01b:'726'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e2f57>|0x047|+0x035:'731'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e2f8c>|0x07c|+0x05e:'735'
-	// <0>
-	// ******
+	float4x4 transform = state.transform;
+	transform.c.xyz( ) = physics_transform.c.xyz( );
+
+	state.physics_controller->set_transform( transform );
+
+	state.physics_controller->set_walk_direction( state.transform.c.xyz( ) - physics_transform.c.xyz( ) );
 }
 
 // STATE[STUB]
