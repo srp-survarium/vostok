@@ -216,15 +216,14 @@ void player::replay_history( const u32 from_index, float4x4& previous_transform 
 	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
 }
 
-// claude@NOTE: Reconstructed and PAIRED, but capped below a full structure match by
-// two stub-inlining walls in sibling units: player::process_quick_slots_for_proxy_player
-// (player.cpp) is still an empty STUB, so its call in the !is_local proxy path inlines to
-// nothing; and replay_history's inner update_history_item_from_previous / set_object_transform
-// calls drop for the same reason (see replay_history note). The tick/restore/clamp/min/
-// lower-bound/replay control flow and the transform-translation-preserving tail all match.
-// Residual also includes the dropped unused bool& __formal arg to update_history_item
-// (LTCG arg-drop). Next step: give process_quick_slots_for_proxy_player +
-// update_history_item_from_previous real bodies, then re-score.
+// claude@NOTE: Reconstructed and PAIRED (~72%), capped below a full structure match by
+// replay_history's inner update_history_item_from_previous / set_object_transform calls
+// dropping (those callees are still empty STUBs, so they inline to nothing - see
+// replay_history note). The tick/restore/clamp/min/lower-bound/replay control flow and the
+// transform-translation-preserving tail all match (process_quick_slots_for_proxy_player is
+// now bodied, so the proxy path no longer DCE-collapses). Residual also includes the
+// dropped unused bool& __formal arg to update_history_item (LTCG arg-drop). Next step:
+// body update_history_item_from_previous (parked on the quaternion-product wall).
 void player::time_warp( server_player_update const& action, u32 time_in_ms )
 {
 	if( m_last_server_correction_time && time_in_ms < m_last_server_correction_time )
@@ -313,7 +312,9 @@ void player::log_active_object( pcstr const header ) const
 //           (the 0x100-byte w/x/y/z product is math::operator*(quaternion,quaternion) inlined)
 //   L518: player_state.animation_player.set_object_transform( <node>, this );
 //   L519: if( is_local ) {                     // cmp [this+0x35]=hit_initiator.is_local
-//   L521-523:  apply_input( player_state, float2( m_input.angular_acceleration.* * dt*0.5 + previous_input.angular_velocity.*, ... ) * dt );
+//   L521-523:  apply_input( player_state, previous_input.angular_velocity, m_input.angular_acceleration, dt );
+//              (the 4-arg apply_input overload - now BODIED in player.cpp - builds the
+//               ( accel*dt*0.5 + prev_velocity ) * dt increment, so this call no longer DCEs)
 //   L525: if( fabs(angle) >= epsilon ) {        // and ecx,0x7FFFFFFF; comiss <eps>
 //   L528:   new_transform = math::mul4x3( create_matrix( <rot>, float3(0,0,0) ), <node> );
 //   L529:   player_state.previous_transform = new_transform; set_object_transform( <node>, new_transform ); }
