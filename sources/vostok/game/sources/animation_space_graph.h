@@ -76,18 +76,15 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > animation_space_graph_ptr;
 
-// STATE[STUB]
 inline bool operator!=( animation_space_vertex_id const& left, animation_space_vertex_id const& right )
 {
-	return false;
-
-	// FUNCTION BODY[0xad210]: 1
-	// <0xad210>|0x000|+0x000:'29'	{
-	// <0xad210>|0x000|+0x063:'30'
-	// <0xad273>|0x063|-0x001:'30'
-	// <0xad272>|0x062|+0x00c:'31'
-	// <0xad27e>|0x06e|      :'31'	}
-	// ******
+	return	!(
+				left.rotation.x == right.rotation.x &&
+				left.rotation.y == right.rotation.y &&
+				left.rotation.z == right.rotation.z &&
+				left.rotation.w == right.rotation.w &&
+				left.translation.is_similar( right.translation )
+			);
 }
 
 } // namespace survarium
