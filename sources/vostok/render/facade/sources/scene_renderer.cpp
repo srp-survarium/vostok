@@ -576,5 +576,22 @@ __declspec( noinline ) void load_props_impl( light_props& props, config_t const&
 
 template void load_props_impl< vostok::configs::binary_config_value >( light_props&, vostok::configs::binary_config_value const& );
 
+// claude@NOTE: render-options-changing + reset_renderer stubs. These are real
+// render-facade deferred-command cooks (same shape as volume_fog/lpv), but
+// their bodies belong to a render-facade matching batch - stubbed here only
+// so game_generate_shaders.cpp links.
+void scene_renderer::reset_renderer( )
+{
+}
+
+void scene_renderer::begin_render_options_changing( volatile long* )
+{
+}
+
+void scene_renderer::end_render_options_changing(
+	scene_ptr const&, render_output_window_ptr, bool, bool, volatile long* )
+{
+}
+
 } // namespace render
 } // namespace vostok
