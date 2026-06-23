@@ -12,6 +12,7 @@
 #include <vostok/render/facade/common_types.h>
 #include <vostok/render/facade/particles.h>
 #include <vostok/render/facade/light_props.h>
+#include <vostok/render/facade/ambient_volume_properties.h>
 #include <vostok/render/facade/scene_view_mode.h>
 #include <vostok/render/facade/render_stage_types.h>
 
@@ -122,6 +123,10 @@ public:
 	// lpv occluders
 	void			update_lpv_occluder				( scene_ptr const& scene, u32 id, math::float4x4 const& transform );
 	void			remove_lpv_occluder				( scene_ptr const& scene, u32 id );
+
+	// ambient volumes
+	void			update_ambient_volume			( scene_ptr const& scene, u32 id, render::ambient_volume_properties const& properties );
+	void			remove_ambient_volume			( scene_ptr const& scene, u32 id );
 
 	// volume fog
 	void			update_volume_fog				( scene_ptr const& scene, u32 id, render::volume_fog_parameters const& parameters );

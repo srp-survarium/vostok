@@ -257,6 +257,36 @@ void scene_renderer::remove_lpv_occluder( scene_ptr const& scene, u32 id)
 	);
 }
 
+void scene_renderer::update_ambient_volume( scene_ptr const& scene, u32 id, vostok::render::ambient_volume_properties const& properties)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< ambient_volume_properties > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			properties
+		)
+	);
+}
+
+void scene_renderer::remove_ambient_volume( scene_ptr const& scene, u32 id)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
 void scene_renderer::update_volume_fog( scene_ptr const& scene, u32 id, vostok::render::volume_fog_parameters const& parameters)
 {
 	m_channel.owner_push_back	(

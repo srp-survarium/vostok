@@ -40,6 +40,8 @@ private:
 	/* 0x01c8 */	resources::unmanaged_resource_ptr		m_particle_fired;
 	/* 0x01cc */	resources::unmanaged_resource_ptr		m_sound_fired;
 	/* 0x01d0 */	game_world&								m_game_world;
+private:
+	friend class booby_trap_cook;
 }; // class booby_trap
 
 STATIC_SIZE_ASSERT(booby_trap, 0x1D8);

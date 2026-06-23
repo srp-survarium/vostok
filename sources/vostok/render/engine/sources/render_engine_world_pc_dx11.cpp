@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include <vostok/render/engine/world.h>
+#include <vostok/render/facade/ambient_volume_properties.h>
 #include <vostok/render/core/world.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/particle/api.h>
@@ -1019,6 +1020,16 @@ void engine::world::remove_lpv_occluder( vostok::render::scene_ptr const& in_sce
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	scene->remove_lpv_occluder	( id);
+}
+
+void engine::world::update_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id, render::ambient_volume_properties const& in_properties)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id, in_properties );
+}
+
+void engine::world::remove_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id );
 }
 
 void engine::world::update_volume_fog( vostok::render::scene_ptr const& in_scene, u32 id, render::volume_fog_parameters const& in_parameters)

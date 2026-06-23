@@ -38,21 +38,12 @@ void booby_trap_set_cook::query_for_derived_resources(
 	);
 }
 
-// STATE[STUB]
 void booby_trap_set_cook::on_models_ready( resources::queries_result& data, booby_trap_set* game_resource )
 {
-	// FUNCTION BODY[0x7b1f20]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <0x7b1f23>|0x003|+0x0b8:'52'
-	// <0x7b1fdb>|0x0bb|+0x0ac:'53'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x7b2087>|0x167|+0x012:'58'
-	// ******
+	game_resource->m_model_ghost_allowed	= static_cast_resource_ptr< render::static_model_ptr >( data[0].get_unmanaged_resource( ) );
+	game_resource->m_model_ghost_denied		= static_cast_resource_ptr< render::static_model_ptr >( data[1].get_unmanaged_resource( ) );
+
+	finish_query( data.get_parent_query( ), game_resource );
 }
 
 
