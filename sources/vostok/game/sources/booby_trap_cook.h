@@ -6,10 +6,10 @@
 #define BOOBY_TRAP_COOK_H_INCLUDED
 
 #include <vostok/game_core/booby_trap_core_cook.h>
+#include "booby_trap.h"
 
 namespace survarium {
 
-class booby_trap;
 class game_world;
 
 // temp_include_all.cpp's use_booby_trap_cook anchor defines FUNCTION-LOCAL
@@ -21,24 +21,14 @@ public:
 	virtual						~booby_trap_cook			( ) { /* no source */ }
 
 private:
-	// STATE[STUB]
 	virtual	booby_trap_core*	new_derived_resource		( ) override
 	{
-		return NULL;
-
-		// FUNCTION BODY[0x97e40]
-		// <0x97e40>|0x000|      :'25'	{
-		// ******
+		return VOSTOK_NEW_IMPL( g_allocator, booby_trap )( m_game_world );
 	}
 
-	// STATE[STUB]
 	virtual	u32					get_derived_resource_size	( ) override
 	{
-		return 0;
-
-		// FUNCTION BODY[0x97e70]
-		// <0x97e70>|0x000|      :'26'	{
-		// ******
+		return sizeof( booby_trap );
 	}
 
 	virtual	void				query_for_derived_resources	(

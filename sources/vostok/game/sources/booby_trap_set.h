@@ -22,6 +22,7 @@ class game_world;
 
 class booby_trap_set : public booby_trap_set_core {
 	friend void ::vostok::use_game_booby_trap( );
+	friend class booby_trap_set_cook;
 public:
 			void									on_trap_placed_message		( u8 index, float3 const& position, float3 const& angles );
 			void									on_trap_removed_message		( u8 index );
