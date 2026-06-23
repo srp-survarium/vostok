@@ -76,6 +76,10 @@ public:
 	void			reload_shaders					( );
 	void			reload_modified_textures		( );
 
+	void			reset_renderer					( );
+	void			begin_render_options_changing	( volatile long* waiting_for );
+	void			end_render_options_changing		( scene_ptr const& scene, render_output_window_ptr render_output_window, bool b0, bool b1, volatile long* waiting_for );
+
 	math::uint2		window_client_size				( render::render_output_window_ptr const& render_output_window );
 
 	void			set_view_matrix					( render::scene_view_ptr const& scene_view, math::float4x4 const& view );

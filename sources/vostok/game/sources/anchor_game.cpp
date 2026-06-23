@@ -57,6 +57,7 @@
 #include "stats.h"
 #include "stats_graph.h"
 #include "damage_model_stats.h"
+#include "game_generate_shaders.h"
 
 // the object-skeleton base cone (game_object_ / game_object_static + the file-local
 // load_transform free function in object.cpp); the object_* visual family derives
@@ -292,6 +293,17 @@ namespace vostok
 		s_sink = *( pcvoid const* )&m_enable;
 		s_sink = *( pcvoid const* )&m_clear;
 		s_sink = *( pcvoid const* )&m_unload;
+
+		// generate_shaders_world: keep ctor + tick + generate_renderer_shaders +
+		// generate_materials_shaders past /OPT:REF. volatile sink prevents LTCG
+		// from proving the args constant / devirtualizing / inlining.
+		static render::world* volatile					s_rw = 0;
+		static survarium::generate_shaders_world* volatile	s_gs = 0;
+		if ( s_rw )
+		{
+			survarium::generate_shaders_world gsw( *s_rw );
+			gsw.tick( 0 );
+		}
 	}
 
 	// Keep the object-skeleton base cone past /OPT:REF. game_object_static is
