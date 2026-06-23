@@ -4,61 +4,60 @@
 
 #include "pch.h"
 #include "login_menu.h"
+#include "game.h"
+#include "swf_input_translator.h"
+
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/input/world.h>
+#include <vostok/input/keyboard.h>
+#include <vostok/input/mouse.h>
+#include <vostok/math_functions.h>
+#include <vostok/math_uint2.h>
 
 namespace survarium {
 
-// STATE[STUB]
 bool login_menu::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
 	input::enum_keyboard_action		action
 )
 {
-	return false;
-
-	// FUNCTION BODY[0x5c3b90]: 3
-	// <0>
-	// <0x5c3b90>|0x000|+0x02d:'18'
-	// <0x5c3bbd>|0x02d|+0x002:'19'
-	// ******
+	get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_login_menu_ui->movie, get_game( ).game_time_ms( ) );
+	return true;
 }
 
-// STATE[STUB]
 bool login_menu::on_gamepad_action(
 	input::world*					__formal,
 	input::gamepad_button			__formal2, // PDB: __formal too (collision)
 	input::enum_gamepad_action		__formal3  // PDB: __formal too (collision)
 )
 {
-	return false;
-
-	// FUNCTION BODY[0x5c3b20]: 1
-	// <0x5c3b20>|0x000|+0x002:'24'
-	// ******
+	return true;
 }
 
-// STATE[STUB]
 bool login_menu::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
 	input::enum_mouse_key_action	action
 )
 {
-	return false;
+	u32 mouse_btn = 0;
+	switch ( button )
+	{
+		case input::mouse_button_left:		mouse_btn = 0; break;
+		case input::mouse_button_right:		mouse_btn = 1; break;
+		case input::mouse_button_middle:	mouse_btn = 2; break;
+	}
 
-	// FUNCTION BODY[0x5c3b30]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5c3b31>|0x001|+0x04f:'35'
-	// <0x5c3b80>|0x050|+0x002:'36'
-	// ******
+	m_login_menu_ui->movie->HandleMouseBtn(
+		action == input::ms_key_down ? flash_movie::mouse_btn_down : flash_movie::mouse_btn_up,
+		mouse_btn,
+		( float )m_mouse_pos.x,
+		( float )m_mouse_pos.y );
+
+	return true;
 }
 
-// STATE[STUB]
 bool login_menu::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -66,32 +65,18 @@ bool login_menu::on_mouse_move(
 	s32					z
 )
 {
-	return false;
+	m_mouse_pos.x += x;
+	m_mouse_pos.y += y;
 
-	// FUNCTION BODY[0x5c3bd0]: 22
-	// <0>
-	// <0x5c3bd0>|0x000|+0x00b:'42'
-	// <0x5c3bdb>|0x00b|+0x007:'43'
-	// <0>
-	// <0x5c3be2>|0x012|+0x00b:'45'
-	// <0>
-	// <0x5c3bed>|0x01d|+0x016:'47'
-	// <0x5c3c03>|0x033|+0x018:'48'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5c3c1b>|0x04b|+0x030:'54'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5c3c4b>|0x07b|+0x02f:'60'
-	// <0>
-	// <0x5c3c7a>|0x0aa|+0x003:'62'
-	// ******
+	math::uint2 const& window_size = output_window_size( );
+	math::clamp( m_mouse_pos.x, 0, ( s32 )window_size.x );
+	math::clamp( m_mouse_pos.y, 0, ( s32 )window_size.y );
+
+	float scroll_delta = ( float )z;
+	m_login_menu_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
+	m_cursor_ui->movie->HandleMouseMove( ( float )m_mouse_pos.x, ( float )m_mouse_pos.y, scroll_delta );
+
+	return true;
 }
 
 } // namespace survarium

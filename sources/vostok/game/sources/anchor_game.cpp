@@ -56,6 +56,7 @@
 #include "game_camera.h"
 #include "stats.h"
 #include "stats_graph.h"
+#include "damage_model_stats.h"
 
 // the object-skeleton base cone (game_object_ / game_object_static + the file-local
 // load_transform free function in object.cpp); the object_* visual family derives
@@ -224,6 +225,7 @@ namespace vostok
 		survarium::free_fly_camera		fly( scene, director );
 		survarium::stats				stats_obj( *( ui::world* )NULL );
 		survarium::stats_graph			graph( 0.f, 0.f, 0.f, 0.f, 0u );
+		survarium::damage_model_stats	dm_stats( *( ui::world* )NULL );
 		// project_cooker_simple is intentionally NOT constructed: its delete_resource
 		// override has no body in our sources, so emitting its vtable would not link
 		// (LNK2001). Its ~4 fns are a tiny residual the cook-matching phase recovers.
