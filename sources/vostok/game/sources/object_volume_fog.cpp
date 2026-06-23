@@ -17,32 +17,27 @@ namespace survarium {
 
 void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
-// STATE[STUB]
- object_volume_fog::object_volume_fog( base_game_scene& w ) :
+static u32	volume_fog_ids	= 0;
+static float const	clear_value		= 1.f;
+
+object_volume_fog::object_volume_fog( base_game_scene& w ) :
 	game_object_static( w )
 {
-	// FUNCTION BODY[0x78e6d0]: 11
-	// <0>
-	// <0x78e6dc>|0x00c|+0x038:'25'
-	// <0>
-	// <1>
-	// <0x78e714>|0x044|+0x04e:'28'
-	// <0x78e762>|0x092|+0x008:'29'
-	// <0x78e76a>|0x09a|+0x008:'30'
-	// <0x78e772>|0x0a2|+0x008:'31'
-	// <0x78e77a>|0x0aa|+0x008:'32'
-	// <0x78e782>|0x0b2|+0x008:'33'
-	// <0x78e78a>|0x0ba|+0x008:'34'
-	// ******
+	m_volume_fog_id				= volume_fog_ids++;
+	m_color						= float3( clear_value, clear_value, clear_value );
+	m_density					= clear_value;
+	m_speed						= clear_value;
+	m_direction					= float2( clear_value, 0.f );
+	m_noise_scale				= clear_value;
+	m_wave_length				= clear_value;
+	m_near_density				= 0.f;
+	m_transparency_multiplier	= clear_value;
+	m_density_offset			= 0.f;
+	m_height_falloff_offset		= 0.f;
 }
 
-// STATE[STUB]
- object_volume_fog::~object_volume_fog( )
+object_volume_fog::~object_volume_fog( )
 {
-	// FUNCTION BODY[0x78e6c0]: 0
-	// <0x78e6c0>|0x000|+0x006:'38'	{
-	// <0x78e6c6>|0x006|      :'39'	}
-	// ******
 }
 
 void object_volume_fog::load(
