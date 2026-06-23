@@ -41,32 +41,18 @@ void booby_trap_cook::query_for_derived_resources(
 	);
 }
 
-// STATE[STUB]
 void booby_trap_cook::on_models_ready( resources::queries_result& data, booby_trap* game_resource )
 {
-	// FUNCTION BODY[0x7672a0]: 21
-	// <0>
-	// <1>
-	// <2>
-	// <0x7672a4>|0x004|+0x004:'57'
-	// <0x7672a8>|0x008|+0x030:'58'
-	// <0x7672d8>|0x038|+0x0a8:'59'
-	// <0x767380>|0x0e0|+0x0ac:'60'
-	// <0x76742c>|0x18c|+0x0ae:'61'
-	// <0>
-	// <0x7674da>|0x23a|+0x0a5:'63'
-	// <0>
-	// <0x76757f>|0x2df|+0x0a3:'65'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x767622>|0x382|+0x012:'74'
-	// ******
+	game_resource->m_models[0]		= NULL;
+	game_resource->m_models[1]		= static_cast_resource_ptr< render::static_model_ptr >( data[0].get_unmanaged_resource( ) );
+	game_resource->m_models[2]		= static_cast_resource_ptr< render::static_model_ptr >( data[1].get_unmanaged_resource( ) );
+	game_resource->m_models[3]		= static_cast_resource_ptr< render::static_model_ptr >( data[2].get_unmanaged_resource( ) );
+
+	game_resource->m_particle_fired	= data[3].get_unmanaged_resource( );
+
+	game_resource->m_sound_fired	= data[4].get_unmanaged_resource( );
+
+	finish_query( data.get_parent_query( ), game_resource );
 }
 
 
