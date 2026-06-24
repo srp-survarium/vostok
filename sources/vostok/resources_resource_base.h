@@ -135,6 +135,8 @@ private:
 	friend	class						cook_base;
 };
 
+STATIC_SIZE_ASSERT(resource_base, 0xD0);
+
 log_string_type		log_string			(resource_base * );
 
 } // namespace resources
