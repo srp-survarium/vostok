@@ -35,9 +35,25 @@ namespace vostok
 			survarium::victory_item			item( *s_world );
 			survarium::victory_item_cook	cook( *s_world );
 
-			static survarium::base_game_scene* volatile	s_scene = 0;
-			survarium::victory_items_container	vic_container( *s_scene );
-			survarium::artefact_container		art_container( *s_scene );
+			// Source the scene through a volatile pointer AND keep the constructed
+			// objects observably live (load + address-sink): with a single dead
+			// construction site LTCG would constant-propagate the scene reference
+			// into the tiny frameless ctor, reading it from [s_scene] instead of the
+			// real [esp+4] thiscall param and dropping `ret 4` (anchor-sole-caller-
+			// convention.md). Making them escape pins the standard convention so the
+			// ctors pair the way create_game_objects' real construction does.
+			static survarium::base_game_scene* volatile			s_scene	= 0;
+			static configs::binary_config_value const* volatile		s_cfg	= 0;
+			survarium::base_game_scene&					scene	= *s_scene;
+			configs::binary_config_value const&			cfg		= *s_cfg;
+
+			survarium::victory_items_container	vic_container( scene );
+			vic_container.load( cfg );
+			s_victory_item_sink = &vic_container;
+
+			survarium::artefact_container		art_container( scene );
+			art_container.load( cfg );
+			s_victory_item_sink = &art_container;
 		}
 
 		// ---- victory_item ----------------------------------------------------
@@ -56,7 +72,7 @@ namespace vostok
 
 		// victory_items_container / artefact_container: the self-guarded ctors
 		// above emit each derived vtable, which references the forwarding
-		// load/activate/deactivate/use_info override bodies - no per-method
-		// address-take needed (those would emit vtable thunks, not the bodies).
+		// load/activate/deactivate/use_info override bodies; the load + address-sink
+		// keeps the instances live so the ctors keep the standard thiscall ABI.
 	}
 } // namespace vostok

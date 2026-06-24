@@ -7,13 +7,6 @@
 
 namespace survarium {
 
-// claude@NOTE: structure correct (base-ctor + m_game_scene(w) ref init + compiler
-// vtable stores). Residual is the anchor-sole-caller convention wall
-// (anchor-sole-caller-convention.md): the only reachable construction is the
-// /OPT:REF anchor (anchor_game_victory_item.cpp), so LTCG specialises the ctor to
-// read the scene from the anchor's static `s_scene` (`mov edi,[s_scene]`, `ret`)
-// instead of the real `[esp+4]` thiscall param (`ret 4`). Pairs at the real
-// convention once create_game_objects (project_cooker_simple, parked) constructs it.
 artefact_container::artefact_container( base_game_scene& w ) :
 	m_game_scene( w )
 {
