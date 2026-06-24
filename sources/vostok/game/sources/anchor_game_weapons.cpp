@@ -112,6 +112,45 @@ namespace vostok
 			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_reload_state				> >	sc_p_reload;
 			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_fire_state				> >	sc_p_fire;
 			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_aimed_fire_state			> >	sc_p_aimed_fire;
+
+			// Construct each handler state so its VTABLE (carrying the real
+			// initialize/finalize bodies, now un-walled) is emitted; the cook's
+			// new_state is the real construction site but is still a STUB. Volatile
+			// args prevent constant-folding the construction away.
+			static survarium::weapon* volatile			s_h_wpn		= 0;
+			static float volatile						s_h_ts		= 0.f;
+			static resources::managed_resource_ptr* volatile	s_h_anims	= 0;
+			static u8 volatile							s_h_u8		= 0;
+			static void* volatile						s_h_buf		= 0;
+			static bool volatile						s_h_flag	= false;
+			#define MAKE_HANDLER( T )	survarium::weapon_sound_events_handler_state< survarium::T > h_##T ( \
+				*s_h_wpn, s_h_ts, s_h_anims, s_h_u8, s_h_buf, s_h_u8, s_h_flag, s_h_u8 )
+			MAKE_HANDLER( weapon_core_reload_state );
+			MAKE_HANDLER( weapon_core_chamber_a_round_state );
+			MAKE_HANDLER( weapon_core_chamber_a_round_aimed_state );
+			MAKE_HANDLER( weapon_core_fire_state );
+			MAKE_HANDLER( weapon_core_aimed_fire_state );
+			MAKE_HANDLER( weapon_core_shotgun_reload_start_substate );
+			MAKE_HANDLER( weapon_core_shotgun_reload_one_round_substate );
+			MAKE_HANDLER( weapon_core_shotgun_reload_finish_substate );
+			MAKE_HANDLER( double_barreled_weapon_core_reload_state );
+			MAKE_HANDLER( double_barreled_weapon_core_fire_state );
+			MAKE_HANDLER( double_barreled_weapon_core_aimed_fire_state );
+			MAKE_HANDLER( pistol_weapon_core_reload_state );
+			MAKE_HANDLER( pistol_weapon_core_fire_state );
+			MAKE_HANDLER( pistol_weapon_core_aimed_fire_state );
+			#undef MAKE_HANDLER
+			// show/hide instantiations take the 9-arg ctor (bool& shown)
+			static bool volatile						s_h_shown	= false;
+			#define MAKE_HANDLER_SHOWN( T )	survarium::weapon_sound_events_handler_state< survarium::T > h_##T ( \
+				*s_h_wpn, s_h_ts, s_h_anims, s_h_u8, s_h_buf, s_h_u8, s_h_flag, s_h_u8, (bool&)s_h_shown )
+			MAKE_HANDLER_SHOWN( weapon_core_show_state );
+			MAKE_HANDLER_SHOWN( weapon_core_hide_state );
+			MAKE_HANDLER_SHOWN( double_barreled_weapon_core_show_state );
+			MAKE_HANDLER_SHOWN( double_barreled_weapon_core_hide_state );
+			MAKE_HANDLER_SHOWN( pistol_weapon_core_show_state );
+			MAKE_HANDLER_SHOWN( pistol_weapon_core_hide_state );
+			#undef MAKE_HANDLER_SHOWN
 		}
 
 		// ---- weapon ----------------------------------------------------------
@@ -225,6 +264,10 @@ namespace vostok
 		keep( &wse::finalize );
 		keep( &wse::on_sound_event );
 		keep( &survarium::on_sound_finished );
+		// the handler-state virtuals initialize/finalize are now bodied (the
+		// weapon_core accessor map is recovered); the guarded construction block above
+		// emits each handler vtable so /OPT:REF keeps them until the cook new_state
+		// (the real instantiation site, still a STUB) reaches them.
 		if( s_run )
 		{
 			// volatile args so the inlined construction is not constant-folded

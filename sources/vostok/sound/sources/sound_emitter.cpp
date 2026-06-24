@@ -36,6 +36,21 @@ sound_instance_proxy_ptr sound_emitter::emit( sound_scene_ptr& scene, world_user
 	return							result;
 }
 
+sound_instance_proxy_ptr sound_emitter::emit_hud_sound( sound_scene_ptr& scene, world_user& user )
+{
+	world_user& specific_user		= static_cast_checked< world_user& >( user );
+	sound_scene& scn				= static_cast_checked< sound_scene& >( *scene.c_ptr( ) );
+
+	sound_instance_proxy_ptr result	= scn.create_sound_instance_proxy
+									(
+										this,
+										*get_sound_propagator_emitter( ),
+										specific_user
+									);
+
+	return							result;
+}
+
 sound_instance_proxy_ptr sound_emitter::emit_point_sound( sound_scene_ptr& scene, world_user& user )
 {
 	world_user& specific_user		= static_cast_checked< world_user& >( user );

@@ -33,6 +33,7 @@ class game_world_ui;
 class player;
 
 class weapon_cook;
+class weapon_sound_effect;
 
 class weapon : public weapon_core {
 	// /OPT:REF anchor reaches the private (AAE/EAE) methods below by address-take;
@@ -41,6 +42,9 @@ class weapon : public weapon_core {
 	// the cook constructs/tears down weapon directly, touching private pfx/animation
 	// members; codegen-neutral
 	friend	class	weapon_cook;
+	// weapon_sound_effect::on_sound_event reads m_game_scene directly (inlined) and
+	// resolves the first/third-view branch through weapon-private members; codegen-neutral
+	friend	class	weapon_sound_effect;
 public:
 								weapon								(
 									u32		first_view_death_animations_count,
