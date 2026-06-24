@@ -142,6 +142,17 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 // (declared-only here; render module not built in this tree) and game_core
 // player_profile slot iteration + items_dictionary torso/pants table lookups
 // whose members are still sibling stubs. Bodies kept as buildable skeletons.
+// Re-verified 2026-06-24: `skeleton_combined_cook_data` exists NOWHERE in sources/
+// (not even sources/vostok/render/), so on_visual_loaded's tail DELETE(cook_data) -
+// which needs the COMPLETE type for ~skeleton_combined_cook_data() + a linkable dtor
+// symbol - cannot compile; on_configs_loaded mallocs+constructs the same 0x1C98-byte
+// cook_data (target 0x5dce70) and binds on_visual_loaded(.,.,cook_data). NEXT: unblocks
+// only once the render module's skeleton_combined_cook_data lands in the tree. Decoded
+// targets for the eventual reconstruction: on_visual_loaded 0x5dcc90 (3 stmts: L358
+// parent->set_unmanaged_resource(static_cast_resource_ptr<unmanaged_resource_ptr>(
+// data[0].get_unmanaged_resource()), nocache_memory, 0x110); L359 finish_query(success);
+// L360 DELETE(cook_data)); on_configs_loaded 0x5dce70 (47 stmts) walks player_profile
+// slots + items_dictionary torso/pants tables; translate_query 0x5dd580 (11 stmts).
 // STATE[STUB]
 void profile_skin_visual_cook::translate_query( resources::query_result_for_cook& parent )
 {

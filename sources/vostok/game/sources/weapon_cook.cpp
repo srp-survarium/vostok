@@ -25,30 +25,68 @@ weapon_cook::weapon_cook( game& g ) :
 // finish}, double_barreled {idle, aimed_idle, show, hide, reload, fire, aimed_fire},
 // pistol {idle, aimed_idle, show, hide, reload, fire, aimed_fire}). Each declaration is
 // a magic-statics guard + cook ctor + atexit(dtor). BLOCKED: emitting the bodies forces
-// instantiation of the cook-template ctors (weapon_core_state_cook_template<T>::ctor in
-// weapon_core_state_cook_template_inline.h and weapon_sound_events_handler_state_cook<T>::
-// ctor in weapon_sound_events_handler_state_cook_inline.h), which are themselves STUBs:
-// their empty bodies implicitly default-construct the base resources::unmanaged_cook,
-// which has NO default ctor (C2512). NEXT: recover those two template cook ctors first
-// (each needs `unmanaged_cook( <per-T class_id>, reuse_false, use_current_thread_id,
-// use_current_thread_id )` + register_cook(this), per weapon_core_inactive_state_cook.cpp),
-// then the 28-static body here builds and pairs.
+// instantiation of the cook-template ctors. UPDATE 2026-06-24: the first blocker is RESOLVED
+// - weapon_core_state_cook_template<T>::ctor in weapon_core_state_cook_template_inline.h now
+// calls `unmanaged_cook( weapon_core_state_cook_class<T>(), reuse_false, use_current_thread_id,
+// use_current_thread_id )` + register_cook(this) (exactly the prior NEXT step). The REMAINING
+// blocker is the *sound*-cook ctor weapon_sound_events_handler_state_cook<T>::ctor in
+// weapon_sound_events_handler_state_cook_inline.h, still an empty STUB `{}` whose implicit
+// base default-construct of resources::unmanaged_cook (NO default ctor) is C2512 once the 7
+// sound cooks (show/hide/...) here instantiate it. That ctor lives in ANOTHER TU
+// (weapon_sound_events_handler_state_cook_inline.h) - per the no-cross-unit-out-line rule it
+// must be matched by THAT unit first, not here. NEXT: match weapon_sound_events_handler_state_cook<T>::
+// ctor (same unmanaged_cook(class_id, reuse_false, use_current_thread_id, use_current_thread_id)
+// + register_cook(this) shape, per its target ctor 0x98a20), THEN the 28-static body here builds
+// and pairs (target order: inactive, idle, aimed, show, hide, reload, chamber_a_round,
+// chamber_a_round_aimed, fire, aimed_fire, shotgun_reload, shotgun_{start,one_round,finish},
+// double_barreled {idle, aimed_idle, show, hide, reload, fire, aimed_fire}, pistol {idle,
+// aimed_idle, show, hide, reload, fire, aimed_fire}; each = magic-statics guard + ctor + atexit dtor).
 void weapon_cook::register_cooks_for_logic_states( )
 {
 }
 
 // STATE[STUB]
-// claude@NOTE: parked - large (71-stmt) weapon-config parser. Now PAIRS (access fixed to
-// private EAE). Recovers as: read config_ptr = data[0] (sound_emitter::set + destroy on the
-// intrusive temp); cfg = config_ptr root; fire_pfx_count = particles/bullet_shells_count
-// (default 0Ah), shells/shoot_pfx_count = particles/shoot_pfx_count (default 3); count the
-// request slots ((fire+shells+4) plus a rifle_scope_dict_id addon via items_dictionary::
-// item_by_id when addons/rifle_scope_dict_id exists); build the request array on alloca
-// (leupold scope model 0x5A, object/model 0x14, then user_animations_in_place/death_hud,
-// /death, /preview each iterated by binary_config_value array stride 0x18, class 0x3D);
-// malloc the weapon block (sizeof(weapon)+sum*4) + placement weapon(counts); query_resources
-// bound to on_weapon_subresources_ready. NEXT: reconstruct statement-by-statement against
-// the carcass line records below (lines 96-166).
+// claude@NOTE: parked - large weapon-config parser. PAIRS (private EAE access). DECODED
+// 2026-06-24 (target 0x5cde90, 34 stmts, all callees buildable - configs operator[]/
+// value_exists, items_dictionary::item_by_id, weapon::weapon(u32,u32,u32), query_resources,
+// boost::bind to on_weapon_subresources_ready). Statement->source-line map (PDB line table):
+//   L96  parent = data.get_parent_query()
+//   L99  config_ptr = static_cast_resource_ptr<binary_config_ptr>( data[0].get_unmanaged_resource() )
+//   L100 binary_config_value const& config = config_ptr->get_root()
+//   L108 u8 fire_pfx_count   = config["particles"].value_exists("bullet_shells_count")
+//                              ? (u8)config["particles"]["bullet_shells_count"] : 0x0A
+//   L109 u8 shells_pfx_count = config["particles"].value_exists("shoot_pfx_count")
+//                              ? (u8)config["particles"]["shoot_pfx_count"]     : 3
+//   L111 u32 requests_count  = fire_pfx_count + shells_pfx_count + 4   (lea edx,[ecx+eax+4])
+//   L114/L115 scope detection: if config["addons"].value_exists() &&
+//             config["addons"]["rifle_scope_dict_id"].value_exists() then
+//             scope = m_game.items_dictionary().item_by_id( config["addons"]["rifle_scope_dict_id"] ).item_cfg_name  (loads [item+8])
+//   L117 requests on raw alloca, size (requests_count + (scope?1:0)) * sizeof(request);
+//        the request build is INLINED here (no `requests` named local, no separate helper
+//        symbol - create_requests_for_animations 0x762950 is the *container* cook's, not this);
+//        each slot is a guarded `if(cursor){[cursor]=path;[cursor+4]=id} cursor+=8`, count later
+//        computed (cursor-start)/8 at the query_resources call.
+//   L118/L119 if(scope) requests[i++].set("gameplay/items/scopes/leupold/...", 0x5A)
+//   L121 requests[i++].set( (pcstr)config["object"]["model"], 0x14 )
+//   L123 binary_config_value const& first_view_animations = config["user_animations_in_place"]["death_hud"]
+//   L124/L125 loop config["user_animations_in_place"]["death_hud"][k] -> requests[i++].set(.,0x3D)  (array stride 0x18, count = [node+0x16])
+//   L127/L128/L129 same loop over ["death"]
+//   L131/L132/L133 same loop over ["preview"]
+//   L135 malloc weapon block sizeof(weapon)+ (death_hud+death+preview)*4 (= *4+0xFF0); placement new
+//   L137 weapon( death_hud_count, death_count, preview_count )   (note: scope-counts are crossed in
+//        the two pfx-list mallocs at L142/L145 - the FIRST malloc uses [ebp-14h] count and stores to
+//        m_shells_pfx_list/0xFAC + m_shells_pfx_count/0xFB1, the SECOND uses [ebp-18h] -> m_fire_pfx_list/
+//        0xFA8 + m_fire_pfx_count/0xFB0; verify the exact source spelling before trusting which member
+//        gets which count - reproduce the crossing, do NOT "fix" it)
+//   L140 m_shells_pfx_list = (unmanaged_resource_ptr*)malloc(count*4+8) zero-inited (array cookie)
+//   L142/L143 m_shells_pfx_count = ...; same malloc dance for m_fire_pfx_list (L145)
+//   L148/L149 if fire_pfx_count: loop requests[i++].set((pcstr)config["particles"]["bullet_shells"], 0x48)
+//   L151/L152 if shells_pfx_count: loop requests[i++].set((pcstr)config["particles"]["shoot"], 0x48)
+//   L166 query_resources( requests, count, boost::bind(&on_weapon_subresources_ready, this, _1, config_ptr, weapon), g_allocator, NULL, parent )
+// NEXT: write the body laying statements on these exact lines (the recorded line table must
+// agree to byte-match); converge with `--view structure-diff` over several rebuilds. The
+// inlined request walk is the only non-obvious shape - try a raw `request*` cursor with
+// create_request() and the guarded push, NOT a buffer_vector (no named local).
 void weapon_cook::on_weapon_config_loaded( resources::queries_result& data )
 {
 	// LOCALS
