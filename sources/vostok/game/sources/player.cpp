@@ -1520,6 +1520,15 @@ void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum 
 	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
+// claude@NOTE: /Ox-target-vs-/Od-base inlining wall. The shipped game TU is /Ox and
+// fully inlines every reader.r<T>() (float3/float/bool/profile_slot_enum) into raw
+// m_pointer reads AND inlines item_in_slot().c_ptr() + the intrusive_ptr refcount
+// dance (the TRGT_ONLY lock-xadd statements). Our /Od base out-of-lines all of it,
+// now compounded by packet_reader::r<T> __declspec(noinline) (header owned elsewhere,
+// a net win for the out-of-line-r<T> handlers). Source structure/order is faithful;
+// the 2 extra base named locals (orientation, look_pitch) are real source locals the
+// /Ox target register-allocated away - NOT deleted (release structure is the
+// post-optimization projection). Residual is non-steerable from this TU.
 void player::deserialize( network_core::packet_reader& reader )
 {
 	float3 const position		= reader.r< float3 >( );
