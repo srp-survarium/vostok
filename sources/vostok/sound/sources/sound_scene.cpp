@@ -1399,6 +1399,47 @@ void sound_scene::resume_propagate_all_sounds	( ) const
 	}
 }
 
+// claude@NOTE: sound_scene.cpp in the target is a NEWER variant (portal-graph
+// propagation, new_sound_propagator / search_service / sound_environment); the
+// committed class matches an EARLIER variant, so the scene methods/ctor cannot be
+// bodied without rewriting the header layout (offsets) and regressing the ~25
+// already-paired old-variant methods. These three free functions are layout-
+// independent and verified byte-correct via pdb_fetch --view diff (the two
+// fill_x3daudio_vector overloads are 100% identical). They do NOT pair in objdiff:
+// the delinker records BOTH fill_x3daudio_vector overloads under the bare demangled
+// name "vostok::sound::fill_x3daudio_vector" (no param list), so objdiff cannot map
+// either overload to the parameter-distinguished base symbol - a target-side
+// delinker artifact, not a matching gap.
+void fill_x3daudio_vector	(
+	_D3DVECTOR&		vec,
+	float			x,
+	float			y,
+	float			z
+)
+{
+	vec.x							= x;
+	vec.y							= y;
+	vec.z							= z;
+}
+
+void fill_x3daudio_vector	( _D3DVECTOR& dest_vec, float3 const& vec )
+{
+	dest_vec.x						= vec.x;
+	dest_vec.y						= vec.y;
+	dest_vec.z						= vec.z;
+}
+
+float3 closest_point_on_segment	(
+	float3 const&		point,
+	float3 const&		segment_origin,
+	float3 const&		segment_displacement
+)
+{
+	float domen_value					= ( point - segment_origin ).dot_product( segment_displacement ) / segment_displacement.squared_length( );
+	domen_value							= math::clamp_r( domen_value, 0.f, 1.f );
+	return								segment_origin + segment_displacement * domen_value;
+}
+
 
 } // namespace sound
 } // namespace vostok
