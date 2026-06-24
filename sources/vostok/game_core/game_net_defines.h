@@ -128,7 +128,19 @@ struct match_options {
 			explicit	match_options	( ) {}
 
 	inline	void		serialize		( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
-			void		deserialize		( network_core::packet_reader& reader ) {} // STATE[STUB]
+			void		deserialize		( network_core::packet_reader& reader )
+			{
+				map_id				= reader.r< u8 >( );
+				reader.r_string		( map_name );
+				match_mode_			= (game_mode_type)reader.r< u8 >( );
+				players_count		= reader.r< u8 >( );
+				victory_items_count	= reader.r< u8 >( );
+				respawn_time		= reader.r< u8 >( );
+				match_time			= reader.r< u16 >( );
+
+				match_id			= 0xFFFFFFFF;
+				received_players_count	= 0xFF;
+			}
 
 public:
 	/* 0x0000 */	player_profile		player_profiles[20];
