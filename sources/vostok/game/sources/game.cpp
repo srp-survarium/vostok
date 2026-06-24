@@ -59,7 +59,9 @@ using vostok::console_commands::command_type_engine_internal;
 // claude@NOTE: PARKED - 's_draw_snd_stats' (sound-debug cc_bool): its command-name
 // string + command_type are not recoverable from the init asm (the name string lives
 // in the data section, not the init function). A guessed name would fabricate
-// data-section bytes. Recover once the data-section string is read.
+// data-section bytes. Recover once the data-section string is read. Its backing value
+// bool s_draw_snd_stats_value is referenced by update_stats's PARKED sound-debug tail
+// (see the note there); restore the static alongside that tail.
 
 static bool s_draw_stats_value = true;
 static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
@@ -660,226 +662,112 @@ void game::exit( pcstr str )
 		m_engine.exit				( 0 );
 }
 
-// STATE[STUB]
 void game::tick( const u32 current_frame_id )
 {
-	// CALL SITE INFO
-	// <0x5e829d> -> void < unknown >( u32 )
-	// <0x5e82ba> -> void < unknown >( const u32, const u32, const bool )
-	// <0x5e8302> -> void < unknown >( u32, const bool )
-	// <0x5e830f> -> void < unknown >()
-	// <0x5e831c> -> void < unknown >()
-	// <0x5e8329> -> void < unknown >()
-	// <0x5e8348> -> render::ui::renderer& < unknown >()
-	// <0x5e8354> -> void < unknown >( render::ui::renderer&, render::base_scene_view_ptr const& )
-	// <0x5e8360> -> void < unknown >()
-	// <0x5e836a> -> bool < unknown >() const
-	// <0x5e8382> -> void < unknown >( render::base_scene_view_ptr const& )
-	// <0x5e839a> -> bool < unknown >() const
-	// <0x5e83ae> -> ui::world& < unknown >()
-	// <0x5e83f3> -> ui::font const* < unknown >()
-	// <0x5e845b> -> void < unknown >( u32, const bool )
-	// ******
+	u32 const		current_time_in_ms		= m_timer.get_elapsed_msec( );
+	u32 const		frame_delta				= current_time_in_ms - m_current_time_in_ms;
+	m_current_time_in_ms					= current_time_in_ms;
 
-	// FUNCTION BODY[0x5e81e0]: 117
-	// <0x5e81e0>|0x000|+0x00e:'691'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e81ee>|0x00e|+0x02b:'697'
-	// <0x5e8219>|0x039|+0x008:'698'
-	// <0>
-	// <1>
-	// <0x5e8221>|0x041|+0x031:'701'
-	// <0>
-	// <0x5e8252>|0x072|+0x009:'703'
-	// <0>
-	// <0x5e825b>|0x07b|+0x019:'705'
-	// <0>
-	// <0x5e8274>|0x094|+0x1c9:'707'
-	// <0>
-	// <0x5e843d>|0x25d|+0x00a:'709'
-	// <0x5e8447>|0x267|+0x016:'710'
-	// <0>
-	// <0x5e845d>|0x27d|-0x1d1:'712'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e828c>|0x0ac|+0x013:'716'
-	// <0x5e829f>|0x0bf|+0x01d:'717'
-	// <0>
-	// <0x5e82bc>|0x0dc|+0x009:'719'
-	// <0x5e82c5>|0x0e5|+0x00d:'720'
-	// <0>
-	// <0x5e82d2>|0x0f2|+0x00c:'722'
-	// <0x5e82de>|0x0fe|+0x006:'723'
-	// <0>
-	// <0x5e82e4>|0x104|+0x00a:'725'
-	// <0x5e82ee>|0x10e|+0x016:'726'
-	// <0>
-	// <0x5e8304>|0x124|+0x00d:'728'
-	// <0>
-	// <0x5e8311>|0x131|+0x00d:'730'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <0x5e831e>|0x13e|+0x00d:'757'
-	// <0x5e832b>|0x14b|+0x02b:'758'
-	// <0>
-	// <0x5e8356>|0x176|+0x00c:'760'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x5e8362>|0x182|+0x00e:'775'
-	// <0x5e8370>|0x190|+0x014:'776'
-	// <0>
-	// <0x5e8384>|0x1a4|+0x005:'778'
-	// <0>
-	// <0x5e8389>|0x1a9|+0x017:'780'
-	// <0x5e83a0>|0x1c0|+0x007:'781'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x5e83a7>|0x1c7|+0x081:'795'
-	// <0>
-	// <0x5e8428>|0x248|+0x00c:'797'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x5e8434>|0x254|+0x035:'809'
-	// <0x5e8469>|0x289|      :'809'	}
-	// ******
+	m_permanent_time_in_ms					= m_permanent_timer.get_elapsed_msec( );
+
+	m_current_frame_id						= current_frame_id;
+
+	m_scheduler.on_frame					( frame_delta, m_current_time_in_ms );
+
+	if ( !m_active_scene || !m_active_scene->render_scene( ).c_ptr( ) )
+	{
+		if ( m_network_client )
+			m_network_client->tick			( m_current_time_in_ms, m_is_paused );
+
+		m_renderer.end_frame				( );
+		return;
+	}
+
+	m_input_world->tick						( m_permanent_time_in_ms );
+	m_active_scene->tick					( frame_delta, m_current_time_in_ms, m_is_paused );
+
+	if ( m_game_options.is_active( ) )
+		m_game_options.tick					( frame_delta, m_current_time_in_ms, m_is_paused );
+
+	if ( m_chat_handler->is_active( ) )
+		m_chat_handler->tick				( frame_delta );
+
+	if ( m_network_client )
+		m_network_client->tick				( m_current_time_in_ms, m_is_paused );
+
+	m_active_scene->on_after_tick			( );
+
+	m_text_wnd->remove_all_childs			( );
+	m_text_wnd->tick						( );
+	m_text_wnd->draw						( m_ui_world->get_renderer( ), m_active_scene->render_scene_view( ) );
+
+	m_ui_world->tick						( );
+
+	if ( m_console->get_active( ) )
+		m_console->tick						( m_active_scene->render_scene_view( ) );
+
+	update_stats							( current_frame_id );
+
+	if ( m_debug_window_type != debug_window_none && !m_console->get_active( ) )
+		draw_debug_window					( );
+
+	m_renderer.draw_scene					( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ), render_output_window( ), viewport( ) );
+
+	m_renderer.end_frame					( );
 }
 
-// STATE[STUB]
 void game::update_stats( const u32 current_frame_id )
 {
-	// LOCALS
-	// const float 						last_frame_time
-	// char[64] 						buff
-	// ******
+	float const last_frame_time				= float( m_permanent_time_in_ms - m_first_frame_time_in_ms ) * math::epsilon_3;
+	m_fps_graph->add_value					( last_frame_time, math::is_zero( last_frame_time - m_last_frame_time ) ? 10000.f : 1.f / ( last_frame_time - m_last_frame_time ) );
 
-	// STATICS
-	// static console_commands::cc_bool fps_graph = <0x4c2b578>;
-	// static bool 						draw_fps_graph = <0x4c265c4>;
-	// ******
+	m_previous_frame_time_in_ms				= m_permanent_time_in_ms;
 
-	// CALL SITE INFO
-	// <0x5e6237> -> ui::world& < unknown >()
-	// <0x5e6249> -> render::ui::renderer& < unknown >()
-	// <0x5e62d2> -> ui::world& < unknown >()
-	// <0x5e62e4> -> render::ui::renderer& < unknown >()
-	// <0x5e6366> -> sound::world_user& < unknown >() const
-	// ******
+	m_last_frame_time						= last_frame_time;
+	if ( m_lobby_menu && m_lobby_menu->is_active( ) )
+		m_lobby_menu->set_fps_stats			( m_fps_graph->cumulative_count( ) / m_fps_graph->cumulative_time( ) );
 
-	// FUNCTION BODY[0x5e60b0]: 52
-	// <0x5e60b3>|0x003|+0x025:'813'
-	// <0x5e60d8>|0x028|+0x06d:'814'
-	// <0>
-	// <0x5e6145>|0x095|+0x012:'816'
-	// <0>
-	// <0x5e6157>|0x0a7|+0x01b:'818'
-	// <0x5e6172>|0x0c2|+0x02e:'819'
-	// <0>
-	// <0x5e61a0>|0x0f0|+0x024:'821'
-	// <0>
-	// <0x5e61c4>|0x114|+0x032:'823'
-	// <0>
-	// <1>
-	// <0x5e61f6>|0x146|+0x025:'826'
-	// <0x5e621b>|0x16b|+0x015:'827'
-	// <0x5e6230>|0x180|+0x026:'828'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e6256>|0x1a6|+0x048:'835'
-	// <0>
-	// <0x5e629e>|0x1ee|+0x018:'837'
-	// <0>
-	// <0x5e62b6>|0x206|+0x015:'839'
-	// <0x5e62cb>|0x21b|+0x035:'840'
-	// <0>
-	// <0x5e6300>|0x250|+0x002:'842'
-	// <0>
-	// <1>
-	// <0x5e6302>|0x252|+0x015:'845'
-	// <0>
-	// <1>
-	// <0x5e6317>|0x267|+0x01a:'848'
-	// <0>
-	// <0x5e6331>|0x281|+0x009:'850'
-	// <0x5e633a>|0x28a|+0x047:'851'
-	// <0>
-	// <0x5e6381>|0x2d1|+0x00e:'853'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e638f>|0x2df|+0x007:'861'
-	// <0x5e6396>|0x2e6|+0x01c:'862'
-	// <0>
-	// <1>
-	// ******
+	if ( s_draw_stats_value && !hide_game_stats && m_game_world.is_active( ) )
+	{
+		m_stats->set_fps_stats				( m_fps_graph->cumulative_count( ) / m_fps_graph->cumulative_time( ) );
+
+		char buff[64];
+		vostok::sprintf						( buff, "pending queries: %d", vostok::resources::pending_queries_count( ) );
+		m_stats->set_resources_stats		( buff );
+
+		m_stats->draw						( ui_world( ).get_renderer( ), m_active_scene->render_scene_view( ) );
+	}
+
+	static bool draw_fps_graph				= false;
+	static cc_bool fps_graph				( "draw_fps_graph", draw_fps_graph, false, command_type_user_specific );
+
+	if ( draw_fps_graph && !hide_game_stats && m_game_world.is_active( ) )
+	{
+		m_fps_graph->set_time_interval		( 5.f );
+		// only top_margin (574) + height (128) survive; arg_4/5/6 are UNREFERENCED in
+		// render() so LTCG drops them - the trailing args here are placeholders.
+		m_fps_graph->render					( ui_world( ).get_renderer( ), m_active_scene->render_scene_view( ), 574, 128, current_frame_id, 1004, 10 );
+	}
+	else
+		m_fps_graph->set_time_interval		( 1.f );
+
+	// claude@NOTE: PARKED tail (6 stmts, target lines 845-862) - the s_draw_snd_stats
+	// sound-debug block:
+	//   if ( s_draw_snd_stats_value && m_game_world.is_active( ) ) {
+	//     if ( !m_sound_stats )
+	//       m_sound_stats = NEW( sound::sound_debug_stats )( g_allocator,
+	//         m_sound_world.get_logic_world_user( ), m_game_world.get_sound_scene( ), *m_ui_world );
+	//     if ( m_sound_stats->is_stats_available( ) ) {
+	//       sound::sound_debug_stats::set_debug_draw_mode( sound::sound_debug_stats::overall );
+	//       m_sound_stats->draw( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ) );
+	//     }
+	//   }
+	// BLOCKED: sound_debug_stats.cpp is ExcludedFromBuild for Master Gold in
+	// sources/vostok/sound/sources/sound.vcproj (and its private helpers
+	// create_statistic/draw_*_stats are unimplemented stubs), so the ctor/draw/
+	// set_debug_draw_mode calls won't link. The TARGET build compiles that TU
+	// (vostok::sound::sound_debug_stats::draw exists at 0x145f60). Restore this tail
+	// once the sound module implements sound_debug_stats.cpp and un-excludes it.
 }
 
 void game::clear_resources( )
