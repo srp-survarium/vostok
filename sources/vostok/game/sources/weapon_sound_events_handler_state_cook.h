@@ -13,6 +13,32 @@ namespace survarium {
 
 struct weapon_state_creation_params;
 
+// Per-state resource class id for the sound-cook ctor; specialized per wrapped
+// logic state. Inlines to the literal in every ctor (no standalone symbol in the
+// target). T is a weapon_sound_events_handler_state< state > instantiation.
+template < typename T >	resources::class_id_enum	weapon_sound_events_handler_state_cook_class	( );
+
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_show_state						> >( )	{ return resources::weapon_show_state_class;							}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_hide_state						> >( )	{ return resources::weapon_hide_state_class;							}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_reload_state						> >( )	{ return resources::weapon_reload_state_class;						}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_chamber_a_round_state			> >( )	{ return resources::weapon_chamber_a_round_state_class;				}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_chamber_a_round_aimed_state		> >( )	{ return resources::weapon_chamber_a_round_aimed_state_class;		}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_fire_state						> >( )	{ return resources::weapon_fire_state_class;							}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_aimed_fire_state					> >( )	{ return resources::weapon_aimed_fire_state_class;					}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_shotgun_reload_start_substate		> >( )	{ return resources::weapon_shotgun_reload_start_substate_class;		}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_shotgun_reload_one_round_substate	> >( )	{ return resources::weapon_shotgun_reload_one_substate_class;		}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< weapon_core_shotgun_reload_finish_substate	> >( )	{ return resources::weapon_shotgun_reload_finish_substate_class;		}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< double_barreled_weapon_core_show_state		> >( )	{ return resources::double_barreled_weapon_show_state_class;			}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state		> >( )	{ return resources::double_barreled_weapon_hide_state_class;			}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< double_barreled_weapon_core_reload_state		> >( )	{ return resources::double_barreled_weapon_reload_state_class;		}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< double_barreled_weapon_core_fire_state		> >( )	{ return resources::double_barreled_weapon_fire_state_class;			}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< double_barreled_weapon_core_aimed_fire_state	> >( )	{ return resources::double_barreled_weapon_aimed_fire_state_class;	}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_show_state					> >( )	{ return resources::pistol_weapon_show_state_class;					}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_hide_state					> >( )	{ return resources::pistol_weapon_hide_state_class;					}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_reload_state				> >( )	{ return resources::pistol_weapon_reload_state_class;				}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_fire_state					> >( )	{ return resources::pistol_weapon_fire_state_class;					}
+template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_aimed_fire_state			> >( )	{ return resources::pistol_weapon_aimed_fire_state_class;			}
+
 // T is a weapon_sound_events_handler_state< state > instantiation
 template < typename T >
 class weapon_sound_events_handler_state_cook : public resources::unmanaged_cook , public boost::noncopyable {
@@ -28,6 +54,9 @@ public:
 public:
 	inline						weapon_sound_events_handler_state_cook	( );
 
+private:
+	// the four cook virtuals + the helpers mangle private (EAE in the target);
+	// reached via the resources_manager vtable + the create_resource bind chain.
 	virtual	mutable_buffer		allocate_resource		( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist ) override;
 	virtual	void				deallocate_resource		( void* buffer ) override;
 	virtual	void				create_resource			( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
@@ -50,6 +79,7 @@ public:
 									config_params const&	config_parameters
 								);
 
+public:
 	virtual						~weapon_sound_events_handler_state_cook	( ) { /* no source */ }
 }; // class weapon_sound_events_handler_state_cook
 
