@@ -309,19 +309,9 @@
         '';
       };
 
-    in {
-      packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
-          vostok-toolchain vostok-libs survarium survarium-resources-unpacked
-          objdiff objdiff-cli;
-        # Convenience aliases for the individual survarium outputs:
-        #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
-        survarium-game = survarium;            # default `out` = game binaries
-        survarium-resources = survarium.resources;
-        survarium-keys = survarium.keys;
-      };
-
-      devShells.${system}.default = pkgs.mkShell {
+      # The lean default dev shell. `with-resources` (below) extends it with the
+      # heavy game-data outputs; everything common lives here.
+      defaultDevShell = pkgs.mkShell {
         name = "surv-decomp";
 
         packages = [
@@ -388,18 +378,17 @@
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
           # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
-          # The survarium outputs all come from one build, so pinning resources
-          # and keys here costs nothing beyond getting the game binaries.
-          # survarium-resources-unpacked is the resources.db expanded into its
-          # file tree (built once with vostok-resources-db), pinned the same way.
+          # The lean shell pins only what matching needs: the toolchain, libs,
+          # the game binaries (survarium `out` = exe/pdb), and the small SSL keys.
+          # The heavy ~1.5 GiB packed resources and ~1.6 GiB unpacked tree are
+          # deliberately NOT realized/pinned here - they're opt-in via the
+          # `with-resources` shell (`nix develop .#with-resources`).
           mkdir -p "$VOSTOK_DIR/binaries/nix-store"
           for pair in \
               "vostok-toolchain:${vostok-toolchain}" \
               "vostok-libs:${vostok-libs}" \
               "vcproj2ninja:${vcproj2ninja}" \
               "survarium-game:${survarium}" \
-              "survarium-resources:${survarium.resources}" \
-              "survarium-resources-unpacked:${survarium-resources-unpacked}" \
               "survarium-keys:${survarium.keys}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
@@ -428,6 +417,60 @@
             echo "[vostok] nvim       : WRAPPED -> auto-loads pdb_fetch.nvim (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
           fi
         '';
+      };
+
+      # Opt-in shell that adds the heavy game data on top of the lean default:
+      #   nix develop .#with-resources
+      # Realizes and pins the ~1.5 GiB packed resources + ~1.6 GiB unpacked tree
+      # and exports VOSTOK_RESOURCES_DIR / VOSTOK_RESOURCES_UNPACKED. The bare
+      # `nix develop` stays lean and never touches these.
+      withResourcesDevShell = pkgs.mkShell {
+        name = "surv-decomp-with-resources";
+
+        # Reuse the entire default shell (packages + its shellHook run first).
+        inputsFrom = [ defaultDevShell ];
+
+        packages = [ vostok-resources-db ];
+
+        shellHook = ''
+          export VOSTOK_RESOURCES_DIR="${survarium.resources}"
+          export VOSTOK_RESOURCES_UNPACKED="${survarium-resources-unpacked}"
+
+          # Pin the heavy resource outputs so `nix-store --gc` keeps them.
+          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+          for pair in \
+              "survarium-resources:${survarium.resources}" \
+              "survarium-resources-unpacked:${survarium-resources-unpacked}"; do
+            name="''${pair%%:*}"
+            path="''${pair#*:}"
+            nix-store -r "$path" \
+              --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
+              --indirect >/dev/null
+          done
+
+          echo "[vostok] resources  : REALIZED -> VOSTOK_RESOURCES_DIR + VOSTOK_RESOURCES_UNPACKED (opt-in shell)." >&2
+        '';
+      };
+
+    in {
+      packages.${system} = {
+        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
+          vostok-toolchain vostok-libs survarium
+          objdiff objdiff-cli;
+        # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand
+        # (`nix build .#survarium-resources-unpacked`), but the default devShell
+        # does NOT realize it - see the `with-resources` shell below.
+        inherit survarium-resources-unpacked;
+        # Convenience aliases for the individual survarium outputs:
+        #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
+        survarium-game = survarium;            # default `out` = game binaries
+        survarium-resources = survarium.resources;
+        survarium-keys = survarium.keys;
+      };
+
+      devShells.${system} = {
+        default = defaultDevShell;
+        with-resources = withResourcesDevShell;
       };
     };
 }
