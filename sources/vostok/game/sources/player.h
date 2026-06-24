@@ -56,6 +56,9 @@ class player : public base_player , public resources::unmanaged_resource {
 	// private out-of-line body. friend grants are codegen-neutral.
 	friend class base_network_client;
 	friend void anchor_game_player( );
+	// weapon::on_foot_step / instant_aim_* inline the private fov/near-plane/demo-player
+	// accessors directly on user() (a player&); codegen-neutral friend grant.
+	friend class weapon;
 public:
 			explicit								player								( player_creation_params const& params );
 	virtual											~player								( );

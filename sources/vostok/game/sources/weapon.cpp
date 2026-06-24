@@ -15,6 +15,10 @@
 
 #include "base_game_scene.h"
 #include "game_camera.h"
+#include "player.h"
+#include "player_input_handler.h"
+#include "step_manager.h"
+#include "game_world.h"
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
@@ -33,30 +37,86 @@ static vostok::console_commands::cc_bool s_attach_fingers_to_weapon_cc( "finger_
 // seed/name-independent.
 static bool s_hide_crosshair_on_aim_value = true;
 static float s_dispersion_gui_scale_coef_value = 1.0f;
+
+// aim FOV/near-plane transition duration, passed to player::set_target_fov_factor in
+// instant_aim_start/end (the [s_aim_transition_time] float-pool memload). sushi@TODO:
+// seed unrecoverable from asm (data section); 0.3f matches the documented aim transition.
+static float s_aim_transition_time = 0.3f;
 static vostok::console_commands::cc_float dispersion_magic_coef_cc( "dispersion_magic_coef", s_dispersion_gui_scale_coef_value, 0.0f, 10000.0f, true, vostok::console_commands::command_type_user_specific );	// sushi@TODO: name string + min/max source unverified
 
 namespace survarium {
 
-// claude@NOTE: STUB - 6 body stmts. Init-list builds weapon_core base, m_fingers_corrector (vector
-// ctor of 2 hands), m_weapon_fire_light_props (light_props ctor). Body line 86 (big): zeroes the pfx
-// list/count/model/ui/scene pointers, sets m_first/third/preview death-animation counts, takes
-// m_weapon_fire_light_id from the survarium::light_ids global (post-increment), copies this+0x158
-// into m_weapon_fire_light_props (rep movsd), seeds m_fire_light_anim_length=0xC8 and the firing-light
-// state floats; lines 88-90 set more light_props fields; 98/99 set m_barrel_transform = m_scope_transform
-// = float4x4().identity(). Parked: needs the light_ids global + the light_props field seeds + the named
-// float constants (__real@437f0000/40a00000 etc.) pinned across several diff cycles. Const members must
-// stay init-list; m_fire_light_anim_length seed is 0xC8.
+// shared light-id counter (also in object_light.cpp); each light grabs ++light_ids.
+static u32 light_ids = 1000000;
+
+// claude@NOTE: STUB-grade structure (6 target stmts vs our many). The target emits the
+// member-init/light_props setup as ONE batched /Od statement (line 86, 0x12d bytes,
+// declaration-order writes) then 5 small ones (88-90 = attenuation_power; 98/99 =
+// m_barrel/m_scope = identity). Walled structurally: m_weapon_fire_light_props is built
+// field-by-field here, but render::light_props has NO out-of-line ctor in our headers
+// (sushi@TODO in light_props.h) so we cannot reproduce the single batched statement - each
+// field assignment becomes its own line record (16 stmts). light_ids is a shared global
+// (file-static here + object_light.cpp, ?light_ids@survarium@@3IA via ICF). Field VALUES are
+// recovered (range=5, color=color_rgba(1,1,1,1)=0xFFFFFFFF, attenuation=2, intensity=1,
+// diffuse/specular=1, does_cast_shadows=true, type=point, anim_length const=200). Recovers
+// once the render-facade light_props ctor lands and the init can collapse.
 // STATE[STUB]
  weapon::weapon(
 	const u32		first_view_death_animations_count,
 	const u32		third_view_death_animations_count,
 	u32				preview_animations_count
 ) :
-	m_fire_light_anim_length				( 0 ),
+	m_fire_light_anim_length				( 200 ),
 	m_first_view_death_animations_count		( first_view_death_animations_count ),
 	m_third_view_death_animations_count		( third_view_death_animations_count ),
 	m_preview_animations_count				( preview_animations_count )
 {
+	m_fire_pfx_list			= NULL;
+	m_shells_pfx_list		= NULL;
+	m_fire_pfx_count		= 0;
+	m_shells_pfx_count		= 0;
+	m_current_shell_pfx_id	= 0;
+	m_current_fire_pfx_id	= 0;
+	model					= NULL;
+	m_game_ui				= NULL;
+	m_rifle_scope			= NULL;
+	m_weapon_fire_light_id	= ++light_ids;
+	m_game_scene			= NULL;
+	m_firing_light_added	= false;
+	m_is_in_scene			= false;
+	m_is_scope_aimed		= false;
+
+	m_weapon_fire_light_props.transform					= weapon_core::m_transform;
+	m_weapon_fire_light_props.local_light_z_bias		= 0.0f;
+	m_weapon_fire_light_props.shadow_transparency		= 0.0f;
+	m_weapon_fire_light_props.range						= 5.0f;
+	m_weapon_fire_light_props.sun_shadow_map_size		= 0;
+	m_weapon_fire_light_props.shadow_map_size_index		= 0;
+	m_weapon_fire_light_props.num_sun_cascades			= 0;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 0 ]	= false;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 1 ]	= false;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 2 ]	= false;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 3 ]	= false;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 4 ]	= false;
+	m_weapon_fire_light_props.shadow_distribution_sides[ 5 ]	= false;
+	m_weapon_fire_light_props.does_cast_shadows			= true;
+	m_weapon_fire_light_props.lighting_model			= 0;
+	m_weapon_fire_light_props.color						= math::color_rgba( 1.0f, 1.0f, 1.0f, 1.0f );
+
+	m_weapon_fire_light_props.attenuation_power			= 2.0f;
+
+	m_weapon_fire_light_props.intensity					= 1.0f;
+	m_weapon_fire_light_props.type						= render::light_type_point;
+	m_weapon_fire_light_props.spot_umbra_angle			= 0.0f;
+	m_weapon_fire_light_props.spot_penumbra_angle		= 0.0f;
+	m_weapon_fire_light_props.spot_falloff				= 0.0f;
+	m_weapon_fire_light_props.diffuse_influence_factor	= 1.0f;
+	m_weapon_fire_light_props.specular_influence_factor	= 1.0f;
+	m_weapon_fire_light_props.shadower					= false;
+	m_weapon_fire_light_props.use_with_lpv				= false;
+
+	m_barrel_transform = float4x4( ).identity( );
+	m_scope_transform = float4x4( ).identity( );
 }
 
  weapon::~weapon( )
@@ -80,24 +140,34 @@ void weapon::set_fire_bullet_transform( float4x4 const& transform )
 	weapon_core::set_fire_bullet_transform( m_is_third_view ? m_barrel_transform : transform );
 }
 
-// claude@NOTE: STUB - calls weapon_core::instant_aim_start, then (if m_game_ui) drives the player
-// aim FOV transition: reads a sound-emitter aim value (m_rifle_scope, +0x114/+0x118) else
-// m_aim_fov_factor/m_aim_near_plane_factor (weapon_core +0x464/+0x468), and writes the player
-// fov-transition block (user().m_local_input_controller, player+0x10EF4 -> +0x10EF4/+0x10F0C..F28
-// + [+0x1A0]=4). Walled: that block lives in player / player_input_handler, incomplete in this TU
-// (forward-declared). Needs player.h + the s_aim_transition_time / satisfaction_equality_tolerance
-// file-statics (unknown seeds). Parked until the player layer is includable here.
-// STATE[STUB]
+// claude@NOTE: structure matched (set_target_fov_factor / set_near_plane_factor /
+// set_key_binder_context inlined on user()). Residual is the get_user() inline-vs-call
+// LTCG wall: the target inlines get_user() to [esi+44Ch] here (and spills nothing), while
+// our build keeps the out-of-line `call get_user` (get_user MUST stay out-of-line - the
+// target calls it elsewhere @0x09b330) + an xmm spill across the call. Not source-steerable.
 void weapon::instant_aim_start( )
 {
+	weapon_core::instant_aim_start( );
+
+	if ( m_game_ui )
+	{
+		user( ).set_target_fov_factor( m_rifle_scope ? m_rifle_scope->fov_factor( ) : m_aim_fov_factor, s_aim_transition_time );
+		user( ).set_near_plane_factor( m_rifle_scope ? m_rifle_scope->near_plane_factor( ) : m_aim_near_plane_factor );
+		user( ).get_input_handler( ).set_key_binder_context( 4 );
+	}
 }
 
-// claude@NOTE: STUB - mirror of instant_aim_start for the end transition (sets the player
-// fov-transition block to the idle target with [+0x1A0]=1). Same player/player_input_handler
-// incomplete-type wall + s_aim_transition_time/clear_value file-static seeds.
-// STATE[STUB]
+// claude@NOTE: structure matched; same get_user inline-vs-call LTCG residual as
+// instant_aim_start. clear_value (1.0f) is the idle fov target.
 void weapon::instant_aim_end( )
 {
+	weapon_core::instant_aim_end( );
+
+	if ( m_game_ui )
+	{
+		user( ).set_target_fov_factor( 1.0f, s_aim_transition_time );
+		user( ).get_input_handler( ).set_key_binder_context( 1 );
+	}
 }
 
 void weapon::tick( )
@@ -158,12 +228,18 @@ bool weapon_user_dead_state::is_ready_for_transition( ) const
 	return false;
 }
 
-// claude@NOTE: STUB - 16 stmts. Stores model = base_model + m_rifle_scope = rifle_scope, looks up
-// the barrel/scope locators (model->get_locator( "...", m_barrel_locator/m_scope_locator ), the two
-// CALL SITE `bool(pcstr, model_locator_item&) const`), copies them, derives the toe bone indices,
-// and wires the dead player_logic_base_state (local `dead`). Walled: render_model_instance::get_locator
-// + the player_logic_base_state plumbing pull model + player-state internals not reachable from this
-// TU at the byte level; structure recoverable once those are spelled.
+// claude@NOTE: STUB - 16 stmts. Lines 266/267: m_rifle_scope = rifle_scope; model = base_model
+// (resource_ptr addref-new/release-old). Lines 269/270: model->m_render_model->get_locator(
+// "barrel_point", m_barrel_locator ) / ( "scope_point", m_scope_locator ) (the [model+0x108] render_
+// model_instance virtual get_locator at vtable+0x20). Lines 272-286: allocates a weapon_user_dead_state
+// via g_allocator (0x30 bytes), constructs it (player_logic_base_state base ctor + dead_state vtable,
+// this+0x28=weapon, +0x2C=NULL), then m_user_animations_selector.m_logic (this+0x278) fsm::add_state(
+// dead ) + fsm::add_transition with is_dead/is_alive predicates (boost::function0<bool> bound to the
+// file-local is_dead/is_alive free fns). PARK CAUSE: the `dead` local (weapon_user_dead_state*
+// placement-new + fsm wiring) is a large reconstruction threading player_logic_base_state ctor +
+// ai::fsm add_state/add_transition + boost predicate vtable bookkeeping. NEXT: recover statement group
+// by group (the resource_ptr assigns + 2 get_locator calls are straightforward; the dead-state fsm
+// block is the bulk).
 // STATE[STUB]
 void weapon::load_weapon(
 	render::skeleton_model_ptr const&	base_model,
@@ -416,13 +492,19 @@ void weapon::on_ammo_empty( )
 		m_game_ui->show_screen_message( "st_empty_ammo_message" );
 }
 
-// claude@NOTE: STUB - ~13 stmts. Guards on user.<player flag +0x10F80> (copies recoil/breath calc
-// +0x284 -> +0x2C0), sets m_game_scene from engine (engine-0xC), calls weapon_core::activate, then
-// finds the Left/RightFoot bone indices via user.skeleton() bone search (m_left/right_toe_bone_index
-// +0xFD4/+0xFD8), and subscribes 4 animation callbacks ("sound_events"/"shell_extraction"/
-// "left_hand_corrector"/"right_hand_corrector" -> on_foot_step / on_shell_extraction_event /
-// on_hand_correction_event(left/right) via boost::bind). Walled: user is base_player but the +0x10F80
-// flag + skeleton() are player-level (incomplete here); needs player.h. Structure recoverable after.
+// claude@NOTE: STUB - 13 stmts. RESOLVED pieces (player.h now included): line 510 `if
+// ( user.is_demo_player() )`; line 516 `m_game_scene = static_cast<base_game_scene*>(&engine)`
+// (the engine-0xC cross-cast with null guard); weapon_core::activate(user, engine); lines 520/521
+// `m_left/right_toe_bone_index = user.skeleton().get_bone_index("LeftFoot"/"RightFoot") -
+// user.skeleton().get_root_bones_count()` (the __find_if(bone_id_predicate)+index/0x14 inline);
+// lines 523-526 four set_animation_callback("sound_events"/"shell_extraction"/"left_hand_corrector"/
+// "right_hand_corrector", get_user(), boost::bind(&weapon::on_foot_step/on_shell_extraction_event/
+// on_hand_correction_event(left/right), this, _1)) - mirror of weapon_core::activate:854-857.
+// PARK CAUSE: line 513 (under the demo guard) copies m_user_animations_selector internals
+// [this+0x284]->[this+0x2C0] = m_logic.m_states.<+0xC> -> m_player_logic_initial_state, an fsm-state-list
+// internal whose source spelling is unresolved (set_player_logic_initial_state is a /no source/ stub).
+// NEXT: identify the m_logic.states() expression at fsm_state_list+0xC for line 513, then write the
+// whole body (all other 12 statements are recovered above).
 // STATE[STUB]
 void weapon::activate( base_player& user, engine& engine )
 {
@@ -441,16 +523,23 @@ void weapon::deactivate( )
 	weapon_core::deactivate( );
 }
 
-// claude@NOTE: STUB - structure recovered (5 stmts): if ( params.animated_object == m_user )
-// { if ( params.domain_data == 5 || params.domain_data == 6 ) { float4x4 const& toe =
-// params.domain_data == 5 ? m_left_toe_transform : m_right_toe_transform; if ( !<player flag
-// at +0x10F80> ) get_game_scene()->get_step_manager().on_step( user(), toe.<pos +0x20>,
-// toe.<dir +0x30>, <game_world> ); } }. Walled: the +0x10F80 guard and the on_step `player
-// const&`/`game_world&` args read through user() (player), which is incomplete in this TU
-// (forward-declared); spelling them needs player.h + the step_manager game_world plumbing.
-// STATE[STUB]
+// claude@NOTE: structure correct (5 stmts: toe ternary, is_demo guard, get_game_scene,
+// on_step args, return). Walled by step_manager::on_step being an empty STUB (parked,
+// physics ray-cast in step_manager.cpp): LTCG sees the empty callee, DCE-collapses the
+// whole on_step call + its toe/game_world arg eval, so our base drops 3 statements.
+// get_user() is also out-of-line in our base (target inlines [esi+44Ch]). Both recover
+// once step_manager::on_step lands a body.
 animation::callback_return_type_enum weapon::on_foot_step( animation::animation_callback_params& params )
 {
+	if ( params.animated_object == get_user( ) && ( params.domain_data == 5 || params.domain_data == 6 ) )
+	{
+		float4x4 const& toe = params.domain_data == 5 ? m_left_toe_transform : m_right_toe_transform;
+
+		if ( !user( ).is_demo_player( ) )
+			static_cast< game_world& >( *get_game_scene( ) ).get_step_manager( ).on_step(
+				user( ), toe.c.xyz( ), toe.k.xyz( ), static_cast< game_world& >( *get_game_scene( ) ) );
+	}
+
 	return animation::callback_return_type_call_me_again;
 }
 
