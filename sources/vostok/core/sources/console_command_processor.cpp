@@ -16,6 +16,26 @@ namespace console_commands{
 
 extern console_command* s_console_command_root;
 
+static u32 s_console_commands_count = 0;
+
+struct starts_from_predicate
+{
+	pcstr starts_from;
+
+	starts_from_predicate( pcstr starts_from ) :starts_from( starts_from ) {}
+
+	bool operator()( console_command* const left, console_command* const right )const
+	{
+		u32 const left_pos	= u32( strstr( left->name(), starts_from ) - left->name() );
+		u32 const right_pos	= u32( strstr( right->name(), starts_from ) - right->name() );
+		if ( left_pos < right_pos )
+			return			true;
+		if ( left_pos > right_pos )
+			return			false;
+		return				strings::compare( left->name(), right->name() ) < 0;
+	}
+};
+
 
 static void show_help(console_command* command)
 {
@@ -41,22 +61,26 @@ console_command* find(pcstr str)
 
 u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 {
-	u32 result = 0;
-	console_command* current = s_console_command_root;
-
-	while(current && result<dst_size)
+	// sushi@TODO: target ignores dst_size and caps at literal 10 ([ebp+10h] never read);
+	// reproduced faithfully but verify the 10 is not a propagated dst_size default.
+	u32 dst_count	= 10;
+	if ( !s_console_commands_count )
 	{
-		pcstr current_name = current->name();
-		if( current_name==strstr(current_name, starts_from) )
-		{
-			*dst	= current;
-			++dst;
-			++result;
-		}
-		current = current->prev();
+		for( console_command* current = s_console_command_root; current; current = current->prev() )
+			++s_console_commands_count;
 	}
 
-	return		result;
+	console_command** commands		= (console_command**)ALLOCA( s_console_commands_count * sizeof(console_command*) );
+	console_command** commands_end	= commands;
+
+	for( console_command* current = s_console_command_root; current; current = current->prev() )
+		if( strstr( current->name(), starts_from ) )
+			*commands_end++ = current;
+
+	dst_count	= math::min( u32(commands_end - commands), dst_count );
+	std::partial_sort		( commands, commands+dst_count, commands_end, starts_from_predicate(starts_from) );
+	memcpy					( dst, commands, dst_count*sizeof(console_command*) );
+	return					dst_count;
 }
 
 void execute(pcstr command_to_execute, execution_filter const filter)
