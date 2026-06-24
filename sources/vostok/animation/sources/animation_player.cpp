@@ -500,11 +500,6 @@ void animation_player::reset( const bool clear_callbacks )
 	}
 }
 
-// claude@NOTE: parked - 28 stmts; builds an animation_callback in the channel list
-// (find-or-create subscribed_channel by channel_id, then push a new animation_callback).
-// Reconstruction needs the channel/callback list-insertion shape + the placement-new of
-// animation_callback into m_callbacks_buffer read from the optimized target asm (0x5702a0).
-// STATE[STUB]
 void animation_player::subscribe(
 	pcstr const								channel_id,
 	new_callback_type const&				callback,
@@ -514,64 +509,43 @@ void animation_player::subscribe(
 	pcvoid const							animated_object
 )
 {
-	// CALL SITE INFO
-	// <0x570448> -> < unknown >
-	// ******
+	subscribed_channel* channel				= m_first_subscribed_channel;
+	subscribed_channel* previous_channel	= 0;
+	for ( ; channel ; previous_channel = channel, channel = channel->next )
+	{
+		if ( strings::compare( channel->channel_id, channel_id ) != 0 )
+			continue;
 
-	// FUNCTION BODY
-	// <0x5702a0>|0x000|+0x007:'492'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5702a7>|0x007|+0x006:'497'
-	// <0x5702ad>|0x00d|+0x002:'498'
-	// <0x5702af>|0x00f|+0x004:'499'
-	// <0>
-	// <0x5702b3>|0x013|+0x110:'501'
-	// <0>
-	// <1>
-	// <0x5703c3>|0x123|+0x006:'504'
-	// <0x5703c9>|0x129|+0x00e:'505'
-	// <0x5703d7>|0x137|+0x049:'506'
-	// <0>
-	// <0x570420>|0x180|+0x00a:'508'
-	// <0x57042a>|0x18a|-0x007:'508'
-	// <0>
-	// <1>
-	// <0x570423>|0x183|+0x00b:'511'
-	// <0>
-	// <0x57042e>|0x18e|-0x138:'513'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5702f6>|0x056|+0x006:'520'
-	// <0x5702fc>|0x05c|+0x00e:'521'
-	// <0x57030a>|0x06a|+0x006:'522'
-	// <0>
-	// <1>
-	// <0x570310>|0x070|+0x01a:'525'
-	// <0x57032a>|0x08a|+0x015:'526'
-	// <0x57033f>|0x09f|+0x009:'527'
-	// <0x570348>|0x0a8|+0x01b:'528'
-	// <0>
-	// <0x570363>|0x0c3|+0x006:'530'
-	// <0x570369>|0x0c9|+0x00e:'531'
-	// <0x570377>|0x0d7|+0x0c2:'532'
-	// <0x570439>|0x199|+0x056:'532'
-	// <0x57048f>|0x1ef|+0x003:'533'
-	// <0>
-	// <0x570492>|0x1f2|+0x004:'535'
-	// <0x570496>|0x1f6|+0x00b:'536'
-	// <0>
-	// <0x5704a1>|0x201|-0x070:'538'
-	// <0x570431>|0x191|+0x068:'539'
-	// <0x570499>|0x1f9|+0x00e:'539'
-	// <0x5704a7>|0x207|      :'539'	}
-	// ******
+		animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr( ) );
+		m_callbacks_buffer					+= sizeof( animation_callback );
+		new ( new_callback ) animation_callback( callback, callback_uid, animation, event_type, animated_object );
+
+		animation_callback* last_callback	= channel->first_callback;
+		for ( ; last_callback->next ; )
+			last_callback					= last_callback->next;
+		last_callback->next					= new_callback;
+		return;
+	}
+
+	subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr( ) );
+	m_callbacks_buffer						+= sizeof( subscribed_channel );
+
+	R_ASSERT								( new_channel );
+
+	u32 const length						= strings::length( channel_id ) + 1;
+	memory::copy							( m_callbacks_buffer.c_ptr( ), length, channel_id, length );
+	new_channel->channel_id					= static_cast<pcstr>( m_callbacks_buffer.c_ptr( ) );
+	m_callbacks_buffer						+= math::align_up( length, u32( 4 ) )*sizeof( char );
+
+	animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr( ) );
+	m_callbacks_buffer						+= sizeof( animation_callback );
+	new ( new_callback ) animation_callback( callback, callback_uid, animation, event_type, animated_object );
+
+	new_channel->first_callback				= new_callback;
+	if ( previous_channel )
+		previous_channel->next				= new_channel;
+	else
+		m_first_subscribed_channel			= new_channel;
 }
 
 void animation_player::subscribe(
@@ -604,143 +578,102 @@ void animation_player::destroy_subscriptions( subscribed_channel const* const ch
 	}
 }
 
-// claude@NOTE: parked - 63 stmts / 7 named locals (channels_count, first_cloned_channel,
-// previous_channel, i, k x2, new_channel); rebuilds the subscribed_channel list dropping
-// disabled callbacks, re-cloning surviving channels into m_callbacks_buffer. Largest fn in
-// the unit; reconstruct from optimized target asm (0x55ff30) statement-by-statement.
-// STATE[STUB]
 void animation_player::compact_callbacks( )
 {
-	// LOCALS
-	// u32 								channels_count
-	// subscribed_channel const* 		first_cloned_channel
-	// subscribed_channel* 				previous_channel
-	// subscribed_channel const* 		i
-	// animation_callback* 				k
-	// subscribed_channel* const 		new_channel
-	// animation_callback* 				k
-	// ******
+	m_callbacks_are_actual					= true;
 
-	// CALL SITE INFO
-	// <0x57003e> -> < unknown >
-	// <0x5701f8> -> < unknown >
-	// ******
+	subscribed_channel const* first_cloned_channel	= 0;
+	subscribed_channel* previous_channel	= 0;
+	for ( subscribed_channel const* i = m_first_subscribed_channel ; i ; i = i->next )
+	{
+		subscribed_channel* const new_channel	= (subscribed_channel*)ALLOCA( sizeof( subscribed_channel ) );
+		if ( first_cloned_channel )
+			previous_channel->next			= new_channel;
+		else
+			first_cloned_channel			= new_channel;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x56ff39>|0x009|+0x003:'574'
-	// <0>
-	// <0x56ff3c>|0x00c|+0x006:'576'
-	// <0x56ff42>|0x012|+0x00f:'577'
-	// <0x56ff51>|0x021|+0x003:'578'
-	// <0x56ff54>|0x024|+0x163:'579'
-	// <0x5700b7>|0x187|-0x154:'579'
-	// <0>
-	// <0x56ff63>|0x033|+0x00f:'581'
-	// <0x56ff72>|0x042|+0x004:'582'
-	// <0x56ff76>|0x046|+0x003:'583'
-	// <0x56ff79>|0x049|+0x002:'584'
-	// <0x56ff7b>|0x04b|+0x006:'585'
-	// <0>
-	// <0x56ff81>|0x051|+0x006:'587'
-	// <0>
-	// <0x56ff87>|0x057|+0x027:'589'
-	// <0x56ffae>|0x07e|+0x003:'590'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56ffb1>|0x081|+0x01f:'595'
-	// <0>
-	// <0x56ffd0>|0x0a0|+0x00a:'597'
-	// <0>
-	// <1>
-	// <0x56ffda>|0x0aa|+0x00c:'600'
-	// <0>
-	// <0x56ffe6>|0x0b6|+0x099:'602'
-	// <0x57007f>|0x14f|+0x007:'603'
-	// <0x570086>|0x156|+0x003:'604'
-	// <0x570089>|0x159|+0x002:'605'
-	// <0x57008b>|0x15b|+0x003:'606'
-	// <0x57008e>|0x15e|+0x010:'607'
-	// <0>
-	// <1>
-	// <0x57009e>|0x16e|+0x005:'610'
-	// <0>
-	// <0x5700a3>|0x173|+0x007:'612'
-	// <0x5700aa>|0x17a|+0x003:'613'
-	// <0x5700ad>|0x17d|+0x002:'614'
-	// <0>
-	// <1>
-	// <0x5700af>|0x17f|+0x003:'617'
-	// <0>
-	// <1>
-	// <0x5700b2>|0x182|+0x002:'620'
-	// <0x5700b4>|0x184|+0x01a:'621'
-	// <0>
-	// <1>
-	// <0x5700ce>|0x19e|+0x00b:'624'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5700d9>|0x1a9|+0x027:'629'
-	// <0>
-	// <0x570100>|0x1d0|+0x007:'631'
-	// <0x570107>|0x1d7|+0x155:'632'
-	// <0x57025c>|0x32c|+0x017:'632'
-	// <0x570273>|0x343|-0x161:'632'
-	// <0>
-	// <1>
-	// <2>
-	// <0x570112>|0x1e2|+0x005:'636'
-	// <0x570117>|0x1e7|+0x007:'637'
-	// <0x57011e>|0x1ee|+0x00c:'638'
-	// <0x57012a>|0x1fa|+0x006:'639'
-	// <0x570130>|0x200|+0x002:'640'
-	// <0x570132>|0x202|+0x006:'641'
-	// <0>
-	// <0x570138>|0x208|+0x006:'643'
-	// <0>
-	// <0x57013e>|0x20e|+0x01e:'645'
-	// <0x57015c>|0x22c|+0x00a:'646'
-	// <0x570166>|0x236|+0x002:'647'
-	// <0x570168>|0x238|+0x016:'648'
-	// <0>
-	// <1>
-	// <2>
-	// <0x57017e>|0x24e|+0x0db:'652'
-	// <0x570259>|0x329|-0x0c5:'652'
-	// <0>
-	// <1>
-	// <0x570194>|0x264|+0x002:'655'
-	// <0x570196>|0x266|+0x007:'656'
-	// <0>
-	// <0x57019d>|0x26d|+0x09c:'658'
-	// <0x570239>|0x309|+0x007:'659'
-	// <0x570240>|0x310|+0x003:'660'
-	// <0x570243>|0x313|+0x002:'661'
-	// <0x570245>|0x315|+0x009:'662'
-	// <0x57024e>|0x31e|+0x017:'663'
-	// <0>
-	// <1>
-	// <0x570265>|0x335|+0x011:'666'
-	// <0>
-	// <1>
-	// <0x570276>|0x346|+0x007:'669'
-	// <0>
-	// <0x57027d>|0x34d|+0x006:'671'
-	// <0x570283>|0x353|+0x00a:'672'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// ******
+		R_ASSERT							( new_channel );
+
+		pstr channel_id;
+		STR_DUPLICATEA						( channel_id, i->channel_id );
+		new_channel->channel_id				= channel_id;
+
+		new_channel->next					= 0;
+		new_channel->first_callback			= 0;
+		animation_callback* previous_callback	= 0;
+		for ( animation_callback* k = i->first_callback ; k ; k = k->next )
+		{
+			if ( !k->enabled )
+				continue;
+
+			animation_callback* const new_callback	= (animation_callback*)ALLOCA( sizeof( animation_callback ) );
+			new ( new_callback ) animation_callback( k->callback, k->callback_uid, k->animation, k->event_type, k->animated_object );
+
+			if ( previous_callback )
+				previous_callback->next		= new_callback;
+			else
+				new_channel->first_callback	= new_callback;
+
+			previous_callback				= new_callback;
+		}
+
+		if ( new_channel->first_callback )
+			previous_channel				= new_channel;
+		else if ( previous_channel )
+			previous_channel->next			= 0;
+		else
+			first_cloned_channel			= 0;
+	}
+
+	destroy_subscriptions					( m_first_subscribed_channel );
+
+	m_first_subscribed_channel = 0, m_callbacks_buffer = mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
+
+	u32 channels_count						= 0;
+	previous_channel						= 0;
+	for ( subscribed_channel const* i = first_cloned_channel ; i ; i = i->next )
+	{
+		subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr( ) );
+		++channels_count;
+		m_callbacks_buffer					+= sizeof( subscribed_channel );
+
+		if ( m_first_subscribed_channel )
+			previous_channel->next			= new_channel;
+		else
+			m_first_subscribed_channel		= new_channel;
+
+		R_ASSERT							( new_channel );
+
+		u32 const length					= strings::length( i->channel_id ) + 1;
+		memory::copy						( m_callbacks_buffer.c_ptr( ), length, i->channel_id, length );
+		new_channel->channel_id				= static_cast<pcstr>( m_callbacks_buffer.c_ptr( ) );
+		m_callbacks_buffer					+= math::align_up( length, u32( 4 ) )*sizeof( char );
+
+		new_channel->next					= 0;
+		new_channel->first_callback			= 0;
+		animation_callback* previous_callback	= 0;
+		for ( animation_callback* k = i->first_callback ; k ; k = k->next )
+		{
+			animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr( ) );
+			m_callbacks_buffer				+= sizeof( animation_callback );
+
+			new ( new_callback ) animation_callback( k->callback, k->callback_uid, k->animation, k->event_type, k->animated_object );
+
+			if ( previous_callback )
+				previous_callback->next		= new_callback;
+			else
+				new_channel->first_callback	= new_callback;
+
+			previous_callback				= new_callback;
+		}
+
+		previous_channel					= new_channel;
+	}
+
+	destroy_subscriptions					( first_cloned_channel );
+
+	if ( !channels_count )
+		m_first_subscribed_channel			= 0;
 }
 
 void animation_player::unsubscribe( pcstr const channel_id, pcvoid const callback_uid )
@@ -776,6 +709,17 @@ u32 animation_player::get_state_buffer_size( ) const
 	return 0x4000; // sushi@TODO: What this constant is. Can be figured out by usage.
 }
 
+// claude@NOTE: parked - 3 stmts decoded from asm (0x56fcd0): (735) n_ary_tree_time_inverter
+// time_inverter( time_in_ms ); (736) walk animation.operands(sizeof(n_ary_tree_animation_node))
+// begin..begin+operands_count() calling (*i)->accept(time_inverter) (the propagate idiom);
+// (738) animation.animation_state().event_iterator.invert_times( time_in_ms ) INLINED (touches
+// event_iterator fields @+0x78: time at +0x08/+0x1c/+0x2c each guarded by a u16 count at
+// +0x0c/+0x20/+0x30). Two hard blockers: (a) needs the full n_ary_tree_time_inverter visitor
+// emitted - its ctor + 8 visit() overrides (parked above) so ??_7n_ary_tree_time_inverter exists;
+// (b) n_ary_tree_event_iterator::invert_times is DECLARED-ONLY in this source tree (no def
+// anywhere) yet the target inlines it - it must be inline-defined on event_iterator (a different
+// TU's class) to inline at line 738, else line 738 is an inline-vs-call wall. Both = the deep
+// cross-TU / multi-node-layout n_ary_tree reconstruction; reconstruct the visitor first.
 // STATE[STUB]
 void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const u32 time_in_ms )
 {
@@ -783,16 +727,10 @@ void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const
 	// n_ary_tree_time_inverter 		time_inverter
 	// ******
 
-	// CALL SITE INFO
-	// <0x56fd04> -> void < unknown >( mixing::n_ary_tree_visitor& )
-	// ******
-
 	// FUNCTION BODY
-	// <0>
-	// <0x56fcd8>|0x008|+0x020:'735'
-	// <0x56fcf8>|0x028|+0x015:'736'
-	// <0>
-	// <0x56fd0d>|0x03d|+0x031:'738'
+	// <0x56fcd8>|0x008|+0x020:'735'	n_ary_tree_time_inverter time_inverter( time_in_ms );
+	// <0x56fcf8>|0x028|+0x015:'736'	for each operand: (*i)->accept( time_inverter );
+	// <0x56fd0d>|0x03d|+0x031:'738'	animation.animation_state().event_iterator.invert_times( time_in_ms );
 	// ******
 }
 
