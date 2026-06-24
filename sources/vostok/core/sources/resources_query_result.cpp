@@ -348,9 +348,14 @@ void   query_result_for_cook::set_zero_unmanaged_resource ()
 	this_ptr->set_flag						(query_result::flag_zero_unmanaged_resource_was_set);
 }
 
-void   query_result::set_flag (u32 flag) 
-{ 
-	threading::interlocked_or				(m_flags, flag); 
+// sushi@TODO: target out-of-lines threading::interlocked_or/interlocked_and (call), our
+// base inlines them to lock or/lock and (_InterlockedOr/_InterlockedAnd are #pragma intrinsic
+// in threading_functions_win_inline.h). Caps set_flag/unset_flag/set_result_iterator/
+// add_referrer/increase_quality_to_target/translate_query_if_needed - engine-wide threading
+// header, not steerable from this TU.
+void   query_result::set_flag (u32 flag)
+{
+	threading::interlocked_or				(m_flags, flag);
 }
 
 void   query_result::unset_flag (u32 flag) 
