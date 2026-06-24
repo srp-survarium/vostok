@@ -8,6 +8,20 @@
 namespace survarium {
 
 // STATE[STUB]
+// claude@NOTE: PARKED - show/hide new_state specializations (3 stmts, lines 32/33/47;
+// target 0x98010 show). Recovered shape: compute two animation time-scales from
+// `animations[0]` (lines 32/33) via resources::pinned_ptr_base<animation::
+// cubic_spline_skeleton_animation const> over the show/hide animation, take their
+// difference / ratio into the "shown progress" arg, then line 47:
+//   return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< STATE >(
+//       params->weapon, <scale>, animations, animations_count, sounds, sounds_count,
+//       config_parameters.stop_sounds_on_state_finalize,
+//       config_parameters.simultaneous_sounds_queue_size, shown ) : NULL;
+// (the 9-arg ctor with bool& shown). BLOCKED: that 9-arg ctor inlines
+// weapon_sound_effect::weapon_sound_effect (out-of-line in weapon_sound_effect.cpp) -
+// cross-unit inline wall, plus the exact pinned_ptr time-scale computation is not yet
+// decoded. NEXT: decode the two pinned_ptr reads (animation duration accessors) and
+// write the ternary; the 9-arg ctor must first be matched by its own unit.
 template < >
 inline weapon_sound_events_handler_state< weapon_core_show_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::weapon_core_show_state> >::new_state(
 	mutable_buffer		buffer,
@@ -20,28 +34,9 @@ inline weapon_sound_events_handler_state< weapon_core_show_state >* weapon_sound
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x98010]: 16
-	// <0x98021>|0x011|+0x071:'32'
-	// <0x98092>|0x082|+0x074:'33'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x98106>|0x0f6|+0x04d:'47'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] - PARKED, same shape/blocker as the show specialization above (target 0x98180).
 template < >
 inline weapon_sound_events_handler_state< weapon_core_hide_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::weapon_core_hide_state> >::new_state(
 	mutable_buffer		buffer,
@@ -54,28 +49,9 @@ inline weapon_sound_events_handler_state< weapon_core_hide_state >* weapon_sound
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x98180]: 16
-	// <0x98191>|0x011|+0x071:'62'
-	// <0x98202>|0x082|+0x074:'63'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x98276>|0x0f6|+0x04d:'77'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] - PARKED, same shape/blocker as the show specialization above (target 0x982e0).
 template < >
 inline weapon_sound_events_handler_state< pistol_weapon_core_show_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::pistol_weapon_core_show_state> >::new_state(
 	mutable_buffer		buffer,
@@ -88,28 +64,9 @@ inline weapon_sound_events_handler_state< pistol_weapon_core_show_state >* weapo
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x982e0]: 16
-	// <0x982f1>|0x011|+0x071:'93'
-	// <0x98362>|0x082|+0x074:'94'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x983d6>|0x0f6|+0x04d:'108'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] - PARKED, same shape/blocker as the show specialization above (target 0x98440).
 template < >
 inline weapon_sound_events_handler_state< pistol_weapon_core_hide_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::pistol_weapon_core_hide_state> >::new_state(
 	mutable_buffer		buffer,
@@ -122,28 +79,9 @@ inline weapon_sound_events_handler_state< pistol_weapon_core_hide_state >* weapo
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x98440]: 16
-	// <0x98451>|0x011|+0x071:'123'
-	// <0x984c2>|0x082|+0x074:'124'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x98536>|0x0f6|+0x04d:'138'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] - PARKED, same shape/blocker as the show specialization above (target 0x985a0).
 template < >
 inline weapon_sound_events_handler_state< double_barreled_weapon_core_show_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::double_barreled_weapon_core_show_state> >::new_state(
 	mutable_buffer		buffer,
@@ -156,29 +94,9 @@ inline weapon_sound_events_handler_state< double_barreled_weapon_core_show_state
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x985a0]: 17
-	// <0x985b1>|0x011|+0x071:'153'
-	// <0x98622>|0x082|+0x074:'154'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x98696>|0x0f6|+0x04d:'169'
-	// ******
 }
 
-// STATE[STUB]
+// STATE[STUB] - PARKED, same shape/blocker as the show specialization above (target 0x98700).
 template < >
 inline weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::double_barreled_weapon_core_hide_state> >::new_state(
 	mutable_buffer		buffer,
@@ -191,26 +109,6 @@ inline weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state
 )
 {
 	return NULL;
-
-	// FUNCTION BODY[0x98700]: 17
-	// <0x98711>|0x011|+0x071:'185'
-	// <0x98782>|0x082|+0x074:'186'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x987f6>|0x0f6|+0x04d:'201'
-	// ******
 }
 
 } // namespace survarium
