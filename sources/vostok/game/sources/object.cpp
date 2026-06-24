@@ -10,12 +10,16 @@
 
 namespace survarium {
 
-void load_transform( configs::binary_config_value const& t, float4x4& dest )
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
+
+game_object_::game_object_( base_game_scene& s ) :
+	m_game_scene( s )
 {
-	float3 const&	scale		= t["scale"];
-	float3 const&	rotation	= t["rotation"];
-	float3 const&	position	= t["position"];
-	dest = create_scale( scale ) * create_rotation( rotation ) * create_translation( position );
+}
+
+game_object_static::game_object_static( base_game_scene& s ) :
+	game_object_( s )
+{
 }
 
 void game_object_static::load(
@@ -27,14 +31,12 @@ void game_object_static::load(
 	load_transform( t, m_transform );
 }
 
-game_object_::game_object_( base_game_scene& s ) :
-	m_game_scene( s )
+void load_transform( configs::binary_config_value const& t, float4x4& dest )
 {
-}
-
-game_object_static::game_object_static( base_game_scene& s ) :
-	game_object_( s )
-{
+	float3 const&	scale		= t["scale"];
+	float3 const&	rotation	= t["rotation"];
+	float3 const&	position	= t["position"];
+	dest = create_scale( scale ) * create_rotation( rotation ) * create_translation( position );
 }
 
 } // namespace survarium

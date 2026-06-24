@@ -73,12 +73,6 @@ void shotgun_weapon_reload_state_cook::create_resource(
 	parent.finish_query( result_postponed );
 }
 
-void shotgun_weapon_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
-{
-	shotgun_weapon_reload_state* wpn_state = static_cast< shotgun_weapon_reload_state* >( resource );
-	wpn_state->~shotgun_weapon_reload_state( );
-}
-
 void shotgun_weapon_reload_state_cook::on_substates_ready(
 	resources::queries_result&				data,
 	mutable_buffer							buffer,
@@ -93,6 +87,12 @@ void shotgun_weapon_reload_state_cook::on_substates_ready(
 
 	data.get_parent_query( )->set_unmanaged_resource( object_to_cook, resources::memory_usage_type( resources::nocache_memory, sizeof( *this ) ) );
 	data.get_parent_query( )->finish_query( result_success );
+}
+
+void shotgun_weapon_reload_state_cook::destroy_resource( resources::unmanaged_resource* resource )
+{
+	shotgun_weapon_reload_state* wpn_state = static_cast< shotgun_weapon_reload_state* >( resource );
+	wpn_state->~shotgun_weapon_reload_state( );
 }
 
 } // namespace survarium
