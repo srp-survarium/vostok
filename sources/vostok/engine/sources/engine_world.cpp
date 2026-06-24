@@ -137,6 +137,10 @@ void engine_world::tick					( )
 	m_render_world->tick				( );
 }
 
+void engine_world::on_crash				( )
+{
+}
+
 bool engine_world::command_line_editor	( )
 {
 #ifdef VOSTOK_STATIC_LIBRARIES
