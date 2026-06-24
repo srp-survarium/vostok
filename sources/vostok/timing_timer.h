@@ -23,11 +23,18 @@ public:
 
 	inline	void		set_time_factor			( float	time_factor );
 	inline	float		get_time_factor			() const;
+
+	inline	bool		is_paused				() const;
+	inline	void		pause					();
+	inline	void		resume					();
 private:
 	u64			m_current_time;
 	u64			m_start_time;
 	float		m_time_factor;
+	float		m_backup_time_factor;
 }; // class timer
+
+STATIC_SIZE_ASSERT(timer, 0x18);
 
 } // namespace timing
 } // namespace vostok
