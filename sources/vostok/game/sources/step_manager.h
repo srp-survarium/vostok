@@ -25,7 +25,7 @@ public:
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	u32		m_decal_id;
+	/* 0x0000 */	mutable u32		m_decal_id;	// const on_step() bumps it per step
 }; // class step_manager
 
 STATIC_SIZE_ASSERT(step_manager, 0x4);

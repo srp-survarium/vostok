@@ -4,14 +4,13 @@
 
 #include "pch.h"
 #include "text_translator.h"
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
-
-// claude@NOTE: parked - the TU has a file-static 's_localization' (a binary_config_ptr or
-// similar) with a compiler-generated dynamic initializer + atexit destructor. Recovering it
-// (the `dynamic initializer for 's_localization'` / `dynamic atexit destructor` symbols)
-// requires the load_text_localization body, which is itself parked. NEXT: declare the static
-// once load_text_localization is recovered.
 
  text_translator::text_translator( )
 {
@@ -21,33 +20,40 @@ namespace survarium {
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - builds a 1-element resources::request[1] for the localization
-// config (a STR_JOIN'd identifier), then fires an async query whose completion routes to
-// on_texts_ready (boost::function bind). Named locals: requests[1] + the STR_JOINA tuples
-// temp. NEXT: recover the request-array build + the query-fire idiom (lines 29/48) - same
-// shape as the cook's request build (see empty_hands_cook).
+// claude@NOTE: line 29 STR_JOIN'd config path - the recorded tuples ctor is
+// <char const*, char*, char const*>, i.e. STR_JOINA( path, "resources/localization/", <lang>,
+// ... ); the middle char* is a runtime language string whose source is unknown from the
+// available corpus, so the exact literals/byte image are not recoverable here. Structure
+// (2 stmts: STR_JOIN+request build, then query_resources) reproduced.
 void text_translator::load_text_localization( )
 {
+	resources::request requests[1] = { { NULL, resources::binary_config_class } };
+	STR_JOINA							( requests[0].path, "resources/localization/", "", "" );	// claude@TODO: middle char* is an unknown runtime language string
+
+	resources::query_resources(
+		requests,
+		boost::bind( &text_translator::on_texts_ready, this, _1 ),
+		g_allocator
+	);
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - reads m_text_data["strings"][text_id]; when value_exists is false
-// it LOGs "There is no available localization ..." (the g_log_* append path) and falls back
-// to text_id, else mbstowcs_s( translated_text, 0x200, m_text_data["strings"][text_id], -1 )
-// to widen the UTF-8 string. NEXT: recover the LOG_* macro form + the binary_config_value
-// operator[] chain (lines 54-63).
-void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
+void text_translator::translate_text( pcstr text_id, wchar_t* const translated_text )
 {
+	pcstr translated;
+	if ( !m_text_data->get_root( )["strings"].value_exists( text_id ) )
+	{
+		LOG_WARNING						( "There is no available localization for [%s] !!!", text_id );
+		translated						= text_id;
+	}
+	else
+		translated						= m_text_data->get_root( )["strings"][text_id];
+
+	mbstowcs_s							( NULL, translated_text, 0x200, translated, _TRUNCATE );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - the async-query completion: stores the loaded localization config
-// into m_text_data from the queries_result (the single statement at line 70 is the
-// m_text_data = data[...].get_config()-style assignment). NEXT: recover the
-// queries_result accessor that yields the binary_config_ptr.
 void text_translator::on_texts_ready( resources::queries_result& data )
 {
+	m_text_data							= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
 }
 
 } // namespace survarium

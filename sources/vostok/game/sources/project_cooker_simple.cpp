@@ -21,13 +21,16 @@ namespace survarium {
 	resources::register_cook( this );
 }
 
-// claude@NOTE: STUB body to provide the vtable symbol (the cook ctor emits the
-// vtable, which references delete_resource). The real target inlines the whole
-// simple_game_project destructor here: it walks the project's pointer vectors
-// (collision+render, ladders, damage-zones, victory-items) and the base_point_stats
-// rb-tree, freeing each element + the virtual_path_string vector + the project
-// itself via the resource vtable. Match requires the full simple_game_project
-// layout/dtor (game_project.h). Parked - buildability stub only.
+// claude@NOTE: PARKED - layout wall. The target inlines the deleted project's full
+// destructor here (24 stmts): it walks m_objects [+0x140], the respawn-point rb-tree
+// [+0x14c] (keyed map<u32, base_point_stats>, NOT our map<u32, respawn_point_core*>),
+// m_collision_geometries [+0x164], m_victory_items_containers [+0x1a0], then erases a
+// vector<fs_new::virtual_path_string> [+0x1a0/+0x1a4] and frees the project. That layout
+// does NOT match our reconstructed simple_game_project (game_project.h): the shipped class
+// had base_point_stats-valued respawn map + a virtual_path_string vector. Matching needs the
+// shipped simple_game_project layout, which would ripple through on_object_loaded /
+// create_game_objects / game_world / network_client. NEXT: reconstruct the shipped
+// simple_game_project member layout (own unit) before bodying this dtor. Buildability stub.
 // STATE[STUB]
 void project_cooker_simple::delete_resource( resources::resource_base* resource )
 {
@@ -84,6 +87,13 @@ void project_cooker_simple::on_object_loaded(
 	}
 }
 
+// claude@NOTE: PARKED - 137 stmts / 0x1923 bytes / 23 locals over source lines 397-692; the
+// shipped project builder (parses collision+render visuals, ladders, damage-zones, victory
+// containers, ext objects; builds resources::request / creation_request arrays; reads
+// transforms; populates the project's member vectors + base_point_stats respawn map +
+// virtual_path_string vector). Same layout wall as delete_resource: needs the shipped
+// simple_game_project member layout (own unit) before bodying. Far beyond a small-cook body.
+// NEXT: reconstruct simple_game_project layout first, then body this in its own pass.
 // STATE[STUB]
 void project_cooker_simple::create_game_objects(
 	configs::binary_config_ptr				project_cfg,
