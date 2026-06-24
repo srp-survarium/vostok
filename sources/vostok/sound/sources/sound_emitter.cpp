@@ -96,18 +96,32 @@ void sound_emitter::emit_and_play_once	(
 											world_user& user,
 											float3 const& position,
 											sound_producer const* producer,
-											sound_receiver const* ignorable_receiver
+											sound_receiver const* ignorable_receiver,
+											bool material_id_is_default
 										)
 {
 	world_user& specific_user			= static_cast_checked< world_user& >( user );
 	sound_scene& scn					= static_cast_checked< sound_scene& >( *scene.c_ptr( ) );
 
-	sound_instance_proxy_ptr result		= scn.create_sound_instance_proxy
+	sound_instance_proxy_ptr result;
+	if ( material_id_is_default )
+	{
+		result							= scn.new_hud_sound_instance_proxy
 										(
 											this,
 											*get_sound_propagator_emitter( ),
 											specific_user
 										);
+	}
+	else
+	{
+		result							= scn.new_point_sound_instance_proxy
+										(
+											this,
+											*get_sound_propagator_emitter( ),
+											specific_user
+										);
+	}
 
 	sound_instance_proxy_internal* p	= static_cast_checked< sound_instance_proxy_internal* >( result.c_ptr( ) );
 	if ( p )
