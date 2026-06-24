@@ -317,8 +317,6 @@ void   query_result::do_create_resource_end_part ()
 template <class Resource>
 void   query_result::propogate_sub_fats_to_resource (Resource & resource)
 {
-	if ( !resource )
-		return;
 	if ( resource->get_fat_it() != m_fat_it )
 		return;
 
