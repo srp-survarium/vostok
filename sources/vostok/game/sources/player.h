@@ -59,6 +59,9 @@ class player : public base_player , public resources::unmanaged_resource {
 	// weapon::on_foot_step / instant_aim_* inline the private fov/near-plane/demo-player
 	// accessors directly on user() (a player&); codegen-neutral friend grant.
 	friend class weapon;
+	// step_manager::on_step reads the private foot_*_view_game_material_id directly off the
+	// player& it is handed; codegen-neutral friend grant.
+	friend class step_manager;
 public:
 			explicit								player								( player_creation_params const& params );
 	virtual											~player								( );

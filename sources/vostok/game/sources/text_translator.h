@@ -23,10 +23,11 @@ public:
 			text_translator			( );
 			~text_translator		( );
 
-	void	translate_text			( pcstr text_id, wchar_t* translated_text );
+	void	translate_text			( pcstr text_id, wchar_t* const translated_text );
 
 	void	load_text_localization	( );
 
+private:
 	void	on_texts_ready			( resources::queries_result& data );
 
 private:

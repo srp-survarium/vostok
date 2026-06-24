@@ -65,6 +65,24 @@ void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 	on_npc_options_received								( config->get_root(), *parent );
 }
 
+// claude@NOTE: PARKED - decoded but not bodied this pass (15 stmts, lines 70-119; needs
+// careful per-statement reconstruction of a 4-element request array with per-request variant
+// user_data). Decode for the next matcher:
+//   L70: binary_config_value const& attributes = config_value["attributes"];   (operator[])
+//   L71: human_npc* const human = NEW human_npc( m_game_world );   (malloc_impl 0x2E0 +
+//        human_npc::human_npc([this+0x20]=m_game_world); NULL-guarded)
+//   L73/83/97: brain_unit_path = attributes["brain_unit"], model_path = attributes["model"],
+//        space_graph_path = attributes["animation_space_graph"]  (each operator[] then [eax])
+//   ~L85: human->set_sound_emitter / intrusive_ptr::set on [human+0x9C] from
+//        m_game_world.get_*sound* (the [edi+20h]->[+0xA8]->[+0x84] virtual world_user accessor)
+//   L86/91/94: variant<32>::set<ai::brain_unit_cook_params>( {unknown_data_class, human} ) +
+//        a physics_world variant (type_to_int<physics::world*>::get) + the params[4] array;
+//        the "resources/animations/single/slot..." default-animation request path (line 0x52)
+//   L98/99/101: requests[4] built; query_resources( requests, 4,
+//        boost::bind(&on_subresources_loaded, this, _1, human), g_allocator, params, &parent )
+//   L119: drop the human ref on the way out (unmanaged_intrusive_base::destroy guard)
+// NEXT: reconstruct the variant user_data array + the 4 request paths, then verify with
+// structure-diff. Not symbol-blocked (set_*/human_npc ctor all exist).
 // STATE[STUB]
 void human_npc_cook::on_npc_options_received(
 	configs::binary_config_value const&		config_value,
@@ -142,6 +160,23 @@ void human_npc_cook::on_npc_options_received(
 	// ******
 }
 
+// claude@NOTE: PARKED - decoded but not bodied this pass (17 stmts, lines 124-155; intricate
+// resource_ptr lifetime management). Decode for the next matcher:
+//   L124: binary_config_value human_attributes_config = data[0].get_root()["attributes"];
+//   L126: if ( !data.is_successful() ) { parent->finish_query( result_error ); return; }
+//        (the cmp [data+0x40],1 == result_success; error path finish_query_impl(1,1,0xb))
+//   L127-145: extract from data[1..]: brain_unit_ptr (unmanaged), model_ptr
+//        (animated_model_instance_ptr), new_graph (animation_space_graph_ptr),
+//        default_animation (managed_resource_ptr) and set them on `human`:
+//        human->set_brain_unit / set_model / set_animation_space_graph / set_default_animation
+//        (member offsets 0x154 m_brain_unit, 0x2c4 m_default_animation; set_model/space_graph
+//        called as static helpers in asm)
+//   L146-152: parent->set_unmanaged_resource( human, {nocache_memory, 0x2E0} );
+//        finish_query( result_success ); m_game_world.on_npc_attributes_received(
+//        human_attributes_config, human )  (the [human+0x20]->m_game_world)
+//   L154/155: drop the local resource_ptr refs (intrusive dtors).
+// NEXT: reconstruct the data[i] resource extraction order + the set_* calls, verify
+// structure-diff. Not symbol-blocked (set_*/on_npc_attributes_received exist).
 // STATE[STUB]
 void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
 {
