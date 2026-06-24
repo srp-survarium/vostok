@@ -145,13 +145,12 @@ void network_client::process_player_profile( network_core::packet_reader& reader
 // process_match_time / process_respawn_timer / process_match_wait_timer /
 // process_base_capture_progress / process_player_kd_stats) are structurally exact
 // (read u32/u8 from the packet, forward into m_game.get_game_world( ).game_ui.set_*);
-// structure-diff confirms STRUCTURE MATCH. The byte residual is two environmental
-// LTCG walls this single-TU base cannot reproduce: (1) packet_reader::r<T> inlines to
-// a direct *(T*)m_pointer load in the target but compiles to an out-of-line call here
-// (documented in packet_reader_inline.h), and (2) game_world_ui::initialize_base_points
-// and set_base_capture_progress are still STUBs in game_world_ui.cpp, so their empty
-// bodies inline away the forwarding call entirely in the base. Both lift when whole-
-// program inlining is reproduced / those game_world_ui bodies are matched.
+// structure-diff confirms STRUCTURE MATCH. The byte residual is the packet_reader::r<T>
+// inline wall (documented in packet_reader_inline.h): r<T> inlines to a direct
+// *(T*)m_pointer load in the target but compiles to an out-of-line call here, so each
+// read shows as a TRGT_ONLY inlined statement. process_team_bases additionally folds
+// get_game_world( ).game_ui to a single [this+18h]+0x26C add in the target where the base
+// computes it across the thiscall/arg threading; the forwarding call itself is emitted.
 void network_client::process_team_bases( network_core::packet_reader& reader )
 {
 	m_game.get_game_world( ).game_ui.initialize_base_points( reader );
@@ -492,13 +491,12 @@ void network_client::send_local_player_input(
 	m_player_inputs.push_back( update );
 }
 
-// claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is two cross-TU inline
-// walls: player::set_character_transform is still an empty STUB in player.cpp, so its body
-// inlines to nothing here and only the get_angles arg-setup survives (the call vanishes);
-// and base_player::is_alive() is a direct out-of-line call here but the target inlines the
-// m_is_alive load. Both lift once those callees are matched / whole-program inlining is
-// reproduced. The set_character_transform position arg (transform.c.xyz()) is the best
-// guess - the stubbed callee makes it unverifiable for now.
+// claude@NOTE: STRUCTURE match (11/11 statements). Byte residual is the cross-TU inline
+// wall: base_player::is_alive() / set_character_transform are direct out-of-line calls here
+// but the target inlines them (the m_is_alive load and the transform setup) so its reads /
+// member accesses fold into the surrounding statements (TRGT_ONLY rows). server_player_update
+// ::deserialize is bodied now so the deserialize call is emitted. Lifts when whole-program
+// inlining is reproduced.
 void network_client::process_player_action( network_core::packet_reader& packet, const u32 time_in_ms )
 {
 	const u8 id = packet.r< u8 >( );
