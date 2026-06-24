@@ -70,8 +70,9 @@ void anchor_game_world_ui( )
 	{ void ( game_world_ui::* const p )( bool )											= &game_world_ui::show_players_list;			s_sink = *( pcvoid const* )&p; }
 	{ void ( game_world_ui::* const p )( const u32, const u32 )							= &game_world_ui::update_ui;					s_sink = *( pcvoid const* )&p; }
 	{ void ( game_world_ui::* const p )( )												= &game_world_ui::update_minimap_objects;		s_sink = *( pcvoid const* )&p; }
-	{ void ( game_world_ui::* const p )( profile_slot_enum )								= &game_world_ui::update_quick_slot;			s_sink = *( pcvoid const* )&p; }
-	{ void ( game_world_ui::* const p )( profile_slot_enum, inventory_item_props&, flash_value& )	= &game_world_ui::create_slot_value;		s_sink = *( pcvoid const* )&p; }
+	// update_quick_slot / create_slot_value are now private; they stay reachable through
+	// the anchored public callers (update_ui -> update_quick_slot -> create_slot_value,
+	// fill_quick_slots -> create_slot_value), so no direct member-pointer anchor is needed.
 }
 
 } // namespace survarium
