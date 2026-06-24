@@ -53,6 +53,10 @@ class player_stamina;
 struct player_input;
 struct base_player_creation_params;
 
+// claude@NOTE: forwarding target of base_player::get_animation_playback_state (see below);
+// the real callee folded to a bare `ret` and is reconstructed in base_player.cpp.
+bool query_animation_playback_state( pcvoid const object, u32 const mask, animation::animation_playback_state result );
+
 // sushi@TODO: <0x122e20>|0x000:'149'
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
@@ -134,11 +138,13 @@ public:
 
 	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
 
-	// claude@NOTE: STUB body is a placeholder. Target (@0x8e... in base_player) has a REAL
-	// body: reads result.{0,4} + mask + this, pushes 4 dwords, calls a 4-arg fn (fold-misnamed
-	// finalize_impl) - a forwarder, not VOSTOK_UNREACHABLE_CODE. Needs the callee identified.
-	// STATE[STUB]
-	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
+	// claude@NOTE: inline COMDAT attributed to this header (target emits it from base_player.h).
+	// `object`/`mask` are top-level `const` (QBX/IBE mangle); result is passed BY VALUE to the
+	// forwarding helper (reconstructed in base_player.cpp - its real callee folded away).
+	virtual	bool								get_animation_playback_state	( pcvoid const object, u32 const mask, animation::animation_playback_state& result ) const
+	{
+		return query_animation_playback_state( object, mask, result );
+	}
 
 	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
 	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
