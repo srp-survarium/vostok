@@ -200,14 +200,9 @@ public:
 													s32					z
 												) override;
 
-	// STATE[STUB]
 	virtual	s32									input_priority					( ) override
 	{
-		return 0;
-
-		// FUNCTION BODY[0x968f0]
-		// <0x968f0>|0x000|      :'102'	{
-		// ******
+		return 10;
 	}
 
 	// the nested bullet_tracer member `bullet` shadows type `bullet` in
@@ -283,14 +278,9 @@ public:
 
 	inline	const simple_game_project_ptr		get_project						( ) const { /* no source */ return m_game_project; }
 
-	// STATE[STUB]
 	virtual	bullet_manager&						get_bullet_manager				( ) const override
 	{
-		return *m_bullet_manager;	// buildability return
-
-		// FUNCTION BODY[0x8f770]
-		// <0x8f770>|0x000|      :'159'	{
-		// ******
+		return *m_bullet_manager;
 	}
 
 	inline	game_material_manager const&		get_game_material_manager		( ) const { /* no source */ return *m_game_material_manager; }
@@ -356,13 +346,8 @@ private:
 			void								update_npc_stats				( );
 
 public:
-	// STATE[STUB]
-public:
 	virtual	void								set_navmesh_info				( pcstr __formal ) const override
 	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'205'	{
-		// ******
 	}
 
 private:
