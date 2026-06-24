@@ -60,7 +60,10 @@ public:
 	typedef intrusive_list_item< parameters_filters_type* >	filter_set_type;
 	typedef intrusive_list< filter_set_type,
 							filter_set_type*,
-							&filter_set_type::next
+							&filter_set_type::next,
+							threading::mutex,
+							size_policy,
+							no_debug_policy
 						  >									filters_set_type;
 	
 private:

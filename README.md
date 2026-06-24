@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 54.81% fuzzy (+1.92%) &middot; 4,822 / 12,915 functions exact (37.34%, +310 best-ever).**
+**Overall: 54.85% fuzzy (+1.92%) &middot; 4,826 / 12,915 functions exact (37.37%, +309 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -25,10 +25,10 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `vostok`        |   112 | 502 / 1,252 (40.1%) |           565 (+63) | 54.5% |     +4.8% |
 | `game_core`     |   189 | 495 / 1,171 (42.3%) |           587 (+92) | 80.2% |     +4.4% |
 | `animation`     |   102 |   257 / 763 (33.7%) |           268 (+11) | 22.6% |     +0.8% |
-| `ai`            |   124 |   405 / 690 (58.7%) |           444 (+39) | 86.2% |     +1.1% |
+| `ai`            |   124 |   408 / 690 (59.1%) |           447 (+39) | 86.9% |     +1.1% |
 | `sound`         |    69 |   207 / 509 (40.7%) |            210 (+3) | 52.0% |     +0.1% |
 | `collision`     |    52 |   409 / 503 (81.3%) |            412 (+3) | 95.4% |     +0.2% |
-| `scaleform`     |    47 |   192 / 453 (42.4%) |            201 (+9) | 53.2% |     +1.2% |
+| `scaleform`     |    47 |   193 / 453 (42.6%) |            201 (+8) | 53.3% |     +1.1% |
 | `particle`      |    25 |   213 / 400 (53.2%) |            217 (+4) | 78.1% |     +1.0% |
 | `vfs`           |    71 |   162 / 390 (41.5%) |            168 (+6) | 84.8% |     +1.7% |
 | `ui`            |    27 |   145 / 227 (63.9%) |            145 (+0) | 77.6% |     +3.6% |

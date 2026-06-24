@@ -48,7 +48,8 @@ protected:
 							intrusive_filters_list*,
 							&intrusive_filters_list::next,
 							threading::single_threading_policy,
-							size_policy >		subfilters_type;
+							size_policy,
+							no_debug_policy >	subfilters_type;
 
 protected:
 	subfilters_type								m_subfilters;
@@ -60,18 +61,26 @@ private:
 	bool										m_is_inverted;
 }; // class base_filter
 
+// sushi@TODO: no_debug_policy spelled explicitly here (and in action_instance.h /
+// goal.h filters_set_type) because MASTER_GOLD instantiates every intrusive_list with
+// no_debug_policy, but intrusive_list.h still DEFAULTS DebugPolicy to debug_policy
+// (~222 base symbols engine-wide carry the wrong name). The faithful global fix is the
+// intrusive_list.h default under MASTER_GOLD; done locally here to keep the change in
+// the planning TU's scope.
 typedef intrusive_list< intrusive_filters_list,
 						intrusive_filters_list*,
 						&intrusive_filters_list::next,
 						threading::single_threading_policy,
-						size_policy >					parameter_filters_type;
+						size_policy,
+						no_debug_policy >				parameter_filters_type;
 
 typedef intrusive_list_item< parameter_filters_type* >	parameter_filters_item_type;
 typedef intrusive_list< parameter_filters_item_type,
 						parameter_filters_item_type*,
 						&parameter_filters_item_type::next,
 						threading::single_threading_policy,
-						size_policy
+						size_policy,
+						no_debug_policy
 					  >									parameters_filters_type;
 
 } // namespace planning
