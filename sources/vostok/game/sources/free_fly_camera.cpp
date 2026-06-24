@@ -34,10 +34,15 @@ free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
 {
 }
 
-// claude@NOTE: depressed % is a stub interaction, not a source error - key_binder::
-// get_binded_action is still a STUB whose volatile-sourced placeholder body is small
-// enough that LTCG inlines it here (the target keeps a real `call get_binded_action`).
-// The call boundary + this function's % recover once key_binder.cpp gets its real body.
+// claude@NOTE: structure is faithful (call get_binded_action, switch on game_action_id,
+// console execute / toggle_pause). Residual is non-steerable optimizer codegen on this
+// /Ox module: (1) the base TAIL-MERGES the two identical console_commands::execute case
+// bodies (kSERIALIZE/kDESERIALIZE differ only by the string literal) into one shared
+// push/call; the target emits each case its own call (3 extra target stmts). (2) the
+// target CSEs get_game_scene().get_game() into one stack slot reused for both
+// get_binded_action and toggle_pause (the base re-loads it), which shifts register
+// allocation. Both are compiler heuristics, not source shape. get_binded_action is now
+// bodied - re-measured 78%, so the earlier stub theory was wrong.
 bool free_fly_camera::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -175,11 +180,6 @@ void free_fly_camera::on_focus( bool b_focus_enter )
 		get_game_scene().get_game().input_world().remove_handler	( *this );
 }
 
-// claude@NOTE: line-157 statement (last) is not a plain matrix copy - the target
-// copies cd's inverted view then re-orthogonalises in place: sets the up row to
-// (0,1,0) and recomputes the right row via cross(up, forward) (a create_camera_
-// direction-style basis rebuild, all inlined, no call). The exact source helper /
-// args are unidentified; the first two statements (super call + time/delta) match.
 void free_fly_camera::on_activate( camera_director* cd )
 {
 	game_camera::on_activate	( cd );
@@ -187,13 +187,25 @@ void free_fly_camera::on_activate( camera_director* cd )
 	m_prev_time_ms				= get_game_scene().get_game().game_time_ms( );
 	m_prev_delta_sec			= -1.0f;
 	m_inverted_view_matrix		= cd->get_inverted_view_matrix( );
+
+	// re-orthogonalise: force the up row level (world-up) and rebuild the right
+	// row from cross( up, forward ), removing any roll from cd's view basis.
+	// claude@NOTE: residual is non-steerable - the base materialises the
+	// float3( 0,1,0 ) temp on the stack then copies it into j; the target writes
+	// the 3 components straight to the matrix (constructor temp scheduling). The
+	// cross row matches but for xmm register-allocation order. Structure matches.
+	m_inverted_view_matrix.j.xyz( )	= float3( 0.f, 1.f, 0.f );
+	m_inverted_view_matrix.i.xyz( )	= math::cross_product( m_inverted_view_matrix.j.xyz( ), m_inverted_view_matrix.k.xyz( ) );
 }
 
-// claude@NOTE: residual is non-steerable. target LOG_INFO bakes __LINE__ 180 (push 0B4h);
-// ours is at line 208 -> whole fn sits ~31 lines later than the original (target stmt #1 is
-// line 163 vs our 194). Plus the LOG callback's boost::function is built inline in target vs
-// a `call boost::function<...>::function<...>` here (LTCG inlining). Structure otherwise
-// matches. Next step: only via restoring the original above-fn line layout (risky, cross-fn).
+// claude@NOTE: structure is faithful (build_view_matrix folds the angle_x/angle_y temps
+// inline = 6 PDB locals matching target; the prior 2-local form was wrong). Residual is
+// non-steerable /Ox codegen: (1) target CSEs game_permanent_time_ms() into one value reused
+// for both current_time_delta and `m_prev_time_ms = ...`, splitting the decl statement; the
+// base re-calls it. (2) LOG_INFO bakes __LINE__ as `push 0B4h` (=180, the original's line)
+// vs our `push 0D5h` (=213) - we sit ~33 lines later in the file; and the target builds the
+// log callback's boost::function inline while the base emits `call boost::function<...>`
+// (LTCG). Recoverable only by restoring the original cross-fn line layout (risky).
 void free_fly_camera::tick( )
 {
 	float const current_time_delta	= float( get_game_scene().get_game().game_permanent_time_ms( ) - m_prev_time_ms );
@@ -248,9 +260,13 @@ void free_fly_camera::tick( )
 	if ( keyb_event_present( input::key_s ) )
 		up					-= factor * .1f;
 
-	float const	angle_x			= angle_factor * math::deg2rad( m_mouse_move.y );
-	float const	angle_y			= angle_factor * math::deg2rad( m_mouse_move.x ) * 0.75f;
-	build_view_matrix			( float2( angle_x, angle_y ), forward, right, up );
+	build_view_matrix			(
+									float2(
+										angle_factor * math::deg2rad( m_mouse_move.y ),
+										angle_factor * math::deg2rad( m_mouse_move.x ) * 0.75f
+									),
+									forward, right, up
+								);
 
 	m_keyb_events.clear();
 	m_mouse_events.clear();
