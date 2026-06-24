@@ -260,16 +260,20 @@ void particle_world::add_particle_system_instance(particle_system_instance* inst
 {
 	//ps_instance_entry* new_entry = MT_NEW(ps_instance_entry)();
 	//m_ticked_instances_list2.push_back( new_entry );
-	// claude@NOTE: QUANTITY/SIZE vs target. Target has NO `self_ptr = impl` store; instead it
-	//   guards the push_back with a duplicate check: `if ( !m_ticked_instances_list.find( impl ) )
-	//   m_ticked_instances_list.push_back( impl );`. Blocked by a TYPEDEF divergence: the target's
-	//   m_ticked_instances_list is intrusive_list<...,resource_ptr<particle_system_instance_impl,
-	//   unmanaged_intrusive_base>,656,mutex,size_policy,no_debug_policy> (resource_ptr PointerType +
-	//   no_debug_policy) while ours is intrusive_list<impl,impl*,&m_next> (raw ptr + debug_policy).
-	//   The find()-arg builds a resource_ptr temp; correcting the list typedef is a class-wide change.
+	// claude@NOTE: source shape now matches the target (decl / braced if-find guard / guarded
+	//   push_back, NO `self_ptr = impl` store). The lone remaining target statement is the braced
+	//   if's block-exit jmp (target line 259, +0x002): the target keeps it because the resource_ptr
+	//   list element needs cleanup on that path, while our raw-ptr list folds the empty block-exit
+	//   into the function epilogue. Root cause is the m_ticked_instances_list typedef divergence -
+	//   target intrusive_list<...,resource_ptr<particle_system_instance_impl,unmanaged_intrusive_base>,
+	//   656,mutex,size_policy,no_debug_policy> (resource_ptr PointerType + offset-based + no_debug)
+	//   vs ours intrusive_list<impl,impl*,&m_next> (raw ptr + member-ptr + debug). Correcting it is a
+	//   shared-infrastructure change (see particle_world.h NOTE) outside this TU's scope.
 	particle_system_instance_impl* impl = static_cast_checked<particle_system_instance_impl*>( instance );
-	impl->self_ptr = impl;
-	m_ticked_instances_list.push_back( impl );
+	if ( !m_ticked_instances_list.find( impl ) )
+	{
+		m_ticked_instances_list.push_back( impl );
+	}
 }
 
 void particle_world::remove_particle_system_instance(particle_system_instance* in_instance)
