@@ -9,19 +9,20 @@ namespace survarium {
 
 // STATE[STUB]
 // claude@NOTE: PARKED - show/hide new_state specializations (3 stmts, lines 32/33/47;
-// target 0x98010 show). Recovered shape: compute two animation time-scales from
-// `animations[0]` (lines 32/33) via resources::pinned_ptr_base<animation::
-// cubic_spline_skeleton_animation const> over the show/hide animation, take their
-// difference / ratio into the "shown progress" arg, then line 47:
-//   return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< STATE >(
-//       params->weapon, <scale>, animations, animations_count, sounds, sounds_count,
-//       config_parameters.stop_sounds_on_state_finalize,
-//       config_parameters.simultaneous_sounds_queue_size, shown ) : NULL;
-// (the 9-arg ctor with bool& shown). BLOCKED: that 9-arg ctor inlines
-// weapon_sound_effect::weapon_sound_effect (out-of-line in weapon_sound_effect.cpp) -
-// cross-unit inline wall, plus the exact pinned_ptr time-scale computation is not yet
-// decoded. NEXT: decode the two pinned_ptr reads (animation duration accessors) and
-// write the ternary; the 9-arg ctor must first be matched by its own unit.
+// target 0x98010 show). The 9-arg ctor wall is CLEARED (the ctor is now bodied + the
+// weapon_core accessor map recovered, so on_sound_event/init/finalize all build). Line 47
+// is ready: return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state<
+// STATE >( params->weapon, <scale>, animations, animations_count, sounds, sounds_count,
+// config_parameters.stop_sounds_on_state_finalize,
+// config_parameters.simultaneous_sounds_queue_size, shown ) : NULL.
+// REMAINING WALL (lines 32/33): the <scale> arg is computed from TWO
+// resources::pinned_ptr_base<animation::cubic_spline_skeleton_animation const> reads over
+// animations[0]: each pins animations[0] then reads the cubic_spline keyframe arrays
+// ([anim+0x14] base, then [base], [base+4] strides into the keyframe/value tables;
+// movss [base+keyidx*..-4] = end value, movss [base+key0<<4] = start value), giving
+// scale = (end_a - start_a) / (end_b - start_b) (subss/subss/divss). NEXT: decode the
+// cubic_spline_skeleton_animation keyframe-table layout (the [+0x14]/[+0]/[+4] reads) to
+// spell the two pinned-ptr duration expressions, then this whole 3-stmt body falls out.
 template < >
 inline weapon_sound_events_handler_state< weapon_core_show_state >* weapon_sound_events_handler_state_cook<survarium::weapon_sound_events_handler_state<survarium::weapon_core_show_state> >::new_state(
 	mutable_buffer		buffer,

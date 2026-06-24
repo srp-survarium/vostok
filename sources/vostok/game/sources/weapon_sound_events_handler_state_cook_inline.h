@@ -57,9 +57,13 @@ void weapon_sound_events_handler_state_cook< T >::create_resource(
 // data[i].get_managed_resource(); compute total_sounds_count; alloc
 // buffer_for_sounds; new_state( buffer, params, animations.begin(),
 // animations.size(), buffer_for_sounds, total_sounds_count, config_parameters );
-// set_unmanaged_resource + finish_query( result_success ). NEXT: reconstruct vs the
-// PDB line table (lines 148-181); calls new_state (also parked). Mirror
-// weapon_core_state_cook_template::on_subresources_ready (sibling, matched).
+// set_unmanaged_resource + finish_query( result_success ). The handler ctor + the
+// weapon_core accessor map are now recovered, so new_state's construction is unblocked;
+// the wall here is the 38-stmt installer's own structure (the managed_resource animation
+// gather loop + the buffer sizing) and new_state's pinned_ptr duration decode. NEXT:
+// reconstruct vs the PDB line table (lines 148-181); calls new_state (still parked on the
+// cubic_spline keyframe decode). Mirror weapon_core_state_cook_template::on_subresources_ready
+// (sibling, matched).
 template < typename T >
 inline void weapon_sound_events_handler_state_cook< T >::on_subresources_ready(
 	resources::queries_result&		data,
