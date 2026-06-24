@@ -28,7 +28,13 @@ namespace survarium {
 class items_dictionary;
 class player_profile;
 
+void use_game_lobby_scene( );	// /OPT:REF anchor (anchor_game_lobby_scene.cpp), friend below
+
 class profile_character : public boost::noncopyable {
+	// codegen-neutral: lets the lobby-scene reachability anchor address-take the
+	// private *_ready callbacks until the real query_resources call graph reaches
+	// them (their callers - query_character_animations etc. - are still STUBs).
+	friend void ::survarium::use_game_lobby_scene( );
 public:
 	struct preview_weapon {
 		inline		preview_weapon	( ) { /* no source */ }
@@ -63,6 +69,7 @@ public:
 	inline	void	query_profile_contents		( player_profile const* arg_0 ) { /* no source */ }
 	inline	void	query_character_animations	( ) { /* no source */ }
 
+private:
 			void	character_model_ready		( resources::queries_result& data );
 			void	character_animation_ready	( resources::queries_result& data );
 			void	weapon_resources_ready		( resources::queries_result& data );
