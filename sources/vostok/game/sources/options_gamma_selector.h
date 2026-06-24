@@ -11,10 +11,8 @@ namespace survarium {
 
 class options_gamma_selector : public options_item_float {
 public:
-	// buildability base init (options_item_float has only the 4-arg ctor);
-	// a matcher supplies the real console-command/id/step arguments
 	inline	explicit	options_gamma_selector	( options_tab& arg_0 )
-		: options_item_float( arg_0, NULL, 0, 0.0f ) { /* no source */ }
+		: options_item_float( arg_0, "r_gamma_correction_factor", 6, 0.01f ) { /* no source */ }
 
 	virtual	void		call					( flash_function_handler_params& params ) override;
 

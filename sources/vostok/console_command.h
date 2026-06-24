@@ -115,6 +115,7 @@ public:
 	virtual void		status					( status_str& dest )	const;
 	virtual void		info					( info_str& dest )		const;
 	virtual void		syntax					( syntax_str& dest )	const;
+	inline	pcstr		get_value				( )	const { return m_value; }
 protected:
 	pstr				m_value;
 	u32					m_size;
