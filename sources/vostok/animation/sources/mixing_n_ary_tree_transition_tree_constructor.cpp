@@ -31,7 +31,14 @@ namespace animation {
 namespace mixing {
 
 // STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::add_animation_node(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::animation_state const*, unsigned int, float, bool)
+// claude@NOTE: 15-stmt finalizer. Records m_new_animation_state into m_new_animation_event,
+// computes initial_event_types (0x81 new / 0x80 prev-state-driven), runs an out-of-line
+// n_ary_tree_weight_calculator::visit over new_animation, then INLINES the animation_state
+// ctor (asm .7 writes the bone_matrices_computer sub-object fields directly) and bumps
+// m_new_animation_state by sizeof(animation_state)=0xB4. Blocked on the INLINED
+// animation_state::animation_state (+ its bone_matrices_computer_data ctor) being matched -
+// that ctor is not in the base index, so the field-write block can't be reproduced yet.
+// Next step: body animation_state::animation_state first, then reconstruct this around it.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
 	animation_state const*			previous_animation_state,
@@ -299,7 +306,13 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 }
 
 // STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::new_animation(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node*, unsigned int, unsigned int&, unsigned int&, unsigned int&, float&, bool, bool)
+// claude@NOTE: 45-stmt release-optimized leaf builder. INLINES the animation_interval clone
+// loop, the 16-arg n_ary_tree_animation_node ctor (twice - .6/.9 paths), animation_interval
+// ctors, stlp_std __find over animated_object_holder, and the boost::function transform. Calls
+// new_time_scale (STUB) out-of-line. Blocked: most of its body is the inlined
+// n_ary_tree_animation_node 16-arg ctor + animation_interval ctor, neither matched/bodied;
+// reconstructing the inlined field writes is not faithful until those ctors exist in base.
+// Next step: body n_ary_tree_animation_node's 16-arg ctor + animation_interval ctor, then this.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation(
 	n_ary_tree_animation_node&		to,
 	n_ary_tree_animation_node&		from,
@@ -705,7 +718,15 @@ void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group
 }
 
 // STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::add_animation(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node* const)
+// claude@NOTE: this is the un-DCE driver for new_weight_transition(base_interpolator const&,
+// float,float) - it is the only caller, so that overload stays unpaired until this is bodied.
+// 22-stmt aggregator mirroring new_weight_driving_animation: pick the weight interpolator (from
+// weight_driving_animation else animation), call new_animation (STUB), then a 3-way operand
+// merge that emits new_weight_transition nodes, then an INLINED stlp_std::sort (introsort_loop
+// + insertion_sort, same comparer idiom as add_operands), then add_animation_node (STUB).
+// Blocked on new_animation + add_animation_node bodies (its new_animation call args + final
+// add_animation_node call can't line up while those return NULL). Next step: body those two
+// roots, then reconstruct this merge+inlined-sort from asm 0x6eb810.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation )
 {
 	// LOCALS
@@ -1338,14 +1359,10 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	// ******
 }
 
-// claude@NOTE: 71-stmt optimized prime root. The guard, the time-scale prologue, the per-side
-// (left/right) multiplicand fast paths (>=2 -> n_ary_tree_multiplication_node, ==1 -> single
-// clone, 0 -> zero-weight n_ary_tree_weight_node) and the `.33` else flow are reconstructed,
-// so it descends out-of-line into the bodied roots (new_*_transition / new_weight_transition /
-// add_operands / add_animation_node / new_animation / computed_operands_count). MISSING: the
-// two inner loops that populate each multiplication node's operand array by cloning every
-// operand via accept(m_cloner) (asm .15 line 1311 / .23 line 1342) - the bulk of the remaining
-// TRGT_ONLY statements. Next step: add those operand-copy loops to close the structure gap.
+// claude@NOTE: the two per-side multiplication-node operand-copy loops (clone every operand
+// via m_cloner.clone, .15/.23 in the target) are reconstructed; structure now matches. The
+// residual TRGT_ONLY is the call-arg setup for new_animation + add_animation_node, both still
+// STUBs (return NULL) - their inlined-ctor/argument flow only lines up once they are bodied.
 void n_ary_tree_transition_tree_constructor::change_animation(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
@@ -1404,9 +1421,14 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		if ( left_multiplicands_count >= 2 ) {
 			n_ary_tree_base_node* const	left	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
-			new ( left ) n_ary_tree_multiplication_node( left_multiplicands_count );
+			n_ary_tree_multiplication_node* const	multiplication	= new ( left ) n_ary_tree_multiplication_node( left_multiplicands_count );
 
+			n_ary_tree_base_node**	operands	= multiplication->operands( sizeof( n_ary_tree_multiplication_node ) );
 			m_buffer				+= left_multiplicands_count * sizeof( n_ary_tree_base_node* );
+
+			for ( n_ary_tree_base_node** i = multiplicands + ( operands_offset && (*multiplicands)->is_time_scale( ) ? 1 : 0 ); i != from_end; ++i )
+				*operands++			= m_cloner.clone( **i );
+
 			weight_from				= left;
 		}
 		else if ( left_multiplicands_count == 1 )
@@ -1425,8 +1447,14 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		if ( right_multiplicands_count >= 2 ) {
 			n_ary_tree_base_node* const	right	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
-			new ( right ) n_ary_tree_multiplication_node( right_multiplicands_count );
+			n_ary_tree_multiplication_node* const	multiplication	= new ( right ) n_ary_tree_multiplication_node( right_multiplicands_count );
+
+			n_ary_tree_base_node**	operands	= multiplication->operands( sizeof( n_ary_tree_multiplication_node ) );
 			m_buffer				+= right_multiplicands_count * sizeof( n_ary_tree_base_node* );
+
+			for ( n_ary_tree_base_node** i = from.operands( sizeof( n_ary_tree_animation_node ) ) + ( operands_offset && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0 ); i != to_end; ++i )
+				*operands++			= m_cloner.clone( **i );
+
 			weight_to				= right;
 		}
 		else if ( right_multiplicands_count == 1 )
