@@ -15,8 +15,7 @@ public:
 
 	virtual	void		call								( flash_function_handler_params& params ) override;
 
-	// buildability return (the base's m_current_value is private)
-	inline	u8			value								( ) { /* no source */ return 0; }
+	inline	u8			value								( ) { /* no source */ return m_current_value; }
 
 	inline				~options_graphics_quality_selector	( ) { /* no source */ }
 }; // class options_graphics_quality_selector
