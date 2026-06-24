@@ -96,6 +96,10 @@ private:
 	friend class					debug_state;
 };
 
+#ifdef MASTER_GOLD
+STATIC_SIZE_ASSERT(unmanaged_resource, 0x108);
+#endif // #ifdef MASTER_GOLD
+
 class unmanaged_resource_buffer
 {
 public:
