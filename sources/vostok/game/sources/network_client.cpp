@@ -421,7 +421,12 @@ game_world& network_client::get_game_world( )
 //   // 525-526: udp_match_stats difference = m_previous_stats - get_stats; sprintf<256>(text,"%3d packets",...)
 //   // 530-534: m_max_local_sequence_difference_value.set_text / m_unacknowledged_packets_value.set_text
 // The create() arg marshalling (10 params, most constant-folded) and the s_show_network_statistics
-// console-command static still need pinning before this is byte-faithful.
+// console-command static still need pinning before this is byte-faithful. Two further walls
+// confirmed this pass: (1) the flash_text assignments at 484-502 route through the flash_text
+// copy-assign + DrawText refcount release (`call [vtable+0x98]`), which is still-stubbed scaleform
+// flash glue (flash_text holds a raw DrawText* stub) - same byte-wall as stats_row::create; and
+// (2) s_show_network_statistics must be materialized as a TU-static bool here (referenced directly
+// by set_visible at 512-515). Body these (flash glue + the cc static) before reattempting.
 // STATE[STUB]
 void network_client::draw_stats( const u32 current_time_in_ms )
 {
