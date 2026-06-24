@@ -13,6 +13,8 @@
 #include <vostok/core/core.h>
 #include <vostok/fs_utils.h>
 #include <vostok/resources_fs.h>
+#include <vostok/fs/fs_native_path_string.h>
+#include <vostok/fs/fs_path_string_utils_inline.h>
 #include <vostok/render/api.h>
 
 #include <vostok/os_preinclude.h>
@@ -28,6 +30,13 @@
 
 #include <objbase.h>				// for COINIT_MULTITHREADED
 #pragma comment( lib, "delayimp.lib" )
+
+// <shlobj.h> drags in prsht.h/commctrl.h, which need the GDI/USER types this
+// TU strips via os_preinclude (NOGDI/NOUSER); declare the one shell import +
+// CSIDL we use directly instead.
+#define CSIDL_PERSONAL				0x0005
+extern "C" __declspec(dllimport) HRESULT __stdcall SHGetFolderPathA( HWND hwnd, int csidl, HANDLE hToken, DWORD dwFlags, LPSTR pszPath );
+#pragma comment( lib, "shell32.lib" )
 
 
 using vostok::engine::engine_world;
@@ -269,6 +278,27 @@ pcstr engine_world::get_resources_path	( ) const
 pcstr engine_world::get_mounts_path		( ) const
 {
 	return								"../../mounts";
+}
+
+// sushi@TODO: structure matches the target (8 stmts, same shape/locals); byte
+// residual is inline-vs-call - the target out-lines append_relative_path<native,
+// native> (a real call, ~0x1f bytes) while our base inlines it (~0x67).
+pcstr engine_world::get_user_data_directory	( ) const
+{
+	using namespace vostok::fs_new;
+
+	static native_path_string			s_user_data_directory;
+	static bool							s_initialized	= false;
+	if ( !s_initialized ) {
+		char							path[MAX_PATH];
+		SHGetFolderPathA				( NULL, CSIDL_PERSONAL, NULL, 0, path );
+		_strlwr_s						( path, sizeof(path) );
+		s_user_data_directory			= path;
+		append_relative_path			( &s_user_data_directory, native_path_string::convert("survarium") );
+		s_initialized					= true;
+	}
+
+	return								s_user_data_directory.c_str();
 }
 
 void engine_world::enable_game						( bool value )
