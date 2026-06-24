@@ -175,6 +175,14 @@ void weapon::tick( )
 	weapon_core::tick( );
 }
 
+// claude@NOTE: structure correct (single statement = the base call at line 187). The target
+// INLINES the trivial in-header weapon_core::set_transform (`m_transform = transform`) directly
+// into a `rep movsd` of 0x10 dwords to [this+0x158], so its body is byte-identical to (and ICF-
+// adjacent) weapon_core::set_transform; our per-TU build keeps the qualified call and tail-jmps
+// it (weapon_core::set_transform is a VIRTUAL whose body is emitted as an addressable COMDAT for
+// the vtable, which /O2 declines to inline at the call site - only the whole-program optimizer
+// inlines it). m_transform is private to weapon_core so the assignment cannot be spelled here.
+// Inline-vs-call LTCG wall, not source-steerable.
 void weapon::set_transform( float4x4 const& transform )
 {
 	weapon_core::set_transform( transform );
@@ -248,6 +256,12 @@ void weapon::load_weapon(
 {
 }
 
+// claude@NOTE: structure faithful (static add, if-guard, the two returns exactly as the target
+// records lines 290/292/293/296+298+296). The target keeps BOTH return paths fully expanded with
+// duplicated epilogues (frame sub esp,0xC8, a float4x4 stack temp per branch) so each return body
+// + its `}` epilogue is a distinct statement (6 stmts); our build cross-jump/tail-merges the two
+// returns through a shared final mul4x3 (`jmp short .3`) into a tighter frame (sub esp,0x80),
+// collapsing to 4 statements. Tail-merge / epilogue-sharing codegen difference, not source-steerable.
 float4x4 weapon::calculate_locator(
 	render::model_locator_item const&		locator,
 	float4x4 const*							matrices,
@@ -342,6 +356,11 @@ void weapon::set_ui_ammo( bool update_total_count )
 	}
 }
 
+// claude@NOTE: structure correct (single statement = set_ui_ammo( true )). The target emits
+// `mov eax,ecx; push 1; call set_ui_ammo` because its set_ui_ammo takes `this` in eax (LTCG
+// custom convention); our set_ui_ammo is standard __thiscall (this in ecx) so we skip the
+// `mov eax,ecx` and the call lands in tail position (attributed to no line). Calling-convention
+// LTCG wall on the set_ui_ammo callee, not source-steerable.
 void weapon::on_reload( )
 {
 	set_ui_ammo( true );
@@ -362,6 +381,15 @@ void weapon::on_unload_chambered_round( )
 		m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
 }
 
+// claude@NOTE: show_crosshair/hide_crosshair structure correct (the if-guard + the inner call).
+// The target shows 2 statements (if-line + call-line) because its game_world_ui::show_crosshair
+// uses an LTCG custom register convention (`this` in edx, bool in al, plain `ret`) which makes the
+// weapon wrapper reserve a frame (`push ecx`/`pop ecx`), and that frame splits the prologue `{`
+// from the if-test (giving the if its own line record). Our build's game_world_ui::show_crosshair
+// is standard __thiscall (this in ecx, bool pushed, `ret 4`), so our wrapper is leaf-minimal (no
+// frame) and the `{`/if-test collapse to one statement. game_world_ui::show_crosshair is a
+// non-trivial out-of-line Invoke wrapper in another TU; its convention is whole-program-chosen.
+// Inline/calling-convention LTCG wall, not source-steerable.
 void weapon::show_crosshair( )
 {
 	if ( m_game_ui )
@@ -392,6 +420,13 @@ void weapon::on_after_fire( )
 	if ( m_game_ui && m_inventory ) m_game_ui->set_ammo_in_magazine( ( m_is_round_chambered != 0 ) + m_ammo_in_magazine );
 }
 
+// claude@NOTE: structure correct - both sides emit 9 statements (the match.db SPLIT flag is a
+// line-number-shift artifact, not a count mismatch; --view structure-diff pairs every statement
+// with only SIZE deltas). Residual is codegen: the target aligns the stack (`and esp,0FFFFFFF8h`
+// + a reserved slot) and uses ebx as `this`, our build uses ebp with no alignment, plus minor
+// register-allocation differences across the add_light/remove_light arg-eval. old_target is a real
+// source local that the optimizer register-allocates into esi (its name drops in the optimized
+// game-module PDB - do not delete it). Codegen/frame difference, not source-steerable.
 void weapon::set_target( const weapon_targets new_target )
 {
 	weapon_targets old_target = m_target;
@@ -610,9 +645,12 @@ void weapon::update_dispersion_visual_representation( )
 }
 
 // claude@NOTE: structure correct (base call + 2 inlined activate_hand). The target records a
-// separate statement (line 705) that hoists `!user_is_sprinting` (both hands' is_active computed
-// up front, reused as al/cl); our base computes each is_active just-in-time. CSE/hoisting
-// scheduling difference, no named local on either side - not source-steerable.
+// separate statement (line 705) that hoists the left hand's is_active (`m_is_double_handed ||
+// !user_is_sprinting`) into al up front, then reuses al/cl across both inlined activate_hand
+// stores; our build computes each is_active just-in-time inside its own activate_hand body.
+// Tried spreading the left call across source lines to coax the arg onto its own statement -
+// did not split (the `||` short-circuit + inlined `if` schedule as one statement regardless).
+// Pure CSE/code-motion scheduling difference, no named local on either side - not source-steerable.
 void weapon::on_user_sprint( const bool user_is_sprinting )
 {
 	weapon_core::on_user_sprint( user_is_sprinting );
