@@ -59,6 +59,14 @@ void anchor_animation_cloner( )
 	static u32 volatile										s_sink_count	= 0;
 	s_sink_interps	= cloner.interpolators( );
 	s_sink_count	= cloner.interpolators_count( );
+
+	// Pin the real public root change_animation(); LTCG then emits the genuine
+	// constructor call graph (new_animation -> add_operands -> the new_*_transition
+	// node-construction leaves) out-of-line, as the shipped EXE did. The leaves are
+	// reached through their TRUE callers here, not enumerated in this anchor.
+	static n_ary_tree_animation_node* volatile	s_anim	= 0;
+	static bool volatile						s_flag	= false;
+	constructor.change_animation( *s_anim, *s_anim, s_anim, s_flag );
 }
 
 } // namespace vostok
