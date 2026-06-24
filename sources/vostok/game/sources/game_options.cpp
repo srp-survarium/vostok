@@ -14,6 +14,15 @@
 #include "text_translator.h"
 
 #include "graphic_preset.h"
+#include "options_name_to_label.h"
+#include "main_menu_button_name_to_action.h"
+#include "key_bind_descr.h"
+#include "keyboard_key_descr.h"
+
+#include <vostok/console_command.h>
+#include <vostok/console_command_processor.h>
+#include <vostok/strings_concatenations.h>
+#include <vostok/strings_functions.h>
 
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_value.h>
@@ -31,6 +40,11 @@ namespace survarium {
 // the table values live in .rdata and do not affect this TU's code bytes; the real
 // preset contents are recovered separately.
 static graphic_preset default_graphic_preset[10];
+
+// the per-action keybind descriptor table walked by the binding methods; its 33
+// entries (action_id / str_description / group_id / type) live in .rdata and do not
+// affect the consuming functions' code bytes. The real contents are recovered separately.
+key_bind_descr key_bind_descriptions[33];
 
 void game_options::apply_default_graphic( )
 {
@@ -161,32 +175,189 @@ void game_options::on_resources_ready( resources::queries_result& data )
 	initialize_bindings( );
 }
 
-// STATE[STUB]
-// claude@NOTE: walks a file-static label-name table translating each entry via
-// m_game.text_translator().translate_text(id, wbuf) + a flash_value array -> Movie::Invoke
-// (34 target statements). Table is a named file-static (recoverable, cf. default_graphic_preset
-// which now matches at 93%). Deferred only on reconstruction volume - the per-entry shape is
-// the same proven flash_value-array+Invoke idiom; needs the label-name table defined + careful
-// per-statement reconstruction over many build cycles.
 void game_options::fill_labels( )
 {
+	options_name_to_label names_to_label[] = {
+		{ "s_friends",					"st_options_friends"			},
+		{ "s_cross",					"st_options_cross_type"			},
+		{ "s_chat",						"st_options_chat"				},
+		{ "s_lobby",					"st_options_lobby"				},
+		{ "s_game",						"st_options_game"				},
+		{ "s_chat_keys",				"st_options_chat_keys"			},
+		{ "gameplay_options_type",		"st_options_gameplay"			},
+		{ "controllers_options_type",	"st_options_controller"			},
+		{ "video_options_type",			"st_options_video"				},
+		{ "sound_options_type",			"st_options_sound"				},
+		{ "adjust_gamma",				"st_monitor_ajust"				},
+		{ "button_default_video",		"st_options_default_video"		},
+		{ "button_default_controls",	"st_options_default_controls"	},
+		{ "button_optimal_video",		"st_options_optimal_video"		},
+		{ "button_ok",					"st_options_ok"					},
+		{ "button_apply",				"st_options_apply"				},
+		{ "button_cancel",				"st_options_cancel"				},
+		{ "apply_changes_msg",			"st_apply_changes_msg"			},
+		{ "s_voice_chat",				"st_options_voice"				},
+		{ "s_sound_volume",				"st_options_volume"				},
+		{ "bind_text",					"st_bind_text"					},
+		{ "s_minimap",					"st_minimap"					},
+	};
+
+	flash_value labels_array;
+	m_options_ui->movie->CreateArray( &labels_array );
+
+	for ( u32 i = 0; i < 22; ++i )
+	{
+		flash_value label;
+		m_options_ui->movie->CreateObject( &label );
+
+		flash_value label_member;
+		label_member.SetString( names_to_label[i].name.c_str( ) );
+		label.SetMember( "name", label_member );
+
+		wchar_t label_txt[512];
+		m_game.text_translator( ).translate_text( names_to_label[i].label.c_str( ), label_txt );
+
+		label_member.SetStringW( label_txt );
+		label.SetMember( "label", label_member );
+
+		labels_array.PushBack( label );
+	}
+
+	m_options_ui->movie->Invoke( "root.set_labels", NULL, &labels_array, 1 );
 }
 
-// STATE[STUB]
-// claude@NOTE: picks in_game_world vs lobby button-name table, translates each entry and
-// pushes a flash_value button array to Movie::Invoke. Same table-walk + flash_value-array
-// + Invoke shape as fill_labels; deferred on reconstruction volume.
 void game_options::fill_menu_buttons( bool in_game_world )
 {
+	main_menu_button_name_to_action name_to_action_in_game_world[] = {
+		{ "st_mm_button_back",			"back"			},
+		{ "st_mm_button_settings",		"settings"		},
+		{ "st_mm_button_leave_match",	"leave_match"	},
+		{ "st_mm_button_exit_to_os",	"exit_to_os"	},
+	};
+
+	main_menu_button_name_to_action name_to_action_in_lobby_menu[] = {
+		{ "st_mm_button_back",			"back"			},
+		{ "st_mm_button_settings",		"settings"		},
+		{ "st_mm_button_exit_to_os",	"exit_to_os"	},
+	};
+
+	flash_value buttons_array;
+	m_options_ui->movie->CreateArray( &buttons_array );
+
+	main_menu_button_name_to_action* name_to_action;
+	u32 buttons_count;
+	if ( in_game_world )
+	{
+		name_to_action = name_to_action_in_game_world;
+		buttons_count = 4;
+	}
+	else
+	{
+		name_to_action = name_to_action_in_lobby_menu;
+		buttons_count = 3;
+	}
+
+	for ( u32 i = 0; i < buttons_count; ++i )
+	{
+		flash_value button;
+		m_options_ui->movie->CreateObject( &button );
+
+		flash_value button_member;
+		button_member.SetString( name_to_action[i].action.c_str( ) );
+		button.SetMember( "action", button_member );
+
+		wchar_t button_txt[512];
+		m_game.text_translator( ).translate_text( name_to_action[i].name.c_str( ), button_txt );
+
+		button_member.SetStringW( button_txt );
+		button.SetMember( "label", button_member );
+
+		buttons_array.PushBack( button );
+	}
+
+	m_options_ui->movie->Invoke( "root.set_options", NULL, &buttons_array, 1 );
 }
 
-// STATE[STUB]
-// claude@NOTE: builds the four per-tab fixed_string label tables
-// (controllers/gameplay/video/sound options) and pushes them via flash_value -> Invoke.
-// Largest method here (77 target statements). Same table-walk shape as fill_labels;
-// deferred on reconstruction volume.
 void game_options::fill_settings_data( )
 {
+	fixed_string< 64 >* gameplay_options_labels = NEW_ARRAY( fixed_string< 64 >, 9 );
+	gameplay_options_labels[0] = "st_invite_from_friends_option";
+	gameplay_options_labels[1] = "st_friends_signin_notification_option";
+	gameplay_options_labels[2] = "st_messages_censor_option";
+	gameplay_options_labels[3] = "st_messages_only_from_friends_option";
+	gameplay_options_labels[4] = "st_private_messages_in_game_option";
+	gameplay_options_labels[5] = "st_hide_spam_option";
+	gameplay_options_labels[6] = "st_crosshair_type_option";
+	gameplay_options_labels[7] = "st_crosshair_static_option";
+	gameplay_options_labels[8] = "st_minimap_rotable_option";
+
+	fixed_string< 64 >* video_options_labels = NEW_ARRAY( fixed_string< 64 >, 19 );
+	video_options_labels[0] = "st_monitor_count_option";
+	video_options_labels[1] = "st_resolution_option";
+	video_options_labels[2] = "st_fullscreen_option";
+	video_options_labels[3] = "st_vsync_option";
+	video_options_labels[4] = "st_antialiasing_option";
+	video_options_labels[5] = "st_aniso_filtering_option";
+	video_options_labels[6] = "st_options_adjust_gamma";
+	video_options_labels[7] = "st_fov_option";
+	video_options_labels[8] = "st_graphics_quality_option";
+	video_options_labels[9] = "st_texture_quality_option";
+	video_options_labels[10] = "st_geometry_quality_option";
+	video_options_labels[11] = "st_shadow_quality_option";
+	video_options_labels[12] = "st_lightning_quality_option";
+	video_options_labels[13] = "st_shading_quality_option";
+	video_options_labels[14] = "st_decorations_options";
+	video_options_labels[15] = "st_post_process_options";
+	video_options_labels[16] = "st_ambient_occlusion_options";
+	video_options_labels[17] = "st_particles_quality_options";
+	video_options_labels[18] = "st_motion_blur_amount_options";
+
+	fixed_string< 64 >* sound_options_labels = NEW_ARRAY( fixed_string< 64 >, 7 );
+	sound_options_labels[0] = "st_general_volume_option";
+	sound_options_labels[1] = "st_ingame_volume_option";
+	sound_options_labels[2] = "st_music_volume_option";
+	sound_options_labels[3] = "st_voice_chat_volume_option";
+	sound_options_labels[4] = "st_use_microphone_option";
+	sound_options_labels[5] = "st_microphone_sensitivity_option";
+	sound_options_labels[6] = "st_ptt_button_option";
+
+	fixed_string< 64 >* controllers_options_labels = NEW_ARRAY( fixed_string< 64 >, 2 );
+	controllers_options_labels[0] = "st_mouse_invertion_option";
+	controllers_options_labels[1] = "st_mouse_sensitivity_option";
+
+	flash_value options_args[2];
+	for ( u32 i = 0; i < 4; ++i )
+	{
+		fixed_string< 64 >* options_labels;
+		u8 options_count;
+		switch ( i )
+		{
+			case 0:		options_labels = gameplay_options_labels;		options_count = 9;	break;
+			case 1:		options_labels = video_options_labels;			options_count = 19;	break;
+			case 2:		options_labels = sound_options_labels;			options_count = 7;	break;
+			case 3:		options_labels = controllers_options_labels;	options_count = 2;	break;
+		}
+
+		options_args[0].SetUInt( i );
+		m_options_ui->movie->CreateArray( &options_args[1] );
+
+		for ( u8 j = 0; j < options_count; ++j )
+		{
+			flash_value options_item;
+			m_options_ui->movie->CreateObject( &options_item );
+
+			wchar_t label_txt[512];
+			m_game.text_translator( ).translate_text( options_labels[j].c_str( ), label_txt );
+
+			flash_value options_item_member;
+			options_item_member.SetStringW( label_txt );
+			options_item.SetMember( "label", options_item_member );
+
+			options_args[1].PushBack( options_item );
+		}
+
+		m_options_ui->movie->Invoke( "root.set_options_data", NULL, options_args, 2 );
+	}
 }
 
 void game_options::activate( base_game_scene* parent_scene )
@@ -226,27 +397,47 @@ void game_options::tick( const u32 frame_delta, const u32, const bool )	// PDB: 
 }
 
 // STATE[STUB]
-// claude@NOTE: looks dik up in key_binder::dik_to_ptr + the file-static
-// key_bind_descriptions[33] table (a named symbol, recoverable), detects conflicts
-// against the action's existing bindings (a profile_slot_enum vector walk), and on
-// success either assigns or pops a conflict dialog (text_translator + flash_value ->
-// Invoke). Deferred with assign_binding (its main callee) on reconstruction volume.
+// claude@NOTE: resolves dik -> keyboard_key_descr via key_binder::dik_to_ptr, then walks
+// key_bind_descriptions[33] collecting conflicting actions into m_conflicted_action_ids (a
+// profile_slot_enum vector whose growth inlines stlp_std _M_insert_overflow_aux + the
+// m_key_bindings group-mask overlap test). When no conflict it calls assign_binding directly;
+// otherwise it builds a wide conflict message (translate_text + repeated wcscat_s over the
+// conflicting action names) and Invokes "root.show_reassign_message"/"root.end_keybind".
+// PARKED: the conflict-detection vector ops + group-mask test are inlined from key_binder
+// internals (m_key_bindings is private; the overlap uses [binding+8] masks) and the wcscat_s
+// message loop needs byte validation against the dual m_conflicted_action_ids walk. Locals
+// (dik/binder/key_name/message_txt/w_text/action_txt) match. Next: validate the vector
+// push_back inline + the two-pass message build before bodying.
 bool game_options::process_key_input( s32 dik )
 {
 	return false;
 }
 
-// STATE[STUB]
-// claude@NOTE: walks key_bind_descriptions[33] for the entry whose action_id == action_id,
-// records key into its new_binded_key (a fixed_string assignf, marking is_default), then
-// builds flash_value[3] bind_value { SetStringW(m_game.text_translator().translate_text(key,
-// w_key_name_txt)), SetUInt(action_id), SetBoolean(is_default) } and Invokes "root.set_keybind".
-// Locals: char const* key, bool is_default, flash_value[3] bind_value, wchar_t[512]
-// w_key_name_txt. Structure fully recovered; deferred only on reconstruction volume + the shared
-// key_bind_descriptions table definition (the proven flash_value-array+Invoke idiom, cf.
-// apply_default_graphic 93% / refill_item_data 85%).
 void game_options::assign_binding( game_action_id action_id, pcstr key )
 {
+	bool is_default = false;
+	for ( u8 i = 0; i < 33; ++i )
+	{
+		if ( key_bind_descriptions[i].action_id == action_id )
+		{
+			if ( !strings::compare( key_bind_descriptions[i].new_binded_key.c_str( ), key ) )
+			{
+				is_default = true;
+				break;
+			}
+
+			key_bind_descriptions[i].new_binded_key.assignf( "%s", key );
+		}
+	}
+
+	wchar_t w_key_name_txt[512];
+	m_game.text_translator( ).translate_text( key, w_key_name_txt );
+
+	flash_value bind_value[3];
+	bind_value[0].SetStringW( w_key_name_txt );
+	bind_value[1].SetUInt( action_id );
+	bind_value[2].SetBoolean( is_default );
+	m_options_ui->movie->Invoke( "root.set_keybind", NULL, bind_value, 3 );
 }
 
 void game_options::finish_binding( )
@@ -351,32 +542,88 @@ void game_options::refill_item_data( u8 options_tab_id, u8 options_item_id )
 	m_options_ui->movie->Invoke( "root.set_data_provider", NULL, options_item_data, 3 );
 }
 
-// STATE[STUB]
-// claude@NOTE: walks key_bind_descriptions[33], building a keybinds flash array of
-// label + current-key per action and CreateObject/Invoke into the UI. Tables are named
-// file-statics (key_bind_descriptions / keyboards, both recoverable); deferred with the
-// rest of the binding set (shares the translate_text-signature wall).
 void game_options::initialize_bindings( )
 {
+	flash_value keybinds_array;
+	m_options_ui->movie->CreateArray( &keybinds_array );
+
+	for ( u32 i = 0; i < 33; ++i )
+	{
+		flash_value keybinds_value;
+		m_options_ui->movie->CreateObject( &keybinds_value );
+
+		flash_value keybinds_value_prop;
+		keybinds_value_prop.SetString( key_bind_descriptions[i].str_description );
+		keybinds_value.SetMember( "action_id", keybinds_value_prop );
+
+		keybinds_value_prop.SetUInt( key_bind_descriptions[i].group_id );
+		keybinds_value.SetMember( "group_id", keybinds_value_prop );
+
+		keybinds_value_prop.SetUInt( key_bind_descriptions[i].type );
+		keybinds_value.SetMember( "type", keybinds_value_prop );
+
+		wchar_t label_txt[512];
+		m_game.text_translator( ).translate_text( key_bind_descriptions[i].str_description, label_txt );
+		keybinds_value_prop.SetStringW( label_txt );
+		keybinds_value.SetMember( "label", keybinds_value_prop );
+
+		keybinds_array.PushBack( keybinds_value );
+	}
+
+	m_options_ui->movie->Invoke( "root.set_keybindings", NULL, &keybinds_array, 1 );
+
+	reset_bindings( true );
 }
 
-// STATE[STUB]
-// claude@NOTE: per-action loop over key_bind_descriptions[33] resolving each action's
-// default (or current) key via the keyboards[] descriptor table (?keyboards@survarium@@,
-// defined in key_binder.cpp - needs an extern decl to reference here), then SetStringW +
-// Invoke. Structure clear; deferred with the binding set.
 void game_options::reset_bindings( bool is_default )
 {
+	for ( u32 i = 0; i < 33; ++i )
+	{
+		pcstr key_name = m_game.get_key_binder( ).dik_to_keyname( m_game.get_key_binder( ).get_action_dik( key_bind_descriptions[i].action_id, 0 ) );
+
+		flash_value bind_value[3];
+		bind_value[1].SetUInt( key_bind_descriptions[i].action_id );
+
+		if ( key_name )
+		{
+			wchar_t w_key_name_txt[512];
+			m_game.text_translator( ).translate_text( key_name, w_key_name_txt );
+			bind_value[0].SetStringW( w_key_name_txt );
+			key_bind_descriptions[i].old_binded_key.assignf( "%s", key_name );
+		}
+		else
+		{
+			key_bind_descriptions[i].old_binded_key.assignf( "%s", "" );
+			bind_value[0].SetStringW( L"" );
+		}
+
+		bind_value[2].SetBoolean( is_default );
+		key_bind_descriptions[i].new_binded_key.assignf( "%s", key_bind_descriptions[i].old_binded_key.c_str( ) );
+		m_options_ui->movie->Invoke( "root.set_keybind", NULL, bind_value, 3 );
+	}
 }
 
-// STATE[STUB]
-// claude@NOTE: loop over key_bind_descriptions[33]: where new_binded_key != old_binded_key,
-// STR_JOIN a "bind"/"unbind" console command (id_to_action_name + the new key) and apply it
-// via console_commands::find(...)->execute. Table ref is &key_bind_descriptions[0].new_binded_key
-// (symbol+0x10 addend). Structure clear; deferred - id_to_action_name's call convention here
-// (action_id in edx, no obvious `this`) and the STR_JOIN/unbind path need byte validation.
 void game_options::apply_key_bindings( )
 {
+	for ( u32 i = 0; i < 33; ++i )
+	{
+		if ( strings::compare( key_bind_descriptions[i].new_binded_key.c_str( ), key_bind_descriptions[i].old_binded_key.c_str( ) ) )
+		{
+			key_bind_descriptions[i].old_binded_key.assignf( "%s", key_bind_descriptions[i].new_binded_key.c_str( ) );
+
+			pstr command;
+			if ( !strings::compare( key_bind_descriptions[i].new_binded_key.c_str( ), "" ) )
+			{
+				STR_JOINA( command, m_game.get_key_binder( ).id_to_action_name( key_bind_descriptions[i].action_id ) );
+				console_commands::find( "unbind" )->execute( command );
+			}
+			else
+			{
+				STR_JOINA( command, m_game.get_key_binder( ).id_to_action_name( key_bind_descriptions[i].action_id ), " ", key_bind_descriptions[i].new_binded_key.c_str( ) );
+				console_commands::find( "bind" )->execute( command );
+			}
+		}
+	}
 }
 
 void game_options::reset_bindings_to_defaults( )
