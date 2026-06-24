@@ -23,6 +23,14 @@ void player_input::serialize( network_core::udp_match_packet& packet ) const
 	packet.append		( actions_mask );
 }
 
+// claude@NOTE: STRUCTURE MATCH (3 stmts, lines 30-32). Byte residual is the
+// packet_reader::r<T> __declspec(noinline): the /Ox target INLINES r<math::float2>
+// (no standalone r<float2> in the target index; the read expands to float2 ctor +
+// non-template r(void*,u32,u32) + Vector2::operator= + member store), while our /Od
+// base out-of-lines the whole r<float2> call. Header is owned by another unit;
+// the noinline is a net win for ~25 handlers whose targets DO out-of-line r<T>.
+// Manual-inlining the read here (tested) drops to 57.7% AND breaks the 3-stmt
+// structure (7 base stmts). Faithful form kept.
 void player_input::deserialize( network_core::packet_reader& reader )
 {
 	angular_velocity		= reader.r< math::float2 >( );
