@@ -26,6 +26,10 @@ object_sky::~object_sky( )
 {
 }
 
+// claude@NOTE: structure faithful (same idiom as STRUCTURE-MATCH sibling
+// object_particle_visual, ~80% ceiling). QUANTITY is the target optimizer folding the NEW
+// cook_data + the inlined variant set() into the user_data decl line and dropping the
+// r[]/ud[] named locals; our Master Gold base keeps them split. Not a source shape diff.
 void object_sky::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,

@@ -24,6 +24,10 @@ object_environment::~object_environment( )
 {
 }
 
+// claude@NOTE: structure faithful (same query_resources idiom as STRUCTURE-MATCH sibling
+// object_particle_visual, ~80% ceiling). QUANTITY is the target optimizer folding the
+// 1-element request r[] init into the query_resources call (drops the r named local); our
+// Master Gold base keeps it as its own statement. Not a source shape diff.
 void object_environment::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
