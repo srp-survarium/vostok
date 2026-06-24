@@ -63,3 +63,24 @@ LOG_* macro's boost::function1 log-callback ctor scheduling (log-callback-ctor-s
 copy + boost::ref slot vs the target's folded-ctor schedule, +0x15/0x20). Evidence:
 network/login_client_impl_sign_in.cpp on_user_name_answer_received 47.1% (4 callback sites),
 26/27..16/16 STRUCTURE MATCH across all 19 handlers (2026-06-15).
+
+Confirmed casualty, ai-planning: action_instance.cpp (2026-06-24). The DebugPolicy-typedef
+fix below paired the 4 filter functions, but two of them sit on the INLINED-front minority of
+this knob: action_instance::is_object_suitable 95.5% and parameters_suitability_checker_predicate
+::operator() 95.8% each have a single `for(...; it = front(); ...)` loop-init statement that is
+STRUCTURE MATCH except `SIZE +0x2` - the target inlines `intrusive_list<intrusive_list_item<
+base_filter*>,...,no_debug_policy>::front()` (`mov ecx,[eax+8]`) while the base CALLs the standalone
+(the knob keeps front out-of-line for the 16 fsm-style instantiations). Flipping would regress the
+fsm family per the CAVEAT above; not steerable from action_instance.cpp - PARK at the ceiling.
+
+PREREQUISITE that gated all four (separate from the front knob): the planning filter intrusive_list
+typedefs (base_filter.h parameter_filters_type/parameters_filters_type/subfilters_type, action_instance.h
+filters_set_type) defaulted DebugPolicy to `debug_policy`, but MASTER_GOLD targets instantiate every
+intrusive_list with `no_debug_policy` (target 273 no_debug : 1 debug; base was 222 debug : 76 no_debug -
+our intrusive_list.h default is wrong for MASTER_GOLD). The two policies are empty (layout-identical), so
+this changed only the MANGLED NAME, leaving the 4 functions TARGET_ONLY/BASE_ONLY (unpaired) despite
+correct bytes. Spelling `no_debug_policy` explicitly as the 6th template arg in the planning typedefs
+paired them (pop_filter_list/add_filters_list to 100/99.85, the two front sites to 95.5/95.8) with ZERO
+regressions (no paired AI fn used a `debug_policy` intrusive_list name). The faithful global fix is the
+intrusive_list.h default, but that is a core cross-module header touched by many workers - out of a
+single planning TU's scope; explicit per-typedef args produce identical bytes/structure.
