@@ -18,7 +18,21 @@ the class decl, member offsets, the `temp_include_all` anchor, your context)
 across code that genuinely shares it. Also pull in any function
 **CALLED by one you're matching** - matching a callee is fine and often necessary (it
 scores as its own function; see MATCHING.md's reconstructed-helper rule).
-One unit = one match commit. If a batch member turns out hard, a bit of spinning on it
+One unit = one match commit.
+
+**Root-first + descend-into-callees, reconstruct anything but `render` (DEFAULT, sushi 2026-06-24).**
+When you match a ROOT (a high-level caller/driver - a tick, a packet dispatcher, a
+high-fan-out base ctor) and it calls a STUB or missing callee, do **NOT** park the root -
+**DESCEND and implement that callee** from its target asm so the root pairs. You may
+reconstruct callees in **ANY module EXCEPT `render`** - sound, physics, network_core, core,
+scaleform, animation, ui, configs are all in scope; reconstruct the missing type/facade
+method/global the callee needs. Only the `render` module stays PARKED (scene_renderer,
+render_output_window / `output_window_size`, tracers, sky-ao, skeleton, scene-draw) - it is
+matched LAST. You OWN the root + its callee subtree for this commit. Two guards: do **not
+regress** the modules you reconstruct into (check `report-changes.json` after each rebuild),
+and stay within the files the orchestrator scoped to you (it keeps live workers' file sets
+disjoint). PARK only on a `render` symbol or a genuinely unrecoverable data-section string.
+This pays off big - one bodied callee routinely un-DCEs several callers from ~0% to ~100%. If a batch member turns out hard, a bit of spinning on it
 is fine, but don't get stuck - finish the rest and park it: a terse `claude@NOTE:`
 above the function (why stuck, what you tried - FACTS only, NEVER a match % in
 a comment: numbers go stale, they live in report.json/the match DB) and the
