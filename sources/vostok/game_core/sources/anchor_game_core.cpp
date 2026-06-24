@@ -150,7 +150,9 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/victory_items_container_core.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
+#include <vostok/game_core/items_dictionary_cook.h>
 #include <vostok/game_core/player_parameters_modifyer.h>
+#include <vostok/game_core/player_parameters_modifyer_cook.h>
 
 // physics/collision headers needed by collision_sensor / collision_geometry anchors
 // (contact_test_predicate, ghost_object's base_physics_objects_type) - over-inclusion
@@ -554,6 +556,26 @@ namespace vostok
 	void use_inventory_cook( )
 	{
 		static survarium::inventory_cook s_inventory_cook;
+	}
+
+	// items_dictionary_cook's ctor self-registers via register_cook(this). Constructing
+	// it keeps the ctor + the vtable (translate_query, delete_resource); translate_query's
+	// boost::bind(&on_items_dictionary_config_loaded,...) keeps that private method, which in
+	// turn binds on_subresources_loaded - so the whole boost::bind chain cascades from here.
+	void use_items_dictionary_cook( )
+	{
+		static survarium::items_dictionary_cook s_items_dictionary_cook;
+		example_callback( reinterpret_cast< pcstr >( &s_items_dictionary_cook ) );
+	}
+
+	// player_parameters_modifyer_cook's ctor self-registers via register_cook(this).
+	// translate_query / delete_resource / player_parameters_modifyer::apply are already
+	// paired (the TU is reachable), but the ctor itself has no construction site - anchor
+	// one here so its standalone body pairs in player_parameters_cook.obj.
+	void use_player_parameters_modifyer_cook( )
+	{
+		static survarium::player_parameters_modifyer_cook s_player_parameters_modifyer_cook;
+		example_callback( reinterpret_cast< pcstr >( &s_player_parameters_modifyer_cook ) );
 	}
 
 	void use_weapon_core_shotgun_reload_state_cook( )
@@ -2452,6 +2474,8 @@ namespace vostok
 		use_victory_item_core( );
 		use_weapon_core_cook( );
 		use_inventory_cook( );
+		use_items_dictionary_cook( );
+		use_player_parameters_modifyer_cook( );
 		use_weapon_core_shotgun_reload_state_cook( );
 		use_weapon_core_inactive_state_cook( );
 		use_game_core_weapon_recoil_params( );
