@@ -5,16 +5,26 @@ Emits the ordered list of a translation unit's function signatures - one
 `signature();` per line, in DEFINITION ORDER - for both the TARGET and the BASE,
 as two plain-text blocks plus a unified diff between them.
 
-Definition order == COMDAT/RVA order: an object file's COMDAT records follow
-source definition order, so we order the TARGET functions by their target RVA and
-the BASE functions by their base RVA. Diffing the two blocks reveals:
+Definition order == PDB SOURCE-LINE order: we order each side's functions by the
+line-table `line` column the PDB records for the function's source definition (the
+DB's {target,base}_functions.line), with the side's RVA only as a stable
+tiebreaker. We deliberately do NOT order by the final-image RVA: the linker (with
+/OPT, ICF and, on the optimized targets, LTCG) freely permutes COMDATs in the
+image, so RVA order is link-scrambled on BOTH sides and reports a flood of FALSE
+reorders (hundreds of vostok .cpp TUs) that do not correspond to any source move.
+The PDB source line is what the .cpp actually declares, so a line-order mismatch
+IS a real, source-editable definition-order divergence. (Functions with no source
+line - compiler-emitted thunks, `dynamic initializer/atexit` records - carry
+line 0/NULL and sort last; they are never genuine source reorders.)
+
+Diffing the two blocks reveals:
 
   (a) TARGET-ONLY functions   (in target block, absent from base)  -> `+ ...`
       BASE-ONLY functions     (in base block, absent from target)  -> `- ...`
-  (b) REARRANGEMENTS - functions present in BOTH but emitted in a DIFFERENT
-      order. Function order within a TU is structure (object COMDAT order follows
-      source definition order), so a reordering is a directly actionable source
-      fix: move the definition in the .cpp to the target's order.
+  (b) REARRANGEMENTS - functions present in BOTH but DECLARED at a different
+      relative source line. Function definition order within a TU is structure, so
+      a reordering is a directly actionable source fix: move the definition in the
+      .cpp to the target's order.
 
 Data source: docs/binary_matching/match.db (the committed delink/diff DB). A TU
 is the report.json object roster (the `units` table), which is exactly the set of
@@ -40,10 +50,16 @@ A TU argument may be a full unit path or a unique trailing substring (e.g. just
 paths are relative to the `sources/` root, exactly as the DB stores them.
 
 The reordering count is the minimal set (longest-common-subsequence) of paired
-functions that must move to make the orders agree, annotated `[t<target_pos>
-b<base_pos>]` so the direction of the move is explicit. tu_order EXITS 1 when a
-TU has any reordering (0 otherwise), so it can gate a structure-pass loop. Refresh
-the DB (scripts/rebuild.py) before trusting it after source moves.
+functions that must move to make the source-line orders agree, annotated
+`[t<target_pos> b<base_pos>]` (positions among the shared, line-ordered functions)
+so the direction of the move is explicit. tu_order EXITS 1 when a TU has any
+reordering (0 otherwise), so it can gate a structure-pass loop. Refresh the DB
+(scripts/rebuild.py) before trusting it after source moves.
+
+Scope note: across all 1995 TUs the line-order signal flags ~9 genuine reorders
+in vostok-own .cpp (mostly the not-yet-matched render module + one animation TU);
+the old RVA-order key flagged ~300 vostok .cpp TUs - almost all link-scramble
+noise, not source moves.
 """
 
 import argparse
@@ -141,7 +157,14 @@ def shorten(sig):
 
 
 def fetch_side(con, unit, side):
-    """Ordered (rva, sym, demangled, paired) rows for one side of a TU.
+    """Ordered (rva, sym, line, demangled, paired) rows for one side of a TU.
+
+    Ordered by the PDB SOURCE LINE the function is defined at (the line-table
+    `line` column), NOT the final-image RVA - the linker scrambles RVA order on
+    both sides (see module docstring). RVA is only a stable tiebreaker for two
+    functions on the same line. Functions with no recorded line (0/NULL: thunks,
+    dynamic initializer/atexit records) sort last, since they have no source
+    position to be "out of order".
 
     `paired` is True when this function is matched to a function on the other
     side (its rva appears in pairs as this side's rva)."""
@@ -150,6 +173,7 @@ def fetch_side(con, unit, side):
     rows = con.execute(f"""
         SELECT fn.rva   AS rva,
                fn.sym   AS sym,
+               fn.line  AS line,
                s.demangled AS demangled,
                (p.{rva_col} IS NOT NULL) AS paired
         FROM {table} fn
@@ -157,7 +181,7 @@ def fetch_side(con, unit, side):
         JOIN symbols s ON fn.sym  = s.id
         LEFT JOIN pairs p ON p.{rva_col} = fn.rva
         WHERE u.name = ?
-        ORDER BY fn.rva
+        ORDER BY (fn.line IS NULL OR fn.line = 0), fn.line, fn.rva
     """, (unit,)).fetchall()
     return rows
 
@@ -228,10 +252,10 @@ def cmd_show(con, args):
         print(f"# UNIT: {unit}")
         print(f"# TARGET functions: {len(t_block)}   BASE functions: {len(b_block)}")
         print()
-        print("===== TARGET (definition/RVA order) =====")
+        print("===== TARGET (definition/source-line order) =====")
         print("\n".join(t_block) if t_block else "(none)")
         print()
-        print("===== BASE (definition/RVA order) =====")
+        print("===== BASE (definition/source-line order) =====")
         print("\n".join(b_block) if b_block else "(none)")
         print()
         print("===== UNIFIED DIFF (target -> base)  [+ = target-only, - = base-only] =====")
