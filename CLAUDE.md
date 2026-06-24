@@ -48,6 +48,14 @@ Inside `nix develop` the flake provides everything:
 - assets via env vars: `VOSTOK_LIBS_DIR`, `SURVARIUM_BIN`, `MSVC_DIR`, ...
 - large fetched packages pinned as gcroots under `binaries/nix-store/`.
 
+The default shell is **lean**: it realizes the toolchain, libs, and the small
+`SURVARIUM_BIN` (the exe/pdb matching needs) but **not** the heavy game
+resources (~1.5 GiB packed + ~1.6 GiB unpacked). Those are opt-in via
+`nix develop .#with-resources`, which adds `VOSTOK_RESOURCES_DIR` /
+`VOSTOK_RESOURCES_UNPACKED` and pins them as gcroots. Binary matching never
+touches the resources, so the default shell is all you need; reach for
+`.#with-resources` only when inspecting/diffing game assets.
+
 ## Base PDB paths are Wine paths
 
 The base build runs MSVC under Wine, so `survarium-dx11-win32-gold.pdb` records
