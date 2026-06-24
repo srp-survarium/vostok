@@ -5,6 +5,19 @@
 #include "pch.h"
 #include "weapon_sound_effect.h"
 
+#include "weapon.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include "base_network_client.h"
+#include "player.h"
+
+#include <vostok/game_core/hit_initiator.h>
+#include <vostok/sound/world.h>
+#include <vostok/sound/world_user.h>
+#include <vostok/sound/sound_instance_proxy.h>
+
+#include <boost/bind.hpp>
+
 #include <algorithm>		// std::find over the sound-instance list
 
 namespace survarium {
@@ -59,21 +72,55 @@ void on_sound_finished(
 	instances.erase( found );
 }
 
-// claude@NOTE: PARKED (cross-module-blocked) - heavy 0x2ee-byte sound-event state
-// machine (26 stmts): u8 domain_data guard (params+0x14) selecting the
-// m_sounds_counter modulo update, then two near-identical first/third-view playback
-// branches (emit_hud_sound vs emit_point_sound, intrusive_ptr::operator= refcount
-// churn, boost::bind(on_sound_finished, ref(instances), ref(instance)) into the
-// instance's boost::function at +0x190, buffer_vector::erase, then a virtual call at
-// vtbl+0x1C). Wall: the branch dereferences UNRECOVERED structures - m_weapon (+0x20)
-// -> base_game_scene (m_game_scene at weapon+0xFC0) -> sound world/listener at
-// scene+0xA8/+0x3B8, plus weapon_core members at weapon+0x40C/+0x148/+0x1B4 that are
-// inside weapon_core's not-yet-recovered region (weapon.h members start at 0x0498).
-// Needs the base_game_scene sound-listener accessors + the weapon_core accessor map
-// before the playback branch can be spelled faithfully. Structure @0x5bd340.
-// STATE[STUB]
+// claude@NOTE: structure faithful (26-stmt sound-event state machine, both first/third-view
+// playback branches present, correct members/branches/calls). Residual is MSVC register
+// scheduling: the target keeps &scene.get_sound_scene() (scene+0x9c) live in edi from the
+// scene statement (lea edi,[eax+9Ch]) while our base defers it (add edi,9Ch at the emit), plus
+// per-branch reg churn; and the if/erase statements differ only in line attribution (the begin()
+// CSE'd into size()'s m_begin load on the target). Not source-steerable.
 animation::callback_return_type_enum weapon_sound_effect::on_sound_event( animation::animation_callback_params& params )
 {
+	if ( params.domain_data == 0xff )
+		m_sounds_counter = u8( m_sounds_counter + 1 ) % m_first_view_sounds.sounds_emitters.size( );
+	else
+		m_sounds_counter = params.domain_data;
+
+	base_game_scene& scene		= *m_weapon.get_game_scene( );
+	sound::world_user& user		= scene.get_game( ).get_sound_world( ).get_logic_world_user( );
+	const bool first_view		= scene.get_game( ).network_client( ).is_player_current( m_weapon.hit_initiator_holder( )->id );
+
+	sound::sound_instance_proxy_ptr instance;
+	if ( first_view )
+	{
+		instance = m_first_view_sounds.sounds_emitters[ m_sounds_counter ]->emit_hud_sound( scene.get_sound_scene( ), user );
+		if ( instance.c_ptr( ) )
+		{
+			instance->set_callback( boost::bind( &on_sound_finished, boost::ref( m_first_view_sounds.sounds_instances ), boost::cref( *instance ) ) );
+
+			if ( m_first_view_sounds.sounds_instances.size( ) == m_simultaneous_sounds_queue_size )
+				m_first_view_sounds.sounds_instances.erase( m_first_view_sounds.sounds_instances.begin( ), m_first_view_sounds.sounds_instances.begin( ) + 1 );
+			m_first_view_sounds.sounds_instances.push_back( instance );
+
+			instance->play( );
+		}
+	}
+	else
+	{
+		instance = m_third_view_sounds.sounds_emitters[ m_sounds_counter ]->emit_point_sound( scene.get_sound_scene( ), user );
+		if ( instance.c_ptr( ) )
+		{
+			instance->set_position( m_weapon.get_bullet_transform( ).c.xyz( ) );
+
+			instance->set_callback( boost::bind( &on_sound_finished, boost::ref( m_third_view_sounds.sounds_instances ), boost::cref( *instance ) ) );
+
+			if ( m_third_view_sounds.sounds_instances.size( ) == m_simultaneous_sounds_queue_size )
+				m_third_view_sounds.sounds_instances.erase( m_third_view_sounds.sounds_instances.begin( ), m_third_view_sounds.sounds_instances.begin( ) + 1 );
+			m_third_view_sounds.sounds_instances.push_back( instance );
+
+			instance->play( );
+		}
+	}
+
 	return animation::callback_return_type_call_me_again;
 }
 

@@ -93,7 +93,7 @@ public:
 
 			bool								ready_to_reload					( ) const;
 
-	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
+	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
 			weapon_targets						get_target						( ) const { return m_target; }										// target out-lines+optimizes this trivial getter (inline-vs-call wall)
 
 	inline	void								set_fire_queue_type				( u8 arg_0 ) { /* no source */ }
@@ -106,7 +106,7 @@ public:
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
 	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
 
-	inline	hit_initiator const*				hit_initiator_holder			( ) const { /* no source */ }
+	inline	hit_initiator const*				hit_initiator_holder			( ) const { return m_initiator_holder; }
 	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
 
 	virtual	void								set_next_fire_queue_type		( );

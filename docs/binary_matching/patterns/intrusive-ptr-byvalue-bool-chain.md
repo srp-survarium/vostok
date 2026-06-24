@@ -20,3 +20,13 @@ lea ecx,[ebp-0Ch]; call intrusive_ptr<...>::dec
 ```
 Base LTCG may lower the safe-bool through an EXTRA intermediate bool slot (mov [slot],0; jmp; cmp [slot],0) vs the target's direct cmp/sete - not steerable; match the control flow + by-value getter call.
 Evidence: dispersion_calculator::get_dispersion (rva 0x586970, 87.49% PARTIAL).
+
+`operator unspecified_bool_type` body is `if(!m_object) return 0; return &intrusive_ptr::c_ptr;`
+so `if ( ptr )` (or `ptr &&`) emits `test raw,raw; je` AND a `mov reg, <&::c_ptr member-fn>; test reg,reg; je`
+(the member-fn-pointer materialize is the safe-bool true value - the `mov reg, <c_ptr symbol>`
+the delinker mislabels). When the raw pointer is ALREADY loaded in a register (e.g. just
+stored by an `operator=`), the target spells the guard `if ( ptr.c_ptr() )` instead - a single
+`test raw,raw; je`, NO safe-bool double-test, reusing the live register. Use `.c_ptr()` (not the
+bare safe-bool) wherever the asm shows a lone `test;je` with no `mov reg,<c_ptr>` materialize.
+Evidence: weapon_sound_effect::on_sound_event (rva 0x5bd340) - `if(instance.c_ptr())` 94.7% vs
+`if(instance)` which adds the stray safe-bool member-fn load + test.
