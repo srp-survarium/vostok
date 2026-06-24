@@ -65,9 +65,6 @@ resources_manager::resources_manager (fs_new::asynchronous_device_interface &	hd
 	m_dispatching_created_resources		=	0;
 	m_self_wakeuping					=	false;
 
-	for ( u32 i=0; i<last_resource_class; ++i )
-		m_cooks_registry.push_back			(NULL);
-
 	m_resources_thread_id				=	0;
 
 	m_flush_timer.start						();
