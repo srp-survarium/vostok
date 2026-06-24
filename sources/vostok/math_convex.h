@@ -68,6 +68,11 @@ private:
 private:
 #pragma warning ( push )
 #pragma warning ( disable : 4251 )
+	// sushi@TODO: target convex is 0x18 = two std::vector (m_planes std::vector<aabb_plane>@0x0,
+	// m_adjacencies std::vector<fixed_vector<u8,8>>@0xc) - NOT these fixed_vectors. Faithful fix
+	// = rewrite the class to std::vector + rename m_adjacency->m_adjacencies + retype, and rework
+	// all math_convex.cpp bodies (test_inexact is the only paired method today). Deferred: full
+	// matcher job, not a header field add; would break the lone 100% test_inexact match.
 	planes_type			m_planes;
 	adjacencies_type	m_adjacency;
 #pragma warning ( pop )

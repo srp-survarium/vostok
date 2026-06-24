@@ -13,9 +13,10 @@ namespace vostok {
 namespace timing {
 
 inline timer::timer						() :
-	m_current_time	(get_QPC()),
-	m_start_time	(0),
-	m_time_factor	(1.0f)
+	m_current_time		(0),
+	m_start_time		(get_QPC()),
+	m_time_factor		(1.0f),
+	m_backup_time_factor(1.0f)
 {}
 
 inline void timer::start				()
@@ -51,6 +52,22 @@ inline void timer::set_time_factor		( float	time_factor )
 inline float timer::get_time_factor		() const
 {
 	return m_time_factor;
+}
+
+inline bool timer::is_paused			() const
+{
+	return m_time_factor == 0.0f;
+}
+
+inline void timer::pause				()
+{
+	m_backup_time_factor		= m_time_factor;
+	set_time_factor				( 0.0f );
+}
+
+inline void timer::resume				()
+{
+	set_time_factor				( m_backup_time_factor );
 }
 
 } // namespace timing

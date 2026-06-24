@@ -47,7 +47,8 @@ doug_lea_mt_allocator::doug_lea_mt_allocator(
 #ifndef MASTER_GOLD
 		, use_leak_detector
 #endif // #ifndef MASTER_GOLD
-	)
+	),
+	m_is_tasks_aware	( false )
 {
 }
 

@@ -20,6 +20,13 @@ struct engine : public core_debug_engine
 	virtual int  	get_exit_code			( ) const = 0;
 	virtual	pcstr	get_resources_path		( ) const = 0;
 	virtual	pcstr	get_mounts_path			( ) const = 0;
+	// sushi@TODO: target vtable inserts `virtual pcstr get_user_data_directory() const = 0` HERE
+	// (before create_physical_path) plus trailing `use_resources_manager()/use_video_memory()`
+	// (both `return true`) and `on_crash() {}`. Adding the pure virtual shifts create_physical_path's
+	// slot, faithful to the target's 72-consumer vtable - but it makes every concrete subclass abstract
+	// (simple_engine here, engine_world in the engine module, maya_engine, ...) until each implements
+	// get_user_data_directory. Deferred: needs coordinated cross-module overrides; a partial add (only
+	// the 3 default-body virtuals) would MISALIGN create_physical_path and is worse than the gap.
 	virtual	void	create_physical_path	( string_path& result, pcstr resources_path, pcstr inside_resources_path ) const = 0;
 
 }; // class engine
