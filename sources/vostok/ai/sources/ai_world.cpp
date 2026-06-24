@@ -42,8 +42,8 @@ ai_world::~ai_world	( )
 
 void ai_world::register_cooks		( )
 {
-	static brain_unit_cook			s_brain_unit_cook( this );
-	static behaviour_cook			s_behaviour_cook( this );
+	static brain_unit_cook			s_brain_unit_cook( *this );
+	static behaviour_cook			s_behaviour_cook( *this );
 	
 	resources::register_cook		( &s_brain_unit_cook );
 	resources::register_cook		( &s_behaviour_cook );
