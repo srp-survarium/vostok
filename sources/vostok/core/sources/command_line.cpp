@@ -146,10 +146,13 @@ void   key::initialize (pcstr value)
 	}
 
 	m_string_value			=	value;
-	if ( strings::convert_string_to_number(value, & m_number_value) )
-		m_type				=	type_number;
-	else
+	if ( strchr(value, ':') )
+	{
 		m_type				=	type_string;
+		return;
+	}
+
+	m_type					=	strings::convert_string_to_number(value, & m_number_value) ? type_number : type_string;
 }
 
 struct command_line_key_finder
@@ -448,8 +451,7 @@ void   show_help_and_exit ( )
 		if ( it == keys.begin() || !strings::equal(key->category(), previous_category) )
 		{
 			fixed_string512	category	=	* key->category() ? key->category() : "global";
-			fixed_string512	first_char;
-			category.substr				(0, 1, & first_char);
+			fixed_string512	first_char	=	category;
 			first_char.make_uppercase	();
 			category[0]				=	first_char[0];
 
