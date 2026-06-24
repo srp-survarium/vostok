@@ -63,9 +63,7 @@ namespace vostok
 
 		// ---- booby_trap_set --------------------------------------------------
 		typedef survarium::booby_trap_set bts;
-		keep( &bts::on_trap_placed_message );
 		keep( &bts::on_trap_removed_message );
-		keep( &bts::on_trap_fired_message );
 		keep( &bts::on_trap_disarmed_message );
 		keep( &bts::get_game_material_manager );
 		keep( &bts::action );
@@ -74,10 +72,5 @@ namespace vostok
 		keep( &bts::holder_removed );
 		keep( &bts::tick );
 		keep( &bts::on_player_death );
-		keep( &bts::toggle_ghost_model );
-		// pick_ghost_model reached by the guarded direct call above (custom sret/ret-4
-		// convention); address-taking it would pin the stack-sret/ret-8 stock copy.
-		keep( &bts::pick_current_ghost_model );
-		keep( &bts::remove_current_ghost_model );
 	}
 } // namespace vostok

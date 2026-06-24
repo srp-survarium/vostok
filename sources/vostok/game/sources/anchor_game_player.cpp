@@ -58,17 +58,9 @@ void anchor_game_player( )
 	}
 
 	ANCHOR_PIN( &player::insert );
-	ANCHOR_PIN( &player::remove );
-	ANCHOR_PIN( &player::kill );
-	ANCHOR_PIN( &player::update_camera );
 	ANCHOR_PIN( &player::apply_hit_directly );
-	ANCHOR_PIN( &player::apply_damage_model_affect );
 	ANCHOR_PIN( &player::hide );
 	ANCHOR_PIN( &player::show );
-	ANCHOR_PIN( &player::set_character_transform );
-	ANCHOR_PIN( &player::set_use_physics_controller_for_current );
-	ANCHOR_PIN( &player::attach_controller );
-	ANCHOR_PIN( &player::detach_controller );
 	ANCHOR_PIN( &player::deserialize );
 	ANCHOR_PIN( &player::get_physics_world );
 	ANCHOR_PIN( &player::reset_fov_factor );
@@ -105,26 +97,15 @@ void anchor_game_player( )
 	) >( &player::subscribe_animation_player ) );
 	ANCHOR_PIN( static_cast< void ( player::* )( pcstr, pcvoid ) >( &player::unsubscribe_animation_player ) );
 	ANCHOR_PIN( static_cast< void ( player::* )( animation::reserved_channel_ids_enum, pcvoid ) >( &player::unsubscribe_animation_player ) );
-	ANCHOR_PIN( &player::add_models_to_scene );
-	ANCHOR_PIN( &player::remove_models_from_scene );
-	ANCHOR_PIN( &player::serialize_current_state );
 	ANCHOR_PIN( &player::select_animations );
-	ANCHOR_PIN( &player::set_physics_controller_walk_vector );
 	ANCHOR_PIN( &player::render );
 	ANCHOR_PIN( &player::render_crosshair_info );
-	ANCHOR_PIN( &player::update_speed_info );
-	ANCHOR_PIN( &player::local_input );
-	ANCHOR_PIN( &player::remote_input );
 	ANCHOR_PIN( static_cast< void ( player::* )( client_player_state&, float2 const& ) >( &player::apply_input ) );
 	ANCHOR_PIN( static_cast< void ( player::* )( client_player_state&, float2 const&, float2 const&, const float ) >( &player::apply_input ) );
 	ANCHOR_PIN( &player::get_transform_for_animation_player );
 	ANCHOR_PIN( &player::detect_usable_objects );
-	ANCHOR_PIN( &player::notify_actions_subscribers );
 	ANCHOR_PIN( &player::on_before_active_object_changed );
-	ANCHOR_PIN( &player::process_quick_slots_for_proxy_player );
-	ANCHOR_PIN( &player::process_quick_slots_for_current_player );
 	ANCHOR_PIN( &player::insert_alive );
-	ANCHOR_PIN( &player::remove_alive );
 	ANCHOR_PIN( &player::compute_bones );
 
 	#undef ANCHOR_PIN

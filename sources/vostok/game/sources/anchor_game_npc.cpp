@@ -51,51 +51,23 @@ namespace vostok
 
 		static pcvoid volatile s_sink = 0;
 		float3 ( survarium::human_npc::* const hp_get_pos )( ) const			= &survarium::human_npc::get_position;
-		void ( survarium::human_npc::* const hp_fill )( ai::npc_statistics& ) const	= &survarium::human_npc::fill_stats;
-		void ( survarium::human_npc::* const hp_tick )( const u32, const bool )	= &survarium::human_npc::tick;
 		survarium::object_weapon* ( survarium::human_npc::* const hp_pop )( )	= &survarium::human_npc::pop_weapon;
 		void ( survarium::human_npc::* const hp_avail )( vectora< ai::weapon* >& ) const	= &survarium::human_npc::get_available_weapons;
-		void ( survarium::human_npc::* const hp_enable )( )						= &survarium::human_npc::enable;
-		void ( survarium::human_npc::* const hp_setattr )( survarium::human_npc::npc_game_attributes& )	= &survarium::human_npc::set_attributes;
-		void ( survarium::human_npc::* const hp_onanim )( )						= &survarium::human_npc::on_animation_end;
-		void ( survarium::human_npc::* const hp_onmove )( )						= &survarium::human_npc::on_movement_end;
-		void ( survarium::human_npc::* const hp_setbeh )( resources::unmanaged_resource_ptr )	= &survarium::human_npc::set_behaviour;
 		void ( survarium::human_npc::* const hp_selgoal )( )						= &survarium::human_npc::select_new_goal;
-		void ( survarium::human_npc::* const hp_setxf )( float4x4 const& )		= &survarium::human_npc::set_transform;
 		void ( survarium::human_npc::* const hp_setbrain )( resources::unmanaged_resource_ptr const& )	= &survarium::human_npc::set_brain_unit;
 		void ( survarium::human_npc::* const hp_setmodel )( survarium::animated_model_instance_ptr const& )	= &survarium::human_npc::set_model;
-		void ( survarium::human_npc::* const hp_draw )( render::game::renderer&, render::scene_ptr const& ) const	= &survarium::human_npc::draw;
-		void ( survarium::human_npc::* const hp_drawdmg )( render::game::renderer&, render::scene_ptr const& ) const	= &survarium::human_npc::draw_damage_model;
 		void ( survarium::human_npc::* const hp_setdefanim )( resources::managed_resource_ptr const& )	= &survarium::human_npc::set_default_animation;
 		void ( survarium::human_npc::* const hp_setgraph )( survarium::animation_space_graph_ptr const& )	= &survarium::human_npc::set_animation_space_graph;
-		void ( survarium::human_npc::* const hp_tickanim )( const u32 )			= &survarium::human_npc::tick_animation_player;
-		void ( survarium::human_npc::* const hp_render )( )						= &survarium::human_npc::render_model;
-		void ( survarium::human_npc::* const hp_settrans )( float4x4 const& )	= &survarium::human_npc::set_translation;
-		void ( survarium::human_npc::* const hp_uptoterr )( )					= &survarium::human_npc::up_to_terrain;
 		void ( survarium::human_npc::* const hp_onaffect )( pcstr, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum ) const	= &survarium::human_npc::on_affect_event;
 		void ( survarium::human_npc::* const hp_onhit )( survarium::hit_object const& )	= &survarium::human_npc::on_hit_event;
 		s_sink = *( pcvoid const* )&hp_get_pos;
-		s_sink = *( pcvoid const* )&hp_fill;
-		s_sink = *( pcvoid const* )&hp_tick;
 		s_sink = *( pcvoid const* )&hp_pop;
 		s_sink = *( pcvoid const* )&hp_avail;
-		s_sink = *( pcvoid const* )&hp_enable;
-		s_sink = *( pcvoid const* )&hp_setattr;
-		s_sink = *( pcvoid const* )&hp_onanim;
-		s_sink = *( pcvoid const* )&hp_onmove;
-		s_sink = *( pcvoid const* )&hp_setbeh;
 		s_sink = *( pcvoid const* )&hp_selgoal;
-		s_sink = *( pcvoid const* )&hp_setxf;
 		s_sink = *( pcvoid const* )&hp_setbrain;
 		s_sink = *( pcvoid const* )&hp_setmodel;
-		s_sink = *( pcvoid const* )&hp_draw;
-		s_sink = *( pcvoid const* )&hp_drawdmg;
 		s_sink = *( pcvoid const* )&hp_setdefanim;
 		s_sink = *( pcvoid const* )&hp_setgraph;
-		s_sink = *( pcvoid const* )&hp_tickanim;
-		s_sink = *( pcvoid const* )&hp_render;
-		s_sink = *( pcvoid const* )&hp_settrans;
-		s_sink = *( pcvoid const* )&hp_uptoterr;
 		s_sink = *( pcvoid const* )&hp_onaffect;
 		s_sink = *( pcvoid const* )&hp_onhit;
 
@@ -124,15 +96,11 @@ namespace vostok
 		void ( survarium::animations_selector::* const s_settgt_m )( ai::movement_target const& )	= &survarium::animations_selector::set_target;
 		void ( survarium::animations_selector::* const s_dbg )( render::game::renderer&, render::scene_ptr const& ) const	= &survarium::animations_selector::debug_draw;
 		vostok::animation::callback_return_type_enum ( survarium::animations_selector::* const s_onend )( animation::animation_callback_params& )	= &survarium::animations_selector::on_animation_interval_end;
-		void ( survarium::animations_selector::* const s_setplayer )( animation::mixing::expression const&, u32 )	= &survarium::animations_selector::set_animation_player_target;
-		void ( survarium::animations_selector::* const s_reset )( u32 )	= &survarium::animations_selector::reset_animation_controller;
 		void ( survarium::animations_selector::* const s_onset )( )		= &survarium::animations_selector::on_set_target;
 		s_sink = *( pcvoid const* )&s_settgt_a;
 		s_sink = *( pcvoid const* )&s_settgt_m;
 		s_sink = *( pcvoid const* )&s_dbg;
 		s_sink = *( pcvoid const* )&s_onend;
-		s_sink = *( pcvoid const* )&s_setplayer;
-		s_sink = *( pcvoid const* )&s_reset;
 		s_sink = *( pcvoid const* )&s_onset;
 
 		// ----- ai_sound_player : ctor + vtable (play / play_once / tick / clear) plus
