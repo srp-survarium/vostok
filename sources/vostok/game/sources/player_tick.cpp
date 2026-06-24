@@ -23,25 +23,31 @@ namespace survarium {
 
 // claude@NOTE: backing storage for the smooth() config commands. The cc_float
 // command objects themselves (and the dynamic init / atexit pairing of the first
-// TU-statics block) are a separate config-machinery unit; recovered values are:
-//   smooth_linear_speed : min 0, max 10.f, serializable, engine_internal
-//   smooth_angular_speed: min 0, max 720.f
-//   smooth_pitch_speed  : min 0, max 720.f
+// TU-statics block) are PARKED: the dynamic-init asm stores the s_console_command_root
+// link, the backing-var pointer, default/min/max and the vtable, but NEVER a
+// command-NAME string pointer, so the pcstr name arg to each cc_float/cc_bool ctor is
+// not recoverable - declaring the objects would fabricate a .data string (forbidden), so
+// they stay unpaired (same convention as game.cpp's s_draw_snd_stats/s_show_profiler).
+// Recovered values: smooth_linear_speed min 0 max 10.f serializable engine_internal;
+// smooth_angular_speed/smooth_pitch_speed min 0 max 720.f.
 static float s_smooth_linear_speed;
 static float s_smooth_angular_speed;
 static float s_smooth_pitch_speed;
 
-// claude@NOTE: backing storage for tick's cc_bool / cc_float config commands (the
-// command objects + their dynamic init/atexit pairing are a separate config-machinery
-// unit, mirror of the s_smooth_* block above).
+// claude@NOTE: backing storage for tick's cc_bool / cc_float config commands - PARKED for
+// the same unrecoverable-name reason as the s_smooth_* block above. Recovered: the random
+// input cc_bools default false, serializable true; the player_name font cc_floats feed the
+// camera-name distance/font clamp in tick().
 static bool s_is_local_player_random_input_enabled;
 static bool s_is_test_players_random_input_enabled;
 static float s_player_name_min_font_size;
 static float s_player_name_max_font_size;
 static float s_player_name_decrease_koef;
 
-// TU statics (compiler-generated dynamic initializers / atexit
-// destructors); a matcher recovers their types/initializers from the asm.
+// TU statics (compiler-generated dynamic initializers / atexit destructors). PARKED: the
+// command-NAME string each cc_* ctor takes is absent from the dynamic-init asm (only the
+// root link / backing-var ptr / default / vtable are stored), so they cannot be declared
+// without fabricating a .data string.
 /*
 // STATE[STUB]
 void `dynamic initializer for 's_net_max_position_discrepancy_command''( )
@@ -167,42 +173,44 @@ void player::update_history_item(
 		item.time_in_ms = server_action_time_in_ms;
 }
 
-// claude@NOTE: PARKED on the manual quaternion-product expansion (math-inline wall).
-// 15 statements (lines 186-255), single named local target_rotation (quaternion).
-// Args (delinker frame): ebx=this, [ebp+0Ch]=previous_item, [ebp+10h]=item_to_update,
-// [ebp+14h]=previous_transform. Structure decoded:
-//   L186: quaternion( previous_transform.get_angles_xyz() )      // get_angles + quaternion(float3)
-//   L187: quaternion( item_to_update.action.state.transform.get_angles_xyz() ) // [ebp+10h]+0x14 = action.state.transform
-//   L188: the 0xf3-byte w/x/y/z quaternion product (math::operator*(quaternion,quaternion) inlined)
-//   L189: quaternion( previous_item.action.state.transform.get_angles_xyz() ) // [ebp+0Ch]+0x14 ; another product -> target_rotation
-//   L198: target_rotation = create_matrix( target_rotation, float3(0,0,0) ); write -> m_target.transform ([this+0x10D44])
-//   L199-207: m_target.look_pitch = item_to_update...; set_physics_controller_walk_vector( m_target ); ([this+0x10DCC] pitch)
-//   L240-255: a physics get_transform / from_bullet roundtrip (bullet_character_controller::get_transform
-//             -> from_bullet -> previous_transform = <result>; a [this+0x10DC8] controller call via vtable [edx])
-// Walls: byte-exact product schedule + the from_bullet/get_transform physics tail
-// (cross-module callee set). Next step: write the get_angles/operator*/create_matrix
-// chain and the physics roundtrip, accept the product residual.
-// STATE[STUB]
+// claude@NOTE: byte residual is the inlined quaternion-product schedule (the two
+// math::operator*(quaternion,quaternion) chains) + the physics get_transform/from_bullet
+// tail (cross-module COMDAT). Structure is faithful: target_rotation = product of three
+// get_angles_xyz quaternions, create_matrix into m_target.transform with the
+// translation-preserving c.xyz() blend, look_pitch copy, walk-vector push, then the
+// physics controller update_action + get_transform roundtrip back into the item/transform.
 void player::update_history_item_from_previous(
 	client_player_history_item const&		previous_item,
 	client_player_history_item&				item_to_update,
 	float4x4&								previous_transform
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( previous_item, item_to_update, previous_transform );
+	math::quaternion target_rotation =
+		math::quaternion( previous_transform.get_angles_xyz( ) )
+		* math::quaternion( item_to_update.action.state.transform.get_angles_xyz( ) )
+		* math::quaternion( previous_item.action.state.transform.get_angles_xyz( ) );
+
+	const float3 position =
+		previous_item.action.state.transform.c.xyz( )
+		+ ( item_to_update.action.state.transform.c.xyz( ) - previous_transform.c.xyz( ) );
+
+	previous_transform = item_to_update.action.state.transform;
+
+	m_target.transform = math::create_matrix( target_rotation, float3( 0.f, 0.f, 0.f ) );
+	m_target.transform.c.xyz( ) = position;
+	m_target.look_pitch = item_to_update.action.state.look_pitch;
+	set_physics_controller_walk_vector( m_target );
+
+	m_target.physics_controller->update_action( item_to_update.time_in_ms - previous_item.time_in_ms );
+	previous_transform = item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
 }
 
-// claude@NOTE: PARKED on a stub-inlining wall. Structure is reconstructed (ring walk
-// from_index->head, update_history_item_from_previous + inventory().action per item,
-// then m_target.animation_player.set_object_transform). But the
-// update_history_item_from_previous CALL and the final set_object_transform statement
-// both vanish at /Od because their callees are still empty STUBs (an empty body inlines
-// to nothing): update_history_item_from_previous is the parked 15-stmt quaternion-blend,
-// and m_target.animation_player.set_object_transform forwards into a stub tree method.
-// Next step: give update_history_item_from_previous a real body, then re-score - the two
-// dropped statements should reappear. (inventory() also out-lines here vs the target's
-// inlined [this+8] deref - a secondary /Od inlining diff to revisit after.)
-// STATE[STUB]
+// claude@NOTE: paired (~69%). Ring walk from_index->head, update_history_item_from_previous
+// + inventory().action per item, then m_target.animation_player.set_object_transform. Now
+// that update_history_item_from_previous is bodied its call and the set_object_transform tail
+// no longer DCE-collapse. Byte residual: our LTCG out-lines inventory() to a `call` where the
+// target inlines the [this+8] deref, plus a loop line-table fusion (target fuses the
+// inventory().action + index=next stmts, we keep them split).
 void player::replay_history( const u32 from_index, float4x4& previous_transform )
 {
 	u32 index = from_index;
@@ -300,36 +308,48 @@ void player::log_active_object( pcstr const header ) const
 	VOSTOK_UNREFERENCED_PARAMETER( header );
 }
 
-// claude@NOTE: PARKED on the manual quaternion-product expansion (math-inline wall).
-// 12 statements (lines 512-529), locals: previous_rotation, angle, new_rotation,
-// new_transform, axe. Structure decoded:
-//   L512: float4x4 src = player_state.animation_player.are_there_any_animations()
-//           ? player_state.animation_player.get_object_transform( this )
-//           : player_state.transform;          // cmp [tree+0x1C]=m_animations_count,0; jbe
-//   L513: quaternion previous_rotation( src ); // quaternion(float4x4 const&)
-//   L514: quaternion new_rotation( <float3 input> ); // quaternion(float3)
-//   L515: new_rotation = previous_rotation * new_rotation; new_rotation.get_axis_and_angle( axe, angle );
-//           (the 0x100-byte w/x/y/z product is math::operator*(quaternion,quaternion) inlined)
-//   L518: player_state.animation_player.set_object_transform( <node>, this );
-//   L519: if( is_local ) {                     // cmp [this+0x35]=hit_initiator.is_local
-//   L521-523:  apply_input( player_state, previous_input.angular_velocity, m_input.angular_acceleration, dt );
-//              (the 4-arg apply_input overload - now BODIED in player.cpp - builds the
-//               ( accel*dt*0.5 + prev_velocity ) * dt increment, so this call no longer DCEs)
-//   L525: if( fabs(angle) >= epsilon ) {        // and ecx,0x7FFFFFFF; comiss <eps>
-//   L528:   new_transform = math::mul4x3( create_matrix( <rot>, float3(0,0,0) ), <node> );
-//   L529:   player_state.previous_transform = new_transform; set_object_transform( <node>, new_transform ); }
-// Walls: (1) the float3 input to new_rotation at L514 (esp+14 origin not statically
-// resolvable through the sub-esp/push stack juggling); (2) the byte-exact w/x/y/z
-// product schedule. Next step: simulate the stack to pin esp+14, then write the
-// operator* form and accept the residual.
-// STATE[STUB]
+// claude@NOTE: byte residual is the inlined math::operator*(quaternion,quaternion) product
+// schedule (L515) + the create_matrix/mul4x3 inline tail (L528) + the LTCG custom call
+// convention into the apply_input overload. Structure is faithful: previous_rotation from
+// the animated/character transform, a per-frame angular-increment quaternion, the product
+// driving get_axis_and_angle, a tree resync, the is_local apply_input path, and the
+// angle-gated rotation re-application into the tree.
 void player::apply_input_before_new_transform(
 	client_player_state&	player_state,
 	player_input const&		previous_input,
 	const float				time_delta
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS( player_state, previous_input, time_delta );
+	math::quaternion previous_rotation(
+		player_state.animation_player.are_there_any_animations( )
+			? player_state.animation_player.get_object_transform( this )
+			: player_state.transform );
+
+	math::quaternion new_rotation( float3(
+		0.f,
+		( m_input.angular_acceleration.x * time_delta * 0.5f + previous_input.angular_velocity.x ) * time_delta,
+		( m_input.angular_acceleration.y * time_delta * 0.5f + previous_input.angular_velocity.y ) * time_delta
+	) );
+
+	new_rotation = previous_rotation * new_rotation;
+
+	float3 axe;
+	float angle;
+	new_rotation.get_axis_and_angle( axe, angle );
+
+	player_state.animation_player.set_object_transform( player_state.transform, this );
+
+	if( is_local )
+		apply_input( player_state, previous_input.angular_velocity, m_input.angular_acceleration, time_delta );
+
+	if( math::abs( angle ) >= math::epsilon_3 )
+	{
+		float4x4 new_transform = math::mul4x3(
+			math::create_matrix( new_rotation, float3( 0.f, 0.f, 0.f ) ),
+			player_state.transform );
+		player_state.transform.c.xyz( ) = new_transform.c.xyz( );
+		player_state.animation_player.set_object_transform( new_transform, this );
+	}
 }
 
 // TU statics (compiler-generated dynamic initializers / atexit
