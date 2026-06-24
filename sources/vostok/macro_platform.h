@@ -8,6 +8,16 @@
 #define VOSTOK_MACRO_PLATFORM_H_INCLUDED
 
 ////////////////////////////////////////////////////////////////////////////
+// VOSTOK_MASTER_GOLD
+////////////////////////////////////////////////////////////////////////////
+// The shipped target is a MASTER_GOLD build; the vcprojs define MASTER_GOLD but
+// the engine's logging macros gate on VOSTOK_MASTER_GOLD. Derive the latter from
+// the former here so the build config matches the target (elides LOG_DEBUG, etc.).
+#if defined( MASTER_GOLD ) && !defined( VOSTOK_MASTER_GOLD )
+#	define VOSTOK_MASTER_GOLD
+#endif // #if defined( MASTER_GOLD ) && !defined( VOSTOK_MASTER_GOLD )
+
+////////////////////////////////////////////////////////////////////////////
 // VOSTOK_PLATFORM_WINDOWS_32
 ////////////////////////////////////////////////////////////////////////////
 #ifdef VOSTOK_PLATFORM_WINDOWS_32
