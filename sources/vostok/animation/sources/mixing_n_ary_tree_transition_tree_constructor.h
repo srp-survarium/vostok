@@ -10,6 +10,9 @@
 #include "mixing_n_ary_tree_cloner.h"
 
 namespace vostok {
+
+void anchor_animation_cloner( ); // codegen-neutral /OPT:REF anchor (see friend below)
+
 namespace animation {
 
 struct base_interpolator;
@@ -26,6 +29,11 @@ class animated_object_holder;
 enum interpolation_direction;
 
 class n_ary_tree_transition_tree_constructor : private boost::noncopyable {
+	// codegen-neutral /OPT:REF anchor friend: anchor_animation_cloner() pins the private
+	// change_animation() root so LTCG emits the constructor's real call graph out-of-line.
+	// TEMPORARY - drop once the real mixer::set_target call graph reaches change_animation.
+	friend void ::vostok::anchor_animation_cloner( );
+
 public:
 	typedef boost::function<float4x4(pcvoid)> transform_functor_type;
 
@@ -43,6 +51,7 @@ public:
 
 			n_ary_tree						computed_tree						( );
 
+private:
 			n_ary_tree_animation_node*		add_animation_node					(
 												n_ary_tree_animation_node&		new_animation,
 												animation_state const*			previous_animation_state,
@@ -92,7 +101,7 @@ public:
 			void							change_animation					(
 												n_ary_tree_animation_node&		from,
 												n_ary_tree_animation_node&		to,
-												n_ary_tree_animation_node*		weight_driving_animation,
+												n_ary_tree_animation_node* const	weight_driving_animation,
 												bool							is_new_driving_animation
 											);
 
@@ -126,6 +135,8 @@ public:
 			n_ary_tree_animation_node*		get_time_driving_animation			( u32 time_synchronization_group_id ) const;
 
 			void							merge_trees							( n_ary_tree const& from, n_ary_tree const& to );
+
+public:
 	inline	void							advance_buffer						( u32 size ) { m_buffer += size; }
 
 public: // sushi@NOTE: Made public to access `m_buffer`
