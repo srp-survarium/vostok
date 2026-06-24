@@ -155,7 +155,6 @@ namespace vostok
 
 		// ---- weapon ----------------------------------------------------------
 		typedef survarium::weapon w;
-		keep( &w::update_dispersion_visual_representation );
 		keep( &w::load_weapon );
 		keep( &w::set_fire_bullet_transform );
 		keep( &w::tick );
@@ -168,7 +167,6 @@ namespace vostok
 		keep( &w::hide_crosshair );
 		keep( &w::update_pfx_transform );
 		keep( &w::show_laser_pointer );
-		keep( &w::set_ui_ammo );
 		keep( &w::activate );
 		keep( &w::deactivate );
 		keep( &w::on_before_fire );
@@ -207,10 +205,8 @@ namespace vostok
 		// ---- object_weapon ---------------------------------------------------
 		typedef survarium::object_weapon ow;
 		keep( &ow::cast_game_object );
-		keep( &ow::get_type );
 		keep( &ow::is_loaded );
 		keep( &ow::get_name );
-		keep( &ow::get_id );
 		keep( static_cast< vostok::ai::npc* ( ow::* )( ) >( &ow::cast_npc ) );
 		keep( static_cast< vostok::ai::weapon* ( ow::* )( ) >( &ow::cast_weapon ) );
 		keep( &ow::get_velocity );
@@ -240,15 +236,9 @@ namespace vostok
 
 		// ---- key_binder ------------------------------------------------------
 		typedef survarium::key_binder kb;
-		keep( &kb::bind_key );
 		keep( &kb::unbind_key );
-		keep( &kb::set_default_controls );
-		keep( &kb::dik_to_ptr );
-		keep( &kb::get_binded_action );
-		keep( &kb::id_to_action_name );
 		keep( &kb::dik_to_keyname );
 		keep( &kb::get_binding_group );
-		keep( &kb::get_action_dik );
 		// keyname_to_ptr / action_name_to_id / action_name_to_ptr / remap_keys are
 		// private (AAE) and reached transitively from the public bind_key/unbind_key
 		// chain, so /OPT:REF keeps them without an explicit (and inaccessible) keep().
@@ -293,7 +283,6 @@ namespace vostok
 		typedef survarium::damage_zone dz;
 		keep( &dz::load );
 		keep( &dz::play_particles );
-		keep( &dz::stop_particles );
 		keep( &dz::deactivate );
 	}
 }

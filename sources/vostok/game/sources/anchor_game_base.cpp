@@ -28,7 +28,6 @@ void use_game_base( )
 	math::uint2 const&			( base_game_scene::* const m_ows )( ) const								= &base_game_scene::output_window_size;
 	void						( base_game_scene::* const m_init )( )									= &base_game_scene::init_physics;
 	void						( base_game_scene::* const m_destroy )( )								= &base_game_scene::destroy_physics;
-	void						( base_game_scene::* const m_apply )( camera_director& )				= &base_game_scene::apply_camera;
 	bool						( base_game_scene::* const m_p2s )( float3 const&, float2& )			= &base_game_scene::point_to_screen;
 	void						( base_game_scene::* const m_show_movie )( flash_movie_resource_ptr& )	= &base_game_scene::show_movie;
 	void						( base_game_scene::* const m_hide_movie )( flash_movie_resource_ptr& )	= &base_game_scene::hide_movie;
@@ -43,7 +42,6 @@ void use_game_base( )
 	s_sink = *( pcvoid const* )&m_ows;
 	s_sink = *( pcvoid const* )&m_init;
 	s_sink = *( pcvoid const* )&m_destroy;
-	s_sink = *( pcvoid const* )&m_apply;
 	s_sink = *( pcvoid const* )&m_p2s;
 	s_sink = *( pcvoid const* )&m_show_movie;
 	s_sink = *( pcvoid const* )&m_hide_movie;
