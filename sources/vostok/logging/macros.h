@@ -69,9 +69,11 @@
 #define LOGI_WARNING( initiator, ... )	__LOG( ::vostok::logging::warning,	&::vostok::core::g_log_format, ::vostok::core::g_log_flags, VOSTOK_LOG_MODULE_INITIATOR ":" initiator ":", ##__VA_ARGS__ )
 #define LOGI_INFO( initiator, ... )		__LOG( ::vostok::logging::info,		&::vostok::core::g_log_format, ::vostok::core::g_log_flags, VOSTOK_LOG_MODULE_INITIATOR ":" initiator ":", ##__VA_ARGS__ )
 
-#define LOGIFD_ERROR( initiator, format, data, ... )	__LOG( ::vostok::logging::error,	format, data, VOSTOK_LOG_MODULE_INITIATOR ":" initiator ":", ##__VA_ARGS__ )
-#define LOGIFD_WARNING( initiator, format, data, ... )	__LOG( ::vostok::logging::warning,	format, data, VOSTOK_LOG_MODULE_INITIATOR ":" initiator ":", ##__VA_ARGS__ )
-#define LOGIFD_INFO( initiator, format, data, ... )		__LOG( ::vostok::logging::info,		format, data, VOSTOK_LOG_MODULE_INITIATOR ":" initiator ":", ##__VA_ARGS__ )
+#define LOGIFD_ERROR( initiator, format, data, ... )	__LOG( ::vostok::logging::error,	format, data, initiator ":", ##__VA_ARGS__ )
+#define LOGIFD_WARNING( initiator, format, data, ... )	__LOG( ::vostok::logging::warning,	format, data, initiator ":", ##__VA_ARGS__ )
+#define LOGIFD_INFO( initiator, format, data, ... )		__LOG( ::vostok::logging::info,		format, data, initiator ":", ##__VA_ARGS__ )
+
+#define LOGIFD_FORCED( initiator, type, format, data, ... )	__LOG_FORCED( type, format, data, initiator ":", ##__VA_ARGS__ )
 
 
 #ifdef DEBUG
