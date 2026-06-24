@@ -57,16 +57,15 @@ private:
 		return false;
 	}
 
-	// STATE[STUB]
-	// claude@NOTE: parked - empty in MASTER_GOLD ($LN7/$LN8 unreachable labels only); the
-	// real packet write is compiled out. Faithful empty body.
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override
 	{
+		vostok::detail::unreferenced_parameter_helper( &packet, client_offset );
 	}
 
-	// STATE[STUB]
-	// claude@NOTE: parked - empty in MASTER_GOLD ($LN3 unreachable label only). Faithful
-	// empty body.
+	// claude@NOTE: faithful empty body. Target is a bare `int3` (0x1 byte, 0 stmts) -
+	// the empty deserialize was ICF-folded into another identical empty function, so
+	// only the alignment trap survives at its RVA; our genuine `ret 4` is correct and
+	// the int3-vs-ret residual is a linker fold artifact, not source-steerable.
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override
 	{
 	}

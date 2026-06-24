@@ -57,6 +57,8 @@ namespace vostok
 		static wchar_t volatile					s_wc		= 0;
 		static bool volatile					s_b			= false;
 		static dik_to_swf_bind* volatile		s_bind		= 0;
+		static network_core::udp_match_packet* volatile	s_packet	= 0;
+		static network_core::packet_reader* volatile	s_reader	= 0;
 
 		// ---- step_manager ----------------------------------------------------
 		step_manager	step;
@@ -85,5 +87,7 @@ namespace vostok
 		hands.activate( *s_base_player, *s_engine );
 		hands.selected_animations( *s_buffer, s_b );
 		hands.update_bones_matrices( *s_skel, s_mat, s_u, s_u, *s_mat, *s_mat, *s_anim );
+		hands.serialize( *s_packet, s_u );
+		hands.deserialize( *s_reader );
 	}
 } // namespace vostok

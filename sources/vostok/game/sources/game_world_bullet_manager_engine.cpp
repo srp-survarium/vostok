@@ -10,6 +10,8 @@
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/render/facade/decal_properties.h>
+#include <vostok/sound/world.h>
+#include <vostok/sound/sound_emitter.h>
 
 namespace survarium {
 
@@ -59,28 +61,26 @@ void game_world::update_tracer(
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - sound-facade arg-shape wall + regression risk. Recovered
-// structure (3 stmts, local sound::sound_emitter_ptr sound):
-//   if ( resource )                    // [esp+4]->[..] guard, plus an emitter c_ptr guard
-//   {
-//       sound = static_cast_resource_ptr< sound::sound_emitter_ptr >( resource );
-//       sound->emit_and_play_once(
-//           get_sound_scene(),                                   // engine_base-0x28 = m_sound_scene
-//           get_game().get_sound_world().get_logic_world_user(), // m_game[+0x84] -> vtable+0x8
-//           position );
-//   }
-// The emit_and_play_once arg block in the target pushes THREE zero dwords +
-// sound before the get_logic_world_user() vcall (0x37-0x3d), which does not map to
-// the header's emit_and_play_once( scene, user, float3 const& position, producer=0,
-// receiver=0 ) by-ref signature - position appears spilled by value and the
-// producer/receiver defaults interleave, so the sound-facade call boundary is the
-// same by-value-vs-const& family as play_particle_system. A naive const&
-// reconstruction diverges enough that objdiff drops the pairing (unpaired, like
-// play_particle). Unblock when the sound::sound_emitter emit_and_play_once arg
-// convention / world_user accessor shape is settled in its own match phase.
+// claude@NOTE: faithful sound-facade reconstruction (paired). Two byte residuals are
+// cross-unit sound-module work: (1) the target's emit_and_play_once pushes a 6th
+// trailing default arg (a `bool`) absent from sound_emitter.h's 5-arg decl - same
+// missing 6-arg overload step_manager::on_step flagged; (2) the guard folds the
+// sound_emitter c_ptr test into the outer `if ( resource )` (static_cast over the
+// resource pointer, no temp construct) so the target is 3 statements where our inner
+// `if ( sound.c_ptr( ) )` is a 4th - both recover once the sound-facade
+// emit_and_play_once arg convention is settled in the sound module.
 void game_world::play_sound( resources::unmanaged_resource_ptr const& resource, float3 const& position )
 {
+	if ( resource )
+	{
+		sound::sound_emitter_ptr sound	= static_cast_resource_ptr< sound::sound_emitter_ptr >( resource );
+		if ( sound.c_ptr( ) )
+			sound->emit_and_play_once(
+				get_sound_scene( ),
+				get_game( ).get_sound_world( ).get_logic_world_user( ),
+				position
+			);
+	}
 }
 
 // claude@NOTE: STRUCTURE MATCH (3 stmts, create_rotation + translation row +
