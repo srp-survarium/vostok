@@ -131,6 +131,7 @@ math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 con
 #include <vostok/game_core/victory_item_core_cook.h>
 #include <vostok/game_core/victory_item_core.h>
 #include <vostok/game_core/weapon_core_cook.h>
+#include <vostok/game_core/inventory_cook.h>
 #include <vostok/game_core/artefact_lifebone_core.h>
 #include <vostok/game_core/hit_affects_type_enum.h>
 #include <vostok/game_core/artefact_container_core.h>
@@ -548,6 +549,11 @@ namespace vostok
 	{
 		static survarium::weapon_core_cook s_weapon_core_cook;
 		vostok::resources::register_cook( &s_weapon_core_cook );
+	}
+
+	void use_inventory_cook( )
+	{
+		static survarium::inventory_cook s_inventory_cook;
 	}
 
 	void use_weapon_core_shotgun_reload_state_cook( )
@@ -2445,6 +2451,7 @@ namespace vostok
 		use_artefact_lifebone_core( );
 		use_victory_item_core( );
 		use_weapon_core_cook( );
+		use_inventory_cook( );
 		use_weapon_core_shotgun_reload_state_cook( );
 		use_weapon_core_inactive_state_cook( );
 		use_game_core_weapon_recoil_params( );
