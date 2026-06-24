@@ -3,17 +3,24 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+// VOSTOK_ANIMATION_API used unqualified by bone_animation.h (pulled in below)
+#include <vostok/animation/api.h>
 #include "animation_space_graph.h"
 #include "animation_space_vertex.h"
+#include "animation_space_vertex_id.h"
+// length: pin the resource as a cubic_spline_skeleton_animation, read its frame duration
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+// max_speed(): an animation_player drives get_movement() per vertex
+#include <vostok/animation/animation_player.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// claude@NOTE: sets animation (intrusive_ptr::set), constructs caption from pcstr, then
-// pins the resource as a cubic_spline_skeleton_animation and computes length(+0x118) from
-// the spline duration (mulss 1/30.0f), group_id(+0x11c)/intervals_count(+0x120) = -1.
-// Needs the cubic_spline_skeleton_animation + pinned_ptr_base internals to match.
- animation_space_vertex::animation_space_vertex( resources::managed_resource_ptr const& animation_vertex, pcstr animation_caption )
+ animation_space_vertex::animation_space_vertex( resources::managed_resource_ptr const& animation_vertex, pcstr animation_caption ) :
+	animation		( animation_vertex ),
+	caption			( animation_caption ),
+	length			( animation::cubic_spline_skeleton_animation_pinned( animation_vertex )->length_in_frames( ) / 30.f ),
+	group_id		( u32( -1 ) ),
+	intervals_count	( u32( -1 ) )
 {
 }
 
@@ -54,9 +61,21 @@ animation_space_vertex const* animation_space_graph::get_animation_by_path( pcst
 }
 
 // STATE[STUB]
-// claude@NOTE: lexeme-builder wall - builds animation_lexeme / weight_lexeme over a
-// mutable_buffer and an interpolator; needs the mixing-lexeme machinery
-// (create_animation_interval family) before it can be matched. Buildability return only.
+// claude@NOTE: 10-statement lexeme builder (structure @0x765a70, 4 locals: buffer,
+// left_lexeme/right_lexeme animation_lexeme, left_weight_lexeme weight_lexeme). Decoded
+// flow: player.reset(false); build a mutable_buffer over a 0x4000-byte alloca; construct
+// animation_lexeme_parameters (animation_intervals_count -> create_animation_intervals)
+// for the right then the left animation, wrap each in a binary_tree_animation_node +
+// animation_lexeme, and cloned_in_buffer them; build a weight_lexeme over an
+// instant_interpolator (call [0x9735AC] = the interpolator vtable thunk) for
+// (1 - left_weight); combine via the lexeme operator*/operator+ combinators; run the
+// player and read back the resulting object_movement into the returned vertex_id.
+// The lexeme TYPES are now available (mixing_animation_lexeme.h / mixing_weight_lexeme.h /
+// animation_lexeme_parameters::create_animation_intervals), but the exact per-segment
+// combinator spelling + the instant_interpolator construction idiom are unconfirmed.
+// PARKED buildability return. NEXT STEP: reconstruct statement-by-statement against
+// --view target, cross-referencing animation_space_graph_cook.cpp (same lexeme idiom over
+// a buffer_vector<u32>) and simple_animation_controller::selected_animations (emitter->emit).
 animation_space_vertex_id animation_space_graph::get_movement(
 	animation::animation_player&		player,
 	animation_space_vertex const*		left_animation,
@@ -72,14 +91,23 @@ animation_space_edge const& animation_space_graph::edge( const u32 index ) const
 	return get_edges( )[ index ];
 }
 
-// STATE[STUB]
-// claude@NOTE: walks the vertices building an animation_player + get_movement() per
-// pair, takes the max speed via sqrtf of the movement translation, then resets the
-// player and destroys the n_ary_tree. Depends on get_movement (lexeme wall) and the
-// animation_player/n_ary_tree machinery. Buildability return only.
 float animation_space_graph::max_speed( ) const
 {
-	return 0.0f;
+	if ( m_max_speed < 0.f )
+	{
+		animation::animation_player player;
+
+		m_max_speed = 0.f;
+		for ( animation_space_vertex const* vertex = get_animations( ); vertex != get_animations( ) + m_animations_count; ++vertex )
+		{
+			animation_space_vertex_id const movement = get_movement( player, vertex, vertex, 1.f );
+			m_max_speed = math::max( m_max_speed, movement.translation.length( ) );
+		}
+
+		player.reset( true );
+	}
+
+	return m_max_speed;
 }
 
 } // namespace survarium

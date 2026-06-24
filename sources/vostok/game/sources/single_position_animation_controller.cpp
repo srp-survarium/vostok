@@ -14,6 +14,10 @@
 #include "animation_space_vertex_id.h"
 // m_owner.on_movement_end() needs the complete human_npc
 #include "human_npc.h"
+// debug_draw: render.debug().draw_origin/draw_cube/draw_arrow + matrix/color builders
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/debug_renderer.h>
+#include <vostok/math_float4x4.h>
 
 namespace survarium {
 
@@ -109,34 +113,30 @@ void single_position_animation_controller::set_target( animation_controller_para
 	m_target_parameters												= static_cast_checked< movement_animation_controller_parameters const& >( target );
 }
 
-// STATE[STUB]
-// claude@NOTE: 6-statement debug renderer draw (1 named local `e`, a `float3 const*`
-// iterator over m_navigation_path). Decoded shape (structure @0x776a70, --view target):
-//   if ( m_target_vertex ) {                                                    // line 212
-//       render.debug( ).draw_origin( scene,                                     // line 215
-//           math::mul4x3(
-//               math::create_matrix( <quaternion>, float3( p.x, p.y + 0.5f, p.z ) ),
-//               math::create_translation( float3( p.x, p.y + 0.5f, p.z ) ) ),
-//           0.5f, true );           // p = m_current_parameters.position ([this+8])
-//       for ( float3 const* e = m_navigation_path.begin( );                     // line 219
-//             e != m_navigation_path.end( ); ++e ) {
-//           render.debug( ).draw_cube( scene, math::create_translation( *e ),   // line 221
-//               float3( nscl, nscl, nscl ), math::color( 0xff0000ff ), true );  // red cube
-//           if ( e != m_navigation_path.begin( ) )                              // line 222
-//               render.debug( ).draw_arrow( scene, *( e - 1 ), *e,              // line 223
-//                   math::color( 0xff00ff00 ), true );                         // green arrow
-//       }
-//   }
-// PARKED void buildability stub. OPEN: (1) the create_matrix quaternion arg is 3 zeroed
-// floats with NO sin/cos and the MASTER_GOLD quaternion() default ctor is a no-op, so it
-// is NOT quaternion()/quaternion(float3 angles) - needs the exact spelling resolved via
-// --view diff; (2) the color is stored as a raw u32 (0xff0000ff / 0xff00ff00) yet
-// math::color is a 4-float struct - confirm the color(u32 argb) form the renderer takes;
-// (3) the `nscl` cube-size constant. NEXT STEP: write the decoded body, build, and iterate
-// the three OPEN items off --view diff (needs game_renderer.h + debug_renderer.h +
-// math_float4x4.h includes).
 void single_position_animation_controller::debug_draw( render::game::renderer& render, render::scene_ptr const& scene ) const
 {
+	if ( m_target_vertex ) {
+		render.debug( ).draw_origin(
+			scene,
+			math::mul4x3(
+				math::create_matrix(
+					math::quaternion( ),
+					float3( m_current_parameters.position.x, m_current_parameters.position.y + 0.5f, m_current_parameters.position.z )
+				),
+				math::create_translation(
+					float3( m_current_parameters.position.x, m_current_parameters.position.y + 0.5f, m_current_parameters.position.z )
+				)
+			),
+			0.5f,
+			true
+		);
+
+		for ( float3 const* e = m_navigation_path.begin( ); e != m_navigation_path.end( ); ++e ) {
+			render.debug( ).draw_cube( scene, math::create_translation( *e ), float3( 0.1f, 0.1f, 0.1f ), math::color( 0xff0000ff ), true );
+			if ( e != m_navigation_path.begin( ) )
+				render.debug( ).draw_arrow( scene, *( e - 1 ), *e, math::color( 0xff00ff00 ), true );
+		}
+	}
 }
 
 } // namespace survarium
