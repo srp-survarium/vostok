@@ -64,13 +64,14 @@ public:
 									float position_to_stereo_radius
 								);
 	
-	void						emit_and_play_once	
+	void						emit_and_play_once
 								(
 									sound_scene_ptr& scene,
 									world_user& user,
 									float3 const& position,
 									sound_producer const* producer = 0,
-									sound_receiver const* ignorable_receiver = 0
+									sound_receiver const* ignorable_receiver = 0,
+									bool material_id_is_default = false
 								);
 	
 	virtual	sound_propagator_emitter const*	get_sound_propagator_emitter( ) const = 0;
