@@ -34,6 +34,13 @@ object_decal::~object_decal( )
 {
 }
 
+// claude@NOTE: structure faithful (same idiom as STRUCTURE-MATCH sibling
+// object_particle_visual, which itself caps ~80%). Residual is a build-config ceiling, not
+// a source shape: target inlines configs::binary_config_value::operator float at every
+// float() read (asserts off -> cmp [.+14h],2 / movss|cvtsi2ss), our Master Gold base never
+// inlines it (asserts active -> call to the /Od out-of-line COMDAT, too big for /Ob2; same
+// in object_wire). Target's optimizer also folds the request r[]/ud[] inits into the
+// query_resources call (drops the r/ud named locals); ours keep them split.
 void object_decal::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
