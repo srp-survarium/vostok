@@ -7,19 +7,20 @@
 #ifndef VOSTOK_RESOURCES_QUERIES_RESULT_H_INCLUDED
 #define VOSTOK_RESOURCES_QUERIES_RESULT_H_INCLUDED
 
-#include <vostok/type_uid_object.h>
 #include <vostok/resources_query_result.h>
 
 namespace vostok {
 namespace resources {
 
-class VOSTOK_CORE_API queries_result : public uid_object<queries_result>
+class VOSTOK_CORE_API queries_result
 {
 public:
 	u32						size						() const;
 	bool					empty						() const;
 
 	memory::base_allocator *	get_user_allocator		() const { return m_allocator; }
+
+	u32						uid							() const { return reinterpret_cast<u32>( this ); }
 
 	query_result_for_user &			operator []			(u32 index);
 	query_result_for_user const &	operator []			(u32 index) const;
@@ -76,6 +77,7 @@ private:
 	u32							m_thread_id;
 	enum result_enum			{ result_uninitialized	=	u32(-1), result_failed = 0, result_success = 1 };
 	threading::atomic32_type	m_result;
+	threading::atomic32_type	is_cancelled;
 
 	bool						m_is_queries_for_quality;
 	assert_on_fail_bool			m_assert_on_fail;
@@ -94,6 +96,8 @@ private:
 	friend	class				thread_local_data;
 	friend	class				query_resources_helper;
 };
+
+STATIC_SIZE_ASSERT(queries_result, 0x50);
 
 } // namespace resources
 } // namespace vostok

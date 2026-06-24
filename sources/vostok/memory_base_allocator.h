@@ -84,6 +84,10 @@ private:
 #endif // #ifndef MASTER_GOLD
 }; // class base_allocator
 
+#ifdef MASTER_GOLD
+STATIC_SIZE_ASSERT(base_allocator, 0x14);
+#endif // #ifdef MASTER_GOLD
+
 namespace monitor {
 extern u32 const housekeeping_size;
 } // namespace monitor
