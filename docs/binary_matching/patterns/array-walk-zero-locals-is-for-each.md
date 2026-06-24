@@ -24,3 +24,20 @@ mov eax,[this]; add eax,<off>; mov [ebp-4],eax    ; it = &arr[0]
 Steerable and CLEAN - 0 locals AND byte-identical, not a take-the-hit. Evidence:
 `inventory::remove` 1->0 local at 100% (#372); its siblings `inventory::serialize`/
 `deserialize` already `std::for_each` over the same `m_slots`.
+
+## Variant: for_each over a std::vector's begin()/end() stays OUT-OF-LINE in our build
+
+When the container is an STLport `std::vector` (e.g. `vector<T*>`) and you iterate
+`std::for_each( v.begin(), v.end(), functor )`, the for_each form is STILL the correct
+0-local structure, but our compile may NOT inline it: `begin()`/`end()` go out-of-line
+(`call stlp_std::priv::_Impl_vector<...>::end`) and the whole loop folds into ONE `call
+stlp_std::for_each<...>` statement, while the TARGET inlined for_each (its begin/end are
+direct `_Myfirst`/`_Mylast` member reads `[this+off]`/`[this+off+4]`, and the loop body is
+several separate statements attributed to the call-site source lines). Result: target N
+statements, our base 1 - a `TRGT_ONLY` cascade in `structure-diff`, low fuzzy %, but the
+SOURCE SHAPE (for_each functor, 0 iterator locals) is faithful. This is the STLport
+header-template inline boundary, NOT source-steerable from the calling TU - bank it as the
+inline-vs-call wall (unlike the raw fixed-array case above, which inlines cleanly because
+its begin/end are raw pointer args). Evidence: `player::on_fire`/`jump`/`notify_actions_subscribers`
+(player.cpp) - the functor captures the receiver `static_cast<hit_receiver const*>(this)`
+and the per-call action; structurally correct, capped on the for_each non-inline.
