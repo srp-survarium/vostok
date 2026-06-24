@@ -8,6 +8,7 @@
 #define MATH_CONVEX_H_INCLUDED
 
 #include <vostok/math_aabb_plane.h>
+#include <vostok/fixed_vector.h>
 
 namespace vostok {
 namespace math {
@@ -45,38 +46,37 @@ public:
 	enum {
 		msc_max_plane_count = 32,
 	};
-	typedef fixed_vector<aabb_plane, msc_max_plane_count>	planes_type;
-	typedef fixed_vector<u32, msc_max_plane_count * 2>		adjacencies_type;
+	typedef u8										adjacency;
+	typedef fixed_vector<adjacency, 8>				vertex_adjacency;
+	typedef std::vector<aabb_plane>					planes_type;
+	typedef std::vector<vertex_adjacency>			adjacencies_type;
 public:
 								convex			( );
 	explicit					convex			( aabb const& bbox );
-								convex			( planes_type const& planes, adjacencies_type const& adjacency );
+								convex			( planes_type planes, adjacencies_type adjacency );
 	void						split			( plane const& p, cache const& c, convex& positive, convex& negative ) const;
 	intersection				test_inexact	( aabb const& aabb) const;
 	bool						inside			( math::float3 const& point ) const;
 	void						fill_cache		( cache& c ) const;
 	bool						empty			( ) const { return m_planes.empty(); }
-	planes_type	 const&			get_planes		( ) const { return m_planes; }
-	adjacencies_type const&		get_adjacencies	( ) const { return m_adjacency; }
+	planes_type					get_planes		( ) const { return m_planes; }
+	adjacencies_type			get_adjacencies	( ) const { return m_adjacencies; }
+	void						sort_adjacencies( );
 private:
 	typedef u64 vertex_flags;
-	typedef u8 (original_to_new_plane_id)[msc_max_plane_count];
 private:
-	static	u32		get_plane_flags							( adjacencies_type const& adjacency_vector );
-	static	void	build_original_to_new_adjacency_dict	( u32 adjacency_flags, original_to_new_plane_id& dict );
-	static	u32		original_to_new_adjacency				( original_to_new_plane_id const& dict, u32 adjacency );
+	static	std::vector<u8>	get_plane_flags							( adjacencies_type adjacency_vector );
+	static	void			build_original_to_new_adjacency_dict	( std::vector<u8> plane_flags, buffer_vector<u8>& dict );
+	static	void			convert_original_adjacency_to_new		( buffer_vector<u8> const& dict, vertex_adjacency& adjacency );
 private:
 #pragma warning ( push )
 #pragma warning ( disable : 4251 )
-	// sushi@TODO: target convex is 0x18 = two std::vector (m_planes std::vector<aabb_plane>@0x0,
-	// m_adjacencies std::vector<fixed_vector<u8,8>>@0xc) - NOT these fixed_vectors. Faithful fix
-	// = rewrite the class to std::vector + rename m_adjacency->m_adjacencies + retype, and rework
-	// all math_convex.cpp bodies (test_inexact is the only paired method today). Deferred: full
-	// matcher job, not a header field add; would break the lone 100% test_inexact match.
 	planes_type			m_planes;
-	adjacencies_type	m_adjacency;
+	adjacencies_type	m_adjacencies;
 #pragma warning ( pop )
 }; // class convex
+
+STATIC_SIZE_ASSERT( convex, 0x18 );
 
 } // namespace math
 } // namespace vostok
