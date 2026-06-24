@@ -112,23 +112,14 @@ public:
 	virtual	math::aabb							get_aabb					( ) const override;
 	virtual	float4x4							get_eyes_matrix				( ) const override;
 
-	// STATE[STUB]
 	virtual	math::color							get_color					( ) const override
 	{
-		return math::color( );
-
-		// FUNCTION BODY[0xaba60]
-		// <0xaba60>|0x000|      :'123'	{
-		// ******
+		return m_game_attributes.debug_draw_color;
 	}
 	virtual	float3								get_eyes_direction			( ) const override;
 
-	// STATE[STUB]
 	virtual	void								set_eyes_direction			( float3 const& direction ) override
 	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'125'	{
-		// ******
 	}
 
 	virtual	float3								get_position				( float3 const& requester ) const override;
@@ -139,74 +130,39 @@ public:
 
 	virtual	bool								debug_draw_allowed			( ) const override;
 
-	// STATE[STUB]
 	virtual	pcstr								get_name					( ) const override
 	{
-		return NULL;
-
-		// FUNCTION BODY[0xaba70]
-		// <0xaba70>|0x000|      :'131'	{
-		// ******
+		return m_game_attributes.name.c_str( );
 	}
 
-	// STATE[STUB]
 	virtual	u32									get_id						( ) const override
 	{
-		return 0;
-
-		// FUNCTION BODY[0xaba80]
-		// <0xaba80>|0x000|      :'132'	{
-		// ******
+		return m_game_attributes.id;
 	}
 
-	// STATE[STUB]
 	virtual	u32									get_group_id				( ) const override
 	{
-		return 0;
-
-		// FUNCTION BODY[0xaba90]
-		// <0xaba90>|0x000|      :'134'	{
-		// ******
+		return m_game_attributes.group_id;
 	}
 
-	// STATE[STUB]
 	virtual	u32									get_class_id				( ) const override
 	{
-		return 0;
-
-		// FUNCTION BODY[0xabaa0]
-		// <0xabaa0>|0x000|      :'135'	{
-		// ******
+		return m_game_attributes.class_id;
 	}
 
-	// STATE[STUB]
 	virtual	u32									get_outfit_id				( ) const override
 	{
-		return 0;
-
-		// FUNCTION BODY[0xabab0]
-		// <0xabab0>|0x000|      :'136'	{
-		// ******
+		return m_game_attributes.outfit_id;
 	}
 
-	// STATE[STUB]
 	virtual	bool								is_patrolling				( ) const override
 	{
-		return false;
-
-		// FUNCTION BODY[0xabac0]
-		// <0xabac0>|0x000|      :'138'	{
-		// ******
+		return m_is_patrolling;
 	}
 
-	// STATE[STUB]
 	virtual	bool								is_at_cover					( ) const override
 	{
 		return false;
-
-		// FUNCTION BODY[0xb2740]
-		// <0xb2740>|0x000|      :'139'	{
-		// ******
 	}
 	virtual	bool								is_safe						( ) const override;
 	virtual	bool								is_invisible				( ) const override { /* no source */ return false; }
@@ -241,89 +197,50 @@ public:
 
 	virtual	void								on_sound_event				( sound::sound_producer const& sound_source ) override;
 
-	// STATE[STUB]
 	virtual	pcstr								get_description				( ) const override
 	{
-		return NULL;
-
-		// FUNCTION BODY[0xabad0]
-		// <0xabad0>|0x000|      :'157'	{
-		// ******
+		return m_game_attributes.description.c_str( );
 	}
 
-	// STATE[STUB]
 	virtual	float3								get_source_position			( float3 const& requester ) const override
 	{
-		// CALL SITE INFO
-		// <0xabaf4> -> float3 < unknown >( float3 const& ) const
-		// ******
-
 		return get_position( requester );
-
-		// FUNCTION BODY[0xabae0]
-		// <0xabae0>|0x000|      :'158'	{
-		// ******
 	}
 
 	virtual	void								on_hit_event				( hit_object const& hit_source );
 
-	// STATE[STUB]
 	virtual	ai::npc*							cast_npc					( ) override
 	{
 		return this;
-
-		// FUNCTION BODY[0xabb00]
-		// <0xabb00>|0x000|      :'161'	{
-		// ******
 	}
 	virtual	ai::npc const*						cast_npc					( ) const override { /* no source */ return this; }
 	virtual	ai::weapon*							cast_weapon					( ) override { /* no source */ return NULL; }
 	virtual	ai::weapon const*					cast_weapon					( ) const override { /* no source */ return NULL; }
 
-	// STATE[STUB]
 	virtual	float								get_velocity				( ) const override
 	{
-		return 0.0f;
-
-		// FUNCTION BODY[0xabb10]
-		// <0xabb10>|0x000|      :'165'	{
-		// ******
+		return m_game_attributes.initial_velocity;
 	}
 
-	// STATE[STUB]
 	virtual	float								get_luminosity				( ) const override
 	{
-		return 0.0f;
-
-		// FUNCTION BODY[0xabb20]
-		// <0xabb20>|0x000|      :'166'	{
-		// ******
+		return m_game_attributes.initial_luminosity;
 	}
 	virtual	float3								get_random_surface_point	( const u32 current_time ) const override;
 
 	virtual	float4x4							local_to_cell				( float3 const& requester ) const override;
 
-	// STATE[STUB]
 	virtual	ai::game_object const*				cast_game_object			( ) const override
 	{
 		return this;
-
-		// FUNCTION BODY[0xabeb0]
-		// <0xabeb0>|0x000|      :'169'	{
-		// ******
 	}
 
-	// STATE[STUB]
 	virtual	void								load						(
 													configs::binary_config_value const&		__formal,
 													pcstr									__formal_1,
 													boost::function< void( game_object_& ) >&	__formal_2
 												) override
 	{
-		// PDB: all three params __formal, genuinely unused
-		// FUNCTION BODY[0xabb30]
-		// <0xabb30>|0x000|      :'170'	{
-		// ******
 	}
 
 	virtual	void								hit							(
