@@ -33,12 +33,17 @@ namespace survarium {
 
 class weapon;
 
+template < typename T > class weapon_sound_events_handler_state_cook;
+
 // T is one of the game_core weapon-state classes; the handler wraps it and
 // plays the per-state weapon sounds. The 9-arg ctor (bool& shown) exists only
 // for the show/hide instantiations in the target, declared for all T (union
 // across the instantiation dumps - uninstantiated members cost nothing).
 template < typename T >
 class weapon_sound_events_handler_state : public T {
+	// the cook over this state owns the sounds buffer (allocated in new_state,
+	// freed in destroy_resource) and reads m_buffer_for_sounds directly.
+	friend class weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< T > >;
 public:
 	inline			weapon_sound_events_handler_state	(
 						weapon&			weapon,
