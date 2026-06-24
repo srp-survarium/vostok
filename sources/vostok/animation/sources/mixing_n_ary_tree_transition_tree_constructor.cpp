@@ -12,6 +12,7 @@
 #include "mixing_n_ary_tree_time_scale_node.h"
 #include "mixing_n_ary_tree_weight_transition_node.h"
 #include "mixing_n_ary_tree_time_scale_transition_node.h"
+#include "mixing_n_ary_tree_multiplication_node.h"
 #include <vostok/animation/mixing_n_ary_tree.h>
 #include "mixing_n_ary_tree_node_comparer.h"
 #include "mixing_n_ary_tree_time_scale_calculator.h"
@@ -936,8 +937,10 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_base_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::new_time_scale_transition(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_base_node&, vostok::animation::mixing::n_ary_tree_base_node&)
+// claude@NOTE: structure-first reconstruction of the 4-arg time-scale-transition builder.
+// The two single-node fast paths (equal-compare line 797, transition_time==0 line 801) each
+// clone `from`/`to` with a fresh time scale via the 3-arg m_cloner.clone overload; residual is
+// the inlined re-scheduled temp-node construction inside those clone calls.
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition(
 	n_ary_tree_animation_node&		from_animation,
 	n_ary_tree_animation_node&		to_animation,
@@ -945,98 +948,77 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 	n_ary_tree_base_node&			to
 )
 {
-	// LOCALS
-	// n_ary_tree_interpolator_selector interpolator_selector
-	// n_ary_tree_time_scale_transition_node* result
-	// n_ary_tree_base_node* 			time_scale_from
-	// ******
+	if ( n_ary_tree_node_comparer( ).compare( from, to ) == n_ary_tree_node_comparer::equal )
+		return				m_cloner.clone(
+								from,
+								0.f,
+								to_animation.override_existing_animation( ) ? to_animation.animation_state( ).animation_interval_time : from_animation.animation_state( ).animation_interval_time
+							);
 
-	// CALL SITE INFO
-	// <0x6ea2a2> -> float < unknown >() const
-	// <0x6ea39a> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	n_ary_tree_interpolator_selector	interpolator_selector;
+	from.accept				( interpolator_selector );
 
-	return NULL;
+	if ( interpolator_selector.result( )->transition_time( ) == 0.f )
+		return				m_cloner.clone(
+								from,
+								0.f,
+								to_animation.override_existing_animation( ) ? to_animation.animation_state( ).animation_interval_time : from_animation.animation_state( ).animation_interval_time
+							);
 
-	// FUNCTION BODY
-	// <0x6ea20d>|0x00d|+0x026:'796'
-	// <0x6ea233>|0x033|+0x067:'797'
-	// <0>
-	// <0x6ea29a>|0x09a|+0x003:'799'
-	// <0x6ea29d>|0x09d|+0x015:'800'
-	// <0x6ea2b2>|0x0b2|+0x066:'801'
-	// <0>
-	// <1>
-	// <0x6ea318>|0x118|+0x009:'804'
-	// <0x6ea321>|0x121|+0x007:'805'
-	// <0>
-	// <0x6ea328>|0x128|+0x030:'807'
-	// <0x6ea358>|0x158|+0x029:'808'
-	// <0>
-	// <0x6ea381>|0x181|+0x00c:'810'
-	// <0x6ea38d>|0x18d|+0x00f:'811'
-	// <0x6ea39c>|0x19c|+0x00c:'812'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ea3a8>|0x1a8|-0x118:'819'
-	// <0>
-	// <1>
-	// <0x6ea290>|0x090|+0x07e:'822'
-	// <0x6ea30e>|0x10e|+0x0b9:'822'
-	// ******
+	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+	m_buffer				+= sizeof( n_ary_tree_time_scale_transition_node );
+
+	n_ary_tree_base_node* const time_scale_from	= m_cloner.clone( from, 0.f );
+	n_ary_tree_base_node* const time_scale_to	= m_cloner.clone( to, 0.f );
+
+	time_scale_to->accept	( interpolator_selector );
+
+	if ( result )
+		new ( result ) n_ary_tree_time_scale_transition_node(
+			*time_scale_from,
+			*time_scale_to,
+			*m_cloner.clone( *interpolator_selector.result() ),
+			m_current_time_in_ms
+		);
+
+	return					result;
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_base_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::new_time_scale_transition(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_base_node&, float)
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition( n_ary_tree_animation_node& from_animation, n_ary_tree_base_node& from, float to )
 {
-	// LOCALS
-	// n_ary_tree_interpolator_selector interpolator_selector
-	// ******
+	n_ary_tree_interpolator_selector	interpolator_selector;
+	from.accept				( interpolator_selector );
 
-	// CALL SITE INFO
-	// <0x6ea0ba> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6ea0c5> -> float < unknown >() const
-	// ******
+	if ( interpolator_selector.result()->transition_time() == 0.f )
+		return				new ( m_buffer.c_ptr() ) n_ary_tree_time_scale_node(
+								*m_cloner.clone( *interpolator_selector.result() ),
+								0.f,
+								from_animation.animation_state( ).animation_interval_time,
+								m_current_time_in_ms
+							);
 
-	return NULL;
+	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+	m_buffer				+= sizeof( n_ary_tree_time_scale_transition_node );
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6ea09d>|0x00d|+0x01f:'831'
-	// <0x6ea0bc>|0x02c|+0x019:'832'
-	// <0x6ea0d5>|0x045|+0x00d:'833'
-	// <0x6ea0e2>|0x052|+0x007:'834'
-	// <0x6ea0e9>|0x059|+0x007:'835'
-	// <0x6ea0f0>|0x060|+0x042:'836'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ea132>|0x0a2|+0x005:'841'
-	// <0x6ea137>|0x0a7|+0x007:'842'
-	// <0>
-	// <0x6ea13e>|0x0ae|+0x023:'844'
-	// <0x6ea161>|0x0d1|+0x01c:'845'
-	// <0>
-	// <0x6ea17d>|0x0ed|+0x005:'847'
-	// <0x6ea182>|0x0f2|+0x007:'848'
-	// <0x6ea189>|0x0f9|+0x034:'849'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ea1bd>|0x12d|+0x031:'856'
-	// <0>
-	// <0x6ea1ee>|0x15e|-0x0c6:'858'
-	// <0x6ea128>|0x098|+0x0c8:'859'
-	// ******
+	n_ary_tree_base_node* const time_scale_from	= m_cloner.clone( from );
+
+	n_ary_tree_base_node* const time_scale_to	=
+		new ( m_buffer.c_ptr() ) n_ary_tree_time_scale_node(
+			*m_cloner.clone( *interpolator_selector.result() ),
+			0.f,
+			from_animation.animation_state( ).animation_interval_time,
+			m_current_time_in_ms
+		);
+	m_buffer				+= sizeof( n_ary_tree_time_scale_node );
+
+	new ( result ) n_ary_tree_time_scale_transition_node(
+		*time_scale_from,
+		*time_scale_to,
+		*m_cloner.clone( *interpolator_selector.result() ),
+		m_current_time_in_ms
+	);
+
+	return					result;
 }
 
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition( float animation_time, float from, n_ary_tree_base_node& to )
@@ -1235,125 +1217,67 @@ void n_ary_tree_transition_tree_constructor::add_operands(
 		stlp_std::sort		( operands_begin, operands_end, comparer );
 }
 
-// STATE[STUB]
 std::pair< u32, u32 > computed_operands_count( n_ary_tree_animation_node& from, n_ary_tree_animation_node& to )
 {
-	// claude@NOTE: STUB - returns a placeholder so the link succeeds and change_animation
-	// can reference it (its real caller). Real body (lines 1103-1188 of the orig source,
-	// a two-list interpolator-comparison count) not yet reconstructed.
-	VOSTOK_UNREFERENCED_PARAMETER( from );
-	VOSTOK_UNREFERENCED_PARAMETER( to );
-	return std::make_pair( 0u, 0u );
+	n_ary_tree_base_node** const		i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
+	n_ary_tree_base_node** const		j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+	n_ary_tree_base_node**				j	= to.operands( sizeof( n_ary_tree_animation_node ) );
 
-	// LOCALS
-	// n_ary_tree_interpolator_selector interpolator_selector
-	// n_ary_tree_base_node** 			j_e
-	// n_ary_tree_node_comparer 		comparer
-	// u32 								time_scale_nodes_count
-	// n_ary_tree_base_node** 			i_e
-	// ******
+	u32									operands_count			= 0;
+	u32									time_scale_nodes_count	= 0;
+	n_ary_tree_node_comparer			comparer;
 
-	// CALL SITE INFO
-	// <0x6e9862> -> bool < unknown >()
-	// <0x6e987f> -> bool < unknown >()
-	// <0x6e9893> -> bool < unknown >()
-	// <0x6e98ec> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6e98fe> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	if ( i != i_e && (*i)->is_time_scale( ) ) {
+		++i;
+		time_scale_nodes_count	= 1;
+		if ( j != j_e && (*j)->is_time_scale( ) )
+			++j;
+	}
+	else if ( j != j_e && (*j)->is_time_scale( ) ) {
+		time_scale_nodes_count	= 1;
+		++j;
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6e982a>|0x00a|+0x003:'1103'
-	// <0>
-	// <0x6e982d>|0x00d|+0x00d:'1105'
-	// <0>
-	// <1>
-	// <0x6e983a>|0x01a|+0x01d:'1108'
-	// <0>
-	// <0x6e9857>|0x037|+0x011:'1110'
-	// <0>
-	// <0x6e9868>|0x048|+0x00b:'1112'
-	// <0x6e9873>|0x053|+0x012:'1113'
-	// <0>
-	// <1>
-	// <0x6e9885>|0x065|+0x002:'1116'
-	// <0x6e9887>|0x067|+0x012:'1117'
-	// <0x6e9899>|0x079|+0x008:'1118'
-	// <0x6e98a1>|0x081|+0x003:'1119'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6e98a4>|0x084|+0x00c:'1123'
-	// <0x6e98b0>|0x090|+0x07e:'1124'
-	// <0x6e992e>|0x10e|-0x06e:'1124'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6e98c0>|0x0a0|+0x01e:'1129'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6e98de>|0x0be|+0x002:'1138'
-	// <0>
-	// <1>
-	// <0x6e98e0>|0x0c0|+0x00e:'1141'
-	// <0>
-	// <1>
-	// <0x6e98ee>|0x0ce|+0x012:'1144'
-	// <0>
-	// <1>
-	// <0x6e9900>|0x0e0|+0x022:'1147'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6e9922>|0x102|+0x003:'1155'
-	// <0x6e9925>|0x105|-0x009:'1156'
-	// <0>
-	// <1>
-	// <0x6e991c>|0x0fc|+0x004:'1159'
-	// <0>
-	// <0x6e9920>|0x100|+0x007:'1161'
-	// <0>
-	// <1>
-	// <0x6e9927>|0x107|+0x001:'1164'
-	// <0x6e9928>|0x108|+0x003:'1165'
-	// <0x6e992b>|0x10b|+0x00b:'1166'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6e9936>|0x116|+0x00a:'1173'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6e9940>|0x120|+0x008:'1180'
-	// <0>
-	// <1>
-	// <0x6e9948>|0x128|+0x008:'1183'
-	// <0x6e9950>|0x130|+0x003:'1184'
-	// <0x6e9953>|0x133|+0x005:'1185'
-	// <0>
-	// <1>
-	// <0x6e9958>|0x138|+0x008:'1188'
-	// ******
+	n_ary_tree_interpolator_selector	interpolator_selector;
+	for ( ; i != i_e; ) {
+		if ( j == j_e )
+			break;
+
+		if ( comparer.compare( **i, **j ) == n_ary_tree_node_comparer::equal ) {
+			++operands_count;
+			++i;
+			++j;
+			continue;
+		}
+
+		(*i)->accept			( interpolator_selector );
+		base_interpolator const* const	i_interpolator	= interpolator_selector.result( );
+		(*j)->accept			( interpolator_selector );
+		switch ( compare( *i_interpolator, *interpolator_selector.result( ) ) ) {
+			case equal :
+				++operands_count;
+				++i;
+				++j;
+				break;
+			case less :
+				++operands_count;
+				++i;
+				break;
+			default :
+				++operands_count;
+				++j;
+				break;
+		}
+	}
+
+	for ( ; i != i_e; ++i )
+		++operands_count;
+
+	for ( ; j != j_e; ++j )
+		++operands_count;
+
+	return						std::make_pair( operands_count, time_scale_nodes_count );
 }
 
 // STATE[STUB]
@@ -1414,8 +1338,14 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::change_animation(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node* const, bool)
+// claude@NOTE: 71-stmt optimized prime root. The guard, the time-scale prologue, the per-side
+// (left/right) multiplicand fast paths (>=2 -> n_ary_tree_multiplication_node, ==1 -> single
+// clone, 0 -> zero-weight n_ary_tree_weight_node) and the `.33` else flow are reconstructed,
+// so it descends out-of-line into the bodied roots (new_*_transition / new_weight_transition /
+// add_operands / add_animation_node / new_animation / computed_operands_count). MISSING: the
+// two inner loops that populate each multiplication node's operand array by cloning every
+// operand via accept(m_cloner) (asm .15 line 1311 / .23 line 1342) - the bulk of the remaining
+// TRGT_ONLY statements. Next step: add those operand-copy loops to close the structure gap.
 void n_ary_tree_transition_tree_constructor::change_animation(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
@@ -1423,13 +1353,102 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 	bool							is_new_driving_animation
 )
 {
-	// claude@NOTE: PARKED - 71-stmt optimized prime root (manual multiplication-tree build,
-	// two major branches). Not yet reconstructed to structure-match. Bodied minimally so the
-	// real call graph genuinely reaches its descended callees (computed_operands_count,
-	// new_animation, add_operands, add_animation_node, the new_time_scale_transition family)
-	// out-of-line - their true caller, not an anchor - which is what pairs the leaves.
-	// Next step: reconstruct the .33 fast path + the multiplication-node main path from the
-	// 0x6daeb0 asm (lines 1244-1404) statement by statement.
+	if ( ( to.is_transitting_to_zero( ) && !from.is_transitting_to_zero( ) )
+		|| ( is_new_driving_animation && to.animation_state( ).are_there_any_weight_transitions ) )
+	{
+		n_ary_tree_base_node** const	from_end	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+		n_ary_tree_base_node**			multiplicands	= to.operands( sizeof( n_ary_tree_animation_node ) );
+		n_ary_tree_base_node** const	to_end		= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+
+		u32								operands_offset	=
+			( to.operands_count( ) && (*multiplicands)->is_time_scale( ) )
+			|| ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+			? 1 : 0;
+
+		u32								animation_interval_id	= 0;
+		float							animation_interval_time	= 0.f;
+		u32								time_scale_operands_count	= 0;
+
+		n_ary_tree_animation_node* const	result	= new_animation(
+			to,
+			from,
+			weight_driving_animation,
+			1,
+			time_scale_operands_count,
+			operands_offset,
+			animation_interval_id,
+			animation_interval_time,
+			from.is_transitting_to_zero( ),
+			true
+		);
+
+		n_ary_tree_base_node** new_operands	= result->operands( sizeof( n_ary_tree_animation_node ) );
+		m_buffer				+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
+
+		if ( to.operands_count( ) && (*multiplicands)->is_time_scale( ) ) {
+			if ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ) {
+				*new_operands++	= new_time_scale_transition( to, from, **multiplicands, **from.operands( sizeof( n_ary_tree_animation_node ) ) );
+				++multiplicands;
+			}
+			else
+				*new_operands++	= new_time_scale_transition( to, **multiplicands, from.animation_state( ).animation_interval_time );
+		}
+		else if ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+			*new_operands++	= new_time_scale_transition( animation_interval_time, animation_interval_time, **from.operands( sizeof( n_ary_tree_animation_node ) ) );
+
+		u32								left_multiplicands_count	= u32( from_end - multiplicands );
+		if ( left_multiplicands_count && (*multiplicands)->is_time_scale( ) )
+			--left_multiplicands_count;
+
+		n_ary_tree_base_node*			weight_from;
+		if ( left_multiplicands_count >= 2 ) {
+			n_ary_tree_base_node* const	left	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
+			new ( left ) n_ary_tree_multiplication_node( left_multiplicands_count );
+
+			m_buffer				+= left_multiplicands_count * sizeof( n_ary_tree_base_node* );
+			weight_from				= left;
+		}
+		else if ( left_multiplicands_count == 1 )
+			weight_from				= m_cloner.clone( **(multiplicands - 1) );
+		else {
+			weight_from				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_weight_node );
+			new ( weight_from ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
+		}
+
+		u32								right_multiplicands_count	= u32( to_end - from.operands( sizeof( n_ary_tree_animation_node ) ) );
+		if ( right_multiplicands_count && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+			--right_multiplicands_count;
+
+		n_ary_tree_base_node*			weight_to;
+		if ( right_multiplicands_count >= 2 ) {
+			n_ary_tree_base_node* const	right	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
+			new ( right ) n_ary_tree_multiplication_node( right_multiplicands_count );
+			m_buffer				+= right_multiplicands_count * sizeof( n_ary_tree_base_node* );
+			weight_to				= right;
+		}
+		else if ( right_multiplicands_count == 1 )
+			weight_to				= m_cloner.clone( **(to_end - 1) );
+		else {
+			weight_to				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_weight_node );
+			new ( weight_to ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
+		}
+
+		*new_operands			= new_weight_transition( *weight_from, *weight_to );
+
+		add_animation_node(
+			*result,
+			&to.animation_state( ),
+			animation_interval_id,
+			animation_interval_time,
+			true
+		);
+		return;
+	}
+
 	std::pair< u32, u32 >	operands_counts	= computed_operands_count( from, to );
 
 	u32						time_scale_operands_count	= operands_counts.first;
@@ -1459,10 +1478,6 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		new_operands + time_scale_operands_count + operands_offset,
 		weight_driving_animation != 0
 	);
-
-	new_time_scale_transition( animation_interval_time, animation_interval_time, **new_operands );
-	new_time_scale_transition( from, **new_operands, animation_interval_time );
-	new_time_scale_transition( from, to, **new_operands, **new_operands );
 
 	add_animation_node(
 		*result,
