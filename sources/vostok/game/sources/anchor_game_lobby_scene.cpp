@@ -20,6 +20,7 @@
 
 #include "lobby_menu.h"
 #include "profile_player_character.h"
+#include "profile_character.h" // profile_character::character_animation_ready
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 
 namespace survarium {
@@ -32,6 +33,13 @@ void pin_lobby_menu_scene_statics( );
 void use_game_lobby_scene( )
 {
 	pin_lobby_menu_scene_statics( );
+
+	// keep matched profile_character methods alive (their real call graph - the
+	// query_resources callbacks - is not reachable yet); address-take since the
+	// ctor needs live items_dictionary / scene_renderer / scene refs.
+	static void ( profile_character::* volatile s_anim_ready )( resources::queries_result& )
+		= &profile_character::character_animation_ready;
+	(void)s_anim_ready;
 
 	static volatile bool s_run = false;
 	if( !s_run )
