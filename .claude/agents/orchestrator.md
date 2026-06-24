@@ -191,6 +191,19 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    their non-100 is `SIZE`-capped, so only their ~20-50 `QUANTITY`/`SPLIT` fns are real work).
    Module priority: animation (prime) > physics/collision (QUANTITY/SPLIT only) + game STUBs
    > render (last).
+
+   **Root-first + descend-into-callees, reconstruct anything but `render` (DEFAULT, sushi
+   2026-06-24).** Once the leaf/greenfield STUBs are drained, prefer dispatching matchers on
+   ROOT functions (high-level callers/drivers - ticks, packet dispatchers, high-fan-out base
+   ctors) and TELL each matcher it MAY **descend into and reconstruct its stub callees in ANY
+   module EXCEPT `render`** (render is matched LAST). This reaches the un-DCE cascades faster
+   than leaf-only bottom-up (which still applies for pure leaf TUs) - measured payoff: one
+   bodied callee lifts several callers from ~0% to ~100%. Two orchestration guards: (a) scope
+   each root matcher to OWN its root + callee subtree, picking roots whose subtrees are
+   **DISJOINT** from other live workers' files (the no-two-matchers-on-one-file rule now spans
+   the whole callee subtree, not just the root TU); (b) require **no regression** in the
+   modules a matcher reconstructs into (read its `report-changes.json`). When a previously
+   parked fn's blocker is a now-reconstructable (non-render) callee, **`flag --requeue`** it.
 2. **ONE linear stacked-PR chain - fan the WORKERS, serialize the OUTPUT.** You MAY fan
    out matchers (several parallel workers off the same tip - encouraged for throughput).
    But their OUTPUTS must land as a SINGLE LINEAR CHAIN: integrate each finished matcher's
