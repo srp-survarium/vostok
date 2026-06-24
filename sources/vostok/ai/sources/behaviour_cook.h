@@ -28,7 +28,7 @@ typedef buffer_vector< resources::request >	requests_type;
 class behaviour_cook : public resources::translate_query_cook
 {
 public:
-					behaviour_cook			( ai_world* world );
+					behaviour_cook			( ai_world& world );
 
 	virtual	void	translate_request_path	( pcstr request, fs_new::virtual_path_string & new_request ) const;
 	virtual	void	translate_query			( resources::query_result_for_cook&	parent );

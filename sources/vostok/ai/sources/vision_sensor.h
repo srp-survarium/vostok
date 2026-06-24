@@ -42,7 +42,8 @@ public:
 						sensed_visual_object*,
 						&sensed_visual_object::next,
 						threading::single_threading_policy,
-						size_policy
+						size_policy,
+						no_debug_policy
 					  >							visible_objects;
 
 private:

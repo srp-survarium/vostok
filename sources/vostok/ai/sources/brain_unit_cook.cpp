@@ -15,9 +15,13 @@
 namespace vostok {
 namespace ai {
 
-brain_unit_cook::brain_unit_cook	( ai_world* world ) :
+// sushi@TODO: target constructs an extra empty (size-0) derived member at this+0x20
+// before m_ai_world (delinker names its ctor allocator<char>); our header has only
+// m_ai_world. Structure-MATCH, byte residual only; identify the missing empty member
+// to close it (do NOT fabricate one).
+brain_unit_cook::brain_unit_cook	( ai_world& world ) :
 	translate_query_cook			( resources::brain_unit_class, reuse_false, use_current_thread_id ),
-	m_ai_world						( world )
+	m_ai_world						( &world )
 {
 }
 
