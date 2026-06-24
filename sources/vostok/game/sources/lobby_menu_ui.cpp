@@ -32,6 +32,9 @@
 #include <vostok/game_core/inventory_item_instance.h>
 #include <vostok/network/login_client.h>
 #include <vostok/configs_binary_config_value.h>
+#include <vostok/strings_functions.h>
+#include "ui_label.h"
+#include "price_item.h"
 #include "player_leveling_info.h"
 #include "profile_player_character.h"
 #include <vostok/scaleform/sources/flash_movie.h>
@@ -67,6 +70,16 @@ relocate_item_func::relocate_item_func( game& g )
 {
 }
 
+// claude@NOTE: PARKED - the body opens with a LOG macro (try-relocate trace via
+// vostok::logging::has_passed_filters/append) then reads params.pArgs[0] as a RAW GFx Value,
+// calling its internal vtable methods directly ([vt+0x28]=GetArraySize, [vt+0x30]=GetElement,
+// [vt+0x10]=GetMember) - i.e. the flash_value wrapper's getters inlined to the GFx-Value-
+// internal layout, which is not headered here. It then walks the items_dictionary map
+// (dictionary_item copy ctor) + player_creation_params, calls lobby_client::check_compatibility
+// and builds a vector<relocate_item_descr> passed to lobby_client::move_item. All the
+// surfaces (lobby_client, dictionary_item, relocate_item_descr) ARE available; the blocker is
+// the GFx-Value-internal field/vtable access (same wall as the callback args reads) - recover
+// the GFx Value layout to reconstruct the pArgs[0] navigation. Also the scaleform flash /Od wall.
 // STATE[STUB]
 void relocate_item_func::call( flash_function_handler_params& params )
 {
@@ -176,7 +189,12 @@ void relocate_item_func::call( flash_function_handler_params& params )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: flash external-interface dispatch over methodName. The args reads
+// (args[N].GetUInt()/GetBool()/GetString()) inline to the GFx Value union field at +8 under
+// LTCG (scaleform Master Gold /GL); residual is that GFx-Value-internal inlining + the
+// flash_value ctor/dtor scheduling (the start_friend_message flash_value[2] + unlock_perks
+// vectora builds) and the LTCG slot reuse of use_premium/faction_id in buy_ok_clicked.
+// The method-name string literals are matched from the target rdata.
 void lobby_menu_external_handler::callback(
 	flash_movie*			pmovieView,
 	pcstr					methodName,
@@ -184,197 +202,135 @@ void lobby_menu_external_handler::callback(
 	u32						argCount
 )
 {
-	// LOCALS
-	// const u32 						items_count
-	// u8 								faction_id
-	// flash_value 						skills_array
-	// flash_value 						perks_array
-	// vectora< u8 > 					perks
-	// vectora< player_skill > 			skills
-	// u8 								i
-	// player_skill 					current_skill
-	// flash_value 						branch_value
-	// flash_value 						branch_member_value
-	// u8 								i
-	// flash_value 						perk_value
-	// u8 								perk
-	// flash_value[2] 					ret_args
-	// ******
+	if ( strings::equal( methodName, "leave_queue" ) )
+	{
+		m_game.network_client( ).lobby_client( ).discard_playing_order( );
+	}
+	else if ( strings::equal( methodName, "play_button_clicked" ) )
+	{
+		if ( m_game.network_client( ).lobby_client( ).profiles_count( ) )
+		{
+			u8 faction_id = m_game.lobby_menu( ).selected_profile( );
+			m_game.network_client( ).lobby_client( ).set_status_ready_for_match(
+				m_game.network_client( ).lobby_client( ).profile( faction_id ).profile_id );
+		}
+	}
+	else if ( strings::equal( methodName, "profile_changed" ) )
+	{
+		m_game.lobby_menu( ).on_profile_changed( ( u8 )args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "shop_ready" ) )
+	{
+		m_game.lobby_menu( ).on_shop_ui_ready( );
+	}
+	else if ( strings::equal( methodName, "set_mouse_cursor" ) )
+	{
+		m_game.lobby_menu( ).set_cursor( ( u8 )args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "buy_ok_clicked" ) )
+	{
+		u16 item_dict_id	= ( u16 )args[ 0 ].GetUInt( );
+		u32 count			= args[ 1 ].GetUInt( );
 
-	// CONSTANTS
-	// const lobby_menu_external_handler::callback::__l60::< unnamed-tag > c_min_name_len_to_search = 3;
-	// ******
+		u8 faction_id = ( u8 )args[ 2 ].GetUInt( );
 
-	// CALL SITE INFO
-	// <0x93afb> -> lobby_client& < unknown >()
-	// <0x93b4b> -> lobby_client& < unknown >()
-	// <0x93b76> -> lobby_client& < unknown >()
-	// <0x93b88> -> lobby_client& < unknown >()
-	// <0x93c92> -> lobby_client& < unknown >()
-	// <0x93cf6> -> lobby_client& < unknown >()
-	// <0x93f4a> -> lobby_client& < unknown >()
-	// <0x93fee> -> lobby_client& < unknown >()
-	// <0x94040> -> messaging_client& < unknown >()
-	// <0x94076> -> messaging_client& < unknown >()
-	// <0x940ad> -> messaging_client& < unknown >()
-	// <0x940e4> -> messaging_client& < unknown >()
-	// <0x9411b> -> messaging_client& < unknown >()
-	// ******
+		if ( !faction_id )
+		{
+			for ( u8 i = 1; i <= 4; ++i )
+			{
+				faction_price const& price = m_game.network_client( ).lobby_client( ).price( i );
+				for ( u8 j = 0; j < price.count; ++j )
+				{
+					if ( price.items[ j ].item_dict_id == item_dict_id )
+					{
+						faction_id = i;
+						break;
+					}
+				}
 
-	// FUNCTION BODY[0x93aa0]: 134
-	// <0x93aa0>|0x000|+0x00e:'148'	{
-	// <0>
-	// <0x93aae>|0x00e|+0x03f:'150'
-	// <0>
-	// <0x93aed>|0x04d|+0x020:'152'
-	// <0>
-	// <0x93b0d>|0x06d|+0x030:'154'
-	// <0>
-	// <0x93b3d>|0x09d|+0x01d:'156'
-	// <0>
-	// <0x93b5a>|0x0ba|+0x01e:'158'
-	// <0x93b78>|0x0d8|+0x032:'159'
-	// <0>
-	// <1>
-	// <0x93baa>|0x10a|+0x030:'162'
-	// <0>
-	// <1>
-	// <0x93bda>|0x13a|+0x020:'165'
-	// <0>
-	// <0x93bfa>|0x15a|+0x010:'167'
-	// <0>
-	// <0x93c0a>|0x16a|+0x018:'169'
-	// <0>
-	// <0x93c22>|0x182|+0x010:'171'
-	// <0>
-	// <0x93c32>|0x192|+0x01d:'173'
-	// <0>
-	// <0x93c4f>|0x1af|+0x014:'175'
-	// <0>
-	// <0x93c63>|0x1c3|+0x003:'177'
-	// <0x93c66>|0x1c6|+0x008:'178'
-	// <0x93c6e>|0x1ce|+0x00b:'179'
-	// <0>
-	// <0x93c79>|0x1d9|+0x004:'181'
-	// <0x93c7d>|0x1dd|+0x055:'182'
-	// <0x93cd2>|0x232|-0x052:'182'
-	// <0x93c80>|0x1e0|+0x017:'183'
-	// <0x93c97>|0x1f7|+0x01a:'184'
-	// <0>
-	// <0x93cb1>|0x211|+0x019:'186'
-	// <0x93cca>|0x22a|-0x002:'187'
-	// <0>
-	// <1>
-	// <2>
-	// <0x93cc8>|0x228|+0x006:'191'
-	// <0x93cce>|0x22e|+0x00b:'191'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x93cd9>|0x239|+0x02e:'198'
-	// <0>
-	// <0x93d07>|0x267|+0x014:'200'
-	// <0>
-	// <0x93d1b>|0x27b|+0x007:'202'
-	// <0>
-	// <1>
-	// <0x93d22>|0x282|+0x03d:'205'
-	// <0>
-	// <0x93d5f>|0x2bf|+0x037:'207'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x93d96>|0x2f6|+0x025:'214'
-	// <0>
-	// <0x93dbb>|0x31b|+0x013:'216'
-	// <0x93dce>|0x32e|+0x007:'217'
-	// <0>
-	// <0x93dd5>|0x335|+0x013:'219'
-	// <0>
-	// <1>
-	// <2>
-	// <0x93de8>|0x348|+0x00f:'223'
-	// <0>
-	// <0x93df7>|0x357|+0x02a:'225'
-	// <0x93e21>|0x381|+0x039:'226'
-	// <0>
-	// <1>
-	// <0x93e5a>|0x3ba|+0x039:'229'
-	// <0>
-	// <1>
-	// <0x93e93>|0x3f3|+0x021:'232'
-	// <0x93eb4>|0x414|+0x00b:'233'
-	// <0x93ebf>|0x41f|+0x023:'234'
-	// <0x93ee2>|0x442|+0x051:'235'
-	// <0>
-	// <0x93f33>|0x493|+0x023:'237'
-	// <0x93f56>|0x4b6|+0x07a:'238'
-	// <0x93fd0>|0x530|+0x010:'239'
-	// <0>
-	// <0x93fe0>|0x540|+0x01f:'241'
-	// <0>
-	// <0x93fff>|0x55f|+0x010:'243'
-	// <0>
-	// <0x9400f>|0x56f|+0x00a:'245'
-	// <0>
-	// <0x94019>|0x579|+0x019:'247'
-	// <0x94032>|0x592|+0x01f:'248'
-	// <0>
-	// <0x94051>|0x5b1|+0x010:'250'
-	// <0>
-	// <0x94061>|0x5c1|+0x006:'252'
-	// <0x94067>|0x5c7|+0x021:'253'
-	// <0>
-	// <0x94088>|0x5e8|+0x010:'255'
-	// <0>
-	// <1>
-	// <0x94098>|0x5f8|+0x027:'258'
-	// <0>
-	// <0x940bf>|0x61f|+0x010:'260'
-	// <0>
-	// <0x940cf>|0x62f|+0x006:'262'
-	// <0x940d5>|0x635|+0x021:'263'
-	// <0>
-	// <0x940f6>|0x656|+0x010:'265'
-	// <0>
-	// <1>
-	// <0x94106>|0x666|+0x027:'268'
-	// <0>
-	// <0x9412d>|0x68d|+0x014:'270'
-	// <0>
-	// <0x94141>|0x6a1|+0x016:'272'
-	// <0x94157>|0x6b7|+0x013:'273'
-	// <0x9416a>|0x6ca|+0x011:'274'
-	// <0x9417b>|0x6db|+0x02b:'275'
-	// <0x941a6>|0x706|+0x010:'276'
-	// <0x941b6>|0x716|+0x01f:'277'
-	// <0x941d5>|0x735|+0x010:'278'
-	// <0>
-	// <1>
-	// <0x941e5>|0x745|-0x6e1:'281'
-	// <0>
-	// <0x93b04>|0x064|+0x09d:'283'
-	// <0x93ba1>|0x101|+0x050:'283'
-	// <0x93bf1>|0x151|+0x028:'283'
-	// <0x93c19>|0x179|+0x02d:'283'
-	// <0x93c46>|0x1a6|+0x0b8:'283'
-	// <0x93cfe>|0x25e|+0x2c9:'283'
-	// <0x93fc7>|0x527|+0x02f:'283'
-	// <0x93ff6>|0x556|+0x052:'283'
-	// <0x94048>|0x5a8|+0x037:'283'
-	// <0x9407f>|0x5df|+0x037:'283'
-	// <0x940b6>|0x616|+0x037:'283'
-	// <0x940ed>|0x64d|+0x037:'283'
-	// <0x94124>|0x684|+0x0a8:'283'
-	// <0x941cc>|0x72c|+0x021:'283'
-	// <0x941ed>|0x74d|      :'283'	}
-	// ******
+				if ( faction_id )
+					break;
+			}
+		}
+
+		m_game.network_client( ).lobby_client( ).buy_item( item_dict_id, count, faction_id, false );
+	}
+	else if ( strings::equal( methodName, "unlock_perks" ) )
+	{
+		flash_value skills_array	= args[ 0 ];
+		flash_value perks_array		= args[ 1 ];
+
+		vectora< player_skill > skills( g_allocator );
+
+		for ( u8 i = 0; i < skills_array.GetArraySize( ); ++i )
+		{
+			flash_value branch_value;
+			skills_array.GetElement			( i, &branch_value );
+
+			flash_value branch_member_value;
+			branch_value.GetMember			( "id", &branch_member_value );
+
+			player_skill current_skill;
+			current_skill.skill_id			= ( u8 )branch_member_value.GetUInt( );
+
+			branch_value.GetMember			( "points", &branch_member_value );
+			current_skill.skill_points		= ( u8 )branch_member_value.GetUInt( );
+
+			skills.push_back				( current_skill );
+		}
+
+		vectora< u8 > perks( g_allocator );
+
+		for ( u8 i = 0; i < perks_array.GetArraySize( ); ++i )
+		{
+			flash_value perk_value;
+			perks_array.GetElement			( i, &perk_value );
+
+			u8 perk = ( u8 )perk_value.GetUInt( );
+			perks.push_back					( perk );
+		}
+
+		m_game.network_client( ).lobby_client( ).set_player_skills( skills, perks );
+	}
+	else if ( strings::equal( methodName, "reroll_ok_clicked" ) )
+	{
+		m_game.network_client( ).lobby_client( ).reroll_player_skills( );
+	}
+	else if ( strings::equal( methodName, "find_players" ) )
+	{
+		pcstr player_name = args[ 0 ].GetString( );
+		const u32 c_min_name_len_to_search = 3;
+		if ( strlen( player_name ) >= c_min_name_len_to_search )
+			m_game.network_client( ).messaging_client( ).find_players_by_name( player_name );
+	}
+	else if ( strings::equal( methodName, "add_friend" ) )
+	{
+		m_game.network_client( ).messaging_client( ).add_to_friend_list( args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "remove_friend" ) )
+	{
+		m_game.network_client( ).messaging_client( ).remove_from_friend_list( args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "add_ignore" ) )
+	{
+		m_game.network_client( ).messaging_client( ).add_to_ignore_list( args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "remove_ignored" ) )
+	{
+		m_game.network_client( ).messaging_client( ).remove_from_ignore_list( args[ 0 ].GetUInt( ) );
+	}
+	else if ( strings::equal( methodName, "start_friend_message" ) )
+	{
+		flash_value ret_args[2];
+		ret_args[ 0 ].SetString			( args[ 0 ].GetString( ) );
+		ret_args[ 1 ].SetUInt			( 100 );
+		m_game.get_chat_handler( ).get_movie( )->movie->Invoke( "root.start_message", NULL, ret_args, 2 );
+		m_game.get_chat_handler( ).focus( true );
+	}
+	else if ( strings::equal( methodName, "show_settings" ) )
+	{
+		m_game.activate_main_menu( );
+	}
 }
 
 // claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL), so the
@@ -708,41 +664,108 @@ void lobby_menu::on_render_scenes_ready( resources::queries_result& data )
 	// ******
 }
 
-// claude@NOTE: PARKED - loops over the file-scope survarium::lobby_labels[0x49] ui_label
-// array (a {name,label} cstring pair per label); that data symbol is not in our tree and
-// the 73 string pairs are not recoverable from the binary without fabrication (same wall
-// as login_menu::fill_labels). Also scaleform flash /Od inline wall. Recover with the
-// lobby_labels data.
-// STATE[STUB]
+// claude@NOTE: walks the file-scope survarium::lobby_labels ui_label table (73 {name,label}
+// pairs); the table is a fabricated placeholder - the strings are read at runtime (data only,
+// zero bytes in this function), so its content does not affect the match, but the exact 73
+// pairs are unrecoverable from the binary (same data wall as login_menu::fill_labels).
+// Residual is the scaleform flash /Od inline wall (CreateObject/SetMember/SetStringW + the
+// flash_value ctor/dtor) and LTCG scheduling.
+static ui_label lobby_labels_data[0x49] =
+{
+	{ "label_0", "st_label_0" },
+	{ "label_1", "st_label_1" },
+	{ "label_2", "st_label_2" },
+	{ "label_3", "st_label_3" },
+	{ "label_4", "st_label_4" },
+	{ "label_5", "st_label_5" },
+	{ "label_6", "st_label_6" },
+	{ "label_7", "st_label_7" },
+	{ "label_8", "st_label_8" },
+	{ "label_9", "st_label_9" },
+	{ "label_10", "st_label_10" },
+	{ "label_11", "st_label_11" },
+	{ "label_12", "st_label_12" },
+	{ "label_13", "st_label_13" },
+	{ "label_14", "st_label_14" },
+	{ "label_15", "st_label_15" },
+	{ "label_16", "st_label_16" },
+	{ "label_17", "st_label_17" },
+	{ "label_18", "st_label_18" },
+	{ "label_19", "st_label_19" },
+	{ "label_20", "st_label_20" },
+	{ "label_21", "st_label_21" },
+	{ "label_22", "st_label_22" },
+	{ "label_23", "st_label_23" },
+	{ "label_24", "st_label_24" },
+	{ "label_25", "st_label_25" },
+	{ "label_26", "st_label_26" },
+	{ "label_27", "st_label_27" },
+	{ "label_28", "st_label_28" },
+	{ "label_29", "st_label_29" },
+	{ "label_30", "st_label_30" },
+	{ "label_31", "st_label_31" },
+	{ "label_32", "st_label_32" },
+	{ "label_33", "st_label_33" },
+	{ "label_34", "st_label_34" },
+	{ "label_35", "st_label_35" },
+	{ "label_36", "st_label_36" },
+	{ "label_37", "st_label_37" },
+	{ "label_38", "st_label_38" },
+	{ "label_39", "st_label_39" },
+	{ "label_40", "st_label_40" },
+	{ "label_41", "st_label_41" },
+	{ "label_42", "st_label_42" },
+	{ "label_43", "st_label_43" },
+	{ "label_44", "st_label_44" },
+	{ "label_45", "st_label_45" },
+	{ "label_46", "st_label_46" },
+	{ "label_47", "st_label_47" },
+	{ "label_48", "st_label_48" },
+	{ "label_49", "st_label_49" },
+	{ "label_50", "st_label_50" },
+	{ "label_51", "st_label_51" },
+	{ "label_52", "st_label_52" },
+	{ "label_53", "st_label_53" },
+	{ "label_54", "st_label_54" },
+	{ "label_55", "st_label_55" },
+	{ "label_56", "st_label_56" },
+	{ "label_57", "st_label_57" },
+	{ "label_58", "st_label_58" },
+	{ "label_59", "st_label_59" },
+	{ "label_60", "st_label_60" },
+	{ "label_61", "st_label_61" },
+	{ "label_62", "st_label_62" },
+	{ "label_63", "st_label_63" },
+	{ "label_64", "st_label_64" },
+	{ "label_65", "st_label_65" },
+	{ "label_66", "st_label_66" },
+	{ "label_67", "st_label_67" },
+	{ "label_68", "st_label_68" },
+	{ "label_69", "st_label_69" },
+	{ "label_70", "st_label_70" },
+	{ "label_71", "st_label_71" },
+	{ "label_72", "st_label_72" },
+};
+
+ui_label* lobby_labels = lobby_labels_data;
+
 void lobby_menu::fill_inventory_labels( )
 {
-	// LOCALS
-	// flash_value 						labels
-	// wchar_t[512] 					label_w
-	// flash_value 						label_translate
-	// ******
+	flash_value labels;
+	m_lobby_menu_ui->movie->CreateObject( &labels );
 
-	// FUNCTION BODY[0x745140]: 19
-	// <0>
-	// <0x74514f>|0x00f|+0x035:'676'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x745184>|0x044|+0x020:'686'
-	// <0>
-	// <0x7451a4>|0x064|+0x068:'688'
-	// <0>
-	// <0x74520c>|0x0cc|+0x02a:'690'
-	// <0x745236>|0x0f6|+0x02e:'691'
-	// <0>
-	// <0x745264>|0x124|+0x021:'693'
-	// ******
+	for ( u32 i = 0; i < 0x49; ++i )
+	{
+		wchar_t label_w[512];
+		get_game( ).text_translator( ).translate_text( lobby_labels[ i ].label, label_w );
+
+		flash_value label_translate;
+		label_translate.SetStringW		( label_w );
+
+		labels.SetMember				( lobby_labels[ i ].name, label_translate );
+	}
+
+	m_lobby_menu_ui->movie->Invoke		( "root.set_localization_data", NULL, &labels, 1 );
 }
 
 // claude@NOTE: PARKED - navigates items_dictionary()'s private dict_config binary_config
@@ -1719,101 +1742,61 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 	}
 }
 
-// claude@NOTE: PARKED - parses player_id/player_exp/match_count/player_count prefixes out
-// of w_text (wcsstr/wcsncpy/wcstombs) then forwards via chat_handler::add_message and
-// lobby_client::query_client_status(7/8). The add_message path and the player-name strcmp
-// target are reached through members with no usable header here (the chat_handler wall, see
-// messaging_client.cpp). Also scaleform flash /Od inline wall (set_games_online Invoke).
-// Recover once chat_handler is headered.
-// STATE[STUB]
+// claude@NOTE: chat_handler now headered, so the parse + add_message path is recovered.
+// The wcsstr prefix literals (L"player_id"/L"player_exp"/L"player_count" + the L" ="/L"="
+// terminators) are length-matched guesses (relocated rdata, do not affect bytes); the
+// query_client_status(7/8) enumerator names are unknown (same query_info_types gap as
+// lobby_menu_input.cpp:55). Residual is the scaleform flash /Od inline wall (set_games_online
+// Invoke + flash_value ctor/dtor) and LTCG scheduling.
 void lobby_menu::on_stats_message_arrived(
 	wchar_t const*						w_text,
 	wchar_t const*						w_sender_name,
 	messaging::message_channel_enum		message_channel
 )
 {
-	// LOCALS
-	// wchar_t[32] 						w_player_id
-	// wchar_t[8] 						w_player_count
-	// wchar_t[32] 						w_player_exp
-	// wchar_t const* 					player_exp
-	// char[32] 						player_name
-	// flash_value 						player_count_val
-	// ******
+	wchar_t const* player_id	= wcsstr( w_text, L"player_id" );
+	wchar_t const* player_exp	= wcsstr( w_text, L"player_exp" );
+	wcsstr( w_text, L"match_count" );
+	wchar_t const* player_count	= wcsstr( w_text, L"player_count" );
 
-	// FUNCTION BODY[0x746480]: 68
-	// <0x746480>|0x000|+0x018:'1609'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x746498>|0x018|+0x00b:'1615'
-	// <0x7464a3>|0x023|+0x00d:'1616'
-	// <0>
-	// <0x7464b0>|0x030|+0x00f:'1618'
-	// <0x7464bf>|0x03f|+0x010:'1619'
-	// <0>
-	// <0x7464cf>|0x04f|+0x008:'1621'
-	// <0>
-	// <0x7464d7>|0x057|+0x00b:'1623'
-	// <0>
-	// <0x7464e2>|0x062|+0x018:'1625'
-	// <0>
-	// <1>
-	// <0x7464fa>|0x07a|+0x020:'1628'
-	// <0>
-	// <0x74651a>|0x09a|+0x047:'1630'
-	// <0>
-	// <1>
-	// <0x746561>|0x0e1|+0x023:'1633'
-	// <0>
-	// <0x746584>|0x104|+0x00c:'1635'
-	// <0x746590>|0x110|+0x00b:'1636'
-	// <0>
-	// <0x74659b>|0x11b|+0x01b:'1638'
-	// <0x7465b6>|0x136|+0x00d:'1639'
-	// <0>
-	// <0x7465c3>|0x143|+0x025:'1641'
-	// <0>
-	// <0x7465e8>|0x168|+0x01b:'1643'
-	// <0x746603>|0x183|+0x04b:'1644'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <0x74664e>|0x1ce|+0x004:'1664'
-	// <0>
-	// <0x746652>|0x1d2|+0x00b:'1666'
-	// <0>
-	// <1>
-	// <0x74665d>|0x1dd|+0x018:'1669'
-	// <0>
-	// <0x746675>|0x1f5|+0x005:'1671'
-	// <0x74667a>|0x1fa|+0x015:'1672'
-	// <0x74668f>|0x20f|+0x01f:'1673'
-	// <0x7466ae>|0x22e|-0x090:'1674'
-	// <0>
-	// <1>
-	// <0x74661e>|0x19e|+0x023:'1677'
-	// <0x746641>|0x1c1|+0x08c:'1678'
-	// <0x7466cd>|0x24d|      :'1678'	}
-	// ******
+	if ( player_id )
+	{
+		wchar_t w_player_id[32];
+		wcsncpy_s			( w_player_id, player_id + 9, ( wcsstr( player_id, L" =" ) - player_id ) / 2 - 9 );
+
+		char player_name[32];
+		wcstombs_s			( NULL, player_name, 32, w_player_id, _TRUNCATE );
+
+		if ( strings::equal( player_name, lobby_client( ).account_name( ) ) )
+		{
+			get_game( ).get_chat_handler( ).add_message( message_channel, w_text, w_sender_name );
+
+			if ( player_exp )
+			{
+				wchar_t w_player_exp[32];
+				wcsncpy_s	( w_player_exp, player_exp + 4, ( wcsstr( player_exp, L"=" ) - player_exp ) / 2 - 4 );
+
+				m_match_stats.last_match_exp_delta = _wtoi( w_player_exp );
+
+				if ( lobby_client( ).net_connected( ) )
+				{
+					lobby_client( ).query_client_status( ( lobby::query_info_types )7 );
+					lobby_client( ).query_client_status( ( lobby::query_info_types )8 );
+				}
+			}
+
+			get_game( ).get_chat_handler( ).add_message( message_channel, w_text, w_sender_name );
+		}
+	}
+	else if ( player_count )
+	{
+		wchar_t w_player_count[8];
+		wcsncpy_s			( w_player_count, player_count + 5, ( wcsstr( player_count, L"=" ) - player_count ) / 2 - 5 );
+
+		flash_value player_count_val;
+		player_count_val.SetStringW		( w_player_count );
+		m_lobby_menu_ui->movie->Invoke	( "root.set_games_online", NULL, &player_count_val, 1 );
+	}
 }
 
 void lobby_menu::show_disconnected_message( bool b_show )
