@@ -172,6 +172,8 @@ void npc_stats::set_stats( human_npc const* const owner )
 										);
 	}
 
+	last_item							= 0;
+
 	// 4th column: body state
 	for ( u32 i = 0; i < stats.body_state.size(); ++i )
 	{
