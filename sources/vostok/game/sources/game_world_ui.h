@@ -129,6 +129,8 @@ public:
 	inline	flash_movie_resource_ptr&	get_ui							( ) { /* no source */ return m_game_hud_ui; }
 
 			void						update_minimap_objects			( );
+
+private:
 			void						update_quick_slot				( profile_slot_enum slot );
 
 			void						create_slot_value				(

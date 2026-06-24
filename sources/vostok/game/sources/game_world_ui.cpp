@@ -8,6 +8,7 @@
 #include "game.h"		// game::text_translator() / get_network_client()
 #include "game_project.h"	// complete simple_game_project for get_project()->m_config
 #include "camera_director.h"	// get_camera_director().get_inverted_view_matrix()
+#include "chat_handler.h"	// get_chat_handler().get_movie() (update_ui minimap advance)
 #include "base_network_client.h"	// match_options() / get_player() / current_player_team()
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 #include <vostok/configs_binary_config.h>	// binary_config::get_root() (project_name lookup)
@@ -50,99 +51,80 @@ void game_world_ui::initialize_resources( resources::unmanaged_resource_ptr cons
 	m_game_hud_ui->movie->SetViewScaleMode( flash_movie::SM_NoScale );
 }
 
-// STATE[STUB]
 void game_world_ui::initialize( match_options& options )
 {
-	// LOCALS
-	// flash_value 						victory_items_count_val
-	// flash_value 						game_mode_val
-	// game_team_id 					local_player_team
-	// flash_value 						players_array
-	// wchar_t[512] 					team_name
-	// flash_value 						v
-	// wchar_t[32] 						profile_name_w
-	// flash_value 						player_item_property
-	// flash_value 						player_item
-	// ******
+	flash_value victory_items_count_val;
+	flash_value game_mode_val;
 
-	// FUNCTION BODY[0x5d2320]: 76
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d2326>|0x006|+0x03c:'79'
-	// <0x5d2362>|0x042|+0x010:'80'
-	// <0>
-	// <0x5d2372>|0x052|+0x022:'82'
-	// <0>
-	// <0x5d2394>|0x074|+0x01b:'84'
-	// <0x5d23af>|0x08f|+0x010:'85'
-	// <0>
-	// <0x5d23bf>|0x09f|+0x022:'87'
-	// <0>
-	// <0x5d23e1>|0x0c1|+0x023:'89'
-	// <0x5d2404>|0x0e4|+0x02d:'90'
-	// <0>
-	// <1>
-	// <0x5d2431>|0x111|+0x009:'93'
-	// <0x5d243a>|0x11a|+0x00b:'94'
-	// <0x5d2445>|0x125|+0x00f:'95'
-	// <0>
-	// <0x5d2454>|0x134|+0x00f:'97'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d2463>|0x143|+0x005:'101'
-	// <0x5d2468>|0x148|+0x010:'102'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d2478>|0x158|+0x003:'106'
-	// <0x5d247b>|0x15b|+0x03b:'107'
-	// <0>
-	// <1>
-	// <0x5d24b6>|0x196|+0x003:'110'
-	// <0x5d24b9>|0x199|+0x036:'111'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d24ef>|0x1cf|+0x031:'115'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d2520>|0x200|+0x00a:'119'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d252a>|0x20a|+0x021:'123'
-	// <0>
-	// <1>
-	// <0x5d254b>|0x22b|+0x021:'126'
-	// <0>
-	// <0x5d256c>|0x24c|+0x028:'128'
-	// <0x5d2594>|0x274|+0x038:'129'
-	// <0>
-	// <0x5d25cc>|0x2ac|+0x034:'131'
-	// <0x5d2600>|0x2e0|+0x038:'132'
-	// <0>
-	// <1>
-	// <0x5d2638>|0x318|+0x021:'135'
-	// <0x5d2659>|0x339|+0x086:'136'
-	// <0x5d26df>|0x3bf|+0x02e:'137'
-	// <0>
-	// <0x5d270d>|0x3ed|+0x025:'139'
-	// <0x5d2732>|0x412|+0x03f:'140'
-	// <0>
-	// <0x5d2771>|0x451|+0x025:'142'
-	// <0x5d2796>|0x476|+0x036:'143'
-	// <0>
-	// <0x5d27cc>|0x4ac|+0x025:'145'
-	// <0x5d27f1>|0x4d1|+0x036:'146'
-	// <0>
-	// <0x5d2827>|0x507|+0x01a:'148'
-	// <0x5d2841>|0x521|+0x061:'149'
-	// <0>
-	// <0x5d28a2>|0x582|+0x01d:'151'
-	// ******
+	wchar_t team_name[512];
+	m_game_world.get_game( ).text_translator( ).translate_text( "st_label_teamA", team_name );
+	victory_items_count_val.SetStringW( team_name );
+
+	get_ui( )->movie->SetVariable( "root.player_list.players.team1.text", victory_items_count_val );
+
+	m_game_world.get_game( ).text_translator( ).translate_text( "st_label_teamB", team_name );
+	victory_items_count_val.SetStringW( team_name );
+
+	get_ui( )->movie->SetVariable( "root.player_list.players.team2.text", victory_items_count_val );
+
+	game_mode_val.SetUInt( 0xff0000 );
+	get_ui( )->movie->SetVariable( "root.player_list.players.team2.textColor", game_mode_val );
+
+	m_game_mode				= options.match_mode_;
+	m_match_time			= options.match_time;
+	m_victory_items_count	= options.victory_items_count;
+
+	game_team_id local_player_team = team_undefined;
+
+	for ( u8 i = 0; i < 20; ++i )
+		if ( options.player_profiles[i].is_local )
+			local_player_team = options.player_profiles[i].team;
+
+	victory_items_count_val.SetUInt( m_victory_items_count );
+	get_ui( )->movie->Invoke( "root.set_artifacts_required", NULL, &victory_items_count_val, 1 );
+
+	game_mode_val.SetUInt( m_game_mode );
+	get_ui( )->movie->Invoke( "root.set_game_type", NULL, &game_mode_val, 1 );
+
+	flash_value players_array;
+	get_ui( )->movie->CreateArray( &players_array );
+	u32 in_array_index = 0;
+	for ( u8 i = 0; i < 20; ++i )
+	{
+		if ( options.player_profiles[i].team == team_undefined )
+			continue;
+
+		flash_value player_item;
+		get_ui( )->movie->CreateObject( &player_item );
+
+		flash_value player_item_property;
+		get_ui( )->movie->CreateObject( &player_item_property );
+
+		player_item_property.SetUInt( in_array_index );
+		player_item.SetMember( "id", player_item_property );
+
+		player_item_property.SetUInt( options.player_profiles[i].team != local_player_team ? 2 : 1 );
+		player_item.SetMember( "team", player_item_property );
+
+		wchar_t profile_name_w[32];
+		mbstowcs_s( NULL, profile_name_w, 32, options.player_profiles[i].profile_name, _TRUNCATE );
+		player_item_property.SetStringW( profile_name_w );
+		player_item.SetMember( "name", player_item_property );
+
+		player_item_property.SetUInt( 66 );
+		player_item.SetMember( "ping", player_item_property );
+
+		player_item_property.SetUInt( 0 );
+		player_item.SetMember( "rank", player_item_property );
+
+		player_item_property.SetUInt( 0 );
+		player_item.SetMember( "artifacts", player_item_property );
+
+		players_array.SetElement( in_array_index, player_item );
+		++in_array_index;
+	}
+
+	get_ui( )->movie->Invoke( "root.list_set_players", NULL, &players_array, 1 );
 }
 
 void game_world_ui::initialize_base_points( network_core::packet_reader& packet )
@@ -303,61 +285,41 @@ void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths
 	get_ui( )->movie->Invoke( "root.list_update_player", NULL, &out_event, 1 );
 }
 
-// STATE[STUB]
+// claude@NOTE: the two Advance() statements (HUD + chat movie) DCE away here because
+// flash_movie::Advance is an empty stub in movie.cpp (a different TU we must not edit);
+// the target inlines the real GFx::Movie::Advance there, so the frame_delta fild/fmul +
+// virtual call are TRGT_ONLY. Cross-unit /Od wall - the rest of update_ui structure-matches.
 void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 {
-	// LOCALS
-	// u8 								i
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 
-	// CALL SITE INFO
-	// <0x5d4c1a> -> match_options& < unknown >()
-	// <0x5d4c35> -> player_ptr < unknown >( const u8 ) const
-	// <0x5d4c99> -> match_options& < unknown >()
-	// <0x5d4d02> -> bool < unknown >() const
-	// ******
+	get_ui( )->movie->Advance( frame_delta_ms * 0.001f, 0 );
 
-	// FUNCTION BODY[0x5d4bb0]: 38
-	// <0x5d4bd0>|0x020|-0x017:'346'
-	// <0>
-	// <1>
-	// <0x5d4bb9>|0x009|+0x01d:'349'
-	// <0x5d4bd6>|0x026|+0x01c:'349'
-	// <0>
-	// <0x5d4bf2>|0x042|+0x00c:'351'
-	// <0>
-	// <0x5d4bfe>|0x04e|+0x00f:'353'
-	// <0x5d4c0d>|0x05d|+0x017:'354'
-	// <0>
-	// <0x5d4c24>|0x074|+0x059:'356'
-	// <0x5d4c7d>|0x0cd|+0x026:'357'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d4ca3>|0x0f3|+0x02e:'361'
-	// <0>
-	// <0x5d4cd1>|0x121|+0x010:'363'
-	// <0x5d4ce1>|0x131|+0x007:'364'
-	// <0>
-	// <0x5d4ce8>|0x138|+0x006:'366'
-	// <0>
-	// <0x5d4cee>|0x13e|+0x01a:'368'
-	// <0x5d4d08>|0x158|+0x006:'369'
-	// <0>
-	// <0x5d4d0e>|0x15e|+0x00d:'371'
-	// <0>
-	// <0x5d4d1b>|0x16b|+0x003:'373'
-	// <0x5d4d1e>|0x16e|+0x003:'374'
-	// <0>
-	// <0x5d4d21>|0x171|+0x004:'376'
-	// <0>
-	// <0x5d4d25>|0x175|+0x00f:'378'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// ******
+	if ( m_players_list_visible )
+	{
+		base_network_client* const client = m_game_world.get_game( ).get_network_client( );
+		for ( u8 i = 0; i < client->match_options( ).players_count; ++i )
+		{
+			player_ptr player = client->get_player( i );
+			if ( player )
+				set_player_online_status( i, client->is_player_local( i ) );
+		}
+	}
+
+	m_game_world.get_game( ).get_chat_handler( ).get_movie( )->movie->Advance( frame_delta_ms * 0.001f, 0 );
+
+	if ( is_ui_minimap_rotable_old != is_ui_minimap_rotable )
+		reset_map_rotatable( );
+
+	update_minimap_local_player( );
+
+	if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
+		update_minimap_players( );
+
+	vector< profile_slot_enum >::iterator it	= m_slots_to_update.begin( );
+	vector< profile_slot_enum >::iterator end	= m_slots_to_update.end( );
+	for ( ; it != end; ++it )
+		update_quick_slot( *it );
 }
 
 void game_world_ui::on_unload( )
@@ -414,6 +376,14 @@ void game_world_ui::show_parametrized_message(
 	get_ui( )->movie->Invoke( "root.set_parameterized_message", NULL, message_val, 4 );
 }
 
+// claude@NOTE: PARKED - the who_team/victim_team computation reads concrete
+// network_client privates ([client+8] current player + an inline sound_emitter
+// c_ptr() carrier check + player+0x34 id field) not reachable through the abstract
+// base_network_client; who_name/victim_name come from player::get_profile_name()
+// passed in an LTCG register. Structure recoverable, but the team/name args need the
+// concrete client type + exact player field offsets. Next: map the concrete client's
+// victory-item-carrier member + player+0x34 id, then reconstruct the 8 SetMember pairs
+// (action_id/who_name/who_team/victim_name/victim_team/object_icon/extra_icon/mastery_icon).
 // STATE[STUB]
 void game_world_ui::on_victory_item_put_take( u8 player_id, bool is_taken, bool is_base )
 {
@@ -514,6 +484,13 @@ void game_world_ui::on_victory_item_put_take( u8 player_id, bool is_taken, bool 
 	// ******
 }
 
+// claude@NOTE: PARKED - same concrete-client wall as on_victory_item_put_take. The
+// "is the victim the local player" guard reads [client+8] (current player) + an inline
+// sound_emitter c_ptr() + player+0x34 id; who_team/victim_team mix that carrier check
+// with player::team(); combat_log_icon comes from dictionary_item.combat_log_icon
+// (items_dictionary().item_by_id(item_dict_id).combat_log_icon). Strings: action_id/
+// who_name/who_team/victim_name/victim_team + root.reset_damage_indicator. Next: map the
+// concrete client member + player+0x34 id to reconstruct the team/name args faithfully.
 // STATE[STUB]
 void game_world_ui::on_player_killed(
 	u8		victim_id,
@@ -681,6 +658,14 @@ void game_world_ui::on_damage_affect_applying(
 	}
 }
 
+// claude@NOTE: PARKED - 42-stmt minimap rebuild that iterates a
+// victory_items_container** range (locals show `it`) plus the m_base_points map, building
+// per-object flash_value level_objects with transform-derived position_x/position_y (.c.x /
+// -.c.z) and is_carrying_victory_item from the local player's inventory victory item. Needs
+// the victory_items_container iteration source (game_world accessor for the container range)
+// + the base-points loop shape. Structure is large but tractable once the container range
+// accessor is identified; heavy flash /Od + transform glue. Next: find the game_world
+// victory-items-container range accessor, then reconstruct the two object loops.
 // STATE[STUB]
 void game_world_ui::update_minimap_objects( )
 {
@@ -816,119 +801,74 @@ void game_world_ui::initialize_minimap( )
 	reset_map_rotatable( );
 }
 
-// STATE[STUB]
 void game_world_ui::update_minimap_players( )
 {
-	// LOCALS
-	// base_network_client* 			client
-	// player_ptr 						local_player
-	// flash_value 						players_array
-	// u32 								in_array_index
-	// u8 								i
-	// float 							position_y
-	// player_ptr 						current_player
-	// flash_value 						player_descr_value
-	// flash_value 						player_descr_value_property
-	// float 							position_x
-	// bool 							is_carrying_item
-	// ******
+	base_network_client* client = m_game_world.get_game( ).get_network_client( );
+	player_ptr local_player = client->get_current_player( );
+	if ( !local_player )
+		return;
 
-	// CALL SITE INFO
-	// <0x5d3531> -> player_ptr < unknown >( const u8 ) const
-	// <0x5d3550> -> game_team_id < unknown >() const
-	// <0x5d355b> -> game_team_id < unknown >() const
-	// <0x5d3798> -> game_team_id < unknown >() const
-	// ******
+	flash_value players_array;
+	get_ui( )->movie->CreateArray( &players_array );
 
-	// FUNCTION BODY[0x5d34b0]: 51
-	// <0x5d34b0>|0x000|+0x009:'810'	{
-	// <0x5d34b9>|0x009|+0x015:'811'
-	// <0>
-	// <0x5d34ce>|0x01e|+0x411:'813'
-	// <0>
-	// <1>
-	// <0x5d38df>|0x42f|-0x3e9:'816'
-	// <0>
-	// <1>
-	// <0x5d34f6>|0x046|+0x01e:'819'
-	// <0x5d3514>|0x064|+0x004:'820'
-	// <0x5d3518>|0x068|+0x008:'821'
-	// <0>
-	// <0x5d3520>|0x070|+0x013:'823'
-	// <0>
-	// <0x5d3533>|0x083|+0x3c6:'825'
-	// <0x5d38f9>|0x449|-0x394:'826'
-	// <0>
-	// <0x5d3565>|0x0b5|+0x004:'828'
-	// <0>
-	// <0x5d3569>|0x0b9|+0x011:'830'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d357a>|0x0ca|+0x044:'834'
-	// <0>
-	// <1>
-	// <0x5d35be>|0x10e|+0x021:'837'
-	// <0>
-	// <0x5d35df>|0x12f|+0x025:'839'
-	// <0x5d3604>|0x154|+0x03c:'840'
-	// <0>
-	// <0x5d3640>|0x190|+0x024:'842'
-	// <0x5d3664>|0x1b4|+0x043:'843'
-	// <0>
-	// <0x5d36a7>|0x1f7|+0x025:'845'
-	// <0x5d36cc>|0x21c|+0x03e:'846'
-	// <0>
-	// <0x5d370a>|0x25a|+0x043:'848'
-	// <0x5d374d>|0x29d|+0x042:'849'
-	// <0>
-	// <0x5d378f>|0x2df|+0x032:'851'
-	// <0x5d37c1>|0x311|+0x03a:'852'
-	// <0>
-	// <0x5d37fb>|0x34b|+0x029:'854'
-	// <0x5d3824>|0x374|+0x038:'855'
-	// <0>
-	// <0x5d385c>|0x3ac|+0x01a:'857'
-	// <0>
-	// <0x5d3876>|0x3c6|+0x07b:'859'
-	// <0x5d38f1>|0x441|+0x04f:'859'
-	// <0x5d3940>|0x490|-0x058:'860'
-	// <0>
-	// <0x5d38e8>|0x438|+0x079:'862'
-	// <0x5d3961>|0x4b1|      :'862'	}
-	// ******
+	u32 in_array_index = 0;
+	for ( u8 i = 0; i < 20; ++i )
+	{
+		player_ptr current_player = client->get_player( i );
+		if ( !current_player )
+			continue;
+
+		float const position_x = current_player->get_current( ).transform.c.x;
+		float const position_y = -current_player->get_current( ).transform.c.z;
+
+		flash_value player_descr_value;
+		get_ui( )->movie->CreateObject( &player_descr_value );
+		flash_value player_descr_value_property;
+		get_ui( )->movie->CreateObject( &player_descr_value_property );
+
+		player_descr_value_property.SetUInt( i );
+		player_descr_value.SetMember( "player_id", player_descr_value_property );
+
+		player_descr_value_property.SetNumber( position_x );
+		player_descr_value.SetMember( "player_pos_x", player_descr_value_property );
+
+		player_descr_value_property.SetNumber( position_y );
+		player_descr_value.SetMember( "player_pos_y", player_descr_value_property );
+
+		player_descr_value_property.SetNumber( current_player->get_current( ).transform.get_angles( math::rotation_zxy ).y );
+		player_descr_value.SetMember( "player_rotation_in_rad", player_descr_value_property );
+
+		player_descr_value_property.SetUInt( current_player->team( ) );
+		player_descr_value.SetMember( "team", player_descr_value_property );
+
+		bool const is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
+		player_descr_value_property.SetBoolean( is_carrying_item );
+		player_descr_value.SetMember( "is_carrying_item", player_descr_value_property );
+
+		players_array.SetElement( in_array_index, player_descr_value );
+		++in_array_index;
+	}
+
+	get_ui( )->movie->Invoke( "root.update_players", NULL, &players_array, 1 );
 }
 
-// STATE[STUB]
 void game_world_ui::update_minimap_local_player( )
 {
-	// LOCALS
-	// player_ptr 						current_player
-	// flash_value[4] 					player_descr_value
-	// float4x4 						current_player_transform
-	// ******
+	player_ptr current_player = m_game_world.get_game( ).get_network_client( )->get_current_player( );
+	if ( !current_player )
+		return;
+	if ( !current_player->is_alive( ) )
+		return;
 
-	// FUNCTION BODY[0x5d3300]: 16
-	// <0x5d3300>|0x000|+0x006:'865'	{
-	// <0x5d3306>|0x006|+0x019:'866'
-	// <0x5d331f>|0x01f|+0x022:'867'
-	// <0x5d3341>|0x041|+0x148:'868'
-	// <0x5d3489>|0x189|-0x13b:'869'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d334e>|0x04e|+0x027:'873'
-	// <0>
-	// <0x5d3375>|0x075|+0x03b:'875'
-	// <0x5d33b0>|0x0b0|+0x027:'876'
-	// <0x5d33d7>|0x0d7|+0x020:'877'
-	// <0x5d33f7>|0x0f7|+0x014:'878'
-	// <0x5d340b>|0x10b|+0x028:'879'
-	// <0>
-	// <0x5d3433>|0x133|+0x031:'881'
-	// <0x5d3464>|0x164|+0x039:'882'
-	// <0x5d349d>|0x19d|      :'882'	}
-	// ******
+	float4x4 const current_player_transform = current_player->get_current( ).transform;
+	flash_value player_descr_value[4];
+
+	player_descr_value[0].SetNumber( current_player_transform.c.x );
+	player_descr_value[1].SetNumber( -current_player_transform.c.z );
+	player_descr_value[2].SetNumber( current_player_transform.get_angles( math::rotation_zxy ).y );
+	player_descr_value[3].SetUInt( current_player ? current_player->team( ) : team_neutral );
+
+	get_ui( )->movie->Invoke( "root.update_local_player", NULL, player_descr_value, 4 );
 }
 
 void game_world_ui::reset_map_rotatable( )
@@ -995,123 +935,81 @@ void game_world_ui::create_slot_value(
 	slot_descr_value.SetMember( "hotkey", slot_descr_valuec_property );
 }
 
-// STATE[STUB]
 void game_world_ui::fill_quick_slots( )
 {
-	// LOCALS
-	// inventory_item_ptr 				item_in_back_slot
-	// u32 								in_array_index
-	// flash_value 						slots_array
-	// flash_value 						slot_descr_value
-	// inventory_item_props 			current_item_props
-	// dictionary_item 					dict_item
-	// inventory_item_props 			item_in_back_slot_props
-	// dictionary_item 					dict_item
-	// flash_value 						b_val
-	// flash_value[2] 					oxygene_props
-	// ******
+	flash_value slots_array;
+	get_ui( )->movie->CreateArray( &slots_array );
+	u32 in_array_index = 0;
+	for ( profile_slot_enum slot = quick_slot1; slot <= quick_slot6; slot = (profile_slot_enum)( slot + 1 ) )
+	{
+		flash_value slot_descr_value;
+		get_ui( )->movie->CreateObject( &slot_descr_value );
 
-	// CALL SITE INFO
-	// <0x5d2f29> -> bool < unknown >( inventory_item_props& )
-	// <0x5d30ef> -> bool < unknown >( inventory_item_props& )
-	// ******
+		inventory_item_ptr item = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( slot );
+		if ( !item )
+			continue;
 
-	// FUNCTION BODY[0x5d2e00]: 49
-	// <0x5d2e50>|0x050|-0x042:'954'
-	// <0x5d2e0e>|0x00e|+0x024:'955'
-	// <0x5d2e32>|0x032|+0x1eb:'956'
-	// <0x5d301d>|0x21d|-0x1cb:'957'
-	// <0>
-	// <1>
-	// <0x5d2e52>|0x052|+0x021:'960'
-	// <0>
-	// <0x5d2e73>|0x073|+0x066:'962'
-	// <0x5d2ed9>|0x0d9|+0x004:'963'
-	// <0x5d2edd>|0x0dd|+0x02a:'964'
-	// <0x5d2f07>|0x107|+0x016:'965'
-	// <0>
-	// <0x5d2f1d>|0x11d|+0x00e:'967'
-	// <0>
-	// <0x5d2f2b>|0x12b|+0x054:'969'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5d2f7f>|0x17f|+0x018:'975'
-	// <0x5d2f97>|0x197|+0x01a:'976'
-	// <0x5d2fb1>|0x1b1|+0x084:'977'
-	// <0>
-	// <0x5d3035>|0x235|+0x01e:'979'
-	// <0>
-	// <0x5d3053>|0x253|+0x072:'981'
-	// <0x5d30c5>|0x2c5|+0x008:'982'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d30cd>|0x2cd|+0x024:'986'
-	// <0>
-	// <0x5d30f1>|0x2f1|+0x054:'988'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5d3145>|0x345|+0x010:'992'
-	// <0>
-	// <0x5d3155>|0x355|+0x032:'994'
-	// <0>
-	// <0x5d3187>|0x387|+0x01a:'996'
-	// <0x5d31a1>|0x3a1|+0x029:'997'
-	// <0x5d31ca>|0x3ca|+0x035:'998'
-	// <0>
-	// <0x5d31ff>|0x3ff|+0x02f:'1000'
-	// <0x5d322e>|0x42e|+0x058:'1001'
-	// <0x5d3286>|0x486|+0x02c:'1002'
-	// ******
+		inventory_item_props current_item_props;
+		item->get_item_props( current_item_props );
+
+		dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item->get_dict_id( ) );
+
+		create_slot_value( slot, current_item_props, slot_descr_value );
+		slots_array.SetElement( in_array_index, slot_descr_value );
+		++in_array_index;
+	}
+
+	get_ui( )->movie->Invoke( "root.fill_slots", NULL, &slots_array, 1 );
+
+	inventory_item_ptr item_in_back_slot = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( back_slot );
+	if ( !item_in_back_slot )
+		return;
+
+	inventory_item_props item_in_back_slot_props;
+	item_in_back_slot->get_item_props( item_in_back_slot_props );
+
+	dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item_in_back_slot->get_dict_id( ) );
+
+	if ( dict_item.item_category == 4 )
+	{
+		flash_value b_val;
+		b_val.SetBoolean( true );
+		get_ui( )->movie->Invoke( "root.show_oxygen", NULL, &b_val, 1 );
+
+		flash_value oxygene_props[2];
+		oxygene_props[0].SetUInt( item_in_back_slot_props.use_in_percents );
+		oxygene_props[1].SetUInt( item_in_back_slot_props.m_amount );
+		get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
+	}
 }
 
-// STATE[STUB]
 void game_world_ui::update_quick_slot( profile_slot_enum slot )
 {
-	// LOCALS
-	// flash_value[2] 					slot_descr_value
-	// inventory_item_props 			current_item_props
-	// dictionary_item 					dict_item
-	// flash_value[2] 					oxygene_props
-	// ******
+	flash_value slot_descr_value[2];
+	get_ui( )->movie->CreateObject( &slot_descr_value[0] );
 
-	// CALL SITE INFO
-	// <0x5d2c03> -> bool < unknown >( inventory_item_props& )
-	// ******
+	inventory_item_ptr item = m_game_world.get_game( ).get_network_client( )->get_current_player( )->inventory( ).item_in_slot( slot );
 
-	// FUNCTION BODY[0x5d2b30]: 27
-	// <0x5d2b3c>|0x00c|+0x01c:'1007'
-	// <0x5d2b58>|0x028|+0x020:'1008'
-	// <0>
-	// <0x5d2b78>|0x048|+0x068:'1010'
-	// <0>
-	// <0x5d2be0>|0x0b0|+0x016:'1012'
-	// <0x5d2bf6>|0x0c6|+0x013:'1013'
-	// <0x5d2c09>|0x0d9|+0x006:'1014'
-	// <0>
-	// <0x5d2c0f>|0x0df|+0x009:'1016'
-	// <0>
-	// <0x5d2c18>|0x0e8|+0x029:'1018'
-	// <0>
-	// <0x5d2c41>|0x111|+0x012:'1020'
-	// <0>
-	// <0x5d2c53>|0x123|+0x013:'1022'
-	// <0x5d2c66>|0x136|+0x02d:'1023'
-	// <0x5d2c93>|0x163|+0x034:'1024'
-	// <0x5d2cc7>|0x197|+0x02e:'1025'
-	// <0x5d2cf5>|0x1c5|+0x013:'1026'
-	// <0x5d2d08>|0x1d8|+0x030:'1027'
-	// <0x5d2d38>|0x208|+0x002:'1028'
-	// <0>
-	// <0x5d2d3a>|0x20a|+0x011:'1030'
-	// <0x5d2d4b>|0x21b|+0x029:'1031'
-	// <0x5d2d74>|0x244|+0x02e:'1032'
-	// <0>
-	// ******
+	inventory_item_props current_item_props;
+	if ( !item->get_item_props( current_item_props ) )
+		disactivate_quick_slot( slot );
+
+	if ( slot == back_slot )
+	{
+		dictionary_item dict_item = m_game_world.get_game( ).items_dictionary( ).item_by_id( item->get_dict_id( ) );
+		if ( dict_item.item_category == 4 )
+		{
+			flash_value oxygene_props[2];
+			oxygene_props[0].SetUInt( current_item_props.use_in_percents );
+			oxygene_props[1].SetUInt( current_item_props.m_amount );
+			get_ui( )->movie->Invoke( "root.set_oxygen", NULL, oxygene_props, 2 );
+		}
+	}
+	else
+	{
+		create_slot_value( slot, current_item_props, slot_descr_value[0] );
+		get_ui( )->movie->Invoke( "root.fill_slot", NULL, slot_descr_value, 2 );
+	}
 }
 
 void game_world_ui::show_screen_message( pcstr message_id )
