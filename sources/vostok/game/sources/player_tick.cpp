@@ -205,20 +205,20 @@ void player::update_history_item_from_previous(
 	previous_transform = item_to_update.action.state.transform = m_target.physics_controller->get_transform( );
 }
 
-// claude@NOTE: paired (~69%). Ring walk from_index->head, update_history_item_from_previous
-// + inventory().action per item, then m_target.animation_player.set_object_transform. Now
-// that update_history_item_from_previous is bodied its call and the set_object_transform tail
-// no longer DCE-collapse. Byte residual: our LTCG out-lines inventory() to a `call` where the
-// target inlines the [this+8] deref, plus a loop line-table fusion (target fuses the
-// inventory().action + index=next stmts, we keep them split).
+// claude@NOTE: STRUCTURE MATCH (target 4 stmts == base 4). Ring walk from_index->head,
+// update_history_item_from_previous + inventory().action per item, then
+// m_target.animation_player.set_object_transform. The loop line-table fusion is now matched:
+// the target fuses inventory().action + index=next into one statement (line 276), so they are
+// written on one source line here too (was 5 stmts -> 4). Byte residual (~69%, not structure):
+// our LTCG out-lines inventory() to a `call` where the target inlines the [this+8] deref, and
+// the target tail-duplicates the post-loop set_object_transform across the empty-loop edge.
 void player::replay_history( const u32 from_index, float4x4& previous_transform )
 {
 	u32 index = from_index;
 	while( index != m_history.head( ) )
 	{
 		update_history_item_from_previous( m_history[ m_history.previous( index ) ], m_history[ index ], previous_transform );
-		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );
-		index = m_history.next( index );
+		inventory( ).action( (profile_slot_enum)m_history[ index ].action.weapon_state.slot_id, true );	index = m_history.next( index );
 	}
 
 	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
