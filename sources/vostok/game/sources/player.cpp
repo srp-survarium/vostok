@@ -22,6 +22,11 @@
 #include <vostok/game_core/hit_initiator.h>			// initiator->id
 #include <vostok/collision/animated_object.h>		// m_damage_collision->body_part_name + bone_collision_data
 #include <vostok/physics/world.h>					// get_physics_world()->remove rigid body
+#include <vostok/game_core/player_actions_subscriber.h>	// on_player_action notify loop (on_fire/jump/notify)
+#include <vostok/game_core/hit_receiver.h>			// static_cast<hit_receiver const*>(this) in notify loop
+#include "stats.h"						// m_game.get_stats().set_player_*_speed (update_speed_info)
+#include "stats_graph.h"				// m_*_speed_graph->add_value / average_value (update_speed_info)
+#include <vostok/network_core/packet_reader.h>		// reader.r<T>() in deserialize
 
 namespace survarium {
 
@@ -142,25 +147,12 @@ void `dynamic initializer for 's_show_client_player_command''( )
 	// ******
 }
 
-// STATE[STUB]
- player::~player( )
+player::~player( )
 {
-	// FUNCTION BODY[0x5e4310]: 14
-	// <0>
-	// <0x5e4310>|0x000|+0x032:'150'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e4342>|0x032|+0x032:'158'
-	// <0>
-	// <0x5e4374>|0x064|+0x013:'160'
-	// <0x5e4387>|0x077|+0x012:'161'
-	// <0>
-	// ******
+	DELETE( m_damage_collision );
+
+	DELETE( m_target.physics_controller );
+	DELETE( m_current.physics_controller );
 }
 
 // claude@NOTE: scene_renderer() cap - base_game_scene::scene_renderer() is a
@@ -234,102 +226,38 @@ void player::insert_alive( )
 	m_is_alive = true;
 }
 
+// claude@NOTE: PARKED on a cross-unit link collision. Full body reconstructed from
+// target 0x5e4c90 (26 addressed stmts; the 22 source lines 288-317 between
+// m_is_first_born and the 2nd demo guard DCE'd to zero code - a compiled-out
+// debug/log block):
+//   m_has_been_inserted = true;
+//   if ( !m_is_demo_player )
+//     inventory().setup_from_profile( m_game.network_client().match_options().player_profiles[id], m_game.items_dictionary() );  // 279/280
+//   else inventory().setup_demo_profile();                                                                                       // 283
+//   if ( m_is_first_born ) m_is_first_born = false;                                                                              // 286/287
+//   if ( !m_is_demo_player ) { m_text = m_game_scene.text_manager().create_text_w( profile_name ); m_text.set_visible(false); m_text.set_color(...); }  // 318-322
+//   m_current_time_in_ms = m_game.game_time_ms();                                                                                // 324
+//   m_target.animation_player.reset(true); m_current.animation_player.reset(true);                                              // 327/328
+//   if ( inventory().item_in_slot(weapon1_slot) ) inventory().action(weapon1_slot,true);                                        // 330/331
+//   else if ( inventory().item_in_slot(weapon2_slot) ) inventory().action(weapon2_slot,true);                                   // 332/333
+//   else m_target_active_object = m_empty_hands;                                                                                 // 334
+//   on_before_active_object_changed( m_current_active_object, m_target_active_object );                                          // 337
+//   m_current_active_object = m_target_active_object; m_current_active_object->activate( *this, m_game_scene );                  // 340-342
+//   if ( is_alive ) insert_alive();                                                                                              // 344/345
+//   m_is_visible = true; add_models_to_scene(); m_force_animation_selection = true; m_force_bones_recompute = true;              // 354
+// WALL: flash_text_manager::create_text_w is an INLINE stub in the game header AND an
+// out-of-line definition in scaleform movie.obj -> instantiating it in player.cpp gives
+// LNK2005 (multiply defined, vs movie.obj). The cure is to declare create_text_w
+// out-of-line in flash_text_manager.h like set_visible/set_color already are (resolve to
+// the single movie.cpp body) - a scaleform-glue header change, NOT a player.cpp concern.
+// Next step: out-line create_text_w in the flash_text_manager.h scaleform glue, then this
+// body links and pairs (capped on the GFx DrawText inline + active-object intrusive_ptr wall).
+// sushi@TODO: out-line flash_text_manager::create_text_w in flash_text_manager.h (like
+// flash_text::set_visible/set_color) to clear the LNK2005 vs movie.obj, then body insert().
 // STATE[STUB]
 void player::insert( const bool is_alive )
 {
-	// CALL SITE INFO
-	// <0x5e4cc0> -> match_options& < unknown >()
-	// <0x5e4e1a> -> void < unknown >( interactive_object_ptr const&, resources::resource_ptr< interactive_object, resources::unmanaged_intrusive_base > const& ) const
-	// <0x5e4e6e> -> void < unknown >( base_player&, engine& )
-	// ******
-
-	// FUNCTION BODY[0x5e4c90]: 85
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4c9d>|0x00d|+0x012:'277'
-	// <0>
-	// <0x5e4caf>|0x01f|+0x013:'279'
-	// <0x5e4cc2>|0x032|+0x024:'280'
-	// <0x5e4ce6>|0x056|+0x002:'281'
-	// <0>
-	// <0x5e4ce8>|0x058|+0x008:'283'
-	// <0>
-	// <1>
-	// <0x5e4cf0>|0x060|+0x009:'286'
-	// <0x5e4cf9>|0x069|+0x007:'287'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <0x5e4d00>|0x070|+0x00d:'318'
-	// <0>
-	// <0x5e4d0d>|0x07d|+0x031:'320'
-	// <0x5e4d3e>|0x0ae|+0x027:'321'
-	// <0x5e4d65>|0x0d5|+0x02d:'322'
-	// <0>
-	// <0x5e4d92>|0x102|+0x00c:'324'
-	// <0>
-	// <1>
-	// <0x5e4d9e>|0x10e|+0x014:'327'
-	// <0x5e4db2>|0x122|+0x00e:'328'
-	// <0>
-	// <0x5e4dc0>|0x130|+0x015:'330'
-	// <0x5e4dd5>|0x145|+0x00b:'331'
-	// <0x5e4de0>|0x150|+0x012:'332'
-	// <0x5e4df2>|0x162|+0x009:'333'
-	// <0x5e4dfb>|0x16b|+0x002:'334'
-	// <0>
-	// <1>
-	// <0x5e4dfd>|0x16d|+0x00e:'337'
-	// <0>
-	// <1>
-	// <0x5e4e0b>|0x17b|+0x011:'340'
-	// <0x5e4e1c>|0x18c|+0x038:'341'
-	// <0x5e4e54>|0x1c4|+0x01c:'342'
-	// <0>
-	// <0x5e4e70>|0x1e0|+0x006:'344'
-	// <0x5e4e76>|0x1e6|+0x006:'345'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x5e4e7c>|0x1ec|+0x00e:'354'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( is_alive );
 }
 
 // claude@NOTE: structure faithful; the lone diff is a line-table fold artifact -
@@ -451,6 +379,15 @@ void player::serialize_current_state( const u32 current_time_in_ms )
 	item.action.weapon_state.slot_id	= inventory( ).get_active_slot( );
 }
 
+// claude@NOTE: PARKED. 9 stmts (target 0x5e4210). Computes the skeleton bone count
+// from m_current.model's bone vector, alloca's a float4x4[count] buffer, then
+// m_current.animation_player.compute_bones(...) (vtable+0x3C), animated_object::update
+// on m_damage_collision, and TWO render::scene_renderer::update_skeleton calls gated
+// by m_show_client_player (10F33) / m_show_server_player-ish (10F32), plus an
+// animation::mixing::n_ary_tree::compute_bones_matrices on m_target. Next step: needs
+// render::scene_renderer::update_skeleton(render_model_instance_ptr const&, float4x4*,
+// u32) bodied (render module, matched last) + the animation_player compute_bones vtable
+// inline - cross-module render/animation, cannot land from player.cpp alone.
 // STATE[STUB]
 void player::compute_bones( const u32 current_time_in_ms )
 {
@@ -493,6 +430,13 @@ void player::compute_bones( const u32 current_time_in_ms )
 	// ******
 }
 
+// claude@NOTE: PARKED. 27 stmts (target 0x5e49f0), the heaviest render entry in the
+// TU: a render::base_scene_ptr + render::trample_desc local, gated draws of the
+// current/server skeleton models into the scene, debug rigid-body draws
+// (physics::bt_rigid_body_base*, float4x4), and trample/decal emission. Deep render
+// module (scene draw + trample) which matches LAST; cannot link/inline its render
+// facade calls until those render bodies exist. Next step: revisit after the render
+// scene_renderer / trample subsystem is bodied.
 // STATE[STUB]
 void player::render( const u32 __formal, const u32 current_time_in_ms )
 {
@@ -578,6 +522,11 @@ void player::render( const u32 __formal, const u32 current_time_in_ms )
 	// ******
 }
 
+// claude@NOTE: PARKED. Casts a physics ray from the camera (ray_from + ray_dir locals)
+// via physics::closest_ray_result, then drives the crosshair "can use" / hit-marker UI
+// from the result. Deep physics raycast + scaleform crosshair UI inlining (closest_ray_result
+// construction is a physics-module template; the UI feedback path is scaleform GFx). Next
+// step: revisit once the physics world raycast helper + the crosshair UI path are bodied.
 // STATE[STUB]
 void player::render_crosshair_info( )
 {
@@ -645,33 +594,25 @@ void player::render_crosshair_info( )
 	// ******
 }
 
-// STATE[STUB]
 void player::update_speed_info( )
 {
-	// LOCALS
-	// const float 						last_frame_angular_displacement
-	// ******
+	float3 const movement	= m_current.transform.c.xyz( ) - m_last_frame_position;
+	m_last_frame_position	= m_current.transform.c.xyz( );
+	if ( m_linear_speed_graph )
+	{
+		m_linear_speed_graph->add_value( m_game.last_frame_time( ), math::length( movement ) );
+		m_game.get_stats( ).set_player_linear_speed( m_linear_speed_graph->average_value( ) );
+	}
 
-	// FUNCTION BODY[0x5e3380]: 18
-	// <0>
-	// <0x5e3388>|0x008|+0x030:'689'
-	// <0x5e33b8>|0x038|+0x009:'690'
-	// <0x5e33c1>|0x041|+0x03d:'691'
-	// <0>
-	// <0x5e33fe>|0x07e|+0x026:'693'
-	// <0x5e3424>|0x0a4|+0x07d:'694'
-	// <0>
-	// <1>
-	// <0x5e34a1>|0x121|+0x014:'697'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e34b5>|0x135|+0x034:'701'
-	// <0>
-	// <0x5e34e9>|0x169|+0x01f:'703'
-	// <0x5e3508>|0x188|+0x08d:'704'
-	// <0>
-	// ******
+	const float rotation = m_current.transform.get_angles( math::rotation_zxy ).y;
+
+	const float last_frame_angular_displacement	= math::abs( rotation - m_last_frame_rotation );
+	m_last_frame_rotation						= rotation;
+	if ( m_angular_speed_graph )
+	{
+		m_angular_speed_graph->add_value( m_game.last_frame_time( ), last_frame_angular_displacement );
+		m_game.get_stats( ).set_player_angular_speed( math::rad2deg( m_angular_speed_graph->average_value( ) ) );
+	}
 }
 
 // claude@NOTE: paired ~93%. Reads the bullet controller transform (bt_character_controller::
@@ -693,6 +634,13 @@ void player::set_physics_controller_walk_vector( client_player_state& state )
 	state.physics_controller->set_walk_direction( state.transform.c.xyz( ) - physics_transform.c.xyz( ) );
 }
 
+// claude@NOTE: PARKED. Casts a physics ray (closest_ray_result) + collects usable_objects
+// into a vectora<usable_object*>, then filters them by a chain of usable_object_user_data
+// predicate calls (the 10+ bool < unknown >(usable_object_user_data*) call sites) and a
+// pcstr label read, picking the closest usable target for the "press use" prompt. Deep
+// physics raycast + the usable_object_user_data accessor cluster (game_core/usable_object).
+// Next step: identify the usable_object_user_data accessors + the physics ray helper, then
+// reconstruct the predicate filter loop.
 // STATE[STUB]
 void player::detect_usable_objects( const u32 current_time_in_ms )
 {
@@ -842,6 +790,15 @@ void player::hit(
 	m_game.network_client( ).on_player_hit_received( info );
 }
 
+// claude@NOTE: PARKED. 12 stmts (target 0x5e3920): damage_model()->hit_body_part(info...);
+// if it lands, two sound-emitter-gated crosshair feedbacks - the FIRST fires a Scaleform
+// GFx Movie::Invoke("root.crosshair_enemy_hit") when m_game's sound emitter bone matches,
+// the SECOND (if m_game_ui) builds a player_ptr (initiator from id or self) and calls
+// game_world_ui::on_hit_from_pos(float3) with intrusive_ptr churn; then a notify loop
+// (action 4 = shoot/character_hit) over the subscribers. Walls: Scaleform GFx Movie::Invoke
+// + the sound emitter bone accessor (m_game+0x3B8) are cross-module (scaleform/sound), and
+// the player_ptr intrusive_ptr management is the same accessor-inline wall. Next step:
+// reconstruct once GFx Movie::Invoke wrapper + the sound emitter accessor are named.
 // STATE[STUB]
 void player::apply_hit_directly( hit_info const& info, const u32 current_time_in_ms )
 {
@@ -1009,99 +966,90 @@ void player::unsubscribe_from_actions( player_actions_subscriber* subscriber )
 	);
 }
 
-// claude@NOTE: fully reversed, parked on the 0-iterator-local loop shape -
-//   const float movement = math::length( m_current.transform.c.xyz() - m_last_frame_position );  // 1108
-//   <loop over m_player_actions_subscribers>                                                       // 1110/1111/1113 (x3)
-//     if ( math::abs( movement ) >= math::epsilon_3 )                                               // 1115 (braced)
-//       if ( m_input.is_trying_to_sprint() )                                                        // 1117 (m_input.actions_mask & 0x200)
-//         subscriber->on_player_action( this, player_actions_subscriber::run, movement );           // 1118 (this upcasts to hit_receiver*, lea [+0x38])
-//       else                                                                                        // 1119
-//         subscriber->on_player_action( this, player_actions_subscriber::walk, movement );          // 1120
-// run/walk match the header enum values (1/0). The loop records NO named iterator
-// local (only `movement`) -> it is std::for_each with an inlined functor, not a
-// raw `for` with a named iterator. Needs the functor-struct form to match the
-// 0-local structure. (NB: on_fire/jump pass action 3/2 via the SAME enum, which
-// under the current header = jump/sprint - the real enum is walk0/run1/jump2/
-// shoot3/character_hit4; the header's sprint=2 is mis-positioned, a game_core fix.)
-// LAYOUT RESOLVED: notify/on_fire/jump all iterate m_player_actions_subscribers at
-// player+0x10E10; the differing literal offsets (notify 0x10E10, on_fire 0x10DE0,
-// subscribe_on_actions 0x10DD8) are the virtual-override `this` adjustments (notify
-// is a plain method this=player; on_fire overrides hit_initiator::on_fire so
-// this=player+0x30; subscribe_on_actions overrides hit_receiver:: so this=player+0x38).
-// The receiver arg is static_cast<hit_receiver const*>(this) (player+0x38). Wall is
-// the for_each functor form (0 iterator locals), not the layout. STATE[STUB]
+namespace {
+
+// the 3-arg notify variant: per subscriber, if the player moved (abs(movement)
+// past epsilon_3) report run while sprinting else walk, with the movement amount.
+struct player_movement_notifier {
+	hit_receiver const*		m_receiver;
+	bool					m_sprinting;
+	float					m_movement;
+	inline	player_movement_notifier( hit_receiver const* receiver, bool sprinting, float movement ) :
+		m_receiver( receiver ), m_sprinting( sprinting ), m_movement( movement ) { }
+	inline	void operator( )( player_actions_subscriber* subscriber ) const {
+		if ( math::abs( m_movement ) >= math::epsilon_3 )
+		{
+			if ( m_sprinting )
+				subscriber->on_player_action( m_receiver, player_actions_subscriber::run, m_movement );
+			else
+				subscriber->on_player_action( m_receiver, player_actions_subscriber::walk, m_movement );
+		}
+	}
+};
+
+} // namespace
+
+// claude@NOTE: std::for_each over m_player_actions_subscribers (0 iterator locals);
+// the only named local `movement` survives. run/walk = header enum 1/0. Receiver
+// is static_cast<hit_receiver const*>(this) (player+0x38). Same STLport for_each
+// inline-vs-call wall as on_fire/jump - the functor body inlines in the target
+// (its 1113/1115/1117-1120 statements) but our for_each stays out-of-line.
 void player::notify_actions_subscribers( )
 {
-	// LOCALS
-	// const float 						movement
-	// ******
-
-	// CALL SITE INFO
-	// <0x5e2aef> -> void < unknown >( hit_receiver const*, player_actions_subscriber::action, float )
-	// <0x5e2af8> -> void < unknown >( hit_receiver const*, player_actions_subscriber::action, float )
-	// ******
-
-	// FUNCTION BODY[0x5e2a30]: 15
-	// <0x5e2a30>|0x000|+0x003:'1107'	{
-	// <0x5e2a33>|0x003|+0x05e:'1108'
-	// <0>
-	// <0x5e2a91>|0x061|+0x006:'1110'
-	// <0x5e2a97>|0x067|+0x009:'1111'
-	// <0>
-	// <0x5e2aa0>|0x070|+0x05e:'1113'
-	// <0x5e2afe>|0x0ce|+0x00e:'1113'
-	// <0x5e2b0c>|0x0dc|-0x068:'1113'
-	// <0>
-	// <0x5e2aa4>|0x074|+0x02f:'1115'
-	// <0>
-	// <0x5e2ad3>|0x0a3|+0x00a:'1117'
-	// <0x5e2add>|0x0ad|+0x014:'1118'
-	// <0x5e2af1>|0x0c1|+0x002:'1119'
-	// <0x5e2af3>|0x0c3|+0x014:'1120'
-	// <0>
-	// <1>
-	// <0x5e2b07>|0x0d7|+0x008:'1123'
-	// <0x5e2b0f>|0x0df|      :'1123'	}
-	// ******
+	const float movement = math::length( m_current.transform.c.xyz( ) - m_last_frame_position );
+	std::for_each(
+		m_player_actions_subscribers.begin( ),
+		m_player_actions_subscribers.end( ),
+		player_movement_notifier( this, m_input.is_trying_to_sprint( ), movement ) );
 }
 
-// STATE[STUB]
+namespace {
+
+struct player_action_notifier {
+	hit_receiver const*						m_receiver;
+	player_actions_subscriber::action		m_action;
+	inline	player_action_notifier( hit_receiver const* receiver, player_actions_subscriber::action action ) :
+		m_receiver( receiver ), m_action( action ) { }
+	inline	void operator( )( player_actions_subscriber* subscriber ) const {
+		subscriber->on_player_action( m_receiver, m_action, 0.f );
+	}
+};
+
+} // namespace
+
+// claude@NOTE: std::for_each over m_player_actions_subscribers, 0 named locals
+// (the iterator lives in the inlined for_each, not on_fire). The target INLINES
+// the loop (begin/end direct member reads + the loop body = its 4 separate
+// statements 1127-1131); our STLport for_each / vector::begin()/end() stay
+// OUT-OF-LINE (one `call stlp_std::for_each`), so we emit 1 statement vs 4. The
+// for_each functor form is structurally correct; the residual is the STLport
+// header-template inline boundary, not steerable from player.cpp. The pushed
+// action byte 3 = player_actions_subscriber::jump under the current header enum
+// (game_core's enum is off-by-one vs the real walk0/run1/jump2/shoot3 - on_fire
+// is semantically `shoot`; match the literal 3, a game_core enum fix is separate).
 void player::on_fire( )
 {
-	// CALL SITE INFO
-	// <0x5e235a> -> void < unknown >( hit_receiver const*, player_actions_subscriber::action, float )
-	// ******
-
-	// FUNCTION BODY[0x5e2320]: 5
-	// <0x5e2324>|0x004|+0x007:'1127'
-	// <0x5e232b>|0x00b|+0x006:'1128'
-	// <0>
-	// <0x5e2331>|0x011|+0x00f:'1130'
-	// <0x5e2340>|0x020|+0x027:'1131'
-	// ******
+	std::for_each(
+		m_player_actions_subscribers.begin( ),
+		m_player_actions_subscribers.end( ),
+		player_action_notifier( this, player_actions_subscriber::jump ) );
 }
 
-// STATE[STUB]
+// claude@NOTE: stand_up() (virtual, this->vtable+0x44) then the same for_each
+// subscriber notify (action byte 2 = sprint under the current header enum;
+// semantically `jump`), then bullet_character_controller::jump on both controllers.
+// Same STLport for_each inline-vs-call wall as on_fire for the notify loop.
 void player::jump( )
 {
-	// CALL SITE INFO
-	// <0x5e264b> -> void < unknown >()
-	// <0x5e2670> -> void < unknown >( hit_receiver const*, player_actions_subscriber::action, float )
-	// ******
+	stand_up( );
+	std::for_each(
+		m_player_actions_subscribers.begin( ),
+		m_player_actions_subscribers.end( ),
+		player_action_notifier( this, player_actions_subscriber::sprint ) );
 
-	// FUNCTION BODY[0x5e2640]: 11
-	// <0x5e2643>|0x003|+0x00a:'1136'
-	// <0x5e264d>|0x00d|+0x006:'1137'
-	// <0x5e2653>|0x013|+0x00e:'1138'
-	// <0x5e2661>|0x021|+0x019:'1139'
-	// <0>
-	// <1>
-	// <0x5e267a>|0x03a|+0x00d:'1142'
-	// <0x5e2687>|0x047|+0x00b:'1143'
-	// <0x5e2692>|0x052|+0x00f:'1144'
-	// <0>
-	// <1>
-	// ******
+	m_target.physics_controller->jump( );
+	if ( m_use_physics_controller_for_current )
+		m_current.physics_controller->jump( );
 }
 
 void player::end_jump( )
@@ -1348,6 +1296,16 @@ physics::world* player::get_physics_world( )
 	return m_game_scene.get_physics_world( );
 }
 
+// claude@NOTE: PARKED. 7 stmts (target 0x5e4f60): base_player::tick_active_object(),
+// then a first-person-vs-sound-emitter animation-channel selection, a 0x4000-byte
+// alloca'd mutable_buffer, the active object's selected_animations(buffer, first_person)
+// expression, and two animation_player blocks (m_current at +0x87FC, m_target at +0x228,
+// after the 0x228 add) each: tick / set_target / tick, fed a boost::bind of
+// get_transform_for_animation_player. Walls: the boost::function1/bind_t/cmf2 functor
+// construction and animation_player::tick/set_target are deep animation-module + boost
+// machinery; the s_first_person_animations_only config command (a TU-static) is also
+// still a stub. Next step: revisit once the animation_player tick/set_target + the
+// boost::bind functor inline are reproducible and the config-command statics are bodied.
 // STATE[STUB]
 void player::select_animations( const u32 current_time_in_ms )
 {
@@ -1562,66 +1520,36 @@ void player::unsubscribe_animation_player( animation::reserved_channel_ids_enum 
 	m_target.animation_player.unsubscribe( channel_id, callback_uid );
 }
 
-// STATE[STUB]
 void player::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// profile_slot_enum 				server_target_active_slot
-	// float3 							position
-	// interactive_object_ptr 			server_current_active_object
-	// ******
+	float3 const position		= reader.r< float3 >( );
+	const float orientation		= reader.r< float >( );
+	const float look_pitch		= reader.r< float >( );
+	const bool is_alive			= reader.r< bool >( );
 
-	// CALL SITE INFO
-	// <0x5e53a0> -> void < unknown >()
-	// <0x5e53af> -> void < unknown >( interactive_object_ptr const&, resources::resource_ptr< interactive_object, resources::unmanaged_intrusive_base > const& ) const
-	// <0x5e5407> -> void < unknown >( base_player&, engine& )
-	// <0x5e548a> -> player_stamina& < unknown >()
-	// ******
+	if ( m_has_been_inserted )
+		remove( );
 
-	// FUNCTION BODY[0x5e52c0]: 42
-	// <0x5e52c7>|0x007|+0x016:'1627'
-	// <0x5e52dd>|0x01d|+0x008:'1628'
-	// <0x5e52e5>|0x025|+0x011:'1629'
-	// <0x5e52f6>|0x036|+0x006:'1630'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e52fc>|0x03c|+0x017:'1635'
-	// <0x5e5313>|0x053|+0x007:'1636'
-	// <0>
-	// <0x5e531a>|0x05a|+0x01c:'1638'
-	// <0x5e5336>|0x076|+0x00b:'1639'
-	// <0>
-	// <0x5e5341>|0x081|+0x009:'1641'
-	// <0x5e534a>|0x08a|+0x009:'1642'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e5353>|0x093|+0x02f:'1648'
-	// <0>
-	// <0x5e5382>|0x0c2|+0x00c:'1650'
-	// <0>
-	// <1>
-	// <0x5e538e>|0x0ce|+0x00b:'1653'
-	// <0x5e5399>|0x0d9|+0x009:'1654'
-	// <0x5e53a2>|0x0e2|+0x00f:'1655'
-	// <0x5e53b1>|0x0f1|+0x03a:'1656'
-	// <0x5e53eb>|0x12b|+0x01e:'1657'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e5409>|0x149|+0x079:'1663'
-	// <0>
-	// <0x5e5482>|0x1c2|+0x011:'1665'
-	// <0x5e5493>|0x1d3|+0x009:'1666'
-	// <0>
-	// <1>
-	// ******
+	set_character_transform( position, orientation, look_pitch );
+	insert( is_alive );
+
+	const profile_slot_enum server_current_active_slot	= reader.r< profile_slot_enum >( );
+	const profile_slot_enum server_target_active_slot	= reader.r< profile_slot_enum >( );
+
+	interactive_object_ptr server_current_active_object = inventory( ).item_in_slot( server_current_active_slot ).c_ptr( );
+	if ( m_current_active_object != server_current_active_object )
+	{
+		inventory( ).action( server_current_active_slot, true );
+		m_current_active_object->deactivate( );
+		on_before_active_object_changed( m_current_active_object, server_current_active_object );
+		m_current_active_object = server_current_active_object;
+		m_current_active_object->activate( *this, get_engine( ) );
+	}
+
+	m_target_active_object = inventory( ).item_in_slot( server_target_active_slot ).c_ptr( );
+
+	stamina( ).deserialize( reader );
+	inventory( ).deserialize( reader );
 }
 
 } // namespace survarium
