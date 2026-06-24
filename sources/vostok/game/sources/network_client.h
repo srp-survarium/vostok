@@ -51,17 +51,13 @@ public:
 										network_client						( game& g, const bool is_spectator );
 	virtual								~network_client						( );
 
-	// STATE[STUB]
 	virtual	void						load								( pcstr map_name, camera_director const& director ) override
 	{
-		// OTHER SYMBOLS
-		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
-		// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x9da12 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
-		// ******
-
-		// FUNCTION BODY[0xaea00]
-		// <0xaea00>|0x000|      :'53'	{
-		// ******
+		// target emits an UNguarded eater call (push director-ref; push map_name;
+		// call <folded-empty>; add esp,8) - the VOSTOK_UNREFERENCED_PARAMETERS guard
+		// (if(identity(false))) would DCE-collapse the whole block to a bare ret. The
+		// direct helper call survives. &director keeps camera_director incomplete-OK.
+		vostok::detail::unreferenced_parameter_helper( map_name, &director );
 	}
 
 	virtual	void						connect_to_login					(
@@ -75,14 +71,9 @@ public:
 
 	virtual	void						tick								( u32 current_time_in_ms, const bool is_game_paused ) override;
 
-	// STATE[STUB]
 	virtual	bool						has_bandwidth						( ) const override
 	{
-		return false;
-
-		// FUNCTION BODY[0x22700]
-		// <0x22700>|0x000|      :'57'	{
-		// ******
+		return true;
 	}
 
 	virtual	void						send_local_player_input				(
@@ -94,74 +85,46 @@ public:
 
 	virtual	void						initiate_kill_current_player		( ) override;
 
-	// STATE[STUB]
 	virtual	void						initiate_respawn_current_player		( ) override
 	{
-		// FUNCTION BODY[0x4f210]
-		// <0x4f210>|0x000|      :'65'	{
-		// ******
 	}
 
 	virtual	bool						is_player_local						( const u8 player_id ) const override;
 
 	virtual	void						unload								( ) override;
 
-	// STATE[STUB]
 	virtual	network::login_client&		login_client						( ) override
 	{
-		// FUNCTION BODY[0x92190]
-		// <0x92190>|0x000|      :'69'	{
-		// ******
 		return m_login_client;
 	}
 
-	// STATE[STUB]
 	virtual	class lobby_client&			lobby_client						( ) override
 	{
-		// FUNCTION BODY[0x921a0]
-		// <0x921a0>|0x000|      :'70'	{
-		// ******
 		return m_lobby_client;
 	}
 
-	// STATE[STUB]
 	virtual	class match_client&			match_client						( ) override
 	{
-		// FUNCTION BODY[0x921b0]
-		// <0x921b0>|0x000|      :'71'	{
-		// ******
 		return m_match_client;
 	}
 
-	// STATE[STUB]
 	virtual	class messaging_client&		messaging_client					( ) override
 	{
-		// FUNCTION BODY[0x921c0]
-		// <0x921c0>|0x000|      :'72'	{
-		// ******
 		return m_messaging_client;
 	}
 
 	// the obvious source (m_match_client's options); a matcher confirms
 	virtual	struct match_options&			match_options						( ) override { /* no source */ return m_match_client.get_match_options( ); }
 
-	// STATE[STUB]
 	virtual	void						on_player_hit_received				( hit_info const& info ) override
 	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'76'	{
-		// ******
 	}
 
 	virtual	player_ptr					get_player							( const u8 id ) const override;
 			game_world&					get_game_world						( );
 
-	// STATE[STUB]
 	inline	player_ptr					get_local_player					( )
 	{
-		// FUNCTION BODY[0x91910]
-		// <0x91910>|0x000|      :'82'	{
-		// ******
 		return m_local_player;
 	}
 
