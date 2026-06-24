@@ -7,9 +7,8 @@
 
 namespace survarium {
 
+// aggregate: brace-initialized ( { "name", "action" } ) in game_options.cpp
 struct main_menu_button_name_to_action {
-	inline		main_menu_button_name_to_action	( ) { /* no source */ }
-
 public:
 	/* 0x0000 */	fixed_string< 32 >		name;
 	/* 0x002c */	fixed_string< 32 >		action;

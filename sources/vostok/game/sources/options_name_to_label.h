@@ -7,9 +7,9 @@
 
 namespace survarium {
 
+// aggregate: the file-static label tables are brace-initialized
+// ( { "name", "label" } ) in game_options.cpp, one entry per statement
 struct options_name_to_label {
-	inline		options_name_to_label	( ) { /* no source */ }
-
 public:
 	/* 0x0000 */	fixed_string< 32 >		name;
 	/* 0x002c */	fixed_string< 32 >		label;
