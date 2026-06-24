@@ -74,6 +74,7 @@
 #include "object_lpv_occluder.h"
 #include "object_ambient_volume.h"
 #include "object_environment_probe.h"
+#include "object_sky_ambient_occlusion.h"
 #include "object_volume_fog.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
@@ -407,13 +408,21 @@ namespace vostok
 		ambient_volume.insert( );
 		ambient_volume.remove( );
 
-		// object_environment_probe: only load is matched (facade-free); insert/remove
-		// are render-facade-walled stubs (environment_probe_properties + scene_renderer
-		// cook methods). Same construct + reference pattern.
+		// object_environment_probe: only ctor/dtor/load are matched (facade-free);
+		// insert/remove are render-facade-walled stubs (environment_probe_properties +
+		// scene_renderer cook methods). Same construct + reference pattern.
 		survarium::object_environment_probe	environment_probe( scene );
 		environment_probe.load( cfg, "", cb );
 		environment_probe.insert( );
 		environment_probe.remove( );
+
+		// object_sky_ambient_occlusion: only ctor/dtor/load are matched (facade-free);
+		// insert/remove are render-facade-walled stubs (sky_ambient_occlusion_properties +
+		// scene_renderer cook methods). Same construct + reference pattern.
+		survarium::object_sky_ambient_occlusion	sky_ambient_occlusion( scene );
+		sky_ambient_occlusion.load( cfg, "", cb );
+		sky_ambient_occlusion.insert( );
+		sky_ambient_occlusion.remove( );
 
 		// object_volume_fog: load + insert + remove all matched now that the render
 		// volume_fog cook chain (volume_fog_parameters + scene_renderer cook methods)
