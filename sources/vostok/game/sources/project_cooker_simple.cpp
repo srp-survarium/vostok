@@ -21,22 +21,6 @@ namespace survarium {
 	resources::register_cook( this );
 }
 
-// claude@NOTE: PARKED - layout wall. The target inlines the deleted project's full
-// destructor here (24 stmts): it walks m_objects [+0x140], the respawn-point rb-tree
-// [+0x14c] (keyed map<u32, base_point_stats>, NOT our map<u32, respawn_point_core*>),
-// m_collision_geometries [+0x164], m_victory_items_containers [+0x1a0], then erases a
-// vector<fs_new::virtual_path_string> [+0x1a0/+0x1a4] and frees the project. That layout
-// does NOT match our reconstructed simple_game_project (game_project.h): the shipped class
-// had base_point_stats-valued respawn map + a virtual_path_string vector. Matching needs the
-// shipped simple_game_project layout, which would ripple through on_object_loaded /
-// create_game_objects / game_world / network_client. NEXT: reconstruct the shipped
-// simple_game_project member layout (own unit) before bodying this dtor. Buildability stub.
-// STATE[STUB]
-void project_cooker_simple::delete_resource( resources::resource_base* resource )
-{
-	DELETE( resource );
-}
-
 void project_cooker_simple::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string project_name( parent.get_requested_path( ) );
@@ -123,6 +107,22 @@ void project_cooker_simple::create_game_objects(
 	// variant< 32 >* 					ud
 	// resources::request 				request
 	// ******
+}
+
+// claude@NOTE: PARKED - layout wall. The target inlines the deleted project's full
+// destructor here (24 stmts): it walks m_objects [+0x140], the respawn-point rb-tree
+// [+0x14c] (keyed map<u32, base_point_stats>, NOT our map<u32, respawn_point_core*>),
+// m_collision_geometries [+0x164], m_victory_items_containers [+0x1a0], then erases a
+// vector<fs_new::virtual_path_string> [+0x1a0/+0x1a4] and frees the project. That layout
+// does NOT match our reconstructed simple_game_project (game_project.h): the shipped class
+// had base_point_stats-valued respawn map + a virtual_path_string vector. Matching needs the
+// shipped simple_game_project layout, which would ripple through on_object_loaded /
+// create_game_objects / game_world / network_client. NEXT: reconstruct the shipped
+// simple_game_project member layout (own unit) before bodying this dtor. Buildability stub.
+// STATE[STUB]
+void project_cooker_simple::delete_resource( resources::resource_base* resource )
+{
+	DELETE( resource );
 }
 
 } // namespace survarium
