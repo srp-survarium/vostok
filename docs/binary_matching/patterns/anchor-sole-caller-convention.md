@@ -24,10 +24,24 @@ callers force the standard ABI). Two distinct symptoms, both steerable from the 
    param + `ret 4`). On `is_player_current` this lifted 82.6% -> 98.7%, and fixing the
    compare ORDER to the source's (`m_current_player->id == id`, member loaded first) -> 99.6%.
 
+3. **Dead-construction ctor reads the scene from the anchor's static.** A tiny frameless
+   ctor `C( base_game_scene& s ) : m_game_scene( s )` constructed in the anchor as
+   `C obj( *s_scene )` and then NEVER USED is DSE-able: with a single dead construction
+   site LTCG inlines the reference load, so the ctor reads the member from `[s_scene]`
+   (`mov edi,[s_scene]` / `mov [esi+2Ch],edi`, frame `push edi;...;pop edi;ret`) instead
+   of the real thiscall param (`mov eax,[esp+4]` / `ret 4`) - 41% vs the target. FIX: make
+   the instance ESCAPE so its stored member is observable - source the scene through a
+   local ref off a `volatile` pointer, call a real method (`obj.load( cfg )`), and assign
+   `&obj` into the volatile sink. A LIVE sibling ctor in the same anchor that IS used
+   (methods address-taken, or `.load()` called) already keeps the standard ABI - mirror it.
+   On `artefact_container`/`victory_items_container` ctors this lifted 41%/38.5% -> 100%.
+   (Contrast: the bigger `victory_item` ctor with an `ebp` frame + `and esp` alignment stays
+   out-of-line at the standard ABI even dead - only the tiny frameless ctor gets specialised.)
+
 CAVEAT (see eax-this-convention.md): the sink forces `__thiscall` with `this` in ECX. If
 the TARGET keeps `this` in EAX (its real caller's convention), the sink will MATCH the param
 side but DIVERGE the this-register (`mov eax,[ecx+8]` vs target `[eax+8]`). Net is usually
 still a large win when the param/`ret 4` gap dominates; the residual this-in-eax is
 irreducible without the real caller. Weigh per function: param-convention gap -> sink helps;
 pure this-in-eax frameless leaf -> sink hurts (do NOT escape the address there).
-evidence-basis: positive (vostok game core-client, base_network_client::is_player_current 82.6->99.6%); anchor_game_clients.cpp runtime_id + member-fn-ptr sink
+evidence-basis: positive (vostok game core-client, base_network_client::is_player_current 82.6->99.6%); anchor_game_clients.cpp runtime_id + member-fn-ptr sink. Dead-construction variant: vostok game artefact_container/victory_items_container ctors 41%->100% via load()+address-sink escape in anchor_game_victory_item.cpp
