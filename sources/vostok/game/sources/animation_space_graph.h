@@ -63,7 +63,9 @@ private:
 	/* 0x0108 */	/* boost::noncopyable */
 	/* 0x0108 */	ai::navigation::world&		m_navigation_world;
 	/* 0x010c */	const float					m_agent_radius;
-	/* 0x0110 */	float						m_max_speed;
+	// sushi@TODO: max_speed() const writes m_max_speed (lazy cache); mutable vs const_cast
+	// is byte-identical so this is a style guess - confirm the original spelling.
+	/* 0x0110 */	mutable	float				m_max_speed;	// lazily computed by max_speed() const
 	/* 0x0114 */	const u32					m_animations_count;
 	/* 0x0118 */	const u32					m_mixes_count;
 	/* 0x011c */	const u32					m_edges_count;
