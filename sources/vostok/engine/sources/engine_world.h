@@ -57,6 +57,7 @@ public:
 	virtual int				get_exit_code			( ) const;
 
 	virtual	pcstr			get_mounts_path			( ) const;
+	virtual	pcstr			get_user_data_directory	( ) const;
 	virtual	void			create_physical_path	( string_path& result, pcstr resources_path, pcstr inside_resources_path ) const { strings::join( result, resources_path,inside_resources_path); }
 	virtual	HWND			get_main_window_handle	( ) const { return m_main_window_handle; }
 	virtual	HWND			get_render_window_handle( ) const { return m_render_window_handle; }
@@ -77,6 +78,7 @@ public:
 
 private:
 	virtual	void			tick					( );
+	virtual	void			on_crash				( );
 
 	// editor
 	virtual	pcstr			get_resources_path		( ) const;
