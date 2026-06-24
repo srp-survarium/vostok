@@ -1505,6 +1505,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sound_scene_proxies.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sound_scene.h"
 				>
 			</File>

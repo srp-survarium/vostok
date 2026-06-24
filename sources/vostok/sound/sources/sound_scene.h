@@ -106,13 +106,27 @@ public:
 									sound_cone_type cone_type
 								);
 
-	sound_instance_proxy_ptr	create_sound_instance_proxy	
+	sound_instance_proxy_ptr	create_sound_instance_proxy
 								(
 									sound_emitter_ptr emitter,
 									sound_propagator_emitter const& propagator_emitter,
 									world_user& user,
 									collision::geometry_instance& geometry,
 									float radius
+								);
+
+	sound_instance_proxy_ptr	new_hud_sound_instance_proxy
+								(
+									sound_emitter_ptr emitter,
+									sound_propagator_emitter const& propagator_emitter,
+									world_user& user
+								);
+
+	sound_instance_proxy_ptr	new_point_sound_instance_proxy
+								(
+									sound_emitter_ptr const& emitter,
+									sound_propagator_emitter const& propagator_emitter,
+									world_user& user
 								);
 
 		void					free_sound_instance_proxy	( sound_instance_proxy* proxy );
