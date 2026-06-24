@@ -16,7 +16,7 @@ public:
 
 	inline	void				r				( void* destination, u32 destination_size, u32 const size );
 	template < typename T >
-	inline	T					r				( );
+	__declspec( noinline )	T			r				( );
 
 	template < int count >
 	inline	char*				r_string		( char ( &string )[ count ] );

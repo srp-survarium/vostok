@@ -35,8 +35,9 @@ inline void packet_reader::r( void* destination, u32 destination_size, u32 const
 	m_pointer		+= size;
 }
 
+// EXPERIMENT (exp/packet-reader-noinline): force MSVC to keep r<T> out-of-line.
 template < typename T >
-inline T packet_reader::r( )
+__declspec( noinline ) T packet_reader::r( )
 {
 	T				result;
 	r				( &result, sizeof( result ), sizeof( result ) );
