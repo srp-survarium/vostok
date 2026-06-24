@@ -6,7 +6,13 @@
 #include "animations_selector.h"
 #include "game_world.h"				// m_game_world.get_game() ...
 #include "game.h"					// ... .game_time_ms() inlines the game clock
+#include "human_npc.h"				// m_owner.get_transform( )
 #include <vostok/animation/animation_player.h>	// subscribe( channel_id_on_animation_interval_end, ... )
+#include <vostok/animation/mixing_expression.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/memory_extensions.h>	// ALLOCA
 #include <vostok/ai/animation_item.h>
 #include <vostok/ai/movement_target.h>
 
@@ -43,22 +49,38 @@ namespace survarium {
 	);
 }
 
-// STATE[STUB]
-// claude@NOTE: lexeme wall - builds an animation_lexeme over a mutable_buffer from the
-// target expression, clones it into the buffer, then animation_player::set_target_and_tick.
-// Needs the mixing-lexeme machinery (create_animation_intervals / animation_lexeme /
-// binary_tree_animation_node). Parked behind the lexeme wall.
 void animations_selector::set_animation_player_target( animation::mixing::expression const& target_expression, const u32 time_in_ms )
 {
+	if ( !target_expression.is_empty( ) )
+		m_animation_player.set_target_and_tick( target_expression, time_in_ms, m_owner.get_transform( ) );
+	else
+	{
+		mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+		animation::mixing::animation_lexeme lexeme( animation::mixing::animation_lexeme_parameters( buffer, "default", m_default_animation, NULL, NULL ).weight_interpolator( animation::linear_interpolator( 0.25f ) ) );
+		m_animation_player.set_target_and_tick( lexeme, time_in_ms, m_owner.get_transform( ) );
+	}
 }
 
-// STATE[STUB]
-// claude@NOTE: builds a mixing::expression from the current controller over a 0x4000
-// mutable_buffer, swaps m_current_controller -> m_target_controller, sets the target
-// params, then set_animation_player_target. Depends on set_animation_player_target
-// (lexeme wall) and the controller make_expression chain. Parked behind the lexeme wall.
 void animations_selector::reset_animation_controller( const u32 time_in_ms )
 {
+	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+	if ( m_current_controller != m_target_controller )
+	{
+		animation::mixing::expression expression;
+		if ( m_current_controller )
+			expression = m_current_controller->try_finalize( *m_target_controller, buffer );
+
+		if ( expression.is_empty( ) )
+		{
+			m_current_controller = m_target_controller;
+			m_current_controller->initialize( );
+			m_current_controller->set_target( *m_target_controller_parameters );
+			m_target_controller_parameters->reset( );
+			expression = m_current_controller->selected_animations( buffer );
+		}
+
+		set_animation_player_target( expression, time_in_ms );
+	}
 }
 
 animation::callback_return_type_enum animations_selector::on_animation_interval_end( animation::animation_callback_params& params )
