@@ -18,15 +18,20 @@ namespace threading {
 // than inline in threading_functions_win_inline.h. The intrinsic expands to a
 // lock cmpxchg retry loop returning the previous value.
 
-atomic32_value_type interlocked_and		( atomic32_type& target, atomic32_value_type mask )
+// sushi@TODO: remove - noinline+Oy-off hack to beat /GL inline-vs-call wall (interlocked_or/and out-of-line); revisit if a faithful cause is found
+#pragma optimize( "y", off )
+
+__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type interlocked_and		( atomic32_type& target, atomic32_value_type mask )
 {
 	return				( _InterlockedAnd( &target, mask ) );
 }
 
-atomic32_value_type interlocked_or		( atomic32_type& target, atomic32_value_type mask )
+__declspec(noinline) DISABLE_LINKER_GL atomic32_value_type interlocked_or		( atomic32_type& target, atomic32_value_type mask )
 {
 	return				( _InterlockedOr( &target, mask ) );
 }
+
+#pragma optimize( "y", on )
 
 void set_current_thread_affinity_impl	(u32 const hardware_thread)
 {
