@@ -66,10 +66,8 @@ void anchor_game_network_clients( game& g )
 	// the linker must keep them callable via the normal ABI, pinning the convention.
 	{
 		bool ( base_network_client::* const is_cur )( const u8 ) const = &base_network_client::is_player_current;
-		game_team_id ( network_client::* const team )( pcstr ) = &network_client::get_player_team;
 		static pcvoid volatile s_sink = 0;
 		s_sink = *( pcvoid const* )&is_cur;
-		s_sink = *( pcvoid const* )&team;
 	}
 
 	{

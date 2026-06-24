@@ -38,10 +38,6 @@ void use_game_options( )
 	// (LNK2001). Pin its standalone COMDAT with an UNCONDITIONAL address-take into a
 	// volatile sink, which whole-program opt cannot prove dead.
 	static pcvoid volatile s_sink = 0;
-	bool ( swf_input_translator::* const proc_kb )(
-		input::world*, input::enum_keyboard, input::enum_keyboard_action, flash_movie*, u32 )
-		= &swf_input_translator::process_keyboard;
-	s_sink = *( pcvoid const* )&proc_kb;
 
 	// self-guarded: the compiler still emits every reference (/OPT:REF keeps the
 	// symbols) but the body never runs, so the placeholder refs are never deref'd.
