@@ -17,21 +17,19 @@ victory_item::victory_item( game_world& w ) :
 	m_transform = create_scale( float3( 1.f, 1.f, 1.f ) ) * create_rotation( float3( 0.f, 0.f, 0.f ) ) * create_translation( float3( 0.f, 0.f, 0.f ) );
 }
 
-void victory_item::tick( const u32, const u32 )
+void victory_item::unload( )
 {
+	victory_item_core::unload( );
+
+	m_scheduler->unregister( &m_scheduler_identifier );
+	m_scheduler = NULL;
+
+	if ( m_model )
+		m_game_world.scene_renderer( ).remove_model( m_game_world.render_scene( ), m_model->m_render_model );
 }
 
-pcstr victory_item::use_info( usable_object_user_data* user )
+void victory_item::tick( const u32, const u32 )
 {
-	if ( inventory_holder* holder = user->owner->cast_to_inventory_holder( ) )
-	{
-		if ( holder->inventory( ).get_victory_item( ) == NULL )
-			return "st_pickup_item";
-		else
-			return "st_cannot_pickup_item";
-	}
-
-	return "";
 }
 
 void victory_item::put( physics::world* world, float4x4 const& transform, scheduler& scheduler )
@@ -60,15 +58,17 @@ void victory_item::take( )
 		m_game_world.scene_renderer( ).remove_model( m_game_world.render_scene( ), m_model->m_render_model );
 }
 
-void victory_item::unload( )
+pcstr victory_item::use_info( usable_object_user_data* user )
 {
-	victory_item_core::unload( );
+	if ( inventory_holder* holder = user->owner->cast_to_inventory_holder( ) )
+	{
+		if ( holder->inventory( ).get_victory_item( ) == NULL )
+			return "st_pickup_item";
+		else
+			return "st_cannot_pickup_item";
+	}
 
-	m_scheduler->unregister( &m_scheduler_identifier );
-	m_scheduler = NULL;
-
-	if ( m_model )
-		m_game_world.scene_renderer( ).remove_model( m_game_world.render_scene( ), m_model->m_render_model );
+	return "";
 }
 
 
