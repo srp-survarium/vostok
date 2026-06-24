@@ -150,6 +150,12 @@ void network_client::on_connected_to_lobby( )
 	}
 }
 
+// claude@NOTE: caching the lobby_menu& once is faithful (the target loads
+// m_game.lobby_menu() ONCE and reuses it - inlining the accessor at each use
+// reloads it 3x and regresses to ~20%). Residual is register/FPO scheduling: the
+// target keeps the cached pointer in scratch eax with a `push ecx` FPO frame and
+// no save, where our base enregisters it in callee-saved esi (`push esi`). Same
+// single-load source shape; the optimizer's register/frame choice is not steerable.
 void network_client::on_disconnected_from_lobby( )
 {
 	lobby_menu& menu = m_game.lobby_menu( );
