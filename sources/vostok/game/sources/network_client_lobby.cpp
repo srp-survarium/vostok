@@ -159,11 +159,8 @@ void network_client::on_connected_to_lobby( )
 void network_client::on_disconnected_from_lobby( )
 {
 	lobby_menu& menu = m_game.lobby_menu( );
-	if ( menu.m_is_connected_to_lobby )
-	{
-		menu.m_is_connected_to_lobby = false;
-		menu.show_disconnected_message( true );
-	}
+	// target folds the guarded body onto one source line (single line-table entry)
+	if ( menu.m_is_connected_to_lobby ) { menu.m_is_connected_to_lobby = false; menu.show_disconnected_message( true ); }
 }
 
 // claude@NOTE: structure recovered + faithful (reads dict_id u16 / id u32 /

@@ -91,6 +91,11 @@ animation_space_edge const& animation_space_graph::edge( const u32 index ) const
 	return get_edges( )[ index ];
 }
 
+// claude@NOTE: 1 named local (player) matching the target - the loop body is a single
+// statement (get_movement(...).translation.length() inlined; the prior `movement` named
+// local was a phantom the target does not record). The byte residual is dominated by
+// get_movement still being a STATE[STUB] (its body is unrecovered) plus the EH-scope brace
+// line the target emits for player's destructor (a lone TRGT_ONLY branch row, not steerable).
 float animation_space_graph::max_speed( ) const
 {
 	if ( m_max_speed < 0.f )
@@ -99,10 +104,7 @@ float animation_space_graph::max_speed( ) const
 
 		m_max_speed = 0.f;
 		for ( animation_space_vertex const* vertex = get_animations( ); vertex != get_animations( ) + m_animations_count; ++vertex )
-		{
-			animation_space_vertex_id const movement = get_movement( player, vertex, vertex, 1.f );
-			m_max_speed = math::max( m_max_speed, movement.translation.length( ) );
-		}
+			m_max_speed = math::max( m_max_speed, get_movement( player, vertex, vertex, 1.f ).translation.length( ) );
 
 		player.reset( true );
 	}
