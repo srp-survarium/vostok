@@ -32,9 +32,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 
 weapon_core_show_state::weapon_core_show_state(
 	weapon_core&							weapon,
-	float									animation_timescale,
+	const float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
+	const u32										animations_count,
 	bool&									is_shown
 ) : weapon_core_show_state_base( weapon, is_shown ),
 	m_time_scale( animation_timescale )
@@ -71,7 +71,7 @@ animation::mixing::expression weapon_core_show_state::weapon_and_hands_expressio
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
-weapon_lexeme_pair weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair weapon_core_show_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-show";
 
@@ -128,7 +128,7 @@ weapon_core_show_state* weapon_core_state_cook_template<weapon_core_show_state>:
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 )
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[0] )->length_in_frames( );

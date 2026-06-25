@@ -39,7 +39,7 @@ player_logic_sprint_state::player_logic_sprint_state( weapon_user_animations_sel
 	m_stamina_subscriber.subscription_callback = boost::bind( &player_logic_sprint_state::on_stamina_depleted, this );
 }
 
-std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_sprint_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
+std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_sprint_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETER( weapon_parameters );
 

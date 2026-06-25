@@ -40,7 +40,7 @@ btRigidBody* bt_animated_rigid_body::get_rigid_body( )
 	return m_bt_body;
 }
 
-u16 bt_animated_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const
+u16 bt_animated_rigid_body::get_triangle_material( const s32 triangle_id, const bool is_shape_index ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( triangle_id, is_shape_index );
 	return m_game_material_id;
@@ -61,7 +61,7 @@ float4x4 bt_animated_rigid_body::get_transform( ) const
 	return from_bullet( m_bt_body->getWorldTransform( ) );
 }
 
-void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
+void bt_animated_rigid_body::update_bone_matrix( const u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
 	btTransform new_child_transform = from_vostok( new_transform );
 	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );
@@ -74,14 +74,14 @@ math::aabb bt_animated_rigid_body::get_aabb( ) const
 	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );
 }
 
-float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
+float4x4 bt_animated_rigid_body::get_bone_transform( const u32 index ) const
 {
 	btTransform& transform = m_shape->getChildTransform( index );
 	return from_bullet ( transform );
 }
 
 // sushi@TODO: switch statement problems
-static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
+static btCollisionShape* new_bt_primitive( const collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
 	switch ( type )
 	{

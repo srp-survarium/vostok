@@ -38,7 +38,7 @@ udp_match_client::udp_match_client(
 {
 	m_connection.set_on_disconnect( boost::bind( &udp_match_client::on_disconnect, this, _1 ) );
 }
-void udp_match_client::on_error( client_error_codes_enum, boost::system::error_code )
+void udp_match_client::on_error( const client_error_codes_enum, const boost::system::error_code )
 {
 	m_connection.instant_disconnect( disconnected_by_connection_lost );
 }

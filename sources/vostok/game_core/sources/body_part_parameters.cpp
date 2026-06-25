@@ -18,12 +18,12 @@ namespace survarium {
 
 body_part_parameters::body_part_parameters(
 	pcstr				name,
-	float				health,
-	float				regeneration_speed,
-	float				regeneration_timeout,
-	bool				can_be_assigned,
+	const float				health,
+	const float				regeneration_speed,
+	const float				regeneration_timeout,
+	const bool				can_be_assigned,
 	damage_model&		owner,
-	u8					damage_group
+	const u8					damage_group
 ) :
 	next					( NULL ),
 	m_damage_model			( owner ),
@@ -129,10 +129,10 @@ static float g_arp_arm_coeff = 1.0;
 
 void body_part_parameters::hit_by_type(
 	pcstr				hit_type,
-	u32					time_in_ms,
-	float				amount,
-	float				armor_piercing,
-	bool				__formal,
+	const u32					time_in_ms,
+	const float				amount,
+	const float				armor_piercing,
+	const bool				__formal,
 	damage_protector*	prot
 )
 {
@@ -174,12 +174,12 @@ void body_part_parameters::hit_by_type(
 	params->apply_damage( delta, time_in_ms );
 }
 
-void body_part_parameters::increase_health( float amount )
+void body_part_parameters::increase_health( const float amount )
 {
 	m_health = math::clamp_r<float>( m_health + amount, 0.0f, m_max_health );
 }
 
-void body_part_parameters::decrease_health( float amount )
+void body_part_parameters::decrease_health( const float amount )
 {
 	m_health = math::clamp_r<float>( m_health - amount, 0.0f, m_max_health );
 }
@@ -212,7 +212,7 @@ void body_part_parameters::regenerate( const u32 time_delta_ms, const u32 curren
 		update_affects( current_time_in_ms );
 }
 
-void body_part_parameters::update_affects( u32 current_time_in_ms )
+void body_part_parameters::update_affects( const u32 current_time_in_ms )
 {
 	for ( s32 i = m_affects.size( ) - 1 ; i >= 0; --i )
 	{
@@ -226,7 +226,7 @@ void body_part_parameters::update_affects( u32 current_time_in_ms )
 	}
 }
 
-void body_part_parameters::cancel_affect_by_force( hit_affects_type_enum affect )
+void body_part_parameters::cancel_affect_by_force( const hit_affects_type_enum affect )
 {
 	for ( s32 i = m_affects.size( ) - 1 ; i >= 0 ; --i )
 	{
@@ -242,7 +242,7 @@ void body_part_parameters::cancel_affect_by_force( hit_affects_type_enum affect 
 
 // Applies affects to all bodyparts. sushi@TODO: There is apply_affects also.
 //
-void body_part_parameters::check_affects( u32 current_time_in_ms )
+void body_part_parameters::check_affects( const u32 current_time_in_ms )
 {
 	for ( affects_threshold* it_threshold = m_thresholds.front( ) ; it_threshold ; it_threshold = m_thresholds.get_next_of_object( it_threshold ) )
 		if ( m_health <= m_max_health * it_threshold->value( ) )
@@ -251,7 +251,7 @@ void body_part_parameters::check_affects( u32 current_time_in_ms )
 		}
 }
 
-bool body_part_parameters::is_affect_applied( hit_affects_type_enum	affect )
+bool body_part_parameters::is_affect_applied( const hit_affects_type_enum	affect )
 {
 	for ( u32 i = 0; i < m_affects.size( ); ++i )
 	{
@@ -261,14 +261,14 @@ bool body_part_parameters::is_affect_applied( hit_affects_type_enum	affect )
 	return false;
 }
 
-bool body_part_parameters::has_affect_protector( hit_affects_type_enum affect )
+bool body_part_parameters::has_affect_protector( const hit_affects_type_enum affect )
 {
 	protect_affect_predicate p( m_name.c_str( ), affect );
 	m_damage_protectors.for_each( p );
 	return p.m_result;
 }
 
-void body_part_parameters::apply_affects( affects_threshold const* threshold_reached, u32 current_time_in_ms )
+void body_part_parameters::apply_affects( affects_threshold const* threshold_reached, const u32 current_time_in_ms )
 {
 	hit_affects_type_enum const* it_begin = threshold_reached->get_affects( );
 	hit_affects_type_enum const* it_end = it_begin + threshold_reached->get_affects_count( );

@@ -37,12 +37,12 @@ public:
 
 			void		draw_cross			(
 							float3 const&			p,
-							float					half_size,
+							const float					half_size,
 							math::color const&		c,
 							bool					use_depth
 						);
 
-			void		draw_origin			( float4x4 const& matrix, float half_size, bool use_depth );
+			void		draw_origin			( float4x4 const& matrix, const float half_size, bool use_depth );
 
 			void		draw_line_capsule	(
 							float4x4 const&			matrix,

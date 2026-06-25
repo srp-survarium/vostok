@@ -20,7 +20,7 @@ public:
 
 			void		set_breath_holding_params	( breath_holding_params const* params );
 
-			void		tick						( u32 current_time_in_ms, float time_scale );
+			void		tick						( const u32 current_time_in_ms, const float time_scale );
 
 			void		hold_breath					( bool value );
 

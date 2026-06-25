@@ -12,9 +12,9 @@ namespace survarium {
 
 weapon_core_shotgun_reload_one_round_substate::weapon_core_shotgun_reload_one_round_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_shotgun_reload_base_substate(
 		weapon, animation_time_scale,
 		animations,

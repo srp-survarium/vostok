@@ -216,8 +216,8 @@ medkit::damage_protection const* medkit::find_damage_protection( pcstr body_part
 float medkit::reduce_damage(
 	pcstr		body_part_name,
 	pcstr		damage_type,
-	float		amount,
-	float		armor_piercing
+	const float		amount,
+	const float		armor_piercing
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( armor_piercing );

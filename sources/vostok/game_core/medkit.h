@@ -34,7 +34,7 @@ private:
 			void								load						( configs::binary_config_value config );
 
 protected:
-			void								active_tick					( u32 frame_time_ms );
+			void								active_tick					( const u32 frame_time_ms );
 			void								set_active					( bool bactive );
 	// body inferred from active_tick's inlined tail-if bytes (cmp m_activity_time_ms,0; sete; movzx)
 	inline	bool								empty						( ) const { return !m_activity_time_ms; }
@@ -42,8 +42,8 @@ protected:
 			float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
-													float		amount,
-													float		armor_piercing
+													const float		amount,
+													const float		armor_piercing
 												);
 private:
 	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable

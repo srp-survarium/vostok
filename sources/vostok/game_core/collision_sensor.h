@@ -29,7 +29,7 @@ public:
 	virtual	void					resolve_links					( base_project* p, configs::binary_config_value cfg ) override;
 	virtual	bool					is_filter_passed				( physics::base_physics_object* object ) const;
 
-	virtual	void					tick							( u32 time_delta_ms, u32 current_time_ms );
+	virtual	void					tick							( const u32 time_delta_ms, const u32 current_time_ms );
 	virtual	void					load							( configs::binary_config_value const& cfg );
 
 	inline	bool					is_active						( ) const { /* no source */ }

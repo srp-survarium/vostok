@@ -62,7 +62,7 @@ bool remove_loosed_ptrs_predicate( base_physics_object* object )
 	return object == NULL;
 }
 
-void collision_sensor::tick( u32 time_delta_ms, u32 current_time_ms )
+void collision_sensor::tick( const u32 time_delta_ms, const u32 current_time_ms )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( time_delta_ms, current_time_ms );
 

@@ -18,10 +18,10 @@ public:
 
 			void		set_character_recoil_params	( character_recoil_params const* params );
 			void		tick						(
-							weapon_user_state_enum		character_state,
-							bool						is_aiming,
-							u32							current_time_in_ms,
-							float						time_scale
+							const weapon_user_state_enum		character_state,
+							const bool						is_aiming,
+							const u32							current_time_in_ms,
+							const float						time_scale
 						);
 	inline	float		get_value					( ) const { return m_current_value; }
 

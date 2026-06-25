@@ -102,7 +102,7 @@ player_logic_base_state& weapon_user_animations_selector::current_state( ) const
 	return *result;
 }
 
-std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> weapon_user_animations_selector::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
+std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> weapon_user_animations_selector::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const
 {
 	return current_state( ).selected_animations( buffer, weapon_parameters, is_third_view );
 }
@@ -286,12 +286,12 @@ float weapon_user_animations_selector::look_time_factor( ) const
 }
 
 float weapon_user_animations_selector::look_time_factor_calculator(
-	float		animation_length,
-	float		animation_time_before_time_scale_starts,
-	u32			time_scale_start_time_in_ms,
-	u32			current_time_in_ms,
-	u32			target_time_in_ms,
-	float		time_scale
+	const float		animation_length,
+	const float		animation_time_before_time_scale_starts,
+	const u32			time_scale_start_time_in_ms,
+	const u32			current_time_in_ms,
+	const u32			target_time_in_ms,
+	const float		time_scale
 ) const
 {
 	// claude@NOTE: target L313 is a surviving LOG_* of these 5 params: in gold both
@@ -320,7 +320,7 @@ animation::callback_return_type_enum weapon_user_animations_selector::on_interva
 	return animation::callback_return_type_call_me_again;
 }
 
-void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
+void weapon_user_animations_selector::on_broken_limb_affect( pcstr bodypart, const hit_affects_type_enum affect, const affect_event_type_enum type )
 {
 	ASSERT_T_U( bodypart, type );
 	ASSERT_CMP_U( affect, ==, 4 );

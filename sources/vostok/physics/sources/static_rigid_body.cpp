@@ -37,7 +37,7 @@ void bt_static_rigid_body::apply_impulse( float3 const& impulse, float3 const& p
 	m_bt_body->applyImpulse( from_vostok( impulse ), rel_pos );
 }
 
-u16 bt_static_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const {
+u16 bt_static_rigid_body::get_triangle_material( const s32 triangle_id, const bool is_shape_index ) const {
 	return m_shape->get_triangle_material( triangle_id, is_shape_index );
 }
 

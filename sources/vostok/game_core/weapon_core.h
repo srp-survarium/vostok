@@ -126,7 +126,7 @@ public:
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
 			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
 
-	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override;
+	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override;
 
 	virtual	void								set_target						( weapon_targets target );
 
@@ -142,7 +142,7 @@ public:
 			void								instant_idle_end				( );
 			void								instant_toggle_start			( );
 			void								instant_toggle_end				( );
-			void								instant_fire					( u32 current_time_in_ms );
+			void								instant_fire					( const u32 current_time_in_ms );
 
 			void								reload_one_round				( );
 	virtual	void								set_fire_bullet_transform		( float4x4 const& fire_bullet_transform );
@@ -219,7 +219,7 @@ public:
 private:
 	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
 			bool								target_predicate						( weapon_targets target ) const { return m_target == target; }
-			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
+			bool								target_and_animation_ended_predicate	( const weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
 
 private:
@@ -231,7 +231,7 @@ private:
 	// claude@MATCH: target mangles these AAE (private), not QAE.
 			float3								get_dispersed_bullet_dir		( );
 
-			void								update_dispersion				( bool is_moving, u32 current_time_in_ms );
+			void								update_dispersion				( const bool is_moving, u32 current_time_in_ms );
 
 			animation::callback_return_type_enum	on_animation_ik_interval		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
@@ -246,8 +246,8 @@ private:
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
-													u32									user_matrices_count,
-													u32									current_time_in_ms,
+													const u32									user_matrices_count,
+													const u32									current_time_in_ms,
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	user_animation_player
@@ -271,7 +271,7 @@ private:
 	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
 	// top-level const on every pointer.
 	virtual	void								on_skeleton_matrices_changed	(
-													u32					current_time_in_ms,
+													const u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
 													float4x4 const* const	weapon_matrices_begin,
 													float4x4 const* const	weapon_matrices_end,
@@ -281,43 +281,43 @@ private:
 													float4x4 const&		user_weapon_transform
 												);
 
-	virtual	void								process_finger_correction		( u32 current_time_in_ms, float4x4* const user_matrices );
+	virtual	void								process_finger_correction		( const u32 current_time_in_ms, float4x4* const user_matrices );
 
 	// claude@MATCH: target mangles this ABE (private const), not QBE.
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
-													bool								is_third_view,
-													weapon_user_state_enum				weapon_user_state_id,
+													const bool								is_third_view,
+													const weapon_user_state_enum				weapon_user_state_id,
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
 	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast_checked< weapon_core_base_state* >( m_logic->current_state( ) ); }
 
 			float								computed_backward_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
 												);
 
 			float								computed_horizontal_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
 												);
 
 			float								computed_vertical_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
 												);
 
 	inline	float								backward_recoil_value			( ) const { /* no source */ }
@@ -335,7 +335,7 @@ private:
 
 private:
 			animation::callback_return_type_enum
-												on_hand_ik_event				( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand );
+												on_hand_ik_event				( animation::animation_callback_params& params, const hand_to_weapon_ik_processor::hands_enum hand );
 protected:
 	virtual	void								on_user_sprint					( bool user_is_sprinting );
 public:
@@ -343,7 +343,7 @@ public:
 private:
 	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.
 			void								update_recoil					( u32 current_time_in_ms, const float time_scale );
-			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
+			void								update_breath_vibration			( const bool is_holding_breath, u32 current_time_in_ms, const float time_scale );
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
 	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it

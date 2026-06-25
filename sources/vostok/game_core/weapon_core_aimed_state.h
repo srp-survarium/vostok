@@ -28,18 +28,18 @@ class weapon_core;
 class weapon_core_aimed_state : public weapon_core_aimed_state_base {
 private:
 	// ctor mangles ??0...@@AAE@... -> private, non-const (objdiff pairs by mangled name)
-				explicit							weapon_core_aimed_state		( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count );
+				explicit							weapon_core_aimed_state		( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count );
 
 	// mangles ?...@@EBE... -> private virtual, const
 	virtual	animation::mixing::expression		weapon_and_hands_expression	(
 													mutable_buffer&							buffer,
-													bool									is_third_view,
-													weapon_user_state_enum					user_state_id,
+													const bool									is_third_view,
+													const weapon_user_state_enum					user_state_id,
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const override;
 
 	// mangles ?...@@ABE... -> private, const
-				weapon_lexeme_pair					get_weapon_lexeme_pair		( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
+				weapon_lexeme_pair					get_weapon_lexeme_pair		( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const;
 
 private:
 	/* 0x0000 */	/* weapon_core_aimed_state_base */

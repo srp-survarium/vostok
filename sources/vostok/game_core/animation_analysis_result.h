@@ -11,7 +11,7 @@ namespace survarium {
 
 class animation_analysis_result : public resources::unmanaged_resource {
 public:
-	explicit	animation_analysis_result	( u32 legs_count );
+	explicit	animation_analysis_result	( const u32 legs_count );
 	virtual		~animation_analysis_result	( );
 
 public:

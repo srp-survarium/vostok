@@ -37,7 +37,7 @@ void player_logic_jump_state::finalize( )
 	m_logic.deactivate( );
 }
 
-std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_jump_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const
+std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> player_logic_jump_state::selected_animations( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const
 {
 	return m_logic.selected_animations( buffer, weapon_parameters, is_third_view );
 }

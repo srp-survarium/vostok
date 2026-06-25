@@ -44,7 +44,7 @@ public:
 	/* bt_rigid_body_base overrides */
 	virtual btRigidBody*		get_rigid_body			( )														override;
 
-	virtual u16					get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			override;
+	virtual u16					get_triangle_material	( const s32 triangle_id, const bool is_shape_index ) const			override;
 	virtual void				apply_impulse			( float3 const& impulse, float3 const& point_in_world )	override;
 
 	virtual void				set_transform			( float4x4 const& transform )							override;
@@ -58,9 +58,9 @@ public:
 	virtual btCollisionObject*	get_bt_collision_obect	( )	override;
 
 	/* self methods: sushi@NOTE: Seems like those didn't inline in target, but did here */
-	void		update_bone_matrix	( u32 index, float4x4 const& new_transform, bool recalculate_aabb );
+	void		update_bone_matrix	( const u32 index, float4x4 const& new_transform, bool recalculate_aabb );
 	math::aabb	get_aabb			( )				const;
-	float4x4	get_bone_transform	( u32 index )	const;
+	float4x4	get_bone_transform	( const u32 index )	const;
 
 private:
 	/* 0x0000 */ /* fields for physics::bt_rigid_body_base */
