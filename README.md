@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 57.03% fuzzy (+1.72%) &middot; 5,329 / 12,915 functions exact (41.26%, +348 best-ever).**
+**Overall: 57.03% fuzzy (+1.72%) &middot; 5,332 / 12,915 functions exact (41.29%, +348 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -29,14 +29,14 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `sound`         |    69 |   214 / 509 (42.0%) |            217 (+3) | 53.9% |     +0.1% |
 | `collision`     |    52 |   412 / 503 (81.9%) |            415 (+3) | 95.6% |     +0.2% |
 | `scaleform`     |    47 |   232 / 453 (51.2%) |           242 (+10) | 55.2% |     +1.2% |
-| `particle`      |    25 |   244 / 400 (61.0%) |            248 (+4) | 79.0% |     +1.0% |
+| `particle`      |    25 |   247 / 400 (61.8%) |            251 (+4) | 79.1% |     +1.0% |
 | `vfs`           |    71 |   164 / 390 (42.1%) |            168 (+4) | 87.1% |     +0.6% |
 | `ui`            |    27 |   190 / 227 (83.7%) |            190 (+0) | 80.3% |     +3.0% |
 | `physics`       |    14 |    91 / 197 (46.2%) |             97 (+6) | 71.9% |     +2.7% |
 | `fs`            |    25 |    71 / 165 (43.0%) |             73 (+2) | 84.0% |     +0.8% |
 | `engine`        |    22 |   109 / 162 (67.3%) |            109 (+0) | 85.5% |     +0.4% |
 | `network`       |    25 |    69 / 158 (43.7%) |             76 (+7) | 85.4% |     +0.9% |
-| `network_core`  |    22 |    35 / 127 (27.6%) |             40 (+5) | 84.1% |     +2.2% |
+| `network_core`  |    22 |    35 / 127 (27.6%) |             40 (+5) | 84.1% |     +1.9% |
 | `debug`         |    16 |   111 / 122 (91.0%) |            111 (+0) | 96.8% |     +0.0% |
 | `logging`       |    10 |     34 / 72 (47.2%) |             34 (+0) | 91.2% |     +0.2% |
 | `input`         |     9 |     37 / 53 (69.8%) |             38 (+1) | 79.9% |     +0.0% |

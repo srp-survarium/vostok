@@ -64,3 +64,36 @@ particle::enum_particle_entity_type, resources::class_id_enum.
   (see the const-param sweep). `uninitialized_reference<T>` `[size]` rows are
   derivative — they track the wrapped type, fix the wrapped type and they follow.
 - Drop a row when a re-run shows the type at 0 divergences.
+- **Before believing a `[member]` flag, confirm against the emitted asm — some are
+  PHANTOM** (target carries a duplicate `_1` type record, OR the base PDB is stale
+  from incremental relink). See `patterns/divergence-phantom-duplicate-type-record.md`.
+  `report.json` is authoritative for "did my fix land"; `pdb_divergence` is
+  trustworthy only after a CLEAN RELINK (`rm` exe+pdb, rebuild). Confirmed-phantom
+  `[member]` flags (do NOT re-chase): network_core `udp_match_connection`/session/
+  server/`udp_match_client` `sequence_number<u8>`/`0xB20`, network `match_client_impl`
+  `boost::array<...,2048>` — base is asm-correct.
+
+## Member-levers sweep (tip 396d3dbe, 2026-06-25 — match/member-levers-2)
+
+FIXED (clean relink confirms 0 divergences + report.json wins, 0 regressions):
+- `particle::particle_system_lod` — field REORDER (`m_parent` first @0x0) — particle_system
+  load_lod_actions_binary/index_to_action/load_binary → 100%.
+- `tasks::task_allocator` `max_task_count` 950000→4096 (target buffer `u8[393216]`,
+  granularity 0x60, ctor loop `cmp edx,1000h`) — also clears the derivative `task_manager`
+  `[size]` rows (it embeds the allocator); task_allocator ctor/allocate/deallocate +
+  task_manager ctor → 100%.
+- `physics::character_move_test_callback` — `const` on `m_up_vector`/`m_minSlopeDot`
+  + ctor param (byte-neutral, faithful; stays 100%).
+- `network_core` `delayed_packets_predicate` — member rename `m_delayed_packets_to_appear`
+  →`m_packets` (byte-neutral; predicate op() stays 100%). The `boost::noncopyable` BASE
+  could NOT be added (std::remove_if copy-constructs the predicate → C2248); sushi@TODO +
+  review_todos row left.
+PARKED (out of layout-only scope — body/render-coupled rewrites, leave for a particle/input matcher):
+  `particle_emitter_instance` / `particle_system_instance(_impl)` (reference→pointer +
+  new `render::base_scene_ptr m_scene` + removed `self_ptr` + ctor/method-set rewrite),
+  `input::receiver::keyboard` (DirectInput event-buffer rewrite, 0x210→0x914),
+  `console_commands::cc_bool` (`cc_value<bool>` base refactor), `core` `mutex_mt_raii`
+  (+`const bool m_is_tasks_aware`, out-of-line ctor logic), `core` `regions_filler`
+  (+`m_high_memory_regions`, 2-arg ctor + region-routing body), `game_test_suite`
+  (`m_rtp_world` is base-only but used by rtp_learn/rtp modules — can't remove without
+  touching them). All others in scope are type-spelling SKIP (`enum X`/`const X`/`char const `).
