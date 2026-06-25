@@ -82,33 +82,34 @@
     "vostok-delinker-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1780395660,
-        "narHash": "sha256-dkFseT2Y5FtiwGdTFViz3N6etZylgahAXqYogGNo6CA=",
+        "lastModified": 1782354708,
+        "narHash": "sha256-kKtcp3qHXb8yki46/9ymTrexpMFeTQJ9U1IwRUgkOBU=",
         "owner": "srp-survarium",
         "repo": "vostok-delinker",
-        "rev": "5118e2a36d9ab3797094259db8311cae11e0770d",
+        "rev": "4e81d30d201747accfcaffa2a0cc7aeabe423462",
         "type": "github"
       },
       "original": {
         "owner": "srp-survarium",
         "repo": "vostok-delinker",
+        "rev": "4e81d30d201747accfcaffa2a0cc7aeabe423462",
         "type": "github"
       }
     },
     "vostok-pdb-parser-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1781952395,
-        "narHash": "sha256-iD+IIntd3hU3cvuZtgu3Yv2eXaalOULQCFbWLNj/D3E=",
+        "lastModified": 1782354686,
+        "narHash": "sha256-2+Ib2ImMhrROegw3yrEJqh0wYMQvf9XQ+ZXBYclcdBU=",
         "owner": "srp-survarium",
         "repo": "vostok-pdb-parser",
-        "rev": "b6159cc49734f77eb3356eda982aa3f3cdb9291c",
+        "rev": "89d3a1e384846edd8d7fcec02ad15f6fb1a51ccc",
         "type": "github"
       },
       "original": {
         "owner": "srp-survarium",
         "repo": "vostok-pdb-parser",
-        "rev": "b6159cc49734f77eb3356eda982aa3f3cdb9291c",
+        "rev": "89d3a1e384846edd8d7fcec02ad15f6fb1a51ccc",
         "type": "github"
       }
     },
