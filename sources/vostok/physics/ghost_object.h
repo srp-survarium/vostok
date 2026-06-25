@@ -35,8 +35,12 @@ public:
 	void		contact_test							( world* world, base_physics_object* object, contact_test_predicate& predicate );
 
 
+	// STATE[REMOVED]: no out-of-line body, no caller in any shipped TU (editor-only paths
+	// excluded from survarium.exe); absent from both binaries.
 	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
 
+	// STATE[REMOVED]: not inlined into non_compound_shapes_centers (which calls the free
+	// get_non_compound_shapes_centers); no caller anywhere; absent from both binaries.
 	u32			non_compound_shapes_count				( ) const /* no source */;
 	void		non_compound_shapes_centers				( vectora<float3>& centres_results ) const;
 
