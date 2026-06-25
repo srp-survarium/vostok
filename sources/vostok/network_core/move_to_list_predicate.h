@@ -37,6 +37,8 @@ public:
 		return true;
 	}
 
+	// trivial dtor (reference + POD members); empty body is correct. Inlined into the
+	// remove_if scope in udp_match_connection.cpp - no standalone target symbol.
 	inline			~move_to_list_predicate	( ) { /* no source */ }
 
 private:

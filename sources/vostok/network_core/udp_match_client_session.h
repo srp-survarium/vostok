@@ -19,6 +19,10 @@ class packet_reader;
 class udp_match_packet;
 class udp_network_flow_emulator;
 
+// STATE[REMOVED] (every `/* no source */` member below): udp_match_client_session is
+// consumed only by udp_match_server (friend) - dedicated-server code with ZERO target
+// symbols, never instantiated in scope. So all its inline members are uninstantiated in
+// both binaries; the empty shams are correct. Reconstruct only if the server is matched.
 class udp_match_client_session : public boost::noncopyable {
 public:
 	inline								udp_match_client_session	(

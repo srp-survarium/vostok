@@ -29,6 +29,8 @@ public:
 			m_client.m_on_packet_received	( message_type, reader );
 	}
 
+	// trivial dtor (single reference member); empty body is correct. Inlined into the
+	// process_incoming_packet/call_predicate scope - no standalone target symbol.
 	inline				~process_packet_predicate	( ) { /* no source */ }
 
 private:

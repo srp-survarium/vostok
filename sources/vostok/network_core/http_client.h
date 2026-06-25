@@ -50,6 +50,8 @@ private:
 			void					close_connection		( );
 
 public:
+	// trivial dtor (resolver/socket/streambuf/string/function members auto-destroy);
+	// empty body is correct - this is the matched ??1http_client form.
 	inline							~http_client			( ) { /* no source */ }
 
 private:
