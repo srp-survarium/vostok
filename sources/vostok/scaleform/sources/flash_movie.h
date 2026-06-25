@@ -57,9 +57,16 @@ struct flash_movie {
 		mouse_btn_up
 	};
 
-	// only the ctor and the priority accessors are unaddressed (true inlines);
-	// everything else is out-of-line in movie.cpp / value.cpp per the rich index
+	// only the ctor, dtor and the priority accessors are unaddressed (true inlines);
+	// everything else is out-of-line in movie.cpp / value.cpp per the rich index. The
+	// dtor (inlined into flash_factory::destroy_movie) nulls the three GFx handles.
 	inline			flash_movie			( ) { /* no source */ }
+	inline			~flash_movie		( )
+	{
+		m_movie_def	= NULL;
+		m_movie		= NULL;
+		m_handle	= NULL;
+	}
 
 			void	SetViewport			( u32 arg_0, u32 arg_1 );
 

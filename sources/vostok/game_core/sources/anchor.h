@@ -44,6 +44,13 @@ namespace vostok
 	// in animation/sources/anchor_animation_player.cpp.
 	void anchor_animation_player( );
 
+	// scaleform module's wrapper reachability anchor - the survarium scaleform
+	// wrappers (flash_factory / flash_movie / flash_text(_manager) / flash_renderer /
+	// scaleform_render_command(_queue) / scaleform_engine / vostok_scaleform_log) are
+	// reached only through the never-instantiated engine startup stub; defined in
+	// scaleform/sources/anchor_scaleform.cpp.
+	void anchor_scaleform( );
+
 	// shared opaque sink: escapes addresses so LTCG observes member stores.
 	// Defined once in anchor_network_core.cpp; used by every anchor TU.
 	void example_callback( const char* name );

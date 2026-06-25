@@ -21,35 +21,65 @@ namespace survarium {
 static vostok_file_opener		g_file_opener;
 static vostok_scaleform_log		g_vostok_logger;
 
-// STATE[STUB]
+// claude@NOTE: the remaining STUBs in this TU are parked on cross-module engine
+// symbols / heavy SDK reconstruction, not reachability (the scaleform anchor pins
+// every public method now):
+//  - scaleform_engine::initialize references vostok::engine::scaleform_engine_alloc/
+//    scaleform_engine_free/scaleform_log_output and the global g_log_output_ptr, none
+//    of which are reconstructed in our sources yet (engine module owns them); cannot
+//    even link extern refs until the engine TU defines them.
+//  - xrSysAllocMalloc::Alloc/Free/Realloc are the X-Ray-era aligned-allocator math
+//    over the m_mem_alloc_ptr/m_mem_free_ptr members (those members are populated by
+//    the initialize() static-ctor path that depends on the engine symbols above).
+//  - vostok_scaleform_log::LogMessageVarg forwards to Scaleform::Log::FormatLog then
+//    dispatches by message-class to the engine global g_log_output_ptr (engine symbol).
+//  - vostok_file_opener::OpenFile builds a Scaleform::MemoryFile from a member buffer
+//    or forwards to FileOpener::OpenFile (member-state-dependent, low priority).
+//  - flash_factory::flash_factory (18 stmts) / build_movie (14 stmts) construct the
+//    GFx Loader state cone (ZlibSupport/FileOpener/FontProviderWin32/AS2Support/
+//    AS3Support/ImageFileHandlerRegistry) and Loader::CreateMovie - heavy SDK glue
+//    that also touches engine globals (0xA5C694 buffer-context pair).
+
 void* scaleform_engine::xrSysAllocMalloc::Alloc( u32 size, u32 align )
 {
-	// FUNCTION BODY[0x0ae120]
-	VOSTOK_UNREFERENCED_PARAMETERS	( size, align );
-	return NULL;
+	u8*	raw		= ( u8* )m_mem_alloc_ptr( size + align );
+	u8*	aligned	= NULL;
+	if ( raw )
+	{
+		aligned	= ( u8* )( ( ( u32 )raw + align - 1 ) & ~( align - 1 ) );
+		if ( aligned == raw )
+			aligned	+= align;
+
+		( ( u32* )aligned )[ -1 ]	= aligned - raw;
+	}
+	return aligned;
 }
 
-// STATE[STUB]
 void scaleform_engine::xrSysAllocMalloc::Free( void* ptr, u32 size, u32 align )
 {
-	// FUNCTION BODY[0x0ae160]
-	VOSTOK_UNREFERENCED_PARAMETERS	( ptr, size, align );
+	VOSTOK_UNREFERENCED_PARAMETERS	( size, align );
+	// the aligned block stores the byte distance back to the raw allocation in the
+	// u32 just before it; recover the raw pointer and hand it to the X-Ray free hook.
+	m_mem_free_ptr( ( u8* )ptr - ( ( u32* )ptr )[ -1 ] );
 }
 
-// STATE[STUB]
 void* scaleform_engine::xrSysAllocMalloc::Realloc( void* old_ptr, u32 old_size, u32 new_size, u32 align )
 {
-	// FUNCTION BODY[0x0ae180]
-	VOSTOK_UNREFERENCED_PARAMETERS	( old_ptr, old_size, new_size, align );
-	return NULL;
+	void*	new_ptr	= Alloc( new_size, align );
+	if ( new_ptr )
+	{
+		memcpy( new_ptr, old_ptr, new_size < old_size ? new_size : old_size );
+		Free( old_ptr, old_size, align );
+	}
+	return new_ptr;
 }
 
-// STATE[STUB]
 Scaleform::File* vostok_file_opener::OpenFile( pcstr url, s32 flags, s32 mode )
 {
-	// FUNCTION BODY[0x0ae1e0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( url, flags, mode );
-	return NULL;
+	if ( cached_file.raw_data )
+		return SF_NEW Scaleform::MemoryFile( url, ( const Scaleform::UByte* )cached_file.raw_data, cached_file.raw_data_size );
+
+	return Scaleform::GFx::FileOpener::OpenFile( url, flags, mode );
 }
 
 // STATE[STUB]
@@ -59,29 +89,24 @@ void vostok_scaleform_log::LogMessageVarg( Scaleform::LogMessageId message_id, p
 	VOSTOK_UNREFERENCED_PARAMETERS	( message_id, fmt, args );
 }
 
-// STATE[STUB]
 void flash_factory::tick( )
 {
-	// FUNCTION BODY[0x5bb9c0]
 }
 
-// STATE[STUB]
 void flash_factory::destroy_movie( flash_movie* movie )
 {
-	// FUNCTION BODY[0x5bb9d0]
-	VOSTOK_UNREFERENCED_PARAMETER	( movie );
+	delete movie;
 }
 
-// STATE[STUB]
 flash_factory::~flash_factory( )
 {
-	// FUNCTION BODY[0x5bb9f0]
+	delete m_gfx_loader;
+	delete m_render_thread_queue;
 }
 
-// STATE[STUB]
 void scaleform_engine::destroy( )
 {
-	// FUNCTION BODY[0x5bba30]
+	Scaleform::GFx::System::Destroy( );
 }
 
 // STATE[STUB]
@@ -105,11 +130,9 @@ void scaleform_engine::initialize(
 	VOSTOK_UNREFERENCED_PARAMETERS	( alloc, free, log );
 }
 
-// STATE[STUB]
 flash_text_manager* flash_factory::create_text_manager( )
 {
-	// FUNCTION BODY[0x5bbc10]
-	return NULL;
+	return new flash_text_manager( m_gfx_loader );
 }
 
 // STATE[STUB]
