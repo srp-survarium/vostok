@@ -53,9 +53,10 @@ enum enum_particle_entity_type
 	
 	particle_action_acceleration_type,
 	particle_action_kill_volume_type,
+	particle_action_gravity_type,
 	// Append new action types here.
-	
-	
+
+
 	particle_action_unsupported_type,
 }; // enum enum_particle_entity_type
 
