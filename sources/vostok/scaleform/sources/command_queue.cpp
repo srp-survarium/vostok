@@ -3,43 +3,40 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include "scaleform_game_engine.h"
 #include "scaleform_render_command.h"
 #include "scaleform_render_command_queue.h"
 #include "scaleform_render_command_queue_impl.h"
 
 namespace survarium {
 
-// STATE[STUB]
 scaleform_render_command_queue::~scaleform_render_command_queue( )
 {
-	// FUNCTION BODY[0x5bb940]
+	delete impl;
 }
 
-// STATE[STUB]
 void scaleform_render_command_queue_impl::PushThreadCommand( Scaleform::Render::ThreadCommand* command )
 {
-	// FUNCTION BODY[0x5bb950]
-	VOSTOK_UNREFERENCED_PARAMETER	( command );
+	scaleform_render_command	cmd	= { command };
+	engine.execute_scaleform_command( cmd );
 }
 
-// STATE[STUB]
 void scaleform_render_command_queue_impl::GetRenderInterfaces( Scaleform::Render::Interfaces* interfaces )
 {
-	// FUNCTION BODY[0x5bb960]
-	VOSTOK_UNREFERENCED_PARAMETER	( interfaces );
+	interfaces->pHAL			= pHAL;
+	interfaces->pRenderer2D		= pR2D;
+	interfaces->pTextureManager	= pHALTextureMgr;
+	interfaces->RenderThreadID	= pRenderThreadId;
 }
 
-// STATE[STUB]
 void scaleform_render_command::execute( )
 {
-	// FUNCTION BODY[0x5bb980]
+	thread_command->Execute( );
 }
 
-// STATE[STUB]
 scaleform_render_command_queue::scaleform_render_command_queue( scaleform_game_engine& engine )
 {
-	// FUNCTION BODY[0x5bb990]
-	VOSTOK_UNREFERENCED_PARAMETER	( engine );
+	impl	= new scaleform_render_command_queue_impl( engine );
 }
 
 } // namespace survarium

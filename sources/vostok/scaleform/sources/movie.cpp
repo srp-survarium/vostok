@@ -12,17 +12,25 @@
 
 namespace survarium {
 
-// STATE[STUB]
 flash_text_manager::flash_text_manager( Scaleform::GFx::Loader* loader )
+	:	need_capture	( false )
 {
-	// FUNCTION BODY[0x5bb730]
-	VOSTOK_UNREFERENCED_PARAMETER	( loader );
+	text_manager_impl	= SF_NEW Scaleform::GFx::DrawTextManager( loader );
+
+	Scaleform::GFx::DrawTextManager::TextParams	defParams	= text_manager_impl->GetDefaultTextParams( );
+	defParams.TextColor	= Scaleform::Render::Color( 0, 0xff, 0, 0xff );
+	defParams.FontName	= "Arial";
+	defParams.FontSize	= 16.f;
+	text_manager_impl->SetDefaultTextParams( defParams );
 }
 
-// STATE[STUB]
 void flash_text_manager::tick( )
 {
-	// FUNCTION BODY[0x5bb1f0]
+	if ( need_capture )
+	{
+		text_manager_impl->Capture( true );
+		need_capture	= false;
+	}
 }
 
 flash_text flash_text_manager::create_text( pcstr text )
@@ -57,34 +65,40 @@ flash_text flash_text_manager::create_text_w( wchar_t* text )
 	return result;
 }
 
-// STATE[STUB]
 void flash_text_manager::set_viewport( u32 width, u32 height )
 {
-	// FUNCTION BODY[0x5bb440]
-	VOSTOK_UNREFERENCED_PARAMETERS	( width, height );
+	u32	output_window_width		= width;
+	u32	output_window_height	= height;
+
+	m_output_width	= output_window_width;
+	m_output_height	= output_window_height;
+
+	Scaleform::GFx::Viewport	viewport( output_window_width, output_window_height, 0, 0, output_window_width, output_window_height );
+	text_manager_impl->SetViewport( viewport );
+
+	need_capture	= true;
 }
 
-// STATE[STUB]
 void flash_text_manager::destroy_text( flash_text& text )
 {
-	// FUNCTION BODY[0x5bb420]
-	VOSTOK_UNREFERENCED_PARAMETER	( text );
+	text.text_impl->Release( );
+	text.text_impl	= NULL;
+	text.owner		= NULL;
+	text.visible	= false;
+	need_capture	= true;
 }
 
 // claude@NOTE: this TU now builds /Ox (Master Gold Optimization=3). The flash_text
 // glue SOURCE STRUCTURE is faithful (set_position records the same 3 locals
 // [screen_position_x/y, rect]; set_text/create_text pair SetText/GetTextExtent/
-// `size += 5.f`/GetRect/SetRect in order). The residual is a genuine /Ox line-table
-// difference, NOT /Od and NOT source-steerable: the target emits the inline RectF
-// temp construction and the SetRect(temp) call as TWO separate statements (the
-// TRGT_ONLY rows), while our /Ox folds the const-float copies and the RectF-arg
-// build into the SetRect statement. The target keeps NO extra RectF local (only
-// the 3), so we cannot add a named temp to force the split without a LOCALS diff.
-// get_width/get_height/set_font_size/create_text_w stay UNPAIRED on reachability,
-// not matching: game's own flash_text.h / flash_text_manager.h inline-stub these
-// four, so the scaleform out-of-line bodies are /OPT:REF-stripped (no caller).
-// Pairing them needs a scaleform-module anchor chain (none exists) - parked,
-// cross-module reachability work.
+// `size += 5.f`/GetRect/SetRect in order). The residual on set_position/set_text/
+// set_font_size is a genuine /Ox line-table difference, NOT /Od and NOT
+// source-steerable: the target emits the inline RectF temp construction and the
+// SetRect(temp) call as TWO separate statements (the TRGT_ONLY rows), while our /Ox
+// folds the const-float copies and the RectF-arg build into the SetRect statement.
+// The target keeps NO extra RectF local (only the 3), so we cannot add a named temp
+// to force the split without a LOCALS diff. get_width/get_height/create_text_w now
+// pair at 100% via the scaleform module anchor (anchor_scaleform.cpp).
 float flash_text::get_width( )
 {
 	return text_impl->GetRect( ).Width( );
@@ -95,11 +109,14 @@ float flash_text::get_height( )
 	return text_impl->GetRect( ).Height( );
 }
 
-// STATE[STUB]
-void flash_text::set_visible( bool visible )
+void flash_text::set_visible( bool value )
 {
-	// FUNCTION BODY[0x5bb400]
-	VOSTOK_UNREFERENCED_PARAMETER	( visible );
+	if ( visible != value )
+	{
+		visible	= value;
+		text_impl->SetVisible( value );
+		owner->need_capture	= true;
+	}
 }
 
 void flash_text::set_font_size( const float font_size )
@@ -139,11 +156,10 @@ void flash_text::set_position( const float x, const float y )
 	owner->need_capture	= true;
 }
 
-// STATE[STUB]
 void flash_text::set_color( u8 r, u8 g, u8 b, u8 a )
 {
-	// FUNCTION BODY[0x5bb700]
-	VOSTOK_UNREFERENCED_PARAMETERS	( r, g, b, a );
+	text_impl->SetColor( Scaleform::Render::Color( r, g, b, a ) );
+	owner->need_capture	= true;
 }
 
 void flash_text::set_text( pcstr text )
@@ -162,55 +178,56 @@ void flash_text::set_text( pcstr text )
 	owner->need_capture	= true;
 }
 
-// STATE[STUB]
 void flash_movie::Advance( const float time_delta, const u32 frame_catch_up_count )
 {
-	// FUNCTION BODY[0x5bb170]
-	VOSTOK_UNREFERENCED_PARAMETERS	( time_delta, frame_catch_up_count );
+	m_movie->Advance( time_delta, frame_catch_up_count );
 }
 
-// STATE[STUB]
 void flash_movie::SetBackgroundAlpha( const float alpha )
 {
-	// FUNCTION BODY[0x5bb150]
-	VOSTOK_UNREFERENCED_PARAMETER	( alpha );
+	m_movie->SetBackgroundAlpha( alpha );
 }
 
-// STATE[STUB]
 void flash_movie::SetViewAlignment( flash_movie::AlignType alignment )
 {
-	// FUNCTION BODY[0x5bb140]
-	VOSTOK_UNREFERENCED_PARAMETER	( alignment );
+	m_movie->SetViewAlignment( ( Scaleform::GFx::Movie::AlignType )alignment );
 }
 
-// STATE[STUB]
 void flash_movie::SetViewScaleMode( flash_movie::ScaleModeType scale_mode )
 {
-	// FUNCTION BODY[0x5bb130]
-	VOSTOK_UNREFERENCED_PARAMETER	( scale_mode );
+	m_movie->SetViewScaleMode( ( Scaleform::GFx::Movie::ScaleModeType )scale_mode );
 }
 
-// STATE[STUB]
 void flash_movie::Restart( )
 {
-	// FUNCTION BODY[0x5bb120]
+	m_movie->Restart( );
 }
 
-// STATE[STUB]
 void flash_movie::SetViewport( u32 width, u32 height )
 {
-	// FUNCTION BODY[0x5bb290]
-	VOSTOK_UNREFERENCED_PARAMETERS	( width, height );
+	u32	output_window_width		= width;
+	u32	output_window_height	= height;
+
+	m_output_width	= output_window_width;
+	m_output_height	= output_window_height;
+
+	Scaleform::GFx::Viewport	viewport( output_window_width, output_window_height, 0, 0, output_window_width, output_window_height );
+	m_movie->SetViewport( viewport );
 }
 
-// STATE[STUB]
 void flash_movie::HandleMouseMove( const float x, const float y, const float scroll_delta )
 {
-	// FUNCTION BODY[0x5bb630]
-	VOSTOK_UNREFERENCED_PARAMETERS	( x, y, scroll_delta );
+	{
+		Scaleform::GFx::MouseEvent	mevent( Scaleform::GFx::Event::MouseMove, 0, x, y );
+		m_movie->HandleEvent( mevent );
+	}
+
+	{
+		Scaleform::GFx::MouseEvent	mevent( Scaleform::GFx::Event::MouseWheel, 0, x, y, scroll_delta );
+		m_movie->HandleEvent( mevent );
+	}
 }
 
-// STATE[STUB]
 void flash_movie::HandleMouseBtn(
 		flash_movie::mouse_btn_action	action,
 		u32								button,
@@ -218,28 +235,35 @@ void flash_movie::HandleMouseBtn(
 		const float						y
 	)
 {
-	// FUNCTION BODY[0x5bb5c0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( action, button, x, y );
+	Scaleform::GFx::Event::EventType	type	= Scaleform::GFx::Event::Unknown;
+	switch ( action )
+	{
+	case mouse_btn_down:	type	= Scaleform::GFx::Event::MouseDown;	break;
+	case mouse_btn_up:		type	= Scaleform::GFx::Event::MouseUp;	break;
+	}
+
+	Scaleform::GFx::MouseEvent	mevent( type, button, x, y );
+	m_movie->HandleEvent( mevent );
 }
 
-// STATE[STUB]
-void flash_movie::HandleKeyboard( flash_movie::keyb_btn_action action, s32 key )
+void flash_movie::HandleKeyboard( flash_movie::keyb_btn_action action, s32 scan )
 {
-	// FUNCTION BODY[0x5bb240]
-	VOSTOK_UNREFERENCED_PARAMETERS	( action, key );
+	Scaleform::GFx::KeyEvent	ev(
+		action == keyb_btn_up ? Scaleform::GFx::Event::KeyDown : Scaleform::GFx::Event::KeyUp,
+		( Scaleform::Key::Code )scan
+	);
+	m_movie->HandleEvent( ev );
 }
 
-// STATE[STUB]
-void flash_movie::HandleChar( wchar_t character )
+void flash_movie::HandleChar( wchar_t c )
 {
-	// FUNCTION BODY[0x5bb210]
-	VOSTOK_UNREFERENCED_PARAMETER	( character );
+	Scaleform::GFx::CharEvent	ev( c );
+	m_movie->HandleEvent( ev );
 }
 
-// STATE[STUB]
 void flash_movie::ForceCollectGarbage( )
 {
-	// FUNCTION BODY[0x5bb110]
+	m_movie->ForceCollectGarbage( );
 }
 
 } // namespace survarium
