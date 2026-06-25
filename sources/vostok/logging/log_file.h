@@ -26,10 +26,9 @@ namespace logging {
 
 enum log_file_usage_enum
 {
-	uninitialized_log,
+	no_log,
 	create_log,
 	append_log,
-	no_log,
 }; // enum error_mode
 
 enum { max_line_groups	=	1024*4 };

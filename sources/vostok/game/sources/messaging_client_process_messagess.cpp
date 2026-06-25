@@ -34,28 +34,28 @@ void messaging_client::on_packet_received( network_core::packet_reader& reader )
 		case 0xCC:
 		{
 			const messaging::friendship_actions_enum action = messaging::friendship_actions_enum( reader.r< u8 >( ) );
-			if ( action == messaging::query_friend_list_action )
+			if ( action == messaging::query_friend_list )
 				read_friend_list( reader );
-			else if ( action == messaging::query_friends_status_action )
+			else if ( action == messaging::update_friends_status )
 				read_friend_status( reader );
-			else if ( action == messaging::query_ignore_list_action )
+			else if ( action == messaging::query_ignore_list )
 				read_ignore_list( reader );
-			else if ( action == messaging::find_players_action )
+			else if ( action == messaging::find_players )
 				read_found_players( reader );
 			else
 			{
 				const u8 result = reader.r< u8 >( );
-				if ( action == messaging::add_friend_action )
+				if ( action == messaging::add_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
 					else					LOG_ERROR( "add_friend: operation denied" );
 				}
-				else if ( action == messaging::remove_friend_action )
+				else if ( action == messaging::remove_friend )
 				{
 					if ( result == '4' )	query_for_friend_list( );
 					else					LOG_ERROR( "remove_friend: operation denied" );
 				}
-				else if ( action == messaging::add_to_ignore_action )
+				else if ( action == messaging::add_ignorable )
 				{
 					if ( result == '4' )	query_for_ignore_list( );
 					else					LOG_ERROR( "add_ignorable: operation denied" );
@@ -172,7 +172,7 @@ void messaging_client::query_for_friend_list( )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::query_friend_list_action );
+	packet.append		( ( u8 )messaging::query_friend_list );
 	m_network_client.send	( packet );
 }
 
@@ -183,7 +183,7 @@ void messaging_client::query_for_friends_status( )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::query_friends_status_action );
+	packet.append		( ( u8 )messaging::update_friends_status );
 	m_network_client.send	( packet );
 }
 
@@ -194,7 +194,7 @@ void messaging_client::add_to_friend_list( const u32 account_id )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::add_friend_action );
+	packet.append		( ( u8 )messaging::add_friend );
 	packet.append		( account_id );
 	m_network_client.send	( packet );
 }
@@ -206,7 +206,7 @@ void messaging_client::remove_from_friend_list( const u32 account_id )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::remove_friend_action );
+	packet.append		( ( u8 )messaging::remove_friend );
 	packet.append		( account_id );
 	m_network_client.send	( packet );
 }
@@ -218,7 +218,7 @@ void messaging_client::query_for_ignore_list( )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::query_ignore_list_action );
+	packet.append		( ( u8 )messaging::query_ignore_list );
 	m_network_client.send	( packet );
 }
 
@@ -229,7 +229,7 @@ void messaging_client::add_to_ignore_list( const u32 account_id )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::add_to_ignore_action );
+	packet.append		( ( u8 )messaging::add_ignorable );
 	packet.append		( account_id );
 	m_network_client.send	( packet );
 }
@@ -241,7 +241,7 @@ void messaging_client::remove_from_ignore_list( const u32 account_id )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::remove_from_ignore_action );
+	packet.append		( ( u8 )messaging::remove_ignorable );
 	packet.append		( account_id );
 	m_network_client.send	( packet );
 }
@@ -253,7 +253,7 @@ void messaging_client::find_players_by_name( pcstr player_name )
 
 	network_core::tcp_packet	packet( memory::g_mt_allocator );
 	packet.append		( ( u8 )0xC4 );
-	packet.append		( ( u8 )messaging::find_players_action );
+	packet.append		( ( u8 )messaging::find_players );
 	packet.append		( player_name );
 	m_network_client.send	( packet );
 }

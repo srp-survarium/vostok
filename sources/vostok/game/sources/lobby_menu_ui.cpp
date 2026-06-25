@@ -299,7 +299,7 @@ void lobby_menu_external_handler::callback(
 	else if ( strings::equal( methodName, "find_players" ) )
 	{
 		pcstr player_name = args[ 0 ].GetString( );
-		const u32 c_min_name_len_to_search = 3;
+		enum { c_min_name_len_to_search = 3 };
 		if ( strlen( player_name ) >= c_min_name_len_to_search )
 			m_game.network_client( ).messaging_client( ).find_players_by_name( player_name );
 	}
@@ -1744,10 +1744,9 @@ void lobby_menu::on_match_message_arrived( wchar_t const* w_text )
 
 // claude@NOTE: chat_handler now headered, so the parse + add_message path is recovered.
 // The wcsstr prefix literals (L"player_id"/L"player_exp"/L"player_count" + the L" ="/L"="
-// terminators) are length-matched guesses (relocated rdata, do not affect bytes); the
-// query_client_status(7/8) enumerator names are unknown (same query_info_types gap as
-// lobby_menu_input.cpp:55). Residual is the scaleform flash /Od inline wall (set_games_online
-// Invoke + flash_value ctor/dtor) and LTCG scheduling.
+// terminators) are length-matched guesses (relocated rdata, do not affect bytes). Residual
+// is the scaleform flash /Od inline wall (set_games_online Invoke + flash_value ctor/dtor)
+// and LTCG scheduling.
 void lobby_menu::on_stats_message_arrived(
 	wchar_t const*						w_text,
 	wchar_t const*						w_sender_name,
@@ -1780,8 +1779,8 @@ void lobby_menu::on_stats_message_arrived(
 
 				if ( lobby_client( ).net_connected( ) )
 				{
-					lobby_client( ).query_client_status( ( lobby::query_info_types )7 );
-					lobby_client( ).query_client_status( ( lobby::query_info_types )8 );
+					lobby_client( ).query_client_status( lobby::q_account_money );	// 7
+					lobby_client( ).query_client_status( lobby::q_player_skills );	// 8
 				}
 			}
 

@@ -499,12 +499,12 @@ void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_read
 {
 	switch ( scene_ready )
 	{
-		case scene_ready_login:
+		case login_scene_ready:
 		{
 			m_login_scene_ready		= true;
 			break;
 		}
-		case scene_ready_lobby:
+		case lobby_scene_ready:
 		{
 			m_lobby_scene_ready		= true;
 			break;

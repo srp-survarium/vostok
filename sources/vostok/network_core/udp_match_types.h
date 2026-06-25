@@ -11,12 +11,13 @@ namespace network_core {
 // referenced only by reference/pointer in the udp_match_* classes
 class	udp_match_client_session;
 
-// packet-class tag stored in the first header byte; fill_packet_header folds the
-// low-level flag into the acknowledgement word when the class is the low-level one.
+// packet-count tag stored in the first header byte; fill_packet_header folds the
+// multiple-packets flag into the acknowledgement word when the class is the multi one.
+// canonical: headers/vostok/network_core/enums/udp_match_packets_count_enum.h
 enum udp_match_packets_count_enum
 {
-	udp_match_regular_packet	= 0x0,
-	udp_match_low_level_packet	= 0x1,
+	udp_match_single_packet		= 0x0,
+	udp_match_multiple_packets	= 0x1,
 }; // enum udp_match_packets_count_enum
 
 struct udp_match_message_type_info {

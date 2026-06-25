@@ -19,7 +19,7 @@ enum login_client_message_types_enum {
 	sign_in_message_type							= 1,
 	sign_out_message_type							= 2,
 
-	login_client_invalid_message_type				= 63,
+	login_client_invalid_message_type				= 7,
 }; // enum login_client_message_types_enum
 
 // server to client

@@ -37,7 +37,7 @@ messaging_client& lobby_menu::messaging_client( )
 // Byte residual is the swf_input_translator::process_keyboard wall (that sibling is
 // a parked {return false;} stub with an LTCG-customized calling convention - key and
 // the time/group args register-passed). NEXT: body process_keyboard + reconcile its
-// calling convention; the query_info_types enumerator name for 0 is still unknown.
+// calling convention.
 bool lobby_menu::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -65,7 +65,7 @@ bool lobby_menu::on_keyboard_action(
 		}
 
 		if ( key == input::key_f5 )
-			lobby_client( ).query_client_status( ( lobby::query_info_types )0 );	// sushi@TODO: enumerator name for query_info_types 0 unknown
+			lobby_client( ).query_client_status( lobby::q_client_state );	// 0
 		else if ( key == input::key_escape )
 		{
 			flash_value has_active_window;
