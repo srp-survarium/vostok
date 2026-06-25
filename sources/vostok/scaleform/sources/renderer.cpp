@@ -13,6 +13,14 @@
 
 namespace survarium {
 
+// claude@NOTE: the flash_renderer trio is reachability-pinned by the scaleform anchor
+// (anchor_scaleform.cpp) but parked on render-adjacent D3D1x SDK reconstruction
+// (matched last per the render-module-last policy): the ctor (9 stmts) builds a
+// Scaleform::Render::D3D1x::HAL + Renderer2D and a D3D1x::HALInitParams (device/
+// context/0x100 halConfigFlags) then InitHAL via vtable+0x128; on_reset_device (5 stmts)
+// re-runs the same HALInitParams/InitHAL path or HAL::RestoreAfterReset; present (16 stmts)
+// drives the per-movie Display + the command-queue. All depend on the D3D1x HAL SDK glue.
+
 // STATE[STUB]
 void flash_renderer::present( flash_movie** movies, u32 movies_count, flash_text_manager* text_manager )
 {
