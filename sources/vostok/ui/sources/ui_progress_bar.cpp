@@ -10,6 +10,13 @@
 namespace vostok {
 namespace ui {
 
+// claude@NOTE: member stores + color packing byte-match the target; residual is the
+// m_text fixed_string<32> default ctor, which the target inlines but our base out-of-lines
+// (call vostok::fixed_string<32>::fixed_string at 0x006870). That out-of-line call forces
+// the object pointer into a callee-saved reg (esi vs target's eax), cascading the whole
+// register allocation and blocking the create_progress_bar tail-call. The inline decision
+// lives in core fixed_string_inline.h/buffer_string_inline.h (out of ui scope; forceinline
+// there would touch every fixed_string consumer).
 ui_progress_bar::ui_progress_bar		( ui_world& world ) :
 	ui_window			( world.allocator( ) ),
 	m_ui_world			( world ),
@@ -18,9 +25,9 @@ ui_progress_bar::ui_progress_bar		( ui_world& world ) :
 	m_value				( 0 ),
 	m_border_width		( 1 ),
 	m_border_height		( 1 ),
-	m_back_color		( 23, 14,  143 ),
-	m_front_color		( 17, 104, 236 ),
-	m_text_color		( 206, 210, 43 ),
+	m_back_color		( 143, 14,  23 ),
+	m_front_color		( 236, 104, 17 ),
+	m_text_color		( 43, 210, 206 ),
 	m_draw_text			( false )
 {}
 
