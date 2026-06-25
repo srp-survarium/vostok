@@ -9,6 +9,7 @@
 
 #include <vostok/vfs/saving_fat_inline_data.h>
 #include <vostok/vfs/types.h>
+#include <vostok/vfs/platform_configuration.h>
 #include <vostok/fs/native_path_string.h>
 #include <vostok/compressor.h>
 #include <vostok/fs/synchronous_device_interface.h>
@@ -43,6 +44,7 @@ struct save_archive_args : private core::noncopyable
 	fat_node_info *							from_vfs_info_tree;
 	virtual_file_system *					to_vfs;
 	fat_node_info *							to_vfs_info_tree;
+	buffer_vector< std::pair< mount_root_node_base<> *, std::pair<void * *, void * *> > > const *	file_handles;
 
 
 	save_archive_args					(fs_new::synchronous_device_interface &	device,
@@ -82,8 +84,11 @@ struct save_archive_args : private core::noncopyable
 	  to_vfs(to_vfs),
 	  to_vfs_info_tree(to_vfs_info_tree),
 	  log_flags(log_flags),
-	  log_format(log_format)	{}
+	  log_format(log_format),
+	  file_handles(NULL)	{}
 };
+
+STATIC_SIZE_ASSERT(save_archive_args, 0x70);
 
 } // namespace vfs
 } // namespace vostok
