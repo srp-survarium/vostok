@@ -8,9 +8,9 @@ VOSTOK_DECLARE_LINKAGE_ID(ui_entry_point)
 namespace vostok {
 namespace ui {
 
-world* vostok::ui::create_world(engine& engine, render::ui::renderer& renderer, memory::base_allocator& allocator/*, render::scene_view_ptr const& scene_view*/ )
+world* vostok::ui::create_world(engine& engine, render::ui::renderer& renderer, memory::base_allocator& allocator, input::world* input_world )
 {
-	return						VOSTOK_NEW_IMPL( allocator, ui_world )( engine, renderer, allocator/*, scene_view*/ );
+	return						VOSTOK_NEW_IMPL( allocator, ui_world )( engine, renderer, allocator, input_world );
 }
 
 void destroy_world( world*& world )

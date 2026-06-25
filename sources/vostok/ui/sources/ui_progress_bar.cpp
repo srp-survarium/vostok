@@ -119,6 +119,11 @@ void ui_progress_bar::draw_text					( bool value )
 	m_draw_text			= value;
 }
 
+void ui_progress_bar::set_text					( pcstr text )
+{
+	m_text				= text;
+}
+
 void ui_progress_bar::set_text_color			( math::color color )
 {
 	m_text_color		= color;

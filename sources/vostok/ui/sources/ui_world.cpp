@@ -14,17 +14,23 @@ namespace ui {
 ui_world::ui_world(
 		engine& engine,
 		render::ui::renderer& renderer,
-		memory::base_allocator& allocator
-		//,render::scene_view_ptr const& scene_view
+		memory::base_allocator& allocator,
+		input::world* input_world
 	) :
+	m_input_world		( input_world ),
 	m_engine			( engine ),
 	m_allocator			( allocator ),
 	m_renderer			( renderer ),
-//	m_scene_view		( scene_view ),
 	m_base_screen_size	( 1024.0f, 768.0f ),
 	m_font_manager		( allocator )
 {
 	m_timer.start		( );
+}
+
+void ui_world::set_base_screen_size( u32 const size_x, u32 const size_y )
+{
+	m_base_screen_size.x	= (float)size_x;
+	m_base_screen_size.y	= (float)size_y;
 }
 
 void ui_world::tick()
