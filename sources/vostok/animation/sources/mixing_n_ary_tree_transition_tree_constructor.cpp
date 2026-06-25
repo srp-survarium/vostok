@@ -31,14 +31,19 @@ namespace animation {
 namespace mixing {
 
 // STATE[STUB]
-// claude@NOTE: 15-stmt finalizer. Records m_new_animation_state into m_new_animation_event,
-// computes initial_event_types (0x81 new / 0x80 prev-state-driven), runs an out-of-line
-// n_ary_tree_weight_calculator::visit over new_animation, then INLINES the animation_state
-// ctor (asm .7 writes the bone_matrices_computer sub-object fields directly) and bumps
-// m_new_animation_state by sizeof(animation_state)=0xB4. Blocked on the INLINED
-// animation_state::animation_state (+ its bone_matrices_computer_data ctor) being matched -
-// that ctor is not in the base index, so the field-write block can't be reproduced yet.
-// Next step: body animation_state::animation_state first, then reconstruct this around it.
+// claude@NOTE: 15-stmt finalizer, locals = { n_ary_tree_weight_calculator weight_calculator,
+// u16 initial_event_types }. Sole out-of-line callee = n_ary_tree_weight_calculator::visit; the
+// animation_state ctor is INLINED here (NOT the out-of-line 0x7a1bb0 symbol). Records
+// m_new_animation_state into *m_new_animation_event++, computes initial_event_types (0x81 new /
+// 0x80 when previous_animation_state && !previous->are_there_any_weight_transitions), then
+// `n_ary_tree_weight_calculator weight_calculator(m_current_time_in_ms, NULL); new_animation.accept(weight_calculator)`,
+// new_animation.set_animation_state(*m_new_animation_state), then the inlined animation_state
+// construction, then m_new_animation_state += 0xB4. PARKED: the inlined ctor's terminal block
+// (asm 0xc6-0x110) writes a 0x18 params-shaped run (interval_id/interval_time/weight/threshold/
+// initial_event_types/previous&mask) into the new state slot whose offsets do NOT map to the
+// animation_state layout - the inlined construction path is not yet decoded faithfully. Next
+// step: decode the 0x18-write block (animation_state_params vs an inlined ctor prologue) from
+// asm 0x6e9e00 before reconstructing.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
 	animation_state const*			previous_animation_state,
@@ -305,14 +310,6 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 	// ******
 }
 
-// STATE[STUB]
-// claude@NOTE: 45-stmt release-optimized leaf builder. INLINES the animation_interval clone
-// loop, the 16-arg n_ary_tree_animation_node ctor (twice - .6/.9 paths), animation_interval
-// ctors, stlp_std __find over animated_object_holder, and the boost::function transform. Calls
-// new_time_scale (STUB) out-of-line. Blocked: most of its body is the inlined
-// n_ary_tree_animation_node 16-arg ctor + animation_interval ctor, neither matched/bodied;
-// reconstructing the inlined field writes is not faithful until those ctors exist in base.
-// Next step: body n_ary_tree_animation_node's 16-arg ctor + animation_interval ctor, then this.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation(
 	n_ary_tree_animation_node&		to,
 	n_ary_tree_animation_node&		from,
@@ -326,164 +323,123 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	bool							can_be_time_driving_animation
 )
 {
-	// LOCALS
-	// n_ary_tree_base_node* 			time_scale_node
-	// animation_interval const* 		cloned_intervals_begin
-	// animation_state const& 			time_driving_animation_state
-	// ******
+	animation_interval_id			= ( to.override_existing_animation( ) || from.animation_state( ).is_freezed ? to : from ).animation_state( ).animation_interval_id;
+	animation_interval_time			= ( to.override_existing_animation( ) || from.animation_state( ).is_freezed ? to : from ).animation_state( ).animation_interval_time;
 
-	return NULL;
+	n_ary_tree_base_node* time_scale_node	= NULL;
+	if ( can_be_time_driving_animation && !from.weight_synchronization_group_id( ) && from.time_synchronization_group_id( ) != u32( -1 ) ) {
+		time_scale_node				= new_time_scale( from, animation_interval_id, animation_interval_time );
+		if ( time_scale_node ) {
+			++operands_offset;
+			++time_scale_operands_count;
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x6eaae0>|0x000|+0x035:'271'
-	// <0x6eab15>|0x035|+0x011:'272'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6eab26>|0x046|+0x033:'276'
-	// <0x6eab59>|0x079|+0x00e:'277'
-	// <0x6eab67>|0x087|+0x004:'278'
-	// <0x6eab6b>|0x08b|+0x00a:'279'
-	// <0x6eab75>|0x095|+0x006:'280'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x6eab7b>|0x09b|+0x006:'292'
-	// <0x6eab81>|0x0a1|+0x00f:'293'
-	// <0x6eab90>|0x0b0|+0x049:'294'
-	// <0x6eabd9>|0x0f9|-0x045:'294'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6eab94>|0x0b4|+0x034:'299'
-	// <0x6eabc8>|0x0e8|+0x015:'300'
-	// <0>
-	// <1>
-	// <0x6eabdd>|0x0fd|+0x005:'303'
-	// <0x6eabe2>|0x102|+0x00c:'304'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <0x6eabee>|0x10e|+0x0a1:'326'
-	// <0x6eac8f>|0x1af|+0x002:'327'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <0x6eac91>|0x1b1|+0x05a:'348'
-	// <0>
-	// <1>
-	// <0x6eaceb>|0x20b|+0x00a:'351'
-	// <0>
-	// <0x6eacf5>|0x215|+0x006:'353'
-	// <0>
-	// <0x6eacfb>|0x21b|+0x006:'355'
-	// <0x6ead01>|0x221|+0x003:'356'
-	// <0x6ead04>|0x224|+0x002:'357'
-	// <0>
-	// <0x6ead06>|0x226|+0x006:'359'
-	// <0>
-	// <1>
-	// <0x6ead0c>|0x22c|+0x016:'362'
-	// <0x6ead22>|0x242|+0x005:'363'
-	// <0x6ead27>|0x247|+0x010:'364'
-	// <0x6ead37>|0x257|+0x003:'365'
-	// <0>
-	// <0x6ead3a>|0x25a|+0x005:'367'
-	// <0>
-	// <0x6ead3f>|0x25f|+0x007:'369'
-	// <0x6ead46>|0x266|+0x003:'370'
-	// <0x6ead49>|0x269|+0x007:'371'
-	// <0>
-	// <0x6ead50>|0x270|+0x018:'373'
-	// <0x6ead68>|0x288|+0x02e:'374'
-	// <0>
-	// <0x6ead96>|0x2b6|+0x002:'376'
-	// <0x6ead98>|0x2b8|+0x026:'377'
-	// <0x6eadbe>|0x2de|+0x01e:'378'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6eaddc>|0x2fc|+0x01c:'382'
-	// <0x6eadf8>|0x318|+0x004:'383'
-	// <0x6eadfc>|0x31c|+0x014:'384'
-	// <0x6eae10>|0x330|+0x00f:'385'
-	// <0x6eae1f>|0x33f|+0x018:'386'
-	// <0x6eae37>|0x357|+0x002:'387'
-	// <0>
-	// <0x6eae39>|0x359|+0x002:'389'
-	// <0x6eae3b>|0x35b|+0x01c:'390'
-	// <0>
-	// <0x6eae57>|0x377|+0x007:'392'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+	animation_interval const* current_interval		= from.animation_intervals( );
+	animation_interval const* const intervals_end	= current_interval + from.animation_intervals_count( );
+	animation_interval const* const cloned_intervals_begin	= static_cast< animation_interval const* >( m_buffer.c_ptr( ) );
+	for ( ; current_interval != intervals_end; ++current_interval, m_buffer += sizeof( animation_interval ) )
+		new ( m_buffer.c_ptr( ) ) animation_interval(
+			current_interval->animation( ),
+			current_interval->start_time( ),
+			current_interval->length( )
+		);
+
+	n_ary_tree_animation_node* const result	= static_cast< n_ary_tree_animation_node* >( m_buffer.c_ptr( ) );
+	if ( !weight_driving_animation )
+		new ( result ) n_ary_tree_animation_node(
+			cloned_intervals_begin,
+			cloned_intervals_begin + from.animation_intervals_count( ),
+			from.unique_animation_id( ),
+			from.start_cycle_animation_interval_id( ),
+			*m_cloner.clone( from.weight_interpolator( ) ),
+			from.animated_object( ),
+			from.playback_type( ),
+			from.time_calculator( ),
+			from.time_synchronization_group_id( ),
+			from.weight_synchronization_group_id( ),
+			from.override_existing_animation( ),
+			from.is_positive_event_direction( ),
+			from.can_generate_events( ),
+			from.additivity_priority( ),
+			from.bones_mask( ),
+			weight_operands_count + time_scale_operands_count + operands_offset,
+			is_transitting_to_zero
+		);
+	else
+		new ( result ) n_ary_tree_animation_node(
+			*weight_driving_animation,
+			cloned_intervals_begin,
+			cloned_intervals_begin + from.animation_intervals_count( ),
+			from.unique_animation_id( ),
+			from.start_cycle_animation_interval_id( ),
+			from.animated_object( ),
+			from.playback_type( ),
+			from.time_calculator( ),
+			from.time_synchronization_group_id( ),
+			from.override_existing_animation( ),
+			from.is_positive_event_direction( ),
+			from.can_generate_events( ),
+			from.additivity_priority( ),
+			from.bones_mask( ),
+			weight_operands_count + time_scale_operands_count + operands_offset,
+			is_transitting_to_zero
+		);
+	m_buffer						+= sizeof( n_ary_tree_animation_node );
+
+	result->user_data				= from.user_data;
+
+	if ( !m_weight_root )
+		m_weight_root				= result;
+	else
+		m_previous_animation->m_next_weight_animation	= result;
+
+	if ( can_be_time_driving_animation && !from.time_driving_animation( ) && from.time_synchronization_group_id( ) != u32( -1 ) ) {
+		*m_time_driving_animations_end++	= result;
+		if ( time_scale_node )
+			*result->operands( sizeof( n_ary_tree_animation_node ) )	= time_scale_node;
+	}
+	else if ( from.time_driving_animation( ) ) {
+		animation_state const& time_driving_animation_state	= from.time_driving_animation( )->animation_state( );
+		animation_interval_id		= time_driving_animation_state.animation_interval_id;
+		animation_interval_time		=
+			from.animation_intervals( )[ animation_interval_id ].length( ) / from.time_driving_animation( )->animation_intervals( )[ animation_interval_id ].length( )
+			* time_driving_animation_state.animation_interval_time;
+	}
+	else {
+		animation_interval_id		= ( to.override_existing_animation( ) || from.animation_state( ).is_freezed ? to : from ).animation_state( ).animation_interval_id;
+		animation_interval_time		= ( to.override_existing_animation( ) || from.animation_state( ).is_freezed ? to : from ).animation_state( ).animation_interval_time;
+	}
+
+	// claude@NOTE: TRGT_ONLY tail (target lines 382-392) is the animated_object dedup: __find
+	// result->animated_object() in [m_animated_objects, m_new_animated_object), then in m_from's
+	// animated_objects, else m_get_transform_functor(...) into a fresh animated_object_holder and
+	// advance m_new_animated_object. Omitted: it reads n_ary_tree::m_animated_objects(_count) and
+	// writes animated_object_holder::transform, both private to classes that do NOT befriend this
+	// constructor here - reconstructing it needs friend decls I can't confirm from structure.
+	m_previous_animation			= result;
+	return							result;
 }
 
-// claude@NOTE: bodied but currently unreferenced (DCE'd to 0%) - its only callers are
-// add_animation/new_animation, still STUBs. Pairs once those roots are bodied.
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transition( base_interpolator const& interpolator, float from, float to )
 {
-	if ( interpolator.transition_time() == 0.f )
-		return				new ( m_buffer.c_ptr() ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), to );
+	if ( interpolator.transition_time() == 0.f ) {
+		n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+		m_buffer				+= sizeof( n_ary_tree_weight_node );
+		new ( result ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), 0.f );
+		return					result;
+	}
 
 	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 	m_buffer				+= sizeof( n_ary_tree_weight_transition_node );
 
-	n_ary_tree_base_node* const weight_from	=
-		new ( m_buffer.c_ptr() ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), from );
+	n_ary_tree_base_node* const weight_from	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 	m_buffer				+= sizeof( n_ary_tree_weight_node );
+	new ( weight_from ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), from );
 
-	n_ary_tree_base_node* const weight_to	=
-		new ( m_buffer.c_ptr() ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), to );
+	n_ary_tree_base_node* const weight_to	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 	m_buffer				+= sizeof( n_ary_tree_weight_node );
+	new ( weight_to ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), to );
 
 	new ( result ) n_ary_tree_weight_transition_node(
 		*weight_from,
@@ -717,129 +673,66 @@ void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group
 	// ******
 }
 
-// STATE[STUB]
-// claude@NOTE: this is the un-DCE driver for new_weight_transition(base_interpolator const&,
-// float,float) - it is the only caller, so that overload stays unpaired until this is bodied.
-// 22-stmt aggregator mirroring new_weight_driving_animation: pick the weight interpolator (from
-// weight_driving_animation else animation), call new_animation (STUB), then a 3-way operand
-// merge that emits new_weight_transition nodes, then an INLINED stlp_std::sort (introsort_loop
-// + insertion_sort, same comparer idiom as add_operands), then add_animation_node (STUB).
-// Blocked on new_animation + add_animation_node bodies (its new_animation call args + final
-// add_animation_node call can't line up while those return NULL). Next step: body those two
-// roots, then reconstruct this merge+inlined-sort from asm 0x6eb810.
+// claude@NOTE: 22-stmt single-animation builder (target lines 618-701). Picks the weight
+// interpolator (weight_driving_animation else animation), calls new_animation, then a per-operand
+// merge that clones each operand (with a 1.f time-scale for time-scale nodes) until the first
+// operand >= temp, emits a new_weight_transition there, then clones the rest, then an INLINED
+// stlp_std::sort (introsort_loop + insertion_sort), then add_animation_node. This is the un-DCE
+// driver for new_weight_transition(base_interpolator const&,float,float). Residual: the inlined
+// sort + clone re-scheduling and the n_ary_tree_weight_node temp construction.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation )
 {
-	// LOCALS
-	// float 							animation_interval_time
-	// u32 								time_scale_operands_count
-	// n_ary_tree_animation_node* 		result
-	// u32 								to_operands_count
-	// u32 								animation_interval_id
-	// n_ary_tree_weight_node 			temp
-	// u32 								operands_offset
-	// n_ary_tree_node_comparer 		comparer
-	// n_ary_tree_base_node** 			new_operands
-	// ******
+	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
 
-	// CALL SITE INFO
-	// <0x6eb84a> -> bool < unknown >()
-	// <0x6eb859> -> float < unknown >() const
-	// <0x6eb8bf> -> bool < unknown >()
-	// <0x6eb953> -> bool < unknown >()
-	// <0x6eb9c8> -> float < unknown >() const
-	// <0x6eba85> -> float < unknown >() const
-	// ******
+	u32 const to_operands_count		= animation.operands_count( ) - ( animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0 );
 
-	return NULL;
+	u32 operands_offset				= interpolator.transition_time( ) != 0.f ? 1 : 0;
 
-	// FUNCTION BODY
-	// <0x6eb810>|0x000|+0x025:'618'
-	// <0>
-	// <0x6eb835>|0x025|+0x007:'620'
-	// <0x6eb83c>|0x02c|+0x003:'621'
-	// <0x6eb83f>|0x02f|+0x033:'622'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x6eb872>|0x062|+0x034:'638'
-	// <0x6eb8a6>|0x096|+0x01f:'639'
-	// <0x6eb8c5>|0x0b5|+0x005:'640'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6eb8ca>|0x0ba|+0x009:'644'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6eb8d3>|0x0c3|+0x018:'652'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6eb8eb>|0x0db|+0x003:'656'
-	// <0x6eb8ee>|0x0de|+0x0d1:'657'
-	// <0x6eb9bf>|0x1af|-0x099:'657'
-	// <0x6eb926>|0x116|+0x026:'658'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6eb94c>|0x13c|+0x12e:'666'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6eba7a>|0x26a|+0x01b:'673'
-	// <0x6eba95>|0x285|+0x020:'674'
-	// <0>
-	// <0x6ebab5>|0x2a5|+0x00f:'676'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ebac4>|0x2b4|-0x101:'683'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6eb9c3>|0x1b3|+0x015:'689'
-	// <0x6eb9d8>|0x1c8|+0x01d:'690'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6eb9f5>|0x1e5|+0x104:'694'
-	// <0x6ebaf9>|0x2e9|+0x015:'694'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ebb0e>|0x2fe|+0x021:'701'
-	// ******
+	u32 time_scale_operands_count	= 0;
+	u32 animation_interval_id		= 0;
+	float animation_interval_time	= 0.f;
+	n_ary_tree_animation_node* const result	= new_animation(
+		animation,
+		animation,
+		weight_driving_animation,
+		operands_offset + to_operands_count,
+		time_scale_operands_count,
+		operands_offset,
+		animation_interval_id,
+		animation_interval_time,
+		false,
+		true
+	);
+
+	bool has_weight_transition_been_added	= weight_driving_animation == 0
+		&& animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
+
+	n_ary_tree_base_node** new_operands	= result->operands( sizeof( n_ary_tree_animation_node ) );
+	m_buffer						+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
+
+	n_ary_tree_weight_node			temp( interpolator, 1.f );
+	n_ary_tree_node_comparer		comparer;
+
+	n_ary_tree_base_node** const	operands_end	= animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
+	n_ary_tree_base_node**			i				= animation.operands( sizeof( n_ary_tree_animation_node ) ) + ( has_weight_transition_been_added ? 1 : 0 );
+	for ( ; i != operands_end; ++i ) {
+		if ( comparer.compare( **i, temp ) == n_ary_tree_node_comparer::more ) {
+			*new_operands++			= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
+			break;
+		}
+
+		*new_operands++				= (*i)->is_time_scale( ) ? m_cloner.clone( **i, 1.f ) : m_cloner.clone( **i );
+	}
+
+	for ( ; i != operands_end; ++i )
+		*new_operands++				= m_cloner.clone( **i );
+
+	if ( i == operands_end && interpolator.transition_time( ) == 0.f )
+		*new_operands++				= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
+
+	stlp_std::sort					( result->operands( sizeof( n_ary_tree_animation_node ) ), new_operands, comparer );
+
+	return							add_animation_node( *result, &animation.animation_state( ), animation_interval_id, animation_interval_time, true );
 }
 
 // STATE[STUB]

@@ -67,6 +67,13 @@ void anchor_animation_cloner( )
 	static n_ary_tree_animation_node* volatile	s_anim	= 0;
 	static bool volatile						s_flag	= false;
 	constructor.change_animation( *s_anim, *s_anim, s_anim, s_flag );
+
+	// Pin the other public root add_animation() (the single-animation builder, reached in
+	// the real call graph through add_synchronization_group/merge_trees, both still STUBs).
+	// Un-DCEs add_animation + its leaf new_weight_transition(base_interpolator const&,float,float).
+	// TEMPORARY - retire once merge_trees reaches add_animation.
+	static n_ary_tree_animation_node* volatile	s_sink_anim	= 0;
+	s_sink_anim	= constructor.add_animation( *s_anim, s_anim );
 }
 
 } // namespace vostok
