@@ -33,7 +33,7 @@ private:
 	};
 
 	enum {
-		max_task_count	=	u32(950000),
+		max_task_count	=	u32(4096),
 		granularity		=	alignment<VOSTOK_TASK_ALLOCATOR_GRANULARITY>::value,
 	};
 
@@ -95,6 +95,8 @@ private:
 
 	friend class		task_manager;
 };
+
+STATIC_SIZE_ASSERT(task_allocator, 0x60040);
 
 } // namespace tasks
 } // namespace vostok

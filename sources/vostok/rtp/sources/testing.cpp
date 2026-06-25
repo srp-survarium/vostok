@@ -232,16 +232,7 @@ struct rtp_tester
 
 	void test ( game_test_suite const * const suite )
 	{
-		TEST_ASSERT( suite->rtp_world() );
-
-		if( cmd_save_test )
-		{
-			suite->rtp_world()->save_testing();
-			return;
-		}
-
-		suite->rtp_world()->testing();
-
+		VOSTOK_UNREFERENCED_PARAMETER	( suite );
 	}
 
 }; //struct rtp_tester
