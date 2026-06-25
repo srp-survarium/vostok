@@ -9,6 +9,7 @@
 
 #include <vostok/animation/mixing_binary_tree_visitor.h>
 #include "mixing_n_ary_tree_visitor.h"
+#include "mixing_n_ary_tree_comparer.h"
 
 namespace vostok {
 namespace animation {
@@ -16,7 +17,6 @@ namespace mixing {
 
 class animation_interval;
 class binary_tree_binary_operation_node;
-class n_ary_tree_comparer;
 
 class n_ary_tree_size_calculator :
 	public binary_tree_visitor,
@@ -50,6 +50,8 @@ private:
 
 
 	inline	void	advance_buffer	( const u32 size ) { /* no source */ }
+
+	inline	u32&	size			( ) { return m_comparer ? m_comparer->m_needed_buffer_size : m_size; }
 
 private:
 	/* 0x0008 */	n_ary_tree_comparer*	m_comparer;
