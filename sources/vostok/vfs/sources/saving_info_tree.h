@@ -16,29 +16,30 @@ namespace vfs {
 struct fat_node_info : public vfs_association
 {
 public:
-	u32					fat_size;
-	u32					fat_size_with_children;
-	u32					archive_size_with_children;
 	fat_node_info *		next;
 	fat_node_info *		parent;
 	fat_node_info *		first_child;
 	fat_node_info *		next_in_hashset;
-	u32					hash;
 	fat_node_info *		link_target;
-
 	base_node<> *		node;
 	pvoid				saved_node;
+	std::pair<void * *, void * *>	file_handle;
 	file_size_type		pos;
+	u32					fat_size;
+	u32					fat_size_with_children;
+	u32					archive_size_with_children;
+	u32					hash;
 	u32					compressed_size;
 	bool				is_compressed;
 	bool				is_archive_part;
+	bool				is_folder;
 	bool				can_be_referenced;
-	
+
 	fat_node_info ()
 		:	vfs_association(0), fat_size(0), fat_size_with_children(0),
-			archive_size_with_children(0), color(u32(-1)), next(NULL), first_child(NULL), link_target(NULL), 
-			parent(NULL), hash(NULL), node(NULL), is_compressed(false), is_archive_part(false), saved_node(NULL),
-			pos(0), compressed_size(0), next_in_hashset(NULL), can_be_referenced(true) { }
+			archive_size_with_children(0), color(u32(-1)), next(NULL), first_child(NULL), link_target(NULL),
+			parent(NULL), hash(NULL), node(NULL), is_compressed(false), is_archive_part(false), is_folder(false),
+			saved_node(NULL), pos(0), compressed_size(0), next_in_hashset(NULL), can_be_referenced(true) { }
 
 public:
 	bool				same_color						(fat_node_info const *	other) const;
@@ -54,7 +55,9 @@ private:
 	u32					color;
 };
 
-typedef hash_multiset< fat_node_info, fat_node_info *, & fat_node_info::next_in_hashset, 
+STATIC_SIZE_ASSERT(fat_node_info, 0x58);
+
+typedef hash_multiset< fat_node_info, fat_node_info *, & fat_node_info::next_in_hashset,
 					   vostok::detail::fixed_size_policy<1024*32> >	fat_node_info_set;
 
 

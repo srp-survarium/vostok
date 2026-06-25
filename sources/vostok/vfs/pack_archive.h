@@ -43,10 +43,14 @@ struct pack_archive_args : private core::noncopyable
 	archive_platform_enum					platform;
 	bool									clean_temp_files;
 	// for patch:
-	virtual_file_system *					from_vfs;	
+	virtual_file_system *					from_vfs;
 	fat_node_info *							from_vfs_info_tree;
-	virtual_file_system *					to_vfs;	
+	virtual_file_system *					to_vfs;
 	fat_node_info *							to_vfs_info_tree;
+	// sushi@TODO: target ctor takes file_handles as a 2nd arg (buffer_vector const*); kept the
+	// 3-arg ctor since the pack/patch consumers aren't in the shipped exe and the signature
+	// change is unverifiable here. Layout matches the target (file_handles @0x494, size 0x498).
+	buffer_vector< std::pair< mount_root_node_base<> *, std::pair<void * *, void * *> > > const *	file_handles;
 
 	pack_archive_args					(fs_new::synchronous_device_interface &		synchronous_device,
 										 logging::log_format * const				log_format,
@@ -66,10 +70,13 @@ struct pack_archive_args : private core::noncopyable
 			from_vfs_info_tree				(NULL),
 			to_vfs							(NULL),
 			to_vfs_info_tree				(NULL),
-			clean_temp_files				(true)
+			clean_temp_files				(true),
+			file_handles					(NULL)
 	{
 	}
 };
+
+STATIC_SIZE_ASSERT(pack_archive_args, 0x498);
 
 bool   pack_archive						(pack_archive_args & args);
 

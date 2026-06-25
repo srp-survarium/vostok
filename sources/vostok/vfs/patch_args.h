@@ -21,6 +21,8 @@ struct patch_args : public pack_archive_args
 		:	pack_archive_args(synchronous_device, log_format, log_flags) {}
 };
 
+STATIC_SIZE_ASSERT(patch_args, 0x6C0);
+
 bool   make_patch						(patch_args & args);
 
 } // namespace vfs
