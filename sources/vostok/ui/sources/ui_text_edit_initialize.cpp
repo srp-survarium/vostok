@@ -62,6 +62,14 @@ void  ui_text_edit::add_action(base_edit_action* action)
 	m_edit_actions.push_back(action);
 }
 
+// claude@NOTE: structure matches the target (the per-site BASE_ONLY entries in the
+// structure-diff are diff-alignment artifacts of the size gap, not real extra statements).
+// Residual is a register-coloring difference: the target hoists m_ui_world.input_world()
+// into edi once and reuses it (push edi) at every create_char_action site while keeping the
+// push_back stride 4 as an immediate; our base instead keeps 4 in edi and reloads
+// [m_ui_world]+m_input_world (8 bytes) per site. No faithful source change flips this - the
+// PDB records no input_world local (and ctrl_sh_state's missing name is /Ox eliding a real,
+// used local, not a phantom to drop).
 void ui_text_edit::init_internals(enum_text_edit_mode mode)
 {
 	shift_state							any_sh_state;
