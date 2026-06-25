@@ -234,6 +234,12 @@ namespace vostok
 		base_short.tick( 0.0f );
 		base_short.is_ready_for_transition( );
 
+		// breath_holding_params::load is a header-inline; a plain call is inlined by /GL,
+		// so take its address to keep the standalone out-of-line COMDAT the target emits.
+		void ( survarium::breath_holding_params::*load_fn )( configs::binary_config_value const& )
+			= &survarium::breath_holding_params::load;
+		example_callback( reinterpret_cast< pcstr >( &load_fn ) );
+
 		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
 		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
 		example_callback( reinterpret_cast< pcstr >( &st_short ) );
@@ -2309,9 +2315,11 @@ namespace vostok
 	// call_player_death_subscriber_callback (taken as a function ref by for_each).
 	void use_game_core_base_player( )
 	{
-		// base_player_creation_params has no compiled default ctor; pass a null ref (the
-		// anchor is never run, only ODR-uses the base_player ctor body).
-		survarium::base_player_creation_params&	cp	= *reinterpret_cast< survarium::base_player_creation_params* >( NULL );
+		// Construct a real base_player_creation_params so its default ctor (member-ctor
+		// chain: player_initial_info / breath_holding_params defaults, recoil / dispersion
+		// / stamina / stealth) is ODR-used and pairs; escape it so the stores are observed.
+		survarium::base_player_creation_params	cp;
+		example_callback( reinterpret_cast< pcstr >( &cp ) );
 		survarium::scheduler					sched( NULL );
 		concrete_base_player					cbp( cp, sched );
 		example_callback( reinterpret_cast< pcstr >( &cbp ) );
@@ -2394,22 +2402,26 @@ namespace vostok
 	}
 
 	// base_project: register_named_object / register_object_to_resolve are public
-	// non-virtual. base_project has a pure-ish vtable (get_object_by_name/resolve_links
-	// are non-pure); reach the two registrars via a trivial concrete derived stub.
+	// non-virtual header-inline registrars. A plain call is inlined by /GL, so take
+	// their addresses instead - an address-taken member keeps the standalone
+	// out-of-line COMDAT the target also emits. base_project has a pure-ish vtable
+	// (get_object_by_name/resolve_links are non-pure); a constructed local keeps the
+	// ctor/vtable.
 	struct concrete_base_project : survarium::base_project
 	{
-		void touch( )
-		{
-			register_named_object( "name", NULL );
-			register_object_to_resolve( NULL, configs::binary_config_value( ) );
-		}
 	};
 
 	void use_game_core_base_project( )
 	{
 		concrete_base_project	p;
-		p.touch( );
 		example_callback( reinterpret_cast< pcstr >( &p ) );
+
+		void ( survarium::base_project::*register_named_object_fn )( pcstr, survarium::base_game_object* )
+			= &survarium::base_project::register_named_object;
+		void ( survarium::base_project::*register_object_to_resolve_fn )( survarium::link_resolver*, configs::binary_config_value )
+			= &survarium::base_project::register_object_to_resolve;
+		example_callback( reinterpret_cast< pcstr >( &register_named_object_fn ) );
+		example_callback( reinterpret_cast< pcstr >( &register_object_to_resolve_fn ) );
 
 		// static_collision insert/remove are public non-virtual leaves on a null ref.
 		survarium::static_collision&	sc	= *reinterpret_cast< survarium::static_collision* >( NULL );
