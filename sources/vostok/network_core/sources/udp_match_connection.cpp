@@ -142,7 +142,7 @@ void udp_match_connection::fill_packet_header( udp_match_packet& packet )
 	reinterpret_cast< sequence_number< u16 >& >( packet.sequence_id ).serialize( buffer );
 	m_remote_sequence_id.serialize( buffer );
 
-	*reinterpret_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_low_level_packet ) );
+	*reinterpret_cast< u16* >( buffer )	= u16( ( m_remote_acknowledgement_bits << 1 ) | ( packet_type == udp_match_multiple_packets ) );
 	buffer	+= 2;
 }
 
@@ -175,7 +175,7 @@ void udp_match_connection::send_packets_list( udp_match_packet* const packets_li
 	udp_match_packet* const	packet_to_send	= new_udp_match_packet( m_packets_allocator );
 	packet_to_send->is_reliable				= 0;
 	reinterpret_cast< sequence_number< u16 >& >( packet_to_send->sequence_id )	= reinterpret_cast< sequence_number< u16 >& >( packets_list->sequence_id );
-	*packet_to_send->buffer_to_send( )		= udp_match_low_level_packet;
+	*packet_to_send->buffer_to_send( )		= udp_match_multiple_packets;
 	fill_packet_header				( *packet_to_send );
 
 	buffer_vector< udp_match_packet* >	packets( ALLOCA( packets_count * sizeof( udp_match_packet* ) ), packets_count );
@@ -254,7 +254,7 @@ namespace network_core {
 udp_match_packet* udp_match_connection::new_low_level_packet( const u8 message_type )
 {
 	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
-	*packet->buffer_to_send( )		= udp_match_low_level_packet;
+	*packet->buffer_to_send( )		= udp_match_multiple_packets;
 
 	packet->append					( u8( 1 ) );
 

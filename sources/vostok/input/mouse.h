@@ -18,16 +18,18 @@ enum enum_mouse_key_action{
 	ms_key_dbl_click
 };//enum_mouse_button_action
 
+// canonical: headers/input/enums/mouse_button.h - the button enumerators carry
+// virtual-key-style codes (0x151..0x158), mouse_button_count = 8
 enum mouse_button {
-	mouse_button_left		= u8( 1 << 0 ),
-	mouse_button_right		= u8( 1 << 1 ),
-	mouse_button_middle		= u8( 1 << 2 ),
-	mouse_button_extended0	= u8( 1 << 3 ),
-	mouse_button_extended1	= u8( 1 << 4 ),
-	mouse_button_extended2	= u8( 1 << 5 ),
-	mouse_button_extended3	= u8( 1 << 6 ),
-	mouse_button_extended4	= u8( 1 << 7 ),
-	mouse_button_count		= 8,
+	mouse_button_left		= 0x151,
+	mouse_button_right		= 0x152,
+	mouse_button_middle		= 0x153,
+	mouse_button_extended0	= 0x154,
+	mouse_button_extended1	= 0x155,
+	mouse_button_extended2	= 0x156,
+	mouse_button_extended3	= 0x157,
+	mouse_button_extended4	= 0x158,
+	mouse_button_count		= 0x008,
 }; // enum mouse_buttons
 
 struct VOSTOK_NOVTABLE mouse {

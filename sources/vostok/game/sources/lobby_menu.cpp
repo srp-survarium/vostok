@@ -165,10 +165,10 @@ void lobby_menu::query_lobby_info( )
 	if ( m_ui_static_info_initialized )
 		return;
 
-	lobby_client( ).query_client_status( (lobby::query_info_types)4 );	// sushi@TODO: enumerator names for query_info_types 3..0xB unknown
-	lobby_client( ).query_client_status( (lobby::query_info_types)5 );
-	lobby_client( ).query_client_status( (lobby::query_info_types)9 );
-	lobby_client( ).query_client_status( (lobby::query_info_types)0xA );
+	lobby_client( ).query_client_status( lobby::q_profile_slots_restrictions );	// 4
+	lobby_client( ).query_client_status( lobby::q_items_compatibility );			// 5
+	lobby_client( ).query_client_status( lobby::q_player_skills_tree );			// 9
+	lobby_client( ).query_client_status( lobby::q_service_prices );				// 0xA
 
 	for ( u32 i = 1 ; i < 4 ; ++i )
 		lobby_client( ).query_prices( i );
@@ -176,10 +176,10 @@ void lobby_menu::query_lobby_info( )
 
 void lobby_menu::query_account_data( )
 {
-	lobby_client( ).query_client_status( (lobby::query_info_types)3 );	// sushi@TODO: enumerator names for query_info_types unknown
-	lobby_client( ).query_client_status( (lobby::query_info_types)7 );
-	lobby_client( ).query_client_status( (lobby::query_info_types)8 );
-	lobby_client( ).query_client_status( (lobby::query_info_types)0xB );
+	lobby_client( ).query_client_status( lobby::q_enumerate_inventory );	// 3
+	lobby_client( ).query_client_status( lobby::q_account_money );		// 7
+	lobby_client( ).query_client_status( lobby::q_player_skills );		// 8
+	lobby_client( ).query_client_status( lobby::q_player_reputations );	// 0xB
 }
 
 void lobby_menu::switch_to_level_loading( )
@@ -189,9 +189,8 @@ void lobby_menu::switch_to_level_loading( )
 }
 
 // claude@NOTE: 12-case switch on query_info_types (0..0xB), each LOG_INFO("[R] <name>") +
-// one call (case bodies in source = jump-table order; values 2/6 = query_profile_info/
-// query_prices_info documented, the rest literal - enumerator names unknown, sushi@TODO).
-// Case 0 is a nested switch on lobby_client().status() (the lobby/match-making state). The
+// one call (case bodies in source = jump-table order). Case 0 (q_client_state) is a nested
+// switch on lobby_client().status() (the lobby/match-making state). The
 // byte residual is the LOG __LINE__ baking (depends on this file's exact line layout) plus
 // the cross-module parked callees (update_status / query_account_data / switch_to_lobby /
 // fill_skills_tree / fill_character_data / fill_service_prices / on_player_reputations_arrived
@@ -200,7 +199,7 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 {
 	switch ( type )
 	{
-	case 0:	// sushi@TODO: enumerator name unknown
+	case lobby::q_client_state:	// 0
 		switch ( lobby_client( ).status( ) )
 		{
 		case lobby::surf_lobby_menu:
@@ -229,48 +228,48 @@ void lobby_menu::on_client_status_received( lobby::query_info_types type )
 		}
 		update_status( );
 		break;
-	case 1:	// sushi@TODO: enumerator name unknown
+	case lobby::q_enumerate_profiles:	// 1
 		LOG_INFO( "[R] enumerate_profiles" );
 		for ( u8 i = 0; i < lobby_client( ).profiles_count( ); ++i )
 			lobby_client( ).query_profile_contents( lobby_client( ).profile( i ).profile_id );
 		fill_profiles( );
 		break;
-	case lobby::query_profile_info:	// 2
+	case lobby::q_profile_contents:	// 2
 		LOG_INFO( "[R] porfile_contents" );
 		break;
-	case 3:	// sushi@TODO: enumerator name unknown
+	case lobby::q_enumerate_inventory:	// 3
 		LOG_INFO( "[R] enumerate_inventory" );
 		fill_inventory_contents( );
-		lobby_client( ).query_client_status( (lobby::query_info_types)1 );
+		lobby_client( ).query_client_status( lobby::q_enumerate_profiles );	// 1
 		break;
-	case 4:	// sushi@TODO: enumerator name unknown
+	case lobby::q_profile_slots_restrictions:	// 4
 		LOG_INFO( "[R] profile_slots_restrictions" );
 		on_slot_restrictions_arrived( );
 		break;
-	case 5:	// sushi@TODO: enumerator name unknown
+	case lobby::q_items_compatibility:	// 5
 		LOG_INFO( "[R] items_compatibility" );
 		on_items_compatibility_arrived( );
 		break;
-	case lobby::query_prices_info:	// 6
+	case lobby::q_price_items:	// 6
 		LOG_INFO( "[R] price_items" );
 		break;
-	case 7:	// sushi@TODO: enumerator name unknown
+	case lobby::q_account_money:	// 7
 		LOG_INFO( "[R] account_money" );
 		reset_account_money( );
 		break;
-	case 8:	// sushi@TODO: enumerator name unknown
+	case lobby::q_player_skills:	// 8
 		LOG_INFO( "[R] player_skills" );
 		fill_character_data( );
 		break;
-	case 9:	// sushi@TODO: enumerator name unknown
+	case lobby::q_player_skills_tree:	// 9
 		LOG_INFO( "[R] player_skills_tree" );
 		fill_skills_tree( );
 		break;
-	case 0xA:	// sushi@TODO: enumerator name unknown
+	case lobby::q_service_prices:	// 0xA
 		LOG_INFO( "[R] service_prices" );
 		fill_service_prices( );
 		break;
-	case 0xB:	// sushi@TODO: enumerator name unknown
+	case lobby::q_player_reputations:	// 0xB
 		LOG_INFO( "[R] player_reputations" );
 		on_player_reputations_arrived( );
 		break;
@@ -287,16 +286,16 @@ void lobby_menu::on_friendship_status_recivied(
 {
 	switch ( type )
 	{
-	case messaging::query_friend_list_action:
+	case messaging::query_friend_list:
 		LOG_INFO( "[R] friend_list" );
 		fill_friend_list( );
 		request_friends_status_from_server( 10000 );
 		break;
-	case messaging::query_ignore_list_action:
+	case messaging::query_ignore_list:
 		LOG_INFO( "[R] ignore_list" );
 		fill_ignore_list( );
 		break;
-	case messaging::find_players_action:
+	case messaging::find_players:
 		LOG_INFO( "[R] find_players" );
 		fill_found_players( );
 		break;
@@ -322,7 +321,7 @@ void lobby_menu::on_operation_permitted_received( lobby_client_message_types_enu
 			lobby_client( ).profile( m_selected_profile ).profile_id );
 		break;
 	case skills_tree_action:
-		lobby_client( ).query_client_status( (lobby::query_info_types)8 );	// sushi@TODO: enumerator name unknown
+		lobby_client( ).query_client_status( lobby::q_player_skills );	// 8
 		break;
 	default:
 		LOG_ERROR( "Unknown (operation permitted) type %d", op_type );
@@ -408,7 +407,7 @@ void lobby_menu::request_status_from_server_impl( const u32 frame_delta_ms, cons
 {
 	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta_ms, current_time_ms );
 	scheduler( ).unregister( &m_update_status_handler );
-	lobby_client( ).query_client_status( (lobby::query_info_types)0 );
+	lobby_client( ).query_client_status( lobby::q_client_state );	// 0
 	LOG_INFO( "request_status_from_server_impl" );
 }
 

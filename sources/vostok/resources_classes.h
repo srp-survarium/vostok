@@ -199,14 +199,25 @@ enum class_id_enum
 	flash_movie_class,                             // [+]
 	game_world_class,                              // [+]
 	last_resource_class,
-	platformed_raw_data_class,                     // [+]
 
-	converted_model_class,
-	binary_config_class,
-	inherits_binary_config_class,                  // [+]
+	// target aliases these onto earlier ids (the PDB records 0x3/0x3/0x22/0x23,
+	// not the contiguous 0x206..0x209 our auto-increment would assign)
+	platformed_raw_data_class	= raw_data_class,			// 0x003
+	converted_model_class		= raw_data_class,			// 0x003
+	binary_config_class			= binary_config_class_impl,	// 0x022
+	inherits_binary_config_class	= ltx_config_class,		// 0x023
 
-	// sushi@TODO: Deleted/renamed classes. Put them at the end to not mess up ids for matching
-	config_class,                                  // [-]
+	// sushi@TODO: [values] divergence - these deleted/renamed classes are absent
+	// from the shipped target's class_id_enum, but our tree still has resource cooks
+	// that reference them (config_class -> configs_binary_config_cook.cpp; spl_class ->
+	// spl_cook.cpp; sound_stream_class -> sound_*_cook*.cpp; animation_controller_class ->
+	// rtp/editor; game_project_simple_class -> project_cooker_simple.cpp). Removing them
+	// to match the target requires parking/removing those cooks (several in skipped
+	// sound/editor modules) - out of scope for the enum-only pass. Kept at the end so
+	// they don't shift the matched ids above. Parked. Anchored at 0x20a (past the
+	// matched range) so aliasing the four entries above onto earlier ids does not
+	// renumber the block down into a collision with the real class ids.
+	config_class	= 0x20a,                       // [-]
 	spl_class,                                     // [-]
 	animation_controller_class,                    // [-]
 	sound_stream_class,                            // [-]

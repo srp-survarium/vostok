@@ -109,8 +109,8 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 			else if ( op == vostok::skills_tree_action )
 			{
 				if ( reader.r< u8 >( ) == 1 )
-					lobby_client( ).query_client_status	( (lobby::query_info_types)7 );
-				lobby_client( ).query_client_status	( (lobby::query_info_types)8 );
+					lobby_client( ).query_client_status	( lobby::q_account_money );		// 7
+				lobby_client( ).query_client_status	( lobby::q_player_skills );			// 8
 			}
 			else
 				m_game.lobby_menu( ).on_operation_permitted_received	( op );
