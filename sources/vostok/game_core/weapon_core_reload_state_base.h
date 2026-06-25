@@ -13,7 +13,7 @@ namespace survarium {
 
 class weapon_core_reload_state_base : public weapon_core_animation_end_aware_state {
 protected:
-	explicit		weapon_core_reload_state_base	( weapon_core& weapon, float animation_time_scale );
+	explicit		weapon_core_reload_state_base	( weapon_core& weapon, const float animation_time_scale );
 
 	virtual	void	initialize						( ) override;
 

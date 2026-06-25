@@ -31,7 +31,7 @@ private:
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations			(
 							mutable_buffer&						buffer,
-							bool								is_third_view,		// sushi@NOTE: unused
+							const bool								is_third_view,		// sushi@NOTE: unused
 							animation_delegate const&			look_calculator,	// sushi@NOTE: unused
 							weapon_animation_parameters const&	weapon_parameters	// sushi@NOTE: unused
 						) override;

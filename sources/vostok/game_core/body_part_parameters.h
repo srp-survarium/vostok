@@ -32,12 +32,12 @@ class body_part_parameters : public boost::noncopyable {
 public:
 									body_part_parameters	(
 										pcstr				name,
-										float				health,
-										float				regeneration_speed,
-										float				regeneration_timeout,
-										bool				can_be_assigned,
+										const float				health,
+										const float				regeneration_speed,
+										const float				regeneration_timeout,
+										const bool				can_be_assigned,
 										damage_model&		owner,
-										u8					damage_group
+										const u8					damage_group
 									);
 
 			void					add_hit_type			( hit_type_parameters* const new_hit_type );
@@ -45,32 +45,32 @@ public:
 
 			void					hit_by_type				(
 										pcstr					hit_type,
-										u32						time_in_ms,
-										float					amount,
-										float					armor_piercing,
-										bool					__formal,
+										const u32						time_in_ms,
+										const float					amount,
+										const float					armor_piercing,
+										const bool					__formal,
 										damage_protector*		prot
 									);
 
-			void					increase_health			( float amount );
-			void					decrease_health			( float amount );
+			void					increase_health			( const float amount );
+			void					decrease_health			( const float amount );
 
-			void					regenerate				( u32 time_delta_ms, u32 current_time_in_ms );
+			void					regenerate				( const u32 time_delta_ms, const u32 current_time_in_ms );
 
-			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, u32 index ) const;
-	inline	void					dump_state				( damage_info_type& arg_0, u32 arg_1 ) const { /* no source */ }
-			void					dump_state				( ai::npc_statistics& stats, u32 current_time_in_ms ) const;
+			void					dump_state				( boost::function<void(u32,float,float,pcstr)> callback, const u32 index ) const;
+	inline	void					dump_state				( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
+			void					dump_state				( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
 
 	inline	void					remove_edges			( body_part_parameters* arg_0 ) { /* no source */ }
 
 			void					reset					( );
 
-			void					apply_affect_by_force	( hit_affects_type_enum affect, affect_event_type_enum event_type, u32 current_time_in_ms );
+			void					apply_affect_by_force	( const hit_affects_type_enum affect, const affect_event_type_enum event_type, const u32 current_time_in_ms );
 
 			bool					can_affect_death		( );
-			bool					has_affect_protector	( hit_affects_type_enum affect );
+			bool					has_affect_protector	( const hit_affects_type_enum affect );
 			u8						get_health_in_percentage( );
-			void					cancel_affect_by_force	( hit_affects_type_enum affect );
+			void					cancel_affect_by_force	( const hit_affects_type_enum affect );
 
 			void					add_damage_protector	( damage_protector* protector );
 			void					remove_damage_protector	( damage_protector* protector );
@@ -90,7 +90,7 @@ public:
 
 	inline	math::color				get_health_level_color	( ) const { /* no source */ }
 
-			bool					is_affect_applied		( hit_affects_type_enum affect );
+			bool					is_affect_applied		( const hit_affects_type_enum affect );
 
 			hit_type_parameters*	get_hit_parameters		( pcstr hit_type ) const;
 			void					set_parameters			( float max_health, float regeneration_speed );
@@ -99,9 +99,9 @@ public:
 			void					deserialize				( network_core::packet_reader& reader );
 
 private:
-			void					check_affects			( u32 current_time_in_ms );
-			void					update_affects			( u32 current_time_in_ms );
-			void					apply_affects			( affects_threshold const* threshold_reached, u32 current_time_in_ms );
+			void					check_affects			( const u32 current_time_in_ms );
+			void					update_affects			( const u32 current_time_in_ms );
+			void					apply_affects			( affects_threshold const* threshold_reached, const u32 current_time_in_ms );
 
 			template < class stats_item_type >
 			void					fill_new_stats_item		( stats_item_type& new_stats_item, const u32 current_time_in_ms ) const;

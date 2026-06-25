@@ -29,7 +29,7 @@ private:
 	virtual	std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
 						selected_animations			(
 							mutable_buffer&						buffer,
-							bool								is_third_view,
+							const bool								is_third_view,
 							animation_delegate const&			look_calculator,
 							weapon_animation_parameters const&	weapon_parameters
 						) override;
@@ -38,7 +38,7 @@ private:
 	virtual	void		finalize					( ) override;
 
 			animation::mixing::animation_lexeme
-						get_main_lexeme				( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask );
+						get_main_lexeme				( mutable_buffer& buffer, const bool is_third_view, const animation::body_part_masks_enum bones_mask );
 
 			animation::mixing::animation_lexeme
 						get_look_lexeme				(

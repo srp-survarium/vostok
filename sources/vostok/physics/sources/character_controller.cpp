@@ -114,7 +114,7 @@ bool bt_character_controller::adjust_foot_transform(
 	return m_bt_physics_world->adjust_foot_transform( half_size, start, finish, rotation_koef0, __formal, transform );
 }
 
-void bt_character_controller::update_action( u32 time_delta_in_ms )
+void bt_character_controller::update_action( const u32 time_delta_in_ms )
 {
 	m_bt_controller->updateAction( m_bt_physics_world->get_bt_internal( ), time_delta_in_ms * math::epsilon_3 );
 }

@@ -34,7 +34,7 @@ struct player_input;
 
 class player_logic_base_state : public ai::fsm_state {
 public:
-	explicit							player_logic_base_state		( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id );
+	explicit							player_logic_base_state		( weapon_user_animations_selector& owner, const weapon_user_state_enum weapon_user_state_id );
 
 	virtual	void						set_user					( base_player& user );
 

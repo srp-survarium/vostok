@@ -8,7 +8,7 @@
 
 namespace survarium {
 
-player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
+player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, const weapon_user_state_enum weapon_user_state_id ) :
 	m_owner							( owner ),
 	m_user							( NULL ),
 	m_weapon_user_state_id			( weapon_user_state_id ),

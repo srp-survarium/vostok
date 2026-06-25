@@ -10,7 +10,7 @@
 
 namespace survarium {
 
-weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, float animation_time_scale ) :
+weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, const float animation_time_scale ) :
 	weapon_core_animation_end_aware_state( weapon, true ),
 	m_animation_timescale( animation_time_scale )
 {

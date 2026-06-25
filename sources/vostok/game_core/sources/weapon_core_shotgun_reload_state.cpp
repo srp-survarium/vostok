@@ -92,8 +92,8 @@ void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader&
 
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {

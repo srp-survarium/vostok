@@ -32,12 +32,12 @@ void character_dispersion_calculator::set_character_dispersion_params( character
 }
 
 void character_dispersion_calculator::tick(
-	weapon_user_state_enum		character_state,
-	bool						is_moving,
-	bool						is_aiming,
-	u8							broken_hands_count,
-	bool						using_double_handed_weapon,
-	u32							current_time_in_ms
+	const weapon_user_state_enum		character_state,
+	const bool						is_moving,
+	const bool						is_aiming,
+	const u8							broken_hands_count,
+	const bool						using_double_handed_weapon,
+	const u32							current_time_in_ms
 )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
@@ -64,7 +64,7 @@ void character_dispersion_calculator::tick(
 		m_value = math::min( m_current_value, m_value + m_value_smoothing_speed * dt );
 }
 
-float character_dispersion_calculator::get_target_koef( weapon_user_state_enum character_state, bool is_moving, bool is_aiming ) const
+float character_dispersion_calculator::get_target_koef( const weapon_user_state_enum character_state, const bool is_moving, const bool is_aiming ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 
@@ -96,7 +96,7 @@ float character_dispersion_calculator::get_target_koef( weapon_user_state_enum c
 	}
 }
 
-float character_dispersion_calculator::get_broken_hands_penalty( u8 broken_hands_count, bool using_double_handed_weapon ) const
+float character_dispersion_calculator::get_broken_hands_penalty( const u8 broken_hands_count, const bool using_double_handed_weapon ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_params ) );
 

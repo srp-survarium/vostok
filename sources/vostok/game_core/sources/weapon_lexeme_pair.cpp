@@ -15,9 +15,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	resources::managed_resource_ptr const&		animation,
 	pcvoid										animated_object,
 	animation::animation_playback_state const&	playback_state,
-	u32											time_synchronization_group,
-	float										time_scale,
-	animation::mixing::playback_enum			playback_type,
+	const u32									time_synchronization_group,
+	const float									time_scale,
+	const animation::mixing::playback_enum		playback_type,
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 )
 {

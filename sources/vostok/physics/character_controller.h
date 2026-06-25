@@ -19,7 +19,7 @@ public:
 
 	void					initialize			( );
 	void					activate			( float4x4 const& t );
-	void					update_action		( u32 time_delta_in_ms );
+	void					update_action		( const u32 time_delta_in_ms );
 
 	void					deactivate			( );
 

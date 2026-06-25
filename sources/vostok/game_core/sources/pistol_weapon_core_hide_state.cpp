@@ -32,9 +32,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 
 pistol_weapon_core_hide_state::pistol_weapon_core_hide_state(
 	weapon_core&							weapon,
-	float									animation_timescale,
+	const float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
+	const u32										animations_count,
 	bool&									is_shown
 ) : weapon_core_hide_state_base( weapon, is_shown ),
 	m_time_scale( animation_timescale )
@@ -150,7 +150,7 @@ pistol_weapon_core_hide_state* weapon_core_state_cook_template<survarium::pistol
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[0] )->length_in_frames( );

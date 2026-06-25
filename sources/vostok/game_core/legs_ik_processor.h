@@ -39,7 +39,7 @@ public:
 			void		set_right_heel_on_ground( bool value );
 			void		set_right_toe_on_ground	( bool value );
 
-			void		tick					( u32 current_time_in_ms );
+			void		tick					( const u32 current_time_in_ms );
 
 	inline	bool		is_right_supporting_leg	( ) const { /* no source */ }
 
@@ -54,8 +54,8 @@ public:
 				void	set_heel_transition_time( float tr_time );
 				void	set_toe_transition_time	( float tr_time );
 		inline	void	set_rotation_axis		( float3 const& arg_0 ) const { /* no source */ }
-				void	set_heel_on_ground		( bool value );
-				void	set_toe_on_ground		( bool value );
+				void	set_heel_on_ground		( const bool value );
+				void	set_toe_on_ground		( const bool value );
 
 		inline	bool	is_heel_on_ground		( ) const { return m_heel_on_ground; }
 		inline	bool	is_toe_on_ground		( ) const { return m_toe_on_ground; }

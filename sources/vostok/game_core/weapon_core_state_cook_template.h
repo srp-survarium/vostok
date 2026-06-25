@@ -106,7 +106,7 @@ private:
 								mutable_buffer							buffer,
 								weapon_state_creation_params const*		params,
 								resources::managed_resource_ptr const*	animations,
-								u32										animations_count
+								const u32								animations_count
 							);
 }; // class weapon_core_state_cook_template
 

@@ -307,15 +307,15 @@ void weapon_core::set_skeleton( resources::resource_ptr<animation::skeleton,reso
 // weapon_core_base_state::has_animation_ended (symbol @0x087f70) but our weapon_core_base_state.h
 // keeps it inline, so the member read is inlined here instead of a `call`. Out-lining it belongs
 // to weapon_core_base_state's PR.
-bool weapon_core::target_and_animation_ended_predicate( weapon_targets target ) const
+bool weapon_core::target_and_animation_ended_predicate( const weapon_targets target ) const
 {
 	return m_target == target && current_base_state( ).has_animation_ended( );
 }
 
 animation::mixing::expression weapon_core::get_weapon_and_hands_animation_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				weapon_user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				weapon_user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -350,7 +350,7 @@ float weapon_core::vertical_recoil_value( ) const
 // recoil-value getters, weapon_user_animations_selector::selected_animations all inlined here
 // vs out-of-line target-side). The recoil cc_bool reads (s_recoil_*_enable_value) are compiled
 // IN here (gating the coeffs), unlike the parked computed_*_recoil_time trio where they fold out.
-animation::mixing::expression weapon_core::selected_animations( mutable_buffer& buffer, bool is_third_view ) const
+animation::mixing::expression weapon_core::selected_animations( mutable_buffer& buffer, const bool is_third_view ) const
 {
 	m_is_third_view = is_third_view;
 
@@ -378,13 +378,13 @@ void weapon_core::update_recoil( u32 current_time_in_ms, const float time_scale 
 
 // claude@NOTE: callee of update_bones_matrices. % walled by intrusive_ptr operator* + dispersion_calculator::tick
 // inline-vs-call (target out-of-lines the resource_ptr deref; inlined here).
-void weapon_core::update_dispersion( bool is_moving, u32 current_time_in_ms )
+void weapon_core::update_dispersion( const bool is_moving, u32 current_time_in_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_user ) );
 	m_dispersion_calculator.tick( m_user_animations_selector.get_current_state_id( ), is_moving, is_aimed( ), ( *m_user->damage_model( ) ).broken_hands_count( ), m_is_double_handed, current_time_in_ms );
 }
 
-void weapon_core::update_breath_vibration( bool is_holding_breath, u32 current_time_in_ms, float time_scale )
+void weapon_core::update_breath_vibration( const bool is_holding_breath, u32 current_time_in_ms, const float time_scale )
 {
 	m_breath_vibration_calculator.hold_breath( is_holding_breath );
 	m_breath_vibration_calculator.set_character_multiplier( 0.0f );
@@ -555,7 +555,7 @@ float weapon_core::get_dispersion( ) const
 	return m_dispersion_calculator.get_dispersion( );
 }
 
-void weapon_core::instant_fire( u32 current_time_in_ms )
+void weapon_core::instant_fire( const u32 current_time_in_ms )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_bullets_in_queue ) );
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ammunition ) );
@@ -917,8 +917,8 @@ void weapon_core::on_player_model_removed( )
 void weapon_core::update_bones_matrices(
 	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
 	float4x4* const						user_matrices,
-	u32									user_matrices_count,
-	u32									current_time_in_ms,
+	const u32									user_matrices_count,
+	const u32									current_time_in_ms,
 	float4x4&							character_head_transform,
 	float4x4&							character_transform,
 	animation::animation_player const&	user_animation_player
@@ -989,7 +989,7 @@ bool weapon_core::is_sprinting( ) const
 // movzx;test;je) and the draw call folds to finalize_impl (universal empty-fn). Neither the flag
 // nor the draw helper is nameable from this TU, so the whole body is the debug-machinery wall.
 void weapon_core::on_skeleton_matrices_changed(
-	u32						current_time_in_ms,
+	const u32						current_time_in_ms,
 	float4x4 const&			weapon_transform,
 	float4x4 const* const	weapon_matrices_begin,
 	float4x4 const* const	weapon_matrices_end,
@@ -1005,7 +1005,7 @@ void weapon_core::on_skeleton_matrices_changed(
 // claude@NOTE: PARK. Single-statement body = `if (<flag>) <debug-draw>( current_time_in_ms,
 // user_matrices )`. Same debug-machinery wall as on_skeleton_matrices_changed (folded flag-read +
 // folded draw call, neither nameable here).
-void weapon_core::process_finger_correction( u32 current_time_in_ms, float4x4* const user_matrices )
+void weapon_core::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
 {
 }
 
@@ -1129,12 +1129,12 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 // test;je) and whose body call folds to finalize_impl (universal empty-fn) - the exact source
 // spelling of the flag/call is not nameable, so stmt 1's bytes are the debug-machinery wall.
 float weapon_core::computed_backward_recoil_time(
-	float		animation_length,
-	float		animation_time_before_time_scale_starts,
-	u32			time_scale_start_time_in_ms,
-	u32			current_time_in_ms,
-	u32			target_time_in_ms,
-	float		time_scale
+	const float		animation_length,
+	const float		animation_time_before_time_scale_starts,
+	const u32			time_scale_start_time_in_ms,
+	const u32			current_time_in_ms,
+	const u32			target_time_in_ms,
+	const float		time_scale
 )
 {
 	update_recoil( target_time_in_ms, time_scale );
@@ -1146,12 +1146,12 @@ float weapon_core::computed_backward_recoil_time(
 }
 
 float weapon_core::computed_horizontal_recoil_time(
-	float		animation_length,
-	float		animation_time_before_time_scale_starts,
-	u32			time_scale_start_time_in_ms,
-	u32			current_time_in_ms,
-	u32			target_time_in_ms,
-	float		time_scale
+	const float		animation_length,
+	const float		animation_time_before_time_scale_starts,
+	const u32			time_scale_start_time_in_ms,
+	const u32			current_time_in_ms,
+	const u32			target_time_in_ms,
+	const float		time_scale
 )
 {
 	update_recoil( target_time_in_ms, time_scale );
@@ -1163,12 +1163,12 @@ float weapon_core::computed_horizontal_recoil_time(
 }
 
 float weapon_core::computed_vertical_recoil_time(
-	float		animation_length,
-	float		animation_time_before_time_scale_starts,
-	u32			time_scale_start_time_in_ms,
-	u32			current_time_in_ms,
-	u32			target_time_in_ms,
-	float		time_scale
+	const float		animation_length,
+	const float		animation_time_before_time_scale_starts,
+	const u32			time_scale_start_time_in_ms,
+	const u32			current_time_in_ms,
+	const u32			target_time_in_ms,
+	const float		time_scale
 )
 {
 	update_recoil( target_time_in_ms, time_scale );

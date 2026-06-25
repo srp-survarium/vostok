@@ -65,7 +65,7 @@ public:
 STATIC_SIZE_ASSERT(regenerate_body_parts_predicate, 0x8);
 
 
-void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
+void damage_model::tick( const u32 time_delta_ms, const u32 current_time_in_ms )
 {
 	if ( !m_last_tick_time_in_ms )
 	{
@@ -148,7 +148,7 @@ bool damage_model::hit_body_part(
 	return true;
 }
 
-void damage_model::apply_med_kit( pcstr part_name, float amount )
+void damage_model::apply_med_kit( pcstr part_name, const float amount )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -201,7 +201,7 @@ void damage_model::subscribe_on_affect( hit_affects_type_enum const affect_type,
 	m_affect_subscriptions[affect_type].push_back( subscriber );
 }
 
-void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
+void damage_model::unsubscribe_from_affect( const hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
 {
 	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -228,7 +228,7 @@ public:
 
 STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
 
-void damage_model::notify_on_affect_event( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type )
+void damage_model::notify_on_affect_event( pcstr body_part_name, const hit_affects_type_enum affect_type, const affect_event_type_enum event_type )
 {
 	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
 	subscribers->for_each( affect_event_predicate( body_part_name, affect_type, event_type ) );
@@ -256,7 +256,7 @@ void damage_model::reset( )
 	m_body_parts.for_each( reset_predicate( ) );
 }
 
-void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type )
+void damage_model::apply_affect( pcstr part_name, const hit_affects_type_enum affect, const affect_event_type_enum event_type )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -275,7 +275,7 @@ u8 damage_model::get_total_health( )
 	return result_value;
 }
 
-void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect )
+void damage_model::cancel_affect( pcstr part_name, const hit_affects_type_enum affect )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );

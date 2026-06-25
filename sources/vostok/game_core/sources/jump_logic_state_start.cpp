@@ -26,7 +26,7 @@ jump_logic_state_start::jump_logic_state_start( jump_logic& owner )
 
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_start::selected_animations(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
+	const bool								is_third_view,
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	look_calculator,
 	weapon_animation_parameters const&	weapon_parameters
 )
@@ -51,7 +51,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jum
 // the FIRST fixed_vector::push_back to construct+end-bump while later ones stay `call
 // push_back`, and the builder-chain setters go out-of-line in the target - neither is
 // source-steerable from this TU.
-animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
+animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mutable_buffer& buffer, const bool is_third_view, const animation::body_part_masks_enum bones_mask )
 {
 	typedef fixed_vector< animation::mixing::animation_interval, 2 >	two_anim_intervals_type;
 
@@ -110,7 +110,7 @@ animation::mixing::animation_lexeme jump_logic_state_start::get_main_lexeme( mut
 
 animation::mixing::animation_lexeme jump_logic_state_start::get_look_lexeme(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
+	const bool								is_third_view,
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	look_calculator,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 )

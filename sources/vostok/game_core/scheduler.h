@@ -46,9 +46,9 @@ private:
 			scheduler::record&			register_object		( scheduler::identifier* identifier, scheduler::callback const& callback, bool active );
 
 public:
-			void						on_frame			( u32 frame_delta, u32 current_time );
+			void						on_frame			( const u32 frame_delta, const u32 current_time );
 private:
-			void						on_frame			( scheduler::record& record, u32 frame_delta, u32 current_time );
+			void						on_frame			( scheduler::record& record, const u32 frame_delta, const u32 current_time );
 
 public:
 	inline explicit						scheduler			( vostok::memory::base_allocator* allocator );

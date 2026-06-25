@@ -28,7 +28,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
+double_barreled_weapon_core_aimed_idle_state::double_barreled_weapon_core_aimed_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count ) :
 	weapon_core_aimed_state_base( weapon )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( animations ) );
@@ -64,7 +64,7 @@ animation::mixing::expression double_barreled_weapon_core_aimed_idle_state::weap
 	return animation::mixing::expression( lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme );
 }
 
-weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair double_barreled_weapon_core_aimed_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_weapon.ammo_in_magazine( ) < 3 ) );
 
@@ -98,7 +98,7 @@ double_barreled_weapon_core_aimed_idle_state* weapon_core_state_cook_template<su
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_aimed_idle_state( params->weapon, animations, animations_count );

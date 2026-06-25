@@ -42,7 +42,7 @@ weapon_core_aimed_fire_state::weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
 	float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_aimed_fire_state_base( weapon, animation_timescale )
 {
 	ASSERT_CMP_U( animations_count, ==, 8 );
@@ -68,8 +68,8 @@ weapon_core_aimed_fire_state::weapon_core_aimed_fire_state(
 // line). Shared with get_user_hands_expression and all 6 fire-state siblings.
 animation::mixing::expression weapon_core_aimed_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -84,7 +84,7 @@ animation::mixing::expression weapon_core_aimed_fire_state::weapon_and_hands_exp
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 }
 
-weapon_lexeme_pair weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-aimed_fire";
 
@@ -109,8 +109,8 @@ weapon_lexeme_pair weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable
 animation::mixing::expression weapon_core_aimed_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id
 ) const
 {
 	if ( user_state_id == type_sprint )
@@ -146,7 +146,7 @@ weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::weapon_
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) weapon_core_aimed_fire_state(

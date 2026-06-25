@@ -28,7 +28,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 	animation::base_interpolator const&			interpolator_for_offset_lexeme
 );
 
-pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
+pistol_weapon_core_idle_state::pistol_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count ) :
 	weapon_core_idle_state_base( weapon )
 {
 	ASSERT_CMP_U( animations_count, ==, 8 );
@@ -70,7 +70,7 @@ animation::mixing::expression pistol_weapon_core_idle_state::weapon_and_hands_ex
 // nibble at the out-of-line m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into
 // eax, our build into ecx). Same quirk caps pistol_weapon_core_reload_state::get_weapon_lexeme_pair;
 // not source-steerable (the plain idle/aimed getters lack the call and are 100%).
-weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair pistol_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =
 	{
@@ -101,7 +101,7 @@ pistol_weapon_core_idle_state* weapon_core_state_cook_template<survarium::pistol
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) pistol_weapon_core_idle_state( params->weapon, animations, animations_count );

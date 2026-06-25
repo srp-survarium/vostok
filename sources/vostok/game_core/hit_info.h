@@ -18,12 +18,12 @@ class bullet;
 
 struct hit_info {
 					hit_info	(
-						u8			hit_initiator,
-						u8			being_hit,
+						const u8		hit_initiator,
+						const u8		being_hit,
 						pcstr const	body_part_name,
 						pcstr const	damage_type,
-						float		amount,
-						float		armor_piercing,
+						const float	amount,
+						const float	armor_piercing,
 						bullet* const	bullet
 					);
 

@@ -55,8 +55,8 @@ private:
 	virtual	void		update_bones_matrices		(
 							animation::skeleton_ptr const&		user_skeleton,
 							float4x4* const						user_matrices,
-							u32									user_matrices_count,
-							u32									current_time_in_ms,
+							const u32									user_matrices_count,
+							const u32									current_time_in_ms,
 							float4x4&							character_head_transform,
 							float4x4&							character_transform,
 							animation::animation_player const&	animation_player

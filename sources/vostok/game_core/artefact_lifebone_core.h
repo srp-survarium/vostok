@@ -21,8 +21,8 @@ public:
 	virtual	float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
-													float		amount,
-													float		armor_piercing
+													const float		amount,
+													const float		armor_piercing
 												);
 			void								load_core					( configs::binary_config_value config );
 

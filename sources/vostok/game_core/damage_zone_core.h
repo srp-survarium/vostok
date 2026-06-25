@@ -38,7 +38,7 @@ public:
 							damage_zone_core			( );
 	virtual					~damage_zone_core			( );
 
-	virtual	void			tick						( u32 frame_delta, u32 current_time ) override;
+	virtual	void			tick						( const u32 frame_delta, const u32 current_time ) override;
 
 	virtual	bool			is_filter_passed			( physics::base_physics_object* object ) const override;
 
@@ -68,9 +68,9 @@ public:
 	inline	float			calc_armor_piercing			( float arg_0 ) const { /* no source */ }
 
 	inline	void			hit							( float arg_0 ) { /* no source */ }
-			void			hit_on_enter				( u32 frame_delta, u32 current_time );
-			void			hit_on_inside				( u32 frame_delta, u32 current_time );
-			void			hit_on_motion_inside		( u32 frame_delta, u32 current_time );
+			void			hit_on_enter				( const u32 frame_delta, const u32 current_time );
+			void			hit_on_inside				( const u32 frame_delta, const u32 current_time );
+			void			hit_on_motion_inside		( const u32 frame_delta, const u32 current_time );
 
 	struct damage_zone_user_data {
 		/* 0x0000 */	configs::binary_config_value const*	config;

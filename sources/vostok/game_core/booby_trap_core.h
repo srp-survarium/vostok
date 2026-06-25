@@ -86,7 +86,7 @@ private:
 	// claude@MATCH: target is FRAMELESS for this `this`-unused leaf (`fldz;ret`); /Od always frames -> unpairable. fldz correct. Private virtual `EBE`.
 	virtual	float							get_speed					( ) const override { return 0.0f; }
 	virtual	void							on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
-	virtual	void							tick						( u32 time_delta_ms, u32 current_time_ms ) override;
+	virtual	void							tick						( const u32 time_delta_ms, const u32 current_time_ms ) override;
 
 protected:
 	virtual	bool							use_initialize				( usable_object_user_data* user ) override;
