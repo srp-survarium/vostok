@@ -26,7 +26,7 @@
       # objdiff pairs them; b6159cc also emits the engine's own
       # vostok/scaleform/sources compilands. Re-track master once these land.
       # Output is gitignored/reference-only.
-      url = "github:srp-survarium/vostok-pdb-parser/7460355fa2a27166b3f8de11c9d76be97805f6bb";
+      url = "github:srp-survarium/vostok-pdb-parser/35d851d95d7f50ca0fbca2dc564ca0016a4ffb0b";
       flake = false;
     };
     vcproj2ninja-src = {
