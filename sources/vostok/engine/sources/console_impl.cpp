@@ -366,7 +366,7 @@ void console_impl::fill_tips_view()
 	float2 line_size		(100.0f, 20.0f);
 	float pos				= 0.0f;
 
-	m_ui_tips_view->w()->remove_all_childs();
+	m_ui_tips_view->w()->remove_all_children();
 
 	u32 tips_count			 = m_tips.size();
 

@@ -130,7 +130,7 @@ void game_material_manager_cook::create_game_material_pairs(
 				requests.push_back( r );
 
 				ext_data.pair = pair;
-				ext_data.type = query_ext_data::decal1;
+				ext_data.type = decal1;
 				ext_data.cd	  = VOSTOK_NEW_IMPL( g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, resources::unmanaged_resource_ptr( NULL ), false );
 
 				user_datas[ud_idx].set<render::material_effects_instance_cook_data*>( ext_data.cd );
@@ -147,7 +147,7 @@ void game_material_manager_cook::create_game_material_pairs(
 				requests.push_back( r );
 
 				ext_data.pair = pair;
-				ext_data.type = query_ext_data::decal2;
+				ext_data.type = decal2;
 				ext_data.cd	  = VOSTOK_NEW_IMPL( g_allocator, render::material_effects_instance_cook_data )( render::decal_vertex_input_type, resources::unmanaged_resource_ptr( NULL ), false );
 
 				user_datas[ud_idx].set<render::material_effects_instance_cook_data*>( ext_data.cd );
@@ -168,7 +168,7 @@ void game_material_manager_cook::create_game_material_pairs(
 				requests.push_back( r );
 
 				ext_data.pair = pair;
-				ext_data.type = query_ext_data::sound;
+				ext_data.type = sound;
 				ext_pair_data->push_back( ext_data );
 				user_data_ptrs.push_back( NULL );
 			}
@@ -183,7 +183,7 @@ void game_material_manager_cook::create_game_material_pairs(
 					requests.push_back( r );
 
 					ext_data.pair = pair;
-					ext_data.type = query_ext_data::particle;
+					ext_data.type = particle;
 					ext_pair_data->push_back( ext_data );
 
 					user_data_ptrs.push_back( NULL );
@@ -233,21 +233,21 @@ void game_material_manager_cook::on_decals_loaded( resources::queries_result& da
 
 	for ( u32 idx = 0 ; it != end ; ++it, ++idx )
 	{
-		if ( it->type == query_ext_data::decal1 )
+		if ( it->type == decal1 )
 		{
 			it->pair->set_decal1( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );
 		}
-		else if ( it->type == query_ext_data::decal2 )
+		else if ( it->type == decal2 )
 		{
 			it->pair->set_decal2( data[idx].get_unmanaged_resource( ) );
 			VOSTOK_DELETE_IMPL( g_allocator, it->cd );
 		}
-		else if ( it->type == query_ext_data::sound )
+		else if ( it->type == sound )
 		{
 			it->pair->set_sound( data[idx].get_unmanaged_resource( ) );
 		}
-		else // if ( it->type == query_ext_data::particle )
+		else // if ( it->type == particle )
 			it->pair->add_particle( data[idx].get_unmanaged_resource( ) );
 	}
 

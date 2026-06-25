@@ -52,9 +52,9 @@ public:
 
 	virtual void			add_child			( window* w, bool adopt );
 	virtual void			remove_child		( window* w );
-	virtual void			remove_all_childs	( );
-	virtual window*			get_child			( u32 idx )				const	{return m_childs[idx];}
-	virtual u32				get_child_count		( )						const	{return m_childs.size();}
+	virtual void			remove_all_children	( );
+	virtual window*			get_child			( u32 idx )				const	{return m_children[idx];}
+	virtual u32				get_child_count		( )						const	{return m_children.size();}
 
 	virtual window*			get_parent			( )						const	{return m_parent;}
 	virtual void			set_parent			( window* w );
@@ -95,7 +95,7 @@ protected:
 	bool					m_b_focused;
 	bool					m_b_tab_stop;
 public:
-	window_list				m_childs;
+	window_list				m_children;
 };
 
 void client_to_screen(const ui_window& w, float2& src_and_dest);

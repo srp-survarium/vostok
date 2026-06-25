@@ -50,7 +50,7 @@ void ui_scroll_view::remove_item(window* w)
 
 void ui_scroll_view::clear()
 {
-	m_pad.remove_all_childs	();
+	m_pad.remove_all_children	();
 	m_flags					|= fl_need_recalc;
 }
 

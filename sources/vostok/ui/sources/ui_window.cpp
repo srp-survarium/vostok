@@ -32,13 +32,13 @@ m_parent		( NULL ),
 m_b_orphan		( true ),
 m_b_focused		( false ),
 m_b_tab_stop	( false ),
-m_childs		( a ),
+m_children		( a ),
 m_event_manager	( a )
 {}
 
 ui_window::~ui_window( )
 {
-	remove_all_childs	( );
+	remove_all_children	( );
 }
 
 void ui_window::set_parent( window* w )
@@ -61,22 +61,22 @@ void ui_window::add_child( window* w, bool adopt )
 	w->set_parent			(this);
 	w->set_orphan			(adopt);
 
-	m_childs.push_back		(w);
+	m_children.push_back		(w);
 }
 
-void ui_window::remove_all_childs( )
+void ui_window::remove_all_children( )
 {
 	// optimize next
-	while(!m_childs.empty())
+	while(!m_children.empty())
 	{
-		remove_child(m_childs.back());
+		remove_child(m_children.back());
 	}
 }
 
 void ui_window::remove_child( window* w )
 {
-	window_list_it it		= std::find(m_childs.begin(), m_childs.end(), w);
-	m_childs.erase			(it);
+	window_list_it it		= std::find(m_children.begin(), m_children.end(), w);
+	m_children.erase			(it);
 
 	if(w->get_orphan())
 		VOSTOK_DELETE_IMPL( allocator(), w );
@@ -86,8 +86,8 @@ void ui_window::remove_child( window* w )
 
 void ui_window::draw		( vostok::render::ui::renderer& render, vostok::render::scene_view_ptr const& scene_view )
 {
-	window_list_it it		= m_childs.begin();
-	window_list_it it_e		= m_childs.end();
+	window_list_it it		= m_children.begin();
+	window_list_it it_e		= m_children.end();
 	for(;it!=it_e;++it)
 	{
 		window* w = *it;
@@ -120,8 +120,8 @@ void ui_window::draw		( vostok::render::ui::renderer& render, vostok::render::sc
 
 void ui_window::tick()
 {
-	window_list_it it		= m_childs.begin();
-	window_list_it it_e		= m_childs.end();
+	window_list_it it		= m_children.begin();
+	window_list_it it_e		= m_children.end();
 	for(;it!=it_e;++it)
 	{
 		window* w = *it;
