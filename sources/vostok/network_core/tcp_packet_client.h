@@ -31,12 +31,16 @@ public:
 	inline	bool						is_connected				( ) const { return false; }
 	inline	bool						has_connection_established	( ) const { return false; }
 
-	inline	void						set_on_connected			( boost::function< void() > const& value ) { /* no source */ }
-	inline	void						set_on_disconnected			( boost::function< void() > const& value ) { /* no source */ }
-	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { /* no source */ }
+	// STATE[INLINED]: bodies from network::tcp_packet_client::create_client, which
+	// calls m_client->set_on_*( ... ) and inline-folds the `m_x = value;` store; the
+	// sibling network::tcp_packet_client::set_on_connected is the matched out-of-line
+	// form of the same body (100%).
+	inline	void						set_on_connected			( boost::function< void() > const& value ) { m_on_connected = value; /* no source */ }
+	inline	void						set_on_disconnected			( boost::function< void() > const& value ) { m_on_disconnected = value; /* no source */ }
+	inline	void						set_on_packet_received		( boost::function< void( tcp_packet const& ) > const& value ) { m_on_packet_received = value; /* no source */ }
 	inline	void						set_on_error				(
 											boost::function< void( client_error_codes_enum, boost::system::error_code ) > const&	value
-										) { /* no source */ }
+										) { m_on_error = value; /* no source */ }
 
 	inline	boost::asio::io_service&	io_service					( ) { return m_io_service; }
 

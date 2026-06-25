@@ -46,7 +46,9 @@ class udp_match_packet : public packet< udp_match_packet > {
 public:
 	class helper {
 	public:
-		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ }
+		// STATE[REMOVED]: never referenced - the factory new_udp_match_packet uses placement
+		// new directly, not call_constructor. Uninstantiated both sides.
+		static	inline	void	call_constructor	( udp_match_packet& packet ) { /* no source */ } // STATE[REMOVED]
 	private:
 		friend	void	delete_udp_match_packet( memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&, udp_match_packet*& );
 
@@ -76,6 +78,9 @@ private:
 		m_buffer.elems[0]		= 0;
 	}
 public:
+	// trivial dtor (POD/aggregate members); the empty body is correct. Referenced via
+	// helper::call_destructor in delete_udp_match_packet but never emitted standalone
+	// (inlined into the destroying scope - no ??1 target symbol).
 	inline				~udp_match_packet	( ) { /* no source */ }
 
 	inline	u32			allocated_size		( ) const { return sizeof( m_buffer ) - header_size( ); }
@@ -89,10 +94,12 @@ public:
 	}
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
-	// sushi@TODO: body unrecovered - the out-of-line packet<udp_match_packet>::reallocate
-	// (0x112e20) is a never-called int3 stub, and append's grow path ends in an
-	// ICF-folded no-arg call (an eater/abort macro?) the LTCG emission can't disambiguate.
-	inline	void		reallocate			( u32 new_size ) { /* no source */ }
+	// STATE[UNMATCHABLE]: body unrecoverable - the out-of-line
+	// packet<udp_match_packet>::reallocate (0x112e20) is a never-called int3 stub, and
+	// append's grow path ends in an ICF-folded no-arg call (an eater/abort macro?) the
+	// LTCG emission can't disambiguate. No decodable inline site.
+	// sushi@TODO: revisit if a non-folded reallocate caller surfaces in a later build.
+	inline	void		reallocate			( u32 new_size ) { /* no source */ } // STATE[UNMATCHABLE]
 
 	// the channel's boost::intrusive::set names &udp_match_packet::set_member_hook and
 	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach
