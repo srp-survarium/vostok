@@ -108,7 +108,7 @@ inline void udp_match_connection::process_incoming_packet( packet_reader& reader
 		update_acknowledgements		( remote_sequence_id, local_sequence_id, local_acknowledgement_bits );
 
 	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( ( bits & 1 ) != 0 );
-	if ( packet_type == udp_match_regular_packet )
+	if ( packet_type == udp_match_single_packet )
 	{
 		++m_stats.received.messages.count;
 		m_stats.received.data_bytes	+= message_bytes;

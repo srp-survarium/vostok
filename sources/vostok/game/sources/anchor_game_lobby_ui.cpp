@@ -77,8 +77,8 @@ void use_game_lobby_ui( )
 	// lobby_menu.cpp server-callback surface (public); these transitively pin the
 	// private request_status_from_server / request_friends_status_from_server they
 	// schedule, until the real lobby_client / messaging_client call graph reaches them.
-	menu.on_client_status_received		( lobby::query_profile_info );
-	menu.on_friendship_status_recivied	( messaging::add_friend_action );
+	menu.on_client_status_received		( lobby::q_profile_contents );
+	menu.on_friendship_status_recivied	( messaging::add_friend );
 	menu.on_operation_permitted_received( set_status_ready_for_match );
 	menu.on_operation_denied_received	( set_status_ready_for_match, NULL );
 

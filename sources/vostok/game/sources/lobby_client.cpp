@@ -186,7 +186,7 @@ void lobby_client::query_prices(
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
-	packet.append	( (u8)lobby::query_prices_info );
+	packet.append	( (u8)lobby::q_price_items );
 	packet.append	( (u8)faction_id );
 	m_packet_client.send	( packet );
 }
@@ -197,7 +197,7 @@ void lobby_client::query_profile_contents(
 {
 	network_core::tcp_packet packet( memory::g_mt_allocator );
 	packet.append	( (u8)vostok::query_client_status );
-	packet.append	( (u8)lobby::query_profile_info );
+	packet.append	( (u8)lobby::q_profile_contents );
 	packet.append	( profile_id );
 	m_packet_client.send	( packet );
 }

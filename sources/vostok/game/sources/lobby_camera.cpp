@@ -53,10 +53,7 @@ bool lobby_camera::on_mouse_key_action(
 	if ( get_game_scene( ).is_mouse_over_ui( ) )
 		return false;
 
-	// sushi@TODO: 0x152 is the shipped mouse_button enumerator, absent from the legacy
-	// reconstructed input/mouse.h (values 1..128); emitted as the literal (fn is byte-
-	// exact 100%) until the real enum constant is recovered. See review_todos.md.
-	if ( button == input::mouse_button( 0x152 ) )
+	if ( button == input::mouse_button_right )	// 0x152
 	{
 		if ( !m_capture_move && actions_mask == input::ms_key_down )
 			m_capture_move	= true;
