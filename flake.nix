@@ -12,16 +12,21 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Pinned to the access-specifier commit on top of the static-init-thunk
-      # canonicalization, on top of the structure-builder
-      # (extract-all-enums-and-unions, vostok-pdb-parser#28). c5a4d0f emits C++
-      # `private:`/`protected:`/`public:` section labels for class/struct members
-      # (CV_access_t), narrowing the `/* no source */` triage. Parent 89d3a1e
-      # demangles `??__E`/`??__F` thunks to the target PDB's
-      # `` `dynamic initializer for 'X'' `` form so objdiff pairs them; b6159cc
-      # also emits the engine's own vostok/scaleform/sources compilands.
-      # Re-track master once these land. Output is gitignored/reference-only.
-      url = "github:srp-survarium/vostok-pdb-parser/c5a4d0f32d7da6225476e4cea4478a1be14c0b43";
+      # Pinned to the pdb_divergence-deps commit on top of the access-specifier
+      # emit (c5a4d0f), on top of the static-init-thunk canonicalization, on top
+      # of the structure-builder (extract-all-enums-and-unions,
+      # vostok-pdb-parser#28). 7460355 lands the two deps of the `pdb_divergence`
+      # bin (the base-vs-target structure-divergence verifier): `pub mod
+      # divergence;` + the `gen_sources::for_each_function` compiland walker, so
+      # the bin builds on a clean checkout. d757820 is the divergence tool
+      # itself. c5a4d0f emits C++ `private:`/`protected:`/`public:` section
+      # labels for class/struct members (CV_access_t), narrowing the
+      # `/* no source */` triage. Parent 89d3a1e demangles `??__E`/`??__F`
+      # thunks to the target PDB's `` `dynamic initializer for 'X'' `` form so
+      # objdiff pairs them; b6159cc also emits the engine's own
+      # vostok/scaleform/sources compilands. Re-track master once these land.
+      # Output is gitignored/reference-only.
+      url = "github:srp-survarium/vostok-pdb-parser/7460355fa2a27166b3f8de11c9d76be97805f6bb";
       flake = false;
     };
     vcproj2ninja-src = {
