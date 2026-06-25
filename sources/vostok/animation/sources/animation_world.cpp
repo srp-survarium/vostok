@@ -55,7 +55,7 @@ animation_world::animation_world(
 	m_debug_renderer			( debug_renderer )
 //	m_test_scene				( test_scene )
 {
-	static skeleton_animation_cook s_skeleton_animation_cook( *this );
+	static skeleton_animation_cook s_skeleton_animation_cook;
 	static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
 	static skeleton_cook s_skeleton_cook;
 	static single_animation_cook s_single_animation_cook;

@@ -99,6 +99,8 @@ private:
 	friend class						task_queue;
 };
 
+STATIC_SIZE_ASSERT(task_manager, 0x60180);
+
 static task_manager						s_task_manager;
 
 task_manager::task_manager () 

@@ -21,13 +21,12 @@ vostok::command_line::key	check_animation_b_spline_approximation( "check_animati
 using vostok::animation::skeleton_animation_cook;
 using vostok::animation::bi_spline_skeleton_animation_baked_ptr;
 
-skeleton_animation_cook::skeleton_animation_cook		( vostok::animation::world &world ) :
+skeleton_animation_cook::skeleton_animation_cook		( ) :
 	super(
 		resources::animation_class,
 		reuse_true,
-		use_current_thread_id
-	),
-	m_world( world )
+		use_resource_manager_thread_id
+	)
 {
 	register_cook	( this );
 }
