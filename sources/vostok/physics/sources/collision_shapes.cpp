@@ -58,7 +58,7 @@ bt_collision_shape::~bt_collision_shape( )
 	destroy_bt_shape( m_bt_shape );
 }
 
-u16 bt_collision_shape::get_triangle_material( s32 triangle_id, bool is_shape_index )
+u16 bt_collision_shape::get_triangle_material( const s32 triangle_id, const bool is_shape_index )
 {
 	if ( is_shape_index )
 	{

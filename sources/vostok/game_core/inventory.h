@@ -21,7 +21,7 @@ class inventory : public resources::unmanaged_resource , public boost::noncopyab
 public:
 												inventory					( );
 
-			void								set_item					( profile_slot_enum slot, inventory_item_ptr const& item );
+			void								set_item					( const profile_slot_enum slot, inventory_item_ptr const& item );
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
@@ -38,7 +38,7 @@ public:
 			void								set_victory_item			( victory_item_core* item );
 	inline	victory_item_core*					get_victory_item			( ) { return m_victory_item; }
 
-			bool								action						( profile_slot_enum slot_id, bool key_down );
+			bool								action						( const profile_slot_enum slot_id, bool key_down );
 
 			profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
 

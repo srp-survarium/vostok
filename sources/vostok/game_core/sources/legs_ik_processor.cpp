@@ -142,14 +142,14 @@ void legs_ik_processor::leg_params::set_toe_transition_time( float tr_time )
 	toe_transition_time = math::min( toe_transition_time, tr_time );
 }
 
-void legs_ik_processor::leg_params::set_heel_on_ground( bool value )
+void legs_ik_processor::leg_params::set_heel_on_ground( const bool value )
 {
 	m_heel_on_ground = value;
 	if ( is_full_on_ground( ) )
 		m_time_since_stance = 0.0f;
 }
 
-void legs_ik_processor::leg_params::set_toe_on_ground( bool value )
+void legs_ik_processor::leg_params::set_toe_on_ground( const bool value )
 {
 	m_toe_on_ground = value;
 	if ( is_full_on_ground( ) )
@@ -511,7 +511,7 @@ void legs_ik_processor::set_toe_on_ground( legs_ik_processor::leg_params& params
 	}
 }
 
-void legs_ik_processor::tick( u32 current_time_in_ms )
+void legs_ik_processor::tick( const u32 current_time_in_ms )
 {
 	if ( m_last_time_in_ms != 0 )
 	{

@@ -31,7 +31,7 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 // Two compiled-out asserts bracket the loop: a leading ASSERT before ASSERT_CMP_U
 // (count==12, i.e. 2*2*3), and a trailing ASSERT after the fill loop. Both are the
 // non-_U lone-eater shape (`mov byte,0; lea; call empty_stub`, no branch).
-double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, u32 animations_count ) :
+double_barreled_weapon_core_idle_state::double_barreled_weapon_core_idle_state( weapon_core& weapon, resources::managed_resource_ptr const* animations, const u32 animations_count ) :
 	weapon_core_idle_state_base( weapon )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -73,7 +73,7 @@ animation::mixing::expression double_barreled_weapon_core_idle_state::weapon_and
 // claude@NOTE: STRUCTURE MATCH and byte-size identical; residual is a single /Od register-coloring
 // nibble at the out-of-line m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into
 // eax, our build into ecx). Same quirk caps the pistol idle/reload getters; not source-steerable.
-weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair double_barreled_weapon_core_idle_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 
@@ -107,7 +107,7 @@ double_barreled_weapon_core_idle_state* weapon_core_state_cook_template<survariu
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_idle_state( params->weapon, animations, animations_count );

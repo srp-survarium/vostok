@@ -278,7 +278,7 @@ void damage_zone_core::on_enter( buffer_vector<physics::base_physics_object *> c
 	}
 }
 
-void damage_zone_core::tick( u32 frame_delta, u32 current_time )
+void damage_zone_core::tick( const u32 frame_delta, const u32 current_time )
 {
 	collision_sensor::tick( frame_delta, current_time );
 

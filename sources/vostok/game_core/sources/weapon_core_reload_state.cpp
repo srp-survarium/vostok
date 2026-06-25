@@ -32,9 +32,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 
 weapon_core_reload_state::weapon_core_reload_state(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_reload_state_base( weapon, animation_time_scale )
 {
 	ASSERT_CMP_U( animations_count, ==, 8 );
@@ -57,8 +57,8 @@ weapon_core_reload_state::weapon_core_reload_state(
 
 animation::mixing::expression weapon_core_reload_state::weapon_and_hands_expression(
 	mutable_buffer&							buffer,
-	bool									is_third_view,
-	weapon_user_state_enum					user_state_id,
+	const bool									is_third_view,
+	const weapon_user_state_enum					user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -69,7 +69,7 @@ animation::mixing::expression weapon_core_reload_state::weapon_and_hands_express
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
-weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-reload";
 
@@ -94,8 +94,8 @@ weapon_lexeme_pair weapon_core_reload_state::get_weapon_lexeme_pair( mutable_buf
 animation::mixing::expression weapon_core_reload_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -128,7 +128,7 @@ weapon_core_reload_state* weapon_core_state_cook_template<weapon_core_reload_sta
 	mutable_buffer							buffer,
 	weapon_state_creation_params const*		params,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) weapon_core_reload_state(

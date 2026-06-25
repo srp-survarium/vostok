@@ -20,7 +20,7 @@ public:
 	virtual ~bt_static_rigid_body( );
 
 	virtual btRigidBody*		get_rigid_body				( ) override;
-	virtual u16					get_triangle_material		( s32 triangle_id, bool is_shape_index ) const override;
+	virtual u16					get_triangle_material		( const s32 triangle_id, const bool is_shape_index ) const override;
 
 	virtual void				apply_impulse				( float3 const& impulse, float3 const& point_in_world ) override;
 

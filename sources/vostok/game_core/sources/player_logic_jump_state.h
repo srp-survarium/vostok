@@ -25,7 +25,7 @@ private:
 							selected_animations		(
 								mutable_buffer&						buffer,
 								weapon_animation_parameters const&	weapon_parameters,
-								bool								is_third_view
+								const bool								is_third_view
 							) const override;
 
 	virtual	void			set_user				( base_player& user ) override;

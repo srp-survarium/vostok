@@ -74,7 +74,7 @@ public:
 			bool			is_in_jump						( ) const;
 
 			std::pair< animation::mixing::expression, animation::mixing::animation_lexeme >
-							selected_animations				( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, bool is_third_view ) const;
+							selected_animations				( mutable_buffer& buffer, weapon_animation_parameters const& weapon_parameters, const bool is_third_view ) const;
 
 			void			activate						(
 								base_player& user,
@@ -118,19 +118,19 @@ private:
 			bool			is_weapon_toggling				( ) const;
 
 			float			look_time_factor_calculator		(
-								float		animation_length,
-								float		animation_time_before_time_scale_starts,
-								u32			time_scale_start_time_in_ms,
-								u32			current_time_in_ms,
-								u32			target_time_in_ms,
-								float		time_scale
+								const float		animation_length,
+								const float		animation_time_before_time_scale_starts,
+								const u32			time_scale_start_time_in_ms,
+								const u32			current_time_in_ms,
+								const u32			target_time_in_ms,
+								const float		time_scale
 							) const;
 
 private:
 			animation::callback_return_type_enum
 							on_interval_ended				( animation::animation_callback_params& params );
 
-			void			on_broken_limb_affect			( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type );
+			void			on_broken_limb_affect			( pcstr bodypart, const hit_affects_type_enum affect, const affect_event_type_enum type );
 			void			set_sprint_callbacks			( boost::function<void()> const& start_callback, boost::function<void()> const& end_callback );
 
 

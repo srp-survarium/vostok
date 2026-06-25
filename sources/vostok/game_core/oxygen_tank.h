@@ -28,12 +28,12 @@ private:
 
 protected:
 			void								set_active					( bool bactive );
-			void								active_tick					( u32 frame_time_ms );
+			void								active_tick					( const u32 frame_time_ms );
 			float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
-													float		amount,
-													float		armor_piercing
+													const float		amount,
+													const float		armor_piercing
 												);
 
 private:

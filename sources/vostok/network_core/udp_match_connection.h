@@ -158,9 +158,9 @@ private:
 
 			// claude@MATCH: pcstr const - the target mangles QBDI (top-level pointer
 			// const lives in the member declaration, the silent-join variant).
-			void						dump							( pcstr const caption, u32 current_time_in_ms );
+			void						dump							( pcstr const caption, const u32 current_time_in_ms );
 
-			void						process_low_level_message		( packet_reader& reader, u32 time_in_ms );
+			void						process_low_level_message		( packet_reader& reader, const u32 time_in_ms );
 
 public:
 	template < typename Predicate >

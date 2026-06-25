@@ -32,9 +32,9 @@ weapon_lexeme_pair get_weapon_lexeme_pair_impl(
 
 pistol_weapon_core_reload_state::pistol_weapon_core_reload_state(
 	weapon_core&							weapon,
-	float									animation_timescale,
+	const float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_reload_state_base( weapon, animation_timescale )
 {
 	ASSERT_CMP_U( animations_count, ==, 16 );
@@ -149,7 +149,7 @@ pistol_weapon_core_reload_state* weapon_core_state_cook_template<survarium::pist
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) pistol_weapon_core_reload_state(

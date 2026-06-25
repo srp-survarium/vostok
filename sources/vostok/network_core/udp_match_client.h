@@ -86,13 +86,13 @@ private:
 			void								handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred );
 	inline	void								handle_send					( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ }
 
-			void								on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code );
+			void								on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code );
 
 			void								process_incoming_packet		( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint );
 
 	inline	void								send						( udp_match_packet const& packet ) { /* no source */ }
 
-			void								on_disconnect				( disconnect_event_types_enum disconnect_type );
+			void								on_disconnect				( const disconnect_event_types_enum disconnect_type );
 
 public:
 	inline										~udp_match_client			( ) { /* no source */ }

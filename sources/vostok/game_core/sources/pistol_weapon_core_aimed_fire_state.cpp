@@ -40,9 +40,9 @@ namespace survarium {
 
 pistol_weapon_core_aimed_fire_state::pistol_weapon_core_aimed_fire_state(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_aimed_fire_state_base( weapon, animation_time_scale ),
 	m_weapon_animation_index( u32( -1 ) )
 {
@@ -89,7 +89,7 @@ animation::mixing::expression pistol_weapon_core_aimed_fire_state::weapon_and_ha
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 }
 
-weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair pistol_weapon_core_aimed_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =
 	{
@@ -157,7 +157,7 @@ pistol_weapon_core_aimed_fire_state* weapon_core_state_cook_template<survarium::
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) pistol_weapon_core_aimed_fire_state(

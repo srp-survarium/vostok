@@ -14,7 +14,7 @@ class body_part_parameters;
 
 class affects_threshold : public boost::noncopyable {
 public:
-									affects_threshold	( float value, u32 affects_count, body_part_parameters* const bodypart );
+									affects_threshold	( const float value, const u32 affects_count, body_part_parameters* const bodypart );
 
 	float							value				( )	const { return m_value; }
 	u32								get_affects_count	( ) const { return m_affects_count; }

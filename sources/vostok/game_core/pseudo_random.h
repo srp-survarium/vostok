@@ -12,7 +12,7 @@ public:
 	inline	explicit	pseudo_random	( float time ) : m_time( time ) { }
 
 	// \sources\weapon_recoil_calculator.cpp
-			float		random_f		( float range );
+			float		random_f		( const float range );
 	inline	void		set_time		( float time ) { m_time = time; }
 
 private:

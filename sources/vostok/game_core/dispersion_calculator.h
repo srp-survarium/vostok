@@ -21,19 +21,19 @@ public:
 	inline	void		set_character_dispersion_params	( character_dispersion_params const* arg_0 ) { m_character_calculator.set_character_dispersion_params( arg_0 ); }
 
 			void		tick							(
-							weapon_user_state_enum		character_state,
-							bool						is_moving,
-							bool						is_aiming,
-							u8							broken_hands_count,
-							bool						using_double_handed_weapon,
-							u32							current_time_in_ms
+							const weapon_user_state_enum		character_state,
+							const bool						is_moving,
+							const bool						is_aiming,
+							const u8							broken_hands_count,
+							const bool						using_double_handed_weapon,
+							const u32							current_time_in_ms
 						);
 
 			float		get_dispersion					( ) const;
 
 			void		set_weapon						( weapon_core* weapon );
-			void		set_shooting_skill_coeff		( float shooting_skill_coef );
-			void		set_aiming_speed_coeff			( float aiming_speed_coeff );
+			void		set_shooting_skill_coeff		( const float shooting_skill_coef );
+			void		set_aiming_speed_coeff			( const float aiming_speed_coeff );
 
 			void		reload							( );
 			void		fire							( );

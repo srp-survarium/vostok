@@ -34,7 +34,7 @@ void legs_ik_drawer::draw_leg(
 
 void legs_ik_drawer::draw_cross(
 	float3 const&			p,
-	float					half_size,
+	const float					half_size,
 	math::color const&		c,
 	bool					use_depth
 )
@@ -42,7 +42,7 @@ void legs_ik_drawer::draw_cross(
 	m_renderer.draw_cross( m_scene, p, half_size, c, use_depth );
 }
 
-void legs_ik_drawer::draw_origin( float4x4 const& matrix, float half_size, bool use_depth )
+void legs_ik_drawer::draw_origin( float4x4 const& matrix, const float half_size, bool use_depth )
 {
 	m_renderer.draw_origin( m_scene, matrix, half_size, use_depth );
 }

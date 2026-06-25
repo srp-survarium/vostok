@@ -25,7 +25,7 @@ public:
 								bt_collision_shape		( btCollisionShape* sh );
 	virtual						~bt_collision_shape		( );
 
-	virtual	u16					get_triangle_material	( s32 triangle_id, bool is_shape_index );
+	virtual	u16					get_triangle_material	( const s32 triangle_id, const bool is_shape_index );
 
 	inline btCollisionShape*	get_bt_shape			( ) const { return m_bt_shape; }
 	inline void					get_bounding_sphere		( float3&, float& ) const { ; } // sushi@TODO

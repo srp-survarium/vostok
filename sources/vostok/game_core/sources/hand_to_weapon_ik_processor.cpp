@@ -46,7 +46,7 @@ void hand_to_weapon_ik_processor::activate( animation::skeleton const& user_skel
 	m_hands[right].locator_matrix_index		= weapon_skeleton.get_bone_index( "right_hand_cont" ) - weapon_skeleton.get_root_bones_count( );
 }
 
-void hand_to_weapon_ik_processor::activate_hand( hand_to_weapon_ik_processor::hands_enum hand, bool active, u32 current_time_in_ms )
+void hand_to_weapon_ik_processor::activate_hand( const hand_to_weapon_ik_processor::hands_enum hand, const bool active, const u32 current_time_in_ms )
 {
 	if ( m_hands[hand].is_active != active )
 	{
@@ -56,17 +56,17 @@ void hand_to_weapon_ik_processor::activate_hand( hand_to_weapon_ik_processor::ha
 	}
 }
 
-bool hand_to_weapon_ik_processor::hand_need_correction( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms )
+bool hand_to_weapon_ik_processor::hand_need_correction( hand_to_weapon_ik_processor::hand const& h, const u32 current_time_in_ms )
 {
 	return h.is_active || hand_need_interpolation( h, current_time_in_ms );
 }
 
-bool hand_to_weapon_ik_processor::hand_need_interpolation( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms )
+bool hand_to_weapon_ik_processor::hand_need_interpolation( hand_to_weapon_ik_processor::hand const& h, const u32 current_time_in_ms )
 {
 	return current_time_in_ms - h.start_transition_time_in_ms < 300;
 }
 
-u32 hand_to_weapon_ik_processor::get_hand_new_start_transition_time( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms )
+u32 hand_to_weapon_ik_processor::get_hand_new_start_transition_time( hand_to_weapon_ik_processor::hand const& h, const u32 current_time_in_ms )
 {
 	u32 const	current_transition_time	= current_time_in_ms - h.start_transition_time_in_ms;
 	return current_transition_time < 300 ? current_time_in_ms - ( 300 - current_transition_time ) : current_time_in_ms;
@@ -146,7 +146,7 @@ void hand_to_weapon_ik_processor::process_hand( hand_to_weapon_ik_processor::han
 	matrices[arm_matrix_index]		= math::get_relative_matrix( get_bone_matrix_in_object_space( *arm_bone.parent( ), *m_skeleton, matrices ), arm_obj_matrix );
 }
 
-float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, u32 current_time_in_ms ) const
+float hand_to_weapon_ik_processor::get_hand_coefficient( hand_to_weapon_ik_processor::hand const& h, const u32 current_time_in_ms ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( true ) );
 

@@ -40,9 +40,9 @@ namespace survarium {
 
 double_barreled_weapon_core_fire_state::double_barreled_weapon_core_fire_state(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_fire_state_base( weapon, animation_time_scale ),
 	m_weapon_animation_index( u32( -1 ) )
 {
@@ -78,8 +78,8 @@ void double_barreled_weapon_core_fire_state::initialize( )
 
 animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -91,7 +91,7 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and
 	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
 }
 
-weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr weapon_animation_captions[2] =
 	{
@@ -122,8 +122,8 @@ weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pai
 animation::mixing::expression double_barreled_weapon_core_fire_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
@@ -160,7 +160,7 @@ double_barreled_weapon_core_fire_state* weapon_core_state_cook_template<survariu
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
 	return new ( buffer.c_ptr( ) ) double_barreled_weapon_core_fire_state(

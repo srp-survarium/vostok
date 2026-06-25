@@ -86,17 +86,17 @@ void player_stamina::reset( )
 	m_last_spending_time_in_ms		= 0;
 }
 
-void player_stamina::set_regeneration_speed( float new_regeneration_speed )
+void player_stamina::set_regeneration_speed( const float new_regeneration_speed )
 {
 	m_regeneration_speed = new_regeneration_speed;
 }
 
-void player_stamina::set_regeneration_speed_factor( float new_regeneration_speed_factor )
+void player_stamina::set_regeneration_speed_factor( const float new_regeneration_speed_factor )
 {
 	m_regeneration_speed_factor = new_regeneration_speed_factor;
 }
 
-void player_stamina::increase_value( float amount )
+void player_stamina::increase_value( const float amount )
 {
 	m_value = vostok::math::clamp_r( m_value + amount, 0.0f, m_max_value * m_max_value_factor );
 	if ( m_value > m_spending_threshold )
@@ -111,7 +111,7 @@ struct stamina_depletion_predicate : public boost::noncopyable {
 
 }; // struct stamina_depletion_predicate
 
-void player_stamina::decrease_value( float amount )
+void player_stamina::decrease_value( const float amount )
 {
 	m_value = vostok::math::clamp_r( m_value - amount, 0.0f, m_max_value * m_max_value_factor );
 
@@ -122,7 +122,7 @@ void player_stamina::decrease_value( float amount )
 	}
 }
 
-void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
+void player_stamina::tick( const u32 current_time_in_ms, const bool is_sprinting )
 {
 	if ( is_sprinting )
 		sprint( current_time_in_ms );
@@ -135,7 +135,7 @@ void player_stamina::tick( u32 current_time_in_ms, bool is_sprinting )
 	m_last_tick_time_in_ms = current_time_in_ms;
 }
 
-void player_stamina::regenerate( u32 current_time_in_ms )
+void player_stamina::regenerate( const u32 current_time_in_ms )
 {
 	if ( !m_last_tick_time_in_ms )
 		return;
@@ -144,13 +144,13 @@ void player_stamina::regenerate( u32 current_time_in_ms )
 	increase_value( time_delta_in_sec * m_regeneration_speed * m_regeneration_speed_factor );
 }
 
-void player_stamina::spend( float amount )
+void player_stamina::spend( const float amount )
 {
 	decrease_value( amount );
 	m_last_spending_time_in_ms = m_last_tick_time_in_ms;
 }
 
-void player_stamina::sprint( u32 current_time_in_ms )
+void player_stamina::sprint( const u32 current_time_in_ms )
 {
 	float time_delta_in_sec = ( current_time_in_ms - m_last_tick_time_in_ms ) / 1000.0f;
 	decrease_value( m_spending_speed * m_spending_speed_factor * time_delta_in_sec );
