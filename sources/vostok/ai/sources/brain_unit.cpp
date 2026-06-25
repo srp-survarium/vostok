@@ -126,13 +126,6 @@ void brain_unit::tick			( )
 		return;
 
 	m_active_sensors.for_each	( tick_predicate() );
-
-	fixed_string2048			output_text;
-	if ( m_world.get_current_time_in_ms() - m_last_tick_time_in_ms >= 500 )
-	{
-		m_goal_selector->set_current_goal( m_world.get_search_service(), *m_specified_problem, m_behaviour, m_blackboard );
-		m_last_tick_time_in_ms	= m_world.get_current_time_in_ms();
-	}
 }
 
 void brain_unit::select_new_goal	( )
@@ -296,8 +289,6 @@ void brain_unit::on_finish_animation_playing		( animation_item const* const anim
 
 void brain_unit::play_sound			( sound_item const* const sound_to_be_played )
 {
-	m_current_sound					= sound_to_be_played;
-	m_sound_player->play			( m_current_sound->sound, boost::bind( &brain_unit::on_finish_sound_playing, this ), m_npc.get_position( float3( 0, 0, 0 ) ) );
 	LOG_INFO						( "%s: playing sound %s", m_npc.cast_game_object()->get_name(), sound_to_be_played->name.c_str() );
 }
 
