@@ -14,6 +14,7 @@ namespace vostok {
 namespace input{
 	enum enum_keyboard;
 	enum enum_keyboard_action;
+	struct world;
 };
 
 namespace ui {
@@ -65,16 +66,18 @@ class insert_char_action : public base_edit_action
 {
 	typedef base_edit_action						super;
 public:
-							insert_char_action		(	ui_text_edit* parent, 
-														input::enum_keyboard key, 
-														input::enum_keyboard_action action, 
+							insert_char_action		(	ui_text_edit* parent,
+														input::enum_keyboard key,
+														input::enum_keyboard_action action,
 														shift_state const& state,
-														char c, char c_shift, bool b_translate);
+														char c, char c_shift, bool b_translate,
+														input::world* input_world);
 
 	virtual					~insert_char_action		();
 	virtual	bool			execute					(input::enum_keyboard_action action);
 
 private:
+	input::world*			m_input_world;
 	bool					m_b_translate;
 	char					m_char;
 	char					m_char_shift;

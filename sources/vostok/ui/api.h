@@ -44,8 +44,8 @@ typedef memory::doug_lea_allocator_type	allocator_type;
 VOSTOK_UI_API	world*	create_world		(
 						engine& engine,
 						render::ui::renderer& renderer,
-						memory::base_allocator& allocator
-						//render::scene_view_ptr const& scene_view
+						memory::base_allocator& allocator,
+						input::world* input_world
 					);
 VOSTOK_UI_API	void	destroy_world		( world*& world);
 

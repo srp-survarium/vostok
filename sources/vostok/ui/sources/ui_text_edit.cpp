@@ -26,6 +26,8 @@ namespace ui {
 
 ui_text_edit::ui_text_edit(ui_world& w, enum_text_edit_mode mode, memory::base_allocator& a )
 :ui_text			( w ),
+m_cursor_color		( 0xffffffff ),
+m_max_chars_count	( 0xff ),
 m_caret_pos			( 0 ),
 m_sel_start			( 0 ),
 m_sel_end			( 0 ),
@@ -426,6 +428,11 @@ u16 ui_text_edit::calc_right_word_position(u16 caret) const
 	}
 
 	return (u16)(cur-str_begin);
+}
+
+void ui_text_edit::set_max_chars(u16 const count)
+{
+	m_max_chars_count	= count;
 }
 
 void ui_text_edit::set_caret_position(u16 const pos, bool b_move)
