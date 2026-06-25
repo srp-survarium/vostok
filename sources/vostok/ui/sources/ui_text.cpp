@@ -13,11 +13,14 @@ void parse_word(pcstr str, ui_font const* font, float& length, pcstr& next_word)
 	{
 		length	+= font->get_char_tc(*str).z;
 		if(IsSpace(*str))
+		{
+			++str;
 			break;
+		}
 
 		++str;
 	}
-	next_word = str+1;
+	next_word = str;
 }
 
 } // namespace vostok

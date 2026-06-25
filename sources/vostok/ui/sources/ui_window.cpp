@@ -153,7 +153,7 @@ bool ui_window::emit_event(enum_window_events ev, window* w, int p1, int p2)
 	event_manager_it it			= std::find(m_event_manager.begin(), m_event_manager.end(), ev);
 	if(it!=m_event_manager.end())
 	{
-		ui_event_handler_list& l	= (*it).list;
+		ui_event_handler_list l		= (*it).list;
 		ui_event_handler_it h_it	=  l.begin();
 		ui_event_handler_it h_it_e	=  l.end();
 		for(; h_it!=h_it_e; ++h_it)
