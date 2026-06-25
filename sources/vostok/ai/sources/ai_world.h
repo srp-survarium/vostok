@@ -159,6 +159,11 @@ private:
 	available_objects_types					m_energy_weapons;
 }; // class ai_world
 
+// sushi@TODO: structure dump misreports this layout (phantom m_npc_lives_timer @0x98,
+// size 0x698) but the binary matches target exactly (ctor 100%, m_engine @0x138); this
+// build-gated assert proves the real size is 0x688 - see review_todos.md.
+STATIC_SIZE_ASSERT( ai_world, 0x688 );
+
 } // namespace ai
 } // namespace vostok
 
