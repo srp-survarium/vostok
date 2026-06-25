@@ -208,16 +208,17 @@ void ui_progress_bar::draw_text					(
 													vostok::render::scene_view_ptr const& scene_view
 												) const
 {
+	if ( m_text.empty( ) )
+		return;
+
 	float2 pos					= get_position( );
 	client_to_screen			( *this, pos );		//need absolute position
 	float2 size					= get_size( );
 
-	fixed_string<32> str;
-	str.assignf					( "%.2f %%", ((float)(m_value - m_minimum)/(float)(m_maximum - m_minimum)) * 100.f );
-	pcstr next_word				= NULL;
+	pcstr word					= NULL;
 	float text_width			= 0.0f;
 	ui_font const* fnt			= m_ui_world.get_font_manager().get_font();
-	fnt->parse_word				( str.c_str(), text_width, next_word );
+	fnt->parse_word				( m_text.c_str(), text_width, word );
 	float text_height			= fnt->get_height( );
 	float2 font_pos				= pos;
 	font_pos.x					= ( size.x / 2.0f ) - text_width / 2.0f + pos.x;
@@ -225,14 +226,14 @@ void ui_progress_bar::draw_text					(
 
 	renderer.draw_text			(
 		scene_view,
-		str.c_str( ), 
-		*fnt, 
-		font_pos, 
-		m_text_color, 
-		m_text_color, 
+		m_text.c_str( ),
+		*fnt,
+		font_pos,
+		m_text_color,
+		m_text_color,
 		math::floor( size.x ),
-		false, 
-		0, 
+		false,
+		0,
 		0
 		);
 }
