@@ -24,7 +24,7 @@ class damage_zone_core;
 
 // sushi@TODO
 
-class generic_anomaly_core : public link_resolver , public player_actions_subscriber, public base_game_object {
+class generic_anomaly_core : public base_game_object , public link_resolver , public player_actions_subscriber {
 public:
 								generic_anomaly_core		( );
 	virtual						~generic_anomaly_core		( );

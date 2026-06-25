@@ -77,7 +77,7 @@ struct VOSTOK_NOVTABLE window
 
 	virtual void			add_child			(window* w, bool adopt)			= 0;
 	virtual void			remove_child		(window* w)						= 0;
-	virtual void			remove_all_childs	()								= 0;
+	virtual void			remove_all_children	()								= 0;
 	virtual window*			get_child			(u32 idx)				const	= 0;
 	virtual u32				get_child_count		()						const	= 0;
 

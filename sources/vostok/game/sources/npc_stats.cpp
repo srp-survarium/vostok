@@ -69,7 +69,7 @@ void npc_stats::draw( render::ui::renderer& ui_renderer, render::scene_view_ptr 
 
 void npc_stats::set_stats( human_npc const* const owner )
 {
-	m_main_window->remove_all_childs	( );
+	m_main_window->remove_all_children	( );
 
 	if ( !owner )
 		return;
