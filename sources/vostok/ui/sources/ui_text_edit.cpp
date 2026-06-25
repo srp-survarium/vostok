@@ -204,7 +204,8 @@ float ui_text_edit::get_local_position	(u16 const pos) const
 
 void ui_text_edit::select_all()
 {
-	m_sel_start			= 0;	m_sel_end			= m_text.length();
+	m_sel_start			= 0;
+	m_sel_end			= m_text.length();
 }
 
 void ui_text_edit::reset_selection()
