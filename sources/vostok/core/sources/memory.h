@@ -18,6 +18,9 @@
 namespace vostok {
 namespace memory {
 
+extern bool g_use_resources_manager;
+extern bool g_use_video_memory;
+
 void preinitialize				( );
 void initialize					( );
 void finalize					( );

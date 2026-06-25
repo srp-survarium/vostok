@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 57.09% fuzzy (+1.70%) &middot; 5,351 / 12,915 functions exact (41.43%, +349 best-ever).**
+**Overall: 57.12% fuzzy (+1.70%) &middot; 5,355 / 12,915 functions exact (41.46%, +346 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -21,9 +21,9 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
 | `render`        |   351 | 350 / 2,647 (13.2%) |           422 (+72) | 31.0% |     +2.1% |
 | `game`          |   141 | 376 / 1,498 (25.1%) |            379 (+3) | 43.8% |     +0.5% |
-| `core`          |   136 | 813 / 1,320 (61.6%) |           837 (+24) | 82.8% |     +2.0% |
-| `vostok`        |   112 | 571 / 1,252 (45.6%) |           636 (+65) | 64.9% |     +4.8% |
-| `game_core`     |   189 | 500 / 1,171 (42.7%) |           590 (+90) | 81.2% |     +3.6% |
+| `core`          |   136 | 813 / 1,320 (61.6%) |           837 (+24) | 83.2% |     +2.0% |
+| `vostok`        |   112 | 573 / 1,252 (45.8%) |           636 (+63) | 64.9% |     +4.8% |
+| `game_core`     |   189 | 501 / 1,171 (42.8%) |           590 (+89) | 81.2% |     +3.6% |
 | `animation`     |   102 |   282 / 763 (37.0%) |           293 (+11) | 27.2% |     +0.9% |
 | `ai`            |   124 |   414 / 690 (60.0%) |           453 (+39) | 88.0% |     +1.0% |
 | `sound`         |    69 |   214 / 509 (42.0%) |            217 (+3) | 53.9% |     +0.1% |
@@ -34,13 +34,13 @@ _All figures from `match.db`, over ALL target functions (paired + inlined/folded
 | `ui`            |    27 |   190 / 227 (83.7%) |            190 (+0) | 80.3% |     +3.0% |
 | `physics`       |    14 |    93 / 197 (47.2%) |             99 (+6) | 71.9% |     +2.7% |
 | `fs`            |    25 |    71 / 165 (43.0%) |             73 (+2) | 84.0% |     +0.8% |
-| `engine`        |    22 |   109 / 162 (67.3%) |            109 (+0) | 85.5% |     +0.4% |
+| `engine`        |    22 |   110 / 162 (67.9%) |            110 (+0) | 85.5% |     +0.5% |
 | `network`       |    25 |    69 / 158 (43.7%) |             76 (+7) | 85.4% |     +0.9% |
 | `network_core`  |    22 |    35 / 127 (27.6%) |             40 (+5) | 84.1% |     +1.2% |
 | `debug`         |    16 |   111 / 122 (91.0%) |            111 (+0) | 96.8% |     +0.0% |
 | `logging`       |    10 |     34 / 72 (47.2%) |             34 (+0) | 91.2% |     +0.2% |
 | `input`         |     9 |     37 / 53 (69.8%) |             38 (+1) | 79.9% |     +0.0% |
-| `survarium`     |     5 |     14 / 22 (63.6%) |             14 (+0) | 84.3% |     +0.0% |
+| `survarium`     |     5 |     14 / 22 (63.6%) |             14 (+0) | 84.4% |     +0.0% |
 | `ai_navigation` |     3 |     13 / 14 (92.9%) |             13 (+0) | 98.1% |     +0.0% |
 
 _Updated 2026-06-25 &middot; delinker `4e81d30` (folded-symbol reconciliation)._
