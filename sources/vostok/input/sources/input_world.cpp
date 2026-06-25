@@ -5,6 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include "direct_input_include.h"
 #include "input_world.h"
 #include "receiver_gamepad.h"
 #include "receiver_keyboard.h"
