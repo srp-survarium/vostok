@@ -12,13 +12,16 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Pinned to the static-init-thunk canonicalization commit on top of the
-      # structure-builder (extract-all-enums-and-unions, vostok-pdb-parser#28):
-      # `??__E`/`??__F` thunks are demangled to the target PDB's
-      # `` `dynamic initializer for 'X'' `` form so objdiff pairs them. (Parent
-      # b6159cc also emits the engine's own vostok/scaleform/sources compilands.)
+      # Pinned to the access-specifier commit on top of the static-init-thunk
+      # canonicalization, on top of the structure-builder
+      # (extract-all-enums-and-unions, vostok-pdb-parser#28). c5a4d0f emits C++
+      # `private:`/`protected:`/`public:` section labels for class/struct members
+      # (CV_access_t), narrowing the `/* no source */` triage. Parent 89d3a1e
+      # demangles `??__E`/`??__F` thunks to the target PDB's
+      # `` `dynamic initializer for 'X'' `` form so objdiff pairs them; b6159cc
+      # also emits the engine's own vostok/scaleform/sources compilands.
       # Re-track master once these land. Output is gitignored/reference-only.
-      url = "github:srp-survarium/vostok-pdb-parser/89d3a1e384846edd8d7fcec02ad15f6fb1a51ccc";
+      url = "github:srp-survarium/vostok-pdb-parser/c5a4d0f32d7da6225476e4cea4478a1be14c0b43";
       flake = false;
     };
     vcproj2ninja-src = {
