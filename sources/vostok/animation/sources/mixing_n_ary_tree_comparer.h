@@ -26,8 +26,12 @@ class n_ary_tree_animation_node;
 struct animation_state;
 class animated_object_holder;
 
+class n_ary_tree_size_calculator;
+
 class n_ary_tree_comparer {
 public:
+	friend class n_ary_tree_size_calculator;
+
 					n_ary_tree_comparer			(
 						n_ary_tree const& from,
 						n_ary_tree const& to,
