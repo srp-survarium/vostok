@@ -23,6 +23,11 @@ class packet_reader;
 class udp_match_packet;
 class udp_network_flow_emulator;
 
+// STATE[REMOVED] (every `/* no source */` member below): udp_match_server is the
+// dedicated-server class - it has ZERO symbols in the shipped client target binary
+// and no TU in scope instantiates it (only #included by network_core_entry_point.cpp,
+// never constructed). So all its inline members are uninstantiated in both binaries;
+// the empty shams are correct. Reconstruct only if a dedicated-server build is matched.
 class udp_match_server : public boost::noncopyable {
 public:
 	struct comparer {

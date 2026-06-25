@@ -55,7 +55,10 @@ public:
 	inline	void								set_on_disconnect			( boost::function< void( disconnect_event_types_enum ) > const& value ) { m_on_disconnect = value; }
 
 	inline	udp_match_packet*					new_packet					( u8 message_type ) { return NULL; }
-	inline	void								delete_packet				( udp_match_packet*& packet ) { /* no source */ }
+	// STATE[REMOVED]: no matched consumer calls these udp_match_client members - the
+	// network module's match_client(_impl) wrapper uses its own new_packet/construct_packet
+	// and routes packets through udp_match_connection directly. Uninstantiated both sides.
+	inline	void								delete_packet				( udp_match_packet*& packet ) { /* no source */ } // STATE[REMOVED]
 
 	inline	bool								are_there_any_queued_packets( ) const { return false; }
 
@@ -84,20 +87,20 @@ private:
 			// const u32 here is load-bearing: __FUNCSIG__ in the LOG_ERROR sites renders from
 			// the FIRST declaration, and the target literal reads "...,const unsigned int)".
 			void								handle_receive				( boost::system::error_code const& error_code, const u32 bytes_transferred );
-	inline	void								handle_send					( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ }
+	inline	void								handle_send					( boost::system::error_code const& error_code, u32 bytes_transferred ) { /* no source */ } // STATE[REMOVED]
 
 			void								on_error					( const client_error_codes_enum client_error_code, const boost::system::error_code error_code );
 
 			void								process_incoming_packet		( packet_reader& reader, boost::asio::ip::udp::endpoint const& endpoint );
 
-	inline	void								send						( udp_match_packet const& packet ) { /* no source */ }
+	inline	void								send						( udp_match_packet const& packet ) { /* no source */ } // STATE[REMOVED]
 
 			void								on_disconnect				( const disconnect_event_types_enum disconnect_type );
 
 public:
-	inline										~udp_match_client			( ) { /* no source */ }
+	inline										~udp_match_client			( ) { /* no source */ } // STATE[REMOVED]
 
-	static	void								construct_packet			( udp_match_packets_orderer& packets_orderer, udp_match_packet& packet, u8 message_type ) { /* no source */ }
+	static	void								construct_packet			( udp_match_packets_orderer& packets_orderer, udp_match_packet& packet, u8 message_type ) { /* no source */ } // STATE[REMOVED]
 
 private:
 	/* 0x0000 */	udp_match_connection				m_connection;

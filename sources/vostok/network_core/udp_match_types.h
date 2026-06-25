@@ -20,7 +20,10 @@ enum udp_match_packets_count_enum
 }; // enum udp_match_packets_count_enum
 
 struct udp_match_message_type_info {
-	inline	udp_match_message_type_info	( bool is_reliable, bool is_ordered, u8 channel_id ) { /* no source */ }
+	// STATE[REMOVED]: constructed only inside the orderer's concrete get_*_message_info
+	// override, whose impl lives outside network_core (the abstract orderer is used
+	// by-reference here); no in-scope TU constructs this value. Uninstantiated both sides.
+	inline	udp_match_message_type_info	( bool is_reliable, bool is_ordered, u8 channel_id ) { /* no source */ } // STATE[REMOVED]
 
 public:
 	/* 0x0000 */	u8		channel_id	: 6;
@@ -34,7 +37,10 @@ struct udp_match_packets_orderer {
 	virtual	udp_match_message_type_info	get_sending_message_info	( u8 message_type ) = 0;
 	virtual	udp_match_message_type_info	get_received_message_info	( u8 message_type ) = 0;
 
-	inline								udp_match_packets_orderer	( ) { /* no source */ }
+	// STATE[REMOVED]: abstract base (pure virtuals) - never directly constructed; the
+	// concrete derived orderer (its ctor folds this in) lives outside network_core, and
+	// in scope the orderer is only held by-reference. Uninstantiated both sides.
+	inline								udp_match_packets_orderer	( ) { /* no source */ } // STATE[REMOVED]
 }; // struct udp_match_packets_orderer
 
 STATIC_SIZE_ASSERT(udp_match_packets_orderer, 0x4);

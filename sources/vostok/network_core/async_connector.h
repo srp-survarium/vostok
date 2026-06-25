@@ -55,13 +55,19 @@ private:
 						boost::asio::ip::tcp::resolver::iterator	iterator
 					);
 
-	inline	void	resolve						( pcstr host, u32 port ) { /* no source */ }
+	// STATE[REMOVED] (resolve/close_connection/on_error): the matched async_connector.cpp
+	// inlines the resolve/connect/error logic directly into connect()/on_resolved()/
+	// on_connected() and never calls these private helpers; no other TU can (they're
+	// private, no friends). Uninstantiated both sides.
+	inline	void	resolve						( pcstr host, u32 port ) { /* no source */ } // STATE[REMOVED]
 
-	inline	void	close_connection			( ) { /* no source */ }
+	inline	void	close_connection			( ) { /* no source */ } // STATE[REMOVED]
 
-	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ }
+	inline	void	on_error					( client_error_codes_enum client_error_code, boost::system::error_code error_code ) { /* no source */ } // STATE[REMOVED]
 
 public:
+	// trivial RAII dtor (resolver-iterator/function/socket-ptr/handler_allocator members
+	// auto-destroy); the empty body is correct - this is the matched ??1async_connector form.
 	inline			~async_connector			( ) { /* no source */ }
 
 private:
