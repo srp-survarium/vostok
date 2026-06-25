@@ -18,6 +18,17 @@ Worked examples (all logging, all STRUCTURE MATCH, PARKED):
 - `compare_nodes::operator()(node_base,node_base)` (70%): `left.name < right.name` -> target inlines
   `buffer_string::operator<` (c_str + strcmp_s + `==-1`), base keeps `call vostok::operator<`.
   (Here the polarity is reversed — target inlines, base calls — same wall, opposite cut.)
+- `format_specifier::fill_specifier_list` (88.3%): `strings::copy(*out_format_string, x)` (the
+  `char(&)[512]` template overload `strings::copy<512>`, strings_functions_inline.h:42). TARGET emits a
+  single `call strings::copy<512>` (the wrapper's own COMDAT inlined its inner 3-arg `copy` down to a
+  bare `strcpy_s`, so the wrapper is a 0x12 frameless leaf and is left out-of-line at the site). BASE
+  INLINES the wrapper into the caller, leaving `mov ecx,200h` + `call strings::copy` (the 3-arg form)
+  per site — 3 SIZE+ rows over a perfect 12/12 + 3-local structure, and the inlined-size pushes the
+  frame `sub esp,430h` vs `428h`. The SIBLING `strings::append<512>` (strings_concatenations.h:28)
+  pairs at +0x0 in BOTH because its inner 3-arg `append` carries an `R_ASSERT_U` that keeps the
+  wrapper too big to inline — i.e. the cut hinges on the helper's body size (assert vs bare
+  `VOSTOK_UNREFERENCED_PARAMETER`), confirming it is an inline-depth decision, not source shape. Can't
+  steer from the call site without touching the SHARED `strings::copy` template — off-limits, PARK.
 - `game_world::add_decal` (54%, game): `float4x4 transform = create_rotation( direction, normal );`
   -> the TARGET inlines the whole `inline`-marked two-vector `create_rotation` (math_float4x4_inline.h:328
   — the `(normal ^ direction).normalize()` cross-product + the i/j/k/c row stores, 0x124 of math) while
