@@ -13,37 +13,37 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 56.79% fuzzy (+1.71%) &middot; 5,250 / 12,915 functions exact (40.65%, +301 best-ever).**
+**Overall: 56.96% fuzzy (+1.73%) &middot; 5,293 / 12,915 functions exact (40.98%, +350 best-ever).**
 
 _All figures from `match.db`, over ALL target functions (paired + inlined/folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-immune): `Functions exact max` shows `(+N)` functions that were exact before they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact max | Fuzzy | Fuzzy max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 372 / 2,647 (14.1%) |           395 (+23) | 30.9% |     +2.0% |
-| `game`          |   141 | 349 / 1,498 (23.3%) |            353 (+4) | 43.3% |     +0.6% |
-| `core`          |   136 | 787 / 1,320 (59.6%) |           811 (+24) | 82.4% |     +2.0% |
+| `render`        |   351 | 347 / 2,647 (13.1%) |           418 (+71) | 31.0% |     +2.1% |
+| `game`          |   141 | 373 / 1,498 (24.9%) |            377 (+4) | 43.8% |     +0.6% |
+| `core`          |   136 | 803 / 1,320 (60.8%) |           827 (+24) | 82.6% |     +2.0% |
 | `vostok`        |   112 | 572 / 1,252 (45.7%) |           635 (+63) | 64.9% |     +4.7% |
-| `game_core`     |   189 | 499 / 1,171 (42.6%) |           588 (+89) | 81.2% |     +3.6% |
+| `game_core`     |   189 | 501 / 1,171 (42.8%) |           590 (+89) | 81.2% |     +3.6% |
 | `animation`     |   102 |   274 / 763 (35.9%) |           285 (+11) | 26.9% |     +0.9% |
-| `ai`            |   124 |   410 / 690 (59.4%) |           449 (+39) | 87.2% |     +1.0% |
+| `ai`            |   124 |   413 / 690 (59.9%) |           452 (+39) | 87.2% |     +1.0% |
 | `sound`         |    69 |   214 / 509 (42.0%) |            217 (+3) | 53.9% |     +0.1% |
-| `collision`     |    52 |   410 / 503 (81.5%) |            413 (+3) | 95.5% |     +0.2% |
-| `scaleform`     |    47 |   233 / 453 (51.4%) |            242 (+9) | 55.2% |     +1.2% |
-| `particle`      |    25 |   229 / 400 (57.2%) |            233 (+4) | 78.1% |     +1.0% |
+| `collision`     |    52 |   412 / 503 (81.9%) |            415 (+3) | 95.6% |     +0.2% |
+| `scaleform`     |    47 |   232 / 453 (51.2%) |           242 (+10) | 55.2% |     +1.2% |
+| `particle`      |    25 |   231 / 400 (57.8%) |            235 (+4) | 78.2% |     +1.0% |
 | `vfs`           |    71 |   164 / 390 (42.1%) |            168 (+4) | 87.1% |     +0.6% |
 | `ui`            |    27 |   185 / 227 (81.5%) |            185 (+0) | 78.8% |     +3.3% |
-| `physics`       |    14 |    84 / 197 (42.6%) |             90 (+6) | 69.3% |     +2.7% |
+| `physics`       |    14 |    91 / 197 (46.2%) |             97 (+6) | 71.9% |     +2.7% |
 | `fs`            |    25 |    71 / 165 (43.0%) |             73 (+2) | 84.0% |     +0.8% |
-| `engine`        |    22 |   100 / 162 (61.7%) |            100 (+0) | 85.0% |     +0.4% |
-| `network`       |    25 |    67 / 158 (42.4%) |             74 (+7) | 84.9% |     +0.9% |
+| `engine`        |    22 |   109 / 162 (67.3%) |            109 (+0) | 85.5% |     +0.4% |
+| `network`       |    25 |    69 / 158 (43.7%) |             76 (+7) | 85.1% |     +0.9% |
 | `network_core`  |    22 |    35 / 127 (27.6%) |             43 (+8) | 84.1% |     +2.9% |
 | `debug`         |    16 |   111 / 122 (91.0%) |            111 (+0) | 96.8% |     +0.0% |
 | `logging`       |    10 |     34 / 72 (47.2%) |             34 (+0) | 91.2% |     +0.2% |
 | `input`         |     9 |     26 / 53 (49.1%) |             28 (+2) | 73.2% |     +1.5% |
-| `survarium`     |     5 |     13 / 22 (59.1%) |             13 (+0) | 83.8% |     +0.0% |
-| `ai_navigation` |     3 |     11 / 14 (78.6%) |             11 (+0) | 93.8% |     +0.0% |
+| `survarium`     |     5 |     14 / 22 (63.6%) |             14 (+0) | 84.3% |     +0.0% |
+| `ai_navigation` |     3 |     12 / 14 (85.7%) |             12 (+0) | 98.1% |     +0.0% |
 
-_Updated 2026-06-25 &middot; delinker `5118e2a` (folded-symbol reconciliation)._
+_Updated 2026-06-25 &middot; delinker `4e81d30` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
