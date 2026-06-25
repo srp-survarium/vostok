@@ -8,6 +8,11 @@
 #define VOSTOK_AI_NPC_H_INCLUDED
 
 namespace vostok {
+
+namespace sound {
+	class world_user;
+} // namespace sound
+
 namespace ai {
 
 struct game_object;
@@ -62,14 +67,17 @@ protected:
 struct brain_unit_cook_params
 {
 	brain_unit_cook_params		( ) :
-		world_user_type			( resources::unknown_data_class ),
+		sound_world_user		( 0 ),
 		npc						( 0 )
 	{
 	}
 
-	resources::class_id_enum	world_user_type;
-	npc*						npc;
+	sound::world_user*					sound_world_user;
+	resources::unmanaged_resource_ptr	sound_scene;
+	npc*								npc;
 };
+
+STATIC_SIZE_ASSERT					( brain_unit_cook_params, 0xC );
 
 } // namespace ai
 } // namespace vostok
