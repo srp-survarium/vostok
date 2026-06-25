@@ -520,6 +520,34 @@ private:
 ////////////////////////////////////////////////////////////////////////////
 
 
+class particle_action_gravity : public particle_modifier {
+	DECLARE_ACTION(particle_action_gravity);
+public:
+						particle_action_gravity	() {}
+	virtual void		init					(particle_emitter_instance* instance, base_particle* P, float time);
+	virtual void		update					(particle_emitter_instance* instance, base_particle* P, float time);
+	virtual void		load					(configs::binary_config_value const& config);
+	virtual void		set_defaults			(bool mt_alloc = false);
+	virtual bool		is_update_modifier		() const {return true;};
+	virtual				~particle_action_gravity() {}
+
+#ifndef	MASTER_GOLD
+	virtual void		load					(configs::lua_config_value const& config);
+#endif // MASTER_GOLD
+
+private:
+	template <class ConfigValueType>
+	inline	void		load_impl				(ConfigValueType const& config);
+
+private:
+	float				m_force;
+}; // class particle_action_gravity
+
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+
 class particle_action_acceleration : public particle_modifier {
 	DECLARE_ACTION(particle_action_acceleration);
 public:

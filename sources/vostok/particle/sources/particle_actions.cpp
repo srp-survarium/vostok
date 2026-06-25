@@ -938,6 +938,50 @@ void particle_action_velocity_over_lifetime::load_binary(vostok::mutable_buffer&
 ////////////////////////////////////////////////////////////////////////////
 
 
+void particle_action_gravity::set_defaults( bool mt_alloc )
+{
+	particle_modifier::set_defaults(mt_alloc);
+	m_force = 9.8f;
+}
+
+void particle_action_gravity::init( particle_emitter_instance* /*instance*/, base_particle* P, float /*time*/ )
+{
+	P->gravity = 9.8f;
+}
+
+void particle_action_gravity::update( particle_emitter_instance* instance, base_particle* P, float time )
+{
+	VOSTOK_UNREFERENCED_PARAMETERS(instance);
+
+	float const mass = 1.0f;
+	P->gravity += m_force / mass * time;
+}
+
+template <class ConfigValueType>
+void particle_action_gravity::load_impl(ConfigValueType const& prop_config)
+{
+	m_force = read_config_value(prop_config, "Force", m_force);
+}
+
+void particle_action_gravity::load(configs::binary_config_value const& prop_config)
+{
+	particle_action::load(prop_config);
+	load_impl(prop_config);
+}
+
+#ifndef	MASTER_GOLD
+void particle_action_gravity::load(configs::lua_config_value const& prop_config)
+{
+	particle_action::load(prop_config);
+	load_impl(prop_config);
+}
+#endif
+
+
+////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////
+
+
 void particle_action_acceleration::set_defaults( bool mt_alloc )
 {
 	particle_modifier::set_defaults(mt_alloc);

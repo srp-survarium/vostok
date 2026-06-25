@@ -12,7 +12,7 @@ namespace particle {
 
 struct base_particle {
 	vostok::math::float4	color;
-	
+
 	// TODO: remove target_color_y_position!
 	float				target_color_y_position; // Used in color_matrix by color_over_life action
 
@@ -22,13 +22,13 @@ struct base_particle {
 	vostok::math::float3	position;
 	vostok::math::float3	spawn_position;
 	vostok::math::float3	old_position;
-	
+
 	vostok::math::float3	velocity;
 	vostok::math::float3	start_velocity;
-	
+
 	vostok::math::float3	size;
 	vostok::math::float3	start_size;
-	
+
 	base_particle*		next;
 	
 #pragma warning( push )

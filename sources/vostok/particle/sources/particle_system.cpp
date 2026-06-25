@@ -44,6 +44,7 @@ static s32 action_classname_to_index(pcstr name)
 	else if (strstr(name,"particle_action_orbit"))					return 23;
 	else if (strstr(name,"particle_action_acceleration"))			return 24;
 	else if (strstr(name,"particle_action_kill_volume"))			return 25;
+	else if (strstr(name,"particle_action_gravity"))				return 26;
 
 	ASSERT(0, "Invalid particle action class name.");
 	return -1;
@@ -192,6 +193,7 @@ static particle_action* create_action_by_index(particle_system_lod& lod, vostok:
 		{
 			action = new(buffer.c_ptr())particle_action_random_velocity;
 			buffer += sizeof(particle_action_random_velocity);
+			emitter->set_target_action((particle_action_random_velocity*)action);
 			break;
 		}
 	case 22:
@@ -216,6 +218,12 @@ static particle_action* create_action_by_index(particle_system_lod& lod, vostok:
 		{
 			action = new(buffer.c_ptr())particle_action_kill_volume;
 			buffer += sizeof(particle_action_kill_volume);
+			break;
+		}
+	case 26:
+		{
+			action = new(buffer.c_ptr())particle_action_gravity;
+			buffer += sizeof(particle_action_gravity);
 			break;
 		}
 	};

@@ -26,6 +26,7 @@ void particle_emitter::set_defaults()
 	m_max_num_particles		= 500;
 	
 	m_source_action			= 0;
+	m_target_action			= 0;
 	m_data_type_action		= 0;
 	
 	m_num_actions			= 0;
@@ -52,12 +53,17 @@ void particle_emitter::set_defaults()
 	m_event_index			= 0;
 }
 
-void particle_emitter::set_source_action( particle_action_source* source_act ) 
+void particle_emitter::set_source_action( particle_action_source* source_act )
 {
 	m_source_action = source_act;
 }
 
-void particle_emitter::set_data_type_action( particle_action_data_type* data_type_act ) 
+void particle_emitter::set_target_action( particle_action_random_velocity* target_act )
+{
+	m_target_action = target_act;
+}
+
+void particle_emitter::set_data_type_action( particle_action_data_type* data_type_act )
 {
 	m_data_type_action = data_type_act;
 }
