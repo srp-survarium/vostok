@@ -28,15 +28,15 @@ struct particle_system_lod
 {
 	typedef platform_pointer<particle_emitter, vostok::platform_pointer_default>::type		particle_emitter_ptr_type;
 	typedef platform_pointer<particle_system, vostok::platform_pointer_default>::type			particle_system_ptr_type;
-	
+
+	particle_system_ptr_type	m_parent;
+
 	particle_emitter_ptr_type	m_emitters_array;
 	u32							m_num_emitters;
-	
-	bool						m_visibility;
+
 	float						m_total_length;
-	
-	particle_system_ptr_type	m_parent;
-	
+	bool						m_visibility;
+
 	void set_defaults()
 	{
 		m_emitters_array		= 0;

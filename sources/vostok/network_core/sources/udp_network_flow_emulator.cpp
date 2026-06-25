@@ -13,20 +13,22 @@
 // the tick remove_if predicate lives at GLOBAL scope - the target mangling carries no
 // namespace (??Rdelayed_packets_predicate@@QBE..); the namespaced spelling mangles
 // @network_core@vostok@ and the symbol join fails SILENTLY (objdiff never pairs it).
+// sushi@TODO: target derives this from boost::noncopyable, but std::remove_if
+// copy-constructs the predicate (C2248) - cannot add the base without rework.
 class delayed_packets_predicate {
 public:
 	inline	delayed_packets_predicate	(
 		vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
 		const u32	time_in_ms
 	) :
-		m_delayed_packets_to_appear	( delayed_packets_to_appear ),
-		m_time_in_ms				( time_in_ms )
+		m_packets		( delayed_packets_to_appear ),
+		m_time_in_ms	( time_in_ms )
 	{ }
 
 	bool	operator()	( std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;
 
 private:
-	/* 0x0000 */	vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_delayed_packets_to_appear;
+	/* 0x0000 */	vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_packets;
 	/* 0x0004 */	const u32	m_time_in_ms;
 }; // class delayed_packets_predicate
 
@@ -73,7 +75,7 @@ bool delayed_packets_predicate::operator()(
 	if ( m_time_in_ms < message.first->last_send_time_in_ms )
 		return false;
 
-	m_delayed_packets_to_appear.push_back( message );
+	m_packets.push_back( message );
 	return true;
 }
 
