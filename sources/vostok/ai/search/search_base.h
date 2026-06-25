@@ -99,6 +99,8 @@ public:
 	priority_queue_impl_type	m_priority_queue;
 }; // class search_base
 
+STATIC_SIZE_ASSERT( search_base, 0x3C );
+
 } // namespace planning
 } // namespace ai
 } // namespace vostok
