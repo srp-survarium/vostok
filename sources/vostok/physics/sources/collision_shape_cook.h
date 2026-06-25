@@ -26,6 +26,9 @@ private:
 		/* 0x0118 */	float3								scale_;
 	};
 
+	// STATE[REMOVED]: no out-of-line body, not inlined into translate_query (which builds
+	// the request array and calls query_resources directly) nor on_collision_sources_loaded;
+	// no caller; absent from both binaries.
 	inline	void				load_collision_resources	( collision_shape_cook::cook_data* arg_0 ) { /* no source */ }
 			void				on_collision_sources_loaded	( resources::queries_result& data, collision_shape_cook::cook_data* cd );
 			bt_collision_shape*	create_primitives_shape		( configs::binary_config_value const& primitives_t, collision_shape_cook::cook_data* cd );
