@@ -53,10 +53,7 @@ bool base_network_client::is_player_current( const u8 id ) const
 
 game_team_id base_network_client::current_player_team( ) const
 {
-	if ( m_current_player.c_ptr( ) )
-		return m_current_player.c_ptr( )->team( );
-
-	return team_neutral;
+	return m_current_player.c_ptr( ) ? m_current_player.c_ptr( )->team( ) : team_neutral;
 }
 
 player_ptr base_network_client::get_current_player( )
