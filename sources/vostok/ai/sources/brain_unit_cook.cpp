@@ -58,16 +58,10 @@ void brain_unit_cook::on_brain_unit_options_received	( resources::queries_result
 	}
 	
 	configs::binary_config_ptr config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource() );
-	
-	brain_unit_cook_params					cook_params;
-	resources::user_data_variant* user_data	= parent->user_data();
-	R_ASSERT								( user_data );
-	bool const user_data_result				= user_data->try_get( cook_params );
-	R_ASSERT								( user_data_result );
-		
+
 	query_resource							(
 		parent->get_requested_path(),
-		cook_params.world_user_type,
+		resources::sound_player_class,
 		boost::bind( &brain_unit_cook::on_sound_player_loaded, this, _1, config ),
 		g_allocator,
 		0,
