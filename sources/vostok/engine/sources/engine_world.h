@@ -16,6 +16,8 @@
 #include <vostok/one_way_threads_channel.h>
 #include <vostok/fs/asynchronous_device_interface.h>
 #include <vostok/fs/windows_hdd_file_system.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/timing_timer.h>
 #include "apc.h"
 
 #if !defined(_MSC_VER)
@@ -177,6 +179,12 @@ private:
 	typedef memory::doug_lea_allocator_type			doug_lea_allocator_type;
 
 private:
+	fs_new::windows_hdd_file_system			m_hdd_device;
+	fs_new::windows_hdd_file_system			m_dvd_device;
+
+	uninitialized_reference<fs_new::asynchronous_device_interface>	m_hdd_async_interface;
+	uninitialized_reference<fs_new::asynchronous_device_interface>	m_dvd_async_interface;
+
 	doug_lea_allocator_type			m_network_allocator;
 	doug_lea_allocator_type			m_sound_allocator;
 	doug_lea_allocator_type			m_render_allocator;
@@ -185,6 +193,8 @@ private:
 	render::world*					m_render_world;
 	editor::world*					m_editor;
 
+	configs::binary_config_ptr		m_shader_mask_config;
+
 	threading::atomic_ptr<network::world>::type	m_network_world;
 	threading::atomic_ptr<sound::world>::type	m_sound_world;
 
@@ -192,11 +202,9 @@ private:
 	vostok::engine_user::module_proxy& m_engine_user_module_proxy;
 	vostok::engine_user::world*		 m_engine_user_world;
 
-	fs_new::windows_hdd_file_system			m_hdd_device;
-	fs_new::windows_hdd_file_system			m_dvd_device;
-
-	uninitialized_reference<fs_new::asynchronous_device_interface>	m_hdd_async_interface;
-	uninitialized_reference<fs_new::asynchronous_device_interface>	m_dvd_async_interface;
+	resources::mount_ptr			m_resources_mount;
+	resources::mount_ptr			m_user_data_mount;
+	resources::mount_ptr			m_test_resources_mount;
 
 	HWND							m_main_window_handle;
 	HWND							m_render_window_handle;
@@ -205,6 +213,8 @@ private:
 	int								m_exit_code;
 	threading::atomic32_type		m_destruction_started;
 	threading::atomic32_type		m_file_system_devices_destruction_started;
+	threading::atomic32_type		m_resources_destruction_started;
+	threading::atomic32_type		m_resources_cooker_destruction_started;
 	bool							m_early_destruction_started;
 	bool							m_initialized;
 	bool							m_game_enabled;
@@ -213,12 +223,7 @@ private:
 	bool							m_application_active;
 	bool							m_application_activated;
 
-	resources::mount_ptr			m_resources_mount;
-	resources::mount_ptr			m_user_data_mount;
-	resources::mount_ptr			m_test_resources_mount;
-
-	threading::atomic32_type		m_resources_destruction_started;
-	threading::atomic32_type		m_resources_cooker_destruction_started;
+	timing::timer					m_timer;
 
 }; // class engine_world
 
