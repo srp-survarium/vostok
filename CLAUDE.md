@@ -43,8 +43,10 @@ devShell):
 
 Inside `nix develop` the flake provides everything:
 
-- binaries on PATH: `vostok-delinker`, `pdb_parser`, `objdiff`, `objdiff-cli`,
-  `wine`, plus `vcproj2ninja.exe` / `ninja.exe` run under Wine.
+- binaries on PATH: `vostok-delinker`, `pdb_parser`, `pdb_fetch`,
+  `pdb_divergence` (the base-vs-target structure-divergence verifier),
+  `objdiff`, `objdiff-cli`, `wine`, plus `vcproj2ninja.exe` / `ninja.exe`
+  run under Wine.
 - assets via env vars: `VOSTOK_LIBS_DIR`, `SURVARIUM_BIN`, `MSVC_DIR`, ...
 - large fetched packages pinned as gcroots under `binaries/nix-store/`.
 
