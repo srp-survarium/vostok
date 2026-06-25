@@ -107,7 +107,8 @@ void vision_sensor::add_new_visible_object	( game_object const* const ai_game_ob
 
 bool vision_sensor::check_if_in_blind_zones		( game_object const* const ai_game_object ) const
 {
-	float3 const& object_position				= ai_game_object->local_to_cell( m_npc.get_eyes_position() ).transform_position( ai_game_object->get_collision_object()->get_origin() );
+	npc const* const npc_object					= ai_game_object->cast_npc();
+	float3 const& object_position				= ai_game_object->local_to_cell( m_npc.get_eyes_position() ).transform_position( npc_object->get_position( float3( 0, 0, 0 ) ) );
 	float const peripheral_view_angle			= math::acos( m_npc.get_eyes_direction() | normalize( object_position - m_npc.get_eyes_position() ) );
 	float const horizontal_fov_d2				= math::atan( 1.f / m_parameters.aspect_ratio * math::tan( m_parameters.vertical_fov / 2.f ) );
 	float const angles_ratio					= math::clamp_r( peripheral_view_angle / horizontal_fov_d2, 0.f, 1.f );

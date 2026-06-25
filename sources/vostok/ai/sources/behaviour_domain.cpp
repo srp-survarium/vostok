@@ -225,19 +225,9 @@ void behaviour::create_domain	( configs::binary_config_value const& options, ai_
 		predicate< brain_unit const*, animation_item const* >( boost::bind( &brain_unit::was_animation_played, _1, _2 ) )
 	);
 	m_domain->add_predicate		(
-		predicate_type_animation_playing,
-		predicates_captions[predicate_type_animation_playing],
-		predicate< brain_unit const* >( boost::bind( &brain_unit::is_playing_animation, _1 ) )
-	);
-	m_domain->add_predicate		(
 		predicate_type_sound_played,
 		predicates_captions[predicate_type_sound_played],
 		predicate< brain_unit const*, sound_item const* >( boost::bind( &brain_unit::was_sound_played, _1, _2 ) )
-	);
-	m_domain->add_predicate		(
-		predicate_type_sound_playing,
-		predicates_captions[predicate_type_sound_playing],
-		predicate< brain_unit const* >( boost::bind( &brain_unit::is_playing_sound, _1 ) )
 	);
   	m_domain->add_predicate		(
   		predicate_type_animation_with_sound_played,
@@ -248,11 +238,6 @@ void behaviour::create_domain	( configs::binary_config_value const& options, ai_
   		predicate_type_is_at_position,
   		predicates_captions[predicate_type_is_at_position],
   		predicate< brain_unit const*, movement_target const* >( boost::bind( &brain_unit::is_at_position, _1, _2 ) )
-  	);
-	m_domain->add_predicate		(
-  		predicate_type_is_moving,
-  		predicates_captions[predicate_type_is_moving],
-  		predicate< brain_unit const* >( boost::bind( &brain_unit::is_moving, _1 ) )
   	);
 
 	configs::binary_config_value const& actions_value			= options["action_types"];
