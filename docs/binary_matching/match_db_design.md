@@ -79,6 +79,23 @@ JOIN base_functions   b ON b.rva = p.base_rva
 WHERE t.size <= 0x80 ORDER BY t.size;
 ```
 
+Pairing is by **mangled name** (`set(target) & set(base)`), PLUS a small
+**cross-name pass** for the compiler-generated dynamic-init/atexit thunks the two
+sides label differently: the original-game PDB stores the demangled form
+(`vostok::sound::\`dynamic initializer for 's_debug_audio''`) while our PDB stores
+the raw mangled form (`??__Es_debug_audio@sound@vostok@@YAXXZ`), and
+`pdb_rich_context` emits each verbatim - so a by-name intersection misses them and
+they double-list as both `target_only` AND `base_only` even though the body is
+byte-identical. The pass canonicalizes the SAFE subset (fully-qualified plain
+identifiers; anon-ns/`?A0x` hash, template, and `\`local'`/cook scope are deferred
+to a Rust-side demangler fix in pdb-parser), pairs 1:1 + identical statement-shape
+only (never onto the wrong variable), and records the pair keyed by the TARGET sym.
+Because such a pair's base twin carries a *different* sym, the anti-join views
+exclude by **RVA** (`p.target_rva`/`p.base_rva`), not by sym, so both sides drop
+out of `*_only` cleanly. These thunks are absent from objdiff's report.json (it
+hits the same name gap), so their `fuzzy_pct` is NULL - the win is roster
+correctness (paired/`target_only` counts), not the weighted README %.
+
 ## Structure classification (`struct_class`)
 
 Computed per paired function from the two statement tables via sequence
