@@ -30,6 +30,7 @@ import difflib
 import hashlib
 import json
 import os
+import re
 import sqlite3
 import sys
 from pathlib import Path
@@ -101,7 +102,14 @@ CREATE INDEX idx_target_sym ON target_functions(sym);
 CREATE INDEX idx_base_sym   ON base_functions(sym);
 CREATE INDEX idx_target_unit ON target_functions(unit);
 CREATE INDEX idx_base_unit   ON base_functions(unit);
+CREATE INDEX idx_pairs_target_rva ON pairs(target_rva);
+CREATE INDEX idx_pairs_base_rva   ON pairs(base_rva);
 
+-- Unpaired = the function's RVA is not the target_rva / base_rva of any pair.
+-- Excluding by RVA (not by sym) also catches the cross-name dynamic-init/atexit
+-- pairs, whose pair row is keyed by the TARGET sym while the base side carries a
+-- different (??__E/??__F) sym - a by-sym check would leave the base twin in
+-- base_only and double-count it.
 CREATE VIEW target_only AS
   SELECT s.mangled, s.demangled, u.name AS unit, t.module, f.path AS file,
          t.rva, t.line, t.size, t.n_stmts
@@ -109,7 +117,7 @@ CREATE VIEW target_only AS
   JOIN symbols s ON s.id = t.sym
   LEFT JOIN units u ON u.id = t.unit
   LEFT JOIN files f ON f.id = t.file
-  LEFT JOIN pairs p ON p.sym = t.sym WHERE p.sym IS NULL;
+  LEFT JOIN pairs p ON p.target_rva = t.rva WHERE p.target_rva IS NULL;
 CREATE VIEW base_only AS
   SELECT s.mangled, s.demangled, u.name AS unit, b.module, f.path AS file,
          b.rva, b.line, b.size, b.n_stmts
@@ -117,7 +125,7 @@ CREATE VIEW base_only AS
   JOIN symbols s ON s.id = b.sym
   LEFT JOIN units u ON u.id = b.unit
   LEFT JOIN files f ON f.id = b.file
-  LEFT JOIN pairs p ON p.sym = b.sym WHERE p.sym IS NULL;
+  LEFT JOIN pairs p ON p.base_rva = b.rva WHERE p.base_rva IS NULL;
 CREATE VIEW paired AS
   SELECT s.mangled, s.demangled, u.name AS unit, t.module,
          p.fuzzy_pct, p.struct_class, p.t_stmts, p.b_stmts,
@@ -269,6 +277,77 @@ def mangled_name_part(mangled):
     return mangled[:i] if i > 0 else mangled
 
 
+# --- dynamic-initializer / atexit-destructor cross-name pairing -------------
+#
+# The two sides label the same compiler-generated static-init thunk with
+# DIFFERENT name strings, so the primary `set(target) & set(base)` pass misses
+# them and they show up as both target_only AND base_only (a measurement bug -
+# the functions are byte-identical, just unpaired):
+#
+#   TARGET (original game PDB): demangled form, emitted verbatim by
+#     pdb_rich_context -   vostok::sound::`dynamic initializer for 's_debug_audio''
+#   BASE   (our PDB):          raw mangled form -
+#     ??__Es_debug_audio@sound@vostok@@YAXXZ
+#
+# pdb_rich_context surfaces only the form each PDB happens to store (the base
+# PDB *does* carry the demangled string too, but the tool discards it - a proper
+# fix belongs there). Here we canonicalize the unpaired thunks on both sides to
+# a (kind, fully-qualified-variable-name) key and pair the SAFE subset only:
+# fully-qualified plain identifiers (no anonymous-namespace `?A0x...` hash, no
+# template/local/cook scope - those need the real demangler), 1:1 on both sides,
+# AND with an identical statement-size sequence (so we never pair a thunk onto
+# the wrong variable's twin). Everything else is left for the Rust-side fix.
+
+_DYN_RE = re.compile(r"^(.*?)`dynamic (initializer|atexit destructor) for '(.*)''$")
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_QUALIFIED_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_][A-Za-z0-9_]*$")
+
+
+def dyn_canon_target(mangled):
+    """Canonical (kind, fqn) for a TARGET-side demangled dynamic thunk, or None
+    if it is not a safely-canonicalizable thunk (template/local/anon scope)."""
+    m = _DYN_RE.match(mangled)
+    if not m:
+        return None
+    pfx, kind, inner = m.group(1), m.group(2), m.group(3)
+    kc = "E" if kind == "initializer" else "F"
+    # pfx is the namespace ("a::b::") OR empty (the var sits fully inside quotes).
+    if pfx:
+        if not pfx.endswith("::"):
+            return None
+        fqn = pfx + inner
+    else:
+        fqn = inner
+    if not _QUALIFIED_RE.match(fqn):  # rejects anon-ns, templates, `local' scopes, $
+        return None
+    return (kc, fqn)
+
+
+def dyn_canon_base(mangled):
+    """Canonical (kind, fqn) for a BASE-side mangled ??__E/??__F thunk, or None
+    if not safely canonicalizable (templated/local/anon-scope encodings carry
+    '?' or '$' and are deferred to the Rust-side demangler)."""
+    if mangled.startswith("??__E"):
+        kc = "E"
+    elif mangled.startswith("??__F"):
+        kc = "F"
+    else:
+        return None
+    body = mangled[5:]
+    if not body.endswith("@@YAXXZ"):
+        return None
+    inner = body[: -len("@@YAXXZ")]
+    if "?" in inner or "$" in inner:  # local/anon/template scope - defer
+        return None
+    parts = [p for p in inner.split("@") if p]
+    if not parts:
+        return None
+    var, scopes = parts[0], list(reversed(parts[1:]))  # mangled scopes are inner-first
+    if not _IDENT_RE.match(var) or any(not _IDENT_RE.match(s) for s in scopes):
+        return None
+    return (kc, "::".join(scopes + [var]))
+
+
 def is_framed(rec):
     """True when the function keeps the /Od `push ebp; mov ebp, esp` prologue.
     A frameless function in a matchable module is an LTCG-customized leaf
@@ -288,6 +367,8 @@ def src_fingerprint(rec):
     Hashes SOURCE TEXT, not bytes: a matcher edit changes it; a header/other-unit
     change that only shifts codegen does not.
     """
+    if rec is None:
+        return None
     path = VOSTOK / "sources" / rec["file"]
     lines = [s["line"] for s in rec["statements"] if s.get("line")]
     if not lines or not path.is_file():
@@ -523,6 +604,50 @@ def regen():
                 n_bonly,
             )
         )
+    # cross-name pairing: pair the dynamic-init/atexit thunks the two sides label
+    # differently (??__E/??__F mangled on base vs `dynamic initializer for ...`
+    # demangled on target). Canonicalize the SAFE subset and pair 1:1 + identical
+    # statement-shape only, so we never pair a thunk onto the wrong variable.
+    # Recorded keyed by the TARGET sym (the demangled name the `paired` view shows);
+    # base_only/target_only exclusion is by RVA, so both rva's drop out cleanly.
+    paired_primary = set(target) & set(base)
+    cross_paired_mangled = set()  # base AND target names we pair across the name gap
+    t_canon, b_canon = {}, {}     # (kind, fqn) -> [mangled, ...]
+    for m in set(target) - paired_primary:
+        c = dyn_canon_target(m)
+        if c:
+            t_canon.setdefault(c, []).append(m)
+    for m in set(base) - paired_primary:
+        c = dyn_canon_base(m)
+        if c:
+            b_canon.setdefault(c, []).append(m)
+    n_cross = 0
+    for c in t_canon.keys() & b_canon.keys():
+        tm_list, bm_list = t_canon[c], b_canon[c]
+        if len(tm_list) != 1 or len(bm_list) != 1:
+            continue  # ambiguous - leave for the Rust-side demangler
+        tm, bm = tm_list[0], bm_list[0]
+        if stmt_seq(target[tm]) != stmt_seq(base[bm]):
+            continue  # not byte-shape identical - genuinely unmatched, do not pair
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
+        pair_rows.append(
+            (
+                sym_id[tm],
+                target[tm]["rva"],
+                base[bm]["rva"],
+                fuzzy_by_mangled.get(tm, fuzzy_by_mangled.get(bm)),
+                cls,
+                t_n,
+                b_n,
+                n_size,
+                n_tonly,
+                n_bonly,
+            )
+        )
+        cross_paired_mangled.update((tm, bm))
+        n_cross += 1
+    if n_cross:
+        log(f"cross-name paired {n_cross} dynamic-init/atexit thunks (??__E/??__F <-> demangled)")
     pair_rows.sort()
 
     unit_rows = sorted(
@@ -569,11 +694,23 @@ def regen():
     for mangled, i in sym_id.items():
         sym_by_id[i] = mangled
     touched = dropped = 0
-    paired_mangled = set(target) & set(base)
+    # paired = primary same-name pairs PLUS the cross-name dynamic-init/atexit pairs
+    # (so a cross-paired base ??__E / target thunk is not re-classified as *_only).
+    paired_mangled = paired_primary | cross_paired_mangled
+    # cross-name pairs are keyed by the TARGET name, which is absent from `base`;
+    # fall back to that pair's matched base record (located by base RVA) for the
+    # source fingerprint.
+    base_by_rva = {rec["rva"]: rec for rec in base.values()}
+    base_rec_for = {
+        sym_by_id[r[0]]: base_by_rva.get(r[2])
+        for r in pair_rows
+        if sym_by_id[r[0]] not in base
+    }
     for row in pair_rows:
         mangled = sym_by_id[row[0]]
         fuzzy, cls = row[3], row[4]
-        fp = src_fingerprint(base[mangled])
+        brec = base.get(mangled) or base_rec_for.get(mangled)
+        fp = src_fingerprint(brec)
         prev = old_history.get(mangled)
         best = fuzzy
         if prev is not None and prev[5] == fp and prev[2] is not None:
