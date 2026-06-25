@@ -12,12 +12,13 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Pinned to the structure-builder commit: extract-all-enums-and-unions
-      # (vostok-pdb-parser#28) PLUS emit the engine's own vostok/scaleform/sources
-      # compilands (the broad '\scaleform\' module filter is dropped; modules with
-      # unresolvable cross-module debug info are skipped, not aborted). Re-track
-      # master once these land. Output is gitignored/reference-only (zero match risk).
-      url = "github:srp-survarium/vostok-pdb-parser/b6159cc49734f77eb3356eda982aa3f3cdb9291c";
+      # Pinned to the static-init-thunk canonicalization commit on top of the
+      # structure-builder (extract-all-enums-and-unions, vostok-pdb-parser#28):
+      # `??__E`/`??__F` thunks are demangled to the target PDB's
+      # `` `dynamic initializer for 'X'' `` form so objdiff pairs them. (Parent
+      # b6159cc also emits the engine's own vostok/scaleform/sources compilands.)
+      # Re-track master once these land. Output is gitignored/reference-only.
+      url = "github:srp-survarium/vostok-pdb-parser/89d3a1e384846edd8d7fcec02ad15f6fb1a51ccc";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -25,7 +26,11 @@
       flake = false;
     };
     vostok-delinker-src = {
-      url = "github:srp-survarium/vostok-delinker";
+      # Pinned to the static-init-thunk canonicalization commit: the base .obj
+      # COFF symbol names for `??__E`/`??__F` thunks are demangled to the target
+      # PDB's `` `dynamic initializer for 'X'' `` form so objdiff pairs them
+      # (the matching half of the vostok-pdb-parser change above).
+      url = "github:srp-survarium/vostok-delinker/4e81d30d201747accfcaffa2a0cc7aeabe423462";
       flake = false;
     };
     vostok-resources-db-src = {
@@ -76,7 +81,7 @@
         pname = "vostok-pdb-parser";
         version = "0.1.0";
         src = vostok-pdb-parser-src;
-        cargoHash = "sha256-VRRjM4FtwwXyeQqO1NOYeDRxsiBpOKW3+Bqj5dKjNCc=";
+        cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
       };
 
       # ---------------------------------------------------------------------------
