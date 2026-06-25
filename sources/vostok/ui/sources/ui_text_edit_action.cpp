@@ -7,6 +7,9 @@
 #include "ui_text_edit_action.h"
 #include "ui_text_edit.h"
 #include <vostok/input/keyboard.h>
+#include <vostok/input/world.h>
+#include <locale.h>
+#include <ctype.h>
 
 namespace vostok {
 namespace ui {
@@ -82,24 +85,23 @@ insert_char_action::~insert_char_action()
 bool insert_char_action::execute(input::enum_keyboard_action action)
 {
 	VOSTOK_UNREFERENCED_PARAMETER	(action);
+	string128		buff;
+
 	char c = (m_parent->is_shift_state(ks_Shift))? m_char_shift : m_char;
 
-	//if( m_b_translate )
-	//{
-	//	string128		buff;
-	//	buff[0]			= 0;
-	//	
-	//	static _locale_t current_locale = _create_locale(LC_ALL, "");
-	//	
-	//	if ( pInput->get_dik_name( m_dik, buff, sizeof(buff) ) )
-	//	{
-	//		if ( _isalpha_l(buff[0], current_locale) || buff[0] == char(-1) ) // "�" = -1
-	//		{
-	//			_strlwr_l	(buff, current_locale);
-	//			c			= buff[0];
-	//		}
-	//	}
-	//}
+	if( m_b_translate && m_input_world )
+	{
+		static _locale_t current_locale = _create_locale(LC_ALL, "");
+
+		if ( m_input_world->get_keyboard()->get_dik_name( m_key, buff, sizeof(buff) ) )
+		{
+			if ( _isalpha_l(buff[0], current_locale) )
+			{
+				_strlwr_s_l	(buff, sizeof(buff), current_locale);
+				c			= buff[0];
+			}
+		}
+	}
 	m_parent->delete_selection();
 	m_parent->insert_character( c );
 	return			true;
