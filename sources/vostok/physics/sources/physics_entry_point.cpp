@@ -39,6 +39,10 @@ void set_memory_allocator( memory::base_allocator* allocator )
 	ASSERT				( !g_ph_allocator || g_ph_allocator==allocator );
 	g_ph_allocator		= allocator;
 
+	// sushi@TODO: these function-local cook statics emit their atexit destructors in base
+	// (set_memory_allocator is anchored) but stay TARGET_ONLY due to the mangled-(base
+	// ??__F...@?5?)-vs-demangled-(target ``6'``) symbol-name pairing gap - tooling, not
+	// source-steerable. See review_todos.md.
 	static collision_shape_cook collision_shape_cooker_static( true );
 	static collision_shape_cook collision_shape_cooker_dynamic( false );
 	static animated_model_instance_cook animated_model_cook;

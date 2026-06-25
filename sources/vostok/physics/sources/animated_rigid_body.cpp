@@ -187,7 +187,13 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	}
 }
 
-// sushi@TODO: This function doesn't have xrefs and got inlined in target, don't know where exactly. Also constants.
+// claude@NOTE: target keeps this as a standalone symbol but the target PDB records it as
+// the DEMANGLED name `vostok::physics::calculate_bt_joint_size` while our base emits the
+// mangled `?calculate_bt_joint_size@physics@vostok@@YAIAB...` - objdiff/match.db pair by
+// exact symbol string, so the two never pair (same name-representation gap as the file-scope
+// console-var dynamic init/atexit pairs). Body is faithful (joint = primitive shape +
+// btCompoundShape). It is `static` with no caller (target has no call-site either), so the
+// base also DCEs it. Pairing is a tooling normalization issue, not source-steerable.
 static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -195,13 +201,13 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	switch ( type )
 	{
 		case collision::primitive_sphere:
-			return 0xA0;
+			return sizeof( btSphereShape ) + sizeof( btCompoundShape );
 		case collision::primitive_box:
-			return 0xB0;
+			return sizeof( btBoxShape ) + sizeof( btCompoundShape );
 		case collision::primitive_cylinder:
-			return 0xB0;
+			return sizeof( btCylinderShape ) + sizeof( btCompoundShape );
 		case collision::primitive_capsule:
-			return 0xB0;
+			return sizeof( btCapsuleShape ) + sizeof( btCompoundShape );
 		default:
 			NODEFAULT( );
 	}

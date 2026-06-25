@@ -15,6 +15,14 @@
 
 #include "LinearMath/btQuickProf.h"
 
+// sushi@TODO: these file-scope console-var statics ARE emitted in our base (their dynamic
+// initializer / atexit destructor pair, sizes 79/87/240/60... matching the target), but they
+// stay TARGET_ONLY because objdiff/match.db pair by exact symbol string: the base PDB records
+// the raw `??__Es_physics_max_substeps_cc@@YAXXZ` / `??__F...` mangling while the target PDB
+// records the DEMANGLED `dynamic initializer for 's_physics_max_substeps_cc'`. Function-LOCAL
+// statics (e.g. render's create_effect::descriptor_object, scope `?1?`/``2'``) DO pair, so the
+// gap is specific to file-scope (and `?5?`/``6'`` function-local-cook) dynamic init/atexit. A
+// tooling name-normalization issue, not source-steerable. See review_todos.md.
 static u32 s_physics_max_substeps_value = 1;
 static console_commands::cc_u32 s_physics_max_substeps_cc (
 	"physics_max_substeps",
@@ -704,10 +712,13 @@ float contact_result_callback::addSingleResult(
 	);
 }
 
-// STATE[STUB]
+// claude@NOTE: STRUCTURE MATCH (2/2 stmts, same order). Residual is LTCG argument-passing:
+// the gold build is the function's only caller and gave it a custom convention (ret 8 vs
+// our ret 0Ch - one stack arg promoted to a register), which reschedules the cb-construction
+// stores. Not source-steerable.
 void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object )
 {
-	contact_result_callback cb( &predicate );	// <0x6bd373>|0x000|0x000:'732'
+	contact_result_callback cb( &predicate );
 	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 
