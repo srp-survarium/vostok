@@ -253,8 +253,12 @@ struct regions_count {
 };
 
 struct regions_filler : private boost::noncopyable {
-	inline	regions_filler	( vostok::memory::platform::regions_type& regions ) :
-		m_regions	( regions )
+	inline	regions_filler	(
+			vostok::memory::platform::regions_type& regions,
+			vostok::memory::platform::regions_type& high_memory_regions
+		) :
+		m_regions				( regions ),
+		m_high_memory_regions	( high_memory_regions )
 	{
 	}
 
@@ -265,7 +269,10 @@ struct regions_filler : private boost::noncopyable {
 	}
 
 	vostok::memory::platform::regions_type& m_regions;
+	vostok::memory::platform::regions_type& m_high_memory_regions;
 };
+
+STATIC_SIZE_ASSERT(regions_filler, 0x8);
 
 static bool allocate_arenas					(
 		vostok::memory::platform::regions_type& arenas,
@@ -292,8 +299,14 @@ static bool allocate_arenas					(
 	using vostok::memory::platform::regions_type;
 	using vostok::memory::platform::region;
 
+	// claude@NOTE: regions_filler gained m_high_memory_regions (2-arg ctor); its operator()
+	// still fills only m_regions per the iterate_regions<regions_filler> asm. The target's
+	// allocate_arenas was rewritten into a low/high-memory split (its PDB body spans many more
+	// statements with a `high_memory_regions` local) - that full rewrite is a separate unit and
+	// is PARKED; this keeps the old single-buffer body, wiring a high buffer to satisfy the ctor.
 	regions_type				regions( ALLOCA(counter.m_region_count*sizeof(region)), counter.m_region_count );
-	regions_filler				filler(regions);
+	regions_type				high_memory_regions( ALLOCA(counter.m_region_count*sizeof(region)), counter.m_region_count );
+	regions_filler				filler(regions, high_memory_regions);
 	iterate_regions				( start_address, allocation_granularity, min_buffer_size, filler );
 
 	std::sort					( regions.begin(), regions.end() );

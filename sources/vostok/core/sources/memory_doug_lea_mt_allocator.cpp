@@ -15,21 +15,32 @@ using vostok::memory::doug_lea_mt_allocator;
 
 class mutex_mt_raii : private boost::noncopyable {
 public:
-	inline	mutex_mt_raii	( doug_lea_mt_allocator const& instance ) :
-		m_instance( instance )
+	explicit	mutex_mt_raii	( doug_lea_mt_allocator const& instance ) :
+		m_instance			( instance ),
+		m_is_tasks_aware	( instance.is_tasks_aware() )
 	{
-		m_instance.mutex().lock				( );
+		if ( m_is_tasks_aware )
+			m_instance.mutex().lock					( );
+		else
+			m_instance.mutex_tasks_unaware().lock	( );
+
 		m_instance.user_current_thread_id	( );
 	}
 
 	inline	~mutex_mt_raii	( )
 	{
-		m_instance.mutex().unlock			( );
+		if ( m_is_tasks_aware )
+			m_instance.mutex().unlock				( );
+		else
+			m_instance.mutex_tasks_unaware().unlock	( );
 	}
 
 private:
-	doug_lea_mt_allocator const& m_instance;
+	doug_lea_mt_allocator const&	m_instance;
+	const bool						m_is_tasks_aware;
 }; // class mutex_mt_raii
+
+STATIC_SIZE_ASSERT(mutex_mt_raii, 0x8);
 
 doug_lea_mt_allocator::doug_lea_mt_allocator(
 		bool const crash_after_out_of_memory,
