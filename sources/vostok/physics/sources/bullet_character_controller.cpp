@@ -16,6 +16,9 @@
 namespace vostok {
 namespace physics {
 
+// sushi@TODO: these console-var statics emit in base but stay TARGET_ONLY due to the
+// mangled-(base ??__E/F)-vs-demangled-(target) symbol-name pairing gap - tooling, not
+// source-steerable. See review_todos.md.
 static float s_step_height								= 0.6f;
 static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
 

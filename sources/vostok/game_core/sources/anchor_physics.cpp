@@ -21,6 +21,7 @@
 #include <vostok/physics/engine.h>
 #include <vostok/physics/ghost_object.h>
 #include <vostok/physics/sources/bullet_character_controller.h>
+#include <vostok/physics/sources/bullet_physics_world.h>
 #include <vostok/physics/static_rigid_body.h>
 
 namespace vostok
@@ -144,6 +145,15 @@ namespace vostok
 
 	}
 
+	void use_bullet_physics_world( )
+	{
+		// Reachability only (never executed): contact_pair_test is otherwise
+		// unreferenced and /OPT:REF-stripped from the base, leaving it target-only.
+		physics::bullet_physics_world* world = NULL;
+		physics::contact_test_predicate* predicate = NULL;
+		world->contact_pair_test( *predicate, NULL, NULL );
+	}
+
 	void anchor_physics( )
 	{
 		use_bt_character_controller();
@@ -151,5 +161,6 @@ namespace vostok
 		use_static_rigid_body();
 		use_animated_rigid_body();
 		use_bullet_character_controller();
+		use_bullet_physics_world();
 	}
 }
