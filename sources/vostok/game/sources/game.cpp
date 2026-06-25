@@ -16,7 +16,7 @@
 #include <vostok/resources.h>	// query_resources / request (query_base_resources) + fill_stats (draw_debug_window)
 #include <vostok/text_tree.h>	// strings::text_tree (draw_debug_window)
 #include <vostok/tasks_system.h>	// tasks::fill_stats (draw_debug_window)
-#include <vostok/ui/ui.h>	// ui::window::remove_all_childs (draw_debug_window)
+#include <vostok/ui/ui.h>	// ui::window::remove_all_children (draw_debug_window)
 
 // SetWindowTextA (USER32) is stripped from os_include.h by NOUSER; declare the import
 // directly for on_application_activate's title-bar update.
@@ -697,7 +697,7 @@ void game::tick( const u32 current_frame_id )
 
 	m_active_scene->on_after_tick			( );
 
-	m_text_wnd->remove_all_childs			( );
+	m_text_wnd->remove_all_children			( );
 	m_text_wnd->tick						( );
 	m_text_wnd->draw						( m_ui_world->get_renderer( ), m_active_scene->render_scene_view( ) );
 
@@ -942,7 +942,7 @@ void game::draw_debug_window( )
 	else
 		tasks::fill_stats			( tree.root( ) );
 
-	m_debug_window->remove_all_childs	( );
+	m_debug_window->remove_all_children	( );
 }
 
 void game::create_debug_window( )

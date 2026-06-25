@@ -188,7 +188,7 @@ void sound_debug_stats::draw_detail_stats( render::scene_ptr  const& scene, rend
 			for ( u32 i = 0; i < max_propagator_statistics_count; ++i )
 				m_progress_bars[i]->get_window( )->set_visible	( false );
 
-			m_main_window->remove_all_childs	( );
+			m_main_window->remove_all_children	( );
 			u32 i = 0;
 			propagator_statistic* prop				= stats->m_propagator_statistics.front( );
 			while ( prop )
@@ -229,7 +229,7 @@ void sound_debug_stats::update_window( vostok::strings::text_tree_item* item, re
 	R_ASSERT								( m_main_window );
 	R_ASSERT								( item );
 
-	m_main_window->remove_all_childs();
+	m_main_window->remove_all_children();
 
 	ui::text_tree_draw_helper_params	params;	
 	params.color1						= math::color( 77, 109, 243 ).m_value;

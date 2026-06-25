@@ -1232,7 +1232,7 @@ void animation_editor::show_statistics()
 	//	m_text_tree_view.break_page();
 	//}
 
-	m_text_wnd->remove_all_childs();
+	m_text_wnd->remove_all_children();
 
 	using ui::text_tree_draw_helper;
 	using ui::text_tree_draw_helper_params;
