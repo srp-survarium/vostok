@@ -63,12 +63,14 @@ bool functor_edit_action::execute(input::enum_keyboard_action action)
 	return			true;
 }
 
-insert_char_action::insert_char_action( ui_text_edit* parent, 
-										input::enum_keyboard key, 
-										input::enum_keyboard_action action, 
+insert_char_action::insert_char_action( ui_text_edit* parent,
+										input::enum_keyboard key,
+										input::enum_keyboard_action action,
 										shift_state const& state,
-										char c, char c_shift, bool b_translate)
+										char c, char c_shift, bool b_translate,
+										input::world* input_world)
 :super(parent, key, action, state),
+m_input_world(input_world),
 m_char(c),
 m_char_shift(c_shift),
 m_b_translate(b_translate)
@@ -91,7 +93,7 @@ bool insert_char_action::execute(input::enum_keyboard_action action)
 	//	
 	//	if ( pInput->get_dik_name( m_dik, buff, sizeof(buff) ) )
 	//	{
-	//		if ( _isalpha_l(buff[0], current_locale) || buff[0] == char(-1) ) // "ÿ" = -1
+	//		if ( _isalpha_l(buff[0], current_locale) || buff[0] == char(-1) ) // "ï¿½" = -1
 	//		{
 	//			_strlwr_l	(buff, current_locale);
 	//			c			= buff[0];

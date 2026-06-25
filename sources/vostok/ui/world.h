@@ -24,7 +24,10 @@ struct VOSTOK_NOVTABLE world {
 	virtual	progress_bar*	create_progress_bar			( )						= 0;
 	virtual void			destroy_window				( window* w )			= 0;
 	virtual	vostok::ui::font const *default_font			( )						= 0;
-	
+
+	virtual	float2 const&	base_screen_size			( ) const				= 0;
+	virtual void			set_base_screen_size		( u32 const size_x, u32 const size_y )	= 0;
+
 	virtual render::ui::renderer& get_renderer			( )						= 0;
 //	virtual vostok::render::scene_view_ptr const& get_scene_view( ) const			= 0;
 

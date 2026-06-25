@@ -925,7 +925,7 @@ void editor_world::on_render_resources_created(resources::queries_result& data)
 	m_camera_view_window->set_render_view_mode(m_view_window->render_view_mode());
 	m_camera_view_window->setup_scene( m_scene->c_ptr(), m_scene_view->c_ptr(), get_renderer(), false );
 	
-	m_ui_world						= ui::create_world( *this, get_renderer().ui(), *g_allocator );
+	m_ui_world						= ui::create_world( *this, get_renderer().ui(), *g_allocator, NULL );
 	m_console_wrapper->m_console	= m_engine.create_editor_console( *m_ui_world );
 	R_ASSERT						( m_console_wrapper->m_console );
 
