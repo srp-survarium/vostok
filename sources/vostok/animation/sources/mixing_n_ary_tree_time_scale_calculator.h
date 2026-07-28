@@ -29,7 +29,7 @@ public:
 						u32 current_time_in_ms,
 						float previous_animation_time,
 						u32 previous_time_in_ms,
-						n_ary_tree_animation_node const* animation = 0
+						n_ary_tree_animation_node* animation = 0
 					);
 
 
@@ -47,11 +47,10 @@ public:
 	virtual	void	visit							( n_ary_tree_subtraction_node& node );
 	virtual	void	visit							( n_ary_tree_multiplication_node& node );
 
-
+private:
 			void	remove_transition				( n_ary_tree_time_scale_transition_node& node );
 
-private:
-	n_ary_tree_animation_node const* const	m_animation;
+	n_ary_tree_animation_node* const		m_animation;
 	n_ary_tree_base_node*				m_result;
 	base_interpolator const*			m_interpolator;
 	u32 const							m_current_time_in_ms;
