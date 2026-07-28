@@ -7,6 +7,7 @@
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/input/world.h>
 #include <vostok/input/keyboard.h>
+#include <GFx/GFx_Player.h>
 #include <locale.h>
 #include <string.h>
 
@@ -57,14 +58,6 @@ bool swf_input_translator::process_mouse_move(
 	return true;
 }
 
-// claude@NOTE: capped - structure recovered/bodied except ONE statement (the L99
-// navigation-key dispatch): the target builds a raw Scaleform::GFx::KeyEvent
-// {type=5, key=bind->scan} and calls movie->m_movie's vtable slot 0x88
-// (Movie::HandleEvent). That needs the GFx headers in the GAME module (a layering
-// violation - scaleform is the deferred layer), so it is left as a documented gap.
-// This whole COMDAT is also LTCG-optimized (and esp,-8, register-passed args) so
-// /Od bytes still diverge even where the structure matches. NEXT: emit the L99 GFx
-// dispatch once the scaleform GFx layer is wired into the game module.
 bool swf_input_translator::process_keyboard(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -87,8 +80,10 @@ bool swf_input_translator::process_keyboard(
 								  input_world->get_keyboard( )->is_key_down( input::key_rshift );
 
 			wchar_t c			= translate_key_action( input_world, is_shift_now, *bind );
-			if ( c )
-				movie->HandleChar( c );
+			if ( !c )
+				return false;
+
+			movie->HandleChar( c );
 		}
 
 		movie->m_last_keyb_hold_time	= time_current_ms + 0x1f4;
@@ -111,11 +106,7 @@ bool swf_input_translator::process_keyboard(
 				continue;
 
 			if ( i == input::key_back || i == input::key_delete || i == input::key_left || i == input::key_right )
-			{
-				// claude@NOTE: WALL - raw Scaleform::GFx::KeyEvent{type=5,key=bind->scan}
-				// dispatched to movie->m_movie (Movie::HandleEvent); needs GFx headers
-				// in the game module. Left as a gap (one missing statement vs target).
-			}
+				movie->m_movie->HandleEvent( Scaleform::GFx::KeyEvent( Scaleform::GFx::Event::KeyDown, ( Scaleform::Key::Code )bind->scan ) );
 
 			if ( !bind->is_character )
 				continue;
