@@ -9,19 +9,16 @@
 
 namespace survarium {
 
-// STATE[99.29%|DONE]
 material_pair::material_pair( ) :
 	m_particles				( g_allocator ),
 	m_current_particle_idx	( 0 )
 {
 }
 
-// STATE[100%|DONE]
 material_pair::~material_pair( )
 {
 }
 
-// STATE[99.51%|DONE]
 void material_pair::load_from_config( game_material_manager const& manager, configs::binary_config_value const& val )
 {
 	u16 first_mtrl_id		= (u16)val["mtrl_1_id"];
@@ -30,40 +27,32 @@ void material_pair::load_from_config( game_material_manager const& manager, conf
 	m_decal2_size			= (float)val["decal2_size"];
 	m_first_material		= manager.get_material( first_mtrl_id );
 	m_second_material		= manager.get_material( second_mtrl_id );
-
-
-	// FUNCTION BODY
-	// <0x6fd499>|0x009|+0x016:'25'
-	// <0x6fd4af>|0x01f|+0x016:'26'
-	// <0x6fd4c5>|0x035|+0x01a:'27'
-	// <0x6fd4df>|0x04f|+0x01a:'28'
-	// <0x6fd4f9>|0x069|+0x013:'29'
-	// <0x6fd50c>|0x07c|+0x013:'30'
-	// ******
 }
 
-// STATE[100%|DONE]
+// claude@NOTE: STRUCTURE MATCH (1 stmt, 0 locals). Residual is an inline-vs-call fold on a
+// resource_ptr passthrough: target emits an extra void-returning out-of-line call on
+// &particle (lea eax,[ebp+8]; call <folded-empty>; push eax) before push_back - an ICF-folded
+// helper (identity/eater) emitted out-of-line in the target but inlined to nothing in our
+// build (which just does lea ecx; push). NOT a plain ASSERT (those materialize a false bool
+// temp + lea; this takes &particle directly and preserves eax). Not steerable from this caller.
 void material_pair::add_particle( resources::unmanaged_resource_ptr particle )
 {
 	m_particles.push_back( particle );
 }
 
-// STATE[97.14%|PARTIAL]
+// claude@NOTE: STRUCTURE MATCH (4 stmts, 0 locals). The leading ASSERT(!empty) matches
+// byte-for-byte. Residual is the trailing "useless call": target wraps the returned element
+// in an out-of-line void call (lea eax,[edx+ecx*4] = &element; call <folded-empty>; ret, eax
+// preserved). It is NOT a plain/_U ASSERT (no false-bool temp, no guard test/je/pushes) - it
+// takes &element directly, i.e. an ICF-folded identity/passthrough helper that the target
+// emits out-of-line and our build inlines away. Same inline-vs-call fold as add_particle.
 resources::unmanaged_resource_ptr const& material_pair::particle( ) const
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_particles.empty( ) ) );
 	if ( m_current_particle_idx == m_particles.size( ) )
 		m_current_particle_idx = 0;
 
-	return m_particles[m_current_particle_idx++]; // sushi@MATCH: Has some useless call at the end. Maybe 'at' artifact?
-
-	// FUNCTION BODY
-	// <0x6fd429>|0x009|+0x00c:'40'
-	// <0x6fd435>|0x015|+0x016:'41'
-	// <0x6fd44b>|0x02b|+0x00a:'42'
-	// <0>
-	// <0x6fd455>|0x035|+0x02e:'44'
-	// ******
+	return m_particles[m_current_particle_idx++];
 }
 
 } // namespace survarium

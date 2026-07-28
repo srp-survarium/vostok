@@ -136,6 +136,11 @@ thread_pool::~thread_pool ()
 	MT_FREE										(task_thread_tls_buffer);
 }
 
+// sushi@TODO: log/log_columns_header residual is (a) the LTCG custom-register
+// calling convention on this varargs member (this=eax, tls=ecx) and (b) the
+// LOGIFD __LINE__ immediate - this file's line layout is ~12 lines short of the
+// ship layout (target LOGIFD lands on src lines 175 / 197), unrecoverable
+// without the original file structure. Statement shape now matches (16/16, 9/9).
 void   thread_pool::log_columns_header ()
 {
 	if ( !m_do_logging )
@@ -160,7 +165,7 @@ void   thread_pool::log_columns_header ()
 		output								+=	column_output;
 	}
 
-	LOGIFD_INFO									("tasks", logging::format_message, core::log_to_console, "%s", output.c_str());
+	LOGIFD_FORCED								("tasks", logging::info, logging::format_message, core::log_to_console, "%s", output.c_str());
 }
 
 void   thread_pool::log (thread_tls * const tls, pcstr format, ...)
@@ -182,7 +187,7 @@ void   thread_pool::log (thread_tls * const tls, pcstr format, ...)
 	output.appendf_va_list						(format, argptr);
 	va_end	 									(argptr);
 
-	LOGIFD_INFO									("tasks", logging::format_message, core::log_to_console,
+	LOGIFD_FORCED								("tasks", logging::info, logging::format_message, core::log_to_console,
 												 "%s", output.c_str());
 }
 
@@ -310,19 +315,20 @@ void   on_new_task ()
 
 void   on_current_thread_locks ()
 {
-	if ( s_thread_pool.initialized() )
+	if ( s_thread_pool.initialized() && threading::current_thread_affinity() != u32(-1) )
 		s_thread_pool->on_current_thread_locks		();
 }
 
 void   on_current_thread_unlocks ()
 {
-	if ( s_thread_pool.initialized() )
+	if ( s_thread_pool.initialized() && threading::current_thread_affinity() != u32(-1) )
 		s_thread_pool->on_current_thread_unlocks	();
 }
 
 void   register_current_thread_as_core_user	()
 {
-	s_thread_pool->register_current_thread_as_core_user	();
+	if ( s_thread_pool.initialized() )
+		s_thread_pool->register_current_thread_as_core_user	();
 }
 
 void   initialize (u32 const max_task_threads,

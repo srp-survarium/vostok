@@ -7,20 +7,27 @@
 
 #include <vostok/game_core/weapon_core_animation_end_aware_state.h>
 
+namespace vostok { void use_game_core_weapon_core_reload_state_base( ); }
+
 namespace survarium {
 
 class weapon_core_reload_state_base : public weapon_core_animation_end_aware_state {
-public:
-	explicit		weapon_core_reload_state_base	( weapon_core& weapon, float animation_time_scale );
+protected:
+	explicit		weapon_core_reload_state_base	( weapon_core& weapon, const float animation_time_scale );
 
 	virtual	void	initialize						( ) override;
+
+private:
 	virtual	void	serialize						( network_core::udp_match_packet& packet ) const override;
 	virtual	void	deserialize						( network_core::packet_reader& reader ) override;
 	virtual	void	on_animation_end_impl			( bool& animation_player_tick_result ) override;
 
-private:
+	// temp_include_all.cpp anchor; needs the protected/private virtuals + ctor.
+	friend void ::vostok::use_game_core_weapon_core_reload_state_base( );
+
+protected:
 	/* 0x0000 */	/* weapon_core_animation_end_aware_state */
-	/* 0x0140 */	float		m_animation_timescale;
+	/* 0x0140 */	float		m_animation_timescale;	// protected: read directly by derived weapon_core_reload_state
 }; // class weapon_core_reload_state_base
 
 STATIC_SIZE_ASSERT(weapon_core_reload_state_base, 0x148);

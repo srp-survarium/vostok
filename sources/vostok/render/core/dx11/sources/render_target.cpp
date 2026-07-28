@@ -20,8 +20,7 @@ namespace render {
 u32		btw_lowest_bitmask( u32 x) {return x & ~( x-1);}
 bool	btw_is_pow2( u32 v) {return btw_lowest_bitmask( v) == v;}
 
-render_target::render_target() :
-	m_is_registered ( false )
+render_target::render_target()
 {
 	m_surface_3d = NULL;
 	m_surface = NULL;
@@ -29,6 +28,7 @@ render_target::render_target() :
 	m_width	  = 0;
 	m_height  = 0;
 	m_format  = DXGI_FORMAT_UNKNOWN;
+	m_is_registered = false;
 }
 
 render_target::~render_target()

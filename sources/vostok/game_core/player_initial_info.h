@@ -10,7 +10,13 @@ namespace survarium {
 struct player_profile;
 
 struct player_initial_info {
-	inline explicit		player_initial_info	( ) { /* no source */ }
+	inline explicit		player_initial_info	( ) :
+		profile			( NULL ),
+		id				( u8(-1) ),
+		game_scene		( NULL ),
+		is_demo_player	( false )
+	{
+	}
 
 public:
 	/* 0x0000 */	player_profile*		profile;

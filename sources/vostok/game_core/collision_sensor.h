@@ -29,7 +29,7 @@ public:
 	virtual	void					resolve_links					( base_project* p, configs::binary_config_value cfg ) override;
 	virtual	bool					is_filter_passed				( physics::base_physics_object* object ) const;
 
-	virtual	void					tick							( u32 time_delta_ms, u32 current_time_ms );
+	virtual	void					tick							( const u32 time_delta_ms, const u32 current_time_ms );
 	virtual	void					load							( configs::binary_config_value const& cfg );
 
 	inline	bool					is_active						( ) const { /* no source */ }
@@ -45,10 +45,9 @@ public:
 			collision_geometry*		get_collision_geometry			( u32 index );
 	inline	u32						collision_geometries_count		( ) const { return m_collision_geometries_count; }
 
-	// STATE[STUB]
+protected:	// claude@MATCH: target mangles these four overrides `MAE` (protected), not `UAE` - must be protected: to pair.
 	virtual	void					on_inside						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_leave						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
-	// STATE[STUB]
 	virtual	void					on_enter						( buffer_vector<physics::base_physics_object *> const& objects )	{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 	virtual	void					on_objetcs_loosed				( vector<physics::base_physics_object *> const& objects )			{ VOSTOK_UNREFERENCED_PARAMETER( objects ); }
 

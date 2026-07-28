@@ -47,6 +47,7 @@ public:
 
 	virtual void		draw_text					( bool value );
 
+	virtual void		set_text					( pcstr text );
 	virtual void		set_text_color				( math::color color );
 	virtual math::color	get_text_color				( ) const;
 
@@ -79,8 +80,11 @@ private:
 	u32					m_minimum;
 	u32					m_maximum;
 	u32					m_value;
+	fixed_string<32>	m_text;
 	bool				m_draw_text;
 }; // class progress_bar
+
+STATIC_SIZE_ASSERT(ui_progress_bar, 0x98);
 
 } // namespace ui
 } // namespace vostok

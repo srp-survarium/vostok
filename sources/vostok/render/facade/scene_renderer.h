@@ -12,6 +12,7 @@
 #include <vostok/render/facade/common_types.h>
 #include <vostok/render/facade/particles.h>
 #include <vostok/render/facade/light_props.h>
+#include <vostok/render/facade/ambient_volume_properties.h>
 #include <vostok/render/facade/scene_view_mode.h>
 #include <vostok/render/facade/render_stage_types.h>
 
@@ -45,6 +46,7 @@ typedef	resources::resource_ptr<
 > speedtree_instance_ptr;
 
 struct decal_properties;
+struct volume_fog_parameters;
 
 namespace editor {
 	class renderer;
@@ -74,6 +76,10 @@ public:
 	void			reload_shaders					( );
 	void			reload_modified_textures		( );
 
+	void			reset_renderer					( );
+	void			begin_render_options_changing	( volatile long* waiting_for );
+	void			end_render_options_changing		( scene_ptr const& scene, render_output_window_ptr render_output_window, bool b0, bool b1, volatile long* waiting_for );
+
 	math::uint2		window_client_size				( render::render_output_window_ptr const& render_output_window );
 
 	void			set_view_matrix					( render::scene_view_ptr const& scene_view, math::float4x4 const& view );
@@ -101,7 +107,7 @@ public:
 	void			populate_speedtree_forest		( scene_ptr const& scene );
 	
 	// particles
-	void			play_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance, math::float4x4 const& transform );
+	void			play_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr in_instance, math::float4x4 const& transform );
 	void			stop_particle_system			( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance );
 	void			remove_particle_system_instance ( scene_ptr const& scene, particle::particle_system_instance_ptr const& in_instance );
 	void			update_particle_system_instance	( scene_ptr const& scene, particle::particle_system_instance_ptr const& instance, math::float4x4 const& transform, bool visible = true, bool paused = false);
@@ -117,6 +123,18 @@ public:
 	void			add_decal						( scene_ptr const& scene, u32 id, render::decal_properties const& properties);
 	void			update_decal					( scene_ptr const& scene, u32 id, render::decal_properties const& properties);
 	void			remove_decal					( scene_ptr const& scene, u32 id );
+
+	// lpv occluders
+	void			update_lpv_occluder				( scene_ptr const& scene, u32 id, math::float4x4 const& transform );
+	void			remove_lpv_occluder				( scene_ptr const& scene, u32 id );
+
+	// ambient volumes
+	void			update_ambient_volume			( scene_ptr const& scene, u32 id, render::ambient_volume_properties const& properties );
+	void			remove_ambient_volume			( scene_ptr const& scene, u32 id );
+
+	// volume fog
+	void			update_volume_fog				( scene_ptr const& scene, u32 id, render::volume_fog_parameters const& parameters );
+	void			remove_volume_fog				( scene_ptr const& scene, u32 id );
 
 	// terrain
 	void			terrain_add_cell				( scene_ptr const& scene, render::render_model_instance_ptr const& v );

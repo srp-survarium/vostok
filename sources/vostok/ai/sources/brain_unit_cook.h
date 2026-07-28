@@ -19,7 +19,7 @@ class brain_unit;
 class brain_unit_cook : public resources::translate_query_cook
 {
 public:
-					brain_unit_cook			( ai_world* world );
+					brain_unit_cook			( ai_world& world );
 
 	virtual	void	translate_request_path	( pcstr request, fs_new::virtual_path_string& new_request ) const;
 	virtual	void	translate_query			( resources::query_result_for_cook&	parent );

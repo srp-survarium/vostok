@@ -4,86 +4,68 @@
 
 #include "pch.h"
 #include <vostok/game_core/player_logic_base_state.h>
+#include <vostok/game_core/player_input.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::player_logic_base_state::player_logic_base_state(survarium::weapon_user_animations_selector&, const survarium::weapon_user_state_enum)
-player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id ) :
-	m_owner		( owner )
+player_logic_base_state::player_logic_base_state( weapon_user_animations_selector& owner, const weapon_user_state_enum weapon_user_state_id ) :
+	m_owner							( owner ),
+	m_user							( NULL ),
+	m_weapon_user_state_id			( weapon_user_state_id ),
+	m_is_weapon_weapon_visible		( true ),
+	m_is_smoothing_needed			( true ),
+	m_is_physics_transform_allowed	( true ),
+	m_is_ready_to_be_deactivated	( true )
 {
-	// FUNCTION BODY
-	// <0x59c220>|0x000|+0x052:'24'	{
-	// <0x59c272>|0x052|      :'25'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::player_logic_base_state::set_user(survarium::base_player&)
 void player_logic_base_state::set_user( base_player& user )
 {
-	// FUNCTION BODY
-	// <0x59c207>|0x007|+0x009:'29'
-	// ******
+	m_user	= &user;
 }
 
-// STATE[STUB]
-// static unsigned int survarium::player_logic_base_state::movement_animation_index(survarium::player_input const&)
 u32 player_logic_base_state::movement_animation_index( player_input const& input )
 {
-	// LOCALS
-	// bool 						move_bwd_pressed
-	// bool 						move_right_pressed
-	// bool 						move_fwd_pressed
-	// bool 						move_left_pressed
-	// ******
+	bool	move_fwd_pressed	= ( input.actions_mask & 0x1 ) != 0;
+	bool	move_bwd_pressed	= ( input.actions_mask & 0x2 ) != 0;
+	bool	move_left_pressed	= ( input.actions_mask & 0x4 ) != 0;
+	bool	move_right_pressed	= ( input.actions_mask & 0x8 ) != 0;
 
-	return 0;
+	if ( move_fwd_pressed && move_bwd_pressed )
+	{
+		move_fwd_pressed	= false;
+		move_bwd_pressed	= false;
+	}
 
-	// FUNCTION BODY
-	// <0x59c104>|0x004|+0x012:'34'
-	// <0x59c116>|0x016|+0x012:'35'
-	// <0x59c128>|0x028|+0x012:'36'
-	// <0x59c13a>|0x03a|+0x012:'37'
-	// <0>
-	// <0x59c14c>|0x04c|+0x010:'39'
-	// <0x59c15c>|0x05c|+0x004:'40'
-	// <0x59c160>|0x060|+0x004:'41'
-	// <0>
-	// <1>
-	// <0x59c164>|0x064|+0x010:'44'
-	// <0x59c174>|0x074|+0x004:'45'
-	// <0x59c178>|0x078|+0x004:'46'
-	// <0>
-	// <1>
-	// <0x59c17c>|0x07c|+0x008:'49'
-	// <0x59c184>|0x084|+0x008:'50'
-	// <0x59c18c>|0x08c|+0x007:'51'
-	// <0>
-	// <0x59c193>|0x093|+0x008:'53'
-	// <0x59c19b>|0x09b|+0x007:'54'
-	// <0>
-	// <0x59c1a2>|0x0a2|+0x007:'56'
-	// <0>
-	// <1>
-	// <0x59c1a9>|0x0a9|+0x008:'59'
-	// <0x59c1b1>|0x0b1|+0x008:'60'
-	// <0x59c1b9>|0x0b9|+0x007:'61'
-	// <0>
-	// <0x59c1c0>|0x0c0|+0x008:'63'
-	// <0x59c1c8>|0x0c8|+0x007:'64'
-	// <0>
-	// <0x59c1cf>|0x0cf|+0x007:'66'
-	// <0>
-	// <1>
-	// <0x59c1d6>|0x0d6|+0x008:'69'
-	// <0x59c1de>|0x0de|+0x007:'70'
-	// <0>
-	// <0x59c1e5>|0x0e5|+0x008:'72'
-	// <0x59c1ed>|0x0ed|+0x007:'73'
-	// <0>
-	// <0x59c1f4>|0x0f4|+0x002:'75'
-	// ******
+	if ( move_left_pressed && move_right_pressed )
+	{
+		move_left_pressed	= false;
+		move_right_pressed	= false;
+	}
+
+	// claude@MATCH: flat early-returns (no `else`) - an if/else-if chain would emit an
+	// extra join `jmp` per level; flat returns each jump once to the single epilogue.
+	if ( move_fwd_pressed )
+	{
+		if ( move_left_pressed )
+			return move_fwd_left_anim;
+		if ( move_right_pressed )
+			return move_fwd_right_anim;
+		return move_fwd_anim;
+	}
+	if ( move_bwd_pressed )
+	{
+		if ( move_left_pressed )
+			return move_bwd_left_anim;
+		if ( move_right_pressed )
+			return move_bwd_right_anim;
+		return move_bwd_anim;
+	}
+	if ( move_left_pressed )
+		return move_left_anim;
+	if ( move_right_pressed )
+		return move_right_anim;
+	return idle_anim;
 }
 
 } // namespace survarium

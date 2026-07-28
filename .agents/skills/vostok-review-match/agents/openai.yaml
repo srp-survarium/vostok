@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vostok Review Match"
+  short_description: "Review a Vostok matching diff before landing"
+  default_prompt: "Use $vostok-review-match to review the requested matching diff."

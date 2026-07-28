@@ -619,13 +619,15 @@ void particle_emitter_instance::update_render_buffers	( enum_particle_data_type 
 void particle_emitter_instance::set_transform	( vostok::math::float4x4 const& transform )
 {
 	m_transform							= transform;
-	m_render_instance->set_transform	( m_world_space ? math::float4x4().identity() : m_transform );
+	if ( m_render_instance )
+		m_render_instance->set_transform	( m_world_space ? math::float4x4().identity() : m_transform );
 }
 
 void particle_emitter_instance::change_material	( resources::unmanaged_resource_ptr const& material )
 {
 	m_material							= material;
-	m_render_instance->change_material	( m_material );
+	if ( m_render_instance )
+		m_render_instance->change_material	( m_material );
 }
 
 } // namespace particle

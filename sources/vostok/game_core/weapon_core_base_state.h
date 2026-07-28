@@ -25,18 +25,19 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_base_state : public ai::fsm_state , public resources::unmanaged_resource , public boost::noncopyable {
-public:
+protected:
+	// ctor mangles ?? 0...@@IAE@... -> protected, non-const (objdiff pairs by mangled name)
 	explicit									weapon_core_base_state		( weapon_core& weapon, bool serialize_animation_state );
 
 public:
-	inline	bool								is_ready_to_be_deactivated	( ) const { /* no source */ }
-	inline	animation::body_part_masks_enum		get_body_part_mask_for_user	( ) const { /* no source */ }
+	inline	bool								is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
+	inline	animation::body_part_masks_enum		get_body_part_mask_for_user	( ) const { return m_body_part_mask_for_user; }
 			bool								has_animation_ended			( ) const { return m_animation_has_been_ended; }
 
 public:
 	virtual	void		initialize					( ) override {}
-	virtual	void		finalize					( ) override { /* 0xc40c0 */ } // sushi@TODO
-	virtual	void		execute						( ) override { /* 0x97f80 */ } // sushi@TODO
+	virtual	void		finalize					( ) override;
+	virtual	void		execute						( ) override;
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 	virtual	void		serialize					( network_core::udp_match_packet& packet ) const;
@@ -50,9 +51,13 @@ public:
 							animation::mixing::animation_lexeme&	arg_3
 						) const = 0;
 
-	inline	void		set_is_firing_ptr			( bool* arg_0 ) { /* no source */ }
+	// claude@MATCH: real body proven by initialize_weapon_logic's target carcass -
+	// the inlined call stores the pointer at [state+0x12C] (m_is_firing_ptr).
+	inline	void		set_is_firing_ptr			( bool* is_firing ) { m_is_firing_ptr = is_firing; }
 	inline	void		set_is_firing				( bool arg_0 ) { /* no source */ }
 
+protected:
+	// mangles ?deserializing@...@@IBE_NXZ -> protected, const (objdiff pairs by mangled name)
 			bool		deserializing				( ) const;
 
 protected:

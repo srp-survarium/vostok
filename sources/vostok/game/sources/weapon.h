@@ -1,151 +1,196 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 15.10.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef WEAPON_H_INCLUDED
 #define WEAPON_H_INCLUDED
 
+#include <vostok/game_core/weapon_core.h>
+
+#include <vostok/animation/animation_callback.h>
+#include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/model.h>
-#include <vostok/animation/animation_player.h>
-#include <vostok/animation/mixing_base_lexeme.h>
-#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/resources_unmanaged_resource.h>
 
-namespace survarium{
+#include "fingers_to_weapon_corrector.h"
+#include "rifle_scope.h"
 
-class weapon;
-class game_world;
-class weapon_part_visual;
+namespace vostok {
+namespace animation {
+	struct animation_callback_params;
+} // namespace animation
+namespace resources {
+	class queries_result;
+} // namespace resources
+} // namespace vostok
 
-class weapon_part
-{
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
+
+namespace survarium {
+
+class base_game_scene;
+class game_world_ui;
+class player;
+
+class weapon_cook;
+class weapon_sound_effect;
+
+class weapon : public weapon_core {
+	// /OPT:REF anchor reaches the private (AAE/EAE) methods below by address-take;
+	// codegen-neutral friend, no layout/symbol impact
+	friend	void	::vostok::use_game_weapons	( );
+	// the cook constructs/tears down weapon directly, touching private pfx/animation
+	// members; codegen-neutral
+	friend	class	weapon_cook;
+	// weapon_sound_effect::on_sound_event reads m_game_scene directly (inlined) and
+	// resolves the first/third-view branch through weapon-private members; codegen-neutral
+	friend	class	weapon_sound_effect;
 public:
-						weapon_part	( );
-	virtual void		load		( configs::binary_config_value const& config );
-	bool				m_visible;
-	weapon*				m_parent;
-}; // class weapon_part
+								weapon								(
+									u32		first_view_death_animations_count,
+									u32		third_view_death_animations_count,
+									u32		preview_animations_count
+								);
+	virtual						~weapon								( );
 
-struct visual_attach_desc
-{
-								visual_attach_desc( ):m_item(NULL){}
+			void				play_weapon_shell_pfx				( );
 
-	weapon_part_visual*			m_item;
-	render::model_locator_item	m_attach_point;
-};
+			void				update_dispersion_visual_representation( );
 
-class weapon_part_visual : public weapon_part
-{
-	typedef weapon_part super;
+	inline	u32					first_view_death_animations_count	( ) const { return m_first_view_death_animations_count; }
+	inline	u32					third_view_death_animations_count	( ) const { return m_third_view_death_animations_count; }
+	inline	u32					preview_animations_count			( ) const { return m_preview_animations_count; }
 
-public:
-						weapon_part_visual	( );
-			void		load				( configs::binary_config_value const& config );
+	// the methods below mangle private (AAE / EAE) in the shipped PDB - declaring
+	// them private keeps each out-of-line symbol pairable with the target
+private:
+			void				load_weapon							(
+									render::skeleton_model_ptr const&	base_model,
+									rifle_scope_ptr const&		rifle_scope
+								);
 
-	virtual void		set_transform		( float4x4 const& transform );
-	virtual void		show				( float4x4 const& initial_transform );
-	virtual void		hide				( );
-	virtual bool		calculate_locator	( render::model_locator_item const& locator, float4x4& result );
-	virtual bool		get_locator			( pcstr locator_name, render::model_locator_item& locator ) =0;
-			
-protected:
-			void		update_childs_transform( );
-	float4x4					m_transform;
+	virtual	void				set_fire_bullet_transform			( float4x4 const& transform ) override;
 
-	typedef vector<visual_attach_desc> childs;
-	childs						m_childs;
-};
+	virtual	void				tick								( ) override;
 
-class weapon_part_solid_visual : public weapon_part_visual
-{
-	typedef weapon_part_visual super;
-public:
-						weapon_part_solid_visual( );
-			void		load					( configs::binary_config_value const& config, render::static_model_ptr );
-	virtual void		set_transform			( float4x4 const& transform );
-	virtual void		show					( float4x4 const& initial_transform );
-	virtual void		hide					( );
-	virtual bool		get_locator				( pcstr locator_name, render::model_locator_item& locator );
+	virtual	void				set_transform						( float4x4 const& transform ) override;
+	virtual	void				set_target							( const weapon_targets new_target ) override;
+	virtual	void				set_next_fire_queue_type			( ) override;
+	virtual	void				set_next_ammo_type					( ) override;
 
-protected:
-	void				on_resources_loaded		( resources::queries_result& data );
-	render::static_model_ptr		m_model;
-};
+	virtual	void				on_ammo_empty						( ) override;
 
-class weapon_part_skinned_visual : public weapon_part_visual
-{
-	typedef weapon_part_visual super;
-public:
+			void				show_crosshair						( );
+			void				hide_crosshair						( );
 
-						weapon_part_skinned_visual( );
-	virtual				~weapon_part_skinned_visual( );
-	void				load					( configs::binary_config_value const& config,
-													render::skeleton_model_ptr model,
-													animation::skeleton_animation_ptr idle_anim,
-													animation::skeleton_animation_ptr reload_anim,
-													animation::skeleton_animation_ptr shoot_anim );
-	virtual void		set_transform			( float4x4 const& transform );
-	virtual void		show					( float4x4 const& initial_transform );
-	virtual void		hide					( );
-	virtual bool		calculate_locator		( render::model_locator_item const& locator, float4x4& result );
-	virtual bool		get_locator				( pcstr locator_name, render::model_locator_item& locator );
-			void		tick					( animation::animation_player*& animation_player );
+	inline	bool				is_in_scene							( ) const { return m_is_in_scene; }
 
-	vostok::animation::mixing::animation_lexeme		select_animation		( mutable_buffer& buffer );
+	inline	void				set_fire_pfx						( resources::queries_result& arg_0 ) { /* no source */ }
+	inline	void				set_shells_pfx						( resources::queries_result& arg_0 ) { /* no source */ }
 
-protected:
+			void				update_pfx_transform				( );
 
-	render::skeleton_model_ptr			m_model;
-	float4x4*							m_matrices;
+			void				play_weapon_fire_pfx				( );
 
-	animation::skeleton_animation_ptr	m_idle;
-	animation::skeleton_animation_ptr	m_reload;
-	animation::skeleton_animation_ptr	m_shoot;
-};
+			void				show_laser_pointer					( );
 
-class weapon : public resources::unmanaged_resource,
-				private boost::noncopyable
-{
-public:
-				weapon				( );
-	void		action				( int id );
+			void				set_ui_ammo							( bool update_total_count );
 
-	game_world&	get_game_world		( ) {return *m_game_world;}
-	void		set_transform		( float4x4 const& transform );
-	void		tick				( animation::animation_player*& animation_player );
-	void		show				( float4x4 const& initial_transform );
-	void		hide				( );
-	weapon_part_visual*		get_part( pcstr name );
-	vostok::animation::mixing::animation_lexeme		select_animation		(mutable_buffer& buffer );
+	virtual	void				activate							( base_player& user, engine& engine ) override;
 
-protected:
-	void		load				( configs::binary_config_value const& config );
+	virtual	void				deactivate							( ) override;
 
-public: // tmp
-	game_world*					m_game_world;
-	weapon_part_skinned_visual*	m_base;
-	
-	weapon_part_solid_visual*	m_cover;
-	weapon_part_solid_visual*	m_stock;
-	weapon_part_solid_visual*	m_handle;
-	weapon_part_solid_visual*	m_ammo;
-	weapon_part_solid_visual*	m_bolt;
-	weapon_part_solid_visual*	m_fore_end;
-	weapon_part_solid_visual*	m_barrel;
-	weapon_part_solid_visual*	m_barrel_end;
+	virtual	void				on_before_fire						( ) override;
+	virtual	void				on_after_fire						( ) override;
+	virtual	void				on_reload							( ) override;
+	virtual	void				on_chamber_a_round					( ) override;
+	virtual	void				on_reload_started					( ) override;
+	virtual	void				on_show								( ) override;
+	virtual	void				on_hide								( ) override;
+	virtual	void				on_unload_chambered_round			( ) override;
 
-	float4x4					m_transform;
+	virtual	void				instant_aim_start					( ) override;
+	virtual	void				instant_aim_end						( ) override;
 
-public:
-	int							m_current_state;
-	u32							m_current_state_start_time;
-};
+	// STATE[STUB]
+	virtual	void				assign_game_ui						( game_world_ui* ui ) override
+	{
+		// FUNCTION BODY[0xab370]
+		// <0xab370>|0x000|      :'86'	{
+		// ******
+	}
 
-typedef	resources::resource_ptr<
-	weapon,
-	resources::unmanaged_intrusive_base >
-weapon_ptr;
+	virtual	void				on_skeleton_matrices_changed		(
+									const u32					current_time_in_ms,
+									float4x4 const&				weapon_transform,
+									float4x4 const* const		weapon_matrices_begin,
+									float4x4 const* const		weapon_matrices_end,
+									float4x4 const&				user_transform,
+									float4x4* const				user_matrices_begin,
+									float4x4* const				user_matrices_end,
+									float4x4 const&				__formal
+								) override;
+
+	virtual	void				process_finger_correction			( const u32 current_time_in_ms, float4x4* const user_matrices ) override;
+
+			animation::callback_return_type_enum	on_foot_step						( animation::animation_callback_params& params );
+			animation::callback_return_type_enum	on_shell_extraction_event			( animation::animation_callback_params& params );
+
+			float4x4			calculate_locator					(
+									render::model_locator_item const&		locator,
+									float4x4 const*							matrices,
+									const u32								matrices_count
+								);
+
+			animation::callback_return_type_enum	on_hand_correction_event			(
+									animation::animation_callback_params&	params,
+									const fingers_to_weapon_corrector::hands_enum	hand
+								);
+	virtual	void				on_user_sprint						( bool user_is_sprinting ) override;
+
+	inline	bool				is_player_current					( ) const { /* no source */ return false; }
+
+	// buildability cast through the incomplete player (weapon_core stores base_player*)
+	inline	player&				user								( ) const { return *( player* )get_user( ); }
+
+	inline	base_game_scene*	get_game_scene						( ) { return m_game_scene; }
+
+private:
+	/* 0x0000 */	/* weapon_core */
+	/* 0x0498 */	float4x4								m_barrel_transform;
+	/* 0x04d8 */	float4x4								m_scope_transform;
+	/* 0x0518 */	float4x4								m_transform;
+	/* 0x0558 */	float4x4								m_left_toe_transform;
+	/* 0x0598 */	float4x4								m_right_toe_transform;
+	/* 0x05d8 */	render::model_locator_item				m_barrel_locator;
+	/* 0x063c */	render::model_locator_item				m_scope_locator;
+	/* 0x06a0 */	fingers_to_weapon_corrector				m_fingers_corrector;
+	/* 0x0eb8 */	render::light_props						m_weapon_fire_light_props;
+	/* 0x0fa8 */	resources::unmanaged_resource_ptr*		m_fire_pfx_list;
+	/* 0x0fac */	resources::unmanaged_resource_ptr*		m_shells_pfx_list;
+	/* 0x0fb0 */	u8										m_fire_pfx_count;
+	/* 0x0fb1 */	u8										m_shells_pfx_count;
+	/* 0x0fb2 */	u8										m_current_shell_pfx_id;
+	/* 0x0fb3 */	u8										m_current_fire_pfx_id;
+	/* 0x0fb4 */	render::skeleton_model_ptr				model;
+	/* 0x0fb8 */	game_world_ui*							m_game_ui;
+	/* 0x0fbc */	rifle_scope_ptr							m_rifle_scope;
+	/* 0x0fc0 */	base_game_scene*						m_game_scene;
+	/* 0x0fc4 */	u32										m_weapon_fire_light_id;
+	/* 0x0fc8 */	u32										m_current_fire_light_anim_time;
+	/* 0x0fcc */	const u32								m_fire_light_anim_length;
+	/* 0x0fd0 */	u32										m_last_tick_time_in_ms;
+	/* 0x0fd4 */	u32										m_left_toe_bone_index;
+	/* 0x0fd8 */	u32										m_right_toe_bone_index;
+	/* 0x0fdc */	const u32								m_first_view_death_animations_count;
+	/* 0x0fe0 */	const u32								m_third_view_death_animations_count;
+	/* 0x0fe4 */	const u32								m_preview_animations_count;
+	/* 0x0fe8 */	bool									m_firing_light_added;
+	/* 0x0fe9 */	bool									m_is_in_scene;
+	/* 0x0fea */	bool									m_is_scope_aimed;
+}; // class weapon
+
+STATIC_SIZE_ASSERT(weapon, 0xFF0);
 
 } // namespace survarium
 

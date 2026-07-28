@@ -52,7 +52,7 @@ inline RESOURCE_PTR &   RESOURCE_PTR::operator = (self_type const & object)
 } // namespace resources
 
 template < typename dest_type, typename object_type, typename base_type >
-inline dest_type static_cast_resource_ptr	( resources::resource_ptr< object_type, base_type > const src_ptr)
+inline dest_type static_cast_resource_ptr	( resources::resource_ptr< object_type, base_type > const& src_ptr)
 {
 	return			static_cast_checked<typename dest_type::object_type*>(src_ptr.c_ptr());
 }

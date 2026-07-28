@@ -7,117 +7,83 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_dispersion_calculator::weapon_dispersion_calculator()
-weapon_dispersion_calculator::weapon_dispersion_calculator( )
+weapon_dispersion_calculator::weapon_dispersion_calculator( ) :
+	m_one_shoot_dispersion_amount	( 0.0f ),
+	m_reload_dispersion_amount		( 0.0f ),
+	m_growth_speed					( 5.0f ),
+	m_aiming_speed					( 0.0f ),
+	m_max_value						( 1.0f ),
+	m_target_coeff					( 0.0f ),
+	m_current_coeff					( 0.0f ),
+	m_current_time					( 0 )
 {
-	// FUNCTION BODY
-	// <0x58f880>|0x000|+0x080:'21'	{
-	// <0>
-	// <0x58f900>|0x080|      :'23'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::tick(const unsigned int)
-void weapon_dispersion_calculator::tick( u32 current_time_in_ms )
+void weapon_dispersion_calculator::tick( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// float 						dt
-	// ******
+	if ( !m_current_time )
+	{
+		m_current_time = current_time_in_ms;
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <0x58f999>|0x009|+0x009:'28'
-	// <0>
-	// <0x58f9a2>|0x012|+0x009:'30'
-	// <0x58f9ab>|0x01b|+0x005:'31'
-	// <0>
-	// <0x58f9b0>|0x020|+0x00b:'33'
-	// <0x58f9bb>|0x02b|+0x005:'34'
-	// <0x58f9c0>|0x030|+0x01f:'35'
-	// <0>
-	// <0x58f9df>|0x04f|+0x009:'37'
-	// <0x58f9e8>|0x058|+0x032:'38'
-	// <0>
-	// <1>
-	// <0x58fa1a>|0x08a|+0x027:'41'
-	// <0x58fa41>|0x0b1|+0x004:'42'
-	// <0x58fa45>|0x0b5|+0x011:'43'
-	// <0>
-	// <0x58fa56>|0x0c6|+0x030:'45'
-	// <0>
-	// <1>
-	// <0x58fa86>|0x0f6|+0x011:'48'
-	// <0>
-	// <0x58fa97>|0x107|+0x02a:'50'
-	// <0>
-	// <1>
-	// ******
+	if ( m_current_time >= current_time_in_ms )
+		return;
+
+	const float dt = (float)( current_time_in_ms - m_current_time ) * 0.001f;
+
+	m_current_time = current_time_in_ms;
+
+	m_target_coeff = math::max( m_target_coeff - m_aiming_speed * dt, 0.0f );
+
+	// claude@NOTE: target has an extra statement at line 42 - the outer if-body's
+	//   scope exit emitted as two adjacent `jmp short .6` at label .3 (the && short-
+	//   circuit-false skip and the inner else-if fall-through, /Od keeps them separate;
+	//   14 stmts). Base /Od merges both into the if-condition's `jnp .4` (13 stmts).
+	//   Byte content is identical; tried brace-less and Allman inner if/else-if (both
+	//   byte-neutral, neither splits the jmp). /Od jump-fold quirk on the && + braced
+	//   body, not steerable by brace placement here.
+	if ( dt != 0.0f && m_current_coeff != m_target_coeff )
+	{
+		if ( m_current_coeff > m_target_coeff )
+		{
+			m_current_coeff = math::max( m_current_coeff - m_aiming_speed * dt, m_target_coeff );
+		}
+		else if ( m_current_coeff < m_target_coeff )
+		{
+			m_current_coeff = math::min( m_current_coeff + m_growth_speed * dt, m_target_coeff );
+		}
+	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::fire()
 void weapon_dispersion_calculator::fire( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f959>|0x009|+0x024:'58'
-	// <0>
-	// ******
+	m_target_coeff = math::min( m_target_coeff + m_one_shoot_dispersion_amount, m_max_value );
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::reload()
 void weapon_dispersion_calculator::reload( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f919>|0x009|+0x025:'65'
-	// <0>
-	// ******
+	m_target_coeff = math::min( m_target_coeff + m_reload_dispersion_amount, m_max_value );
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_reload_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_reload_dispersion_amount( float reload_dispersion_amount )
+void weapon_dispersion_calculator::set_reload_dispersion_amount( const float reload_dispersion_amount )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f867>|0x007|+0x00d:'72'
-	// <0>
-	// ******
+	m_reload_dispersion_amount = reload_dispersion_amount;
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_one_shoot_dispersion_amount(const float)
-void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( float one_shoot_dispersion_amount )
+void weapon_dispersion_calculator::set_one_shoot_dispersion_amount( const float one_shoot_dispersion_amount )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x58f847>|0x007|+0x00c:'79'
-	// <0>
-	// ******
+	m_one_shoot_dispersion_amount = one_shoot_dispersion_amount;
 }
 
-// STATE[STUB]
-// float survarium::weapon_dispersion_calculator::get_value() const
 float weapon_dispersion_calculator::get_value( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY
-	// <0x58f827>|0x007|+0x006:'85'
-	// ******
+	return m_current_coeff;
 }
 
-// STATE[STUB]
-// void survarium::weapon_dispersion_calculator::set_aiming_speed(const float)
-void weapon_dispersion_calculator::set_aiming_speed( float aiming_speed )
+void weapon_dispersion_calculator::set_aiming_speed( const float aiming_speed )
 {
-	// FUNCTION BODY
-	// <0x58f807>|0x007|+0x00d:'90'
-	// ******
+	m_aiming_speed = aiming_speed;
 }
 
 } // namespace survarium

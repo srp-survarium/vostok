@@ -71,11 +71,12 @@ public:
 	// to be removed soon
 	virtual	void	fill_objects_dictionary	( configs::binary_config_value const& dictionary );
 	virtual	bool	is_npc_safe				( brain_unit_res_ptr brain ) const;
-	virtual	u32		get_current_time_in_ms	( ) const { return m_npc_lives_timer.get_elapsed_msec(); }
 	virtual	void	on_animation_finish		( animation_item const* const target, brain_unit_res_ptr brain );
-			
+	virtual	void	select_new_goal			( brain_unit_res_ptr brain );
+
 			void	get_available_weapons	( npc* owner, weapons_list& list_to_be_filled );
-			
+			u32		get_current_time_in_ms	( ) const;
+
 			void	get_colliding_objects	( math::aabb const& query_aabb, ai_objects_type& results );
 			void	get_visible_objects		( math::cuboid const& cuboid, update_frustum_callback_type const& update_callback );
 			bool	ray_query				(
@@ -141,7 +142,6 @@ private:
 	destruction_subscriptions_manager_type	m_destruction_subscriptions_manager;
 
 	brain_units								m_brain_units;
-	timing::timer							m_npc_lives_timer;
 
 	planning::search						m_search_service;
 
@@ -158,6 +158,11 @@ private:
 	available_objects_types					m_light_weapons;
 	available_objects_types					m_energy_weapons;
 }; // class ai_world
+
+// sushi@TODO: structure dump misreports this layout (phantom m_npc_lives_timer @0x98,
+// size 0x698) but the binary matches target exactly (ctor 100%, m_engine @0x138); this
+// build-gated assert proves the real size is 0x688 - see review_todos.md.
+STATIC_SIZE_ASSERT( ai_world, 0x688 );
 
 } // namespace ai
 } // namespace vostok

@@ -5,88 +5,77 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/animation/animation_callback.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_finish_substate::weapon_core_shotgun_reload_finish_substate(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int)
 weapon_core_shotgun_reload_finish_substate::weapon_core_shotgun_reload_finish_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_shotgun_reload_base_substate(
 		weapon, animation_time_scale,
 		animations,
 		animations_count,
-		animation::mixing::play_once_and_remove_at_end,
-		10,
-		"animation_id",
-		"hands_stand_animation_id",
-		"hands_crouch_animation_id",
-		"hands_jump_animation_id"
+		animation::mixing::play_once_and_freeze_at_end,
+		5,
+		"shotgun-finish_reload",
+		"reload_finish(stand)",
+		"reload_finish(crouch)",
+		"reload_finish(jump)"
 	)
+	, m_owner_ready_for_transition( NULL )
 {
-	// FUNCTION BODY
-	// <0x59e1b0>|0x000|+0x05a:'20'	{
-	// <0x59e20a>|0x05a|      :'21'	}
-	// ******
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_finish_substate::is_ready_for_transition() const
 bool weapon_core_shotgun_reload_finish_substate::is_ready_for_transition( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x59dfb7>|0x007|+0x002:'25'
-	// ******
+	return true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_finish_substate::initialize()
 void weapon_core_shotgun_reload_finish_substate::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59e0dd>|0x00d|+0x0c6:'31'
-	// ******
+	m_weapon.set_animation_callback(
+		animation::channel_id_on_animation_end,
+		this,
+		boost::bind( &weapon_core_shotgun_reload_finish_substate::on_animation_end, this, _1 )
+	);
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_finish_substate::finalize()
+// claude@NOTE: the deserializing/chamber_a_round/ammo_in_magazine/instant_chamber_a_round guard
+// chain is structure-correct (clean structure-diff); residual is animation_playback_state::reset()
+// inlined by /Od where the target keeps it out-of-line (shared-header noinline only; cross-unit).
 void weapon_core_shotgun_reload_finish_substate::finalize( )
 {
-	// FUNCTION BODY
-	// <0x59e039>|0x009|+0x01a:'36'
-	// <0x59e053>|0x023|+0x014:'37'
-	// <0x59e067>|0x037|+0x01a:'38'
-	// <0>
-	// <0x59e081>|0x051|+0x02f:'40'
-	// <0>
-	// <0x59e0b0>|0x080|+0x00e:'42'
-	// <0>
-	// <1>
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
+	if ( !m_weapon.deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.ammo_in_magazine( ) )
+		{
+			m_weapon.instant_chamber_a_round( );
+		}
+	}
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_shotgun_reload_finish_substate::on_animation_end(vostok::animation::animation_callback_params&)
+// claude@NOTE: structure-correct; residual is the intrusive_ptr operator== operand-evaluation
+// order (target loads `this` before the arg; /Od reverses it). Non-steerable from source.
 animation::callback_return_type_enum weapon_core_shotgun_reload_finish_substate::on_animation_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0x59dfc9>|0x009|+0x007:'49'
-	// <0>
-	// <0x59dfd0>|0x010|+0x010:'51'
-	// <0x59dfe0>|0x020|+0x00c:'52'
-	// <0x59dfec>|0x02c|+0x01b:'53'
-	// <0x59e007>|0x047|+0x00c:'54'
-	// <0x59e013>|0x053|+0x007:'55'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59e01a>|0x05a|+0x002:'59'
-	// ******
+	params.interrupt_animation_player_tick = false;
+	if ( params.animated_object == &m_weapon )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		if ( m_animation_to_wait_for == params.animation )
+		{
+			*m_owner_ready_for_transition = true;
+			params.interrupt_animation_player_tick = true;
+		}
+	}
+
+	return animation::callback_return_type_call_me_again;
 }
 
 } // namespace survarium

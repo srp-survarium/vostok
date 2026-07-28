@@ -19,18 +19,22 @@ namespace network_core {
 }
 }
 
+// claude@NOTE: matching anchor in temp_include_all.cpp needs to reach the private
+// static movement_animation_index; befriend it (friend decls don't affect bytes).
+namespace vostok { void use_game_core_player_logic_base_state( ); }
+
 namespace survarium {
 
 struct base_player;
 class weapon_user_animations_selector;
 struct player_input;
 
-//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)	// <0x122e20>|0x000|      :'60'	{
-//	inventory_item::action												//  <0x22c50>|0x000|      :'61'	{
+//	weapon_user_dead_state::`scalar deleting destructor'(unsigned int)
+//	inventory_item::action
 
 class player_logic_base_state : public ai::fsm_state {
 public:
-	explicit							player_logic_base_state		( weapon_user_animations_selector& owner, weapon_user_state_enum weapon_user_state_id );
+	explicit							player_logic_base_state		( weapon_user_animations_selector& owner, const weapon_user_state_enum weapon_user_state_id );
 
 	virtual	void						set_user					( base_player& user );
 
@@ -41,15 +45,16 @@ public:
 											bool								is_third_view
 										) const = 0;
 
-	virtual	float4x4					get_attachment_transform	( ) const { /* no source */ }
+	// claude@NOTE: stub body must return a value or the abstract vtable fails LTCG
+	// codegen (C4716/LNK1257) once an obj carrying this vtable is kept. Not matched.
+	virtual	float4x4					get_attachment_transform	( ) const { return float4x4( ); }
 
 	virtual	void						serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void						deserialize					( network_core::packet_reader& arg_0 ) { /* no source */ }
 
 	inline	weapon_user_state_enum		id							( ) const { return m_weapon_user_state_id; }
 	inline	bool						is_ready_to_be_deactivated	( ) const { return m_is_ready_to_be_deactivated; }
-	// STATE[STUB]
-	virtual	bool						is_ready_for_transition		( ) const override { return true; } // <0x22c50>|0x000|      :'61'
+	virtual	bool						is_ready_for_transition		( ) const override { return true; }
 
 	inline	bool						is_weapon_visible			( ) const { /* no source */ }
 	inline	bool						is_smoothing_needed			( ) const { /* no source */ }
@@ -57,13 +62,24 @@ public:
 
 	virtual								~player_logic_base_state	( );
 
+
+protected:
+	// claude@MATCH: protected static -> mangled `K` (target). private would be `C`,
+	// public `S`; either mismatches the target's symbol so objdiff can't pair it.
 	static	u32							movement_animation_index	( player_input const& input );
 
-
-private:
+	// claude@NOTE: protected (not private) so derived state overrides
+	// (e.g. player_logic_jump_state::is_ready_for_transition) can read m_user
+	// directly, as the target codegen does (no accessor call). Access level does
+	// not affect base_state's own byte output.
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	weapon_user_animations_selector&	m_owner;
 	/* 0x001c */	base_player*						m_user;
+
+
+private:
+	friend void ::vostok::use_game_core_player_logic_base_state( );
+
 	/* 0x0020 */	weapon_user_state_enum				m_weapon_user_state_id;
 	/* 0x0024 */	bool								m_is_weapon_weapon_visible;
 	/* 0x0025 */	bool								m_is_smoothing_needed;

@@ -31,6 +31,12 @@ particle_system_wrapper_cook::particle_system_wrapper_cook()
 
 void particle_system_wrapper_cook::translate_query( query_result_for_cook& parent )
 {
+	// claude@NOTE: QUANTITY base +4. Target is 3 stmts / 1 local (converted_path only): one
+	//   path string, one assignf, then a SINGLE query_resource (NOT query_resources/requests[])
+	//   binding &on_resource_ready directly on the converted path - it SKIPS the source/converted
+	//   fs-iterator timestamp comparison entirely (no source_path, no on_fs_iterators_ready hop).
+	//   Closing it is a control-flow rewrite folding on_fs_iterators_ready away - a multi-function
+	//   rework that would break the matched cooking flow, not a localized resteer.
 	fs_new::virtual_path_string				source_path;
 	source_path.assignf						("resources/particles/%s.particle", parent.get_requested_path());
 
@@ -87,7 +93,10 @@ void   particle_system_wrapper_cook::on_resource_ready	(queries_result & result)
 	unmanaged_resource_ptr resource		=	result[0].get_unmanaged_resource();
 
 	if ( resource )
+	{
+		resource->set_deleter_object			(this, allocate_thread_id());
 		parent->set_unmanaged_resource		(resource, resource->memory_usage());
+	}
 
 	parent->finish_query					(result[0].get_error_type(), result.assert_on_fail());
 }

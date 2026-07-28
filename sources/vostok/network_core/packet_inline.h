@@ -1,159 +1,176 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 21.02.2012
-//	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2012
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef PACKET_INLINE_H_INCLUDED
-#define PACKET_INLINE_H_INCLUDED
+#ifndef NETWORK_CORE_PACKET_INLINE_H_INCLUDED
+#define NETWORK_CORE_PACKET_INLINE_H_INCLUDED
 
 namespace vostok {
 namespace network_core {
 
-template <typename T> // STATE[STUB]
-inline packet<T>::packet		( )
+// claude@NOTE: the packet< tcp_packet > / packet< udp_match_packet > append/resize/
+// ctor instantiations below are unpaired in the objdiff report (target COMDAT present,
+// base absent). Cause: in the shipped exe the linker kept the OPTIMIZED instances of
+// these primitives (e.g. tcp append(void*,u32) at 0xa72f0 = 0x78B, register-allocated,
+// no ebp frame; udp append(float2)/header_size likewise) - they came from /Ot consumer
+// TUs and survived /OPT:ICF. Our base compiles network_core /Od and inlines every
+// primitive at its (also /Od) call sites, so it emits no standalone COMDAT to pair with
+// the target's optimized one - a uniform-/Od build cannot reproduce a mixed-optimization
+// exe. The bodies here are the faithful deliverable; the missing pairing is the
+// optimization-level wall, NOT a structure defect. (The earlier synthetic address-of
+// anchors were dropped in 587b3077 because a single /Ot anchor TU still cannot mirror
+// the target's whole-program inlining.) A handful (e.g. resize(tcp) at 0x134ee0) stayed
+// /Od in the target but is reachable only via call sites our /Od build inlines, so it too
+// emits no standalone base COMDAT.
+
+template < typename T >
+inline packet< T >::packet( )
 {
 }
 
+// STATE[REMOVED]: no in-scope consumer calls packet<T>::clear (tcp_packet/udp_match_packet
+// reset their buffer via reserve/append paths, not clear). Uninstantiated both sides.
+template < typename T >
+inline void packet< T >::clear( ) { /* no source */ } // STATE[REMOVED]
 
-
-
-
-template <typename T>
-inline void packet<T>::reallocate	( u32 const new_size )
+template < typename T >
+inline void packet< T >::reserve( u32 size )
 {
-	m_allocated_size	= new_size;
-	m_buffer_size		= std::min( m_buffer_size, m_allocated_size );
-	m_buffer			= static_cast<pbyte>( VOSTOK_REALLOC_IMPL( m_allocator, m_buffer ? m_buffer - 3 : 0, new_size + 3, "packet" ) ) + 3;
-}
-
-template <typename T>
-inline void packet<T>::reserve		( u32 const size )
-{
-	if ( m_allocated_size >= size )
+	if ( allocated_size( ) >= size )
 		return;
 
 	reallocate			( size );
 }
 
-template <typename T>
-inline void	packet<T>::resize		( u32 const size )
+template < typename T >
+inline void packet< T >::resize( u32 size )
 {
-	ASSERT				( !m_buffer_size );
+	ASSERT				( !buffer_size( ) );
 	reserve				( size );
-	m_buffer_size		= m_allocated_size;
+	m_buffer_size		= size;
 }
 
-template <typename T>
-inline void	packet<T>::clone		( base_packet const& other )
+// needed so send's clone() step emits. claude@MATCH: legacy's direct friend reads
+// (other.m_buffer/m_buffer_size) are DISPROVEN - the target clone row (0x123f08, 0x24B)
+// lowers the two operands as out-of-line CALLS (push call-result x2 before append), which
+// direct member reads can never produce; shipped clone() calls the accessors. The base
+// residual (our LTCG inlines them to field reads) is the accessor inline-vs-call wall.
+template < typename T >
+inline void packet< T >::clone( base_packet const& other )
 {
 	m_buffer_size		= 0;
-	append				( other.m_buffer, other.m_buffer_size );
+	append				( other.buffer( ), other.buffer_size( ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( u8 value )
+template < typename T >
+inline void packet< T >::append( bool value )
 {
-	append				( &value, sizeof(value) ); // <0x8d751>|0x000|0x000:'57'
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( s8 value )
+template < typename T >
+inline void packet< T >::append( u8 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( u16 value )
+template < typename T >
+inline void packet< T >::append( s8 value )
 {
-	append				( &value, sizeof(value) ); // <0x8d731>|0x000|0x000:'69'
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( s16 value )
+template < typename T >
+inline void packet< T >::append( u16 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( u32 value )
+template < typename T >
+inline void packet< T >::append( s16 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( s32 value )
+template < typename T >
+inline void packet< T >::append( u32 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( u64 value )
+template < typename T >
+inline void packet< T >::append( s32 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T>
-inline void packet<T>::append( s64 value )
+template < typename T >
+inline void packet< T >::append( u64 value )
 {
-	append				( &value, sizeof(value) );
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( float value )
+template < typename T >
+inline void packet< T >::append( s64 value )
 {
-	append				( &value, sizeof(value) ); // <0x8d711>|0x000|0x000:'105'
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( float2 const& value )
+template < typename T >
+inline void packet< T >::append( float value )
 {
-	append				( &value, sizeof(value) ); // <0x8d701>|0x000|0x000:'111'
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( float3 const& value )
+template < typename T >
+inline void packet< T >::append( float2 const& value )
 {
-	append				( &value, sizeof(value) ); // <0x8d6f1>|0x000|0x000:'117'
+	append				( &value, sizeof( value ) );
 }
 
-template <typename T> // STATE[STUB]
-inline void packet<T>::append( pcvoid const buffer, u32 const buffer_size )
+template < typename T >
+inline void packet< T >::append( float3 const& value )
 {
-	if ( m_buffer_size + buffer_size > m_allocated_size ) {
-		u32 new_allocated_size	= m_allocated_size ? m_allocated_size : buffer_size;
+	append				( &value, sizeof( value ) );
+}
+
+template < typename T >
+inline void packet< T >::append( pcstr string )
+{
+	append				( string, static_cast< u8 >( strlen( string ) ) );
+}
+
+template < typename T >
+inline void packet< T >::append( pcstr string, u8 string_length )
+{
+	ASSERT				( string_length <= u8(-1) );
+	append				( string_length );
+	append				( static_cast< pcvoid >( string ), string_length );
+}
+
+template < typename T >
+inline void packet< T >::append( pcvoid buffer, u32 buffer_size )
+{
+	if ( m_buffer_size + buffer_size > allocated_size( ) ) {
+		u32 new_allocated_size	= allocated_size( ) ? allocated_size( ) : buffer_size;
 		while ( new_allocated_size < m_buffer_size + buffer_size )
 			new_allocated_size	*= 2;
 
 		reallocate		( new_allocated_size );
 	}
 
-	ASSERT				( m_buffer_size + buffer_size <= m_allocated_size );
-	memcpy				( m_buffer + m_buffer_size, buffer, buffer_size );
+	ASSERT				( m_buffer_size + buffer_size <= allocated_size( ) );
+	memcpy				( this->buffer( ) + m_buffer_size, buffer, buffer_size );
 	m_buffer_size		+= buffer_size;
-
-
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x7c6e5 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN44") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x7c6cb }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN45") })
-	// ******
-
-	// FUNCTION BODY
-	// <0x8d695>|0x000|0x000:'137'
-	// <0x8d6af>|0x01a|0x01a:'138'
-	// <0x8d6b5>|0x020|0x006:'139'
-	// <0x8d6b9>|0x024|0x004:'140'
-	// 1
-	// <0x8d6c6>|0x031|0x00d:'142'
-	// 1
-	// 2
-	// 3
-	// <0x8d6cb>|0x036|0x005:'146'
-	// <0x8d6db>|0x046|0x010:'147'
-	// ******
 }
+
+template < typename T >
+inline T const& packet< T >::implementation( ) const { return *static_cast< T const* >( this ); }
+
+template < typename T >
+inline T& packet< T >::implementation( ) { return *static_cast< T* >( this ); }
 
 } // namespace network_core
 } // namespace vostok
 
-#endif // #ifndef PACKET_INLINE_H_INCLUDED
+#endif // #ifndef NETWORK_CORE_PACKET_INLINE_H_INCLUDED

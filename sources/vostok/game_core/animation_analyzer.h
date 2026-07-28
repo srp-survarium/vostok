@@ -18,7 +18,7 @@ struct leg_key_times;
 
 class animation_analyzer : public core::noncopyable {
 public:
-						animation_analyzer		( leg_info const* legs_info, u32 legs_count, animation::skeleton const& skeleton );
+						animation_analyzer		( leg_info const* legs_info, const u32 legs_count, animation::skeleton const& skeleton );
 						~animation_analyzer		( );
 
 	inline	void		analyze					( pcstr arg_0, resources::managed_resource_ptr arg_1, leg_key_times* arg_2 ) { /* no source */ }

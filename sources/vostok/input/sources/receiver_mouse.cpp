@@ -9,38 +9,47 @@
 #include <vostok/input/handler.h>
 
 using vostok::input::receiver::mouse;
+using vostok::input::mouse_button;
+
+mouse_button mouse::convert_to_binder_mouse_button	( s32 receiver_button )
+{
+	switch ( receiver_button ) {
+		case 1 << 0	: return mouse_button_left;
+		case 1 << 1	: return mouse_button_right;
+		case 1 << 2	: return mouse_button_middle;
+		case 1 << 3	: return mouse_button_extended0;
+		case 1 << 4	: return mouse_button_extended1;
+		case 1 << 5	: return mouse_button_extended2;
+		case 1 << 6	: return mouse_button_extended3;
+		case 1 << 7	: return mouse_button_extended4;
+	}
+
+	NODEFAULT();
+}
 
 void mouse::process		( handlers_type& handlers )
 {
-	handlers_type::iterator it	= handlers.begin();
-	handlers_type::iterator it_e = handlers.end();
-
 	u16 const changed_buttons	= u16( m_current_state.buttons ^ m_previous_state.buttons );
 
-	u16 const buttons_down		= u16( m_current_state.buttons & changed_buttons );
-	for ( u16 i = buttons_down; i; i &= i - 1 )
-		for(; it!=it_e; ++it)
-			if( (*it)->on_mouse_key_action( &m_world, mouse_button( i ^ ( i & ( i - 1 ) ) ), ms_key_down ) )
+	handlers_type::iterator const it_e = handlers.end();
+	for ( u16 i = u16( m_current_state.buttons & changed_buttons ); i; i &= i - 1 )
+		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
+			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_down )
+			   | (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_hold ) )
 				break;
 
-	it							= handlers.begin();
-	u16 const buttons_up		= u16( ~m_current_state.buttons & changed_buttons );
-	for ( u16 i = buttons_up; i; i &= i - 1 )
-		for(; it!=it_e; ++it)
-			if( (*it)->on_mouse_key_action( &m_world, mouse_button( i ^ ( i & ( i - 1 ) ) ), ms_key_up ) )
+	for ( u16 i = u16( ~m_current_state.buttons & changed_buttons ); i; i &= i - 1 )
+		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
+			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_up ) )
 				break;
 
-	it							= handlers.begin();
-	u16 const hold_buttons		= u16( m_current_state.buttons & m_previous_state.buttons );
-	for ( u16 i = hold_buttons; i; i &= i - 1 )
-		for(; it!=it_e; ++it)
-			if( (*it)->on_mouse_key_action( &m_world, mouse_button( i ^ ( i & ( i - 1 ) ) ), ms_key_hold ) )
+	for ( u16 i = u16( m_current_state.buttons & m_previous_state.buttons ); i; i &= i - 1 )
+		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
+			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_hold ) )
 				break;
 
-	it							= handlers.begin();
-
-	if( m_current_state.x || m_current_state.y || m_current_state.z)
-		for(; it!=it_e; ++it)
-			if( (*it)->on_mouse_move( &m_world, m_current_state.x, m_current_state.y, m_current_state.z ) )
+	if ( m_current_state.x || m_current_state.y || m_current_state.z )
+		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
+			if ( (*it)->on_mouse_move( &m_world, m_current_state.x, m_current_state.y, m_current_state.z ) )
 				break;
 }

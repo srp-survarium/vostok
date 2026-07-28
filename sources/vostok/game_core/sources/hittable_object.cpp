@@ -10,36 +10,32 @@
 
 namespace survarium {
 
-// STATE[72.88%|PARTIAL]: target didn't inline constructor for hit_receiver
- hittable_object::hittable_object( ) :
+// claude@NOTE: STRUCTURE MATCH. Residual is the base-ctor call-vs-inline wall: target CALLs
+// survarium::hit_receiver::hit_receiver (its user-declared inline ctor survives as an
+// ICF-folded out-of-line COMDAT - 3 copies in the target index, ZERO in our base), so our
+// build inlines hit_receiver's body (game_object vtable store + loose_ptr_base ctor call) and
+// uses a different frame. Decided by whether the implicit/inline base ctor is emitted as a
+// COMDAT globally - not steerable from this TU. See patterns/base-ctor-call-vs-inlined-init.md.
+hittable_object::hittable_object( ) :
 	m_rigid_body	( NULL ),
 	m_physics_world	( NULL ),
 	m_group			( 0 ),
 	m_mask			( 0 )
 {
-	// FUNCTION BODY[0x599f30]: 0
-	// <0x599f30>|0x000|+0x041:'19'	{
-	// <0x599f71>|0x041|      :'20'	}
-	// ******
 }
 
-// STATE[69.59%|PARTIAL]: Manual statements matched. Destructor of hit_receiver inlined in base.
- hittable_object::~hittable_object( )
+// claude@NOTE: STRUCTURE MATCH. Same wall as the ctor, on the dtor side: target CALLs
+// survarium::hit_receiver::~hit_receiver (out-of-line in target, absent from our base), so our
+// build inlines the base dtor (hit_receiver vtable store + loose_ptr_base::~loose_ptr_base)
+// and grows the frame to 0x38 (vs target 0x0C). Not steerable from this TU.
+hittable_object::~hittable_object( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 
 	physics::destroy_static_rigid_body( m_rigid_body );
-
-	// FUNCTION BODY[0x599ee0]: 4
-	// <0x599ef3>|0x013|+0x00c:'24'
-	// <0x599eff>|0x01f|+0x00c:'25'
-	// <0>
-	// <0x599f0b>|0x02b|+0x00b:'27'
-	// ******
 }
 
-// STATE[86.74%|PARTIAL]: LTCG for linear math ops.
 void hittable_object::load( configs::binary_config_value const& cfg_val )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( cfg_val.value_exists( "full_name" ) ) );
@@ -71,55 +67,18 @@ void hittable_object::load( configs::binary_config_value const& cfg_val )
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION );
-
-	// FUNCTION BODY[0x599f80]: 30
-	// <0x599f91>|0x011|+0x012:'32'
-	// <0x599fa3>|0x023|+0x012:'33'
-	// <0x599fb5>|0x035|+0x012:'34'
-	// <0x599fc7>|0x047|+0x012:'35'
-	// <0x599fd9>|0x059|+0x012:'36'
-	// <0x599feb>|0x06b|+0x012:'37'
-	// <0x599ffd>|0x07d|+0x012:'38'
-	// <0>
-	// <0x59a00f>|0x08f|+0x015:'40'
-	// <0x59a024>|0x0a4|+0x015:'41'
-	// <0x59a039>|0x0b9|+0x015:'42'
-	// <0x59a04e>|0x0ce|+0x015:'43'
-	// <0x59a063>|0x0e3|+0x056:'44'
-	// <0>
-	// <0x59a0b9>|0x139|+0x030:'46'	configs::binary_config_value meshes = cfg_val["meshes"];
-	// <0x59a0e9>|0x169|+0x032:'47'
-	// <0x59a11b>|0x19b|+0x00f:'48'
-	// <0>
-	// <1>
-	// <0x59a12a>|0x1aa|+0x008:'51'
-	// <0x59a132>|0x1b2|+0x00c:'52'
-	// <0>
-	// <0x59a13e>|0x1be|+0x011:'54'
-	// <0>
-	// <0x59a14f>|0x1cf|+0x01c:'56'
-	// <0x59a16b>|0x1eb|+0x01c:'57'
-	// <0>
-	// <0x59a187>|0x207|+0x012:'59'
-	// <0x59a199>|0x219|+0x012:'60'
-	// <0x59a1ab>|0x22b|+0x012:'61'
-	// ******
-
 }
 
-// STATE[100%|DONE]
 void hittable_object::set_transform( float4x4 const& transform )
 {
 	m_rigid_body->set_transform( transform );
 }
 
-// STATE[MISSING]
 float4x4 hittable_object::get_transform( )
 {
 	return m_rigid_body->get_transform( );
 }
 
-// STATE[100%|DONE]
 void hittable_object::insert( physics::world* world )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( !m_physics_world ));
@@ -130,7 +89,6 @@ void hittable_object::insert( physics::world* world )
 	world->add( m_rigid_body, m_group, m_mask );
 }
 
-// STATE[100%|DONE]
 void hittable_object::remove( )
 {
 	ASSERT( UNKNOWN_EXPRESSION_T( m_physics_world ));

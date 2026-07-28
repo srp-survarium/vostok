@@ -7,41 +7,56 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_dispersion_params::weapon_dispersion_params()
-weapon_dispersion_params::weapon_dispersion_params( )
+weapon_dispersion_params::weapon_dispersion_params( ) :
+	base_dispersion				( 0.0f ),
+	from_the_hip_multiplier		( 1.0f ),
+	aim_multiplier				( 1.0f ),
+	speed_of_aiming				( 1.0f ),
+	one_shoot_dispersion_amount	( 1.0f ),
+	reload_dispersion_amount	( 1.0f ),
+	growth_speed				( 1.0f ),
+	max_dispersion				( 2.0f )
 {
-	// FUNCTION BODY
-	// <0x592de0>|0x000|+0x086:'21'	{
-	// <0x592e66>|0x086|      :'22'	}
-	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_dispersion_params::weapon_dispersion_params(vostok::configs::binary_config_value const&)
-weapon_dispersion_params::weapon_dispersion_params( configs::binary_config_value const& cfg )
+weapon_dispersion_params::weapon_dispersion_params( configs::binary_config_value const& cfg ) :
+	base_dispersion				( 0.0f ),
+	from_the_hip_multiplier		( 1.0f ),
+	aim_multiplier				( 1.0f ),
+	speed_of_aiming				( 1.0f ),
+	one_shoot_dispersion_amount	( 1.0f ),
+	reload_dispersion_amount	( 1.0f ),
+	growth_speed				( 1.0f ),
+	max_dispersion				( 2.0f )
 {
-	// FUNCTION BODY
-	// <0x592f16>|0x0a6|+0x014:'34'
-	// <0x592f2a>|0x0ba|+0x01c:'35'
-	// <0x592f46>|0x0d6|+0x014:'36'
-	// <0x592f5a>|0x0ea|+0x01d:'37'
-	// <0x592f77>|0x107|+0x014:'38'
-	// <0x592f8b>|0x11b|+0x01d:'39'
-	// <0x592fa8>|0x138|+0x014:'40'
-	// <0x592fbc>|0x14c|+0x01d:'41'
-	// <0x592fd9>|0x169|+0x014:'42'
-	// <0x592fed>|0x17d|+0x01d:'43'
-	// <0x59300a>|0x19a|+0x014:'44'
-	// <0x59301e>|0x1ae|+0x01d:'45'
-	// <0x59303b>|0x1cb|+0x014:'46'
-	// <0x59304f>|0x1df|+0x01d:'47'
-	// <0x59306c>|0x1fc|+0x014:'48'
-	// <0x593080>|0x210|+0x01d:'49'
-	// <0>
-	// <1>
-	// <0x59309d>|0x22d|+0x013:'52'
-	// ******
+	if ( cfg.value_exists( "base_dispersion" ) )
+		base_dispersion = (float)cfg["base_dispersion"];
+
+	if ( cfg.value_exists( "from_the_hip_multiplier" ) )
+		from_the_hip_multiplier = (float)cfg["from_the_hip_multiplier"];
+
+	if ( cfg.value_exists( "aim_multiplier" ) )
+		aim_multiplier = (float)cfg["aim_multiplier"];
+
+	if ( cfg.value_exists( "speed_of_aiming" ) )
+		speed_of_aiming = (float)cfg["speed_of_aiming"];
+
+	if ( cfg.value_exists( "one_shoot_dispersion_amount" ) )
+		one_shoot_dispersion_amount = (float)cfg["one_shoot_dispersion_amount"];
+
+	if ( cfg.value_exists( "reload_dispersion_amount" ) )
+		reload_dispersion_amount = (float)cfg["reload_dispersion_amount"];
+
+	if ( cfg.value_exists( "growth_speed" ) )
+		growth_speed = (float)cfg["growth_speed"];
+
+	if ( cfg.value_exists( "max_dispersion" ) )
+		max_dispersion = (float)cfg["max_dispersion"];
+
+	// claude@MATCH: the target unconditionally clears this AFTER the if-blocks,
+	// discarding any "one_shoot_dispersion_amount" the config just read (matched verbatim,
+	// not a fix: movss from .rdata 0.0f at target .text 0x22d -> [this+0x10]).
+	one_shoot_dispersion_amount = 0.0f;
 }
 
 } // namespace survarium

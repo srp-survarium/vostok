@@ -14,7 +14,6 @@
 
 namespace survarium {
 
-// STATE[SKIPPED]: sushi@TODO: Most likely something to do with inheritance + NO_VTABLE + virtual methods
 generic_anomaly_core::generic_anomaly_core( ):
 	m_artefact_grab_time_ms		( 0 ),
 	m_current_state				( NULL ),
@@ -25,12 +24,10 @@ generic_anomaly_core::generic_anomaly_core( ):
 {
 }
 
-// STATE[SKIPPED]: sushi@TODO: Has two simple instructions swapped
 generic_anomaly_core::~generic_anomaly_core( )
 {
 }
 
-// STATE[79.69%|PARTIAL]: boost::bind in target inlined for one more layer
 void generic_anomaly_core::activate( physics::world* world, survarium::scheduler& scheduler )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -47,26 +44,8 @@ void generic_anomaly_core::activate( physics::world* world, survarium::scheduler
 	m_was_zone_trigger_event = false;
 	m_was_shoot_trigger_event = false;
 	spawn_artefacts( );
-
-	// FUNCTION BODY
-	// <0x59dc1a>|0x00a|+0x00c:'28'
-	// <0x59dc26>|0x016|+0x00c:'29'
-	// <0x59dc32>|0x022|+0x009:'30'
-	// <0x59dc3b>|0x02b|+0x009:'31'
-	// <0x59dc44>|0x034|+0x0ce:'32'
-	// <0>
-	// <0x59dd12>|0x102|+0x022|[1]:'34'	for ( u32 a = 0 ; a < m_artefact_containers.size( ) ; ++a )
-	// <0>								{
-	// <0x59dd34>|0x124|+0x050:'36'
-	// <0x59dd84>|0x174|+0x002:'37'		}
-	// <0>
-	// <0x59dd86>|0x176|+0x007:'39'
-	// <0x59dd8d>|0x17d|+0x007:'40'
-	// <0x59dd94>|0x184|+0x008:'41'
-	// ******
 }
 
-// STATE[99.68%|DONE]: Different stack size
 void generic_anomaly_core::deactivate( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -80,25 +59,8 @@ void generic_anomaly_core::deactivate( )
 		m_artefact_containers[a]->deactivate( );
 
 	m_scheduler = NULL;
-
-	// FUNCTION BODY
-	// <0x59d7c0>|0x000|+0x009:'45'	{
-	// <0x59d7c9>|0x009|+0x00c:'46'
-	// <0x59d7d5>|0x015|+0x012:'47'
-	// <0x59d7e7>|0x027|+0x009:'48'
-	// <0>
-	// <0x59d7f0>|0x030|+0x00b:'50'
-	// <0x59d7fb>|0x03b|+0x00a:'51'
-	// <0>
-	// <0x59d805>|0x045|+0x022|[1]:'53'
-	// <0x59d827>|0x067|+0x046:'54'
-	// <0>
-	// <0x59d86d>|0x0ad|+0x00a:'56'
-	// <0x59d877>|0x0b7|      :'57'	}
-	// ******
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::inc_energy( float amount )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -109,7 +71,6 @@ void generic_anomaly_core::inc_energy( float amount )
 	}
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::dec_energy( float amount )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -120,7 +81,6 @@ void generic_anomaly_core::dec_energy( float amount )
 	}
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::tick( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	m_current_time = current_time_ms;
@@ -141,7 +101,6 @@ void generic_anomaly_core::tick( u32 const time_delta_ms, u32 const current_time
 		spawn_artefacts( );
 }
 
-// STATE[100%|DONE]
 void generic_anomaly_core::spawn_artefacts( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -168,7 +127,6 @@ void generic_anomaly_core::spawn_artefacts( )
 	m_artefact_grab_time_ms = 0;
 }
 
-// STATE[100%|DONE]
 anomaly_state* generic_anomaly_core::select_state( )
 {
 	anomaly_state* state = m_states[0];
@@ -192,7 +150,6 @@ anomaly_state* generic_anomaly_core::select_state( )
 	return state;
 }
 
-// STATE[100%|DONE]
 void anomaly_state::initialize( )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
@@ -204,7 +161,6 @@ void anomaly_state::initialize( )
 		m_finish_time_ms = 0;
 }
 
-// STATE[100%|DONE]
 void anomaly_state::execute( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
@@ -214,21 +170,18 @@ void anomaly_state::execute( u32 const time_delta_ms, u32 const current_time_ms 
 		owner->set_current_energy( (float)energy_on_exit );
 }
 
-// STATE[100%|DONE]
 void anomaly_state::finalize( )
 {
 	for ( u32 g = 0 ; g < groups.size( ) ; ++g )
 		groups[g]->finalize( );
 }
 
-// STATE[100%|DONE]
 void zone_group::initialize( )
 {
 	charged_count = 0;
 	recharge( );
 }
 
-// STATE[100%|DONE]
 void zone_group::execute( u32 const time_delta_ms, u32 const current_time_ms )
 {
 	if ( next_recharge_time && current_time_ms >= next_recharge_time )
@@ -241,7 +194,6 @@ void zone_group::execute( u32 const time_delta_ms, u32 const current_time_ms )
 	}
 }
 
-// STATE[100%|DONE]
 void zone_group::finalize( )
 {
 	for ( u32 z = 0 ; z < zones.size( ) ; ++z )
@@ -254,7 +206,6 @@ void zone_group::finalize( )
 	}
 }
 
-// STATE[100%|DONE]
 void zone_group::recharge( )
 {
 	for ( u32 z = 0 ; z < zones.size( ) ; ++z )
@@ -268,7 +219,6 @@ void zone_group::recharge( )
 	next_recharge_time = 0;
 }
 
-// STATE[100%|DONE]
 void zone_group::on_zone_act( damage_zone_core* zone, hit_receiver* receiver )
 {
 	core( )->on_zone_act( zone, receiver );

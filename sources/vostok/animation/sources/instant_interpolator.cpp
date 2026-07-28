@@ -31,16 +31,10 @@ instant_interpolator* instant_interpolator::clone	( vostok::mutable_buffer& buff
 {
 	return				clone_impl< instant_interpolator >( buffer );
 }
-// STATE[STUB]
+
 instant_interpolator* instant_interpolator::clone( vostok::animation::mixing::n_ary_tree_transition_tree_constructor& constructor ) const
 {
-	return NULL;
-
-	// FUNCTION BODY
-	// <0x56f8c0>|0x000|+0x020:'37'
-	// <0x56f8e0>|0x020|-0x003:'37'
-	// <0x56f8dd>|0x01d|+0x00f:'38'
-	// ******
+	return					clone_impl< instant_interpolator >( constructor.m_buffer );
 }
 
 void instant_interpolator::accept					( interpolator_visitor& visitor ) const

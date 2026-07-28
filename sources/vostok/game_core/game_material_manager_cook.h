@@ -26,14 +26,14 @@ public:
 	virtual	void	delete_resource				( resources::resource_base* res ) override;
 
 private:
-	struct query_ext_data {
-		enum res_type {
-			decal1		= 0x0000,
-			decal2		= 0x0001,
-			sound		= 0x0002,
-			particle	= 0x0003,
-		};
+	enum res_type {
+		decal1		= 0x0000,
+		decal2		= 0x0001,
+		sound		= 0x0002,
+		particle	= 0x0003,
+	};
 
+	struct query_ext_data {
 		/* 0x0000 */	material_pair*	pair;
 		/* 0x0004 */	res_type		type;
 		/* 0x0008 */	vostok::render::material_effects_instance_cook_data*	cd;

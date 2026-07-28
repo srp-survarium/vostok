@@ -14,9 +14,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
 
-#pragma warning( push )
-#pragma warning( disable : 4995 )
-
 #ifndef INC_SF_Render_Matrix3x4_H
 #define INC_SF_Render_Matrix3x4_H
 
@@ -123,7 +120,7 @@ namespace Scaleform { namespace Render {
         T operator [] (int pos)         { return Data()[pos]; }
         T operator [] (int pos) const   { return Data()[pos]; }
 
-        void Set(const T *pVals, int count) { memcpy(M, pVals, count*sizeof(T));   }
+        void Set(const T *pVals, int count) { SF_ASSERT(count<=12); memcpy(M, pVals, count*sizeof(T));   }
         void Set(const T pVals[3][4])       { Set(&pVals[0][0], 12); }
         void Set(const Matrix3x4 &mat)      { Set(&mat.M[0][0], 12); }
 
@@ -252,22 +249,7 @@ namespace Scaleform { namespace Render {
         // Matrix equality
         inline friend bool                operator == (const Matrix3x4 &m1, const Matrix3x4 &m2)
         {
-#if 0
-            return  (m1.M[0][0] == m2.M[0][0]) && 
-                    (m1.M[0][1] == m2.M[0][1]) && 
-                    (m1.M[0][2] == m2.M[0][2]) && 
-                    (m1.M[0][3] == m2.M[0][3]) && 
-                    (m1.M[1][0] == m2.M[1][0]) && 
-                    (m1.M[1][1] == m2.M[1][1]) && 
-                    (m1.M[1][2] == m2.M[1][2]) &&
-                    (m1.M[1][3] == m2.M[1][3]) &&
-                    (m1.M[2][0] == m2.M[2][0]) && 
-                    (m1.M[2][1] == m2.M[2][1]) && 
-                    (m1.M[2][2] == m2.M[2][2]) &&
-                    (m1.M[2][3] == m2.M[2][3]);
-#else
             return memcmp(m1.M, m2.M, sizeof(Matrix3x4<T>)) == 0;
-#endif
         }
         inline friend bool                operator != (const Matrix3x4 &m1, const Matrix3x4 &m2)
         {
@@ -337,6 +319,7 @@ namespace Scaleform { namespace Render {
         // create camera view matrix, world to view transform. Right or Left-handed. 
         SF_EXPORT void ViewRH(const Point3<T>& eyePt, const Point3<T>& lookAtPt, const Point3<T>& upVec);
         SF_EXPORT void ViewLH(const Point3<T>& eyePt, const Point3<T>& lookAtPt, const Point3<T>& upVec);
+        SF_EXPORT void View  (const Point3<T>& eyePt, const Point3<T>& viewVector, const Point3<T>& upVec);
 
         // create perspective matrix, view to screen transform.  Right or Left-handed.
         SF_EXPORT void PerspectiveRH(T fovYRad, T fAR, T fNearZ, T fFarZ);
@@ -781,48 +764,25 @@ namespace Scaleform { namespace Render {
     template<typename T>
     inline void Matrix3x4<T>::ViewRH(const Point3<T>& eyePt, const Point3<T>& lookAtPt, const Point3<T>& upVec)
     {
-        Clear();
-
         // view direction
         Point3<T> zAxis = (eyePt - lookAtPt);
         zAxis.Normalize();
-
-        // right direction
-        Point3<T> xAxis;
-        xAxis.Cross(upVec, zAxis);
-        xAxis.Normalize();
-
-        // up direction
-        Point3<T> yAxis;
-        yAxis.Cross(zAxis, xAxis);
-        //    yAxis.Normalize();
-
-        M[0][0] = xAxis.x;
-        M[0][1] = xAxis.y;
-        M[0][2] = xAxis.z;
-        M[0][3] = -xAxis.Dot(eyePt);
-
-        M[1][0] = yAxis.x;
-        M[1][1] = yAxis.y;
-        M[1][2] = yAxis.z;
-        M[1][3] = -yAxis.Dot(eyePt);
-
-        M[2][0] = zAxis.x;
-        M[2][1] = zAxis.y;
-        M[2][2] = zAxis.z;
-        M[2][3] = -zAxis.Dot(eyePt);
+        View(eyePt, zAxis, upVec);
     }
 
     // create camera view matrix
     template<typename T>
     inline void Matrix3x4<T>::ViewLH(const Point3<T>& eyePt, const Point3<T>& lookAtPt, const Point3<T>& upVec)
     {
-        Clear();
-
         // view direction
         Point3<T> zAxis = (lookAtPt - eyePt);
         zAxis.Normalize();
+        View(eyePt, zAxis, upVec);
+    }
 
+    template<typename T>
+    inline void Matrix3x4<T>::View(const Point3<T>& eyePt, const Point3<T>& zAxis, const Point3<T>& upVec)
+    {
         // right direction
         Point3<T> xAxis;
         xAxis.Cross(upVec, zAxis);
@@ -982,6 +942,3 @@ namespace Scaleform { namespace Render {
 }} // Scaleform<T>::Render
 
 #endif      // INC_SF_Render_Matrix3x4_H
-
-#pragma warning( pop )
-

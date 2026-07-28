@@ -21,24 +21,25 @@ class inventory : public resources::unmanaged_resource , public boost::noncopyab
 public:
 												inventory					( );
 
-			void								set_item					( profile_slot_enum slot, inventory_item_ptr const& item );
+			void								set_item					( const profile_slot_enum slot, inventory_item_ptr const& item );
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
-	// STATE[STUB]
+	// claude@NOTE: holder/item_in_slot/get_active_slot carry the correct one-line bodies
+	// but pair only as the optimized-COMDAT convention wall - the target keeps /Ox copies
+	// (this in eax/ecx, no frame, args from [esp+N]); our /Od base emits the standard
+	// thiscall ebp-frame COMDAT (right unit, structure matches, bytes differ by frame).
+	// Not source-steerable.
 			inventory_holder&					holder						( ) { return *m_holder; }
 
-	// STATE[STUB]
 			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
-	// STATE[STUB]
 	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );
 	inline	victory_item_core*					get_victory_item			( ) { return m_victory_item; }
 
-			bool								action						( profile_slot_enum slot_id, bool key_down );
+			bool								action						( const profile_slot_enum slot_id, bool key_down );
 
-	// STATE[STUB]
 			profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
 
 			void								setup_from_profile			( player_profile& profile, items_dictionary const& dict );
@@ -47,7 +48,7 @@ public:
 
 			void								remove						( );
 
-	inline	void								serialize					( network_core::udp_match_packet& arg_0, u32 arg_1 ) const { /* no source */ }
+			void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const;
 			void								deserialize					( network_core::packet_reader& reader );
 
 private:

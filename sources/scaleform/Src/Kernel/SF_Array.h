@@ -182,7 +182,7 @@ template<class T, class Allocator, class SizePolicy> struct ArrayDataBase
                 Reserve(pheapAddr, newSize);
             }
         }
-        else if(newSize >= Policy.GetCapacity())
+        else if (newSize > Policy.GetCapacity())
         {
             Reserve(pheapAddr, newSize + (newSize >> 2));
         }

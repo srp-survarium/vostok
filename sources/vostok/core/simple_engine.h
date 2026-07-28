@@ -22,6 +22,7 @@ public:
 	virtual void	set_exit_code			( int error_code )	{ m_exit_code = error_code; }
 	virtual	pcstr	get_resources_path		( ) const			{ return "../../resources"; }
 	virtual	pcstr	get_mounts_path			( ) const			{ return NULL; }
+	virtual	pcstr	get_user_data_directory	( ) const			{ return NULL; }
 	virtual	void	create_physical_path	( string_path& result, pcstr resources_path, pcstr inside_resources_path ) const { strings::join(result, resources_path, inside_resources_path); }
 
 private:

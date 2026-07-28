@@ -36,6 +36,8 @@ public:
 	virtual									~bullet_character_controller	( );
 
 	virtual	void							updateAction					( btCollisionWorld* collisionWorld, float deltaTime ) override;
+	// Empty virtual override; IS instantiated (vtable slot, body = `ret 4`, ICF-folded
+	// in both binaries). The empty body is faithful — not a missing reconstruction.
 	virtual	void							debugDraw						( btIDebugDraw* arg_0 ) override { /* no source */ }
 
 			void							set_desired_walk_vector			( btVector3 const& walk_vector );
@@ -56,8 +58,10 @@ public:
 			void							end_jump						( );
 			bool							can_jump						( ) const;
 
+	// STATE[REMOVED]: no caller (the get_gravity/is_inserted grep hits are on unrelated
+	// classes game_core::bullet_manager / victory_item_core); absent from both binaries.
 	inline	float							get_gravity						( ) const { /* no source */ }
-	inline	bool							is_inserted						( ) const { /* no source */ }
+	inline	bool							is_inserted						( ) const { /* no source */ } // STATE[REMOVED]
 
 	inline	btPairCachingGhostObject*		get_active_ghost_object			( ) { return m_ghost_object; }
 
@@ -65,6 +69,8 @@ private:
 			void							player_step						( float dt );
 			void							pre_step						( float dt );
 
+	// STATE[REMOVED]: not inlined into pre_step (verified: pre_step only loops
+	// recover_from_penetration); no caller; absent from both binaries.
 	inline	void							prevent_max_slope_moving_prestep( float dt ) { /* no source */ }
 
 			float							recover_from_penetration		( );
@@ -80,14 +86,17 @@ private:
 												float				tangentMag = 0.0f,
 												float				normalMag = 1.0f
 											);
-	// All of those inline functions without source code are most likely used in `player_step`.
+	// STATE[REMOVED]: the "most likely used in player_step" hypothesis is DISPROVEN — the
+	// target player_step (0x576220) calls only step_up/step_forward_and_strafe/step_down/
+	// setWorldTransform, none of these. These private inlines have no out-of-line body and no
+	// inline site in any shipped function; absent from both binaries. Empty stubs correct.
 	inline	bool							in_crouch						( ) const { return m_in_crouch; }
-	inline	void							prevent_step_bouncing			( ) { /* no source */ }
-	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ }
-	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ }
-	inline	void							updata_slide_vector				( btVector3 const& arg_0, float arg_1 ) { /* no source */ }
+	inline	void							prevent_step_bouncing			( ) { /* no source */ } // STATE[REMOVED]
+	inline	bool							can_overstep_obstacle			( btVector3 const& arg_0, btVector3 const& arg_1 ) { /* no source */ } // STATE[REMOVED]
+	inline	bool							has_support_to_overstep_obstacle( ) { /* no source */ } // STATE[REMOVED]
+	inline	void							updata_slide_vector				( btVector3 const& arg_0, float arg_1 ) { /* no source */ } // STATE[REMOVED]
 
-	inline	u32								get_contacts_count				( ) { /* no source */ }
+	inline	u32								get_contacts_count				( ) { /* no source */ } // STATE[REMOVED]
 
 			void							setup_crouch_state				( bool crouch );
 			void							setup_shape_dim					( float2 const& shape_dim );

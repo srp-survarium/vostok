@@ -99,12 +99,14 @@ public:
     virtual void        NativePopCallstack(UInt64 time);
 
     // Methods for ActionScript profiling
-    void                RegisterScriptFunction(UInt32 swdHandle, UInt32 swfOffset, const char* name, unsigned length, UInt32 asVersion);
+    void                RegisterScriptFunction(UInt32 swdHandle, UInt32 swfOffset, const char* name, unsigned length, UInt32 asVersion, bool updateSource);
     void                RegisterSourceFile(UInt32 swdHandle, UInt32 index, const char* name);
     void                PushCallstack(UInt32 swdHandle, UInt32 swfOffset, UInt64 funcTime);
     void                PopCallstack(UInt32 swdHandle, UInt32 swfOffset, UInt64 funcTime);
-    void                GetActiveLine(UInt64* activeFile, UInt32* activeLine) const;
-    void                SetActiveLine(UInt64 fileId, UInt32 lineNumber);
+    UInt32              GetActiveLine() const;
+    void                SetActiveLine(UInt32 lineNumber);
+    UInt64              GetActiveFile() const;
+    void                SetActiveFile(UInt64 fileId);
     ArrayLH<UInt64>&    LockBufferInstructionTimes(UInt32 swdHandle, UInt32 swfBufferOffset, unsigned length);
     void                ReleaseBufferInstructionTimes();
     void                RecordSourceLineTime(UInt64 lineTime);
@@ -119,6 +121,8 @@ public:
     void                CollectTimingStats(ProfileFrame* frameProfile);
     void                CollectMarkers(MovieProfile* movieProfile);
     void                ClearMarkers();
+    void                CollectGcStats(ProfileFrame* frameProfile);
+    void                ClearGcStats();
     void                CollectMemoryStats(ProfileFrame* frameProfile);
     void                GetStats(StatBag* bag, bool reset);
 
@@ -142,6 +146,10 @@ public:
 
     // Frame markers
     void        AddMarker(const char* markerType);
+
+    // GC stats
+    virtual void AddGcRoots(UInt32 numRoots);
+    virtual void AddGcFreedRoots(UInt32 numFreedRoots);
 
     void        UpdateStats(UInt64 functionId, UInt32 functionTime, UInt32 functionCalls, ProfileFrame* frameProfile);
 
@@ -204,6 +212,10 @@ private:
 
     // Markers
     StringHashLH<UInt32>    Markers;
+
+    // GC stats
+    UInt32                  RootsNumber;
+    UInt32                  FreedRootsNumber;
 
     Scaleform::Event        DebugEvent;
 

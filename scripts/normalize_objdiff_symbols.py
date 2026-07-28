@@ -1,0 +1,138 @@
+#!/usr/bin/env python3
+"""Normalize project-specific compiler thunk names in objdiff target objects.
+
+vostok-delinker deliberately emits PDB procedure names verbatim.  The retail
+PDB spells static initializer/finalizer thunks as readable backtick names,
+while MSVC 8 emits decorated ``??__E``/``??__F`` names in candidate COFF
+objects.  objdiff pairs functions by COFF symbol identity, so normalize the
+safe, fully-qualified retail names to the compiler-native spelling in the
+disposable target comparison objects.
+
+This is intentionally a project-side comparison transform: the delinker's raw
+output remains generic, the source PDB identity remains available in the rich
+index, and local/anonymous/template scopes that cannot be inverted exactly are
+left untouched.
+"""
+
+from __future__ import annotations
+
+import argparse
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+
+_DYNAMIC_RE = re.compile(
+    r"^(?P<prefix>(?:[A-Za-z_][A-Za-z0-9_]*::)*)"
+    r"`dynamic (?P<kind>initializer|atexit destructor) for "
+    r"'(?P<inner>[^']+)''$"
+)
+_IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_NM_RE = re.compile(
+    r"^\s*(?:[0-9A-Fa-f]+\s+)?[A-Za-z?]\s+(?P<name>.+)$"
+)
+
+
+def compiler_name(pdb_name: str) -> str | None:
+    """Return the exact MSVC ``??__E``/``??__F`` spelling when invertible."""
+    match = _DYNAMIC_RE.match(pdb_name)
+    if not match:
+        return None
+
+    prefix = match.group("prefix").removesuffix("::")
+    inner = match.group("inner")
+    if "::" in inner:
+        if prefix:
+            return None
+        parts = inner.split("::")
+    else:
+        parts = ([*prefix.split("::"), inner] if prefix else [inner])
+    if not parts or any(not _IDENT_RE.fullmatch(part) for part in parts):
+        return None
+
+    variable, scopes = parts[-1], parts[:-1]
+    kind = "E" if match.group("kind") == "initializer" else "F"
+    scope_suffix = "".join(f"@{scope}" for scope in reversed(scopes))
+    return f"??__{kind}{variable}{scope_suffix}@@YAXXZ"
+
+
+def object_symbols(nm: str, obj: Path) -> set[str]:
+    result = subprocess.run(
+        [nm, str(obj)],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    names = set()
+    for line in result.stdout.splitlines():
+        match = _NM_RE.match(line)
+        if match:
+            names.add(match.group("name"))
+    return names
+
+
+def normalize_tree(root: Path, *, nm: str, objcopy: str) -> tuple[int, int]:
+    """Normalize target objects atomically; return (objects, renamed symbols)."""
+    mappings: dict[str, str] = {}
+    symbols_by_object: dict[Path, set[str]] = {}
+    for obj in sorted(root.rglob("*.obj")):
+        names = object_symbols(nm, obj)
+        symbols_by_object[obj] = names
+        for name in names:
+            replacement = compiler_name(name)
+            if replacement:
+                previous = mappings.setdefault(name, replacement)
+                if previous != replacement:
+                    raise RuntimeError(
+                        f"ambiguous normalization for {name!r}: "
+                        f"{previous!r} vs {replacement!r}"
+                    )
+
+    changed_objects = 0
+    renamed_symbols = 0
+    for obj, names in symbols_by_object.items():
+        local = sorted((old, mappings[old]) for old in names if old in mappings)
+        if not local:
+            continue
+        tmp = obj.with_name(f".{obj.name}.normalize.tmp")
+        command = [objcopy]
+        for old, new in local:
+            command.extend(["--redefine-sym", f"{old}={new}"])
+        command.extend([str(obj), str(tmp)])
+        try:
+            subprocess.run(command, check=True)
+            tmp.replace(obj)
+        finally:
+            tmp.unlink(missing_ok=True)
+        changed_objects += 1
+        renamed_symbols += len(local)
+
+    return changed_objects, renamed_symbols
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(
+        description="Normalize safe retail static-init thunk names for objdiff"
+    )
+    parser.add_argument("root", type=Path)
+    args = parser.parse_args()
+
+    nm = shutil.which("llvm-nm")
+    objcopy = shutil.which("llvm-objcopy")
+    if not nm or not objcopy:
+        parser.error("llvm-nm and llvm-objcopy must be available on PATH")
+    if not args.root.is_dir():
+        parser.error(f"{args.root} is not a directory")
+
+    objects, symbols = normalize_tree(args.root, nm=nm, objcopy=objcopy)
+    print(
+        f"[symbol-normalize] normalized {symbols} symbols in "
+        f"{objects} target objects"
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

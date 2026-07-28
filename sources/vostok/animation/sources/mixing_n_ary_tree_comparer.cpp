@@ -26,126 +26,79 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[UNCHECKED]
 void n_ary_tree_comparer::increase_buffer_size( n_ary_tree_base_node& node )
 {
 	n_ary_tree_size_calculator	calculator( this );
 	node.accept					( calculator );
-
-	// FUNCTION BODY
-	// <0>
-	// <0x56d883>|0x003|+0x028:'51'
-	// ******
 }
 
-// STATE[UNCHECKED]
 bool n_ary_tree_comparer::equal( ) const
 {
 	return						m_equal;
-
-	// FUNCTION BODY
-	// <0x56d860>|0x000|+0x003:'63'
-	// ******
 }
 
-// STATE[STUB]
 u32 n_ary_tree_comparer::needed_buffer_size( ) const
 {
 	return						m_needed_buffer_size;
-
-	// FUNCTION BODY
-	// <0x56d850>|0x000|+0x003:'68'
-	// ******
 }
 
-// STATE[STUB]
 comparison_result_enum animation_comparer_predicate::operator()(
 	n_ary_tree_animation_node const& left,
 	n_ary_tree_animation_node const& right
 ) const
 {
-	// FUNCTION BODY
-	// <0x56e2e2>|0x002|+0x013:'76'
-	// <0x56e2f5>|0x015|+0x006:'77'
-	// <0>
-	// <0x56e2fb>|0x01b|+0x004:'79'
-	// <0x56e2ff>|0x01f|+0x009:'80'
-	// <0>
-	// <0x56e308>|0x028|+0x008:'82'
-	// <0x56e310>|0x030|+0x002:'83'
-	// <0>
-	// <1>
-	// <0x56e312>|0x032|+0x002:'86'
-	// <0>
-	// <0x56e314>|0x034|+0x008:'88'
-	// <0x56e31c>|0x03c|+0x002:'89'
-	// <0>
-	// <1>
-	// <0x56e31e>|0x03e|+0x002:'92'
-	// <0>
-	// <0x56e320>|0x040|+0x008:'94'
-	// <0x56e328>|0x048|+0x002:'95'
-	// <0>
-	// <1>
-	// <0x56e32a>|0x04a|+0x002:'98'
-	// <0>
-	// <0x56e32c>|0x04c|+0x008:'100'
-	// <0x56e334>|0x054|+0x002:'101'
-	// <0>
-	// <1>
-	// <0x56e336>|0x056|+0x002:'104'
-	// <0>
-	// <0x56e338>|0x058|+0x011:'106'
-	// <0x56e349>|0x069|+0x00a:'107'
-	// <0x56e353>|0x073|+0x009:'108'
-	// <0x56e35c>|0x07c|+0x011:'109'
-	// <0x56e36d>|0x08d|+0x002:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x56e36f>|0x08f|+0x008:'126'
-	// <0x56e377>|0x097|+0x002:'127'
-	// <0>
-	// <1>
-	// <0x56e379>|0x099|+0x002:'130'
-	// <0>
-	// <0x56e37b>|0x09b|+0x017:'132'
-	// <0>
-	// <1>
-	// <0x56e392>|0x0b2|+0x008:'135'
-	// <0x56e39a>|0x0ba|+0x006:'136'
-	// <0>
-	// <0x56e3a0>|0x0c0|-0x017:'138'
-	// <0x56e389>|0x0a9|+0x02e:'139'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56e3b7>|0x0d7|+0x006:'145'
-	// <0x56e3bd>|0x0dd|+0x00a:'146'
-	// <0x56e3c7>|0x0e7|+0x002:'147'
-	// <0>
-	// <0x56e3c9>|0x0e9|+0x008:'149'
-	// <0x56e3d1>|0x0f1|+0x008:'150'
-	// <0>
-	// <1>
-	// <0x56e3d9>|0x0f9|-0x0d4:'153'
-	// <0x56e305>|0x025|+0x08a:'154'
-	// <0x56e38f>|0x0af|+0x04d:'154'
-	// ******
+	if ( left.weight_synchronization_group_id() > right.weight_synchronization_group_id() )
+		return									less;
+	if ( left.weight_synchronization_group_id() < right.weight_synchronization_group_id() )
+		return									more;
+
+	if ( left.time_synchronization_group_id() > right.time_synchronization_group_id() )
+		return									less;
+	if ( left.time_synchronization_group_id() < right.time_synchronization_group_id() )
+		return									more;
+
+	if ( left.animated_object() > right.animated_object() )
+		return									less;
+	if ( left.animated_object() < right.animated_object() )
+		return									more;
+
+	if ( left.bones_mask() > right.bones_mask() )
+		return									less;
+	if ( left.bones_mask() < right.bones_mask() )
+		return									more;
+
+	if ( left.playback_type() > right.playback_type() )
+		return									less;
+	if ( left.playback_type() < right.playback_type() )
+		return									more;
+
+	if ( m_use_synchronized_animations && ( left.weight_driving_animation() || right.weight_driving_animation() ) ) {
+		switch ( ( *this )(
+			right.weight_driving_animation() ? *right.weight_driving_animation() : right,
+			left.weight_driving_animation() ? *left.weight_driving_animation() : left
+		) ) {
+			case less:	return				less;
+			case more:	return				more;
+		}
+	}
+
+	if ( left.unique_animation_id() > right.unique_animation_id() )
+		return									less;
+	if ( left.unique_animation_id() < right.unique_animation_id() )
+		return									more;
+
+	if ( left.can_generate_events() != right.can_generate_events() )
+		return									left.can_generate_events() ? less : more;
+
+	switch ( compare_animation_intervals( left, right ) ) {
+		case less:	return					less;
+		case more:	return					more;
+	}
+
+	if ( m_use_overriding_animations && left.override_existing_animation() != right.override_existing_animation() )
+		return									left.override_existing_animation() ? less : more;
+
+	return										equal;
 }
 
 // STATE[STUB]
@@ -358,17 +311,10 @@ void n_ary_tree_comparer::new_animation(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition( float from, float to )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56d870>|0x000|+0x004:'321'
-	// <0x56d874>|0x004|+0x004:'322'
-	// ******
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node ) + 2 * sizeof( n_ary_tree_weight_node );
+	m_equal						= false;
 }
 
 // STATE[STUB]
@@ -499,28 +445,16 @@ void n_ary_tree_comparer::remove_animation(
 }
 
 // STATE[STUB]
+// claude@NOTE: parked. 7-stmt loop (lines 426,427,439,431,432,433,438) calls the still-empty
+// remove_animation stub, so any body here collapses (the callee inlines to nothing, like
+// add_weight_synchronization_group did). Line-426 guard is an FP weight compare on
+// begin->m_weight_interpolator (offset 0x20) vtbl[0xc]() vs 0.0 with a `test ah,44h; jp`
+// whose polarity I could not confirm against the m_equal=false/early-return path - bodying
+// it risks an inverted guard (wrong structure). Body remove_animation first, then revisit:
+// the loop is remove_animation(*i, weight_driving, !i->is_transitting_to_zero()) over
+// begin..end with weight_driving = (begin->wsgid==-1)?NULL:begin.
 void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// CALL SITE INFO
-	// <0x56f143> -> float < unknown >() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x56f137>|0x007|+0x01c:'426'
-	// <0x56f153>|0x023|+0x00c:'427'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f15f>|0x02f|+0x014:'431'
-	// <0x56f173>|0x043|+0x003:'432'
-	// <0x56f176>|0x046|+0x010:'433'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56f186>|0x056|-0x02f:'438'
-	// <0x56f157>|0x027|+0x04c:'439'
-	// ******
 }
 
 // STATE[STUB]
@@ -566,16 +500,12 @@ void n_ary_tree_comparer::add_animation(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// FUNCTION BODY
-	// <0x56f0ff>|0x00f|+0x004:'474'
-	// <0>
-	// <0x56f103>|0x013|+0x00a:'476'
-	// <0x56f10d>|0x01d|+0x004:'477'
-	// <0x56f111>|0x021|+0x010:'478'
-	// ******
+	m_equal						= false;
+	n_ary_tree_animation_node* const weight_driving_animation	= ( begin->weight_synchronization_group_id() == u32( -1 ) ) ? 0 : begin;
+	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_weight_animation )
+		add_animation			( *i, weight_driving_animation );
 }
 
 // STATE[STUB]
@@ -1325,6 +1255,15 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 }
 
 // STATE[STUB]
+// claude@NOTE: parked. 8-stmt body (lines 1052,1053,1057,1059,1061,1070) is reconstructible
+// in shape - if(to_begin->weight_synchronization_group_id()==u32(-1)) merge_weight_asynchronous_groups()
+// else: find_animation(from_begin,from_end,*to_begin); conditional new_weight_driving_animation();
+// merge_weight_synchronization_groups(...). BUT every callee is still an empty stub so the body
+// collapses to 1 surviving statement (find_animation) - its structure cannot be verified, and a
+// trial body STOLE merge_trees' objdiff pairing (37%->unpaired) for only ~15% here. Body the
+// callees (merge_weight_asynchronous_groups, new_weight_driving_animation x2,
+// merge_weight_synchronization_groups) first, then reconstruct + confirm the 5th merge arg and
+// the is_new_driving_animation flag (asm reads to-side is_transitting_to_zero @0x51).
 void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1332,32 +1271,8 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		to_end
 )
 {
-	// FUNCTION BODY
-	// <0x56f1b7>|0x007|+0x008:'1052'
-	// <0x56f1bf>|0x00f|+0x016:'1053'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f1d5>|0x025|+0x009:'1057'
-	// <0>
-	// <0x56f1de>|0x02e|+0x01d:'1059'
-	// <0>
-	// <0x56f1fb>|0x04b|-0x00a:'1061'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x56f1f1>|0x041|+0x010:'1070'
-	// <0x56f201>|0x051|-0x034:'1070'
-	// <0x56f1cd>|0x01d|+0x055:'1071'
-	// ******
 }
 
-// STATE[UNCHECKED]
 void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const& to )
 {
 	n_ary_tree_animation_node* i_begin		= from.weight_root();
@@ -1395,49 +1310,8 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 		add_weight_synchronization_group	( j_begin, j_end );
 		get_next_synchronization_group		( j_begin, j_end );
 	}
-
-
-	// FUNCTION BODY
-	// <0x56f233>|0x003|+0x003:'1078'
-	// <0x56f236>|0x006|+0x019:'1079'
-	// <0x56f24f>|0x01f|+0x007:'1080'
-	// <0x56f256>|0x026|+0x01a:'1081'	synchronization_group_end( j_begin );
-	// <0x56f270>|0x040|+0x048:'1082'	while
-	// <0x56f2b8>|0x088|-0x040:'1082'
-	// <0x56f278>|0x048|+0x00e:'1083'		if ( (*i_begin).weight_synchroni
-	// <0x56f286>|0x056|+0x00b:'1084'
-	// <0x56f291>|0x061|+0x01b:'1085'
-	// <0x56f2ac>|0x07c|+0x067:'1086'
-	// <0>
-	// <1>
-	// <0x56f313>|0x0e3|+0x002:'1089'
-	// <0x56f315>|0x0e5|+0x030:'1090'
-	// <0x56f345>|0x115|-0x091:'1091'
-	// <0x56f2b4>|0x084|+0x0ae:'1092'
-	// <0x56f362>|0x132|+0x005:'1092'
-	// <0>
-	// <1>
-	// <0x56f367>|0x137|+0x00f:'1095'
-	// <0x56f376>|0x146|+0x01f:'1096'
-	// <0x56f395>|0x165|+0x022:'1097'
-	// <0>
-	// <1>
-	// <0x56f3b7>|0x187|+0x009:'1100'
-	// <0x56f3c0>|0x190|+0x004:'1101'
-	// <0x56f3c4>|0x194|+0x00b:'1102'
-	// <0x56f3cf>|0x19f|-0x113:'1103'
-	// <0>
-	// <1>
-	// <0x56f2bc>|0x08c|+0x055:'1106'
-	// <0x56f311>|0x0e1|-0x04d:'1106'
-	// <0>
-	// <0x56f2c4>|0x094|+0x030:'1108'
-	// <0x56f2f4>|0x0c4|+0x104:'1109'
-	// <0>
-	// ******
 }
 
-// STATE[UNCHECKED]
  n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, u32 current_time_in_ms ) :
 	m_animations_count		( 0 ),
 	m_animated_objects_count( 0 ),
@@ -1445,34 +1319,15 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	m_from					( from ),
 	m_to					( to ),
 	m_equal					( true ),
-	m_needed_buffer_size	( 4 ) // sushi@TODO
+	m_needed_buffer_size	( 4 )
 {
 
 	process_interpolators( from, to );
 
-	m_animated_objects = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( to.animated_objects_count() + from.animated_objects_count() ) );
-	m_animated_objects_end = m_animated_objects;
+	m_animated_objects = m_animated_objects_end = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( from.animated_objects_count() + to.animated_objects_count() ) );
 	merge_trees( from, to );
-	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
 
-	m_needed_buffer_size += m_animations_count * sizeof( animation_state );
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x56f426>|0x016|+0x01b:'1134'
-	// <0>
-	// <1>
-	// <0x56f441>|0x031|+0x013:'1137'
-	// <0>
-	// <1>
-	// <0x56f454>|0x044|+0x00e:'1140'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56f462>|0x052|+0x022:'1144'
-	// <0x56f484>|0x074|+0x00b:'1145'
-	// ******
+	m_needed_buffer_size += m_animations_count * sizeof( animation_state ) + ( m_animated_objects_count = m_animated_objects_end - m_animated_objects ) * sizeof( animated_object_holder );
 }
 
 } // namespace mixing

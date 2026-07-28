@@ -46,7 +46,6 @@ struct  ASStringNode;
 // Log forward declaration - for leak report
 class   LogState;
 
-
 // String node - stored in the manager table.
 
 struct ASStringNode
@@ -97,6 +96,7 @@ struct ASStringNode
         ResolveLowercase_Impl();
     }
 
+    bool    IsNull() const;
 };
 
 
@@ -176,6 +176,8 @@ public:
     unsigned    GetSize() const         { return pNode->Size; }
     bool        IsEmpty() const         { return pNode->Size == 0; }
 
+    bool        IsNull() const;
+
     unsigned    GetHashFlags() const    { return pNode->HashFlags; }
     unsigned    GetHash() const         { return GetHashFlags() & Flag_HashMask; }
 
@@ -202,6 +204,9 @@ public:
     //  -start is the index of the first UTF8 character you want to include.    
     //  -end is the index one past the last UTF8 character you want to include.
     ASStringNode*   SubstringNode(int start, int end) const;
+
+    // Returns a String with truncated whitespace.
+    ASStringNode*   TruncateWhitespaceNode() const;
 
     // Case-converted strings.
     ASStringNode*   ToUpperNode() const; 
@@ -392,11 +397,16 @@ public:
 
     void        Clear();
 
+    void        SetNull();
 
     // *** UTF8 Aware functions.
 
     // The rest of the functions here operate in UTF8. For example,    
     ASString    AppendChar(UInt32 ch) const { return ASString(AppendCharNode(ch)); }
+
+    void        Append(const char* str, UPInt len);
+    void        Append(const char* str) { Append(str, strlen(str)); }
+    void        Append(const ASString& str);
 
     /* No Insert or Remove for now - not necessary.
 
@@ -412,6 +422,9 @@ public:
     //  -end is the index one past the last UTF8 character you want to include.
     ASString    Substring(int start, int end) const { return ASString(SubstringNode(start, end)); }
 
+    // Returns a String with truncated whitespace.
+    ASString    TruncateWhitespace() const { return ASString(TruncateWhitespaceNode()); }
+
     // Case-converted strings.
     ASString    ToUpper() const { return ASString(ToUpperNode()); }
     ASString    ToLower() const { return ASString(ToLowerNode()); }
@@ -419,29 +432,19 @@ public:
     // *** Operators
 
     // Assignment.
+    template <typename T>
+    void        operator = (const T&);
     void        operator = (const char* str);
     void        operator = (const ASString& src)
     {
-        AssignNode(src.pNode);        
+        AssignNode(src.pNode);
     }
 
     // Concatenation of string / UTF8.
-    void        operator += (const char* str)
-    {
-        AssignNode(AppendStringNode(str));
-    }
-    void        operator += (const ASString& str)
-    {
-        AssignNode(AppendStringNode(str));
-    }
-    ASString    operator + (const char* str) const
-    {
-        return ASString(AppendStringNode(str));
-    }
-    ASString    operator + (const ASString& str) const
-    {
-        return ASString(AppendStringNode(str));
-    }
+    void        operator += (const char* str) { Append(str); }
+    void        operator += (const ASString& str) { Append(str); }
+    ASString    operator + (const char* str) const;
+    ASString    operator + (const ASString& str) const;
 
     // Comparison.
     bool        operator == (const ASString& str) const
@@ -719,6 +722,8 @@ class ASStringManager : public RefCountBase<ASStringManager, StatMV_ASString_Mem
     // Pointer to the available string node.
     ASStringNode    EmptyStringNode;
 
+    ASStringNode    NullStringNode;
+
     // Log object used for reporting AS leaks.
     Ptr<LogState>   pLog;
     StringLH        FileName;
@@ -818,13 +823,55 @@ public:
 
     ASStringNode* GetEmptyStringNode() { return &EmptyStringNode;  }
 
+    ASStringNode* GetNullStringNode() { return &NullStringNode;  }
+
     // Shared-code Helpers to be used by StringManager
     void          InitBuiltinArray(ASStringNodeHolder* nodes, const char** strings,
                                    unsigned count);
     void          ReleaseBuiltinArray(ASStringNodeHolder* nodes, unsigned count);
 };
 
+inline
+bool ASStringNode::IsNull() const
+{
+    return this == pManager->GetNullStringNode();
+}
 
+inline
+bool ASConstString::IsNull() const
+{
+    return pNode == GetManager()->GetNullStringNode();
+}
+
+inline
+void ASString::SetNull()
+{
+    AssignNode(GetManager()->GetNullStringNode());
+}
+
+template <>
+inline
+void ASString::operator = <String>(const String& str)
+{
+    AssignNode(GetManager()->CreateStringNode(str.ToCStr(), str.GetSize()));
+}
+
+template <>
+inline
+void ASString::operator = <StringDH>(const StringDH& str)
+{
+    AssignNode(GetManager()->CreateStringNode(str.ToCStr(), str.GetSize()));
+}
+
+template <>
+inline
+void ASString::operator = <Ptr<ASStringNode> >(const Ptr<ASStringNode>& str)
+{
+    if (str)
+        AssignNode(str.GetPtr());
+    else
+        SetNull();
+}
 
 // ***** StringManager Template
 
@@ -857,12 +904,15 @@ public:
     const ASStringNodeHolder& GetBuiltinNodeHolder(Builtin_Type btype) const { return Builtins[btype]; }
     const ASString& GetBuiltin(Builtin_Type btype) const            { return (const ASString&)GetBuiltinNodeHolder(btype); }
     ASString        CreateConstString(const char *pstr) const       { return pStringManager->CreateConstString(pstr); }
+    ASString        CreateConstString(const char *pstr, UPInt length) const { return pStringManager->CreateConstString(pstr, length); }
     ASString        CreateString(const char *pstr) const            { return pStringManager->CreateString(pstr); }
     ASString        CreateString(const wchar_t *pwstr, SPInt len = -1) const { return pStringManager->CreateString(pwstr, len); }
     ASString        CreateString(const char *pstr, UPInt length) const  { return pStringManager->CreateString(pstr, length); }
     ASString        CreateString(const String& str) const           { return pStringManager->CreateString(str); }
     ASStringNode*   GetEmptyStringNode() const                      { return pStringManager->GetEmptyStringNode();  }
     ASString        CreateEmptyString() const                       { return ASString(pStringManager->GetEmptyStringNode()); }
+    ASStringNode*   GetNullStringNode() const                       { return pStringManager->GetNullStringNode();  }
+    ASString        CreateNullString() const                        { return ASString(pStringManager->GetNullStringNode()); }
 
     ASStringManager* GetStringManager() const { return pStringManager; }
 

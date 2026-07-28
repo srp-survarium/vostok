@@ -235,19 +235,17 @@ private:
 		{
 			case age_evaluate_type:
 			return m_upper.evaluate(time, default_value, time_type, alpha0, alpha1);
-			/*
 			case random_evaluate_type:
 				time = linear_interpolation(
-							vostok::math::min(upper.curve_time_min, lower.curve_time_min),
-							vostok::math::max(upper.curve_time_max, lower.curve_time_max), 
+							vostok::math::min(m_upper.curve_time_min, m_lower.curve_time_min),
+							vostok::math::max(m_upper.curve_time_max, m_lower.curve_time_max),
 							random_float(0.0f, 1.0f)
 							);
 				return linear_interpolation(
-					upper.evaluate(time, default_value, range_time_type), 
-					lower.evaluate(time, default_value, range_time_type), 
+					m_upper.evaluate(time, default_value, range_time_type),
+					m_lower.evaluate(time, default_value, range_time_type),
 					random_float(0.0f, 1.0f)
 					);
-			*/
 			default: NODEFAULT( return default_value );
 		}
 
@@ -322,12 +320,28 @@ struct curve_line_ranged_xyz_float
 	}
 	inline u32 save_binary(vostok::mutable_buffer& buffer, bool calc_size = false)
 	{
+		if (calc_size)
+		{
+			return m_line_x.save_binary(buffer, calc_size) +
+				   m_line_y.save_binary(buffer, calc_size) +
+				   m_line_z.save_binary(buffer, calc_size) + 1;
+		}
+
+		u8 tmp = (u8)m_evaluate_type;
+		vostok::memory::copy(buffer.c_ptr(), sizeof(tmp), &tmp, sizeof(tmp));
+		buffer += sizeof(tmp);
+
 		return m_line_x.save_binary(buffer, calc_size) +
 			   m_line_y.save_binary(buffer, calc_size) +
 			   m_line_z.save_binary(buffer, calc_size);
 	}
 	inline void load_binary(vostok::mutable_buffer& buffer)
 	{
+		u8 tmp;
+		vostok::memory::copy(&tmp, sizeof(tmp), buffer.c_ptr(), sizeof(tmp));
+		buffer += sizeof(tmp);
+		m_evaluate_type = (enum_evaluate_type)tmp;
+
 		m_line_x.load_binary(buffer);
 		m_line_y.load_binary(buffer);
 		m_line_z.load_binary(buffer);

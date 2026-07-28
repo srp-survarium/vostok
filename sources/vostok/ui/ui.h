@@ -77,7 +77,7 @@ struct VOSTOK_NOVTABLE window
 
 	virtual void			add_child			(window* w, bool adopt)			= 0;
 	virtual void			remove_child		(window* w)						= 0;
-	virtual void			remove_all_childs	()								= 0;
+	virtual void			remove_all_children	()								= 0;
 	virtual window*			get_child			(u32 idx)				const	= 0;
 	virtual u32				get_child_count		()						const	= 0;
 
@@ -119,6 +119,8 @@ struct VOSTOK_NOVTABLE text_edit
 {
 	virtual	u16				get_caret_position		() const						= 0;
 	virtual	void			set_caret_position		(u16 const, bool b_move=false)	= 0;
+	virtual	void			set_max_chars			(u16 const count)				= 0;
+	virtual	void			set_cursor_color		(u32 const color)				= 0;
 	virtual text*			text					()								= 0;
 	virtual window*			w						()								= 0;
 
@@ -206,6 +208,7 @@ struct VOSTOK_NOVTABLE progress_bar
 	virtual void		set_front_color				( math::color )					= 0;
 	virtual math::color	get_front_color				( ) const						= 0;
 
+	virtual void		set_text					( pcstr text )					= 0;
 	virtual void		draw_text					( bool value )					= 0;
 
 	virtual void		set_text_color				( math::color color )			= 0;

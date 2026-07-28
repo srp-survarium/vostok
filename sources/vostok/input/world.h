@@ -17,7 +17,7 @@ struct gamepad;
 
 struct VOSTOK_NOVTABLE world {
 public:
-	virtual	void		tick			( ) = 0;
+	virtual	void		tick			( u32 current_time_in_ms ) = 0;
 	virtual	void		clear_resources	( ) = 0;
 	virtual	void		on_activate		( ) = 0;
 	virtual	void		on_deactivate	( ) = 0;

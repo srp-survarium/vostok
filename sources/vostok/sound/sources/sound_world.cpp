@@ -291,7 +291,7 @@ void sound_world::on_panning_lut_loaded				( resources::queries_result& queries 
 
 sound_world::~sound_world		( )
 {
-	LOG_DEBUG					( "~sound_world" );
+	//LOG_DEBUG					( "~sound_world" );
 	R_ASSERT					( m_voices_to_delete.empty( ) );
 	DELETE						( m_voice_factory );
 	DELETE						( m_sound_buffer_factory );
@@ -378,7 +378,10 @@ IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
 void sound_world::free_submix_voice	( IXAudio2SubmixVoice* voice ) const
 {
 	if ( voice )
+	{
+		voice->SetOutputVoices	( NULL );
 		voice->DestroyVoice		( );
+	}
 }
 
 void sound_world::hdr_audio_test	( u32 time_delta_in_msec )
@@ -445,7 +448,7 @@ voice_bridge* sound_world::get_voice ( voice_callback_handler* callback_handler,
 void sound_world::free_voice ( voice_bridge* voice )
 {
 	R_ASSERT							( voice );
-	voice->set_output_voice				( 0 );
+	//voice->set_output_voice				( 0 );
 	m_voice_factory->delete_voice		( voice );
 }
 
@@ -505,7 +508,7 @@ void sound_world::register_sound_cooks	( )
 	
 void sound_world::clear_resources	( )
 {
-	LOG_DEBUG						 ( "sound_world::clear_resources" );
+	//LOG_DEBUG						 ( "sound_world::clear_resources" );
 
 	sound_scene* scene				= m_active_scenes.front( );
 	while ( scene )
@@ -684,7 +687,8 @@ void sound_world::set_active_sound_scene_impl(	sound_scene& scene,
 	}
 
 	m_current_scene					= &scene;
-	m_current_scene->fade_in		( *this, fade_in_time );
+	if ( m_current_scene )
+		m_current_scene->fade_in		( *this, fade_in_time );
 }
 
 void sound_world::remove_sound_scene_impl	( sound_scene_ptr scene )

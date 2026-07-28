@@ -10,6 +10,13 @@
 namespace vostok {
 namespace ui {
 
+// claude@NOTE: member stores + color packing byte-match the target; residual is the
+// m_text fixed_string<32> default ctor, which the target inlines but our base out-of-lines
+// (call vostok::fixed_string<32>::fixed_string at 0x006870). That out-of-line call forces
+// the object pointer into a callee-saved reg (esi vs target's eax), cascading the whole
+// register allocation and blocking the create_progress_bar tail-call. The inline decision
+// lives in core fixed_string_inline.h/buffer_string_inline.h (out of ui scope; forceinline
+// there would touch every fixed_string consumer).
 ui_progress_bar::ui_progress_bar		( ui_world& world ) :
 	ui_window			( world.allocator( ) ),
 	m_ui_world			( world ),
@@ -18,9 +25,9 @@ ui_progress_bar::ui_progress_bar		( ui_world& world ) :
 	m_value				( 0 ),
 	m_border_width		( 1 ),
 	m_border_height		( 1 ),
-	m_back_color		( 23, 14,  143 ),
-	m_front_color		( 17, 104, 236 ),
-	m_text_color		( 206, 210, 43 ),
+	m_back_color		( 143, 14,  23 ),
+	m_front_color		( 236, 104, 17 ),
+	m_text_color		( 43, 210, 206 ),
 	m_draw_text			( false )
 {}
 
@@ -119,6 +126,11 @@ void ui_progress_bar::draw_text					( bool value )
 	m_draw_text			= value;
 }
 
+void ui_progress_bar::set_text					( pcstr text )
+{
+	m_text				= text;
+}
+
 void ui_progress_bar::set_text_color			( math::color color )
 {
 	m_text_color		= color;
@@ -196,16 +208,17 @@ void ui_progress_bar::draw_text					(
 													vostok::render::scene_view_ptr const& scene_view
 												) const
 {
+	if ( m_text.empty( ) )
+		return;
+
 	float2 pos					= get_position( );
 	client_to_screen			( *this, pos );		//need absolute position
 	float2 size					= get_size( );
 
-	fixed_string<32> str;
-	str.assignf					( "%.2f %%", ((float)(m_value - m_minimum)/(float)(m_maximum - m_minimum)) * 100.f );
-	pcstr next_word				= NULL;
+	pcstr word					= NULL;
 	float text_width			= 0.0f;
 	ui_font const* fnt			= m_ui_world.get_font_manager().get_font();
-	fnt->parse_word				( str.c_str(), text_width, next_word );
+	fnt->parse_word				( m_text.c_str(), text_width, word );
 	float text_height			= fnt->get_height( );
 	float2 font_pos				= pos;
 	font_pos.x					= ( size.x / 2.0f ) - text_width / 2.0f + pos.x;
@@ -213,14 +226,14 @@ void ui_progress_bar::draw_text					(
 
 	renderer.draw_text			(
 		scene_view,
-		str.c_str( ), 
-		*fnt, 
-		font_pos, 
-		m_text_color, 
-		m_text_color, 
+		m_text.c_str( ),
+		*fnt,
+		font_pos,
+		m_text_color,
+		m_text_color,
 		math::floor( size.x ),
-		false, 
-		0, 
+		false,
+		0,
 		0
 		);
 }

@@ -11,13 +11,13 @@ class weapon_dispersion_calculator {
 public:
 	explicit	weapon_dispersion_calculator	( );
 
-	void		set_reload_dispersion_amount	( float reload_dispersion_amount );
-	void		set_one_shoot_dispersion_amount	( float one_shoot_dispersion_amount );
+	void		set_reload_dispersion_amount	( const float reload_dispersion_amount );
+	void		set_one_shoot_dispersion_amount	( const float one_shoot_dispersion_amount );
 
-	void		tick							( u32 current_time_in_ms );
+	void		tick							( const u32 current_time_in_ms );
 
 	float		get_value						( ) const;
-	void		set_aiming_speed				( float aiming_speed );
+	void		set_aiming_speed				( const float aiming_speed );
 
 	void		fire							( );
 	void		reload							( );

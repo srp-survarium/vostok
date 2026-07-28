@@ -69,7 +69,7 @@ public:
     // De-initializes System more, finalizing the threading system and destroying
     // the global memory allocator.
     SF_EXPORT static void SF_CDECL Destroy();
-    SF_EXPORT static bool hasMemoryLeaks;
+    SF_EXPORT static bool HasMemoryLeaks;
 };
 
 } // Scaleform

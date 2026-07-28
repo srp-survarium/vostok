@@ -63,9 +63,10 @@ enum PathEdgeType
 {
     Edge_LineTo  = 1,   // Straight line
     Edge_QuadTo  = 2,   // Quadratic curve
+    Edge_CubicTo = 3,   // Cubic curve
     Edge_EndPath = 0,   // No more path data
 
-    Edge_MaxCoord = 4   // Max number of coordinates to read. For Quadratic curves only it's 4,
+    Edge_MaxCoord = 6   // Max number of coordinates to read. For Quadratic curves only it's 4,
                         // for cubic ones it must be 6
 };
 
@@ -127,6 +128,34 @@ struct FillStyleType
     Ptr<ComplexFill>    pFill;
 };
 
+// DashArray specifies dash length and gaps. The list should have an even 
+// number of entries, but if you give an odd number of entries, the renderer 
+// will repeat the list in the SVG manner so the total number of entries is even. 
+// Thus, DashArray 5,3,2 is equivalent to 5,3,2,5,3,2.
+//------------------------------------------------------------------------
+struct DashArray : public RefCountBase<DashArray, Stat_Default_Mem>
+{
+    enum { MaxDashes = 8 };
+
+    float    Dashes[MaxDashes*2];
+    float    DashStart;
+    unsigned DashCount;
+
+    DashArray() : DashStart(0), DashCount(0) {}
+    DashArray(float d1,   float g1,   float d2=0, float g2=0, 
+              float d3=0, float g3=0, float d4=0, float g4=0) : DashStart(0), DashCount(0)
+    {
+        if(d1 > 0) Dashes[DashCount++] = d1;
+        if(g1 > 0) Dashes[DashCount++] = g1;
+        if(d2 > 0) Dashes[DashCount++] = d2;
+        if(g2 > 0) Dashes[DashCount++] = g2;
+        if(d3 > 0) Dashes[DashCount++] = d3;
+        if(g3 > 0) Dashes[DashCount++] = g3;
+        if(d4 > 0) Dashes[DashCount++] = d4;
+        if(g4 > 0) Dashes[DashCount++] = g4;
+    }
+};
+
 //------------------------------------------------------------------------
 struct StrokeStyleType
 {
@@ -136,6 +165,7 @@ struct StrokeStyleType
     float               Miter;      // Miter limit
     UInt32              Color;
     Ptr<ComplexFill>    pFill;
+    Ptr<DashArray>      pDashes;
 };
 
 

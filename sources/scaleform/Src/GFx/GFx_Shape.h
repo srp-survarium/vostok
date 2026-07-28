@@ -109,11 +109,11 @@ public:
 
     virtual CharacterDefType GetType() const { return Shape; }
 
-    virtual RectF       GetBoundsLocal() const = 0;
+    virtual RectF       GetBoundsLocal(float morphRatio = 0) const = 0;
 
     // These methods are implemented only in shapes with styles, i.e.
     // it is not needed for glyph shapes.
-    virtual RectF       GetRectBoundsLocal() const = 0;
+    virtual RectF       GetRectBoundsLocal(float morphRatio = 0) const = 0;
     //virtual void        SetRectBoundsLocal(const RectF&) = 0;
 
     // calculate exact bounds, since Bounds may contain null or inexact info

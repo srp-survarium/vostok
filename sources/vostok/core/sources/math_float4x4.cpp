@@ -371,3 +371,13 @@ bool vostok::math::try_solve_linear_equations_system	(
 	result		= float4( inverted.i | b, inverted.j | b, inverted.k | b, inverted.c | b );
 	return		true;
 }
+
+float4x4 vostok::math::lerp ( float4x4 const& left, float4x4 const& right, float time_delta )
+{
+	quaternion left_rotation( left.get_angles_xyz( ) );
+	quaternion right_rotation( right.get_angles_xyz( ) );
+
+	float4x4 result = create_matrix( slerp_optimized( left_rotation, right_rotation, time_delta ), float3( 0, 0, 0 ) );
+	result.c.xyz( ) = left.c.xyz( ) + ( right.c.xyz( ) - left.c.xyz( ) ) * time_delta;
+	return result;
+}

@@ -16,7 +16,6 @@ stack_allocator::stack_allocator	( ) :
 {
 }
 
-// STATE[UNVERIFIED]
 void stack_allocator::swap( stack_allocator& other )
 {
     std::swap(m_arena_start, other.m_arena_start);

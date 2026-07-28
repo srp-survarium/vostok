@@ -186,6 +186,8 @@ void preinitialize ()
 	_set_new_handler				( &out_of_memory_handler );
 
 	_set_purecall_handler			( &pure_call_handler );
+
+	g_assertion_message[0]			= 0;
 }
 
 } // namespace debug

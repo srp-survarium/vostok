@@ -18,7 +18,6 @@ namespace logging {
 
 using namespace fs_new;
 
-// STATE[98%|DONE]: LTCG for `path_string`.
 log_file::log_file				(	memory::base_allocator&		allocator,
 									log_file_usage_enum			log_file_usage,
 									pcstr						file_name,
@@ -54,14 +53,13 @@ log_file::log_file				(	memory::base_allocator&		allocator,
 	m_current_pos		= 0;
 }
 
-// STATE[100%|DONE]
 log_file::~log_file				( )
 {
 	close				( );
 	VOSTOK_DESTROY_REFERENCE					(m_line_groups);
 }
 
-// STATE[75%|DONE]: `native_path_string::convert` and `file_type_pointer` aligned differently. sushi@NOTE: Possibly implementation for them has changed.
+// sushi@NOTE: Possibly implementation for them has changed.
 void log_file::flush			( pcstr in_file_name )
 {
 	if ( !m_file )
@@ -69,7 +67,9 @@ void log_file::flush			( pcstr in_file_name )
 
 	m_device->flush		( m_file );
 
-	if ( !in_file_name )
+	// claude@MATCH: target compares the requested name against m_file_name and bails when equal
+	// (cmp [ebp+8],0; je return + compare_insensitive(m_file_name.c_str(), in_file_name); je return)
+	if ( !in_file_name || !strings::compare_insensitive( m_file_name.c_str(), in_file_name ) )
 		return;
 
 	bool const success	= m_device->seek( m_file, 0, seek_file_begin );
@@ -97,11 +97,10 @@ void log_file::flush			( pcstr in_file_name )
 	}
 }
 
-// STATE[100%|DONE]
 void log_file::append			( pcstr data, u32 const length )
 {
-	if ( length == 0 )	// <0x65b5c9>|0x000|0x000:'100'
-		return;			// <0x65b5cf>|0x006|0x006:'101'
+	if ( length == 0 )
+		return;
 	ASSERT				( length );
 	ASSERT				( data );
 	ASSERT				( m_file );
@@ -140,7 +139,6 @@ void log_file::append			( pcstr data, u32 const length )
 	}
 }
 
-// STATE[92%|DONE]: LTCG for `mutex::lock`.
 void log_file::start_transaction	( )
 {
 	m_log_mutex.lock( );
@@ -150,7 +148,6 @@ void log_file::start_transaction	( )
 	m_transaction_thread_id		=	threading::current_thread_id();
 }
 
-// STATE[100%|DONE]
 void log_file::assert_transaction_in_current_thread	( ) const
 {
 	R_ASSERT						( m_transaction_thread_id != u32(-1),
@@ -159,7 +156,6 @@ void log_file::assert_transaction_in_current_thread	( ) const
 									 "transaction was started in another thread");
 }
 
-// STATE[99%|DONE]: LTCG for `mutex::unlock`.
 void log_file::end_transaction		( )
 {
 	assert_transaction_in_current_thread	( );
@@ -167,14 +163,12 @@ void log_file::end_transaction		( )
 	m_log_mutex.unlock( );
 }
 
-// STATE[100%|DONE]
 u32	log_file::get_lines_count		( ) const
 {
 	assert_transaction_in_current_thread	( );
 	return							m_last_line;
 }
 
-// STATE[100%|DONE]
 void log_file::goto_line		( u32 const line )
 {
 	assert_transaction_in_current_thread	( );
@@ -194,7 +188,6 @@ void log_file::goto_line		( u32 const line )
 		skip_next_line	( );
 }
 
-// STATE[100%|DONE]
 char log_file::read_next_char	( )
 {
 	int const cache_offs= m_current_pos - m_cache_start;
@@ -212,7 +205,9 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
-// STATE[100%|DONE]
+// claude@NOTE: STRUCTURE MATCH + locals match (2: last_pos, current_char). Residual is the
+// math::min(u32,u32) call: target keeps it out-of-line (call vostok::math::min), base inlines
+// min_integral's branchless sbb/neg/and/add. Inline-vs-call decision, not source-steerable. PARK.
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {
@@ -255,7 +250,6 @@ struct processor {
 
 STATIC_SIZE_ASSERT(processor, 0x4);
 
-// STATE[100%|DONE]
 bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 {
 	assert_transaction_in_current_thread	( );
@@ -263,7 +257,6 @@ bool log_file::read_next_line	(pstr const buffer, const u32 buffer_size)
 	return				( process_next_line( buffer_size, processor( buffer ) ) );
 }
 
-// STATE[100%|DONE]
 bool log_file::skip_next_line	( )
 {
 	struct processor {
@@ -281,7 +274,6 @@ bool log_file::skip_next_line	( )
 namespace vostok {
 namespace logging {
 
-// STATE[100%|DONE]
 void log_file::close		( )
 {
 	if ( !m_file )
@@ -302,7 +294,6 @@ void log_file::on_terminate			( )
 	close			( );
 }
 
-// STATE[92%|DONE]: LTCG for malloc
 log_file* new_log_file(
 	memory::base_allocator&				allocator,
 	fs_new::device_file_system_proxy&	device,
@@ -310,14 +301,13 @@ log_file* new_log_file(
 	log_file_usage_enum					log_file_usage
 )
 {
-	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device ); 	// <0x65bcd6>|0x000|0x000:'297'
+	return VOSTOK_NEW_IMPL( allocator, log_file )( allocator, log_file_usage, log_file_name, device );
 }
 
-// STATE[100%|DONE]
 void delete_log_file( log_file*& log_file )
 {
-	if ( log_file )												// <0x65b9d6>|0x000|0x000:'302'
-		VOSTOK_DELETE_IMPL( log_file->allocator(), log_file );	// <0x65b9de>|0x008|0x008:'303'
+	if ( log_file )
+		VOSTOK_DELETE_IMPL( log_file->allocator(), log_file );
 }
 
 } // namespace logging

@@ -26,7 +26,7 @@ class skeleton_animation_cook :
 	private boost::noncopyable
 {
 public:
-						skeleton_animation_cook		( animation::world &w  );
+						skeleton_animation_cook		( );
 
 private:
 	typedef translate_query_cook					super;
@@ -40,10 +40,9 @@ private:
 						bi_spline_skeleton_animation_baked_ptr	bi_spline_animation
 					);
 	static	void	on_bi_spline_animation_arrived	( resources::queries_result& result );
-
-private:
-	animation::world&	m_world;
 }; // class skeleton_animation_cook
+
+STATIC_SIZE_ASSERT(skeleton_animation_cook, 0x20);
 
 } // namespace animation
 } // namespace vostok

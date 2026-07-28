@@ -104,8 +104,8 @@ public:
 	void						wait_and_dispatch_callbacks			(bool 			call_from_main_thread,
 																	 bool 			finalizing_thread);
 
-	void						register_cook						(cook_base *	cook);
-	cook_base *					unregister_cook						(class_id_enum	class_id);
+	static void					register_cook						(cook_base *	cook);
+	static cook_base *			unregister_cook						(class_id_enum	class_id);
 
 	void						wakeup_resources_thread				();
 	void						wakeup_cooker_thread				();
@@ -179,7 +179,7 @@ private:
 
 	void						on_created_resource					(query_result * query);
 
-	cook_base *					find_cook							(class_id_enum	class_id);
+	static cook_base *			find_cook							(class_id_enum	class_id);
 
 	//----------------------------------------------------------
 	// translating query
@@ -347,9 +347,6 @@ private:
 #if VOSTOK_FS_NEW_WATCHER_ENABLED
 	uninitialized_reference<watcher>								m_watcher;
 #endif
-
-	typedef	fixed_vector<cook_base*, last_resource_class>			cooks_registry_type;
-	cooks_registry_type												m_cooks_registry;
 
 	// we need this to prevent the following Code Analysis error
 	// "function 'vostok::intrusive_list<BaseWithMember,PointerType,MemberNext>::intrusive_list(void)' already has a body"

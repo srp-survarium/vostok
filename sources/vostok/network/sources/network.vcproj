@@ -736,11 +736,27 @@
 			Name="core"
 			>
 			<File
-				RelativePath=".\handler_allocator.h"
+				RelativePath="..\api.h"
 				>
 			</File>
 			<File
-				RelativePath=".\network_library_linkage.cpp"
+				RelativePath="..\engine.h"
+				>
+			</File>
+			<File
+				RelativePath="..\library_linkage.h"
+				>
+			</File>
+			<File
+				RelativePath="..\world.h"
+				>
+			</File>
+			<File
+				RelativePath=".\network_entry_point.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\network_entry_point.h"
 				>
 			</File>
 			<File
@@ -851,175 +867,151 @@
 				RelativePath=".\two_way_threads_channel.h"
 				>
 			</File>
-			<Filter
-				Name="client"
+			<File
+				RelativePath=".\order.h"
 				>
-				<File
-					RelativePath=".\client.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\client_error_codes.h"
-					>
-				</File>
-				<Filter
-					Name="impl"
-					>
-					<File
-						RelativePath=".\client_impl.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\client_impl.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="server"
+			</File>
+			<File
+				RelativePath=".\response.h"
 				>
-				<File
-					RelativePath=".\server.cpp"
-					>
-				</File>
-				<Filter
-					Name="impl"
-					>
-					<File
-						RelativePath=".\server_impl.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\server_impl.h"
-						>
-					</File>
-				</Filter>
-				<Filter
-					Name="client_session"
-					>
-					<File
-						RelativePath=".\client_session.cpp"
-						>
-					</File>
-					<File
-						RelativePath=".\client_session.h"
-						>
-					</File>
-				</Filter>
-			</Filter>
-			<Filter
-				Name="packet_socket"
+			</File>
+			<File
+				RelativePath=".\functor_order.h"
 				>
-				<File
-					RelativePath=".\packet_socket.h"
-					>
-				</File>
-				<File
-					RelativePath=".\packet_socket_inline.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="packet"
+			</File>
+			<File
+				RelativePath=".\functor_response.h"
 				>
-				<File
-					RelativePath=".\packet.cpp"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="orders"
+			</File>
+			<File
+				RelativePath=".\connect_order.h"
 				>
-				<File
-					RelativePath=".\connect_order.h"
-					>
-				</File>
-				<File
-					RelativePath=".\functor_order.h"
-					>
-				</File>
-				<File
-					RelativePath=".\order.h"
-					>
-				</File>
-				<File
-					RelativePath=".\send_order.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="responses"
+			</File>
+			<File
+				RelativePath=".\send_order.h"
 				>
-				<File
-					RelativePath=".\functor_response.h"
-					>
-				</File>
-				<File
-					RelativePath=".\receive_response.h"
-					>
-				</File>
-				<File
-					RelativePath=".\response.h"
-					>
-				</File>
-			</Filter>
+			</File>
+			<File
+				RelativePath=".\receive_response.h"
+				>
+			</File>
+			<File
+				RelativePath=".\enqueue_order.h"
+				>
+			</File>
+			<File
+				RelativePath=".\send_queued_order.h"
+				>
+			</File>
+			<File
+				RelativePath=".\receive_udp_response.h"
+				>
+			</File>
+			<File
+				RelativePath=".\string_order.h"
+				>
+			</File>
+			<File
+				RelativePath=".\string_response.h"
+				>
+			</File>
+			<File
+				RelativePath=".\udp_match_fixed_packets_allocator.h"
+				>
+			</File>
 		</Filter>
 		<Filter
-			Name="include"
+			Name="tcp_packet_client"
 			>
 			<File
-				RelativePath="..\api.h"
+				RelativePath="..\tcp_packet_client.h"
 				>
 			</File>
 			<File
-				RelativePath="..\client.h"
+				RelativePath=".\tcp_packet_client.cpp"
 				>
 			</File>
-			<File
-				RelativePath="..\engine.h"
-				>
-			</File>
-			<File
-				RelativePath="..\library_linkage.h"
-				>
-			</File>
-			<File
-				RelativePath="..\server.h"
-				>
-			</File>
-			<File
-				RelativePath="..\world.h"
-				>
-			</File>
-			<Filter
-				Name="packet"
-				>
-				<File
-					RelativePath="..\packet.h"
-					>
-				</File>
-				<File
-					RelativePath="..\packet_inline.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="packet_reader"
-				>
-				<File
-					RelativePath="..\packet_reader.h"
-					>
-				</File>
-				<File
-					RelativePath="..\packet_reader_inline.h"
-					>
-				</File>
-			</Filter>
 		</Filter>
-		<File
-			RelativePath=".\network_entry_point.cpp"
+		<Filter
+			Name="http_client"
 			>
-		</File>
+			<File
+				RelativePath="..\http_client.h"
+				>
+			</File>
+			<File
+				RelativePath=".\http_client.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="login_client"
+			>
+			<File
+				RelativePath="..\login_client.h"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_connect.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_handshake.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_ping.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_resolve.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_sign_in.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_sign_out.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\login_client_impl_sign_up.cpp"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="match_client"
+			>
+			<File
+				RelativePath="..\match_client.h"
+				>
+			</File>
+			<File
+				RelativePath=".\match_client.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\match_client_impl.h"
+				>
+			</File>
+			<File
+				RelativePath=".\match_client_impl.cpp"
+				>
+			</File>
+		</Filter>
 	</Files>
 	<Globals>
 	</Globals>

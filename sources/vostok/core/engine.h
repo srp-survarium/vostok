@@ -20,7 +20,13 @@ struct engine : public core_debug_engine
 	virtual int  	get_exit_code			( ) const = 0;
 	virtual	pcstr	get_resources_path		( ) const = 0;
 	virtual	pcstr	get_mounts_path			( ) const = 0;
+	virtual	pcstr	get_user_data_directory	( ) const = 0;
 	virtual	void	create_physical_path	( string_path& result, pcstr resources_path, pcstr inside_resources_path ) const = 0;
+
+	virtual	bool	use_resources_manager	( ) const { return true; }
+	virtual	bool	use_video_memory		( ) const { return true; }
+
+	virtual	void	on_crash				( ) { }
 
 }; // class engine
 

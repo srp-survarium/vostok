@@ -5,170 +5,159 @@
 #include "pch.h"
 #include <vostok/game_core/pistol_weapon_core_hide_state.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 #include <vostok/game_core/weapon_core_state_cook_template.h>
+
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 
 namespace survarium {
 
-// STATE[STUB]
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
 pistol_weapon_core_hide_state::pistol_weapon_core_hide_state(
 	weapon_core&							weapon,
-	float									animation_timescale,
+	const float									animation_timescale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
+	const u32										animations_count,
 	bool&									is_shown
-) : weapon_core_hide_state_base( weapon, is_shown )
+) : weapon_core_hide_state_base( weapon, is_shown ),
+	m_time_scale( animation_timescale )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							weapon_state_index<3>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	ASSERT_CMP_U( animations_count, ==, 12 );
 
-	// SKIPPED BLOCKS
-	// <0x7adfbc><2>
-	// <0x7adfd4><3>
-	// <0x7ae044><3>
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			for ( u32 weapon_state_index = 0 ; weapon_state_index != 2 ; ++weapon_state_index ) {
+				m_weapon_animations[view_index][user_state_index][weapon_state_index] = animations[animation_index++];
+			}
+		}
+	}
 
-	// FUNCTION BODY
-	// <0x7adf7c>|0x06c|+0x023:'27'
-	// <0x7adf9f>|0x08f|+0x007:'28'
-	// <0x7adfa6>|0x096|+0x018|[1]:'29'
-	// <0x7adfbe>|0x0ae|+0x018:'30'
-	// <0x7adfd6>|0x0c6|+0x018:'31'
-	// <0x7adfee>|0x0de|+0x03a:'32'
-	// <0x7ae028>|0x118|+0x002:'33'
-	// <0x7ae02a>|0x11a|+0x002:'34'
-	// <0x7ae02c>|0x11c|+0x002:'35'
-	// <0x7ae02e>|0x11e|+0x018|[2]:'36'
-	// <0x7ae046>|0x136|+0x018:'37'
-	// <0x7ae05e>|0x14e|+0x031:'38'
-	// <0x7ae08f>|0x17f|+0x002:'39'
-	// <0x7ae091>|0x181|+0x002:'40'
-	// <0x7ae093>|0x183|+0x00c:'41'
-	// ******
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_hide_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// claude@NOTE: systemic ceiling shared by every weapon_*_state weapon_and_hands_expression.
+// Structure is a 3-statement MATCH; only the return diverges - the target inlines
+// mixing::operator+ where our build emits a call. Inline-vs-call codegen; not source-steerable.
 animation::mixing::expression pistol_weapon_core_hide_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::expression hands_expression
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
-	// FUNCTION BODY
-	// <0x7ae360>|0x010|+0x01f:'46'
-	// <0x7ae37f>|0x02f|+0x02a:'47'
-	// <0x7ae3a9>|0x059|+0x07a:'48'
-	// ******
+	animation::mixing::expression hands_expression = get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
+
+	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::pistol_weapon_core_hide_state::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
-weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+// claude@NOTE: STRUCTURE MATCH; residual is the /Od register-coloring nibble at the out-of-line
+// m_weapon.ammo_in_magazine() thiscall (target loads the weapon ptr into eax, our build into ecx).
+weapon_lexeme_pair pistol_weapon_core_hide_state::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	// LOCALS
-	// pcstr[2] 					weapon_animation_captions
-	// resources::managed_resource_ptr const& selected_animation
-	// u32 							animation_index
-	// pcstr 						animation_identifier
-	// ******
+	pcstr weapon_animation_captions[2] =
+	{
+		"pistol-hide",
+		"pistol-hide_empty"
+	};
 
-	// FUNCTION BODY
-	// <0>
-	// <0x7ae289>|0x009|+0x007:'54'
-	// <0x7ae290>|0x010|+0x007:'55'
-	// <0>
-	// <0x7ae297>|0x017|+0x01b:'57'
-	// <0x7ae2b2>|0x032|+0x00a:'58'
-	// <0x7ae2bc>|0x03c|+0x02c:'59'
-	// <0x7ae2e8>|0x068|+0x00c:'60'
-	// <0>
-	// <1>
-	// <0x7ae2f4>|0x074|+0x056:'63'
-	// ******
+	u32 const animation_index = m_weapon.ammo_in_magazine( ) == 0;
+	pcstr animation_identifier = weapon_animation_captions[animation_index];
+
+	resources::managed_resource_ptr const& selected_animation =
+		m_weapon_animations[is_third_view != false][user_state_id == type_crouch][animation_index];
+
+	set_animation_to_wait( selected_animation );
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		animation_identifier,
+		selected_animation,
+		&m_weapon,
+		m_animation_playback_state,
+		7,
+		m_time_scale,
+		animation::mixing::play_once_and_freeze_at_end,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::pistol_weapon_core_hide_state::get_user_hands_expression(vostok::animation::mixing::animation_lexeme&, vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// claude@NOTE: systemic inline-vs-call ceiling shared by every weapon_*_state
+// get_user_hands_expression (matched weapon_core_show/hide_state siblings sit at the same %).
+// 7-statement STRUCTURE MATCH (extra local: linear_interpolator interpolator); the target leaves
+// the lexeme_parameters setters + ~animation_lexeme_parameters out-of-line and inlines the
+// expression ctor (early return) to a bare simple_lock, where our build inlines the setters and
+// calls the ctor. Not source-steerable.
 animation::mixing::expression pistol_weapon_core_hide_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	bool const							is_third_view,
+	weapon_user_state_enum const		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// pcstr[2] 					animation_captions
-	// animation::linear_interpolator interpolator
-	// u32 							user_state_index
-	// ******
+	if ( user_state_id == type_sprint )
+		return weapon_lexeme;
 
-	// FUNCTION BODY
-	// <0x7ae191>|0x011|+0x006:'68'
-	// <0x7ae197>|0x017|+0x010:'69'
-	// <0>
-	// <0x7ae1a7>|0x027|+0x00c:'71'
-	// <0x7ae1b3>|0x033|+0x00e:'72'
-	// <0>
-	// <0x7ae1c1>|0x041|+0x010:'74'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7ae1d1>|0x051|+0x079:'86'
-	// <0x7ae24a>|0x0ca|+0x021:'87'
-	// ******
+	u32 const user_state_index = user_state_id == type_crouch;
+
+	pcstr const animation_captions[2] = { "stand_hide", "crouch_hide" };
+
+	animation::linear_interpolator interpolator( s_aim_transition_time );
+
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			animation_captions[user_state_index],
+			m_user_animations[is_third_view != false][user_state_index],
+			&weapon_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.bones_mask( 2 )
+		.playback_type( animation::mixing::play_once_and_freeze_at_end )
+	);
+
+	return override_lexeme;
 }
 
-// STATE[STUB]
-// survarium::pistol_weapon_core_hide_state* survarium::weapon_core_state_cook_template<survarium::pistol_weapon_core_hide_state>::new_object(vostok::mutable_buffer, survarium::weapon_state_creation_params const*, vostok::resources::managed_resource_ptr const*, const unsigned int)
 pistol_weapon_core_hide_state* weapon_core_state_cook_template<survarium::pistol_weapon_core_hide_state>::new_object(
 	mutable_buffer						buffer,
 	weapon_state_creation_params const*	params,
 	resources::managed_resource_ptr const*	animations,
-	u32									animations_count
+	const u32									animations_count
 )
 {
-	// LOCALS
-	// float 						time_scale
-	// float 						weapon_anim_length
-	// float 						user_anim_length
-	// ******
+	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[0] )->length_in_frames( );
+	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[8] )->length_in_frames( );
+	float time_scale = weapon_anim_length / user_anim_length;
 
-	return NULL;
-
-	// FUNCTION BODY
-	// <0x7ae0b9>|0x009|+0x02b:'94'
-	// <0x7ae0e4>|0x034|+0x030:'95'
-	// <0x7ae114>|0x064|+0x00f:'96'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x7ae123>|0x073|+0x053:'103'
-	// ******
+	return new ( buffer.c_ptr( ) ) pistol_weapon_core_hide_state( params->weapon, time_scale, animations, animations_count, params->shown );
 }
 
 } // namespace survarium

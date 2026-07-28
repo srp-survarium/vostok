@@ -126,17 +126,11 @@ public:
     virtual CharacterDefType GetType() const { return Button; }
 
     // Obtains character bounds in local coordinate space.
-    virtual RectF  GetBoundsLocal() const
+    virtual RectF  GetBoundsLocal(float = 0) const
     {
         // This is not useful, because button bounds always depend on its state.
         SF_ASSERT(0);
         return RectF(0);
-        /*
-        float h = 0;
-        for(unsigned i=0; i<ButtonRecords.GetSize(); i++)
-        if (!ButtonRecords[i].HitTest)
-        h = Alg::Max<float>(h, ButtonRecords[i].pCharacterDef->GetHeightLocal());
-        return h; */
     }
 
 

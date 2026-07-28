@@ -13,13 +13,16 @@ class weapon_core_shotgun_reload_start_substate : public weapon_core_shotgun_rel
 public:
 			explicit	weapon_core_shotgun_reload_start_substate(
 							weapon_core&							weapon,
-							float									animation_time_scale,
+							const float									animation_time_scale,
 							resources::managed_resource_ptr const*	animations,
-							u32										animations_count
+							const u32										animations_count
 						);
 
+protected:
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
+
+private:
 	virtual	bool		is_ready_for_transition			( ) const override;
 
 			animation::callback_return_type_enum

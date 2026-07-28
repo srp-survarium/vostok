@@ -5,19 +5,14 @@
 #include "pch.h"
 #include <vostok/game_core/hit_initiator.h>
 #include <vostok/game_core/hit_info.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[UNCHECKED]
  hit_info::hit_info( )
 {
-	// FUNCTION BODY[0x73ea50]: 0
-	// <0x73ea50>|0x000|+0x01c:'20'	{
-	// <0x73ea6c>|0x01c|      :'21'	}
-	// ******
 }
 
-// STATE[UNCHECKED]
  hit_info::hit_info(
 	const u8					hit_initiator,
 	const u8					being_hit,
@@ -35,37 +30,33 @@ namespace survarium {
 	hit_initiator	( hit_initiator ),
 	being_hit		( being_hit )
 {
-	// FUNCTION BODY[0x73ea80]: 0
-	// <0x73ea80>|0x000|+0x059:'39'	{
-	// <0x73ead9>|0x059|      :'40'	}
-	// ******
 }
 
-// STATE[BLOCKED]
+// claude@NOTE: structure matches the target 1:1 (9 stmts, same source lines), but each
+// statement is byte-larger because the base INLINES packet_reader::r<bool>/r<float>/
+// r_string<16> while the target keeps them OUT-OF-LINE (standalone target symbols
+// ??$r@_N@, ??$r@M@, ??$r_string@$0BA@@ exist; the base has no such instantiations - they
+// inline at every site). Steering that is a cross-unit LTCG inliner decision in the already
+// matched packet_reader_inline.h, off-limits from here; the bigger base frame (sub esp 98h
+// vs 58h) and the per-statement +0xN sizes all follow from it. objdiff leaves it unpaired
+// purely on the size gap (0x117 vs 0x88 bytes).
 void hit_info::deserialize( network_core::packet_reader& packet )
 {
-	// LOCALS
-	// char[16] 						damage_type_info
-	// char[16] 						c_body_part_name
-	// ******
+	hit_initiator	= packet.r< bool >( );
+	being_hit		= packet.r< bool >( );
 
-	// FUNCTION BODY[0x73eaf0]: 15
-	// <0x73eafa>|0x00a|+0x00e:'44'
-	// <0x73eb08>|0x018|+0x00e:'45'
-	// <0>
-	// <1>
-	// <0x73eb16>|0x026|+0x00c:'48'
-	// <0x73eb22>|0x032|+0x00b:'49'
-	// <0>
-	// <1>
-	// <0x73eb2d>|0x03d|+0x00c:'52'
-	// <0x73eb39>|0x049|+0x00e:'53'
-	// <0>
-	// <0x73eb47>|0x057|+0x010:'55'
-	// <0x73eb57>|0x067|+0x010:'56'
-	// <0>
-	// <0x73eb67>|0x077|+0x00a:'58'
-	// ******
+	char c_body_part_name[ 16 ];
+	packet.r_string	( c_body_part_name );
+	body_part_name	= c_body_part_name;
+
+	char damage_type_info[ 16 ];
+	packet.r_string	( damage_type_info );
+	damage_type		= damage_type_info;
+
+	amount			= packet.r< float >( );
+	armor_piercing	= packet.r< float >( );
+
+	bullet			= NULL;
 }
 
 } // namespace survarium

@@ -489,7 +489,8 @@ public:
     enum NewLinePolicy
     {
         NLP_CompressCRLF, // CR LF will be compressed into one EOL
-        NLP_ReplaceCRLF   // each CR and/or LF will be replaced by EOL
+        NLP_ReplaceCRLF,  // each CR and/or LF will be replaced by EOL
+        NLP_IgnoreCRLF    // CR LF will be ignored (for single line textfields)
     };
     UPInt AppendString(const char* putf8String, UPInt stringSize = SF_MAX_UPINT, 
         NewLinePolicy newLinePolicy = NLP_ReplaceCRLF);

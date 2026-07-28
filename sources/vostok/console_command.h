@@ -115,6 +115,7 @@ public:
 	virtual void		status					( status_str& dest )	const;
 	virtual void		info					( info_str& dest )		const;
 	virtual void		syntax					( syntax_str& dest )	const;
+	inline	pcstr		get_value				( )	const { return m_value; }
 protected:
 	pstr				m_value;
 	u32					m_size;
@@ -140,6 +141,10 @@ class VOSTOK_CORE_API cc_value : public console_command
 	typedef console_command		super;
 public:
 	inline			cc_value					( pcstr name, T& value, T const min, T const max, bool serializable, command_type const command_type, execution_filter const execution_filter = execution_filter_general );
+
+	inline	T&		get_value					( )	{ return m_value; }
+	inline	T&		get_min						( )	{ return m_min; }
+	inline	T&		get_max						( )	{ return m_max; }
 protected:
 			T&		m_value;
 			T		m_min;

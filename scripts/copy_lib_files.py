@@ -1,5 +1,14 @@
 """
-copy_lib_files.py - Copy 3rd party libraries ('.dll's and '.lib's) into the project.
+copy_lib_files.py - Stage prebuilt 3rd party libraries ('.dll's, '.lib's, ...)
+into the repo.
+
+These are binary blobs, not source, so they land in a top-level
+`binaries.prebuilt/` tree (gitignored) that mirrors how the shipped game stored
+them - NOT in `sources/`, which is the SDK source tree. The GFx (Scaleform)
+Shipping libs are remapped onto the original game's layout
+(`binaries.prebuilt/Win32/libraries/shipping/`); every other blob keeps its
+source-relative subpath under `binaries.prebuilt/`. Include dirs still point at
+`sources/` (the SDK headers), so only the link search path moves.
 """
 
 import argparse
@@ -17,7 +26,32 @@ VOSTOK_DIR = SCRIPT_DIR.parent
 LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vostok-libs")))
 
 SRC         = LIBS_DIR   / "sources"
-DEST        = VOSTOK_DIR / "sources"
+DEST        = VOSTOK_DIR / "binaries.prebuilt"
+
+# `COPYING.LIB` is LGPL license TEXT (cell SDK), not a binary blob - the `*.lib`
+# ext glob catches it. It is committed as normal source under sources/, so we
+# SKIP it here rather than staging a copy (no special destination needed).
+LICENSE_NAMES  = {"COPYING.LIB"}
+
+# Our from-source 4.2.22 GFx suite (built per the shipped PDB's recipe - non-/GL,
+# /Ox, pristine SDK; see build_gfx_suite.py) ships inside vostok-libs at the shipped
+# Win32 Shipping config path. Remap it onto the game's binaries.prebuilt layout
+# (`Win32/libraries/shipping/`), where the exe's `#pragma comment(lib,"libgfx.lib")`
+# resolves it. The foreign 4.0.15 GFx libs were removed from vostok-libs and replaced
+# by these - no skip/clobber dance needed.
+GFX_SRC = Path("scaleform/Lib/Win32/Msvc90/Shipping")
+GFX_DST = Path("Win32/libraries/shipping")
+
+
+def dest_for(rel_path: Path, dest: Path) -> Path:
+    """Resolve the absolute target path for a source-relative blob.
+
+    The GFx Shipping libs remap onto the game's `Win32/libraries/shipping/` layout;
+    everything else keeps its source-relative subpath under `dest`.
+    """
+    if rel_path.parent == GFX_SRC:
+        return dest / GFX_DST / rel_path.name
+    return dest / rel_path
 
 
 def human_size(n: int) -> str:
@@ -46,9 +80,10 @@ def main():
     total_bytes = 0
 
     for file in src.rglob("*"):
-        if file.is_file() and file.suffix.lower() in EXTS:
+        # License text (COPYING.LIB) is committed source, not a staged blob - skip it.
+        if file.is_file() and file.suffix.lower() in EXTS and file.name not in LICENSE_NAMES:
             rel_path = file.relative_to(src)
-            target = dest / rel_path
+            target = dest_for(rel_path, dest)
             target.parent.mkdir(parents=True, exist_ok=True)
 
             # Prior copies came from /nix/store (read-only). Atomically remove any

@@ -39,6 +39,12 @@ namespace animation {
 }
 }
 
+namespace vostok {
+	// claude@MATCH: temp_include_all anchor, befriended so it can ODR-use the
+	// protected leaf methods (tick_active_object / on_player_death).
+	void use_game_core_base_player( );
+}
+
 namespace survarium {
 
 struct engine;
@@ -47,9 +53,14 @@ class player_stamina;
 struct player_input;
 struct base_player_creation_params;
 
+// claude@NOTE: forwarding target of base_player::get_animation_playback_state (see below);
+// the real callee folded to a bare `ret` and is reconstructed in base_player.cpp.
+bool query_animation_playback_state( pcvoid const object, u32 const mask, animation::animation_playback_state result );
+
 // sushi@TODO: <0x122e20>|0x000:'149'
 
 struct base_player : public inventory_holder , public collision_user , public hit_initiator , public hit_receiver {
+	friend void ::vostok::use_game_core_base_player( );
 public:
 	explicit									base_player						( base_player_creation_params const& params, survarium::scheduler& the_scheduler );
 	virtual										~base_player					( );
@@ -84,15 +95,12 @@ public:
 	inline	void								set_movement_speed_factor		( float movement_speed_factor ) { m_movement_speed_factor = movement_speed_factor; }
 	inline	float								get_movement_speed_factor		( ) const { return m_movement_speed_factor; }
 
-	// STATE[STUB]
 			bool								is_alive						( ) const { return m_is_alive; }
 
 	virtual	base_player*						cast_to_base_player				( ) override { return this; }
 	virtual	inventory_holder const*				cast_to_inventory_holder		( ) const override { return this; }
-	// STATE[STUB]
 	virtual	inventory_holder*					cast_to_inventory_holder		( ) override { return this; }
 
-	// STATE[STUB]
 			void								force_animation_selection		( ) { m_force_animation_selection = true; }
 
 	inline	bool								has_been_inserted				( ) const { return m_has_been_inserted; }
@@ -100,14 +108,9 @@ public:
 public:
 	typedef boost::function< animation::callback_return_type_enum( animation::animation_callback_params & ) > animation_callback;
 
-	virtual	void								subscribe_animation_player		(
-													animation::reserved_channel_ids_enum	arg_0,
-													animation_callback const&				arg_1,
-													pcvoid									arg_2,
-													resources::managed_resource_ptr const&	arg_3,
-													pcvoid									arg_4
-												) = 0;
-
+	// claude@MATCH: MSVC assigns vtable slots to same-name overloaded virtuals in
+	// REVERSE declaration order. Target wants enum-subscribe at vtable+0x4C (lower)
+	// and pcstr-subscribe at +0x50, so the enum overload must be declared LAST.
 	virtual	void								subscribe_animation_player		(
 													pcstr									arg_0,
 													animation_callback const&				arg_1,
@@ -117,8 +120,16 @@ public:
 													pcvoid									arg_5
 												) = 0;
 
-	virtual	void								unsubscribe_animation_player	( animation::reserved_channel_ids_enum arg_0, pcvoid arg_1 ) = 0;
+	virtual	void								subscribe_animation_player		(
+													animation::reserved_channel_ids_enum	arg_0,
+													animation_callback const&				arg_1,
+													pcvoid									arg_2,
+													resources::managed_resource_ptr const&	arg_3,
+													pcvoid									arg_4
+												) = 0;
+
 	virtual	void								unsubscribe_animation_player	( pcstr arg_0, pcvoid arg_1 ) = 0;
+	virtual	void								unsubscribe_animation_player	( animation::reserved_channel_ids_enum arg_0, pcvoid arg_1 ) = 0;
 
 	virtual	bool								is_replaying_history			( ) const = 0;
 
@@ -127,12 +138,15 @@ public:
 
 	virtual	u32									local_time						( u32 arg_0 ) const = 0; // sushi@TODO
 
-	// STATE[STUB]
-	virtual	bool								get_animation_playback_state	( pcvoid object, u32 mask, animation::animation_playback_state& result ) const { VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result ); VOSTOK_UNREACHABLE_CODE( ); }
+	// claude@NOTE: inline COMDAT attributed to this header (target emits it from base_player.h).
+	// `object`/`mask` are top-level `const` (QBX/IBE mangle); result is passed BY VALUE to the
+	// forwarding helper (reconstructed in base_player.cpp - its real callee folded away).
+	virtual	bool								get_animation_playback_state	( pcvoid const object, u32 const mask, animation::animation_playback_state& result ) const
+	{
+		return query_animation_playback_state( object, mask, result );
+	}
 
-	// STATE[STUB]
 	virtual	void								insert_game_world_object		( game_world_object& object ) override { m_game_world_objects.push_back( &object ); }
-	// STATE[STUB]
 	virtual	void								remove_game_world_object		( game_world_object& object ) override { m_game_world_objects.erase( &object ); }
 
 			void								subscribe_on_player_death		( player_death_subscriber* subscriber );
@@ -149,16 +163,22 @@ public:
 			void								deserialize_game_world_object	( network_core::packet_reader& reader );
 
 	virtual	engine&								get_engine						( ) = 0;
+protected:
 			void								tick_active_object				( );
+public:
 
 	inline	game_world_object_list const&		game_world_objects				( ) const { return m_game_world_objects; }
 
+protected:
 			void								on_player_death					( );
+private:
+	// target mangles ABE (private const) - ?send_game_world_object@..@@ABE..
 			void								send_game_world_object			(
 													game_world_object const*											object,
 													boost::function< network_core::udp_match_packet& ( ) > const&		reciver_packet_allocator,
 													boost::function< void( network_core::udp_match_packet& ) > const&	reciver_enqueuer
 												) const;
+public:
 
 	virtual	animation::animation_player const&	animation_player				( ) const = 0;
 	virtual	animation::animation_player&		animation_player				( ) = 0;

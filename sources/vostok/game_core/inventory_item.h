@@ -14,7 +14,7 @@ class inventory;
 struct inventory_item_props;
 class game_world_object;
 
-// STATE[STUB] // sushi@TODO
+// sushi@TODO: stray carcass note (belongs to player_logic_base_state, not inventory_item):
 // player_logic_base_state::~player_logic_base_state( ) { /* <0x4f210>|0x000:'58' */ }
 
 class inventory_item : public interactive_object , public boost::noncopyable {
@@ -27,19 +27,23 @@ public:
 
 public:
 												inventory_item					( inventory_item::action_behaviour_type type );
-	// STATE[STUB]
+	// claude@NOTE: the noinline accessors below (set_inventory/get_inventory/
+	// profile_slot_id/set_amount/amount) carry the CORRECT one-line bodies and pair in
+	// this TU, but the target compiled them /Ox: frameless, this in ECX, args read from
+	// [esp+N] (e.g. set_inventory = mov eax,[esp+4]; mov edx,[esp+8]; mov [ecx+10Ch],eax;
+	// mov [ecx+110h],edx; ret 8). Our base is /Od (full ebp frame, this spilled to
+	// [ebp-4]); the residual is the optimization-level wall (optimized-comdat-in-od-unit),
+	// not source-steerable. noinline keeps the COMDAT out-of-line so it pairs at all.
 	__declspec( noinline )
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) { m_inventory = inv; m_slot_id = slot; }
-	// STATE[STUB]
 	__declspec( noinline )
 			inventory&							get_inventory					( ) const { return *m_inventory; }
-	// STATE[STUB]
 	__declspec( noinline )
 			profile_slot_enum					profile_slot_id					( ) const { return m_slot_id; }
-	// STATE[STUB]
 	inline	inventory_item::action_behaviour_type const&
 												get_action_behaviuor			( ) const { return m_action_behaviuor; }
-	// STATE[STUB]: sushi@NOTE: Actual impl is at `player_logic_base_state.h`.
+	// sushi@NOTE: Actual impl is at `player_logic_base_state.h`. Empty here and ICF-folded
+	// (no distinct symbol in either index), so unpairable as a standalone.
 	__declspec( noinline )
 	virtual	void								action							( bool key_down ) { VOSTOK_UNREFERENCED_PARAMETER( key_down ); }
 	virtual	void								remove							( ) { /* no source */ }
@@ -47,10 +51,8 @@ public:
 	virtual	void								holder_assigned					( ) { /* no source */ }
 	virtual	void								holder_removed					( ) { /* no source */ }
 
-	// STATE[STUB]
 	__declspec( noinline )
 			void								set_amount						( u16 value ) { m_amount = value; }
-	// STATE[STUB]
 	__declspec( noinline )
 
 			u16									amount							( ) const { return m_amount; }
@@ -61,17 +63,14 @@ public:
 	virtual	bool								get_item_props					( inventory_item_props& props );
 
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return NULL; }
-	// STATE[STUB]
 	__declspec( noinline )
 	virtual	weapon_core*						cast_weapon_core				( ) override { return NULL; }
 
 	virtual	void								serialize						( network_core::udp_match_packet& packet, u32 client_offset ) const override;
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
-	// STATE[BLOCKED]
-	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { /* <0x969f0>|0x000:'77' */ }
-	// STATE[BLOCKED]
-	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* <0xab250>|0x000:'78' */ }
+	virtual	void							serialize_game_world_object_header	( game_world_object& object, network_core::udp_match_packet& packet ) const { /* rva 0x869f0 */ }
+	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) { /* rva 0x9b250 */ }
 
 protected:
 	/* 0x0000 */	/* interactive_object */

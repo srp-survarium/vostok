@@ -209,7 +209,7 @@ bool is_point_inside_triangle	(
 	vostok::math::float3 c
 );
 
-u32	navigation_world::get_node_id_at		( vostok::math::float3 const& position )
+u32	navigation_world::get_node_id_at		( vostok::math::float3 const& position ) const
 {
 	float min_distance = 0;
 	u32 min_node_id = u32(-1);
@@ -270,7 +270,7 @@ bool navigation_world::find_path (
 		vostok::math::float3 const& goal_position,
 		float agent_radius,
 		vostok::ai::navigation::path_type& path
-	)
+	) const
 {
 #ifndef MASTER_GOLD
 	path_finder_funnel::channel_type channel;

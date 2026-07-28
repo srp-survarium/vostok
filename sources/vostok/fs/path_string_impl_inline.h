@@ -44,11 +44,12 @@ path_string_impl::path_string_impl (char separator, src_iterator const & begin, 
 }
 
 inline
-path_string_impl const &   path_string_impl::operator = (path_string_impl const & s) 
-{ 
-	m_string							=	(string_type &)s;
-	verify_self								(); 
-	return									*this; 
+path_string_impl const &   path_string_impl::operator = (path_string_impl const & s)
+{
+	if ( this != & s )
+		as_buffer_string					()	=	s.as_buffer_string();
+	verify_self								();
+	return									*this;
 }
 
 template <class src_type>

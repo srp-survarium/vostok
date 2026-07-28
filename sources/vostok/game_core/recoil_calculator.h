@@ -25,10 +25,10 @@ public:
 			float		get_back_coeff				( ) const;
 
 			void		tick						(
-							weapon_user_state_enum		character_state,
-							bool						is_aiming,
-							u32							current_time_in_ms,
-							float						time_scale
+							const weapon_user_state_enum		character_state,
+							const bool						is_aiming,
+							const u32							current_time_in_ms,
+							const float						time_scale
 						);
 
 			void		set_weapon					( weapon_core* weapon );

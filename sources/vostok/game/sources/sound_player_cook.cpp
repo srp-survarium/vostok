@@ -1,41 +1,23 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 02.03.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "sound_player_cook.h"
-#include <vostok/ai/sound_collection_types.h>
-#include <vostok/ai/npc.h>
-#include <vostok/sound/world.h>
-#include <vostok/sound/sound_emitter.h>
-#include "ai_sound_player.h"
-#include "human_npc.h"
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 
 namespace survarium {
 
-sound_player_cook::sound_player_cook( sound::sound_scene_ptr& scene, sound::world* world, resources::class_id_enum class_id ) :
-	translate_query_cook			( class_id, reuse_false, use_current_thread_id ),
-	m_scene							( scene ),
-	m_world							( world ),
-	m_dbg_input_world				( 0 )
+ sound_player_cook::sound_player_cook( sound::world* world, resources::class_id_enum class_id ) :
+	resources::translate_query_cook( class_id, reuse_false, use_current_thread_id ),
+	m_world( world )
 {
 }
 
-sound_player_cook::sound_player_cook(	sound::sound_scene_ptr& scene,
-										sound::world* sound_world,
-										input::world* input_world,
-										resources::class_id_enum class_id ) :
-	translate_query_cook			( class_id, reuse_false, use_current_thread_id ),
-	m_scene							( scene ),
-	m_world							( sound_world ),
-	m_dbg_input_world				( input_world )
-{
-}
-
-void sound_player_cook::translate_query	( resources::query_result_for_cook& parent )
+void sound_player_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource	(
 		parent.get_requested_path(),
@@ -47,13 +29,17 @@ void sound_player_cook::translate_query	( resources::query_result_for_cook& pare
 	);
 }
 
-void sound_player_cook::delete_resource	( resources::resource_base* resource )
+// claude@NOTE: 53% - the dtor call is a distinct target statement but the free
+// path differs: target emits strip_pointer<doug_lea_allocator> + inline
+// vostok_mspace_free, base resolves VOSTOK_FREE_IMPL to get_pointer + free_helper
+// (g_allocator pass-by-pointer idiom mismatch). Structure (2 stmts) is faithful.
+void sound_player_cook::delete_resource( resources::resource_base* resource )
 {
 	resource->~resource_base			( );
 	VOSTOK_FREE_IMPL						( g_allocator, resource );
 }
 
-void sound_player_cook::on_config_loaded				( resources::queries_result& data )
+void sound_player_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
@@ -62,18 +48,14 @@ void sound_player_cook::on_config_loaded				( resources::queries_result& data )
 		parent->finish_query							( result_error );
 		return;
 	}
-	
+
 	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr const>( data[0].get_unmanaged_resource() );
 	configs::binary_config_value const& sounds_value	= (*config)["sounds"];
-	
+
 	configs::binary_config_value::const_iterator it		= sounds_value.begin();
 	configs::binary_config_value::const_iterator it_end	= sounds_value.end();
-		
+
 	buffer_vector< resources::request >	requests		( ALLOCA( sizeof( resources::request ) * sounds_value.size() ), sounds_value.size() );
-	
-//	resources::user_data_variant user_data;
-//	user_data.set										( resources::wav_encoded_sound_interface_class ); 
-//	buffer_vector< resources::user_data_variant const* > sound_interface_params ( ALLOCA( sizeof( resources::user_data_variant* ) * sounds_value.size() ), sounds_value.size() );
 
 	for ( ; it != it_end; ++it )
 	{
@@ -82,93 +64,90 @@ void sound_player_cook::on_config_loaded				( resources::queries_result& data )
 		request.path									= sound_value["filename"];
 		request.id										= resources::sound_collection_class;
 		requests.push_back								( request );
-		//sound_interface_params.push_back				( &user_data );
 	}
 
-	query_resources	(
-		&requests.front(), 
-		requests.size(), 
-		boost::bind( &sound_player_cook::on_sounds_loaded, this, _1, config ), 
+	resources::query_resources	(
+		&requests.front(),
+		requests.size(),
+		boost::bind( &sound_player_cook::on_sounds_loaded, this, _1, config ),
 		g_allocator,
-		0, //sound_interface_params.begin( ),
+		0,
 		parent
 	);
+
 }
-	
-void sound_player_cook::on_sounds_loaded	( resources::queries_result& data, configs::binary_config_ptr config  )	
+
+// STATE[STUB]
+void sound_player_cook::on_sounds_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
-	resources::query_result_for_cook* const	parent		= data.get_parent_query();
-	if ( !data.is_successful() )
-	{
-		R_ASSERT										( data.is_successful(), "couldn't load sounds" );
-		parent->finish_query							( result_error );
-		return;
-	}
-	
-	configs::binary_config_value const& sounds_value	= (*config)["sounds"];
-	
-	sound::world_user* world_user					= 0;
-	switch ( get_class_id() )
-	{
-		case resources::sound_player_logic_class:
-			world_user									= &m_world->get_logic_world_user();
-			break;
+	// LOCALS
+	// resources::unmanaged_resource_ptr sound_scene
+	// ai_sound_player::sounds_collection_type* const end
+	// resources::query_result_for_cook* const parent
+	// sound::world_user* 				sound_world_user
+	// configs::binary_config_value const* it_end
+	// ai_sound_player* const 			player
+	// ai::brain_unit_cook_params 		params
+	// ******
 
-#ifndef MASTER_GOLD
-		case resources::sound_player_editor_class:
-			world_user									= &m_world->get_editor_world_user();
-			break;
-#endif // #ifndef MASTER_GOLD
-
-		default:
-			NODEFAULT									( );
-	}
-	R_ASSERT											( world_user );
-
-
-	human_npc const* npc								= 0;
-
-	resources::query_result_for_cook* const brain_unit_query	= parent->get_parent_query	( );
-	if ( brain_unit_query && brain_unit_query->get_class_id( ) == resources::brain_unit_class )
-	{
-		resources::user_data_variant* user_data			= brain_unit_query->user_data( );
-		ai::brain_unit_cook_params params;
-		if ( user_data && user_data->try_get( params ) )
-		{
-			npc											= static_cast_checked<human_npc const* const>( params.npc );
-		}
-	}
-
-	u32 const ai_sound_player_buffer_size				= sizeof( ai_sound_player );
-	u32 const sounds_size								= sizeof( ai_sound_player::sounds_collection_type ) * sounds_value.count;
-	u8* sound_player_buffer								= static_cast<u8*>( VOSTOK_MALLOC_IMPL( g_allocator, ai_sound_player_buffer_size + sounds_size, "ai_sound_player" ) );
-
-	ai_sound_player* player;
-	if ( m_dbg_input_world )
-		player			= new( sound_player_buffer )ai_sound_player( m_scene, sounds_value.count, *world_user, m_dbg_input_world, npc, npc );
-	else
-		player			= new( sound_player_buffer )ai_sound_player( m_scene, sounds_value.count, *world_user, npc, npc );
-
-	ai_sound_player::sounds_collection_type* const begin = pointer_cast<ai_sound_player::sounds_collection_type*>( sound_player_buffer + ai_sound_player_buffer_size );
-	ai_sound_player::sounds_collection_type* const end	= begin + sounds_value.count;
-
-	configs::binary_config_value::const_iterator it		= sounds_value.begin( );
-	configs::binary_config_value::const_iterator it_end	= sounds_value.end( );
-
-	for ( ai_sound_player::sounds_collection_type* i = begin; ( it != it_end ) && ( i != end ); ++it, ++i )
-	{
-		configs::binary_config_value const& sound_value	= *it;
-		u32 type										= sound_value["collection_type"];
-		new( i )ai_sound_player::sounds_collection_type	(
-			player,
-			(ai::sound_collection_types)type,
-			static_cast_resource_ptr< sound::sound_emitter_ptr >( data[std::distance( begin, i )].get_unmanaged_resource() ),
-			sound_value["priority"]
-		);
-	}
-	
-	parent->set_unmanaged_resource						( player, resources::nocache_memory, sizeof( ai_sound_player ) + sounds_size );
-	parent->finish_query								( result_success );
+	// FUNCTION BODY[0x768a90]: 52
+	// <0x768a93>|0x003|+0x00b:'87'
+	// <0x768a9e>|0x00e|+0x028:'88'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x768ac6>|0x036|+0x016:'95'
+	// <0>
+	// <0x768adc>|0x04c|+0x004:'97'
+	// <0>
+	// <1>
+	// <2>
+	// <0x768ae0>|0x050|+0x00d:'101'
+	// <0x768aed>|0x05d|+0x015:'102'
+	// <0>
+	// <0x768b02>|0x072|+0x006:'104'
+	// <0x768b08>|0x078|+0x00c:'105'
+	// <0x768b14>|0x084|+0x017:'106'
+	// <0>
+	// <0x768b2b>|0x09b|+0x004:'108'
+	// <0x768b2f>|0x09f|-0x08e:'109'
+	// <0x768aa1>|0x011|+0x0ca:'110'
+	// <0x768b6b>|0x0db|+0x008:'110'
+	// <0>
+	// <0x768b73>|0x0e3|+0x01b:'112'
+	// <0>
+	// <1>
+	// <0x768b8e>|0x0fe|+0x004:'115'
+	// <0x768b92>|0x102|+0x026:'116'
+	// <0x768bb8>|0x128|+0x1c0:'117'
+	// <0x768d78>|0x2e8|-0x167:'117'
+	// <0>
+	// <0x768c11>|0x181|-0x02b:'119'
+	// <0x768be6>|0x156|+0x004:'120'
+	// <0>
+	// <0x768bea>|0x15a|+0x00e:'122'
+	// <0x768bf8>|0x168|+0x011:'123'
+	// <0>
+	// <0x768c09>|0x179|+0x010:'125'
+	// <0x768c19>|0x189|+0x008:'125'
+	// <0>
+	// <1>
+	// <0x768c21>|0x191|+0x016:'128'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x768c37>|0x1a7|+0x0a9:'134'
+	// <0>
+	// <1>
+	// <0x768ce0>|0x250|+0x037:'137'
+	// <0x768d17>|0x287|+0x00b:'138'
+	// ******
 }
+
 
 } // namespace survarium

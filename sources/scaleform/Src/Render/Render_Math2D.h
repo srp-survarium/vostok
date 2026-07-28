@@ -16,9 +16,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 **************************************************************************/
 
-#pragma warning( push )
-#pragma warning( disable : 4995 )
-
 #ifndef INC_SF_Render_Math2D_H
 #define INC_SF_Render_Math2D_H
 
@@ -43,10 +40,6 @@ namespace Math2D
 
 const CoordType Pi = (CoordType)3.14159265358979323846;
 
-enum CurveRecursionLimitType
-{
-    CurveRecursionLimit = 12
-};
 
 //-----------------------------------------------------------------------
 inline CoordType CrossProduct(CoordType x1, CoordType y1,
@@ -425,6 +418,29 @@ inline void PointOnQuadCurve(CoordType x1, CoordType y1,
                 *y = y12 + t*(y23 - y12);
 }
 
+//--------------------------------------------------------------------
+inline void PointOnCubicCurve(CoordType x1, CoordType y1,
+                              CoordType x2, CoordType y2,
+                              CoordType x3, CoordType y3,
+                              CoordType x4, CoordType y4,
+                              CoordType t,
+                              CoordType* x, CoordType* y)
+{
+    CoordType x12   = x1 + t*(x2 - x1);
+    CoordType y12   = y1 + t*(y2 - y1);
+    CoordType x23   = x2 + t*(x3 - x2);
+    CoordType y23   = y2 + t*(y3 - y2);
+    CoordType x34   = x3 + t*(x4 - x3);
+    CoordType y34   = y3 + t*(y4 - y3);
+
+    CoordType x123  = x12 + t*(x23 - x12);
+    CoordType y123  = y12 + t*(y23 - y12);
+    CoordType x234  = x23 + t*(x34 - x23);
+    CoordType y234  = y23 + t*(y34 - y23);
+
+    *x = x123 + t*(x234 - x123);
+    *y = y123 + t*(y234 - y123);
+}
 
 //--------------------------------------------------------------------
 inline CoordType QuadCurveExtremum(CoordType x1, CoordType x2, CoordType x3)
@@ -434,132 +450,51 @@ inline CoordType QuadCurveExtremum(CoordType x1, CoordType x2, CoordType x3)
 }
 
 //--------------------------------------------------------------------
+inline void CubicCurveExtremum(CoordType x1, CoordType x2, CoordType x3, CoordType x4, CoordType* t1, CoordType* t2)
+{
+    CoordType a = x4 - 3*x3 + 3*x2 - x1;
+    CoordType b = x3 - 2*x2 + x1;
+    CoordType c = x2 - x1;
+    CoordType d;
+    CoordType e = 0.001f;
+    *t1 = -1;
+    *t2 = -1;
+    
+    if(fabsf(a) > e)
+    {
+        d = b*b - a*c;
+        if(d > 0)
+        {
+            d  =  sqrtf(d);    // Two solutions (loop or 'S')
+            *t1 = -(b - d)/a;
+            *t2 = -(b + d)/a;
+        }
+        else
+        if(d == 0)
+        {
+            *t1 = -b/a;        // One solution
+        }
+    }
+    else
+    {
+        if(fabsf(b) > e)
+        {
+            *t1 = -c/(2*b);    // Special case
+        }
+    }
+}
+
+//--------------------------------------------------------------------
 enum SegmentType
 {
-    Seg_MoveTo = 0,
-    Seg_LineTo = 1,
-    Seg_QuadTo = 2
+    Seg_MoveTo  = 0,
+    Seg_LineTo  = 1,
+    Seg_QuadTo  = 2,
+    Seg_CubicTo = 3,
+    Seg_EndPath = 4
 };
 
-//--------------------------------------------------------------------
-template<class Container>
-bool TestQuadCollinearity(Container* con, const ToleranceParams& param, 
-                          CoordType x1, CoordType y1,
-                          CoordType x2, CoordType y2,
-                          CoordType x3, CoordType y3)
-{
-    // Checking the curve for collinearity. 
-    // We need to calculate the distance between p2 and the line p1-p3
-    // (the length of the perpendicular). Essentially it is: 
-    // d = cross_product(p1, p3, p2) / length(p1, p3);
-    // To calculate the length we have to calculate a square root, 
-    // but it is possible to avoid it, since we can compare the squares
-    // of values instead of values themselves. 
-    // 
-    // If the three points are collinear we can do without any subdivision.
-    // The subdivision function correctly processes the simple collinear
-    // case p1-p2-p3, but fails in case when the second line segment
-    // makes a U-turn, that is, p1-p3-p2 or p3-p1-p2 (where p2 is the curve 
-    // control point). In the simple collinear case the result consists of 
-    // only two points, but in the U-turn case we have to calculate the 
-    // third point.
-    //-----------------
-    CoordType da = SqDistance(x1, y1, x3, y3);
-    CoordType d  = AbsCrossProduct(x1, y1, x3, y3, x2, y2);
-    CoordType collinearityTolerance = param.CollinearityTolerance / 4;
-    if(d * d <= collinearityTolerance * collinearityTolerance * da)
-    {
-        // The expression below verifies if point p2 lies between p1 and p3.
-        // If it does (0 <= d <= 1) we can omit the third point. Otherwise
-        // it's necessary to calculate it.
-        //---------------------
-        if(da == 0) d = 2;
-        else        d = ((x2 - x1)*(x3 - x1) + (y2 - y1)*(y3 - y1)) / da;
-        if(d < 0 || d > 1)
-        {
-            // Calculate the ratio (parameter t) to subdivide the curve. 
-            // This ratio corresponds to the point on the curve with the maximal 
-            // curvature. The formula is the proportion between d1 and d2, 
-            // that is, d1 / (d1 + d2), where d1 and d2 are the Euclidean 
-            // distances p1-p2 and p2-p3 respectively.
-            CoordType d1 = Distance(x1, y1, x2, y2);
-            CoordType d2 = Distance(x2, y2, x3, y3) + d1;
-            if(d2 != 0)
-            {
-                CoordType t    = d1 / d2;
-                CoordType x12  = x1 + t*(x2 - x1);
-                CoordType y12  = y1 + t*(y2 - y1);
-                CoordType x23  = x2 + t*(x3 - x2);
-                CoordType y23  = y2 + t*(y3 - y2);
-                con->AddVertex(x12 + t*(x23 - x12), y12 + t*(y23 - y12));
-            }
-        }
-        con->AddVertex(x3, y3);
-        return true;
-    }
-    return false;
-}
-
-
-
-//--------------------------------------------------------------------
-template<class Container>
-void TessellateQuadRecursively(Container* con, CoordType toleranceSq, 
-                               CoordType x1, CoordType y1,
-                               CoordType x2, CoordType y2,
-                               CoordType x3, CoordType y3,
-                               int level)
-{
-    // Check the conditions to stop curve subdivision. 
-    // We need to calculate the distance between p2 and the line p1-p3
-    // (the length of the perpendicular). Essentially it is: 
-    // d = cross_product(p1, p3, p2) / length(p1, p3);
-    // To calculate the length we have to calculate a square root, 
-    // but it is possible to avoid it, since we can compare the squares
-    // of values instead of values themselves. 
-    //-----------------
-    CoordType d = AbsCrossProduct(x1, y1, x3, y3, x2, y2);
-    if(d == 0 ||
-       d * d <= toleranceSq * SqDistance(x1, y1, x3, y3) ||
-       level >= CurveRecursionLimit)
-    {
-        // The curve is flat enough, so that we add the point 
-        // and stop subdivision.
-        //---------------------
-        con->AddVertex(x3, y3);
-        return;
-    }
-    // Subdivide the curve at t=0.5.
-    //-----------------
-    CoordType x12  = (x1  + x2)  / 2;
-    CoordType y12  = (y1  + y2)  / 2;
-    CoordType x23  = (x2  + x3)  / 2;
-    CoordType y23  = (y2  + y3)  / 2;
-    CoordType x123 = (x12 + x23) / 2;
-    CoordType y123 = (y12 + y23) / 2;
-    TessellateQuadRecursively(con, toleranceSq, x1, y1, x12, y12, x123, y123, level+1);
-    TessellateQuadRecursively(con, toleranceSq, x123, y123, x23, y23, x3, y3, level+1);
-}
-
-
-
-
-//--------------------------------------------------------------------
-template<class Container>
-void TessellateQuadCurve(Container* con, const ToleranceParams& param, 
-                         CoordType x2, CoordType y2,
-                         CoordType x3, CoordType y3)
-{
-    CoordType x1 = con->GetLastX();
-    CoordType y1 = con->GetLastY(); 
-    if(!TestQuadCollinearity(con, param, x1, y1, x2, y2, x3, y3))
-    {
-        CoordType toleranceSq = (param.CurveTolerance/4) * (param.CurveTolerance/4);
-        TessellateQuadRecursively(con, toleranceSq, x1, y1, x2, y2, x3, y3, 0);
-    }
-}
-
-
+/*
 //--------------------------------------------------------------------
 struct NullTransformer
 {
@@ -592,33 +527,44 @@ void ExpandBounds(PathReader* reader, PathInfo* pathInfo,
     for(i = 0; i < n; ++i)
     {
         unsigned seg = reader->ReadSegment(pathInfo, coord);
-        if (seg != Seg_QuadTo)
+        switch(seg)
         {
-            trans.Transform(&coord[0], &coord[1]);
-            ExpandBounds(coord[0], coord[1], x1, y1, x2, y2);
-            ax = coord[0];
-            ay = coord[1];
-        }
-        else
-        {
-            trans.Transform(&coord[0], &coord[1]);
-            trans.Transform(&coord[2], &coord[3]);
-            CoordType t, x, y;
-            t = QuadCurveExtremum(ax, coord[0], coord[2]);
-            if (t > 0 && t < 1)
+        case Seg_MoveTo:
+        case Seg_LineTo:
             {
-                PointOnQuadCurve(ax, ay, coord[0], coord[1], coord[2], coord[3], t, &x, &y);
-                ExpandBounds(x, y, x1, y1, x2, y2);
+                trans.Transform(&coord[0], &coord[1]);
+                ExpandBounds(coord[0], coord[1], x1, y1, x2, y2);
+                ax = coord[0];
+                ay = coord[1];
             }
-            t = QuadCurveExtremum(ay, coord[1], coord[3]);
-            if (t > 0 && t < 1)
+            break;
+
+        case Seg_QuadTo:
             {
-                PointOnQuadCurve(ax, ay, coord[0], coord[1], coord[2], coord[3], t, &x, &y);
-                ExpandBounds(x, y, x1, y1, x2, y2);
+                trans.Transform(&coord[0], &coord[1]);
+                trans.Transform(&coord[2], &coord[3]);
+                CoordType t, x, y;
+                t = QuadCurveExtremum(ax, coord[0], coord[2]);
+                if (t > 0 && t < 1)
+                {
+                    PointOnQuadCurve(ax, ay, coord[0], coord[1], coord[2], coord[3], t, &x, &y);
+                    ExpandBounds(x, y, x1, y1, x2, y2);
+                }
+                t = QuadCurveExtremum(ay, coord[1], coord[3]);
+                if (t > 0 && t < 1)
+                {
+                    PointOnQuadCurve(ax, ay, coord[0], coord[1], coord[2], coord[3], t, &x, &y);
+                    ExpandBounds(x, y, x1, y1, x2, y2);
+                }
+                ax = coord[2];
+                ay = coord[3];
+                ExpandBounds(ax, ay, x1, y1, x2, y2);
             }
-            ax = coord[2];
-            ay = coord[3];
-            ExpandBounds(ax, ay, x1, y1, x2, y2);
+            break;
+
+        case Seg_CubicTo:
+            // TO DO: Implement
+            break;
         }
     }
 }
@@ -635,13 +581,10 @@ void ComputeBounds(PathReader* reader, PathInfo* pathInfo,
     *y2 = MinCoord;
     ExpandBounds(reader, pathInfo, x1, y1, x2, y2, trans);
 }
-
+*/
 
 
 }}} // Scaleform::Render::Math2D
 
 #endif
-
-#pragma warning( pop )
-
 

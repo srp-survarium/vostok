@@ -1,19 +1,22 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 10.05.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "object_environment.h"
-#include "game_world.h"
-#include <vostok/render/world.h>
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
-namespace survarium{
+namespace survarium {
 
-object_environment::object_environment( game_scene& w )
-:super			( w )
+object_environment::object_environment( base_game_scene& w ) :
+	game_object_( w )
 {
 }
 
@@ -21,29 +24,45 @@ object_environment::~object_environment( )
 {
 }
 
-void object_environment::load( configs::binary_config_value const& t )
+// claude@NOTE: structure faithful (same query_resources idiom as STRUCTURE-MATCH sibling
+// object_particle_visual, ~80% ceiling). QUANTITY is the target optimizer folding the
+// 1-element request r[] init into the query_resources call (drops the r named local); our
+// Master Gold base keeps it as its own statement. Not a source shape diff.
+void object_environment::load(
+	configs::binary_config_value const&		t,
+	pcstr									__formal,
+	boost::function< void( game_object_& ) >&	cb
+)
 {
-	super::load					(t);
-	pcstr post_effect_name		= pcstr(t["post_effect"]);
-	
-	resources::query_resource	( post_effect_name, resources::material_class, boost::bind(&object_environment::material_ready, this, _1), g_allocator );
-}
+	pcstr post_effect_name = pcstr( t["post_effect"] );
 
-void object_environment::material_ready( resources::queries_result& data )
-{
-	if(data.is_successful())
+	resources::request r[] =
 	{
-		m_game_scene.renderer().scene().set_post_process(m_game_scene.get_render_scene_view(), data[0].get_unmanaged_resource());
-	}
+		{ post_effect_name, resources::material_class },
+	};
+
+	resources::query_resources(
+		r,
+		1,
+		boost::bind( &object_environment::material_ready, this, _1, cb ),
+		g_allocator
+	);
 }
 
-void object_environment::unload_contents( )
-{	
+void object_environment::material_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
+{
+	m_postprocess = data[0].get_unmanaged_resource();
+
+	cb( *this );
 }
 
-void object_environment::load_contents( )
-{	
+void object_environment::insert( )
+{
+	get_game_scene().renderer().scene().set_post_process( get_game_scene().render_scene_view(), m_postprocess );
 }
 
+void object_environment::remove( )
+{
+}
 
 } // namespace survarium

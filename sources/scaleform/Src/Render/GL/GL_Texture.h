@@ -22,31 +22,37 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_Threads.h"
 #include "Render/Render_Image.h"
 #include "Render/Render_MemoryManager.h"
-#include "Render/Render_ThreadCommandQueue.h"
 #include "Kernel/SF_HeapNew.h"
 
-namespace Scaleform { namespace Render { namespace GL {
+namespace Scaleform { namespace Render { 
+
+class ThreadCommandQueue;
+
+namespace GL {
 
 
 // TextureFormat describes format of the texture and its caps.
 // Format includes allowed usage capabilities and ImageFormat
 // from which texture is supposed to be initialized.
 
-struct TextureFormat
+struct TextureFormat : public Render::TextureFormat
 {
-    ImageFormat              Format, ConvFormat;
-    GLenum                   GLColors, GLFormat, GLData;
-    UByte                    BytesPerPixel;
-    bool                     Mappable;
-    UByte                    DrawModes;
-    const char*              Extension;
-    Image::CopyScanlineFunc  CopyFunc;
-    Image::CopyScanlineFunc  UncopyFunc;
+    struct Mapping
+    {
+        ImageFormat              Format, ConvFormat;
+        GLenum                   GLColors, GLFormat, GLData;
+        UByte                    BytesPerPixel;
+        const char*              Extension;
+        Image::CopyScanlineFunc  CopyFunc;
+        Image::CopyScanlineFunc  UncopyFunc;
+    };
+    const Mapping*  pMapping;
 
-    ImageFormat     GetImageFormat() const { return Format; }
+    TextureFormat(TextureFormat::Mapping* pmapping = 0) : pMapping(pmapping) { }
 
-    unsigned        GetPlaneCount() const
-    { return ImageData::GetFormatPlaneCount(GetImageFormat()); }
+    virtual ImageFormat             GetImageFormat() const      { return pMapping->Format; }
+    virtual Image::CopyScanlineFunc GetScanlineCopyFn() const   { return pMapping->CopyFunc; }
+    virtual Image::CopyScanlineFunc GetScanlineUncopyFn() const { return pMapping->UncopyFunc; }
 };
 
 class MappedTexture;
@@ -60,21 +66,8 @@ class HAL;
 class Texture : public Render::Texture
 {
 public:
-    // Bits stored in TextureFlags.
-    enum TextureFlagBits
-    {
-        TF_Rescale     = 0x01,
-        TF_SWMipGen    = 0x02,
-        TF_UserAlloc   = 0x04,
-        TF_DoNotDelete = 0x08,
-    };
-
     Ptr<RawImage>            pBackingImage;
-    const TextureFormat*     pFormat;
-
-    // If texture is currently mapped, it is here.
-    MappedTexture*          pMap;
-
+    
     struct HWTextureDesc
     {
         ImageSize           Size;
@@ -93,36 +86,39 @@ public:
             const ImageSize& size, ImageBase* pimage);
     ~Texture();
 
-    ImageFormat             GetImageFormat() const { return pFormat->Format; }
     TextureManager*         GetManager() const     { return (TextureManager*)pManagerLocks->pManager; }
     inline  HAL*            GetHAL() const;
-    bool                    IsValid() const        { return pTextures != 0; }
+    virtual bool            IsValid() const        { return pTextures != 0; }
 
-    void                    LoseManager();
-    void                    LoseTextureData();
     void                    RestoreAfterLoss();
-    bool                    Initialize();
+    virtual bool            Initialize();
     bool                    Initialize(GLuint texID);
-    void                    ReleaseHWTextures();
+    virtual void            ReleaseHWTextures(bool staging = true);
+    virtual void            ApplyTexture(unsigned stage, const ImageFillMode& fillMode);
 
     // *** Interface implementation
 
-    //    virtual HAL*      GetRenderHAL() const { SF_ASSERT(0); return 0; } // TBD
-    virtual Image*          GetImage() const
-        { SF_ASSERT(!pImage || (pImage->GetImageType() != Image::Type_ImageBase)); return (Image*)pImage; }
-    virtual ImageFormat     GetFormat() const         { return GetImageFormat(); }
+    virtual Image*                  GetImage() const                        { SF_ASSERT(!pImage || (pImage->GetImageType() != Image::Type_ImageBase)); return (Image*)pImage; }
+    virtual ImageFormat             GetFormat() const                       { return GetImageFormat(); }
+    virtual ImageSize               GetTextureSize(unsigned plane =0) const { return pTextures[plane].Size; }
+    const TextureFormat*            GetTextureFormat() const                { return reinterpret_cast<const TextureFormat*>(pFormat); }
+    const TextureFormat::Mapping*   GetTextureFormatMapping() const         { return pFormat ? reinterpret_cast<const TextureFormat*>(pFormat)->pMapping : 0; }
 
-    virtual bool            Map(ImageData* pdata, unsigned mipLevel, unsigned levelCount);
-    virtual bool            Unmap();
+    virtual bool            UpdateRenderTargetData(Render::RenderTargetData* prtData, Render::HAL* =0);
+    virtual bool            UpdateStagingData(Render::RenderTargetData* prtData);
 
     virtual bool            Update(const UpdateDesc* updates, unsigned count = 1, unsigned mipLevel = 0);    
-    virtual bool            Update();
 
     virtual bool            Upload(unsigned itex, unsigned level, const ImagePlane& plane);
     virtual void            MakeMappable();
 
     // Copies the image data from the hardware.
     SF_AMP_CODE( virtual bool Copy(ImageData* pdata); )
+
+protected:
+    virtual void            computeUpdateConvertRescaleFlags( bool rescale, bool swMipGen, ImageFormat inputFormat, 
+                                                              ImageRescaleType &rescaleType, ImageFormat &rescaleBuffFromat, bool &convert );
+    virtual void            uploadImage(ImageData* psource);
 };
 
 // GL DepthStencilSurface implementation. 
@@ -138,41 +134,30 @@ public:
 
     ImageSize                 Size;
     GLuint                    RenderBufferID;
-    Texture::CreateState      State;
 
+    // We can't query ahead of time which stencil format is supported. So, we have to attempt
+    // creating them, and if they fail, try the next format. Returns false once there are no
+    // more formats to try.
+    static bool               SetNextGLFormatIndex();
+
+    // Returns true of the current format has a packed depth component (and is not just stencil data).
+    static bool               CurrentFormatHasDepth();
+
+    // The list of GL formats we will try to use to allocate stencil buffers (in order of preference).
+    static int                GLFormatIndex;
+    static unsigned           GLStencilFormats[];
 };
 
-// MappedTexture object repents a Texture mapped into memory with Texture::Map() call;
-// it is also used internally during updates.
-// The key part of this class is the Data object, stored Locked texture level plains.
-
-class MappedTexture : public NewOverrideBase<StatRender_TextureManager_Mem>
+// *** MappedTexture
+class MappedTexture : public MappedTextureBase
 {
     friend class Texture;
 
-    Texture*      pTexture;
-    // We support mapping sub-range of levels, in which case
-    // StartMipLevel may be non-zero.
-    unsigned      StartMipLevel;
-    int           LevelCount;
-    // Pointer data that can be copied to.
-    ImageData     Data;
-
-    enum { PlaneReserveSize = 4 };
-    ImagePlane    Planes[PlaneReserveSize];
-
 public:
-    MappedTexture()
-        : pTexture(0), StartMipLevel(false), LevelCount(0) { }
-    ~MappedTexture()
-    {
-        SF_ASSERT(!IsMapped());
-    }
+    MappedTexture() : MappedTextureBase() { }
 
-    bool        Reserve()  { AtomicOps<int>::CompareAndSet_Sync(&LevelCount, 0, -1); return LevelCount == -1; }
-    bool        IsMapped() { return (LevelCount > 0); }
-    bool        Map(Texture* ptexture, unsigned mipLevel, unsigned levelCount);
-    void        Unmap();
+    virtual bool Map(Render::Texture* ptexture, unsigned mipLevel, unsigned levelCount);
+    virtual void Unmap(bool = true);
 };
 
 
@@ -190,50 +175,41 @@ class TextureManager : public Render::TextureManager
     typedef ArrayLH<GLuint,
         StatRender_TextureManager_Mem,
         KillListArrayPolicy>    GLTextureArray;
-    typedef List<Texture, Render::Texture>  TextureList;
-    typedef List<DepthStencilSurface, Render::DepthStencilSurface> DepthStencilList;
 
     enum TextureCaps
     {
-        TC_NonPower2Limited = 1,
-        TC_NonPower2Full    = 2,
-#if defined(GL_ES_VERSION_2_0)
-            TC_UseBgra          = 4,
-#endif
+        TC_NonPower2Limited = 0x01,
+        TC_NonPower2Full    = 0x02,
+        TC_NonPower2RT      = 0x04,
+        TC_UseBgra          = 0x08,
     };
 
     MappedTexture       MappedTexture0;
 
     HAL*                     pHal;
     unsigned                 Caps;
+
     // Lists protected by TextureManagerLocks::TextureMutex.
-    TextureList               Textures;
-    TextureList               TextureInitQueue;
-    DepthStencilList          DepthStencilInitQueue;
     GLTextureArray            GLTextureKillList;
     GLTextureArray            GLDepthStencilKillList;
-    ThreadId                  RenderThreadId;
-    ThreadCommandQueue*       pRTCommandQueue;    
+    GLTextureArray            GLFrameBufferKillList;
 
-    // Texture format table, organized by supported HW features.
-    ArrayLH<TextureFormat*>  TextureFormats;
+    // Detecting redundant texture bindings.
+    static const int MaximumStages = 4;
+    GLint                    CurrentTextures[MaximumStages];
 
     HAL* GetHAL() const { return pHal; }
 
-    const Render::TextureFormat* getTextureFormat(ImageFormat format) const;
-    static GLenum getBaseTextureFormatFromInternal(GLenum intfmt);
-    virtual bool    isMappable(const Render::TextureFormat* ptformat) { return ((TextureFormat*)ptformat)->Mappable; }
-
-    // Texture Memory-mapping support.
-    MappedTexture*  mapTexture(Texture* p, unsigned mipLevel, unsigned levelCount);
-    MappedTexture*  mapTexture(Texture* p) { return mapTexture(p, 0, p->MipLevels); }
-    void            unmapTexture(Texture *ptexture);    
+    void                         initTextureFormats();
+    static GLenum                getBaseTextureFormatFromInternal(GLenum intfmt);
+    virtual MappedTextureBase&   getDefaultMappedTexture() { return MappedTexture0; }
+    virtual MappedTextureBase*   createMappedTexture()     { return SF_HEAP_AUTO_NEW(this) MappedTexture; }
 
     virtual void    processInitTextures();
     virtual void    processTextureKillList();
 
 public:
-    TextureManager(ThreadId renderThreadId, ThreadCommandQueue* commandQueue);
+    TextureManager(ThreadId renderThreadId, ThreadCommandQueue* commandQueue, TextureCache* texCache = 0);
     ~TextureManager();
 
     // XXX - use Extensions instead if needed
@@ -241,7 +217,15 @@ public:
     void            NotifyLostContext();
     void            RestoreAfterLoss();
 
+    // Applies a texture to a stage.
+    void            ApplyTexture(unsigned stageIndex, GLint texture);
+
+    // Adds a FrameBuffer to the FBO kill list, or deletes it immediately if in RT.
+    void            DestroyFBO(GLuint fboid);
+
     // *** TextureManager
+    virtual unsigned         GetTextureFormatSupport() const;
+
     virtual Render::Texture* CreateTexture(ImageFormat format, unsigned mipLevels,
                                            const ImageSize& size, unsigned use, 
                                            ImageBase* pimage = 0,
@@ -249,15 +233,19 @@ public:
     virtual Render::Texture* CreateTexture(GLuint texID, bool deleteTexture, 
                                            ImageSize imgSize = ImageSize(0),
                                            ImageBase* pimage = 0);
+
     virtual Render::DepthStencilSurface* CreateDepthStencilSurface(const ImageSize& size,
                                                            MemoryManager* manager = 0);
     virtual Render::DepthStencilSurface* CreateDepthStencilSurface(GLuint id);
 
-    bool            IsMultiThreaded() { return false; }
+	virtual bool	IsDrawableImageFormat(ImageFormat format) const { return (format == Image_B8G8R8A8) || (format == Image_R8G8B8A8); }
+
+	bool            IsMultiThreaded() { return false; }
     unsigned        GetTextureUseCaps(ImageFormat format);
     bool            IsNonPow2Supported(ImageFormat format, UInt16 use);
 
-    bool            CanCreateTextureCurrentThread();
+    // Should be called before each frame on RenderThread.
+    virtual void    BeginFrame( );
 };
 
 GL::HAL* Texture::GetHAL() const

@@ -7,8 +7,7 @@
 
 namespace survarium {
 
-// STATE[82.17%|DONE]
-void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 current_time )
+void scheduler::on_frame( scheduler::record& record, const u32 frame_delta, const u32 current_time )
 {
 	u32 last_update_time = record.m_last_update_time;
 	if ( current_time <= last_update_time )
@@ -28,62 +27,25 @@ void scheduler::on_frame( scheduler::record& record, u32 frame_delta, u32 curren
 
 	u32 time_delta = current_time - last_update_time;
 	s32 count = math::floor( (float)time_delta / (float)update_delta ); // sushi@NOTE: `math::floor` didn't inline in target
-	record.m_last_update_time += update_delta * count;
-	count = math::min( count, (s32)record.m_max_update_count );
+	record.m_last_update_time += count * update_delta;
+	count = math::min( count, (s32)record.m_max_update_count ); // claude@NOTE: math::min(s32) out-of-line in target, inlined by our /GL (wall); also the callback copy ctor inlines assign_to_own in the target but calls it here (same inline wall)
 	ASSERT( UNKNOWN_EXPRESSION_T( record.m_id ) );
 
 	scheduler::identifier* id = record.m_id;
 	scheduler::callback callback = record.m_callback;
 	for ( s32 i = 0 ; i < count && id->m_active ; ++i )
 		callback( update_delta, current_time );
-
-	// FUNCTION BODY
-	// <0xb8de0>|0x000|0x000:'16'
-	// <0xb8de9>|0x009|0x009:'17'
-	// <0xb8df1>|0x011|0x008:'18'
-	// <1>
-	// <0xb8df6>|0x016|0x005:'20'
-	// <0xb8e04>|0x024|0x00e:'21'
-	// <0xb8e0d>|0x02d|0x009:'22'
-	// <0xb8e20>|0x040|0x013:'23'
-	// <1>
-	// <2>
-	// <0xb8e25>|0x045|0x005:'26'
-	// <1>
-	// <0xb8e31>|0x051|0x00c:'28' u32 update_delta = record.m_update_delta;
-	// <0xb8e40>|0x060|0x00f:'29' if ( current_time < update_delta + last_update_time )
-	// <0xb8e4b>|0x06b|0x00b:'30'	return;
-	// <1>
-	// <0xb8e50>|0x070|0x005:'32' u32 time_delta = current_time - last_update_time;
-	// <0xb8e59>|0x079|0x009:'33'
-	// <0xb8e9c>|0x0bc|0x043:'34'
-	// <0xb8eaf>|0x0cf|0x013:'35'
-	// <0xb8ec0>|0x0e0|0x011:'36' ASSERT
-	// <1>
-	// <0xb8ecc>|0x0ec|0x00c:'38' scheduler::identifier* id = record.m_id;
-	// <0xb8ed4>|0x0f4|0x008:'39' scheduler::callback callback = record.m_callback;
-	// <0xb8ee2>|0x102|0x00e|[1]:'40'
-	// <0xb8f09>|0x129|0x027:'41'	 callback( update_delta, current_time );
-	// ******
 }
 
-// STATE[STUB]
-void scheduler::on_frame( u32 frame_delta, u32 current_time )
-{   // sushi@NOTE: `size` didn't inline in target
-	for ( m_current_index = 0 ; m_current_index < m_inactive_objects.size( ) ; ++m_current_index )
+// claude@MATCH: loop iterates m_active_objects (offset 0x10), not m_inactive_objects (0x00).
+void scheduler::on_frame( const u32 frame_delta, const u32 current_time )
+{   // claude@NOTE: walled - target keeps vectora<record>::size() and vector::operator[]
+	// out-of-line (they exist standalone in the target PDB); our /GL inlines both at the
+	// call site ((end-begin)/0x38 and direct index). Not steerable from this TU.
+	for ( m_current_index = 0 ; m_current_index < m_active_objects.size( ) ; ++m_current_index )
 		on_frame( m_active_objects[m_current_index], frame_delta, current_time );
 
 	m_current_index = u32(-1);
-
-	// FUNCTION BODY
-	// <1>
-	// <2>
-	// <3>
-	// <0x78de8f>|0x000|0x000:'49'
-	// <0x78decc>|0x03d|0x03d:'50'
-	// <1>
-	// <0x78def9>|0x06a|0x02d:'52'
-	// ******
 }
 
 } // namespace survarium

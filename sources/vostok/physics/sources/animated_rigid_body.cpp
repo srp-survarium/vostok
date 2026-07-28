@@ -27,72 +27,63 @@
 namespace vostok {
 namespace physics {
 
-// STATE[98%|PARTIAL]: LTCG for `game_material_id`.
 bt_animated_rigid_body::bt_animated_rigid_body( btCompoundShape* shape, btRigidBody* body, u16 game_material_id ) :
 	m_bt_body			( body ),
 	m_shape				( shape ),
 	m_game_material_id	( game_material_id )
 {
-	body->setUserPointer(this);	// <0x6bfe5a>|0x000|0x000:'25'
+	body->setUserPointer(this);
 }
 
-// STATE[100%|DONE]
 btRigidBody* bt_animated_rigid_body::get_rigid_body( )
 {
-	return m_bt_body;	// <0x6bf410>|0x000|0x000:'30'
+	return m_bt_body;
 }
 
-// STATE[100%|DONE]
-u16 bt_animated_rigid_body::get_triangle_material( s32 triangle_id, bool is_shape_index ) const
+u16 bt_animated_rigid_body::get_triangle_material( const s32 triangle_id, const bool is_shape_index ) const
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( triangle_id, is_shape_index );
-	return m_game_material_id;	// <0x6bf4b0>|0x000|0x000:'36'
+	return m_game_material_id;
 }
 
-// STATE[100%|DONE]
 void bt_animated_rigid_body::apply_impulse( float3 const& impulse, float3 const& point_in_world)
 {
 	VOSTOK_UNREFERENCED_PARAMETERS ( impulse, point_in_world ); // sushi@NOTE: This function is empty
 }
 
-// STATE[100%|DONE]
 void bt_animated_rigid_body::set_transform( float4x4 const& transform )
 {
-	m_bt_body->setWorldTransform( from_vostok( transform ) );	// <0x6bf95b>|0x000|0x000:'46'
+	m_bt_body->setWorldTransform( from_vostok( transform ) );
 }
 
-// STATE[100%|DONE]
 float4x4 bt_animated_rigid_body::get_transform( ) const
 {
-	return from_bullet( m_bt_body->getWorldTransform( ) );	// <0x6bf750>|0x000|0x000:'51'
+	return from_bullet( m_bt_body->getWorldTransform( ) );
 }
 
-// STATE[100%|DONE]
-void bt_animated_rigid_body::update_bone_matrix( u32 index, float4x4 const& new_transform, bool recalculate_aabb )
+void bt_animated_rigid_body::update_bone_matrix( const u32 index, float4x4 const& new_transform, bool recalculate_aabb )
 {
-	btTransform new_child_transform = from_vostok( new_transform );					// <0x6bf92a>|0x000|0x000:'56'
-	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );	// <0x6bf933>|0x009|0x009:'57'
+	btTransform new_child_transform = from_vostok( new_transform );
+	m_shape->updateChildTransform( index, new_child_transform, recalculate_aabb );
 }
 
-// STATE[100%|DONE]
 math::aabb bt_animated_rigid_body::get_aabb( ) const
 {
 	btVector3 aabbMin, aabbMax;
-	m_bt_body->getAabb( aabbMin, aabbMax );													// <0x6bf4c9>|0x000|0x000:'63'
-	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );	// <0x6bf4e8>|0x01f|0x01f:'64'
+	m_bt_body->getAabb( aabbMin, aabbMax );
+	return math::create_aabb_min_max ( from_bullet( aabbMin ), from_bullet( aabbMax ) );
 }
 
-// STATE[100%|DONE]
-float4x4 bt_animated_rigid_body::get_bone_transform( u32 index ) const
+float4x4 bt_animated_rigid_body::get_bone_transform( const u32 index ) const
 {
-	btTransform& transform = m_shape->getChildTransform( index );	// <0x6bf730>|0x000|0x000:'69'
-	return from_bullet ( transform );								// <0x6bf741>|0x011|0x011:'70'
+	btTransform& transform = m_shape->getChildTransform( index );
+	return from_bullet ( transform );
 }
 
-// STATE[BLOCKED]: sushi@TODO: switch statement problems
-static btCollisionShape* new_bt_primitive( collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
+// sushi@TODO: switch statement problems
+static btCollisionShape* new_bt_primitive( const collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
-	switch ( type )	// <0x6bf579>|0x000|0x000:'86'
+	switch ( type )
 	{
 		case collision::primitive_sphere:
 		{
@@ -120,7 +111,17 @@ static btCollisionShape* new_bt_primitive( collision::primitive_type type, float
 	}
 }
 
-// STATE[90%|DONE]: LTCG is different for `binary_config_value::operator[]`, `new_bt_primitive`.
+// claude@NOTE: structure matches the target (statement count + named-local set
+// verified via structure-diff). Residual is the engine-wide strip_pointer
+// inline-vs-call LTCG wall: the gold build inlines memory::strip_pointer at every
+// VOSTOK_NEW/MALLOC/DELETE_IMPL site here (delinker renders the folded out-of-line
+// copy as boost::get_pointer<weapon_user_animations_selector>), our /Ox+/GL base
+// keeps the call. Proven decisive: a global __forceinline strip_pointer drives this
+// TU's allocation fns to 100% but regresses ~170 functions across ai/network/
+// particle/logging, so it is NOT a blanket forceinline - it is context-specific
+// LTCG we cannot reproduce per-site from source. Same cause in new_animated_rigid_body,
+// new_compound_shape_from_hit_targets_config, new_animated_bt_hit_model (docs/binary_matching
+// /patterns/strip-pointer-delete-resource.md).
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
@@ -141,29 +142,32 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// STATE[99.54%|DONE]: LTCG is different for `binary_config_value::operator[]`.
+// claude@NOTE: 12 statements + locals match the target. Beyond the strip_pointer
+// wall (see new_bt_element_joint), the gold build also INLINES new_bt_element_joint,
+// the bone_collision_data ctor (two fixed_string base-ctors) and buffer_vector::push_back
+// into the loop body (target 0x485 bytes vs base 0x142, base CALLs each helper). That is
+// LTCG inline-budget, not source-steerable; the loop's brace/statement shape is faithful.
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];										// <0x6bf98f>|0x000|0x000:'146'
-	u32 hit_targets_count = targets_table.size( );																	// <0x6bf99b>|0x00c|0x00c:'147'
+	configs::binary_config_value const& targets_table = config["hit_targets"];
+	u32 hit_targets_count = targets_table.size( );
 																													// <1>..<4>
-	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );										// <0x6bf9af>|0x020|0x014:'152'
+	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
 
-	for ( u32 i = 0 ; i < hit_targets_count ; ++i )																	// <0x6bf9e2>|0x053|0x033:'154'
+	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
 	{
-		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];													// <0x6bfa0b>|0x07c|0x029:'156'
+		pcstr hit_param		= (pcstr)targets_table[i]["hit_param"];
 		pcstr animation_bone = (pcstr)targets_table[i]["animation_bone"];
 
 		collision::bone_collision_data data( animation_bone, NULL, hit_param );
 		geometries_data.push_back(data);
-		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );	// <0x6bfb17>|0x188|0x036:'159'
-		btTransform joint_transform( from_vostok( float4x4().identity() ) );										// <0x6bf9ec>|0x05d|-0x12b:'160'
-		bt_shape->addChildShape( joint_transform, element_joint );													// <0x6bfc8c>|0x2fd|0x2a0:'161'
+		btCompoundShape* element_joint = new_bt_element_joint( targets_table[i], allocator, &geometries_data[i] );
+		btTransform joint_transform( from_vostok( float4x4().identity() ) );
+		bt_shape->addChildShape( joint_transform, element_joint );
 	}
-	return bt_shape;																								// <0x6bfdfa>|0x46b|0x16e:'165'
+	return bt_shape;
 }
 
-// STATE[100%|DONE]
 static u32 calculate_bt_hit_target_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -183,7 +187,13 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	}
 }
 
-// STATE[BLOCKED]: sushi@TODO: This function doesn't have xrefs and got inlined in target, don't know where exactly. Also constants.
+// claude@NOTE: target keeps this as a standalone symbol but the target PDB records it as
+// the DEMANGLED name `vostok::physics::calculate_bt_joint_size` while our base emits the
+// mangled `?calculate_bt_joint_size@physics@vostok@@YAIAB...` - objdiff/match.db pair by
+// exact symbol string, so the two never pair (same name-representation gap as the file-scope
+// console-var dynamic init/atexit pairs). Body is faithful (joint = primitive shape +
+// btCompoundShape). It is `static` with no caller (target has no call-site either), so the
+// base also DCEs it. Pairing is a tooling normalization issue, not source-steerable.
 static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -191,34 +201,39 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	switch ( type )
 	{
 		case collision::primitive_sphere:
-			return 0xA0;
+			return sizeof( btSphereShape ) + sizeof( btCompoundShape );
 		case collision::primitive_box:
-			return 0xB0;
+			return sizeof( btBoxShape ) + sizeof( btCompoundShape );
 		case collision::primitive_cylinder:
-			return 0xB0;
+			return sizeof( btCylinderShape ) + sizeof( btCompoundShape );
 		case collision::primitive_capsule:
-			return 0xB0;
+			return sizeof( btCapsuleShape ) + sizeof( btCompoundShape );
 		default:
 			NODEFAULT( );
 	}
 }
 
-// STATE[98.38%|PARTIAL]: sushi@TODO: Constants need to be converted to proper `sizeof` operations.
+// sushi@TODO: Constants need to be converted to proper `sizeof` operations.
 // STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
-	configs::binary_config_value const& targets_table = config["hit_targets"];	// <0x6bf777>|0x000|0x000:'201'
-	u32 hit_targets_count = targets_table.size( );								// <0x6bf783>|0x00c|0x00c:'202'
+	configs::binary_config_value const& targets_table = config["hit_targets"];
+	u32 hit_targets_count = targets_table.size( );
 
-	u32 result = 0x70 * hit_targets_count + 0x60;								// <0x6bf7a1>|0x02a|0x01e:'204'
+	u32 result = 0x70 * hit_targets_count + 0x60;
 
-	for ( u32 i = 0 ; i < hit_targets_count ; ++i )								// <0x6bf7a6>|0x02f|0x005:'206'
-		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;		// <0x6bf7b3>|0x03c|0x00d:'207'
+	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
+		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;
 
-	return result;																// <0x6bf7f4>|0x07d|0x041:'209'
+	return result;
 }
 
-// STATE[97.25%|DONE]: LTCG for `game_material_id`.
+// claude@NOTE: 6 statements + locals match the target. Two LTCG walls on top of the
+// strip_pointer one (see new_bt_element_joint): the gold build CALLs the
+// bt_animated_rigid_body ctor here while our base inlines it, and that ctor is itself
+// an optimized/frameless COMDAT (it inlines loose_ptr_base::loose_ptr_base -> pt3malloc,
+// ret 8, no ebp frame; our base CALLs loose_ptr_base instead). Both are inline-budget
+// decisions, not source-steerable.
 bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
 {
 	btVector3	local_inertia( 0.f, 0.f, 0.f );
@@ -232,13 +247,11 @@ bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 gam
 	return rigid_body;
 }
 
-// STATE[100%|DONE]
 void destroy_animated_rigid_body( bt_animated_rigid_body* body, memory::base_allocator* allocator )
 {
-	VOSTOK_DELETE_IMPL( allocator, body );	// <0x6bf475>|0x000|0x000:'227'
+	VOSTOK_DELETE_IMPL( allocator, body );
 }
 
-// STATE[99.81%|DONE]: LTCG for `calculate_bt_animated_body_size_from_hit_targets_config` and `get_bones_count_from_hit_targets_config`.
 collision::animated_object* new_animated_bt_hit_model(
 	configs::binary_config_value const& config,
 	animation::skeleton_ptr const&		model_skeleton,
@@ -256,20 +269,17 @@ collision::animated_object* new_animated_bt_hit_model(
 	return object;
 }
 
-// STATE[100%|DONE]
 u16 bt_animated_rigid_body::get_collision_group( ) const
 {
-	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;	// <0x6bf460>|0x000|0x000:'252'
+	return m_bt_body->getBroadphaseHandle()->m_collisionFilterGroup;
 }
 
-// STATE[100%|DONE]
 float3 const& bt_animated_rigid_body::center_of_mass_offset( ) const
 {
-	static float3 offset( 0.0f, 0.0f, 0.0f );	// <0x6bf420>|0x000|0x000:'257'
-	return offset;								// <0x6bf44e>|0x02e|0x02e:'258'
+	static float3 offset( 0.0f, 0.0f, 0.0f );
+	return offset;
 }
 
-// STATE[100%|DONE]
 btCollisionObject* bt_animated_rigid_body::get_bt_collision_obect( )
 {
 	return m_bt_body;

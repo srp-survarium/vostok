@@ -60,12 +60,16 @@ class TreeCacheNode;
 
 namespace ContextImpl {
     class Context;
+    class ContextCaptureNotify;
     template <class C, class B> class ContextData_ImplMixin;
     template <class C> class DisplayHandle;
+    template<class C> struct NonlocalCloneArg;
 };
     using ContextImpl::Context;
+    using ContextImpl::ContextCaptureNotify;
     using ContextImpl::ContextData_ImplMixin;
     using ContextImpl::DisplayHandle;
+    using ContextImpl::NonlocalCloneArg;
 }};
 
 namespace Scaleform { class Event; }
@@ -324,6 +328,18 @@ struct EntryListAccessor
 typedef List2<Entry, EntryListAccessor> EntryList;
 //typedef List<Entry> EntryList;
 
+// NonlocalCloneArg is a non-local context copy constructor argument,
+// used in EntryData/TreeNode constructor to do selective copy.
+// Selective copy is necessary when cloning a the tree for DrawableImage.
+template<class C>
+struct NonlocalCloneArg
+{
+    const C* pC;
+    NonlocalCloneArg(const C& c) : pC(&c) { }
+    NonlocalCloneArg(const NonlocalCloneArg& s) : pC(s.pC) { }
+    const C* operator -> () const { return pC; }
+};
+
 
 //--------------------------------------------------------------------
 // *** Context::EntryData
@@ -351,7 +367,12 @@ public:
     };
 
     EntryData(EntryType type = ET_Base, UInt16 flags = 0)
-        : Type((UInt16)type), Flags(flags) { }
+        : Type((UInt16)type), Flags(flags) { }    
+    EntryData(const EntryData& src)
+        : Type(src.Type), Flags(src.Flags) { }
+    // "Copy constructor" for external context cloning. Mask bits must be handled separately.
+    EntryData(NonlocalCloneArg<EntryData> src)
+        : Type(src->Type), Flags(src->Flags & ~(UInt16)(NF_HasMask|NF_MaskNode)) { }
     virtual ~EntryData();
 
     inline EntryType    GetType() const { return (EntryType)Type; }
@@ -496,6 +517,32 @@ public:
         if (pRTCommandQueue)
             pRTCommandQueue->PushThreadCommand(&ServiceCommandInstance);
     }
+};
+
+
+//--------------------------------------------------------------------
+// Capture notification - used by DrawableImage
+//  managed as a thread-safe list
+
+class ContextCaptureNotify : public ListNode<ContextCaptureNotify>
+{
+    friend class Context;
+    // Context with which we are associated, if any.
+    Context* pOwnedContext;
+
+public:
+    ContextCaptureNotify() : pOwnedContext(0) { }
+    virtual ~ContextCaptureNotify();
+
+    // Notification function called when the context that we are being notified by calls Capture.
+    virtual void OnCapture() { }
+    
+    // Notification function called when the context that we are being notified by calls NextCapture.
+    virtual void OnNextCapture(RenderNotify* notify) { SF_UNUSED(notify); }
+
+    // Notification function called when the context that we are being notified by calls Shutdown.
+    // The waitFlag parameter indicates whether the owned context will wait for renderer shutdown.
+    virtual void OnShutdown(bool waitFlag) { SF_UNUSED(waitFlag); }
 };
 
 
@@ -699,6 +746,10 @@ public:
     // this can be used to determine whether the Capture call is necessary.
     bool    HasChanges() const;
 
+    // Notifies the context that a DrawableImage has been updated, and thus, HasChanges
+    // should report true when next queried.
+    void    SetDIChangesRequired() { DIChangesRequired = true; }
+
     // Captures the state of the render nodes so that further
     // modifications don't affect the displayed graph.
     bool    Capture();
@@ -735,6 +786,13 @@ public:
     // This only needs to be called explicitly if it is different than the thread that created the context.
     void SetCaptureThreadId(ThreadId captureThreadId);
 
+    // Adds a notification object that will be called when Capture and NextCapture
+    // events take place (possibly on different threads).
+    void AddCaptureNotify(ContextCaptureNotify* notify);
+    void RemoveCaptureNotify(ContextCaptureNotify* notify);
+
+    MemoryHeap* GetHeap() const { return pHeap; }
+
     // *** Render Thread API
 
     
@@ -769,7 +827,8 @@ private:
     ThreadId          CaptureThreadId;  // Expected thread ID that will call Capture.
 #endif
     EntryTable        Table;
-    Ptr<ContextLock>  pCaptureLock;
+    Ptr<ContextLock>  pCaptureLock;    
+    List<ContextCaptureNotify> CaptureNotifyList;
 
     // Renderer that owns us. We need to finish with it before
     // being used with a new one.
@@ -777,6 +836,7 @@ private:
     bool            MultiThreadedUse;
     bool            NextCaptureCalledInFrame;
     volatile bool   CaptureCalled;
+    volatile bool   DIChangesRequired;
     // Set once Shutdown is initiated, can't be un-set.
     volatile bool   ShutdownRequested;    
     // If not null, RenderThread should set this even in ShutdownRendering.
@@ -785,7 +845,7 @@ private:
     // RenderNotify object keeps track of us through this list.
     RenderNotify::ContextNode RenderNode;
 
-    List<RTHandle::HandleData> RTHandleList;
+    List<RTHandle::HandleData> RTHandleList;    
 
 
     // Current snapshots for all stages. A single pointer is enough
@@ -877,7 +937,10 @@ template <class C, class B>
 class ContextData_ImplMixin : public B
 {
 public:
-    ContextData_ImplMixin(Context::EntryData::EntryType type = Context::EntryData::ET_Base) : B(type) { }
+    ContextData_ImplMixin(Context::EntryData::EntryType type = Context::EntryData::ET_Base)
+        : B(type) { }
+    ContextData_ImplMixin(NonlocalCloneArg<ContextData_ImplMixin<C, B> > src)
+        : B(NonlocalCloneArg<B>(*src.pC)) { }
 
     virtual Context::EntryData* ConstructCopy(LinearHeap& heap) const
     {

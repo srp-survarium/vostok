@@ -33,10 +33,16 @@ class VOSTOK_SOUND_API sound_emitter : public resources::unmanaged_resource
 {
 public:
 								sound_emitter		( );
-	sound_instance_proxy_ptr	emit				
-								( 
+	sound_instance_proxy_ptr	emit
+								(
 									sound_scene_ptr& scene,
-									world_user& user 
+									world_user& user
+								);
+
+	sound_instance_proxy_ptr	emit_hud_sound
+								(
+									sound_scene_ptr& scene,
+									world_user& user
 								);
 
 	sound_instance_proxy_ptr	emit_point_sound
@@ -64,13 +70,14 @@ public:
 									float position_to_stereo_radius
 								);
 	
-	void						emit_and_play_once	
+	void						emit_and_play_once
 								(
 									sound_scene_ptr& scene,
 									world_user& user,
 									float3 const& position,
 									sound_producer const* producer = 0,
-									sound_receiver const* ignorable_receiver = 0
+									sound_receiver const* ignorable_receiver = 0,
+									bool material_id_is_default = false
 								);
 	
 	virtual	sound_propagator_emitter const*	get_sound_propagator_emitter( ) const = 0;

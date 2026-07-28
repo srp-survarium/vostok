@@ -33,7 +33,6 @@ namespace Scaleform { namespace GFx {
 class FontResource;
 class MovieDef;
 
-
 class FontLib : public State
 {
     class FontLibImpl *pImpl;
@@ -45,12 +44,6 @@ public:
     // By default, the the movie is pinned in the loader so that its
     // textures don't get unloaded.
     void                AddFontsFrom(MovieDef* md, bool pin = 1);
-
-    // Register a single font resource.
-    bool                RegisterFont(MovieDef* md, FontResource* fontRes);
-    // Unregister all single fonts for 'md', which were previously
-    // registered by RegisterFont. 
-    void                UnregisterFonts(MovieDef* md);
 
     // A structure filled in if LookupFont succeeds. Combines a font
     // resource with MovieDef which it came from. It is important
@@ -86,8 +79,27 @@ public:
     // Loads all available font names into destination array
     void                LoadFontNames(StringHash<String>& fontnames);
     void                LoadFonts(HashSet<Ptr<Render::Font> >& fonts);
+
+    // Sets a filename of SWF with fonts to be substituted by fontlib. 
+    // This should be a name of SWF file that was used as a font import 
+    // library during authoring of SWF content in Flash Studio. For example,
+    // if 'fonts_en.swf' was used as a default source of imported fonts then use
+    // this name. Default value is 'gfxfontlib.swf' for compatibility reasons.
+    //void                SetSubstitute(const char* filename);
+    //const String&       GetSubstitute() const;
 };
 
+// *** Default Font Lib Name state
+class DefaultFontLibNameState : public State
+{
+    StringLH Name;
+public:
+    DefaultFontLibNameState():State(State::State_DefaultFontLibName) {}
+    virtual ~DefaultFontLibNameState() {}
+
+    void            SetName(const char* n)  { Name = n; }
+    const StringLH& GetName() const         { return Name; }
+};
 
 
 // *** External class inlines dependent on us

@@ -35,6 +35,7 @@ public:
 	virtual pcstr	current_directory		( ) const;
 	virtual bool	create_folder_r			( pcstr path, bool create_last ) const;
 	virtual pcstr	bugtrap_application_name ( ) const;
+	virtual bool	output_to_debugger		( ) const { return true; }
 
 }; // class core_debug_engine
 

@@ -38,11 +38,21 @@ public:
 							weapon_animation_parameters const&	weapon_parameters
 						) = 0;
 
-	inline	bool		is_jump_finished		( ) const { /* no source */ }
-	// STATE[STUB]
-	explicit			jump_logic_base_state	( jump_logic& owner ) : m_jump_logic( owner ) {}
+	inline	bool		is_jump_finished		( ) const { return m_is_jump_finished; }
 
-private:
+protected:
+	// claude@MATCH: target mangles the ctor ?...@@IAE (protected).
+	explicit			jump_logic_base_state	( jump_logic& owner )
+							:	m_jump_logic( owner ),
+								m_user( 0 ),
+								m_interval_id_to_wait_for( 0xFF ),
+								m_is_jump_finished( false )
+						{}
+
+protected:
+	// claude@MATCH: derived state overrides read m_jump_logic / m_animation /
+	// m_interval_id_to_wait_for directly (no accessor in the target asm), so the data
+	// members are protected. Access specifier changes no codegen, only visibility.
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	jump_logic&							m_jump_logic;
 	/* 0x001c */	base_player*						m_user;

@@ -1,52 +1,59 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 26.03.2012
-//	Author		: Plichko Alexander
-//	Copyright (C) GSC Game World - 2012
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef PROJECT_COOKER_SIMPLE_H_INCLUDED
 #define PROJECT_COOKER_SIMPLE_H_INCLUDED
 
 #include <vostok/resources_cook_classes.h>
-#include "game_project.h"
+#include <vostok/configs.h>	// configs::binary_config_ptr (by-value param)
+
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
 
 namespace survarium {
 
-	class game_project ;
+class game_object_;
+class simple_game_project;
 
-	class project_cooker_simple	:	public resources::translate_query_cook,
-		public boost::noncopyable					
-	{
-		typedef resources::translate_query_cook		super;
-	public:
-		project_cooker_simple		( bool editor_present );
+class project_cooker_simple : public resources::translate_query_cook , public boost::noncopyable {
+public:
+			explicit	project_cooker_simple			( bool editor_present );
 
-		virtual	void				translate_query			( resources::query_result_for_cook&	parent );
-		virtual void				delete_resource			( resources::resource_base* resource );
+	virtual	void		translate_query					( resources::query_result_for_cook& parent ) override;
 
-	private:
-		void				on_game_project_loaded( resources::queries_result& data, 
-			resources::query_result_for_cook* parent );
-#ifndef MASTER_GOLD	
-		void				on_fs_iterators_ready	( resources::queries_result& data, 
-			resources::query_result_for_cook* parent );
+	virtual	void		delete_resource					( resources::resource_base* resource ) override;
 
-		void				on_editor_project_loaded( resources::queries_result& data, 
-			resources::query_result_for_cook* parent );
+	virtual				~project_cooker_simple			( ) { /* no source */ }
 
-		void				make_game_project		( configs::lua_config_ptr& editor_project, 
-			resources::query_result_for_cook* parent );
+private:
+	// reachability anchor (anchor_game_weapons.cpp) address-takes the private
+	// callbacks that the real bind sites (in still-stubbed create_game_objects)
+	// don't yet reach; codegen-neutral friend.
+	friend	void	::vostok::use_game_weapons	( );
 
-		void				on_cells_loaded			( resources::queries_result& data,
-			resources::query_result_for_cook* parent,
-			game_project* project );
-#endif // MASTER_GOLD
-		void create_game_objects( vostok::configs::binary_config_ptr project_cfg, resources::query_result_for_cook* parent_query );
+			void		on_game_project_loaded			( resources::queries_result& data, resources::query_result_for_cook* parent );
+			void		on_object_loaded				(
+							game_object_&							__formal,
+							simple_game_project*					project,
+							resources::query_result_for_cook*		parent_query
+						);
 
+			void		create_game_objects				(
+							configs::binary_config_ptr				project_cfg,
+							resources::query_result_for_cook*		parent_query
+						);
 
-		bool				m_editor_present;
+			void		on_damage_zones_loaded			( simple_game_project* project, resources::queries_result& data );
+			void		on_ladders_loaded				( simple_game_project* project, resources::queries_result& data );
+			void		on_collision_and_visuals_loaded	( resources::queries_result& data, simple_game_project* project );
 
-	}; // class project_cooker_simple
+private:
+	/* 0x0000 */	/* resources::translate_query_cook */
+	/* 0x0020 */	/* boost::noncopyable */
+	/* 0x0020 */	bool	m_editor_present;
+}; // class project_cooker_simple
+
+STATIC_SIZE_ASSERT(project_cooker_simple, 0x24);
 
 } // namespace survarium
 

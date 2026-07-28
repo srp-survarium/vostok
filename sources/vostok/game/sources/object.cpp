@@ -1,39 +1,42 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 24.12.2008
-//	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2009
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "object.h"
-#include "game_world.h"
+#include "game_object_.h"
+#include "game_object_static.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
 
-namespace survarium{
+namespace survarium {
 
-game_object_::game_object_( game_scene& s )
-:m_game_scene	( s ),
-m_loaded_cnt	( 0 )
-{}
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
-void game_object_::load( configs::binary_config_value const& )
+game_object_::game_object_( base_game_scene& s ) :
+	m_game_scene( s )
 {
 }
-game_world_object_old::game_world_object_old( game_world& w )
-:super(w),
-m_game_world(w)
-{};
 
-game_object_static::game_object_static(game_scene& s )
-:super	( s )
-{}
-
-void game_object_static::load( configs::binary_config_value const& t )
+game_object_static::game_object_static( base_game_scene& s ) :
+	game_object_( s )
 {
-	super::load				( t );
-	float3 const& scale		= t["scale"];
-	float3 const& rotation	= t["rotation"];
-	float3 const& position	= t["position"];
-	m_transform				= create_scale(scale) * create_rotation(rotation) * create_translation(position);
+}
+
+void game_object_static::load(
+		configs::binary_config_value const&			t,
+		pcstr										project_resources_path,
+		boost::function< void( game_object_& ) >&	cb
+	)
+{
+	load_transform( t, m_transform );
+}
+
+void load_transform( configs::binary_config_value const& t, float4x4& dest )
+{
+	float3 const&	scale		= t["scale"];
+	float3 const&	rotation	= t["rotation"];
+	float3 const&	position	= t["position"];
+	dest = create_scale( scale ) * create_rotation( rotation ) * create_translation( position );
 }
 
 } // namespace survarium

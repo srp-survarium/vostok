@@ -5,7 +5,7 @@ setup-toolchain.py
 Installs the Vostok build environment so that later `wine ninja.exe` invocations
 in binaries/ninja/ can build the project. Steps:
 
-  1. Copy vostok-libs into sources/
+  1. Stage vostok-libs (prebuilt blobs) into binaries.prebuilt/
   2. Initialise the Wine prefix
   3. Set PATH, INCLUDE, LIB in the Wine registry
   4. Run vcproj2ninja.exe under Wine to (re)generate binaries/ninja/build.ninja
@@ -42,6 +42,8 @@ import os
 import subprocess
 import sys
 from pathlib import Path
+
+import regen_ninja
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
@@ -163,38 +165,48 @@ def _nonempty_dir(p: Path) -> bool:
 
 def ensure_target_side(force: bool = False) -> None:
     """Generate the target-side diff inputs (the original game never changes):
-    binaries/objdiff/target (COFF) and binaries/structure/target (pdb-parser stubs).
+    binaries/objdiff/target (COFF), binaries/structure/target (pdb-parser stubs),
+    and binaries/rich/target (pdb_rich_context index for `pdb_fetch`).
 
     Idempotent - skips whichever output already exists (unless `force`), so this is
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
     doesn't go unnoticed.
     """
     import generate_delink
+    import generate_rich
     import generate_structure
 
     objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
     structure_target = VOSTOK_DIR / "binaries" / "structure" / "target"
-    if not force and _nonempty_dir(objdiff_target) and _nonempty_dir(structure_target):
+    rich_target      = VOSTOK_DIR / "binaries" / "rich" / "target"
+    if (
+        not force
+        and _nonempty_dir(objdiff_target)
+        and _nonempty_dir(structure_target)
+        and _nonempty_dir(rich_target)
+    ):
         return  # already generated
 
-    log("Generating target diff inputs (original game COFF + structure) ...")
+    log("Generating target diff inputs (original game COFF + structure + rich index) ...")
     try:
         if force or not _nonempty_dir(objdiff_target):
             generate_delink.generate("target")
         if force or not _nonempty_dir(structure_target):
             generate_structure.generate("target")
+        if force or not _nonempty_dir(rich_target):
+            generate_rich.generate("target")
     except (RuntimeError, subprocess.CalledProcessError) as e:
         die(f"could not generate target diff inputs: {e}")
     log("Target diff inputs ready.")
 
 
 def copy_libs(libs_dir: Path) -> None:
-    log("Copying vostok-libs -> sources/ ...")
+    log("Staging vostok-libs -> binaries.prebuilt/ ...")
     subprocess.check_call([
         sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
-        str(libs_dir / "sources"), str(VOSTOK_DIR / "sources"),
+        str(libs_dir / "sources"), str(VOSTOK_DIR / "binaries.prebuilt"),
     ])
-    log("Library files copied.")
+    log("Library files staged.")
 
 
 def init_wine_prefix(wineprefix: Path, force: bool = False) -> None:
@@ -226,6 +238,18 @@ def generate_ninja(vcproj_exe: Path) -> None:
     if not (BUILD_DIR / "build.ninja").is_file():
         die(f"vcproj2ninja did not produce {BUILD_DIR}/build.ninja")
     log("Ninja files generated.")
+
+
+def ensure_compdb(force: bool = False) -> None:
+    """clangd inputs at the repo root (gitignored, so absent on fresh clones
+    and worktrees). Generated here so editors/clangd_query work before the
+    first rebuild; rebuild.py keeps them fresh afterwards."""
+    if not force and all(
+        (VOSTOK_DIR / n).is_file() for n in regen_ninja.COMPDB_FILES
+    ):
+        return
+    log("Generating clangd inputs (compile_commands.json + clangd-vfs.yaml) ...")
+    regen_ninja.regenerate_compdb()
 
 
 def parse_force(argv) -> set:
@@ -299,6 +323,7 @@ def main() -> None:
 
     if setup_current and not force:
         log("Wine/ninja setup already complete.")
+        ensure_compdb()
         ensure_target_side()
         return
     if setup_current:
@@ -314,6 +339,7 @@ def main() -> None:
         configure_registry(msvc_dir, winsdk_dir, dxsdk_dir)
     if not setup_current or "ninja" in force:
         generate_ninja(vcproj_exe)
+        ensure_compdb(force=True)
 
     # Record the fingerprint so the next plain run short-circuits.
     SETUP_STAMP.parent.mkdir(parents=True, exist_ok=True)

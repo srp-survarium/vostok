@@ -7,8 +7,8 @@
 
 namespace vostok {
 namespace network_core {
-	class packet_reader {};		// sushi@TODO
-	class udp_match_packet {};	// sushi@TODO
+	class packet_reader;
+	class udp_match_packet;
 }
 }
 
@@ -18,13 +18,13 @@ class bullet;
 
 struct hit_info {
 					hit_info	(
-						u8			hit_initiator,
-						u8			being_hit,
-						pcstr		body_part_name,
-						pcstr		damage_type,
-						float		amount,
-						float		armor_piercing,
-						bullet*		bullet
+						const u8		hit_initiator,
+						const u8		being_hit,
+						pcstr const	body_part_name,
+						pcstr const	damage_type,
+						const float	amount,
+						const float	armor_piercing,
+						bullet* const	bullet
 					);
 
 					hit_info	( );

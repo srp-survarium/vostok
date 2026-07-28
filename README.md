@@ -8,6 +8,44 @@ This README covers the **Nix / Linux** workflow, which builds the exact VS2008
 toolchain under Wine for you - no Windows install required. For the original
 manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
+<!-- match-score:start -->
+## Match status
+
+_Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+
+**Overall: 5,410 / 12,915 functions exact (41.89%) &middot; 5,410 / 12,915 functions exact-max (41.89%) &middot; 57.17% fuzzy &middot; 57.17% fuzzy-max.**
+
+_All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
+
+| Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
+| :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
+| `render`        |   351 | 366 / 2,647 (13.8%) | 366 / 2,647 (13.8%) | 31.0% |     31.0% |
+| `game`          |   141 | 389 / 1,498 (26.0%) | 389 / 1,498 (26.0%) | 43.8% |     43.8% |
+| `core`          |   136 | 828 / 1,320 (62.7%) | 828 / 1,320 (62.7%) | 83.2% |     83.2% |
+| `vostok`        |   112 | 574 / 1,252 (45.8%) | 574 / 1,252 (45.8%) | 65.0% |     65.0% |
+| `game_core`     |   189 | 499 / 1,171 (42.6%) | 499 / 1,171 (42.6%) | 81.5% |     81.5% |
+| `animation`     |   102 |   285 / 763 (37.4%) |   285 / 763 (37.4%) | 27.2% |     27.2% |
+| `ai`            |   124 |   411 / 690 (59.6%) |   411 / 690 (59.6%) | 88.0% |     88.0% |
+| `sound`         |    69 |   214 / 509 (42.0%) |   214 / 509 (42.0%) | 53.9% |     53.9% |
+| `collision`     |    52 |   412 / 503 (81.9%) |   412 / 503 (81.9%) | 95.6% |     95.6% |
+| `scaleform`     |    47 |   236 / 453 (52.1%) |   236 / 453 (52.1%) | 55.1% |     55.1% |
+| `particle`      |    25 |   247 / 400 (61.8%) |   247 / 400 (61.8%) | 79.1% |     79.1% |
+| `vfs`           |    71 |   164 / 390 (42.1%) |   164 / 390 (42.1%) | 87.1% |     87.1% |
+| `ui`            |    27 |   192 / 227 (84.6%) |   192 / 227 (84.6%) | 80.3% |     80.3% |
+| `physics`       |    14 |    94 / 197 (47.7%) |    94 / 197 (47.7%) | 71.9% |     71.9% |
+| `fs`            |    25 |    71 / 165 (43.0%) |    71 / 165 (43.0%) | 84.0% |     84.0% |
+| `engine`        |    22 |   112 / 162 (69.1%) |   112 / 162 (69.1%) | 85.5% |     85.5% |
+| `network`       |    25 |    69 / 158 (43.7%) |    69 / 158 (43.7%) | 85.4% |     85.4% |
+| `network_core`  |    22 |    35 / 127 (27.6%) |    35 / 127 (27.6%) | 84.1% |     84.1% |
+| `debug`         |    16 |   111 / 122 (91.0%) |   111 / 122 (91.0%) | 96.8% |     96.8% |
+| `logging`       |    10 |     33 / 72 (45.8%) |     33 / 72 (45.8%) | 91.2% |     91.2% |
+| `input`         |     9 |     41 / 53 (77.4%) |     41 / 53 (77.4%) | 88.2% |     88.2% |
+| `survarium`     |     5 |     14 / 22 (63.6%) |     14 / 22 (63.6%) | 86.3% |     86.3% |
+| `ai_navigation` |     3 |     13 / 14 (92.9%) |     13 / 14 (92.9%) | 98.1% |     98.1% |
+
+_Updated 2026-07-28 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
+<!-- match-score:end -->
+
 ## Requirements
 
 - Linux (x86_64) with [Nix](https://nixos.org/download) and flakes enabled
@@ -31,6 +69,8 @@ The first entry fetches/builds everything and runs `scripts/setup-toolchain.py`,
 which:
 
 - pins the toolchain, libs, and game binaries as gcroots under `binaries/nix-store/`,
+- stages the prebuilt third-party `.lib`/`.dll` blobs into `binaries.prebuilt/`
+  (gitignored; mirrors the shipped game's layout - not the `sources/` tree),
 - initialises the Wine prefix and registry (PATH / INCLUDE / LIB),
 - generates the ninja build graph from the `.sln` via `vcproj2ninja`, and
 - generates the **target-side** diff inputs once from the original game
@@ -42,8 +82,10 @@ Then, after editing sources, run the build/diff loop:
 python3 scripts/rebuild.py
 ```
 
-This builds `survarium - PC - DirectX 11` with ninja under Wine, then regenerates
-the **base-side** diff inputs in parallel:
+This first refreshes the ninja graph from the `.vcproj`s (write-if-changed: a no-op
+regen touches nothing, so there are no spurious rebuilds), builds
+`survarium - PC - DirectX 11` with ninja under Wine, then regenerates the
+**base-side** diff inputs in parallel:
 
 | | base (your build) | target (original game) |
 |---|---|---|
@@ -52,8 +94,9 @@ the **base-side** diff inputs in parallel:
 
 Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 `binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
-also writes an overall match summary to `binaries/objdiff/report.json` and logs
-the code / function match percentages.
+also writes an overall match summary to `binaries/objdiff/report.json`, logs
+the code / function match percentages, and regenerates the match DB
+(`docs/binary_matching/match.db`) from that fresh report at the end of the run.
 
 Useful individual scripts (all run inside `nix develop`):
 
@@ -62,6 +105,35 @@ python3 scripts/ninja_build.py [target]              # build only (verbose, keep
 python3 scripts/generate_delink.py {base|target}     # COFF split for one side
 python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
+
+### Source navigation (clangd)
+
+`compile_commands.json` + `clangd-vfs.yaml` at the repo root (`vcproj2ninja
+--target clangd`) give clangd a clang-cl view of every TU pinned to the MSVC
+8.0 dialect (`_MSC_VER=1400`, i686, C++98), with a case-insensitive VFS overlay
+because the sources spell includes in Wine's case-insensitive world. They are
+generated by `setup-toolchain.py` on first `nix develop` entry, and the graph
+regen renews them when they are missing or a TU/module is added or removed
+(they are include-invariant, so ordinary rebuilds skip them); force with
+`python3 scripts/regen_ninja.py --compdb` after a flags-only .vcproj edit.
+clangd (in the devShell) navigates the whole engine through it - **clang is a
+reader here**; its diagnostics are suppressed via `.clangd` and the Wine build
+remains the only verdict on correctness.
+
+Point any LSP editor at the repo root (the compdb is found automatically), or
+query from the shell / an agent:
+
+```sh
+python3 scripts/clangd_query.py index                       # warm the background index once
+python3 scripts/clangd_query.py symbol weapon_lexeme_pair   # fuzzy workspace symbols
+python3 scripts/clangd_query.py def   <file> <line> [col]   # go to definition
+python3 scripts/clangd_query.py refs  <file> <line> [col]   # all references
+python3 scripts/clangd_query.py hover <file> <line> [col]   # type/expansion at point
+```
+
+A new `#include` changes neither generated file (include tracking lives in the
+ninja graph), so the background index never reindexes more than the TUs whose
+content actually changed.
 
 ## Game data
 
@@ -81,6 +153,128 @@ Plus a fourth, derived output pinned the same way:
 
 To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
 `.#survarium-resources-unpacked`, `.#survarium-keys`, `.#survarium-game`.
+
+## Matching (the orchestrator)
+
+Binary-matching is driven by an **orchestrator** that dispatches `matcher` +
+`structure-verifier` (+ a tiny `reviewer`) workers and stacks their PRs onto
+`feature/agentic-matching-loop-2` for review. **Start it from a fresh top-level Claude Code
+session** - it spawns worker subagents, so it cannot run as a nested subagent - with the
+`/match` slash command:
+
+```sh
+/match network_core        # whole queue, default 3 workers in parallel
+/match game_core 2         # whole queue, but only 2 workers in parallel
+```
+
+Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a
+`matcher` (fanning out up to the worker cap, default 3), integrates each finished matcher's
+commit into a single linear stack, and **builds before opening that unit's PR** so each PR
+carries a current `match.db`. Matchers spawn off the **top** of the stack so percentages
+compound; their PRs form **one linear chain** (each based on the unit below it, never fanned
+into a shared base). After every 10-15 matchers it runs one `structure-verifier` over the
+batch. You review the stack **bottom-up**; when approved it lands into the integration branch
+by a single fast-forward (all commits preserved).
+Prereqs: worktrees `vostok_1..3` clean + warm (`binaries/rich/target` + `binaries/objdiff`
+present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md).
+
+## Reviewing match % (no rebuild needed)
+
+These read the **last build** - the committed `binaries/objdiff/report.json` and
+`docs/binary_matching/match.db`. For *current* numbers after edits, run
+`python3 scripts/rebuild.py` first (it regenerates `match.db` at the end of the
+build); `python3 scripts/match_db.py refresh` only re-derives the DB from an
+already-built `report.json` (it does NOT rebuild - run `rebuild.py` if sources moved).
+A function is **DONE only when the compile says so** (`struct_class`/`fuzzy_pct`
+below); the only hand-set status is a **PARK** (an `out_of_scope` flag with a
+cause) - so a low % is "still open", never silently "done".
+
+```sh
+# headline + per-module table (overall fuzzy %, functions-exact) - READ-ONLY print;
+# the README score block itself is refreshed by rebuild.py at the end of every build.
+python3 scripts/match_score.py
+
+# per-UNIT rollup for a module, sorted 100%->0% (a header inline shows its .h file,
+# not a '(no unit)' lump): weighted_pct (size-weighted) + avg_pct (plain per-function
+# mean), struct_match, out_of_scope (parked). --lite drops custom_conv/out_of_scope/suspicious.
+python3 scripts/match_db.py report --module game_core --per-unit --lite
+
+# ONE unit by name or substring (--module optional; lean view; refuses with
+# paste-ready full names if the substring is ambiguous, e.g. medkit.cpp vs medkit.h)
+python3 scripts/match_db.py report --unit medkit
+
+# per-FUNCTION list for ONE unit, with a weighted%/avg% header. Columns: pct,
+# best (best-ever % - best=100 with pct<100 is a TRANSIENT/regressed match), tries
+# (matcher dispatches), cls, size, flag. Sorted 100%->0%; NULL pct = unpaired/open.
+python3 scripts/match_db.py report --unit medkit --per-function
+
+# any function by NAME substring, across files (e.g. all 'medkit::' members); same
+# columns + a file column (the .cpp TU, or the header for an inline fn) and a
+# count/weighted/avg header. --module optional.
+python3 scripts/match_db.py report --function 'medkit::'
+
+# (the fn column is the mangled-derived scope::name - no return type, template args, or
+#  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
+#  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
+
+# list EVERY function in a module/unit + its raw diff columns (fuzzy_pct, struct_class,
+# t_stmts/b_stmts, sizes, target VA hint). The most direct per-function dump; filter by
+# --class to pull just the steerable QUANTITY traps, or --presence for the unpaired set.
+# Needs a FRESH DB - `list` bails on a stale report.json (run rebuild.py/refresh first),
+# unlike report/sql which warn-and-proceed. --json gives full names; pipe wide output to `less -S`.
+python3 scripts/match_db.py list --module game_core                  # all game_core functions
+python3 scripts/match_db.py list --module game_core --class QUANTITY  # just the wrong-stmt-count traps
+python3 scripts/match_db.py list --unit vostok/game_core/sources/weapon_core.cpp
+python3 scripts/match_db.py list --module game_core --presence TARGET_ONLY  # unpaired (no base symbol yet)
+
+# TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
+# WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
+# verifier (`pdb_fetch --view structure-diff`); a 100%/QUANTITY is the classic false win.
+python3 scripts/match_db.py sql "SELECT printf('%.1f',p.fuzzy_pct) pct, p.struct_class cls, substr(u.name,25) unit, s.demangled \
+  FROM pairs p JOIN symbols s ON s.id=p.sym JOIN target_functions t ON t.sym=p.sym JOIN units u ON u.id=t.unit \
+  WHERE t.module='game_core' AND p.fuzzy_pct>=80 AND p.struct_class IN ('QUANTITY','SPLIT') ORDER BY p.fuzzy_pct DESC"
+
+# every PARKED function + why (the blocker, queryable - not buried in a PR body)
+python3 scripts/match_db.py sql "SELECT substr(u.name,25) unit, s.demangled, f.cause \
+  FROM flags f JOIN symbols s ON s.mangled=f.mangled JOIN target_functions tf ON tf.sym=s.id \
+  JOIN units u ON u.id=tf.unit WHERE f.flag='OUT_OF_SCOPE' AND u.module='game_core'"
+
+# function-level DIFF of the committed match.db across revisions (a regression tracker):
+#   <hash>          compares that commit vs the working tree
+#   <hash>..<hash>  compares two commits
+# groups every function: regress / lost / new / improve / TOUCHED (retries up, % unchanged -
+# i.e. a worked TU's 100% fns) / reclass. Columns include max (best-ever %) + tries (from->to).
+# max printed as `X->Y` means the fn's SOURCE changed and best reset to the new % (a real
+# re-work that lost ground) - vs a held max next to a dropped current %, which is just LTO.
+python3 scripts/match_db.py diff <hash>..<hash> --module game_core   # --json for machine-readable
+
+# bank the done set: stamp every fn that ever reached 100% with tries=1, so the queue
+# (which ranks/excludes by best-ever %, not current %) drops them until real work is gone.
+python3 scripts/match_db.py tried --done
+
+# AUTHORITATIVE per-function structure diff (the `cls` column above is only an approximation).
+# Prints each diverging statement tagged SIZE +/-N / BASE_ONLY / TRGT_ONLY, the target-vs-base
+# statement counts, and `; STRUCTURE MATCH` when the shape is clean. --function is a substring of
+# the signature; --view also takes target,base,structure,diff. This is how you confirm a
+# QUANTITY is real (recoverable statements) vs a stale label (0/0 STRUCTURE MATCH) vs blocked.
+pdb_fetch --target-index binaries/rich/target/index.jsonl --base-index binaries/rich/base/index.jsonl \
+  --function 'weapon_core::tick' --view structure-diff
+```
+
+**`cls` (structure class)** is the DB's *approximate* shape verdict (the
+authoritative one is the structure-verifier's `pdb_fetch --view structure-diff`;
+full defs in [`match_db_design.md`](docs/binary_matching/match_db_design.md)):
+
+| `cls` | meaning |
+|---|---|
+| `MATCH` | same statement **count** *and* per-statement byte **sizes** - clean structure; only sub-statement noise left |
+| `SIZE` | same count, >=1 statement differs in **bytes** - skeleton matches; residual = inline-vs-call / LTCG / reg-alloc |
+| `SPLIT` | equal counts *and* total bytes, but alignment leaves paired target-only/base-only rows (line-attribution split) |
+| `QUANTITY` | statement **counts differ** - real missing/extra source statements (the high-%-over-WRONG-structure trap) |
+| `-` (NULL) | unpaired/open - no base match yet |
+
+A high `fuzzy_pct` with `cls = QUANTITY`/`SPLIT` is the trap the structure-verifier
+exists to catch: the bytes line up over the **wrong** statement shape.
 
 ## Docs
 

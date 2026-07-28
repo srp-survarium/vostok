@@ -25,7 +25,7 @@ namespace survarium {
 
 struct base_player_creation_params {
 public:
-	explicit	base_player_creation_params	( );
+	explicit	base_player_creation_params	( ) { }
 	inline		~base_player_creation_params( ) { /* no source */ }
 
 public:

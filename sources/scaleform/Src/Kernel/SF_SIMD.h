@@ -34,7 +34,7 @@ otherwise accompanies this software in either electronic or hard copy form.
         #include "SF_SIMD_X360.h"
     #elif defined(SF_CPU_ALTIVEC)
         #include "SF_SIMD_Altivec.h"
-    #elif defined(SF_CPU_ARM_NEON) && !defined(SF_OS_NGP)
+    #elif defined(SF_CPU_ARM_NEON) && !defined(SF_OS_PSVITA)
         #include "SF_SIMD_ARMNeon.h"
     #else
         // Your platform does not support any SIMD processor - disabling.

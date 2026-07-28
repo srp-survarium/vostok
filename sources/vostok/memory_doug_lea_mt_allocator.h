@@ -28,7 +28,9 @@ public:
 			pvoid	malloc_impl			( size_t size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			pvoid	realloc_impl		( pvoid pointer, size_t new_size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			void	free_impl			( pvoid pointer VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
+	inline	bool	is_tasks_aware		( ) const { return m_is_tasks_aware; }
 	inline	threading::mutex& mutex		( ) const { return m_mutex; }
+	inline	threading::mutex_tasks_unaware&	mutex_tasks_unaware	( ) const { return m_mutex_tasks_unaware; }
 	virtual	void	initialize			( pvoid arena, u64 arena_size, pcstr arena_id );
 
 private:
@@ -49,8 +51,12 @@ public:
 	u64							dummy;
 
 private:
-	mutable threading::mutex	m_mutex;
+	mutable threading::mutex				m_mutex;
+	mutable threading::mutex_tasks_unaware	m_mutex_tasks_unaware;
+	bool									m_is_tasks_aware;
 }; // class doug_lea_allocator
+
+STATIC_SIZE_ASSERT(doug_lea_mt_allocator, 0x70);
 
 #else // #if !VOSTOK_USE_CRT_MEMORY_ALLOCATOR
 

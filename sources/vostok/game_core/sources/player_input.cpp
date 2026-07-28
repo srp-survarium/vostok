@@ -4,10 +4,11 @@
 
 #include "pch.h"
 #include <vostok/game_core/player_input.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[100%|DONE]
 player_input::player_input( ) :
 	angular_velocity	( 0.0f, 0.0f ),
 	angular_acceleration( 0.0f, 0.0f ),
@@ -15,31 +16,28 @@ player_input::player_input( ) :
 {
 }
 
-// STATE[BLOCKED]
 void player_input::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x700e80>|0x000|+0x009:'22'	{
-	// <0x700e89>|0x009|+0x00b:'23'
-	// <0x700e94>|0x014|+0x00e:'24'
-	// <0x700ea2>|0x022|+0x00f:'25'
-	// <0x700eb1>|0x031|      :'26'	}
-	// ******
+	packet.append		( angular_velocity );
+	packet.append		( angular_acceleration );
+	packet.append		( actions_mask );
 }
 
-// STATE[BLOCKED]
+// claude@NOTE: STRUCTURE MATCH (3 stmts, lines 30-32). Byte residual is the
+// packet_reader::r<T> __declspec(noinline): the /Ox target INLINES r<math::float2>
+// (no standalone r<float2> in the target index; the read expands to float2 ctor +
+// non-template r(void*,u32,u32) + Vector2::operator= + member store), while our /Od
+// base out-of-lines the whole r<float2> call. Header is owned by another unit;
+// the noinline is a net win for ~25 handlers whose targets DO out-of-line r<T>.
+// Manual-inlining the read here (tested) drops to 57.7% AND breaks the 3-stmt
+// structure (7 base stmts). Faithful form kept.
 void player_input::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x700df0>|0x000|+0x00b:'29'	{
-	// <0x700dfb>|0x00b|+0x032:'30'
-	// <0x700e2d>|0x03d|+0x033:'31'
-	// <0x700e60>|0x070|+0x00e:'32'
-	// <0x700e6e>|0x07e|      :'33'	}
-	// ******
+	angular_velocity		= reader.r< math::float2 >( );
+	angular_acceleration	= reader.r< math::float2 >( );
+	actions_mask			= reader.r< u32 >( );
 }
 
-// STATE[100%|DONE]
 bool player_input::is_empty( ) const
 {
 	return math::is_zero( angular_velocity.x )
@@ -48,17 +46,6 @@ bool player_input::is_empty( ) const
 		&& math::is_zero( angular_acceleration.y )
 		&& !actions_mask
 		&& true; // sushi@NOTE: master_gold check
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x700d69>|0x009|+0x07e:'56'
-	// ******
 }
 
 } // namespace survarium

@@ -430,6 +430,7 @@ Close:
     if (!shape->IsEmpty())
     {
         shape->EndShape();
+        shape->SetHintedSize(hinted ? fontHeight*20 : 0);
         return true;
     }
 

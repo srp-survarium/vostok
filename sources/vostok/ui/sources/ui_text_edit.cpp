@@ -26,6 +26,8 @@ namespace ui {
 
 ui_text_edit::ui_text_edit(ui_world& w, enum_text_edit_mode mode, memory::base_allocator& a )
 :ui_text			( w ),
+m_cursor_color		( 0xffffffff ),
+m_max_chars_count	( 0xff ),
 m_caret_pos			( 0 ),
 m_sel_start			( 0 ),
 m_sel_end			( 0 ),
@@ -141,7 +143,8 @@ void ui_text_edit::draw(vostok::render::ui::renderer& render, vostok::render::sc
 {
 	super::draw_internal	(render, scene_view, m_sel_start, m_sel_end, 0xff010101); //argb
 	draw_highlighted_rect	(render, scene_view);
-	draw_cursor				(render, scene_view);
+	if ( w()->get_focused() )
+		draw_cursor			(render, scene_view);
 }
 
 void ui_text_edit::draw_highlighted_rect(vostok::render::ui::renderer& render, vostok::render::scene_view_ptr const& scene_view)
@@ -428,6 +431,11 @@ u16 ui_text_edit::calc_right_word_position(u16 caret) const
 	return (u16)(cur-str_begin);
 }
 
+void ui_text_edit::set_max_chars(u16 const count)
+{
+	m_max_chars_count	= count;
+}
+
 void ui_text_edit::set_caret_position(u16 const pos, bool b_move)
 {
 	bool b_move_right	= (pos>m_caret_pos);
@@ -514,7 +522,8 @@ bool ui_text_edit::on_keyb_action(window* w, int p1, int p2)
 void ui_text_edit::tick()
 {
 	super::tick();
-	
+
+	if ( w()->get_focused() )
 	if(m_last_action && (m_last_action_time+0.3f < m_ui_world.timer().get_elapsed_sec()) )
 	{
 		m_last_action_time = m_ui_world.timer().get_elapsed_sec()-0.2f;

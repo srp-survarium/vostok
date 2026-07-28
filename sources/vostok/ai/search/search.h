@@ -49,6 +49,8 @@ private:
 	search*										m_next_search;
 }; // class search
 
+STATIC_SIZE_ASSERT( search, 0xA0 );
+
 } // namespace planning
 } // namespace ai
 } // namespace vostok

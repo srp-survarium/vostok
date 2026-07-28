@@ -351,9 +351,15 @@ public:
                                    MaskEffectState oldState, unsigned flags);
 
     // Calculate the local mask bounds + bounding area matrix to use in filter rendering;
-    bool calcFilterBounds(RectF* filterBounds, Matrix2F* boundAreaMatrix, 
-                          const Matrix3F& viewMatrix, const Matrix4F& viewProjMatrix, 
-                          RectF* cullRect = 0);
+    enum FilterBoundResult
+    {
+        FilterBoundResult_CompletelyClipped,
+        FilterBoundResult_PartiallyClipped,
+        FilterBoundResult_FullyVisible
+    };
+    FilterBoundResult calcFilterBounds(RectF* filterBounds, Matrix2F* boundAreaMatrix, 
+                                       const Matrix3F& viewMatrix, const Matrix4F& viewProjMatrix, 
+                                       RectF* cullRect = 0);
 
     /*    
     void            CalcScale9GridParameters(RectF* s9gRect, Matrix2F* shapeMtx) const;
@@ -361,6 +367,7 @@ public:
 
     void            CalcViewMatrix(Matrix2F* pviewMatrix) const;
     void            CalcViewMatrix(Matrix3F* pviewMatrix, Matrix4F *pviewProj) const;
+    void            CalcCxform(Cxform& dest) const;
     bool            CalcFilterFlag() const;
 
     Matrix4F        GetViewProj() const;
@@ -370,13 +377,14 @@ public:
     }
 
 
-    virtual void    UpdateBundlePattern();
+    virtual void    UpdateBundlePattern(unsigned flags);
 
     // Obtains a full BundleEntry pattern chain for the subtree indexed at list.
     // This list includes visibility and mask related entries for this node; it is
     // different from child-only cached list.
-    virtual bool    GetPatternChain(BundleEntryRange* range)
+    virtual bool    GetPatternChain(BundleEntryRange* range, unsigned flags)
     {
+        SF_UNUSED(flags);
         range->Clear(Range_Empty);
         return false;
     }
@@ -429,10 +437,14 @@ public:
     virtual void    propagateEdgeAA(EdgeAAMode parentEdgeAA);
     virtual void    propagate3DFlag(unsigned parent3D);
 
-    void            BuildChildPattern(BundleEntryRange* pattern);
-    virtual void    UpdateBundlePattern();
+    enum
+    {        
+        Pattern_DisableMatch = 0x1, // Causes matching to be completely disabled when building patterns.
+    };
+    void            BuildChildPattern(BundleEntryRange* pattern, unsigned flags);
+    virtual void    UpdateBundlePattern(unsigned flags);
     
-    virtual bool    GetPatternChain(BundleEntryRange* range);
+    virtual bool    GetPatternChain(BundleEntryRange* range, unsigned flags);
     virtual bool    IsPatternChainValid() const;    
 
     virtual void    forceUpdateImages();
@@ -493,40 +505,12 @@ public:
         DepthUpdatesChained = false;
     }    
 
-    inline void AddToUpdate(TreeCacheNode *pnode, unsigned flags)
-    {
-        SF_ASSERT(flags && pnode->pNode && (DepthUpdatesChained == false));
-        if (!(pnode->UpdateFlags & Update_InList))
-        {
-            pnode->pNextUpdate = pUpdateList;
-            pUpdateList = pnode;
-            flags |= Update_InList;
-        }
-        pnode->UpdateFlags |= flags;
-    }
+    void AddToUpdate(TreeCacheNode *pnode, unsigned flags);
 
     // Adds node directly to depth update array. Can also be used after
     // ChainUpdatesByDepth was called for original updates.
     // Intended to tree update rebuilding.
-    inline void AddToDepthUpdate(TreeCacheNode *pnode, unsigned flags)
-    {
-        SF_ASSERT(flags && pnode->pNode);
-        if (!(pnode->UpdateFlags & Update_InList))
-        {
-            if (DepthUpdatesChained)
-            {
-                DepthUpdates.Link(pnode->Depth, &pnode->pNextUpdate, pnode);
-            }
-            else
-            {
-                pnode->pNextUpdate = pUpdateList;
-                pUpdateList = pnode;
-            }
-            
-            flags |= Update_InList;
-        }
-        pnode->UpdateFlags |= flags;
-    }
+    void AddToDepthUpdate(TreeCacheNode *pnode, unsigned flags);
 
     virtual void HandleChanges(unsigned changeBits);
 
@@ -593,8 +577,8 @@ public:
 
     // TreeCacheNode Virtual API.
     virtual void    HandleChanges(unsigned changeBits);
-    virtual bool    GetPatternChain(BundleEntryRange* range);
-    virtual void    UpdateBundlePattern();
+    virtual bool    GetPatternChain(BundleEntryRange* range, unsigned flags);
+    virtual void    UpdateBundlePattern(unsigned flags);
 
 };
 

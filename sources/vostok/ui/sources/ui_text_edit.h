@@ -51,6 +51,9 @@ public:
 	virtual ui::window*	w					()								{return this;}
 	virtual ui::text*	text				()								{return this;}
 
+	virtual void		set_max_chars		(u16 const count);
+	virtual void		set_cursor_color	(u32 const color)				{m_cursor_color = color;}
+
 			bool 		is_shift_state		(enum_shift_state const state) const;
 			void		set_shift_state		(enum_shift_state const state, bool b_set);
 
@@ -109,6 +112,8 @@ private:
 	history									m_undo_history;
 	history									m_redo_history;
 
+	u32										m_cursor_color;
+	u16										m_max_chars_count;
 	u16										m_caret_pos;
 	u16										m_sel_start;
 	u16										m_sel_end;
@@ -118,6 +123,8 @@ private:
 	bool									m_b_redo;
 	bool									m_b_insert_mode;
 };//class ui_text_edit
+
+STATIC_SIZE_ASSERT(ui_text_edit, 0x2B0);
 
 } // namespace vostok
 } // namespace ui

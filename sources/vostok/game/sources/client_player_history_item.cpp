@@ -1,0 +1,18 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "client_player_history_item.h"
+
+namespace survarium {
+
+client_player_history_item::client_player_history_item( )
+{
+}
+
+client_player_history_item::~client_player_history_item( )
+{
+}
+
+} // namespace survarium

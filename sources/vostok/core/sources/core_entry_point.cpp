@@ -116,8 +116,11 @@ void vostok::core::preinitialize		( core::engine *							engine,
 	VOSTOK_CONSTRUCT_REFERENCE(s_core_synchronous_device, fs_new::synchronous_device_interface)
 								(get_core_device_file_system( ), fs_new::watcher_enabled_false);
 
+	memory::g_use_resources_manager	= engine->use_resources_manager( );
+	memory::g_use_video_memory		= engine->use_video_memory( );
+
 	memory::preinitialize	( );
-	build::preinitialize	( build_date ); // <0x6705d9>|0x092|0x013:'125'
+	build::preinitialize	( build_date );
 
 	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true); // sushi@NOTE: Deleted. This should be handled when `fs_new` or `core` is matched.
 

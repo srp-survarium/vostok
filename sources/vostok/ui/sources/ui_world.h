@@ -7,12 +7,16 @@
 
 namespace vostok {
 
-namespace render {	
+namespace input {
+	struct world;
+} // namespace input
+
+namespace render {
 class world;
 
 namespace ui {
 	class renderer;
-} // namespace ui 
+} // namespace ui
 } // namespace render
 
 namespace ui {
@@ -27,8 +31,8 @@ public:
 							ui_world				(
 								engine& engine,
 								vostok::render::ui::renderer& renderer,
-								memory::base_allocator& allocator
-//								,vostok::render::scene_view_ptr const& scene_view
+								memory::base_allocator& allocator,
+								input::world* input_world
 							);
 	virtual	void			tick					( );
 	virtual	void			clear_resources			( );
@@ -42,28 +46,29 @@ public:
 	virtual void			destroy_window			( window* w );
 	virtual	vostok::ui::font const *default_font			( );
 	virtual render::ui::renderer& get_renderer( )	{ return m_renderer; }
-//	virtual vostok::render::scene_view_ptr const& get_scene_view	( ) const { return m_scene_view; }
 
 	virtual void			on_device_reset			( );
 	void					client_to_screen_scaled ( float2 const& src, float2& dst );
 	void					align_pixel				( float2 const& src, float2& dst );
-	float2 const&			base_screen_size		( ) const								{ return m_base_screen_size; }
-	
-	
+	virtual void			set_base_screen_size	( u32 const size_x, u32 const size_y );
+	virtual float2 const&	base_screen_size		( ) const								{ return m_base_screen_size; }
 
 	font_manager&			get_font_manager		( )										{ return m_font_manager; }
 	timing::timer const&	timer					( ) const								{ return m_timer; }
 	memory::base_allocator&	allocator				( ) const								{ return m_allocator; }
+	input::world*			input_world				( ) const								{ return m_input_world; }
 
 private:
+	input::world*					m_input_world;
 	engine&							m_engine;
-	render::ui::renderer&			m_renderer;	
+	render::ui::renderer&			m_renderer;
 	memory::base_allocator&			m_allocator;
-//	vostok::render::scene_view_ptr	m_scene_view;
 	float2							m_base_screen_size;
 	font_manager					m_font_manager;
 	timing::timer					m_timer;
 }; // ui_class world
+
+STATIC_SIZE_ASSERT(ui_world, 0x58);
 
 } // namespace vostok
 } // namespace ui

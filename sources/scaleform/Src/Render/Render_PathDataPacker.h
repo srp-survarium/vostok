@@ -708,7 +708,7 @@ inline int PathDataDecoder<ContainerType>::ReadSInt32fixlen(unsigned pos) const
 template<class ContainerType>
 inline float PathDataDecoder<ContainerType>::ReadFloat(unsigned pos) const
 {
-    float v;
+    float v = 0;
     UInt8* p = (UInt8*)&v;
     p[0] = Data->ValueAt(pos+0);
     p[1] = Data->ValueAt(pos+1);

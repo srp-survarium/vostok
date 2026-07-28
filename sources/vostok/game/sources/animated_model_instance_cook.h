@@ -1,7 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 20.04.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef ANIMATED_MODEL_INSTANCE_COOK_H_INCLUDED
@@ -11,21 +9,26 @@
 
 namespace survarium {
 
-class animated_model_instance_cook : public resources::translate_query_cook
-{
-	typedef resources::translate_query_cook			super;
+struct animated_model_instance;
 
+class animated_model_instance_cook : public resources::translate_query_cook {
 public:
 					animated_model_instance_cook	( );
-	
-	virtual	void	translate_request_path			( pcstr request, fs_new::virtual_path_string & new_request ) const;
-	virtual	void	translate_query					( resources::query_result_for_cook&	parent );
-	virtual void	delete_resource					( resources::resource_base* resource );
-	
+
+	virtual	void	translate_request_path			( pcstr request, fs_new::virtual_path_string& new_request ) const override;
+	virtual	void	translate_query					( resources::query_result_for_cook& parent ) override;
+
+	virtual	void	delete_resource					( resources::resource_base* resource ) override;
+
+	virtual			~animated_model_instance_cook	( ) { /* no source */ }
+
 private:
 			void	on_config_loaded				( resources::queries_result& data );
 			void	on_subresources_loaded			( resources::queries_result& data );
+			void	on_hit_params_loaded			( resources::queries_result& data, animated_model_instance* new_model );
 }; // class animated_model_instance_cook
+
+STATIC_SIZE_ASSERT(animated_model_instance_cook, 0x20);
 
 } // namespace survarium
 

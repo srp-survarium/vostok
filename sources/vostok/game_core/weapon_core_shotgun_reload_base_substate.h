@@ -27,14 +27,14 @@ namespace survarium {
 class weapon_core;
 
 class weapon_core_shotgun_reload_base_substate : public ai::fsm_state , public resources::unmanaged_resource {
-public:
+protected:
 	explicit			weapon_core_shotgun_reload_base_substate(
 							weapon_core&							weapon,
-							float									animation_time_scale,
+							float const								animation_time_scale,
 							resources::managed_resource_ptr const*	animations,
-							u32										animations_count,
-							animation::mixing::playback_enum		playback_type,
-							u32										time_synchronization_group,
+							u32 const								animations_count,
+							animation::mixing::playback_enum const	playback_type,
+							u32 const								time_synchronization_group,
 							pcstr									animation_id,
 							pcstr									hands_stand_animation_id,
 							pcstr									hands_crouch_animation_id,
@@ -52,24 +52,24 @@ public:
 			animation::mixing::expression
 					weapon_and_hands_expression			(
 						mutable_buffer&							buffer,
-						bool									is_third_view,
-						weapon_user_state_enum					user_state_id,
+						const bool									is_third_view,
+						const weapon_user_state_enum					user_state_id,
 						animation::mixing::animation_lexeme&	weight_driving_animation
 					) const;
 
-	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* arg_0 ) { /* no source */ }
+	inline	void	set_animation_playback_state_ptr	( animation::animation_playback_state* animation_playback_state ) { m_animation_playback_state = animation_playback_state; }
 
 	inline	bool	deserializing						( ) const { /* no source */ }
 
-public:
-			weapon_lexeme_pair
-					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const;
-
 private:
+			weapon_lexeme_pair
+					get_weapon_lexeme_pair				( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const;
+
+protected:
 	/* 0x0000 */	/* ai::fsm_state */
 	/* 0x0018 */	/* resources::unmanaged_resource */
 	/* 0x0120 */	weapon_core&							m_weapon;
-	/* 0x0124 */	resources::managed_resource_ptr			m_animation_to_wait_for;
+	/* 0x0124 */	mutable resources::managed_resource_ptr	m_animation_to_wait_for;
 	/* 0x0128 */	resources::managed_resource_ptr			m_weapon_animations[2][2];
 	/* 0x0138 */	resources::managed_resource_ptr			m_user_animations[2][2];
 	/* 0x0148 */	animation::animation_playback_state*	m_animation_playback_state;

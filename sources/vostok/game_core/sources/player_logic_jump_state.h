@@ -14,6 +14,7 @@ class player_logic_jump_state : public player_logic_base_state {
 public:
 	explicit				player_logic_jump_state	( weapon_user_animations_selector& owner );
 
+private:
 	virtual	void			initialize				( ) override;
 	virtual	void			finalize				( ) override;
 	virtual	void			execute					( ) override;
@@ -24,12 +25,12 @@ public:
 							selected_animations		(
 								mutable_buffer&						buffer,
 								weapon_animation_parameters const&	weapon_parameters,
-								bool								is_third_view
+								const bool								is_third_view
 							) const override;
 
 	virtual	void			set_user				( base_player& user ) override;
 
-private:
+
 	/* 0x0000 */	/* player_logic_base_state */
 	/* 0x0028 */	jump_logic		m_logic;
 }; // class player_logic_jump_state

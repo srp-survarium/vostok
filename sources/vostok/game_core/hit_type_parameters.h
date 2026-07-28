@@ -15,10 +15,10 @@ class hit_type_parameters : public boost::noncopyable {
 public:
 						hit_type_parameters	(
 							pcstr		type,
-							float		absorption,
-							float		armor,
+							const float		absorption,
+							const float		armor,
 							float		reduce,
-							u32			bdb_count
+							const u32			bdb_count
 						);
 
 
@@ -33,7 +33,7 @@ public:
 	inline	float		get_absorption		( ) const { return m_absorption_amount; }
 	inline	u32			get_bdb_coeffs_count( ) const { return m_bdb_count; }
 
-			void		apply_damage		( float delta, u32 time_in_ms );
+			void		apply_damage		( const float delta, const u32 time_in_ms );
 	inline	void		remove_vertex		( body_part_parameters* arg_0 ) { /* no source */ }
 			void		set_parameters		( float armor, float reduce, float absorbtion );
 

@@ -55,15 +55,9 @@ VOSTOK_THREADING_INLINE atomic32_value_type	interlocked_exchange_sub			( atomic3
 	return				( _InterlockedExchangeAdd( &value, -subtract ) );
 }
 
-VOSTOK_THREADING_INLINE atomic32_value_type interlocked_and						( atomic32_type& value, atomic32_value_type mask )
-{
-	return				( _InterlockedAnd( &value, mask ) );
-}
-
-VOSTOK_THREADING_INLINE atomic32_value_type interlocked_or						( atomic32_type& value, atomic32_value_type mask )
-{
-	return				( _InterlockedOr( &value, mask ) );
-}
+// interlocked_and / interlocked_or are defined OUT-OF-LINE (no
+// _InterlockedAnd/_InterlockedOr intrinsics on MSVC8 x86) - see
+// threading_functions_win.cpp; declared VOSTOK_CORE_API in threading_functions.h.
 
 VOSTOK_THREADING_INLINE atomic32_value_type interlocked_exchange					( atomic32_type& target, atomic32_value_type value )
 {

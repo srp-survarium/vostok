@@ -54,6 +54,8 @@ class scene;
 class scene_view;
 struct light_props;
 struct decal_properties;
+struct ambient_volume_properties;
+struct volume_fog_parameters;
 struct scene_configuration;
 struct buffer_fragment;
 struct terrain_buffer_fragment;
@@ -183,6 +185,15 @@ public:
 			void			add_decal					( scene_ptr const& scene, u32 id, render::decal_properties const& properties );
 			void			update_decal				( scene_ptr const& scene, u32 id, render::decal_properties const& properties );
 			void			remove_decal				( scene_ptr const& scene, u32 id );
+
+			void			update_lpv_occluder			( scene_ptr const& scene, u32 id, math::float4x4 const& transform );
+			void			remove_lpv_occluder			( scene_ptr const& scene, u32 id );
+
+			void			update_ambient_volume		( scene_ptr const& scene, u32 id, render::ambient_volume_properties const& in_properties );
+			void			remove_ambient_volume		( scene_ptr const& scene, u32 id );
+
+			void			update_volume_fog			( scene_ptr const& scene, u32 id, render::volume_fog_parameters const& in_parameters );
+			void			remove_volume_fog			( scene_ptr const& scene, u32 id );
 
 			void			update_skeleton				( render::render_model_instance_ptr const& v, math::float4x4* matrices, u32 count );
 

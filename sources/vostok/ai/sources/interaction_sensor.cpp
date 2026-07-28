@@ -30,12 +30,10 @@ void interaction_sensor::tick			( )
 	
 	for ( ai_objects_type::const_iterator iter = objects.begin(); iter != objects.end(); ++iter )
 	{
-		collision_object const* const ai_object = (*iter)->get_collision_object();
-
 		sensed_object pickup_object		(
 			m_npc.get_position( float3( 0, 0, 0 ) ),
-			ai_object->get_origin(),
-			&ai_object->get_game_object(),
+			(*iter)->get_collision_object()->get_origin(),
+			&(*iter)->get_collision_object()->get_game_object(),
 			m_world.get_current_time_in_ms(),
 			sensed_object_type_interaction,
 			1.f
