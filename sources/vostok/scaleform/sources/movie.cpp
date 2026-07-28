@@ -120,12 +120,9 @@ void flash_text::set_font_size( const float font_size )
 	size	+= 5.f;
 
 	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
-	text_impl->SetRect( Scaleform::Render::RectF(
-		rect.x1,
-		rect.y1,
-		rect.x1 + size.Width,
-		rect.y1 + size.Height
-	) );
+	rect.x2	= size.Width + rect.x1;
+	rect.y2	= size.Height + rect.y1;
+	text_impl->SetRect( rect );
 	owner->need_capture	= true;
 }
 
@@ -159,12 +156,9 @@ void flash_text::set_text( pcstr text )
 	size	+= 5.f;
 
 	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
-	text_impl->SetRect( Scaleform::Render::RectF(
-		rect.x1,
-		rect.y1,
-		rect.x1 + size.Width,
-		rect.y1 + size.Height
-	) );
+	rect.x2	= size.Width + rect.x1;
+	rect.y2	= size.Height + rect.y1;
+	text_impl->SetRect( rect );
 	owner->need_capture	= true;
 }
 
