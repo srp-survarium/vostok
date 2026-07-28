@@ -1501,6 +1501,14 @@
 			Name="scene"
 			>
 			<File
+				RelativePath=".\sound_environment.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\sound_environment.h"
+				>
+			</File>
+			<File
 				RelativePath=".\sound_scene.cpp"
 				>
 			</File>
