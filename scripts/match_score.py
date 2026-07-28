@@ -229,8 +229,6 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
 
     ov = db["OVERALL"]
     funcs, tfuncs = ov["exact_cur"], ov["total_funcs"]
-    o_fz_diff = ov["fuzzy_max"] - ov["fuzzy_cur"]
-
     rows = []
     for mod in sorted((m for m in db if m != "OVERALL"),
                       key=lambda k: -db[k]["total_funcs"]):
@@ -242,13 +240,13 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
             f"`{mod}`",
             f"{a['units']}",
             f"{exc:,} / {tot:,} ({_pct(exc, tot):.1f}%)",
-            f"{exm:,} (+{exm - exc})",
+            f"{exm:,} / {tot:,} ({_pct(exm, tot):.1f}%)",
             f"{fzc:.1f}%",
-            f"+{fzm - fzc:.1f}%",
+            f"{fzm:.1f}%",
         ])
     table = _md_table(
-        ["Module", "Units", "Functions exact", "Functions exact max",
-         "Fuzzy", "Fuzzy max"],
+        ["Module", "Units", "Functions exact", "Functions best seen",
+         "Fuzzy", "Fuzzy best seen"],
         "lrrrrr",
         rows,
     )
@@ -261,16 +259,19 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         "`rebuild.py` at the end of every build; do not hand-edit. Diff this block "
         "across commits to spot regressions._",
         "",
-        f"**Overall: {ov['fuzzy_cur']:.2f}% fuzzy (+{o_fz_diff:.2f}%) &middot; "
-        f"{funcs:,} / {tfuncs:,} functions exact "
-        f"({_pct(funcs, tfuncs):.2f}%, +{ov['exact_max'] - funcs} best-ever).**",
+        f"**Overall: {funcs:,} / {tfuncs:,} functions exact "
+        f"({_pct(funcs, tfuncs):.2f}%) &middot; "
+        f"{ov['exact_max']:,} / {tfuncs:,} functions best seen "
+        f"({_pct(ov['exact_max'], tfuncs):.2f}%) &middot; "
+        f"{ov['fuzzy_cur']:.2f}% fuzzy &middot; "
+        f"{ov['fuzzy_max']:.2f}% fuzzy best seen.**",
         "",
-        "_All figures from `match.db`, over ALL target functions (paired + inlined/"
-        "folded `target_only`). `Functions exact` / `Fuzzy` = current; the `max` "
-        "columns are best-ever per function (`history.best_fuzzy_pct`, ICF-churn-"
-        "immune): `Functions exact max` shows `(+N)` functions that were exact before "
-        "they folded away, `Fuzzy max` shows `+Δ%` regained. Byte-weighted code view: "
-        "`scripts/match_score.py --max-code`._",
+        "_All figures come from `match.db` over every target function (paired plus "
+        "inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe "
+        "the current build. **Best seen** retains ordinary rebuild observations "
+        "from `history.best_fuzzy_pct`, primarily to expose ICF/fold churn; it is "
+        "not HoMM2-style source-hash-scoped island evidence or correctness proof. "
+        "Byte-weighted code view: `scripts/match_score.py --max-code`._",
         "",
         *table,
     ]

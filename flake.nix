@@ -34,11 +34,9 @@
       flake = false;
     };
     vostok-delinker-src = {
-      # Pinned to the static-init-thunk canonicalization commit: the base .obj
-      # COFF symbol names for `??__E`/`??__F` thunks are demangled to the target
-      # PDB's `` `dynamic initializer for 'X'' `` form so objdiff pairs them
-      # (the matching half of the vostok-pdb-parser change above).
-      url = "github:srp-survarium/vostok-delinker/4e81d30d201747accfcaffa2a0cc7aeabe423462";
+      # Keep the measured delinker revision explicit: changes to relocation and
+      # symbol recovery can re-pair functions without any source change.
+      url = "github:srp-survarium/vostok-delinker/83bc6fc0835e80e6cf15ab68f98c0bde02020bbc";
       flake = false;
     };
     vostok-resources-db-src = {
@@ -103,7 +101,7 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
-        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
+        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
       };
 
       # ---------------------------------------------------------------------------
@@ -346,6 +344,7 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+          pkgs.llvmPackages.bintools
           # sqlite3 CLI - pdb_fetch.nvim reads docs/binary_matching/match.db for
           # per-function match metrics (cur %, best %, structure, retries).
           pkgs.sqlite

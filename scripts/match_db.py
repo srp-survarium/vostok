@@ -348,6 +348,17 @@ def dyn_canon_base(mangled):
     return (kc, "::".join(scopes + [var]))
 
 
+def dyn_compiler_name(canonical):
+    """MSVC-decorated thunk name for a ``(kind, qualified variable)`` key."""
+    kind, fqn = canonical
+    parts = fqn.split("::")
+    if not parts or any(not _IDENT_RE.match(part) for part in parts):
+        return None
+    variable, scopes = parts[-1], parts[:-1]
+    scope_suffix = "".join(f"@{scope}" for scope in reversed(scopes))
+    return f"??__{kind}{variable}{scope_suffix}@@YAXXZ"
+
+
 def is_framed(rec):
     """True when the function keeps the /Od `push ebp; mov ebp, esp` prologue.
     A frameless function in a matchable module is an LTCG-customized leaf
@@ -587,6 +598,15 @@ def regen():
         if fuzzy is not None:
             prev = fuzzy_by_mangled.get(mangled)
             fuzzy_by_mangled[mangled] = fuzzy if prev is None else max(prev, fuzzy)
+    # The disposable target COFF tree normalizes safe retail PDB backtick names
+    # to MSVC's ??__E/??__F spelling so objdiff can pair them with candidate
+    # objects. The rich indexes retain the authoritative PDB names; reflect each
+    # normalized report score back onto that identity before building pair rows.
+    for mangled in target:
+        canonical = dyn_canon_target(mangled)
+        compiler = dyn_compiler_name(canonical) if canonical else None
+        if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
+            fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
     pair_rows = []
     for mangled in sorted(set(target) & set(base)):
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[mangled], base[mangled])

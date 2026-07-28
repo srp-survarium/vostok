@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vostok Verify Structure"
+  short_description: "Verify and fix source-structure mismatches"
+  default_prompt: "Use $vostok-verify-structure to verify and fix the requested Vostok functions."
