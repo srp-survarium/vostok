@@ -37,3 +37,14 @@ variants: <sibling-file.md, ...>   (only when true variants of the same construc
 <at most 1-2 lean trailing lines: steerable-or-wall + evidence (functions, %s, PRs).>
 ```
 
+## Bootstrapping new patterns by compiling probes
+
+You do not have to wait for a diff to surface a shape. Write a minimal snippet, compile it
+with the real toolchain, and read the listing — the method that produced the foundational
+`construct -> /Od asm` set in [`patterns/manual/`](patterns/manual/INDEX.md) (if/else,
+loops, `&&`/`||`, comma, braces, calls, virtual dispatch, `_alloca`, the `VOSTOK_NEW`/
+`DELETE` family, construct/destruct-in-place). The reproduction recipe — a standalone
+`cl.exe` invocation with the game_core codegen flags minus `/GL` `/Zi` and the PCH, plus
+`/FAcs` for a machine-code listing — is at the top of that INDEX. Reach for it whenever a
+construct's lowering is unclear; promote anything reusable to a `patterns/` file as usual.
+
