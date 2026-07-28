@@ -24,13 +24,13 @@ panning_lut_cook::~panning_lut_cook 	( )
 void panning_lut_cook::translate_query	( resources::query_result_for_cook&	parent )
 {
 	resources::user_data_variant* user_data		= parent.user_data( );
-	channels_type type							= channels_type_count;	
+	u8 channels_num								= 2;
 	if ( user_data )
 	{
-		user_data->try_get( type );
+		user_data->try_get( channels_num );
 	}
 
-	panning_lut* lut				= UNMANAGED_NEW ( lut, panning_lut ) ( type );
+	panning_lut* lut				= UNMANAGED_NEW ( lut, panning_lut ) ( channels_num );
 
 	if ( !lut )
 	{
