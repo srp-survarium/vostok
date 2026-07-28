@@ -37,14 +37,11 @@ encoded_sound_with_qualities::~encoded_sound_with_qualities	( )
 encoded_sound_child_ptr const& encoded_sound_with_qualities::get_encoded_sound( world const& world, resources::positional_unmanaged_resource const* const resource_user )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS		( resource_user, &world );
-	//float distance	= .0f; //world->get_distance_to_listener( resource_user->current_matrix( ).lines[3].xyz() );
-
 
 	for ( s32 i	= array_size( m_qualities ) - 1; i >= 0; --i )
 	{
 		if ( m_qualities[i] )
 		{
-			//if ( math::similar( satisfaction_with ( i, resource_user, 0 ), 1.f ) )
 			m_current_quality	= i;
 			return				m_qualities[i];
 		}
@@ -59,7 +56,6 @@ encoded_sound_child_ptr const& encoded_sound_with_qualities::get_encoded_sound( 
 	{
 		if ( m_qualities[i] )
 		{
-			//if ( math::similar( satisfaction_with ( i, resource_user, 0 ), 1.f ) )
 			m_current_quality	= i;
 			return				m_qualities[i];
 		}
@@ -102,22 +98,6 @@ void encoded_sound_with_qualities::increase_quality_to_target	(query_result_for_
 	if ( m_sound_interface_type == unknown_data_class )
 	{
 		m_sound_interface_type			= ogg_encoded_sound_interface_class; // default value
-
-		//query_result_for_cook const* p	= parent_query;
-
-		//while ( p )
-		//{
-		//	resources::user_data_variant* user_data	= p->user_data( );
-		//	if ( user_data )
-		//	{
-		//		class_id_enum sound_interface_type;
-		//		user_data->try_get( sound_interface_type );
-		//		R_ASSERT	( sound_interface_type == ogg_encoded_sound_interface_class || sound_interface_type == wav_encoded_sound_interface_class );
-		//		m_sound_interface_type	= sound_interface_type;
-		//		break;
-		//	}
-		//	p = p->get_parent_query( );
-		//}
 	}
 
 	for ( u32 i = 0; i <  max_quality_levels_count; ++i )
@@ -182,17 +162,10 @@ float encoded_sound_with_qualities::satisfaction_with (u32 quality_level, positi
 	return							satisfaction;
 }
 
-//struct sound_world {
-//	threading::atomic_ptr<math::float3>	m_listener_position;
-//	math::float3						m_listener_positions[2];
-//
-//};
-
 void encoded_sound_with_qualities::on_quality_loaded	(queries_result & resources)
 {
 	R_ASSERT						( m_increasing_quality );
 	u32 const target_quality		= target_quality_level( );
-//	m_current_quality				= target_quality;
 
 	bool const increasing			= !m_parent_query;
 
