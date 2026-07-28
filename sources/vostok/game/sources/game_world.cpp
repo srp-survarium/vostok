@@ -170,11 +170,7 @@ void game_world::tick( const u32 frame_delta_ms, const u32 current_time_in_ms, c
 	if ( m_is_ui_shown )
 		game_ui.update_ui( frame_delta_ms, current_time_in_ms );
 
-	if ( get_text_manager( )->need_capture )
-	{
-		get_text_manager( )->text_manager_impl->Capture( true );
-		get_text_manager( )->need_capture = false;
-	}
+	get_text_manager( )->tick( );
 }
 
 void game_world::switch_camera_mode( const input_mode_type_enum input_mode )

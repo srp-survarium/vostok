@@ -26,16 +26,13 @@ struct flash_text {
 		align_justify
 	};
 
-	inline				flash_text		( ) { /* no source */ }
+	inline				flash_text		( ) : text_impl( NULL ), owner( NULL ), visible( false ) { }
 
-	inline	float		get_width		( ) { /* no source */ return 0.f; }
-	inline	float		get_height		( ) { /* no source */ return 0.f; }
+			float		get_width		( );
+			float		get_height		( );
 
-	// real out-of-line bodies live in the scaleform glue (movie.cpp); declared
-	// (not inlined) here so game-side callers resolve to that single definition
-	// instead of emitting a clashing COMDAT copy (LNK2005 vs movie.obj)
 			void		set_visible		( bool arg_0 );
-	inline	void		set_font_size	( const float arg_0 ) { /* no source */ }
+			void		set_font_size	( const float arg_0 );
 			void		set_position	( const float arg_0, const float arg_1 );
 	inline	void		set_alignment	( flash_text::alignment arg_0 ) { /* no source */ }
 			void		set_color		(
