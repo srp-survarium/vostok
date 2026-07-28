@@ -16,4 +16,5 @@ animation_lexeme::animation_lexeme	( animation_lexeme_parameters const& paramete
 	base_lexeme					( parameters.buffer() ),
 	m_cloned_instance			( 0 )
 {
+	cloned_in_buffer				( );
 }
