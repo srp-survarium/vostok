@@ -12,11 +12,7 @@
 
 namespace vostok
 {
-	// /OPT:REF reachability anchor entry points, one per engine module. Each
-	// instantiates its module's classes and calls their methods so the linker
-	// keeps them in the base EXE for the delinker to score. IncludeAll::IncludeAll()
-	// (instantiated in game/sources/game_entry_point.cpp::create_world - the real
-	// engine entry point) dispatches to all of them.
+	// Module entry points keep reconstructed code reachable under /OPT:REF.
 	void anchor_game_core( );
 	void anchor_network_core( );
 	void anchor_network( );
@@ -25,34 +21,19 @@ namespace vostok
 	void anchor_logging( );
 	void anchor_ai_navigation( );
 
-	// game module's own per-module anchor (the engine_user world cone, the game/menu/
-	// camera/stats skeleton, and the network-client carcass) - defined in
-	// game/sources/anchor_game.cpp, not game_core.
 	void anchor_game( );
 
-	// animation module's n_ary_tree visitor carcass anchors - defined in
-	// animation/sources/anchor_animation_*.cpp (each visitor has no reachable
-	// constructor; mixer.cpp is not compiled in this build).
 	void anchor_animation_comparer( );
 	void anchor_animation_weaver( );
 	void anchor_animation_cloner( );
 	void anchor_animation_animation_time_calculator( );
 	void anchor_animation_time_in_ms_calculator( );
 
-	// animation_player carcass anchor - the player's public surface is only reached
-	// by the game animation-controller graph (not fully wired in this build); defined
-	// in animation/sources/anchor_animation_player.cpp.
 	void anchor_animation_player( );
 
-	// scaleform module's wrapper reachability anchor - the survarium scaleform
-	// wrappers (flash_factory / flash_movie / flash_text(_manager) / flash_renderer /
-	// scaleform_render_command(_queue) / scaleform_engine / vostok_scaleform_log) are
-	// reached only through the never-instantiated engine startup stub; defined in
-	// scaleform/sources/anchor_scaleform.cpp.
 	void anchor_scaleform( );
 
-	// shared opaque sink: escapes addresses so LTCG observes member stores.
-	// Defined once in anchor_network_core.cpp; used by every anchor TU.
+	// Escapes addresses so LTCG observes anchored member stores.
 	void example_callback( const char* name );
 }
 
@@ -63,37 +44,6 @@ class IncludeAll
 {
 public:
 	IncludeAll();
-};
-
-
-class Callback1
-{
-public:
-	Callback1();
-
-	void complete ( char const * name );
-	void partial  ( char const * name, int value );
-
-public:
-	typedef boost::function< void ( char const * ) > fn;
-
-	fn m_complete;
-	fn m_partial;
-};
-
-class Callback2
-{
-public:
-	Callback2();
-
-	void complete ( char const * name, int value );
-	void partial  ( char const * name, int value, float precision );
-
-public:
-	typedef boost::function< void ( char const *, int ) > fn;
-
-	fn m_complete;
-	fn m_partial;
 };
 
 }
