@@ -163,9 +163,11 @@ n_ary_tree_animation_time_calculator::n_ary_tree_animation_time_calculator	(
 	m_animation_interval_length				( (animation.animation_intervals() + animation.animation_state().animation_interval_id)->length() ),
 	m_is_read_only							( is_read_only )
 {
-	// sushi@TODOm_new_time_scale_node					= *animation.operands( sizeof(n_ary_tree_animation_node) );
-	// sushi@TODOm_new_time_scale_node->accept			( *this );
-	// sushi@TODO*animation.operands( sizeof(n_ary_tree_animation_node) )	= m_new_time_scale_node;
+	if ( animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+		(*animation.operands( sizeof( n_ary_tree_animation_node ) ))->accept	( *this );
+	else
+		fill_time							( 1.f, start_animation_time, start_time_in_ms );
+
 	R_ASSERT_CMP							( m_animation_time, >=, 0.f );
 	R_ASSERT_CMP							( m_animation_time, <=, m_animation_interval_length );
 }
