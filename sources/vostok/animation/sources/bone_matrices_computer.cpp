@@ -80,11 +80,6 @@ STATIC_SIZE_ASSERT(bone_transform, 0x2C);
 namespace vostok {
 namespace animation {
 
-// claude@NOTE: 7-stmt STRUCTURE MATCH (capped ~30%). Residual is inlining-environment only:
-// target keeps a real `call vostok::math::max` + register-promotes m_layers_count to ebx
-// (single write-back + ++), base inlines max branchless and read/writes the member each pass;
-// target inlines the intrusive_ptr ref-count dance into the pinned_ptr assignment while base
-// keeps pinned_ptr_const::operator=/dtor calls. Same statements, different inline decomposition.
 bone_matrices_computer::bone_matrices_computer(
 	pcvoid const						animated_object,
 	skeleton const*						skeleton,
@@ -127,14 +122,6 @@ float3 mix_translations( buffer_vector< std::pair< float3, float > > const& tran
 	return	result;
 }
 
-// claude@NOTE: BODIED (faithful reconstruction of the 26-stmt target at va 0x6eca10) but currently
-// DCE-stripped: its only callers (computed_local_bone_transform / get_object_transform below) are
-// still STUBs, and those in turn are blocked on two missing engine symbols - the 4-arg
-// evaluate_frame( float, animation_curve_type const*, frame&, current_frame_position& ) and
-// bone_names::bone_index( char const* ) const (CRC binary-search over a bone_name_index /
-// crc_compare_predicate our bone_names.h does not yet model). Pairs the moment that chain is bodied
-// (same situation as the n_ary_tree forwarders). Callee math::extrapolated_slerp added to
-// math_quaternion.{h,cpp}.
 math::quaternion mix_rotations(
 		buffer_vector< std::pair< float3, float > >&	transforms,
 		const bool										do_normalization

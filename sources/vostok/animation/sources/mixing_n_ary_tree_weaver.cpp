@@ -80,10 +80,8 @@ void n_ary_tree_weaver::visit			( binary_tree_animation_node& node )
 	unique_node->m_unique_weights_count	= 0;
 	unique_node->m_next_weight_animation	= m_animations_root;
 	m_animations_root					= unique_node;
-	if ( !unique_node->weight_driving_animation() )
+	if ( !unique_node->weight_driving_animation() || !unique_node->time_driving_animation() )
 		add_interpolator		( *unique_node, *unique_node->time_scale_interpolator() );
-	else
-		R_ASSERT				( !unique_node->time_scale_interpolator() );
 }
 
 void n_ary_tree_weaver::visit			( binary_tree_weight_node& node )
