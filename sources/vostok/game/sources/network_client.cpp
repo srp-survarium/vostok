@@ -453,12 +453,12 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 		m_unacknowledged_packets_value.set_position( 325.f, 340.f );
 	}
 
-	m_sent.set_visible( true );
-	m_sent_low_level.set_visible( true );
-	m_resent.set_visible( true );
-	m_received.set_visible( true );
-	m_received_low_level.set_visible( true );
-	m_received_duplicated.set_visible( true );
+	m_sent.set_visible( s_show_network_statistics );
+	m_sent_low_level.set_visible( s_show_network_statistics );
+	m_resent.set_visible( s_show_network_statistics );
+	m_received.set_visible( s_show_network_statistics );
+	m_received_low_level.set_visible( s_show_network_statistics );
+	m_received_duplicated.set_visible( s_show_network_statistics );
 
 	m_max_local_sequence_difference_caption.set_visible( s_show_network_statistics );
 	m_max_local_sequence_difference_value.set_visible( s_show_network_statistics );
@@ -474,7 +474,7 @@ void network_client::draw_stats( const u32 current_time_in_ms )
 	m_received_duplicated.set_text( current_time_in_ms, stats.received_duplicated, m_previous_stats.received_duplicated );
 
 	m_previous_stats = stats;
-	network_core::udp_match_stats difference = m_previous_stats - stats;
+	network_core::udp_match_stats difference = stats - m_previous_stats;
 
 	char text[ 256 ];
 	vostok::sprintf< 256 >( text, "%3d packets", m_previous_stats.max_local_sequence_difference );
