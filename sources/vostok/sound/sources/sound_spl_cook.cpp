@@ -46,6 +46,8 @@ void sound_spl_cook::delete_resource	( resource_base* res )
 
 void sound_spl_cook::on_config_loaded( queries_result& data, query_result_for_cook* parent )
 {
+	sound_spl_ptr spl						= VOSTOK_NEW_IMPL( resources::unmanaged_allocator( ), sound_spl) ( );
+
 	if( !data.is_successful() )
 	{
 	#ifndef MASTER_GOLD
@@ -67,10 +69,11 @@ void sound_spl_cook::on_config_loaded( queries_result& data, query_result_for_co
 		return;
 	}
 
-	configs::binary_config_ptr config		= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
-
-	sound_spl_ptr spl						= VOSTOK_NEW_IMPL( resources::unmanaged_allocator( ), sound_spl) ( );
-	spl->load								( config->get_root( )["spl"] );
+	else
+	{
+		configs::binary_config_ptr spl_config	= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
+		spl->load								( spl_config->get_root( )["spl"] );
+	}
 	parent->set_unmanaged_resource			( spl.c_ptr(), resources::nocache_memory, sizeof( sound_spl ));
 	parent->finish_query					( result_success );
 }
