@@ -13,6 +13,8 @@
 #include "vostok_scaleform_log.h"
 
 #include "GFx.h"
+#include "GFx_FontProvider_Win32.h"
+#include "GFx_Render.h"
 
 namespace survarium {
 
@@ -129,11 +131,26 @@ flash_text_manager* flash_factory::create_text_manager( )
 	return new flash_text_manager( m_gfx_loader );
 }
 
-// STATE[STUB]
 flash_factory::flash_factory( scaleform_game_engine& engine )
 {
-	// FUNCTION BODY[0x5bbc40]
-	VOSTOK_UNREFERENCED_PARAMETER	( engine );
+	m_gfx_loader	= new Scaleform::GFx::Loader;
+	m_gfx_loader->SetFileOpener( &g_file_opener );
+	m_gfx_loader->SetLog( &g_vostok_logger );
+
+	Scaleform::Ptr<Scaleform::GFx::FontProviderWin32>	font_provider	= *SF_NEW Scaleform::GFx::FontProviderWin32( GetDC( NULL ) );
+	m_gfx_loader->SetFontProvider( font_provider );
+
+	Scaleform::Ptr<Scaleform::GFx::ASSupport>	as2_support	= *SF_NEW Scaleform::GFx::AS2Support;
+	m_gfx_loader->SetAS2Support( as2_support );
+
+	Scaleform::Ptr<Scaleform::GFx::ImageFileHandlerRegistry>	image_handlers	= *SF_NEW Scaleform::GFx::ImageFileHandlerRegistry;
+	image_handlers->AddHandler( &Scaleform::Render::JPEG::FileReader::Instance );
+	image_handlers->AddHandler( &Scaleform::Render::PNG::FileReader::Instance );
+	image_handlers->AddHandler( &Scaleform::Render::TGA::FileReader::Instance );
+	image_handlers->AddHandler( &Scaleform::Render::DDS::FileReader::Instance );
+	m_gfx_loader->SetImageFileHandlerRegistry( image_handlers );
+
+	m_render_thread_queue	= new scaleform_render_command_queue( engine );
 }
 
 } // namespace survarium
