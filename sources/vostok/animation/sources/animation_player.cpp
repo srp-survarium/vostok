@@ -41,29 +41,13 @@ private:
   boost::function< float4x4 ( pcvoid )>&	functor;
 };
 
-// claude@NOTE: parked - transform_getter is a sushi@TODO local reconstruction (not in any
-// header); get_transform calls the wrapped functor or animation_player::try_get_transform.
-// Target VA 0x11d090 is in the .text low range (not the 0x55-0x57 player block) so it pairs
-// only once the transform_getter reconstruction itself is finalized. Reconstruct from asm.
-// STATE[STUB]
 float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 {
-	// LOCALS
-	// float4x4 						transform
-	// ******
+	float4x4 transform;
+	if ( animation_player.try_get_transform( animated_object, transform ) )
+		return transform;
 
-	return vostok::math::float4x4();
-
-	// FUNCTION BODY
-	// <0x11d090>|0x000|+0x00b:'43'	{
-	// <0>
-	// <0x11d09b>|0x00b|+0x017:'45'
-	// <0x11d0b2>|0x022|+0x018:'46'
-	// <0>
-	// <0x11d0ca>|0x03a|-0x008:'48'
-	// <0x11d0c2>|0x032|+0x017:'49'
-	// <0x11d0d9>|0x049|      :'49'	}
-	// ******
+	return functor( animated_object );
 }
 /*
 // STATE[STUB]
