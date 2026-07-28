@@ -35,6 +35,9 @@ semantics are not.
 - Inspect the small `binaries/objdiff/report-changes.json` for regressions.
   Slice the large `report.json` with `jq`; never print or load it wholesale.
 - After editing `scripts/`, run `ruff check scripts/`.
+- Treat `history.best_fuzzy_pct` as scheduling/ICF history only. Correctness-facing
+  MAX comes from `source_maxima`, is scoped to an effective source/compiler-context
+  hash, and must never be backfilled from ordinary best-seen history.
 
 ## Matching invariants
 
@@ -90,6 +93,10 @@ semantics are not.
   onto the advancing tip; never merge a fan.
 - Preserve every per-commit README/database snapshot. Land an approved linear
   stack by fast-forward, never squash it.
+- Before committing a matching step, record every function actually worked
+  exactly once in `attempts` (a whole-TU mark is appropriate when the whole TU
+  was reviewed). Put those marks and any flags in the same rebuilt database
+  snapshot as the source change so the per-commit diff identifies the work.
 - Do not push, merge, close PRs, prune worktrees, or delete branches unless the
   user or the active orchestration task authorizes it.
 

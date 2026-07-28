@@ -17,17 +17,23 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
 5. Parallelize investigation, not history. Integrate each finished worker one
    at a time by cherry-picking onto the current tip. Never merge sibling
    branches or create a PR fan.
-6. After each integration, run the full `python3 scripts/rebuild.py`, inspect
-   regressions, update attempts/flags, and fold the generated README and
-   `match.db` into that same source commit. No commit may borrow a later
-   database snapshot.
+6. After each integration, run the full `python3 scripts/rebuild.py` and inspect
+   regressions. Before committing, mark every function actually worked exactly
+   once in `attempts` (use `match_db.py tried --unit <tu>` when the whole TU was
+   worked), apply flags, then fold the generated README and `match.db` into that
+   same source commit. A diff with no attempt increment for worked code is a
+   bookkeeping defect. No commit may borrow a later database snapshot.
 7. Push/open a PR only after its commit is measured. Base each PR on the unit
    immediately below it.
 8. After roughly 10-15 integrated units, run one
    `$vostok-verify-structure` audit over the batch and land its rebuilt fix as a
    new stack commit.
 9. Continue until work is compiled-done or parked with a queryable cause and
-   next action. Audit attempts and flags before handoff.
+   next action. Use `source_maxima`, not ordinary `history.best_fuzzy_pct`, for
+   MAX progress (`match_db.py max --module <m> --below 100`). Never carry MAX
+   across an effective-source hash change. Island evidence must be measured by
+   the normal report/index refresh before `record-max` annotates it; never type
+   a score into the ledger. Audit attempts and flags before handoff.
 10. Request or perform `$vostok-review-match` before landing. When authorized
     and ready, fast-forward the complete linear stack into the integration
     branch. Never squash; preserve every per-commit database snapshot.
