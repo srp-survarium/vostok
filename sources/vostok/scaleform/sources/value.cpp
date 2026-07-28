@@ -13,29 +13,6 @@
 
 #include "GFx.h"
 
-// claude@NOTE: this TU now builds /Ox (Master Gold Optimization=3, since the
-// scaleform vcproj flip), so the trivial setters/getters/ctors/dtors byte-match
-// the target. The remaining partials are NOT /Od artifacts; they are genuine /Ox
-// residuals over already-faithful structure:
-//  - Call pairs 5/5 statements at the exact target lines, same 0x46 total bytes;
-//    the only delta is the optimizer interleaving the params.pMovie->GetUserData()
-//    load across the field-store statements (scheduling, not source-steerable).
-//  - SetVariable/GetVariable/SetElement pair clean (gfx() inlines); the byte
-//    residual is per-statement instruction scheduling of the inlined GFx::Value.
-//  - SetString/SetStringW: the target source is `*gfx(this) = GFx::Value(value)`
-//    (constructs a typed Value temp, inlines operator=). Our /Ox does NOT inline
-//    GFx::Value::operator= (emits `call operator=` + an explicit temp ~Value),
-//    which scores WORSE (unpaired) than the SF_INLINE SetString form kept here.
-//    The temp+operator= form is what the target wrote; restore it once the SDK
-//    operator= inlines (or it is forced inline). Kept at the paired SetString form.
-//  - GetMember pairs against the wrong base COMDAT (objdiff folds it onto a
-//    DrawText helper that pushes the "text" literal + ret 4) - a pairing artifact,
-//    not a source gap; our GetMember(member_name, value) is correct.
-//  - Callback: 2 target statements (movie->GetUserData() evaluated first, then the
-//    virtual owner.callback) vs our base's right-to-left arg push; the target has
-//    0 named locals, so the early GetUserData is the optimizer's arg scheduling for
-//    the virtual call, not a named-temp source shape we can add.
-
 namespace survarium {
 
 // the flash_value <-> GFx::Value bridge helpers (addressed free functions;
