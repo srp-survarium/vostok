@@ -490,126 +490,103 @@ void n_ary_tree::update_synchronization_group_using_integration(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree::update_animation_time( animation_state& animation_state )
 {
-	// LOCALS
-	// const float 						animation_time
-	// const float 						animation_length
-	// ******
+	if ( animation_state.is_freezed )
+		return;
 
-	// FUNCTION BODY
-	// <0x6eea33>|0x003|+0x00b:'940'
-	// <0>
-	// <1>
-	// <0x6eea3e>|0x00e|+0x012:'943'
-	// <0x6eea50>|0x020|+0x00a:'944'
-	// <0x6eea5a>|0x02a|+0x07e:'945'
-	// <0>
-	// <0x6eead8>|0x0a8|+0x024:'947'
-	// <0>
-	// <1>
-	// <0x6eeafc>|0x0cc|+0x005:'950'
-	// ******
+	animation_interval const& interval	=
+		animation_state.event_iterator.animation( ).animation_intervals( )[ animation_state.animation_interval_id ];
+	float const animation_time			= interval.start_time( ) + animation_state.animation_interval_time;
+	float const animation_length		=
+		cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+	animation_state.animation_time		= math::min(
+		math::max( animation_time - animation_state.animation_time_threshold, 0.f ),
+		animation_length
+	);
 }
 
-// STATE[STUB]
 void n_ary_tree::update_animation_state(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						start_time_in_ms,
 	const u32						target_time_in_ms
 )
 {
-	// LOCALS
-	// n_ary_tree_weight_calculator 	weight_calculator
-	// ******
+	animation_state& state		= animation_node.animation_state( );
+	n_ary_tree_weight_calculator weight_calculator( target_time_in_ms, &animation_node );
+	weight_calculator.visit		( animation_node );
+	state.weight				= weight_calculator.weight( );
 
-	// FUNCTION BODY
-	// <0x6ef5d0>|0x000|+0x003:'958'	{
-	// <0>
-	// <1>
-	// <0x6ef5d3>|0x003|+0x010:'961'
-	// <0x6ef5e3>|0x013|+0x030:'962'
-	// <0x6ef613>|0x043|+0x00b:'963'
-	// <0>
-	// <1>
-	// <0x6ef61e>|0x04e|+0x005:'966'
-	// <0>
-	// <1>
-	// <0x6ef623>|0x053|+0x007:'969'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6ef62a>|0x05a|+0x02c:'977'
-	// <0>
-	// <1>
-	// <0x6ef656>|0x086|+0x003:'980'
-	// <0x6ef659>|0x089|+0x00c:'981'
-	// <0x6ef665>|0x095|+0x00c:'982'
-	// <0x6ef671>|0x0a1|-0x02f:'983'
-	// <0>
-	// <1>
-	// <0x6ef642>|0x072|+0x043:'986'
-	// <0x6ef685>|0x0b5|-0x039:'986'
-	// <0>
-	// <1>
-	// <0x6ef64c>|0x07c|+0x046:'989'
-	// <0x6ef692>|0x0c2|      :'989'	}
-	// ******
+	if ( state.is_freezed )
+		return;
+
+	n_ary_tree_animation_node* const driving_animation	= animation_node.time_driving_animation( );
+	if ( !driving_animation ) {
+		state.animation_interval_time	=
+			n_ary_tree_animation_time_calculator(
+				animation_node,
+				start_time_in_ms,
+				state.animation_interval_time,
+				target_time_in_ms,
+				false
+			).animation_time( );
+		update_animation_time	( state );
+		return;
+	}
+
+	animation_state const& driving_state	= driving_animation->animation_state( );
+	animation_interval const& driving_interval	=
+		driving_animation->animation_intervals( )[ driving_state.animation_interval_id ];
+	animation_interval const& interval	=
+		animation_node.animation_intervals( )[ state.animation_interval_id ];
+	state.animation_interval_time	=
+		interval.length( ) / driving_interval.length( ) * driving_state.animation_interval_time;
+	update_animation_time		( state );
 }
 
-// STATE[STUB]
 void n_ary_tree::update_time_synchronization_group(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						start_time_in_ms,
 	const u32						target_time_in_ms
 )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f07fa>|0x00a|+0x00a:'1000'
-	// <0x6f0804>|0x014|+0x004:'1001'
-	// <0x6f0808>|0x018|+0x005:'1002'
-	// <0>
-	// <0x6f080d>|0x01d|+0x003:'1004'
-	// <0>
-	// <1>
-	// <0x6f0810>|0x020|+0x009:'1007'
-	// <0>
-	// <0x6f0819>|0x029|+0x059:'1009'
-	// <0x6f0872>|0x082|+0x002:'1010'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6f0874>|0x084|+0x00d:'1018'
-	// <0x6f0881>|0x091|-0x058:'1019'
-	// <0x6f0829>|0x039|+0x00e:'1020'
-	// <0>
-	// <0x6f0837>|0x047|+0x005:'1022'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f083c>|0x04c|+0x007:'1026'
-	// <0>
-	// <1>
-	// <0x6f0843>|0x053|+0x009:'1029'
-	// <0>
-	// <0x6f084c>|0x05c|+0x009:'1031'
-	// <0>
-	// <1>
-	// <0x6f0855>|0x065|+0x015:'1034'
-	// <0>
-	// ******
+	animation_state& state					= animation_node.animation_state( );
+	bool are_there_any_weight_transitions	= state.are_there_any_weight_transitions;
+	u32 const synchronization_group_id		= animation_node.time_synchronization_group_id( );
+	if ( !are_there_any_weight_transitions && synchronization_group_id != u32( -1 ) ) {
+		for (
+			n_ary_tree_animation_node* current = animation_node.m_next_time_animation;
+			current && current->time_synchronization_group_id( ) == synchronization_group_id;
+			current = current->m_next_time_animation
+		) {
+			if ( !current->animation_state( ).are_there_any_weight_transitions )
+				continue;
+
+			are_there_any_weight_transitions	= true;
+			break;
+		}
+	}
+
+	if ( are_there_any_weight_transitions )
+		update_synchronization_group_using_integration	( animation_node, start_time_in_ms, target_time_in_ms );
+	else
+		update_animation_state							( animation_node, start_time_in_ms, target_time_in_ms );
+
+	if ( synchronization_group_id == u32( -1 ) )
+		return;
+
+	n_ary_tree_animation_node* current	=
+		are_there_any_weight_transitions ? &animation_node : animation_node.m_next_time_animation;
+	for (
+		;
+		current && current->time_synchronization_group_id( ) == synchronization_group_id;
+		current = current->m_next_time_animation
+	) {
+		if ( current->animation_state( ).are_there_any_weight_transitions )
+			continue;
+
+		update_animation_state	( *current, start_time_in_ms, target_time_in_ms );
+	}
 }
 
 void n_ary_tree::update_animation_states( const u32 start_time_in_ms, const u32 target_time_in_ms )
