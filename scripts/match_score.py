@@ -19,8 +19,8 @@ credit included), taken verbatim from the report's top-level measures.
 A third, on-demand view (``--max-code``) reads match.db instead of the report:
 per module, code-match on BOTH rulers - ``fuzzy`` (partial credit, ~82% - "how
 close") and ``exact`` (byte-perfect, ~26% - the README "Code matched") - each with
-a best-ever ``max`` column from ``history.best_fuzzy_pct`` (churn-immune). Weighted
-over ALL target code, so TRGT_ONLY/unpaired functions count as 0% dead weight.
+a source-hash-scoped ``max`` column from ``source_maxima``. Weighted over ALL
+target code, so TRGT_ONLY/unpaired functions count as 0% dead weight.
 
 Usage:
     python3 scripts/match_score.py                  # print to stdout
@@ -137,10 +137,9 @@ _NON_ENGINE = frozenset({
 
 def db_module_stats() -> dict[str, dict]:
     """Per-module stats computed ENTIRELY from match.db (report.json NOT consulted):
-    total target functions, TU count, current + best-ever exact COUNTS, and
-    byte-weighted current + best-ever fuzzy %. The 'max' figures use
-    history.best_fuzzy_pct, so a transient ICF fold-rep regression can't lower them,
-    and max >= current by construction (best = max(current, history)). Third-party /
+    total target functions, TU count, current + source-hash-scoped exact-max
+    counts, and byte-weighted current + fuzzy-max %. The MAX figures use
+    source_maxima and never inherit ordinary history.best_fuzzy_pct. Third-party /
     catch-all modules (`_NON_ENGINE`) are excluded. Returns module -> dict plus an
     'OVERALL' aggregate; {} if the DB is missing/unreadable."""
     try:
@@ -150,31 +149,35 @@ def db_module_stats() -> dict[str, dict]:
     # module -> [n_funcs, exact_cur, exact_max, code, fuzzy_cur_num, fuzzy_max_num]
     agg: dict[str, list[float]] = {}
 
-    def acc(mod: str, size: float, cur: float, best: float) -> None:
+    def acc(mod: str, size: float, cur: float, maximum: float, exact_max: bool) -> None:
         if mod in _NON_ENGINE:
             return
         a = agg.setdefault(mod, [0, 0, 0, 0.0, 0.0, 0.0])
         a[0] += 1
         a[1] += 1 if cur >= _EXACT else 0
-        a[2] += 1 if best >= _EXACT else 0
+        a[2] += 1 if exact_max else 0
         a[3] += size
         a[4] += cur * size
-        a[5] += best * size
+        a[5] += maximum * size
 
     try:
-        for mod, size, fz, best in con.execute(
-            "SELECT p.module, p.target_size, p.fuzzy_pct, h.best_fuzzy_pct "
-            "FROM paired p LEFT JOIN history h ON h.mangled = p.mangled"
+        for mod, size, fz, maximum, exact_max in con.execute(
+            "SELECT p.module, p.target_size, p.fuzzy_pct, "
+            "m.max_fuzzy_pct, m.exact_proven "
+            "FROM paired p LEFT JOIN source_maxima m ON m.mangled = p.mangled"
         ):
             fp = fz or 0.0
-            acc(mod, size or 0, fp, max(fp, best or 0.0))
-        # target_only (unpaired): 0% now, full size as weight; max credits it only
-        # if history shows it was matched before it folded away
-        for mod, size, best in con.execute(
-            "SELECT t.module, t.size, h.best_fuzzy_pct "
-            "FROM target_only t LEFT JOIN history h ON h.mangled = t.mangled"
+            acc(
+                mod, size or 0, fp, max(fp, maximum or 0.0),
+                bool(exact_max) or fp >= _EXACT,
+            )
+        # target_only (unpaired): 0% now, full size as weight; MAX credits only
+        # retained evidence from the same effective-source epoch.
+        for mod, size, maximum, exact_max in con.execute(
+            "SELECT t.module, t.size, m.max_fuzzy_pct, m.exact_proven "
+            "FROM target_only t LEFT JOIN source_maxima m ON m.mangled = t.mangled"
         ):
-            acc(mod, size or 0, 0.0, best or 0.0)
+            acc(mod, size or 0, 0.0, maximum or 0.0, bool(exact_max))
         units = {m: u for m, u in con.execute(
             "SELECT module, COUNT(*) FROM units GROUP BY module")
             if m not in _NON_ENGINE}
@@ -245,8 +248,8 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
             f"{fzm:.1f}%",
         ])
     table = _md_table(
-        ["Module", "Units", "Functions exact", "Functions best seen",
-         "Fuzzy", "Fuzzy best seen"],
+        ["Module", "Units", "Functions exact", "Functions exact-max",
+         "Fuzzy", "Fuzzy-max"],
         "lrrrrr",
         rows,
     )
@@ -261,16 +264,17 @@ def render(overall: dict, mods: dict, delinker_rev: str) -> str:
         "",
         f"**Overall: {funcs:,} / {tfuncs:,} functions exact "
         f"({_pct(funcs, tfuncs):.2f}%) &middot; "
-        f"{ov['exact_max']:,} / {tfuncs:,} functions best seen "
+        f"{ov['exact_max']:,} / {tfuncs:,} functions exact-max "
         f"({_pct(ov['exact_max'], tfuncs):.2f}%) &middot; "
         f"{ov['fuzzy_cur']:.2f}% fuzzy &middot; "
-        f"{ov['fuzzy_max']:.2f}% fuzzy best seen.**",
+        f"{ov['fuzzy_max']:.2f}% fuzzy-max.**",
         "",
         "_All figures come from `match.db` over every target function (paired plus "
         "inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe "
-        "the current build. **Best seen** retains ordinary rebuild observations "
-        "from `history.best_fuzzy_pct`, primarily to expose ICF/fold churn; it is "
-        "not HoMM2-style source-hash-scoped island evidence or correctness proof. "
+        "the current build. **Exact-max** and **Fuzzy-max** retain only observations "
+        "from the same effective-source/compiler-context hash in `source_maxima`; "
+        "ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. "
+        "Exact-max requires a byte-exact observation in the current source epoch. "
         "Byte-weighted code view: `scripts/match_score.py --max-code`._",
         "",
         *table,
@@ -289,7 +293,7 @@ _EXACT = 99.995
 
 
 def code_max(module: str | None = None) -> list[tuple]:
-    """Per-module code match on BOTH rulers, each current vs best-ever max.
+    """Per-module code match on BOTH rulers, each current vs source-scoped MAX.
 
     Code-weighted over ALL target code: each target function contributes its
     target_size to the denominator, so a TRGT_ONLY/unpaired function is 0%-matched
@@ -298,11 +302,11 @@ def code_max(module: str | None = None) -> list[tuple]:
                  number (~82% for game_core; objdiff's weighted match).
       - exact  : byte-perfect only - a function adds its full size iff fuzzy==100,
                  else 0. The README's "Code matched" (~26%).
-    The max columns use history.best_fuzzy_pct (best-ever per function), so a
-    transient ICF fold-rep regression can't lower them.
+    The max columns use source_maxima. They survive compiler-state churn within
+    one effective-source epoch and reset when that epoch changes.
 
     Everything is already in match.db (paired.target_size + target_only.size +
-    history.best_fuzzy_pct). Returns rows of
+    source_maxima). Returns rows of
     (module, total_code, fuzzy_cur, fuzzy_max, exact_cur, exact_max) sorted by
     code size, with a trailing OVERALL row.
     """
@@ -310,29 +314,35 @@ def code_max(module: str | None = None) -> list[tuple]:
     # module -> [total, fuzzy_cur_num, fuzzy_max_num, exact_cur, exact_max]
     agg: dict[str, list[float]] = {}
 
-    def add(mod: str | None, size: int, cur_fz: float, best_fz: float) -> None:
+    def add(
+        mod: str | None, size: int, cur_fz: float, max_fz: float, exact_max: bool
+    ) -> None:
         if mod is None:
             return
         a = agg.setdefault(mod, [0.0, 0.0, 0.0, 0.0, 0.0])
         a[0] += size
         a[1] += cur_fz * size
-        a[2] += best_fz * size
+        a[2] += max_fz * size
         a[3] += size if cur_fz >= _EXACT else 0
-        a[4] += size if best_fz >= _EXACT else 0
+        a[4] += size if exact_max else 0
 
-    for mod, size, fuzzy, best in con.execute(
-        "SELECT p.module, p.target_size, p.fuzzy_pct, h.best_fuzzy_pct "
-        "FROM paired p LEFT JOIN history h ON h.mangled = p.mangled"
+    for mod, size, fuzzy, maximum, exact_max in con.execute(
+        "SELECT p.module, p.target_size, p.fuzzy_pct, "
+        "m.max_fuzzy_pct, m.exact_proven "
+        "FROM paired p LEFT JOIN source_maxima m ON m.mangled = p.mangled"
     ):
         fp = fuzzy or 0.0
-        add(mod, size or 0, fp, max(fp, best or 0.0))
-    # target-only (no base symbol): 0% now, full size as weight; the max credits
-    # it only if history shows it was matched before it folded away
-    for mod, size, best in con.execute(
-        "SELECT t.module, t.size, h.best_fuzzy_pct "
-        "FROM target_only t LEFT JOIN history h ON h.mangled = t.mangled"
+        add(
+            mod, size or 0, fp, max(fp, maximum or 0.0),
+            bool(exact_max) or fp >= _EXACT,
+        )
+    # target-only (no base symbol): 0% now, full size as weight; MAX credits
+    # retained same-epoch evidence only.
+    for mod, size, maximum, exact_max in con.execute(
+        "SELECT t.module, t.size, m.max_fuzzy_pct, m.exact_proven "
+        "FROM target_only t LEFT JOIN source_maxima m ON m.mangled = t.mangled"
     ):
-        add(mod, size or 0, 0.0, best or 0.0)
+        add(mod, size or 0, 0.0, maximum or 0.0, bool(exact_max))
     con.close()
 
     if module:
@@ -353,7 +363,7 @@ def code_max(module: str | None = None) -> list[tuple]:
 def render_code_max(rows: list[tuple]) -> str:
     lines = [
         "Code match  (match.db, code-weighted over ALL target code incl. "
-        "TRGT_ONLY@0%; max = best-ever per fn, ICF-churn-immune)",
+        "TRGT_ONLY@0%; max = effective-source-hash scoped)",
         "  fuzzy = partial credit (how close) | exact = byte-perfect "
         "(README 'Code matched')",
         f"{'module':<14}{'code bytes':>12}{'fuzzy':>9}{'fuzzy-max':>11}"
