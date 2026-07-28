@@ -170,7 +170,8 @@ void flash_text::set_text( pcstr text )
 
 void flash_movie::Advance( const float time_delta, const u32 frame_catch_up_count )
 {
-	m_movie->Advance( time_delta, frame_catch_up_count );
+	VOSTOK_UNREFERENCED_PARAMETER	( frame_catch_up_count );
+	m_movie->Advance( time_delta, 0 );
 }
 
 void flash_movie::SetBackgroundAlpha( const float alpha )
@@ -185,7 +186,8 @@ void flash_movie::SetViewAlignment( flash_movie::AlignType alignment )
 
 void flash_movie::SetViewScaleMode( flash_movie::ScaleModeType scale_mode )
 {
-	m_movie->SetViewScaleMode( ( Scaleform::GFx::Movie::ScaleModeType )scale_mode );
+	VOSTOK_UNREFERENCED_PARAMETER	( scale_mode );
+	m_movie->SetViewScaleMode( Scaleform::GFx::Movie::SM_NoScale );
 }
 
 void flash_movie::Restart( )
