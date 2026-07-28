@@ -154,29 +154,25 @@ Plus a fourth, derived output pinned the same way:
 To build any one standalone (e.g. outside the shell): `nix build .#survarium-resources`,
 `.#survarium-resources-unpacked`, `.#survarium-keys`, `.#survarium-game`.
 
-## Matching (the orchestrator)
+## Matching campaigns
 
-Binary-matching is driven by an **orchestrator** that dispatches `matcher` +
-`structure-verifier` (+ a tiny `reviewer`) workers and stacks their PRs onto
-`feature/agentic-matching-loop-2` for review. **Start it from a fresh top-level Claude Code
-session** - it spawns worker subagents, so it cannot run as a nested subagent - with the
-`/match` slash command:
+Repository skills under [`.agents/skills/`](.agents/skills/) cover unit matching,
+structure verification, stack review, and module-scale orchestration. Ask the agent
+to use `$vostok-orchestrate-matching` for a whole module or `$vostok-match-unit`
+for one translation unit.
 
-```sh
-/match network_core        # whole queue, default 3 workers in parallel
-/match game_core 2         # whole queue, but only 2 workers in parallel
-```
+A campaign prepares clean, warm sibling worktrees from the current integration
+tip and dispatches disjoint translation units in parallel. Finished work is
+integrated one commit at a time into a single advancing stack. Every commit is
+fully rebuilt and carries the corresponding `README.md` and `match.db`; parallel
+branches are never merged into a fan and the approved stack is never squashed.
+After roughly 10-15 units, the batch receives a structure audit before review and
+landing.
 
-Per unit it then: prepares a sibling worktree `vostok_<N>` off the stack tip, dispatches a
-`matcher` (fanning out up to the worker cap, default 3), integrates each finished matcher's
-commit into a single linear stack, and **builds before opening that unit's PR** so each PR
-carries a current `match.db`. Matchers spawn off the **top** of the stack so percentages
-compound; their PRs form **one linear chain** (each based on the unit below it, never fanned
-into a shared base). After every 10-15 matchers it runs one `structure-verifier` over the
-batch. You review the stack **bottom-up**; when approved it lands into the integration branch
-by a single fast-forward (all commits preserved).
-Prereqs: worktrees `vostok_1..3` clean + warm (`binaries/rich/target` + `binaries/objdiff`
-present). Full rules: [`.claude/agents/orchestrator.md`](.claude/agents/orchestrator.md).
+Warm worktrees should already contain `binaries/rich/target` and
+`binaries/objdiff`. Full campaign rules live in
+[`docs/binary_matching/agentic_loop.md`](docs/binary_matching/agentic_loop.md)
+and [the orchestration skill](.agents/skills/vostok-orchestrate-matching/SKILL.md).
 
 ## Reviewing match % (no rebuild needed)
 
