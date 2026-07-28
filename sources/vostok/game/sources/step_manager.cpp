@@ -26,15 +26,15 @@ namespace survarium {
 // claude@NOTE: LTCG custom-convention residual - the target promotes `world` to ecx and
 // `position` to eax (no slots), passes `a` as the only [ebp+] stack arg, and dispatches
 // add_decal / play_particle through the bullet_manager_engine sub-vptr ([world+0xC4]).
-// emit_and_play_once is also recorded with a 6th trailing bool (material-id==default) not in
-// sound_emitter.h. Source SHAPE is the target's 17-stmt body (lines 34-67); our base lowers
+// emit_and_play_once records all 6 parameters after default-argument expansion.
+// Source SHAPE is the target's 17-stmt body (lines 34-67); our base lowers
 // to 15 stmts: the resource_ptr/intrusive_ptr c_ptr() + emit/decal/particle arg-marshaling
 // inline as fewer line-table entries here than in the target (cross-module inline boundary),
 // and /Ox spills the lone-use foot_material_id local the target keeps in a register (the extra
 // base `const u8 foot_material_id` named local is that /Ox projection, not a phantom to delete).
-// The quantity gap + byte residual are LTCG/arg-passing and cross-module inline bound. NEXT: a
-// 6-arg emit_and_play_once overload + bullet_manager_engine& cast accessor belong to OTHER
-// units (sound, game_world) - take the inline-vs-call hit here.
+// The quantity gap + byte residual are LTCG/arg-passing and cross-module inline boundaries.
+// The remaining bullet_manager_engine sub-vptr accessor belongs to game_world; take the
+// inline-vs-call hit here.
 void step_manager::on_step(
 	player const&		a,
 	float3 const&		position,
