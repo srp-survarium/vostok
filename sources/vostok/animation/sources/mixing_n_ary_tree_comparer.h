@@ -44,7 +44,7 @@ public:
 	inline	u32		animations_count			( ) const { return m_animations_count; }
 	inline	u32		animated_objects_count		( ) const { return m_animated_objects_count; }
 
-private: // sushi@NOTE: This block removed?
+private:
 					n_ary_tree_comparer			( n_ary_tree_comparer const& );
 	n_ary_tree_comparer& operator =				( n_ary_tree_comparer const& );
 
