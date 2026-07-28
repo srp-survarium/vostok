@@ -30,7 +30,6 @@ VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
 using namespace vostok;
 using namespace vostok::animation;
 
-// sushi@TODO: Missing somehow in headers.
 struct transform_getter : boost::noncopyable
 {
 public:
@@ -49,14 +48,6 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 
 	return functor( animated_object );
 }
-/*
-// STATE[STUB]
-void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
-{
-	return NULL;
-}
-*/
-
 class n_ary_tree_time_inverter : mixing::n_ary_tree_visitor, boost::noncopyable
 {
 public:
