@@ -14,13 +14,14 @@ namespace Render {
 	class TextureManager;
 	// not in the vendored GFx 4.0.15; the shipped binary overrode
 	// ThreadCommandQueue::GetRenderInterfaces(Interfaces*) from a newer SDK
-	class Interfaces;
+	struct Interfaces;
 } // namespace Render
 } // namespace Scaleform
 
 namespace survarium {
 
 class scaleform_game_engine;
+struct flash_renderer;
 
 class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadCommandQueue , public boost::noncopyable {
 public:
@@ -37,6 +38,8 @@ public:
 	virtual				~scaleform_render_command_queue_impl( ) { /* no source */ }
 
 private:
+	friend struct flash_renderer;
+
 	/* 0x0000 */	/* Scaleform::Render::ThreadCommandQueue */
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	Scaleform::Render::HAL*					pHAL;

@@ -7,43 +7,83 @@
 #include "flash_movie.h"
 #include "flash_text_manager.h"
 #include "scaleform_render_command_queue.h"
+#include "scaleform_render_command_queue_impl.h"
 
 #include "GFx.h"
 #include "GFx_Renderer_D3D1x.h"
 
 namespace survarium {
 
-// claude@NOTE: the flash_renderer trio is reachability-pinned by the scaleform anchor
-// (anchor_scaleform.cpp) but parked on render-adjacent D3D1x SDK reconstruction
-// (matched last per the render-module-last policy): the ctor (9 stmts) builds a
-// Scaleform::Render::D3D1x::HAL + Renderer2D and a D3D1x::HALInitParams (device/
-// context/0x100 halConfigFlags) then InitHAL via vtable+0x128; on_reset_device (5 stmts)
-// re-runs the same HALInitParams/InitHAL path or HAL::RestoreAfterReset; present (16 stmts)
-// drives the per-movie Display + the command-queue. All depend on the D3D1x HAL SDK glue.
-
-// STATE[STUB]
 void flash_renderer::present( flash_movie** movies, u32 movies_count, flash_text_manager* text_manager )
 {
-	// FUNCTION BODY[0x7019d0]
-	VOSTOK_UNREFERENCED_PARAMETERS	( movies, movies_count, text_manager );
+	for ( u32 i = 0; i < movies_count; ++i )
+	{
+		flash_movie* movie = movies[ i ];
+		if ( movie->m_output_width != m_output_width || movie->m_output_height != m_output_height )
+			movie->SetViewport( m_output_width, m_output_height );
+
+		Scaleform::Render::TreeRootDisplayHandle& handle = *movie->m_handle;
+		m_R2dRenderer->BeginFrame( );
+		if ( handle.NextCapture( m_R2dRenderer->GetContextNotify( ) ) )
+			m_R2dRenderer->Display( handle.GetRenderEntry( ) );
+		m_R2dRenderer->EndFrame( );
+	}
+
+	if ( text_manager )
+	{
+		if (
+			text_manager->m_output_width != m_output_width ||
+			text_manager->m_output_height != m_output_height
+		)
+			text_manager->set_viewport( m_output_width, m_output_height );
+
+		Scaleform::Render::TreeRootDisplayHandle handle =
+			text_manager->text_manager_impl->GetDisplayHandle( );
+		m_R2dRenderer->BeginFrame( );
+		if ( handle.NextCapture( m_R2dRenderer->GetContextNotify( ) ) )
+			m_R2dRenderer->Display( handle.GetRenderEntry( ) );
+		m_R2dRenderer->EndFrame( );
+	}
 }
 
-// STATE[STUB]
 void flash_renderer::on_reset_device( u32 width, u32 height, ID3D11Device* device, ID3D11DeviceContext* context )
 {
-	// FUNCTION BODY[0x701b80]
-	VOSTOK_UNREFERENCED_PARAMETERS	( width, height, device, context );
+	m_output_width		= width;
+	m_output_height		= height;
+
+	if ( !m_HALRenderer->IsInitialized( ) )
+	{
+		Scaleform::Render::D3D1x::HALInitParams params( device, context, 0x100 );
+		m_HALRenderer->InitHAL( params );
+	}
+	else
+		m_HALRenderer->RestoreAfterReset( );
 }
 
-// STATE[STUB]
 flash_renderer::flash_renderer(
 		scaleform_render_command_queue*	queue,
 		ID3D11Device*					device,
 		ID3D11DeviceContext*			context
 	)
 {
-	// FUNCTION BODY[0x701c10]
-	VOSTOK_UNREFERENCED_PARAMETERS	( queue, device, context );
+	m_HALRenderer = SF_NEW Scaleform::Render::D3D1x::HAL( queue->impl );
+	m_R2dRenderer = SF_NEW Scaleform::Render::Renderer2D( m_HALRenderer );
+
+	if ( !m_HALRenderer->IsInitialized( ) )
+	{
+		Scaleform::Render::D3D1x::HALInitParams params(
+			device,
+			context,
+			0x100,
+			reinterpret_cast< Scaleform::ThreadId >( ::GetCurrentThreadId( ) )
+		);
+		m_HALRenderer->InitHAL( params );
+	}
+
+	queue->impl->pHAL				= m_HALRenderer;
+	queue->impl->pHALTextureMgr		= m_HALRenderer->GetTextureManager( );
+	queue->impl->pR2D				= m_R2dRenderer;
+	queue->impl->pRenderThreadId		= Scaleform::GetCurrentThreadId( );
 }
 
 } // namespace survarium

@@ -9,6 +9,7 @@ namespace survarium {
 
 class scaleform_game_engine;
 class scaleform_render_command_queue_impl;
+struct flash_renderer;
 
 class scaleform_render_command_queue {
 public:
@@ -17,6 +18,8 @@ public:
 						~scaleform_render_command_queue	( );
 
 private:
+	friend struct flash_renderer;
+
 	/* 0x0000 */	scaleform_render_command_queue_impl*	impl;
 }; // class scaleform_render_command_queue
 
