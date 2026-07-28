@@ -4,188 +4,154 @@
 
 #include "pch.h"
 #include "jump_logic_state_landing.h"
+#include <vostok/game_core/weapon_user_animations_selector.h>
+#include <vostok/game_core/weapon_animation_parameters.h>
+#include <vostok/game_core/base_player.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/instant_interpolator.h>
+#include <vostok/fixed_vector.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::jump_logic_state_landing::jump_logic_state_landing(survarium::jump_logic&)
-jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner ) : jump_logic_base_state( owner )
+static float s_aim_transition_time = 0.3f;
+
+jump_logic_state_landing::jump_logic_state_landing( jump_logic& owner )
+	: jump_logic_base_state( owner ), m_landing_type( jump_animations_part_land_run )
 {
-	// FUNCTION BODY
-	// <0x58cef0>|0x000|+0x028:'26'	{
-	// <0x58cf18>|0x028|      :'27'	}
-	// ******
 }
 
-// STATE[STUB]
-// stlp_std::pair<vostok::animation::mixing::expression,vostok::animation::mixing::animation_lexeme> survarium::jump_logic_state_landing::selected_animations(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, survarium::weapon_animation_parameters const&)
 std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> jump_logic_state_landing::selected_animations(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
+	const bool								is_third_view,
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	look_calculator,
 	weapon_animation_parameters const&	weapon_parameters
 )
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme main_lexeme
-	// animation::mixing::animation_lexeme look_lexeme
-	// ******
+	animation::mixing::animation_lexeme	main_lexeme	= get_main_lexeme(
+		buffer,
+		is_third_view,
+		weapon_parameters.is_aimed ? animation::body_part_whole_body : weapon_parameters.body_part_mask
+	);
 
-	// FUNCTION BODY
-	// <0x58d3f1>|0x011|+0x045:'34'
-	// <0x58d436>|0x056|+0x026:'35'
-	// <0x58d45c>|0x07c|+0x088:'36'
-	// ******
+	animation::mixing::animation_lexeme	look_lexeme	= get_look_lexeme( buffer, is_third_view, look_calculator, main_lexeme );
+
+	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
+		animation::mixing::expression( main_lexeme ) + look_lexeme,
+		main_lexeme
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_landing::get_main_lexeme(vostok::mutable_buffer&, const bool, const vostok::animation::body_part_masks_enum)
-animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( mutable_buffer& buffer, bool is_third_view, animation::body_part_masks_enum bones_mask )
+// claude@MATCH: the trailing branch is a real `else` (target emits a back-to-back
+// `jmp .epilogue; jmp .epilogue` = the returning if-body's `}` jumping OVER the else;
+// patterns/else-block-double-jmp.md). Residual is the builder-chain inline-vs-call ceiling
+// (the animation_lexeme_parameters setters go out-of-line in the target), not steerable here.
+animation::mixing::animation_lexeme jump_logic_state_landing::get_main_lexeme( mutable_buffer& buffer, const bool is_third_view, const animation::body_part_masks_enum bones_mask )
 {
-	// LOCALS
-	// pcstr 						caption
-	// resources::managed_resource_ptr move_animation<1>
-	// fixed_vector<animation::mixing::animation_interval,2> intervals<1>
-	// bool 						landing_to_left_leg<1>
-	// ******
+	typedef fixed_vector< animation::mixing::animation_interval, 2 >	two_anim_intervals_type;
 
-	// SKIPPED BLOCKS
-	// <0x58d17e><1>
-	// ******
+	m_animation		= m_jump_logic.get_animation( m_landing_type, is_third_view );
 
-	// TYPEDEFS
-	// typedef
-	// 	fixed_vector<animation::mixing::animation_interval,2>
-	// 	two_anim_intervals_type;
+	pcstr const		caption	= m_jump_logic.get_animation_caption( m_landing_type );
 
-	// ******
+	if ( m_landing_type == jump_animations_part_land_run )
+	{
+		resources::managed_resource_ptr	move_animation	= m_jump_logic.get_move_animation( is_third_view );
 
-	// FUNCTION BODY
-	// <0x58d121>|0x011|+0x038:'43'
-	// <0x58d159>|0x049|+0x01b:'44'
-	// <0>
-	// <0x58d174>|0x064|+0x010:'46'
-	// <0x58d184>|0x074|+0x017:'47'
-	// <0x58d19b>|0x08b|+0x00c:'48'
-	// <0>
-	// <0x58d1a7>|0x097|+0x01c:'50'
-	// <0x58d1c3>|0x0b3|+0x00f:'51'
-	// <0x58d1d2>|0x0c2|+0x00c:'52'
-	// <0x58d1de>|0x0ce|+0x04d:'53'
-	// <0x58d22b>|0x11b|+0x028:'54'
-	// <0x58d253>|0x143|+0x00a:'55'
-	// <0x58d25d>|0x14d|+0x002:'56'
-	// <0x58d25f>|0x14f|+0x028:'57'
-	// <0x58d287>|0x177|+0x022:'58'
-	// <0x58d2a9>|0x199|+0x00a:'59'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x58d2b3>|0x1a3|+0x0bd:'69'
-	// <0x58d370>|0x260|+0x002:'70'
-	// <0x58d372>|0x262|+0x00a:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x58d37c>|0x26c|+0x05a:'78'
-	// <0>
-	// ******
+		ASSERT( UNKNOWN_EXPRESSION );
+
+		two_anim_intervals_type	intervals;
+
+		bool const	landing_to_left_leg	= m_jump_logic.is_jump_from_right_leg( );
+
+		if ( landing_to_left_leg )
+		{
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( move_animation, 0 ) );
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+
+			m_interval_id_to_wait_for	= 1;
+		}
+		else
+		{
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( m_animation, 0 ) );
+			intervals.push_back( animation::mixing::animation_lexeme_parameters::create_animation_interval( move_animation, 1 ) );
+
+			m_interval_id_to_wait_for	= 0;
+		}
+
+		return animation::mixing::animation_lexeme(
+			animation::mixing::animation_lexeme_parameters( buffer, caption, intervals.begin( ), intervals.end( ), 0, 0 )
+			.weight_synchronization_group_id	( 0 )
+			.weight_interpolator				( animation::instant_interpolator( ) )
+			.time_synchronization_group_id		( 0 )
+			.time_scale_interpolator			( animation::linear_interpolator( s_aim_transition_time ) )
+			.animated_object					( m_user )
+			.bones_mask							( bones_mask )
+		);
+	}
+	else
+	{
+		m_interval_id_to_wait_for	= 0;
+
+		return animation::mixing::animation_lexeme(
+			animation::mixing::animation_lexeme_parameters( buffer, caption, m_animation, 0, 0 )
+			.weight_synchronization_group_id	( 0 )
+			.animated_object					( m_user )
+			.bones_mask							( bones_mask )
+			.playback_type						( animation::mixing::play_once_and_freeze_at_end )
+		);
+	}
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::animation_lexeme survarium::jump_logic_state_landing::get_look_lexeme(vostok::mutable_buffer&, const bool, fastdelegate::FastDelegate<float __cdecl(float,float,unsigned int,unsigned int,unsigned int,float)> const&, vostok::animation::mixing::animation_lexeme&)
 animation::mixing::animation_lexeme jump_logic_state_landing::get_look_lexeme(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
+	bool const							is_third_view,
 	fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	look_calculator,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 )
 {
-	// LOCALS
-	// pcstr 						look_animation_id
-	// animation::mixing::animation_lexeme_parameters parameters
-	// float 						start_animation_interval_time
-	// resources::managed_resource_ptr look_animation
-	// ******
+	resources::managed_resource_ptr	look_animation		= m_jump_logic.get_animation( jump_animations_part_land_run_look, is_third_view );
+	pcstr const						look_animation_id	= m_jump_logic.get_animation_caption( jump_animations_part_land_run_look );
 
-	// FUNCTION BODY
-	// <0x58d030>|0x010|+0x019:'87'
-	// <0x58d049>|0x029|+0x013:'88'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x58d05c>|0x03c|+0x016:'95'
-	// <0x58d072>|0x052|+0x027:'96'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x58d099>|0x079|+0x06d:'104'
-	// ******
+	animation::mixing::animation_lexeme_parameters	parameters( buffer, look_animation_id, look_animation, 0, &weight_driving_animation );
+
+	float const	start_animation_interval_time	= parameters.animation_intervals( )[ 0 ].length( ) * m_jump_logic.look_time_factor( );
+
+	return animation::mixing::animation_lexeme(
+		parameters
+			.start_animation_interval_time( start_animation_interval_time )
+			.animated_object( m_user )
+			.additivity_priority( 4 )
+			.weight_synchronization_group_id( 0 )
+			.time_calculator( look_calculator )
+	);
 }
 
-// STATE[STUB]
-// void survarium::jump_logic_state_landing::initialize()
 void jump_logic_state_landing::initialize( )
 {
-	// CALL SITE INFO
-	// <0x58cf4d> -> void <unknown>()
-	// ******
+	m_user->end_jump( );
 
-	// FUNCTION BODY
-	// <0>
-	// <0x58cf3a>|0x00a|+0x015:'110'
-	// <0x58cf4f>|0x01f|+0x0a0:'111'
-	// <0x58cfef>|0x0bf|+0x01e:'112'
-	// <0x58d00d>|0x0dd|+0x007:'113'
-	// ******
+	m_jump_logic.owner().set_animation_callback( animation::channel_id_on_animation_interval_end, this, boost::bind( &jump_logic_state_landing::on_interval_end, this, _1 ) );
+
+	m_landing_type		= m_jump_logic.does_need_land_and_run( ) ? jump_animations_part_land_run : jump_animations_part_land;
+	m_is_jump_finished	= false;
 }
 
-// STATE[STUB]
-// void survarium::jump_logic_state_landing::finalize()
 void jump_logic_state_landing::finalize( )
 {
-	// FUNCTION BODY
-	// <0x58ce40>|0x000|+0x007:'117'	{
-	// <0>
-	// <0x58ce47>|0x007|      :'119'	}
-	// ******
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::jump_logic_state_landing::on_interval_end(vostok::animation::animation_callback_params&)
 animation::callback_return_type_enum jump_logic_state_landing::on_interval_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x58ce59>|0x009|+0x05a:'126'
-	// <0>
-	// <1>
-	// <0x58ceb3>|0x063|+0x007:'129'
-	// <0x58ceba>|0x06a|+0x01f:'130'
-	// <0x58ced9>|0x089|+0x007:'131'
-	// <0>
-	// <1>
-	// <2>
-	// <0x58cee0>|0x090|+0x002:'135'
-	// ******
+	if ( params.animation_interval_id == m_interval_id_to_wait_for && params.animated_object == &m_jump_logic.owner().user() && m_animation == params.animation )
+	{
+		params.interrupt_animation_player_tick	= true;
+		m_jump_logic.owner().remove_animation_callback( animation::channel_id_on_animation_interval_end, this );
+		m_is_jump_finished						= true;
+	}
+
+	return animation::callback_return_type_call_me_again;
 }
 
 } // namespace survarium

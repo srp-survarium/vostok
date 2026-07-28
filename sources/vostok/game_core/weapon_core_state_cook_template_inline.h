@@ -7,132 +7,80 @@
 
 namespace survarium {
 
-// STATE[STUB]
 template < typename T >
-inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( )
+inline weapon_core_state_cook_template<T>::weapon_core_state_cook_template( ) :
+	resources::unmanaged_cook( weapon_core_state_cook_class< T >( ), reuse_false, use_current_thread_id, use_current_thread_id )
 {
-	// FUNCTION BODY
-	// <0x9acb8>|0x038|+0x026:'16'
-	// ******
+	resources::register_cook( this );
 }
 
-// STATE[STUB]
+template < typename T >
+inline weapon_core_state_cook_template<T>::~weapon_core_state_cook_template( )
+{
+}
+
 template < typename T >
 inline mutable_buffer weapon_core_state_cook_template<T>::allocate_resource( resources::query_result_for_cook& in_query, const_buffer raw_file_data, bool file_exist )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x9af17>|0x007|+0x023:'29'
-	// ******
+	return mutable_buffer( VOSTOK_MALLOC_IMPL( g_allocator, sizeof( T ), "weapon_core_state" ), sizeof( T ) );
 }
 
 template < typename T >
 inline void weapon_core_state_cook_template<T>::deallocate_resource( void* arg_0 )
 {
-	// sushi@TODO
+	VOSTOK_FREE_IMPL( g_allocator, (resources::resource_base*&)arg_0 );
 }
 
 
-// STATE[STUB]
 template < typename T >
 inline void weapon_core_state_cook_template<T>::create_resource( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer )
 {
-	// LOCALS
-	// configs::binary_config_value cfg
-	// weapon_state_creation_params const* params
-	// fixed_vector<resources::request,4> requests
-	// ******
+	weapon_state_creation_params const*	params	= static_cast< weapon_state_creation_params const* >( raw_file_data.c_ptr( ) );
+	configs::binary_config_value		cfg;
+	if ( !parent.user_data( )->try_get( cfg ) )
+	{
+		DEBUG_BREAK		( );
+		parent.finish_query( result_error );
+		return;
+	}
 
-	// TYPEDEFS
-	// typedef
-	// 	fixed_vector<resources::request,4>
-	// 	requests_fixed_type;
+	typedef fixed_vector< resources::request, 4 >	requests_fixed_type;
 
-	// ******
+	requests_fixed_type	requests;
 
-	// FUNCTION BODY
-	// <0x9ad05>|0x015|+0x00c:'41'
-	// <0x9ad11>|0x021|+0x01a:'42'
-	// <0x9ad2b>|0x03b|+0x028:'43'
-	// <0x9ad53>|0x063|+0x001:'44'
-	// <0x9ad54>|0x064|+0x017:'45'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x9ad6b>|0x07b|+0x00e:'50'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x9ad79>|0x089|+0x034:'55'
-	// <0>
-	// <1>
-	// <0x9adad>|0x0bd|+0x00e:'58'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x9adbb>|0x0cb|-0x05e:'75'
-	// <0x9ad5d>|0x06d|+0x12d:'76'
-	// <0x9ae8a>|0x19a|-0x128:'76'
-	// <0x9ad62>|0x072|+0x132:'77'
-	// ******
+	for ( u32 i = 0; i != 4; ++i ) requests.push_back( resources::create_request( cfg["animations"][ i ], resources::animation_class ) );
+
+	ASSERT( UNKNOWN_EXPRESSION_T( cfg.value_exists( "user_animations" ) ) );
+
+	resources::query_resources(
+		requests.begin( ),
+		requests.size( ),
+		boost::bind( &weapon_core_state_cook_template< T >::on_subresources_ready, this, _1, in_out_unmanaged_resource_buffer, params ),
+		g_allocator,
+		NULL,
+		&parent
+	);
+	parent.finish_query( result_postponed );
 }
 
-// STATE[STUB]
 template < typename T >
 inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params )
 {
-	// LOCALS
-	// fixed_vector<resources::managed_resource_ptr,4> animations
-	// ******
+	typedef fixed_vector< resources::managed_resource_ptr, 4 >	skeleton_animations_fixed_type;
 
-	// TYPEDEFS
-	// typedef
-	// 	fixed_vector<resources::managed_resource_ptr,4>
-	// 	skeleton_animations_fixed_type;
+	skeleton_animations_fixed_type	animations;
+	for ( u32 i = 0; i != 4; ++i ) animations.push_back( static_cast_resource_ptr< resources::managed_resource_ptr >( data[ i ].get_managed_resource( ) ) );
 
-	// ******
+	T* object_to_cook = new_object( buffer, params, animations.begin( ), animations.size( ) );
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0xa065a>|0x00a|+0x0dd:'86'
-	// <0>
-	// <1>
-	// <0xa0737>|0x0e7|+0x024:'89'
-	// <0>
-	// <0xa075b>|0x10b|+0x06f:'91'
-	// <0xa07ca>|0x17a|+0x00e:'92'
-	// ******
+	data.get_parent_query( )->set_unmanaged_resource( object_to_cook, resources::memory_usage_type( resources::nocache_memory, sizeof( T ) ) );
+	data.get_parent_query( )->finish_query( result_success );
 }
 
-// STATE[STUB]
 template < typename T >
 inline void weapon_core_state_cook_template<T>::destroy_resource( resources::unmanaged_resource* resource )
 {
-	// CALL SITE INFO
-	// <0x9d47b> -> void* <unknown>(u32)
-	// ******
-
-	// FUNCTION BODY
-	// <0x9d460>|0x000|+0x00f:'98'
-	// ******
+	static_cast< T* >( resource )->~T( );
 }
 
 } // namespace survarium

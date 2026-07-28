@@ -33,7 +33,7 @@ void ui_dialog::focus_next()
 	window* prev_focused		= NULL;
 	window* new_focused			= NULL;
 
-	calc_focus_next				(m_childs, prev_focused, new_focused);
+	calc_focus_next				(m_children, prev_focused, new_focused);
 	if(prev_focused)
 		prev_focused->set_focused	(false);
 
@@ -49,8 +49,8 @@ bool ui_dialog::calc_focus_next(window_list& childs, window*& prev_focused, wind
 	for(; it!=it_e; ++it)
 	{
 		ui_window* w = static_cast_checked<ui_window*>(*it);
-		if(!w->m_childs.empty())
-			if(calc_focus_next(w->m_childs, prev_focused, new_focused))
+		if(!w->m_children.empty())
+			if(calc_focus_next(w->m_children, prev_focused, new_focused))
 				break;
 
 		if(w->get_focused())

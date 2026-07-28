@@ -57,7 +57,7 @@ public:
 	{
 		typedef vertex_allocator_type::impl< vertex_type >	super;
 		inline vertex_allocator_impl_type	( u32 const max_vertex_count ) :
-			super							( max_vertex_count )
+			super							( ::vostok::ai::g_allocator, max_vertex_count )
 		{
 		}
 	};
@@ -98,6 +98,8 @@ private:
 public:
 	priority_queue_impl_type	m_priority_queue;
 }; // class search_base
+
+STATIC_SIZE_ASSERT( search_base, 0x3C );
 
 } // namespace planning
 } // namespace ai

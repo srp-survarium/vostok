@@ -22,7 +22,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #ifdef SF_ENABLE_LIBPNG
 
 #ifdef SF_OS_WIN32
-#include "../3rdParty/libpng/png.h"
+#include "../3rdParty/libpng-1.5.13/png.h"
 
 #else
 #include <png.h>
@@ -61,12 +61,12 @@ static void SF_CDECL png_error_handler(png_structp png_ptr, png_const_charp msg)
         SFstrncpy(pcontext->errorMessage, sizeof(pcontext->errorMessage), msg, sizeof(pcontext->errorMessage) - 1);
         pcontext->errorMessage[sizeof(pcontext->errorMessage) - 1] = 0;
     }
-    longjmp(png_ptr->jmpbuf, 1);
+    png_longjmp(png_ptr, 1);
 }
 
 static void SF_CDECL png_read_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    File* pfile = reinterpret_cast<File*>(png_ptr->io_ptr);
+    File* pfile = reinterpret_cast<File*>(png_get_io_ptr(png_ptr));
     int check = pfile->Read(data, (int)length);
 
     if (check < 0 || ((png_size_t)check) != length)
@@ -81,8 +81,8 @@ static int GFxPngReadInfo(PngContext* context)
 
     if (setjmp(png_jmpbuf(context->png_ptr)))
     {
-        SF_DEBUG_WARNING2(1, "Image::ReadPng failed - Can't read info from file %s, error - %s\n", 
-            context->filePath, context->errorMessage);
+         SF_DEBUG_WARNING2(1, "Image::ReadPng failed - Can't read info from file %s, error - %s\n", 
+             context->filePath, context->errorMessage);
         return 0;
     }
 
@@ -149,7 +149,7 @@ static int GFxPngReadInfo(PngContext* context)
 
     // row_bytes is the width x number of channels
 
-    context->ulRowBytes = png_get_rowbytes(context->png_ptr, context->info_ptr);
+    context->ulRowBytes = (png_uint_32)png_get_rowbytes(context->png_ptr, context->info_ptr);
 
     return 1;
 }
@@ -167,12 +167,6 @@ public:
 
     virtual int ReadData(void** ppData) 
     {
-        if (setjmp(png_jmpbuf(Context.png_ptr)))
-        {
-            SF_DEBUG_WARNING2(1, "GImage::ReadPng failed - Can't read data from file %s, error - %s\n", 
-                Context.filePath, Context.errorMessage);
-            return 0;
-        }
         png_read_image(Context.png_ptr, (png_bytepp)ppData);
         return 1;
     }
@@ -207,11 +201,12 @@ public:
 
         StartImage();
     }
-    
-    void StartImage()
+    bool IsValid() const { return IsInitialized; }
+
+    bool StartImage()
     {
         if (IsInitialized)
-            return;
+            return true;
         pFile->SeekToBegin();
         pFile->SkipBytes(8); // skip the header.
 
@@ -223,7 +218,7 @@ public:
         {
             SF_DEBUG_WARNING1(1, "Image::ReadPng failed - Can't create read struct for file %s\n", 
                 Context.filePath);
-            return;
+            return false;
         }
 
         Context.info_ptr = png_create_info_struct(Context.png_ptr);
@@ -232,7 +227,7 @@ public:
             SF_DEBUG_WARNING1(1, "Image::ReadPng failed - Can't create info struct for file %s\n", 
                 Context.filePath);
             png_destroy_read_struct(&Context.png_ptr, NULL, NULL);
-            return;
+            return false;
         }
         png_set_read_fn(Context.png_ptr, (png_voidp)pFile, png_read_data);
 
@@ -240,9 +235,10 @@ public:
         {
             // Context.errorMessage contains an error message
             png_destroy_read_struct(&Context.png_ptr, &Context.info_ptr, NULL);
-            return;
+            return false;
         }
         IsInitialized = true;
+        return true;
     }
     ImageSize GetSize() const
     {
@@ -256,7 +252,11 @@ public:
         bool                success = true;
         ImageFormat         readFormat;
 
-        StartImage();
+        if (!StartImage())
+        {
+            IsInitialized = false;
+            return false;
+        }
         switch(Context.colorType)
         {
         case PNG_COLOR_TYPE_RGB:        readFormat = Image_R8G8B8;   srcScanLineSize = Context.width*3; break;
@@ -271,12 +271,23 @@ public:
 
         if (readFormat != Image_None)
         {
+            ImageScanlineBuffer<1024*4> scanline(readFormat, Context.width, format);
+            png_bytepp ppbRowPointers = NULL;
+
+            if (setjmp(png_jmpbuf(Context.png_ptr)))
+            {
+                SF_DEBUG_WARNING2(1, "Image::ReadPng failed - Can't read info from file %s, error - %s\n", 
+                                  Context.filePath, Context.errorMessage);
+                png_destroy_read_struct(&Context.png_ptr, &Context.info_ptr, NULL);
+                SF_FREE(ppbRowPointers);
+                IsInitialized = false;
+                return false;
+            }
+
 
             //For non-interlaced PNG we can read by scanline, for interlaced we must read whole image
             if (!Context.interlaceType)
             {
-                ImageScanlineBuffer<1024*4> scanline(readFormat, Context.width, format);
-
                 for (unsigned y = 0; y < Context.height; y++)
                 {
                     if (!ReadScanline(scanline.GetReadBuffer()))
@@ -290,7 +301,7 @@ public:
             }
             else
             {
-                png_bytepp ppbRowPointers =  (png_bytepp) SF_ALLOC(Context.height
+                ppbRowPointers =  (png_bytepp) SF_ALLOC(Context.height
                     * sizeof(png_bytep) + Context.height * srcScanLineSize * sizeof(png_byte), Stat_Default_Mem);
                  
                 ppbRowPointers[0] = (png_bytep) (ppbRowPointers + Context.height);
@@ -320,6 +331,7 @@ public:
                     return false;
                 }
 
+                // no longjmps beyond this point expected.
                 ImageScanlineBuffer<1024*4> scanline(readFormat, Context.width, format);
                 for (unsigned y = 0; y < Context.height; y++)
                 {
@@ -455,7 +467,11 @@ ImageSource* FileReader::ReadImageSource(File* file, const ImageCreateArgs& args
 Input* FileReader::CreateInput(File* pin) const
 {
     if (!pin || !pin->IsValid()) return 0;
-    return SF_NEW LibPNGInput(pin);
+    LibPNGInput* pngi = SF_NEW LibPNGInput(pin);
+    if (pngi && pngi->IsValid())
+        return pngi;
+    delete pngi;
+    return NULL;
 }
 
 // Instance singleton.
@@ -466,7 +482,7 @@ FileReader FileReader::Instance;
 
 static void SF_CDECL png_write_data(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    File* pfile = reinterpret_cast<File*>(png_ptr->io_ptr);
+    File* pfile = reinterpret_cast<File*>(png_get_io_ptr(png_ptr));
     int check = pfile->Write(data, (int)length);
 
     if (check < 0 || ((png_size_t)check) != length)

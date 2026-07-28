@@ -39,6 +39,7 @@ public:
 private:
 	virtual	pcstr	get_resources_path		( ) const;
 	virtual pcstr	get_mounts_path			( ) const { return get_resources_path(); }
+	virtual	pcstr	get_user_data_directory	( ) const { return get_resources_path(); }
 	virtual	void	create_physical_path	( string_path& result, pcstr resources_path, pcstr inside_resources_path ) const { vostok::strings::join(result, resources_path, inside_resources_path); }
 
 private:

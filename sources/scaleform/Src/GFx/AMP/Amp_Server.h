@@ -37,6 +37,7 @@ class StatusChangedCallback;
 class ViewStats;
 class SocketImplFactory;
 class AmpStream;
+class ObjectsLog;
 
 // AMP server states
 enum ServerStateType
@@ -108,6 +109,9 @@ public:
     // It is called from GRenderer::EndFrame
     virtual void    AdvanceFrame();
 
+    // Called from movie advance thread
+    virtual void    MovieAdvance(MovieImpl* movie);
+
     // Custom callback that handles application-specific messages
     virtual void    SetAppControlCallback(AppControlInterface* callback);
 
@@ -121,14 +125,18 @@ public:
 
     // Message handling methods
     bool            HandleAppControl(const MessageAppControl* message);
+    bool            HandleInitState(const MessageInitState* message);
     bool            HandleSwdRequest(const MessageSwdRequest* message);
     bool            HandleSourceRequest(const MessageSourceRequest* message);
+    bool            HandleObjectsReportRequest(const MessageObjectsReportRequest* message);
     bool            HandleImageRequest(const MessageImageRequest* message);
     bool            HandleFontRequest(const MessageFontRequest* message);
 
     // AMP keeps track of active Movie Views
     virtual void    AddMovie(MovieImpl* movie);
     virtual void    RemoveMovie(MovieImpl* movie);
+    // note: the returned movie is AddRef-ed!
+    virtual bool    FindMovieByHeap(MemoryHeap* heap, MovieImpl** movie);
 
     // AMP keeps track of images
     virtual void    AddImage(GFx::ImageResource* image);
@@ -170,8 +178,8 @@ public:
     virtual AmpStats*   GetDisplayStats();
 
     // GPA integration
-    virtual __itt_id        GetGpaGroupId();
-    virtual __itt_domain*   GetGpaDomain();
+    virtual SF_GPA_ITT_ID        GetGpaGroupId();
+    virtual SF_GPA_ITT_DOMAIN*   GetGpaDomain();
 
 private:
 
@@ -210,12 +218,13 @@ private:
     ServerState                     CurrentState;   // Paused, Disabled, etc
     mutable Lock                    CurrentStateLock;
     UInt32                          ToggleState;   // Paused, Disabled, etc
+    UInt32                          ForceState;   // Paused, Disabled, etc
+    bool                            PendingForceState;
     SInt32                          PendingProfileLevel;
     mutable Lock                    ToggleStateLock;
     UInt32                          Port;           // For socket connection to client
     UInt32                          BroadcastPort;  // For broadcasting IP address to AMP
     Ptr<ThreadMgr>                  SocketThreadMgr;      // Socket threads
-    mutable Lock                    ConnectionLock;
     ArrayLH<MovieImpl*>             Movies;
     ArrayLH< Ptr<ViewProfile> >     MovieStats;
     mutable Lock                    MovieLock;
@@ -237,7 +246,7 @@ private:
     unsigned                        ConnectionWaitDelay;  // milliseconds
     bool                            InitSocketLib;  // Initialize socket library?
     SocketImplFactory*              SocketFactory;
-    mutable bool                    Profiling;
+    mutable AtomicInt<UInt32>       Profiling;
     AtomicInt<UPInt>                SoundMemory;
     AtomicInt<UInt32>               NumStrokes;
     AtomicInt<UInt32>               FontThrashing;
@@ -245,10 +254,15 @@ private:
     AtomicInt<UInt32>               MemReportLocked;
     AtomicInt<UInt32>               ProfileLevelLocked;
 
+    // For objects report
+    Lock                            ObjectsReportLock;
+    UInt32                          ObjectsReportRequested;
+    UInt32                          ObjectsReportFlags;
+
     // Task group domain and ID for GPA integration
-    __itt_domain*                   GpaDomain;
-    __itt_string_handle*            GpaStringHandle;
-    __itt_id                        GpaGroupId;
+    SF_GPA_ITT_DOMAIN*              GpaDomain;
+    SF_GPA_ITT_STRING_HANDLE*       GpaStringHandle;
+    SF_GPA_ITT_ID                   GpaGroupId;
 
     // Handles app requests from AMP client
     AppControlInterface*            AppControlCallback;
@@ -283,6 +297,7 @@ private:
     bool        IsState(ServerStateType state) const;
     void        SetState(ServerStateType state, bool stateValue, bool sendState);
     void        ToggleAmpState(UInt32 toggleState, bool sendState);
+    void        SetAmpState(UInt32 newState, bool sendState);
     String      GetSourceFilename(UInt64 handle) const;
     bool        GetProfilingState() const;
     void        UpdateProfilingState();

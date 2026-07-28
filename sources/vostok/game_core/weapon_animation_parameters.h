@@ -19,9 +19,16 @@ public:
 					animation::body_part_masks_enum		arg_3,
 					bool								arg_4,
 					bool								arg_5
-				) { /* no source */ }
+				) :
+					recoil_horizontal	( arg_0 ),
+					recoil_vertical		( arg_1 ),
+					recoil_backward		( arg_2 ),
+					body_part_mask		( arg_3 ),
+					is_aimed			( arg_4 ),
+					is_firing			( arg_5 )
+				{ }
 
-	inline		~weapon_animation_parameters( ) { /* no source */ }
+	inline		~weapon_animation_parameters( ) { }
 
 
 public:

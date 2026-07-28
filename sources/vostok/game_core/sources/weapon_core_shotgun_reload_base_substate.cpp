@@ -5,102 +5,115 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
 
+#include <vostok/game_core/weapon_core.h>
+
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/linear_interpolator.h>
+
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(survarium::weapon_core&, const float, vostok::resources::managed_resource_ptr const*, const unsigned int, const vostok::animation::mixing::playback_enum, const unsigned int, char const*, char const*, char const*, char const*)
+static float s_aim_transition_time = 0.3f;
+
+weapon_lexeme_pair get_weapon_lexeme_pair_impl(
+	mutable_buffer&								buffer,
+	pcstr										identifier,
+	resources::managed_resource_ptr const&		animation,
+	pcvoid										animated_object,
+	animation::animation_playback_state const&	playback_state,
+	u32											time_synchronization_group,
+	float										time_scale,
+	animation::mixing::playback_enum			playback_type,
+	animation::base_interpolator const&			interpolator_for_offset_lexeme
+);
+
 weapon_core_shotgun_reload_base_substate::weapon_core_shotgun_reload_base_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	float const								animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count,
-	animation::mixing::playback_enum		playback_type,
-	u32										time_synchronization_group,
+	u32 const								animations_count,
+	animation::mixing::playback_enum const	playback_type,
+	u32 const								time_synchronization_group,
 	pcstr									animation_id,
 	pcstr									hands_stand_animation_id,
 	pcstr									hands_crouch_animation_id,
 	pcstr									hands_jump_animation_id
-) : m_weapon( weapon )
+) :
+	m_weapon( weapon ),
+	m_animation_playback_state( 0 ),
+	m_animation_timescale( animation_time_scale ),
+	m_playback_type( playback_type ),
+	m_time_synchronization_group( time_synchronization_group ),
+	m_animation_id( animation_id )
 {
-	// LOCALS
-	// u32 							animation_index
-	// u32 							view_index<1>
-	// u32 							user_state_index<2>
-	// u32 							view_index<2>
-	// u32 							user_state_index<3>
-	// ******
+	m_hand_animation_captions[0] = hands_stand_animation_id;
+	m_hand_animation_captions[1] = hands_crouch_animation_id;
+	m_hand_animation_captions[2] = hands_jump_animation_id;
 
-	// SKIPPED BLOCKS
-	// <0x7a86c0><2>
-	// <0x7a8725><3>
-	// ******
+	ASSERT_CMP_U( animations_count, ==, 8 );
 
-	// FUNCTION BODY
-	// <0x7a865c>|0x0bc|+0x00c:'36'
-	// <0x7a8668>|0x0c8|+0x00c:'37'
-	// <0x7a8674>|0x0d4|+0x00c:'38'
-	// <0>
-	// <0x7a8680>|0x0e0|+0x023:'40'
-	// <0x7a86a3>|0x103|+0x007:'41'
-	// <0x7a86aa>|0x10a|+0x018|[1]:'42'
-	// <0x7a86c2>|0x122|+0x018:'43'
-	// <0x7a86da>|0x13a|+0x031:'44'
-	// <0x7a870b>|0x16b|+0x002:'45'
-	// <0x7a870d>|0x16d|+0x002:'46'
-	// <0x7a870f>|0x16f|+0x018|[2]:'47'
-	// <0x7a8727>|0x187|+0x018:'48'
-	// <0x7a873f>|0x19f|+0x031:'49'
-	// <0x7a8770>|0x1d0|+0x002:'50'
-	// <0x7a8772>|0x1d2|+0x002:'51'
-	// <0x7a8774>|0x1d4|+0x00c:'52'
-	// ******
+	u32 animation_index = 0;
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			m_weapon_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
+
+	for ( u32 view_index = 0 ; view_index != 2 ; ++view_index ) {
+		for ( u32 user_state_index = 0 ; user_state_index != 2 ; ++user_state_index ) {
+			m_user_animations[view_index][user_state_index] = animations[animation_index++];
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// survarium::weapon_lexeme_pair survarium::weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum) const
-weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool is_third_view, weapon_user_state_enum user_state_id ) const
+weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_pair( mutable_buffer& buffer, bool const is_third_view, weapon_user_state_enum const user_state_id ) const
 {
-	// FUNCTION BODY
-	// <0x7a8799>|0x009|+0x02f:'57'
-	// <0>
-	// <1>
-	// <0x7a87c8>|0x038|+0x072:'60'
-	// ******
+	m_animation_to_wait_for = m_weapon_animations[is_third_view != false][user_state_id == type_crouch];
+
+	return get_weapon_lexeme_pair_impl(
+		buffer,
+		m_animation_id,
+		m_animation_to_wait_for,
+		&m_weapon,
+		*m_animation_playback_state,
+		m_time_synchronization_group,
+		m_animation_timescale,
+		m_playback_type,
+		animation::linear_interpolator( s_aim_transition_time )
+	);
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
+// claude@NOTE: structure-correct; residual is the shared mixing builder family - target
+// out-of-lines the animation_lexeme_parameters fluent setters and uses
+// addition_lexeme/cloned_in_buffer where /Od inlines the free operator+. Same wall as the
+// chamber weapon_and_hands_expression; only fixable in the shared mixing_addition_lexeme API.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool							is_third_view,
+	const weapon_user_state_enum		user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// LOCALS
-	// animation::mixing::animation_lexeme override_lexeme
-	// u32 							user_state_index
-	// weapon_lexeme_pair 			lexeme_pair
-	// ******
+	weapon_lexeme_pair lexeme_pair = get_weapon_lexeme_pair( buffer, is_third_view, user_state_id );
 
-	// FUNCTION BODY
-	// <0x7a8851>|0x011|+0x01f:'69'
-	// <0>
-	// <0x7a8870>|0x030|+0x00f:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x7a887f>|0x03f|+0x086:'83'
-	// <0x7a8905>|0x0c5|+0x095:'84'
-	// ******
+	const u32 user_state_index = user_state_id == type_crouch;
+
+	animation::mixing::animation_lexeme override_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			m_hand_animation_captions[user_state_index],
+			m_user_animations[is_third_view != false][user_state_index],
+			&lexeme_pair.offset_lexeme,
+			&weight_driving_animation
+		)
+		.animated_object( m_weapon.get_user( ) )
+		.bones_mask( 2 )
+		.playback_type( m_playback_type )
+	);
+
+	return override_lexeme + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
 } // namespace survarium

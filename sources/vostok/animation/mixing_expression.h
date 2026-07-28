@@ -17,13 +17,14 @@ class base_lexeme;
 
 class VOSTOK_ANIMATION_API expression {
 public:
+	inline						expression		( );
 	template < typename T >
 	inline	IMPLICIT			expression		( T& lexeme );
 	inline	mutable_buffer&		buffer			( ) const;
 	inline	binary_tree_base_node& node			( ) const;
 	inline	base_lexeme&		lexeme			( ) const;
 	inline	base_lexeme*		cloned_in_buffer( ) const;
-	inline	bool				is_empty		( ) const { return false; /* no source */ }
+	inline	bool				is_empty		( ) const { return !m_node || !m_lexeme; }
 
 	template < typename T >
 	inline	expression&			operator +=		( T& other );

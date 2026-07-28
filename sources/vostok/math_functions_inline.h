@@ -40,7 +40,7 @@ inline float min( const float left, const float right )
 {
 	R_ASSERT	( valid(left) );
 	R_ASSERT	( valid(right) );
-	return		( left < right ? left : right );	// <0x239e0>|0x000|+0x008:'41'
+	return		( left < right ? left : right );
 }
 
 template < typename T >
@@ -55,48 +55,53 @@ inline T min			( T const& value1, T const& value2, T const& value3, T const& val
 	return		min(value1, min(value2, min(value3, value4)));
 }
 
+// sushi@TODO: remove __forceinline - inline-divergence hack, not original source.
+// Target INLINES min_integral/integer min (branchless) at call sites; our MSVC8
+// inliner lands just over threshold on the two-level min->min_integral and emits
+// an out-of-line __cdecl call instead. Bodies are byte-for-byte the target's, so
+// there is no source-level cause - forcing the inline matches the target.
 template < typename T >
-inline T min_integral	( T const& left, T const& right )
+__forceinline T min_integral	( T const& left, T const& right )
 {
 	return		( right + ( ( left - right) & -( left < right ) ) );
 }
 
-inline s8 min			( s8 left, s8 right )
+__forceinline s8 min			( s8 left, s8 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline s16 min			( s16 left, s16 right )
+__forceinline s16 min			( s16 left, s16 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline s32 min			( s32 left, s32 right )
+__forceinline s32 min			( s32 left, s32 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline s64 min			( s64 left, s64 right )
+__forceinline s64 min			( s64 left, s64 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline u8 min			( u8 left, u8 right )
+__forceinline u8 min			( u8 left, u8 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline u16 min			( u16 left, u16 right )
+__forceinline u16 min			( u16 left, u16 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline u32 min			( u32 left, u32 right )
+__forceinline u32 min			( u32 left, u32 right )
 {
 	return		( min_integral( left, right ) );
 }
 
-inline u64 min			( u64 left, u64 right )
+__forceinline u64 min			( u64 left, u64 right )
 {
 	return		( min_integral( left, right ) );
 }
@@ -125,10 +130,10 @@ inline T max_integral	( T const& left, T const& right )
 {
 	return		( left - ( ( left - right ) & -( left < right ) ) );
 }
-// STATE[UNCHECKED]: sushi@NOTE: Why not use templated function instead.
+// sushi@NOTE: Why not use templated function instead.
 inline float max		( float left, float right )
 {
-	return		( left > right ? left : right );	// <0x158f0>|0x000|+0x008:'113'
+	return		( left > right ? left : right );
 }
 
 

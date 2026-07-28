@@ -16,6 +16,10 @@ struct fixed_count
 	struct vertex_impl			{};
 	struct look_up_cell_impl	{};
 
+	// canonical (shipped) layout: the allocator is a stored member and the
+	// ctor receives it - every PDB instantiation (ai::planning::search_base,
+	// ai_navigation's path_find_channel, survarium::animations_search_service)
+	// is 0x10 with m_allocator first
 	template < typename VertexType >
 	class impl
 	{
@@ -23,7 +27,7 @@ struct fixed_count
 		typedef	VertexType	vertex_type;
 
 	public:
-		inline				impl					( u32 const max_vertex_count );
+		inline				impl					( memory::base_allocator* memory_allocator, u32 const max_vertex_count );
 		inline				~impl					( );
 
 		inline void			on_before_search		( );
@@ -32,8 +36,10 @@ struct fixed_count
 
 	public:
 		inline u32			visited_vertex_count	( ) const;
+		inline memory::base_allocator*	memory_allocator	( ) const;
 
 	private:
+		memory::base_allocator*	m_allocator;
 		vertex_type*		m_vertices;
 		vertex_type*		m_vertices_end;
 		vertex_type*		m_vertex_current;

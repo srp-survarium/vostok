@@ -187,6 +187,8 @@ inline	quaternion		exp			( quaternion const& value );
 inline	float3			rotate		( float3 const& position, quaternion const& rotation );
 
 VOSTOK_CORE_API quaternion slerp		( quaternion const& left, quaternion const& right, float time_delta );
+VOSTOK_CORE_API quaternion slerp_optimized	( quaternion const& q0, quaternion const& q1, float time_delta );
+VOSTOK_CORE_API quaternion extrapolated_slerp( std::pair< quaternion, float > const* begin, std::pair< quaternion, float > const* end );
 
 } // namespace math
 } // namespace vostok

@@ -55,6 +55,9 @@ public:
     // still may be enabled. This function determines whether this is the case.
     virtual bool    IsContributing() const = 0;
 
+    // Filters may be able to cache across transformations, however, the ability depends on filter's behavior.
+    virtual bool    CanCacheAcrossTransform(bool deltaTrans, bool deltaRot, bool deltaScale) const = 0;
+
 protected:    
     FilterType Type;
     bool       Frozen;
@@ -111,6 +114,8 @@ public:
         Distance = distance;
         Params.Offset = BlurFilterParams::CalcOffsetByAngleDistance(angle, distance);
     }
+
+    virtual bool    CanCacheAcrossTransform(bool deltaTrans, bool deltaRot, bool deltaScale) const;
 
 protected:
     BlurFilterParams Params;
@@ -176,6 +181,7 @@ public:
 
     virtual Filter* Clone(MemoryHeap *heap = 0) const;
     virtual bool    IsContributing() const;
+    virtual bool    CanCacheAcrossTransform(bool deltaTrans, bool deltaRot, bool deltaScale) const;
 };
 
 class GlowFilter : public BlurFilterImpl
@@ -226,8 +232,6 @@ public:
     BevelFilter(const BlurFilterParams& params, float angle, float dist) :
         BlurFilterImpl(Filter_Bevel, params)
     {
-        // Force highlight mode for bevel, LoadFilters doesn't always set it apparently.
-        Params.Mode |= BlurFilterParams::Mode_Highlight;
         SetAngleDistance(angle, PixelsToTwips(dist));
     }
 
@@ -240,6 +244,7 @@ public:
 
     virtual Filter* Clone(MemoryHeap *heap = 0) const;
     virtual bool    IsContributing() const;
+    virtual bool    CanCacheAcrossTransform(bool deltaTrans, bool deltaRot, bool deltaScale) const;
 };
 
 // ColorMatrixFilter represents a 4x5 color transform, applied as follows:
@@ -276,11 +281,39 @@ public:
     }
 
     virtual bool    IsContributing() const;
+    virtual bool    CanCacheAcrossTransform(bool, bool, bool deltaScale) const { return !deltaScale; }
 
 protected:
     float MatrixData[ColorMatrixEntries];
 };
 
+
+class CacheAsBitmapFilter : public Filter
+{
+public:
+    CacheAsBitmapFilter() : Filter(Filter_CacheAsBitmap) { }
+
+    static CacheAsBitmapFilter* GetInstance()
+    {
+        static CacheAsBitmapFilter instance;
+        return &instance;
+    }
+    virtual Filter* Clone(MemoryHeap * pheap= 0) const 
+    { 
+        // Because CacheAsBitmapFilter contains no state, it does not need to be cloned, just AddRef to the singleton.
+        SF_UNUSED(pheap);
+        Filter* cab = GetInstance(); 
+        if (cab) cab->AddRef();
+        return cab;
+    };
+
+    CacheAsBitmapFilter& operator=(const CacheAsBitmapFilter&)
+    {
+        return *this;
+    }
+    virtual bool    IsContributing() const { return true; }
+    virtual bool    CanCacheAcrossTransform(bool, bool, bool deltaScale) const { return !deltaScale; }
+};
 
 
 //--------------------------------------------------------------------
@@ -309,17 +342,25 @@ public:
     void          AddFilter(Filter* filter)
     {
         SF_ASSERT(!IsFrozen());
-        Filters.PushBack(filter);
+        if (Filters.GetSize() == 1 && Filters[0]->GetFilterType() == Filter_CacheAsBitmap)
+            Filters[0] = filter;
+        else
+            Filters.PushBack(filter);
     }
     void          InsertFilterAt(UPInt index, Filter* filter)
     {
         SF_ASSERT(!IsFrozen());
-        Filters.InsertAt(index, filter);
+        if (Filters.GetSize() == 1 && Filters[0]->GetFilterType() == Filter_CacheAsBitmap)
+            Filters[0] = filter;
+        else
+            Filters.InsertAt(index, filter);
     }
     void          RemoveFilterAt(UPInt index)
     {
         SF_ASSERT(!IsFrozen());
         Filters.RemoveAt(index);
+        if (Filters.GetSize() == 0 && GetCacheAsBitmap())
+            Filters.PushBack(CacheAsBitmapFilter::GetInstance());
     }
 
     // Removes all copies of the filter from the set.
@@ -330,6 +371,10 @@ public:
         return Filters;
     }
     
+    // Gets or Sets whether the FilterSet has cacheAsBitmap enabled.
+    bool          GetCacheAsBitmap() const { return CacheAsBitmap; }
+    void          SetCacheAsBitmap(bool enable);
+
     // Clones a filter set. If deepCopy == true, individual filters
     // are also cloned.
     FilterSet*    Clone(bool deepCopy = true, MemoryHeap *heap = 0) const;
@@ -337,9 +382,13 @@ public:
     // Returns true if any filter within the set contributes.
     bool          IsContributing() const;
 
+    // Determines whether the filter can cache itself across translation/
+    bool          CanCacheAcrossTransform(bool deltaTrans, bool deltaRot, bool deltaScale) const;
+
 protected:    
     Array<Ptr<Filter> > Filters;
     bool                Frozen;
+    bool                CacheAsBitmap;
 };
 
 

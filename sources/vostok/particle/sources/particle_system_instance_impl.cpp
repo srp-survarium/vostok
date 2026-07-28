@@ -291,6 +291,12 @@ void particle_system_instance_impl::remove_emitter_instances()
 
 bool particle_system_instance_impl::is_finished()
 {
+	// claude@NOTE: ~95% structural (42 target / 40 base). Target has 2 extra tail statements
+	//   (lines run to ~378 vs our 358) and names the finished local `ps_finished` not `finished`.
+	//   Its emitter list local is intrusive_list<...,224,single_threading_policy,size_policy,
+	//   no_debug_policy> (the same offset-based/no_debug list-typedef root cause as particle_world).
+	//   Closing needs the missing tail body reconstructed + the list typedef corrected - not a
+	//   localized resteer.
 	if (m_no_more_create)
 	{
 		particle_emitter_instance* instance = m_lods[m_current_lod].m_emitter_instance_list.front();
@@ -387,7 +393,12 @@ void particle_system_instance_impl::add_emitter_instance( u32 lod_index, particl
 	new_instance->m_particle_system_instance = this;
 	
 	m_lods[lod_index].m_emitter_instance_list.push_back(new_instance);
-	
+
+	// claude@NOTE: QUANTITY -2 vs target. After push_back the target emits a guarded
+	//   `if ( m_is_playing /*+0x2A4*/ ) prepare_render_resources();` (cmp [this+2A4h],0/je;
+	//   call particle_system_instance_impl::prepare_render_resources). prepare_render_resources
+	//   is a real 13-stmt target member NOT yet reconstructed in our source (absent from base);
+	//   the 2-stmt guard cannot be added until that method body is recovered (would not link).
 	//new_instance->process_event(particle_event::on_play,m_transform.lines[3].xyz());
 }
 
@@ -406,9 +417,9 @@ void particle_system_instance_impl::play_impl(vostok::math::float4x4 const& tran
 void particle_system_instance_impl::stop_impl(float time)
 {
 	(void)&time;
-	// TODO: если time==0 то удалять пс немедленно.
-	// time - время доигрывания пс.
-	// если time больше ее времени жизни, то пс просто доиграет до конца и удалится.
+	// TODO: пїЅпїЅпїЅпїЅ time==0 пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
+	// time - пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ.
+	// пїЅпїЅпїЅпїЅ time пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ, пїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ.
 	m_is_playing = false;
 	m_no_more_create = true;
 }
@@ -461,6 +472,20 @@ bool particle_system_instance_impl::tick(float time_delta )
 	}
 	
 	return is_finished();
+}
+
+// claude@NOTE: callee of survarium::weapon::~weapon / update_pfx_transform paths. Reconstructed
+// structure (2 stmts): static_cast the c_ptr() to particle_system_instance_impl*, then return a
+// dword member at +0x2A4 != 0. The exact +0x2A4 member is unverified from this header (no offset
+// annotations), so the byte match of is_playing ITSELF is parked - this faithful-structure stub
+// only needs to LINK so its callers (the weapon dtor) pair.
+// STATE[STUB]
+bool is_playing( particle_system_instance_ptr const& instance )
+{
+	particle_system_instance_impl* const instance_impl = static_cast< particle_system_instance_impl* >( instance.c_ptr( ) );
+	// sushi@TODO: target reads a dword member at +0x2A4 (`!= 0`); m_next is a placeholder so this
+	// links. Identify the real +0x2A4 field (this header has no offset annotations) to byte-match.
+	return instance_impl->m_next != 0;
 }
 
 } // namespace particle

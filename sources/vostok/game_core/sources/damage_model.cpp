@@ -9,12 +9,13 @@
 #include <vostok/game_core/bullet.h>
 
 #include <vostok/ai/npc_statistics.h>
+#include <vostok/network_core/packet_reader.h>
+#include <boost/bind.hpp>
 
 
 namespace survarium {
 
-// STATE[97.55%|DONE]
-damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
+damage_model::damage_model( affects_applying_type_enum const affects_applying_type ) :
 	m_affects_applying_type					( affects_applying_type ),
 	m_last_tick_time_in_ms					( 0 ),
 	m_last_hit_initiator					( 255 )
@@ -32,7 +33,6 @@ damage_model::damage_model( affects_applying_type_enum affects_applying_type ) :
 	subscribe_on_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
 }
 
-// STATE[83.38%|DONE]: Difference in compiler generated code.
 damage_model::~damage_model( )
 {
 	while ( booster_damage_protector* p = m_damage_protectors.pop_front( ) )
@@ -42,20 +42,17 @@ damage_model::~damage_model( )
 	unsubscribe_from_affect( affects_type_hand_damage, &m_hand_damaged_subscriber );
 }
 
-// STATE[100%|DONE]
 body_part_parameters* damage_model::pop_body_part( )
 {
-	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( ); // <0x6ff629>|0x009|+0x033:'46'
+	return m_body_parts.empty( ) ? NULL : m_body_parts.pop_front( );
 }
 
 struct regenerate_body_parts_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit			regenerate_body_parts_predicate		( u32 time_delta_ms, u32 current_time_in_ms ) :
 							time_delta_ms		( time_delta_ms ),
 							current_time_in_ms	( current_time_in_ms ) {}
 
-	// STATE[BLOCKED]
 	inline		void	operator()							( body_part_parameters * body_part ) const {
 		body_part->regenerate( time_delta_ms, current_time_in_ms );
 	}
@@ -68,10 +65,9 @@ public:
 STATIC_SIZE_ASSERT(regenerate_body_parts_predicate, 0x8);
 
 
-// STATE[100%|DONE]
-void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
+void damage_model::tick( const u32 time_delta_ms, const u32 current_time_in_ms )
 {
-	if ( !m_last_tick_time_in_ms )	// <0x6ffc69>|0x009|+0x00c:'68'
+	if ( !m_last_tick_time_in_ms )
 	{
 		m_last_tick_time_in_ms = current_time_in_ms;
 		return;
@@ -82,18 +78,15 @@ void damage_model::tick( u32 time_delta_ms, u32 current_time_in_ms )
 	m_last_tick_time_in_ms = current_time_in_ms;
 }
 
-// STATE[100%|DONE]
 void damage_model::add_body_part( body_part_parameters* const new_body_part )
 {
-	m_body_parts.push_back( new_body_part );	// <0x6ff5f9>|0x009|+0x014:'81'
+	m_body_parts.push_back( new_body_part );
 }
 
 struct find_body_part_by_name_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit	find_body_part_by_name_predicate	( pcstr body_part_name ) : body_part_name( body_part_name ) {}
 
-	// STATE[BLOCKED]
 	bool		operator()							( body_part_parameters* params ) const {
 		return strings::equal( params->get_name( ), body_part_name );
 	}
@@ -103,20 +96,18 @@ public:
 }; // struct find_body_part_by_name_predicate
 
 
-// STATE[100%|DONE]
 body_part_parameters* damage_model::get_body_part( pcstr part_name ) const
 {
-	find_body_part_by_name_predicate find_predicate( part_name );	// <0x6ff739>|0x009|+0x00e:'101': why twice, isn't it boost::noncopy?, it looks like our asm has a copy :shrug:
+	find_body_part_by_name_predicate find_predicate( part_name );
 	return m_body_parts.find_if<find_body_part_by_name_predicate>( find_predicate );
 }
 
 struct find_by_damage_type_predicate {
-	// STATE[BLOCKED]
 	explicit		find_by_damage_type_predicate	( pcstr damage_type ) {
 		strings::copy( m_damage_type, 16, damage_type );
 	}
 
-	// STATE[BLOCKED]: sushi@TODO: m_hit_type is getter
+	// sushi@TODO: m_hit_type is getter
 	inline	bool	operator()						( booster_damage_protector * protector ) const {
 		return strings::equal( protector->m_hit_type, m_damage_type );
 	}
@@ -126,18 +117,17 @@ private:
 }; // struct find_by_damage_type_predicate
 
 
-// STATE[99.82%|DONE]
 bool damage_model::hit_body_part(
-	u8			initiator,
+	u8 const	initiator,
 	pcstr		part_name,
 	pcstr		damage_type,
-	float		amount,
-	float		armor_piercing,
-	u32			time_in_ms,
+	float const	amount,
+	float const	armor_piercing,
+	u32 const	time_in_ms,
 	bullet*		const bullet
 )
 {
-	body_part_parameters* last_hitted_body_part = bullet ? m_body_parts.find( bullet->last_hitted_body_part( ) ) : NULL;	// <0x6ffafa>|0x00a|+0x033:'145'
+	body_part_parameters* last_hitted_body_part = bullet ? m_body_parts.find( bullet->last_hitted_body_part( ) ) : NULL;
 
 	body_part_parameters* part = get_body_part( part_name );
 	if ( last_hitted_body_part )
@@ -158,8 +148,7 @@ bool damage_model::hit_body_part(
 	return true;
 }
 
-// STATE[100%|DONE]
-void damage_model::apply_med_kit( pcstr part_name, float amount )
+void damage_model::apply_med_kit( pcstr part_name, const float amount )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -168,12 +157,10 @@ void damage_model::apply_med_kit( pcstr part_name, float amount )
 
 struct dump_npc_body_part_state_predicate : boost::noncopyable {
 public:
-	// STATE[UNVERIFIED]
 	explicit		dump_npc_body_part_state_predicate	( vostok::ai::npc_statistics& npc_stats, u32 current_time ) :
 						npc_stats		( npc_stats ),
 						current_time	( current_time ) {}
 
-	// STATE[UNVERIFIED]
 	inline	void	operator()							( body_part_parameters* params ) const {
 		params->dump_state( npc_stats, current_time );
 	}
@@ -184,11 +171,10 @@ public:
 }; // struct dump_npc_body_part_state_predicate
 
 
-// STATE[BLOCKED]
-void damage_model::fill_stats( ai::npc_statistics& stats, u32 current_time_in_ms ) const
+void damage_model::fill_stats( ai::npc_statistics& stats, u32 const current_time_in_ms ) const
 {
 	typedef ai::statistics_item<46, 16> content_type;
-	content_type new_stats_item;	// <0x6ff800>|0x010|+0x00b:'211'
+	content_type new_stats_item;
 	new_stats_item.caption = "damage status: ";
 	stats.selectors_state.push_back( new_stats_item );	// sushi@TODO: This is wrong, npc_statistics has changed, this should be `body_state`.
 
@@ -196,26 +182,26 @@ void damage_model::fill_stats( ai::npc_statistics& stats, u32 current_time_in_ms
 	m_body_parts.for_each( dump_predicate );
 }
 
-// STATE[78.97%|PARTIAL]
+// sushi@TODO: target PDB records the body_part local as body_part_parameters const* (pointee-const), but
+// intrusive_list::get_next_of_object takes PointerType const (= body_part_parameters* const) so the
+// const* spelling cannot compile against our list header - kept non-const.
 void damage_model::dump_stats( boost::function<void( u32, float, float, pcstr )> callback )
 {
-	body_part_parameters*		body_part = m_body_parts.front( );	// <0x6ff92a>|0x00a|+0x00c:'231'
+	body_part_parameters*		body_part = m_body_parts.front( );
 	u32							body_part_index = 0;
 	while ( body_part )
 	{
-		body_part->dump_state( callback, body_part_index++ ); // sushi@NOTE: Seems like callback copy has inlined differently
+		body_part->dump_state( callback, body_part_index++ ); // claude@MATCH: by-value boost::function copy lowered differently than target
 		body_part = m_body_parts.get_next_of_object( body_part );
 	}
 }
 
-// STATE[100%|DONE]
-void damage_model::subscribe_on_affect( hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
+void damage_model::subscribe_on_affect( hit_affects_type_enum const affect_type, affect_subscriber* const subscriber )
 {
-	m_affect_subscriptions[affect_type].push_back( subscriber );	// <0x6ffa39>|0x009|+0x01b:'242'
+	m_affect_subscriptions[affect_type].push_back( subscriber );
 }
 
-// STATE[100%|DONE]
-void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
+void damage_model::unsubscribe_from_affect( const hit_affects_type_enum affect_type, affect_subscriber* const subscriber )
 {
 	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
 	ASSERT( UNKNOWN_EXPRESSION );
@@ -224,13 +210,11 @@ void damage_model::unsubscribe_from_affect( hit_affects_type_enum affect_type, a
 
 struct affect_event_predicate : public boost::noncopyable {
 public:
-	// STATE[BLOCKED]
 	explicit		affect_event_predicate	( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type ) :
 						body_part_name		( body_part_name ),
 						affect_type			( affect_type ),
 						event_type			( event_type ) { }
 
-	// STATE[BLOCKED]
 	inline	void	operator()				( affect_subscriber* subscriber ) const {
 		subscriber->subscription_callback( body_part_name, affect_type, event_type );
 	}
@@ -244,10 +228,9 @@ public:
 
 STATIC_SIZE_ASSERT(affect_event_predicate, 0xC);
 
-// STATE[100%|DONE]
-void damage_model::notify_on_affect_event( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type )
+void damage_model::notify_on_affect_event( pcstr body_part_name, const hit_affects_type_enum affect_type, const affect_event_type_enum event_type )
 {
-	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];	// <0x6ff99f>|0x00f|+0x016|[1]:'294'
+	affect_subscriptions_list* subscribers = &m_affect_subscriptions[affect_type];
 	subscribers->for_each( affect_event_predicate( body_part_name, affect_type, event_type ) );
 }
 
@@ -255,13 +238,11 @@ struct reset_predicate : boost::noncopyable {
 public:
 	explicit			reset_predicate	( ) {}
 
-	// STATE[BLOCKED]
 	inline		void	operator()		( body_part_parameters* params ) const {
 		params->reset( );
 	}
 }; // struct reset_predicate
 
-// STATE[100%|DONE]
 void damage_model::reset( )
 {
 	m_last_hit_initiator = u8(-1);
@@ -275,15 +256,13 @@ void damage_model::reset( )
 	m_body_parts.for_each( reset_predicate( ) );
 }
 
-// STATE[100%|DONE]
-void damage_model::apply_affect( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type )
+void damage_model::apply_affect( pcstr part_name, const hit_affects_type_enum affect, const affect_event_type_enum event_type )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->apply_affect_by_force( affect, event_type, m_last_tick_time_in_ms );
 }
 
-// STATE[100%|DONE]
 u8 damage_model::get_total_health( )
 {
 	u8 result_value = 100;
@@ -296,15 +275,13 @@ u8 damage_model::get_total_health( )
 	return result_value;
 }
 
-// STATE[100%|DONE]
-void damage_model::cancel_affect( pcstr part_name, hit_affects_type_enum affect )
+void damage_model::cancel_affect( pcstr part_name, const hit_affects_type_enum affect )
 {
 	body_part_parameters* part = get_body_part( part_name );
 	ASSERT( UNKNOWN_EXPRESSION );
 	part->cancel_affect_by_force( affect );
 }
 
-// STATE[100%|DONE]
 void damage_model::register_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -312,7 +289,6 @@ void damage_model::register_body_part_damage_protector( pcstr part_name, damage_
 	part->add_damage_protector( protector );
 }
 
-// STATE[100%|DONE]
 void damage_model::unregister_body_part_damage_protector( pcstr part_name, damage_protector* protector )
 {
 	body_part_parameters* part = get_body_part( part_name );
@@ -320,7 +296,6 @@ void damage_model::unregister_body_part_damage_protector( pcstr part_name, damag
 	part->remove_damage_protector( protector );
 }
 
-// STATE[92.21%|DONE]
 void damage_model::add_damage_protector( pcstr damage_type, float reduce, float absorb )
 {
 	booster_damage_protector* protector = m_damage_protectors.find_if(
@@ -337,8 +312,7 @@ void damage_model::add_damage_protector( pcstr damage_type, float reduce, float 
 	}
 }
 
-// STATE[98.95%|DONE]
-void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type )
+void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum const affect, affect_event_type_enum const type )
 {
 	if ( affect == affects_type_leg_damage && strings::equal( "left_leg", bodypart ) )
 	{
@@ -358,14 +332,9 @@ void damage_model::on_broken_limb_affect( pcstr bodypart, hit_affects_type_enum 
 	}
 }
 
-// STATE[BLOCKED]
 void damage_model::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x6ffc10>|0x000|+0x009:'433'	{
-	// <0x6ffc19>|0x009|+0x041:'434'
-	// <0x6ffc5a>|0x04a|      :'435'	}
-	// ******
+	m_body_parts.for_each( boost::bind( &body_part_parameters::deserialize, _1, boost::ref( reader ) ) );
 }
 
 } // namespace survarium

@@ -64,7 +64,8 @@ void   resources_manager::init_query_with_no_fat_it (query_result & query)
 		return;
 	}
 
-	bool const assert_on_not_found		=	query.get_owner_queries() && 
+#ifdef DEBUG
+	bool const assert_on_not_found		=	query.get_owner_queries() &&
 											query.get_owner_queries()->assert_on_fail();
 	if ( assert_on_not_found )
 	{
@@ -72,6 +73,7 @@ void   resources_manager::init_query_with_no_fat_it (query_result & query)
 		//if ( debug::is_debugger_present() && !s_skip_file_not_found )
 		//	DEBUG_BREAK						();
 	}
+#endif // #ifdef DEBUG
 
 	query.set_error_type					(query_result::error_type_file_not_found);
 	query.end_query_might_destroy_this	();

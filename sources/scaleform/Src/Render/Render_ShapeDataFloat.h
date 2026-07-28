@@ -44,6 +44,7 @@ class ShapeDataFloatTempl : public ShapeDataInterface
         Tag_MoveTo,
         Tag_LineTo,
         Tag_QuadTo,
+        Tag_CubicTo,
         Tag_EndPath,
         Tag_EndShape
     };
@@ -145,6 +146,21 @@ public:
         LastX = ax; LastY = ay;
     }
 
+    void CubicTo(float cx1, float cy1, float cx2, float cy2, float ax, float ay)
+    {
+        SF_ASSERT(Status == Status_MoveTo || Status == Status_EdgeTo);
+        PathDataEncoder<ContainerType> encoder(*Data);
+        encoder.WriteChar(Tag_CubicTo);
+        encoder.WriteFloat(cx1);
+        encoder.WriteFloat(cy1);
+        encoder.WriteFloat(cx2);
+        encoder.WriteFloat(cy2);
+        encoder.WriteFloat(ax);
+        encoder.WriteFloat(ay);
+        Status = Status_EdgeTo;
+        LastX = ax; LastY = ay;
+    }
+
     void ClosePath()
     {
         if (LastX != StartX || LastY != StartY)
@@ -217,15 +233,21 @@ public:
         char tag = decoder.ReadChar(pos->Pos); ++pos->Pos;
         if (tag != Tag_EndPath)
         {
-            SF_ASSERT(tag == Tag_LineTo || tag == Tag_QuadTo);
+            SF_ASSERT(tag == Tag_LineTo || tag == Tag_QuadTo || tag == Tag_CubicTo);
             ret = Edge_LineTo;
             coord[0] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
             coord[1] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
-            if (tag == Tag_QuadTo)
+            if (tag == Tag_QuadTo || tag == Tag_CubicTo)
             {
                 ret = Edge_QuadTo;
                 coord[2] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
                 coord[3] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
+            }
+            if (tag == Tag_CubicTo)
+            {
+                ret = Edge_CubicTo;
+                coord[4] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
+                coord[5] = decoder.ReadFloat(pos->Pos); pos->Pos += 4;
             }
         }
         return ret;

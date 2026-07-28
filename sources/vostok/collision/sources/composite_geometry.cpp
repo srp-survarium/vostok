@@ -134,8 +134,7 @@ bool composite_geometry::ray_query(
 		if ( (*i)->ray_query( object, origin, direction, max_distance, distance, triangles, predicate ) )
 		{
 			res = true;
-			u32 new_triangles_size = triangles.size();
-			for ( ; j < new_triangles_size ; ++j )
+			for ( u32 new_triangles_size = triangles.size() ; j < new_triangles_size ; ++j )
 				triangles[j].triangle_id = id >> 2;
 		}		
 	}

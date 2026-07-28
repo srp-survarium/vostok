@@ -15,10 +15,12 @@ namespace vostok {
 namespace vfs {
 
 class virtual_file_system;
-typedef	intrusive_list	<	vfs_mount, 
-							vfs_mount_ptr, 
+typedef	intrusive_list	<	vfs_mount,
+							vfs_mount_ptr,
 							& vfs_mount::next_scheduled_to_unmount,
-							threading::simple_lock	>	scheduled_to_unmount_container;
+							threading::simple_lock,
+							size_policy,
+							no_debug_policy	>	scheduled_to_unmount_container;
 
 void   dispatch_scheduled_to_unmount	(scheduled_to_unmount_container &	scheduled_to_unmount,
 										 mount_history_container &			mount_history);

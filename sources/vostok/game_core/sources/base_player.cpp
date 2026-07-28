@@ -8,203 +8,132 @@
 #include <vostok/game_core/base_player_creation_params.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/scheduler.h>
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/animation/animation_playback_state.h>
 
 namespace survarium {
 
-// STATE[STUB]
 base_player::base_player( base_player_creation_params const& params, survarium::scheduler& the_scheduler ) :
-	inventory_holder	( the_scheduler, params.inventory ),
-	hit_initiator		( params.initial_info.id, params.initial_info.profile->is_local ),
-	m_recoil_params		( params.recoil_params )
+	inventory_holder			( the_scheduler, params.inventory ),
+	hit_initiator				( params.initial_info.id, params.initial_info.profile->is_local ),
+	m_recoil_params				( params.recoil_params ),
+	m_dispersion_params			( params.dispersion_params ),
+	m_breath_holding_params		( params.breath_holding_params ),
+	m_damage_model				( params.damage_model ),
+	m_movement_speed_factor		( 1.0f ),
+	m_force_animation_selection	( false ),
+	m_is_alive					( false ),
+	m_is_replaying_history		( false ),
+	m_has_been_inserted			( false )
 {
-	// FUNCTION BODY
-	// <0x73f0b0>|0x000|+0x1da:'31'	{
-	// <0x73f28a>|0x1da|      :'32'	}
-	// ******
 }
 
-// STATE[STUB]
 base_player::~base_player( )
 {
-	// FUNCTION BODY
-	// <0x73ed70>|0x000|+0x009:'35'	{
-	// <0x73ed79>|0x009|+0x00c:'36'
-	// <0x73ed85>|0x015|      :'37'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// STATE[STUB]
-// void survarium::base_player::tick_active_object()
 void base_player::tick_active_object( )
 {
-	// LOCALS
-	// weapon_core const* 			current_weapon<1>
-	// u8 							broken_hands_count<2>
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> another_item<3>
-	// profile_slot_enum 			another_weapon_slot_id<3>
-	// weapon_core const* 			another_weapon<3>
-	// weapon_core const* 			current_weapon<1>
-	// ******
+	( *m_current_active_object ).tick( );
 
-	// CALL SITE INFO
-	// <0x73ee63> -> void <unknown>()
-	// <0x73ee9a> -> bool <unknown>() const
-	// <0x73eec0> -> void <unknown>(resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base> const&, resources::resource_ptr<interactive_object,resources::unmanaged_intrusive_base> const&) const
-	// <0x73eedb> -> void <unknown>()
-	// <0x73ef07> -> engine& <unknown>()
-	// <0x73ef19> -> void <unknown>(base_player&, engine&)
-	// <0x73ef34> -> void <unknown>()
-	// <0x73ef79> -> weapon_core* <unknown>()
-	// <0x73ef93> -> resources::resource_ptr<damage_model,resources::unmanaged_intrusive_base> const& <unknown>() const
-	// <0x73f038> -> weapon_core* <unknown>()
-	// <0x73f09e> -> weapon_core* <unknown>()
-	// ******
+	if ( m_current_active_object != m_target_active_object )
+		if ( ( *m_current_active_object ).is_ready_to_be_deactivated( ) )
+		{
+			on_before_active_object_changed( m_current_active_object, m_target_active_object );
+			( *m_current_active_object ).deactivate( );
+			m_current_active_object	= m_target_active_object;
+			( *m_current_active_object ).activate( *this, get_engine( ) );
+			( *m_current_active_object ).tick( );
+		}
 
-	// FUNCTION BODY
-	// <0x73ee40>|0x000|+0x00a:'40'	{
-	// <0x73ee4a>|0x00a|+0x01b:'41'
-	// <0>
-	// <0x73ee65>|0x025|+0x01c:'43'
-	// <0x73ee81>|0x041|+0x026:'44'
-	// <0>
-	// <0x73eea7>|0x067|+0x01b:'46'
-	// <0x73eec2>|0x082|+0x01b:'47'
-	// <0x73eedd>|0x09d|+0x011:'48'
-	// <0x73eeee>|0x0ae|+0x02d:'49'
-	// <0x73ef1b>|0x0db|+0x01b:'50'
-	// <0>
-	// <1>
-	// <2>
-	// <0x73ef36>|0x0f6|+0x02a:'54'
-	// <0x73ef60>|0x120|+0x028|[1]:'55'
-	// <0x73ef88>|0x148|+0x03a|[2]:'56'
-	// <0x73efc2>|0x182|+0x017:'57'
-	// <0x73efd9>|0x199|+0x020|[3]:'58'
-	// <0x73eff9>|0x1b9|+0x01d:'59'
-	// <0x73f016>|0x1d6|+0x036:'60'
-	// <0x73f04c>|0x20c|+0x019:'61'
-	// <0x73f065>|0x225|+0x018:'62'
-	// <0>
-	// <0x73f07d>|0x23d|+0x008:'64'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x73f085>|0x245|+0x01e|[1]:'70'
-	// <0>
-	// <0x73f0a3>|0x263|      :'72'	}
-	// ******
+	if ( m_current_active_object == m_target_active_object )
+		if ( weapon_core const* const current_weapon = ( *m_current_active_object ).cast_weapon_core( ) )
+			if ( u8 const broken_hands_count = ( *damage_model( ) ).broken_hands_count( ) )
+				if ( !current_weapon->could_be_used( *this ) ) {
+					profile_slot_enum another_weapon_slot_id = inventory( ).get_active_slot( ) != weapon1_slot ? weapon1_slot : weapon2_slot;
+					inventory_item_ptr another_item = inventory( ).item_in_slot( another_weapon_slot_id );
+					weapon_core const* const another_weapon = another_item ? ( *another_item ).cast_weapon_core( ) : NULL;
+					if ( another_weapon && another_weapon->could_be_used( *this ) )
+						inventory( ).action( another_weapon_slot_id, true );
+
+				}
+
+	// claude@MATCH: the trailing braced block is real - the target emits the cast (+0x54
+	// vcall) and a dead store into a second block-scoped `current_weapon` local at the
+	// function tail (lines 69-71 of the original; the value is never read - whatever
+	// consumed it was compiled out of MASTER_GOLD).
+	{
+		weapon_core const* const current_weapon = ( *m_current_active_object ).cast_weapon_core( );
+	}
 }
 
-// STATE[STUB]
-// void survarium::base_player::send_game_world_object(survarium::game_world_object const*, boost::function<vostok::network_core::udp_match_packet & __cdecl(void)> const&, boost::function<void __cdecl(vostok::network_core::udp_match_packet &)> const&) const
 void base_player::send_game_world_object( game_world_object const* object, boost::function<network_core::udp_match_packet &()> const& reciver_packet_allocator, boost::function<void(network_core::udp_match_packet &)> const& reciver_enqueuer ) const
 {
-	// LOCALS
-	// network_core::udp_match_packet& packet
-	// inventory_item const* 		item
-	// ******
+	network_core::udp_match_packet&	packet	= reciver_packet_allocator( );
 
-	// CALL SITE INFO
-	// <0x73ec30> -> inventory_item const* <unknown>() const
-	// <0x73ec80> -> void <unknown>(network_core::udp_match_packet&) const
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	packet.append		( id );
 
-	// FUNCTION BODY
-	// <0x73ebe0>|0x000|+0x00f:'79'	{
-	// <0x73ebef>|0x00f|+0x00b:'80'
-	// <0>
-	// <0x73ebfa>|0x01a|+0x00c:'82'
-	// <0x73ec06>|0x026|+0x013:'83'
-	// <0>
-	// <0x73ec19>|0x039|+0x00c:'85'
-	// <0x73ec25>|0x045|+0x010:'86'
-	// <0>
-	// <0x73ec35>|0x055|+0x00c:'88'
-	// <0x73ec41>|0x061|+0x030:'89'
-	// <0>
-	// <0x73ec71>|0x091|+0x011:'91'
-	// <0>
-	// <0x73ec82>|0x0a2|+0x00c:'93'
-	// <0x73ec8e>|0x0ae|      :'94'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	inventory_item const*	item	= object->owner( );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	packet.append		( item ? item->profile_slot_id( ) : invalid_slot );
+
+	object->serialize	( packet );
+
+	reciver_enqueuer	( packet );
 }
 
-// STATE[STUB]
-// void survarium::base_player::deserialize_game_world_object(vostok::network_core::packet_reader&)
+// claude@NOTE: structure matches the target (3 stmts), but the base inlines what the
+// target keeps out-of-line - reader.r<bool>, inventory(), inventory::item_in_slot
+// (and its bounds ASSERT), the intrusive_ptr ctor/operator*/dtor - so the byte match
+// collapses. Inline-vs-call, not source-steerable.
 void base_player::deserialize_game_world_object( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// resources::resource_ptr<inventory_item,resources::unmanaged_intrusive_base> item
-	// profile_slot_enum 			slot
-	// ******
+	profile_slot_enum	slot	= (profile_slot_enum)reader.r< bool >( );
 
-	// CALL SITE INFO
-	// <0x73ed57> -> void <unknown>(network_core::packet_reader&)
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
 
-	// FUNCTION BODY
-	// <0x73ed00>|0x000|+0x009:'113'	{
-	// <0>
-	// <0x73ed09>|0x009|+0x00e:'115'
-	// <0>
-	// <0x73ed17>|0x017|+0x00c:'117'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x73ed23>|0x023|+0x01a:'123'
-	// <0x73ed3d>|0x03d|+0x01c:'124'
-	// <0x73ed59>|0x059|      :'125'	}
-	// ******
+	inventory_item_ptr	item	= inventory( ).item_in_slot( slot );
+	item->deserialize_game_world_object( reader );
 }
 
-// STATE[STUB]
-// void survarium::base_player::subscribe_on_player_death(survarium::player_death_subscriber*)
 void base_player::subscribe_on_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
-	// <0x73ebb0>|0x000|+0x009:'128'	{
-	// <0x73ebb9>|0x009|+0x00c:'129'
-	// <0x73ebc5>|0x015|+0x014:'130'
-	// <0x73ebd9>|0x029|      :'131'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_player_death_subscribers.push_back( subscriber );
 }
 
-// STATE[STUB]
-// void survarium::base_player::unsubscribe_from_player_death(survarium::player_death_subscriber*)
 void base_player::unsubscribe_from_player_death( player_death_subscriber* subscriber )
 {
-	// FUNCTION BODY
-	// <0x73eb80>|0x000|+0x009:'134'	{
-	// <0x73eb89>|0x009|+0x00c:'135'
-	// <0x73eb95>|0x015|+0x012:'136'
-	// <0x73eba7>|0x027|      :'137'	}
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION );
+	m_player_death_subscribers.erase( subscriber );
 }
 
-// STATE[STUB]
-// void survarium::call_player_death_subscriber_callback(survarium::player_death_subscriber const* const)
-void call_player_death_subscriber_callback( player_death_subscriber const* subscriber )
+static void call_player_death_subscriber_callback( player_death_subscriber const* const subscriber )
 {
-	// FUNCTION BODY
-	// <0x73eca0>|0x000|+0x009:'140'	{
-	// <0x73eca9>|0x009|+0x008:'141'
-	// <0x73ecb1>|0x011|      :'142'	}
-	// ******
+	subscriber->subscription_callback( );
 }
 
-// STATE[STUB]
-// void survarium::base_player::on_player_death()
 void base_player::on_player_death( )
 {
-	// FUNCTION BODY
-	// <0x73ecc0>|0x000|+0x009:'145'	{
-	// <0x73ecc9>|0x009|+0x029:'146'
-	// <0x73ecf2>|0x032|      :'147'	}
-	// ******
+	m_player_death_subscribers.for_each( call_player_death_subscriber_callback );
+}
+
+// claude@NOTE: reconstructed forwarding target of base_player::get_animation_playback_state.
+// The real callee COMDAT-folded to a bare `ret` whole-program (name unrecoverable); this empty
+// body re-folds to the same `ret`, so the caller's `call rel32` is byte-identical. result is
+// taken BY VALUE - the target pushes its two members (interval_id, interval_time) individually.
+// sushi@TODO: helper NAME is a guess (the real callee folded away); structure/bytes of the
+// forwarding call are name-independent, but identify the true callee to retire this base-only symbol.
+bool query_animation_playback_state( pcvoid const object, u32 const mask, animation::animation_playback_state result )
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( object, mask, result );
+	VOSTOK_UNREACHABLE_CODE( );
 }
 
 } // namespace survarium

@@ -1,226 +1,191 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "udp_network_flow_emulator.h"
+#include <vostok/network_core/udp_network_flow_emulator.h>
+#include <vostok/network_core/udp_network_flow_emulator_options.h>
+#include <vostok/network_core/udp_match_connection.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/buffer_vector.h>
+
+// the tick remove_if predicate lives at GLOBAL scope - the target mangling carries no
+// namespace (??Rdelayed_packets_predicate@@QBE..); the namespaced spelling mangles
+// @network_core@vostok@ and the symbol join fails SILENTLY (objdiff never pairs it).
+// sushi@TODO: target derives this from boost::noncopyable, but std::remove_if
+// copy-constructs the predicate (C2248) - cannot add the base without rework.
+class delayed_packets_predicate {
+public:
+	inline	delayed_packets_predicate	(
+		vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	delayed_packets_to_appear,
+		const u32	time_in_ms
+	) :
+		m_packets		( delayed_packets_to_appear ),
+		m_time_in_ms	( time_in_ms )
+	{ }
+
+	bool	operator()	( std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const& message ) const;
+
+private:
+	/* 0x0000 */	vostok::buffer_vector< std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > >&	m_packets;
+	/* 0x0004 */	const u32	m_time_in_ms;
+}; // class delayed_packets_predicate
+
+// sushi@review: the size verifier swept only headers, so this .cpp-local class
+// (and its ctor) was missed. Its size is 0x8 (ref + const u32). The ctor + operator()
+// emit no standalone symbol until tick's remove_if instantiates them (see STATE below).
+STATIC_SIZE_ASSERT(delayed_packets_predicate, 0x8);
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// vostok::network_core::udp_network_flow_emulator::udp_network_flow_emulator(vostok::memory::base_allocator&, vostok::memory::single_size_buffer_allocator<300,vostok::threading::single_threading_policy>&, vostok::network_core::udp_network_flow_emulator_options const&)
-udp_network_flow_emulator::udp_network_flow_emulator( memory::base_allocator& allocator, memory::single_size_buffer_allocator<300,threading::single_threading_policy>& packets_allocator, udp_network_flow_emulator_options const& options )
+ udp_network_flow_emulator::udp_network_flow_emulator(
+	memory::base_allocator&		allocator,
+	memory::single_size_buffer_allocator< 300, threading::single_threading_policy >&	packets_allocator,
+	udp_network_flow_emulator_options const&	options
+) :
+	m_delayed_packets	( &allocator ),
+	m_lost_packets_random	( 0x995a34 ),
+	m_ping_random		( 0x995a35 ),
+	m_out_of_order_random	( 0x995a36 ),
+	m_packets_allocator	( packets_allocator ),
+	m_logging_id		( options.logging_id ),
+	m_lost_packet_probability	( options.lost_packet_probability ),
+	m_min_ping_time_in_ms	( options.min_ping_time_in_ms ),
+	m_max_ping_time_in_ms	( options.max_ping_time_in_ms )
 {
-	// FUNCTION BODY
-	// 1
-	// ******
 }
 
-// STATE[STUB]
-// void vostok::network_core::udp_network_flow_emulator::~udp_network_flow_emulator()
-void udp_network_flow_emulator::~udp_network_flow_emulator( )
+ udp_network_flow_emulator::~udp_network_flow_emulator( )
 {
-	// FUNCTION BODY
-	// <0x738999>|0x000|0x000:'34'
-	// <0x7389b0>|0x017|0x017:'35'
-	// <0x7389cf>|0x036|0x01f:'36'
-	// <0x7389ec>|0x053|0x01d:'37'
-	// ******
+	while ( m_delayed_packets.begin( ) != m_delayed_packets.end( ) ) {
+		delete_udp_match_packet( m_packets_allocator, m_delayed_packets.back( ).first );
+		m_delayed_packets.pop_back( );
+	}
 }
 
-// STATE[STUB]
-// bool delayed_packets_predicate::operator()(stlp_std::pair<vostok::network_core::udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> > const&) const
-bool delayed_packets_predicate::operator()( std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> > const& message ) const
+} // namespace network_core
+} // namespace vostok
+
+bool delayed_packets_predicate::operator()(
+	std::pair< vostok::network_core::udp_match_packet*, boost::asio::ip::udp::endpoint > const&	message
+) const
 {
-	return false;
-	// FUNCTION BODY
-	// <0x1369d9>|0x000|0x000:'49'
-	// <0x1369e9>|0x010|0x010:'50'
-	// 1
-	// <0x1369ed>|0x014|0x004:'52'
-	// <0x1369fb>|0x022|0x00e:'53'
-	// ******
+	if ( m_time_in_ms < message.first->last_send_time_in_ms )
+		return false;
+
+	m_packets.push_back( message );
+	return true;
 }
 
-// STATE[STUB]
-// void vostok::network_core::udp_network_flow_emulator::tick(unsigned int, boost::function<void __cdecl(vostok::network_core::packet_reader &,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const &)> const&)
-void udp_network_flow_emulator::tick( u32 time_in_ms, boost::function<void __cdecl(packet_reader &,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const &)> const& functor )
-{
-	// LOCALS
-	// buffer_vector<std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> > > delayed_packets_to_appear
-	// std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> >* e<1>
-	// std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> >* i<1>
-	// packet_reader 				reader<2>
-	// u16 							received_local_sequence_id<3>
-	// packet_reader 				reader<3>
-	// u16 							remote_sequence_id<3>
-	// ******
+namespace vostok {
+namespace network_core {
 
-	// TYPEDEFS
-	// typedef
-	// 	u16
-	// 	sequence_number_type;
+typedef std::pair< udp_match_packet*, boost::asio::ip::udp::endpoint >	flow_emulator_packet_pair;
 
-	// ******
-
-	// FUNCTION BODY
-	// <0x738a40>|0x000|0x000:'63'
-	// <0x738a5d>|0x01d|0x01d:'64'
-	// 1
-	// <0x738a62>|0x022|0x005:'66'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// <0x738ac2>|0x082|0x060:'74'
-	// 1
-	// <0x738b2d>|0x0ed|0x06b:'76'
-	// <0x738b3f>|0x0ff|0x012:'77'
-	// 1
-	// <0x738b65>|0x125|0x026:'79'
-	// <0x738b85>|0x145|0x020|[1]:'80'
-	// 1
-	// <0x738ba8>|0x168|0x023|[3]:'82'
-	// 1
-	// <0x738c07>|0x1c7|0x05f:'84'
-	// <0x738c13>|0x1d3|0x00c:'85'
-	// 1
-	// 2
-	// 3
-	// <0x738c1f>|0x1df|0x00c:'89'
-	// <0x738c7e>|0x23e|0x05f:'90'
-	// <0x738c91>|0x251|0x013:'91'
-	// <0x738ca7>|0x267|0x016:'92'
-	// ******
-}
-
-// STATE[STUB]
-// void vostok::network_core::udp_network_flow_emulator::add_packet(unsigned char*, unsigned int, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&, unsigned int, unsigned int)
-void udp_network_flow_emulator::add_packet(
-	u8*									buffer,
-	u32									buffer_size,
-	boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&	endpoint,
-	u32									time_in_ms,
-	u32									unacknowledged_packets_count
+void udp_network_flow_emulator::tick(
+	const u32		time_in_ms,
+	boost::function< void( packet_reader&, boost::asio::ip::udp::endpoint const& ) > const&	functor
 )
 {
-	// LOCALS
-	// udp_match_packet* 			packet
-	// u16 							received_local_sequence_id
-	// packet_reader 				reader
-	// u16 							remote_sequence_id
-	// ******
+	if ( m_delayed_packets.empty( ) )
+		return;
 
-	// TYPEDEFS
-	// typedef
-	// 	u16
-	// 	sequence_number_type;
+	buffer_vector< flow_emulator_packet_pair >	delayed_packets_to_appear(
+		ALLOCA( m_delayed_packets.size( ) * sizeof( flow_emulator_packet_pair ) ),
+		m_delayed_packets.size( )
+	);
 
-	// ******
+	m_delayed_packets.erase(
+		std::remove_if(
+			m_delayed_packets.begin( ),
+			m_delayed_packets.end( ),
+			delayed_packets_predicate( delayed_packets_to_appear, time_in_ms )
+		),
+		m_delayed_packets.end( )
+	);
 
-	// FUNCTION BODY
-	// <0x738d01>|0x000|0x000:'103'
-	// 1
-	// <0x738d1e>|0x01d|0x01d:'105'
-	// <0x738d2a>|0x029|0x00c:'106'
-	// 1
-	// 2
-	// <0x738d36>|0x035|0x00c:'109'
-	// <0x738d4b>|0x04a|0x015:'110'
-	// 1
-	// <0x738d84>|0x083|0x039:'112'
-	// <0x738dbd>|0x0bc|0x039:'113'
-	// 1
-	// <0x738dc6>|0x0c5|0x009:'115'
-	// <0x738ddd>|0x0dc|0x017:'116'
-	// <0x738df3>|0x0f2|0x016:'117'
-	// ******
+	if ( delayed_packets_to_appear.empty( ) )
+		return;
+
+	std::random_shuffle(
+		delayed_packets_to_appear.begin( ),
+		delayed_packets_to_appear.end( ),
+		m_out_of_order_random
+	);
+
+	for ( flow_emulator_packet_pair* i = delayed_packets_to_appear.begin( ), * e = delayed_packets_to_appear.end( ); i != e; ++i ) {
+		{
+			packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+			const u16		received_local_sequence_id	= reader.r< u16 >( );
+			const u16		remote_sequence_id			= reader.r< u16 >( );
+
+			VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
+			VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
+		}
+
+		packet_reader	reader( base_packet( i->first->buffer_to_send( ), i->first->buffer_to_send_size( ) ) );
+		functor( reader, i->second );
+
+		delete_udp_match_packet( m_packets_allocator, i->first );
+	}
 }
 
-// STATE[STUB]
-// void vostok::network_core::udp_network_flow_emulator::make_packet_lost(unsigned char*, unsigned int, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&)
-void udp_network_flow_emulator::make_packet_lost( u8* buffer, u32 buffer_size, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const& endpoint )
+void udp_network_flow_emulator::add_packet(
+	pbyte const		buffer,
+	const u32		buffer_size,
+	boost::asio::ip::udp::endpoint const&	endpoint,
+	const u32		time_in_ms,
+	const u32		unacknowledged_packets_count
+)
 {
-	// LOCALS
-	// bool 						is_low_level_packet
-	// ******
+	packet_reader	reader( base_packet( buffer, buffer_size ) );
 
-	// FUNCTION BODY
-	// 1
-	// 2
-	// <0x738a09>|0x000|0x000:'124'
-	// 1
-	// 2
-	// 3
-	// 4
-	// 5
-	// 6
-	// 7
-	// 8
-	// 9
-	// 10
-	// 11
-	// 12
-	// 13
-	// 14
-	// 15
-	// 16
-	// 17
-	// 18
-	// 19
-	// 20
-	// 21
-	// 22
-	// 23
-	// 24
-	// 25
-	// 26
-	// 27
-	// 28
-	// 29
-	// 30
-	// ******
+	const u16		received_local_sequence_id	= reader.r< u16 >( );
+	const u16		remote_sequence_id			= reader.r< u16 >( );
+
+	udp_match_packet* const	packet	= new_udp_match_packet( m_packets_allocator );
+	packet->last_send_time_in_ms	= m_ping_random( m_max_ping_time_in_ms - m_min_ping_time_in_ms ) + m_min_ping_time_in_ms + time_in_ms;
+
+	if ( m_delayed_packets.size( ) + unacknowledged_packets_count >= m_packets_allocator.total_size( ) / 4 - 1 )
+		packet->last_send_time_in_ms	= time_in_ms;
+
+	memory::copy( packet->m_buffer.data( ), 6, buffer, 6 );
+	packet->append( buffer + 6, buffer_size - 6 );
+
+	m_delayed_packets.push_back( std::make_pair( packet, endpoint ) );
+
+	VOSTOK_UNREFERENCED_PARAMETER( received_local_sequence_id );
+	VOSTOK_UNREFERENCED_PARAMETER( remote_sequence_id );
 }
 
-// STATE[STUB]
-// void vostok::network_core::udp_network_flow_emulator::on_packet_received(unsigned char*, unsigned int, boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&, unsigned int, unsigned int)
+void udp_network_flow_emulator::make_packet_lost(
+	pbyte const		buffer,
+	const u32		buffer_size,
+	boost::asio::ip::udp::endpoint const&	endpoint
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETER( endpoint );
+
+	const bool	is_low_level_packet	= udp_match_connection::is_low_level_packet( base_packet( buffer, buffer_size ) );
+	VOSTOK_UNREFERENCED_PARAMETER( is_low_level_packet );
+}
+
 void udp_network_flow_emulator::on_packet_received(
-	u8*									buffer,
-	u32									buffer_size,
-	boost::asio::ip::basic_endpoint<boost::asio::ip::udp> const&	endpoint,
-	u32									time_in_ms,
-	u32									unacknowledged_packets_count)
+	pbyte const		buffer,
+	const u32		buffer_size,
+	boost::asio::ip::udp::endpoint const&	endpoint,
+	const u32		time_in_ms,
+	const u32		unacknowledged_packets_count
+)
 {
-	// FUNCTION BODY
-	// <0x738e67>|0x000|0x000:'165'
-	// <0x738e86>|0x01f|0x01f:'166'
-	// <0x738ea2>|0x03b|0x01c:'167'
-	// <0x738ea4>|0x03d|0x002:'168'
-	// ******
+	if ( m_lost_packets_random.random_f( 1.f ) > m_lost_packet_probability )
+		add_packet( buffer, buffer_size, endpoint, time_in_ms, unacknowledged_packets_count );
+	else
+		make_packet_lost( buffer, buffer_size, endpoint );
 }
 
-	// TYPEDEFS
-	typedef
-		boost::asio::ip::udp
-		protocol_type;
-
-	typedef
-		boost::intrusive::rbtree_impl<boost::intrusive::setopt<boost::intrusive::detail::member_hook_traits<udp_match_packet,boost::intrusive::set_member_hook<boost::intrusive::none,boost::intrusive::none,boost::intrusive::none,boost::intrusive::none>,8>,udp_match_connection::comparer,u32,1> >
-		tree_type;
-
-	typedef
-		sockaddr
-		data_type;
-
-	typedef
-		std::pair<udp_match_packet *,boost::asio::ip::basic_endpoint<boost::asio::ip::udp> >*
-		iterator_type;
-
-	// ******
 
 } // namespace network_core
 } // namespace vostok

@@ -18,20 +18,31 @@
 namespace vostok {
 namespace resources {
 
+typedef	fixed_vector<cook_base*, last_resource_class>	cooks_registry_type;
+static	cooks_registry_type							s_cooks_registry;
+
 cook_base *   resources_manager::find_cook (class_id_enum const resource_class)
 {
+	if ( s_cooks_registry.empty() )
+		for ( u32 i=0; i<last_resource_class; ++i )
+			s_cooks_registry.push_back		(NULL);
+
 	R_ASSERT									(resource_class < last_resource_class);
-	return										 m_cooks_registry[resource_class];
+	return										s_cooks_registry[resource_class];
 }
 
 void   resources_manager::register_cook	(cook_base * const cook)
 {
+	if ( s_cooks_registry.empty() )
+		for ( u32 i=0; i<last_resource_class; ++i )
+			s_cooks_registry.push_back		(NULL);
+
 	class_id_enum const resource_class		=	cook->get_class_id();
 	R_ASSERT									(resource_class < last_resource_class);
 
-	R_ASSERT									(!find_cook(resource_class), 
+	R_ASSERT									(!find_cook(resource_class),
 												 "cook for this kind of resource is already registered" );
-	m_cooks_registry[resource_class]		=	cook;
+	s_cooks_registry[resource_class]		=	cook;
 }
 
 bool   resources_manager::thread_can_exit ()
@@ -84,15 +95,23 @@ bool   resources_manager::thread_can_exit ()
 												local_data_allows;
 }
 
+// sushi@TODO: 83% residual is register allocation inside the LOG_WARNING expansion -
+// target keeps `result` in edi and emits `return result` (mov eax, edi) as its own
+// statement (line 114), our base puts it in ebx and folds the move into the epilogue.
+// Non-steerable from source; structure otherwise matches.
 cook_base *   resources_manager::unregister_cook (class_id_enum const resource_class)
 {
+	if ( s_cooks_registry.empty() )
+		for ( u32 i=0; i<last_resource_class; ++i )
+			s_cooks_registry.push_back		(NULL);
+
 	R_ASSERT									(resource_class < last_resource_class);
-	cook_base * const result				=	m_cooks_registry[resource_class];
+	cook_base * const result				=	s_cooks_registry[resource_class];
 	if ( result && result->cook_users_count()!=0)
 		LOG_WARNING( "There are [%d] leaked resource(s). (classid = [%d])", result->cook_users_count(), resource_class );
 //		R_ASSERT_CMP							(result->cook_users_count(), ==, 0);
 
-	m_cooks_registry[resource_class]		=	NULL;
+	s_cooks_registry[resource_class]		=	NULL;
 	return										result;
 }
 

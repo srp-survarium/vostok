@@ -1,387 +1,512 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 04.03.2009
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2009
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "game_world.h"
-#include "game.h"
-#include "cell_manager.h"
-#include <vostok/game_core/bullet_manager.h>
-#include <vostok/game_core/sources/temp_include_all.h> // sushi@TODO: Final remove :)
-#include "event_manager.h"
-#include "object_scene.h"
-#include "actor.h"
-#include "actor_input_controller.h"
-#include "free_fly_camera.h"
-#include "stats.h"
+#include "game.h"			// get_game().get_sound_world() needs game complete
+#include "game_memory.h"	// g_allocator for allocator-taking vectora member
+#include "camera_director.h"	// switch_to_camera (switch_to_free_fly_camera)
+#include "free_fly_camera.h"	// free_fly_camera complete (game_camera* arg)
+#include "player_input_handler.h"	// set_input_mode (switch_to_player_camera)
+#include "base_network_client.h"	// get_current_player_position (add_enemy_position_for_team)
+#include "victory_item.h"			// victory_item::put (put_victory_item)
+#include "stats.h"					// stats::set_camera_stats (on_after_tick)
+#include "chat_handler.h"			// chat_handler::set_mode (on_activate)
+#include "npc_stats.h"				// DELETE m_active_npc_stats (clear_resources)
+#include "damage_model_stats.h"		// DELETE m_damage_model_stats (clear_resources)
+#include <vostok/game_core/bullet_manager.h>	// DELETE m_bullet_manager (clear_resources)
+#include <vostok/game_core/respawn_point_core.h>	// selected_for_respawn (clear_player_spawn_info)
+#include <vostok/input/world.h>		// input::world add/remove_handler (on_activate/on_deactivate)
+#include <vostok/sound/world.h>		// get_logic_world_user (on_after_tick/on_activate)
+#include <vostok/sound/world_user.h>	// set_listener_properties_interlocked/set_active_sound_scene
+#include <vostok/ai/world.h>		// ai::world::clear_resources/tick (clear_resources/tick)
+#include <vostok/ai_navigation/world.h>	// ai::navigation::world::clear_resources (clear_resources)
+#include <vostok/physics/world.h>	// physics::world::tick (tick)
+#include "flash_text_manager.h"		// DrawTextManager::Capture (tick)
+#include "GFx/GFx_DrawText.h"		// Scaleform::GFx::DrawTextManager::Capture (tick)
+#include "step_manager.h"			// NEW step_manager (ctor)
+#include <vostok/console_command.h>	// console_commands::cc_delegate (ctor)
+#include <vostok/ai/api.h>			// ai::create_world (ctor)
+#include <vostok/ai_navigation/api.h>	// ai::navigation::create_world (ctor)
+#include <vostok/render/facade/game_renderer.h>	// renderer().debug() (ctor)
+#include <vostok/render/facade/common_types.h>	// render::scene_configuration (load)
+#include <vostok/sound/sound_scene_creation_params.h>	// sound::sound_scene_creation_params (load)
+#include <vostok/game_core/game_net_defines.h>	// match_options::victory_items_count (load)
+#include <vostok/buffer_vector.h>	// buffer_vector (load)
+#include <vostok/fixed_string.h>	// fixed_string<8> name (load)
+// register_cooks: the cook family + the resources::register_cook free function
+#include "sound_player_cook.h"
+#include "human_npc_cook.h"
+#include "animation_space_graph_cook.h"
+#include "player_cook.h"
+#include "booby_trap_set_cook.h"
+#include "booby_trap_cook.h"
+#include "weapon_cook.h"
+#include "damage_zone_cook.h"
+#include "rifle_scope_cook.h"
+#include "empty_hands_cook.h"
 
-#include <vostok/sound/world.h>
-#include <vostok/sound/world_user.h>
-#include <vostok/console_command.h>
+using namespace vostok;
 
-#include <vostok/network/packet_reader.h>
+// file-scope debug console commands (global namespace - mangled @@3IA / @@3_NA);
+// s_max_tracers_count caps the per-frame bullet-tracer request fan-out in load()
+static u32	s_max_tracers_count		= 8;
+static bool	s_draw_respawn_debug	= false;
+static bool	s_draw_game_match_stats	= false;
 
-#include <vostok/render/facade/scene_renderer.h>
-
-//static void server_on_packet_received	( vostok::network::server& server, vostok::network::client_session& client, vostok::network::packet_reader& packet )
-//{
-//	string256 message;
-//	packet.r_string						( message );
-//
-//	vostok::network::packet* const answer_packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
-//	answer_packet->append				( message );
-//	server.send							( client, answer_packet );
-//}
-//
-static void client_on_packet_received	( vostok::network::client& client, vostok::network::packet_reader& packet )
-{
-	string256 message;
-	packet.r_string						( message );
-
-	vostok::network::packet* const answer_packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
-	answer_packet->append				( "the second message" );
-	client.send							( answer_packet );
-}
-
-static void client_on_connected			( vostok::network::client& client )
-{
-	vostok::network::packet* const packet = NEW (vostok::network::packet) ( *survarium::g_allocator );
-	packet->append						( "Hello, world!" );
-	client.send							( packet );
-}
+static console_commands::cc_u32		bullet_tracers_max_count_cc(
+	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
+static console_commands::cc_bool	draw_respawn_debug_cc(
+	"draw_respawn_debug", s_draw_respawn_debug, true, console_commands::command_type_engine_internal );
+static console_commands::cc_bool	draw_match_stats_cc(
+	"draw_match_stats", s_draw_game_match_stats, true, console_commands::command_type_engine_internal );
 
 namespace survarium {
 
+// defined in game_world_npc.cpp (no public header); unload() walks m_npcs and
+// strips each NPC's weapons
+void delete_weapons( human_npc_ptr& owner );
 
-extern pcstr  editor_project_ext;
-extern pcstr  resources_converted_path;
-extern pcstr  resources_path;
-
-
-game_world::game_world( game& game )
-:super					( game ),
-m_collision_tree		( NULL ),
-m_game_time_ms			( 0 ),
-m_game_time_sec			( 0 ),
-m_last_frame_time_ms	( 0 ),
-m_last_frame_time_sec	( 0 ),
-//m_test_anim_object	( NULL ),
-m_bullet_manager		( 0 ),
-m_local_actor			( NULL ),
-//m_server				( game.get_network_world() ),
-m_client				( game.get_network_world() )
+game_world::game_world( game& game ) :
+	base_game_scene( game ),
+	game_ui( *this ),
+	m_game_project( NULL ),
+	m_free_fly_camera( NULL ),
+	m_player_camera( NULL ),
+	m_bullet_manager( NULL ),
+	m_step_manager( NULL ),
+	m_ai_world( NULL ),
+	m_ai_navigation_world( NULL ),
+	m_death_particles_it( 0 ),
+	m_active_npc_stats( NULL ),
+	m_damage_model_stats( NULL ),
+	m_input_mode( free_fly_mode ),
+	m_is_dictionary_created( false ),
+	m_active_npc_set( false ),
+	m_is_loading( false ),
+	m_victory_items( g_allocator )
 {
-	init_physics						( );
+	static console_commands::cc_delegate add_enemy_position_cc(
+		"add_enemy", boost::bind( &game_world::add_enemy_position_for_team, this, _1 ), true );
+	static console_commands::cc_delegate clear_enemies_position_cc(
+		"clear_enemies", boost::bind( &game_world::clear_enemies_positions_for_team, this, _1 ), true );
+	static console_commands::cc_delegate clear_player_spawn_cc(
+		"clear_player_spawn", boost::bind( &game_world::clear_player_spawn_info, this ), false );
 
-	m_cell_manager		= NEW(cell_manager)( game, *this),
-#ifndef MASTER_GOLD
-	m_dbg_name							= "Game World";
-#endif //#ifndef MASTER_GOLD
-	m_bullet_manager					= NEW(bullet_manager)( NULL, NULL, NULL ); // sushi@TODO
-	m_camera_director					= NEW(camera_director)( *this );
-	m_camera_director->set_no_delete	( );
-	m_actor_input_controller			= NEW(actor_input_controller)( *this );
-	m_free_fly_camera					= NEW(free_fly_camera)(*this, m_camera_director);
-//	m_test_anim_object					= NEW(test_anim_object)(*this);
-	query_resources			( );
+	m_step_manager = NEW( step_manager )( );
 
-	u16 const port					= 2510;
+	init_physics( );
 
-//	m_server.set_on_packet_received	( boost::bind( &server_on_packet_received, boost::ref(m_server), _1, _2) );
-//	m_server.start_accepting		( port, 16 );
+	m_free_fly_camera = NEW( free_fly_camera )( *this, get_camera_director( ) );
 
-	m_client.set_on_packet_received	( boost::bind( &client_on_packet_received, boost::ref(m_client), _1) );
-	m_client.set_on_connected		( boost::bind( &client_on_connected, boost::ref(m_client)) );
-	m_client.connect				( "localhost", port );
+	register_cooks( );
 
-	IncludeAll all;
+	m_ai_world = ai::create_world( *this );
+	m_ai_navigation_world = ai::navigation::create_world( *this, render_scene( ), get_game( ).renderer( ).debug( ) );
 }
 
+void game_world::register_cooks( )
+{
+	static sound_player_cook			s_sound_player_cook( &get_game( ).get_sound_world( ), resources::sound_player_class );
+	static human_npc_cook				s_human_npc_cook( *this );
+	static animation_space_graph_cook	s_animation_space_graph_cook( *m_ai_navigation_world );
+	static player_cook					s_player_cook;
+	static booby_trap_set_cook			s_booby_trap_set_cook( *this );
+	static booby_trap_cook				s_booby_trap_cook( *this );
 
+	resources::register_cook( &s_sound_player_cook );
+	resources::register_cook( &s_human_npc_cook );
+	resources::register_cook( &s_animation_space_graph_cook );
+	resources::register_cook( &s_player_cook );
 
+	static weapon_cook					s_weapon_cook( get_game( ) );
+	weapon_cook::register_cooks_for_logic_states( );
+
+	static damage_zone_cook				s_damage_zone_cook( *this );
+	static rifle_scope_cook				s_rifle_scope_cook;
+	static empty_hands_cook				s_empty_hands_cook;
+}
 
 game_world::~game_world( )
 {
-	DELETE				( m_free_fly_camera );
-	DELETE				( m_local_actor );
-	DELETE				( m_actor_input_controller );
-
-	camera_director* cd = m_camera_director.c_ptr();
-	m_camera_director	= NULL;
-	DELETE				( cd );
-//	DELETE				( m_test_anim_object );
+	DELETE( m_free_fly_camera );
+	DELETE( m_active_npc_stats );
+	DELETE( m_step_manager );
+	DELETE( m_damage_model_stats );
 }
 
-void game_world::time_update( )
+void game_world::on_after_tick( )
 {
-	u64 elapsed_ticks					= m_timer.get_elapsed_ticks( );
-	float new_game_time_sec				= ( float( double(elapsed_ticks) / timing::g_qpc_per_second ) );
-	u32 new_game_time_ms				= ( u32( (elapsed_ticks*u64( 1000 ) / timing::g_qpc_per_second) & u32(-1) ) );
+	get_camera_director( ).apply( );
 
-	m_last_frame_time_sec				= new_game_time_sec - m_game_time_sec;
-	m_game_time_sec						= new_game_time_sec;
-	m_last_frame_time_ms				= new_game_time_ms - m_game_time_ms;
-	m_game_time_ms						= new_game_time_ms;
+	get_game( ).get_sound_world( ).get_logic_world_user( ).set_listener_properties_interlocked(
+		reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ),
+		m_inverted_view_matrix.c.xyz( ),
+		m_inverted_view_matrix.k.xyz( ),
+		m_inverted_view_matrix.j.xyz( ) );
+
+	get_game( ).get_stats( ).set_camera_stats( m_inverted_view_matrix.c.xyz( ), m_inverted_view_matrix.k.xyz( ) );
 }
 
-void game_world::tick( )
+void game_world::tick( const u32 frame_delta_ms, const u32 current_time_in_ms, const bool is_game_paused )
 {
-	super::tick					( );
-	time_update					( );
+	get_camera_director( ).tick( );
 
-	//if(m_test_anim_object)
-	//	m_test_anim_object->tick();
+	if ( !is_game_paused && get_physics_world( ) )
+		get_physics_world( )->tick( current_time_in_ms );
 
-	//scenes_list::iterator it = m_active_scenes.begin();
-	//scenes_list::iterator it_e = m_active_scenes.end();
-	//for( ;it!=it_e; ++it)
-	//	(*it)->tick			( );
+	if ( m_bullet_manager && !is_game_paused )
+		m_bullet_manager->tick( get_game( ).game_time_ms( ) );
 
-	m_camera_director->tick				( );
+	if ( m_is_dictionary_created )
+		tick_npcs( current_time_in_ms, is_game_paused );
 
-	if(m_local_actor)
+	if ( !is_game_paused )
+		m_ai_world->tick( );
+
+	update_npc_stats( );
+
+	if ( m_is_ui_shown )
+		game_ui.update_ui( frame_delta_ms, current_time_in_ms );
+
+	if ( get_text_manager( )->need_capture )
 	{
-		m_local_actor->tick				( );
-		m_actor_input_controller->inverted_view_matrix() = m_local_actor->character_head_transform();
-		//m_actor_input_controller->update_camera_matrix(	float2( m_frame_events.m_onframe_turn_x, m_frame_events.m_onframe_turn_y ),
-		//										m_frame_events.m_onframe_move_fwd,
-		//										m_frame_events.m_onframe_move_right,
-		//										m_inverted_view_matrix );
-
+		get_text_manager( )->text_manager_impl->Capture( true );
+		get_text_manager( )->need_capture = false;
 	}
-
-	m_camera_director->apply			( );
-
-	m_cell_manager->set_inv_view_matrix	( m_camera_director->get_inverted_view_matrix( ) );
-	m_cell_manager->tick				( );
-	m_bullet_manager->tick				( m_game_time_sec );
-
-	get_game().get_sound_world().get_logic_world_user().set_listener_properties_interlocked(
-		get_sound_scene(),
-		m_inverted_view_matrix.c.xyz(),
-		m_inverted_view_matrix.k.xyz(),
-		m_inverted_view_matrix.j.xyz());
-
-	get_game().get_stats().set_camera_stats	( m_inverted_view_matrix.c.xyz(), m_inverted_view_matrix.k.xyz() );
-
 }
 
-u32 game_world::game_time_ms	( )
+void game_world::switch_camera_mode( const input_mode_type_enum input_mode )
 {
-	return m_game_time_ms;
-}
-float game_world::game_time_sec	( )
-{
-	return m_game_time_sec;
-}
-
-u32 game_world::last_frame_time_ms ( )
-{
-	return m_last_frame_time_ms;
-}
-
-float game_world::last_frame_time_sec ( )
-{
-	return m_last_frame_time_sec;
+	switch ( input_mode )
+	{
+	case first_person_mode:
+		switch_to_player_camera( true );
+		break;
+	case free_fly_mode:
+		switch_to_free_fly_camera( );
+		break;
+	case third_person_mode:
+		switch_to_player_camera( false );
+		break;
+	}
 }
 
-void game_world::unload( )
+void game_world::switch_to_player_camera( const bool first_person_view )
 {
-	//scenes_list::iterator it = m_active_scenes.begin();
-	//scenes_list::iterator it_e = m_active_scenes.end();
-	//for( ;it!=it_e; ++it)
-	//{
-	//	(*it)->stop			( true );
-	//}
-
-	switch_to_free_fly_camera	( );
-	DELETE						( m_local_actor );
-
-//	m_active_scenes.clear				( );
-	m_camera_director->switch_to_camera	( NULL, "null" );
-	m_cell_manager->unload				( );
-	ASSERT								( empty() );
-	vostok::collision::delete_space_partitioning_tree( m_collision_tree );
-	m_collision_tree					= NULL;
-	m_game_project						= NULL;
-}
-
-void game_world::switch_to_hud_camera( )
-{
-	if(m_local_actor)
-		m_camera_director->switch_to_camera	( m_actor_input_controller, "actor camera" );
+	if ( m_player_camera )
+	{
+		m_input_mode = first_person_view ? first_person_mode : third_person_mode;
+		m_player_camera->set_input_mode( m_input_mode );
+		get_camera_director( ).switch_to_camera( m_player_camera, first_person_view ? "First Person View" : "Third Person View" );
+	}
 }
 
 void game_world::switch_to_free_fly_camera( )
 {
-	m_camera_director->switch_to_camera	( m_free_fly_camera, "free fly camera" );
+	m_input_mode = free_fly_mode;
+	get_camera_director( ).switch_to_camera( m_free_fly_camera, "Free Fly View" );
 }
 
 bool game_world::empty( )
 {
-	return		m_cell_manager->empty();
+	return m_game_project == NULL;
 }
 
-void game_world::load( pcstr project_resource_name, pcstr project_resource_path )
+// claude@NOTE: parked - 43-stmt / 0xb06-byte resource-loaded handler (RVA 0x5d0f40).
+// Reads the project + scene/sound/portal resources out of `data`, wires game_ui
+// (initialize, initialize_resources, initialize_minimap, show_capture_progress), the
+// camera (set_position_direction / switch_to_camera), the bullet_manager, the text
+// manager, and re-queries the npc/victory sub-resources via query_resources.
+// BLOCKED on cross-unit symbols still missing/stripped: the 4-arg
+// sound::world_user::set_active_sound_scene(scene, portal, u32, u32) overload and
+// render::scene_renderer::set_portal_system are not declared in our headers; and the
+// callees game_world_ui::initialize / initialize_minimap / show_capture_progress are
+// UNPAIRED (empty stubs in game_world_ui.cpp - they /Od-inline to nothing and collapse
+// the wiring guards). NEXT: add the 4-arg set_active_sound_scene + set_portal_system
+// overloads (do that in on_portal_system_loaded's unit first, same wall), match the
+// three game_world_ui setup methods, then reconstruct from the rich asm. Locals:
+// resource_index, user_data variant<32>, camera_position/_direction float3, two loops.
+// STATE[STUB]
+void game_world::on_project_loaded(
+	resources::queries_result&		data,
+	const u32						results_offset,
+	boost::function< void( resources::queries_result& ) > const&	callback
+)
 {
-	if ( !empty() )
-		unload();
-
-	m_collision_tree = &( *( collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ) );
-
-	if ( project_resource_path )
-		m_project_resource_path				= project_resource_path;
-	else
-		m_project_resource_path				= project_resource_name;
-
-
-	LOG_INFO( "game_world::load : %s", project_resource_name );
-	resources::query_resource(
-		project_resource_name,
-		resources::game_project_class,
-		boost::bind( &game_world::on_project_loaded, this, _1 ),
-		g_allocator
-	);
 }
 
-void game_world::on_project_loaded( resources::queries_result& data )
+void game_world::unload( )
 {
-	R_ASSERT						( data.is_successful() );
+	switch_to_free_fly_camera( );
 
-	m_game_project					= static_cast_resource_ptr<game_project_ptr>(data[0].get_unmanaged_resource());
-	m_cell_manager->load			( m_game_project );
+	if ( get_game( ).get_network_client( ) )
+		get_game( ).get_network_client( )->unload( );
 
-	math::float3 camera_position	= (*m_game_project->m_config)["camera"]["position"];
-	math::float3 camera_direction	= (*m_game_project->m_config)["camera"]["direction"];
-	m_camera_director->set_position_direction( camera_position, camera_direction );
-	switch_to_free_fly_camera		( );
+	for ( human_npc_ptr it_npc = m_npcs.front( ); it_npc; it_npc = it_npc->next_npc )
+	{
+		delete_weapons( it_npc );
+		it_npc->clear_resources( );
+	}
 
-	m_local_actor						= NEW(actor)( *this );
+	m_selected_npc = NULL;
+	m_active_npc_set = false;
+	m_npcs.clear( );
+
+	get_camera_director( ).switch_to_camera( NULL, "null" );
+
+	if ( m_game_project && m_game_project->is_inserted( ) )
+		m_game_project->remove( );
+
+	m_game_project = NULL;
+
+	for ( vectora< victory_item_ptr >::iterator it = m_victory_items.begin( ); it != m_victory_items.end( ); ++it )
+		if ( ( *it )->is_inserted( ) )
+			( *it )->unload( );
+
+	m_victory_items.clear( );
+
+	game_ui.on_unload( );
+}
+
+void game_world::load(
+	pcstr						project_resource_name,
+	resources::request*			requests_begin,
+	resources::request*			requests_end,
+	variant< 32 > const**		user_datas_begin,
+	boost::function< void( resources::queries_result& ) > const&	callback
+)
+{
+	m_is_loading = true;
+
+	const u8 victory_items_count = get_game( ).get_network_client( )->match_options( ).victory_items_count;
+
+	const u32 user_datas_count = victory_items_count + s_max_tracers_count + 23;
+	const u32 requests_count = ( requests_end - requests_begin ) + user_datas_count;
+
+	buffer_vector< resources::request >		requests		( ALLOCA( requests_count * sizeof( resources::request ) ), requests_count );
+	buffer_vector< variant< 32 > >			user_datas		( ALLOCA( user_datas_count * sizeof( variant< 32 > ) ), user_datas_count );
+	buffer_vector< variant< 32 > const* >	user_data_ptrs	( ALLOCA( requests_count * sizeof( variant< 32 > const* ) ), requests_count );
+
+	for ( resources::request* it = requests_begin; it != requests_end; ++it, ++user_datas_begin )
+	{
+		requests.push_back( *it );
+		user_data_ptrs.push_back( *user_datas_begin );
+	}
+
+	render::scene_configuration scene_configuration;
+	scene_configuration.m_create_terrain			= false;
+	scene_configuration.m_create_particle_world		= true;
+	scene_configuration.m_create_speedtree_world	= false;
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( scene_configuration );
+
+	sound::sound_scene_creation_params sound_configuration;
+	sound_configuration.proxies_count		= 0x80;
+	sound_configuration.propagators_count	= 0xc4;
+	sound_configuration.receivers_count		= 0;
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( sound_configuration );
+
+	requests.push_back( resources::create_request( "game_scene", resources::scene_class ) );
+	user_data_ptrs.push_back( &user_datas[0] );
+
+	requests.push_back( resources::create_request( "game_scene_view", resources::scene_view_class ) );
+	user_data_ptrs.push_back( NULL );
+
+	requests.push_back( resources::create_request( "game_sound_scene", resources::sound_scene_class ) );
+	user_data_ptrs.push_back( &user_datas[1] );
+
+	requests.push_back( resources::create_request( "resources/flash_movies/hud.swf", resources::flash_movie_class ) );
+	user_data_ptrs.push_back( NULL );
+
+	for ( u32 i = 0; i < s_max_tracers_count; ++i )
+	{
+		requests.push_back( resources::create_request( "weapons/trace", resources::tracer_model_instance_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	for ( u8 i = 0; i < victory_items_count; ++i )
+	{
+		requests.push_back( resources::create_request( "player_death", resources::particle_system_instance_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	if ( m_game_project )
+		unload( );
+
+	LOG_INFO( "game_world::load: %s", project_resource_name );
+
+	if ( !m_game_material_manager )
+	{
+		requests.push_back( resources::create_request( "game_material_manager", resources::game_material_manager_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	user_datas.push_back( variant< 32 >( ) );
+	user_datas.back( ).set( static_cast< base_game_scene* >( this ) );
+
+	requests.push_back( resources::create_request( project_resource_name, resources::client_game_project_class ) );
+	user_data_ptrs.push_back( &user_datas.back( ) );
+
+	for ( u8 i = 0; i < victory_items_count; ++i )
+	{
+		fixed_string< 8 > name;
+		name.assignf( "vp_%d", i );
+		requests.push_back( resources::create_request( name.c_str( ), resources::victory_item_class ) );
+		user_data_ptrs.push_back( NULL );
+	}
+
+	resources::query_resources(
+		requests.begin( ),
+		requests.size( ),
+		boost::bind( &game_world::on_project_loaded, this, _1, requests_end - requests_begin, callback ),
+		g_allocator,
+		user_data_ptrs.begin( ) );
+}
+
+// claude@NOTE: structure recovered (4 stmts: assign m_portal_sector_structure
+// from data[1], scene_renderer().set_portal_system(render_scene(), data[0]),
+// then set_active_sound_scene with the portal). Parked: needs cross-unit header
+// additions - render::scene_renderer::set_portal_system (scene_renderer.h, render
+// facade) and the 4-arg sound::world_user::set_active_sound_scene(scene, portal,
+// u32, u32) overload (world_user.h, sound) - and our world_user.h spells the
+// scene arg sound_scene_ptr& vs the canonical unmanaged_resource_ptr&, which the
+// other matched fns reinterpret_cast around; resolve in those units first.
+void game_world::on_portal_system_loaded( resources::queries_result& data )
+{
+	// STATE[STUB]
 }
 
 void game_world::on_activate( )
 {
-	super::on_activate			( );
-	m_camera_director->on_focus	( true );
+	base_game_scene::on_activate( );
 
-	if(get_sound_scene())
-		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 0, 0 );
+	get_game( ).input_world( ).add_handler( *this );
+
+	if ( get_sound_scene( ) )
+		get_game( ).get_sound_world( ).get_logic_world_user( ).set_active_sound_scene(
+			reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ), 0, 0 );
+
+	if ( get_game( ).get_network_client( )->has_bandwidth( ) )
+		get_game( ).get_chat_handler( ).set_mode( true );
 }
 
 void game_world::on_deactivate( )
 {
-	super::on_deactivate		( );
-	m_camera_director->on_focus	( false );
+	base_game_scene::on_deactivate( );
+
+	get_game( ).input_world( ).remove_handler( *this );
+
+	get_game( ).deactivate_main_menu( );
+
+	game_ui.show_quick_slots( false );
 }
 
-game_project_ptr const game_world::get_project( ) const
+void game_world::show_ui( bool b_show )
 {
-	return m_cell_manager->get_project( );
-}
+	if ( m_is_ui_shown == b_show )
+		return;
 
-game_object_ptr_ game_world::get_object_by_name( pcstr object_id ) const
-{
-	return m_cell_manager->get_object_by_name( object_id );
-}
-
-void game_world::query_object_by_name	( pcstr object_id, object_loaded_callback_type const& callback ) const
-{
-	return m_cell_manager->query_object_by_name( object_id, callback );
-}
-
-void game_world::start_game( )
-{
-	m_timer.start			( );
-	time_update				( );
-
-//.	m_test_anim_object	= NEW(test_anim_object)(*this);
-
-	camera_director_ptr object_ptr			= get_camera_director();
-	m_cell_manager->m_named_registry["camera_director"]		= object_ptr.c_ptr();
-
-	//configs::binary_config_value scenes_to_start = (*m_game_project->m_config)["start"]["scenes_to_start"];
-	//for ( u32 i = 0; i < scenes_to_start.size(); i++ )
-	//{
-	//	pcstr start_scene		= (pcstr)scenes_to_start[i];
-	//	game_object_ptr_ s		= get_object_by_name(start_scene);
-	//	object_scene_ptr scene	= static_cast_resource_ptr<object_scene_ptr>(s);
-	//	scene->start			( );
-	//}
-}
-
-//void game_world::on_scene_start( object_scene_ptr scene )
-//{
-//	m_active_scenes.push_back	( scene );
-//}
-//
-//void game_world::on_scene_stop( object_scene_ptr scene )
-//{
-//	scenes_list::iterator it	= std::find(m_active_scenes.begin(), m_active_scenes.end(), scene );
-//	R_ASSERT					( it!=m_active_scenes.end() );
-//	m_active_scenes.erase		( it );
-//}
-
-void game_world::query_resources( )
-{
-	vostok::render::scene_configuration				scene_configuration;
-	scene_configuration.m_create_terrain			= true;
-	scene_configuration.m_create_particle_world		= true;
-	scene_configuration.m_create_speedtree_world	= true;
-	scene_configuration.m_create_grass_world		= true;
-	scene_configuration.m_sky_enabled				= true;
-
-	resources::user_data_variant					scene_data;
-	scene_data.set									( scene_configuration );
-
-
-	vostok::resources::user_data_variant const* data[] = { &scene_data, 0, 0  };
-
-	vostok::const_buffer			temp_buffer( "", 1 );
-
-	vostok::resources::creation_request requests[] =
+	if ( b_show )
 	{
-		vostok::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
-		vostok::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
-		vostok::resources::creation_request( "game_sound_scene", temp_buffer, resources::sound_scene_class ),
-	};
- 	vostok::resources::query_create_resources(
- 		requests,
-		boost::bind( &game_world::on_resources_ready, this, _1 ),
- 		survarium::g_allocator,
- 		data
- 	);
-}
+		show_movie( game_ui.get_ui( ) );
+		if ( get_game( ).get_network_client( )->has_bandwidth( ) )
+			get_game( ).get_chat_handler( ).show( this );
+	}
+	else
+	{
+		hide_movie( game_ui.get_ui( ) );
+		if ( get_game( ).get_chat_handler( ).is_active( ) )
+			get_game( ).get_chat_handler( ).hide( this );
+	}
 
-void game_world::on_resources_ready( resources::queries_result& data )
-{
-	R_ASSERT			( data.is_successful( ) );
-
-	m_scene				= static_cast_resource_ptr< vostok::render::scene_ptr >( data[0].get_unmanaged_resource() );
-	m_scene_view		= static_cast_resource_ptr< vostok::render::scene_view_ptr >( data[1].get_unmanaged_resource() );
-
-	m_sound_scene		= static_cast_resource_ptr< vostok::sound::sound_scene_ptr >( data[2].get_unmanaged_resource() );
-
-	if(is_active())
-		get_game().get_sound_world().get_logic_world_user().set_active_sound_scene( get_sound_scene(), 1000, 0 );
+	m_is_ui_shown = b_show;
 }
 
 void game_world::clear_resources( )
 {
-	get_game().get_sound_world().get_logic_world_user().remove_sound_scene	( get_sound_scene() );
+	destroy_physics( );
+
+	if ( get_sound_scene( ) )
+		get_game( ).get_sound_world( ).get_logic_world_user( ).remove_sound_scene(
+			reinterpret_cast< sound::sound_scene_ptr& >( get_sound_scene( ) ) );
+
+	DELETE( m_damage_model_stats );
+	DELETE( m_active_npc_stats );
+
+	m_ai_navigation_world->clear_resources( );
+	m_ai_world->clear_resources( );
+
+	show_ui( false );
+
+	if ( get_text_manager( ) )
+		hide_text_manager( get_text_manager( ) );
+
+	if ( m_game_material_manager )
+		m_game_material_manager->clear_resources( );
+	m_game_material_manager = NULL;
+
+	DELETE( m_bullet_manager );
 }
 
-void game_world::tmp_actor_ready( actor* a )
+sound::world& game_world::get_sound_world( ) const
 {
-	R_ASSERT				(a==m_local_actor);
-	a->set_input_source		( m_actor_input_controller );
-
-	float4x4 initial_matrix = float4x4().identity();
-	initial_matrix.c		= m_camera_director->get_inverted_view_matrix().c;
-	a->activate				( initial_matrix );
-
-	m_camera_director->switch_to_camera	( m_actor_input_controller, "actor camera" );
+	return get_game( ).get_sound_world( );
 }
+
+void game_world::add_enemy_position_for_team( pcstr const team_name )
+{
+	float3 const position = get_game( ).get_network_client( )->get_current_player_position( );
+
+	if ( !strcmp( team_name, "1" ) )
+		m_enemies_for_team_1.push_back( position );
+	else if ( !strcmp( team_name, "2" ) )
+		m_enemies_for_team_2.push_back( position );
+}
+
+void game_world::clear_enemies_positions_for_team( pcstr const team_name )
+{
+	if ( !strcmp( team_name, "1" ) )
+		m_enemies_for_team_1.clear( );
+	else if ( !strcmp( team_name, "2" ) )
+		m_enemies_for_team_2.clear( );
+}
+
+// claude@NOTE: target walks m_respawn_points with a forward std::map::iterator
+// (reads _M_leftmost/_M_header once, ++it via _Rb_global<bool>::_M_increment) and
+// sets selected_for_respawn=false. Our `map<...>::iterator` here resolves to a
+// reverse_iterator (begin()/end() rewrapped each pass), inflating the body - a
+// vostok::map iterator-typedef quirk to chase; structure (3 stmts: begin, loop,
+// body) is right.
+void game_world::clear_player_spawn_info( )
+{
+	map< u32, respawn_point_core*, std::less< u32 > >::iterator it = m_game_project->m_respawn_points.begin( );
+	for ( ; it != m_game_project->m_respawn_points.end( ); ++it )
+		it->second->selected_for_respawn = false;
+}
+
+void game_world::on_player_killed( player_ptr& player, const u8 arg_1, const u8 arg_2 )
+{
+}
+
+u32 game_world::get_current_time_in_ms( ) const
+{
+	return get_game( ).game_time_ms( );
+}
+
+void game_world::set_local_player_camera( player_input_handler* camera )
+{
+	m_player_camera = camera;
+}
+
+void game_world::put_victory_item( u8 item_id, float4x4 const& transform )
+{
+	m_victory_items[item_id]->put( get_physics_world( ), transform, get_game( ).scheduler( ) );
+}
+
 
 } // namespace survarium

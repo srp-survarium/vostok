@@ -20,6 +20,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_RefCount.h"
 #include "Kernel/SF_Array.h"
 #include "Kernel/SF_Hash.h"
+#include "Kernel/SF_Random.h"
 
 #include "Render/Render_Matrix2x4.h"
 #include "Render/Render_Matrix4x4.h"
@@ -48,10 +49,12 @@ enum StandardShaderFlags
 
 enum VertexFormatFlags
 {
-    MVF_AlignVertexStride     = 1,
-    MVF_AlignVertexAttrs      = 2,
-    MVF_Align                 = 3,
-    MVF_ReverseColor          = 4,
+    MVF_AlignVertexStride     = 0x01,
+    MVF_AlignVertexAttrs      = 0x02,
+    MVF_Align                 = MVF_AlignVertexStride | MVF_AlignVertexAttrs,
+    MVF_ReverseColor          = 0x04,
+    MVF_HasInstancing         = 0x08,
+    MVF_EndianSwapFactors     = 0x10,
 };
 
 template<typename Uniforms, typename Shader>
@@ -63,6 +66,12 @@ protected:
     Texture* Textures[4];
 
 public:
+
+    ShaderInterfaceBase()
+    {
+        memset(Textures, 0, sizeof(Textures));
+        memset(UniformSet, 0, sizeof(UniformSet));
+    }
 
     unsigned GetParameterStage(const Shader& sd, unsigned var, int index = 0) const
     {
@@ -80,6 +89,14 @@ public:
 
     void BeginPrimitive()
     {
+#ifdef SF_BUILD_DEBUG
+        // If we are beginning a primitive, no uniforms should be currently set.
+        for (int i = 0; i < Uniforms::SU_Count; i++)
+        {
+            SF_DEBUG_ASSERT1(!UniformSet[i], "Unexpected uniform set during BeginPrimitive (%d).", i);
+        }
+        memset(UniformData, 0, sizeof(UniformData));
+#endif // SF_BUILD_DEBUG
     	memset(UniformSet, 0, sizeof(UniformSet));
         memset(Textures, 0, sizeof(Textures));
     }
@@ -87,7 +104,7 @@ public:
     void SetUniform0(const Shader& sd, unsigned var, const float* v, unsigned n, unsigned index = 0, unsigned batch = 0)
     {
 	    SF_ASSERT(batch == 0); SF_UNUSED(batch);
-	    SF_ASSERT(sd->pFDesc->Uniforms[var].Size > 0 || sd->pVDesc->Uniforms[var].Size > 0);
+	    SF_DEBUG_ASSERT(sd->pFDesc->Uniforms[var].Size > 0 || sd->pVDesc->Uniforms[var].Size > 0, "Setting uniform not used by current shader.");
 
         if (sd->pVDesc->Uniforms[var].Size)
         {
@@ -141,17 +158,17 @@ public:
 	    SetUniform(sd, var, rows, 8, index*2, batch);
     }
 
-    void SetMatrix(const Shader& sd, unsigned var, const Matrix2F &m1, const HMatrix &m2, const MatrixState &Matrices, unsigned index = 0, unsigned batch = 0)
+    void SetMatrix(const Shader& sd, unsigned var, const Matrix2F &m1, const HMatrix &m2, const MatrixState* Matrices, unsigned index = 0, unsigned batch = 0)
     {
         if (m2.Has3D())
         {
-            Matrix4F m(Matrices.GetUVP(), Matrix3F(m2.GetMatrix3D(), m1));
+            Matrix4F m(Matrices->GetUVP(), Matrix3F(m2.GetMatrix3D(), m1));
             const float *rows = m.Data();
             SetUniform(sd, var, rows, 16, index, batch);
         }
         else
         {
-            Matrix2F  m(m1, m2.GetMatrix2D(), Matrices.UserView);
+            Matrix2F  m(m1, m2.GetMatrix2D(), Matrices->UserView);
             const float *rows = &m.M[0][0];
 
             SetUniform(sd, var, rows, 8, index*2, batch);
@@ -216,15 +233,14 @@ public:
     }
 };
 
-template<typename FShaderDesc, typename VShaderDesc,
+template<typename ShaderDesc, typename VShaderDesc,
          class Uniforms, class ShaderInterface, class NativeTexture>
 class StaticShaderManager
 {
 public:
-    typedef typename VShaderDesc::VertexAttrDesc VertexAttrDesc;
-    typedef typename VShaderDesc::ShaderType VShaderType;
-    typedef typename FShaderDesc::ShaderType FShaderType;
-    typedef typename ShaderInterface::Shader Shader;
+    typedef typename VShaderDesc::VertexAttrDesc    VertexAttrDesc;
+    typedef typename ShaderDesc::ShaderType         ShaderType;
+    typedef typename ShaderInterface::Shader        Shader;
 
 protected:
     MultiKeyCollection<VertexElement, VertexFormat, 32>        VFormats;
@@ -233,7 +249,7 @@ protected:
 public:
     StaticShaderManager(ProfileViews* prof) : Profiler(prof) {}
 
-    FShaderType StaticShaderForFill (PrimitiveFill* pfill, unsigned& fillflags, bool batch)
+    ShaderType StaticShaderForFill (PrimitiveFill* pfill, unsigned& fillflags, unsigned batchType)
     {
         switch(pfill->GetType())
         {
@@ -243,32 +259,50 @@ public:
             if ( pfill->GetTextureCount() == 1 && ImageData::GetFormatPlaneCount(pfill->GetTexture(0)->GetFormat()) >= 3)
             {
                 unsigned shader = pfill->GetType() == PrimFill_Texture_EAlpha ? 
-                    FShaderDesc::FS_FYUVEAlpha : FShaderDesc::FS_FYUV;
+                    ShaderDesc::ST_YUVEAlpha : ShaderDesc::ST_YUV;
 
                 if (ImageData::GetFormatPlaneCount(pfill->GetTexture(0)->GetFormat()) == 4)
-                    shader += FShaderDesc::FS_base_YUVA;
+                    shader += ShaderDesc::ST_base_video_YUVA;
 
-                if ((fillflags & FF_Cxform) && shader != FShaderDesc::FS_FText)
-                    shader += FShaderDesc::FS_base_Cxform;
+                if (shader != ShaderDesc::ST_Text)
+                {
+                    if ((fillflags & (FF_AlphaWrite|FF_Cxform)) == (FF_AlphaWrite|FF_Cxform))
+                        shader += ShaderDesc::ST_base_video_CxformAc;
+                    else if ((fillflags & FF_Cxform))
+                        shader += ShaderDesc::ST_base_video_Cxform;
+                }
 
-                if (batch)
-                    shader += FShaderDesc::FS_base_Batch;
+                switch(batchType)
+                {
+                case PrimitiveBatch::DP_Batch:
+                    shader += ShaderDesc::ST_base_video_Batch;
+                    break;
+
+                case PrimitiveBatch::DP_Instanced:
+                    shader += ShaderDesc::ST_base_video_Instanced;
+                    break;
+                default: break;
+                }
 
                 if (fillflags & FF_Multiply)
-                    shader += FShaderDesc::FS_base_Mul;
+                    shader += ShaderDesc::ST_base_video_Mul;
 
-                return (FShaderType)shader;
+                if (fillflags & FF_3DProjection)
+                    shader += ShaderDesc::ST_base_video_Position3d;
+
+
+                return (ShaderType)shader;
             }
             break;
 
         default: break;
         }
-        return StaticShaderForFill(pfill->GetType(), fillflags, batch);
+        return StaticShaderForFill(pfill->GetType(), fillflags, batchType);
     }
 
-    FShaderType StaticShaderForFill (PrimitiveFillType fill, unsigned& fillflags, bool batch)
+    ShaderType StaticShaderForFill (PrimitiveFillType fill, unsigned& fillflags, unsigned batchType)
     {
-        unsigned shader = FShaderDesc::FS_None;
+        unsigned shader = ShaderDesc::ST_None;
 
         switch (fill)
         {
@@ -276,70 +310,89 @@ public:
         case PrimFill_None:
         case PrimFill_Mask:
         case PrimFill_SolidColor:
-            shader = FShaderDesc::FS_FSolid;
+            shader = ShaderDesc::ST_Solid;
             fillflags &= ~FF_Cxform;
             break;
 
         case PrimFill_VColor:
-            shader = FShaderDesc::FS_FVertex;
+            shader = ShaderDesc::ST_Vertex;
             break;
 
         case PrimFill_VColor_EAlpha:
-            shader = FShaderDesc::FS_FVertexEAlpha;
+            shader = ShaderDesc::ST_VertexEAlpha;
             break;
 
         case PrimFill_Texture:
-            shader = FShaderDesc::FS_FTexTG;
+            shader = ShaderDesc::ST_TexTG;
             break;
 
         case PrimFill_Texture_EAlpha:
-            shader = FShaderDesc::FS_FTexTGEAlpha;
+            shader = ShaderDesc::ST_TexTGEAlpha;
             break;
     		
         case PrimFill_Texture_VColor:
-            shader = FShaderDesc::FS_FTexTGVertex;
+            shader = ShaderDesc::ST_TexTGVertex;
             break;
 
         case PrimFill_Texture_VColor_EAlpha:
-            shader = FShaderDesc::FS_FTexTGVertexEAlpha;
+            shader = ShaderDesc::ST_TexTGVertexEAlpha;
             break;
 
         case PrimFill_2Texture:
-            shader = FShaderDesc::FS_FTexTGTexTG;
+            shader = ShaderDesc::ST_TexTGTexTG;
             break;
 
         case PrimFill_2Texture_EAlpha:
-            shader = FShaderDesc::FS_FTexTGTexTGEAlpha;
+            shader = ShaderDesc::ST_TexTGTexTGEAlpha;
             break;
 
         case PrimFill_UVTexture:
-            shader = FShaderDesc::FS_FTextColor;
+            shader = ShaderDesc::ST_TextColor;
             break;
 
         case PrimFill_UVTextureAlpha_VColor:
-            shader = FShaderDesc::FS_FText;
+            shader = ShaderDesc::ST_Text;
             fillflags |= FF_Cxform;
             break;
 
-        case PrimFill_UVTextureDFAlpha_VColor:
-            fillflags |= FF_Cxform;
-            return FShaderDesc::FindStaticShader("TextDFA", (batch ? SS_Batch : 0) | (fillflags & FF_Multiply ? SS_Mul : 0));
-            break;
+        //case PrimFill_UVTextureDFAlpha_VColor:
+        //    fillflags |= FF_Cxform;
+        //    return FShaderDesc::FindStaticShader("TextDFA", (batchType == PrimitiveBatch::DP_Batch ? SS_Batch : 0) | (fillflags & FF_Multiply ? SS_Mul : 0));
+        //    break;
         }
 
-        if ((fillflags & FF_Cxform) && shader != FShaderDesc::FS_FText)
-            shader += FShaderDesc::FS_base_Cxform;
+        if (shader != ShaderDesc::ST_Text)
+        {
+            if ((fillflags & (FF_AlphaWrite|FF_Cxform)) == (FF_AlphaWrite|FF_Cxform))
+                shader += ShaderDesc::ST_base_CxformAc;
+            else if ((fillflags & FF_Cxform))
+                shader += ShaderDesc::ST_base_Cxform;
+        }
 
-        if (batch)
-            shader += FShaderDesc::FS_base_Batch;
+
+        switch(batchType)
+        {
+        case PrimitiveBatch::DP_Batch:
+            shader += ShaderDesc::ST_base_Batch;
+            break;
+
+        case PrimitiveBatch::DP_Instanced:
+            shader += ShaderDesc::ST_base_Instanced;
+            break;
+
+        default: break;
+        }
 
         if (fillflags & FF_Multiply)
-            shader += FShaderDesc::FS_base_Mul;
+            shader += ShaderDesc::ST_base_Mul;
 
-        return (FShaderType)shader;
+        if (fillflags & FF_3DProjection)
+            shader += ShaderDesc::ST_base_Position3d;
+
+        return (ShaderType)shader;
     }
 
-    const VertexFormat* GetVertexFormat(VertexElement* pelements, unsigned count, unsigned size)
+    const VertexFormat* GetVertexFormat(VertexElement* pelements, unsigned count, unsigned size, unsigned alignment = 1)
     {
         VertexFormat  *pformat   = VFormats.Find(pelements, count);
         if (pformat)
@@ -349,23 +402,65 @@ public:
         if (!pformat)
             return 0;
 
+        // Align vertex size to if requested
+        size = (size+(alignment-1)) & ~(alignment-1);
+
         pformat->Size      = size;
         pformat->pElements = pelements;
         return pformat;
     }
 
+    struct SourceFormatHash
+    {
+        SourceFormatHash(PrimitiveFillType  fill,
+                         const VertexFormat* sourceFormat,
+                         unsigned           flags) :
+            FillType(fill),
+            SourceFormat(sourceFormat),
+            FormatFlags(flags) { }
+
+        bool operator==(const SourceFormatHash& other) const
+        {
+            return other.FillType == FillType &&
+                   other.SourceFormat == SourceFormat &&
+                   other.FormatFlags == FormatFlags;
+        }
+        PrimitiveFillType       FillType;
+        const VertexFormat*     SourceFormat;
+        unsigned                FormatFlags;
+    };
+    struct ResultFormat
+    {
+        const VertexFormat*     single;
+        const VertexFormat*     batch;
+        const VertexFormat*     instanced;
+    };
+    HashLH<SourceFormatHash, ResultFormat>  VertexFormatComputedHash;
+
     void    MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
 			    const VertexFormat** single,
 			    const VertexFormat** batch, const VertexFormat** instanced,
-                int alignMode = 0)
+                unsigned flags = 0)
     {
+        // Hashed lookup. If we have done this source format/fill and flags combination before, simply return it.
+        ResultFormat result;
+        SourceFormatHash sourceKey(fill, sourceFormat, flags);
+        if (VertexFormatComputedHash.Get(sourceKey, &result))
+        {
+            *single = result.single;
+            *batch = result.batch;
+            *instanced = result.instanced;
+            return;
+        }
+        
         unsigned             fillflags = 0;
-        FShaderType          shader = this->StaticShaderForFill(fill, fillflags, 0);
-        const VShaderDesc*   pshader = VShaderDesc::Descs[FShaderDesc::VShaderForFShader[shader]];
+        ShaderType           shader  = StaticShaderForFill(fill, fillflags, PrimitiveBatch::DP_Single);
+        const VShaderDesc*   pshader = VShaderDesc::GetDesc(shader);
+
         const VertexAttrDesc* psvf = pshader->Attributes;
         const unsigned       maxVertexElements = 8;
         VertexElement        outf[maxVertexElements];
-        unsigned             size = 0, maxalign = 1;
+        unsigned             size = 0, maxalign = 4;
         int                  batchOffset = -1, batchElement = -1;
         int                  j = 0;
 
@@ -374,6 +469,8 @@ public:
             if ((psvf[i].Attr & (VET_Usage_Mask | VET_Index_Mask | VET_Components_Mask)) == (VET_Color | (1 << VET_Index_Shift) | 4))
             {
                 // XXX - change shaders to use .rg instead of .ra for these
+                if ( (flags & MVF_EndianSwapFactors) == 0 )
+                {
                 outf[j].Offset = size;
                 outf[j].Attribute = VET_T0Weight8;
                 j++;
@@ -381,9 +478,19 @@ public:
                 outf[j].Attribute = VET_FactorAlpha8;
                 batchOffset = size+2;
                 batchElement = j;
+                }
+                else
+                {
+                    outf[j].Offset = size;
+                    outf[j].Attribute = VET_FactorAlpha8;
+                j++;
+                    outf[j].Offset = size+3;
+                    outf[j].Attribute = VET_T0Weight8;
+                    batchElement = j;
+                    batchOffset = size+1;
+                }
                 j++;
                 size += 4;
-                if (maxalign < 4) maxalign = 4;
                 continue;
             }
 
@@ -396,7 +503,7 @@ public:
             outf[j] = *pv;
             outf[j].Offset = size;
 
-            if (alignMode & MVF_ReverseColor)
+            if (flags & MVF_ReverseColor)
             {
                 if ((pv->Attribute & (VET_Usage_Mask|VET_CompType_Mask|VET_Components_Mask)) == VET_ColorRGBA8)
                     outf[j].Attribute = VET_ColorARGB8 | (pv->Attribute & ~(VET_Usage_Mask|VET_CompType_Mask|VET_Components_Mask));
@@ -408,17 +515,27 @@ public:
             }
 
             SF_ASSERT((outf[j].Attribute & VET_Components_Mask) > 0 && (outf[j].Attribute & VET_Components_Mask) <= 4);
-            if (maxalign < pv->Size()) maxalign = pv->Size();
+            maxalign = Alg::Max(maxalign, pv->CompSize());
             size += outf[j].Size();
-            if (alignMode & MVF_AlignVertexAttrs)
-                size = (size + outf[j].CompSize() - 1) & ~(outf[j].Size() - 1);
+            if (flags & MVF_AlignVertexAttrs)
+                size = (size + 3) & ~3;
+
             j++;
         }
         outf[j].Attribute = VET_None;
         outf[j].Offset = 0;
-        if (alignMode & MVF_AlignVertexStride)
-            size = (size + maxalign - 1) & ~(maxalign - 1);
-        *single = GetVertexFormat(outf, j+1, size);
+        *single = GetVertexFormat(outf, j+1, size, flags & MVF_AlignVertexStride ? maxalign : 1);
+
+        // If we have instancing support, add an I8 vertex element to indicate this.
+        if ( flags & MVF_HasInstancing )
+        {
+            outf[j].Attribute = VET_Instance | VET_I8  | 1 | VET_Argument_Flag;
+            outf[j].Offset = 0;
+            outf[j+1].Attribute = VET_None;
+            outf[j+1].Offset = 0;
+            *instanced = GetVertexFormat(outf, j+2, size, flags & MVF_AlignVertexStride ? maxalign : 1);
+        }
+        else
         *instanced = 0;
 
         if (batchOffset >= 0)
@@ -432,37 +549,50 @@ public:
         else
         {
             outf[j].Attribute = VET_Instance8;
-            outf[j].Offset = size;
+            outf[j].Offset = (flags & MVF_EndianSwapFactors) == 0 ? size : size+3;
             size += outf[j].Size();
-            if (alignMode & MVF_AlignVertexStride)
-                size = (size + maxalign - 1) & ~(maxalign - 1);
         }
         outf[j+1].Attribute = VET_None;
         outf[j+1].Offset = 0;
-        *batch = GetVertexFormat(outf, j+2, size);
+        *batch = GetVertexFormat(outf, j+2, size, flags & MVF_AlignVertexStride ? maxalign : 1);
+
+        // Set the results in the hash.
+        result.single    = *single;
+        result.batch     = *batch;
+        result.instanced = *instanced;
+        VertexFormatComputedHash.Set(sourceKey, result);
     }
 
-    const Shader& SetPrimitiveFill(PrimitiveFill* pfill, unsigned fillFlags, unsigned batchType, const VertexFormat* pvf, unsigned meshCount,
-                                   const MatrixState& Matrices, const Primitive::MeshEntry* pmeshes, ShaderInterface* psi)
+    // claude@NOTE: structure-fixed (removed the stock outer FF_Blending|FF_Cxform guard
+    // around the cxform loop - survarium's instantiation runs it unconditionally). Byte
+    // residual is the survarium-modified GFx ShaderDesc/FF_ enum divergence: FF_Blending
+    // is 0x10 here vs 0x20 in our Render_Primitive.h, and the blending flag is read/written
+    // through pfill rather than the fillFlags reference. Needs survarium's modified GFx
+    // shader header / FF_ enum to close further.
+    const Shader& SetPrimitiveFill(PrimitiveFill* pfill, unsigned& fillFlags, unsigned batchType, const VertexFormat* pvf, unsigned meshCount,
+                                   const MatrixState* Matrices, const Primitive::MeshEntry* pmeshes, ShaderInterface* psi)
     {
         PrimitiveFillType fillType = pfill->GetType();
 
-        if (batchType < PrimitiveBatch::DP_Instanced)
-            for (unsigned i = 0; i < meshCount; i++)
-                if (!(Profiler->GetCxform(pmeshes[i].M.GetCxform()) == Cxform::Identity))
-                {
-                    fillFlags |= FF_Cxform;
-                    break;
-                }
+        if ((fillFlags & FF_Blending) == 0 && pfill->RequiresBlend())
+            fillFlags |= FF_Blending;
 
-        FShaderType shader = StaticShaderForFill(pfill, fillFlags, batchType == PrimitiveBatch::DP_Batch);
-        VShaderType vshader = FShaderDesc::VShaderForFShader[shader];
+        // Check the color transforms of the matrices to determine if we will need to apply them.
+        for (unsigned i = 0; i < meshCount; i++)
+        {
+            Cxform finalCx = Profiler->GetCxform(pmeshes[i].M.GetCxform());
+            if (finalCx != Cxform::Identity)
+            {
+                fillFlags |= FF_Cxform;
+                if (finalCx.RequiresBlend())
+                    fillFlags |= FF_Blending;
+                break;
+            }
+        }
 
-        // Check flag to determine whether to use a 3D shader.
-        if (fillFlags & FF_3DProjection)
-            vshader = (VShaderType)((int)vshader + (int)VShaderDesc::VS_base_Position3d);
+        ShaderType shader = StaticShaderForFill(pfill, fillFlags, batchType);
 
-        psi->SetStaticShader(vshader, shader, pvf);
+        psi->SetStaticShader(shader, pvf);
         psi->BeginPrimitive();
         const Shader& pso = psi->GetCurrentShaders();
         bool solid = (fillType == PrimFill_None || fillType == PrimFill_Mask || fillType == PrimFill_SolidColor);
@@ -474,26 +604,16 @@ public:
             NativeTexture*  pt0 = (NativeTexture*)pfill->GetTexture(0);
             SF_ASSERT(pt0);
 
-            /* XXX
-               pfsd = pfsd->MatchImageFormat(pt0->GetImageFormat());
-               if (!pfsd) // No shader existed for specified format!!
-               {
-               PrimitivePSType = PS_None;
-               return false;
-               }
-            */
             ImageFillMode fm0 = pfill->GetFillMode(0);
 
-            unsigned stage = 0;
-            psi->SetTexture(pso, stage, pt0, fm0);
-            stage += pt0->GetPlaneCount();
 
+            psi->SetTexture(pso, Uniforms::SU_tex, pt0, fm0);
             if ((fillType == PrimFill_2Texture) || (fillType == PrimFill_2Texture_EAlpha))
             {
                 NativeTexture* pt1 = (NativeTexture*)pfill->GetTexture(1);
                 ImageFillMode  fm1 = pfill->GetFillMode(1);
 
-                psi->SetTexture(pso, stage, pt1, fm1);
+                psi->SetTexture(pso, Uniforms::SU_tex, pt1, fm1, pt0->GetPlaneCount());
             }
         }
 
@@ -505,29 +625,27 @@ public:
             }
         }
 
-        if (batchType < PrimitiveBatch::DP_Instanced)
+        unsigned tmCount = (psi->GetParameterStage(pso, Uniforms::SU_texgen) & 0xffff) >> 1;
+
+        for (unsigned i = 0; i < meshCount; i++)
         {
-            unsigned tmCount = (psi->GetParameterStage(pso, Uniforms::SU_texgen) & 0xffff) >> 1;
+            psi->SetMatrix(pso, Uniforms::SU_mvp, pmeshes[i].pMesh->VertexMatrix, pmeshes[i].M, Matrices, 0, i);
 
-            for (unsigned i = 0; i < meshCount; i++)
+            if (fillType == PrimFill_Mask)
+                psi->SetColor(pso, Uniforms::SU_cxmul, Color(128,0,0,128));
+            else
+            if (fillFlags & FF_Cxform)
+                psi->SetCxform(pso, Profiler->GetCxform(pmeshes[i].M.GetCxform()), 0, i);
+
+            for (unsigned tm = 0; tm < tmCount; tm++)
             {
-                psi->SetMatrix(pso, Uniforms::SU_mvp, pmeshes[i].pMesh->VertexMatrix, pmeshes[i].M, Matrices, 0, i);
-
-                if (fillType == PrimFill_Mask)
-                    psi->SetColor(pso, Uniforms::SU_cxmul, Color(128,0,0,128));
-                else
-                if (fillFlags & FF_Cxform)
-                    psi->SetCxform(pso, Profiler->GetCxform(pmeshes[i].M.GetCxform()), 0, i);
-
-                for (unsigned tm = 0; tm < tmCount; tm++)
-                {
-                    Matrix2F m(pmeshes[i].pMesh->VertexMatrix);
-                    m.Append(pmeshes[i].M.GetTextureMatrix(tm));
-                    psi->SetMatrix(pso, Uniforms::SU_texgen, m, tm, i);
-                }
+                Matrix2F m(pmeshes[i].pMesh->VertexMatrix);
+                m.Append(pmeshes[i].M.GetTextureMatrix(tm));
+                psi->SetMatrix(pso, Uniforms::SU_texgen, m, tm, i);
             }
-    	}
+        }
 
+        if (!(fillFlags & FF_LeaveOpen))
         psi->Finish(meshCount);
 
         return pso;
@@ -535,14 +653,8 @@ public:
 
     const Shader& SetFill(PrimitiveFillType fillType, unsigned& fillFlags, unsigned batchType, const VertexFormat* pvf, ShaderInterface* psi)
     {
-        FShaderType shader = this->StaticShaderForFill(fillType, fillFlags, batchType == PrimitiveBatch::DP_Batch);
-        VShaderType vshader = FShaderDesc::VShaderForFShader[shader];
-
-        // Check a flag, to determine whether to use a 3D shader.
-        if (fillFlags & FF_3DProjection)
-            vshader = (VShaderType)((int)vshader + (int)VShaderDesc::VS_base_Position3d);
-
-        psi->SetStaticShader(vshader, shader, pvf);
+        ShaderType shader = StaticShaderForFill(fillType, fillFlags, batchType);
+        psi->SetStaticShader(shader, pvf);
         psi->BeginPrimitive();
         return psi->GetCurrentShaders();
     }
@@ -552,8 +664,7 @@ public:
                        unsigned* shaders, unsigned pass, unsigned passCount, const VertexFormat* pvf, 
                        ShaderInterface* psi)
     { 
-        VShaderType vshader = FShaderDesc::VShaderForFShader[shaders[pass]];
-        if ( !psi->SetStaticShader( vshader, (FShaderType)shaders[pass], pvf ) )
+        if ( !psi->SetStaticShader( (ShaderType)shaders[pass], pvf ) )
             return false;
         psi->BeginPrimitive();
         const Shader& pso = psi->GetCurrentShaders();
@@ -562,9 +673,9 @@ public:
         psi->SetMatrix(pso, Uniforms::SU_mvp, mvp );
 
         // Apply the source texture.
-        bool shadowPass = shaders[pass] >= FShaderDesc::FS_start_shadows && shaders[pass] <= FShaderDesc::FS_end_shadows;
+        bool shadowPass = shaders[pass] >= ShaderDesc::ST_start_shadows && shaders[pass] <= ShaderDesc::ST_end_shadows;
         NativeTexture* ptexture = (NativeTexture*)targets[Target_Source]->GetTexture();
-        psi->SetTexture(pso, 0, ptexture, ImageFillMode(Wrap_Clamp, Sample_Linear));
+        psi->SetTexture(pso, Uniforms::SU_tex, ptexture, ImageFillMode(Wrap_Clamp, Sample_Linear));
 
         // Apply the texture matrix.
         Matrix2F texgen;
@@ -589,7 +700,7 @@ public:
             float fsize[4];
             float blurx = Alg::Max( 1.0f, floorf(TwipsToPixels(params.BlurX)));
             float blury = Alg::Max( 1.0f, floorf(TwipsToPixels(params.BlurY)));
-            if ( shaders[pass] == FShaderDesc::FS_FBox1Blur || shaders[pass] == FShaderDesc::FS_FBox1BlurMul)
+            if ( shaders[pass] == ShaderDesc::ST_Box1Blur || shaders[pass] == ShaderDesc::ST_Box1BlurMul)
             {
                 // On even passes, do the X blur, on odd passes, do the Y blur.
                 if ( (pass & 1) == 0 )
@@ -636,21 +747,21 @@ public:
                 offset[0] = -TwipsToPixels(params.Offset.x);
                 offset[1] = -TwipsToPixels(params.Offset.y);
 
-                if ( !(params.Mode & BlurFilterParams::Mode_HideObject &&
-                     !(params.Mode & BlurFilterParams::Mode_Knockout)) && 
+                if ( (shaders[pass] & ShaderDesc::ST_shadows_Shadowonly) == 0 &&
+                     (shaders[pass] & ShaderDesc::ST_shadows_ShadowonlyHighlight) == 0 &&
                      targets[Target_Original] )
                 {
                     NativeTexture* psrctex = (NativeTexture*)targets[Target_Original]->GetTexture();
                     srctexscale[0] = 1.0f / (psrctex->GetSize().Width * texscale[0] );
                     srctexscale[1] = 1.0f / (psrctex->GetSize().Height * texscale[1] );
                     psi->SetUniform(pso, Uniforms::SU_srctexscale, srctexscale, 2 );
-                    psi->SetTexture(pso, 1, psrctex, ImageFillMode(Wrap_Clamp, Sample_Linear));
+                    psi->SetTexture(pso, Uniforms::SU_srctex, psrctex, ImageFillMode(Wrap_Clamp, Sample_Linear));
                 }
         
                 psi->SetUniform(pso, Uniforms::SU_scolor, scolors[0], 4 );
                 psi->SetUniform(pso, Uniforms::SU_offset, offset, 2 );
 
-                if ( params.Mode & BlurFilterParams::Mode_Highlight)
+                if (filter->GetFilterType() == Filter_Bevel)
                     psi->SetUniform(pso, Uniforms::SU_scolor2, scolors[1], 4 );
             }
         }
@@ -685,7 +796,8 @@ public:
     }
 
     static const int MaximumBlurKernel = 32 * 20 * 20; // in twips^2
-    static const int MaximumFilterPasses = 8;
+    static const int MaximumQuality      = 15;
+    static const int MaximumFilterPasses = 8 * MaximumQuality;
 
     // Returns the number of passes required to render the given filter from scratch. Fills out the passes
     // array (which must contain at least MaximumPasses elements), with the shaders used per-pass.
@@ -709,40 +821,68 @@ public:
 
             // Every pass except the last is simply a blur
             unsigned pass;
-            for ( pass = 0; pass < passCount-1; ++pass )
-                passes[pass] = box1 ? FShaderDesc::FS_FBox1Blur : FShaderDesc::FS_FBox2Blur;
+            for ( pass = 0; pass < Alg::Max<unsigned>(0,passCount-1); ++pass )
+                passes[pass] = box1 ? ShaderDesc::ST_Box1Blur : ShaderDesc::ST_Box2Blur;
 
-            switch( params.Mode & BlurFilterParams::Mode_FilterMask )
+            FilterType type = (FilterType)(params.Mode & BlurFilterParams::Mode_FilterMask);
+            switch( type )
             {
                 default:
                 case Filter_Blur:
-                    passes[pass] = FShaderDesc::FS_start_blurs;
+                    passes[pass] = ShaderDesc::ST_start_blurs;
 
                     // Extra flags.
-                    passes[pass] += box1 ? 0 : FShaderDesc::FS_blurs_Box2;
+                    passes[pass] += box1 ? 0 : ShaderDesc::ST_blurs_Box2;
                     if ( fillFlags & FF_Multiply )
-                        passes[pass] += (unsigned)FShaderDesc::FS_blurs_Mul;
+                        passes[pass] += (unsigned)ShaderDesc::ST_blurs_Mul;
                     break;
                 case Filter_Glow:
-                case Filter_Bevel:
                 case Filter_Shadow:
-
                     // Base shader.
                     if ( params.Mode & BlurFilterParams::Mode_Inner )
-                        passes[pass] = FShaderDesc::FS_FBox2InnerShadow;
-                    else if (params.Mode & BlurFilterParams::Mode_HideObject &&
-                        !(params.Mode & BlurFilterParams::Mode_Knockout))
-                        passes[pass] = FShaderDesc::FS_FBox2Shadowonly;
+                    {
+                        if (params.Mode & (BlurFilterParams::Mode_HideObject|BlurFilterParams::Mode_Knockout))
+                            passes[pass] = ShaderDesc::ST_Box2InnerShadowKnockout; // Inner+Hide identical to Inner+Knockout.
+                        else
+                            passes[pass] = ShaderDesc::ST_Box2InnerShadow;
+                    }
                     else
-                        passes[pass] = FShaderDesc::FS_FBox2Shadow;
+                    {
+                        if ((params.Mode & (BlurFilterParams::Mode_HideObject|BlurFilterParams::Mode_Knockout)) == BlurFilterParams::Mode_HideObject)
+                            passes[pass] = ShaderDesc::ST_Box2Shadowonly;
+                        else
+                        {
+                            passes[pass] = ShaderDesc::ST_Box2Shadow;
+                            if (params.Mode & BlurFilterParams::Mode_Knockout)
+                                passes[pass] += ShaderDesc::ST_shadows_Knockout;
+                        }
+                    }
 
                     // Extra flags.
                     if ( fillFlags & FF_Multiply )
-                        passes[pass] += (unsigned)FShaderDesc::FS_shadows_Mul;
-                    if ( params.Mode & BlurFilterParams::Mode_Knockout )
-                        passes[pass] += (unsigned)FShaderDesc::FS_shadows_Knockout;
-                    if ( params.Mode & BlurFilterParams::Mode_Highlight )
-                        passes[pass] += (unsigned)FShaderDesc::FS_shadows_Highlight;
+                        passes[pass] += (unsigned)ShaderDesc::ST_shadows_Mul;
+                    break;
+
+                case Filter_Bevel:
+                    // Base shader.
+                    if ( params.Mode & BlurFilterParams::Mode_Inner )
+						passes[pass] = ShaderDesc::ST_Box2InnerShadowHighlight; // inner
+                    else if (params.Mode & BlurFilterParams::Mode_Highlight)
+                    {
+                        if (params.Mode & BlurFilterParams::Mode_Knockout)
+                            passes[pass] = ShaderDesc::ST_Box2ShadowonlyHighlight;  // full + knockout.
+                        else
+                            passes[pass] = ShaderDesc::ST_Box2FullShadowHighlight;  // full.                    
+                    }
+                    else
+                        passes[pass] = ShaderDesc::ST_Box2ShadowHighlight;      // outer
+
+
+                    // Extra flags.
+                    if ( passes[pass] != ShaderDesc::ST_Box2ShadowonlyHighlight && (params.Mode & BlurFilterParams::Mode_Knockout) )
+                        passes[pass] += (unsigned)ShaderDesc::ST_shadows_Knockout;
+                    if ( fillFlags & FF_Multiply )
+                        passes[pass] += (unsigned)ShaderDesc::ST_shadows_Mul;
                     break;
 
                 // Unsupported.
@@ -750,19 +890,151 @@ public:
                 //case Filter_GradientBevel:
             }
         }
-        else
+        else if (filter->GetFilterType() == Filter_ColorMatrix)
         {
             passCount = 1;
             ColorMatrixFilter* matrixFilter = (ColorMatrixFilter*)filter;
             float* params = &((float&)matrixFilter[0]);
             SF_UNUSED(params);
-            passes[0] = FShaderDesc::FS_start_cmatrix;
+            passes[0] = ShaderDesc::ST_start_cmatrix;
             if ( fillFlags & FF_Multiply )
-                passes[0] += (unsigned)FShaderDesc::FS_cmatrix_Mul;
+                passes[0] += (unsigned)ShaderDesc::ST_cmatrix_Mul;
+        }
+        else
+        {
+            // Report 0 passes. This should cause the HAL::drawUncachedFilter code to just use the
+            // source texture as the destination.
+            SF_DEBUG_ASSERT(filter->GetFilterType() == Filter_CacheAsBitmap, "Expected filter type to be CacheAsBitmap.");
+            passCount = 0;
         }
         return passCount;
     }
 
+    // Set of flags that may be passed to various DrawableImage functions.
+    enum DrawableImageFlags
+    {
+        CPF_HalfPixelOffset     = 0x1,      // Some platforms require a half-pixel offset to have pixel-centres match exactly (D3D9).
+        CPF_InvertedViewport    = 0x2,      // Some platforms require their render target output to be flipped (GL).
+    };
+
+    // Sets a fill based on a CopyPixels BitmapData command.
+    bool SetDrawableCopyPixelsFill( Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                                    const Matrix2F& mvp, bool mergeAlpha, bool destAlpha, const VertexFormat* pvf,
+									ShaderInterface* psi, unsigned flags = 0 )
+    {
+        // Determine which shader to use, based on parameters.
+		unsigned type = ShaderDesc::ST_start_DrawableCopyPixels;
+        if ( tex[2] )
+		{
+            type += ShaderDesc::ST_DrawableCopyPixels_DrawableCopyPixelsAlpha;
+		}
+        if ( !destAlpha )
+            type += ShaderDesc::ST_DrawableCopyPixels_NoDestAlpha;
+		else if ( mergeAlpha )
+			type += ShaderDesc::ST_DrawableCopyPixels_MergeAlpha;
+
+        if (!psi->SetStaticShader((ShaderType)type, pvf ))
+            return false;
+
+        psi->BeginPrimitive();
+        return DrawableFinish(2 + (tex[2] ? 1 : 0), tex, texgen, texsize, mvp, psi, flags);
+    }
+
+    // Sets a fill based on a CopyChannel or Merge BitmapData command.
+    bool SetDrawableMergeFill(  Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                                const Matrix4F* cxmul,
+                                const VertexFormat* pvf, ShaderInterface* psi, unsigned flags = 0 )
+    {
+        if (!psi->SetStaticShader(ShaderDesc::ST_DrawableMerge, pvf ))
+            return false;
+        psi->BeginPrimitive();
+        const Shader& pso = psi->GetCurrentShaders();
+
+        // Set the color matrices which will perform the operation.
+        psi->SetUniform(pso, Uniforms::SU_cxmul, cxmul[0], 16);
+        psi->SetUniform(pso, Uniforms::SU_cxmul1, cxmul[1], 16);
+
+        // Make the mvp cover the entire viewport.
+        Matrix2F mvp = Matrix2F::Scaling(2,-2) * Matrix2F::Translation(-0.5f, -0.5f);
+        return DrawableFinish(2, tex, texgen, texsize, mvp, psi, flags);
+    }
+
+    bool SetDrawableCxform( Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                            const Cxform* cx,
+                            const VertexFormat* pvf, ShaderInterface* psi, unsigned flags = 0 )
+    {
+        if (!psi->SetStaticShader(ShaderDesc::ST_TexTGCxform, pvf ))
+            return false;
+        psi->BeginPrimitive();
+        const Shader& pso = psi->GetCurrentShaders();
+
+        psi->SetCxform(pso, *cx);
+
+        // Make the mvp cover the entire viewport.
+        Matrix2F mvp = Matrix2F::Scaling(2,-2) * Matrix2F::Translation(-0.5f, -0.5f);
+        return DrawableFinish(1, tex, texgen, texsize, mvp, psi, flags);
+    }
+
+    bool SetDrawableCompare( Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                             const VertexFormat* pvf, ShaderInterface* psi, unsigned flags = 0 )
+    {
+        if (!psi->SetStaticShader(ShaderDesc::ST_DrawableCompare, pvf ))
+            return false;
+        psi->BeginPrimitive();
+
+        // Make the mvp cover the entire viewport.
+        Matrix2F mvp = Matrix2F::Scaling(2,-2) * Matrix2F::Translation(-0.5f, -0.5f);
+        return DrawableFinish(2, tex, texgen, texsize, mvp, psi, flags);
+    }
+
+    bool SetDrawablePaletteMap( Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                                const Matrix2F& mvp, Render::Texture* paletteMap,
+                                const VertexFormat* pvf, ShaderInterface* psi, unsigned flags = 0 )
+    {
+        if (!psi->SetStaticShader(ShaderDesc::ST_DrawablePaletteMap, pvf ))
+            return false;
+        psi->BeginPrimitive();
+        const Shader& pso = psi->GetCurrentShaders();
+
+        // Set the palette map texture.
+        psi->SetTexture(pso, Uniforms::SU_srctex, paletteMap, ImageFillMode(Wrap_Clamp, Sample_Point));
+
+        return DrawableFinish(1, tex, texgen, texsize, mvp, psi, flags);
+    }
+
+    // This function is used by many BitmapData commands. It assumes that one of the SetDrawable* functions
+    // has already been called.
+    bool DrawableFinish    (  unsigned srcCount, 
+                              Render::Texture** tex, const Matrix2F* texgen, const Size<int> texsize, 
+                              const Matrix2F& mvpOriginal,
+                              ShaderInterface* psi, unsigned flags = 0 )
+    {
+        const Shader& pso = psi->GetCurrentShaders();
+
+        // Caculate the MVP, should be the whole viewport.
+        Matrix2F mvp = mvpOriginal;
+
+        if ( flags & CPF_InvertedViewport )
+        {
+            mvp.PrependTranslation(0.0f, 1.0f);
+            mvp.PrependScaling(1.0f, -1.0f);
+        }
+        if ( flags & CPF_HalfPixelOffset )
+        {
+            mvp.Tx() -= 1.0f/texsize.Width;   // D3D9 1/2 pixel center offset
+            mvp.Ty() += 1.0f/texsize.Height;
+        }
+
+        psi->SetMatrix (pso, Uniforms::SU_mvp,      mvp );
+
+        for ( unsigned i =0; i < srcCount; ++i )
+        {
+            psi->SetTexture(pso, Uniforms::SU_tex, tex[i], ImageFillMode(Wrap_Clamp, Sample_Point), i);
+            psi->SetMatrix(pso, Uniforms::SU_texgen, texgen[i], i);
+        }
+        psi->Finish(1);
+        return true;
+    }
 };
 
 template<class Builder>

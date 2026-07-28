@@ -25,7 +25,7 @@ public:
 	inline	void		set_character_multiplier			( float character_multiplier ) { m_player_recoil_multiplier = character_multiplier; }
 	inline	void		set_player_compensation_multiplier	( float player_compensation_multiplier ) { m_player_compensation_multiplier = player_compensation_multiplier; }
 
-			void		tick							( u32 current_time_in_ms, float time_scale );
+			void		tick							( const u32 current_time_in_ms, const float time_scale );
 			void		fire							( );
 			void		reload							( );
 			void		chamber_a_round					( );
@@ -34,14 +34,15 @@ public:
 	inline	float		get_horizontal_koef				( ) const { return m_horizontal_koef;	}
 	inline	float		get_back_koef					( ) const { return m_back_koef;			}
 
-			void		process_compensation			( float dt_sec );
+private:
+			void		process_compensation			( const float dt_sec );
 
-			float		get_random_angle				( float range );
-			float		get_random_amount				( float range );
+			float		get_random_angle				( const float range );
+			float		get_random_amount				( const float range );
 
 			void		reset							( );
 
-private:
+
 	/* 0x0000 */	math::random32						m_random;
 	/* 0x0004 */	pseudo_random						m_pseudo_random;
 	/* 0x0008 */	animation::linear_interpolator		m_interpolator;

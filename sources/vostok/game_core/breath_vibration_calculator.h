@@ -20,24 +20,24 @@ public:
 
 			void		set_breath_holding_params	( breath_holding_params const* params );
 
-			void		tick						( u32 current_time_in_ms, float time_scale );
+			void		tick						( const u32 current_time_in_ms, const float time_scale );
 
 			void		hold_breath					( bool value );
 
 	inline	void		set_max_breath_delay_time	( float arg_0 ) { /* no source */ }
 
-	inline	void		set_user					( base_player const* arg_0 ) { /* no source */ }
+	inline	void		set_user					( base_player const* arg_0 ) { m_user = arg_0; }
 
-	inline	float		get_horizontal_value		( ) const { /* no source */ }
-	inline	float		get_vertical_value			( ) const { /* no source */ }
+	inline	float		get_horizontal_value		( ) const { return m_horizontal_value; }
+	inline	float		get_vertical_value			( ) const { return m_vertical_value; }
 
-	inline	void		set_character_multiplier	( float arg_0 ) { /* no source */ }
+	inline	void		set_character_multiplier	( float arg_0 ) { m_character_multiplier = arg_0; }
 
+private:
 			void		initialize_logic			( );
 
-	// STATE[STUB]
 			bool		hold_button_state_equals_to	( bool btn_state ) const { return m_is_breath_holded == btn_state; }
-	// STATE[STUB]
+
 			bool		insufficient_breath			( ) const { return m_breath_holding_reserve <= 0.0f; }
 
 

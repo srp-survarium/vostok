@@ -4,56 +4,38 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_chamber_a_round_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.instant_chamber_a_round
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base(survarium::weapon_core&, const float)
-weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( weapon_core& weapon, float animation_time_scale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+weapon_core_chamber_a_round_state_base::weapon_core_chamber_a_round_state_base( weapon_core& weapon, const float animation_time_scale ) :
+	weapon_core_animation_end_aware_state( weapon, true ),
+	m_animation_timescale( animation_time_scale )
 {
-	// FUNCTION BODY
-	// <0x761d19>|0x059|+0x00d:'22'
-	// ******
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::initialize()
 void weapon_core_chamber_a_round_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0x761d37>|0x007|+0x008:'27'
-	// <0>
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::on_animation_end_impl(bool&)
 void weapon_core_chamber_a_round_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x761c47>|0x007|+0x00e:'34'
-	// <0x761c55>|0x015|+0x006:'35'
-	// ******
+	m_weapon.instant_chamber_a_round( );
+	animation_player_tick_result = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_chamber_a_round_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x761c99>|0x009|+0x013:'40'
-	// ******
+	packet.append( m_animation_has_been_ended );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_chamber_a_round_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x761c79>|0x009|+0x011:'45'
-	// ******
+	m_animation_has_been_ended = reader.r< bool >( );
 }
 
 } // namespace survarium

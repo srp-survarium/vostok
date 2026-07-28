@@ -1,47 +1,52 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 04.05.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef CAMERA_DIRECTOR_H_INCLUDED
 #define CAMERA_DIRECTOR_H_INCLUDED
 
-#include "object.h"
-#include "object_behaviour.h"
+namespace vostok {
+namespace configs {
+	class binary_config_value;
+} // namespace configs
+} // namespace vostok
 
-namespace survarium{
+namespace survarium {
 
+class base_game_scene;
 class game_camera;
-class game_world;
 
-class camera_director : public game_object_, 
-						public object_controlled
-{
-	typedef game_object_ super;
+class camera_director : public boost::noncopyable {
 public:
-						camera_director				( game_scene& w );
-	void				switch_to_camera			( game_camera* c, pcstr camera_name );
-	game_camera*		get_active_camera			( ) const				{ return m_active_camera; }
-	void				tick						( );
-	void				apply						( );
-	float4x4 const&		get_inverted_view_matrix	( ) const				{ return m_inverted_view; }
-	float4x4 const&		get_projection_matrix		( ) const				{ return m_projection; }
-	void				set_position_direction		( math::float3 const& p, math::float3 const& d );
-	virtual void		on_focus					( bool b_focus_enter);
+			explicit			camera_director			( base_game_scene& w );
+
+	virtual	void				load					( configs::binary_config_value const& __formal ) { /* no source */ }
+
+			void				switch_to_camera		( game_camera* c, pcstr camera_name );
+	inline	game_camera const*	get_active_camera		( ) const { /* no source */ return m_active_camera; }
+
+			void				tick					( );
+
+			void				apply					( );
+
+	inline	float4x4 const&		get_inverted_view_matrix( ) const { /* no source */ return m_inverted_view; }
+	inline	float4x4 const&		get_projection_matrix	( ) const { /* no source */ return m_projection; }
+
+			void				set_position_direction	( float3 const& p, float3 const& d );
+
+	virtual	void				on_focus				( bool b_focus_enter );
+
+	inline						~camera_director		( ) { /* no source */ }
 
 private:
-	float4x4			m_inverted_view;
-	float4x4			m_projection;
-
-	game_camera*		m_active_camera;
+	/* 0x0004 */	/* boost::noncopyable */
+	/* 0x0004 */	float4x4			m_inverted_view;
+	/* 0x0044 */	float4x4			m_projection;
+	/* 0x0084 */	game_camera*		m_active_camera;
+	/* 0x0088 */	base_game_scene&	m_game_scene;
 }; // class camera_director
 
-typedef	intrusive_ptr<
-			camera_director,
-			resources::unmanaged_intrusive_base,
-			threading::single_threading_policy
-		> camera_director_ptr;
+STATIC_SIZE_ASSERT(camera_director, 0x8C);
 
 } // namespace survarium
 

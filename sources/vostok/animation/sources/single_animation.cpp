@@ -32,6 +32,8 @@ single_animation::~single_animation ( )
 	VOSTOK_DELETE_IMPL				( resources::unmanaged_allocator(), m_interpolator );
 }
 
+// claude@NOTE: STRUCTURE MATCH; capped by inline-vs-call wall - gold inlines the
+// animation_lexeme_parameters / animation_lexeme / expression ctors that our /Od base CALLs.
 expression single_animation::emit	( mutable_buffer& buffer, bool& is_last_animation ) const
 {
 	is_last_animation				= true;

@@ -16,7 +16,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Render/ImageFiles/GXT_ImageFile.h"
 #include "Render/ImageFiles/Render_ImageFileUtil.h"
 #include "Render/Render_MemoryManager.h"
-#include "Render/NGP/NGP_Texture.h"
+#include "Render/PSVita/PSVita_Texture.h"
 #include "Kernel/SF_HeapNew.h"
 #include "Kernel/SF_Debug.h"
 #include <gxt.h>
@@ -88,9 +88,9 @@ bool GXTFileImageSource::ReadHeader()
                     Format = Image_PVRTC_RGB_4BPP; 
                 break;
             }
-            case SCE_GXM_TEXTURE_BASE_FORMAT_UBC1:          Format = Image_NGP_DXT1; break;
-	        case SCE_GXM_TEXTURE_BASE_FORMAT_UBC2:          Format = Image_NGP_DXT3; break;
-	        case SCE_GXM_TEXTURE_BASE_FORMAT_UBC3:          Format = Image_NGP_DXT5; break;
+            case SCE_GXM_TEXTURE_BASE_FORMAT_UBC1:          Format = Image_PSVita_DXT1; break;
+	        case SCE_GXM_TEXTURE_BASE_FORMAT_UBC2:          Format = Image_PSVita_DXT3; break;
+	        case SCE_GXM_TEXTURE_BASE_FORMAT_UBC3:          Format = Image_PSVita_DXT5; break;
 
             // Uncompressed formats.
             case SCE_GXM_TEXTURE_BASE_FORMAT_U8U8U8U8:      
@@ -134,10 +134,10 @@ Image* GXTFileImageSource::CreateCompatibleImage(const ImageCreateArgs& args)
         return 0;
     }
 
-    NGP::TextureManager* pManager = (NGP::TextureManager*) args.pManager;
+    PSVita::TextureManager* pManager = (PSVita::TextureManager*) args.pManager;
 
     SceGxmTexture TexHeader;
-    UByte* pTexData = (UByte*)pManager->GetMemoryManager()->Alloc(TextureInfo.dataSize, 16, Memory_NGP_CDRAM);
+    UByte* pTexData = (UByte*)pManager->GetMemoryManager()->Alloc(TextureInfo.dataSize, 16, Memory_PSVita_CDRAM);
     if (!pTexData)
     {
         SF_DEBUG_ERROR(1, "CreateTexture failed - memory allocation failed");
@@ -176,7 +176,7 @@ Image* GXTFileImageSource::CreateCompatibleImage(const ImageCreateArgs& args)
     SF_ASSERT(error == SCE_OK);
 
     MemoryHeap*  heap = args.pHeap ? args.pHeap : Memory::GetGlobalHeap();
-    Ptr<NGP::Texture> ptexture = *(NGP::Texture*)pManager->CreateTexture(TexHeader);
+    Ptr<PSVita::Texture> ptexture = *(PSVita::Texture*)pManager->CreateTexture(TexHeader);
     if (ptexture)
     {
         // free data

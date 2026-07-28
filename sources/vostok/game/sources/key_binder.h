@@ -1,191 +1,67 @@
-#pragma once
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 02.06.2026
+////////////////////////////////////////////////////////////////////////////
 
+#ifndef KEY_BINDER_H_INCLUDED
+#define KEY_BINDER_H_INCLUDED
 
-namespace survarium{
+#include "game_action_id.h"
+#include "key_binding.h"
+#include "toggle_action_enum.h"
 
+namespace survarium {
 
 class game;
+class console_command_bind;
 
-enum	game_action_id
-{
-	kLEFT,
-	kRIGHT,
-	kUP,
-	kDOWN,
-	kJUMP,
-	kCROUCH,
-	kACCEL,
-	kSPRINT_TOGGLE,
-						
-	kFWD,
-	kBACK,
-	kL_STRAFE,
-	kR_STRAFE,
-						
- 	kL_LOOKOUT,
- 	kR_LOOKOUT,
- 						
- 	kCAM_1,
- 	kCAM_2,
- 	kCAM_3,
- 	kCAM_ZOOM_IN,
- 	kCAM_ZOOM_OUT,
- 						
- 	kTORCH,
- 	kNIGHT_VISION,
- 	kDETECTOR,
- 	kWPN_1,
- 	kWPN_2,
- 	kWPN_3,
- 	kWPN_4,
- 	kWPN_5,
- 	kWPN_6,
- 	kARTEFACT,
- 	kWPN_NEXT,
- 	kWPN_FIRE,
-// 	kWPN_ZOOM,
-// 	kWPN_ZOOM_INC,
-// 	kWPN_ZOOM_DEC,
-// 	kWPN_RELOAD,
-// 	kWPN_FUNC,
-// 	kWPN_FIREMODE_PREV,
-// 	kWPN_FIREMODE_NEXT,
-// 						
-// 	kPAUSE,
-// 	kDROP,
-// 	kUSE,
-// 	kSCORES,
-// 	kCHAT,
-// 	kCHAT_TEAM,
-// 	kSCREENSHOT,
-// 	kQUIT,
-// 	kCONSOLE,
-// 	kINVENTORY,
-// 	kBUY,
-// 	kSKIN,
-// 	kTEAM,
-// 	kACTIVE_JOBS,
-// 						
-// 	kVOTE_BEGIN,
-// 	kVOTE,
-// 	kVOTEYES,
-// 	kVOTENO,
-// 						
-// 	kNEXT_SLOT,
-// 	kPREV_SLOT,
-// 						
-// 	kSPEECH_MENU_0,
-// 	kSPEECH_MENU_1,
-// 						
-// 	kQUICK_USE_1,
-// 	kQUICK_USE_2,		
-// 	kQUICK_USE_3,		
-// 	kQUICK_USE_4,		
-// 	
-// 	kQUICK_SAVE,
-// 	kQUICK_LOAD,
-// 	kALIFE_CMD,
-
-	kLASTACTION,
-	kNOTBINDED,
-	kFORCEDWORD		= u32(-1)
-};
-
-struct keyboard_key_descr		
-{
-	pcstr		key_name;
-	int			dik;
-	string128	key_local_name;
-};
-enum keyboard_key_group{
-	_both	=	(1<<0)			,
-	_sp		=	_both | (1<<1)	,
-	_mp		=	_both | (1<<2)	,
-};
-
-#define bindings_count kLASTACTION
-
-bool is_group_not_conflicted(keyboard_key_group g1, keyboard_key_group g2);
-
-struct game_action_descr
-{
-	pcstr				action_name;
-	game_action_id		id;
-	keyboard_key_group	key_group;
-	pcstr				default_key;
-};
-
-struct key_binding
-{
-	game_action_descr*		m_action;
-	keyboard_key_descr*		m_keyboard[2];
-};
-
-
-extern keyboard_key_group		g_current_keygroup;
-extern game_action_descr		actions		[];
-extern key_binding				g_key_bindings[];
-
-class key_binder: private boost::noncopyable{
+class key_binder : public boost::noncopyable {
+	friend class console_command_bind;
 public:
-							key_binder			( game& game );
+			explicit				key_binder			( game& g );
+
+			void					bind_key			( pcstr args, s32 bind_number );
+			void					unbind_key			( pcstr args, s32 bind_number );
+
+			void					set_default_controls( );
+
+			keyboard_key_descr*		dik_to_ptr			( s32 _dik, bool bSafe );
+
+			game_action_id			get_binded_action	( s32 _dik, toggle_action_enum& actions_mask_type, s32 key_group_mask ) const;
+
+			pcstr					id_to_action_name	( game_action_id _id ) const;
+
+			pcstr					dik_to_keyname		( s32 _dik );
+
+			s32						get_binding_group	( game_action_id _id );
+
+	inline	void					GetActionAllBinding	( pcstr arg_0, char* arg_1, s32 arg_2 ) { /* no source */ }
+
+	inline	float					mouse_sensitivity	( ) const { /* no source */ return 0.0f; }
+	inline	bool					mouse_invertion		( ) const { /* no source */ return false; }
+
+			s32						get_action_dik		( game_action_id _action_id, s32 idx );
+	inline	s32						keyname_to_dik		( pcstr arg_0 ) { /* no source */ return 0; }
+
+	inline	bool					is_binded			( game_action_id arg_0, s32 arg_1 ) { /* no source */ return false; }
+
+	inline							~key_binder			( ) { /* no source */ }
+
 private:
-	
-	int						keyname_to_dik		( pcstr _name );
-	keyboard_key_descr*		keyname_to_ptr		( pcstr _name );
-	
+			keyboard_key_descr*		keyname_to_ptr		( pcstr _name );
 
-	game_action_id			action_name_to_id	( pcstr _name );
-	game_action_descr*		action_name_to_ptr	( pcstr _name );	
-	void					remap_keys			();
+			game_action_id			action_name_to_id	( pcstr _name );
+			game_action_descr*		action_name_to_ptr	( pcstr _name );
 
-	game&					m_game;
+			void					remap_keys			( );
 
-	bool					is_binded			( game_action_id action_id, int dik );
-	int						get_action_dik		( game_action_id action_id, int idx=-1 );
+private:
+	/* 0x0000 */	/* boost::noncopyable */
+	/* 0x0000 */	key_binding		m_key_bindings[64];
+	/* 0x0300 */	game&			m_game;
+}; // class key_binder
 
-public:
-	void					bind_key			( pcstr args, int bind_number );
-	void					unbind_key			( pcstr args, int bind_number );
-	void					set_default_controls( );
-
-static keyboard_key_descr*	dik_to_ptr			( int _dik, bool bSafe );
-static game_action_id		get_binded_action	( int dik );	
-static pcstr				id_to_action_name	( game_action_id _id );
-static pcstr				dik_to_keyname		( int _dik );
-
-//extern void		CCC_RegisterInput();
-
-// struct _conCmd	{
-// 	pcstr	cmd;
-// };
-
-// class ConsoleBindCmds{
-// public:
-// 	map<int,_conCmd>		m_bindConsoleCmds;
-// 
-// 	void 	bind			(int dik, LPCSTR N);
-// 	void 	unbind			(int dik);
-// 	bool 	execute			(int dik);
-// 	void 	clear			();
-// //	void 	save			(IWriter* F);
-// };
-
-void GetActionAllBinding	(pcstr action, char* dst_buff, int dst_buff_sz);
-
-};//class key_binder
-
-//extern ConsoleBindCmds		bindConsoleCmds;
-
-// 0xED - max value in DIK* enum
-#define MOUSE_1		(0xED + 100)
-#define MOUSE_2		(0xED + 101)
-#define MOUSE_3		(0xED + 102)
-
-#define MOUSE_4		(0xED + 103)
-#define MOUSE_5		(0xED + 104)
-#define MOUSE_6		(0xED + 105)
-#define MOUSE_7		(0xED + 106)
-#define MOUSE_8		(0xED + 107)
+STATIC_SIZE_ASSERT(key_binder, 0x304);
 
 } // namespace survarium
+
+#endif // #ifndef KEY_BINDER_H_INCLUDED

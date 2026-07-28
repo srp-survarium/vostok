@@ -1,0 +1,11 @@
+3rdParty/zlib-1.2.7/adler32.c
+3rdParty/zlib-1.2.7/compress.c
+3rdParty/zlib-1.2.7/crc32.c
+3rdParty/zlib-1.2.7/deflate.c
+3rdParty/zlib-1.2.7/infback.c
+3rdParty/zlib-1.2.7/inffast.c
+3rdParty/zlib-1.2.7/inflate.c
+3rdParty/zlib-1.2.7/inftrees.c
+3rdParty/zlib-1.2.7/trees.c
+3rdParty/zlib-1.2.7/uncompr.c
+3rdParty/zlib-1.2.7/zutil.c

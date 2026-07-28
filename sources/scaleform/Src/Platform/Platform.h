@@ -29,6 +29,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include "Platform/Platform_CommandLine.h"
 #include "Platform/Platform_SystemCursorManager.h"
+#include "GFx/GFx_Player.h"
 //#include "GFx/IME/GFx_IMEManager.h"
 
 #ifdef SF_OS_PS3
@@ -57,7 +58,7 @@ otherwise accompanies this software in either electronic or hard copy form.
     { SF_SystemClassInstance.Init(); Platform_3DS_InitExtra(); return new AppClass args; } \
     void Scaleform::Platform::AppBase::DestroyInstance(Scaleform::Platform::AppBase* app) \
     { delete app; SF_SystemClassInstance.Destroy(); }
-#elif defined(SF_OS_WIN32)
+#elif defined(SF_OS_WIN32) && !defined(SF_OS_WINMETRO)
 // To fix Unicode command line arguments handling
 // wmain needs to be in here and not in Platform_WinAPI.cpp, otherwise we have 
 // ambiguous entry point error (because Platform_WinAPI.cpp is in the lib)
@@ -70,7 +71,7 @@ otherwise accompanies this software in either electronic or hard copy form.
                 void Scaleform::Platform::AppBase::DestroyInstance(Scaleform::Platform::AppBase* app) \
                 { delete app; SF_SystemClassInstance.Destroy(); } \
                 int wmain(int argc, wchar_t **argv) \
-                { Platform_WinAPI_MainW(argc, argv); }
+                { return Platform_WinAPI_MainW(argc, argv); }
     #else
         extern int Platform_WinAPI_MainA(int argc, char** argv);
         #define SF_PLATFORM_SYSTEM_APP_ARGS(AppPackageId, SystemClass, AppClass, args)             \
@@ -80,7 +81,7 @@ otherwise accompanies this software in either electronic or hard copy form.
             void Scaleform::Platform::AppBase::DestroyInstance(Scaleform::Platform::AppBase* app) \
             { delete app; SF_SystemClassInstance.Destroy(); } \
             int main(int argc, char** argv) \
-            { Platform_WinAPI_MainA(argc, argv); }
+            { return Platform_WinAPI_MainA(argc, argv); }
     #endif
 #elif !defined(SF_OS_ANDROID)
     #define SF_PLATFORM_SYSTEM_APP_ARGS(AppPackageId, SystemClass, AppClass, args)             \
@@ -120,43 +121,58 @@ class RenderHALThread;
 
 enum ViewFlagConstants
 {
-    View_FullScreen         = 0x0001,
-    View_VSync              = 0x0002,
-    View_FSAA               = 0x0004,
-    View_ForceTiling        = 0x0008,
+    View_FullScreen         = 0x00001,
+    View_VSync              = 0x00002,
+    View_FSAA               = 0x00004,
+    View_ForceTiling        = 0x00008,
     // Window-only.
-    View_WindowResizable    = 0x0010,
-    View_WindowDropFiles    = 0x0020,
+    View_WindowResizable    = 0x00010,
+    View_WindowDropFiles    = 0x00020,
     // Force SW cursor, disabling HW one if available.
-    View_WindowSWCursor     = 0x0040,
+    View_WindowSWCursor     = 0x00040,
 
     // Application must respond to OnOrientation by setting the viewport Orientation flags.
-    View_UseOrientation     = 0x0080,
+    View_UseOrientation     = 0x00080,
 
-    View_Stereo             = 0x0100,
+    View_Stereo             = 0x00100,
+
+    // Stereo in the display hardware only; uses the same size buffer but half for each eye.
+    // Set View_Stereo also.
+    View_Stereo_SplitV      = 0x00200,
+    View_Stereo_SplitH      = 0x00400,
     
     // These flags must be set if size and/or pos is provided. If not specified, 
     // default location and size values will be used.
     // Defaults have special meaning when switching from and going into FullScreen mode.    
-    View_Pos                = 0x1000,
-    View_Size               = 0x2000,
+    View_Pos                = 0x01000,
+    View_Size               = 0x02000,
 
     // If the platform compiles shaders at runtime, this flag causes all possible shaders
     // to be compiled at startup. The default causes shaders to be compiled as they are used.
     //  - GL based HALs use this flag.
-    //  - D3D based HALs use this flag (TODO: remove after precompiled shaders).
-    View_PrecompileShaders  = 0x4000,
+    View_PrecompileShaders  = 0x04000,
 
     // Forces the system to use software rendering (if available). 
     //  - D3D10/11 use this flag to select a WARP device.
-    View_SoftwareRendering  = 0x8000,
+    View_SoftwareRendering  = 0x08000,
+
+    // Causes the mesh caches to use static index/vertex buffers, instead of dynamic ones 
+    // (if applicable for the HAL's mesh cache - currently only D3D9).
+    View_StaticBuffers     = 0x10000,
+
+    // Causes the created OpenGL context to use legacy mode rather than GL 3. Only applicable
+    // to OpenGL renderers.
+    View_GL20              = 0x20000,
+    
+    // Forces the shader system in D3D9 to use SM2.0 shaders, even if it is capable of SM3.0.
+    View_ShaderModel20     = 0x40000
 };
 
 enum StereoFormats
 {
     Stereo_None,
     Stereo_Standard,            // Separate Left/Right buffers, call PresentFrame twice
-    Stereo_CombinedBuffer       // Left/Right stored in same buffer (frame packing, interlaced, etc.). Call PresentFrame once.
+    Stereo_CombinedBuffer,      // Left/Right stored in same buffer (frame packing, interlaced, etc.). Call PresentFrame once.
 };
 
 enum PresentFlags
@@ -174,12 +190,15 @@ enum DeviceCaps
 {
     DeviceCap_Stereo    = 0x0001,
     DeviceCap_Wireframe = 0x0002,
+    DeviceCap_MSAA      = 0x0004,
 };
 
 struct ViewConfig
 {
-    unsigned        ViewFlags;
-    unsigned        BitDepth; // 0 = default.
+    unsigned        ViewFlags;      // Bit-flags for configuration. See ViewFlagConstants.
+    int             ColorBits;      // The requested number of bits in the color buffer (-1 will use platform default).
+    int             DepthBits;      // The requested number of bits in the depth buffer (-1 will use platform default).
+    int             StencilBits;    // The requested number of bits in the stencil buffer (-1 will use platform default).
     Size<unsigned>  ViewSize;
     unsigned        Orientation;
     unsigned        StereoFormat;
@@ -187,13 +206,13 @@ struct ViewConfig
     Size<unsigned>  MinSize;
 
     ViewConfig()
-        : ViewFlags(0), BitDepth(0), ViewSize(0), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
+        : ViewFlags(0), ColorBits(-1), DepthBits(-1), StencilBits(-1), ViewSize(0), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
     ViewConfig(const Size<unsigned>& sz)
-        : ViewFlags(View_Size), BitDepth(0), ViewSize(sz), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
+        : ViewFlags(View_Size), ColorBits(-1), DepthBits(-1), StencilBits(-1), ViewSize(sz), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
     ViewConfig(const Point<int> &pos, const Size<unsigned>& sz)
-        : ViewFlags(View_Pos|View_Size), BitDepth(0), ViewSize(sz), Orientation(0), StereoFormat(Stereo_None), WindowPos(pos), MinSize(0) { }
+        : ViewFlags(View_Pos|View_Size), ColorBits(-1), DepthBits(-1), StencilBits(-1), ViewSize(sz), Orientation(0), StereoFormat(Stereo_None), WindowPos(pos), MinSize(0) { }
     ViewConfig(unsigned width, unsigned height)
-        : ViewFlags(View_Size), BitDepth(0), ViewSize(width, height), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
+        : ViewFlags(View_Size), ColorBits(-1), DepthBits(-1), StencilBits(-1), ViewSize(width, height), Orientation(0), StereoFormat(Stereo_None), WindowPos(0), MinSize(0) { }
     
     Size<unsigned> GetSize() const { return ViewSize; }
     void           SetSize(const Size<unsigned>& sz)
@@ -218,6 +237,16 @@ struct ViewConfig
     {
         if (set) ViewFlags |= flag;
         else     ViewFlags &= ~flag;
+    }
+
+    unsigned GetViewportFlags() const
+    {
+        unsigned vpflags = Orientation;
+        if (ViewFlags & View_Stereo_SplitH)
+            vpflags |= Render::Viewport::View_Stereo_SplitH;
+        if (ViewFlags & View_Stereo_SplitV)
+            vpflags |= Render::Viewport::View_Stereo_SplitV;
+        return vpflags;
     }
 };
 
@@ -264,6 +293,7 @@ public:
     bool        AdjustViewConfig(ViewConfig* config);
     bool        InitGraphics(const ViewConfig& config, Device::Window* window,
                              ThreadId renderThreadId = 0);
+    void        ResizeFrame(void* layer);
     bool        ReconfigureGraphics(const ViewConfig& config);
     void        ShutdownGraphics();
 
@@ -301,17 +331,22 @@ enum ThreadingType
     // AutoDetect means that causes the use of multi-threading
     // if Thread::GetCPUCount() > 1.
     TT_AutoDetect,
-    TT_Unspecified
+    TT_Unspecified,
+
+    TT_TypeMask         = 0x0000FFF,    // Bitmask, specifying the bits used for the threading type.
+    TT_WatchDogFlag     = 0x0001000,    // Enables the watchdog thread.
 };
 
 //------------------------------------------------------------------------
 // A platform independent interface for a gesture manager.
 class GestureManager : public RefCountBaseNTS<GestureManager, Stat_Default_Mem>
 {
-    class AppBase& TheApp;
 public:
+	class AppBase& TheApp;
     GestureManager(class AppBase& app) : TheApp(app) {}
-    virtual ~GestureManager() {}
+	virtual ~GestureManager() {}
+
+	virtual void SetMovie(Ptr<Scaleform::GFx::Movie> moviePtr) = 0;
 
     // 'screenPt' - the point in screen (window) coordinates;
     // 'moviePt'  - the point in Movie coordinate space.
@@ -353,6 +388,18 @@ public:
     virtual Point<int>      GetMousePos() const;
     virtual void            killWindow()   { };
     virtual bool            setupWindow(const String& title, const ViewConfig& config) = 0;
+    
+    virtual bool            IsMultitouchSupported() const { return false; }
+    virtual bool            IsDisplayActive() const { return true; }
+
+    // Invoked when a virtual keyboard must be opened.
+    // 'textBox' contains bounds of a textfield in world coordinates (stage), in pixels.
+    virtual void            HandleVirtualKeyboardOpen(bool multiline, const Render::RectF& textBox) 
+        { SF_UNUSED2(multiline,textBox); }
+    // Invoked when a virtual keyboard must be closed 
+    virtual void            HandleVirtualKeyboardClose() { }
+
+    virtual void            ProcessUrl(const String& url) { SF_UNUSED(url); }
 
 public:
     AppBase*        pApp;
@@ -501,23 +548,31 @@ public:
     virtual void OnGestureEnd(unsigned window, UInt32 gestureMask, const Point<int>& pos)
     { SF_UNUSED3(window, gestureMask, pos); }
 
-    virtual void OnGestureEvent(unsigned window, unsigned event, UInt32 gestureMask, const Point<int>& pos, 
+    enum GesturePhase
+    {
+        Gesture_Begin = 0,
+        Gesture_End   = 1,
+        Gesture_Upd   = 2,
+        Gesture_Simple= 3
+    };
+    virtual void OnGestureEvent(unsigned window, unsigned eventPhase, UInt32 gestureMask, const Point<int>& pos, 
                                 const PointF& translationDelta,
                                 const PointF& scaleDelta,
                                 float rotationDelta)
     {
-        switch(event)
+        switch(eventPhase)
         {
-        case 0:
-        case 3:
+        case Gesture_Begin:
             OnGestureBegin(window, gestureMask, pos, translationDelta, scaleDelta, rotationDelta);
             return;
-        case 1:
+        case Gesture_End:
             OnGestureEnd(window, gestureMask, pos);
             return;
-        case 2:
+        case Gesture_Upd:
+        case Gesture_Simple:
             OnGesture(window, gestureMask, pos, translationDelta, scaleDelta, rotationDelta);
             return;
+        default:;
         }
     }
 
@@ -540,8 +595,8 @@ public:
     virtual void    OnDropFiles(const String& path)
     { SF_UNUSED(path); }
 
-    virtual void    OnOrientation(unsigned orientation, bool force = false)
-    { SF_UNUSED2(orientation, force); }
+    virtual bool    OnOrientation(unsigned orientation, bool force = false)
+    { SF_UNUSED2(orientation, force); return false; }
 
     // Used for stereo
     virtual void    OnConfigurationChange(const ViewConfig& newConfig)
@@ -559,6 +614,24 @@ public:
     virtual void    OnClose()
     { Shutdown(); }
 
+    virtual void    OnPause() {}
+    virtual void    OnResume() {}
+    // Returns current orientation
+    virtual unsigned GetOrientation() { return 0; }
+    virtual bool	IsOrientationLocked() { return false; }
+
+    // Resets current input focus to null
+    virtual void    ResetInputFocus(unsigned controllerIdx) { SF_UNUSED(controllerIdx); }
+
+    // A notification that comes from a system to the player about virtual keyboard appearance.
+    // 'keyboardRect' must be specified in screen coordinates;
+    // 'textBox' must be specified in stage coordinates, in pixels.
+    virtual void    NotifyShowVirtualKeyboard(const Render::RectF& keyboardRect, const Render::RectF& textBox) 
+    { SF_UNUSED2(keyboardRect, textBox); }
+
+    // A notification that comes from a system to the player about virtual keyboard disappearance.
+    virtual void    NotifyHideVirtualKeyboard() {}
+
 
     // *** Window Setup / Message APIs
 
@@ -569,7 +642,9 @@ public:
 #elif defined(SF_USE_GLES2) || defined(SF_USE_GLES)
             return "OpenGL ES";
 #elif defined(SF_OS_WIN32)
-    #if (!defined(FXPLAYER_RENDER_DIRECT3D))
+    #if defined(SF_OS_WINMETRO)
+	    return "D3D11 Win32 Metro";
+    #elif (!defined(FXPLAYER_RENDER_DIRECT3D))
             return "OpenGL Win32";
     #elif (!defined(SF_D3D_VERSION) || (SF_D3D_VERSION == 9))
             return "D3D9";
@@ -586,8 +661,8 @@ public:
         return "XBox 360";
 #elif defined (SF_OS_PS3)
         return "PS3";
-#elif defined (SF_OS_NGP)
-        return "NGP";
+#elif defined (SF_OS_PSVITA)
+        return "PSVITA";
 #elif defined (SF_OS_3DS)
         return "3DS";
 #elif defined (SF_OS_WII)
@@ -651,6 +726,13 @@ public:
     // Returns directory for additional content
     static String          GetContentDirectory();
 
+    // Returns directory for save data
+#if defined(SF_OS_ANDROID) || defined(SF_OS_IPHONE)
+    String          GetSaveDataDirectory();
+#else
+    String          GetSaveDataDirectory() { return GetContentDirectory(); }
+#endif
+
     virtual RenderHALThread* GetAppRenderThread() const = 0;
 
     // Number of mice or similar controllers available
@@ -703,7 +785,15 @@ class App : public AppBase
 {
 public:
     App() : AppBase(), OldSize(Device::GetDefaultViewSize()), OldPos(0) { }
-    ~App() { }
+    ~App() 
+    {
+        if (pDevice)
+        {
+            delete pDevice;
+            pDevice = 0;
+        }
+        AppBase::OnShutdown();
+    }
 
     // OnInitHelper is provided to simplify OnInit initialization, while
     // allowing RenderThread class to be customized. Should be called
@@ -752,12 +842,6 @@ public:
             pRenderThread->DestroyGraphics();
             pRenderThread->ExitThread();
         }
-        if (pDevice)
-        {
-            delete pDevice;
-            pDevice = 0;
-        }
-        AppBase::OnShutdown();
     }
 
 

@@ -1,29 +1,37 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef NETWORK_CORE_PACKET_READER_H_INCLUDED
 #define NETWORK_CORE_PACKET_READER_H_INCLUDED
 
+#include <vostok/network_core/base_packet.h>
+
 namespace vostok {
 namespace network_core {
 
-class base_packet;
-
-
 class packet_reader {
 public:
-	inline							packet_reader	( base_packet const& arg_0 ) { /* no source */ }
+	inline	explicit			packet_reader	( base_packet const& packet );
 
-			void					r				( void* destination, u32 size );
-	inline	char*					r_string		( char* arg_0, u8 arg_1 ) { /* no source */ }
+	inline	void				r				( void* destination, u32 destination_size, u32 const size );
+	template < typename T >
+	__declspec( noinline )	T			r				( );
 
-	inline	base_packet const&		get_packet		( ) const { /* no source */ }
+	template < int count >
+	inline	char*				r_string		( char ( &string )[ count ] );
+	inline	char*				r_string		( char* string, u8 buffer_size );
 
-			bool					eof				( ) const;
-			pcbyte					pointer			( ) const;
-			void					advance			( u32 offset );
-			u32						size_to_eof		( ) const;
+	inline	base_packet const&	get_packet		( ) const;
+
+	inline	bool				eof				( ) const;
+
+	// claude@MATCH: public per the target mangling ?pointer@..@@QBEPBEXZ (Q = public).
+	inline	pcbyte				pointer			( ) const;
+
+	inline	void				advance			( u32 offset );
+
+	inline	u32					size_to_eof		( ) const;
 
 private:
 	/* 0x0000 */	base_packet const&		m_packet;
@@ -34,5 +42,7 @@ STATIC_SIZE_ASSERT(packet_reader, 0x8);
 
 } // namespace network_core
 } // namespace vostok
+
+#include <vostok/network_core/packet_reader_inline.h>
 
 #endif // #ifndef NETWORK_CORE_PACKET_READER_H_INCLUDED

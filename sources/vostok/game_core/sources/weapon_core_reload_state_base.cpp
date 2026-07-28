@@ -4,63 +4,48 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_reload_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.* + chamber_a_round_on_reload/round_is_chambered/unload_chambered_round/instant_reload
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_reload_state_base::weapon_core_reload_state_base(survarium::weapon_core&, const float)
-weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, float animation_time_scale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+weapon_core_reload_state_base::weapon_core_reload_state_base( weapon_core& weapon, const float animation_time_scale ) :
+	weapon_core_animation_end_aware_state( weapon, true ),
+	m_animation_timescale( animation_time_scale )
 {
 	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
-
-	// FUNCTION BODY
-	// <0x776709>|0x059|+0x00d:'22'
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::initialize()
 void weapon_core_reload_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0x776729>|0x009|+0x008:'27'
-	// <0>
-	// <0x776731>|0x011|+0x00f:'29'
-	// <0>
-	// <0x776740>|0x020|+0x02f:'31'
-	// <0x77676f>|0x04f|+0x00e:'32'
-	// <0>
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
+
+	if ( !deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+			m_weapon.unload_chambered_round( );
+	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::on_animation_end_impl(bool&)
 void weapon_core_reload_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x776797>|0x007|+0x00e:'39'
-	// <0x7767a5>|0x015|+0x006:'40'
-	// ******
+	m_weapon.instant_reload( );
+	animation_player_tick_result = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::serialize(vostok::network_core::udp_match_packet&) const
+// claude@NOTE: target keeps packet<>::append(const bool) / packet_reader::r<bool> OUT of line
+// (single push of the bool value / al return); our base inlines both to the append(&v,sizeof)/
+// r(&v,1,1) bodies. Inline ceiling owned by the shared packet.h/packet_reader.h templates, not
+// steerable from here; every bool-append/r<bool> sibling sits at the same 69.33%/46.9%.
 void weapon_core_reload_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x776689>|0x009|+0x013:'45'
-	// ******
+	packet.append( m_animation_has_been_ended );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_reload_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_reload_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x776669>|0x009|+0x011:'50'
-	// ******
+	m_animation_has_been_ended = reader.r< bool >( );
 }
 
 } // namespace survarium

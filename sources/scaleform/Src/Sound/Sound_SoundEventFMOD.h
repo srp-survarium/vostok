@@ -129,10 +129,14 @@ private:
     String MediaPath;
 };
 
+}} // Scaleform::Sound
+
 #if defined(GFX_SOUND_FMOD_DESIGNER) && (defined(SF_OS_WIN32) || defined(SF_OS_MAC))
 
 #include <fmod_event.hpp>
 #include <fmod_event_net.hpp>
+
+namespace Scaleform { namespace Sound {
 
 //////////////////////////////////////////////////////////////////////////
 //
@@ -257,10 +261,9 @@ private:
     String MediaPath;
 };
 
-#endif // GFX_SOUND_FMOD_DESIGNER
-
 }} // Scaleform::Sound
 
+#endif // GFX_SOUND_FMOD_DESIGNER
 #endif // GFX_SOUND_FMOD
 
 #endif // GFX_ENABLE_SOUND

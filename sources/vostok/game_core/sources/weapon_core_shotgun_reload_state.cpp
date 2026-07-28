@@ -4,182 +4,154 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_state.h>
+#include <vostok/ai/fsm.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_base_substate.h>
+#include <vostok/game_core/weapon_core_shotgun_reload_finish_substate.h>
+#include <vostok/game_core/weapon_core.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(survarium::weapon_core&, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
 weapon_core_shotgun_reload_state::weapon_core_shotgun_reload_state(
 	weapon_core&								weapon,
 	weapon_core_shotgun_reload_base_substate*	reload_start,
 	weapon_core_shotgun_reload_base_substate*	reload_one_round,
 	weapon_core_shotgun_reload_base_substate*	reload_finish
-) : weapon_core_base_state( weapon, true )
+) :
+	weapon_core_base_state( weapon, true ),
+	m_logic( 0 ),
+	m_delete_substates_on_destruction( true )
 {
-	// FUNCTION BODY
-	// <0x599d7f>|0x03f|+0x00d:'27'
-	// <0x599d8c>|0x04c|+0x014:'28'
-	// ******
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
+	initialize_logic( reload_start, reload_one_round, reload_finish );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state()
 weapon_core_shotgun_reload_state::~weapon_core_shotgun_reload_state( )
 {
-	// LOCALS
-	// ai::fsm_state* 				state<1>
-	// ******
+	if ( m_delete_substates_on_destruction )
+		while ( ai::fsm_state* state = m_logic->pop_state( ) )
+		{
+			VOSTOK_DELETE_IMPL( g_allocator, state );
+		}
 
-	// FUNCTION BODY
-	// <0x5998ec>|0x01c|+0x00e:'33'
-	// <0x5998fa>|0x02a|+0x017|[1]:'34'
-	// <0x599911>|0x041|+0x026:'35'
-	// <0x599937>|0x067|+0x002:'36'
-	// <0>
-	// <0x599939>|0x069|+0x02c:'38'
-	// ******
+	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::initialize()
 void weapon_core_shotgun_reload_state::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x599737>|0x007|+0x022:'44'
-	// <0x599759>|0x029|+0x00a:'45'
-	// ******
+	m_logic->set_initial_state( m_logic->states( ).front( ) );
+	m_animation_has_been_ended = false;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::finalize()
 void weapon_core_shotgun_reload_state::finalize( )
 {
-	// FUNCTION BODY
-	// <0x599777>|0x007|+0x00d:'50'
-	// <0x599784>|0x014|+0x010:'51'
-	// ******
+	m_animation_playback_state.reset( );
+	m_logic->set_initial_state( 0 );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_shotgun_reload_state::serialize( network_core::udp_match_packet& packet ) const
 {
-	// LOCALS
-	// u8 							state_id
-	// bool 						found
-	// ai::fsm_state const* 		current
-	// ai::fsm_state const* 		i<1>
-	// ******
+	u8							state_id	= 0;
+	bool						found		= false;
+	ai::fsm_state const* const	current		= m_logic->current_state( );
 
-	// FUNCTION BODY
-	// <0x599839>|0x009|+0x004:'56'
-	// <0x59983d>|0x00d|+0x004:'57'
-	// <0x599841>|0x011|+0x00f:'58'
-	// <0x599850>|0x020|+0x02f|[1]:'59'
-	// <0x59987f>|0x04f|+0x008:'60'
-	// <0x599887>|0x057|+0x004:'61'
-	// <0x59988b>|0x05b|+0x002:'62'
-	// <0>
-	// <0x59988d>|0x05d|+0x002:'64'
-	// <0>
-	// <0x59988f>|0x05f|+0x00c:'66'
-	// <0x59989b>|0x06b|+0x00d:'67'
-	// ******
+	for ( ai::fsm_state const* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
+	{
+		if ( i == current )
+		{
+			found	= true;
+			break;
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( found ) );
+
+	packet.append( state_id );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_shotgun_reload_state::deserialize( network_core::packet_reader& reader )
 {
-	// LOCALS
-	// u8 							target_state_id
-	// u8 							state_id
-	// ai::fsm_state* 				current
-	// ai::fsm_state* 				i<1>
-	// ******
+	u8 const				target_state_id	= reader.r< bool >( );
+	u8						state_id		= 0;
+	ai::fsm_state*			current			= NULL;
 
-	// FUNCTION BODY
-	// <0x5997a9>|0x009|+0x00b:'72'
-	// <0x5997b4>|0x014|+0x004:'73'
-	// <0x5997b8>|0x018|+0x007:'74'
-	// <0x5997bf>|0x01f|+0x02f|[1]:'75'
-	// <0x5997ee>|0x04e|+0x00c:'76'
-	// <0x5997fa>|0x05a|+0x006:'77'
-	// <0x599800>|0x060|+0x002:'78'
-	// <0>
-	// <0x599802>|0x062|+0x002:'80'
-	// <0>
-	// <0x599804>|0x064|+0x00c:'82'
-	// <0x599810>|0x070|+0x012:'83'
-	// ******
+	for ( ai::fsm_state* i = m_logic->states( ).front( ); i; i = i->next, ++state_id )
+	{
+		if ( state_id == target_state_id )
+		{
+			current	= i;
+			break;
+		}
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION_T( current ) );
+
+	m_logic->set_initial_state( current );
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::expression survarium::weapon_core_shotgun_reload_state::weapon_and_hands_expression(vostok::mutable_buffer&, const bool, const survarium::weapon_user_state_enum, vostok::animation::mixing::animation_lexeme&) const
 animation::mixing::expression weapon_core_shotgun_reload_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
-	bool								is_third_view,
-	weapon_user_state_enum				user_state_id,
+	const bool								is_third_view,
+	const weapon_user_state_enum				user_state_id,
 	animation::mixing::animation_lexeme&	weight_driving_animation
 ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x599db9>|0x009|+0x035:'89'
-	// ******
+	// claude@MATCH: chained cast-forward matches the target's SOURCE STRUCTURE - 1 statement,
+	// ZERO named locals (`--view structure`: target has no locals block). The byte-100% variant
+	// `T* state = ...; U* current = ...; return current->...` is rejected: it fabricates two
+	// locals (state/current) the target never records. Residual SIZE -0x6 (~90%) is the target
+	// materializing 2 stack temps our build elides - non-steerable, and preferred over phantom locals.
+	// sushi@TODO: recover the exact temp shape via vostok-versions; the structure verdict does not
+	// yet compare locals (a follow-up PR adds locals name+count to the tool + worker).
+	// See patterns/current-state-cast-forward-materialized-locals.md.
+	return static_cast< weapon_core_shotgun_reload_base_substate* >( m_logic->current_state( ) )->weapon_and_hands_expression( buffer, is_third_view, user_state_id, weight_driving_animation );
 }
 
-// STATE[STUB]
 // bool survarium::true_predicate()
 static bool true_predicate( )
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x599723>|0x003|+0x002:'94'
-	// ******
+	return true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::initialize_logic(survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*, survarium::weapon_core_shotgun_reload_base_substate*)
 void weapon_core_shotgun_reload_state::initialize_logic( weapon_core_shotgun_reload_base_substate* reload_start, weapon_core_shotgun_reload_base_substate* reload_one_round, weapon_core_shotgun_reload_base_substate* reload_finish )
 {
-	// FUNCTION BODY
-	// <0x599ae0>|0x010|+0x05d:'99'
-	// <0x599b3d>|0x06d|+0x014:'100'
-	// <0x599b51>|0x081|+0x015:'101'
-	// <0x599b66>|0x096|+0x01b:'102'
-	// <0x599b81>|0x0b1|+0x015:'103'
-	// <0x599b96>|0x0c6|+0x015:'104'
-	// <0x599bab>|0x0db|+0x015:'105'
-	// <0x599bc0>|0x0f0|+0x01b:'106'
-	// <0x599bdb>|0x10b|+0x065:'107'
-	// <0x599c40>|0x170|+0x0ea:'108'
-	// ******
+	m_logic = VOSTOK_NEW_IMPL( g_allocator, ai::fsm );
+
+	reload_start->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_one_round->set_animation_playback_state_ptr( &m_animation_playback_state );
+	reload_finish->set_animation_playback_state_ptr( &m_animation_playback_state );
+
+	m_logic->add_state( reload_start );
+	m_logic->add_state( reload_one_round );
+	m_logic->add_state( reload_finish );
+
+	static_cast< weapon_core_shotgun_reload_finish_substate* >( reload_finish )->set_owner_ready_for_transition( &m_animation_has_been_ended );
+
+	m_logic->add_transition( reload_start, reload_one_round, boost::bind< bool >( &true_predicate ) );
+	m_logic->add_transition( reload_one_round, reload_finish, boost::bind( &weapon_core_shotgun_reload_state::finish_reload_predicate, this ) );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_state::finish_reload_predicate() const
+// claude@NOTE: structure matched (1 stmt @0x14d) and the boolean logic is byte-faithful.
+// Two residuals, both rooted in another unit's header (weapon_core), so out of scope here:
+//   (1) the target reads m_weapon.m_ammo_in_magazine (+0x47a) and m_weapon.m_is_round_chambered
+//       (+0x48e) INLINE (direct member access => weapon_core befriends this state), but the
+//       state is not a friend, so ammo_in_magazine()/round_is_chambered() are CALLed instead.
+//   (2) the target keeps m_weapon.get_target() out-of-line (a `call`), but our inline getter
+//       (return m_target) folds to a direct read here.
+// Both need cross-unit weapon_core.h changes (friend decl + out-of-line get_target) that would
+// touch weapon_core's own matches; left for the weapon_core owner.
 bool weapon_core_shotgun_reload_state::finish_reload_predicate( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x599991>|0x011|+0x137:'116'
-	// ******
+	return m_weapon.ammo_in_magazine( ) == m_weapon.get_magazine_capacity( )
+		|| m_weapon.ammunition( )->amount( ) == 0
+		|| ( ( m_weapon.ammo_in_magazine( ) + ( m_weapon.round_is_chambered( ) != 0 ) ) != 0
+			&& ( m_weapon.get_target( ) == weapon_target_fire || m_weapon.get_target( ) == weapon_target_aim_fire ) );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_state::execute()
 void weapon_core_shotgun_reload_state::execute( )
 {
-	// FUNCTION BODY
-	// <0x5998b7>|0x007|+0x00e:'121'
-	// ******
+	m_logic->tick( );
 }
 
 } // namespace survarium

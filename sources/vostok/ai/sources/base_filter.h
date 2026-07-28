@@ -48,7 +48,8 @@ protected:
 							intrusive_filters_list*,
 							&intrusive_filters_list::next,
 							threading::single_threading_policy,
-							size_policy >		subfilters_type;
+							size_policy,
+							no_debug_policy >	subfilters_type;
 
 protected:
 	subfilters_type								m_subfilters;
@@ -64,14 +65,16 @@ typedef intrusive_list< intrusive_filters_list,
 						intrusive_filters_list*,
 						&intrusive_filters_list::next,
 						threading::single_threading_policy,
-						size_policy >					parameter_filters_type;
+						size_policy,
+						no_debug_policy >				parameter_filters_type;
 
 typedef intrusive_list_item< parameter_filters_type* >	parameter_filters_item_type;
 typedef intrusive_list< parameter_filters_item_type,
 						parameter_filters_item_type*,
 						&parameter_filters_item_type::next,
 						threading::single_threading_policy,
-						size_policy
+						size_policy,
+						no_debug_policy
 					  >									parameters_filters_type;
 
 } // namespace planning

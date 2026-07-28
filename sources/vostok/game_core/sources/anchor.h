@@ -1,0 +1,49 @@
+
+
+#include <vostok/game_core/affect_event_type_enum.h>
+#include <vostok/game_core/affects_applying_type_enum.h>
+#include <vostok/game_core/hit_affects_type_enum.h>
+
+#include <vostok/game_core/affects_threshold.h>
+#include <vostok/game_core/body_part_parameters.h>
+#include <vostok/game_core/damage_model.h>
+#include <vostok/game_core/damage_protector.h>
+#include <vostok/game_core/hit_type_parameters.h>
+
+namespace vostok
+{
+	// Module entry points keep reconstructed code reachable under /OPT:REF.
+	void anchor_game_core( );
+	void anchor_network_core( );
+	void anchor_network( );
+	void anchor_physics( );
+	void anchor_collision( );
+	void anchor_logging( );
+	void anchor_ai_navigation( );
+
+	void anchor_game( );
+
+	void anchor_animation_comparer( );
+	void anchor_animation_weaver( );
+	void anchor_animation_cloner( );
+	void anchor_animation_animation_time_calculator( );
+	void anchor_animation_time_in_ms_calculator( );
+
+	void anchor_animation_player( );
+
+	void anchor_scaleform( );
+
+	// Escapes addresses so LTCG observes anchored member stores.
+	void example_callback( const char* name );
+}
+
+namespace survarium
+{
+
+class IncludeAll
+{
+public:
+	IncludeAll();
+};
+
+}

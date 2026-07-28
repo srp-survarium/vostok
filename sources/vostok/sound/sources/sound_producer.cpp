@@ -20,7 +20,7 @@ sound_producer::~sound_producer		( )
 {
 	if ( m_world_user && !m_world_user->get_sound_world( )->is_destroying( ) )
 	{
-		LOG_DEBUG				( "~sound_producer" );
+		//LOG_DEBUG				( "~sound_producer" );
 		m_world_user->mark_producer_as_deleted( (u64)this );
 		
 		functor_order* order	= VOSTOK_NEW_IMPL( m_world_user->get_allocator( ), functor_order )

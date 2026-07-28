@@ -33,6 +33,8 @@ namespace particle	{
 	struct preview_particle_emitter_info;
 	enum enum_particle_render_mode;
 	struct world;
+
+	bool	is_playing	( particle_system_instance_ptr const& instance );
 } // namespace particle
 
 namespace render {

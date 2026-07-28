@@ -15,6 +15,7 @@ namespace logging {
 namespace core {
 
 enum log_flags_enum {
+	log_to_stdout		=	0,
 	log_to_console		=	1 << 0,
 	log_to_stderr		=	1 << 1,
 };

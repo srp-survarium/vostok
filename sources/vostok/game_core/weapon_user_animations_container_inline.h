@@ -7,32 +7,39 @@
 
 namespace survarium {
 
-/*
-// STATE[STUB]
-resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl<27,6>(
-	resources::managed_resource_ptr[27] move[27],
-	resources::managed_resource_ptr[6] hands[6],
-	u32 index
-)
+// claude@NOTE: get_animation_impl<27,6> (mangled $0BL@$05 == <27,6>; $05 encodes 6) is the
+// instantiation get_stand_animation forwards to, passing the [6] hands member. It is kept
+// out-of-line in the target (standalone @0x0bcf90) because the *_lexeme callers in
+// player_logic_*_state inline get_stand_animation but leave the nested template call as a
+// `call`. ODR-using it from those callers (movement_lexeme et al.) emits the standalone here
+// so objdiff pairs it; get_stand_animation itself is the inlined impl.
+template < u32 move_count, u32 hands_count >
+inline resources::managed_resource_ptr weapon_user_animations_container::get_animation_impl(
+		resources::managed_resource_ptr const	(&move)[ move_count ],
+		resources::managed_resource_ptr const	(&hands)[ hands_count ],
+		const u32								index
+	)
 {
-	// FUNCTION BODY
-	// <0xccf96>|0x006|+0x00c:'19'
-	// <0xccfa2>|0x012|+0x036:'20'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION_T( index < move_count + hands_count ) );
+	return index < move_count ? move[ index ] : hands[ index - move_count ];
 }
-*/
 
-// STATE[STUB]
-inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( bool aimed, u32 index, bool is_third_view ) const
+inline resources::managed_resource_ptr weapon_user_animations_container::get_stand_animation( const bool aimed, const u32 index, const bool is_third_view ) const
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0xccee9>|0x009|+0x094:'30'
-	// ******
+	return get_animation_impl(
+		( aimed ? m_aimed_stand_animations : m_stand_animations )[ is_third_view ],
+		( aimed ? m_aimed_stand_hands_only_animations : m_stand_hands_only_animations )[ is_third_view ],
+		index
+	);
+}
+
+inline resources::managed_resource_ptr weapon_user_animations_container::get_crouch_animation( const bool aimed, const u32 index, const bool is_third_view ) const
+{
+	return get_animation_impl(
+		( aimed ? m_aimed_crouch_animations : m_crouch_animations )[ is_third_view ],
+		( aimed ? m_aimed_crouch_hands_only_animations : m_crouch_hands_only_animations )[ is_third_view ],
+		index
+	);
 }
 
 } // namespace survarium

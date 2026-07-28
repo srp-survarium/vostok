@@ -19,7 +19,7 @@ public:
 	inline	void		on_zone_act		( damage_zone_core* arg_0, hit_receiver* arg_1 ) { /* no source */ }
 
 			void		initialize		( );
-			void		execute			( u32 time_delta_ms, u32 current_time_ms );
+			void		execute			( const u32 time_delta_ms, const u32 current_time_ms );
 			void		finalize		( );
 
 public:

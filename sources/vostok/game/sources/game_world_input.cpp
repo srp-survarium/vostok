@@ -1,80 +1,95 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 26.03.2010
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2010
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "game.h"
-#include "free_fly_camera.h"
 #include "game_world.h"
 
-#include <vostok/rtp/world.h>
-#include <vostok/animation/world.h>
+#include <vostok/input/keyboard.h>
+#include <vostok/input/world.h>
 
-namespace survarium{
+#include "game.h"
+#include "chat_handler.h"
+#include "key_binder.h"
+#include "base_network_client.h"
 
-class camera_director;
-bool b_rtp_dbg_input = false;
+namespace survarium {
 
-class rtp_debug_camera : public free_fly_camera
+// claude@NOTE: structure matches the target, but the residual % is callee-stub
+// inlining - show_players_list, key_binder::get_binded_action,
+// chat_handler::focus and game::activate_main_menu are still STUBs, so under
+// LTCG their calls fold away (get_binded_action returns a constant, collapsing
+// the game_action branches). Unblocks once those callee bodies are matched.
+bool game_world::on_keyboard_action(
+	input::world*					input_world,
+	input::enum_keyboard			key,
+	input::enum_keyboard_action		action
+)
 {
-	typedef free_fly_camera super;
-public:
-						rtp_debug_camera		( game_world& w );
-	virtual void		tick					( );
-	virtual void		on_activate				( camera_director* cd )	{ super::on_activate(cd); }
-	virtual void		on_deactivate			( )							{ super::on_deactivate(); }
-			void		start					( );
-			void		stop					( );
-private:
-	game_camera*	m_prev_camera;
-};
+	bool btab = input_world->get_keyboard()->is_key_down( input::key_tab );
+	game_ui.show_players_list( btab );
 
-rtp_debug_camera::rtp_debug_camera( game_world& w )
-:super			( w ),
-m_prev_camera	( NULL )
-{};
+	if ( action == input::kb_key_down )
+	{
+		toggle_action_enum	action_type;
+		game_action_id		game_action	=
+			get_game().get_key_binder().get_binded_action( key, action_type, 1 );
 
-void rtp_debug_camera::start( )
-{
-	camera_director_ptr cd = m_game_world.get_camera_director();
-	m_prev_camera		= cd->get_active_camera();
-	cd->switch_to_camera	( this, "[RTP debug]" );
+		if ( game_action == kCHAT || key == input::key_return || key == input::key_numpadenter )
+			get_game().get_chat_handler().focus( true );
+
+		if ( key == input::key_k )
+		{
+			get_game().get_network_client()->initiate_kill_current_player();
+			return true;
+		}
+
+		if ( key == input::key_l )
+		{
+			get_game().get_network_client()->initiate_respawn_current_player();
+			return true;
+		}
+
+		if ( key == input::key_escape )
+		{
+			get_game().activate_main_menu();
+			return true;
+		}
+
+		if ( game_action == kCAM_1 )
+			switch_to_player_camera( true );
+	}
+
+	return false;
 }
 
-void rtp_debug_camera::stop( )
+bool game_world::on_gamepad_action(
+	input::world*					input_world,
+	input::gamepad_button			button,
+	input::enum_gamepad_action		action
+)
 {
-	camera_director_ptr cd = m_game_world.get_camera_director();
-	cd->switch_to_camera	( m_prev_camera, "[prev]" );
+	return false;
 }
 
-void rtp_debug_camera::tick( )
+bool game_world::on_mouse_key_action(
+	input::world*					input_world,
+	input::mouse_button				button,
+	input::enum_mouse_key_action	action
+)
 {
-	super::tick								( );
-	game& g = m_game_world.get_game();
-	g.rtp().dbg_move_control			( m_inverted_view_matrix, g.input_world() );
-//	g.animation_world().debug_control	( g.input_world()  );
+	return false;
 }
 
-rtp_debug_camera* g_rtp_debug_camera = NULL;
-
-void game_world::turn_rtp_debug( pcstr )
+bool game_world::on_mouse_move(
+	input::world*		input_world,
+	s32					x,
+	s32					y,
+	s32					z
+)
 {
-	//if(b_rtp_dbg_input)
-	//{
-	//	if(!g_rtp_debug_camera)
-	//		g_rtp_debug_camera		= NEW(rtp_debug_camera)(*this);
-	//	g_rtp_debug_camera->start	( );
-	//}else
-	//{
-	//	if(g_rtp_debug_camera)
-	//	{
-	//		g_rtp_debug_camera->stop( );
-	//		DELETE					( g_rtp_debug_camera );
-	//		g_rtp_debug_camera		= NULL;
-	//	}
-	//}
+	return false;
 }
+
 
 } // namespace survarium

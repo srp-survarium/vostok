@@ -22,9 +22,6 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_HeapNew.h"
 
-#define SF_RENDER_GL_INSTANCE_MATRICES 30
-
-
 namespace Scaleform { namespace Render { namespace GL {
 
 class MeshBuffer;
@@ -38,11 +35,18 @@ class MeshCacheItem : public Render::MeshCacheItem
     friend class MeshCache;
     friend class MeshBuffer;
     friend class HAL;
+    friend class VertexBuilder_Legacy;
+    friend class VertexBuilder_Core30;
+    friend class VertexBuilder_VAOES;
 
-    MeshBuffer*     pVertexBuffer;
-    MeshBuffer*     pIndexBuffer;
-    UPInt           VBAllocOffset, VBAllocSize;
-    UPInt           IBAllocOffset, IBAllocSize;
+    MeshBuffer*         pVertexBuffer;
+    MeshBuffer*         pIndexBuffer;
+    UPInt               VBAllocOffset, VBAllocSize;
+    UPInt               IBAllocOffset, IBAllocSize;
+
+    GLuint              VAO;            // The vertex array object name this item uses. 
+    const VertexFormat* VAOFormat;      // The vertex format used to construct the current VAO.
+    UByte*              VAOOffset;      // The base vertex offset to construct the current VAO.
 
 public:
 
@@ -63,6 +67,9 @@ public:
             p->VBAllocSize   = vertexAllocSize;
             p->IBAllocOffset = indexOffset;
             p->IBAllocSize   = indexAllocSize;
+            p->VAO           = 0;
+            p->VAOFormat     = 0;
+            p->VAOOffset     = 0;
         }
         return p;
     }
@@ -93,7 +100,7 @@ protected:
 public:
     MeshBuffer(HAL* phal, GLenum btype, UPInt size, AllocType type, unsigned arena)
         : Render::MeshBuffer(size, type, arena)
-    { pHal = phal; Buffer = 0; BufferData = 0; pNextLock = 0; Type = btype; }
+    { pHal = phal; Buffer = 0; BufferData = 0; pNextLock = 0; Type = btype; CurrentBuffer = 0xffffffff; }
     ~MeshBuffer();
 
     inline  UPInt   GetIndex() const { return Index; }
@@ -103,8 +110,10 @@ public:
     bool    DoMap();
     void    Unmap();
     GLuint  GetBuffer() { return Buffer; }
-    inline UByte*  GetBufferBase() const;
+    UByte*  GetBufferBase() const;
     GLenum  GetBufferType() const { return Type; }
+
+    static GLuint CurrentBuffer;
 
     // Simple LockList class is used to track all MeshBuffers that were locked.
     struct MapList
@@ -280,9 +289,7 @@ class MeshCache : public Render::MeshCache
     friend class HAL;    
 
     enum {
-        MinSupportedGranularity = 16*1024,
-        MaxEraseBatchCount = (10 > SF_RENDER_GL_INSTANCE_MATRICES) ?
-        10 : SF_RENDER_GL_INSTANCE_MATRICES
+        MinSupportedGranularity = 16*1024
     };
 
     HAL *                       pHal;
@@ -302,8 +309,8 @@ class MeshCache : public Render::MeshCache
     List<Render::MeshBuffer>    ChunkBuffers;
 
     GLuint                      MaskEraseBatchVertexBuffer;
-    GLuint                      UVSquareVertexBuffer;
-
+    GLuint                      MaskEraseBatchVAO;
+    
     inline MeshCache* getThis() { return this; }
     inline HAL* GetHAL() const { return pHal; }
 
@@ -315,8 +322,6 @@ class MeshCache : public Render::MeshCache
     bool            createStaticVertexBuffers();
     bool            createInstancingVertexBuffer();
     bool            createMaskEraseBatchVertexBuffer();
-    bool            createUVSquareVertexBuffer();
-
 
     // Allocates Vertex/Index buffer of specified size and adds it to free list.
     bool            allocCacheBuffers(UPInt size, MeshBuffer::AllocType type, unsigned arena = 0);

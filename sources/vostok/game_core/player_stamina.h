@@ -32,21 +32,21 @@ public:
 	inline	void				set_spending_speed				( float spending_speed )				{ m_spending_speed			= spending_speed;				}
 
 	inline	float				get_regeneration_speed			( ) { return m_regeneration_speed; }
-			void				set_regeneration_speed			( float new_regeneration_speed );
+			void				set_regeneration_speed			( const float new_regeneration_speed );
 
 	inline	void				set_regeneration_threshold		( float new_regeneration_threshold )	{ m_regeneration_threshold	= new_regeneration_threshold;	}
 	inline	void				set_max_value_factor			( float new_max_value_factor )			{ m_max_value_factor		= new_max_value_factor;			}
 	inline	void				set_spending_speed_factor		( float new_spending_speed_factor )		{ m_spending_speed_factor	= new_spending_speed_factor;	}
-			void				set_regeneration_speed_factor	( float new_regeneration_speed_factor );
+			void				set_regeneration_speed_factor	( const float new_regeneration_speed_factor );
 
-			void				tick							( u32 current_time_in_ms, bool is_sprinting );
+			void				tick							( const u32 current_time_in_ms, const bool is_sprinting );
 
-			void				spend							( float amount );
+			void				spend							( const float amount );
 			bool				can_be_spent					( ) const;
 
 	inline	float				current_value					( ) const { return m_value; }
 	inline	float				max_value						( ) const { return m_max_value; }
-	inline	float				amount_to_jump					( ) const { /* no source */ }
+	inline	float				amount_to_jump					( ) const { return m_max_value * m_max_value_factor / 5.0f; }
 
 	inline	float				get_max_carried_weight			( ) const { return m_max_carried_weight; }
 	inline	void				set_max_carried_weight			( float max_carried_weight ) { m_max_carried_weight = max_carried_weight; }
@@ -55,11 +55,11 @@ public:
 			void				unsubscribe_from_depletion		( player_stamina_subscriber* const subscriber );
 
 private:
-			void				increase_value					( float amount );
-			void				decrease_value					( float amount );
+			void				increase_value					( const float amount );
+			void				decrease_value					( const float amount );
 
-			void				regenerate						( u32 current_time_in_ms );
-			void				sprint							( u32 current_time_in_ms );
+			void				regenerate						( const u32 current_time_in_ms );
+			void				sprint							( const u32 current_time_in_ms );
 
 private:
 	/* 0x0000 */	/* boost::noncopyable */

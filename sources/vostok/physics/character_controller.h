@@ -19,7 +19,7 @@ public:
 
 	void					initialize			( );
 	void					activate			( float4x4 const& t );
-	void					update_action		( u32 time_delta_in_ms );
+	void					update_action		( const u32 time_delta_in_ms );
 
 	void					deactivate			( );
 
@@ -36,6 +36,9 @@ public:
 	void					end_jump			( );
 	bool					has_updates			( ) const;
 
+	// STATE[REMOVED]: this 5-arg (3 float3 const& + 2 float3&) overload has no caller; the
+	// shipped users (anchor_physics, legs_ik_processor) call the 6-arg overload below.
+	// Absent from both binaries; empty stub correct.
 	inline	bool			adjust_foot_transform	(
 								float3 const&		arg_0,
 								float3 const&		arg_1,
@@ -54,6 +57,7 @@ public:
 							);
 
 	void					set_crouch			( bool crouch );
+	// STATE[REMOVED]: declared but never defined or called; absent from both binaries.
 	bool					can_prone			( ) const /* no source */;
 	bool					can_crouch			( ) const;
 	bool					can_stand			( ) const;

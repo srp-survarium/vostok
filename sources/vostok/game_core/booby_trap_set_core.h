@@ -35,8 +35,17 @@ public:
 
 public:
 	struct config_params {
-		// STATE[STUB]
-		inline	explicit	config_params	( ) { }
+		inline	explicit	config_params	( ) :
+			max_slope_cos			( 0.0f ),
+			max_distance			( 0.0f ),
+			armed_life_time			( 0 ),
+			fired_life_time			( 0 ),
+			disarmed_life_time		( 0 ),
+			defuse_time				( 0 ),
+			defuse_by_hit			( false ),
+			material_can_place_test	( false ),
+			material_can_stick_test	( false )
+		{ }
 
 		/* 0x0000 */	float		max_slope_cos;
 		/* 0x0004 */	float		max_distance;
@@ -49,9 +58,14 @@ public:
 		/* 0x001a */	bool		material_can_stick_test;
 	}; // struct booby_trap_set_core::config_params
 
-	// STATE[STUB]
+	// claude@NOTE: config()/traps() carry the correct one-line bodies and pair in this TU,
+	// but the target compiled them /Ox (frameless, this in eax/ecx, no ebp frame) while
+	// our base is /Od; the residual is the optimization-level wall, not source-steerable.
 			booby_trap_set_core::config_params const&
 												config							( ) const { return m_config; }
+
+private:
+	// private in the target: mangled @@EAE (private virtual), not @@UAE - pairing depends on it
 	virtual	void								deserialize_game_world_object	( network_core::packet_reader& reader ) override;
 
 protected:
@@ -64,17 +78,16 @@ public:
 												) const;
 
 private:
-	// STATE[STUB]
+	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
+	// virtuals that ICF-fold to shared targets (no distinct symbol in either index), so they
+	// are unpairable as standalones; the idiomatic bodies below are the faithful shapes.
 	virtual	void								activate						( base_player& user, engine& engine ) override { VOSTOK_UNREACHABLE_CODE( ); }
-	// STATE[STUB]
 	virtual	void								deactivate						( ) override { VOSTOK_UNREACHABLE_CODE( ); }
-	// STATE[STUB]
 	virtual	float4x4							transform						( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								tick							( ) override { /* no source */ }
 	virtual	bool								is_ready_to_be_deactivated		( ) const override { return true; /* sushi@TODO no source */ }
 
-	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override  { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added			( ) override { /* no source */ }
@@ -83,8 +96,8 @@ private:
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
-													u32									user_matrices_count,
-													u32									current_time_in_ms,
+													const u32									user_matrices_count,
+													const u32									current_time_in_ms,
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
@@ -107,7 +120,6 @@ protected:
 	inline	void								remove_traps					( ) { /* no source */ }
 
 	inline	buffer_vector< booby_trap_core_ptr > const&	traps					( ) const	{ return m_traps; }
-	// STATE[STUB]
 			buffer_vector< booby_trap_core_ptr >&		traps					( )			{ return m_traps; }
 
 			u8									trap_index						( booby_trap_core const& trap ) const;

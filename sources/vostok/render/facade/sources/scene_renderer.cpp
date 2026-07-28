@@ -9,6 +9,7 @@
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/decal_properties.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 #include <vostok/render/facade/one_way_render_channel.h>
 #include "functor_command.h"
 #include "functor_with_big_buffer_to_copy_command.h"
@@ -133,7 +134,7 @@ void scene_renderer::update_skeleton( render_model_instance_ptr const& v, float4
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, update_skeleton_command ) ( m_render_engine_world, v, matrices, count ) );
 }
 
-void scene_renderer::play_particle_system			( scene_ptr const& scene, particle_system_instance_ptr const& in_instance, vostok::float4x4 const& transform )
+void scene_renderer::play_particle_system			( scene_ptr const& scene, particle_system_instance_ptr in_instance, vostok::float4x4 const& transform )
 {
 	R_ASSERT	( scene );
 	m_channel.owner_push_back	(
@@ -216,6 +217,98 @@ void scene_renderer::remove_decal( scene_ptr const& scene, u32 id)
 		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
 			boost::bind(
 				&vostok::render::engine::world::remove_decal,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
+void scene_renderer::update_lpv_occluder( scene_ptr const& scene, u32 id, vostok::math::float4x4 const& transform)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			transform
+		)
+	);
+}
+
+void scene_renderer::remove_lpv_occluder( scene_ptr const& scene, u32 id)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
+void scene_renderer::update_ambient_volume( scene_ptr const& scene, u32 id, vostok::render::ambient_volume_properties const& properties)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< ambient_volume_properties > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			properties
+		)
+	);
+}
+
+void scene_renderer::remove_ambient_volume( scene_ptr const& scene, u32 id)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
+}
+
+void scene_renderer::update_volume_fog( scene_ptr const& scene, u32 id, vostok::render::volume_fog_parameters const& parameters)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< volume_fog_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			parameters
+		)
+	);
+}
+
+void scene_renderer::remove_volume_fog( scene_ptr const& scene, u32 id)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_volume_fog,
 				&m_render_engine_world,
 				scene,
 				id
@@ -404,3 +497,101 @@ void scene_renderer::draw_render_statistics( vostok::ui::world& ui_world, vostok
 	);
 }
 #endif // #ifndef MASTER_GOLD
+
+// claude@NOTE: lpv_occluder cook chain is now reconstructed end-to-end
+// (scene::update/remove_lpv_occluder over m_lpv_occluders assoc_vector ->
+// engine::world::update/remove_lpv_occluder forwarders -> these facade
+// update/remove_lpv_occluder deferred commands), which paired the game
+// object_lpv_occluder::insert/remove at 100%.
+//
+// volume_fog is now reconstructed end-to-end too: struct volume_fog_parameters
+// (vostok/render/facade/volume_fog_parameters.h, 0x74, default ctor inits transform
+// to identity + the floats to a file-static clear_value) -> scene m_volume_fogs
+// associative_vector<u32, volume_fog_parameters> + scene::update/remove_volume_fog
+// (lpv lower_bound/insert/erase idiom over the 0x74 value) -> engine::world forwarders
+// -> these facade update/remove_volume_fog deferred commands. That paired the game
+// object_volume_fog::insert/remove at 100% (scene cooks ~75% - the member sits at the
+// END of our smaller scene, not the target's 0x13c, so the offset bytes differ;
+// facade ~96-97% functor-closure residual, same as lpv).
+//
+// The other object-cook facade methods (update/remove_ambient_volume,
+// update/remove_environment_probe, update/remove_sky_ambient_occlusion,
+// add/remove/update_tracer, set/reset_grass, set_portal_system, build_lpv_geometry,
+// add_vegetation_trample, begin/end_render_options_changing, reset_renderer) follow the
+// SAME deferred-command shape (functor_command, or functor_with_big_buffer_to_copy_command<T>
+// for the property-carrying update_*) binding to engine::world::<same name>. They stay
+// TARGET_ONLY because each remaining chain is a HEAP-CLASS chain (deeper than the POD
+// volume_fog/lpv assoc_vector chains) and not yet built:
+//   - ambient_volume: needs struct ambient_volume_properties (0x48) AND the heap
+//     vostok::render::ambient_volume class (: resource_intrusive_base, boost::noncopyable;
+//     ctor(properties,id) sets m_aabb to (min=-1, max=clear_value) + m_occlusion_info_index
+//     = -1 + m_occluded = false then set_properties; set_properties rep-copies the 0x48
+//     props then m_aabb.modify(transform.c) -> aabb::modify; is_occluded reads an
+//     options occlusion flag at options+0x120 our options.h does not yet model) AND a NEW
+//     find_by_id_predicate<ambient_volume> template (operator() compares obj->m_id at +0x64);
+//     scene m_ambient_volumes is vector< ambient_volume* > at 0x360. update = std::find_if
+//     -> if end push_back(NEW(ambient_volume)(props,id)) else (*i)->set_properties(props);
+//     remove = find_if -> DELETE pointee + __copy_ptrs erase.
+//   - environment_probe: ALL of the above PLUS collision integration - the heap
+//     environment_probe class takes a collision::space_partitioning_tree*, owns
+//     m_collision_geometry/m_collision_object + res_texture_ptr m_texture/m_texture_depth,
+//     and has a real (non-empty) dtor + remove_collision; needs find_environment_probe_predicate;
+//     scene m_environment_probes is vector< environment_probe* > at 0x37c with its own
+//     m_environment_probes_tree at 0x38c. The game object_environment_probe::insert also
+//     constructs the 0x178 properties field-by-field (fixed_string<260>::operator= for
+//     texture_name + all float/bool fields) before the facade call.
+// (Property struct layouts: binaries/structure/target/headers/vostok/render/
+// {ambient_volume_properties,environment_probe_properties}.h; heap-class layouts in
+// {ambient_volume,environment_probe}.h there.) Each is a self-contained render-engine
+// unit (new property header + new find predicate template + new heap class .h/.cpp +
+// scene vector member + scene cook + world forwarder + facade method), then the matching
+// game object_* insert/remove pair at ~100% (independent of scene layout - they go
+// through the facade indirection, not direct scene member offsets - exactly as volume_fog
+// and lpv proved).
+//
+// add_light/update_light(light_props*) are blocked separately - the world add_light is
+// light_props& in our tree but light_props* in the target, a cross-TU light-flow
+// refactor (world decl+impl, scene, the game object_light caller). play_particle_system
+// is matched (the cook whose world method already existed: by-value in_instance was the
+// divergence).
+
+// claude@NOTE: load_props_impl is a real render-facade cook (RVA 0x45344, ~1664
+// bytes, this compiland in the target) called out-of-line by object_light::load.
+// Not yet matched here - stubbed + explicitly instantiated only so the game-module
+// object_light link resolves. Recover its real body in a render-facade batch.
+namespace vostok {
+namespace configs {
+	class binary_config_value;
+} // namespace configs
+namespace render {
+
+template < typename config_t >
+__declspec( noinline ) void load_props_impl( light_props& props, config_t const& )
+{
+	// touch props through a volatile sink so LTCG cannot prove the call is a no-op
+	// and elide it at the object_light::load call site (the real body is unmatched).
+	static light_props* volatile s_sink = 0;
+	s_sink = &props;
+}
+
+template void load_props_impl< vostok::configs::binary_config_value >( light_props&, vostok::configs::binary_config_value const& );
+
+// claude@NOTE: render-options-changing + reset_renderer stubs. These are real
+// render-facade deferred-command cooks (same shape as volume_fog/lpv), but
+// their bodies belong to a render-facade matching batch - stubbed here only
+// so game_generate_shaders.cpp links.
+void scene_renderer::reset_renderer( )
+{
+}
+
+void scene_renderer::begin_render_options_changing( volatile long* )
+{
+}
+
+void scene_renderer::end_render_options_changing(
+	scene_ptr const&, render_output_window_ptr, bool, bool, volatile long* )
+{
+}
+
+} // namespace render
+} // namespace vostok

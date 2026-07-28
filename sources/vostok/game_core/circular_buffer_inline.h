@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 06.12.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef CIRCULAR_BUFFER_INLINE_H_INCLUDED
@@ -7,30 +7,31 @@
 
 namespace survarium {
 
-// STATE[STUB]
 template < typename T >
 circular_buffer<T>::~circular_buffer( )
 {
-	// FUNCTION BODY
-	// <0x8efc0>|0x000|+0x010:'25'
-	// <0x8efd0>|0x010|+0x013:'26'
-	// <0>
-	// <0x8efe3>|0x023|+0x017:'28'
-	// ******
+	while ( !empty( ) )
+		pop_tail( );
+
+	VOSTOK_FREE_IMPL( m_allocator, m_history );
 }
 
-// STATE[STUB]
+// claude@NOTE: structure faithful to target 0x8f000 (4 stmts, 0 named locals -
+// the `result` reference elides). The target keeps new_item out-of-line (a real
+// call from serialize_current_state); our LTCG inlines it into its sole caller,
+// so it has no standalone base COMDAT to pair. Inline-vs-call wall - not
+// source-steerable from this unit.
 template < typename T >
 T& circular_buffer<T>::new_item( )
 {
-	// FUNCTION BODY
-	// <0x8f000>|0x000|+0x01e:'40'
-	// <0x8f01e>|0x01e|+0x003:'41'
-	// <0x8f021>|0x021|+0x015:'42'
-	// <0>
-	// <0x8f036>|0x036|+0x010:'44'
-	// <0x8f046>|0x046|+0x003:'45'
-	// ******
+	new ( &m_history[ m_head ] ) T( );
+	T& result	= m_history[ m_head ];
+	m_head		= next( m_head );
+
+	if ( m_head == m_tail )
+		m_tail = next( m_tail );
+
+	return result;
 }
 
 } // namespace survarium

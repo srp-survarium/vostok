@@ -15,9 +15,13 @@
 namespace vostok {
 namespace ai {
 
-brain_unit_cook::brain_unit_cook	( ai_world* world ) :
+// sushi@TODO: target constructs an extra empty (size-0) derived member at this+0x20
+// before m_ai_world (delinker names its ctor allocator<char>); our header has only
+// m_ai_world. Structure-MATCH, byte residual only; identify the missing empty member
+// to close it (do NOT fabricate one).
+brain_unit_cook::brain_unit_cook	( ai_world& world ) :
 	translate_query_cook			( resources::brain_unit_class, reuse_false, use_current_thread_id ),
-	m_ai_world						( world )
+	m_ai_world						( &world )
 {
 }
 
@@ -54,16 +58,10 @@ void brain_unit_cook::on_brain_unit_options_received	( resources::queries_result
 	}
 	
 	configs::binary_config_ptr config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource() );
-	
-	brain_unit_cook_params					cook_params;
-	resources::user_data_variant* user_data	= parent->user_data();
-	R_ASSERT								( user_data );
-	bool const user_data_result				= user_data->try_get( cook_params );
-	R_ASSERT								( user_data_result );
-		
+
 	query_resource							(
 		parent->get_requested_path(),
-		cook_params.world_user_type,
+		resources::sound_player_class,
 		boost::bind( &brain_unit_cook::on_sound_player_loaded, this, _1, config ),
 		g_allocator,
 		0,

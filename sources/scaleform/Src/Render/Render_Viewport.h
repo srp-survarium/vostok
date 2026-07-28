@@ -66,10 +66,15 @@ public:
         View_Orientation_L90    = 0x30,
         View_Orientation_Mask   = 0x30,
 
+		// For stereo in display hardware only; uses the same size buffer but half for each eye.
+		View_Stereo_SplitV		= 0x40,
+		View_Stereo_SplitH		= 0x80,
+		View_Stereo_AnySplit    = 0xc0,
+
         View_RenderTextureAlpha = View_IsRenderTexture|View_AlphaComposite,
 
-        // Hal-specific flags should start here
-        View_FirstHalFlag       = 0x100
+        // The viewport should offset by a half-pixel to be on the pixel centers.
+        View_HalfPixelOffset    = 0x100
     };
 
     Viewport()
@@ -87,6 +92,17 @@ public:
     Viewport(int bw, int bh, int left, int top, int w, int h, unsigned flags = 0)
     { 
         BufferWidth = bw; BufferHeight = bh; Left = left; Top = top; Width = w; Height = h; Flags = flags; 
+        ScissorLeft = ScissorTop = ScissorWidth = ScissorHeight = 0;
+    }
+    Viewport(Size<int> bufferSize, Rect<int> view, unsigned flags = 0)
+    {
+        BufferWidth = bufferSize.Width; 
+        BufferHeight = bufferSize.Height; 
+        Left = view.x1; 
+        Top = view.y1; 
+        Width = view.x2-view.x1; 
+        Height = view.y2-view.y1; 
+        Flags = flags; 
         ScissorLeft = ScissorTop = ScissorWidth = ScissorHeight = 0;
     }
     Viewport(const Viewport& src)
@@ -215,6 +231,8 @@ public:
     {
         return !operator == (other);
     }
+
+	void SetStereoViewport(unsigned display);
 };
 
 }} // Scaleform::Render

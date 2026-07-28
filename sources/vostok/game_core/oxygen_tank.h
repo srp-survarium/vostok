@@ -28,31 +28,31 @@ private:
 
 protected:
 			void								set_active					( bool bactive );
-			void								active_tick					( u32 frame_time_ms );
+			void								active_tick					( const u32 frame_time_ms );
 			float								reduce_damage				(
 													pcstr		body_part_name,
 													pcstr		damage_type,
-													float		amount,
-													float		armor_piercing
+													const float		amount,
+													const float		armor_piercing
 												);
 
 private:
-	// STATE[STUB]
+	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
+	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
+	// faithful idioms below. update_bones_matrices folds to the artefact_lifebone_core copy
+	// at rva 0xbc810 (a 101-byte ASSERT-guarded forward); see that header's note - left
+	// empty until the folded forward-callee is named.
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
-	// STATE[STUB]
 	virtual	void								deactivate					( ) override { }
-	// STATE[STUB]
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								tick						( ) override { /* no source */ }
 
 	virtual	bool								is_ready_to_be_deactivated	( ) const override { return false; /* no source */ }
-	// STATE[STUB]
 	virtual	animation::mixing::expression		selected_animations			( mutable_buffer& buffer, bool is_third_view ) const override { VOSTOK_UNREACHABLE_CODE( ); }
 
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
-	// STATE[STUB]
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4*							user_matrices,
@@ -62,10 +62,8 @@ private:
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
 												) override { /* <0xcc810> */ }
-	// STATE[STUB]
-	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { /* <0xccd90> */ }
-	// STATE[STUB]
-	virtual	void								deserialize					( network_core::packet_reader& reader ) override { /* <0xccdb0> */ }
+	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { inventory_item::serialize( packet, client_offset ); }
+	virtual	void								deserialize					( network_core::packet_reader& reader ) override { inventory_item::deserialize( reader ); }
 
 	virtual	bool								is_sprinting				( ) const override { return false; /* no source */ }
 

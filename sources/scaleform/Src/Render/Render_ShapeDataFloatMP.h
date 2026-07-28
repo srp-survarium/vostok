@@ -61,6 +61,11 @@ public:
         pData->QuadTo(cx, cy, ax, ay); 
     }
 
+    void CubicTo(float cx1, float cy1, float cx2, float cy2, float ax, float ay)
+    {
+        pData->CubicTo(cx1, cy1, cx2, cy2, ax, ay); 
+    }
+
     void RectanglePath(float x1, float y1, float x2, float y2)
     {
         pData->MoveTo(x1, y1);

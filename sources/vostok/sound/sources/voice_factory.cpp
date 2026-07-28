@@ -88,7 +88,7 @@ voice_bridge* voice_factory::new_voice ( voice_callback_handler* callback_handle
 
 void voice_factory::delete_voice( voice_bridge* voice_to_be_deleted)
 {
-	LOG_DEBUG								("voice_factory::delete_voice");
+	//LOG_DEBUG								("voice_factory::delete_voice");
 	channels_type const type				= voice_to_be_deleted->get_channels_type( );
 	R_ASSERT_U								( m_voices[type].contains_object( voice_to_be_deleted ));
 	voice_to_be_deleted->set_handler		( 0 );

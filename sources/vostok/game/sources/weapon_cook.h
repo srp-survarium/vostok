@@ -1,36 +1,50 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 13.11.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef WEAPON_COOK_H_INCLUDED
 #define WEAPON_COOK_H_INCLUDED
-#include <vostok/resources_cook_classes.h>
 
-namespace survarium{
+#include <vostok/game_core/weapon_core_cook.h>
+
+namespace vostok { void use_game_weapons( ); }	// anchor_game_weapons.cpp (friend)
+
+namespace survarium {
+
 class game;
+class weapon_core;
 
-class weapon_cook :	public resources::translate_query_cook,
-					private boost::noncopyable
-
-{
-	typedef resources::translate_query_cook super;
+class weapon_cook : public weapon_core_cook {
+	// /OPT:REF anchor address-takes the private methods below; codegen-neutral friend
+	friend	void	::vostok::use_game_weapons	( );
 public:
-					weapon_cook				(  game& game );
-	virtual	void	translate_query			( resources::query_result_for_cook&	parent );
-	virtual void	delete_resource			( resources::resource_base* resource );	
+			explicit	weapon_cook					( game& g );
+
+	// these methods mangle private (AAE / EAE / EBE) in the shipped PDB; declaring
+	// them private keeps each out-of-line symbol pairable with the target
+private:
+			void		on_weapon_subresources_ready(
+							resources::queries_result&		data,
+							configs::binary_config_ptr		config_ptr,
+							weapon_core*					object_to_cook
+						);
+	virtual	void		on_weapon_config_loaded		( resources::queries_result& data ) override;
+
+	virtual	void		delete_resource				( resources::resource_base* resource ) override;
+
+	virtual	u32			cooked_object_size			( weapon_core& object_to_cook ) const override;
+
+public:
+	virtual				~weapon_cook				( ) { /* no source */ }
+
+	static	void		register_cooks_for_logic_states( );
 
 private:
-			void	on_weapon_config_ready	(	resources::queries_result& data, 
-												resources::query_result_for_cook* parent );
-
-			void	on_weapon_parts_ready	(	resources::queries_result& data, 
-												configs::binary_config_ptr config_ptr, 
-												resources::query_result_for_cook* parent );
-
-	game&			m_game;
+	/* 0x0000 */	/* weapon_core_cook */
+	/* 0x0020 */	game&		m_game;
 }; // class weapon_cook
+
+STATIC_SIZE_ASSERT(weapon_cook, 0x24);
 
 } // namespace survarium
 

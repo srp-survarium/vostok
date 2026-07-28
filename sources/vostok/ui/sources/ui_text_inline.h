@@ -64,8 +64,7 @@ void ui_text<T>::fit_height_to_text()
 	if(m_mode==tm_multiline)
 	{
 		pcstr ch				= get_text();
-		u32 symb_count			= m_text.length();
-		float const height		= m_font->get_height();
+		u32 symb_count			= m_text.length();	float const height		= m_font->get_height();
 		float curr_word_len		= 0.0f;
 		pcstr next_word			= NULL;
 		float2 new_size			(0.0f, height);

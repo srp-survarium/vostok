@@ -1,72 +1,99 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 31.10.2011
-//	Author		: Andrew Kolomiets
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
 #include "object_wire.h"
-#include "game_world.h"
+#include "game_object_static.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/math_float4x4.h>
+#include <vostok/configs_binary_config_value.h>
+#include <vostok/resources.h>
+#include <vostok/resources_queries_result.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/memory_writer.h>
 #include <vostok/render/engine/model_format.h>
+#include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
 
-namespace survarium{
+namespace survarium {
 
-object_wire::object_wire( game_scene& w )
-:super		( w ),
-m_points	( NULL )
-{}
+void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
-object_wire::~object_wire( )
+object_wire::object_wire( base_game_scene& w ) :
+	game_object_static( w ),
+	m_points( NULL )
 {
-	FREE(m_points);
 }
 
-static void create_wire_visual_source( memory::writer& writer,
-								float3* points,
-								u32 points_count,
-								pcstr material_name, 
-								float wire_width )
+// claude@NOTE: dtor byte-residual is the inlined base-class dtor chain - the target
+// tail-jmps ~unmanaged_resource without re-writing the game_object_ vtable, while our
+// base inlines ~game_object_ (header-inline {}) which emits that extra vtable store
+// plus an unconditional esi/ecx save. A game_object_ dtor-codegen artifact, not
+// steerable from this TU.
+object_wire::~object_wire( )
+{
+	FREE( m_points );
+}
+
+static void create_wire_visual_source(
+	memory::writer&		writer,
+	float3*				points,
+	u32					points_count,
+	pcstr				material_name,
+	float				wire_width
+)
 {
 	render::model_header	hdr;
 
-	//// fill hdr here !!!
 	hdr.platform_id			= render::platform_uni;
-	hdr.bb.min				= float3(-1, -1, -1);
-	hdr.bb.max				= float3(1, 1, 1);
+	hdr.bb.min				= float3( -1, -1, -1 );
+	hdr.bb.max				= float3( 1, 1, 1 );
 	hdr.type				= render::mt_user_mesh_wire;
 
 	writer.open_chunk		( render::model_chunk_header );
-	writer.write			( &hdr, sizeof(hdr) );
-	writer.close_chunk		( );//model_chunk_header
+	writer.write			( &hdr, sizeof( hdr ) );
+	writer.close_chunk		( );
 
 	writer.open_chunk		( render::model_texture );
-    writer.write_string		( material_name );
-	writer.write_float		( wire_width ); // wire width
-	writer.close_chunk		( );//model_texture
+	writer.write_string		( material_name );
+	writer.write_float		( wire_width );
+	writer.close_chunk		( );
 
 	writer.open_chunk		( render::model_chunk_vertices );
 
 	writer.write_u32		( points_count );
 
-	for(u32 i=0; i<points_count; ++i)
-		writer.write_float3(points[i]);
+	for ( u32 i = 0; i < points_count; ++i )
+		writer.write_float3( points[i] );
 
-	writer.close_chunk		( );//model_chunk_vertices}
+	writer.close_chunk		( );
 }
 
-
-void object_wire::load( configs::binary_config_value const& t )
+// claude@NOTE: load is a 22-statement STRUCTURE MATCH; the byte-residual is a cascade
+// of inline-vs-outline divergences on SHARED library types that shift every downstream
+// offset (target frame 0x1BC vs base 0xAC): the target inlines binary_config_value::
+// operator float (m_wire_width = t["wire_width"]) to cmp-type-tag + movss/cvtsi2ss while
+// our base calls it out-of-line; likewise it inlines the memory::writer ctor
+// (vectora_allocator) and the fixed_string<32> default-ctor that our base out-lines.
+// These are compiler inline-budget decisions on configs/memory/fixed_string headers -
+// not steerable from object_wire.cpp without editing those shared headers.
+void object_wire::load(
+	configs::binary_config_value const&		t,
+	pcstr									__formal,
+	boost::function< void( game_object_& ) >&	cb
+)
 {
-	super::load		( t );
+	load_transform	( t, m_transform );
 	m_wire_width	= t["wire_width"];
 	m_points_count	= t["points_count"];
 
-	if(m_points_count!=0)
+	if ( m_points_count != 0 )
 	{
-		m_points		= ALLOC(float3, m_points_count);
+		m_points		= ALLOC( float3, m_points_count );
 		float3* p		= m_points;
-		for(u32 i=0; i<m_points_count; ++i)
+		for ( u32 i = 0; i < m_points_count; ++i )
 		{
 			float3 pt	= t["points"][i];
 			*p			= pt;
@@ -74,63 +101,63 @@ void object_wire::load( configs::binary_config_value const& t )
 		}
 	}
 
-}
-
-void object_wire::load_contents( )
-{
-	if( m_visual )
-		return;
-
-	memory::writer	writer(g_allocator);
+	memory::writer	writer( g_allocator );
 	writer.external_data	= true;
 
 	pcstr material_name = "editor/wire";
 
-	if(m_points_count && m_points)
+	if ( m_points_count && m_points )
 	{
-	create_wire_visual_source( writer, 
-								m_points,
-								m_points_count,
-								material_name, 
-								m_wire_width );
+		create_wire_visual_source( writer, m_points, m_points_count, material_name, m_wire_width );
 
+		const_buffer creation_buffer( writer.pointer(), writer.size() );
+		fixed_string< 32 > wire_name;
+		wire_name.assignf( "wire_%X", this );
 
-	const_buffer creation_buffer( writer.pointer(), writer.size() );
-	fixed_string<32> wire_name;
-	wire_name.assignf("wire_%X", this);
-	resources::query_create_resource(
-		wire_name.c_str(),
-		creation_buffer,
-		resources::user_mesh_class,
-		boost::bind(&object_wire::resources_ready, this, _1),
-		g_allocator
-	);
-	}else
+		resources::creation_request r[] =
+		{
+			resources::creation_request( wire_name.c_str(), creation_buffer, resources::user_mesh_class ),
+		};
+
+		resources::query_create_resources(
+			r,
+			boost::bind( &object_wire::resources_ready, this, _1, cb ),
+			g_allocator
+		);
+	}
+	else
 	{
-		LOG_WARNING("empty wire");
+		LOG_WARNING( "empty wire" );
 	}
 }
 
-void object_wire::unload_contents( )
+void object_wire::insert( )
 {
-	if( m_visual )
-	{
-		m_game_scene.renderer().scene().remove_model( m_game_scene.get_render_scene(),  m_visual );
-		m_visual = NULL;
-	}
-
+	if ( m_visual )
+		get_game_scene().renderer().scene().add_model( get_game_scene().render_scene(), m_visual, m_transform );
 }
 
-void object_wire::resources_ready( resources::queries_result& data )
+void object_wire::remove( )
 {
-	R_ASSERT							(data.is_successful());
+	if ( m_visual )
+		get_game_scene().renderer().scene().remove_model( get_game_scene().render_scene(), m_visual );
+}
+
+// claude@NOTE: resources_ready byte-residual is two shared-header divergences: (1) our
+// base's query_result layout reads m_creation_data_from_user 8 bytes high (0x128 vs the
+// target's 0x120) - a resources_query_result.h struct-offset gap; (2) DELETE/const_buffer
+// c_ptr() expand to the heavier platform_pointer_selector + call_destructor_predicate
+// path in our base vs a direct mspace_free in the target. m_visual's assignment (0x12C)
+// matches. Not steerable from this TU.
+void object_wire::resources_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
+{
 	const_buffer user_data_to_create	= data[0].creation_data_from_user();
 	pbyte creation_data					= (pbyte)user_data_to_create.c_ptr();
 	DELETE								( creation_data );
 
-	m_visual							= static_cast_resource_ptr<render::render_model_instance_ptr>(data[0].get_unmanaged_resource());
+	m_visual							= static_cast_resource_ptr< render::render_model_instance_ptr >( data[0].get_unmanaged_resource() );
 
-	m_game_scene.renderer().scene().add_model( m_game_scene.get_render_scene(), m_visual, m_transform );
+	cb( *this );
 }
 
-} //namespace survarium
+} // namespace survarium

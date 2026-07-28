@@ -6,8 +6,7 @@
 
 #include "pch.h"
 #include "network_world.h"
-#include <vostok/network/packet.h>
-#include <vostok/network/engine.h>
+#include <vostok/network_core/tcp_packet.h>
 #include "functor_response.h"
 #include "functor_order.h"
 
@@ -16,13 +15,15 @@ using vostok::network::network_world;
 static void empty_function ( ) { }
 
 network_world::network_world					( vostok::network::engine& engine, vostok::memory::base_allocator& orders_allocator ) :
-	m_engine							( engine ),
-	m_channel							( *vostok::network::g_allocator, orders_allocator )
+	m_io_service						( NEW( boost::asio::io_service ) ( ) ),
+	m_channel							( *vostok::network::g_allocator, orders_allocator ),
+	m_engine							( engine )
 {
 	m_channel.orders.user_initialize	( );
 	m_channel.responses.owner_initialize( NEW(functor_response)( &empty_function ), NEW(functor_response)( &empty_function ) );
 }
 
+// claude@NOTE: the target never deletes m_io_service - a faithful leak, do not "fix"
 network_world::~network_world					( )
 {
 	m_channel.responses.owner_finalize	( );
@@ -39,18 +40,22 @@ void network_world::finalize					( )
 	m_channel.orders.owner_finalize		( );
 }
 
-void network_world::tick						( )
+void network_world::tick						( bool single_threaded )
 {
 	process_orders						( );
-	m_io_service.poll					( );
+
+	if ( single_threaded )
+		m_io_service->run_one			( );
+	else
+		m_io_service->poll				( );
 }
 
-void network_world::add_order					( vostok::network::order* const order )
+void network_world::add_order					( vostok::network::order* order )
 {
 	m_channel.orders.owner_push_back	( order );
 }
 
-void network_world::add_response				( vostok::network::response* const response )
+void network_world::add_response				( vostok::network::response* response )
 {
 	m_channel.responses.owner_push_back	( response );
 }
@@ -65,12 +70,20 @@ void network_world::process_orders				( )
 void network_world::process_responses			( )
 {
 	m_channel.orders.owner_delete_processed_items	( );
-	while ( response* const response = m_channel.responses.user_pop_front() )
+	u32 count							= 0;
+	while ( response* const response = m_channel.responses.user_pop_front( ) ) {
 		response->execute				( );
+		if ( ++count >= 10 )
+			break;
+	}
 }
 
 void network_world::clear_resources				( )
 {
+	m_channel.orders.owner_delete_processed_items	( );
+	while ( response* const response = m_channel.responses.user_pop_front( ) ) {
+		response->execute				( );
+	}
 }
 
 void network_world::dispatch_callbacks			( )
@@ -78,7 +91,7 @@ void network_world::dispatch_callbacks			( )
 	process_responses					( );
 }
 
-vostok::network::packet* network_world::new_packet( )
+vostok::network_core::tcp_packet* network_world::new_packet( )
 {
-	return								NEW( packet ) ( *g_allocator );
+	return								NEW( network_core::tcp_packet ) ( *g_allocator );
 }

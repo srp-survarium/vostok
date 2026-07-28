@@ -26,6 +26,7 @@ protected:
 	template < typename T >
 	static inline	T*						cloned_in_buffer( T& value );
 	static inline	binary_tree_base_node*	cloned_in_buffer( expression& value );
+	static inline	binary_tree_base_node*	cloned_in_buffer( expression const& value );
 }; // class binary_operation_lexeme
 
 } // namespace mixing

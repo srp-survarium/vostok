@@ -18,6 +18,7 @@ class particle_action;
 class particle_emitter_instance;
 class particle_world;
 class particle_action_source;
+class particle_action_random_velocity;
 class particle_action_data_type;
 class particle_event;
 
@@ -39,6 +40,7 @@ public:
 	inline	void	load				( ConfigValueType const& prop_config );
 	
 			void	set_source_action	( particle_action_source* source_act );
+			void	set_target_action	( particle_action_random_velocity* target_act );
 			void	set_data_type_action( particle_action_data_type* data_type_act );
 	
 	inline	particle_action_source*	get_source_action		( ) const { return m_source_action;}
@@ -67,6 +69,7 @@ private:
 	typedef vostok::platform_pointer<particle_event, vostok::platform_pointer_default>::type			particle_event_ptr_type;
 	typedef vostok::platform_pointer<particle_action_data_type, vostok::platform_pointer_default>::type particle_action_data_type_ptr_type;
 	typedef vostok::platform_pointer<particle_action_source, vostok::platform_pointer_default>::type	particle_action_source_ptr_type;
+	typedef vostok::platform_pointer<particle_action_random_velocity, vostok::platform_pointer_default>::type	particle_action_random_velocity_ptr_type;
 	typedef vostok::platform_pointer<particle_system, vostok::platform_pointer_default>::type			particle_system_ptr_type;
 	typedef vostok::platform_pointer<burst_entry, vostok::platform_pointer_default>::type				burst_entry_ptr_type;
 	
@@ -77,6 +80,7 @@ private:
 	curve_line_ranged_float				m_particle_spawn_rate_curve;
 	
 	particle_action_source_ptr_type		m_source_action;
+	particle_action_random_velocity_ptr_type	m_target_action;
 	particle_action_data_type_ptr_type	m_data_type_action;
 	
 public:

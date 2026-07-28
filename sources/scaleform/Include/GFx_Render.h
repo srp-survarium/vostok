@@ -83,7 +83,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "../Src/Render/Render_Vertex.h" 		
 #include "../Src/Render/Render_Viewport.h" 		
 #include "../Src/Render/FontProvider/Render_FontProviderHUD.h" 		
-#ifdef SF_OS_WIN32
+#if defined(SF_OS_WIN32) && !defined(SF_OS_WINMETRO)
 #include "../Src/Render/FontProvider/Render_FontProviderWinAPI.h" 	
 #endif		
 #include "../Src/Render/ImageFiles/DDS_ImageFile.h" 		

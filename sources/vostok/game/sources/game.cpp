@@ -1,352 +1,574 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 11.11.2008
-//	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2009
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "game.h"
-#include "game_exit_handler.h"
-//#include "npc_manipulation_handler.h"
-#include "game_world.h"
-#include "stats.h"
-#include "stats_graph.h"
-#include "project_cooker.h"
-#include "project_cooker_simple.h"
-#include "cell_cooker.h"
-#include "object_cooker.h"
-//#include "sound_player_cook.h"
-//#include "human_npc_cook.h"
-//#include "human_npc.h"
-#include "weapon_cook.h"
-//#include "building_object.h"
-//#include "composite_building.h"
-//#include "ai_sound_player.h"
-#include <vostok/input/world.h>
-#include <vostok/input/keyboard.h>
-#include <vostok/input/mouse.h>
-#include <vostok/sound/world.h>
-#include <vostok/sound/world_user.h>
-#include <vostok/sound/sound_debug_stats.h>
-#include <vostok/engine/console.h>
-#include <vostok/console_command.h>
-#include <vostok/console_command_processor.h>
-#include <vostok/physics/world.h>
-#include <vostok/animation/world.h>
-//#include <vostok/rtp/world.h>
-//#include <vostok/ai/world.h>
-#include <vostok/game/collision_object_types.h>
-#include <vostok/collision/space_partitioning_tree.h>
-//#include <vostok/game_test_suite.h>
-#include "animated_model_instance_cook.h"
-#include "object_weapon.h"
-//#include "npc_stats.h"
-#include "free_fly_camera.h"
-#include <vostok/render/facade/debug_renderer.h>
-#include <vostok/render/facade/scene_renderer.h>
-#include <vostok/text_tree.h>
-#include <vostok/ui/world.h>
-#include <vostok/ui/text_tree_draw_helper.h>
-#include "main_menu.h"
-#include "lobby_menu.h"
-#include "key_binder.h"
 
-#include <vostok/game_core/ladder_cook.h>
-#include <vostok/game_core/game_material_manager_cook.h>
-#include <vostok/game_core/inventory_cook.h>
-#include <vostok/game_core/items_dictionary_cook.h>
-#include <vostok/game_core/player_parameters_modifyer_cook.h>
-#include <vostok/game_core/animation_analysis_result_cook.h>
+#include <vostok/console_command.h>	// cc_float (max_angular_velocity_command)
+#include <vostok/console_command_processor.h>	// console_commands::save (cfg_save_*)
+#include <vostok/memory_extensions.h>	// memory::g_mt_allocator (cfg_save_*)
+#include <vostok/render/world.h>	// game_renderer() (ctor init)
+#include <vostok/render/facade/game_renderer.h>	// renderer().ui() (draw_debug_window)
+#include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
+#include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
+#include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
+#include <vostok/resources.h>	// query_resources / request (query_base_resources) + fill_stats (draw_debug_window)
+#include <vostok/text_tree.h>	// strings::text_tree (draw_debug_window)
+#include <vostok/tasks_system.h>	// tasks::fill_stats (draw_debug_window)
+#include <vostok/ui/ui.h>	// ui::window::remove_all_children (draw_debug_window)
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-#include <GFx.h>
-#include "flash_factory.h"
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+// SetWindowTextA (USER32) is stripped from os_include.h by NOUSER; declare the import
+// directly for on_application_activate's title-bar update.
+extern "C" __declspec( dllimport ) int __stdcall SetWindowTextA( void* hWnd, char const* lpString );
 
+using vostok::console_commands::cc_bool;
+using vostok::console_commands::cc_u32;
 using vostok::console_commands::cc_delegate;
-using vostok::console_commands::cc_float3;
+using vostok::console_commands::command_type_user_specific;
+using vostok::console_commands::command_type_engine_internal;
+
+#include "scaleform_movie_cook.h"	// its out-of-line bodies live here per the PDB
+#include <vostok/scaleform/sources/flash_factory.h>	// m_factory.build_movie (on_raw_data_loaded)
+#include <vostok/scaleform/sources/flash_movie_resource.h>	// flash_movie_resource (delete_resource)
+#include <vostok/scaleform/sources/flash_movie.h>	// delete movie (delete_resource)
+#include "base_game_scene.h"	// m_active_scene->on_activate/on_deactivate (switch_to_scene)
+#include "base_network_client.h"	// m_network_client virtuals (commit_suicide etc.)
+#include "network_client.h"	// NEW( network_client ) (create_network_client)
+#include "stats.h"	// DELETE( m_stats ) (~game)
+#include "stats_graph.h"	// DELETE( m_fps_graph ) (~game)
+#include "key_binder.h"	// DELETE( m_key_binder ) (~game)
+#include "chat_handler.h"	// DELETE( m_chat_handler ) (~game)
+#include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
+#include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
+#include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
+#include "animated_model_instance_cook.h"	// register_cooks function-statics
+#include <vostok/game_core/game_material_manager_cook.h>
+#include "project_cooker_simple.h"
+#include <vostok/game_core/animation_analysis_result_cook.h>
+#include <vostok/game_core/ladder_cook.h>
+#include <vostok/game_core/weapon_user_animations_container_cook.h>
+#include "victory_item_cook.h"
+
+// File-scope console-command statics + their command functions. The PDB mangles these
+// undecorated (global scope, not survarium::); the dynamic initializers / atexit
+// destructors the compiler emits for each are the matched targets. Source order (init
+// line numbers): draw_snd_stats(58), draw_stats(70), show_profiler(74), cfg_save pair
+// (126/127), particle commands (138/141).
+
+// claude@NOTE: PARKED - 's_draw_snd_stats' (sound-debug cc_bool): its command-name
+// string + command_type are not recoverable from the init asm (the name string lives
+// in the data section, not the init function). A guessed name would fabricate
+// data-section bytes. Recover once the data-section string is read. Its backing value
+// bool s_draw_snd_stats_value is referenced by update_stats's PARKED sound-debug tail
+// (see the note there); restore the static alongside that tail.
 
 static bool s_draw_stats_value = true;
-static console_commands::cc_bool s_draw_stats("draw_stats", s_draw_stats_value, true, vostok::console_commands::command_type_user_specific);
+static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
 
-static command_line::key		s_level_key			( "level", "", "", "level to load" );
-static command_line::key		s_run_sound_tests	( "run_sound_test", "", "", "test for sound system" );
+// claude@NOTE: PARKED - 's_show_profiler_command' (profiler cc_bool): command-name
+// string + command_type unrecoverable (data-section string), same as s_draw_snd_stats.
 
-void cfg_save_user()
+// claude@NOTE: cfg_save_user is GLOBAL (?cfg_save_user@@YAXXZ); target body is
+//   console_commands::save( "user.cfg", command_type_user_specific, s_engine->allocator( ) );
+// where s_engine is a file-static engine pointer (the engine virtual at vtable+0x4C
+// yields the allocator). That static is compiler-generated and NOT in our source, so
+// the allocator arg cannot be reproduced; we approximate with g_mt_allocator. The path
+// + command_type ARE matched. Restore the engine-allocator form once s_engine is recovered.
+// sushi@TODO: recover the s_engine file-static (+ its write site) to lift cfg_save_user
+// AND game::~game line 279 to byte-exact - see docs/binary_matching/review_todos.md.
+void cfg_save_user( )
 {
-	vostok::console_commands::save(NULL, vostok::console_commands::command_type_user_specific, memory::g_mt_allocator );
+	vostok::console_commands::save( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 }
-void cfg_save_system()
+
+// target body is empty (single `ret`); the system-save logic is compiled out in this build.
+void cfg_save_system( )
 {
-	vostok::console_commands::save(NULL, vostok::console_commands::command_type_engine_internal, memory::g_mt_allocator );
 }
 
-static cc_delegate	cgf_save_system_cc( "cfg_save_system", boost::bind(&cfg_save_system), false );
-static cc_delegate	cgf_save_user_cc( "cfg_save_user", boost::bind(&cfg_save_user), false );
-
-
-
-
-static command_line::key		s_speedtree_key		( "speedtree", "", "", "speedtree test" );
-//static bool is_speedtree_loaded	= false;
-
-
-
-
-#ifndef MASTER_GOLD
-static void	make_crash				( pcstr )
-{
-	FATAL					( "do not report, this console command is aimed for testing bug tracking" );
-}
-static console_commands::cc_delegate s_crash("crash", &make_crash, false);
-#endif // #ifndef MASTER_GOLD
+static cc_delegate cfg_save_system_cc( "cfg_save_system", boost::bind( &cfg_save_system ), false );
+static cc_delegate cfg_save_user_cc( "cfg_save_user", boost::bind( &cfg_save_user ), false );
 
 static u32 s_max_particles_value = 100;
-static console_commands::cc_u32 s_max_particles("max_particles", s_max_particles_value, 0, 1000, true, vostok::console_commands::command_type_engine_internal);
+static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, true, command_type_engine_internal );
 
 static u32 s_particle_lod_value = 0;
-static console_commands::cc_u32 s_particle_lod("particle_lod", s_particle_lod_value, 0, 10, true, vostok::console_commands::command_type_engine_internal);
+static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
 
 namespace survarium {
 
-// namespace temp
-// {
-// 	static vostok::math::random32 randomizer(100);
-// 	static u32 const random_max = 65535;
-//
-// 	float random_float(float min_value, float max_value)
-// 	{
-// 		float alpha = float(randomizer.random(random_max)) / float(random_max);
-// 		return min_value * (1.0f - alpha) + max_value * alpha;
-// 	}
-//
-// 	float3 random_float3(float3 const& min_value, float3 const& max_value)
-// 	{
-// 		return float3(random_float(min_value.x, max_value.x),
-// 			random_float(min_value.y, max_value.y),
-// 			random_float(min_value.z, max_value.z));
-// 	}
-// }
-
-// static void speedtree_loaded(resources::queries_result& data, vostok::render::game::renderer* r)
-// {
-// 	if (!data.is_successful())
-// 		return;
-//
-// 	using namespace vostok::math;
-//
-// 	float4x4 transform = create_translation( temp::random_float3(float3(-400, 0, -400), float3(400, 0, 400)));
-//
-// 	vostok::render::speedtree_instance_ptr st_instance_ptr = static_cast_resource_ptr<vostok::render::speedtree_instance_ptr>(data[0].get_unmanaged_resource());
-// 	r->add_speedtree_instance(st_instance_ptr, transform);
-// }
-//
-// static void load_speedtree(vostok::render::game::renderer* r)
-// {
-// 	if (is_speedtree_loaded || !s_speedtree_key.is_set())
-// 		return;
-//
-// 	for (u32 i=0; i<5000; i++)
-// 	{
-// 		pcstr					tree_name = "acacia";
-// 		if (i>5*333 && i<5*666)		tree_name = "white_birch"; // live_oak
-// 		else if (i>=5*666)		tree_name = "banana_plant";
-//
-// 		resources::query_resource(
-// 			tree_name,
-// 			resources::speedtree_instance_class,
-// 			boost::bind(&speedtree_loaded, _1, r),
-// 			g_allocator
-// 		);
-// 	}
-//
-// 	is_speedtree_loaded = true;
-// }
-
-
-
-
-game::game(		vostok::engine_user::engine& engine,
-				vostok::render::world& render_world,
-				vostok::sound::world& sound,
-				vostok::network::world& network )
-:	m_engine				( engine ),
-	m_render_world			( render_world ),
-	m_renderer				( render_world.game_renderer() ),
-	m_sound_world			( sound ),
-	m_network_world			( network ),
-	m_last_frame_time		( 0 ),
-	m_active_scene			( 0 ),
-	m_input_world			( 0 ),
-	m_ui_world				( 0 ),
-//	m_physics_world			( 0 ),
-	m_animation_world		( 0 ),
-//	m_rtp_world				( 0 ),
-//	m_ai_navigation_world	( 0 ),
-
-//	m_ai_world				( 0 ),
-//	m_spatial_tree			( 0 ),
-	m_sound_test_allowed	( s_run_sound_tests.is_set() ),
-//	m_is_dictionary_created	( false ),
-//	m_is_npc_auto_creation_enabled( true ),
-//	m_selected_npc			( 0 ),
-//	m_npc_queries_count		( 0 ),
-//	m_active_npc_set		( false ),
-
-	m_game_world			( NULL ),
-	m_main_menu				( NULL ),
-	m_lobby_menu			( NULL ),
-	m_last_frame_time_ms	( 0 ),
-	m_enabled				( false ),
-	m_initialized			( false ),
-	m_is_active				( false ),
-	m_debug_window_type		( debug_window_none ),
-	m_debug_window			( NULL )
+// TU static 's_net_login_client' (compiler-generated; a matcher recovers its type
+// and initializer from the init asm).
+/*
+// STATE[STUB]
+void `dynamic initializer for 's_net_login_client''( )
 {
-	query_render_scene		( );
+	// FUNCTION BODY[0x7d79c0]
+	// <0x7d79c0>|0x000|      :'54'	{
+	// ******
+}
+*/
 
-	static vostok::console_commands::cc_delegate s_reload_shaders(
-		"reload_shaders",
-		boost::bind( &vostok::render::scene_renderer::reload_shaders, &m_renderer.scene() ),
-		false
-	);
-	m_timer.start			( );
+// TU static 's_is_spectator' (compiler-generated; a matcher recovers its type
+// and initializer from the init asm).
+/*
+// STATE[STUB]
+void `dynamic initializer for 's_is_spectator''( )
+{
+	// FUNCTION BODY[0x7d79e0]
+	// <0x7d79e0>|0x000|      :'55'	{
+	// ******
+}
+*/
 
-	static vostok::console_commands::cc_delegate s_reload_modified_textures(
-		"reload_modified_textures",
-		boost::bind( &vostok::render::scene_renderer::reload_modified_textures, &m_renderer.scene() ),
-		false
-	);
+// TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
+// in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
+class max_angular_velocity_command : public console_commands::cc_float {
+public:
+					max_angular_velocity_command	(
+						pcstr			name,
+						const float		min,
+						const float		max,
+						bool			serializable,
+						const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
+						const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
+					);
 
-#ifdef VOSTOK_STATIC_LIBRARIES
-	LOG_INFO("survarium::game() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
-#endif #ifdef VOSTOK_STATIC_LIBRARIES
+	inline	void	set_engine						( engine_user::engine& arg_0 ) { /* no source */ }
 
-	inventory_cook					inv_cook;
-	items_dictionary_cook			id_cook;
-	player_parameters_modifyer_cook	pp_cook;
+	virtual	void	execute							( pcstr arg_0 ) override { /* no source */ }
+
+	virtual			~max_angular_velocity_command	( ) { /* no source */ }
+
+private:
+	/* 0x0000 */	/* console_commands::cc_float */
+	/* 0x0050 */	engine_user::engine*	m_engine;
+	/* 0x0054 */	float					m_value;
+}; // class max_angular_velocity_command
+
+STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
+
+ max_angular_velocity_command::max_angular_velocity_command(
+	pcstr			name,
+	const float		min,
+	const float		max,
+	bool			serializable,
+	const console_commands::command_type	arg_4 /* console_commands::command_type command_type */,
+	const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
+) :
+	console_commands::cc_float( name, m_value, min, max, serializable, arg_4, arg_5 ),
+	m_engine( NULL ),
+	m_value( 720.f )
+{
 }
 
-game::~game( )
+// TU static 's_max_angular_velocity_command' (compiler-generated; a matcher recovers its type
+// and initializer from the init asm).
+/*
+// STATE[STUB]
+void `dynamic initializer for 's_max_angular_velocity_command''( )
 {
-	console_commands::save		( 0, vostok::console_commands::command_type_engine_internal, *g_allocator );
-	console_commands::save		( 0, vostok::console_commands::command_type_user_specific, *g_allocator );
+	// FUNCTION BODY[0x7d7af0]
+	// <0x7d7af0>|0x000|      :'114'	{
+	// ******
+}
+*/
 
-	if ( m_active_scene )
-		m_active_scene->on_deactivate ( );
+// TU static 's_max_angular_velocity_command' (compiler-generated; a matcher recovers its type
+// and initializer from the init asm).
+/*
+// STATE[STUB]
+void `dynamic atexit destructor for 's_max_angular_velocity_command''( )
+{
+	// FUNCTION BODY[0x7ef9f0]
+	// <0x7d7d70>|0x000|      :'144'	{
+	// ******
+}
+*/
 
-	DELETE						( m_main_menu );
-	DELETE						( m_lobby_menu );
-	DELETE						( m_console );
-	DELETE						( m_stats );
-//	DELETE						( m_active_npc_stats );
-	DELETE						( m_fps_graph );
-#ifndef MASTER_GOLD
-//	DELETE						( m_sound_stats	);
-#endif //#ifndef MASTER_GOLD
+// STATE[STUB]
+ game::game(
+	engine_user::engine&	engine,
+	render::world&			render_world,
+	sound::world&			sound,
+	network::world&			network
+) :
+	// ref/value-member sources per the legacy ctor (temp/game_legacy/game.cpp:170);
+	// m_scheduler's allocator is a buildability placeholder - a matcher confirms
+	m_engine( engine ),
+	m_render_world( render_world ),
+	m_sound_world( sound ),
+	m_network_world( network ),
+	m_renderer( render_world.game_renderer( ) ),
+	m_game_world( *this ),
+	m_scheduler( g_allocator ),
+	m_game_options( *this )
+{
+	// STATICS
+	// static player_parameters_modifyer_cook s_player_parameters_cook = <0x4c2bb70>;
+	// static console_commands::cc_string s_current_render_configuration_cc = <0x4c2bd30>;
+	// static profile_skin_visual_cook 	s_profile_skin_visual_cook = <0x4c277d0>;
+	// static console_commands::cc_delegate pause_game_command = <0x4c2bc70>;
+	// static console_commands::cc_delegate commit_suicide_cc = <0x4c2bbb0>;
+	// static console_commands::cc_delegate s_reload_shaders = <0x4c2bd78>;
+	// static console_commands::cc_delegate s_reload_modified_textures = <0x4c2bcd0>;
+	// static fixed_string< 512 > 		s_current_render_configuration = <0x4c26a20>;
+	// static inventory_cook 			s_inventory_cook = <0x4c2bb90>;
+	// static scaleform_movie_cook 		s_scaleform_movie_cook = <0x4c27838>;
+	// static items_dictionary_cook 	s_items_dictionary_cook = <0x4c2bb50>;
+	// static console_commands::cc_delegate s_build_lpv_geometry = <0x4c2bdd8>;
+	// static console_commands::cc_delegate resume_game_command = <0x4c2bc10>;
+	// ******
 
-	DELETE						( m_game_world );
-#ifdef VOSTOK_STATIC_LIBRARIES
-	DELETE						( m_flash_factory );
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-	DELETE						( m_key_binder );
-
-	deinitialize_modules		( );
+	// FUNCTION BODY[0x5e7a70]: 58
+	// <0x5e7a70>|0x000|+0x1e8:'206'	{
+	// <0x5e7c58>|0x1e8|+0x05e:'207'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5e7cb6>|0x246|+0x097:'214'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5e7d4d>|0x2dd|+0x075:'221'
+	// <0>
+	// <0x5e7dc2>|0x352|+0x02e:'223'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x5e7df0>|0x380|+0x039:'231'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5e7e29>|0x3b9|+0x075:'238'
+	// <0x5e7e9e>|0x42e|+0x092:'239'
+	// <0x5e7f30>|0x4c0|+0x092:'240'
+	// <0x5e7fc2>|0x552|+0x08f:'241'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5e8051>|0x5e1|+0x02e:'247'
+	// <0x5e807f>|0x60f|+0x01c:'248'
+	// <0>
+	// <0x5e809b>|0x62b|+0x031:'250'
+	// <0>
+	// <0x5e80cc>|0x65c|+0x02a:'252'
+	// <0x5e80f6>|0x686|+0x02a:'253'
+	// <0x5e8120>|0x6b0|+0x02a:'254'
+	// <0x5e814a>|0x6da|+0x02c:'255'
+	// <0x5e8176>|0x706|+0x026:'256'
+	// <0>
+	// <0x5e819c>|0x72c|+0x007:'258'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5e81a3>|0x733|+0x02a:'263'
+	// <0x5e81cd>|0x75d|-0x00b:'263'
+	// <0>
+	// <0x5e81c2>|0x752|+0x011:'265'
+	// <0x5e81d3>|0x763|      :'265'	}
+	// ******
 }
 
-void game::on_render_scene_created( vostok::resources::queries_result& data )
+// STATE[STUB]
+// claude@NOTE: target body is m_renderer.execute_scaleform_command( command );
+// but render::game::renderer::execute_scaleform_command is NOT declared in our
+// sources/vostok/render/facade/game_renderer.h (it IS in the target structure).
+// That header is the render cluster's; cannot add the decl here. Keep the stub
+// buildable; restore the real call once render declares execute_scaleform_command.
+void game::execute_scaleform_command( scaleform_render_command command )
 {
-//	m_scene						= static_cast_resource_ptr< vostok::render::scene_ptr >( data[0].get_unmanaged_resource() );
-//	m_scene_view				= static_cast_resource_ptr< vostok::render::scene_view_ptr >( data[1].get_unmanaged_resource() );
-	m_render_output_window		= static_cast_resource_ptr< vostok::render::render_output_window_ptr >( data[0].get_unmanaged_resource() );
+	// FUNCTION BODY[0x5e5e00]: 1
+	// <0x5e5e00>|0x000|+0x011:'269'
+	// ******
+}
 
-	m_timer.start				( );
+// STATE[STUB]
+// claude@NOTE: target body is
+//   m_renderer.scene( ).build_lpv_geometry( m_game_world.render_scene( ) );
+// but render::scene_renderer::build_lpv_geometry( base_scene_ptr const& ) is NOT
+// declared in our sources/vostok/render/facade/scene_renderer.h (it IS in the target
+// structure). That header is the render cluster's; cannot add the decl here. Keep
+// the stub buildable; restore the real call once render declares build_lpv_geometry.
+void game::build_lpv_geometry( )
+{
+	// FUNCTION BODY[0x5e6750]: 1
+	// <0x5e6750>|0x000|+0x016:'274'
+	// ******
+}
 
-//	query_npc_dictionary		( );
+ game::~game( )
+{
+	// claude@NOTE: line 279 calls console_commands::save( "user.cfg", ..., s_engine->allocator() )
+	// where s_engine is the same unrecoverable file-static as cfg_save_user (see its note +
+	// review_todos.md); approximated with g_mt_allocator. Remaining 11 statements are exact.
+	vostok::console_commands::save	( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 
-	initialize_modules			( );
-	register_cooks				( );
+	DELETE							( m_network_client );
+	DELETE							( m_main_menu );
+	DELETE							( m_lobby_menu );
+	DELETE							( m_login_menu );
+	DELETE							( m_console );
+	DELETE							( m_stats );
+	DELETE							( m_fps_graph );
 
-	m_initialized				= true;
+	DELETE							( m_flash_factory );
+	DELETE							( m_key_binder );
+	DELETE							( m_chat_handler );
 
-	m_game_world				= NEW( game_world )( *this );
-	static object_cooker s_object_cook( *m_game_world );
-	static object_scene_cooker s_object_scene_cook( *m_game_world );
-	register_cook				( &s_object_cook );
-	register_cook				( &s_object_scene_cook );
+	deinitialize_modules			( );
+}
 
- 	m_console					= m_engine.create_game_console( ui_world(), input_world() );
-	m_stats						= NEW( stats )( *m_ui_world );
-	m_fps_graph					= NEW( stats_graph )( 1.f, math::infinity, 30.f, 60.f );
-//	m_active_npc_stats			= NEW( npc_stats )( *m_ui_world );
-#ifdef VOSTOK_STATIC_LIBRARIES
-	m_flash_factory				= NEW( flash_factory )( *this );
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
-	m_main_menu					= NEW( main_menu )( *this, *m_game_world );
-	m_key_binder				= NEW( key_binder )( *this );
+math::uint2 parse_resolution( pcstr in_str )
+{
+	char xy_str[16];
 
-	m_lobby_menu				= NEW( lobby_menu )( *this );
-
-	create_debug_window			( );
-
-
-	register_console_commands	( );
-
-	m_viewport.left				= 0.f;
-	m_viewport.top				= 0.f;
-	m_viewport.right			= 1.f;
-	m_viewport.bottom			= 1.f;
-
-	fixed_string512				project_path;
-	bool const load_level		= s_level_key.is_set_as_string( &project_path );
-
-	if ( load_level && !m_engine.command_line_editor() )
-		load					( project_path.c_str() );
-	else
-		m_game_world->switch_to_free_fly_camera( );
-
-//	R_ASSERT					( m_rtp_world );
-//	rtp().set_scene				( m_scene );
-
-	R_ASSERT					( m_animation_world );
-//	animation_world().set_test_scene( m_scene );
-
-	enable						( m_enabled );
-
-	if ( m_is_active )
+	if ( in_str && in_str[0] )
 	{
-		m_is_active				= false;
-		on_application_activate	( );
+		pcstr const height_str	= vostok::strings::get_token( in_str, xy_str, vostok::strings::length( in_str ), 'x' );
+		if ( height_str )
+		{
+			u32 const width		= atoi( xy_str );
+			u32 const height	= atoi( height_str );
+			if ( width && height )
+				return vostok::math::uint2( width, height );
+		}
 	}
+
+	return vostok::math::uint2( 1280, 720 );
 }
 
-void game::query_render_scene( )
+// STATE[STUB]
+void game::on_configs_loaded( resources::queries_result& result )
 {
-	vostok::render::output_window_configuration		window_configuration;
-	window_configuration.m_hwnd						= m_engine.get_render_window_handle();
-	window_configuration.m_create_flash_renderer	= true;
+	// LOCALS
+	// variant< 32 > 					window_data
+	// variant< 32 > const*[1] 			data
+	// render::output_window_configuration window_configuration
+	// variant< 32 > 					output_window_data
+	// resources::request[1] 			requests
+	// math::uint2 						resolution_xy
+	// console_commands::console_command* fullscreen_command
+	// ******
 
-	resources::user_data_variant window_data;
-	window_data.set				( window_configuration );
+	// CALL SITE INFO
+	// <0x5e7814> -> HWND__* < unknown >() const
+	// <0x5e7839> -> bool < unknown >()
+	// ******
 
-	resources::user_data_variant output_window_data;
+	// FUNCTION BODY[0x5e7760]: 47
+	// <0x5e7771>|0x011|+0x02d:'330'
+	// <0>
+	// <0x5e779e>|0x03e|+0x021:'332'
+	// <0>
+	// <0x5e77bf>|0x05f|+0x01f:'334'
+	// <0x5e77de>|0x07e|+0x01a:'335'
+	// <0>
+	// <0x5e77f8>|0x098|+0x00c:'337'
+	// <0>
+	// <1>
+	// <0x5e7804>|0x0a4|+0x012:'340'
+	// <0>
+	// <1>
+	// <0x5e7816>|0x0b6|+0x009:'343'
+	// <0>
+	// <0x5e781f>|0x0bf|+0x020:'345'
+	// <0>
+	// <1>
+	// <0x5e783f>|0x0df|+0x018:'348'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5e7857>|0x0f7|+0x00d:'352'
+	// <0>
+	// <1>
+	// <0x5e7864>|0x104|+0x008:'355'
+	// <0x5e786c>|0x10c|+0x00e:'356'
+	// <0x5e787a>|0x11a|+0x00d:'357'
+	// <0>
+	// <1>
+	// <0x5e7887>|0x127|+0x00e:'360'
+	// <0x5e7895>|0x135|+0x01a:'361'
+	// <0>
+	// <1>
+	// <0x5e78af>|0x14f|+0x012:'364'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x5e78c1>|0x161|+0x0b3:'376'
+	// ******
+}
 
-	vostok::resources::user_data_variant const* data[] = { /*&scene_data, 0,*/ &window_data };
+void game::on_render_output_window_created( resources::queries_result& data )
+{
+	m_render_output_window			= static_cast_resource_ptr< render::render_output_window_ptr >( data[0].get_unmanaged_resource( ) );
 
-	vostok::const_buffer			temp_buffer( "", 1 );
-	vostok::resources::creation_request requests[] =
+	resources::request requests[]	=
 	{
-//		vostok::resources::creation_request( "game_scene", temp_buffer, resources::scene_class ),
-//		vostok::resources::creation_request( "game_scene_view", temp_buffer, resources::scene_view_class ),
-		vostok::resources::creation_request( "game_render_output_window", temp_buffer, resources::render_output_window_class )
+		resources::create_request	( "items_dictionary", resources::items_dictionary_class ),
+		resources::create_request	( "resources/flash_movies/chat.swf", resources::flash_movie_class ),
 	};
- 	vostok::resources::query_create_resources(
- 		requests,
-		boost::bind( &game::on_render_scene_created, this, _1 ),
- 		survarium::g_allocator,
- 		data
- 	);
+
+	resources::query_resources		(
+		requests,
+		2,
+		boost::bind					( &game::on_base_resources_created, this, _1 ),
+		g_allocator,
+		NULL,
+		NULL,
+		assert_on_fail_true
+	);
+}
+
+// claude@NOTE: 28-statement central init. Structure FULLY decoded from 0x5e7200; two
+// classes of blocker stop a clean body, so it stays a STUB (bodying it with the parts
+// below would emit the high-leverage `static global_input_handler g_input_handler(*this)`
+// that unblocks the global_input_handler ctor 82%->100%, but the residual pieces are
+// unrecoverable and risk fabrication):
+//   399 m_items_dictionary = static_cast_resource_ptr<items_dictionary_ptr>( data[0].get_unmanaged_resource() );
+//   403 static global_input_handler g_input_handler( *this );    // <- the leverage point
+//   404 m_input_world->add_handler( g_input_handler );
+//   406 register_cooks( );
+//   408 m_game_options.initialize( );
+//   410 m_chat_handler->initialize( data[1].get_unmanaged_resource() );
+//   412 m_text_wnd = m_ui_world->create_window( );
+//   413 m_text_wnd->set_position( float2( 300.f, 0.f ) );
+//   414 m_text_wnd->set_size( float2( 600.f, 600.f ) );
+//   415 m_text_wnd->set_visible( true );
+//   417 m_console = m_engine.create_game_console( ui_world( ), input_world( ) );
+//   418 m_stats = NEW(stats)( *m_ui_world ); m_stats->create( );
+//   422 m_fps_graph = NEW(stats_graph)( <t>, math::infinity, <fps>, 60.f, 0xFF00FF00 );  // <t>,<fps> = UNRESOLVED float pool consts (clear_value/default_fps)
+//   424 m_main_menu = NEW(main_menu)( *this ); m_main_menu->query_resources( );
+//   426 create_debug_window( );
+//   428 m_viewport = rectangle<float2>( float2(0,0), float2(<v>,<v>) );   // <v> = UNRESOLVED (clear_value)
+//   433 enable( m_enabled );
+//   435/438 if ( m_is_active ) { on_application_deactivate( ); m_is_active = false; }
+//   446-471 if ( s_net_login_client.is_set_as_string( &client_str ) && strchr(client_str,':') )
+//             create_and_assign_network_client( client_str, s_is_spectator.is_set( ) );
+//           else create_and_assign_network_client( "188.93.23.27:5100", false );
+// BLOCKERS: (1) the m_fps_graph/m_viewport float pool constants resolve only to delinker
+// symbol names (clear_value/default_fps), not literal values; (2) the s_net_login_client /
+// s_is_spectator command_line::key statics' ctor strings live in the data section, not the
+// init asm, so declaring them (and their own dynamic-initializer STUBs) would be a guess.
+// Finish once those data-section strings + float literals are recovered.
+// STATE[STUB]
+void game::on_base_resources_created( resources::queries_result& data )
+{
+}
+
+void game::create_and_assign_network_client( fixed_string< 512 > client_options, const bool is_spectator )
+{
+	m_network_client_options		= client_options;
+
+	if ( is_spectator )
+	{
+		create_network_client		( true );
+		return;
+	}
+
+	create_lobby_menu				( );
+	create_login_menu				( );
+}
+
+void game::on_queried_by_network_client_scene_ready( scene_ready_type scene_ready )
+{
+	switch ( scene_ready )
+	{
+		case login_scene_ready:
+		{
+			m_login_scene_ready		= true;
+			break;
+		}
+		case lobby_scene_ready:
+		{
+			m_lobby_scene_ready		= true;
+			break;
+		}
+	}
+
+	if ( m_lobby_scene_ready && m_login_scene_ready )
+		create_network_client		( false );
+}
+
+// claude@NOTE: structure + 6 stmts match. Residual is LTCG convention only - the
+// target passes `this` ON THE STACK (ret 8, mov ebx,[esp+42Ch]) and pushes
+// is_spectator to the network_client ctor; base keeps __thiscall (this in ecx,
+// ret 4) and the ctor's is_spectator goes via register. The 4-byte frame shift
+// cascades through every [esp+XX] slot. Not source-steerable (arg-passing).
+void game::create_network_client( const bool is_spectator )
+{
+	fixed_string< 512 > host;
+
+	const u32 offset				= m_network_client_options.find( ':' );
+	if ( offset == u32( -1 ) )
+		return;
+
+	host							= m_network_client_options.substr( 0, offset );
+
+	const u16 port					= atoi( m_network_client_options.c_str( ) + offset + 1 );
+
+	set_network_client				(
+		NEW( class network_client )	( *this, is_spectator ),
+		host.c_str					( ),
+		port,
+		is_spectator
+	);
+}
+
+void game::create_lobby_menu( )
+{
+	m_lobby_menu					= NEW( class lobby_menu )( *this );
+}
+
+void game::create_login_menu( )
+{
+	m_login_menu					= NEW( class login_menu )( *this );
+}
+
+void game::query_base_resources( )
+{
+	register_console_commands		( );
+
+	resources::request requests[]	=
+	{
+		resources::create_request	( "resources/startup.cfg", resources::raw_data_class ),
+		resources::create_request	( "user_data/user.cfg", resources::raw_data_class ),
+	};
+
+	resources::query_resources		(
+		requests,
+		2,
+		boost::bind					( &game::on_configs_loaded, this, _1 ),
+		g_allocator,
+		NULL,
+		NULL,
+		assert_on_fail_true
+	);
 }
 
 void game::enable( bool value )
@@ -357,97 +579,74 @@ void game::enable( bool value )
 		return;
 
 	if ( value )
-	{
 		m_input_world->acquire		( );
-
-		// select active scene
-		game_scene* scene_to_activate = /*m_lobby_menu;*/m_game_world;
-#if 0
-		if( m_game_world->empty() )
-			scene_to_activate		= m_main_menu;
-#endif
-		switch_to_scene				( scene_to_activate );
-	}
 	else
-	{
 		m_input_world->unacquire	( );
-	}
 }
 
- void on_config_loaded( resources::queries_result& data )
- {
- 	if( !data.is_successful() )
- 	{
- 		LOG_ERROR					( "config file loading FAILED" );
- 		return;
- 	}
+void game::on_renderer_created( resources::queries_result& data )
+{
+}
 
- 	resources::pinned_ptr_const<u8> pinned_data( data[0].get_managed_resource() );
- 	memory::reader F				( pinned_data.c_ptr(), pinned_data.size() );
-	console_commands::load			( F, console_commands::execution_filter_general );
- }
+void game::on_config_loaded( resources::queries_result& data, bool create_renderer )
+{
+	if ( !data.is_successful( ) )
+	{
+		LOG_ERROR					( "config file loading FAILED" );
+		return;
+	}
 
- void load_config_query				( pcstr cfg_name )
- {
- 	resources::query_resource		(
- 		cfg_name,
- 		vostok::resources::raw_data_class,
- 		boost::bind( &on_config_loaded, _1 ),
- 		g_allocator,
-		0,
-		0,
-		assert_on_fail_false
- 	);
- }
+	load_cc_script					( data[0].get_managed_resource( ), create_renderer );
+}
+
+// claude@NOTE: 9-statement body, two halves. First half (608-615) is clean + recoverable:
+//   if ( cfg && cfg.c_ptr( ) ) {
+//     resources::pinned_ptr_const<u8> pinned_data( cfg );
+//     memory::reader F( pinned_data.c_ptr( ), pinned_data.size( ) );
+//     console_commands::load( F, console_commands::execution_filter_general );
+//   }
+// Second half (618-629) is BLOCKED: `if ( create_renderer )` builds a "renderer" creation
+// request whose user_data is the render ENGINE world read straight off the renderer facade
+// (asm: mov ecx,[m_renderer]; mov esi,[ecx+4] == render::game::renderer::m_render_engine_world)
+// then query_create_resources( ..., on_renderer_created, ... ). m_render_engine_world is a
+// PRIVATE member of render::game::renderer with no accessor and game is not a friend, so the
+// exact `[m_renderer+4]` load cannot be produced from game.cpp (m_render_world.engine_world()
+// reads a different slot). Writing only the first half would give the wrong (truncated)
+// structure, so the whole function stays a STUB. Lifts once the render cluster exposes the
+// renderer's engine world (an accessor or friend).
+// STATE[STUB]
+void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_renderer )
+{
+}
+
+void game::load_config_query( pcstr cfg_name, bool create_renderer )
+{
+	resources::query_resources_and_wait	( &resources::create_request( cfg_name, resources::raw_data_class ), 1, boost::bind( &game::on_config_loaded, this, _1, create_renderer ), g_allocator, NULL, NULL, assert_on_fail_false );
+}
 
 void game::register_console_commands( )
 {
-	static exit_handler				game_exit_handler( *this );
-//	static npc_manipulation_handler npc_management_handler( *this );
-
-	m_input_world->add_handler		( game_exit_handler );
-//	m_input_world->add_handler		( npc_management_handler );
-
-	static cc_delegate				game_exit_cc( "quit", boost::bind( &game::exit, this, _1 ), false );
- 	static cc_delegate				cfg_load_cc( "cfg_load", boost::bind( &load_config_query, _1 ), true );
- 	cfg_load_cc.execute				( "resources/startup.cfg" );
- 	cfg_load_cc.execute				( "user_data/user.cfg" );
-
- 	static cc_delegate				cfg_load_level( "level_load",   boost::bind( &game::load_cmd, this, _1 ), true );
- 	static cc_delegate				cfg_unload_level( "level_unload", boost::bind( &game::unload_cmd, this, _1 ), false );
+	static console_commands::cc_delegate	game_exit_cc( "quit", boost::bind( &game::exit, this, _1 ), false );
+	static console_commands::cc_delegate	cfg_load_cc( "cfg_load", boost::bind( &game::load_config_query, this, _1, false ), true );
+	static console_commands::cc_delegate	cfg_load_level( "level_load", boost::bind( &game::load_cmd, this, _1 ), true );
+	static console_commands::cc_delegate	cfg_unload_level( "level_unload", boost::bind( &game::unload_cmd, this, _1 ), false );
 }
 
-void game::switch_to_scene( game_scene* scene )
+void game::switch_to_scene( base_game_scene* scene )
 {
-	R_ASSERT						( scene );
-//	ASSERT			( m_active_scene != scene );
+	if ( m_active_scene == scene )
+		return;
 
-	if( m_active_scene )
+	if ( m_active_scene )
 		m_active_scene->on_deactivate( );
 
 	m_active_scene	= scene;
 	m_active_scene->on_activate		( );
-
-#ifndef MASTER_GOLD
-	m_stats->set_active_scene(m_active_scene->dbg_name());
-#endif //#ifndef MASTER_GOLD
 }
 
-u32 game::time_ms( )
+void game::toggle_console( )
 {
-	return m_timer.get_elapsed_msec();
-}
-
-//void game::apply_camera( game_camera const* c )
-//{
-//	m_inverted_view					= c->get_inverted_view_matrix();
-//	m_projection					= c->get_projection_matrix();
-//	m_sound_world.get_logic_world_user().set_listener_properties( m_inverted_view );
-//}
-
-void game::toggle_console			( )
-{
-	if ( m_console->get_active() )
+	if ( m_console->get_active( ) )
 		m_console->on_deactivate	( );
 	else
 		m_console->on_activate		( );
@@ -457,369 +656,250 @@ void game::exit( pcstr str )
 {
 	unload							( str, true );
 
-	if ( m_engine.command_line_editor() )
+	if ( m_engine.command_line_editor( ) )
 		m_engine.enter_editor_mode	( );
 	else
 		m_engine.exit				( 0 );
 }
 
-void game::tick( u32 const current_frame_id )
+void game::tick( const u32 current_frame_id )
 {
-	//static bool game_test_run		= false;
-	//if ( !game_test_run )
-	//{
-	//	game_test_suite::run_tests	( );
-	//	game_test_run				= true;
-	//}
+	u32 const		current_time_in_ms		= m_timer.get_elapsed_msec( );
+	u32 const		frame_delta				= current_time_in_ms - m_current_time_in_ms;
+	m_current_time_in_ms					= current_time_in_ms;
 
+	m_permanent_time_in_ms					= m_permanent_timer.get_elapsed_msec( );
 
-	if( !get_active_scene() )
+	m_current_frame_id						= current_frame_id;
+
+	m_scheduler.on_frame					( frame_delta, m_current_time_in_ms );
+
+	if ( !m_active_scene || !m_active_scene->render_scene( ).c_ptr( ) )
 	{
-		m_renderer.end_frame		( );
+		if ( m_network_client )
+			m_network_client->tick			( m_current_time_in_ms, m_is_paused );
+
+		m_renderer.end_frame				( );
 		return;
 	}
 
-	if ( m_active_scene )
-	{
- 		m_input_world->tick			( );
-		m_active_scene->tick		( );
-	}
+	m_input_world->tick						( m_permanent_time_in_ms );
+	m_active_scene->tick					( frame_delta, m_current_time_in_ms, m_is_paused );
 
+	if ( m_game_options.is_active( ) )
+		m_game_options.tick					( frame_delta, m_current_time_in_ms, m_is_paused );
 
-//	test							( );
-	m_ui_world->tick				( );
-//	m_physics_world->tick			( );
+	if ( m_chat_handler->is_active( ) )
+		m_chat_handler->tick				( frame_delta );
 
-//	m_rtp_world->tick				( );
-	m_animation_world->tick			( );
+	if ( m_network_client )
+		m_network_client->tick				( m_current_time_in_ms, m_is_paused );
 
-	//m_ai_navigation_world->tick		( );
+	m_active_scene->on_after_tick			( );
 
-	//if ( m_is_dictionary_created )
-	//	run_ai_tests				( current_frame_id );
+	m_text_wnd->remove_all_children			( );
+	m_text_wnd->tick						( );
+	m_text_wnd->draw						( m_ui_world->get_renderer( ), m_active_scene->render_scene_view( ) );
 
-	//m_ai_world->tick				( );
+	m_ui_world->tick						( );
 
-//#ifdef DEBUG
-//	if ( m_game_world->get_camera_director()->get_active_camera() )
-//	{
-//		float3 const& position				= m_game_world->get_camera_director()->get_active_camera()->get_inverted_view_matrix().c.xyz();
-//		float3 const& direction				= m_game_world->get_camera_director()->get_active_camera()->get_inverted_view_matrix().k.xyz();
-//		float4x4 const& projection_matrix	= m_game_world->get_camera_director()->get_active_camera()->get_projection_matrix();
-//		float4x4 const& view_matrix			= math::invert4x3( m_game_world->get_camera_director()->get_active_camera()->get_inverted_view_matrix() );
-//		m_ai_navigation_world->debug_render	( *m_input_world, position, direction,	math::frustum( mul4x4( view_matrix, projection_matrix ) ) );
-//	}
-//#endif // #ifdef DEBUG
+	if ( m_console->get_active( ) )
+		m_console->tick						( m_active_scene->render_scene_view( ) );
 
-	if( m_console->get_active() )
-		m_console->tick				( get_active_scene_view() );
+	update_stats							( current_frame_id );
 
-	// because of out of memory at the start
-	update_stats					( current_frame_id );
+	if ( m_debug_window_type != debug_window_none && !m_console->get_active( ) )
+		draw_debug_window					( );
 
-	if ( (m_debug_window_type != debug_window_none) && !m_console->get_active() )
-		draw_debug_window			( );
+	m_renderer.draw_scene					( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ), render_output_window( ), viewport( ) );
 
-	renderer().draw_scene(
-							get_active_scene(),
-							get_active_scene_view(),
-							render_output_window(),
-							viewport() );
-
-	m_renderer.end_frame			( );
+	m_renderer.end_frame					( );
 }
 
-void game::update_stats				( u32 const current_frame_id )
+void game::update_stats( const u32 current_frame_id )
 {
-	float const last_frame_time		= float( m_timer.get_elapsed_msec() - m_last_frame_time_ms ) / 1000.f;
-	m_fps_graph->add_value			( last_frame_time, math::is_zero( last_frame_time - m_last_frame_time ) ? math::infinity : 1.f / ( last_frame_time - m_last_frame_time ) );
-	m_last_frame_time				= last_frame_time;
+	float const last_frame_time				= float( m_permanent_time_in_ms - m_first_frame_time_in_ms ) * math::epsilon_3;
+	m_fps_graph->add_value					( last_frame_time, math::is_zero( last_frame_time - m_last_frame_time ) ? 10000.f : 1.f / ( last_frame_time - m_last_frame_time ) );
 
-//	update_npc_stats				( );
+	m_previous_frame_time_in_ms				= m_permanent_time_in_ms;
 
-	if ( s_draw_stats_value /*&& !m_active_npc_set*/ )
+	m_last_frame_time						= last_frame_time;
+	if ( m_lobby_menu && m_lobby_menu->is_active( ) )
+		m_lobby_menu->set_fps_stats			( m_fps_graph->cumulative_count( ) / m_fps_graph->cumulative_time( ) );
+
+	if ( s_draw_stats_value && !hide_game_stats && m_game_world.is_active( ) )
 	{
-		m_stats->set_fps_stats		( m_fps_graph->average_value() );
-//		m_stats->set_camera_stats	( m_inverted_view_matrix.c.xyz(), m_inverted_view_matrix.k.xyz() );
-		string64					buff;
-		vostok::sprintf				( buff, "Q: %d", vostok::resources::pending_queries_count() );
-		m_stats->set_resources_stats( buff );
+		m_stats->set_fps_stats				( m_fps_graph->cumulative_count( ) / m_fps_graph->cumulative_time( ) );
 
-		m_stats->draw				( ui_world().get_renderer(), get_active_scene_view() );
+		char buff[64];
+		vostok::sprintf						( buff, "pending queries: %d", vostok::resources::pending_queries_count( ) );
+		m_stats->set_resources_stats		( buff );
+
+		m_stats->draw						( ui_world( ).get_renderer( ), m_active_scene->render_scene_view( ) );
 	}
 
+	static bool draw_fps_graph				= false;
+	static cc_bool fps_graph				( "draw_fps_graph", draw_fps_graph, false, command_type_user_specific );
 
-	//if( true ) {
-	//	string4096 s = "";
-	//	m_rtp_world->get_controllers_dump( s );
-	//	m_stats->set_rtp_controllers_dump( s );
-	//}
-
-	static bool draw_fps_graph	= false;
-	static console_commands::cc_bool	fps_graph( "draw_fps_graph", draw_fps_graph, false, console_commands::command_type_user_specific );
-
-	if ( draw_fps_graph /*&& !m_active_npc_set*/ )
+	if ( draw_fps_graph && !hide_game_stats && m_game_world.is_active( ) )
 	{
-		m_fps_graph->set_time_interval	( 5.f );
-		m_fps_graph->render				( ui_world().get_renderer(), get_active_scene_view(), current_frame_id, 10, 768 - 128 - 2, 1024 - 2*10, 128 );
+		m_fps_graph->set_time_interval		( 5.f );
+		// only top_margin (574) + height (128) survive; arg_4/5/6 are UNREFERENCED in
+		// render() so LTCG drops them - the trailing args here are placeholders.
+		m_fps_graph->render					( ui_world( ).get_renderer( ), m_active_scene->render_scene_view( ), 574, 128, current_frame_id, 1004, 10 );
 	}
 	else
+		m_fps_graph->set_time_interval		( 1.f );
+
+	// claude@NOTE: PARKED tail (6 stmts, target lines 845-862) - the s_draw_snd_stats
+	// sound-debug block:
+	//   if ( s_draw_snd_stats_value && m_game_world.is_active( ) ) {
+	//     if ( !m_sound_stats )
+	//       m_sound_stats = NEW( sound::sound_debug_stats )( g_allocator,
+	//         m_sound_world.get_logic_world_user( ), m_game_world.get_sound_scene( ), *m_ui_world );
+	//     if ( m_sound_stats->is_stats_available( ) ) {
+	//       sound::sound_debug_stats::set_debug_draw_mode( sound::sound_debug_stats::overall );
+	//       m_sound_stats->draw( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ) );
+	//     }
+	//   }
+	// BLOCKED: sound_debug_stats.cpp is ExcludedFromBuild for Master Gold in
+	// sources/vostok/sound/sources/sound.vcproj (and its private helpers
+	// create_statistic/draw_*_stats are unimplemented stubs), so the ctor/draw/
+	// set_debug_draw_mode calls won't link. The TARGET build compiles that TU
+	// (vostok::sound::sound_debug_stats::draw exists at 0x145f60). Restore this tail
+	// once the sound module implements sound_debug_stats.cpp and un-excludes it.
+}
+
+void game::clear_resources( )
+{
+	destroy_debug_window			( );
+
+	m_main_menu->clear_resources	( );
+
+	if ( m_lobby_menu )
+		m_lobby_menu->clear_resources( );
+
+	if ( m_login_menu )
+		m_login_menu->clear_resources( );
+
+	if ( m_active_scene )
+		m_active_scene->on_deactivate( );
+
+	if ( m_network_client )
 	{
-		m_fps_graph->stop_rendering		( );
-		m_fps_graph->set_time_interval	( 1.f );
+		m_network_client->unload	( );
+		DELETE						( m_network_client );
 	}
 
-//#ifndef MASTER_GOLD
-//	if ( m_sound_stats && m_sound_stats->is_stats_available( ) )
-//		m_sound_stats->draw				( m_scene );
-//#endif //#ifndef MASTER_GOLD
+	m_input_world->clear_resources	( );
+	m_ui_world->clear_resources		( );
+
+	if ( !m_game_world.empty( ) )
+		m_game_world.unload			( );
+
+	m_game_world.clear_resources	( );
 }
 
-
-void game::clear_resources				( )
+void game::load_cmd( pcstr project_name )
 {
-	destroy_debug_window				( );
-
-	m_lobby_menu->clear_resources		( );
-
-	//for ( human_npc_ptr it_npc = m_npcs.front(); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
-	//	kill_npc						( it_npc );
-
-	//m_npcs.clear						( );
-
-//	R_ASSERT							( m_spatial_tree );
-//	vostok::collision::delete_space_partitioning_tree( m_spatial_tree );
-//	m_spatial_tree						= 0;
-
-#ifndef MASTER_GOLD
-//	m_sound_stats->clear_resources		( m_sound_world.get_logic_world_user() );
-#endif //#ifndef MASTER_GOLD
-
-	//m_render_world.destroy( *g_allocator, m_renderer);
-
-//	m_physics_world->clear_resources	( );
-	m_input_world->clear_resources		( );
-	m_ui_world->clear_resources			( );
-	//m_ai_navigation_world->clear_resources( );
-//	m_ai_world->clear_resources			( );
-	m_animation_world->clear_resources	( );
-//	m_rtp_world->clear_resources		( );
-
-	if( !m_game_world->empty() )
-		m_game_world->unload			( );
+	load							( project_name );
 }
 
-void game::load_cmd						( pcstr project_name )
+void game::unload_cmd( pcstr s )
 {
-	load								( project_name );
+	unload							( s, false );
 }
 
-void game::unload_cmd					( pcstr s )
+void game::load(
+	pcstr const						project_resource_name,
+	resources::request* const		requests_begin,
+	resources::request* const		requests_end,
+	variant< 32 > const** const		user_datas_begin,
+	boost::function< void( resources::queries_result& ) > const&	callback
+)
 {
-	unload								( s, false );
+	m_project_resource_name			= project_resource_name;
+
+	m_game_world.load				( project_resource_name, requests_begin, requests_end, user_datas_begin, callback );
+
+	m_lpv_geometry_builded			= false;
 }
 
-void game::load( pcstr project_resource_name, pcstr project_resource_path )
+void game::load( pcstr const project_resource_name )
 {
-	m_game_world->load		( project_resource_name, project_resource_path );
-
-	//m_ai_navigation_world->load_navmesh( project_resource_path ? project_resource_path : project_resource_name );
-
-	switch_to_scene			( m_game_world );
+	m_network_client->load			( project_resource_name, m_game_world.get_camera_director( ) );
 }
 
-void game::unload( pcstr , bool destroying )
+void game::unload( pcstr __formal, bool destroying )
 {
-	ASSERT								( m_game_world );
+	if ( !m_game_world.empty( ) )
+		m_game_world.unload			( );
 
-	m_game_world->unload				( );
+	if ( !destroying )
+		switch_to_scene				( m_main_menu );
+}
 
-	//for ( human_npc_ptr it_npc = m_npcs.front(); it_npc; it_npc = m_npcs.get_next_of_object( it_npc ) )
-	//{
-	//	kill_npc( it_npc );
-	//}
-	//m_selected_npc		= NULL;
-	//m_active_npc_set	= false;
-	//m_npc_queries_count	= 0;
-	//m_npcs.clear();
+void game::switch_to_game_world( )
+{
+	switch_to_scene					( &m_game_world );
+}
 
-	if(!destroying)
-		switch_to_scene					( m_main_menu );
+void game::switch_to_main_menu( )
+{
+	switch_to_scene					( m_main_menu );
 }
 
 void game::switch_to_lobby( )
 {
-		switch_to_scene					( m_lobby_menu );
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
+
+	switch_to_scene					( m_lobby_menu );
 }
 
-void game::scene_close_query( )
+void game::switch_to_login( login_menu_status_enum status )
 {
-	if ( m_active_scene == m_main_menu )
-		switch_to_scene					( m_game_world );
-	else
-	if ( m_active_scene == m_game_world )
-		switch_to_scene					( m_main_menu );
-	else
-	if ( m_active_scene == m_lobby_menu )
-		switch_to_scene					( m_game_world );
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
+
+	m_login_menu->set_status		( status );
+	switch_to_scene					( m_login_menu );
 }
 
-
+// claude@NOTE: cook inventory + order verified EXACT against the target disasm
+// (0x5e5940): the 7 statics and the 3 explicit register_cook calls all appear in
+// target order - this is NOT a content/order divergence. The residual is all
+// non-steerable codegen: (1) `mov esi,eax` this-in-eax convention - the fn is
+// reached only via the member-fn-ptr anchor in anchor_game_world.cpp (address-take,
+// not a direct call); (2) animated_model_instance_cook ctor inline-vs-call (base
+// inlines its body, target out-of-lines it - cross-module knob); (3) the free
+// resources::register_cook(cook) is inlined into resources_manager::register_cook
+// in the target but CALLed in our base x3 (cross-module inline knob); (4) the
+// s_victory_item_cook ctor is this-const-folded in the target (see
+// victory_item_cooker.cpp note). None steerable from this TU.
 void game::register_cooks( )
 {
-	static animation_analysis_result_cook			s_animation_analysis_result_cook;
+	static animated_model_instance_cook				s_animated_model_instance_cook;
 	static game_material_manager_cook				s_material_manager_cook( false );
-//	static animated_model_instance_cook				s_animated_model_instance_cook = <0x4c277b0>;
-	static ladder_cook 								s_ladder_cook;
-//	static weapon_user_animations_container_cook	s_animation_container_cook = <0x4c2785c>;
-//	static project_cooker_simple					s_simple_project_cook = <0x4c2778c>;
-//	static victory_item_cook 						s_victory_item_cook( );
+	static project_cooker_simple					s_simple_project_cook( engine( ).command_line_editor( ) );
 
-	register_cook						( &s_animation_analysis_result_cook );
-	register_cook						( &s_material_manager_cook );
-	register_cook						( &s_ladder_cook );
+	static animation_analysis_result_cook			s_animation_analysis_result_cook;
+	resources::register_cook						( &s_animation_analysis_result_cook );
 
-//
-// outdated
-//
+	static ladder_cook								s_ladder_cook;
+	resources::register_cook						( &s_ladder_cook );
 
-	static project_cooker			s_project_cook( engine().command_line_editor() );
-	static project_cooker_simple	s_simple_project_cook( engine().command_line_editor() );
-	static cell_cooker				s_cell_cook;
+	static weapon_user_animations_container_cook	s_animation_container_cook;
+	resources::register_cook						( &s_animation_container_cook );
 
-//	static sound_player_cook			s_logic_sound_player_cook		( m_sound_scene, &m_sound_world, m_input_world, resources::sound_player_logic_class );
-//	static sound_player_cook			s_editor_sound_player_cook		( m_sound_scene, &m_sound_world, m_input_world, resources::sound_player_editor_class );
-//	static human_npc_cook				s_human_npc_cook				( *this );
-//	static animated_model_instance_cook	s_animated_model_instance_cook;
-	static weapon_cook					s_weapon_cook					( *this );
-
-
-	register_cook						( &s_project_cook );
-	register_cook						( &s_simple_project_cook );
-	register_cook						( &s_cell_cook );
-
-	//register_cook						( &s_logic_sound_player_cook );
-	//register_cook						( &s_editor_sound_player_cook );
-	//register_cook						( &s_human_npc_cook );
-	//register_cook						( &s_animated_model_instance_cook );
-	register_cook						( &s_weapon_cook );
+	static victory_item_cook						s_victory_item_cook( m_game_world );
 }
 
-#if 0
-static void on_lua_config_loaded	( resources::queries_result& data )
+void game::on_application_activate( )
 {
-	VOSTOK_UNREFERENCED_PARAMETER		( data );
-	R_ASSERT						( !data.is_failed() );
+	::SetWindowTextA					( m_engine.get_main_window_handle( ), "Survarium\x99 v0.1 - Copyright\xA9 Vostok Games\xAE" );
 
-	{
-		configs::binary_config_ptr	config	= configs::create_lua_config("test.lua");
-		configs::binary_config_value root	= (*config)["skeleton"];
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"]["head"] = 1;
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"]["head"].create_table();
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"]["head2"] = 1;
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"].add_super_table( root["hips"] );
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"].remove_super_table( root["hips"] );
-		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"].add_super_table( "scripts/test_config", "new_table.mega_table" );
-		configs::binary_config_value value = root["hips"]["spine"]["spine_1"]["spine_2"]["neck"]["mega_value"];
-		pcstr const mega_value			= value;
-		debug::printf( "%s%c", mega_value, '\n' );
-//		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"].remove_super_table( "test", "hips.spine"  );
-//		root["hips"]["spine"]["spine_1"]["spine_2"]["neck"]["head"] = "ooops";
-		root["hips"]["spine"]["spine_1"]["spine_2"]["left_collar"]["left_arm"]["left_fore_arm"]["left_hand_roll"].create_table();
-		config->save					( );
-	}
-	{
-		configs::binary_config_ptr config_ptr = static_cast_checked<configs::lua_config*>(data[0].get_unmanaged_resource().get());
-		configs::lua_config& config		= *config_ptr;
-		u32 const value					= config["atest_table"]["value"];
-		u32 const value2				= config["atest_table"]["value2"];
-		config.save_as					( "d:/test.lua" );
-	}
-
-	{
-		configs::binary_config_ptr config	= configs::create_lua_config();
-		configs::binary_config_value params = *config;
-		params["test"][0]["a"] 			= "a";
-		params["test"][0]["b"] 			= "b";
-		params["test"][1]["a"] 			= "a";
-		params["test"][1]["b"] 			= "b";
-		config->save_as					( "d:/test.lua" );
-		configs::create_lua_config( config->get_binary_config() )->save_as("d:/test2.lua");
-	}
-
-	configs::binary_config_ptr config_ptr = static_cast_checked<configs::lua_config*>(data[0].get_unmanaged_resource().get());
-	configs::lua_config& config		= *config_ptr;
-	u32 u32_value					= config["test_table"]["u32_value"];
-	s32 s32_value					= config["test_table"]["s32_value"];
-	float float_value				= config["test_table"]["float_value"];
-	pcstr string_value				= config["test_table"]["string_value"];
-	math::float2 const float2_value	= config["test_table"]["float2_value"];
-	math::float3 float3_value		= config["test_table"]["float3_value"];
-	bool bool_value					= config["test_table"]["one_more_table"]["bool_value"];
-	bool const value_exist0			= config["test_table"]["one_more_table"].value_exists("bool_value");
-	bool const value_exist1			= config["test_table"]["one_more_table"].value_exists("bool_value_");
-	bool const value_exist2			= config.value_exists("test_table.one_more_table.bool_value");
-
-	config["test_table"]["u32_value"]		= 128;
-	config["test_table"]["s32_value"]		= -128;
-	config["test_table"]["float_value"]		= 128.1f;
-	config["test_table"]["string_value"]	= "string_value";
-	config["test_table"]["float2_value"]	= math::float2( 0.f, 1.f );
-	config["test_table"]["float3_value"]	= math::float3( 0.f, 1.f, 2.f ).normalize();
-	config["test_table"]["new_table"]["float3_value"]	= math::float3( 0.f, 128.f, 2.f ).normalize();
-	config["new_table"]["new_table"]["float3_value"]	= math::float3( 2.f, 128.f, 2.f ).normalize();
-	config["test_table"]["float3_value"]["new_value"]	= math::float3( 0.f, 1.f, 2.f ).normalize();
-
-	config["test_table"]["new_table2"]["float3_value"].value_exists("float4_value");
-	config["new_table2"]["new_table"]["float3_value"].value_exists("float4_value");
-
-	config["expreimaental"]["test_super_value"]		= "super_value";
-
-	config["test_table"]["__a"].remove_super_table	( "scripts/test_config", "test_table" );
-	config["test_table"]["__a"].remove_super_table	( "scripts/test_config", "new_table" );
-	config["test_table"]["__a"].add_super_table		( "scripts/test_config", "expreimaental" );
-	pcstr const super_value			= config["test_table"]["__a"]["test_super_value"];
-	config["test_table"]["__a"]["test_super_value"]	= "super_value";
-//	config["test_table"]["__a"].add_super_table	( "scripts/test_config", "test_table" );
-//	float float_value2				= config["test_table"]["__a"]["float_value"];
-//	config["test_table"]["__a"].remove_super_table	( "scripts/test_config", "test_table" );
-//	float_value2					= config["test_table"]["__a"]["float_value"];
-//	config["test_table"]["__a"].add_super_table	( config[new_table] );
-//	float3_value					= config["test_table"]["__a"]["new_table"]["float3_value"];
-//	config["test_table"]["new_table"].remove_super_table( config["new_table"] );
-//	float3_value					= config["test_table"]["new_table"]["new_table"]["float3_value"];
-
-	configs::binary_config_value value	= config.get_root( );
-	value							= value["test_table"];
-	value							= value["float2_value"];
-	value							= value["new_value"];
-	value							= math::float2( 3, 1 );
-
-	config.save_as					( "c:\\test_config.lua" );
-//	config_ptr						= configs::create_lua_config( );
-//	configs::lua_config& config		= *config_ptr;
-//	config["test_table"]["u32_value"]		= 1;
-//	config["test_table"]["string_value"]	= "aga!";
-//	u32 const u32_value				= (*bc)["test_table"]["u32_value"];
-//	pcstr const string_value		= (*bc)["test_table"]["string_value"];
-
-	{
-		configs::binary_config_ptr bc	= config.get_binary_config( );
-		u32_value						= (*bc)["test_table"]["u32_value"];
-		s32_value						= (*bc)["test_table"]["s32_value"];
-		float_value						= (*bc)["test_table"]["float_value"];
-		string_value					= (*bc)["test_table"]["string_value"];
-		bool_value						= (*bc)["test_table"]["one_more_table"]["bool_value"];
-		math::float3 const float3_value	= (*bc)["test_table"]["float3_value"]["new_value"];
-	}
-}
-#endif // #if 0
-
-void game::on_application_activate		( )
-{
 	threading::mutex_raii guard			( m_application_activation );
-
-	R_ASSERT							( !m_is_active );
 
 	if ( m_input_world )
 		m_input_world->on_activate		( );
@@ -827,165 +907,231 @@ void game::on_application_activate		( )
 	m_is_active							= true;
 }
 
-void game::on_application_deactivate	( )
+void game::on_application_deactivate( )
 {
-	if ( !m_input_world )
-		return;
+	if ( m_input_world )
+	{
+		threading::mutex_raii guard		( m_application_activation );
 
-	threading::mutex_raii guard			( m_application_activation );
-
-//?	R_ASSERT	( m_is_active );
-	m_input_world->on_deactivate		( );
-	m_is_active							= false;
+		m_input_world->on_deactivate	( );
+		m_is_active						= false;
+	}
 }
-//
-//
-//struct ray_query_predicate : private boost::noncopyable
-//{
-//	inline ray_query_predicate		(
-//			float& value,
-//			collision::object const* const object_of_interest,
-//			collision::object const* const object_to_ignore,
-//			float const threshold
-//		) :
-//		visibility_value			( value ),
-//		requested_object			( object_of_interest ),
-//		object_to_ignore			( object_to_ignore ),
-//		transparency_threshold		( threshold ),
-//		requested_object_was_found	( false )
-//	{
-//	}
-//
-//	inline bool predicate			( vostok::collision::ray_triangle_result const& triangle )
-//	{
-//		if ( !triangle.object->user_data() )
-//			return					false;
-//
-//		if ( triangle.object == object_to_ignore )
-//			return					false;
-//
-//		game_material_visibility_parameters const* const parameters = static_cast_checked< game_material_visibility_parameters const* >( triangle.object->user_data() );
-//		float const transparency	= parameters->get_transparency_value();
-//		requested_object_was_found	= triangle.object == requested_object;
-//		visibility_value			-= ( 1.f - ( requested_object_was_found ? 1.f : transparency ) );
-//		if ( requested_object_was_found || visibility_value <= transparency_threshold || transparency == 0 )
-//			return					true;
-//
-//		return						false;
-//	}
-//
-//	float&							visibility_value;
-//	collision::object const* const	requested_object;
-//	collision::object const* const	object_to_ignore;
-//	float const						transparency_threshold;
-//	bool							requested_object_was_found;
-//}; // class ray_query_predicate
-//
 
-//void game::draw_ray	( float3 const& start_point, float3 const& end_point, bool sees_something ) const
-//{
-//	m_renderer.debug().draw_arrow( m_scene, start_point, end_point, sees_something ? math::color( 255, 0, 0 ) : math::color( 0, 255, 255 ) );
-//}
-
-//void game::draw_frustum					(
-//		float fov_in_radians,
-//		float far_plane_distance,
-//		float aspect_ratio,
-//		float3 const& position,
-//		float3 const& direction,
-//		math::color color
-//	) const
-//{
-//	m_renderer.debug().draw_frustum		(
-//		m_scene,
-//		fov_in_radians,
-//		0.f,
-//		far_plane_distance,
-//		aspect_ratio,
-//		position,
-//		direction,
-//		float3( 0.f, 1.f, 0.f ),
-//		color
-//	);
-//}
-
-
-
-
-
-void game::draw_debug_window			()
+// STATE[STUB]
+// claude@NOTE: target body resolves m_render_output_window -> res_render_output and
+// calls render::res_render_output::goto_fullscreen, which is NOT declared in our
+// sources/vostok/render/core/dx11/res_render_output.h (it IS in the target structure).
+// That header is the render cluster's; cannot add the decl here. Keep stub buildable.
+void game::on_fullscreen_alttab( bool first )
 {
-	using namespace						vostok;
-	R_ASSERT							( m_debug_window );
+	// FUNCTION BODY[0x5e5f80]: 2
+	// <0>
+	// <0x5e5f80>|0x000|+0x010:'1126'
+	// ******
+}
 
-	u32 const buffer_size				=	64 * vostok::Kb;
-	pvoid const buffer					=	ALLOCA(buffer_size);
-	vostok::strings::text_tree tree			(buffer, buffer_size, "resources stats");
+void game::draw_debug_window( )
+{
+	u32 const buffer_size			= u32( 64 * Kb );
+	pvoid const buffer				= ALLOCA( buffer_size );
+	strings::text_tree tree			( buffer, buffer_size, "resources stats" );
 
 	if ( m_debug_window_type == debug_window_resources )
-		vostok::resources::fill_stats		(tree.root());
-	else if ( m_debug_window_type == debug_window_tasks )
-		vostok::tasks::fill_stats			(tree.root());
+		resources::fill_stats		( tree.root( ) );
 	else
-		NODEFAULT						(return);
+		tasks::fill_stats			( tree.root( ) );
 
-	m_debug_window->remove_all_childs	();
-
-	ui::text_tree_draw_helper_params	params;
-	params.color1						= math::color( 177, 109, 243 ).m_value;
-	params.color2						= math::color( 191, 192, 247 ).m_value;
-	params.is_multipaged				= false;
-	params.fnt							= ui::fnt_arial;
-	params.row_height					= 15.0f;
-	params.space_between_pages			= 10.0f;
-	params.start_pos					= float2(0.0f, 0.0f);
-	ui::text_tree_draw_helper h			( * m_ui_world, m_debug_window, params, memory::g_mt_allocator );
-
-	h.output							( & tree.root() );
-	m_debug_window->draw				( renderer().ui(), get_active_scene_view() );
+	m_debug_window->remove_all_children	( );
 }
 
-void game::create_debug_window			()
+void game::create_debug_window( )
 {
-	R_ASSERT							(!m_debug_window);
 	m_debug_window						= m_ui_world->create_window( );
 	m_debug_window->set_visible			( true );
 	m_debug_window->set_position		( float2( 0.f, 120.f ) );
 	m_debug_window->set_size			( float2( 2024.f, 768.f ) );
 }
 
-void game::destroy_debug_window			()
+void game::destroy_debug_window( )
 {
-	R_ASSERT							( m_debug_window );
 	m_ui_world->destroy_window			( m_debug_window );
 	m_debug_window						= 0;
 }
 
-void game::toggle_debug_window			()
-{
-	if ( m_debug_window_type == debug_window_none )
-		m_debug_window_type				=	debug_window_resources;
-	else if ( m_debug_window_type == debug_window_resources )
-		m_debug_window_type				=	debug_window_tasks;
-	else
-		m_debug_window_type				=	debug_window_none;
-}
-
-vostok::render::scene_view_ptr const game::get_active_scene_view( )	const
-{
-	return m_active_scene ? m_active_scene->get_render_scene_view() : NULL;//get_game_world().get_render_scene_view();
-}
-
-vostok::render::scene_ptr const game::get_active_scene( )	const
-{
-	return m_active_scene ? m_active_scene->get_render_scene() : NULL;//get_game_world().get_render_scene();
-}
-
-#ifdef VOSTOK_STATIC_LIBRARIES
-flash_factory&					game::get_flash_factory	( )
+flash_factory& game::get_flash_factory( )
 {
 	return *m_flash_factory;
 }
-#endif //#ifdef VOSTOK_STATIC_LIBRARIES
+
+// STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header. Target body:
+//   m_is_paused = !m_is_paused;
+//   if ( m_is_paused )  pause( );
+//   else {  m_timer.resume( );  m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );  }
+// but timing::timer::resume()/pause()/is_paused() are NOT declared in our
+// sources/vostok/timing_timer.h (they ARE inline in the target timing/timer.h).
+// That header is the core/timing module's; cannot add them here. Keep stub buildable.
+void game::toggle_pause( )
+{
+	// CALL SITE INFO
+	// <0x5e5d90> -> sound::world_user& < unknown >() const
+	// ******
+
+	// FUNCTION BODY[0x5e5d50]: 5
+	// <0x5e5d50>|0x000|+0x010:'1185'
+	// <0x5e5d60>|0x010|+0x004:'1186'
+	// <0x5e5d64>|0x014|+0x008:'1187'
+	// <0>
+	// <0x5e5d6c>|0x01c|+0x02e:'1189'
+	// ******
+}
+
+// STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
+//   m_is_paused = true;  m_timer.pause( );
+//   m_last_sound_timescale_factor = m_sound_world.get_logic_world_user().get_time_scale_factor( );
+//   m_sound_world.get_logic_world_user().set_time_scale_factor( 0.f );
+// timing::timer::pause() not in our sources/vostok/timing_timer.h. Keep stub buildable.
+void game::pause( )
+{
+	// CALL SITE INFO
+	// <0x5e5d1c> -> sound::world_user& < unknown >() const
+	// <0x5e5d3c> -> sound::world_user& < unknown >() const
+	// ******
+
+	// FUNCTION BODY[0x5e5cc0]: 4
+	// <0>
+	// <0x5e5cc7>|0x007|+0x04a:'1195'
+	// <0x5e5d11>|0x051|+0x01a:'1196'
+	// <0x5e5d2b>|0x06b|+0x01c:'1197'
+	// ******
+}
+
+// STATE[STUB]
+// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
+//   m_is_paused = false;  m_timer.resume( );
+//   m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );
+// timing::timer::resume() not in our sources/vostok/timing_timer.h. Keep stub buildable.
+void game::resume( )
+{
+	// CALL SITE INFO
+	// <0x5e5928> -> sound::world_user& < unknown >() const
+	// ******
+
+	// FUNCTION BODY[0x5e5900]: 3
+	// <0>
+	// <0x5e5904>|0x004|+0x00f:'1203'
+	// <0x5e5913>|0x013|+0x020:'1204'
+	// ******
+}
+
+void game::set_network_client(
+	base_network_client* const		network_client,
+	pcstr							host,
+	const u16						port,
+	const bool						is_spectator
+)
+{
+	m_network_client				= network_client;
+
+	if ( !m_network_client->has_bandwidth( ) )
+		return;
+
+	if ( is_spectator )
+	{
+		m_network_client->connect_to_login( host, port, "", "" );
+		return;
+	}
+
+	network::login_client& login_client	= m_network_client->login_client( );
+	strings::copy					( login_client.m_server_host, host );
+	login_client.m_server_port		= port;
+
+	fixed_string< 128 > name		= login_client.account_name( );
+	fixed_string< 128 > password	= login_client.account_password( );
+
+	switch_to_login					( login_menu_status_disconnected );
+}
+
+void game::commit_suicide( )
+{
+	m_network_client->initiate_kill_current_player( );
+}
+
+void game::respawn_local_player( )
+{
+	m_network_client->initiate_respawn_current_player( );
+}
+
+bool game::is_loading( ) const
+{
+	return m_game_world.is_loading( );
+}
+
+scaleform_movie_cook::scaleform_movie_cook( flash_factory& factory )
+:
+	resources::translate_query_cook( resources::flash_movie_class, reuse_false, use_current_thread_id ),
+	m_factory( factory )
+{
+	resources::register_cook		( this );
+}
+
+void scaleform_movie_cook::translate_query( resources::query_result_for_cook& parent )
+{
+	resources::query_resources		( &resources::create_request( parent.get_requested_path( ), resources::raw_data_class ), 1, boost::bind( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ), g_allocator, NULL, &parent );
+}
+
+// claude@NOTE: 2-statement target. `delete movie` byte-residual: our scaleform/flash_movie.h
+// declares flash_movie with a TRIVIAL dtor, so the delete folds into operator-delete only; the
+// target's flash_movie dtor zeroes its 3 leading members first (its own statement) -> base
+// merges line 1279 into 1280. The VOSTOK_DELETE_IMPL half is the usual inline-vs-call allocator
+// wall (delete_helper out-of-line). Both are cross-module, not steerable from here.
+void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
+{
+	delete							static_cast< flash_movie_resource* >( resource )->movie;
+
+	VOSTOK_DELETE_IMPL				( g_allocator, resource );
+}
+
+void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
+{
+	resources::pinned_ptr_const< u8 > pinned( data[0].get_managed_resource( ) );
+
+	flash_movie_resource* const resource	= VOSTOK_NEW_IMPL( g_allocator, flash_movie_resource );
+
+	resource->movie					= m_factory.build_movie( (void*)pinned.c_ptr( ), pinned.size( ), parent->reusable_request_name( ).c_str( ) );
+
+	parent->set_unmanaged_resource	( resource, resources::nocache_memory, 0x110 );
+	parent->finish_query			( result_success );
+}
+
+// claude@NOTE: BLOCKED on sibling game_options.cpp - unpaired. The target out-of-lines
+// `call game_options::activate`, but our game_options::activate is near-empty (its
+// show_movie/fill_menu_buttons body collapsed - cross-unit stubs), so LTCG INLINES that
+// tiny body into the call site and the delinker can't pair the divergent shape. Lifts
+// once game_options::activate is matched (regains its body -> stays out-of-line -> a real
+// call here). Reached via the anchor_game_world.cpp guarded direct call.
+void game::activate_main_menu( )
+{
+	m_active_scene->show_ui			( false );
+	m_game_options.activate			( m_active_scene );
+}
+
+// claude@NOTE: convention-matched (anchor direct call) but byte residual capped by the
+// SIBLING game_options.cpp: game_options::deactivate's inlined body here is missing its
+// base_game_scene::hide_movie( m_options_ui/m_cursor_ui ) calls + remove_handler (those
+// bodies are collapsed cross-unit stubs). Lifts once game_options.cpp is matched.
+void game::deactivate_main_menu( )
+{
+	m_game_options.deactivate		( );
+	m_active_scene->show_ui			( true );
+}
+
+void game::discard_current_match( )
+{
+	m_network_client->close_current_match( true );
+}
+
 
 } // namespace survarium

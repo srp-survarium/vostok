@@ -15,6 +15,7 @@
 #include <vostok/fs/synchronous_device_interface.h>
 #include <vostok/fs/device_utils.h>
 #include <vostok/logging/log_file.h>
+#include <vostok/core/logging_extensions.h>
 
 #	pragma warning( push )
 #	pragma warning( disable : 4074 )
@@ -73,10 +74,8 @@ bool	core_debug_engine::terminate_on_error		() const
 
 void    core_debug_engine::on_terminate			() const
 {
-	// sushi@TODO:  logging::flush_log_file							();
-	// sushi@TODO:  logging::log_file * const log_file	=	logging::get_log_file();
-	// sushi@TODO:  if ( log_file )
-	// sushi@TODO:  	log_file->on_terminate				();
+	if ( g_log_file )
+		g_log_file->close					();
 }
 
 int		core_debug_engine::get_exit_code	() const

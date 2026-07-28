@@ -12,20 +12,23 @@ namespace particle {
 
 struct base_particle {
 	vostok::math::float4	color;
-	
+
 	// TODO: remove target_color_y_position!
 	float				target_color_y_position; // Used in color_matrix by color_over_life action
-	
+
+	vostok::math::float3	render_position;
+	vostok::math::float3	render_old_position;
+
 	vostok::math::float3	position;
 	vostok::math::float3	spawn_position;
 	vostok::math::float3	old_position;
-	
+
 	vostok::math::float3	velocity;
 	vostok::math::float3	start_velocity;
-	
+
 	vostok::math::float3	size;
 	vostok::math::float3	start_size;
-	
+
 	base_particle*		next;
 	
 #pragma warning( push )
@@ -45,7 +48,10 @@ struct base_particle {
 	
 	float				lifetime;
 	float				duration;
-	
+
+	float				gravity;
+	float				gravity_accumulation;
+
 	// TODO: maybe as emitter instance dynamic data?
 	float				subimage_index;
 	float				next_subimage_index;
@@ -65,6 +71,8 @@ private:
 	u32					m_seed;
 
 }; // struct base_particle
+
+STATIC_SIZE_ASSERT(base_particle, 0xD0);
 
 typedef intrusive_list< particle::base_particle, particle::base_particle*, &particle::base_particle::next >	particle_list_type;
 

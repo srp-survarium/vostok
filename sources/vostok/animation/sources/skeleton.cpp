@@ -41,12 +41,9 @@ struct bone_id_predicate {
 
 bone_index_type vostok::animation::skeleton_bone_index	( skeleton const& skeleton, pcstr const bone_name )
 {
-	u32 const bones_count	= skeleton.get_bones_count();
-	skeleton_bone const* const begin	= &skeleton.get_bone(0);
-	skeleton_bone const* const end		= &skeleton.get_bone( bones_count - 1 ) + 1;
-	skeleton_bone const* const result	= std::find_if( begin, end, bone_id_predicate( bone_name ) );
-	R_ASSERT				( result != end );
-	return					result - begin;
+	skeleton_bone const* const begin	= &skeleton.get_root();
+
+	return					std::find_if( begin, begin + skeleton.get_bones_count(), bone_id_predicate( bone_name ) ) - begin;
 }
 
 pcstr skeleton::get_bone_name	( bone_index_type const index ) const

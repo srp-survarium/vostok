@@ -20,7 +20,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 #include "Render/Render_Types2D.h"
 #include "Render/Render_Matrix2x4.h"
 
-#define GFX_RTREELOG_ENABLED
+//#define GFX_RTREELOG_ENABLED
 
 namespace Scaleform { 
 namespace Render {

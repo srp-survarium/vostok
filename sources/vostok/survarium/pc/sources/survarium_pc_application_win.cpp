@@ -15,11 +15,14 @@
 #undef NOWINMESSAGES
 #undef NOCTLMGR
 #undef NOGDI
+#undef NOMB
 #include <vostok/os_include.h>
 
 using survarium::application;
 
 static HWND	s_splash_screen			= 0;
+
+static HANDLE	s_presence_mutex		= 0;
 
 static vostok::fixed_string512		s_finger_print;
 
@@ -87,13 +90,17 @@ static pbyte allocate				( u32 const size )
 
 static RETURN_TYPE CALLBACK window_procedure ( HWND window_handle, UINT msg, WPARAM wp, LPARAM lp)
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( wp, lp, window_handle );
+	VOSTOK_UNREFERENCED_PARAMETERS	( lp, window_handle );
 
 	switch( msg ){
-		case WM_DESTROY: {
+		case WM_DESTROY:
 			PostQuitMessage	( 0 );
 			return					( FALSE );
-		}
+
+		case WM_CTLCOLORSTATIC:
+			SetTextColor			( (HDC)wp, RGB( 255, 255, 255 ) );
+			SetBkMode				( (HDC)wp, TRANSPARENT );
+			return					( (RETURN_TYPE)GetStockObject( NULL_BRUSH ) );
 	}
 
 	return							( FALSE );
@@ -198,6 +205,9 @@ static void splash_screen_main		( )
 	if ( previous_bitmap )
 		DeleteObject				( previous_bitmap );
 
+	RECT							screen_rectangle;
+	GetWindowRect					( GetDesktopWindow( ), &screen_rectangle );
+
 	SetWindowPos					(
 		s_splash_screen,
 #ifndef MASTER_GOLD
@@ -205,11 +215,11 @@ static void splash_screen_main		( )
 #else // #ifndef MASTER_GOLD
 		HWND_TOPMOST,
 #endif // #ifndef MASTER_GOLD
-		0,
-		0,
+		(screen_rectangle.right - screen_rectangle.left - info_header->biWidth)/2,
+		(screen_rectangle.bottom - screen_rectangle.top - info_header->biHeight)/2,
 		info_header->biWidth,
 		info_header->biHeight,
-		SWP_NOMOVE | SWP_SHOWWINDOW
+		SWP_SHOWWINDOW
 	);
 
 	SetActiveWindow					( s_splash_screen );
@@ -236,6 +246,16 @@ static void splash_screen_main		( )
 }
 #pragma warning(pop)
 
+// claude@NOTE: STRUCTURE MISMATCH (quantity) - base 4 stmts / target 5. The
+// target declared decode_finger_print as `void(char (&)[64])` (mangled
+// ?decode_finger_print@@YAXAAY0EA@D@Z), fills a 64-byte LOCAL, then a 5th stmt
+// `s_finger_print = local;` (buffer_string::operator=). Our finger_print.cpp
+// keeps the old `void(fixed_string512*)` signature (unpaired, name differs) and
+// writes the global directly, so the assign stmt is absent. Fixing this needs
+// the char[64]& signature + body rewrite in finger_print.cpp AND resolving the
+// s_finger_print name collision there (its `static u8 const s_finger_print[48]`
+// vs this 512-byte fixed_string the target's decode also strcpy_s's into).
+// Cross-unit refactor with ambiguous symbol resolution - capped, not steered.
 void application::preinitialize					( )
 {
 	vostok::engine::preinitialize		( m_game_proxy, GetCommandLine( ), "survarium", __DATE__ );
@@ -250,4 +270,27 @@ void application::preinitialize					( )
 void application::postinitialize				( )
 {
 	PostMessage						( s_splash_screen, WM_DESTROY, 0, 0 );
+}
+
+// claude@NOTE: optimized-target wall - structure MATCHes (8/8 stmts). Byte residual
+// is the `return s_presence_mutex != 0;` codegen: target does setne al on the live
+// CreateMutexA result (eax) right after storing, base materialises the bool via
+// xor ecx/setne cl/mov al,cl. Not source-steerable from /Od source.
+bool check_presence_mutex						( )
+{
+	s_presence_mutex				= OpenMutexA( READ_CONTROL, FALSE, "survarium_already_running" );
+	if ( !s_presence_mutex ) {
+		s_presence_mutex			= CreateMutexA( 0, FALSE, "survarium_already_running" );
+		return						s_presence_mutex != 0;
+	}
+
+	CloseHandle						( s_presence_mutex );
+	MessageBoxA						( 0, "Survarium application already running", "Survarium", MB_ICONERROR );
+	TerminateProcess				( GetCurrentProcess(), 1 );
+	return							false;
+}
+
+void destroy_presence_mutex						( )
+{
+	CloseHandle						( s_presence_mutex );
 }

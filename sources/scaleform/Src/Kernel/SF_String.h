@@ -6,7 +6,7 @@ Content     :   String UTF8 string implementation with copy-on
                 write semantics (thread-safe for assignment but not
                 modification).
 Created     :   April 27, 2007
-Authors     :   Ankur Mohan, Michael Antonov
+Authors     :   Ankur Mohan, Michael Antonov, Sergey Sikorskiy
 
 Copyright   :   Copyright 2011 Autodesk, Inc. All Rights reserved.
 
@@ -35,6 +35,7 @@ class String;
 class StringLH;
 class StringDH;
 class StringBuffer;
+class StringDataPtr;
 
 
 // ***** String Class 
@@ -172,6 +173,7 @@ public:
     String(const char* data, UPInt buflen);
     String(const String& src);
     String(const StringBuffer& src);
+    String(const StringDataPtr src);
     String(const InitStruct& src, UPInt size);
     explicit String(const wchar_t* data);      
 
@@ -286,8 +288,8 @@ public:
     String  GetFilename() const;    // Returns filename, including extension.
     String  GetExtension() const;   // Returns extension with a dot.
 
-    void    StripProtocol();        // Strips front protocol, if any, from the string.
-    void    StripExtension();       // Strips off trailing extension.
+    String& StripProtocol();        // Strips front protocol, if any, from the string.
+    String& StripExtension();       // Strips off trailing extension.
     
 
     // Operators
@@ -571,8 +573,10 @@ public:
     void        operator =  (const char* str);
     void        operator =  (const wchar_t* str);
     void        operator =  (const String& src);
+    void        operator =  (const StringBuffer& src);
 
     // Addition
+    void        operator += (const StringBuffer& buff)  { AppendString(buff.ToCStr(), buff.GetSize()); }
     void        operator += (const String& src)      { AppendString(src.ToCStr(),src.GetSize()); }
     void        operator += (const char* psrc)       { AppendString(psrc); }
     void        operator += (const wchar_t* psrc)    { AppendString(psrc); }
@@ -627,7 +631,14 @@ public:
         : pStr(v), Size(N) {}
 
 public:
-    const char* ToCStr() const { return pStr; }
+    // Accesses raw bytes
+    char        operator [] (UPInt index) const 
+    {
+        SF_ASSERT(index < GetSize());
+        return pStr[index];
+    }
+
+    const char* ToCStr() const  { return pStr; }
     UPInt       GetSize() const { return Size; }
     bool        IsEmpty() const { return GetSize() == 0; }
 
@@ -657,19 +668,10 @@ public:
 
     // Find last character.
     // init_ind - initial index.
-    SPInt       FindLastChar(char c, UPInt init_ind = ~0) const 
-    {
-        if (init_ind == (UPInt)~0 || init_ind > GetSize())
-            init_ind = GetSize();
-        else
-            ++init_ind;
+    SPInt       FindLastChar(char c, UPInt init_ind = ~0) const;
 
-        for (UPInt i = init_ind; i > 0; --i)
-            if (pStr[i - 1] == c)
-                return static_cast<SPInt>(i - 1);
-
-        return -1; 
-    }
+    // Find first substring.
+    SPInt       FindSubstring(const StringDataPtr& s, UPInt init_ind = 0) const;
 
     // Create new object and trim size bytes from the left.
     StringDataPtr  GetTrimLeft(UPInt size) const
@@ -690,21 +692,7 @@ public:
 
     // Create new object, which contains next token.
     // Useful for parsing.
-    StringDataPtr GetNextToken(char separator = ':') const
-    {
-        UPInt cur_pos = 0;
-        const char* cur_str = ToCStr();
-
-        for (; cur_pos < GetSize() && cur_str[cur_pos]; ++cur_pos)
-        {
-            if (cur_str[cur_pos] == separator)
-            {
-                break;
-            }
-        }
-
-        return StringDataPtr(ToCStr(), cur_pos);
-    }
+    StringDataPtr GetNextToken(char separator = ':') const;
 
     // Trim size bytes from the left.
     StringDataPtr& TrimLeft(UPInt size)
@@ -726,6 +714,52 @@ public:
         return *this;
     }
 
+    // Create new object. Prefix of size "size".
+    StringDataPtr  GetPrefix(UPInt size) const
+    {
+        // Limit prefix size to the size of the string.
+        size = Alg::PMin(GetSize(), size);
+
+        return StringDataPtr(ToCStr(), size);
+    }
+    // Create new object. Suffix of size "size".
+    StringDataPtr  GetSuffix(UPInt size) const
+    {
+        // Limit suffix to the size of the string.
+        size = Alg::PMin(GetSize(), size);
+
+        return StringDataPtr(ToCStr() + GetSize() - size, size);
+    }
+
+    // Prefix of size "size".
+    StringDataPtr& Prefix(UPInt size)
+    {
+        // Limit prefix size to the size of the string.
+        Size = Alg::PMin(GetSize(), size);
+
+        return *this;
+    }
+    // Suffix of size "size".
+    StringDataPtr& Suffix(UPInt size)
+    {
+        // Limit suffix to the size of the string.
+        size = Alg::PMin(GetSize(), size);
+
+        pStr = ToCStr() + GetSize() - size;
+        Size = size;
+
+        return *this;
+    }
+
+    static bool IsWhiteSpace(UInt32 c);
+
+    StringDataPtr GetTruncateWhitespace() const;
+    StringDataPtr& TruncateWhitespace()
+    {
+        *this = GetTruncateWhitespace();
+        return *this;
+    }
+
     const char* Begin() const { return ToCStr(); }
     const char* End() const { return ToCStr() + GetSize(); }
 
@@ -738,9 +772,15 @@ public:
         }        
     };
 
-    bool operator== (const StringDataPtr& data) const 
+    bool operator==(const StringDataPtr& other) const 
     {
-        return (SFstrncmp(pStr, data.pStr, data.Size) == 0);
+        return (other.Size == Size &&
+            (other.pStr == pStr || 
+            (pStr && other.pStr && SFstrncmp(pStr, other.pStr, Size) == 0)));
+    }
+    bool operator!=(const StringDataPtr& other) const 
+    {
+        return !operator==(other);
     }
 
 public:

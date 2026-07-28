@@ -23,12 +23,12 @@
 #include "mixing_animation_state.h"
 #include <vostok/animation/animation_player.h>
 #include <vostok/animation/skeleton.h>
+#include <vostok/animation/mixing_animated_object_holder.h>
 
 namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[STUB]
  n_ary_tree::n_ary_tree(
 	n_ary_tree_animation_node* const	weight_root,
 	n_ary_tree_animation_node* const	time_root,
@@ -41,14 +41,33 @@ namespace mixing {
 	const u32							animated_objects_count,
 	const u32							interpolators_count,
 	const u32							current_time_in_ms
-)
+) :
+	m_reference_counter		( reference_counter ),
+	m_weight_root			( weight_root ),
+	m_time_root				( time_root ),
+	m_interpolators			( interpolators ),
+	m_animation_states		( animation_states ),
+	m_animation_events		( animation_events ),
+	m_animated_objects		( animated_objects ),
+	m_animations_count		( animations_count ),
+	m_animated_objects_count( animated_objects_count ),
+	m_interpolators_count	( interpolators_count ),
+	m_tree_actual_time_in_ms( current_time_in_ms ),
+	m_is_logging_enabled	( false )
 {
-	// FUNCTION BODY
-	// <0x6ef337>|0x047|+0x013:'480'
-	// ******
+	initialize					( );
 }
 
 // STATE[STUB]
+// claude@NOTE: initialize() is the ctor's only body statement; the ctor's init-list is already
+// structure-faithful but unpaired because (a) this initialize() is an empty stub and (b) the
+// single_threading_policy intrusive_ptr(T*) ctor is inlined in target / called in base (global
+// inline-vs-call knob). Parked: initialize()'s loop (492 sort + per-state set_object_transform(node&))
+// reads event_iterator internals (animation_event copy, test event_type & 0x80 =
+// time_event_weight_transitions_started) and calls the still-stubbed node-overload
+// set_object_transform; faithful spelling needs the event_iterator operator*/animation() API
+// decoded. Next step: body event_iterator_predicate (file-static) + the node set_object_transform,
+// then sort = std::sort(m_animation_events, +count, event_iterator_predicate()).
 void n_ary_tree::initialize( )
 {
 	// FUNCTION BODY
@@ -61,89 +80,66 @@ void n_ary_tree::initialize( )
 	// ******
 }
 
-// STATE[STUB]
 n_ary_tree& n_ary_tree::operator=( n_ary_tree const& other )
 {
-	return *this;
-	// FUNCTION BODY
-	// <0>
-	// <0x6ee290>|0x000|+0x006:'503'
-	// <0>
-	// <0x6ee296>|0x006|+0x005:'505'
-	// <0>
-	// <0x6ee29b>|0x00b|+0x016:'507'
-	// <0x6ee2b1>|0x021|+0x006:'508'
-	// <0x6ee2b7>|0x027|+0x006:'509'
-	// <0x6ee2bd>|0x02d|+0x006:'510'
-	// <0x6ee2c3>|0x033|+0x006:'511'
-	// <0x6ee2c9>|0x039|+0x006:'512'
-	// <0x6ee2cf>|0x03f|+0x006:'513'
-	// <0x6ee2d5>|0x045|+0x006:'514'
-	// <0x6ee2db>|0x04b|+0x006:'515'
-	// <0x6ee2e1>|0x051|+0x006:'516'
-	// <0x6ee2e7>|0x057|+0x006:'517'
-	// <0x6ee2ed>|0x05d|+0x006:'518'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee2f3>|0x063|+0x002:'523'
-	// ******
+	if ( this == &other )
+		return *this;
+
+	destroy						( );
+
+	m_reference_counter			= other.m_reference_counter;
+	m_weight_root				= other.m_weight_root;
+	m_time_root					= other.m_time_root;
+	m_interpolators				= other.m_interpolators;
+	m_animation_states			= other.m_animation_states;
+	m_animation_events			= other.m_animation_events;
+	m_animated_objects			= other.m_animated_objects;
+	m_animations_count			= other.m_animations_count;
+	m_animated_objects_count	= other.m_animated_objects_count;
+	m_interpolators_count		= other.m_interpolators_count;
+	m_tree_actual_time_in_ms	= other.m_tree_actual_time_in_ms;
+	m_is_logging_enabled		= other.m_is_logging_enabled;
+
+	return						*this;
 }
 
-// STATE[STUB]
  n_ary_tree::~n_ary_tree( )
 {
-	// FUNCTION BODY
-	// <0x6ee280>|0x000|+0x007:'528'
-	// ******
+	destroy						( );
 }
 
-// STATE[STUB]
 void n_ary_tree::destroy( )
 {
-	// LOCALS
-	// n_ary_tree_destroyer 			tree_destroyer
-	// ******
+	if ( !m_weight_root )
+		return;
 
-	// CALL SITE INFO
-	// <0x6ee1df> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6ee208> -> void* < unknown >( u32 )
-	// ******
+	if ( m_reference_counter->reference_count() > 1 ) {
+		m_reference_counter		= 0;
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x6ee1a0>|0x000|+0x006:'532'	{
-	// <0x6ee1a6>|0x006|+0x00d:'533'
-	// <0>
-	// <1>
-	// <0x6ee1b3>|0x013|+0x007:'536'
-	// <0x6ee1ba>|0x01a|+0x011:'537'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ee1cb>|0x02b|+0x008:'544'
-	// <0>
-	// <0x6ee1d3>|0x033|+0x015:'546'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee1e8>|0x048|+0x018:'551'
-	// <0x6ee200>|0x060|+0x011:'552'
-	// <0>
-	// <0x6ee211>|0x071|+0x003:'554'
-	// <0x6ee214>|0x074|+0x00b:'555'
-	// <0x6ee21f>|0x07f|+0x004:'556'
-	// <0x6ee223>|0x083|-0x05a:'557'
-	// <0x6ee1c9>|0x029|+0x0af:'558'
-	// <0x6ee278>|0x0d8|      :'558'	}
-	// ******
+	n_ary_tree_destroyer		tree_destroyer;
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		i->accept				( tree_destroyer );
+
+	for ( base_interpolator const* const* i = m_interpolators, * const* const e = i + m_interpolators_count; i != e; ++i )
+		(*i)->~base_interpolator( );
+
+	animation_state* i			= m_animation_states;
+	animation_state* const e	= m_animation_states + m_animations_count;
+	for ( ; i != e; ++i )
+		(*i).~animation_state	( );
 }
 
 // STATE[STUB]
+// claude@NOTE: get_object_transform(pcvoid) - 4 stmts, local `float4x4 left`. Structure:
+// std::find the animated_object_holder, then two guarded `if(m_animation_states)` blocks each
+// constructing a bone_matrices_computer(left/result, m_animation_states, 0|1, animated_object, this)
+// and calling its get_object_transform, with a mul4x3(result, holder->transform, that) in the
+// second. PARKED: bone_matrices_computer ctor/get_object_transform are STUBs in
+// bone_matrices_computer.cpp (other TU) so the whole expression DCE-collapses; faithful body also
+// needs the exact ctor arg signature + mul4x3 operand order decoded. Next: body
+// bone_matrices_computer.cpp first, then reconstruct here.
 float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 {
 	// LOCALS
@@ -176,6 +172,17 @@ float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 }
 
 // STATE[STUB]
+// claude@NOTE: set_object_transform(node&) - 16 stmts, locals current_frame_position frame_position
+// + pinned_ptr_const<cubic_spline_skeleton_animation> pinned_animation. It pins the animation
+// (animation_node.animation_state(), m_animation_states[m_animation_intervals at +5Ch]), calls
+// evaluate_frame( animation_time*default_fps, intervals, frame, frame_position ) then writes the
+// computed object_movement (quaternion(rotation) @ state bone_matrices_computer +0/+8, translation,
+// scale) into the animation_state's bone_matrices_computer_data, branching on
+// state.are_there_any_weight_transitions (+74h). PARKED: animation-evaluation math - needs
+// current_frame_position layout, evaluate_frame semantics, the object_movement quaternion/float3
+// field offsets, and pinned_ptr_const machinery decoded; high risk to fabricate. Bodying this
+// un-DCEs the loops in set_object_transform(pcvoid)/set_objects_transform/tick. Next: decode
+// evaluate_frame + object_movement writes from the rich asm against cubic_spline_skeleton_animation.
 void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node )
 {
 	// LOCALS
@@ -219,34 +226,28 @@ void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree::set_object_transform( pcvoid const animated_object, float4x4 const& object_transform )
 {
-	// FUNCTION BODY
-	// <0x6ef9d9>|0x009|+0x007:'697'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef9e0>|0x010|+0x005:'701'
-	// <0x6ef9e5>|0x015|+0x00e:'702'
-	// <0>
-	// <0x6ef9f3>|0x023|+0x017:'704'
-	// <0>
-	// <1>
-	// <0x6efa0a>|0x03a|+0x00d:'707'
-	// ******
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		if ( i->animated_object( ) == animated_object )
+			set_object_transform	( *i );
+
+	animated_object_holder* const j = std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, animated_object );
+	j->transform				= object_transform;
 }
 
-// STATE[STUB]
 void n_ary_tree::set_objects_transform( )
 {
-	// FUNCTION BODY
-	// <0x6f0899>|0x009|+0x017:'712'
-	// <0x6f08b0>|0x020|+0x02b:'713'
-	// ******
+	for ( animated_object_holder* i = m_animated_objects, * const e = i + m_animated_objects_count; i != e; ++i )
+		set_object_transform		( i->animated_object, get_object_transform( i->animated_object ) );
 }
 
-// STATE[STUB]
+// claude@NOTE: the three bone-matrix forwarders below are STRUCTURE-faithful (temporary
+// bone_matrices_computer for convert_to_object_matrices/compute_bones_matrices = 1 stmt no
+// local; named `computer` local for compute_bones_local_matrices = 2 stmts, per --view
+// structure). They are unpaired/~20% only because bone_matrices_computer's ctor/dtor/methods
+// are empty STUBs in bone_matrices_computer.cpp (other TU) -> the whole expression DCE-collapses
+// to a 1-byte ret. Pairs once that TU is bodied; off-limits to touch here.
 void n_ary_tree::compute_bones_matrices(
 	pcvoid const		animated_object,
 	skeleton const&		skeleton,
@@ -255,12 +256,9 @@ void n_ary_tree::compute_bones_matrices(
 	u32* const			bones_masks
 ) const
 {
-	// FUNCTION BODY
-	// <0x6ef996>|0x006|+0x02e:'718'
-	// ******
+	bone_matrices_computer( animated_object, &skeleton, m_animation_states, m_animations_count ).compute_bones_matrices( begin, end, bones_masks );
 }
 
-// STATE[STUB]
 void n_ary_tree::compute_bones_local_matrices(
 	pcvoid				animated_object,
 	skeleton const&		skeleton,
@@ -269,23 +267,10 @@ void n_ary_tree::compute_bones_local_matrices(
 	u32* const			bones_masks
 ) const
 {
-	// LOCALS
-	// bone_matrices_computer 			computer
-	// ******
-
-	// FUNCTION BODY
-	// <0x6ef956>|0x006|+0x018:'723'
-	// <0x6ef96e>|0x01e|+0x012:'724'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+	bone_matrices_computer computer( animated_object, &skeleton, m_animation_states, m_animations_count );
+	computer.compute_bones_local_matrices( begin, end, bones_masks );
 }
 
-// STATE[STUB]
 void n_ary_tree::convert_to_object_matrices(
 	pcvoid				animated_object,
 	skeleton const&		skeleton,
@@ -293,9 +278,7 @@ void n_ary_tree::convert_to_object_matrices(
 	float4x4* const		end
 ) const
 {
-	// FUNCTION BODY
-	// <0x6ef916>|0x006|+0x029:'735'
-	// ******
+	bone_matrices_computer( animated_object, &skeleton, m_animation_states, m_animations_count ).convert_to_object_matrices( begin, end );
 }
 
 // STATE[STUB]
@@ -347,32 +330,6 @@ void n_ary_tree::accumulate_object_movement(
 	// <0x6eeeee>|0x3de|+0x041:'772'
 	// <0x6eef2f>|0x41f|+0x016:'773'
 	// <0x6eef45>|0x435|+0x027:'774'
-	// ******
-}
-
-// STATE[STUB]
-animation_state& animation_state::operator=( animation_state const& __that )
-{
-	// FUNCTION BODY
-	// <0x11c680>|0x000|+0x000:'785'	{
-	// <0x11c680>|0x000|+0x014:'786'
-	// <0>
-	// <1>
-	// <0x11c694>|0x014|+0x027:'789'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x11c6bb>|0x03b|-0x003:'800'
-	// <0>
-	// <0x11c6b8>|0x038|+0x038:'802'
-	// <0x11c6f0>|0x070|      :'802'	}
 	// ******
 }
 
@@ -655,39 +612,24 @@ void n_ary_tree::update_time_synchronization_group(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree::update_animation_states( const u32 start_time_in_ms, const u32 target_time_in_ms )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x6f0a76>|0x006|+0x00a:'1041'
-	// <0x6f0a80>|0x010|+0x006:'1042'
-	// <0x6f0a86>|0x016|+0x010:'1043'
-	// <0>
-	// <1>
-	// ******
+	for ( n_ary_tree_animation_node* i = m_time_root; i; i = i->m_next_time_animation )
+		if ( !i->time_driving_animation( ) )
+			update_time_synchronization_group( *i, start_time_in_ms, target_time_in_ms );
 }
 
-// STATE[STUB]
 bool n_ary_tree::need_new_transform( const u32 target_time_in_ms ) const
 {
-	return false;
+	bool need_new_transform		= false;
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		if ( i->animation_state( ).event_iterator->event_time_in_ms == target_time_in_ms )
+			if ( i->animation_state( ).event_iterator->event_type & time_event_need_new_object_transform ) {
+				std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, i->animated_object( ) )->need_new_transform = true;
+				need_new_transform	= true;
+			}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x6ee136>|0x006|+0x00b:'1052'
-	// <0x6ee141>|0x011|+0x00f:'1053'
-	// <0x6ee150>|0x020|+0x00e:'1054'
-	// <0x6ee15e>|0x02e|+0x01e:'1055'
-	// <0>
-	// <0x6ee17c>|0x04c|+0x007:'1057'
-	// <0x6ee183>|0x053|+0x00d:'1058'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	return						need_new_transform;
 }
 
 // STATE[STUB]
@@ -991,19 +933,12 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_types )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x6f0a36>|0x006|+0x00a:'1464'
-	// <0x6f0a40>|0x010|+0x00b:'1465'
-	// <0x6f0a4b>|0x01b|+0x00b:'1466'
-	// <0x6f0a56>|0x026|+0x00e:'1467'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		if ( ( i->animation_state( ).event_iterator->event_time_in_ms == target_time_in_ms ) &&
+			 ( event_types & i->animation_state( ).event_iterator->event_type ) )
+			process_event			( *i, event_types );
 }
 
 // STATE[STUB]
@@ -1487,21 +1422,24 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 	// ******
 }
 
-// STATE[STUB]
 u32 n_ary_tree::nearest_event_time_in_ms( ) const
 {
-	return 0;
+	if ( m_weight_root ) return	(*m_animation_events)->event_iterator->event_time_in_ms;
 
-	// FUNCTION BODY
-	// <0x6ee080>|0x000|+0x000:'1892'	{
-	// <0x6ee080>|0x000|+0x012:'1893'
-	// <0x6ee092>|0x012|-0x001:'1893'
-	// <0x6ee091>|0x011|+0x004:'1894'
-	// <0x6ee095>|0x015|      :'1894'	}
-	// ******
+	return						u32(-1);
 }
 
 // STATE[STUB]
+// claude@NOTE: adjust_animation_events_times - structure recovered (9 stmts): a
+// `for(animation_state* i=other.m_animation_states, e=i+other.m_animations_count; i!=e; ++i)`
+// loop whose body copies this->m_animation_states[k] INTO other's state (calls
+// bone_matrices_computer_data::operator= then inlines the scalar+event_iterator field copies,
+// with neg/sbb/and bool-normalizations on three event_iterator fields), then a
+// `std::sort(other.m_animation_events, +count, event_iterator_predicate())`. Parked: the per-state
+// copy is the INLINED animation_state::operator= (itself a STUB at line ~307) over
+// n_ary_tree_event_iterator's nested private sub-iterators (offsets 0x88/0x8C/0x90/0xAC); faithful
+// reconstruction needs that operator= + event_iterator internals decoded, plus the file-static
+// event_iterator_predicate defined. Not steerable without inventing the field/operator structure.
 void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 {
 	// LOCALS
@@ -1530,103 +1468,52 @@ void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 	// ******
 }
 
-// STATE[STUB]
+// claude@NOTE: tick body is structure-faithful; residual is stubbed callees
+// (process_events->process_event, update_animation_states->update_time_synchronization_group,
+// update_event_iterators_and_dispatch_callbacks, set_object_transform(node&)) whose empty bodies
+// let the optimizer DCE the loop effects. % rises as those callees get bodied.
 bool n_ary_tree::tick(
 	const u32				target_time_in_ms,
 	subscribed_channel*&	channels_head,
 	bool&					callbacks_are_actual
 )
 {
-	// LOCALS
-	// animated_object_holder* 			e
-	// bool 							user_handled_callbacks
-	// ******
+	bool user_handled_callbacks	= false;
+	if ( !m_weight_root ) {
+		m_tree_actual_time_in_ms	= target_time_in_ms;
+		return						false;
+	}
 
-	return false;
+	for ( u32 event_time_in_ms; ( event_time_in_ms = (*m_animation_events)->event_iterator->event_time_in_ms ) <= target_time_in_ms; ) {
+		if ( m_tree_actual_time_in_ms < event_time_in_ms )
+			update_animation_states	( m_tree_actual_time_in_ms, event_time_in_ms );
 
-	// FUNCTION BODY
-	// <0x6f0aa0>|0x000|+0x009:'1972'	{
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6f0aa9>|0x009|+0x00d:'1979'
-	// <0x6f0ab6>|0x016|+0x007:'1980'
-	// <0x6f0abd>|0x01d|+0x00c:'1981'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6f0ac9>|0x029|+0x10e:'1987'
-	// <0x6f0bd7>|0x137|-0x0f3:'1987'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f0ae4>|0x044|+0x007:'1991'
-	// <0x6f0aeb>|0x04b|+0x00a:'1992'
-	// <0>
-	// <0x6f0af5>|0x055|+0x009:'1994'
-	// <0x6f0afe>|0x05e|+0x013:'1995'
-	// <0>
-	// <0x6f0b11>|0x071|+0x016:'1997'
-	// <0x6f0b27>|0x087|+0x009:'1998'
-	// <0x6f0b30>|0x090|+0x030:'1999'
-	// <0>
-	// <1>
-	// <0x6f0b60>|0x0c0|+0x00d:'2002'
-	// <0>
-	// <0x6f0b6d>|0x0cd|+0x013:'2004'
-	// <0x6f0b80>|0x0e0|+0x009:'2005'
-	// <0x6f0b89>|0x0e9|+0x012:'2006'
-	// <0x6f0b9b>|0x0fb|+0x011:'2007'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6f0bac>|0x10c|+0x05f:'2014'
-	// <0x6f0c0b>|0x16b|-0x05b:'2015'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6f0bb0>|0x110|+0x035:'2022'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6f0be5>|0x145|+0x00d:'2031'
-	// <0>
-	// <0x6f0bf2>|0x152|+0x008:'2033'
-	// <0>
-	// <0x6f0bfa>|0x15a|+0x003:'2035'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6f0bfd>|0x15d|-0x13e:'2049'
-	// <0x6f0abf>|0x01f|+0x142:'2050'
-	// <0x6f0c01>|0x161|      :'2050'	}
-	// ******
+		if ( need_new_transform( event_time_in_ms ) ) {
+			process_events			( event_time_in_ms, time_event_animation_lexeme_started );
+			for ( animated_object_holder* i = m_animated_objects, * const e = i + m_animated_objects_count; i != e; ++i )
+				if ( i->need_new_transform )
+					i->new_transform	= get_object_transform( i->animated_object );
+
+			process_events			( event_time_in_ms, time_event_all_events & ~time_event_animation_lexeme_started );
+			for ( animated_object_holder* i = m_animated_objects, * const e = i + m_animated_objects_count; i != e; ++i )
+				if ( i->need_new_transform ) {
+					set_object_transform( i->animated_object, i->new_transform );
+					i->need_new_transform = false;
+				}
+		}
+		else
+			process_events			( event_time_in_ms, time_event_all_events );
+
+		m_tree_actual_time_in_ms	= event_time_in_ms;
+		user_handled_callbacks		= update_event_iterators_and_dispatch_callbacks( event_time_in_ms, channels_head, callbacks_are_actual );
+	}
+
+	if ( m_weight_root && m_tree_actual_time_in_ms != target_time_in_ms )
+		update_animation_states	( m_tree_actual_time_in_ms, target_time_in_ms );
+
+	m_tree_actual_time_in_ms	= target_time_in_ms;
+
+	return						user_handled_callbacks;
 }
 
 } // namespace mixing

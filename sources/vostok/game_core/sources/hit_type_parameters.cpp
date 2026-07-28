@@ -9,13 +9,12 @@
 
 namespace survarium {
 
-// STATE[78.14%|DONE]: LTCG for `m_type` constructor.
 hit_type_parameters::hit_type_parameters(
 	pcstr		type,
-	float		absorption,
-	float		armor,
+	const float	absorption,
+	const float	armor,
 	float		reduce,
-	u32			bdb_count
+	const u32	bdb_count
 ) :
 	next					( NULL ),
 	m_type				  	( type ),
@@ -26,7 +25,6 @@ hit_type_parameters::hit_type_parameters(
 {
 }
 
-// STATE[100%|DONE]
 void hit_type_parameters::apply_damage( const float delta, const u32 time_in_ms )
 {
 	std::pair<body_part_parameters*, float>* const it_begin = get_bdb_coefficients();
@@ -37,7 +35,6 @@ void hit_type_parameters::apply_damage( const float delta, const u32 time_in_ms 
 			it->first->hit_by_type( get_type( ), time_in_ms, it->second * delta, 0.0f, false, NULL ); // sushi@MATCH: In target `c_str` is called in a different order.
 }
 
-// STATE[100%|DONE]
 void hit_type_parameters::set_parameters( float armor, float reduce, float absorbtion )
 {
 	m_armor = armor;

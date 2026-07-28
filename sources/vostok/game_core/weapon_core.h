@@ -32,6 +32,13 @@ namespace vostok {
 namespace ai {
 	class fsm;
 }
+	// claude@NOTE: temp_include_all anchor; friended below so it can call the
+	// private initialize_weapon_logic (target mangles it AAE).
+	void use_game_core_weapon_core_initialize_weapon_logic( );
+	// claude@NOTE: anchor for the private update_recoil/update_breath_vibration/
+	// get_body_part_mask_for_user (target mangles them AAE/ABE).
+	void use_game_core_weapon_core_small_setters( );
+	void use_game_core_weapon_core_ik_callbacks( );
 }
 
 namespace survarium {
@@ -41,9 +48,15 @@ struct hit_receiver;
 struct base_player;
 class bullet_manager;
 struct weapon_ammo_info;
+class weapon;	// game module; reads weapon_core members directly (see friend below)
 
 
 class weapon_core : public inventory_item {
+	// the game-module weapon reads m_ammo_in_magazine / m_is_round_chambered /
+	// m_fire_queue_type / m_weapon_fire_queue_types / m_ammo_slot INLINE (direct
+	// member loads in weapon::set_ui_ammo, set_next_*_type, on_chamber_a_round,
+	// on_after_fire); codegen-neutral friend, no layout/symbol impact
+	friend class weapon;
 public:
 			explicit							weapon_core						( );
 	virtual										~weapon_core					( );
@@ -62,12 +75,12 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const										{ return m_magazine_capacity;		}	// STATE[STUB]
+			u16									get_magazine_capacity			( ) const;	// out-of-line: target emits `call get_magazine_capacity` @0x09cc20 (double-barreled ctor ASSERT_CMP_U); optimized-COMDAT wall
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const										{ return m_ammo_in_magazine;		}	// STATE[STUB]
+			u16									ammo_in_magazine				( ) const;	// out-of-line: target emits `call ammo_in_magazine` @0x09b270 (idle-state getters); optimized-COMDAT wall
 	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
@@ -76,30 +89,30 @@ public:
 
 			bool								is_ready_to_shoot				( ) const;
 	inline	bool								is_firing						( ) const { return m_is_firing; /* no source */ }
-	inline	bool								is_toggling						( ) const { return m_is_toggling; /* no source */ }
+	inline	bool								is_toggling						( ) const { return m_is_toggling || !m_is_shown; }
 
-			bool								ready_to_reload					( ) const { return true; /* sushi@TODO: A LOT OF LOGIC */ }			// STATE[STUB]
+			bool								ready_to_reload					( ) const;
 
-	inline	float4x4 const&						get_bullet_transform			( ) const { /* no source */ }
-			weapon_targets						get_target						( ) const { return m_target; }										// STATE[STUB]
+	inline	float4x4 const&						get_bullet_transform			( ) const { return m_fire_bullet_transform; }
+			weapon_targets						get_target						( ) const { return m_target; }										// target out-lines+optimizes this trivial getter (inline-vs-call wall)
 
 	inline	void								set_fire_queue_type				( u8 arg_0 ) { /* no source */ }
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
-	inline	u16									get_bullets_in_queue			( ) const { /* no source */ }
-			u16									fire_queue_length				( ) const {  return m_weapon_fire_queue_types[m_fire_queue_type]; } // STATE[STUB]
+	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
+			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
-	virtual	float4x4							transform						( ) const override { return m_transform; }							// STATE[STUB]
-	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// STATE[STUB]
+	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
+	virtual	void								set_transform					( float4x4 const& transform ) { m_transform = transform; }			// optimized-COMDAT wall (STRUCTURE MATCH)
 
-	inline	hit_initiator const*				hit_initiator_holder			( ) const { /* no source */ }
+	inline	hit_initiator const*				hit_initiator_holder			( ) const { return m_initiator_holder; }
 	inline	animation::skeleton_ptr				get_skeleton					( ) const { /* no source */ }
 
 	virtual	void								set_next_fire_queue_type		( );
 	virtual	void								set_next_ammo_type				( );
 
-	virtual	void								on_ammo_empty					( ) { }																// STATE[STUB]
+	virtual	void								on_ammo_empty					( ) { }
 	virtual	void								set_inventory					( inventory* inv, profile_slot_enum slot ) override;
 
 			profile_slot_enum					get_ammo_slot					( ammo_id_enum slot_id );
@@ -111,9 +124,9 @@ public:
 			calculator_functor					vertical_recoil_time_calculator		( );
 
 	inline	weapon_user_animations_selector const&	user_animations_selector		( ) const { return m_user_animations_selector; }
-			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// STATE[STUB]
+			weapon_user_animations_selector&		user_animations_selector		( )	{ return m_user_animations_selector; }						// optimized-COMDAT wall
 
-	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, bool is_third_view ) const override;
+	virtual	animation::mixing::expression		selected_animations				( mutable_buffer& buffer, const bool is_third_view ) const override;
 
 	virtual	void								set_target						( weapon_targets target );
 
@@ -129,7 +142,7 @@ public:
 			void								instant_idle_end				( );
 			void								instant_toggle_start			( );
 			void								instant_toggle_end				( );
-			void								instant_fire					( u32 current_time_in_ms );
+			void								instant_fire					( const u32 current_time_in_ms );
 
 			void								reload_one_round				( );
 	virtual	void								set_fire_bullet_transform		( float4x4 const& fire_bullet_transform );
@@ -139,11 +152,13 @@ public:
 	virtual	void								activate						( base_player& user, engine& engine ) override;
 	virtual	void								deactivate						( ) override;
 
-	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// STATE[STUB]
+	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
 			void								reset_fire_queue				( );
 
-			bool								is_aimed						( ) const { return m_aimed; }				// STATE[STUB]
-	inline	bool								is_idle							( ) const { /* no source */ }
+			bool								is_aimed						( ) const;	// out-of-line: target emits `call is_aimed` @0x09b310 (e.g. from the recoil-value getters)
+	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
+	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
+	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
 
 			void								unload_chambered_round			( );
 			void								unload_ammo						( );
@@ -151,8 +166,10 @@ public:
 			void								load_magazine					( );
 			void								chamber_a_round					( );
 
-	inline	void								set_bullet_damage				( float bullet_damage ) { m_bullet_damage = bullet_damage; }
-	inline	void								set_bullet_pierce				( float bullet_pierce ) { m_bullet_pierce = bullet_pierce; }
+	// claude@MATCH: weapon_core_cook::load_weapon_parameters inlines these two setters
+	// WITH an empty_stub (compiled-out ASSERT) before the member store.
+	inline	void								set_bullet_damage				( float bullet_damage ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_damage >= 0.f ) ); m_bullet_damage = bullet_damage; }
+	inline	void								set_bullet_pierce				( float bullet_pierce ) { ASSERT( UNKNOWN_EXPRESSION_T( bullet_pierce >= 0.f ) ); m_bullet_pierce = bullet_pierce; }
 	inline	void								set_aim_fov_factor				( float aim_fov_factor ) { m_aim_fov_factor = aim_fov_factor; }
 	inline	void								set_aim_near_plane_factor		( float aim_near_plane_factor ) { m_aim_near_plane_factor = aim_near_plane_factor; }
 
@@ -161,18 +178,22 @@ public:
 	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
 	inline	float								aim_near_plane_factor			( ) const { return m_aim_near_plane_factor; }
 
-			profile_slot_enum					ammo_slot						( ) { return m_ammo_slot; }					// STATE[STUB]
+			profile_slot_enum					ammo_slot						( );	// out-of-line: target emits `call ammo_slot` @0x09b320 (e.g. from get_ammo_info)
 
-	inline	void								set_weapon_fire_queue_types		( pbyte arg_0, u8 arg_1 ) { /* no source */ }
+	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
-			base_player*						get_user						( ) const { return m_user; }				// STATE[STUB]
-			bool								is_double_handed				( ) const { return m_is_double_handed; }	// STATE[STUB]
+			base_player*						get_user						( ) const;	// out-of-line: target emits `call get_user` @0x09b330
+			bool								is_double_handed				( ) const;	// out-of-line: target emits `call is_double_handed` @0x09b340
+	// claude@NOTE: reconstructed for weapon_core_cook::load_weapon_parameters (direct byte
+	// stores to m_is_double_handed/m_chamber_a_round_on_reload, no symbol - always inlined).
+	inline	void								set_double_handed				( bool is_double_handed ) { m_is_double_handed = is_double_handed; }
+	inline	void								set_chamber_a_round_on_reload	( bool chamber_a_round_on_reload ) { m_chamber_a_round_on_reload = chamber_a_round_on_reload; }
 
+	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }
 	virtual	weapon_core const*					cast_weapon_core				( ) const override { return this; }
-	virtual	weapon_core*						cast_weapon_core				( ) override { return this; }				// STATE[STUB]
 
 			bool								could_be_used					( base_player const& user ) const;
 			bool								could_be_aimed					( base_player const& user ) const;
@@ -184,41 +205,49 @@ public:
 			void								remove_animation_callback		( pcstr channel_id, pcvoid callback_uid );
 
 	inline	bool								is_third_view					( ) const { /* no source */ }
+	// claude@NOTE: reconstructed for weapon_core_cook::query_weapon_states - the
+	// weapon_state_creation_params `bool& shown` binds &m_is_shown (lea object+487h).
+	inline	bool&								is_shown						( ) { return m_is_shown; }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
-			bool								round_is_chambered				( ) const { return m_is_round_chambered; }	// STATE[STUB]
-	inline	bool								chamber_a_round_on_reload		( ) const { /* no source */ }
+			bool								round_is_chambered				( ) const;	// out-of-line: target emits `call round_is_chambered` @0x09b360 (reload_state_base::initialize); optimized-COMDAT wall
+	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
-	inline	bool								deserializing					( ) const { /* no source */ }
+	inline	bool								deserializing					( ) const { return m_deserializing; }
 	inline	bool								is_active						( ) const { /* no source */ }
 
-			bool								target_predicate						( weapon_targets target ) const { return m_target == target; } // STATE[STUB]
-			bool								target_and_animation_ended_predicate	( weapon_targets target ) const;
+private:
+	// claude@MATCH: target mangles target_predicate ABE (private), not QBE.
+			bool								target_predicate						( weapon_targets target ) const { return m_target == target; }
+			bool								target_and_animation_ended_predicate	( const weapon_targets target ) const;
 			bool								instant_idle_predicate					( ) const;
 
+private:
 			bool								must_chamber_a_round_predicate							( ) const;
 			bool								must_chamber_a_round_aimed_predicate					( ) const;
 			bool								must_chamber_a_round_and_animation_ended_predicate		( ) const;
 			bool								must_chamber_a_round_aimed_and_animation_ended_predicate( ) const;
 
+	// claude@MATCH: target mangles these AAE (private), not QAE.
 			float3								get_dispersed_bullet_dir		( );
 
-			void								update_recoil					( u32 current_time_in_ms, float time_scale );
-			void								update_dispersion				( bool is_moving, u32 current_time_in_ms );
-			void								update_breath_vibration			( bool is_holding_breath, u32 current_time_in_ms, float time_scale );
+			void								update_dispersion				( const bool is_moving, u32 current_time_in_ms );
 
 			animation::callback_return_type_enum	on_animation_ik_interval		( animation::animation_callback_params& params );
 			animation::callback_return_type_enum	on_sprint_animation_ended		( animation::animation_callback_params& params );
-			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; } // STATE[STUB]
+			animation::callback_return_type_enum	fake_callback					( animation::animation_callback_params& params ) { return animation::callback_return_type_call_me_again; }
 
+private:
 	virtual	void								on_player_model_added			( ) override;
 	virtual	void								on_player_model_removed			( ) override;
 
+	// claude@MATCH: target mangles update_bones_matrices/serialize/deserialize
+	// EAE/EBE/EAE (private virtual), not UAE/UBE.
 	virtual	void								update_bones_matrices			(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
-													u32									user_matrices_count,
-													u32									current_time_in_ms,
+													const u32									user_matrices_count,
+													const u32									current_time_in_ms,
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	user_animation_player
@@ -228,6 +257,7 @@ public:
 	virtual	void								deserialize						( network_core::packet_reader& reader ) override;
 
 	virtual	bool								is_sprinting					( ) const override;
+public:
 
 	virtual	void								on_before_fire					( ) { /* no source */ }
 	virtual	void								on_after_fire					( ) { /* no source */ }
@@ -237,28 +267,90 @@ public:
 	virtual	void								on_hide							( ) { /* no source */ }
 	virtual	void								on_unload_chambered_round		( ) { /* no source */ }
 
+private:
+	// claude@MATCH: target mangles the pointer params QBV/QAV (T* const) - keep the
+	// top-level const on every pointer.
 	virtual	void								on_skeleton_matrices_changed	(
-													u32					current_time_in_ms,
+													const u32					current_time_in_ms,
 													float4x4 const&		weapon_transform,
-													float4x4 const*		weapon_matrices_begin,
-													float4x4 const*		weapon_matrices_end,
+													float4x4 const* const	weapon_matrices_begin,
+													float4x4 const* const	weapon_matrices_end,
 													float4x4 const&		user_transform,
-													float4x4*			user_matrices_begin,
-													float4x4*			user_matrices_end,
+													float4x4* const		user_matrices_begin,
+													float4x4* const		user_matrices_end,
 													float4x4 const&		user_weapon_transform
 												);
 
-	virtual	void								process_finger_correction		( u32 current_time_in_ms, float4x4* user_matrices );
+	virtual	void								process_finger_correction		( const u32 current_time_in_ms, float4x4* const user_matrices );
 
+	// claude@MATCH: target mangles this ABE (private const), not QBE.
 			animation::mixing::expression		get_weapon_and_hands_animation_expression(
 													mutable_buffer&						buffer,
-													bool								is_third_view,
-													weapon_user_state_enum				weapon_user_state_id,
+													const bool								is_third_view,
+													const weapon_user_state_enum				weapon_user_state_id,
 													animation::mixing::animation_lexeme&	weight_driving_animation
 												) const;
 
+	inline	weapon_core_base_state&				current_base_state				( ) const { return *static_cast_checked< weapon_core_base_state* >( m_logic->current_state( ) ); }
+
+			float								computed_backward_recoil_time	(
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
+												);
+
+			float								computed_horizontal_recoil_time	(
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
+												);
+
+			float								computed_vertical_recoil_time	(
+													const float		animation_length,
+													const float		animation_time_before_time_scale_starts,
+													const u32			time_scale_start_time_in_ms,
+													const u32			current_time_in_ms,
+													const u32			target_time_in_ms,
+													const float		time_scale
+												);
+
+	inline	float								backward_recoil_value			( ) const { /* no source */ }
+			float								horizontal_recoil_value			( ) const;
+			float								vertical_recoil_value			( ) const;
+
+private:
+			bool								is_trying_to_aim				( ) const;
+			bool								is_not_trying_to_aim_predicate	( ) const;
+			bool								can_and_must_reload_predicate	( ) const;
+			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
+
+	// claude@MATCH: target mangles load_ammo AAE (private), not QAE.
+			void								load_ammo						( );
+
+private:
+			animation::callback_return_type_enum
+												on_hand_ik_event				( animation::animation_callback_params& params, const hand_to_weapon_ik_processor::hands_enum hand );
+protected:
+	virtual	void								on_user_sprint					( bool user_is_sprinting );
+public:
+
+private:
+	// claude@MATCH: target mangles these AAE/ABE (private), not QAE/QBE.
+			void								update_recoil					( u32 current_time_in_ms, const float time_scale );
+			void								update_breath_vibration			( const bool is_holding_breath, u32 current_time_in_ms, const float time_scale );
 			animation::body_part_masks_enum		get_body_part_mask_for_user		( ) const;
 
+	// claude@MATCH: target mangles this AAE (private), not QAE; the source declared it
+	// in a private section. The temp_include_all anchor is a friend so it can call it.
+	// claude@NOTE: weapon_core_cook::on_weapon_states_ready calls it too (target @0x59fb16),
+	// so the cook must be a friend.
+	friend class weapon_core_cook;
 			void								initialize_weapon_logic			(
 													weapon_core_base_state_ptr const&	inactive_state,
 													weapon_core_base_state_ptr const&	show_state,
@@ -272,53 +364,10 @@ public:
 													weapon_core_base_state_ptr const&	chamber_a_round_aimed_state
 												);
 
-	inline	weapon_core_base_state&				current_base_state				( ) const { /* no source */ }
+	friend void ::vostok::use_game_core_weapon_core_initialize_weapon_logic( );
+	friend void ::vostok::use_game_core_weapon_core_small_setters( );
+	friend void ::vostok::use_game_core_weapon_core_ik_callbacks( );
 
-			float								computed_backward_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
-												);
-
-			float								computed_horizontal_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
-												);
-
-			float								computed_vertical_recoil_time	(
-													float		animation_length,
-													float		animation_time_before_time_scale_starts,
-													u32			time_scale_start_time_in_ms,
-													u32			current_time_in_ms,
-													u32			target_time_in_ms,
-													float		time_scale
-												);
-
-	inline	float								backward_recoil_value			( ) const { /* no source */ }
-			float								horizontal_recoil_value			( ) const;
-			float								vertical_recoil_value			( ) const;
-
-			bool								is_trying_to_aim				( ) const;
-			bool								is_not_trying_to_aim_predicate	( ) const;
-
-			bool								can_and_must_reload_predicate	( ) const;
-			bool								can_and_must_reload_and_animation_ended_predicate( ) const;
-
-			void								load_ammo						( );
-
-			animation::callback_return_type_enum
-												on_hand_ik_event				( animation::animation_callback_params& params, hand_to_weapon_ik_processor::hands_enum hand );
-
-	virtual	void								on_user_sprint					( bool user_is_sprinting );
-
-private:
 	typedef fixed_vector< weapon_core_base_state_ptr, 10 > weapon_core_base_state_ptrs;
 private:
 	/* 0x0000 */	/* inventory_item */
@@ -357,7 +406,7 @@ private:
 	/* 0x0480 */	profile_slot_enum					m_ammo_slot;
 	/* 0x0484 */	u8									m_weapon_id;
 	/* 0x0485 */	u8									m_weapon_fire_queue_types_count;
-	/* 0x0486 */	bool								m_is_third_view;
+	/* 0x0486 */	mutable bool						m_is_third_view;
 	/* 0x0487 */	bool								m_is_shown;
 	/* 0x0488 */	bool								m_aimed;
 	/* 0x0489 */	bool								m_ready_for_fire;

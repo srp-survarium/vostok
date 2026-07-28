@@ -29,7 +29,6 @@ public:
 	virtual	bool			use_execute					( usable_object_user_data* user ) override;
 	virtual	bool			use_finalize				( usable_object_user_data* user ) override;
 
-	// STATE[100%|DONE]
 	virtual	pcstr			use_info					( usable_object_user_data* user ) override { VOSTOK_UNREFERENCED_PARAMETER( user ); return ""; }
 
 	virtual	void			put							( physics::world* world, float4x4 const& transform );
@@ -48,7 +47,7 @@ public:
 
 	inline	bool			is_inserted					( ) { return m_is_inserted; }
 
-private:
+protected:
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	/* resources::unmanaged_resource */
 	/* 0x0128 */	u8				id;

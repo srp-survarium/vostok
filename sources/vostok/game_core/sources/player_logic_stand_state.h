@@ -9,12 +9,13 @@
 
 namespace survarium {
 
-// void* survarium::player_logic_stand_state::`scalar deleting destructor'(unsigned int) // <0x2a800>|0x000|      :'33'	{
+// void* survarium::player_logic_stand_state::`scalar deleting destructor'(unsigned int)
 
 class player_logic_stand_state : public player_logic_base_state {
 public:
 	explicit			player_logic_stand_state	( weapon_user_animations_selector& owner );
 
+private:
 	virtual	void		initialize					( ) override { /* no source */ }
 	virtual	void		finalize					( ) override { /* no source */ }
 	virtual	void		execute						( ) override { /* no source */ }
@@ -24,37 +25,37 @@ public:
 						selected_animations			(
 							mutable_buffer&						buffer,
 							weapon_animation_parameters const&	weapon_parameters,
-							bool								is_third_view
+							const bool								is_third_view
 						) const override;
 
 			animation::mixing::animation_lexeme
 						movement_lexeme				(
 							mutable_buffer&						buffer,
-							u32									animation_index,
-							animation::body_part_masks_enum		bones_mask,
-							bool								is_aimed,
-							bool								is_third_view,
-							bool								is_firing
+							const u32									animation_index,
+							const animation::body_part_masks_enum		bones_mask,
+							const bool								is_aimed,
+							const bool								is_third_view,
+							const bool								is_firing
 						) const;
 
 			animation::mixing::expression
 						get_recoil_animation_lexeme	(
 							animation_type_enum					animation_index,
-							bool								aimed,
-							float								coeff,
+							const bool								aimed,
+							const float								coeff,
 							animation::base_interpolator const&	interpolator,
 							mutable_buffer&						buffer,
-							bool								is_third_view,
-							u32									additivity_priority,
+							const bool								is_third_view,
+							const u32									additivity_priority,
 							fastdelegate::FastDelegate<float(float,float,u32,u32,u32,float)> const&	time_calculator
 						) const;
 
 			animation::mixing::expression
 						look_expression				(
 							mutable_buffer&							buffer,
-							u32										movement_animation_index,
-							bool									is_aimed,
-							bool									is_third_view,
+							const u32										movement_animation_index,
+							const bool									is_aimed,
+							const bool									is_third_view,
 							weapon_animation_parameters const&		weapon_parameters,
 							animation::mixing::animation_lexeme&	weight_driving_animation
 						) const;

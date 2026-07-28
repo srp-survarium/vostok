@@ -151,9 +151,9 @@ namespace math {
 	#endif // #if defined(_MSC_VER)
 		union{
 			struct{
-				u8	b;
-				u8	g;
 				u8	r;
+				u8	g;
+				u8	b;
 				u8	a;
 			};
 			u32				m_value;

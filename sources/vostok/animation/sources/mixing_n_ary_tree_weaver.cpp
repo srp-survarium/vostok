@@ -47,20 +47,18 @@ void n_ary_tree_weaver::add_interpolator( binary_tree_base_node& node, base_inte
 }
 
 static bool is_unique_animation_lexeme	( binary_tree_animation_node& node, binary_tree_animation_node* const animations_root )
-{	// sushi@TODO
-	/*
-	if ( node.m_next_animation )
+{
+	if ( node.m_next_weight_animation )
 		return					false;
 
-	binary_tree_animation_node* i	= animations_root;
-	for ( ; i; i = i->m_next_animation.c_ptr() ) {
+	for ( binary_tree_animation_node* i = animations_root; i; i = i->m_next_weight_animation.c_ptr() ) {
 		if ( i != &node )
 			continue;
 
-		R_ASSERT				( !i->m_next_animation );
+		R_ASSERT				( !i->m_next_weight_animation );
 		return					false;
 	}
-	*/
+
 	return						true;
 }
 
@@ -68,8 +66,6 @@ void n_ary_tree_weaver::visit			( binary_tree_animation_node& node )
 {
 	binary_tree_animation_node* unique_node;
 	if ( !is_unique_animation_lexeme(node, m_current_animations_root) ) {
-		LOG_WARNING				( "the same animation lexeme is used twice in the expression" );
-
 		unique_node				= static_cast<binary_tree_animation_node*>( m_buffer.c_ptr() );
 		m_buffer				+= sizeof( binary_tree_animation_node );
 		new ( unique_node ) binary_tree_animation_node( node );
@@ -82,14 +78,12 @@ void n_ary_tree_weaver::visit			( binary_tree_animation_node& node )
 	clean						( *unique_node );
 
 	unique_node->m_unique_weights_count	= 0;
-	// sushi@TODO
-	// unique_node->m_next_animation		= m_animations_root;
+	unique_node->m_next_weight_animation	= m_animations_root;
 	m_animations_root					= unique_node;
-	// sushi@TODO
-	// if ( !unique_node->driving_animation() )
-	// 	add_interpolator		( *unique_node, *unique_node->time_scale_interpolator() );
-	// else
-	// 	R_ASSERT				( !unique_node->time_scale_interpolator() );
+	if ( !unique_node->weight_driving_animation() )
+		add_interpolator		( *unique_node, *unique_node->time_scale_interpolator() );
+	else
+		R_ASSERT				( !unique_node->time_scale_interpolator() );
 }
 
 void n_ary_tree_weaver::visit			( binary_tree_weight_node& node )
@@ -118,18 +112,16 @@ inline void n_ary_tree_weaver::propagate( T& node, n_ary_tree_weaver& weaver )
 
 void n_ary_tree_weaver::join_animations	( n_ary_tree_weaver const& other )
 {
-	/*
 	binary_tree_animation_node* previous = 0;
-	for ( binary_tree_animation_node* i = other.m_animations_root; i; previous = i, i = i->m_next_animation.c_ptr() );
+	for ( binary_tree_animation_node* i = other.m_animations_root; i; previous = i, i = i->m_next_weight_animation.c_ptr() );
 
 	if ( !previous )
 		return;
 
-	previous->m_next_animation	= m_animations_root;
+	previous->m_next_weight_animation	= m_animations_root;
 	m_animations_root			= other.m_animations_root;
 	if ( !m_current_animations_root )
 		m_current_animations_root	= m_animations_root;
-	*/
 }
 
 template < typename T >
@@ -173,7 +165,6 @@ void n_ary_tree_weaver::visit			( binary_tree_subtraction_node& node )
 
 static void update_weights				( binary_tree_animation_node* const animations_root, binary_tree_base_node* const weights_root )
 {
-	/*
 	vostok::animation::mixing::binary_tree_animation_node_ptr current = animations_root;
 	do {
 		binary_tree_base_node* j= current.c_ptr( );
@@ -184,9 +175,8 @@ static void update_weights				( binary_tree_animation_node* const animations_roo
 			j->m_next_weight	= weights_root;
 		}
 
-		current					= current->m_next_animation;
+		current					= current->m_next_weight_animation;
 	} while ( current );
-	*/
 }
 
 void n_ary_tree_weaver::visit			( binary_tree_multiplication_node& node )

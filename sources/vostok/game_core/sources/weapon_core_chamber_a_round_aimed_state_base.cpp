@@ -4,76 +4,45 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_chamber_a_round_aimed_state_base.h>
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/network_core/udp_match_packet.h>
+#include <vostok/network_core/packet_reader.h>
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base(survarium::weapon_core&, const float)
-weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, float animation_time_scale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+weapon_core_chamber_a_round_aimed_state_base::weapon_core_chamber_a_round_aimed_state_base( weapon_core& weapon, const float animation_time_scale ) :
+	weapon_core_animation_end_aware_state( weapon, true ),
+	m_animation_timescale				( animation_time_scale )
 {
-	// FUNCTION BODY
-	// <0x73e419>|0x059|+0x00d:'22'
-	// ******
+	m_body_part_mask_for_user = animation::body_part_whole_body_but_hands;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::initialize()
 void weapon_core_chamber_a_round_aimed_state_base::initialize( )
 {
-	// CALL SITE INFO
-	// <0x73e45b> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x73e437>|0x007|+0x008:'27'
-	// <0x73e43f>|0x00f|+0x01e:'28'
-	// <0>
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
+	m_weapon.instant_aim_start( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::finalize()
 void weapon_core_chamber_a_round_aimed_state_base::finalize( )
 {
-	// CALL SITE INFO
-	// <0x73e32b> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x73e307>|0x007|+0x008:'34'
-	// <0x73e30f>|0x00f|+0x01e:'35'
-	// <0>
-	// ******
+	weapon_core_animation_end_aware_state::finalize( );
+	m_weapon.instant_aim_end( );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl(bool&)
 void weapon_core_chamber_a_round_aimed_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x73e347>|0x007|+0x00e:'42'
-	// <0x73e355>|0x015|+0x006:'43'
-	// ******
+	m_weapon.instant_chamber_a_round( );
+	animation_player_tick_result = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::serialize(vostok::network_core::udp_match_packet&) const
 void weapon_core_chamber_a_round_aimed_state_base::serialize( network_core::udp_match_packet& packet ) const
 {
-	// FUNCTION BODY
-	// <0x73e399>|0x009|+0x013:'48'
-	// ******
+	packet.append( m_animation_has_been_ended );
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_chamber_a_round_aimed_state_base::deserialize(vostok::network_core::packet_reader&)
 void weapon_core_chamber_a_round_aimed_state_base::deserialize( network_core::packet_reader& reader )
 {
-	// FUNCTION BODY
-	// <0x73e379>|0x009|+0x011:'53'
-	// ******
+	m_animation_has_been_ended = reader.r< bool >( );
 }
 
 } // namespace survarium

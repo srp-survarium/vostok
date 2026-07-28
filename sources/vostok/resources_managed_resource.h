@@ -68,6 +68,10 @@ private:
 	friend class			::vostok::memory::tester_pinned_resource; // tester class
 };
 
+#ifdef MASTER_GOLD
+STATIC_SIZE_ASSERT(managed_resource, 0xF0);
+#endif // #ifdef MASTER_GOLD
+
 typedef	resource_ptr		<managed_resource, managed_intrusive_base>		managed_resource_ptr;
 typedef	child_resource_ptr	<managed_resource, managed_intrusive_base>		child_managed_resource_ptr;
 

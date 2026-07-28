@@ -956,10 +956,10 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="temp_include_all"
+				Name="anchor"
 				>
 				<File
-					RelativePath=".\temp_include_all.cpp"
+					RelativePath=".\anchor.cpp"
 					>
 					<FileConfiguration
 						Name="Master Gold|Win32"
@@ -971,8 +971,92 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\temp_include_all.h"
+					RelativePath=".\anchor.h"
 					>
+				</File>
+				<File
+					RelativePath=".\anchor_game_core.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_network_core.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_network.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_physics.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_collision.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_logging.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\anchor_ai_navigation.cpp"
+					>
+					<FileConfiguration
+						Name="Master Gold|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							GeneratePreprocessedFile="0"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -1346,7 +1430,7 @@
 						>
 					</File>
 					<File
-						RelativePath="..\weapon_core_inactive_state.h"
+						RelativePath=".\weapon_core_inactive_state.h"
 						>
 					</File>
 					<File

@@ -1,90 +1,98 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 28.01.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef AI_COLLISION_OBJECT_H_INCLUDED
 #define AI_COLLISION_OBJECT_H_INCLUDED
 
-#include <vostok/collision/collision_object.h>
+#include <vostok/collision/object.h>
+#include <vostok/collision/geometry_instance.h>
 #include <vostok/ai/collision_object.h>
 
 namespace survarium {
 
-class ai_collision_object :
-	public collision::object,
-	public ai::collision_object,
-	private boost::noncopyable
-{
+class ai_collision_object : public collision::object , public ai::collision_object , public boost::noncopyable {
 public:
-					ai_collision_object	(
-						non_null< collision::geometry >::ptr geometry,
-						float4x4 const& transform,
-						ai::game_object& ai_object,
-						u32 object_type,
-						pvoid user_data
-					);
+	// ref member; the geometry overload builds an instance in the legacy code -
+	// a matcher supplies the real source when a TU instantiates this
+	inline											ai_collision_object	(
+														collision::geometry*	arg_0,
+														float4x4 const&			arg_1,
+														ai::game_object&		arg_2,
+														u32						arg_3,
+														void*					arg_4
+													) :
+		m_geometry_instance( *( collision::geometry_instance* )NULL ),	// buildability placeholder
+		m_ai_object( arg_2 ) { /* no source */ }
+	inline											ai_collision_object	(
+														collision::geometry_instance*		arg_0,
+														ai::game_object&					arg_1,
+														u32									arg_2,
+														void*								arg_3
+													) :
+		m_geometry_instance( *arg_0 ),
+		m_ai_object( arg_1 ) { /* no source */ }
 
-					ai_collision_object	(
-						non_null< collision::geometry_instance >::ptr geometry,
-						ai::game_object& ai_object,
-						u32 object_type,
-						pvoid user_data
-					);
+	// PDB spells arg_0 vostok::render::base_scene_ptr - the same resource_ptr
+	// type our render tree typedefs as scene_ptr
+	virtual	void									render				( render::scene_ptr const& arg_0, render::debug::renderer& arg_1 ) const override { /* no source */ }
 
-	virtual	void	render				( vostok::render::scene_ptr const& scene, vostok::render::debug::renderer& renderer ) const;
+	virtual	bool									aabb_query			( math::aabb const& arg_0, vectora< collision::triangle_result >& arg_1 ) const override { /* no source */ return false; }
+	virtual	bool									cuboid_query		( math::cuboid const& arg_0, vectora< collision::triangle_result >& arg_1 ) const override { /* no source */ return false; }
+	virtual	bool									ray_query			(
+														float3 const&		arg_0,
+														float3 const&		arg_1,
+														float				arg_2,
+														float&				arg_3,
+														vectora< collision::ray_triangle_result >&	arg_4,
+														fastdelegate::FastDelegate< bool( collision::ray_triangle_result const& ) > const&	arg_5
+													) const override { /* no source */ return false; }
 
-	virtual	bool	aabb_query			( math::aabb const& aabb, collision::triangles_type& triangles ) const;
-	virtual	bool	cuboid_query		( math::cuboid const& cuboid, collision::triangles_type& triangles ) const;
-	virtual	bool	ray_query			(
-						float3 const& origin,
-						float3 const& direction,
-						float max_distance,
-						float& distance,
-						collision::ray_triangles_type& triangles,
-						collision::triangles_predicate_type const& predicate
-					) const;
+	virtual	bool									aabb_test			( math::aabb const& arg_0 ) const override { /* no source */ return false; }
+	virtual	bool									cuboid_test			( math::cuboid const& arg_0 ) const override { /* no source */ return false; }
+	virtual	bool									ray_test			(
+														float3 const&		arg_0,
+														float3 const&		arg_1,
+														float				arg_2,
+														float&				arg_3
+													) const override { /* no source */ return false; }
 
-	virtual	bool	aabb_test			( math::aabb const& aabb ) const;
-	virtual	bool	cuboid_test			( math::cuboid const& cuboid ) const;
-	virtual	bool	ray_test			(
-						float3 const& origin,
-						float3 const& direction,
-						float max_distance,
-						float& distance
-					) const;
+	virtual	void									add_triangles		( vectora< collision::triangle_result >& arg_0 ) const override { /* no source */ }
 
-	virtual	void	add_triangles		( collision::triangles_type& triangles ) const;
-	virtual	math::aabb	update_aabb		( float4x4 const& local_to_world );
+	virtual	math::aabb								update_aabb			( float4x4 const& arg_0 ) override { /* no source */ return get_aabb( ); }
 
-	virtual	ai::game_object&		get_game_object	( )	const	{ return m_ai_object; }
-	virtual	float3					get_origin		( ) const	{ return get_aabb().center(); }
+	virtual	ai::game_object&						get_game_object		( ) const override { /* no source */ return m_ai_object; }
+	virtual	float3									get_origin			( ) const override { /* no source */ return float3( 0.f, 0.f, 0.f ); }
+	inline	collision::geometry_instance const&		get_geom_instance	( ) const { /* no source */ return m_geometry_instance; }
 
-	static	non_null< ai_collision_object >::ptr	new_ai_geometry_object	(
-														memory::base_allocator* allocator,
-														ai::game_object* ai_game_object,
-														u32 const object_type,
-														float4x4 const& matrix,
-														non_null< collision::geometry >::ptr geometry,
-														pvoid user_data
-													);
+	virtual											~ai_collision_object( ) { /* no source */ }
 
-	static	non_null< ai_collision_object >::ptr	new_ai_geometry_object	(
-														memory::base_allocator* allocator,
-														ai::game_object* ai_game_object,
-														u32 const object_type,
-														non_null< collision::geometry_instance >::ptr geometry,
-														pvoid user_data
-													);
+	static	inline	ai_collision_object*			new_ai_geometry_object(
+														memory::base_allocator*		arg_0,
+														ai::game_object*			arg_1,
+														const u32					arg_2,
+														float4x4 const&				arg_3,
+														collision::geometry*		arg_4,
+														void*						arg_5
+													) { /* no source */ return NULL; }
+	static	inline	ai_collision_object*			new_ai_geometry_object(
+														memory::base_allocator*				arg_0,
+														ai::game_object*					arg_1,
+														const u32							arg_2,
+														collision::geometry_instance*		arg_3,
+														void*								arg_4
+													) { /* no source */ return NULL; }
+	static	inline	void							delete_ai_collision_object( memory::base_allocator* arg_0, ai_collision_object* arg_1 ) { /* no source */ }
 
-	static	void	delete_ai_collision_object		( memory::base_allocator* allocator, ai_collision_object* object );
-
-	collision::geometry_instance const&	get_geom_instance( ) const { return m_geometry_instance; }
 private:
-	collision::geometry_instance&	m_geometry_instance;
-	ai::game_object&				m_ai_object;
+	/* 0x0000 */	/* collision::object */
+	/* 0x0030 */	/* ai::collision_object */
+	/* 0x0034 */	/* boost::noncopyable */
+	/* 0x0034 */	collision::geometry_instance&		m_geometry_instance;
+	/* 0x0038 */	ai::game_object&					m_ai_object;
 }; // class ai_collision_object
+
+STATIC_SIZE_ASSERT(ai_collision_object, 0x3C);
 
 } // namespace survarium
 

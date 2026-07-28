@@ -21,7 +21,7 @@ class path_parts;
 class node : public node_base, private boost::noncopyable
 {
 public:
-	inline	explicit	node			(pcstr const name, verbosity filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
+	inline	explicit	node			(pcstr const name, verbosity const filter) : node_base(name), m_verbosity(filter), m_thread_id(u32(-1)) {}
 						~node			();
 			void		set				(pcstr						initiator_path,
 										 int						verbosity,

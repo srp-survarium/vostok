@@ -28,6 +28,8 @@ static pcstr s_call_stack_line_format		= "%-60s       : %-70s : 0x%08x";
 
 static bool s_error_after_dialog	= false;
 
+string4096	vostok::debug::g_assertion_message;
+
 struct helper {
 	string512				m_initiator;
 	bool					m_use_error_verbosity;
@@ -168,19 +170,30 @@ void vostok::debug::platform::on_error	( bool* do_debug_break, char* const messa
 		return;
 	}
 
-#if USE_OWN_ERROR_MESSAGE_WINDOW
 	call_stack_size_calculator		calculator;
+	// claude@NOTE: structure matches (29/29); the two byte residuals are the
+	// boost::function7::assign_to<bind_t<...>> machinery on BOTH iterate calls (the
+	// call_stack_size_calculator bind here and the error_helper bind below) - target
+	// CALLS function7::assign_to out-of-line at each, our /Ob2 build inlines it one level
+	// deeper to basic_vtable1::assign_to. The target out-lines both because on_error's
+	// inline budget (large body, two bind/iterate sites) tips the /Ob2 cost model that
+	// way; the tiny single-bind dump_call_stack inlines on BOTH sides and matches, and
+	// debug.cpp's process() (which shares the calc bind COMDAT) also out-lines + matches.
+	// Per-caller /Ob2 cost decision - the body is already an exact structural match, not
+	// source-steerable without dropping real statements.
 	vostok::debug::call_stack::iterate( NULL, NULL, boost::bind( & call_stack_size_calculator::predicate, &calculator, _1, _2, _3, _4, _5, _6, _7), false );
 	u32 const message_length		= strlen( message );
-	u32 const buffer_size			= calculator.needed_size() + message_length + 4096;
+	u32 const buffer_size			= message_length + calculator.needed_size() * 4 + 4096;
 	pstr buffer						= static_cast<pstr>( ALLOCA( buffer_size ) );
 	memcpy							( buffer, message, message_length );
 	buffer							+= message_length;
-	
+
 	error_helper					helper (error_type == error_type_assert ? 3 : 0, buffer, u32 ( message_size - ( buffer - message ) ) );
 	vostok::debug::call_stack::iterate( exception_information, NULL, boost::bind( &error_helper::predicate, &helper, _1, _2, _3, _4, _5, _6, _7), false );
 
 	buffer							= message + strlen( message );
+
+	strncpy_s						( g_assertion_message, 0x1000, message, 0x1000 );
 
 	pcstr const	endline				= "\r\n";
 
@@ -195,44 +208,6 @@ void vostok::debug::platform::on_error	( bool* do_debug_break, char* const messa
 		buffer						+= sprintf_s( buffer, message_size - ( buffer - message ), "%s%sPress OK to abort execution%s", endline, endline, endline );
 	}
 
-	int	const result				= 
-		MessageBox	(
-			GetTopWindow( 0 ),
-			message,
-			"Fatal Error",
-			( error_type == error_type_assert ? MB_CANCELTRYCONTINUE : MB_OK ) | MB_ICONERROR | MB_SYSTEMMODAL
-		);
-
-	if ( error_type == error_type_unhandled_exception )
-		return;
-
-	s_error_after_dialog			= true;
-
-	switch (result) {
-		case IDCANCEL : {
-			if ( do_debug_break )
-				* do_debug_break	= true;
-			vostok::debug::on_error ( message );
-			break;
-		}
-		case IDTRYAGAIN : {
-			s_error_after_dialog	= false;
-			break;
-		}
-		case IDCONTINUE : {
-			s_error_after_dialog	= false;
-			if ( ignore_always )
-				*ignore_always		= true;
-			break;
-		}
-		default : {
-			if ( do_debug_break )
-				* do_debug_break	= true;
-			vostok::debug::on_error ( message );
-			break;
-		}
-	}
-#else // #if USE_OWN_ERROR_MESSAGE_WINDOW
 	if ( error_type == error_type_unhandled_exception )
 		return;
 
@@ -240,7 +215,6 @@ void vostok::debug::platform::on_error	( bool* do_debug_break, char* const messa
 		* do_debug_break			= true;
 
 	vostok::debug::on_error		( message );
-#endif // #if USE_OWN_ERROR_MESSAGE_WINDOW
 }
 
 void vostok::debug::platform::on_error_message_box	( bool* do_debug_break, char* const message, u32 const message_size, bool* ignore_always, _EXCEPTION_POINTERS* const exception_information, error_type_enum error_type )

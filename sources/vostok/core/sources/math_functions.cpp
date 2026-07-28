@@ -197,22 +197,22 @@ float vostok::math::segment_to_segment_distance (
 // sushi@TODO: Squared distance is returned
 float vostok::math::segment_to_segment_distance ( float3 const& p1, float3 const& p2, float3 const& p3, float3 const& p4 )
 {
-	float3 const d1		= p2 - p1; // <0x74b1c7>
-	float3 const d2		= p4 - p3; // <0x74b1d9>
-	float3 const cross	= d1 ^ d2; // <0x74b25e>
+	float3 const d1		= p2 - p1;
+	float3 const d2		= p4 - p3;
+	float3 const cross	= d1 ^ d2;
 
-	if( !math::is_zero( cross.x ) || !math::is_zero( cross.y ) || !math::is_zero( cross.z ) ) // <0x74b2a0>
+	if( !math::is_zero( cross.x ) || !math::is_zero( cross.y ) || !math::is_zero( cross.z ) )
 	{
 		float3	pa;
 		float3	pb;
 		float	mua;
 		float	mub;
 
-		line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub ); // <0x74b332>
+		line_line_intersect_non_parallel( p1, d1, p3, d2, pa, pb, mua, mub );
 
 		//segments cross
-		if( mua > 0 && mua < 1 && mub > 0 && mub < 1 )	// <0x74b354>
-			return 0.f;									// <0x74b381>
+		if( mua > 0 && mua < 1 && mub > 0 && mub < 1 )
+			return 0.f;
 	}
 	
 	return math::min(( p1 - closest_point_on_segment( p1, p3, d2 ) ).squared_length( ),		// 1 
@@ -221,5 +221,5 @@ float vostok::math::segment_to_segment_distance ( float3 const& p1, float3 const
 					 ( p4 - closest_point_on_segment( p4, p1, d1 ) ).squared_length( )		// 4
 		   )																				// 5
 		   )																				// 6
-		   );																				// <0x74b3ab>						
+		   );
 }

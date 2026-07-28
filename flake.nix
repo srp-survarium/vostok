@@ -12,7 +12,21 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      url = "github:srp-survarium/vostok-pdb-parser";
+      # Pinned to the pdb_divergence-deps commit on top of the access-specifier
+      # emit (c5a4d0f), on top of the static-init-thunk canonicalization, on top
+      # of the structure-builder (extract-all-enums-and-unions,
+      # vostok-pdb-parser#28). 7460355 lands the two deps of the `pdb_divergence`
+      # bin (the base-vs-target structure-divergence verifier): `pub mod
+      # divergence;` + the `gen_sources::for_each_function` compiland walker, so
+      # the bin builds on a clean checkout. d757820 is the divergence tool
+      # itself. c5a4d0f emits C++ `private:`/`protected:`/`public:` section
+      # labels for class/struct members (CV_access_t), narrowing the
+      # `/* no source */` triage. Parent 89d3a1e demangles `??__E`/`??__F`
+      # thunks to the target PDB's `` `dynamic initializer for 'X'' `` form so
+      # objdiff pairs them; b6159cc also emits the engine's own
+      # vostok/scaleform/sources compilands. Re-track master once these land.
+      # Output is gitignored/reference-only.
+      url = "github:srp-survarium/vostok-pdb-parser/01020c6cab56524d8ec2560a22847fd2f02f7931";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -20,16 +34,25 @@
       flake = false;
     };
     vostok-delinker-src = {
-      url = "github:srp-survarium/vostok-delinker";
+      # Keep the measured delinker revision explicit: changes to relocation and
+      # symbol recovery can re-pair functions without any source change.
+      url = "github:srp-survarium/vostok-delinker/83bc6fc0835e80e6cf15ab68f98c0bde02020bbc";
       flake = false;
     };
     vostok-resources-db-src = {
       url = "github:srp-survarium/vostok-resources-db";
       flake = false;
     };
+    # pdb_fetch.nvim - the in-editor match views (:Vostok). Auto-loaded into nvim
+    # by the dev shell's shim (see shellHook). Bump with `nix flake update
+    # pdb-fetch-nvim-src` to pick up new plugin versions on the next `nix develop`.
+    pdb-fetch-nvim-src = {
+      url = "github:srp-survarium/pdb_fetch.nvim";
+      flake = false;
+    };
   };
 
-  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src }:
+  outputs = { self, nixpkgs, rust-overlay, vostok-pdb-parser-src, vcproj2ninja-src, vostok-delinker-src, vostok-resources-db-src, pdb-fetch-nvim-src }:
     let
       system = "x86_64-linux";
 
@@ -64,7 +87,7 @@
         pname = "vostok-pdb-parser";
         version = "0.1.0";
         src = vostok-pdb-parser-src;
-        cargoHash = "sha256-sNWVj0UWfLzr5KqXoZK+bv3aokjdyK12sxjLNpxP1uI=";
+        cargoHash = "sha256-Rz5KvSEfVJS55aj08X86LkPTfggLKqGsaD1nynxVhFM=";
       };
 
       # ---------------------------------------------------------------------------
@@ -78,7 +101,7 @@
         pname = "vostok-delinker";
         version = "0.1.0";
         src = vostok-delinker-src;
-        cargoHash = "sha256-ry3TH1fz7Aj/JdbmlgQFFn29m8E7EQHyGaVXnZTEcXo=";
+        cargoHash = "sha256-ZwFdbqUyh4b0S+fUYKGMN1fWaxRu1zU2ozKpe7CbcYs=";
       };
 
       # ---------------------------------------------------------------------------
@@ -109,7 +132,7 @@
         pname = "vcproj2ninja";
         version = "0.1.0";
         src = vcproj2ninja-src;
-        cargoHash = "sha256-SKEVJ/2wEmEfevCJe8WtVief3BL25K2OmsYjWv9SSC4=";
+        cargoHash = "sha256-Fc30XVO4LYQT5HHHXm0J99QZgYXh4VNzeNukWV4sFeg=";
 
         CARGO_TARGET_X86_64_PC_WINDOWS_GNU_LINKER =
           "${mingw.stdenv.cc}/bin/${mingw.stdenv.cc.targetPrefix}cc";
@@ -171,13 +194,15 @@
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
-      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b.zip --repo srp-survarium/vostok-build-env
+      # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx422.zip --repo srp-survarium/vostok-build-env
+      # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
+      # (built per the shipped PDB recipe; see docs + scripts/build_gfx_suite.py).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         src = pkgs.fetchurl {
-          name = "vostok-libs-v0.100b.zip";
-          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b.zip";
-          sha256 = "0rr63ifgv0mkpwy2acm6zrn7ni4qk3ls5gy52fmizf02yr8jivb2";
+          name = "vostok-libs-v0.100b-gfx422.zip";
+          url = "https://github.com/srp-survarium/vostok-build-env/releases/download/v0.100b/vostok-libs-v0.100b-gfx422.zip";
+          sha256 = "0qpnmx0jhk9bclzxjzzjk8kbgpg5k640138cxmhnkz2nbi4447b1";
         };
         nativeBuildInputs = [ pkgs.unzip ];
       } ''
@@ -295,19 +320,9 @@
         '';
       };
 
-    in {
-      packages.${system} = {
-        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
-          vostok-toolchain vostok-libs survarium survarium-resources-unpacked
-          objdiff objdiff-cli;
-        # Convenience aliases for the individual survarium outputs:
-        #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
-        survarium-game = survarium;            # default `out` = game binaries
-        survarium-resources = survarium.resources;
-        survarium-keys = survarium.keys;
-      };
-
-      devShells.${system}.default = pkgs.mkShell {
+      # The lean default dev shell. `with-resources` (below) extends it with the
+      # heavy game-data outputs; everything common lives here.
+      defaultDevShell = pkgs.mkShell {
         name = "surv-decomp";
 
         packages = [
@@ -329,6 +344,15 @@
           pkgs.file
           pkgs.xxd
           pkgs.jq
+          pkgs.llvmPackages.bintools
+          # sqlite3 CLI - pdb_fetch.nvim reads docs/binary_matching/match.db for
+          # per-function match metrics (cur %, best %, structure, retries).
+          pkgs.sqlite
+
+          # clangd - source navigation/LSP over the generated
+          # compile_commands.json (clang is a READER here; MSVC8 under Wine
+          # stays the only build truth)
+          pkgs.clang-tools
 
           # objdiff - GUI + CLI for comparing base vs target objects
           objdiff
@@ -366,18 +390,17 @@
           # Pin large fetched packages with indirect gcroots so `nix-store --gc`
           # doesn't delete them between dev shells. Symlinks live in
           # binaries/nix-store/<name> (e.g. binaries/nix-store/survarium-game).
-          # The survarium outputs all come from one build, so pinning resources
-          # and keys here costs nothing beyond getting the game binaries.
-          # survarium-resources-unpacked is the resources.db expanded into its
-          # file tree (built once with vostok-resources-db), pinned the same way.
+          # The lean shell pins only what matching needs: the toolchain, libs,
+          # the game binaries (survarium `out` = exe/pdb), and the small SSL keys.
+          # The heavy ~1.5 GiB packed resources and ~1.6 GiB unpacked tree are
+          # deliberately NOT realized/pinned here - they're opt-in via the
+          # `with-resources` shell (`nix develop .#with-resources`).
           mkdir -p "$VOSTOK_DIR/binaries/nix-store"
           for pair in \
               "vostok-toolchain:${vostok-toolchain}" \
               "vostok-libs:${vostok-libs}" \
               "vcproj2ninja:${vcproj2ninja}" \
               "survarium-game:${survarium}" \
-              "survarium-resources:${survarium.resources}" \
-              "survarium-resources-unpacked:${survarium-resources-unpacked}" \
               "survarium-keys:${survarium.keys}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
@@ -387,7 +410,79 @@
           done
 
           python3 "$VOSTOK_DIR/scripts/setup-toolchain.py"
+
+          # Wrap nvim to auto-load pdb_fetch.nvim (:Vostok match views), leaving the
+          # user's own config intact. A wrapper SCRIPT on PATH (not a shell function)
+          # survives `nix develop --command fish`; the real nvim is resolved before we
+          # shadow it, VOSTOK_NVIM_WRAPPED guards nested shells, and rtp points at the
+          # flake-pinned plugin so `nix flake update pdb-fetch-nvim-src` ships new
+          # versions on the next `nix develop`.
+          if [ -z "''${VOSTOK_NVIM_WRAPPED:-}" ] && command -v nvim >/dev/null 2>&1; then
+            _vnv_real="$(command -v nvim)"
+            _vnv_bin="$VOSTOK_DIR/binaries/nvim-shim"
+            mkdir -p "$_vnv_bin"
+            printf '#!/bin/sh\nexec "%s" --cmd "set rtp^=%s" "$@"\n' \
+              "$_vnv_real" "${pdb-fetch-nvim-src}" > "$_vnv_bin/nvim"
+            chmod +x "$_vnv_bin/nvim"
+            export PATH="$_vnv_bin:$PATH"
+            export VOSTOK_NVIM_WRAPPED=1
+            echo "[vostok] nvim       : WRAPPED -> auto-loads pdb_fetch.nvim (:Vostok, vbs/vts/vds, vo, V). Plain nvim is unchanged outside this shell." >&2
+          fi
         '';
+      };
+
+      # Opt-in shell that adds the heavy game data on top of the lean default:
+      #   nix develop .#with-resources
+      # Realizes and pins the ~1.5 GiB packed resources + ~1.6 GiB unpacked tree
+      # and exports VOSTOK_RESOURCES_DIR / VOSTOK_RESOURCES_UNPACKED. The bare
+      # `nix develop` stays lean and never touches these.
+      withResourcesDevShell = pkgs.mkShell {
+        name = "surv-decomp-with-resources";
+
+        # Reuse the entire default shell (packages + its shellHook run first).
+        inputsFrom = [ defaultDevShell ];
+
+        packages = [ vostok-resources-db ];
+
+        shellHook = ''
+          export VOSTOK_RESOURCES_DIR="${survarium.resources}"
+          export VOSTOK_RESOURCES_UNPACKED="${survarium-resources-unpacked}"
+
+          # Pin the heavy resource outputs so `nix-store --gc` keeps them.
+          mkdir -p "$VOSTOK_DIR/binaries/nix-store"
+          for pair in \
+              "survarium-resources:${survarium.resources}" \
+              "survarium-resources-unpacked:${survarium-resources-unpacked}"; do
+            name="''${pair%%:*}"
+            path="''${pair#*:}"
+            nix-store -r "$path" \
+              --add-root "$VOSTOK_DIR/binaries/nix-store/$name" \
+              --indirect >/dev/null
+          done
+
+          echo "[vostok] resources  : REALIZED -> VOSTOK_RESOURCES_DIR + VOSTOK_RESOURCES_UNPACKED (opt-in shell)." >&2
+        '';
+      };
+
+    in {
+      packages.${system} = {
+        inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
+          vostok-toolchain vostok-libs survarium
+          objdiff objdiff-cli;
+        # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand
+        # (`nix build .#survarium-resources-unpacked`), but the default devShell
+        # does NOT realize it - see the `with-resources` shell below.
+        inherit survarium-resources-unpacked;
+        # Convenience aliases for the individual survarium outputs:
+        #   nix build .#survarium-game  /  .#survarium-resources  /  .#survarium-keys
+        survarium-game = survarium;            # default `out` = game binaries
+        survarium-resources = survarium.resources;
+        survarium-keys = survarium.keys;
+      };
+
+      devShells.${system} = {
+        default = defaultDevShell;
+        with-resources = withResourcesDevShell;
       };
     };
 }

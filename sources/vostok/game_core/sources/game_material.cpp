@@ -12,7 +12,6 @@ namespace survarium {
 // game_id -> physics_group
 u16 g_material_physics_group[64] = {};
 
-// STATE[83.44%|DONE]: LTCG for fixed_string constructor
 game_material::game_material( )	:
 	m_name							( "default" ),
 	m_material_resistance			( 50.0f ),
@@ -25,7 +24,6 @@ game_material::game_material( )	:
 {
 }
 
-// STATE[88.10%|PARTIAL]: LTCG for binary_config_value access, also buffer_string
 void game_material::load_from_config( configs::binary_config_value const& val )
 {
 	m_id							= (u16)val["id"];
@@ -49,30 +47,6 @@ void game_material::load_from_config( configs::binary_config_value const& val )
 	g_material_physics_group[m_id]	= physics_group;
 
 	ASSERT( UNKNOWN_EXPRESSION );
-
-	// FUNCTION BODY
-	// <0x760399>|0x009|+0x019:'28'
-	// <0x7603b2>|0x022|+0x021:'29'
-	// <0x7603d3>|0x043|+0x026:'30'
-	// <0x7603f9>|0x069|+0x026:'31'
-	// <0x76041f>|0x08f|+0x026:'32'
-	// <0x760445>|0x0b5|+0x026:'33'
-	// <0>
-	// <0x76046b>|0x0db|+0x006:'35'
-	// <0>
-	// <0x760471>|0x0e1|+0x026:'37'
-	// <0x760497>|0x107|+0x026:'38'
-	// <0>
-	// <0x7604bd>|0x12d|+0x027:'40'
-	// <0x7604e4>|0x154|+0x00b:'41'
-	// <0>
-	// <0x7604ef>|0x15f|+0x027:'43'
-	// <0x760516>|0x186|+0x00b:'44'
-	// <0>
-	// <0x760521>|0x191|+0x013:'46'
-	// <0>
-	// <0x760534>|0x1a4|+0x00c:'48'
-	// ******
 }
 
 } // namespace survarium

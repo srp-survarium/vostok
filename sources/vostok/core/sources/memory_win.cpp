@@ -28,6 +28,9 @@ using vostok::Mb;
 using vostok::Gb;
 using vostok::Tb;
 
+bool vostok::memory::g_use_resources_manager	= true;
+bool vostok::memory::g_use_video_memory			= true;
+
 static pvoid s_single_block_arena		= 0;
 static u64 s_single_block_arena_size	= 0;
 
@@ -253,8 +256,12 @@ struct regions_count {
 };
 
 struct regions_filler : private boost::noncopyable {
-	inline	regions_filler	( vostok::memory::platform::regions_type& regions ) :
-		m_regions	( regions )
+	inline	regions_filler	(
+			vostok::memory::platform::regions_type& regions,
+			vostok::memory::platform::regions_type& high_memory_regions
+		) :
+		m_regions				( regions ),
+		m_high_memory_regions	( high_memory_regions )
 	{
 	}
 
@@ -265,7 +272,10 @@ struct regions_filler : private boost::noncopyable {
 	}
 
 	vostok::memory::platform::regions_type& m_regions;
+	vostok::memory::platform::regions_type& m_high_memory_regions;
 };
+
+STATIC_SIZE_ASSERT(regions_filler, 0x8);
 
 static bool allocate_arenas					(
 		vostok::memory::platform::regions_type& arenas,
@@ -292,15 +302,19 @@ static bool allocate_arenas					(
 	using vostok::memory::platform::regions_type;
 	using vostok::memory::platform::region;
 
-	regions_type				regions( ALLOCA(counter.m_region_count*sizeof(region)), counter.m_region_count );
-	regions_filler				filler(regions);
+	regions_type				regions( ALLOCA((counter.m_region_count + 1)*sizeof(region)), counter.m_region_count + 1 );
+	regions_type				high_memory_regions( ALLOCA((counter.m_region_count + 1)*sizeof(region)), counter.m_region_count + 1 );
+	regions_filler				filler(regions, high_memory_regions);
 	iterate_regions				( start_address, allocation_granularity, min_buffer_size, filler );
 
 	std::sort					( regions.begin(), regions.end() );
+	std::sort					( high_memory_regions.begin(), high_memory_regions.end() );
 
-	// sort resource arenas
-	if ( resource_arenas.front().size > resource_arenas.back().size )
-		std::swap				( resource_arenas.front(), resource_arenas.back() );
+	if ( vostok::memory::g_use_resources_manager ) {
+		// sort resource arenas
+		if ( resource_arenas.front().size > resource_arenas.back().size )
+			std::swap			( resource_arenas.front(), resource_arenas.back() );
+	}
 
 	regions_type::reverse_iterator i		= arenas.rbegin();
 	regions_type::reverse_iterator const e	= arenas.rend();
@@ -308,21 +322,29 @@ static bool allocate_arenas					(
 		for ( ; i != e; ++i ) {
 			(*i).size			= ( ((*i).size - 1)/allocation_granularity + 1 )*allocation_granularity;
 
-			regions_type::iterator const regions_b	= regions.begin();
-			regions_type::iterator const regions_e	= regions.end();
-			regions_type::iterator j		= std::lower_bound( regions_b, regions_e, *i );
-			R_ASSERT			( j != regions_e );
+			regions_type::iterator		regions_b	= high_memory_regions.begin();
+			regions_type::iterator		j			= std::lower_bound( regions_b, high_memory_regions.end(), *i );
+			regions_type*				container	= &high_memory_regions;
+			if ( (j == high_memory_regions.end()) || ((*j).size < (*i).size) ) {
+				regions_b		= regions.begin();
+				j				= std::lower_bound( regions_b, regions.end(), *i );
+				container		= &regions;
+			}
+
+			R_ASSERT			( j != container->end() );
 			R_ASSERT_CMP		( (*j).size, >=, (*i).size );
 
-			regions_type::iterator k	= j + 1;
-			if ( (k != regions_e) && ( (k + 1) == regions_e) )
-				j				= select_best_region( j == regions_b ? 0 : (*(j-1)).size, j, k, (*i).size, resource_arenas, allocation_granularity );
+			if ( !vostok::memory::g_use_resources_manager ) {
+				regions_type::iterator k	= j + 1;
+				if ( (k != container->end()) && ( (k + 1) == container->end()) )
+					j			= select_best_region( j == regions_b ? 0 : (*(j-1)).size, j, k, (*i).size, resource_arenas, allocation_granularity );
+			}
 
 			(*i).address		= allocate_region( (*i).size, (*j).address, 0 );
 			(pbyte&)((*j).address )	+= (*i).size;
 			(*j).size			-= (*i).size;
 
-			if ( j != regions.begin() ) {
+			if ( j != container->begin() ) {
 				if ( (*j).size >= (*(j-1)).size )
 					continue;
 			}
@@ -330,29 +352,36 @@ static bool allocate_arenas					(
 				if ( (*j).size >= min_buffer_size )
 					continue;
 
-				regions.erase	( j );
+				container->erase	( j );
 				continue;
 			}
 
 			region temp			= *j;
 
-			regions.erase		( j );
+			container->erase	( j );
 			if ( temp.size >= min_buffer_size )
-				regions.insert(
-					std::lower_bound( regions.begin(), regions.end(), temp ),
+				container->insert(
+					std::lower_bound( container->begin(), container->end(), temp ),
 					temp
 				);
 		}
 	}
 
+	if ( !vostok::memory::g_use_resources_manager )
+		return					true;
+
+	regions.insert				( regions.end(), high_memory_regions.begin(), high_memory_regions.end() );
+	std::sort					( regions.begin(), regions.end() );
+
 	R_ASSERT					( !regions.empty() );
-	i							= regions.rbegin();
 
 	R_ASSERT_CMP				( resource_arenas.size(), ==, 2 );
 	region& minimum				= resource_arenas.front();
 	region& maximum				= resource_arenas.back();
 	R_ASSERT					( minimum.size <= maximum.size );
 	u64 const resource_arenas_size	= minimum.size + maximum.size;
+
+	i							= regions.rbegin();
 
 	if ( (*i).size >= resource_arenas_size ) {
 		minimum.address			= allocate_region( minimum.size, (*i).address, 0, false );

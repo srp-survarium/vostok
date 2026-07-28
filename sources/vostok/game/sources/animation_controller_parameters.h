@@ -1,33 +1,57 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 23.11.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef ANIMATION_CONTROLLER_PARAMETERS_H_INCLUDED
 #define ANIMATION_CONTROLLER_PARAMETERS_H_INCLUDED
 
-//#include <vostok/animation/skeleton_animation.h>
+// animation::animation_expression_emitter_ptr value members
 #include <vostok/animation/animation_expression_emitter.h>
 
 namespace survarium {
 
-struct animation_controller_parameters
-{
+struct animation_controller_parameters {
+	virtual	void	reset							( ) = 0;
+
+	inline			animation_controller_parameters	( ) { /* no source */ }
 }; // struct animation_controller_parameters
 
-struct simple_animation_controller_parameters : public animation_controller_parameters
-{
-	animation::animation_expression_emitter_ptr	emitter;
+STATIC_SIZE_ASSERT(animation_controller_parameters, 0x4);
+
+struct simple_animation_controller_parameters : public animation_controller_parameters {
+	virtual	void	reset	( ) override;
+
+	inline			simple_animation_controller_parameters	( ) { /* no source */ }
+	inline			~simple_animation_controller_parameters( ) { /* no source */ }
+
+public:
+	/* 0x0000 */	/* animation_controller_parameters */
+	/* 0x0004 */	animation::animation_expression_emitter_ptr	emitter;
 }; // struct simple_animation_controller_parameters
 
-struct movement_animation_controller_parameters : public animation_controller_parameters
-{
-	float3										position;
-	float3										eyes_direction;
-	float3										velocity;
-	animation::animation_expression_emitter_ptr	animation;
+STATIC_SIZE_ASSERT(simple_animation_controller_parameters, 0x8);
+
+bool	operator==	( simple_animation_controller_parameters const& first, simple_animation_controller_parameters const& second );
+bool	operator!=	( simple_animation_controller_parameters const& first, simple_animation_controller_parameters const& second );
+
+struct movement_animation_controller_parameters : public animation_controller_parameters {
+	virtual	void	reset	( ) override;
+
+	inline			movement_animation_controller_parameters	( ) { /* no source */ }
+	inline			~movement_animation_controller_parameters	( ) { /* no source */ }
+
+public:
+	/* 0x0000 */	/* animation_controller_parameters */
+	/* 0x0004 */	float3		position;
+	/* 0x0010 */	float3		eyes_direction;
+	/* 0x001c */	float3		velocity;
+	/* 0x0028 */	animation::animation_expression_emitter_ptr	animation;
 }; // struct movement_animation_controller_parameters
+
+STATIC_SIZE_ASSERT(movement_animation_controller_parameters, 0x2C);
+
+bool	operator==	( movement_animation_controller_parameters const& first, movement_animation_controller_parameters const& second );
+bool	operator!=	( movement_animation_controller_parameters const& first, movement_animation_controller_parameters const& second );
 
 } // namespace survarium
 

@@ -54,6 +54,8 @@ static void prologue											( _EXCEPTION_POINTERS* const exception_informatio
 
 	bugtrap::add_file						( log_file_name );
 	platform::save_minidump					( date_time, exception_information );
+
+	bugtrap::restart_application_on_crash	( false );
 }
 
 static void epilogue											( _EXCEPTION_POINTERS* const exception_information )
@@ -112,7 +114,6 @@ int   vostok::debug::unhandled_exception_filter	( int const exception_code, _EXC
 #endif // #ifdef DEBUG
 
 	UnhandledExceptionFilterType* fake_handler = 0;
-	VOSTOK_ANALYSIS_ASSUME		( fake_handler != 0 );
 	UnhandledExceptionFilterType* current_handler = SetUnhandledExceptionFilter( fake_handler );
 	if ( !current_handler )
 		current_handler			= &unhandled_exception_handler;

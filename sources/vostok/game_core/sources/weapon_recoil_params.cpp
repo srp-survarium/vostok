@@ -7,62 +7,77 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_recoil_params::weapon_recoil_params()
-weapon_recoil_params::weapon_recoil_params( )
+// claude@MATCH: additive_back_recoil (offset 0x20) is omitted - the target never
+// stores it (no movss [this+20h]); additive_recoil_time is math::epsilon_3 (.001f).
+weapon_recoil_params::weapon_recoil_params( ) :
+	first_shoot_side_recoil		( 0.0f ),
+	shoot_side_recoil		( 0.0f ),
+	first_shoot_back_recoil		( 0.0f ),
+	shoot_back_recoil		( 0.0f ),
+	shoot_recoil_min_angle		( 0.0f ),
+	shoot_recoil_angle_range	( 0.0f ),
+	additive_recoil_time		( math::epsilon_3 ),
+	additive_side_recoil		( 0.0f ),
+	additive_recoil_min_angle	( 0.0f ),
+	additive_recoil_angle_range	( 0.0f ),
+	side_compensation_speed		( 0.0f ),
+	back_compensation_speed		( 0.0f )
 {
-	// FUNCTION BODY
-	// <0x5930c0>|0x000|+0x0c6:'25'	{
-	// <0>
-	// <0x593186>|0x0c6|      :'27'	}
-	// ******
 }
 
-// STATE[STUB]
-// survarium::weapon_recoil_params::weapon_recoil_params(vostok::configs::binary_config_value const&)
-weapon_recoil_params::weapon_recoil_params( configs::binary_config_value const& cfg )
+// claude@MATCH: the member-init list omits first_shoot_back_recoil (0x08),
+// shoot_back_recoil (0x0c), additive_back_recoil (0x20) and back_compensation_speed
+// (0x30) - only 9 of the 12 members are initialized here (the default ctor inits all
+// but 0x20); reproduced verbatim from the target's prologue stores.
+weapon_recoil_params::weapon_recoil_params( configs::binary_config_value const& cfg ) :
+	first_shoot_side_recoil		( 0.0f ),
+	shoot_side_recoil		( 0.0f ),
+	shoot_recoil_min_angle		( 0.0f ),
+	shoot_recoil_angle_range	( 0.0f ),
+	additive_recoil_time		( math::epsilon_3 ),
+	additive_side_recoil		( 0.0f ),
+	additive_recoil_min_angle	( 0.0f ),
+	additive_recoil_angle_range	( 0.0f ),
+	side_compensation_speed		( 0.0f )
 {
-	// FUNCTION BODY
-	// <0x593228>|0x098|+0x014:'40'
-	// <0x59323c>|0x0ac|+0x019:'41'
-	// <0>
-	// <0x593255>|0x0c5|+0x014:'43'
-	// <0x593269>|0x0d9|+0x01a:'44'
-	// <0>
-	// <0x593283>|0x0f3|+0x014:'46'
-	// <0x593297>|0x107|+0x01a:'47'
-	// <0>
-	// <0x5932b1>|0x121|+0x014:'49'
-	// <0x5932c5>|0x135|+0x01a:'50'
-	// <0>
-	// <0x5932df>|0x14f|+0x028:'52'
-	// <0>
-	// <0x593307>|0x177|+0x01a:'54'
-	// <0x593321>|0x191|+0x022:'55'
-	// <0>
-	// <1>
-	// <0x593343>|0x1b3|+0x014:'58'
-	// <0x593357>|0x1c7|+0x01a:'59'
-	// <0>
-	// <0x593371>|0x1e1|+0x014:'61'
-	// <0x593385>|0x1f5|+0x01a:'62'
-	// <0>
-	// <0x59339f>|0x20f|+0x014:'64'
-	// <0x5933b3>|0x223|+0x01a:'65'
-	// <0>
-	// <1>
-	// <0x5933cd>|0x23d|+0x028:'68'
-	// <0>
-	// <0x5933f5>|0x265|+0x01a:'70'
-	// <0x59340f>|0x27f|+0x022:'71'
-	// <0>
-	// <1>
-	// <0x593431>|0x2a1|+0x014:'74'
-	// <0x593445>|0x2b5|+0x01a:'75'
-	// <0>
-	// <0x59345f>|0x2cf|+0x014:'77'
-	// <0x593473>|0x2e3|+0x01a:'78'
-	// ******
+	if ( cfg.value_exists( "first_shoot_side_recoil" ) )
+		first_shoot_side_recoil = (float)cfg["first_shoot_side_recoil"];
+
+	if ( cfg.value_exists( "shoot_side_recoil" ) )
+		shoot_side_recoil = (float)cfg["shoot_side_recoil"];
+
+	if ( cfg.value_exists( "first_shoot_back_recoil" ) )
+		first_shoot_back_recoil = (float)cfg["first_shoot_back_recoil"];
+
+	if ( cfg.value_exists( "shoot_back_recoil" ) )
+		shoot_back_recoil = (float)cfg["shoot_back_recoil"];
+
+	if ( cfg.value_exists( "shoot_recoil_min_angle" ) && cfg.value_exists( "shoot_recoil_max_angle" ) )
+	{
+		shoot_recoil_min_angle = (float)cfg["shoot_recoil_min_angle"];
+		shoot_recoil_angle_range = (float)cfg["shoot_recoil_max_angle"] - shoot_recoil_min_angle;
+	}
+
+	if ( cfg.value_exists( "additive_recoil_time" ) )
+		additive_recoil_time = (float)cfg["additive_recoil_time"];
+
+	if ( cfg.value_exists( "additive_side_recoil" ) )
+		additive_side_recoil = (float)cfg["additive_side_recoil"];
+
+	if ( cfg.value_exists( "additive_back_recoil" ) )
+		additive_back_recoil = (float)cfg["additive_back_recoil"];
+
+	if ( cfg.value_exists( "additive_recoil_min_angle" ) && cfg.value_exists( "additive_recoil_max_angle" ) )
+	{
+		additive_recoil_min_angle = (float)cfg["additive_recoil_min_angle"];
+		additive_recoil_angle_range = (float)cfg["additive_recoil_max_angle"] - additive_recoil_min_angle;
+	}
+
+	if ( cfg.value_exists( "side_compensation_speed" ) )
+		side_compensation_speed = (float)cfg["side_compensation_speed"];
+
+	if ( cfg.value_exists( "back_compensation_speed" ) )
+		back_compensation_speed = (float)cfg["back_compensation_speed"];
 }
 
 } // namespace survarium

@@ -89,6 +89,8 @@ VOSTOK_CORE_API bool		try_invert4x4					( float4x4 const& matrix_to_invert, floa
 
 inline float4x4			transpose						( float4x4 const& other );
 
+VOSTOK_CORE_API float4x4	lerp							( float4x4 const& left, float4x4 const& right, float time_delta );
+
 // matrix construction
 
 inline DISABLE_LINKER_GL float4x4			create_translation				( float3 const& position );

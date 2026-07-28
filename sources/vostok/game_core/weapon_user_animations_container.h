@@ -7,22 +7,41 @@
 
 namespace survarium {
 
+class weapon_user_animations_container_cook;
+
+// claude@MATCH: extern caption arrays - single .rdata copy each in the target exe
+// (external `?..._captions@survarium@@3QBQBDB` symbols); stand_animations_captions is
+// defined in player_logic_stand_state.cpp, crouch_animations_captions in
+// player_logic_crouch_state.cpp, jump_animations_captions in jump_logic.cpp.
+extern pcstr const stand_animations_captions[];
+extern pcstr const crouch_animations_captions[];
+extern pcstr const sprint_animations_captions[];
+extern pcstr const jump_animations_captions[];
+
 class weapon_user_animations_container : public resources::unmanaged_resource , public core::noncopyable {
+	friend class weapon_user_animations_container_cook;
+public:
+			resources::managed_resource_ptr	get_stand_animation			( const bool aimed, const u32 index, const bool is_third_view ) const;
+			resources::managed_resource_ptr	get_crouch_animation		( const bool aimed, const u32 index, const bool is_third_view ) const;
+	inline	resources::managed_resource_ptr get_sprint_animation		( u32 index, bool is_third_view ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 2 ) ); return m_sprint_animations[is_third_view][index]; }
+	inline	resources::managed_resource_ptr	get_jump_animation			( u32 index, bool is_third_view ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 100 ) ); return m_jump_animations[is_third_view][index]; }
+
+	inline	pcstr		get_stand_animation_caption		( bool aimed, u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) ); return stand_animations_captions[ index ]; }
+	inline	pcstr		get_crouch_animation_caption	( bool aimed, u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 33 ) ); return crouch_animations_captions[ index ]; }
+	inline	pcstr		get_sprint_animation_caption	( u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 2 ) ); return sprint_animations_captions[ index ]; }
+	inline	pcstr		get_jump_animation_caption		( u32 index ) const { ASSERT( UNKNOWN_EXPRESSION_T( index < 100 ) ); return jump_animations_captions[ index ]; }
+
 public:
 	// sushi@TODO: Where are you defined?
-			resources::managed_resource_ptr	get_stand_animation			( bool aimed, u32 index, bool is_third_view ) const;
-	inline	resources::managed_resource_ptr	get_crouch_animation		( bool arg_0, u32 arg_1, bool arg_2 ) const { /* no source */ }
-	inline	resources::managed_resource_ptr get_sprint_animation		( u32 arg_0, bool arg_1 ) const { /* no source */ }
-	inline	resources::managed_resource_ptr	get_jump_animation			( u32 arg_0, bool arg_1 ) const { /* no source */ }
+	inline										weapon_user_animations_container( ) { /* no source */ }
 
-	inline	pcstr		get_stand_animation_caption		( bool arg_0, u32 arg_1 ) const { /* no source */ }
-	inline	pcstr		get_crouch_animation_caption	( bool arg_0, u32 arg_1 ) const { /* no source */ }
-	inline	pcstr		get_sprint_animation_caption	( u32 arg_0 ) const { /* no source */ }
-	inline	pcstr		get_jump_animation_caption		( u32 arg_0 ) const { /* no source */ }
-
-public:
-	// sushi@TODO: Where are you defined?
-	explicit									weapon_user_animations_container( );
+private:
+	template < u32 move_count, u32 hands_count >
+	static	resources::managed_resource_ptr	get_animation_impl			(
+				resources::managed_resource_ptr const	(&move)[ move_count ],
+				resources::managed_resource_ptr const	(&hands)[ hands_count ],
+				const u32								index
+			);
 
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */

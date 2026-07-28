@@ -13,15 +13,19 @@ class weapon_core_shotgun_reload_finish_substate : public weapon_core_shotgun_re
 public:
 			explicit	weapon_core_shotgun_reload_finish_substate(
 							weapon_core&							weapon,
-							float									animation_time_scale,
+							const float									animation_time_scale,
 							resources::managed_resource_ptr const*	animations,
-							u32										animations_count
+							const u32										animations_count
 						);
 
 public:
-	inline	void		set_owner_ready_for_transition	( bool* arg_0 ) { /* no source */ }
+	inline	void		set_owner_ready_for_transition	( bool* owner_ready_for_transition ) { m_owner_ready_for_transition = owner_ready_for_transition; }
+
+protected:
 	virtual	void		initialize						( ) override;
 	virtual	void		finalize						( ) override;
+
+private:
 	virtual	bool		is_ready_for_transition			( ) const override;
 
 			animation::callback_return_type_enum

@@ -23,9 +23,8 @@ class artefact_container_core;
 class damage_zone_core;
 
 // sushi@TODO
-// <0x4f210>|0x000|      :'104'	{
 
-class generic_anomaly_core : public link_resolver , public player_actions_subscriber, public base_game_object {
+class generic_anomaly_core : public base_game_object , public link_resolver , public player_actions_subscriber {
 public:
 								generic_anomaly_core		( );
 	virtual						~generic_anomaly_core		( );
@@ -35,7 +34,7 @@ public:
 
 	virtual	void				activate					( physics::world* world, scheduler& scheduler );
 	virtual	void				deactivate					( );
-	virtual	void				tick						( u32 time_delta_ms, u32 current_time_ms );
+	virtual	void				tick						( const u32 time_delta_ms, const u32 current_time_ms );
 
 	inline	physics::world*		physics_world				( ) { return m_physics_world; }
 	inline	scheduler&			scheduler					( ) { return *m_scheduler; }

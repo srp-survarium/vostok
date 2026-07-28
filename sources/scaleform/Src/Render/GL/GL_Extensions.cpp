@@ -28,32 +28,6 @@ bool Extensions::Init()
 
     p_glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC) SF_GL_RUNTIME_LINK("glGenerateMipmapEXT");
 
-    p_glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC) SF_GL_RUNTIME_LINK("glFramebufferTexture2DEXT");
-
-    p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBuffer");
-        if (!p_glMapBuffer)
-        {
-             p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBufferARB");
-             if (!p_glMapBuffer)
-             {
-                  p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBufferEXT");
-                  if (!p_glMapBuffer && true)
-                      result = 0;
-             }
-        }
-
-    p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffers");
-        if (!p_glGenBuffers)
-        {
-             p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffersARB");
-             if (!p_glGenBuffers)
-             {
-                  p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffersEXT");
-                  if (!p_glGenBuffers && true)
-                      result = 0;
-             }
-        }
-
     p_glCreateShader = (PFNGLCREATESHADERPROC) SF_GL_RUNTIME_LINK("glCreateShader");
         if (!p_glCreateShader)
         {
@@ -62,18 +36,6 @@ bool Extensions::Init()
              {
                   p_glCreateShader = (PFNGLCREATESHADERPROC) SF_GL_RUNTIME_LINK("glCreateShaderEXT");
                   if (!p_glCreateShader && true)
-                      result = 0;
-             }
-        }
-
-    p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferData");
-        if (!p_glBufferData)
-        {
-             p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferDataARB");
-             if (!p_glBufferData)
-             {
-                  p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferDataEXT");
-                  if (!p_glBufferData && true)
                       result = 0;
              }
         }
@@ -90,57 +52,21 @@ bool Extensions::Init()
              }
         }
 
-    p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgram");
-        if (!p_glLinkProgram)
+    #if defined(GL_ARB_get_program_binary)
+    p_glProgramBinary = (PFNGLPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glProgramBinary");
+        if (!p_glProgramBinary)
         {
-             p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgramARB");
-             if (!p_glLinkProgram)
+             p_glProgramBinary = (PFNGLPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glProgramBinaryARB");
+             if (!p_glProgramBinary)
              {
-                  p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgramEXT");
-                  if (!p_glLinkProgram && true)
+                  p_glProgramBinary = (PFNGLPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glProgramBinaryEXT");
+                  if (!p_glProgramBinary && false)
                       result = 0;
              }
         }
-
-    p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTexture");
-        if (!p_glActiveTexture)
-        {
-             p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTextureARB");
-             if (!p_glActiveTexture)
-             {
-                  p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTextureEXT");
-                  if (!p_glActiveTexture && true)
-                      result = 0;
-             }
-        }
-
-    p_glGetRenderbufferParameterivEXT = (PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC) SF_GL_RUNTIME_LINK("glGetRenderbufferParameterivEXT");
-
-    p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramiv");
-        if (!p_glGetProgramiv)
-        {
-             p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramivARB");
-             if (!p_glGetProgramiv)
-             {
-                  p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramivEXT");
-                  if (!p_glGetProgramiv && true)
-                      result = 0;
-             }
-        }
+    #endif
 
     p_glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC) SF_GL_RUNTIME_LINK("glCheckFramebufferStatusEXT");
-
-    p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fv");
-        if (!p_glUniform1fv)
-        {
-             p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fvARB");
-             if (!p_glUniform1fv)
-             {
-                  p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fvEXT");
-                  if (!p_glUniform1fv && true)
-                      result = 0;
-             }
-        }
 
     p_glBlendEquation = (PFNGLBLENDEQUATIONPROC) SF_GL_RUNTIME_LINK("glBlendEquation");
         if (!p_glBlendEquation)
@@ -150,18 +76,6 @@ bool Extensions::Init()
              {
                   p_glBlendEquation = (PFNGLBLENDEQUATIONPROC) SF_GL_RUNTIME_LINK("glBlendEquationEXT");
                   if (!p_glBlendEquation && true)
-                      result = 0;
-             }
-        }
-
-    p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArray");
-        if (!p_glDisableVertexAttribArray)
-        {
-             p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArrayARB");
-             if (!p_glDisableVertexAttribArray)
-             {
-                  p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArrayEXT");
-                  if (!p_glDisableVertexAttribArray && true)
                       result = 0;
              }
         }
@@ -214,18 +128,6 @@ bool Extensions::Init()
              }
         }
 
-    p_glDrawArraysInstanced = (PFNGLDRAWARRAYSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawArraysInstanced");
-        if (!p_glDrawArraysInstanced)
-        {
-             p_glDrawArraysInstanced = (PFNGLDRAWARRAYSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawArraysInstancedARB");
-             if (!p_glDrawArraysInstanced)
-             {
-                  p_glDrawArraysInstanced = (PFNGLDRAWARRAYSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawArraysInstancedEXT");
-                  if (!p_glDrawArraysInstanced && false)
-                      result = 0;
-             }
-        }
-
     p_glBlendFuncSeparate = (PFNGLBLENDFUNCSEPARATEPROC) SF_GL_RUNTIME_LINK("glBlendFuncSeparate");
         if (!p_glBlendFuncSeparate)
         {
@@ -238,7 +140,303 @@ bool Extensions::Init()
              }
         }
 
+    p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderiv");
+        if (!p_glGetShaderiv)
+        {
+             p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderivARB");
+             if (!p_glGetShaderiv)
+             {
+                  p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderivEXT");
+                  if (!p_glGetShaderiv && true)
+                      result = 0;
+             }
+        }
+
+    #if defined(GL_EXT_gpu_shader4)
+    p_glBindFragDataLocation = (PFNGLBINDFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glBindFragDataLocation");
+        if (!p_glBindFragDataLocation)
+        {
+             p_glBindFragDataLocation = (PFNGLBINDFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glBindFragDataLocationARB");
+             if (!p_glBindFragDataLocation)
+             {
+                  p_glBindFragDataLocation = (PFNGLBINDFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glBindFragDataLocationEXT");
+                  if (!p_glBindFragDataLocation && false)
+                      result = 0;
+             }
+        }
+    #endif
+
+    #if defined(GL_GREMEDY_string_marker)
+    p_glStringMarkerGREMEDY = (PFNGLSTRINGMARKERGREMEDYPROC) SF_GL_RUNTIME_LINK("glStringMarkerGREMEDY");
+        if (!p_glStringMarkerGREMEDY)
+        {
+             p_glStringMarkerGREMEDY = (PFNGLSTRINGMARKERGREMEDYPROC) SF_GL_RUNTIME_LINK("glStringMarkerGREMEDYARB");
+             if (!p_glStringMarkerGREMEDY)
+             {
+                  p_glStringMarkerGREMEDY = (PFNGLSTRINGMARKERGREMEDYPROC) SF_GL_RUNTIME_LINK("glStringMarkerGREMEDYEXT");
+                  if (!p_glStringMarkerGREMEDY && false)
+                      result = 0;
+             }
+        }
+    #endif
+
+    p_glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glDeleteFramebuffersEXT");
+
+    p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgram");
+        if (!p_glCreateProgram)
+        {
+             p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgramARB");
+             if (!p_glCreateProgram)
+             {
+                  p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgramEXT");
+                  if (!p_glCreateProgram && true)
+                      result = 0;
+             }
+        }
+
+    p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1f");
+        if (!p_glUniform1f)
+        {
+             p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1fARB");
+             if (!p_glUniform1f)
+             {
+                  p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1fEXT");
+                  if (!p_glUniform1f && true)
+                      result = 0;
+             }
+        }
+
+    p_glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glBindRenderbufferEXT");
+
+    p_glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glGenRenderbuffersEXT");
+
+    p_glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC) SF_GL_RUNTIME_LINK("glRenderbufferStorageEXT");
+
+    p_glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC) SF_GL_RUNTIME_LINK("glGetFramebufferAttachmentParameterivEXT");
+
+    #if defined(GL_ARB_vertex_array_object)
+    p_glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glGenVertexArrays");
+        if (!p_glGenVertexArrays)
+        {
+             p_glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glGenVertexArraysARB");
+             if (!p_glGenVertexArrays)
+             {
+                  p_glGenVertexArrays = (PFNGLGENVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glGenVertexArraysEXT");
+                  if (!p_glGenVertexArrays && false)
+                      result = 0;
+             }
+        }
+    #endif
+
+    p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fv");
+        if (!p_glUniform4fv)
+        {
+             p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fvARB");
+             if (!p_glUniform4fv)
+             {
+                  p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fvEXT");
+                  if (!p_glUniform4fv && true)
+                      result = 0;
+             }
+        }
+
+    p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBuffer");
+        if (!p_glUnmapBuffer)
+        {
+             p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBufferARB");
+             if (!p_glUnmapBuffer)
+             {
+                  p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBufferEXT");
+                  if (!p_glUnmapBuffer && true)
+                      result = 0;
+             }
+        }
+
+    p_glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glFramebufferRenderbufferEXT");
+
+    p_glIsFramebufferEXT = (PFNGLISFRAMEBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glIsFramebufferEXT");
+
+    p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fv");
+        if (!p_glUniform2fv)
+        {
+             p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fvARB");
+             if (!p_glUniform2fv)
+             {
+                  p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fvEXT");
+                  if (!p_glUniform2fv && true)
+                      result = 0;
+             }
+        }
+
+    p_glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC) SF_GL_RUNTIME_LINK("glFramebufferTexture2DEXT");
+
+    p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBuffer");
+        if (!p_glMapBuffer)
+        {
+             p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBufferARB");
+             if (!p_glMapBuffer)
+             {
+                  p_glMapBuffer = (PFNGLMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glMapBufferEXT");
+                  if (!p_glMapBuffer && true)
+                      result = 0;
+             }
+        }
+
+    #if defined(GL_ARB_draw_instanced)
+    p_glDrawElementsInstanced = (PFNGLDRAWELEMENTSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawElementsInstanced");
+        if (!p_glDrawElementsInstanced)
+        {
+             p_glDrawElementsInstanced = (PFNGLDRAWELEMENTSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawElementsInstancedARB");
+             if (!p_glDrawElementsInstanced)
+             {
+                  p_glDrawElementsInstanced = (PFNGLDRAWELEMENTSINSTANCEDPROC) SF_GL_RUNTIME_LINK("glDrawElementsInstancedEXT");
+                  if (!p_glDrawElementsInstanced && false)
+                      result = 0;
+             }
+        }
+    #endif
+
+    p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffers");
+        if (!p_glGenBuffers)
+        {
+             p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffersARB");
+             if (!p_glGenBuffers)
+             {
+                  p_glGenBuffers = (PFNGLGENBUFFERSPROC) SF_GL_RUNTIME_LINK("glGenBuffersEXT");
+                  if (!p_glGenBuffers && true)
+                      result = 0;
+             }
+        }
+
+    p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferData");
+        if (!p_glBufferData)
+        {
+             p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferDataARB");
+             if (!p_glBufferData)
+             {
+                  p_glBufferData = (PFNGLBUFFERDATAPROC) SF_GL_RUNTIME_LINK("glBufferDataEXT");
+                  if (!p_glBufferData && true)
+                      result = 0;
+             }
+        }
+
+    p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgram");
+        if (!p_glLinkProgram)
+        {
+             p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgramARB");
+             if (!p_glLinkProgram)
+             {
+                  p_glLinkProgram = (PFNGLLINKPROGRAMPROC) SF_GL_RUNTIME_LINK("glLinkProgramEXT");
+                  if (!p_glLinkProgram && true)
+                      result = 0;
+             }
+        }
+
+    p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTexture");
+        if (!p_glActiveTexture)
+        {
+             p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTextureARB");
+             if (!p_glActiveTexture)
+             {
+                  p_glActiveTexture = (PFNGLACTIVETEXTUREPROC) SF_GL_RUNTIME_LINK("glActiveTextureEXT");
+                  if (!p_glActiveTexture && true)
+                      result = 0;
+             }
+        }
+
+    p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramiv");
+        if (!p_glGetProgramiv)
+        {
+             p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramivARB");
+             if (!p_glGetProgramiv)
+             {
+                  p_glGetProgramiv = (PFNGLGETPROGRAMIVPROC) SF_GL_RUNTIME_LINK("glGetProgramivEXT");
+                  if (!p_glGetProgramiv && true)
+                      result = 0;
+             }
+        }
+
+    p_glGetRenderbufferParameterivEXT = (PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC) SF_GL_RUNTIME_LINK("glGetRenderbufferParameterivEXT");
+
+    p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fv");
+        if (!p_glUniform1fv)
+        {
+             p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fvARB");
+             if (!p_glUniform1fv)
+             {
+                  p_glUniform1fv = (PFNGLUNIFORM1FVPROC) SF_GL_RUNTIME_LINK("glUniform1fvEXT");
+                  if (!p_glUniform1fv && true)
+                      result = 0;
+             }
+        }
+
+    p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArray");
+        if (!p_glDisableVertexAttribArray)
+        {
+             p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArrayARB");
+             if (!p_glDisableVertexAttribArray)
+             {
+                  p_glDisableVertexAttribArray = (PFNGLDISABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glDisableVertexAttribArrayEXT");
+                  if (!p_glDisableVertexAttribArray && true)
+                      result = 0;
+             }
+        }
+
+    p_glUniform1iv = (PFNGLUNIFORM1IVPROC) SF_GL_RUNTIME_LINK("glUniform1iv");
+        if (!p_glUniform1iv)
+        {
+             p_glUniform1iv = (PFNGLUNIFORM1IVPROC) SF_GL_RUNTIME_LINK("glUniform1ivARB");
+             if (!p_glUniform1iv)
+             {
+                  p_glUniform1iv = (PFNGLUNIFORM1IVPROC) SF_GL_RUNTIME_LINK("glUniform1ivEXT");
+                  if (!p_glUniform1iv && true)
+                      result = 0;
+             }
+        }
+
+    #if defined(GL_EXT_gpu_shader4)
+    p_glGetFragDataLocation = (PFNGLGETFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glGetFragDataLocation");
+        if (!p_glGetFragDataLocation)
+        {
+             p_glGetFragDataLocation = (PFNGLGETFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glGetFragDataLocationARB");
+             if (!p_glGetFragDataLocation)
+             {
+                  p_glGetFragDataLocation = (PFNGLGETFRAGDATALOCATIONPROC) SF_GL_RUNTIME_LINK("glGetFragDataLocationEXT");
+                  if (!p_glGetFragDataLocation && false)
+                      result = 0;
+             }
+        }
+    #endif
+
     p_glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glGenFramebuffersEXT");
+
+    #if defined(GL_ARB_get_program_binary)
+    p_glGetProgramBinary = (PFNGLGETPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glGetProgramBinary");
+        if (!p_glGetProgramBinary)
+        {
+             p_glGetProgramBinary = (PFNGLGETPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glGetProgramBinaryARB");
+             if (!p_glGetProgramBinary)
+             {
+                  p_glGetProgramBinary = (PFNGLGETPROGRAMBINARYPROC) SF_GL_RUNTIME_LINK("glGetProgramBinaryEXT");
+                  if (!p_glGetProgramBinary && false)
+                      result = 0;
+             }
+        }
+    #endif
+
+    #if defined(GL_ARB_get_program_binary)
+    p_glProgramParameteri = (PFNGLPROGRAMPARAMETERIPROC) SF_GL_RUNTIME_LINK("glProgramParameteri");
+        if (!p_glProgramParameteri)
+        {
+             p_glProgramParameteri = (PFNGLPROGRAMPARAMETERIPROC) SF_GL_RUNTIME_LINK("glProgramParameteriARB");
+             if (!p_glProgramParameteri)
+             {
+                  p_glProgramParameteri = (PFNGLPROGRAMPARAMETERIPROC) SF_GL_RUNTIME_LINK("glProgramParameteriEXT");
+                  if (!p_glProgramParameteri && false)
+                      result = 0;
+             }
+        }
+    #endif
 
     p_glUniform1i = (PFNGLUNIFORM1IPROC) SF_GL_RUNTIME_LINK("glUniform1i");
         if (!p_glUniform1i)
@@ -254,17 +452,19 @@ bool Extensions::Init()
 
     p_glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glDeleteRenderbuffersEXT");
 
-    p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderiv");
-        if (!p_glGetShaderiv)
+    #if defined(GL_ARB_vertex_array_object)
+    p_glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glDeleteVertexArrays");
+        if (!p_glDeleteVertexArrays)
         {
-             p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderivARB");
-             if (!p_glGetShaderiv)
+             p_glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glDeleteVertexArraysARB");
+             if (!p_glDeleteVertexArrays)
              {
-                  p_glGetShaderiv = (PFNGLGETSHADERIVPROC) SF_GL_RUNTIME_LINK("glGetShaderivEXT");
-                  if (!p_glGetShaderiv && true)
+                  p_glDeleteVertexArrays = (PFNGLDELETEVERTEXARRAYSPROC) SF_GL_RUNTIME_LINK("glDeleteVertexArraysEXT");
+                  if (!p_glDeleteVertexArrays && false)
                       result = 0;
              }
         }
+    #endif
 
     p_glBufferSubData = (PFNGLBUFFERSUBDATAPROC) SF_GL_RUNTIME_LINK("glBufferSubData");
         if (!p_glBufferSubData)
@@ -290,21 +490,19 @@ bool Extensions::Init()
              }
         }
 
-    p_glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glDeleteFramebuffersEXT");
-
-    p_glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glBindFramebufferEXT");
-
-    p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgram");
-        if (!p_glCreateProgram)
+    #if defined(GL_VERSION_3_0)
+    p_glGetStringi = (PFNGLGETSTRINGIPROC) SF_GL_RUNTIME_LINK("glGetStringi");
+        if (!p_glGetStringi)
         {
-             p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgramARB");
-             if (!p_glCreateProgram)
+             p_glGetStringi = (PFNGLGETSTRINGIPROC) SF_GL_RUNTIME_LINK("glGetStringiARB");
+             if (!p_glGetStringi)
              {
-                  p_glCreateProgram = (PFNGLCREATEPROGRAMPROC) SF_GL_RUNTIME_LINK("glCreateProgramEXT");
-                  if (!p_glCreateProgram && true)
+                  p_glGetStringi = (PFNGLGETSTRINGIPROC) SF_GL_RUNTIME_LINK("glGetStringiEXT");
+                  if (!p_glGetStringi && false)
                       result = 0;
              }
         }
+    #endif
 
     p_glUseProgram = (PFNGLUSEPROGRAMPROC) SF_GL_RUNTIME_LINK("glUseProgram");
         if (!p_glUseProgram)
@@ -318,28 +516,16 @@ bool Extensions::Init()
              }
         }
 
-    p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1f");
-        if (!p_glUniform1f)
-        {
-             p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1fARB");
-             if (!p_glUniform1f)
-             {
-                  p_glUniform1f = (PFNGLUNIFORM1FPROC) SF_GL_RUNTIME_LINK("glUniform1fEXT");
-                  if (!p_glUniform1f && true)
-                      result = 0;
-             }
-        }
+    p_glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glBindFramebufferEXT");
 
-    p_glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glBindRenderbufferEXT");
-
-    p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffers");
-        if (!p_glDeleteBuffers)
+    p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLog");
+        if (!p_glGetProgramInfoLog)
         {
-             p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffersARB");
-             if (!p_glDeleteBuffers)
+             p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLogARB");
+             if (!p_glGetProgramInfoLog)
              {
-                  p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffersEXT");
-                  if (!p_glDeleteBuffers && true)
+                  p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLogEXT");
+                  if (!p_glGetProgramInfoLog && true)
                       result = 0;
              }
         }
@@ -356,32 +542,14 @@ bool Extensions::Init()
              }
         }
 
-    p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLog");
-        if (!p_glGetProgramInfoLog)
+    p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffers");
+        if (!p_glDeleteBuffers)
         {
-             p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLogARB");
-             if (!p_glGetProgramInfoLog)
+             p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffersARB");
+             if (!p_glDeleteBuffers)
              {
-                  p_glGetProgramInfoLog = (PFNGLGETPROGRAMINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetProgramInfoLogEXT");
-                  if (!p_glGetProgramInfoLog && true)
-                      result = 0;
-             }
-        }
-
-    p_glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC) SF_GL_RUNTIME_LINK("glGenRenderbuffersEXT");
-
-    p_glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC) SF_GL_RUNTIME_LINK("glRenderbufferStorageEXT");
-
-    p_glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC) SF_GL_RUNTIME_LINK("glGetFramebufferAttachmentParameterivEXT");
-
-    p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBuffer");
-        if (!p_glBindBuffer)
-        {
-             p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBufferARB");
-             if (!p_glBindBuffer)
-             {
-                  p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBufferEXT");
-                  if (!p_glBindBuffer && true)
+                  p_glDeleteBuffers = (PFNGLDELETEBUFFERSPROC) SF_GL_RUNTIME_LINK("glDeleteBuffersEXT");
+                  if (!p_glDeleteBuffers && true)
                       result = 0;
              }
         }
@@ -398,6 +566,18 @@ bool Extensions::Init()
              }
         }
 
+    p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBuffer");
+        if (!p_glBindBuffer)
+        {
+             p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBufferARB");
+             if (!p_glBindBuffer)
+             {
+                  p_glBindBuffer = (PFNGLBINDBUFFERPROC) SF_GL_RUNTIME_LINK("glBindBufferEXT");
+                  if (!p_glBindBuffer && true)
+                      result = 0;
+             }
+        }
+
     p_glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetShaderInfoLog");
         if (!p_glGetShaderInfoLog)
         {
@@ -406,30 +586,6 @@ bool Extensions::Init()
              {
                   p_glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC) SF_GL_RUNTIME_LINK("glGetShaderInfoLogEXT");
                   if (!p_glGetShaderInfoLog && true)
-                      result = 0;
-             }
-        }
-
-    p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fv");
-        if (!p_glUniform4fv)
-        {
-             p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fvARB");
-             if (!p_glUniform4fv)
-             {
-                  p_glUniform4fv = (PFNGLUNIFORM4FVPROC) SF_GL_RUNTIME_LINK("glUniform4fvEXT");
-                  if (!p_glUniform4fv && true)
-                      result = 0;
-             }
-        }
-
-    p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArray");
-        if (!p_glEnableVertexAttribArray)
-        {
-             p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArrayARB");
-             if (!p_glEnableVertexAttribArray)
-             {
-                  p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArrayEXT");
-                  if (!p_glEnableVertexAttribArray && true)
                       result = 0;
              }
         }
@@ -446,19 +602,17 @@ bool Extensions::Init()
              }
         }
 
-    p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBuffer");
-        if (!p_glUnmapBuffer)
+    p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArray");
+        if (!p_glEnableVertexAttribArray)
         {
-             p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBufferARB");
-             if (!p_glUnmapBuffer)
+             p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArrayARB");
+             if (!p_glEnableVertexAttribArray)
              {
-                  p_glUnmapBuffer = (PFNGLUNMAPBUFFERPROC) SF_GL_RUNTIME_LINK("glUnmapBufferEXT");
-                  if (!p_glUnmapBuffer && true)
+                  p_glEnableVertexAttribArray = (PFNGLENABLEVERTEXATTRIBARRAYPROC) SF_GL_RUNTIME_LINK("glEnableVertexAttribArrayEXT");
+                  if (!p_glEnableVertexAttribArray && true)
                       result = 0;
              }
         }
-
-    p_glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glFramebufferRenderbufferEXT");
 
     p_glVertexAttribPointer = (PFNGLVERTEXATTRIBPOINTERPROC) SF_GL_RUNTIME_LINK("glVertexAttribPointer");
         if (!p_glVertexAttribPointer)
@@ -496,20 +650,6 @@ bool Extensions::Init()
              }
         }
 
-    p_glIsFramebufferEXT = (PFNGLISFRAMEBUFFEREXTPROC) SF_GL_RUNTIME_LINK("glIsFramebufferEXT");
-
-    p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fv");
-        if (!p_glUniform2fv)
-        {
-             p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fvARB");
-             if (!p_glUniform2fv)
-             {
-                  p_glUniform2fv = (PFNGLUNIFORM2FVPROC) SF_GL_RUNTIME_LINK("glUniform2fvEXT");
-                  if (!p_glUniform2fv && true)
-                      result = 0;
-             }
-        }
-
     p_glUniform3fv = (PFNGLUNIFORM3FVPROC) SF_GL_RUNTIME_LINK("glUniform3fv");
         if (!p_glUniform3fv)
         {
@@ -521,6 +661,20 @@ bool Extensions::Init()
                       result = 0;
              }
         }
+
+    #if defined(GL_ARB_vertex_array_object)
+    p_glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC) SF_GL_RUNTIME_LINK("glBindVertexArray");
+        if (!p_glBindVertexArray)
+        {
+             p_glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC) SF_GL_RUNTIME_LINK("glBindVertexArrayARB");
+             if (!p_glBindVertexArray)
+             {
+                  p_glBindVertexArray = (PFNGLBINDVERTEXARRAYPROC) SF_GL_RUNTIME_LINK("glBindVertexArrayEXT");
+                  if (!p_glBindVertexArray && false)
+                      result = 0;
+             }
+        }
+    #endif
 
     return result;
 }

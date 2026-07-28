@@ -166,7 +166,7 @@ public:
                                    const char* fmt, ...) SF_LOG_VAARG_ATTRIBUTE(3,4);
 
     // Log formating buffer size used by default LogMessageVarg. Longer strings are truncated.
-    enum { MaxLogBufferMessageSize = 2048 };
+    enum { MaxLogBufferMessageSize = 4096 };
 
     // Helper used by LogMessageVarg to format the log message, writing the resulting
     // string into buffer. It formats text based on fmt and appends prefix/new line

@@ -1,16 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 20.04.2011
-//	Author		: Tetyana Meleshchenko
-//	Copyright (C) GSC Game World - 2011
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-
 #include "animated_model_instance_cook.h"
 #include "animated_model_instance.h"
-#include <vostok/render/facade/model.h>
-#include <vostok/physics/model.h>
+#include <vostok/resources.h>
+#include <vostok/resources_query_result.h>
+#include <vostok/configs_binary_config.h>
+#include <vostok/configs_binary_config_value.h>
 #include <vostok/collision/api.h>
+#include <vostok/animation/animation_player.h>
 
 namespace vostok {
 namespace physics {
@@ -20,17 +20,17 @@ namespace physics {
 
 namespace survarium {
 
-animated_model_instance_cook::animated_model_instance_cook	( ) :
-	super	( resources::game_animated_model_instance_class, reuse_false, use_resource_manager_thread_id )	
+ animated_model_instance_cook::animated_model_instance_cook( ) :
+	resources::translate_query_cook( resources::game_animated_model_instance_class, reuse_false, use_resource_manager_thread_id )
 {
 }
 
-void animated_model_instance_cook::translate_request_path	( pcstr request, fs_new::virtual_path_string & new_request ) const
+void animated_model_instance_cook::translate_request_path( pcstr request, fs_new::virtual_path_string& new_request ) const
 {
 	new_request.assignf( "resources/animated_model_instances/%s.animated_model", request );
 }
 
-void animated_model_instance_cook::translate_query	( resources::query_result_for_cook&	parent )
+void animated_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	resources::query_resource						(
 		parent.get_requested_path(),
@@ -42,7 +42,7 @@ void animated_model_instance_cook::translate_query	( resources::query_result_for
 	);
 }
 
-void animated_model_instance_cook::on_config_loaded		( resources::queries_result& data )
+void animated_model_instance_cook::on_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
 	if ( !data.is_successful() )
@@ -51,22 +51,22 @@ void animated_model_instance_cook::on_config_loaded		( resources::queries_result
 		parent->finish_query							( result_error );
 		return;
 	}
-	
+
 	configs::binary_config_ptr config					= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
 	configs::binary_config_value const& config_value	= config->get_root();
 	configs::binary_config_value const& models			= config_value["models"];
-	
+
 	R_ASSERT											( models.value_exists( "render_animated_model" ) );
 	pcstr render_model_path								= models["render_animated_model"];
 
 	R_ASSERT											( models.value_exists( "physics_animated_model" ) );
 	pcstr physics_model_path							= models["physics_animated_model"];
-	
+
 	R_ASSERT											( models.value_exists( "damage_collision_object" ) );
 	pcstr damage_collision_path							= models["damage_collision_object"];
 	fs_new::virtual_path_string							damage_config_path;
 	damage_config_path.assignf							( "resources/animated_model_instances/collision_objects/%s.physics", damage_collision_path );
-	
+
 	R_ASSERT											( parent );
 	resources::user_data_variant* user_data				= parent->user_data();
 	R_ASSERT											( user_data );
@@ -91,18 +91,18 @@ void animated_model_instance_cook::on_config_loaded		( resources::queries_result
 		{ physics_model_path, resources::physics_animated_model_instance_class },
 		{ damage_config_path.c_str(), resources::binary_config_class }
 	};
-	
-	query_resources										(
+
+	resources::query_resources							(
 		requests,
 		array_size( requests ),
-		boost::bind( &animated_model_instance_cook::on_subresources_loaded, this, _1 ), 
+		boost::bind( &animated_model_instance_cook::on_subresources_loaded, this, _1 ),
 		resources::unmanaged_allocator(),
 		params,
 		parent
 	);
 }
 
-void animated_model_instance_cook::on_subresources_loaded	( resources::queries_result& data )
+void animated_model_instance_cook::on_subresources_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent	= data.get_parent_query();
 	if ( !data.is_successful() )
@@ -126,7 +126,7 @@ void animated_model_instance_cook::on_subresources_loaded	( resources::queries_r
 	new_model_instance->m_animation_player			= player;
 
 	parent->set_unmanaged_resource					(
-		new_model_instance, 
+		new_model_instance,
 		resources::memory_usage_type(
 			resources::nocache_memory,
 			sizeof( animated_model_instance )
@@ -135,7 +135,15 @@ void animated_model_instance_cook::on_subresources_loaded	( resources::queries_r
 	parent->finish_query							( result_success );
 }
 
-void animated_model_instance_cook::delete_resource	( resources::resource_base* resource )
+// STATE[STUB]
+// claude@NOTE: real body (14 stmts) unrecovered; its only bind site is the
+// hit-params follow-up query that the matched on_subresources_loaded does not emit
+// (LTCG-folded tail / different version), so it is also unreachable - left unpaired.
+void animated_model_instance_cook::on_hit_params_loaded( resources::queries_result& data, animated_model_instance* new_model )
+{
+}
+
+void animated_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
 	animated_model_instance* model_instance			= static_cast_checked< animated_model_instance* >( resource );
 	collision::delete_animated_object				( model_instance->m_damage_collision, resources::unmanaged_allocator() );

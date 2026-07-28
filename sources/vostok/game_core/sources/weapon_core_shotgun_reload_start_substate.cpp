@@ -5,87 +5,81 @@
 #include "pch.h"
 #include <vostok/game_core/weapon_core_shotgun_reload_start_substate.h>
 
+#include <vostok/game_core/weapon_core.h>
+#include <vostok/animation/animation_callback.h>
+
 namespace survarium {
 
-// STATE[STUB]
 weapon_core_shotgun_reload_start_substate::weapon_core_shotgun_reload_start_substate(
 	weapon_core&							weapon,
-	float									animation_time_scale,
+	const float									animation_time_scale,
 	resources::managed_resource_ptr const*	animations,
-	u32										animations_count
+	const u32										animations_count
 ) : weapon_core_shotgun_reload_base_substate(
 		weapon, animation_time_scale,
 		animations,
 		animations_count,
-		animation::mixing::play_once_and_remove_at_end,
-		10,
-		"animation_id",
-		"hands_stand_animation_id",
-		"hands_crouch_animation_id",
-		"hands_jump_animation_id"
+		animation::mixing::play_once_and_freeze_at_end,
+		3,
+		"shotgun-start_reload",
+		"reload_start(stand)",
+		"reload_start(crouch)",
+		"reload_start(jump)"
 	)
 {
-	// FUNCTION BODY
-	// <0x59e620>|0x000|+0x04d:'20'	{
-	// <0x59e66d>|0x04d|      :'21'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_start_substate::initialize()
+// claude@NOTE: the deserializing/chamber_a_round/round_is_chambered/unload guard chain is
+// structure-correct; residual is boost::function's assign_to - target inlines this
+// instantiation, /Od out-of-lines it (per-instantiation inliner decision; one_round::initialize,
+// the same boost::bind without the guard, is 100%). Non-steerable from source.
 void weapon_core_shotgun_reload_start_substate::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59e4ea>|0x00a|+0x00a:'26'
-	// <0x59e4f4>|0x014|+0x0c6:'27'
-	// <0>
-	// <0x59e5ba>|0x0da|+0x01a:'29'
-	// <0>
-	// <0x59e5d4>|0x0f4|+0x02f:'31'
-	// <0x59e603>|0x123|+0x00e:'32'
-	// <0>
-	// ******
+	m_animation_ended = false;
+	m_weapon.set_animation_callback(
+		animation::channel_id_on_animation_end,
+		this,
+		boost::bind( &weapon_core_shotgun_reload_start_substate::on_animation_end, this, _1 )
+	);
+
+	if ( !m_weapon.deserializing( ) )
+	{
+		if ( m_weapon.chamber_a_round_on_reload( ) && m_weapon.round_is_chambered( ) )
+			m_weapon.unload_chambered_round( );
+	}
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_shotgun_reload_start_substate::finalize()
+// claude@NOTE: structure-correct; residual is animation_playback_state::reset() - target
+// keeps it out-of-line (its COMDAT in animation_playback_state.h.obj) while /Od inlines the
+// trivial in-class body here. Cross-unit: only fixable by noinline'ing the shared header.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
-	// FUNCTION BODY
-	// <0x59e4a9>|0x009|+0x01a:'38'
-	// <0x59e4c3>|0x023|+0x014:'39'
-	// ******
+	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	m_weapon.remove_animation_callback( animation::channel_id_on_animation_end, this );
 }
 
-// STATE[STUB]
-// bool survarium::weapon_core_shotgun_reload_start_substate::is_ready_for_transition() const
 bool weapon_core_shotgun_reload_start_substate::is_ready_for_transition( ) const
 {
-	return false;
-
-	// FUNCTION BODY
-	// <0x59e427>|0x007|+0x009:'44'
-	// ******
+	return m_animation_ended;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_shotgun_reload_start_substate::on_animation_end(vostok::animation::animation_callback_params&)
+// claude@NOTE: structure matches the matched weapon_core_animation_end_aware_state::on_animation_end
+// (90.9%); residual is the intrusive_ptr operator== operand-evaluation order (target computes
+// the `this` address before the arg, /Od emits the reverse). Non-steerable from source.
 animation::callback_return_type_enum weapon_core_shotgun_reload_start_substate::on_animation_end( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0x59e449>|0x009|+0x007:'49'
-	// <0>
-	// <0x59e450>|0x010|+0x010:'51'
-	// <0x59e460>|0x020|+0x00c:'52'
-	// <0x59e46c>|0x02c|+0x01b:'53'
-	// <0x59e487>|0x047|+0x00a:'54'
-	// <0x59e491>|0x051|+0x007:'55'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59e498>|0x058|+0x002:'59'
-	// ******
+	params.interrupt_animation_player_tick = false;
+	if ( params.animated_object == &m_weapon )
+	{
+		ASSERT( UNKNOWN_EXPRESSION );
+		if ( m_animation_to_wait_for == params.animation )
+		{
+			m_animation_ended = true;
+			params.interrupt_animation_player_tick = true;
+		}
+	}
+
+	return animation::callback_return_type_call_me_again;
 }
 
 } // namespace survarium

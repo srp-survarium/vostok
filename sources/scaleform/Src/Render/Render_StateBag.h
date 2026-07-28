@@ -41,6 +41,8 @@ enum StateType
     State_MaskNode,
     State_ViewMatrix3D,
     State_ProjectionMatrix3D,
+    State_UserData,
+    State_OrigScale9Parent,
     // Internal states should not be manipulated directly.
     State_Internal_MaskOwner, 
     State_Type_Count
@@ -228,11 +230,7 @@ class StateBag : private StateData
 public:
     StateBag() : StateData() { }
 
-    StateBag(const StateBag& src) : StateData(src)
-    {
-        if (!src.isEmpty())
-            addRefBag_NotEmpty();
-    }
+    StateBag(const StateBag& src);
     ~StateBag()
     {
         if (!isEmpty())

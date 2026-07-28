@@ -12,7 +12,10 @@ namespace survarium {
 struct profile_slot {
 public:
 	inline	void	serialize	( network_core::udp_match_packet& packet, slot_serialize_mode_enum arg_1 ) const { /* no source */ }
-	inline	void	deserialize	( network_core::packet_reader& reader, slot_serialize_mode_enum arg_1 ) { /* no source */ }
+	inline	void	deserialize	( network_core::packet_reader& reader, slot_serialize_mode_enum mode )
+	{
+		item.deserialize( reader, mode );
+	}
 
 public:
 	/* 0x0000 */	inventory_item_instance		item;

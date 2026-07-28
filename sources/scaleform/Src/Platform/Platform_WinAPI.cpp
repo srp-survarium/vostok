@@ -119,6 +119,78 @@ private:
     DWORD               Cookie;
     class AppImpl*      pAppImpl;
 };
+
+// A class to access multitouch related WinAPI functions (for compatibility with pre-Windows7 systems).
+class User32TouchDll
+{
+    typedef BOOL (WINAPI *RegisterTouchWindowProcType)(HWND hwnd, ULONG ulFlags);
+    typedef BOOL (WINAPI *UnregisterTouchWindowProcType)(HWND);
+    typedef BOOL (WINAPI *IsTouchWindowProcType)(HWND, PULONG);
+    typedef BOOL (WINAPI *CloseTouchInputHandleProcType)(HTOUCHINPUT hTouchInput);
+    typedef BOOL (WINAPI *GetTouchInputInfoProcType)(HTOUCHINPUT hTouchInput, UINT cInputs, PTOUCHINPUT pInputs, int cbSize);
+
+    RegisterTouchWindowProcType     RegisterTouchWindowProc;
+    UnregisterTouchWindowProcType   UnregisterTouchWindowProc;
+    IsTouchWindowProcType           IsTouchWindowProc;
+    CloseTouchInputHandleProcType   CloseTouchInputHandleProc;
+    GetTouchInputInfoProcType       GetTouchInputInfoProc;
+
+    HMODULE                         hUser32;
+    DWORD                           ErrorCode;
+public:
+    User32TouchDll() 
+    {
+        hUser32 = ::LoadLibraryA("user32.dll");
+        if (hUser32)
+        {
+            RegisterTouchWindowProc     = (RegisterTouchWindowProcType)::GetProcAddress(hUser32, "RegisterTouchWindow");    
+            UnregisterTouchWindowProc   = (UnregisterTouchWindowProcType)::GetProcAddress(hUser32, "UnregisterTouchWindow");    
+            IsTouchWindowProc           = (IsTouchWindowProcType)::GetProcAddress(hUser32, "IsTouchWindow");    
+            CloseTouchInputHandleProc   = (CloseTouchInputHandleProcType)::GetProcAddress(hUser32, "CloseTouchInputHandle");    
+            GetTouchInputInfoProc       = (GetTouchInputInfoProcType)::GetProcAddress(hUser32, "GetTouchInputInfo");    
+            ErrorCode = 0;
+        }
+        else
+        {
+            ErrorCode = GetLastError();
+        }
+    }
+    ~User32TouchDll()
+    {
+        if (hUser32)
+            ::FreeLibrary(hUser32);
+    }
+    bool IsAvailable()  const   
+    { 
+        return hUser32 != NULL && RegisterTouchWindowProc && UnregisterTouchWindowProc && 
+            IsTouchWindowProc && CloseTouchInputHandleProc && GetTouchInputInfoProc; 
+    }
+    int	 GetErrorCode() const   { return (int)ErrorCode; }
+    void ResetErrorCode()       { ErrorCode = 0;    }
+
+    // User32 functions. Note, before calling any of the following function
+    // make sure Imm32 was loaded by calling to IsAvailable.
+    BOOL RegisterTouchWindow(HWND hwnd, ULONG ulFlags) 
+    { 
+        return (RegisterTouchWindowProc) ? RegisterTouchWindowProc(hwnd, ulFlags) : FALSE;
+    } 
+    BOOL UnregisterTouchWindow(HWND hwnd)
+    {
+        return (UnregisterTouchWindowProc) ? UnregisterTouchWindowProc(hwnd) : FALSE;
+    }
+    BOOL IsTouchWindow(HWND hwnd, PULONG pulFlags)
+    {
+        return (IsTouchWindowProc) ? IsTouchWindowProc(hwnd, pulFlags) : FALSE;
+    }
+    BOOL CloseTouchInputHandle(HTOUCHINPUT hTouchInput)
+    {
+        return (CloseTouchInputHandleProc) ? CloseTouchInputHandleProc(hTouchInput) : FALSE;
+    }
+    BOOL GetTouchInputInfo(HTOUCHINPUT hTouchInput, UINT cInputs, PTOUCHINPUT pInputs, int cbSize)
+    {
+        return (GetTouchInputInfoProc) ? GetTouchInputInfoProc(hTouchInput, cInputs, pInputs, cbSize) : FALSE;
+    }
+};
 #endif
 
 //------------------------------------------------------------------------
@@ -139,7 +211,7 @@ public:
      //     OldWindowSize(AppBase::GetDefaultViewSize()),
           NeedPaint(true),
           hWndNextViewer(0),
-          BlockOnSize(false)
+          BlockOnSize(false), MultitouchSupported(false)
     {
         Created = false;
 #if (WINVER >= 0x0601) && defined(GFX_MULTITOUCH_SUPPORT_ENABLE)
@@ -182,10 +254,16 @@ public:
     
     // AppImplBase
     virtual void    InitArgDescriptions(Args* args);
+    virtual void    ApplyViewConfigArgs(ViewConfig* config, const Args& args);
     virtual void    SetWindowTitle(const String& title);
     virtual void    killWindow();
 
     virtual bool    OnArgs(const Args& args, Args::ParseResult parseResult);
+
+    virtual bool    IsMultitouchSupported() const { return MultitouchSupported; }
+
+    virtual void    ProcessUrl(const String& url);
+
 protected:
     virtual void    updateConfig();
 
@@ -206,6 +284,7 @@ private:
     HWND            hWndNextViewer;
     bool            Created;
     bool            BlockOnSize;
+    bool            MultitouchSupported;
 
     static LRESULT CALLBACK appWindowProc(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam);
 
@@ -217,6 +296,7 @@ private:
     Ptr<ManipulationEventListener>  pManipulationEventListener;
     Point<int>                      FirstTouchPt;
     UInt32                          ActiveGestureMask;
+    User32TouchDll                  User32;
 #endif
 };
 
@@ -335,37 +415,49 @@ bool AppImpl::setupWindow(const String& title, const ViewConfig& config)
     }
 
 #if (WINVER >= 0x0601) && defined(GFX_MULTITOUCH_SUPPORT_ENABLE)
-    ::RegisterTouchWindow(hWnd, 0);
-
-    SF_ASSERT(::IsTouchWindow(hWnd, NULL));
-
-    do 
+    // test for touch
+    int value = GetSystemMetrics(SM_DIGITIZER);
+    if (value & NID_MULTI_INPUT)
     {
-        // Instantiate the ManipulationProcessor object
-        HRESULT hr = ::CoCreateInstance(__uuidof(ManipulationProcessor), NULL, CLSCTX_ALL, IID_PPV_ARGS(&pIManipProc.GetRawRef()));
-        if (FAILED(hr))
-        {
-            //SF_ASSERT(SUCCEEDED(hr)); // failed to instantiate the ManipulationProcessor object
-            continue;
-        }
+        // digitizer is multitouch
+        // !AB: should we check for if (value & NID_INTEGRATED_TOUCH) as well?
+        MultitouchSupported = true;    
+    }
+    
+    if (User32.IsAvailable())
+    {
+        User32.RegisterTouchWindow(hWnd, 0);
 
-        // Instantiate the event sink with the manipulation processor and pointer to the rectangle object
-        pManipulationEventListener = *new ManipulationEventListener(this);
-        if (!pManipulationEventListener)
-        {
-            pIManipProc = NULL;
-            continue;
-        }
+        SF_ASSERT(User32.IsTouchWindow(hWnd, NULL));
 
-        // Establish the link between ManipulationEventSink and ManipulationProcessor
-        if (!pManipulationEventListener->Connect(pIManipProc))
+        do 
         {
-            SF_ASSERT(0); // failed to connect ManipulationEventListener and ManipulationProcessor
-            pIManipProc = NULL;
-            pManipulationEventListener = NULL;
-            continue;
-        }
-    } while(0);
+            // Instantiate the ManipulationProcessor object
+            HRESULT hr = ::CoCreateInstance(__uuidof(ManipulationProcessor), NULL, CLSCTX_ALL, IID_PPV_ARGS(&pIManipProc.GetRawRef()));
+            if (FAILED(hr))
+            {
+                //SF_ASSERT(SUCCEEDED(hr)); // failed to instantiate the ManipulationProcessor object
+                continue;
+            }
+
+            // Instantiate the event sink with the manipulation processor and pointer to the rectangle object
+            pManipulationEventListener = *new ManipulationEventListener(this);
+            if (!pManipulationEventListener)
+            {
+                pIManipProc = NULL;
+                continue;
+            }
+
+            // Establish the link between ManipulationEventSink and ManipulationProcessor
+            if (!pManipulationEventListener->Connect(pIManipProc))
+            {
+                SF_ASSERT(0); // failed to connect ManipulationEventListener and ManipulationProcessor
+                pIManipProc = NULL;
+                pManipulationEventListener = NULL;
+                continue;
+            }
+        } while(0);
+    }
 
 #endif
 
@@ -401,7 +493,8 @@ void AppImpl::failSetupWindow(const char* cause)
 void AppImpl::killWindow()
 {
 #if (WINVER >= 0x0601) && defined(GFX_MULTITOUCH_SUPPORT_ENABLE)
-    ::UnregisterTouchWindow(hWnd);
+    if (User32.IsAvailable())
+        User32.UnregisterTouchWindow(hWnd);
 
     // COM objects must be released before CoUninitialize
     // Release ManipulationEventSink object 
@@ -487,11 +580,29 @@ void AppImpl::InitArgDescriptions(Args* args)
     AppImplBase::InitArgDescriptions(args);
     ArgDesc options[] =
     {
-        {"ndp",   "NoDebugPopups",  Args::Flag,      "",    "Disable Windows debug popups"},
-        {"dump",  "Minidump",       Args::Flag,      "",    "Creates a minidump when unhandled exceptions occur (implies -ndp)."},
-        {"",      "",               Args::ArgEnd,    "",    ""}
+        {"ndp",     "NoDebugPopups",  Args::Flag,           "", "Disable Windows debug popups"},
+        {"dump",    "Minidump",       Args::StringOption,   "", "Creates a minidump when unhandled exceptions occur (implies -ndp)."},
+        {"sbuf",    "StaticBuffers",  Args::Flag,           "", "Uses static vertex/index buffers, instead of dynamic ones."},
+        {"sm20",    "ShaderModel20",  Args::Flag,           "", "Forces the use of shader model 2.0 shaders (D3D9)"},
+#if defined(FXPLAYER_RENDER_OPENGL)
+        {"gl20",    "OpenGL20",       Args::Flag,           "", "Use a legacy GL 2.x context instead of GL 3.x" },
+#endif
+        {"",        "",               Args::ArgEnd,         "", ""}
     };
     args->AddDesriptions(options);
+}
+
+void AppImpl::ApplyViewConfigArgs(ViewConfig* config, const Args& args)
+{
+    AppImplBase::ApplyViewConfigArgs(config, args);
+    if (args.GetBool("StaticBuffers"))
+        config->ViewFlags |= View_StaticBuffers;
+#if defined(FXPLAYER_RENDER_OPENGL)
+    if (args.GetBool("OpenGL20"))
+        config->ViewFlags |= View_GL20;
+#endif
+    if (args.GetBool("ShaderModel20"))
+        config->ViewFlags |= View_ShaderModel20;
 }
 
 void AppImpl::SetWindowTitle(const String& title)
@@ -614,7 +725,7 @@ void AppImpl::processTouch(WPARAM wParam, LPARAM lParam)
     PTOUCHINPUT pInputs = new TOUCHINPUT[cInputs];
     if (NULL != pInputs)
     {
-        if (GetTouchInputInfo((HTOUCHINPUT)lParam,
+        if (User32.GetTouchInputInfo((HTOUCHINPUT)lParam,
             cInputs,
             pInputs,
             sizeof(TOUCHINPUT)))
@@ -666,7 +777,7 @@ void AppImpl::processTouch(WPARAM wParam, LPARAM lParam)
 
             }
             // process pInputs
-            if (!CloseTouchInputHandle((HTOUCHINPUT)lParam))
+            if (!User32.CloseTouchInputHandle((HTOUCHINPUT)lParam))
             {
                 // error handling
             }
@@ -715,6 +826,11 @@ void AppImpl::processChangeCBChain(WPARAM wParam, LPARAM lParam)
         SendMessage(hWndNextViewer, WM_CHANGECBCHAIN, wParam, lParam); 
 }
 
+
+void    AppImpl::ProcessUrl(const String& url)
+{
+    ShellExecute(NULL, "open", url.ToCStr(), NULL, NULL, SW_SHOWNORMAL);
+}
 
 LRESULT AppImpl::MemberWndProc(UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -1183,24 +1299,23 @@ void InvalidParameterHandler(const wchar_t * expression,
 }
 
 // Writes minidump files when -dump is passed on the command line.
+static char MinidumpFilename[_MAX_PATH];
 LONG WINAPI WriteMinidumpUnhandledExceptionFilter( __in struct _EXCEPTION_POINTERS* ExceptionInfo )
 {
     // Construct the dump filename, and open the handle.
     HANDLE dumpFile = INVALID_HANDLE_VALUE;
-    TCHAR moduleFilename[_MAX_PATH], dumpFilename[_MAX_PATH];
-    GetModuleFileName(0, moduleFilename, _MAX_PATH );
-    unsigned fileIndex = 0;
-    do 
+    if ( SFstrlen(MinidumpFilename) == 0)
     {
-        sprintf_s(dumpFilename, _MAX_PATH, "%s%05d.dmp", moduleFilename, fileIndex++);
-        dumpFile = CreateFile(dumpFilename, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0 );
-    } while (dumpFile == INVALID_HANDLE_VALUE);
+        GetModuleFileName(0, MinidumpFilename, _MAX_PATH );
+        SFstrcat(MinidumpFilename, _MAX_PATH, ".dmp");
+    }
 
     // Now actually write the dump file.
+    dumpFile = CreateFile(MinidumpFilename, GENERIC_WRITE, 0, 0, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, 0 );
     MINIDUMP_EXCEPTION_INFORMATION exception = { ::GetCurrentThreadId(), ExceptionInfo, TRUE };
     MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), dumpFile, MiniDumpWithHandleData, &exception, 0, 0 );
     CloseHandle(dumpFile);
-    fprintf_s(stderr, "Encountered unhandled exception! Writing minidump to %s\n", dumpFilename);
+    fprintf_s(stderr, "Encountered unhandled exception! Writing minidump to %s\n", MinidumpFilename);
     return EXCEPTION_CONTINUE_SEARCH;
 }
 
@@ -1212,7 +1327,7 @@ bool AppImpl::OnArgs(const Args& args, Args::ParseResult parseResult)
         return false;
 
     // Check for disabling error dialogs.
-    if ( args.GetBool("NoDebugPopups") || args.GetBool("Minidump"))
+    if ( args.GetBool("NoDebugPopups") || args.GetString("Minidump").GetLength() > 0 )
     {
         // Redirects asserts and errors to stderr (in debug mode only).
         _CrtSetReportFile(_CRT_ASSERT, _CRTDBG_FILE_STDERR);
@@ -1228,8 +1343,11 @@ bool AppImpl::OnArgs(const Args& args, Args::ParseResult parseResult)
     }
 
     // Check for creating minidumps.
-    if (args.GetBool("Minidump"))
+    MinidumpFilename[0] = 0;
+    if (args.GetString("Minidump").GetLength() > 0)
     {
+        String minidumpName = args.GetString("Minidump"); 
+        SFstrcpy(MinidumpFilename, _MAX_PATH, minidumpName.ToCStr());
         SetUnhandledExceptionFilter(WriteMinidumpUnhandledExceptionFilter);
     }
     
@@ -1333,7 +1451,13 @@ int AppBase::GetMouseCount()
 }
 int AppBase::GetKeyboardCount()
 {
-    return 1;
+    int cnt = 0;
+    for (unsigned i = 0; i < XUSER_MAX_COUNT; ++i)
+    {
+        if (pImpl->Pad.IsConnected(i))
+            ++cnt;
+    }
+    return Alg::Max(1, cnt);
 }
 
 UInt32 AppBase::GetCaps() const
@@ -1485,12 +1609,17 @@ public:
         DirectoryImplBase(path, pattern) { } 
 
     virtual void ReadDirectory(const String& path, const String& pattern);
+    virtual int  GetFileIndex(const String& filename) const;
 };
 
 void DirectoryImpl::ReadDirectory(const String& path, const String& pattern)
 {
     Pattern = pattern;
     Path = path;
+    if (Path == ".")
+    {
+        Path += "/";
+    }
     unsigned start = 0;
     String winpath  = "";
     unsigned length = (unsigned)Pattern.GetLength();
@@ -1510,9 +1639,15 @@ void DirectoryImpl::ReadDirectory(const String& path, const String& pattern)
 
         if (hFind != INVALID_HANDLE_VALUE)
         {
-            Filenames.PushBack(dp.cFileName);
+            String lowerFilename = dp.cFileName;
+            lowerFilename = lowerFilename.ToLower();
+            Filenames.PushBack(lowerFilename);
             while (FindNextFileA(hFind, &dp))
-                Filenames.PushBack(dp.cFileName);
+            {
+                lowerFilename = dp.cFileName;
+                lowerFilename = lowerFilename.ToLower();
+                Filenames.PushBack(lowerFilename);
+            }
             FindClose(hFind);
         }
         start = i+1;
@@ -1521,6 +1656,17 @@ void DirectoryImpl::ReadDirectory(const String& path, const String& pattern)
     CurFile = 0;
 }
 
+int DirectoryImpl::GetFileIndex(const String& filename) const
+{
+    String fileOnly = filename.GetFilename();
+    fileOnly = fileOnly.ToLower();
+    for ( unsigned i = 0; i < (unsigned)Filenames.GetSize(); ++i )
+    {
+        if ( Filenames[i] == fileOnly )
+            return i;
+    }
+    return -1;
+}
 
 Directory::Directory(const String& path, const String& pattern)
 {
@@ -1564,7 +1710,7 @@ int Platform_WinAPI_MainA(int argc, char** argv)
         result = app->AppMain(argc, argv);
 
     Scaleform::Platform::AppBase::DestroyInstance(app);
-    if (result == 0 && Scaleform::System::hasMemoryLeaks)
+    if (result == 0 && Scaleform::System::HasMemoryLeaks)
         result = -1;
 
     return result;

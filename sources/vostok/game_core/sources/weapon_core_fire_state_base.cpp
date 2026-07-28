@@ -4,122 +4,80 @@
 
 #include "pch.h"
 #include <vostok/game_core/weapon_core_fire_state_base.h>
+#include <vostok/game_core/weapon_core.h>		// m_weapon.* + get_bullets_in_queue
 
 namespace survarium {
 
-// STATE[STUB]
-// survarium::weapon_core_fire_state_base::weapon_core_fire_state_base(survarium::weapon_core&, float)
 weapon_core_fire_state_base::weapon_core_fire_state_base( weapon_core& weapon, float animation_timescale ) :
-	weapon_core_animation_end_aware_state( weapon, true )
+	weapon_core_animation_end_aware_state	( weapon, true ),
+	m_animation_timescale					( animation_timescale ),
+	m_playback_type							( animation::mixing::play_cyclically )
 {
-	// FUNCTION BODY
-	// <0x59ec20>|0x000|+0x066:'23'	{
-	// <0x59ec86>|0x066|      :'24'	}
-	// ******
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::initialize()
 void weapon_core_fire_state_base::initialize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec9a>|0x00a|+0x008:'34'
-	// <0x59eca2>|0x012|+0x094:'35'
-	// <0x59ed36>|0x0a6|+0x029:'36'
-	// <0>
-	// <0x59ed5f>|0x0cf|+0x018:'38'
-	// ******
+	weapon_core_animation_end_aware_state::initialize( );
+
+	m_weapon.set_animation_callback(
+		"shoot",
+		this,
+		boost::bind( &weapon_core_fire_state_base::on_shot_event, this, _1 )
+	);
+
+	m_playback_type = animation::mixing::playback_enum( m_weapon.get_bullets_in_queue( ) <= 1 );
+
+	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = true;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::execute()
+// claude@NOTE: paired, walled by a cross-unit inline-vs-call boundary. The target emits a
+// `call weapon_core_base_state::execute` (out-of-line 0x16-byte function there); here that
+// base method is an inline `{}` in weapon_core_base_state.h, so MSVC inlines it away and drops
+// the call statement. Out-lining it belongs to weapon_core_base_state.cpp's match.
 void weapon_core_fire_state_base::execute( )
 {
-	// FUNCTION BODY
-	// <0x59ec07>|0x007|+0x008:'43'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ec0f>|0x00f|+0x00a:'50'
-	// ******
+	weapon_core_base_state::execute( );
+	m_animation_has_been_ended = false;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::finalize()
 void weapon_core_fire_state_base::finalize( )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ebb9>|0x009|+0x008:'61'
-	// <0x59ebc1>|0x011|+0x017:'62'
-	// <0>
-	// <0x59ebd8>|0x028|+0x018:'64'
-	// ******
+	weapon_core_animation_end_aware_state::finalize( );
+
+	m_weapon.remove_animation_callback( "shoot", this );
+
+	ASSERT( UNKNOWN_EXPRESSION ); *m_is_firing_ptr = false;
 }
 
-// STATE[STUB]
-// vostok::animation::callback_return_type_enum survarium::weapon_core_fire_state_base::on_shot_event(vostok::animation::animation_callback_params&)
+// claude@NOTE: paired, structure matches (10/10 stmts); sole residual is a 3-byte size
+// diff in the LOG_ERROR statement - the macro bakes __LINE__ into the pushed string length
+// (target pushes 0x52, base 0x42), which depends on this file's line layout matching the
+// original's and is not faithfully reconstructable.
 animation::callback_return_type_enum weapon_core_fire_state_base::on_shot_event( animation::animation_callback_params& params )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59ed91>|0x011|+0x007:'70'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x59ed98>|0x018|+0x00c:'77'
-	// <0x59eda4>|0x024|+0x00c:'78'
-	// <0>
-	// <1>
-	// <0x59edb0>|0x030|+0x01c:'81'
-	// <0x59edcc>|0x04c|+0x077:'82'
-	// <0x59ee43>|0x0c3|+0x004:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <0x59ee47>|0x0c7|+0x00c:'87'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x59ee53>|0x0d3|+0x015:'97'
-	// <0>
-	// <0x59ee68>|0x0e8|+0x00c:'99'
-	// <0>
-	// <0x59ee74>|0x0f4|+0x002:'101'
-	// ******
+	params.interrupt_animation_player_tick = true;
+
+	ASSERT( UNKNOWN_EXPRESSION );
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	if ( !m_weapon.get_bullets_in_queue( ) )
+	{
+		LOG_ERROR( "!m_weapon.get_bullets_in_queue()" );
+		return animation::callback_return_type_call_me_again;
+	}
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	m_weapon.instant_fire( params.callback_time_in_ms );
+
+	ASSERT( UNKNOWN_EXPRESSION );
+
+	return animation::callback_return_type_call_me_again;
 }
 
-// STATE[STUB]
-// void survarium::weapon_core_fire_state_base::on_animation_end_impl(bool&)
 void weapon_core_fire_state_base::on_animation_end_impl( bool& animation_player_tick_result )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x59eb97>|0x007|+0x006:'107'
-	// ******
+	animation_player_tick_result = true;
 }
 
 } // namespace survarium

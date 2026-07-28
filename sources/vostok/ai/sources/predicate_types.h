@@ -10,6 +10,12 @@
 namespace vostok {
 namespace ai {
 
+// sushi@TODO: [values] divergence - target ships only 12 enumerators (0x0..0xb ending at
+// predicate_type_is_at_position); the base has predicate_type_animation_playing (0x9),
+// predicate_type_sound_playing (0xb) and predicate_type_is_moving (0xe), shifting the
+// tail. Matching the target requires REMOVING those 3 predicates AND every consumer
+// (behaviour_domain.cpp preconditions / add_predicate blocks + the brain_unit::is_playing_*
+// / is_moving binds) - a behaviour-logic [stmt] change, not an enum-only fix. Parked.
 enum predicate_types_enum
 {
 	predicate_type_target_dead			= 0,

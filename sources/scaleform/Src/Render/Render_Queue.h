@@ -57,6 +57,7 @@ public:
 
     // Initialize the queue, with the given number of items.
     bool Initialize( UPInt itemCount = DefaultQueueSize );
+    void Shutdown();
     
     // Reserved space for one queue item; returns 0 if that
     // is impossible due to buffers being full.

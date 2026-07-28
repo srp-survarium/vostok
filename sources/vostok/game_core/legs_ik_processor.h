@@ -30,7 +30,7 @@ public:
 			void		activate				( animation::skeleton const& skeleton );
 
 	inline	void		set_drawer				( legs_ik_drawer* drawer ) { /* no source */ }
-	inline	void		set_character_controller( physics::bt_character_controller* controller ) { /* no source */ }
+	inline	void		set_character_controller( physics::bt_character_controller* controller ) { m_character_controller = controller; }
 
 			void		process					( float4x4* matrices, float4x4 const& transform );
 
@@ -39,7 +39,7 @@ public:
 			void		set_right_heel_on_ground( bool value );
 			void		set_right_toe_on_ground	( bool value );
 
-			void		tick					( u32 current_time_in_ms );
+			void		tick					( const u32 current_time_in_ms );
 
 	inline	bool		is_right_supporting_leg	( ) const { /* no source */ }
 
@@ -54,13 +54,13 @@ public:
 				void	set_heel_transition_time( float tr_time );
 				void	set_toe_transition_time	( float tr_time );
 		inline	void	set_rotation_axis		( float3 const& arg_0 ) const { /* no source */ }
-				void	set_heel_on_ground		( bool value );
-				void	set_toe_on_ground		( bool value );
+				void	set_heel_on_ground		( const bool value );
+				void	set_toe_on_ground		( const bool value );
 
-		inline	bool	is_heel_on_ground		( ) const { /* no source */ }
-		inline	bool	is_toe_on_ground		( ) const { /* no source */ }
-		inline	bool	is_on_ground			( ) const { /* no source */ }
-		inline	bool	is_full_on_ground		( ) const { /* no source */ }
+		inline	bool	is_heel_on_ground		( ) const { return m_heel_on_ground; }
+		inline	bool	is_toe_on_ground		( ) const { return m_toe_on_ground; }
+		inline	bool	is_on_ground			( ) const { return is_heel_on_ground( ) || is_toe_on_ground( ); }
+		inline	bool	is_full_on_ground		( ) const { return is_heel_on_ground( ) && is_toe_on_ground( ); }
 
 		inline	bool	is_more_supporting_then	( legs_ik_processor::leg_params const& arg_0 ) const { /* no source */ }
 
@@ -79,6 +79,7 @@ public:
 		/* 0x002d */	bool		m_toe_on_ground;
 	}; // struct leg_params
 
+private:
 			void		set_heel_on_ground		( legs_ik_processor::leg_params& params, bool value );
 			void		set_toe_on_ground		( legs_ik_processor::leg_params& params, bool value );
 
@@ -112,10 +113,10 @@ private:
 private:
 	class transition_time_calculator {
 	public:
-		inline	explicit	transition_time_calculator	( ) { /* no source */ }
+		inline	explicit	transition_time_calculator	( ) : m_value( 0.1f ) { }
 
-		inline	void		reset						( ) { /* no source */ }
-		inline	void		tick						( float arg_0 ) { /* no source */ }
+		inline	void		reset						( ) { m_value = 0.0f; }
+		inline	void		tick						( float arg_0 ) { m_value += arg_0; }
 		inline	float		get_value					( ) const { return m_value; }
 
 	private:

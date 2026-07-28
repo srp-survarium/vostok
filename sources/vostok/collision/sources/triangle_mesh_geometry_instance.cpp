@@ -22,6 +22,12 @@ triangle_mesh_geometry_instance::~triangle_mesh_geometry_instance( )
 {
 }
 
+// claude@NOTE: STRUCTURE MATCH. Capped on the cross-module math::cuboid::cuboid(aabb const&,
+// float4x4 const&) ctor (vostok/core/sources/math_cuboid.cpp): the target compiles that COMDAT
+// with an LTCG 2-register-arg convention (aabb in ecx, matrix in eax), our /Od base passes both
+// by stack push. Pure call-boundary arg residual; not steerable from this site. Same cause caps
+// aabb_test/cuboid_test/cuboid_query here. capsule/truncated_sphere variants are NOT_IMPLEMENTED
+// stubs so they never build a cuboid and stay 100%.
 bool triangle_mesh_geometry_instance::aabb_query			( object const* object, math::aabb const& aabb, triangles_type& triangles ) const
 {
 	return m_triangle_mesh->cuboid_query( object, math::cuboid( aabb, m_inverted_matrix ), triangles );

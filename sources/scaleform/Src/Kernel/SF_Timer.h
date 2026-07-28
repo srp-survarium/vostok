@@ -96,11 +96,12 @@ public:
     public:
         virtual ~TimerOverride() {}
 
-        virtual UInt32 GetTicksMs()      = 0;
-        virtual UInt64 GetRawTicks()     = 0;
-        virtual UInt64 GetRawFrequency() = 0;
+        virtual UInt32 GetTicksMs(UInt32 measured)      = 0;
+        virtual UInt64 GetRawTicks(UInt64 measured)     = 0;
+        virtual UInt64 GetRawFrequency(UInt64 measured) = 0;
     };
     static void    SF_STDCALL SetTimerOverride(TimerOverride* instance);
+    static TimerOverride*     GetTimerOverride();
 
 private:
     friend class System;

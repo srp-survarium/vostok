@@ -52,16 +52,14 @@ STATIC_SIZE_ASSERT(affect_subscriber, 0x28);
 
 struct booster_damage_protector : public damage_protector {
 public:
-	// STATE[99.87%|DONE]: Stack size is different
 	explicit			booster_damage_protector	( pcstr damage_type, float reduce, float absorb ) :
 							m_reduce	( reduce ),
 							m_absorb	( absorb )
 	{
-		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );	// <0xbb247>|0x047|+0x0ac:'56'
+		reduce_damage_functor = boost::bind( &booster_damage_protector::reduce_damage, this, _1, _2, _3, _4 );
 		strings::copy( (pstr)&m_hit_type, 16, damage_type ); // sushi@TODO: damage_type can be less then 16, is this safe?
 	}
 
-	// STATE[99.50%|DONE]
 	inline	float		reduce_damage				(
 							pcstr		body_part_name,
 							pcstr		damage_type,
@@ -86,46 +84,46 @@ STATIC_SIZE_ASSERT(booster_damage_protector, 0x70);
 
 class damage_model : public resources::unmanaged_resource, public boost::noncopyable {
 public:
-									damage_model					( affects_applying_type_enum affects_applying_type );
+									damage_model					( const affects_applying_type_enum affects_applying_type );
 	virtual							~damage_model					( );
 
 			void					add_body_part					( body_part_parameters* const new_body_part );
 			bool					hit_body_part					(
-										u8			initiator,
+										const u8			initiator,
 										pcstr		part_name,
 										pcstr		damage_type,
-										float		amount,
-										float		armor_piercing,
-										u32			time_in_ms,
+										const float		amount,
+										const float		armor_piercing,
+										const u32			time_in_ms,
 										bullet*		const bullet
 									);
 
-			void					apply_med_kit					( pcstr part_name, float amount );
+			void					apply_med_kit					( pcstr part_name, const float amount );
 
-			void					tick							( u32 time_delta_ms, u32 current_time_in_ms );
+			void					tick							( const u32 time_delta_ms, const u32 current_time_in_ms );
 
-	inline	void					fill_stats						( damage_info_type& arg_0, u32 arg_1 ) const { /* no source */ }
-			void					fill_stats						( ai::npc_statistics& stats, u32 current_time_in_ms ) const;
+	inline	void					fill_stats						( damage_info_type& arg_0, const u32 arg_1 ) const { /* no source */ }
+			void					fill_stats						( ai::npc_statistics& stats, const u32 current_time_in_ms ) const;
 			void					dump_stats						( boost::function<void( u32, float, float, pcstr )> callback );
 
 	inline	bool					is_healthy						( ) const { /* no source */ }
 
 			void					reset							( );
 
-			void					apply_affect					( pcstr part_name, hit_affects_type_enum affect, affect_event_type_enum event_type );
-			void					cancel_affect					( pcstr part_name, hit_affects_type_enum affect );
+			void					apply_affect					( pcstr part_name, const hit_affects_type_enum affect, const affect_event_type_enum event_type );
+			void					cancel_affect					( pcstr part_name, const hit_affects_type_enum affect );
 
-			void					subscribe_on_affect				( hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
-			void					unsubscribe_from_affect			( hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
+			void					subscribe_on_affect				( const hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
+			void					unsubscribe_from_affect			( const hit_affects_type_enum affect_type, affect_subscriber* const subscriber );
 
-			void					notify_on_affect_event			( pcstr body_part_name, hit_affects_type_enum affect_type, affect_event_type_enum event_type );
+			void					notify_on_affect_event			( pcstr body_part_name, const hit_affects_type_enum affect_type, const affect_event_type_enum event_type );
 			void					add_damage_protector			( pcstr damage_type, float reduce, float absorb );
 
 			void					register_body_part_damage_protector		( pcstr part_name, damage_protector* protector );
 			void					unregister_body_part_damage_protector	( pcstr part_name, damage_protector* protector );
 
-	inline	u8						broken_legs_count				( ) const { /* no source */ }
-	inline	u8						broken_hands_count				( ) const { /* no source */ }
+	inline	u8						broken_legs_count				( ) const { return m_broken_legs_count[0] + m_broken_legs_count[1]; }
+	inline	u8						broken_hands_count				( ) const { return m_broken_hands_count[0] + m_broken_hands_count[1]; }
 	inline	u32						get_parts_count					( ) const { /* no source */ }
 	inline	u8						get_last_aggressor_id			( ) const { /* no source */ }
 
@@ -145,7 +143,7 @@ public:
 			void					deserialize				( network_core::packet_reader& reader );
 
 private:
-			void					on_broken_limb_affect	( pcstr bodypart, hit_affects_type_enum affect, affect_event_type_enum type );
+			void					on_broken_limb_affect	( pcstr bodypart, const hit_affects_type_enum affect, const affect_event_type_enum type );
 
 
 public:

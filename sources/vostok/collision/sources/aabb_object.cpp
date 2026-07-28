@@ -34,7 +34,8 @@ aabb_object::~aabb_object( )
 
 math::aabb aabb_object::update_aabb( float4x4 const& local_to_world )
 {
-	return m_aabb = m_aabb.modify( local_to_world );
+	m_aabb = m_aabb.modify( local_to_world );
+	return m_aabb;
 }
 
 void aabb_object::render	( render::scene_ptr const& scene, render::debug::renderer& renderer ) const

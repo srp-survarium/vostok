@@ -76,15 +76,10 @@ particle_world::particle_world	( particle::engine& engine ) :
 
 particle_world::~particle_world	( )
 {
- 	particle_system_instance_impl* instance = m_ticked_instances_list.front();
- 	while(instance)
- 	{
- 		particle_system_instance_impl* next = m_ticked_instances_list.get_next_of_object(instance);
-		
- 		remove_particle_system_instance(instance);
-		
- 		instance = next;
- 	}
+	// claude@NOTE: target dtor has NO drain loop (base had 5 extra stmts). Body is a single
+	//   compiled-out statement (MASTER_GOLD assert eater); the list is drained elsewhere.
+	//   Reconstructed as ASSERT(empty()); the eater byte count is build-validated.
+	ASSERT( m_ticked_instances_list.empty() );
 }
 
 base_particle* particle_world::allocate_particle( )
@@ -111,14 +106,22 @@ void particle_world::deallocate_particle( base_particle* P )
 void particle_world::play(particle_system_instance_ptr instance, vostok::math::float4x4 const& transform, bool use_transform, bool always_loop)
 {
 	particle_system_instance_impl* impl = static_cast_checked<particle_system_instance_impl*>(instance.c_ptr());
-	
+
+	if ( !impl )
+		return;
+
+	// claude@NOTE: target emits `impl->reset();` here before the play_impl branch. reset() is a
+	//   real 8-stmt target member of particle_system_instance_impl, NOT reconstructed in our
+	//   source (absent from base) - cannot add the call until that body is recovered (would not
+	//   link). With the early-return guard added, the residual QUANTITY is this one reset() stmt.
+
 	if (use_transform)
 		impl->play_impl(transform);
 	else
 		impl->play_impl();
-	
+
 	impl->m_always_looping = always_loop;
-	
+
 	add_particle_system_instance(impl);
 }
 
@@ -257,9 +260,20 @@ void particle_world::add_particle_system_instance(particle_system_instance* inst
 {
 	//ps_instance_entry* new_entry = MT_NEW(ps_instance_entry)();
 	//m_ticked_instances_list2.push_back( new_entry );
+	// claude@NOTE: source shape now matches the target (decl / braced if-find guard / guarded
+	//   push_back, NO `self_ptr = impl` store). The lone remaining target statement is the braced
+	//   if's block-exit jmp (target line 259, +0x002): the target keeps it because the resource_ptr
+	//   list element needs cleanup on that path, while our raw-ptr list folds the empty block-exit
+	//   into the function epilogue. Root cause is the m_ticked_instances_list typedef divergence -
+	//   target intrusive_list<...,resource_ptr<particle_system_instance_impl,unmanaged_intrusive_base>,
+	//   656,mutex,size_policy,no_debug_policy> (resource_ptr PointerType + offset-based + no_debug)
+	//   vs ours intrusive_list<impl,impl*,&m_next> (raw ptr + member-ptr + debug). Correcting it is a
+	//   shared-infrastructure change (see particle_world.h NOTE) outside this TU's scope.
 	particle_system_instance_impl* impl = static_cast_checked<particle_system_instance_impl*>( instance );
-	impl->self_ptr = impl;
-	m_ticked_instances_list.push_back( impl );
+	if ( !m_ticked_instances_list.find( impl ) )
+	{
+		m_ticked_instances_list.push_back( impl );
+	}
 }
 
 void particle_world::remove_particle_system_instance(particle_system_instance* in_instance)

@@ -94,7 +94,7 @@ def generate(side: str) -> None:
     out.mkdir(parents=True, exist_ok=True)
     log(f"Generating {side} structure from {pdb.name} -> {out}")
     try:
-        subprocess.run(
+        proc = subprocess.run(
             [
                 _pdb_parser(),
                 "--output-path", str(out),
@@ -102,13 +102,32 @@ def generate(side: str) -> None:
                 "--engine-path",  engine,
                 *extra,
             ],
-            check=True,
+            stderr=subprocess.PIPE,
+            text=True,
         )
     except FileNotFoundError:
         raise RuntimeError(
             f"pdb-parser binary {_pdb_parser()!r} not found on PATH - run inside "
             "`nix develop`, or set PDB_PARSER"
         )
+    # pdb-parser (since the all-enums/-unions extraction bump) prints one warning per
+    # enum it sees recorded with differing enumerator counts across compilands (a
+    # forward-decl in one TU vs the full definition in another). It keeps the first and
+    # the extracted enums are reference-only (gitignored, zero match risk), so this is
+    # benign noise - collapse the flood to a single count line, pass everything else
+    # through so real diagnostics still surface.
+    _ENUM_DEDUP = "seen with differing enumerator counts across namespaces"
+    suppressed = 0
+    for line in (proc.stderr or "").splitlines():
+        if _ENUM_DEDUP in line:
+            suppressed += 1
+        else:
+            print(line, file=sys.stderr)
+    if suppressed:
+        log(f"({suppressed} benign 'enum differing enumerator counts' notes from "
+            "pdb-parser suppressed)")
+    if proc.returncode != 0:
+        raise subprocess.CalledProcessError(proc.returncode, proc.args)
     log(f"Done: {out}")
 
 

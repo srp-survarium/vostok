@@ -27,7 +27,6 @@ namespace planning {
 ai_world::ai_world	( engine& engine ) :
 	m_engine		( engine )
 {
-	m_npc_lives_timer.start();
 	register_cooks	( );
 //	planning::planner_test_2_actions( );
 //	planning::planner_test			( );
@@ -43,8 +42,8 @@ ai_world::~ai_world	( )
 
 void ai_world::register_cooks		( )
 {
-	static brain_unit_cook			s_brain_unit_cook( this );
-	static behaviour_cook			s_behaviour_cook( this );
+	static brain_unit_cook			s_brain_unit_cook( *this );
+	static behaviour_cook			s_behaviour_cook( *this );
 	
 	resources::register_cook		( &s_brain_unit_cook );
 	resources::register_cook		( &s_behaviour_cook );
@@ -148,6 +147,11 @@ bool ai_world::ray_query				(
 				transparency_threshold,
 				visibility_value
 			);
+}
+
+u32 ai_world::get_current_time_in_ms	( ) const
+{
+	return m_engine.get_current_time_in_ms( );
 }
 
 void ai_world::set_ignore_filter		(
@@ -462,6 +466,12 @@ void ai_world::on_animation_finish	( animation_item const* const target, brain_u
 {
 	brain_unit_ptr brain_unit		= static_cast_resource_ptr< brain_unit_ptr >( brain );
 	brain_unit->on_finish_animation_playing( target );
+}
+
+void ai_world::select_new_goal		( brain_unit_res_ptr brain )
+{
+	brain_unit_ptr brain_unit		= static_cast_resource_ptr< brain_unit_ptr >( brain );
+	brain_unit->select_new_goal		( );
 }
 
 } // namespace ai

@@ -33,8 +33,8 @@ void ui_scroll_pad::draw(vostok::render::ui::renderer& renderer, vostok::render:
 	range.y						-= get_position().y;
 
 	pred_window_less_position	p;
-	window_list_it it			= std::lower_bound(m_childs.begin(), m_childs.end(), range.x, p);
-	window_list_it it_e			= std::upper_bound(m_childs.begin(), m_childs.end(), range.y, p);
+	window_list_it it			= std::lower_bound(m_children.begin(), m_children.end(), range.x, p);
+	window_list_it it_e			= std::upper_bound(m_children.begin(), m_children.end(), range.y, p);
 
 	for(; it!=it_e; ++it)
 		(*it)->draw				(renderer, scene_view);
@@ -48,8 +48,8 @@ void ui_scroll_pad::tick()
 	range.y						-= get_position().y;
 
 	pred_window_less_position	p;
-	window_list_it it			= std::lower_bound(m_childs.begin(), m_childs.end(), range.x, p);
-	window_list_it it_e			= std::upper_bound(m_childs.begin(), m_childs.end(), range.y, p);
+	window_list_it it			= std::lower_bound(m_children.begin(), m_children.end(), range.x, p);
+	window_list_it it_e			= std::upper_bound(m_children.begin(), m_children.end(), range.y, p);
 
 	for(; it!=it_e; ++it)
 		(*it)->tick			();

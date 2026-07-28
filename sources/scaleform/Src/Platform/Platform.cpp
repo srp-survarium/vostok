@@ -41,15 +41,18 @@ void AppImplBase::InitArgDescriptions(Args* args)
 {
     ArgDesc options[] =
     {
-        {"help",  "Help",           Args::Flag,      "",   "Print command line options.",},
-        {"print", "Print",          Args::Flag,      "",   "Print argument values after command line parsing."},
-        {"mt",    "MultiThreaded",  Args::Flag,      "",   "Force multi-threaded rendering."},
-        {"st",    "SingleThreaded", Args::Flag,      "",   "Force single-threaded rendering."},
-        {"f",     "FullScreen",     Args::Flag,      "",   "Run in full-screen mode."},
-        {"sy",    "VSync",          Args::Flag,      "",   "Enable vertical synchronization."},
-        {"b",     "BitDepth",       Args::IntOption, "32", "<bits>   Bit depth of output window (16 or 32, default is 32)."},
-        {"sw",    "SoftwareRender", Args::Flag,      "",   "Creates a software renderer instead of a hardware one (if available)."},
-        {"",      "",               Args::ArgEnd,    "",   ""}
+        {"help",  "Help",           Args::Flag,         "",   "Print command line options.",},
+        {"print", "Print",          Args::Flag,         "",   "Print argument values after command line parsing."},
+        {"mt",    "MultiThreaded",  Args::Flag,         "",   "Force multi-threaded rendering."},
+        {"st",    "SingleThreaded", Args::Flag,         "",   "Force single-threaded rendering."},
+        {"f",     "FullScreen",     Args::Flag,         "",   "Run in full-screen mode."},
+        {"sy",    "VSync",          Args::Flag,         "",   "Enable vertical synchronization."},
+        {"fmt",   "BufferFormat",   Args::StringOption,  0,   "Requested backbuffer format, in the form: C<bits>D<bits>S<bits>, the default "
+                                                              "(if available) is C32D24S8. The requested buffer format is not available, the "
+                                                              "default for the Platform will be used."},
+        {"sw",    "SoftwareRender", Args::Flag,         "",   "Creates a software renderer instead of a hardware one (if available)."},
+        {"wd",    "WatchDog",       Args::Flag,         "",   "Runs the watchdog thread, and crashes the application if it is not serviced."},
+        {"",      "",               Args::ArgEnd,       "",   ""}
     };
     args->AddDesriptions(options);
 }
@@ -95,12 +98,16 @@ ThreadingType AppBase::GetArgsThreadingType() const
 
 ThreadingType AppImplBase::GetArgsThreadingType() const
 {
-    ThreadingType tt = TT_AutoDetect;
+    unsigned tt = TT_AutoDetect;
     if (Arguments.GetBool("SingleThreaded"))
         tt = TT_SingleThreaded;
     else if (Arguments.GetBool("MultiThreaded"))
         tt = TT_MultiThreaded;
-    return tt;
+
+    if (Arguments.GetBool("WatchDog"))
+        tt |= TT_WatchDogFlag;
+
+    return (ThreadingType)tt;
 }
 
 void AppBase::SetWindowTitle(const String& title)
@@ -156,10 +163,44 @@ void AppImplBase::ApplyViewConfigArgs(ViewConfig* config, const Args& args)
     if (args.GetBool("SoftwareRender"))
         config->ViewFlags |= View_SoftwareRendering;
 
-    if (args.GetInt("BitDepth") == 16)
-        config->BitDepth = 16;
-    else
-        config->BitDepth = 32;
+    // Parse the buffer format.
+    if (args.HasValue("BufferFormat"))
+    {
+        static const int MaxNumberChars = 16;
+        String fmtStr = args.GetString("BufferFormat");
+        const char * strPtr = fmtStr.ToCStr();
+        char numberBuffer[MaxNumberChars];
+        int numberIndex = 0;
+        int field = 0;
+        while (*strPtr)
+        {
+            if (isdigit(*strPtr))
+            {
+                SF_DEBUG_ASSERT(numberIndex < MaxNumberChars, "Buffer bitcount too high.");
+                numberBuffer[numberIndex++] = *strPtr;
+            }
+
+            if (!isdigit(*strPtr) || !*(strPtr+1))
+            {
+                numberBuffer[numberIndex] = 0;
+                numberIndex = 0;
+                switch(field)
+                {
+                case 0: break; // initialization
+                case 'C': config->ColorBits   = (int)atoi(numberBuffer); break;
+                case 'D': config->DepthBits   = (int)atoi(numberBuffer); break;
+                case 'S': config->StencilBits = (int)atoi(numberBuffer); break;
+                default:
+                    SF_DEBUG_WARNING1(1, "Unrecognized buffer field format: %c", field);
+                    break;
+                }
+
+                if (*strPtr)
+                    field = SFtoupper(*strPtr);
+            }
+            strPtr++;
+        } 
+    }
 }
 
 void AppBase::GetViewConfig(ViewConfig* config) const

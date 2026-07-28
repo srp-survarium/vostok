@@ -108,12 +108,12 @@ sound_scene::~sound_scene	( )
 
 	R_ASSERT					( m_receivers.empty( ) );
 
-	LOG_DEBUG					( "~sound_scene() id: %d", m_dbg_id );
+	//LOG_DEBUG					( "~sound_scene() id: %d", m_dbg_id );
 }
 
 void sound_scene::stop		( )
 {
-	LOG_DEBUG									( "sound_scene::stop" );
+	//LOG_DEBUG									( "sound_scene::stop" );
 	sound_instance_proxy_internal* proxy		= m_active_proxies.front( );
 	while ( proxy )
 	{
@@ -1014,41 +1014,39 @@ void sound_scene::pause_propagate_sound	( sound_instance_proxy_internal& proxy )
 
 void sound_scene::resume_produce_sound	( sound_instance_proxy_internal& proxy )
 {
-	LOG_DEBUG						( "sound_scene::resume_produce_sound" );
-	std::list<sound_propagator*>	temp_propagators;
-
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
-	while ( prop )
-	{
-		if ( prop->is_state_preserved_for_resume( ) )
-		{
-			sound_propagator* new_propagator			= create_sound_propagator
-			(
-				prop->get_propagator_emitter( ),
-				proxy,
-				prop->get_playback_mode( ),
-				prop->get_playing_offset( ),
-				prop->get_before_palying_offset( ),
-				prop->get_after_palying_offset( ),
-				prop->get_producer( ),
-				prop->get_ignorable_receiver( )
-				);
-
-			new_propagator->set_as_callback_executer	( prop->is_callback_executer( ) );
-			prop->set_as_callback_executer				( false );
-			temp_propagators.push_back					( new_propagator );
-			prop->clear_preservation_state_for_resume	( );
-		}
-		prop						= proxy.get_propagators( ).get_next_of_object( prop );
-	}
-
-	std::list<sound_propagator*>::iterator it			= temp_propagators.begin( );
-	std::list<sound_propagator*>::const_iterator it_end	= temp_propagators.end( );
-	while ( it != it_end )
-	{
-		proxy.add_sound_propagator					( *(*it) );
-		++it;
-	}
+	// Resume-produce propagator rebuild was disabled in the shipped build (target body is empty):
+	//	LOG_DEBUG						( "sound_scene::resume_produce_sound" );
+	//	std::list<sound_propagator*>	temp_propagators;
+	//	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	//	while ( prop )
+	//	{
+	//		if ( prop->is_state_preserved_for_resume( ) )
+	//		{
+	//			sound_propagator* new_propagator			= create_sound_propagator
+	//			(
+	//				prop->get_propagator_emitter( ),
+	//				proxy,
+	//				prop->get_playback_mode( ),
+	//				prop->get_playing_offset( ),
+	//				prop->get_before_palying_offset( ),
+	//				prop->get_after_palying_offset( ),
+	//				prop->get_producer( ),
+	//				prop->get_ignorable_receiver( )
+	//				);
+	//			new_propagator->set_as_callback_executer	( prop->is_callback_executer( ) );
+	//			prop->set_as_callback_executer				( false );
+	//			temp_propagators.push_back					( new_propagator );
+	//			prop->clear_preservation_state_for_resume	( );
+	//		}
+	//		prop						= proxy.get_propagators( ).get_next_of_object( prop );
+	//	}
+	//	std::list<sound_propagator*>::iterator it			= temp_propagators.begin( );
+	//	std::list<sound_propagator*>::const_iterator it_end	= temp_propagators.end( );
+	//	while ( it != it_end )
+	//	{
+	//		proxy.add_sound_propagator					( *(*it) );
+	//		++it;
+	//	}
 }
 
 void sound_scene::resume_propagate_sound	( sound_instance_proxy_internal& proxy ) const
@@ -1103,7 +1101,7 @@ void sound_scene::fade_in	( sound_world& world, u32 time_in_msec )
 
 void sound_scene::fade_out	( u32 time_in_msec )
 {
-	LOG_DEBUG				( "sound_scene::fade_out" );
+	//LOG_DEBUG				( "sound_scene::fade_out" );
 	R_ASSERT				( m_is_active );
 	m_fade_state			= fade_out_state;
 	m_fade_out_time			= time_in_msec;
@@ -1399,6 +1397,47 @@ void sound_scene::resume_propagate_all_sounds	( ) const
 		resume_propagate_sound					( *proxy );
 		proxy									= m_active_proxies.get_next_of_object( proxy );
 	}
+}
+
+// claude@NOTE: sound_scene.cpp in the target is a NEWER variant (portal-graph
+// propagation, new_sound_propagator / search_service / sound_environment); the
+// committed class matches an EARLIER variant, so the scene methods/ctor cannot be
+// bodied without rewriting the header layout (offsets) and regressing the ~25
+// already-paired old-variant methods. These three free functions are layout-
+// independent and verified byte-correct via pdb_fetch --view diff (the two
+// fill_x3daudio_vector overloads are 100% identical). They do NOT pair in objdiff:
+// the delinker records BOTH fill_x3daudio_vector overloads under the bare demangled
+// name "vostok::sound::fill_x3daudio_vector" (no param list), so objdiff cannot map
+// either overload to the parameter-distinguished base symbol - a target-side
+// delinker artifact, not a matching gap.
+void fill_x3daudio_vector	(
+	_D3DVECTOR&		vec,
+	float			x,
+	float			y,
+	float			z
+)
+{
+	vec.x							= x;
+	vec.y							= y;
+	vec.z							= z;
+}
+
+void fill_x3daudio_vector	( _D3DVECTOR& dest_vec, float3 const& vec )
+{
+	dest_vec.x						= vec.x;
+	dest_vec.y						= vec.y;
+	dest_vec.z						= vec.z;
+}
+
+float3 closest_point_on_segment	(
+	float3 const&		point,
+	float3 const&		segment_origin,
+	float3 const&		segment_displacement
+)
+{
+	float domen_value					= ( point - segment_origin ).dot_product( segment_displacement ) / segment_displacement.squared_length( );
+	domen_value							= math::clamp_r( domen_value, 0.f, 1.f );
+	return								segment_origin + segment_displacement * domen_value;
 }
 
 

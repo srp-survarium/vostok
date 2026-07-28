@@ -1,79 +1,148 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created 	: 12.10.2025
+//	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef UDP_MATCH_CONNECTION_INLINE_H_INCLUDED
-#define UDP_MATCH_CONNECTION_INLINE_H_INCLUDED
+#ifndef NETWORK_CORE_UDP_MATCH_CONNECTION_INLINE_H_INCLUDED
+#define NETWORK_CORE_UDP_MATCH_CONNECTION_INLINE_H_INCLUDED
 
 namespace vostok {
 namespace network_core {
 
-// STATE[STUB]
-// static void vostok::network_core::udp_match_connection::construct_packet(vostok::network_core::udp_match_packets_orderer&, vostok::network_core::udp_match_packet&, unsigned char)
-static void udp_match_connection::construct_packet( udp_match_packets_orderer& packets_orderer, udp_match_packet& packet, u8 message_type )
+inline void udp_match_connection::construct_packet(
+	udp_match_packets_orderer&		packets_orderer,
+	udp_match_packet&				packet,
+	u8								message_type
+)
 {
-	// LOCALS
-	// udp_match_message_type_info const& info
-	// ******
+	packet.message_type				= message_type;
+	packet.append					( message_type );
+	udp_match_message_type_info const&	info	= packets_orderer.get_sending_message_info( message_type );
 
-	// OTHER SYMBOLS
-	// CallSiteInfo(CallSiteInfoSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0xd9cbf }, type_index: TypeIndex(0x1906e) })
-	// ******
+	packet.channel_id				= info.channel_id;
+	packet.is_reliable				= info.is_reliable;
+	packet.is_ordered				= info.is_ordered;
 
-	// FUNCTION BODY
-	// <0xeac96>|0x000|0x000:'22'
-	// <0xeac9f>|0x009|0x009:'23'
-	// <0xeacac>|0x016|0x00d:'24'
-	// 1
-	// <0xeacc7>|0x031|0x01b:'26'
-	// <0xeace3>|0x04d|0x01c:'27'
-	// <0xead04>|0x06e|0x021:'28'
-	// 1
-	// <0xead24>|0x08e|0x020:'30'
-	// <0xead37>|0x0a1|0x013:'31'
-	// 1
-	// 2
-	// 3
-	// 4
-	// ******
+	if ( packet.is_ordered )
+	{
+		packet.append				( u16( 0xFFFF ) );
+	}
 }
 
-	// TYPEDEFS
-	typedef
-		boost::asio::basic_socket<boost::asio::ip::udp,boost::asio::datagram_socket_service<boost::asio::ip::udp> >
-		lowest_layer_type;
+template < typename Predicate >
+inline void udp_match_connection::call_predicate( Predicate const& predicate, packet_reader& reader )
+{
+	const u8	message_type		= reader.r< u8 >( );
+	udp_match_message_type_info const&	info	= m_packets_orderer.get_received_message_info( message_type );
+	if ( !info.is_ordered )
+	{
+		predicate					( message_type, reader );
+		return;
+	}
 
-	typedef
-		boost::asio::datagram_socket_service<boost::asio::ip::udp>
-		service_type;
+	sequence_number< u16 >	order_id( reader.r< u16 >( ) );
 
-	typedef
-		boost::asio::ip::basic_endpoint<boost::asio::ip::udp>
-		endpoint_type;
+	channel&	channel				= m_channels[ info.channel_id ];
 
-	typedef
-		boost::asio::ip::udp
-		protocol_type;
+	if ( order_id <= channel.received_order_id )
+	{
+		return;
+	}
 
-	typedef
-		boost::function<void __cdecl(u8,packet_reader &)>
-		client_on_packet_received_type;
+	if ( channel.packets.find( order_id, comparer( ) ) != channel.packets.end( ) )
+	{
+		return;
+	}
 
-	typedef
-		boost::function<void __cdecl(u8,packet_reader &)>
-		on_packet_received_type;
+	udp_match_packet&	packet		= *new_udp_match_packet( m_packets_allocator );
+	packet.message_type				= message_type;
+	packet.order_id					= order_id;
+	packet.append					( reader.pointer( ), reader.size_to_eof( ) );
+	channel.packets.insert			( packet );
 
-	typedef
-		boost::intrusive::rbtree_impl<boost::intrusive::setopt<boost::intrusive::detail::member_hook_traits<udp_match_packet,boost::intrusive::set_member_hook<boost::intrusive::none,boost::intrusive::none,boost::intrusive::none,boost::intrusive::none>,8>,udp_match_connection::comparer,u32,1> >
-		tree_type;
+	sequence_number< u16 >	next_order_id( channel.received_order_id );
+	++next_order_id;
+	while ( !channel.packets.empty( ) && channel.packets.begin( )->order_id == next_order_id )
+	{
+		udp_match_packet*	packet	= &*channel.packets.begin( );
+		channel.packets.erase		( *packet );
+		packet_reader	reader		( *packet );
 
-	typedef
-		sockaddr
-		data_type;
+		predicate					( packet->message_type, reader );
+		++channel.received_order_id;
+		++next_order_id;
+		delete_udp_match_packet		( m_packets_allocator, packet );
+	}
+}
 
-	// ******
+template < typename Predicate >
+inline void udp_match_connection::process_incoming_packet( packet_reader& reader, Predicate const& predicate )
+{
+	dump							( "before process_incoming   ", 0 );
+
+	threading::interlocked_exchange	( m_last_receive_time_in_ms, m_last_send_attempt_time_in_ms );
+
+	++m_stats.received.packets.count;
+
+	const u32	message_bytes		= reader.size_to_eof( );
+	const u32	packet_bytes		= message_bytes + 46;
+	m_stats.received.packets.bytes	+= packet_bytes;
+	m_stats.received.messages.bytes	+= message_bytes;
+
+	sequence_number< u16 > const&	remote_sequence_id	= sequence_number< u16 >( reader.r< u16 >( ) );
+	sequence_number< u16 > const&	local_sequence_id	= sequence_number< u16 >( reader.r< u16 >( ) );
+	const u16	bits				= reader.r< u16 >( );
+	const u16	local_acknowledgement_bits	= u16( ( bits >> 1 ) | 0x8000 );
+
+	if ( m_remote_sequence_id == remote_sequence_id )
+	{
+		++m_stats.received_duplicated.packets.count;
+		m_stats.received_duplicated.packets.bytes	+= packet_bytes;
+
+		m_stats.received_duplicated.messages.bytes	+= message_bytes;
+
+		dump						( "after  process_incoming   ", 0 );
+		return;
+	}
+
+	if ( m_remote_sequence_id < remote_sequence_id )
+		update_acknowledgements		( remote_sequence_id, local_sequence_id, local_acknowledgement_bits );
+
+	const udp_match_packets_count_enum	packet_type	= udp_match_packets_count_enum( ( bits & 1 ) != 0 );
+	if ( packet_type == udp_match_single_packet )
+	{
+		++m_stats.received.messages.count;
+		m_stats.received.data_bytes	+= message_bytes;
+
+		call_predicate				( predicate, reader );
+		dump						( "after  process_incoming   ", 0 );
+		return;
+	}
+
+	for ( u32 i = 0; !reader.eof( ); ++i )
+	{
+		++m_stats.received.messages.count;
+		const u8	subpacket_size	= reader.r< u8 >( );
+		m_stats.received.data_bytes	+= subpacket_size;
+
+		packet_reader	subpacket_reader( base_packet( pbyte( reader.pointer( ) ), subpacket_size ) );
+		reader.advance				( subpacket_size );
+		if ( i || !reader.eof( ) )
+			call_predicate			( predicate, subpacket_reader );
+		else
+		{
+			++m_stats.received_low_level.packets.count;
+			m_stats.received_low_level.packets.bytes	+= packet_bytes;
+			++m_stats.received_low_level.messages.count;
+			m_stats.received_low_level.messages.bytes	+= message_bytes;
+			m_stats.received_low_level.data_bytes		+= subpacket_reader.size_to_eof( );
+			process_low_level_message( subpacket_reader, m_last_send_attempt_time_in_ms );
+		}
+	}
+
+	dump							( "after  process_incoming   ", 0 );
+}
 
 } // namespace network_core
 } // namespace vostok
 
-#endif // #ifndef UDP_MATCH_CONNECTION_INLINE_H_INCLUDED
+#endif // #ifndef NETWORK_CORE_UDP_MATCH_CONNECTION_INLINE_H_INCLUDED

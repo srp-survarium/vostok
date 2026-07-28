@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vostok Match Unit"
+  short_description: "Binary-match one Vostok translation unit faithfully"
+  default_prompt: "Use $vostok-match-unit to match the requested Vostok translation unit."
