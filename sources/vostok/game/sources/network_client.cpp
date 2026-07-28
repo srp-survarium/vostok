@@ -26,17 +26,13 @@ namespace network_core {
 
 namespace survarium {
 
-// TU static console command (compiler-generated atexit destructor); a matcher
-// recovers its type/initializer from the init asm when this TU is enabled.
-/*
-// STATE[STUB]
-void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
-{
-	// FUNCTION BODY[0x7f0290]
-	// <0x7d84f0>|0x000|      :'26'	{
-	// ******
-}
-*/
+static bool s_show_network_statistics = false;
+static vostok::console_commands::cc_bool s_show_network_statistics_comand(
+	"show_network_statistics",
+	s_show_network_statistics,
+	true,
+	vostok::console_commands::command_type_engine_internal
+);
 
 // claude@NOTE: the bind setters + member inits are structurally exact. m_is_player_ticked /
 // m_is_time_synchronized_first_time are in the member-init list (the target attributes them to
@@ -399,41 +395,92 @@ game_world& network_client::get_game_world( )
 	return m_game.get_game_world( );
 }
 
-// claude@NOTE: PARKED for budget - this is a 46-statement HUD renderer, not blocked by a
-// missing symbol but unusually heavy to make faithful. Recovered structure (build it later):
-//   static bool first_time = true;                                   // 458
-//   if ( first_time ) {
-//       flash_text_manager& mgr = m_game.get_game_world( ).text_manager( );   // [m_game+0x13C]=game_world(+0x98).m_text_manager(+0xA4)  // 459
-//       // 477-482: six m_sent/m_sent_low_level/m_resent/m_received/m_received_low_level/
-//       // m_received_duplicated .create( mgr, caption, start_width, ... , color ) with
-//       // captions "sent :"/"sent (low level) :"/"re-sent :"/"received :"/
-//       // "received (low level) :"/"received (duplicates) :", start_width 200/240/280/220/
-//       // 260/300, colors 0xFFFFFF00 (yellow) / 0xFF00FFFF (cyan) alternating
-//       // 484-502: four flash_text setups via mgr.create_text(...) + set_color + set_position
-//       //   m_max_local_sequence_difference_caption = mgr.create_text("max seq-diff :"); set_color(0xFF,0xFF,0,0xFF); set_position(150,320)
-//       //   m_max_local_sequence_difference_value   = mgr.create_text("");               set_color(0xFF,0xFF,0,0xFF); set_position(325,320)
-//       //   m_unacknowledged_packets_caption        = mgr.create_text("unacknowledged :"); set_color(0,0xFF,0xFF,0xFF); set_position(150,340)
-//       //   m_unacknowledged_packets_value          = mgr.create_text("");               set_color(0,0xFF,0xFF,0xFF); set_position(325,340)
-//       first_time = false;
-//   }
-//   // 505-510: six m_sent*/m_received* .set_visible( <stats_row default> )
-//   // 512-515: four flash_text set_visible( s_show_network_statistics )  (the TU-static cc bool
-//   //          toggled by s_show_network_statistics_comand - that console command + bool are the
-//   //          other unpaired symbols in this TU; recover them together)
-//   // 518-523: six .set_text( current_time_in_ms, <m_previous_stats stream>, ... )
-//   // 525-526: udp_match_stats difference = m_previous_stats - get_stats; sprintf<256>(text,"%3d packets",...)
-//   // 530-534: m_max_local_sequence_difference_value.set_text / m_unacknowledged_packets_value.set_text
-// The create() arg marshalling (10 params, most constant-folded) and the s_show_network_statistics
-// console-command static still need pinning before this is byte-faithful. Two further walls
-// confirmed this pass: (1) the flash_text assignments at 484-502 route through the flash_text
-// copy-assign + DrawText refcount release (`call [vtable+0x98]`), which is still-stubbed scaleform
-// flash glue (flash_text holds a raw DrawText* stub) - same byte-wall as stats_row::create; and
-// (2) s_show_network_statistics must be materialized as a TU-static bool here (referenced directly
-// by set_visible at 512-515). Body these (flash glue + the cc static) before reattempting.
-// STATE[STUB]
 void network_client::draw_stats( const u32 current_time_in_ms )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( current_time_in_ms );
+	static bool first_time = true;
+
+	if ( first_time )
+	{
+		flash_text_manager* text_manager;
+		if ( !( text_manager = m_game.get_game_world( ).get_text_manager( ) ) )
+			return;
+
+		first_time = false;
+
+		m_sent.create(
+			*text_manager, "sent :", 150.f, 200.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFFFFFF00 )
+		);
+		m_sent_low_level.create(
+			*text_manager, "sent (low level) :", 150.f, 240.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFF00FFFF )
+		);
+		m_resent.create(
+			*text_manager, "re-sent :", 150.f, 280.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFFFFFF00 )
+		);
+		m_received.create(
+			*text_manager, "received :", 150.f, 220.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFF00FFFF )
+		);
+		m_received_low_level.create(
+			*text_manager, "received (low level) :", 150.f, 260.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFFFFFF00 )
+		);
+		m_received_duplicated.create(
+			*text_manager, "received (duplicates) :", 150.f, 300.f, 175.f,
+			100.f, 100.f, 100.f, 40.f, math::color( 0xFF00FFFF )
+		);
+
+		m_max_local_sequence_difference_caption = text_manager->create_text( "max seq-diff :" );
+		m_max_local_sequence_difference_caption.set_visible( true );
+		m_max_local_sequence_difference_caption.set_color( 0xFF, 0xFF, 0, 0xFF );
+		m_max_local_sequence_difference_caption.set_position( 150.f, 320.f );
+
+		m_max_local_sequence_difference_value = text_manager->create_text( "" );
+		m_max_local_sequence_difference_value.set_visible( true );
+		m_max_local_sequence_difference_value.set_color( 0xFF, 0xFF, 0, 0xFF );
+		m_max_local_sequence_difference_value.set_position( 325.f, 320.f );
+
+		m_unacknowledged_packets_caption = text_manager->create_text( "unacknowledged :" );
+		m_unacknowledged_packets_caption.set_visible( true );
+		m_unacknowledged_packets_caption.set_color( 0, 0xFF, 0xFF, 0xFF );
+		m_unacknowledged_packets_caption.set_position( 150.f, 340.f );
+
+		m_unacknowledged_packets_value = text_manager->create_text( "" );
+		m_unacknowledged_packets_value.set_visible( true );
+		m_unacknowledged_packets_value.set_color( 0, 0xFF, 0xFF, 0xFF );
+		m_unacknowledged_packets_value.set_position( 325.f, 340.f );
+	}
+
+	m_sent.set_visible( true );
+	m_sent_low_level.set_visible( true );
+	m_resent.set_visible( true );
+	m_received.set_visible( true );
+	m_received_low_level.set_visible( true );
+	m_received_duplicated.set_visible( true );
+
+	m_max_local_sequence_difference_caption.set_visible( s_show_network_statistics );
+	m_max_local_sequence_difference_value.set_visible( s_show_network_statistics );
+	m_unacknowledged_packets_caption.set_visible( s_show_network_statistics );
+	m_unacknowledged_packets_value.set_visible( s_show_network_statistics );
+
+	network_core::udp_match_stats const& stats = m_match_client.get_stats( );
+	m_sent.set_text( current_time_in_ms, stats.sent, m_previous_stats.sent );
+	m_sent_low_level.set_text( current_time_in_ms, stats.sent_low_level, m_previous_stats.sent_low_level );
+	m_resent.set_text( current_time_in_ms, stats.resent, m_previous_stats.resent );
+	m_received.set_text( current_time_in_ms, stats.received, m_previous_stats.received );
+	m_received_low_level.set_text( current_time_in_ms, stats.received_low_level, m_previous_stats.received_low_level );
+	m_received_duplicated.set_text( current_time_in_ms, stats.received_duplicated, m_previous_stats.received_duplicated );
+
+	m_previous_stats = stats;
+	network_core::udp_match_stats difference = m_previous_stats - stats;
+
+	char text[ 256 ];
+	vostok::sprintf< 256 >( text, "%3d packets", m_previous_stats.max_local_sequence_difference );
+	m_max_local_sequence_difference_value.set_text( text );
+	vostok::sprintf< 256 >( text, "%3d packets", m_previous_stats.unacknowledged_packets );
+	m_unacknowledged_packets_value.set_text( text );
 }
 
 game_team_id network_client::get_player_team( pcstr player_profile_name )
