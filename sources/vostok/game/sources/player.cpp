@@ -226,38 +226,49 @@ void player::insert_alive( )
 	m_is_alive = true;
 }
 
-// claude@NOTE: PARKED on a cross-unit link collision. Full body reconstructed from
-// target 0x5e4c90 (26 addressed stmts; the 22 source lines 288-317 between
-// m_is_first_born and the 2nd demo guard DCE'd to zero code - a compiled-out
-// debug/log block):
-//   m_has_been_inserted = true;
-//   if ( !m_is_demo_player )
-//     inventory().setup_from_profile( m_game.network_client().match_options().player_profiles[id], m_game.items_dictionary() );  // 279/280
-//   else inventory().setup_demo_profile();                                                                                       // 283
-//   if ( m_is_first_born ) m_is_first_born = false;                                                                              // 286/287
-//   if ( !m_is_demo_player ) { m_text = m_game_scene.text_manager().create_text_w( profile_name ); m_text.set_visible(false); m_text.set_color(...); }  // 318-322
-//   m_current_time_in_ms = m_game.game_time_ms();                                                                                // 324
-//   m_target.animation_player.reset(true); m_current.animation_player.reset(true);                                              // 327/328
-//   if ( inventory().item_in_slot(weapon1_slot) ) inventory().action(weapon1_slot,true);                                        // 330/331
-//   else if ( inventory().item_in_slot(weapon2_slot) ) inventory().action(weapon2_slot,true);                                   // 332/333
-//   else m_target_active_object = m_empty_hands;                                                                                 // 334
-//   on_before_active_object_changed( m_current_active_object, m_target_active_object );                                          // 337
-//   m_current_active_object = m_target_active_object; m_current_active_object->activate( *this, m_game_scene );                  // 340-342
-//   if ( is_alive ) insert_alive();                                                                                              // 344/345
-//   m_is_visible = true; add_models_to_scene(); m_force_animation_selection = true; m_force_bones_recompute = true;              // 354
-// WALL: flash_text_manager::create_text_w is an INLINE stub in the game header AND an
-// out-of-line definition in scaleform movie.obj -> instantiating it in player.cpp gives
-// LNK2005 (multiply defined, vs movie.obj). The cure is to declare create_text_w
-// out-of-line in flash_text_manager.h like set_visible/set_color already are (resolve to
-// the single movie.cpp body) - a scaleform-glue header change, NOT a player.cpp concern.
-// Next step: out-line create_text_w in the flash_text_manager.h scaleform glue, then this
-// body links and pairs (capped on the GFx DrawText inline + active-object intrusive_ptr wall).
-// sushi@TODO: out-line flash_text_manager::create_text_w in flash_text_manager.h (like
-// flash_text::set_visible/set_color) to clear the LNK2005 vs movie.obj, then body insert().
-// STATE[STUB]
 void player::insert( const bool is_alive )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( is_alive );
+	m_has_been_inserted = true;
+
+	if ( !m_is_demo_player )
+		inventory( ).setup_from_profile(
+			m_game.network_client( ).match_options( ).player_profiles[ id ], m_game.items_dictionary( ) );
+	else
+		inventory( ).setup_demo_profile( );
+
+	if ( m_is_first_born )
+		m_is_first_born = false;
+
+	if ( !m_is_demo_player )
+	{
+		m_text = m_game_scene.text_manager( ).create_text_w( profile_name );
+		m_text.set_visible( false );
+		m_text.set_color( 0, 0xff, 0, 0xff );
+	}
+
+	m_current_time_in_ms = m_game.game_time_ms( );
+
+	m_target.animation_player.reset( true );
+	m_current.animation_player.reset( true );
+
+	if ( inventory( ).item_in_slot( weapon1_slot ) )
+		inventory( ).action( weapon1_slot, true );
+	else if ( inventory( ).item_in_slot( weapon2_slot ) )
+		inventory( ).action( weapon2_slot, true );
+	else
+		m_target_active_object = m_empty_hands;
+
+	on_before_active_object_changed( m_current_active_object, m_target_active_object );
+	m_current_active_object = m_target_active_object;
+	m_current_active_object->activate( *this, m_game_scene );
+
+	if ( is_alive )
+		insert_alive( );
+
+	m_is_visible = true;
+	add_models_to_scene( );
+	m_force_animation_selection = true;
+	m_force_bones_recompute = true;
 }
 
 // claude@NOTE: structure faithful; the lone diff is a line-table fold artifact -
@@ -277,11 +288,6 @@ void player::remove_alive( )
 		m_game_scene.get_physics_world( )->remove( m_damage_collision->get_rigid_body( ) );
 }
 
-// claude@NOTE: full body reconstructed (unblocks lobby_menu_scene::clear_resources).
-// Residual is cross-module: flash_text_manager::destroy_text is a STUB in scaleform
-// (target inlines the GFx Release + flash_text zero + need_capture=1), so our line
-// 403 emits `call destroy_text` vs the target's inline; plus the intrusive_ptr/
-// item_in_slot accessor-inlining cap shared with the quick-slot fns.
 void player::remove( )
 {
 	m_has_been_inserted = false;
