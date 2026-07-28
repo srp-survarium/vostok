@@ -90,6 +90,15 @@ CREATE TABLE history(
   mangled TEXT PRIMARY KEY,
   last_paired_at TEXT, best_fuzzy_pct REAL, last_fuzzy_pct REAL,
   last_struct_class TEXT, src_fingerprint TEXT);
+CREATE TABLE source_maxima(
+  mangled TEXT PRIMARY KEY,
+  effective_hash TEXT NOT NULL,
+  max_fuzzy_pct REAL NOT NULL,
+  exact_proven INTEGER NOT NULL,
+  state_id TEXT,
+  module TEXT,
+  source_file TEXT, source_lo INTEGER, source_hi INTEGER,
+  origin TEXT NOT NULL, evidence TEXT);
 CREATE TABLE flags(
   mangled TEXT, flag TEXT, cause TEXT, set_at TEXT,
   PRIMARY KEY(mangled, flag));
@@ -372,12 +381,8 @@ def is_framed(rec):
     )
 
 
-def src_fingerprint(rec):
-    """Hash of the function's source extent (file + statement line range text).
-
-    Hashes SOURCE TEXT, not bytes: a matcher edit changes it; a header/other-unit
-    change that only shifts codegen does not.
-    """
+def _source_extent(rec):
+    """Return ``(relative path, first line, last line, source text)``."""
     if rec is None:
         return None
     path = VOSTOK / "sources" / rec["file"]
@@ -390,7 +395,118 @@ def src_fingerprint(rec):
             text = "".join(f.readlines()[lo - 1 : hi])
     except OSError:
         return None
-    return hashlib.sha1(f"{rec['file']}:{lo}:{text}".encode("latin-1")).hexdigest()
+    return rec["file"], lo, hi, text
+
+
+def src_fingerprint(rec):
+    """Hash of the function's source extent (file + statement line range text).
+
+    Hashes SOURCE TEXT, not bytes: a matcher edit changes it; a header/other-unit
+    change that only shifts codegen does not.
+    """
+    extent = _source_extent(rec)
+    if extent is None:
+        return None
+    source_file, lo, _hi, text = extent
+    return hashlib.sha1(f"{source_file}:{lo}:{text}".encode("latin-1")).hexdigest()
+
+
+_MAX_CONTEXT_CACHE = {}
+_MAX_CONTEXT_SUFFIXES = frozenset((".h", ".hh", ".hpp", ".inl", ".vcproj"))
+
+
+def _hash_paths(paths):
+    digest = hashlib.sha256()
+    for path in sorted(set(paths)):
+        if not path.is_file():
+            continue
+        digest.update(path.relative_to(VOSTOK).as_posix().encode("utf-8"))
+        digest.update(b"\0")
+        digest.update(path.read_bytes())
+        digest.update(b"\0")
+    return digest.hexdigest()[:16]
+
+
+def _max_context_hash(module):
+    """Hash stable inputs that can change a function without changing its body.
+
+    Vostok is LTCG-built, so this is deliberately conservative: all headers and
+    project files in the owning module, shared top-level Vostok headers, anchor
+    sources, and the pinned build/delink configuration form one module context.
+    Compiler-state island probes may vary disposable declarations, but must
+    restore these tracked inputs before recording evidence.
+    """
+    if module in _MAX_CONTEXT_CACHE:
+        return _MAX_CONTEXT_CACHE[module]
+
+    source_root = VOSTOK / "sources" / "vostok"
+    paths = [
+        VOSTOK / "flake.lock",
+        VOSTOK / "flake.nix",
+        VOSTOK / "scripts" / "generate_ninja.py",
+        VOSTOK / "scripts" / "generate_delink.py",
+    ]
+    paths.extend(
+        path for path in source_root.iterdir()
+        if path.is_file() and path.suffix.lower() in _MAX_CONTEXT_SUFFIXES
+    )
+    module_root = source_root / module
+    if module_root.is_dir():
+        paths.extend(
+            path for path in module_root.rglob("*")
+            if path.is_file() and (
+                path.suffix.lower() in _MAX_CONTEXT_SUFFIXES
+                or path.name in {"anchor.cpp", "temp_include_all.cpp"}
+            )
+        )
+    value = _hash_paths(paths)
+    _MAX_CONTEXT_CACHE[module] = value
+    return value
+
+
+def effective_source_hash(rec, module=None):
+    """HoMM2-style effective-source epoch for a source-backed function.
+
+    The body hash is scoped by a conservative module/compiler context. Unlike
+    ``history.src_fingerprint``, this hash owns correctness-facing MAX evidence;
+    ordinary best-seen/ICF history is never promoted into it.
+    """
+    extent = _source_extent(rec)
+    if extent is None:
+        return None
+    source_file, _lo, _hi, text = extent
+    owner = module or module_of(source_file)
+    body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
+    return f"{body}.{_max_context_hash(owner)}"
+
+
+def effective_source_hash_at(source_file, lo, hi, module):
+    """Re-hash a retained source locator when its symbol is not in this build."""
+    path = VOSTOK / "sources" / source_file
+    if not path.is_file() or not lo or not hi:
+        return None
+    try:
+        with open(path, encoding="latin-1") as f:
+            text = "".join(f.readlines()[lo - 1 : hi])
+    except OSError:
+        return None
+    body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
+    return f"{body}.{_max_context_hash(module or module_of(source_file))}"
+
+
+def compiled_state_id(rec):
+    """Identity for the observed candidate state (size + ordered instructions)."""
+    if rec is None:
+        return None
+    state = {
+        "size": rec.get("size"),
+        "instructions": [
+            (ins.get("off"), ins.get("len"), ins.get("text"))
+            for ins in rec.get("instructions", [])
+        ],
+    }
+    encoded = json.dumps(state, ensure_ascii=True, separators=(",", ":"))
+    return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
 
 
 def file_mtime_iso(path):
@@ -402,7 +518,7 @@ def file_mtime_iso(path):
     )
 
 
-SCHEMA_VERSION = "3"
+SCHEMA_VERSION = "4"
 
 
 def _git(*args):
@@ -694,10 +810,17 @@ def regen():
         log("no declarations.jsonl - BASE_ONLY legitimacy check degraded (parser dump pending)")
 
     # carry persistent tables forward from the existing DB
-    old_history, old_flags, old_attempts = {}, [], []
+    old_history, old_maxima, old_flags, old_attempts = {}, {}, [], []
     if DB_PATH.is_file():
         old = open_db()
         old_history = {r["mangled"]: tuple(r) for r in old.execute("SELECT * FROM history")}
+        try:
+            old_maxima = {
+                r["mangled"]: tuple(r)
+                for r in old.execute("SELECT * FROM source_maxima")
+            }
+        except sqlite3.OperationalError:
+            old_maxima = {}  # schema 3: start MAX from current observations
         old_flags = [tuple(r) for r in old.execute("SELECT * FROM flags ORDER BY mangled, flag")]
         try:
             old_attempts = [
@@ -748,6 +871,74 @@ def regen():
     history_rows = sorted(old_history.values())
     if touched or dropped:
         log(f"history: {touched} touched (reset), {dropped} touched-and-vanished (re-queued)")
+
+    # Correctness-facing MAX is separate from ordinary `history`: only
+    # observations in the same effective-source epoch accumulate. A first
+    # schema-4 refresh seeds it from the current build, never from best-seen.
+    maxima_rows = {}
+    maxima_reset = maxima_raised = 0
+    for row in pair_rows:
+        mangled = sym_by_id[row[0]]
+        fuzzy, cls = row[3], row[4]
+        if fuzzy is None:
+            continue
+        brec = base.get(mangled) or base_rec_for.get(mangled)
+        extent = _source_extent(brec)
+        if extent is None:
+            continue
+        source_file, lo, hi, _text = extent
+        units = units_by_mangled.get(mangled)
+        if not units and brec is not None:
+            units = units_by_mangled.get(brec["mangled"])
+        module = module_of(units[0] if units else source_file)
+        effective_hash = effective_source_hash(brec, module)
+        state_id = compiled_state_id(brec)
+        current_exact = int(fuzzy >= 99.995)
+        previous = old_maxima.get(mangled)
+
+        maximum = fuzzy
+        exact_proven = current_exact
+        origin, evidence = "rebuild", None
+        if previous is not None and previous[1] == effective_hash:
+            maximum = max(previous[2], fuzzy)
+            exact_proven = int(bool(previous[3]) or current_exact)
+            current_improves = maximum > previous[2] or exact_proven > previous[3]
+            if not current_improves:
+                state_id, origin, evidence = previous[4], previous[9], previous[10]
+            if current_improves:
+                maxima_raised += 1
+        elif previous is not None:
+            maxima_reset += 1
+
+        maxima_rows[mangled] = (
+            mangled, effective_hash, maximum, exact_proven, state_id, module,
+            source_file, lo, hi, origin, evidence,
+        )
+
+    # A same-hash maximum remains valid when LTCG/ICF makes the function
+    # temporarily disappear. Re-hash the retained source locator before keeping
+    # it; edits or context changes retire the old epoch.
+    for mangled, previous in old_maxima.items():
+        if mangled in maxima_rows:
+            continue
+        brec = base.get(mangled)
+        if brec is not None:
+            extent = _source_extent(brec)
+            if extent is None:
+                continue
+            source_file, lo, hi, _text = extent
+            module = previous[5] or module_of(source_file)
+            effective_hash = effective_source_hash(brec, module)
+        else:
+            module, source_file, lo, hi = previous[5:9]
+            effective_hash = effective_source_hash_at(source_file, lo, hi, module)
+        if effective_hash == previous[1]:
+            maxima_rows[mangled] = (
+                *previous[:5], module, source_file, lo, hi, previous[9], previous[10]
+            )
+    maxima_rows = sorted(maxima_rows.values())
+    if maxima_reset or maxima_raised:
+        log(f"source MAX: {maxima_raised} raised, {maxima_reset} source epochs reset")
 
     # BASE_ONLY taxonomy (design: declaration-grounded)
     log("classifying base-only symbols ...")
@@ -837,6 +1028,7 @@ def regen():
     con.executemany("INSERT INTO pairs VALUES (?,?,?,?,?,?,?,?,?,?)", pair_rows)
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
     con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
+    con.executemany("INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)", maxima_rows)
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
     con.executemany("INSERT INTO attempts VALUES (?,?,?,?)", old_attempts)
     # deterministic meta only (artifact mtimes, not wall clock)
@@ -849,7 +1041,7 @@ def regen():
             ("refresh_head", git_head()),
             ("build_head", build_head),
             ("declarations_loaded", "1" if (declared_methods or declared_free) else "0"),
-            ("schema_version", "3"),
+            ("schema_version", SCHEMA_VERSION),
         ],
     )
     con.commit()
@@ -940,6 +1132,77 @@ def cmd_list(args):
     q += f" ORDER BY {size_col}, {name_col}"
     rows = [dict(r) for r in con.execute(q, params)]
     emit(rows, args.json)
+
+
+def cmd_max(args):
+    """List correctness-facing MAX rows, separate from ordinary history."""
+    con = open_db(check_schema=True)
+    staleness_check(con)
+    where, params = [], []
+    if args.module:
+        where.append("m.module = ?")
+        params.append(args.module)
+    if args.below is not None:
+        where.append("m.max_fuzzy_pct < ?")
+        params.append(args.below)
+    q = """
+      SELECT s.demangled, m.mangled, m.module,
+             round(m.max_fuzzy_pct, 4) AS max_fuzzy_pct,
+             m.exact_proven, m.effective_hash, m.state_id, m.origin, m.evidence
+      FROM source_maxima m
+      LEFT JOIN symbols s ON s.mangled = m.mangled
+    """
+    if where:
+        q += " WHERE " + " AND ".join(where)
+    q += " ORDER BY m.max_fuzzy_pct, m.module, m.mangled"
+    rows = [dict(row) for row in con.execute(q, params)]
+    con.close()
+    emit(rows, args.json)
+
+
+def cmd_record_max(args):
+    """Attach island provenance to an already measured MAX observation.
+
+    The score, effective hash, exact proof, and state identity must first have
+    been derived by `refresh` from real candidate artifacts. This command never
+    accepts a score and therefore cannot manufacture a maximum.
+    """
+    con = open_db(check_schema=True)
+    row = con.execute(
+        "SELECT effective_hash, max_fuzzy_pct, state_id FROM source_maxima "
+        "WHERE mangled = ?",
+        (args.mangled,),
+    ).fetchone()
+    if row is None:
+        con.close()
+        sys.exit("[match_db] no measured source_maxima row for that symbol")
+    if args.expected_hash and args.expected_hash != row["effective_hash"]:
+        con.close()
+        sys.exit(
+            f"[match_db] effective hash changed: expected {args.expected_hash}, "
+            f"measured {row['effective_hash']}"
+        )
+    evidence = Path(args.evidence)
+    if evidence.is_absolute():
+        try:
+            evidence = evidence.relative_to(VOSTOK)
+        except ValueError:
+            con.close()
+            sys.exit("[match_db] --evidence must be inside the repository worktree")
+    evidence_path = VOSTOK / evidence
+    if not evidence_path.exists():
+        con.close()
+        sys.exit(f"[match_db] missing evidence path: {evidence}")
+    con.execute(
+        "UPDATE source_maxima SET origin = 'island', evidence = ? WHERE mangled = ?",
+        (evidence.as_posix(), args.mangled),
+    )
+    con.commit()
+    con.close()
+    log(
+        f"recorded island provenance for {args.mangled}: "
+        f"{row['max_fuzzy_pct']:.4f}% state={row['state_id']}"
+    )
 
 
 # Display caps for the function column: a demangled signature splits into a return
@@ -1810,6 +2073,22 @@ def main():
     )
     p.add_argument("--json", action="store_true")
 
+    p = sub.add_parser(
+        "max",
+        help="list effective-source-hash-scoped MAX evidence (not ordinary history)",
+    )
+    p.add_argument("--module")
+    p.add_argument("--below", type=float, help="only rows whose MAX is below this percent")
+    p.add_argument("--json", action="store_true")
+
+    p = sub.add_parser(
+        "record-max",
+        help="mark an already measured MAX row as compiler-state island evidence",
+    )
+    p.add_argument("mangled")
+    p.add_argument("--evidence", required=True, help="candidate manifest/path in this worktree")
+    p.add_argument("--expected-hash", help="refuse if the effective source epoch changed")
+
     p = sub.add_parser("report", help="per-module/TU rollup")
     p.add_argument("--module")
     p.add_argument(
@@ -1901,6 +2180,8 @@ def main():
     {
         "refresh": cmd_refresh,
         "list": cmd_list,
+        "max": cmd_max,
+        "record-max": cmd_record_max,
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,

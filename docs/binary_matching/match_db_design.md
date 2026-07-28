@@ -65,6 +65,9 @@ pairs(mangled, target_rva, base_rva,
 history(mangled PRIMARY KEY,
         last_paired_at, best_fuzzy_pct, last_fuzzy_pct, last_struct_class,
         src_fingerprint)    -- hash of the function's source extent at pairing
+source_maxima(mangled PRIMARY KEY,
+        effective_hash, max_fuzzy_pct, exact_proven, state_id, module,
+        source_file, source_lo, source_hi, origin, evidence)
 flags(mangled, flag, cause, set_at)   -- manual overrides only (requeue etc.)
 meta(key, value)
 ```
@@ -138,6 +141,37 @@ Known edge (accepted): a function pairs, then its `temp_include_all` anchor is
 deleted - it vanishes with the source extent unchanged and is wrongly called
 out of scope. The anchor removal is visible in the PR diff, and `flag
 --requeue` overrides manually.
+
+## Source-hash-scoped MAX
+
+`history.best_fuzzy_pct` remains ordinary rebuild history for queue scheduling
+and ICF/fold diagnosis. It is not correctness-facing MAX evidence.
+
+`source_maxima` is the separate HoMM2-style ledger. A refresh records the
+current fuzzy score and compiled-state identity under an effective hash made
+from the function's source extent plus conservative module/compiler context:
+module and shared headers, project files, anchor sources, and pinned
+build/delink configuration.
+
+- The same effective hash retains `max(old, current)`.
+- A changed effective hash starts a new epoch at the current observation.
+- Ordinary `history` maxima are never imported.
+- A same-hash maximum may survive temporary LTCG/ICF disappearance only while
+  its retained source locator and context re-hash identically.
+- `exact_proven` requires a measured byte-exact observation in that epoch.
+- `state_id` identifies the observed size and ordered instruction stream.
+
+Disposable compiler-state islands must restore all tracked source/context
+inputs before recording their evidence. Generated probe source is not durable;
+only the source-scoped maximum, state identity, origin, and evidence reference
+belong in the database. README `exact-max` and `fuzzy-max` use this table and
+take current measurements as a floor, so MAX can never display below current.
+
+`match_db.py max [--module <m>] [--below 100]` lists the ledger. An island
+runner must first refresh from the real candidate artifacts, restore the source,
+and then use `record-max <mangled> --evidence <path> --expected-hash <hash>`.
+`record-max` accepts no score: it can annotate only the hash, score, exact bit,
+and state identity already measured by the normal report/index pipeline.
 
 ## BASE_ONLY taxonomy (declaration-grounded)
 
