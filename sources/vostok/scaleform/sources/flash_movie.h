@@ -122,7 +122,7 @@ struct flash_movie {
 public:
 	/* 0x0000 */	Scaleform::GFx::MovieDef*		m_movie_def;
 	/* 0x0004 */	Scaleform::GFx::Movie*			m_movie;
-	/* 0x0008 */	Scaleform::Render::ContextImpl::DisplayHandle< Scaleform::Render::TreeRoot > const*	m_handle;
+	/* 0x0008 */	Scaleform::Render::ContextImpl::DisplayHandle< Scaleform::Render::TreeRoot >*	m_handle;
 	/* 0x000c */	u32								m_output_width;
 	/* 0x0010 */	u32								m_output_height;
 	/* 0x0014 */	u32								m_last_keyb_hold_time;
