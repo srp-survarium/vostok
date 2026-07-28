@@ -49,9 +49,9 @@ void   game_resources_manager::capture_resource (resource_base * resource)
 
 	resource->cast_base_of_intrusive_base()->on_capture_increment_reference_count	();
 
-	// sushi@TODO: target elides this LOGI_DEBUG (MASTER_GOLD), our base emits it (extra
-	// statement -> QUANTITY). logging macros key off VOSTOK_MASTER_GOLD which our vcproj
-	// never defines (it defines MASTER_GOLD). build-config, not a source-shape fix.
+
+
+
 	LOGI_DEBUG								("grm", "captured %s", log_string(resource).c_str());
 
 	memory_type * const info			=	(memory_type *)resource->memory_usage().type;

@@ -454,4 +454,3 @@ SUMMARY
   types w/ missing methods: 456
   missing types : 197 likely-real (+ noise: templates / wrong-ns stubs)
 [parsed 2555 target types, 2661 base types in vostok::/survarium:: (render excluded)]
-

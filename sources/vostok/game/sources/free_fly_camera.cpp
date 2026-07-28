@@ -41,8 +41,8 @@ free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
 // push/call; the target emits each case its own call (3 extra target stmts). (2) the
 // target CSEs get_game_scene().get_game() into one stack slot reused for both
 // get_binded_action and toggle_pause (the base re-loads it), which shifts register
-// allocation. Both are compiler heuristics, not source shape. get_binded_action is now
-// bodied - re-measured 78%, so the earlier stub theory was wrong.
+// allocation. Both are compiler heuristics, not source shape; the callee is bodied and
+// this function measures 78%.
 bool free_fly_camera::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -199,7 +199,7 @@ void free_fly_camera::on_activate( camera_director* cd )
 }
 
 // claude@NOTE: structure is faithful (build_view_matrix folds the angle_x/angle_y temps
-// inline = 6 PDB locals matching target; the prior 2-local form was wrong). Residual is
+// inline, giving the target's 6 PDB locals). Residual is
 // non-steerable /Ox codegen: (1) target CSEs game_permanent_time_ms() into one value reused
 // for both current_time_delta and `m_prev_time_ms = ...`, splitting the decl statement; the
 // base re-calls it. (2) LOG_INFO bakes __LINE__ as `push 0B4h` (=180, the original's line)

@@ -100,7 +100,7 @@ messaging::message_channel_enum messaging_client::parse_receiver_channel( wchar_
 	return messaging::player_private_channel;
 }
 
-// claude@NOTE: bodied from the target (was a STUB). Structure-complete modulo three
+// claude@NOTE: structure-complete modulo three
 // byte-capped residuals: (1) the packet<>::append/tcp_packet ctor/dtor + send chain is
 // whole-program-inlined in gold but /Od here (the network template inline wall); the
 // trailing inlined packet dtor offsets the append-row pairing. (2) the wcstombs_s error

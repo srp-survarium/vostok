@@ -92,8 +92,8 @@ animation_space_edge const& animation_space_graph::edge( const u32 index ) const
 }
 
 // claude@NOTE: 1 named local (player) matching the target - the loop body is a single
-// statement (get_movement(...).translation.length() inlined; the prior `movement` named
-// local was a phantom the target does not record). The byte residual is dominated by
+// statement (get_movement(...).translation.length() inlined; the target records no named
+// `movement` local). The byte residual is dominated by
 // get_movement still being a STATE[STUB] (its body is unrecovered) plus the EH-scope brace
 // line the target emits for player's destructor (a lone TRGT_ONLY branch row, not steerable).
 float animation_space_graph::max_speed( ) const
