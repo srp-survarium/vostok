@@ -9,7 +9,6 @@
 
 #include "voice_callback_handler.h"
 #include <vostok/sound/sound.h>
-#include <vostok/sound/channels_type.h>
 
 namespace vostok {
 namespace sound {
@@ -106,7 +105,7 @@ private:
 	u32								m_current_quality;
 	u32								m_target_quality;
 
-	channels_type					m_channels_type;
+	u8								m_channels_num;
 
 	sound_buffer*					m_conversion_buffer;
 	sound_buffer*					m_conversion_buffer_test;

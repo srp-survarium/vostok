@@ -95,13 +95,8 @@ void wav_encoded_sound_interface::read_riff					( )
 
 	m_samples_per_sec		= format.fmt_format.nSamplesPerSec;
 	m_bytes_per_sample		= format.fmt_format.wBitsPerSample >> 3;
-	switch ( format.fmt_format.nChannels )
-	{
-	case 1:	m_channels_type = mono;		break;
-	case 2:	m_channels_type = stereo;	break;
-	default: NODEFAULT( );
-	}
 
+	m_channels_num			= u8( format.fmt_format.nChannels );
 	m_length_in_pcm			= d.data_size / m_bytes_per_sample;
 	m_length_in_msec		= ( m_length_in_pcm * 1000 ) / m_samples_per_sec;
 }

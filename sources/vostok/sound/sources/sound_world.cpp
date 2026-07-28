@@ -104,13 +104,6 @@ sound_world::sound_world	(
 
 	register_sound_cooks		( );
 
-//	static console_commands::cc_float s_speed_of_sound_cc	("speed_of_sound", m_speed_of_sound, 0.001f, 1.0f, true, vostok::console_commands::command_type_engine_internal);
-	//static console_commands::cc_u32 s_test_timer_cc			("test_timer", m_test_timer, 0, 2, false, console_commands::command_type_engine_internal );
-	//s_test_timer_cc.subscribe_on_change						( boost::bind( &sound_world::test_timer, this, _1 ));
-
-//	static console_commands::cc_float s_test_time_factor_cc	("time_factor", (float&)m_time_factor, 0.0f, 5.0f, false, vostok::console_commands::command_type_engine_internal);
-//	s_test_time_factor_cc.subscribe_on_change				( boost::bind( &sound_world::test_timer, this, _1 ));
-
 	u32 speed_of_sound_in_m_per_sec				= 0;
 	if ( s_speed_of_sound.is_set_as_number( &speed_of_sound_in_m_per_sec ) )
 		m_speed_of_sound					= m_speed_of_sound / 1000.0f;
@@ -148,9 +141,9 @@ sound_world::sound_world	(
 		resources::sound_panning_lut_class
 	);
 
-	channels_type type = stereo;
+	u8 channels_num = 2;
 	resources::user_data_variant user_data;
-	user_data.set( type );
+	user_data.set( channels_num );
 	
 	resources::query_resource_and_wait	(
 		"panning_lut",
@@ -269,10 +262,7 @@ bool sound_world::initialize_xaudio		( )
 										NULL 
 										);
 	ASSERT						( !FAILED( res ) );
-	//// initialize X3DAudio
 	m_xaudio->GetDeviceDetails		( preferred_device_id, &deviceDetails );
-	//u32 channelMask					= deviceDetails.OutputFormat.dwChannelMask;
-	//X3DAudioInitialize				( channelMask, X3DAUDIO_SPEED_OF_SOUND, m_x3d_instance );
 	return true;
 }
 
@@ -291,7 +281,6 @@ void sound_world::on_panning_lut_loaded				( resources::queries_result& queries 
 
 sound_world::~sound_world		( )
 {
-	//LOG_DEBUG					( "~sound_world" );
 	R_ASSERT					( m_voices_to_delete.empty( ) );
 	DELETE						( m_voice_factory );
 	DELETE						( m_sound_buffer_factory );
@@ -303,18 +292,11 @@ sound_world::~sound_world		( )
 	VOSTOK_DELETE_IMPL			( memory::g_mt_allocator, order );
 }
 
-channels_type sound_world::master_channel_type ( ) const
+u8 sound_world::master_channels_num ( ) const
 {
 	XAUDIO2_VOICE_DETAILS voice_details;
 	m_master_voice->GetVoiceDetails( &voice_details );
-	switch ( voice_details.InputChannels )
-	{
-		case 1:		return mono;
-		case 2:		return stereo;
-		// temporarily for Xbox360
-		case 6:		return stereo;
-		default:	NODEFAULT( return channels_type_count );
-	}
+	return (u8)voice_details.InputChannels;
 }
 
 struct erase_unaudible_predicate
@@ -338,8 +320,6 @@ void sound_world::tick			( )
 	u32 const current_time_in_ms = m_timer.get_elapsed_msec( );
 	R_ASSERT_CMP				( current_time_in_ms, >=, m_last_current_time_in_ms );
 	u32 const time_delta		= current_time_in_ms - m_last_current_time_in_ms;
-//	LOG_DEBUG					( "elapsed_ms: %u", current_time_in_ms );
-//	LOG_DEBUG					( "time_delta: %u", time_delta );
 
 	process_orders				( );
 
@@ -353,8 +333,6 @@ void sound_world::tick			( )
 	try_delete_stoping_voices	( );
 
 	m_last_current_time_in_ms	= current_time_in_ms;
-
-//	threading::yield			( 1000 );
 }
 
 IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
@@ -387,59 +365,11 @@ void sound_world::free_submix_voice	( IXAudio2SubmixVoice* voice ) const
 void sound_world::hdr_audio_test	( u32 time_delta_in_msec )
 {
 	VOSTOK_UNREFERENCED_PARAMETER		( time_delta_in_msec );
-
-	//float l_n_sum					= 0.0f;
-	//sound_instances_type::iterator it	= m_instances.begin();
-	//sound_instances_type::iterator end	= m_instances.end();
-	//for (; it != end; ++it)
-	//{
-	//	if ( (*it).is_hearable( ))
-	//	{
-	//		float dist		= get_distance_to_listener( (*it).get_position() );
-	//		(*it).m_La		= 20* log10( 1.0f / ( (dist > 1.0f)? dist : 1.0f)) + 50.0f;
-	//		(*it).m_Lp		= (*it).m_La + (*it).get_rms( ) * 10;
-
-	//		//LOG_DEBUG		("dist - %f, La - %f, Lp - %f", dist, La, Lp );
-	//		l_n_sum			+= pow(10.0f, (*it).m_Lp / 10.0f);
-	//	}
-	//}
-
-	//// calc L_current
-	//if ( !math::is_zero ( l_n_sum ) )
-	//{
-	//	float L_current					= 10.0f * log10(l_n_sum);
-	//	if(L_current > m_L_wintop)
-	//		m_L_wintop = L_current;
-	//	else 
-	//		m_L_wintop					-= ( m_L_wintop - L_current );
-
-	//	if( m_L_wintop < m_L_min )
-	//		m_L_wintop = m_L_min;
-
-	//	//LOG_DEBUG		("m_L_wintop - %f, m_L_min - %f", m_L_wintop, m_L_min );
-	//}
-
-	//{
-	//	sound_instances_type::iterator it	= m_instances.begin();
-	//	sound_instances_type::iterator end	= m_instances.end();
-	//	for (; it != end; ++it)
-	//	{
-	//		//sound_instance_ptr ptr		= &(*it);
-	//		//float k						= pow(5.0f, ((*it).m_Lp - m_L_wintop) / 20.0f);
-	//		//float a_fin					= pow(10.0f, ((*it).m_La + k * (*it).get_rms( ) * 10 - m_L_wintop) / 20.0f);
-
-
-	//		//LOG_DEBUG					( "a_fin %f, ", a_fin );
-
-	//		//pE->m_A_fin				=	0.9f*pE->m_A_fin + 0.1f*a_fin;
-	//	}
-	//}
-
 }
 
-voice_bridge* sound_world::get_voice ( voice_callback_handler* callback_handler, IXAudio2SubmixVoice* submix_voice, channels_type type, u32 sample_rate  )
+voice_bridge* sound_world::get_voice ( sound_voice* callback_handler, IXAudio2SubmixVoice* submix_voice, u8 channels_num, u32 sample_rate  )
 {
-	voice_bridge* voice		= m_voice_factory->new_voice	( callback_handler, type, sample_rate );
+	voice_bridge* voice		= m_voice_factory->new_voice	( callback_handler, channels_num, sample_rate );
 	voice->set_output_voice	( submix_voice );
 	
 	return voice;
@@ -448,7 +378,6 @@ voice_bridge* sound_world::get_voice ( voice_callback_handler* callback_handler,
 void sound_world::free_voice ( voice_bridge* voice )
 {
 	R_ASSERT							( voice );
-	//voice->set_output_voice				( 0 );
 	m_voice_factory->delete_voice		( voice );
 }
 
@@ -508,8 +437,6 @@ void sound_world::register_sound_cooks	( )
 	
 void sound_world::clear_resources	( )
 {
-	//LOG_DEBUG						 ( "sound_world::clear_resources" );
-
 	sound_scene* scene				= m_active_scenes.front( );
 	while ( scene )
 	{
@@ -583,14 +510,6 @@ void sound_world::start_destruction			( )
 	R_ASSERT						( !m_is_destroying );
 	m_is_destroying					= true;
 
-	//sound_instances_type::iterator it	= m_instances.begin();
-	//sound_instances_type::iterator end	= m_instances.end();
-	//for (; it != end; ++it)
-	//{
-	//	if ( it->is_playing_once ( ) )
-	//		it->finish_playing_once	( );
-	//}
-
 	process_orders					( );
 }
 
@@ -598,17 +517,6 @@ void sound_world::set_calculation_type	( calculation_type type )
 {
 	threading::interlocked_exchange ( m_calc_type, (u32)type );
 }
-
-//float3 sound_world::get_listener_position			( ) const
-//{
-//#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-//	return float3 ( m_listener.Position.x, m_listener.Position.y, m_listener.Position.z ); 
-//#else	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-//	return float3 ( 0.0f, 0.0f, 0.0f );
-//#endif	// #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-//}
-
-
 
 sound_voice* sound_world::create_sound_voice(	sound_scene& scene,
 												s32 playing_offset,

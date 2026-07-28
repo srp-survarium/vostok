@@ -36,12 +36,7 @@ ogg_encoded_sound_interface::ogg_encoded_sound_interface		(resources::managed_re
 	m_length_in_pcm				= ov_pcm_total(&m_ovf, -1);
 	m_samples_per_sec			= (ovi->rate);
 	m_length_in_msec			= (m_length_in_pcm * 1000) / m_samples_per_sec;
-	switch ( ovi->channels )
-	{
-	case 1:						m_channels_type = mono;		break;
-	case 2:						m_channels_type = stereo;	break;
-	default:					NODEFAULT( );
-	}
+	m_channels_num				= u8(ovi->channels);
 }
 
 ogg_encoded_sound_interface::~ogg_encoded_sound_interface		( )
@@ -58,45 +53,5 @@ u32	ogg_encoded_sound_interface::decompress(	pbyte dest,
 	pcm_pointer_after_decompress	= pcm_pointer;
 	return							res;
 }
-/*
-u32 ogg_encoded_sound_interface::get_length_in_pcm ( ) const
-{
-	return m_pcm_total;
-}
-
-u32 ogg_encoded_sound_interface::get_length_in_msec ( ) const
-{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	return (m_pcm_total * 1000) / m_wfx.nSamplesPerSec;
-#else
-	NOT_IMPLEMENTED(0);
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-}
-
-u32 ogg_encoded_sound_interface::get_samples_per_sec	( ) const
-{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	return m_wfx.nSamplesPerSec;
-#else
-	NOT_IMPLEMENTED(0);
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-}
-
-channels_type ogg_encoded_sound_interface::get_channels_type ( ) const
-{
-#if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-	switch (m_wfx.nChannels)
-	{
-	case 1:	 return mono;
-	case 2:	 return stereo;
-	default: NODEFAULT();
-	}
-	return channels_type_count;
-#else
-	NOT_IMPLEMENTED(0);
-#endif // #if VOSTOK_PLATFORM_WINDOWS | VOSTOK_PLATFORM_XBOX_360
-
-}
-*/
 } // namespace sound
 } // namespace vostok

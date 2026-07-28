@@ -8,7 +8,6 @@
 #define VOSTOK_SOUND_ENCODED_SOUND_INTERFACE_H_INCLUDED
 
 #include <vostok/sound/sound.h>
-#include <vostok/sound/channels_type.h>
 
 namespace vostok {
 namespace sound {
@@ -23,8 +22,8 @@ public:
 	inline	u64				get_length_in_pcm			( ) const { return m_length_in_pcm;		}
 	inline	u64				get_length_in_msec			( ) const { return m_length_in_msec;	}
 	inline	u32				get_samples_per_sec			( ) const { return m_samples_per_sec;	}
-	inline	channels_type	get_channels_type			( ) const { return m_channels_type;		}
 	inline	u32				get_bytes_per_sample		( ) const { return m_bytes_per_sample;	}
+	inline	u8				get_channels_num			( ) const { return m_channels_num;		}
 
 	virtual	u32				decompress					(	pbyte dest,
 															u32 pcm_pointer,
@@ -37,7 +36,7 @@ protected:
 	u64					m_length_in_msec;
 	u32					m_samples_per_sec;
 	u32					m_bytes_per_sample;
-	channels_type		m_channels_type;
+	u8					m_channels_num;
 }; // class encoded_sound_interface
 
 typedef	resources::resource_ptr < encoded_sound_interface, resources::unmanaged_intrusive_base > encoded_sound_ptr;
