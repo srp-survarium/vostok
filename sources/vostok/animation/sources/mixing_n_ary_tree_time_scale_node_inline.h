@@ -82,13 +82,13 @@ inline bool operator <															(
 		n_ary_tree_time_scale_node const& right
 	)
 {
-	if ( left.interpolator().transition_time() < right.interpolator().transition_time() )
+	if ( left.time_scale() < right.time_scale() )
 		return	true;
 
-	if ( right.interpolator().transition_time() < left.interpolator().transition_time() )
+	if ( right.time_scale() < left.time_scale() )
 		return	false;
 
-	return				left.time_scale() < right.time_scale();
+	return				left.interpolator() < right.interpolator();
 }
 
 } // namespace mixing
