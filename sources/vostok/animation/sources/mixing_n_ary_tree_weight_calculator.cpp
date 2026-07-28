@@ -102,6 +102,8 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_weight_node& node )
 {
 	m_weight			= node.weight( );
 	m_result			= 0;
+	m_null_weight_found	= m_weight == 0.f;
+	m_weight_transition_ended_time_in_ms	= m_current_time_in_ms;
 }
 
 void n_ary_tree_weight_calculator::visit		( n_ary_tree_time_scale_node& node )
