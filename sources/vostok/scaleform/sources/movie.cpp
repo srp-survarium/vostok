@@ -209,15 +209,11 @@ void flash_movie::SetViewport( u32 width, u32 height )
 
 void flash_movie::HandleMouseMove( const float x, const float y, const float scroll_delta )
 {
-	{
-		Scaleform::GFx::MouseEvent	mevent( Scaleform::GFx::Event::MouseMove, 0, x, y );
-		m_movie->HandleEvent( mevent );
-	}
+	Scaleform::GFx::MouseEvent	mevent( Scaleform::GFx::Event::MouseMove, 0, x, y );
+	m_movie->HandleEvent( mevent );
 
-	{
-		Scaleform::GFx::MouseEvent	mevent( Scaleform::GFx::Event::MouseWheel, 0, x, y, scroll_delta );
-		m_movie->HandleEvent( mevent );
-	}
+	mevent	= Scaleform::GFx::MouseEvent( Scaleform::GFx::Event::MouseWheel, 0, x, y, scroll_delta );
+	m_movie->HandleEvent( mevent );
 }
 
 void flash_movie::HandleMouseBtn(
