@@ -13,25 +13,6 @@
 
 namespace survarium {
 
-// claude@NOTE: the network_stats HUD-row cluster (stats_stream/stats_row create +
-// set_text + dtors) drives a column of flash_text labels via create_text and the
-// flash_text accessors. Structure (statement count/order, create_text + set_*
-// sequence, named-local set, allocator routing) is faithful; reachability is held by
-// anchor_game_clients.cpp. The graph alloc/free now matches the target: NEW/DELETE
-// route through doug_lea_allocator malloc_impl / vostok_mspace_free (was global
-// operator new/delete - the dtors jumped 17/20% -> 37/56% on that fix alone).
-// The DOMINANT remaining wall is CROSS-MODULE: three scaleform helpers are STUBs in
-// vostok/scaleform/sources/movie.cpp - flash_text::set_visible, flash_text::set_color
-// and flash_text_manager::destroy_text - so they inline to nothing on our base while
-// the target inlines real GFx DrawText vtable dispatch. That empties the per-text
-// set_visible/set_color line records in create (folds them into the next set_position
-// statement, the SIZE +0x40 rows + TRGT_ONLY pairs) and drops all four destroy_text
-// statements from each dtor (the TRGT_ONLY rows). Bodying those three movie.cpp stubs
-// is the scaleform module's matching task; until then create/dtors are capped here.
-// set_text (80/85%) has no allocator/destroy_text dependency: its residual is the
-// inline scheduling of the (already-matched) flash_text::set_text + stats_graph
-// add_value/cumulative_* helpers - STRUCTURE MATCH, capped.
-
 stats_stream::~stats_stream( )
 {
 	if( text_manager )

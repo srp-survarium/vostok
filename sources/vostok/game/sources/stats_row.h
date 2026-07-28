@@ -20,11 +20,6 @@ class stats_graph;
 struct flash_text_manager;
 
 struct stats_row : public boost::noncopyable {
-	// STATE[STUB]
-	// claude@NOTE: body is empty `{ }`; the whole-object zeroing the target shows
-	// comes from the flash_text / stats_stream member default ctors, which are
-	// `{ /* no source */ }` placeholders in this tree (the real zeroing ctors are
-	// part of the still-stubbed flash glue) - so the member init is byte-walled here.
 	inline			stats_row	( )
 	{
 	}

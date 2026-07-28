@@ -260,21 +260,6 @@ void anchor_game_network_clients( game& g )
 		match.send_queued_packets( any_u32 );
 	}
 
-	{
-		// the stats_row / stats_stream out-of-line bodies live in network_stats.cpp;
-		// call them explicitly so the linker keeps them (members alone don't).
-		flash_text_manager& text_manager = *( flash_text_manager* )NULL;
-		network_core::udp_match_stream_stats stream_stats;
-		network_core::udp_match_items_stats items_stats;
-
-		stats_stream stream;
-		stream.create( text_manager, 0.f, 0.f, 0.f, 0.f, 0.f, math::color( ) );
-		stream.set_text( 0, items_stats, items_stats );
-
-		stats_row row;
-		row.create( text_manager, "caption", 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, 0.f, math::color( ) );
-		row.set_text( 0, stream_stats, stream_stats );
-	}
 }
 
 } // namespace survarium

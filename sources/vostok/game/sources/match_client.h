@@ -64,7 +64,7 @@ public:
 	inline	bool								is_connected						( ) const { return m_client.is_connected( ); }
 	inline	bool								is_disconnected						( ) const { return m_client.is_disconnected( ); }
 
-	inline	network_core::udp_match_stats const&	get_stats							( ) const { /* no source */ return m_client.get_stats( ); }
+	inline	network_core::udp_match_stats const&	get_stats							( ) const { return m_client.get_stats( ); }
 
 	inline	u32									last_receive_time_in_ms				( ) const { return m_client.last_receive_time_in_ms( ); }
 
