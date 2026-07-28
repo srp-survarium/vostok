@@ -195,50 +195,63 @@ frame identity_frame( )
 	return	result;
 }
 
-// STATE[STUB]
-// claude@NOTE: 27-stmt 0x41c per-bone mixer (target 0x6ed2b0, lines 275-353). STRUCTURE FULLY
-// DECODED below; kept a returning STUB (not bodied) because the inner frame-evaluation needs two
-// engine symbols our source does NOT yet provide:
-//   (1) void evaluate_frame( float, animation_curve_type const*, frame&, current_frame_position& )
-//       - a 4-arg overload (target rva 0x10E0E0, lines 22-23 of bone_animation_inline.h). The
-//         existing inline is only the 3-arg form; the 4-arg one threads current_frame_position via
-//         time_channel::domain(t, current_domain) + an inline poly_curve Horner eval. Reconstructable.
-//   (2) unsigned bone_names::bone_index( char const* ) const (target rva 0x559FB0) - a CRC binary
-//       search (bone_name_index + crc_compare_predicate + __lower_bound). Our bone_names.h models
-//       names as vector<fixed_string<64>> with only bone_index(string_type const&) - the
-//       bone_name_index/crc infrastructure is ABSENT. This is the HARD blocker; do NOT fabricate it.
-// Both are also needed by n_ary_tree::set_object_transform/get_object_transform. Decoded shape (the
-// faithful body to paste once (1)+(2) exist):
-//   buffer_vector<pair<float3,float>> translations(ALLOCA,m_animations_count); // 275 (unnamed-in-PDB; mix_translations inlines @348)
-//   buffer_vector<pair<float3,float>> rotations   (ALLOCA,m_animations_count); // 276
-//   buffer_vector<pair<float3,float>> scales      (ALLOCA,m_animations_count); // 277
-//   for ( animation_state* i=m_animations, * const e=m_animations+m_animations_count; i!=e; ++i ) { // 279
-//       n_ary_tree_animation_node& node = i->event_iterator.animation();        // 280 [edi+0xAC]
-//       if ( node.animated_object() != m_animated_object ) continue;            // 281 [ecx+0x24] vs [this]
-//       if ( i->weight == 0.f ) continue;                                       // 284 [edi+0x68]
-//       if ( node.additivity_priority() != animation_layer_id ) continue;       // 287 [ecx+0x48] vs [ebp+0x18]
-//       if ( !( node.bones_mask() & bone_mask ) ) continue;                      // 290 [ecx+0x4C] & [ebp+0x14]
-//       frame f; current_frame_position frame_position;                          // 294: bone_index over pinned bone_names
-//       u32 idx = i->bone_matrices_computer.pinned_animation->bone_names().bone_index( bone.id() );
-//       if ( idx == u32(-1) ) f = identity_frame();
-//       else evaluate_frame( i->animation_time*default_fps, pinned->bone(idx).channels, f, frame_position );
-//       translations.push_back( make_pair(f.translation, i->weight) );           // 297
-//       rotations.push_back   ( make_pair(f.rotation,    i->weight) );           // 298
-//       scales.push_back      ( make_pair(f.scale,       i->weight) ); }         // 299
-//   if ( animation_layer_id == 0 ) {                                             // 302 guard ([ebp+0x18] test; jne .15)
-//       float total = sum( rotations[k].second );                               // 304/306/307
-//       if ( math::abs( total - 1.f ) > epsilon_5 ) {                           // 311 (clear_value=1.f)
-//           for k: rotations[k].second *= 1.f/total;                            // 314/315 normalize
-//           float total2 = sum( rotations[k].second );                         // 317/318/319
-//           if ( !m_overweighting_detected && math::abs(1.f - total2) >= 0.5f )  // 323 ([half])
-//               m_overweighting_detected = true; } }                            // 324 store [edx+0x14]=1
-//   return bone_transform( mix_translations(translations),                       // 348 (mix_scales+mix_rotations called)
-//       mix_rotations(rotations, animation_layer_id < 2), mix_scales(scales), true ); // 353 (visibility byte [ecx+0x28]=1)
-// sushi@TODO: blocked on bone_names::bone_index(char const*) - a CRC index (bone_name_index /
-// crc_compare_predicate) absent from our bone_names.h. Returning stub until that is recovered.
 bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_bone const& bone, const u32 bone_mask, const u32 animation_layer_id ) const
 {
-	return vostok::animation::bone_transform( );
+	typedef std::pair< float3, float > weighted_transform;
+	buffer_vector< weighted_transform > translations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+	buffer_vector< weighted_transform > rotations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+	buffer_vector< weighted_transform > scales( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+
+	mixing::animation_state* const e	= m_animations + m_animations_count;
+	for ( mixing::animation_state* i = m_animations; i != e; ++i ) {
+		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation( );
+		if ( animation_node.animated_object( ) != m_animated_object )
+			continue;
+		if ( i->weight == 0.f )
+			continue;
+		if ( animation_node.additivity_priority( ) != animation_layer_id )
+			continue;
+		if ( !( animation_node.bones_mask( ) & bone_mask ) )
+			continue;
+
+		frame animation_frame;
+		current_frame_position frame_position;
+		cubic_spline_skeleton_animation const& animation	= *i->bone_matrices_computer.pinned_animation;
+		u32 const bone_index	= animation.get_bone_names( ).bone_index( bone.id( ) );
+		if ( bone_index == u32(-1) )
+			animation_frame	= identity_frame( );
+		else
+			animation.bone( bone_index ).get_frame( i->animation_time * default_fps, animation_frame, frame_position );
+
+		translations.push_back	( std::make_pair( animation_frame.translation, i->weight ) );
+		rotations.push_back		( std::make_pair( animation_frame.rotation, i->weight ) );
+		scales.push_back		( std::make_pair( animation_frame.scale, i->weight ) );
+	}
+
+	if ( animation_layer_id == 0 ) {
+		float total_weight	= 0.f;
+		for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
+			total_weight	+= i->second;
+
+		if ( math::abs( total_weight - 1.f ) > math::epsilon_5 ) {
+			float const inverted_total_weight	= 1.f / total_weight;
+			for ( weighted_transform* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
+				i->second	*= inverted_total_weight;
+
+			float normalized_total_weight	= 0.f;
+			for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
+				normalized_total_weight	+= i->second;
+
+			if ( !m_overweighting_detected && math::abs( 1.f - normalized_total_weight ) >= .5f )
+				m_overweighting_detected	= true;
+		}
+	}
+
+	return bone_transform(
+		mix_translations( translations ),
+		mix_rotations( rotations, animation_layer_id < 2 ),
+		mix_scales( scales )
+	);
 }
 
 float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const& bone, const u32 bone_mask ) const
