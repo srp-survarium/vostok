@@ -33,6 +33,8 @@ import subprocess
 import sys
 from pathlib import Path
 
+import normalize_objdiff_symbols
+
 
 SCRIPT_DIR  = Path(__file__).resolve().parent
 VOSTOK_DIR  = SCRIPT_DIR.parent
@@ -291,6 +293,22 @@ def generate(side: str) -> None:
         ],
         check=True,
     )
+
+    if side == "target":
+        nm = shutil.which("llvm-nm")
+        objcopy = shutil.which("llvm-objcopy")
+        if not nm or not objcopy:
+            raise RuntimeError(
+                "llvm-nm and llvm-objcopy are required to normalize retail "
+                "static-init thunk names"
+            )
+        objects, symbols = normalize_objdiff_symbols.normalize_tree(
+            out, nm=nm, objcopy=objcopy
+        )
+        log(
+            f"Normalized {symbols} project-specific static-init symbols "
+            f"in {objects} target objects"
+        )
 
     log("Refreshing objdiff config ...")
     subprocess.run(

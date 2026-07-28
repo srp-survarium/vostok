@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vostok Orchestrate Matching"
+  short_description: "Drive a linear rebuilt Vostok matching stack"
+  default_prompt: "Use $vostok-orchestrate-matching to drive matching for the requested module."
