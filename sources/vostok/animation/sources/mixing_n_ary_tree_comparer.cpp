@@ -101,51 +101,35 @@ comparison_result_enum animation_comparer_predicate::operator()(
 	return										equal;
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::process_interpolators( n_ary_tree const& from, n_ary_tree const& to )
 {
-	// LOCALS
-	// const u32 						from_interpolators_count
-	// base_interpolator const* const* const to_interpolators_begin
-	// interpolator_size_calculator 	size_calculator
-	// ******
+	u32 const from_interpolators_count				= from.interpolators_count( );
+	base_interpolator const* const* const to_interpolators_begin	= to.interpolators( );
+	base_interpolator const** const interpolators	= static_cast< base_interpolator const** >(
+		ALLOCA( sizeof( base_interpolator const* ) * ( from_interpolators_count + to.interpolators_count( ) ) )
+	);
+	base_interpolator const** const merged_end		= std::merge(
+		from.interpolators( ),
+		from.interpolators( ) + from_interpolators_count,
+		to_interpolators_begin,
+		to_interpolators_begin + to.interpolators_count( ),
+		interpolators,
+		merge_interpolators_predicate( )
+	);
+	base_interpolator const** const end				= std::unique(
+		interpolators,
+		merged_end,
+		unique_interpolators_predicate( )
+	);
 
-	// CALL SITE INFO
-	// <0x56e022> -> void < unknown >( interpolator_visitor& ) const
-	// ******
+	u32 const interpolators_count					= end - interpolators;
+	m_equal											= m_equal && from_interpolators_count == interpolators_count;
 
-	// FUNCTION BODY
-	// <0x56df76>|0x006|+0x004:'161'
-	// <0>
-	// <0x56df7a>|0x00a|+0x008:'163'
-	// <0x56df82>|0x012|+0x006:'164'
-	// <0>
-	// <1>
-	// <0x56df88>|0x018|+0x00f:'167'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x56df97>|0x027|+0x04a:'180'
-	// <0>
-	// <1>
-	// <0x56dfe1>|0x071|+0x021:'183'
-	// <0>
-	// <0x56e002>|0x092|+0x011:'185'
-	// <0x56e013>|0x0a3|+0x018:'186'
-	// <0x56e02b>|0x0bb|-0x014:'186'
-	// <0x56e017>|0x0a7|+0x017:'187'
-	// <0>
-	// <0x56e02e>|0x0be|+0x00a:'189'
-	// ******
+	interpolator_size_calculator size_calculator	( this );
+	for ( base_interpolator const** i = interpolators; i != end; ++i )
+		(*i)->accept									( size_calculator );
+
+	m_needed_buffer_size							+= interpolators_count * sizeof( base_interpolator const* );
 }
 
 // STATE[STUB]

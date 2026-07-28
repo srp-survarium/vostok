@@ -14,6 +14,7 @@ namespace animation {
 
 struct base_interpolator;
 class bone_mixer;
+class interpolator_size_calculator;
 
 namespace mixing {
 
@@ -31,6 +32,7 @@ class n_ary_tree_size_calculator;
 class n_ary_tree_comparer {
 public:
 	friend class n_ary_tree_size_calculator;
+	friend class ::vostok::animation::interpolator_size_calculator;
 
 					n_ary_tree_comparer			(
 						n_ary_tree const& from,
