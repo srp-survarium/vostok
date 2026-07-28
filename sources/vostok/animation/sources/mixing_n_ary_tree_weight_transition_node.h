@@ -27,6 +27,7 @@ public:
 	inline	n_ary_tree_base_node& to				( ) const;
 	inline	base_interpolator const& interpolator	( ) const;
 	inline	u32		start_time_in_ms				( ) const;
+	inline	void	set_start_time_in_ms			( u32 value );
 
 	virtual	void	accept							( n_ary_tree_visitor& visitor );
 	inline	void	on_from_changed					( n_ary_tree_base_node& new_from ) { m_from	= &new_from; }
@@ -57,7 +58,7 @@ private:
 	n_ary_tree_base_node*		m_from;
 	n_ary_tree_base_node*		m_to;
 	base_interpolator const&	m_interpolator;
-	u32 const					m_start_time_in_ms;
+	u32							m_start_time_in_ms;
 }; // class n_ary_tree_weight_transition_node
 
 STATIC_SIZE_ASSERT(n_ary_tree_weight_transition_node, 0x14);

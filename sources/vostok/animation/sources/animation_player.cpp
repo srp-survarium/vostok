@@ -13,6 +13,13 @@
 #include "mixing_n_ary_tree_converter.h"
 #include "mixing_n_ary_tree_comparer.h"
 #include "mixing_n_ary_tree_animation_node.h"
+#include "mixing_n_ary_tree_weight_transition_node.h"
+#include "mixing_n_ary_tree_time_scale_transition_node.h"
+#include "mixing_n_ary_tree_weight_node.h"
+#include "mixing_n_ary_tree_time_scale_node.h"
+#include "mixing_n_ary_tree_addition_node.h"
+#include "mixing_n_ary_tree_subtraction_node.h"
+#include "mixing_n_ary_tree_multiplication_node.h"
 #include "mixing_n_ary_tree_node_comparer.h"
 #include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include "mixing_n_ary_tree_visitor.h"
@@ -20,8 +27,8 @@
 
 VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
 
-namespace vostok {
-namespace animation {
+using namespace vostok;
+using namespace vostok::animation;
 
 // sushi@TODO: Missing somehow in headers.
 struct transform_getter : boost::noncopyable
@@ -66,16 +73,15 @@ void* n_ary_tree_time_inverter::`scalar deleting destructor'( u32 arg_0 )
 }
 */
 
-// claude@NOTE: parked (the 4 visit() overrides below + invert_animation_times) - the
-// n_ary_tree_time_inverter walks the operation-node operands inverting each node's stored
-// times against m_current_time_in_ms. Reconstruction needs the per-node-type field offsets
-// (time_scale_node @0x10, time_scale_transition_node @0x10, the operation-node operands array
-// @0x58/count@0x4) and the animation_state event-time adjust (@0x78). Read each visit body
-// from its target asm (0x11d0f0 / 0x11d100 / 0x11d133 / 0x22c50) once node layouts are pinned.
-// sushi@TODO: Missing somehow in headers.
 class n_ary_tree_time_inverter : mixing::n_ary_tree_visitor, boost::noncopyable
 {
 public:
+	explicit		n_ary_tree_time_inverter	( u32 current_time_in_ms ) :
+		m_current_time_in_ms				( current_time_in_ms )
+	{
+	}
+
+private:
 	virtual	void	visit		( mixing::n_ary_tree_animation_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_weight_transition_node& node );
 	virtual	void	visit		( mixing::n_ary_tree_time_scale_transition_node& node );
@@ -86,65 +92,68 @@ public:
 	virtual	void	visit		( mixing::n_ary_tree_multiplication_node& node );
 
 private:
-  u32 m_current_time_in_ms;
+	template < typename T >
+	void			propagate					( T& node )
+	{
+		mixing::n_ary_tree_base_node** i			= node.operands( sizeof( T ) );
+		mixing::n_ary_tree_base_node** const end	= i + node.operands_count( );
+		for ( ; i != end; ++i )
+			(*i)->accept( *this );
+	}
+
+	u32 m_current_time_in_ms;
 };
 
-
-// STATE[STUB]
-void n_ary_tree_time_inverter::visit(
-	mixing::n_ary_tree_weight_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_weight_node& node */
-)
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_animation_node& node )
 {
-	// FUNCTION BODY
-	// <0x22c50>|0x000|+0x000:'73'	{
-	// <0>
-	// <0x22c50>|0x000|      :'75'	}
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER	( node );
+	NODEFAULT						( );
 }
 
-// STATE[STUB]
-void n_ary_tree_time_inverter::visit(
-	mixing::n_ary_tree_time_scale_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_time_scale_node& node */
-)
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_weight_node& node )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x11d0f0>|0x000|+0x00d:'80'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER	( node );
 }
 
-// STATE[STUB]
-void n_ary_tree_time_inverter::visit(
-	mixing::n_ary_tree_addition_node&		arg_0 /* vostok::animation::mixing::n_ary_tree_addition_node& node */
-)
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_time_scale_node& node )
 {
-	// CALL SITE INFO
-	// <0x11d11e> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
-	// ******
-
-	// FUNCTION BODY
-	// <0x11d100>|0x000|+0x016:'85'
-	// <0x11d116>|0x016|+0x014:'86'
-	// ******
+	node.set_time_scale_start_time(
+		m_current_time_in_ms - node.time_scale_start_time_in_ms( ),
+		node.animation_time_before_scale_starts( )
+	);
 }
 
-// STATE[STUB]
-void n_ary_tree_time_inverter::visit(
-	mixing::n_ary_tree_weight_transition_node&	arg_0 /* vostok::animation::mixing::n_ary_tree_weight_transition_node& node */
-)
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_addition_node& node )
 {
-	// CALL SITE INFO
-	// <0x11d14a> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
-	// <0x11d155> -> void < unknown >( vostok::animation::mixing::n_ary_tree_visitor& )
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x11d133>|0x003|+0x00b:'104'
-	// <0x11d13e>|0x00e|+0x00e:'105'
-	// <0x11d14c>|0x01c|+0x00d:'106'
-	// ******
+	propagate	( node );
 }
+
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_subtraction_node& node )
+{
+	propagate	( node );
+}
+
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_multiplication_node& node )
+{
+	propagate	( node );
+}
+
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_weight_transition_node& node )
+{
+	node.set_start_time_in_ms	( m_current_time_in_ms - node.start_time_in_ms( ) );
+	node.from( ).accept			( *this );
+	node.to( ).accept			( *this );
+}
+
+void n_ary_tree_time_inverter::visit( mixing::n_ary_tree_time_scale_transition_node& node )
+{
+	node.set_start_time_in_ms	( m_current_time_in_ms - node.start_time_in_ms( ) );
+	node.from( ).accept			( *this );
+	node.to( ).accept			( *this );
+}
+
+namespace vostok {
+namespace animation {
 
 animation_player::~animation_player( )
 {
