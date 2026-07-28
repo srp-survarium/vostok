@@ -38,7 +38,7 @@ class VOSTOK_ANIMATION_API bone_names:
 {
 public:
 	struct crc_compare_predicate {
-		inline	bool	operator()	( bone_name_index const& lhs, bone_name_index const& rhs ) const { return true; /* sushi@TODO */ }
+		inline	bool	operator()	( bone_name_index const& lhs, bone_name_index const& rhs ) const { return lhs.crc < rhs.crc; }
 	}; // struct bone_names
 public:
 				bone_names( );

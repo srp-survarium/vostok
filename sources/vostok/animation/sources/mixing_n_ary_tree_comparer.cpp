@@ -534,189 +534,105 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
 {
-	// CALL SITE INFO
-	// <0x56dbc2> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56dbd7> -> float < unknown >() const
-	// <0x56dc0b> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56dc1d> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56dc43> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	n_ary_tree_node_comparer comparer;
+	if ( comparer.compare( from, to ) == n_ary_tree_node_comparer::equal ) {
+		increase_buffer_size		( from );
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x56db79>|0x009|+0x024:'529'
-	// <0x56db9d>|0x02d|+0x02f:'530'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56dbcc>|0x05c|+0x003:'534'
-	// <0>
-	// <0x56dbcf>|0x05f|+0x003:'536'
-	// <0x56dbd2>|0x062|+0x00b:'537'
-	// <0x56dbdd>|0x06d|+0x038:'538'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56dc15>|0x0a5|+0x00a:'542'
-	// <0x56dc1f>|0x0af|+0x026:'543'
-	// <0x56dc45>|0x0d5|-0x081:'544'
-	// <0x56dbc4>|0x054|+0x049:'545'
-	// <0x56dc0d>|0x09d|+0x03c:'545'
-	// ******
+	m_equal						= false;
+	base_interpolator const& interpolator	= static_cast< n_ary_tree_time_scale_node& >( to ).interpolator( );
+	if ( interpolator.transition_time( ) == 0.f ) {
+		increase_buffer_size		( to );
+		return;
+	}
+
+	increase_buffer_size		( from );
+	increase_buffer_size		( to );
+	m_needed_buffer_size		+= sizeof( n_ary_tree_time_scale_transition_node );
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from, float to )
 {
-	// LOCALS
-	// n_ary_tree_interpolator_selector interpolator_selector
-	// ******
+	n_ary_tree_interpolator_selector interpolator_selector;
+	from.accept				( interpolator_selector );
+	if ( interpolator_selector.result( )->transition_time( ) == 0.f ) {
+		m_needed_buffer_size	+= sizeof( n_ary_tree_time_scale_node );
+		return;
+	}
 
-	// CALL SITE INFO
-	// <0x56db0e> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56db19> -> float < unknown >() const
-	// <0x56db5d> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
-
-	// FUNCTION BODY
-	// <0>
-	// <0x56daf3>|0x003|+0x01d:'553'
-	// <0x56db10>|0x020|+0x019:'554'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56db29>|0x039|+0x008:'558'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56db31>|0x041|+0x004:'563'
-	// <0x56db35>|0x045|+0x02a:'564'
-	// <0>
-	// <0x56db5f>|0x06f|-0x032:'566'
-	// <0x56db2d>|0x03d|+0x036:'567'
-	// ******
+	m_equal					= false;
+	increase_buffer_size	( from );
+	m_needed_buffer_size	+= sizeof( n_ary_tree_time_scale_node ) + sizeof( n_ary_tree_time_scale_transition_node );
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_time_scale_transition( float from, n_ary_tree_base_node& to )
 {
-	// CALL SITE INFO
-	// <0x56da9f> -> float < unknown >() const
-	// <0x56dad7> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56dae6> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	m_equal						= false;
+	base_interpolator const& interpolator	= static_cast< n_ary_tree_time_scale_node& >( to ).interpolator( );
+	if ( interpolator.transition_time( ) == 0.f ) {
+		increase_buffer_size		( to );
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x56da93>|0x003|+0x004:'576'
-	// <0>
-	// <0x56da97>|0x007|+0x003:'578'
-	// <0x56da9a>|0x00a|+0x00b:'579'
-	// <0x56daa5>|0x015|+0x038:'580'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56dadd>|0x04d|+0x004:'584'
-	// <0x56dae1>|0x051|+0x007:'585'
-	// <0x56dae8>|0x058|-0x00f:'586'
-	// <0x56dad9>|0x049|+0x013:'587'
-	// ******
+	m_needed_buffer_size		+= sizeof( n_ary_tree_time_scale_node );
+	increase_buffer_size		( to );
+	m_needed_buffer_size		+= sizeof( n_ary_tree_time_scale_transition_node );
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
 {
-	// CALL SITE INFO
-	// <0x56da16> -> float < unknown >() const
-	// <0x56da4a> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56da5c> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56da82> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	m_equal						= false;
+	base_interpolator const& interpolator	= static_cast< n_ary_tree_weight_node& >( to ).interpolator( );
+	if ( interpolator.transition_time( ) == 0.f ) {
+		increase_buffer_size		( to );
+		return;
+	}
 
-	// FUNCTION BODY
-	// <0x56da04>|0x004|+0x005:'594'
-	// <0>
-	// <0x56da09>|0x009|+0x013:'596'
-	// <0x56da1c>|0x01c|+0x038:'597'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56da54>|0x054|+0x00a:'601'
-	// <0x56da5e>|0x05e|+0x026:'602'
-	// <0x56da84>|0x084|-0x038:'603'
-	// <0x56da4c>|0x04c|+0x03c:'604'
-	// ******
+	increase_buffer_size		( from );
+	increase_buffer_size		( to );
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node );
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition(
 	base_interpolator const&	from_animation_interpolator,
 	n_ary_tree_base_node&		from,
 	float						to
 )
 {
-	// LOCALS
-	// n_ary_tree_weight_node 			weight
-	// ******
+	if ( from_animation_interpolator.transition_time( ) == 0.f ) {
+		m_needed_buffer_size	+= sizeof( n_ary_tree_weight_node );
+		m_equal					= false;
+		return;
+	}
 
-	// CALL SITE INFO
-	// <0x56d960> -> float < unknown >() const
-	// <0x56d9a7> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	increase_buffer_size		( from );
+	n_ary_tree_weight_node weight( from_animation_interpolator, to );
+	n_ary_tree_node_comparer comparer;
+	if ( comparer.compare( from, weight ) == n_ary_tree_node_comparer::equal )
+		return;
 
-	// FUNCTION BODY
-	// <0x56d958>|0x008|+0x018:'612'
-	// <0>
-	// <0x56d970>|0x020|+0x00f:'614'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56d97f>|0x02f|+0x02a:'618'
-	// <0>
-	// <0x56d9a9>|0x059|+0x042:'620'
-	// <0x56d9eb>|0x09b|-0x077:'621'
-	// <0>
-	// <0x56d974>|0x024|+0x079:'623'
-	// <0>
-	// <0x56d9ed>|0x09d|-0x075:'625'
-	// <0x56d978>|0x028|+0x07d:'626'
-	// ******
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node ) + sizeof( n_ary_tree_weight_node );
+	m_equal						= false;
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_transition(
 	base_interpolator const&	to_animation_interpolator,
 	float						from,
 	n_ary_tree_base_node&		to
 )
 {
-	// LOCALS
-	// n_ary_tree_weight_node 			weight
-	// ******
+	increase_buffer_size		( to );
+	n_ary_tree_weight_node weight( to_animation_interpolator, from );
+	n_ary_tree_node_comparer comparer;
+	if ( comparer.compare( weight, to ) == n_ary_tree_node_comparer::equal )
+		return;
 
-	// CALL SITE INFO
-	// <0x56d8db> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56d92e> -> float < unknown >() const
-	// ******
-
-	// FUNCTION BODY
-	// <0x56d8b3>|0x003|+0x02a:'634'
-	// <0x56d8dd>|0x02d|+0x00c:'635'
-	// <0x56d8e9>|0x039|+0x037:'636'
-	// <0x56d920>|0x070|+0x002:'637'
-	// <0>
-	// <0x56d922>|0x072|+0x004:'639'
-	// <0>
-	// <0x56d926>|0x076|+0x016:'641'
-	// <0x56d93c>|0x08c|+0x002:'642'
-	// <0>
-	// <1>
-	// <0x56d93e>|0x08e|+0x004:'645'
-	// ******
+	m_equal						= false;
+	if ( to_animation_interpolator.transition_time( ) != 0.f )
+		m_needed_buffer_size	+= sizeof( n_ary_tree_weight_transition_node ) + sizeof( n_ary_tree_weight_node );
 }
 
 // STATE[STUB]
