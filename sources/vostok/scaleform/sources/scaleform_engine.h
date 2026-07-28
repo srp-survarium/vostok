@@ -23,7 +23,10 @@ void	destroy		( );
 // X-Ray-era allocator hook handed to Scaleform::GFx::System::Init
 class xrSysAllocMalloc : public Scaleform::SysAlloc {
 public:
-	inline				xrSysAllocMalloc	( void* ( *arg_0 )( u32 ), void ( *arg_1 )( void* ) ) { /* no source */ }
+	inline				xrSysAllocMalloc	( void* ( *arg_0 )( u32 ), void ( *arg_1 )( void* ) )
+		:	m_mem_alloc_ptr	( arg_0 ),
+			m_mem_free_ptr	( arg_1 )
+	{ /* no source */ }
 	virtual				~xrSysAllocMalloc	( ) { /* no source */ }
 
 	// the three SysAlloc overrides are out-of-line in factory.cpp per the rich index
