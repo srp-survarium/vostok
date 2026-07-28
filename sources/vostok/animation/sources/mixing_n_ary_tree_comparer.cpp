@@ -265,34 +265,28 @@ bool n_ary_tree_comparer::new_time_scale( n_ary_tree_animation_node& new_time_dr
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_animation(
 	n_ary_tree_animation_node&		animation,
 	u32&							time_scale_operands_count,
 	u32&							operands_offset
 )
 {
-	// FUNCTION BODY
-	// <0>
-	// <0x56e25a>|0x00a|+0x016:'295'
-	// <0x56e270>|0x020|+0x00b:'296'
-	// <0x56e27b>|0x02b|+0x00a:'297'
-	// <0x56e285>|0x035|+0x006:'298'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x56e28b>|0x03b|+0x003:'305'
-	// <0>
-	// <1>
-	// <0x56e28e>|0x03e|+0x003:'308'
-	// <0>
-	// <0x56e291>|0x041|+0x022:'310'
-	// <0x56e2b3>|0x063|+0x004:'311'
-	// <0x56e2b7>|0x067|+0x01d:'312'
-	// ******
+	time_scale_operands_count	= 0;
+	if ( !animation.time_driving_animation( ) && animation.time_synchronization_group_id( ) != u32( -1 ) ) {
+		if ( new_time_scale( animation ) ) {
+			operands_offset				= 1;
+			time_scale_operands_count	= 1;
+		}
+	}
+
+	++m_animations_count;
+	m_needed_buffer_size	+= sizeof( n_ary_tree_animation_node )
+		+ animation.animation_intervals_count( ) * sizeof( animation_interval )
+		+ sizeof( animation_state* );
+
+	animated_object_holder* const i	= std::find( m_animated_objects, m_animated_objects_end, animation.animated_object( ) );
+	if ( i == m_animated_objects_end )
+		new ( m_animated_objects_end++ ) animated_object_holder( animation.animated_object( ) );
 }
 
 void n_ary_tree_comparer::new_weight_transition( float from, float to )
@@ -441,47 +435,30 @@ void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animat
 {
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::add_animation(
 	n_ary_tree_animation_node&			animation,
 	n_ary_tree_animation_node* const	weight_driving_animation
 )
 {
-	// LOCALS
-	// u32 								time_scale_operands_count
-	// u32 								operands_offset
-	// ******
+	m_equal								= false;
+	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
+	u32 operands_count						= animation.operands_count( ) + ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
 
-	// CALL SITE INFO
-	// <0x56eb13> -> float < unknown >() const
-	// <0x56eb5d> -> bool < unknown >()
-	// <0x56ebb7> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56ebc9> -> float < unknown >() const
-	// ******
+	u32 time_scale_operands_count;
+	u32 operands_offset					= 0;
+	new_animation						( animation, time_scale_operands_count, operands_offset );
+	if ( operands_count && operands_offset && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) && !time_scale_operands_count )
+		--operands_count;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x56eaf8>|0x008|+0x004:'447'
-	// <0>
-	// <0x56eafc>|0x00c|+0x00c:'449'
-	// <0>
-	// <0x56eb08>|0x018|+0x027:'451'
-	// <0>
-	// <1>
-	// <0x56eb2f>|0x03f|+0x01a:'454'
-	// <0>
-	// <1>
-	// <0x56eb49>|0x059|+0x02c:'457'
-	// <0>
-	// <0x56eb75>|0x085|+0x00a:'459'
-	// <0>
-	// <0x56eb7f>|0x08f|+0x007:'461'
-	// <0x56eb86>|0x096|+0x00d:'462'
-	// <0x56eb93>|0x0a3|+0x02d:'463'
-	// <0>
-	// <0x56ebc0>|0x0d0|+0x019:'465'
-	// <0x56ebd9>|0x0e9|+0x008:'466'
-	// ******
+	m_needed_buffer_size				+= operands_count * sizeof( n_ary_tree_base_node* );
+
+	n_ary_tree_base_node* const* const end	= animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
+	n_ary_tree_base_node* const* i			= animation.operands( sizeof( n_ary_tree_animation_node ) ) + operands_offset;
+	for ( ; i != end; ++i )
+		increase_buffer_size				( **i );
+
+	if ( interpolator.transition_time( ) != 0.f )
+		new_weight_transition				( 0.f, 1.f );
 }
 
 void n_ary_tree_comparer::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
