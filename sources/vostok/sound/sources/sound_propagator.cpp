@@ -24,6 +24,7 @@ static inline sound_world* get_world	( sound_instance_proxy_internal const& prox
 static u32 prop_id					= 0;
 
 sound_propagator::sound_propagator	(	playback_mode mode,
+										u32 playback_id,
 										u32	playing_offset,
 										u32 before_playing_offset,
 										u32 after_playing_offset,
@@ -39,6 +40,7 @@ sound_propagator::sound_propagator	(	playback_mode mode,
 	m_playing_offset					( playing_offset ),
 	m_playing_offset_original			( playing_offset ),
 	m_sound_playing_time				( playing_offset ),
+	m_playback_id						( playback_id ),
 	m_end_propagation_distance			( emitter.get_sound_spl()->get_unheard_distance() ),
 	m_producer							( producer ),
 	m_ignorable_receiver				( ignorable_receiver ),
@@ -74,9 +76,8 @@ sound_propagator::sound_propagator	(	playback_mode mode,
 	if ( m_mode == looped )
 	{
 		m_sound_length				= 0xffffffff;
-		m_end_propagation_time		= 0xffffffff;// end_propagation_distance / get_world(proxy)->get_speed_of_sound() + sound_length;
+		m_end_propagation_time		= 0xffffffff;
 
-//		m_sound_length				( (u32)(m_emitter.get_quality_for_resource( proxy, position )->get_length_in_msec( )) + after_playing_offset + before_playing_offset - playing_offset ),
 		m_sound_length_original		= ( (u32)(m_emitter.get_quality_for_resource( )->get_length_in_msec( )) + after_playing_offset + before_playing_offset ); 
 
 		m_playing_offset			= playing_offset % m_sound_length_original;
@@ -86,7 +87,6 @@ sound_propagator::sound_propagator	(	playback_mode mode,
 	LOG_DEBUG						( "emitter address: 0x%8x", &emitter );
 	LOG_DEBUG						( "sound_length: %d", m_sound_length );
 	LOG_DEBUG						( "sound_length_original: %d", m_sound_length_original );
-	//LOG_DEBUG						( "get_length_in_msec: %d", (u32)(proxy.get_sound_propagator_emitter( ).get_quality_for_resource( proxy )->get_length_in_msec( )));
 	LOG_DEBUG						( "after_playing_offset: %d", after_playing_offset );
 	LOG_DEBUG						( "before_playing_offset: %d", before_playing_offset );
 	LOG_DEBUG						( "playing_offset: %d", playing_offset );
@@ -111,7 +111,6 @@ void sound_propagator::tick			( u32 time_delta_in_msec )
 
 void sound_propagator::tick_for_once_mode	( u32 time_delta_in_msec )
 {
-//	LOG_DEBUG								( "time_delta_in_msec: %d", time_delta_in_msec );
 	if ( !m_is_propagation_finished && !m_is_pause_propagating_requested )
 	{
 		if ( !m_is_pause_producing_sound_requested && !m_is_stop_producing_sound_requested )
@@ -141,7 +140,6 @@ void sound_propagator::tick_for_looped_mode	( u32 time_delta_in_msec )
 			m_playing_offset		+= time_delta_in_msec;
 
 		m_propagating_time			+= time_delta_in_msec;
-//		LOG_DEBUG					( "m_playing_offset: %d", m_playing_offset );
 
 		if ( !m_is_on_finish_playing_called && m_playing_offset >= m_sound_length_original )
 		{
@@ -174,11 +172,6 @@ void sound_propagator::on_finish_playing_sound	( )
 		if ( !m_proxy.is_playing_once( ) && is_callback_executer( ) && m_mode == once )
 			execute_user_callback					( );
 	}
-	else
-	{
-//		sound_propagator* prop		= m_proxy.get_sound_scene().create_sound_propagator_for_looped( *this );
-//		m_proxy.add_sound_propagator( *prop );
-	}
 
 }
 
@@ -191,17 +184,12 @@ void sound_propagator::execute_user_callback	( ) const
 {
 	m_proxy.set_callback_pending			( true );
 	functor_response* response				= VOSTOK_NEW_IMPL ( m_proxy.get_world_user().get_channel().responses.owner_allocator(), functor_response )
-		( boost::bind( &sound_instance_proxy_internal::execute_callback, boost::ref( m_proxy ) ) );
+		( boost::bind( static_cast<void (sound_instance_proxy_internal::*)( u32 )>( &sound_instance_proxy_internal::execute_callback ), boost::ref( m_proxy ), m_playback_id ) );
 	m_proxy.get_world_user().add_response	( response );
 }
 
 float sound_propagator::get_propagation_outer_radius	( ) const
 {
-
-//	float r		= m_mode == once ? 
-//		get_outer_radius_internal( ) :
-//		m_propagating_time * get_world( m_proxy )->get_speed_of_sound( );
-
 	return math::min ( get_outer_radius_internal( ), m_end_propagation_distance );
 }
 
@@ -209,65 +197,32 @@ float sound_propagator::get_propagation_inner_radius( ) const
 {
 	if ( m_mode == looped && m_end_propagation_time	== 0xffffffff )
 		return 0.0f;
-	//if ( m_mode == once )
-	//{
-		float out_r				= get_outer_radius_internal( );
-	//	LOG_DEBUG				( "out_r: %f", out_r );
-		if ( math::is_zero( out_r ) )
-			return 0.0f;
 
-		u32 sound_played			= m_playing_offset_original + m_sound_length;
-		//LOG_DEBUG					( "sound_played: %d", sound_played );
-		u32 sound_length_without_offset	= m_sound_length_original - m_after_playing_offset;
-		//LOG_DEBUG					( "sound_length_without_offset: %d", sound_length_without_offset );
-		u32 diff					= 0;
-		if ( sound_played >= sound_length_without_offset )
-			diff			= sound_played - sound_length_without_offset;
+	float out_r				= get_outer_radius_internal( );
+	if ( math::is_zero( out_r ) )
+		return 0.0f;
 
-		u32 before_playing_offset	= 0;
-		if ( m_playing_offset_original < m_before_playing_offset )
-			before_playing_offset		= m_before_playing_offset - m_playing_offset_original;
-	
-		//LOG_DEBUG			( "before_playing_offset: %d", before_playing_offset );
+	u32 sound_played			= m_playing_offset_original + m_sound_length;
+	u32 sound_length_without_offset	= m_sound_length_original - m_after_playing_offset;
+	u32 diff					= 0;
+	if ( sound_played >= sound_length_without_offset )
+		diff			= sound_played - sound_length_without_offset;
 
-		//LOG_DEBUG			( "diff: %d", diff );
-		float in_r			= out_r - get_world( m_proxy )->get_speed_of_sound( ) * ( m_sound_length - diff - before_playing_offset);
-		//LOG_DEBUG			( "in_r: %f", in_r );
-		return math::min ( math::max( in_r, .0f ), math::min( out_r, m_end_propagation_distance ));
-	//}
-	
-	//if ( m_sound_length > m_propagating_time )
-	//	return 0.0f;
+	u32 before_playing_offset	= 0;
+	if ( m_playing_offset_original < m_before_playing_offset )
+		before_playing_offset		= m_before_playing_offset - m_playing_offset_original;
 
-	//return ( m_propagating_time - m_sound_length ) * get_world( m_proxy )->get_speed_of_sound( );
+	float in_r			= out_r - get_world( m_proxy )->get_speed_of_sound( ) * ( m_sound_length - diff - before_playing_offset);
+	return math::min ( math::max( in_r, .0f ), math::min( out_r, m_end_propagation_distance ));
 }
 
 float sound_propagator::get_propagation_outer_radius_for_listener	( ) const
 {
 	return get_propagation_outer_radius				( );
-//	if ( m_propagating_time < m_before_playing_offset )
-//		return 0.0f;
-
-//	return ( m_propagating_time - m_before_playing_offset ) * get_world( m_proxy )->get_speed_of_sound( );
-//	float r = m_propagating_time * get_world( m_proxy )->get_speed_of_sound( );
-//	return math::min ( r, m_end_propagation_distance );
 }
 
 float sound_propagator::get_propagation_inner_radius_for_listener	( ) const
 {
-	//if ( m_mode == once )
-	//{
-	//	if ( m_propagating_time < m_sound_length - m_after_playing_offset )
-	//		return 0.0f;
-	//	return ( m_propagating_time - m_sound_length + m_after_playing_offset ) * get_world( m_proxy )->get_speed_of_sound( );
-	//}
-	//else if ( m_mode == looped )
-	//{
-	//	if ( m_propagating_time <= m_sound_length - m_after_playing_offset )
-	//		return 0.0f;
-	//	return ( m_propagating_time - m_sound_length + m_after_playing_offset ) * get_world( m_proxy )->get_speed_of_sound( );
-	//}
-
 	return get_propagation_inner_radius				( );
 }
 
@@ -342,7 +297,6 @@ void sound_propagator::pause_produce_and_preserve_state_for_resume	( )
 	m_sound_length							= m_propagating_time;
 	m_end_propagation_time					= (u32)(m_end_propagation_distance / get_world(m_proxy)->get_speed_of_sound()) + m_sound_length;
 	LOG_DEBUG								( "m_end_propagation_time: %d", m_end_propagation_time );
-//	m_playing_offset						= m_propagating_time + m_playing_offset_original;
 }
 
 void sound_propagator::clear_preservation_state_for_resume	( )
@@ -353,7 +307,6 @@ void sound_propagator::clear_preservation_state_for_resume	( )
 	R_ASSERT								( m_is_state_preserved_for_resume );
 
 	m_is_state_preserved_for_resume			= false;
-	//m_is_pause_producing_sound_requested	= false;
 }
 
 void sound_propagator::pause_propagation	( )
@@ -417,11 +370,8 @@ float sound_propagator::get_sound_spl		( float distance ) const
 
 float sound_propagator::get_sound_rms_value	( ) const
 {
-//	LOG_DEBUG							("prop m_dbg_id: %d", m_dbg_id );
 	float dist_to_list					= length( m_proxy.get_position( ) - get_listener_position( ));
-//	LOG_DEBUG							( "dist_to_list: %f", dist_to_list );
 	u32 time_to_list					= (u32)(dist_to_list / get_world( m_proxy )->get_speed_of_sound( ));
-//	LOG_DEBUG							( "time_to_list: %d", time_to_list );
 	float rms_val						= 0.0f;
 
 	u32 prop_time						= m_propagating_time;
@@ -453,15 +403,6 @@ float sound_propagator::get_sound_rms_value	( ) const
 		rms_val							= pinned_rms->get_rms_by_time ( offset );
 	}
 
-	////LOG_DEBUG							( "time_to_list: %f", time_to_list );
-	////u32	time							= ( m_sound_playing_time + (u32)time_to_list ) % m_sound_length_original;
-	////LOG_DEBUG							( "time: %d", time );
-	////if ( time < m_before_playing_offset || time > m_sound_length_original - m_after_playing_offset )
-	////	return 0.0f;
-
-	//sound_rms_pinned pinned_rms			( m_sound_rms );
-	//float rms_val						= pinned_rms->get_rms_by_time ( time - m_before_playing_offset );
-	//LOG_DEBUG							( "rms val: %f", rms_val );
 	return rms_val;
 }
 

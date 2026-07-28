@@ -28,6 +28,7 @@ public:
 	virtual	void	emit_sound_propagators	(
 						sound_instance_proxy_internal& proxy,
 						playback_mode mode,
+						u32 playback_id,
 						u32 before_playing_offset = 0,
 						u32 after_playing_offset = 0,
 						sound_producer const* const producer = 0,

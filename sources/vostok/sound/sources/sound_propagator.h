@@ -34,11 +34,13 @@ struct create_sound_propagator_params
 {	
 	create_sound_propagator_params (	playback_mode							mode,
 										sound_instance_proxy_internal&			proxy,
+										u32										playback_id,
 										sound_producer const* const				producer = 0,
 										sound_receiver const* const				ignorable_receiver = 0
 										) :
 		m_mode				( mode ),
 		m_proxy				( proxy ),
+		m_playback_id		( playback_id ),
 		m_producer			( producer ),
 		m_ignorable_receiver( ignorable_receiver ),
 		m_type				( point )
@@ -47,6 +49,7 @@ struct create_sound_propagator_params
 	create_sound_propagator_params (	source_params const&					params,
 										playback_mode							mode,
 										sound_instance_proxy_internal&			proxy,
+										u32										playback_id,
 										sound_producer const* const				producer = 0,
 										sound_receiver const* const				ignorable_receiver = 0
 										) :
@@ -56,6 +59,7 @@ struct create_sound_propagator_params
 		m_outer_gain		( params.m_outer_gain ),
 		m_mode				( mode ),
 		m_proxy				( proxy ),
+		m_playback_id		( playback_id ),
 		m_producer			( producer ),
 		m_ignorable_receiver( ignorable_receiver ),
 		m_type				( cone )
@@ -68,6 +72,7 @@ public:
 	float									m_cone_inner_angle;
 	float									m_cone_outer_angle;
 	float									m_outer_gain;
+	u32										m_playback_id;
 	sound_instance_proxy_internal&			m_proxy;
 	sound_producer const* const				m_producer;
 	sound_receiver const*					m_ignorable_receiver;
@@ -83,6 +88,7 @@ class sound_propagator : private boost::noncopyable
 {
 public:
 								sound_propagator		(	playback_mode mode,
+															u32 playback_id,
 															u32	playing_offset,
 															u32 before_playing_offset,
 															u32 after_playing_offset,
@@ -110,6 +116,7 @@ public:
 	inline	bool				can_be_deleted			( ) const { return	m_is_propagation_finished &&
 																			!m_is_state_preserved_for_resume; }
 	inline	u32					get_sound_length		( ) const { return m_sound_length; }
+	inline	u32					get_playback_id			( ) const { return m_playback_id; }
 	inline	u32					get_playing_offset		( ) const { return m_playing_offset; }
 	inline	u32				get_sound_length_original	( ) const { return m_sound_length_original;}
 	inline	u32				get_before_playing_offset	( ) const { return m_before_playing_offset; }
@@ -141,8 +148,6 @@ public:
 	inline	void							clear_producer				( ) { m_producer = 0; }
 	inline	sound_receiver const* const		get_ignorable_receiver		( ) const { return m_ignorable_receiver; }
 	inline	sound_instance_proxy_internal&	get_proxy					( ) const { return m_proxy; }
-//	inline	sound_propagator_emitter const&	get_emitter					( ) const { return m_emitter; }
-
 	// hdr audio functions
 	inline	float					get_percived_loudness	( ) const		{ return m_perceived_loudness; }
 	inline	void					set_percived_loudness	( float pl )	{ m_perceived_loudness = pl; }
@@ -177,28 +182,23 @@ private:
 public:
 	sound_propagator*		m_next_for_proxies;
 private:
-	// we can't update propagator position, but we update
-	// m_current_proxy_position, so that we could put sound_voice in the right place
-	// It's a fake, maybe we will save path. 
-	float3 /*const*/					m_start_propagation_position;
-	//float3								m_current_proxy_position;
-	// we save listener position for avoiding calculation problems 
-	// when listener and propagator come closer too fast or move
-	// away one from another
+	// Keep propagation and listener positions independent during fast motion.
+	float3								m_start_propagation_position;
 	float3								m_listener_position;
 	sound_instance_proxy_internal&		m_proxy;
 	sound_propagator_emitter const&		m_emitter;
 	sound_producer const*				m_producer;
 	sound_receiver const*				m_ignorable_receiver;
 	sound_voice*						m_sound_voice;
-	float /*const*/						m_end_propagation_distance;
+	float								m_end_propagation_distance;
 	u32									m_end_propagation_time;
 	u32									m_propagating_time;
 	u32									m_sound_length;
-	u32 /*const*/						m_sound_length_original;
+	u32									m_sound_length_original;
 	u32									m_sound_playing_time;
+	u32									m_playback_id;
 	u32									m_playing_offset;
-	u32 /*const*/						m_playing_offset_original;
+	u32									m_playing_offset_original;
 	u32									m_before_playing_offset;
 	u32									m_after_playing_offset;
 	u32									m_tick_precision_for_listener;

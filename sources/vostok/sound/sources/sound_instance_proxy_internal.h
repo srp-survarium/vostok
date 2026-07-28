@@ -107,7 +107,8 @@ public:
 			void			add_sound_propagator	( sound_propagator& propagator ) { m_propagators.push_back( &propagator ); }
 
 	inline	void			set_callback_pending	( bool is_pending ) { threading::interlocked_exchange( m_callback_pending, is_pending ); }
-			void			execute_callback		( );
+			void			execute_callback		( u32 playback_id );
+	inline	void			execute_callback		( ) { execute_callback( m_playback_id ); }
 	inline	bool			is_destruction_pending	( ) const { return m_destruction_pending == 1; }
 
 	inline	propagators_list&		get_propagators				( ) { return m_propagators; }
@@ -129,8 +130,6 @@ public:
 
 	
 			void			on_propagators_serialized		( boost::function < void ( memory::writer*, memory::writer* ) >& fn, memory::writer* sound_thread_writer, memory::writer* w );
-	//virtual	void			dbg_draw					( render::game::renderer& render, render::scene_ptr const& scene ) const;
-
 			void			on_finish_callback				( sound_instance_proxy_ptr last_reference );
 
 sound_emitter_ptr const&	get_sound_emitter				( ) const { return m_sound_emitter; }
@@ -141,8 +140,6 @@ sound_emitter_ptr const&	get_sound_emitter				( ) const { return m_sound_emitter
 			void			dump_debug_snapshot				( configs::lua_config_value& val ) const;
 			void			fill_statistic					( proxy_statistic& statistic ) const;
 #endif // #ifndef MASTER_GOLD
-public:
-	sound_instance_proxy_internal*		m_next_for_sound_world;
 private:
 	virtual	void			free_object						( );
 	
@@ -159,15 +156,17 @@ private:
 	atomic_half3									m_direction;
 
 	propagators_list								m_propagators;
+public:
+	sound_instance_proxy_internal*				m_next_for_sound_world;
+private:
 	world_user&										m_user;
 	sound_scene&									m_scene;
 	sound_emitter_ptr								m_sound_emitter;
 	sound_propagator_emitter const&					m_propagator_emitter;
 
-	threading::atomic32_type						m_destruction_pending;
 	collision::geometry_instance*					m_collision;
-
-
+	threading::atomic32_type						m_destruction_pending;
+	u32												m_playback_id;
 	sound_type										m_type;
 	sound_cone_type									m_cone_type;
 	float											m_volumetric_radius;
