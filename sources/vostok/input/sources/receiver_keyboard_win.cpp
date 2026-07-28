@@ -50,6 +50,11 @@ keyboard::~keyboard			( )
 	m_device->Release	( );
 }
 
+void keyboard::reset_current_state	( )
+{
+	memory::zero		( &m_current_key_state, sizeof( m_current_key_state ) );
+}
+
 void keyboard::on_activate	( )
 {
 	HRESULT	result		= m_device->Acquire	( );
@@ -72,11 +77,6 @@ bool keyboard::is_key_down	( char const value ) const
 bool keyboard::is_key_down	( enum_keyboard const key ) const
 {
 	return				( is_key_down( (char)m_current_key_state[ key ] ) );
-}
-
-void keyboard::reset_current_state	( )
-{
-	memory::zero		( &m_current_key_state, sizeof( m_current_key_state ) );
 }
 
 void keyboard::execute		( )

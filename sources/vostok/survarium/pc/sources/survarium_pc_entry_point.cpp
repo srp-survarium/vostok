@@ -18,14 +18,8 @@ struct guard {
 	{
 //		R_ASSERT						( vostok::memory::g_crt_allocations_are_enabled );
 //		vostok::memory::g_crt_allocations_are_enabled	= false;
+		// sushi@TODO: Recover debug::set_support_email once its debug-module implementation exists.
 		VOSTOK_CONSTRUCT_REFERENCE		( s_application, survarium::application );
-		// claude@NOTE: STRUCTURE MISMATCH (quantity) - target has a TRGT_ONLY stmt
-		// here: vostok::debug::set_support_email( "game_crash_reports@survarium.com" ).
-		// That fn is absent from our base (count 0); the target refactored the inline
-		// s_BT_SetSupportEMail(...) call out of bugtrap_win.cpp::initialize() into a
-		// set_support_email(pcstr) storing to a static s_support_email[64] (strcpy_s<64>)
-		// + a BugTrap-loaded guard. Adding the call needs that fn implemented in the
-		// debug module + initialize() rewired - cross-unit refactor, capped.
 		s_application->initialize		( );
 	}
 
