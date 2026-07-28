@@ -10,6 +10,8 @@
 #include <vostok/animation/animation_callback.h>
 #include <vostok/animation/mixing_n_ary_tree.h>
 
+struct transform_getter;
+
 namespace vostok {
 
 namespace render {
@@ -39,6 +41,8 @@ enum reserved_channel_ids_enum {
 
 class VOSTOK_ANIMATION_API animation_player
 {
+	friend struct ::transform_getter;
+
 public:
 						animation_player		( );
 						~animation_player		( );
