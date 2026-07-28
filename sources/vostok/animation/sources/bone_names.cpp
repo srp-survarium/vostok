@@ -86,11 +86,6 @@ void	bone_names::set_name( bone_index_type bone_index, pcstr name )
 	bone_names_idx()[bone_index] = bone_name_index( bone_index, name );
 }
 
-bool crc_cmp( const bone_name_index& l, const bone_name_index& r )
-{
-	return l.crc < r.crc;
-}
-
 void	bone_names::read( vostok::configs::binary_config_value const &cfg )
 {
 	const bone_index_type size = cfg.size();
@@ -106,7 +101,7 @@ void	bone_names::read( vostok::configs::binary_config_value const &cfg )
 		my_idx[i] = bone_name_index ( i, pcstr ( static_cast<pcstr>( cfg[i] ) ) ) ;
 	}
 
-	std::sort( my_idx, my_idx + m_bone_count, crc_cmp );
+	std::sort( my_idx, my_idx + m_bone_count, crc_compare_predicate( ) );
 }
 
 void	bone_names::write( vostok::configs::lua_config_value	&cfg )const
@@ -138,7 +133,7 @@ bone_index_type	bone_names::bone_index( pcstr name )const
 	//u32 crc = string_crc( name );
 	bone_name_index temp( u32(-1), name );
 
-	vector<bone_name_index>::const_iterator r = std::lower_bound( bone_names_idx(), bone_names_idx() + m_bone_count, temp, crc_cmp );
+	vector<bone_name_index>::const_iterator r = std::lower_bound( bone_names_idx(), bone_names_idx() + m_bone_count, temp, crc_compare_predicate( ) );
 
 	if ( temp.crc == r->crc &&
 		name[ 0 ] == r->name[0]
