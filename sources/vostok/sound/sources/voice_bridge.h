@@ -24,7 +24,7 @@ class voice_bridge :
 {
 public:
 	inline	u8				get_channels_num				( ) const { return m_channels_num; }
-			u32				get_sample_rate					( ) const;
+	inline	u32				get_sample_rate					( ) const { return m_sample_rate; }
 			u8				get_bytes_per_second			( ) const;
 
 			void			start							( );
@@ -73,6 +73,7 @@ private:
 	sound_voice*			m_handler;
 	IXAudio2SourceVoice*	m_source_voice;
 	u8						m_master_channels_num;
+	u32						m_sample_rate;
 	u8						m_channels_num;
 
 	friend class			voice_factory;

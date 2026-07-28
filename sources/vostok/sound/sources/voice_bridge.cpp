@@ -22,8 +22,7 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 	m_next				( 0 ),
 	m_handler			( 0 ),
 	m_source_voice		( 0 ),
-	m_master_channels_num( params.master_channels_num ),
-	m_channels_num		( params.channels_num )
+	m_master_channels_num( params.master_channels_num )
 {
 	R_ASSERT_U						( params.channels_num );
 	R_ASSERT_U						( params.xaudio_engine );
@@ -36,6 +35,8 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 	wfx_standard.nChannels			= params.channels_num;
 	wfx_standard.nBlockAlign		= wfx_standard.nChannels * ( wfx_standard.wBitsPerSample >> 3 ); 
 	wfx_standard.nAvgBytesPerSec	= wfx_standard.nSamplesPerSec * wfx_standard.nBlockAlign;
+	m_sample_rate					= default_sample_rate;
+	m_channels_num					= params.channels_num;
 	
 	HRESULT hr						= params.xaudio_engine->CreateSourceVoice	( 
 																&m_source_voice,
@@ -61,18 +62,12 @@ void voice_bridge::set_handler ( sound_voice* handler )
 		stop( );
 }
 
-u32 voice_bridge::get_sample_rate ( ) const
-{
-	XAUDIO2_VOICE_DETAILS voice_details;
-	m_source_voice->GetVoiceDetails(&voice_details);
-	return voice_details.InputSampleRate;
-}
-
 void voice_bridge::set_sample_rate	( u32 new_sample_rate )
 {
 	R_ASSERT_U			( buffers_queued() == 0 );
 	if (get_sample_rate() != new_sample_rate)
 	{
+		m_sample_rate	= new_sample_rate;
 		HRESULT hr		= m_source_voice->SetSourceSampleRate( new_sample_rate );
 		R_ASSERT_U		(!FAILED(hr));
 	}
