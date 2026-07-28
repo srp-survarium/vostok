@@ -109,12 +109,10 @@ sound_scene::~sound_scene	( )
 
 	R_ASSERT					( m_receivers.empty( ) );
 
-	//LOG_DEBUG					( "~sound_scene() id: %d", m_dbg_id );
 }
 
 void sound_scene::stop		( )
 {
-	//LOG_DEBUG									( "sound_scene::stop" );
 	sound_instance_proxy_internal* proxy		= m_active_proxies.front( );
 	while ( proxy )
 	{
@@ -220,6 +218,7 @@ void sound_scene::free_sound_instance_proxy	( sound_instance_proxy* proxy )
 
 void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 												playback_mode mode,
+												u32 playback_id,
 												sound_producer const* const producer,
 												sound_receiver const* const ignorable_receiver	)
 {
@@ -228,6 +227,7 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 		( 
 			mode,
 			proxy,
+			playback_id,
 			producer,
 			ignorable_receiver
 		);
@@ -245,13 +245,13 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 		VOSTOK_NEW_IMPL	( proxy.get_world_user( ).get_allocator( ), order_type )
 		( proxy.get_world_user( ), proxy, functor, params );
 
-//	LOG_INFO							( "create_sound_propagator ORDER: 0x%8x with id %d", propagator_emitter, instance_id );
 	proxy.get_world_user( ).add_order	( order );
 }
 
 void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 												source_params const& params,
-												playback_mode mode, 
+												playback_mode mode,
+												u32 playback_id,
 												sound_producer const* const producer,
 												sound_receiver const* const ignorable_receiver
 											)
@@ -262,6 +262,7 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 			params,
 			mode,
 			proxy,
+			playback_id,
 			producer,
 			ignorable_receiver
 		);
@@ -279,7 +280,6 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 		VOSTOK_NEW_IMPL	( proxy.get_world_user( ).get_allocator( ), order_type )
 		( proxy.get_world_user( ), proxy, functor, prop_params );
 
-//	LOG_INFO							( "create_sound_propagator ORDER: 0x%8x with id %d", propagator_emitter, instance_id );
 	proxy.get_world_user( ).add_order	( order );
 }
 
@@ -299,6 +299,7 @@ void sound_scene::emit_sound_propagators_impl
 	(
 		proxy,
 		params.m_mode,
+		params.m_playback_id,
 		0,
 		0,
 		params.m_producer,
@@ -326,7 +327,6 @@ void sound_scene::emit_sound_propagators_impl
 	}
 
 	max_duration_prop->set_as_callback_executer( true );
-//	proxy.get_propagators( ).front( )->set_as_callback_executer( true );
 	LOG_INFO									( "sound propagators with id %d created", params.m_proxy.get_id() );
 
 	if ( old_props_count == 0 )
@@ -341,12 +341,13 @@ sound_propagator* sound_scene::create_sound_propagator
 										sound_propagator_emitter const& owner,
 										sound_instance_proxy_internal& proxy,
 										playback_mode mode,
+										u32 playback_id,
 										u32 playing_offset,
 										u32 before_playing_offset,
 										u32 after_playing_offset,
 										sound_producer const* const producer,
 										sound_receiver const* const ignorable_receiver
-									) 
+									)
 {
 	LOG_DEBUG							( "sound_scene::create_sound_propagator" );
 	if ( m_propagators_allocator->total_size() == m_propagators_allocator->allocated_size() )
@@ -359,6 +360,7 @@ sound_propagator* sound_scene::create_sound_propagator
 										( m_propagators_allocator.c_ptr(), sound_propagator )
 										( 
 											mode,
+											playback_id,
 											playing_offset,
 											before_playing_offset,
 											after_playing_offset,
@@ -384,6 +386,7 @@ sound_propagator* sound_scene::create_sound_propagator_for_looped( sound_propaga
 										( m_propagators_allocator.c_ptr(), sound_propagator )
 										( 
 											original.get_playback_mode( ),
+											original.get_playback_id( ),
 											0,
 											original.get_before_palying_offset( ),
 											original.get_after_palying_offset( ),
@@ -515,16 +518,11 @@ void sound_scene::notify_listener	( sound_world const& world )
 			float distance_per_tick	= proxy->get_world_user( ).get_sound_world( )->get_speed_of_sound() * precalculation_time_for_propagators_in_msec;
 			if ( real_dist_to_list >= inner_radius && real_dist_to_list - distance_per_tick <= outer_radius )
 			{
-				//LOG_DEBUG							( "listener inside propagator area" );
-				//propagator->get_sound_rms_value		( );
-				//props_for_hdr_audio.push_back		( propagator );
 				if ( !propagator->has_sound_voice() )
 					propagator->attach_sound_voice	( precalculation_time_for_propagators_in_msec );
 			}
 			else if ( propagator->has_sound_voice() )
 			{
-				//LOG_DEBUG							( "listener outside propagator area" );
-//				propagator->get_propagation_inner_radius_for_listener( );
 				propagator->detach_sound_voice		( );
 			}
 
@@ -571,18 +569,11 @@ static float coeff_calc		( float g, float cw )
 
 void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panning_lut )
 {
-	//const u32 MAX_SENDS		= 4;
-
 	float dry_gain_hf		= 1.0f;
-
-	//float wet_gain_hf[MAX_SENDS];
-	//for( u32 i = 0; i < MAX_SENDS; ++i )
-	//	wet_gain_hf[i]		= 1.0f;
 
 	sound_instance_proxy_internal const& proxy	= voice.get_proxy( );
 	sound_type type								= proxy.get_sound_type( );
 	//get context properties
-	//u32 num_sends				= 1;
 	u32 frequency				= 44100;
 	float head_dampen			= 0.25f;
 	u32 num_channels			= 2;
@@ -670,22 +661,12 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 
 	float attenuation					= voice.get_sound_spl( )->get_loudness( distance );;
 	
-	//if( (min_dist + (distance - min_dist)) > 0.0f )
-	//	attenuation = min_dist / (min_dist + (distance - min_dist));
-
-
 	// Source Gain + Attenuation
     float dry_gain						= source_volume * attenuation;
-	//float wet_gain		[MAX_SENDS];
-	//for( u32 i = 0; i < num_sends; ++i )
-	//{
-	//	wet_gain[i]		= source_volume; //* RoomAttenuation[i];
-	//	wet_gain_hf[i]	= 1.0f;
-	//}
 
 	float effective_dist = 0.0f;
     if( min_dist > 0.0f && attenuation < 1.0f )
-        effective_dist = ( min_dist/attenuation - min_dist);//*MetersPerUnit;
+        effective_dist = min_dist/attenuation - min_dist;
 
    // Distance-based air absorption
     if( air_absorption_factor > 0.0f && effective_dist > 0.0f)
@@ -774,16 +755,9 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 		}
     }
 
-	//float sum				= ch_l + ch_r;
-	
-	//float spl_attenuation	= voice.get_sound_spl( )->get_loudness( distance );
-
 	float channel_matrix[2];
-	channel_matrix[0]				= ( ch_r/* / sum*/ );// * spl_attenuation;
-	channel_matrix[1]				= ( ch_l/* / sum*/ );// * spl_attenuation;
-
-//	LOG_DEBUG						( "left		: %f", channel_matrix[0] );
-//	LOG_DEBUG						( "right	: %f", channel_matrix[1] );
+	channel_matrix[0]				= ch_r;
+	channel_matrix[1]				= ch_l;
 
 	/* Update filter coefficients. */
 	float const LOWPASSFREQCUTOFF   = 5000;
@@ -824,73 +798,10 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 
 	voice.set_output_matrix			( channel_matrix );
 	voice.set_low_pass_filter_params( 1.0f - iir_filter_coeff );
-
-
-	//LOG_DEBUG							( "OpenaAL calc -----------------------------------------" );
-	//LOG_DEBUG							( "left channel		: %f", channel_matrix[0] );
-	//LOG_DEBUG							( "right channel	: %f", channel_matrix[1] );
-	//LOG_DEBUG							( "lpf direct coeff	: %f", iir_filter_coeff );
 }
 
 void sound_scene::calculate_hdr_audio	( )
 {
-	//float l_n_sum											= 0.0f;
-	//// hdr audio calculation
-	//{
-	//	std::list<sound_propagator*>::const_iterator it_begin	= props_for_hdr_audio.begin	( );
-	//	std::list<sound_propagator*>::const_iterator it_end		= props_for_hdr_audio.end	( );
-	//	for ( ; it_begin != it_end; ++it_begin )
-	//	{
-	//		float dist			= get_distance_to_listener( (*it_begin)->get_position() );
-	//		float al			= (*it_begin)->get_sound_spl( dist );
-	//		float rms			= (*it_begin)->get_sound_rms_value( ) * 100.0f;
-	//		float pl			= al + rms;
-
-	//		//		if ( (*it_begin)->get_sound_rms_value( ) < math::epsilon_3 && (*it_begin)->has_sound_voice( ) )
-	//		//			(*it_begin)->detach_sound_voice	( );
-
-	//		//		LOG_DEBUG			( "al: %f", al );
-	//		//		LOG_DEBUG			( "rms: %f", rms );
-	//		//		LOG_DEBUG			( "pl: %f", pl );
-
-	//		(*it_begin)->set_attenuated_loudness	( al );
-	//		(*it_begin)->set_percived_loudness		( pl );
-	//		////	(*it)->m_La		= 20* log10( 1.0f / ( (dist > 1.0f)? dist : 1.0f)) + 50.0f;
-	//		////	(*it)->m_Lp		= (*it_begin)->m_La + (*it_begin)->get_rms( ) * 10;
-
-	//		////	LOG_DEBUG		("dist - %f, La - %f, Lp - %f", dist, La, Lp );
-	//		l_n_sum				+= pow(10.0f, pl / 10.0f);
-	//	}
-	//}
-
-
-	//// calc L_current
-	//if ( !math::is_zero ( l_n_sum ) )
-	//{
-	//	float L_current					= 10.0f * log10(l_n_sum);
-	//	if(L_current > m_L_wintop)
-	//		m_L_wintop = L_current;
-	//	else 
-	//		m_L_wintop					-= ( m_L_wintop - L_current ) * ( m_L_frame_fade_speed * time_delta );
-
-	//	if( m_L_wintop < m_L_min )
-	//		m_L_wintop = m_L_min;
-
-	//	LOG_DEBUG		("m_L_wintop - %f, m_L_min - %f", m_L_wintop, m_L_min );
-	//}
-
-	//std::list<sound_propagator*>::const_iterator it_begin	= props_for_hdr_audio.begin	( );
-	//std::list<sound_propagator*>::const_iterator it_end		= props_for_hdr_audio.end	( );
-	//for ( ; it_begin != it_end; ++it_begin )
-	//{
-	//	if ( (*it_begin)->get_percived_loudness( ) >  m_L_min )
-	//	{
-	//		if ( !(*it_begin)->has_sound_voice() )
-	//			(*it_begin)->attach_sound_voice	( time_delta );
-	//	}
-	//	else if ( (*it_begin)->has_sound_voice() )
-	//		(*it_begin)->detach_sound_voice();
-	//}
 }
 
 struct compare_receivers_predicate : private boost::noncopyable
@@ -1068,7 +979,6 @@ void sound_scene::fade_in	( sound_world& world, u32 time_in_msec )
 
 void sound_scene::fade_out	( u32 time_in_msec )
 {
-	//LOG_DEBUG				( "sound_scene::fade_out" );
 	R_ASSERT				( m_is_active );
 	m_fade_state			= fade_out_state;
 	m_fade_out_time			= time_in_msec;

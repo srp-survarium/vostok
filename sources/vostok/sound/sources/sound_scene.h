@@ -135,7 +135,8 @@ public:
 		void					emit_sound_propagators			
 								(	
 									sound_instance_proxy_internal& proxy,
-									playback_mode mode, 
+									playback_mode mode,
+									u32 playback_id,
 									sound_producer const* const producer,
 									sound_receiver const* const ignorable_receiver
 								);
@@ -144,7 +145,8 @@ public:
 								(	
 									sound_instance_proxy_internal& proxy,
 									source_params const& params,
-									playback_mode mode, 
+									playback_mode mode,
+									u32 playback_id,
 									sound_producer const* const producer,
 									sound_receiver const* const ignorable_receiver
 								);
@@ -154,6 +156,7 @@ public:
 									sound_propagator_emitter const& owner,
 									sound_instance_proxy_internal& proxy,
 									playback_mode mode,
+									u32 playback_id,
 									u32 playing_offset,
 									u32 before_playing_offset,
 									u32 after_playing_offset,
@@ -243,13 +246,9 @@ private:
 			void		notify_listener						( sound_world const& world );
 
 			void		calculate_hdr_audio					( );
-			//void		calculate_3d_sound					( sound_voice& voice );
-			//void		calculate_channel_matrix			( sound_voice& voice, float* channel_matrix );
-
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
-	//		void		fill_statistic						( debug_statistic& statistic ) const;
 private:
 	typedef memory::single_size_buffer_allocator<	sizeof( sound_instance_proxy_internal ),
 													threading::multi_threading_policy

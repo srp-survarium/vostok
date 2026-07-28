@@ -16,7 +16,6 @@ m_collection					( buffer, (buffer_vector< sounds_type >::size_type)max_count ),
 m_random_number					( last_time )
 {
 	m_old_address				= (u64)get_sound_propagator_emitter	( );
-	//LOG_DEBUG					( "composite_sound address: 0x%8x", get_sound_propagator_emitter() );
 }
 
 composite_sound::~composite_sound	( )
@@ -26,6 +25,7 @@ composite_sound::~composite_sound	( )
 void composite_sound::emit_sound_propagators	(
 		sound_instance_proxy_internal& proxy,
 		playback_mode mode,
+		u32 playback_id,
 		u32 before_playing_offset,
 		u32 after_playing_offset,
 		sound_producer const* const producer,
@@ -38,11 +38,11 @@ void composite_sound::emit_sound_propagators	(
 		{
 			LOG_DEBUG					( "sp_address: 0x%8x", generator );
 			if ( m_collection[i].second.first == m_collection[i].second.second )
-				generator->emit_sound_propagators	( proxy, mode, before_playing_offset + m_collection[i].second.first, after_playing_offset, producer, ignorable_receiver );
+				generator->emit_sound_propagators	( proxy, mode, playback_id, before_playing_offset + m_collection[i].second.first, after_playing_offset, producer, ignorable_receiver );
 			else
 			{
 				u32 const offset	= m_random_number.random( m_collection[i].second.second - m_collection[i].second.first ) + m_collection[i].second.first;
-				generator->emit_sound_propagators	( proxy, mode, before_playing_offset + offset, after_playing_offset, producer, ignorable_receiver );
+				generator->emit_sound_propagators	( proxy, mode, playback_id, before_playing_offset + offset, after_playing_offset, producer, ignorable_receiver );
 			}
 		}
 	}
@@ -95,19 +95,6 @@ sound_propagator_emitter const* composite_sound::get_sound_propagator_emitter( u
 				return emt;
 		}
 	}
-
-	//if ( address == (u64)get_sound_propagator_emitter( ) )
-	//	return this;
-
-	//for ( u32 i = 0; i < m_collection.size(); ++i )
-	//{
-	//	if ( sound_propagator_emitter const* const generator = m_collection[i].first->get_sound_propagator_emitter() )
-	//	{
-	//		sound_propagator_emitter const* emt	= generator->get_sound_propagator_emitter( address );
-	//		if ( (u64)emt == address )
-	//			return emt;
-	//	}
-	//}
 
 	return 0;
 }
