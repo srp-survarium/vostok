@@ -20,25 +20,7 @@ namespace survarium {
 // (survarium::`dynamic initializer for 'g_file_opener'' etc.)
 static vostok_file_opener		g_file_opener;
 static vostok_scaleform_log		g_vostok_logger;
-
-// claude@NOTE: the remaining STUBs in this TU are parked on cross-module engine
-// symbols / heavy SDK reconstruction, not reachability (the scaleform anchor pins
-// every public method now):
-//  - scaleform_engine::initialize references vostok::engine::scaleform_engine_alloc/
-//    scaleform_engine_free/scaleform_log_output and the global g_log_output_ptr, none
-//    of which are reconstructed in our sources yet (engine module owns them); cannot
-//    even link extern refs until the engine TU defines them.
-//  - xrSysAllocMalloc::Alloc/Free/Realloc are the X-Ray-era aligned-allocator math
-//    over the m_mem_alloc_ptr/m_mem_free_ptr members (those members are populated by
-//    the initialize() static-ctor path that depends on the engine symbols above).
-//  - vostok_scaleform_log::LogMessageVarg forwards to Scaleform::Log::FormatLog then
-//    dispatches by message-class to the engine global g_log_output_ptr (engine symbol).
-//  - vostok_file_opener::OpenFile builds a Scaleform::MemoryFile from a member buffer
-//    or forwards to FileOpener::OpenFile (member-state-dependent, low priority).
-//  - flash_factory::flash_factory (18 stmts) / build_movie (14 stmts) construct the
-//    GFx Loader state cone (ZlibSupport/FileOpener/FontProviderWin32/AS2Support/
-//    AS3Support/ImageFileHandlerRegistry) and Loader::CreateMovie - heavy SDK glue
-//    that also touches engine globals (0xA5C694 buffer-context pair).
+static void ( *g_log_output_ptr )( u8, pcstr );
 
 void* scaleform_engine::xrSysAllocMalloc::Alloc( u32 size, u32 align )
 {
@@ -117,17 +99,15 @@ flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr fi
 	return NULL;
 }
 
-// STATE[STUB]
 void scaleform_engine::initialize(
 		void* ( *alloc )( u32 ),
 		void ( *free )( void* ),
 		void ( *log )( u8, pcstr )
 	)
 {
-	// FUNCTION BODY[0x5bbbb0]
-	// the rich index shows a `dynamic atexit destructor for 'scaleform_alloc''
-	// inside this function - a local `static xrSysAllocMalloc scaleform_alloc`
-	VOSTOK_UNREFERENCED_PARAMETERS	( alloc, free, log );
+	static xrSysAllocMalloc scaleform_alloc( alloc, free );
+	Scaleform::GFx::System::Init( &scaleform_alloc );
+	g_log_output_ptr = log;
 }
 
 flash_text_manager* flash_factory::create_text_manager( )
