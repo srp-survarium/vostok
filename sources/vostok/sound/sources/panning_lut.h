@@ -7,7 +7,7 @@
 #ifndef PANNING_LUT_H_INCLUDED
 #define PANNING_LUT_H_INCLUDED
 
-#include <vostok/sound/channels_type.h>
+#include <vostok/sound/api.h>
 
 namespace vostok {
 namespace sound {
@@ -16,7 +16,7 @@ class panning_lut :	public resources::unmanaged_resource,
 					private boost::noncopyable
 {
 public:
-						panning_lut					( channels_type type );
+	explicit				panning_lut					( u8 const channels_num );
 	virtual				~panning_lut				( );
 
 	inline	float&		operator[]					( u32 index ) { return m_table[index]; }
@@ -27,7 +27,7 @@ public:
 		lut_num				= 512,
 	};
 private:
-	float			m_table[ channels_count * lut_num ];
+	float			m_table[ 4608 ];
 }; // class panning_lut
 
 typedef resources::resource_ptr < panning_lut, resources::unmanaged_intrusive_base > panning_lut_ptr;
