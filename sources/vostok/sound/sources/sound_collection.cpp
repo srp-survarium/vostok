@@ -12,7 +12,7 @@ namespace vostok {
 namespace sound {
 
 sound_collection::sound_collection		(
-		collection_playing_types type,
+		collection_playback_types type,
 		bool can_repeat_successively,
 		u16 cyclic_repeating_index,
 		pvoid buffer,
@@ -40,7 +40,7 @@ sound_emitter const* sound_collection::get_sound	( ) const
 
 	switch ( m_type )
 	{
-		case collection_playing_type_random:
+		case collection_playback_type_random:
 		{
 			u32 const sounds_size		= m_sounds.size();
 
@@ -55,7 +55,7 @@ sound_emitter const* sound_collection::get_sound	( ) const
 			}
 		}
 
-		case collection_playing_type_sequential:
+		case collection_playback_type_sequential:
 		{
 			u32 sound_index = m_previously_played_sound_index++;
 			return m_sounds[++sound_index % m_sounds.size()].c_ptr();
@@ -95,7 +95,6 @@ sound_propagator_emitter const* sound_collection::get_sound_propagator_emitter( 
 
 void sound_collection::serialize	( memory::writer& w ) const
 {
-//	w.write_u64					( (u64)get_sound_propagator_emitter( ) );
 	w.write						( &m_type, sizeof( m_type ) );
 	m_random_number.serialize	( w );
 	w.write_u32					( m_cyclic_repeating_from_index );
@@ -113,8 +112,7 @@ void sound_collection::serialize	( memory::writer& w ) const
 
 void sound_collection::deserialize	( memory::reader& r )
 {
-//	m_old_address						= r.r_u64( );
-	r.r				( &m_type, sizeof( collection_playing_types ), sizeof( collection_playing_types ) );
+	r.r				( &m_type, sizeof( collection_playback_types ), sizeof( collection_playback_types ) );
 	m_random_number.deserialize( r );
 	m_cyclic_repeating_from_index		= r.r_u32( );
 	m_previously_played_sound_index		= r.r_u32( );
@@ -128,20 +126,6 @@ void sound_collection::deserialize	( memory::reader& r )
 		(*begin)->deserialize			( r );
 	}
 }
-
-//sound_propagator_emitter const* sound_collection::get_sound_propagator_emitter( u64 address ) const
-//{
-//	buffer_vector< sound_emitter_ptr >::const_iterator begin	= m_sounds.begin( );
-//	buffer_vector< sound_emitter_ptr >::const_iterator end		= m_sounds.end( );
-//	for ( ; begin != end; ++begin )
-//	{
-//		sound_propagator_emitter const* emt	= (*begin)->get_sound_propagator_emitter( address );
-//		if ( (u64)emt == address )
-//			return emt;
-//	}
-//
-//	return 0;
-//}
 
 } // namespace sound
 } // namespace vostok

@@ -183,8 +183,8 @@ void sound_collection_cook::sub_sounds_loaded ( resources::queries_result& data,
 sound_collection* sound_collection_cook::create_collection	( configs::binary_config_value const& collection )
 {
 	pcstr collection_type								= collection["type"];
-	collection_playing_types type						= strings::equal( collection_type, "random" ) ?
-														collection_playing_type_random : collection_playing_type_sequential;
+	collection_playback_types type						= strings::equal( collection_type, "random" ) ?
+														collection_playback_type_random : collection_playback_type_sequential;
 	bool can_repeat_successively						= collection["dont_repeat_sound_successively"];
 	u16 cyclic_repeating_index							= collection["cyclic_repeat_from_sound"];
 	
