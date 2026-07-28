@@ -16,6 +16,7 @@ flash_text_manager::flash_text_manager( Scaleform::GFx::Loader* loader )
 	:	need_capture	( false )
 {
 	text_manager_impl	= SF_NEW Scaleform::GFx::DrawTextManager( loader );
+	text_manager_impl->SetFontProvider( loader->GetFontProvider( ) );
 
 	Scaleform::GFx::DrawTextManager::TextParams	defParams	= text_manager_impl->GetDefaultTextParams( );
 	defParams.TextColor	= Scaleform::Render::Color( 0, 0xff, 0, 0xff );
@@ -88,17 +89,6 @@ void flash_text_manager::destroy_text( flash_text& text )
 	need_capture	= true;
 }
 
-// claude@NOTE: this TU now builds /Ox (Master Gold Optimization=3). The flash_text
-// glue SOURCE STRUCTURE is faithful (set_position records the same 3 locals
-// [screen_position_x/y, rect]; set_text/create_text pair SetText/GetTextExtent/
-// `size += 5.f`/GetRect/SetRect in order). The residual on set_position/set_text/
-// set_font_size is a genuine /Ox line-table difference, NOT /Od and NOT
-// source-steerable: the target emits the inline RectF temp construction and the
-// SetRect(temp) call as TWO separate statements (the TRGT_ONLY rows), while our /Ox
-// folds the const-float copies and the RectF-arg build into the SetRect statement.
-// The target keeps NO extra RectF local (only the 3), so we cannot add a named temp
-// to force the split without a LOCALS diff. get_width/get_height/create_text_w now
-// pair at 100% via the scaleform module anchor (anchor_scaleform.cpp).
 float flash_text::get_width( )
 {
 	return text_impl->GetRect( ).Width( );
