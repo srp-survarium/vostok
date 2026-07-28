@@ -12,6 +12,7 @@
 #include "player.h"
 
 #include "game.h"			// m_game.get_game_world() / m_game.lobby_menu()
+#include "flash_text_manager.h"
 #include "login_menu_status_enum.h"	// on_connected_to_login -> game::switch_to_login( status )
 #include <vostok/console_command.h>	// console_commands::cc_delegate
 
@@ -82,13 +83,15 @@ void `dynamic atexit destructor for 's_show_network_statistics_comand''( )
 	}
 }
 
-// claude@NOTE: the body is the empty `{}` the target compiled - all member destruction is
-// compiler-generated. The target emits 5 inlined flash_text member dtors (Scaleform::
-// RefCountNTSImpl::Release on m_*_caption/value at 0x413C..0x4160); our base emits 0 because
-// flash_text's dtor is a `{}` stub in this tree (the real Scaleform Release glue is still
-// stubbed) - the 5 statements come back once that glue is built. Source shape is correct.
- network_client::~network_client( )
+network_client::~network_client( )
 {
+	if ( flash_text_manager* const text_manager = m_game.get_game_world( ).get_text_manager( ) )
+	{
+		text_manager->destroy_text( m_unacknowledged_packets_value );
+		text_manager->destroy_text( m_unacknowledged_packets_caption );
+		text_manager->destroy_text( m_max_local_sequence_difference_value );
+		text_manager->destroy_text( m_max_local_sequence_difference_caption );
+	}
 }
 
 // claude@NOTE: target walks m_net_players by pointer (no index local) and reads the
