@@ -26,8 +26,8 @@ sound_spl_cook::~sound_spl_cook			( )
 
 void sound_spl_cook::translate_query	( query_result_for_cook& parent )
 {
-	fs_new::virtual_path_string	source_path	= "resources/sounds/single/";
-	source_path.append						( parent.get_requested_path( ) );
+	fs_new::virtual_path_string	source_path;
+	source_path.assignf						( "resources/sounds/single/%s.single_sound_options", parent.get_requested_path( ) );
 
 	resources::query_resource(
 		source_path.c_str( ),
