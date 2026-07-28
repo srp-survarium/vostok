@@ -21,6 +21,7 @@ namespace Render {
 namespace survarium {
 
 class scaleform_game_engine;
+class flash_factory;
 struct flash_renderer;
 
 class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadCommandQueue , public boost::noncopyable {
@@ -38,6 +39,7 @@ public:
 	virtual				~scaleform_render_command_queue_impl( ) { /* no source */ }
 
 private:
+	friend class flash_factory;
 	friend struct flash_renderer;
 
 	/* 0x0000 */	/* Scaleform::Render::ThreadCommandQueue */

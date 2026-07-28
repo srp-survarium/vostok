@@ -9,6 +9,7 @@
 #include "scaleform_engine.h"
 #include "scaleform_game_engine.h"
 #include "scaleform_render_command_queue.h"
+#include "scaleform_render_command_queue_impl.h"
 #include "vostok_file_opener.h"
 #include "vostok_scaleform_log.h"
 
@@ -23,6 +24,7 @@ namespace survarium {
 static vostok_file_opener		g_file_opener;
 static vostok_scaleform_log		g_vostok_logger;
 static void ( *g_log_output_ptr )( u8, pcstr );
+static bool						created_image_creator;
 
 void* scaleform_engine::xrSysAllocMalloc::Alloc( u32 size, u32 align )
 {
@@ -107,12 +109,35 @@ void scaleform_engine::destroy( )
 	Scaleform::GFx::System::Destroy( );
 }
 
-// STATE[STUB]
 flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr file_name )
 {
-	// FUNCTION BODY[0x5bba40]
-	VOSTOK_UNREFERENCED_PARAMETERS	( buffer, buffer_size, file_name );
-	return NULL;
+	if ( !created_image_creator )
+	{
+		created_image_creator	= true;
+		Scaleform::Ptr<Scaleform::GFx::ImageCreator>	image_creator	=
+			*SF_NEW Scaleform::GFx::ImageCreator( m_render_thread_queue->impl->pHAL->GetTextureManager( ) );
+		m_gfx_loader->SetImageCreator( image_creator );
+	}
+
+	g_file_opener.cached_file.raw_data		= buffer;
+	g_file_opener.cached_file.raw_data_size	= buffer_size;
+
+	flash_movie*	movie	= new flash_movie;
+	movie->m_movie_def	= m_gfx_loader->CreateMovie( file_name, 0, 0 );
+
+	g_file_opener.cached_file.raw_data		= NULL;
+	g_file_opener.cached_file.raw_data_size	= 0;
+
+	Scaleform::GFx::MovieDef*					movie_def		= movie->m_movie_def;
+	Scaleform::Render::ThreadCommandQueue*		render_queue	= m_render_thread_queue->impl;
+	Scaleform::GFx::MemoryParams					memory_params;
+	movie->m_movie	= movie_def->CreateInstance( memory_params, true, NULL, render_queue );
+	movie->m_movie->SetUserData( movie );
+	movie->m_movie->SetMouseCursorCount( 1 );
+	movie->m_movie->SetControllerCount( 1 );
+	movie->m_handle	= const_cast<Scaleform::GFx::MovieDisplayHandle*>( &movie->m_movie->GetDisplayHandle( ) );
+
+	return movie;
 }
 
 void scaleform_engine::initialize(

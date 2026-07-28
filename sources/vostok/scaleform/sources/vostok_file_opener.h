@@ -9,6 +9,8 @@
 
 namespace survarium {
 
+class flash_factory;
+
 class vostok_file_opener : public Scaleform::GFx::FileOpener {
 public:
 	inline						vostok_file_opener	( ) { /* no source */ }
@@ -19,6 +21,8 @@ public:
 	virtual						~vostok_file_opener	( ) { /* no source */ }
 
 private:
+	friend class flash_factory;
+
 	/* 0x0000 */	/* Scaleform::GFx::FileOpener */
 	// PDB spells the nested type `<unnamed-type-cached_file>` - a true
 	// anonymous struct member

@@ -60,7 +60,12 @@ struct flash_movie {
 	// only the ctor, dtor and the priority accessors are unaddressed (true inlines);
 	// everything else is out-of-line in movie.cpp / value.cpp per the rich index. The
 	// dtor (inlined into flash_factory::destroy_movie) nulls the three GFx handles.
-	inline			flash_movie			( ) { /* no source */ }
+	inline			flash_movie			( )
+		:	m_output_width			( 0 ),
+			m_output_height			( 0 ),
+			m_last_keyb_hold_time	( 0 ),
+			m_priority				( 0 )
+	{}
 	inline			~flash_movie		( )
 	{
 		m_movie_def	= NULL;
@@ -115,9 +120,9 @@ struct flash_movie {
 						u32						arg_3
 					);
 
-	inline	void	SetPriority			( u8 arg_0 ) { /* no source */ }
+	inline	void	SetPriority			( u8 arg_0 ) { m_priority = arg_0; }
 
-	inline	u8		GetPriority			( ) { /* no source */ return 0; }
+	inline	u8		GetPriority			( ) { return m_priority; }
 
 public:
 	/* 0x0000 */	Scaleform::GFx::MovieDef*		m_movie_def;
