@@ -10,11 +10,12 @@
 namespace survarium {
 
 class vostok_scaleform_log : public Scaleform::Log {
-public:
+private:
 	// PDB shows the va_list argument as char* (its x86 MSVC definition);
 	// out-of-line in factory.cpp per the rich index
 	virtual	void	LogMessageVarg			( Scaleform::LogMessageId arg_0, pcstr arg_1, va_list arg_2 ) override;
 
+public:
 	inline			vostok_scaleform_log	( ) { /* no source */ }
 	virtual			~vostok_scaleform_log	( ) { /* no source */ }
 }; // class vostok_scaleform_log

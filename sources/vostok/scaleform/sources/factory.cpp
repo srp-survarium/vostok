@@ -64,11 +64,25 @@ Scaleform::File* vostok_file_opener::OpenFile( pcstr url, s32 flags, s32 mode )
 	return Scaleform::GFx::FileOpener::OpenFile( url, flags, mode );
 }
 
-// STATE[STUB]
 void vostok_scaleform_log::LogMessageVarg( Scaleform::LogMessageId message_id, pcstr fmt, va_list args )
 {
-	// FUNCTION BODY[0x0ae240]
-	VOSTOK_UNREFERENCED_PARAMETERS	( message_id, fmt, args );
+	Scaleform::LogMessageType const scaleform_message_type = message_id.GetMessageType( );
+	char buffer[ Scaleform::Log::MaxLogBufferMessageSize ];
+	Scaleform::Log::FormatLog( buffer, sizeof( buffer ), message_id, fmt, args );
+
+	switch ( scaleform_message_type )
+	{
+	default:
+	case Scaleform::LogMessage_Text:
+		g_log_output_ptr( 1, buffer );
+		break;
+	case Scaleform::LogMessage_Warning:
+		g_log_output_ptr( 2, buffer );
+		break;
+	case Scaleform::LogMessage_Error:
+		g_log_output_ptr( 3, buffer );
+		break;
+	}
 }
 
 void flash_factory::tick( )
