@@ -26,14 +26,14 @@ class encoded_sound_with_qualities :
 	private boost::noncopyable
 {
 public:
-	enum					{ max_quality_levels_count = 3 };
+	enum					{ max_quality_levels_count = 2 };
 public:
 							encoded_sound_with_qualities	( );
 	virtual					~encoded_sound_with_qualities	( );
 
 			encoded_sound_child_ptr const&	get_encoded_sound( world const& world, resources::positional_unmanaged_resource const* const resource_user );
 			encoded_sound_child_ptr const&	get_encoded_sound( );
-			encoded_sound_child_ptr const&	dbg_get_encoded_sound( u32 quality ) const;// { return m_qualities[quality]; }
+			encoded_sound_child_ptr const&	dbg_get_encoded_sound( u32 quality ) const;
 	inline	u64					get_length_in_pcm		( ) const;
 	inline	u64					get_length_in_msec		( ) const;
 	inline	u32					get_samples_per_sec		( ) const;
