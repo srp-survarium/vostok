@@ -14,7 +14,11 @@ namespace mixing {
 
 class animated_object_holder {
 public:
-	inline	explicit	animated_object_holder	( pcvoid animated_object ) : animated_object( animated_object ) { }
+	inline	explicit	animated_object_holder	( pcvoid animated_object ) :
+		animated_object		( animated_object ),
+		need_new_transform	( false )
+	{
+	}
 	inline	bool		operator==				( pcvoid animated_object ) const { return this->animated_object == animated_object; }
 
 private:
