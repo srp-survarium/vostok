@@ -7,9 +7,7 @@
 #ifndef VOICE_BRIDGE_H_INCLUDED
 #define VOICE_BRIDGE_H_INCLUDED
 
-#include <vostok/sound/channels_type.h>
 #include "voice_format.h"
-#include "voice_callback_handler.h"
 
 struct IXAudio2Voice;
 struct IXAudio2SubmixVoice;
@@ -18,21 +16,20 @@ namespace vostok {
 namespace sound {
 
 class sound_buffer;
+class sound_voice;
 
 class voice_bridge :
 	private IXAudio2VoiceCallback,
 	private boost::noncopyable
 {
 public:
-			channels_type	get_channels_type				( ) const;
+	inline	u8				get_channels_num				( ) const { return m_channels_num; }
 			u32				get_sample_rate					( ) const;
 			u8				get_bytes_per_second			( ) const;
 
 			void			start							( );
 			void			stop							( );
 			void			submit_source_buffer			( sound_buffer* buffer, u32 playing_offset = 0, u32 playing_length = 0 );
-//			for debug only
-//			void			submit_source_buffer			( XAUDIO2_BUFFER& buf );
 			void			flush_source_buffers			( );
 
 			u32				buffers_queued					( ) const;
@@ -40,7 +37,7 @@ public:
 			u64				samples_played					( ) const;
 
 			void			set_output_matrix				( float const* level_matrix );
-			void			set_channel_volumes				( channels_type type, float const* level_matrix );
+			void			set_channel_volumes				( u8 channels_num, float const* level_matrix );
 			void			set_low_pass_filter_params		( float coeff );
 			void			set_output_voice				( IXAudio2SubmixVoice* output_voice  );
 			void			set_sample_rate					( u32 new_sample_rate );
@@ -50,15 +47,15 @@ private:
 	{
 		IXAudio2*			xaudio_engine;
 		float				max_frequency_ratio;
-		channels_type		type;
-		channels_type		master_channels_type;
+		u8					channels_num;
+		u8					master_channels_num;
 		
 	}; // struct creation_parametrs
 
 							voice_bridge					( creation_parametrs& params );
 
 			bool			has_handler						( ) const { return m_handler != 0; }
-			void			set_handler						( voice_callback_handler* handler );
+			void			set_handler						( sound_voice* handler );
 			
 
 	virtual void __stdcall	OnVoiceProcessingPassStart		( UINT32 BytesRequired );
@@ -73,9 +70,10 @@ public:
 	voice_bridge*			m_next;
 	virtual					~voice_bridge					( );
 private:
-	voice_callback_handler*	m_handler;
+	sound_voice*			m_handler;
 	IXAudio2SourceVoice*	m_source_voice;
-	channels_type			m_master_channels;
+	u8						m_master_channels_num;
+	u8						m_channels_num;
 
 	friend class			voice_factory;
 }; // class voice_bridge

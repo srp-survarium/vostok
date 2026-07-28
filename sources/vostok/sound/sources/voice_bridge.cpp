@@ -18,34 +18,14 @@ enum
 	default_sample_rate		= 44100,
 };
 
-static WORD channels_type_to_xaudio_channels ( channels_type type )
-{
-	switch ( type )
-	{
-	case mono:		return 1;
-	case stereo:	return 2;
-	default:		NODEFAULT( return channels_type_count );
-	}
-}
-
-static channels_type xaudio_channels_to_channels_type ( u32 channels )
-{
-	switch ( channels )
-	{
-	case 1:		return mono;
-	case 2:		return stereo;
-	default:	NODEFAULT( return channels_type_count );
-	}
-}
-
-
 voice_bridge::voice_bridge			( creation_parametrs& params ) : 
 	m_next				( 0 ),
 	m_handler			( 0 ),
 	m_source_voice		( 0 ),
-	m_master_channels	( params.master_channels_type )
+	m_master_channels_num( params.master_channels_num ),
+	m_channels_num		( params.channels_num )
 {
-	R_ASSERT_U						( params.type < channels_type_count );
+	R_ASSERT_U						( params.channels_num );
 	R_ASSERT_U						( params.xaudio_engine );
 
 	WAVEFORMATEX wfx_standard		= { 0 };
@@ -53,7 +33,7 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
     wfx_standard.nSamplesPerSec		= default_sample_rate;
     wfx_standard.wBitsPerSample		= default_bits_per_sample;
     wfx_standard.cbSize				= 0;
-	wfx_standard.nChannels			= channels_type_to_xaudio_channels(params.type);
+	wfx_standard.nChannels			= params.channels_num;
 	wfx_standard.nBlockAlign		= wfx_standard.nChannels * ( wfx_standard.wBitsPerSample >> 3 ); 
 	wfx_standard.nAvgBytesPerSec	= wfx_standard.nSamplesPerSec * wfx_standard.nBlockAlign;
 	
@@ -72,21 +52,13 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 voice_bridge::~voice_bridge( )
 {
 	m_source_voice->DestroyVoice( );
-	//LOG_INFO("voice_bridge destroyed");
 }
 
-void voice_bridge::set_handler ( voice_callback_handler* handler )
+void voice_bridge::set_handler ( sound_voice* handler )
 {
 	m_handler = handler;
 	if ( !m_handler )
 		stop( );
-}
-
-channels_type voice_bridge::get_channels_type ( ) const
-{
-	XAUDIO2_VOICE_DETAILS voice_details;
-	m_source_voice->GetVoiceDetails(&voice_details);
-	return xaudio_channels_to_channels_type( voice_details.InputChannels );
 }
 
 u32 voice_bridge::get_sample_rate ( ) const
@@ -160,12 +132,6 @@ void voice_bridge::submit_source_buffer	( sound_buffer* buffer, u32 playing_offs
 	R_ASSERT_U		(!FAILED(hr));
 }
 
-//void voice_bridge::submit_source_buffer	( XAUDIO2_BUFFER& buf )
-//{
-//	HRESULT hr		= m_source_voice->SubmitSourceBuffer( &buf  );
-//	R_ASSERT_U		(!FAILED(hr));
-//}
-
 void voice_bridge::flush_source_buffers ( )
 {
 	HRESULT hr		= m_source_voice->FlushSourceBuffers( );
@@ -199,12 +165,12 @@ void voice_bridge::set_output_matrix ( float const* level_matrix )
 {
 	XAUDIO2_VOICE_DETAILS voice_details;
 	m_source_voice->GetVoiceDetails( &voice_details );
-	m_source_voice->SetOutputMatrix( NULL, voice_details.InputChannels, channels_type_to_xaudio_channels( m_master_channels ), level_matrix);
+	m_source_voice->SetOutputMatrix( NULL, voice_details.InputChannels, m_master_channels_num, level_matrix);
 }
 
-void voice_bridge::set_channel_volumes	( channels_type type, float const* level_matrix )
+void voice_bridge::set_channel_volumes	( u8 channels_num, float const* level_matrix )
 {
-	m_source_voice->SetChannelVolumes( channels_type_to_xaudio_channels( type ), level_matrix ); 
+	m_source_voice->SetChannelVolumes( channels_num, level_matrix );
 }
 
 void voice_bridge::set_low_pass_filter_params		( float coeff )
@@ -214,9 +180,6 @@ void voice_bridge::set_low_pass_filter_params		( float coeff )
 	params.Frequency		= coeff;
 	params.OneOverQ			= 1.0f;
 
-	// SetFilterParameters call was disabled in the shipped build (target builds params only):
-	//HRESULT hr				= m_source_voice->SetFilterParameters( &params );
-	//R_ASSERT_U				(!FAILED(hr));
 }
 
 void voice_bridge::set_frequency_ratio				( float ratio )

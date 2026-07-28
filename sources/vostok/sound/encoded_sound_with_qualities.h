@@ -37,7 +37,7 @@ public:
 	inline	u64					get_length_in_pcm		( ) const;
 	inline	u64					get_length_in_msec		( ) const;
 	inline	u32					get_samples_per_sec		( ) const;
-	inline	channels_type		get_channels_type		( ) const;
+	inline	u8					get_channels_num			( ) const;
 	inline	u32					decompress				(	pbyte dest, 
 															u32 pcm_pointer,
 															u32& pcm_pointer_after_decompress,
@@ -81,9 +81,9 @@ u32 encoded_sound_with_qualities::get_samples_per_sec	( ) const
 }
 
 inline
-channels_type encoded_sound_with_qualities::get_channels_type	( ) const
+u8 encoded_sound_with_qualities::get_channels_num	( ) const
 {
-	return m_qualities[m_current_quality]->get_channels_type( ); 
+	return m_qualities[m_current_quality]->get_channels_num( );
 }
 
 inline

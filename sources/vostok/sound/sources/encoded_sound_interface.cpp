@@ -15,7 +15,7 @@ encoded_sound_interface::encoded_sound_interface ( ) :
 	m_length_in_msec		( 0 ),		
 	m_samples_per_sec		( 0 ),
 	m_bytes_per_sample		( 0 ),
-	m_channels_type			( channels_type_count )
+	m_channels_num			( 1 )
 {
 
 }

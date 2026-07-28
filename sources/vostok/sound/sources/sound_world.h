@@ -93,7 +93,7 @@ public:
 
 			IXAudio2*		xaudio_engine			( ) const	{ return m_xaudio; }
 	IXAudio2MasteringVoice*	xaudio_master_voice		( ) const	{ return m_master_voice; }
-			channels_type	master_channel_type		( ) const;
+			u8				master_channels_num		( ) const;
 	IXAudio2SubmixVoice*	create_submix_voice		( ) const;
 			void			free_submix_voice		( IXAudio2SubmixVoice* voice ) const;
 
@@ -101,7 +101,7 @@ public:
 
 	inline	bool			is_audio_device_exist	( ) const	{ return m_is_audio_device_exist; }
 
-			voice_bridge*	get_voice				( voice_callback_handler* callback_handler, IXAudio2SubmixVoice* submix_voice, channels_type type, u32 sample_rate  );
+			voice_bridge*	get_voice				( sound_voice* callback_handler, IXAudio2SubmixVoice* submix_voice, u8 channels_num, u32 sample_rate  );
 			void			free_voice				( voice_bridge* voice );
 			sound_buffer*	get_sound_buffer		( encoded_sound_ptr const& encoded_sound, u32 pcm_offset, u32& next_pcm_offset );
 			sound_buffer*	get_no_cahceable_sound_buffer( encoded_sound_ptr const& encoded_sound, u32 pcm_offset, u32& next_pcm_offset );

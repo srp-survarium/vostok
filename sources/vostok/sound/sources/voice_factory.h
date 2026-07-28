@@ -25,7 +25,7 @@ public:
 					voice_factory			( u8* buffer, u32 buffer_size, sound_world const& world, pool_parametrs const& params );
 					~voice_factory			( );
 
-	voice_bridge*	new_voice				( voice_callback_handler* callback_handler, channels_type type, u32 sample_rate );
+	voice_bridge*	new_voice				( sound_voice* callback_handler, u8 channels_num, u32 sample_rate );
 			void	delete_voice			( voice_bridge* voice_to_be_deleted );
 
 			void	set_frequency_ratio		( float ratio );
@@ -34,7 +34,7 @@ public:
 	inline	float	get_max_frequency_ratio ( ) const { return m_max_frequency_ratio; }
 private:
 	//typedefs
-	typedef boost::array<voice_list_type, channels_type_count>		voice_container;
+	typedef boost::array<voice_list_type, 2>		voice_container;
 
 	typedef memory::single_size_buffer_allocator< sizeof( voice_bridge ),
 												  threading::single_threading_policy > 
@@ -43,7 +43,7 @@ private:
 	
 private:
 	pool_parametrs			m_pool_params;
-	voice_container			m_voices;
+	voice_container			m_voices_pool;
 	voices_allocator		m_voices_allocator;
 	float const				m_min_frequency_ratio;
 	float const				m_max_frequency_ratio;

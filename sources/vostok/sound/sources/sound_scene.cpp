@@ -17,6 +17,7 @@
 #include <vostok/core_entry_point.h>
 #include "sound_instance_proxy_order.h"
 #include "sound_world.h"
+#include "speakers.h"
 
 namespace vostok {
 namespace sound {
@@ -750,7 +751,7 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
     }
 
     u32 pos					= cart_to_lut_position( -position[2], position[0] );
-	float* speaker_gain		= &((*panning_lut)[channels_count * pos]);
+	float* speaker_gain		= &((*panning_lut)[speakers_count * pos]);
 	float dir_gain			= math::sqrt( position[0]*position[0] + position[2]*position[2] );
 
 	// elevation adjustment for directional gain. this sucks, but

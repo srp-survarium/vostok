@@ -20,30 +20,30 @@ voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& wo
 
 	voice_bridge::creation_parametrs	voice_params;
 	voice_params.xaudio_engine			= world.xaudio_engine( );
-	voice_params.master_channels_type	= world.master_channel_type( );
-	voice_params.type					= mono;
+	voice_params.master_channels_num	= world.master_channels_num( );
+	voice_params.channels_num			= 1;
 	voice_params.max_frequency_ratio	= m_max_frequency_ratio;
 
 	for (u32 i = 0; i < params.mono_voices_count; ++i)
 	{
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
-		m_voices[mono].push_back( new_voice );
+		m_voices_pool[0].push_back( new_voice );
 	}
 
-	voice_params.type					= stereo;
+	voice_params.channels_num			= 2;
 
 	for (u32 i = 0; i < params.stereo_voices_count; ++i)
 	{
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
-		m_voices[stereo].push_back( new_voice );
+		m_voices_pool[1].push_back( new_voice );
 	}
 }
 
 voice_factory::~voice_factory			( )
 {
-	for (u32 i = 0; i < channels_type_count; ++i)
+	for (u32 i = 0; i < 2; ++i)
 	{
-		voice_bridge* current_voice	= m_voices[i].front( );
+		voice_bridge* current_voice	= m_voices_pool[i].front( );
 		while( current_voice )
 		{
 			voice_bridge* object_to_be_deleted		= current_voice;
@@ -53,24 +53,12 @@ voice_factory::~voice_factory			( )
 		}
 	}
 
-	//FREE						( m_memory );
 }
 
-voice_bridge* voice_factory::new_voice ( voice_callback_handler* callback_handler, channels_type type, u32 sample_rate )
+voice_bridge* voice_factory::new_voice ( sound_voice* callback_handler, u8 channels_num, u32 sample_rate )
 {
-	//// for test's
-	//{
-	//	LOG_DEBUG				("new_voice test");
-	//	voice_bridge* idle_voice	= m_voices[type].front( );
-	//	while ( idle_voice )
-	//	{
-	//		LOG_DEBUG			("idle_voice->has_handler( ) %d", idle_voice->has_handler( ) );
-	//		idle_voice			= voice_list_type::get_next_of_object( idle_voice );
-	//	}
-	//}
-
-	R_ASSERT					(type < channels_type_count);
-	voice_bridge* idle_voice	= m_voices[type].front( );
+	R_ASSERT					( channels_num );
+	voice_bridge* idle_voice	= m_voices_pool[channels_num - 1].front( );
 	while ( idle_voice )
 	{
 		if (!idle_voice->has_handler( ))
@@ -88,9 +76,8 @@ voice_bridge* voice_factory::new_voice ( voice_callback_handler* callback_handle
 
 void voice_factory::delete_voice( voice_bridge* voice_to_be_deleted)
 {
-	//LOG_DEBUG								("voice_factory::delete_voice");
-	channels_type const type				= voice_to_be_deleted->get_channels_type( );
-	R_ASSERT_U								( m_voices[type].contains_object( voice_to_be_deleted ));
+	u8 const channels_num					= voice_to_be_deleted->get_channels_num( );
+	R_ASSERT_U								( m_voices_pool[channels_num - 1].contains_object( voice_to_be_deleted ));
 	voice_to_be_deleted->set_handler		( 0 );
 	voice_to_be_deleted->set_output_voice	( 0 );
 }
@@ -100,9 +87,9 @@ void voice_factory::set_frequency_ratio				( float ratio )
 	R_ASSERT										( !( ratio < m_min_frequency_ratio ) );
 	R_ASSERT										( !( ratio > m_max_frequency_ratio ) );
 
-	for ( u32 i = 0; i < channels_type_count; ++i )
+	for ( u32 i = 0; i < 2; ++i )
 	{
-		voice_bridge* current_voice	= m_voices[i].front( );
+		voice_bridge* current_voice	= m_voices_pool[i].front( );
 		while( current_voice )
 		{
 			current_voice->set_frequency_ratio		( ratio );
