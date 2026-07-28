@@ -53,8 +53,8 @@ static inline n_ary_tree_node_comparer::enum_result	revert	( n_ary_tree_node_com
 ////////////////////////////////////////////////////////////////////////////
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_animation_node& right )
 {
-	animation_comparer_less_predicate predicate( true, true ); // sushi@TODO
-	result				= predicate(left, right) ? less : predicate(right, left) ? more : equal;
+	animation_comparer_predicate predicate( true, true );
+	result				= static_cast< enum_result >( predicate( left, right ) );
 }
 
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_weight_transition_node& right )
