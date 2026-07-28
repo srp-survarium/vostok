@@ -192,6 +192,7 @@ _TOKEN_RE = re.compile(
     | \benum\b
     | \bnamespace\b
     | \b(?:class|struct)\b
+    | 0[xX][0-9a-fA-F]+|\d+         # integer literal (keep digits together)
     | [A-Za-z_]\w*
     | ::                            # scope operator (class-nested enum names)
     | <<|>>                         # shift ops (enum flag bodies use `1 << n`)
@@ -427,6 +428,18 @@ def _fmt(v: int | None) -> str:
     return f"-0x{-v:x}" if v < 0 else f"0x{v:x}"
 
 
+def _values_equal(base_value: int | None, target_value: int) -> bool:
+    """Compare MSVC enum values by their 32-bit representation.
+
+    The source scanner evaluates ``1 << 31`` as positive Python 0x80000000,
+    while the PDB renders the same MSVC enum constant as -0x80000000.
+    """
+    return (
+        base_value is not None
+        and (base_value & 0xFFFFFFFF) == (target_value & 0xFFFFFFFF)
+    )
+
+
 def _in_scope(name: str, include_render: bool) -> bool:
     if not name.startswith(ENGINE_PREFIXES):
         return False
@@ -454,7 +467,7 @@ def diff_enums(base, target, include_render):
         b_map = dict(b)
         t_map = dict(t)
         if [m for m, _ in t] == [m for m, _ in b] and all(
-            b_map[m] == v for m, v in t
+            _values_equal(b_map[m], v) for m, v in t
         ):
             continue
         diff_lines = _member_diff(name, b, t, b_map, t_map)
@@ -470,7 +483,7 @@ def _member_diff(name, b, t, b_map, t_map):
     for em in order:
         in_b, in_t = em in b_map, em in t_map
         if in_b and in_t:
-            if b_map[em] is not None and b_map[em] != t_map[em]:
+            if not _values_equal(b_map[em], t_map[em]):
                 lines.append(f"{em}: base={_fmt(b_map[em])} target={_fmt(t_map[em])}")
         elif in_t:
             lines.append(f"{em}: base=<absent> target={_fmt(t_map[em])}")

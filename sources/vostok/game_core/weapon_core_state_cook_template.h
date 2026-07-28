@@ -92,15 +92,9 @@ public:
 	virtual	void			create_resource			( resources::query_result_for_cook& parent, const_buffer raw_file_data, mutable_buffer in_out_unmanaged_resource_buffer ) override;
 	virtual	void			destroy_resource		( resources::unmanaged_resource* resource ) override;
 
-	// sushi@TODO: target mangles on_subresources_ready ?...@@AAE... (private) but it is
-	// public (QAE) here, so the 6 cook instantiations stay unpaired. Moving it to the
-	// private section below would let them pair, but the body is also /Od-divergent
-	// (target folds the 4-iteration push_back loop into the `animations` decl statement;
-	// our /Od keeps it separate), so they would pair at a low %. Belongs to the
-	// weapon-state-cook unit owner (shared template, 12+ instantiations).
+private:
 	inline	void			on_subresources_ready	( resources::queries_result& data, mutable_buffer buffer, weapon_state_creation_params const* params );
 
-private:
 	// new_object mangles ?new_object@...@@AAE... -> private (objdiff pairs by mangled name)
 			T*				new_object				(
 								mutable_buffer							buffer,
