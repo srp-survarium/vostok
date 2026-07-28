@@ -13,6 +13,12 @@ using vostok::input::receiver::mouse;
 using vostok::input::handler;
 using vostok::input::world;
 
+namespace vostok {
+namespace command_line {
+	bool key_is_set			( pcstr key_raw );
+} // namespace command_line
+} // namespace vostok
+
 mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& input_world ) 
 :	m_window_handle		( window_handle ),
 	m_device			( 0 ),
@@ -24,10 +30,13 @@ mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& 
 	result				= m_device->SetDataFormat( &c_dfDIMouse2 );
 	R_ASSERT			( !FAILED( result ) );
 
-    result				= 
+    result				=
 		m_device->SetCooperativeLevel(
-			window_handle, 
-			DISCL_FOREGROUND  /*| DISCL_EXCLUSIVE */| DISCL_NONEXCLUSIVE
+			window_handle,
+			DISCL_FOREGROUND |
+				( ( !debug::is_debugger_present( ) || command_line::key_is_set( "mouse_lock" ) ) &&
+				  !command_line::key_is_set( "mouse_unlock" ) ?
+					DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE )
 		);
 	R_ASSERT			( !FAILED( result ) );
 
