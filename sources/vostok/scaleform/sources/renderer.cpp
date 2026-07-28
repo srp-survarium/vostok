@@ -52,10 +52,7 @@ void flash_renderer::on_reset_device( u32 width, u32 height, ID3D11Device* devic
 	m_output_height		= height;
 
 	if ( !m_HALRenderer->IsInitialized( ) )
-	{
-		Scaleform::Render::D3D1x::HALInitParams params( device, context, 0x100 );
-		m_HALRenderer->InitHAL( params );
-	}
+		m_HALRenderer->InitHAL( Scaleform::Render::D3D1x::HALInitParams( device, context ) );
 	else
 		m_HALRenderer->RestoreAfterReset( );
 }
@@ -74,7 +71,7 @@ flash_renderer::flash_renderer(
 		Scaleform::Render::D3D1x::HALInitParams params(
 			device,
 			context,
-			0x100,
+			0,
 			reinterpret_cast< Scaleform::ThreadId >( ::GetCurrentThreadId( ) )
 		);
 		m_HALRenderer->InitHAL( params );
