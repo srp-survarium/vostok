@@ -67,7 +67,7 @@ private:
 	/* 0x0008 */	mixing::animation_state* const		m_animations;
 	/* 0x000c */	const u32							m_animations_count;
 	/* 0x0010 */	u32									m_layers_count;
-	/* 0x0014 */	bool								m_overweighting_detected;
+	/* 0x0014 */	mutable bool						m_overweighting_detected;
 }; // class bone_matrices_computer
 
 STATIC_SIZE_ASSERT(bone_matrices_computer, 0x18);
