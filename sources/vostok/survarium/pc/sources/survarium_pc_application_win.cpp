@@ -205,13 +205,9 @@ static void splash_screen_main		( )
 	if ( previous_bitmap )
 		DeleteObject				( previous_bitmap );
 
-	// claude@NOTE: STRUCTURE MISMATCH (quantity, 6 TRGT_ONLY rows) - the target
-	// CENTERS the splash on the desktop instead of SWP_NOMOVE: it calls
-	// GetWindowRect( GetDesktopWindow(), &rect ) and passes
-	// x = (rect.right-rect.left - biWidth)/2, y = (rect.bottom-rect.top - biHeight)/2,
-	// HWND_TOPMOST (-1), SWP_SHOWWINDOW (0x40, no SWP_NOMOVE). The rest of the
-	// 90% residual is the LOG_ERROR __FILE__ path-wall (SIZE -0x3 noise). Centering
-	// reconstruction deferred - larger logic change, not a localized resteer.
+	RECT							screen_rectangle;
+	GetWindowRect					( GetDesktopWindow( ), &screen_rectangle );
+
 	SetWindowPos					(
 		s_splash_screen,
 #ifndef MASTER_GOLD
@@ -219,11 +215,11 @@ static void splash_screen_main		( )
 #else // #ifndef MASTER_GOLD
 		HWND_TOPMOST,
 #endif // #ifndef MASTER_GOLD
-		0,
-		0,
+		(screen_rectangle.right - screen_rectangle.left - info_header->biWidth)/2,
+		(screen_rectangle.bottom - screen_rectangle.top - info_header->biHeight)/2,
 		info_header->biWidth,
 		info_header->biHeight,
-		SWP_NOMOVE | SWP_SHOWWINDOW
+		SWP_SHOWWINDOW
 	);
 
 	SetActiveWindow					( s_splash_screen );
