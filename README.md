@@ -13,16 +13,16 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,658 / 12,915 functions exact (28.32%) &middot; 3,658 / 12,915 functions exact-max (28.32%) &middot; 58.97% fuzzy &middot; 58.98% fuzzy-max.**
+**Overall: 3,668 / 12,915 functions exact (28.40%) &middot; 3,668 / 12,915 functions exact-max (28.40%) &middot; 59.03% fuzzy &middot; 59.04% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 |  191 / 2,647 (7.2%) |  191 / 2,647 (7.2%) | 32.5% |     32.5% |
+| `render`        |   351 |  199 / 2,647 (7.5%) |  199 / 2,647 (7.5%) | 32.7% |     32.7% |
 | `game`          |   141 | 243 / 1,498 (16.2%) | 243 / 1,498 (16.2%) | 44.1% |     44.2% |
 | `core`          |   136 | 425 / 1,320 (32.2%) | 425 / 1,320 (32.2%) | 82.8% |     82.8% |
-| `vostok`        |   112 | 464 / 1,252 (37.1%) | 464 / 1,252 (37.1%) | 67.3% |     67.3% |
+| `vostok`        |   112 | 466 / 1,252 (37.2%) | 466 / 1,252 (37.2%) | 67.3% |     67.3% |
 | `game_core`     |   189 | 330 / 1,171 (28.2%) | 330 / 1,171 (28.2%) | 81.4% |     81.4% |
 | `animation`     |   102 |   307 / 763 (40.2%) |   307 / 763 (40.2%) | 39.1% |     39.1% |
 | `ai`            |   124 |   281 / 690 (40.7%) |   281 / 690 (40.7%) | 87.4% |     87.4% |

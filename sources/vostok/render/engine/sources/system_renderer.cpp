@@ -1140,7 +1140,7 @@ void system_renderer::setup_render_output_window	( render_output_window_ptr in_o
 {
 	render_output_window* output_window = (render_output_window*)in_output_window.c_ptr();
 	
-	m_renderer_context->set_target_context		( &output_window->target_context() );
+	m_renderer_context->set_target_context		( &output_window->target_context(), false );
 	backend::ref().set_render_output			( output_window->render_output() );
 	backend::ref().reset_depth_stencil_target	();
 	
@@ -1175,5 +1175,4 @@ void system_renderer::set_selection_parameters		( vostok::math::float4 in_select
 
 } // namespace render
 } // namespace vostok
-
 

@@ -9,6 +9,7 @@
 
 #include "stage.h"
 #include "render_model.h"
+#include <vostok/render/core/render_target.h>
 
 namespace vostok {
 namespace render {
@@ -39,6 +40,7 @@ private:
 			u32		index_to_shadow_size		(u32 size_index ) const;
 			void	render_speedtree_instances	(math::float3 const& viewer_position, u32 cascade_index);
 			void	render_terrain				(math::float3 const& viewer_position);
+			void	create_cascaded_shadow_map_buffers	( u32 shadow_map_size );
 
 			bool	is_effects_ready			() const;			
 	shader_constant_host*						m_c_light_direction;
@@ -50,6 +52,8 @@ private:
 	
 	render_surface_instances								m_caster_model;
 	u32											m_old_shadow_map_size;
+	ref_rt										m_rt_shadow_map[4];
+	ref_texture									m_t_shadow_map[4];
 }; // class stage_shadow_direct
 
 

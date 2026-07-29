@@ -88,6 +88,8 @@ enum enum_render_target_index
 	rt_num_frame_luminance_targets			= 0x09,
 };
 
+pcstr rt_index_to_name( enum_render_target_index index );
+
 struct render_target_instance
 {
 	render_target_instance	( ) { }

@@ -38,7 +38,6 @@ stage_accumulate_distortion::~stage_accumulate_distortion()
 
 void stage_accumulate_distortion::execute()
 {
-	//resource_manager::ref().copy2D(m_context->m_t_generic_0.c_ptr(), 0, 0, m_context->m_t_generic_1.c_ptr(), 0, 0, m_context->m_t_generic_1->width(), m_context->m_t_generic_1->height());
 	
 	if (!is_enabled())
 	{

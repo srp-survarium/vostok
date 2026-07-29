@@ -151,3 +151,21 @@ Record each non-live removal here as:
   downsampled pair, SSAO-small to `rt_ssao_temporal_mask`, light-scattering to
   `rt_light_scattering_result`, and color to `rt_albedo`. Those consumers
   remain queued and must recover their target semantics when rebuilt.
+- `headers/vostok/render/renderer_context.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/renderer_context.h` carries the target
+  `0x4284` owner layout, including the embedded 70-entry texture family,
+  scene/view state, matrix stacks, shader values, constant hosts, and target
+  inline access surface.
+- `sources/vostok/render/engine/sources/renderer_context.h` |
+  merged into the live owner header |
+  The target `get_rt` and `get_t` bodies are represented by the indexed target
+  and embedded texture-family accessors in the live header.
+- `sources/vostok/render/engine/sources/renderer_context.cpp` |
+  represented in the live tree |
+  The live source owns target-family switching, scene-view propagation,
+  matrix and eye-state updates, target constant registration, and resource
+  clearing. The four legacy cascade shadow targets were moved temporarily to
+  `stage_shadow_direct`; that stage remains queued for its own target owner
+  reconstruction. `renderer_context_1.h` remains queued because its
+  `stage_pre_rain` deleting destructor belongs to that separate stage owner.

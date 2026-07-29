@@ -55,10 +55,9 @@ void stage_combine::execute()
 {
 	PIX_EVENT( stage_combine);
 
-	backend::ref().set_render_targets( &*m_context->m_rt_generic_0, &*m_context->m_rt_generic_1, 0);
+	backend::ref().set_render_targets( &*m_context->get_rt( rt_generic_0 ), &*m_context->get_rt( rt_generic_1 ), 0);
 	backend::ref().reset_depth_stencil_target();
 	// --Porting to DX10_
-	//set_render_target( m_context->m_rt_generic_0,  m_context->m_rt_generic_1, 0, m_context->m_base_zb);
 
 	//light* sun = lights_db::ref().get_sun().get();//( light*)RImplementation.Lights.sun_adapted._get()	;
 
@@ -217,4 +216,3 @@ void stage_combine::execute()
 
 } // namespace render
 } // namespace vostok
-
