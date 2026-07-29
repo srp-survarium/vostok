@@ -769,53 +769,21 @@ void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_ty
 			process_event			( *i, event_types );
 }
 
-// STATE[STUB]
 void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6efc40>|0x000|+0x020:'1482'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6efc60>|0x020|+0x061:'1489'
-	// <0>
-	// <0x6efcc1>|0x081|+0x020:'1491'
-	// <0x6efce1>|0x0a1|+0x005:'1492'
-	// <0x6efce6>|0x0a6|+0x01b:'1493'
-	// <0x6efd01>|0x0c1|+0x014:'1494'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// ******
+	while ( (*m_animation_events)->event_iterator->event_time_in_ms == target_time_in_ms ) {
+		++(*m_animation_events)->event_iterator;
+
+		animation_state** const found	= std::lower_bound(
+			m_animation_events + 1,
+			m_animation_events + m_animations_count,
+			*m_animation_events,
+			event_iterator_predicate( )
+		);
+		animation_state* const event	= *m_animation_events;
+		std::copy						( m_animation_events + 1, found, m_animation_events );
+		*( found - 1 )					= event;
+	}
 }
 
 // STATE[STUB]
