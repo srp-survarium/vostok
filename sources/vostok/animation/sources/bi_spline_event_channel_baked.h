@@ -5,34 +5,44 @@
 #ifndef ANIMATION_BI_SPLINE_EVENT_CHANNEL_BAKED_H_INCLUDED
 #define ANIMATION_BI_SPLINE_EVENT_CHANNEL_BAKED_H_INCLUDED
 
-/* INCLUDES */
-struct vostok::platform_pointer_selector<float,1>::helper;
-enum vostok::animation::channel_type_enum;
+#include <vostok/platform_pointer.h>
+#include <vostok/animation/event_channel.h>
 
 namespace vostok {
 namespace animation {
 
 class bi_spline_event_channel_baked {
 public:
-	inline	float const*			knots							( ) const { /* no source */ }
+	inline	float const*			knots							( ) const { return m_knots; }
 
-	inline	u32						knots_count						( ) const { /* no source */ }
+	inline	u32						knots_count						( ) const { return m_knots_count; }
 
-	inline	pcbyte					domains							( ) const { /* no source */ }
+	inline	pcbyte					domains							( ) const
+	{
+		return reinterpret_cast< pcbyte >( knots() + knots_count() );
+	}
 
-	inline	u32						domains_count					( ) const { /* no source */ }
+	inline	u32						domains_count					( ) const { return m_domains_count; }
 
-	inline	channel_type_enum		type							( ) const { /* no source */ }
+	inline	channel_type_enum		type							( ) const
+	{
+		return static_cast< channel_type_enum >( m_type );
+	}
 
-	inline	pcstr					name							( ) const { /* no source */ }
+	inline	pcstr					name							( ) const
+	{
+		return reinterpret_cast< pcstr >( domains() + domains_count() );
+	}
 
-	inline							bi_spline_event_channel_baked	( ) { /* no source */ }
+	inline							bi_spline_event_channel_baked	( ) { }
 
 private:
-	/* 0x0000 */	platform_pointer_selector< float, 1 >::helper	m_knots;
+	/* 0x0000 */	platform_pointer_selector< float, platform_pointer_64bit >::helper	m_knots;
 	/* 0x0008 */	u16		m_knots_count;
 	/* 0x000a */	u8		m_domains_count;
 	/* 0x000b */	u8		m_type;
+
+	friend void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_size );
 }; // class bi_spline_event_channel_baked
 
 STATIC_SIZE_ASSERT(bi_spline_event_channel_baked, 0x10);

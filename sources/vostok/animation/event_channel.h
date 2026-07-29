@@ -12,7 +12,8 @@
 namespace vostok {
 namespace animation {
 
-// sushi@TODO: Move to where it is needed?
+class bi_spline_event_channel_baked;
+
 enum channel_type_enum
 {
 	channel_type_intervals		= 0x0,
@@ -29,12 +30,11 @@ public:
 public:
 	template < class ConfigValueType >
 	static inline u32			count_internal_memory_size	( ConfigValueType const& config  );
-	// static	inline	u32		count_internal_memory_size	( bi_spline_event_channel_baked const& arg_0 ) { /* no source */ }
-	// static	inline	u32		count_internal_memory_size	( event_channel const& arg_0 ) { /* no source */ }
+	static	u32					count_internal_memory_size	( bi_spline_event_channel_baked const& channel );
 
 	template < class ConfigValueType >
 	inline	void				create_in_place_internals	( ConfigValueType const& config, void* memory_buff );
-	// inline	void			create_in_place_internals	( bi_spline_event_channel_baked const& channel, void* memory_buff ) { /* no source */ }
+			void				create_in_place_internals	( bi_spline_event_channel_baked const& channel, void* memory_buff );
 
 #ifndef	MASTER_GOLD
 public:

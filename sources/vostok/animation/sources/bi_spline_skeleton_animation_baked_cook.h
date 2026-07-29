@@ -34,15 +34,10 @@ private:
 	virtual	resource_delegate	get_create_resource_inplace_in_creation_data_delegate( ) override;
 
 private:
-	// sushi@NOTE: This function is missing and I don't exactly understand its point.
-	// Maybe it will do something ~eventually~, but for now I just made this stub implementation.
-	inline	void				create_resource_inplace	(
+			void				create_resource_inplace	(
 									resources::query_result_for_cook&		in_out_query,
 									mutable_buffer							in_out_unmanaged_resource_buffer
-								)
-								{
-									create_resource( in_out_query, in_out_unmanaged_resource_buffer );
-								}
+								);
 
 }; // class bi_spline_skeleton_animation_baked_cook
 
