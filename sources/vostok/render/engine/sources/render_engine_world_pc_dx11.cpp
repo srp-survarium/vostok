@@ -443,8 +443,10 @@ void engine::world::load_console_commands_config_query( pcstr cfg_name, bool loa
 	);
 }
 
-void engine::world::initialize				( )
+void engine::world::initialize				( bool const is_editor )
 {
+	VOSTOK_UNREFERENCED_PARAMETER		( is_editor );
+
 // #ifndef MASTER_GOLD
 // 	vostok::resources::subscribe_watcher("resources/render/", fastdelegate::FastDelegate<void ( vostok::vfs::vfs_notification const &) >( this, &engine::world::on_render_config_changed ));
 // #endif // #ifndef MASTER_GOLD

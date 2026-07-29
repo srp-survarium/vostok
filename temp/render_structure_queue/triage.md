@@ -57,3 +57,11 @@ Record each non-live removal here as:
 - `sources/vostok/render/facade/sources/one_way_render_channel.cpp` |
   represented in the live tree |
   The owner methods and scene-list draining live at the same real path.
+- `headers/vostok/render/engine__renderer.h` |
+  represented in the live tree |
+  `sources/vostok/render/facade/engine_renderer.h` carries the target four-byte
+  facade owner and its editor-aware initialization contract.
+- `sources/vostok/render/facade/sources/engine_renderer.cpp` |
+  represented in the live tree |
+  Construction, initialization forwarding, and frame-id access live at the
+  target source path.

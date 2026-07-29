@@ -11,25 +11,31 @@
 
 namespace vostok {
 namespace render {
+
+class world;
+
 namespace engine {
 
 class world;
 
-class VOSTOK_RENDER_API renderer : private core::noncopyable {
+class VOSTOK_RENDER_API renderer : public core::noncopyable {
 private:
 	friend class render::world;
-			renderer	( engine::world& engine_world );
+	explicit	renderer	( engine::world& engine_world );
 
 public:
-	void	initialize	( );
-	u32		frame_id	( );
-	
+	void		initialize	( bool is_editor );
+	u32			frame_id	( );
+	inline		~renderer	( ) { }
+
 private:
-	engine::world&	m_render_engine_world;
+	/* 0x0000 */	engine::world&	m_render_engine_world;
 }; // class renderer
+
+STATIC_SIZE_ASSERT( renderer, 0x4 );
 
 } // namespace engine
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef VOSTOK_RENDER_FACADE_ENGINE_RENDERER_H_INCLUDED
+#endif // VOSTOK_RENDER_FACADE_ENGINE_RENDERER_H_INCLUDED
