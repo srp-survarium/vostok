@@ -281,6 +281,8 @@ private:
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
+	IXAudio2SubmixVoice*
+						create_environment_submix_voice	( sound_world const& world ) const;
 private:
 	typedef memory::single_size_buffer_allocator<	sizeof( sound_instance_proxy_internal ),
 													threading::multi_threading_policy
