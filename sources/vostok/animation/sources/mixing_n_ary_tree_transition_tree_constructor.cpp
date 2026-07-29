@@ -30,20 +30,6 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-// STATE[STUB]
-// claude@NOTE: 15-stmt finalizer, locals = { n_ary_tree_weight_calculator weight_calculator,
-// u16 initial_event_types }. Sole out-of-line callee = n_ary_tree_weight_calculator::visit; the
-// animation_state ctor is INLINED here (NOT the out-of-line 0x7a1bb0 symbol). Records
-// m_new_animation_state into *m_new_animation_event++, computes initial_event_types (0x81 new /
-// 0x80 when previous_animation_state && !previous->are_there_any_weight_transitions), then
-// `n_ary_tree_weight_calculator weight_calculator(m_current_time_in_ms, NULL); new_animation.accept(weight_calculator)`,
-// new_animation.set_animation_state(*m_new_animation_state), then the inlined animation_state
-// construction, then m_new_animation_state += 0xB4. PARKED: the inlined ctor's terminal block
-// (asm 0xc6-0x110) writes a 0x18 params-shaped run (interval_id/interval_time/weight/threshold/
-// initial_event_types/previous&mask) into the new state slot whose offsets do NOT map to the
-// animation_state layout - the inlined construction path is not yet decoded faithfully. Next
-// step: decode the 0x18-write block (animation_state_params vs an inlined ctor prologue) from
-// asm 0x6e9e00 before reconstructing.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
 	animation_state const*			previous_animation_state,
@@ -52,85 +38,39 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	bool							is_new_animation
 )
 {
-	// LOCALS
-	// n_ary_tree_weight_calculator 	weight_calculator
-	// u16 								initial_event_types
-	// ******
+	*m_new_animation_event++			= m_new_animation_state;
 
-	// CALL SITE INFO
-	// <0x6e9e97> -> bool < unknown >()
-	// ******
+	u16 initial_event_types				= 0;
+	if ( is_new_animation )
+		initial_event_types				= time_event_animation_lexeme_started
+			| time_event_weight_transitions_started;
+	else if ( previous_animation_state && !previous_animation_state->are_there_any_weight_transitions )
+		initial_event_types				= time_event_weight_transitions_started;
 
-	return NULL;
+	n_ary_tree_weight_calculator weight_calculator( m_current_time_in_ms, 0 );
+	new_animation.accept				( weight_calculator );
+	new_animation.set_animation_state	( *m_new_animation_state );
 
-	// FUNCTION BODY
-	// <0x6e9e03>|0x003|+0x00d:'50'
-	// <0>
-	// <0x6e9e10>|0x010|+0x00c:'52'
-	// <0x6e9e1c>|0x01c|+0x006:'53'
-	// <0>
-	// <0x6e9e22>|0x022|+0x008:'55'
-	// <0>
-	// <0x6e9e2a>|0x02a|+0x002:'57'
-	// <0x6e9e2c>|0x02c|+0x008:'58'
-	// <0>
-	// <0x6e9e34>|0x034|+0x005:'60'
-	// <0x6e9e39>|0x039|+0x008:'61'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6e9e41>|0x041|+0x009:'65'
-	// <0x6e9e4a>|0x04a|+0x030:'66'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6e9e7a>|0x07a|+0x016:'70'
-	// <0x6e9e90>|0x090|+0x010:'71'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x6e9ea0>|0x0a0|+0x026:'83'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <0x6e9ec6>|0x0c6|+0x04b:'107'
-	// <0>
-	// <0x6e9f11>|0x111|+0x007:'109'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// ******
+	animation_state const* const previous	=
+		previous_animation_state
+		&& (
+			!previous_animation_state->is_freezed
+			|| previous_animation_state->event_iterator.animation( ).is_transitting_to_zero( )
+			|| new_animation.is_transitting_to_zero( )
+		)
+			? previous_animation_state
+			: 0;
+	new ( m_new_animation_state ) animation_state_params(
+		initial_event_types,
+		animation_interval_id,
+		animation_interval_time,
+		previous ? previous->animation_time_threshold : 0.f,
+		weight_calculator.weight( ),
+		previous
+	);
+	++m_new_animation_state;
+
+	return								&new_animation;
 }
 
 // STATE[STUB]
