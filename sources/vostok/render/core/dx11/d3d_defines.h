@@ -19,7 +19,7 @@ u32 const enum_slot_ind_null	= 0xFFFFFFFF;
 #	include <vostok/render/core/DX10_defines.h>
 #	define DX10_ONLY( expression )	expression
 #else
-#	include <vostok/render/core/DX11_defines.h>
+#	include <vostok/render/core/dx11_defines.h>
 #endif	//	USE_DX10
 
 #endif // #ifndef D3D_DEINES_H_INCLUDED

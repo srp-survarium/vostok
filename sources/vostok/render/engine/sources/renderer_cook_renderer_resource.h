@@ -1,12 +1,7 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #ifndef RENDER_RENDERER_COOK_RENDERER_RESOURCE_H_INCLUDED
 #define RENDER_RENDERER_COOK_RENDERER_RESOURCE_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::unmanaged_resource;
+#include "renderer_cook.h"
 
 namespace vostok {
 namespace render {
