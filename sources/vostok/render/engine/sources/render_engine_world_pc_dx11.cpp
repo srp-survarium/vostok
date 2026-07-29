@@ -1,22 +1,19 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_engine_world_pc_dx11.h"
+#include <vostok/render/engine/world.h>
+#include <vostok/render/facade/vertex_input_type.h>
+#include "renderer_cook_renderer_resource.h"
+#include "speedtree_tree.h"
 
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
-void `dynamic initializer for 's_no_level''( )
-{
-	// FUNCTION BODY[0x7d59e0]
-	// ******
-}
+struct singletons_on_initialize {
+	singletons_on_initialize( );
+};
 
 // STATE[STUB]
- renderer_cook::renderer_cook( )
+ renderer_cook::renderer_cook( ) :
+	resources::unmanaged_cook( resources::renderer_class, reuse_false )
 {
 	// FUNCTION BODY[0x60650]
 	// ******
@@ -67,16 +64,6 @@ void renderer_cook::create_resource(
 	// <0>
 	// <0x60765>|0x045|+0x020:'128'
 	// <0x60785>|0x065|+0x00b:'129'
-	// ******
-}
-
-// STATE[STUB]
-void* renderer_cook::renderer_resource::`scalar deleting destructor'( u32 arg_0 )
-{
-	return NULL;
-
-	// FUNCTION BODY[0x607c0]: 1
-	// <0>
 	// ******
 }
 
@@ -194,41 +181,6 @@ void initialize_options( )
 {
 	// FUNCTION BODY[0x608c0]: 1
 	// <0>
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_options''( )
-{
-	// FUNCTION BODY[0x7d5a00]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_singletons_on_preinitialize''( )
-{
-	// FUNCTION BODY[0x7d5a10]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_singletons_on_initialize''( )
-{
-	// FUNCTION BODY[0x7d5a20]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_system_renderer''( )
-{
-	// FUNCTION BODY[0x7d5a30]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 'g_quad_ib''( )
-{
-	// FUNCTION BODY[0x7d5a40]
 	// ******
 }
 
@@ -1078,7 +1030,7 @@ void engine::world::draw_scene(
 	base_output_window_ptr const&		output_window,
 	math::rectangle< float2 > const&	viewport,
 	boost::function< void( bool ) > const&	on_draw_scene,
-	ui::font const*						default_font
+	vostok::ui::font const*				default_font
 )
 {
 	// LOCALS
@@ -1970,13 +1922,6 @@ void engine::world::goto_fullscreen( base_output_window_ptr const& output_window
 }
 
 // STATE[STUB]
-void `dynamic atexit destructor for 'g_quad_ib''( )
-{
-	// FUNCTION BODY[0x7edb00]
-	// ******
-}
-
-// STATE[STUB]
 engine::world* engine::create_world( configs::binary_config_ptr const& in_config, bool is_editor )
 {
 	return NULL;
@@ -2112,7 +2057,7 @@ void engine::world::draw_triangles(
 void engine::world::draw_text(
 	vectora< ui::vertex >&		output,
 	pcstr const&				text,
-	ui::font const&				font,
+	vostok::ui::font const&		font,
 	float2 const&				position,
 	math::color const&			text_color,
 	math::color const&			selection_color,

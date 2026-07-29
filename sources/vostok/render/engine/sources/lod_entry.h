@@ -1,7 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #ifndef RENDER_LOD_ENTRY_H_INCLUDED
 #define RENDER_LOD_ENTRY_H_INCLUDED
 
@@ -9,7 +5,7 @@ namespace vostok {
 namespace render {
 
 struct lod_entry {
-	inline		lod_entry	( ) { /* no source */ }
+	inline		lod_entry	( ) : start_index( 0 ), num_indices( 0 ) { /* no source */ }
 
 	/* 0x0000 */	u32		start_index;
 	/* 0x0004 */	u32		num_indices;

@@ -1,28 +1,37 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #ifndef RENDER_SPEEDTREE_TREE_H_INCLUDED
 #define RENDER_SPEEDTREE_TREE_H_INCLUDED
 
-/* INCLUDES */
-class SpeedTree::CCore;
-class vostok::render::speedtree_tree_component;
-class vostok::render::speedtree_tree_component_billboard;
-struct vostok::render::lod_render_info;
-struct vostok::render::speedtree_tree_base;
-class vostok::render::material_effects_instance;
-class vostok::render::speedtree_tree::component_type;
+#include "lod_render_info.h"
+#include "speedtree_tree_base.h"
+
+#include <vostok/resources_resource_ptr.h>
 
 namespace vostok {
 namespace render {
 
+class material_effects_instance;
+class speedtree_tree_component;
+class speedtree_tree_component_billboard;
+
+typedef resources::resource_ptr<
+	material_effects_instance,
+	resources::unmanaged_intrusive_base
+> material_effects_instance_ptr;
+
 class speedtree_tree : public speedtree_tree_base , public SpeedTree::CCore {
 public:
+	enum component_type {
+		branch,
+		frond,
+		leafmesh,
+		leafcard,
+		billboard,
+	};
+
 										speedtree_tree		( pcvoid data, u32 size );
 	virtual								~speedtree_tree		( );
 
-	inline	lod_render_info const&		get_lod_render_info	( SpeedTree::EGeometryType arg_0 ) const { /* no source */ }
+	inline	lod_render_info const&		get_lod_render_info	( SpeedTree::EGeometryType arg_0 ) const { return m_lod_render_info[ 0 ]; }
 			lod_render_info&			get_lod_render_info	( SpeedTree::EGeometryType type );
 
 			void						set_material_effects(

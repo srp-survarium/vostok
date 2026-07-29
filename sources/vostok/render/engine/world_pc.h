@@ -1,61 +1,75 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
+#ifndef VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED
 
-#ifndef RENDER_ENGINE_WORLD_H_INCLUDED
-#define RENDER_ENGINE_WORLD_H_INCLUDED
+#include <vostok/render/engine/base_classes.h>
+#include <vostok/render/core/memory.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
+#include <vostok/scaleform/sources/scaleform_render_command.h>
 
-/* INCLUDES */
-class vostok::render::renderer;
-class vostok::configs::binary_config;
-class vostok::math::uint2;
-class vostok::particle::enum_particle_render_mode;
-class vostok::render::base_output_window;
-class vostok::render::base_scene;
-class vostok::render::base_scene_view;
-class vostok::render::enum_render_stage_type;
-class vostok::render::render_model_instance;
-class vostok::render::scene_view_mode;
-class vostok::render::speedtree_instance;
-class vostok::render::tracer_model_instance;
-class vostok::resources::unmanaged_resource;
-class vostok::ui::font* const;
-class survarium::flash_movie_resource;
-class survarium::scaleform_render_command;
-
-/* FORWARD REFS */
-class vostok::fs_new::virtual_path_string;
-class vostok::math::color;
-class vostok::math::rectangle<vostok::math::float2>;
-class vostok::particle::world;
-class vostok::render::ambient_volume_properties;
-class vostok::render::cloud_key_parameters;
-class vostok::render::cloud_parameters;
-class vostok::render::decal_properties;
-class vostok::render::environment_probe_generate_parameters;
-class vostok::render::environment_probe_properties;
-class vostok::render::grass_layer_data;
-class vostok::render::grass_layer_desc;
-class vostok::render::light_props;
-class vostok::render::sky_ambient_occlusion_map_generate_parameters;
-class vostok::render::sky_ambient_occlusion_properties;
-class vostok::render::trample_desc;
-class vostok::render::ui::vertex;
-class vostok::render::vector<unsigned short>;
-class vostok::render::vector<vostok::render::vertex_colored>;
-class vostok::render::volume_fog_parameters;
-class vostok::resources::queries_result;
-class vostok::ui::font;
-class vostok::vectora<unsigned short>;
-class vostok::vectora<vostok::render::buffer_fragment>;
-class vostok::vectora<vostok::render::ui::vertex>;
-class vostok::vectora<vostok::render::vertex_colored>;
-class survarium::flash_text_manager;
+namespace survarium {
+struct flash_text_manager;
+}
 
 namespace vostok {
+
+namespace particle {
+enum enum_particle_render_mode;
+struct world;
+}
+
+namespace ui {
+struct font;
+}
+
 namespace render {
 
-class engine::world : public boost::noncopyable {
+class renderer;
+class render_model_instance;
+class render_surface;
+class speedtree_instance;
+class tracer_model_instance;
+
+struct ambient_volume_properties;
+struct buffer_fragment;
+struct cloud_key_parameters;
+struct cloud_parameters;
+struct decal_properties;
+struct environment_probe_generate_parameters;
+struct environment_probe_properties;
+struct grass_layer_data;
+struct grass_layer_desc;
+struct light_props;
+struct sky_ambient_occlusion_map_generate_parameters;
+struct sky_ambient_occlusion_properties;
+struct trample_desc;
+struct vertex_colored;
+struct volume_fog_parameters;
+
+enum enum_render_stage_type;
+enum scene_view_mode;
+
+namespace ui {
+struct vertex;
+}
+
+typedef resources::resource_ptr<
+	render_model_instance,
+	resources::unmanaged_intrusive_base
+> render_model_instance_ptr;
+
+typedef resources::resource_ptr<
+	speedtree_instance,
+	resources::unmanaged_intrusive_base
+> speedtree_instance_ptr;
+
+typedef resources::resource_ptr<
+	tracer_model_instance,
+	resources::unmanaged_intrusive_base
+> tracer_model_instance_ptr;
+
+namespace engine {
+
+class world : public boost::noncopyable {
 public:
 	inline	void				set_renderer_configuration			( fs_new::virtual_path_string const& arg_0, bool arg_1 ) { /* no source */ }
 
@@ -104,14 +118,14 @@ public:
 	inline	void				draw_text							(
 									pcstr					arg_0,
 									float2 const&			arg_1,
-									ui::font* const			arg_2,
+									vostok::ui::font* const	arg_2,
 									math::color const&		arg_3
 								) { /* no source */ }
 
 			void				set_view_matrix						( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix );
 			void				set_projection_matrix				( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix );
 
-	inline	math::uint2			window_client_size					( base_output_window_ptr const& arg_0 ) { /* no source */ }
+	inline	math::uint2			window_client_size					( base_output_window_ptr const& arg_0 ) { return math::uint2( 0, 0 ); }
 
 	inline	void				draw_debug_lines					( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
 	inline	void				draw_debug_triangles				( vector< vertex_colored > const& arg_0, vector< u16 > const& arg_1 ) { /* no source */ }
@@ -129,7 +143,7 @@ public:
 									base_output_window_ptr const&		output_window,
 									math::rectangle< float2 > const&	viewport,
 									boost::function< void( bool ) > const&	on_draw_scene,
-									ui::font const*						default_font
+									vostok::ui::font const*				default_font
 								);
 
 	inline	void				pick_lighting_luminance				( const u32 arg_0, const u32 arg_1 ) { /* no source */ }
@@ -410,12 +424,12 @@ public:
 			void				set_grass							( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s );
 			void				reset_grass							( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s );
 
-	inline	pcstr				type								( ) { /* no source */ }
+	inline	pcstr				type								( ) { return NULL; }
 
 	static	void				draw_text							(
 									vectora< ui::vertex >&		output,
 									pcstr const&				text,
-									ui::font const&				font,
+									vostok::ui::font const&		font,
 									float2 const&				position,
 									math::color const&			text_color,
 									math::color const&			selection_color,
@@ -431,11 +445,12 @@ private:
 	/* 0x0004 */	u32				m_frame_id;
 	/* 0x0008 */	bool			m_initialized;
 	/* 0x0009 */	bool			m_enable_terrain_debug_mode;
-}; // class engine::world
+}; // class world
 
 STATIC_SIZE_ASSERT(engine::world, 0xC);
 
+} // namespace engine
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef RENDER_ENGINE_WORLD_H_INCLUDED
+#endif // #ifndef VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED

@@ -1,23 +1,15 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #ifndef RENDER_RENDERER_COOK_H_INCLUDED
 #define RENDER_RENDERER_COOK_H_INCLUDED
 
-/* INCLUDES */
-class vostok::resources::unmanaged_cook;
-class vostok::const_buffer;
-
-/* FORWARD REFS */
-class vostok::resources::query_result_for_cook;
-class vostok::resources::unmanaged_resource;
+#include <vostok/resources_cook_classes.h>
 
 namespace vostok {
 namespace render {
 
 class renderer_cook : public resources::unmanaged_cook {
 public:
+	struct renderer_resource;
+
 								renderer_cook		( );
 
 	virtual	mutable_buffer		allocate_resource	(
