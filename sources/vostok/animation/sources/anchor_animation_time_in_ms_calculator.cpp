@@ -8,6 +8,7 @@
 #include "mixing_n_ary_tree_target_time_scale_calculator.h"
 #include "mixing_n_ary_tree_time_scale_start_time_modifier.h"
 #include "mixing_n_ary_tree_animation_node.h"
+#include <vostok/animation/bone_animation.h>
 #include <vostok/animation/bone_names.h>
 
 namespace vostok {
@@ -56,6 +57,17 @@ void anchor_animation_time_in_ms_calculator( )
 		void*
 	) = &animation::bone_names::create_internals_in_place;
 	s_sink_pointer = *(pcvoid const*)&create_bone_names;
+
+	u32 (* const count_bone_animation)(
+		animation::bi_spline_bone_animation_baked const&
+	) = &animation::bone_animation::count_internal_memory_size;
+	s_sink_pointer = *(pcvoid const*)&count_bone_animation;
+
+	void ( animation::bone_animation::* const create_bone_animation )(
+		animation::bi_spline_bone_animation_baked const&,
+		void*
+	) = &animation::bone_animation::create_internals_in_place;
+	s_sink_pointer = *(pcvoid const*)&create_bone_animation;
 }
 
 } // namespace vostok
