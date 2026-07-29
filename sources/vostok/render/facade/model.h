@@ -90,6 +90,32 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > render_model_instance_ptr;
 
+class skin : public resources::unmanaged_resource {
+public:
+	skin( ) { }
+
+protected:
+	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( skin )
+};
+
+STATIC_SIZE_ASSERT( skin, 0x108 );
+
+typedef resources::resource_ptr<
+	skin,
+	resources::unmanaged_intrusive_base
+> skin_ptr;
+
+struct animated_model_instance : public resources::unmanaged_resource {
+	animated_model_instance( ) { }
+	virtual ~animated_model_instance( ) { }
+
+	render_model_instance_ptr	m_model;
+	skin_ptr					m_skin;
+	fixed_string< 32 >			m_hit_params;
+};
+
+STATIC_SIZE_ASSERT( animated_model_instance, 0x140 );
+
 } // namespace render
 } // namespace vostok
 
