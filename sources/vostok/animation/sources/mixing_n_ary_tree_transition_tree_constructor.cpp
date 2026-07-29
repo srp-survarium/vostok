@@ -1073,10 +1073,6 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	);
 }
 
-// claude@NOTE: the two per-side multiplication-node operand-copy loops (clone every operand
-// via m_cloner.clone, .15/.23 in the target) are reconstructed; structure now matches. The
-// residual TRGT_ONLY is the call-arg setup for new_animation + add_animation_node, both still
-// STUBs (return NULL) - their inlined-ctor/argument flow only lines up once they are bodied.
 void n_ary_tree_transition_tree_constructor::change_animation(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
