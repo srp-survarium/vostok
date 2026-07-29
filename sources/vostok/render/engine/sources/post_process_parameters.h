@@ -106,8 +106,11 @@ struct post_process_parameters
 #if VOSTOK_PLATFORM_WINDOWS
 	ref_texture			color_grading_texture;
 #endif // #if VOSTOK_PLATFORM_WINDOWS
-	
+
+	u8					m_target_layout_tail[0x14C];
 }; // struct post_process_parameters
+
+STATIC_SIZE_ASSERT( post_process_parameters, 0x2D4 );
 
 } // namespace render
 } // namespace vostok

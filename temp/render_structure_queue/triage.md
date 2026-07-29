@@ -80,3 +80,20 @@ Record each non-live removal here as:
   text-manager routing, Scaleform dispatch, and scene submission live at the
   target source path. Downstream engine scene-view/output implementations stay
   in their own structure-queue entries until those owners are rebuilt.
+- `headers/vostok/render/scene_view{,_1}.h` |
+  merged and represented in the live tree |
+  `sources/vostok/render/engine/sources/scene_view.h` carries the target `0x5e0`
+  owner layout, renderer-visible collections, movie/text-manager state, and
+  inline access surface. The `_1` record differs only by an incomplete particle
+  enum from another compiland.
+- `sources/vostok/render/engine/sources/scene_view.cpp` |
+  represented in the live tree |
+  Construction, destruction, movie ordering/removal, and text-manager ownership
+  live at the target path. The corresponding engine-world forwarding bodies are
+  also live; the larger engine-world source entry remains queued for its other
+  unresolved bodies.
+
+The queued `post_process_parameters` owner is still authoritative for its
+unreconstructed fields and methods. Its live header currently preserves the
+target `0x2d4` child size so the completed `scene_view` members retain their
+target offsets; this does not drain the post-process queue entry.
