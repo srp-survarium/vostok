@@ -38,6 +38,7 @@ sound_voice::sound_voice	(	s32 playing_offset_in_msec,
 								sound_instance_proxy_internal& proxy,
 								sound_propagator_emitter const& emitter,
 								sound_spl_ptr const& spl ) :
+	m_position				( 0.0f, 0.0f, 0.0f ),
 	m_proxy					( proxy ),
 	m_emitter				( emitter ),
 	m_sound_spl				( spl ),
@@ -45,7 +46,6 @@ sound_voice::sound_voice	(	s32 playing_offset_in_msec,
 	m_is_quality_changing_requested	( false ),
 	m_is_conversion_buffer_ready	( false ),
 	m_stream_cursor_pcm		( 0 ),
-	m_buffer_playing_offset	( 0 ),
 	m_next_for_delete		( 0 ),
 	m_next_for_active		( 0 ),
 	m_playing_offset		( playing_offset_in_msec ),
@@ -58,17 +58,17 @@ sound_voice::sound_voice	(	s32 playing_offset_in_msec,
 	m_is_conversion_buffer_submited( false ),
 	m_conv_state			( conversion_not_requested ),
 	m_current_quality		( 2 ),
+	m_first_portal_id		( u32(-1) ),
+	m_second_portal_id		( u32(-1) ),
+	m_distance_to_listener	( 0.0f ),
 	m_target_sound_quality	( 0 ),
 	m_world_user			( proxy.get_world_user( ) )
 {
-	m_current_sound_quality	= emitter.dbg_get_encoded_sound( 2 );
+	m_current_sound_quality	= emitter.dbg_get_encoded_sound( 0 );
 
 	m_channels_num			= m_current_sound_quality->get_channels_num	( );
 	u32 samples_per_sec	= m_current_sound_quality->get_samples_per_sec( );
 
-	LOG_DEBUG			( "sound_voice id: %d", m_dbg_id );			
-	LOG_DEBUG			( "sound_length in msec %d:", m_current_sound_quality->get_length_in_msec() );
-	
 	m_voice				= m_world_user.get_sound_world()->get_voice( this, proxy.get_sound_scene().get_submix_voice(), m_channels_num, samples_per_sec );
 }
 
@@ -81,24 +81,14 @@ sound_voice::~sound_voice	( )
 
 void sound_voice::play		( playback_mode mode )
 {
-	LOG_DEBUG				("sound_voice::play start");
-
 	m_mode					= mode;
 
 	if ( m_mode == once )
 	{
 		if ( m_playing_offset > 10  )
-		{
 			m_stream_cursor_pcm				= find_nearest_adjective_pcm_offset ( );
-			LOG_DEBUG						( "m_stream_cursor_pcm: %d", m_stream_cursor_pcm );
-			m_buffer_playing_offset			= time_in_msec_to_pcm( m_current_sound_quality, m_playing_offset ) - find_nearest_adjective_pcm_offset( );
-			LOG_DEBUG						( "m_buffer_playing_offset: %d", m_buffer_playing_offset );
-		}
 		else
-		{
 			m_stream_cursor_pcm				= 0;
-			m_buffer_playing_offset			= 0;
-		}
 	}
 	else if ( m_mode == looped )
 	{
@@ -110,7 +100,6 @@ void sound_voice::play		( playback_mode mode )
 		{
 			m_playing_offset				-= m_before_playing_quiet;
 			m_stream_cursor_pcm				= find_nearest_adjective_pcm_offset ( );
-			m_buffer_playing_offset			= time_in_msec_to_pcm( m_current_sound_quality, m_playing_offset ) - find_nearest_adjective_pcm_offset( );
 		}
 		else
 		{
@@ -118,13 +107,9 @@ void sound_voice::play		( playback_mode mode )
 		}
 	}
 
-	LOG_DEBUG			( "sound_voice() m_stream_cursor_pcm: %d", m_stream_cursor_pcm );
-	LOG_DEBUG			( "sound_voice() m_buffer_playing_offset: %d", m_buffer_playing_offset );
-
 	m_is_playing								= true;
 	refill_buffers								( );
 	m_voice->start								( );
-	LOG_DEBUG									("sound_voice::play end");
 }
 
 void sound_voice::stop		( )
@@ -141,7 +126,7 @@ void sound_voice::refill_buffers	( )
 	while ( ( m_buffers_queued  < max_queued_buffers ) && ( m_stream_cursor_pcm < pcm_total ) )
 	{
 		sound_buffer* buffer = m_world_user.get_sound_world()->get_sound_buffer( m_current_sound_quality, m_stream_cursor_pcm, m_stream_cursor_pcm );
-		m_voice->submit_source_buffer	( buffer, m_buffer_playing_offset );
+		m_voice->submit_source_buff		( buffer );
 		if ( m_mode == looped && pcm_total == m_stream_cursor_pcm )
 		{
 			submit_muted_buffers		( m_before_playing_quiet + m_after_playing_quiet );
@@ -169,8 +154,6 @@ void sound_voice::set_output_matrix	( float const* level_matrix )
 		m_voice->set_output_matrix	( level_matrix );
 	else if ( m_channels_num == 2 )
 		m_voice->set_channel_volumes( m_channels_num, level_matrix );
-	else
-		NOT_IMPLEMENTED				( );
 }
 
 u32 sound_voice::find_nearest_adjective_pcm_offset	( ) const
@@ -218,8 +201,8 @@ void sound_voice::submit_muted_buffers	( u32 msec )
 	u32 const bytes_per_sample	= m_current_sound_quality->get_bytes_per_sample	( );
 	u32 const samples_per_sec	= m_current_sound_quality->get_samples_per_sec( ) ;
 	u32 const samples_in_buffer	= sound_buffer_size / bytes_per_sample;
-	u8 const channels_count		= m_current_sound_quality->get_channels_num( );
-	u32 buffer_length_in_msec	= (( samples_in_buffer * 1000 ) / samples_per_sec ) / channels_count;
+	m_channels_num					= m_current_sound_quality->get_channels_num( );
+	u32 buffer_length_in_msec	= (( samples_in_buffer * 1000 ) / samples_per_sec ) / m_channels_num;
 	u32 mute_buffers_count		= msec / buffer_length_in_msec;
 
 	
@@ -235,8 +218,7 @@ void sound_voice::submit_muted_buffers	( u32 msec )
 	for ( u32 i = 0; i < mute_buffers_count; ++i )
 	{
 		sound_buffer* mute_buff			= m_proxy.get_world_user().get_sound_world()->get_mute_sound_buffer( m_current_sound_quality );
-		u32 buf_offset					= i == 0 ? mute_buffer_playing_offset : 0;
-		m_voice->submit_source_buffer	( mute_buff, buf_offset );
+		m_voice->submit_source_buff		( mute_buff );
 		threading::interlocked_increment( m_buffers_queued );		
 	}
 }
@@ -244,6 +226,34 @@ void sound_voice::submit_muted_buffers	( u32 msec )
 void sound_voice::set_low_pass_filter_params( float coeff )
 {
 	m_voice->set_low_pass_filter_params	( coeff );
+}
+
+void sound_voice::set_path	( u32 first_portal_id, u32 second_portal_id )
+{
+	m_first_portal_id				= first_portal_id;
+	m_second_portal_id				= second_portal_id;
+}
+
+void sound_voice::get_path	( u32& first_portal_id, u32& second_portal_id ) const
+{
+	first_portal_id					= m_first_portal_id;
+	second_portal_id				= m_second_portal_id;
+}
+
+bool sound_voice::is_same_voice	( u32 first_portal_id, u32 second_portal_id ) const
+{
+	if ( first_portal_id == m_first_portal_id && second_portal_id == m_second_portal_id )
+		return true;
+
+	if ( first_portal_id == m_second_portal_id || second_portal_id == m_first_portal_id )
+		return true;
+
+	return false;
+}
+
+IXAudio2SourceVoice* sound_voice::get_xaudio_voice	( )
+{
+	return m_voice->get_xaudio_voice	( );
 }
 
 } // namespace sound
