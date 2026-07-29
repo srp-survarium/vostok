@@ -28,19 +28,30 @@ For a shared namespace or a legacy-body harvest, also read:
 1. Require explicit authorization for a whole-library replacement. Do not turn
    a routine matching request into a destructive carcass rebuild.
 2. Start from a clean, fully rebuilt branch in its own worktree.
-3. Define the actual build library and PDB compiland set. For `render`, process
-   one sublibrary/project at a time (`facade`, `base`, `core`, platform core,
-   `engine`); never treat the entire render umbrella as one queue.
-4. Inventory keepers before moving anything: project files, PCH, API/export
-   headers, library linkage, entry points, allocator/bootstrap infrastructure.
+3. Define the actual build library and PDB compiland set. For retail `render`,
+   process one shipped project at a time: `render_facade`,
+   `render_core_pc_dx11`, then `render_engine_pc_dx11`. The old `base`, DX9,
+   generic platform, and OpenGL trees are legacy evidence, not live retail
+   owners. `render_core_pc_dx11` consumes both `render/core/` and
+   `render/core/dx11/` source/header roots; the `.vcproj` location under
+   `core/dx11/sources/` is not an ownership boundary. Never treat the entire
+   render umbrella as one build library.
+4. Inventory project files, PCH, API/export headers, linkage, entry points, and
+   allocator/bootstrap infrastructure so every original file has a recoverable
+   legacy location. Inventory does not make these files live baseline keepers.
 5. Record the baseline build, match report, enabled TUs, and current source
    tree. Use recoverable Git moves; never erase the only copy of legacy code.
 
 ## Create both queues
 
-1. Move the replaceable old module files to
-   `temp/<module>_legacy/`. This is the legacy implementation queue.
-2. Keep only the inventoried infrastructure in the real module tree.
+1. Move the complete old module to `temp/<module>_legacy/`. This is the legacy
+   implementation queue, including original PCH, bootstrap, linkage, and project
+   files.
+2. For a retail render rebuild, leave only the three live `.vcproj` manifests
+   (`render_facade`, `render_core_pc_dx11`, and `render_engine_pc_dx11`) and
+   empty each manifest's `<Files>` section. The baseline live render tree must
+   contain no `.cpp`, `.h`, inline header, API, PCH, bootstrap, or implementation
+   file.
 3. Regenerate canonical target structure:
 
    ```text
@@ -57,15 +68,24 @@ The structure queue proves target type completeness. The legacy queue supplies
 the missing header topology and candidate implementations, and proves that old
 material was neither silently lost nor blindly copied.
 
+Before introducing any interface, regenerate Ninja, clean the three render
+library targets, and build them. All three zero-object librarian commands must
+exit successfully. MSVC `lib.exe` does not emit an archive when it receives no
+objects, so absence of the three `.lib` files is expected until the first TUs
+are introduced. This successful source-free build is the clean baseline.
+
 ## Reconstruct top-down
 
 Start at the top of the target ownership and call tree, not at small helpers:
 
-1. Establish public facade roots, entry points, worlds/managers, resource owners,
+1. Restore each retail project's original PCH only when that project receives
+   its first reconstructed TU. Add the PCH and an empty PCH-only source stub to
+   the project manifest, then keep the project compiling.
+2. Establish public facade roots, entry points, worlds/managers, resource owners,
    and their exact interfaces.
-2. Expand each owner through its member types, virtual surface, construction,
+3. Expand each owner through its member types, virtual surface, construction,
    and immediate dependencies.
-3. Add leaf helpers only when a reconstructed owner requires them.
+4. Add leaf helpers only when a reconstructed owner requires them.
 
 This ordering is mandatory for `/O2` + LTCG targets. A helper introduced before
 its real owner and call path exists may be inlined, folded, discarded, or emitted
@@ -144,7 +164,11 @@ For each real header:
    owning header become available. Leave hard bodies queued for later.
 6. Delete entries from either queue only when the corresponding real header or
    method is present and compile-validated, or its disposition is recorded.
-7. Commit small green batches. Every commit requires a successful full
+7. During render reconstruction, compile only the three retail render libraries:
+   `python3 scripts/ninja_build.py render_facade render_core_pc_dx11
+   render_engine_pc_dx11`. Fix compiler errors until all three libraries build
+   cleanly. Do not link or regenerate reports during this structural loop.
+8. Commit small green batches. Every commit requires a successful full
    `python3 scripts/rebuild.py` and its generated `README.md` and `match.db`.
 
 ## Drain the legacy implementation queue
