@@ -33,6 +33,7 @@ public:
 							);
 	inline	n_ary_tree_animation_event_iterator		( );
 	n_ary_tree_animation_event_iterator& operator ++( );
+			void			invert_times			( u32 time_in_ms );
 	inline	animation_event operator *				( );
 	inline	bool			is_equal				( n_ary_tree_animation_event_iterator const& other ) const;
 

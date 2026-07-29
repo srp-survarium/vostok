@@ -26,6 +26,15 @@ n_ary_tree_event_iterator::n_ary_tree_event_iterator	(
 	select_state					( );
 }
 
+void n_ary_tree_event_iterator::invert_times( u32 const time_in_ms )
+{
+	if ( m_value.event_type )
+		m_value.event_time_in_ms	= time_in_ms - m_value.event_time_in_ms;
+
+	m_weight_event_iterator.invert_times		( time_in_ms );
+	m_animation_event_iterator.invert_times	( time_in_ms );
+}
+
 void n_ary_tree_event_iterator::select_state						( )
 {
 	if ( (*m_weight_event_iterator).event_time_in_ms < (*m_animation_event_iterator).event_time_in_ms ) {
