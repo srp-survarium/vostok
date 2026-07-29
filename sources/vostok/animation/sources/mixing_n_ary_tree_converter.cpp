@@ -19,6 +19,7 @@
 #include "mixing_n_ary_tree_time_scale_node.h"
 #include "interpolator_size_calculator.h"
 #include "mixing_n_ary_tree_redundant_multiplicands_detector.h"
+#include "mixing_binary_tree_initializer.h"
 #include "mixing_binary_tree_null_weight_searcher.h"
 #include "mixing_n_ary_tree_weight_node.h"
 #include "mixing_n_ary_tree_node_comparer.h"
@@ -26,6 +27,7 @@
 #include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include <vostok/animation/mixing_binary_tree_multiplication_node.h>
 #include <vostok/animation/mixing_binary_tree_addition_node.h>
+#include <vostok/animation/mixing_binary_tree_subtraction_node.h>
 #include "mixing_n_ary_tree_animation_node.h"
 #include <vostok/animation/i_editor_mixer.h>
 #include <vostok/animation/mixing_animated_object_holder.h>
@@ -46,6 +48,73 @@ using vostok::animation::mixing::n_ary_tree;
 using vostok::animation::base_interpolator;
 using vostok::animation::mixing::binary_tree_null_weight_searcher;
 
+typedef std::pair<
+	u32,
+	std::pair< binary_tree_animation_node*, binary_tree_animation_node* >
+> weight_driving_animation;
+
+typedef vostok::buffer_vector< weight_driving_animation > weight_driving_animations;
+
+struct find_weight_driving_animation_predicate {
+	inline bool operator()( weight_driving_animation const& left, u32 const right ) const
+	{
+		return left.first < right;
+	}
+};
+
+class binary_tree_weight_driving_animation_getter : public vostok::animation::mixing::binary_tree_visitor {
+public:
+	explicit binary_tree_weight_driving_animation_getter( weight_driving_animations& animations ) :
+		m_animations( animations )
+	{
+	}
+
+private:
+	virtual void visit( binary_tree_animation_node& node )
+	{
+		if ( node.weight_driving_animation() )
+			return;
+
+		u32 const synchronization_group_id = node.weight_synchronization_group_id();
+		if ( synchronization_group_id == u32( -1 ) )
+			return;
+
+		weight_driving_animations::iterator const found = std::lower_bound(
+			m_animations.begin(),
+			m_animations.end(),
+			synchronization_group_id,
+			find_weight_driving_animation_predicate()
+		);
+		R_ASSERT( found != m_animations.end() );
+		found->second.second = &node;
+	}
+
+	virtual void visit( binary_tree_weight_node& )
+	{
+	}
+
+	virtual void visit( vostok::animation::mixing::binary_tree_addition_node& node )
+	{
+		node.left().accept( *this );
+		node.right().accept( *this );
+	}
+
+	virtual void visit( vostok::animation::mixing::binary_tree_subtraction_node& node )
+	{
+		node.left().accept( *this );
+		node.right().accept( *this );
+	}
+
+	virtual void visit( vostok::animation::mixing::binary_tree_multiplication_node& node )
+	{
+		node.left().accept( *this );
+		node.right().accept( *this );
+	}
+
+private:
+	weight_driving_animations& m_animations;
+};
+
 static inline void set_animation_user_data	( n_ary_tree_animation_node& n_ary_animation, binary_tree_animation_node const& binary_animation )
 {
 #ifndef MASTER_GOLD
@@ -56,15 +125,21 @@ static inline void set_animation_user_data	( n_ary_tree_animation_node& n_ary_an
 }
 
 n_ary_tree_converter::n_ary_tree_converter	( expression const& expression ) :
-	m_root						( binary_tree_expression_simplifier( expression.node(), expression.buffer() ).result() ),
+	m_root						(
+		&binary_tree_initializer(
+			*binary_tree_expression_simplifier( expression.node(), expression.buffer() ).result()
+		).result()
+	),
 	m_animations_root			( 0 ),
 	m_binary_interpolators		( 0 ),
 	m_interpolators				( 0 ),
 	m_animation_states			( 0 ),
 	m_animation_events			( 0 ),
+	m_animated_objects			( 0 ),
 	m_reference_counter			( 0 ),
 	m_nodes_to_destroy_manually	( 0 ),
 	m_animations_count			( 0 ),
+	m_animated_objects_count	( 0 ),
 	m_interpolators_count		( 0 ),
 	m_buffer_size				( 0 )
 {
@@ -76,6 +151,7 @@ n_ary_tree_converter::n_ary_tree_converter	( expression const& expression ) :
 	process_interpolators		( weaver.interpolators_root(), weaver.interpolators_count(), expression.buffer() );
 	simplify_weights			( );
 	sort_animations				( expression.buffer() );
+	fix_weight_driving_animations_with_null_weights( expression );
 	compute_buffer_size			( );
 
 	ASSERT						( m_buffer_size );
@@ -165,47 +241,6 @@ void n_ary_tree_converter::compute_buffer_size		( )
 struct animation_less_predicate {
 	inline bool operator ( )	( vostok::animation::mixing::binary_tree_animation_node const& left, vostok::animation::mixing::binary_tree_animation_node const& right ) const
 	{
-	/*
-		if ( left.synchronization_group_id() < right.synchronization_group_id() )
-			return			true;
-
-		if ( right.synchronization_group_id() < left.synchronization_group_id() )
-			return			false;
-
-		if ( !left.driving_animation() )
-			return			true;
-
-		if ( !right.driving_animation() )
-			return			false;
-
-		R_ASSERT			( left.driving_animation() == right.driving_animation(), "more than one driving animation found in synchronization group %d", left.synchronization_group_id() );
-
-		if ( left.animation_intervals_count() < right.animation_intervals_count() )
-			return			true;
-
-		if ( right.animation_intervals_count() < left.animation_intervals_count() )
-			return			false;
-
-		vostok::animation::mixing::animation_interval const* i		= left.animation_intervals_begin();
-		vostok::animation::mixing::animation_interval const* const e	= left.animation_intervals_end();
-		vostok::animation::mixing::animation_interval const* j		= right.animation_intervals_begin();
-		for ( ; i != e; ++i, ++j ) {
-			if ( (*i).animation() < (*j).animation() )
-				return		true;
-
-			if ( (*j).animation() < (*i).animation() )
-				return		false;
-		}
-
-		if ( left.playing_type() != right.playing_type() )
-			return			left.playing_type() < right.playing_type();
-
-		if ( left.start_animation_interval_id() < right.start_animation_interval_id() )
-			return			true;
-
-		if ( left.start_animation_interval_id() > right.start_animation_interval_id() )
-			return			false;
-		*/
 		return				left.start_animation_interval_time() < right.start_animation_interval_time();
 	}
 
@@ -233,67 +268,99 @@ binary_tree_base_node* n_ary_tree_converter::create_binary_multipliers				(
 
 void n_ary_tree_converter::sort_animations			( vostok::mutable_buffer& buffer )
 {
-/*
-	u32 animations_count		= 0;
-	for (binary_tree_animation_node_ptr i = m_animations_root; i; ++animations_count, i = i->m_next_animation ) ;
-	R_ASSERT					( animations_count );
+}
 
-	binary_tree_animation_node** animations = (binary_tree_animation_node**)ALLOCA(animations_count*sizeof(binary_tree_animation_node*));
-	binary_tree_animation_node** j = animations;
-	for (binary_tree_animation_node_ptr i=m_animations_root; i; *j++ = i.c_ptr(), i = i->m_next_animation ) {
-		if ( !(*i).driving_animation() )
+void n_ary_tree_converter::fix_weight_driving_animations_with_null_weights( expression const& expression )
+{
+	u32 animations_count = 1;
+	u32 synchronization_group_id = m_animations_root->weight_synchronization_group_id();
+	for (
+		binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation;
+		animation;
+		animation = animation->m_next_weight_animation
+	)
+	{
+		if ( animation->m_null_weight_found )
 			continue;
 
-		binary_tree_animation_node* k = i.c_ptr( );
-		while ( (*k).driving_animation() ) {
-			R_ASSERT_CMP		( (*k).synchronization_group_id(), ==, (*k).driving_animation()->synchronization_group_id() );
-			k					= (*k).driving_animation().c_ptr();
-		}
+		u32 const current_group_id = animation->weight_synchronization_group_id();
+		if ( current_group_id == synchronization_group_id )
+			continue;
+		if ( current_group_id == u32( -1 ) )
+			break;
 
-		(*i).set_driving_animation	( k );
+		synchronization_group_id = current_group_id;
+		++animations_count;
 	}
 
-	std::sort					( animations, animations + animations_count, animation_less_predicate() );
+	weight_driving_animations animations(
+		ALLOCA( animations_count * sizeof( weight_driving_animation ) ),
+		animations_count
+	);
+	animations.push_back(
+		weight_driving_animation(
+			m_animations_root->weight_synchronization_group_id(),
+			std::make_pair( m_animations_root, static_cast< binary_tree_animation_node* >( 0 ) )
+		)
+	);
 
-	animation_less_predicate predicate;
+	synchronization_group_id = m_animations_root->weight_synchronization_group_id();
+	for (
+		binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation;
+		animation;
+		animation = animation->m_next_weight_animation
+	)
+	{
+		if ( animation->m_null_weight_found )
+			continue;
 
-	binary_tree_animation_node** i	= animations;
-	binary_tree_animation_node** e	= animations + animations_count;
-	binary_tree_animation_node** new_e_minus_1	= animations + animations_count - 1;
-	for ( j = i + 1; j != e; ) {
-		if ( predicate(**i, **j) ) {
-			++i;
-			++j;
+		u32 const current_group_id = animation->weight_synchronization_group_id();
+		if ( current_group_id == synchronization_group_id )
+			continue;
+		if ( current_group_id == u32( -1 ) )
+			break;
+
+		synchronization_group_id = current_group_id;
+		animations.push_back(
+			weight_driving_animation(
+				current_group_id,
+				std::make_pair( animation.c_ptr(), static_cast< binary_tree_animation_node* >( 0 ) )
+			)
+		);
+	}
+
+	binary_tree_weight_driving_animation_getter weight_driving_animation_getter( animations );
+	expression.node().accept( weight_driving_animation_getter );
+
+	for (
+		binary_tree_animation_node_ptr animation = m_animations_root;
+		animation;
+		animation = animation->m_next_weight_animation
+	)
+	{
+		if ( animation->m_null_weight_found )
+			continue;
+
+		u32 const current_group_id = animation->weight_synchronization_group_id();
+		if ( current_group_id == u32( -1 ) )
+			break;
+
+		weight_driving_animations::iterator const found = std::lower_bound(
+			animations.begin(),
+			animations.end(),
+			current_group_id,
+			find_weight_driving_animation_predicate()
+		);
+		R_ASSERT( found != animations.end() );
+
+		if ( found->second.first != animation.c_ptr() ) {
+			animation->m_weight_driving_animation = found->second.first;
 			continue;
 		}
 
-		LOG_WARNING				( "the same animation is used twice in the expression" );
-
-		R_ASSERT				( !predicate(**j, **i), "less predicate for binary tree animation nodes is broken" );
-
-		binary_tree_base_node_ptr current_hierarchy	= create_binary_multipliers( buffer, (*i)->m_next_weight );
-		do {
-			binary_tree_base_node_ptr const right	= create_binary_multipliers( buffer, (*j)->m_next_weight );
-
-			binary_tree_addition_node* const new_weight	= static_cast<binary_tree_addition_node*>( buffer.c_ptr() );
-			buffer						+= sizeof( binary_tree_addition_node );
-			new ( new_weight ) binary_tree_addition_node( current_hierarchy.c_ptr(), right.c_ptr() );
-			current_hierarchy			= new_weight;
-
-			++j;
-			--new_e_minus_1;
-		} while ( (j != e) && !predicate(**i, **j) );
-
-		(*i)->m_next_weight				= binary_tree_expression_simplifier( *current_hierarchy, buffer ).result( );
-		++i;
+		animation->m_weight_driving_animation = 0;
+		animation->m_weight_interpolator = found->second.second->m_weight_interpolator;
 	}
-
-	for (i = animations; i != new_e_minus_1; ++i )
-		(*i)->m_next_animation	= *(i+1);
-
-	(*i)->m_next_animation		= 0;
-	m_animations_root			= *animations;
-	*/
 }
 
 void n_ary_tree_converter::simplify_weights		( )

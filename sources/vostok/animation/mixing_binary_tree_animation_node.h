@@ -35,6 +35,8 @@ namespace mixing {
 
 class animation_lexeme_parameters;
 class animation_interval;
+class binary_tree_initializer;
+class n_ary_tree_converter;
 
 typedef intrusive_ptr<
 	binary_tree_animation_node,
@@ -98,6 +100,9 @@ protected:
 			void					destroy_animation_intervals	( );
 
 private:
+	friend class binary_tree_initializer;
+	friend class n_ary_tree_converter;
+
 	inline	binary_tree_animation_node& operator=				( binary_tree_animation_node const& other );
 	inline	void				assign_uninitialized_user_data	( );
 

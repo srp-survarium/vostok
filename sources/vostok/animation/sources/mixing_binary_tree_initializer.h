@@ -17,8 +17,9 @@ class binary_tree_initializer : public binary_tree_visitor , public boost::nonco
 public:
 			explicit					binary_tree_initializer	( binary_tree_base_node& expression_node );
 
-	inline	binary_tree_base_node&		result					( ) const { return m_root; } // sushi@TODO: Maybe?
+	inline	binary_tree_base_node&		result					( ) const { return m_root; }
 
+private:
 	virtual	void						visit					( binary_tree_animation_node& node ) override;
 	virtual	void						visit					( binary_tree_weight_node& node ) override;
 	virtual	void						visit					( binary_tree_addition_node& node ) override;

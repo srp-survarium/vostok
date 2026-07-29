@@ -8,53 +8,54 @@
 namespace vostok {
 namespace animation {
 
-// STATE[STUB]
 void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_size )
 {
-	// LOCALS
-	// mutable_buffer 					buffer
-	// bi_spline_event_channel_baked* const event_channels
-	// ******
-
-	// TYPEDEFS
-	// typedef
-	// 	platform_pointer_selector< bi_spline_channel_animation_baked, 1 >::helper
-	// 	bi_spline_channel_animation_baked_ptr;
-
-	// ******
-
 	mutable_buffer buffer( raw_buffer, buffer_size );
-	buffer += 4;
+	bi_spline_skeleton_animation_baked_impl const* const impl =
+		static_cast< bi_spline_skeleton_animation_baked_impl const* >( buffer.c_ptr() );
+	buffer += sizeof( *impl );
 
-	// FUNCTION BODY
-	// <0x73b3f7>|0x007|+0x00b:'119'
-	// <0x73b402>|0x012|+0x004:'120'
-	// <0x73b406>|0x016|+0x00e:'121'
-	// <0>
-	// <1>
-	// <0x73b414>|0x024|+0x018:'124'
-	// <0>
-	// <1>
-	// <0x73b42c>|0x03c|+0x015:'127'
-	// <0>
-	// <1>
-	// <2>
-	// <0x73b441>|0x051|+0x043:'131'
-	// <0x73b484>|0x094|-0x034:'131'
-	// <0x73b450>|0x060|+0x007:'132'
-	// <0x73b457>|0x067|+0x002:'133'
-	// <0x73b459>|0x069|+0x010:'134'
-	// <0>
-	// <0x73b469>|0x079|+0x021:'136'
-	// <0>
-	// <1>
-	// <2>
-	// <0x73b48a>|0x09a|+0x016:'140'
-	// <0x73b4a0>|0x0b0|+0x003:'141'
-	// <0x73b4a3>|0x0b3|+0x016:'142'
-	// <0x73b4b9>|0x0c9|+0x042:'143'
-	// <0>
-	// ******
+	bi_spline_bone_animation_baked* const bones =
+		static_cast< bi_spline_bone_animation_baked* >( buffer.c_ptr() );
+	buffer += impl->bones_count * sizeof( *bones );
+
+	bi_spline_event_channel_baked* const event_channels =
+		static_cast< bi_spline_event_channel_baked* >( buffer.c_ptr() );
+	buffer += impl->event_channels_count * sizeof( *event_channels );
+
+	bi_spline_bone_animation_baked* bone = bones;
+	bi_spline_bone_animation_baked* const bones_end = bones + impl->bones_count;
+	for ( ; bone != bones_end; ++bone )
+	{
+		typedef platform_pointer_selector<
+			bi_spline_channel_animation_baked,
+			platform_pointer_64bit
+		>::helper channel_pointer;
+
+		channel_pointer* channel = bone->m_channel_animations;
+		channel_pointer* const channels_end = channel + channel_max;
+		for ( ; channel != channels_end; ++channel )
+		{
+			bi_spline_channel_animation_baked* const channel_animation =
+				static_cast< bi_spline_channel_animation_baked* >( buffer.c_ptr() );
+			*channel = channel_animation;
+
+			buffer += sizeof( *channel_animation );
+			buffer += channel_animation->knots_count() * sizeof( std::pair< float, float > );
+		}
+	}
+
+	for ( u32 channel = 0; channel < impl->event_channels_count; ++channel )
+	{
+		bi_spline_event_channel_baked& event_channel = event_channels[channel];
+		event_channel.m_knots = static_cast< float* >( buffer.c_ptr() );
+
+		buffer += event_channel.knots_count() * sizeof( float );
+		buffer += math::align_up(
+			event_channel.domains_count() + strings::length( event_channel.name() ) + 1,
+			u32( 4 )
+		);
+	}
 }
 
 } // namespace animation
