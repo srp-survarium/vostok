@@ -41,3 +41,19 @@ Record each non-live removal here as:
   represented in the live tree |
   `sources/vostok/render/facade/sources/render_facade_world.cpp` now owns the
   target facade-world construction and renderer wiring.
+- `headers/vostok/render/{base_command,base_scene,base_scene_view,base_output_window}.h` |
+  represented in the live tree |
+  `sources/vostok/render/facade/base_command.h` and
+  `sources/vostok/render/engine/base_classes.h` carry the target layouts,
+  ownership aliases, and public/protected surfaces.
+- `headers/vostok/render/one_way_render_channel{,__null_render_command}.h` |
+  represented in the live tree |
+  `sources/vostok/render/facade/one_way_render_channel.h` carries the target
+  `0xb8` channel owner and its nested null command.
+- `sources/vostok/render/facade/one_way_render_channel_inline{,_1}.h` |
+  merged into the live header |
+  Both compiland variants are represented in
+  `sources/vostok/render/facade/one_way_render_channel_inline.h`.
+- `sources/vostok/render/facade/sources/one_way_render_channel.cpp` |
+  represented in the live tree |
+  The owner methods and scene-list draining live at the same real path.

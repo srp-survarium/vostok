@@ -17,44 +17,59 @@ namespace render {
 namespace debug { class renderer; }
 
 class base_command;
+struct base_scene;
+struct base_scene_view;
+struct base_output_window;
+
+typedef resources::resource_ptr<
+	base_scene,
+	resources::unmanaged_intrusive_base
+> base_scene_ptr;
+
+typedef resources::resource_ptr<
+	base_scene_view,
+	resources::unmanaged_intrusive_base
+> base_scene_view_ptr;
 
 struct base_scene : public resources::unmanaged_resource {
 	inline	base_scene	( ) :
 		first_command	( 0 ),
-		last_command	( 0 )
+		last_command	( 0 ),
+		fixed_lod_value	( 0 )
 	{
 	}
 
-	typedef	resources::resource_ptr <
-		base_scene,
-		resources::unmanaged_intrusive_base
-	> scene_ptr;
+	virtual	~base_scene	( ) { }
 
-	base_command*		first_command;
-	base_command*		last_command;
-	scene_ptr			next_scene;
+	/* 0x0108 */	base_command*		first_command;
+	/* 0x010c */	base_command*		last_command;
+	/* 0x0110 */	base_scene_ptr		next_scene;
+	/* 0x0114 */	volatile long		fixed_lod_value;
 }; // struct base_scene
 
-typedef base_scene* scene_pointer;
+STATIC_SIZE_ASSERT( base_scene, 0x118 );
+
+typedef base_scene* base_scene_pointer;
 
 struct base_scene_view : public resources::unmanaged_resource {
 	inline	base_scene_view	( ) :
-		first_command	( 0 ),
-		last_command	( 0 )
+		first_command		( 0 ),
+		last_command		( 0 ),
+		editor_debug_mode	( 0 )
 	{
 	}
 
-	typedef	resources::resource_ptr <
-		base_scene_view,
-		resources::unmanaged_intrusive_base
-	> scene_view_ptr;
+	virtual	~base_scene_view	( ) { }
 
-	base_command*		first_command;
-	base_command*		last_command;
-	scene_view_ptr		next_scene_view;
+	/* 0x0108 */	base_command*			first_command;
+	/* 0x010c */	base_command*			last_command;
+	/* 0x0110 */	base_scene_view_ptr		next_scene_view;
+	/* 0x0114 */	volatile long			editor_debug_mode;
 }; // struct base_scene_view
 
-typedef base_scene_view* scene_view_pointer;
+STATIC_SIZE_ASSERT( base_scene_view, 0x118 );
+
+typedef base_scene_view* base_scene_view_pointer;
 
 struct base_output_window : public resources::unmanaged_resource {
 	inline	math::uint2 const&	current_size		( ) const { return m_current_size; }
@@ -62,16 +77,16 @@ struct base_output_window : public resources::unmanaged_resource {
 	inline						base_output_window	( ) { }
 	virtual						~base_output_window	( ) { }
 
-public:
+protected:
 	/* 0x0108 */	math::uint2		m_current_size;
 }; // struct base_output_window
 
-STATIC_SIZE_ASSERT(base_output_window, 0x110);
+STATIC_SIZE_ASSERT( base_output_window, 0x110 );
 
-typedef	base_scene::scene_ptr			scene_ptr;
-typedef	base_scene_view::scene_view_ptr	scene_view_ptr;
+typedef	base_scene_ptr			scene_ptr;
+typedef	base_scene_view_ptr		scene_view_ptr;
 
-typedef	resources::resource_ptr <
+typedef resources::resource_ptr<
 	base_output_window,
 	resources::unmanaged_intrusive_base
 > render_output_window_ptr;
@@ -82,21 +97,21 @@ typedef base_output_window* render_output_window_pointer;
 } // namespace vostok
 
 template class VOSTOK_RENDER_ENGINE_API
-	vostok::resources::resource_ptr <
+	vostok::resources::resource_ptr<
 		vostok::render::base_scene,
 		vostok::resources::unmanaged_intrusive_base
 	>;
 
 template class VOSTOK_RENDER_ENGINE_API
-	vostok::resources::resource_ptr <
+	vostok::resources::resource_ptr<
 		vostok::render::base_scene_view,
 		vostok::resources::unmanaged_intrusive_base
 	>;
 
 template class VOSTOK_RENDER_ENGINE_API
-	vostok::resources::resource_ptr <
+	vostok::resources::resource_ptr<
 		vostok::render::base_output_window,
 		vostok::resources::unmanaged_intrusive_base
 	>;
 
-#endif // #ifndef VOSTOK_RENDER_ENGINE_BASE_CLASSES_H_INCLUDED
+#endif // VOSTOK_RENDER_ENGINE_BASE_CLASSES_H_INCLUDED

@@ -4,8 +4,8 @@
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef BASE_COMMAND_H_INCLUDED
-#define BASE_COMMAND_H_INCLUDED
+#ifndef VOSTOK_RENDER_BASE_COMMAND_H_INCLUDED
+#define VOSTOK_RENDER_BASE_COMMAND_H_INCLUDED
 
 #include <vostok/render/engine/base_classes.h>
 
@@ -14,23 +14,31 @@ namespace render {
 
 class VOSTOK_NOVTABLE base_command {
 public:
-	inline			base_command		( bool const is_deferred_command = false, bool const use_depth = true ) : remove_frame_id( 0 ), is_deferred_command( is_deferred_command ), use_depth( use_depth ) { }
+	inline			base_command		( bool const is_deferred = false, bool const depth = true ) :
+		remove_frame_id		( 0 ),
+		is_deferred_command	( is_deferred ),
+		use_depth			( depth )
+	{
+	}
+
 	virtual	void	execute				( ) = 0;
 	virtual	void	defer_execution		( ) { R_ASSERT( !is_deferred_command ); }
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( base_command )
 
 public:
-	base_command*	next;
-	base_command*	deferred_next;
-	bool			is_deferred_command;
-	bool			use_depth;
+	/* 0x0004 */	base_command*	next;
+	/* 0x0008 */	base_command*	deferred_next;
+	/* 0x000c */	bool			is_deferred_command;
+	/* 0x000d */	bool			use_depth;
 
 public:
-	VOSTOK_MAX_CACHE_LINE_PAD;
-	u32				remove_frame_id;
+	/* 0x000e */	VOSTOK_MAX_CACHE_LINE_PAD;
+	/* 0x0050 */	u32				remove_frame_id;
 }; // class base_command
+
+STATIC_SIZE_ASSERT( base_command, 0x54 );
 
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef BASE_COMMAND_H_INCLUDED
+#endif // VOSTOK_RENDER_BASE_COMMAND_H_INCLUDED
