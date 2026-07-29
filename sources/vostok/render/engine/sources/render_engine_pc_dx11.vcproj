@@ -953,6 +953,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage.h"
+			>
+		</File>
+		<File
 			RelativePath=".\material_effects_instance.h"
 			>
 		</File>
