@@ -7,19 +7,66 @@ fill in function bodies one at a time. Worked example: `network_core` (47 files,
 rebuilt clean from `feature/agentic-matching-loop-2`).
 
 This is the *clean redo* of the older patch-in-place approach (PR #267's
-`enabling_a_library.md`, never merged - its content is subsumed here). Here we throw
-the old per-type files away and regenerate
-every one from the canonical dump, using an emptying **temp queue** as the proof of
-completeness.
+`enabling_a_library.md`, never merged - its content is subsumed here). Before
+replacing the old per-type files, move them to `temp/<module>_legacy/`; that
+recoverable tree is the topology/body-salvage queue. Regenerate every interface from
+the canonical dump using a separate emptying structure queue as the proof of type
+completeness. Drain the two queues together, one real header and its related methods
+at a time. Legacy headers recover file placement, grouping, includes, and candidate
+bodies, but never override the canonical layout.
 
 ## The method in one paragraph
-Branch off the integration base. Delete EVERY per-type header and `.cpp` carcass in
-the module - keep only the handful of files that are not PDB types (below). Copy the
-canonical `headers/` and `sources/` trees for the module into a TEMP dir; that temp
-dir is your work-list. Reproduce each canonical file as a compilable header/source in
-the real tree, then DELETE it from the temp dir. When the temp dir is EMPTY, every
-canonical class/struct/enum/carcass has been reproduced - that is the completeness
-signal. Then enable the TUs and drive the build green.
+Branch off the integration base. Move EVERY replaceable per-type header and `.cpp`
+carcass in the module to `temp/<module>_legacy/`; keep only the handful of files that
+are not PDB types (below). Copy the canonical `headers/` and `sources/` trees for the
+module into `temp/<module>_structure_queue/`; that second temp tree is the target-type
+work-list. Despite their names, generated `headers/` is a synthetic
+namespace-keyed, one-type-record-per-file pool, while generated `sources/` contains
+every path-preserved file with at least one function - including `.cpp`, `.h`, and
+inline/include files. The latter gives strong paths for function-bearing headers,
+but the structure generator still does not recover the complete original header
+tree. Never copy generated `headers/` verbatim as the new interface. Rebuild each
+real header by relating synthetic type records and function-bearing paths to the
+legacy header tree and current consumers, porting straightforward methods as their
+declarations become available.
+Delete entries from either queue only after reproducing, porting, or explicitly
+triaging them. When both queues are EMPTY, every canonical type is represented and
+every legacy item is accounted for. Then enable the remaining TUs and drive the full
+build green.
+
+## Two queues, one header at a time
+
+The PDB structure gives exact types but incomplete source topology:
+
+- generated `headers/` files are synthetic type records and do not identify final
+  header grouping;
+- generated `sources/` paths cover any file with at least one function, including
+  headers, but cannot place data-only/type-only headers;
+- function-bearing paths and source-line records identify ownership for only some
+  types;
+- `_N` variants and nested-type files may describe fragments that belong together.
+
+These properties come directly from the generator:
+
+- every run deletes and recreates its generated `sources/` and `headers/` trees;
+- `sources/` walks DBI compilands, groups functions by recorded filename, strips
+  the configured engine-path prefix, and preserves the remainder;
+- the writer uses create-new semantics, so a recorded path seen in multiple
+  compilands becomes `<stem>_1`, `<stem>_2`, and so on;
+- `headers/` walks the global type stream and synthesizes filenames from namespace
+  and resident type names (with truncation and punctuation replacement).
+
+Therefore a `sources/` path is useful provenance, while a `headers/` filename is
+not. Merge suffixed source variants by symbol/source-line evidence, and seed a
+durable temp queue from a completed generation before running the generator again.
+
+Use both queues simultaneously. For each real header, reconcile canonical type and
+compiland entries with legacy filenames/includes, current consumers, symbol
+ownership, source-line clues, and dependency order. The legacy tree is authoritative
+for likely file relationships; the target PDB and symbols are authoritative for
+declarations and layout. A generated file and a real header are not necessarily
+one-to-one. Drain the corresponding structure and legacy entries only after the new
+header compiles.
 
 ## Shared-namespace header pools (the `game` complication)
 
@@ -59,15 +106,18 @@ contain them:
   the file itself is hand-maintained infra you keep.
 
 Everything else - every `*.h` type header, every `*_inline.h`, every `sources/*.cpp` -
-is deleted and rebuilt from canonical.
+is moved into the legacy queue and rebuilt against canonical structure.
 
 ## Ground truth = `binaries/structure/target/` (NEVER guess)
-- `headers/vostok/<module>/` - one file per type: exact members, `/* 0xNN */` offsets,
-  access specifiers, `STATIC_SIZE_ASSERT`, method signatures, `{ /* no source */ }`
-  inline bodies. Nested types are separate `Outer__Inner.h` files; enums under `enums/`.
-- `sources/vostok/<module>/` - the per-compiland carcasses: `*_inline.h` carry the
-  inline definitions with addressed `// FUNCTION BODY[0xVA]` blocks; `sources/*.cpp`
-  carry the out-of-line definitions.
+- `headers/vostok/<module>/` - synthetic one-file-per-type records: exact members,
+  `/* 0xNN */` offsets, access specifiers, `STATIC_SIZE_ASSERT`, method signatures,
+  `{ /* no source */ }` inline bodies. These are reconstruction ingredients, not
+  original headers. Nested types are separate `Outer__Inner.h` files; enums under
+  `enums/`.
+- `sources/vostok/<module>/` - path-preserved carcasses for every recorded file
+  with at least one function. This is not a `.cpp`-only pool: ordinary headers and
+  `*_inline.h` files appear here when they own inline definitions with addressed
+  `// FUNCTION BODY[0xVA]` blocks; `.cpp` files carry out-of-line definitions.
 
 You reassemble each real header from BOTH views. **When the canonical header and a real
 symbol disagree, the symbol wins** (`binaries/rich/target/index.jsonl`, `mangled`
@@ -164,8 +214,27 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
    includes, so a `//#include <vostok/<module>/x.h>` of a deleted header leaves a
    dangling ninja dep ("missing and no known rule to make it") in every consumer TU.
 
+## Draining the legacy topology/body queue
+
+The canonical carcass owns declarations, layouts, and signatures. The parked legacy
+tree supplies likely header relationships and candidate method bodies:
+
+1. Match a legacy method to its canonical declaration by name and structure.
+2. Port straightforward bodies, adapting them to canonical members, signatures, and
+   module ownership. Preserve the fresh addressed carcass evidence until matching.
+3. Do not force bodies that depend on removed subsystems or incompatible types.
+   Record their disposition in the queue's triage log.
+4. Remove a method from its legacy file only after it was ported or triaged; delete
+   the file when empty.
+5. Keep the module green after every harvest batch. Porting is seeding, not proof of
+   a binary match; the normal matcher loop still decides that.
+
+See `game/legacy_harvest.md` for the worked protocol.
+
 ## Acceptance gates
-- Both temp dirs (`headers` + `sources`) EMPTY.
+- The structure queue's `headers` and `sources` trees are EMPTY.
+- The legacy queue is EMPTY, with every unported item accounted for in its triage
+  log.
 - `grep -rn 'FUNCTION BODY$' sources/vostok/<module>` returns nothing (no addressless
   carcass) and no file carries the old generation's `Created` date.
 - `python3 scripts/rebuild.py` GREEN; `report-changes.json` only ICF-folding noise
