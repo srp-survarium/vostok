@@ -21,6 +21,10 @@ semantics are not.
 - Enter the Nix development environment; do not use sibling tool checkouts.
 - Use `python3 scripts/rebuild.py` with no module argument for the authoritative
   build, relink, delink, report, README score, and `match.db` refresh.
+- During render clean-room reconstruction, compile only the three retail render
+  libraries with `python3 scripts/ninja_build.py render_facade
+  render_core_pc_dx11 render_engine_pc_dx11`. Fix compiler errors until all
+  three libraries build; do not link or regenerate reports during this loop.
 - A module-only build does not relink the executable and cannot establish a
   current match score.
 - `python3 scripts/match_db.py refresh` only re-derives the database from the
