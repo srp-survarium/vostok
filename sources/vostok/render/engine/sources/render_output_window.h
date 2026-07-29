@@ -31,7 +31,6 @@ private:
 
 private:
 	renderer_context_targets		m_targets;
-	math::uint2						m_current_size;
 	ref_render_output				m_output;
 	HWND							m_window;
 public:

@@ -73,19 +73,25 @@ void vostok_scaleform_log::LogMessageVarg( Scaleform::LogMessageId message_id, p
 	char buffer[ Scaleform::Log::MaxLogBufferMessageSize ];
 	Scaleform::Log::FormatLog( buffer, sizeof( buffer ), message_id, fmt, args );
 
-	switch ( scaleform_message_type )
+	if ( scaleform_message_type == Scaleform::LogMessage_Text )
 	{
-	default:
-	case Scaleform::LogMessage_Text:
 		g_log_output_ptr( 1, buffer );
-		break;
-	case Scaleform::LogMessage_Warning:
-		g_log_output_ptr( 2, buffer );
-		break;
-	case Scaleform::LogMessage_Error:
-		g_log_output_ptr( 3, buffer );
-		break;
+		return;
 	}
+
+	if ( scaleform_message_type == Scaleform::LogMessage_Warning )
+	{
+		g_log_output_ptr( 2, buffer );
+		return;
+	}
+
+	if ( scaleform_message_type == Scaleform::LogMessage_Error )
+	{
+		g_log_output_ptr( 3, buffer );
+		return;
+	}
+
+	g_log_output_ptr( 1, buffer );
 }
 
 void flash_factory::tick( )

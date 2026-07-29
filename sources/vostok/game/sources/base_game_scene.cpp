@@ -63,18 +63,9 @@ base_game_scene::~base_game_scene( )
 	DELETE( m_camera_director );
 }
 
-// STATE[STUB]
-// claude@NOTE: target body is `return m_game.render_output_window( )->output_window_size( );`
-// - it reads m_game.render_output_window() (resource_ptr by value, addref/release temp)
-// then a uint2 const& member at +0x108 of the concrete render_output_window. That
-// accessor does not exist on base_output_window / render_output_window (render module,
-// not editable here): render_output_window only exposes get_window_client_size() (by
-// VALUE, returns HWND-queried size), no `uint2 const& output_window_size()` returning the
-// m_current_size member by ref. BLOCKED on a render-module accessor; also walls
-// point_to_screen + the movie/text methods (all call this).
 math::uint2 const& base_game_scene::output_window_size( ) const
 {
-	return *( math::uint2 const* )NULL;	// buildability return
+	return m_game.render_output_window( )->current_size( );
 }
 
 // STATE[STUB]
