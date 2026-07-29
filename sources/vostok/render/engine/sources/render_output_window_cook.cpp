@@ -1,15 +1,16 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_output_window_cook.h"
+#include "render_output_window_cook.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- render_output_window_cook::render_output_window_cook( )
+render_output_window_cook::render_output_window_cook( ) :
+	resources::translate_query_cook(
+		resources::render_output_window_class,
+		reuse_false,
+		use_current_thread_id
+	)
 {
 	// FUNCTION BODY[0x76ac70]
 	// ******
