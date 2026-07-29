@@ -18,6 +18,8 @@
 #pragma comment ( lib,"libgfx_as2.lib")
 #pragma comment ( lib,"libgfx_as3.lib")
 #pragma comment ( lib,"libgfx_libjpeg.lib" )
+#pragma comment ( lib,"libgfxexpat.lib")
+#pragma comment ( lib,"pcre.lib")
 
 using Scaleform::UPInt;
 

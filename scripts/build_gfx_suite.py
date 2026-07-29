@@ -31,10 +31,10 @@ Flags (verified per-lib via pdb_build_info; libgfx/as2/as3 share one config):
     -errorreport:none -TP  + the -w44### warning enables
     defines: WIN32 _WINDOWS SF_BUILD_STATICLIB NDEBUG SF_BUILD_SHIPPING _MBCS
              _VC80_UPGRADE=0x0710
-  C libs (libgfx_zlib, libgfx_libpng, libgfx_libjpeg): plain Release C static
-    libs (the shipped PDB carries no debug cmd for them - they are not engine-
-    matchable; they only need to RESOLVE the jpeg_*/png_*/inflate symbols libgfx
-    pulls). /O2 /MT, WIN32;NDEBUG (+ _LIB;_CRT_SECURE_NO_WARNINGS for jpeg), -TC.
+  C libs (libgfx_zlib, libgfx_libpng, libgfx_libjpeg, libgfxexpat, pcre):
+    plain Release C static libs (the shipped PDB carries no debug cmd for them -
+    they are not engine-matchable; they only need to resolve the symbols the C++
+    archives pull). /O2 /MT, -TC, with the SDK projects' release defines.
 
 System includes (VC / WinSDK / DXSDK) come from Wine's %INCLUDE% (set in the Wine
 registry by setup-toolchain.py), so the rsp lists only the GFx-specific -I dirs;
@@ -47,7 +47,7 @@ distribution libs so a setup pass never clobbers them.
 
 Run inside `nix develop`. Idempotent: re-run to resume (skips objs already built).
 
-    python3 scripts/build_gfx_suite.py            # all 6 (small first)
+    python3 scripts/build_gfx_suite.py            # all 8 (small first)
     python3 scripts/build_gfx_suite.py libgfx     # one
 """
 import os
@@ -83,7 +83,7 @@ CPP_INCLUDES = [
 ]
 
 # C libs: plain Release C static lib. The PDB carries no debug cmd for these and
-# they are not engine-matchable; they only resolve the codec symbols libgfx pulls.
+# they are not engine-matchable; they only resolve symbols the C++ archives pull.
 C_LIBS = {
     "libgfx_zlib":    {"defines": ("WIN32", "NDEBUG", "_MBCS"),
                        "includes": ["3rdParty/zlib-1.2.7"]},
@@ -92,11 +92,17 @@ C_LIBS = {
     "libgfx_libjpeg": {"defines": ("WIN32", "NDEBUG", "_LIB",
                                    "_CRT_SECURE_NO_WARNINGS", "_MBCS"),
                        "includes": ["3rdParty/jpeg-8d"]},
+    "libgfxexpat":    {"defines": ("WIN32", "NDEBUG", "COMPILED_FROM_DSP"),
+                       "includes": ["3rdParty/expat-2.1.0/lib"]},
+    "pcre":           {"defines": ("WIN32", "NDEBUG", "HAVE_CONFIG_H",
+                                   "_CRT_SECURE_NO_WARNINGS"),
+                       "includes": ["3rdParty/pcre"]},
 }
 C_FLAGS = "-nologo -O2 -Ob2 -Ot -MT -GS- -W3 -Z7 -FD -c -MP -errorreport:none -TC"
 
 CPP_LIBS = ("libgfx", "libgfx_as2", "libgfx_as3")
 DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
+                 "libgfxexpat", "pcre",
                  "libgfx_as2", "libgfx_as3", "libgfx"]
 
 
