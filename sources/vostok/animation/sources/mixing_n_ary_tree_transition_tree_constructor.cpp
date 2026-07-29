@@ -92,181 +92,140 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	return								&new_animation;
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_base_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::new_time_scale(vostok::animation::mixing::n_ary_tree_animation_node&, unsigned int&, float&)
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_ary_tree_animation_node& new_time_driving_animation, u32& animation_interval_id, float& animation_interval_time )
 {
-	// LOCALS
-	// float 							new_time_driving_animation_time_offset
-	// n_ary_tree_time_scale_calculator time_scale_calculator
-	// n_ary_tree_base_node* 			time_scale_node
-	// float 							directional_time_scale_factor
-	// float 							new_driving_animation_length
-	// float 							time_scale_factor
-	// bool 							is_target_time_scale_node
-	// n_ary_tree_base_node* 			target_time_scale_node
-	// float 							new_time_driving_animation_target_time_scale
-	// ******
+	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.time_root( );
+	for ( ; previous_time_driving_animation; previous_time_driving_animation = previous_time_driving_animation->m_next_weight_animation ) {
+		if ( previous_time_driving_animation->time_driving_animation( ) )
+			continue;
+		if ( previous_time_driving_animation->time_synchronization_group_id( ) == new_time_driving_animation.time_synchronization_group_id( ) )
+			break;
+	}
 
-	// CALL SITE INFO
-	// <0x6ea52f> -> bool < unknown >()
-	// <0x6ea546> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6ea57a> -> float < unknown >() const
-	// <0x6ea598> -> bool < unknown >()
-	// <0x6ea641> -> bool < unknown >()
-	// <0x6ea783> -> bool < unknown >()
-	// ******
+	if ( !previous_time_driving_animation || previous_time_driving_animation->animation_state( ).is_freezed )
+		return								NULL;
 
-	return NULL;
+	n_ary_tree_animation_node* target_time_driving_animation	= m_to.time_root( );
+	for ( ; target_time_driving_animation; target_time_driving_animation = target_time_driving_animation->m_next_time_animation )
+		if ( target_time_driving_animation->time_synchronization_group_id( ) == new_time_driving_animation.time_synchronization_group_id( ) )
+			break;
+	if ( target_time_driving_animation && target_time_driving_animation != &new_time_driving_animation )
+		return								NULL;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ea3e3>|0x003|+0x00d:'130'
-	// <0x6ea3f0>|0x010|+0x01d:'131'
-	// <0x6ea40d>|0x02d|-0x00b:'131'
-	// <0x6ea402>|0x022|+0x01e:'132'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ea420>|0x040|-0x00c:'138'
-	// <0x6ea414>|0x034|+0x015:'139'
-	// <0>
-	// <0x6ea429>|0x049|+0x00a:'141'
-	// <0x6ea433>|0x053|+0x00e:'142'
-	// <0x6ea441>|0x061|+0x002:'143'
-	// <0x6ea443>|0x063|+0x002:'144'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x6ea445>|0x065|+0x011:'154'
-	// <0x6ea456>|0x076|+0x016:'155'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ea46c>|0x08c|+0x011:'159'
-	// <0>
-	// <1>
-	// <0x6ea47d>|0x09d|+0x004:'162'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ea481>|0x0a1|+0x022:'167'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6ea4a3>|0x0c3|+0x02c:'175'
-	// <0x6ea4cf>|0x0ef|+0x004:'176'
-	// <0>
-	// <1>
-	// <0x6ea4d3>|0x0f3|+0x045:'179'
-	// <0x6ea518>|0x138|+0x03c:'180'
-	// <0x6ea554>|0x174|-0x030:'180'
-	// <0x6ea524>|0x144|+0x011:'181'
-	// <0>
-	// <0x6ea535>|0x155|+0x013:'183'
-	// <0x6ea548>|0x168|+0x010:'184'
-	// <0x6ea558>|0x178|+0x00a:'184'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ea562>|0x182|+0x011:'188'
-	// <0>
-	// <0x6ea573>|0x193|+0x017:'190'
-	// <0>
-	// <1>
-	// <0x6ea58a>|0x1aa|+0x017:'193'
-	// <0x6ea5a1>|0x1c1|+0x036:'194'
-	// <0>
-	// <1>
-	// <0x6ea5d7>|0x1f7|+0x046:'197'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ea61d>|0x23d|+0x02e:'201'
-	// <0>
-	// <0x6ea64b>|0x26b|+0x009:'203'
-	// <0>
-	// <0x6ea654>|0x274|+0x006:'205'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ea65a>|0x27a|+0x037:'212'
-	// <0x6ea691>|0x2b1|+0x029:'213'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6ea6ba>|0x2da|+0x035:'222'
-	// <0x6ea6ef>|0x30f|+0x009:'223'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6ea6f8>|0x318|+0x03a:'231'
-	// <0x6ea732>|0x352|+0x019:'232'
-	// <0x6ea74b>|0x36b|+0x019:'232'
-	// <0>
-	// <1>
-	// <0x6ea764>|0x384|+0x029:'235'
-	// <0>
-	// <0x6ea78d>|0x3ad|+0x01f:'237'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ea7ac>|0x3cc|+0x013:'242'
-	// <0x6ea7bf>|0x3df|+0x009:'243'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ea7c8>|0x3e8|+0x031:'250'
-	// <0x6ea7f9>|0x419|+0x01a:'251'
-	// <0x6ea813>|0x433|-0x0d4:'251'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ea73f>|0x35f|+0x019:'255'
-	// <0x6ea758>|0x378|+0x041:'255'
-	// <0x6ea799>|0x3b9|+0x06e:'255'
-	// <0x6ea807>|0x427|+0x01e:'255'
-	// <0x6ea825>|0x445|-0x40f:'255'
-	// <0x6ea416>|0x036|+0x32b:'256'
-	// <0x6ea741>|0x361|+0x019:'256'
-	// <0x6ea75a>|0x37a|+0x048:'256'
-	// <0x6ea7a2>|0x3c2|+0x067:'256'
-	// <0x6ea809>|0x429|+0x020:'256'
-	// ******
+	animation_interval_id					=
+		( new_time_driving_animation.override_existing_animation( )
+			? new_time_driving_animation
+			: *previous_time_driving_animation
+		).animation_state( ).animation_interval_id;
+	float const new_driving_animation_length	=
+		new_time_driving_animation.animation_intervals( )[ animation_interval_id ].length( )
+		/ previous_time_driving_animation->animation_intervals( )[ animation_interval_id ].length( );
+	float const directional_time_scale_factor	=
+		new_time_driving_animation.is_positive_event_direction( )
+			== previous_time_driving_animation->is_positive_event_direction( )
+				? new_driving_animation_length
+				: -new_driving_animation_length;
+	animation_interval_time					=
+		new_time_driving_animation.override_existing_animation( )
+			? new_time_driving_animation.animation_state( ).animation_interval_time
+			: previous_time_driving_animation->animation_state( ).animation_interval_time
+				* new_driving_animation_length;
+
+	n_ary_tree_time_scale_calculator time_scale_calculator(
+		m_current_time_in_ms,
+		0.f,
+		m_current_time_in_ms
+	);
+	n_ary_tree_base_node* target_time_scale_node	= NULL;
+	if ( new_time_driving_animation.operands_count( ) ) {
+		n_ary_tree_base_node* const node	=
+			*new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) );
+		if ( node && node->is_time_scale( ) ) {
+			target_time_scale_node			= node;
+			node->accept					( time_scale_calculator );
+		}
+	}
+
+	float const time_scale_factor				=
+		target_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
+	base_interpolator const* time_scale_interpolator	=
+		target_time_scale_node
+			? time_scale_calculator.interpolator( )
+			: &new_time_driving_animation.weight_interpolator( );
+	if ( !target_time_scale_node && time_scale_interpolator->transition_time( ) <= 0.f )
+		return								NULL;
+
+	n_ary_tree_base_node* previous_time_scale_node	= NULL;
+	if ( previous_time_driving_animation->operands_count( ) ) {
+		n_ary_tree_base_node* const node	=
+			*previous_time_driving_animation->operands( sizeof( n_ary_tree_animation_node ) );
+		if ( node && node->is_time_scale( ) )
+			previous_time_scale_node		= m_cloner.clone( *node, directional_time_scale_factor );
+	}
+
+	n_ary_tree_target_time_scale_calculator target_time_scale_calculator( *previous_time_driving_animation );
+	float const previous_target_time_scale	=
+		target_time_scale_calculator.result( ) * directional_time_scale_factor;
+	if ( time_scale_factor == previous_target_time_scale
+		&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
+	{
+		base_interpolator const& interpolator	= *m_cloner.clone( *time_scale_interpolator );
+		n_ary_tree_base_node* const from	=
+			previous_time_scale_node
+				? previous_time_scale_node
+				: new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_node(
+					interpolator,
+					1.f,
+					animation_interval_time,
+					m_current_time_in_ms
+				);
+		if ( !previous_time_scale_node )
+			m_buffer					+= sizeof( n_ary_tree_time_scale_node );
+
+		n_ary_tree_base_node* const to	=
+			new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_node(
+				interpolator,
+				time_scale_factor,
+				animation_interval_time,
+				m_current_time_in_ms
+			);
+		m_buffer						+= sizeof( n_ary_tree_time_scale_node );
+
+		n_ary_tree_time_scale_transition_node* const result	=
+			new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_transition_node(
+				*from,
+				*to,
+				interpolator,
+				m_current_time_in_ms
+			);
+		m_buffer						+= sizeof( n_ary_tree_time_scale_transition_node );
+		return							result;
+	}
+
+	if ( previous_time_scale_node ) {
+		if ( time_scale_factor == 0.f && !previous_time_scale_node->is_transition( ) ) {
+			n_ary_tree_time_scale_node& node	=
+				static_cast_checked< n_ary_tree_time_scale_node& >( *previous_time_scale_node );
+			node.set_time_scale_start_time(
+				node.time_scale_start_time_in_ms( ),
+				new_time_driving_animation.animation_state( ).animation_time
+			);
+		}
+		return							previous_time_scale_node;
+	}
+
+	if ( time_scale_factor == 1.f )
+		return								NULL;
+
+	n_ary_tree_time_scale_node* const result	=
+		new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_node(
+			*m_cloner.clone( *time_scale_interpolator ),
+			time_scale_factor,
+			animation_interval_time,
+			m_current_time_in_ms
+		);
+	m_buffer							+= sizeof( n_ary_tree_time_scale_node );
+	return								result;
 }
 
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation(
