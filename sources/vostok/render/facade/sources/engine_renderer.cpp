@@ -8,19 +8,25 @@
 #include <vostok/render/facade/engine_renderer.h>
 #include <vostok/render/engine/world.h>
 
-using vostok::render::engine::renderer;
+namespace vostok {
+namespace render {
+namespace engine {
 
-renderer::renderer					( vostok::render::engine::world& engine_world ) :
-	m_render_engine_world			( engine_world )
+renderer::renderer( engine::world& engine_world ) :
+	m_render_engine_world	( engine_world )
 {
 }
 
-void renderer::initialize			( )
+void renderer::initialize( bool const is_editor )
 {
-	m_render_engine_world.initialize( );
+	m_render_engine_world.initialize	( is_editor );
 }
 
-u32 renderer::frame_id				( )
+u32 renderer::frame_id( )
 {
-	return							( m_render_engine_world.frame_id( ) );
+	return	m_render_engine_world.frame_id( );
 }
+
+} // namespace engine
+} // namespace render
+} // namespace vostok

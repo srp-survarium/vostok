@@ -140,7 +140,7 @@ void engine_world::initialize			( )
 	
 	apc::run							( apc::logic,	boost::bind(&engine_world::initialize_logic_modules, this), apc::continue_process_loop, apc::dont_wait_for_completion);
 	
-	m_render_world->engine_renderer().initialize	( );
+	m_render_world->engine_renderer().initialize	( is_editor );
 	
 	// initialize render users
 	if ( is_editor )

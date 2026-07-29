@@ -106,7 +106,7 @@ private:
 public:
 							world						( configs::binary_config_ptr const& in_config, bool is_editor );
 							~world						( );
-			void			initialize					( );
+			void			initialize					( bool is_editor );
 //			flash_renderer&	flash_renderer				( );
 			void			show_movie					( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
 			void			hide_movie					( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
