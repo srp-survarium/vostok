@@ -12,8 +12,8 @@ namespace survarium {
 struct flash_movie;
 
 struct flash_movie_resource : public resources::unmanaged_resource {
-	inline		flash_movie_resource	( ) { /* no source */ }
-	virtual		~flash_movie_resource	( ) { /* no source */ }
+	inline		flash_movie_resource	( ) { }
+	virtual		~flash_movie_resource	( ) { }
 
 public:
 	/* 0x0000 */	/* resources::unmanaged_resource */

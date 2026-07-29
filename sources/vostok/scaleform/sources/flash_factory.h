@@ -23,8 +23,6 @@ class scaleform_render_command_queue;
 
 class flash_factory {
 public:
-	// all out-of-line in factory.cpp per the rich index, except
-	// destroy_text_manager (unaddressed - a true inline)
 			explicit				flash_factory		( scaleform_game_engine& arg_0 );
 									~flash_factory		( );
 
@@ -34,7 +32,7 @@ public:
 			void					tick				( );
 
 			flash_text_manager*		create_text_manager	( );
-	inline	void					destroy_text_manager( flash_text_manager* arg_0 ) { /* no source */ }
+	inline	void					destroy_text_manager( flash_text_manager* arg_0 ) { }
 
 private:
 	/* 0x0000 */	Scaleform::GFx::Loader*				m_gfx_loader;

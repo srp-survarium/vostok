@@ -12,12 +12,11 @@ namespace survarium {
 struct flash_function_handler;
 
 struct flash_function_handler_impl : public Scaleform::GFx::FunctionHandler , public boost::noncopyable {
-	// ctor and Call are out-of-line in value.cpp per the rich index
 			explicit	flash_function_handler_impl	( flash_function_handler& arg_0 );
 
 	virtual	void		Call						( Scaleform::GFx::FunctionHandler::Params const& arg_0 ) override;
 
-	virtual				~flash_function_handler_impl( ) { /* no source */ }
+	virtual				~flash_function_handler_impl( ) { }
 
 public:
 	/* 0x0000 */	/* Scaleform::GFx::FunctionHandler */

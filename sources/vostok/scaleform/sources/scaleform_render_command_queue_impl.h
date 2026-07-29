@@ -12,8 +12,7 @@ namespace Render {
 	class HAL;
 	class Renderer2D;
 	class TextureManager;
-	// not in the vendored GFx 4.0.15; the shipped binary overrode
-	// ThreadCommandQueue::GetRenderInterfaces(Interfaces*) from a newer SDK
+	// The shipped wrapper adds GetRenderInterfaces beyond this SDK base.
 	struct Interfaces;
 } // namespace Render
 } // namespace Scaleform
@@ -28,15 +27,14 @@ class scaleform_render_command_queue_impl : public Scaleform::Render::ThreadComm
 public:
 	inline	explicit	scaleform_render_command_queue_impl	( scaleform_game_engine& arg_0 )
 		:	engine	( arg_0 )
-	{ /* no source */ }
+	{ }
 
-	// PushThreadCommand/GetRenderInterfaces are out-of-line in command_queue.cpp
 	virtual	void		PushThreadCommand					( Scaleform::Render::ThreadCommand* arg_0 ) override;
 
 	// no `override`: the vendored SDK's ThreadCommandQueue lacks this virtual (see above)
 	virtual	void		GetRenderInterfaces					( Scaleform::Render::Interfaces* arg_0 );
 
-	virtual				~scaleform_render_command_queue_impl( ) { /* no source */ }
+	virtual				~scaleform_render_command_queue_impl( ) { }
 
 private:
 	friend class flash_factory;

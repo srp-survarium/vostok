@@ -9,8 +9,7 @@
 
 namespace survarium {
 
-// scaleform_engine is a NAMESPACE (initialize/destroy mangle as free
-// functions); all the addressed bodies live in factory.cpp.
+// scaleform_engine is a NAMESPACE (initialize/destroy mangle as free functions).
 namespace scaleform_engine {
 
 void	initialize	(
@@ -26,10 +25,9 @@ public:
 	inline				xrSysAllocMalloc	( void* ( *arg_0 )( u32 ), void ( *arg_1 )( void* ) )
 		:	m_mem_alloc_ptr	( arg_0 ),
 			m_mem_free_ptr	( arg_1 )
-	{ /* no source */ }
-	virtual				~xrSysAllocMalloc	( ) { /* no source */ }
+	{ }
+	virtual				~xrSysAllocMalloc	( ) { }
 
-	// the three SysAlloc overrides are out-of-line in factory.cpp per the rich index
 	virtual	void*		Alloc				( u32 arg_0, u32 arg_1 ) override;
 
 	virtual	void		Free				( void* arg_0, u32 arg_1, u32 arg_2 ) override;

@@ -10,7 +10,6 @@ namespace survarium {
 // opaque storage for a Scaleform::GFx::Value (0x18 bytes), keeping the SDK
 // type out of the public header
 struct flash_value {
-	// every method is out-of-line in value.cpp per the rich index
 								flash_value			( );
 								~flash_value		( );
 

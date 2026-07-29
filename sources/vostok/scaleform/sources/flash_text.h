@@ -26,10 +26,6 @@ struct flash_text {
 		align_justify
 	};
 
-	// all out-of-line in movie.cpp per the rich index, except the ctor and
-	// set_alignment (unaddressed - true inlines). The ctor zero-inits all three
-	// members: create_text's carcass shows the return slot zeroed at construction
-	// (text_impl/owner = 0, visible = false) before the fields are filled in.
 	inline				flash_text		( ) : text_impl( NULL ), owner( NULL ), visible( false ) { }
 
 			float		get_width		( );
@@ -38,7 +34,7 @@ struct flash_text {
 			void		set_visible		( bool arg_0 );
 			void		set_font_size	( const float arg_0 );
 			void		set_position	( const float arg_0, const float arg_1 );
-	inline	void		set_alignment	( flash_text::alignment arg_0 ) { /* no source */ }
+	inline	void		set_alignment	( flash_text::alignment arg_0 ) { }
 			void		set_color		(
 							u8		arg_0,
 							u8		arg_1,

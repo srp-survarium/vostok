@@ -57,9 +57,6 @@ struct flash_movie {
 		mouse_btn_up
 	};
 
-	// only the ctor, dtor and the priority accessors are unaddressed (true inlines);
-	// everything else is out-of-line in movie.cpp / value.cpp per the rich index. The
-	// dtor (inlined into flash_factory::destroy_movie) nulls the three GFx handles.
 	inline			flash_movie			( )
 		:	m_output_width			( 0 ),
 			m_output_height			( 0 ),
