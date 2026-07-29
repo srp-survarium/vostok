@@ -346,38 +346,85 @@ void bone_matrices_computer::convert_to_object_matrices( float4x4* begin, float4
 			convert_skeleton_branch( *j, begin, float4x4( ).identity( ) );
 }
 
-// STATE[STUB]
-// claude@NOTE: 19-stmt 0x689 object-movement mixer (target 0x6ecc20, lines 492-536). Structure
-// decoded; STUB kept because the per-animation movement extraction (513-519) is dense FP that I
-// could not pin without risk of fabrication. The two callee blockers are now CLEARED:
-//   - the 4-arg evaluate_frame is added to bone_animation_inline.h (used by the FALSE branch @519);
-//   - create_matrix / create_rotation / get_angles_xyz / conjugate / mul4x3 are all in math headers.
-// What remains is purely the FP branch decode (no missing symbols). Named locals (PDB, 6, in order):
-// rotations, translations, scales, e (animation_state*), i (animation_state*), frame_position
-// (THREE buffers ALL named here, unlike computed_local_bone_transform). ebx = i+0x34 so:
-//   accumulated_object_movement (state +0x28): rotation=ebx-0xC, translation=ebx+0x4, scale=ebx+0x10
-//   previous_object_movement    (state +0x00): rotation=ebx-0x34, translation=ebx-0x24, scale=ebx-0x18
-//   weight=[ebx+0x34]=i+0x68, node=[ebx+0x78]=i->event_iterator.animation(), pinned=[ebx+0x20]=i->bmc.pinned_animation
-// Shape:
-//   buffer_vector<pair<float3,float>> rotations   ( ALLOCA, m_animations_count );  // 492
-//   buffer_vector<pair<float3,float>> translations( ALLOCA, m_animations_count );  // 493
-//   buffer_vector<pair<float3,float>> scales      ( ALLOCA, m_animations_count );  // 494
-//   for ( animation_state* i=m_animations, * const e=m_animations+m_animations_count; i!=e; ++i ) { // 496
-//       n_ary_tree_animation_node& node = i->event_iterator.animation();
-//       if ( node.animated_object() != m_animated_object ) continue;               // 497
-//       if ( pinned->animation_type() != 0 ) continue;                             // 500 cubic_spline_skeleton_animation::animation_type
-//       if ( !node.can_generate_events() ) continue;                               // 503 ([node+0x4C]&1)
-//       if ( i->event_iterator.are_there_any_weight_transitions() ) {              // 506 ([i+0x74])
-//           // TRUE branch (507-509): push accumulated_object_movement components straight (scale/translation/rotation)
-//       } else {                                                                   // FALSE branch @511
-//           // 513-519: evaluate_frame(...) + bone_transform ctor + create_matrix(rot,float3(0)) + get_angles_xyz + conjugate
-//           // to derive the per-frame movement, then push translation/rotation/scale paired with i->weight
-//       } }
-//   return <compose: create_scale(mix_scales(scales)) * create_rotation(mix_rotations(rotations,true)) // 529
-//          * create_translation(mix_translations(translations))>;                  // 536
 float4x4 bone_matrices_computer::get_object_transform( ) const
 {
-	return vostok::math::float4x4();
+	typedef std::pair< float3, float > weighted_transform;
+	buffer_vector< weighted_transform > rotations(
+		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
+		m_animations_count
+	);
+	buffer_vector< weighted_transform > translations(
+		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
+		m_animations_count
+	);
+	buffer_vector< weighted_transform > scales(
+		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
+		m_animations_count
+	);
+
+	mixing::animation_state* const end	= m_animations + m_animations_count;
+	for ( mixing::animation_state* i = m_animations; i != end; ++i ) {
+		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation( );
+		if ( animation_node.animated_object( ) != m_animated_object )
+			continue;
+		if ( i->bone_matrices_computer.pinned_animation->animation_type( ) != animation_type_full )
+			continue;
+		if ( !animation_node.can_generate_events( ) )
+			continue;
+
+		mixing::object_movement const& accumulated_movement	=
+			i->bone_matrices_computer.accumulated_object_movement;
+		if ( i->are_there_any_weight_transitions ) {
+			scales.push_back				( std::make_pair( accumulated_movement.scale, i->weight ) );
+			rotations.push_back				( std::make_pair(
+				create_matrix( accumulated_movement.rotation, float3( 0.f, 0.f, 0.f ) ).get_angles_xyz( ),
+				i->weight
+			) );
+			translations.push_back			( std::make_pair( accumulated_movement.translation, i->weight ) );
+		}
+		else {
+			frame animation_frame;
+			current_frame_position frame_position;
+			i->bone_matrices_computer.pinned_animation->bone( u32( 0 ) ).get_frame(
+				i->animation_time * default_fps,
+				animation_frame,
+				frame_position
+			);
+			bone_transform const movement	( animation_frame );
+			scales.push_back				( std::make_pair(
+				movement.scale / accumulated_movement.scale,
+				i->weight
+			) );
+			rotations.push_back				( std::make_pair(
+				create_matrix(
+					movement.rotation * math::conjugate( accumulated_movement.rotation ),
+					float3( 0.f, 0.f, 0.f )
+				).get_angles_xyz( ),
+				i->weight
+			) );
+			translations.push_back			( std::make_pair(
+				(
+					accumulated_movement.rotation *
+					quaternion(
+						float4(
+							movement.translation - accumulated_movement.translation,
+							0.f
+						)
+					) *
+					math::conjugate( accumulated_movement.rotation )
+				).vector.xyz( ),
+				i->weight
+			) );
+		}
+	}
+
+	return mul4x3(
+		mul4x3(
+			create_scale( mix_scales( scales ) ),
+			create_rotation( mix_rotations( rotations, true ) )
+		),
+		create_translation( mix_translations( translations ) )
+	);
 }
 
 } // namespace animation

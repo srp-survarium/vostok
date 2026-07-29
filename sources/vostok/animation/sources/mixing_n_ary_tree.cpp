@@ -130,44 +130,22 @@ void n_ary_tree::destroy( )
 		(*i).~animation_state	( );
 }
 
-// STATE[STUB]
-// claude@NOTE: get_object_transform(pcvoid) - 4 stmts, local `float4x4 left`. Structure:
-// std::find the animated_object_holder, then two guarded `if(m_animation_states)` blocks each
-// constructing a bone_matrices_computer(left/result, m_animation_states, 0|1, animated_object, this)
-// and calling its get_object_transform, with a mul4x3(result, holder->transform, that) in the
-// second. PARKED: bone_matrices_computer ctor/get_object_transform are STUBs in
-// bone_matrices_computer.cpp (other TU) so the whole expression DCE-collapses; faithful body also
-// needs the exact ctor arg signature + mul4x3 operand order decoded. Next: body
-// bone_matrices_computer.cpp first, then reconstruct here.
 float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 {
-	// LOCALS
-	// float4x4 						left
-	// ******
-
-	return vostok::math::float4x4();
-
-	// FUNCTION BODY
-	// <0x6efa2f>|0x00f|+0x022:'641'
-	// <0>
-	// <1>
-	// <0x6efa51>|0x031|+0x009:'644'
-	// <0x6efa5a>|0x03a|+0x02e:'645'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6efa88>|0x068|+0x063:'659'
-	// ******
+	animated_object_holder const* const holder	=
+		std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, animated_object );
+	float4x4 result;
+	if ( m_animation_states )
+		result						=
+			bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
+				.get_object_transform( );
+	if ( m_animation_states )
+		result						= mul4x3(
+			bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
+				.get_object_transform( ),
+			holder->transform
+		);
+	return							result;
 }
 
 void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node )
