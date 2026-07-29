@@ -19,7 +19,6 @@ namespace animation {
 
 
 bone_names::bone_names( ):
-//bone_names_idx()( 0 ),
 m_bone_count( u32(-1) ),
 m_internal_memory_position ( size_t(-1) )
 {
@@ -39,21 +38,13 @@ void bone_names::create_internals_in_place(u32 bones_count, void* memory  )
 
 	m_bone_count = bones_count;
 
-	//*( (bone_names*)memory ) = *this;
-
-	//bone_names_idx() = (bone_name_index*) memory;
-
 	for ( u32 i = 0; i < bones_count; ++i )
 	{
-		//bone_name_index idx = bone_name_index();
 		bone_name_index * idx = bone_names_idx();
-
-		new( & (idx[ i ]) ) bone_name_index();// = idx;
-
-
+		new( &idx[i] ) bone_name_index();
 	}
-
 }
+
 void bone_names::create_internals_in_place	( const bone_names &names, void* memory )
 {
 	create_internals_in_place( names.bones_number(), memory );
@@ -63,6 +54,31 @@ void bone_names::create_internals_in_place	( const bone_names &names, void* memo
 		bone_name_index const * in_idx = names.bone_names_idx();
 		my_idx[ i ] = in_idx[ i ];
 	}
+}
+
+void bone_names::create_internals_in_place	( configs::binary_config_ptr const& names, void* memory )
+{
+	configs::binary_config_value const& bones_names = (*names)["bones_names"];
+	create_internals_in_place	( bones_names.size(), memory );
+
+	bone_name_index* const indices = static_cast<bone_name_index*>(
+		ALLOCA( bones_number() * sizeof(bone_name_index) )
+	);
+	for ( u32 n = 0; n < bones_number(); ++n )
+	{
+		pcstr const name = static_cast<pcstr>( bones_names[n] );
+		strings::copy				( indices[n].name, name );
+		indices[n].index			= n;
+
+		boost::crc_32_type processor;
+		processor.process_block		( name, name + strings::length(name) );
+		indices[n].crc				= processor.checksum();
+	}
+
+	std::sort	( indices, indices + bones_number(), crc_compare_predicate() );
+
+	for ( u32 n = 0; n < bones_number(); ++n )
+		bone_names_idx()[n] = indices[n];
 }
 
 bone_name_index::bone_name_index(  u32 idx, pcstr aname ):
@@ -89,12 +105,9 @@ void	bone_names::set_name( bone_index_type bone_index, pcstr name )
 void	bone_names::read( vostok::configs::binary_config_value const &cfg )
 {
 	const bone_index_type size = cfg.size();
-	//bone_names_idx().resize( size );
 	R_ASSERT( size == m_bone_count );
 
 	bone_name_index * my_idx = bone_names_idx();
-
-	//dbg_idx  = my_idx;
 
 	for ( bone_index_type i = 0; i < size; ++i )
 	{
@@ -130,7 +143,6 @@ void	bone_names::write( stream &file )const
 
 bone_index_type	bone_names::bone_index( pcstr name )const
 {
-	//u32 crc = string_crc( name );
 	bone_name_index temp( u32(-1), name );
 
 	vector<bone_name_index>::const_iterator r = std::lower_bound( bone_names_idx(), bone_names_idx() + m_bone_count, temp, crc_compare_predicate( ) );
@@ -141,12 +153,6 @@ bone_index_type	bone_names::bone_index( pcstr name )const
 		return r->index;
 
 	return u32(-1);
-
-
-	//vector < string_type >::const_iterator r =	 std::find( bone_names_idx().begin(), bone_names_idx().end(),  name  );
-	//if ( r == bone_names_idx().end() )
-	//	return ( u32(-1) );
-	//return u32( r - bone_names_idx().begin() );
 }
 
 pcstr bone_names::bone_name		( bone_index_type index )const
@@ -157,21 +163,7 @@ pcstr bone_names::bone_name		( bone_index_type index )const
 			return it->name;
 
 	return NULL;
-//	return bone_names_idx()[index].name.c_str();
 }
-/* sushi@TODO
-void bone_names::create_index	( const skeleton &skel, vector< bone_index_type > &index )const
-{
-	const bone_index_type sz = skel.get_bones_count();
 
-	R_ASSERT( sz <= m_bone_count );
-
-	index.resize( sz );
-
-	for ( bone_index_type i = 0; i < sz; ++i )
-		index[i] = bone_index( skel.get_bone( i ).id() );
-
-}
-*/
 } // namespace animation
 } // namespace vostok
