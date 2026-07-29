@@ -12,7 +12,6 @@ struct flash_function_handler_params;
 
 // PDB: dtor is NON-virtual (only `call` populates the vtable after the ctor)
 struct flash_function_handler {
-	// ctor/dtor are out-of-line in value.cpp per the rich index
 					flash_function_handler	( );
 					~flash_function_handler	( );
 

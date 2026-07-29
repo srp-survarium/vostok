@@ -12,7 +12,6 @@ struct flash_movie;
 struct flash_value;
 
 struct flash_external_handler {
-	// ctor/dtor are out-of-line in value.cpp per the rich index
 					flash_external_handler	( );
 	virtual			~flash_external_handler	( );
 
