@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "cubic_spline_skeleton_animation_cook.h"
-// sushi@TODO: #include "bi_spline_skeleton_animation.h"
+#include "bi_spline_skeleton_animation_baked.h"
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 
 using vostok::animation::cubic_spline_skeleton_animation_cook;
@@ -24,23 +24,14 @@ cubic_spline_skeleton_animation_cook::cubic_spline_skeleton_animation_cook	( ) :
 u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer bi_spline_skeleton_animation_buffer, bool const file_exist )
 {
 	R_ASSERT_U							( file_exist );
-	return 0;
-	/* sushi@TODO
 	return
 		cubic_spline_skeleton_animation::count_memory_size(
-			*static_cast_checked< bi_spline_skeleton_animation const* >(
+			*static_cast_checked< bi_spline_skeleton_animation_baked const* >(
 				bi_spline_skeleton_animation_buffer.c_ptr()
 			)
 		);
-	*/
 }
 
-// claude@NOTE: PARKED - cross-module wall. Target line 59 builds the animation in place
-// (cubic_spline_skeleton_animation::new_animation(pinned_ptr.c_ptr(), *static_cast_checked<
-// bi_spline_skeleton_animation const*>(buffer.c_ptr())) + set_file_name) then finish_query.
-// The non-baked `bi_spline_skeleton_animation` class is forward-declared-only everywhere
-// (never defined in sources/) so new_animation(pvoid,...) and the static_cast can't compile.
-// Unblock = reconstruct that type, then body lines 45/59/67 per the sushi@TODO below.
 void cubic_spline_skeleton_animation_cook::create_resource					(
 		vostok::resources::query_result_for_cook& in_out_query,
 		vostok::const_buffer bi_spline_skeleton_animation_buffer,
@@ -48,11 +39,10 @@ void cubic_spline_skeleton_animation_cook::create_resource					(
 	)
 {
 	resources::pinned_ptr_mutable< cubic_spline_skeleton_animation > const& pinned_ptr	= pin_for_write< cubic_spline_skeleton_animation >( out_resource );
-	/* sushi@TODO
 	cubic_spline_skeleton_animation* const animation	=
 		cubic_spline_skeleton_animation::new_animation(
 			pinned_ptr.c_ptr(),
-			*static_cast_checked< bi_spline_skeleton_animation const* >(
+			*static_cast_checked< bi_spline_skeleton_animation_baked const* >(
 				bi_spline_skeleton_animation_buffer.c_ptr()
 			)
 		);
@@ -64,7 +54,6 @@ void cubic_spline_skeleton_animation_cook::create_resource					(
 #endif // #ifndef	MASTER_GOLD
 
 	in_out_query.finish_query			( result_success );
-	*/
 }
 
 void cubic_spline_skeleton_animation_cook::destroy_resource					( vostok::resources::managed_resource* const dying_resource )
