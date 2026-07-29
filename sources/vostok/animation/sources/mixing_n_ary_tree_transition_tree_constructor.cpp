@@ -1472,8 +1472,6 @@ void n_ary_tree_transition_tree_constructor::merge_weight_synchronization_groups
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(vostok::animation::mixing::n_ary_tree_animation_node* const, vostok::animation::mixing::n_ary_tree_animation_node* const, vostok::animation::mixing::n_ary_tree_animation_node* const, vostok::animation::mixing::n_ary_tree_animation_node* const)
 void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1481,49 +1479,32 @@ void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
 	n_ary_tree_animation_node*		to_end
 )
 {
-	// LOCALS
-	// n_ary_tree_node_comparer 		comparer
-	// ******
+	n_ary_tree_animation_node* i	= from_begin;
+	n_ary_tree_animation_node* j	= to_begin;
+	n_ary_tree_node_comparer comparer;
+	while ( i && j ) {
+		switch ( comparer.compare( *i, *j ) ) {
+			case n_ary_tree_node_comparer::equal :
+				change_animation	( *i, *j, 0, false );
+				i				= i->m_next_weight_animation;
+				j				= j->m_next_weight_animation;
+				break;
+			case n_ary_tree_node_comparer::less :
+				remove_animation	( *i, 0, false );
+				i				= i->m_next_weight_animation;
+				break;
+			default :
+				add_animation	( *j, 0 );
+				j				= j->m_next_weight_animation;
+				break;
+		}
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ebfec>|0x00c|+0x010:'1478'
-	// <0>
-	// <0x6ebffc>|0x01c|+0x002:'1480'
-	// <0x6ebffe>|0x01e|+0x059:'1481'
-	// <0x6ec057>|0x077|-0x051:'1481'
-	// <0x6ec006>|0x026|+0x022:'1482'
-	// <0x6ec028>|0x048|+0x00e:'1482'
-	// <0>
-	// <0x6ec036>|0x056|+0x00b:'1484'
-	// <0x6ec041>|0x061|+0x003:'1485'
-	// <0x6ec044>|0x064|-0x020:'1486'
-	// <0>
-	// <1>
-	// <0x6ec024>|0x044|+0x009:'1489'
-	// <0x6ec02d>|0x04d|+0x007:'1489'
-	// <0>
-	// <0x6ec034>|0x054|+0x012:'1491'
-	// <0>
-	// <1>
-	// <0x6ec046>|0x066|+0x00b:'1494'
-	// <0x6ec051>|0x071|+0x003:'1495'
-	// <0x6ec054>|0x074|+0x025:'1496'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ec079>|0x099|+0x007:'1503'
-	// <0x6ec080>|0x0a0|-0x025:'1504'
-	// <0>
-	// <0x6ec05b>|0x07b|+0x005:'1506'
-	// <0x6ec060>|0x080|+0x010:'1507'
-	// <0x6ec070>|0x090|+0x024:'1508'
-	// ******
+	for ( ; i; i = i->m_next_weight_animation )
+		remove_animation			( *i, 0, false );
+
+	for ( ; j; j = j->m_next_weight_animation )
+		add_animation				( *j, 0 );
 }
 
 // STATE[STUB]

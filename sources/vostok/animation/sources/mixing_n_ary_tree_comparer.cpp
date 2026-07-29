@@ -1044,7 +1044,6 @@ void n_ary_tree_comparer::merge_weight_synchronization_groups(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 	n_ary_tree_animation_node* const	from_begin,
 	n_ary_tree_animation_node* const	from_end,
@@ -1052,47 +1051,32 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 	n_ary_tree_animation_node* const	to_end
 )
 {
-	// LOCALS
-	// n_ary_tree_node_comparer 		comparer
-	// ******
+	n_ary_tree_animation_node* i	= from_begin;
+	n_ary_tree_animation_node* j	= to_begin;
+	n_ary_tree_node_comparer comparer;
+	while ( i && j ) {
+		switch ( comparer.compare( *i, *j ) ) {
+			case n_ary_tree_node_comparer::equal :
+				change_animation	( *i, *j, false );
+				i				= i->m_next_weight_animation;
+				j				= j->m_next_weight_animation;
+				break;
+			case n_ary_tree_node_comparer::less :
+				remove_animation	( *i, 0, false );
+				i				= i->m_next_weight_animation;
+				break;
+			default :
+				add_animation	( *j, 0 );
+				j				= j->m_next_weight_animation;
+				break;
+		}
+	}
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56eeb4>|0x004|+0x01a:'1015'
-	// <0x56eece>|0x01e|+0x05a:'1016'
-	// <0x56ef28>|0x078|-0x052:'1016'
-	// <0x56eed6>|0x026|+0x030:'1017'
-	// <0>
-	// <0x56ef06>|0x056|+0x00b:'1019'
-	// <0x56ef11>|0x061|+0x003:'1020'
-	// <0x56ef14>|0x064|-0x019:'1021'
-	// <0>
-	// <1>
-	// <0x56eefb>|0x04b|+0x009:'1024'
-	// <0>
-	// <0x56ef04>|0x054|+0x012:'1026'
-	// <0>
-	// <1>
-	// <0x56ef16>|0x066|+0x00c:'1029'
-	// <0x56ef22>|0x072|+0x003:'1030'
-	// <0x56ef25>|0x075|+0x024:'1031'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x56ef49>|0x099|+0x007:'1038'
-	// <0x56ef50>|0x0a0|-0x024:'1039'
-	// <0>
-	// <0x56ef2c>|0x07c|+0x004:'1041'
-	// <0x56ef30>|0x080|+0x010:'1042'
-	// <0x56ef40>|0x090|+0x022:'1043'
-	// ******
+	for ( ; i; i = i->m_next_weight_animation )
+		remove_animation			( *i, 0, false );
+
+	for ( ; j; j = j->m_next_weight_animation )
+		add_animation				( *j, 0 );
 }
 
 // STATE[STUB]
