@@ -241,7 +241,7 @@ void renderer::setup_render_output_window ( render_output_window_ptr in_output_w
 	R_ASSERT									( in_output_window );
 	render_output_window* const output_window	= (render_output_window*)in_output_window.c_ptr();
 		
-	m_renderer_context->set_target_context		( &output_window->target_context());
+	m_renderer_context->set_target_context		( &output_window->target_context(), false );
 	backend::ref().set_render_output			( output_window->render_output());
 	backend::ref().reset_depth_stencil_target	();
 
@@ -560,7 +560,7 @@ void renderer::present	( render_output_window_ptr in_output_window, viewport_typ
 	setup_render_output_window			( output_window, viewport );
 	
 	// Present the final image to base render target
-	m_present_stage->execute( m_renderer_context->m_t_present);
+	m_present_stage->execute( m_renderer_context->get_t( rt_present ) );
 	
 	if( output_window )
 	{

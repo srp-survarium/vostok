@@ -20,7 +20,9 @@
 #include <vostok/render/core/res_geometry.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/effect_options_descriptor.h>
+#include <vostok/render/core/resource_manager.h>
 #include "system_renderer.h"
+#include "shared_names.h"
 
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
@@ -85,6 +87,28 @@ stage_shadow_direct::stage_shadow_direct( renderer_context* context): stage( con
 	m_c_light_attenuation_power	= backend::ref().register_constant_host( "light_attenuation", rc_float );
 	m_c_start_corner		= backend::ref().register_constant_host("start_corner", rc_float);
 	m_enabled				= options::ref().m_enabled_sun_shadows_stage;
+	create_cascaded_shadow_map_buffers( 1024 );
+}
+
+void stage_shadow_direct::create_cascaded_shadow_map_buffers( u32 shadow_map_size )
+{
+	pcstr const names[] = {
+		r2_rt_shadow_map0,
+		r2_rt_shadow_map1,
+		r2_rt_shadow_map2,
+		r2_rt_shadow_map3
+	};
+	for ( u32 i = 0; i < sun_cascade::num_max_sun_shadow_cascades; ++i )
+	{
+		m_rt_shadow_map[i] = resource_manager::ref().create_render_target(
+			names[i],
+			shadow_map_size,
+			shadow_map_size,
+			DXGI_FORMAT_R24G8_TYPELESS,
+			enum_rt_usage_depth_stencil
+		);
+		m_t_shadow_map[i] = resource_manager::ref().create_texture( names[i] );
+	}
 }
 
 bool stage_shadow_direct::is_effects_ready() const
@@ -130,7 +154,7 @@ void stage_shadow_direct::execute_disabled()
 	for (u32 cascade_id=first_cascade, cascade_index=0; cascade_id<last_cascade; cascade_id++, cascade_index++)
 	{
 		backend::ref().set_render_targets		( 0, 0, 0, 0);
-		backend::ref().set_depth_stencil_target	( &*m_context->m_rt_shadow_map[cascade_index]);	
+		backend::ref().set_depth_stencil_target	( &*m_rt_shadow_map[cascade_index] );
 		backend::ref().clear_depth_stencil		( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);		
 	}
 }
@@ -169,7 +193,7 @@ void stage_shadow_direct::execute()
 	if (m_old_shadow_map_size!=request_shadow_map_size)
 	{
 		m_old_shadow_map_size = request_shadow_map_size;
-		m_context->create_casceded_shadow_map_buffers(m_old_shadow_map_size);
+		create_cascaded_shadow_map_buffers( m_old_shadow_map_size );
 	}
 	
 	u32 first_cascade = u32(sun_cascade::num_max_sun_shadow_cascades) - u32(sun->num_sun_cascades);
@@ -352,8 +376,6 @@ void	stage_shadow_direct::draw_debug(u32 in_cascade_id)
 // 		float3 line[2];
 // 		line[0] = sun_position  + light_shift_xz;
 // 		line[1] = xf.xyz();
-// 		system_renderer::ref().draw_screen_lines(line, 2, math::color(1.0f, 0.0f, 0.0f, 1.0f), 1, 0xffffffff, true, false);
-// 		//system_renderer::ref().draw_3D_point(xf.xyz(), 100, math::color(0.0f, 0.0f, 0.0f, 1.0f), true);
 // 	}
 
 	m_context->set_w					( float4x4().identity() );
@@ -380,7 +402,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		return;
 	
 	backend::ref().set_render_targets		( 0, 0, 0, 0);
-	backend::ref().set_depth_stencil_target	( &*m_context->m_rt_shadow_map[cascade_index]);	
+	backend::ref().set_depth_stencil_target	( &*m_rt_shadow_map[cascade_index] );
 	backend::ref().clear_depth_stencil		( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);
 	
 	float const size						= m_context->m_sun_cascades[cascade_id].size;
@@ -521,7 +543,6 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	m_context->pop_v();
 	m_context->pop_p();
 	
-	//m_context->get_shadow_map_z_bias();
 	float ragne		= 1.f;
 	float z_bias	= m_context->m_sun_cascades[cascade_id].bias;//s_sun_shadow_z_bias_value[cascade_index];//sun->shadow_z_bias * m_context->m_sun_cascades[cascade_id].bias;
 	float4x4	texture_space(	float4( 0.5f,				0.0f,				0.0f,			0.0f),
@@ -569,7 +590,6 @@ void stage_shadow_direct::render_terrain(vostok::math::float3 const& viewer_posi
 				continue;
 			
 			(*it_tr)->m_terrain_model->effect()->apply(2);
-			//(*it_tr)->m_terrain_model->render_geometry().geom->apply();
 			
 			float3	start_corner( 0.f, 0.f, 0.f);
 			start_corner = (*it_tr)->m_terrain_model->transform().transform_position( start_corner);
