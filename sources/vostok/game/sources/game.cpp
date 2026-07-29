@@ -1096,9 +1096,10 @@ void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
 
 void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
 {
-	resources::pinned_ptr_const< u8 > pinned( data[0].get_managed_resource( ) );
+	resources::managed_resource_ptr raw_data	= data[0].get_managed_resource( );
+	resources::pinned_ptr_const< u8 > pinned	( raw_data );
 
-	flash_movie_resource* const resource	= VOSTOK_NEW_IMPL( g_allocator, flash_movie_resource );
+	flash_movie_resource* const resource	= NEW( flash_movie_resource );
 
 	resource->movie					= m_factory.build_movie( (void*)pinned.c_ptr( ), pinned.size( ), parent->reusable_request_name( ).c_str( ) );
 
