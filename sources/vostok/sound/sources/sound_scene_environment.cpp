@@ -12,6 +12,25 @@
 namespace vostok {
 namespace sound {
 
+IXAudio2SubmixVoice* sound_scene::create_environment_submix_voice	( sound_world const& world ) const
+{
+	IXAudio2SubmixVoice* voice			= world.create_submix_voice( 1, 1 );
+
+	IUnknown* pReverbEffect				= 0;
+	HRESULT hr							= XAudio2CreateReverb( &pReverbEffect );
+	XAUDIO2_EFFECT_DESCRIPTOR effects[1] = { { pReverbEffect, true, 1 } };
+	XAUDIO2_EFFECT_CHAIN effectChain		= { 1, effects };
+
+	voice->SetEffectChain				( &effectChain );
+
+	XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2_params = XAUDIO2FX_I3DL2_PRESET_DEFAULT;
+	XAUDIO2FX_REVERB_PARAMETERS native;
+	ReverbConvertI3DL2ToNative			( &i3dl2_params, &native );
+	hr									= voice->SetEffectParameters( 0, &native, sizeof( native ) );
+
+	return								voice;
+}
+
 void sound_scene::insert_environment	( sound_environment& environment, float4x4 const& transform )
 {
 	m_environments_tree->insert			( environment.collision( ), transform );

@@ -13,6 +13,7 @@
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <vostok/fixed_string.h>
 #include <vostok/collision/object.h>
+#include <vostok/render/culling/portal_sector_structure.h>
 #include <vostok/sound/sound_receiver.h>
 #include "sound_instance_proxy_internal.h"
 #include "sound_voice.h"
@@ -32,8 +33,10 @@ class query_result_for_cook;
 namespace sound {
 
 class sound_debug_stats;
+class sound_world;
 struct effect_cross_fader;
 struct sound_scene_creation_params;
+struct create_sound_propagator_params;
 class sound_environment;
 
 namespace statistics {
@@ -167,7 +170,7 @@ public:
 									sound_receiver const* const ignorable_receiver
 								);
 
-	sound_propagator*			create_sound_propagator
+	new_sound_propagator*		create_sound_propagator
 								(	
 									sound_propagator_emitter const& owner,
 									sound_instance_proxy_internal& proxy,
@@ -180,15 +183,10 @@ public:
 									sound_receiver const* const ignorable_receiver = 0
 								);
 
-	sound_propagator*			create_sound_propagator_for_looped
-											(	
-												sound_propagator& original
-											);
-
 				void			delete_sound_propagator	
 											( 
 												sound_instance_proxy_internal& proxy,
-												sound_propagator* propagator
+												new_sound_propagator* propagator
 											);
 
 				void			stop_produce_sound			( sound_instance_proxy_internal& proxy ) const;
@@ -228,6 +226,13 @@ public:
 				void			remove_active_voice			( sound_voice& voice );
 
 				void			calculate_3d_sound			( sound_voice& voice, panning_lut_ptr panning_lut );
+				void			clear_resources				( );
+
+				void			set_graph					( render::culling::portal_sector_structure_ptr& graph );
+				bool			graph_exist					( ) const;
+				float3			get_portal_center			( u32 portal_id ) const;
+				bool			is_segment_pass_portal		( u32 portal_id, float3 segment_start, float3 segment_end ) const;
+				void			find_path					( float3 const& destination_point, vectora< fixed_vector< u32, 32 > >& result_paths ) const;
 
 #ifndef MASTER_GOLD
 				void			update_stats				( sound_debug_stats& stats ) const;
@@ -271,16 +276,28 @@ private:
 			void		notify_receivers					( );
 			void		notify_listener						( sound_world const& world );
 
+			void		calculate_channel_matrix			(
+																panning_lut_ptr const& panning_lut,
+																sound_instance_proxy_internal const& proxy,
+																float3 const& graph_position,
+																float distance,
+																float attenuation,
+																float* channels_result,
+																float& lp_filter_result
+															) const;
 			void		calculate_hdr_audio					( );
+			void		x3daudio_calculate					( sound_world const&, sound_voice& );
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
+	IXAudio2SubmixVoice*
+						create_environment_submix_voice	( sound_world const& world ) const;
 private:
 	typedef memory::single_size_buffer_allocator<	sizeof( sound_instance_proxy_internal ),
 													threading::multi_threading_policy
 												>	sound_proxies_allocator;
 
-	typedef memory::single_size_buffer_allocator<	sizeof( sound_propagator ),
+	typedef memory::single_size_buffer_allocator<	sizeof( new_sound_propagator ),
 													threading::single_threading_policy
 												>	sound_propagators_allocator;
 
@@ -329,7 +346,7 @@ private:
 	atomic_half3											m_list_orient_top;
 
 	resources::unmanaged_allocation_resource_ptr			m_memory_arena_resources_ptr;
-	resources::unmanaged_resource_ptr						m_graph;
+	render::culling::portal_sector_structure_ptr			m_graph;
 
 	u32 const												m_proxies_count;
 	uninitialized_reference< sound_proxies_allocator >		m_proxies_allocator;

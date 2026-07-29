@@ -109,16 +109,9 @@ public:
 			sound_buffer*	get_mute_sound_buffer	( encoded_sound_ptr const& encoded_sound );
 
 			void			add_xaudio_order		( sound_order* order );
-						
-			void			set_listener_properties_impl		( sound_scene& scene, float4x4 const& inv_view_matrix );
 
 			void			try_process_order					( sound_instance_proxy_order* order );
 			void			process_destroy_sound_instance_proxy( destroy_sound_instance_proxy_order* order );
-
-//			void	calculate_3d_sound							( sound_scene const& scene, sound_voice& voice );
-//			void	calculate_channel_matrix					( sound_scene const& scene, sound_voice& voice, float* channel_matrix );
-//			void	calculate_channel_matrix_with_pass_filters	( sound_scene const& scene, sound_voice& voice, float* channel_matrix );
-//			void	calculate_volumetric_channel_matrix			( sound_scene const& scene, sound_voice& voice, float* channel_matrix );
 
 			sound_voice*	create_sound_voice		(	sound_scene& scene,
 														s32 playing_offset,
@@ -132,7 +125,6 @@ public:
 
 			//serialization
 			void	serialize_proxy					( sound_instance_proxy_internal* proxy, boost::function < void ( memory::writer*, memory::writer* ) >& fn, memory::writer* ) const;
-			//void	serialize_proxy					( sound_instance_proxy_internal* proxy, boost::function < void ( memory::writer*, memory::writer* ) >& fn, memory::writer& writer );
 			void	deserialize_proxy				( sound_instance_proxy_internal* proxy, memory::reader* r );
 			void	on_proxy_serialized				( memory::writer* writer );
 
@@ -144,6 +136,10 @@ public:
 			void	set_active_sound_scene_impl		(	sound_scene& scene,
 														u32 fade_in_time,
 														u32 fade_out_old_scene_time  );
+			void	set_active_sound_scene_impl		(	sound_scene& scene,
+														render::culling::portal_sector_structure_ptr& graph,
+														u32 fade_in_time,
+														u32 fade_out_old_scene_time  );
 
 			void	remove_sound_scene_impl			( sound_scene_ptr scene );
 
@@ -151,6 +147,7 @@ public:
 			void	disable_current_scene_stream_writing	( );
 			void	dump_current_scene_stream_writing		( );
 			bool	is_current_scene_stream_writing_enabled	( ) const;
+	X3DAUDIO_HANDLE const&	get_x3daudio				( ) const;
 private:
 
 
@@ -197,7 +194,6 @@ private:
 	// xaudio2
 	IXAudio2*						m_xaudio;
 	IXAudio2MasteringVoice*			m_master_voice;
-//	X3DAUDIO_HANDLE					X3DInstance;	
 	sound_buffer_factory*			m_sound_buffer_factory;
 
 	panning_lut_ptr					m_panning_lut;
@@ -208,15 +204,11 @@ private:
 	atomic_float					m_time_factor;
 	bool							m_is_destroying;
 	bool							m_is_audio_device_exist;
-	// for hdr audio test
-	float							m_L_wintop;
-	float							m_L_min;
 	threading::atomic32_type		m_calc_type;
 
 	sound_scenes_list				m_active_scenes;
 	sound_scene*					m_current_scene;
-	// debug stuff
-	//X3DAUDIO_HANDLE					m_x3d_instance;
+	X3DAUDIO_HANDLE					m_x3d_instance;
 }; // class sound_world
 
 } // namespace sound

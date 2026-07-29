@@ -33,8 +33,6 @@
 namespace vostok {
 namespace sound {
 
-static const float m_L_frame_fade_speed = 150.0f;
-
 enum
 {
 	// this constant for playing sound earlier then needed (play quiet),
@@ -76,8 +74,6 @@ sound_world::sound_world	(
 	m_last_current_time_in_ms	( 0 ),
 	m_sound_voices_count		( 8 ),
 	m_is_destroying				( false ),
-	m_L_wintop					( 50.0f ),
-	m_L_min						( 50.0f ),
 	m_master_voice				( 0 ),
 	m_is_audio_device_exist		( false ),
 	m_panning_lut				( 0 ),
@@ -263,6 +259,11 @@ bool sound_world::initialize_xaudio		( )
 										);
 	ASSERT						( !FAILED( res ) );
 	m_xaudio->GetDeviceDetails		( preferred_device_id, &deviceDetails );
+	X3DAudioInitialize				(
+		deviceDetails.OutputFormat.dwChannelMask,
+		X3DAUDIO_SPEED_OF_SOUND,
+		m_x3d_instance
+	);
 	return true;
 }
 
@@ -599,6 +600,25 @@ void sound_world::set_active_sound_scene_impl(	sound_scene& scene,
 		m_current_scene->fade_in		( *this, fade_in_time );
 }
 
+void sound_world::set_active_sound_scene_impl
+(
+	sound_scene& scene,
+	render::culling::portal_sector_structure_ptr& graph,
+	u32 fade_in_time,
+	u32 fade_out_time
+)
+{
+	if ( m_current_scene )
+		m_current_scene->fade_out	( fade_out_time );
+
+	m_current_scene					= &scene;
+	if ( m_current_scene )
+	{
+		m_current_scene->set_graph	( graph );
+		m_current_scene->fade_in		( *this, fade_in_time );
+	}
+}
+
 void sound_world::remove_sound_scene_impl	( sound_scene_ptr scene )
 {
 	sound_scene* scn		= static_cast_checked<sound_scene*>( scene.c_ptr( ) );
@@ -652,6 +672,11 @@ void sound_world::set_time_scale_factor		( float factor )
 float sound_world::get_time_scale_factor	( ) const
 {
 	return m_time_factor.get				( );
+}
+
+X3DAUDIO_HANDLE const& sound_world::get_x3daudio	( ) const
+{
+	return m_x3d_instance;
 }
 
 #ifndef MASTER_GOLD
