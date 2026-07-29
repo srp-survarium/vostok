@@ -965,6 +965,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\material.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\material.h"
+			>
+		</File>
+		<File
 			RelativePath=".\model_manager.cpp"
 			>
 		</File>
