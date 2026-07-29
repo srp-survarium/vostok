@@ -12,7 +12,18 @@ struct render_surface_instance {
 
 	void set_constants( );
 	bool is_occluded( ) const;
+
+	render_surface*				m_render_surface;
+	float4x4*					m_transform;
+	render_model_instance_impl*	m_parent;
+	u32							m_occlusion_info_index;
+	float						m_dynamic_screen_factor;
+	u32							m_flags;
+	u8							m_shader_lod_index;
+	bool						m_occluded;
 };
+
+STATIC_SIZE_ASSERT( render_surface_instance, 0x1C );
 
 } // namespace render
 } // namespace vostok

@@ -771,6 +771,10 @@
 			RelativePath="..\common_types.h"
 			>
 		</File>
+		<File
+			RelativePath="..\model.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
