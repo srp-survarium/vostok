@@ -1,26 +1,8 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\renderer_context.h"
+#include "renderer_context.h"
 
 namespace vostok {
 namespace render {
-
-// STATE[STUB]
-void `dynamic initializer for 's_cc_lighting_material_strategy''( )
-{
-	// FUNCTION BODY[0x7d6170]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 's_cc_lighting_material_strategy''( )
-{
-	// FUNCTION BODY[0x7ee160]
-	// ******
-}
 
 // STATE[STUB]
  renderer_context::renderer_context( )
