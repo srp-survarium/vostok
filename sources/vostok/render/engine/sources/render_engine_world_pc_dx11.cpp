@@ -1604,12 +1604,12 @@ void engine::world::draw_text					(
 	);
 }
 
-void engine::world::show_movie(
+void engine::world::show_movie	(
 	base_scene_view_ptr const&			scene_view,
 	survarium::flash_movie_resource_ptr	movie
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, movie.c_ptr() );
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_movie( movie );
 }
 
 void engine::world::hide_movie(
@@ -1617,7 +1617,7 @@ void engine::world::hide_movie(
 	survarium::flash_movie_resource_ptr	movie
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, movie.c_ptr() );
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_movie( movie );
 }
 
 void engine::world::show_text_manager(
@@ -1625,7 +1625,7 @@ void engine::world::show_text_manager(
 	survarium::flash_text_manager*	tm
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, tm );
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_text_manager( tm );
 }
 
 void engine::world::hide_text_manager(
@@ -1633,7 +1633,7 @@ void engine::world::hide_text_manager(
 	survarium::flash_text_manager*	tm
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, tm );
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_text_manager( tm );
 }
 
 void engine::world::execute_scaleform_command(
