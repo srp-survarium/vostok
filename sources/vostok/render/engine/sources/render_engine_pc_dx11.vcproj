@@ -892,6 +892,14 @@
 			RelativePath=".\scene_manager.h"
 			>
 		</File>
+		<File
+			RelativePath=".\scene_view.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\scene_view.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
