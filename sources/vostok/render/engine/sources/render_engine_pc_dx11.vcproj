@@ -860,6 +860,14 @@
 			RelativePath=".\render_engine_world_pc_dx11.cpp"
 			>
 		</File>
+		<File
+			RelativePath=".\renderer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\renderer.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

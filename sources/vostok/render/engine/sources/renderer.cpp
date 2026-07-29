@@ -1,159 +1,8 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\renderer.h"
+#include "renderer.h"
 
 namespace vostok {
 namespace render {
-
-// STATE[STUB]
-void `dynamic initializer for 's_ui_enabled_console_command''( )
-{
-	// FUNCTION BODY[0x7d5aa0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_do_stages_profiling_cc''( )
-{
-	// FUNCTION BODY[0x7d5af0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_dxt_env_probe_cc''( )
-{
-	// FUNCTION BODY[0x7d5b40]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_execute_stages_cc''( )
-{
-	// FUNCTION BODY[0x7d5b90]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_enable_rendering_cc''( )
-{
-	// FUNCTION BODY[0x7d5be0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_view_mode''( )
-{
-	// FUNCTION BODY[0x7d5c30]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_s_use_gpu_sync_cc''( )
-{
-	// FUNCTION BODY[0x7d5c90]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_disabled_shader_constansts_set_cc''( )
-{
-	// FUNCTION BODY[0x7d5ce0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_wireframe_cc''( )
-{
-	// FUNCTION BODY[0x7d5d30]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_unlit_cc''( )
-{
-	// FUNCTION BODY[0x7d5d80]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_distortion_cc''( )
-{
-	// FUNCTION BODY[0x7d5dd0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_sorting_cc''( )
-{
-	// FUNCTION BODY[0x7d5e20]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_sorting2_cc''( )
-{
-	// FUNCTION BODY[0x7d5e70]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_sorting3_cc''( )
-{
-	// FUNCTION BODY[0x7d5ec0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_hiz_7''( )
-{
-	// FUNCTION BODY[0x7d5f10]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_hiz_8''( )
-{
-	// FUNCTION BODY[0x7d5f60]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_draw_fps_histogram_cc''( )
-{
-	// FUNCTION BODY[0x7d5fb0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_draw_most_dips_models_list_cc''( )
-{
-	// FUNCTION BODY[0x7d6000]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_dump_scene_statistics_cc''( )
-{
-	// FUNCTION BODY[0x7d6060]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_debug_remove_trample_cc''( )
-{
-	// FUNCTION BODY[0x7d60b0]
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_debug_use_skeletel_mesh_lods_cc''( )
-{
-	// FUNCTION BODY[0x7d6100]
-	// ******
-}
 
 // STATE[STUB]
 bool renderer::is_effects_ready( ) const
@@ -168,13 +17,6 @@ bool renderer::is_effects_ready( ) const
 	// <0x6473d0>|0x000|+0x033:'163'
 	// <0x647403>|0x033|-0x001:'163'
 	// <0x647402>|0x032|+0x003:'164'
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 'm_statistics''( )
-{
-	// FUNCTION BODY[0x7ee080]
 	// ******
 }
 
@@ -197,7 +39,7 @@ void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_con
 }
 
 // STATE[STUB]
-explicit renderer::renderer( renderer_context* renderer_context )
+renderer::renderer( renderer_context* renderer_context )
 {
 	// FUNCTION BODY[0x64bf20]: 71
 	// <0>
@@ -850,7 +692,7 @@ void push_point(
 void make_ui_vertices(
 	vectora< ui::vertex >&		out_vertices,
 	pcstr						in_text,
-	ui::font const&				in_font,
+	vostok::ui::font const&				in_font,
 	float2 const&				in_position,
 	math::color const&			in_color,
 	math::color const&			in_selection_color,
@@ -937,7 +779,7 @@ void make_ui_vertices(
 
 // STATE[STUB]
 void draw_text(
-	ui::font const*		in_font,
+	vostok::ui::font const*		in_font,
 	pcstr				str,
 	u32					pos_x,
 	u32					pos_y,
@@ -975,7 +817,7 @@ void draw_text(
 
 // STATE[STUB]
 void draw_text_shadowed(
-	ui::font const*		in_font,
+	vostok::ui::font const*		in_font,
 	pcstr				str,
 	u32					pos_x,
 	u32					pos_y,
@@ -996,7 +838,7 @@ void renderer::render(
 	math::rectangle< float2 > const&	viewport,
 	boost::function< void( bool ) > const&	on_draw_scene,
 	bool								draw_debug_terrain,
-	ui::font const*						default_font
+	vostok::ui::font const*						default_font
 )
 {
 	// LOCALS
@@ -1498,7 +1340,7 @@ void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
 	const float			frame_time,
-	ui::font const*		default_font
+	vostok::ui::font const*		default_font
 )
 {
 	// LOCALS
@@ -1640,7 +1482,7 @@ void renderer::draw_debug(
 }
 
 // STATE[STUB]
-void renderer::draw_luminance_picker_info( ui::font const* default_font )
+void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
 	// LOCALS
 	// fixed_string< 64 >[8] 			strings
@@ -1683,7 +1525,7 @@ void renderer::draw_luminance_picker_info( ui::font const* default_font )
 }
 
 // STATE[STUB]
-void renderer::draw_stages_stats( ui::font const* default_font )
+void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
 	// LOCALS
 	// double 							total_cpu_time
