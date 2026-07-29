@@ -59,7 +59,6 @@ float3 random_float3(float3 const& min_value, float3 const& max_value);
 enum_evaluate_type string_to_evaluate_type(pcstr name);
 float VOSTOK_CORE_API get_tangent_from_2d_vector( float2 const& vec );
 
-// Rename to curve_line_points!
 template<class T, enum_curve_line_type> 
 struct curve_line_points
 {
@@ -67,6 +66,7 @@ struct curve_line_points
 	
 	typedef typename vostok::platform_pointer<point_type, vostok::platform_pointer_default>::type point_ptr_type;
 	
+	curve_line_points();
 	~curve_line_points();
 	
 	u32  get_num_points		() const { return num_points; }
