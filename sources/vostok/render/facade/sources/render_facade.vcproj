@@ -772,6 +772,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\cull_mode.h"
+			>
+		</File>
+		<File
+			RelativePath="..\material_effects_instance_cook_data.h"
+			>
+		</File>
+		<File
 			RelativePath="..\model.h"
 			>
 		</File>

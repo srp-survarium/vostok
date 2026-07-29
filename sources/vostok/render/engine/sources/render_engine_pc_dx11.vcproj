@@ -989,6 +989,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\material_effects_instance_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\material_effects_instance_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\material_manager.cpp"
 			>
 		</File>
