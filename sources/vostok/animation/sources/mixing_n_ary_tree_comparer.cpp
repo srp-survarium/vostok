@@ -435,69 +435,42 @@ void n_ary_tree_comparer::add_weight_synchronization_group( n_ary_tree_animation
 		add_animation			( *i, weight_driving_animation );
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_node& animation )
 {
-	// LOCALS
-	// u32 								time_scale_operands_count
-	// n_ary_tree_weight_node 			temp
-	// u32 								operands_offset
-	// n_ary_tree_node_comparer 		comparer
-	// base_interpolator const& 		interpolator
-	// ******
+	m_equal								= false;
+	bool const has_time_scale				= animation.operands_count( )
+		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
+	base_interpolator const& interpolator	= animation.weight_interpolator( );
+	u32 const weight_operands_count			= animation.operands_count( ) - ( has_time_scale ? 1 : 0 )
+		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
 
-	// CALL SITE INFO
-	// <0x56e973> -> bool < unknown >()
-	// <0x56e98d> -> float < unknown >() const
-	// <0x56ea5a> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56ea6c> -> float < unknown >() const
-	// <0x56ea96> -> float < unknown >() const
-	// <0x56ead6> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	u32 time_scale_operands_count;
+	u32 operands_offset						= has_time_scale ? 1 : 0;
+	new_animation							( animation, time_scale_operands_count, operands_offset );
+	m_needed_buffer_size					+= ( weight_operands_count + time_scale_operands_count )
+		* sizeof( n_ary_tree_base_node* );
 
-	// FUNCTION BODY
-	// <0x56e959>|0x009|+0x004:'483'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56e95d>|0x00d|+0x025:'488'
-	// <0>
-	// <0x56e982>|0x032|+0x027:'490'
-	// <0>
-	// <0x56e9a9>|0x059|+0x014:'492'
-	// <0>
-	// <1>
-	// <0x56e9bd>|0x06d|+0x004:'495'
-	// <0>
-	// <0x56e9c1>|0x071|+0x015:'497'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56e9d6>|0x086|+0x003:'501'
-	// <0x56e9d9>|0x089|+0x08a:'502'
-	// <0x56ea63>|0x113|-0x04f:'502'
-	// <0x56ea14>|0x0c4|+0x022:'503'
-	// <0x56ea36>|0x0e6|+0x057:'504'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x56ea8d>|0x13d|+0x019:'511'
-	// <0x56eaa6>|0x156|+0x008:'512'
-	// <0>
-	// <0x56eaae>|0x15e|+0x004:'514'
-	// <0x56eab2>|0x162|-0x04b:'515'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56ea67>|0x117|+0x015:'520'
-	// <0x56ea7c>|0x12c|+0x008:'521'
-	// <0x56ea84>|0x134|+0x05b:'522'
-	// ******
+	n_ary_tree_base_node* const* const operands_end	=
+		animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
+	n_ary_tree_base_node* const* i					=
+		animation.operands( sizeof( n_ary_tree_animation_node ) )
+			+ ( has_time_scale ? time_scale_operands_count : 0 );
+
+	n_ary_tree_weight_node temp				( interpolator, 0.f );
+	n_ary_tree_node_comparer comparer;
+	for ( ; i != operands_end; ++i ) {
+		if ( comparer.compare( **i, temp ) == n_ary_tree_node_comparer::more )
+			break;
+
+		increase_buffer_size					( **i );
+	}
+
+	if ( interpolator.transition_time( ) != 0.f )
+		m_needed_buffer_size				+= sizeof( n_ary_tree_weight_transition_node )
+			+ sizeof( n_ary_tree_weight_node );
+
+	for ( ; i != operands_end; ++i )
+		increase_buffer_size					( **i );
 }
 
 void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
