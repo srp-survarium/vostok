@@ -34,7 +34,7 @@ template class VOSTOK_ANIMATION_API boost::function< void (vostok::animation::mi
 enum reserved_channel_ids_enum {
 	channel_id_on_animation_end				= 1,
 	channel_id_on_animation_interval_end,
-//	channel_id_on_animation_lexeme_end,
+	channel_id_on_animation_lexeme_end,
 
 	channel_id_max,
 }; // enum reserved_channel_ids_enum

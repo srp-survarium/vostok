@@ -805,7 +805,7 @@ bool n_ary_tree::dispatch_callbacks(
 				  channel = channel->next )
 			{
 				u8 const channel_id				= *reinterpret_cast< u8 const* >( channel->channel_id );
-				if ( channel_id > channel_id_max )
+				if ( channel_id >= channel_id_max )
 					continue;
 
 				bool const matches_animation_end	=
@@ -819,7 +819,7 @@ bool n_ary_tree::dispatch_callbacks(
 					channel_id == channel_id_on_animation_interval_end;
 				bool const matches_lexeme_end		=
 					( generator->event_type & time_event_animation_lexeme_ended ) &&
-					channel_id == channel_id_max;
+					channel_id == channel_id_on_animation_lexeme_end;
 				if ( !matches_animation_end && !matches_interval_end && !matches_lexeme_end )
 					continue;
 
@@ -1121,7 +1121,7 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 			previous_animation->animation_intervals( )[ state.animation_interval_id ];
 		bool subscribed				= false;
 		for ( subscribed_channel const* channel = channels_head; channel && !subscribed; channel = channel->next ) {
-			if ( u8( channel->channel_id[ 0 ] ) != u8( 3 ) )
+			if ( u8( channel->channel_id[ 0 ] ) != channel_id_on_animation_lexeme_end )
 				continue;
 
 			for ( animation_callback const* callback = channel->first_callback;
