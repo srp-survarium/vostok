@@ -22,6 +22,9 @@
 #include "sound_instance_proxy_order.h"
 #include "sound_world.h"
 #include "speakers.h"
+#include "propagator_info.h"
+#include "unique_propagator_info.h"
+#include "compare_by_propagator.h"
 
 namespace vostok {
 namespace sound {
@@ -387,213 +390,11 @@ void sound_scene::free_sound_instance_proxy	( sound_instance_proxy* proxy )
 	VOSTOK_DELETE_IMPL					( m_proxies_allocator.c_ptr(), proxy );
 }
 
-void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
-												playback_mode mode,
-												u32 playback_id,
-												sound_producer const* const producer,
-												sound_receiver const* const ignorable_receiver	)
-{
-	LOG_DEBUG							( "sound_scene::emit_sound_propagators" );
-	create_sound_propagator_params params
-		( 
-			mode,
-			proxy,
-			playback_id,
-			producer,
-			ignorable_receiver
-		);
-
-	typedef sound_instance_proxy_order_with_data< create_sound_propagator_params > order_type;
-
-	order_type::functor_type functor	= boost::bind 
-		( 
-			&sound_scene::emit_sound_propagators_impl,
-			this,
-			_1
-		);
-
-	order_type* order	= 
-		VOSTOK_NEW_IMPL	( proxy.get_world_user( ).get_allocator( ), order_type )
-		( proxy.get_world_user( ), proxy, functor, params );
-
-	proxy.get_world_user( ).add_order	( order );
-}
-
-void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
-												source_params const& params,
-												playback_mode mode,
-												u32 playback_id,
-												sound_producer const* const producer,
-												sound_receiver const* const ignorable_receiver
-											)
-{
-	LOG_DEBUG							( "sound_scene::emit_sound_propagators" );
-	create_sound_propagator_params prop_params
-		( 
-			params,
-			mode,
-			proxy,
-			playback_id,
-			producer,
-			ignorable_receiver
-		);
-
-	typedef sound_instance_proxy_order_with_data< create_sound_propagator_params > order_type;
-
-	order_type::functor_type functor	= boost::bind 
-		( 
-			&sound_scene::emit_sound_propagators_impl,
-			this,
-			_1
-		);
-
-	order_type* order	= 
-		VOSTOK_NEW_IMPL	( proxy.get_world_user( ).get_allocator( ), order_type )
-		( proxy.get_world_user( ), proxy, functor, prop_params );
-
-	proxy.get_world_user( ).add_order	( order );
-}
-
-void sound_scene::emit_sound_propagators_impl
-									(
-										create_sound_propagator_params const& params
-									)
-{	
-	LOG_DEBUG							( "sound_scene::emit_sound_propagators_impl" );
-	sound_instance_proxy_internal& proxy		= params.m_proxy;
-	sound_propagator_emitter const& emitter		= proxy.get_sound_propagator_emitter( );
-
-	u32 old_props_count							= proxy.get_propagators( ).size( );
-
-
-	emitter.emit_sound_propagators
-	(
-		proxy,
-		params.m_mode,
-		params.m_playback_id,
-		0,
-		0,
-		params.m_producer,
-		params.m_ignorable_receiver
-	);
-
-#pragma message( VOSTOK_TODO("dimetcm 2 dimetcm: determine which propagator should execute callback ( for compositie sound )") )
-	
-	sound_propagator* prop					= proxy.get_propagators( ).front( );
-
-	for ( u32 i = 0; i < old_props_count; ++i )
-	{
-		prop					=  proxy.get_propagators( ).get_next_of_object( prop );
-	}
-
-	sound_propagator* max_duration_prop		= prop;
-
-	while ( prop )
-	{
-		u32 cur_offset	= prop->get_sound_length_original( ) + prop->get_before_palying_offset( );
-		u32 max_offset	= max_duration_prop->get_sound_length_original( ) + max_duration_prop->get_before_palying_offset( );
-		if ( cur_offset > max_offset )
-			max_duration_prop		= prop;
-		prop			= proxy.get_propagators( ).get_next_of_object( prop );
-	}
-
-	max_duration_prop->set_as_callback_executer( true );
-	LOG_INFO									( "sound propagators with id %d created", params.m_proxy.get_id() );
-
-	if ( old_props_count == 0 )
-	{
-		R_ASSERT									( !m_active_proxies.contains_object( &params.m_proxy ));
-		m_active_proxies.push_back					( &proxy );
-	}
-}
-
-sound_propagator* sound_scene::create_sound_propagator
-									(	
-										sound_propagator_emitter const& owner,
-										sound_instance_proxy_internal& proxy,
-										playback_mode mode,
-										u32 playback_id,
-										u32 playing_offset,
-										u32 before_playing_offset,
-										u32 after_playing_offset,
-										sound_producer const* const producer,
-										sound_receiver const* const ignorable_receiver
-									)
-{
-	LOG_DEBUG							( "sound_scene::create_sound_propagator" );
-	if ( m_propagators_allocator->total_size() == m_propagators_allocator->allocated_size() )
-	{
-		LOG_ERROR( "can't allocate sound_propagator, memory pool is empty :(" );
-		return 0;
-	}
-
-	sound_propagator* new_propagator	= VOSTOK_NEW_IMPL
-										( m_propagators_allocator.c_ptr(), sound_propagator )
-										( 
-											mode,
-											playback_id,
-											playing_offset,
-											before_playing_offset,
-											after_playing_offset,
-											proxy,
-											owner,
-											producer,
-											ignorable_receiver
-										);
-
-	return new_propagator;
-}
-
-sound_propagator* sound_scene::create_sound_propagator_for_looped( sound_propagator& original )
-{
-	LOG_DEBUG							( "sound_scene::create_sound_propagator_for_looped" );
-	if ( m_propagators_allocator->total_size() == m_propagators_allocator->allocated_size() )
-	{
-		LOG_ERROR( "can't allocate sound_propagator, memory pool is empty :(" );
-		return 0;
-	}
-
-	sound_propagator* new_propagator	= VOSTOK_NEW_IMPL
-										( m_propagators_allocator.c_ptr(), sound_propagator )
-										( 
-											original.get_playback_mode( ),
-											original.get_playback_id( ),
-											0,
-											original.get_before_palying_offset( ),
-											original.get_after_palying_offset( ),
-											original.get_proxy( ),
-											original.get_propagator_emitter( ),
-											original.get_producer( ),
-											original.get_ignorable_receiver( )
-										);
-
-	return new_propagator;
-}
-
-
-void sound_scene::delete_sound_propagator	( sound_instance_proxy_internal& proxy, sound_propagator* propagator )
-{
-	LOG_DEBUG							( "sound_scene::delete_sound_propagator" );
-	if ( propagator == 0 )
-	{
-		LOG_ERROR						( "can't delete sound_propagator, pointer == 0" );
-		return;
-	}
-
-	R_ASSERT							( proxy.get_propagators().contains_object( propagator ));
-	proxy.get_propagators().erase		( propagator );
-	VOSTOK_DELETE_IMPL					( m_propagators_allocator.c_ptr(), propagator );
-
-	R_ASSERT							( m_active_proxies.contains_object( &proxy ) );
-	if ( proxy.get_propagators().empty() )
-		m_active_proxies.erase			( &proxy );
-}
-
 void sound_scene::init_allocators	( resources::query_result_for_cook& parent )
 {
 	LOG_DEBUG						( "sound_scene::init_allocators" );
 	u32	proxies_size				= m_proxies_count * sizeof( sound_instance_proxy_internal );
-	u32	propagators_size			= m_propagators_count * sizeof( sound_propagator );
+	u32	propagators_size			= m_propagators_count * sizeof( new_sound_propagator );
 	u32 receiver_positions_size		= m_receivers_count * sizeof ( atomic_half3 );
 	u32 receiver_collisions_size	= m_receivers_count * sizeof ( receiver_collision );
 	u32 allocation_size				= proxies_size + propagators_size + receiver_positions_size + receiver_collisions_size;
@@ -650,69 +451,81 @@ void sound_scene::notify_receivers	( )
 	}
 }
 
+unique_propagator_info::unique_propagator_info	( ) :
+	voice_params	( g_allocator ),
+	prop			( 0 )
+{
+}
+
+bool compare_propagator_info_by_distance	( propagator_info const& lhs, propagator_info const& rhs )
+{
+	return lhs.distance_to_listener < rhs.distance_to_listener;
+}
+
 void sound_scene::notify_listener	( sound_world const& world )
 {
-	float3 const listener_position		= m_list_position.get( );
+	float3 const listener					= m_list_position.get( );
+	vectora< propagator_info > props		( g_allocator );
 	sound_instance_proxy_internal* proxy	= m_active_proxies.front( );
 	while ( proxy )
 	{
-		sound_propagator* propagator		= proxy->get_propagators().front();
+		vectora< std::pair< float, float3 > > results	( g_allocator );
+		proxy->calculate_graph_position		( listener, results );
+
+		new_sound_propagator* propagator	= proxy->get_propagators().front();
 		while ( propagator )
 		{
-			if ( propagator->is_propagation_paused	( ) )
+			for ( u32 i = 0; i < results.size( ); ++i )
 			{
-				propagator			= proxy->get_propagators().get_next_of_object( propagator );
-				continue;
+				propagator_info info;
+				info.prop						= propagator;
+				info.in_graph_position			= results[i].second;
+				info.distance_to_listener		= results[i].first;
+				props.push_back					( info );
 			}
-
-			float3 prop_pos;
-			sound_type type			= proxy->get_sound_type( );
-			switch ( type )
-			{
-			case cone: 
-			case point:				prop_pos = proxy->get_position( ); break;
-			case volumetric:		prop_pos = proxy->get_volumetric_position( listener_position ); break;
-			default:				NODEFAULT( );
-			}
-
-			float real_dist_to_list	= math::length( prop_pos - listener_position );
-
-			float inner_radius	= propagator->get_propagation_inner_radius_for_listener( );
-			float outer_radius	= propagator->get_propagation_outer_radius_for_listener( );
-
-			float unheard_dist	= propagator->get_unheard_distance( );
-
-			if ( real_dist_to_list > unheard_dist )
-			{
-				if ( propagator->has_sound_voice() )
-					propagator->detach_sound_voice		( );
-				propagator			= proxy->get_propagators().get_next_of_object( propagator );
-				continue;
-			}
-
-			float distance_per_tick	= proxy->get_world_user( ).get_sound_world( )->get_speed_of_sound() * precalculation_time_for_propagators_in_msec;
-			if ( real_dist_to_list >= inner_radius && real_dist_to_list - distance_per_tick <= outer_radius )
-			{
-				if ( !propagator->has_sound_voice() )
-					propagator->attach_sound_voice	( precalculation_time_for_propagators_in_msec );
-			}
-			else if ( propagator->has_sound_voice() )
-			{
-				propagator->detach_sound_voice		( );
-			}
-
 			propagator			= proxy->get_propagators().get_next_of_object( propagator );
 		}
-		proxy				=  m_active_proxies.get_next_of_object( proxy );
+		proxy					= m_active_proxies.get_next_of_object( proxy );
 	}
 
-	sound_voice* voice		= m_active_voices.front( );
-	while ( voice )
+	std::sort								( props.begin( ), props.end( ), &compare_propagator_info_by_distance );
+	vectora< unique_propagator_info > unique	( g_allocator );
+	for ( u32 i = 0; i < props.size( ) && i < 20; ++i )
 	{
-		calculate_3d_sound			( *voice, world.get_panning_lut() );
-		voice						= m_active_voices.get_next_of_object( voice );
+		float distance_to_listener	= props[i].distance_to_listener;
+		float distance				= math::max( distance_to_listener, 1.0f );
+		distance					= math::min( distance, math::float_max );
+		float attenuation			= props[i].prop->get_proxy( ).get_sound_propagator_emitter( ).get_sound_spl( )->get_loudness( distance );
+
+		sound_voice_params params;
+		calculate_channel_matrix
+		(
+			world.get_panning_lut( ),
+			props[i].prop->get_proxy( ),
+			props[i].in_graph_position,
+			distance,
+			attenuation,
+			params.channel_matrix,
+			params.lp_filter_coeff
+		);
+
+		compare_by_propagator predicate	( props[i].prop );
+		vectora< unique_propagator_info >::iterator it	= std::find_if( unique.begin( ), unique.end( ), predicate );
+		if ( it != unique.end( ) )
+			it->voice_params.push_back	( params );
+		else
+		{
+			unique_propagator_info info;
+			info.voice_params.push_back	( params );
+			info.prop					= props[i].prop;
+			unique.push_back			( info );
+		}
 	}
-	calculate_hdr_audio				( );
+
+	vectora< unique_propagator_info >::iterator it	= unique.begin( );
+	vectora< unique_propagator_info >::iterator end	= unique.end( );
+	for ( ; it != end; ++it )
+		it->prop->distribute_voices		( it->voice_params.size( ), it->voice_params );
 }
 
 static u32 cart_to_lut_position	(float re, float im)
@@ -744,9 +557,40 @@ static float coeff_calc		( float g, float cw )
 
 void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panning_lut )
 {
+	sound_instance_proxy_internal const& proxy	= voice.get_proxy( );
+	float3 position								= proxy.get_sound_type( ) == volumetric ?
+		proxy.get_volumetric_position( get_listenet_position( ) ) : proxy.get_position( );
+	float distance								= math::length( position - get_listenet_position( ) );
+	float attenuation							= voice.get_sound_spl( )->get_loudness( distance );
+	float channel_matrix[2];
+	float lp_filter_coeff;
+	calculate_channel_matrix
+	(
+		panning_lut,
+		proxy,
+		position,
+		distance,
+		attenuation,
+		channel_matrix,
+		lp_filter_coeff
+	);
+	voice.set_output_matrix						( channel_matrix );
+	voice.set_low_pass_filter_params				( lp_filter_coeff );
+}
+
+void sound_scene::calculate_channel_matrix
+(
+	panning_lut_ptr const& panning_lut,
+	sound_instance_proxy_internal const& proxy,
+	float3 const& graph_position,
+	float distance,
+	float attenuation,
+	float* channels_result,
+	float& lp_filter_result
+) const
+{
 	float dry_gain_hf		= 1.0f;
 
-	sound_instance_proxy_internal const& proxy	= voice.get_proxy( );
 	sound_type type								= proxy.get_sound_type( );
 	//get context properties
 	u32 frequency				= 44100;
@@ -800,14 +644,14 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 	matrix.k[0] = u[2]; matrix.k[1] = v[2]; matrix.k[2] = -n[2]; matrix.k[3] = 0.0f;
 	matrix.c[0] = 0.0f; matrix.c[1] = 0.0f; matrix.c[2] =  0.0f; matrix.c[3] = 1.0f;
 
-	float3 position					= float3( 0.0f, 0.0f, 0.0f );
+	float3 position					= graph_position;
 	float3 direction				= float3( 0.0f, 0.0f, 0.0f );
 
 	switch( type )
 	{
 	case cone:			direction		= proxy.get_direction( );
-	case point:			position		= proxy.get_position( );	break;
-	case volumetric:	position		= proxy.get_volumetric_position( get_listenet_position( ) ); break;
+	case point:
+	case volumetric:	break;
 	default:			NODEFAULT		( );
 	}
 
@@ -828,14 +672,11 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 	direction.normalize_safe			( direction );
 
 	//2. Calculate distance attenuation
-	float distance						= math::sqrt( dot_product ( position, position ) );
     float orig_dist						= distance;
 
 	distance							= math::max ( distance, min_dist );
 	distance							= math::min ( distance, max_dist );
 
-	float attenuation					= voice.get_sound_spl( )->get_loudness( distance );;
-	
 	// Source Gain + Attenuation
     float dry_gain						= source_volume * attenuation;
 
@@ -948,8 +789,9 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 		
 		if ( volumetric_distance > proxy.get_volumetric_radius( ))
 		{
-			voice.set_output_matrix			( channel_matrix );
-			voice.set_low_pass_filter_params( 1.0f - iir_filter_coeff );
+			channels_result[0]					= channel_matrix[0];
+			channels_result[1]					= channel_matrix[1];
+			lp_filter_result					= 1.0f - iir_filter_coeff;
 			return;
 		}
 
@@ -971,8 +813,9 @@ void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panni
 			iir_filter_coeff			= 0.0f;
 	}
 
-	voice.set_output_matrix			( channel_matrix );
-	voice.set_low_pass_filter_params( 1.0f - iir_filter_coeff );
+	channels_result[0]				= channel_matrix[0];
+	channels_result[1]				= channel_matrix[1];
+	lp_filter_result				= 1.0f - iir_filter_coeff;
 }
 
 void sound_scene::calculate_hdr_audio	( )
@@ -1050,11 +893,10 @@ void sound_scene::unregister_receiver	( world_user& user, sound_receiver* receiv
 
 void sound_scene::stop_produce_sound		( sound_instance_proxy_internal& proxy ) const
 {
-	sound_propagator* prop				= proxy.get_propagators( ).front( );
+	new_sound_propagator* prop			= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
-		if ( prop->is_sound_producing( ) )
-			prop->stop_produce_sound	( );
+		prop->stop_produce				( );
 		prop							= proxy.get_propagators( ).get_next_of_object( prop );
 	}
 }
@@ -1062,11 +904,11 @@ void sound_scene::stop_produce_sound		( sound_instance_proxy_internal& proxy ) c
 void sound_scene::stop_propagate_sound	( sound_instance_proxy_internal& proxy )
 {
 	LOG_DEBUG						( "sound_scene::stop_propagate_sound" );
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	new_sound_propagator* prop		= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
-		prop->stop_propagate_sound	( );
-		sound_propagator* next		= proxy.get_propagators( ).get_next_of_object( prop );
+		new_sound_propagator* next	= proxy.get_propagators( ).get_next_of_object( prop );
+		prop->stop_propagation		( );
 		R_ASSERT					( prop->can_be_deleted( ) );
 
 		delete_sound_propagator		( proxy, prop );
@@ -1078,11 +920,10 @@ void sound_scene::stop_propagate_sound	( sound_instance_proxy_internal& proxy )
 void sound_scene::pause_produce_sound	( sound_instance_proxy_internal& proxy ) const
 {
 	LOG_DEBUG						( "sound_scene::pause_produce_sound" );
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	new_sound_propagator* prop		= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
-		if ( prop->is_sound_producing( ) )
-			prop->pause_produce_and_preserve_state_for_resume	( );
+		prop->stop_produce			( );
 		prop						= proxy.get_propagators( ).get_next_of_object( prop );
 	}
 }
@@ -1090,7 +931,7 @@ void sound_scene::pause_produce_sound	( sound_instance_proxy_internal& proxy ) c
 void sound_scene::pause_propagate_sound	( sound_instance_proxy_internal& proxy ) const
 {
 	LOG_DEBUG						( "sound_scene::pause_propagate_sound" );
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	new_sound_propagator* prop		= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
 		prop->pause_propagation		( );
@@ -1105,11 +946,10 @@ void sound_scene::resume_produce_sound	( sound_instance_proxy_internal& proxy )
 void sound_scene::resume_propagate_sound	( sound_instance_proxy_internal& proxy ) const
 {
 	LOG_DEBUG						( "sound_scene::resume_propagate_sound" );
-	sound_propagator* prop			= proxy.get_propagators( ).front( );
+	new_sound_propagator* prop		= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
-		if ( prop->is_propagation_paused( ) )
-			prop->resume_propagation	( );
+		prop->resume_propagation		( );
 		prop						= proxy.get_propagators( ).get_next_of_object( prop );
 	}
 

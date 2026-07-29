@@ -1521,6 +1521,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\sound_scene_propagators.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\sound_scene_environment.cpp"
 				>
 			</File>

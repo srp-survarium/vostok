@@ -11,6 +11,7 @@
 #include <vostok/sound/sound_producer.h>
 #include <vostok/sound/sound_instance_proxy.h>
 #include <vostok/memory_single_size_buffer_allocator.h>
+#include "create_sound_propagator_params.h"
 
 namespace vostok {
 namespace sound {
@@ -29,60 +30,6 @@ class sound_rms;
 typedef	resources::resource_ptr < encoded_sound_interface, resources::unmanaged_intrusive_base > encoded_sound_ptr;
 typedef	resources::resource_ptr < sound_spl, resources::unmanaged_intrusive_base > sound_spl_ptr;
 typedef	resources::managed_resource_ptr sound_rms_ptr;
-
-struct create_sound_propagator_params
-{	
-	create_sound_propagator_params (	playback_mode							mode,
-										sound_instance_proxy_internal&			proxy,
-										u32										playback_id,
-										sound_producer const* const				producer = 0,
-										sound_receiver const* const				ignorable_receiver = 0
-										) :
-		m_mode				( mode ),
-		m_proxy				( proxy ),
-		m_playback_id		( playback_id ),
-		m_producer			( producer ),
-		m_ignorable_receiver( ignorable_receiver ),
-		m_type				( point )
-		{}
-
-	create_sound_propagator_params (	source_params const&					params,
-										playback_mode							mode,
-										sound_instance_proxy_internal&			proxy,
-										u32										playback_id,
-										sound_producer const* const				producer = 0,
-										sound_receiver const* const				ignorable_receiver = 0
-										) :
-		m_direction			( params.m_direction ),
-		m_cone_inner_angle	( params.m_cone_inner_angle ),
-		m_cone_outer_angle	( params.m_cone_outer_angle ),
-		m_outer_gain		( params.m_outer_gain ),
-		m_mode				( mode ),
-		m_proxy				( proxy ),
-		m_playback_id		( playback_id ),
-		m_producer			( producer ),
-		m_ignorable_receiver( ignorable_receiver ),
-		m_type				( cone )
-		{}
-
-private:
-	const create_sound_propagator_params& operator= ( const create_sound_propagator_params& );
-public:
-	float3									m_direction;
-	float									m_cone_inner_angle;
-	float									m_cone_outer_angle;
-	float									m_outer_gain;
-	u32										m_playback_id;
-	sound_instance_proxy_internal&			m_proxy;
-	sound_producer const* const				m_producer;
-	sound_receiver const*					m_ignorable_receiver;
-	playback_mode							m_mode;
-	enum type
-	{
-		point,
-		cone
-	}										m_type;
-};
 
 class sound_propagator : private boost::noncopyable
 {
