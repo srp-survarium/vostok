@@ -23,6 +23,7 @@
 #include "i_editor_mixer_inline.h"
 #include "mixing_n_ary_tree_target_time_scale_calculator.h"
 #include "mixing_n_ary_tree_weight_calculator.h"
+#include <vostok/animation/mixing_animated_object_holder.h>
 
 #define VOSTOK_DEBUG_ANIMATIONS_COUNT			0
 
@@ -1542,7 +1543,6 @@ void n_ary_tree_transition_tree_constructor::merge_trees( n_ary_tree const& from
 	// ******
 }
 
-// STATE[STUB]
 n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(
 	mutable_buffer&					buffer,
 	n_ary_tree const&				from,
@@ -1563,11 +1563,11 @@ n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(
 	m_time_driving_animations_begin	( NULL ),
 	m_time_driving_animations_end	( NULL ),
 	m_animation_states				( NULL ),
-	// m_new_animation_state
-	// m_animation_events
+	m_new_animation_state			( NULL ),
+	m_animation_events				( NULL ),
 	m_animated_objects				( NULL ),
 	m_new_animated_object			( NULL ),
-	// m_new_animation_event
+	m_new_animation_event			( NULL ),
 	m_reference_counter				( NULL ),
 	m_previous_animation			( NULL ),
 	m_channels_head					( channels_head ),
@@ -1575,36 +1575,31 @@ n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(
 	m_animations_count				( animations_count ),
 	m_animated_objects_count		( animated_objects_count )
 {
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x6ec760>|0x090|+0x005:'1699'
-	// <0x6ec765>|0x095|+0x007:'1700'
-	// <0x6ec76c>|0x09c|+0x009:'1701'
-	// <0>
-	// <0x6ec775>|0x0a5|+0x00d:'1703'
-	// <0>
-	// <1>
-	// <0x6ec782>|0x0b2|+0x015:'1706'
-	// <0x6ec797>|0x0c7|+0x006:'1707'
-	// <0>
-	// <0x6ec79d>|0x0cd|+0x002:'1709'
-	// <0x6ec79f>|0x0cf|+0x00f:'1710'
-	// <0x6ec7ae>|0x0de|+0x006:'1711'
-	// <0>
-	// <1>
-	// <0x6ec7b4>|0x0e4|+0x013:'1714'
-	// <0x6ec7c7>|0x0f7|+0x006:'1715'
-	// <0>
-	// <0x6ec7cd>|0x0fd|+0x005:'1717'
-	// <0>
-	// <1>
-	// <0x6ec7d2>|0x102|+0x015:'1720'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	m_reference_counter				= static_cast< n_ary_tree_intrusive_base* >( m_buffer.c_ptr( ) );
+	m_buffer						+= sizeof( n_ary_tree_intrusive_base );
+	new ( m_reference_counter ) n_ary_tree_intrusive_base( );
+
+	m_cloner.initialize				( from, to );
+
+	m_animation_states				= static_cast< animation_state* >( m_buffer.c_ptr( ) );
+	m_buffer						+= animations_count * sizeof( animation_state );
+	m_new_animation_state			= m_animation_states;
+
+	m_animation_events				= static_cast< animation_state** >( m_buffer.c_ptr( ) );
+	m_buffer						+= animations_count * sizeof( animation_state* );
+	m_new_animation_event			= m_animation_events;
+
+	m_animated_objects				= static_cast< animated_object_holder* >( m_buffer.c_ptr( ) );
+	m_buffer						+= animated_objects_count * sizeof( animated_object_holder );
+	m_new_animated_object			= m_animated_objects;
+
+	m_time_driving_animations_begin	=
+		static_cast< n_ary_tree_animation_node** >(
+			ALLOCA( animations_count * sizeof( n_ary_tree_animation_node* ) )
+		);
+	m_time_driving_animations_end	= m_time_driving_animations_begin;
+
+	merge_trees						( from, to );
 }
 
 // claude@NOTE: structure matches (single `return n_ary_tree( <11 members> )`, mirror of
