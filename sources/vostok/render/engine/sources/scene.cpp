@@ -1,19 +1,9 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\scene.h"
+#include "scene.h"
+#include "moved_object_predicate_helper.h"
 
 namespace vostok {
 namespace render {
-
-// STATE[STUB]
-void `dynamic atexit destructor for 's_use_poral_culling_cc''( )
-{
-	// FUNCTION BODY[0x7ee250]
-	// ******
-}
 
 // STATE[STUB]
 particle::render_particle_emitter_instance* scene::particle_engine::create_render_emitter_instance(
@@ -73,14 +63,14 @@ base_scene_ptr scene::particle_engine::get_scene( particle::world& world )
 }
 
 // STATE[STUB]
-explicit scene::scene( scene_configuration const& renderer_configuration )
+scene::scene( scene_configuration const& renderer_configuration )
 {
 	// FUNCTION BODY[0x63f5e0]: 0
 	// ******
 }
 
 // STATE[STUB]
- scene::~scene( )
+scene::~scene( )
 {
 	// FUNCTION BODY[0x63f110]: 9
 	// <0x63f117>|0x007|+0x018:'122'
@@ -578,48 +568,6 @@ void scene::process_streaming(
 }
 
 // STATE[STUB]
-bool `vostok::render::scene::process_streaming'::`2'::remove_texture_predicate::operator()(
-	streamable_texture_info const&		arg_0 /* vostok::render::streamable_texture_info const& info */
-)
-{
-	return false;
-
-	// FUNCTION BODY[0x63d130]: 2
-	// <0x63d130>|0x000|+0x015:'362'
-	// <0x63d145>|0x015|-0x001:'362'
-	// <0>
-	// <0x63d144>|0x014|+0x003:'364'
-	// ******
-}
-
-// STATE[STUB]
-bool `vostok::render::scene::process_streaming'::`3'::remove_requested_texture_predicate::operator()(
-	requested_streamable_texture const&		arg_0 /* vostok::render::requested_streamable_texture const& req */
-)
-{
-	return false;
-
-	// FUNCTION BODY[0x63d110]: 2
-	// <0x63d110>|0x000|+0x013:'379'
-	// <0x63d123>|0x013|-0x001:'379'
-	// <0>
-	// <0x63d122>|0x012|+0x003:'381'
-	// ******
-}
-
-// STATE[STUB]
-bool `vostok::render::scene::process_streaming'::`16'::ready_texture_comparer::operator()(
-	streaming_ready_texture const&		arg_0 /* vostok::render::streaming_ready_texture const& left */,
-	streaming_ready_texture const&		arg_1 /* vostok::render::streaming_ready_texture const& right */
-)
-{
-	return false;
-
-	// FUNCTION BODY[0x63cf10]
-	// ******
-}
-
-// STATE[STUB]
 void scene::add_trample( trample_desc const& desc )
 {
 	// FUNCTION BODY[0x63d3d0]: 4
@@ -778,27 +726,6 @@ void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bo
 	// <0>
 	// <1>
 	// <0x63e7d9>|0x519|+0x032:'622'
-	// ******
-}
-
-// STATE[STUB]
-explicit `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::find_texture_predicate(
-	res_texture*	arg_0 /* vostok::render::res_texture* texture */
-)
-{
-	// FUNCTION BODY[0x63cf00]
-	// ******
-}
-
-// STATE[STUB]
-bool `vostok::render::scene::gather_streamable_textures'::`2'::find_texture_predicate::operator()(
-	streamable_texture_info const&		arg_0 /* vostok::render::streamable_texture_info const& other */
-) const
-{
-	return false;
-
-	// FUNCTION BODY[0x63d100]: 1
-	// <0x63d100>|0x000|+0x00d:'548'
 	// ******
 }
 
@@ -1613,139 +1540,6 @@ void scene::dump_scene_statistics( ) const
 	// <0>
 	// ******
 }
-
-// STATE[STUB]
-bool `vostok::render::scene::dump_scene_statistics'::`2'::sort_predicate::operator()(
-	render_model_instance_impl_ptr const&	arg_0 /* vostok::render::render_model_instance_impl_ptr const& left */,
-	render_model_instance_impl_ptr const&	arg_1 /* vostok::render::render_model_instance_impl_ptr const& right */
-) const
-{
-	// CALL SITE INFO
-	// <0x63cfab> -> u32 < unknown >() const
-	// <0x63cfb6> -> u32 < unknown >() const
-	// ******
-
-	return false;
-
-	// FUNCTION BODY[0x63cfa0]: 1
-	// <0x63cfa0>|0x000|+0x020:'1223'
-	// ******
-}
-
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	std::pair< u32, float4x4 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	std::pair< u32, vostok::render::volume_fog_parameters >*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 260 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::lpv_vertex*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::render_model_instance_impl_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::requested_streamable_texture*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_buffer_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shadow_vertex*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::speedtree_instance_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::streamable_texture_info*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::streaming_ready_texture*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::streaming_texture_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::tracer_model_instance_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::vertex_colored*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::volume_fog_parameters*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::resources::unmanaged_resource_ptr*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
