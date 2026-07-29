@@ -34,6 +34,7 @@ private:
 	ref_effect m_editor_shader_complexity_effect[num_vertex_input_types];
 	ref_effect m_editor_show_miplevel_effect[num_vertex_input_types];
 	ref_effect m_editor_geometry_complexity_effect[num_vertex_input_types];
+	ref_effect m_editor_show_geometry_effect;
 	ref_effect m_editor_accumulate_overdraw_effect[num_vertex_input_types];
 	
 	ref_effect m_editor_apply_wireframe_shader;

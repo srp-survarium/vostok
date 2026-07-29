@@ -14,6 +14,7 @@
 #include "effect_editor_apply_wireframe.h"
 #include "effect_editor_show_miplevel.h"
 #include "effect_editor_geometry_complexity.h"
+#include "effect_editor_show_batched_geometry.h"
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/render_target.h>
 #include "renderer_context.h"
@@ -68,6 +69,7 @@ stage_view_mode::stage_view_mode( renderer_context* context):
 		effect_manager::ref().create_effect<effect_editor_geometry_complexity>(&m_editor_geometry_complexity_effect[i], desc);
 	}
 	
+	effect_manager::ref().create_effect<effect_editor_show_batched_geometry>(&m_editor_show_geometry_effect);
 	effect_manager::ref().create_effect<effect_editor_apply_wireframe>(&m_editor_apply_wireframe_shader);
 	effect_manager::ref().create_effect<effect_editor_show_overdraw>(&m_editor_show_overdraw_shader);
 	
