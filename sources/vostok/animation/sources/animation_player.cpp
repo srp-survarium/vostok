@@ -162,12 +162,6 @@ bool animation_player::try_get_transform( pcvoid const animated_object, float4x4
 	return false;
 }
 
-// claude@NOTE: parked - 36 stmts / 8 named locals (buffer, target_tree, builder,
-// mixing_buffer, transition_tree, transform_getter_instance, comparer); core mixer
-// set_target pipeline. Reconstruction needs the n_ary_tree_converter / comparer /
-// transition_tree_constructor call sequence read statement-by-statement from the
-// optimized target asm (0x570b10). Next: map each of the 36 line records to its
-// converter/comparer call, then write the named-local lexical structure.
 // STATE[STUB]
 bool animation_player::set_target(
 	mixing::expression const&						expression,
