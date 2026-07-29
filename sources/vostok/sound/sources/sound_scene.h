@@ -33,6 +33,7 @@ class query_result_for_cook;
 namespace sound {
 
 class sound_debug_stats;
+class sound_world;
 struct effect_cross_fader;
 struct sound_scene_creation_params;
 struct create_sound_propagator_params;
@@ -285,6 +286,7 @@ private:
 																float& lp_filter_result
 															) const;
 			void		calculate_hdr_audio					( );
+			void		x3daudio_calculate					( sound_world const&, sound_voice& );
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
