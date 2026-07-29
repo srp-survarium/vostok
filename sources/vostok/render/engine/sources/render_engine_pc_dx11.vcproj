@@ -868,6 +868,14 @@
 			RelativePath=".\renderer.h"
 			>
 		</File>
+		<File
+			RelativePath=".\renderer_context.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\renderer_context.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
