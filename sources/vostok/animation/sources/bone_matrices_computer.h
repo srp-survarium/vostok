@@ -12,6 +12,7 @@ namespace animation {
 
 namespace mixing {
 	struct animation_state;
+	class n_ary_tree;
 } // namespace mixing
 
 class skeleton;
@@ -68,6 +69,8 @@ private:
 	/* 0x000c */	const u32							m_animations_count;
 	/* 0x0010 */	u32									m_layers_count;
 	/* 0x0014 */	mutable bool						m_overweighting_detected;
+
+	friend class mixing::n_ary_tree;
 }; // class bone_matrices_computer
 
 STATIC_SIZE_ASSERT(bone_matrices_computer, 0x18);
