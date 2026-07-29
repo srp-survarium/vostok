@@ -9,6 +9,7 @@
 
 #include "mixing_n_ary_tree_destroyer.h"
 #include "mixing_n_ary_tree_animation_node.h"
+#include "mixing_n_ary_tree_comparer.h"
 #include "mixing_n_ary_tree_time_scale_node.h"
 #include <vostok/animation/base_interpolator.h>
 #include "mixing_n_ary_tree_dumper.h"
@@ -1115,7 +1116,6 @@ bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 	return								result;
 }
 
-// STATE[STUB]
 callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 	n_ary_tree const&					previous_tree,
 	n_ary_tree const&					new_tree,
@@ -1124,76 +1124,75 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 	subscribed_channel* const			channels_head
 )
 {
-	// LOCALS
-	// callback_generator_info* 		callback_generators_head
-	// callback_generator_info* 		previous_generator_info
-	// ******
+	callback_generator_info* callback_generators_head	= 0;
+	callback_generator_info* previous_generator_info	= 0;
+	for ( n_ary_tree_animation_node* previous_animation = previous_tree.m_weight_root;
+		  previous_animation;
+		  previous_animation = previous_animation->m_next_weight_animation )
+	{
+		n_ary_tree_animation_node* new_animation	= new_tree.m_weight_root;
+		for ( ; new_animation; new_animation = new_animation->m_next_weight_animation )
+			if ( animation_comparer_predicate( false, false )(
+				*new_animation,
+				*previous_animation
+			) == equal )
+				break;
 
-	return NULL;
+		if ( new_animation )
+			continue;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ee307>|0x007|+0x150:'1822'
-	// <0x6ee457>|0x157|-0x137:'1822'
-	// <0x6ee320>|0x020|+0x02d:'1823'
-	// <0x6ee34d>|0x04d|+0x008:'1823'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ee355>|0x055|+0x05f:'1827'
-	// <0x6ee3b4>|0x0b4|-0x051:'1827'
-	// <0x6ee363>|0x063|+0x007:'1828'
-	// <0x6ee36a>|0x06a|+0x043:'1829'
-	// <0x6ee3ad>|0x0ad|-0x03c:'1829'
-	// <0x6ee371>|0x071|+0x006:'1830'
-	// <0>
-	// <1>
-	// <0x6ee377>|0x077|+0x02a:'1833'
-	// <0>
-	// <1>
-	// <0x6ee3a1>|0x0a1|-0x056:'1836'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ee34b>|0x04b|+0x075:'1843'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6ee3c0>|0x0c0|+0x004:'1852'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ee3c4>|0x0c4|+0x012:'1856'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6ee3d6>|0x0d6|+0x06c:'1865'
-	// <0>
-	// <0x6ee442>|0x142|+0x008:'1867'
-	// <0x6ee44a>|0x14a|+0x003:'1868'
-	// <0x6ee44d>|0x14d|+0x002:'1869'
-	// <0x6ee44f>|0x14f|+0x004:'1870'
-	// <0>
-	// <0x6ee453>|0x153|+0x00f:'1872'
-	// <0>
-	// <1>
-	// <0x6ee462>|0x162|+0x004:'1875'
-	// ******
+		animation_state const& state	= previous_animation->animation_state( );
+		animation_interval const& interval	=
+			previous_animation->animation_intervals( )[ state.animation_interval_id ];
+		bool subscribed				= false;
+		for ( subscribed_channel const* channel = channels_head; channel && !subscribed; channel = channel->next ) {
+			if ( u8( channel->channel_id[ 0 ] ) != u8( 3 ) )
+				continue;
+
+			for ( animation_callback const* callback = channel->first_callback;
+				  callback;
+				  callback = callback->next )
+			{
+				if ( !callback->enabled )
+					continue;
+				if ( callback->animation.c_ptr( ) &&
+					 callback->animation.c_ptr( ) != interval.animation( ).c_ptr( ) )
+					continue;
+				if ( callback->animated_object &&
+					 callback->animated_object != previous_animation->animated_object( ) )
+					continue;
+
+				subscribed				= true;
+				break;
+			}
+		}
+
+		if ( !subscribed )
+			continue;
+
+		R_ASSERT_CMP					(
+			callback_generators_buffer_begin,
+			<,
+			callback_generators_buffer_end
+		);
+		callback_generator_info* const generator	=
+			new ( callback_generators_buffer_begin++ ) callback_generator_info(
+				previous_animation->animated_object( ),
+				interval.animation( ),
+				state.animation_time,
+				time_event_animation_lexeme_ended,
+				0,
+				previous_animation->user_data,
+				u8( state.animation_interval_id )
+			);
+		if ( previous_generator_info )
+			previous_generator_info->next	= generator;
+		else
+			callback_generators_head			= generator;
+		previous_generator_info				= generator;
+	}
+
+	return							callback_generators_head;
 }
 
 u32 n_ary_tree::nearest_event_time_in_ms( ) const
