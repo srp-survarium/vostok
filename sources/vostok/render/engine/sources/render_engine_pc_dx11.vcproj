@@ -981,6 +981,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_model_user.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model_user.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_surface.h"
 			>
 		</File>

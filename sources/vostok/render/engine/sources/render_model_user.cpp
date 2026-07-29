@@ -1,9 +1,5 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_model_user.h"
+#include "render_model_user.h"
 
 namespace vostok {
 namespace render {
@@ -43,7 +39,7 @@ void user_render_model_instance::get_surfaces(
 	float3 const*							view_pos,
 	vector< render_surface_instance* >&		dest,
 	bool									visible_only,
-	u8										__formal,
+	u8										lod_id,
 	u32										surface_flags
 )
 {
@@ -56,7 +52,7 @@ void user_render_model_instance::get_surfaces(
 }
 
 // STATE[STUB]
-void user_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& __formal ) const
+void user_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
 {
 	// OTHER SYMBOLS
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x621c40 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
@@ -299,53 +295,6 @@ void user_render_surface_wire::load_from_chunk_data( memory::chunk_reader& chunk
 	// <0x633eef>|0x11af|+0x0c5:'284'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
