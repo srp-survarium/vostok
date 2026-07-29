@@ -148,7 +148,7 @@ bool stage_skybox::is_enabled() const
 	else
 	{
 		math::color clear_color = math::color(0.2f,0.2f,0.2f,1.0f);
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, &*m_context->m_targets->m_rt_generic_1, 0, 0);
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, &*m_context->m_targets->m_family[rt_generic_1].target, 0, 0);
 		backend::ref().clear_render_targets(clear_color,clear_color,clear_color,clear_color);
 		return false;
 	}
@@ -169,7 +169,7 @@ void stage_skybox::execute()
 		return;
 	}
 	
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, &*m_context->m_targets->m_rt_generic_1, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, &*m_context->m_targets->m_family[rt_generic_1].target, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 
 	render_sky();

@@ -73,8 +73,8 @@ void stage_decals_accumulate::execute()
 	//collision::objects_type decals_objects		= g_allocator;
 	
 	backend::ref().set_render_targets			( 
-		&*m_context->m_targets->m_rt_decals_diffuse, // DXGI_FORMAT_R8G8B8A8_UNORM
-		&*m_context->m_targets->m_rt_decals_normal,	 // DXGI_FORMAT_R16G16B16A16_FLOAT
+		&*m_context->m_targets->m_family[rt_decals_diffuse].target, // DXGI_FORMAT_R8G8B8A8_UNORM
+		&*m_context->m_targets->m_family[rt_decals_normal].target,	 // DXGI_FORMAT_R16G16B16A16_FLOAT
 		0,
 		0
 	);
@@ -118,8 +118,8 @@ void stage_decals_accumulate::execute()
 	PIX_EVENT( stage_decals_accumulate);
 	
 	backend::ref().set_render_targets			( 
-		&*m_context->m_targets->m_rt_decals_diffuse, // DXGI_FORMAT_R8G8B8A8_UNORM
-		&*m_context->m_targets->m_rt_decals_normal,	 // DXGI_FORMAT_R16G16B16A16_FLOAT
+		&*m_context->m_targets->m_family[rt_decals_diffuse].target, // DXGI_FORMAT_R8G8B8A8_UNORM
+		&*m_context->m_targets->m_family[rt_decals_normal].target,	 // DXGI_FORMAT_R16G16B16A16_FLOAT
 		0,
 		0
 	);

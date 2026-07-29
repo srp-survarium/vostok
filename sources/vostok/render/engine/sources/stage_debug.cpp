@@ -38,7 +38,7 @@ void stage_debug::execute()
 		execute_disabled();
 		return;
 	}
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_present, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 	
 	// TODO: Get dynamic visuals once.
 	{

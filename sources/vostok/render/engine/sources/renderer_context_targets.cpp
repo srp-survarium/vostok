@@ -6,244 +6,307 @@
 
 #include "pch.h"
 #include "renderer_context_targets.h"
-#include "shared_names.h"
 #include <vostok/render/core/resource_manager.h>
-#include <vostok/render/core/render_target.h>
 #include <vostok/render/core/backend.h>
 
 namespace vostok {
 namespace render {
 
-u32		renderer_context_targets::s_new_id = 0;
+u32 renderer_context_targets::s_new_id = 0;
 
-renderer_context_targets::renderer_context_targets( math::uint2 size)
+pcstr rt_index_to_name( enum_render_target_index index )
 {
-	// zero m_size!
-	m_size = math::uint2(0, 0);
-	create_targets( size);
+	switch ( index )
+	{
+	case rt_gbuffer_position_downsampled:		return "$user$gbuffer_position_downsampled";
+	case rt_final_frame_downsampled_temp:		return "$user$final_frame_downsampledtemp";
+	case rt_final_frame_downsampled:				return "$user$final_frame_downsampled";
+	case rt_indirect_lighting_specular:			return "$user$indirect_lighting_specular";
+	case rt_light_scattering_mask:				return "$user$light_scattering_mask";
+	case rt_light_scattering_result:				return "$user$light_scattering_result";
+	case rt_local_reflection_result:				return "$user$local_reflection_result";
+	case rt_local_reflection_result_params:		return "$user$local_reflection_result_params";
+	case rt_sun_translucensy_help_data:			return "$user$sun_translucensy_help_data";
+	case rt_position:							return "$user$position";
+	case rt_normal:								return "$user$normal";
+	case rt_normal_copy:							return "$user$normal_copy";
+	case rt_albedo:								return "$user$albedo";
+	case rt_one_layer_transparency_alpha:		return "$user$one_layer_transparency_alpha";
+	case rt_distortion:							return "$user$distortion";
+	case rt_distortion_mask:						return "$user$distortion_mask";
+	case rt_object_motion_vectors:				return "$user$object_motion_vectors";
+	case rt_ssao_accumulator:					return "$user$ssao_accumulator";
+	case rt_ssao_accumulator_full_x:				return "$user$ssao_accumulator_full_x";
+	case rt_ssao_temporal_mask:					return "$user$ssao_temporal_mask";
+	case rt_ssao_prev_accumulator_full_x:		return "$user$ssao_prev_accumulator_full_x";
+	case rt_ssao_accumulator_z:					return "$user$ssao_accumulator_z";
+	case rt_ssao_prev_accumulator_z:				return "$user$ssao_prev_accumulator_z";
+	case rt_decals_diffuse:						return "$user$decals_diffuse";
+	case rt_decals_normal:						return "$user$decals_normal";
+	case rt_decals_smoothness:					return "$user$decals_smoothness";
+	case rt_accumulator_diffuse:					return "$user$accum_diffuse";
+	case rt_decals_blend_result:					return "$user$decals_blend_result";
+	case rt_accumulator_specular:				return "$user$accum_specular";
+	case rt_lpv_accumulation:					return "$user$lpv_accumulation";
+	case rt_blur_0:								return "$user$blur0";
+	case rt_blur_1:								return "$user$blur1";
+	case rt_blur_2:								return "$user$blur2";
+	case rt_blur_3:								return "$user$blur3";
+	case rt_blur_4:								return "$user$blur4";
+	case rt_blur_4_0:							return "$user$blur40";
+	case rt_blur_5:								return "$user$blur5";
+	case rt_blur_5_0:							return "$user$blur50";
+	case rt_blur_6:								return "$user$blur6";
+	case rt_blur_6_0:							return "$user$blur60";
+	case rt_blur_7:								return "$user$blur7";
+	case rt_blur_7_0:							return "$user$blur70";
+	case rt_blur_8:								return "$user$blur8";
+	case rt_blur_8_0:							return "$user$blur80";
+	case rt_lens_flares:						return "$user$lens_flares";
+	case rt_present:							return "$user$present";
+	case rt_previous_present:					return "$user$previous_present";
+	case rt_generic_0:							return "$user$generic0";
+	case rt_generic_1:							return "$user$generic1";
+	case rt_particle_result:					return "$user$particle_result";
+	case rt_particle_lighting:					return "$user$particle_lighting";
+	case rt_rain_result:							return "$user$rain_result";
+	case rt_frame_luminance_previous:			return "$user$frame_luminance_previous";
+	case rt_frame_luminance_current:				return "$user$frame_luminance";
+	case rt_frame_luminance_histogram:			return "$user$frame_luminance_histogram";
+	case rt_apply_indirect_lighting_ds:			return "$user$apply_indirect_lighting_ds";
+	case rt_frame_luminance0:					return "$user$frame_luminance0";
+	case rt_frame_luminance1:					return "$user$frame_luminance1";
+	case rt_frame_luminance2:					return "$user$frame_luminance2";
+	case rt_frame_luminance3:					return "$user$frame_luminance3";
+	case rt_frame_luminance4:					return "$user$frame_luminance4";
+	case rt_frame_luminance5:					return "$user$frame_luminance5";
+	case rt_frame_luminance6:					return "$user$frame_luminance6";
+	case rt_frame_luminance7:					return "$user$frame_luminance7";
+	case rt_frame_luminance8:					return "$user$frame_luminance8";
+	case rt_mie_scattering:						return "$user$mie_scattering";
+	case rt_rayleigh_scattering:				return "$user$rayleigh_scattering";
+	case rt_frame_lum_scene_downsampled:		return "$user$frame_luminance_scene_color_downsampled";
+	case rt_result_frame_luminance_histogram:	return "$user$result_frame_luminance_histogram";
+	case rt_frame_luminance_lockable:			return "$user$frame_luminance_lockable";
+	default:									return 0;
+	}
 }
 
-void	renderer_context_targets::create_targets( math::uint2 size)
+u32 get_format_block_size( DXGI_FORMAT format )
 {
-	if( m_size == size)
+	switch ( format )
+	{
+	case DXGI_FORMAT_R32G32B32A32_FLOAT:	return 16;
+	case DXGI_FORMAT_R16G16B16A16_FLOAT:	return 8;
+	case DXGI_FORMAT_R8_UNORM:				return 1;
+	case DXGI_FORMAT_R8G8_UNORM:
+	case DXGI_FORMAT_R16_FLOAT:				return 2;
+	default:								return 4;
+	}
+}
+
+renderer_context_targets::renderer_context_targets( math::uint2 size ) :
+	m_size			( 0, 0 ),
+	m_id			( 0 ),
+	m_memory_usage	( 0 )
+{
+	create_targets( size, true );
+}
+
+renderer_context_targets::~renderer_context_targets( )
+{
+}
+
+void renderer_context_targets::new_rt(
+	enum_render_target_index	index,
+	DXGI_FORMAT					in_format,
+	math::uint2 const			in_size,
+	enum_rt_usage				usage,
+	bool						enabled
+)
+{
+	if ( !enabled )
 		return;
 
-	m_size = size;
+	render_target_instance& instance = m_family[index];
+	pcstr const original_name = rt_index_to_name( index );
+	if ( instance.orig_name != original_name )
+		instance.orig_name = original_name;
 
-	m_id = s_new_id++;
-	ASSERT( s_new_id > 0, "This means we reached u32 max !");
-	
-
-/*
-	ref_rt				m_rt_gbuffer_position_downsamped;
-	ref_texture			m_t_gbuffer_position_downsamped;
-	fixed_string<64>	m_rt_gbuffer_position_downsamped_name;
-	
-	ref_rt				m_rt_gbuffer_normal_downsamped;
-	ref_texture			m_t_gbuffer_normal_downsamped;
-	fixed_string<64>	m_rt_gbuffer_normal_downsamped_name;
-*/
-	
-	m_rt_gbuffer_position_downsampled_name.assignf( "%s_%d", r2_rt_gbuffer_position_downsampled, m_id);
-	m_rt_gbuffer_position_downsampled	= resource_manager::ref().create_render_target( m_rt_gbuffer_position_downsampled_name.get_buffer(), size.width / 4, size.height / 4, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	
-	m_rt_gbuffer_normal_downsampled_name.assignf( "%s_%d", r2_rt_gbuffer_normal_downsampled, m_id);
-	m_rt_gbuffer_normal_downsampled	= resource_manager::ref().create_render_target( m_rt_gbuffer_normal_downsampled_name.get_buffer(), size.width / 4, size.height / 4, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	
-	//m_rt_indirect_lighting_name.assignf( "%s_%d", r2_rt_indirect_lighting, m_id);
-	//m_rt_indirect_lighting	= resource_manager::ref().create_render_target( m_rt_indirect_lighting_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-		
-	m_apply_indirect_lighting_ds_name.assignf( "$user$apply_indirect_lighting_ds_%d", m_id);
-	m_apply_indirect_lighting_ds	= resource_manager::ref().create_render_target(m_apply_indirect_lighting_ds_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R24G8_TYPELESS, enum_rt_usage_depth_stencil);
-	
-	m_rt_position_ex_name.assignf( "%s_%d", r2_rt_p_ex, m_id);
-	m_rt_precision_ex	= resource_manager::ref().create_render_target( m_rt_position_ex_name.get_buffer(), size.width, size.height,	DXGI_FORMAT_R16G16_UNORM, enum_rt_usage_render_target);
-
-	//m_rt_position_name.assignf( "%s_%d", r2_rt_p, m_id);
-	//m_rt_position		= resource_manager::ref().create_render_target( m_rt_position_name.get_buffer(), size.width, size.height,		DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-
-	//m_rt_normal_name.assignf( "%s_%d", r2_rt_n, m_id);
-	//m_rt_normal			= resource_manager::ref().create_render_target( m_rt_normal_name.get_buffer(), size.width, size.height,		DXGI_FORMAT_R16G16B16A16_FLOAT,	enum_rt_usage_render_target);
-
-	//m_rt_color_name.assignf( "%s_%d", r2_rt_albedo, m_id);
-	//m_rt_color			= resource_manager::ref().create_render_target( m_rt_color_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM,		enum_rt_usage_render_target);//take into account mixed_depth!!!!!!!!
-	
-	m_rt_tangents_name.assignf( "%s_%d", r2_rt_tangents, m_id);
-	m_rt_tangents		= resource_manager::ref().create_render_target( m_rt_tangents_name.get_buffer(), size.width, size.height,		DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	
-	m_rt_position_name.assignf( "%s_%d", r2_rt_p, m_id);
-	m_rt_position		= resource_manager::ref().create_render_target( m_rt_position_name.get_buffer(), size.width, size.height,		DXGI_FORMAT_R16G16B16A16_UNORM, enum_rt_usage_render_target);
-
-	m_rt_normal_name.assignf( "%s_%d", r2_rt_n, m_id);
-	m_rt_normal			= resource_manager::ref().create_render_target( m_rt_normal_name.get_buffer(), size.width, size.height,		DXGI_FORMAT_R16G16B16A16_FLOAT,	enum_rt_usage_render_target);
-
-	m_rt_color_name.assignf( "%s_%d", r2_rt_albedo, m_id);
-	m_rt_color			= resource_manager::ref().create_render_target( m_rt_color_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM,		enum_rt_usage_render_target);//take into account mixed_depth!!!!!!!!
-
-	m_rt_emissive_name.assignf( "%s_%d", r2_rt_emissive, m_id);
-	m_rt_emissive		= resource_manager::ref().create_render_target( m_rt_emissive_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R10G10B10A2_UNORM, enum_rt_usage_render_target);
-
-	m_rt_distortion_name.assignf( "%s_%d", r2_rt_distortion, m_id);
-	m_rt_distortion		= resource_manager::ref().create_render_target( m_rt_distortion_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R11G11B10_FLOAT, enum_rt_usage_render_target);
-	
-	m_rt_ssao_accumulator_name.assignf( "%s_%d", r2_rt_ssao_accumulator, m_id);
-	m_rt_ssao_accumulator		= resource_manager::ref().create_render_target( m_rt_ssao_accumulator_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8_UNORM, enum_rt_usage_render_target);
-	
-	m_rt_ssao_accumulator_small_name.assignf( "%s_%d", r2_rt_ssao_accumulator_small, m_id);
-	m_rt_ssao_accumulator_small	= resource_manager::ref().create_render_target( m_rt_ssao_accumulator_small_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8_UNORM, enum_rt_usage_render_target);
-	
-	//name.assignf( "%s_%d", r2_rt_p_ex, m_id);
-	//m_rt_accumulator			= resource_manager::ref().create_render_target( name.get_buffer(), size.width, size.height,	DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	m_rt_accumulator_diffuse_name.assignf( "%s_%d", r2_rt_accum_diffuse, m_id);
-	m_rt_accumulator_diffuse	= resource_manager::ref().create_render_target( m_rt_accumulator_diffuse_name.get_buffer(), size.width, size.height,	DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-
-	m_rt_accumulator_specular_name.assignf( "%s_%d", r2_rt_accum_specular, m_id);
-	m_rt_accumulator_specular	= resource_manager::ref().create_render_target( m_rt_accumulator_specular_name.get_buffer(), size.width, size.height,	DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-
-	
-	m_rt_light_scattering_name.assignf( "%s_%d", r2_rt_light_scattering, m_id);
-	m_rt_light_scattering	= resource_manager::ref().create_render_target( m_rt_light_scattering_name.get_buffer(), size.width/4, size.height/4,	DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	
-
-	m_rt_present_name.assignf( "%s_%d", r2_rt_present, m_id);
-	m_rt_present			= resource_manager::ref().create_render_target( m_rt_present_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	
-	// generic( LDR) RTs
-	m_rt_generic_0_name.assignf( "%s_%d", r2_rt_generic0, m_id);
-	m_rt_generic_0			= resource_manager::ref().create_render_target( m_rt_generic_0_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	
-	m_rt_generic_1_name.assignf( "%s_%d", r2_rt_generic1, m_id);
-	m_rt_generic_1			= resource_manager::ref().create_render_target( m_rt_generic_1_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-
-	
-	// blur RTs
-	m_rt_blur_0_name.assignf( "%s_%d", r2_rt_blur0, m_id);
-	m_rt_blur_0				= resource_manager::ref().create_render_target( m_rt_blur_0_name.get_buffer(), size.width/4, size.height/4, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	
-	m_rt_blur_1_name.assignf( "%s_%d", r2_rt_blur1, m_id);
-	m_rt_blur_1				= resource_manager::ref().create_render_target( m_rt_blur_1_name.get_buffer(), size.width/4, size.height/4, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);	
-	
-	m_rt_decals_diffuse_name.assignf( "%s_%d", r2_rt_decals_diffuse, m_id);
-	m_rt_decals_diffuse		= resource_manager::ref().create_render_target( m_rt_decals_diffuse_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	
-	m_rt_decals_normal_name.assignf( "%s_%d", r2_rt_decals_normal, m_id);
-	m_rt_decals_normal		= resource_manager::ref().create_render_target( m_rt_decals_normal_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target);
-	
-	u32 lum_rt_size			= 1;
-	
-	for (u32 i=0; i<NUM_TONEMAP_TEXTURES; i++)
-	{
-		m_rt_frame_luminance_name[i].assignf( "%s%d_%d", r2_rt_frame_luminance, i, m_id);
-		m_rt_frame_luminance[i]	= resource_manager::ref().create_render_target( m_rt_frame_luminance_name[i].get_buffer(), lum_rt_size, lum_rt_size, DXGI_FORMAT_R32G32B32A32_FLOAT, enum_rt_usage_render_target);	
-		lum_rt_size *= 2;
-	}
-	
-	m_rt_frame_luminance_current_name.assignf( "%s_%d", r2_rt_frame_luminance, m_id);
-	m_rt_frame_luminance_current	= resource_manager::ref().create_render_target( m_rt_frame_luminance_current_name.get_buffer(), 1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT, enum_rt_usage_render_target);
-	
-	m_rt_frame_luminance_previous_name.assignf( "%s_%d", r2_rt_frame_luminance_previous, m_id);
-	m_rt_frame_luminance_previous	= resource_manager::ref().create_render_target( m_rt_frame_luminance_previous_name.get_buffer(), 1, 1, DXGI_FORMAT_R32G32B32A32_FLOAT, enum_rt_usage_render_target);
-
-	m_rt_frame_luminance_histogram_name.assignf("%s_%d", r2_rt_frame_luminance_histogram, m_id);
-	m_rt_frame_luminance_histogram	= resource_manager::ref().create_render_target( m_rt_frame_luminance_histogram_name.get_buffer(), NUM_HISTOGRAM_VALUES, 1, DXGI_FORMAT_R32G32B32A32_FLOAT, enum_rt_usage_render_target, 0, 0);	
-
-	// Textures to render targets
-	m_t_position			= resource_manager::ref().create_texture( m_rt_position_name.get_buffer());
-	
-	m_t_position_ex			= resource_manager::ref().create_texture( m_rt_position_ex_name.get_buffer());
-	
-	m_t_normal				= resource_manager::ref().create_texture( m_rt_normal_name.get_buffer());
-	
-	m_t_color				= resource_manager::ref().create_texture( m_rt_color_name.get_buffer());
-	
-	m_t_emissive			= resource_manager::ref().create_texture( m_rt_emissive_name.get_buffer());
-	
-	m_t_distortion			= resource_manager::ref().create_texture( m_rt_distortion_name.get_buffer());
-
-	m_t_ssao_accumulator	= resource_manager::ref().create_texture( m_rt_ssao_accumulator_name.get_buffer());
-	m_t_ssao_accumulator_small	= resource_manager::ref().create_texture( m_rt_ssao_accumulator_small_name.get_buffer());
-	
-	
-	m_t_light_scattering	= resource_manager::ref().create_texture( m_rt_light_scattering_name.get_buffer());
-	
-	//m_t_accumulator			= resource_manager::ref().create_texture( m_rt_color_name.get_buffer());
-	
-	m_t_accumulator_diffuse	= resource_manager::ref().create_texture( m_rt_accumulator_diffuse_name.get_buffer());
-	
-	m_t_accumulator_specular = resource_manager::ref().create_texture( m_rt_accumulator_specular_name.get_buffer());
-	
-	m_t_present				= resource_manager::ref().create_texture( m_rt_present_name.get_buffer());
-	
-	m_t_generic_0			= resource_manager::ref().create_texture( m_rt_generic_0_name.get_buffer());
-	m_t_generic_1			= resource_manager::ref().create_texture( m_rt_generic_1_name.get_buffer());
-	
-	m_t_blur_0				= resource_manager::ref().create_texture( m_rt_blur_0_name.get_buffer());
-	m_t_blur_1				= resource_manager::ref().create_texture( m_rt_blur_1_name.get_buffer());
-	
-	m_t_decals_diffuse		= resource_manager::ref().create_texture( m_rt_decals_diffuse_name.get_buffer());
-	m_t_decals_normal		= resource_manager::ref().create_texture( m_rt_decals_normal_name.get_buffer());
-	
-	for (u32 i=0; i<NUM_TONEMAP_TEXTURES; i++)
-		m_t_frame_luminance[i]	= resource_manager::ref().create_texture( m_rt_frame_luminance_name[i].get_buffer());
-
-	m_t_frame_luminance_current	= resource_manager::ref().create_texture( m_rt_frame_luminance_current_name.get_buffer());
-	
-	m_t_frame_luminance_previous = resource_manager::ref().create_texture( m_rt_frame_luminance_previous_name.get_buffer());
-	
-	m_t_frame_luminance_histogram = resource_manager::ref().create_texture( m_rt_frame_luminance_histogram_name.get_buffer());
-	
-	m_t_result_frame_luminance_histogram_name.assignf("$user$result_frame_luminance_histogram_%d", m_id);
-	m_t_result_frame_luminance_histogram = resource_manager::ref().create_texture2d( m_t_result_frame_luminance_histogram_name.get_buffer(), NUM_HISTOGRAM_VALUES, 1, 0, DXGI_FORMAT_R32G32B32A32_FLOAT, D3D_USAGE_STAGING, 0, 1 );
-	
-	m_t_frame_luminance_lockable_name.assignf("$user$frame_luminance_lockable_%d", m_id);
-	m_t_frame_luminance_lockable = resource_manager::ref().create_texture2d( m_t_frame_luminance_lockable_name.get_buffer(), 1, 1, 0, DXGI_FORMAT_R32G32B32A32_FLOAT, D3D_USAGE_STAGING, 0, 1 );
-	
-	m_t_tangents = resource_manager::ref().create_texture( m_rt_tangents_name.get_buffer());
-	
-	
-	// MLAA render targets.
-	m_rt_mlaa_edges_name.assignf			("%s_%d", r2_rt_mlaa_edges, m_id);
-	m_rt_mlaa_blended_weights_name.assignf	("%s_%d", r2_rt_mlaa_blended_weights, m_id);
-	
-	m_rt_mlaa_edges				= resource_manager::ref().create_render_target(m_rt_mlaa_edges_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	m_rt_mlaa_blended_weights	= resource_manager::ref().create_render_target(m_rt_mlaa_blended_weights_name.get_buffer(), size.width, size.height, DXGI_FORMAT_R8G8B8A8_UNORM, enum_rt_usage_render_target);
-	
-	m_t_mlaa_edges				= resource_manager::ref().create_texture(m_rt_mlaa_edges_name.get_buffer());
-	m_t_mlaa_blended_weights	= resource_manager::ref().create_texture(m_rt_mlaa_blended_weights_name.get_buffer());
-	
-	m_t_gbuffer_position_downsampled	= resource_manager::ref().create_texture(m_rt_gbuffer_position_downsampled_name.get_buffer());
-	m_t_gbuffer_normal_downsampled	= resource_manager::ref().create_texture(m_rt_gbuffer_normal_downsampled_name.get_buffer());
-
-	//m_t_indirect_lighting	= resource_manager::ref().create_texture(m_rt_indirect_lighting_name.get_buffer());
-	
-	backend::ref().set_render_targets	( &*m_rt_frame_luminance_previous, 0, 0, 0);
-	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.f);
-	
-	backend::ref().set_render_targets	( &*m_rt_frame_luminance_current, 0, 0, 0);
-	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.f);
-
-
-
-
-
-
-
-
-
-
+	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
+	instance.target = resource_manager::ref().create_render_target(
+		instance.name.get_buffer(),
+		in_size.x,
+		in_size.y,
+		in_format,
+		usage
+	);
+	instance.texture = instance.target->get_texture( );
+	m_memory_usage += get_format_block_size( in_format ) * in_size.x * in_size.y;
 }
 
-void	renderer_context_targets::resize	( math::uint2 size)
+void renderer_context_targets::new_lt(
+	enum_render_target_index	index,
+	DXGI_FORMAT					in_format,
+	math::uint2 const			in_size
+)
 {
-	create_targets( size);
+	render_target_instance& instance = m_family[index];
+	pcstr const original_name = rt_index_to_name( index );
+	if ( instance.orig_name != original_name )
+		instance.orig_name = original_name;
+
+	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
+	instance.target = 0;
+	instance.texture = resource_manager::ref().create_texture2d(
+		instance.name.get_buffer(),
+		in_size.x,
+		in_size.y,
+		0,
+		in_format,
+		D3D_USAGE_STAGING,
+		0,
+		1
+	);
+	m_memory_usage += get_format_block_size( in_format ) * in_size.x * in_size.y;
+}
+
+void renderer_context_targets::create_targets( math::uint2 size, bool force_resize )
+{
+	if ( !force_resize && m_size == size )
+		return;
+
+	for ( u32 i = 0; i < rt_num_render_targets; ++i )
+	{
+		m_family[i].target = 0;
+		m_family[i].texture = 0;
+	}
+
+	m_size = size;
+	m_id = s_new_id++;
+	m_memory_usage = 0;
+
+	math::uint2 const size_d2(
+		math::max( size.x >> 1, 1u ),
+		math::max( size.y >> 1, 1u )
+	);
+	math::uint2 const size_d4(
+		math::max( size.x >> 2, 1u ),
+		math::max( size.y >> 2, 1u )
+	);
+	math::uint2 const size_d8(
+		math::max( size.x >> 3, 1u ),
+		math::max( size.y >> 3, 1u )
+	);
+	math::uint2 const size_d16(
+		math::max( size.x >> 4, 1u ),
+		math::max( size.y >> 4, 1u )
+	);
+	math::uint2 const size_d32(
+		math::max( size.x >> 5, 1u ),
+		math::max( size.y >> 5, 1u )
+	);
+	math::uint2 const size_d64(
+		math::max( size.x >> 6, 1u ),
+		math::max( size.y >> 6, 1u )
+	);
+	math::uint2 const size_d128(
+		math::max( size.x >> 7, 1u ),
+		math::max( size.y >> 7, 1u )
+	);
+
+	new_rt( rt_generic_0, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_generic_1, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_previous_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_accumulator_diffuse, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_accumulator_specular, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_albedo, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
+	new_ds( rt_apply_indirect_lighting_ds, DXGI_FORMAT_R24G8_TYPELESS, size );
+	new_rt( rt_sun_translucensy_help_data, DXGI_FORMAT_R16G16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_normal, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_decals_blend_result, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_normal_copy, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_distortion, DXGI_FORMAT_R16G16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_distortion_mask, DXGI_FORMAT_R8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_object_motion_vectors, DXGI_FORMAT_R16G16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_position, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_accumulator_full_x, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_one_layer_transparency_alpha, DXGI_FORMAT_R8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_decals_diffuse, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_decals_normal, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_decals_smoothness, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_prev_accumulator_full_x, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_prev_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, true );
+
+	new_rt( rt_ssao_temporal_mask, DXGI_FORMAT_R8G8_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_lpv_accumulation, DXGI_FORMAT_R11G11B10_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_indirect_lighting_specular, DXGI_FORMAT_R11G11B10_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_accumulator, DXGI_FORMAT_R16G16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_gbuffer_position_downsampled, DXGI_FORMAT_R16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_light_scattering_mask, DXGI_FORMAT_R8_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_light_scattering_result, DXGI_FORMAT_R10G10B10A2_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_rain_result, DXGI_FORMAT_R8G8B8A8_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_particle_result, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_particle_lighting, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_frame_lum_scene_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_local_reflection_result, DXGI_FORMAT_R8G8B8A8_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_local_reflection_result_params, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+
+	new_rt( rt_final_frame_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_final_frame_downsampled_temp, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_lens_flares, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_1, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_2, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_3, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_4, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d8, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_4_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d8, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_5, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_5_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_6, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d32, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_6_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d32, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_7, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d64, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_7_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d64, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_8, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d128, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_8_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d128, enum_rt_usage_render_target, true );
+
+	u32 luminance_size = 1;
+	for ( u32 i = 0; i < rt_num_frame_luminance_targets; ++i )
+	{
+		new_rt(
+			enum_render_target_index( rt_frame_luminance0 + i ),
+			DXGI_FORMAT_R32G32B32A32_FLOAT,
+			math::uint2( luminance_size, luminance_size ),
+			enum_rt_usage_render_target,
+			true
+		);
+		luminance_size <<= 1;
+	}
+
+	new_rt( rt_frame_luminance_current, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 1, 1 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance_previous, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 1, 1 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance_histogram, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 16, 1 ), enum_rt_usage_render_target, true );
+	new_lt( rt_result_frame_luminance_histogram, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 16, 1 ) );
+	new_lt( rt_frame_luminance_lockable, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 16, 1 ) );
+	new_rt( rt_mie_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
+	new_rt( rt_rayleigh_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
+
+	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_previous].target, 0, 0, 0 );
+	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
+	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_current].target, 0, 0, 0 );
+	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
+	backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_full_x].target, 0, 0, 0 );
+	backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
+	backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_z].target, 0, 0, 0 );
+	backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
 }
 
 void renderer_context_targets::resize( math::uint2 size, bool force_resize )
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( force_resize );
-	create_targets					( size );
+	create_targets( size, force_resize );
 }
-
 
 } // namespace render
 } // namespace vostok

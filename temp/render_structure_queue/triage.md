@@ -119,3 +119,35 @@ Record each non-live removal here as:
   paths. `renderer_context_targets` and `res_render_output` remain separately
   queued dependencies; their current compatibility surfaces do not constitute
   completion of those owners.
+- `headers/vostok/render/enums/enum_render_target_index.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/renderer_context_targets.h` carries all
+  70 target-family indices and the nine-entry luminance-family count with the
+  target values.
+- `headers/vostok/render/enums/enum_rt_usage.h` |
+  represented by the live DX11 core owner |
+  `sources/vostok/render/core/dx11/render_target.h` carries the target
+  depth-stencil and render-target usage values consumed by the engine owner.
+- `headers/vostok/render/render_target_instance.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/renderer_context_targets.h` carries the
+  target `0xa0` instance layout: original name, generated name, render target,
+  and texture.
+- `headers/vostok/render/renderer_context_targets.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/renderer_context_targets.h` carries the
+  target `0x2bd0` owner with `m_family[70]`, size at `0x2bc0`, id at `0x2bc8`,
+  and memory accounting at `0x2bcc`.
+- `sources/vostok/render/engine/sources/renderer_context_targets.cpp` |
+  represented in the live tree |
+  The live owner names and creates the complete target family, owns resize/id/
+  memory behavior, creates luminance lockables, and initializes history
+  targets. Temporal SSAO allocation is currently always enabled until the
+  target engine-options owner exposes its controlling field. Legacy stage
+  consumers that predate the target family have explicit transitional
+  mappings: normal-downsampled to `rt_final_frame_downsampled_temp`, tangents
+  to `rt_normal_copy`, position-ex to `rt_position`, emissive to
+  `rt_object_motion_vectors`, MLAA edges/weights to the final-frame
+  downsampled pair, SSAO-small to `rt_ssao_temporal_mask`, light-scattering to
+  `rt_light_scattering_result`, and color to `rt_albedo`. Those consumers
+  remain queued and must recover their target semantics when rebuilt.

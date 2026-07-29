@@ -546,8 +546,8 @@ void radiance_volume::inject_camera_occluders(renderer_context* context)
 		context->set_p(context->get_p());
 		
 		m_injection_geometry_from_camera.prepare(
-			context->m_targets->m_t_gbuffer_position_downsampled->width(),
-			context->m_targets->m_t_gbuffer_position_downsampled->height()
+			context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->width(),
+			context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->height()
 		);
 		
 		m_injection_geometry_from_camera.draw	();

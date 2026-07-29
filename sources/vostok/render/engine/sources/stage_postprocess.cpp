@@ -322,7 +322,7 @@ void stage_postprocess::buid_luminance_histogram(res_texture* scene_texture, u32
 	D3D_VIEWPORT orig_viewport;
 	backend::ref().get_viewport			(orig_viewport);
 	
-	backend::ref().set_render_targets	(&*m_context->m_targets->m_rt_frame_luminance_histogram, 0, 0, 0);
+	backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance_histogram].target, 0, 0, 0);
 	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.0f);
 	
 	u32 const num_histogam_values		= math::min<u32>(num_values, NUM_HISTOGRAM_VALUES);
@@ -352,7 +352,7 @@ void stage_postprocess::buid_luminance_histogram(res_texture* scene_texture, u32
 		backend::ref().set_viewport( tmp_viewport);
 		
 		m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_histogram);
-		fill_surface2(m_context->m_targets->m_rt_frame_luminance_histogram);
+		fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_histogram].target);
 		
 		backend::ref().set_viewport( orig_viewport);
 	}
@@ -360,24 +360,24 @@ void stage_postprocess::buid_luminance_histogram(res_texture* scene_texture, u32
 	if (out_array)
 	{
 		resource_manager::ref().copy2D(
-			&*m_context->m_targets->m_t_result_frame_luminance_histogram,
+			&*m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture,
 			0,
 			0,
-			&*m_context->m_targets->m_t_frame_luminance_histogram,
+			&*m_context->m_targets->m_family[rt_frame_luminance_histogram].texture,
 			0,
 			0,
-			m_context->m_targets->m_t_frame_luminance_histogram->width(),
-			m_context->m_targets->m_t_frame_luminance_histogram->height()
+			m_context->m_targets->m_family[rt_frame_luminance_histogram].texture->width(),
+			m_context->m_targets->m_family[rt_frame_luminance_histogram].texture->height()
 		);
 		
 		u32 row_pitch = 0;
 		
-		float4* data = (float4*)m_context->m_targets->m_t_result_frame_luminance_histogram->map2D(D3D_MAP_READ, 0, row_pitch);
+		float4* data = (float4*)m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture->map2D(D3D_MAP_READ, 0, row_pitch);
 		
 		for (u32 i=0; i<num_histogam_values; i++)
 			out_array[i] = (*data++).x;
 		
-		m_context->m_targets->m_t_result_frame_luminance_histogram->unmap2D(0);
+		m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture->unmap2D(0);
 	}
 }
 
@@ -389,31 +389,31 @@ void stage_postprocess::measure_per_pixel_luminance_percentage (res_texture* sce
 	
 	for (u32 lum_rt_index=0; lum_rt_index<NUM_TONEMAP_TEXTURES; lum_rt_index++)
 	{
-		backend::ref().set_render_targets	(&*m_context->m_targets->m_rt_frame_luminance[lum_rt_index], 0, 0, 0);
+		backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, 0, 0, 0);
 		backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.0f);
 	}
 	
 	m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_in_range);
 	backend::ref().set_ps_constant(m_luminance_range_parameter_parameter, float4(min_luminanace, max_luminanace, 0.0f, 0.0f));
 	backend::ref().set_ps_texture( "t_frame_color0", scene_texture);
-	fill_surface(m_context->m_targets->m_rt_frame_luminance[last_target_index]);
+	fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + last_target_index].target);
 	
 	for (s32 lum_rt_index=last_target_index-1; lum_rt_index>=0; lum_rt_index--)
 	{
 		m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_count);
-		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_t_frame_luminance[lum_rt_index+1]);
-		fill_surface(m_context->m_targets->m_rt_frame_luminance[lum_rt_index]);
+		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index+1].texture);
+		fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target);
 	}
 	
 	resource_manager::ref().copy2D(
-		&*m_context->m_targets->m_t_frame_luminance_current,
+		&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
 		0,
 		0,
-		&*m_context->m_targets->m_t_frame_luminance[0],
+		&*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture,
 		0,
 		0,
-		m_context->m_targets->m_t_frame_luminance[0]->width(),
-		m_context->m_targets->m_t_frame_luminance[0]->height()
+		m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->width(),
+		m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->height()
 	);
 }
 
@@ -431,7 +431,7 @@ void stage_postprocess::measure_per_pixel_luminance(res_texture* scene_texture, 
 	
 	m_sh_gather_luminance->apply(effect_gather_luminance::gather_log_luminance);
 	backend::ref().set_ps_texture( "t_frame_color0", scene_texture);
-	fill_surface(m_context->m_targets->m_rt_frame_luminance[last_target_index]);
+	fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + last_target_index].target);
 	
 	for (s32 lum_rt_index=last_target_index-1; lum_rt_index>=0; lum_rt_index--)
 	{
@@ -440,39 +440,39 @@ void stage_postprocess::measure_per_pixel_luminance(res_texture* scene_texture, 
 		else
 			m_sh_gather_luminance->apply(effect_gather_luminance::gather_luminance);
 		
-		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_t_frame_luminance[lum_rt_index+1]);
-		fill_surface(m_context->m_targets->m_rt_frame_luminance[lum_rt_index]);
+		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index+1].texture);
+		fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target);
 	}
 	
 /*	resource_manager::ref().copy2D(
-		&*m_context->m_targets->m_t_frame_luminance_lockable,
+		&*m_context->m_targets->m_family[rt_frame_luminance_lockable].texture,
 		0,
 		0,
-		&*m_context->m_targets->m_t_frame_luminance[0],
+		&*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture,
 		0,
 		0,
-		m_context->m_targets->m_t_frame_luminance[0]->width(),
-		m_context->m_targets->m_t_frame_luminance[0]->height()
+		m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->width(),
+		m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->height()
 	);
 	*/
 	//u32 row_pitch = 0;
-	//float4* data = (float4*)m_context->m_targets->m_t_frame_luminance_lockable->map2D(D3D_MAP_READ, 0, row_pitch);
+	//float4* data = (float4*)m_context->m_targets->m_family[rt_frame_luminance_lockable].texture->map2D(D3D_MAP_READ, 0, row_pitch);
 	//out_avrg_min_max = *data;
 	
-	//m_context->m_targets->m_t_frame_luminance_lockable->unmap2D(0);
+	//m_context->m_targets->m_family[rt_frame_luminance_lockable].texture->unmap2D(0);
 	
 	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
 //	if not using eye adaptation
 	if (math::is_similar(pp_parameters.adaptation_speed, 0.0f, 0.05f))
 		resource_manager::ref().copy2D(
-			&*m_context->m_targets->m_t_frame_luminance_current,
+			&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
 			0,
 			0,
-			&*m_context->m_targets->m_t_frame_luminance[0],
+			&*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture,
 			0,
 			0,
-			m_context->m_targets->m_t_frame_luminance[0]->width(),
-			m_context->m_targets->m_t_frame_luminance[0]->height()
+			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->width(),
+			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->height()
 		);	
 }
 
@@ -492,26 +492,26 @@ void stage_postprocess::compute_per_pixel_eye_adaptated_luminance()
 	static bool fist_pass = true;
 	if (fist_pass)
 	{
-		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_t_frame_luminance[0] );
+		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture );
 		fist_pass = false;
 	}
 	else
 	{
-		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_t_frame_luminance_previous );
+		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_family[rt_frame_luminance_previous].texture );
 	}
 	
-	backend::ref().set_ps_texture( "t_current_luminanace", &*m_context->m_targets->m_t_frame_luminance[0] );
-	fill_surface2(m_context->m_targets->m_rt_frame_luminance_current);
+	backend::ref().set_ps_texture( "t_current_luminanace", &*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture );
+	fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_current].target);
 	
 	resource_manager::ref().copy2D(
-		&*m_context->m_targets->m_t_frame_luminance_previous,
+		&*m_context->m_targets->m_family[rt_frame_luminance_previous].texture,
 		0,
 		0,
-		&*m_context->m_targets->m_t_frame_luminance_current,
+		&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
 		0,
 		0,
-		m_context->m_targets->m_t_frame_luminance_current->width(),
-		m_context->m_targets->m_t_frame_luminance_current->height()
+		m_context->m_targets->m_family[rt_frame_luminance_current].texture->width(),
+		m_context->m_targets->m_family[rt_frame_luminance_current].texture->height()
 	);	
 }
 
@@ -539,7 +539,7 @@ vostok::math::float4 stage_postprocess::get_frame_luminance_parameters()
 	
 	float values						[num_values];
 	buid_luminance_histogram			(
-		&*m_context->m_targets->m_t_generic_0, 
+		&*m_context->m_targets->m_family[rt_generic_0].texture,
 		array_size(values), 
 		min_luminance, 
 		max_luminance, 
@@ -634,18 +634,18 @@ vostok::math::float4 stage_postprocess::compute_luminance_parameters(u32 frame_d
 
 	for (u32 lum_rt_index=0; lum_rt_index<NUM_TONEMAP_TEXTURES; lum_rt_index++)
 	{
-		backend::ref().set_render_targets	(&*m_context->m_targets->m_rt_frame_luminance[lum_rt_index], 0, 0, 0);
+		backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, 0, 0, 0);
 		backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 1.0f);
 	}
 	
-// 	backend::ref().set_render_targets	(&*m_context->m_targets->m_rt_frame_luminance_current, 0, 0, 0);
+// 	backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance_current].target, 0, 0, 0);
 // 	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 1.0f);
 // 	
-// 	backend::ref().set_render_targets	(&*m_context->m_targets->m_rt_frame_luminance_previous, 0, 0, 0);
+// 	backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance_previous].target, 0, 0, 0);
 // 	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 1.0f);
 	
 	float4 frame_luminance_parameter0;
-	measure_per_pixel_luminance			(&*m_context->m_targets->m_t_generic_0, frame_luminance_parameter0);
+	measure_per_pixel_luminance			(&*m_context->m_targets->m_family[rt_generic_0].texture, frame_luminance_parameter0);
 	
 	if (!math::is_similar(pp_parameters.adaptation_speed, 0.0f, 0.05f))
 		compute_per_pixel_eye_adaptated_luminance();
@@ -662,9 +662,9 @@ void stage_postprocess::execute_disabled()
 		return;
 	
 	m_sh_effect_copy_image->apply	(effect_copy_image::copy_rewrite);
-	backend::ref().set_ps_texture	( "t_base", &*m_context->m_targets->m_t_generic_0);
+	backend::ref().set_ps_texture	( "t_base", &*m_context->m_targets->m_family[rt_generic_0].texture);
 	backend::ref().set_ps_constant	(m_gamma_correction_factor, 1.0f);
-	fill_surface					(m_context->m_targets->m_rt_present);
+	fill_surface					(m_context->m_targets->m_family[rt_present].target);
 	m_context->set_w				(float4x4().identity());
 }
 
@@ -688,15 +688,15 @@ void stage_postprocess::execute()
 	if (!m_context->scene_view()->is_use_post_process())
 	{
 		m_sh_effect_copy_image->apply	(effect_copy_image::copy_rewrite);
-		backend::ref().set_ps_texture	( "t_base", &*m_context->m_targets->m_t_generic_0);
+		backend::ref().set_ps_texture	( "t_base", &*m_context->m_targets->m_family[rt_generic_0].texture);
 		backend::ref().set_ps_constant	(m_gamma_correction_factor, 1.0f);
-		fill_surface					(m_context->m_targets->m_rt_present);
+		fill_surface					(m_context->m_targets->m_family[rt_present].target);
 		
 		m_context->set_w				(float4x4().identity());
 		
 	
 		//if (!saved)
-		//	m_context->m_targets->m_t_generic_0->save_as("f:/hdr_screen.dds");
+		//	m_context->m_targets->m_family[rt_generic_0].texture->save_as("f:/hdr_screen.dds");
 		//saved							= true;
 		
 		return;
@@ -714,11 +714,11 @@ void stage_postprocess::execute()
 		m_sh_gather_sun_light_scattering_zone->apply();
 		sun_direction = the_sun->direction;
 		backend::ref().set_ps_constant	(m_sun_direction_parameter, sun_direction);
-		fill_surface(m_context->m_targets->m_rt_light_scattering);
+		fill_surface(m_context->m_targets->m_family[rt_light_scattering_result].target);
 	}
 	
-	float t_w							= float(m_context->m_targets->m_rt_blur_0->width());
-	float t_h							= float(m_context->m_targets->m_rt_blur_0->height());
+	float t_w							= float(m_context->m_targets->m_family[rt_blur_0].target->width());
+	float t_h							= float(m_context->m_targets->m_family[rt_blur_0].target->height());
 	float s_u							= 1.0f / backend::ref().target_width();
 	float s_v							= 1.0f / backend::ref().target_height();
 	
@@ -729,15 +729,15 @@ void stage_postprocess::execute()
 	
 	backend::ref().flush_rt_views		();
 	
-	clear_surface						(m_context->m_targets->m_rt_blur_0);
-	clear_surface						(m_context->m_targets->m_rt_blur_1);
+	clear_surface						(m_context->m_targets->m_family[rt_blur_0].target);
+	clear_surface						(m_context->m_targets->m_family[rt_blur_1].target);
 	
 	float4 frame_luminance_parameter	= compute_luminance_parameters(16);
 	
 	if (pp_parameters.enable_bloom)
 	{
 		m_sh_gather_bloom->apply		();
-		backend::ref().set_ps_texture	( "t_frame_color", &*m_context->m_targets->m_t_generic_0);
+		backend::ref().set_ps_texture	( "t_frame_color", &*m_context->m_targets->m_family[rt_generic_0].texture);
 		m_dof_shader_constants.set(
 			pp_parameters.dof_height_lights, 
 			pp_parameters.dof_focus_distance, 
@@ -751,7 +751,7 @@ void stage_postprocess::execute()
 		backend::ref().set_ps_constant	(m_kernel_offsets, kernel_offsets);
 		m_bloom_shader_constants.set	(pp_parameters.bloom_scale, pp_parameters.bloom_max_color);
 		backend::ref().set_ps_constant	(m_frame_luminance_parameter, frame_luminance_parameter);
-		fill_surface					(m_context->m_targets->m_rt_blur_0);
+		fill_surface					(m_context->m_targets->m_family[rt_blur_0].target);
 	}
 	
 	float weights_h[27];
@@ -769,18 +769,18 @@ void stage_postprocess::execute()
 		blur_offsets_weights[i]			= float4(offsets_h[i], weights_h[i], offsets_v[i], weights_v[i]);
 	
 	m_sh_blur->apply					(effect_blur::horizontally);
-	m_textures[0]						= m_context->m_targets->m_t_blur_0;
-	backend::ref().set_ps_texture		( "t_base", &*m_context->m_targets->m_t_blur_0);
+	m_textures[0]						= m_context->m_targets->m_family[rt_blur_0].texture;
+	backend::ref().set_ps_texture		( "t_base", &*m_context->m_targets->m_family[rt_blur_0].texture);
 	backend::ref().set_ps_constant		( m_blur_offsets_weights, blur_offsets_weights);
-	fill_surface						(m_context->m_targets->m_rt_blur_1);
+	fill_surface						(m_context->m_targets->m_family[rt_blur_1].target);
 	
 	backend::ref().flush_rt_shader_resources();
 	
 	m_sh_blur->apply					(effect_blur::vertically);
-	m_textures[1]						= m_context->m_targets->m_t_blur_1;
-	backend::ref().set_ps_texture		( "t_base", &*m_context->m_targets->m_t_blur_1);
+	m_textures[1]						= m_context->m_targets->m_family[rt_blur_1].texture;
+	backend::ref().set_ps_texture		( "t_base", &*m_context->m_targets->m_family[rt_blur_1].texture);
 	backend::ref().set_ps_constant		( m_blur_offsets_weights, blur_offsets_weights);
-	fill_surface						(m_context->m_targets->m_rt_blur_0);
+	fill_surface						(m_context->m_targets->m_family[rt_blur_0].target);
 	
 	u32 dof_type						= pp_parameters.use_bokeh_dof;
 	
@@ -817,35 +817,35 @@ void stage_postprocess::execute()
 	backend::ref().set_ps_constant		(m_sun_direction_parameter, sun_direction);
 	backend::ref().set_ps_constant		(m_frame_luminance_parameter, frame_luminance_parameter);
 	
-	fill_surface						(m_context->m_targets->m_rt_generic_1);
+	fill_surface						(m_context->m_targets->m_family[rt_generic_1].target);
 	
 	if (options::ref().m_enabled_mlaa)
 	{
-		clear_surface								(m_context->m_targets->m_rt_mlaa_edges);
-		clear_surface								(m_context->m_targets->m_rt_mlaa_blended_weights);
+		clear_surface								(m_context->m_targets->m_family[rt_final_frame_downsampled_temp].target);
+		clear_surface								(m_context->m_targets->m_family[rt_final_frame_downsampled].target);
 		
 		// MLAA.
 		m_post_process_antialiasing_shader->apply	(effect_post_process_mlaa::color_edge_detection);
-		fill_surface2								(m_context->m_targets->m_rt_mlaa_edges);
+		fill_surface2								(m_context->m_targets->m_family[rt_final_frame_downsampled_temp].target);
 		
 		m_post_process_antialiasing_shader->apply	(effect_post_process_mlaa::blending_weight_calculation);
-		fill_surface2								(m_context->m_targets->m_rt_mlaa_blended_weights);
+		fill_surface2								(m_context->m_targets->m_family[rt_final_frame_downsampled].target);
 		
 		m_post_process_antialiasing_shader->apply	(effect_post_process_mlaa::neighborhood_blending);
-		fill_surface2								(m_context->m_targets->m_rt_present);
+		fill_surface2								(m_context->m_targets->m_family[rt_present].target);
 	}
 	else if (options::ref().m_enabled_fxaa)
 	{
 		m_post_process_antialiasing_shader_fxaa->apply	();
-		fill_surface2									(m_context->m_targets->m_rt_present);
+		fill_surface2									(m_context->m_targets->m_family[rt_present].target);
 	}
 	else
 	{
 		// Convert to pc gamma space.
 		m_sh_effect_copy_image->apply	(effect_copy_image::copy_rewrite);
-		backend::ref().set_ps_texture	("t_base", &*m_context->m_targets->m_t_generic_1);
+		backend::ref().set_ps_texture	("t_base", &*m_context->m_targets->m_family[rt_generic_1].texture);
 		backend::ref().set_ps_constant	(m_gamma_correction_factor, 1.0f);
-		fill_surface					(m_context->m_targets->m_rt_present);
+		fill_surface					(m_context->m_targets->m_family[rt_present].target);
 	}
 	
 	/*for (render::vector<material_effects>::const_iterator it=m_material_post_effects.begin(); it!=m_material_post_effects.end(); ++it)
@@ -855,11 +855,11 @@ void stage_postprocess::execute()
 		
 		it->m_effects[accumulate_distortion_render_stage]->apply();
 		
-		resource_manager::ref().copy2D(m_context->m_targets->m_t_color.c_ptr(), 0, 0, m_context->m_targets->m_t_present.c_ptr(), 0, 0, m_context->m_targets->m_t_present->width(), m_context->m_targets->m_t_present->height());
-		m_textures[4] = m_context->m_targets->m_t_color;
-		backend::ref().set_ps_texture( "t_frame_color", &*m_context->m_targets->m_t_color);
+		resource_manager::ref().copy2D(m_context->m_targets->m_family[rt_albedo].texture.c_ptr(), 0, 0, m_context->m_targets->m_family[rt_present].texture.c_ptr(), 0, 0, m_context->m_targets->m_family[rt_present].texture->width(), m_context->m_targets->m_family[rt_present].texture->height());
+		m_textures[4] = m_context->m_targets->m_family[rt_albedo].texture;
+		backend::ref().set_ps_texture( "t_frame_color", &*m_context->m_targets->m_family[rt_albedo].texture);
 		
-		fill_surface(m_context->m_targets->m_rt_present);
+		fill_surface(m_context->m_targets->m_family[rt_present].target);
 	}
 	
 	// Add "post_process" resource?
@@ -871,11 +871,11 @@ void stage_postprocess::execute()
 		
 		it->m_effects[post_process_render_stage]->apply();
 		
-		resource_manager::ref().copy2D(m_context->m_targets->m_t_color.c_ptr(), 0, 0, m_context->m_targets->m_t_present.c_ptr(), 0, 0, m_context->m_targets->m_t_present->width(), m_context->m_targets->m_t_present->height());
-		m_textures[5] = m_context->m_targets->m_t_color;
-		backend::ref().set_ps_texture( "t_frame_color", &*m_context->m_targets->m_t_color);
+		resource_manager::ref().copy2D(m_context->m_targets->m_family[rt_albedo].texture.c_ptr(), 0, 0, m_context->m_targets->m_family[rt_present].texture.c_ptr(), 0, 0, m_context->m_targets->m_family[rt_present].texture->width(), m_context->m_targets->m_family[rt_present].texture->height());
+		m_textures[5] = m_context->m_targets->m_family[rt_albedo].texture;
+		backend::ref().set_ps_texture( "t_frame_color", &*m_context->m_targets->m_family[rt_albedo].texture);
 		
-		fill_surface(m_context->m_targets->m_rt_present);
+		fill_surface(m_context->m_targets->m_family[rt_present].target);
 	}
 	*/
 	

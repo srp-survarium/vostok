@@ -372,7 +372,7 @@ void stage_sun::execute_cascade( u32 cascade)
 	PIX_EVENT( stage_sun);
 
 	//backend::ref().set_render_targets	( &*m_context->m_rt_accumulator, 0, 0, 0);
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 	
 	backend::ref().reset_depth_stencil_target();
 	//backend::ref().set_depth_stencil_target( NULL);

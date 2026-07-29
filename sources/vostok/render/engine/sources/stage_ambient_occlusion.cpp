@@ -78,7 +78,7 @@ static void fill_surface(ref_rt surf, renderer_context* context)
 
 void stage_ambient_occlusion::execute_disabled()
 {
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_ssao_accumulator, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_ssao_accumulator].target, 0, 0, 0);
 	backend::ref().clear_render_targets( vostok::math::color( 1.0f, 1.0f, 1.0f, 0.0f));
 }
 
@@ -108,7 +108,7 @@ void stage_ambient_occlusion::execute()
 		// SSAO pass.
 		m_sh_ssao_accumulation->apply();
 		backend::ref().set_ps_constant(m_ao_parameters, float4(pp_parameters.ssao_saturation, pp_parameters.ssao_radius_scale, 0.0f, 0.0f));
-		fill_surface(m_context->m_targets->m_rt_ssao_accumulator, m_context);
+		fill_surface(m_context->m_targets->m_family[rt_ssao_accumulator].target, m_context);
 		
 		END_CPUGPU_TIMER;
 		
@@ -118,32 +118,32 @@ void stage_ambient_occlusion::execute()
 		
 		// SSAO filter 4x4
 		m_sh_ssao_filter4x4->apply(0);
-		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_t_ssao_accumulator);
-		fill_surface(m_context->m_targets->m_rt_ssao_accumulator_small, m_context);
+		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_family[rt_ssao_accumulator].texture);
+		fill_surface(m_context->m_targets->m_family[rt_ssao_temporal_mask].target, m_context);
 		backend::ref().flush_rt_shader_resources();
 		
 		// SSAO filter 4x4
 		m_sh_ssao_filter4x4->apply(0);
-		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_t_ssao_accumulator_small);
-		fill_surface(m_context->m_targets->m_rt_ssao_accumulator, m_context);
+		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_family[rt_ssao_temporal_mask].texture);
+		fill_surface(m_context->m_targets->m_family[rt_ssao_accumulator].target, m_context);
 		backend::ref().flush_rt_shader_resources();
 		
 		// SSAO filter 4x4
 		m_sh_ssao_filter4x4->apply(1);
-		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_t_ssao_accumulator);
-		fill_surface(m_context->m_targets->m_rt_ssao_accumulator_small, m_context);
+		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_family[rt_ssao_accumulator].texture);
+		fill_surface(m_context->m_targets->m_family[rt_ssao_temporal_mask].target, m_context);
 		backend::ref().flush_rt_shader_resources();
 		
 		// SSAO filter 4x4
 		m_sh_ssao_filter4x4->apply(1);
-		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_t_ssao_accumulator_small);
-		fill_surface(m_context->m_targets->m_rt_ssao_accumulator, m_context);
+		backend::ref().set_ps_texture("t_ssao_accumulator", &*m_context->m_targets->m_family[rt_ssao_temporal_mask].texture);
+		fill_surface(m_context->m_targets->m_family[rt_ssao_accumulator].target, m_context);
 		
 		END_CPUGPU_TIMER;
 	}
 	else
 	{
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_ssao_accumulator, 0, 0, 0);
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_ssao_accumulator].target, 0, 0, 0);
 		backend::ref().clear_render_targets( vostok::math::color( 1.0f, 1.0f, 1.0f, 0.0f));
 	}
 	backend::ref().reset_render_targets();

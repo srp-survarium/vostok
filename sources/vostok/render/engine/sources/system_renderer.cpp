@@ -677,9 +677,9 @@ void system_renderer::draw_debug_terrain( )
 
 
 	backend::ref().set_render_targets	( 
-		&*m_renderer_context->m_targets->m_rt_position,
-		&*m_renderer_context->m_targets->m_rt_normal,
-		&*m_renderer_context->m_targets->m_rt_tangents,
+		&*m_renderer_context->m_targets->m_family[rt_position].target,
+		&*m_renderer_context->m_targets->m_family[rt_normal].target,
+		&*m_renderer_context->m_targets->m_family[rt_normal_copy].target,
 		0
 	);
 	backend::ref().clear_render_targets	(
@@ -778,12 +778,12 @@ void system_renderer::draw_debug_terrain( )
 		m_terrain_debug_material->get_material_effects().m_effects[debug_post_process_render_stage])
 	{
 		m_terrain_debug_material->get_material_effects().m_effects[debug_post_process_render_stage]->apply();
-		fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+		fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 	}
 
 
 	/*
-	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_rt_position, &*m_renderer_context->m_targets->m_rt_normal, &*m_renderer_context->m_targets->m_rt_color, &*m_renderer_context->m_targets->m_rt_emissive);
+	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_family[rt_position].target, &*m_renderer_context->m_targets->m_family[rt_normal].target, &*m_renderer_context->m_targets->m_family[rt_albedo].target, &*m_renderer_context->m_targets->m_family[rt_object_motion_vectors].target);
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().clear_depth_stencil( D3D_CLEAR_STENCIL, 1.0f, 0);
 	backend::ref().clear_render_targets	( math::color( 0, 0, 0, 0));
@@ -835,10 +835,10 @@ void system_renderer::draw_debug_terrain( )
 // 	if (m_terrain_debug_material_effects.stage_enable[debug_post_process_render_stage] && m_terrain_debug_material_effects.m_effects[debug_post_process_render_stage])
 // 	{
 // 		m_terrain_debug_material_effects.m_effects[debug_post_process_render_stage]->apply();
-// 		fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+// 		fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 // 	}
 	
-	//backend::ref().set_render_targets(&*m_renderer_context->m_targets->m_rt_present,0,0,0);
+	//backend::ref().set_render_targets(&*m_renderer_context->m_targets->m_family[rt_present].target,0,0,0);
 	//m_sh_copy_image->apply(effect_copy_image::copy_rewrite);
 }
 
@@ -1144,7 +1144,7 @@ void system_renderer::setup_render_output_window	( render_output_window_ptr in_o
 	backend::ref().set_render_output			( output_window->render_output() );
 	backend::ref().reset_depth_stencil_target	();
 	
-	backend::ref().set_render_targets			( &*m_renderer_context->m_targets->m_rt_present,0, 0, 0);
+	backend::ref().set_render_targets			( &*m_renderer_context->m_targets->m_family[rt_present].target,0, 0, 0);
 	backend::ref().reset_depth_stencil_target	( );
 
 	viewport_type res_viewport( math::float2( 0.f, 0.f ), math::float2( 1.f, 1.f ));

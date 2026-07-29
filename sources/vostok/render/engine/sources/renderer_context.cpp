@@ -264,7 +264,7 @@ void renderer_context::set_target_context		( renderer_context_targets const * ta
 {
 	m_targets	= targets_context;
 
-	if( !m_targets || !m_targets->m_t_position)
+	if( !m_targets || !m_targets->m_family[rt_position].texture)
 	{
 // 		m_t_skin_scattering->clone		( &*m_t_null);
 // 		m_t_skin_scattering_small->clone			( &*m_t_null);
@@ -324,49 +324,49 @@ void renderer_context::set_target_context		( renderer_context_targets const * ta
 
 	m_screen_resolution				= float4( (float)m_targets->size().x,  (float)m_targets->size().y, 1.f/m_targets->size().x, 1.f/m_targets->size().y);
 
-	m_t_position->clone				( &*m_targets->m_t_position);
-	m_t_position_ex->clone			( &*m_targets->m_t_position_ex);
-	m_t_normal->clone				( &*m_targets->m_t_normal);
-	m_t_color->clone				( &*m_targets->m_t_color);
-	m_t_emissive->clone				( &*m_targets->m_t_emissive);
-	m_t_distortion->clone			( &*m_targets->m_t_distortion);
-	m_t_ssao_accumulator->clone		( &*m_targets->m_t_ssao_accumulator);
-	m_t_ssao_accumulator_small->clone( &*m_targets->m_t_ssao_accumulator_small);
-	//m_t_accumulator->clone		( &*m_targets->m_t_accumulator);
-	m_t_accumulator_diffuse->clone	( &*m_targets->m_t_accumulator_diffuse);
-	m_t_accumulator_specular->clone	( &*m_targets->m_t_accumulator_specular);
+	m_t_position->clone				( &*m_targets->m_family[rt_position].texture);
+	m_t_position_ex->clone			( &*m_targets->m_family[rt_position].texture);
+	m_t_normal->clone				( &*m_targets->m_family[rt_normal].texture);
+	m_t_color->clone				( &*m_targets->m_family[rt_albedo].texture);
+	m_t_emissive->clone				( &*m_targets->m_family[rt_object_motion_vectors].texture);
+	m_t_distortion->clone			( &*m_targets->m_family[rt_distortion].texture);
+	m_t_ssao_accumulator->clone		( &*m_targets->m_family[rt_ssao_accumulator].texture);
+	m_t_ssao_accumulator_small->clone( &*m_targets->m_family[rt_ssao_temporal_mask].texture);
+	//m_t_accumulator->clone		( &*m_targets->m_family[rt_accumulator_diffuse].texture);
+	m_t_accumulator_diffuse->clone	( &*m_targets->m_family[rt_accumulator_diffuse].texture);
+	m_t_accumulator_specular->clone	( &*m_targets->m_family[rt_accumulator_specular].texture);
 
-	m_t_decals_diffuse->clone		( &*m_targets->m_t_decals_diffuse);
-	m_t_decals_normal->clone		( &*m_targets->m_t_decals_normal);
+	m_t_decals_diffuse->clone		( &*m_targets->m_family[rt_decals_diffuse].texture);
+	m_t_decals_normal->clone		( &*m_targets->m_family[rt_decals_normal].texture);
 	
-	m_t_light_scattering->clone		( &*m_targets->m_t_light_scattering);
+	m_t_light_scattering->clone		( &*m_targets->m_family[rt_light_scattering_result].texture);
 	
-	m_t_present->clone				( &*m_targets->m_t_present);
+	m_t_present->clone				( &*m_targets->m_family[rt_present].texture);
 	
-	m_t_generic_0->clone			( &*m_targets->m_t_generic_0);
-	m_t_generic_1->clone			( &*m_targets->m_t_generic_1);
+	m_t_generic_0->clone			( &*m_targets->m_family[rt_generic_0].texture);
+	m_t_generic_1->clone			( &*m_targets->m_family[rt_generic_1].texture);
 	
-	m_t_blur_0->clone				( &*m_targets->m_t_blur_0);
-	m_t_blur_1->clone				( &*m_targets->m_t_blur_0);
+	m_t_blur_0->clone				( &*m_targets->m_family[rt_blur_0].texture);
+	m_t_blur_1->clone				( &*m_targets->m_family[rt_blur_0].texture);
 
-	m_t_tangents->clone				( &*m_targets->m_t_tangents);
+	m_t_tangents->clone				( &*m_targets->m_family[rt_normal_copy].texture);
 
-	m_t_mlaa_edges->clone			( &*m_targets->m_t_mlaa_edges);
-	m_t_mlaa_blended_weights->clone	( &*m_targets->m_t_mlaa_blended_weights);
+	m_t_mlaa_edges->clone			( &*m_targets->m_family[rt_final_frame_downsampled_temp].texture);
+	m_t_mlaa_blended_weights->clone	( &*m_targets->m_family[rt_final_frame_downsampled].texture);
 	
-	m_t_gbuffer_position_downsampled->clone	( &*m_targets->m_t_gbuffer_position_downsampled);
-	m_t_gbuffer_normal_downsampled->clone	( &*m_targets->m_t_gbuffer_normal_downsampled);
+	m_t_gbuffer_position_downsampled->clone	( &*m_targets->m_family[rt_gbuffer_position_downsampled].texture);
+	m_t_gbuffer_normal_downsampled->clone	( &*m_targets->m_family[rt_final_frame_downsampled_temp].texture);
 	
-	//m_t_indirect_lighting->clone	( &*m_targets->m_t_indirect_lighting);
+	//m_t_indirect_lighting->clone	( &*m_targets->m_family[rt_indirect_lighting_specular].texture);
 		
 	for (u32 i=0; i<NUM_TONEMAP_TEXTURES; i++)
-		m_t_frame_luminance[i]->clone( &*m_targets->m_t_frame_luminance[i]);
+		m_t_frame_luminance[i]->clone( &*m_targets->m_family[rt_frame_luminance0 + i].texture);
 	
-	m_t_frame_luminance_current->clone( &*m_targets->m_t_frame_luminance_current);
+	m_t_frame_luminance_current->clone( &*m_targets->m_family[rt_frame_luminance_current].texture);
 	
-	m_t_frame_luminance_previous->clone( &*m_targets->m_t_frame_luminance_previous);
+	m_t_frame_luminance_previous->clone( &*m_targets->m_family[rt_frame_luminance_previous].texture);
 	
-	m_t_frame_luminance_histogram->clone( &*m_targets->m_t_frame_luminance_histogram);
+	m_t_frame_luminance_histogram->clone( &*m_targets->m_family[rt_frame_luminance_histogram].texture);
 }
 
 void renderer_context::set_time_delta	( float const time_delta )
