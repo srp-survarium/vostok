@@ -14,58 +14,30 @@ namespace vostok {
 namespace sound {
 
 sound_scene_cook::sound_scene_cook	( sound_world& world ) :
-	resources::unmanaged_cook	( vostok::resources::sound_scene_class, reuse_false, use_current_thread_id, use_current_thread_id ),
+	resources::translate_query_cook	( resources::sound_scene_class, reuse_false, use_current_thread_id ),
 	m_sound_world				( world ) 
 {
 }
 
-mutable_buffer sound_scene_cook::allocate_resource	(	resources::query_result_for_cook& in_query,
-														const_buffer raw_file_data,
-														bool file_exist
-													)
+void sound_scene_cook::translate_query	( resources::query_result_for_cook& parent )
 {
- 	VOSTOK_UNREFERENCED_PARAMETERS	( &in_query, file_exist, &raw_file_data );
-	return mutable_buffer			( ALLOC( u8, sizeof( sound_scene )), sizeof( sound_scene ));
-}
-
-void sound_scene_cook::deallocate_resource	( pvoid buffer )
-{
-	FREE							( buffer );
-}
-
-void sound_scene_cook::create_resource	(	resources::query_result_for_cook& in_out_query,
-											const_buffer raw_file_data,
-											mutable_buffer in_out_unmanaged_resource_buffer
-											)
-{
-	VOSTOK_UNREFERENCED_PARAMETER			( raw_file_data );
-
 	static u32 id						= 0;
 	sound_scene_creation_params params;
-	bool const result					= in_out_query.user_data( )->try_get( params );
+	bool const result					= parent.user_data( )->try_get( params );
 	R_ASSERT							( result );
 
-	sound_scene* created_scene			= new	( in_out_unmanaged_resource_buffer.c_ptr( ) )
-												sound_scene
-												(
-													m_sound_world,
-													params,
-													m_sound_world.create_submix_voice( 2, 2 ),
-													id++,
-													in_out_query
-												);
+	sound_scene* created_scene			= NEW( sound_scene )
+		( m_sound_world, params, m_sound_world.create_submix_voice( 2, 2 ), id++, parent );
 
-	in_out_query.set_unmanaged_resource	( created_scene, resources::nocache_memory, sizeof ( sound_scene ) );
-	in_out_query.finish_query			( result_success );
+	parent.set_unmanaged_resource		( created_scene, resources::nocache_memory, sizeof( sound_scene ) );
+	parent.finish_query					( result_success );
 }
 
-void sound_scene_cook::destroy_resource	( resources::unmanaged_resource* resource )
+void sound_scene_cook::delete_resource	( resources::resource_base* resource )
 {
 	sound_scene* scene					= static_cast_checked< sound_scene* >( resource );
-
-	m_sound_world.free_submix_voice		( scene->get_submix_voice( ) );
-
-	scene->~sound_scene					( );
+	scene->clear_resources				( );
+	DELETE								( scene );
 }
 
 

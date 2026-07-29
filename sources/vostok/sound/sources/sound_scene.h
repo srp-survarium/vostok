@@ -13,6 +13,7 @@
 #include <vostok/memory_single_size_buffer_allocator.h>
 #include <vostok/fixed_string.h>
 #include <vostok/collision/object.h>
+#include <vostok/render/culling/portal_sector_structure.h>
 #include <vostok/sound/sound_receiver.h>
 #include "sound_instance_proxy_internal.h"
 #include "sound_voice.h"
@@ -228,6 +229,11 @@ public:
 				void			remove_active_voice			( sound_voice& voice );
 
 				void			calculate_3d_sound			( sound_voice& voice, panning_lut_ptr panning_lut );
+				void			clear_resources				( );
+
+				void			set_graph					( render::culling::portal_sector_structure_ptr& graph );
+				bool			graph_exist					( ) const;
+				float3			get_portal_center			( u32 portal_id ) const;
 
 #ifndef MASTER_GOLD
 				void			update_stats				( sound_debug_stats& stats ) const;
@@ -329,7 +335,7 @@ private:
 	atomic_half3											m_list_orient_top;
 
 	resources::unmanaged_allocation_resource_ptr			m_memory_arena_resources_ptr;
-	resources::unmanaged_resource_ptr						m_graph;
+	render::culling::portal_sector_structure_ptr			m_graph;
 
 	u32 const												m_proxies_count;
 	uninitialized_reference< sound_proxies_allocator >		m_proxies_allocator;

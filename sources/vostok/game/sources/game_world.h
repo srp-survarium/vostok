@@ -10,6 +10,7 @@
 #include <vostok/game_core/bullet_manager_engine.h>
 #include <vostok/game_core/game_material_manager.h>
 #include <vostok/input/handler.h>
+#include <vostok/render/culling/portal_sector_structure.h>
 #include <vostok/render/facade/model.h>	// render_model_instance_ptr (parked tracer_model_instance)
 #include <vostok/resources_unmanaged_resource.h>
 #include <vostok/type_variant.h>	// variant< 32 > (load takes user datas)
@@ -60,23 +61,6 @@ namespace render {
 		tracer_model_instance,
 		resources::unmanaged_intrusive_base
 	> tracer_model_instance_ptr;
-	namespace culling {
-		// render-pool type parked here (tracer_model_instance pattern above):
-		// the portal_sector_structure_ptr's resource_ptr dtor needs it COMPLETE
-		// to ->destroy(); the render carcass has not emitted the header yet. Only
-		// a pointer member, so the layout doesn't affect game_world - minimal stub.
-		// Canonical: binaries/structure/target/headers/vostok/render/culling/portal_sector_structure.h
-		class portal_sector_structure : public resources::unmanaged_resource {
-		public:
-			inline			portal_sector_structure		( ) { /* no source */ }
-			virtual			~portal_sector_structure	( ) { /* no source */ }
-		}; // class portal_sector_structure
-
-		typedef resources::resource_ptr<
-			portal_sector_structure,
-			resources::unmanaged_intrusive_base
-		> portal_sector_structure_ptr;
-	} // namespace culling
 } // namespace render
 } // namespace vostok
 
