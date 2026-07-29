@@ -1005,6 +1005,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\animated_model_instance_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\animated_model_instance_cook.h"
+			>
+		</File>
+		<File
 			RelativePath="..\model_format.h"
 			>
 		</File>
