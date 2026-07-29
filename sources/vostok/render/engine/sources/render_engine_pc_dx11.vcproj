@@ -989,6 +989,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\post_process_parameters.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\post_process_parameters.h"
+			>
+		</File>
+		<File
 			RelativePath=".\model_manager.cpp"
 			>
 		</File>
