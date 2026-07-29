@@ -23,6 +23,7 @@
 #include "mixing_n_ary_tree_node_comparer.h"
 #include "mixing_n_ary_tree_transition_tree_constructor.h"
 #include "mixing_n_ary_tree_visitor.h"
+#include "mixing_animation_state.h"
 #include <vostok/linkage_helper.h>
 
 VOSTOK_DECLARE_LINKAGE_ID( animation_player_linkage_id );
@@ -48,7 +49,9 @@ float4x4 transform_getter::get_transform( pcvoid const animated_object ) const
 
 	return functor( animated_object );
 }
-class n_ary_tree_time_inverter : mixing::n_ary_tree_visitor, boost::noncopyable
+class n_ary_tree_time_inverter :
+	public mixing::n_ary_tree_visitor,
+	private boost::noncopyable
 {
 public:
 	explicit		n_ary_tree_time_inverter	( u32 current_time_in_ms ) :
@@ -693,29 +696,16 @@ u32 animation_player::get_state_buffer_size( ) const
 	return 0x4000; // sushi@TODO: What this constant is. Can be figured out by usage.
 }
 
-// claude@NOTE: parked - 3 stmts decoded from asm (0x56fcd0): (735) n_ary_tree_time_inverter
-// time_inverter( time_in_ms ); (736) walk animation.operands(sizeof(n_ary_tree_animation_node))
-// begin..begin+operands_count() calling (*i)->accept(time_inverter) (the propagate idiom);
-// (738) animation.animation_state().event_iterator.invert_times( time_in_ms ) INLINED (touches
-// event_iterator fields @+0x78: time at +0x08/+0x1c/+0x2c each guarded by a u16 count at
-// +0x0c/+0x20/+0x30). Two hard blockers: (a) needs the full n_ary_tree_time_inverter visitor
-// emitted - its ctor + 8 visit() overrides (parked above) so ??_7n_ary_tree_time_inverter exists;
-// (b) n_ary_tree_event_iterator::invert_times is DECLARED-ONLY in this source tree (no def
-// anywhere) yet the target inlines it - it must be inline-defined on event_iterator (a different
-// TU's class) to inline at line 738, else line 738 is an inline-vs-call wall. Both = the deep
-// cross-TU / multi-node-layout n_ary_tree reconstruction; reconstruct the visitor first.
-// STATE[STUB]
 void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const u32 time_in_ms )
 {
-	// LOCALS
-	// n_ary_tree_time_inverter 		time_inverter
-	// ******
+	n_ary_tree_time_inverter time_inverter( time_in_ms );
 
-	// FUNCTION BODY
-	// <0x56fcd8>|0x008|+0x020:'735'	n_ary_tree_time_inverter time_inverter( time_in_ms );
-	// <0x56fcf8>|0x028|+0x015:'736'	for each operand: (*i)->accept( time_inverter );
-	// <0x56fd0d>|0x03d|+0x031:'738'	animation.animation_state().event_iterator.invert_times( time_in_ms );
-	// ******
+	mixing::n_ary_tree_base_node** i			= animation.operands( sizeof(mixing::n_ary_tree_animation_node) );
+	mixing::n_ary_tree_base_node** const end	= i + animation.operands_count( );
+	for ( ; i != end; ++i )
+		(*i)->accept				( time_inverter );
+
+	animation.animation_state( ).event_iterator.invert_times( time_in_ms );
 }
 
 void animation_player::invert_times(
