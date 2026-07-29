@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_H_INCLUDED
 
+#include <vostok/math_aabb.h>
 #include <vostok/resources_unmanaged_resource.h>
 
 namespace vostok {
@@ -25,7 +26,20 @@ public:
 	virtual void load_properties( configs::binary_config_value const& properties );
 	virtual void set_children( render_surface** children_in, u8 count, model_lods_descriptor* lods );
 	virtual bool get_locator( pcstr locator_name, model_locator_item& result ) const;
+
+	math::aabb				m_aabbox;
+
+protected:
+	model_locator_item*		m_locators;
+	u16						m_locators_count;
+
+public:
+	model_lods_descriptor*	m_lods_descriptor;
+	render_surface**		m_childs;
+	u8						m_childs_count;
 };
+
+STATIC_SIZE_ASSERT( render_model, 0x138 );
 
 typedef resources::resource_ptr<
 	render_model,
