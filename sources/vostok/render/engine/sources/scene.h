@@ -5,6 +5,7 @@
 #include <vostok/render/core/resource_intrusive_base.h>
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/render/engine/world_pc.h>
+#include "material_effects_instance.h"
 #include "render_model_instance_impl.h"
 #include "res_texture.h"
 #include "speedtree_instance.h"
@@ -26,17 +27,11 @@ class vfs_locked_iterator;
 
 namespace render {
 
-class material_effects_instance;
 class render_surface_instance;
 class system_renderer;
 
 struct grass_world;
 struct scene_configuration;
-
-typedef resources::resource_ptr<
-	material_effects_instance,
-	resources::unmanaged_intrusive_base
-> material_effects_instance_ptr;
 
 typedef intrusive_ptr<
 	res_texture,

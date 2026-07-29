@@ -1,29 +1,21 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_model.h"
+#include "render_model.h"
+#include "render_model_instance_impl.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
-void `dynamic atexit destructor for 's_use_one_material''( )
-{
-	// FUNCTION BODY[0x7ee2d0]
-	// ******
-}
-
-// STATE[STUB]
- render_model::render_model( )
+render_model::render_model( )
 {
 	// FUNCTION BODY[0x63c500]
 	// ******
 }
 
 // STATE[STUB]
- render_model::~render_model( )
+render_model::~render_model( )
 {
 	// LOCALS
 	// u8 								i
@@ -130,7 +122,7 @@ material_effects& render_surface::get_material_effects( )
 }
 
 // STATE[STUB]
- render_surface::~render_surface( )
+render_surface::~render_surface( )
 {
 	// FUNCTION BODY[0x63c6e0]: 1
 	// <0x63c6e0>|0x000|+0x01c:'109'
@@ -257,58 +249,11 @@ bool render_surface_instance::is_occluded( ) const
 }
 
 // STATE[STUB]
- render_model_instance_impl::render_model_instance_impl( )
+render_model_instance_impl::render_model_instance_impl( )
 {
 	// FUNCTION BODY[0x63c590]
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
