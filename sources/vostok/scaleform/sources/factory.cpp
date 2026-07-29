@@ -14,6 +14,7 @@
 #include "vostok_scaleform_log.h"
 
 #include "GFx.h"
+#include "GFx/AS3/AS3_Global.h"
 #include "GFx_FontProvider_Win32.h"
 #include "GFx_Render.h"
 
@@ -164,6 +165,9 @@ flash_factory::flash_factory( scaleform_game_engine& engine )
 
 	Scaleform::Ptr<Scaleform::GFx::ASSupport>	as2_support	= *SF_NEW Scaleform::GFx::AS2Support;
 	m_gfx_loader->SetAS2Support( as2_support );
+
+	Scaleform::Ptr<Scaleform::GFx::ASSupport>	as3_support	= *SF_NEW Scaleform::GFx::AS3Support;
+	m_gfx_loader->SetAS3Support( as3_support );
 
 	Scaleform::Ptr<Scaleform::GFx::ImageFileHandlerRegistry>	image_handlers	= *SF_NEW Scaleform::GFx::ImageFileHandlerRegistry;
 	image_handlers->AddHandler( &Scaleform::Render::JPEG::FileReader::Instance );
