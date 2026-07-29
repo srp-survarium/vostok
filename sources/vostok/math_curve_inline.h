@@ -83,6 +83,12 @@ template<class T, enum_curve_line_type value_type> T evaluate_value(curve_line_p
 }
 
 TEMPLATE_SIGNATURE
+inline CURVE_LINE::curve_line_points() :
+	num_points		( 0 )
+{
+}
+
+TEMPLATE_SIGNATURE
 inline CURVE_LINE::~curve_line_points()
 {
 	clear			();
