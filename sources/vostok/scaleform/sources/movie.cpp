@@ -44,8 +44,7 @@ flash_text flash_text_manager::create_text( pcstr text )
 
 	result.visible		= true;
 
-	need_capture		= true;
-	result.owner		= this;
+	need_capture		= true; result.owner	= this;
 
 	return result;
 }
@@ -60,8 +59,7 @@ flash_text flash_text_manager::create_text_w( wchar_t* text )
 
 	result.visible		= true;
 
-	need_capture		= true;
-	result.owner		= this;
+	need_capture		= true; result.owner	= this;
 
 	return result;
 }
@@ -218,11 +216,10 @@ void flash_movie::HandleMouseBtn(
 	)
 {
 	Scaleform::GFx::Event::EventType	type	= Scaleform::GFx::Event::Unknown;
-	switch ( action )
-	{
-	case mouse_btn_down:	type	= Scaleform::GFx::Event::MouseDown;	break;
-	case mouse_btn_up:		type	= Scaleform::GFx::Event::MouseUp;	break;
-	}
+	if ( action == mouse_btn_down )
+		type	= Scaleform::GFx::Event::MouseDown;
+	else if ( action == mouse_btn_up )
+		type	= Scaleform::GFx::Event::MouseUp;
 
 	Scaleform::GFx::MouseEvent	mevent( type, button, x, y );
 	m_movie->HandleEvent( mevent );

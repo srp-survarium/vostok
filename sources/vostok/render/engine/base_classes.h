@@ -56,7 +56,17 @@ struct base_scene_view : public resources::unmanaged_resource {
 
 typedef base_scene_view* scene_view_pointer;
 
-struct base_output_window : public resources::unmanaged_resource { };
+struct base_output_window : public resources::unmanaged_resource {
+	inline	math::uint2 const&	current_size		( ) const { return m_current_size; }
+
+	inline						base_output_window	( ) { }
+	virtual						~base_output_window	( ) { }
+
+public:
+	/* 0x0108 */	math::uint2		m_current_size;
+}; // struct base_output_window
+
+STATIC_SIZE_ASSERT(base_output_window, 0x110);
 
 typedef	base_scene::scene_ptr			scene_ptr;
 typedef	base_scene_view::scene_view_ptr	scene_view_ptr;

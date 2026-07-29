@@ -16,7 +16,6 @@ private:
 
 public:
 	inline			vostok_scaleform_log	( ) { }
-	virtual			~vostok_scaleform_log	( ) { }
 }; // class vostok_scaleform_log
 
 STATIC_SIZE_ASSERT(vostok_scaleform_log, 0x8);
