@@ -144,6 +144,10 @@ public:
 			void	set_active_sound_scene_impl		(	sound_scene& scene,
 														u32 fade_in_time,
 														u32 fade_out_old_scene_time  );
+			void	set_active_sound_scene_impl		(	sound_scene& scene,
+														render::culling::portal_sector_structure_ptr& graph,
+														u32 fade_in_time,
+														u32 fade_out_old_scene_time  );
 
 			void	remove_sound_scene_impl			( sound_scene_ptr scene );
 
@@ -197,7 +201,6 @@ private:
 	// xaudio2
 	IXAudio2*						m_xaudio;
 	IXAudio2MasteringVoice*			m_master_voice;
-//	X3DAUDIO_HANDLE					X3DInstance;	
 	sound_buffer_factory*			m_sound_buffer_factory;
 
 	panning_lut_ptr					m_panning_lut;
@@ -215,8 +218,6 @@ private:
 
 	sound_scenes_list				m_active_scenes;
 	sound_scene*					m_current_scene;
-	// debug stuff
-	//X3DAUDIO_HANDLE					m_x3d_instance;
 }; // class sound_world
 
 } // namespace sound

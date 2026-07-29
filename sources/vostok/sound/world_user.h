@@ -10,6 +10,7 @@
 #include <vostok/sound/api.h>
 #include <vostok/sound/sound.h>
 #include <vostok/sound/two_way_thread_channel.h>
+#include <vostok/render/culling/portal_sector_structure.h>
 
 namespace vostok {
 namespace sound {
@@ -32,8 +33,6 @@ public:
 
 			void		mute_all_sounds						( bool mute );
 
-//			void		set_listener_properties				( sound_scene_ptr& scene, float4x4 const& inv_view_matrix );
-
 			void		set_listener_properties_interlocked	(	sound_scene_ptr& scene, 
 																float3 const& position,
 																float3 const& orient_front,
@@ -52,6 +51,10 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 			void		set_active_sound_scene				(	sound_scene_ptr& scene,
+																u32 fade_in_time,
+																u32 fade_out_old_scene_time  );
+			void		set_active_sound_scene				(	sound_scene_ptr& scene,
+																render::culling::portal_sector_structure_ptr& graph,
 																u32 fade_in_time,
 																u32 fade_out_old_scene_time  );
 			void		remove_sound_scene					( sound_scene_ptr& scene );
