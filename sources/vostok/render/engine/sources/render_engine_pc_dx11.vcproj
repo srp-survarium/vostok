@@ -909,6 +909,34 @@
 			>
 		</File>
 		<File
+			RelativePath=".\scene.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\scene.h"
+			>
+		</File>
+		<File
+			RelativePath=".\moved_object_predicate_helper.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model_instance_impl.h"
+			>
+		</File>
+		<File
+			RelativePath=".\res_texture.h"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_instance.h"
+			>
+		</File>
+		<File
+			RelativePath=".\tracer_model_instance.h"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_cook.cpp"
 			>
 		</File>
