@@ -57,6 +57,48 @@ The structure queue proves target type completeness. The legacy queue supplies
 the missing header topology and candidate implementations, and proves that old
 material was neither silently lost nor blindly copied.
 
+## Reconstruct top-down
+
+Start at the top of the target ownership and call tree, not at small helpers:
+
+1. Establish public facade roots, entry points, worlds/managers, resource owners,
+   and their exact interfaces.
+2. Expand each owner through its member types, virtual surface, construction,
+   and immediate dependencies.
+3. Add leaf helpers only when a reconstructed owner requires them.
+
+This ordering is mandatory for `/O2` + LTCG targets. A helper introduced before
+its real owner and call path exists may be inlined, folded, discarded, or emitted
+as a COMDAT in the bootstrap TU. That result cannot establish the helper's target
+ownership or matching state. Treat early helper output as structural evidence
+only and measure it again through the reconstructed owner.
+
+Use the existing per-module anchor system while the real ownership graph is
+incomplete. Do not recreate the deprecated monolithic
+`temp_include_all.{h,cpp}`/"temp includes" convention:
+
+- put a module's temporary `use_<thing>()` functions in one or more
+  `sources/anchor_<module>*.cpp` files compiled by that module's project;
+- expose one `vostok::anchor_<module>()` dispatcher for the module;
+- declare that dispatcher in `game_core/sources/anchor.h`;
+- call it once from `survarium::IncludeAll::IncludeAll()` in
+  `game_core/sources/anchor.cpp`;
+- keep the single `IncludeAll` instance at the real executable-rooted startup
+  path in `game/sources/game_entry_point.cpp`.
+
+Self-guard anchor bodies and source arguments through volatile placeholders so
+LTCG keeps the references without executing scaffolding or specializing target
+bodies from constants. Never duplicate another module's `use_*` ownership.
+Anchors are disposable reachability scaffolding, not target ownership evidence.
+Drain each temporary reference into the real top-down call path when that owner
+is reconstructed, then retire the empty anchor file and dispatcher call.
+
+Before writing a subsystem, inspect analogous code elsewhere in the engine.
+Reuse established conventions for header layering, ownership, allocators,
+resource cooks, entry points, containers, naming, assertions, and failure
+handling. These analogues are style and architecture priors only: target
+structure and symbols remain authoritative for ABI, declarations, and ownership.
+
 ## Rebuild headers by reconciling both queues
 
 The generated directory names are record categories, not real file kinds:
@@ -128,8 +170,8 @@ ported body matched until the normal target/base loop proves it.
 1. Drain the structure queue completely.
 2. Enable TUs leaf-first in the project file. Re-exclude a failing TU rather
    than leaving the shared build broken, and record the blocker.
-3. Add only required reachability anchors; retire temporary anchors when real
-   call paths replace them.
+3. Add only required per-module anchor references; retire them when real call
+   paths replace them.
 4. Run a full rebuild and inspect structure, base-only/target-only symbols, and
    `report-changes.json`.
 5. Use `$vostok-verify-structure` for the final interface audit, then use

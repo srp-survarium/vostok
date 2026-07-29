@@ -68,6 +68,47 @@ declarations and layout. A generated file and a real header are not necessarily
 one-to-one. Drain the corresponding structure and legacy entries only after the new
 header compiles.
 
+## Reconstruct from owners down
+
+Rebuild the target ownership/call tree from its roots: public facade and entry
+points first, then worlds/managers/resource owners, their immediate types and
+virtual surfaces, and finally the helpers those owners require. Do not begin with
+small convenient leaf helpers. Under `/O2` + LTCG, a helper compiled before its
+real owner exists can be discarded, inlined into the bootstrap path, folded with
+another implementation, or emitted from the wrong COMDAT island. A high or low
+score obtained in that state says little about the target helper. Measure it again
+after its owning path exists.
+
+During this bootstrap, use the repository's per-module anchor system instead of
+wiring temporary calls into arbitrary production consumers. The old monolithic
+`temp_include_all.{h,cpp}`/"temp includes" scheme is deprecated:
+
+1. Each owning project compiles one or more `sources/anchor_<module>*.cpp` files.
+   They contain narrowly grouped `use_<thing>()` functions and one public
+   `vostok::anchor_<module>()` dispatcher. A module owns its own `use_*` symbols;
+   never duplicate them in a central include-everything TU.
+2. Declare the module dispatcher in `game_core/sources/anchor.h` and call it once
+   from `survarium::IncludeAll::IncludeAll()` in
+   `game_core/sources/anchor.cpp`.
+3. Keep the one `IncludeAll` instance on the real executable-rooted startup path
+   in `game/sources/game_entry_point.cpp`; an instance under a stripped stub does
+   not retain the cone.
+4. Self-guard anchors with a never-true volatile condition and source arguments
+   through volatile placeholders. This retains references without running the
+   scaffolding or letting LTCG specialize target bodies from constants.
+
+This system keeps the partial tree reachable without assigning false permanent
+ownership. As the top-down pass reaches a real owner, move its references from the
+module anchor into the recovered call path; retire empty `use_*` functions,
+anchor files, declarations, dispatcher calls, and the final `IncludeAll` instance.
+
+Before implementing each owner, inspect analogous engine code for conventions:
+nearby Vostok libraries and the corresponding X-Ray-era subsystem can reveal
+expected include layering, allocator and resource-cook idioms, containers, entry
+point structure, naming, assertions, and failure handling. Use that material as a
+style and architecture prior. It must not override target PDB layouts, signatures,
+symbols, source ownership, or measured binary evidence.
+
 ## Shared-namespace header pools (the `game` complication)
 
 `headers/` in the canonical dump is keyed by NAMESPACE, not by module. For
