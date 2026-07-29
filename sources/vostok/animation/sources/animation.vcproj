@@ -2549,6 +2549,10 @@
 				Name="sources"
 				>
 				<File
+					RelativePath=".\mixing_binary_tree_initializer.cpp"
+					>
+				</File>
+				<File
 					RelativePath=".\bi_spline_skeleton_animation_baked.cpp"
 					>
 				</File>
