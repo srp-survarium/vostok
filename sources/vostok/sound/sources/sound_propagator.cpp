@@ -25,6 +25,47 @@ static inline sound_world* get_world	( sound_instance_proxy_internal const& prox
 
 static u32 prop_id					= 0;
 
+new_sound_propagator::new_sound_propagator
+(
+	float3 const&						start_position,
+	float3 const&						listener_position,
+	playback_mode						mode,
+	u32									playback_id,
+	u32									playing_offset,
+	u32									before_playing_offset,
+	u32									after_playing_offset,
+	sound_instance_proxy_internal&		proxy,
+	sound_propagator_emitter const&		emitter
+) :
+	m_voice						( 0 ),
+	m_start_position			( start_position ),
+	m_proxy						( proxy ),
+	m_emitter					( emitter ),
+	m_mode						( mode ),
+	m_is_callback_executer		( false ),
+	m_playing_offset			( playing_offset ),
+	m_playback_id				( playback_id ),
+	m_propagation_time			( 0 ),
+	m_before_playing_offsets	( before_playing_offset ),
+	m_after_playing_offsets		( after_playing_offset ),
+	m_propagation_state			( propagating ),
+	m_perceived_loudness		( 0.0f ),
+	m_attenuated_loudness		( 0.0f )
+{
+	m_sound_length				= (u32)emitter.get_quality_for_resource( )->get_length_in_msec( );
+	m_sound_length_with_offsets	= m_before_playing_offsets + m_sound_length + m_after_playing_offsets;
+
+	if ( m_proxy.get_sound_type( ) != hud )
+		m_time_to_listener		= (u32)( ( listener_position - start_position ).length( ) / get_world( proxy )->get_speed_of_sound( ) );
+	else
+		m_time_to_listener		= 0;
+
+	if ( mode == once )
+		m_end_propagation_time	= m_time_to_listener + m_sound_length_with_offsets - playing_offset;
+	else
+		m_end_propagation_time	= u32(-1);
+}
+
 sound_propagator::sound_propagator	(	playback_mode mode,
 										u32 playback_id,
 										u32	playing_offset,
@@ -513,6 +554,20 @@ void new_sound_propagator::resume_propagation	( )
 		m_propagation_state = propagating;
 }
 
+void new_sound_propagator::tick	( u32 time_delta_in_msec )
+{
+	if ( m_propagation_state == propagating )
+	{
+		m_propagation_time			+= time_delta_in_msec;
+		if ( m_propagation_time > m_end_propagation_time )
+		{
+			stop_propagation			( );
+			if ( m_is_callback_executer )
+				execute_callback		( );
+		}
+	}
+}
+
 void new_sound_propagator::pause_propagation	( )
 {
 	if ( m_propagation_state == propagating )
@@ -628,6 +683,26 @@ void new_sound_propagator::set_voice_channel_matrix	( sound_voice* voice, float 
 {
 	voice->set_output_matrix			( channel_matrix );
 	voice->set_low_pass_filter_params	( lp_coeff );
+}
+
+void new_sound_propagator::execute_callback	( )
+{
+	m_proxy.set_callback_pending		( true );
+	functor_response* response			= VOSTOK_NEW_IMPL
+	(
+		m_proxy.get_world_user( ).get_channel( ).responses.owner_allocator( ),
+		functor_response
+	)
+	(
+		boost::bind
+		(
+			static_cast<void (sound_instance_proxy_internal::*)( u32 )>
+			( &sound_instance_proxy_internal::execute_callback ),
+			boost::ref( m_proxy ),
+			m_playback_id
+		)
+	);
+	m_proxy.get_world_user( ).add_response	( response );
 }
 
 #ifndef MASTER_GOLD
