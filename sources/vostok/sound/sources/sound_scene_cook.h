@@ -14,26 +14,19 @@ namespace sound {
 
 class sound_world;
 
-class sound_scene_cook :	public resources::unmanaged_cook,
+class sound_scene_cook :	public resources::translate_query_cook,
 							private boost::noncopyable
 {
 public:
 							sound_scene_cook		( sound_world& world );
 
-	virtual	mutable_buffer	allocate_resource		(	resources::query_result_for_cook& in_query,
-														const_buffer raw_file_data,
-														bool file_exist
-													);
-	virtual void			deallocate_resource		( pvoid buffer );
-
-	virtual void			create_resource			(	resources::query_result_for_cook& in_out_query,
-														const_buffer raw_file_data,
-														mutable_buffer in_out_unmanaged_resource_buffer
-													);
-	virtual void			destroy_resource		( resources::unmanaged_resource* resource );
+	virtual	void			translate_query			( resources::query_result_for_cook& parent );
+	virtual	void			delete_resource			( resources::resource_base* resource );
 private:
 	sound_world&			m_sound_world;
 }; // class sound_scene_cook
+
+STATIC_SIZE_ASSERT( sound_scene_cook, 0x24 );
 
 } // namespace sound
 } // namespace vostok

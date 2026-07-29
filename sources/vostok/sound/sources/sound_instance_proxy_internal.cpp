@@ -232,10 +232,10 @@ void sound_instance_proxy_internal::free_object	( )
 
 void sound_instance_proxy_internal::tick	( u32 delta_time )
 {
-	sound_propagator* propagator	= m_propagators.front( );
+	new_sound_propagator* propagator	= m_propagators.front( );
 	while ( propagator )
 	{
-		sound_propagator* next	= m_propagators.get_next_of_object( propagator );
+		new_sound_propagator* next	= m_propagators.get_next_of_object( propagator );
 
 		propagator->tick		( delta_time );
 
@@ -392,7 +392,7 @@ void sound_instance_proxy_internal::dbg_set_quality	( u32 quality )
 
 void sound_instance_proxy_internal::dbg_set_quality_impl	( u32 quality )
 {
-	sound_propagator* prop			= m_propagators.front( );
+	new_sound_propagator* prop		= m_propagators.front( );
 	while ( prop )
 	{
 		prop->set_quality	( quality );
@@ -405,6 +405,31 @@ float3 sound_instance_proxy_internal::get_volumetric_position	( float3 const& li
 {
 	R_ASSERT									( m_type == volumetric );
 	return m_collision->get_closest_point_to	( listener_position );
+}
+
+void sound_instance_proxy_internal::calculate_graph_position
+(
+	float3 const& listener_position,
+	vectora< std::pair< float, float3 > >& results
+)
+{
+	if ( m_type == hud )
+	{
+		results.push_back	( std::make_pair( 0.0f, listener_position ) );
+		return;
+	}
+
+	bool use_graph			= true;
+	float3 position			= m_type == volumetric ?
+		get_volumetric_position( listener_position ) : get_position( );
+
+	if ( !use_graph || !m_scene.graph_exist( ) )
+	{
+		results.push_back	( std::make_pair( math::length( position - listener_position ), position ) );
+		return;
+	}
+
+	results.push_back		( std::make_pair( math::length( position - listener_position ), position ) );
 }
 
 #ifndef MASTER_GOLD
@@ -441,7 +466,7 @@ void sound_instance_proxy_internal::dump_debug_snapshot	( configs::lua_config_va
 	default: NODEFAULT();
 	};
 
-	sound_propagator* prop			= m_propagators.front( );
+	new_sound_propagator* prop		= m_propagators.front( );
 	u32 i							= 0;
 	while ( prop )
 	{

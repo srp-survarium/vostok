@@ -114,16 +114,6 @@ void world_user::unregister_receiver( sound_scene_ptr& scene, sound_receiver& re
 }
 
 
-//void world_user::set_listener_properties( sound_scene_ptr& scene, float4x4 const& inv_view_matrix )
-//{
-//	sound_scene& scn					= static_cast_checked<sound_scene&>( *scene.c_ptr() );
-//
-//	listener_properties_order* order	= VOSTOK_NEW_IMPL( m_allocator, listener_properties_order )
-//										( *m_owner_world, scn, inv_view_matrix );
-//
-//	add_order							( order );
-//}
-
 void world_user::set_listener_properties_interlocked(	sound_scene_ptr& scene, 
 														float3 const& position,
 														float3 const& orient_front,
@@ -138,12 +128,48 @@ void world_user::set_active_sound_scene	(	sound_scene_ptr& scene,
 											u32 fade_in_time,
 											u32 fade_out_old_scene_time  )
 {
-	//R_ASSERT					( scene );
 	sound_scene& scn			= static_cast_checked<sound_scene&>( *scene.c_ptr() );
 
 	functor_order* order		= VOSTOK_NEW_IMPL( m_allocator, functor_order )
 	(	
-		boost::bind( &sound_world::set_active_sound_scene_impl, m_owner_world,  boost::ref( scn ), fade_in_time, fade_out_old_scene_time )
+		boost::bind
+		(
+			static_cast< void (sound_world::*)( sound_scene&, u32, u32 ) >
+			( &sound_world::set_active_sound_scene_impl ),
+			m_owner_world,
+			boost::ref( scn ),
+			fade_in_time,
+			fade_out_old_scene_time
+		)
+	);
+
+	add_order							( order );
+}
+
+void world_user::set_active_sound_scene	(	sound_scene_ptr& scene,
+											render::culling::portal_sector_structure_ptr& graph,
+											u32 fade_in_time,
+											u32 fade_out_old_scene_time  )
+{
+	sound_scene& scn			= static_cast_checked<sound_scene&>( *scene.c_ptr() );
+
+	functor_order* order		= VOSTOK_NEW_IMPL( m_allocator, functor_order )
+	(
+		boost::bind
+		(
+			static_cast< void (sound_world::*)
+			(
+				sound_scene&,
+				render::culling::portal_sector_structure_ptr&,
+				u32,
+				u32
+			) >( &sound_world::set_active_sound_scene_impl ),
+			m_owner_world,
+			boost::ref( scn ),
+			boost::ref( graph ),
+			fade_in_time,
+			fade_out_old_scene_time
+		)
 	);
 
 	add_order							( order );
