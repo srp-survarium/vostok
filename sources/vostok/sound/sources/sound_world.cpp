@@ -335,7 +335,7 @@ void sound_world::tick			( )
 	m_last_current_time_in_ms	= current_time_in_ms;
 }
 
-IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
+IXAudio2SubmixVoice* sound_world::create_submix_voice	( u8 input_channels_count, u8 processing_stage ) const
 {
 	if ( m_is_audio_device_exist )
 	{
@@ -344,7 +344,7 @@ IXAudio2SubmixVoice* sound_world::create_submix_voice	( ) const
 		m_master_voice->GetVoiceDetails( &voice_details );
 
 		IXAudio2SubmixVoice* submix_voice;
-		HRESULT res			= m_xaudio->CreateSubmixVoice( &submix_voice, voice_details.InputChannels, voice_details.InputSampleRate ); 
+		HRESULT res			= m_xaudio->CreateSubmixVoice( &submix_voice, input_channels_count, 44100, 0, processing_stage, NULL, NULL );
 		ASSERT				( !FAILED( res ) );
 		res					= submix_voice->SetOutputVoices( NULL );
 		ASSERT				( !FAILED( res ) );
