@@ -13,7 +13,11 @@ class flash_factory;
 
 class vostok_file_opener : public Scaleform::GFx::FileOpener {
 public:
-	inline						vostok_file_opener	( ) { }
+	inline						vostok_file_opener	( )
+	{
+		cached_file.raw_data		= NULL;
+		cached_file.raw_data_size	= 0;
+	}
 
 	virtual	Scaleform::File*	OpenFile			( pcstr arg_0, s32 arg_1, s32 arg_2 ) override;
 
