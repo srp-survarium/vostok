@@ -15,8 +15,7 @@ namespace animation {
 		resources::bi_spline_skeleton_animation_baked_class,
 		reuse_true,
 		use_resource_manager_thread_id,
-		use_resource_manager_thread_id,
-		resources::cook_base::internal_flag_does_inplace_cook // sushi@TODO: Understand what this flag does exactly
+		use_resource_manager_thread_id
 	)
 {
 	resources::register_cook( this );
@@ -32,13 +31,7 @@ mutable_buffer bi_spline_skeleton_animation_baked_cook::allocate_resource(
 	VOSTOK_UNREFERENCED_PARAMETERS(&in_query, file_exist);
 	out_offset_to_file = sizeof( bi_spline_skeleton_animation_baked );
 	u32 bytes_to_allocate = sizeof( bi_spline_skeleton_animation_baked ) + file_size;
-	mutable_buffer out_buffer( UNMANAGED_ALLOC( u8, bytes_to_allocate ), bytes_to_allocate );
-	return out_buffer;
-
-	/* sushi@NOTE: Other similar implentations call this. Should we? particle_world_cooker::allocate_resource
-		if ( !out_buffer )
-		in_query.set_out_of_memory	(resources::unmanaged_memory, bytes_to_allocate);
-	*/
+	return mutable_buffer( UNMANAGED_ALLOC( char, bytes_to_allocate ), bytes_to_allocate );
 }
 
 void bi_spline_skeleton_animation_baked_cook::deallocate_resource( void* buffer )
@@ -46,37 +39,35 @@ void bi_spline_skeleton_animation_baked_cook::deallocate_resource( void* buffer 
 	UNMANAGED_FREE( buffer );
 }
 
-// STATE[STUB]
 void bi_spline_skeleton_animation_baked_cook::create_resource(
 	resources::query_result_for_cook&		in_out_query,
 	mutable_buffer							in_out_unmanaged_resource_buffer
 )
 {
-	/*
-	create_baked_animation_in_place(
+	create_resource_inplace( in_out_query, in_out_unmanaged_resource_buffer );
+}
 
-	in_out_query.set_unmanaged_resource( new_particle_world, resources::nocache_memory, sizeof(particle_world) );
+void bi_spline_skeleton_animation_baked_cook::create_resource_inplace(
+	resources::query_result_for_cook&		in_out_query,
+	mutable_buffer							in_out_unmanaged_resource_buffer
+)
+{
+	create_baked_animation_in_place(
+		static_cast< pbyte >( in_out_unmanaged_resource_buffer.c_ptr() ) +
+			sizeof( bi_spline_skeleton_animation_baked ),
+		in_out_query.get_raw_file_size()
+	);
+
+	bi_spline_skeleton_animation_baked* const animation =
+		new ( in_out_unmanaged_resource_buffer.c_ptr() )
+			bi_spline_skeleton_animation_baked;
+
+	in_out_query.set_unmanaged_resource(
+		animation,
+		resources::managed_memory,
+		in_out_unmanaged_resource_buffer.size()
+	);
 	in_out_query.finish_query( result_success );
-	*/
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x121f5b>|0x00b|+0x04c:'61'
-	// <0>
-	// <1>
-	// <0x121fa7>|0x057|+0x024:'64'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x121fcb>|0x07b|+0x024:'70'
-	// <0>
-	// <0x121fef>|0x09f|+0x00b:'72'
-	// ******
 }
 
 void bi_spline_skeleton_animation_baked_cook::destroy_resource( resources::unmanaged_resource* resource )
@@ -84,21 +75,15 @@ void bi_spline_skeleton_animation_baked_cook::destroy_resource( resources::unman
 	resource->~unmanaged_resource( );
 }
 
-// sushi@NOTE: Might still be related to an unimplemented function
 bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_animation_baked_cook::get_create_resource_inplace_in_inline_fat_delegate( )
 {
-	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
+	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource_inplace );
 }
 
-// sushi@NOTE. The implementation is missing. If you look at vtable, you would see that exactly the same function is used for `inline_fat_delegate`.
 bi_spline_skeleton_animation_baked_cook::resource_delegate bi_spline_skeleton_animation_baked_cook::get_create_resource_inplace_in_creation_data_delegate( )
 {
-	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource );
+	return resource_delegate( this, &bi_spline_skeleton_animation_baked_cook::create_resource_inplace );
 }
 
-/* sushi@TODO: Same as impl_cook
-//  `dynamic atexit destructor for 's_bi_spline_skeleton_animation_baked_cook'' <0x7deb70>
-static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
-*/
 } // namespace animation
 } // namespace vostok

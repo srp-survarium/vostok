@@ -45,6 +45,8 @@ private:
 
 STATIC_SIZE_ASSERT(bi_spline_skeleton_animation_baked, 0x110);
 
+void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_size );
+
 } // namespace animation
 } // namespace vostok
 

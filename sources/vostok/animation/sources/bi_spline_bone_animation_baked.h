@@ -26,6 +26,8 @@ private:
 						bi_spline_channel_animation_baked,
 						platform_pointer_64bit
 					>::helper	m_channel_animations[9];
+
+	friend void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_size );
 }; // class bi_spline_bone_animation_baked
 
 STATIC_SIZE_ASSERT(bi_spline_bone_animation_baked, 0x48);
