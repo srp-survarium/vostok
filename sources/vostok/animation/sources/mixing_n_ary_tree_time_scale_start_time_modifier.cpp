@@ -81,5 +81,12 @@ n_ary_tree_time_scale_start_time_modifier::n_ary_tree_time_scale_start_time_modi
 	m_new_start_time_in_ms( new_start_time_in_ms ),
 	m_animation_interval_time( animation_interval_time )
 {
-	(**animation.operands( sizeof(n_ary_tree_animation_node) )).accept( *this );
+	if ( !animation.operands_count() )
+		return;
+
+	n_ary_tree_base_node* const operand = *animation.operands( sizeof(n_ary_tree_animation_node) );
+	if ( !operand || !operand->is_time_scale() )
+		return;
+
+	operand->accept	( *this );
 }
