@@ -8,7 +8,8 @@ namespace vostok {
 namespace render {
 
 // STATE[STUB]
-render_model::render_model( )
+render_model::render_model( ) :
+	m_aabbox( math::create_zero_aabb( ) )
 {
 	// FUNCTION BODY[0x63c500]
 	// ******
