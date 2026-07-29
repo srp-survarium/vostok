@@ -1001,6 +1001,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_apply_indirect_lighting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_apply_indirect_lighting.h"
+			>
+		</File>
+		<File
 			RelativePath=".\decal_default_material_effect.cpp"
 			>
 		</File>
