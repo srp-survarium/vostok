@@ -65,7 +65,8 @@ namespace vostok
 		render::scene_ptr scene = vostok::render::scene_ptr();
 		memory::managed_allocator alloc = memory::managed_allocator(100, 100);
 		render::one_way_render_channel channel = render::one_way_render_channel(alloc);
-		render::engine::world world = render::engine::world();
+		configs::binary_config_ptr render_config;
+		render::engine::world world = render::engine::world(render_config, false);
 		render::debug::renderer renderer = render::debug::renderer(channel, alloc, world);
 
 

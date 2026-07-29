@@ -7,6 +7,8 @@
 #ifndef VOSTOK_RENDER_ENGINE_API_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_API_H_INCLUDED
 
+#include <vostok/configs_binary_config.h>
+
 #ifndef VOSTOK_RENDER_ENGINE_API
 #	ifdef VOSTOK_STATIC_LIBRARIES
 #		define VOSTOK_RENDER_ENGINE_API
@@ -29,7 +31,7 @@ namespace engine {
 
 class world;
 
-VOSTOK_RENDER_ENGINE_API world*	create_world	( );
+VOSTOK_RENDER_ENGINE_API world*	create_world	( configs::binary_config_ptr const& in_config, bool is_editor );
 VOSTOK_RENDER_ENGINE_API void		destroy			( world*& instance );
 
 } // namespace engine

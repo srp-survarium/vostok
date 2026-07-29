@@ -192,13 +192,15 @@ void engine_world::initialize_core	( )
 	initialize_scaleform	( );
 }
 
-void engine_world::create_render	( )
+void engine_world::create_render	( vostok::configs::binary_config_ptr const& in_config, bool is_editor )
 {
 	s_world					= this;
 
 	m_render_world			= render::create_world (
 		m_engine_user_module_proxy.allocator(),
-		command_line_editor() ? &m_editor_allocator : 0
+		is_editor ? &m_editor_allocator : 0,
+		in_config,
+		is_editor
 	);
 	R_ASSERT				( m_render_world );
 }

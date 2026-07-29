@@ -104,7 +104,7 @@ private:
 	void load_console_commands_config_query				( pcstr cfg_name, bool load_renderer_options );
 
 public:
-							world						( );
+							world						( configs::binary_config_ptr const& in_config, bool is_editor );
 							~world						( );
 			void			initialize					( );
 //			flash_renderer&	flash_renderer				( );
