@@ -25,7 +25,7 @@ public:
 					voice_factory			( u8* buffer, u32 buffer_size, sound_world const& world, pool_parametrs const& params );
 					~voice_factory			( );
 
-	voice_bridge*	new_voice				( sound_voice* callback_handler, u8 channels_num, u32 sample_rate );
+	voice_bridge*	new_voice				( sound_voice* callback_handler, u8 const channels_num, u32 const sample_rate );
 			void	delete_voice			( voice_bridge* voice_to_be_deleted );
 
 			void	set_frequency_ratio		( float ratio );
@@ -48,6 +48,8 @@ private:
 	float const				m_min_frequency_ratio;
 	float const				m_max_frequency_ratio;
 }; // voice_factory
+
+STATIC_SIZE_ASSERT( voice_factory, 0x3C );
 
 } // namespace sound
 } // namespace vostok
