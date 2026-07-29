@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "sound_propagator.h"
 #include "new_sound_propagator.h"
+#include "sound_voice_params.h"
 #include <vostok/sound/sound_propagator_emitter.h>
 #include <vostok/sound/sound_rms.h>
 #include <vostok/sound/sound_spl.h>
@@ -561,6 +562,72 @@ u32 new_sound_propagator::sound_playing_time_with_offsets	( ) const
 
 void new_sound_propagator::detach_voices	( u32 )
 {
+}
+
+new_sound_propagator::~new_sound_propagator	( )
+{
+	if ( m_voice )
+		detach_voice				( m_voice );
+}
+
+void new_sound_propagator::distribute_voices	( u32 count, vectora< sound_voice_params > const& voices_params )
+{
+	R_ASSERT					( count == voices_params.size( ) );
+	attach_voices				( count, voices_params );
+}
+
+void new_sound_propagator::attach_voices	( u32 count, vectora< sound_voice_params > const& voices_params )
+{
+	VOSTOK_UNREFERENCED_PARAMETERS	( count, voices_params );
+	if ( !m_voice )
+	{
+		u32 offset				= sound_playing_time( );
+		if ( offset == u32(-1) )
+			return;
+
+		m_voice					= attach_voice( offset );
+		m_voice->set_output_matrix	( voices_params[0].channel_matrix );
+		m_voice->play			( m_mode );
+		return;
+	}
+
+	m_voice->set_output_matrix	( voices_params[0].channel_matrix );
+}
+
+sound_voice* new_sound_propagator::attach_voice	( u32 offset )
+{
+	u32 const tick_percission	= 10;
+	if ( offset <= tick_percission )
+		offset					= 0;
+
+	return get_world( m_proxy )->create_sound_voice
+	(
+		m_proxy.get_sound_scene( ),
+		offset,
+		0,
+		0,
+		&m_proxy,
+		m_emitter,
+		m_emitter.get_sound_spl( )
+	);
+}
+
+void new_sound_propagator::detach_voice	( sound_voice* voice )
+{
+	R_ASSERT					( voice );
+	voice->stop					( );
+	get_world( m_proxy )->delete_sound_voice
+	(
+		m_proxy.get_sound_scene( ),
+		voice
+	);
+	voice						= 0;
+}
+
+void new_sound_propagator::set_voice_channel_matrix	( sound_voice* voice, float const* channel_matrix, float lp_coeff )
+{
+	voice->set_output_matrix			( channel_matrix );
+	voice->set_low_pass_filter_params	( lp_coeff );
 }
 
 #ifndef MASTER_GOLD
