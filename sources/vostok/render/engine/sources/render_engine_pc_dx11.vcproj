@@ -993,6 +993,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_apply_distortion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_apply_distortion.h"
+			>
+		</File>
+		<File
 			RelativePath=".\decal_default_material_effect.cpp"
 			>
 		</File>
