@@ -1025,16 +1025,6 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 		add_animation				( *j, 0 );
 }
 
-// STATE[STUB]
-// claude@NOTE: parked. 8-stmt body (lines 1052,1053,1057,1059,1061,1070) is reconstructible
-// in shape - if(to_begin->weight_synchronization_group_id()==u32(-1)) merge_weight_asynchronous_groups()
-// else: find_animation(from_begin,from_end,*to_begin); conditional new_weight_driving_animation();
-// merge_weight_synchronization_groups(...). BUT every callee is still an empty stub so the body
-// collapses to 1 surviving statement (find_animation) - its structure cannot be verified, and a
-// trial body STOLE merge_trees' objdiff pairing (37%->unpaired) for only ~15% here. Body the
-// callees (merge_weight_asynchronous_groups, new_weight_driving_animation x2,
-// merge_weight_synchronization_groups) first, then reconstruct + confirm the 5th merge arg and
-// the is_new_driving_animation flag (asm reads to-side is_transitting_to_zero @0x51).
 void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1042,6 +1032,28 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		to_end
 )
 {
+	if ( to_begin->weight_synchronization_group_id( ) == u32( -1 ) ) {
+		merge_weight_asynchronous_groups	( from_begin, from_end, to_begin, to_end );
+		return;
+	}
+
+	n_ary_tree_animation_node* const previous_weight_driving_animation	=
+		find_animation( from_begin, from_end, *to_begin );
+	bool const is_new_driving_animation	= !previous_weight_driving_animation
+		|| previous_weight_driving_animation->is_transitting_to_zero( );
+	if ( previous_weight_driving_animation )
+		new_weight_driving_animation		( *to_begin, *previous_weight_driving_animation );
+	else
+		new_weight_driving_animation		( *to_begin );
+
+	merge_weight_synchronization_groups(
+		from_begin,
+		from_end,
+		to_begin,
+		to_end,
+		*to_begin,
+		is_new_driving_animation
+	);
 }
 
 void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const& to )

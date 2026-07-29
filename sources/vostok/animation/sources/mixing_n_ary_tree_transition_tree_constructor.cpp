@@ -1439,8 +1439,6 @@ void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
 		add_animation				( *j, 0 );
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::change_weight_synchronization_group(vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*)
 void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1448,31 +1446,29 @@ void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group
 	n_ary_tree_animation_node*		to_end
 )
 {
-	// FUNCTION BODY
-	// <0x6ec2e7>|0x007|+0x009:'1517'
-	// <0x6ec2f0>|0x010|+0x015:'1518'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ec305>|0x025|+0x008:'1524'
-	// <0>
-	// <0x6ec30d>|0x02d|+0x01d:'1526'
-	// <0>
-	// <0x6ec32a>|0x04a|-0x00a:'1528'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6ec320>|0x040|+0x010:'1537'
-	// <0x6ec330>|0x050|-0x032:'1537'
-	// <0x6ec2fe>|0x01e|+0x04f:'1538'
-	// ******
+	if ( to_begin->weight_synchronization_group_id( ) == u32( -1 ) ) {
+		merge_weight_asynchronous_groups	( from_begin, from_end, to_begin, to_end );
+		return;
+	}
+
+	n_ary_tree_animation_node* const previous_weight_driving_animation	=
+		find_animation( from_begin, from_end, *to_begin );
+	bool const is_new_driving_animation	= !previous_weight_driving_animation
+		|| previous_weight_driving_animation->is_transitting_to_zero( );
+	n_ary_tree_animation_node* const new_weight_driving_animation_node	=
+		previous_weight_driving_animation
+			? new_weight_driving_animation( *to_begin, *previous_weight_driving_animation )
+			: new_weight_driving_animation( *to_begin );
+
+	merge_weight_synchronization_groups(
+		from_begin,
+		from_end,
+		to_begin,
+		to_end,
+		*new_weight_driving_animation_node,
+		is_new_driving_animation
+	);
+
 }
 
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::get_time_driving_animation( u32 time_synchronization_group_id ) const
