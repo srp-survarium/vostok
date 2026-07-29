@@ -964,79 +964,87 @@ bool n_ary_tree::dispatch_callbacks(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 {
-	// LOCALS
-	// animation_state* 				current_alive_animation_state
-	// buffer_vector< pcvoid > 			animated_objects
-	// animation_state* 				current_animation_state
-	// n_ary_tree_animation_node* 		previous_animation
-	// n_ary_tree_animation_node* 		current_animation
-	// animated_object_holder* const 	e
-	// animated_object_holder* 			j
-	// ******
+	buffer_vector< pcvoid > animated_objects(
+		ALLOCA( m_animated_objects_count * sizeof( pcvoid ) ),
+		m_animated_objects_count
+	);
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6ef358>|0x008|+0x021:'1674'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef379>|0x029|+0x02d:'1678'
-	// <0>
-	// <1>
-	// <0x6ef3a6>|0x056|+0x00b:'1681'
-	// <0x6ef3b1>|0x061|+0x009:'1682'
-	// <0>
-	// <0x6ef3ba>|0x06a|+0x038:'1684'
-	// <0>
-	// <1>
-	// <0x6ef3f2>|0x0a2|+0x010:'1687'
-	// <0x6ef402>|0x0b2|+0x005:'1688'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef407>|0x0b7|+0x018:'1692'
-	// <0x6ef41f>|0x0cf|+0x012:'1693'
-	// <0>
-	// <0x6ef431>|0x0e1|+0x00a:'1695'
-	// <0x6ef43b>|0x0eb|+0x006:'1696'
-	// <0x6ef441>|0x0f1|+0x003:'1697'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef444>|0x0f4|+0x003:'1701'
-	// <0x6ef447>|0x0f7|+0x01e:'1702'
-	// <0>
-	// <1>
-	// <0x6ef465>|0x115|+0x00c:'1705'
-	// <0x6ef471>|0x121|+0x01f:'1706'
-	// <0x6ef490>|0x140|+0x00e:'1707'
-	// <0>
-	// <0x6ef49e>|0x14e|+0x0a8:'1709'
-	// <0>
-	// <1>
-	// <0x6ef546>|0x1f6|-0x056:'1712'
-	// <0x6ef4f0>|0x1a0|+0x059:'1713'
-	// <0>
-	// <0x6ef549>|0x1f9|+0x00f:'1715'
-	// <0x6ef558>|0x208|+0x056:'1716'
-	// <0x6ef5ae>|0x25e|-0x03e:'1716'
-	// <0x6ef570>|0x220|+0x012:'1717'
-	// <0x6ef582>|0x232|+0x007:'1718'
-	// <0x6ef589>|0x239|+0x012:'1719'
-	// <0>
-	// <1>
-	// <0x6ef59b>|0x24b|+0x016:'1722'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ef5b1>|0x261|+0x00b:'1728'
-	// <0>
-	// ******
+	animation_state* current_animation_state		= m_animation_states;
+	animation_state* current_alive_animation_state	= current_animation_state;
+	n_ary_tree_animation_node* previous_animation	= 0;
+	for ( n_ary_tree_animation_node* current_animation = m_weight_root;
+		  current_animation; )
+	{
+		if ( current_animation_state->event_iterator->event_time_in_ms == target_time_in_ms &&
+			 ( current_animation_state->event_iterator->event_type &
+			   time_event_animation_lexeme_ended ) )
+		{
+			animation_state** const end	= m_animation_events + m_animations_count;
+			animation_state** const found	=
+				std::find( m_animation_events, end, current_animation_state );
+			std::copy						( found + 1, end, found );
+			remove_animation				( current_animation, previous_animation );
+			++current_animation_state;
+			continue;
+		}
+
+		pcvoid const animated_object	= current_animation->animated_object( );
+		if ( std::find(
+				animated_objects.begin( ),
+				animated_objects.end( ),
+				animated_object
+			) == animated_objects.end( ) )
+			animated_objects.push_back	( animated_object );
+
+		if ( current_animation_state != current_alive_animation_state )
+			*current_alive_animation_state	= *current_animation_state;
+		current_animation->set_animation_state( *current_alive_animation_state );
+
+		previous_animation				= current_animation;
+		current_animation				= current_animation->m_next_weight_animation;
+		++current_alive_animation_state;
+		++current_animation_state;
+	}
+
+	if ( current_alive_animation_state != current_animation_state ) {
+		animation_state** event			= m_animation_events;
+		animation_state* const end		= m_animation_states + m_animations_count;
+		for ( animation_state* i = m_animation_states; i != end; ++i )
+			*event++					= i;
+
+		stlp_std::sort					(
+			m_animation_events,
+			m_animation_events + m_animations_count,
+			event_iterator_predicate( )
+		);
+
+		for ( animation_state* i = current_alive_animation_state;
+			  i != current_animation_state;
+			  ++i )
+			i->~animation_state			( );
+	}
+
+	if ( m_animated_objects_count != animated_objects.size( ) ) {
+		animated_object_holder* alive		= m_animated_objects;
+		animated_object_holder* const end	=
+			m_animated_objects + m_animated_objects_count;
+		for ( animated_object_holder* i = m_animated_objects; i != end; ++i ) {
+			if ( std::find(
+					animated_objects.begin( ),
+					animated_objects.end( ),
+					i->animated_object
+				) == animated_objects.end( ) )
+				continue;
+
+			if ( alive != i )
+				*alive					= *i;
+			++alive;
+		}
+
+		m_animated_objects_count		= animated_objects.size( );
+	}
 }
 
 bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
