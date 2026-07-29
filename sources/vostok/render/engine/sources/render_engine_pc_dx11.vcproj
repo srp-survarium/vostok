@@ -885,6 +885,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_output_window.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_output_window.h"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_manager.cpp"
 			>
 		</File>
