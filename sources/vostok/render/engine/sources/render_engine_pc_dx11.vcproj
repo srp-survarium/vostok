@@ -969,6 +969,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_aberration.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_aberration.h"
+			>
+		</File>
+		<File
 			RelativePath=".\decal_default_material_effect.cpp"
 			>
 		</File>
