@@ -599,6 +599,25 @@ void sound_world::set_active_sound_scene_impl(	sound_scene& scene,
 		m_current_scene->fade_in		( *this, fade_in_time );
 }
 
+void sound_world::set_active_sound_scene_impl
+(
+	sound_scene& scene,
+	render::culling::portal_sector_structure_ptr& graph,
+	u32 fade_in_time,
+	u32 fade_out_time
+)
+{
+	if ( m_current_scene )
+		m_current_scene->fade_out	( fade_out_time );
+
+	m_current_scene					= &scene;
+	if ( m_current_scene )
+	{
+		m_current_scene->set_graph	( graph );
+		m_current_scene->fade_in		( *this, fade_in_time );
+	}
+}
+
 void sound_world::remove_sound_scene_impl	( sound_scene_ptr scene )
 {
 	sound_scene* scn		= static_cast_checked<sound_scene*>( scene.c_ptr( ) );
