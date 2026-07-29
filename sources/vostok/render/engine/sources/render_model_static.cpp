@@ -1,15 +1,12 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_model_static.h"
+#include "batched_vertex_source.h"
+#include "render_model_static.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
-explicit static_render_surface::static_render_surface( bool colored )
+static_render_surface::static_render_surface( bool colored )
 {
 	// FUNCTION BODY[0x631d50]: 1
 	// <0x631d57>|0x007|+0x013:'47'
@@ -17,9 +14,10 @@ explicit static_render_surface::static_render_surface( bool colored )
 }
 
 // STATE[STUB]
-bool read_diffuse_colors<64>(
+template < u32 Size >
+bool read_diffuse_colors(
 	material_effects_instance_ptr		m_materail_effects_instance,
-	math::color[64][64]&				results
+	math::color (&results)[Size][Size]
 )
 {
 	// LOCALS
@@ -107,6 +105,11 @@ bool read_diffuse_colors<64>(
 	// ******
 }
 
+template bool read_diffuse_colors< 64 >(
+	material_effects_instance_ptr,
+	math::color (&)[64][64]
+);
+
 // STATE[STUB]
 float frac( float v )
 {
@@ -118,8 +121,9 @@ float frac( float v )
 }
 
 // STATE[STUB]
-math::color interpolated_color<64>(
-	math::color[64][64]&	color_grid,
+template < u32 Size >
+math::color interpolated_color(
+	math::color (&color_grid)[Size][Size],
 	const float2			arg_1 /* float2 uv */
 )
 {
@@ -164,8 +168,14 @@ math::color interpolated_color<64>(
 	// ******
 }
 
+template math::color interpolated_color< 64 >(
+	math::color (&)[64][64],
+	const float2
+);
+
 // STATE[STUB]
-void create_shadow_pass_geometry_type<`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::static_vertex0,`vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex>(
+template < typename StaticVertex, typename OptimizedVertex >
+void create_shadow_pass_geometry_type(
 	render_geometry&					in_render_geometry,
 	pcbyte								data,
 	const u32							num_vertices,
@@ -267,7 +277,8 @@ void create_shadow_pass_geometry_type<`vostok::render::static_render_surface::cr
 }
 
 // STATE[STUB]
-void fill_static_lpv_vertex_color<`vostok::render::static_render_surface::fill_lpv_vertex_color'::`2'::static_vertex0>(
+template < typename StaticVertex >
+void fill_static_lpv_vertex_color(
 	batched_geometry_interface*			in_out_lpv_geometry,
 	render_geometry&					in_render_geometry,
 	material_effects_instance_ptr&		in_materail_effects_instance,
@@ -434,7 +445,8 @@ void static_render_surface::fill_lpv_vertex_color( batched_geometry_interface* i
 }
 
 // STATE[STUB]
-void fill_source_vertices_impl<`vostok::render::fill_source_vertices'::`2'::static_vertex>(
+template < typename StaticVertex >
+void fill_source_vertices_impl(
 	render_geometry&					in_render_geometry,
 	vector< batched_vertex_source >&	out_vertices,
 	vector< u16 >&						out_indices
@@ -655,31 +667,6 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 }
 
 // STATE[STUB]
-void `vostok::render::static_render_surface::create_shadow_pass_geometry'::`2'::opt_static_vertex::set(
-	static_render_surface::create_shadow_pass_geometry::__l2::static_vertex0 const&	arg_0 /* vostok::render::static_render_surface::create_shadow_pass_geometry::__l2::static_vertex0 const& base */
-)
-{
-	// FUNCTION BODY[0x6300b0]: 3
-	// <0x6300b0>|0x000|+0x00e:'686'
-	// <0x6300be>|0x00e|+0x006:'687'
-	// <0x6300c4>|0x014|+0x00c:'688'
-	// ******
-}
-
-// STATE[STUB]
-void `vostok::render::static_render_surface::create_shadow_pass_geometry'::`3'::colored_opt_static_vertex::set(
-	static_render_surface::create_shadow_pass_geometry::__l2::colored_static_vertex const&	arg_0 /* vostok::render::static_render_surface::create_shadow_pass_geometry::__l2::colored_static_vertex const& base */
-)
-{
-	// FUNCTION BODY[0x630080]: 4
-	// <0x630080>|0x000|+0x00e:'699'
-	// <0x63008e>|0x00e|+0x006:'700'
-	// <0x630094>|0x014|+0x00c:'701'
-	// <0x6300a0>|0x020|+0x006:'702'
-	// ******
-}
-
-// STATE[STUB]
 void static_render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
 {
 	// LOCALS
@@ -773,14 +760,14 @@ void static_render_surface::load( configs::binary_config_value const& properties
 }
 
 // STATE[STUB]
- static_render_model_instance::static_render_model_instance( )
+static_render_model_instance::static_render_model_instance( )
 {
 	// FUNCTION BODY[0x6311a0]
 	// ******
 }
 
 // STATE[STUB]
- static_render_model_instance::~static_render_model_instance( )
+static_render_model_instance::~static_render_model_instance( )
 {
 	// FUNCTION BODY[0x631120]: 2
 	// <0x631124>|0x004|+0x019:'846'
@@ -1065,73 +1052,6 @@ void static_render_model_instance::add_sectors_holder( configs::binary_config_va
 	// <0x631104>|0x044|+0x00c:'1065'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	D3D11_INPUT_ELEMENT_DESC*
-	// 	iterator_type;
-
-	// typedef
-	// 	_D3DVERTEXELEMENT9*
-	// 	iterator_type;
-
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::batched_vertex_source*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_buffer_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
