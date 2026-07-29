@@ -1,0 +1,941 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\render\engine\sources\radiance_volume.h"
+
+namespace vostok {
+namespace render {
+
+// STATE[STUB]
+void `dynamic initializer for 's_draw_radiance_debug_cc''( )
+{
+	// FUNCTION BODY[0x7d77a0]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_draw_propagated_radiance_debug_cc''( )
+{
+	// FUNCTION BODY[0x7d77f0]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_draw_radiance_occluders_debug_cc''( )
+{
+	// FUNCTION BODY[0x7d7840]
+	// ******
+}
+
+// STATE[STUB]
+explicit injection_geometry::injection_geometry( u32 rsm_size )
+{
+	// LOCALS
+	// float2* 							vertices_begin
+	// ******
+
+	// FUNCTION BODY[0x5efee0]: 15
+	// <0x5efef5>|0x015|+0x019:'62'
+	// <0x5eff0e>|0x02e|+0x004:'63'
+	// <0>
+	// <0x5eff12>|0x032|+0x06c:'65'
+	// <0x5eff7e>|0x09e|-0x068:'65'
+	// <0>
+	// <0x5eff16>|0x036|+0x06a:'67'
+	// <0>
+	// <0x5eff80>|0x0a0|+0x037:'69'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5effb7>|0x0d7|+0x07f:'75'
+	// <0x5f0036>|0x156|+0x01d:'76'
+	// ******
+}
+
+// STATE[STUB]
+ injection_geometry::injection_geometry( u32 rsm_size_x, u32 rsm_size_y )
+{
+	// FUNCTION BODY[0x5efec0]: 1
+	// <0x5efece>|0x00e|+0x00e:'84'
+	// ******
+}
+
+// STATE[STUB]
+void injection_geometry::prepare( u32 rsm_size_x, u32 rsm_size_y )
+{
+	// LOCALS
+	// float2* 							vertices_begin
+	// ******
+
+	// FUNCTION BODY[0x5efd80]: 22
+	// <0x5efd88>|0x008|+0x014:'90'
+	// <0>
+	// <1>
+	// <0x5efd9c>|0x01c|+0x007:'93'
+	// <0x5efda3>|0x023|+0x003:'94'
+	// <0x5efda6>|0x026|+0x003:'95'
+	// <0>
+	// <0x5efda9>|0x029|+0x010:'97'
+	// <0>
+	// <1>
+	// <0x5efdb9>|0x039|+0x00c:'100'
+	// <0>
+	// <0x5efdc5>|0x045|+0x050:'102'
+	// <0>
+	// <0x5efe15>|0x095|+0x039:'104'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5efe4e>|0x0ce|+0x043:'110'
+	// <0x5efe91>|0x111|+0x019:'111'
+	// ******
+}
+
+// STATE[STUB]
+void injection_geometry::draw( )
+{
+	// FUNCTION BODY[0x5ef240]: 4
+	// <0x5ef246>|0x006|+0x035:'116'
+	// <0x5ef27b>|0x03b|+0x03f:'117'
+	// <0x5ef2ba>|0x07a|+0x01f:'118'
+	// <0x5ef2d9>|0x099|+0x054:'119'
+	// ******
+}
+
+// STATE[STUB]
+explicit sliced_cube_geometry::sliced_cube_geometry( const u32 in_num_cells )
+{
+	// LOCALS
+	// const u32 						num_vertices
+	// const float 						slice_z
+	// ******
+
+	// FUNCTION BODY[0x5ef970]: 47
+	// <0x5ef98c>|0x01c|+0x00d:'126'
+	// <0x5ef999>|0x029|+0x003:'127'
+	// <0>
+	// <0x5ef99c>|0x02c|+0x013:'129'
+	// <0x5ef9af>|0x03f|+0x00e:'130'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5ef9bd>|0x04d|+0x27a:'135'
+	// <0x5efc37>|0x2c7|-0x1d8:'135'
+	// <0>
+	// <0x5efa5f>|0x0ef|-0x092:'137'
+	// <0>
+	// <1>
+	// <0x5ef9cd>|0x05d|+0x0ad:'140'
+	// <0x5efa7a>|0x10a|-0x0aa:'140'
+	// <0x5ef9d0>|0x060|+0x01c:'141'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ef9ec>|0x07c|+0x005:'145'
+	// <0x5ef9f1>|0x081|+0x08d:'146'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5efa7e>|0x10e|-0x064:'150'
+	// <0x5efa1a>|0x0aa|+0x075:'151'
+	// <0x5efa8f>|0x11f|-0x070:'152'
+	// <0>
+	// <1>
+	// <0x5efa1f>|0x0af|+0x14e:'155'
+	// <0x5efb6d>|0x1fd|-0x149:'155'
+	// <0x5efa24>|0x0b4|+0x184:'156'
+	// <0x5efba8>|0x238|+0x045:'156'
+	// <0>
+	// <1>
+	// <0x5efbed>|0x27d|+0x00a:'159'
+	// <0>
+	// <1>
+	// <0x5efbf7>|0x287|+0x006:'162'
+	// <0x5efbfd>|0x28d|+0x009:'163'
+	// <0x5efc06>|0x296|+0x009:'164'
+	// <0x5efc0f>|0x29f|+0x006:'165'
+	// <0x5efc15>|0x2a5|+0x009:'166'
+	// <0x5efc1e>|0x2ae|+0x01c:'167'
+	// <0>
+	// <1>
+	// <0x5efc3a>|0x2ca|+0x037:'170'
+	// <0x5efc71>|0x301|+0x07f:'171'
+	// <0x5efcf0>|0x380|+0x07e:'172'
+	// ******
+}
+
+// STATE[STUB]
+void sliced_cube_geometry::draw( )
+{
+	// FUNCTION BODY[0x5ef100]: 4
+	// <0x5ef100>|0x000|+0x03a:'177'
+	// <0x5ef13a>|0x03a|+0x044:'178'
+	// <0x5ef17e>|0x07e|+0x033:'179'
+	// <0x5ef1b1>|0x0b1|+0x077:'180'
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic atexit destructor for 's_draw_radiance_debug_cc''( )
+{
+	// FUNCTION BODY[0x7ef810]
+	// ******
+}
+
+// STATE[STUB]
+ radiance_volume::radiance_volume(
+	const u32		in_rsm_size,
+	const u32		in_num_cells,
+	const u32		in_num_propagate_iterations,
+	const float		in_scale,
+	const float		in_flux_amplifier
+)
+{
+	// LOCALS
+	// DXGI_FORMAT 						rv_format
+	// ******
+
+	// FUNCTION BODY[0x5f1780]: 108
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5f194e>|0x1ce|+0x08f:'208'
+	// <0x5f19dd>|0x25d|+0x040:'209'
+	// <0x5f1a1d>|0x29d|+0x03c:'210'
+	// <0>
+	// <0x5f1a59>|0x2d9|+0x03d:'212'
+	// <0x5f1a96>|0x316|+0x03c:'213'
+	// <0x5f1ad2>|0x352|+0x03c:'214'
+	// <0>
+	// <0x5f1b0e>|0x38e|+0x04f:'216'
+	// <0x5f1b5d>|0x3dd|+0x04f:'217'
+	// <0x5f1bac>|0x42c|+0x04f:'218'
+	// <0>
+	// <1>
+	// <0x5f1bfb>|0x47b|+0x045:'221'
+	// <0x5f1c40>|0x4c0|+0x03c:'222'
+	// <0x5f1c7c>|0x4fc|+0x03c:'223'
+	// <0>
+	// <0x5f1cb8>|0x538|+0x04f:'225'
+	// <0x5f1d07>|0x587|+0x04f:'226'
+	// <0x5f1d56>|0x5d6|+0x04f:'227'
+	// <0>
+	// <0x5f1da5>|0x625|+0x045:'229'
+	// <0x5f1dea>|0x66a|+0x03c:'230'
+	// <0x5f1e26>|0x6a6|+0x03c:'231'
+	// <0>
+	// <0x5f1e62>|0x6e2|+0x056:'233'
+	// <0x5f1eb8>|0x738|+0x056:'234'
+	// <0x5f1f0e>|0x78e|+0x056:'235'
+	// <0>
+	// <0x5f1f64>|0x7e4|+0x05d:'237'
+	// <0x5f1fc1>|0x841|+0x05d:'238'
+	// <0x5f201e>|0x89e|+0x05d:'239'
+	// <0>
+	// <1>
+	// <0x5f207b>|0x8fb|+0x025:'242'
+	// <0x5f20a0>|0x920|+0x059:'243'
+	// <0>
+	// <1>
+	// <0x5f20f9>|0x979|+0x025:'246'
+	// <0x5f211e>|0x99e|+0x021:'247'
+	// <0x5f213f>|0x9bf|+0x020:'248'
+	// <0>
+	// <0x5f215f>|0x9df|+0x05d:'250'
+	// <0x5f21bc>|0xa3c|+0x05d:'251'
+	// <0x5f2219>|0xa99|+0x05d:'252'
+	// <0>
+	// <0x5f2276>|0xaf6|+0x00c:'254'
+	// <0>
+	// <1>
+	// <0x5f2282>|0xb02|+0x02d:'257'
+	// <0x5f22af>|0xb2f|+0x054:'258'
+	// <0x5f2303>|0xb83|+0x026:'259'
+	// <0x5f2329>|0xba9|+0x053:'260'
+	// <0x5f237c>|0xbfc|+0x025:'261'
+	// <0x5f23a1>|0xc21|+0x053:'262'
+	// <0>
+	// <0x5f23f4>|0xc74|+0x026:'264'
+	// <0x5f241a>|0xc9a|+0x053:'265'
+	// <0x5f246d>|0xced|+0x026:'266'
+	// <0x5f2493>|0xd13|+0x053:'267'
+	// <0x5f24e6>|0xd66|+0x025:'268'
+	// <0x5f250b>|0xd8b|+0x053:'269'
+	// <0>
+	// <0x5f255e>|0xdde|+0x026:'271'
+	// <0x5f2584>|0xe04|+0x053:'272'
+	// <0x5f25d7>|0xe57|+0x026:'273'
+	// <0x5f25fd>|0xe7d|+0x032:'274'
+	// <0x5f262f>|0xeaf|+0x026:'275'
+	// <0x5f2655>|0xed5|+0x032:'276'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x5f2687>|0xf07|+0x028:'288'
+	// <0>
+	// <0x5f26af>|0xf2f|+0x043:'290'
+	// <0x5f26f2>|0xf72|+0x041:'291'
+	// <0x5f2733>|0xfb3|+0x042:'292'
+	// <0x5f2775>|0xff5|+0x041:'293'
+	// <0x5f27b6>|0x1036|+0x042:'294'
+	// <0x5f27f8>|0x1078|+0x041:'295'
+	// <0x5f2839>|0x10b9|+0x042:'296'
+	// <0x5f287b>|0x10fb|+0x041:'297'
+	// <0x5f28bc>|0x113c|+0x043:'298'
+	// <0x5f28ff>|0x117f|+0x041:'299'
+	// <0x5f2940>|0x11c0|+0x042:'300'
+	// <0x5f2982>|0x1202|+0x041:'301'
+	// <0x5f29c3>|0x1243|+0x043:'302'
+	// <0x5f2a06>|0x1286|+0x041:'303'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5f2a47>|0x12c7|+0x011:'308'
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+ radiance_volume::~radiance_volume( )
+{
+	// FUNCTION BODY[0x5ef340]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+bool radiance_volume::is_effects_ready( ) const
+{
+	return false;
+
+	// FUNCTION BODY[0x5eebf0]: 1
+	// <0x5eebf0>|0x000|+0x00b:'320'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::set_origin( float3 const& in_origin )
+{
+	// FUNCTION BODY[0x5eecc0]: 3
+	// <0x5eecc3>|0x003|+0x039:'325'
+	// <0x5eecfc>|0x03c|+0x03f:'326'
+	// <0x5eed3b>|0x07b|+0x07c:'327'
+	// ******
+}
+
+// STATE[STUB]
+float3 const& radiance_volume::get_origin( ) const
+{
+	// FUNCTION BODY[0x5eebe0]: 1
+	// <0x5eebe0>|0x000|+0x005:'332'
+	// ******
+}
+
+// STATE[STUB]
+float3 const& radiance_volume::get_previous_origin( ) const
+{
+	// FUNCTION BODY[0x5eebd0]: 1
+	// <0x5eebd0>|0x000|+0x005:'337'
+	// ******
+}
+
+// STATE[STUB]
+float radiance_volume::get_scale( ) const
+{
+	return 0.0f;
+
+	// FUNCTION BODY[0x5eebc0]: 1
+	// <0x5eebc0>|0x000|+0x008:'347'
+	// ******
+}
+
+// STATE[STUB]
+u32 radiance_volume::get_num_cells( ) const
+{
+	return 0;
+
+	// FUNCTION BODY[0x5eebb0]: 1
+	// <0x5eebb0>|0x000|+0x006:'352'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::prepare_gv( )
+{
+	// FUNCTION BODY[0x5eec00]: 9
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5eec00>|0x000|+0x024:'362'
+	// <0>
+	// <0x5eec24>|0x024|+0x075:'364'
+	// <0x5eec99>|0x099|+0x018:'365'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::prepare(
+	float3 const&		view_position,
+	float3 const&		view_direction,
+	float				offset_from_center
+)
+{
+	// LOCALS
+	// float3 							cascade_origin
+	// const float 						cell_size
+	// ******
+
+	// FUNCTION BODY[0x5eedc0]: 25
+	// <0x5eedc3>|0x003|+0x02b:'372'
+	// <0x5eedee>|0x02e|+0x01d:'373'
+	// <0>
+	// <0x5eee0b>|0x04b|+0x01e:'375'
+	// <0x5eee29>|0x069|+0x01d:'376'
+	// <0>
+	// <0x5eee46>|0x086|+0x01e:'378'
+	// <0x5eee64>|0x0a4|+0x01d:'379'
+	// <0>
+	// <1>
+	// <0x5eee81>|0x0c1|+0x028:'382'
+	// <0>
+	// <0x5eeea9>|0x0e9|+0x009:'384'
+	// <0x5eeeb2>|0x0f2|+0x047:'385'
+	// <0>
+	// <0x5eeef9>|0x139|+0x010:'387'
+	// <0x5eef09>|0x149|+0x03b:'388'
+	// <0x5eef44>|0x184|+0x016:'389'
+	// <0x5eef5a>|0x19a|+0x016:'390'
+	// <0x5eef70>|0x1b0|+0x00c:'391'
+	// <0>
+	// <0x5eef7c>|0x1bc|+0x03a:'393'
+	// <0x5eefb6>|0x1f6|+0x029:'394'
+	// <0>
+	// <0x5eefdf>|0x21f|+0x00f:'396'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::begin_render_to_cells( )
+{
+	// LOCALS
+	// D3D11_VIEWPORT 					cells_viewport
+	// ******
+
+	// FUNCTION BODY[0x5ef050]: 13
+	// <0x5ef053>|0x003|+0x027:'401'
+	// <0x5ef07a>|0x02a|+0x00c:'402'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ef086>|0x036|+0x016:'406'
+	// <0>
+	// <0x5ef09c>|0x04c|+0x022:'408'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5ef0be>|0x06e|+0x039:'413'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::end_render_to_cells( )
+{
+	// FUNCTION BODY[0x5ef000]: 3
+	// <0x5ef001>|0x001|+0x00d:'418'
+	// <0x5ef00e>|0x00e|+0x00c:'419'
+	// <0x5ef01a>|0x01a|+0x031:'420'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::fill_previous_result( )
+{
+	// FUNCTION BODY[0x5eeba0]: 3
+	// <0>
+	// <1>
+	// <2>
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::prepare_final( )
+{
+	// FUNCTION BODY[0x5f1620]: 17
+	// <0x5f1628>|0x008|+0x007:'432'
+	// <0>
+	// <0x5f162f>|0x00f|+0x020:'434'
+	// <0x5f164f>|0x02f|+0x01a:'435'
+	// <0>
+	// <0x5f1669>|0x049|+0x01e:'437'
+	// <0x5f1687>|0x067|+0x02f:'438'
+	// <0x5f16b6>|0x096|+0x01a:'439'
+	// <0x5f16d0>|0x0b0|+0x026:'440'
+	// <0x5f16f6>|0x0d6|+0x026:'441'
+	// <0x5f171c>|0x0fc|+0x011:'442'
+	// <0>
+	// <0x5f172d>|0x10d|+0x006:'444'
+	// <0>
+	// <1>
+	// <0x5f1733>|0x113|+0x00e:'447'
+	// <0x5f1741>|0x121|+0x006:'448'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::propagate_lighting_iter( const u32 cascade_index, const u32 iteration_index )
+{
+	// FUNCTION BODY[0x5f1090]: 47
+	// <0x5f1098>|0x008|+0x007:'453'
+	// <0>
+	// <0x5f109f>|0x00f|+0x00b:'455'
+	// <0>
+	// <0x5f10aa>|0x01a|+0x020:'457'
+	// <0x5f10ca>|0x03a|+0x02f:'458'
+	// <0x5f10f9>|0x069|+0x018:'459'
+	// <0x5f1111>|0x081|+0x026:'460'
+	// <0x5f1137>|0x0a7|+0x026:'461'
+	// <0x5f115d>|0x0cd|+0x011:'462'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5f116e>|0x0de|+0x02b:'467'
+	// <0x5f1199>|0x109|+0x02f:'468'
+	// <0x5f11c8>|0x138|+0x01a:'469'
+	// <0x5f11e2>|0x152|+0x026:'470'
+	// <0x5f1208>|0x178|+0x026:'471'
+	// <0x5f122e>|0x19e|+0x02c:'472'
+	// <0x5f125a>|0x1ca|+0x06a:'473'
+	// <0x5f12c4>|0x234|+0x04a:'474'
+	// <0x5f130e>|0x27e|+0x01c:'475'
+	// <0x5f132a>|0x29a|+0x047:'476'
+	// <0x5f1371>|0x2e1|+0x01c:'477'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5f138d>|0x2fd|+0x005:'481'
+	// <0>
+	// <0x5f1392>|0x302|+0x017:'483'
+	// <0x5f13a9>|0x319|+0x02f:'484'
+	// <0x5f13d8>|0x348|+0x064:'485'
+	// <0x5f143c>|0x3ac|+0x018:'486'
+	// <0x5f1454>|0x3c4|+0x026:'487'
+	// <0x5f147a>|0x3ea|+0x026:'488'
+	// <0x5f14a0>|0x410|+0x02c:'489'
+	// <0x5f14cc>|0x43c|+0x065:'490'
+	// <0x5f1531>|0x4a1|+0x045:'491'
+	// <0x5f1576>|0x4e6|+0x021:'492'
+	// <0x5f1597>|0x507|+0x047:'493'
+	// <0x5f15de>|0x54e|+0x01c:'494'
+	// <0>
+	// <0x5f15fa>|0x56a|+0x00b:'496'
+	// <0>
+	// <1>
+	// <0x5f1605>|0x575|+0x006:'499'
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::propagate_lighting( const u32 cascade_index )
+{
+	// LOCALS
+	// u32 								iteration_index
+	// ******
+
+	// FUNCTION BODY[0x5f0a30]: 99
+	// <0x5f0a39>|0x009|+0x007:'504'
+	// <0>
+	// <0x5f0a40>|0x010|+0x020:'506'
+	// <0x5f0a60>|0x030|+0x02f:'507'
+	// <0x5f0a8f>|0x05f|+0x01a:'508'
+	// <0x5f0aa9>|0x079|+0x026:'509'
+	// <0x5f0acf>|0x09f|+0x026:'510'
+	// <0x5f0af5>|0x0c5|+0x011:'511'
+	// <0>
+	// <0x5f0b06>|0x0d6|+0x01c:'513'
+	// <0>
+	// <0x5f0b22>|0x0f2|+0x00b:'515'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5f0b2d>|0x0fd|+0x08d:'520'
+	// <0x5f0bba>|0x18a|+0x02f:'521'
+	// <0>
+	// <0x5f0be9>|0x1b9|+0x01a:'523'
+	// <0x5f0c03>|0x1d3|+0x026:'524'
+	// <0x5f0c29>|0x1f9|+0x026:'525'
+	// <0x5f0c4f>|0x21f|+0x02c:'526'
+	// <0x5f0c7b>|0x24b|+0x067:'527'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <0x5f0ce2>|0x2b2|+0x005:'549'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5f0ce7>|0x2b7|+0x08d:'553'
+	// <0>
+	// <0x5f0d74>|0x344|+0x02f:'555'
+	// <0x5f0da3>|0x373|+0x064:'556'
+	// <0x5f0e07>|0x3d7|+0x018:'557'
+	// <0x5f0e1f>|0x3ef|+0x026:'558'
+	// <0x5f0e45>|0x415|+0x026:'559'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5f0e6b>|0x43b|+0x02c:'563'
+	// <0x5f0e97>|0x467|+0x065:'564'
+	// <0x5f0efc>|0x4cc|+0x045:'565'
+	// <0x5f0f41>|0x511|+0x047:'566'
+	// <0x5f0f88>|0x558|+0x045:'567'
+	// <0x5f0fcd>|0x59d|+0x04a:'568'
+	// <0>
+	// <0x5f1017>|0x5e7|+0x020:'570'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <0x5f1037>|0x607|+0x045:'596'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::inject_occluder_geometry(
+	renderer_context*				context,
+	float3 const&					light_position,
+	float3 const&					light_direction,
+	vector< float4x4 > const&		transforms
+)
+{
+	// FUNCTION BODY[0x5f07c0]: 32
+	// <0>
+	// <0x5f07c8>|0x008|+0x016:'612'
+	// <0>
+	// <0x5f07de>|0x01e|+0x06c:'614'
+	// <0x5f084a>|0x08a|+0x005:'615'
+	// <0>
+	// <0x5f084f>|0x08f|+0x029:'617'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x5f0878>|0x0b8|+0x090:'625'
+	// <0>
+	// <0x5f0908>|0x148|+0x05c:'627'
+	// <0x5f0964>|0x1a4|+0x01a:'628'
+	// <0x5f097e>|0x1be|+0x014:'629'
+	// <0x5f0992>|0x1d2|+0x01d:'630'
+	// <0>
+	// <0x5f09af>|0x1ef|+0x006:'632'
+	// <0x5f09b5>|0x1f5|+0x003:'633'
+	// <0>
+	// <0x5f09b8>|0x1f8|+0x022:'635'
+	// <0x5f09da>|0x21a|-0x01a:'635'
+	// <0>
+	// <0x5f09c0>|0x200|+0x00c:'637'
+	// <0x5f09cc>|0x20c|+0x014:'638'
+	// <0>
+	// <1>
+	// <0x5f09e0>|0x220|+0x03f:'641'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::inject_occluders(
+	renderer_context*		context,
+	float3 const&			light_position,
+	float3 const&			light_direction,
+	u32						rsm_size
+)
+{
+	// FUNCTION BODY[0x5f0580]: 57
+	// <0>
+	// <1>
+	// <2>
+	// <0x5f0588>|0x008|+0x014:'650'
+	// <0>
+	// <0x5f059c>|0x01c|+0x06b:'652'
+	// <0x5f0607>|0x087|+0x005:'653'
+	// <0>
+	// <0x5f060c>|0x08c|+0x024:'655'
+	// <0>
+	// <0x5f0630>|0x0b0|+0x08b:'657'
+	// <0>
+	// <0x5f06bb>|0x13b|+0x05c:'659'
+	// <0x5f0717>|0x197|+0x01a:'660'
+	// <0x5f0731>|0x1b1|+0x014:'661'
+	// <0x5f0745>|0x1c5|+0x01d:'662'
+	// <0>
+	// <0x5f0762>|0x1e2|+0x015:'664'
+	// <0x5f0777>|0x1f7|+0x029:'665'
+	// <0>
+	// <0x5f07a0>|0x220|+0x008:'667'
+	// <0>
+	// <0x5f07a8>|0x228|+0x006:'669'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <25>
+	// <26>
+	// <27>
+	// <28>
+	// <29>
+	// <30>
+	// <31>
+	// <32>
+	// <33>
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::inject_camera_occluders( renderer_context* context )
+{
+	// FUNCTION BODY[0x5f0320]: 37
+	// <0>
+	// <0x5f0328>|0x008|+0x020:'709'
+	// <0>
+	// <0x5f0348>|0x028|+0x06a:'711'
+	// <0x5f03b2>|0x092|+0x005:'712'
+	// <0>
+	// <0x5f03b7>|0x097|+0x029:'714'
+	// <0>
+	// <0x5f03e0>|0x0c0|+0x022:'716'
+	// <0x5f0402>|0x0e2|+0x065:'717'
+	// <0x5f0467>|0x147|+0x05f:'718'
+	// <0>
+	// <0x5f04c6>|0x1a6|+0x05c:'720'
+	// <0>
+	// <0x5f0522>|0x202|+0x007:'722'
+	// <0x5f0529>|0x209|+0x016:'723'
+	// <0>
+	// <0x5f053f>|0x21f|+0x00d:'725'
+	// <0x5f054c>|0x22c|+0x00d:'726'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5f0559>|0x239|+0x00b:'733'
+	// <0>
+	// <0x5f0564>|0x244|+0x006:'735'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// ******
+}
+
+// STATE[STUB]
+void radiance_volume::inject_lighting(
+	float3 const&		light_position,
+	float3 const&		light_direction,
+	float				light_fov,
+	u32					rsm_size
+)
+{
+	// LOCALS
+	// float 							flux_weight
+	// ******
+
+	// FUNCTION BODY[0x5f0060]: 40
+	// <0x5f0060>|0x000|+0x02a:'749'
+	// <0>
+	// <0x5f008a>|0x02a|+0x007:'751'
+	// <0>
+	// <0x5f0091>|0x031|+0x024:'753'
+	// <0>
+	// <0x5f00b5>|0x055|+0x01d:'755'
+	// <0x5f00d2>|0x072|+0x023:'756'
+	// <0x5f00f5>|0x095|+0x029:'757'
+	// <0>
+	// <0x5f011e>|0x0be|+0x090:'759'
+	// <0x5f01ae>|0x14e|+0x05c:'760'
+	// <0x5f020a>|0x1aa|+0x01a:'761'
+	// <0x5f0224>|0x1c4|+0x014:'762'
+	// <0>
+	// <1>
+	// <0x5f0238>|0x1d8|+0x01a:'765'
+	// <0x5f0252>|0x1f2|+0x014:'766'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5f0266>|0x206|+0x01e:'770'
+	// <0>
+	// <1>
+	// <0x5f0284>|0x224|+0x024:'773'
+	// <0x5f02a8>|0x248|-0x01e:'773'
+	// <0>
+	// <0x5f028a>|0x22a|+0x020:'775'
+	// <0>
+	// <0x5f02aa>|0x24a|+0x04f:'777'
+	// <0>
+	// <0x5f02f9>|0x299|+0x008:'779'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x5f0301>|0x2a1|+0x006:'788'
+	// ******
+}
+
+	// TYPEDEFS
+	// typedef
+	// 	pbyte
+	// 	iterator_type;
+
+	// typedef
+	// 	pcvoid*
+	// 	iterator_type;
+
+	// typedef
+	// 	u16*
+	// 	iterator_type;
+
+	// typedef
+	// 	void**
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::fixed_string< 32 >*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::geometry_batch*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_pass_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_shader_technique_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_binding*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_buffer_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::signature_layout_pair*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::texture_named_instance*
+	// 	iterator_type;
+
+	// ******
+
+} // namespace render
+} // namespace vostok

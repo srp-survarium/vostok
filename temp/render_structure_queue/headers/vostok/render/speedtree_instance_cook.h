@@ -1,0 +1,38 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#ifndef RENDER_SPEEDTREE_INSTANCE_COOK_H_INCLUDED
+#define RENDER_SPEEDTREE_INSTANCE_COOK_H_INCLUDED
+
+/* INCLUDES */
+class vostok::resources::translate_query_cook;
+
+/* FORWARD REFS */
+class vostok::resources::queries_result;
+class vostok::resources::query_result_for_cook;
+class vostok::resources::resource_base;
+
+namespace vostok {
+namespace render {
+
+struct speedtree_instance_cook : public resources::translate_query_cook {
+					speedtree_instance_cook	( );
+
+	virtual	void	translate_query			( resources::query_result_for_cook& parent ) override;
+
+	virtual	void	delete_resource			( resources::resource_base* resource ) override;
+
+private:
+			void	on_speedtree_loaded		( resources::queries_result& data, resources::query_result_for_cook* parent_query );
+
+public:
+	virtual			~speedtree_instance_cook( ) { /* no source */ }
+}; // struct speedtree_instance_cook
+
+STATIC_SIZE_ASSERT(speedtree_instance_cook, 0x20);
+
+} // namespace render
+} // namespace vostok
+
+#endif // #ifndef RENDER_SPEEDTREE_INSTANCE_COOK_H_INCLUDED

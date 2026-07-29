@@ -1,0 +1,180 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\render\engine\sources\grass_cook.h"
+
+namespace vostok {
+namespace render {
+
+// STATE[STUB]
+ grass_cook::grass_cook( )
+{
+	// FUNCTION BODY[0x76b640]: 1
+	// <0x76b678>|0x038|+0x029:'28'
+	// ******
+}
+
+// STATE[STUB]
+void grass_cook::translate_query( resources::query_result_for_cook& parent )
+{
+	// LOCALS
+	// configs::binary_config_value const& t
+	// grass_world* 					result
+	// grass_cook_data* 				cook_data
+	// grass_loading_data* 				loading_data
+	// buffer_vector< resources::request > requests
+	// grass_layer_desc* 				layer_desc
+	// grass_layer_data* 				layer_data
+	// fixed_string< 260 > 				s
+	// fs_new::virtual_path_string 		filename
+	// strings::detail::tuples 			STR_JOINA_tuples_unique_identifier
+	// ******
+
+	// FUNCTION BODY[0x76b850]: 93
+	// <0>
+	// <0x76b860>|0x010|+0x013:'34'
+	// <0>
+	// <0x76b873>|0x023|+0x027:'36'
+	// <0>
+	// <1>
+	// <0x76b89a>|0x04a|+0x005:'39'
+	// <0x76b89f>|0x04f|+0x021:'40'
+	// <0>
+	// <0x76b8c0>|0x070|+0x017:'42'
+	// <0x76b8d7>|0x087|+0x018:'43'
+	// <0x76b8ef>|0x09f|+0x00b:'44'
+	// <0>
+	// <0x76b8fa>|0x0aa|+0x00c:'46'
+	// <0>
+	// <0x76b906>|0x0b6|+0x011:'48'
+	// <0x76b917>|0x0c7|+0x011:'49'
+	// <0x76b928>|0x0d8|+0x5d1:'50'
+	// <0x76bef9>|0x6a9|-0x5a9:'50'
+	// <0>
+	// <0x76b950>|0x100|+0x02e:'52'
+	// <0x76b97e>|0x12e|+0x059:'53'
+	// <0>
+	// <0x76b9d7>|0x187|+0x005:'55'
+	// <0x76b9dc>|0x18c|+0x006:'56'
+	// <0>
+	// <0x76b9e2>|0x192|+0x015:'58'
+	// <0x76b9f7>|0x1a7|+0x00d:'59'
+	// <0>
+	// <0x76ba04>|0x1b4|+0x014:'61'
+	// <0>
+	// <0x76ba18>|0x1c8|+0x05d:'63'
+	// <0x76ba75>|0x225|+0x025:'64'
+	// <0>
+	// <0x76ba9a>|0x24a|+0x03d:'66'
+	// <0x76bad7>|0x287|+0x00b:'67'
+	// <0>
+	// <0x76bae2>|0x292|+0x011:'69'
+	// <0x76baf3>|0x2a3|+0x03e:'70'
+	// <0x76bb31>|0x2e1|+0x075:'71'
+	// <0>
+	// <1>
+	// <0x76bba6>|0x356|+0x021:'74'
+	// <0x76bbc7>|0x377|+0x014:'75'
+	// <0x76bbdb>|0x38b|+0x022:'76'
+	// <0x76bbfd>|0x3ad|+0x021:'77'
+	// <0x76bc1e>|0x3ce|+0x014:'78'
+	// <0>
+	// <0x76bc32>|0x3e2|+0x025:'80'
+	// <0x76bc57>|0x407|+0x028:'81'
+	// <0>
+	// <0x76bc7f>|0x42f|+0x00c:'83'
+	// <0>
+	// <0x76bc8b>|0x43b|+0x035:'85'
+	// <0x76bcc0>|0x470|+0x00e:'86'
+	// <0>
+	// <0x76bcce>|0x47e|+0x002:'88'
+	// <0>
+	// <0x76bcd0>|0x480|+0x030:'90'
+	// <0>
+	// <0x76bd00>|0x4b0|+0x04c:'92'
+	// <0x76bd4c>|0x4fc|+0x014:'93'
+	// <0x76bd60>|0x510|+0x01f:'94'
+	// <0>
+	// <1>
+	// <0x76bd7f>|0x52f|+0x005:'97'
+	// <0>
+	// <0x76bd84>|0x534|+0x02b:'99'
+	// <0x76bdaf>|0x55f|+0x011:'100'
+	// <0>
+	// <0x76bdc0>|0x570|+0x002:'102'
+	// <0>
+	// <0x76bdc2>|0x572|+0x010:'104'
+	// <0>
+	// <0x76bdd2>|0x582|+0x058:'106'
+	// <0x76be2a>|0x5da|+0x031:'107'
+	// <0>
+	// <0x76be5b>|0x60b|+0x028:'109'
+	// <0x76be83>|0x633|+0x036:'110'
+	// <0x76beb9>|0x669|-0x002:'110'
+	// <0x76beb7>|0x667|+0x014:'111'
+	// <0x76becb>|0x67b|+0x002:'111'
+	// <0x76becd>|0x67d|+0x042:'112'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <0x76bf0f>|0x6bf|+0x095:'125'
+	// ******
+}
+
+// STATE[STUB]
+void grass_cook::on_layers_loaded( resources::queries_result& data, grass_cook_data* cook_data )
+{
+	// LOCALS
+	// grass_layer_desc* 				layer_desc
+	// ******
+
+	// FUNCTION BODY[0x76b6f0]: 20
+	// <0>
+	// <0x76b6f4>|0x004|+0x008:'131'
+	// <0>
+	// <0x76b6fc>|0x00c|+0x017:'133'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x76b713>|0x023|+0x072:'138'
+	// <0x76b785>|0x095|+0x02a:'139'
+	// <0>
+	// <1>
+	// <0x76b7af>|0x0bf|+0x009:'142'
+	// <0>
+	// <0x76b7b8>|0x0c8|+0x032:'144'
+	// <0x76b7ea>|0x0fa|+0x00e:'145'
+	// <0>
+	// <0x76b7f8>|0x108|+0x018:'147'
+	// <0x76b810>|0x120|+0x018:'148'
+	// <0x76b828>|0x138|+0x015:'149'
+	// ******
+}
+
+// STATE[STUB]
+void grass_cook::delete_resource( resources::resource_base* resource )
+{
+	// CALL SITE INFO
+	// <0x76b6d4> -> void* < unknown >( u32 )
+	// ******
+
+	// FUNCTION BODY[0x76b6b0]: 2
+	// <0>
+	// <0x76b6b1>|0x001|+0x03a:'155'
+	// ******
+}
+
+} // namespace render
+} // namespace vostok
