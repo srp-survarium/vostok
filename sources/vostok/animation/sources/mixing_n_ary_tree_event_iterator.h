@@ -16,6 +16,7 @@ namespace animation {
 namespace mixing {
 
 struct animation_state;
+class n_ary_tree;
 class n_ary_tree_animation_node;
 
 class VOSTOK_ANIMATION_API n_ary_tree_event_iterator {
@@ -55,6 +56,8 @@ private:
 	animation_event							m_value;
 	n_ary_tree_animation_node*				m_animation_node;
 	u32										m_state;
+
+	friend class n_ary_tree;
 }; // class n_ary_tree_event_iterator
 
 STATIC_SIZE_ASSERT(n_ary_tree_event_iterator, 0x3C);

@@ -56,15 +56,6 @@ private:
 	inline	void					assign					( n_ary_tree const& other );
 			void					destroy					( );
 
-
-	// Moved reference_counter to the beginning
-	// Split root into weight and time
-	// Added animation events
-	// Added animation objjects
-	// Removed m_significant_animations_count
-	// Removed m_transitions_count
-	// Added m_tree_actual_time_in_ms
-	// Added m_is_logging_enabled
 private:
 	/* 0x0000 */	n_ary_tree_intrusive_base_ptr		m_reference_counter;
 	/* 0x0004 */	n_ary_tree_animation_node*			m_weight_root;

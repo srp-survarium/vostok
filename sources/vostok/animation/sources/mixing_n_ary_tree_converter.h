@@ -49,7 +49,7 @@ private:
 		void	process_interpolators	( binary_tree_base_node* const interpolators_root, u32 const interpolators_count, vostok::mutable_buffer& buffer );
 		void	fix_weight_driving_animations_with_null_weights ( expression const& expression );
 
-private: // sushi@NOTE: Added m_animated_objects_count
+private:
 	/* 0x0000 */	binary_tree_base_node_ptr		m_root;
 	/* 0x0004 */	binary_tree_animation_node*		m_animations_root;
 	/* 0x0008 */	base_interpolator const**		m_binary_interpolators;
