@@ -32,7 +32,9 @@ enum sound_type
 {
 	point,
 	cone,
-	volumetric
+	volumetric,
+	hud,
+	sound_types_count
 };
 
 class sound_instance_proxy_internal : public sound_instance_proxy
