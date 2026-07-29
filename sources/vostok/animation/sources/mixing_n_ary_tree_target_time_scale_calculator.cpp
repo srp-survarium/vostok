@@ -28,7 +28,15 @@ using vostok::animation::mixing::n_ary_tree_multiplication_node;
 
 n_ary_tree_target_time_scale_calculator::n_ary_tree_target_time_scale_calculator( n_ary_tree_animation_node& node )
 {
-	(*node.operands( sizeof(n_ary_tree_animation_node) ))->accept	( *this );
+	if ( node.operands_count() ) {
+		n_ary_tree_base_node* const operand = *node.operands( sizeof(n_ary_tree_animation_node) );
+		if ( operand && operand->is_time_scale() ) {
+			operand->accept	( *this );
+			return;
+		}
+	}
+
+	m_result	= 1.f;
 }
 
 void n_ary_tree_target_time_scale_calculator::visit		( n_ary_tree_animation_node& node )
