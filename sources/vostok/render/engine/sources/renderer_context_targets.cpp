@@ -1,19 +1,8 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\renderer_context_targets.h"
+#include "renderer_context_targets.h"
 
 namespace vostok {
 namespace render {
-
-// STATE[STUB]
-void `dynamic initializer for 's_target_test''( )
-{
-	// FUNCTION BODY[0x7d65b0]
-	// ******
-}
 
 // STATE[STUB]
 pcstr rt_index_to_name( enum_render_target_index index )
@@ -250,7 +239,7 @@ pcstr rt_index_to_name( enum_render_target_index index )
 }
 
 // STATE[STUB]
-explicit renderer_context_targets::renderer_context_targets( math::uint2 size )
+renderer_context_targets::renderer_context_targets( math::uint2 size )
 {
 	// FUNCTION BODY[0x635890]: 3
 	// <0x6358a3>|0x013|+0x010:'111'
