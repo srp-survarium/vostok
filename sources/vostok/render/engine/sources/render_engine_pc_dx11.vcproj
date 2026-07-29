@@ -949,6 +949,26 @@
 			>
 		</File>
 		<File
+			RelativePath=".\material_effects_instance.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_surface.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_surface_instance.h"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_cook.cpp"
 			>
 		</File>

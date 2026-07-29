@@ -8,6 +8,7 @@ namespace render {
 
 class render_model_instance_impl : public resources::unmanaged_resource {
 public:
+	render_model_instance_impl( );
 	virtual ~render_model_instance_impl( ) { }
 };
 
