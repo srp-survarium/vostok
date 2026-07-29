@@ -21,11 +21,12 @@ sound_rms::sound_rms ( resources::managed_resource_ptr const& ogg_raw_file, floa
 	OggVorbis_File				ovf;
 
 	ov_callbacks ovc			= {ogg_utils::ov_read_func, ogg_utils::ov_seek_func, ogg_utils::ov_close_func, ogg_utils::ov_tell_func};
-	ov_open_callbacks			(&ogg, &ovf, NULL, 0, ovc);
+	s32 res						= ov_open_callbacks(&ogg, &ovf, NULL, 0, ovc);
+	R_ASSERT					( res == 0 );
 	
 	vorbis_info* ovi			= ov_info(&ovf, -1);
 	u32 samples_per_sec			= ovi->rate;
-	const u32	one_sec_samples	= samples_per_sec * 60;
+	const u32	one_sec_samples	= samples_per_sec;
 	m_length_in_msec			= (ov_pcm_total(&ovf, -1) * 1000) / samples_per_sec;
 
 	u64 samples_discr_in_pcm	= static_cast<u64>(ovi->rate * m_samples_discr);
@@ -67,11 +68,14 @@ sound_rms::sound_rms ( resources::managed_resource_ptr const& ogg_raw_file, floa
 		}else
 		{
 			// flush tail
-			rms						/= curr_samples_counter;
-			rms						= sqrt( rms );
-			m_data[rms_idx++]		= rms;
-			rms						= 0.0f;
-			curr_samples_counter	= 0;
+			if ( curr_samples_counter )
+			{
+				rms						/= curr_samples_counter;
+				rms						= sqrt( rms );
+				m_data[rms_idx++]		= rms;
+				rms						= 0.0f;
+				curr_samples_counter	= 0;
+			}
 			break;
 		}
 	}
