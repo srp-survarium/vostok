@@ -19,8 +19,6 @@
 
 namespace survarium {
 
-// the rich index shows dynamic initializers + atexit destructors for both
-// (survarium::`dynamic initializer for 'g_file_opener'' etc.)
 static vostok_file_opener		g_file_opener;
 static vostok_scaleform_log		g_vostok_logger;
 static void ( *g_log_output_ptr )( u8, pcstr );
@@ -128,10 +126,9 @@ flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr fi
 	g_file_opener.cached_file.raw_data		= NULL;
 	g_file_opener.cached_file.raw_data_size	= 0;
 
-	Scaleform::GFx::MovieDef*					movie_def		= movie->m_movie_def;
 	Scaleform::Render::ThreadCommandQueue*		render_queue	= m_render_thread_queue->impl;
-	Scaleform::GFx::MemoryParams					memory_params;
-	movie->m_movie	= movie_def->CreateInstance( memory_params, true, NULL, render_queue );
+	Scaleform::GFx::MovieDef*					movie_def		= movie->m_movie_def;
+	Scaleform::GFx::MemoryParams					memory_params; movie->m_movie	= movie_def->CreateInstance( memory_params, true, NULL, render_queue );
 	movie->m_movie->SetUserData( movie );
 	movie->m_movie->SetMouseCursorCount( 1 );
 	movie->m_movie->SetControllerCount( 1 );
