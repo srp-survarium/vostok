@@ -1,15 +1,16 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\scene_cook.h"
+#include "scene_cook.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- scene_cook::scene_cook( )
+scene_cook::scene_cook( ) :
+	resources::translate_query_cook(
+		resources::scene_class,
+		reuse_false,
+		use_current_thread_id
+	)
 {
 	// FUNCTION BODY[0x76af90]
 	// ******
@@ -84,53 +85,5 @@ void scene_cook::delete_resource( resources::resource_base* resource )
 	// <0x76b035>|0x045|+0x036:'70'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
-
 } // namespace render
 } // namespace vostok
