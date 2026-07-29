@@ -768,6 +768,10 @@
 	</References>
 	<Files>
 		<File
+			RelativePath="..\ambient_volume_properties.h"
+			>
+		</File>
+		<File
 			RelativePath="..\common_types.h"
 			>
 		</File>
