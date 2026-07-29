@@ -34,7 +34,7 @@ enum conversion_state
 	conversion_buffer_submited
 };
 
-class sound_voice : private boost::noncopyable
+class sound_voice : private noncopyable
 {
 public:
 									sound_voice				( s32 playing_offset_in_msec, // can be negative, playing a quiet
@@ -47,9 +47,6 @@ public:
 
 									~sound_voice			( );
 
-			
-//			void					tick					( u32 time_delta_msec );
-
 			void					play					( playback_mode mode = once );
 			void					stop					( );
 			
@@ -58,12 +55,22 @@ public:
 			void					set_output_matrix			( float const* level_matrix );
 			void					set_low_pass_filter_params	( float coeff );
 
-	inline	sound_instance_proxy_internal const& get_proxy	( ) const { return m_proxy; }
+	inline	sound_instance_proxy_internal& get_proxy		( ) { return m_proxy; }
+	inline	u8						get_channels_num		( ) const { return m_channels_num; }
 
 	inline	sound_spl_ptr const&	get_sound_spl			( ) const { return m_sound_spl; }
 
 			sound_scene const&		get_sound_scene			( ) const;
 			void					set_quality				( u32 quality );
+			void					set_path				( u32 first_portal_id, u32 second_portal_id );
+			void					get_path				( u32& first_portal_id, u32& second_portal_id ) const;
+			bool					is_same_voice			( u32 first_portal_id, u32 second_portal_id ) const;
+
+	inline	void					set_distance_to_listener( float distance ) { m_distance_to_listener = distance; }
+	inline	float					get_distance_to_listener( ) const { return m_distance_to_listener; }
+	inline	void					set_position			( float3 const& position ) { m_position = position; }
+	inline	float3 const&			get_position			( ) const { return m_position; }
+			IXAudio2SourceVoice*	get_xaudio_voice		( );
 // voice_callback_handler stuff
 // must be called from voice_bridge class only
 public:
@@ -91,6 +98,7 @@ public:
 	sound_voice*					m_next_for_delete;
 	sound_voice*					m_next_for_active;
 private:
+	float3							m_position;
 	sound_propagator_emitter const&	m_emitter;
 	sound_spl_ptr const&			m_sound_spl;
 	world_user&						m_world_user;
@@ -98,17 +106,16 @@ private:
 	sound_instance_proxy_internal&	m_proxy;
 	s32								m_playing_offset;
 	u32								m_stream_cursor_pcm;
-	u32								m_buffer_playing_offset;
 	threading::atomic32_type		m_buffers_queued;
 	u32								m_before_playing_quiet;
 	u32								m_after_playing_quiet;
 	u32								m_current_quality;
 	u32								m_target_quality;
-
-	u8								m_channels_num;
+	u32								m_first_portal_id;
+	u32								m_second_portal_id;
+	float							m_distance_to_listener;
 
 	sound_buffer*					m_conversion_buffer;
-	sound_buffer*					m_conversion_buffer_test;
 
 	bool							m_is_playing;
 	threading::atomic32_type		m_is_quality_changing_requested;
@@ -116,7 +123,7 @@ private:
 	bool							m_is_conversion_buffer_submited;
 	playback_mode					m_mode;
 
-	
+	u8								m_channels_num;
 
 	threading::atomic32_type		m_conv_state;
 	u32								m_dbg_id;
@@ -126,6 +133,8 @@ private:
 	encoded_sound_ptr				m_current_sound_quality;
 	encoded_sound_ptr				m_target_sound_quality;
 }; // class sound_voice
+
+STATIC_SIZE_ASSERT					( sound_voice, 0x88 );
 
 } // namespace sound
 } // namespace vostok

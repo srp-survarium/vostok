@@ -43,6 +43,7 @@ public:
 			void			set_output_voice				( IXAudio2SubmixVoice* output_voice  );
 			void			set_sample_rate					( u32 new_sample_rate );
 			void			set_frequency_ratio				( float ratio );
+	inline	IXAudio2SourceVoice*	get_xaudio_voice			( ) { return m_source_voice; }
 private:
 	struct creation_parametrs
 	{
