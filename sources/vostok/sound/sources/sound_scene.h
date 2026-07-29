@@ -234,6 +234,7 @@ public:
 				void			set_graph					( render::culling::portal_sector_structure_ptr& graph );
 				bool			graph_exist					( ) const;
 				float3			get_portal_center			( u32 portal_id ) const;
+				bool			is_segment_pass_portal		( u32 portal_id, float3 segment_start, float3 segment_end ) const;
 
 #ifndef MASTER_GOLD
 				void			update_stats				( sound_debug_stats& stats ) const;

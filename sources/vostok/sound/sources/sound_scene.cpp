@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "sound_scene.h"
 #include <vostok/collision/api.h>
+#include <vostok/collision/ray_collision_utils.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/sound/sound_propagator_emitter.h>
 #include <vostok/sound/sound_receiver.h>
@@ -1481,6 +1482,14 @@ bool sound_scene::graph_exist	( ) const
 float3 sound_scene::get_portal_center	( u32 portal_id ) const
 {
 	return								m_graph->get_portals( )[portal_id].get_points( )[0];
+}
+
+bool sound_scene::is_segment_pass_portal	( u32 portal_id, float3 segment_start, float3 segment_end ) const
+{
+	render::culling::portal const& portal	= m_graph->get_portals( )[portal_id];
+	float result_a, result_b				= 0.0f;
+
+	return collision::test_triangle( portal.get_points( )[0], portal.get_points( )[1], portal.get_points( )[2], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_a ) || collision::test_triangle( portal.get_points( )[0], portal.get_points( )[2], portal.get_points( )[3], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_b );
 }
 
 float3 closest_point_on_segment	(
