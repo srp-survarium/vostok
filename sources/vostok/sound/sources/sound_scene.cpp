@@ -253,6 +253,13 @@ sound_scene::sound_scene	(
 	}
 }
 
+void sound_scene::clear_resources	( )
+{
+	m_world.free_submix_voice		( m_fade_in_environment );
+	m_world.free_submix_voice		( m_fade_out_environment );
+	m_world.free_submix_voice		( m_submix_voice );
+}
+
 struct receiver_unconditional_erasing_predicate : private boost::noncopyable
 {
 	inline void operator()	( receiver_collision* receiver_container ) const
@@ -1459,6 +1466,21 @@ void fill_x3daudio_vector	( _D3DVECTOR& dest_vec, float3 const& vec )
 	dest_vec.x						= vec.x;
 	dest_vec.y						= vec.y;
 	dest_vec.z						= vec.z;
+}
+
+void sound_scene::set_graph	( render::culling::portal_sector_structure_ptr& graph )
+{
+	m_graph							= graph;
+}
+
+bool sound_scene::graph_exist	( ) const
+{
+	return								!!m_graph;
+}
+
+float3 sound_scene::get_portal_center	( u32 portal_id ) const
+{
+	return								m_graph->get_portals( )[portal_id].get_points( )[0];
 }
 
 float3 closest_point_on_segment	(
