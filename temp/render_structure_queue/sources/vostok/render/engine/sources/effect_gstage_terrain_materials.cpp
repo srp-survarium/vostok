@@ -1,0 +1,291 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\render\engine\sources\effect_gstage_terrain_materials.h"
+
+namespace vostok {
+namespace render {
+
+// STATE[STUB]
+void effect_gstage_terrain_materials::compile( effect_compiler& compiler, custom_config_value const& custom_config )
+{
+	// LOCALS
+	// float4 							tiles
+	// const bool 						use_height_map_2
+	// shader_configuration 			configuration
+	// const bool 						use_height_map_1
+	// const bool 						use_height_map_0
+	// shader_configuration 			local_configuration
+	// shader_configuration 			local_configuration
+	// shader_configuration 			local_configuration
+	// shader_configuration 			local_configuration
+	// float4 							solid_emission_color
+	// float 							multiplier
+	// float 							alpha_ref
+	// shader_configuration 			local_configuration
+	// float 							alpha_ref
+	// shader_configuration 			local_configuration
+	// shader_configuration 			local_configuration
+	// ******
+
+	// FUNCTION BODY[0x7b7e50]: 218
+	// <0x7b7e5a>|0x00a|+0x018:'20'
+	// <0>
+	// <0x7b7e72>|0x022|+0x004:'22'
+	// <0>
+	// <1>
+	// <0x7b7e76>|0x026|+0x044:'25'
+	// <0x7b7eba>|0x06a|+0x03c:'26'
+	// <0>
+	// <0x7b7ef6>|0x0a6|+0x038:'28'
+	// <0>
+	// <0x7b7f2e>|0x0de|+0x031:'30'
+	// <0>
+	// <0x7b7f5f>|0x10f|+0x02c:'32'
+	// <0x7b7f8b>|0x13b|+0x02c:'33'
+	// <0x7b7fb7>|0x167|+0x02c:'34'
+	// <0x7b7fe3>|0x193|+0x028:'35'
+	// <0>
+	// <0x7b800b>|0x1bb|+0x02d:'37'
+	// <0>
+	// <0x7b8038>|0x1e8|+0x010:'39'
+	// <0x7b8048>|0x1f8|+0x00c:'40'
+	// <0x7b8054>|0x204|+0x009:'41'
+	// <0x7b805d>|0x20d|+0x010:'42'
+	// <0x7b806d>|0x21d|+0x033:'43'
+	// <0>
+	// <0x7b80a0>|0x250|+0x01b:'45'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x7b80bb>|0x26b|+0x01f:'52'
+	// <0>
+	// <0x7b80da>|0x28a|+0x04c:'54'
+	// <0>
+	// <0x7b8126>|0x2d6|+0x020:'56'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x7b8146>|0x2f6|+0x05c:'63'
+	// <0>
+	// <0x7b81a2>|0x352|+0x023:'65'
+	// <0>
+	// <0x7b81c5>|0x375|+0x020:'67'
+	// <0x7b81e5>|0x395|+0x020:'68'
+	// <0x7b8205>|0x3b5|+0x020:'69'
+	// <0x7b8225>|0x3d5|+0x020:'70'
+	// <0x7b8245>|0x3f5|+0x032:'71'
+	// <0>
+	// <1>
+	// <0x7b8277>|0x427|+0x020:'74'
+	// <0>
+	// <1>
+	// <0x7b8297>|0x447|+0x00b:'77'
+	// <0>
+	// <0x7b82a2>|0x452|+0x020:'79'
+	// <0x7b82c2>|0x472|+0x020:'80'
+	// <0x7b82e2>|0x492|+0x020:'81'
+	// <0x7b8302>|0x4b2|+0x020:'82'
+	// <0x7b8322>|0x4d2|+0x033:'83'
+	// <0>
+	// <1>
+	// <0x7b8355>|0x505|+0x020:'86'
+	// <0x7b8375>|0x525|+0x020:'87'
+	// <0x7b8395>|0x545|+0x020:'88'
+	// <0x7b83b5>|0x565|+0x020:'89'
+	// <0>
+	// <0x7b83d5>|0x585|+0x033:'91'
+	// <0>
+	// <0x7b8408>|0x5b8|+0x015:'93'
+	// <0x7b841d>|0x5cd|+0x015:'94'
+	// <0>
+	// <0x7b8432>|0x5e2|+0x00b:'96'
+	// <0>
+	// <0x7b843d>|0x5ed|+0x020:'98'
+	// <0x7b845d>|0x60d|+0x020:'99'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <0x7b847d>|0x62d|+0x078:'109'
+	// <0>
+	// <0x7b84f5>|0x6a5|+0x019:'111'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7b850e>|0x6be|+0x02f:'117'
+	// <0x7b853d>|0x6ed|+0x00b:'118'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x7b8548>|0x6f8|+0x004:'123'
+	// <0x7b854c>|0x6fc|+0x042:'124'
+	// <0>
+	// <0x7b858e>|0x73e|+0x018:'126'
+	// <0>
+	// <0x7b85a6>|0x756|+0x04a:'128'
+	// <0x7b85f0>|0x7a0|+0x016:'129'
+	// <0>
+	// <0x7b8606>|0x7b6|+0x007:'131'
+	// <0x7b860d>|0x7bd|+0x025:'132'
+	// <0>
+	// <0x7b8632>|0x7e2|+0x051:'134'
+	// <0>
+	// <0x7b8683>|0x833|+0x00b:'136'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7b868e>|0x83e|+0x02d:'142'
+	// <0x7b86bb>|0x86b|+0x035:'143'
+	// <0x7b86f0>|0x8a0|+0x005:'144'
+	// <0x7b86f5>|0x8a5|+0x01f:'145'
+	// <0x7b8714>|0x8c4|+0x050:'146'
+	// <0x7b8764>|0x914|+0x00b:'147'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7b876f>|0x91f|+0x02d:'153'
+	// <0x7b879c>|0x94c|+0x04d:'154'
+	// <0x7b87e9>|0x999|+0x019:'155'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7b8802>|0x9b2|+0x013:'159'
+	// <0>
+	// <0x7b8815>|0x9c5|+0x017:'161'
+	// <0x7b882c>|0x9dc|+0x017:'162'
+	// <0x7b8843>|0x9f3|+0x018:'163'
+	// <0x7b885b>|0xa0b|+0x04e:'164'
+	// <0>
+	// <1>
+	// <0x7b88a9>|0xa59|+0x056:'167'
+	// <0>
+	// <0x7b88ff>|0xaaf|+0x007:'169'
+	// <0>
+	// <0x7b8906>|0xab6|+0x023:'171'
+	// <0>
+	// <1>
+	// <0x7b8929>|0xad9|+0x00e:'174'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7b8937>|0xae7|+0x006:'180'
+	// <0>
+	// <0x7b893d>|0xaed|+0x03c:'182'
+	// <0x7b8979>|0xb29|+0x02b:'183'
+	// <0>
+	// <0x7b89a4>|0xb54|+0x021:'185'
+	// <0x7b89c5>|0xb75|+0x04d:'186'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7b8a12>|0xbc2|+0x015:'190'
+	// <0x7b8a27>|0xbd7|+0x01f:'191'
+	// <0>
+	// <0x7b8a46>|0xbf6|+0x017:'193'
+	// <0x7b8a5d>|0xc0d|+0x017:'194'
+	// <0>
+	// <0x7b8a74>|0xc24|+0x033:'196'
+	// <0>
+	// <0x7b8aa7>|0xc57|+0x04b:'198'
+	// <0x7b8af2>|0xca2|+0x00b:'199'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x7b8afd>|0xcad|+0x004:'205'
+	// <0>
+	// <0x7b8b01>|0xcb1|+0x03c:'207'
+	// <0x7b8b3d>|0xced|+0x02b:'208'
+	// <0>
+	// <0x7b8b68>|0xd18|+0x021:'210'
+	// <0x7b8b89>|0xd39|+0x04d:'211'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7b8bd6>|0xd86|+0x015:'215'
+	// <0x7b8beb>|0xd9b|+0x01f:'216'
+	// <0>
+	// <0x7b8c0a>|0xdba|+0x017:'218'
+	// <0x7b8c21>|0xdd1|+0x01a:'219'
+	// <0>
+	// <0x7b8c3b>|0xdeb|+0x033:'221'
+	// <0>
+	// <0x7b8c6e>|0xe1e|+0x015:'223'
+	// <0x7b8c83>|0xe33|+0x015:'224'
+	// <0>
+	// <0x7b8c98>|0xe48|+0x046:'226'
+	// <0x7b8cde>|0xe8e|+0x00b:'227'
+	// <0>
+	// <1>
+	// <2>
+	// <0x7b8ce9>|0xe99|+0x002:'231'
+	// <0>
+	// <0x7b8ceb>|0xe9b|+0x02d:'233'
+	// <0x7b8d18>|0xec8|+0x04a:'234'
+	// <0x7b8d62>|0xf12|+0x058:'235'
+	// <0x7b8dba>|0xf6a|+0x00b:'236'
+	// <0>
+	// ******
+}
+
+	// TYPEDEFS
+	// typedef
+	// 	vostok::render::data_indexer*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::effect_compiler::shader_cache_info*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_pass_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_shader_technique_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_binding*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_buffer_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::texture_named_instance*
+	// 	iterator_type;
+
+	// ******
+
+} // namespace render
+} // namespace vostok

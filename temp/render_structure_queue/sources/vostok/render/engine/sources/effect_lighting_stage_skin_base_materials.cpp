@@ -1,0 +1,265 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\render\engine\sources\effect_lighting_stage_skin_base_materials.h"
+
+namespace vostok {
+namespace render {
+
+// STATE[STUB]
+void effect_lighting_stage_skin_base_materials::compile( effect_compiler& compiler, custom_config_value const& custom_config )
+{
+	// LOCALS
+	// shader_configuration 			configuration
+	// float 							specular_power
+	// shader_configuration 			configuration
+	// float4 							solid_color_specular
+	// float 							solid_transparency
+	// shader_configuration 			configuration
+	// float4 							scattering_component_blurring_weights_and_color_multiplier
+	// shader_configuration 			configuration
+	// float4 							solid_color_specular
+	// ******
+
+	// FUNCTION BODY[0x5eca00]: 199
+	// <0>
+	// <1>
+	// <0x5eca0a>|0x00a|+0x037:'21'
+	// <0x5eca41>|0x041|+0x014:'22'
+	// <0x5eca55>|0x055|+0x00b:'23'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5eca60>|0x060|+0x012:'27'
+	// <0>
+	// <0x5eca72>|0x072|+0x01a:'29'
+	// <0x5eca8c>|0x08c|+0x023:'30'
+	// <0x5ecaaf>|0x0af|+0x033:'31'
+	// <0>
+	// <0x5ecae2>|0x0e2|+0x033:'33'
+	// <0x5ecb15>|0x115|+0x031:'34'
+	// <0x5ecb46>|0x146|+0x027:'35'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5ecb6d>|0x16d|+0x00d:'40'
+	// <0x5ecb7a>|0x17a|+0x007:'41'
+	// <0>
+	// <0x5ecb81>|0x181|+0x018:'43'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ecb99>|0x199|+0x04c:'47'
+	// <0x5ecbe5>|0x1e5|+0x00a:'48'
+	// <0x5ecbef>|0x1ef|+0x00a:'49'
+	// <0x5ecbf9>|0x1f9|+0x015:'50'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <0x5ecc0e>|0x20e|+0x007:'72'
+	// <0x5ecc15>|0x215|+0x020:'73'
+	// <0>
+	// <1>
+	// <0x5ecc35>|0x235|+0x017:'76'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5ecc4c>|0x24c|+0x01c:'81'
+	// <0x5ecc68>|0x268|+0x020:'82'
+	// <0>
+	// <0x5ecc88>|0x288|+0x007:'84'
+	// <0x5ecc8f>|0x28f|+0x020:'85'
+	// <0>
+	// <0x5eccaf>|0x2af|+0x028:'87'
+	// <0x5eccd7>|0x2d7|+0x096:'88'
+	// <0>
+	// <1>
+	// <0x5ecd6d>|0x36d|+0x033:'91'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <0x5ecda0>|0x3a0|+0x013:'98'
+	// <0x5ecdb3>|0x3b3|+0x022:'99'
+	// <0x5ecdd5>|0x3d5|+0x002:'100'
+	// <0>
+	// <0x5ecdd7>|0x3d7|+0x00e:'102'
+	// <0x5ecde5>|0x3e5|+0x017:'103'
+	// <0>
+	// <0x5ecdfc>|0x3fc|+0x033:'105'
+	// <0>
+	// <1>
+	// <0x5ece2f>|0x42f|+0x041:'108'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x5ece70>|0x470|+0x00b:'113'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ece7b>|0x47b|+0x006:'117'
+	// <0x5ece81>|0x481|+0x040:'118'
+	// <0>
+	// <0x5ecec1>|0x4c1|+0x005:'120'
+	// <0x5ecec6>|0x4c6|+0x016:'121'
+	// <0x5ecedc>|0x4dc|+0x04a:'122'
+	// <0x5ecf26>|0x526|+0x00a:'123'
+	// <0x5ecf30>|0x530|+0x00a:'124'
+	// <0x5ecf3a>|0x53a|+0x015:'125'
+	// <0x5ecf4f>|0x54f|+0x015:'126'
+	// <0x5ecf64>|0x564|+0x015:'127'
+	// <0x5ecf79>|0x579|+0x015:'128'
+	// <0>
+	// <0x5ecf8e>|0x58e|+0x032:'130'
+	// <0>
+	// <0x5ecfc0>|0x5c0|+0x016:'132'
+	// <0x5ecfd6>|0x5d6|+0x03b:'133'
+	// <0>
+	// <0x5ed011>|0x611|+0x019:'135'
+	// <0>
+	// <0x5ed02a>|0x62a|+0x022:'137'
+	// <0x5ed04c>|0x64c|+0x017:'138'
+	// <0>
+	// <0x5ed063>|0x663|+0x017:'140'
+	// <0x5ed07a>|0x67a|+0x020:'141'
+	// <0>
+	// <0x5ed09a>|0x69a|+0x033:'143'
+	// <0>
+	// <0x5ed0cd>|0x6cd|+0x006:'145'
+	// <0x5ed0d3>|0x6d3|+0x005:'146'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ed0d8>|0x6d8|+0x006:'150'
+	// <0x5ed0de>|0x6de|+0x03a:'151'
+	// <0x5ed118>|0x718|+0x037:'152'
+	// <0x5ed14f>|0x74f|+0x033:'153'
+	// <0>
+	// <1>
+	// <0x5ed182>|0x782|+0x033:'156'
+	// <0x5ed1b5>|0x7b5|+0x035:'157'
+	// <0x5ed1ea>|0x7ea|+0x034:'158'
+	// <0x5ed21e>|0x81e|+0x030:'159'
+	// <0>
+	// <0x5ed24e>|0x84e|+0x01c:'161'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x5ed26a>|0x86a|+0x04d:'167'
+	// <0x5ed2b7>|0x8b7|+0x015:'168'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ed2cc>|0x8cc|+0x007:'172'
+	// <0x5ed2d3>|0x8d3|+0x020:'173'
+	// <0>
+	// <0x5ed2f3>|0x8f3|+0x017:'175'
+	// <0>
+	// <0x5ed30a>|0x90a|+0x013:'177'
+	// <0x5ed31d>|0x91d|+0x020:'178'
+	// <0>
+	// <0x5ed33d>|0x93d|+0x017:'180'
+	// <0x5ed354>|0x954|+0x020:'181'
+	// <0>
+	// <0x5ed374>|0x974|+0x017:'183'
+	// <0x5ed38b>|0x98b|+0x020:'184'
+	// <0>
+	// <0x5ed3ab>|0x9ab|+0x017:'186'
+	// <0x5ed3c2>|0x9c2|+0x020:'187'
+	// <0>
+	// <0x5ed3e2>|0x9e2|+0x017:'189'
+	// <0x5ed3f9>|0x9f9|+0x020:'190'
+	// <0>
+	// <0x5ed419>|0xa19|+0x007:'192'
+	// <0x5ed420>|0xa20|+0x020:'193'
+	// <0>
+	// <0x5ed440>|0xa40|+0x028:'195'
+	// <0x5ed468>|0xa68|+0x097:'196'
+	// <0>
+	// <0x5ed4ff>|0xaff|+0x020:'198'
+	// <0x5ed51f>|0xb1f|+0x04a:'199'
+	// <0>
+	// <0x5ed569>|0xb69|+0x020:'201'
+	// <0x5ed589>|0xb89|+0x04c:'202'
+	// <0>
+	// <1>
+	// <2>
+	// <0x5ed5d5>|0xbd5|+0x035:'206'
+	// <0>
+	// <0x5ed60a>|0xc0a|+0x015:'208'
+	// <0x5ed61f>|0xc1f|+0x015:'209'
+	// <0x5ed634>|0xc34|+0x015:'210'
+	// <0x5ed649>|0xc49|+0x015:'211'
+	// <0x5ed65e>|0xc5e|+0x015:'212'
+	// <0x5ed673>|0xc73|+0x015:'213'
+	// <0>
+	// <0x5ed688>|0xc88|+0x00b:'215'
+	// <0>
+	// <1>
+	// ******
+}
+
+	// TYPEDEFS
+	// typedef
+	// 	vostok::render::data_indexer*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::effect_compiler::shader_cache_info*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_pass_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_shader_technique_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_binding*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_buffer_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::texture_named_instance*
+	// 	iterator_type;
+
+	// ******
+
+} // namespace render
+} // namespace vostok

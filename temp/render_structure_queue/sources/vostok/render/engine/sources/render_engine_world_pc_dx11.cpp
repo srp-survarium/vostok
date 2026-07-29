@@ -1,0 +1,2358 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created 	: 29.07.2026
+////////////////////////////////////////////////////////////////////////////
+
+#include "pch.h"
+#include "vostok\render\engine\sources\render_engine_world_pc_dx11.h"
+
+namespace vostok {
+namespace render {
+
+// STATE[STUB]
+void `dynamic initializer for 's_no_level''( )
+{
+	// FUNCTION BODY[0x7d59e0]
+	// ******
+}
+
+// STATE[STUB]
+ renderer_cook::renderer_cook( )
+{
+	// FUNCTION BODY[0x60650]
+	// ******
+}
+
+// STATE[STUB]
+mutable_buffer renderer_cook::allocate_resource(
+	resources::query_result_for_cook&		in_query,
+	const_buffer							raw_file_data,
+	bool									file_exist
+)
+{
+	// FUNCTION BODY[0x606c0]: 4
+	// <0>
+	// <1>
+	// <0x606c7>|0x007|+0x021:'108'
+	// <0x606e8>|0x028|+0x002:'109'
+	// ******
+}
+
+// STATE[STUB]
+void renderer_cook::deallocate_resource( void* buffer )
+{
+	// FUNCTION BODY[0x60700]: 1
+	// <0x60700>|0x000|+0x01c:'113'
+	// ******
+}
+
+// STATE[STUB]
+void renderer_cook::create_resource(
+	resources::query_result_for_cook&		in_out_query,
+	const_buffer							raw_file_data,
+	mutable_buffer							in_out_unmanaged_resource_buffer
+)
+{
+	// LOCALS
+	// engine::world* 					engine_world
+	// ******
+
+	// FUNCTION BODY[0x60720]: 10
+	// <0>
+	// <1>
+	// <2>
+	// <0x60723>|0x003|+0x01c:'123'
+	// <0x6073f>|0x01f|+0x00b:'124'
+	// <0>
+	// <0x6074a>|0x02a|+0x01b:'126'
+	// <0>
+	// <0x60765>|0x045|+0x020:'128'
+	// <0x60785>|0x065|+0x00b:'129'
+	// ******
+}
+
+// STATE[STUB]
+void* renderer_cook::renderer_resource::`scalar deleting destructor'( u32 arg_0 )
+{
+	return NULL;
+
+	// FUNCTION BODY[0x607c0]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void register_cooks( )
+{
+	// STATICS
+	// static skeleton_combined_model_instance_cook skeleton_combined_model_instance_cooker = <0x4c279e8>;
+	// static static_model_instance_cook static_model_instance_cooker = <0x4c27a88>;
+	// static tracer_model_instance_cook tracer_model_instance_cooker = <0x4c27a48>;
+	// static skeleton_combined_render_model_instance_cook skeleton_combined_render_model_instance_cooker = <0x4c27a08>;
+	// static render_model_cook 		skeleton_mesh_instance_cooker = <0x4c27bf0>;
+	// static render_model_cook 		render_model_class_cooker = <0x4c27bd0>;
+	// static skeleton_combined_model_cook skeleton_combined_model_cooker = <0x4c27a28>;
+	// static material_effects_instance_cook material_effects_instance_cooker = <0x4c27988>;
+	// static user_mesh_cook 			user_mesh_cooker = <0x4c27b08>;
+	// static culling::portal_sector_structure_cook s_portal_system_cook = <0x4c278e8>;
+	// static material_cook 			material_cook = <0x4c279a8>;
+	// static scene_cook 				scene_cook = <0x4c27968>;
+	// static scene_view_cook 			scene_view_cook = <0x4c27948>;
+	// static render_output_window_cook render_output_window_cook = <0x4c27928>;
+	// static grass_cook 				grass_cooker = <0x4c279c8>;
+	// static animated_model_instance_cook animated_model_cook = <0x4c27908>;
+	// static grass_render_model_cook 	grass_render_model_class_cooker = <0x4c27aa8>;
+	// static renderer_cook 			renderer_cooker = <0x4c27b28>;
+	// static skeleton_render_model_instance_cook skeleton_render_model_instance_cooker = <0x4c27ac8>;
+	// static static_render_model_instance_cook static_render_model_instance_cooker = <0x4c27ae8>;
+	// static skeleton_model_instance_cook skeleton_model_instance_cooker = <0x4c27a68>;
+	// ******
+
+	// FUNCTION BODY[0x6546c0]: 61
+	// <0x6546c0>|0x000|+0x025:'146'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x6546e5>|0x025|+0x025:'157'
+	// <0>
+	// <0x65470a>|0x04a|+0x025:'159'
+	// <0x65472f>|0x06f|+0x025:'160'
+	// <0x654754>|0x094|+0x025:'161'
+	// <0x654779>|0x0b9|+0x030:'162'
+	// <0x6547a9>|0x0e9|+0x02f:'163'
+	// <0x6547d8>|0x118|+0x039:'164'
+	// <0x654811>|0x151|+0x026:'165'
+	// <0x654837>|0x177|+0x025:'166'
+	// <0>
+	// <0x65485c>|0x19c|+0x025:'168'
+	// <0x654881>|0x1c1|+0x025:'169'
+	// <0x6548a6>|0x1e6|+0x025:'170'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x6548cb>|0x20b|+0x025:'182'
+	// <0>
+	// <0x6548f0>|0x230|+0x025:'184'
+	// <0x654915>|0x255|+0x00a:'185'
+	// <0>
+	// <0x65491f>|0x25f|+0x025:'187'
+	// <0x654944>|0x284|+0x00a:'188'
+	// <0>
+	// <0x65494e>|0x28e|+0x005:'190'
+	// <0>
+	// <0x654953>|0x293|+0x005:'192'
+	// <0>
+	// <0x654958>|0x298|+0x025:'194'
+	// <0x65497d>|0x2bd|+0x00a:'195'
+	// <0>
+	// <0x654987>|0x2c7|+0x025:'197'
+	// <0x6549ac>|0x2ec|+0x00a:'198'
+	// <0>
+	// <0x6549b6>|0x2f6|+0x025:'200'
+	// <0x6549db>|0x31b|+0x00a:'201'
+	// <0>
+	// <0x6549e5>|0x325|+0x025:'203'
+	// <0x654a0a>|0x34a|+0x00a:'204'
+	// <0>
+	// <0x654a14>|0x354|+0x025:'206'
+	// ******
+}
+
+// STATE[STUB]
+void unregister_cooks( )
+{
+	// FUNCTION BODY[0x654eb0]: 2
+	// <0x654eb1>|0x001|+0x005:'212'
+	// <0x654eb6>|0x006|+0x006:'213'
+	// ******
+}
+
+// STATE[STUB]
+void initialize_options( )
+{
+	// FUNCTION BODY[0x654090]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+ singletons_on_initialize::singletons_on_initialize( )
+{
+	// FUNCTION BODY[0x608c0]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_options''( )
+{
+	// FUNCTION BODY[0x7d5a00]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_singletons_on_preinitialize''( )
+{
+	// FUNCTION BODY[0x7d5a10]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_singletons_on_initialize''( )
+{
+	// FUNCTION BODY[0x7d5a20]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 's_system_renderer''( )
+{
+	// FUNCTION BODY[0x7d5a30]
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic initializer for 'g_quad_ib''( )
+{
+	// FUNCTION BODY[0x7d5a40]
+	// ******
+}
+
+// STATE[STUB]
+HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
+{
+	// LOCALS
+	// IDxDiagProvider* 				dxdiag_provider
+	// bool 							does_dx_version_obtained
+	// bool 							should_cleanup_COM
+	// bool 							does_minor_version_obtained
+	// _DXDIAG_INIT_PARAMS 				dxDiagInitParam
+	// IDxDiagContainer* 				pDxDiagRoot
+	// IDxDiagContainer* 				pDxDiagSystemInfo
+	// tagVARIANT 						var
+	// ******
+
+	// CALL SITE INFO
+	// <0x653efe> -> HRESULT < unknown >( void* )
+	// <0x653f25> -> HRESULT < unknown >( _GUID const&, IUnknown*, unsigned long, _GUID const&, void** )
+	// <0x653f6a> -> HRESULT < unknown >( _DXDIAG_INIT_PARAMS* )
+	// <0x653f8b> -> HRESULT < unknown >( IDxDiagContainer** )
+	// <0x653fa9> -> HRESULT < unknown >( wchar_t const*, IDxDiagContainer** )
+	// <0x653fb8> -> void < unknown >( tagVARIANT* )
+	// <0x653fd2> -> HRESULT < unknown >( wchar_t const*, tagVARIANT* )
+	// <0x653ff7> -> HRESULT < unknown >( tagVARIANT* )
+	// <0x65400d> -> HRESULT < unknown >( wchar_t const*, tagVARIANT* )
+	// <0x65402f> -> HRESULT < unknown >( tagVARIANT* )
+	// <0x65404b> -> unsigned long < unknown >()
+	// <0x654057> -> unsigned long < unknown >()
+	// <0x654063> -> unsigned long < unknown >()
+	// <0x65406c> -> void < unknown >()
+	// ******
+
+	// FUNCTION BODY[0x653ef0]: 86
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x653ef5>|0x005|+0x00f:'273'
+	// <0x653f04>|0x014|+0x002:'274'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x653f06>|0x016|+0x025:'283'
+	// <0x653f2b>|0x03b|+0x008:'284'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x653f33>|0x043|+0x039:'295'
+	// <0x653f6c>|0x07c|+0x008:'296'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x653f74>|0x084|+0x019:'302'
+	// <0x653f8d>|0x09d|+0x008:'303'
+	// <0>
+	// <1>
+	// <0x653f95>|0x0a5|+0x016:'306'
+	// <0x653fab>|0x0bb|+0x008:'307'
+	// <0>
+	// <1>
+	// <0x653fb3>|0x0c3|+0x00b:'310'
+	// <0>
+	// <1>
+	// <0x653fbe>|0x0ce|+0x016:'313'
+	// <0x653fd4>|0x0e4|+0x00c:'314'
+	// <0>
+	// <0x653fe0>|0x0f0|+0x00a:'316'
+	// <0x653fea>|0x0fa|+0x002:'317'
+	// <0>
+	// <0x653fec>|0x0fc|+0x00d:'319'
+	// <0>
+	// <1>
+	// <0x653ff9>|0x109|+0x016:'322'
+	// <0x65400f>|0x11f|+0x00c:'323'
+	// <0>
+	// <0x65401b>|0x12b|+0x00a:'325'
+	// <0x654025>|0x135|+0x005:'326'
+	// <0>
+	// <0x65402a>|0x13a|+0x007:'328'
+	// <0>
+	// <1>
+	// <0x654031>|0x141|+0x00b:'331'
+	// <0x65403c>|0x14c|+0x005:'332'
+	// <0>
+	// <0x654041>|0x151|+0x00c:'334'
+	// <0>
+	// <1>
+	// <0x65404d>|0x15d|+0x00c:'337'
+	// <0>
+	// <1>
+	// <2>
+	// <0x654059>|0x169|+0x00c:'341'
+	// <0>
+	// <1>
+	// <0x654065>|0x175|+0x007:'344'
+	// <0x65406c>|0x17c|+0x006:'345'
+	// <0>
+	// <0x654072>|0x182|+0x006:'347'
+	// <0>
+	// <1>
+	// <2>
+	// ******
+}
+
+// STATE[STUB]
+bool does_os_support_dx11( )
+{
+	// LOCALS
+	// _OSVERSIONINFOEXA 				OsVersionInfo
+	// unsigned long 					major_version
+	// unsigned long 					minor_version
+	// ******
+
+	// CALL SITE INFO
+	// <0x6542f7> -> int < unknown >( _OSVERSIONINFOA* )
+	// ******
+
+	return false;
+
+	// FUNCTION BODY[0x6542d0]: 30
+	// <0>
+	// <1>
+	// <0x6542d6>|0x006|+0x014:'358'
+	// <0>
+	// <1>
+	// <0x6542ea>|0x01a|+0x015:'361'
+	// <0x6542ff>|0x02f|+0x002:'362'
+	// <0>
+	// <0x654301>|0x031|+0x007:'364'
+	// <0x654308>|0x038|+0x002:'365'
+	// <0>
+	// <0x65430a>|0x03a|+0x002:'367'
+	// <0>
+	// <0x65430c>|0x03c|+0x005:'369'
+	// <0x654311>|0x041|+0x002:'370'
+	// <0>
+	// <0x654313>|0x043|+0x00b:'372'
+	// <0>
+	// <1>
+	// <2>
+	// <0x65431e>|0x04e|+0x016:'376'
+	// <0>
+	// <0x654334>|0x064|+0x007:'378'
+	// <0x65433b>|0x06b|+0x009:'379'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x654344>|0x074|-0x007:'385'
+	// <0x65433d>|0x06d|+0x009:'386'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::apply_render_options_changes( )
+{
+	// FUNCTION BODY[0x656e10]: 7
+	// <0>
+	// <1>
+	// <0x656e10>|0x000|+0x007:'392'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
+}
+
+// STATE[STUB]
+void on_material_loaded( resources::queries_result& data, long volatile* waiting_for )
+{
+	// STATICS
+	// static u32 						num_materials_processed = <0x4c26484>;
+	// ******
+
+	// FUNCTION BODY[0x654ce0]: 101
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <25>
+	// <26>
+	// <27>
+	// <28>
+	// <29>
+	// <30>
+	// <31>
+	// <32>
+	// <33>
+	// <34>
+	// <35>
+	// <36>
+	// <37>
+	// <38>
+	// <39>
+	// <40>
+	// <41>
+	// <42>
+	// <43>
+	// <44>
+	// <45>
+	// <46>
+	// <47>
+	// <48>
+	// <49>
+	// <50>
+	// <51>
+	// <52>
+	// <53>
+	// <54>
+	// <55>
+	// <56>
+	// <57>
+	// <58>
+	// <59>
+	// <60>
+	// <61>
+	// <62>
+	// <63>
+	// <64>
+	// <65>
+	// <66>
+	// <67>
+	// <68>
+	// <69>
+	// <70>
+	// <71>
+	// <72>
+	// <73>
+	// <74>
+	// <75>
+	// <76>
+	// <77>
+	// <78>
+	// <79>
+	// <80>
+	// <81>
+	// <82>
+	// <83>
+	// <84>
+	// <85>
+	// <86>
+	// <87>
+	// <88>
+	// <89>
+	// <90>
+	// <91>
+	// <0x654ce9>|0x009|+0x01f:'497'
+	// <0x654d08>|0x028|+0x0c0:'498'
+	// <0>
+	// <0x654dc8>|0x0e8|+0x00c:'500'
+	// <0>
+	// <0x654dd4>|0x0f4|+0x0c2:'502'
+	// <0>
+	// <0x654e96>|0x1b6|+0x007:'504'
+	// <0x654e9d>|0x1bd|+0x004:'505'
+	// ******
+}
+
+// STATE[STUB]
+void on_fs_iterator_materials_ready_children(
+	vector< fs_new::virtual_path_string >&	out_material_names,
+	pcstr						materials_path,
+	vfs::vfs_iterator const&	fs_it
+)
+{
+	// LOCALS
+	// vfs::vfs_iterator 				it
+	// fs_new::virtual_path_string 		request_path
+	// fs_new::virtual_path_string 		new_materials_path
+	// ******
+
+	// FUNCTION BODY[0x654ef0]: 77
+	// <0x654ef0>|0x000|+0x018:'510'
+	// <0>
+	// <0x654f08>|0x018|+0x019:'512'
+	// <0>
+	// <0x654f21>|0x031|+0x009:'514'
+	// <0>
+	// <0x654f2a>|0x03a|+0x00f:'516'
+	// <0>
+	// <1>
+	// <0x654f39>|0x049|+0x049:'519'
+	// <0x654f82>|0x092|+0x023:'520'
+	// <0x654fa5>|0x0b5|+0x004:'521'
+	// <0x654fa9>|0x0b9|+0x005:'522'
+	// <0>
+	// <0x654fae>|0x0be|+0x012:'524'
+	// <0>
+	// <0x654fc0>|0x0d0|+0x005:'526'
+	// <0x654fc5>|0x0d5|+0x005:'527'
+	// <0>
+	// <1>
+	// <2>
+	// <0x654fca>|0x0da|+0x040:'531'
+	// <0>
+	// <0x65500a>|0x11a|+0x00a:'533'
+	// <0x655014>|0x124|+0x013:'534'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <25>
+	// <26>
+	// <27>
+	// <28>
+	// <29>
+	// <30>
+	// <31>
+	// <32>
+	// <33>
+	// <34>
+	// <35>
+	// <36>
+	// <37>
+	// <38>
+	// <39>
+	// <40>
+	// <41>
+	// <42>
+	// <43>
+	// <44>
+	// <45>
+	// <46>
+	// <47>
+	// <48>
+	// <0x655027>|0x137|+0x026:'584'
+	// <0x65504d>|0x15d|+0x019:'585'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void query_materials_and_wait( vector< fs_new::virtual_path_string > const& in_material_names )
+{
+	// LOCALS
+	// const u32 						num_resuests
+	// variant< 32 >** 					user_data_variants_ptrs
+	// volatile long 					waiting_for
+	// variant< 32 >* 					user_data_variants
+	// resources::request* 				requests
+	// fs_new::virtual_path_string const* name_it
+	// u32 								vi_type
+	// ******
+
+	// FUNCTION BODY[0x655d50]: 46
+	// <0x655d59>|0x009|+0x002:'591'
+	// <0x655d5b>|0x00b|+0x003:'592'
+	// <0>
+	// <0x655d5e>|0x00e|+0x012:'594'
+	// <0>
+	// <0x655d70>|0x020|+0x02b:'596'
+	// <0x655d9b>|0x04b|+0x018:'597'
+	// <0x655db3>|0x063|+0x017:'598'
+	// <0>
+	// <1>
+	// <0x655dca>|0x07a|+0x102:'601'
+	// <0x655ecc>|0x17c|-0x0ec:'601'
+	// <0>
+	// <0x655de0>|0x090|+0x024:'603'
+	// <0>
+	// <1>
+	// <0x655e04>|0x0b4|+0x011:'606'
+	// <0>
+	// <0x655e15>|0x0c5|+0x013:'608'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x655e28>|0x0d8|+0x06f:'614'
+	// <0x655e97>|0x147|+0x039:'615'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x655ed0>|0x180|+0x092:'626'
+	// <0>
+	// <0x655f62>|0x212|+0x01e:'628'
+	// <0x655f80>|0x230|+0x01a:'629'
+	// <0x655f9a>|0x24a|+0x014:'630'
+	// <0>
+	// <0x655fae>|0x25e|+0x027:'632'
+	// <0>
+	// <0x655fd5>|0x285|+0x078:'634'
+	// <0x65604d>|0x2fd|+0x05e:'635'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void on_fs_iterator_materials_ready(
+	pcstr								materials_path,
+	vfs::vfs_locked_iterator const&		fs_it,
+	long volatile*						waiting_for
+)
+{
+	// LOCALS
+	// fs_new::virtual_path_string const* name_end
+	// vfs::vfs_iterator 				end
+	// vector< fs_new::virtual_path_string > query_names
+	// vector< fs_new::virtual_path_string > out_material_names
+	// vfs::vfs_iterator 				it
+	// fs_new::virtual_path_string 		new_materials_path
+	// fs_new::virtual_path_string 		name
+	// ******
+
+	// FUNCTION BODY[0x6560c0]: 93
+	// <0x6560cf>|0x00f|+0x019:'641'
+	// <0x6560e8>|0x028|+0x008:'642'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x6560f0>|0x030|+0x018:'647'
+	// <0x656108>|0x048|+0x00c:'648'
+	// <0>
+	// <0x656114>|0x054|+0x0d8:'650'
+	// <0x6561ec>|0x12c|-0x0bc:'650'
+	// <0>
+	// <0x656130>|0x070|+0x009:'652'
+	// <0>
+	// <0x656139>|0x079|+0x00f:'654'
+	// <0>
+	// <1>
+	// <0x656148>|0x088|+0x049:'657'
+	// <0x656191>|0x0d1|+0x01f:'658'
+	// <0>
+	// <0x6561b0>|0x0f0|+0x002:'660'
+	// <0>
+	// <0x6561b2>|0x0f2|+0x03c:'662'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x6561ee>|0x12e|+0x008:'667'
+	// <0>
+	// <1>
+	// <0x6561f6>|0x136|+0x012:'670'
+	// <0x656208>|0x148|+0x0e4:'671'
+	// <0x6562ec>|0x22c|-0x0dc:'671'
+	// <0>
+	// <0x656210>|0x150|+0x047:'673'
+	// <0x656257>|0x197|+0x032:'674'
+	// <0>
+	// <1>
+	// <0x656289>|0x1c9|+0x011:'677'
+	// <0x65629a>|0x1da|+0x022:'678'
+	// <0>
+	// <0x6562bc>|0x1fc|+0x009:'680'
+	// <0x6562c5>|0x205|+0x02b:'681'
+	// <0>
+	// <1>
+	// <2>
+	// <0x6562f0>|0x230|+0x015:'685'
+	// <0x656305>|0x245|+0x009:'686'
+	// <0>
+	// <0x65630e>|0x24e|+0x007:'688'
+	// <0x656315>|0x255|+0x004:'689'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <25>
+	// <26>
+	// <27>
+	// <28>
+	// <29>
+	// <30>
+	// <31>
+	// <32>
+	// <33>
+	// <34>
+	// <35>
+	// <36>
+	// <37>
+	// <38>
+	// <39>
+	// <40>
+	// <41>
+	// <0x656319>|0x259|-0x247:'732'
+	// <0>
+	// <0x6560d2>|0x012|+0x329:'734'
+	// ******
+}
+
+// STATE[STUB]
+ engine::world::world( configs::binary_config_ptr const& in_config, bool is_editor )
+{
+	// FUNCTION BODY[0x655960]: 17
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x655970>|0x010|+0x016:'757'
+	// <0>
+	// <1>
+	// <2>
+	// <0x655986>|0x026|+0x035:'761'
+	// <0>
+	// <1>
+	// <2>
+	// <0x6559bb>|0x05b|+0x005:'765'
+	// <0>
+	// <0x6559c0>|0x060|+0x005:'767'
+	// <0>
+	// <0x6559c5>|0x065|+0x01f:'769'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::on_renderer_configuration_config_loaded( bool async_effects, resources::queries_result& data )
+{
+	// FUNCTION BODY[0x656d40]: 12
+	// <0x656d43>|0x003|+0x017:'787'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x656d5a>|0x01a|+0x083:'793'
+	// <0>
+	// <0x656ddd>|0x09d|+0x00e:'795'
+	// <0>
+	// <0x656deb>|0x0ab|+0x01a:'797'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::reset_renderer( bool async_effects )
+{
+	// FUNCTION BODY[0x656b30]: 12
+	// <0x656b39>|0x009|+0x0cf:'803'
+	// <0>
+	// <0x656c08>|0x0d8|+0x006:'805'
+	// <0x656c0e>|0x0de|+0x02a:'806'
+	// <0>
+	// <0x656c38>|0x108|+0x010:'808'
+	// <0>
+	// <0x656c48>|0x118|+0x025:'810'
+	// <0>
+	// <0x656c6d>|0x13d|+0x00c:'812'
+	// <0>
+	// <0x656c79>|0x149|+0x0bb:'814'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::initialize( bool is_editor )
+{
+	// FUNCTION BODY[0x6569b0]: 16
+	// <0>
+	// <1>
+	// <2>
+	// <0x6569bb>|0x00b|+0x018:'853'
+	// <0>
+	// <0x6569d3>|0x023|+0x03d:'855'
+	// <0x656a10>|0x060|+0x01d:'856'
+	// <0x656a2d>|0x07d|+0x045:'857'
+	// <0x656a72>|0x0c2|+0x067:'858'
+	// <0x656ad9>|0x129|+0x00a:'859'
+	// <0>
+	// <1>
+	// <0x656ae3>|0x133|+0x007:'862'
+	// <0>
+	// <0x656aea>|0x13a|+0x017:'864'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+ engine::world::~world( )
+{
+	// FUNCTION BODY[0x655a30]: 13
+	// <0x655a3b>|0x00b|+0x005:'870'
+	// <0x655a40>|0x010|+0x005:'871'
+	// <0>
+	// <0x655a45>|0x015|+0x00b:'873'
+	// <0x655a50>|0x020|+0x037:'874'
+	// <0x655a87>|0x057|+0x028:'875'
+	// <0x655aaf>|0x07f|+0x017:'876'
+	// <0x655ac6>|0x096|+0x00c:'877'
+	// <0>
+	// <0x655ad2>|0x0a2|+0x00a:'879'
+	// <0>
+	// <0x655adc>|0x0ac|+0x005:'881'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::reload_shaders( )
+{
+	// FUNCTION BODY[0x6542c0]: 1
+	// <0x6542c0>|0x000|+0x00c:'887'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::reload_modified_textures( )
+{
+	// FUNCTION BODY[0x655d40]: 1
+	// <0x655d40>|0x000|+0x00b:'892'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::build_lpv_geometry( base_scene_ptr const& scene )
+{
+	// FUNCTION BODY[0x6542a0]: 0
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_unused_environment_cubemaps( base_scene_ptr const& scene )
+{
+	// FUNCTION BODY[0x655cd0]: 0
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::clear_resources( )
+{
+	// FUNCTION BODY[0x655630]: 3
+	// <0>
+	// <1>
+	// <0x655631>|0x001|+0x016:'909'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::begin_render_options_changing( long volatile* waiting_for )
+{
+	// FUNCTION BODY[0x654270]: 1
+	// <0x654270>|0x000|+0x025:'914'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::end_render_options_changing(
+	base_scene_ptr const&		scene,
+	base_output_window_ptr		output_window,
+	bool						reload_all_materials,
+	bool						shaders_recompile,
+	long volatile*				waiting_for
+)
+{
+	// LOCALS
+	// vector< fs_new::virtual_path_string > changed_defines
+	// ******
+
+	// FUNCTION BODY[0x656eb0]: 81
+	// <0>
+	// <1>
+	// <2>
+	// <0x656ebc>|0x00c|+0x011:'922'
+	// <0>
+	// <0x656ecd>|0x01d|+0x011:'924'
+	// <0>
+	// <0x656ede>|0x02e|+0x00c:'926'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x656eea>|0x03a|+0x00b:'932'
+	// <0x656ef5>|0x045|+0x011:'933'
+	// <0>
+	// <0x656f06>|0x056|+0x0a9:'935'
+	// <0>
+	// <0x656faf>|0x0ff|-0x092:'937'
+	// <0>
+	// <1>
+	// <2>
+	// <0x656f1d>|0x06d|+0x00c:'941'
+	// <0>
+	// <0x656f29>|0x079|+0x00b:'943'
+	// <0x656f34>|0x084|+0x00b:'944'
+	// <0x656f3f>|0x08f|+0x00b:'945'
+	// <0x656f4a>|0x09a|+0x00b:'946'
+	// <0x656f55>|0x0a5|+0x00b:'947'
+	// <0x656f60>|0x0b0|+0x00b:'948'
+	// <0x656f6b>|0x0bb|+0x00b:'949'
+	// <0x656f76>|0x0c6|+0x00b:'950'
+	// <0x656f81>|0x0d1|+0x00b:'951'
+	// <0x656f8c>|0x0dc|+0x00b:'952'
+	// <0x656f97>|0x0e7|+0x00b:'953'
+	// <0x656fa2>|0x0f2|+0x016:'954'
+	// <0>
+	// <1>
+	// <0x656fb8>|0x108|+0x009:'957'
+	// <0>
+	// <0x656fc1>|0x111|+0x005:'959'
+	// <0>
+	// <1>
+	// <0x656fc6>|0x116|+0x005:'962'
+	// <0>
+	// <0x656fcb>|0x11b|+0x00b:'964'
+	// <0>
+	// <1>
+	// <0x656fd6>|0x126|+0x004:'967'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <0x656fda>|0x12a|+0x027:'976'
+	// <0>
+	// <0x657001>|0x151|+0x015:'978'
+	// <0>
+	// <1>
+	// <0x657016>|0x166|+0x00b:'981'
+	// <0x657021>|0x171|+0x004:'982'
+	// <0>
+	// <0x657025>|0x175|+0x005:'984'
+	// <0>
+	// <0x65702a>|0x17a|+0x009:'986'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <0x657033>|0x183|+0x098:'997'
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
+{
+	// FUNCTION BODY[0x654b00]: 1
+	// <0x654b01>|0x001|+0x016:'1004'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix )
+{
+	// FUNCTION BODY[0x654490]: 1
+	// <0x654490>|0x000|+0x01b:'1016'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::draw_scene(
+	base_scene_ptr const&				scene,
+	base_scene_view_ptr const&			view,
+	base_output_window_ptr const&		output_window,
+	math::rectangle< float2 > const&	viewport,
+	boost::function< void( bool ) > const&	on_draw_scene,
+	ui::font const*						default_font
+)
+{
+	// LOCALS
+	// float4x4 						identity
+	// ******
+
+	// FUNCTION BODY[0x657120]: 9
+	// <0>
+	// <0x657124>|0x004|+0x00b:'1035'
+	// <0x65712f>|0x00f|+0x012:'1036'
+	// <0>
+	// <0x657141>|0x021|+0x00a:'1038'
+	// <0x65714b>|0x02b|+0x023:'1039'
+	// <0>
+	// <0x65716e>|0x04e|-0x007:'1041'
+	// <0>
+	// <0x657167>|0x047|+0x013:'1043'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::end_frame( )
+{
+	// FUNCTION BODY[0x653ee0]: 1
+	// <0x653ee0>|0x000|+0x003:'1111'
+	// ******
+}
+
+// STATE[STUB]
+u32 engine::world::frame_id( )
+{
+	return 0;
+
+	// FUNCTION BODY[0x653ed0]: 1
+	// <0x653ed0>|0x000|+0x003:'1116'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::draw_ui_vertices(
+	ui::vertex const*		vertices,
+	u32 const&				count,
+	s32						prim_type,
+	s32						point_type
+)
+{
+	// FUNCTION BODY[0x655c10]: 1
+	// <0x655c10>|0x000|+0x018:'1132'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_speedtree_instance(
+	base_scene_ptr const&				in_scene,
+	speedtree_instance_ptr const&		v,
+	float4x4 const&						transform,
+	bool								populate_forest
+)
+{
+	// FUNCTION BODY[0x655bd0]: 3
+	// <0>
+	// <1>
+	// <0x655bd0>|0x000|+0x039:'1227'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_speedtree_instance(
+	base_scene_ptr const&				in_scene,
+	speedtree_instance_ptr const&		v,
+	bool								populate_forest
+)
+{
+	// FUNCTION BODY[0x655b90]: 3
+	// <0>
+	// <1>
+	// <0x655b90>|0x000|+0x034:'1234'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_speedtree_instance(
+	base_scene_ptr const&				in_scene,
+	speedtree_instance_ptr const&		v,
+	float4x4 const&						transform,
+	bool								populate_forest
+)
+{
+	// FUNCTION BODY[0x655b50]: 3
+	// <0>
+	// <1>
+	// <0x655b50>|0x000|+0x039:'1241'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::populate_speedtree_forest( base_scene_ptr const& in_scene )
+{
+	// FUNCTION BODY[0x655b30]: 2
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_model(
+	base_scene_ptr const&				in_scene,
+	render_model_instance_ptr const&	v,
+	float4x4 const&						transform,
+	bool								apply_transform
+)
+{
+	// CALL SITE INFO
+	// <0x655868> -> void < unknown >( float4x4 const& )
+	// ******
+
+	// FUNCTION BODY[0x655830]: 8
+	// <0x655831>|0x001|+0x004:'1253'
+	// <0>
+	// <0x655835>|0x005|+0x020:'1255'
+	// <0>
+	// <0x655855>|0x025|+0x007:'1257'
+	// <0x65585c>|0x02c|+0x00e:'1258'
+	// <0>
+	// <0x65586a>|0x03a|+0x023:'1260'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_model(
+	base_scene_ptr const&				in_scene,
+	render_model_instance_ptr const&	v,
+	float4x4 const&						transform
+)
+{
+	// CALL SITE INFO
+	// <0x6555f2> -> void < unknown >( float4x4 const& )
+	// ******
+
+	// FUNCTION BODY[0x6555c0]: 5
+	// <0x6555c1>|0x001|+0x004:'1265'
+	// <0>
+	// <0x6555c5>|0x005|+0x021:'1267'
+	// <0x6555e6>|0x026|+0x00e:'1268'
+	// <0x6555f4>|0x034|+0x021:'1269'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_instance_ptr const& v )
+{
+	// FUNCTION BODY[0x6557c0]: 4
+	// <0x6557c0>|0x000|+0x004:'1274'
+	// <0>
+	// <0x6557c4>|0x004|+0x01f:'1276'
+	// <0x6557e3>|0x023|+0x024:'1277'
+	// ******
+}
+
+// STATE[STUB]
+enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::virtual_path_string const& subsurface_name )
+{
+	// FUNCTION BODY[0x654aa0]: 6
+	// <0x654aa0>|0x000|+0x016:'1282'
+	// <0x654ab6>|0x016|+0x010:'1283'
+	// <0x654ac6>|0x026|+0x010:'1284'
+	// <0x654ad6>|0x036|+0x010:'1285'
+	// <0x654ae6>|0x046|-0x031:'1286'
+	// <0>
+	// <0x654ab5>|0x015|+0x047:'1288'
+	// ******
+}
+
+// STATE[STUB]
+speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( enum_vertex_input_type type )
+{
+	// FUNCTION BODY[0x653ec0]: 10
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <0x653ec0>|0x000|+0x002:'1301'
+	// ******
+}
+
+// STATE[STUB]
+void on_speedtree_material_effects_instance_ready(
+	resources::queries_result&		data,
+	speedtree_tree*					tree,
+	enum_vertex_input_type			vertex_input_type
+)
+{
+	// FUNCTION BODY[0x6558d0]: 6
+	// <0x6558d1>|0x001|+0x017:'1306'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x6558e8>|0x018|+0x06c:'1311'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_speedtree_instance_material(
+	speedtree_instance_ptr const&			v,
+	fs_new::virtual_path_string const&		subsurface_name,
+	resources::unmanaged_resource_ptr		in_mtl_ptr
+)
+{
+	// LOCALS
+	// speedtree_tree* 					tree
+	// variant< 32 > 					data_variant
+	// ******
+
+	// FUNCTION BODY[0x656810]: 26
+	// <0x656819>|0x009|+0x00b:'1318'
+	// <0x656824>|0x014|+0x028:'1319'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <0x65684c>|0x03c|+0x060:'1329'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <0x6568ac>|0x09c|+0x0a4:'1343'
+	// ******
+}
+
+// STATE[STUB]
+void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
+{
+	// FUNCTION BODY[0x655720]: 10
+	// <0x655723>|0x003|+0x00c:'1349'
+	// <0>
+	// <1>
+	// <0x65572f>|0x00f|+0x016:'1352'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x655745>|0x025|+0x06c:'1357'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_model_material(
+	render_model_instance_ptr const&		v,
+	fs_new::virtual_path_string const&		subsurface_name,
+	resources::unmanaged_resource_ptr		m
+)
+{
+	// LOCALS
+	// bool 							check_name
+	// render_model_instance_impl_ptr 	model
+	// vector< render_surface_instance* > list
+	// material_ptr 					mtl_ptr
+	// render_surface_instance** 		it
+	// variant< 32 > 					data_variant
+	// ******
+
+	// CALL SITE INFO
+	// <0x656581> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
+	// ******
+
+	// FUNCTION BODY[0x656530]: 72
+	// <0x656539>|0x009|+0x024:'1365'
+	// <0>
+	// <1>
+	// <0x65655d>|0x02d|+0x026:'1368'
+	// <0>
+	// <0x656583>|0x053|+0x008:'1370'
+	// <0>
+	// <0x65658b>|0x05b|+0x022:'1372'
+	// <0>
+	// <0x6565ad>|0x07d|+0x017:'1374'
+	// <0>
+	// <0x6565c4>|0x094|+0x002:'1376'
+	// <0>
+	// <0x6565c6>|0x096|+0x05c:'1378'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x656622>|0x0f2|+0x006:'1383'
+	// <0>
+	// <0x656628>|0x0f8|+0x032:'1385'
+	// <0x65665a>|0x12a|+0x005:'1386'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x65665f>|0x12f|+0x085:'1394'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <0x6566e4>|0x1b4|+0x075:'1407'
+	// <0x656759>|0x229|+0x02c:'1408'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <11>
+	// <12>
+	// <13>
+	// <14>
+	// <15>
+	// <16>
+	// <17>
+	// <18>
+	// <19>
+	// <20>
+	// <21>
+	// <22>
+	// <23>
+	// <24>
+	// <25>
+	// <26>
+	// <27>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_model_lod_params(
+	render_model_instance_ptr const&	v,
+	u8									type,
+	bool								use_default,
+	float								p0,
+	float								p1,
+	float								p2
+)
+{
+	// CALL SITE INFO
+	// <0x655578> -> void < unknown >( u8, bool, float, float, float )
+	// ******
+
+	// FUNCTION BODY[0x655530]: 2
+	// <0x655530>|0x000|+0x01d:'1441'
+	// <0x65554d>|0x01d|+0x02d:'1442'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_model_visible(
+	render_model_instance_ptr const&		v,
+	fs_new::virtual_path_string const&		subsurface_name,
+	u32										flags
+)
+{
+	// LOCALS
+	// render_model_instance_impl_ptr 	model
+	// vector< render_surface_instance* > list
+	// bool 							check_name
+	// ******
+
+	// CALL SITE INFO
+	// <0x655461> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
+	// ******
+
+	// FUNCTION BODY[0x655410]: 17
+	// <0x655413>|0x003|+0x02c:'1447'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <0x65543f>|0x02f|+0x024:'1452'
+	// <0>
+	// <0x655463>|0x053|+0x00a:'1454'
+	// <0>
+	// <0x65546d>|0x05d|+0x011:'1456'
+	// <0>
+	// <0x65547e>|0x06e|+0x002:'1458'
+	// <0x655480>|0x070|+0x059:'1459'
+	// <0>
+	// <1>
+	// <0x6554d9>|0x0c9|+0x018:'1462'
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v, u32 subsurface_id, u32 flags )
+{
+	// LOCALS
+	// render_model_instance_impl_ptr 	model
+	// vector< render_surface_instance* > list
+	// ******
+
+	// CALL SITE INFO
+	// <0x6552b9> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
+	// ******
+
+	// FUNCTION BODY[0x655260]: 13
+	// <0x655269>|0x009|+0x087:'1468'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <0x6552f0>|0x090|+0x0a4:'1476'
+	// <0x655394>|0x134|+0x02f:'1477'
+	// <0>
+	// <1>
+	// <0x6553c3>|0x163|-0x153:'1480'
+	// <0x655270>|0x010|+0x15c:'1481'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bool value )
+{
+	// FUNCTION BODY[0x654260]: 4
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_model_vertex_buffer( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments )
+{
+	// CALL SITE INFO
+	// <0x654438> -> HRESULT < unknown >( ID3D11Resource*, u32, D3D11_MAP, u32, D3D11_MAPPED_SUBRESOURCE* )
+	// <0x654481> -> void < unknown >( ID3D11Resource*, u32 )
+	// ******
+
+	// FUNCTION BODY[0x654400]: 15
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <0x654400>|0x000|+0x03a:'1510'
+	// <0>
+	// <1>
+	// <0x65443a>|0x03a|+0x002:'1513'
+	// <0x65443c>|0x03c|+0x007:'1514'
+	// <0>
+	// <0x654443>|0x043|+0x004:'1516'
+	// <0x654447>|0x047|+0x01c:'1517'
+	// <0>
+	// <0x654463>|0x063|+0x024:'1519'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
+{
+	// FUNCTION BODY[0x656e70]: 3
+	// <0>
+	// <1>
+	// <0x656e70>|0x000|+0x01b:'1539'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
+{
+	// FUNCTION BODY[0x656e20]: 3
+	// <0>
+	// <1>
+	// <0x656e23>|0x003|+0x047:'1546'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x655a10]: 3
+	// <0>
+	// <1>
+	// <0x655a11>|0x001|+0x018:'1553'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_clouds( base_scene_ptr const& in_scene, cloud_parameters const& parameters )
+{
+	// FUNCTION BODY[0x654cd0]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_clouds( base_scene_ptr const& in_scene, cloud_parameters const& parameters )
+{
+	// FUNCTION BODY[0x654ec0]: 2
+	// <0x654ec0>|0x000|+0x007:'1564'
+	// <0x654ec7>|0x007|+0x01f:'1565'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_clouds( base_scene_ptr const& in_scene )
+{
+	// FUNCTION BODY[0x654a70]: 2
+	// <0x654a70>|0x000|+0x008:'1570'
+	// <0x654a78>|0x008|+0x01d:'1571'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_num_clouds_keys( base_scene_ptr const& in_scene, const u32 num_keys )
+{
+	// FUNCTION BODY[0x654240]: 4
+	// <0x654240>|0x000|+0x006:'1576'
+	// <0>
+	// <0x654246>|0x006|+0x00a:'1578'
+	// <0x654250>|0x010|+0x00a:'1579'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_clouds_key(
+	base_scene_ptr const&			in_scene,
+	const u32						index,
+	cloud_key_parameters const&		parameters
+)
+{
+	// FUNCTION BODY[0x654210]: 4
+	// <0x654210>|0x000|+0x006:'1584'
+	// <0>
+	// <0x654216>|0x006|+0x00a:'1586'
+	// <0x654220>|0x010|+0x01d:'1587'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_clouds_time( base_scene_ptr const& in_scene, const float time )
+{
+	// FUNCTION BODY[0x654c80]: 4
+	// <0x654c80>|0x000|+0x006:'1592'
+	// <0>
+	// <0x654c86>|0x006|+0x00a:'1594'
+	// <0x654c90>|0x010|+0x00c:'1595'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_editor_mode( base_scene_ptr const& in_scene, bool is_editor_mode )
+{
+	// FUNCTION BODY[0x6541f0]: 4
+	// <0x6541f0>|0x000|+0x006:'1600'
+	// <0>
+	// <0x6541f6>|0x006|+0x00a:'1602'
+	// <0x654200>|0x010|+0x00a:'1603'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::apply_clouds_changes( base_scene_ptr const& in_scene )
+{
+	// FUNCTION BODY[0x6541c0]: 4
+	// <0x6541c0>|0x000|+0x006:'1608'
+	// <0>
+	// <0x6541c6>|0x006|+0x00a:'1610'
+	// <0x6541d0>|0x010|+0x00f:'1611'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_tracer(
+	base_scene_ptr const&				in_scene,
+	tracer_model_instance_ptr const&	instance,
+	float4x4 const&						initialize_transform
+)
+{
+	// FUNCTION BODY[0x6555a0]: 1
+	// <0x6555a0>|0x000|+0x014:'1616'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_tracer(
+	base_scene_ptr const&				in_scene,
+	tracer_model_instance_ptr const&	instance,
+	float4x4 const&						new_transform
+)
+{
+	// FUNCTION BODY[0x654180]: 1
+	// <0x654180>|0x000|+0x032:'1621'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_tracer( base_scene_ptr const& in_scene, tracer_model_instance_ptr const& instance )
+{
+	// FUNCTION BODY[0x655230]: 1
+	// <0x655230>|0x000|+0x029:'1626'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
+{
+	// FUNCTION BODY[0x655710]: 2
+	// <0>
+	// <1>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
+{
+	// FUNCTION BODY[0x6558b0]: 3
+	// <0>
+	// <1>
+	// <0x6558b0>|0x000|+0x016:'1640'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x654c60]: 3
+	// <0>
+	// <1>
+	// <0x654c60>|0x000|+0x00f:'1647'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_environment_probe(
+	base_scene_ptr const&					in_scene,
+	u32										id,
+	environment_probe_properties const&		properties
+)
+{
+	// FUNCTION BODY[0x656520]: 0
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_environment_probe( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x654c40]: 1
+	// <0x654c40>|0x000|+0x010:'1657'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_sky_ambient_occlusion(
+	base_scene_ptr const&		in_scene,
+	u32							id,
+	sky_ambient_occlusion_properties const&	properties
+)
+{
+	// FUNCTION BODY[0x656500]: 1
+	// <0x656500>|0x000|+0x015:'1662'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_sky_ambient_occlusion( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x654c20]: 1
+	// <0x654c20>|0x000|+0x010:'1667'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_ambient_volume(
+	base_scene_ptr const&				in_scene,
+	u32									id,
+	ambient_volume_properties const&	properties
+)
+{
+	// FUNCTION BODY[0x654cb0]: 1
+	// <0x654cb0>|0x000|+0x015:'1672'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_vegetation_trample( base_scene_ptr const& in_scene, trample_desc const& desc )
+{
+	// FUNCTION BODY[0x654ba0]: 1
+	// <0x654ba0>|0x000|+0x043:'1677'
+	// <0x654be3>|0x043|-0x003:'1677'
+	// <0x654be0>|0x040|+0x00e:'1678'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_ambient_volume( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x654a50]: 1
+	// <0x654a50>|0x000|+0x010:'1682'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_lpv_occluder( base_scene_ptr const& in_scene, u32 id, float4x4 const& transform )
+{
+	// FUNCTION BODY[0x654b90]: 0
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_lpv_occluder( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x6543f0]: 0
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_volume_fog(
+	base_scene_ptr const&			in_scene,
+	u32								id,
+	volume_fog_parameters const&	in_parameters
+)
+{
+	// FUNCTION BODY[0x654b40]: 3
+	// <0x654b4c>|0x00c|+0x003:'1697'
+	// <0>
+	// <0x654b4f>|0x00f|+0x02b:'1699'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_volume_fog(
+	base_scene_ptr const&			in_scene,
+	u32								id,
+	volume_fog_parameters const&	in_parameters
+)
+{
+	// FUNCTION BODY[0x654c00]: 2
+	// <0>
+	// <0x654c00>|0x000|+0x015:'1706'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_volume_fog( base_scene_ptr const& in_scene, u32 id )
+{
+	// FUNCTION BODY[0x6543e0]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_skeleton( render_model_instance_ptr const& v, float4x4* matrices, u32 count )
+{
+	// FUNCTION BODY[0x6543d0]: 2
+	// <0>
+	// <0x6543d0>|0x000|+0x00d:'1725'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::play_particle_system(
+	base_scene_ptr const&					in_scene,
+	resources::unmanaged_resource_ptr		in_instance,
+	bool									use_transform,
+	bool									always_looping,
+	float4x4 const&							transform
+)
+{
+	// CALL SITE INFO
+	// <0x654686> -> void < unknown >( resources::unmanaged_resource_ptr, float4x4 const&, bool, bool )
+	// ******
+
+	// FUNCTION BODY[0x654650]: 3
+	// <0>
+	// <1>
+	// <0x654650>|0x000|+0x038:'1767'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::stop_particle_system( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr in_instance )
+{
+	// CALL SITE INFO
+	// <0x65461f> -> void < unknown >( resources::unmanaged_resource_ptr, float )
+	// ******
+
+	// FUNCTION BODY[0x6545f0]: 4
+	// <0>
+	// <0x6545f0>|0x000|+0x004:'1773'
+	// <0>
+	// <0x6545f4>|0x004|+0x02d:'1775'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_particle_system_instance(
+	resources::unmanaged_resource_ptr		particle_system_instance,
+	base_scene_ptr const&					in_scene
+)
+{
+	// CALL SITE INFO
+	// <0x6545b7> -> void < unknown >( resources::unmanaged_resource_ptr )
+	// ******
+
+	// FUNCTION BODY[0x654590]: 4
+	// <0x654590>|0x000|+0x007:'1780'
+	// <0>
+	// <1>
+	// <0x654597>|0x007|+0x022:'1783'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_particle_system_instance(
+	resources::unmanaged_resource_ptr		particle_system_instance,
+	base_scene_ptr const&					in_scene,
+	float4x4 const&							transform,
+	bool									visible,
+	bool									paused
+)
+{
+	// CALL SITE INFO
+	// <0x65451c> -> void < unknown >( resources::unmanaged_resource_ptr, float4x4 const& )
+	// <0x65453d> -> void < unknown >( resources::unmanaged_resource_ptr, bool )
+	// <0x65455e> -> void < unknown >( resources::unmanaged_resource_ptr, bool )
+	// ******
+
+	// FUNCTION BODY[0x6544f0]: 6
+	// <0>
+	// <1>
+	// <2>
+	// <0x6544f0>|0x000|+0x02e:'1791'
+	// <0x65451e>|0x02e|+0x021:'1792'
+	// <0x65453f>|0x04f|+0x021:'1793'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::resize_render_output_window(
+	base_output_window_ptr const&		output_window,
+	const u32							width,
+	const u32							height,
+	const bool							fullscreen
+)
+{
+	// FUNCTION BODY[0x656e90]: 1
+	// <0x656e90>|0x000|+0x01b:'1798'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
+{
+	// FUNCTION BODY[0x654ca0]: 1
+	// <0x654ca0>|0x000|+0x00f:'1803'
+	// ******
+}
+
+// STATE[STUB]
+void `dynamic atexit destructor for 'g_quad_ib''( )
+{
+	// FUNCTION BODY[0x7edb00]
+	// ******
+}
+
+// STATE[STUB]
+engine::world* engine::create_world( configs::binary_config_ptr const& in_config, bool is_editor )
+{
+	return NULL;
+
+	// FUNCTION BODY[0x6559f0]: 3
+	// <0>
+	// <0x6559f1>|0x001|+0x018:'1918'
+	// <0x655a09>|0x019|+0x005:'1919'
+	// ******
+}
+
+// STATE[STUB]
+void engine::destroy( engine::world*& engine_world )
+{
+	// FUNCTION BODY[0x655b10]: 4
+	// <0>
+	// <1>
+	// <0x655b10>|0x000|+0x00b:'1926'
+	// <0x655b1b>|0x00b|+0x014:'1927'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplier )
+{
+	// FUNCTION BODY[0x654160]: 2
+	// <0>
+	// <0x654160>|0x000|+0x014:'1933'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
+{
+	// FUNCTION BODY[0x654130]: 3
+	// <0>
+	// <0x654130>|0x000|+0x006:'1939'
+	// <0x654136>|0x006|+0x01c:'1940'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_view_mode( base_scene_view_ptr view_ptr, scene_view_mode view_mode )
+{
+	// FUNCTION BODY[0x655100]: 2
+	// <0>
+	// <0x655100>|0x000|+0x00e:'1946'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, particle::enum_particle_render_mode render_mode )
+{
+	// FUNCTION BODY[0x6550c0]: 2
+	// <0>
+	// <0x6550c0>|0x000|+0x00e:'1953'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr mtl_ptr )
+{
+	// FUNCTION BODY[0x655690]: 2
+	// <0x655691>|0x001|+0x004:'1958'
+	// <0x655695>|0x005|+0x04b:'1959'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::enable_post_process( base_scene_view_ptr view_ptr, bool enable )
+{
+	// FUNCTION BODY[0x655080]: 6
+	// <0>
+	// <0x655080>|0x000|+0x00e:'2065'
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_post_process(
+	base_scene_view_ptr						view_ptr,
+	resources::unmanaged_resource_ptr		post_process_resource
+)
+{
+	// FUNCTION BODY[0x656440]: 8
+	// <0x656443>|0x003|+0x008:'2074'
+	// <0x65644b>|0x00b|+0x00e:'2075'
+	// <0>
+	// <0x656459>|0x019|+0x004:'2077'
+	// <0>
+	// <0x65645d>|0x01d|+0x011:'2079'
+	// <0>
+	// <0x65646e>|0x02e|+0x028:'2081'
+	// ******
+}
+
+// STATE[STUB]
+particle::world& engine::world::particle_world( base_scene_ptr const& scene )
+{
+	// FUNCTION BODY[0x6551f0]: 1
+	// <0x6551f1>|0x001|+0x038:'2086'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::draw_lines(
+	base_scene_ptr const&				scene,
+	vectora< vertex_colored > const&	vertices,
+	vectora< u16 > const&				indices
+)
+{
+	// FUNCTION BODY[0x655c80]: 1
+	// <0x655c80>|0x000|+0x040:'2096'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::draw_triangles(
+	base_scene_ptr const&				scene,
+	vectora< vertex_colored > const&	vertices,
+	vectora< u16 > const&				indices
+)
+{
+	// FUNCTION BODY[0x655c30]: 1
+	// <0x655c30>|0x000|+0x040:'2101'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::draw_text(
+	vectora< ui::vertex >&		output,
+	pcstr const&				text,
+	ui::font const&				font,
+	float2 const&				position,
+	math::color const&			text_color,
+	math::color const&			selection_color,
+	const u32					max_line_width,
+	const bool					is_multiline,
+	const u32					start_selection,
+	const u32					end_selection
+)
+{
+	// FUNCTION BODY[0x6544b0]: 12
+	// <0>
+	// <1>
+	// <2>
+	// <3>
+	// <4>
+	// <5>
+	// <6>
+	// <7>
+	// <8>
+	// <9>
+	// <10>
+	// <0x6544b1>|0x001|+0x034:'2141'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::show_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
+{
+	// FUNCTION BODY[0x655650]: 2
+	// <0>
+	// <0x655651>|0x001|+0x00f:'2146'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::hide_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
+{
+	// FUNCTION BODY[0x655190]: 2
+	// <0x655190>|0x000|+0x008:'2151'
+	// <0x655198>|0x008|+0x021:'2152'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::show_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
+{
+	// FUNCTION BODY[0x654110]: 2
+	// <0>
+	// <0x654110>|0x000|+0x010:'2158'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
+{
+	// FUNCTION BODY[0x6540f0]: 2
+	// <0>
+	// <0x6540f0>|0x000|+0x010:'2164'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::execute_scaleform_command( survarium::scaleform_render_command command )
+{
+	// FUNCTION BODY[0x653eb0]: 1
+	// <0x653eb0>|0x000|+0x00b:'2169'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_portal_system( base_scene_ptr const& scene, resources::unmanaged_resource_ptr pss_ptr )
+{
+	// FUNCTION BODY[0x655140]: 2
+	// <0x655140>|0x000|+0x007:'2174'
+	// <0x655147>|0x007|+0x019:'2175'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::test_action_portal_system( base_scene_ptr const& scene )
+{
+	// FUNCTION BODY[0x6540d0]: 2
+	// <0x6540d0>|0x000|+0x006:'2180'
+	// <0x6540d6>|0x006|+0x011:'2181'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::clear_grass( base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x655af0]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::populate_grass( base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x656b10]: 1
+	// <0>
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::add_grass_layer( grass_layer_desc* desc, grass_layer_data* data, base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x655d10]: 2
+	// <0>
+	// <0x655d10>|0x000|+0x021:'2199'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::update_grass_layer(
+	grass_layer_desc*			desc,
+	grass_layer_data*			data,
+	base_scene_ptr const&		s,
+	bool						is_set
+)
+{
+	// FUNCTION BODY[0x655ce0]: 2
+	// <0>
+	// <0x655ce0>|0x000|+0x024:'2205'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::remove_grass_layer( u8 id, base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x654b20]: 2
+	// <0>
+	// <0x654b20>|0x000|+0x017:'2211'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x654390]: 3
+	// <0>
+	// <1>
+	// <0x654390>|0x000|+0x010:'2218'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::reset_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s )
+{
+	// FUNCTION BODY[0x654350]: 3
+	// <0>
+	// <1>
+	// <0x654350>|0x000|+0x010:'2225'
+	// ******
+}
+
+// STATE[STUB]
+bool engine::world::is_playing( resources::unmanaged_resource_ptr const& instance )
+{
+	return false;
+
+	// FUNCTION BODY[0x6540c0]: 2
+	// <0>
+	// <0x6540c0>|0x000|+0x009:'2231'
+	// ******
+}
+
+// STATE[STUB]
+void engine::world::set_gamma_correction_factor( const float value )
+{
+	// FUNCTION BODY[0x6540a0]: 1
+	// <0x6540a0>|0x000|+0x010:'2236'
+	// ******
+}
+
+	// TYPEDEFS
+	// typedef
+	// 	pbyte
+	// 	iterator_type;
+
+	// typedef
+	// 	pcvoid*
+	// 	iterator_type;
+
+	// typedef
+	// 	u16*
+	// 	iterator_type;
+
+	// typedef
+	// 	void**
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::fixed_string< 32 >*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::fs_new::virtual_path_string*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::data_indexer*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::geometry_batch*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_pass_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::res_shader_technique_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_binding*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::shader_constant_buffer_ptr*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::signature_layout_pair*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::speedtree_forest::tree_render_info*
+	// 	iterator_type;
+
+	// typedef
+	// 	vostok::render::texture_named_instance*
+	// 	iterator_type;
+
+	// ******
+
+} // namespace render
+} // namespace vostok
