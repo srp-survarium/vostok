@@ -14,6 +14,7 @@
 #include <vostok/sound/world_user.h>
 #include <vostok/sound/single_sound.h>
 #include <vostok/sound/sound_debug_stats.h>
+#include <vostok/sound/sound_scene_creation_params.h>
 #include <vostok/core_entry_point.h>
 #include "sound_instance_proxy_order.h"
 #include "sound_world.h"
@@ -57,12 +58,19 @@ void receiver_collision::delete_position	( sound_scene& scene )
 	m_position							= 0;
 }
 
-sound_scene::sound_scene	( IXAudio2SubmixVoice* submix_voice, u32 dbg_id ) :
+sound_scene::sound_scene	(
+	sound_world& world,
+	sound_scene_creation_params const& creation_params,
+	IXAudio2SubmixVoice* submix_voice,
+	u32 dbg_id,
+	resources::query_result_for_cook& parent
+) :
 	m_next						( 0 ),
-	m_proxies_count				( 16 ),
-	m_propagators_count			( 16 ),
-	m_receivers_count			( 16 ),
-	m_unmanaged_resources_ptr	( 0 ),
+	m_world						( world ),
+	m_memory_arena_resources_ptr( 0 ),
+	m_proxies_count				( creation_params.proxies_count ),
+	m_propagators_count			( creation_params.propagators_count ),
+	m_receivers_count			( creation_params.receivers_count ),
 	m_spatial_tree				( 0 ),
 	m_submix_voice				( submix_voice ),
 	m_is_active					( false ),
@@ -79,13 +87,12 @@ sound_scene::sound_scene	( IXAudio2SubmixVoice* submix_voice, u32 dbg_id ) :
 	m_is_debug_stream_writing_enabled	= 0;
 #endif // #ifndef MASTER_GOLD
 
-	init_allocators						( );
+	init_allocators						( parent );
 
 	ASSERT								( !m_spatial_tree );
 	m_spatial_tree						= &*collision::new_space_partitioning_tree( g_allocator, 0.0001f, 1024 );
 	ASSERT								( m_spatial_tree );
 
-	memory::zero						( &m_listener, sizeof( listener ) );
 }
 
 struct receiver_unconditional_erasing_predicate : private boost::noncopyable
@@ -139,15 +146,7 @@ void sound_scene::tick		( sound_world& world, u32 time_delta )
 
 	update_receivers_position	( );
 	notify_receivers			( );
-	update_listener_properties	( );
 	notify_listener				( world );
-}
-
-void sound_scene::update_listener_properties	( )
-{
-	m_listener.m_position		= m_list_position.get( );
-	m_listener.m_orient_front	= m_list_orient_front.get( );
-	m_listener.m_orient_top		= m_list_orient_top.get( );
 }
 
 sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy	
@@ -418,7 +417,7 @@ void sound_scene::delete_sound_propagator	( sound_instance_proxy_internal& proxy
 		m_active_proxies.erase			( &proxy );
 }
 
-void sound_scene::init_allocators	( )
+void sound_scene::init_allocators	( resources::query_result_for_cook& parent )
 {
 	LOG_DEBUG						( "sound_scene::init_allocators" );
 	u32	proxies_size				= m_proxies_count * sizeof( sound_instance_proxy_internal );
@@ -440,30 +439,33 @@ void sound_scene::init_allocators	( )
 		&request, 
 		1,
 		boost::bind( &sound_scene::on_unmanaged_resources_allocated, this, _1 ), 
-		g_allocator
+		g_allocator,
+		0,
+		&parent,
+		assert_on_fail_true
 	);
 
 	u32 proxies_offset				= 0;
 	VOSTOK_CONSTRUCT_REFERENCE		( m_proxies_allocator, sound_proxies_allocator )
-									( m_unmanaged_resources_ptr->buffer + proxies_offset, proxies_size );
+									( m_memory_arena_resources_ptr->buffer + proxies_offset, proxies_size );
 
 	u32 propagators_offset			= proxies_offset + proxies_size;
 	VOSTOK_CONSTRUCT_REFERENCE		( m_propagators_allocator, sound_propagators_allocator )
-									( m_unmanaged_resources_ptr->buffer + propagators_offset, propagators_size );
+									( m_memory_arena_resources_ptr->buffer + propagators_offset, propagators_size );
 
 	u32 receivers_positions_offset	= propagators_offset + propagators_size;
 	VOSTOK_CONSTRUCT_REFERENCE		( m_receiver_positions_allocator, receiver_position_allocator )
-									( m_unmanaged_resources_ptr->buffer + receivers_positions_offset, receiver_positions_size );
+									( m_memory_arena_resources_ptr->buffer + receivers_positions_offset, receiver_positions_size );
 
 	u32 receivers_collisions_offset	= receivers_positions_offset + receiver_positions_size;
 	VOSTOK_CONSTRUCT_REFERENCE		( m_receiver_collisions_allocator, receiver_collision_allocator )
-									( m_unmanaged_resources_ptr->buffer + receivers_collisions_offset, receiver_collisions_size );
+									( m_memory_arena_resources_ptr->buffer + receivers_collisions_offset, receiver_collisions_size );
 }
 
 void sound_scene::on_unmanaged_resources_allocated	( resources::queries_result& queries )
 {
 	R_ASSERT					( queries[0].is_successful() );
-	m_unmanaged_resources_ptr	= static_cast_resource_ptr<resources::unmanaged_allocation_resource_ptr>( queries[0].get_unmanaged_resource() );
+	m_memory_arena_resources_ptr	= static_cast_resource_ptr<resources::unmanaged_allocation_resource_ptr>( queries[0].get_unmanaged_resource() );
 }
 
 void sound_scene::notify_receivers	( )
@@ -478,6 +480,7 @@ void sound_scene::notify_receivers	( )
 
 void sound_scene::notify_listener	( sound_world const& world )
 {
+	float3 const listener_position		= m_list_position.get( );
 	sound_instance_proxy_internal* proxy	= m_active_proxies.front( );
 	while ( proxy )
 	{
@@ -496,11 +499,11 @@ void sound_scene::notify_listener	( sound_world const& world )
 			{
 			case cone: 
 			case point:				prop_pos = proxy->get_position( ); break;
-			case volumetric:		prop_pos = proxy->get_volumetric_position( m_listener.m_position ); break;
+			case volumetric:		prop_pos = proxy->get_volumetric_position( listener_position ); break;
 			default:				NODEFAULT( );
 			}
 
-			float real_dist_to_list	= math::length( prop_pos - m_listener.m_position );
+			float real_dist_to_list	= math::length( prop_pos - listener_position );
 
 			float inner_radius	= propagator->get_propagation_inner_radius_for_listener( );
 			float outer_radius	= propagator->get_propagation_outer_radius_for_listener( );
@@ -942,9 +945,7 @@ void sound_scene::resume_propagate_sound	( sound_instance_proxy_internal& proxy 
 
 void sound_scene::set_listener_properties( float4x4 const& inv_view_matrix )
 {
-	m_listener.m_orient_front		= inv_view_matrix.k.xyz();
-	m_listener.m_orient_top			= inv_view_matrix.j.xyz();
-	m_listener.m_position			= inv_view_matrix.c.xyz();
+	set_listener_properties			( inv_view_matrix.c.xyz(), inv_view_matrix.k.xyz(), inv_view_matrix.j.xyz() );
 }
 
 void sound_scene::set_listener_properties	(	
@@ -1159,9 +1160,9 @@ void sound_scene::dump_debug_stream_writing	( ) const
 	configs::lua_config_ptr cfg			= configs::create_lua_config( path.c_str( ) );
 	configs::lua_config_value val		= cfg->get_root( )["scene"];
 
-	val["listener"]["position"]			= m_listener.m_position;
-	val["listener"]["orient_front"]		= m_listener.m_orient_front;
-	val["listener"]["orient_top"]		= m_listener.m_orient_top;
+	val["listener"]["position"]			= m_list_position.get( );
+	val["listener"]["orient_front"]		= m_list_orient_front.get( );
+	val["listener"]["orient_top"]		= m_list_orient_top.get( );
 
 	val["active_proxies_count"]			= m_active_proxies.size( );
 
@@ -1182,9 +1183,9 @@ debug_statistic* sound_scene::create_statistic	( ) const
 {
 	return 0;
 	debug_statistic* statistic					= VOSTOK_NEW_IMPL( g_allocator, debug_statistic )( );
-	statistic->m_listener_position				= m_listener.m_position;
-	statistic->m_listener_orient_front			= m_listener.m_orient_front;
-	statistic->m_listener_orient_top			= m_listener.m_orient_top;
+	statistic->m_listener_position				= m_list_position.get( );
+	statistic->m_listener_orient_front			= m_list_orient_front.get( );
+	statistic->m_listener_orient_top			= m_list_orient_top.get( );
 	
 	statistic->m_registered_receivers_count		= m_receivers.size		( );
 	statistic->m_active_proxies_count			= m_active_proxies.size	( );
