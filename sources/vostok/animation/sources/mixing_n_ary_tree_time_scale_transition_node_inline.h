@@ -20,6 +20,7 @@ inline n_ary_tree_time_scale_transition_node::n_ary_tree_time_scale_transition_n
 	super										( from, to, interpolator, current_time_in_ms )
 {
 	R_ASSERT_CMP								( m_last_integration_interval_value, >=, 0.f );
+	check_consistency							( );
 }
 
 } // namespace mixing
