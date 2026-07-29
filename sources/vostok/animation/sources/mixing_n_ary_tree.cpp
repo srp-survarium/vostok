@@ -781,7 +781,6 @@ void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 	}
 }
 
-// STATE[STUB]
 bool n_ary_tree::dispatch_callbacks(
 	callback_generator_info const* const	callback_generators_head,
 	subscribed_channel*&	channels_head,
@@ -789,179 +788,153 @@ bool n_ary_tree::dispatch_callbacks(
 	bool&					callbacks_are_actual
 )
 {
-	// LOCALS
-	// bool 							result
-	// callback_generator_info const* 	generator
-	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
-	// animation_callback_params 		params
-	// subscribed_channel const* 		subscribed_channel
-	// u8 								domain_data
-	// const u32 						knot_upper_id
-	// animation_callback_params 		params
-	// ******
+	bool result								= false;
+	for ( callback_generator_info const* generator = callback_generators_head;
+		  generator;
+		  generator = generator->next )
+	{
+		if ( generator->event_type & (
+				time_event_animation_lexeme_ended |
+				time_event_animation_interval_ended |
+				time_event_animation_ended_in_positive_direction |
+				time_event_animation_ended_in_negative_direction
+			) )
+		{
+			for ( subscribed_channel const* channel = channels_head;
+				  channel;
+				  channel = channel->next )
+			{
+				u8 const channel_id				= *reinterpret_cast< u8 const* >( channel->channel_id );
+				if ( channel_id > channel_id_max )
+					continue;
 
-	// CONSTANTS
-	// const n_ary_tree::dispatch_callbacks::__l77::< unnamed-tag > partitions = 1;
-	// const n_ary_tree::dispatch_callbacks::__l77::< unnamed-tag > intervals = 0;
-	// const n_ary_tree::dispatch_callbacks::__l77::< unnamed-tag > events = 2;
-	// ******
+				bool const matches_animation_end	=
+					( generator->event_type & (
+						time_event_animation_ended_in_positive_direction |
+						time_event_animation_ended_in_negative_direction
+					) ) &&
+					channel_id == channel_id_on_animation_end;
+				bool const matches_interval_end	=
+					( generator->event_type & time_event_animation_interval_ended ) &&
+					channel_id == channel_id_on_animation_interval_end;
+				bool const matches_lexeme_end		=
+					( generator->event_type & time_event_animation_lexeme_ended ) &&
+					channel_id == channel_id_max;
+				if ( !matches_animation_end && !matches_interval_end && !matches_lexeme_end )
+					continue;
 
-	// CALL SITE INFO
-	// <0x6ee5a7> -> < unknown >
-	// <0x6ee948> -> < unknown >
-	// ******
+				for ( animation_callback* callback = channel->first_callback;
+					  callback;
+					  callback = callback->next )
+				{
+					if ( !callback->enabled )
+						continue;
+					if ( callback->animation.c_ptr( ) &&
+						 callback->animation.c_ptr( ) != generator->animation.c_ptr( ) )
+						continue;
+					if ( callback->animated_object &&
+						 callback->animated_object != generator->animated_object )
+						continue;
 
-	return false;
+					animation_callback_params params(
+						generator->animated_object,
+						generator->animation,
+						channel->channel_id,
+						current_time_in_ms,
+						generator->user_data,
+						u8( -1 ),
+						generator->animation_interval_id
+					);
+					callback_return_type_enum const callback_result	= callback->callback( params );
+					callback->enabled				=
+						callback->enabled &&
+						callback_result == callback_return_type_call_me_again;
+					callbacks_are_actual			= callbacks_are_actual && callback->enabled;
+					result							= result || params.interrupt_animation_player_tick;
+				}
+			}
+		}
 
-	// FUNCTION BODY
-	// <0x6ee486>|0x016|+0x008:'1526'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ee48e>|0x01e|+0x012:'1533'
-	// <0x6ee4a0>|0x030|+0x00a:'1534'
-	// <0x6ee4aa>|0x03a|+0x150:'1535'
-	// <0x6ee5fa>|0x18a|-0x13a:'1535'
-	// <0x6ee4c0>|0x050|+0x00c:'1536'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ee4cc>|0x05c|+0x009:'1542'
-	// <0x6ee4d5>|0x065|+0x005:'1543'
-	// <0>
-	// <0x6ee4da>|0x06a|+0x009:'1545'
-	// <0x6ee4e3>|0x073|+0x005:'1546'
-	// <0>
-	// <0x6ee4e8>|0x078|+0x00d:'1548'
-	// <0x6ee4f5>|0x085|+0x005:'1549'
-	// <0>
-	// <0x6ee4fa>|0x08a|+0x008:'1551'
-	// <0>
-	// <1>
-	// <0x6ee502>|0x092|+0x0ed:'1554'
-	// <0x6ee5ef>|0x17f|-0x0df:'1554'
-	// <0x6ee510>|0x0a0|+0x00a:'1555'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee51a>|0x0aa|+0x018:'1560'
-	// <0>
-	// <1>
-	// <0x6ee532>|0x0c2|+0x010:'1563'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x6ee542>|0x0d2|+0x06c:'1579'
-	// <0x6ee5ae>|0x13e|+0x013:'1580'
-	// <0x6ee5c1>|0x151|+0x013:'1581'
-	// <0x6ee5d4>|0x164|+0x031:'1582'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee605>|0x195|+0x00a:'1587'
-	// <0>
-	// <1>
-	// <0x6ee60f>|0x19f|+0x050:'1590'
-	// <0x6ee65f>|0x1ef|+0x004:'1591'
-	// <0x6ee663>|0x1f3|+0x006:'1592'
-	// <0x6ee669>|0x1f9|+0x04c:'1593'
-	// <0>
-	// <0x6ee6b5>|0x245|+0x2eb:'1595'
-	// <0x6ee9a0>|0x530|-0x2d0:'1595'
-	// <0x6ee6d0>|0x260|+0x059:'1596'
-	// <0x6ee729>|0x2b9|+0x009:'1597'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee732>|0x2c2|+0x011:'1602'
-	// <0>
-	// <1>
-	// <0x6ee743>|0x2d3|+0x006:'1605'
-	// <0x6ee749>|0x2d9|+0x009:'1606'
-	// <0x6ee752>|0x2e2|+0x04c:'1607'
-	// <0>
-	// <0x6ee79e>|0x32e|+0x012:'1609'
-	// <0x6ee7b0>|0x340|+0x012:'1610'
-	// <0x6ee7c2>|0x352|+0x025:'1611'
-	// <0x6ee7e7>|0x377|+0x03b:'1612'
-	// <0>
-	// <0x6ee822>|0x3b2|+0x02e:'1614'
-	// <0x6ee850>|0x3e0|+0x008:'1615'
-	// <0>
-	// <1>
-	// <0x6ee858>|0x3e8|+0x00e:'1618'
-	// <0>
-	// <0x6ee866>|0x3f6|+0x002:'1620'
-	// <0x6ee868>|0x3f8|+0x002:'1621'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6ee86a>|0x3fa|+0x004:'1638'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ee86e>|0x3fe|+0x127:'1644'
-	// <0x6ee995>|0x525|-0x0f1:'1644'
-	// <0x6ee8a4>|0x434|+0x00a:'1645'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee8ae>|0x43e|+0x018:'1650'
-	// <0>
-	// <1>
-	// <0x6ee8c6>|0x456|+0x00f:'1653'
-	// <0>
-	// <1>
-	// <0x6ee8d5>|0x465|+0x010:'1656'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ee8e5>|0x475|+0x07a:'1661'
-	// <0x6ee95f>|0x4ef|+0x01c:'1662'
-	// <0x6ee97b>|0x50b|+0x038:'1663'
-	// <0>
-	// <1>
-	// <0x6ee9b3>|0x543|+0x061:'1666'
-	// <0>
-	// <0x6eea14>|0x5a4|+0x004:'1668'
-	// ******
+		if ( !( generator->event_type & time_event_channel_callback_should_be_fired ) )
+			continue;
+
+		cubic_spline_skeleton_animation_pinned pinned_animation( generator->animation );
+		animation_event_channels const& event_channels	= pinned_animation->event_channels( );
+		if ( !event_channels.channels_count( ) )
+			continue;
+
+		for ( subscribed_channel const* subscribed_channel = channels_head;
+			  subscribed_channel;
+			  subscribed_channel = subscribed_channel->next )
+		{
+			u32 const channel_id			=
+				event_channels.get_channel_id( subscribed_channel->channel_id );
+			if ( channel_id == u32( -1 ) )
+				continue;
+			if ( ( generator->channel_ids & ( u8( 1 ) << channel_id ) ) == 0 )
+				continue;
+
+			event_channel const& channel	= event_channels.channel( channel_id );
+			float const animation_time	= generator->animation_time * default_fps;
+			float const* const knots		= channel.knots( );
+			u32 const knots_count			= channel.knots_count( );
+			float const* const upper		=
+				std::lower_bound( knots, knots + knots_count, animation_time );
+			u32 const knot_upper_id		= ( upper - knots ) % knots_count;
+			u32 const knot_lower_id		=
+				( knot_upper_id + knots_count - 1 ) % knots_count;
+			float const animation_length	= pinned_animation->length_in_frames( );
+
+			float lower_time				= channel.knot( knot_lower_id );
+			if ( animation_time < lower_time )
+				lower_time					-= animation_length;
+			float upper_time				= channel.knot( knot_upper_id );
+			if ( upper_time < animation_time )
+				upper_time					+= animation_length;
+
+			float const clamped_time		= math::min( animation_time, upper_time );
+			u32 const domain_id			=
+				clamped_time - lower_time <= upper_time - clamped_time ?
+				knot_lower_id :
+				knot_upper_id;
+			u8 const domain_data			= channel.domain( domain_id ).data;
+
+			for ( animation_callback* callback = subscribed_channel->first_callback;
+				  callback;
+				  callback = callback->next )
+			{
+				if ( !callback->enabled )
+					continue;
+				if ( callback->animation.c_ptr( ) &&
+					 callback->animation.c_ptr( ) != generator->animation.c_ptr( ) )
+					continue;
+				if ( callback->event_type != u8( -1 ) &&
+					 callback->event_type != domain_data )
+					continue;
+				if ( callback->animated_object &&
+					 callback->animated_object != generator->animated_object )
+					continue;
+
+				animation_callback_params params(
+					generator->animated_object,
+					generator->animation,
+					subscribed_channel->channel_id,
+					current_time_in_ms,
+					generator->user_data,
+					domain_data,
+					generator->animation_interval_id
+				);
+				callback_return_type_enum const callback_result	= callback->callback( params );
+				callback->enabled				=
+					callback->enabled &&
+					callback_result == callback_return_type_call_me_again;
+				callbacks_are_actual			= callbacks_are_actual && callback->enabled;
+				result							= result || params.interrupt_animation_player_tick;
+			}
+		}
+	}
+
+	return									result;
 }
 
 void n_ary_tree::remove_animations( const u32 target_time_in_ms )
