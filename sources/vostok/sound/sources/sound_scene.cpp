@@ -16,6 +16,8 @@
 #include <vostok/sound/sound_debug_stats.h>
 #include <vostok/sound/sound_scene_creation_params.h>
 #include <vostok/core_entry_point.h>
+#include "effect_cross_fader.h"
+#include "sound_environment.h"
 #include "sound_instance_proxy_order.h"
 #include "sound_world.h"
 #include "speakers.h"
@@ -58,6 +60,74 @@ void receiver_collision::delete_position	( sound_scene& scene )
 	m_position							= 0;
 }
 
+effect_cross_fader::effect_cross_fader	(
+	sound_scene& scene,
+	u32 fade_time_in_ms,
+	IXAudio2SubmixVoice* first_submix,
+	IXAudio2SubmixVoice* second_submix
+) :
+	m_scene								( scene ),
+	m_fade_time							( fade_time_in_ms ),
+	m_fade_in_value						( 1.0f ),
+	m_fade_in_submix					( first_submix ),
+	m_fade_out_submix					( second_submix )
+{
+	m_fade_in_environment				= m_scene.get_current_environment( );
+	m_fade_out_environment				= m_scene.get_current_environment( );
+}
+
+void effect_cross_fader::tick	( u32 delta_time_in_ms, sound_environment* current_environment )
+{
+	if ( m_fade_in_environment != current_environment )
+	{
+		if ( math::is_similar( m_fade_in_value, 1.0f ) )
+		{
+			XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params =
+				m_scene.get_environment_params( m_fade_out_environment->env_params_id( ) );
+			XAUDIO2FX_REVERB_PARAMETERS native;
+			ReverbConvertI3DL2ToNative	( params, &native );
+			m_fade_out_submix->SetEffectParameters( 0, &native, sizeof( native ) );
+
+			m_fade_out_environment		= m_fade_in_environment;
+			m_fade_in_environment		= current_environment;
+			m_fade_in_value				= 0.0f;
+
+			IXAudio2SubmixVoice* temp	= m_fade_in_submix;
+			m_fade_in_submix			= m_fade_out_submix;
+			m_fade_out_submix			= temp;
+
+			m_fade_in_submix->SetVolume	( m_fade_in_value );
+			m_fade_out_submix->SetVolume( 1.0f - m_fade_in_value );
+		}
+		else
+		{
+			m_fade_out_environment		= m_fade_in_environment;
+			m_fade_in_environment		= current_environment;
+			m_fade_in_value				= 1.0f - m_fade_in_value;
+
+			IXAudio2SubmixVoice* temp	= m_fade_in_submix;
+			m_fade_in_submix			= m_fade_out_submix;
+			m_fade_out_submix			= temp;
+
+			m_fade_in_submix->SetVolume	( m_fade_in_value );
+			m_fade_out_submix->SetVolume( 1.0f - m_fade_in_value );
+		}
+	}
+	else
+	{
+		float fade_out_value			= 0.0f;
+		if ( m_fade_in_value < 1.0f )
+		{
+			m_fade_in_value				+= delta_time_in_ms * 1.0f / ( m_fade_time * 1.0f );
+			m_fade_in_value				= math::min( m_fade_in_value, 1.0f );
+			fade_out_value				= 1.0f - m_fade_in_value;
+		}
+
+		m_fade_in_submix->SetVolume		( m_fade_in_value );
+		m_fade_out_submix->SetVolume	( 1.0f - m_fade_in_value );
+	}
+}
+
 sound_scene::sound_scene	(
 	sound_world& world,
 	sound_scene_creation_params const& creation_params,
@@ -66,14 +136,20 @@ sound_scene::sound_scene	(
 	resources::query_result_for_cook& parent
 ) :
 	m_next						( 0 ),
+	m_environment_parameters	( g_allocator ),
 	m_world						( world ),
 	m_memory_arena_resources_ptr( 0 ),
+	m_graph						( 0 ),
 	m_proxies_count				( creation_params.proxies_count ),
 	m_propagators_count			( creation_params.propagators_count ),
 	m_receivers_count			( creation_params.receivers_count ),
 	m_spatial_tree				( 0 ),
+	m_environments_tree			( 0 ),
 	m_submix_voice				( submix_voice ),
+	m_fade_in_environment		( 0 ),
+	m_fade_out_environment		( 0 ),
 	m_is_active					( false ),
+	m_is_listener_position_set	( false ),
 	m_fade_state				( none ),
 	m_fade_in_time				( 0 ),
 	m_fade_out_time				( 0 ),
@@ -93,6 +169,88 @@ sound_scene::sound_scene	(
 	m_spatial_tree						= &*collision::new_space_partitioning_tree( g_allocator, 0.0001f, 1024 );
 	ASSERT								( m_spatial_tree );
 
+	ASSERT								( !m_environments_tree );
+	m_environments_tree					= &*collision::new_space_partitioning_tree( g_allocator, 0.0001f, 64 );
+	ASSERT								( m_environments_tree );
+
+	if ( m_world.is_audio_device_exist( ) )
+	{
+		m_fade_in_environment			= m_world.create_submix_voice( 1, 1 );
+		m_fade_out_environment			= m_world.create_submix_voice( 1, 1 );
+
+		IUnknown* pReverbEffect_1		= 0;
+		HRESULT hr						= XAudio2CreateReverb( &pReverbEffect_1 );
+		XAUDIO2_EFFECT_DESCRIPTOR effects_1[1] =
+		{
+			{ pReverbEffect_1, true, 1 }
+		};
+		XAUDIO2_EFFECT_CHAIN effectChain_1 =
+		{
+			1,
+			effects_1
+		};
+		hr								= m_fade_in_environment->SetEffectChain( &effectChain_1 );
+
+		IUnknown* pReverbEffect_2		= 0;
+		hr								= XAudio2CreateReverb( &pReverbEffect_2 );
+		XAUDIO2_EFFECT_DESCRIPTOR effects_2[1] =
+		{
+			{ pReverbEffect_2, true, 1 }
+		};
+		XAUDIO2_EFFECT_CHAIN effectChain_2 =
+		{
+			1,
+			effects_2
+		};
+		hr								= m_fade_out_environment->SetEffectChain( &effectChain_2 );
+
+		XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2_params =
+		{
+			100.0f,
+			-10000,
+			0,
+			0.0f,
+			1.0f,
+			0.5f,
+			-10000,
+			0.02f,
+			-10000,
+			0.04f,
+			100.0f,
+			100.0f,
+			5000.0f
+		};
+		XAUDIO2FX_REVERB_I3DL2_PARAMETERS* default_params =
+			VOSTOK_NEW_IMPL( g_allocator, XAUDIO2FX_REVERB_I3DL2_PARAMETERS )( i3dl2_params );
+		m_environment_parameters.push_back( std::make_pair( fixed_string< 64 >( "" ), default_params ) );
+
+		u32 env_params_id				= 0;
+		add_environment_params			( "", default_params, env_params_id );
+		m_default_environment			= VOSTOK_NEW_IMPL( g_allocator, sound_environment )( env_params_id );
+
+		XAUDIO2FX_REVERB_PARAMETERS native;
+		ReverbConvertI3DL2ToNative		( &i3dl2_params, &native );
+		hr								= m_fade_in_environment->SetEffectParameters( 0, &native, sizeof( native ) );
+		hr								= m_fade_out_environment->SetEffectParameters( 0, &native, sizeof( native ) );
+
+		XAUDIO2_SEND_DESCRIPTOR send_descriptor =
+		{
+			0,
+			m_submix_voice
+		};
+		XAUDIO2_VOICE_SENDS sends =
+		{
+			1,
+			&send_descriptor
+		};
+		hr								= m_fade_in_environment->SetOutputVoices( &sends );
+		hr								= m_fade_out_environment->SetOutputVoices( &sends );
+
+		m_environment_crossfader		=
+			VOSTOK_NEW_IMPL( g_allocator, effect_cross_fader )
+			( *this, 100, m_fade_in_environment, m_fade_out_environment );
+		VOSTOK_UNREFERENCED_PARAMETER	( hr );
+	}
 }
 
 struct receiver_unconditional_erasing_predicate : private boost::noncopyable
@@ -107,6 +265,7 @@ sound_scene::~sound_scene	( )
 {
 	R_ASSERT						( !is_debug_stream_writing_enabled( ) );
 	delete_space_partitioning_tree	( m_spatial_tree );
+	delete_space_partitioning_tree	( m_environments_tree );
 
 	if ( !m_receivers.empty( ) )
 	{
@@ -130,6 +289,10 @@ void sound_scene::stop		( )
 
 void sound_scene::tick		( sound_world& world, u32 time_delta )
 {
+	bool const device_exist		= world.is_audio_device_exist( );
+	if ( device_exist )
+		m_environment_crossfader->tick( time_delta, get_current_environment( ) );
+
 	R_ASSERT					( m_is_active );
 	if ( m_is_paused )
 		return;
@@ -146,7 +309,8 @@ void sound_scene::tick		( sound_world& world, u32 time_delta )
 
 	update_receivers_position	( );
 	notify_receivers			( );
-	notify_listener				( world );
+	if ( m_is_listener_position_set && device_exist )
+		notify_listener			( world );
 }
 
 sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy	
@@ -957,6 +1121,7 @@ void sound_scene::set_listener_properties	(
 	m_list_position.set		( position );
 	m_list_orient_front.set	( orient_front );
 	m_list_orient_top.set	( orient_top );
+	m_is_listener_position_set = true;
 }
 
 void sound_scene::fade_in	( sound_world& world, u32 time_in_msec )

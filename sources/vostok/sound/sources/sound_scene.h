@@ -8,8 +8,10 @@
 #define VOSTOK_SOUND_SCENE_H_INCLUDED
 
 #include <vostok/sound/sound.h>
+#include <xaudio2fx.h>
 #include <vostok/unmanaged_allocation_resource.h>
 #include <vostok/memory_single_size_buffer_allocator.h>
+#include <vostok/fixed_string.h>
 #include <vostok/collision/object.h>
 #include <vostok/sound/sound_receiver.h>
 #include "sound_instance_proxy_internal.h"
@@ -30,7 +32,9 @@ class query_result_for_cook;
 namespace sound {
 
 class sound_debug_stats;
+struct effect_cross_fader;
 struct sound_scene_creation_params;
+class sound_environment;
 
 namespace statistics {
 
@@ -241,6 +245,17 @@ public:
 				void			resume								( );
 				bool			is_paused							( ) const;
 
+				void			insert_environment					( sound_environment& environment, float4x4 const& transform );
+				void			add_environment_params				( pcstr name, XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params, u32& id );
+				u32				get_environment_params_id			( pcstr name );
+	XAUDIO2FX_REVERB_I3DL2_PARAMETERS*
+								get_environment_params				( pcstr name );
+	XAUDIO2FX_REVERB_I3DL2_PARAMETERS*
+								get_environment_params				( u32 id );
+				sound_environment*
+								get_current_environment				( );
+	IXAudio2SubmixVoice*		get_current_effect_submix			( );
+
 private:
 	// orders
 	void			emit_sound_propagators_impl
@@ -277,45 +292,36 @@ private:
 													threading::single_threading_policy
 												>	receiver_collision_allocator;
 
-#ifdef MASTER_GOLD
-	typedef intrusive_list	<	sound_instance_proxy_internal,
-								sound_instance_proxy_internal*,
-								&sound_instance_proxy_internal::m_next_for_sound_world,
-								threading::single_threading_policy 
-							>	proxies_list;
-
-	typedef intrusive_list	<	receiver_collision,
-								receiver_collision*,
-								&receiver_collision::m_next >	sound_receivers_list;
-
-	typedef intrusive_list	<	sound_voice,
-								sound_voice*,
-								&sound_voice::m_next_for_active > active_voices;
-#else // MASTER_GOLD
 	typedef intrusive_list	<	sound_instance_proxy_internal,
 								sound_instance_proxy_internal*,
 								&sound_instance_proxy_internal::m_next_for_sound_world,
 								threading::single_threading_policy,
-								size_policy			
+								size_policy,
+								no_debug_policy
 							>	proxies_list;
 
 	typedef intrusive_list	<	receiver_collision,
 								receiver_collision*,
 								&receiver_collision::m_next,
-								threading::single_threading_policy,
-								size_policy	>	sound_receivers_list;
+								threading::mutex,
+								size_policy,
+								no_debug_policy
+							>	sound_receivers_list;
 
 	typedef intrusive_list	<	sound_voice,
 								sound_voice*,
 								&sound_voice::m_next_for_active,
-								threading::single_threading_policy,
-								size_policy	>	active_voices;
-#endif // MASTER_GOLD
+								threading::mutex,
+								size_policy,
+								no_debug_policy
+							>	active_voices;
 
 
 public:
 	sound_scene*		m_next;
 private:
+	typedef std::pair< fixed_string< 64 >, XAUDIO2FX_REVERB_I3DL2_PARAMETERS* > environment_parameters_pair;
+	vectora< environment_parameters_pair >					m_environment_parameters;
 	sound_world&											m_world;
 
 	atomic_half3											m_list_position;
@@ -323,6 +329,7 @@ private:
 	atomic_half3											m_list_orient_top;
 
 	resources::unmanaged_allocation_resource_ptr			m_memory_arena_resources_ptr;
+	resources::unmanaged_resource_ptr						m_graph;
 
 	u32 const												m_proxies_count;
 	uninitialized_reference< sound_proxies_allocator >		m_proxies_allocator;
@@ -336,6 +343,7 @@ private:
 	uninitialized_reference< receiver_collision_allocator > m_receiver_collisions_allocator;
 
 	collision::space_partitioning_tree*						m_spatial_tree;
+	collision::space_partitioning_tree*						m_environments_tree;
 	sound_receivers_list									m_receivers;
 
 	proxies_list											m_active_proxies;
@@ -343,6 +351,11 @@ private:
 	active_voices											m_active_voices;
 
 	IXAudio2SubmixVoice*									m_submix_voice;
+	IXAudio2SubmixVoice*									m_fade_in_environment;
+	IXAudio2SubmixVoice*									m_fade_out_environment;
+	u32														m_environment_fade_time;
+	sound_environment*										m_default_environment;
+	effect_cross_fader*										m_environment_crossfader;
 
 #ifndef MASTER_GOLD
 	debug_snapshot*											m_debug_snapshot;
@@ -356,6 +369,7 @@ private:
 	u32														m_dbg_id;
 	bool													m_is_paused;
 	bool													m_is_active;
+	bool													m_is_listener_position_set;
 	enum
 	{
 		none,
@@ -365,6 +379,9 @@ private:
 
 }; // class sound_scene
 
+#ifdef MASTER_GOLD
+STATIC_SIZE_ASSERT( sound_scene, 0x270 );
+#endif // MASTER_GOLD
 
 typedef intrusive_list	<	sound_scene,
 							sound_scene*,
