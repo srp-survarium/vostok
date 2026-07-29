@@ -16,7 +16,18 @@ namespace render {
 
 class render_surface;
 struct model_locator_item;
-struct model_lods_descriptor;
+
+struct model_lods_descriptor {
+	model_lods_descriptor( ) { }
+
+	u8		m_lod_surfaces_count[3];
+	pbyte	m_lod_surfaces[3];
+	u8		m_lod_calc_type;
+	float	m_lod_custom_params[3];
+	bool	m_lod_params_default;
+};
+
+STATIC_SIZE_ASSERT( model_lods_descriptor, 0x24 );
 
 class render_model : public resources::unmanaged_resource {
 public:
