@@ -315,9 +315,11 @@ void resource_manager::recompile_xs_shaders(render::vector<fs_new::virtual_path_
 		shader_names.push_back(file_name);
 /*
 		shader_configuration null_configuration;
-		null_configuration.configuration = 0x00;
+		null_configuration.configuration[0] = 0x00;
+		null_configuration.configuration[1] = 0x00;
 		shader_configuration max_configuration;
-		max_configuration.configuration = 0xFFFFFFFF;
+		max_configuration.configuration[0] = u64(-1);
+		max_configuration.configuration[1] = u64(-1);
 		
 		shader_name_config_pair range_start	( file_name.c_str(), null_configuration);
 		shader_name_config_pair range_end	( file_name.c_str(), max_configuration);
@@ -706,9 +708,11 @@ void resource_manager::release_impl( res_xs_hw<shader_data> const* xs_hw)
 	char* name = (char*)( xs_hw->m_name.c_str());
 
 	shader_configuration null_configuration;
-	null_configuration.configuration = 0x00;
+	null_configuration.configuration[0] = 0x00;
+	null_configuration.configuration[1] = 0x00;
 	shader_configuration max_configuration;
-	max_configuration.configuration = 0xFFFFFFFF;
+	max_configuration.configuration[0] = u64(-1);
+	max_configuration.configuration[1] = u64(-1);
 	
 	shader_name_config_pair range_start	( name, null_configuration);
 	shader_name_config_pair range_end	( name, max_configuration);
@@ -2605,4 +2609,3 @@ res_sampler_state * resource_manager::find_registered_sampler	( char const* name
 
 } // namespace render 
 } // namespace vostok 
-

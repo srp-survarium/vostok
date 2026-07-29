@@ -270,13 +270,16 @@ struct binary_shader_key_type
 	{
 		return	left.shader_name < right.shader_name ||
 				(left.shader_name == right.shader_name && 
-					(left.configuration.configuration < right.configuration.configuration || 
-						(left.configuration.configuration == right.configuration.configuration && left.type < right.type)));
+					(union_base::operator < (left.configuration, right.configuration) ||
+						(left.configuration.configuration[0] == right.configuration.configuration[0] &&
+							left.configuration.configuration[1] == right.configuration.configuration[1] &&
+							left.type < right.type)));
 	}
 	friend bool operator == (binary_shader_key_type const& left, binary_shader_key_type const& right)
 	{
 		return	left.shader_name == right.shader_name && 
-				left.configuration.configuration == right.configuration.configuration &&
+				left.configuration.configuration[0] == right.configuration.configuration[0] &&
+				left.configuration.configuration[1] == right.configuration.configuration[1] &&
 				left.type == right.type;
 	}
 	

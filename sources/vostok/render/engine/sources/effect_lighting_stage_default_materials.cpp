@@ -21,10 +21,10 @@ void effect_lighting_stage_default_materials::compile( effect_compiler& compiler
 	configuration.use_normal_texture			 = bool(custom_config["use_nmap"]);
 	configuration.use_alpha_test				 = bool(custom_config["use_alpha_test"]);
 	configuration.use_transparency_texture		 = bool(custom_config["use_ttransparency"]);
-	configuration.use_tfresnel_at_0_degree		 = custom_config.value_exists("use_fresnel_at_0_degree_texture") ? bool(custom_config["use_fresnel_at_0_degree_texture"]) : false;
+	configuration.use_fresnel_texture		 = custom_config.value_exists("use_fresnel_at_0_degree_texture") ? bool(custom_config["use_fresnel_at_0_degree_texture"]) : false;
 
 	configuration.use_specular_intensity_texture = bool(custom_config["use_tspecular_inensity"]);
-	configuration.use_specular_power_texture	 = bool(custom_config["use_tspecular_power"]);
+	configuration.use_roughness_texture	 = bool(custom_config["use_tspecular_power"]);
 	
 	configuration.is_anisotropic_material		= custom_config.value_exists("is_anisotropic_material") ? 
 												(bool)custom_config["is_anisotropic_material"] : false;
@@ -50,7 +50,7 @@ void effect_lighting_stage_default_materials::compile( effect_compiler& compiler
 			float const max_roughness					= custom_config.value_exists("max_roughness") ? custom_config["max_roughness"] : 1.0f;
 			compiler.set_constant						( "max_roughness", max_roughness );
 
-			if (configuration.use_tfresnel_at_0_degree)
+			if (configuration.use_fresnel_texture)
 				compiler.set_texture("t_fresnel_at_0_degree", pcstr(custom_config["texture_fresnel_at_0_degree"]));
 
 			if( configuration.use_diffuse_texture)
@@ -79,7 +79,7 @@ void effect_lighting_stage_default_materials::compile( effect_compiler& compiler
 			
 			float4 roughness_uv_parameters(0, 0, min_roughness, max_roughness);
 			
-			if( configuration.use_specular_power_texture)
+			if( configuration.use_roughness_texture)
 				compiler.set_texture("t_roughness", pcstr(custom_config["texture_specular_power"]));
 			else
 			{

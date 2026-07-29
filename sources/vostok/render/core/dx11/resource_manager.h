@@ -137,13 +137,16 @@ public:
  		inline bool operator < ( shader_name_config_pair const & other) const
  		{
 			int str_res = strcmp	(name, other.name);
- 			return (str_res < 0 ) || ( (str_res == 0) && config.configuration < other.config.configuration);
+			return (str_res < 0 ) ||
+				((str_res == 0) && union_base::operator < (config, other.config));
  		}
 
  		inline bool operator == ( shader_name_config_pair const & other) const
  		{
 			int str_res = strcmp	(name, other.name);
-			return ( (str_res == 0) && config.configuration == other.config.configuration);
+			return (str_res == 0) &&
+				config.configuration[0] == other.config.configuration[0] &&
+				config.configuration[1] == other.config.configuration[1];
  		}
 	};
 

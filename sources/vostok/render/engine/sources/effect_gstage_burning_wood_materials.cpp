@@ -22,7 +22,7 @@ void effect_gstage_burning_wood_materials::compile( effect_compiler& compiler, c
 	configuration.use_normal_texture		= bool(custom_config["use_nmap"]);
 	configuration.use_parallax				= bool(custom_config["use_parallax"]);
 	configuration.use_alpha_test			= bool(custom_config["use_alpha_test"]);
-	configuration.use_tfresnel_at_0_degree	= custom_config.value_exists("use_fresnel_at_0_degree_texture") ? bool(custom_config["use_fresnel_at_0_degree_texture"]) : false;
+	configuration.use_fresnel_texture	= custom_config.value_exists("use_fresnel_at_0_degree_texture") ? bool(custom_config["use_fresnel_at_0_degree_texture"]) : false;
 	configuration.use_detail_normal_texture	= custom_config.value_exists("use_detail_nmap") ? bool(custom_config["use_detail_nmap"]) : false;
 	
 	configuration.use_detail_texture		= custom_config.value_exists("use_tditail_diffuse") ? 
@@ -52,8 +52,8 @@ void effect_gstage_burning_wood_materials::compile( effect_compiler& compiler, c
 	}
 	
 	configuration.use_specular_intensity_texture		= (bool)custom_config["use_tspecular_inensity"];
-	configuration.use_specular_power_texture			= (bool)custom_config["use_tspecular_power"];
-	configuration.use_transluceny_texture				= (bool)custom_config["use_ttranslucency"];
+	configuration.use_roughness_texture			= (bool)custom_config["use_tspecular_power"];
+	configuration.use_translucency_texture				= (bool)custom_config["use_ttranslucency"];
 	
 	configuration.is_anisotropic_material				= custom_config.value_exists("is_anisotropic_material") ? 
 														  (bool)custom_config["is_anisotropic_material"] : false;
@@ -138,7 +138,7 @@ void effect_gstage_burning_wood_materials::compile( effect_compiler& compiler, c
 			solid_color_specular.w		= 0;
 			solid_color_specular_used	= true;
 			
-			if (configuration.use_tfresnel_at_0_degree)
+			if (configuration.use_fresnel_texture)
 				compiler.set_texture("t_fresnel_at_0_degree", pcstr(custom_config["texture_fresnel_at_0_degree"]));
 			
 			if (configuration.use_reflection)
@@ -214,7 +214,7 @@ void effect_gstage_burning_wood_materials::compile( effect_compiler& compiler, c
 			
 			if (pass_index == 0)
 			{
-				if( configuration.use_specular_power_texture)
+				if( configuration.use_roughness_texture)
 					compiler.set_texture("t_roughness", pcstr(custom_config["texture_specular_power"]));
 				else
 				{
@@ -237,7 +237,7 @@ void effect_gstage_burning_wood_materials::compile( effect_compiler& compiler, c
 			//solid_material_params.y = float(custom_config["constant_diffuse_power"]);
 			solid_material_params_used = true;
 			
-			if( configuration.use_transluceny_texture)
+			if( configuration.use_translucency_texture)
 				compiler.set_texture("t_translucency", pcstr(custom_config["texture_translucency"]));
 			//else
 			//{
