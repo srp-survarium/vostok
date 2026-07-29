@@ -19,9 +19,10 @@ namespace render {
 render_output_window::render_output_window( vostok::render::output_window_configuration const& window_configuration )
 :	m_targets		( get_window_client_size((HWND)window_configuration.m_hwnd) ),
 	m_window		( (HWND)window_configuration.m_hwnd ),
-	m_output		( resource_manager::ref().create_render_output( (HWND)window_configuration.m_hwnd, true) ),
-	m_current_size	( get_window_client_size((HWND)window_configuration.m_hwnd) )
+	m_output		( resource_manager::ref().create_render_output( (HWND)window_configuration.m_hwnd, true) )
 {
+	m_current_size									= get_window_client_size((HWND)window_configuration.m_hwnd);
+
 	if(window_configuration.m_create_flash_renderer)
 	{
 		m_flash_renderer								= NEW(flash_renderer)();
