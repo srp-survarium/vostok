@@ -1044,97 +1044,75 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 	// ******
 }
 
-// STATE[STUB]
 bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 	const u32				target_time_in_ms,
 	subscribed_channel*&	channels_head,
 	bool&					callbacks_are_actual
 )
 {
-	// LOCALS
-	// callback_generator_info const* 	callback_generators_head
-	// callback_generator_info* 		previous_generator_info
-	// animation_state const* const 	e
-	// const u16 						event_type
-	// const bool 						result
-	// ******
+	callback_generator_info const* callback_generators_head	= 0;
+	callback_generator_info* previous_generator_info			= 0;
+	animation_state const* const end							=
+		m_animation_states + m_animations_count;
+	for ( animation_state const* i = m_animation_states; i != end; ++i ) {
+		animation_event const& event	= *i->event_iterator;
+		if ( event.event_time_in_ms != target_time_in_ms )
+			continue;
 
-	return false;
+		u16 const event_type			= event.event_type;
+		if ( !( event_type & (
+			time_event_animation_lexeme_ended |
+			time_event_animation_interval_ended |
+			time_event_animation_ended_in_positive_direction |
+			time_event_animation_ended_in_negative_direction |
+			time_event_channel_callback_should_be_fired
+		) ) )
+			continue;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f08f8>|0x008|+0x0e8:'1741'
-	// <0x6f09e0>|0x0f0|-0x0c0:'1741'
-	// <0x6f0920>|0x030|+0x00f:'1742'
-	// <0>
-	// <1>
-	// <0x6f092f>|0x03f|+0x010:'1745'
-	// <0>
-	// <1>
-	// <0x6f093f>|0x04f|+0x015:'1748'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6f0954>|0x064|+0x006:'1756'
-	// <0>
-	// <1>
-	// <0x6f095a>|0x06a|+0x003:'1759'
-	// <0x6f095d>|0x06d|+0x00d:'1760'
-	// <0>
-	// <1>
-	// <0x6f096a>|0x07a|+0x015:'1763'
-	// <0x6f097f>|0x08f|+0x003:'1764'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6f0982>|0x092|+0x038:'1773'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6f09ba>|0x0ca|+0x007:'1790'
-	// <0x6f09c1>|0x0d1|+0x003:'1791'
-	// <0x6f09c4>|0x0d4|+0x002:'1792'
-	// <0x6f09c6>|0x0d6|+0x003:'1793'
-	// <0>
-	// <0x6f09c9>|0x0d9|+0x01a:'1795'
-	// <0>
-	// <1>
-	// <0x6f09e3>|0x0f3|+0x00a:'1798'
-	// <0x6f09ed>|0x0fd|+0x009:'1799'
-	// <0x6f09f6>|0x106|+0x015:'1800'
-	// <0>
-	// <0x6f0a0b>|0x11b|+0x006:'1802'
-	// <0x6f0a11>|0x121|+0x002:'1803'
-	// <0x6f0a13>|0x123|+0x003:'1804'
-	// <0x6f0a16>|0x126|+0x009:'1805'
-	// <0>
-	// <1>
-	// <0x6f0a1f>|0x12f|+0x003:'1808'
-	// ******
+		n_ary_tree_animation_node const& animation	= i->event_iterator.animation( );
+		if ( animation.is_transitting_to_zero( ) &&
+			 !( event_type & time_event_animation_lexeme_ended ) )
+			continue;
+		if ( !animation.can_generate_events( ) )
+			continue;
+
+		u32 const animation_interval_id	=
+			( event_type & time_event_animation_interval_ended ) ?
+			i->previous_animation_interval_id :
+			i->animation_interval_id;
+		callback_generator_info* const generator	=
+			new ( ALLOCA( sizeof( callback_generator_info ) ) ) callback_generator_info(
+				animation.animated_object( ),
+				animation.animation_intervals( )[ animation_interval_id ].animation( ),
+				i->animation_time,
+				event_type,
+				event.channel_ids,
+				animation.user_data,
+				u8( animation_interval_id )
+			);
+		if ( previous_generator_info )
+			previous_generator_info->next	= generator;
+		else
+			callback_generators_head			= generator;
+		previous_generator_info				= generator;
+	}
+
+	remove_animations					( target_time_in_ms );
+	update_event_iterators				( target_time_in_ms );
+	bool const result					= dispatch_callbacks(
+		callback_generators_head,
+		channels_head,
+		target_time_in_ms,
+		callbacks_are_actual
+	);
+
+	for ( callback_generator_info const* i = callback_generators_head; i; ) {
+		callback_generator_info const* const next	= i->next;
+		i->~callback_generator_info			( );
+		i								= next;
+	}
+
+	return								result;
 }
 
 // STATE[STUB]

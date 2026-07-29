@@ -27,10 +27,46 @@ class animation_player;
 
 namespace mixing {
 
-struct callback_generator_info;
 class n_ary_tree_animation_node;
 struct animation_state;
 class animated_object_holder;
+
+class callback_generator_info {
+public:
+	inline callback_generator_info(
+		pcvoid const								animated_object,
+		resources::managed_resource_ptr const&	animation,
+		const float								animation_time,
+		const u16								event_type,
+		const u8								channel_ids,
+		const u32								user_data,
+		const u8								animation_interval_id
+	) :
+		animation				( animation ),
+		animated_object			( animated_object ),
+		next					( 0 ),
+		user_data				( user_data ),
+		animation_time			( animation_time ),
+		event_type				( event_type ),
+		channel_ids				( channel_ids ),
+		animation_interval_id	( animation_interval_id )
+	{
+	}
+
+private:
+	/* 0x0000 */	const resources::managed_resource_ptr	animation;
+	/* 0x0004 */	pcvoid const							animated_object;
+	/* 0x0008 */	callback_generator_info const*			next;
+	/* 0x000c */	const u32								user_data;
+	/* 0x0010 */	const float								animation_time;
+	/* 0x0014 */	const u16								event_type;
+	/* 0x0016 */	const u8								channel_ids;
+	/* 0x0017 */	const u8								animation_interval_id;
+
+	friend class n_ary_tree;
+}; // class callback_generator_info
+
+STATIC_SIZE_ASSERT(callback_generator_info, 0x18);
 
 template class VOSTOK_ANIMATION_API intrusive_ptr <
 	n_ary_tree_intrusive_base,
