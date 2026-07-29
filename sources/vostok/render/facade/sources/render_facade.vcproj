@@ -767,6 +767,10 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath="..\common_types.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

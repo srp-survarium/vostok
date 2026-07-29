@@ -1,15 +1,11 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_output_window.h"
+#include "render_output_window.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
-explicit render_output_window::render_output_window( output_window_configuration const& window_configuration )
+render_output_window::render_output_window( output_window_configuration const& window_configuration )
 {
 	// FUNCTION BODY[0x653c70]: 22
 	// <0x653ce6>|0x076|+0x024:'24'
