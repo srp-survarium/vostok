@@ -20,6 +20,8 @@
 #include "mixing_n_ary_tree_time_scale_calculator.h"
 #include "mixing_n_ary_tree_transition_tree_constructor_impl.h"
 #include "mixing_n_ary_tree_target_time_scale_calculator.h"
+#include "mixing_animation_state.h"
+#include "interpolator_comparer.h"
 
 #include <vostok/animation/mixing_animated_object_holder.h>
 
@@ -713,55 +715,44 @@ void n_ary_tree_comparer::add_operands(
 	// ******
 }
 
-// STATE[STUB]
 void n_ary_tree_comparer::new_weight_driving_animation(
 	n_ary_tree_animation_node&		new_weight_driving_animation,
 	n_ary_tree_animation_node&		new_driving_animation_in_previous_target
 )
 {
-	// LOCALS
-	// interpolator_comparer 			interpolator_comparer
-	// u32 								operands_offset
-	// u32 								time_scale_operands_count
-	// ******
+	if ( new_driving_animation_in_previous_target.weight_driving_animation( ) )
+		m_equal					= false;
 
-	// CALL SITE INFO
-	// <0x56e8a2> -> void < unknown >( interpolator_comparer&, base_interpolator const& ) const
-	// ******
+	if ( new_weight_driving_animation.override_existing_animation( )
+		&& new_weight_driving_animation.animation_state( ).animation_time
+			!= new_driving_animation_in_previous_target.animation_state( ).animation_time )
+		m_equal					= false;
 
-	// FUNCTION BODY
-	// <0x56e868>|0x008|+0x006:'747'
-	// <0x56e86e>|0x00e|+0x004:'748'
-	// <0>
-	// <0x56e872>|0x012|+0x01b:'750'
-	// <0x56e88d>|0x02d|+0x004:'751'
-	// <0>
-	// <1>
-	// <0x56e891>|0x031|+0x013:'754'
-	// <0x56e8a4>|0x044|+0x019:'755'
-	// <0>
-	// <0x56e8bd>|0x05d|+0x006:'757'
-	// <0>
-	// <1>
-	// <2>
-	// <0x56e8c3>|0x063|+0x02d:'761'
-	// <0>
-	// <1>
-	// <0x56e8f0>|0x090|+0x00d:'764'
-	// <0>
-	// <0x56e8fd>|0x09d|+0x007:'766'
-	// <0>
-	// <0x56e904>|0x0a4|+0x014:'768'
-	// <0>
-	// <1>
-	// <0x56e918>|0x0b8|+0x011:'771'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56e929>|0x0c9|+0x014:'777'
-	// ******
+	interpolator_comparer comparer;
+	new_driving_animation_in_previous_target.weight_interpolator( ).accept(
+		comparer,
+		new_weight_driving_animation.weight_interpolator( )
+	);
+	m_equal						= m_equal && comparer.result == animation::equal;
+
+	if ( new_weight_driving_animation.override_existing_animation( ) )
+		m_equal					= m_equal
+			&& new_driving_animation_in_previous_target.animation_state( ).animation_interval_id
+				== new_weight_driving_animation.animation_state( ).animation_interval_id
+			&& new_driving_animation_in_previous_target.animation_state( ).animation_interval_time
+				== new_weight_driving_animation.animation_state( ).animation_interval_time;
+
+	std::pair< u32, u32 > const operands_counts	=
+		computed_operands_count( new_driving_animation_in_previous_target, new_weight_driving_animation );
+	u32 time_scale_operands_count	= operands_counts.first;
+	u32 operands_offset				= operands_counts.second;
+	new_animation					( new_weight_driving_animation, time_scale_operands_count, operands_offset );
+	m_needed_buffer_size			+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
+	add_operands(
+		new_driving_animation_in_previous_target,
+		new_weight_driving_animation,
+		time_scale_operands_count != 0
+	);
 }
 
 // STATE[STUB]
