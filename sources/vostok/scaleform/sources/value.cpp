@@ -158,8 +158,9 @@ void flash_external_handler_impl::Callback(
 		u32								args_count
 	)
 {
+	flash_movie*	flash	= ( flash_movie* )movie->GetUserData( );
 	owner.callback(
-		( flash_movie* )movie->GetUserData( ),
+		flash,
 		method_name,
 		( flash_value const* )args,
 		args_count
@@ -211,8 +212,8 @@ void flash_function_handler_impl::Call( Scaleform::GFx::FunctionHandler::Params 
 	flash_function_handler_params	p;
 	p.pRetVal	= ( flash_value* )params.pRetVal;
 	p.pArgs		= ( flash_value* )params.pArgs;
-	p.pMovie	= ( flash_movie* )params.pMovie->GetUserData( );
 	p.ArgCount	= params.ArgCount;
+	p.pMovie	= ( flash_movie* )params.pMovie->GetUserData( );
 
 	owner.call( p );
 }
