@@ -59,11 +59,23 @@ STATIC_SIZE_ASSERT( user_render_surface_wire, 0x9C );
 
 class user_render_model_instance : public render_model_instance_impl {
 public:
-	user_render_model_instance( ) { }
+	user_render_model_instance( )
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x619f0]
+	}
+
 	virtual ~user_render_model_instance( ) { }
 
+	virtual math::aabb get_aabb( )
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x619b0]
+		return m_surface->m_aabbox;
+	}
+
 	void assign_surface( user_render_surface* surface );
-	void get_surfaces(
+	virtual void get_surfaces(
 		float4x4 const*						mat_vp,
 		float3 const*						view_pos,
 		vector< render_surface_instance* >&	dest,
@@ -71,8 +83,26 @@ public:
 		u8									lod_id,
 		u32									surface_flags
 	);
-	void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
+
+	virtual u32 get_surfaces_count( ) const
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0xb53b0]
+		return 1;
+	}
+
+	virtual u32 get_surfaces_count( u32 ) const
+	{
+		return 1;
+	}
+
+	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
+
+	user_render_surface*	m_surface;
+	render_surface_instance	m_surface_instance;
 };
+
+STATIC_SIZE_ASSERT( user_render_model_instance, 0x1A8 );
 
 typedef resources::resource_ptr<
 	user_render_model_instance,

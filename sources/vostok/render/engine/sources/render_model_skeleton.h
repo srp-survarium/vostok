@@ -56,7 +56,7 @@ public:
 	skeleton_render_model_instance( );
 	virtual ~skeleton_render_model_instance( );
 
-	void get_surfaces(
+	virtual void get_surfaces(
 		float4x4 const*						mat_vp,
 		float3 const*						view_pos,
 		vector< render_surface_instance* >&	list,
@@ -65,15 +65,39 @@ public:
 		u32									surface_flags
 	);
 
-	void update( );
-	void set_constants( );
+	virtual void update( );
+	virtual void set_constants( );
+
+	virtual math::aabb get_aabb( )
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x6f3f0]
+		return m_original->m_aabbox;
+	}
+
 	void assign_original( skeleton_render_model_ptr v );
 	void update_render_matrices( float4x4 const* matrices, u32 count );
-	bool get_locator( pcstr locator_name, model_locator_item& result ) const;
-	u32 get_surfaces_count( u32 lod_id ) const;
-	void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
-	void get_bind_pose( float4x4* matrices, u32 count ) const;
+	virtual bool get_locator( pcstr locator_name, model_locator_item& result ) const;
+
+	virtual u32 get_surfaces_count( ) const
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x6f450]
+		return m_instances_count;
+	}
+
+	virtual u32 get_surfaces_count( u32 lod_id ) const;
+	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
+	virtual void get_bind_pose( float4x4* matrices, u32 count ) const;
+
+	vector< float4x4 >			m_prev_bones_matrices;
+	vector< float4x4 >			m_bones_matrices;
+	skeleton_render_model_ptr	m_original;
+	u8							m_instances_count;
+	render_surface_instance*	m_surface_instances;
 };
+
+STATIC_SIZE_ASSERT( skeleton_render_model_instance, 0x1B0 );
 
 } // namespace render
 } // namespace vostok
