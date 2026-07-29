@@ -909,6 +909,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\scene_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\scene_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_view.cpp"
 			>
 		</File>
