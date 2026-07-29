@@ -973,6 +973,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\model_cooker.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\model_cooker.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_model.cpp"
 			>
 		</File>
