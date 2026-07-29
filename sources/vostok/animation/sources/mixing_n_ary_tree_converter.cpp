@@ -28,6 +28,7 @@
 #include <vostok/animation/mixing_binary_tree_addition_node.h>
 #include "mixing_n_ary_tree_animation_node.h"
 #include <vostok/animation/i_editor_mixer.h>
+#include <vostok/animation/mixing_animated_object_holder.h>
 #include "mixing_n_ary_tree_weight_calculator.h"
 #include "i_editor_mixer_inline.h"
 #include "interpolator_comparer.h"
@@ -115,11 +116,10 @@ static void fill_weights	( binary_tree_animation_node& animation )
 
 void n_ary_tree_converter::compute_buffer_size		( )
 {
-	/*
 	ASSERT						( !m_animations_count );
 
-	n_ary_tree_size_calculator	calculator;
-	for ( binary_tree_animation_node_ptr i=m_animations_root; i; ++m_animations_count, i=i->m_next_animation ) {
+	n_ary_tree_size_calculator	calculator( 0 );
+	for ( binary_tree_animation_node_ptr i=m_animations_root; i; ++m_animations_count, i=i->m_next_weight_animation ) {
 		if ( (*i).m_null_weight_found ) {
 			--m_animations_count;
 			continue;
@@ -129,7 +129,7 @@ void n_ary_tree_converter::compute_buffer_size		( )
 
 		i->accept				( calculator );
 
-		if ( !i->driving_animation() ) {
+		if ( !i->time_driving_animation() && (i->time_scale() != 1.f) ) {
 			m_buffer_size		+= sizeof(n_ary_tree_time_scale_node);
 			m_buffer_size		+= sizeof(n_ary_tree_base_node*);
 		}
@@ -143,7 +143,23 @@ void n_ary_tree_converter::compute_buffer_size		( )
 	m_buffer_size				+= calculator.calculated_size( );
 	m_buffer_size				+= m_animations_count*sizeof(animation_state);
 	m_buffer_size				+= m_animations_count*sizeof(animation_state*);
-	*/
+
+	buffer_vector<pcvoid> animated_objects(
+		ALLOCA( m_animations_count*sizeof(animated_object_holder) ),
+		m_animations_count
+	);
+	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
+		if ( !(*i).m_null_weight_found )
+			animated_objects.push_back	( i->animated_object() );
+	}
+
+	std::sort					( animated_objects.begin(), animated_objects.end() );
+	animated_objects.erase		(
+		std::unique( animated_objects.begin(), animated_objects.end() ),
+		animated_objects.end()
+	);
+	m_animated_objects_count	= animated_objects.size();
+	m_buffer_size				+= m_animated_objects_count*sizeof(animated_object_holder);
 }
 
 struct animation_less_predicate {
@@ -282,8 +298,7 @@ void n_ary_tree_converter::sort_animations			( vostok::mutable_buffer& buffer )
 
 void n_ary_tree_converter::simplify_weights		( )
 {
-	/*
-	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_animation ) {
+	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
 		fill_weights			( *i );
 
 		binary_tree_null_weight_searcher searcher;
@@ -299,7 +314,11 @@ void n_ary_tree_converter::simplify_weights		( )
 		}
 
 		if ( unique_count == 1 ) {
-			n_ary_tree_redundant_multiplicands_detector	detector( i->weight_interpolator() );
+			n_ary_tree_redundant_multiplicands_detector detector(
+				i->weight_driving_animation() ?
+				*i->weight_driving_animation()->weight_interpolator() :
+				*i->weight_interpolator()
+			);
 			last_multiplicand->accept	( detector );
 			if ( detector.result() )
 				unique_count		= 0;
@@ -307,7 +326,6 @@ void n_ary_tree_converter::simplify_weights		( )
 		i->m_unique_weights_count	= unique_count;
 		i->m_null_weight_found		= searcher.result( );
 	}
-	*/
 }
 
 u32 n_ary_tree_converter::needed_buffer_size		( )
@@ -331,9 +349,8 @@ struct binary_tree_unique_interpolators_predicate {
 
 void n_ary_tree_converter::process_interpolators	( binary_tree_base_node* const interpolators_root, u32 const interpolators_count, vostok::mutable_buffer& buffer )
 {
-	/*
 	u32 animations_count		= 0;
-	for ( binary_tree_animation_node_ptr i = m_animations_root; i; i = i->m_next_animation )
+	for ( binary_tree_animation_node_ptr i = m_animations_root; i; i = i->m_next_weight_animation )
 		++animations_count;
 
 	m_interpolators_count		= interpolators_count + 2*animations_count;
@@ -347,8 +364,8 @@ void n_ary_tree_converter::process_interpolators	( binary_tree_base_node* const 
 			*i++				= &weight->interpolator();
 	}
 
-	for ( binary_tree_animation_node_ptr j = m_animations_root; j; j = j->m_next_animation ) {
-		*i++					= &(*j).weight_interpolator();
+	for ( binary_tree_animation_node_ptr j = m_animations_root; j; j = j->m_next_weight_animation ) {
+		*i++					= (*j).weight_interpolator();
 		if ( (*j).time_scale_interpolator() )
 			*i++				=  (*j).time_scale_interpolator();
 	}
@@ -366,12 +383,11 @@ void n_ary_tree_converter::process_interpolators	( binary_tree_base_node* const 
 
 	memory::copy				( m_binary_interpolators, buffer_size, i, buffer_size );
 
-	interpolator_size_calculator size_calculator;
+	interpolator_size_calculator size_calculator( 0 );
 	for ( ; i != e; ++i )
 		(*i)->accept			( size_calculator );
 
 	m_buffer_size				+= size_calculator.calculated_size( ) + m_interpolators_count*sizeof(base_interpolator*);
-	*/
 }
 
 struct node_predicate {
