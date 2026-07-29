@@ -1,0 +1,4 @@
+interface:
+  display_name: "Vostok Rebuild Library Carcass"
+  short_description: "Regenerate and drain a module carcass queue"
+  default_prompt: "Use $vostok-rebuild-library-carcass to clean-rebuild the requested Vostok library from canonical target structure."
