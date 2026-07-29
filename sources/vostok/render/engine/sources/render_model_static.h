@@ -47,7 +47,14 @@ public:
 	static_render_model_instance( );
 	virtual ~static_render_model_instance( );
 
-	void get_surfaces(
+	virtual math::aabb get_aabb( )
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x71760]
+		return m_original->m_aabbox;
+	}
+
+	virtual void get_surfaces(
 		float4x4 const*						mat_vp,
 		float3 const*						view_pos,
 		vector< render_surface_instance* >&	list,
@@ -57,15 +64,29 @@ public:
 	);
 
 	void assign_original( static_render_model_ptr v );
-	bool get_locator( pcstr locator_name, model_locator_item& result ) const;
-	u32 get_surfaces_count( u32 lod_id ) const;
-	void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
+	virtual bool get_locator( pcstr locator_name, model_locator_item& result ) const;
+
+	virtual u32 get_surfaces_count( ) const
+	{
+		// STATE[STUB]
+		// FUNCTION BODY[0x717a0]
+		return m_instances_count;
+	}
+
+	virtual u32 get_surfaces_count( u32 lod_id ) const;
+	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
 	void add_sectors_holder( configs::binary_config_value sectotrs_cfg );
-	void set_lod_params( u8 type, bool use_default, float p0, float p1, float p2 );
+	virtual void set_lod_params( u8 type, bool use_default, float p0, float p1, float p2 );
 
 protected:
 	u8 select_lod( float4x4 const& mat_vp, float3 const& view_pos );
+
+	static_render_model_ptr		m_original;
+	u8							m_instances_count;
+	render_surface_instance*	m_surface_instances;
 };
+
+STATIC_SIZE_ASSERT( static_render_model_instance, 0x198 );
 
 } // namespace render
 } // namespace vostok
