@@ -127,7 +127,7 @@ void	sound_world::serialize_proxy	( sound_instance_proxy_internal* proxy, boost:
 	memory::writer* sound_thread_writer			= VOSTOK_NEW_IMPL( g_allocator, memory::writer )( g_allocator );
 	sound_thread_writer->write_u32				( proxy->get_propagators( ).size( ) );
 
-	sound_propagator* prop			= proxy->get_propagators( ).front( );
+	new_sound_propagator* prop		= proxy->get_propagators( ).front( );
 	while ( prop )
 	{
 		prop->serialize				( *sound_thread_writer );
@@ -150,32 +150,6 @@ void	sound_world::deserialize_proxy	( sound_instance_proxy_internal* proxy, memo
 	R_ASSERT							( proxy );
 	R_ASSERT							( r );
 	VOSTOK_UNREFERENCED_PARAMETERS		( proxy, r );
-	//sound_propagator* prop			= proxy->get_propagators( ).front( );
-	//while ( prop )
-	//{
-	//	sound_propagator* next		= proxy->get_propagators( ).get_next_of_object( prop );
-	//	delete_sound_propagator		( proxy, prop );
-	//	prop						= next;
-	//}
-
-	//u32 props_count			= r->r_u32( );
-	//for ( u32 i = 0; i < props_count; ++i )
-	//{
-	//	u64 emitter_address		= r->r_u64( );
-
-	//	sound_propagator_emitter const* emt	= proxy->get_sound_propagator_emitter( ).get_sound_propagator_emitter( emitter_address );
-	//	R_ASSERT						( emt != 0 );
-	//	sound_propagator* prop	= get_sound_propagator( 
-	//		*emt, 
-	//		proxy,
-	//		float3( .0f, .0f, .0f ),
-	//		once,
-	//		0,
-	//		0,
-	//		0 );
-	//	prop->deserialize	( *r );
-	//	proxy->get_propagators( ).push_back( prop );
-	//}
 }
 
 } // namespace sound

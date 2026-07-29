@@ -36,7 +36,7 @@ void single_sound::emit_sound_propagators	(	sound_instance_proxy_internal& proxy
 											) const
 {
 
-	sound_propagator* new_propagator	= proxy.get_sound_scene( ).create_sound_propagator
+	new_sound_propagator* new_propagator	= proxy.get_sound_scene( ).create_sound_propagator
 										(
 											*this,
 											proxy,

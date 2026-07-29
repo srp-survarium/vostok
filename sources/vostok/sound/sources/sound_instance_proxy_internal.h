@@ -12,7 +12,7 @@
 #include <vostok/sound/sound_producer.h>
 #include <vostok/sound/sound_emitter.h>
 #include <vostok/sound/atomic_half3.h>
-#include "sound_propagator.h"
+#include "new_sound_propagator.h"
 
 namespace vostok {
 
@@ -106,15 +106,15 @@ public:
 			void			tick					( u32 delta_time );
 			void			notify_receivers		( collision::space_partitioning_tree& spatial_tree );
 
-			void			add_sound_propagator	( sound_propagator& propagator ) { m_propagators.push_back( &propagator ); }
+			void			add_sound_propagator	( new_sound_propagator& propagator ) { m_propagators.push_back( &propagator ); }
 
 	inline	void			set_callback_pending	( bool is_pending ) { threading::interlocked_exchange( m_callback_pending, is_pending ); }
 			void			execute_callback		( u32 playback_id );
 	inline	void			execute_callback		( ) { execute_callback( m_playback_id ); }
 	inline	bool			is_destruction_pending	( ) const { return m_destruction_pending == 1; }
 
-	inline	propagators_list&		get_propagators				( ) { return m_propagators; }
-	inline	propagators_list const&	get_propagators				( ) const { return m_propagators; }
+	inline	new_sound_propagator_list&		get_propagators				( ) { return m_propagators; }
+	inline	new_sound_propagator_list const&	get_propagators				( ) const { return m_propagators; }
 	inline	world_user&				get_world_user				( ) const { return m_user; }
 	inline	sound_scene&			get_sound_scene				( ) const { return m_scene; }
 
@@ -133,6 +133,8 @@ public:
 	
 			void			on_propagators_serialized		( boost::function < void ( memory::writer*, memory::writer* ) >& fn, memory::writer* sound_thread_writer, memory::writer* w );
 			void			on_finish_callback				( sound_instance_proxy_ptr last_reference );
+
+			void			calculate_graph_position		( float3 const& listener_position, vectora< std::pair< float, float3 > >& results );
 
 sound_emitter_ptr const&	get_sound_emitter				( ) const { return m_sound_emitter; }
 
@@ -157,7 +159,7 @@ private:
 	atomic_half3									m_position;
 	atomic_half3									m_direction;
 
-	propagators_list								m_propagators;
+	new_sound_propagator_list						m_propagators;
 public:
 	sound_instance_proxy_internal*				m_next_for_sound_world;
 private:

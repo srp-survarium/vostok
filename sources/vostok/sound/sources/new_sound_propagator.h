@@ -7,6 +7,10 @@
 
 #include <vostok/sound/sound.h>
 #include <vostok/fixed_vector.h>
+#include <vostok/sound/sound_propagator_emitter.h>
+#include <vostok/sound/sound_rms.h>
+#include <vostok/sound/sound_spl.h>
+#include "sound_voice.h"
 
 struct IXAudio2SubmixVoice;
 
@@ -19,7 +23,6 @@ class writer;
 namespace sound {
 
 class sound_instance_proxy_internal;
-class sound_propagator_emitter;
 class sound_voice;
 struct sound_voice_params;
 
@@ -116,6 +119,42 @@ private:
 }; // class new_sound_propagator
 
 STATIC_SIZE_ASSERT( new_sound_propagator, 0x6C );
+
+typedef intrusive_list	<	new_sound_propagator,
+							new_sound_propagator*,
+							&new_sound_propagator::m_next_for_proxies,
+							threading::single_threading_policy
+						>	new_sound_propagator_list;
+
+inline void new_sound_propagator::set_quality	( u32 quality )
+{
+	if ( m_voice )
+		m_voice->set_quality		( quality );
+}
+
+inline float new_sound_propagator::get_sound_spl	( float distance ) const
+{
+	return m_emitter.get_sound_spl( )->get_spl( distance );
+}
+
+inline float new_sound_propagator::get_sound_rms_value	( ) const
+{
+	u32 const offset			= sound_playing_time( );
+	if ( offset == u32(-1) )
+		return					0.0f;
+
+	sound_rms_pinned pinned_rms	( m_emitter.get_sound_rms( ) );
+	return pinned_rms->get_rms_by_time( offset );
+}
+
+inline resources::managed_resource_ptr const& new_sound_propagator::get_sound_rms	( ) const
+{
+	return m_emitter.get_sound_rms( );
+}
+
+inline void new_sound_propagator::serialize	( memory::writer& )
+{
+}
 
 } // namespace sound
 } // namespace vostok
