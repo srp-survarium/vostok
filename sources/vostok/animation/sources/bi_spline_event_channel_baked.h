@@ -41,6 +41,8 @@ private:
 	/* 0x0008 */	u16		m_knots_count;
 	/* 0x000a */	u8		m_domains_count;
 	/* 0x000b */	u8		m_type;
+
+	friend void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_size );
 }; // class bi_spline_event_channel_baked
 
 STATIC_SIZE_ASSERT(bi_spline_event_channel_baked, 0x10);
