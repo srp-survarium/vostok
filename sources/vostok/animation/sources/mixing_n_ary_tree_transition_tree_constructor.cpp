@@ -31,6 +31,24 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
+struct time_animations_predicate {
+	inline bool operator ( )(
+		n_ary_tree_animation_node const* const left,
+		n_ary_tree_animation_node const* const right
+	) const
+	{
+		if ( left->time_synchronization_group_id( ) != right->time_synchronization_group_id( ) )
+			return left->time_synchronization_group_id( ) < right->time_synchronization_group_id( );
+
+		if ( !left->time_driving_animation( ) && right->time_driving_animation( ) )
+			return true;
+		if ( left->time_driving_animation( ) && !right->time_driving_animation( ) )
+			return false;
+
+		return left < right;
+	}
+};
+
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
 	animation_state const*			previous_animation_state,
@@ -392,207 +410,172 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transit
 	return					result;
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::remove_animation(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node* const, bool)
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::remove_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation, bool is_new_driving_animation )
 {
-	// LOCALS
-	// float 							animation_interval_time
-	// bool 							can_be_time_driving_animation
-	// n_ary_tree_animation_node* 		result
-	// u32 								animation_interval_id
-	// n_ary_tree_base_node** 			new_operands
-	// n_ary_tree_weight_transition_node* transition
-	// u32 								operands_offset
-	// float 							animation_interval_time
-	// n_ary_tree_animation_node* 		result
-	// u32 								animation_interval_id
-	// u32 								operands_offset
-	// n_ary_tree_base_node** 			multiplicands
-	// n_ary_tree_base_node** 			e
-	// u32 								time_scale_operands_count
-	// n_ary_tree_base_node* 			weight_from
-	// bool 							can_be_time_driving_animation
-	// u32 								time_scale_operands_count
-	// n_ary_tree_base_node** 			new_operands
-	// n_ary_tree_base_node** 			operands_end
-	// ******
+	base_interpolator const& interpolator	=
+		( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
+	if ( interpolator.transition_time( ) == 0.f )
+		return							NULL;
 
-	// CALL SITE INFO
-	// <0x6ebb6c> -> float < unknown >() const
-	// <0x6ebbaa> -> bool < unknown >()
-	// <0x6ebc67> -> bool < unknown >()
-	// <0x6ebd25> -> bool < unknown >()
-	// <0x6ebe13> -> bool < unknown >()
-	// <0x6ebe75> -> bool < unknown >()
-	// <0x6ebf60> -> bool < unknown >()
-	// ******
+	bool can_be_time_driving_animation	= true;
+	u32 operands_offset					=
+		animation.operands_count( )
+		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+			? 1
+			: 0;
 
-	return NULL;
+	if ( animation.time_synchronization_group_id( ) != u32( -1 ) ) {
+		n_ary_tree_animation_node* i	= m_to.time_root( );
+		for ( ; i && i->time_synchronization_group_id( ) != animation.time_synchronization_group_id( ); i = i->m_next_time_animation )
+			;
 
-	// FUNCTION BODY
-	// <0x6ebb4a>|0x00a|+0x01d:'436'
-	// <0x6ebb67>|0x027|+0x015:'437'
-	// <0x6ebb7c>|0x03c|+0x00c:'438'
-	// <0>
-	// <0x6ebb88>|0x048|+0x015:'440'
-	// <0>
-	// <0x6ebb9d>|0x05d|+0x01c:'442'
-	// <0x6ebbb9>|0x079|+0x003:'443'
-	// <0>
-	// <1>
-	// <0x6ebbbc>|0x07c|+0x013:'446'
-	// <0x6ebbcf>|0x08f|+0x011:'447'
-	// <0x6ebbe0>|0x0a0|+0x00e:'448'
-	// <0x6ebbee>|0x0ae|+0x004:'449'
-	// <0x6ebbf2>|0x0b2|+0x005:'450'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ebbf7>|0x0b7|+0x008:'457'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6ebbff>|0x0bf|+0x025:'474'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ebc24>|0x0e4|+0x010:'479'
-	// <0x6ebc34>|0x0f4|+0x014:'480'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ebc48>|0x108|+0x00d:'484'
-	// <0>
-	// <1>
-	// <0x6ebc55>|0x115|+0x00b:'487'
-	// <0x6ebc60>|0x120|+0x00d:'488'
-	// <0x6ebc6d>|0x12d|+0x007:'489'
-	// <0x6ebc74>|0x134|+0x005:'490'
-	// <0>
-	// <0x6ebc79>|0x139|+0x002:'492'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ebc7b>|0x13b|+0x038:'498'
-	// <0>
-	// <0x6ebcb3>|0x173|+0x002:'500'
-	// <0>
-	// <0x6ebcb5>|0x175|+0x037:'502'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ebcec>|0x1ac|+0x027:'506'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ebd13>|0x1d3|+0x024:'511'
-	// <0>
-	// <0x6ebd37>|0x1f7|+0x00d:'513'
-	// <0x6ebd44>|0x204|-0x158:'514'
-	// <0x6ebbec>|0x0ac|+0x164:'515'
-	// <0x6ebd50>|0x210|+0x00e:'515'
-	// <0x6ebd5e>|0x21e|+0x004:'516'
-	// <0x6ebd62>|0x222|+0x005:'517'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ebd67>|0x227|+0x004:'524'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6ebd6b>|0x22b|+0x026:'541'
-	// <0>
-	// <1>
-	// <0x6ebd91>|0x251|+0x004:'544'
-	// <0x6ebd95>|0x255|+0x020:'545'
-	// <0>
-	// <0x6ebdb5>|0x275|+0x004:'547'
-	// <0>
-	// <1>
-	// <0x6ebdb9>|0x279|+0x03c:'550'
-	// <0>
-	// <1>
-	// <0x6ebdf5>|0x2b5|+0x005:'553'
-	// <0x6ebdfa>|0x2ba|+0x007:'554'
-	// <0>
-	// <1>
-	// <0x6ebe01>|0x2c1|+0x026:'557'
-	// <0x6ebe27>|0x2e7|+0x16c:'558'
-	// <0>
-	// <0x6ebf93>|0x453|+0x005:'560'
-	// <0x6ebf98>|0x458|+0x00b:'561'
-	// <0x6ebfa3>|0x463|-0x04b:'562'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ebf58>|0x418|+0x036:'566'
-	// <0x6ebf8e>|0x44e|-0x153:'567'
-	// <0>
-	// <1>
-	// <0x6ebe3b>|0x2fb|+0x005:'570'
-	// <0x6ebe40>|0x300|+0x00b:'571'
-	// <0x6ebe4b>|0x30b|+0x00d:'572'
-	// <0x6ebe58>|0x318|+0x005:'573'
-	// <0x6ebe5d>|0x31d|+0x00c:'574'
-	// <0x6ebe69>|0x329|+0x027:'575'
-	// <0x6ebe90>|0x350|+0x033:'576'
-	// <0>
-	// <0x6ebec3>|0x383|+0x004:'578'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ebec7>|0x387|+0x005:'584'
-	// <0x6ebecc>|0x38c|+0x007:'585'
-	// <0x6ebed3>|0x393|+0x023:'586'
-	// <0>
-	// <1>
-	// <0x6ebef6>|0x3b6|+0x035:'589'
-	// <0x6ebf2b>|0x3eb|-0x227:'590'
-	// <0>
-	// <0x6ebd04>|0x1c4|+0x22b:'592'
-	// <0x6ebf2f>|0x3ef|-0x3b1:'592'
-	// <0x6ebb7e>|0x03e|+0x18b:'593'
-	// <0x6ebd09>|0x1c9|+0x245:'593'
-	// ******
+		if ( i && i != &animation ) {
+			can_be_time_driving_animation	= false;
+			operands_offset					= 0;
+		}
+	}
+
+	if ( animation.is_transitting_to_zero( ) && !is_new_driving_animation ) {
+		u32 const operands_count			= animation.operands_count( ) - (
+			animation.operands_count( )
+			&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+				? 1
+				: 0
+		);
+		u32 time_scale_operands_count	= 0;
+		u32 animation_interval_id		= 0;
+		float animation_interval_time	= 0.f;
+		n_ary_tree_animation_node* const result	= new_animation(
+			animation,
+			animation,
+			weight_driving_animation,
+			operands_count,
+			time_scale_operands_count,
+			operands_offset,
+			animation_interval_id,
+			animation_interval_time,
+			true,
+			can_be_time_driving_animation
+		);
+
+		n_ary_tree_base_node** new_operands	=
+			result->operands( sizeof( n_ary_tree_animation_node ) ) + time_scale_operands_count;
+		m_buffer						+= ( time_scale_operands_count + operands_count ) * sizeof( n_ary_tree_base_node* );
+
+		n_ary_tree_base_node** i			= animation.operands( sizeof( n_ary_tree_animation_node ) );
+		n_ary_tree_base_node** const end	= i + animation.operands_count( );
+		for ( ; i != end; ++i ) {
+			if ( (*i)->is_time_scale( ) && time_scale_operands_count )
+				continue;
+
+			*new_operands++				= (*i)->is_time_scale( )
+				? m_cloner.clone( **i, 1.f )
+				: m_cloner.clone( **i );
+		}
+
+		return							add_animation_node(
+			*result,
+			&animation.animation_state( ),
+			animation_interval_id,
+			animation_interval_time,
+			false
+		);
+	}
+
+	operands_offset						=
+		!animation.time_driving_animation( )
+		&& animation.operands_count( )
+		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+			? 1
+			: 0;
+
+	u32 time_scale_operands_count		= 0;
+	u32 animation_interval_id			= 0;
+	float animation_interval_time		= 0.f;
+	n_ary_tree_animation_node* const result	= new_animation(
+		animation,
+		animation,
+		weight_driving_animation,
+		1,
+		time_scale_operands_count,
+		operands_offset,
+		animation_interval_id,
+		animation_interval_time,
+		true,
+		can_be_time_driving_animation
+	);
+
+	n_ary_tree_base_node** new_operands	=
+		result->operands( sizeof( n_ary_tree_animation_node ) ) + time_scale_operands_count;
+	m_buffer							+= ( time_scale_operands_count + 1 ) * sizeof( n_ary_tree_base_node* );
+
+	if ( time_scale_operands_count < operands_offset )
+		*new_operands++					= m_cloner.clone(
+			**animation.operands( sizeof( n_ary_tree_animation_node ) ),
+			1.f
+		);
+
+	n_ary_tree_weight_transition_node* const transition	=
+		static_cast< n_ary_tree_weight_transition_node* >( m_buffer.c_ptr( ) );
+	m_buffer							+= sizeof( n_ary_tree_weight_transition_node );
+
+	u32 const weight_operands_offset	= animation.operands_count( )
+		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+			? 1
+			: 0;
+	u32 const multiplicands_count		= animation.operands_count( ) - weight_operands_offset;
+	n_ary_tree_base_node* weight_from	= NULL;
+	switch ( multiplicands_count ) {
+		case 0:
+			weight_from					= static_cast< n_ary_tree_base_node* >( m_buffer.c_ptr( ) );
+			m_buffer					+= sizeof( n_ary_tree_weight_node );
+			new ( weight_from ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), 1.f );
+			break;
+
+		case 1:
+			weight_from					= m_cloner.clone(
+				*animation.operands( sizeof( n_ary_tree_animation_node ) )[ weight_operands_offset ]
+			);
+			break;
+
+		default: {
+			n_ary_tree_multiplication_node* const multiplication	=
+				new ( m_buffer.c_ptr( ) ) n_ary_tree_multiplication_node( multiplicands_count );
+			m_buffer					+= sizeof( n_ary_tree_multiplication_node );
+			n_ary_tree_base_node** operands	=
+				multiplication->operands( sizeof( n_ary_tree_multiplication_node ) );
+			m_buffer					+= multiplicands_count * sizeof( n_ary_tree_base_node* );
+
+			n_ary_tree_base_node** i		=
+				animation.operands( sizeof( n_ary_tree_animation_node ) ) + weight_operands_offset;
+			n_ary_tree_base_node** const end	= i + multiplicands_count;
+			for ( ; i != end; ++i )
+				*operands++				= m_cloner.clone( **i );
+
+			weight_from					= multiplication;
+			break;
+		}
+	}
+
+	n_ary_tree_weight_node* const weight_to	=
+		new ( m_buffer.c_ptr( ) ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), 0.f );
+	m_buffer							+= sizeof( n_ary_tree_weight_node );
+
+	new ( transition ) n_ary_tree_weight_transition_node(
+		*weight_from,
+		*weight_to,
+		*m_cloner.clone( interpolator ),
+		m_current_time_in_ms
+	);
+	*new_operands						= transition;
+
+	return								add_animation_node(
+		*result,
+		&animation.animation_state( ),
+		animation_interval_id,
+		animation_interval_time,
+		false
+	);
 }
 
 void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
@@ -1421,126 +1404,111 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::get_time_driv
 	return						NULL;
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::merge_trees(vostok::animation::mixing::n_ary_tree const&, vostok::animation::mixing::n_ary_tree const&)
 void n_ary_tree_transition_tree_constructor::merge_trees( n_ary_tree const& from, n_ary_tree const& to )
 {
-	// LOCALS
-	// n_ary_tree_animation_node* 		i_begin
-	// float 							animation_interval_time
-	// animation_state_params const& 	params
-	// u16 								initial_event_types
-	// float 							animation_time_threshold
-	// float 							weight
-	// animation_interval const* 		time_driving_animation_interval
-	// bool 							is_freezed
-	// ******
+	n_ary_tree_animation_node* i_begin	= from.weight_root( );
+	n_ary_tree_animation_node* i_end	= synchronization_group_end( i_begin );
+	n_ary_tree_animation_node* j_begin	= to.weight_root( );
+	n_ary_tree_animation_node* j_end	= synchronization_group_end( j_begin );
+	while ( i_begin && j_begin ) {
+		if ( i_begin->weight_synchronization_group_id( ) < j_begin->weight_synchronization_group_id( ) ) {
+			remove_weight_synchronization_group	( i_begin, i_end );
+			get_next_synchronization_group			( i_begin, i_end );
+			continue;
+		}
 
-	// FUNCTION BODY
-	// <0x6ec366>|0x006|+0x003:'1557'
-	// <0x6ec369>|0x009|+0x017:'1558'
-	// <0x6ec380>|0x020|+0x006:'1559'
-	// <0x6ec386>|0x026|+0x01d:'1560'
-	// <0x6ec3a3>|0x043|+0x0ab:'1561'
-	// <0x6ec44e>|0x0ee|-0x0a3:'1561'
-	// <0x6ec3ab>|0x04b|+0x00a:'1562'
-	// <0x6ec3b5>|0x055|+0x00b:'1563'
-	// <0x6ec3c0>|0x060|+0x01e:'1564'
-	// <0x6ec3de>|0x07e|+0x003:'1565'
-	// <0>
-	// <1>
-	// <0x6ec3e1>|0x081|-0x001:'1568'
-	// <0x6ec3e0>|0x080|+0x003:'1569'
-	// <0x6ec3e3>|0x083|+0x00b:'1569'
-	// <0x6ec3ee>|0x08e|+0x01e:'1570'
-	// <0x6ec40c>|0x0ac|+0x002:'1571'
-	// <0>
-	// <1>
-	// <0x6ec40e>|0x0ae|+0x00c:'1574'
-	// <0x6ec41a>|0x0ba|+0x01a:'1575'
-	// <0x6ec434>|0x0d4|+0x053:'1576'
-	// <0>
-	// <1>
-	// <0x6ec487>|0x127|+0x009:'1579'
-	// <0x6ec490>|0x130|+0x00b:'1580'
-	// <0x6ec49b>|0x13b|-0x043:'1581'
-	// <0>
-	// <1>
-	// <0x6ec458>|0x0f8|+0x02d:'1584'
-	// <0x6ec485>|0x125|-0x025:'1584'
-	// <0x6ec460>|0x100|+0x00c:'1585'
-	// <0x6ec46c>|0x10c|+0x04e:'1586'
-	// <0>
-	// <1>
-	// <0x6ec4ba>|0x15a|+0x038:'1589'
-	// <0x6ec4f2>|0x192|-0x02e:'1589'
-	// <0x6ec4c4>|0x164|+0x008:'1590'
-	// <0x6ec4cc>|0x16c|+0x01b:'1591'
-	// <0>
-	// <0x6ec4e7>|0x187|+0x008:'1593'
-	// <0x6ec4ef>|0x18f|+0x00a:'1594'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec4f9>|0x199|+0x00f:'1598'
-	// <0>
-	// <0x6ec508>|0x1a8|+0x00b:'1600'
-	// <0x6ec513>|0x1b3|+0x00c:'1601'
-	// <0>
-	// <0x6ec51f>|0x1bf|+0x041:'1603'
-	// <0>
-	// <0x6ec560>|0x200|+0x002:'1605'
-	// <0x6ec562>|0x202|+0x00e:'1606'
-	// <0x6ec570>|0x210|+0x00f:'1607'
-	// <0>
-	// <0x6ec57f>|0x21f|+0x011:'1609'
-	// <0x6ec590>|0x230|+0x003:'1610'
-	// <0x6ec593>|0x233|+0x007:'1611'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec59a>|0x23a|+0x00a:'1615'
-	// <0x6ec5a4>|0x244|+0x006:'1616'
-	// <0x6ec5aa>|0x24a|+0x014:'1617'
-	// <0x6ec5be>|0x25e|+0x009:'1618'
-	// <0x6ec5c7>|0x267|+0x013:'1619'
-	// <0x6ec5da>|0x27a|+0x003:'1620'
-	// <0>
-	// <0x6ec5dd>|0x27d|+0x008:'1622'
-	// <0>
-	// <0x6ec5e5>|0x285|+0x00c:'1624'
-	// <0x6ec5f1>|0x291|+0x008:'1625'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec5f9>|0x299|+0x022:'1629'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6ec61b>|0x2bb|+0x042:'1643'
-	// <0>
-	// <0x6ec65d>|0x2fd|+0x030:'1645'
-	// <0>
-	// <0x6ec68d>|0x32d|+0x004:'1647'
-	// <0x6ec691>|0x331|+0x015:'1648'
-	// <0>
-	// <1>
-	// <0x6ec6a6>|0x346|+0x017:'1651'
-	// <0x6ec6bd>|0x35d|-0x00f:'1651'
-	// <0x6ec6ae>|0x34e|+0x012:'1652'
-	// <0x6ec6c0>|0x360|-0x00f:'1652'
-	// <0x6ec6b1>|0x351|+0x012:'1653'
-	// ******
+		if ( i_begin->weight_synchronization_group_id( ) > j_begin->weight_synchronization_group_id( ) ) {
+			add_weight_synchronization_group		( j_begin, j_end );
+			get_next_synchronization_group			( j_begin, j_end );
+			continue;
+		}
+
+		change_weight_synchronization_group		( i_begin, i_end, j_begin, j_end );
+		get_next_synchronization_group				( i_begin, i_end );
+		get_next_synchronization_group				( j_begin, j_end );
+	}
+
+	while ( j_begin ) {
+		add_weight_synchronization_group			( j_begin, j_end );
+		get_next_synchronization_group				( j_begin, j_end );
+	}
+
+	while ( i_begin ) {
+		remove_weight_synchronization_group		( i_begin, i_end );
+		get_next_synchronization_group				( i_begin, i_end );
+	}
+
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation ) {
+		u32 const group_id						= i->time_synchronization_group_id( );
+		if ( group_id == u32( -1 ) )
+			continue;
+
+		n_ary_tree_animation_node* const driver	= get_time_driving_animation( group_id );
+		if ( driver && driver != i )
+			i->set_time_driving_animation			( *driver );
+	}
+
+	n_ary_tree_animation_node** const animations	=
+		static_cast< n_ary_tree_animation_node** >(
+			ALLOCA( m_animations_count * sizeof( n_ary_tree_animation_node* ) )
+		);
+	n_ary_tree_animation_node** animations_end	= animations;
+	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
+		*animations_end++						= i;
+
+	stlp_std::sort								( animations, animations_end, time_animations_predicate( ) );
+	if ( animations != animations_end ) {
+		m_time_root								= *animations;
+		for ( n_ary_tree_animation_node** i = animations + 1, **previous = animations; i != animations_end; ++i, ++previous )
+			(*previous)->m_next_time_animation	= *i;
+	}
+
+	for ( n_ary_tree_animation_node* animation = m_time_root; animation; animation = animation->m_next_time_animation ) {
+		animation_state_params const params		=
+			*reinterpret_cast< animation_state_params const* >( &animation->animation_state( ) );
+
+		u16 const initial_event_types			= params.initial_event_types;
+		u32 animation_interval_id				= params.animation_interval_id;
+		float animation_interval_time			= params.animation_interval_time;
+		float animation_time_threshold			= params.animation_time_threshold;
+		float const weight						= params.weight;
+		animation_state const* const previous	= params.previous;
+		bool const is_freezed					= previous ? previous->is_freezed : false;
+
+		if ( animation->time_driving_animation( ) ) {
+			n_ary_tree_animation_node& driver	= *animation->time_driving_animation( );
+			animation_state const& driver_state	= driver.animation_state( );
+			animation_interval_id				= driver_state.animation_interval_id;
+			animation_interval const& driver_interval	=
+				driver.animation_intervals( )[ animation_interval_id ];
+			animation_interval_time				=
+				animation->animation_intervals( )[ animation_interval_id ].length( )
+				/ driver_interval.length( )
+				* driver_state.animation_interval_time;
+			animation_time_threshold			= 0.f;
+		}
+
+		animation_state* const state				= &animation->animation_state( );
+		new ( state ) animation_state(
+			*animation,
+			m_current_time_in_ms,
+			initial_event_types,
+			animation_interval_id,
+			animation_interval_id,
+			animation_interval_time,
+			animation_time_threshold,
+			weight,
+			m_channels_head,
+			is_freezed
+		);
+		state->are_there_any_weight_transitions	= state->event_iterator.are_there_any_weight_transitions( );
+
+		if ( previous )
+			state->bone_matrices_computer			= previous->bone_matrices_computer;
+	}
+
+	m_time_driving_animations_begin				= NULL;
+	m_time_driving_animations_end				= NULL;
 }
 
 n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(

@@ -37,6 +37,11 @@ void n_ary_tree_animation_node::accept( n_ary_tree_double_dispatcher& dispatcher
 	node.visit			( dispatcher, *this );
 }
 
+void n_ary_tree_animation_node::set_time_driving_animation( n_ary_tree_animation_node& time_driving_animation )
+{
+	m_time_driving_animation	= &time_driving_animation;
+}
+
 void n_ary_tree_animation_node::visit	( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_animation_node& node )
 {
 	dispatcher.dispatch	( node, *this );
