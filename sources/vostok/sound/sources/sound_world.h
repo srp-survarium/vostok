@@ -94,7 +94,7 @@ public:
 			IXAudio2*		xaudio_engine			( ) const	{ return m_xaudio; }
 	IXAudio2MasteringVoice*	xaudio_master_voice		( ) const	{ return m_master_voice; }
 			u8				master_channels_num		( ) const;
-	IXAudio2SubmixVoice*	create_submix_voice		( ) const;
+	IXAudio2SubmixVoice*	create_submix_voice		( u8 input_channels_count, u8 processing_stage ) const;
 			void			free_submix_voice		( IXAudio2SubmixVoice* voice ) const;
 
 	inline	panning_lut_ptr	get_panning_lut			( ) const { return m_panning_lut; }

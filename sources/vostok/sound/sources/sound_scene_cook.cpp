@@ -42,9 +42,7 @@ void sound_scene_cook::create_resource	(	resources::query_result_for_cook& in_ou
 	static u32 id						= 0;
 
 	sound_scene* created_scene			= new	( in_out_unmanaged_resource_buffer.c_ptr( ) )
-												sound_scene( m_sound_world.create_submix_voice( ), id++ );
-
-//	m_sound_world.add_sound_scene		( created_scene );
+												sound_scene( m_sound_world.create_submix_voice( 2, 2 ), id++ );
 
 	in_out_query.set_unmanaged_resource	( created_scene, resources::nocache_memory, sizeof ( sound_scene ) );
 	in_out_query.finish_query			( result_success );
@@ -54,7 +52,6 @@ void sound_scene_cook::destroy_resource	( resources::unmanaged_resource* resourc
 {
 	sound_scene* scene					= static_cast_checked< sound_scene* >( resource );
 
-//	m_sound_world.remove_sound_scene	( scene );
 	m_sound_world.free_submix_voice		( scene->get_submix_voice( ) );
 
 	scene->~sound_scene					( );
