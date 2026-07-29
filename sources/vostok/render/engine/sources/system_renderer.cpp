@@ -1,9 +1,5 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\system_renderer.h"
+#include "system_renderer.h"
 
 namespace vostok {
 namespace render {
@@ -50,143 +46,6 @@ untyped_buffer* system_renderer::create_quad_ib( )
 }
 
 // STATE[STUB]
-void `vostok::render::effect_manager::create_effect<vostok::render::effect_wireframe_colored>'::`2'::`dynamic atexit destructor for 'descriptor_object''( )
-{
-	// FUNCTION BODY[0x7ee120]: 130
-	// <0>
-	// <1>
-	// <0x646c04>|0x114|+0x035:'122'
-	// <0x646c39>|0x149|+0x054:'123'
-	// <0x646c8d>|0x19d|+0x054:'124'
-	// <0x646ce1>|0x1f1|+0x054:'125'
-	// <0>
-	// <0x646d35>|0x245|+0x049:'127'
-	// <0>
-	// <0x646d7e>|0x28e|+0x044:'129'
-	// <0>
-	// <0x646dc2>|0x2d2|+0x00b:'131'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <0x646dcd>|0x2dd|+0x09a:'168'
-	// <0>
-	// <0x646e67>|0x377|+0x00e:'170'
-	// <0x646e75>|0x385|+0x059:'171'
-	// <0x646ece>|0x3de|+0x04d:'172'
-	// <0>
-	// <0x646f1b>|0x42b|+0x00c:'174'
-	// <0x646f27>|0x437|+0x01b:'175'
-	// <0x646f42>|0x452|+0x025:'176'
-	// <0x646f67>|0x477|+0x016:'177'
-	// <0>
-	// <0x646f7d>|0x48d|+0x014:'179'
-	// <0x646f91>|0x4a1|+0x057:'180'
-	// <0>
-	// <1>
-	// <2>
-	// <0x646fe8>|0x4f8|+0x092:'184'
-	// <0x64707a>|0x58a|+0x011:'185'
-	// <0>
-	// <0x64708b>|0x59b|+0x017:'187'
-	// <0>
-	// <0x6470a2>|0x5b2|+0x005:'189'
-	// <0>
-	// <0x6470a7>|0x5b7|+0x005:'191'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6470ac>|0x5bc|+0x01e:'195'
-	// <0x6470ca>|0x5da|+0x020:'196'
-	// <0>
-	// <0x6470ea>|0x5fa|+0x01d:'198'
-	// <0>
-	// <1>
-	// <0x647107>|0x617|+0x011:'201'
-	// <0>
-	// <0x647118>|0x628|+0x011:'203'
-	// <0>
-	// <0x647129>|0x639|+0x055:'205'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x64717e>|0x68e|+0x02a:'221'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <0x6471a8>|0x6b8|+0x002:'242'
-	// <0x6471aa>|0x6ba|+0x0e0:'243'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64728a>|0x79a|+0x041:'249'
-	// ******
-}
-
-// STATE[STUB]
 bool system_renderer::is_effects_ready( ) const
 {
 	return false;
@@ -217,7 +76,7 @@ bool system_renderer::is_effects_ready( ) const
 }
 
 // STATE[STUB]
- system_renderer::~system_renderer( )
+system_renderer::~system_renderer( )
 {
 	// FUNCTION BODY[0x644e70]: 1
 	// <0>
@@ -1005,61 +864,6 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 	// <53>
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_buffer_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

@@ -38,11 +38,6 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > material_effects_instance_ptr;
 
-typedef resources::resource_ptr<
-	render_model_instance_impl,
-	resources::unmanaged_intrusive_base
-> render_model_instance_impl_ptr;
-
 typedef intrusive_ptr<
 	res_texture,
 	resource_intrusive_base,

@@ -11,6 +11,11 @@ public:
 	virtual ~render_model_instance_impl( ) { }
 };
 
+typedef resources::resource_ptr<
+	render_model_instance_impl,
+	resources::unmanaged_intrusive_base
+> render_model_instance_impl_ptr;
+
 } // namespace render
 } // namespace vostok
 
