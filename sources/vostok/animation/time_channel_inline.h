@@ -58,7 +58,7 @@ template < class DomainType >
 size_t time_channel< DomainType >::count_internal_memory_size	( u32 const knots_count ) 
 { 
 	ASSERT						( knots_count > 0 );
-	return						sizeof(DomainType) * ( knots_count - 1 ) + sizeof( float ) * knots_count; 
+	return						( sizeof(DomainType) + sizeof(float) ) * knots_count;
 }
 
 template < class DomainType >

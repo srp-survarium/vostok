@@ -12,6 +12,8 @@
 namespace vostok {
 namespace animation {
 
+class bi_spline_event_channel_baked;
+
 //static const u32	max_event_channels = 10;
 
 class VOSTOK_ANIMATION_API animation_event_channels {
@@ -23,10 +25,19 @@ public:
 public:
 template	<class ConfigValueType>
 static	size_t	count_internal_memory_size( ConfigValueType const& config );
+static	u32		count_internal_memory_size(
+						bi_spline_event_channel_baked const* channels,
+						u32 channels_count
+					);
 
 public:
 template	<class ConfigValueType>
 void create_in_place_internals ( ConfigValueType const& config, void* memory_buff );
+		void	create_in_place_internals(
+						bi_spline_event_channel_baked const* channels,
+						u32 channels_count,
+						void* memory_buffer
+					);
 
 public:
 		void				create_in_place_internals ( animation_event_channels const& event_channels, void* memory_buff );

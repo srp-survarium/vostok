@@ -39,34 +39,6 @@ inline void dump( const poly_curve_order3_domain< Point_type, Dimension > &d )
 }
 
 
-//template< class DomainType >
-//inline void	poly_curve< DomainType >::read( vostok::configs::lua_config_value const& config )
-//{
-//
-//	{
-//		R_ASSERT( config["domains"].size() + 1 ==  config["knots"].size() );
-//
-//		domains().resize( config["domains"].size() );
-//
-//		vector<DomainType>::iterator i,  b = domains().begin( ), e = domains().end() ;
-//
-//		for ( i = b ; i!= e; ++i )
-//			animation::read ( *i, config["domains"][ i - b ] );
-//	}
-//
-//	{
-//		knots().resize( config["knots"].size() );
-//
-//		vector<float>::iterator i,  b = knots().begin( ), e = knots().end() ;
-//
-//		for ( i = b ; i!= e; ++i )
-//			(*i) = config["knots"][ i - b ];
-//	}
-//
-//}
-
-
-
 template< class DomainType >
 inline void	poly_curve< DomainType >::dump( ) const
 {
@@ -208,7 +180,7 @@ inline size_t poly_curve< DomainType >::count_internal_memory_size(
 {
 	u32 knots_cnt = poly_knots_count( cv );
 
-	return ( sizeof(DomainType) + sizeof(float) ) * knots_cnt;
+	return time_channel<DomainType>::count_internal_memory_size( knots_cnt );
 }
 
 template< class DomainType >

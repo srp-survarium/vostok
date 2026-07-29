@@ -41,7 +41,7 @@ public:
 	inline	float const*		knots						( ) const	{  return   (float*) ( pbyte( this ) + knots_memory_position() ); }
 
 private:
-	inline	size_t				domains_memory_size			( ) const	{	return	sizeof(DomainType) * ( m_knots_count - 1 ); }
+	inline	size_t				domains_memory_size			( ) const	{	return	sizeof(DomainType) * m_knots_count; }
 	inline	size_t				domains_memory_position		( ) const	{	return  m_internal_memory_position; }
 	inline	size_t				knots_memory_position		( ) const 	{	return  m_internal_memory_position + domains_memory_size(); }
 
