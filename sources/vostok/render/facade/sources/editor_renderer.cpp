@@ -407,7 +407,8 @@ void renderer::draw_scene_impl		( scene_ptr const& scene, scene_view_ptr const& 
 		scene_view,
 		render_output_window,
 		viewport,
-		boost::bind( &one_way_render_channel::render_on_draw_scene, &m_world.editor_channel(), scene, scene_view, _1 )
+		boost::bind( &one_way_render_channel::render_on_draw_scene, &m_world.editor_channel(), scene, scene_view, _1 ),
+		0
 	);
 }
 

@@ -7,6 +7,7 @@
 #include "game_world_ui.h"
 
 #include <vostok/game_core/inventory.h>
+#include <vostok/particle/world.h>
 
 #include "weapon_user_dead_state.h"
 

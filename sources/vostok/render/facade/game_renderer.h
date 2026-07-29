@@ -9,101 +9,114 @@
 
 #include <vostok/render/api.h>
 #include <vostok/render/engine/base_classes.h>
-#include <vostok/render/engine/vertex_colored.h>
+#include <vostok/render/engine/world.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
+#include <vostok/scaleform/sources/scaleform_render_command.h>
 
-namespace survarium
-{
-	struct flash_movie;
+namespace survarium {
+struct flash_text_manager;
 }
 
 namespace vostok {
 
-namespace particle	{
-	typedef	resources::resource_ptr<
-		resources::unmanaged_resource,
-		resources::unmanaged_intrusive_base
-	> particle_system_instance_ptr;
-
-	class particle_system;
-	typedef	resources::resource_ptr<
-		resources::unmanaged_resource,
-		resources::unmanaged_intrusive_base
-	> particle_system_ptr;
-
-	struct preview_particle_emitter_info;
-	enum enum_particle_render_mode;
-	struct world;
-
-	bool	is_playing	( particle_system_instance_ptr const& instance );
-} // namespace particle
+namespace ui {
+struct font;
+}
 
 namespace render {
 
-struct light_props;
-
-typedef math::rectangle< math::float2 >	viewport_type;
-
-namespace engine {
-	class world;
-} // namespace engine
-
+class scene_renderer;
 class world;
 
 namespace debug {
-	class renderer;
-} // namespace debug
+class renderer;
+}
 
 namespace ui {
-	class renderer;
-} // namespace debug
-
-class scene_renderer;
-
-class render_model_instance;
-typedef	resources::resource_ptr<
-	render_model_instance,
-	resources::unmanaged_intrusive_base
-> render_model_instance_ptr;
+class renderer;
+}
 
 namespace game {
 
-class VOSTOK_RENDER_API renderer : private core::noncopyable {
+class VOSTOK_RENDER_API renderer : public core::noncopyable {
 private:
 	friend class render::world;
-			renderer		( render::world& world, engine::world& engine_world );
+	renderer	( render::world& world, engine::world& engine_world );
 
 public:
-			~renderer		( );
-	
-	debug::renderer& debug	( ) const;
-	ui::renderer& ui		( ) const;
-	scene_renderer& scene	( ) const;
+	~renderer	( );
 
-	void	show_movie		( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
-	void	hide_movie		( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
+	debug::renderer&	debug	( ) const;
+	ui::renderer&		ui		( ) const;
+	scene_renderer&		scene	( ) const;
 
-	void	draw_scene		(
-				scene_ptr const& scene,
-				scene_view_ptr const& scene_view,
-				render_output_window_ptr const& render_output_window,
-				viewport_type const& viewport
+	inline engine::world& engine_world( )
+	{
+		return m_render_engine_world;
+	}
+
+	inline void resize_render_output_window(
+		base_output_window_ptr const&	output_window,
+		u32 const						width,
+		u32 const						height,
+		bool const						fullscreen
+	)
+	{
+		m_render_engine_world.resize_render_output_window(
+			output_window,
+			width,
+			height,
+			fullscreen
+		);
+	}
+
+	void	goto_fullscreen	( base_output_window_ptr const& output_window );
+
+	void	show_movie			(
+				base_scene_view_ptr const&			scene_view,
+				survarium::flash_movie_resource_ptr	movie
 			);
-	void	end_frame		( );
-	
+	void	hide_movie			(
+				base_scene_view_ptr const&			scene_view,
+				survarium::flash_movie_resource_ptr	movie
+			);
+
+	void	show_text_manager	(
+				base_scene_view_ptr const&	scene_view,
+				survarium::flash_text_manager*	tm
+			);
+	void	hide_text_manager	(
+				base_scene_view_ptr const&	scene_view,
+				survarium::flash_text_manager*	tm
+			);
+
+	void	execute_scaleform_command	( survarium::scaleform_render_command command );
+
+	void	draw_scene	(
+				base_scene_ptr const&			scene,
+				base_scene_view_ptr const&		scene_view,
+				base_output_window_ptr const&	render_output_window,
+				math::rectangle< float2 > const&	viewport,
+				vostok::ui::font const*			default_font
+			);
+	void	end_frame	( );
+
 private:
 	struct draw_scene_params;
-			void	draw_scene_impl	( draw_scene_params const& params );
+	void	draw_scene_impl	( draw_scene_params const& params );
 
 private:
-	render::world&		m_world;
-	engine::world&		m_render_engine_world;
-	debug::renderer*	m_debug;
-	ui::renderer*		m_ui;
-	scene_renderer*		m_scene;
-}; // class game_renderer
+	/* 0x0000 */	render::world&		m_world;
+	/* 0x0004 */	engine::world&		m_render_engine_world;
+	/* 0x0008 */	debug::renderer*	m_debug;
+	/* 0x000c */	ui::renderer*		m_ui;
+	/* 0x0010 */	scene_renderer*		m_scene;
+}; // class renderer
+
+STATIC_SIZE_ASSERT( renderer, 0x14 );
 
 } // namespace game
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef VOSTOK_RENDER_FACADE_GAME_RENDERER_H_INCLUDED
+#endif // VOSTOK_RENDER_FACADE_GAME_RENDERER_H_INCLUDED

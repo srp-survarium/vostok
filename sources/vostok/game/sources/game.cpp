@@ -287,17 +287,9 @@ void `dynamic atexit destructor for 's_max_angular_velocity_command''( )
 	// ******
 }
 
-// STATE[STUB]
-// claude@NOTE: target body is m_renderer.execute_scaleform_command( command );
-// but render::game::renderer::execute_scaleform_command is NOT declared in our
-// sources/vostok/render/facade/game_renderer.h (it IS in the target structure).
-// That header is the render cluster's; cannot add the decl here. Keep the stub
-// buildable; restore the real call once render declares execute_scaleform_command.
 void game::execute_scaleform_command( scaleform_render_command command )
 {
-	// FUNCTION BODY[0x5e5e00]: 1
-	// <0x5e5e00>|0x000|+0x011:'269'
-	// ******
+	m_renderer.execute_scaleform_command	( command );
 }
 
 // STATE[STUB]
@@ -711,7 +703,13 @@ void game::tick( const u32 current_frame_id )
 	if ( m_debug_window_type != debug_window_none && !m_console->get_active( ) )
 		draw_debug_window					( );
 
-	m_renderer.draw_scene					( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ), render_output_window( ), viewport( ) );
+	m_renderer.draw_scene					(
+		m_active_scene->render_scene( ),
+		m_active_scene->render_scene_view( ),
+		render_output_window( ),
+		viewport( ),
+		m_ui_world->default_font( )
+	);
 
 	m_renderer.end_frame					( );
 }
@@ -918,17 +916,10 @@ void game::on_application_deactivate( )
 	}
 }
 
-// STATE[STUB]
-// claude@NOTE: target body resolves m_render_output_window -> res_render_output and
-// calls render::res_render_output::goto_fullscreen, which is NOT declared in our
-// sources/vostok/render/core/dx11/res_render_output.h (it IS in the target structure).
-// That header is the render cluster's; cannot add the decl here. Keep stub buildable.
 void game::on_fullscreen_alttab( bool first )
 {
-	// FUNCTION BODY[0x5e5f80]: 2
-	// <0>
-	// <0x5e5f80>|0x000|+0x010:'1126'
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER	( first );
+	m_renderer.goto_fullscreen		( m_render_output_window );
 }
 
 void game::draw_debug_window( )

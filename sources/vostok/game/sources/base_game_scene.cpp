@@ -10,6 +10,9 @@
 #include "game_camera.h"
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
+#include <vostok/scaleform/sources/flash_factory.h>
+#include <vostok/scaleform/sources/flash_movie.h>
+#include "flash_text_manager.h"
 #include <vostok/physics/api.h>
 #include <vostok/physics/world.h>
 #include <vostok/sound/world.h>
@@ -68,48 +71,27 @@ math::uint2 const& base_game_scene::output_window_size( ) const
 	return m_game.render_output_window( )->current_size( );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade. Target body:
-//   movie->movie->SetViewport( output_window_size( ).x, output_window_size( ).y );
-//   renderer( ).show_movie( render_scene_view( ), movie );
-// render::game::renderer::show_movie has the SHIPPED signature
-// show_movie(scene_view_ptr const&, flash_movie_resource_ptr); the facade
-// game_renderer.h declares the OLD show_movie(render_output_window_ptr const&,
-// flash_movie*) and game_renderer.cpp defines that - changing the facade is a
-// render-module match, not editable here. Also needs output_window_size() (blocked).
 void base_game_scene::show_movie( flash_movie_resource_ptr& movie )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
+	movie->movie->SetViewport	( output_window_size( ).x, output_window_size( ).y );
+	renderer( ).show_movie		( render_scene_view( ), movie );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade (see show_movie). Target body:
-//   if ( movie ) renderer( ).hide_movie( render_scene_view( ), movie );
-// needs render::game::renderer::hide_movie(scene_view_ptr const&, flash_movie_resource_ptr).
 void base_game_scene::hide_movie( flash_movie_resource_ptr& movie )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
+	if ( movie )
+		renderer( ).hide_movie	( render_scene_view( ), movie );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade. Target body:
-//   tm->set_viewport( output_window_size( ).x, output_window_size( ).y );
-//   renderer( ).show_text_manager( render_scene_view( ), tm );
-// render::game::renderer::show_text_manager(scene_view_ptr const&, flash_text_manager*)
-// does NOT exist in the facade (game_renderer.h) at all - a render-module add. Also
-// needs output_window_size() (blocked).
 void base_game_scene::show_text_manager( flash_text_manager* tm )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( tm );	// buildability stub
+	tm->set_viewport			( output_window_size( ).x, output_window_size( ).y );
+	renderer( ).show_text_manager	( render_scene_view( ), tm );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade (see show_text_manager). Target body:
-//   renderer( ).hide_text_manager( render_scene_view( ), tm );
-// needs render::game::renderer::hide_text_manager(scene_view_ptr const&, flash_text_manager*).
 void base_game_scene::hide_text_manager( flash_text_manager* tm )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( tm );	// buildability stub
+	renderer( ).hide_text_manager	( render_scene_view( ), tm );
 }
 
 // claude@NOTE: structure matches (1 stmt: alloc bullet_physics_world via g_mt_allocator
@@ -220,16 +202,10 @@ swf_input_translator& base_game_scene::input_translator( )
 	return m_game.input_translator( );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade (renderer::show_text_manager) + the
-// flash_text_manager(Scaleform::GFx::Loader*) ctor. Target body:
-//   m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory()...loader );
-//   m_text_manager->set_viewport( output_window_size( ).x, output_window_size( ).y );
-//   renderer( ).show_text_manager( render_scene_view( ), m_text_manager );
-// (the 2 structure stmts are the alloc+set_viewport and the renderer call). Needs the
-// render facade show_text_manager + output_window_size() (both blocked).
 void base_game_scene::create_text_manager( )
 {
+	m_text_manager	= m_game.get_flash_factory( ).create_text_manager( );
+	show_text_manager	( m_text_manager );
 }
 
 void base_game_scene::on_after_tick( )

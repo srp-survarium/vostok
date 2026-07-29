@@ -11,7 +11,7 @@ namespace survarium {
 
 struct flash_movie;
 
-struct flash_movie_resource : public resources::unmanaged_resource {
+struct flash_movie_resource : public vostok::resources::unmanaged_resource {
 	inline		flash_movie_resource	( ) { }
 	virtual		~flash_movie_resource	( ) { }
 
@@ -24,9 +24,9 @@ STATIC_SIZE_ASSERT(flash_movie_resource, 0x110);
 
 // canonical UDT alias (resource_ptr< flash_movie_resource, unmanaged_intrusive_base >),
 // held by value across the menu/options/chat classes
-typedef resources::resource_ptr<
+typedef vostok::resources::resource_ptr<
 	flash_movie_resource,
-	resources::unmanaged_intrusive_base
+	vostok::resources::unmanaged_intrusive_base
 > flash_movie_resource_ptr;
 
 } // namespace survarium

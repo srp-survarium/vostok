@@ -9,10 +9,12 @@
 
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
+#include <vostok/scaleform/sources/scaleform_render_command.h>
 
 namespace survarium
 {
-	struct flash_movie;
+	struct flash_text_manager;
 }
 
 namespace vostok {
@@ -108,8 +110,25 @@ public:
 							~world						( );
 			void			initialize					( bool is_editor );
 //			flash_renderer&	flash_renderer				( );
-			void			show_movie					( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
-			void			hide_movie					( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie );
+			void			show_movie					(
+								base_scene_view_ptr const&			scene_view,
+								survarium::flash_movie_resource_ptr	movie
+							);
+			void			hide_movie					(
+								base_scene_view_ptr const&			scene_view,
+								survarium::flash_movie_resource_ptr	movie
+							);
+			void			show_text_manager			(
+								base_scene_view_ptr const&		scene_view,
+								survarium::flash_text_manager*	tm
+							);
+			void			hide_text_manager			(
+								base_scene_view_ptr const&		scene_view,
+								survarium::flash_text_manager*	tm
+							);
+			void			execute_scaleform_command	(
+								survarium::scaleform_render_command command
+							);
 
 			void			clear_resources				( );
 
@@ -144,12 +163,27 @@ public:
 			void			setup_grid_render_mode		( u32 grid_density );
 			void			remove_grid_render_mode		( );
 			void			setup_rotation_control_modes( bool color_write );	
-			void			draw_scene					( scene_ptr const& scene, scene_view_ptr const& view, render_output_window_ptr const& output_window, viewport_type const& viewport, boost::function< void ( bool ) > const& on_draw_scene );
+			void			draw_scene					(
+								base_scene_ptr const&					scene,
+								base_scene_view_ptr const&				view,
+								base_output_window_ptr const&			output_window,
+								viewport_type const&					viewport,
+								boost::function< void ( bool ) > const&	on_draw_scene,
+								vostok::ui::font const*					default_font
+							);
 			
 			void			draw_text					( pcstr text, vostok::math::float2 const& position, vostok::ui::font* const in_font, vostok::math::color const& in_color );
 			
 			void			end_frame					( );
 			u32				frame_id					( );
+
+			void			resize_render_output_window	(
+								base_output_window_ptr const&	output_window,
+								u32 const						width,
+								u32 const						height,
+								bool const						fullscreen
+							);
+			void			goto_fullscreen				( base_output_window_ptr const& output_window );
 
 			void			reload_shaders				( );
 			void			reload_modified_textures	( );
