@@ -1,15 +1,16 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\scene_view_cook.h"
+#include "scene_view_cook.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- scene_view_cook::scene_view_cook( )
+scene_view_cook::scene_view_cook( ) :
+	resources::translate_query_cook(
+		resources::scene_view_class,
+		reuse_false,
+		use_current_thread_id
+	)
 {
 	// FUNCTION BODY[0x76ae00]
 	// ******
@@ -42,21 +43,5 @@ void scene_view_cook::delete_resource( resources::resource_base* resource )
 	// <0x76aeaa>|0x04a|+0x035:'36'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
-
 } // namespace render
 } // namespace vostok

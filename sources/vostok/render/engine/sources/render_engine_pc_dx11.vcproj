@@ -916,6 +916,14 @@
 			RelativePath=".\scene_view.h"
 			>
 		</File>
+		<File
+			RelativePath=".\scene_view_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\scene_view_cook.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
