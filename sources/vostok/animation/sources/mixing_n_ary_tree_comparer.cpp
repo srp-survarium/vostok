@@ -135,137 +135,86 @@ void n_ary_tree_comparer::process_interpolators( n_ary_tree const& from, n_ary_t
 	m_needed_buffer_size							+= interpolators_count * sizeof( base_interpolator const* );
 }
 
-// STATE[STUB]
 bool n_ary_tree_comparer::new_time_scale( n_ary_tree_animation_node& new_time_driving_animation )
 {
-	// LOCALS
-	// n_ary_tree_time_scale_calculator time_scale_calculator
-	// const float 						directional_time_scale_factor
-	// const float 						new_time_driving_animation_target_time_scale
-	// const float 						time_scale_factor
-	// n_ary_tree_base_node* const 		target_time_scale_node
-	// const float 						new_driving_animation_length
-	// ******
+	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.time_root( );
+	for ( ; previous_time_driving_animation; previous_time_driving_animation = previous_time_driving_animation->m_next_weight_animation ) {
+		if ( previous_time_driving_animation->time_driving_animation( ) )
+			continue;
+		if ( previous_time_driving_animation->time_synchronization_group_id( ) == new_time_driving_animation.time_synchronization_group_id( ) )
+			break;
+	}
 
-	// CALL SITE INFO
-	// <0x56dd64> -> bool < unknown >()
-	// <0x56dd78> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56dd85> -> bool < unknown >()
-	// <0x56ddbb> -> float < unknown >() const
-	// <0x56ddd9> -> bool < unknown >()
-	// <0x56de12> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x56de7e> -> bool < unknown >()
-	// <0x56df39> -> bool < unknown >()
-	// ******
+	if ( !previous_time_driving_animation || previous_time_driving_animation->animation_state( ).is_freezed )
+		return								false;
 
-	return false;
+	n_ary_tree_animation_node* target_time_driving_animation	= m_to.time_root( );
+	for ( ; target_time_driving_animation; target_time_driving_animation = target_time_driving_animation->m_next_time_animation )
+		if ( target_time_driving_animation->time_synchronization_group_id( ) == new_time_driving_animation.time_synchronization_group_id( ) )
+			break;
+	if ( target_time_driving_animation && target_time_driving_animation != &new_time_driving_animation )
+		return								false;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56dc60>|0x000|+0x02a:'199'
-	// <0x56dc8a>|0x02a|-0x00a:'199'
-	// <0x56dc80>|0x020|+0x01d:'200'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56dc9d>|0x03d|-0x00c:'206'
-	// <0x56dc91>|0x031|+0x217:'207'
-	// <0x56dea8>|0x248|-0x203:'207'
-	// <0>
-	// <0x56dca5>|0x045|+0x00b:'209'
-	// <0x56dcb0>|0x050|+0x00e:'210'
-	// <0x56dcbe>|0x05e|+0x002:'211'
-	// <0x56dcc0>|0x060|+0x002:'212'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x56dcc2>|0x062|+0x003:'221'
-	// <0x56dcc5>|0x065|+0x015:'222'
-	// <0>
-	// <1>
-	// <0x56dcda>|0x07a|+0x00b:'225'
-	// <0>
-	// <1>
-	// <0x56dce5>|0x085|+0x004:'228'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56dce9>|0x089|+0x024:'233'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x56dd0d>|0x0ad|+0x040:'240'
-	// <0x56dd4d>|0x0ed|+0x046:'241'
-	// <0x56dd93>|0x133|-0x03a:'241'
-	// <0x56dd59>|0x0f9|+0x03e:'242'
-	// <0x56dd97>|0x137|+0x004:'242'
-	// <0x56dd9b>|0x13b|-0x031:'243'
-	// <0x56dd6a>|0x10a|+0x010:'244'
-	// <0x56dd7a>|0x11a|+0x023:'245'
-	// <0x56dd9d>|0x13d|+0x008:'245'
-	// <0>
-	// <0x56dda5>|0x145|+0x011:'247'
-	// <0x56ddb6>|0x156|+0x015:'248'
-	// <0>
-	// <1>
-	// <0x56ddcb>|0x16b|+0x04b:'251'
-	// <0x56de16>|0x1b6|-0x034:'251'
-	// <0x56dde2>|0x182|+0x004:'252'
-	// <0x56dde6>|0x186|+0x032:'253'
-	// <0x56de18>|0x1b8|+0x004:'253'
-	// <0>
-	// <1>
-	// <0x56de1c>|0x1bc|+0x046:'256'
-	// <0>
-	// <1>
-	// <0x56de62>|0x202|+0x022:'259'
-	// <0>
-	// <0x56de84>|0x224|+0x004:'261'
-	// <0x56de88>|0x228|+0x004:'262'
-	// <0>
-	// <1>
-	// <0x56de8c>|0x22c|+0x004:'265'
-	// <0x56de90>|0x230|+0x010:'266'
-	// <0>
-	// <1>
-	// <0x56dea0>|0x240|+0x014:'269'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x56deb4>|0x254|+0x017:'274'
-	// <0>
-	// <0x56decb>|0x26b|+0x008:'276'
-	// <0>
-	// <0x56ded3>|0x273|+0x040:'278'
-	// <0x56df13>|0x2b3|+0x03e:'279'
-	// <0x56df51>|0x2f1|-0x0bd:'279'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x56de94>|0x234|-0x201:'285'
-	// <0x56dc93>|0x033|+0x203:'286'
-	// <0x56de96>|0x236|+0x014:'286'
-	// <0x56deaa>|0x24a|+0x09d:'286'
-	// <0x56df47>|0x2e7|+0x00f:'286'
-	// ******
+	u32 const animation_interval_id		=
+		previous_time_driving_animation->animation_state( ).animation_interval_id;
+	float const new_driving_animation_length	=
+		new_time_driving_animation.animation_intervals( )[ animation_interval_id ].length( )
+		/ previous_time_driving_animation->animation_intervals( )[ animation_interval_id ].length( );
+	float const directional_time_scale_factor	=
+		new_time_driving_animation.is_positive_event_direction( )
+			== previous_time_driving_animation->is_positive_event_direction( )
+				? new_driving_animation_length
+				: -new_driving_animation_length;
+
+	n_ary_tree_time_scale_calculator time_scale_calculator(
+		m_current_time_in_ms,
+		0.f,
+		m_current_time_in_ms
+	);
+	n_ary_tree_base_node* target_time_scale_node	= NULL;
+	if ( new_time_driving_animation.operands_count( ) ) {
+		n_ary_tree_base_node* const node	=
+			*new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) );
+		if ( node && node->is_time_scale( ) ) {
+			target_time_scale_node			= node;
+			node->accept					( time_scale_calculator );
+		}
+	}
+
+	float const time_scale_factor			=
+		target_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
+	base_interpolator const* const time_scale_interpolator	=
+		target_time_scale_node
+			? time_scale_calculator.interpolator( )
+			: &new_time_driving_animation.weight_interpolator( );
+	if ( !target_time_scale_node && time_scale_interpolator->transition_time( ) <= 0.f )
+		return								false;
+
+	n_ary_tree_base_node* previous_time_scale_node	= NULL;
+	if ( previous_time_driving_animation->operands_count( ) ) {
+		n_ary_tree_base_node* const node	=
+			*previous_time_driving_animation->operands( sizeof( n_ary_tree_animation_node ) );
+		if ( node && node->is_time_scale( ) ) {
+			previous_time_scale_node		= node;
+			increase_buffer_size			( *node );
+		}
+	}
+
+	n_ary_tree_target_time_scale_calculator target_time_scale_calculator( *previous_time_driving_animation );
+	float const previous_target_time_scale	=
+		target_time_scale_calculator.result( ) * directional_time_scale_factor;
+	if ( time_scale_factor == previous_target_time_scale
+		&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
+	{
+		if ( !previous_time_scale_node )
+			m_needed_buffer_size			+= sizeof( n_ary_tree_time_scale_node );
+		m_needed_buffer_size				+= sizeof( n_ary_tree_time_scale_node )
+			+ sizeof( n_ary_tree_time_scale_transition_node );
+		m_equal							= false;
+		return							true;
+	}
+
+	return									previous_time_scale_node != NULL;
 }
 
 void n_ary_tree_comparer::new_animation(
