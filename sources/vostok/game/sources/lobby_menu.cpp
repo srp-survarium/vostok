@@ -111,10 +111,6 @@ void lobby_menu::on_connected_to_lobby( )
 	}
 }
 
-// claude@NOTE: structure faithful (the if/else show/hide branches + chat_handler::show/hide).
-// Residual is cross-unit: base_game_scene::show_movie/hide_movie are STUBs (blocked on the
-// render facade), so the 3 show/hide_movie calls per branch DCE-collapse to nothing here.
-// Lifts when base_game_scene::show_movie/hide_movie get real bodies.
 void lobby_menu::show_ui( bool b_show )
 {
 	if ( m_is_ui_shown != b_show )

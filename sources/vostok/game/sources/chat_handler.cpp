@@ -35,9 +35,6 @@ namespace survarium {
 //     add_message/set_mode, the missing TRGT_ONLY GFx::Value inlines in initialize);
 //   - flash_movie::Advance/Restart/ForceCollectGarbage are EMPTY stubs, so tick()
 //     inlines its movie->Advance to nothing -> base body == ret;
-//   - base_game_scene::show_movie/hide_movie are stubs (blocked on the render
-//     facade), so show()/hide() inline them away (the scene call vanishes, base
-//     keeps only the m_active store);
 //   - base_network_client::has_bandwidth + messaging_client::on_message_typed and
 //     network_client::get_player_team/get_local_player do not inline the way the
 //     target did, so focus/callback/on_message_typed/add_message keep extra
