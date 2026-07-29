@@ -1309,6 +1309,16 @@ void fill_x3daudio_vector	( _D3DVECTOR& dest_vec, float3 const& vec )
 	dest_vec.z						= vec.z;
 }
 
+void sound_scene::x3daudio_calculate	( sound_world const&, sound_voice& )
+{
+	X3DAUDIO_LISTENER listener;
+	fill_x3daudio_vector				( listener.Velocity, 0.0f, 0.0f, 0.0f );
+	fill_x3daudio_vector				( listener.Position, m_list_position.get( ) );
+	fill_x3daudio_vector				( listener.OrientFront, m_list_orient_front.get( ) );
+	fill_x3daudio_vector				( listener.OrientTop, m_list_orient_top.get( ) );
+	listener.pCone					= 0;
+}
+
 void sound_scene::set_graph	( render::culling::portal_sector_structure_ptr& graph )
 {
 	m_graph							= graph;
