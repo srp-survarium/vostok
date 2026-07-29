@@ -865,6 +865,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\box_geometry.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\box_geometry.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_engine_world_pc_dx11.cpp"
 			>
 		</File>

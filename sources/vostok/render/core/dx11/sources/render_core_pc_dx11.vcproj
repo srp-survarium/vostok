@@ -767,6 +767,14 @@
 	<References>
 	</References>
 	<Files>
+		<File
+			RelativePath="..\res_declaration.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\untyped_buffer.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
