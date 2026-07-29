@@ -759,8 +759,8 @@ void stage_postprocess::execute()
 	float weights_v[27];
 	float offsets_v[27];
 	
-	float const blur_kernel				= pp_parameters.bloom_blurring_kernel;
-	float const blur_intencity			= pp_parameters.bloom_blurring_intencity;
+	float const blur_kernel				= float( pp_parameters.blur_kernel );
+	float const blur_intencity			= 0.25f;
 	
 	get_gaussain_weights_offsets		(weights_h, offsets_h, u32(t_w), blur_kernel, blur_intencity, 27);
 	get_gaussain_weights_offsets		(weights_v, offsets_v, u32(t_h), blur_kernel, blur_intencity, 27);
@@ -805,7 +805,7 @@ void stage_postprocess::execute()
 		pp_parameters.frame_shadows,
 		pp_parameters.frame_fade_color,
 		pp_parameters.frame_fade_amount,
-		pp_parameters.frame_gamma_correction_factor,
+		1.0f,
 		pp_parameters.frame_desaturation
 	);
 	
@@ -819,7 +819,7 @@ void stage_postprocess::execute()
 	
 	fill_surface						(m_context->m_targets->m_rt_generic_1);
 	
-	if (pp_parameters.use_msaa && options::ref().m_enabled_mlaa)
+	if (options::ref().m_enabled_mlaa)
 	{
 		clear_surface								(m_context->m_targets->m_rt_mlaa_edges);
 		clear_surface								(m_context->m_targets->m_rt_mlaa_blended_weights);

@@ -92,8 +92,13 @@ Record each non-live removal here as:
   live at the target path. The corresponding engine-world forwarding bodies are
   also live; the larger engine-world source entry remains queued for its other
   unresolved bodies.
-
-The queued `post_process_parameters` owner is still authoritative for its
-unreconstructed fields and methods. Its live header currently preserves the
-target `0x2d4` child size so the completed `scene_view` members retain their
-target offsets; this does not drain the post-process queue entry.
+- `headers/vostok/render/post_process_parameters.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/post_process_parameters.h` carries the
+  complete target `0x2d4` layout, including all four resource-owning texture
+  pointers and the atmosphere, clouds, rain, filmic, and skylight parameters.
+- `sources/vostok/render/engine/sources/post_process_parameters.cpp` |
+  represented in the live tree |
+  The constructor initializes every target field and acquires the base color
+  grading LUT at the target path. Consumers that still belong to larger legacy
+  material and post-process units remain queued for their own reconstruction.
