@@ -42,7 +42,7 @@ void sound_rms_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	// calc rms from high quality sound
 	fs_new::virtual_path_string req_path;
-	req_path.assignf( "%s%s.high%s", _converted_local_path, parent.get_requested_path(), _ogg_ext );
+	req_path.assignf( "%s%s.high%s", "resources/sounds/single/", parent.get_requested_path(), ".ogg" );
 	query_resource	(
 						req_path.c_str(), 
 						resources::ogg_raw_file, 
