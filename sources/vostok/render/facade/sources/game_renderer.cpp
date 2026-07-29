@@ -7,128 +7,216 @@
 #include "pch.h"
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/world.h>
-#include <vostok/render/engine/world.h>
 #include "functor_command.h"
+#include "functor_with_big_buffer_to_copy_command.h"
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/render/facade/ui_renderer.h>
 #include <vostok/render/facade/scene_renderer.h>
-#include "functor_with_big_buffer_to_copy_command.h"
-#include <vostok/render/facade/model.h>
-#include <vostok/render/engine/sources/flash_renderer.h>
-#include <vostok/scaleform/sources/flash_factory.h>
-
 
 namespace vostok {
 namespace render {
 namespace game {
 
-renderer::renderer	( world& world, engine::world& engine_world ) :
+renderer::renderer( render::world& world, engine::world& engine_world ) :
 	m_world					( world ),
 	m_render_engine_world	( engine_world )
 {
-	//m_render_engine_world.flash_renderer();
-
-	m_debug					= NEW ( debug::renderer )	( world.logic_channel(), *logic::g_allocator, engine_world );
-	m_ui					= NEW ( ui::renderer )		( world.logic_channel(), *logic::g_allocator, engine_world );
-	m_scene					= NEW ( scene_renderer )	( world.logic_channel(), *logic::g_allocator, engine_world, &m_debug->frustum );
+	m_debug					= NEW( debug::renderer )(
+		world.logic_channel(),
+		*logic::g_allocator,
+		engine_world
+	);
+	m_ui					= NEW( ui::renderer )(
+		world.logic_channel(),
+		*logic::g_allocator,
+		engine_world
+	);
+	m_scene					= NEW( scene_renderer )(
+		world.logic_channel(),
+		*logic::g_allocator,
+		engine_world,
+		&m_debug->frustum
+	);
 }
 
-renderer::~renderer		( )
+renderer::~renderer( )
 {
-	DELETE					( m_scene );
-	DELETE					( m_ui );
-	DELETE					( m_debug );
+	DELETE	( m_scene );
+	DELETE	( m_ui );
+	DELETE	( m_debug );
 }
 
-void renderer::end_frame		( )
+void renderer::goto_fullscreen( base_output_window_ptr const& output_window )
 {
-	m_world.logic_channel().owner_push_back	( L_NEW( functor_command ) ( boost::bind( &world::end_frame_logic, &m_world) ) );
+	m_render_engine_world.goto_fullscreen	( output_window );
+}
+
+void renderer::end_frame( )
+{
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind( &render::world::end_frame_logic, &m_world )
+		)
+	);
 }
 
 struct renderer::draw_scene_params {
-	scene_ptr					scene;
-	scene_view_ptr				scene_view;
-	render_output_window_ptr	render_output_window;
-	viewport_type				viewport;
-};
+	inline	draw_scene_params	( ) { }
+	inline	~draw_scene_params	( ) { }
 
-void			render_on_draw_scene3		( bool use_depth );
+	/* 0x0000 */	base_scene_ptr					scene;
+	/* 0x0004 */	base_scene_view_ptr				scene_view;
+	/* 0x0008 */	base_output_window_ptr			render_output_window;
+	/* 0x000c */	math::rectangle< float2 >		viewport;
+	/* 0x001c */	vostok::ui::font const*			default_font;
+}; // struct renderer::draw_scene_params
 
-void renderer::draw_scene_impl	(
-		renderer::draw_scene_params const& params
-	)
+STATIC_SIZE_ASSERT( renderer::draw_scene_params, 0x20 );
+
+void renderer::draw_scene_impl( renderer::draw_scene_params const& params )
 {
-	R_ASSERT					( params.scene );
-	R_ASSERT					( params.scene_view );
-	R_ASSERT					( params.render_output_window );
+	R_ASSERT	( params.scene );
+	R_ASSERT	( params.scene_view );
+	R_ASSERT	( params.render_output_window );
 
- 	m_render_engine_world.draw_scene(
- 		params.scene,
- 		params.scene_view,
- 		params.render_output_window,
- 		params.viewport,
- 		boost::bind( &one_way_render_channel::render_on_draw_scene, (one_way_render_channel *) &m_world.logic_channel(), (render::scene_ptr const&)params.scene, (render::scene_view_ptr)params.scene_view, _1 )
- 	);
+	m_render_engine_world.draw_scene(
+		params.scene,
+		params.scene_view,
+		params.render_output_window,
+		params.viewport,
+		boost::bind(
+			&one_way_render_channel::render_on_draw_scene,
+			&m_world.logic_channel(),
+			params.scene,
+			params.scene_view,
+			_1
+		),
+		params.default_font
+	);
 }
 
-void renderer::draw_scene		(
-		scene_ptr const& scene,
-		scene_view_ptr const& scene_view,
-		render_output_window_ptr const& render_output_window,
-		viewport_type const& viewport
-	)
+void renderer::draw_scene(
+	base_scene_ptr const&			scene,
+	base_scene_view_ptr const&		scene_view,
+	base_output_window_ptr const&	render_output_window,
+	math::rectangle< float2 > const&	viewport,
+	vostok::ui::font const* const	default_font
+)
 {
-	draw_scene_params			params;
-	params.scene				= scene;
-	params.scene_view			= scene_view;
-	params.render_output_window	= render_output_window;
-	params.viewport				= viewport;
+	draw_scene_params params;
+	params.scene					= scene;
+	params.scene_view				= scene_view;
+	params.render_output_window		= render_output_window;
+	params.viewport					= viewport;
+	params.default_font				= default_font;
 
-	m_world.logic_channel().owner_push_back	(
-		L_NEW( functor_with_big_buffer_to_copy_command<draw_scene_params> ) (
-			boost::bind(
-				&renderer::draw_scene_impl,
-				this,
-				_1
-			),
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_with_big_buffer_to_copy_command< draw_scene_params > )(
+			boost::bind( &renderer::draw_scene_impl, this, _1 ),
 			params
 		)
 	);
 }
 
-vostok::render::debug::renderer& renderer::debug	( ) const
+debug::renderer& renderer::debug( ) const
 {
-	ASSERT					( m_debug );
-	return					*m_debug;
+	ASSERT	( m_debug );
+	return	*m_debug;
 }
 
-ui::renderer& renderer::ui						( ) const
+ui::renderer& renderer::ui( ) const
 {
-	ASSERT					( m_ui );
-	return					*m_ui;
+	ASSERT	( m_ui );
+	return	*m_ui;
 }
 
-vostok::render::scene_renderer& renderer::scene				( ) const
+scene_renderer& renderer::scene( ) const
 {
-	ASSERT					( m_scene );
-	return					*m_scene;
+	ASSERT	( m_scene );
+	return	*m_scene;
 }
 
-void renderer::show_movie						( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie )
+void renderer::show_movie(
+	base_scene_view_ptr const&			scene_view,
+	survarium::flash_movie_resource_ptr	movie
+)
 {
- 	m_world.logic_channel().owner_push_back	( 
- 		L_NEW( functor_command ) ( 
-		boost::bind( &engine::world::show_movie, &m_render_engine_world, render_output_window, movie )
- 		) 
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind(
+				&engine::world::show_movie,
+				&m_render_engine_world,
+				scene_view,
+				movie
+			)
+		)
 	);
 }
-void renderer::hide_movie						( render_output_window_ptr const& render_output_window, survarium::flash_movie* movie )
+
+void renderer::hide_movie(
+	base_scene_view_ptr const&			scene_view,
+	survarium::flash_movie_resource_ptr	movie
+)
 {
-	m_world.logic_channel().owner_push_back	( 
-		L_NEW( functor_command ) ( 
-		boost::bind( &engine::world::hide_movie, &m_render_engine_world, render_output_window, movie )
-		) 
-		);
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind(
+				&engine::world::hide_movie,
+				&m_render_engine_world,
+				scene_view,
+				movie
+			)
+		)
+	);
+}
+
+void renderer::show_text_manager(
+	base_scene_view_ptr const&		scene_view,
+	survarium::flash_text_manager*	tm
+)
+{
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind(
+				&engine::world::show_text_manager,
+				&m_render_engine_world,
+				scene_view,
+				tm
+			)
+		)
+	);
+}
+
+void renderer::hide_text_manager(
+	base_scene_view_ptr const&		scene_view,
+	survarium::flash_text_manager*	tm
+)
+{
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind(
+				&engine::world::hide_text_manager,
+				&m_render_engine_world,
+				scene_view,
+				tm
+			)
+		)
+	);
+}
+
+void renderer::execute_scaleform_command(
+	survarium::scaleform_render_command command
+)
+{
+	m_world.logic_channel().owner_push_back(
+		L_NEW( functor_command )(
+			boost::bind(
+				&engine::world::execute_scaleform_command,
+				&m_render_engine_world,
+				command
+			)
+		)
+	);
 }
 
 } // namespace game

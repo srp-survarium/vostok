@@ -79,7 +79,8 @@ public:
 												 render_output_window_ptr const& output_window,
 												 viewport_type const& viewport,
 												 boost::function< void ( bool ) > const& on_draw_scene,
-												 bool draw_debug_terrain);
+												 bool draw_debug_terrain,
+												 vostok::ui::font const* default_font);
 	void			present							(render_output_window_ptr output_window, viewport_type const& viewport);
 	inline	u32		frame_id						() const { return m_frame_id; }
 

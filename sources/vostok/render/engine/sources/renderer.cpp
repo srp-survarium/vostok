@@ -289,8 +289,11 @@ void renderer::render(scene_ptr const& in_scene,
 					  render_output_window_ptr const& output_window,
 					  viewport_type const& viewport,
 					  boost::function< void ( bool ) > const& on_draw_scene,
-					  bool draw_debug_terrain)
+					  bool draw_debug_terrain,
+					  vostok::ui::font const* const default_font)
 {
+	VOSTOK_UNREFERENCED_PARAMETER	( default_font );
+
 	backend::ref().disabled_shader_constansts_set	= s_disabled_shader_constansts_set;
 	
 	vostok::render::scene*		scene	= static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());

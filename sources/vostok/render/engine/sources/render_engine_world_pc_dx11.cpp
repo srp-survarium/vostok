@@ -534,11 +534,12 @@ void engine::world::draw_text( pcstr text, vostok::math::float2 const& position,
 }
 
 void engine::world::draw_scene						(
-		scene_ptr const& scene,
-		scene_view_ptr const& view,
-		render_output_window_ptr const& output_window,
+		base_scene_ptr const& scene,
+		base_scene_view_ptr const& view,
+		base_output_window_ptr const& output_window,
 		viewport_type const& viewport,
-		boost::function< void ( bool ) > const& on_draw_scene
+		boost::function< void ( bool ) > const& on_draw_scene,
+		vostok::ui::font const* const default_font
 	)
 {
 	float4x4 identity;
@@ -546,7 +547,15 @@ void engine::world::draw_scene						(
 	system_renderer::ref().set_w( identity );
 	
 	if (m_renderer)
-		m_renderer->render	( scene, view, output_window, viewport, on_draw_scene, m_enable_terrain_debug_mode );
+		m_renderer->render	(
+			scene,
+			view,
+			output_window,
+			viewport,
+			on_draw_scene,
+			m_enable_terrain_debug_mode,
+			default_font
+		);
 	else {
 		static_cast_checked<vostok::render::scene*>(scene.c_ptr())->flush	( on_draw_scene );
 	}
@@ -1595,17 +1604,58 @@ void engine::world::draw_text					(
 	);
 }
 
-void engine::world::show_movie					( render_output_window_ptr const& base_render_output_window, survarium::flash_movie* movie )
+void engine::world::show_movie(
+	base_scene_view_ptr const&			scene_view,
+	survarium::flash_movie_resource_ptr	movie
+)
 {
-	render_output_window* const output_window = static_cast_checked< render_output_window* >( base_render_output_window.c_ptr() );
-	output_window->m_flash_renderer->show_movie(movie);
-
+	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, movie.c_ptr() );
 }
-void engine::world::hide_movie					( render_output_window_ptr const& base_render_output_window, survarium::flash_movie* movie )
-{
-	render_output_window* const output_window = static_cast_checked< render_output_window* >( base_render_output_window.c_ptr() );
-	output_window->m_flash_renderer->hide_movie(movie);
 
+void engine::world::hide_movie(
+	base_scene_view_ptr const&			scene_view,
+	survarium::flash_movie_resource_ptr	movie
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, movie.c_ptr() );
+}
+
+void engine::world::show_text_manager(
+	base_scene_view_ptr const&		scene_view,
+	survarium::flash_text_manager*	tm
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, tm );
+}
+
+void engine::world::hide_text_manager(
+	base_scene_view_ptr const&		scene_view,
+	survarium::flash_text_manager*	tm
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS	( &scene_view, tm );
+}
+
+void engine::world::execute_scaleform_command(
+	survarium::scaleform_render_command command
+)
+{
+	command.execute	( );
+}
+
+void engine::world::resize_render_output_window(
+	base_output_window_ptr const&	output_window,
+	u32 const						width,
+	u32 const						height,
+	bool const						fullscreen
+)
+{
+	VOSTOK_UNREFERENCED_PARAMETERS	( &output_window, width, height, fullscreen );
+}
+
+void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
+{
+	VOSTOK_UNREFERENCED_PARAMETER	( output_window );
 }
 
 } // namespace render

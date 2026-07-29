@@ -89,8 +89,9 @@ typedef	base_scene_view_ptr		scene_view_ptr;
 typedef resources::resource_ptr<
 	base_output_window,
 	resources::unmanaged_intrusive_base
-> render_output_window_ptr;
+> base_output_window_ptr;
 
+typedef base_output_window_ptr render_output_window_ptr;
 typedef base_output_window* render_output_window_pointer;
 
 } // namespace render

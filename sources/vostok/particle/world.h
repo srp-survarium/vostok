@@ -40,6 +40,8 @@ typedef	resources::resource_ptr <
 	resources::unmanaged_intrusive_base
 > particle_system_instance_ptr;
 
+bool is_playing( particle_system_instance_ptr const& instance );
+
 struct VOSTOK_NOVTABLE world : public resources::unmanaged_resource {
 	virtual	void	tick							( float time_delta, vostok::math::float4x4 const& view_matrix ) = 0;
 	virtual void	get_render_emitter_instances	( float4x4 const& view_proj_matrix, render_particle_emitter_instances_type& out_particle_emitter_instances ) = 0;

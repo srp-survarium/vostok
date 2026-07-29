@@ -65,3 +65,18 @@ Record each non-live removal here as:
   represented in the live tree |
   Construction, initialization forwarding, and frame-id access live at the
   target source path.
+- `headers/vostok/render/game__renderer{,__draw_scene_params}.h` |
+  represented in the live tree |
+  `sources/vostok/render/facade/game_renderer.h` and its source carry the
+  target `0x14` facade owner, the `0x20` draw parameters, and the shipped
+  movie, text-manager, Scaleform, output, and scene APIs.
+- `headers/vostok/render/functor_with_big_buffer_to_copy_command_vostok__render__game__renderer__draw_scene_params_.h` |
+  represented by the live generic template |
+  `sources/vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h`
+  is instantiated with the live target-layout `game::renderer::draw_scene_params`.
+- `sources/vostok/render/facade/sources/game_renderer.cpp` |
+  represented in the live tree |
+  The owner construction, command marshalling, renderer accessors, movie and
+  text-manager routing, Scaleform dispatch, and scene submission live at the
+  target source path. Downstream engine scene-view/output implementations stay
+  in their own structure-queue entries until those owners are rebuilt.
