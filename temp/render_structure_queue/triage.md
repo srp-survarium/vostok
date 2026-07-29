@@ -30,3 +30,14 @@ Record each non-live removal here as:
 
 `queue path | disposition | evidence`
 
+- `headers/vostok/render/world.h` | represented in the live tree |
+  `sources/vostok/render/world.h` now carries the target `0x190` layout and
+  facade ownership.
+- `sources/vostok/render/facade/sources/render_facade_entry_point.cpp` |
+  represented in the live tree |
+  `sources/vostok/render/facade/sources/render_facade_entry_point.cpp` now
+  exposes the target allocator and world-factory signatures.
+- `sources/vostok/render/facade/sources/render_facade_world.cpp` |
+  represented in the live tree |
+  `sources/vostok/render/facade/sources/render_facade_world.cpp` now owns the
+  target facade-world construction and renderer wiring.

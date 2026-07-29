@@ -337,12 +337,15 @@ void engine::world::apply_render_options_changes( )
 #endif // #ifndef MASTER_GOLD
 }
 
-engine::world::world						( ) :
+engine::world::world						( configs::binary_config_ptr const& in_config, bool is_editor ) :
 	m_frame_id						( 0 ),
 	m_initialized					( false ),
 	m_enable_terrain_debug_mode		( false ),
 	m_renderer						( NULL )
 {
+	VOSTOK_UNREFERENCED_PARAMETER	( in_config );
+	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
+
 	CHECK_OR_EXIT							(
 		does_os_support_dx11(),
 		"Your operating system doesn't support DirectX 11.\r\n"
@@ -1305,10 +1308,10 @@ void	engine::world::set_selection_parameters	( vostok::math::float4 const& selec
 
 static vostok::uninitialized_reference< engine::world > s_world;
 
-engine::world* engine::create_world	( )
+engine::world* engine::create_world	( configs::binary_config_ptr const& in_config, bool is_editor )
 {
 	R_ASSERT					( !s_world.initialized() );
-	VOSTOK_CONSTRUCT_REFERENCE	( s_world, engine::world ) ( );
+	VOSTOK_CONSTRUCT_REFERENCE	( s_world, engine::world ) ( in_config, is_editor );
 	return						s_world.c_ptr( );
 }
 

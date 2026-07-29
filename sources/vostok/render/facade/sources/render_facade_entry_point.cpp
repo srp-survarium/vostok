@@ -5,28 +5,25 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/render/world.h>
 #include <vostok/render/api.h>
+#include <vostok/render/world.h>
 #include <vostok/render/core/memory.h>
 
-typedef vostok::render::render_allocator_type	render_allocator_type;
-typedef vostok::render::logic_allocator_type	logic_allocator_type;
-typedef vostok::render::editor_allocator_type	editor_allocator_type;
+namespace vostok {
+namespace render {
 
-using vostok::render::world;
+static uninitialized_reference< world >	s_world;
 
-static vostok::uninitialized_reference<world>	s_world;
+logic_allocator_type*	logic::g_allocator	= 0;
+editor_allocator_type*	editor::g_allocator	= 0;
 
-logic_allocator_type*	vostok::render::logic::g_allocator = 0;
-editor_allocator_type*	vostok::render::editor::g_allocator = 0;
-
-void vostok::render::set_memory_allocator	(
-		render_allocator_type&	render_allocator,
-		logic_allocator_type&	logic_allocator,
-		editor_allocator_type&	editor_allocator
-	)
+void set_memory_allocator(
+	render_allocator_type&	render_allocator,
+	logic_allocator_type&	logic_allocator,
+	editor_allocator_type&	editor_allocator
+)
 {
-	R_ASSERT			( !vostok::render::g_allocator );
+	R_ASSERT			( !g_allocator );
 	g_allocator			= &render_allocator;
 
 	R_ASSERT			( !logic::g_allocator );
@@ -36,18 +33,28 @@ void vostok::render::set_memory_allocator	(
 	editor::g_allocator	= &editor_allocator;
 }
 
-vostok::render::world* vostok::render::create_world	(
-		vostok::memory::base_allocator& logic_allocator,
-		vostok::memory::base_allocator* editor_allocator
-	)
+world* create_world(
+	memory::base_allocator&				logic_allocator,
+	memory::base_allocator*				editor_allocator,
+	configs::binary_config_ptr const&	in_config,
+	bool								is_editor
+)
 {
-	VOSTOK_CONSTRUCT_REFERENCE( s_world, world )	( logic_allocator, editor_allocator );
-	return					( &*s_world );
+	VOSTOK_CONSTRUCT_REFERENCE( s_world, world )(
+		logic_allocator,
+		editor_allocator,
+		in_config,
+		is_editor
+	);
+	return &*s_world;
 }
 
-void vostok::render::destroy_world					( vostok::render::world*& world )
+void destroy_world( world*& instance )
 {
-	R_ASSERT				( &*s_world == world );
+	R_ASSERT					( &*s_world == instance );
 	VOSTOK_DESTROY_REFERENCE	( s_world );
-	world					= 0;
+	instance					= 0;
 }
+
+} // namespace render
+} // namespace vostok

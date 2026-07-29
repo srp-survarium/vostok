@@ -100,14 +100,14 @@ engine_world::~engine_world		( )
 	core::finalize						( );
 }
 
-void engine_world::initialize_render	( )
+void engine_world::initialize_render	( vostok::configs::binary_config_ptr const& in_config, bool is_editor )
 {
 	ASSERT								( m_initialized );
 
 	render::set_memory_allocator		( m_render_allocator, m_engine_user_module_proxy.allocator(), m_editor_allocator );
 
 	ASSERT								( !m_render_world );
-	create_render						( );
+	create_render						( in_config, is_editor );
 	ASSERT								( m_render_world );
 }
 
@@ -277,4 +277,3 @@ void engine_world::set_exit_code		( int const exit_code )
 {
 	m_exit_code			= exit_code;
 }
-

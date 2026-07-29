@@ -136,7 +136,7 @@ void engine_world::initialize			( )
 #endif //#ifndef MASTER_GOLD
 	
 	// no apc::run since we are in the render thread
-	initialize_render					( );
+	initialize_render					( m_shader_mask_config, is_editor );
 	
 	apc::run							( apc::logic,	boost::bind(&engine_world::initialize_logic_modules, this), apc::continue_process_loop, apc::dont_wait_for_completion);
 	

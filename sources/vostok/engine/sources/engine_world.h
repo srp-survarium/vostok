@@ -108,7 +108,7 @@ private:
 			void			initialize_core			( );
 			void			initialize_editor		( );
 			void	initialize_editor_thread_ids	( );
-			void			initialize_render		( );
+			void			initialize_render		( configs::binary_config_ptr const& in_config, bool is_editor );
 			void			initialize_logic		( );
 			void			initialize_logic_thread	( );
 			void			initialize_scaleform	( );
@@ -128,7 +128,7 @@ private:
 
 private:
 			void		on_render_resources_created ( resources::queries_result& data );
-			void			create_render			( );
+			void			create_render			( configs::binary_config_ptr const& in_config, bool is_editor );
 			void			destroy_render			( );
 			void			logic_dispatch_callbacks( );
 			void			logic_tick				( );

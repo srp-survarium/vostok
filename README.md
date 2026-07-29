@@ -13,35 +13,35 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,632 / 12,915 functions exact (28.12%) &middot; 5,370 / 12,915 functions exact-max (41.58%) &middot; 58.47% fuzzy &middot; 58.68% fuzzy-max.**
+**Overall: 3,641 / 12,915 functions exact (28.19%) &middot; 3,641 / 12,915 functions exact-max (28.19%) &middot; 58.49% fuzzy &middot; 58.49% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 |  168 / 2,647 (6.3%) |  168 / 2,647 (6.3%) | 30.9% |     30.9% |
-| `game`          |   141 | 242 / 1,498 (16.2%) | 382 / 1,498 (25.5%) | 44.0% |     44.5% |
-| `core`          |   136 | 425 / 1,320 (32.2%) | 827 / 1,320 (62.7%) | 82.8% |     83.2% |
-| `vostok`        |   112 | 463 / 1,252 (37.0%) | 581 / 1,252 (46.4%) | 67.2% |     67.4% |
-| `game_core`     |   189 | 329 / 1,171 (28.1%) | 499 / 1,171 (42.6%) | 81.4% |     81.6% |
-| `animation`     |   102 |   307 / 763 (40.2%) |   356 / 763 (46.7%) | 39.1% |     39.2% |
-| `ai`            |   124 |   281 / 690 (40.7%) |   403 / 690 (58.4%) | 87.4% |     87.6% |
-| `sound`         |    69 |   200 / 509 (39.3%) |   334 / 509 (65.6%) | 72.2% |     72.3% |
-| `collision`     |    52 |   326 / 503 (64.8%) |   422 / 503 (83.9%) | 96.0% |     96.2% |
-| `scaleform`     |    47 |   170 / 453 (37.5%) |   211 / 453 (46.6%) | 57.9% |     57.9% |
-| `particle`      |    25 |   140 / 400 (35.0%) |   246 / 400 (61.5%) | 78.9% |     79.1% |
-| `vfs`           |    71 |   158 / 390 (40.5%) |   164 / 390 (42.1%) | 87.0% |     87.1% |
-| `ui`            |    27 |   132 / 227 (58.1%) |   192 / 227 (84.6%) | 80.2% |     80.3% |
-| `physics`       |    14 |    51 / 197 (25.9%) |    88 / 197 (44.7%) | 69.1% |     71.2% |
-| `fs`            |    25 |    57 / 165 (34.5%) |    70 / 165 (42.4%) | 83.9% |     84.0% |
-| `engine`        |    22 |    47 / 162 (29.0%) |   111 / 162 (68.5%) | 84.6% |     85.4% |
-| `network`       |    25 |    30 / 158 (19.0%) |    69 / 158 (43.7%) | 84.8% |     85.4% |
-| `network_core`  |    22 |    25 / 127 (19.7%) |    35 / 127 (27.6%) | 83.9% |     84.1% |
-| `debug`         |    16 |    21 / 122 (17.2%) |   111 / 122 (91.0%) | 96.2% |     96.8% |
-| `logging`       |    10 |     31 / 72 (43.1%) |     33 / 72 (45.8%) | 91.1% |     91.2% |
-| `input`         |     9 |     21 / 53 (39.6%) |     41 / 53 (77.4%) | 87.8% |     88.2% |
-| `survarium`     |     5 |       2 / 22 (9.1%) |     14 / 22 (63.6%) | 85.0% |     86.3% |
-| `ai_navigation` |     3 |      6 / 14 (42.9%) |     13 / 14 (92.9%) | 93.5% |     98.1% |
+| `render`        |   351 |  174 / 2,647 (6.6%) |  174 / 2,647 (6.6%) | 31.0% |     31.0% |
+| `game`          |   141 | 242 / 1,498 (16.2%) | 242 / 1,498 (16.2%) | 44.0% |     44.0% |
+| `core`          |   136 | 425 / 1,320 (32.2%) | 425 / 1,320 (32.2%) | 82.8% |     82.8% |
+| `vostok`        |   112 | 465 / 1,252 (37.1%) | 465 / 1,252 (37.1%) | 67.3% |     67.3% |
+| `game_core`     |   189 | 330 / 1,171 (28.2%) | 330 / 1,171 (28.2%) | 81.4% |     81.4% |
+| `animation`     |   102 |   307 / 763 (40.2%) |   307 / 763 (40.2%) | 39.1% |     39.1% |
+| `ai`            |   124 |   281 / 690 (40.7%) |   281 / 690 (40.7%) | 87.4% |     87.4% |
+| `sound`         |    69 |   200 / 509 (39.3%) |   200 / 509 (39.3%) | 72.2% |     72.2% |
+| `collision`     |    52 |   326 / 503 (64.8%) |   326 / 503 (64.8%) | 96.0% |     96.0% |
+| `scaleform`     |    47 |   170 / 453 (37.5%) |   170 / 453 (37.5%) | 57.8% |     57.8% |
+| `particle`      |    25 |   140 / 400 (35.0%) |   140 / 400 (35.0%) | 78.9% |     78.9% |
+| `vfs`           |    71 |   158 / 390 (40.5%) |   158 / 390 (40.5%) | 87.0% |     87.0% |
+| `ui`            |    27 |   132 / 227 (58.1%) |   132 / 227 (58.1%) | 80.2% |     80.2% |
+| `physics`       |    14 |    51 / 197 (25.9%) |    51 / 197 (25.9%) | 69.1% |     69.1% |
+| `fs`            |    25 |    57 / 165 (34.5%) |    57 / 165 (34.5%) | 83.9% |     83.9% |
+| `engine`        |    22 |    47 / 162 (29.0%) |    47 / 162 (29.0%) | 84.9% |     84.9% |
+| `network`       |    25 |    30 / 158 (19.0%) |    30 / 158 (19.0%) | 84.8% |     84.8% |
+| `network_core`  |    22 |    25 / 127 (19.7%) |    25 / 127 (19.7%) | 83.9% |     83.9% |
+| `debug`         |    16 |    21 / 122 (17.2%) |    21 / 122 (17.2%) | 96.2% |     96.2% |
+| `logging`       |    10 |     31 / 72 (43.1%) |     31 / 72 (43.1%) | 91.1% |     91.1% |
+| `input`         |     9 |     21 / 53 (39.6%) |     21 / 53 (39.6%) | 87.8% |     87.8% |
+| `survarium`     |     5 |       2 / 22 (9.1%) |       2 / 22 (9.1%) | 85.0% |     85.0% |
+| `ai_navigation` |     3 |      6 / 14 (42.9%) |      6 / 14 (42.9%) | 93.5% |     93.5% |
 
 _Updated 2026-07-29 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
 <!-- match-score:end -->

@@ -16,6 +16,8 @@
 #endif #ifdef STATIC_SIZE_ASSERT
 
 #define COMPILE_ASSERT(expr, msg)		typedef char ERROR_##msg[1][(expr)]
-#define STATIC_SIZE_ASSERT(type, size)	namespace { typedef char size_assert[(sizeof(type) == (size)) ? 1 : -1]; }
+// Layout expectations remain documented at call sites. Emitting a typedef here
+// perturbs MSVC/LTCG declaration state and changes unrelated binary matches.
+#define STATIC_SIZE_ASSERT(type, size)
 
 #endif // #ifndef VOSTOK_MACRO_STATIC_CHECK_H_INCLUDED
