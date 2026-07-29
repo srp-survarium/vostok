@@ -340,13 +340,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("bloom_max_color"))
 		out_post_process_parameters.bloom_max_color				= float(config["bloom_max_color"]["value"]);
 
-	if (config.value_exists("bloom_blurring_kernel"))
-		out_post_process_parameters.bloom_blurring_kernel		= float(config["bloom_blurring_kernel"]["value"]);
-
-	if (config.value_exists("bloom_blurring_intencity"))
-		out_post_process_parameters.bloom_blurring_intencity	= float(config["bloom_blurring_intencity"]["value"]);
-	
-	
 	if (config.value_exists("frame_desaturation"))
 		out_post_process_parameters.frame_desaturation			= float(config["frame_desaturation"]["value"]);
 
@@ -358,10 +351,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 
 	if (config.value_exists("frame_shadows"))
 		out_post_process_parameters.frame_shadows				= float3(config["frame_shadows"]["value"]);
-
-	if (config.value_exists("frame_gamma_correction_factor"))
-		out_post_process_parameters.frame_gamma_correction_factor	= float(config["frame_gamma_correction_factor"]["value"]);
-	
 
 	if (config.value_exists("environment_far_fog_color") &&
 		config.value_exists("environment_far_fog_distance") &&
@@ -421,10 +410,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	if (config.value_exists("enable_bloom"))
 		out_post_process_parameters.enable_bloom				= bool(config["enable_bloom"]["value"]);
 
-	if (config.value_exists("enable_msaa"))
-		out_post_process_parameters.use_msaa					= bool(config["enable_msaa"]["value"]);
-	
-	
 	if (config.value_exists("environment_skycolor_up"))
 		out_post_process_parameters.environment_skycolor[3]		= float4(config["environment_skycolor_up"]["value"]);
 	
@@ -490,4 +475,3 @@ void material_manager::add_material_effects(material_effects_instance_ptr& in_ma
 
 } // namespace render 
 } // namespace vostok 
-
