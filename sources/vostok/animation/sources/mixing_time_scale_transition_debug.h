@@ -13,16 +13,20 @@ namespace mixing {
 
 class time_scale_transition_debug : public n_ary_tree_visitor {
 public:
-	inline	explicit	time_scale_transition_debug	( n_ary_tree_time_scale_transition_node& node ) { /* no source */ }
+	inline	explicit	time_scale_transition_debug	( n_ary_tree_time_scale_transition_node& node )
+	{
+		node.accept					( *this );
+	}
 
-	virtual	void		visit						( n_ary_tree_animation_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_weight_transition_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_time_scale_transition_node& node ) override;
-	virtual	void		visit						( n_ary_tree_weight_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_time_scale_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_addition_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_subtraction_node& node ) override { /* no source */ }
-	virtual	void		visit						( n_ary_tree_multiplication_node& node ) override { /* no source */ }
+private:
+	virtual	void		visit						( n_ary_tree_animation_node& ) override { NODEFAULT( ); }
+	virtual	void		visit						( n_ary_tree_weight_transition_node& ) override { NODEFAULT( ); }
+	virtual	void		visit						( n_ary_tree_time_scale_transition_node& ) override { }
+	virtual	void		visit						( n_ary_tree_weight_node& ) override { NODEFAULT( ); }
+	virtual	void		visit						( n_ary_tree_time_scale_node& ) override { }
+	virtual	void		visit						( n_ary_tree_addition_node& ) override { NODEFAULT( ); }
+	virtual	void		visit						( n_ary_tree_subtraction_node& ) override { NODEFAULT( ); }
+	virtual	void		visit						( n_ary_tree_multiplication_node& ) override { NODEFAULT( ); }
 }; // class time_scale_transition_debug
 
 STATIC_SIZE_ASSERT(time_scale_transition_debug, 0x4);
