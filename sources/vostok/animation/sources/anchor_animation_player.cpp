@@ -22,6 +22,7 @@
 
 #include <vostok/animation/animation_player.h>
 #include <vostok/animation/mixing_expression.h>
+#include "mixing_n_ary_tree_converter.h"
 
 namespace vostok {
 
@@ -45,6 +46,10 @@ void anchor_animation_player( )
 	mixing::expression const&							expression	= *s_expression;
 	boost::function< math::float4x4( pcvoid ) > const&	functor		= *s_functor;
 	math::float4x4 const&								transform	= *s_transform;
+
+	mixing::n_ary_tree_converter converter( expression );
+	static u32 volatile s_buffer_size = 0;
+	s_buffer_size = converter.needed_buffer_size( );
 
 	s_sink	= player.tick( s_time );
 	s_sink	= player.tick_to_nearest_user_handled_callback( s_time );
