@@ -156,6 +156,7 @@ new_sound_propagator* sound_scene::create_sound_propagator
 		owner
 	);
 
+	new_propagator->set_as_callback_executer	( true );
 	return new_propagator;
 }
 
@@ -165,14 +166,15 @@ void sound_scene::delete_sound_propagator	( sound_instance_proxy_internal& proxy
 	if ( propagator == 0 )
 	{
 		LOG_ERROR						( "can't delete sound_propagator, pointer == 0" );
-		return;
 	}
+	else
+	{
+		proxy.get_propagators().erase		( propagator );
+		VOSTOK_DELETE_IMPL					( m_propagators_allocator.c_ptr(), propagator );
 
-	proxy.get_propagators().erase		( propagator );
-	VOSTOK_DELETE_IMPL					( m_propagators_allocator.c_ptr(), propagator );
-
-	if ( proxy.get_propagators().empty() )
-		m_active_proxies.erase			( &proxy );
+		if ( proxy.get_propagators().empty() )
+			m_active_proxies.erase			( &proxy );
+	}
 }
 
 } // namespace sound
