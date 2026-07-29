@@ -5,12 +5,8 @@
 #ifndef D3D1X_SYNC_H_INCLUDED
 #define D3D1X_SYNC_H_INCLUDED
 
-// survarium's fork of the Scaleform 4.x D3D1x_Sync.h (header-only; every
-// addressed RenderSync body lives HERE per the rich index). The vendored
-// 4.0.15 SDK predates the RenderSync/fence machinery entirely - the base
-// Scaleform::Render::RenderSync comes from the newer SDK the fork tracked.
-
 #include "Render/Render_Sync.h"
+#include "Kernel/SF_Threads.h"
 
 #include <d3d11.h>
 
@@ -20,67 +16,145 @@ namespace D3D1x {
 
 class RenderSync : public Render::RenderSync {
 public:
-	inline			RenderSync		( ) { /* no source */ }
-
-	// STATE[STUB]
-	inline	bool	SetDevice		( ID3D11Device* arg_0, ID3D11DeviceContext* arg_1 )
+	inline			RenderSync		( )
+		: pNextEndFrameFence( NULL ),
+		  pDevice( NULL ),
+		  pDeviceContext( NULL )
 	{
-		// FUNCTION BODY[0x0b4600]
-		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1 );
-		return false;
 	}
 
-	// STATE[STUB]
+	inline	bool	SetDevice		( ID3D11Device* device, ID3D11DeviceContext* device_context )
+	{
+		if ( !device || !device_context )
+		{
+			pDevice			= NULL;
+			pDeviceContext	= NULL;
+			ReleaseOutstandingFrames( );
+			return true;
+		}
+
+		D3D11_QUERY_DESC desc;
+		memset( &desc, 0, sizeof( desc ) );
+		desc.Query	= D3D11_QUERY_EVENT;
+
+		ID3D11Query* query	= NULL;
+		HRESULT const result	= device->CreateQuery( &desc, &query );
+		if ( query )
+		{
+			query->Release( );
+			pDevice			= device;
+			pDeviceContext	= device_context;
+		}
+
+		return SUCCEEDED( result );
+	}
+
 	virtual	void	BeginFrame		( ) override
 	{
-		// FUNCTION BODY[0x0b46d0]
+		if ( !pDevice )
+			return;
+
+		SF_ASSERT( !pNextEndFrameFence );
+
+		D3D11_QUERY_DESC desc;
+		memset( &desc, 0, sizeof( desc ) );
+		desc.Query	= D3D11_QUERY_EVENT;
+
+		HRESULT const result	= pDevice->CreateQuery( &desc, &pNextEndFrameFence );
+		if ( FAILED( result ) )
+			pNextEndFrameFence	= NULL;
+
+		Render::RenderSync::BeginFrame( );
 	}
 
-	// STATE[STUB]
 	virtual	bool	EndFrame		( ) override
 	{
-		// FUNCTION BODY[0x0b4720]
-		return false;
+		if ( !pDevice || !pDeviceContext )
+			return true;
+
+		if ( !Render::RenderSync::EndFrame( ) )
+			return false;
+
+		if ( pNextEndFrameFence )
+		{
+			pDeviceContext->End( pNextEndFrameFence );
+			pNextEndFrameFence->Release( );
+		}
+
+		pNextEndFrameFence	= NULL;
+		return true;
 	}
 
-	// STATE[STUB]
-	virtual	void	KickOffFences	( FenceType arg_0 ) override
+	virtual	void	KickOffFences	( FenceType wait_type ) override
 	{
-		// FUNCTION BODY[0x022c50] (ICF-folded empty body; the fold also
-		// absorbs Render::MeshCache::PostUpdateMesh)
-		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
+		SF_UNUSED( wait_type );
 	}
 
-	// STATE[STUB]
 	virtual	u64		SetFence		( ) override
 	{
-		// FUNCTION BODY[0x0b4770]
-		return 0;
+		if ( pNextEndFrameFence )
+			pNextEndFrameFence->AddRef( );
+
+		return reinterpret_cast< u64 >( pNextEndFrameFence );
 	}
 
-	// STATE[STUB]
-	virtual	bool	IsPending		( FenceType arg_0, u64 arg_1, FenceFrame const& arg_2 ) override
+	virtual	bool	IsPending		( FenceType wait_type, u64 handle, FenceFrame const& parent ) override
 	{
-		// FUNCTION BODY[0x0b4790]
-		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2 );
-		return false;
+		SF_UNUSED2( wait_type, parent );
+
+		ID3D11Query* query	= reinterpret_cast< ID3D11Query* >( handle );
+		if ( !query )
+			return false;
+
+		if ( FenceFrames.IsEmpty( ) )
+			return false;
+
+		if ( query == pNextEndFrameFence )
+			return true;
+
+		HRESULT const result	= pDeviceContext->GetData(
+			query,
+			NULL,
+			0,
+			D3D11_ASYNC_GETDATA_DONOTFLUSH
+		);
+		return result != S_OK;
 	}
 
-	// STATE[STUB]
-	virtual	void	WaitFence		( FenceType arg_0, u64 arg_1, FenceFrame const& arg_2 ) override
+	virtual	void	WaitFence		( FenceType wait_type, u64 handle, FenceFrame const& parent ) override
 	{
-		// FUNCTION BODY[0x0b47d0]
-		VOSTOK_UNREFERENCED_PARAMETERS	( arg_0, arg_1, arg_2 );
+		SF_UNUSED2( wait_type, parent );
+
+		ID3D11Query* query	= reinterpret_cast< ID3D11Query* >( handle );
+		if ( !query )
+			return;
+
+		if ( query == pNextEndFrameFence )
+		{
+			pDeviceContext->End( pNextEndFrameFence );
+			query	= pNextEndFrameFence;
+
+			D3D11_QUERY_DESC desc;
+			memset( &desc, 0, sizeof( desc ) );
+			desc.Query	= D3D11_QUERY_EVENT;
+
+			HRESULT const result	= pDevice->CreateQuery( &desc, &pNextEndFrameFence );
+			if ( FAILED( result ) )
+				pNextEndFrameFence	= NULL;
+		}
+
+		while ( pDeviceContext->GetData( query, NULL, 0, 0 ) != S_OK )
+			Thread::Sleep( 0 );
 	}
 
-	// STATE[STUB]
-	virtual	void	ReleaseFence	( u64 arg_0 ) override
+	virtual	void	ReleaseFence	( u64 handle ) override
 	{
-		// FUNCTION BODY[0x0b4870]
-		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
+		ID3D11Query* query	= reinterpret_cast< ID3D11Query* >( handle );
+		if ( query )
+			query->Release( );
 	}
 
-	virtual			~RenderSync		( ) { /* no source */ }
+	virtual			~RenderSync		( ) { }
 
 private:
 	/* 0x0000 */	/* Scaleform::Render::RenderSync */
