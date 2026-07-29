@@ -1156,12 +1156,12 @@ std::pair< u32, u32 > computed_operands_count( n_ary_tree_animation_node& from, 
 		base_interpolator const* const	i_interpolator	= interpolator_selector.result( );
 		(*j)->accept			( interpolator_selector );
 		switch ( compare( *i_interpolator, *interpolator_selector.result( ) ) ) {
-			case equal :
+			case animation::equal :
 				++operands_count;
 				++i;
 				++j;
 				break;
-			case less :
+			case animation::less :
 				++operands_count;
 				++i;
 				break;
@@ -1396,8 +1396,6 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 	);
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::merge_weight_synchronization_groups(vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node&, bool)
 void n_ary_tree_transition_tree_constructor::merge_weight_synchronization_groups(
 	n_ary_tree_animation_node*		from_begin,
 	n_ary_tree_animation_node*		from_end,
@@ -1407,69 +1405,52 @@ void n_ary_tree_transition_tree_constructor::merge_weight_synchronization_groups
 	bool							is_new_driving_animation
 )
 {
-	// LOCALS
-	// bool 							new_driving_animation_in_old_target_found
-	// animation_comparer_equal_predicate equal_predicate
-	// animation_comparer_predicate 	comparer
-	// n_ary_tree_animation_node** 		i
-	// ******
+	u32 animations_count			= 0;
+	for ( n_ary_tree_animation_node* i = from_begin; i != from_end; i = i->m_next_weight_animation )
+		++animations_count;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6ec0a3>|0x003|+0x12d:'1416'
-	// <0x6ec1d0>|0x130|-0x119:'1416'
-	// <0x6ec0b7>|0x017|+0x005:'1417'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec0bc>|0x01c|+0x01a:'1421'
-	// <0>
-	// <0x6ec0d6>|0x036|+0x02c:'1423'
-	// <0x6ec102>|0x062|-0x022:'1423'
-	// <0x6ec0e0>|0x040|+0x011:'1424'
-	// <0x6ec0f1>|0x051|+0x00b:'1425'
-	// <0x6ec0fc>|0x05c|+0x002:'1426'
-	// <0>
-	// <0x6ec0fe>|0x05e|+0x00c:'1428'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec10a>|0x06a|+0x006:'1432'
-	// <0x6ec110>|0x070|+0x001:'1433'
-	// <0>
-	// <0x6ec111>|0x071|+0x04b:'1435'
-	// <0>
-	// <1>
-	// <0x6ec15c>|0x0bc|+0x00b:'1438'
-	// <0>
-	// <1>
-	// <0x6ec167>|0x0c7|+0x065:'1441'
-	// <0x6ec1cc>|0x12c|-0x057:'1441'
-	// <0x6ec175>|0x0d5|+0x026:'1442'
-	// <0>
-	// <0x6ec19b>|0x0fb|+0x015:'1444'
-	// <0x6ec1b0>|0x110|-0x025:'1445'
-	// <0>
-	// <1>
-	// <0x6ec18b>|0x0eb|+0x00e:'1448'
-	// <0>
-	// <0x6ec199>|0x0f9|+0x019:'1450'
-	// <0>
-	// <1>
-	// <0x6ec1b2>|0x112|+0x017:'1453'
-	// <0x6ec1c9>|0x129|+0x009:'1454'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6ec1d2>|0x132|+0x004:'1461'
-	// <0x6ec1d6>|0x136|+0x019:'1462'
-	// <0>
-	// <0x6ec1ef>|0x14f|+0x005:'1464'
-	// <0x6ec1f4>|0x154|+0x016:'1465'
-	// ******
+	n_ary_tree_animation_node** const animations	=
+		(n_ary_tree_animation_node**)ALLOCA( animations_count * sizeof( n_ary_tree_animation_node* ) );
+	n_ary_tree_animation_node** animation	= animations;
+	bool new_driving_animation_in_old_target_found	= false;
+	animation_comparer_equal_predicate equal_predicate( false, true );
+	for ( n_ary_tree_animation_node* i = from_begin; i != from_end; i = i->m_next_weight_animation ) {
+		if ( !equal_predicate( *i, new_weight_driving_animation ) )
+			*animation++			= i;
+		else
+			new_driving_animation_in_old_target_found	= true;
+	}
+
+	if ( new_driving_animation_in_old_target_found )
+		--animations_count;
+
+	n_ary_tree_animation_node** const animations_end	= animations + animations_count;
+	stlp_std::sort				( animations, animations_end, animation_comparer_less_predicate( false, true ) );
+
+	animation					= animations;
+	n_ary_tree_animation_node* i	= to_begin;
+	animation_comparer_predicate comparer( false, true );
+	while ( animation != animations_end && i != to_end ) {
+		switch ( comparer( **animation, *i ) ) {
+			case equal :
+				change_animation	( **animation++, *i, &new_weight_driving_animation, is_new_driving_animation );
+				i				= i->m_next_weight_animation;
+				break;
+			case less :
+				remove_animation	( **animation++, &new_weight_driving_animation, is_new_driving_animation );
+				break;
+			default :
+				add_animation	( *i, &new_weight_driving_animation );
+				i				= i->m_next_weight_animation;
+				break;
+		}
+	}
+
+	for ( ; animation != animations_end; ++animation )
+		remove_animation			( **animation, &new_weight_driving_animation, is_new_driving_animation );
+
+	for ( ; i != to_end; i = i->m_next_weight_animation )
+		add_animation				( *i, &new_weight_driving_animation );
 }
 
 void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
