@@ -24,7 +24,7 @@ class chunk_reader;
 namespace render {
 
 class batched_geometry_interface;
-class material_effects;
+struct material_effects;
 
 class render_surface : public boost::noncopyable {
 public:
