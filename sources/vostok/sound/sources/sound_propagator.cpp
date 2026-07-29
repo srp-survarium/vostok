@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "sound_propagator.h"
+#include "new_sound_propagator.h"
 #include <vostok/sound/sound_propagator_emitter.h>
 #include <vostok/sound/sound_rms.h>
 #include <vostok/sound/sound_spl.h>
@@ -503,6 +504,63 @@ void sound_propagator::set_quality	( u32 quality )
 {
 	if ( m_sound_voice )
 		m_sound_voice->set_quality( quality );
+}
+
+void new_sound_propagator::resume_propagation	( )
+{
+	if ( m_propagation_state == propagating_paused )
+		m_propagation_state = propagating;
+}
+
+void new_sound_propagator::pause_propagation	( )
+{
+	if ( m_propagation_state == propagating )
+	{
+		m_propagation_state = propagating_paused;
+		detach_voices			( 4 );
+	}
+}
+
+void new_sound_propagator::stop_propagation	( )
+{
+	m_propagation_state		= propagating_finished;
+	detach_voices			( 4 );
+}
+
+u32 new_sound_propagator::stop_produce	( )
+{
+	u32 producing_time			= m_propagation_time + m_playing_offset;
+	m_end_propagation_time		= m_propagation_time + m_time_to_listener;
+	return						producing_time;
+}
+
+u32 new_sound_propagator::sound_playing_time	( ) const
+{
+	u32 offset					= sound_playing_time_with_offsets( );
+	if ( offset == u32(-1) )
+		return					u32(-1);
+
+	R_ASSERT					( offset >= m_before_playing_offsets && offset <= m_before_playing_offsets + m_sound_length );
+	if ( offset < m_before_playing_offsets || offset > m_before_playing_offsets + m_sound_length )
+		return					u32(-1);
+
+	return						offset - m_before_playing_offsets;
+}
+
+u32 new_sound_propagator::sound_playing_time_with_offsets	( ) const
+{
+	if ( m_propagation_time < m_time_to_listener )
+		return					u32(-1);
+
+	u32 offset					= m_propagation_time - m_time_to_listener;
+	if ( m_mode == once )
+		return					offset + m_playing_offset;
+	else
+		return					( offset + m_playing_offset ) % m_sound_length_with_offsets;
+}
+
+void new_sound_propagator::detach_voices	( u32 )
+{
 }
 
 #ifndef MASTER_GOLD
