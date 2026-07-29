@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 5,512 / 12,915 functions exact (42.68%) &middot; 5,524 / 12,915 functions exact-max (42.77%) &middot; 57.77% fuzzy &middot; 57.84% fuzzy-max.**
+**Overall: 5,514 / 12,915 functions exact (42.69%) &middot; 5,526 / 12,915 functions exact-max (42.79%) &middot; 57.77% fuzzy &middot; 57.84% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -28,7 +28,7 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `ai`            |   124 |   403 / 690 (58.4%) |   411 / 690 (59.6%) | 87.6% |     88.0% |
 | `sound`         |    69 |   266 / 509 (52.3%) |   266 / 509 (52.3%) | 56.3% |     56.3% |
 | `collision`     |    52 |   412 / 503 (81.9%) |   412 / 503 (81.9%) | 95.6% |     95.6% |
-| `scaleform`     |    47 |   252 / 453 (55.6%) |   252 / 453 (55.6%) | 57.9% |     57.9% |
+| `scaleform`     |    47 |   254 / 453 (56.1%) |   254 / 453 (56.1%) | 57.9% |     57.9% |
 | `particle`      |    25 |   247 / 400 (61.8%) |   247 / 400 (61.8%) | 79.1% |     79.1% |
 | `vfs`           |    71 |   164 / 390 (42.1%) |   164 / 390 (42.1%) | 87.1% |     87.1% |
 | `ui`            |    27 |   192 / 227 (84.6%) |   192 / 227 (84.6%) | 80.3% |     80.3% |
