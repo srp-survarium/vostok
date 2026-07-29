@@ -15,8 +15,7 @@
 
 namespace survarium {
 
-// the flash_value <-> GFx::Value bridge helpers (addressed free functions;
-// flash_value::body is the opaque GFx::Value storage)
+// flash_value stores a GFx::Value in its opaque body buffer.
 Scaleform::GFx::Value* gfx( flash_value const* value )
 {
 	return ( Scaleform::GFx::Value* )( value->body );
@@ -199,8 +198,7 @@ flash_external_handler::flash_external_handler( )
 
 flash_external_handler::~flash_external_handler( )
 {
-	if ( impl )
-		delete impl;
+	delete impl;
 }
 
 flash_function_handler_impl::flash_function_handler_impl( flash_function_handler& handler )
@@ -226,8 +224,7 @@ flash_function_handler::flash_function_handler( )
 
 flash_function_handler::~flash_function_handler( )
 {
-	if ( impl )
-		delete impl;
+	delete impl;
 }
 
 } // namespace survarium
