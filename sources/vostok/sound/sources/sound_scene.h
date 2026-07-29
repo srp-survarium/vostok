@@ -22,9 +22,15 @@
 
 
 namespace vostok {
+
+namespace resources {
+class query_result_for_cook;
+} // namespace resources
+
 namespace sound {
 
 class sound_debug_stats;
+struct sound_scene_creation_params;
 
 namespace statistics {
 
@@ -85,7 +91,13 @@ class sound_scene :	public resources::unmanaged_resource,
 					private boost::noncopyable
 {
 public:
-								sound_scene					( IXAudio2SubmixVoice* submix_voice, u32 dbg_id );
+								sound_scene					(
+									sound_world& world,
+									sound_scene_creation_params const& creation_params,
+									IXAudio2SubmixVoice* submix_voice,
+									u32 dbg_id,
+									resources::query_result_for_cook& parent
+								);
 								~sound_scene				( );
 
 	void						tick						( sound_world& world, u32 time_delta );
@@ -195,9 +207,9 @@ public:
 															);
 
 
-	inline	float3 const&		get_listenet_position		( ) const { return m_listener.m_position; }
-	inline	float3 const&		get_listenet_orient_front	( ) const { return m_listener.m_orient_front; }
-	inline	float3 const&		get_listenet_orient_top		( ) const { return m_listener.m_orient_top; }
+	inline	float3				get_listenet_position		( ) const { return m_list_position.get( ); }
+	inline	float3				get_listenet_orient_front	( ) const { return m_list_orient_front.get( ); }
+	inline	float3				get_listenet_orient_top		( ) const { return m_list_orient_top.get( ); }
 
 	IXAudio2SubmixVoice*		get_submix_voice			( ) const { return m_submix_voice; }
 				void			fade_in						( sound_world& world, u32 time_in_msec );
@@ -237,12 +249,11 @@ private:
 								);
 
 private:
-			void		init_allocators						( );
+			void		init_allocators						( resources::query_result_for_cook& parent );
 			void		on_unmanaged_resources_allocated	( resources::queries_result& queries );
 
 			void		update_receivers_position			( );
 			void		notify_receivers					( );
-			void		update_listener_properties			( );
 			void		notify_listener						( sound_world const& world );
 
 			void		calculate_hdr_audio					( );
@@ -305,18 +316,13 @@ private:
 public:
 	sound_scene*		m_next;
 private:
-	struct listener
-	{
-		float3			m_orient_front; // orientation of front direction, used only for matrix and delay calculations or listeners with cones for matrix, LPF (both direct and reverb paths), and reverb calculations, must be normalized when used
-		float3			m_orient_top;   // orientation of top direction, used only for matrix and delay calculations, must be orthonormal with OrientFront when used
-		float3			m_position;		// position in user-defined world units, does not affect Velocity
-	}														m_listener;
+	sound_world&											m_world;
 
 	atomic_half3											m_list_position;
 	atomic_half3											m_list_orient_front;
 	atomic_half3											m_list_orient_top;
 
-	resources::unmanaged_allocation_resource_ptr			m_unmanaged_resources_ptr;
+	resources::unmanaged_allocation_resource_ptr			m_memory_arena_resources_ptr;
 
 	u32 const												m_proxies_count;
 	uninitialized_reference< sound_proxies_allocator >		m_proxies_allocator;
