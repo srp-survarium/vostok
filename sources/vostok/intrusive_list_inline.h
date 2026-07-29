@@ -178,7 +178,7 @@ inline PointerType INTRUSIVE_LIST::pop_all_and_clear	(u32 * out_size)
 }
 
 TEMPLATE_SIGNATURE
-PointerType INTRUSIVE_LIST::front	() const
+inline PointerType INTRUSIVE_LIST::front	() const
 {
 	return									m_first;
 }

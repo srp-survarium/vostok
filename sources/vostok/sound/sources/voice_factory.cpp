@@ -21,13 +21,13 @@ voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& wo
 	voice_bridge::creation_parametrs	voice_params;
 	voice_params.xaudio_engine			= world.xaudio_engine( );
 	voice_params.master_channels_num	= world.master_channels_num( );
-	voice_params.channels_num			= 1;
 	voice_params.max_frequency_ratio	= m_max_frequency_ratio;
+	voice_params.channels_num			= 1;
 
 	for (u32 i = 0; i < params.mono_voices_count; ++i)
 	{
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
-		m_voices_pool[0].push_back( new_voice );
+		m_voices_pool[voice_params.channels_num - 1].push_back( new_voice );
 	}
 
 	voice_params.channels_num			= 2;
@@ -35,7 +35,7 @@ voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& wo
 	for (u32 i = 0; i < params.stereo_voices_count; ++i)
 	{
 		voice_bridge* new_voice	= VOSTOK_NEW_IMPL( m_voices_allocator, voice_bridge)( voice_params );
-		m_voices_pool[1].push_back( new_voice );
+		m_voices_pool[voice_params.channels_num - 1].push_back( new_voice );
 	}
 }
 
@@ -55,7 +55,7 @@ voice_factory::~voice_factory			( )
 
 }
 
-voice_bridge* voice_factory::new_voice ( sound_voice* callback_handler, u8 channels_num, u32 sample_rate )
+voice_bridge* voice_factory::new_voice ( sound_voice* callback_handler, u8 const channels_num, u32 const sample_rate )
 {
 	R_ASSERT					( channels_num );
 	voice_bridge* idle_voice	= m_voices_pool[channels_num - 1].front( );
