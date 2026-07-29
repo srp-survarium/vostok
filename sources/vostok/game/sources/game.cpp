@@ -1098,22 +1098,12 @@ void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, 
 	parent->finish_query			( result_success );
 }
 
-// claude@NOTE: BLOCKED on sibling game_options.cpp - unpaired. The target out-of-lines
-// `call game_options::activate`, but our game_options::activate is near-empty (its
-// show_movie/fill_menu_buttons body collapsed - cross-unit stubs), so LTCG INLINES that
-// tiny body into the call site and the delinker can't pair the divergent shape. Lifts
-// once game_options::activate is matched (regains its body -> stays out-of-line -> a real
-// call here). Reached via the anchor_game_world.cpp guarded direct call.
 void game::activate_main_menu( )
 {
 	m_active_scene->show_ui			( false );
 	m_game_options.activate			( m_active_scene );
 }
 
-// claude@NOTE: convention-matched (anchor direct call) but byte residual capped by the
-// SIBLING game_options.cpp: game_options::deactivate's inlined body here is missing its
-// base_game_scene::hide_movie( m_options_ui/m_cursor_ui ) calls + remove_handler (those
-// bodies are collapsed cross-unit stubs). Lifts once game_options.cpp is matched.
 void game::deactivate_main_menu( )
 {
 	m_game_options.deactivate		( );

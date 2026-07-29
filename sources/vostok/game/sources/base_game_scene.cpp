@@ -14,6 +14,7 @@
 #include <vostok/physics/world.h>
 #include <vostok/sound/world.h>
 #include <vostok/sound/world_user.h>
+#include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_text_manager.h>
 #include <vostok/memory_extensions.h>
 #include <vostok/console_command.h>
@@ -69,27 +70,17 @@ math::uint2 const& base_game_scene::output_window_size( ) const
 	return m_game.render_output_window( )->current_size( );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade. Target body:
-//   movie->movie->SetViewport( output_window_size( ).x, output_window_size( ).y );
-//   renderer( ).show_movie( render_scene_view( ), movie );
-// render::game::renderer::show_movie has the SHIPPED signature
-// show_movie(scene_view_ptr const&, flash_movie_resource_ptr); the facade
-// game_renderer.h declares the OLD show_movie(render_output_window_ptr const&,
-// flash_movie*) and game_renderer.cpp defines that - changing the facade is a
-// render-module match, not editable here. Also needs output_window_size() (blocked).
 void base_game_scene::show_movie( flash_movie_resource_ptr& movie )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
+	math::uint2 const& output_size = output_window_size( );
+	movie->movie->SetViewport( output_size.x, output_size.y );
+	renderer( ).show_movie( render_scene_view( ), movie );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade (see show_movie). Target body:
-//   if ( movie ) renderer( ).hide_movie( render_scene_view( ), movie );
-// needs render::game::renderer::hide_movie(scene_view_ptr const&, flash_movie_resource_ptr).
 void base_game_scene::hide_movie( flash_movie_resource_ptr& movie )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( movie );	// buildability stub
+	if ( movie.c_ptr( ) )
+		renderer( ).hide_movie( render_scene_view( ), movie );
 }
 
 void base_game_scene::show_text_manager( flash_text_manager* tm )
