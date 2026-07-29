@@ -893,6 +893,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_output_window_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_output_window_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_manager.cpp"
 			>
 		</File>
