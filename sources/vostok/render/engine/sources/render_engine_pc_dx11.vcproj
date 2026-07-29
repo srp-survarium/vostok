@@ -961,6 +961,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_material_base.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_material_base.h"
+			>
+		</File>
+		<File
 			RelativePath=".\material_effects_instance.h"
 			>
 		</File>
