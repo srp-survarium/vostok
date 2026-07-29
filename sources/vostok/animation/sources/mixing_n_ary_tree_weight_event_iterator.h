@@ -14,6 +14,7 @@ namespace animation {
 namespace mixing {
 
 class n_ary_tree_animation_node;
+class n_ary_tree;
 
 class VOSTOK_ANIMATION_API n_ary_tree_weight_event_iterator {
 public:
@@ -34,6 +35,8 @@ private:
 	n_ary_tree_animation_node*	m_animation;
 	u32							m_time_in_ms;
 	u16							m_event_type;
+
+	friend class n_ary_tree;
 }; // class n_ary_tree_weight_event_iterator
 
 STATIC_SIZE_ASSERT(n_ary_tree_weight_event_iterator, 0xC);

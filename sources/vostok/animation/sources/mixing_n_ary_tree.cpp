@@ -1257,43 +1257,30 @@ u32 n_ary_tree::nearest_event_time_in_ms( ) const
 	return						u32(-1);
 }
 
-// STATE[STUB]
-// claude@NOTE: adjust_animation_events_times - structure recovered (9 stmts): a
-// `for(animation_state* i=other.m_animation_states, e=i+other.m_animations_count; i!=e; ++i)`
-// loop whose body copies this->m_animation_states[k] INTO other's state (calls
-// bone_matrices_computer_data::operator= then inlines the scalar+event_iterator field copies,
-// with neg/sbb/and bool-normalizations on three event_iterator fields), then a
-// `std::sort(other.m_animation_events, +count, event_iterator_predicate())`. Parked: the per-state
-// copy is the INLINED animation_state::operator= (itself a STUB at line ~307) over
-// n_ary_tree_event_iterator's nested private sub-iterators (offsets 0x88/0x8C/0x90/0xAC); faithful
-// reconstruction needs that operator= + event_iterator internals decoded, plus the file-static
-// event_iterator_predicate defined. Not steerable without inventing the field/operator structure.
 void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 {
-	// LOCALS
-	// animation_state* const 			e
-	// n_ary_tree_animation_node* const animation
-	// subscribed_channel** const 		channels_head
-	// ******
+	animation_state* source			= m_animation_states;
+	animation_state* const end		= other.m_animation_states + other.m_animations_count;
+	for ( animation_state* i = other.m_animation_states; i != end; ++i, ++source ) {
+		n_ary_tree_animation_node* const animation	= i->event_iterator.m_animation_node;
+		subscribed_channel** const channels_head	=
+			i->event_iterator.m_animation_event_iterator.m_channels_head;
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6efb03>|0x003|+0x0e1:'1951'
-	// <0x6efbe4>|0x0e4|-0x0b4:'1951'
-	// <0x6efb30>|0x030|+0x006:'1952'
-	// <0x6efb36>|0x036|+0x006:'1953'
-	// <0x6efb3c>|0x03c|+0x049:'1954'
-	// <0>
-	// <0x6efb85>|0x085|+0x025:'1956'
-	// <0x6efbaa>|0x0aa|+0x012:'1957'
-	// <0x6efbbc>|0x0bc|+0x02c:'1958'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6efbe8>|0x0e8|+0x04d:'1964'
-	// ******
+		*i								= *source;
+		i->event_iterator.m_animation_node	=
+			source->event_iterator.m_animation_node ? animation : 0;
+		i->event_iterator.m_animation_event_iterator.m_channels_head	= channels_head;
+		i->event_iterator.m_animation_event_iterator.m_animation	=
+			source->event_iterator.m_animation_event_iterator.m_animation ? animation : 0;
+		i->event_iterator.m_weight_event_iterator.m_animation	=
+			source->event_iterator.m_weight_event_iterator.m_animation ? animation : 0;
+	}
+
+	stlp_std::sort					(
+		other.m_animation_events,
+		other.m_animation_events + other.m_animations_count,
+		event_iterator_predicate( )
+	);
 }
 
 // claude@NOTE: tick body is structure-faithful; residual is stubbed callees
