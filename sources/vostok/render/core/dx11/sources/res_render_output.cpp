@@ -21,6 +21,7 @@ m_base_rt		(NULL),
 m_base_zb		(NULL),
 m_window		( window),
 m_present_sync_mode	( D3DPRESENT_INTERVAL_DEFAULT),
+m_valid_previous_present( false ),
 m_windowed		( windowed),
 m_is_registered	( false )
 {
@@ -169,10 +170,15 @@ void res_render_output::select_resolution( u32 & width, u32 & height, bool windo
 
 void	res_render_output::resize				( )
 {
-	resize( m_windowed);
+	resize( false );
 }
 
-void res_render_output::resize( bool windowed)
+void res_render_output::resize( bool force_resize )
+{
+	resize( m_windowed, 0, 0, force_resize );
+}
+
+void res_render_output::resize( bool windowed, u32 size_x, u32 size_y, bool force_resize )
 {
 	m_windowed = windowed;
 	m_swap_chain_desc.Windowed	= m_windowed;
@@ -181,10 +187,11 @@ void res_render_output::resize( bool windowed)
 
 	DXGI_MODE_DESC	&buffer_desc = m_swap_chain_desc.BufferDesc;
 
-	math::uint2	new_size = math::uint2(0, 0);
-	select_resolution( new_size.x, new_size.y, m_windowed, m_window);
+	math::uint2	new_size = math::uint2( size_x, size_y );
+	if ( !new_size.x || !new_size.y )
+		select_resolution( new_size.x, new_size.y, m_windowed, m_window);
 
-	if( buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y)
+	if( !force_resize && buffer_desc.Width == new_size.x && buffer_desc.Height == new_size.y)
 		return;
 
 	if ( new_size.x < 16 )
@@ -232,6 +239,16 @@ void res_render_output::resize( bool windowed)
 
 	// --Porting to DX10_
 	//setup_states();
+}
+
+void res_render_output::set_size( u32 width, u32 height, bool fullscreen, bool force_resize )
+{
+	resize( !fullscreen, width, height, force_resize );
+}
+
+void res_render_output::goto_fullscreen( )
+{
+	set_size( width( ), height( ), true, true );
 }
 
 

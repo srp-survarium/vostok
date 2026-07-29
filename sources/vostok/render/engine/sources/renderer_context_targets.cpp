@@ -238,6 +238,12 @@ void	renderer_context_targets::resize	( math::uint2 size)
 	create_targets( size);
 }
 
+void renderer_context_targets::resize( math::uint2 size, bool force_resize )
+{
+	VOSTOK_UNREFERENCED_PARAMETER	( force_resize );
+	create_targets					( size );
+}
+
 
 } // namespace render
 } // namespace vostok

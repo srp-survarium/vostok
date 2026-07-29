@@ -7,6 +7,12 @@
 #ifndef COMMON_TYPES_H_INCLUDED
 #define COMMON_TYPES_H_INCLUDED
 
+namespace survarium {
+
+class scaleform_render_command_queue;
+
+} // namespace survarium
+
 namespace vostok {
 namespace render {
 
@@ -32,13 +38,25 @@ struct scene_configuration
 
 struct output_window_configuration
 {
-	output_window_configuration():
-		m_create_flash_renderer(false),
-		m_hwnd(NULL) 
-	{}
-	bool	m_create_flash_renderer;
-	void*	m_hwnd;
+	output_window_configuration( ) :
+		hwnd					( 0 ),
+		width					( 0 ),
+		height					( 0 ),
+		create_flash_renderer	( false ),
+		windowed				( true ),
+		scaleform_render_queue	( 0 )
+	{
+	}
+
+	void*										hwnd;
+	u32											width;
+	u32											height;
+	bool										create_flash_renderer;
+	bool										windowed;
+	survarium::scaleform_render_command_queue*	scaleform_render_queue;
 };
+
+STATIC_SIZE_ASSERT( output_window_configuration, 0x14 );
 
 ////////////////////////////////////////////////////////////////////////////
 // Terrain defines

@@ -26,7 +26,10 @@ public:
 public:
 	void		present			( );
 	void		resize			( );
-	void		resize			( bool m_windowed);
+	void		resize			( bool force_resize );
+	void		resize			( bool windowed, u32 size_x, u32 size_y, bool force_resize );
+	void		set_size		( u32 width, u32 height, bool fullscreen, bool force_resize );
+	void		goto_fullscreen	( );
 
 	vostok::math::uint2	size	( ) const { return vostok::math::uint2( m_swap_chain_desc.BufferDesc.Width, m_swap_chain_desc.BufferDesc.Height); }
 	u32			width			( ) const { return m_swap_chain_desc.BufferDesc.Width; }
@@ -34,6 +37,7 @@ public:
 
 	HWND		window			( )	 const				{ return m_window; }
 	bool		equal			( HWND window)	const	{ return m_window == window; }
+	bool		valid_present	( ) const				{ return m_valid_previous_present; }
 
 	inline bool	is_registered	( ) const	{ return m_is_registered; }
 	inline void	mark_registered	( )			{ R_ASSERT( !m_is_registered); m_is_registered = true; }
@@ -61,9 +65,12 @@ public:
 	ref_texture				m_texture_zb;	//	depth/stencil texture
 	HWND					m_window;
 	u32						m_present_sync_mode;
+	bool					m_valid_previous_present;
 	bool					m_windowed;
 	bool					m_is_registered;
 }; // class res_render_output
+
+STATIC_SIZE_ASSERT( res_render_output, 0xE8 );
 
 typedef	intrusive_ptr<res_render_output, resource_intrusive_base, threading::single_threading_policy>	ref_render_output;
 typedef	intrusive_ptr<res_render_output const, resource_intrusive_base const, threading::single_threading_policy>	ref_render_output_const;

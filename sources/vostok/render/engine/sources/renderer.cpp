@@ -20,7 +20,7 @@
 #include "effect_editor_gbuffer_to_screen.h"
 #include "grass_world.h"
 
-#include "flash_renderer.h"
+#include <vostok/scaleform/sources/flash_renderer.h>
 
 // render stages
 #include "stage_gbuffer.h"
@@ -323,7 +323,7 @@ void renderer::render(scene_ptr const& in_scene,
 	BEGIN_CPUGPU_TIMER(statistics::ref().general_stat_group.render_frame_time);
 	BEGIN_TIMER(statistics::ref().general_stat_group.cpu_render_frame_time);
 	
-	static_cast_checked< render::render_output_window* > ( output_window.c_ptr() )->resize( );
+	static_cast_checked< render::render_output_window* > ( output_window.c_ptr() )->resize( false );
 	
 	setup_render_output_window				( output_window, viewport);
 	
@@ -565,7 +565,7 @@ void renderer::present	( render_output_window_ptr in_output_window, viewport_typ
 	if( output_window )
 	{
 		if(output_window->m_flash_renderer)
-			output_window->m_flash_renderer->present( );
+			output_window->m_flash_renderer->present( 0, 0, 0 );
 
 		output_window->render_output()->present();
 	}
