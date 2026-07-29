@@ -43,12 +43,12 @@ void flash_value::SetBoolean( bool value )
 
 void flash_value::SetString( pcstr value )
 {
-	gfx( this )->SetString( value );
+	*gfx( this ) = Scaleform::GFx::Value( value );
 }
 
 void flash_value::SetStringW( wchar_t const* value )
 {
-	gfx( this )->SetStringW( value );
+	*gfx( this ) = Scaleform::GFx::Value( value );
 }
 
 void flash_value::SetInt( s32 value )
