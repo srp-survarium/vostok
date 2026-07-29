@@ -12,6 +12,8 @@ class animation_player;
 
 namespace mixing {
 
+class n_ary_tree_transition_tree_constructor;
+
 class animated_object_holder {
 public:
 	inline	explicit	animated_object_holder	( pcvoid animated_object ) :
@@ -30,6 +32,7 @@ private:
 private:
 	friend class ::vostok::animation::animation_player;
 	friend class n_ary_tree;
+	friend class n_ary_tree_transition_tree_constructor;
 }; // class animated_object_holder
 
 STATIC_SIZE_ASSERT(animated_object_holder, 0x88);

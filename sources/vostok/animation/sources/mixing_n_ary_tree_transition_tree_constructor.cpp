@@ -329,12 +329,24 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 		animation_interval_time		= ( to.override_existing_animation( ) || from.animation_state( ).is_freezed ? to : from ).animation_state( ).animation_interval_time;
 	}
 
-	// claude@NOTE: TRGT_ONLY tail (target lines 382-392) is the animated_object dedup: __find
-	// result->animated_object() in [m_animated_objects, m_new_animated_object), then in m_from's
-	// animated_objects, else m_get_transform_functor(...) into a fresh animated_object_holder and
-	// advance m_new_animated_object. Omitted: it reads n_ary_tree::m_animated_objects(_count) and
-	// writes animated_object_holder::transform, both private to classes that do NOT befriend this
-	// constructor here - reconstructing it needs friend decls I can't confirm from structure.
+	pcvoid const animated_object		= result->animated_object( );
+	animated_object_holder* const existing	=
+		std::find( m_animated_objects, m_new_animated_object, animated_object );
+	if ( existing == m_new_animated_object ) {
+		animated_object_holder const* const from_objects	= m_from.animated_objects( );
+		animated_object_holder const* const from_end		=
+			from_objects + m_from.animated_objects_count( );
+		animated_object_holder const* const from_holder	=
+			std::find( from_objects, from_end, animated_object );
+
+		animated_object_holder* const holder	= m_new_animated_object++;
+		new ( holder ) animated_object_holder	( animated_object );
+		holder->transform					=
+			from_holder != from_end ?
+			from_holder->transform :
+			m_get_transform_functor( animated_object );
+	}
+
 	m_previous_animation			= result;
 	return							result;
 }
@@ -549,13 +561,6 @@ void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group
 		remove_animation		( *i, weight_driving_animation, !begin->is_transitting_to_zero( ) );
 }
 
-// claude@NOTE: 22-stmt single-animation builder (target lines 618-701). Picks the weight
-// interpolator (weight_driving_animation else animation), calls new_animation, then a per-operand
-// merge that clones each operand (with a 1.f time-scale for time-scale nodes) until the first
-// operand >= temp, emits a new_weight_transition there, then clones the rest, then an INLINED
-// stlp_std::sort (introsort_loop + insertion_sort), then add_animation_node. This is the un-DCE
-// driver for new_weight_transition(base_interpolator const&,float,float). Residual: the inlined
-// sort + clone re-scheduling and the n_ary_tree_weight_node temp construction.
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation )
 {
 	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
@@ -689,10 +694,6 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	);
 }
 
-// claude@NOTE: structure-first reconstruction of the 4-arg time-scale-transition builder.
-// The two single-node fast paths (equal-compare line 797, transition_time==0 line 801) each
-// clone `from`/`to` with a fresh time scale via the 3-arg m_cloner.clone overload; residual is
-// the inlined re-scheduled temp-node construction inside those clone calls.
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition(
 	n_ary_tree_animation_node&		from_animation,
 	n_ary_tree_animation_node&		to_animation,
@@ -902,9 +903,6 @@ void n_ary_tree_transition_tree_constructor::add_operands(
 	bool							skip_time_scale_node
 )
 {
-	// claude@NOTE: time-scale prologue (lines 1003-1016) is collapsed vs the target's
-	// nested form, and the merge cases each emit a couple of extra target statements -
-	// residual structure work. Main 3-way merge + tails + sort match.
 	n_ary_tree_node_comparer	comparer;
 	n_ary_tree_base_node** const		i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
 	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
@@ -1525,11 +1523,6 @@ n_ary_tree_transition_tree_constructor::n_ary_tree_transition_tree_constructor(
 	merge_trees						( from, to );
 }
 
-// claude@NOTE: structure matches (single `return n_ary_tree( <11 members> )`, mirror of
-// the matched sibling n_ary_tree_transition_constructor::computed_tree). Byte residual: the
-// 11-arg n_ary_tree constructor is still an empty STUB (mixing_n_ary_tree.cpp), so the base
-// INLINES it to nothing - only the implicit intrusive_ptr member-ctor survives, dropping all
-// 11 arg pushes + the out-of-line `call`. Reappears once that constructor gets a real body.
 n_ary_tree n_ary_tree_transition_tree_constructor::computed_tree( )
 {
 	return
