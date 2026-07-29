@@ -21,15 +21,18 @@ namespace vostok {
 namespace animation {
 
 class skeleton;
-// sushi@TODO: class bi_spline_skeleton_animation;
+class bi_spline_skeleton_animation_baked;
 
 class VOSTOK_ANIMATION_API cubic_spline_skeleton_animation {
 public:
-// sushi@TODO:	static	u32								count_memory_size	( const bi_spline_skeleton_animation &data );
+	static	u32								count_memory_size	( bi_spline_skeleton_animation_baked const& animation );
+	static	cubic_spline_skeleton_animation* new_animation		(
+														pvoid buffer_for_animation,
+														bi_spline_skeleton_animation_baked const& animation
+													);
 #ifndef MASTER_GOLD
-	static	cubic_spline_skeleton_animation* new_animation		( memory::base_allocator& allocator, bi_spline_skeleton_animation const& animation );
+	static	cubic_spline_skeleton_animation* new_animation		( memory::base_allocator& allocator, bi_spline_skeleton_animation_baked const& animation );
 #endif // #ifndef MASTER_GOLD
-	// sushi@TODO: static	cubic_spline_skeleton_animation* new_animation		( pvoid buffer_for_animation, bi_spline_skeleton_animation const& animation );
 	static	void							 delete_animation	( cubic_spline_skeleton_animation const*& animation_to_delete );
 
 public:
@@ -41,8 +44,6 @@ public:
 
 	inline	bool					has_bone			( pcstr id ) const;
 	inline	float					get_frames_per_second( ) const { return 30.f; }
-//	inline	bool					has_bone			( u32 id ) const;
-
 public:
 			u32						bones_count			( ) const { return m_bone_count; }
 	inline	float					max_time_in_frames	( ) const { return bone_data()[0].max_time(); }
@@ -56,9 +57,8 @@ public:
 	inline	animation_event_channels const& event_channels		( ) const;
 
 private:
-						cubic_spline_skeleton_animation	( /* // sushi@TODO: bi_spline_skeleton_animation const& animation */ );
+						cubic_spline_skeleton_animation	( bi_spline_skeleton_animation_baked const& animation );
 						~cubic_spline_skeleton_animation( );
-			void			create_in_place_internals	( /* const bi_spline_skeleton_animation &data, */ void *memory );
 			bone_animation*			bone_data			( )			{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 			bone_animation const*	bone_data			( ) const	{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 

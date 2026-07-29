@@ -25,7 +25,7 @@ inline void	event_channel::create_in_place_internals ( ConfigValueType const& co
 
 	strings::copy( m_name, static_cast<pcstr>( config["name"] ) );
 
-	m_type		= (channel_type_enum)(u32)config["type"]; // sushi@TODO
+	m_type		= static_cast< channel_type_enum >( (u32)config["type"] );
 
 	for ( u32 i = 0; i < cnt ; ++i )
 		m_time_channel.knot( i ) = config["knots"][i];
@@ -43,6 +43,7 @@ inline void	event_channel::create_in_place_internals ( ConfigValueType const& co
 		m_time_channel.domain( i ).data = config["domains"][i];
 
 }
+
 
 #ifndef	MASTER_GOLD
 inline void	event_channel::write( configs::lua_config_value	&cfg )const

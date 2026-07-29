@@ -10,6 +10,7 @@
 #include "mixing_n_ary_tree_animation_node.h"
 #include <vostok/animation/bone_animation.h>
 #include <vostok/animation/bone_names.h>
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
 
 namespace vostok {
 
@@ -68,6 +69,17 @@ void anchor_animation_time_in_ms_calculator( )
 		void*
 	) = &animation::bone_animation::create_internals_in_place;
 	s_sink_pointer = *(pcvoid const*)&create_bone_animation;
+
+	u32 (* const count_skeleton_animation)(
+		animation::bi_spline_skeleton_animation_baked const&
+	) = &animation::cubic_spline_skeleton_animation::count_memory_size;
+	s_sink_pointer = *(pcvoid const*)&count_skeleton_animation;
+
+	animation::cubic_spline_skeleton_animation* (* const create_skeleton_animation)(
+		pvoid,
+		animation::bi_spline_skeleton_animation_baked const&
+	) = &animation::cubic_spline_skeleton_animation::new_animation;
+	s_sink_pointer = *(pcvoid const*)&create_skeleton_animation;
 }
 
 } // namespace vostok
