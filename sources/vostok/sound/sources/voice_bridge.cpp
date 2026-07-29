@@ -24,7 +24,7 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 	m_source_voice		( 0 ),
 	m_master_channels_num( params.master_channels_num )
 {
-	R_ASSERT_U						( params.channels_num );
+	R_ASSERT_U						( ( params.channels_num == 1 ) || ( params.channels_num == 2 ) );
 	R_ASSERT_U						( params.xaudio_engine );
 
 	WAVEFORMATEX wfx_standard		= { 0 };
@@ -41,7 +41,7 @@ voice_bridge::voice_bridge			( creation_parametrs& params ) :
 	HRESULT hr						= params.xaudio_engine->CreateSourceVoice	( 
 																&m_source_voice,
 																&wfx_standard,
-																XAUDIO2_VOICE_USEFILTER,
+																XAUDIO2_VOICE_NOPITCH | XAUDIO2_VOICE_NOSRC,
 																params.max_frequency_ratio,
 																this,
 																NULL,
