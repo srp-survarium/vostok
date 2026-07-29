@@ -29,6 +29,13 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
+struct event_iterator_predicate {
+	inline bool operator()( animation_state const* const left, animation_state const* const right ) const
+	{
+		return					left->event_iterator.is_less( right->event_iterator );
+	}
+};
+
  n_ary_tree::n_ary_tree(
 	n_ary_tree_animation_node* const	weight_root,
 	n_ary_tree_animation_node* const	time_root,
@@ -58,26 +65,18 @@ namespace mixing {
 	initialize					( );
 }
 
-// STATE[STUB]
-// claude@NOTE: initialize() is the ctor's only body statement; the ctor's init-list is already
-// structure-faithful but unpaired because (a) this initialize() is an empty stub and (b) the
-// single_threading_policy intrusive_ptr(T*) ctor is inlined in target / called in base (global
-// inline-vs-call knob). Parked: initialize()'s loop (492 sort + per-state set_object_transform(node&))
-// reads event_iterator internals (animation_event copy, test event_type & 0x80 =
-// time_event_weight_transitions_started) and calls the still-stubbed node-overload
-// set_object_transform; faithful spelling needs the event_iterator operator*/animation() API
-// decoded. Next step: body event_iterator_predicate (file-static) + the node set_object_transform,
-// then sort = std::sort(m_animation_events, +count, event_iterator_predicate()).
 void n_ary_tree::initialize( )
 {
-	// FUNCTION BODY
-	// <0x6ef238>|0x008|+0x055:'492'
-	// <0>
-	// <0x6ef28d>|0x05d|+0x014:'494'
-	// <0x6ef2a1>|0x071|+0x022:'495'
-	// <0x6ef2c3>|0x093|+0x015:'496'
-	// <0>
-	// ******
+	stlp_std::sort				(
+		m_animation_events,
+		m_animation_events + m_animations_count,
+		event_iterator_predicate( )
+	);
+
+	animation_state* const end	= m_animation_states + m_animations_count;
+	for ( animation_state* i = m_animation_states; i != end; ++i )
+		if ( i->event_iterator->event_type & time_event_weight_transitions_started )
+			set_object_transform	( i->event_iterator.animation( ) );
 }
 
 n_ary_tree& n_ary_tree::operator=( n_ary_tree const& other )
@@ -171,59 +170,37 @@ float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 	// ******
 }
 
-// STATE[STUB]
-// claude@NOTE: set_object_transform(node&) - 16 stmts, locals current_frame_position frame_position
-// + pinned_ptr_const<cubic_spline_skeleton_animation> pinned_animation. It pins the animation
-// (animation_node.animation_state(), m_animation_states[m_animation_intervals at +5Ch]), calls
-// evaluate_frame( animation_time*default_fps, intervals, frame, frame_position ) then writes the
-// computed object_movement (quaternion(rotation) @ state bone_matrices_computer +0/+8, translation,
-// scale) into the animation_state's bone_matrices_computer_data, branching on
-// state.are_there_any_weight_transitions (+74h). PARKED: animation-evaluation math - needs
-// current_frame_position layout, evaluate_frame semantics, the object_movement quaternion/float3
-// field offsets, and pinned_ptr_const machinery decoded; high risk to fabricate. Bodying this
-// un-DCEs the loops in set_object_transform(pcvoid)/set_objects_transform/tick. Next: decode
-// evaluate_frame + object_movement writes from the rich asm against cubic_spline_skeleton_animation.
 void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node )
 {
-	// LOCALS
-	// current_frame_position 			frame_position
-	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
-	// ******
+	animation_state& state					= animation_node.animation_state( );
+	animation_interval const& interval		= animation_node.animation_intervals( )[ state.animation_interval_id ];
+	current_frame_position frame_position;
+	frame frame_transform;
+	{
+		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
+		pinned_animation->bone( u32( 0 ) ).get_frame(
+			state.animation_time * default_fps,
+			frame_transform,
+			frame_position
+		);
+	}
 
-	// FUNCTION BODY
-	// <0x6eef90>|0x000|+0x004:'663'	{
-	// <0x6eef94>|0x004|+0x003:'664'
-	// <0x6eef97>|0x007|+0x006:'665'
-	// <0x6eef9d>|0x00d|+0x02c:'666'
-	// <0>
-	// <1>
-	// <0x6eefc9>|0x039|+0x04e:'669'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ef017>|0x087|+0x02d:'674'
-	// <0x6ef044>|0x0b4|+0x007:'675'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ef04b>|0x0bb|+0x01e:'680'
-	// <0x6ef069>|0x0d9|+0x063:'681'
-	// <0x6ef0cc>|0x13c|+0x033:'682'
-	// <0>
-	// <0x6ef0ff>|0x16f|+0x024:'684'
-	// <0x6ef123>|0x193|+0x04a:'685'
-	// <0x6ef16d>|0x1dd|+0x033:'686'
-	// <0>
-	// <1>
-	// <0x6ef1a0>|0x210|+0x009:'689'
-	// <0x6ef1a9>|0x219|+0x03d:'690'
-	// <0x6ef1e6>|0x256|-0x04d:'691'
-	// <0>
-	// <0x6ef199>|0x209|+0x07b:'693'
-	// <0x6ef214>|0x284|      :'693'	}
-	// ******
+	object_movement& previous				= state.bone_matrices_computer.previous_object_movement;
+	object_movement& accumulated			= state.bone_matrices_computer.accumulated_object_movement;
+	if ( state.are_there_any_weight_transitions ) {
+		previous.translation				= frame_transform.translation;
+		previous.rotation					= math::quaternion( frame_transform.rotation );
+		previous.scale						= frame_transform.scale;
+
+		accumulated.translation				= float3( 0.f, 0.f, 0.f );
+		accumulated.rotation				= math::quaternion( float3( 0.f, 0.f, 0.f ) );
+		accumulated.scale					= float3( 1.f, 1.f, 1.f );
+		return;
+	}
+
+	accumulated.translation					= frame_transform.translation;
+	accumulated.rotation					= math::quaternion( frame_transform.rotation );
+	accumulated.scale						= frame_transform.scale;
 }
 
 void n_ary_tree::set_object_transform( pcvoid const animated_object, float4x4 const& object_transform )
@@ -281,213 +258,135 @@ void n_ary_tree::convert_to_object_matrices(
 	bone_matrices_computer( animated_object, &skeleton, m_animation_states, m_animations_count ).convert_to_object_matrices( begin, end );
 }
 
-// STATE[STUB]
 void n_ary_tree::accumulate_object_movement(
 	n_ary_tree_animation_node&		animation_node,
 	const float						animation_interval_time,
 	const u32						time_in_ms
 )
 {
-	// LOCALS
-	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
-	// current_frame_position 			frame_position
-	// n_ary_tree_weight_calculator 	weight_calculator
-	// ******
+	animation_state& state					= animation_node.animation_state( );
+	n_ary_tree_weight_calculator weight_calculator( time_in_ms, &animation_node );
+	animation_node.accept					( weight_calculator );
+	state.weight							= weight_calculator.weight( );
+	state.animation_interval_time			= animation_interval_time;
+	update_animation_time					( state );
 
-	// CALL SITE INFO
-	// <0x6eeb5d> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	animation_interval const& interval		=
+		animation_node.animation_intervals( )[ state.animation_interval_id ];
+	cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
+	current_frame_position frame_position;
+	frame frame_transform;
+	pinned_animation->bone( u32( 0 ) ).get_frame(
+		state.animation_time * default_fps,
+		frame_transform,
+		frame_position
+	);
 
-	// FUNCTION BODY
-	// <0>
-	// <0x6eeb16>|0x006|+0x008:'745'
-	// <0x6eeb1e>|0x00e|+0x041:'746'
-	// <0>
-	// <0x6eeb5f>|0x04f|+0x00b:'748'
-	// <0>
-	// <0x6eeb6a>|0x05a|+0x009:'750'
-	// <0x6eeb73>|0x063|+0x00c:'751'
-	// <0>
-	// <0x6eeb7f>|0x06f|+0x00c:'753'
-	// <0x6eeb8b>|0x07b|+0x049:'754'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6eebd4>|0x0c4|+0x05f:'761'
-	// <0>
-	// <0x6eec33>|0x123|+0x02c:'763'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6eec5f>|0x14f|+0x026:'768'
-	// <0x6eec85>|0x175|+0x216:'769'
-	// <0x6eee9b>|0x38b|+0x053:'770'
-	// <0>
-	// <0x6eeeee>|0x3de|+0x041:'772'
-	// <0x6eef2f>|0x41f|+0x016:'773'
-	// <0x6eef45>|0x435|+0x027:'774'
-	// ******
+	math::quaternion const frame_rotation	( frame_transform.rotation );
+	object_movement& previous				= state.bone_matrices_computer.previous_object_movement;
+	object_movement& accumulated			= state.bone_matrices_computer.accumulated_object_movement;
+
+	accumulated.translation					+= frame_transform.translation - previous.translation;
+	accumulated.rotation					=
+		( frame_rotation * math::conjugate( previous.rotation ) ) * accumulated.rotation;
+	accumulated.scale						*= frame_transform.scale / previous.scale;
+
+	previous.translation					= frame_transform.translation;
+	previous.rotation						= frame_rotation;
+	previous.scale							= frame_transform.scale;
 }
 
-// STATE[STUB]
 void n_ary_tree::update_synchronization_group_using_integration(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						start_time_in_ms,
 	const u32						target_time_in_ms
 )
 {
-	// LOCALS
-	// bool 							is_time_scale_node
-	// float 							accumulated_animation_time
-	// const float 						animation_interval_length
-	// n_ary_tree_base_node* 			time_scale_node
-	// const u32 						full_intervals_count
-	// animation_state& 				animation_state
-	// n_ary_tree_time_scale_calculator time_scale_calculator
-	// const u32 						time_synchronization_group_id
-	// ******
+	animation_state& state					= animation_node.animation_state( );
+	n_ary_tree_base_node* time_scale_node	=
+		animation_node.operands_count( )
+			? *animation_node.operands( sizeof( n_ary_tree_animation_node ) )
+			: 0;
+	bool is_time_scale_node					= time_scale_node && time_scale_node->is_time_scale( );
+	float accumulated_animation_time		= state.animation_interval_time;
+	animation_interval const& interval		=
+		animation_node.animation_intervals( )[ state.animation_interval_id ];
+	float const animation_interval_length	= interval.length( );
 
-	// CALL SITE INFO
-	// <0x6ef6c7> -> bool < unknown >()
-	// <0x6ef7af> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	u32 const integration_interval_length_in_ms	= 10;
+	float const integration_interval_length		=
+		float( integration_interval_length_in_ms ) / 1000.f;
+	u32 const full_intervals_count				=
+		( target_time_in_ms - start_time_in_ms ) / integration_interval_length_in_ms;
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <0x6ef6a9>|0x009|+0x003:'812'
-	// <0x6ef6ac>|0x00c|+0x067:'813'
-	// <0x6ef713>|0x073|-0x055:'813'
-	// <0x6ef6be>|0x01e|+0x059:'814'
-	// <0x6ef717>|0x077|-0x040:'814'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef6d7>|0x037|+0x017:'818'
-	// <0x6ef6ee>|0x04e|+0x009:'819'
-	// <0x6ef6f7>|0x057|+0x01a:'820'
-	// <0x6ef711>|0x071|+0x00f:'821'
-	// <0x6ef720>|0x080|+0x1cf:'821'
-	// <0x6ef8ef>|0x24f|-0x1c7:'821'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6ef728>|0x088|+0x036:'827'
-	// <0>
-	// <0x6ef75e>|0x0be|+0x040:'829'
-	// <0>
-	// <0x6ef79e>|0x0fe|+0x013:'831'
-	// <0x6ef7b1>|0x111|+0x00c:'832'
-	// <0x6ef7bd>|0x11d|+0x003:'833'
-	// <0>
-	// <1>
-	// <0x6ef7c0>|0x120|+0x017:'836'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef7d7>|0x137|+0x004:'840'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <0x6ef7db>|0x13b|+0x02b:'861'
-	// <0x6ef806>|0x166|+0x002:'862'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x6ef808>|0x168|+0x043:'878'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <0x6ef84b>|0x1ab|+0x023:'897'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6ef86e>|0x1ce|+0x011:'905'
-	// <0x6ef87f>|0x1df|+0x00a:'906'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ef889>|0x1e9|+0x011:'911'
-	// <0>
-	// <0x6ef89a>|0x1fa|+0x007:'913'
-	// <0x6ef8a1>|0x201|+0x005:'914'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ef8a6>|0x206|+0x003:'918'
-	// <0>
-	// <1>
-	// <0x6ef8a9>|0x209|+0x00c:'921'
-	// <0>
-	// <0x6ef8b5>|0x215|+0x009:'923'
-	// <0>
-	// <1>
-	// <0x6ef8be>|0x21e|+0x00c:'926'
-	// <0x6ef8ca>|0x22a|+0x009:'927'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ef8d3>|0x233|+0x027:'932'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	for ( u32 i = 0; i <= full_intervals_count; ++i ) {
+		u32 const previous_sample_time	=
+			i < full_intervals_count
+				? start_time_in_ms + ( i ? 2 * i - 1 : 0 ) * ( integration_interval_length_in_ms / 2 )
+				: start_time_in_ms + full_intervals_count * integration_interval_length_in_ms;
+		u32 const sample_time			=
+			i < full_intervals_count
+				? start_time_in_ms + ( 2 * i + 1 ) * ( integration_interval_length_in_ms / 2 )
+				: target_time_in_ms;
+		n_ary_tree_time_scale_calculator time_scale_calculator(
+			sample_time,
+			accumulated_animation_time,
+			previous_sample_time,
+			&animation_node
+		);
+
+		if ( is_time_scale_node ) {
+			u32 const operands_count		= animation_node.operands_count( );
+			time_scale_node->accept		( time_scale_calculator );
+			if ( time_scale_calculator.result( ) )
+				time_scale_node			= time_scale_calculator.result( );
+			if ( operands_count != animation_node.operands_count( ) ) {
+				time_scale_node			= 0;
+				is_time_scale_node		= false;
+			}
+		}
+
+		float const time_scale			=
+			is_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
+		u32 const update_time			=
+			i < full_intervals_count
+				? start_time_in_ms + ( i + 1 ) * integration_interval_length_in_ms
+				: target_time_in_ms;
+		float const interval_fraction	=
+			i < full_intervals_count
+				? 1.f
+				: float( ( target_time_in_ms - start_time_in_ms ) % integration_interval_length_in_ms )
+					/ float( integration_interval_length_in_ms );
+		accumulated_animation_time		+= time_scale * integration_interval_length * interval_fraction;
+
+		if ( state.are_there_any_weight_transitions )
+			accumulate_object_movement	( animation_node, accumulated_animation_time, update_time );
+
+		u32 const group_id				= animation_node.time_synchronization_group_id( );
+		if ( group_id == u32( -1 ) )
+			continue;
+
+		for (
+			n_ary_tree_animation_node* current = animation_node.m_next_time_animation;
+			current && current->time_synchronization_group_id( ) == group_id;
+			current = current->m_next_time_animation
+		) {
+			animation_state& current_state	= current->animation_state( );
+			if ( !current_state.are_there_any_weight_transitions )
+				continue;
+
+			animation_interval const& current_interval	=
+				current->animation_intervals( )[ current_state.animation_interval_id ];
+			float const driven_time_scale	=
+				current_interval.length( ) / animation_interval_length;
+			accumulate_object_movement(
+				*current,
+				accumulated_animation_time * driven_time_scale,
+				update_time
+			);
+		}
+	}
+
 }
 
 void n_ary_tree::update_animation_time( animation_state& animation_state )
@@ -609,50 +508,24 @@ bool n_ary_tree::need_new_transform( const u32 target_time_in_ms ) const
 	return						need_new_transform;
 }
 
-// STATE[STUB]
 void n_ary_tree::remove_animation( n_ary_tree_animation_node*& i, n_ary_tree_animation_node* j )
 {
-	// LOCALS
-	// n_ary_tree_destroyer 			destroyer
-	// ******
+	n_ary_tree_animation_node** time_link	= &m_time_root;
+	while ( *time_link && *time_link != i )
+		time_link							= &( *time_link )->m_next_time_animation;
+	if ( *time_link )
+		*time_link							= ( *time_link )->m_next_time_animation;
 
-	// CALL SITE INFO
-	// <0x6ee102> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	if ( j )
+		j->m_next_weight_animation			= i->m_next_weight_animation;
+	else
+		m_weight_root						= i->m_next_weight_animation;
 
-	// FUNCTION BODY
-	// <0x6ee0a0>|0x000|+0x000:'1069'	{
-	// <0>
-	// <0x6ee0a0>|0x000|+0x020:'1071'
-	// <0x6ee0c0>|0x020|+0x00f:'1072'
-	// <0x6ee0cf>|0x02f|+0x00d:'1073'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6ee0dc>|0x03c|+0x00c:'1082'
-	// <0>
-	// <0x6ee0e8>|0x048|+0x002:'1084'
-	// <0x6ee0ea>|0x04a|+0x006:'1085'
-	// <0>
-	// <1>
-	// <0x6ee0f0>|0x050|+0x008:'1088'
-	// <0x6ee0f8>|0x058|+0x00c:'1089'
-	// <0>
-	// <0x6ee104>|0x064|+0x004:'1091'
-	// <0x6ee108>|0x068|+0x00d:'1092'
-	// <0>
-	// <0x6ee115>|0x075|-0x00a:'1094'
-	// <0>
-	// <0x6ee10b>|0x06b|+0x00d:'1096'
-	// <0x6ee118>|0x078|-0x006:'1096'
-	// <0x6ee112>|0x072|+0x00d:'1097'
-	// <0x6ee11f>|0x07f|      :'1097'	}
-	// ******
+	n_ary_tree_destroyer destroyer;
+	i->accept								( destroyer );
+	i										= j ? j->m_next_weight_animation : m_weight_root;
+	--m_animations_count;
+
 }
 
 // STATE[STUB]

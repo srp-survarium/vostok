@@ -13,7 +13,6 @@ using vostok::animation::mixing::n_ary_tree_animation_node;
 using vostok::animation::skeleton_animation_ptr;
 using vostok::animation::subscribed_channel;
 
-// STATE[STUB]: Sad
 animation_state::animation_state	(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						time_in_ms,
