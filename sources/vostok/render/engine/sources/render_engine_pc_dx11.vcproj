@@ -961,6 +961,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_model_static.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\batched_vertex_source.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model_static.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_surface.h"
 			>
 		</File>
