@@ -198,12 +198,6 @@ void n_ary_tree::set_objects_transform( )
 		set_object_transform		( i->animated_object, get_object_transform( i->animated_object ) );
 }
 
-// claude@NOTE: the three bone-matrix forwarders below are STRUCTURE-faithful (temporary
-// bone_matrices_computer for convert_to_object_matrices/compute_bones_matrices = 1 stmt no
-// local; named `computer` local for compute_bones_local_matrices = 2 stmts, per --view
-// structure). They are unpaired/~20% only because bone_matrices_computer's ctor/dtor/methods
-// are empty STUBs in bone_matrices_computer.cpp (other TU) -> the whole expression DCE-collapses
-// to a 1-byte ret. Pairs once that TU is bodied; off-limits to touch here.
 void n_ary_tree::compute_bones_matrices(
 	pcvoid const		animated_object,
 	skeleton const&		skeleton,
@@ -1228,10 +1222,6 @@ void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 	);
 }
 
-// claude@NOTE: tick body is structure-faithful; residual is stubbed callees
-// (process_events->process_event, update_animation_states->update_time_synchronization_group,
-// update_event_iterators_and_dispatch_callbacks, set_object_transform(node&)) whose empty bodies
-// let the optimizer DCE the loop effects. % rises as those callees get bodied.
 bool n_ary_tree::tick(
 	const u32				target_time_in_ms,
 	subscribed_channel*&	channels_head,

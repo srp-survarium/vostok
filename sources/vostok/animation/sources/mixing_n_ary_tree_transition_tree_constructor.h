@@ -11,7 +11,7 @@
 
 namespace vostok {
 
-void anchor_animation_cloner( ); // codegen-neutral /OPT:REF anchor (see friend below)
+void anchor_animation_cloner( );
 
 namespace animation {
 
@@ -29,9 +29,6 @@ class animated_object_holder;
 enum interpolation_direction;
 
 class n_ary_tree_transition_tree_constructor : private boost::noncopyable {
-	// codegen-neutral /OPT:REF anchor friend: anchor_animation_cloner() pins the private
-	// change_animation() root so LTCG emits the constructor's real call graph out-of-line.
-	// TEMPORARY - drop once the real mixer::set_target call graph reaches change_animation.
 	friend void ::vostok::anchor_animation_cloner( );
 
 public:
@@ -139,7 +136,7 @@ private:
 public:
 	inline	void							advance_buffer						( u32 size ) { m_buffer += size; }
 
-public: // sushi@NOTE: Made public to access `m_buffer`
+public:
 	/* 0x0000 */	transform_functor_type			m_get_transform_functor;
 	/* 0x0020 */	n_ary_tree_cloner				m_cloner;
 	/* 0x0044 */	mutable_buffer&					m_buffer;
