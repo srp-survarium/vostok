@@ -1,15 +1,11 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\engine\sources\render_model_skeleton.h"
+#include "render_model_skeleton.h"
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- skeleton_render_surface::skeleton_render_surface( )
+skeleton_render_surface::skeleton_render_surface( )
 {
 	// FUNCTION BODY[0x63b1a0]: 1
 	// <0x63b1ad>|0x00d|+0x007:'22'
@@ -17,7 +13,7 @@ namespace render {
 }
 
 // STATE[STUB]
- skeleton_render_model::skeleton_render_model( )
+skeleton_render_model::skeleton_render_model( )
 {
 	// FUNCTION BODY[0x63ae00]: 2
 	// <0x63ae2e>|0x02e|+0x05c:'27'
@@ -87,14 +83,14 @@ void skeleton_render_model::update( vector< float4x4 > const& bones )
 }
 
 // STATE[STUB]
- skeleton_render_model_instance::skeleton_render_model_instance( )
+skeleton_render_model_instance::skeleton_render_model_instance( )
 {
 	// FUNCTION BODY[0x63af90]
 	// ******
 }
 
 // STATE[STUB]
- skeleton_render_model_instance::~skeleton_render_model_instance( )
+skeleton_render_model_instance::~skeleton_render_model_instance( )
 {
 	// FUNCTION BODY[0x63aef0]: 1
 	// <0x63aefa>|0x00a|+0x01b:'80'
@@ -147,7 +143,7 @@ void skeleton_render_model_instance::assign_original( skeleton_render_model_ptr 
 }
 
 // STATE[STUB]
-u32 skeleton_render_model_instance::get_surfaces_count( u32 __formal ) const
+u32 skeleton_render_model_instance::get_surfaces_count( u32 lod_id ) const
 {
 	return 0;
 
@@ -158,11 +154,11 @@ u32 skeleton_render_model_instance::get_surfaces_count( u32 __formal ) const
 
 // STATE[STUB]
 void skeleton_render_model_instance::get_surfaces(
-	float4x4 const*							__formal,
-	float3 const*							__formal,
+	float4x4 const*							mat_vp,
+	float3 const*							view_pos,
 	vector< render_surface_instance* >&		list,
 	bool									visible_only,
-	u8										__formal,
+	u8										lod_id,
 	u32										surface_flags
 )
 {
@@ -190,7 +186,7 @@ void skeleton_render_model_instance::get_surfaces(
 }
 
 // STATE[STUB]
-void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& __formal ) const
+void skeleton_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
 {
 	// FUNCTION BODY[0x63a6a0]: 2
 	// <0>
@@ -280,65 +276,6 @@ void skeleton_render_model_instance::get_bind_pose( float4x4* matrices, u32 coun
 	// <0x63aa60>|0x000|+0x015:'202'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	float4x4*
-	// 	iterator_type;
-
-	// typedef
-	// 	pbyte
-	// 	iterator_type;
-
-	// typedef
-	// 	pcvoid*
-	// 	iterator_type;
-
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	void**
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::fixed_string< 32 >*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::geometry_batch*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_pass_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::res_shader_technique_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_binding*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::shader_constant_buffer_ptr*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::signature_layout_pair*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::texture_named_instance*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok

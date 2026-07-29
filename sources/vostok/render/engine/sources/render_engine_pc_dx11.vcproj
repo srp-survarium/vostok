@@ -973,6 +973,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_model_skeleton.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model_skeleton.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_surface.h"
 			>
 		</File>
