@@ -115,6 +115,12 @@ private:
 
 STATIC_SIZE_ASSERT(n_ary_tree_weight_transition_end_time_calculator, 0x10);
 
+void n_ary_tree_weight_event_iterator::invert_times( u32 const time_in_ms )
+{
+	if ( m_event_type )
+		m_time_in_ms			= time_in_ms - m_time_in_ms;
+}
+
 n_ary_tree_weight_event_iterator::n_ary_tree_weight_event_iterator(
 		n_ary_tree_animation_node& animation,
 		u32 const start_time_in_ms,

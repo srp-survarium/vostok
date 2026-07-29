@@ -30,7 +30,7 @@ public:
 	inline				n_ary_tree_event_iterator	( );
 
 			n_ary_tree_event_iterator&	operator ++	( );
-			void						invert_times( u32 time_in_ms ); // sushi@TODO
+			void						invert_times( u32 time_in_ms );
 	inline	animation_event				operator *	( ) const;
 	inline	animation_event*			operator ->	( );
 	inline	animation_event const*		operator ->	( ) const;

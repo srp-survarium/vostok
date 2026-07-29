@@ -654,23 +654,16 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::remove_animat
 	// ******
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group(vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*)
 void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// FUNCTION BODY
-	// <0x6ec275>|0x005|+0x020:'600'
-	// <0x6ec295>|0x025|+0x004:'601'
-	// <0>
-	// <1>
-	// <0x6ec299>|0x029|+0x003:'604'
-	// <0x6ec29c>|0x02c|+0x014:'605'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6ec2b0>|0x040|+0x01e:'610'
-	// ******
+	n_ary_tree_animation_node* const new_animation	= remove_animation( *begin, 0, !begin->is_transitting_to_zero( ) );
+	if ( !new_animation )
+		return;
+
+	n_ary_tree_animation_node* const weight_driving_animation	=
+		new_animation->weight_synchronization_group_id( ) == u32( -1 ) ? 0 : new_animation;
+	for ( n_ary_tree_animation_node* i = begin->m_next_weight_animation; i != end; i = i->m_next_weight_animation )
+		remove_animation		( *i, weight_driving_animation, !begin->is_transitting_to_zero( ) );
 }
 
 // claude@NOTE: 22-stmt single-animation builder (target lines 618-701). Picks the weight
@@ -735,19 +728,13 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	return							add_animation_node( *result, &animation.animation_state( ), animation_interval_id, animation_interval_time, true );
 }
 
-// STATE[STUB]
-// void vostok::animation::mixing::n_ary_tree_transition_tree_constructor::add_weight_synchronization_group(vostok::animation::mixing::n_ary_tree_animation_node*, vostok::animation::mixing::n_ary_tree_animation_node*)
 void n_ary_tree_transition_tree_constructor::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
 {
-	// FUNCTION BODY
-	// <0x6ec22d>|0x00d|+0x00b:'709'
-	// <0x6ec238>|0x018|+0x003:'710'
-	// <0x6ec23b>|0x01b|+0x015:'711'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6ec250>|0x030|+0x00f:'715'
-	// ******
+	n_ary_tree_animation_node* const new_animation	= add_animation( *begin, 0 );
+	n_ary_tree_animation_node* const weight_driving_animation	=
+		new_animation->weight_synchronization_group_id( ) == u32( -1 ) ? 0 : new_animation;
+	for ( n_ary_tree_animation_node* i = begin->m_next_weight_animation; i != end; i = i->m_next_weight_animation )
+		add_animation			( *i, weight_driving_animation );
 }
 
 // STATE[STUB]

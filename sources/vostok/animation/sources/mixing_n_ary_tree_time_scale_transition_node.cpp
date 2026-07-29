@@ -15,6 +15,7 @@
 #include "mixing_n_ary_tree_time_scale_transition_node.h"
 #include "mixing_n_ary_tree_visitor.h"
 #include "mixing_n_ary_tree_double_dispatcher.h"
+#include "mixing_time_scale_transition_debug.h"
 
 using vostok::animation::mixing::n_ary_tree_visitor;
 using vostok::animation::mixing::n_ary_tree_double_dispatcher;
@@ -26,6 +27,11 @@ using vostok::animation::mixing::n_ary_tree_subtraction_node;
 using vostok::animation::mixing::n_ary_tree_multiplication_node;
 using vostok::animation::mixing::n_ary_tree_weight_transition_node;
 using vostok::animation::mixing::n_ary_tree_time_scale_transition_node;
+
+void n_ary_tree_time_scale_transition_node::check_consistency( )
+{
+	time_scale_transition_debug		( *this );
+}
 
 void n_ary_tree_time_scale_transition_node::accept	( n_ary_tree_visitor& visitor )
 {
