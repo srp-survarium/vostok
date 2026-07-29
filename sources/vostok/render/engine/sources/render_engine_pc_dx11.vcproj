@@ -969,6 +969,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\decal_default_material_effect.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\decal_default_material_effect.h"
+			>
+		</File>
+		<File
 			RelativePath=".\material_effects_instance.h"
 			>
 		</File>
