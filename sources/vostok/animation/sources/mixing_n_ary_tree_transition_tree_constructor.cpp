@@ -1181,62 +1181,45 @@ std::pair< u32, u32 > computed_operands_count( n_ary_tree_animation_node& from, 
 	return						std::make_pair( operands_count, time_scale_nodes_count );
 }
 
-// STATE[STUB]
-// vostok::animation::mixing::n_ary_tree_animation_node* vostok::animation::mixing::n_ary_tree_transition_tree_constructor::new_weight_driving_animation(vostok::animation::mixing::n_ary_tree_animation_node&, vostok::animation::mixing::n_ary_tree_animation_node&)
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_driving_animation( n_ary_tree_animation_node& new_weight_driving_animation, n_ary_tree_animation_node& new_driving_animation_in_previous_target )
 {
-	// LOCALS
-	// float 							animation_interval_time
-	// n_ary_tree_animation_node* 		result
-	// u32 								animation_interval_id
-	// u32 								operands_offset
-	// u32 								time_scale_operands_count
-	// n_ary_tree_base_node** 			operands
-	// ******
+	std::pair< u32, u32 > const operands_counts	=
+		computed_operands_count( new_driving_animation_in_previous_target, new_weight_driving_animation );
+	u32 time_scale_operands_count	= operands_counts.first;
+	u32 operands_offset				= operands_counts.second;
+	u32 animation_interval_id		= 0;
+	float animation_interval_time	= 0.f;
+	n_ary_tree_animation_node* const result	= new_animation(
+		new_weight_driving_animation,
+		new_driving_animation_in_previous_target,
+		0,
+		0,
+		time_scale_operands_count,
+		operands_offset,
+		animation_interval_id,
+		animation_interval_time,
+		new_driving_animation_in_previous_target.is_transitting_to_zero( ),
+		true
+	);
 
-	return NULL;
+	n_ary_tree_base_node** const operands	=
+		result->operands( sizeof( n_ary_tree_animation_node ) ) + time_scale_operands_count;
+	m_buffer					+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
+	add_operands(
+		new_driving_animation_in_previous_target,
+		new_weight_driving_animation,
+		operands,
+		operands + operands_offset,
+		time_scale_operands_count != 0
+	);
 
-	// FUNCTION BODY
-	// <0x6eb45d>|0x00d|+0x00f:'1196'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6eb46c>|0x01c|+0x03c:'1213'
-	// <0x6eb4a8>|0x058|+0x008:'1214'
-	// <0>
-	// <0x6eb4b0>|0x060|+0x012:'1216'
-	// <0x6eb4c2>|0x072|+0x00c:'1217'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6eb4ce>|0x07e|+0x01c:'1225'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x6eb4ea>|0x09a|+0x01d:'1234'
-	// ******
+	return						add_animation_node(
+		*result,
+		&new_weight_driving_animation.animation_state( ),
+		animation_interval_id,
+		animation_interval_time,
+		false
+	);
 }
 
 // claude@NOTE: the two per-side multiplication-node operand-copy loops (clone every operand
