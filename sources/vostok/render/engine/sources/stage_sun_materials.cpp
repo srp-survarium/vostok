@@ -331,7 +331,7 @@ void stage_sun_materials::execute( sun_cascade cascade)
 		return;
 	}
 	
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 
 	//// Choose normal code-path or filtered

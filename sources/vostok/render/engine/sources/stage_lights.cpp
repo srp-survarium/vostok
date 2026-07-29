@@ -1253,7 +1253,7 @@ void stage_lights::make_skin_scattering_texture(vostok::render::render_surface_i
 		//backend::ref().flush_rt_shader_resources();
 		
 		// Set old. TODO: get_render_targets(), set_render_targets()
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, 0, 0, 0); 
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 		backend::ref().reset_depth_stencil_target();
 		backend::ref().set_viewport( orig_viewport);
 		
@@ -1276,7 +1276,7 @@ void stage_lights::make_skin_scattering_texture(vostok::render::render_surface_i
 	}
 	
 	// Set old. TODO: get_render_targets(), set_render_targets()
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().set_viewport( orig_viewport);
 }
@@ -1674,7 +1674,7 @@ void stage_lights::render_speedtree_lighting (vostok::render::lod_entry const* l
 
 void stage_lights::execute_disabled()
 {
-	backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+	backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 	backend::ref().reset_depth_stencil_target	();
 	
 	backend::ref().clear_render_targets			( 
@@ -1706,7 +1706,7 @@ void stage_lights::execute()
 	if (!identity(m_is_forward_lighting_pass))
 	{
 		m_context->set_w							(float4x4().identity());
-		backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+		backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 		backend::ref().reset_depth_stencil_target	();
 		
 		// mask
@@ -1748,7 +1748,7 @@ void stage_lights::execute()
 	
 	BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.forward_lighting_time);
 	
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 	
 	m_context->scene()->select_models( m_context->get_culling_vp(), m_dynamic_visuals);
 	
@@ -1913,7 +1913,7 @@ void stage_lights::render_shadowed_light( light* l )
 		
 		BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.accumulate_lighting_time);
 		
-		backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0); 
+		backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 		backend::ref().reset_depth_stencil_target	();
 		
 		// Mask opaque geometry.
@@ -2122,7 +2122,7 @@ void stage_lights::render_light( light* l, bool shadowers_pass)
 	
 	BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.accumulate_lighting_time);
 	
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0); 
+	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 	
 //	if (!s_one_light_dip_value)
@@ -2404,7 +2404,7 @@ void stage_lights::debug_render	( )
 	//	2, 3, 4,
 	//};
 
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_rt_present, 0, 0, 0); 
+	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 
 	typedef lights_db::lights_type	lights_type;
 	lights_type const& lights	= m_context->scene()->lights().get_lights();

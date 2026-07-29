@@ -26,7 +26,7 @@ render_output_window::render_output_window( vostok::render::output_window_config
 
 	if ( window_configuration.create_flash_renderer )
 	{
-		backend::ref().set_render_targets	( &*m_targets.m_rt_generic_0, 0, 0, 0 );
+		backend::ref().set_render_targets	( &*m_targets.m_family[rt_generic_0].target, 0, 0, 0 );
 		backend::ref().flush				( );
 
 		m_flash_renderer = NEW( survarium::flash_renderer )(
@@ -76,7 +76,7 @@ void render_output_window::resize( bool force_resize )
 
 	if ( m_flash_renderer )
 	{
-		backend::ref().set_render_targets	( &*m_targets.m_rt_generic_0, 0, 0, 0 );
+		backend::ref().set_render_targets	( &*m_targets.m_family[rt_generic_0].target, 0, 0, 0 );
 		backend::ref().flush				( );
 		m_flash_renderer->on_reset_device(
 			m_current_size.x,
@@ -113,7 +113,7 @@ void render_output_window::set_size(
 
 	if ( m_flash_renderer )
 	{
-		backend::ref().set_render_targets	( &*m_targets.m_rt_generic_0, 0, 0, 0 );
+		backend::ref().set_render_targets	( &*m_targets.m_family[rt_generic_0].target, 0, 0, 0 );
 		backend::ref().flush				( );
 		m_flash_renderer->on_reset_device(
 			width,

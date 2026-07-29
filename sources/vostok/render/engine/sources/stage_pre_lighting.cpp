@@ -26,7 +26,7 @@ void stage_pre_lighting::execute( )
 
 	m_context->m_light_marker_id = 1<<stencil_light_marker_shift;
 	//backend::ref().set_render_targets( &*m_context->m_rt_accumulator, 0, 0, 0);
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 
 	backend::ref().clear_render_targets( math::color( 0.0f, 0.0f, 0.0f, 0.0f));

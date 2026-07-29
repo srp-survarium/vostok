@@ -173,7 +173,7 @@ void stage_view_mode::execute(scene_view_mode view_mode)
 	
 	if (view_mode==wireframe_view_mode || view_mode==wireframe_two_sided_view_mode)
 	{
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, 0, 0, 0);
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 		backend::ref().clear_render_targets( math::color( 0.f, 0.f, 0.f, 0.f));
 	}
 	//else if (view_mode == overdraw_view_mode)
@@ -182,7 +182,7 @@ void stage_view_mode::execute(scene_view_mode view_mode)
 	//}
 	else
 	{
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_present, 0, 0, 0);
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 		backend::ref().clear_render_targets( math::color( 0.f, 0.f, 0.f, 0.f));
 	}
 	
@@ -561,17 +561,17 @@ void stage_view_mode::execute(scene_view_mode view_mode)
 	if (view_mode == wireframe_view_mode || view_mode == wireframe_two_sided_view_mode)
 	{
 		m_editor_apply_wireframe_shader->apply();
-		fill_surface(m_context->m_targets->m_rt_present, m_context);
+		fill_surface(m_context->m_targets->m_family[rt_present].target, m_context);
 	}
 	else if (view_mode == overdraw_view_mode)
 	{
-		backend::ref().set_render_targets( &*m_context->m_targets->m_rt_present, 0, 0, 0);
+		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 		backend::ref().clear_render_targets(0.0f, 0.25f, 0.0f, 0.0f);
 		
 		for (u32 layer_index = 1; layer_index < effect_editor_show_overdraw::num_overdraw_layers; layer_index++)
 		{
 			m_editor_show_overdraw_shader->apply(layer_index);
-			fill_surface(m_context->m_targets->m_rt_present, m_context, false);
+			fill_surface(m_context->m_targets->m_family[rt_present].target, m_context, false);
 		}
 	}
 	

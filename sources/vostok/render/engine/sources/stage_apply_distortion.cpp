@@ -53,7 +53,7 @@ void stage_apply_distortion::execute()
 	
 	BEGIN_CPUGPU_TIMER(statistics::ref().distortion_pass_stat_group.apply_time);
 	
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_generic_0, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 	backend::ref().clear_render_targets(math::color(0,0,0,0));
 	backend::ref().reset_depth_stencil_target();
 

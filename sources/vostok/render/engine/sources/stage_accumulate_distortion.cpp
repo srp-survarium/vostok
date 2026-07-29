@@ -48,7 +48,7 @@ void stage_accumulate_distortion::execute()
 	
 	BEGIN_CPUGPU_TIMER(statistics::ref().distortion_pass_stat_group.accumulate_time);
 	
-	backend::ref().set_render_targets( &*m_context->m_targets->m_rt_distortion, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_distortion].target, 0, 0, 0);
 	backend::ref().clear_render_targets	( math::color( 0.0f, 0.0f, 0.0f, 0.f));
 	
 	{

@@ -199,7 +199,7 @@ void stage_clouds::execute()
 		return;
 	}
 	
-//	backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_generic_0, NULL, NULL, NULL);
+//	backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_generic_0].target, NULL, NULL, NULL);
 //	backend::ref().reset_depth_stencil_target	();
 //	
 //	m_clouds_effect->apply						();

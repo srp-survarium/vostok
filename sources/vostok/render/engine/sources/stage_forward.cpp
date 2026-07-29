@@ -76,7 +76,7 @@ void stage_forward::execute()
 	
 	BEGIN_CPUGPU_TIMER(statistics::ref().forward_stage_stat_group.execute_time);
 	
-	backend::ref().set_render_targets			(&*m_context->m_targets->m_rt_generic_0, 0, 0, 0);
+	backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 	backend::ref().reset_depth_stencil_target	();
 	
 	// TODO: Get dynamic visuals once.

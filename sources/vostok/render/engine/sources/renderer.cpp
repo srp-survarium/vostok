@@ -187,7 +187,7 @@ renderer::renderer( renderer_context * renderer_context ):
 	m_present_stage									= NEW(stage_screen_image)				(m_renderer_context);
 
 
-//	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_rt_generic_0, 0, 0, 0);
+//	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
 
 
 	m_timer.start();
@@ -347,7 +347,7 @@ void renderer::render(scene_ptr const& in_scene,
 	
 	scene_view_mode view_mode = view->get_view_mode();
 	
-	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_rt_position, &*m_renderer_context->m_targets->m_rt_normal, 0, 0);
+	backend::ref().set_render_targets	( &*m_renderer_context->m_targets->m_family[rt_position].target, &*m_renderer_context->m_targets->m_family[rt_normal].target, 0, 0);
 	backend::ref().reset_depth_stencil_target( );
 	backend::ref().clear_render_targets	( math::color( 1.f, 1.f, 1.f, 1.f), math::color( 0.f, 0.f, 0.f, 0.f), math::color( 0.f, 0.f, 0.f, 0.f), math::color( 0.f, 0.f, 0.f, 0.f));
 	
@@ -385,19 +385,19 @@ void renderer::render(scene_ptr const& in_scene,
 				{
 					// Copy final scene color to albedo texture.
 					resource_manager::ref().copy2D(
-						&*m_renderer_context->m_targets->m_t_color,
+						&*m_renderer_context->m_targets->m_family[rt_albedo].texture,
 						0,
 						0,
-						&*m_renderer_context->m_targets->m_t_present,
+						&*m_renderer_context->m_targets->m_family[rt_present].texture,
 						0,
 						0,
-						m_renderer_context->m_targets->m_t_present->width(),
-						m_renderer_context->m_targets->m_t_present->height()
+						m_renderer_context->m_targets->m_family[rt_present].texture->width(),
+						m_renderer_context->m_targets->m_family[rt_present].texture->height()
 					);
 					
 					m_gbuffer_to_screen_shader->apply();
 					backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-					fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+					fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				}
 				
 				break;
@@ -427,7 +427,7 @@ void renderer::render(scene_ptr const& in_scene,
 				
 				m_gbuffer_to_screen_shader->apply();
 				backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-				fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+				fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				
 				break;
 			}
@@ -443,7 +443,7 @@ void renderer::render(scene_ptr const& in_scene,
 				
 				m_gbuffer_to_screen_shader->apply();
 				backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-				fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+				fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				break;
 			}
 			case lighting_view_mode:
@@ -464,7 +464,7 @@ void renderer::render(scene_ptr const& in_scene,
 				m_gbuffer_to_screen_shader->apply();
 				
 				backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-				fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+				fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				break;
 			}
 			case indirect_lighting_mode:
@@ -481,7 +481,7 @@ void renderer::render(scene_ptr const& in_scene,
 				m_gbuffer_to_screen_shader->apply();
 				
 				backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-				fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+				fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				break;
 			}
 			case ambient_occlusion_only_view_mode:
@@ -498,7 +498,7 @@ void renderer::render(scene_ptr const& in_scene,
 				m_gbuffer_to_screen_shader->apply();
 				
 				backend::ref().set_ps_constant(m_gbuffer_to_screen_type, view_mode_type);
-				fill_surface(m_renderer_context->m_targets->m_rt_present, m_renderer_context);
+				fill_surface(m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context);
 				break;
 			}
 		}
@@ -516,7 +516,7 @@ void renderer::render(scene_ptr const& in_scene,
 	if (m_stage_debug)
 		m_stage_debug->execute			();
 	
-	backend::ref().set_render_targets( &*m_renderer_context->m_targets->m_rt_present, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_renderer_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 	
 	scene->flush					( on_draw_scene );
 	

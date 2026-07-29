@@ -532,13 +532,13 @@ void stage_light_propagation_volumes::downsample_gbuffer()
 {
 	m_downsample_gbuffer_effect->apply		();
 	
-	u32 const width							= m_context->m_targets->m_t_gbuffer_position_downsampled->width();
-	u32 const height						= m_context->m_targets->m_t_gbuffer_position_downsampled->height();
+	u32 const width							= m_context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->width();
+	u32 const height						= m_context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->height();
 	
 	float3 const* const eye_rays			= m_context->get_eye_rays();
 	backend::ref().set_ps_constant			(m_c_eye_ray_corner, ((float4*)eye_rays)[0]);
 	
-	backend::ref().set_render_targets		(&*m_context->m_targets->m_rt_gbuffer_position_downsampled, &*m_context->m_targets->m_rt_gbuffer_normal_downsampled, 0, 0);
+	backend::ref().set_render_targets		(&*m_context->m_targets->m_family[rt_gbuffer_position_downsampled].target, &*m_context->m_targets->m_family[rt_final_frame_downsampled_temp].target, 0, 0);
 	backend::ref().set_depth_stencil_target	(0);
 	
 	D3D_VIEWPORT orig_viewport;
@@ -639,7 +639,7 @@ void stage_light_propagation_volumes::execute()
 		
 		downsample_gbuffer						();
 		
-		backend::ref().set_depth_stencil_target		(&*m_context->m_targets->m_apply_indirect_lighting_ds);
+		backend::ref().set_depth_stencil_target		(&*m_context->m_targets->m_family[rt_apply_indirect_lighting_ds].target);
 		backend::ref().clear_depth_stencil			(D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0);
 		backend::ref().reset_depth_stencil_target	();
 		
@@ -838,7 +838,7 @@ void stage_light_propagation_volumes::execute()
 		for (s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; cascade_index--)
 		{
 			// Apply to scene.
-			backend::ref().set_render_targets		(&*m_context->m_targets->m_rt_accumulator_diffuse, 0, 0, 0);
+			backend::ref().set_render_targets		(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, 0, 0, 0);
 			
 			backend::ref().set_depth_stencil_target	(NULL);
 			
@@ -881,7 +881,7 @@ void stage_light_propagation_volumes::execute()
 			render_quad								();
 			
 			//m_apply_indirect_lighting_effect->apply	(1);
-			//backend::ref().set_render_targets		(&*m_context->m_targets->m_rt_accumulator_diffuse, 0, 0, 0);
+			//backend::ref().set_render_targets		(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, 0, 0, 0);
 			//render_quad								();
 			
 			backend::ref().reset_render_targets			();
@@ -893,7 +893,7 @@ void stage_light_propagation_volumes::execute()
 	}
 	
 	/*
-	backend::ref().set_depth_stencil_target		(&*m_context->m_targets->m_apply_indirect_lighting_ds);
+	backend::ref().set_depth_stencil_target		(&*m_context->m_targets->m_family[rt_apply_indirect_lighting_ds].target);
 	backend::ref().clear_depth_stencil			(D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0);
 	backend::ref().reset_depth_stencil_target	();
 
@@ -905,8 +905,8 @@ void stage_light_propagation_volumes::execute()
 		process_cascade							(cascade_index);
 		
 		// Apply to scene.
-		backend::ref().set_render_targets		(&*m_context->m_targets->m_rt_accumulator_diffuse, &*m_context->m_targets->m_rt_accumulator_specular, 0, 0);
-		backend::ref().set_depth_stencil_target	(&*m_context->m_targets->m_apply_indirect_lighting_ds);
+		backend::ref().set_render_targets		(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
+		backend::ref().set_depth_stencil_target	(&*m_context->m_targets->m_family[rt_apply_indirect_lighting_ds].target);
 		
 		m_apply_indirect_lighting_effect->apply	();
 		

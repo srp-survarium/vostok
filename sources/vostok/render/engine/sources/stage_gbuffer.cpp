@@ -95,9 +95,9 @@ void stage_gbuffer::execute()
 	if (m_is_pre_pass)
 	{
 		backend::ref().set_render_targets	( 
-			&*m_context->m_targets->m_rt_position,
-			&*m_context->m_targets->m_rt_normal,
-			&*m_context->m_targets->m_rt_tangents,
+			&*m_context->m_targets->m_family[rt_position].target,
+			&*m_context->m_targets->m_family[rt_normal].target,
+			&*m_context->m_targets->m_family[rt_normal_copy].target,
 			0
 		);
 		backend::ref().clear_render_targets	(
@@ -110,7 +110,7 @@ void stage_gbuffer::execute()
 	else
 	{
 		backend::ref().set_render_targets(
-			&*m_context->m_targets->m_rt_generic_0, // DXGI_FORMAT_R16G16B16A16_FLOAT
+			&*m_context->m_targets->m_family[rt_generic_0].target, // DXGI_FORMAT_R16G16B16A16_FLOAT
 			0,
 			0,
 			0
@@ -487,14 +487,14 @@ void stage_gbuffer::execute()
 		device::ref().d3d_context()->Flush();
 		
 		resource_manager::ref().copy2D		(
-			&*m_context->m_targets->m_t_generic_1,
+			&*m_context->m_targets->m_family[rt_generic_1].texture,
 			0,
 			0,
-			&*m_context->m_targets->m_t_generic_0,
+			&*m_context->m_targets->m_family[rt_generic_0].texture,
 			0,
 			0,
-			m_context->m_targets->m_t_generic_0->width(),
-			m_context->m_targets->m_t_generic_0->height()
+			m_context->m_targets->m_family[rt_generic_0].texture->width(),
+			m_context->m_targets->m_family[rt_generic_0].texture->height()
 		);
 	}*/
 	END_CPUGPU_TIMER;
