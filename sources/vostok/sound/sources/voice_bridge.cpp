@@ -103,6 +103,15 @@ void voice_bridge::stop ( )
 	R_ASSERT_U				( !FAILED(result) );
 }
 
+void voice_bridge::submit_source_buff	( sound_buffer* buffer )
+{
+	XAUDIO2_BUFFER* xaudio_buffer	= buffer->get_xaudio_buffer( );
+
+	R_ASSERT						( xaudio_buffer );
+	HRESULT hr						= m_source_voice->SubmitSourceBuffer( xaudio_buffer );
+	R_ASSERT_U						( !FAILED(hr) );
+}
+
 void voice_bridge::submit_source_buffer	( sound_buffer* buffer, u32 playing_offset, u32 playing_length )
 {
 

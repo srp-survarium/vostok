@@ -29,6 +29,7 @@ public:
 
 			void			start							( );
 			void			stop							( );
+			void			submit_source_buff				( sound_buffer* buffer );
 			void			submit_source_buffer			( sound_buffer* buffer, u32 playing_offset = 0, u32 playing_length = 0 );
 			void			flush_source_buffers			( );
 
