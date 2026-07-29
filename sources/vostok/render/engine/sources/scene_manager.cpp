@@ -140,7 +140,7 @@ struct render_output_window_predicate
 
 render_output_window*	scene_manager::create_render_output_window( vostok::render::output_window_configuration const& window_configuration )
 {
-	HWND window = (HWND)window_configuration.m_hwnd;
+	HWND window = (HWND)window_configuration.hwnd;
  	render_output_windows::iterator it = std::find_if( m_output_windows.begin(), m_output_windows.end(), render_output_window_predicate( window) );
  	if( it != m_output_windows.end())
 	{

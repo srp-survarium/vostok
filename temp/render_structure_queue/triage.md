@@ -102,3 +102,20 @@ Record each non-live removal here as:
   The constructor initializes every target field and acquires the base color
   grading LUT at the target path. Consumers that still belong to larger legacy
   material and post-process units remain queued for their own reconstruction.
+- `headers/vostok/render/output_window_configuration.h` |
+  represented in the live tree |
+  `sources/vostok/render/facade/common_types.h` carries the target `0x14`
+  output configuration, including explicit dimensions, windowed state, and the
+  Scaleform command-queue dependency.
+- `headers/vostok/render/render_output_window.h` |
+  represented in the live tree |
+  `sources/vostok/render/engine/sources/render_output_window.h` carries the
+  target `0x2cf0` owner layout and the resize, explicit-size, fullscreen,
+  client-size, output, target-context, and Scaleform surfaces.
+- `sources/vostok/render/engine/sources/render_output_window.cpp` |
+  represented in the live tree |
+  The owner constructs its target context and swap-chain output, manages the
+  optional Scaleform renderer, and implements the target resize and fullscreen
+  paths. `renderer_context_targets` and `res_render_output` remain separately
+  queued dependencies; their current compatibility surfaces do not constitute
+  completion of those owners.

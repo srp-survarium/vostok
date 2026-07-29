@@ -1650,12 +1650,17 @@ void engine::world::resize_render_output_window(
 	bool const						fullscreen
 )
 {
-	VOSTOK_UNREFERENCED_PARAMETERS	( &output_window, width, height, fullscreen );
+	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->set_size(
+		width,
+		height,
+		fullscreen,
+		false
+	);
 }
 
 void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
 {
-	VOSTOK_UNREFERENCED_PARAMETER	( output_window );
+	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->goto_fullscreen( );
 }
 
 } // namespace render

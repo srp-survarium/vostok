@@ -27,6 +27,7 @@ public:
 
 	math::uint2		size	() const				{ return m_size; }
 	void			resize	( math::uint2 size);
+	void			resize	( math::uint2 size, bool force_resize );
 	
 	ref_rt				m_rt_gbuffer_position_downsampled;
 	ref_texture			m_t_gbuffer_position_downsampled;
@@ -164,8 +165,11 @@ private:
 	
 	static u32		s_new_id;
 	int				m_id;
+	u8				m_target_layout_tail[0x1F50];
 
 }; // class renderer_context_targets
+
+STATIC_SIZE_ASSERT( renderer_context_targets, 0x2BD0 );
 
 } // namespace render
 } // namespace vostok

@@ -961,10 +961,10 @@ void editor_world::query_scene( )
 
 	
 	render::output_window_configuration				window_configuration1;
-	window_configuration1.m_hwnd					= view_handle( );
+	window_configuration1.hwnd					= view_handle( );
 
 	render::output_window_configuration				window_configuration2;
-	window_configuration2.m_hwnd					= camera_view_handle( );
+	window_configuration2.hwnd					= camera_view_handle( );
 
 	resources::user_data_variant* temp_data[] = { NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant), NEW(resources::user_data_variant)};
 	temp_data[0]->set( scene_configuration);

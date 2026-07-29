@@ -93,7 +93,7 @@ void sound_scene_document::query_create_render_resources()
 
 	System::Int32 hwnd						= m_view_window->view_handle();
 	render::output_window_configuration		window_configuration;
-	window_configuration.m_hwnd				= *(HWND*)&hwnd;
+	window_configuration.hwnd				= *(HWND*)&hwnd;
 
 
  	resources::user_data_variant* temp_data[] = {NEW(resources::user_data_variant), 0, NEW(resources::user_data_variant)};
