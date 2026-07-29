@@ -884,6 +884,14 @@
 			RelativePath=".\renderer_context_targets.h"
 			>
 		</File>
+		<File
+			RelativePath=".\scene_manager.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\scene_manager.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
