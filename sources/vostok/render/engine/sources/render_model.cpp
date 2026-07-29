@@ -250,7 +250,9 @@ bool render_surface_instance::is_occluded( ) const
 }
 
 // STATE[STUB]
-render_model_instance_impl::render_model_instance_impl( )
+render_model_instance_impl::render_model_instance_impl( ) :
+	m_collision_object( this ),
+	m_transform( math::float4x4( ).identity( ) )
 {
 	// FUNCTION BODY[0x63c590]
 	// ******
