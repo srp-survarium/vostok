@@ -44,8 +44,7 @@ flash_text flash_text_manager::create_text( pcstr text )
 
 	result.visible		= true;
 
-	need_capture		= true;
-	result.owner		= this;
+	need_capture		= true; result.owner	= this;
 
 	return result;
 }
@@ -60,8 +59,7 @@ flash_text flash_text_manager::create_text_w( wchar_t* text )
 
 	result.visible		= true;
 
-	need_capture		= true;
-	result.owner		= this;
+	need_capture		= true; result.owner	= this;
 
 	return result;
 }
