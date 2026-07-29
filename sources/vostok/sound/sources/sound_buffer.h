@@ -36,12 +36,14 @@ private:
 
 class sound_buffer : 
 	public boost::intrusive::set_base_hook< >,
-	private boost::noncopyable
+	private sound::noncopyable
 {
 private:
 							sound_buffer			( );
 public:
-			u32				get_length_in_pcm		( ) const;
+	inline	u32				get_bytes_per_sample	( ) { return m_encoded_sound->get_bytes_per_sample( ); }
+	inline	u32				get_bytes_per_pcm		( ) { return get_bytes_per_sample( ) * m_encoded_sound->get_channels_num( ); }
+	inline	u32				get_length_in_pcm		( ) const { return m_xaudio_buffer.PlayLength; }
 	inline	XAUDIO2_BUFFER*	get_xaudio_buffer		( )
 			{
 				return &m_xaudio_buffer;
@@ -67,7 +69,6 @@ private:
 	u32						m_cached_offset_after_decompress;
 	u32						m_users;
 	u32						m_reference_count;
-	u32						m_length_in_pcm;
 public:
 	s16						m_last_value_in_buffer;
 	friend class sound_buffer_compare_predicate;
@@ -79,6 +80,7 @@ public:
 #pragma warning(default:4200)
 }; // class sound_buffer
 
+STATIC_SIZE_ASSERT( sound_buffer, 0x60 );
 
 
 class sound_buffer_compare_predicate
