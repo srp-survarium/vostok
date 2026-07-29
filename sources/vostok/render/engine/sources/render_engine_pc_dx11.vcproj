@@ -997,6 +997,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\combined_model_cooker.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\combined_model_cooker.h"
+			>
+		</File>
+		<File
 			RelativePath="..\model_format.h"
 			>
 		</File>
