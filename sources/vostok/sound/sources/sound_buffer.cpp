@@ -26,7 +26,6 @@ sound_buffer::sound_buffer ( ) :
 	m_cached_offset						( 0 ),
 	m_cached_offset_after_decompress	( 0 ),
 	m_reference_count					( 0 ),
-	m_length_in_pcm						( 0 ),
 	m_last_value_in_buffer				( 0 )
 {
 }
@@ -39,19 +38,15 @@ void sound_buffer::fill_buffer( encoded_sound_ptr const& encoded_sound, u32 pcm_
 {
 	m_encoded_sound						= encoded_sound;
 	m_cached_offset						= pcm_offset;
-//	u64 total_pcm						= m_encoded_sound->get_length_in_pcm( );
+	u64 total_pcm						= m_encoded_sound->get_length_in_pcm( );
 	u32 audio_bytes						= m_encoded_sound->decompress(m_buff, pcm_offset, next_pcm_offset, sound_buffer_size );
 	m_last_value_in_buffer				= *(((s16*)m_buff) + ( next_pcm_offset - pcm_offset ) - 1);
-	LOG_DEBUG							( "first val in buffer: %d", *((s16*)m_buff));
-	LOG_DEBUG							( "m_last_value_in_buffer: %d", m_last_value_in_buffer );
-	m_length_in_pcm						= ( audio_bytes / m_encoded_sound->get_bytes_per_sample( ) );
+	m_xaudio_buffer.PlayLength			= audio_bytes / ( m_encoded_sound->get_bytes_per_sample( ) * m_encoded_sound->get_channels_num( ) );
+	m_xaudio_buffer.PlayBegin			= 0;
 	m_cached_offset_after_decompress	= next_pcm_offset;
-	m_xaudio_buffer.Flags				= 0;//total_pcm == next_pcm_offset ? XAUDIO2_END_OF_STREAM : 0;
-	//LOG_DEBUG							("m_xaudio_buffer.Flags = %d", m_xaudio_buffer.Flags);
+	m_xaudio_buffer.Flags				= total_pcm == next_pcm_offset ? XAUDIO2_END_OF_STREAM : 0;
     m_xaudio_buffer.AudioBytes			= audio_bytes;
     m_xaudio_buffer.pAudioData			= m_buff;
-    m_xaudio_buffer.PlayBegin			= 0;
-    m_xaudio_buffer.PlayLength			= m_length_in_pcm;
     m_xaudio_buffer.LoopBegin			= 0;
     m_xaudio_buffer.LoopLength			= 0;
     m_xaudio_buffer.LoopCount			= 0;
@@ -65,12 +60,7 @@ void sound_buffer::fill_mute_buffer		( encoded_sound_ptr const& encoded_sound )
 	m_xaudio_buffer.AudioBytes		= sound_buffer_size;
 	m_xaudio_buffer.pAudioData		= m_buff;
 	m_xaudio_buffer.pContext		= this;
-	m_length_in_pcm					= sound_buffer_size / encoded_sound ->get_bytes_per_sample( );
-}
-
-u32 sound_buffer::get_length_in_pcm		( ) const
-{
-	return m_length_in_pcm;
+	m_xaudio_buffer.PlayLength		= sound_buffer_size / ( encoded_sound->get_bytes_per_sample( ) * m_encoded_sound->get_channels_num( ) );
 }
 
 } // namespace sound
