@@ -18,10 +18,8 @@ namespace GFx {
 namespace survarium {
 
 struct flash_text_manager {
-	// all out-of-line in movie.cpp per the rich index, except the dtor and
-	// capture (unaddressed - true inlines)
 			explicit		flash_text_manager	( Scaleform::GFx::Loader* arg_0 );
-	inline					~flash_text_manager	( ) { /* no source */ }
+	inline					~flash_text_manager	( ) { }
 
 			void			set_viewport		( u32 arg_0, u32 arg_1 );
 
@@ -30,7 +28,7 @@ struct flash_text_manager {
 
 			void			destroy_text		( flash_text& arg_0 );
 
-	inline	void			capture				( ) { /* no source */ }
+	inline	void			capture				( ) { }
 
 			void			tick				( );
 

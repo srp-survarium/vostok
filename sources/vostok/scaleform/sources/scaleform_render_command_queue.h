@@ -14,7 +14,6 @@ struct flash_renderer;
 
 class scaleform_render_command_queue {
 public:
-	// ctor/dtor are out-of-line in command_queue.cpp per the rich index
 			explicit	scaleform_render_command_queue	( scaleform_game_engine& arg_0 );
 						~scaleform_render_command_queue	( );
 

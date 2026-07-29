@@ -13,12 +13,11 @@ class flash_factory;
 
 class vostok_file_opener : public Scaleform::GFx::FileOpener {
 public:
-	inline						vostok_file_opener	( ) { /* no source */ }
+	inline						vostok_file_opener	( ) { }
 
-	// out-of-line in factory.cpp per the rich index
 	virtual	Scaleform::File*	OpenFile			( pcstr arg_0, s32 arg_1, s32 arg_2 ) override;
 
-	virtual						~vostok_file_opener	( ) { /* no source */ }
+	virtual						~vostok_file_opener	( ) { }
 
 private:
 	friend class flash_factory;

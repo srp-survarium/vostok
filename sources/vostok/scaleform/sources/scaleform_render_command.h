@@ -15,7 +15,6 @@ namespace survarium {
 
 // passed BY VALUE through the render facade (execute_scaleform_command)
 struct scaleform_render_command {
-	// out-of-line in command_queue.cpp per the rich index
 			void	execute	( );
 
 public:

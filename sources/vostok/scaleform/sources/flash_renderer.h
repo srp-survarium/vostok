@@ -28,14 +28,12 @@ struct flash_text_manager;
 class scaleform_render_command_queue;
 
 struct flash_renderer {
-	// ctor/present/on_reset_device are out-of-line in renderer.cpp per the
-	// rich index; the rest are unaddressed (true inlines)
 					flash_renderer	(
 						scaleform_render_command_queue*		arg_0,
 						ID3D11Device*						arg_1,
 						ID3D11DeviceContext*				arg_2
 					);
-	inline			~flash_renderer	( ) { /* no source */ }
+	inline			~flash_renderer	( ) { }
 
 			void	present			( flash_movie** arg_0, u32 arg_1, flash_text_manager* arg_2 );
 
@@ -45,8 +43,8 @@ struct flash_renderer {
 						ID3D11Device*			arg_2,
 						ID3D11DeviceContext*	arg_3
 					);
-	inline	void	on_create_device( ) { /* no source */ }
-	inline	void	on_lost_device	( ) { /* no source */ }
+	inline	void	on_create_device( ) { }
+	inline	void	on_lost_device	( ) { }
 
 public:
 	/* 0x0000 */	u32									m_output_width;
