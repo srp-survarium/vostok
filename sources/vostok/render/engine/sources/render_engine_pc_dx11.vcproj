@@ -2181,6 +2181,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_post_process_fxaa.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_post_process_fxaa.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
