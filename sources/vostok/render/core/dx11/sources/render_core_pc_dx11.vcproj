@@ -928,6 +928,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\resource_manager.h"
+			>
+		</File>
+		<File
 			RelativePath="..\state_cache.h"
 			>
 		</File>
@@ -985,6 +989,10 @@
 		</File>
 		<File
 			RelativePath="..\..\binary_shader_key_type.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\resource_manager.h"
 			>
 		</File>
 		<File
