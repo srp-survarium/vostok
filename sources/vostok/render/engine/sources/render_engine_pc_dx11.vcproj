@@ -1025,6 +1025,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\temporal_projection_matrix_modifier.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\temporal_projection_matrix_modifier.h"
+			>
+		</File>
+		<File
 			RelativePath=".\renderer_register_effects.cpp"
 			>
 		</File>
