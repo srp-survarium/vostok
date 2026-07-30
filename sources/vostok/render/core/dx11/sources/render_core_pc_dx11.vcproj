@@ -876,6 +876,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_manager.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
