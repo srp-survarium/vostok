@@ -952,6 +952,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_ps_hw.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
