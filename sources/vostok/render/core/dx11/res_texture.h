@@ -62,7 +62,11 @@ public:
 	void unmap3D( u32 mip_level );
 
 	pcstr name( ) const { return m_name.c_str( ); }
-	void set_name( pcstr name ) { m_name = name; }
+	void set_name( pcstr name )
+	{
+		// FUNCTION BODY[0x124670]
+		m_name = name;
+	}
 	void clone( res_texture* other );
 
 private:
