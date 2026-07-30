@@ -920,6 +920,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\res_sampler_list.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\sampler_slot.h"
 			>
 		</File>
