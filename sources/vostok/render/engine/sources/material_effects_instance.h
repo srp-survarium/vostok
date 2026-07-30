@@ -13,6 +13,11 @@ class material_effects_instance_cook;
 
 class material_effects_instance : public resources::unmanaged_resource {
 public:
+	material_effects_instance( )
+	{
+		// FUNCTION BODY[0x635a0]
+	}
+
 	material_effects& get_material_effects( )
 	{
 		return m_material_effects;
