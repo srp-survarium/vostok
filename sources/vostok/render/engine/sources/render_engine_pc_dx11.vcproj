@@ -1641,6 +1641,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_apply_wireframe.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_apply_wireframe.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
