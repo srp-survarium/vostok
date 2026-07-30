@@ -920,6 +920,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\binary_shader_source.h"
+			>
+		</File>
+		<File
+			RelativePath="..\binary_shader_key_type.h"
+			>
+		</File>
+		<File
 			RelativePath="..\state_cache.h"
 			>
 		</File>
@@ -969,6 +977,14 @@
 		</File>
 		<File
 			RelativePath="..\..\shader_configuration.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\binary_shader_source.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\binary_shader_key_type.h"
 			>
 		</File>
 		<File
