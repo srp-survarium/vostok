@@ -5,6 +5,13 @@
 namespace vostok {
 namespace render {
 
+struct shader_file_info {
+	shader_file_info( ) { }
+
+	char name[260];
+	u32 time;
+};
+
 shader_binary_source_cook::shader_binary_source_cook( )
 	: resources::unmanaged_cook(
 		resources::shader_binary_source_class,
