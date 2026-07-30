@@ -968,6 +968,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\texture_slot.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
@@ -1073,6 +1077,10 @@
 		</File>
 		<File
 			RelativePath="..\..\shader_constant_defines.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\shader_data_base.h"
 			>
 		</File>
 		<File
