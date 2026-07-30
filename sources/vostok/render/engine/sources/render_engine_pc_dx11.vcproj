@@ -925,6 +925,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\lpv_batched_geometry.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\lpv_batched_geometry.h"
+			>
+		</File>
+		<File
 			RelativePath=".\shadow_batched_geometry.cpp"
 			>
 		</File>
