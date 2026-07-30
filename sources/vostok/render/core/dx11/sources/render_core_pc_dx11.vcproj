@@ -888,11 +888,19 @@
 			>
 		</File>
 		<File
+			RelativePath="..\backend.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
 		<File
 			RelativePath="..\..\backend_handlers.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\backend.h"
 			>
 		</File>
 		<File
