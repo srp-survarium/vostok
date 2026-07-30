@@ -880,6 +880,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_options_descriptor.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\static_type.cpp"
 			>
 		</File>
