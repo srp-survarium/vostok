@@ -1089,6 +1089,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_ssao_filter4x4.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_ssao_filter4x4.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_apply_indirect_lighting.cpp"
 			>
 		</File>
