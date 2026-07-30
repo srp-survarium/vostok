@@ -1269,6 +1269,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_screen_image.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_screen_image.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_sun.cpp"
 			>
 		</File>

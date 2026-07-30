@@ -1,0 +1,88 @@
+#ifndef VOSTOK_RENDER_CORE_RES_TEXTURE_LIST_H_INCLUDED
+#define VOSTOK_RENDER_CORE_RES_TEXTURE_LIST_H_INCLUDED
+
+#include <vostok/fixed_vector.h>
+#include <vostok/intrusive_ptr.h>
+#include <vostok/render/core/memory.h>
+#include <vostok/render/core/resource_intrusive_base.h>
+
+namespace vostok {
+namespace render {
+
+class res_texture;
+class texture_slot;
+
+typedef intrusive_ptr<
+	res_texture,
+	resource_intrusive_base,
+	threading::single_threading_policy
+> res_texture_ptr;
+
+class res_texture_list : public resource_intrusive_base {
+public:
+	typedef vector<res_texture_ptr> textures_type;
+	typedef textures_type::const_iterator const_iterator;
+	typedef textures_type::iterator iterator;
+
+	res_texture_list( ) :
+		m_is_registered( false )
+	{
+	}
+
+	explicit res_texture_list( fixed_vector<texture_slot, 128> const& slots );
+
+	~res_texture_list( ) { }
+
+	void destroy_impl( ) const;
+
+	bool equal( res_texture_list const& ) const
+	{
+		// STATE[STUB]
+		return false;
+	}
+
+	bool equal( fixed_vector<texture_slot, 128> const& ) const
+	{
+		// STATE[STUB]
+		return false;
+	}
+
+	s32 compare( res_texture_list const& base ) const;
+	s32 compare( fixed_vector<texture_slot, 128> const& base ) const;
+
+	u32 size( ) const { return m_container.size( ); }
+
+	res_texture_ptr const& operator[]( u32 index ) const
+	{
+		return m_container[index];
+	}
+
+	res_texture_ptr& operator[]( u32 index )
+	{
+		return m_container[index];
+	}
+
+	void resize( u32 size, res_texture_ptr const& value )
+	{
+		m_container.resize( size, value );
+	}
+
+	const_iterator begin( ) const { return m_container.begin( ); }
+	iterator begin( ) { return m_container.begin( ); }
+	const_iterator end( ) const { return m_container.end( ); }
+	iterator end( ) { return m_container.end( ); }
+
+	bool is_registered( ) const { return m_is_registered; }
+	void mark_registered( ) { m_is_registered = true; }
+
+private:
+	textures_type	m_container;
+	bool			m_is_registered;
+};
+
+STATIC_SIZE_ASSERT( res_texture_list, 0x14 );
+
+} // namespace render
+} // namespace vostok
+
+#endif // #ifndef VOSTOK_RENDER_CORE_RES_TEXTURE_LIST_H_INCLUDED
