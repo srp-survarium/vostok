@@ -31,6 +31,7 @@ public:
 	render_surface( ) :
 		m_aabbox( math::create_zero_aabb( ) )
 	{
+		// FUNCTION BODY[0x6f360]
 	}
 	virtual ~render_surface( );
 
