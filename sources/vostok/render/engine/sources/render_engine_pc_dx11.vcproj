@@ -1113,6 +1113,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\find_by_id_predicate.h"
+			>
+		</File>
+		<File
 			RelativePath=".\moved_object_predicate_helper.h"
 			>
 		</File>

@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "scene.h"
+#include "ambient_volume.h"
+#include "environment_probe.h"
+#include "find_by_id_predicate.h"
 #include "moved_object_predicate_helper.h"
+#include "sky_ambient_occlusion.h"
 #include "streaming.h"
 
 namespace vostok {
@@ -22,6 +26,11 @@ private:
 };
 
 STATIC_SIZE_ASSERT( find_requested_texture_predicate, 0x4 );
+
+bool find_environment_probe_predicate::operator()( environment_probe const* const object )
+{
+	return object->m_id == m_id;
+}
 
 // STATE[STUB]
 particle::render_particle_emitter_instance* scene::particle_engine::create_render_emitter_instance(
