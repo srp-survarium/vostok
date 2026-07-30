@@ -834,6 +834,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_facade_entry_point.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_facade_entry_point.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\ambient_volume_properties.h"
 			>
 		</File>
