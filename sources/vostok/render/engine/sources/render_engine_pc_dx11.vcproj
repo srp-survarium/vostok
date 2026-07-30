@@ -1949,6 +1949,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fstage_default_view_angle_dependent_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fstage_default_view_angle_dependent_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
