@@ -1,0 +1,6 @@
+#ifndef VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_H_INCLUDED
+#define VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_H_INCLUDED
+
+#include <vostok/render/facade/sources/one_way_render_channel.h>
+
+#endif // #ifndef VOSTOK_RENDER_FACADE_ONE_WAY_RENDER_CHANNEL_H_INCLUDED

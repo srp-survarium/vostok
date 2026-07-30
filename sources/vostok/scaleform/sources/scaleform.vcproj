@@ -1358,6 +1358,10 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\d3d1x_shaderbinary.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\d3d1x_shaderdescs.cpp"
 				>
 				<FileConfiguration

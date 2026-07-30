@@ -43,9 +43,10 @@ private:
 	friend class editor::renderer;
 	friend class game::renderer;
 
+public:
+	// @todo Restrict direct construction once collision anchors use a renderer supplied by the facade.
 	renderer( one_way_render_channel& channel, memory::base_allocator& allocator, engine::world& engine_world );
 
-public:
 	void draw_line( base_scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
 	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float half_size, bool use_depth = true );
 	void draw_cross( base_scene_ptr const& scene, float3 const& point, float half_size, math::color const& color, bool use_depth = true );

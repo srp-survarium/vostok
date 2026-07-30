@@ -25,6 +25,11 @@ class base_allocator;
 namespace particle {
 enum enum_particle_render_mode;
 struct world;
+
+typedef resources::resource_ptr<
+	resources::unmanaged_resource,
+	resources::unmanaged_intrusive_base
+> particle_system_instance_ptr;
 }
 
 namespace render {
@@ -142,8 +147,8 @@ public:
 		base_scene_ptr const& scene,
 		resources::unmanaged_resource_ptr const& instance,
 		float4x4 const& transform,
-		bool visible,
-		bool paused
+		bool visible = true,
+		bool paused = false
 	);
 	bool is_playing( resources::unmanaged_resource_ptr const& instance );
 	void set_particles_render_mode( base_scene_view_ptr const&, particle::enum_particle_render_mode ) { /* no source */ }

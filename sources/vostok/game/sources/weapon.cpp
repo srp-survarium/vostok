@@ -439,7 +439,7 @@ void weapon::set_target( const weapon_targets new_target )
 		if ( old_target != m_target )
 		{
 			m_weapon_fire_light_props.transform = m_barrel_transform;
-			get_game_scene( )->renderer( ).scene( ).add_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, m_weapon_fire_light_props );
+			get_game_scene( )->renderer( ).scene( ).add_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, &m_weapon_fire_light_props );
 			m_firing_light_added = true;
 		}
 	}
@@ -494,7 +494,7 @@ void weapon::update_pfx_transform( )
 	if ( m_firing_light_added )
 	{
 		m_weapon_fire_light_props.transform = m_barrel_transform;
-		get_game_scene( )->renderer( ).scene( ).update_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, m_weapon_fire_light_props );
+		get_game_scene( )->renderer( ).scene( ).update_light( get_game_scene( )->render_scene( ), m_weapon_fire_light_id, &m_weapon_fire_light_props );
 	}
 
 	if ( m_fire_pfx_list )

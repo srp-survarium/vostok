@@ -154,6 +154,11 @@ struct animated_model_instance : public resources::unmanaged_resource {
 
 STATIC_SIZE_ASSERT( animated_model_instance, 0x140 );
 
+typedef resources::resource_ptr<
+	animated_model_instance,
+	resources::unmanaged_intrusive_base
+> animated_model_instance_ptr;
+
 } // namespace render
 } // namespace vostok
 

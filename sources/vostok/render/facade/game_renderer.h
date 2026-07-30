@@ -1,0 +1,6 @@
+#ifndef VOSTOK_RENDER_FACADE_GAME_RENDERER_H_INCLUDED
+#define VOSTOK_RENDER_FACADE_GAME_RENDERER_H_INCLUDED
+
+#include <vostok/render/facade/sources/game_renderer.h>
+
+#endif // #ifndef VOSTOK_RENDER_FACADE_GAME_RENDERER_H_INCLUDED

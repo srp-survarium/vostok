@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "damage_zone_cook.h"
 #include "damage_zone.h"
-#include <vostok/render/base/light_props.h>
+#include <vostok/render/facade/light_props.h>
 #include <vostok/resources.h>
 #include <vostok/resources_query_result.h>
 #include <vostok/resources_queries_result.h>
