@@ -1261,6 +1261,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_shader_parameters.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\streaming.cpp"
 			>
 		</File>
