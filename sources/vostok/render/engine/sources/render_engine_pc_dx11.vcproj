@@ -1233,6 +1233,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_tree_component_leafcard.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_tree_component_leafcard.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree_shader_parameters.h"
 			>
 		</File>
