@@ -10,6 +10,14 @@ class scaleform_render_command_queue;
 namespace vostok {
 namespace render {
 
+struct buffer_fragment {
+	u32 start;
+	u32 size;
+	void* buffer;
+};
+
+STATIC_SIZE_ASSERT( buffer_fragment, 0xc );
+
 struct scene_configuration {
 	inline scene_configuration( ) { }
 
