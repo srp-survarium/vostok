@@ -4,6 +4,13 @@
 namespace vostok {
 namespace render {
 
+struct stream_1_type {
+	float3	object_position;
+	u32		color_and_wind;
+};
+
+STATIC_SIZE_ASSERT( stream_1_type, 0x10 );
+
 bool has_surface_by_lod( grass_render_model_ptr model, u32 lod_index )
 {
 	// FUNCTION BODY[0x5f43e0]

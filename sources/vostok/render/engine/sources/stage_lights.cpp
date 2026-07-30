@@ -5,6 +5,19 @@
 namespace vostok {
 namespace render {
 
+struct screen_vertex {
+	float4	position;
+	float2	tc;
+
+	void set( float4 const& in_position, float2 const& in_tc )
+	{
+		position	= in_position;
+		tc			= in_tc;
+	}
+};
+
+STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
+
 void stage_lights::new_sphere_geometry( )
 {
 	// STATE[STUB]
