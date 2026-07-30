@@ -4,6 +4,16 @@
 namespace vostok {
 namespace render {
 
+struct vertex_colored_sl {
+	float3	position;
+	u32		color;
+	float3	begin_line_position;
+	float	shift;
+	u32		pattern;
+};
+
+STATIC_SIZE_ASSERT( vertex_colored_sl, 0x24 );
+
 // STATE[STUB]
 untyped_buffer* system_renderer::create_quad_ib( )
 {

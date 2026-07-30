@@ -4,6 +4,16 @@
 namespace vostok {
 namespace render {
 
+struct vertex_wire {
+	float3	position;
+	float3	normal;
+	float3	tangent;
+	float3	binormal;
+	float2	uv;
+};
+
+STATIC_SIZE_ASSERT( vertex_wire, 0x38 );
+
 // STATE[STUB]
 void user_render_surface::material_ready(
 	resources::queries_result&		data,
