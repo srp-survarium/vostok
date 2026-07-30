@@ -143,6 +143,32 @@ private:
 	res_xs_hw< shader_data > const* const& m_shader;
 };
 
+template < enum_shader_type shader_type >
+template < typename T >
+inline void constants_handler< shader_type >::set_constant(
+	shader_constant_host const&,
+	T const&
+)
+{
+	// STATE[STUB]
+	// FUNCTION BODY[0x672e0] for vertex shader
+	// FUNCTION BODY[0x67330] for pixel shader
+	// FUNCTION BODY[0x8cad0] for geometry shader
+}
+
+template < enum_shader_type shader_type >
+template < typename T >
+inline void constants_handler< shader_type >::set_constant_array(
+	shader_constant_host const&,
+	T const*,
+	u32
+)
+{
+	// STATE[STUB]
+	// FUNCTION BODY[0x6f680] for vertex shader
+	// FUNCTION BODY[0x7ce90] for pixel shader
+}
+
 STATIC_SIZE_ASSERT( constants_handler< enum_shader_type_vertex >, 0xC );
 STATIC_SIZE_ASSERT( textures_handler< enum_shader_type_vertex >, 0x224 );
 STATIC_SIZE_ASSERT( samplers_handler< enum_shader_type_vertex >, 0x50 );
