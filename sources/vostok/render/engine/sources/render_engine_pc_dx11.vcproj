@@ -1713,6 +1713,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_debug_environment_probe_preview.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_debug_environment_probe_preview.h"
+			>
+		</File>
+		<File
 			RelativePath=".\obb_light_effect.h"
 			>
 		</File>
