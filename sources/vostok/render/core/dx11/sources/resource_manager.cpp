@@ -4,6 +4,47 @@
 namespace vostok {
 namespace render {
 
+struct shader_hw_remove_predicate {
+	explicit shader_hw_remove_predicate( pcstr name ) :
+		m_name( name )
+	{
+	}
+
+	template <typename T>
+	bool operator()( T const& element ) const
+	{
+		return strings::compare( element->second, m_name ) == 0;
+	}
+
+private:
+	pcstr m_name;
+};
+
+struct load_texture_delegate {
+	load_texture_delegate(
+		res_texture_ptr texture,
+		math::rectangle< math::int2 > rectangle,
+		u32 array_index,
+		pcstr name
+	) :
+		dest_rect( rectangle ),
+		dest_texture( texture ),
+		user_name( name ),
+		arr_ind( array_index )
+	{
+	}
+
+	void execute( resources::queries_result& )
+	{
+	}
+
+private:
+	math::rectangle< math::int2 > dest_rect;
+	res_texture_ptr dest_texture;
+	pcstr user_name;
+	u32 arr_ind;
+};
+
 bool resource_manager::constant_buffer_predicate::operator()(
 	shader_constant_buffer const* const,
 	shader_constant_buffer const* const
