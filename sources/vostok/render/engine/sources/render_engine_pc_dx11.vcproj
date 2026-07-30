@@ -2125,6 +2125,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_motion_blur.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_motion_blur.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
