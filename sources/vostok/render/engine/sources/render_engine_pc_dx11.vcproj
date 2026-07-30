@@ -1137,6 +1137,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\grass_patch.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_patch.h"
+			>
+		</File>
+		<File
 			RelativePath=".\grass_template.cpp"
 			>
 		</File>
