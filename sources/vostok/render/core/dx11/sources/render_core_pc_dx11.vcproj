@@ -884,6 +884,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\shader_constant_buffer.h"
+			>
+		</File>
+		<File
 			RelativePath="..\sampler_slot.h"
 			>
 		</File>
@@ -953,6 +957,10 @@
 		</File>
 		<File
 			RelativePath="..\..\shader_constant.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\shader_constant_buffer.h"
 			>
 		</File>
 		<File
