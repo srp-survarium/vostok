@@ -7,6 +7,8 @@
 #ifndef VOSTOK_RENDER_CORE_MACROS_EXTENSIONS_H_INCLUDED
 #define VOSTOK_RENDER_CORE_MACROS_EXTENSIONS_H_INCLUDED
 
+pcstr make_d3d11_error_string( HRESULT error_code );
+
 #define CHECK_RESULT( expression, ... )\
 	if ( vostok::identity( true ) ) {\
 		static bool ignore_always = false;\
