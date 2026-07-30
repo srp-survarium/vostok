@@ -1681,6 +1681,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_wireframe_accumulation.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_wireframe_accumulation.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
