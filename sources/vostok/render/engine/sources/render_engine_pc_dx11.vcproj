@@ -1165,6 +1165,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\vertex_formats.h"
+			>
+		</File>
+		<File
 			RelativePath=".\grass_cook.cpp"
 			>
 		</File>

@@ -1,11 +1,5 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created		: 25.03.2009
-//	Author		: Mykhailo Parfeniuk
-//	Copyright (C) GSC Game World - 2009
-////////////////////////////////////////////////////////////////////////////
-
-#ifndef FVF_H_INCLUDED
-#define FVF_H_INCLUDED
+#ifndef VOSTOK_RENDER_ENGINE_VERTEX_FORMATS_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_VERTEX_FORMATS_H_INCLUDED
 
 namespace vostok {
 namespace render {
@@ -251,6 +245,15 @@ namespace vertex_formats
 		{"TEXCOORD",	0, DXGI_FORMAT_R32G32_FLOAT,		0, 28, 	D3D_INPUT_PER_VERTEX_DATA, 0}
 	};
 
+	STATIC_SIZE_ASSERT( L, 0x10 );
+	STATIC_SIZE_ASSERT( LIT, 0x18 );
+	STATIC_SIZE_ASSERT( TL, 0x1c );
+	STATIC_SIZE_ASSERT( TL0uv, 0x14 );
+	STATIC_SIZE_ASSERT( TL2uv, 0x24 );
+	STATIC_SIZE_ASSERT( TL4uv, 0x34 );
+	STATIC_SIZE_ASSERT( Tquad, 0x24 );
+	STATIC_SIZE_ASSERT( Tuv, 0x18 );
+	STATIC_SIZE_ASSERT( V, 0x14 );
 
 } // namespace vertex_formats
 #pragma pack(pop)
@@ -258,4 +261,4 @@ namespace vertex_formats
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef FVF_H_INCLUDED
+#endif // #ifndef VOSTOK_RENDER_ENGINE_VERTEX_FORMATS_H_INCLUDED
