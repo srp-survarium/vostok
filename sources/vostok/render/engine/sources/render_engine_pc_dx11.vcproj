@@ -1113,6 +1113,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\tracer_model_instance_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\tracer_model_instance_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_target.h"
 			>
 		</File>
