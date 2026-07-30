@@ -1657,6 +1657,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_show_batched_geometry.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_show_batched_geometry.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
