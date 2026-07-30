@@ -5,6 +5,7 @@
 #include <vostok/render/core/resource_intrusive_base.h>
 #include <vostok/render/engine/base_classes.h>
 #include <vostok/render/engine/world_pc.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 #include "material_effects_instance.h"
 #include "render_model_instance_impl.h"
 #include "res_texture.h"
