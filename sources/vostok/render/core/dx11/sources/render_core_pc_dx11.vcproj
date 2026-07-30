@@ -1152,6 +1152,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\utils.h"
+			>
+		</File>
+		<File
 			RelativePath="..\state_descriptor.h"
 			>
 		</File>
@@ -1321,6 +1325,10 @@
 		</File>
 		<File
 			RelativePath="..\..\state_utils.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\utils.h"
 			>
 		</File>
 		<File
