@@ -1133,6 +1133,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\grass_instance.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\grass_template.cpp"
 			>
 		</File>
