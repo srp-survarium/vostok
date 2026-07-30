@@ -984,6 +984,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\effect_cook.h"
+			>
+		</File>
+		<File
 			RelativePath="..\effect_compiler.h"
 			>
 		</File>
@@ -1093,6 +1097,10 @@
 		</File>
 		<File
 			RelativePath="..\..\effect_manager.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\effect_cook.h"
 			>
 		</File>
 		<File
