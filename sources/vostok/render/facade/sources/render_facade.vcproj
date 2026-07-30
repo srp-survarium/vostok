@@ -890,6 +890,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\functor_with_big_buffer_to_copy_command.h"
+			>
+		</File>
+		<File
 			RelativePath=".\ui_renderer.h"
 			>
 		</File>
