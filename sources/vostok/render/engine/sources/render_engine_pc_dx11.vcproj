@@ -1221,6 +1221,22 @@
 			>
 		</File>
 		<File
+			RelativePath=".\hw_hiz_occlusion_manager.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\hw_hiz_occlusion_manager.h"
+			>
+		</File>
+		<File
+			RelativePath=".\hw_hiz_point_list.h"
+			>
+		</File>
+		<File
+			RelativePath=".\sphere_occluder_geometry.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_material_base.cpp"
 			>
 		</File>
