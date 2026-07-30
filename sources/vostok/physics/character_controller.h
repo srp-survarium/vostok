@@ -5,6 +5,8 @@
 #ifndef VOSTOK_PHYSICS_CHARACTER_CONTROLLER_H_INCLUDED
 #define VOSTOK_PHYSICS_CHARACTER_CONTROLLER_H_INCLUDED
 
+#include <vostok/physics/api.h>
+
 namespace vostok {
 namespace physics {
 
@@ -36,9 +38,7 @@ public:
 	void					end_jump			( );
 	bool					has_updates			( ) const;
 
-	// STATE[REMOVED]: this 5-arg (3 float3 const& + 2 float3&) overload has no caller; the
-	// shipped users (anchor_physics, legs_ik_processor) call the 6-arg overload below.
-	// Absent from both binaries; empty stub correct.
+	// @todo Recover this overload if a caller requiring it is restored.
 	inline	bool			adjust_foot_transform	(
 								float3 const&		arg_0,
 								float3 const&		arg_1,
@@ -57,7 +57,7 @@ public:
 							);
 
 	void					set_crouch			( bool crouch );
-	// STATE[REMOVED]: declared but never defined or called; absent from both binaries.
+	// @todo Recover the implementation when a caller is restored.
 	bool					can_prone			( ) const /* no source */;
 	bool					can_crouch			( ) const;
 	bool					can_stand			( ) const;

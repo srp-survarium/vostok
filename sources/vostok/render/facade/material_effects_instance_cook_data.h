@@ -12,8 +12,8 @@ struct material_effects_instance_cook_data {
 	material_effects_instance_cook_data(
 		enum_vertex_input_type				in_vertex_input_type,
 		resources::unmanaged_resource_ptr	in_material,
-		bool								in_delete_in_cook,
-		enum_cull_mode						in_cull_mode
+		bool								in_delete_in_cook = true,
+		enum_cull_mode						in_cull_mode = cull_mode_back
 	) :
 		vertex_input_type	( in_vertex_input_type ),
 		material			( in_material ),

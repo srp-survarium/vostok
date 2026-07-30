@@ -19,19 +19,15 @@ struct singletons_on_initialize {
 	// ******
 }
 
-// STATE[STUB]
 mutable_buffer renderer_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
 	bool									file_exist
 )
 {
-	// FUNCTION BODY[0x606c0]: 4
-	// <0>
-	// <1>
-	// <0x606c7>|0x007|+0x021:'108'
-	// <0x606e8>|0x028|+0x002:'109'
-	// ******
+	// @todo Recover renderer resource allocation.
+	VOSTOK_UNREFERENCED_PARAMETERS( &in_query, &raw_file_data, file_exist );
+	return mutable_buffer::zero( );
 }
 
 // STATE[STUB]

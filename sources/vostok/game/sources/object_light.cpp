@@ -18,12 +18,6 @@ void load_transform( configs::binary_config_value const& t, float4x4& dest );
 
 static u32 light_ids = 1000000;
 
-// claude@NOTE: ctor/dtor/load byte-residual is a render-facade gap, not a source
-// shape issue - light_props has no out-of-line ctor/dtor in our header (target
-// calls render::light_props::light_props/~light_props out-of-line, ours inlines a
-// trivial member-init), and load_props_impl is a noinline stub in scene_renderer.cpp
-// (real body ~1664 bytes, unmatched). Recovers once the render-facade light_props
-// batch lands.
 object_light::object_light( base_game_scene& w ) :
 	game_object_static( w )
 {
@@ -41,13 +35,13 @@ void object_light::load(
 )
 {
 	load_transform( t, m_transform );
-	render::load_props_impl( m_props, t );
+	m_props.load_light_props( t );
 	cb( *this );
 }
 
 void object_light::insert( )
 {
-	get_game_scene().renderer().scene().add_light( get_game_scene().render_scene(), m_light_id, m_props );
+	get_game_scene().renderer().scene().add_light( get_game_scene().render_scene(), m_light_id, &m_props );
 }
 
 void object_light::remove( )
