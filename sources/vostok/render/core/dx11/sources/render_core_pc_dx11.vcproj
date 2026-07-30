@@ -928,6 +928,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_sampler_list.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
