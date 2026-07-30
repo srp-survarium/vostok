@@ -868,6 +868,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\state_cache.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
