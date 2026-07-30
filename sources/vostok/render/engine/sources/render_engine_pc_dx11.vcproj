@@ -1893,6 +1893,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\skeleton_mesh_gpu_skinning_1weight.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\skeleton_mesh_gpu_skinning_1weight.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_model_user.cpp"
 			>
 		</File>
