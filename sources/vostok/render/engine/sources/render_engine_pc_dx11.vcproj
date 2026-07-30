@@ -2277,6 +2277,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_wet_surface.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_wet_surface.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
