@@ -1505,6 +1505,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\fog_box_geometry.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\fog_box_geometry.h"
 			>
 		</File>
