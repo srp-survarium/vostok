@@ -23,9 +23,9 @@ public:
 		bool				staging
 	);
 
-	~untyped_buffer( ) { }
+	~untyped_buffer( );
 
-	void destroy_impl( ) const { }
+	void destroy_impl( ) const;
 
 	void* map( D3D11_MAP ) { return 0; }
 	void unmap( ) { }
