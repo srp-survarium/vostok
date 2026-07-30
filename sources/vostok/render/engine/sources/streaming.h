@@ -51,6 +51,26 @@ struct streaming_texture_instance {
 
 STATIC_SIZE_ASSERT( streaming_texture_instance, 0x18 );
 
+struct streamable_texture_info {
+	streamable_texture_info( ) { }
+
+	vector<streaming_texture_instance>	instances;
+	fixed_string<260>					path;
+	res_texture_ptr						texture;
+};
+
+STATIC_SIZE_ASSERT( streamable_texture_info, 0x120 );
+
+struct requested_streamable_texture {
+	requested_streamable_texture( ) { }
+
+	fixed_string<260>	path;
+	res_texture_ptr		texture;
+	u32					num_mips;
+};
+
+STATIC_SIZE_ASSERT( requested_streamable_texture, 0x118 );
+
 float calculate_streaming_texture_factor(
 	float3 const* positions,
 	float2 const* uvs,

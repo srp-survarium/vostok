@@ -1,9 +1,27 @@
 #include "pch.h"
 #include "scene.h"
 #include "moved_object_predicate_helper.h"
+#include "streaming.h"
 
 namespace vostok {
 namespace render {
+
+struct find_requested_texture_predicate {
+	explicit find_requested_texture_predicate( res_texture_ptr const& texture ) :
+		m_texture( texture )
+	{
+	}
+
+	bool operator()( requested_streamable_texture const& other ) const
+	{
+		return other.texture == m_texture;
+	}
+
+private:
+	res_texture_ptr	m_texture;
+};
+
+STATIC_SIZE_ASSERT( find_requested_texture_predicate, 0x4 );
 
 // STATE[STUB]
 particle::render_particle_emitter_instance* scene::particle_engine::create_render_emitter_instance(
