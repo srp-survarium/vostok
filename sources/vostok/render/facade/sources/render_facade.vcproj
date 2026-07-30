@@ -1026,6 +1026,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\particles.h"
+			>
+		</File>
+		<File
 			RelativePath="..\render_stage_types.h"
 			>
 		</File>

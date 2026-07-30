@@ -24,7 +24,30 @@ struct priority_less : public std::binary_function<
 STATIC_SIZE_ASSERT( priority_less, 0x1 );
 
 // STATE[STUB]
- scene_view::scene_view( )
+ scene_view::scene_view( ) :
+	luminance_pass_index							( 0 ),
+	need_recalc_atmosphere						( true ),
+	m_view_mode									( lit_view_mode ),
+	m_particles_render_mode						( particle::normal_particle_render_mode ),
+	m_use_post_process							( true ),
+	m_render_frame_index						( 0 ),
+	m_visible_particle_instances				( g_allocator ),
+	m_flash_text_manager						( 0 ),
+	m_num_frustum_culled_surfaces				( 0 ),
+	m_num_frustum_culled_lights					( 0 ),
+	m_num_frustum_culled_grass_patches			( 0 ),
+	m_num_frustum_culled_particle_instances		( 0 ),
+	m_num_frustum_culled_decals					( 0 ),
+	m_num_occlusion_culled_surfaces				( 0 ),
+	m_num_occlusion_culled_lights				( 0 ),
+	m_num_occlusion_culled_grass_patches		( 0 ),
+	m_num_occlusion_culled_particle_instances	( 0 ),
+	m_num_occlusion_culled_decals				( 0 ),
+	m_occlusion_culling_results					( 0 ),
+	m_num_occlusion_culling_results				( 0 ),
+	m_culling_results							( 0 ),
+	m_culling_bounds							( 0 ),
+	m_atmosphere_prev_targets_size				( u32( -1 ) )
 {
 	// FUNCTION BODY[0x638550]: 30
 	// <0>
