@@ -1025,6 +1025,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\renderer_register_effects.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\renderer_register_effects.h"
+			>
+		</File>
+		<File
 			RelativePath=".\renderer_context.cpp"
 			>
 		</File>
