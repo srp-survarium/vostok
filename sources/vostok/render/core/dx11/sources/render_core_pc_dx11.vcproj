@@ -1024,6 +1024,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\effect_loader.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\shader_include_getter.h"
 			>
 		</File>
