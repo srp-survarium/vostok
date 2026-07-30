@@ -3,6 +3,7 @@
 
 #include "remove_inappropriate_models.h"
 #include "remove_model_if_in_frustum_predicate.h"
+#include "shadow_cascade_volume.h"
 
 namespace vostok {
 namespace render {
