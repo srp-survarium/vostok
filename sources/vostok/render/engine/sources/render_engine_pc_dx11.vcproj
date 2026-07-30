@@ -2077,6 +2077,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_hiz_occlusion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_hiz_occlusion.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
