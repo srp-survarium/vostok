@@ -24,6 +24,8 @@ private:
 	ID3D11Query* m_query;
 };
 
+STATIC_SIZE_ASSERT( event_query, 0x4 );
+
 } // namespace render
 } // namespace vostok
 
