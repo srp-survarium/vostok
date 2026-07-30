@@ -90,7 +90,9 @@ base_scene_ptr scene::particle_engine::get_scene( particle::world& world )
 }
 
 // STATE[STUB]
-scene::scene( scene_configuration const& renderer_configuration )
+scene::scene( scene_configuration const& renderer_configuration ) :
+	m_particle_engine	( this ),
+	m_lights			( 0 )
 {
 	// FUNCTION BODY[0x63f5e0]: 0
 	// ******
