@@ -1769,6 +1769,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\statistics.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\statistics.h"
+			>
+		</File>
+		<File
 			RelativePath=".\depth_accumulate_material_effect.cpp"
 			>
 		</File>

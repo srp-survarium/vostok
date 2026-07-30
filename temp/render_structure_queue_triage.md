@@ -22,3 +22,11 @@ Reset from `binaries/structure/target/` on 2026-07-29 for a clean-room rebuild.
 ## Dispositions
 
 `queue path | disposition | evidence`
+
+- `headers/vostok/render/{statistics*,*_statistics_group,cpu_gpu_timer_scope,timer_scope}.h`
+  | merged into `sources/vostok/render/engine/sources/statistics.h`
+  | these records form one subsystem; the `double` and `int` records share one
+  target-compatible `statistics_value<T>` primary template.
+- `sources/vostok/render/engine/sources/statistics_inline.h`
+  | merged into `sources/vostok/render/engine/sources/statistics.h`
+  | the addressed instance bodies belong to the canonical template definition.
