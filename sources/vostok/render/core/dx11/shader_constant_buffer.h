@@ -1,0 +1,168 @@
+#ifndef VOSTOK_RENDER_CORE_DX11_SHADER_CONSTANT_BUFFER_H_INCLUDED
+#define VOSTOK_RENDER_CORE_DX11_SHADER_CONSTANT_BUFFER_H_INCLUDED
+
+#include <vostok/fixed_string.h>
+#include <vostok/intrusive_ptr.h>
+#include <vostok/render/core/render_include.h>
+#include <vostok/render/core/resource_intrusive_base.h>
+#include <vostok/render/core/shader_constant.h>
+#include <vostok/render/core/shader_constant_defines.h>
+#include <vostok/render/core/shader_constant_slot.h>
+#include <vostok/render/core/shader_defines.h>
+
+namespace vostok {
+namespace render {
+
+class resource_manager;
+
+class shader_constant_buffer : public resource_intrusive_base {
+protected:
+	friend class resource_manager;
+
+	shader_constant_buffer(
+		fixed_string<64> const& name,
+		enum_shader_type destination,
+		D3D_CBUFFER_TYPE type,
+		u32 size
+	);
+	~shader_constant_buffer( );
+
+public:
+	void destroy_impl( ) const;
+
+	void set( shader_constant const& constant )
+	{
+		set(
+			constant.slot( ),
+			constant.source( ).pointer( ),
+			constant.source( ).size( ),
+			constant.slot( ).array_size( )
+		);
+	}
+
+	void zero( shader_constant const& constant )
+	{
+		zero( constant.slot( ), constant.source( ).size( ) );
+	}
+
+	template < typename T >
+	void set_typed( shader_constant_slot const& slot, T const& value )
+	{
+		set( slot, const_cast<T*>( &value ), constant_type_traits<T>::size );
+	}
+
+	template < typename T >
+	void set_typed( shader_constant_slot const& slot, T const* values, u32 array_size )
+	{
+		set(
+			slot,
+			const_cast<T*>( values ),
+			constant_type_traits<T>::size,
+			array_size
+		);
+	}
+
+	bool similiar( shader_constant_buffer const& other ) const
+	{
+		return m_name == other.m_name && m_type == other.m_type
+			&& m_dest == other.m_dest && m_buffer_size == other.m_buffer_size;
+	}
+
+	void update( );
+	ID3D11Buffer* hardware_buffer( ) const { return m_hardware_buffer; }
+	fixed_string<64> const& name( ) const { return m_name; }
+	enum_shader_type& dest( ) { return m_dest; }
+	enum_shader_type const& dest( ) const { return m_dest; }
+	D3D_CBUFFER_TYPE type( ) const { return m_type; }
+	u32 size( ) const { return m_buffer_size; }
+	bool is_registered( ) const { return m_is_registered; }
+	void mark_registered( )
+	{
+		R_ASSERT( !m_is_registered );
+		m_is_registered = true;
+	}
+
+private:
+	void set( shader_constant_slot const& slot, void* pointer, u32 )
+	{
+		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
+		set_memory( slot.slot_index( ), static_cast<pcstr>( pointer ), data_size );
+	}
+
+	void set( shader_constant_slot const& slot, void* pointer, u32, u32 array_size )
+	{
+		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
+		set_memory(
+			slot.slot_index( ),
+			static_cast<pcstr>( pointer ),
+			data_size * array_size
+		);
+	}
+
+	void zero( shader_constant_slot const& slot, u32 )
+	{
+		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
+		zero_memory( slot.slot_index( ), data_size );
+	}
+
+	void set_memory( u32 offset, pcstr source, u32 size )
+	{
+		// FUNCTION BODY[0x66860]
+		char* destination = static_cast<char*>( m_buffer_data ) + offset;
+		u32 const available = offset < m_buffer_size ? m_buffer_size - offset : 0;
+		u32 const copy_size = size < available ? size : available;
+		u8 difference = 0;
+		for ( u32 index = 0; index < copy_size; ++index ) {
+			difference |= destination[index] ^ source[index];
+			destination[index] = source[index];
+		}
+		m_changed |= difference != 0;
+	}
+
+	void zero_memory( u32 offset, u32 size )
+	{
+		char* destination = static_cast<char*>( m_buffer_data ) + offset;
+		u32 const available = offset < m_buffer_size ? m_buffer_size - offset : 0;
+		u32 const clear_size = size < available ? size : available;
+		u8 difference = 0;
+		for ( u32 index = 0; index < clear_size; ++index ) {
+			difference |= destination[index];
+			destination[index] = 0;
+		}
+		m_changed |= difference != 0;
+	}
+
+	void* access( u32 offset )
+	{
+		return offset < m_buffer_size
+			? static_cast<char*>( m_buffer_data ) + offset
+			: 0;
+	}
+
+private:
+	fixed_string<64> m_name;
+	D3D_CBUFFER_TYPE m_type;
+	enum_shader_type m_dest;
+	void* m_buffer_data;
+	u32 m_buffer_size;
+	ID3D11Buffer* m_hardware_buffer;
+	bool m_changed;
+	bool m_is_registered;
+};
+
+typedef intrusive_ptr<
+	shader_constant_buffer,
+	resource_intrusive_base,
+	threading::single_threading_policy
+> shader_constant_buffer_ptr;
+
+typedef intrusive_ptr<
+	shader_constant_buffer const,
+	resource_intrusive_base const,
+	threading::single_threading_policy
+> shader_constant_buffer_const_ptr;
+
+} // namespace render
+} // namespace vostok
+
+#endif // #ifndef VOSTOK_RENDER_CORE_DX11_SHADER_CONSTANT_BUFFER_H_INCLUDED
