@@ -940,6 +940,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\macros_extensions.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
