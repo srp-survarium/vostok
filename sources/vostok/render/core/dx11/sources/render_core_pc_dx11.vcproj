@@ -1152,6 +1152,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\res_input_layout.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_signature.h"
 			>
 		</File>
