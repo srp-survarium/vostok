@@ -866,6 +866,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ui_renderer.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ui_renderer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_renderer.h"
 			>
 		</File>
