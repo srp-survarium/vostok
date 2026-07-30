@@ -1917,6 +1917,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fill_sky_ao_map.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fill_sky_ao_map.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
