@@ -2,6 +2,7 @@
 #include "stage_ambient_lighting.h"
 
 #include "effect_environment_probe_lighting.h"
+#include "effect_sky_ambient_occlusion.h"
 
 namespace vostok {
 namespace render {
