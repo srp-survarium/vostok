@@ -7,6 +7,12 @@ namespace render {
 class render_model_instance_impl;
 class render_surface;
 
+enum render_surface_instance_flags {
+	fully_invisible		= 0x0,
+	visible_flag		= 0x1,
+	cast_shadow_flag	= 0x2,
+};
+
 struct render_surface_instance {
 	render_surface_instance( ) { }
 

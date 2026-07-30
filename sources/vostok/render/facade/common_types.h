@@ -10,6 +10,11 @@ class scaleform_render_command_queue;
 namespace vostok {
 namespace render {
 
+enum {
+	terrain_texture_max_count	= 0x10,
+	terrain_texture_size		= 0x400,
+};
+
 struct buffer_fragment {
 	u32 start;
 	u32 size;
