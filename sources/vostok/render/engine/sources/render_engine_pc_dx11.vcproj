@@ -1217,6 +1217,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_tree_component_frond.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_tree_component_frond.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree_shader_parameters.h"
 			>
 		</File>
