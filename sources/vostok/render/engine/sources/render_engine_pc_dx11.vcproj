@@ -953,6 +953,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\camera.h"
+			>
+		</File>
+		<File
 			RelativePath=".\cloud_key_parameters.h"
 			>
 		</File>
