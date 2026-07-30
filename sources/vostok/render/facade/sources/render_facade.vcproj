@@ -776,6 +776,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\sky_ambient_occlusion_properties.h"
+			>
+		</File>
+		<File
 			RelativePath="..\decal_properties.h"
 			>
 		</File>
