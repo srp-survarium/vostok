@@ -1164,6 +1164,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\options.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\binary_shader_source.h"
 			>
 		</File>
