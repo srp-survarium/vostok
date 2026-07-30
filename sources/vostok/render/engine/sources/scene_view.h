@@ -27,10 +27,13 @@ namespace render {
 
 class ambient_volume;
 class environment_probe;
-struct culling_result;
 struct decal_instance;
 struct grass_patch;
 struct render_surface_instance;
+
+struct culling_result {
+	void* user_data;
+};
 
 class scene_view : public base_scene_view {
 public:
