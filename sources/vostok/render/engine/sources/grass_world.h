@@ -33,8 +33,8 @@ class queries_result;
 
 namespace render {
 
-class grass_layer_data;
-class grass_layer_desc;
+struct grass_layer_data;
+struct grass_layer_desc;
 class grass_patch;
 class grass_render_model;
 class grass_template;
