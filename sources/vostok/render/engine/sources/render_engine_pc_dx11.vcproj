@@ -1777,6 +1777,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_particle_emitter_instance.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_particle_emitter_instance.h"
+			>
+		</File>
+		<File
 			RelativePath=".\depth_accumulate_material_effect.cpp"
 			>
 		</File>

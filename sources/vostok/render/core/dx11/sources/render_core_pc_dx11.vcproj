@@ -776,6 +776,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\vertex_buffer.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\index_buffer.h"
+			>
+		</File>
+		<File
 			RelativePath=".\res_state.h"
 			>
 		</File>
