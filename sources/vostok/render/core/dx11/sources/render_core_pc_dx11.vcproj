@@ -864,6 +864,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\backend_handlers.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
