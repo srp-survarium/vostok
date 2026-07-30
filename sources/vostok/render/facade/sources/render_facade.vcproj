@@ -834,6 +834,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\volume_fog_parameters.h"
+			>
+		</File>
+		<File
 			RelativePath=".\logic_allocator.h"
 			>
 		</File>
