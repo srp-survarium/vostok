@@ -2021,6 +2021,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gather_luminance.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gather_luminance.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
