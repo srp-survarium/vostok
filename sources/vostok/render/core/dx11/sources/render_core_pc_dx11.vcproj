@@ -860,6 +860,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\backend.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
