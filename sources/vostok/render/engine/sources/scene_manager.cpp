@@ -1,8 +1,23 @@
 #include "pch.h"
+#include "render_output_window.h"
 #include "scene_manager.h"
 
 namespace vostok {
 namespace render {
+
+struct render_output_window_predicate {
+	explicit render_output_window_predicate( HWND__* window ) :
+		m_window( window )
+	{
+	}
+
+	bool operator()( render_output_window* other )
+	{
+		return m_window == other->window( );
+	}
+
+	HWND__* m_window;
+};
 
 // STATE[STUB]
  scene_manager::scene_manager( )

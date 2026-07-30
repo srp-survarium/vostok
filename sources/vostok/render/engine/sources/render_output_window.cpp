@@ -5,7 +5,15 @@ namespace vostok {
 namespace render {
 
 // STATE[STUB]
-render_output_window::render_output_window( output_window_configuration const& window_configuration )
+render_output_window::render_output_window(
+	output_window_configuration const& window_configuration
+) :
+	m_targets(
+		math::uint2( window_configuration.width, window_configuration.height )
+	),
+	m_window			( static_cast< HWND__* >( window_configuration.hwnd ) ),
+	m_windowed			( window_configuration.windowed ),
+	m_flash_renderer	( 0 )
 {
 	// FUNCTION BODY[0x653c70]: 22
 	// <0x653ce6>|0x076|+0x024:'24'
