@@ -1,6 +1,8 @@
 #include "pch.h"
 #include "stage_ambient_lighting.h"
 
+#include "effect_environment_probe_lighting.h"
+
 namespace vostok {
 namespace render {
 
