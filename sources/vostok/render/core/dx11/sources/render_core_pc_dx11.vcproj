@@ -860,11 +860,23 @@
 			>
 		</File>
 		<File
+			RelativePath=".\device.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\api.h"
 			>
 		</File>
 		<File
+			RelativePath="..\device.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\device.h"
 			>
 		</File>
 		<File
