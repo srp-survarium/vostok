@@ -1,8 +1,27 @@
 #include "pch.h"
 #include "scene_view.h"
 
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_movie_resource.h>
+
 namespace vostok {
 namespace render {
+
+struct priority_less : public std::binary_function<
+	survarium::flash_movie_resource_ptr const&,
+	survarium::flash_movie_resource_ptr const&,
+	bool
+> {
+	bool operator()(
+		survarium::flash_movie_resource_ptr const& left,
+		survarium::flash_movie_resource_ptr const& right
+	) const
+	{
+		return left->movie->GetPriority( ) < right->movie->GetPriority( );
+	}
+};
+
+STATIC_SIZE_ASSERT( priority_less, 0x1 );
 
 // STATE[STUB]
  scene_view::scene_view( )
