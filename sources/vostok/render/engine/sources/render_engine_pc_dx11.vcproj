@@ -1073,6 +1073,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sun_cascade.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_output_window.cpp"
 			>
 		</File>
