@@ -932,6 +932,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\vertex_buffer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
