@@ -920,6 +920,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_effect.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
