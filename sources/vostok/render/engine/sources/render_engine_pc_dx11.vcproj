@@ -1593,6 +1593,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_vertex_alpha.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_vertex_alpha.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
