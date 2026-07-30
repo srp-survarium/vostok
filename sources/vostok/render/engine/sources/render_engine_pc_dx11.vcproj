@@ -1117,6 +1117,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\grass_world.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_world.h"
+			>
+		</File>
+		<File
+			RelativePath=".\trample_desc.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree_forest.cpp"
 			>
 		</File>
