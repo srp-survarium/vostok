@@ -1129,6 +1129,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\grass_instance.h"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_template.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_template.h"
+			>
+		</File>
+		<File
 			RelativePath=".\grass_world.cpp"
 			>
 		</File>
