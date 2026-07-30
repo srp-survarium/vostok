@@ -980,6 +980,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\xs_descriptor.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
