@@ -889,6 +889,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\moon_position.h"
+			>
+		</File>
+		<File
+			RelativePath=".\sun_position.h"
+			>
+		</File>
+		<File
 			RelativePath=".\sky_ambient_occlusion.cpp"
 			>
 		</File>

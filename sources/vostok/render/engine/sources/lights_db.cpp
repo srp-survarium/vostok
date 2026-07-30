@@ -1,5 +1,7 @@
 #include "pch.h"
 #include "lights_db.h"
+#include "moon_position.h"
+#include "sun_position.h"
 
 namespace vostok {
 namespace render {
