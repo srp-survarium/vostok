@@ -1097,6 +1097,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_downsample_gbuffer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_downsample_gbuffer.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_downsample_reflective_shadow_map.cpp"
 			>
 		</File>
