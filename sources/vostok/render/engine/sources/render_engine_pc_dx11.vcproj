@@ -1585,6 +1585,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_forward_system.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_forward_system.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_aberration.cpp"
 			>
 		</File>
