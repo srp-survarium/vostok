@@ -1689,6 +1689,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_gbuffer_to_screen.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_gbuffer_to_screen.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
