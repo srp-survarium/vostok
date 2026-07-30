@@ -776,6 +776,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\light_props.h"
+			>
+		</File>
+		<File
 			RelativePath="..\sky_ambient_occlusion_properties.h"
 			>
 		</File>
