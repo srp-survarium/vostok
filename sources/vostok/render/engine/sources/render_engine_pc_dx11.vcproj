@@ -1901,6 +1901,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\skeleton_mesh_gpu_skinning_2weights.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\skeleton_mesh_gpu_skinning_2weights.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_model_user.cpp"
 			>
 		</File>
