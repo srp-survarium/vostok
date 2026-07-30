@@ -1008,6 +1008,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\texture_cook.h"
+			>
+		</File>
+		<File
 			RelativePath="..\effect_compiler.h"
 			>
 		</File>
@@ -1133,6 +1137,10 @@
 		</File>
 		<File
 			RelativePath="..\..\texture_cook_wrapper.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\texture_cook.h"
 			>
 		</File>
 		<File
