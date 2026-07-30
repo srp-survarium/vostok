@@ -11,6 +11,26 @@ struct stream_1_type {
 
 STATIC_SIZE_ASSERT( stream_1_type, 0x10 );
 
+struct sort_indices_predicate {
+	sort_indices_predicate( grass_patch* patch, float3 const& view_position ) :
+		m_patch( patch ),
+		m_view_pos( view_position )
+	{
+	}
+
+	bool operator()(
+		grass_patch::sort_info const&,
+		grass_patch::sort_info const&
+	) const
+	{
+		return false;
+	}
+
+private:
+	grass_patch* m_patch;
+	float3 m_view_pos;
+};
+
 bool has_surface_by_lod( grass_render_model_ptr model, u32 lod_index )
 {
 	// FUNCTION BODY[0x5f43e0]
