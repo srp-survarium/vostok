@@ -14,3 +14,7 @@ incompatibility with the shipped interface is recorded here.
   `resources::unmanaged_cook` allocation interface. The shipped type derives
   from `resources::translate_query_cook`; its old allocation/create/destroy
   methods do not map to the target `translate_query`/`delete_resource` surface.
+- `engine/model_format.h`: the target-owned enums, model header, quantized basis,
+  and skinned vertex layouts were consolidated into the live header. Legacy
+  `s24_tc_base`, `vert_static`, and `vb_sw_struct` have no retail PDB record or
+  live consumer and were omitted.
