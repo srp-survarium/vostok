@@ -908,6 +908,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\shader_configuration.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
@@ -945,6 +949,10 @@
 		</File>
 		<File
 			RelativePath="..\..\shader_defines.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\shader_configuration.h"
 			>
 		</File>
 		<File
