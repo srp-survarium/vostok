@@ -1957,6 +1957,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fstage_fire_fresnel_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fstage_fire_fresnel_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
