@@ -948,6 +948,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_constant_host.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_declaration.h"
 			>
 		</File>
