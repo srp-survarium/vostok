@@ -1057,6 +1057,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sky_dome_geometry.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_atmosphere.cpp"
 			>
 		</File>
