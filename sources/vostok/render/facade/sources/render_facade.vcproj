@@ -830,6 +830,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\skeleton_combined_cook_data.h"
+			>
+		</File>
+		<File
 			RelativePath=".\logic_allocator.h"
 			>
 		</File>
