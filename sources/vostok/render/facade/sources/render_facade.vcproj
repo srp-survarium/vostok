@@ -894,6 +894,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\update_model_vertex_buffer_command.h"
+			>
+		</File>
+		<File
+			RelativePath=".\update_model_vertex_buffer_command.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\ui_renderer.h"
 			>
 		</File>
