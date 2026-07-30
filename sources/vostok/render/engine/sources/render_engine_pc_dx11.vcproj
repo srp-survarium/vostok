@@ -2197,6 +2197,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_post_process_sharpen.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_post_process_sharpen.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
