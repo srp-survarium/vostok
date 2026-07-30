@@ -2013,6 +2013,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gather_bloom.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gather_bloom.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
