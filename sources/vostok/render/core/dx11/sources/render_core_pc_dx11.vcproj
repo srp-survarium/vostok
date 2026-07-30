@@ -908,6 +908,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_descriptor.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
