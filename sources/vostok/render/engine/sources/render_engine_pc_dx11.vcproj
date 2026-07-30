@@ -1037,6 +1037,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\register_samplers.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\register_samplers.h"
+			>
+		</File>
+		<File
 			RelativePath=".\renderer_register_effects.h"
 			>
 		</File>
