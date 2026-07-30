@@ -1593,6 +1593,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_system_line.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_system_line.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_aberration.cpp"
 			>
 		</File>
