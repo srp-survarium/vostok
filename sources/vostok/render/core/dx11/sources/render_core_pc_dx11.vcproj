@@ -992,6 +992,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\shader_binary_source_cook.h"
+			>
+		</File>
+		<File
 			RelativePath="..\effect_compiler.h"
 			>
 		</File>
@@ -1109,6 +1113,10 @@
 		</File>
 		<File
 			RelativePath="..\..\effect_cook.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\shader_binary_source_cook.h"
 			>
 		</File>
 		<File
