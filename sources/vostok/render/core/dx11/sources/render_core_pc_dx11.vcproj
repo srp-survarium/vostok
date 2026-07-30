@@ -952,6 +952,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\utils.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
