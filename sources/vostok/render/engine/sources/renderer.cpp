@@ -4,6 +4,68 @@
 namespace vostok {
 namespace render {
 
+struct remove_model_filter_predicate {
+	remove_model_filter_predicate( ) :
+		m_need_static( false ),
+		m_need_skeletal( false ),
+		m_need_translucency( false )
+	{
+	}
+
+	remove_model_filter_predicate(
+		bool need_static,
+		bool need_skeletal,
+		bool need_translucency
+	) :
+		m_need_static( need_static ),
+		m_need_skeletal( need_skeletal ),
+		m_need_translucency( need_translucency )
+	{
+	}
+
+	bool operator()( render_surface_instance* )
+	{
+		return false;
+	}
+
+	bool m_need_static;
+	bool m_need_skeletal;
+	bool m_need_translucency;
+};
+
+struct remove_model_if_not_in_frustum_predicate {
+	explicit remove_model_if_not_in_frustum_predicate( math::frustum& frustum ) :
+		m_frustum( &frustum )
+	{
+	}
+
+	bool operator()( render_surface_instance* )
+	{
+		return false;
+	}
+
+	math::frustum* m_frustum;
+};
+
+struct remove_model_if_olt_predicate {
+	remove_model_if_olt_predicate( ) :
+		m_use_olt( false )
+	{
+	}
+
+	explicit remove_model_if_olt_predicate( u32 use_olt ) :
+		m_use_olt( use_olt != 0 )
+	{
+	}
+
+	bool operator()( render_surface_instance* )
+	{
+		return false;
+	}
+
+	bool m_use_olt;
+};
+
 // STATE[STUB]
 bool renderer::is_effects_ready( ) const
 {
