@@ -873,6 +873,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sky_ambient_occlusion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\sky_ambient_occlusion.h"
+			>
+		</File>
+		<File
 			RelativePath=".\box_geometry.cpp"
 			>
 		</File>
