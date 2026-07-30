@@ -1000,6 +1000,22 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\texture_named_instance.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\res_pass.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\res_shader_technique.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\res_effect.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\shader_include_getter.h"
 			>
 		</File>
