@@ -897,6 +897,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\cuboid2.h"
+			>
+		</File>
+		<File
+			RelativePath=".\remove_inappropriate_models.h"
+			>
+		</File>
+		<File
 			RelativePath=".\box_geometry.cpp"
 			>
 		</File>
@@ -1138,6 +1146,14 @@
 		</File>
 		<File
 			RelativePath=".\stage_lights.h"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_shadow_direct.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_shadow_direct.h"
 			>
 		</File>
 		<File
