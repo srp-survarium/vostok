@@ -807,6 +807,10 @@
 			RelativePath="..\model.h"
 			>
 		</File>
+		<File
+			RelativePath="..\render_stage_types.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>

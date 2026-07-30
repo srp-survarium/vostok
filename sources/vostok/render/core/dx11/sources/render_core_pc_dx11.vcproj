@@ -775,6 +775,10 @@
 			RelativePath="..\..\untyped_buffer.h"
 			>
 		</File>
+		<File
+			RelativePath=".\res_state.h"
+			>
+		</File>
 	</Files>
 	<Globals>
 	</Globals>
