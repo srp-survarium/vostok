@@ -1233,6 +1233,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\hw_hiz_point_list.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\sphere_occluder_geometry.h"
 			>
 		</File>
