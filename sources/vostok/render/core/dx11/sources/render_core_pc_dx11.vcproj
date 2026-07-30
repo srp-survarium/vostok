@@ -860,6 +860,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\texture_pool.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_core_entry_point.cpp"
 			>
 		</File>
