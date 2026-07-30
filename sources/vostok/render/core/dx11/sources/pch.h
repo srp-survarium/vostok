@@ -11,7 +11,7 @@
 #	define VOSTOK_ENGINE_BUILDING
 #endif // #ifndef VOSTOK_STATIC_LIBRARIES
 
-#define VOSTOK_LOG_MODULE_INITIATOR	"render"
+#define VOSTOK_LOG_MODULE_INITIATOR "render"
 
 #include <vostok/extensions.h>
 

@@ -11,8 +11,8 @@ namespace vostok {
 namespace render {
 namespace core {
 
-void	initialize	( );
-void	finalize	( );
+void initialize( );
+void finalize( );
 
 } // namespace core
 } // namespace render
