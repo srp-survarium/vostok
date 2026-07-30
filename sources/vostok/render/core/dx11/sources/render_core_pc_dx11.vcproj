@@ -916,6 +916,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_input_layout.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\api.h"
 			>
 		</File>
