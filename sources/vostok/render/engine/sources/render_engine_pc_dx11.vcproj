@@ -1101,6 +1101,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_instance_impl.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_instance_impl.h"
+			>
+		</File>
+		<File
 			RelativePath=".\tracer_model_instance.h"
 			>
 		</File>
