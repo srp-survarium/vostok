@@ -1697,6 +1697,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_copy_image.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_copy_image.h"
+			>
+		</File>
+		<File
 			RelativePath=".\obb_light_effect.h"
 			>
 		</File>
