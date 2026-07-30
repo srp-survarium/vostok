@@ -842,6 +842,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\one_way_render_channel.h"
+			>
+		</File>
+		<File
+			RelativePath=".\one_way_render_channel.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\base_command.h"
 			>
 		</File>
