@@ -1,12 +1,86 @@
 #include "pch.h"
 #include "portal_sector_system.h"
 
+#include <vostok/collision/common_types.h>
 #include <vostok/math_frustum.h>
 #include <vostok/math_plane.h>
 
 namespace vostok {
 namespace render {
 namespace culling {
+
+struct collision_result_user_data_equalls_to :
+	public std::unary_function< collision::triangle_result const&, bool >
+{
+	explicit collision_result_user_data_equalls_to( u32 user_data ) :
+		m_user_data( user_data )
+	{
+	}
+
+	bool operator()( collision::triangle_result const& ) const
+	{
+		return false;
+	}
+
+private:
+	u32 m_user_data;
+};
+
+struct portal_id_closer_to_point : public std::binary_function< u32, u32, bool > {
+	explicit portal_id_closer_to_point( float const* distances ) :
+		m_distances( distances )
+	{
+	}
+
+	bool operator()( u32 left, u32 right ) const
+	{
+		return m_distances[left] < m_distances[right];
+	}
+
+private:
+	float const* m_distances;
+};
+
+struct portal_object_belongs_to_sector :
+	public std::unary_function< collision::triangle_result const&, bool >
+{
+	explicit portal_object_belongs_to_sector( u32 sector_id ) :
+		m_sector_id( sector_id )
+	{
+	}
+
+	bool operator()( collision::triangle_result const& ) const
+	{
+		return false;
+	}
+
+private:
+	u32 m_sector_id;
+};
+
+struct portal_object_closer_to_point :
+	public std::binary_function<
+		collision::triangle_result const&,
+		collision::triangle_result const&,
+		bool
+	>
+{
+	explicit portal_object_closer_to_point( float3 const& point ) :
+		m_point( point )
+	{
+	}
+
+	bool operator()(
+		collision::triangle_result const&,
+		collision::triangle_result const&
+	) const
+	{
+		return false;
+	}
+
+private:
+	float3 m_point;
+};
 
 portal_sector_system::portal_sector_system( portal_sector_structure_ptr structure ) :
 	m_structure					( structure ),
