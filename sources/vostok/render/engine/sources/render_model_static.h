@@ -10,7 +10,7 @@
 namespace vostok {
 namespace render {
 
-class batched_geometry_interface;
+struct batched_geometry_interface;
 struct surface_stats;
 
 class static_render_surface : public render_surface {
