@@ -1117,6 +1117,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_lights.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_lights.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_sun.cpp"
 			>
 		</File>
