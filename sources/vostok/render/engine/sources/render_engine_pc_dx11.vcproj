@@ -1121,6 +1121,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_light_propagation_volumes.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_light_propagation_volumes.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_ssao_accumulation.cpp"
 			>
 		</File>
