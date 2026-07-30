@@ -39,7 +39,9 @@ void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_con
 }
 
 // STATE[STUB]
-renderer::renderer( renderer_context* renderer_context )
+renderer::renderer( renderer_context* renderer_context ) :
+	m_renderer_context	( renderer_context ),
+	m_simulation		( 32, 32, 32 )
 {
 	// FUNCTION BODY[0x64bf20]: 71
 	// <0>
