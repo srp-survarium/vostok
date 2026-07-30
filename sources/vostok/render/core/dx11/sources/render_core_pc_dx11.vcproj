@@ -1152,6 +1152,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\res_geometry.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_xs_hw.h"
 			>
 		</File>
