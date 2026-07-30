@@ -30,3 +30,13 @@ Reset from `binaries/structure/target/` on 2026-07-29 for a clean-room rebuild.
 - `sources/vostok/render/engine/sources/statistics_inline.h`
   | merged into `sources/vostok/render/engine/sources/statistics.h`
   | the addressed instance bodies belong to the canonical template definition.
+- `headers/vostok/render/render_particle_emitter_instance_{1,2}.h`
+  | merged into `sources/vostok/render/engine/sources/render_particle_emitter_instance.h`
+  | all three generated records describe the same 0x480 class.
+- `headers/vostok/render/{particle_sprite_vertex,subuv_particle_sprite_vertex,particle_beamtrail_vertex}.h`
+  | merged into `sources/vostok/render/engine/sources/render_particle_emitter_instance.cpp`
+  | the vertex records are source-local implementation types in the original library.
+- `headers/vostok/render/{vertex_buffer,index_buffer}.h`
+  | moved to canonical `sources/vostok/render/core/` headers
+  | the emitter owns complete `uninitialized_reference` instances of these DX11 core types;
+  their function sources remain queued under their actual core owners.
