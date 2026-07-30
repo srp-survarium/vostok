@@ -912,6 +912,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_geometry.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\api.h"
 			>
 		</File>
