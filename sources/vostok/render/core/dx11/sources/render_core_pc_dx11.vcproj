@@ -920,6 +920,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\texture_storage.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
