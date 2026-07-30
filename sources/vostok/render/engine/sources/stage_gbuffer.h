@@ -1,7 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_GBUFFER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_GBUFFER_H_INCLUDED
 
-#include <vostok/render/core/dx11/sources/res_state.h>
+#include <vostok/render/core/res_state.h>
 #include <vostok/render/core/effect_descriptor.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/res_effect.h>
