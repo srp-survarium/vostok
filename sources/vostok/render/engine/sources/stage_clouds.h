@@ -88,6 +88,15 @@ public:
 	bool is_effects_ready( ) const;
 
 private:
+	struct voxel {
+		u8 x;
+		u8 y;
+		u8 z;
+		u8 w;
+	};
+
+	STATIC_SIZE_ASSERT( voxel, 0x4 );
+
 	float evaluate_noise( float, float, u32 )
 	{
 		// STATE[STUB]
