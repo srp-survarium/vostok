@@ -860,6 +860,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\manager_common_inline.h"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_storage.h"
 			>
 		</File>
