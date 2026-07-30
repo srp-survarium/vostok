@@ -1209,6 +1209,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_tree_component_branch.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_tree_component_branch.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree_shader_parameters.h"
 			>
 		</File>
