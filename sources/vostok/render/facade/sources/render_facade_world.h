@@ -60,6 +60,8 @@ private:
 	bool m_is_editor;
 };
 
+STATIC_SIZE_ASSERT( world, 0x190 );
+
 } // namespace render
 } // namespace vostok
 
