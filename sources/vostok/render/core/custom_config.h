@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_CORE_CUSTOM_CONFIG_H_INCLUDED
 #define VOSTOK_RENDER_CORE_CUSTOM_CONFIG_H_INCLUDED
 
+#include <vostok/memory_buffer.h>
 #include <vostok/resources_unmanaged_resource.h>
 
 #include <vostok/render/core/custom_config_value.h>
@@ -56,6 +57,30 @@ typedef intrusive_ptr<
 	custom_config,
 	threading::simple_lock
 > custom_config_ptr;
+
+custom_config_ptr create_custom_config(
+	effect_options_descriptor const& value,
+	u32& out_data_crc,
+	bool calc_data_crc = false
+);
+custom_config_ptr create_custom_config(
+	custom_config_value const& value,
+	u32& out_data_crc,
+	bool calc_data_crc = false
+);
+custom_config_ptr create_custom_config(
+	configs::binary_config_value const& value,
+	u32& out_data_crc,
+	bool calc_data_crc = false
+);
+custom_config_ptr create_custom_config(
+	effect_options_descriptor const& value,
+	mutable_buffer& buffer,
+	u32& out_data_crc,
+	bool calc_data_crc = false
+);
+
+u32 calc_config_memory_usage( effect_options_descriptor const& value );
 
 } // namespace render
 } // namespace vostok
