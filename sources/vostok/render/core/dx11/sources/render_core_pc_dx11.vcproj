@@ -880,6 +880,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\res_render_output.h"
+			>
+		</File>
+		<File
 			RelativePath="..\backend_handlers.h"
 			>
 		</File>
@@ -897,6 +901,10 @@
 		</File>
 		<File
 			RelativePath="..\..\res_texture.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\res_render_output.h"
 			>
 		</File>
 		<File
