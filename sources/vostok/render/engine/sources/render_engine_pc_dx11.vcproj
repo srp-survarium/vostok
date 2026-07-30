@@ -2029,6 +2029,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gather_luminance_histogram.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gather_luminance_histogram.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
