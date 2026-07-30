@@ -1200,6 +1200,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\decl_utils.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\shader_defines.h"
 			>
 		</File>
@@ -1345,6 +1349,10 @@
 		</File>
 		<File
 			RelativePath="..\res_declaration.h"
+			>
+		</File>
+		<File
+			RelativePath="..\decl_utils.h"
 			>
 		</File>
 		<File
