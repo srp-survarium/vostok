@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "effect_gstage_default_materials.h"
+#include "geometry_type.h"
 
 #include <vostok/render/facade/vertex_input_type.h>
 

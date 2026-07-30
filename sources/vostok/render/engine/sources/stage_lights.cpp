@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "organic_lighting_passes.h"
 #include "stage_lights.h"
 
 namespace vostok {
