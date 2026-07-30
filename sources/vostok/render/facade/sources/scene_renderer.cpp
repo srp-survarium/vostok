@@ -1,20 +1,21 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\facade\sources\scene_renderer.h"
+#include <vostok/render/facade/light_props.h>
+#include <vostok/render/facade/sources/scene_renderer.h>
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- scene_renderer::scene_renderer(
+scene_renderer::scene_renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
 	engine::world&				render_engine_world,
 	math::frustum*				frustum_listener
 )
+	: m_render_engine_world( render_engine_world ),
+	  m_channel( channel ),
+	  m_allocator( allocator ),
+	  m_frustum_listener( frustum_listener )
 {
 	// FUNCTION BODY[0x6e0020]: 2
 	// <0x6e0093>|0x073|+0x006:'47'
@@ -711,6 +712,7 @@ particle::world& scene_renderer::particle_world( base_scene_ptr const& scene )
 	// <0>
 	// <0x6e01c1>|0x001|+0x038:'833'
 	// ******
+	return *(particle::world*)0;
 }
 
 // STATE[STUB]
@@ -744,7 +746,7 @@ void scene_renderer::reset_renderer( )
 }
 
 // STATE[STUB]
- light_props::light_props( )
+light_props::light_props( )
 {
 	// FUNCTION BODY[0x6e00d0]: 6
 	// <0x6e018b>|0x0bb|+0x006:'923'
@@ -757,85 +759,6 @@ void scene_renderer::reset_renderer( )
 }
 
 // STATE[STUB]
-explicit boost::_bi::bind_t<void,boost::_mfi::mf2<void,vostok::render::engine::world,vostok::resources::resource_ptr<vostok::render::base_scene,vostok::resources::unmanaged_intrusive_base> const &,vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> >,boost::_bi::list3<boost::_bi::value<vostok::render::engine::world *>,boost::_bi::value<vostok::resources::resource_ptr<vostok::render::base_scene,vostok::resources::unmanaged_intrusive_base> >,boost::_bi::value<vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> > > >::bind_t<void,boost::_mfi::mf2<void,vostok::render::engine::world,vostok::resources::resource_ptr<vostok::render::base_scene,vostok::resources::unmanaged_intrusive_base> const &,vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> >,boost::_bi::list3<boost::_bi::value<vostok::render::engine::world *>,boost::_bi::value<vostok::resources::resource_ptr<vostok::render::base_scene,vostok::resources::unmanaged_intrusive_base> >,boost::_bi::value<vostok::resources::resource_ptr<vostok::resources::unmanaged_resource,vostok::resources::unmanaged_intrusive_base> > > >(
-	boost::_bi::bind_t< void, boost::_mfi::mf2< void, engine::world, base_scene_ptr const&, resources::resource_ptr< resources::unmanaged_resource, resources::unmanaged_intrusive_base > >, boost::_bi::list3< boost::_bi::value< engine::world* >, boost::_bi::value< resources::resource_ptr< base_scene, resources::unmanaged_intrusive_base > >, boost::_bi::value< resources::resource_ptr< resources::unmanaged_resource, resources::unmanaged_intrusive_base > > > > const&	arg_0 /* boost::_bi::bind_t< void, boost::_mfi::mf2< void, vostok::render::engine::world, vostok::render::base_scene_ptr const&, vostok::resources::resource_ptr< vostok::resources::unmanaged_resource, vostok::resources::unmanaged_intrusive_base > >, boost::_bi::list3< boost::_bi::value< vostok::render::engine::world* >, boost::_bi::value< vostok::resources::resource_ptr< vostok::render::base_scene, vostok::resources::unmanaged_intrusive_base > >, boost::_bi::value< vostok::resources::resource_ptr< vostok::resources::unmanaged_resource, vostok::resources::unmanaged_intrusive_base > > > > const& __that */
-)
-{
-	// FUNCTION BODY[0x1bad0]: 67
-	// <0x1b138>|0x018|+0x015:'934'
-	// <0>
-	// <0x1b14d>|0x02d|+0x032:'936'
-	// <0x1b17f>|0x05f|+0x021:'937'
-	// <0x1b1a0>|0x080|+0x021:'938'
-	// <0x1b1c1>|0x0a1|+0x021:'939'
-	// <0x1b1e2>|0x0c2|+0x028:'940'
-	// <0x1b20a>|0x0ea|+0x028:'941'
-	// <0x1b232>|0x112|+0x028:'942'
-	// <0x1b25a>|0x13a|+0x028:'943'
-	// <0x1b282>|0x162|+0x028:'944'
-	// <0x1b2aa>|0x18a|+0x028:'945'
-	// <0x1b2d2>|0x1b2|+0x048:'946'
-	// <0x1b31a>|0x1fa|+0x034:'947'
-	// <0>
-	// <0x1b34e>|0x22e|+0x010:'949'
-	// <0x1b35e>|0x23e|+0x011:'950'
-	// <0x1b36f>|0x24f|+0x002:'951'
-	// <0x1b371>|0x251|+0x007:'952'
-	// <0>
-	// <0x1b378>|0x258|+0x01c:'954'
-	// <0x1b394>|0x274|+0x02b:'955'
-	// <0>
-	// <0x1b3bf>|0x29f|+0x03f:'957'
-	// <0>
-	// <0x1b3fe>|0x2de|+0x00e:'959'
-	// <0x1b40c>|0x2ec|+0x00e:'960'
-	// <0x1b41a>|0x2fa|+0x00c:'961'
-	// <0x1b426>|0x306|+0x092:'962'
-	// <0>
-	// <0x1b4b8>|0x398|+0x002:'964'
-	// <0x1b4ba>|0x39a|+0x014:'965'
-	// <0>
-	// <0x1b4ce>|0x3ae|+0x00e:'967'
-	// <0>
-	// <0x1b4dc>|0x3bc|+0x00f:'969'
-	// <0x1b4eb>|0x3cb|+0x025:'970'
-	// <0x1b510>|0x3f0|+0x002:'971'
-	// <0x1b512>|0x3f2|+0x028:'972'
-	// <0>
-	// <0x1b53a>|0x41a|+0x021:'974'
-	// <0x1b55b>|0x43b|+0x021:'975'
-	// <0x1b57c>|0x45c|+0x021:'976'
-	// <0x1b59d>|0x47d|+0x021:'977'
-	// <0>
-	// <0x1b5be>|0x49e|+0x03b:'979'
-	// <0x1b5f9>|0x4d9|+0x03b:'980'
-	// <0>
-	// <0x1b634>|0x514|+0x02b:'982'
-	// <0x1b65f>|0x53f|+0x02c:'983'
-	// <0>
-	// <0x1b68b>|0x56b|+0x02c:'985'
-	// <0>
-	// <0x1b6b7>|0x597|+0x02c:'987'
-	// <0>
-	// <0x1b6e3>|0x5c3|+0x017:'989'
-	// <0>
-	// <0x1b6fa>|0x5da|+0x018:'991'
-	// <0>
-	// <0x1b712>|0x5f2|+0x004:'993'
-	// <0>
-	// <0x1b716>|0x5f6|+0x038:'995'
-	// <0x1b74e>|0x62e|+0x029:'996'
-	// <0x1b777>|0x657|+0x017:'996'
-	// <0>
-	// <1>
-	// <0x1b78e>|0x66e|-0x022:'999'
-	// <0>
-	// <0x1b76c>|0x64c|+0x017:'1001'
-	// <0x1b783>|0x663|+0x012:'1001'
-	// ******
-}
-
-// STATE[STUB]
 void light_props::load_light_props( configs::binary_config_value const& cfg )
 {
 	// FUNCTION BODY[0x6e01b0]: 2
@@ -843,49 +766,6 @@ void light_props::load_light_props( configs::binary_config_value const& cfg )
 	// <0x6e01b1>|0x001|+0x00b:'1014'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	boost::function< void( float4x4 const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::fs_new::virtual_path_string const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::ambient_volume_properties const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::cloud_key_parameters const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::cloud_parameters const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::decal_properties const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::environment_probe_properties const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::sky_ambient_occlusion_properties const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::trample_desc const& ) >
-	// 	on_execute_type;
-
-	// typedef
-	// 	boost::function< void( vostok::render::volume_fog_parameters const& ) >
-	// 	on_execute_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
