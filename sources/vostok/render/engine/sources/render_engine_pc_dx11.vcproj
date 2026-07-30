@@ -1925,6 +1925,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fix_irradiance_texture.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fix_irradiance_texture.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
