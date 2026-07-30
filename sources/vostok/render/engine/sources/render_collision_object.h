@@ -6,6 +6,21 @@
 namespace vostok {
 namespace render {
 
+struct predicate_result {
+	predicate_result( ) :
+		stored_result( 0, 0, 0.f )
+	{
+	}
+
+	bool predicate( collision::ray_triangle_result const& result )
+	{
+		stored_result = result;
+		return true;
+	}
+
+	collision::ray_triangle_result stored_result;
+};
+
 template <typename T>
 class render_collision_object : public collision::object {
 public:
