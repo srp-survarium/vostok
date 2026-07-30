@@ -51,6 +51,10 @@ struct shader_type_traits< enum_shader_type_geometry > {
 	static pcstr short_name( ) { return "gs"; }
 };
 
+STATIC_SIZE_ASSERT( shader_type_traits< enum_shader_type_vertex >, 0x1 );
+STATIC_SIZE_ASSERT( shader_type_traits< enum_shader_type_pixel >, 0x1 );
+STATIC_SIZE_ASSERT( shader_type_traits< enum_shader_type_geometry >, 0x1 );
+
 } // namespace render
 } // namespace vostok
 
