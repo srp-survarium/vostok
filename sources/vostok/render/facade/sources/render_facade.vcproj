@@ -842,6 +842,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_facade_world.h"
+			>
+		</File>
+		<File
+			RelativePath=".\render_facade_world.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\one_way_render_channel.h"
 			>
 		</File>
