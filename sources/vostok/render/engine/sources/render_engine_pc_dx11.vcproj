@@ -1997,6 +1997,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fstage_volume_cone_base_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fstage_volume_cone_base_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
