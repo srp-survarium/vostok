@@ -880,6 +880,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\static_type.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
@@ -1029,6 +1033,14 @@
 		</File>
 		<File
 			RelativePath="..\..\effect_loader.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\static_type.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\destroy_data_helper.h"
 			>
 		</File>
 		<File
