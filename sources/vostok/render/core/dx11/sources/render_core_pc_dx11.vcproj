@@ -1100,6 +1100,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\effect_compile_data.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\effect_cook.h"
 			>
 		</File>
