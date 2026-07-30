@@ -4,6 +4,13 @@
 namespace vostok {
 namespace render {
 
+struct vertex_struct {
+	vertex_struct( ) { }
+
+	float4 bound;
+	float2 pixel;
+};
+
 hw_hiz_point_list::hw_hiz_point_list( ) :
 	m_num_points( 0 )
 {
