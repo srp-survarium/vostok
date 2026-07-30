@@ -2,6 +2,8 @@
 #define VOSTOK_RENDER_ENGINE_WORLD_PC_H_INCLUDED
 
 #include <vostok/render/engine/base_classes.h>
+#include <vostok/render/facade/environment_probe_generate_parameters.h>
+#include <vostok/render/facade/sky_ambient_occlusion_map_generate_parameters.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/scaleform/sources/flash_movie_resource.h>
 #include <vostok/scaleform/sources/scaleform_render_command.h>
@@ -34,12 +36,10 @@ struct buffer_fragment;
 struct cloud_key_parameters;
 struct cloud_parameters;
 struct decal_properties;
-struct environment_probe_generate_parameters;
 struct environment_probe_properties;
 struct grass_layer_data;
 struct grass_layer_desc;
 struct light_props;
-struct sky_ambient_occlusion_map_generate_parameters;
 struct sky_ambient_occlusion_properties;
 struct trample_desc;
 struct vertex_colored;

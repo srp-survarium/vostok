@@ -986,11 +986,19 @@
 			>
 		</File>
 		<File
+			RelativePath="..\environment_probe_generate_parameters.h"
+			>
+		</File>
+		<File
 			RelativePath="..\light_props.h"
 			>
 		</File>
 		<File
 			RelativePath="..\sky_ambient_occlusion_properties.h"
+			>
+		</File>
+		<File
+			RelativePath="..\sky_ambient_occlusion_map_generate_parameters.h"
 			>
 		</File>
 		<File
