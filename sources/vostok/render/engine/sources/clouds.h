@@ -2,10 +2,10 @@
 #define VOSTOK_RENDER_ENGINE_CLOUDS_H_INCLUDED
 
 #include <vostok/math_float3.h>
+#include <vostok/render/facade/cloud_key.h>
 #include <vostok/tasks_task.h>
 #include <vostok/uninitialized_reference.h>
 
-#include "cloud_key_parameters.h"
 #include "cloud_parameters.h"
 #include "cloud_simulation.h"
 

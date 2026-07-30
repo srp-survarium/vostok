@@ -4,8 +4,7 @@
 #include <boost/noncopyable.hpp>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>
-
-#include "cloud_key_parameters.h"
+#include <vostok/render/facade/cloud_key.h>
 
 namespace vostok {
 namespace render {

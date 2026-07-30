@@ -5,10 +5,10 @@
 #include <vostok/math_float4.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/untyped_buffer.h>
+#include <vostok/render/facade/cloud_key.h>
 #include <vostok/tasks_task.h>
 
 #include "cloud_interp_textures.h"
-#include "cloud_key_parameters.h"
 #include "render_target.h"
 #include "res_geometry.h"
 #include "sphere_geometry.h"

@@ -1,5 +1,5 @@
-#ifndef VOSTOK_RENDER_ENGINE_CLOUD_KEY_PARAMETERS_H_INCLUDED
-#define VOSTOK_RENDER_ENGINE_CLOUD_KEY_PARAMETERS_H_INCLUDED
+#ifndef VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
+#define VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
 
 namespace vostok {
 
@@ -12,7 +12,11 @@ class binary_config_value;
 namespace render {
 
 struct cloud_key_parameters {
-	cloud_key_parameters( ) { }
+	// STATE[STUB]
+	cloud_key_parameters( )
+	{
+		// FUNCTION BODY[0x6f1b0]
+	}
 
 	void load( configs::binary_config_value const& )
 	{
@@ -53,4 +57,4 @@ STATIC_SIZE_ASSERT( cloud_key_parameters, 0x44 );
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef VOSTOK_RENDER_ENGINE_CLOUD_KEY_PARAMETERS_H_INCLUDED
+#endif // #ifndef VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
