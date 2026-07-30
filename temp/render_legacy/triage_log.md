@@ -124,3 +124,57 @@ DEAD (zero symbol AND zero string evidence in the shipped exe):
 - facade/ editor-only: `sources/editor_draw_screen_lines_command.cpp`,
   `sources/editor_draw_3d_screen_lines_command.cpp` (editor paths stripped from
   the shipped build).
+
+## DEAD-bucket sweep (2026-07-31; 195 rows verified, 170 retired, 25 overturned)
+
+Retired families (zero symbol AND zero string evidence in the shipped exe;
+per-function source-file list from match.db used as ground truth; every family
+has its newer legacy heir still queued where one exists):
+
+- `blender_*` (30): D3D9 shader system; heirs are the queued `effect_*` files
+  (`blender_forward_system`->`effect_forward_system`, `blender_light_mask`->
+  `effect_light_mask`, `blender_deffer*`->`effect_gstage_default_materials`,
+  `blender_compiler`->`effect_compiler`, `blender_tree`->speedtree effects).
+  `blender_combine.{cpp,h}` KEPT as the only surviving reading reference for
+  the ancestor-less `stage_resolve_lighting`/`effect_resolve_lighting`.
+- `base/sources/command_*` (40): pre-facade per-operation commands; shipped
+  design is `functor_command`/`functor_with_big_buffer_to_copy_command`.
+- `editor_*` (16): zero `editor::` symbols; `facade/sources/editor_renderer.cpp`
+  stays parked separately for a hypothetical editor restore.
+- terrain (19): render-side terrain subsystem retired in the target; only
+  `effect_gstage_terrain_materials`/`effect_post_process_terrain_debug_materials`
+  survive and have direct queued ancestors. Ports of files that include
+  terrain headers drop those branches.
+- old `effect_*` generation (19): `effect_deffer*`/`effect_light_spot`/
+  `effect_notexture`/`effect_tree`/`effect_radiance_volume_*` (bodies fully
+  commented out) - heirs queued (`effect_gstage_default_materials`,
+  `effect_light_propagation_volumes`, ...).
+- 46 singles: DX9 device/caps/state era (`hw_*`, `render_device*`,
+  `simulator_states.cpp`), orphan headers of already-retired `.cpp`s
+  (`index/vertex_stream.h`, `dds.h`, `scene_render.h`, stage headers),
+  `render_options.h` (->`options.h`), broken-at-write-time stubs
+  (`shader_cache.h`, `parallel_light_effect.h` - folded into `effect_sun`),
+  `render_model_composite` (different shipped design), CPU skinning (target
+  ships GPU-only), editor gizmos (`transform_control*`), platform dispatch
+  (`platform_api_*`), pre-facade world/scene (`render_base_world.cpp`,
+  `scene_renderer_impl.cpp`), `render_output_window_base.h`,
+  `render_statistics.h`, `float4x4b.h`, `engine_options.h` (body fully in
+  comment - consumers drop the include), `model_converter.h`.
+
+Overturned -> PORT (renamed-effect ancestors, feed wave 4):
+`effect_light_direct.h` -> `effect_sun.cpp`;
+`effect_post_process_antialiasing.{cpp,h}`+`effect_post_process_aliasing.cpp`
+-> `effect_post_process_sraa.cpp` (cross-check `effect_temporal_antialiasing`);
+`effect_post_process_deferred_transparency.{cpp,h}` -> `effect_translucency.cpp`;
+`effect_gather_sun_light_scattering_zone.{cpp,h}` -> `effect_god_rays.cpp`;
+`make_vcm_effect.{cpp,h}` -> `effect_motion_vectors_accumulation.cpp` (lower
+confidence; make_vcm shaders still ship).
+
+Overturned -> REFERENCE (held): `blender_combine.{cpp,h}` (resolve_lighting),
+`effect_light_direct.cpp`+`engine/effect_light_direct.h` (second reading for
+effect_sun), `core/{res_rt,res_constant_table,res_constant_buffer,constant,
+constant_bindings}.h`+`common/sources/res_common.h` (declaration headers for
+queued wave-3 res_* ports; also supply shader_constant member ordering),
+`core/dx11/gpu_timer.h` (D3D query idiom for statistics/event_query),
+`pix_event_wrapper` x4 (macro recognition while porting stages; target has
+zero PIX symbols - ported bodies DROP the scopes; retire with waves 4/5).
