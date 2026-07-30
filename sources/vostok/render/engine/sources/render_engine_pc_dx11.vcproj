@@ -2117,6 +2117,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_lighting_stage_skin_base_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_lighting_stage_skin_base_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
