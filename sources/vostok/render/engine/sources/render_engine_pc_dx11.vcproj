@@ -1297,6 +1297,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_view_mode.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_view_mode.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_visibility.cpp"
 			>
 		</File>
