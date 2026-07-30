@@ -924,6 +924,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\texture_pool.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
