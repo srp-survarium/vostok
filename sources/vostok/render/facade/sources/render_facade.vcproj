@@ -858,6 +858,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\scene_renderer.h"
+			>
+		</File>
+		<File
+			RelativePath=".\scene_renderer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\game_renderer.h"
 			>
 		</File>
