@@ -4,12 +4,12 @@
 #include <vostok/fixed_vector.h>
 #include <vostok/intrusive_ptr.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/render/core/res_texture.h>
 #include <vostok/render/core/resource_intrusive_base.h>
 
 namespace vostok {
 namespace render {
 
-class res_texture;
 class texture_slot;
 
 typedef intrusive_ptr<

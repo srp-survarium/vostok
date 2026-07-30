@@ -872,7 +872,19 @@
 			>
 		</File>
 		<File
+			RelativePath="..\res_texture.h"
+			>
+		</File>
+		<File
+			RelativePath="..\backend_handlers.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\backend_handlers.h"
 			>
 		</File>
 		<File
@@ -880,7 +892,15 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\res_texture.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\macros_extensions.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\shader_defines.h"
 			>
 		</File>
 		<File
