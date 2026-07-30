@@ -858,6 +858,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\game_renderer.h"
+			>
+		</File>
+		<File
+			RelativePath=".\game_renderer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\one_way_render_channel.h"
 			>
 		</File>
