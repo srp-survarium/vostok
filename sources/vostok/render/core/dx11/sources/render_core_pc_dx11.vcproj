@@ -968,6 +968,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\binary_shader_cook_data.h"
+			>
+		</File>
+		<File
 			RelativePath="..\binary_shader_key_type.h"
 			>
 		</File>
