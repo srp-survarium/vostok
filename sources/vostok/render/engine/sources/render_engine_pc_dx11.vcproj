@@ -1585,6 +1585,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_debug_tracer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_debug_tracer.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_forward_system.cpp"
 			>
 		</File>
