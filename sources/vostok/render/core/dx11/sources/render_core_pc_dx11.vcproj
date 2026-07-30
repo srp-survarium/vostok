@@ -1052,6 +1052,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\device_caps.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\res_texture.cpp"
 			>
 		</File>

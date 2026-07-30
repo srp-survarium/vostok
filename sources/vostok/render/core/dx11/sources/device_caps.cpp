@@ -5,9 +5,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/render/core/device_caps.h>
+#include <vostok/render/core/dx11/device_caps.h>
 
-static inline u32 cap_version( u32 a, u32 b)	
+static inline u32 cap_version( u32 a, u32 b)
 {
 	return a*10 + b;
 }
@@ -174,5 +174,5 @@ void device_caps::update()
 }
 
 
-} // namespace render 
-} // namespace vostok 
+} // namespace render
+} // namespace vostok
