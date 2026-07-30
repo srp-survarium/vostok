@@ -3,21 +3,10 @@
 
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/render_include.h>
+#include <vostok/render/core/state_utils.h>
 
 namespace vostok {
 namespace render {
-
-namespace state_utils {
-	bool operator==( D3D11_RASTERIZER_DESC const& left, D3D11_RASTERIZER_DESC const& right );
-	bool operator==( D3D11_DEPTH_STENCIL_DESC const& left, D3D11_DEPTH_STENCIL_DESC const& right );
-	bool operator==( D3D11_BLEND_DESC const& left, D3D11_BLEND_DESC const& right );
-	bool operator==( D3D11_SAMPLER_DESC const& left, D3D11_SAMPLER_DESC const& right );
-
-	u32 get_hash( D3D11_RASTERIZER_DESC const& desc );
-	u32 get_hash( D3D11_DEPTH_STENCIL_DESC const& desc );
-	u32 get_hash( D3D11_BLEND_DESC const& desc );
-	u32 get_hash( D3D11_SAMPLER_DESC const& desc );
-} // namespace state_utils
 
 using state_utils::operator==;
 
