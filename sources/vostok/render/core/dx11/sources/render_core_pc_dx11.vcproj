@@ -896,6 +896,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\render_target.h"
+			>
+		</File>
+		<File
 			RelativePath="..\shader_constant_buffer.h"
 			>
 		</File>
@@ -941,6 +945,10 @@
 		</File>
 		<File
 			RelativePath="..\..\res_render_output.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\render_target.h"
 			>
 		</File>
 		<File
