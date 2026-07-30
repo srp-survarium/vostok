@@ -1705,6 +1705,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_debug_editor_wireframe.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_debug_editor_wireframe.h"
+			>
+		</File>
+		<File
 			RelativePath=".\obb_light_effect.h"
 			>
 		</File>
