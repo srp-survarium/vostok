@@ -1909,6 +1909,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fill_environment_probe_face.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fill_environment_probe_face.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
