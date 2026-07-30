@@ -892,6 +892,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\shader_macros.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
