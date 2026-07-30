@@ -768,6 +768,72 @@
 	</References>
 	<Files>
 		<File
+			RelativePath=".\pch.cpp"
+			>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|x64"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug|x64"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release(static)|Win32"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release(static)|x64"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug(static)|Win32"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Debug(static)|x64"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Master Gold|Win32"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Master Gold|x64"
+				>
+				<Tool Name="VCCLCompilerTool" UsePrecompiledHeader="1" />
+			</FileConfiguration>
+		</File>
+		<File
+			RelativePath=".\pch.h"
+			>
+		</File>
+		<File
+			RelativePath=".\logic_allocator.h"
+			>
+		</File>
+		<File
+			RelativePath=".\editor_allocator.h"
+			>
+		</File>
+		<File
 			RelativePath="..\ambient_volume_properties.h"
 			>
 		</File>
