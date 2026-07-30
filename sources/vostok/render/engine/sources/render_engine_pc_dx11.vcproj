@@ -1601,6 +1601,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gbuffer_depth.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gbuffer_depth.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_forward_system.cpp"
 			>
 		</File>
