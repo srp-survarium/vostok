@@ -1753,6 +1753,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\render_model_grass.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\render_model_grass.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_surface.h"
 			>
 		</File>
