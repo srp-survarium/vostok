@@ -81,6 +81,23 @@ its owner exists measures noise. Order:
    `temp/render_legacy/triage_log.md` only when retiring (DEAD / DX9 /
    incompatible-interface).
 
+## Waves (dispatch plan; one agent = disjoint file set, orchestrator builds+commits)
+
+| wave | scope (stub counts at baseline) | status |
+|---|---|---|
+| 1 | facade: entry_point+world (me), channel+stage_types, scene_renderer (46), debug_renderer+commands (37), game/ui renderers+commands (~25) | DISPATCHED |
+| 2 | engine roots: render_engine_world_pc_dx11 (115, +legacy render_engine_world_dx11.cpp merge), renderer (27), scene (65), renderer_context (17), system_renderer (18) | |
+| 3 | core/dx11 owners: resource_manager (80), options (26), custom_config (29), effect_manager (18+inline 114), backend+handlers (31), device (13), effect_compiler (15+9) | |
+| 4 | stages: visibility/gbuffer/lights/shadow/postprocess/LPV/distortion/rain... (~200) | |
+| 5 | models+cookers: render_model_* / *_cooker / skeleton / static (~150) | |
+| 6 | world systems: grass (35+12), speedtree (13), clouds (15), radiance_volume (26), lights_db, decals, particles, statistics (33) | |
+| 7 | core res_* / state_* / shader_* helpers + remaining engine helpers | |
+| 8 | sweep: culling, UNMAPPED/PORT rows, retire DEAD+DX9+editor with triage entries | |
+
+Wave rule: a wave dispatches only after its owners' wave compiled green; agents
+never build (orchestrator builds centrally, fixes trivial breaks, requeues bad
+ports).
+
 ## Completion gates (step 7)
 
 - `temp/render_structure_queue/` empty (already true).
