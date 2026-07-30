@@ -6,6 +6,7 @@
 #include <vostok/math_float4.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/render/culling/aab_rect.h>
 #include <vostok/render/culling/portal_sector_structure.h>
 #include <vostok/resources_unmanaged_resource.h>
 
@@ -38,7 +39,6 @@ class system_renderer;
 
 namespace culling {
 
-class aab_rect;
 class sector_double_query_preventer;
 
 class portal_sector_system : public resources::unmanaged_resource {
