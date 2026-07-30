@@ -900,6 +900,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_signature.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\api.h"
 			>
 		</File>
