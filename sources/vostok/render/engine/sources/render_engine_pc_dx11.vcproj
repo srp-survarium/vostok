@@ -1241,6 +1241,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sphere_occluder_geometry.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_material_base.cpp"
 			>
 		</File>
