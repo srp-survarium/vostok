@@ -1197,6 +1197,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_debug.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_debug.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_forward.cpp"
 			>
 		</File>
