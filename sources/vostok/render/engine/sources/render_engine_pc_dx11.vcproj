@@ -1609,6 +1609,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_system_ui.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_system_ui.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_aberration.cpp"
 			>
 		</File>
