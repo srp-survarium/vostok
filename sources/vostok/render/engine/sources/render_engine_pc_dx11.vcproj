@@ -2189,6 +2189,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_post_process_mlaa.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_post_process_mlaa.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
