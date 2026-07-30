@@ -21,7 +21,7 @@ class queries_result;
 namespace render {
 
 class effect_descriptor;
-class effect_loader;
+struct effect_loader;
 struct effect_options_descriptor;
 
 class effect_manager : public quasi_singleton<effect_manager> {
