@@ -1649,6 +1649,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_show_miplevel.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_show_miplevel.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
