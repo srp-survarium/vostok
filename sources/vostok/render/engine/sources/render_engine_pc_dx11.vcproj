@@ -1693,6 +1693,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_complex_post_process_blend.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_editor_gbuffer_to_screen.cpp"
 			>
 		</File>

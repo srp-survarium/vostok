@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "effect_blur.h"
+#include "effect_complex_post_process_blend.h"
 #include "renderer_register_effects.h"
 
 namespace vostok {

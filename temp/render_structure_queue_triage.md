@@ -47,3 +47,8 @@ Reset from `binaries/structure/target/` on 2026-07-29 for a clean-room rebuild.
   sample counts 3 through 25; the synthetic `<0>` record is the same class shape.
   The target debug symbols preserve values but not the declared integral parameter
   type, so `u32` follows the engine's local size/count template convention.
+- `headers/vostok/render/effect_complex_post_process_blend_{0,0,0;0,0,1;1,0,0;1,0,1;1,1,0;1,1,1}_.h`
+  and `sources/vostok/render/engine/sources/effect_complex_post_process_blend.h`
+  | merged into `sources/vostok/render/engine/sources/effect_complex_post_process_blend.h`
+  | the target mangled names prove one primary template with three boolean
+  parameters; the six generated records are emitted specializations, not classes.
