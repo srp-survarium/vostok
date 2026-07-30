@@ -885,6 +885,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\cloud_simulation.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\clouds.cpp"
 			>
 		</File>
