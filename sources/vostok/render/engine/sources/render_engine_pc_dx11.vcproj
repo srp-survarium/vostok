@@ -877,6 +877,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\cloud_interp_textures.h"
+			>
+		</File>
+		<File
 			RelativePath=".\cloud_noise.cpp"
 			>
 		</File>
@@ -1038,6 +1042,18 @@
 		</File>
 		<File
 			RelativePath=".\stage_ambient_occlusion.h"
+			>
+		</File>
+		<File
+			RelativePath=".\sphere_geometry.h"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_clouds.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_clouds.h"
 			>
 		</File>
 		<File
