@@ -21,16 +21,6 @@ struct lod_entry;
 class renderer_context;
 class speedtree_tree_component;
 
-typedef resources::resource_ptr<
-	speedtree_instance,
-	resources::unmanaged_intrusive_base
-> speedtree_instance_ptr;
-
-typedef resources::resource_ptr<
-	speedtree_tree_base,
-	resources::unmanaged_intrusive_base
-> speedtree_tree_base_ptr;
-
 struct speedtree_forest {
 	struct tree_render_info {
 		tree_render_info(
