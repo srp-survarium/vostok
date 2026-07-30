@@ -936,6 +936,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\effect_manager.h"
+			>
+		</File>
+		<File
 			RelativePath="..\state_cache.h"
 			>
 		</File>
@@ -1013,6 +1017,10 @@
 		</File>
 		<File
 			RelativePath="..\..\res_effect.h"
+			>
+		</File>
+		<File
+			RelativePath="..\..\effect_manager.h"
 			>
 		</File>
 		<File
