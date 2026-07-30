@@ -1133,6 +1133,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sector_double_query_preventer.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\sector_double_query_preventer.h"
+			>
+		</File>
+		<File
 			RelativePath=".\trample_desc.h"
 			>
 		</File>
