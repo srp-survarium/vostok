@@ -1,19 +1,18 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\facade\sources\ui_renderer.h"
+#include <vostok/render/facade/sources/ui_renderer.h>
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- ui::renderer::renderer(
+ui::renderer::renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
 	engine::world&				engine_world
 )
+	: m_channel( channel ),
+	  m_render_engine_world( engine_world ),
+	  m_allocator( allocator )
 {
 	// FUNCTION BODY[0x7372b0]: 0
 	// ******
@@ -37,7 +36,7 @@ void ui::renderer::draw_vertices(
 void ui::renderer::draw_text(
 	base_scene_view_ptr const&		scene_view,
 	pcstr const&					text,
-	ui::font const&					font,
+	vostok::ui::font const&			font,
 	float2 const&					position,
 	math::color const&				text_color,
 	math::color const&				selection_color,
@@ -72,13 +71,6 @@ void ui::renderer::draw_text(
 	// <0x737358>|0x088|+0x05f:'67'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::render::ui::vertex*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
