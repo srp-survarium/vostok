@@ -1148,6 +1148,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\res_state.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\res_xs.h"
 			>
 		</File>
@@ -1280,7 +1284,7 @@
 			>
 		</File>
 		<File
-			RelativePath=".\res_state.h"
+			RelativePath="..\res_state.h"
 			>
 		</File>
 	</Files>
