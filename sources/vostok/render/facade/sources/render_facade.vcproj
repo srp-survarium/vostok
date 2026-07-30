@@ -874,6 +874,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\ui_draw_vertices_command.h"
+			>
+		</File>
+		<File
+			RelativePath=".\ui_draw_vertices_command.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_renderer.h"
 			>
 		</File>

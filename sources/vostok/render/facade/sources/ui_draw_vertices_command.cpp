@@ -1,15 +1,11 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\facade\sources\ui_draw_vertices_command.h"
+#include <vostok/render/facade/sources/ui_draw_vertices_command.h>
 
 namespace vostok {
 namespace render {
 
 // STATE[STUB]
- ui::draw_vertices_command::draw_vertices_command(
+ui::draw_vertices_command::draw_vertices_command(
 	engine::world&					render_engine_world,
 	base_scene_view_ptr const&		scene_view,
 	ui::vertex const* const			begin,
@@ -18,6 +14,12 @@ namespace render {
 	const u32						primitives_type,
 	const u32						points_type
 )
+	: base_command( true ),
+	  m_vertices( allocator, begin, end ),
+	  m_render_engine_world( render_engine_world ),
+	  m_scene_view( scene_view ),
+	  m_primitives_type( primitives_type ),
+	  m_points_type( points_type )
 {
 	// FUNCTION BODY[0x7711b0]: 1
 	// <0>
@@ -41,13 +43,6 @@ void ui::draw_vertices_command::defer_execution( )
 	// <0x771190>|0x020|+0x010:'49'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	vostok::render::ui::vertex*
-	// 	iterator_type;
-
-	// ******
 
 } // namespace render
 } // namespace vostok
