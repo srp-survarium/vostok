@@ -896,6 +896,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\texture_cook.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
