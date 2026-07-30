@@ -772,6 +772,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\environment_probe_properties.h"
+			>
+		</File>
+		<File
 			RelativePath="..\decal_properties.h"
 			>
 		</File>

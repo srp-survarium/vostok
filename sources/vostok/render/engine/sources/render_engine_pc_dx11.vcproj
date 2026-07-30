@@ -865,6 +865,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\environment_probe.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\environment_probe.h"
+			>
+		</File>
+		<File
 			RelativePath=".\box_geometry.cpp"
 			>
 		</File>
