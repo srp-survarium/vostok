@@ -2045,6 +2045,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_god_rays.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_god_rays.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
