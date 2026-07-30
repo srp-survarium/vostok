@@ -826,6 +826,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\cloud_key.h"
+			>
+		</File>
+		<File
 			RelativePath=".\logic_allocator.h"
 			>
 		</File>

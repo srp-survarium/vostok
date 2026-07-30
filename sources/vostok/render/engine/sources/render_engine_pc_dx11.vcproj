@@ -961,10 +961,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\cloud_key_parameters.h"
-			>
-		</File>
-		<File
 			RelativePath=".\cloud_interp_textures.h"
 			>
 		</File>
