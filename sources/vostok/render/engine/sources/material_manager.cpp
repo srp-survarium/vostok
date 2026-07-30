@@ -1,8 +1,28 @@
 #include "pch.h"
+#include "effect_material_base.h"
 #include "material_manager.h"
 
 namespace vostok {
 namespace render {
+
+class material_shader_base : public effect_material_base {
+	material_shader_base(
+		enum_vertex_input_type vertex_type,
+		material_ptr material
+	) :
+		m_vertex_type( vertex_type ),
+		m_mtl( material )
+	{
+	}
+
+public:
+	virtual ~material_shader_base( ) { }
+
+private:
+	u32 m_vertex_type;
+	material_ptr m_mtl;
+	res_effect_ptr m_shader;
+};
 
 material_manager::material_manager( ) :
 	m_watcher_materials_subscribe_id			( 0 ),
