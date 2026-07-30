@@ -864,6 +864,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_texture.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\api.h"
 			>
 		</File>
