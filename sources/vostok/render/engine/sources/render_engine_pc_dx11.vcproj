@@ -921,6 +921,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\radiance_volume.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\radiance_volume.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_engine_world_pc_dx11.cpp"
 			>
 		</File>
