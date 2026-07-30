@@ -1209,6 +1209,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree.h"
 			>
 		</File>
