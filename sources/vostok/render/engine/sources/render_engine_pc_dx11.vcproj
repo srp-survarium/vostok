@@ -1213,6 +1213,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_visibility.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_visibility.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_material_base.cpp"
 			>
 		</File>
