@@ -1213,6 +1213,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_pre_lighting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_pre_lighting.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_sun.cpp"
 			>
 		</File>
