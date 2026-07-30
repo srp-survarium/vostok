@@ -940,6 +940,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_constant_slot.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_declaration.h"
 			>
 		</File>
