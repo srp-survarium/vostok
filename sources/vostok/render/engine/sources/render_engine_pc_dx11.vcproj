@@ -1933,6 +1933,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_fstage_blend_subuv_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_fstage_blend_subuv_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
