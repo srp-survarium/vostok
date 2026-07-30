@@ -976,6 +976,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\xs_data.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
