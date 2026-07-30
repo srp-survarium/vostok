@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vostok/render/core/device.h>
+#include <vostok/render/core/dx11/device_caps.h>
 
 vostok::command_line::key g_debug_render_device(
 	"debug_dx",
