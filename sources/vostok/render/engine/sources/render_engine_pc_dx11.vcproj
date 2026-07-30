@@ -1221,6 +1221,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_particles.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_particles.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_lights.cpp"
 			>
 		</File>
