@@ -1601,6 +1601,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_system_colored.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_system_colored.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_aberration.cpp"
 			>
 		</File>
