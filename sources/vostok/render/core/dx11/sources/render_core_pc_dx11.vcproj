@@ -956,6 +956,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\state_descriptor.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
