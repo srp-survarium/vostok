@@ -1,0 +1,28 @@
+#ifndef VOSTOK_RENDER_ENGINE_EFFECT_MOTION_VECTORS_ACCUMULATION_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_EFFECT_MOTION_VECTORS_ACCUMULATION_H_INCLUDED
+
+#include "effect_material_base.h"
+
+namespace vostok {
+namespace render {
+
+class custom_config_value;
+class effect_compiler;
+
+class effect_motion_vectors_accumulation : public effect_material_base {
+public:
+	effect_motion_vectors_accumulation( ) { }
+	virtual ~effect_motion_vectors_accumulation( ) { }
+
+	virtual void compile(
+		effect_compiler&			compiler,
+		custom_config_value const&	config
+	) override;
+};
+
+STATIC_SIZE_ASSERT( effect_motion_vectors_accumulation, 0x4 );
+
+} // namespace render
+} // namespace vostok
+
+#endif // #ifndef VOSTOK_RENDER_ENGINE_EFFECT_MOTION_VECTORS_ACCUMULATION_H_INCLUDED
