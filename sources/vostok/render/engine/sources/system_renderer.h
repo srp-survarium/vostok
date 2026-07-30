@@ -7,18 +7,13 @@
 #include "render_model_instance_impl.h"
 #include "render_target.h"
 #include "speedtree_instance.h"
+#include "vertex_formats.h"
 
 namespace vostok {
 namespace render {
 
 class renderer_context;
 class untyped_buffer;
-
-namespace vertex_formats {
-
-struct TL;
-
-} // namespace vertex_formats
 
 class system_renderer : public quasi_singleton< system_renderer > {
 public:
