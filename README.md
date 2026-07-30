@@ -43,7 +43,7 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `survarium`     |     5 |     14 / 22 (63.6%) |     14 / 22 (63.6%) | 86.3% |     86.3% |
 | `ai_navigation` |     3 |     13 / 14 (92.9%) |     13 / 14 (92.9%) | 98.1% |     98.1% |
 
-_Updated 2026-07-30 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
+_Updated 2026-07-31 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
