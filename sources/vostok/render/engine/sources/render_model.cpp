@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/render/culling/possible_sectors_holder.h>
 #include "render_model.h"
 #include "render_model_instance_impl.h"
 #include "render_surface.h"
