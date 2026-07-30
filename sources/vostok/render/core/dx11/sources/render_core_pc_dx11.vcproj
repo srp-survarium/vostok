@@ -936,6 +936,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\index_buffer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
