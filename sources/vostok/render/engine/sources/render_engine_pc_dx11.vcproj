@@ -1285,6 +1285,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\fog_box_geometry.h"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_volume_fog.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_volume_fog.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_visibility.cpp"
 			>
 		</File>
