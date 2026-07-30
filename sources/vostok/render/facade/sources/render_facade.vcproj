@@ -772,6 +772,14 @@
 			>
 		</File>
 		<File
+			RelativePath="..\decal_properties.h"
+			>
+		</File>
+		<File
+			RelativePath="..\decal_properties_inline.h"
+			>
+		</File>
+		<File
 			RelativePath="..\common_types.h"
 			>
 		</File>
