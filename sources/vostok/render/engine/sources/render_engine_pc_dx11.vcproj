@@ -1901,6 +1901,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_eye_adaptation.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_eye_adaptation.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
