@@ -964,6 +964,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_constant_bindings.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\shader_constant_slot.h"
 			>
 		</File>
