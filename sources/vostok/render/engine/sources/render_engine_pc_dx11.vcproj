@@ -1017,6 +1017,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_ambient_occlusion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_ambient_occlusion.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_decals_accumulate.cpp"
 			>
 		</File>
