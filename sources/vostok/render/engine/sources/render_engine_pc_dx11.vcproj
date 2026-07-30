@@ -1761,6 +1761,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sky_default_material_effect.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\sky_default_material_effect.h"
+			>
+		</File>
+		<File
 			RelativePath=".\depth_accumulate_material_effect.cpp"
 			>
 		</File>
