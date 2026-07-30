@@ -2229,6 +2229,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_resolve_lighting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_resolve_lighting.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
