@@ -1625,6 +1625,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_model_ghost.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_model_ghost.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
