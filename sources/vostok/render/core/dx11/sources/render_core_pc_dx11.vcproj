@@ -904,6 +904,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\texture_cook_register.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
