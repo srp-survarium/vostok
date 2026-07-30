@@ -1269,6 +1269,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_translucency.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_translucency.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_visibility.cpp"
 			>
 		</File>
