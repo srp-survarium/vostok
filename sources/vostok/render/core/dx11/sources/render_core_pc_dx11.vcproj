@@ -944,6 +944,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\res_vs_hw.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
