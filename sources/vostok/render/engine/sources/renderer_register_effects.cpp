@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "capsule_light_effect.h"
 #include "effect_blur.h"
 #include "effect_complex_post_process_blend.h"
 #include "obb_light_effect.h"
