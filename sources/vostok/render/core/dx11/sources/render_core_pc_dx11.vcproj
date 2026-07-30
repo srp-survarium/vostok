@@ -944,6 +944,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_constant_source.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_declaration.h"
 			>
 		</File>
