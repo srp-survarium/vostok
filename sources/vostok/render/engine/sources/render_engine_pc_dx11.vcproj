@@ -1741,6 +1741,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\capsule_light_effect.h"
+			>
+		</File>
+		<File
 			RelativePath=".\obb_light_effect.h"
 			>
 		</File>
