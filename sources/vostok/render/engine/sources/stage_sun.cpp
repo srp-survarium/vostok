@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "convex_volume.h"
 #include "stage_sun.h"
 
 namespace vostok {
