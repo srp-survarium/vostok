@@ -2173,6 +2173,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_post_process_downsample_frame.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_post_process_downsample_frame.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
