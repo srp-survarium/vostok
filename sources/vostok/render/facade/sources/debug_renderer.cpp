@@ -1,20 +1,19 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 29.07.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
-#include "vostok\render\facade\sources\debug_renderer.h"
+#include <vostok/render/facade/sources/debug_renderer.h>
 
 namespace vostok {
 namespace render {
 namespace debug {
 
 // STATE[STUB]
- renderer::renderer(
+renderer::renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
 	engine::world&				engine_world
 )
+	: m_render_engine_world( engine_world ),
+	  m_channel( channel ),
+	  m_allocator( allocator )
 {
 	// FUNCTION BODY[0x771310]: 0
 	// ******
@@ -117,7 +116,7 @@ void renderer::draw_cross(
 // STATE[STUB]
 void renderer::draw_triangle(
 	base_scene_ptr const&		scene,
-	const vertex_colored[3]&	vertices,
+	vertex_colored const (&vertices)[3],
 	const bool					use_depth
 )
 {
@@ -832,17 +831,6 @@ void renderer::draw_lines(
 	// buffer_vector< u16 > 			temp_indices
 	// ******
 
-	// TYPEDEFS
-	// typedef
-	// 	buffer_vector< vertex_colored >
-	// 	TempVertices;
-
-	// typedef
-	// 	buffer_vector< u16 >
-	// 	TempIndices;
-
-	// ******
-
 	// FUNCTION BODY[0x771330]: 24
 	// <0>
 	// <1>
@@ -912,25 +900,6 @@ void renderer::draw_lines(
 	// <0x771e7c>|0x00c|+0x07c:'881'
 	// ******
 }
-
-	// TYPEDEFS
-	// typedef
-	// 	u16*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::render::vertex_colored*
-	// 	iterator_type;
-
-	// typedef
-	// 	vostok::vectora< u16 >
-	// 	indices_type;
-
-	// typedef
-	// 	vostok::vectora< vostok::render::vertex_colored >
-	// 	vertices_type;
-
-	// ******
 
 } // namespace debug
 } // namespace render

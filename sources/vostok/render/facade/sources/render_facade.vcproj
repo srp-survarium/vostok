@@ -858,6 +858,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\debug_renderer.h"
+			>
+		</File>
+		<File
+			RelativePath=".\debug_renderer.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\scene_renderer.h"
 			>
 		</File>
