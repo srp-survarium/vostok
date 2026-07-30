@@ -1,5 +1,5 @@
-#ifndef RENDER_LOD_RENDER_INFO_H_INCLUDED
-#define RENDER_LOD_RENDER_INFO_H_INCLUDED
+#ifndef VOSTOK_RENDER_ENGINE_LOD_RENDER_INFO_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_LOD_RENDER_INFO_H_INCLUDED
 
 #include "lod_entry.h"
 
@@ -7,14 +7,20 @@ namespace vostok {
 namespace render {
 
 struct lod_render_info {
-	inline						lod_render_info	( ) : lods( NULL ), num_lods( 0 ) { /* no source */ }
+	lod_render_info( ) : lods( 0 ), num_lods( 0 ) { }
 
-	inline	bool				has_geometry	( u32 arg_0 ) const { return false; }
+	bool has_geometry( u32 lod_index ) const
+	{
+		return lods && lod_index < num_lods && lods[lod_index].num_indices != 0;
+	}
 
-	inline	lod_entry const*	is_active		( u32 arg_0 ) const { return NULL; }
+	lod_entry const* is_active( u32 lod_index ) const
+	{
+		return has_geometry( lod_index ) ? &lods[lod_index] : 0;
+	}
 
-	/* 0x0000 */	lod_entry*		lods;
-	/* 0x0004 */	u32				num_lods;
+	lod_entry* lods;
+	u32 num_lods;
 }; // struct lod_render_info
 
 STATIC_SIZE_ASSERT(lod_render_info, 0x8);
@@ -22,4 +28,4 @@ STATIC_SIZE_ASSERT(lod_render_info, 0x8);
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef RENDER_LOD_RENDER_INFO_H_INCLUDED
+#endif // VOSTOK_RENDER_ENGINE_LOD_RENDER_INFO_H_INCLUDED

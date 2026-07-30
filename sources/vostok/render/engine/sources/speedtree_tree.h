@@ -1,24 +1,45 @@
-#ifndef RENDER_SPEEDTREE_TREE_H_INCLUDED
-#define RENDER_SPEEDTREE_TREE_H_INCLUDED
+#ifndef VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_H_INCLUDED
+#define VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_H_INCLUDED
 
+#include <speedtree/core/core.h>
+#include <vostok/render/facade/vertex_input_type.h>
 #include "lod_render_info.h"
+#include "material.h"
+#include "material_effects_instance.h"
+#include "render_geometry.h"
 #include "speedtree_tree_base.h"
-
-#include <vostok/resources_resource_ptr.h>
 
 namespace vostok {
 namespace render {
 
-class material_effects_instance;
-class speedtree_tree_component;
+class renderer_context;
+class speedtree_tree;
 class speedtree_tree_component_billboard;
 
-typedef resources::resource_ptr<
-	material_effects_instance,
-	resources::unmanaged_intrusive_base
-> material_effects_instance_ptr;
+class speedtree_tree_component {
+public:
+	explicit speedtree_tree_component( speedtree_tree& parent );
+	virtual ~speedtree_tree_component( );
 
-class speedtree_tree : public speedtree_tree_base , public SpeedTree::CCore {
+	virtual void set_material( material_ptr material ) = 0;
+	virtual void set_default_material( ) = 0;
+	virtual void render( lod_entry const* lod, renderer_context* context ) = 0;
+	virtual SpeedTree::EGeometryType get_geometry_type( ) const = 0;
+	virtual enum_vertex_input_type get_vertex_input_type( ) = 0;
+
+	void set_material_effects( material_effects_instance_ptr instance, pcstr material_name );
+	material_effects& get_material_effects( );
+
+	speedtree_tree* m_parent;
+	render_geometry m_render_geometry;
+
+protected:
+	material_effects_instance_ptr m_materail_effects_instance;
+};
+
+STATIC_SIZE_ASSERT( speedtree_tree_component, 0x70 );
+
+class speedtree_tree : public speedtree_tree_base, public SpeedTree::CCore {
 public:
 	enum component_type {
 		branch,
@@ -31,7 +52,7 @@ public:
 										speedtree_tree		( pcvoid data, u32 size );
 	virtual								~speedtree_tree		( );
 
-	inline	lod_render_info const&		get_lod_render_info	( SpeedTree::EGeometryType arg_0 ) const { return m_lod_render_info[ 0 ]; }
+	inline	lod_render_info const&		get_lod_render_info	( SpeedTree::EGeometryType type ) const { return m_lod_render_info[ type ]; }
 			lod_render_info&			get_lod_render_info	( SpeedTree::EGeometryType type );
 
 			void						set_material_effects(
@@ -43,6 +64,11 @@ public:
 protected:
 			void						load				( pcvoid data, u32 size );
 
+private:
+	friend class speedtree_tree_component;
+	friend struct speedtree_cook;
+	friend struct speedtree_forest;
+
 	/* 0x0000 */	/* speedtree_tree_base */
 	/* 0x0120 */	/* SpeedTree::CCore */
 	/* 0x0f44 */	speedtree_tree_component*				m_branch_component;
@@ -50,7 +76,7 @@ protected:
 	/* 0x0f4c */	speedtree_tree_component*				m_leafmesh_component;
 	/* 0x0f50 */	speedtree_tree_component*				m_leafcard_component;
 	/* 0x0f54 */	speedtree_tree_component_billboard*		m_billboard_component;
-	/* 0x0f58 */	lod_render_info							m_lod_render_info[6];
+	/* 0x0f58 */	lod_render_info							m_lod_render_info[SpeedTree::GEOMETRY_TYPE_COUNT];
 }; // class speedtree_tree
 
 STATIC_SIZE_ASSERT(speedtree_tree, 0xF88);
@@ -58,4 +84,4 @@ STATIC_SIZE_ASSERT(speedtree_tree, 0xF88);
 } // namespace render
 } // namespace vostok
 
-#endif // #ifndef RENDER_SPEEDTREE_TREE_H_INCLUDED
+#endif // VOSTOK_RENDER_ENGINE_SPEEDTREE_TREE_H_INCLUDED
