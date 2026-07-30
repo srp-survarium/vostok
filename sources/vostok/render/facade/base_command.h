@@ -28,6 +28,8 @@ public:
 	u32 remove_frame_id;
 };
 
+STATIC_SIZE_ASSERT( base_command, 0x54 );
+
 } // namespace render
 } // namespace vostok
 

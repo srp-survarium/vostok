@@ -18,6 +18,8 @@ protected:
 	noncopyable_protected const& operator=( noncopyable_protected const& ) { return *this; }
 };
 
+STATIC_SIZE_ASSERT( noncopyable_protected, 0x1 );
+
 class res_texture :
 	public resource_intrusive_base,
 	public noncopyable_protected

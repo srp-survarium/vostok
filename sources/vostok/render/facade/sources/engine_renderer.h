@@ -27,6 +27,9 @@ private:
 };
 
 } // namespace engine
+
+STATIC_SIZE_ASSERT( engine::renderer, 0x4 );
+
 } // namespace render
 } // namespace vostok
 

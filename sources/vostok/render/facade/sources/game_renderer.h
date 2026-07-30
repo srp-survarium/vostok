@@ -93,6 +93,10 @@ private:
 };
 
 } // namespace game
+
+STATIC_SIZE_ASSERT( game::renderer, 0x14 );
+STATIC_SIZE_ASSERT( game::renderer::draw_scene_params, 0x20 );
+
 } // namespace render
 } // namespace vostok
 

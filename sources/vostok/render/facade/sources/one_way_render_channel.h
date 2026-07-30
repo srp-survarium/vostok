@@ -120,6 +120,9 @@ public:
 	~one_way_render_channel( ) { }
 };
 
+STATIC_SIZE_ASSERT( one_way_render_channel, 0xb8 );
+STATIC_SIZE_ASSERT( one_way_render_channel::null_render_command, 0x54 );
+
 } // namespace render
 } // namespace vostok
 
