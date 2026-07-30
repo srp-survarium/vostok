@@ -4,21 +4,20 @@
 namespace vostok {
 namespace render {
 
-inline decal_properties::decal_properties( ) :
-	transform							( math::float4x4( ).identity( ) ),
-	material							( 0 ),
-	width_height_far_distance			( 0.5f, 0.5f, 0.5f ),
-	alpha_angle							( -1.0f ),
-	clip_angle							( -1.0f ),
-	draw_priority						( 0.0f ),
-	projection_on_terrain_geometry		( true ),
-	projection_on_static_geometry		( true ),
-	projection_on_speedtree_geometry	( true ),
-	projection_on_skeleton_geometry		( true ),
-	projection_on_particle_geometry		( true )
+inline decal_properties::decal_properties( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x68b70]
+	transform							= math::float4x4().identity();
+	material							= NULL;
+	width_height_far_distance			= 0.5f * float3(1.0f, 1.0f, 1.0f);
+	alpha_angle							= -1.0f;
+	clip_angle							= -1.0f;
+	draw_priority						= 0.0f;
+	projection_on_terrain_geometry		= true;
+	projection_on_static_geometry		= true;
+	projection_on_speedtree_geometry	= true;
+	projection_on_skeleton_geometry		= true;
+	projection_on_particle_geometry		= true;
 }
 
 inline decal_properties::decal_properties(

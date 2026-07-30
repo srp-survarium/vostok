@@ -34,15 +34,6 @@ public:
 
 public:
 	inline				draw_lines_command	(
-							memory::base_allocator& allocator,
-							scene_ptr const& scene,
-							engine::world& renderer,
-							vertices_type const& vertices,
-							indices_type const& indices,
-							bool use_depth = true
-						);
-
-	inline				draw_lines_command	(
 							scene_ptr const& scene,
 							engine::world& renderer,
 							memory::base_allocator& allocator,
@@ -51,27 +42,6 @@ public:
 							indices_type const& indices,
 							bool use_depth = true
 						);
-
-	template < int vertex_count, int index_count >
-	inline				draw_lines_command	(
-							scene_ptr const& scene,
-							engine::world& renderer,
-							memory::base_allocator& allocator,
-							vertex_colored const ( &vertices )[ vertex_count ],
-							u16 const ( &indices )[ index_count ],
-							bool use_depth = true
-						);
-	template < template < typename > class container_type >
-	inline				draw_lines_command	(
-							scene_ptr const& scene,
-							engine::world& renderer,
-							memory::base_allocator& allocator,
-							container_type < vertex_colored > const& vertices,
-							container_type < u16 > const& indices,
-							bool use_depth = true
-						);
-	virtual	void		execute				( );
-	virtual	void		defer_execution		( );
 
 private:
 	vertices_type		m_vertices;

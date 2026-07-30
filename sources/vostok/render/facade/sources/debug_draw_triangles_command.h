@@ -26,7 +26,6 @@ public:
 	typedef vectora< vertex_colored > vertices_type;
 	typedef vectora< u16 > indices_type;
 
-	// STATE[STUB]
 	inline draw_triangles_command(
 		base_scene_ptr const& scene,
 		engine::world& renderer,
@@ -41,10 +40,10 @@ public:
 		  m_renderer( renderer )
 	{
 		// FUNCTION BODY[0x16b80]
+		ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
 	}
 
 	template < int vertex_count, int index_count >
-	// STATE[STUB]
 	inline draw_triangles_command(
 		base_scene_ptr const& scene,
 		engine::world& renderer,

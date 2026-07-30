@@ -39,7 +39,6 @@ enum enum_render_stage_type
 }; // enum enum_render_stage_type
 
 enum_render_stage_type	string_to_stage_type	(pcstr stage_name);
-pcstr					stage_type_to_string	(enum_render_stage_type stage_type);
 
 } // namespace render
 } // namespace vostok

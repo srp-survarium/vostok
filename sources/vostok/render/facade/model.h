@@ -45,13 +45,11 @@ public:
 
 	virtual void update( )
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x4f210]
 	}
 
 	virtual bool get_locator( pcstr, model_locator_item& ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0xb4f50]
 		return false;
 	}
@@ -62,7 +60,6 @@ public:
 
 	virtual void get_bind_pose( float4x4*, u32 ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x38090]
 	}
 

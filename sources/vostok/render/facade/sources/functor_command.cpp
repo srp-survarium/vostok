@@ -4,7 +4,6 @@
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 functor_command::functor_command(
 	on_execute_type const& on_execute,
 	on_defer_execution_type const& on_defer_execution
@@ -14,18 +13,19 @@ functor_command::functor_command(
 	  m_on_defer_execution( on_defer_execution )
 {
 	// FUNCTION BODY[0x771260]
+	ASSERT				( on_execute );
 }
 
-// STATE[STUB]
 void functor_command::execute( )
 {
 	// FUNCTION BODY[0x771300]
+	m_on_execute		( );
 }
 
-// STATE[STUB]
 void functor_command::defer_execution( )
 {
 	// FUNCTION BODY[0x7712f0]
+	m_on_defer_execution( *this );
 }
 
 // STATE[STUB]

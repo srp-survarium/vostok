@@ -94,11 +94,7 @@ private:
 	void process_next_frame_commands( );
 
 	template < typename scene_pointer_type >
-	void move_commands_from_list( scene_pointer_type const& )
-	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x15c50] for base_scene_ptr
-	}
+	void move_commands_from_list( scene_pointer_type const& scene_or_scene_view );
 
 private:
 	struct null_render_command : base_command {

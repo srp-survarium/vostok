@@ -20,7 +20,6 @@ struct material_effects_instance_cook_data {
 		cull_mode			( in_cull_mode ),
 		delete_in_cook		( in_delete_in_cook )
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x60600]
 	}
 

@@ -1,11 +1,18 @@
 #include "pch.h"
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
+#include <vostok/render/engine/world.h>
+#include <vostok/render/facade/ambient_volume_properties.h>
+#include <vostok/render/facade/decal_properties.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
+#include <vostok/render/facade/one_way_render_channel.h>
+#include <vostok/render/facade/sources/functor_command.h>
+#include <vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h>
+#include <vostok/render/facade/sources/update_skeleton_command.h>
 
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 scene_renderer::scene_renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
@@ -15,15 +22,19 @@ scene_renderer::scene_renderer(
 	: m_render_engine_world( render_engine_world ),
 	  m_channel( channel ),
 	  m_allocator( allocator ),
-	  m_frustum_listener( frustum_listener )
+	  m_frustum_listener( frustum_listener ),
+	  m_view( math::float4x4().identity() ),
+	  m_projection( math::create_perspective_projection( math::pi_d2, 4.f/3.f, .1f, 1000.f ) )
 {
 	// FUNCTION BODY[0x6e0020]: 2
 	// <0x6e0093>|0x073|+0x006:'47'
 	// <0x6e0099>|0x079|+0x026:'48'
 	// ******
+
+	if ( m_frustum_listener )
+		*m_frustum_listener	= math::frustum( mul4x4(m_view, m_projection) );
 }
 
-// STATE[STUB]
 void scene_renderer::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
 {
 	// CALL SITE INFO
@@ -48,6 +59,23 @@ void scene_renderer::set_view_matrix( base_scene_view_ptr const& scene_view, flo
 	// <10>
 	// <0x6e1777>|0x057|+0x115:'68'
 	// ******
+
+	R_ASSERT				( scene_view );
+	m_view					= view_and_culling_matrix;
+	if ( m_frustum_listener )
+		*m_frustum_listener	= math::frustum( mul4x4( m_view, m_projection ) );
+
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_view_matrix,
+				&m_render_engine_world,
+				scene_view,
+				_1
+			),
+			view_and_culling_matrix
+		)
+	);
 }
 
 // STATE[STUB]
@@ -73,7 +101,6 @@ void scene_renderer::add_vegetation_trample( base_scene_ptr const& scene, trampl
 	// ******
 }
 
-// STATE[STUB]
 void scene_renderer::set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection )
 {
 	// CALL SITE INFO
@@ -97,9 +124,24 @@ void scene_renderer::set_projection_matrix( base_scene_view_ptr const& scene_vie
 	// <9>
 	// <0x6e15f9>|0x059|+0x115:'135'
 	// ******
+
+	R_ASSERT	( scene_view );
+	m_projection = projection;
+	if ( m_frustum_listener )
+		*m_frustum_listener	= math::frustum( mul4x4( m_view, m_projection ) );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_projection_matrix,
+				&m_render_engine_world,
+				scene_view,
+				_1
+			),
+			projection
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::add_model(
 	base_scene_ptr const&				scene,
 	render_model_instance_ptr const&	v,
@@ -114,18 +156,22 @@ void scene_renderer::add_model(
 	// <0>
 	// <0x6e146e>|0x00e|+0x129:'141'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back		( VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) ( boost::bind( &vostok::render::engine::world::add_model, &m_render_engine_world, scene, v, _1, true), transform ) );
 }
 
-// STATE[STUB]
 void scene_renderer::remove_model( base_scene_ptr const& scene, render_model_instance_ptr const& model )
 {
 	// FUNCTION BODY[0x6e26c0]: 2
 	// <0>
 	// <0x6e26cb>|0x00b|+0x14a:'147'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back		( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &vostok::render::engine::world::remove_model, &m_render_engine_world, scene, model)));
 }
 
-// STATE[STUB]
 void scene_renderer::update_model(
 	base_scene_ptr const&				scene,
 	render_model_instance_ptr const&	render_model,
@@ -140,14 +186,18 @@ void scene_renderer::update_model(
 	// <0>
 	// <0x6e2589>|0x009|+0x12d:'153'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back		( VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) ( boost::bind( &vostok::render::engine::world::update_model, &m_render_engine_world, scene, render_model, _1), model_to_world));
 }
 
-// STATE[STUB]
 void scene_renderer::update_skeleton( render_model_instance_ptr const& v, float4x4 const* matrices, u32 count )
 {
 	// FUNCTION BODY[0x6e0200]: 1
 	// <0x6e0204>|0x004|+0x07d:'158'
 	// ******
+
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, update_skeleton_command ) ( m_render_engine_world, v, matrices, count ) );
 }
 
 // STATE[STUB]
@@ -158,10 +208,9 @@ void scene_renderer::set_gamma_correction_factor( const float value )
 	// ******
 }
 
-// STATE[STUB]
 void scene_renderer::play_particle_system(
 	base_scene_ptr const&		scene,
-	const resources::unmanaged_resource_ptr	arg_1 /* resources::unmanaged_resource_ptr in_instance */,
+	const resources::unmanaged_resource_ptr	in_instance,
 	float4x4 const&				transform
 )
 {
@@ -186,9 +235,24 @@ void scene_renderer::play_particle_system(
 	// <13>
 	// <0x6e130e>|0x00e|+0x122:'182'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::play_particle_system,
+				&m_render_engine_world,
+				scene,
+				in_instance,
+				true,
+				false,
+				_1
+			),
+			transform
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_particle_system_instance(
 	base_scene_ptr const&		scene,
 	resources::unmanaged_resource_ptr const&	in_instance
@@ -198,9 +262,11 @@ void scene_renderer::remove_particle_system_instance(
 	// <0>
 	// <0x6e059b>|0x00b|+0x13f:'194'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::remove_particle_system_instance, &m_render_engine_world, in_instance, scene) ));
 }
 
-// STATE[STUB]
 void scene_renderer::update_particle_system_instance(
 	base_scene_ptr const&		scene,
 	resources::unmanaged_resource_ptr const&	instance,
@@ -217,6 +283,9 @@ void scene_renderer::update_particle_system_instance(
 	// <0>
 	// <0x6e11c9>|0x009|+0x123:'200'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< math::float4x4 > ) ( boost::bind( &engine::world::update_particle_system_instance, &m_render_engine_world, instance, scene, _1, visible, paused), transform ) );
 }
 
 // STATE[STUB]
@@ -229,7 +298,6 @@ bool scene_renderer::is_playing( resources::unmanaged_resource_ptr const& instan
 	// ******
 }
 
-// STATE[STUB]
 void scene_renderer::update_decal( base_scene_ptr const& scene, u32 id, decal_properties const& properties )
 {
 	// CALL SITE INFO
@@ -251,9 +319,22 @@ void scene_renderer::update_decal( base_scene_ptr const& scene, u32 id, decal_pr
 	// <11>
 	// <0x6e109b>|0x00b|+0x114:'244'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< decal_properties > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_decal,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			properties
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_decal( base_scene_ptr const& scene, u32 id )
 {
 	// FUNCTION BODY[0x6e2440]: 11
@@ -269,6 +350,18 @@ void scene_renderer::remove_decal( base_scene_ptr const& scene, u32 id )
 	// <9>
 	// <0x6e244b>|0x00b|+0x128:'259'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_decal,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
 }
 
 // STATE[STUB]
@@ -363,7 +456,6 @@ void scene_renderer::remove_sky_ambient_occlusion( base_scene_ptr const& scene, 
 	// ******
 }
 
-// STATE[STUB]
 void scene_renderer::update_ambient_volume( base_scene_ptr const& scene, u32 id, ambient_volume_properties const& properties )
 {
 	// CALL SITE INFO
@@ -385,9 +477,21 @@ void scene_renderer::update_ambient_volume( base_scene_ptr const& scene, u32 id,
 	// <11>
 	// <0x6e0f79>|0x009|+0x10c:'341'
 	// ******
+
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< ambient_volume_properties > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			properties
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_ambient_volume( base_scene_ptr const& scene, u32 id )
 {
 	// FUNCTION BODY[0x6e2080]: 11
@@ -403,9 +507,19 @@ void scene_renderer::remove_ambient_volume( base_scene_ptr const& scene, u32 id 
 	// <9>
 	// <0x6e208b>|0x00b|+0x128:'356'
 	// ******
+
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_ambient_volume,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::update_lpv_occluder( base_scene_ptr const& scene, u32 id, float4x4 const& transform )
 {
 	// CALL SITE INFO
@@ -427,9 +541,22 @@ void scene_renderer::update_lpv_occluder( base_scene_ptr const& scene, u32 id, f
 	// <11>
 	// <0x6e0e4b>|0x00b|+0x114:'373'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			transform
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_lpv_occluder( base_scene_ptr const& scene, u32 id )
 {
 	// FUNCTION BODY[0x6e1f40]: 11
@@ -445,9 +572,20 @@ void scene_renderer::remove_lpv_occluder( base_scene_ptr const& scene, u32 id )
 	// <9>
 	// <0x6e1f4b>|0x00b|+0x128:'388'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_lpv_occluder,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::update_volume_fog( base_scene_ptr const& scene, u32 id, volume_fog_parameters const& in_parameters )
 {
 	// CALL SITE INFO
@@ -469,9 +607,21 @@ void scene_renderer::update_volume_fog( base_scene_ptr const& scene, u32 id, vol
 	// <11>
 	// <0x6e0d29>|0x009|+0x10c:'422'
 	// ******
+
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< volume_fog_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			in_parameters
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_volume_fog( base_scene_ptr const& scene, u32 id )
 {
 	// FUNCTION BODY[0x6e1e00]: 11
@@ -487,6 +637,17 @@ void scene_renderer::remove_volume_fog( base_scene_ptr const& scene, u32 id )
 	// <9>
 	// <0x6e1e0b>|0x00b|+0x128:'437'
 	// ******
+
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
 }
 
 // STATE[STUB]
@@ -581,7 +742,6 @@ void scene_renderer::set_portal_system( base_scene_ptr const& scene, resources::
 	// ******
 }
 
-// STATE[STUB]
 void scene_renderer::add_light( base_scene_ptr const& scene, u32 id, light_props* props )
 {
 	// FUNCTION BODY[0x6e2f40]: 12
@@ -598,9 +758,21 @@ void scene_renderer::add_light( base_scene_ptr const& scene, u32 id, light_props
 	// <10>
 	// <0x6e2f4b>|0x00b|+0x133:'654'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::add_light,
+				&m_render_engine_world,
+				scene,
+				id,
+				props
+			)
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::update_light( base_scene_ptr const& scene, u32 id, light_props* props )
 {
 	// FUNCTION BODY[0x6e2e00]: 12
@@ -617,9 +789,21 @@ void scene_renderer::update_light( base_scene_ptr const& scene, u32 id, light_pr
 	// <10>
 	// <0x6e2e09>|0x009|+0x122:'670'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::update_light,
+				&m_render_engine_world,
+				scene,
+				id,
+				props
+			)
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::remove_light( base_scene_ptr const& scene, u32 id )
 {
 	// FUNCTION BODY[0x6e1a00]: 11
@@ -635,9 +819,20 @@ void scene_renderer::remove_light( base_scene_ptr const& scene, u32 id )
 	// <9>
 	// <0x6e1a0b>|0x00b|+0x128:'685'
 	// ******
+
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_light,
+				&m_render_engine_world,
+				scene,
+				id
+			)
+		)
+	);
 }
 
-// STATE[STUB]
 void scene_renderer::set_post_process(
 	base_scene_view_ptr const&		scene_view,
 	resources::unmanaged_resource_ptr const&	post_process_resource
@@ -647,30 +842,36 @@ void scene_renderer::set_post_process(
 	// <0>
 	// <0x6e293b>|0x00b|+0x138:'697'
 	// ******
+
+	R_ASSERT	( scene_view );
+	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::set_post_process, &m_render_engine_world, scene_view, post_process_resource) ));
 }
 
-// STATE[STUB]
 void scene_renderer::reload_shaders( )
 {
 	// FUNCTION BODY[0x6dfdd0]: 1
 	// <0x6dfddf>|0x00f|+0x0f7:'702'
 	// ******
+
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &vostok::render::engine::world::reload_shaders, &m_render_engine_world) ) );
 }
 
-// STATE[STUB]
 void scene_renderer::reload_modified_textures( )
 {
 	// FUNCTION BODY[0x6e2820]: 1
 	// <0x6e282f>|0x00f|+0x0f7:'707'
 	// ******
+
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &vostok::render::engine::world::reload_modified_textures, &m_render_engine_world) ) );
 }
 
-// STATE[STUB]
 void scene_renderer::set_sky_material( base_scene_ptr const& scene, resources::unmanaged_resource_ptr const& mtl_ptr )
 {
 	// FUNCTION BODY[0x6e18a0]: 1
 	// <0x6e18ab>|0x00b|+0x13d:'720'
 	// ******
+
+	m_channel.owner_push_back  ( VOSTOK_NEW_IMPL( m_allocator, functor_command ) ( boost::bind( &engine::world::set_sky_material, &m_render_engine_world, scene, mtl_ptr) ));
 }
 
 // STATE[STUB]
@@ -705,14 +906,15 @@ void scene_renderer::reset_grass( resources::unmanaged_resource_ptr grass, base_
 	// ******
 }
 
-// STATE[STUB]
 particle::world& scene_renderer::particle_world( base_scene_ptr const& scene )
 {
 	// FUNCTION BODY[0x6e01c0]: 2
 	// <0>
 	// <0x6e01c1>|0x001|+0x038:'833'
 	// ******
-	return *(particle::world*)0;
+
+	R_ASSERT	( scene );
+	return 		m_render_engine_world.particle_world( scene );
 }
 
 // STATE[STUB]
