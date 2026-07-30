@@ -1893,6 +1893,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_exponential_volume_fog.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_exponential_volume_fog.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
