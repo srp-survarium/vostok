@@ -842,6 +842,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\base_command.h"
+			>
+		</File>
+		<File
 			RelativePath="..\ambient_volume_properties.h"
 			>
 		</File>
