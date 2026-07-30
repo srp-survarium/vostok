@@ -913,6 +913,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\lpv_render_surface.h"
+			>
+		</File>
+		<File
+			RelativePath=".\remove_model_if_in_frustum_predicate.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_engine_world_pc_dx11.cpp"
 			>
 		</File>
@@ -1030,6 +1038,14 @@
 		</File>
 		<File
 			RelativePath=".\stage_decals_accumulate.h"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_light_propagation_volumes.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_light_propagation_volumes.h"
 			>
 		</File>
 		<File
