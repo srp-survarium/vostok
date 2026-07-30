@@ -1125,6 +1125,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\portal_sector_system.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\portal_sector_system.h"
+			>
+		</File>
+		<File
 			RelativePath=".\trample_desc.h"
 			>
 		</File>
