@@ -913,6 +913,30 @@
 			>
 		</File>
 		<File
+			RelativePath=".\batched_geometry.h"
+			>
+		</File>
+		<File
+			RelativePath=".\geometry_batch.h"
+			>
+		</File>
+		<File
+			RelativePath=".\lpv_vertex.h"
+			>
+		</File>
+		<File
+			RelativePath=".\shadow_batched_geometry.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\shadow_batched_geometry.h"
+			>
+		</File>
+		<File
+			RelativePath=".\shadow_vertex.h"
+			>
+		</File>
+		<File
 			RelativePath=".\box_geometry.cpp"
 			>
 		</File>
