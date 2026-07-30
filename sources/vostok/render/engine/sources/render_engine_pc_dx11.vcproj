@@ -1729,6 +1729,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_distortion_stage_panner_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_distortion_stage_panner_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\obb_light_effect.h"
 			>
 		</File>
