@@ -873,6 +873,26 @@
 			>
 		</File>
 		<File
+			RelativePath=".\cloud_key_parameters.h"
+			>
+		</File>
+		<File
+			RelativePath=".\cloud_parameters.h"
+			>
+		</File>
+		<File
+			RelativePath=".\cloud_simulation.h"
+			>
+		</File>
+		<File
+			RelativePath=".\clouds.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\clouds.h"
+			>
+		</File>
+		<File
 			RelativePath=".\render_engine_world_pc_dx11.cpp"
 			>
 		</File>
