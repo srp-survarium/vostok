@@ -1601,6 +1601,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_texture_density.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_texture_density.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
