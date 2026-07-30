@@ -1093,6 +1093,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_sun.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_sun.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_material_base.cpp"
 			>
 		</File>
