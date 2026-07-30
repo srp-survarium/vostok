@@ -1049,6 +1049,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\sphere_geometry.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_clouds.cpp"
 			>
 		</File>
