@@ -2,7 +2,9 @@
 #define VOSTOK_RENDER_ENGINE_RENDERER_H_INCLUDED
 
 #include <vostok/render/engine/base_classes.h>
+#include <vostok/render/core/effect_descriptor.h>
 #include <vostok/render/core/memory.h>
+#include <vostok/render/facade/render_stage_types.h>
 
 namespace vostok {
 
@@ -26,24 +28,66 @@ namespace ui {
 struct vertex;
 }
 
-class effect_pick_light_luminance {
+class effect_pick_light_luminance : public effect_descriptor {
 public:
-	void compile( effect_compiler& compiler, custom_config_value const& config );
+	effect_pick_light_luminance( ) { }
+	virtual ~effect_pick_light_luminance( ) { }
+
+	virtual void compile( effect_compiler& compiler, custom_config_value const& config ) override;
 };
 
 class sort_by_vs_predicate {
 public:
+	sort_by_vs_predicate( enum_render_stage_type stage_type, u32 tech_index ) :
+		m_stage_type( stage_type ),
+		m_tech_index( tech_index )
+	{
+	}
+
 	bool operator()( render_surface_instance const* left, render_surface_instance const* right ) const;
+
+private:
+	enum_render_stage_type	m_stage_type;
+	u32						m_tech_index;
 };
 
 class sort_by_distance_predicate {
 public:
+	sort_by_distance_predicate( float3 const& eye_position, bool from_near_to_far ) :
+		m_eye_position( eye_position ),
+		m_from_near_to_far( from_near_to_far )
+	{
+	}
+
 	bool operator()( render_surface_instance const* left, render_surface_instance const* right ) const;
+
+private:
+	float3	m_eye_position;
+	bool	m_from_near_to_far;
 };
 
 class sort_by_texture_predicate {
 public:
+	sort_by_texture_predicate( enum_render_stage_type stage_type, u32 tech_index ) :
+		m_stage_type( stage_type ),
+		m_tech_index( tech_index )
+	{
+	}
+
 	bool operator()( render_surface_instance const* left, render_surface_instance const* right ) const;
+
+private:
+	enum_render_stage_type	m_stage_type;
+	u32						m_tech_index;
+};
+
+class sort_by_textures_predicate {
+public:
+	bool operator()( render_surface_instance const*, render_surface_instance const* ) const
+	{
+		// STATE[STUB]
+		return false;
+	}
 };
 
 class renderer : public boost::noncopyable {
@@ -93,6 +137,12 @@ private:
 	void draw_stages_stats( vostok::ui::font const* default_font );
 	void draw_frame_histogram( ) const;
 };
+
+STATIC_SIZE_ASSERT( effect_pick_light_luminance, 0x4 );
+STATIC_SIZE_ASSERT( sort_by_vs_predicate, 0x8 );
+STATIC_SIZE_ASSERT( sort_by_distance_predicate, 0x10 );
+STATIC_SIZE_ASSERT( sort_by_texture_predicate, 0x8 );
+STATIC_SIZE_ASSERT( sort_by_textures_predicate, 0x1 );
 
 } // namespace render
 } // namespace vostok
