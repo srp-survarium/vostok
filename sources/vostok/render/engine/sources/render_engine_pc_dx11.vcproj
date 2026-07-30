@@ -1697,6 +1697,26 @@
 			>
 		</File>
 		<File
+			RelativePath=".\obb_light_effect.h"
+			>
+		</File>
+		<File
+			RelativePath=".\plane_spot_light_effect.h"
+			>
+		</File>
+		<File
+			RelativePath=".\point_light_effect.h"
+			>
+		</File>
+		<File
+			RelativePath=".\sphere_light_effect.h"
+			>
+		</File>
+		<File
+			RelativePath=".\spot_light_effect.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_editor_gbuffer_to_screen.cpp"
 			>
 		</File>

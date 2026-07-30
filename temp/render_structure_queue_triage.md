@@ -52,3 +52,10 @@ Reset from `binaries/structure/target/` on 2026-07-29 for a clean-room rebuild.
   | merged into `sources/vostok/render/engine/sources/effect_complex_post_process_blend.h`
   | the target mangled names prove one primary template with three boolean
   parameters; the six generated records are emitted specializations, not classes.
+- `headers/vostok/render/{obb,plane_spot,point,sphere,spot}_light_effect_*.h`
+  and their path-preserved engine headers
+  | merged into five canonical primary-template headers under
+  `sources/vostok/render/engine/sources/`
+  | target symbols and the original library agree that these are boolean
+  shadow-mode templates; `point_light_effect` has two parameters and the other
+  four have one. The target emits eleven specializations in total.

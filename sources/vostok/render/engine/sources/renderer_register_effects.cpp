@@ -1,7 +1,12 @@
 #include "pch.h"
 #include "effect_blur.h"
 #include "effect_complex_post_process_blend.h"
+#include "obb_light_effect.h"
+#include "plane_spot_light_effect.h"
+#include "point_light_effect.h"
 #include "renderer_register_effects.h"
+#include "sphere_light_effect.h"
+#include "spot_light_effect.h"
 
 namespace vostok {
 namespace render {
