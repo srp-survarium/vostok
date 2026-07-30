@@ -968,6 +968,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\effect_constant_storage.h"
+			>
+		</File>
+		<File
 			RelativePath="..\state_cache.h"
 			>
 		</File>

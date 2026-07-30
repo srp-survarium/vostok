@@ -14,6 +14,7 @@
 #include <vostok/render/core/shader_include_getter.h>
 #include <vostok/render/core/texture_named_instance.h>
 #include <vostok/render/core/dx11/binary_shader_key_type.h>
+#include <vostok/render/core/dx11/effect_constant_storage.h>
 #include <vostok/render/core/dx11/res_texture.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
 #include <vostok/render/core/dx11/state_descriptor.h>
@@ -158,11 +159,15 @@ public:
 	}
 
 	template < typename T >
-	effect_compiler& set_constant( shared_string, T const& )
+	effect_compiler& set_constant( shared_string hlsl_name, T const& source )
 	{
-		// STATE[STUB]
 		// Observed float3 instantiation [0x887f0] and float2 [0x8cc90].
-		return *this;
+		return bind_constant(
+			shader_constant_binding(
+				hlsl_name,
+				effect_constant_storage::ref( ).store_constant( source )
+			)
+		);
 	}
 
 	effect_compiler(
