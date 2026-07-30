@@ -1225,6 +1225,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_tree_component_leafmesh.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_tree_component_leafmesh.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree_shader_parameters.h"
 			>
 		</File>
