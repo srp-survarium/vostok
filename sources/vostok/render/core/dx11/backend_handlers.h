@@ -2,18 +2,18 @@
 #define VOSTOK_RENDER_CORE_DX11_BACKEND_HANDLERS_H_INCLUDED
 
 #include <vostok/intrusive_ptr.h>
+#include <vostok/render/core/res_sampler_list.h>
 #include <vostok/render/core/res_texture_list.h>
 #include <vostok/render/core/resource_intrusive_base.h>
+#include <vostok/render/core/shader_constant_table.h>
 #include <vostok/render/core/shader_defines.h>
 
 namespace vostok {
 namespace render {
 
 class backend;
-class res_sampler_list;
 class res_texture;
 class shader_constant_host;
-class shader_constant_table;
 
 template < typename shader_data >
 class res_xs_hw;
