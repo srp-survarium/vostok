@@ -1036,6 +1036,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\effect_options_descriptor.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\static_type.h"
 			>
 		</File>
