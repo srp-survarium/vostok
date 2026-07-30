@@ -1045,6 +1045,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_ambient_lighting.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_ambient_lighting.h"
+			>
+		</File>
+		<File
 			RelativePath=".\sphere_geometry.h"
 			>
 		</File>
