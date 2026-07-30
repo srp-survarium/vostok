@@ -1125,6 +1125,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_accumulate_distortion.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_accumulate_distortion.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_ambient_occlusion.cpp"
 			>
 		</File>
