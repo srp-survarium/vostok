@@ -4,6 +4,23 @@
 namespace vostok {
 namespace render {
 
+struct stage_stat {
+	double average_time( bool gpu_time ) const
+	{
+		return gpu_time ? elapsed_gpu_msec[0] : elapsed_cpu_msec[0];
+	}
+
+	u32 average_dips( ) const
+	{
+		return dips[0];
+	}
+
+	double elapsed_gpu_msec[1];
+	double elapsed_cpu_msec[1];
+	u32 dips[1];
+	stage* stg;
+};
+
 struct remove_model_filter_predicate {
 	remove_model_filter_predicate( ) :
 		m_need_static( false ),
