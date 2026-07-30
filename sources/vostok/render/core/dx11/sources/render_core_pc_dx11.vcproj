@@ -1144,6 +1144,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\res_xs.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\effect_manager.h"
 			>
 		</File>
@@ -1253,6 +1257,10 @@
 		</File>
 		<File
 			RelativePath="..\res_xs_hw.h"
+			>
+		</File>
+		<File
+			RelativePath="..\res_xs.h"
 			>
 		</File>
 		<File
