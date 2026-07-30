@@ -1177,6 +1177,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\portal_sector_structure_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\portal_sector_structure_cook.h"
+			>
+		</File>
+		<File
 			RelativePath=".\sector_double_query_preventer.cpp"
 			>
 		</File>
