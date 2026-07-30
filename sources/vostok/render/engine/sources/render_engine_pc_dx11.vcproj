@@ -2061,6 +2061,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gstage_default_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gstage_default_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
