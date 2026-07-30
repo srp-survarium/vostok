@@ -1593,6 +1593,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_grass_trample.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_grass_trample.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_forward_system.cpp"
 			>
 		</File>
