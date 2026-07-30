@@ -1201,6 +1201,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\speedtree_convert_type.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\speedtree_convert_type.h"
+			>
+		</File>
+		<File
 			RelativePath=".\speedtree.h"
 			>
 		</File>
