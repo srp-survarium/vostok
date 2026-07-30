@@ -964,6 +964,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\sampler_state_descriptor.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\api.h"
 			>
 		</File>
