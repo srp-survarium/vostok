@@ -2093,6 +2093,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_light_mask.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_light_mask.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
