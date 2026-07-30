@@ -872,6 +872,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\resource_manager.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\device.cpp"
 			>
 		</File>
