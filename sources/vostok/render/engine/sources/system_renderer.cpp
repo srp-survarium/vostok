@@ -15,6 +15,28 @@ struct vertex_colored_sl {
 STATIC_SIZE_ASSERT( vertex_colored_sl, 0x24 );
 
 // STATE[STUB]
+system_renderer::system_renderer( renderer_context* renderer_context ) :
+	m_cook_data_to_delete		( 0 ),
+	m_selection_color			( 0.0f, 0.0f, 0.5f, 1.0f ),
+	m_selection_rate			( 1.0f ),
+	m_current_selection_color	( 0.0f, 0.0f, 0.0f, 0.0f ),
+	m_ghost_model_color			( 0.2f, 0.2f, 0.2f, 0.2f ),
+	m_renderer_context			( renderer_context ),
+	m_WVP_sl					( 0 ),
+	m_c_start_corner			( 0 ),
+	m_vertex_stream				( 1024 * 1024 ),
+	m_index_stream				( 512 * 1024 ),
+	m_vertex_stream_quad		( 1024 * 1024 ),
+	m_index_stream_quad			( 512 * 1024 ),
+	m_grid_mode					( false ),
+	m_grid_density				( 0.0f ),
+	m_grid_density_constant		( 0 ),
+	m_color_write				( true ),
+	m_rotation_mode_ref_value	( 0 )
+{
+}
+
+// STATE[STUB]
 untyped_buffer* system_renderer::create_quad_ib( )
 {
 	// LOCALS
