@@ -1609,6 +1609,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_editor_shader_complexity.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_editor_shader_complexity.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_grass_trample.cpp"
 			>
 		</File>
