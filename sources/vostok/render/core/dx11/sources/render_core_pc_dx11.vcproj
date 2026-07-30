@@ -900,6 +900,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\custom_config_value.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\texture_cook_wrapper.cpp"
 			>
 		</File>
