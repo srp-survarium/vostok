@@ -2205,6 +2205,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_post_process_sraa.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_post_process_sraa.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
