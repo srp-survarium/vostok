@@ -881,6 +881,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\lights_db.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\lights_db.h"
+			>
+		</File>
+		<File
 			RelativePath=".\sky_ambient_occlusion.cpp"
 			>
 		</File>
