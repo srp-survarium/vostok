@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_FACADE_MODEL_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_MODEL_H_INCLUDED
 
+#include <vostok/animation/skeleton.h>
 #include <vostok/fixed_string.h>
 #include <vostok/math_float4x4.h>
 #include <vostok/resources_unmanaged_resource.h>
@@ -89,6 +90,43 @@ typedef resources::resource_ptr<
 	render_model_instance,
 	resources::unmanaged_intrusive_base
 > render_model_instance_ptr;
+
+class static_model_instance : public resources::unmanaged_resource {
+public:
+	static_model_instance( ) { }
+	virtual ~static_model_instance( ) { }
+
+	render_model_instance_ptr m_render_model;
+	resources::unmanaged_resource_ptr m_sound_environment;
+};
+
+STATIC_SIZE_ASSERT( static_model_instance, 0x110 );
+
+typedef resources::resource_ptr<
+	static_model_instance,
+	resources::unmanaged_intrusive_base
+> static_model_ptr;
+
+class skeleton_model_instance : public resources::unmanaged_resource {
+public:
+	skeleton_model_instance( ) { }
+	virtual ~skeleton_model_instance( ) { }
+
+	void get_bind_pose( float4x4* matrices, u32 count ) const
+	{
+		m_render_model->get_bind_pose( matrices, count );
+	}
+
+	render_model_instance_ptr m_render_model;
+	animation::skeleton_ptr m_skeleton;
+};
+
+STATIC_SIZE_ASSERT( skeleton_model_instance, 0x110 );
+
+typedef resources::resource_ptr<
+	skeleton_model_instance,
+	resources::unmanaged_intrusive_base
+> skeleton_model_ptr;
 
 class skin : public resources::unmanaged_resource {
 public:

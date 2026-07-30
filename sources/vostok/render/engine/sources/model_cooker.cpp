@@ -1,8 +1,27 @@
 #include "pch.h"
 #include "model_cooker.h"
+#include <vostok/render/facade/model.h>
 
 namespace vostok {
+
+namespace configs {
+class binary_config_value;
+}
+
+namespace sound {
+struct world;
+}
+
 namespace render {
+
+struct static_model_instance_user_data {
+	static_model_instance_user_data( ) { }
+	~static_model_instance_user_data( ) { }
+
+	configs::binary_config_value const* config;
+	sound::world* sound_world;
+	resources::unmanaged_resource_ptr sound_scene;
+};
 
 // STATE[STUB]
 static_model_instance_cook::static_model_instance_cook( ) :
