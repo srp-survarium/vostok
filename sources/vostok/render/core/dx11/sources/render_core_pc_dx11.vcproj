@@ -1132,6 +1132,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\res_xs_hw.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\untyped_buffer.h"
 			>
 		</File>
