@@ -19,6 +19,13 @@ struct screen_vertex {
 
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
 
+struct remove_lpv_inappropriate_models {
+	bool operator()( lpv_render_surface const& )
+	{
+		return false;
+	}
+};
+
 stage_light_propagation_volumes::stage_light_propagation_volumes(
 	renderer*			in_renderer,
 	renderer_context*	context
