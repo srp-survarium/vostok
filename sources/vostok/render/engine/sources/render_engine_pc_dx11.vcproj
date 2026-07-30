@@ -1229,6 +1229,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\stage_postprocess.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\stage_postprocess.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_lights.cpp"
 			>
 		</File>
