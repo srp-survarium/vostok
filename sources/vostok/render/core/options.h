@@ -22,6 +22,99 @@ class queries_result;
 
 namespace render {
 
+enum enum_uro_ambient_occlusion_quality_values {
+	uro_ambient_occlusion_quality_off	= 0x0,
+	uro_ambient_occlusion_quality_ssao	= 0x1,
+	uro_ambient_occlusion_quality_hbao	= 0x2,
+	uro_ambient_occlusion_quality_ssdo	= 0x3,
+	uro_ambient_occlusion_quality_count	= 0x4,
+};
+
+enum enum_uro_anisotrophic_filter_values {
+	uro_anisotrophic_filter_off		= 0x0,
+	uro_anisotrophic_filter_2x		= 0x1,
+	uro_anisotrophic_filter_4x		= 0x2,
+	uro_anisotrophic_filter_8x		= 0x3,
+	uro_anisotrophic_filter_16x		= 0x4,
+	uro_anisotrophic_filter_count	= 0x5,
+};
+
+enum enum_uro_antialiasing_method_values {
+	uro_antialiasing_method_off		= 0x0,
+	uro_antialiasing_method_FXAA	= 0x1,
+	uro_antialiasing_method_2xTAA	= 0x2,
+	uro_antialiasing_method_count	= 0x3,
+};
+
+enum enum_uro_decorations_quality_values {
+	uro_decorations_quality_low		= 0x0,
+	uro_decorations_quality_medium	= 0x1,
+	uro_decorations_quality_high	= 0x2,
+	uro_decorations_quality_count	= 0x3,
+};
+
+enum enum_uro_geometry_quality_values {
+	uro_geometry_quality_medium	= 0x0,
+	uro_geometry_quality_high	= 0x1,
+	uro_geometry_quality_count	= 0x2,
+};
+
+enum enum_uro_graphics_quality_values {
+	uro_graphics_quality_minimum	= 0x0,
+	uro_graphics_quality_low		= 0x1,
+	uro_graphics_quality_medium		= 0x2,
+	uro_graphics_quality_high		= 0x3,
+	uro_graphics_quality_ultra		= 0x4,
+	uro_graphics_quality_count		= 0x5,
+};
+
+enum enum_uro_lighting_quality_values {
+	uro_lighting_quality_low	= 0x0,
+	uro_lighting_quality_medium	= 0x1,
+	uro_lighting_quality_high	= 0x2,
+	uro_lighting_quality_ultra	= 0x3,
+	uro_lighting_quality_count	= 0x4,
+};
+
+enum enum_uro_motion_blur_quality_values {
+	uro_motion_blur_quality_off		= 0x0,
+	uro_motion_blur_quality_low		= 0x1,
+	uro_motion_blur_quality_medium	= 0x2,
+	uro_motion_blur_quality_high	= 0x3,
+	uro_motion_blur_quality_count	= 0x4,
+};
+
+enum enum_uro_particles_quality_values {
+	uro_particles_quality_low		= 0x0,
+	uro_particles_quality_medium	= 0x1,
+	uro_particles_quality_high		= 0x2,
+	uro_particles_quality_count		= 0x3,
+};
+
+enum enum_uro_post_process_quality_values {
+	uro_post_process_quality_minimum	= 0x0,
+	uro_post_process_quality_low		= 0x1,
+	uro_post_process_quality_medium	= 0x2,
+	uro_post_process_quality_high		= 0x3,
+	uro_post_process_quality_count		= 0x4,
+};
+
+enum enum_uro_shading_quality_values {
+	uro_shading_quality_low		= 0x0,
+	uro_shading_quality_medium	= 0x1,
+	uro_shading_quality_high	= 0x2,
+	uro_shading_quality_ultra	= 0x3,
+	uro_shading_quality_count	= 0x4,
+};
+
+enum enum_uro_shadow_quality_values {
+	uro_shadow_quality_low		= 0x0,
+	uro_shadow_quality_medium	= 0x1,
+	uro_shadow_quality_high		= 0x2,
+	uro_shadow_quality_ultra	= 0x3,
+	uro_shadow_quality_count	= 0x4,
+};
+
 enum enum_options_changes_result {
 	ocr_need_nothing = 0x0001,
 	ocr_need_resatart_application = 0x0002,
