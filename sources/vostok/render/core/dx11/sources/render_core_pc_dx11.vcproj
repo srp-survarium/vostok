@@ -888,6 +888,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_constant_storage.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_options_descriptor.cpp"
 			>
 		</File>
