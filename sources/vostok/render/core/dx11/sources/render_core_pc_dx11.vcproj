@@ -1080,6 +1080,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\device_caps.h"
+			>
+		</File>
+		<File
 			RelativePath="..\res_texture.h"
 			>
 		</File>
