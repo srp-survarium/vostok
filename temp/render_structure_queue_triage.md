@@ -40,3 +40,10 @@ Reset from `binaries/structure/target/` on 2026-07-29 for a clean-room rebuild.
   | moved to canonical `sources/vostok/render/core/` headers
   | the emitter owns complete `uninitialized_reference` instances of these DX11 core types;
   their function sources remain queued under their actual core owners.
+- `headers/vostok/render/effect_blur_{0,3,5,7,9,13,17,21,25}_.h` and
+  `sources/vostok/render/engine/sources/effect_blur.h`
+  | merged into `sources/vostok/render/engine/sources/effect_blur.h`
+  | the target compiland emits one shared `effect_blur<N>` primary template for
+  sample counts 3 through 25; the synthetic `<0>` record is the same class shape.
+  The target debug symbols preserve values but not the declared integral parameter
+  type, so `u32` follows the engine's local size/count template convention.

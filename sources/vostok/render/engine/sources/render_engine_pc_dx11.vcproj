@@ -1689,6 +1689,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_blur.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_editor_gbuffer_to_screen.cpp"
 			>
 		</File>
