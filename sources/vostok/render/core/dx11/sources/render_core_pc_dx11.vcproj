@@ -888,6 +888,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\shader_binary_source_cook.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_compiler.cpp"
 			>
 		</File>
