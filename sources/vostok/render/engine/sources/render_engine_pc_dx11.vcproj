@@ -1869,6 +1869,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_downsample_skin_irradiance_texture.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_downsample_skin_irradiance_texture.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_downsample_gbuffer.cpp"
 			>
 		</File>
