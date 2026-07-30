@@ -1089,6 +1089,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_ssao_downsample_position_and_normal.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_ssao_downsample_position_and_normal.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_ssao_filter4x4.cpp"
 			>
 		</File>
