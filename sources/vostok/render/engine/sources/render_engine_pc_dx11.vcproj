@@ -2221,6 +2221,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_rain.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_rain.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
