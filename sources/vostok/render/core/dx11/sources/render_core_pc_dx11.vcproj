@@ -1156,6 +1156,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\shader_macros.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\binary_shader_source.h"
 			>
 		</File>
