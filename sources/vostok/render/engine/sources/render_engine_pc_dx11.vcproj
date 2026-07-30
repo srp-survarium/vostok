@@ -1065,6 +1065,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_decal_mask.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_decal_mask.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_apply_indirect_lighting.cpp"
 			>
 		</File>
