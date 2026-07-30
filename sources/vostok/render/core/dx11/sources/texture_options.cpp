@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/render/core/texture_options.h>
 #include <vostok/render/core/texture_options_cooker.h>
 
 namespace vostok {

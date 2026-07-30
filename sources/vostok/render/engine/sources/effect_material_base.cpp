@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "blend_mode.h"
 #include "effect_material_base.h"
 
 namespace vostok {

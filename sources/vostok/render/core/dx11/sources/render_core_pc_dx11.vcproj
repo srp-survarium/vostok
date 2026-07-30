@@ -1268,6 +1268,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\..\texture_options.h"
+			>
+		</File>
+		<File
 			RelativePath="..\..\res_pass.h"
 			>
 		</File>

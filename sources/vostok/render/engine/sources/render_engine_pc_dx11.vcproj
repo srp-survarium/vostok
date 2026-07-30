@@ -1469,6 +1469,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\organic_lighting_passes.h"
+			>
+		</File>
+		<File
 			RelativePath=".\stage_shadow_direct.cpp"
 			>
 		</File>
@@ -1602,6 +1606,10 @@
 		</File>
 		<File
 			RelativePath=".\effect_material_base.h"
+			>
+		</File>
+		<File
+			RelativePath=".\blend_mode.h"
 			>
 		</File>
 		<File
@@ -2090,6 +2098,10 @@
 		</File>
 		<File
 			RelativePath=".\effect_gstage_default_materials.h"
+			>
+		</File>
+		<File
+			RelativePath=".\geometry_type.h"
 			>
 		</File>
 		<File
