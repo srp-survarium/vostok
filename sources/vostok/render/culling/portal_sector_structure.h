@@ -37,6 +37,11 @@ class frustum;
 namespace render {
 namespace culling {
 
+enum {
+	sectors_volume_object_type	= 0x1,
+	portal_object_type			= 0x2,
+};
+
 class portal {
 public:
 	portal(
