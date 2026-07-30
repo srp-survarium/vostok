@@ -1,6 +1,9 @@
 #ifndef VOSTOK_RENDER_FACADE_COMMON_TYPES_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_COMMON_TYPES_H_INCLUDED
 
+#include <vostok/math_rectangle.h>
+#include <vostok/vectora.h>
+
 namespace survarium {
 
 class scaleform_render_command_queue;
@@ -15,6 +18,26 @@ enum {
 	terrain_texture_size		= 0x400,
 };
 
+#pragma pack(push, 1)
+
+struct terrain_data {
+	terrain_data( ) { }
+
+	float	height;
+	float2	tex_shift;
+	u8		tex_id0;
+	u8		tex_id1;
+	u8		tex_id2;
+	u8		alpha0;
+	u8		alpha1;
+	u8		alpha2;
+	u32		color;
+};
+
+STATIC_SIZE_ASSERT( terrain_data, 0x16 );
+
+#pragma pack(pop)
+
 struct buffer_fragment {
 	u32 start;
 	u32 size;
@@ -22,6 +45,18 @@ struct buffer_fragment {
 };
 
 STATIC_SIZE_ASSERT( buffer_fragment, 0xc );
+
+struct terrain_buffer_fragment {
+	explicit terrain_buffer_fragment( memory::base_allocator* allocator ) :
+		buffer( allocator )
+	{
+	}
+
+	vectora<terrain_data>			buffer;
+	math::rectangle<math::uint2>	rect;
+};
+
+STATIC_SIZE_ASSERT( terrain_buffer_fragment, 0x20 );
 
 struct scene_configuration {
 	inline scene_configuration( ) { }
