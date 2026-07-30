@@ -4,6 +4,24 @@
 namespace vostok {
 namespace render {
 
+struct texture_raw_file_data : public resources::unmanaged_resource {
+	explicit texture_raw_file_data( mutable_buffer outer_buffer )
+		: m_buffer( outer_buffer )
+	{
+	}
+
+	virtual ~texture_raw_file_data( )
+	{
+	}
+
+	mutable_buffer const& buffer( ) const
+	{
+		return m_buffer;
+	}
+
+	mutable_buffer m_buffer;
+};
+
 texture_data_resource::texture_data_resource( u32 )
 {
 	// STATE[STUB]
