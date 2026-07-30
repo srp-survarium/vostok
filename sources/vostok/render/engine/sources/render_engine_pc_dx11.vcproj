@@ -2053,6 +2053,14 @@
 			>
 		</File>
 		<File
+			RelativePath=".\effect_gstage_burning_wood_materials.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\effect_gstage_burning_wood_materials.h"
+			>
+		</File>
+		<File
 			RelativePath=".\effect_fill_reflective_shadow_map.cpp"
 			>
 		</File>
