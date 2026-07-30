@@ -1117,6 +1117,18 @@
 			>
 		</File>
 		<File
+			RelativePath=".\grass_cook.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_cook.h"
+			>
+		</File>
+		<File
+			RelativePath=".\grass_data.h"
+			>
+		</File>
+		<File
 			RelativePath=".\grass_world.cpp"
 			>
 		</File>
