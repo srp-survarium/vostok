@@ -93,8 +93,10 @@ namespace render {
 }
 
 // STATE[STUB]
-void renderer_context::set_scene( scene* scene )
+void renderer_context::set_scene( render::scene* in_scene )
 {
+	VOSTOK_UNREFERENCED_PARAMETER( in_scene );
+
 	// FUNCTION BODY[0x642720]: 2
 	// <0x642720>|0x000|+0x006:'169'
 	// <0>

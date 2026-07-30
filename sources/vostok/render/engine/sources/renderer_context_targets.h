@@ -1,6 +1,14 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDERER_CONTEXT_TARGETS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDERER_CONTEXT_TARGETS_H_INCLUDED
 
+#include <vostok/fixed_string.h>
+#include <vostok/math_uint2.h>
+#include <vostok/render/core/render_include.h>
+#include <vostok/render/core/res_texture_list.h>
+
+#include "render_target.h"
+#include "res_texture.h"
+
 namespace vostok {
 namespace render {
 
@@ -79,10 +87,20 @@ enum enum_render_target_index {
 	rt_num_frame_luminance_targets			= 0x09,
 };
 
-enum enum_rt_usage;
-
 pcstr rt_index_to_name( enum_render_target_index index );
 u32 get_format_block_size( DXGI_FORMAT format );
+
+struct render_target_instance {
+	render_target_instance( ) { }
+	~render_target_instance( ) { }
+
+	fixed_string< 64 >	orig_name;
+	fixed_string< 64 >	name;
+	render_target_ptr	target;
+	res_texture_ptr		texture;
+};
+
+STATIC_SIZE_ASSERT( render_target_instance, 0xA0 );
 
 class renderer_context_targets {
 public:
@@ -96,16 +114,38 @@ public:
 		enum_rt_usage			usage,
 		bool					enabled
 	);
+	void new_ds(
+		enum_render_target_index index,
+		DXGI_FORMAT in_format,
+		math::uint2 const in_size
+	)
+	{
+		new_rt( index, in_format, in_size, enum_rt_usage_depth_stencil, true );
+	}
 	void new_lt(
 		enum_render_target_index	index,
 		DXGI_FORMAT				in_format,
 		math::uint2 const		in_size
 	);
+
+	math::uint2 size( ) const { return m_size; }
 	void resize( math::uint2 size, bool force_resize );
+	u32 memory_usage( ) const { return m_memory_usage; }
+	u32 get_id( ) const { return static_cast< u32 >( m_id ); }
 
 private:
 	void create_targets( math::uint2 size, bool force_resize );
+
+public:
+	render_target_instance	m_family[rt_num_render_targets];
+	math::uint2				m_size;
+
+private:
+	s32 m_id;
+	u32 m_memory_usage;
 };
+
+STATIC_SIZE_ASSERT( renderer_context_targets, 0x2BD0 );
 
 } // namespace render
 } // namespace vostok

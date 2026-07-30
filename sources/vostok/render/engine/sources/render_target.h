@@ -6,6 +6,11 @@
 namespace vostok {
 namespace render {
 
+enum enum_rt_usage {
+	enum_rt_usage_depth_stencil	= 0,
+	enum_rt_usage_render_target	= 1,
+};
+
 class render_target : public resource_intrusive_base {
 public:
 	void destroy_impl( ) const { }
