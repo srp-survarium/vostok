@@ -9,7 +9,7 @@ namespace vostok {
 namespace render {
 
 struct volume_fog_parameters {
-	volume_fog_parameters( ) { /* no source */ }
+	inline	volume_fog_parameters	( );
 
 	float4x4	transform;
 	float3		fog_color;
@@ -25,6 +25,26 @@ struct volume_fog_parameters {
 };
 
 STATIC_SIZE_ASSERT( volume_fog_parameters, 0x74 );
+
+namespace
+{
+	static float clear_value	= -1.0f;
+} // namespace
+
+inline volume_fog_parameters::volume_fog_parameters( )
+{
+	transform					= vostok::math::float4x4().identity();
+	fog_color					= float3( clear_value, clear_value, clear_value );
+	direction					= float2( clear_value, 0.0f );
+	density						= clear_value;
+	speed						= clear_value;
+	noise_scale					= clear_value;
+	wave_length					= clear_value;
+	transparency_multiplier		= clear_value;
+	height_falloff_offset		= 0.0f;
+	near_density				= 0.0f;
+	density_offset				= 0.0f;
+}
 
 } // namespace render
 } // namespace vostok

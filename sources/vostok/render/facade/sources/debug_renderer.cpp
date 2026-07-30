@@ -1,11 +1,17 @@
 #include "pch.h"
 #include <vostok/render/facade/sources/debug_renderer.h>
+#include <vostok/render/engine/world.h>
+#include <vostok/render/facade/sources/debug_draw_lines_command.h>
+#include <vostok/render/facade/sources/debug_draw_triangles_command.h>
+#include <vostok/render/facade/sources/one_way_render_channel.h>
+#include <vostok/geometry_primitives.h>
 
 namespace vostok {
 namespace render {
 namespace debug {
 
-// STATE[STUB]
+static u32 const max_debug_vertices_count	= 64*1024;
+
 renderer::renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
@@ -15,11 +21,9 @@ renderer::renderer(
 	  m_channel( channel ),
 	  m_allocator( allocator )
 {
-	// FUNCTION BODY[0x771310]: 0
-	// ******
+	// FUNCTION BODY[0x771310]
 }
 
-// STATE[STUB]
 void renderer::draw_line(
 	base_scene_ptr const&		scene,
 	float3 const&				start_point,
@@ -28,27 +32,12 @@ void renderer::draw_line(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// const vertex_colored[2] 			vertices
-	// const u16[2] 					indices
-	// ******
-
-	// FUNCTION BODY[0x771cc0]: 11
-	// <0x771cd1>|0x011|+0x0b2:'36'
-	// <0x771d83>|0x0c3|+0x02f:'37'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x771db2>|0x0f2|+0x01b:'44'
-	// <0x771dcd>|0x10d|+0x016:'45'
-	// <0x771de3>|0x123|+0x078:'46'
-	// ******
+	// FUNCTION BODY[0x771cc0]
+	vertex_colored const vertices[2]	= { vertex_colored( start_point, color ), vertex_colored( end_point, color ) };
+	u16 const indices[2]		= { 0, 1 };
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_origin(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -56,33 +45,26 @@ void renderer::draw_origin(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// const vertex_colored[6] 			vertices
-	// const u16[6] 					indices
-	// ******
+	// FUNCTION BODY[0x771800]
+	//math::aabb bb = (math::aabb().identity()*half_size).modify(matrix);
+	//if(frustum.test_inexact(bb)==math::intersection_outside)
+	//	return;
 
-	// FUNCTION BODY[0x771800]: 17
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x771806>|0x006|+0x1a3:'62'
-	// <0x7719a9>|0x1a9|+0x122:'63'
-	// <0x771acb>|0x2cb|+0x103:'64'
-	// <0>
-	// <0x771bce>|0x3ce|+0x03c:'66'
-	// <0x771c0a>|0x40a|+0x0a2:'67'
-	// ******
+	math::color const clr_red	( 0xff, 0x00, 0x00, 0xff );
+	math::color const clr_green ( 0x00, 0xff, 0x00, 0xff );
+	math::color const clr_blue	( 0x00, 0x00, 0x0ff, 0xff );
+	math::color const clr_white ( 0xff, 0xff, 0xff, 0xff );
+
+	vertex_colored const vertices[6]=
+	{
+		vertex_colored( float3(-half_size, 0, 0)* matrix, clr_white ), vertex_colored( float3(half_size, 0, 0)* matrix, clr_red ), // x- axis
+		vertex_colored( float3(0, -half_size, 0)* matrix, clr_white ), vertex_colored( float3(0, half_size, 0)* matrix, clr_green ), // y- axis
+		vertex_colored( float3(0, 0, -half_size)* matrix, clr_white ), vertex_colored( float3(0, 0, half_size)* matrix, clr_blue ), // z- axis
+	};
+	u16 const indices[]			= { 0, 1, 2, 3, 4, 5 };
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_cross(
 	base_scene_ptr const&		scene,
 	float3 const&				p,
@@ -91,46 +73,32 @@ void renderer::draw_cross(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// const vertex_colored[6] 			vertices
-	// const u16[6] 					indices
-	// ******
+	// FUNCTION BODY[0x771600]
+	//math::aabb bb = (math::aabb().identity()*2*half_size).move(p);
+	//if(frustum.test_inexact(bb)==math::intersection_outside)
+	//	return;
 
-	// FUNCTION BODY[0x771600]: 12
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x771609>|0x009|+0x059:'78'
-	// <0x771662>|0x062|+0x06b:'79'
-	// <0x7716cd>|0x0cd|-0x0ca:'80'
-	// <0>
-	// <0x771603>|0x003|+0x12b:'82'
-	// <0x77172e>|0x12e|+0x03b:'82'
-	// <0x771769>|0x169|+0x089:'83'
-	// ******
+	vertex_colored const vertices[6]=
+	{
+		vertex_colored( p + float3( -half_size, 0, 0 ), color ),	vertex_colored( p + float3( half_size, 0, 0 ), color ),
+		vertex_colored( p + float3( 0, -half_size, 0 ), color ),	vertex_colored( p + float3( 0, half_size, 0 ), color ),
+		vertex_colored( p + float3( 0, 0, -half_size ), color ),	vertex_colored( p + float3( 0, 0, half_size ), color ),
+	};
+	u16 const indices[]		= { 0, 1, 2, 3, 4, 5 };
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_triangle(
 	base_scene_ptr const&		scene,
 	vertex_colored const (&vertices)[3],
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// const u16[3] 					indices
-	// ******
-
-	// FUNCTION BODY[0x771560]: 2
-	// <0x771567>|0x007|+0x00c:'115'
-	// <0x771573>|0x013|+0x078:'116'
-	// ******
+	// FUNCTION BODY[0x771560]
+	u16 const indices[3]		= { 0, 1, 2 };
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_triangles_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_cube(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -139,30 +107,24 @@ void renderer::draw_cube(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// math::aabb 						bb
-	// ******
+	// FUNCTION BODY[0x773390]
+	math::aabb bb = create_aabb_min_max(-size, size).modify(matrix);
+	if(frustum.test_inexact(bb)==math::intersection_outside)
+		return;
 
-	// FUNCTION BODY[0x773390]: 15
-	// <0x773399>|0x009|+0x082:'121'
-	// <0x77341b>|0x08b|+0x017:'122'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x773432>|0x0a2|+0x01f:'135'
-	// ******
+	draw_lines					(
+		scene,
+		matrix,
+		size,
+		geometry_utils::obb::vertices,
+		geometry_utils::obb::vertex_count,
+		(u16*)geometry_utils::obb::pairs,
+		geometry_utils::obb::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_frustum(
 	base_scene_ptr const&		scene,
 	const float					fov_in_radians,
@@ -176,99 +138,80 @@ void renderer::draw_frustum(
 	bool						use_depth
 )
 {
-	// LOCALS
-	// float 							window_right_coord
-	// float 							window_left_coord
-	// float 							window_top_coord
-	// float 							window_bottom_coord
-	// const float3[4] 					corner_vertices
-	// const float3[4] 					projectors
-	// const float3[4] 					far_plane_points
-	// bool 							do_debug_break
-	// ******
+	// FUNCTION BODY[0x772920]
+	float y_fov					= fov_in_radians;
+	float x_fov					= fov_in_radians * aspect_ratio;
 
-	// STATICS
-	// static bool 						debug_macro_helper_ignore_always = <0x4c25af6>;
-	// static u32 						occurances_left = <0xa6bd8c>;
-	// ******
+	float window_right_coord	= math::tan( x_fov / 2.f );
+	float window_left_coord		= -window_right_coord;
+	float window_top_coord		= math::tan( y_fov / 2.f );
+	float window_bottom_coord	= -window_top_coord;
 
-	// FUNCTION BODY[0x772920]: 71
-	// <0>
-	// <0x77292c>|0x00c|+0x00a:'152'
-	// <0>
-	// <0x772936>|0x016|+0x01b:'154'
-	// <0>
-	// <0x772951>|0x031|+0x024:'156'
-	// <0x772975>|0x055|+0x002:'157'
-	// <0>
-	// <0x772977>|0x057|+0x0e6:'159'
-	// <0>
-	// <0x772a5d>|0x13d|+0x0b1:'161'
-	// <0x772b0e>|0x1ee|+0x0c3:'162'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x772bd1>|0x2b1|+0x152:'167'
-	// <0x772d23>|0x403|+0x068:'168'
-	// <0x772d8b>|0x46b|+0x028:'169'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x772db3>|0x493|+0x135:'175'
-	// <0x772ee8>|0x5c8|+0x0a3:'176'
-	// <0x772f8b>|0x66b|+0x0a3:'177'
-	// <0>
-	// <0x77302e>|0x70e|+0x0d1:'179'
-	// <0>
-	// <0x7730ff>|0x7df|+0x0b5:'181'
-	// <0>
-	// <1>
-	// <0x7731b4>|0x894|+0x045:'184'
-	// <0x7731f9>|0x8d9|+0x04f:'185'
-	// <0x773248>|0x928|+0x049:'186'
-	// <0>
-	// <0x773291>|0x971|+0x025:'188'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7732b6>|0x996|+0x038:'192'
-	// <0x7732ee>|0x9ce|+0x011:'193'
-	// <0x7732ff>|0x9df|+0x014:'194'
-	// <0x773313>|0x9f3|+0x014:'195'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <0x773327>|0xa07|+0x012:'218'
-	// <0x773339>|0xa19|+0x015:'219'
-	// <0x77334e>|0xa2e|+0x018:'220'
-	// <0x773366>|0xa46|-0x910:'221'
-	// <0x772a56>|0x136|+0x925:'222'
-	// ******
+	CURE_ASSERT					( math::is_similar( direction.length(), 1.f, math::epsilon_5 ), return, "given direction vector isn't normalized" );
+
+	float3 const& right_vector	= normalize( up_vector ^ direction );
+	up_vector					= normalize( direction ^ right_vector );
+	float3 const& offset		= position + direction;
+
+	float3 const corner_vertices[] =
+	{
+		offset + right_vector * window_right_coord + up_vector * window_top_coord,
+		offset + right_vector * window_right_coord + up_vector * window_bottom_coord,
+		offset + right_vector * window_left_coord  + up_vector * window_top_coord,
+		offset + right_vector * window_left_coord  + up_vector * window_bottom_coord
+	};
+
+	float3 const projectors[]		=
+	{
+		normalize( corner_vertices[0] - position ),
+		normalize( corner_vertices[1] - position ),
+		normalize( corner_vertices[2] - position ),
+		normalize( corner_vertices[3] - position )
+	};
+
+	float const distance_to_vertex	= far_plane_distance / ( direction | normalize( projectors[0] ) );
+	float3 const far_plane_points[] =
+	{
+		position + projectors[0] * distance_to_vertex,
+		position + projectors[1] * distance_to_vertex,
+		position + projectors[2] * distance_to_vertex,
+		position + projectors[3] * distance_to_vertex
+	};
+
+	if ( near_plane_distance == 0.f )
+	{
+		draw_line				( scene, position, far_plane_points[0], color, use_depth );
+		draw_line				( scene, position, far_plane_points[1], color, use_depth );
+		draw_line				( scene, position, far_plane_points[2], color, use_depth );
+		draw_line				( scene, position, far_plane_points[3], color, use_depth );
+	}
+	else
+	{
+		float const distance_to_vertex	= near_plane_distance / ( direction | normalize( projectors[0] ) );
+		float3 const near_plane_points[] =
+		{
+			position + projectors[0] * distance_to_vertex,
+			position + projectors[1] * distance_to_vertex,
+			position + projectors[2] * distance_to_vertex,
+			position + projectors[3] * distance_to_vertex
+		};
+		draw_line				( scene, near_plane_points[0], near_plane_points[1], color, use_depth );
+		draw_line				( scene, near_plane_points[1], near_plane_points[3], color, use_depth );
+		draw_line				( scene, near_plane_points[3], near_plane_points[2], color, use_depth );
+		draw_line				( scene, near_plane_points[2], near_plane_points[0], color, use_depth );
+
+		draw_line				( scene, near_plane_points[0], far_plane_points[0], color, use_depth );
+		draw_line				( scene, near_plane_points[1], far_plane_points[1], color, use_depth );
+		draw_line				( scene, near_plane_points[2], far_plane_points[2], color, use_depth );
+		draw_line				( scene, near_plane_points[3], far_plane_points[3], color, use_depth );
+	}
+
+	draw_line					( scene, far_plane_points[0], far_plane_points[1], color, use_depth );
+	draw_line					( scene, far_plane_points[1], far_plane_points[3], color, use_depth );
+	draw_line					( scene, far_plane_points[3], far_plane_points[2], color, use_depth );
+	draw_line					( scene, far_plane_points[2], far_plane_points[0], color, use_depth );
 }
 
-// STATE[STUB]
 void renderer::draw_aabb(
 	base_scene_ptr const&		scene,
 	float3 const&				center,
@@ -277,20 +220,18 @@ void renderer::draw_aabb(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773a70]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x773a7a>|0x00a|+0x021:'361'
-	// ******
+	// FUNCTION BODY[0x773a70]
+	draw_cube					(
+		scene,
+		math::create_translation(
+			center
+		),
+		size,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_ellipsoid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -299,22 +240,20 @@ void renderer::draw_ellipsoid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7728f0]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x7728f0>|0x000|+0x024:'404'
-	// ******
+	// FUNCTION BODY[0x7728f0]
+	draw_lines					(
+		scene,
+		matrix,
+		size,
+		geometry_utils::ellipsoid::vertices,
+		geometry_utils::ellipsoid::vertex_count,
+		geometry_utils::ellipsoid::pairs,
+		geometry_utils::ellipsoid::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_cylinder(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -323,26 +262,24 @@ void renderer::draw_cylinder(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7728c0]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x7728c0>|0x000|+0x024:'438'
-	// ******
+	// FUNCTION BODY[0x7728c0]
+	//math::aabb bb = (math::aabb().identity()*size).modify(matrix);
+	//if(frustum.test_inexact(bb)==math::intersection_outside)
+	//	return;
+
+	draw_lines					(
+		scene,
+		matrix,
+		size,
+		geometry_utils::cylinder::vertices,
+		geometry_utils::cylinder::vertex_count,
+		geometry_utils::cylinder::pairs,
+		geometry_utils::cylinder::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_sphere(
 	base_scene_ptr const&		scene,
 	float4x4 const&				m,
@@ -351,26 +288,24 @@ void renderer::draw_sphere(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// math::sphere 					sp
-	// ******
+	// FUNCTION BODY[0x7739f0]
+	math::sphere sp(m.c.xyz(), radius);
+	if( frustum.test(sp) == math::intersection_outside )
+		return;
 
-	// FUNCTION BODY[0x7739f0]: 11
-	// <0x7739f3>|0x003|+0x013:'443'
-	// <0x773a06>|0x016|+0x01c:'444'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x773a22>|0x032|+0x03a:'453'
-	// ******
+	draw_lines					(
+		scene,
+		m,
+		float3(radius, radius, radius),
+		geometry_utils::ellipsoid::vertices,
+		geometry_utils::ellipsoid::vertex_count,
+		geometry_utils::ellipsoid::pairs,
+		geometry_utils::ellipsoid::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_cone(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -379,30 +314,24 @@ void renderer::draw_cone(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// math::sphere 					sp
-	// ******
+	// FUNCTION BODY[0x772850]
+	math::sphere sp(matrix.c.xyz(), math::max(size.x, size.y) );
+	if(frustum.test(sp)==math::intersection_outside)
+		return;
 
-	// FUNCTION BODY[0x772850]: 15
-	// <0x77285b>|0x00b|+0x01d:'458'
-	// <0x772878>|0x028|+0x01c:'459'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x772894>|0x044|+0x021:'472'
-	// ******
+	draw_lines					(
+		scene,
+		matrix,
+		size,
+		geometry_utils::cone::vertices,
+		geometry_utils::cone::vertex_count,
+		geometry_utils::cone::pairs,
+		geometry_utils::cone::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_cube_solid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -411,26 +340,24 @@ void renderer::draw_cube_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772820]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x772820>|0x000|+0x028:'525'
-	// ******
+	// FUNCTION BODY[0x772820]
+	//math::aabb bb = (math::aabb().identity()*size).modify(matrix);
+	//if(frustum.test_inexact(bb)==math::intersection_outside)
+	//	return;
+
+	draw_primitive_solid		(
+		scene,
+		matrix,
+		size,
+		geometry_utils::cube_solid::vertices,
+		geometry_utils::cube_solid::vertex_count,
+		geometry_utils::cube_solid::faces,
+		geometry_utils::cube_solid::index_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_cylinder_solid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -439,24 +366,22 @@ void renderer::draw_cylinder_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x772790]: 13
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x77279c>|0x00c|+0x07b:'542'
-	// ******
+	// FUNCTION BODY[0x772790]
+	draw_primitive_solid		(
+		scene,
+		// this is temporary, coordinates of the primitive need to be updated.
+		math::create_scale( float3(0.5, 1, 0.5))*matrix,
+		//matrix,
+		size,
+		geometry_utils::cylinder_solid::vertices,
+		geometry_utils::cylinder_solid::vertex_count,
+		geometry_utils::cylinder_solid::faces,
+		geometry_utils::cylinder_solid::index_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_sphere_solid(
 	base_scene_ptr const&		scene,
 	float3 const&				center,
@@ -465,26 +390,20 @@ void renderer::draw_sphere_solid(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// math::sphere 					sp
-	// ******
+	// FUNCTION BODY[0x772710]
+	math::sphere sp(center, radius);
+	if(frustum.test(sp)==math::intersection_outside)
+		return;
 
-	// FUNCTION BODY[0x772710]: 11
-	// <0x772713>|0x003|+0x00f:'547'
-	// <0x772722>|0x012|+0x01a:'548'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x77273c>|0x02c|+0x04e:'557'
-	// ******
+	draw_ellipsoid_solid		(
+		scene,
+		math::create_translation( center ),
+		float3( radius, radius, radius ),
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_ellipsoid_solid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -493,22 +412,20 @@ void renderer::draw_ellipsoid_solid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7726d0]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x7726d0>|0x000|+0x02e:'572'
-	// ******
+	// FUNCTION BODY[0x7726d0]
+	draw_primitive_solid		(
+		scene,
+		matrix,
+		size,
+		geometry_utils::ellipsoid_solid::vertices,
+		geometry_utils::ellipsoid_solid::vertex_count,
+		geometry_utils::ellipsoid_solid::faces,
+		geometry_utils::ellipsoid_solid::index_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_primitive_solid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -521,48 +438,34 @@ void renderer::draw_primitive_solid(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// vectora< vertex_colored > 		temp_vertices
-	// float4x4 						trnsform
-	// vertex_colored 					temp_vertex
-	// vectora< u16 > 					temp_indices
-	// u32 								i
-	// ******
+	// FUNCTION BODY[0x772090]
+	float4x4 trnsform = create_scale(size)*matrix;
 
-	// FUNCTION BODY[0x772090]: 25
-	// <0x77209f>|0x00f|+0x069:'577'
-	// <0>
-	// <0x772108>|0x078|+0x00c:'579'
-	// <0x772114>|0x084|+0x028:'580'
-	// <0>
-	// <1>
-	// <0x77213c>|0x0ac|+0x005:'583'
-	// <0>
-	// <0x772141>|0x0b1|+0x3d6:'585'
-	// <0x772517>|0x487|-0x388:'585'
-	// <0>
-	// <1>
-	// <2>
-	// <0x77218f>|0x0ff|+0x39e:'589'
-	// <0x77252d>|0x49d|-0x395:'589'
-	// <0>
-	// <0x772198>|0x108|+0x39e:'591'
-	// <0x772536>|0x4a6|-0x2df:'591'
-	// <0x772257>|0x1c7|+0x39e:'592'
-	// <0x7725f5>|0x565|+0x01e:'592'
-	// <0>
-	// <1>
-	// <0x772613>|0x583|+0x006:'595'
-	// <0x772619>|0x589|+0x038:'596'
-	// <0>
-	// <0x772651>|0x5c1|+0x00f:'598'
-	// <0x772660>|0x5d0|+0x017:'599'
-	// <0>
-	// <0x772677>|0x5e7|+0x01c:'601'
-	// ******
+	debug_vertices_type temp_vertices(m_allocator);
+	temp_vertices.resize		( vertex_count);
+
+	vertex_colored temp_vertex;
+	temp_vertex.color = color;
+
+	for( u32 i = 0, j = 0; i< vertex_count; ++i, j+=3)
+	{
+		temp_vertex.position.x = vertices[j];
+		temp_vertex.position.y = vertices[j+1];
+		temp_vertex.position.z = vertices[j+2];
+
+		temp_vertex.position = trnsform.transform_position( temp_vertex.position );
+		temp_vertices[i] = temp_vertex;
+	}
+
+	debug_indices_type temp_indices(m_allocator);
+	temp_indices.resize	( index_count);
+
+	for( u32 i = 0; i< index_count; ++i)
+		temp_indices[i] = faces[i];
+
+	draw_triangles	( scene, temp_vertices, temp_indices, use_depth );
 }
 
-// STATE[STUB]
 void renderer::draw_arrow(
 	base_scene_ptr const&		scene,
 	float3 const&				start_point,
@@ -572,50 +475,40 @@ void renderer::draw_arrow(
 	const bool					use_depth
 )
 {
-	// LOCALS
-	// float3 							up_vector
-	// float4x4 						matrix
-	// float3 							direction
-	// float 							length
-	// float3 							sizes
-	// ******
+	// FUNCTION BODY[0x7736f0]
+	float3 direction			= end_point - start_point;
+	if ( math::is_zero( direction.squared_length(), math::epsilon_3 ) )
+		return;
 
-	// FUNCTION BODY[0x7736f0]: 31
-	// <0x773700>|0x010|+0x01f:'606'
-	// <0x77371f>|0x02f|+0x056:'607'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x773775>|0x085|+0x014:'615'
-	// <0>
-	// <0x773789>|0x099|+0x048:'617'
-	// <0x7737d1>|0x0e1|+0x006:'618'
-	// <0>
-	// <1>
-	// <0x7737d7>|0x0e7|+0x008:'621'
-	// <0>
-	// <0x7737df>|0x0ef|+0x055:'623'
-	// <0>
-	// <0x773834>|0x144|+0x093:'625'
-	// <0x7738c7>|0x1d7|+0x036:'626'
-	// <0x7738fd>|0x20d|+0x002:'627'
-	// <0>
-	// <0x7738ff>|0x20f|+0x019:'629'
-	// <0x773918>|0x228|+0x028:'630'
-	// <0x773940>|0x250|+0x002:'631'
-	// <0x773942>|0x252|+0x073:'632'
-	// <0>
-	// <1>
-	// <0x7739b5>|0x2c5|+0x003:'635'
-	// <0x7739b8>|0x2c8|+0x027:'636'
-	// ******
+	//math::aabb bb = create_aabb_min_max(start_point, start_point);
+	//bb.modify(end_point);
+	//if(frustum.test_inexact(bb)==math::intersection_outside)
+	//	return;
+
+	draw_line					( scene, start_point, end_point, line_color, use_depth );
+
+	float						length = ( start_point - end_point ).length( );
+	float						size = length / 20.f;
+	float3						sizes = float3( .5f * size, size, .5f * size );
+
+	direction					/= length;
+
+	float3 const up_vector		( 0.f, 1.f, 0.f );
+	float4x4 matrix;
+	if ( !math::is_zero( math::length( up_vector ^ direction ) ) )
+		matrix					= math::create_rotation_x( -math::pi_d2 ) * math::create_rotation( direction, up_vector );
+	else
+	{
+		if ( ( up_vector | direction ) > 0.f )
+			matrix				= math::create_rotation_y( math::pi_d2 );
+		else
+			matrix				= math::create_rotation_x( -math::pi ) * math::create_rotation_y( -math::pi_d2 );
+	}
+
+	matrix.c.xyz()				= end_point;
+	draw_cone					( scene, matrix, sizes, cone_color, use_depth );
 }
 
-// STATE[STUB]
 void renderer::draw_arrow(
 	base_scene_ptr const&		scene,
 	float3 const&				start_point,
@@ -624,19 +517,17 @@ void renderer::draw_arrow(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773ab0]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x773ab0>|0x000|+0x015:'648'
-	// ******
+	// FUNCTION BODY[0x773ab0]
+	draw_arrow					(
+		scene,
+		start_point,
+		end_point,
+		color,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_line_ellipsoid(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -644,43 +535,41 @@ void renderer::draw_line_ellipsoid(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7714f0]: 32
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x7714fb>|0x00b|+0x01c:'662'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x771517>|0x027|+0x01c:'673'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x771533>|0x043|+0x01c:'684'
-	// ******
+	// FUNCTION BODY[0x7714f0]
+	draw_lines(
+		scene,
+		matrix,
+		geometry_utils::line_ellipsoid::vertices_xy,
+		geometry_utils::line_ellipsoid::vertex_count,
+		geometry_utils::line_ellipsoid::pairs,
+		geometry_utils::line_ellipsoid::pair_count,
+		color,
+		use_depth
+	);
+
+	draw_lines(
+		scene,
+		matrix,
+		geometry_utils::line_ellipsoid::vertices_yz,
+		geometry_utils::line_ellipsoid::vertex_count,
+		geometry_utils::line_ellipsoid::pairs,
+		geometry_utils::line_ellipsoid::pair_count,
+		color,
+		use_depth
+	);
+
+	draw_lines(
+		scene,
+		matrix,
+		geometry_utils::line_ellipsoid::vertices_xz,
+		geometry_utils::line_ellipsoid::vertex_count,
+		geometry_utils::line_ellipsoid::pairs,
+		geometry_utils::line_ellipsoid::pair_count,
+		color,
+		use_depth
+	);
 }
 
-// STATE[STUB]
 void renderer::draw_line_hemisphere(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -690,50 +579,48 @@ void renderer::draw_line_hemisphere(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x771fe0]: 39
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x771fe6>|0x006|+0x048:'700'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x77202e>|0x04e|+0x055:'712'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// ******
+	// FUNCTION BODY[0x771fe0]
+	// base is XY plane
+	draw_lines(
+		scene,
+		matrix,
+		size,
+		geometry_utils::line_arc::vertices_xy,
+		geometry_utils::line_arc::vertex_count,
+		geometry_utils::line_arc::pairs,
+		geometry_utils::line_arc::pair_count,
+		color,
+		use_depth
+	);
+
+	draw_lines(
+		scene,
+		math::create_rotation_y(math::pi_d2)* matrix,
+		size,
+		geometry_utils::line_arc::vertices_xy,
+		geometry_utils::line_arc::vertex_count,
+		geometry_utils::line_arc::pairs,
+		geometry_utils::line_arc::pair_count,
+		color,
+		use_depth
+	);
+
+	if(bdraw_base)
+	{
+		draw_lines(
+			scene,
+			matrix,
+			size,
+			geometry_utils::line_ellipsoid::vertices_xz,
+			geometry_utils::line_ellipsoid::vertex_count,
+			geometry_utils::line_ellipsoid::pairs,
+			geometry_utils::line_ellipsoid::pair_count,
+			color,
+			use_depth
+		);
+	}
 }
 
-// STATE[STUB]
 void renderer::draw_line_capsule(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -742,25 +629,23 @@ void renderer::draw_line_capsule(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x7735c0]: 14
-	// <0x7735cc>|0x00c|+0x02c:'732'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7735f8>|0x038|+0x06f:'738'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x773667>|0x0a7|+0x07d:'744'
-	// <0>
-	// ******
+	// FUNCTION BODY[0x7735c0]
+	draw_cylinder		( scene, matrix, size, color, use_depth );
+
+	draw_line_hemisphere( scene, math::create_translation(float3(0, size.y, 0)) * matrix,
+							float3(size.x, size.x, size.z),
+							false,
+							color,
+							use_depth);
+
+	draw_line_hemisphere( scene, math::create_translation(float3(0, -size.y, 0)) * matrix,
+							float3(size.x, -size.x, size.z),
+							false,
+							color,
+							use_depth);
+
 }
 
-// STATE[STUB]
 void renderer::draw_solid_capsule(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -769,38 +654,21 @@ void renderer::draw_solid_capsule(
 	const bool					use_depth
 )
 {
-	// FUNCTION BODY[0x773460]: 27
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x773472>|0x012|+0x07b:'764'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x7734ed>|0x08d|+0x063:'770'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x773550>|0x0f0|+0x064:'775'
-	// <0>
-	// ******
+	// FUNCTION BODY[0x773460]
+	draw_cylinder_solid	( scene, matrix, size, color, use_depth );
+
+	draw_sphere_solid	( scene, matrix.c.xyz( ) + matrix.j.xyz( ) * size.y,
+							size.x,
+							color,
+							use_depth);
+
+	draw_sphere_solid	( scene, matrix.c.xyz( ) - matrix.j.xyz( ) * size.y,
+							size.x,
+							color,
+							use_depth);
+
 }
 
-// STATE[STUB]
 void renderer::draw_lines(
 	base_scene_ptr const&				scene,
 	vectora< vertex_colored > const&	vertices,
@@ -808,13 +676,11 @@ void renderer::draw_lines(
 	const bool							use_depth
 )
 {
-	// FUNCTION BODY[0x771f70]: 2
-	// <0>
-	// <0x771f74>|0x004|+0x067:'782'
-	// ******
+	// FUNCTION BODY[0x771f70]
+	R_ASSERT_CMP				( vertices.size(), <=, max_debug_vertices_count );
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( m_allocator, scene, m_render_engine_world, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_lines(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -826,40 +692,33 @@ void renderer::draw_lines(
 	bool						use_depth
 )
 {
-	// LOCALS
-	// buffer_vector< vertex_colored > 	temp_vertices
-	// buffer_vector< u16 > 			temp_indices
-	// ******
+	// FUNCTION BODY[0x771330]
+	R_ASSERT_CMP				( vertex_count, <=, max_debug_vertices_count );
 
-	// FUNCTION BODY[0x771330]: 24
-	// <0>
-	// <1>
-	// <2>
-	// <0x77133b>|0x00b|+0x03c:'811'
-	// <0>
-	// <1>
-	// <0x771377>|0x047|+0x015:'814'
-	// <0x77138c>|0x05c|+0x00b:'815'
-	// <0>
-	// <0x771397>|0x067|+0x003:'817'
-	// <0>
-	// <0x77139a>|0x06a|+0x016:'819'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x7713b0>|0x080|+0x0bc:'828'
-	// <0>
-	// <1>
-	// <0x77146c>|0x13c|+0x06a:'831'
-	// ******
+	typedef vostok::buffer_vector< u16 >	TempIndices;
+	TempIndices temp_indices	( ALLOCA( 2 * pair_count * sizeof( u16 ) ), 2 * pair_count, pairs, pairs + 2*pair_count );
+
+	typedef vostok::buffer_vector< vertex_colored >	TempVertices;
+	TempVertices temp_vertices	( ALLOCA( vertex_count * sizeof( vertex_colored ) ), vertex_count );
+	temp_vertices.resize		( vertex_count );
+
+	TempVertices::iterator		i = temp_vertices.begin( );
+	TempVertices::iterator		e = temp_vertices.end( );
+	for ( u32 j = 0; i != e; ++i, j += 3 ) {
+		( *i )					=
+			vertex_colored(
+				float3(
+					vertices[ j ],
+					vertices[ j + 1 ],
+					vertices[ j + 2 ]
+				) * matrix,
+				color
+			);
+	}
+
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, temp_vertices, temp_indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_triangles(
 	base_scene_ptr const&				scene,
 	vectora< vertex_colored > const&	vertices,
@@ -867,13 +726,11 @@ void renderer::draw_triangles(
 	const bool							use_depth
 )
 {
-	// FUNCTION BODY[0x771f00]: 2
-	// <0>
-	// <0x771f04>|0x004|+0x066:'856'
-	// ******
+	// FUNCTION BODY[0x771f00]
+	R_ASSERT_CMP				( vertices.size(), <=, max_debug_vertices_count );
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_triangles_command ) ( scene, m_render_engine_world, vertices, indices, use_depth ) );
 }
 
-// STATE[STUB]
 void renderer::draw_lines(
 	base_scene_ptr const&		scene,
 	float4x4 const&				matrix,
@@ -886,19 +743,18 @@ void renderer::draw_lines(
 	bool						use_depth
 )
 {
-	// FUNCTION BODY[0x771e70]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x771e7c>|0x00c|+0x07c:'881'
-	// ******
+	// FUNCTION BODY[0x771e70]
+	R_ASSERT_CMP				( vertex_count, <=, max_debug_vertices_count );
+	draw_lines					(
+		scene,
+		math::create_scale( size ) * matrix,
+		vertices,
+		vertex_count,
+		pairs,
+		pair_count,
+		color,
+		use_depth
+	);
 }
 
 } // namespace debug

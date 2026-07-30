@@ -1,10 +1,12 @@
 #include "pch.h"
 #include <vostok/render/facade/sources/ui_renderer.h>
+#include <vostok/render/world.h>
+#include <vostok/render/engine/world.h>
+#include <vostok/render/facade/sources/ui_draw_vertices_command.h>
 
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 ui::renderer::renderer(
 	one_way_render_channel&		channel,
 	memory::base_allocator&		allocator,
@@ -15,10 +17,8 @@ ui::renderer::renderer(
 	  m_allocator( allocator )
 {
 	// FUNCTION BODY[0x7372b0]: 0
-	// ******
 }
 
-// STATE[STUB]
 void ui::renderer::draw_vertices(
 	base_scene_view_ptr const&		scene_view,
 	ui::vertex const* const			begin,
@@ -28,11 +28,9 @@ void ui::renderer::draw_vertices(
 )
 {
 	// FUNCTION BODY[0x7373e0]: 1
-	// <0x7373e4>|0x004|+0x069:'34'
-	// ******
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, ui::draw_vertices_command ) ( m_render_engine_world, scene_view, begin, end, m_allocator, primitives_type, points_type ) );
 }
 
-// STATE[STUB]
 void ui::renderer::draw_text(
 	base_scene_view_ptr const&		scene_view,
 	pcstr const&					text,
@@ -46,30 +44,25 @@ void ui::renderer::draw_text(
 	const u32						end_selection
 )
 {
-	// LOCALS
-	// vectora< ui::vertex > 			vertices
-	// ******
-
 	// FUNCTION BODY[0x7372d0]: 18
-	// <0>
-	// <0x7372d3>|0x003|+0x051:'51'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x737324>|0x054|+0x034:'63'
-	// <0>
-	// <1>
-	// <2>
-	// <0x737358>|0x088|+0x05f:'67'
-	// ******
+	vectora< ui::vertex > vertices( m_allocator );
+	vertices.resize				( strings::length( text ) * 4 );
+	m_render_engine_world.draw_text	(
+		vertices,
+		text,
+		font,
+		position,
+		text_color,
+		selection_color,
+		max_line_size,
+		is_multiline,
+		start_selection,
+		end_selection
+	);
+
+	u32 const primitives_type	= 0;
+	u32 const points_type		= 0;
+	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, ui::draw_vertices_command ) ( m_render_engine_world, scene_view, &*vertices.begin(), &*vertices.end(), m_allocator, primitives_type, points_type ) );
 }
 
 } // namespace render

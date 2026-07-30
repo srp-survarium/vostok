@@ -17,7 +17,6 @@ public:
 	typedef boost::function< void ( T const& ) > on_execute_type;
 	typedef boost::function< void ( base_command& ) > on_defer_execution_type;
 
-	// STATE[STUB]
 	inline functor_with_big_buffer_to_copy_command(
 		on_execute_type const& on_execute,
 		T const& data,
@@ -30,18 +29,19 @@ public:
 	{
 		// FUNCTION BODY[0x15e90] for game::renderer::draw_scene_params
 		// FUNCTION BODY[0x19c70] for decal_properties
+		R_ASSERT			( on_execute );
 	}
 
-	// STATE[STUB]
 	virtual void execute( )
 	{
 		// FUNCTION BODY[0x1a2f0]
+		m_on_execute		( m_data );
 	}
 
-	// STATE[STUB]
 	virtual void defer_execution( )
 	{
 		// FUNCTION BODY[0x1a5f0]
+		m_on_defer_execution( *this );
 	}
 
 	virtual ~functor_with_big_buffer_to_copy_command( ) { /* no source */ }

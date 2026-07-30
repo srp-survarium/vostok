@@ -29,7 +29,7 @@ public:
 	inline update_model_vertex_buffer_command(
 		engine::world& world,
 		render_model_instance_ptr object,
-		fragments_type const&,
+		fragments_type const& fragments,
 		memory::base_allocator& allocator
 	)
 		: m_fragments( allocator ),
@@ -37,7 +37,19 @@ public:
 		  m_world( world ),
 		  m_allocator( allocator )
 	{
-		/* no source */
+		ASSERT				( m_object );
+		m_fragments.resize	( fragments.size() );
+		fragments_type::iterator		it	= m_fragments.begin();
+		fragments_type::const_iterator	end	= m_fragments.end();
+
+		fragments_type::const_iterator it_o	= fragments.begin();
+
+		for( ; it != end; ++it, ++it_o)
+		{
+			*it = *it_o;
+			it->buffer = VOSTOK_NEW_ARRAY_IMPL( m_allocator, char, it_o->size);
+			memory::copy( it->buffer, it_o->size, it_o->buffer, it_o->size);
+		}
 	}
 
 	virtual ~update_model_vertex_buffer_command( );

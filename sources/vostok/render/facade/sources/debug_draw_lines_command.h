@@ -26,7 +26,6 @@ public:
 	typedef vectora< vertex_colored > vertices_type;
 	typedef vectora< u16 > indices_type;
 
-	// STATE[STUB]
 	inline draw_lines_command(
 		memory::base_allocator& allocator,
 		base_scene_ptr const& scene,
@@ -42,10 +41,10 @@ public:
 		  m_renderer( renderer )
 	{
 		// FUNCTION BODY[0x16a70]
+		ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
 	}
 
 	template < int vertex_count, int index_count >
-	// STATE[STUB]
 	inline draw_lines_command(
 		base_scene_ptr const& scene,
 		engine::world& renderer,
@@ -65,7 +64,6 @@ public:
 	}
 
 	template < template < typename > class container_type >
-	// STATE[STUB]
 	inline draw_lines_command(
 		base_scene_ptr const& scene,
 		engine::world& renderer,

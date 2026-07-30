@@ -12,23 +12,6 @@ namespace render {
 namespace debug {
 
 inline draw_lines_command::draw_lines_command	(
-		memory::base_allocator& allocator,
-		render::scene_ptr const& scene,
-		render::engine::world& renderer,
-		vertices_type const& vertices,
-		indices_type const& indices,
-		bool use_depth
-	) :
-	super		( true, use_depth ),
-	m_scene		( scene ),
-	m_renderer	( renderer ),
-	m_vertices	( allocator, vertices.begin(), vertices.end() ),
-	m_indices	( allocator, indices.begin(), indices.end() )
-{
-	ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
-}
-
-inline draw_lines_command::draw_lines_command	(
 		scene_ptr const& scene,
 		engine::world& renderer,
 		memory::base_allocator& allocator,
@@ -44,41 +27,6 @@ inline draw_lines_command::draw_lines_command	(
 	m_indices	( allocator, indices.begin(), indices.end() )
 {
 	ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
-}
-
-template < int vertex_count, int index_count >
-inline draw_lines_command::draw_lines_command	(
-		scene_ptr const& scene,
-		render::engine::world& renderer,
-		memory::base_allocator& allocator,
-		vertex_colored const ( &vertices )[ vertex_count ],
-		u16 const ( &indices )[ index_count ],
-		bool use_depth
-	) :
-	super		( true, use_depth ),
-	m_scene		( scene ),
-	m_vertices	( allocator, &vertices[0], &vertices[0] + vertex_count ),
-	m_indices	( allocator, &indices[0], &indices[0] + index_count ),
-	m_renderer	( renderer )
-{
-	COMPILE_ASSERT( index_count >= vertex_count, please_remove_redundant_vertices );
-}
-
-template < template < typename T > class container_type >
-inline draw_lines_command::draw_lines_command	(
-		scene_ptr const& scene,
-		render::engine::world& renderer,
-		memory::base_allocator& allocator,
-		container_type < vertex_colored > const& vertices,
-		container_type < u16 > const& indices,
-		bool use_depth
-	) :
-	super		( true, use_depth ),
-	m_scene		( scene ),
-	m_renderer	( renderer ),
-	m_vertices	( allocator, vertices.begin( ), vertices.end( ) ),
-	m_indices	( allocator, indices.begin( ), indices.end( ) )
-{
 }
 
 } // namespace debug
