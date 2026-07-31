@@ -37,11 +37,26 @@ RECOVERING THE KEY (name + ctor args) - all from the binary, no guessing:
    `push s_<name>; push protected_key_construct; call debug::protected_call`, which names
    the static.
 2. The five `pcstr` members are compile-time constants folded into `.data`, so read them
-   from the image: object VMA = `<m_type VMA> - 0x21c` for `fixed_string512 m_string_value`
-   + `float m_number_value` + 5 pointers; the 5 dwords immediately BELOW `m_type` are
-   `m_full_name, m_short_name, m_category, m_description, m_argument_description`.
-   Convert VMA->file offset with `objdump -h` (.data VMA/file-off) and `xxd` them; empty
-   args all point at one pooled `""`.
+   from the image: the 5 dwords immediately BELOW `m_type` are `m_full_name, m_short_name,
+   m_category, m_description, m_argument_description`, i.e. `m_full_name == m_type - 0x14`;
+   the object itself starts `0x224` below `m_type` (`fixed_string512 m_string_value` at +0,
+   then the 5 pointers at +0x210, then `m_type` at +0x224). Do NOT hardcode the object
+   offset - disassemble the `dynamic initializer` and take the `push <addr>` operand, then
+   read the strings at `<addr>+0x210 .. +0x220`. Convert VMA->file offset with `objdump -h`
+   (careful: `.rdata` and `.data` can share one VMA-minus-file delta); empty args all point
+   at one pooled `""`.
 
 Evidence: `render::engine::world::initialize` - the missing `if ( !s_no_level )` was the
 whole gap between its 7 base statements and the target's 8 (56.7% -> 99.9%, STRUCTURE MATCH).
+
+Evidence 2 - the key is often a SECOND disjunct of an existing guard, and one key can gate a
+whole class. `render::effect_compiler`'s eleven `if (m_shaders_cache_mode)` early-outs are
+really `if (m_shaders_cache_mode || s_no_effect_result)`: `cmp byte ptr [this+9090h],0 /
+jne .end` followed immediately by the `0A5EFCC` lazy-init pair, all inside ONE statement
+record. Widening the guard in one edit moved set_fill_mode/set_cull_mode 30->99, set_depth
+32->99, set_stencil 42->99.6, bind_constant 68->99.6, and un-DCE'd both `set_texture`
+overloads. `begin_technique` in the SAME class has only the `m_shaders_cache_mode` compare -
+read each function's asm, never blanket-apply. When a TU holds two keys
+(`s_no_effect_result`, `s_one_texture_result`), the one used through `operator bool` inlines
+to the lazy-init pair while an explicit `.is_set()` stays an out-of-line
+`call vostok::command_line::key::is_set` - that tells you which spelling the source used.

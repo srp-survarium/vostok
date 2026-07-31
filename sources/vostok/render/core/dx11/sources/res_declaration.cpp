@@ -13,13 +13,6 @@ signature	(signature)
 	input_layout = resource_manager::ref().create_input_layout( decl, signature);
 }
 
-res_declaration::~res_declaration()
-{
-	// FUNCTION BODY[0x7a7480]
-	//	Release vertex layout
-//	safe_release(m_dcl);
-}
-
 res_declaration::res_declaration(
 	D3D11_INPUT_ELEMENT_DESC const* declaration,
 	u32 count
@@ -37,6 +30,13 @@ void res_declaration::destroy_impl() const
 {
 	// FUNCTION BODY[0x7a7510]
 	resource_manager::ref().release( this );
+}
+
+res_declaration::~res_declaration()
+{
+	// FUNCTION BODY[0x7a7480]
+	//	Release vertex layout
+//	safe_release(m_dcl);
 }
 
 } // namespace render

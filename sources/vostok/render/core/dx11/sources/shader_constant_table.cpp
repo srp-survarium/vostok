@@ -17,6 +17,12 @@ bool sort( shader_constant const & c1, shader_constant const & c2)
 
 } // namespace res_const_table_predicates
 
+void shader_constant_table::destroy_impl() const
+{
+	// FUNCTION BODY[0x739360]
+	resource_manager::ref().release( this );
+}
+
 shader_constant* shader_constant_table::get( shared_string const& name)
 {
 	// FUNCTION BODY[0x7390d0]
@@ -31,64 +37,6 @@ shader_constant* shader_constant_table::get( shared_string const& name)
 	return	0;
 }
 
-void shader_constant_table::apply_bindings( shader_constant_bindings const & bindings)
-{
-	// FUNCTION BODY[0x739100]
-	vector<shader_constant_binding>::const_iterator	it  = bindings.bindings().begin(),
-												end = bindings.bindings().end();
-
-	for ( ; it!=end; ++it)
-	{
-		shader_constant * c = get( it->name() );
-
-		if( c == NULL || c->source().pointer() != NULL ) // Do not overwrite source if it is set.
-			continue;
-
-		if( (constant_class_cast_mask & c->slot().class_id()) != (it->class_id() & constant_class_cast_mask))
-		{
-			ASSERT( (constant_class_cast_mask & c->slot().class_id()) == (it->class_id()&constant_class_cast_mask),
-					"The bound object cant be cast to the corresponding slot!");
-			continue;
-		}
-
-		if( c->host().type() != it->type())
-		{
-			ASSERT( c->host().type() == it->type(), "The bound object dosen't have same type as the corresponding slot!");
-			continue;
-		}
-
-		// Maybe we need ignore the binding in this case
-		ASSERT( (c->slot().class_id()&constant_class_size_mask) <= it->source().size(), "The bound object has smaller dimension than the corresponding slot!");
-		c->set_source (
-			shader_constant_source(
-				it->source().pointer(),
-				math::min(
-					it->source().size(),
-					u32( c->slot().class_id() & constant_class_size_mask )
-				)
-			)
-		);
-
-// 		if ( c && c->m_loader.empty())
-// 			c->m_loader = it->second;
-	}
-}
-
-s32 shader_constant_table::compare( shader_constant_table const& ) const
-{
-	// claude@NOTE: no legacy ancestor - stem file consumed; only bool equal ever existed (already ported to the header inline); the s32 compare is target-generation; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x739190]
-	return 0;
-}
-
-void shader_constant_table::clear()
-{
-	// FUNCTION BODY[0x7392a0]
-	m_table.clear();
-	m_const_buffers.clear();
-}
-
 shader_constant* shader_constant_table::get( pcstr const name)
 {
 	// FUNCTION BODY[0x7392e0]
@@ -101,12 +49,6 @@ shader_constant* shader_constant_table::get( pcstr const name)
 
 
 	return	0;
-}
-
-void shader_constant_table::destroy_impl() const
-{
-	// FUNCTION BODY[0x739360]
-	resource_manager::ref().release( this );
 }
 
 bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstantBuffer* src_table, u32 buffer_index)
@@ -129,6 +71,10 @@ bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstan
 		ASSERT( variable);
 
 		variable->GetDesc( &variable_desc);
+
+		if ( !( variable_desc.uFlags & D3D10_SVF_USED))
+			continue;
+
 		reflection_type = variable->GetType();
 		ASSERT( reflection_type);
 
@@ -280,7 +226,6 @@ bool shader_constant_table::parse_constant_buffer( ID3D11ShaderReflectionConstan
 	return TRUE;
 }
 
-
 bool shader_constant_table::parse( ID3D11ShaderReflection* shader_reflection, enum_shader_type destination)
 {
 	// FUNCTION BODY[0x739600]
@@ -318,7 +263,6 @@ bool shader_constant_table::parse( ID3D11ShaderReflection* shader_reflection, en
 	return		TRUE;
 }
 
-
 // void shader_constant_table::merge( shader_constant_table* ctable)
 // {
 // 	if ( 0 == ctable) return;
@@ -350,6 +294,68 @@ bool shader_constant_table::parse( ID3D11ShaderReflection* shader_reflection, en
 // 	// Sort
 // 	std::sort( m_table.begin(), m_table.end(), res_const_table_predicates::sort);
 // }
+
+void shader_constant_table::clear()
+{
+	// FUNCTION BODY[0x7392a0]
+	m_table.clear();
+	m_const_buffers.clear();
+}
+
+s32 shader_constant_table::compare( shader_constant_table const& ) const
+{
+	// claude@NOTE: body recovered from the target (min-size loop over m_table calling
+	// the free compare( shader_constant const&, shader_constant const& ), then the
+	// size tie-break), but writing it here is premature: that free compare is itself a
+	// STATE[STUB] `return 0` in shader_constant.h, so the loop folds away. Body the
+	// free compare first, then port this one.
+	// STATE[STUB]
+	// FUNCTION BODY[0x739190]
+	return 0;
+}
+
+void shader_constant_table::apply_bindings( shader_constant_bindings const & bindings)
+{
+	// FUNCTION BODY[0x739100]
+	vector<shader_constant_binding>::const_iterator	it  = bindings.bindings().begin(),
+												end = bindings.bindings().end();
+
+	for ( ; it!=end; ++it)
+	{
+		shader_constant * c = get( it->name() );
+
+		if( c == NULL || c->source().pointer() != NULL ) // Do not overwrite source if it is set.
+			continue;
+
+		if( (constant_class_cast_mask & c->slot().class_id()) != (it->class_id() & constant_class_cast_mask))
+		{
+			ASSERT( (constant_class_cast_mask & c->slot().class_id()) == (it->class_id()&constant_class_cast_mask),
+					"The bound object cant be cast to the corresponding slot!");
+			continue;
+		}
+
+		if( c->host().type() != it->type())
+		{
+			ASSERT( c->host().type() == it->type(), "The bound object dosen't have same type as the corresponding slot!");
+			continue;
+		}
+
+		// Maybe we need ignore the binding in this case
+		ASSERT( (c->slot().class_id()&constant_class_size_mask) <= it->source().size(), "The bound object has smaller dimension than the corresponding slot!");
+		c->set_source (
+			shader_constant_source(
+				it->source().pointer(),
+				math::min(
+					it->source().size(),
+					u32( c->slot().class_id() & constant_class_size_mask )
+				)
+			)
+		);
+
+// 		if ( c && c->m_loader.empty())
+// 			c->m_loader = it->second;
+	}
+}
 
 } // namespace render
 } // namespace vostok

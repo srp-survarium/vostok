@@ -68,6 +68,62 @@ specific channel read (a `clear_render_targets` colour unpack, or any
 union alone. Do not "fix" it by making the two sides agree arbitrarily; fix it
 to whatever the target's shifts say, then re-measure.
 
+## T3 - `single_threading_policy::increment/decrement` ASSERT blocks inlining engine-wide
+
+Raised by batch B3. The `ASSERT` inside
+`single_threading_policy::increment/decrement` (`sources/vostok/threading_policies.h`)
+emits `call empty_stub` in MASTER_GOLD, inflating the instantiation to 38
+bytes, so MSVC calls it out-of-line at **every** `intrusive_ptr` assignment.
+Target evidence: its surviving `increment<long volatile>` is **9 bytes** - too
+small to hold a `call empty_stub` (~0xc) - and it ships **no** out-of-line
+`increment<unsigned int>` at all. So the shipped source's increment/decrement
+carry no assert.
+
+This is the whole residual of `res_xs<T>::res_xs` (30-40%),
+`signature_layout_pair` (36%), `res_xs_hw<vs_data>::create_hw_shader` (53%),
+and a large share of `end_pass` / `set_texture`. Write-up:
+`patterns/refcount-policy-assert-blocks-inlining.md`.
+
+Blast radius is every `intrusive_ptr` in the engine, so it belongs in the same
+deliberate core pass as T1/T2 - but its evidence is the strongest of the three,
+and it is the only one of the three that is a pure codegen change (no
+semantics move). Note it cuts AGAINST the usual repo rule that MASTER_GOLD
+asserts must be preserved as `call empty_stub` sites: here the target proves
+these two specific functions have none.
+
+## T4 - 247 render paired functions are UNMEASURED (fuzzy_pct IS NULL)
+
+Not a source defect - a scoring blind spot found while checking B3's
+"stripped functions" claim. B3 reported ~8 `resource_manager` create_* fns as
+unpaired/stripped; they are in fact **paired by address** (both `base_rva` and
+`target_rva` present) but carry **NULL `fuzzy_pct`** - objdiff never produced a
+measurement for them.
+
+Scale (per `match.db`, at batch B3):
+
+| module | paired | unmeasured | share |
+|---|---|---|---|
+| render | 1,295 | 247 | 19.1% |
+| scaleform | 433 | 73 | 16.9% |
+| vostok | 1,007 | 155 | 15.4% |
+| stlport | 1,209 | 161 | 13.3% |
+| boost | 2,453 | 278 | 11.3% |
+| core | 1,213 | 18 | 1.5% |
+
+So it is **systemic, not render-specific** - but render is on the high end
+because it is header-inline heavy. The unmeasured rows cluster exactly there:
+`effect_manager_inline.h` 40/40, `res_effect.h` 10/10, `state_cache_inline.h`
+8/8, `backend_inline.h` 8/8, `res_xs_hw_impl.h` 5/5, plus 69 with no unit
+attribution at all. Header-defined functions land in COMDATs whose unit maps to
+a header path, and there is no object pair to diff.
+
+**Implication for the "render to 100% max" goal:** these 247 functions cannot
+reach 100% by matching - they are not scored at all, yet they sit in the
+2,647-function denominator the README reports. That is a ~9% hard ceiling on
+render's headline exact %, independent of match quality. Closing it is a
+delinker/objdiff attribution fix (map header COMDATs to a diffable object
+pair), i.e. tooling work, not matcher work. Do NOT let matchers chase these.
+
 ## Handling
 
 Run these as ONE deliberate core-structure pass with a full before/after
