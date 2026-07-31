@@ -61,6 +61,13 @@ public:
 		return compare( descriptor ) < 0;
 	}
 
+	s32 compare( res_xs<shader_data> const& ) const
+	{
+		// STATE[STUB]
+		// needed by compare_shader_predicate (canonical header evidence)
+		return 0;
+	}
+
 	void apply( ) const;
 
 	bool is_registered( ) const { return m_is_registered; }

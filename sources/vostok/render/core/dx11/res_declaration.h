@@ -70,6 +70,11 @@ inline s32 compare( res_declaration const&, res_declaration const& )
 	return 0;
 }
 
+inline bool operator<( res_declaration const& left, res_declaration const& right )
+{
+	return compare( left, right ) < 0;
+}
+
 STATIC_SIZE_ASSERT( signature_layout_pair, 0x8 );
 STATIC_SIZE_ASSERT( res_declaration, 0x20 );
 

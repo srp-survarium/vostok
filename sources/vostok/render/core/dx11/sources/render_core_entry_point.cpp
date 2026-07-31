@@ -8,13 +8,11 @@ render_allocator_type* g_allocator = 0;
 
 namespace core {
 
-// STATE[STUB]
 void initialize( )
 {
 	// FUNCTION BODY[0x6571a0]
 }
 
-// STATE[STUB]
 void finalize( )
 {
 	// FUNCTION BODY[0x657190]

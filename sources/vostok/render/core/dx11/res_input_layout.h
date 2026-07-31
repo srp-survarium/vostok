@@ -43,6 +43,13 @@ typedef intrusive_ptr<
 
 STATIC_SIZE_ASSERT( res_input_layout, 0x14 );
 
+// STATE[STUB]
+// ordering for compare_predicate< res_input_layout >
+inline bool operator<( res_input_layout const&, res_input_layout const& )
+{
+	return false;
+}
+
 } // namespace render
 } // namespace vostok
 

@@ -53,10 +53,18 @@ public:
 
 	shader_constant* get( shared_string const& name );
 
-	bool equal( shader_constant_table const& ) const
+	bool equal( shader_constant_table const& other ) const
 	{
-		// STATE[STUB]
-		return false;
+		if ( m_table.size( ) != other.m_table.size( ) )
+			return false;
+
+		u32 size = m_table.size( );
+		for ( u32 it = 0; it < size; ++it ) {
+			if ( m_table[it] != other.m_table[it] )
+				return false;
+		}
+
+		return true;
 	}
 
 	s32 compare( shader_constant_table const& other ) const;
@@ -70,7 +78,11 @@ public:
 
 private:
 	shader_constant* get( pcstr name );
-	void fatal( pcstr ) { /* STATE[STUB] */ }
+	void fatal( pcstr msg )
+	{
+		VOSTOK_UNREFERENCED_PARAMETER( msg );
+		FATAL( msg );
+	}
 
 public:
 	constants_type m_table;

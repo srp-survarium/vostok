@@ -1,36 +1,43 @@
 #include "pch.h"
 #include <vostok/render/core/res_state.h>
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/backend.h>
 
 namespace vostok {
 namespace render {
 
-res_state::res_state(
-	ID3D11RasterizerState*,
-	ID3D11DepthStencilState*,
-	ID3D11BlendState*,
-	u32
-)
+res_state::~res_state()
 {
-	// STATE[STUB]
+	// FUNCTION BODY[0x559750]
+	// m_state is released in resource_manager cache.
+}
+
+res_state::res_state( ID3D11RasterizerState*	rasterizer_state,
+						ID3D11DepthStencilState*	depth_stencil_state,
+						ID3D11BlendState*			blend_state,
+						u32							stencil_ref):
+m_rasterizer_state			( rasterizer_state),
+m_depth_stencil_state		( depth_stencil_state),
+m_blend_state				( blend_state),
+m_stencil_ref				( stencil_ref),
+m_is_registered				( false )
+{
 	// FUNCTION BODY[0x559760]
 }
 
-res_state::~res_state( )
+void res_state::apply() const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x559750]
-}
-
-void res_state::destroy_impl( ) const
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x5597f0]
-}
-
-void res_state::apply( ) const
-{
-	// STATE[STUB]
 	// FUNCTION BODY[0x559790]
+	backend::ref().set_rasterizer_state		( m_rasterizer_state);
+	backend::ref().set_depth_stencil_state	( m_depth_stencil_state);
+	backend::ref().set_blend_state			( m_blend_state);
+	backend::ref().set_stencil_ref			( m_stencil_ref);
+}
+
+void res_state::destroy_impl	() const
+{
+	// FUNCTION BODY[0x5597f0]
+	resource_manager::ref().release( this );
 }
 
 } // namespace render

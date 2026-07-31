@@ -201,3 +201,37 @@ REFERENCE:
   `stage_resolve_lighting.cpp` / `effect_resolve_lighting.cpp` (lower
   confidence: DX9 draws a fullscreen quad, shipped stage adds a per-material
   `render_models` pass). Retire with wave 4.
+
+## res_* / buffer / constant-table harvest (wave 7 slice, 2026-07-31)
+
+Ported into `sources/vostok/render/core/dx11/sources/` (render_target,
+res_texture, res_render_output, untyped_buffer + header map/unmap,
+index_buffer, vertex_buffer, shader_constant_table, shader_constant_buffer,
+res_state, res_declaration, res_effect, res_texture_list, res_geometry).
+Retired without port:
+
+- `common/sources/res_shader.cpp`, `common/sources/res_atomic.cpp`,
+  `common/sources/res_common.h` - DX9-generation bodies
+  (shader_manager/hw_wrapper era, dtor-side manager releases, res_base/
+  res_named ancestry); every covered class has its same-generation DX11
+  ancestor which was ported instead. `res_texture_list::clear/clear_not_free/
+  find_texture_stage/apply` and `res_shader`/`res_id` have no counterpart in
+  the shipped generation.
+- `core/sources/res_rt.cpp` + `core/res_rt.h`,
+  `core/sources/res_constant_table.cpp` + `core/res_constant_table.h`,
+  `core/sources/res_constant_buffer.cpp` + `core/res_constant_buffer.h`,
+  `core/sources/res_buffer.cpp`, `core/constant.h`, `core/constant_bindings.h`
+  - renamed pre-rename generation (`render_dx10` namespace, u8 slot indices,
+  `_free()`); superseded by the same-generation
+  `core|core/dx11/sources/*.cpp` copies that were ported.
+- `core/index_buffer_inline.h`, `core/vertex_buffer_inline.h`,
+  `core/shader_constant_binding_inline.h`, `core/dx11/untyped_buffer_inline.h`
+  - verified against the canonical in-class inline bodies (binding ctor
+  asserts are absent from the shipped 0x66d40/0x67540 instances, so the
+  canonical empty body is faithful); map/unmap were filled into
+  `core/untyped_buffer.h`.
+
+Kept as HARVEST REMAINDER (ancestors of still-stubbed `compare` functions):
+`core/dx11/sources/res_effect.cpp` (res_pass::equal,
+res_shader_technique::equal), `core/dx11/sources/res_texture_list.cpp`
+(equal(texture_slots)), `core/dx11/sources/res_geometry.cpp` (equal).

@@ -50,6 +50,13 @@ typedef intrusive_ptr<
 
 STATIC_SIZE_ASSERT( res_signature, 0xC );
 
+// STATE[STUB]
+// ordering for compare_predicate< res_signature > (evidence 0x126aa0)
+inline bool operator<( res_signature const&, res_signature const& )
+{
+	return false;
+}
+
 } // namespace render
 } // namespace vostok
 

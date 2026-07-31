@@ -1,124 +1,322 @@
 #include "pch.h"
 #include <vostok/render/core/res_texture.h>
+#include "com_utils.h"
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/device.h>
+
+#ifndef MASTER_GOLD
+#include <d3dx11tex.h>
+#endif // #ifndef MASTER_GOLD
 
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
-res_texture::res_texture( bool pool_texture ) :
-	m_loaded( false ),
-	num_mips( 0 ),
-	m_user( 0 ),
-	m_seq_cycles( 0 ),
-	m_reserved_flags( 0 ),
-	m_mem_usage( 0 ),
-	m_surface( 0 ),
-	m_desc_cache_surface( 0 ),
-	m_sh_res_view( 0 ),
-	m_mip_level_cut( 0 ),
-	m_desc_valid( false ),
-	m_desc_3d_valid( false ),
-	m_pool_texture( pool_texture ),
-	m_is_registered( false ),
-	m_streamed( false )
+ID3D11Resource* res_texture::hw_texture()
 {
-	// FUNCTION BODY[0x55c5b0]
-}
+// 	if (m_surface)
+// 		m_surface->AddRef();
 
-// STATE[STUB]
-res_texture::~res_texture( )
-{
-	// FUNCTION BODY[0x55c430]
-}
-
-// STATE[STUB]
-void res_texture::destroy_impl( ) const
-{
-	// FUNCTION BODY[0x55c670]
-}
-
-// STATE[STUB]
-void res_texture::save_as( pcstr file_name )
-{
-	VOSTOK_UNREFERENCED_PARAMETER( file_name );
-	// FUNCTION BODY[0x55c300]
-}
-
-// STATE[STUB]
-void res_texture::desc_update( )
-{
-	// FUNCTION BODY[0x55c2a0]
-}
-
-// STATE[STUB]
-void res_texture::set_hw_texture(
-	ID3D11Resource* surface,
-	u32 mip_level_cut,
-	bool staging,
-	bool srgb,
-	bool depth_stencil
-)
-{
-	VOSTOK_UNREFERENCED_PARAMETER( surface );
-	VOSTOK_UNREFERENCED_PARAMETER( mip_level_cut );
-	VOSTOK_UNREFERENCED_PARAMETER( staging );
-	VOSTOK_UNREFERENCED_PARAMETER( srgb );
-	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
-	// FUNCTION BODY[0x55c6c0]
-}
-
-// STATE[STUB]
-void* res_texture::map2D(
-	D3D11_MAP mode,
-	u32 mip_level,
-	u32& row_pitch,
-	bool do_not_wait
-)
-{
-	VOSTOK_UNREFERENCED_PARAMETER( mode );
-	VOSTOK_UNREFERENCED_PARAMETER( mip_level );
-	VOSTOK_UNREFERENCED_PARAMETER( row_pitch );
-	VOSTOK_UNREFERENCED_PARAMETER( do_not_wait );
-	// FUNCTION BODY[0x55c530]
-	return 0;
-}
-
-// STATE[STUB]
-void res_texture::unmap2D( u32 mip_level )
-{
-	VOSTOK_UNREFERENCED_PARAMETER( mip_level );
-	// FUNCTION BODY[0x55c510]
-}
-
-// STATE[STUB]
-void* res_texture::map3D( D3D11_MAP mode, u32 mip_level, u32& row_pitch )
-{
-	VOSTOK_UNREFERENCED_PARAMETER( mode );
-	VOSTOK_UNREFERENCED_PARAMETER( mip_level );
-	VOSTOK_UNREFERENCED_PARAMETER( row_pitch );
-	// FUNCTION BODY[0x55c4a0]
-	return 0;
-}
-
-// STATE[STUB]
-void res_texture::unmap3D( u32 mip_level )
-{
-	VOSTOK_UNREFERENCED_PARAMETER( mip_level );
-	// FUNCTION BODY[0x55c480]
-}
-
-// STATE[STUB]
-ID3D11Resource* res_texture::hw_texture( )
-{
 	// FUNCTION BODY[0x55c290]
 	return m_surface;
 }
 
-// STATE[STUB]
-void res_texture::clone( res_texture* other )
+void res_texture::desc_update()
 {
-	VOSTOK_UNREFERENCED_PARAMETER( other );
+	// FUNCTION BODY[0x55c2a0]
+	m_desc_cache_surface	= m_surface;
+	if (m_desc_cache_surface)
+	{
+		D3D_RESOURCE_DIMENSION	type;
+		m_desc_cache_surface->GetType(&type);
+		if (D3D_RESOURCE_DIMENSION_TEXTURE2D == type)
+		{
+			ID3DTexture2D*	T	= (ID3DTexture2D*)m_desc_cache_surface;
+			T->GetDesc(&m_desc);
+			m_desc_valid = true;
+		}
+		if (D3D_RESOURCE_DIMENSION_TEXTURE3D == type)
+		{
+			ID3DTexture3D*	T	= (ID3DTexture3D*)m_desc_cache_surface;
+			T->GetDesc(&m_desc_3d);
+			m_desc_3d_valid = true;
+		}
+	}
+}
+
+void res_texture::save_as(pcstr file_name)
+{
+	// TODO:
+	// Saving flips R and B components...
+
+	// FUNCTION BODY[0x55c300]
+	HRESULT result;
+
+#ifndef MASTER_GOLD
+	result = D3DX11SaveTextureToFile(device::ref().d3d_context(), hw_texture(), D3DX11_IFF_DDS, file_name);
+#else
+	VOSTOK_UNREFERENCED_PARAMETER(file_name);
+#endif // #ifndef MASTER_GOLD
+
+	(void)&result;
+}
+
+void res_texture::clone 	( res_texture* other)
+{
 	// FUNCTION BODY[0x55c310]
+	safe_release(m_surface);
+	safe_release(m_sh_res_view);
+
+	// If you added any member to the class res_texture, than add it to this copy list as well,
+	// otherwise just set the new size of the class.
+//	COMPILE_ASSERT( sizeof(res_texture) == 92, The_res_texture_class_size_has_changed);
+
+	m_loaded					= other->m_loaded;
+	m_user						= other->m_user;
+	m_seq_cycles				= other->m_seq_cycles;
+	m_mem_usage					= other->m_mem_usage;
+
+	m_bind						= other->m_bind;
+
+	m_surface					= other->m_surface;
+	m_desc_cache_surface		= other->m_desc_cache_surface;
+	m_sh_res_view				= other->m_sh_res_view;
+	m_desc						= other->m_desc;
+	m_mip_level_cut				= other->m_mip_level_cut;
+	m_desc_valid				= other->m_desc_valid;
+	m_pool_texture				= other->m_pool_texture;
+
+
+	if( m_surface)
+		m_surface->AddRef();
+
+	if( m_sh_res_view)
+		m_sh_res_view->AddRef();
+}
+
+res_texture::~res_texture()
+{
+	// FUNCTION BODY[0x55c430]
+	safe_release(m_surface);
+	safe_release(m_sh_res_view);
+
+	//unload				();
+	// release external reference
+}
+
+void res_texture::unmap3D			( u32 mip_level)
+{
+	// FUNCTION BODY[0x55c480]
+	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels));
+}
+
+void* res_texture::map3D	( D3D_MAP mode, u32 mip_level, u32& row_pitch)
+{
+	// FUNCTION BODY[0x55c4a0]
+	if( m_surface && m_desc_3d_valid)
+	{
+		D3D_RESOURCE_DIMENSION	type;
+		m_surface->GetType(&type);
+		if (D3D_RESOURCE_DIMENSION_TEXTURE3D == type)
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped_res;
+			device::ref().d3d_context()->Map( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc_3d.MipLevels), mode, 0, &mapped_res);
+
+			row_pitch = mapped_res.RowPitch;
+			return mapped_res.pData;
+		}
+	}
+	ASSERT( 0, "The texture couldn't be mapped.");
+	return NULL;
+}
+
+void res_texture::unmap2D			( u32 mip_level)
+{
+	// FUNCTION BODY[0x55c510]
+	device::ref().d3d_context()->Unmap( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels));
+}
+
+void* res_texture::map2D	( D3D_MAP mode, u32 mip_level, u32& row_pitch, bool do_not_wait)
+{
+	// FUNCTION BODY[0x55c530]
+	if( m_surface && m_desc_valid)
+	{
+		D3D_RESOURCE_DIMENSION	type;
+		m_surface->GetType(&type);
+		if (D3D_RESOURCE_DIMENSION_TEXTURE2D == type)
+		{
+			D3D11_MAPPED_SUBRESOURCE mapped_res;
+			device::ref().d3d_context()->Map( m_surface, D3D11CalcSubresource( mip_level, 0, m_desc.MipLevels), mode, do_not_wait ? D3D11_MAP_FLAG_DO_NOT_WAIT : 0, &mapped_res);
+
+			row_pitch = mapped_res.RowPitch;
+			return mapped_res.pData;
+		}
+	}
+	ASSERT( 0, "The texture couldn't be mapped.");
+	return NULL;
+}
+
+//////////////////////////////////////////////////////////////////////
+// Construction/Destruction
+//////////////////////////////////////////////////////////////////////
+res_texture::res_texture( bool pool_texture):
+m_loaded		(false),
+num_mips		(0),
+m_surface		(NULL),
+m_mip_level_cut	(0),
+m_desc_valid	(false),
+m_sh_res_view	(NULL),
+m_pool_texture	(pool_texture),
+m_rescale_min	(float4(0.0f,0.0f,0.0f,0.0f)),
+m_rescale_max	(float4(1.0f,1.0f,1.0f,1.0f)),
+m_mem_usage		(0),
+m_is_registered	( false ),
+m_streamed		( true )
+{
+	// FUNCTION BODY[0x55c5b0]
+	ZeroMemory( &m_desc, sizeof(m_desc));
+
+	//pAVI				= NULL;
+	//pTheora				= NULL;
+	//desc_cache			= 0;
+	//seqMSPF				= 0;
+	//flags.MemoryUsage	= 0;
+	//flags.bLoaded		= false;
+	//flags.bUser			= false;
+	//flags.seqCycles		= FALSE;
+	//m_material			= 1.0f;
+	//m_bind = fastdelegate::FastDelegate1<u32>(this, &res_texture::apply_load);
+}
+
+void res_texture::destroy_impl		() const
+{
+	// FUNCTION BODY[0x55c670]
+	resource_manager::ref().release( this );
+}
+
+static DXGI_FORMAT get_srgb_format(DXGI_FORMAT format)
+{
+	switch (format)
+	{
+		case DXGI_FORMAT_BC1_UNORM:
+		case DXGI_FORMAT_BC1_TYPELESS:
+			return DXGI_FORMAT_BC1_UNORM_SRGB;
+		case DXGI_FORMAT_BC2_UNORM:
+		case DXGI_FORMAT_BC2_TYPELESS:
+			return DXGI_FORMAT_BC2_UNORM_SRGB;
+		case DXGI_FORMAT_BC3_UNORM:
+		case DXGI_FORMAT_BC3_TYPELESS:
+			return DXGI_FORMAT_BC3_UNORM_SRGB;
+		case DXGI_FORMAT_BC7_UNORM:
+		case DXGI_FORMAT_BC7_TYPELESS:
+			return DXGI_FORMAT_BC7_UNORM_SRGB;
+		default:
+			return format;
+	};
+}
+
+void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, bool staging, bool srgb, bool depth_stencil)
+{
+	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
+	// FUNCTION BODY[0x55c6c0]
+	if (surface)
+		surface->AddRef();
+
+	m_mip_level_cut = mip_level_cut;
+
+	safe_release( m_surface);
+
+	safe_release( m_sh_res_view);
+
+	m_surface = surface;
+
+	m_desc_valid = false;
+	m_desc_3d_valid = false;
+
+	if (m_surface)
+	{
+		desc_update();
+
+		ASSERT( mip_level_cut < m_desc.MipLevels || !m_desc_valid);
+
+		D3D_RESOURCE_DIMENSION	type;
+		m_surface->GetType(&type);
+
+		if (D3D_RESOURCE_DIMENSION_TEXTURE2D == type )
+		{
+			D3D_SHADER_RESOURCE_VIEW_DESC	view_desc;
+
+			if (m_desc.MiscFlags&D3D_RESOURCE_MISC_TEXTURECUBE)
+			{
+				view_desc.ViewDimension = D3D_SRV_DIMENSION_TEXTURECUBE;
+				view_desc.TextureCube.MostDetailedMip = 0;
+				view_desc.TextureCube.MipLevels = m_desc.MipLevels;
+			}
+			else
+			{
+				if(m_desc.SampleDesc.Count <= 1 )
+				{
+					if( m_desc.ArraySize > 1)
+					{
+						view_desc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DARRAY;
+						view_desc.Texture2DArray.FirstArraySlice = 0;
+						view_desc.Texture2DArray.ArraySize = m_desc.ArraySize;
+						view_desc.Texture2DArray.MostDetailedMip = 0;
+						view_desc.Texture2DArray.MipLevels = m_desc.MipLevels;
+					}
+					else
+					{
+						view_desc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2D;
+						view_desc.Texture2D.MostDetailedMip = 0;
+						view_desc.Texture2D.MipLevels = m_desc.MipLevels;
+					}
+				}
+				else
+				{
+					ASSERT( m_desc.ArraySize == 1, "Multisampler Array textures support are not implemented.");
+					view_desc.ViewDimension = D3D_SRV_DIMENSION_TEXTURE2DMS;
+					view_desc.Texture2D.MostDetailedMip = 0;
+					view_desc.Texture2D.MipLevels = m_desc.MipLevels;
+				}
+			}
+
+			if (srgb)
+				view_desc.Format = get_srgb_format(m_desc.Format);
+			else
+				view_desc.Format = DXGI_FORMAT_UNKNOWN;
+
+			switch(m_desc.Format)
+			{
+			case DXGI_FORMAT_R24G8_TYPELESS:
+				view_desc.Format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+				break;
+			case DXGI_FORMAT_R32_TYPELESS:
+				view_desc.Format = DXGI_FORMAT_R32_FLOAT;
+				break;
+			}
+
+			// this would be supported by DX10.1 but is not needed for stalker
+			// if( view_desc.Format != DXGI_FORMAT_R24_UNORM_X8_TYPELESS )
+			if( !staging && ((m_desc.SampleDesc.Count <= 1)  )/* || (view_desc.Format != DXGI_FORMAT_R24_UNORM_X8_TYPELESS))*/ )
+				CHECK_RESULT(device::ref().d3d_device()->CreateShaderResourceView(m_surface, &view_desc, &m_sh_res_view));
+			else
+				m_sh_res_view = 0;
+		}
+		else if (D3D_RESOURCE_DIMENSION_TEXTURE3D == type )
+		{
+			D3D_SHADER_RESOURCE_VIEW_DESC		view_desc;
+			view_desc.Format					= m_desc_3d.Format;
+			view_desc.ViewDimension				= D3D_SRV_DIMENSION_TEXTURE3D;
+			view_desc.Texture3D.MostDetailedMip = 0;
+			view_desc.Texture3D.MipLevels		= m_desc_3d.MipLevels;
+
+			if (!staging)
+				CHECK_RESULT(device::ref().d3d_device()->CreateShaderResourceView(m_surface, NULL, &m_sh_res_view));
+			else
+				m_sh_res_view = 0;
+		}
+		else
+			CHECK_RESULT(device::ref().d3d_device()->CreateShaderResourceView(m_surface, NULL, &m_sh_res_view));
+	}
 }
 
 } // namespace render
