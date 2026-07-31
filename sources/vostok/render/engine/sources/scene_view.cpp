@@ -23,7 +23,6 @@ struct priority_less : public std::binary_function<
 
 STATIC_SIZE_ASSERT( priority_less, 0x1 );
 
-// STATE[STUB]
  scene_view::scene_view( ) :
 	luminance_pass_index							( 0 ),
 	need_recalc_atmosphere						( true ),
@@ -81,9 +80,11 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 	// <8>
 	// <9>
 	// ******
+	m_prev_frame_luminance_parameters	= math::float4(0.0f, 0.0f, 0.0f, 0.0f);
+	m_frame_luminance_parameters		= math::float4(0.0f, 0.0f, 0.0f, 0.0f);
+	memory::zero						( m_histogram_values );
 }
 
-// STATE[STUB]
  scene_view::~scene_view( )
 {
 	// FUNCTION BODY[0x6383b0]: 23
@@ -113,7 +114,6 @@ STATIC_SIZE_ASSERT( priority_less, 0x1 );
 	// ******
 }
 
-// STATE[STUB]
 void scene_view::add_movie( survarium::flash_movie_resource_ptr& movie )
 {
 	// FUNCTION BODY[0x638350]: 4
@@ -122,9 +122,10 @@ void scene_view::add_movie( survarium::flash_movie_resource_ptr& movie )
 	// <0x638354>|0x004|+0x043:'120'
 	// <0x638397>|0x047|+0x015:'121'
 	// ******
+	m_flash_movies.push_back( movie );
+	std::sort( m_flash_movies.begin( ), m_flash_movies.end( ), priority_less( ) );
 }
 
-// STATE[STUB]
 void scene_view::remove_movie( survarium::flash_movie_resource_ptr& movie )
 {
 	// FUNCTION BODY[0x638320]: 3
@@ -132,9 +133,11 @@ void scene_view::remove_movie( survarium::flash_movie_resource_ptr& movie )
 	// <0>
 	// <0x638338>|0x018|+0x009:'128'
 	// ******
+	render::vector< survarium::flash_movie_resource_ptr >::iterator const iterator =
+		std::find( m_flash_movies.begin( ), m_flash_movies.end( ), movie );
+	m_flash_movies.erase( iterator );
 }
 
-// STATE[STUB]
 void scene_view::add_text_manager( survarium::flash_text_manager* tm )
 {
 	// FUNCTION BODY[0x638310]: 5
@@ -144,10 +147,10 @@ void scene_view::add_text_manager( survarium::flash_text_manager* tm )
 	// <1>
 	// <2>
 	// ******
+	m_flash_text_manager = tm;
 }
 
-// STATE[STUB]
-void scene_view::remove_text_manager( survarium::flash_text_manager* tm )
+void scene_view::remove_text_manager( survarium::flash_text_manager* )
 {
 	// FUNCTION BODY[0x638300]: 5
 	// <0>
@@ -156,6 +159,7 @@ void scene_view::remove_text_manager( survarium::flash_text_manager* tm )
 	// <1>
 	// <2>
 	// ******
+	m_flash_text_manager = NULL;
 }
 
 	// TYPEDEFS

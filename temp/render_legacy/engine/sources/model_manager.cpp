@@ -20,23 +20,11 @@ namespace vostok {
 namespace render {
 namespace model_factory {
 
-void destroy_render_model( render_model* v )
-{
-	DELETE( v );
-}
+// REMAINDER: get_surface_type has no canonical counterpart (merged into
+// get_model_type in the shipped tree).
 
-void destroy_render_surface( render_surface* v )
-{
-	DELETE( v );
-}
 
-u16 get_model_type(memory::chunk_reader& chunk)
-{
-	memory::reader	ogf = chunk.open_reader( model_chunk_header );
-	model_header		header;
-	ogf.r			(&header, sizeof(header), sizeof(header));
-	return			header.type;
-}
+
 
 u16 get_surface_type(memory::chunk_reader& chunk)
 {
@@ -46,65 +34,7 @@ u16 get_surface_type(memory::chunk_reader& chunk)
 	return			header.type;
 }
 
-render_surface* create_render_surface(u16 type)
-{
-	render_surface* result	= NULL;
-	switch(type)
-	{
-	case mt_static_submesh:
-		result = NEW(static_render_surface)();
-		break;
 
-	case mt_skinned_submesh_4w:
-#if 1
-//		result	= NEW(skeleton_mesh_cpu_skinning_4weights)();
-		result	= NEW(skeleton_mesh_gpu_skinning_4weights)();
-#else
-		result	= NEW(skeleton_submesh_4w_hw)();
-#endif
-		break;
-	case mt_user_mesh_editable:
-		result = NEW(user_render_surface_editable)();
-		break;
-	case mt_user_mesh_wire:
-		result = NEW(user_render_surface_wire)();
-		break;
-	case mt_grass_mesh:
-		result = NEW(grass_render_surface)();
-		break;
-
-	default:
-		NODEFAULT();
-	};
-	return result;
-}
-
-render_model* create_render_model(u16 type)
-{
-	render_model* result	= NULL;
-	switch(type)
-	{
-	case mt_static_mesh:
-		result = NEW(static_render_model)();
-		break;
-
-	case mt_grass_mesh:
-		result = NEW(grass_render_model)();
-		break;
-
-	case mt_terrain_cell:
-		result = NEW(terrain_render_model)();
-		break;
-
-	case mt_skinned_mesh:
-		result = NEW(skeleton_render_model)();
-		break;
-	default:
-		NODEFAULT();
-	};
-
-	return result;
-}
 
 } // namespace model_factory
 } // namespace render 
