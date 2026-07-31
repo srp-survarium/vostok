@@ -1,86 +1,129 @@
 #include "pch.h"
 
 #include <vostok/render/core/dx11/state_descriptor.h>
+#include <vostok/render/core/state_utils.h>
 
 namespace vostok {
 namespace render {
 
 state_descriptor::state_descriptor( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557fc0]
+	reset	( );
 }
 
 void state_descriptor::reset( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557f00]
+	m_rasterizer_desc_updated		= false;
+	m_depth_stencil_desc_updated	= false;
+	m_effect_desc_updated			= false;
+
+	state_utils::reset( m_rasterizer_desc);
+	state_utils::reset( m_depth_stencil_desc);
+	state_utils::reset( m_effect_desc);
+
+	m_stencil_ref		 = 0x00;
 }
 
-void state_descriptor::set_depth( bool, bool, D3D11_COMPARISON_FUNC )
+void state_descriptor::set_depth( bool enable, bool write_enable, D3D11_COMPARISON_FUNC cmp_func )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557ed0]
+	m_depth_stencil_desc.DepthEnable	= enable;
+	m_depth_stencil_desc.DepthWriteMask	= write_enable ? D3D_DEPTH_WRITE_MASK_ALL : D3D_DEPTH_WRITE_MASK_ZERO;
+	m_depth_stencil_desc.DepthFunc		= cmp_func;
+
+	m_depth_stencil_desc_updated		= true;
 }
 
-void state_descriptor::set_stencil( s32, u32, u8, u8 )
+void state_descriptor::set_stencil( s32 enable, u32 ref, u8 read_mask, u8 write_mask )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557ea0]
+	m_depth_stencil_desc.StencilEnable		= enable;
+	m_depth_stencil_desc.StencilReadMask	= read_mask;
+	m_depth_stencil_desc.StencilWriteMask	= write_mask;
+	m_stencil_ref							= ref;
+
+	m_depth_stencil_desc_updated		= true;
 }
 
 void state_descriptor::set_stencil_frontface(
-	D3D11_COMPARISON_FUNC,
-	D3D11_STENCIL_OP,
-	D3D11_STENCIL_OP,
-	D3D11_STENCIL_OP
+	D3D11_COMPARISON_FUNC func,
+	D3D11_STENCIL_OP fail,
+	D3D11_STENCIL_OP pass,
+	D3D11_STENCIL_OP zfail
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557e70]
+	m_depth_stencil_desc.FrontFace.StencilFailOp 		= fail;
+	m_depth_stencil_desc.FrontFace.StencilDepthFailOp	= zfail;
+	m_depth_stencil_desc.FrontFace.StencilPassOp		= pass;
+	m_depth_stencil_desc.FrontFace.StencilFunc			= func;
+
+	m_depth_stencil_desc_updated		= true;
 }
 
 void state_descriptor::set_stencil_backface(
-	D3D11_COMPARISON_FUNC,
-	D3D11_STENCIL_OP,
-	D3D11_STENCIL_OP,
-	D3D11_STENCIL_OP
+	D3D11_COMPARISON_FUNC func,
+	D3D11_STENCIL_OP fail,
+	D3D11_STENCIL_OP pass,
+	D3D11_STENCIL_OP zfail
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557e40]
+	m_depth_stencil_desc.BackFace.StencilFailOp 		= fail;
+	m_depth_stencil_desc.BackFace.StencilDepthFailOp	= zfail;
+	m_depth_stencil_desc.BackFace.StencilPassOp			= pass;
+	m_depth_stencil_desc.BackFace.StencilFunc			= func;
+
+	m_depth_stencil_desc_updated		= true;
 }
 
 void state_descriptor::set_alpha_blend(
-	s32,
-	D3D11_BLEND,
-	D3D11_BLEND,
-	D3D11_BLEND_OP,
-	D3D11_BLEND,
-	D3D11_BLEND,
-	D3D11_BLEND_OP
+	s32 blend_enable,
+	D3D11_BLEND src_blend,
+	D3D11_BLEND dest_blend,
+	D3D11_BLEND_OP blend_op,
+	D3D11_BLEND src_alpha_blend,
+	D3D11_BLEND dest_alpha_blend,
+	D3D11_BLEND_OP blend_alpha_op
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557cd0]
+	// Temporary !!!
+	for( int i = 0; i< 8; ++i)
+	{
+		m_effect_desc.RenderTarget[i].BlendEnable		=  blend_enable;
+		m_effect_desc.RenderTarget[i].SrcBlend			= src_blend;
+		m_effect_desc.RenderTarget[i].DestBlend			= dest_blend;
+		m_effect_desc.RenderTarget[i].BlendOp			= blend_op;
+		m_effect_desc.RenderTarget[i].SrcBlendAlpha		= src_alpha_blend;
+		m_effect_desc.RenderTarget[i].DestBlendAlpha	= dest_alpha_blend;
+		m_effect_desc.RenderTarget[i].BlendOpAlpha		= blend_alpha_op;
+	}
 }
 
-void state_descriptor::set_cull_mode( D3D11_CULL_MODE )
+void state_descriptor::set_cull_mode( D3D11_CULL_MODE mode )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557cc0]
+	m_rasterizer_desc_updated |= m_rasterizer_desc.CullMode != mode;
+	m_rasterizer_desc.CullMode = mode;
 }
 
-void state_descriptor::color_write_enable( D3D11_COLOR_WRITE_ENABLE )
+void state_descriptor::color_write_enable( D3D11_COLOR_WRITE_ENABLE mode )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557c90]
+	m_effect_desc_updated |= m_effect_desc.RenderTarget[0].RenderTargetWriteMask != mode;
+
+	for( int i = 0; i< 8; ++i)
+		m_effect_desc.RenderTarget[i].RenderTargetWriteMask = (u8)mode;
 }
 
-void state_descriptor::set_fill_mode( D3D11_FILL_MODE )
+void state_descriptor::set_fill_mode( D3D11_FILL_MODE fill_mode )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x557c80]
+	m_rasterizer_desc_updated		|= m_rasterizer_desc.FillMode != fill_mode;
+	m_rasterizer_desc.FillMode		 = fill_mode;
 }
 
 } // namespace render
