@@ -36,7 +36,7 @@ namespace render {
 
 struct grass_layer_data;
 struct grass_layer_desc;
-class grass_patch;
+struct grass_patch;
 class grass_render_model;
 class grass_template;
 class renderer;

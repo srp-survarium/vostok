@@ -29,7 +29,7 @@ class renderer;
 class render_model_instance;
 class render_surface;
 class speedtree_instance;
-class tracer_model_instance;
+struct tracer_model_instance;
 
 struct ambient_volume_properties;
 struct buffer_fragment;

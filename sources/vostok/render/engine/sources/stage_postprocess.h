@@ -28,10 +28,10 @@
 namespace vostok {
 namespace render {
 
-class post_process_parameters;
+struct post_process_parameters;
 class renderer;
 class renderer_context;
-class render_surface_instance;
+struct render_surface_instance;
 class shader_constant_host;
 
 typedef resources::resource_ptr<

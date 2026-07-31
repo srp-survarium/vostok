@@ -23,11 +23,11 @@ struct SInstanceLod;
 namespace vostok {
 namespace render {
 
-class environment_probe;
+struct environment_probe;
 class light;
 class lod_entry;
 class render_particle_emitter_instance;
-class render_surface_instance;
+struct render_surface_instance;
 class renderer;
 class renderer_context;
 class shader_constant_host;

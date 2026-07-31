@@ -29,7 +29,7 @@ class effect_compiler;
 class environment_probe_generate_parameters;
 class renderer_context;
 class renderer_context_targets;
-class render_surface_instance;
+struct render_surface_instance;
 class scene;
 class scene_view;
 class shader_constant_host;

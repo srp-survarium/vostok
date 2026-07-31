@@ -7,7 +7,7 @@
 namespace vostok {
 namespace render {
 
-class tracer_model_instance : public resources::unmanaged_resource {
+struct tracer_model_instance : public resources::unmanaged_resource {
 public:
 	tracer_model_instance( ) { }
 	virtual ~tracer_model_instance( ) { }

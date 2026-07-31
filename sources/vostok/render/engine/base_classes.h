@@ -35,7 +35,7 @@ struct base_scene : public resources::unmanaged_resource {
 	inline	base_scene	( ) :
 		first_command	( 0 ),
 		last_command	( 0 ),
-		fixed_lod_value	( 0 )
+		fixed_lod_value	( -1 )
 	{
 	}
 

@@ -25,8 +25,8 @@ struct render_particle_emitter_instance;
 
 namespace render {
 
-class ambient_volume;
-class environment_probe;
+struct ambient_volume;
+struct environment_probe;
 struct decal_instance;
 struct grass_patch;
 struct render_surface_instance;
