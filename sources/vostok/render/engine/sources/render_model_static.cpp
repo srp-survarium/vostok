@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the remaining template helpers and LPV/shadow-pass/LOD/batched-vertex/sectors machinery below have no legacy ancestor (new-in-target; legacy twin keeps only load/append_surface/get_surfaces) - matcher-phase work.
 #include "help_math.h"
 #include "batched_vertex_source.h"
 #include "render_model_static.h"
@@ -6,9 +7,12 @@
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 static_render_surface::static_render_surface( bool colored )
 {
+	// claude@NOTE: legacy ctor had no parameter and always set static_mesh_vertex_input_type;
+	// colored selector inferred from the canonical bool param + vertex_input_type enum.
+	m_vertex_input_type	= colored ? static_mesh_vertex_colored_input_type : static_mesh_vertex_input_type;
+
 	// FUNCTION BODY[0x631d50]: 1
 	// <0x631d57>|0x007|+0x013:'47'
 	// ******
@@ -660,6 +664,8 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 }
 
 // STATE[STUB]
+// claude@NOTE: legacy body needs D3DXGetDeclLength/D3DXGetDeclVertexSize (d3dx9mesh) which are
+// not available in this tree - skipped; legacy seed kept in temp/render_legacy.
 void static_render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
 {
 	// LOCALS
@@ -752,25 +758,40 @@ void static_render_surface::load( configs::binary_config_value const& properties
 	// ******
 }
 
-// STATE[STUB]
 static_render_model_instance::static_render_model_instance( )
+:m_surface_instances( NULL ),
+m_instances_count	( 0 )
 {
 	// FUNCTION BODY[0x6311a0]
 	// ******
 }
 
-// STATE[STUB]
 static_render_model_instance::~static_render_model_instance( )
 {
+	DELETE_ARRAY		( m_surface_instances );
+
 	// FUNCTION BODY[0x631120]: 2
 	// <0x631124>|0x004|+0x019:'846'
 	// <0x63113d>|0x01d|+0x01e:'847'
 	// ******
 }
 
-// STATE[STUB]
 void static_render_model_instance::assign_original( static_render_model_ptr v )
 {
+	m_original			= v;
+	m_instances_count	= m_original->m_childs_count;
+	m_surface_instances = NEW_ARRAY( render_surface_instance, m_instances_count );
+
+	for( u8 i = 0; i < m_instances_count; ++i )
+	{
+		render_surface_instance& info = m_surface_instances[i];
+		info.m_parent				= this;
+		info.m_render_surface		= m_original->m_childs[i];
+		info.m_transform			= &m_transform;
+		// claude@NOTE: legacy set info.m_visible = true; canonical replaced the bool with m_flags.
+		info.m_flags				= visible_flag;
+	}
+
 	// FUNCTION BODY[0x631200]: 12
 	// <0x631200>|0x000|+0x046:'852'
 	// <0x631246>|0x046|+0x012:'853'
@@ -897,6 +918,7 @@ u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 cons
 	// ******
 }
 
+// claude@NOTE: legacy body diverged - legacy has only the no-arg get_surfaces_count overload; the lod_id overload is new-in-target; matcher-phase work.
 // STATE[STUB]
 u32 static_render_model_instance::get_surfaces_count( u32 lod_id ) const
 {
@@ -911,6 +933,7 @@ u32 static_render_model_instance::get_surfaces_count( u32 lod_id ) const
 	// ******
 }
 
+// claude@NOTE: legacy body diverged - legacy get_surfaces(render_surface_instances&,bool) is a plain visible-only loop; lod/occlusion rewrite is new-in-target; matcher-phase work.
 // STATE[STUB]
 void static_render_model_instance::get_surfaces(
 	float4x4 const*							mat_vp,
@@ -1004,22 +1027,29 @@ void static_render_model_instance::get_surfaces(
 	// ******
 }
 
-// STATE[STUB]
 bool static_render_model_instance::get_locator( pcstr locator_name, model_locator_item& result ) const
 {
 	// CALL SITE INFO
 	// <0x6300eb> -> bool < unknown >( pcstr, model_locator_item& ) const
 	// ******
 
-	return false;
+	return m_original->get_locator( locator_name, result );
 
 	// FUNCTION BODY[0x6300e0]: 0
 	// ******
 }
 
-// STATE[STUB]
 void static_render_model_instance::get_surface_stats( u32 surface_id, surface_stats& stats ) const
 {
+	R_ASSERT			(surface_id<m_instances_count);
+	render_surface_instance* inst = m_surface_instances+surface_id;
+	stats.vcount		= inst->m_render_surface->m_render_geometry.vertex_count;
+	stats.tricount		= inst->m_render_surface->m_render_geometry.primitive_count;
+	if(inst->m_render_surface->m_materail_effects_instance.c_ptr())
+		stats.material		= inst->m_render_surface->m_materail_effects_instance->get_material_name().c_str();
+	else
+		stats.material		= "_not_assigned";
+
 	// FUNCTION BODY[0x6302b0]: 9
 	// <0>
 	// <0x6302b0>|0x000|+0x013:'1051'

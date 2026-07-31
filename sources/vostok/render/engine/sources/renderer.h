@@ -138,6 +138,7 @@ public:
 		render_surface_instance const*
 	) const
 	{
+		// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
 		// STATE[STUB]
 		return false;
 	}

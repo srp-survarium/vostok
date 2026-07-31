@@ -43,6 +43,7 @@ typedef intrusive_ptr<
 
 STATIC_SIZE_ASSERT( res_input_layout, 0x14 );
 
+// claude@NOTE: no legacy ancestor - legacy res_input_layout has only equal(declaration,signature), no ordering operator (target moved to a sorted set); matcher-phase work.
 // STATE[STUB]
 // ordering for compare_predicate< res_input_layout >
 inline bool operator<( res_input_layout const&, res_input_layout const& )

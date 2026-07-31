@@ -107,6 +107,15 @@ ports).
   no-legacy-ancestor, i.e. matcher-phase work, not harvest work).
 - Render builds; full game + render consumers link.
 
+**CLOSED 2026-07-31 - all gates met.** Structure queue empty; render_legacy
+empty (triage_log.md kept as the disposition record; recovery pointer =
+`git show 8bb5b3dfc:temp/render_legacy/<path>`); 652 remaining STATE[STUB]
+are all annotated target_only / no-legacy-ancestor / documented-divergence
+(matcher-phase work); full exe links green. Render 396/2,647 exact (15.0%)
+vs the 13.8% pre-restructure recovery bar - carcass rebuild recovered past
+the old structure's exact count with 652 bodies still to match. Fuzzy 24.6%
+vs old 31.0%: the gap is the stub remainder, matcher-phase upside.
+
 ## Checkpoint log
 
 | date | commit | batch | render exact | render fuzzy | stubs left | legacy files left |
@@ -114,8 +123,11 @@ ports).
 | 2026-07-31 | 6931a537b | baseline | 8 (0.3%) | 0.1% | 1,826 | 1,011 |
 | 2026-07-31 | 55090cde2 | wave 1 (facade) | 8 (0.3%) | 0.1% (latent - callees stubbed) | 1,714 | 787 |
 | 2026-07-31 | wave 2 | engine roots + SpeedTree SDK link | 129 (4.9%) | 6.3% | 1,567 | 563 |
-
 | 2026-07-31 | bd12750c4 | wave 3 pt1 (core resource layer) | 168 (6.3%) | 7.5% | 1,393 | 510 |
+| 2026-07-31 | (solo TU loop, 20 commits) | core owner/state layer | 168 (6.3%) | 7.5% | 1,236 | 476 |
+| 2026-07-31 | d4e77de9e | 3-worker push (stages/models/core residue) | 294 (11.1%) | 15.4% | 782 | 279 |
+| 2026-07-31 | 6a3055e5c | closeout push (portable-miss list + drains) | 378 (14.3%) | 22.8% | 653 | 13 |
+| 2026-07-31 | (closeout, this commit) | final port round; legacy EMPTY | 396 (15.0%) | 24.6% | 652 | 0 (+triage_log) |
 
 Wave-2 side effect: overall repo exact 38.13% -> 41.45% (+428 fns), fuzzy
 46.65% -> 50.88% - the restored create_world -> engine world -> cooks chain

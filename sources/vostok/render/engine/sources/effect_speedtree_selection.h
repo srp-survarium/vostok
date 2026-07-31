@@ -11,6 +11,15 @@ class effect_compiler;
 
 class effect_speedtree_selection : public effect_descriptor {
 public:
+	enum
+	{
+		branch	= 0,
+		frond,
+		leafmesh,
+		leafcard,
+		billboard,
+	};
+
 	effect_speedtree_selection( ) { }
 	virtual ~effect_speedtree_selection( ) { }
 

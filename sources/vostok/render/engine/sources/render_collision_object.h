@@ -33,15 +33,14 @@ public:
 
 	virtual void render( scene_ptr const&, debug::renderer& ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x122e20]
+		NOT_IMPLEMENTED();
 	}
 
 	virtual bool aabb_query( math::aabb const&, collision::triangles_type& ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0xb53e0]
-		return false;
+		return true;
 	}
 
 	virtual bool cuboid_query( math::cuboid const&, collision::triangles_type& ) const
@@ -58,16 +57,14 @@ public:
 		collision::triangles_predicate_type const&
 	) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x6f130]
-		return false;
+		return true;
 	}
 
 	virtual bool aabb_test( math::aabb const& ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x6f140]
-		return false;
+		return true;
 	}
 
 	virtual bool cuboid_test( math::cuboid const& ) const
@@ -77,9 +74,8 @@ public:
 
 	virtual bool ray_test( float3 const&, float3 const&, float, float& ) const
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x6f150]
-		return false;
+		return true;
 	}
 
 	virtual void add_triangles( collision::triangles_type& ) const

@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_INSTANCE_IMPL_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_INSTANCE_IMPL_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: the legacy render_model.h base was fully consumed; it declared neither the mat_vp/lod get_surfaces surface nor anything beyond the already-harvested set_transform inline - matcher-phase work.
 #include <vostok/render/facade/model.h>
 #include "render_collision_object.h"
 

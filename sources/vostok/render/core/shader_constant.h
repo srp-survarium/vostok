@@ -63,6 +63,7 @@ inline bool operator!=( shader_constant const& left, shader_constant const& righ
 
 inline s32 compare( shader_constant const&, shader_constant const& )
 {
+	// claude@NOTE: no legacy ancestor - stem file consumed; the s32 compare family is a target-generation refactor (no legacy compare ever); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x12ea00]
 	return 0;

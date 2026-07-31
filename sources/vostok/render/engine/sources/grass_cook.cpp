@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (grass_cook/grass_world_class are new-in-target; every legacy cook is the retired unmanaged_cook shape) - matcher-phase work.
 #include "grass_cook.h"
 #include "grass_world.h"
 

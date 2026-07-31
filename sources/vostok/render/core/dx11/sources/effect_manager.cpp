@@ -28,10 +28,22 @@ struct effect_manager_call_destructor_predicate
 namespace vostok {
 namespace render {
 
-void effect_loader::on_effect_ready( resources::queries_result& )
+void effect_loader::on_effect_ready( resources::queries_result& data )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x77f6a0]
+	if(!query_rejected)
+	{
+		if (data[0].is_successful())
+			*effect_ptr		= static_cast_resource_ptr<res_effect_ptr>(data[0].get_unmanaged_resource());
+		else
+			*effect_ptr	= 0;
+	}else
+	{
+		//LOG_INFO("query rejected");
+	}
+
+	effect_loader* this_ptr	= this;
+	DELETE					( this_ptr );
 }
 
 effect_manager::effect_manager( )
@@ -181,6 +193,7 @@ void effect_manager::on_async_effect_created_callback(
 	boost::function<void( )>
 )
 {
+	// claude@NOTE: no legacy ancestor - new-in-target overload; the corpus only ever had the 3-param on_async_effect_created (already ported); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x77f230]
 }
@@ -238,12 +251,29 @@ res_effect_ptr effect_manager::create_new_effect(
 }
 
 void effect_manager::on_effects_recompiled(
-	vectora<effect_to_recompile_struct>*,
-	resources::queries_result&
+	vectora<effect_to_recompile_struct>* effects_to_recompile,
+	resources::queries_result& data
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x77f900]
+	u32 request_index						= 0;
+	for (vectora<effect_to_recompile_struct>::iterator it = effects_to_recompile->begin(); it != effects_to_recompile->end(); ++it, ++request_index)
+	{
+		if (data[request_index].is_successful())
+		{
+
+			effects_to_recompile;
+
+			res_effect_ptr created_temp_effect	= static_cast_resource_ptr<res_effect_ptr>(data[request_index].get_unmanaged_resource());
+			// TODO: add some special copy function
+			it->effect->m_techniques		= created_temp_effect->m_techniques;
+			it->effect->m_cur_technique		= created_temp_effect->m_cur_technique;
+#ifndef MASTER_GOLD
+			threading::simple_lock_raii raii(it->effect->used_shaders_lock);
+			it->effect->used_shaders		= created_temp_effect->used_shaders;
+#endif // #ifndef MASTER_GOLD
+		}
+	}
 }
 
 res_shader_technique* effect_manager::create_effect_technique(
@@ -290,6 +320,7 @@ void effect_manager::recompile_shaders_async(
 	vector<fs_new::virtual_path_string> const&
 )
 {
+	// claude@NOTE: legacy body diverged - closest ancestor recompile_shaders is entirely #ifndef MASTER_GOLD over the retired used_shaders member; recompile_shaders_async has zero corpus hits; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x77fb40]
 }

@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (stage_atmosphere is new-in-target) - matcher-phase work.
 #include "stage_atmosphere.h"
 
 namespace vostok {

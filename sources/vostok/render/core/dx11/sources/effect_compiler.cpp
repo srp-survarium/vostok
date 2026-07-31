@@ -105,6 +105,7 @@ effect_compiler& effect_compiler::set_texture(
 	u32
 )
 {
+	// claude@NOTE: legacy body diverged - legacy overload predates the trailing mip-cut params (3-param set_texture); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x7a6c70]
 	if ( out_texture )
@@ -119,6 +120,7 @@ effect_compiler& effect_compiler::set_texture(
 	u32
 )
 {
+	// claude@NOTE: legacy body diverged - legacy overload predates the trailing mip-cut params (2-param set_texture); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x7a5e60]
 	return *this;
@@ -165,15 +167,51 @@ effect_compiler& effect_compiler::bind_constant( shader_constant_binding const& 
 }
 
 effect_compiler& effect_compiler::begin_pass(
-	pcstr,
-	pcstr,
-	pcstr,
-	shader_configuration const&,
-	shader_include_getter*
+	pcstr vs_name,
+	pcstr gs_name,
+	pcstr ps_name,
+	shader_configuration const& shader_config,
+	shader_include_getter* include_getter
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7a6100]
+	if (m_shaders_cache_mode)
+	{
+		shader_cache_info				info;
+		info.vertex_shader_name			= vs_name;
+		info.geometry_shader_name		= gs_name;
+		info.pixel_shader_name			= ps_name;
+		info.configuration				= shader_config;
+		m_shader_cache_info.push_back	(info);
+
+		return *this;
+	}
+
+	m_state_descriptor.reset();
+	m_bindings.clear();
+
+	m_vs_hw = resource_manager::ref().create_vs_hw( vs_name, shader_config, include_getter, m_shader_sources);
+	m_gs_hw = resource_manager::ref().create_gs_hw( gs_name, shader_config, include_getter, m_shader_sources);
+	m_ps_hw = resource_manager::ref().create_ps_hw( ps_name, shader_config, include_getter, m_shader_sources);
+
+	if (m_vs_hw)
+		m_vs_descriptor.reset( &*m_vs_hw);
+	else
+		m_vs_descriptor.reset( NULL );
+
+	if (m_gs_hw)
+		m_gs_descriptor.reset( &*m_gs_hw);
+	else
+		m_gs_descriptor.reset( NULL );
+
+	if (m_ps_hw)
+		m_ps_descriptor.reset( &*m_ps_hw);
+	else
+		m_ps_descriptor.reset( NULL );
+
+	set_depth		( true, true);
+	set_alpha_blend	( false, D3D11_BLEND_ONE, D3D11_BLEND_ZERO);
+
 	return *this;
 }
 

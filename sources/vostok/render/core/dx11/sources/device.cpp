@@ -1,7 +1,15 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the remaining stubs have no legacy ancestor (legacy device remainder holds only setup_states/get_device_state; the d3d_device/d3d_context inlines were consumed and are already reproduced; on_device_removed/get_query_data/get_output/video-memory are new-in-target) - matcher-phase work.
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/dx11/device_caps.h>
 #include <vostok/render/core/dx11/sources/com_utils.h>
+
+#pragma comment( lib, "d3d11.lib" )
+#pragma comment( lib, "dxgi.lib" )
+// claude@NOTE: D3DReflect (res_xs_hw.h) lives in d3dcompiler.lib; the legacy
+// tree pulled it in from the retired render_base platform_dx11.cpp, so the
+// pragma moves next to the other DX import libs.
+#pragma comment( lib, "d3dcompiler.lib" )
 
 vostok::command_line::key g_debug_render_device(
 	"debug_dx",

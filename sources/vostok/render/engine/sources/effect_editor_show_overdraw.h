@@ -11,6 +11,11 @@ class effect_compiler;
 
 class effect_editor_show_overdraw : public effect_descriptor {
 public:
+	enum
+	{
+		num_overdraw_layers = 10,
+	};
+
 	effect_editor_show_overdraw( ) { }
 	virtual ~effect_editor_show_overdraw( ) { }
 

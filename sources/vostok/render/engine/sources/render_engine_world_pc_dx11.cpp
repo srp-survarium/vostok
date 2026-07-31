@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the remaining world:: stubs are absent from the legacy twin (new-in-target subsystems: clouds, tracers, environment probes, sky AO, ambient volumes, grass layers, LOD, portal system, volume fog, streaming; renderer_cook is new too); the handful with nuances carry their own notes - matcher-phase work.
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include "renderer_cook_renderer_resource.h"
@@ -636,6 +637,7 @@ void engine::world::apply_render_options_changes( )
 #endif // #ifndef MASTER_GOLD
 }
 
+// claude@NOTE: no legacy ancestor - the same-named legacy fn sits in an #if 0 block and is a different tool (rewrites lua material configs from a request path); matcher-phase work.
 // STATE[STUB]
 void on_material_loaded( resources::queries_result& data, long volatile* waiting_for )
 {
@@ -906,6 +908,7 @@ void query_materials_and_wait( vector< fs_new::virtual_path_string > const& in_m
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - legacy version is #if 0 and takes resources::fs_iterator, not the vfs_locked_iterator+waiting_for surface; matcher-phase work.
 // STATE[STUB]
 void on_fs_iterator_materials_ready(
 	pcstr								materials_path,
@@ -1237,6 +1240,7 @@ void engine::world::remove_unused_environment_cubemaps( base_scene_ptr const& sc
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - legacy twin keeps the fn but its body is one commented-out model_manager call; matcher-phase work.
 // STATE[STUB]
 void engine::world::clear_resources( )
 {
@@ -1585,6 +1589,7 @@ void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_i
 	scene->remove_model( model);
 }
 
+// claude@NOTE: legacy body diverged - legacy returns the retired speedtree_*_vertex_input_type enumerators deleted from the shipped enum; matcher-phase work.
 // STATE[STUB]
 enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::virtual_path_string const& subsurface_name )
 {
@@ -1599,6 +1604,7 @@ enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::v
 	// ******
 }
 
+// claude@NOTE: legacy body diverged - legacy switch labels are the retired speedtree_*_vertex_input_type enumerators; matcher-phase work.
 // STATE[STUB]
 speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( enum_vertex_input_type type )
 {
@@ -1614,9 +1620,13 @@ speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( en
 	// <8>
 	// <0x653ec0>|0x000|+0x002:'1301'
 	// ******
+	// claude@NOTE: legacy default arm was NODEFAULT( return speedtree_tree::branch ),
+	// which collapses to __assume(0) in MASTER_GOLD and leaves the function
+	// without a return (C4716 -> LNK1257 at LTCG); the constant return also
+	// matches the target's 2-byte body.
+	return speedtree_tree::branch;
 }
 
-// STATE[STUB]
 void on_speedtree_material_effects_instance_ready(
 	resources::queries_result&		data,
 	speedtree_tree*					tree,
@@ -1624,16 +1634,14 @@ void on_speedtree_material_effects_instance_ready(
 )
 {
 	// FUNCTION BODY[0x6558d0]: 6
-	// <0x6558d1>|0x001|+0x017:'1306'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6558e8>|0x018|+0x06c:'1311'
-	// ******
+	if (data[0].is_successful())
+		tree->set_material_effects(
+			vostok::static_cast_resource_ptr<material_effects_instance_ptr>(data[0].get_unmanaged_resource()),
+			vertex_input_type_to_speedtree_component_type(vertex_input_type),
+			data[0].get_requested_path()
+		);
 }
 
-// STATE[STUB]
 void engine::world::set_speedtree_instance_material(
 	speedtree_instance_ptr const&			v,
 	fs_new::virtual_path_string const&		subsurface_name,
@@ -1646,33 +1654,32 @@ void engine::world::set_speedtree_instance_material(
 	// ******
 
 	// FUNCTION BODY[0x656810]: 26
-	// <0x656819>|0x009|+0x00b:'1318'
-	// <0x656824>|0x014|+0x028:'1319'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x65684c>|0x03c|+0x060:'1329'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x6568ac>|0x09c|+0x0a4:'1343'
-	// ******
+	speedtree_tree*		tree				= static_cast_checked<speedtree_tree*>(v->m_speedtree_tree_ptr.c_ptr());
+	material_ptr		mtl_ptr				= static_cast_resource_ptr<material_ptr>(in_mtl_ptr);
+
+	if (!mtl_ptr)
+		return;
+
+	resources::user_data_variant			data_variant;
+
+	data_variant.set						(NEW(material_effects_instance_cook_data)(
+		speedtree_subsurface_name_to_vertex_input_type(subsurface_name),
+		static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
+	);
+
+	// Must be query_resource_and_wait!
+	resources::query_resource_and_wait		(
+		mtl_ptr->get_material_name(),
+		resources::material_effects_instance_class,
+		boost::bind(
+			&on_speedtree_material_effects_instance_ready,
+			_1,
+			tree,
+			speedtree_subsurface_name_to_vertex_input_type(subsurface_name)
+		),
+		vostok::render::g_allocator,
+		&data_variant
+	);
 }
 
 void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
@@ -1862,6 +1869,7 @@ void engine::world::set_model_lod_params(
 	// ******
 }
 
+// claude@NOTE: legacy body diverged - legacy set_model_visible takes bool, canonical takes u32 flags; matcher-phase work.
 // STATE[STUB]
 void engine::world::set_model_visible(
 	render_model_instance_ptr const&		v,
@@ -2219,6 +2227,7 @@ void engine::world::remove_sky_ambient_occlusion( base_scene_ptr const& in_scene
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - legacy body is an explicit no-op; the shipped body has real code; matcher-phase work.
 // STATE[STUB]
 void engine::world::update_ambient_volume(
 	base_scene_ptr const&				in_scene,
@@ -2241,6 +2250,7 @@ void engine::world::add_vegetation_trample( base_scene_ptr const& in_scene, tram
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - legacy body is an explicit no-op; the shipped body has real code; matcher-phase work.
 // STATE[STUB]
 void engine::world::remove_ambient_volume( base_scene_ptr const& in_scene, u32 id )
 {

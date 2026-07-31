@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "blend_mode.h"
 #include "effect_material_base.h"
+#include <vostok/render/core/custom_config.h>
+#include <vostok/render/core/shader_configuration.h>
 #include <vostok/render/core/shader_include_getter.h>
+#include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/facade/vertex_input_type.h>
 
 namespace vostok {
@@ -50,34 +53,82 @@ private:
 };
 
 void effect_material_base::compile_begin(
-	pcstr,
-	pcstr,
-	effect_compiler&,
-	shader_configuration*,
-	custom_config_value const&
+	pcstr						vertex_shader_name,
+	pcstr						pixel_shader_name,
+	effect_compiler&			compiler,
+	shader_configuration*		shader_config,
+	custom_config_value const&	config
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b3d40]
+	compile_begin(vertex_shader_name, 0, pixel_shader_name, compiler, shader_config, config);
 }
 
 void effect_material_base::compile_begin(
-	pcstr,
-	pcstr,
-	pcstr,
-	effect_compiler&,
-	shader_configuration*,
-	custom_config_value const&
+	pcstr						vertex_shader_name,
+	pcstr						geometry_shader_name,
+	pcstr						pixel_shader_name,
+	effect_compiler&			compiler,
+	shader_configuration*		shader_config,
+	custom_config_value const&	config
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b3bb0]
+	if (config.value_exists("vertex_input_type"))
+		shader_config->vertex_input_type = u32((enum_vertex_input_type)config["vertex_input_type"]);
+
+	D3D_CULL_MODE cull_mode = D3D_CULL_BACK;
+	if (config.value_exists("cull_mode"))
+		cull_mode = (D3D_CULL_MODE)config["cull_mode"];
+
+	shader_config->use_subuv		= shader_config->vertex_input_type == particle_subuv_vertex_input_type;
+
+	//material_shader_include_getter  include_getter( vertex_input_type );
+
+	s32 blend_mode = -1;
+
+	if (config.value_exists("blend_mode"))
+		blend_mode = s32(config["blend_mode"]);
+
+	compiler.begin_technique();
+	compiler.begin_pass(vertex_shader_name, geometry_shader_name, pixel_shader_name, *shader_config, 0);//&include_getter);
+
+	switch (blend_mode)
+	{
+		case blend_mode_opaque:
+			compiler.set_depth( true, true);
+			compiler.set_alpha_blend(false);
+			break;
+		case blend_mode_translucent:
+			compiler.set_depth( true, false);
+			compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_INV_SRC_ALPHA);
+			break;
+		case blend_mode_additive:
+			compiler.set_depth( true, false);
+			compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_ONE);
+			break;
+		case blend_mode_modulate:
+			compiler.set_depth( true, false);
+			compiler.set_alpha_blend(true,D3D_BLEND_ZERO,D3D_BLEND_SRC_COLOR);
+			break;
+		case blend_mode_subtractive:
+			compiler.set_depth( true, false);
+			compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE,D3D_BLEND_OP_REV_SUBTRACT);
+			break;
+	}
+	//	int bool_type = static_type::get_type_id<bool>();
+
+	//if (config.value_exists("two_sided") /*&& config["two_sided"].type==bool_type*/ && bool(config["two_sided"]))
+	//	compiler.set_cull_mode(D3D_CULL_NONE);
+	//else
+		compiler.set_cull_mode(cull_mode);
 }
 
-void effect_material_base::compile_end( effect_compiler& )
+void effect_material_base::compile_end( effect_compiler& compiler )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b3d60]
+	compiler.end_pass();
+	compiler.end_technique();
 }
 
 } // namespace render

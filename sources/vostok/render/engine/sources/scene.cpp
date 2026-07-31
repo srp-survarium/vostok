@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: every remaining stub is absent from the legacy scene.cpp remainder (only the three select_* helpers survive there; clouds/tracers/probes/sky-AO/ambient-volumes/streaming/portal-system/grass/trample are new-in-target) - matcher-phase work.
 #include "scene.h"
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
@@ -1078,6 +1079,12 @@ void scene::remove_light( u32 id )
 }
 
 // STATE[STUB]
+// claude@NOTE: environment_probe heap-class reconstruction recipe (from the
+// consumed legacy scene_renderer.cpp note; recover via git show 8bb5b3dfc):
+// heap class + find_environment_probe_predicate; scene::m_environment_probes
+// at 0x37c + m_environment_probes_tree at 0x38c; collision-geometry ownership;
+// 0x178 properties built in game-side object_environment_probe::insert. See
+// binaries/structure/target/headers/vostok/render/environment_probe{,_properties}.h.
 void scene::update_environment_probe( u32 id, environment_probe_properties const& properties )
 {
 	// FUNCTION BODY[0x640940]: 14

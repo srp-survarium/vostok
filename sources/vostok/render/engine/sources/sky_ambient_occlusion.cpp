@@ -1,4 +1,6 @@
 #include "pch.h"
+
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target subsystem) - matcher-phase work.
 #include "sky_ambient_occlusion.h"
 
 namespace vostok {

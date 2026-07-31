@@ -11,6 +11,13 @@ class effect_compiler;
 
 class effect_post_process_mlaa : public effect_descriptor {
 public:
+	enum
+	{
+		color_edge_detection		= 0,
+		blending_weight_calculation,
+		neighborhood_blending,
+	};
+
 	effect_post_process_mlaa( ) { }
 	virtual ~effect_post_process_mlaa( ) { }
 

@@ -16,7 +16,6 @@ struct grass_template {
 
 	void apply( )
 	{
-		// STATE[STUB]
 	}
 
 private:

@@ -11,6 +11,13 @@ class effect_compiler;
 
 class effect_gather_luminance : public effect_descriptor {
 public:
+	enum
+	{
+		gather_log_luminance,
+		gather_luminance,
+		gather_exp_luminance,
+	};
+
 	effect_gather_luminance( ) { }
 	virtual ~effect_gather_luminance( ) { }
 

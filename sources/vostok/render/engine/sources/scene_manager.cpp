@@ -1,6 +1,9 @@
 #include "pch.h"
+#include <vostok/render/facade/common_types.h>
 #include "render_output_window.h"
+#include "scene.h"
 #include "scene_manager.h"
+#include "scene_view.h"
 
 namespace vostok {
 namespace render {
@@ -19,6 +22,7 @@ struct render_output_window_predicate {
 	HWND__* m_window;
 };
 
+// claude@NOTE: no legacy ancestor - legacy scene_manager declared no ctor (compiler-generated); the explicit ctor is new-in-target; matcher-phase work.
 // STATE[STUB]
  scene_manager::scene_manager( )
 {
@@ -27,90 +31,147 @@ struct render_output_window_predicate {
 	// ******
 }
 
-// STATE[STUB]
  scene_manager::~scene_manager( )
 {
-	// LOCALS
-	// scene** 							en_c
-	// ******
+	// FUNCTION BODY[0x749270]
+	vector< scene* >::iterator	it_c = m_scenes.begin(),
+								en_c = m_scenes.end();
 
-	// FUNCTION BODY[0x749270]: 17
-	// <0x749273>|0x003|+0x007:'23'
-	// <0x74927a>|0x00a|+0x037:'24'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7492b1>|0x041|-0x02f:'28'
-	// <0>
-	// <0x749282>|0x012|+0x116:'30'
-	// <0x749398>|0x128|-0x046:'30'
-	// <0x749352>|0x0e2|+0x052:'31'
-	// <0>
-	// <0x7493a4>|0x134|+0x003:'33'
-	// <0x7493a7>|0x137|+0x003:'34'
-	// <0>
-	// <1>
-	// <2>
-	// <0x7493aa>|0x13a|+0x048:'38'
-	// <0x7493f2>|0x182|-0x042:'38'
-	// <0x7493b0>|0x140|+0x046:'39'
-	// ******
+//!	ASSERT( it_c == en_c, "Some scenes were not deleted before render engine destruction." );
+	if ( it_c != en_c )
+		LOG_ERROR		( "Some scenes were not deleted before render engine destruction." );
+
+	for( ; it_c != en_c; ++it_c)
+		DELETE			(*it_c);
+
+	vector< scene_view* >::iterator	it_v = m_views.begin(),
+									en_v = m_views.end();
+
+	ASSERT( it_v == en_v, "Some scene views were not deleted before render engine destruction." );
+
+	for( ; it_v != en_v; ++it_v)
+		DELETE(*it_v);
 }
 
-// STATE[STUB]
 void scene_manager::add_scene( scene* in_scene )
 {
-	// FUNCTION BODY[0x749210]: 1
-	// <0x749213>|0x003|+0x016:'44'
-	// <0x749229>|0x019|-0x003:'44'
-	// <0x749226>|0x016|+0x013:'45'
-	// ******
+	// FUNCTION BODY[0x749210]
+	m_scenes.push_back( in_scene);
 }
 
-// STATE[STUB]
 void scene_manager::remove_scene( scene* in_scene )
 {
-	// FUNCTION BODY[0x749170]: 6
-	// <0x749175>|0x005|+0x010:'49'
-	// <0>
-	// <0x749185>|0x015|+0x004:'51'
-	// <0>
-	// <1>
-	// <0x749189>|0x019|+0x023:'54'
-	// ******
+	// FUNCTION BODY[0x749170]
+	vector< scene* >::iterator found = std::find(m_scenes.begin(), m_scenes.end(), in_scene);
+
+	if (found == m_scenes.end())
+		return;
+
+	m_scenes.erase(found);
 }
 
-// STATE[STUB]
 void scene_manager::add_scene_view( scene_view* in_scene_view )
 {
-	// FUNCTION BODY[0x7491e0]: 1
-	// <0x7491e1>|0x001|+0x01b:'59'
-	// <0x7491fc>|0x01c|-0x003:'59'
-	// <0x7491f9>|0x019|+0x013:'60'
-	// ******
+	// FUNCTION BODY[0x7491e0]
+	m_views.push_back(in_scene_view);
 }
 
-// STATE[STUB]
 void scene_manager::remove_scene_view( scene_view* in_scene_view )
 {
-	// FUNCTION BODY[0x749120]: 6
-	// <0x749125>|0x005|+0x011:'64'
-	// <0>
-	// <0x749136>|0x016|+0x004:'66'
-	// <0>
-	// <1>
-	// <0x74913a>|0x01a|+0x025:'69'
-	// ******
+	// FUNCTION BODY[0x749120]
+	vector< scene_view* >::iterator found = std::find(m_views.begin(), m_views.end(), in_scene_view);
+
+	if(found == m_views.end())
+		return;
+
+	m_views.erase(found);
 }
 
-// STATE[STUB]
 void scene_manager::add_render_output_window( render_output_window* in_output_window )
 {
-	// FUNCTION BODY[0x7491b0]: 1
-	// <0x7491b1>|0x001|+0x01b:'74'
-	// <0x7491cc>|0x01c|-0x003:'74'
-	// <0x7491c9>|0x019|+0x013:'75'
-	// ******
+	// FUNCTION BODY[0x7491b0]
+	m_output_windows.push_back(in_output_window);
+}
+
+// claude@NOTE: the seven definitions below were declared by the canonical header but
+// left undefined by the carcass (no target symbol - /OPT:REF stripped them); ported
+// from the legacy scene_manager.cpp, with its scenes/scene_views/render_output_windows
+// typedefs resolved to the canonical direct vector< T* > members.
+void scene_manager::remove_render_output_window( render_output_window* in_output_window )
+{
+	vector< render_output_window* >::iterator found = std::find(m_output_windows.begin(), m_output_windows.end(), in_output_window);
+
+	if(found == m_output_windows.end())
+		return;
+
+	m_output_windows.erase(found);
+}
+
+scene* scene_manager::create_scene( scene_configuration const& renderer_configuration )
+{
+	scene* new_scene	= NEW(scene) (renderer_configuration);
+	m_scenes.push_back(new_scene);
+
+	return new_scene;
+}
+
+void scene_manager::destroy( scene* scene )
+{
+	vector< render::scene* >::iterator it = std::find( m_scenes.begin(), m_scenes.end(), scene);
+
+	ASSERT( it != m_scenes.end());
+	if( it == m_scenes.end())
+		return;
+
+	DELETE			(*it);
+	m_scenes.erase	(it);
+}
+
+scene_view* scene_manager::create_scene_view( )
+{
+	scene_view* new_view	= NEW(scene_view);
+	m_views.push_back(new_view);
+
+	return new_view;
+}
+
+void scene_manager::destroy( scene_view* view )
+{
+	vector< scene_view* >::iterator it = std::find( m_views.begin(), m_views.end(), view);
+
+	ASSERT( it != m_views.end());
+	if( it == m_views.end())
+		return;
+
+	DELETE			(*it);
+	m_views.erase	(it);
+}
+
+render_output_window* scene_manager::create_render_output_window(
+	output_window_configuration const& window_configuration
+)
+{
+	HWND__* window = (HWND__*)window_configuration.hwnd;
+ 	vector< render_output_window* >::iterator it = std::find_if( m_output_windows.begin(), m_output_windows.end(), render_output_window_predicate( window) );
+ 	if( it != m_output_windows.end())
+	{
+		ASSERT( 0, "A window output with the specified handle has been crate already.");
+ 		return *it;
+	}
+
+	render_output_window* new_output	= NEW(render_output_window)( window_configuration );
+	m_output_windows.push_back			( new_output );
+
+	return new_output;
+}
+
+void scene_manager::destroy( render_output_window* output_window )
+{
+	vector< render_output_window* >::iterator const found	= std::find( m_output_windows.begin(), m_output_windows.end(), output_window );
+	R_ASSERT									( found != m_output_windows.end() );
+	DELETE										( *found );
+	m_output_windows.erase						( found );
+	R_ASSERT									( std::find( m_output_windows.begin(), m_output_windows.end(), output_window ) == m_output_windows.end() );
 }
 
 	// TYPEDEFS

@@ -1,16 +1,22 @@
 #include "pch.h"
 #include "effect_editor_texture_density.h"
+#include <vostok/render/core/dx11/effect_compiler.h>
 
 namespace vostok {
 namespace render {
 
 void effect_editor_texture_density::compile(
-	effect_compiler&,
-	custom_config_value const&
+	effect_compiler&			compiler,
+	custom_config_value const&	config
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b46a0]
+	shader_configuration configuration;
+
+	compile_begin("vertex_base", "editor_texture_density", compiler, &configuration, config);
+		compiler.set_depth(true, true);
+		compiler.set_cull_mode(D3D_CULL_NONE);
+	compile_end(compiler);
 }
 
 } // namespace render

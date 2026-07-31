@@ -11,6 +11,12 @@ class effect_compiler;
 
 class effect_copy_image : public effect_descriptor {
 public:
+	enum
+	{
+		copy_rewrite  = 0,
+		copy_additive,
+	};
+
 	effect_copy_image( ) { }
 	virtual ~effect_copy_image( ) { }
 

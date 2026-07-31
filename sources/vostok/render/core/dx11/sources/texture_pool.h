@@ -3,6 +3,8 @@
 
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/render_include.h>
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/utils.h>
 
 namespace vostok {
 namespace render {
@@ -28,7 +30,7 @@ public:
 		DXGI_FORMAT format,
 		u32 mips,
 		u32 count,
-		D3D11_USAGE
+		D3D11_USAGE usage
 	)
 		: m_unoccupied_count( count ),
 		  m_width( width ),
@@ -37,20 +39,49 @@ public:
 		  m_mips( mips ),
 		  m_memory_usage( 0 )
 	{
-		// STATE[STUB]
+		// claude@NOTE: legacy create_texture2d_impl took 6 arguments; the
+		// canonical one is 8-arg, so array_size/use_for_render_target are
+		// spelled out with their legacy defaults.
+		ASSERT( count > 0 );
+
+		m_textures.reserve( count );
+		for ( u32 i = 0; i < count; ++i )
+			m_textures.push_back( slot( resource_manager::ref( ).create_texture2d_impl( m_width, m_height, NULL, m_format, usage, m_mips, 1, false ) ) );
+
+		m_memory_usage = u32( 0.3f*m_width*m_height*utils::get_format_4x4_pixel_size( m_format )/16 );
 	}
 
 	~texture_pool( );
 
 	res_texture* get( )
 	{
-		// STATE[STUB]
-		return 0;
+		if( m_unoccupied_count <= 0)
+			return NULL;
+
+		--m_unoccupied_count;
+
+		slot slot = m_textures[m_unoccupied_count];
+
+		slot.occupied = true;
+
+		return slot.texture;
 	}
 
-	void release( res_texture const* )
+	void release( res_texture const* texture )
 	{
-		// STATE[STUB]
+		const u32 count = m_textures.size();
+
+		for( u32 i = 0; i < count; ++i)
+		{
+			if( m_textures[i].texture != texture)
+				continue;
+
+			m_textures[i].occupied = false;
+			std::swap( *(m_textures.begin() + i), *(m_textures.begin() + m_unoccupied_count));
+			return;
+		}
+
+		ASSERT( false, "The texture could not be found in the pool!");
 	}
 
 	u32 memory_usage( ) const { return m_memory_usage; }

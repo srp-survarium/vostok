@@ -1,4 +1,7 @@
 #include "pch.h"
+#include <vostok/render/core/backend.h>
+#include <vostok/render/facade/sources/ui_renderer.h>
+#include <vostok/ui/ui.h>
 #include "statistics.h"
 
 namespace vostok {
@@ -13,52 +16,106 @@ statistics_group::statistics_group( pcstr group_name ) :
 	m_name( group_name ),
 	m_next( 0 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638c60]
+	m_next							= statistics::ref().first_group;
+	statistics::ref().first_group	= this;
 }
 
 statistics_group::~statistics_group( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6387d0]
 }
 
 void statistics_group::start( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6387a0]
+	for (statistics_base* it = first_statistics; it != 0; it = it->m_next)
+	{
+		it->start();
+	}
 }
 
 static void push_point(
-	vectora< ui::vertex >&,
-	u32,
-	float,
-	float,
-	float,
-	u32,
-	float,
-	float
+	vectora< ui::vertex >& out_vertices,
+	u32 index,
+	float x,
+	float y,
+	float z,
+	u32 c,
+	float u,
+	float v
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638870]
+	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
+	vertex_item.m_position.set				(x, y, z, 1);
+	vertex_item.m_uv.set					(u, v);
+	vertex_item.m_color						= c;
 }
 
 static void make_ui_vertices(
-	vectora< ui::vertex >&,
-	pcstr,
-	vostok::ui::font const&,
-	float2 const&,
-	math::color const&,
-	math::color const&,
-	u32,
-	bool,
-	u32,
-	u32
+	vectora< ui::vertex >& out_vertices,
+	pcstr in_text,
+	vostok::ui::font const& in_font,
+	float2 const& in_position,
+	math::color const& in_color,
+	math::color const& in_selection_color,
+	u32 max_line_width,
+	bool is_multiline,
+	u32 start_selection_index,
+	u32 end_selection_index
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638910]
+	using namespace vostok::math;
+
+	float2 pos_rt			(0, 0);
+	float2 pos				= in_position;
+	u32 symb_count			= strlen(in_text);
+
+	pcstr ch				= in_text;
+	float const height		= in_font.get_height();
+	float height_ts			= in_font.get_height_ts();
+
+	float curr_word_len		= 0.0f;
+	pcstr next_word			= NULL;
+
+	if(is_multiline)
+		in_font.parse_word	(ch, curr_word_len, next_word);
+
+	u32 index = 0;
+
+	for(u32 i=0; i<symb_count; ++i, ++ch)
+	{
+		u32 clr = (i>=start_selection_index && i<end_selection_index) ? in_selection_color.m_value : in_color.m_value;
+
+		float3 uv			= in_font.get_char_tc_ts(*ch);
+		float3 const& tc	= in_font.get_char_tc(*ch);
+
+		if (in_text[i]=='\n' || in_text[i]=='\r\n')
+		{
+			in_font.parse_word	(ch, curr_word_len, next_word);
+			pos_rt.x			= 0.0f;
+			pos_rt.y			+= height;
+		}
+
+		if(is_multiline && (ch==next_word))
+		{
+			in_font.parse_word		(ch, curr_word_len, next_word);
+			if(pos_rt.x + curr_word_len > max_line_width)
+			{
+				pos_rt.x		= 0.0f;
+				pos_rt.y		+= height;
+			}
+		}
+
+		push_point(out_vertices, index++, pos.x+pos_rt.x,		pos.y+pos_rt.y+height,	0.0f, clr, uv.x,		uv.y+height_ts);
+		push_point(out_vertices, index++, pos.x+pos_rt.x,		pos.y+pos_rt.y,			0.0f, clr, uv.x,		uv.y);
+		push_point(out_vertices, index++, pos.x+pos_rt.x+tc.z,	pos.y+pos_rt.y+height,	0.0f, clr, uv.x+uv.z,	uv.y+height_ts);
+		push_point(out_vertices, index++, pos.x+pos_rt.x+tc.z,	pos.y+pos_rt.y,			0.0f, clr, uv.x+uv.z,	uv.y);
+
+		pos_rt.x			+= tc.z;
+	}
 }
 
 statistics_base::statistics_base( statistics_group* group, pcstr name ) :
@@ -66,20 +123,26 @@ statistics_base::statistics_base( statistics_group* group, pcstr name ) :
 	m_next( 0 ),
 	m_group( group )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6388c0]
+	// Not for inner statistics values.
+	if (group)
+	{
+		m_next					= group->first_statistics;
+		group->first_statistics = this;
+	}
 }
 
 statistics_base::~statistics_base( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6387c0]
 }
 
-void statistics_float::print( fs_new::virtual_path_string& )
+void statistics_float::print( fs_new::virtual_path_string& out_result )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638d20]
+	// claude@NOTE: canonical statistics_value grew min/max/digit tracking; legacy print
+	// only reports the average.
+	out_result.assignf("%s: %f", m_name.c_str(), average());
 }
 
 u32 get_num_digits( u32 )
@@ -91,27 +154,29 @@ u32 get_num_digits( u32 )
 
 fixed_string< 260 > u32_to_string( u32 )
 {
+	// claude@NOTE: no legacy ancestor - legacy statistics.cpp never had u32_to_string/get_num_digits; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x638cf0]
 	return fixed_string< 260 >( );
 }
 
-void statistics_int::print( fs_new::virtual_path_string& )
+void statistics_int::print( fs_new::virtual_path_string& out_result )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639520]
+	out_result.assignf("%s: %d", m_name.c_str(), average());
 }
 
-void statistics_cpu_gpu::print( fs_new::virtual_path_string& )
+void statistics_cpu_gpu::print( fs_new::virtual_path_string& out_result )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638ca0]
+	out_result.assignf("%s: CPU:%.3f, GPU:%.3f", m_name.c_str(), cpu_time.average(), gpu_time.average());
 }
 
 void statistics_cpu_gpu::start( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638770]
+	cpu_time.start();
+	gpu_time.start();
 }
 
 gbuffer_statistics_group::gbuffer_statistics_group( pcstr group_name ) :
@@ -119,7 +184,6 @@ gbuffer_statistics_group::gbuffer_statistics_group( pcstr group_name ) :
 	pre_pass_execute_time( this, "pre pass execute time" ),
 	material_pass_execute_time( this, "material pass execute time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x63a4b0]
 }
 
@@ -148,7 +212,6 @@ visibility_statistics_group::visibility_statistics_group( pcstr group_name ) :
 	num_occlusion_culled_portals( this, "num occlusion culled portals" ),
 	num_occlusion_culled_ambient_volumes( this, "num occlusion culled ambient volumes" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6392d0]
 }
 
@@ -158,7 +221,6 @@ lights_statistics_group::lights_statistics_group( pcstr group_name ) :
 	forward_lighting_time( this, "forward lighting time" ),
 	shadow_map_time( this, "shadow map time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x63a390]
 }
 
@@ -170,7 +232,6 @@ particles_statistics_group::particles_statistics_group( pcstr group_name ) :
 	meshes_execute_time( this, "meshes execute time" ),
 	num_total_instances( this, "num total instances" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x63a210]
 }
 
@@ -188,7 +249,6 @@ cascaded_sun_shadow_statistics_group::cascaded_sun_shadow_statistics_group( pcst
 	num_clipped_dips( this, "num clipped dips" ),
 	num_triangles( this, "num triangles" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x63a000]
 }
 
@@ -196,7 +256,6 @@ postprocess_statistics_group::postprocess_statistics_group( pcstr group_name ) :
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639f70]
 }
 
@@ -204,7 +263,6 @@ forward_stage_statistics_group::forward_stage_statistics_group( pcstr group_name
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639ee0]
 }
 
@@ -217,7 +275,6 @@ general_statistics_group::general_statistics_group( pcstr group_name ) :
 	cpu_fps( this, "cpu fps" ),
 	render_only_time( this, "render only time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639dd0]
 }
 
@@ -227,7 +284,6 @@ speedtree_statistics_group::speedtree_statistics_group( pcstr group_name ) :
 	culling_time( this, "culling time" ),
 	num_instances( this, "num instances" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639d10]
 }
 
@@ -237,7 +293,6 @@ forward_decals_statistics_group::forward_decals_statistics_group( pcstr group_na
 	num_decals( this, "num decals" ),
 	num_decal_draw_calls( this, "num decal draw calls" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639240]
 }
 
@@ -247,7 +302,6 @@ deferred_decals_statistics_group::deferred_decals_statistics_group( pcstr group_
 	num_decals( this, "num decals" ),
 	num_decal_draw_calls( this, "num decal draw calls" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6391b0]
 }
 
@@ -256,7 +310,6 @@ distortion_pass_statistics_group::distortion_pass_statistics_group( pcstr group_
 	accumulate_time( this, "accumulate time" ),
 	apply_time( this, "apply time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639c30]
 }
 
@@ -265,7 +318,6 @@ ssao_statistics_group::ssao_statistics_group( pcstr group_name ) :
 	ssao_accumulate_time( this, "ssao accumulate time" ),
 	ssao_blurring_time( this, "ssao blurring time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639b50]
 }
 
@@ -273,7 +325,6 @@ sky_statistics_group::sky_statistics_group( pcstr group_name ) :
 	statistics_group( group_name ),
 	execute_time( this, "execute time" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639ac0]
 }
 
@@ -291,7 +342,6 @@ lpv_statistics_group::lpv_statistics_group( pcstr group_name ) :
 	num_dips_in_cascade_2( this, "num dips in cascade 2" ),
 	num_clipped_dips( this, "num clipped dips" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639860]
 }
 
@@ -301,7 +351,6 @@ grass_statistics_group::grass_statistics_group( pcstr group_name ) :
 	num_rendered_patches( this, "num rendered patches" ),
 	num_visible_patches( this, "num visible patches" )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x639120]
 }
 
@@ -327,6 +376,7 @@ debug_statistics_group::debug_statistics_group( pcstr group_name ) :
 	gpu_num_compressed_textures( this, "gpu num compressed textures" ),
 	cpu_num_compressed_textures( this, "cpu num compressed textures" )
 {
+	// claude@NOTE: no legacy ancestor - debug_statistics_group is new-in-target; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x638f10]
 }
@@ -353,19 +403,25 @@ statistics::statistics( ) :
 	m_max_string_width( 0 ),
 	m_max_string_height( 0 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x63a590]
 }
 
 void statistics::start( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6387e0]
+	for (statistics_group* it = first_group; it != 0; it = it->m_next)
+	{
+		it->start();
+	}
+
+	backend::ref().num_total_rendered_triangles		= 0;
+	backend::ref().num_total_rendered_points		= 0;
+	backend::ref().num_setted_shader_constants		= 0;
+	backend::ref().num_draw_calls					= 0;
 }
 
 statistics::~statistics( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x638d70]
 }
 

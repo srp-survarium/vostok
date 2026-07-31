@@ -250,3 +250,118 @@ res_vs_hw, shader_binary_source_cook, shader_macros, texture_cook,
 texture_cook_wrapper, texture_options, texture_pool, texture_storage, utils
 (.cpp each). Four differing siblings kept for reconciliation: backend,
 options, effect_compiler, backend_handlers.
+
+## Final-push dispositions (2026-07-31; worker C + closeout sweep verdicts)
+
+base/ RETIRED wholesale (22 files) - the pre-facade base_world/platform
+dispatch layer, wholly superseded by the already-ported facade generation:
+debug_renderer.{h,sources/*} (fn set fully covered by canonical facade
+debug_renderer, 0 stubs), game_renderer/ui_renderer pairs (base ctors take
+base_world&/platform&), debug_draw_{lines,triangles}_command x4 (facade
+generation ported wave 1), platform_dx11.{cpp,h} (dissolved into core
+backend/device; wave-2 reading hold expired), platform_dx9.cpp,
+editor_renderer/engine_wrapper/extended_renderer/renderer_dx11/platform.h
+(NOVTABLE interface shells; triage-entered earlier, physical deletion was
+pending), model.h (unique terrain_model_instance already noted dead in the
+facade remainder).
+
+common/ RETIRED (11): light/lights_db/material_manager pairs (older
+generations of already-harvested engine copies), res_shader.h
+(IDirect3DVertexBuffer9 era), res_texture.{cpp,h} (DX9 set_surface era;
+DX11 copy harvested), utils.h (X-Ray property_container helpers, zero
+evidence), convex_volume.cpp (comment-level twin of the consumed engine
+copy). HELD: blender_combine.{cpp,h} (resolve_lighting reading reference),
+pix_event_wrapper.h (stage-porting macro recognition).
+
+Also deleted: facade/platform.h (all-#if 0, entered earlier),
+engine/sources/terrain_texture_pool_inline.h (entered earlier), plus the
+closeout sweep's 33 fully-consumed shells (dispatch headers, consumed
+facade pch/allocator/command twins - see sweep report in the PR).
+
+core/sources reconciliation four (backend/options/effect_compiler/
+backend_handlers.cpp): RETIRE verdicts recorded (older generations, deltas
+nil or deliberately-disabled); physical deletion follows the final port
+round which uses backend.cpp as a port source.
+
+## Engine/core drain dispositions (2026-07-31; worker "drain engine/core", 147 deleted / 12 kept)
+
+Holds expired (11): dx9 model_manager pair (5 ported chunks noted in
+portal_sector_system.cpp + detect_sector x2 in portal_sector_structure.cpp;
+remaining portal stubs all "no legacy ancestor"), dx9 stage_combine pair
+(resolve_lighting notes record the member mismatch), gpu_timer.h
+(declarations-only; event_query.cpp spells the D3D11_QUERY_EVENT idiom),
+flash_renderer.cpp (hold REFUTED - survarium::flash_renderer is a name
+collision, not the same type), pix_event_wrapper x3 (zero PIX symbols in
+target), core/sources/include_handler.h (byte-twin of dx11 copy).
+Duplicate twins (5): last of the core/sources "26 twins" family
+(texture_cook_wrapper/texture_pool/texture_storage/shader_binary_source_cook
+.h). Covered-by-canonical-notes (~62): all 47 HARVEST-REMAINDER banner
+files whose leftovers map to a STATE[STUB]+claude@NOTE, the 9 untrimmed
+stage_*.cpp (each execute stub carries its divergence note), and
+render_engine_world_pc_dx11.cpp (unported header inlines land on world_pc.h's
+22 target-proven-empty { /* no source */ } inlines). Dead machinery (~68):
+verified against match.db target symbols, e.g. resource_manager.cpp (every
+leftover has an UNPORTED: cause - m_sources subsystem / non-MASTER_GOLD / no
+target symbol), effect_manager.cpp (no find/delete/recompile/create-by-name
+in target).
+
+## Facade/common drain dispositions (2026-07-31; worker "drain facade+common", 22/22 retired)
+
+Fully-ported byte-equivalents (4): render_facade_world.cpp (9 bodies),
+render_facade_entry_point.cpp (3 bodies + s_world/allocator defs),
+cull_mode.h, base_command.h. Canonical-is-target-superset (5):
+common_types.h, scene_view_mode.h (target 0x1a-entry set),
+render_stage_types.h (target 0x1d-stage set), vertex_input_type.h (target
+0x0f-type set), scene_renderer.h (pre-v0.100b interface; named as ancestor
+by the set_model_visible note). Zero-target-evidence (5): model.h
+(terrain_model_instance - terrain subsystem retired), particles.h
+(particle_emitter_info heir = particle::preview_particle_emitter_info),
+render_stage_types.cpp (string_to_stage_type; target ships only
+stage_type_to_string 0x5872f0), vertex_input_type.cpp (both string
+converters dead), debug_renderer.cpp remainder. Plus common/ retirements
+recorded in the final-push entry above (blender_combine + pix_event_wrapper
+holds released with the stage waves complete).
+
+## Final port round (2026-07-31; the 12 kept-portable files -> EMPTY)
+
+speedtree.cpp: initialize_speedtree [0x75a880] (IsAuthorized guard,
+CAllocatorInterface local - atexit-dtor evidence, SetCoordSys, both
+register_cook pairs; statics at NAMESPACE scope per dynamic-initializer
+symbols), finalize_speedtree [0x75aa10], print_speedtree_errors [0x75910].
+NOT ported: speed_tree_allocator::Alloc [0x54440] 76B vs one-line MALLOC
+forward (legacy adds num_speedtree_memory_used counter + throw bad_alloc) -
+claude@NOTE left, matcher follow-up. material.cpp:
+initialize_nomaterial_material [0x6fcbf0] header-inline -> out-of-line
+(geometry_render_stage -> gbuffer_render_stage; effect instantiation
+confirmed by create_effect's observed-instantiation list).
+scene_manager.cpp 7/7 (ctor = only stub left, new-in-target).
+system_renderer.cpp 16 ported at legacy positions; draw_debug_terrain does
+NOT map (needs dropped m_terrain_debug_material + retired render-terrain
+subsystem) - git-history note in source. shader_binary_source_cook:
+converted_shader_loaded [0x5589e0] COMPLETE (else-arm only; blob+copy
+collapses to raw pointer into pinned managed resource = fits 0x18d);
+create_resource [0x558b70] PARTIAL (define path-suffix loop elided - needs
+dropped get_shader_source_by_short_name/found_shader_declarated_macroses;
+note cites 0x558b70 disassembly as the resolution path).
+include_handler.h hold MOOT: sole consumer compile_shader_task not
+canonical, zero ID3DInclude call sites in render (runtime shader compile
+stripped from MASTER_GOLD); effect_compiler uses canonical
+shader_include_getter instead. texture_pool/texture_storage/core-utils
+verified consumed (ctor formula + dtor [0x781f60], get/release inlines,
+utils::log_2).
+
+## Closing evidence lines
+
+- res_xs_hw mark_registered/set_name: R_ASSERT guards kept verbatim from
+  legacy (MASTER_GOLD emits empty_stub per assert site - they are bytes).
+- effect_manager::create_effect: legacy proves the ALLOCA-descriptor form
+  (stack-allocated effect_options_descriptor filled then passed by ref),
+  kept in the canonical template.
+
+## Recovery pointer
+
+Every file this campaign deleted from temp/render_legacy/ is recoverable at
+the clean-room baseline commit: `git show 8bb5b3dfc:temp/render_legacy/<path>`
+(full ever-existed list: `git ls-tree -r --name-only 6931a537b -- temp/render_legacy`).
+Dangling claude@NOTE references to temp/render_legacy paths in sources/
+resolve through that same pointer.

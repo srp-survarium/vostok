@@ -85,6 +85,7 @@ bool resource_manager::constant_buffer_predicate::operator()(
 	shader_constant_buffer const* const
 ) const
 {
+	// claude@NOTE: no legacy ancestor - constant_buffer_predicate is new-in-target (legacy kept a plain vector with linear search); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x124a20]
 	return false;
@@ -275,6 +276,11 @@ res_xs_hw<gs_data>* resource_manager::create_gs_hw(
 	binary_shader_sources_type*
 )
 {
+	// claude@NOTE: legacy forwards to create_xs_hw_impl<gs_data>; the target DOES carry that
+	// instantiation (??$create_xs_hw_impl@Ugs_data@... is in match.db), so the shipped source
+	// had ONE generic create_xs_hw_impl template instantiated for vs/gs/ps rather than the
+	// vs_data-only explicit specialization this TU currently holds; genericising it (registry
+	// + shader_type via traits) and restoring the forwards is matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x5643a0]
 	return 0;
@@ -287,6 +293,9 @@ res_xs_hw<ps_data>* resource_manager::create_ps_hw(
 	binary_shader_sources_type*
 )
 {
+	// claude@NOTE: legacy forwards to create_xs_hw_impl<ps_data>; the target DOES carry that
+	// instantiation (??$create_xs_hw_impl@Ups_data@... is in match.db) - see create_gs_hw above;
+	// matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x564370]
 	return 0;
@@ -294,6 +303,7 @@ res_xs_hw<ps_data>* resource_manager::create_ps_hw(
 
 void resource_manager::bind_samplers_to_shaders( )
 {
+	// claude@NOTE: no legacy ancestor - bind_samplers_to_shaders has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x560d30]
 }
@@ -332,12 +342,14 @@ void resource_manager::release( res_xs_hw<vs_data> const* shader )
 
 void resource_manager::release( res_xs_hw<gs_data> const* )
 {
+	// claude@NOTE: legacy body diverged - legacy release_impl has no gs instantiation in the target (~0x10-byte target body, see legacy UNPORTED note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x562dc0]
 }
 
 void resource_manager::release( res_xs_hw<ps_data> const* )
 {
+	// claude@NOTE: legacy body diverged - legacy release_impl has no ps instantiation in the target; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x562db0]
 }
@@ -605,6 +617,7 @@ void fix_texture_name( fs_new::virtual_path_string& str )
 
 u32 calc_bytes_per_block( DXGI_FORMAT )
 {
+	// claude@NOTE: no legacy ancestor - calc_bytes_per_block has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x560660]
 	return 0;
@@ -612,6 +625,7 @@ u32 calc_bytes_per_block( DXGI_FORMAT )
 
 u32 calc_block_size( DXGI_FORMAT )
 {
+	// claude@NOTE: no legacy ancestor - calc_block_size has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x5605f0]
 	return 0;
@@ -619,6 +633,7 @@ u32 calc_block_size( DXGI_FORMAT )
 
 DXGI_FORMAT find_srgb_format( DXGI_FORMAT format, bool )
 {
+	// claude@NOTE: no legacy ancestor - find_srgb_format has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x560560]
 	return format;
@@ -630,6 +645,7 @@ void resource_manager::on_texture_loaded(
 	u32
 )
 {
+	// claude@NOTE: no legacy ancestor - the managed-ptr on_texture_loaded split has no legacy ancestor (see legacy UNPORTED note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x562400]
 }
@@ -641,12 +657,14 @@ void resource_manager::on_texture_loaded(
 	u32
 )
 {
+	// claude@NOTE: legacy body diverged - legacy is the 3-param D3DX11/texture_data_resource path; the target gained a fourth u32 and split the flow; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x562de0]
 }
 
 u32 resource_manager::get_texture_video_memory_size( )
 {
+	// claude@NOTE: no legacy ancestor - get_texture_video_memory_size has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x560850]
 	return 0;
@@ -658,12 +676,14 @@ void resource_manager::on_texture_loaded_staging(
 	bool
 )
 {
+	// claude@NOTE: legacy body diverged - signature matches but the shipped body is empty (staging pool disabled in the shipped build, see legacy UNPORTED note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x560550]
 }
 
 void resource_manager::reload_all_textures( )
 {
+	// claude@NOTE: no legacy ancestor - reload_all_textures has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x564c50]
 }

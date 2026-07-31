@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (stage_volume_fog and effect_simple_fog are new-in-target) - matcher-phase work.
 #include "stage_volume_fog.h"
 
 namespace vostok {

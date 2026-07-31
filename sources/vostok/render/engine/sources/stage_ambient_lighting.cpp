@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (stage_ambient_lighting is new-in-target; the consumed stage_ambient_occlusion was a different stage) - matcher-phase work.
 #include "stage_ambient_lighting.h"
 
 #include "effect_environment_probe_lighting.h"

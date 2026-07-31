@@ -10,16 +10,20 @@ grass_template::grass_template( u32 in_index, grass_render_model_ptr const& in_m
 	m_index( in_index ),
 	m_sizes( 0.f, 0.f, 0.f )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b1660]
 }
 
 grass_template::~grass_template( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b15e0]
-	for ( vector<grass_instance*>::iterator i = m_instances.begin( ); i != m_instances.end( ); ++i )
-		DELETE( *i );
+	vector<grass_instance*>::iterator	it_i		=	m_instances.begin();
+	vector<grass_instance*>::iterator	end_i		=	m_instances.end();
+
+	for (; it_i != end_i; ++it_i)
+	{
+		grass_instance* inst					=	(*it_i);
+		DELETE									(inst);
+	}
 }
 
 } // namespace render

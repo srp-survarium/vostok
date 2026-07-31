@@ -52,15 +52,13 @@ public:
 	);
 
 	void merge_with_declared_macroses(
-		shader_declarated_macroses_list const&,
-		shader_defines_list&
-	)
-	{
-		// STATE[STUB]
-	}
+		shader_declarated_macroses_list const& declared_macroses,
+		shader_defines_list& macros
+	);
 
 	void append_macros_name( shader_defines_names_list&, pcstr )
 	{
+		// claude@NOTE: no legacy ancestor - append_macros_name has no legacy ancestor (legacy shader_macros declares only the fill/merge trio); matcher-phase work.
 		// STATE[STUB]
 	}
 

@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the remaining stubs have no legacy ancestor - legacy render_cc_bool/float/u32 override only fill_macro (no execute/is_changed/m_prev_value machinery), and parse_resolution/begin-end_render_options_changing are new-in-target - matcher-phase work.
 #include <vostok/math_int2.h>
 #include <vostok/render/core/options.h>
 #include <vostok/console_command_processor.h>
@@ -251,6 +252,17 @@ void options::set_default_values( )
 	current.m_num_test_lights					= 1024;
 }
 
+fs_new::virtual_path_string options::get_current_configuration( )
+{
+	console_commands::cc_string* command = static_cast_checked<console_commands::cc_string*>(vostok::console_commands::find("r_current_render_configuration"));
+	console_commands::console_command::status_str		status;
+	command->status						(status);
+	fs_new::virtual_path_string			file_name;
+	file_name.append					(status);
+
+	return file_name;
+}
+
 math::uint2 parse_resolution( pcstr )
 {
 	// STATE[STUB]
@@ -258,10 +270,109 @@ math::uint2 parse_resolution( pcstr )
 	return math::uint2( 1, 1 );
 }
 
+string256 s_current_render_configuration = "default";
+
+// claude@NOTE: legacy registrations adapted to the canonical two-table
+// (current/previous) signature; every changed_result is the ocr_need_nothing
+// placeholder - the real per-cc values live in the immediates at 0x55cfa0
+// (matcher work), as do the target-added ccs (clouds/fxaa/grass/ssao/quality
+// tiers/resolution/...). Legacy ccs on fields dropped from optinos_table
+// (use_branching, use_loop_unrolling, gbuffer_pos_packing,
+// gbuffer_normal_packing) are dropped with their fields.
 void options::register_console_commands( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55cfa0]
+	using namespace console_commands;
+
+	static cc_string current_render_configuration_cc("r_current_render_configuration", s_current_render_configuration, 256, true, command_type_engine_internal );
+
+	static render_cc_bool	enabled_g_stage_cc					("r_enabled_g_stage",					ocr_need_nothing, 0, current.m_enabled_g_stage,					previous.m_enabled_g_stage,					true, command_type_engine_internal);
+	static render_cc_bool	enabled_g_stage_pre_pass_cc			("r_enabled_g_stage_pre_pass",			ocr_need_nothing, 0, current.m_enabled_g_stage_pre_pass,		previous.m_enabled_g_stage_pre_pass,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_g_stage_material_pass_cc	("r_enabled_g_stage_material_pass",		ocr_need_nothing, 0, current.m_enabled_g_stage_material_pass,	previous.m_enabled_g_stage_material_pass,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_decals_accumulate_stage_cc	("r_enabled_decals_accumulate_stage",	ocr_need_nothing, 0, current.m_enabled_decals_accumulate_stage,	previous.m_enabled_decals_accumulate_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_distortion_stage_cc			("r_enabled_distortion_stage",			ocr_need_nothing, 0, current.m_enabled_distortion_stage,		previous.m_enabled_distortion_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sun_shadows_stage_cc		("r_enabled_sun_shadows_stage",			ocr_need_nothing, 0, current.m_enabled_sun_shadows_stage,		previous.m_enabled_sun_shadows_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sun_stage_cc				("r_enabled_sun_stage",					ocr_need_nothing, 0, current.m_enabled_sun_stage,				previous.m_enabled_sun_stage,				true, command_type_engine_internal);
+	static render_cc_bool	enabled_lighting_stage_cc			("r_enabled_lighting_stage",			ocr_need_nothing, 0, current.m_enabled_lighting_stage,			previous.m_enabled_lighting_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_forward_lighting_stage_cc	("r_enabled_forward_lighting_stage",	ocr_need_nothing, 0, current.m_enabled_forward_lighting_stage,	previous.m_enabled_forward_lighting_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_deferred_lighting_stage_cc	("r_enabled_deferred_lighting_stage",	ocr_need_nothing, 0, current.m_enabled_deferred_lighting_stage,	previous.m_enabled_deferred_lighting_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_forward_stage_cc			("r_enabled_forward_stage",				ocr_need_nothing, 0, current.m_enabled_forward_stage,			previous.m_enabled_forward_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_particles_stage_cc			("r_enabled_particles_stage",			ocr_need_nothing, 0, current.m_enabled_particles_stage,			previous.m_enabled_particles_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_post_process_stage_cc		("r_enabled_post_process_stage",		ocr_need_nothing, 0, current.m_enabled_post_process_stage,		previous.m_enabled_post_process_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sky_box_stage_cc			("r_enabled_sky_box_stage",				ocr_need_nothing, 0, current.m_enabled_sky_box_stage,			previous.m_enabled_sky_box_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_ambient_occlusion_stage_cc	("r_enabled_ambient_occlusion_stage",	ocr_need_nothing, 0, current.m_enabled_ambient_occlusion_stage,	previous.m_enabled_ambient_occlusion_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_clouds_stage_cc				("r_enabled_clouds_stage",				ocr_need_nothing, 0, current.m_enabled_clouds_stage,			previous.m_enabled_clouds_stage,			true, command_type_engine_internal);
+
+	// Terrain parameters.
+	static render_cc_bool	enabled_draw_terrain_cc				("r_enabled_draw_terrain",				ocr_need_nothing, 0, current.m_enabled_draw_terrain,			previous.m_enabled_draw_terrain,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_terrain_shadows_cc			("r_enabled_terrain_shadows",			ocr_need_nothing, 0, current.m_enabled_terrain_shadows,			previous.m_enabled_terrain_shadows,			true, command_type_engine_internal);
+
+	// SpeedTree parameters.
+	static render_cc_bool	enabled_draw_speedtree_cc			("r_enabled_draw_speedtree",			ocr_need_nothing, 0, current.m_enabled_draw_speedtree,			previous.m_enabled_draw_speedtree,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_draw_speedtree_branches_cc	("r_enabled_draw_speedtree_branches",	ocr_need_nothing, 0, current.m_enabled_draw_speedtree_branches,	previous.m_enabled_draw_speedtree_branches,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_draw_speedtree_fronds_cc	("r_enabled_draw_speedtree_fronds",		ocr_need_nothing, 0, current.m_enabled_draw_speedtree_fronds,	previous.m_enabled_draw_speedtree_fronds,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_draw_speedtree_leafmeshes_cc("r_enabled_draw_speedtree_leafmeshes",	ocr_need_nothing, 0, current.m_enabled_draw_speedtree_leafmeshes, previous.m_enabled_draw_speedtree_leafmeshes, true, command_type_engine_internal);
+	static render_cc_bool	enabled_draw_speedtree_leafcards_cc	("r_enabled_draw_speedtree_leafcards",	ocr_need_nothing, 0, current.m_enabled_draw_speedtree_leafcards, previous.m_enabled_draw_speedtree_leafcards,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_draw_speedtree_billboards_cc("r_enabled_draw_speedtree_billboards",	ocr_need_nothing, 0, current.m_enabled_draw_speedtree_billboards, previous.m_enabled_draw_speedtree_billboards, true, command_type_engine_internal);
+
+	// Models parameters.
+	static render_cc_bool	enabled_draw_models_cc				("r_enabled_draw_models",				ocr_need_nothing, 0, current.m_enabled_draw_models,				previous.m_enabled_draw_models,				true, command_type_engine_internal);
+
+	static render_cc_bool	enabled_fxaa_cc						("r_enabled_fxaa",						ocr_need_nothing, 0, current.m_enabled_fxaa,					previous.m_enabled_fxaa,					true, command_type_engine_internal);
+	static render_cc_bool	enabled_mlaa_cc						("r_enabled_mlaa",						ocr_need_nothing, 0, current.m_enabled_mlaa,					previous.m_enabled_mlaa,					true, command_type_engine_internal);
+	static render_cc_bool	use_cpu_mlaa_cc						("r_use_cpu_mlaa",						ocr_need_nothing, 0, current.m_use_cpu_mlaa,					previous.m_use_cpu_mlaa,					false, command_type_engine_internal);
+
+	// Lighting stage parameters.
+	static render_cc_bool	enabled_local_light_shadows_cc		("r_enabled_local_light_shadows",		ocr_need_nothing, 0, current.m_enabled_local_light_shadows,		previous.m_enabled_local_light_shadows,		true, command_type_engine_internal);
+
+	static render_cc_bool	use_parallax_cc						("r_use_parallax",						ocr_need_nothing, "GLOBAL_ALLOW_STEEPPARALLAX",				current.m_use_parallax, previous.m_use_parallax, true, command_type_engine_internal);
+
+	static render_cc_u32	organic_irradiance_texture_size_cc	("r_organic_irradiance_texture_size",	ocr_need_nothing, "GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE",	current.m_organic_irradiance_texture_size, previous.m_organic_irradiance_texture_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32	shadow_map_size_cc					("r_shadow_map_size",					ocr_need_nothing, "GLOBAL_SHADOWMAP_SIZE",					current.m_shadow_map_size, previous.m_shadow_map_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32	spot_shadow_map_size_cc				("r_spot_shadow_map_size",				ocr_need_nothing, "GLOBAL_SPOT_SHADOWMAP_SIZE",				current.m_spot_shadow_map_size, previous.m_spot_shadow_map_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32	shadow_quality_cc					("r_shadow_quality",					ocr_need_nothing, "GLOBAL_SHADOWMAP_QUALITY",				current.m_shadow_quality, previous.m_shadow_quality, 0, 2, true, command_type_engine_internal);
+	static render_cc_float  test_float_option_cc				("r_test_float_option",					ocr_need_nothing, "GLOBAL_TEST_FLOAT",						current.m_test_float_option, previous.m_test_float_option, 0.0f, 100.0f, true, command_type_engine_internal);
+
+	// Light Propagation Volumes stage parameters.
+	static render_cc_bool	enabled_light_propagation_volumes_stage_cc	("r_enabled_light_propagation_volumes_stage",	ocr_need_nothing, 0, current.m_enabled_light_propagation_volumes_stage, previous.m_enabled_light_propagation_volumes_stage, true, command_type_engine_internal);
+	static render_cc_u32	light_propagation_volumes_rsm_size_cc		("r_light_propagation_volumes_rsm_size",		ocr_need_nothing, 0, current.m_light_propagation_volumes_rsm_size, previous.m_light_propagation_volumes_rsm_size, 1, 2048, true, command_type_engine_internal);
+	static render_cc_u32	num_radiance_volume_cells_cc				("r_num_radiance_volume_cells",					ocr_need_nothing, 0, current.m_num_radiance_volume_cells,	previous.m_num_radiance_volume_cells,	8, 128, true, command_type_engine_internal);
+	static render_cc_u32	num_propagate_iterations_cc					("r_num_propagate_iterations",					ocr_need_nothing, 0, current.m_num_propagate_iterations,	previous.m_num_propagate_iterations,	0, 32, true, command_type_engine_internal);
+	static render_cc_float	radiance_volume_scale_cc					("r_radiance_volume_scale",						ocr_need_nothing, 0, current.m_radiance_volume_scale,		previous.m_radiance_volume_scale,		1.0f, 100.0f, true, command_type_engine_internal);
+
+	static render_cc_float	lpv_flux_amplifier_cc						("r_lpv_flux_amplifier",						ocr_need_nothing, 0, current.m_lpv_flux_amplifier,			previous.m_lpv_flux_amplifier,			0.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_float	lpv_interreflection_contribution_cc			("r_lpv_interreflection_contribution",			ocr_need_nothing, 0, current.m_lpv_interreflection_contribution, previous.m_lpv_interreflection_contribution, 0.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_bool	lpv_movable_cc								("r_lpv_movable",								ocr_need_nothing, 0, current.m_lpv_movable,					previous.m_lpv_movable,					true, command_type_engine_internal);
+
+	static render_cc_u32	lpv_num_cascades_cc							("r_lpv_num_cascades",							ocr_need_nothing, 0, current.m_lpv_num_cascades,			previous.m_lpv_num_cascades,			1, 4, true, command_type_engine_internal);
+
+	static render_cc_bool	lpv_gather_occluders_from_light_view_cc		("r_lpv_gather_occluders_from_light_view",		ocr_need_nothing, 0, current.m_lpv_gather_occluders_from_light_view, previous.m_lpv_gather_occluders_from_light_view, true, command_type_engine_internal);
+	static render_cc_bool	lpv_gather_occluders_from_camera_view_cc	("r_lpv_gather_occluders_from_camera_view",		ocr_need_nothing, 0, current.m_lpv_gather_occluders_from_camera_view, previous.m_lpv_gather_occluders_from_camera_view, true, command_type_engine_internal);
+
+	static render_cc_bool	lpv_disable_rsm_generating_cc				("r_lpv_disable_rsm_generating",				ocr_need_nothing, 0, current.m_lpv_disable_rsm_generating,	previous.m_lpv_disable_rsm_generating,	false, command_type_engine_internal);
+	static render_cc_bool	lpv_disable_rsm_downsampling_cc				("r_lpv_disable_rsm_downsampling",				ocr_need_nothing, 0, current.m_lpv_disable_rsm_downsampling, previous.m_lpv_disable_rsm_downsampling, false, command_type_engine_internal);
+	static render_cc_bool	lpv_disable_vpl_injection_cc				("r_lpv_disable_vpl_injection",					ocr_need_nothing, 0, current.m_lpv_disable_vpl_injection,	previous.m_lpv_disable_vpl_injection,	false, command_type_engine_internal);
+	static render_cc_bool	lpv_disable_gv_injection_cc					("r_lpv_disable_gv_injection",					ocr_need_nothing, 0, current.m_lpv_disable_gv_injection,	previous.m_lpv_disable_gv_injection,	false, command_type_engine_internal);
+	static render_cc_bool	lpv_disable_propagation_cc					("r_lpv_disable_propagation",					ocr_need_nothing, 0, current.m_lpv_disable_propagation,		previous.m_lpv_disable_propagation,		false, command_type_engine_internal);
+	static render_cc_bool	lpv_disable_lpv_lookup_cc					("r_lpv_disable_lpv_lookup",					ocr_need_nothing, 0, current.m_lpv_disable_lpv_lookup,		previous.m_lpv_disable_lpv_lookup,		false, command_type_engine_internal);
+
+	static render_cc_u32	lpv_refresh_once_per_frames_cc				("r_lpv_refresh_once_per_frames",				ocr_need_nothing, 0, current.m_lpv_refresh_once_per_frames,	previous.m_lpv_refresh_once_per_frames,	1, 20, true, command_type_engine_internal);
+	static render_cc_float	lpv_occlusion_amplifier_cc					("r_lpv_occlusion_amplifier",					ocr_need_nothing, 0, current.m_lpv_occlusion_amplifier,		previous.m_lpv_occlusion_amplifier,		0.0f, 100.0f, true, command_type_engine_internal);
+
+	static render_cc_u32	num_test_lights_cc							("r_num_test_lights",							ocr_need_nothing, 0, current.m_num_test_lights,				previous.m_num_test_lights,				16, 1024 * 1024, true, command_type_engine_internal);
+
+	first_command				= &enabled_g_stage_cc;
+	console_command* command	= first_command;
+
+	while (command)
+	{
+		if (!command->next())
+		{
+			last_command = command;
+			break;
+		}
+		command = command->next();
+	}
 }
 
 void options::begin_render_options_changing( long volatile* )
@@ -277,6 +388,27 @@ enum_options_changes_result options::end_render_options_changing(
 	// STATE[STUB]
 	// FUNCTION BODY[0x55f180]
 	return ocr_need_nothing;
+}
+
+void options::save( pcstr file_name )
+{
+	memory::writer			f(g_allocator);
+	console_commands::console_command* current = first_command;
+	console_commands::save_storage		s(*g_allocator);
+
+	while(current)
+	{
+		if(current->is_serializable())
+			current->save_to( s, g_allocator );
+
+		if (current == last_command)
+			break;
+
+		current				= current->next();
+	}
+
+	s.save_to				( f );
+	f.save_to				( file_name );
 }
 
 void options::on_config_loaded( resources::queries_result& data )
@@ -331,6 +463,16 @@ void options::load_impl( memory::reader& F )
 		r_string			(F, str);
 		vostok::console_commands::execute				(str, vostok::console_commands::execution_filter_all);
 	}
+}
+
+void options::load( pcstr file_name )
+{
+	resources::query_resource	(
+		file_name,
+		vostok::resources::raw_data_class,
+		boost::bind(&options::on_config_loaded, this, _1),
+		g_allocator
+	);
 }
 
 void options::fill_global_macros( shader_defines_list& out_defines )
@@ -390,6 +532,21 @@ void options::load_from_config( configs::binary_config_value const& config )
 			break;
  		command = command->next();
  	}
+}
+
+// claude@NOTE: legacy body was gated #ifndef MASTER_GOLD; the canonical class
+// declares it unconditionally and load_from_config ships (0x55ce80), so the
+// gate is dropped.
+void options::on_config_loaded2( resources::queries_result& data )
+{
+	if (data.is_successful())
+	{
+		load_from_config(
+			vostok::static_cast_resource_ptr<vostok::configs::binary_config_ptr>(
+				data[0].get_unmanaged_resource()
+			)->get_root()["options"]
+		);
+	}
 }
 
 } // namespace render

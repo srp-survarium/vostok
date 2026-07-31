@@ -23,16 +23,34 @@ public:
 
 	void destroy_impl( ) const;
 
-	bool equal( res_sampler_list const& ) const
+	bool equal( res_sampler_list const& base ) const
 	{
-		// STATE[STUB]
-		return false;
+		if (m_samplers.size() != base.m_samplers.size())
+			return false;
+
+		for (u32 cmp = 0, count = m_samplers.size(); cmp < count; ++cmp)
+		{
+			if (m_samplers[cmp] != base.m_samplers[cmp])	return false;
+		}
+
+		return true;
 	}
 
-	bool equal( fixed_vector<sampler_slot, 16> const& ) const
+	bool equal( fixed_vector<sampler_slot, 16> const& base ) const
 	{
-		// STATE[STUB]
-		return false;
+		u32 const base_size = base.size();
+		for (u32 i = 0, count = m_samplers.size(); i < base_size; ++i)
+		{
+			if( i < count)
+			{
+				if (m_samplers[i] != base[i].state)
+					return false;
+			}
+			else if( base[i].slot_id != enum_slot_ind_null)
+				return false;
+		}
+
+		return true;
 	}
 
 	s32 compare( res_sampler_list const& base ) const;

@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (hierarchical-Z occlusion is new-in-target) - matcher-phase work.
 #include "hw_hiz_occlusion_manager.h"
 
 namespace vostok {

@@ -11,6 +11,15 @@ class effect_compiler;
 
 class effect_sun : public effect_descriptor {
 public:
+	enum
+	{
+		tech_sun_near,
+		tech_sun_near_mat2,
+		tech_sun_near_clip,
+		tech_sun_near_mat2_clip,
+		tech_sun_far
+	};
+
 	effect_sun( ) { }
 	virtual ~effect_sun( ) { }
 

@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: stem file consumed; rebind never existed in the corpus and the two compares descend from bool equal overloads (equal->compare is a target-generation refactor) - matcher-phase work.
 #include <vostok/render/core/res_sampler_list.h>
 #include <vostok/render/core/resource_manager.h>
 

@@ -1,4 +1,7 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the remaining stubs (ctor tail, trample, LOD, render/sort/merge) are absent from the legacy grass_patch.cpp remainder (only create_render_buffer survives there; trample/LOD/merged-stream design is new-in-target) - matcher-phase work.
+#include <vostok/collision/api.h>
+#include <vostok/collision/space_partitioning_tree.h>
 #include "grass_patch.h"
 
 namespace vostok {
@@ -95,21 +98,35 @@ void grass_patch::try_accumulate_trample( trample_desc&, grass_world*, renderer*
 
 grass_patch::~grass_patch( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f4480]
+	// claude@NOTE: legacy dtor; freeing of the canonical merged-stream arrays
+	// (m_merged_indices/m_sort_info) is matcher-phase.
+	if (m_collision_tree && m_collision_object)
+		m_collision_tree->erase					(m_collision_object);
+
+	collision::delete_object					(g_allocator, m_collision_object);
+	collision::delete_geometry_instance			(g_allocator, m_collision_geometry);
 }
 
 void grass_patch::init_collision( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f3ba0]
+	// claude@NOTE: adapted from the legacy ctor tail (collision setup moved into
+	// init_collision; legacy float3 m_sizes became the scalar m_size).
+	float3 const sizes							=	float3(m_size, m_size, m_size);
+	math::float4x4 const transform				=	math::create_scale(sizes * 0.5f) * math::create_translation(m_origin + sizes * 0.5f);
+	m_collision_geometry						=	&*collision::new_box_geometry_instance(g_allocator, transform);
+	m_collision_object							=	&*collision::new_collision_object(g_allocator, 1, m_collision_geometry, this);
+
+	m_collision_tree->insert					(m_collision_object, transform);
+	m_aabb.modify								(transform);
 }
 
 u32 grass_patch::get_stream_1_stride( ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f3ae0]
-	return 0;
+	// claude@NOTE: legacy returned sizeof(grass_instance_data); canonical stream layout.
+	return sizeof(stream_1_type);
 }
 
 u32 grass_patch::get_index_count( ) const

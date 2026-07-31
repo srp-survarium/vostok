@@ -92,6 +92,7 @@ void res_render_output::update_window_properties()
 
 bool set_client_rect( HWND, s32, s32, s32, s32 )
 {
+	// claude@NOTE: no legacy ancestor - set_client_rect has no legacy ancestor (absent from the consumed res_render_output too); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x55ab60]
 	return false;

@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (the batched_geometry family is new-in-target) - matcher-phase work.
 #include <boost/function.hpp>
 #include <vostok/math_aabb.h>
 #include <vostok/render/core/dx11/res_declaration.h>

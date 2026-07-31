@@ -1,4 +1,6 @@
 #include "pch.h"
+
+// claude@NOTE: legacy-harvest disposition: skeleton_combined_model_cook is new-in-target (no temp/render_legacy ancestor; the legacy composite_render_model cooks are a different, retired subsystem) - matcher-phase work.
 #include "combined_model_cooker.h"
 
 namespace vostok {

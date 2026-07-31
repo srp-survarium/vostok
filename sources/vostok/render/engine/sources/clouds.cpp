@@ -1,4 +1,6 @@
 #include "pch.h"
+
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target cloud system) - matcher-phase work.
 #include "clouds.h"
 
 namespace vostok {

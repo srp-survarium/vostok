@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_SKELETON_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_SKELETON_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: legacy render_model_skeleton.h fully consumed; its get_aabb was a TMP identity-aabb stub and get_surfaces_count is already reproduced - matcher-phase work.
 #include <vostok/render/core/memory.h>
 #include "render_model.h"
 #include "render_model_instance_impl.h"

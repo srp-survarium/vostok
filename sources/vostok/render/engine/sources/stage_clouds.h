@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_CLOUDS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_CLOUDS_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: environment_temp and the noise/cloud-task members have no legacy ancestor (legacy stage_clouds is the sliced-cube generation); the ctor DIVERGED note is inline - matcher-phase work.
 #include <vostok/math_float3.h>
 #include <vostok/math_float4.h>
 #include <vostok/render/core/res_effect.h>
@@ -78,6 +79,7 @@ public:
 		m_x_rotation				( 0.0f ),
 		m_y_rotation				( 0.0f )
 	{
+		// claude@NOTE: legacy body diverged - legacy stage_clouds ctor takes (renderer_context*) and owns the retired sliced-cube members, not simulation/interp textures; matcher-phase work.
 		// STATE[STUB]
 	}
 

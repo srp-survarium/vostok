@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (cloud_key_parameters is new-in-target) - matcher-phase work.
 namespace vostok {
 
 namespace configs {

@@ -9,8 +9,25 @@
 namespace vostok {
 namespace render {
 
+// claude@NOTE: declared in res_pass.h with no legacy out-of-line ancestor
+// (legacy res_pass ctor was header-inline); init-list ctor for the
+// effect_compiler end_pass construction path.
+res_pass::res_pass(
+	res_vs_ptr const& vs,
+	res_gs_ptr const& gs,
+	res_ps_ptr const& ps,
+	res_state_ptr const& state
+) :
+	m_state	( state ),
+	m_vs	( vs ),
+	m_gs	( gs ),
+	m_ps	( ps )
+{
+}
+
 s32 compare( res_pass const&, res_pass const& )
 {
+	// claude@NOTE: legacy body diverged - legacy is member bool res_pass::equal, not a free s32 compare (equal->compare refactor, see legacy remainder note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e7b10]
 	return 0;
@@ -18,6 +35,7 @@ s32 compare( res_pass const&, res_pass const& )
 
 s32 compare( res_shader_technique const&, res_shader_technique const& )
 {
+	// claude@NOTE: legacy body diverged - legacy is member bool res_shader_technique::equal, not a free s32 compare; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e7b80]
 	return 0;
@@ -25,6 +43,7 @@ s32 compare( res_shader_technique const&, res_shader_technique const& )
 
 void res_effect::push_texture_unique( res_texture*, pcstr )
 {
+	// claude@NOTE: no legacy ancestor - push_texture_unique has no legacy ancestor; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e7ce0]
 }
