@@ -235,3 +235,18 @@ Kept as HARVEST REMAINDER (ancestors of still-stubbed `compare` functions):
 `core/dx11/sources/res_effect.cpp` (res_pass::equal,
 res_shader_technique::equal), `core/dx11/sources/res_texture_list.cpp`
 (equal(texture_slots)), `core/dx11/sources/res_geometry.cpp` (equal).
+
+## core/sources twins of core/dx11 (2026-07-31)
+
+26 files under `core/sources/` verified byte-identical (git diff vs the
+campaign-start dx11 copies at 8bb5b3dfc) to their `core/dx11/sources/`
+siblings - the same source committed twice in the old tree layout. The dx11
+copies are the harvest sources; the twins add nothing. Retired:
+resource_manager, device, effect_manager, state_cache, state_descriptor,
+state_utils, custom_config, custom_config_value, decl_utils, effect_cook,
+effect_descriptor, effect_options_descriptor, render_core_entry_point,
+res_gs_hw, res_input_layout, res_ps_hw, res_sampler_list, res_signature,
+res_vs_hw, shader_binary_source_cook, shader_macros, texture_cook,
+texture_cook_wrapper, texture_options, texture_pool, texture_storage, utils
+(.cpp each). Four differing siblings kept for reconciliation: backend,
+options, effect_compiler, backend_handlers.
