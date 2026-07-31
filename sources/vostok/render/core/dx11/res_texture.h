@@ -24,6 +24,11 @@ class res_texture :
 	public resource_intrusive_base,
 	public noncopyable_protected
 {
+	// claude@NOTE: resource_manager::create_texture3d stores the computed surface size
+	// straight into m_mem_usage (mov [tex+34h], eax) and res_texture's PDB member list
+	// records no setter for it, so the manager reaches the private member as a friend.
+	friend class resource_manager;
+
 public:
 	explicit res_texture( bool pool_texture = false );
 	virtual ~res_texture( );

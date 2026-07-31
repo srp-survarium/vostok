@@ -13,13 +13,13 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 5,732 / 12,915 functions exact (44.38%) &middot; 5,732 / 12,915 functions exact-max (44.38%) &middot; 57.19% fuzzy &middot; 57.19% fuzzy-max.**
+**Overall: 5,744 / 12,915 functions exact (44.48%) &middot; 5,744 / 12,915 functions exact-max (44.48%) &middot; 57.41% fuzzy &middot; 57.41% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 396 / 2,647 (15.0%) | 396 / 2,647 (15.0%) | 24.6% |     24.6% |
+| `render`        |   351 | 408 / 2,647 (15.4%) | 408 / 2,647 (15.4%) | 25.3% |     25.3% |
 | `game`          |   141 | 397 / 1,498 (26.5%) | 397 / 1,498 (26.5%) | 44.9% |     44.9% |
 | `core`          |   136 | 828 / 1,320 (62.7%) | 828 / 1,320 (62.7%) | 83.0% |     83.0% |
 | `vostok`        |   112 | 583 / 1,252 (46.6%) | 583 / 1,252 (46.6%) | 67.1% |     67.1% |
@@ -33,7 +33,7 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `vfs`           |    71 |   164 / 390 (42.1%) |   164 / 390 (42.1%) | 87.2% |     87.2% |
 | `ui`            |    27 |   192 / 227 (84.6%) |   192 / 227 (84.6%) | 80.3% |     80.3% |
 | `physics`       |    14 |    94 / 197 (47.7%) |    94 / 197 (47.7%) | 71.8% |     71.8% |
-| `fs`            |    25 |    70 / 165 (42.4%) |    70 / 165 (42.4%) | 83.8% |     83.8% |
+| `fs`            |    25 |    70 / 165 (42.4%) |    70 / 165 (42.4%) | 83.5% |     83.8% |
 | `engine`        |    22 |   118 / 162 (72.8%) |   118 / 162 (72.8%) | 86.0% |     86.0% |
 | `network`       |    25 |    69 / 158 (43.7%) |    69 / 158 (43.7%) | 85.4% |     85.4% |
 | `network_core`  |    22 |    35 / 127 (27.6%) |    35 / 127 (27.6%) | 84.1% |     84.1% |

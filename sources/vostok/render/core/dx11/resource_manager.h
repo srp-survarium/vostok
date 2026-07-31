@@ -505,6 +505,13 @@ private:
 	);
 	void release_impl( res_texture const* texture );
 
+	// claude@NOTE: the target instantiates create_xs_hw_impl/release_impl for vs/gs/ps from
+	// ONE template, so the per-shader registry must come from a helper - and the PDB's member
+	// list for resource_manager records no such accessor, which rules out an ordinary member
+	// (an inlined one still shows up there, e.g. tick/copy3D) and leaves a member TEMPLATE.
+	// The name is not recoverable from the binary.
+	template < typename shader_data >
+	map<shader_name_config_pair, res_xs_hw<shader_data>*>& xs_hw_registry( );
 	template < typename shader_data >
 	res_xs_hw<shader_data>* create_xs_hw_impl(
 		pcstr name,
