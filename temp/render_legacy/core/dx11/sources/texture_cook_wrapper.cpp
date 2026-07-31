@@ -13,6 +13,10 @@
 namespace vostok {
 namespace render {
 
+// REMAINDER: the non-MASTER_GOLD conversion pipeline (make_converted_path,
+// translate_query fs-iterator arm, on_fs_iterators_ready, request_convertion)
+// - members dropped from the canonical class; editor-restore reference.
+
 using namespace resources;
 using namespace fs_new;
 
@@ -28,18 +32,6 @@ static pcstr source_texture_options_extension		=	"options";
 static pcstr resources_textures_converted_string	=	"resources.converted/textures/";
 static pcstr resources_textures_string				=	"resources/textures/";
 
-texture_cook_wrapper::texture_cook_wrapper ()
-	: translate_query_cook(
-		texture_wrapper_class, 
-#ifndef MASTER_GOLD
-		reuse_false, 
-#else /// #ifndef MASTER_GOLD
-		reuse_true, 
-#endif /// #ifndef MASTER_GOLD
-		use_any_thread_id
-	)
-{
-}
 
 void   texture_cook_wrapper::make_converted_path (virtual_path_string *	out_converted_path, 
 												  query_result_for_cook & result)
@@ -82,22 +74,6 @@ void   texture_cook_wrapper::translate_query (query_result_for_cook & query)
 #endif // #ifndef MASTER_GOLD
 }
 
-void   texture_cook_wrapper::query_converted_texture (query_result_for_cook * parent)
-{
-	virtual_path_string						converted_texture_path;
-	make_converted_path						(& converted_texture_path, * parent);
-
-	query_resource							(converted_texture_path.c_str(),
-											 texture_class,
-											 boost::bind(&texture_cook_wrapper::on_texture_loaded, this, _1), 
-#ifdef MASTER_GOLD
-											 & memory::g_mt_allocator,
-#else
-											 & debug::g_mt_allocator,
-#endif
-											 NULL,
-											 parent); 
-}
 
 #ifndef MASTER_GOLD
 
@@ -219,24 +195,7 @@ void   texture_cook_wrapper::on_texture_created (managed_resource_ptr converted_
 }
 #endif //#ifndef MASTER_GOLD
 
-void   texture_cook_wrapper::on_texture_loaded (queries_result & result)
-{
-	query_result_for_cook * const	parent	=	result.get_parent_query();
 
-	if ( !result.is_successful() )
-	{
-		parent->finish_query			(result_error);
-		return;
-	}
-
-	parent->set_managed_resource	(result[0].get_managed_resource());
-	parent->finish_query			(result_success);
-}
-
-void   texture_cook_wrapper::delete_resource (resource_base * )
-{
-	CURE_ASSERT						(identity(false), "should not end up here! Call Lain");
-}
 
 } // namespace render
 } // namespace vostok
