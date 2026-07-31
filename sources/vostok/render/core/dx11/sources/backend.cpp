@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/shader_constant_host.h>
@@ -12,20 +13,89 @@
 namespace vostok {
 namespace render {
 
+static u32 s_max_triagles_per_dip_value = 1000000;
+static console_commands::cc_u32 s_max_triagles_per_dip(
+	"max_triagles_per_dip",
+	s_max_triagles_per_dip_value,
+	0,
+	100000,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_debug_enabled_ds_clearing_value = true;
+static console_commands::cc_bool s_debug_enabled_ds_clearing_value_cc(
+	"r_debug_enabled_ds_clearing",
+	s_debug_enabled_ds_clearing_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_debug_enabled_rt_clearing_value = true;
+static console_commands::cc_bool s_debug_enabled_rt_clearing_cc(
+	"s_debug_enabled_rt_clearing",
+	s_debug_enabled_rt_clearing_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
 backend::backend( ) :
-	vertex( 1536 * 1024 ),
-	index( 512 * 1024 ),
-	m_vs_textures_handler( m_vs ),
-	m_vs_samplers_handler( m_vs ),
-	m_gs_textures_handler( m_gs ),
-	m_gs_samplers_handler( m_gs ),
-	m_ps_textures_handler( m_ps ),
-	m_ps_samplers_handler( m_ps )
+	num_vs_changes					( 0 ),
+	num_ps_changes					( 0 ),
+	num_il_changes					( 0 ),
+	num_vsc_changes					( 0 ),
+	num_vst_changes					( 0 ),
+	num_vss_changes					( 0 ),
+	num_psc_changes					( 0 ),
+	num_pst_changes					( 0 ),
+	num_pss_changes					( 0 ),
+	max_triagles_per_dip			( false ),
+	disable_DrawIndexed				( false ),
+	m_set_ps_sources				( true ),
+	allow_debug_profile_dip			( false ),
+	vertex							( 256 * 1024 ),
+	index							( 256 * 1024 ),
+	num_total_rendered_triangles	( 0 ),
+	num_total_rendered_points		( 0 ),
+	num_setted_shader_constants		( 0 ),
+	disabled_shader_constansts_set	( false ),
+	num_draw_calls					( 0 ),
+	draw_calls_counting				( true ),
+	m_user_output					( false ),
+	m_user_output_width				( 1 ),
+	m_user_output_height			( 1 ),
+	m_device						( device::ref().d3d_device() ),
+	m_rasterizer_state				( NULL ),
+	m_depth_stencils_state			( NULL ),
+	m_effect_state					( NULL ),
+	m_stencil_ref					( 0x00 ),
+	m_sample_mask					( 0xFFFFFFFF ),
+	m_vb							( NULL ),
+	m_ib							( NULL ),
+	m_vs							( NULL ),
+	m_ps							( NULL ),
+	m_gs							( NULL ),
+	m_vs_textures_handler			( m_vs ),
+	m_vs_samplers_handler			( m_vs ),
+	m_gs_textures_handler			( m_gs ),
+	m_gs_samplers_handler			( m_gs ),
+	m_ps_textures_handler			( m_ps ),
+	m_ps_samplers_handler			( m_ps ),
+	m_decl							( NULL ),
+	m_input_layout					( NULL ),
+	m_render_output					( NULL ),
+	m_texture_compression_time		( 0.f ),
+	m_cpu_compression_time			( 0.f ),
+	m_cpu_num_compressed_textures	( 0 ),
+	m_gpu_num_compressed_textures	( 0 ),
+	m_vb_stride						( 0 ),
+	m_vb_offset						( 0 ),
+	m_vb_stride_instance_data		( 0 ),
+	m_vb_offset_instance_data		( 0 ),
+	m_vb_stride_stream_1			( 0 ),
+	m_vb_offset_stream_1			( 0 ),
+	m_constant_update_counter		( 1 )
 {
-	// FUNCTION BODY[0x560260]
-	// claude@NOTE: legacy init-list zeroed ~20 more members (m_device via
-	// device::ref().d3d_device(), state/buffer/shader pointers, counters);
-	// reconcile the canonical member inits against 0x560260 at matcher phase.
 	for ( int i = 0; i < enum_shader_types_count; ++i )
 		m_constant_update_markers[i] = 1;
 
@@ -35,7 +105,6 @@ backend::backend( ) :
 
 backend::~backend( )
 {
-	// FUNCTION BODY[0x55fa10]
 	for( vector< shader_constant_host* >::iterator it = m_constant_hosts.begin(); it< m_constant_hosts.end(); ++it)
 		DELETE( *it);
 
@@ -44,33 +113,44 @@ backend::~backend( )
 
 void backend::clear_depth_stencil( u32 flags, float z_value, u8 stencil_value )
 {
-	// FUNCTION BODY[0x55f5b0]
  	//flush_rt();
-	if (m_zb)
+	if( s_debug_enabled_ds_clearing_value)
 	{
-		device::ref().d3d_context()->ClearDepthStencilView( m_zb, flags, z_value, stencil_value);
+		if (m_zb)
+		{
+			device::ref().d3d_context()->ClearDepthStencilView( m_zb, flags, z_value, stencil_value);
+		}
 	}
 }
 
 void backend::clear_render_targets( float r, float g, float b, float a )
 {
-	// FUNCTION BODY[0x55f530]
-	float color_elements[4] = {r, g, b, a};
+	if( s_debug_enabled_rt_clearing_value)
+	{
+		float color_elements[4] = {r, g, b, a};
 
-	for( int i = 0; i< enum_target_count; ++i)
-		if( m_targets[i])
-			device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
+		for( int i = 0; i< enum_target_count; ++i)
+			if( m_targets[i])
+				device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
+	}
 }
 
+// claude@NOTE: the target reads the channels in union order - color_elements[0] takes
+// ( value & 0xff ), i.e. math::color::r. sources/vostok/math_color.h (core, out of this
+// unit) defines color_get_R as ( value >> 16 ) while its own union puts r at byte 0, so
+// our get_RGBA fills { B, G, R, A } here. The call site is left in the natural order;
+// the divergence is in math_color.h's accessors.
 void backend::clear_render_targets( math::color color )
 {
-	// FUNCTION BODY[0x55f860]
-	float color_elements[4];
-	color.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+	if( s_debug_enabled_rt_clearing_value)
+	{
+		float color_elements[4];
+		color.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
 
-	for( int i = 0; i< enum_target_count; ++i)
-		if( m_targets[i])
-			device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
+		for( int i = 0; i< enum_target_count; ++i)
+			if( m_targets[i])
+				device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
+	}
 }
 
 void backend::clear_render_targets(
@@ -80,38 +160,40 @@ void backend::clear_render_targets(
 	math::color color3
 )
 {
-	// FUNCTION BODY[0x55f5f0]
-	COMPILE_ASSERT	( enum_target_count == 4, Unknown_render_targets_count );
-	float color_elements[4];
-
-	if( m_targets[0])
+	if( s_debug_enabled_rt_clearing_value)
 	{
-		color0.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
-		device::ref().d3d_context()->ClearRenderTargetView( m_targets[0], color_elements);
-	}
+		COMPILE_ASSERT	( enum_target_count == 4, Unknown_render_targets_count );
 
-	if( m_targets[1])
-	{
-		color1.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
-		device::ref().d3d_context()->ClearRenderTargetView( m_targets[1], color_elements);
-	}
+		float color_elements[4];
 
-	if( m_targets[2])
-	{
-		color2.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
-		device::ref().d3d_context()->ClearRenderTargetView( m_targets[2], color_elements);
-	}
+		if( m_targets[0])
+		{
+			color0.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[0], color_elements);
+		}
 
-	if( m_targets[3])
-	{
-		color3.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
-		device::ref().d3d_context()->ClearRenderTargetView( m_targets[3], color_elements);
+		if( m_targets[1])
+		{
+			color1.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[1], color_elements);
+		}
+
+		if( m_targets[2])
+		{
+			color2.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[2], color_elements);
+		}
+
+		if( m_targets[3])
+		{
+			color3.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[3], color_elements);
+		}
 	}
 }
 
 void backend::on_device_destroy( )
 {
-	// FUNCTION BODY[0x55f510]
 	safe_release(m_device);
 	m_device = 0;
 
@@ -121,13 +203,11 @@ void backend::on_device_destroy( )
 
 bool sorted_vector_predicate( shader_constant_host const* first, shared_string const& second )
 {
-	// FUNCTION BODY[0x55f4f0]
 	return first->name() < second;
 }
 
 shader_constant_host* backend::register_constant_host( shared_string const& name, enum_constant_type const type )
 {
-	// FUNCTION BODY[0x55f930]
 	vector< shader_constant_host* >::iterator it = std::lower_bound( m_constant_hosts.begin(), m_constant_hosts.end(), name, sorted_vector_predicate);
 
 	if ( it == m_constant_hosts.end() || !((*it)->name() == name))
@@ -168,9 +248,7 @@ void backend::reset_constant_update_markers( )
 
 void backend::update_input_layout( )
 {
-	// FUNCTION BODY[0x55f9b0]
-	// Set always
-	//if( m_dirty_objects.input_layout)
+	if( m_dirty_objects.input_layout && m_vs)
 	{
 		if( !m_input_layout)
 		{
@@ -185,7 +263,6 @@ void backend::update_input_layout( )
 
 void backend::set_render_target( enum_render_target_enum target, render_target const* rt )
 {
-	// FUNCTION BODY[0x55f4c0]
 	ID3DRenderTargetView * rt_view = (rt == NULL) ? NULL : rt->get_target_view();
 
 	if( m_targets[target] != rt_view)
@@ -195,24 +272,23 @@ void backend::set_render_target( enum_render_target_enum target, render_target c
 	}
 }
 
+// claude@NOTE: both bodies emit nothing in the shipped build (start_profiling is a bare
+// ret, end_profiling an xorps+ret) but the target records 13 / 22 source statements for
+// them, all compiled out, over a file-scope `s_timer` (target-only `dynamic initializer
+// for 's_timer''); the timing source is not recoverable from the bytes.
 void start_profiling( )
 {
-	// claude@NOTE: no legacy ancestor - no profiling free functions anywhere in the legacy corpus; matcher-phase work.
 	// STATE[STUB]
-	// FUNCTION BODY[0x55f4b0]
 }
 
 double end_profiling( pcstr, bool )
 {
-	// claude@NOTE: no legacy ancestor - no profiling free functions anywhere in the legacy corpus; matcher-phase work.
 	// STATE[STUB]
-	// FUNCTION BODY[0x55f4a0]
-	return 0.0;
+	return 0.0f;
 }
 
 void backend::flush( )
 {
-	// FUNCTION BODY[0x55fd70]
 	//Here may be used caching to prevent reseting the same state.
 	if( m_dirty_objects.rasterizer_state)
 		device::ref().d3d_context()->RSSetState				( m_rasterizer_state);
@@ -224,7 +300,7 @@ void backend::flush( )
 	{
 		// --Porting to DX10_
 		// give correct blend factors
-		float blend_factor[4]  = {0.f,0.f,0.f,0.f} ;
+		float blend_factor[4]  = {1.f,1.f,1.f,1.f} ;
 		device::ref().d3d_context()->OMSetBlendState			( m_effect_state, blend_factor, m_sample_mask);
 	}
 
@@ -269,7 +345,13 @@ void backend::flush( )
 				device::ref().d3d_context()->IASetVertexBuffers( 0, 1, &buffer, &m_vb_stride, &m_vb_offset);
 			}
 		}
-		
+
+		if( m_dirty_objects.vertex_buffer_stream_1)
+		{
+			ID3DVertexBuffer * buffer = (m_vb_stream_1 == (untyped_buffer*)NULL) ? NULL : m_vb_stream_1->hardware_buffer();
+			device::ref().d3d_context()->IASetVertexBuffers( 1, 1, &buffer, &m_vb_stride_stream_1, &m_vb_offset_stream_1);
+		}
+
 		if( m_dirty_objects.index_buffer)
 		{
 			ID3DIndexBuffer * buffer = (m_ib == (untyped_buffer*)NULL) ? NULL : m_ib->hardware_buffer();
@@ -307,8 +389,13 @@ void backend::flush( )
 
 		if( m_dirty_objects.pixel_samplers)
 			m_ps_samplers_handler.apply();
-		
+
+		if( m_dirty_objects.primitive_topology)
+			device::ref().d3d_context()->IASetPrimitiveTopology( m_primitive_topology);
+
 		m_constant_update_counter++;
+
+		update_input_layout();
 
 		m_dirty_objects.reset();
 //	}
@@ -316,18 +403,24 @@ void backend::flush( )
 
 void backend::render_indexed( D3D_PRIMITIVE_TOPOLOGY type, u32 index_count, u32 start_index, u32 base_vertex )
 {
-	// FUNCTION BODY[0x5601b0]
+	m_dirty_objects.primitive_topology	= type != m_primitive_topology;
+	if( m_dirty_objects.primitive_topology)
+		m_primitive_topology			= type;
+
 	flush();
-	update_input_layout();
-	num_draw_calls			++;
+
+	if( draw_calls_counting)
+		num_draw_calls			++;
 
 	//stat.calls			++;
 	//stat.verts			+= 3*PC;
 	//stat.polys			+= PC;
 
-	device::ref().d3d_context()->IASetPrimitiveTopology(type);
+	if( draw_calls_counting)
+		index_count			= math::min( s_max_triagles_per_dip_value * 3, index_count);
 
-	device::ref().d3d_context()->DrawIndexed(index_count, start_index, base_vertex);
+	if( !disable_DrawIndexed)
+		device::ref().d3d_context()->DrawIndexed(index_count, start_index, base_vertex);
 
 	// TODO
 	switch (type)
@@ -348,15 +441,19 @@ void backend::render_indexed( D3D_PRIMITIVE_TOPOLOGY type, u32 index_count, u32 
 
 void backend::render( D3D_PRIMITIVE_TOPOLOGY type, u32 vertex_count, u32 base_vertex )
 {
-	// FUNCTION BODY[0x560130]
+	m_dirty_objects.primitive_topology	= type != m_primitive_topology;
+	if( m_dirty_objects.primitive_topology)
+		m_primitive_topology			= type;
+
 	flush();
-	update_input_layout();
-	num_draw_calls			++;
+
+	if( draw_calls_counting)
+		num_draw_calls			++;
+
 	//stat.calls			++;
 	//stat.verts			+= 3*PC;
 	//stat.polys			+= PC;
 
-	device::ref().d3d_context()->IASetPrimitiveTopology( type);
 	device::ref().d3d_context()->Draw( vertex_count,  base_vertex);
 
 	// TODO

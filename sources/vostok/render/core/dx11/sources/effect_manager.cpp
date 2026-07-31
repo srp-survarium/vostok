@@ -12,6 +12,8 @@
 namespace vostok {
 namespace render {
 
+static command_line::key s_no_effects_initialize( "no_effects_initialize", "", "", "" );
+
 struct effect_manager_call_destructor_predicate
 {
 
@@ -30,13 +32,15 @@ namespace render {
 
 void effect_loader::on_effect_ready( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x77f6a0]
 	if(!query_rejected)
 	{
-		if (data[0].is_successful())
-			*effect_ptr		= static_cast_resource_ptr<res_effect_ptr>(data[0].get_unmanaged_resource());
-		else
-			*effect_ptr	= 0;
+		if( !s_no_effects_initialize)
+		{
+			if (data[0].is_successful())
+				*effect_ptr		= static_cast_resource_ptr<res_effect_ptr>(data[0].get_unmanaged_resource());
+			else
+				*effect_ptr	= 0;
+		}
 	}else
 	{
 		//LOG_INFO("query rejected");
@@ -47,7 +51,7 @@ void effect_loader::on_effect_ready( resources::queries_result& data )
 }
 
 effect_manager::effect_manager( )
-	: m_is_effects_query_processing( false ),
+	:
 #ifdef MASTER_GOLD
 	  m_shader_cache_info( memory::g_mt_allocator ),
 #else // #ifdef MASTER_GOLD
@@ -56,14 +60,12 @@ effect_manager::effect_manager( )
 	  force_sync( false ),
 	  m_loading_incomplete( false )
 {
-	// FUNCTION BODY[0x77f110]
 	static effect_cook effect_cooker;
 	register_cook(&effect_cooker);
 }
 
 effect_manager::~effect_manager( )
 {
-	// FUNCTION BODY[0x77ef10]
 	map<fixed_string<128>, effect_descriptor*>::iterator it  = m_effect_descriptors.begin(),
 							  end = m_effect_descriptors.end();
 
@@ -81,9 +83,7 @@ effect_manager::~effect_manager( )
 
 res_pass* effect_manager::create_pass( res_pass const& pass )
 {
-	// FUNCTION BODY[0x77f790]
-	set<res_pass*, compare_predicate<res_pass> >::iterator const found =
-		m_passes.find( const_cast<res_pass*>( &pass ) );
+	set<res_pass*, compare_predicate<res_pass> >::iterator const found = m_passes.find( &pass );
 	if( found != m_passes.end())
 		return *found;
 
@@ -96,7 +96,6 @@ res_pass* effect_manager::create_pass( res_pass const& pass )
 
 void effect_manager::delete_pass( res_pass const* pass )
 {
-	// FUNCTION BODY[0x77f5a0]
 	if( !pass->is_registered() )
 		return;
 
@@ -111,7 +110,6 @@ void effect_manager::delete_pass( res_pass const* pass )
 
 effect_descriptor* effect_manager::get_effect_descriptor_by_name( pcstr name )
 {
-	// FUNCTION BODY[0x77ed30]
 	map<fixed_string<128>, effect_descriptor*>::iterator it = m_effect_descriptors.find(name);
 
 	if( it != m_effect_descriptors.end())
@@ -129,7 +127,6 @@ void effect_manager::add_effect(
 	res_effect* in_effect
 )
 {
-	// FUNCTION BODY[0x77ee70]
 	effect_holder_struct	holder;
 	holder.effect			= in_effect;
 	holder.config			= in_config;
@@ -140,7 +137,6 @@ void effect_manager::add_effect(
 
 void effect_manager::remove_effect( res_effect* in_effect )
 {
-	// FUNCTION BODY[0x77ede0]
 	vector<effect_holder_struct>::iterator begin_it	= m_effects.begin();
 	vector<effect_holder_struct>::iterator end_it	= m_effects.end();
 	vector<effect_holder_struct>::iterator it		= begin_it;
@@ -159,7 +155,9 @@ void effect_manager::on_effect_created(
 	resources::queries_result& data
 )
 {
-	// FUNCTION BODY[0x77f490]
+	if ( s_no_effects_initialize)
+		return;
+
 	if (data[0].is_successful())
 	{
 		*out_effect_ptr		= static_cast_resource_ptr<res_effect_ptr>(data[0].get_unmanaged_resource());
@@ -174,11 +172,13 @@ void effect_manager::on_async_effect_created(
 	effect_descriptor* descriptor
 )
 {
-	// FUNCTION BODY[0x77f390]
 	(void)&descriptor;
 
 //	if (std::find(m_effects_deleted_in_pending.begin(), m_effects_deleted_in_pending.end(), out_effect_ptr) != m_effects_deleted_in_pending.end())
 //		return;
+
+	if ( s_no_effects_initialize)
+		return;
 
 	if (data[0].is_successful())
 		*out_effect_ptr		= static_cast_resource_ptr<res_effect_ptr>(data[0].get_unmanaged_resource());
@@ -195,7 +195,6 @@ void effect_manager::on_async_effect_created_callback(
 {
 	// claude@NOTE: no legacy ancestor - new-in-target overload; the corpus only ever had the 3-param on_async_effect_created (already ported); matcher-phase work.
 	// STATE[STUB]
-	// FUNCTION BODY[0x77f230]
 }
 
 void effect_manager::create_new_effect(
@@ -205,7 +204,6 @@ void effect_manager::create_new_effect(
 	u32 crc
 )
 {
-	// FUNCTION BODY[0x77f9e0]
 	resources::user_data_variant				user_data_variant;
 
 	effect_compile_data* cook_data				= NEW(effect_compile_data)(descriptor, config, crc);
@@ -227,7 +225,6 @@ res_effect_ptr effect_manager::create_new_effect(
 	u32 crc
 )
 {
-	// FUNCTION BODY[0x77ff50]
 	resources::user_data_variant				user_data_variant;
 
 	effect_compile_data* cook_data				= NEW(effect_compile_data)(&descriptor, ptr, crc);
@@ -255,7 +252,6 @@ void effect_manager::on_effects_recompiled(
 	resources::queries_result& data
 )
 {
-	// FUNCTION BODY[0x77f900]
 	u32 request_index						= 0;
 	for (vectora<effect_to_recompile_struct>::iterator it = effects_to_recompile->begin(); it != effects_to_recompile->end(); ++it, ++request_index)
 	{
@@ -280,13 +276,12 @@ res_shader_technique* effect_manager::create_effect_technique(
 	res_shader_technique const& element
 )
 {
-	// FUNCTION BODY[0x77f850]
 	if( element.m_passes.empty())
 		return 0;
 
 	// Search equal in shaders array
 	set<res_shader_technique*, compare_predicate<res_shader_technique> >::iterator const found =
-		m_techniques.find( const_cast<res_shader_technique*>( &element ) );
+		m_techniques.find( &element );
 	if( found != m_techniques.end())
 		return *found;
 
@@ -303,7 +298,6 @@ res_shader_technique* effect_manager::create_effect_technique(
 
 void effect_manager::delete_effect_technique( res_shader_technique const* technique )
 {
-	// FUNCTION BODY[0x77f810]
 	if( !technique->is_registered() )
 		return;
 
@@ -322,12 +316,10 @@ void effect_manager::recompile_shaders_async(
 {
 	// claude@NOTE: legacy body diverged - closest ancestor recompile_shaders is entirely #ifndef MASTER_GOLD over the retired used_shaders member; recompile_shaders_async has zero corpus hits; matcher-phase work.
 	// STATE[STUB]
-	// FUNCTION BODY[0x77fb40]
 }
 
 void effect_manager::register_effect_desctiptor( pcstr name, effect_descriptor* dectriptor )
 {
-	// FUNCTION BODY[0x77ed60]
  	m_effect_descriptors.insert( mk_pair(name, dectriptor));
 }
 

@@ -30,7 +30,6 @@ samplers_handler< shader_type >::~samplers_handler( )
 template <enum_shader_type shader_type>
 void constants_handler<shader_type>::assign( shader_constant_table const * table)
 {
-	// FUNCTION BODY[0x12c5e0]
 	if( m_current && table)
 		utils::calc_lists_diff_range( m_current->m_const_buffers, table->m_const_buffers, m_diff_range_start, m_diff_range_end);
 	else
@@ -110,7 +109,6 @@ void constants_handler <shader_type>::gather_data()
 template <enum_shader_type shader_type>
 void  constants_handler<shader_type>::fill_changes_buffer( ID3DConstantBuffer** buffer, u32& out_num_constants)
 {
-	// FUNCTION BODY[0x12c6e0]
 	u32 const start	= m_diff_range_start;
 	u32 const end	= m_diff_range_end;
 	u32 const list_size = (m_current.c_ptr() == NULL) ? 0 : m_current->m_const_buffers.size();
@@ -130,7 +128,6 @@ void  constants_handler<shader_type>::fill_changes_buffer( ID3DConstantBuffer** 
 template <enum_shader_type shader_type>
 void constants_handler<shader_type>::update_buffers()
 {
-	// FUNCTION BODY[0x12cab0]
 	if( m_current)
 	{
 		shader_constant_table::buffers_type::const_iterator	it = m_current->m_const_buffers.begin();
@@ -144,7 +141,6 @@ void constants_handler<shader_type>::update_buffers()
 template <>
 void constants_handler<enum_shader_type_vertex>::apply	()
 {
-	// FUNCTION BODY[0x73a130]
 	check_for_unset_constants();
 	
 	u32 const start	= m_diff_range_start;
@@ -175,7 +171,6 @@ void	constants_handler<shader_type>::check_for_unset_constants()
 template <>
 void constants_handler<enum_shader_type_geometry>::apply	()
 {
-	// FUNCTION BODY[0x73a0c0]
 	check_for_unset_constants();
 	
 	u32 const start	= m_diff_range_start;
@@ -198,7 +193,6 @@ void constants_handler<enum_shader_type_geometry>::apply	()
 template <>
 void constants_handler<enum_shader_type_pixel>::apply	()
 {
-	// FUNCTION BODY[0x73a050]
 	check_for_unset_constants();
 
 	u32 const start	= m_diff_range_start;
@@ -223,11 +217,14 @@ template class constants_handler<enum_shader_type_pixel>;
 
 
 //////////////////////////////////////////////////////////////////////////
-//textures 
+//textures
+// claude@NOTE: the target CALLS `vostok::math::max(unsigned int, unsigned int)` here - a
+// non-template overload that sources/vostok/math_functions.h (core, out of this unit) does
+// not declare, so our math::max<u32> template inlines instead. Same wall in
+// samplers_handler::assign and textures_handler::set_overwrite.
 template <enum_shader_type shader_type>
 void textures_handler<shader_type>::assign( res_texture_list const * list)
 {
-	// FUNCTION BODY[0x12c740]
 	u32 start, end;
 	if( m_current && list)
 		utils::calc_lists_diff_range( *m_current, *list, start, end);
@@ -249,7 +246,6 @@ void textures_handler<shader_type>::assign( res_texture_list const * list)
 template <enum_shader_type shader_type>
 inline bool textures_handler<shader_type>::set_overwrite	( char const * name, res_texture* texture)
 {
-	// FUNCTION BODY[0x12c7e0]
 	if( m_shader == NULL)
 	{
 		ASSERT( 0, "The texture can be set after the shader.");
@@ -296,7 +292,6 @@ inline bool textures_handler<shader_type>::set_overwrite	( char const * name, re
 template <enum_shader_type shader_type>
 void  textures_handler<shader_type>::fill_changes_buffer( ID3DShaderResourceView** buffer, s32& out_num_textures)
 {
-	// FUNCTION BODY[0x12cd00]
 	const s32 start		= m_diff_range_start;
 	const s32 end		= m_diff_range_end;
 	const s32 list_size = (m_current.c_ptr() == NULL) ? 0 : m_current->size();
@@ -335,7 +330,6 @@ void textures_handler<shader_type>::check_for_unset_textures( )
 template <>
 void textures_handler<enum_shader_type_vertex>::apply	()
 {
-	// FUNCTION BODY[0x73a2c0]
 	vostok::memory::zero(m_tmp_buffer);
 	
 	check_for_unset_textures();
@@ -355,7 +349,6 @@ void textures_handler<enum_shader_type_vertex>::apply	()
 template <>
 void textures_handler<enum_shader_type_geometry>::apply	()
 {
-	// FUNCTION BODY[0x73a260]
 	vostok::memory::zero(m_tmp_buffer);
 	
 	check_for_unset_textures();
@@ -375,19 +368,27 @@ void textures_handler<enum_shader_type_geometry>::apply	()
 template <>
 void textures_handler<enum_shader_type_pixel>::apply	()
 {
-	// FUNCTION BODY[0x73a1a0]
-	vostok::memory::zero(m_tmp_buffer);
-	
+	ID3DShaderResourceView*	tmp_buffer[128];
+
+	vostok::memory::zero(tmp_buffer);
+
 	check_for_unset_textures();
-	
+
 	s32 end;
-	
-	fill_changes_buffer( m_tmp_buffer, end);
+
+	fill_changes_buffer( tmp_buffer, end);
 	s32 start	= m_diff_range_start;
 	end		= m_diff_range_end;
-	
-	if( end - start > 0) 
-		device::ref().d3d_context()->PSSetShaderResources( start, end - start, &m_tmp_buffer[start]);
+
+	if( backend::ref().m_set_ps_sources && end - start > 0)
+	{
+		for( s32 i = 0; i < end - start; ++i)
+			if( tmp_buffer[i] != m_tmp_buffer[i])
+			{
+				device::ref().d3d_context()->PSSetShaderResources( i, 1, &tmp_buffer[i]);
+				m_tmp_buffer[i]	= tmp_buffer[i];
+			}
+	}
 
 	m_diff_range_start = m_diff_range_end = 0;
 }
@@ -402,7 +403,6 @@ template class textures_handler<enum_shader_type_pixel>;
 template <enum_shader_type shader_type>
 void samplers_handler<shader_type>::assign( res_sampler_list const * list)
 {
-	// FUNCTION BODY[0x12cb20]
 	if( m_current && list)
 		utils::calc_lists_diff_range( *m_current, *list, m_diff_range_start, m_diff_range_end);
 	else
@@ -417,7 +417,6 @@ void samplers_handler<shader_type>::assign( res_sampler_list const * list)
 template <enum_shader_type shader_type>
 void  samplers_handler<shader_type>::fill_changes_buffer( ID3DSamplerState ** buffer, u32& out_num_samplers)
 {
-	// FUNCTION BODY[0x12cb90]
 	const u32 start		= m_diff_range_start;
 	const u32 end		= m_diff_range_end;
 	const u32 list_size = (m_current.c_ptr() == NULL) ? 0 : m_current->size();
@@ -448,7 +447,6 @@ void samplers_handler<shader_type>::check_for_unset_samplers()
 template <>
 void samplers_handler<enum_shader_type_vertex>::apply	()
 {
-	// FUNCTION BODY[0x739ff0]
 	vostok::memory::zero(m_tmp_buffer);
 	
 	check_for_unset_samplers();
@@ -466,7 +464,6 @@ void samplers_handler<enum_shader_type_vertex>::apply	()
 template <>
 void samplers_handler<enum_shader_type_geometry>::apply	()
 {
-	// FUNCTION BODY[0x739f80]
 	vostok::memory::zero(m_tmp_buffer);
 	
 	check_for_unset_samplers();
@@ -485,7 +482,6 @@ void samplers_handler<enum_shader_type_geometry>::apply	()
 template <>
 void samplers_handler<enum_shader_type_pixel>::apply	()
 {
-	// FUNCTION BODY[0x739f20]
 	vostok::memory::zero(m_tmp_buffer);
 	
 	check_for_unset_samplers();

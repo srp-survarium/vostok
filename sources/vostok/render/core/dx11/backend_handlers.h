@@ -90,6 +90,7 @@ private:
 		m_diff_range_end( 0 ),
 		m_shader( shader )
 	{
+		vostok::memory::zero( m_tmp_buffer );
 	}
 
 	void assign( res_texture_list const* list );
