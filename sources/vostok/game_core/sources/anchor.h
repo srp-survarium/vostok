@@ -33,6 +33,10 @@ namespace vostok
 
 	void anchor_scaleform( );
 
+	namespace render {
+		void anchor_render_facade( );
+	}
+
 	// Escapes addresses so LTCG observes anchored member stores.
 	void example_callback( const char* name );
 }
