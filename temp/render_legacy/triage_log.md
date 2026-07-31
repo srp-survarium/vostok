@@ -178,3 +178,26 @@ queued wave-3 res_* ports; also supply shader_constant member ordering),
 `core/dx11/gpu_timer.h` (D3D query idiom for statistics/event_query),
 `pix_event_wrapper` x4 (macro recognition while porting stages; target has
 zero PIX symbols - ported bodies DROP the scopes; retire with waves 4/5).
+
+## DX9-bucket sweep (2026-07-31; 46 rows verified, 43 retired, 3 held)
+
+Whole `dx9/` tree retired as unused retail code (match.db has zero dx9 units)
+- every stage/backend/stream/visual family has its DX10/DX11 heir still queued
+in `temp/render_legacy/core|engine` or already live. Exceptions held as
+REFERENCE:
+
+- `dx9/sources/model_manager.cpp` - the ONLY surviving portal/sector traversal
+  bodies in the corpus (`traverse`, `clip_polygon_against_volume`,
+  `portal::create`, `detect_sector` x2, `select_visible_sectors`, sector
+  `marker` idiom - ancestor of `sector_double_query_preventer`). Every other
+  legacy copy is declarations-only or commented out. Feeds ~50 stubs across
+  `portal_sector_system.{h,cpp}`, `sector_double_query_preventer.cpp`,
+  `culling/portal_sector_structure.h`, `culling/possible_sectors_holder.h`,
+  `facade/sources/portal_sector_structure.cpp`,
+  `portal_sector_structure_cook.cpp`. Read with the retired declaration header
+  `engine/model_manager.h` (in git history). Retire with the culling wave.
+- `dx9/sources/stage_combine.{cpp,h}` - stage-side pair of the held
+  `blender_combine.{cpp,h}`; only remaining stage ancestor for
+  `stage_resolve_lighting.cpp` / `effect_resolve_lighting.cpp` (lower
+  confidence: DX9 draws a fullscreen quad, shipped stage adds a per-material
+  `render_models` pass). Retire with wave 4.
