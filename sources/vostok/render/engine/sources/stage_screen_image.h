@@ -22,11 +22,7 @@ typedef resources::resource_ptr<
 
 class stage_screen_image : public stage {
 public:
-	stage_screen_image( renderer* in_renderer, renderer_context* in_context ) :
-		stage( in_renderer, in_context )
-	{
-		// STATE[STUB]
-	}
+	stage_screen_image( renderer* in_renderer, renderer_context* in_context );
 
 	virtual ~stage_screen_image( ) { }
 
