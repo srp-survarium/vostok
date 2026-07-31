@@ -3,12 +3,16 @@
 #include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/effect_manager.h>
+#include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/dx11/res_state.h>
 #include <vostok/render/core/dx11/res_xs.h>
 
 namespace vostok {
 namespace render {
+
+static command_line::key s_no_effect_result( "no_effect_result", "", "", "" );
+static command_line::key s_one_texture_result( "one_texture", "", "", "" );
 
 effect_compiler::effect_compiler(
 	res_effect& effect,
@@ -40,7 +44,7 @@ effect_compiler& effect_compiler::set_depth(
 )
 {
 	// FUNCTION BODY[0x7a6020]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.set_depth	( enable, write_enable, cmp_func);
@@ -60,7 +64,7 @@ effect_compiler& effect_compiler::set_stencil(
 )
 {
 	// FUNCTION BODY[0x7a5f80]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.set_stencil	( enable, ref, read_mask, write_mask);
@@ -81,7 +85,7 @@ effect_compiler& effect_compiler::set_alpha_blend(
 )
 {
 	// FUNCTION BODY[0x7a5f10]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.set_alpha_blend(
@@ -98,38 +102,119 @@ effect_compiler& effect_compiler::set_alpha_blend(
 }
 
 effect_compiler& effect_compiler::set_texture(
-	pcstr,
-	pcstr,
-	res_texture_ptr* out_texture,
-	bool,
-	u32
+	pcstr				name,
+	pcstr				physical_name,
+	res_texture_ptr*	out_texture,
+	bool				streamed,
+	u32					num_last_mips_used
 )
 {
-	// claude@NOTE: legacy body diverged - legacy overload predates the trailing mip-cut params (3-param set_texture); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x7a6c70]
-	if ( out_texture )
-		*out_texture = res_texture_ptr( );
-	return *this;
+	if (
+		!physical_name ||
+		!strcmp( physical_name, "") ||
+		(
+			s_one_texture_result.is_set() &&
+			!strstr( physical_name, "$user$") &&
+			!strstr( physical_name, "ui/")
+		)
+	)
+		physical_name	= "editor/default";
+
+	fixed_string<512>	s	= physical_name;
+
+	if ( !options::ref().current.m_use_texture_streaming)
+		num_last_mips_used	= u32(-1);
+
+	fs_new::virtual_path_string	physical_name_lower_case( physical_name);
+	physical_name_lower_case.make_lowercase();
+
+	if (m_shaders_cache_mode || s_no_effect_result)
+	{
+		texture_query_desc	desc;
+		desc.m_query_physicaly_path		= physical_name_lower_case.c_str();
+		desc.m_num_last_mips_used		= num_last_mips_used;
+
+		m_textures_for_query.push_back	( desc);
+
+		return *this;
+	}
+
+	bool	res		= false;
+
+	if ( m_vs_hw)
+		res		= m_vs_descriptor.use_texture	( name);
+
+	if ( m_gs_hw)
+		res		|= m_gs_descriptor.use_texture	( name);
+
+	bool	used_in_ps	= false;
+
+	if ( m_ps_hw)
+	{
+		used_in_ps	= m_ps_descriptor.use_texture	( name);
+		res			|= used_in_ps;
+	}
+
+	if ( !res)
+		return *this;
+
+	res_texture*	texture	= resource_manager::ref().create_texture(
+		physical_name_lower_case.c_str(),
+		0,
+		0,
+		false,
+		true,
+		true,
+		num_last_mips_used
+	);
+
+	if ( used_in_ps && streamed && options::ref().current.m_use_texture_streaming)
+	{
+		texture_named_instance	instance;
+
+		instance.texture	= texture;
+		instance.path		= physical_name;
+		m_ps_used_textures.push_back	( instance);
+	}
+
+	// claude@NOTE: LTCG drops `out_texture` from the target's parameter list entirely
+	// (every call site passes 0), so the target records ~14 source lines here that emit
+	// no code at all - only the fact that a block existed survives. This is the minimal
+	// reconstruction consistent with the surviving signature.
+	if ( out_texture)
+		*out_texture	= texture;
+
+	return set_texture( name, texture, streamed, num_last_mips_used);
 }
 
 effect_compiler& effect_compiler::set_texture(
-	pcstr,
-	res_texture*,
-	bool,
+	pcstr			name,
+	res_texture*	texture,
+	bool			streamed,
 	u32
 )
 {
-	// claude@NOTE: legacy body diverged - legacy overload predates the trailing mip-cut params (2-param set_texture); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x7a5e60]
+	if (m_shaders_cache_mode || s_no_effect_result)
+		return *this;
+
+	u32		num_last_mips_used	= u32(-1);
+
+	if ( m_vs_hw)
+		m_vs_descriptor.set_texture	( name, texture);
+
+	if ( m_gs_hw)
+		m_gs_descriptor.set_texture	( name, texture);
+
+	if ( m_ps_hw)
+		m_ps_descriptor.set_texture	( name, texture);
+
 	return *this;
 }
 
 effect_compiler& effect_compiler::set_cull_mode( D3D11_CULL_MODE mode )
 {
 	// FUNCTION BODY[0x7a5e10]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.set_cull_mode( mode);
@@ -139,7 +224,7 @@ effect_compiler& effect_compiler::set_cull_mode( D3D11_CULL_MODE mode )
 effect_compiler& effect_compiler::color_write_enable( D3D11_COLOR_WRITE_ENABLE mode )
 {
 	// FUNCTION BODY[0x7a5dc0]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.color_write_enable( mode);
@@ -149,7 +234,7 @@ effect_compiler& effect_compiler::color_write_enable( D3D11_COLOR_WRITE_ENABLE m
 effect_compiler& effect_compiler::set_fill_mode( D3D11_FILL_MODE fill_mode )
 {
 	// FUNCTION BODY[0x7a5d70]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_state_descriptor.set_fill_mode	( fill_mode);
@@ -159,7 +244,7 @@ effect_compiler& effect_compiler::set_fill_mode( D3D11_FILL_MODE fill_mode )
 effect_compiler& effect_compiler::bind_constant( shader_constant_binding const& binding )
 {
 	// FUNCTION BODY[0x7a6090]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_bindings.add( binding);
@@ -175,7 +260,7 @@ effect_compiler& effect_compiler::begin_pass(
 )
 {
 	// FUNCTION BODY[0x7a6100]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 	{
 		shader_cache_info				info;
 		info.vertex_shader_name			= vs_name;
@@ -218,7 +303,7 @@ effect_compiler& effect_compiler::begin_pass(
 effect_compiler& effect_compiler::end_pass( )
 {
 	// FUNCTION BODY[0x7a68f0]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
 	m_vs_descriptor.data().constants.apply_bindings(m_bindings);
@@ -267,7 +352,7 @@ effect_compiler& effect_compiler::begin_technique( )
 void effect_compiler::end_technique( )
 {
 	// FUNCTION BODY[0x7a6b70]
-	if (m_shaders_cache_mode)
+	if (m_shaders_cache_mode || s_no_effect_result)
 		return;
 
 	res_shader_technique_ptr se = effect_manager::ref().create_effect_technique( m_sh_technique);
