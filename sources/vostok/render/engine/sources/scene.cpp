@@ -1173,47 +1173,32 @@ void scene::remove_sky_ambient_occlusion( u32 id )
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_ambient_volume( u32 id, ambient_volume_properties const& properties )
 {
-	// FUNCTION BODY[0x63d870]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d87c>|0x00c|+0x018:'869'
-	// <0>
-	// <0x63d894>|0x024|+0x004:'871'
-	// <0>
-	// <0x63d898>|0x028|+0x039:'873'
-	// <0x63d8d1>|0x061|+0x017:'873'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d8e8>|0x078|-0x01f:'878'
-	// <0>
-	// <0x63d8c9>|0x059|+0x017:'880'
-	// <0x63d8e0>|0x070|+0x011:'880'
-	// ******
+	vector< ambient_volume* >::iterator		i =
+		std::find_if( m_ambient_volumes.begin( ), m_ambient_volumes.end( ), find_by_id_predicate< ambient_volume >( id ) );
+
+	if ( i == m_ambient_volumes.end( ) )
+	{
+		m_ambient_volumes.push_back			( NEW( ambient_volume )( properties, id ) );
+		return;
+	}
+
+
+	( *i )->set_properties					( properties );
+
 }
 
-// STATE[STUB]
 void scene::remove_ambient_volume( u32 id )
 {
-	// FUNCTION BODY[0x63d150]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d156>|0x006|+0x018:'888'
-	// <0x63d16e>|0x01e|+0x004:'889'
-	// <0>
-	// <0x63d172>|0x022|+0x002:'891'
-	// <0x63d174>|0x024|+0x016:'892'
-	// <0x63d18a>|0x03a|+0x02c:'893'
-	// <0>
-	// ******
+	vector< ambient_volume* >::iterator		i =
+		std::find_if( m_ambient_volumes.begin( ), m_ambient_volumes.end( ), find_by_id_predicate< ambient_volume >( id ) );
+	if ( i != m_ambient_volumes.end( ) )
+	{
+		ambient_volume* volume				= *i;
+		DELETE								( volume );
+		m_ambient_volumes.erase				( i );
+	}
 }
 
 void scene::update_lpv_occluder( u32 id, float4x4 const& transform )

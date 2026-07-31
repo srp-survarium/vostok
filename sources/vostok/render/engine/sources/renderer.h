@@ -43,6 +43,10 @@ class stage_visibility;
 struct event_query;
 struct hw_hiz_occlusion_manager;
 
+namespace engine {
+class world;
+} // namespace engine
+
 namespace ui {
 struct vertex;
 } // namespace ui
@@ -145,6 +149,11 @@ public:
 };
 
 class renderer : public boost::noncopyable {
+	// claude@NOTE: world::clear_resources reads m_renderer_context directly
+	// (m_renderer->m_renderer_context->clear_resources() inlined at 0x655631);
+	// the PDB records no accessor on renderer, so the original granted friendship.
+	friend class engine::world;
+
 public:
 	explicit renderer( renderer_context* renderer_context );
 	~renderer( );
