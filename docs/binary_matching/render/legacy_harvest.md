@@ -85,8 +85,8 @@ its owner exists measures noise. Order:
 
 | wave | scope (stub counts at baseline) | status |
 |---|---|---|
-| 1 | facade: entry_point+world (me), channel+stage_types, scene_renderer (46), debug_renderer+commands (37), game/ui renderers+commands (~25) | DISPATCHED |
-| 2 | engine roots: render_engine_world_pc_dx11 (115, +legacy render_engine_world_dx11.cpp merge), renderer (27), scene (65), renderer_context (17), system_renderer (18) | |
+| 1 | facade: entry_point+world (me), channel+stage_types, scene_renderer (46), debug_renderer+commands (37), game/ui renderers+commands (~25) | DONE 55090cde2: ~97 fns, facade stubs 145->33, module green |
+| 2 | engine roots: render_engine_world_pc_dx11 (115, +legacy render_engine_world_dx11.cpp merge), renderer (27), scene (65), renderer_context (17), system_renderer (18) | PORTED: world 66/115, scene 35/65, renderer_context 17/17, renderer 8/27, system_renderer 17/18; integration fixes: res_geometry+render_target placeholder->core redirects, struct-font/ui-world fwd-decls (mangling), technique enums x4, frac consolidated into help_math.h (target-attributed), SpeedTree SDK static libs linked per legacy pragmas (stand-in globals -> externs), forwarding ctor for singletons_on_preinitialize, decal friend-class device, draw_debug_terrain link stub |
 | 3 | core/dx11 owners: resource_manager (80), options (26), custom_config (29), effect_manager (18+inline 114), backend+handlers (31), device (13), effect_compiler (15+9) | |
 | 4 | stages: visibility/gbuffer/lights/shadow/postprocess/LPV/distortion/rain... (~200) | |
 | 5 | models+cookers: render_model_* / *_cooker / skeleton / static (~150) | |
@@ -112,3 +112,9 @@ ports).
 | date | commit | batch | render exact | render fuzzy | stubs left | legacy files left |
 |---|---|---|---|---|---|---|
 | 2026-07-31 | 6931a537b | baseline | 8 (0.3%) | 0.1% | 1,826 | 1,011 |
+| 2026-07-31 | 55090cde2 | wave 1 (facade) | 8 (0.3%) | 0.1% (latent - callees stubbed) | 1,714 | 787 |
+| 2026-07-31 | wave 2 | engine roots + SpeedTree SDK link | 129 (4.9%) | 6.3% | 1,567 | 563 |
+
+Wave-2 side effect: overall repo exact 38.13% -> 41.45% (+428 fns), fuzzy
+46.65% -> 50.88% - the restored create_world -> engine world -> cooks chain
+un-DCE'd reachability cones in consumer modules too.

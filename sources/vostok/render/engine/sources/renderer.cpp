@@ -1,8 +1,56 @@
 #include "pch.h"
 #include "renderer.h"
 
+#include <vostok/console_command.h>
+#include <vostok/particle/world.h>
+#include <vostok/render/core/backend.h>
+#include <vostok/render/core/effect_manager.h>
+#include <vostok/render/core/res_effect.h>
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/dx11/sampler_state_descriptor.h>
+#include <vostok/render/core/shader_constant_binding.h>
+#include <vostok/render/facade/scene_view_mode.h>
+#include <vostok/scaleform/sources/flash_renderer.h>
+
+#include "effect_editor_gbuffer_to_screen.h"
+#include "grass_world.h"
+#include "material.h"
+#include "render_output_window.h"
+#include "renderer_context.h"
+#include "scene.h"
+#include "scene_view.h"
+#include "speedtree_forest.h"
+#include "stage_accumulate_distortion.h"
+#include "stage_ambient_occlusion.h"
+#include "stage_debug.h"
+#include "stage_decals_accumulate.h"
+#include "stage_forward.h"
+#include "stage_gbuffer.h"
+#include "stage_light_propagation_volumes.h"
+#include "stage_lights.h"
+#include "stage_particles.h"
+#include "stage_postprocess.h"
+#include "stage_pre_lighting.h"
+#include "stage_screen_image.h"
+#include "stage_shadow_direct.h"
+#include "stage_sun.h"
+#include "stage_view_mode.h"
+#include "statistics.h"
+#include "system_renderer.h"
+
 namespace vostok {
 namespace render {
+
+// defined in stage_gbuffer.cpp
+void fill_surface( render_target_ptr surf, renderer_context* context );
+
+static bool s_disabled_shader_constansts_set = false;
+static vostok::console_commands::cc_bool s_disabled_shader_constansts_set_cc(
+	"disabled_shader_constansts_set",
+	s_disabled_shader_constansts_set,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
 
 struct stage_stat {
 	double average_time( bool gpu_time ) const
@@ -83,11 +131,8 @@ struct remove_model_if_olt_predicate {
 	bool m_use_olt;
 };
 
-// STATE[STUB]
 bool renderer::is_effects_ready( ) const
 {
-	return false;
-
 	// FUNCTION BODY[0x6473d0]: 5
 	// <0>
 	// <1>
@@ -97,7 +142,11 @@ bool renderer::is_effects_ready( ) const
 	// <0x647403>|0x033|-0x001:'163'
 	// <0x647402>|0x032|+0x003:'164'
 	// ******
+
+	return m_gbuffer_to_screen_shader.c_ptr( ) != NULL;
 }
+
+static statistics m_statistics;
 
 // STATE[STUB]
 void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_config_value const& config )
@@ -117,9 +166,10 @@ void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_con
 	// ******
 }
 
-// STATE[STUB]
 renderer::renderer( renderer_context* renderer_context ) :
 	m_renderer_context	( renderer_context ),
+	m_last_frame_time	( 0.f ),
+	m_current_time		( 0.f ),
 	m_simulation		( 32, 32, 32 )
 {
 	// FUNCTION BODY[0x64bf20]: 71
@@ -195,10 +245,93 @@ renderer::renderer( renderer_context* renderer_context ) :
 	// <0x64c93e>|0xa1e|+0x03e:'263'
 	// <0x64c97c>|0xa5c|+0x01f:'264'
 	// ******
+
+	static float4 dummy_data( 0.f, 0.f, 0.f, 0.f );
+
+	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "hemi_cube_pos_faces", &dummy_data ) );
+	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "hemi_cube_neg_faces", &dummy_data ) );
+	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "dt_params", &dummy_data ) );
+
+	sampler_state_descriptor sampler_sim;
+	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
+	sampler_sim.set_max_anisotropy	( 16 );
+	resource_manager::ref( ).register_sampler( "s_base", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set_filter			( D3D_FILTER_ANISOTROPIC );
+	sampler_sim.set_max_anisotropy	( 16 );
+	resource_manager::ref( ).register_sampler( "s_base_hud", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
+	sampler_sim.set_max_anisotropy	( 16 );
+	resource_manager::ref( ).register_sampler( "s_detail", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
+	resource_manager::ref( ).register_sampler( "s_position", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	resource_manager::ref( ).register_sampler( "s_diffuse", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	resource_manager::ref( ).register_sampler( "s_accumulator", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
+	sampler_sim.set_max_anisotropy	( 16 );
+	resource_manager::ref( ).register_sampler( "s_material", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	resource_manager::ref( ).register_sampler( "s_normal", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_CLAMP );
+	resource_manager::ref( ).register_sampler( "s_material1", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_POINT, D3D_TEXTURE_ADDRESS_WRAP );
+	resource_manager::ref( ).register_sampler( "s_nofilter", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_LINEAR_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
+	resource_manager::ref( ).register_sampler( "s_rtlinear", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_WRAP );
+	resource_manager::ref( ).register_sampler( "s_linear", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_BORDER );
+	resource_manager::ref( ).register_sampler( "s_border", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+
+	sampler_sim.set					( D3D_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
+	sampler_sim.set_border_color	( float4( 1.f, 1.f, 1.f, 0.f ) );
+	sampler_sim.set_comparison_function( D3D_COMPARISON_LESS_EQUAL );
+	resource_manager::ref( ).register_sampler( "s_shmap", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	sampler_sim.reset				( );
+
+	effect_manager::ref( ).create_effect< effect_editor_gbuffer_to_screen >( &m_gbuffer_to_screen_shader );
+
+	m_gbuffer_to_screen_type		= backend::ref( ).register_constant_host( "gbuffer_to_screen_type", rc_float );
+
+	m_stages.resize					( num_render_stages );
+
+	for ( stage** it = m_stages.begin( ); it != m_stages.end( ); ++it )
+		*it = 0;
+
+	m_stage_debug					= 0;
+	m_view_mode_stage				= 0;
+	m_present_stage					= 0;
+	m_visibility_stage				= 0;
+
+	m_stages[gbuffer_render_stage]					= NEW( stage_gbuffer )					( this, m_renderer_context );
+	m_stages[decals_accumulate_render_stage]		= NEW( stage_decals_accumulate )		( this, m_renderer_context );
+	m_stages[accumulate_distortion_render_stage]	= NEW( stage_accumulate_distortion )	( this, m_renderer_context );
+	m_stages[pre_lighting_render_stage]				= NEW( stage_pre_lighting )				( this, m_renderer_context );
+	m_stages[sun_shadows_accumulate_render_stage]	= NEW( stage_shadow_direct )			( this, m_renderer_context );
+	m_stages[sun_render_stage]						= NEW( stage_sun )						( this, m_renderer_context, m_cloud_interp_textures, m_simulation );
+	m_stages[deferred_lighting_render_stage]		= NEW( stage_lights )					( this, m_renderer_context, false );
+	m_stages[ambient_occlusion_render_stage]		= NEW( stage_ambient_occlusion )		( this, m_renderer_context );
+	m_stages[light_propagation_volumes_render_stage]= NEW( stage_light_propagation_volumes )( this, m_renderer_context );
+	m_stages[forward_render_stage]					= NEW( stage_forward )					( this, m_renderer_context, stage_forward::forward_base );
+	m_stages[lighting_render_stage]					= NEW( stage_lights )					( this, m_renderer_context, true );
+	m_stages[particles_render_stage]				= NEW( stage_particles )				( this, m_renderer_context );
+	m_stages[post_process_render_stage]				= NEW( stage_postprocess )				( this, m_renderer_context );
+
+	m_stage_debug					= NEW( stage_debug )		( this, m_renderer_context );
+	m_view_mode_stage				= NEW( stage_view_mode )	( this, m_renderer_context );
+	m_present_stage					= NEW( stage_screen_image )	( this, m_renderer_context );
+
+	m_timer.start					( );
 }
 
-// STATE[STUB]
- renderer::~renderer( )
+renderer::~renderer( )
 {
 	// LOCALS
 	// std::reverse_iterator< stage** > e
@@ -226,6 +359,13 @@ renderer::renderer( renderer_context* renderer_context ) :
 	// <0x64845b>|0x14b|+0x040:'279'
 	// <0x64849b>|0x18b|+0x040:'280'
 	// ******
+
+	DELETE					( m_view_mode_stage );
+	DELETE					( m_present_stage );
+	DELETE					( m_stage_debug );
+
+	for ( std::reverse_iterator< stage** > it = m_stages.rbegin( ), e = m_stages.rend( ); it != e; ++it )
+		DELETE				( *it );
 }
 
 // STATE[STUB]
@@ -372,7 +512,6 @@ void renderer::set_target_context( renderer_context_targets const* targets_conte
 	// ******
 }
 
-// STATE[STUB]
 void renderer::setup_render_output_window(
 	base_output_window_ptr				in_output_window,
 	math::rectangle< float2 > const&	viewport
@@ -416,15 +555,42 @@ void renderer::setup_render_output_window(
 	// <1>
 	// <0x648289>|0x159|+0x04f:'347'
 	// ******
+
+	R_ASSERT				( in_output_window );
+	render_output_window* const output_window = (render_output_window*)in_output_window.c_ptr( );
+
+	m_renderer_context->set_target_context( &output_window->target_context( ), false );
+	backend::ref( ).set_render_output( output_window->render_output( ) );
+	backend::ref( ).reset_depth_stencil_target( );
+
+	math::rectangle< float2 > res_viewport;
+	res_viewport			= math::rectangle< float2 >( float2( 0, 0 ), float2( 1.f, 1.f ) );
+
+	R_ASSERT				( viewport.width( ) );
+	R_ASSERT				( viewport.height( ) );
+
+	res_viewport.left		= math::max( res_viewport.left, viewport.left );
+	res_viewport.right		= math::min( res_viewport.right, viewport.right );
+	res_viewport.top		= math::max( res_viewport.top, viewport.top );
+	res_viewport.bottom		= math::min( res_viewport.bottom, viewport.bottom );
+
+	u32 const window_width	= backend::ref( ).target_width( );
+	u32 const window_height	= backend::ref( ).target_height( );
+
+	D3D11_VIEWPORT d3d_viewport = { window_width * res_viewport.left, window_height * res_viewport.top, window_width * res_viewport.width( ), window_height * res_viewport.height( ), 0.f, 1.f };
+
+	backend::ref( ).set_viewport( d3d_viewport );
 }
 
-// STATE[STUB]
 void renderer::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
 {
 	// FUNCTION BODY[0x6473b0]: 2
 	// <0x6473b0>|0x000|+0x00f:'352'
 	// <0x6473bf>|0x00f|+0x009:'353'
 	// ******
+
+	if ( m_stages[stage_type] )
+		m_stages[stage_type]->set_enabled( toggle );
 }
 
 // STATE[STUB]
@@ -435,7 +601,6 @@ void renderer::clear_resources( )
 	// ******
 }
 
-// STATE[STUB]
 void renderer::execute_stages( )
 {
 	// LOCALS
@@ -496,6 +661,14 @@ void renderer::execute_stages( )
 	// <0>
 	// <1>
 	// ******
+
+	for ( stage** it = m_stages.begin( ); it != m_stages.end( ); ++it )
+	{
+		stage* current_stage = *it;
+
+		if ( current_stage )
+			current_stage->execute( );
+	}
 }
 
 // STATE[STUB]
@@ -911,7 +1084,6 @@ void draw_text_shadowed(
 	// ******
 }
 
-// STATE[STUB]
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -1414,6 +1586,239 @@ void renderer::render(
 	// <0x64ca78>|0x0b8|+0x848:'1292'
 	// <0x64d2c0>|0x900|+0x01e:'1292'
 	// ******
+
+	VOSTOK_UNREFERENCED_PARAMETER( default_font );
+
+	backend::ref( ).disabled_shader_constansts_set = s_disabled_shader_constansts_set;
+
+	vostok::render::scene* scene		= static_cast_checked< vostok::render::scene* >( in_scene.c_ptr( ) );
+	vostok::render::scene_view* view	= static_cast_checked< vostok::render::scene_view* >( in_view.c_ptr( ) );
+
+	view->inc_render_frame_index( );
+
+	m_current_time				= m_timer.get_elapsed_sec( );
+
+	float time_delta			= m_current_time - m_last_frame_time;
+	time_delta					= vostok::math::max( time_delta, 0.0f ) * scene->get_slomo( );
+
+	m_renderer_context->set_current_time( m_last_frame_time );
+	m_renderer_context->set_time_delta( time_delta );
+
+	m_renderer_context->set_scene( scene );
+	m_renderer_context->set_scene_view( view );
+
+	if ( !is_effects_ready( ) || !material::is_nomaterial_material_ready( ) )
+	{
+		vostok::render::scene* const scene = static_cast_checked< vostok::render::scene* >( in_scene.c_ptr( ) );
+		scene->flush			( on_draw_scene, false, false );
+		return;
+	}
+
+	statistics::ref( ).start	( );
+
+	BEGIN_CPUGPU_TIMER( statistics::ref( ).general_stat_group.render_frame_time );
+	BEGIN_TIMER( statistics::ref( ).general_stat_group.cpu_render_frame_time );
+
+	static_cast_checked< render::render_output_window* >( output_window.c_ptr( ) )->resize( false );
+
+	setup_render_output_window	( output_window, viewport );
+
+	m_renderer_context->m_light_marker_id = 1;
+
+	m_renderer_context->scene( )->update_models( );
+
+	vostok::particle::world* part_world = m_renderer_context->scene( )->particle_world( );
+
+	if ( scene->get_speedtree_forest( ) )
+		scene->get_speedtree_forest( )->tick( m_renderer_context );
+
+	if ( part_world )
+		part_world->tick		( time_delta, m_renderer_context->get_v( ) );
+
+	if ( scene->get_grass( ) )
+		scene->get_grass( )->process_culling( m_renderer_context, 100.0f );
+
+	backend::ref( ).reset		( );
+
+	scene_view_mode view_mode	= view->get_view_mode( );
+
+	backend::ref( ).set_render_targets( &*m_renderer_context->m_targets->m_family[rt_position].target, &*m_renderer_context->m_targets->m_family[rt_normal].target, 0, 0 );
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).clear_render_targets( math::color( 1.f, 1.f, 1.f, 1.f ), math::color( 0.f, 0.f, 0.f, 0.f ), math::color( 0.f, 0.f, 0.f, 0.f ), math::color( 0.f, 0.f, 0.f, 0.f ) );
+
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
+
+#ifdef MASTER_GOLD
+	execute_stages				( );
+	VOSTOK_UNREFERENCED_PARAMETER( view_mode );
+#else // #ifdef MASTER_GOLD
+
+	if ( m_view_mode_stage && m_view_mode_stage->is_support_view_mode( view_mode ) )
+	{
+		// opaque pass
+		if ( m_stages[gbuffer_render_stage] )
+			m_stages[gbuffer_render_stage]->execute( );
+
+		m_view_mode_stage->execute( view_mode );
+		statistics::ref( ).visibility_stat_group.num_total_rendered_triangles.value = backend::ref( ).num_total_rendered_triangles;
+	}
+	else
+	{
+		float view_mode_type = float( u32( view_mode ) ) + 0.5f;
+		switch ( view_mode )
+		{
+			case lit_view_mode:
+			{
+				execute_stages	( );
+
+				break;
+			}
+			case unlit_view_mode:
+			case unlit_with_ao_view_mode:
+			{
+				m_stages[accumulate_distortion_render_stage]->set_enabled( false );
+				m_stages[pre_lighting_render_stage]->set_enabled( false );
+				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( false );
+				m_stages[sun_render_stage]->set_enabled( false );
+				m_stages[deferred_lighting_render_stage]->set_enabled( false );
+				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( false );
+				m_stages[post_process_render_stage]->set_enabled( false );
+				m_stages[lighting_render_stage]->set_enabled( false );
+
+				execute_stages	( );
+
+				m_stages[accumulate_distortion_render_stage]->set_enabled( true );
+				m_stages[pre_lighting_render_stage]->set_enabled( true );
+				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( true );
+				m_stages[sun_render_stage]->set_enabled( true );
+				m_stages[deferred_lighting_render_stage]->set_enabled( true );
+				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( true );
+				m_stages[post_process_render_stage]->set_enabled( true );
+				m_stages[lighting_render_stage]->set_enabled( true );
+
+				m_gbuffer_to_screen_shader->apply( );
+				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
+				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
+
+				break;
+			}
+			case normals_view_mode:
+			{
+				if ( m_stages[gbuffer_render_stage] )
+					m_stages[gbuffer_render_stage]->execute( );
+
+				if ( m_stages[decals_accumulate_render_stage] )
+					m_stages[decals_accumulate_render_stage]->execute( );
+
+				m_gbuffer_to_screen_shader->apply( );
+				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
+				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
+				break;
+			}
+			case lighting_view_mode:
+			case lighting_diffuse_view_mode:
+			case lighting_specular_view_mode:
+			case emissive_only_view_mode:
+			case distortion_only_view_mode:
+			{
+				if ( m_stages[post_process_render_stage] )
+					m_stages[post_process_render_stage]->set_enabled( false );
+
+				execute_stages	( );
+
+				if ( m_stages[post_process_render_stage] )
+					m_stages[post_process_render_stage]->set_enabled( true );
+
+				m_gbuffer_to_screen_shader->apply( );
+
+				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
+				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
+				break;
+			}
+			case indirect_lighting_view_mode:
+			{
+				m_stages[gbuffer_render_stage]->execute( );
+				m_stages[decals_accumulate_render_stage]->execute( );
+				m_stages[accumulate_distortion_render_stage]->execute( );
+				m_stages[pre_lighting_render_stage]->execute( );
+				m_stages[sun_render_stage]->execute_disabled( );
+				m_stages[sun_shadows_accumulate_render_stage]->execute_disabled( );
+				m_stages[ambient_occlusion_render_stage]->execute( );
+				m_stages[light_propagation_volumes_render_stage]->execute( );
+
+				m_gbuffer_to_screen_shader->apply( );
+
+				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
+				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
+				break;
+			}
+			case ambient_occlusion_only_view_mode:
+			{
+				if ( m_stages[gbuffer_render_stage] )
+					m_stages[gbuffer_render_stage]->execute( );
+
+				if ( m_stages[decals_accumulate_render_stage] )
+					m_stages[decals_accumulate_render_stage]->execute( );
+
+				if ( m_stages[ambient_occlusion_render_stage] )
+					m_stages[ambient_occlusion_render_stage]->execute( );
+
+				m_gbuffer_to_screen_shader->apply( );
+
+				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
+				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
+				break;
+			}
+		}
+	}
+
+	backend::ref( ).reset_depth_stencil_target( );
+
+	if ( m_stages[light_propagation_volumes_render_stage] )
+		( (stage_light_propagation_volumes*)m_stages[light_propagation_volumes_render_stage] )->draw_debug( );
+
+	if ( m_stages[deferred_lighting_render_stage] )
+		( (stage_lights*)m_stages[deferred_lighting_render_stage] )->debug_render( );
+
+	if ( m_stage_debug )
+		m_stage_debug->execute	( );
+
+	backend::ref( ).set_render_targets( &*m_renderer_context->m_targets->m_family[rt_present].target, 0, 0, 0 );
+
+	scene->flush				( on_draw_scene, false, false );
+
+	backend::ref( ).reset_depth_stencil_target( );
+
+	if ( m_stages[lighting_render_stage] )
+		m_stages[lighting_render_stage]->debug_render( );
+
+	if ( scene->get_grass( ) )
+		scene->get_grass( )->render_debug( m_renderer_context );
+
+#endif // #ifdef MASTER_GOLD
+
+	statistics::ref( ).visibility_stat_group.num_total_rendered_triangles.value = backend::ref( ).num_total_rendered_triangles;
+	statistics::ref( ).visibility_stat_group.num_total_rendered_points.value = backend::ref( ).num_total_rendered_points;
+
+	double const es				= statistics::ref( ).general_stat_group.render_frame_time.cpu_time.average( ) / 1000.0;
+	double const es2			= statistics::ref( ).general_stat_group.cpu_render_frame_time.average( ) / 1000.0;
+
+	statistics::ref( ).general_stat_group.fps.value = math::floor( float( es > 0.0 ? ( 1.0 / es ) : 0.0 ) );
+	statistics::ref( ).general_stat_group.cpu_fps.value = math::floor( float( es2 > 0.0 ? ( 1.0 / es2 ) : 0.0 ) );
+
+	statistics::ref( ).general_stat_group.num_setted_shader_constants.value = backend::ref( ).num_setted_shader_constants;
+	statistics::ref( ).visibility_stat_group.num_draw_calls.value = backend::ref( ).num_draw_calls;
+
+	backend::ref( ).disabled_shader_constansts_set = false;
+
+	if ( draw_debug_terrain )
+		system_renderer::ref( ).draw_debug_terrain( );
+
+	present						( output_window, viewport );
+
+	END_TIMER;
+	END_CPUGPU_TIMER;
 }
 
 // STATE[STUB]
@@ -1689,7 +2094,6 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 	// ******
 }
 
-// STATE[STUB]
 void renderer::present(
 	base_output_window_ptr				in_output_window,
 	math::rectangle< float2 > const&	viewport
@@ -1703,6 +2107,28 @@ void renderer::present(
 	// <4>
 	// <0x648b10>|0x000|+0x02c:'1519'
 	// ******
+
+	render_output_window* const output_window = static_cast_checked< render_output_window* >( in_output_window.c_ptr( ) );
+	setup_render_output_window	( in_output_window, viewport );
+
+	// Present the final image to base render target
+	m_present_stage->execute	( m_renderer_context->get_t( rt_present ) );
+
+	if ( output_window )
+	{
+		if ( output_window->m_flash_renderer )
+			output_window->m_flash_renderer->present( 0, 0, 0 );
+
+		output_window->render_output( )->present( );
+	}
+
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
+
+	backend::ref( ).reset		( );
+	backend::ref( ).flush		( );
+
+	m_last_frame_time			= m_current_time;
 }
 
 // STATE[STUB]

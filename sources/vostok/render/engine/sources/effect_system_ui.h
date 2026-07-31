@@ -11,6 +11,8 @@ class effect_compiler;
 
 class effect_system_ui : public effect_descriptor {
 public:
+	enum techniques{ ui_font, ui, ui_fill, ui_line_strip };
+
 	effect_system_ui( ) { }
 	virtual ~effect_system_ui( ) { }
 

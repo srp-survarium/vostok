@@ -13,28 +13,28 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 4,925 / 12,915 functions exact (38.13%) &middot; 5,130 / 12,915 functions exact-max (39.72%) &middot; 46.65% fuzzy &middot; 49.12% fuzzy-max.**
+**Overall: 5,353 / 12,915 functions exact (41.45%) &middot; 5,402 / 12,915 functions exact-max (41.83%) &middot; 50.88% fuzzy &middot; 51.15% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 |    8 / 2,647 (0.3%) |    8 / 2,647 (0.3%) |  0.1% |      0.1% |
-| `game`          |   141 | 366 / 1,498 (24.4%) | 371 / 1,498 (24.8%) | 43.5% |     44.4% |
-| `core`          |   136 | 814 / 1,320 (61.7%) | 823 / 1,320 (62.3%) | 80.3% |     83.2% |
-| `vostok`        |   112 | 521 / 1,252 (41.6%) | 570 / 1,252 (45.5%) | 60.7% |     67.4% |
-| `game_core`     |   189 | 493 / 1,171 (42.1%) | 497 / 1,171 (42.4%) | 81.2% |     81.6% |
-| `animation`     |   102 |   354 / 763 (46.4%) |   354 / 763 (46.4%) | 38.7% |     39.2% |
-| `ai`            |   124 |   403 / 690 (58.4%) |   403 / 690 (58.4%) | 87.5% |     87.6% |
+| `render`        |   351 |  129 / 2,647 (4.9%) |  129 / 2,647 (4.9%) |  6.3% |      6.3% |
+| `game`          |   141 | 393 / 1,498 (26.2%) | 393 / 1,498 (26.2%) | 44.7% |     44.8% |
+| `core`          |   136 | 823 / 1,320 (62.3%) | 827 / 1,320 (62.7%) | 82.8% |     83.3% |
+| `vostok`        |   112 | 556 / 1,252 (44.4%) | 582 / 1,252 (46.5%) | 64.2% |     67.4% |
+| `game_core`     |   189 | 500 / 1,171 (42.7%) | 500 / 1,171 (42.7%) | 81.6% |     81.6% |
+| `animation`     |   102 |   355 / 763 (46.5%) |   355 / 763 (46.5%) | 38.8% |     39.2% |
+| `ai`            |   124 |   403 / 690 (58.4%) |   403 / 690 (58.4%) | 87.6% |     87.6% |
 | `sound`         |    69 |   334 / 509 (65.6%) |   334 / 509 (65.6%) | 72.3% |     72.3% |
-| `collision`     |    52 |   405 / 503 (80.5%) |   414 / 503 (82.3%) | 93.3% |     94.2% |
+| `collision`     |    52 |   416 / 503 (82.7%) |   423 / 503 (84.1%) | 96.1% |     96.4% |
 | `scaleform`     |    47 |   257 / 453 (56.7%) |   257 / 453 (56.7%) | 58.0% |     58.0% |
-| `particle`      |    25 |     36 / 400 (9.0%) |   157 / 400 (39.2%) | 26.8% |     78.9% |
+| `particle`      |    25 |   240 / 400 (60.0%) |   246 / 400 (61.5%) | 78.0% |     79.1% |
 | `vfs`           |    71 |   164 / 390 (42.1%) |   164 / 390 (42.1%) | 87.1% |     87.1% |
-| `ui`            |    27 |   182 / 227 (80.2%) |   188 / 227 (82.8%) | 73.5% |     80.3% |
-| `physics`       |    14 |    94 / 197 (47.7%) |    94 / 197 (47.7%) | 71.7% |     71.7% |
+| `ui`            |    27 |   187 / 227 (82.4%) |   191 / 227 (84.1%) | 79.4% |     80.3% |
+| `physics`       |    14 |    94 / 197 (47.7%) |    94 / 197 (47.7%) | 71.8% |     71.8% |
 | `fs`            |    25 |    69 / 165 (41.8%) |    71 / 165 (43.0%) | 81.9% |     84.0% |
-| `engine`        |    22 |   109 / 162 (67.3%) |   109 / 162 (67.3%) | 71.0% |     85.8% |
+| `engine`        |    22 |   117 / 162 (72.2%) |   117 / 162 (72.2%) | 85.8% |     85.9% |
 | `network`       |    25 |    69 / 158 (43.7%) |    69 / 158 (43.7%) | 85.4% |     85.4% |
 | `network_core`  |    22 |    35 / 127 (27.6%) |    35 / 127 (27.6%) | 84.1% |     84.1% |
 | `debug`         |    16 |   111 / 122 (91.0%) |   111 / 122 (91.0%) | 96.8% |     96.8% |

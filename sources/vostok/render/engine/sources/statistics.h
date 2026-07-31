@@ -25,10 +25,10 @@ struct statistics_group : public boost::noncopyable {
 	explicit statistics_group( pcstr group_name );
 	~statistics_group( );
 
-	u32 render( ui::world&, u32, u32 ) { return 0; }
+	u32 render( vostok::ui::world&, u32, u32 ) { return 0; }
 	void start( );
 	void clear( ) { }
-	void calc_sizes( ui::font const*, u32&, u32& ) { }
+	void calc_sizes( vostok::ui::font const*, u32&, u32& ) { }
 	u32 get_num_text_lines( ) const { return 0; }
 
 	statistics_base*	first_statistics;
@@ -50,7 +50,7 @@ struct statistics_base : public boost::noncopyable {
 	virtual void start( ) = 0;
 	virtual void clear( ) { }
 
-	u32 calc_max_string_width( ui::font const* ) { return 0; }
+	u32 calc_max_string_width( vostok::ui::font const* ) { return 0; }
 
 protected:
 	friend struct statistics_group;
@@ -439,7 +439,7 @@ public:
 	~statistics( );
 
 	void start( );
-	void render( ui::world&, u32, u32 ) { }
+	void render( vostok::ui::world&, u32, u32 ) { }
 	void clear( ) { }
 	u32 get_num_text_lines( ) const { return 0; }
 

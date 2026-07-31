@@ -8,16 +8,38 @@ namespace render {
 namespace utils {
 
 template < typename list_type >
-bool calc_lists_diff_range(
-	list_type const&,
-	list_type const&,
-	u32&,
-	u32&
-)
+bool calc_lists_diff_range( list_type const& first, list_type const& second, u32 &min, u32 &max)
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12ce30] for res_texture_list
-	return false;
+	list_type::const_iterator	it	= first.begin();
+	list_type::const_iterator	end = first.end();
+
+	list_type::const_iterator	it_oth	= second.begin();
+	list_type::const_iterator	end_oth = second.end();
+
+	min = max = 0;
+	for( ; it != end && it_oth != end_oth; ++it, ++it_oth, ++min)
+		if( *it != *end_oth)
+			break;
+
+
+	if( first.size() != second.size())
+	{
+		max = math::max( first.size(), second.size());
+		return min != max;
+	}
+
+	int ind = min;
+	for( ; it != end && it_oth != end_oth; ++it, ++it_oth, ++ind)
+	{
+		if( *it != *end_oth)
+		{
+			max = ind+1;
+//			*it = *it_oth;
+		}
+	}
+
+	return min != max;
 }
 
 u32 get_format_4x4_pixel_size( DXGI_FORMAT format );

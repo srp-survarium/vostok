@@ -1,11 +1,23 @@
 #include "pch.h"
 #include "scene.h"
+#include <vostok/collision/api.h>
+#include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/render/core/backend.h>
+#include <vostok/render/core/options.h>
+#include <vostok/render/facade/common_types.h>
 #include "ambient_volume.h"
 #include "environment_probe.h"
 #include "find_by_id_predicate.h"
+#include "grass_world.h"
 #include "moved_object_predicate_helper.h"
+#include "render_particle_emitter_instance.h"
 #include "sky_ambient_occlusion.h"
+#include "speedtree_forest.h"
+#include "statistics.h"
 #include "streaming.h"
+#include "system_renderer.h"
+
+static const u32 s_max_vertex_count	= 64*1024;
 
 namespace vostok {
 namespace render {
@@ -32,7 +44,6 @@ bool find_environment_probe_predicate::operator()( environment_probe const* cons
 	return object->m_id == m_id;
 }
 
-// STATE[STUB]
 particle::render_particle_emitter_instance* scene::particle_engine::create_render_emitter_instance(
 	particle::particle_emitter_instance&	particle_emitter_instance,
 	particle::base_particle_list const&		particle_list,
@@ -44,7 +55,18 @@ particle::render_particle_emitter_instance* scene::particle_engine::create_rende
 	float4 const&							instance_color
 )
 {
-	return NULL;
+	return
+		MT_NEW( render_particle_emitter_instance ) (
+			*m_particle_world,
+			particle_emitter_instance,
+			particle_list,
+			billboard_parameters,
+			beamtrail_parameters,
+			locked_axis,
+			screen_alignment,
+			transform,
+			instance_color
+		);
 
 	// FUNCTION BODY[0x63ef30]: 12
 	// <0>
@@ -64,9 +86,12 @@ particle::render_particle_emitter_instance* scene::particle_engine::create_rende
 	// ******
 }
 
-// STATE[STUB]
 void scene::particle_engine::destroy( particle::render_particle_emitter_instance*& instance )
 {
+	render::render_particle_emitter_instance* render_instance = static_cast_checked< render::render_particle_emitter_instance*>(instance);
+	MT_DELETE			( render_instance );
+	instance			= 0;
+
 	// CALL SITE INFO
 	// <0x63d431> -> void* < unknown >( u32 )
 	// ******
@@ -87,20 +112,39 @@ base_scene_ptr scene::particle_engine::get_scene( particle::world& world )
 	// <0>
 	// <0x63e880>|0x000|+0x019:'91'
 	// ******
+	VOSTOK_UNREFERENCED_PARAMETER( world );
+	return base_scene_ptr( );
 }
 
-// STATE[STUB]
 scene::scene( scene_configuration const& renderer_configuration ) :
 	m_particle_engine	( this ),
-	m_lights			( 0 )
+	m_decals_tree		( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ),
+	m_environment_probes_tree( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ),
+	m_models_tree		( &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 ) ),
+	m_lights			( NEW(lights_db) ),
+	m_particle_world	( NULL ),
+	m_speedtree_forest	( renderer_configuration.m_create_speedtree_world ? NEW(speedtree_forest) : NULL ),
+	m_grass				( renderer_configuration.m_create_grass_world ? NEW(grass_world) : NULL ),
+	m_clouds			( NULL ),
+	m_scene_slomo		( 1.0f ),
+	m_use_clouds		( renderer_configuration.m_has_clouds ),
+	m_sky_enabled		( renderer_configuration.m_sky_enabled ),
+	m_use_occlusion_culling( renderer_configuration.m_use_occlusion_culling ),
+	m_portal_system		( NULL )
 {
 	// FUNCTION BODY[0x63f5e0]: 0
 	// ******
 }
 
-// STATE[STUB]
 scene::~scene( )
 {
+	DELETE			( m_speedtree_forest );
+	DELETE			( m_grass );
+
+	collision::delete_space_partitioning_tree( m_decals_tree );
+	collision::delete_space_partitioning_tree( m_environment_probes_tree );
+	collision::delete_space_partitioning_tree( m_models_tree );
+
 	// FUNCTION BODY[0x63f110]: 9
 	// <0x63f117>|0x007|+0x018:'122'
 	// <0x63f12f>|0x01f|+0x00c:'123'
@@ -114,9 +158,10 @@ scene::~scene( )
 	// ******
 }
 
-// STATE[STUB]
 void scene::set_sky_material( material_effects_instance_ptr const& in_material )
 {
+	m_sky_material		= in_material;
+
 	// FUNCTION BODY[0x63ebd0]: 7
 	// <0x63ebd3>|0x003|+0x00d:'135'
 	// <0x63ebe0>|0x010|+0x00c:'136'
@@ -312,19 +357,21 @@ void scene::remove_unused_environment_cubemaps( )
 	// ******
 }
 
-// STATE[STUB]
 particle::world* scene::particle_world( )
 {
-	return NULL;
+	return m_particle_world.c_ptr( );
 
 	// FUNCTION BODY[0x63cf90]: 1
 	// <0x63cf90>|0x000|+0x006:'283'
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_speedtree_instance( speedtree_instance_ptr instance, float4x4 const& transform, bool populate_forest )
 {
+	m_speedtree_forest->add_instance(instance, transform);
+	if(populate_forest)
+		m_speedtree_forest->populate_forest();
+
 	// FUNCTION BODY[0x63f090]: 3
 	// <0x63f090>|0x000|+0x036:'288'
 	// <0x63f0c6>|0x036|+0x007:'289'
@@ -332,9 +379,12 @@ void scene::add_speedtree_instance( speedtree_instance_ptr instance, float4x4 co
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_speedtree_instance( speedtree_instance_ptr instance, bool populate_forest )
 {
+	m_speedtree_forest->remove_instance(instance);
+	if(populate_forest)
+		m_speedtree_forest->populate_forest();
+
 	// FUNCTION BODY[0x63f010]: 3
 	// <0x63f016>|0x006|+0x033:'295'
 	// <0x63f049>|0x039|+0x006:'296'
@@ -342,9 +392,12 @@ void scene::remove_speedtree_instance( speedtree_instance_ptr instance, bool pop
 	// ******
 }
 
-// STATE[STUB]
 void scene::set_speedtree_instance_transform( speedtree_instance_ptr instance, float4x4 const& transform, bool populate_forest )
 {
+	m_speedtree_forest->set_transform(instance, transform);
+	if(populate_forest)
+		m_speedtree_forest->populate_forest();
+
 	// FUNCTION BODY[0x63ef90]: 3
 	// <0x63ef90>|0x000|+0x039:'302'
 	// <0x63efc9>|0x039|+0x007:'303'
@@ -352,9 +405,10 @@ void scene::set_speedtree_instance_transform( speedtree_instance_ptr instance, f
 	// ******
 }
 
-// STATE[STUB]
 void scene::populate_speedtree_forest( )
 {
+	m_speedtree_forest->populate_forest();
+
 	// FUNCTION BODY[0x63ef80]: 1
 	// <0x63ef80>|0x000|+0x00c:'309'
 	// ******
@@ -758,9 +812,12 @@ void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bo
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_model( render_model_instance_impl_ptr v )
 {
+	R_ASSERT( std::find(m_render_model_instances.begin(), m_render_model_instances.end(), v) == m_render_model_instances.end());
+	m_render_model_instances.push_back		( v );
+	m_models_tree->insert( &v->m_collision_object, v->transform() );
+
 	// CALL SITE INFO
 	// <0x63eb70> -> void < unknown >( collision::object*, float4x4 const& )
 	// ******
@@ -778,9 +835,11 @@ void scene::add_model( render_model_instance_impl_ptr v )
 	// ******
 }
 
-// STATE[STUB]
 void scene::modify_model( render_model_instance_impl_ptr v )
 {
+	R_ASSERT					( std::find(m_render_model_instances.begin(), m_render_model_instances.end(), v) != m_render_model_instances.end());
+	m_models_tree->move			( &v->m_collision_object, v->transform() );
+
 	// CALL SITE INFO
 	// <0x63e8be> -> void < unknown >( collision::object*, float4x4 const& )
 	// ******
@@ -797,9 +856,13 @@ void scene::modify_model( render_model_instance_impl_ptr v )
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_model( render_model_instance_impl_ptr v )
 {
+	vector< render_model_instance_impl_ptr >::iterator it	= std::find(m_render_model_instances.begin(), m_render_model_instances.end(), v);
+	R_ASSERT					( it != m_render_model_instances.end() );
+	m_models_tree->erase		( &v->m_collision_object);
+	m_render_model_instances.erase	( it );
+
 	// CALL SITE INFO
 	// <0x63ea9c> -> void < unknown >( collision::object* )
 	// ******
@@ -838,7 +901,6 @@ void moved_object_predicate_helper::check_object( collision::object const& obj )
 	// ******
 }
 
-// STATE[STUB]
 void scene::select_models(
 	float4x4 const&							mat_vp,
 	vector< render_surface_instance* >&		selection,
@@ -847,6 +909,33 @@ void scene::select_models(
 	bool									moved_only
 )
 {
+	if (!options::ref().current.m_enabled_draw_models)
+		return;
+
+	BEGIN_TIMER(statistics::ref().visibility_stat_group.culling_time);
+
+	if(options::ref().current.m_enabled_draw_models)
+	{
+		math::frustum view_frustum (mat_vp);
+
+		selection.clear();
+
+		collision::objects_type query_result(render::g_allocator);
+		m_models_tree->cuboid_query( u32(-1), view_frustum, query_result);
+
+		selection.reserve( selection.size() + query_result.size());
+
+		collision::objects_type::const_iterator end = query_result.end();
+		for( collision::objects_type::iterator it = query_result.begin(); it != end; ++it)
+		{
+			render_collision_object<render_model_instance_impl> const* const object =
+				static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it);
+
+			object->owner()->get_surfaces( &mat_vp, &view_pos, selection, moved_only, 0, surface_flags );
+		}
+	}
+	END_TIMER;
+
 	// LOCALS
 	// math::frustum 					view_frustum
 	// collision::object const* const* 	end
@@ -925,9 +1014,18 @@ void scene::select_models(
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_models( )
 {
+	BEGIN_TIMER(statistics::ref().visibility_stat_group.models_updating_time);
+
+	vector< render_model_instance_impl_ptr >::iterator			it	=	m_render_model_instances.begin();
+	vector< render_model_instance_impl_ptr >::const_iterator	end =	m_render_model_instances.end();
+
+	for( ; it !=  end; ++it)
+		(*it)->update();
+
+	END_TIMER;
+
 	// CALL SITE INFO
 	// <0x63d0e9> -> void < unknown >()
 	// ******
@@ -946,17 +1044,19 @@ void scene::update_models( )
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_light( u32 id, light_props* props )
 {
+	m_lights->add_light( id, props);
+
 	// FUNCTION BODY[0x640a30]: 1
 	// <0x640a30>|0x000|+0x011:'759'
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_light( u32 id, light_props* props )
 {
+	m_lights->update_light( id, props);
+
 	// FUNCTION BODY[0x6409e0]: 7
 	// <0x6409e3>|0x003|+0x03d:'764'
 	// <0>
@@ -968,9 +1068,10 @@ void scene::update_light( u32 id, light_props* props )
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_light( u32 id )
 {
+	m_lights->remove_light( id);
+
 	// FUNCTION BODY[0x63ef20]: 1
 	// <0x63ef21>|0x001|+0x00e:'775'
 	// ******
@@ -1108,9 +1209,14 @@ void scene::remove_ambient_volume( u32 id )
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_lpv_occluder( u32 id, float4x4 const& transform )
 {
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
+	if ( i == m_lpv_occluders.end( ) || id < i->first )
+		m_lpv_occluders.insert			( std::make_pair( id, transform ) );
+	else
+		i->second						= transform;
+
 	// FUNCTION BODY[0x63d330]: 6
 	// <0x63d33e>|0x00e|+0x03e:'899'
 	// <0>
@@ -1122,9 +1228,12 @@ void scene::update_lpv_occluder( u32 id, float4x4 const& transform )
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_lpv_occluder( u32 id )
 {
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
+	if ( i != m_lpv_occluders.end( ) && i->first == id )
+		m_lpv_occluders.erase			( i );
+
 	// FUNCTION BODY[0x63d050]: 4
 	// <0x63d057>|0x007|+0x041:'909'
 	// <0>
@@ -1133,9 +1242,10 @@ void scene::remove_lpv_occluder( u32 id )
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_decal( u32 id, decal_properties const& properties )
 {
+	m_decals.push_back						(NEW(decal_instance_node)(NEW(decal_instance)(m_decals_tree, properties, id)));
+
 	// FUNCTION BODY[0x63e9b0]: 1
 	// <0x63e9b1>|0x001|+0x08b:'917'
 	// <0x63ea3c>|0x08c|-0x007:'917'
@@ -1143,9 +1253,25 @@ void scene::add_decal( u32 id, decal_properties const& properties )
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_decal( u32 id, decal_properties const& properties )
 {
+	decal_instance_node* instance			= m_decals.front();
+
+	bool found								= false;
+	while (instance)
+	{
+		if (instance->decal->m_id == id)
+		{
+			instance->decal->set_properties	(properties);
+			found							= true;
+		}
+		instance							= m_decals.get_next_of_object(instance);
+	}
+	if (!found)
+	{
+		add_decal							(id, properties);
+	}
+
 	// FUNCTION BODY[0x63eec0]: 16
 	// <0x63eec6>|0x006|+0x00e:'922'
 	// <0>
@@ -1166,12 +1292,24 @@ void scene::update_decal( u32 id, decal_properties const& properties )
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_decal( u32 id )
 {
 	// LOCALS
 	// scene::decal_instance_node* 		instance
 	// ******
+
+	decal_instance_node* instance			= m_decals.front();
+
+	while (instance)
+	{
+		if (instance->decal->m_id == id)
+		{
+			m_decals.erase					(instance);
+			DELETE							(instance);
+			break;
+		}
+		instance							= m_decals.get_next_of_object(instance);
+	}
 
 	// FUNCTION BODY[0x63d820]: 12
 	// <0x63d821>|0x001|+0x009:'942'
@@ -1191,17 +1329,23 @@ void scene::remove_decal( u32 id )
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
+	m_volume_fogs.insert			( std::make_pair( id, in_parameters ) );
+
 	// FUNCTION BODY[0x63d2f0]: 1
 	// <0x63d2fc>|0x00c|+0x024:'958'
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
+	if ( i == m_volume_fogs.end( ) || id < i->first )
+		m_volume_fogs.insert			( std::make_pair( id, in_parameters ) );
+	else
+		i->second						= in_parameters;
+
 	// FUNCTION BODY[0x63d460]: 10
 	// <0x63d471>|0x011|+0x03f:'963'
 	// <0>
@@ -1217,9 +1361,12 @@ void scene::update_volume_fog( u32 id, volume_fog_parameters const& in_parameter
 	// ******
 }
 
-// STATE[STUB]
 void scene::remove_volume_fog( u32 id )
 {
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
+	if ( i != m_volume_fogs.end( ) && i->first == id )
+		m_volume_fogs.erase			( i );
+
 	// FUNCTION BODY[0x63cfd0]: 4
 	// <0x63cfd7>|0x007|+0x041:'977'
 	// <0>
@@ -1261,17 +1408,22 @@ void scene::select_volume_fog_instances( float4x4 const& vp, vector< volume_fog_
 	// ******
 }
 
-// STATE[STUB]
 void scene::set_slomo( float time_multiplier )
 {
+	m_scene_slomo = time_multiplier;
+
 	// FUNCTION BODY[0x63cee0]: 1
 	// <0x63cee0>|0x000|+0x008:'1010'
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_lines( const u32 add_count )
 {
+	if ( m_line_indices.size( ) + add_count >= s_max_vertex_count )
+		render_lines			( false );
+
+	ASSERT						( m_line_indices.size() + add_count < s_max_vertex_count );
+
 	// FUNCTION BODY[0x63fa30]: 4
 	// <0x63fa30>|0x000|+0x01a:'1015'
 	// <0x63fa4a>|0x01a|+0x007:'1016'
@@ -1280,9 +1432,26 @@ void scene::update_lines( const u32 add_count )
 	// ******
 }
 
-// STATE[STUB]
 void scene::render_lines( bool covering_effect )
 {
+	if ( m_line_vertices.empty( ) ) {
+		ASSERT					( m_line_indices.empty( ), "lines are empty, but not the pairs" );
+		return;
+	}
+
+	ASSERT						( !m_line_indices.empty( ), "lines aren't empty, but not the pairs" );
+
+	system_renderer::ref().draw_lines	(
+		&*m_line_vertices.begin(),
+		&*m_line_vertices.end(),
+		&*m_line_indices.begin(),
+		&*m_line_indices.end(),
+		covering_effect
+	);
+
+	m_line_vertices.resize		( 0 );
+	m_line_indices.resize		( 0 );
+
 	// FUNCTION BODY[0x63f9b0]: 17
 	// <0x63f9b6>|0x006|+0x014:'1023'
 	// <0>
@@ -1304,9 +1473,15 @@ void scene::render_lines( bool covering_effect )
 	// ******
 }
 
-// STATE[STUB]
 void scene::update_triangles( const u32 add_count )
 {
+	R_ASSERT_CMP				( add_count, <=, s_max_vertex_count );
+	R_ASSERT_CMP				( m_triangle_vertices.size(), <=, s_max_vertex_count );
+	if ( m_triangle_vertices.size( ) + add_count >= s_max_vertex_count )
+		render_triangles		( false );
+
+	ASSERT						( m_triangle_vertices.size( ) + add_count < s_max_vertex_count );
+
 	// FUNCTION BODY[0x63f980]: 6
 	// <0>
 	// <1>
@@ -1317,9 +1492,23 @@ void scene::update_triangles( const u32 add_count )
 	// ******
 }
 
-// STATE[STUB]
 void scene::render_triangles( bool covering_effect )
 {
+	if ( m_triangle_vertices.empty( ) )
+		return;
+
+	ASSERT						( ( m_triangle_indices.size( ) % 3 ) == 0, "triangle indices count isn't divisible by 3" );
+
+	system_renderer::ref().draw_triangles	(
+		&*m_triangle_vertices.begin(),
+		&*m_triangle_vertices.end(),
+		&*m_triangle_indices.begin(),
+		&*m_triangle_indices.end(),
+		covering_effect
+	);
+	m_triangle_vertices.resize	( 0 );
+	m_triangle_indices.resize	( 0 );
+
 	// FUNCTION BODY[0x63f900]: 14
 	// <0x63f906>|0x006|+0x016:'1054'
 	// <0>
@@ -1338,9 +1527,19 @@ void scene::render_triangles( bool covering_effect )
 	// ******
 }
 
-// STATE[STUB]
 void scene::draw_lines( vectora< vertex_colored > const& vertices, vectora< u16 > const& indices )
 {
+	ASSERT						( indices.size( ) % 2 == 0 );
+	update_lines				( indices.size( ) );
+
+	u16	const n					= ( u16 ) m_line_vertices.size( );
+	m_line_vertices.insert		( m_line_vertices.end(), vertices.begin( ), vertices.end( ) );
+
+	u16 const*	i				= indices.begin( );
+	u16 const*	e				= indices.end( );
+	for ( ; i != e; ++i )
+		m_line_indices.push_back( n + *i );
+
 	// LOCALS
 	// u16 const* 						e
 	// const u16 						n
@@ -1367,9 +1566,20 @@ void scene::draw_lines( vectora< vertex_colored > const& vertices, vectora< u16 
 	// ******
 }
 
-// STATE[STUB]
 void scene::draw_triangles( vectora< vertex_colored > const& vertices, vectora< u16 > const& indices )
 {
+	update_triangles			( indices.size( ) );
+
+	u16	const n					= ( u16 ) m_triangle_vertices.size( );
+	m_triangle_vertices.insert	( m_triangle_vertices.end(), vertices.begin( ), vertices.end( ) );
+
+	u16 const*	i				= indices.begin( );
+	u16 const*	e				= indices.end( );
+	for ( ; i != e; ++i )
+		m_triangle_indices.push_back( n + *i );
+
+	ASSERT						( ( m_triangle_indices.size( ) % 3 ) == 0, "triangle indices count isn't divisible by 3" );
+
 	// LOCALS
 	// u16 const* 						e
 	// const u16 						n
@@ -1397,13 +1607,30 @@ void scene::draw_triangles( vectora< vertex_colored > const& vertices, vectora< 
 	// ******
 }
 
-// STATE[STUB]
 void scene::flush(
 	boost::function< void( bool ) > const&	on_draw_scene,
 	bool	all_depth_used,
 	bool	all_depth_unused
 )
 {
+	backend::ref().reset_depth_stencil_target();
+
+	on_draw_scene				( true );
+	render_lines				( false );
+	render_triangles			( false );
+
+	backend::ref().reset_depth_stencil_target	( );
+	backend::ref().clear_depth_stencil			( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);
+
+	// render selected models
+	system_renderer::ref().draw_render_models_selection				( m_selected_models );
+	system_renderer::ref().draw_particle_system_instance_selections	( m_particle_system_instances );
+	system_renderer::ref().draw_speedtree_instance_selections		( m_speedtree_instances );
+
+	on_draw_scene				( false );
+	render_lines				( true );
+	render_triangles			( true );
+
 	// FUNCTION BODY[0x63fe70]: 33
 	// <0x63fe70>|0x000|+0x00d:'1101'
 	// <0>
@@ -1441,9 +1668,19 @@ void scene::flush(
 	// ******
 }
 
-// STATE[STUB]
 void scene::select_model( render_model_instance_impl_ptr const& instance, const bool is_selected )
 {
+	vector< render_model_instance_impl_ptr >::iterator found	= std::find( m_selected_models.begin(), m_selected_models.end(), instance );
+	if ( found == m_selected_models.end() )
+	{
+		if ( is_selected )
+			m_selected_models.push_back		( instance );
+		return;
+	}
+
+	if ( !is_selected )
+		m_selected_models.erase				( found );
+
 	// FUNCTION BODY[0x63e980]: 10
 	// <0x63e982>|0x002|+0x016:'1166'
 	// <0x63e998>|0x018|+0x004:'1167'

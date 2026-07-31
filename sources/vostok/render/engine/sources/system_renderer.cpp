@@ -1,5 +1,27 @@
 #include "pch.h"
 #include "system_renderer.h"
+#include "help_math.h"
+
+#include <vostok/particle/world.h>
+#include <vostok/render/core/backend.h>
+#include <vostok/render/core/effect_manager.h>
+#include <vostok/render/core/effect_options_descriptor.h>
+#include <vostok/render/core/res_effect.h>
+#include <vostok/render/core/resource_manager.h>
+
+#include "aabb_indices.h"
+#include "effect_editor_model_ghost.h"
+#include "effect_editor_selection.h"
+#include "effect_particle_selection.h"
+#include "effect_speedtree_selection.h"
+#include "effect_system_colored.h"
+#include "effect_system_line.h"
+#include "effect_system_ui.h"
+#include "effect_wireframe_colored.h"
+#include "render_particle_emitter_instance.h"
+#include "renderer_context.h"
+#include "scene.h"
+#include "stage_particles.h"
 
 namespace vostok {
 namespace render {
@@ -14,7 +36,16 @@ struct vertex_colored_sl {
 
 STATIC_SIZE_ASSERT( vertex_colored_sl, 0x24 );
 
-// STATE[STUB]
+//TODO: not here
+const D3D_INPUT_ELEMENT_DESC F_L_sl[] =
+{
+	{"POSITION",	0, DXGI_FORMAT_R32G32B32_FLOAT,	0, 0,	D3D_INPUT_PER_VERTEX_DATA, 0},
+	{"COLOR",		0, DXGI_FORMAT_R8G8B8A8_UNORM,	0, 12,	D3D_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	0, DXGI_FORMAT_R32G32B32_FLOAT,	0, 16,	D3D_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	1, DXGI_FORMAT_R32_FLOAT,		0, 28,	D3D_INPUT_PER_VERTEX_DATA, 0},
+	{"TEXCOORD",	2, DXGI_FORMAT_R32_UINT,		0, 32,	D3D_INPUT_PER_VERTEX_DATA, 0},
+};
+
 system_renderer::system_renderer( renderer_context* renderer_context ) :
 	m_cook_data_to_delete		( 0 ),
 	m_selection_color			( 0.0f, 0.0f, 0.5f, 1.0f ),
@@ -34,16 +65,84 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 	m_color_write				( true ),
 	m_rotation_mode_ref_value	( 0 )
 {
+	ASSERT						( m_renderer_context );
+
+	m_renderer_context->m_quad_ib			= create_quad_ib( );
+	m_renderer_context->m_g_quad_uv			= resource_manager::ref( ).create_geometry( vertex_formats::F_TL, array_size( vertex_formats::F_TL ), sizeof( vertex_formats::TL ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
+	m_renderer_context->m_g_quad_2uv		= resource_manager::ref( ).create_geometry( vertex_formats::F_TL2uv, array_size( vertex_formats::F_TL2uv ), sizeof( vertex_formats::TL2uv ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
+	m_renderer_context->m_g_quad_eye_ray	= resource_manager::ref( ).create_geometry( vertex_formats::F_Tquad, array_size( vertex_formats::F_Tquad ), sizeof( vertex_formats::Tquad ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
+
+	m_colored_geom		= resource_manager::ref( ).create_geometry( vertex_formats::F_L, array_size( vertex_formats::F_L ), sizeof( vertex_formats::L ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
+
+	m_colored_geom_sl	= resource_manager::ref( ).create_geometry( F_L_sl, array_size( F_L_sl ), sizeof( vertex_colored_sl ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
+
+	effect_manager::ref( ).create_effect< effect_system_colored >( &m_sh_vcolor );
+
+	effect_manager::ref( ).create_effect< effect_system_line >( &m_sh_sl );
+	m_grid_density_constant		= backend::ref( ).register_constant_host( "grid_density", rc_float );
+	m_ui_geom					= resource_manager::ref( ).create_geometry( vertex_formats::F_TL, array_size( vertex_formats::F_TL ), sizeof( vertex_formats::TL ), m_vertex_stream.buffer( ), *m_renderer_context->m_quad_ib );
+
+	pvoid buffer				= ALLOCA( 1 * Kb );
+	effect_options_descriptor	desc( buffer, 1 * Kb );
+	desc["ui_texture0"]			= "ui/ui_font_arial_21_1024";
+	desc["ui_texture1"]			= "ui/ui_skull";
+
+	effect_manager::ref( ).create_effect< effect_system_ui >( &m_sh_ui, desc );
+	m_WVP_sl					= backend::ref( ).register_constant_host( "m_WVP_sl", rc_float );
+
+	// Setup selection shader and color constant.
+
+	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "selection_color", &m_current_selection_color ) );
+	effect_manager::ref( ).create_effect< effect_wireframe_colored >( &m_notexture_shader );
+
+	effect_manager::ref( ).create_effect< effect_speedtree_selection >( &m_speedtree_selection_shader );
+
+	for ( u32 i = 0; i < num_vertex_input_types; i++ )
+	{
+		if ( i == post_process_vertex_input_type )
+			continue;
+
+		u8 data[Kb];
+		effect_options_descriptor desc( data, Kb );
+		desc["vertex_input_type"] = ( enum_vertex_input_type )i;
+
+		effect_manager::ref( ).create_effect< effect_editor_selection >( &m_editor_selection_shader[i], desc );
+	}
+
+	effect_manager::ref( ).create_effect< effect_editor_model_ghost >( &m_editor_model_ghost_shader );
+
+	effect_manager::ref( ).create_effect< effect_particle_selection >( &m_sh_particle_selection );
+
+	m_c_start_corner = backend::ref( ).register_constant_host( "start_corner", rc_float );
 }
 
-// STATE[STUB]
 untyped_buffer* system_renderer::create_quad_ib( )
 {
 	// LOCALS
 	// u16[24576] 						indices
 	// ******
 
-	return NULL;
+	const u32 quad_count	= 4 * 1024;
+	const u32 idx_count		= quad_count * 2 * 3;
+
+	u16	indices[idx_count];
+
+	int		vertex_id	= 0;
+	int		idx			= 0;
+	for ( int i = 0; i < quad_count; ++i )
+	{
+		indices[idx++] = u16( vertex_id + 0 );
+		indices[idx++] = u16( vertex_id + 1 );
+		indices[idx++] = u16( vertex_id + 2 );
+
+		indices[idx++] = u16( vertex_id + 3 );
+		indices[idx++] = u16( vertex_id + 2 );
+		indices[idx++] = u16( vertex_id + 1 );
+
+		vertex_id += 4;
+	}
+
+	return resource_manager::ref( ).create_buffer( idx_count * sizeof( u16 ), indices, enum_buffer_type_index, false, false );
 
 	// FUNCTION BODY[0x6449a0]: 28
 	// <0>
@@ -77,10 +176,25 @@ untyped_buffer* system_renderer::create_quad_ib( )
 	// ******
 }
 
-// STATE[STUB]
 bool system_renderer::is_effects_ready( ) const
 {
-	return false;
+	for ( u32 i = 0; i < num_vertex_input_types; i++ )
+	{
+		if ( i == post_process_vertex_input_type )
+			continue;
+
+		if ( m_editor_selection_shader[i].c_ptr( ) == NULL )
+			return false;
+	}
+
+	return
+		   m_sh_vcolor.c_ptr( ) != NULL
+		&& m_sh_ui.c_ptr( ) != NULL
+		&& m_sh_sl.c_ptr( ) != NULL
+		&& m_editor_model_ghost_shader.c_ptr( ) != NULL
+		&& m_speedtree_selection_shader.c_ptr( ) != NULL
+		&& m_notexture_shader.c_ptr( ) != NULL
+		&& m_sh_particle_selection.c_ptr( ) != NULL;
 
 	// FUNCTION BODY[0x644700]: 17
 	// <0x644700>|0x000|+0x012:'254'
@@ -107,7 +221,6 @@ bool system_renderer::is_effects_ready( ) const
 	// ******
 }
 
-// STATE[STUB]
 system_renderer::~system_renderer( )
 {
 	// FUNCTION BODY[0x644e70]: 1
@@ -115,15 +228,15 @@ system_renderer::~system_renderer( )
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::set_w( float4x4 const& m )
 {
+	m_renderer_context->set_w( m );
+
 	// FUNCTION BODY[0x644990]: 1
 	// <0x644990>|0x000|+0x009:'293'
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_lines(
 	vertex_colored const* const		vertices_begin,
 	vertex_colored const* const		vertices_end,
@@ -136,6 +249,35 @@ void system_renderer::draw_lines(
 	// u32 								ioffset
 	// u32 								voffset
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	R_ASSERT_CMP( vertices_begin, <, vertices_end );
+	R_ASSERT_CMP( indices_begin,  <, indices_end );
+
+	// Prepare vertex buffer.
+	vertex_colored* vbuffer;
+	u32 voffset;
+	u32 const vertices_size	= vertices_end - vertices_begin;
+	m_vertex_stream.lock	( vertices_size, &vbuffer, voffset );
+	memory::copy			( vbuffer, vertices_size * sizeof( vertex_colored ), vertices_begin, vertices_size * sizeof( vertex_colored ) );
+	m_vertex_stream.unlock	( );
+
+	// Prepare index buffer
+	u32 ioffset;
+	u32 const indices_size	= indices_end - indices_begin;
+	u16* ibuffer			= (u16*)m_index_stream.lock( indices_size, ioffset );
+	memory::copy			( ibuffer, indices_size * sizeof( u16 ), indices_begin, indices_size * sizeof( u16 ) );
+	m_index_stream.unlock	( );
+	m_colored_geom->apply	( );
+
+	if ( covering_effect )
+		m_sh_vcolor->apply	( effect_system_colored::cover, 0 );
+	else
+		m_sh_vcolor->apply	( 0, 0 );
+
+	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_LINELIST, indices_size, ioffset /* ? */, voffset );
 
 	// FUNCTION BODY[0x646460]: 28
 	// <0x646467>|0x007|+0x016:'326'
@@ -169,7 +311,6 @@ void system_renderer::draw_lines(
 	// ******
 }
 
-// STATE[STUB]
 float2 clip_2_screen(
 	float3 const&		world_pixel,
 	float4x4 const&		wvpMatrix,
@@ -181,7 +322,22 @@ float2 clip_2_screen(
 	// float4 							result
 	// ******
 
-	return vostok::math::float2(1., 1.);
+	float4 result = wvpMatrix.transform( float4( world_pixel, 1.0f ) );
+
+	if ( math::is_zero( result.elements[3], math::epsilon_5 ) )
+		result.elements[3]	= math::epsilon_3;
+
+	result = result * ( 1.0f / result.elements[3] );
+
+	result.elements[0] *= 0.5f;
+	result.elements[1] *= -0.5f;
+
+	result = result + float4( 0.5f, 0.5f, 0.0f, 0.0f );
+
+	result.elements[0] *= screen_width;
+	result.elements[1] *= screen_height;
+
+	return float2( result.elements[0], result.elements[1] );
 
 	// FUNCTION BODY[0x6447d0]: 16
 	// <0x6447d3>|0x003|+0x0b1:'358'
@@ -203,27 +359,19 @@ float2 clip_2_screen(
 	// ******
 }
 
-// STATE[STUB]
-float frac( float f )
-{
-	return 0.0f;
+static u8 pattern_length = 8;
 
-	// FUNCTION BODY[0x6446f0]: 1
-	// <0x6446f0>|0x000|+0x00c:'380'
-	// ******
-}
+// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x6446f0])
 
-// STATE[STUB]
 u8 calc_pattern( float2 const& begin, float2 const& end )
 {
-	return 0;
+	return static_cast_checked< u8 >( frac( math::max( math::abs( end.elements[0] - begin.elements[0] ), math::abs( end.elements[1] - begin.elements[1] ) ) / (float)pattern_length ) * ( (float)pattern_length ) );
 
 	// FUNCTION BODY[0x644770]: 1
 	// <0x644776>|0x006|+0x048:'385'
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_screen_lines(
 	float3 const*			points,
 	u32						count,
@@ -249,6 +397,78 @@ void system_renderer::draw_screen_lines(
 	// float3 							current_point
 	// float2 							screen_start
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	ASSERT( count > 0 );
+
+	VOSTOK_UNREFERENCED_PARAMETER( width );
+
+	// Vertices already in world space.
+	float4x4 wvpMatrix = is_screen_space_coord ? float4x4( ).identity( ) : math::mul4x4( m_renderer_context->get_v( ), m_renderer_context->get_p( ) );
+
+	u32 screen_width	= backend::ref( ).target_width( );
+	u32 screen_height	= backend::ref( ).target_height( );
+
+	u32 u32_color		= color.m_value;
+	u32 vertex_count	= count * 2 - 2;
+
+	// Prepare index buffer
+	u32 ioffset;
+	u16* ibuffer = (u16*)m_index_stream.lock( vertex_count, ioffset );
+
+	// Prepare vertex buffer
+	vertex_colored_sl* vbuffer;
+	u32 voffset;
+	m_vertex_stream.lock( vertex_count, &vbuffer, voffset );
+
+	float shift = 0.0f;
+
+	for ( u32 i = 1; i < count; ++i )
+	{
+		float3 const&			start_point		= points[ i - 1 ],
+								current_point	= points[ i ];
+
+		vertex_colored_sl&		line_begin		= *vbuffer++;
+		vertex_colored_sl&		line_end		= *vbuffer++;
+
+		line_begin.position = start_point;
+		line_begin.color = u32_color;
+		line_begin.begin_line_position = start_point;
+
+		line_begin.shift = line_end.shift = shift;
+		line_begin.pattern = line_end.pattern = pattern;
+
+		float2 screen_start	= clip_2_screen( start_point, wvpMatrix, screen_width, screen_height );
+		float2 screen_end	= clip_2_screen( current_point, wvpMatrix, screen_width, screen_height );
+
+		shift = shift + calc_pattern( screen_start, screen_end );
+
+		if ( (u32)shift >= pattern_length )
+			shift = shift - pattern_length;
+
+		line_end.position = current_point;
+		line_end.color = u32_color;
+		line_end.begin_line_position = start_point;
+
+		*ibuffer++ = static_cast_checked< u16 >( i * 2 - 2 );
+		*ibuffer++ = static_cast_checked< u16 >( i * 2 - 1 );
+	}
+
+	m_vertex_stream.unlock	( );
+	m_index_stream.unlock	( );
+
+	m_colored_geom_sl->apply( );
+
+	if ( use_depth )
+		m_sh_sl->apply		( effect_system_line::z_enabled, 0 );
+	else
+		m_sh_sl->apply		( effect_system_line::z_disabled, 0 );
+
+	backend::ref( ).set_vs_constant( m_WVP_sl, transpose( wvpMatrix ) );
+
+	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_LINELIST, vertex_count, ioffset, voffset );
 
 	// FUNCTION BODY[0x646070]: 72
 	// <0x64607d>|0x00d|+0x014:'390'
@@ -328,7 +548,6 @@ void system_renderer::draw_screen_lines(
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_3D_point(
 	float3 const&			position,
 	float					width,
@@ -359,6 +578,58 @@ void system_renderer::draw_3D_point(
 	// 	colored_indices_type;
 
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	VOSTOK_UNREFERENCED_PARAMETER( use_depth );
+
+	u32 screen_width	= backend::ref( ).target_width( );
+
+	float4x4 view_matrix = m_renderer_context->get_v( ),
+			 proj_matrix = m_renderer_context->get_p( );
+
+	float4x4 inv_view_proj_matrix = math::mul4x4( view_matrix, proj_matrix );
+
+	inv_view_proj_matrix.try_invert( inv_view_proj_matrix );
+
+	float4x4 inv_view_matrix = view_matrix;
+	inv_view_matrix.try_invert( inv_view_matrix );
+
+	// Distance to view pos.
+	float dist = ( float3( inv_view_matrix.e30, inv_view_matrix.e31, inv_view_matrix.e32 ) - position ).length( );
+
+	// Calc quad vertex offsets.
+	float3 offset_by_x = inv_view_proj_matrix.transform_direction( float3( 1000, 0, 0 ) ).normalize( ) * 1.0f / (float)screen_width * width * 0.5f * dist,
+		   offset_by_y = inv_view_proj_matrix.transform_direction( float3( 0, -1000, 0 ) ).normalize( ) * 1.0f / (float)screen_width * width * 0.5f * dist;
+
+	float3 quad_position[4] = {
+		position - offset_by_x - offset_by_y,
+		position - offset_by_x + offset_by_y,
+		position + offset_by_x + offset_by_y,
+		position + offset_by_x - offset_by_y
+	};
+
+	typedef fixed_vector< vertex_colored, 4 >	colored_vertices_type;
+	typedef fixed_vector< u16, 6 >				colored_indices_type;
+	colored_vertices_type vertices;
+	colored_indices_type indices;
+
+	// Setup vertices.
+	for ( u32 i = 0; i < 4; ++i )
+		vertices.push_back	( vertex_colored( quad_position[i], color ) );
+
+	// Setup indices.
+	indices.push_back(2); indices.push_back(1); indices.push_back(0);
+	indices.push_back(3); indices.push_back(2); indices.push_back(0);
+
+	draw_triangles(
+		&*vertices.begin( ),
+		&*vertices.end( ),
+		&*indices.begin( ),
+		&*indices.end( ),
+		false
+	);
 
 	// FUNCTION BODY[0x645a60]: 50
 	// <0x645a60>|0x000|+0x022:'466'
@@ -489,12 +760,33 @@ void system_renderer::fill_surface(
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& color )
 {
 	// LOCALS
 	// vertex_colored[8] 				vertices
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	vertex_colored vertices[] = {
+		vertex_colored( aabb.min, color ),
+		vertex_colored( float3( aabb.min.x, aabb.min.y, aabb.max.z ), color ),
+		vertex_colored( float3( aabb.min.x, aabb.max.y, aabb.min.z ), color ),
+		vertex_colored( float3( aabb.max.x, aabb.min.y, aabb.min.z ), color ),
+		vertex_colored( float3( aabb.min.x, aabb.max.y, aabb.max.z ), color ),
+		vertex_colored( float3( aabb.max.x, aabb.min.y, aabb.max.z ), color ),
+		vertex_colored( float3( aabb.max.x, aabb.max.y, aabb.min.z ), color ),
+		vertex_colored( aabb.max, color ),
+	};
+
+	draw_lines	(
+		vertices,
+		vertices + array_size( vertices ),
+		aabb_indices,
+		aabb_indices + array_size( aabb_indices ),
+		false
+	);
 
 	// FUNCTION BODY[0x6465a0]: 20
 	// <0x6465a6>|0x006|+0x00d:'576'
@@ -520,7 +812,6 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_triangles(
 	vertex_colored const* const		vertices_begin,
 	vertex_colored const* const		vertices_end,
@@ -533,6 +824,47 @@ void system_renderer::draw_triangles(
 	// u32 								ioffset
 	// u32 								voffset
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	R_ASSERT_CMP( vertices_begin, <, vertices_end );
+	R_ASSERT_CMP( indices_begin,  <, indices_end );
+
+	// Prepare ill vertex buffer.
+	u32 voffset;
+	u32 const vertices_size	= vertices_end - vertices_begin;
+	vertex_colored* vbuffer	= (vertex_colored*)m_vertex_stream.lock( vertices_size, sizeof( vertex_colored ), voffset );
+	memory::copy			( vbuffer, vertices_size * sizeof( vertex_colored ), vertices_begin, vertices_size * sizeof( vertex_colored ) );
+	m_vertex_stream.unlock	( );
+
+	// Prepare index buffer
+	u32 ioffset;
+	u32 const indices_size	= indices_end - indices_begin;
+	u16* ibuffer			= (u16*)m_index_stream.lock( indices_size, ioffset );
+	memory::copy			( ibuffer, indices_size * sizeof( u16 ), indices_begin, indices_size * sizeof( u16 ) );
+	m_index_stream.unlock	( );
+
+	m_colored_geom->apply	( );
+
+	if ( covering_effect )
+	{
+		m_sh_vcolor->apply		( effect_system_colored::cover, 0 );
+	}
+	else
+	{
+		if ( !m_color_write )
+			m_sh_vcolor->apply		( effect_system_colored::voided, 0 );
+		else
+		if ( !m_grid_mode )
+			m_sh_vcolor->apply		( effect_system_colored::solid, 0 );
+		else
+			m_sh_vcolor->apply		( effect_system_colored::stenciled, 0 );
+	}
+
+	backend::ref( ).set_ps_constant( m_grid_density_constant, m_grid_density );
+
+	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices_size, ioffset /* ? */, voffset );
 
 	// FUNCTION BODY[0x6457c0]: 47
 	// <0x6457cd>|0x00d|+0x00f:'630'
@@ -585,7 +917,6 @@ void system_renderer::draw_triangles(
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_ui_vertices(
 	vertex_formats::TL const*		vertices,
 	u32 const&						count,
@@ -596,6 +927,45 @@ void system_renderer::draw_ui_vertices(
 	// LOCALS
 	// u32 								v_offset
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	u32 v_offset;
+	vertex_formats::TL* vbuffer;
+	m_vertex_stream.lock	( count, &vbuffer, v_offset );
+	memory::copy			( vbuffer, count * sizeof( vertex_formats::TL ), vertices, count * sizeof( vertex_formats::TL ) );
+	m_vertex_stream.unlock	( );
+
+	m_ui_geom->apply( );
+
+	if ( prim_type == 0 )
+	{
+		if ( point_type == 0 )
+			m_sh_ui->apply( effect_system_ui::ui_font, 0 );
+
+		else if ( point_type == 1 )
+			m_sh_ui->apply( effect_system_ui::ui, 0 );
+
+		else if ( point_type == 2 )
+			m_sh_ui->apply( effect_system_ui::ui_fill, 0 );
+
+		else
+			UNREACHABLE_CODE();
+
+		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 3 * count / 2, 0, v_offset );
+
+	}
+	else if ( prim_type == 1 )
+	{
+		m_sh_ui->apply( effect_system_ui::ui_line_strip, 0 );
+
+		backend::ref( ).render( D3D_PRIMITIVE_TOPOLOGY_LINESTRIP, count, v_offset );
+	}
+	else
+	{
+		UNREACHABLE_CODE();
+	}
 
 	// FUNCTION BODY[0x645680]: 39
 	// <0x64568c>|0x00c|+0x00f:'697'
@@ -641,7 +1011,6 @@ void system_renderer::draw_ui_vertices(
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_render_models_selection( vector< render_model_instance_impl_ptr >& render_models )
 {
 	// LOCALS
@@ -651,6 +1020,25 @@ void system_renderer::draw_render_models_selection( vector< render_model_instanc
 	// CALL SITE INFO
 	// <0x6469b2> -> math::aabb < unknown >()
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	math::aabb draw_box = math::create_invalid_aabb( );
+
+	for ( vector< render_model_instance_impl_ptr >::iterator it = render_models.begin( ), it_end = render_models.end( ); it != it_end; ++it )
+		draw_box.modify				( ( *it )->get_aabb( ) );
+
+	m_current_selection_color		= m_selection_color * math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
+	draw_aabb						(
+		draw_box,
+		math::color(
+			m_current_selection_color.x,
+			m_current_selection_color.y,
+			m_current_selection_color.z,
+			1.0f
+		)
+	);
 
 	// FUNCTION BODY[0x646910]: 44
 	// <0x64691b>|0x00b|+0x011:'1003'
@@ -700,7 +1088,6 @@ void system_renderer::draw_render_models_selection( vector< render_model_instanc
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_particle_system_instance_selections( vector< resources::unmanaged_resource_ptr > const& instances )
 {
 	// LOCALS
@@ -723,6 +1110,72 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x634389 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
 	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x634390 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1") })
 	// ******
+
+	if ( instances.empty( ) )
+		return;
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	if ( !m_renderer_context->scene( ) )
+		return;
+
+	if ( !m_renderer_context->scene( )->particle_world( ) )
+		return;
+
+	m_current_selection_color	= m_selection_color *
+								  math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
+
+	// TODO: LODs?
+
+	particle::world* part_world	= m_renderer_context->scene( )->particle_world( );
+
+	for ( vector< resources::unmanaged_resource_ptr >::const_iterator instance_it = instances.begin( );
+																	  instance_it != instances.end( );
+																	  ++instance_it )
+	{
+		particle::render_particle_emitter_instances_type emitters( g_allocator );
+
+		part_world->get_render_emitter_instances( *instance_it, emitters );
+
+		for ( particle::render_particle_emitter_instances_type::const_iterator it = emitters.begin( ); it != emitters.end( ); ++it )
+		{
+			render::render_particle_emitter_instance*	instance		= static_cast< render::render_particle_emitter_instance* >( *it );
+
+			u32 const									num_particles	= instance->get_num_particles( );
+
+			if ( !num_particles )
+				continue;
+
+			switch ( instance->vertex_type( ) ) {
+				case particle::particle_vertex_type_billboard:
+					m_sh_particle_selection->apply( effect_particle_selection::billboard, 0 );
+					break;
+
+				case particle::particle_vertex_type_billboard_subuv:
+					m_sh_particle_selection->apply( effect_particle_selection::billboard_subuv, 0 );
+					break;
+
+				case particle::particle_vertex_type_trail:
+				case particle::particle_vertex_type_beam:
+					m_sh_particle_selection->apply( effect_particle_selection::beamtrail, 0 );
+					break;
+			}
+
+			particle_shader_constants::ref( ).set(
+				m_renderer_context->get_v_inverted( ).transform_direction( float3( 0, 1000, 0 ) ).normalize( ),
+				m_renderer_context->get_v_inverted( ).transform_direction( float3( 1000, 0, 0 ) ).normalize( ),
+				m_renderer_context->get_v_inverted( ).lines[3].xyz( ),
+				instance->locked_axis( ),
+				instance->screen_alignment( )
+				);
+			particle_shader_constants::ref( ).set_time( m_renderer_context->m_current_time );
+
+			m_renderer_context->set_w( instance->transform( ) );
+
+			instance->render( m_renderer_context->get_v_inverted( ).lines[3].xyz( ), num_particles );
+		}
+	}
 
 	// FUNCTION BODY[0x6451f0]: 80
 	// <0x6451f0>|0x000|+0x01a:'1070'
@@ -808,12 +1261,36 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 	// ******
 }
 
-// STATE[STUB]
 void system_renderer::draw_speedtree_instance_selections( vector< speedtree_instance_ptr > const& instances )
 {
 	// LOCALS
 	// math::aabb 						draw_box
 	// ******
+
+	if ( !is_effects_ready( ) )
+		return;
+
+	if ( !instances.size( ) )
+		return;
+
+	m_current_selection_color	= m_selection_color *
+								  math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
+
+	for ( vector< speedtree_instance_ptr >::const_iterator it = instances.begin( ); it != instances.end( ); ++it )
+	{
+		math::aabb			draw_box( math::create_zero_aabb( ) );
+		draw_box			= it->c_ptr( )->m_speedtree_tree_ptr->m_bbox;
+		draw_box.modify		( it->c_ptr( )->m_transform );
+
+		draw_aabb			( draw_box,
+			math::color(
+				m_current_selection_color.x,
+				m_current_selection_color.y,
+				m_current_selection_color.z,
+				1.0f
+			)
+		);
+	}
 
 	// FUNCTION BODY[0x646750]: 77
 	// <0x64675a>|0x00a|+0x00f:'1154'
@@ -895,6 +1372,14 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 	// <52>
 	// <53>
 	// ******
+}
+
+// claude@NOTE: no addressed target record (inlined into renderer::render or
+// folded); legacy body is blocked on dropped members (m_terrain_debug_material)
+// - see temp/render_legacy/engine/sources/system_renderer.cpp. Link stub only.
+// STATE[STUB]
+void system_renderer::draw_debug_terrain( )
+{
 }
 
 } // namespace render
