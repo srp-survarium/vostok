@@ -14,8 +14,9 @@ render_cc::render_cc(
 	  m_define_name( define_name ),
 	  m_changes_result( changed_result )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55cdc0]
+	render_next		= options::ref().first_render_command;
+	options::ref().first_render_command = this;
 }
 
 render_cc_bool::render_cc_bool(
@@ -36,7 +37,6 @@ render_cc_bool::render_cc_bool(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b550]
 }
 
@@ -53,11 +53,17 @@ bool render_cc_bool::is_changed( ) const
 	return false;
 }
 
-bool render_cc_bool::fill_macro( shader_macro& ) const
+bool render_cc_bool::fill_macro( shader_macro& out_macro ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b5d0]
-	return false;
+	if (define_name())
+	{
+		out_macro.definition = cc_bool::m_value ? "1" : "0";
+		out_macro.name		 = define_name();
+		return true;
+	}
+	else
+		return false;
 }
 
 render_cc_float::render_cc_float(
@@ -82,7 +88,6 @@ render_cc_float::render_cc_float(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b630]
 }
 
@@ -99,11 +104,17 @@ bool render_cc_float::is_changed( ) const
 	return false;
 }
 
-bool render_cc_float::fill_macro( shader_macro& ) const
+bool render_cc_float::fill_macro( shader_macro& out_macro ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b6c0]
-	return false;
+	if (define_name())
+	{
+		out_macro.definition.assignf("%f", cc_float::m_value);
+		out_macro.name		 = define_name();
+		return true;
+	}
+	else
+		return false;
 }
 
 render_cc_u32::render_cc_u32(
@@ -128,7 +139,6 @@ render_cc_u32::render_cc_u32(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b720]
 }
 
@@ -145,11 +155,17 @@ bool render_cc_u32::is_changed( ) const
 	return false;
 }
 
-bool render_cc_u32::fill_macro( shader_macro& ) const
+bool render_cc_u32::fill_macro( shader_macro& out_macro ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x12b7a0]
-	return false;
+	if (define_name())
+	{
+		out_macro.definition.assignf("%d", cc_u32::m_value);
+		out_macro.name		 = define_name();
+		return true;
+	}
+	else
+		return false;
 }
 
 options::options( )
@@ -157,8 +173,9 @@ options::options( )
 	  first_command( 0 ),
 	  last_command( 0 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f0a0]
+	register_console_commands();
+	set_default_values();
 }
 
 // claude@NOTE: legacy defaults only; target-added table fields (clouds/
@@ -262,10 +279,15 @@ enum_options_changes_result options::end_render_options_changing(
 	return ocr_need_nothing;
 }
 
-void options::on_config_loaded( resources::queries_result& )
+void options::on_config_loaded( resources::queries_result& data )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f350]
+	if( !data.is_successful( ) )
+		return;
+
+	resources::pinned_ptr_const<u8> pinned_data	(data[ 0 ].get_managed_resource( ));
+	memory::reader				F( pinned_data.c_ptr( ), pinned_data.size( ) );
+	load_impl					( F );
 }
 
 bool is_line_term( char a )
@@ -327,10 +349,47 @@ void options::fill_global_macros( shader_defines_list& out_defines )
 	}
 }
 
-void options::load_from_config( configs::binary_config_value const& )
+void options::load_from_config( configs::binary_config_value const& config )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55ce80]
+ 	vostok::console_commands::console_command* command = first_command;
+ 	while (command)
+ 	{
+ 		if (config.value_exists(command->name()))
+ 		{
+			vostok::configs::binary_config_value const& value_config = config[command->name()];
+
+ 			vostok::configs::enum_types type = (vostok::configs::enum_types)value_config.type;
+ 			switch (type)
+ 			{
+ 			case vostok::configs::t_boolean:
+ 				command->execute(
+ 					bool(value_config) ?
+ 					"true" : "false"
+ 					);
+ 				break;
+ 			case vostok::configs::t_float:
+ 				{
+ 					fs_new::virtual_path_string value;
+ 					value.assignf("%f", float(value_config));
+ 					command->execute(value.c_str());
+ 					break;
+ 				}
+ 			case vostok::configs::t_integer:
+ 				{
+ 					fs_new::virtual_path_string value;
+ 					value.assignf("%d", s32(value_config));
+ 					command->execute(value.c_str());
+ 					break;
+ 				}
+ 			default: NODEFAULT();
+ 			};
+ 		}
+
+		if (command == last_command)
+			break;
+ 		command = command->next();
+ 	}
 }
 
 } // namespace render
