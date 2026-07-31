@@ -64,17 +64,17 @@ public:
 	effect_compiler& set_depth(
 		bool enable,
 		bool write_enable,
-		D3D11_COMPARISON_FUNC cmp_func
+		D3D11_COMPARISON_FUNC cmp_func = D3D11_COMPARISON_LESS_EQUAL
 	);
 	effect_compiler& set_stencil(
 		s32 enable,
-		u32 ref,
-		u8 read_mask,
-		u8 write_mask,
-		D3D11_COMPARISON_FUNC func,
-		D3D11_STENCIL_OP fail,
-		D3D11_STENCIL_OP pass,
-		D3D11_STENCIL_OP zfail
+		u32 ref = 0x00,
+		u8 read_mask = 0x00,
+		u8 write_mask = 0x00,
+		D3D11_COMPARISON_FUNC func = D3D11_COMPARISON_ALWAYS,
+		D3D11_STENCIL_OP fail = D3D11_STENCIL_OP_KEEP,
+		D3D11_STENCIL_OP pass = D3D11_STENCIL_OP_KEEP,
+		D3D11_STENCIL_OP zfail = D3D11_STENCIL_OP_KEEP
 	);
 	effect_compiler& set_stencil_ref( u32 ref )
 	{
@@ -83,12 +83,12 @@ public:
 	}
 	effect_compiler& set_alpha_blend(
 		s32 blend_enable,
-		D3D11_BLEND src_blend,
-		D3D11_BLEND dest_blend,
-		D3D11_BLEND_OP blend_op,
-		D3D11_BLEND src_alpha_blend,
-		D3D11_BLEND dest_alpha_blend,
-		D3D11_BLEND_OP blend_alpha_op
+		D3D11_BLEND src_blend = D3D11_BLEND_ONE,
+		D3D11_BLEND dest_blend = D3D11_BLEND_ZERO,
+		D3D11_BLEND_OP blend_op = D3D11_BLEND_OP_ADD,
+		D3D11_BLEND src_alpha_blend = D3D11_BLEND_ONE,
+		D3D11_BLEND dest_alpha_blend = D3D11_BLEND_ZERO,
+		D3D11_BLEND_OP blend_alpha_op = D3D11_BLEND_OP_ADD
 	);
 	effect_compiler& set_cull_mode( D3D11_CULL_MODE mode );
 	effect_compiler& set_alpha_to_coverage( s32 enabled )
@@ -96,7 +96,7 @@ public:
 		m_state_descriptor.set_alpha_to_coverage( enabled );
 		return *this;
 	}
-	effect_compiler& color_write_enable( D3D11_COLOR_WRITE_ENABLE mode );
+	effect_compiler& color_write_enable( D3D11_COLOR_WRITE_ENABLE mode = D3D11_COLOR_WRITE_ENABLE_ALL );
 	effect_compiler& set_fill_mode( D3D11_FILL_MODE fill_mode );
 
 	effect_compiler& def_sampler( pcstr, sampler_state_descriptor& )

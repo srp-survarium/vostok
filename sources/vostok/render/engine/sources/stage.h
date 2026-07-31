@@ -42,25 +42,12 @@ public:
 	{
 	}
 
-	void u_compute_texgen_screen( float4x4& )
-	{
-	}
+	void u_compute_texgen_screen( float4x4& );
+	void u_compute_texgen_jitter( float4x4& );
 
-	void u_compute_texgen_jitter( float4x4& )
-	{
-	}
-
-	static void rm_near( )
-	{
-	}
-
-	static void rm_normal( )
-	{
-	}
-
-	static void rm_far( )
-	{
-	}
+	static void rm_near( );
+	static void rm_normal( );
+	static void rm_far( );
 
 protected:
 	renderer_context*	m_context;
