@@ -45,6 +45,10 @@ public:
 	static void finalize_nomaterial_material( );
 
 private:
+	friend struct material_cook;
+	friend class material_manager;
+	friend class material_effects_instance_cook;
+
 	fixed_string< 128 >		m_material_name;
 	configs::binary_config_ptr	m_config;
 };

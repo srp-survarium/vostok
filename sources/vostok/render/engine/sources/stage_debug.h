@@ -26,7 +26,6 @@ public:
 		m_sphere_geometry				( 16, 16 ),
 		m_preview_mip_index_parameter	( 0 )
 	{
-		// STATE[STUB]
 	}
 
 	virtual ~stage_debug( );

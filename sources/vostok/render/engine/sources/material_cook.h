@@ -42,9 +42,7 @@ private:
 	void on_fs_iterator_ready(
 		vfs::vfs_locked_iterator const&,
 		resources::query_result_for_cook*
-	)
-	{
-	}
+	);
 };
 
 STATIC_SIZE_ASSERT( material_cook, 0x20 );
