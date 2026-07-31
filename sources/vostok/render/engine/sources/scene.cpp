@@ -1,16 +1,20 @@
 #include "pch.h"
 // claude@NOTE: legacy-harvest disposition: every remaining stub is absent from the legacy scene.cpp remainder (only the three select_* helpers survive there; clouds/tracers/probes/sky-AO/ambient-volumes/streaming/portal-system/grass/trample are new-in-target) - matcher-phase work.
 #include "scene.h"
+#include <vostok/console_command.h>
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/facade/common_types.h>
 #include "ambient_volume.h"
+#include "clouds.h"
 #include "environment_probe.h"
 #include "find_by_id_predicate.h"
 #include "grass_world.h"
+#include "material_manager.h"
 #include "moved_object_predicate_helper.h"
+#include "portal_sector_system.h"
 #include "render_particle_emitter_instance.h"
 #include "sky_ambient_occlusion.h"
 #include "speedtree_forest.h"
@@ -19,6 +23,14 @@
 #include "system_renderer.h"
 
 static const u32 s_max_vertex_count	= 64*1024;
+
+static bool s_use_poral_culling_value = true;
+static vostok::console_commands::cc_bool s_use_poral_culling_cc(
+	"r_use_portal_culling",
+	s_use_poral_culling_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
 
 namespace vostok {
 namespace render {
@@ -106,15 +118,10 @@ void scene::particle_engine::destroy( particle::render_particle_emitter_instance
 	// ******
 }
 
-// STATE[STUB]
 base_scene_ptr scene::particle_engine::get_scene( particle::world& world )
 {
-	// FUNCTION BODY[0x63e880]: 2
-	// <0>
-	// <0x63e880>|0x000|+0x019:'91'
-	// ******
 	VOSTOK_UNREFERENCED_PARAMETER( world );
-	return base_scene_ptr( );
+	return base_scene_ptr( m_scene );
 }
 
 scene::scene( scene_configuration const& renderer_configuration ) :
@@ -128,13 +135,10 @@ scene::scene( scene_configuration const& renderer_configuration ) :
 	m_grass				( renderer_configuration.m_create_grass_world ? NEW(grass_world) : NULL ),
 	m_clouds			( NULL ),
 	m_scene_slomo		( 1.0f ),
-	m_use_clouds		( renderer_configuration.m_has_clouds ),
 	m_sky_enabled		( renderer_configuration.m_sky_enabled ),
 	m_use_occlusion_culling( renderer_configuration.m_use_occlusion_culling ),
 	m_portal_system		( NULL )
 {
-	// FUNCTION BODY[0x63f5e0]: 0
-	// ******
 }
 
 scene::~scene( )
@@ -161,73 +165,47 @@ scene::~scene( )
 
 void scene::set_sky_material( material_effects_instance_ptr const& in_material )
 {
-	m_sky_material		= in_material;
+	if ( m_sky_material.c_ptr( ) )
+		material_manager::ref( ).remove_material_effects( m_sky_material );
 
-	// FUNCTION BODY[0x63ebd0]: 7
-	// <0x63ebd3>|0x003|+0x00d:'135'
-	// <0x63ebe0>|0x010|+0x00c:'136'
-	// <0>
-	// <0x63ebec>|0x01c|+0x038:'138'
-	// <0>
-	// <0x63ec24>|0x054|+0x00e:'140'
-	// <0x63ec32>|0x062|+0x013:'141'
-	// ******
+	m_sky_material			= in_material;
+
+	if ( m_sky_material )
+		material_manager::ref( ).add_material_effects( m_sky_material, in_material->get_material_name( ) );
 }
 
-// STATE[STUB]
 void scene::add_clouds( cloud_parameters const& parameters )
 {
-	// FUNCTION BODY[0x63d900]: 6
-	// <0x63d901>|0x001|+0x011:'146'
-	// <0>
-	// <0x63d912>|0x012|+0x016:'148'
-	// <0>
-	// <0x63d928>|0x028|+0x01b:'150'
-	// <0x63d943>|0x043|+0x013:'151'
-	// <0x63d956>|0x056|-0x003:'151'
-	// <0x63d953>|0x053|+0x015:'152'
-	// ******
+	if ( m_clouds )
+	{
+		DELETE				( m_clouds );
+	}
+	m_clouds				= NEW( clouds );
+	m_clouds->initialize	( parameters );
 }
 
-// STATE[STUB]
 void scene::update_clouds( cloud_parameters const& parameters )
 {
-	// FUNCTION BODY[0x63d970]: 8
-	// <0x63d971>|0x001|+0x006:'156'
-	// <0>
-	// <0x63d977>|0x007|+0x00d:'158'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d984>|0x014|-0x001:'162'
-	// <0>
-	// <0x63d983>|0x013|+0x007:'164'
-	// ******
+	if ( !m_clouds )
+	{
+		add_clouds			( parameters );
+		return;
+	}
+
+	m_clouds->initialize	( parameters );
+
 }
 
-// STATE[STUB]
 void scene::remove_clouds( )
 {
-	// FUNCTION BODY[0x63d1c0]: 3
-	// <0x63d1c1>|0x001|+0x019:'168'
-	// <0>
-	// <0x63d1da>|0x01a|+0x007:'170'
-	// ******
+	DELETE					( m_clouds );
+
+	m_clouds				= NULL;
 }
 
-// STATE[STUB]
 void scene::build_lpv_geometry( )
 {
-	// CALL SITE INFO
-	// <0x63cf45> -> void < unknown >( vector< render_model_instance_impl_ptr >& )
-	// ******
-
-	// FUNCTION BODY[0x63cf30]: 4
-	// <0x63cf30>|0x000|+0x017:'180'
-	// <0>
-	// <1>
-	// <2>
-	// ******
+	m_lpv_geometry.build	( m_render_model_instances );
 }
 
 // STATE[STUB]
@@ -415,51 +393,29 @@ void scene::populate_speedtree_forest( )
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_tracer( tracer_model_instance_ptr const& instance, float4x4 const& initialize_transform )
 {
-	// FUNCTION BODY[0x63e920]: 8
-	// <0>
-	// <1>
-	// <0x63e922>|0x002|+0x011:'316'
-	// <0x63e933>|0x013|+0x03f:'317'
-	// <0x63e972>|0x052|-0x005:'317'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63e96d>|0x04d|+0x00c:'322'
-	// ******
+	instance->m_transform		= initialize_transform;
+	m_tracers.push_back			( instance );
 }
 
-// STATE[STUB]
 void scene::update_tracer( tracer_model_instance_ptr const& instance, float4x4 const& new_transform )
 {
-	// FUNCTION BODY[0x63cf60]: 9
-	// <0x63cf61>|0x001|+0x014:'326'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63cf75>|0x015|+0x015:'330'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
+	vector< tracer_model_instance_ptr >::iterator	it	= std::find( m_tracers.begin( ), m_tracers.end( ), instance );
+	ASSERT						( it != m_tracers.end( ) );
+
+	( *it )->m_transform		= new_transform;
+
 }
 
-// STATE[STUB]
 void scene::remove_tracer( tracer_model_instance_ptr const& instance )
 {
-	// FUNCTION BODY[0x63e850]: 7
-	// <0x63e852>|0x002|+0x016:'339'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x63e868>|0x018|+0x009:'345'
-	// ******
+	vector< tracer_model_instance_ptr >::iterator	it	= std::find( m_tracers.begin( ), m_tracers.end( ), instance );
+	ASSERT						( it != m_tracers.end( ) );
+
+
+
+	m_tracers.erase				( it );
 }
 
 // STATE[STUB]
@@ -651,17 +607,12 @@ void scene::process_streaming(
 	// ******
 }
 
-// STATE[STUB]
 void scene::add_trample( trample_desc const& desc )
 {
-	// FUNCTION BODY[0x63d3d0]: 4
-	// <0x63d3d0>|0x000|+0x00b:'510'
-	// <0>
-	// <1>
-	// <0x63d3db>|0x00b|+0x02c:'513'
-	// <0x63d407>|0x037|-0x001:'513'
-	// <0x63d406>|0x036|+0x008:'514'
-	// ******
+	if ( !m_grass )
+		return;
+
+	m_grass->add_trample	( desc );
 }
 
 // STATE[STUB]
@@ -819,21 +770,7 @@ void scene::add_model( render_model_instance_impl_ptr v )
 	m_render_model_instances.push_back		( v );
 	m_models_tree->insert( &v->m_collision_object, v->transform() );
 
-	// CALL SITE INFO
-	// <0x63eb70> -> void < unknown >( collision::object*, float4x4 const& )
-	// ******
-
-	// FUNCTION BODY[0x63eb00]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <0x63eb01>|0x001|+0x058:'630'
-	// <0x63eb59>|0x059|+0x019:'631'
-	// <0>
-	// <0x63eb72>|0x072|+0x031:'633'
-	// <0>
-	// <1>
-	// ******
+	gather_streamable_textures				( v, false );
 }
 
 void scene::modify_model( render_model_instance_impl_ptr v )
@@ -841,20 +778,7 @@ void scene::modify_model( render_model_instance_impl_ptr v )
 	R_ASSERT					( std::find(m_render_model_instances.begin(), m_render_model_instances.end(), v) != m_render_model_instances.end());
 	m_models_tree->move			( &v->m_collision_object, v->transform() );
 
-	// CALL SITE INFO
-	// <0x63e8be> -> void < unknown >( collision::object*, float4x4 const& )
-	// ******
-
-	// FUNCTION BODY[0x63e8a0]: 8
-	// <0>
-	// <1>
-	// <2>
-	// <0x63e8a1>|0x001|+0x01f:'643'
-	// <0>
-	// <1>
-	// <0x63e8c0>|0x020|+0x031:'646'
-	// <0>
-	// ******
+	gather_streamable_textures	( v, true );
 }
 
 void scene::remove_model( render_model_instance_impl_ptr v )
@@ -864,42 +788,18 @@ void scene::remove_model( render_model_instance_impl_ptr v )
 	m_models_tree->erase		( &v->m_collision_object);
 	m_render_model_instances.erase	( it );
 
-	// CALL SITE INFO
-	// <0x63ea9c> -> void < unknown >( collision::object* )
-	// ******
-
-	// FUNCTION BODY[0x63ea60]: 8
-	// <0x63ea66>|0x006|+0x01e:'652'
-	// <0>
-	// <1>
-	// <0x63ea84>|0x024|+0x01a:'655'
-	// <0x63ea9e>|0x03e|+0x007:'656'
-	// <0>
-	// <0x63eaa5>|0x045|+0x028:'658'
-	// <0>
-	// ******
+	select_model				( v, false );
 }
 
-// STATE[STUB]
 void scene::unmove_all_models( )
 {
-	// CALL SITE INFO
-	// <0x63cefb> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x63cef0]: 0
-	// ******
+	m_models_tree->unmove_all	( );
 }
 
-// STATE[STUB]
 void moved_object_predicate_helper::check_object( collision::object const& obj )
 {
-	// FUNCTION BODY[0x69180]: 2
-	// <0x69180>|0x000|+0x00b:'676'
-	// <0x6918b>|0x00b|+0x018:'677'
-	// <0x691a3>|0x023|-0x003:'677'
-	// <0x691a0>|0x020|+0x00f:'678'
-	// ******
+	if ( obj.is_moved( ) )
+		m_array.push_back		( &obj );
 }
 
 void scene::select_models(
@@ -913,106 +813,50 @@ void scene::select_models(
 	if (!options::ref().current.m_enabled_draw_models)
 		return;
 
-	BEGIN_TIMER(statistics::ref().visibility_stat_group.culling_time);
-
-	if(options::ref().current.m_enabled_draw_models)
+	if ( m_portal_system && s_use_poral_culling_value )
 	{
-		math::frustum view_frustum (mat_vp);
+		select_models_via_sectors		( mat_vp, view_pos, selection );
 
-		selection.clear();
+		if ( !selection.empty( ) )
+			return;
+	}
 
-		collision::objects_type query_result(render::g_allocator);
+
+
+	math::frustum view_frustum (mat_vp);
+
+	selection.clear();
+
+	collision::objects_type query_result(render::g_allocator);
+
+	if ( moved_only )
+	{
+		moved_object_predicate_helper						helper( query_result );
+		boost::function< void ( collision::object const& ) >	callback =
+			boost::bind( &moved_object_predicate_helper::check_object, &helper, _1 );
+
+		m_models_tree->cuboid_query( u32(-1), view_frustum, callback);
+	}
+	else
 		m_models_tree->cuboid_query( u32(-1), view_frustum, query_result);
 
-		selection.reserve( selection.size() + query_result.size());
+	selection.reserve( selection.size() + query_result.size());
 
-		collision::objects_type::const_iterator end = query_result.end();
-		for( collision::objects_type::iterator it = query_result.begin(); it != end; ++it)
-		{
-			render_collision_object<render_model_instance_impl> const* const object =
-				static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it);
+	collision::objects_type::const_iterator end = query_result.end();
+	for( collision::objects_type::iterator it = query_result.begin(); it != end; ++it)
+	{
+		render_model_instance_impl* const model =
+			static_cast_checked<render_collision_object<render_model_instance_impl> const*>(*it)->owner( );
 
-			object->owner()->get_surfaces( &mat_vp, &view_pos, selection, moved_only, 0, surface_flags );
-		}
+		// claude@NOTE: the transformed bounding box is computed and dropped -
+		// the target keeps both calls (virtual get_aabb + out-of-line
+		// aabb::modify) and never consumes the result.
+		model->get_aabb( ).modify		( model->transform( ) );
+
+		u8 const lod_id					= fixed_lod_value == -1 ? u8( -1 ) : u8( fixed_lod_value );
+
+		model->get_surfaces( &mat_vp, &view_pos, selection, true, lod_id, surface_flags );
 	}
-	END_TIMER;
-
-	// LOCALS
-	// math::frustum 					view_frustum
-	// collision::object const* const* 	end
-	// vectora< collision::object const* > query_result
-	// boost::function< void( collision::object const& ) > callback
-	// moved_object_predicate_helper 	helper
-	// u8 								lod_id
-	// ******
-
-	// CALL SITE INFO
-	// <0x63d70c> -> bool < unknown >( u32, math::cuboid const&, boost::function< void( collision::object const& ) >& )
-	// <0x63d72d> -> < unknown >
-	// <0x63d747> -> bool < unknown >( u32, math::cuboid const&, vectora< collision::object const* >& )
-	// <0x63d790> -> math::aabb < unknown >()
-	// <0x63d7e3> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
-	// ******
-
-	// FUNCTION BODY[0x63d620]: 57
-	// <0x63d63a>|0x01a|+0x013:'684'
-	// <0>
-	// <1>
-	// <0x63d64d>|0x02d|+0x012:'687'
-	// <0>
-	// <1>
-	// <0x63d65f>|0x03f|+0x017:'690'
-	// <0>
-	// <0x63d676>|0x056|+0x00b:'692'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x63d681>|0x061|+0x00b:'698'
-	// <0>
-	// <0x63d68c>|0x06c|+0x02c:'700'
-	// <0>
-	// <0x63d6b8>|0x098|+0x016:'702'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d6ce>|0x0ae|+0x00d:'706'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x63d6db>|0x0bb|+0x01c:'712'
-	// <0>
-	// <0x63d6f7>|0x0d7|+0x017:'714'
-	// <0x63d70e>|0x0ee|+0x024:'715'
-	// <0x63d732>|0x112|+0x002:'716'
-	// <0>
-	// <0x63d734>|0x114|+0x015:'718'
-	// <0>
-	// <1>
-	// <0x63d749>|0x129|+0x01b:'721'
-	// <0>
-	// <0x63d764>|0x144|+0x004:'723'
-	// <0x63d768>|0x148|+0x010:'724'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d778>|0x158|+0x006:'729'
-	// <0>
-	// <0x63d77e>|0x15e|+0x01b:'731'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d799>|0x179|+0x023:'735'
-	// <0>
-	// <0x63d7bc>|0x19c|+0x038:'737'
-	// <0>
-	// <1>
-	// <0x63d7f4>|0x1d4|+0x010:'740'
-	// ******
 }
 
 void scene::update_models( )
@@ -1078,99 +922,58 @@ void scene::remove_light( u32 id )
 	// ******
 }
 
-// STATE[STUB]
-// claude@NOTE: environment_probe heap-class reconstruction recipe (from the
-// consumed legacy scene_renderer.cpp note; recover via git show 8bb5b3dfc):
-// heap class + find_environment_probe_predicate; scene::m_environment_probes
-// at 0x37c + m_environment_probes_tree at 0x38c; collision-geometry ownership;
-// 0x178 properties built in game-side object_environment_probe::insert. See
-// binaries/structure/target/headers/vostok/render/environment_probe{,_properties}.h.
 void scene::update_environment_probe( u32 id, environment_probe_properties const& properties )
 {
-	// FUNCTION BODY[0x640940]: 14
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x640945>|0x005|+0x022:'793'
-	// <0x640967>|0x027|+0x004:'794'
-	// <0>
-	// <0x64096b>|0x02b|+0x045:'796'
-	// <0x6409b0>|0x070|+0x016:'796'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6409c6>|0x086|-0x01d:'801'
-	// <0>
-	// <0x6409a9>|0x069|+0x016:'803'
-	// <0x6409bf>|0x07f|+0x014:'803'
-	// ******
+	vector< environment_probe* >::iterator	i =
+		std::find_if( m_environment_probes.begin( ), m_environment_probes.end( ), find_environment_probe_predicate( id ) );
+	if ( i == m_environment_probes.end( ) )
+	{
+		m_environment_probes.push_back		( NEW( environment_probe )( m_environment_probes_tree, properties, id ) );
+		return;
+	}
+
+
+	( *i )->set_properties					( properties );
+
 }
 
-// STATE[STUB]
 void scene::remove_environment_probe( u32 id )
 {
-	// FUNCTION BODY[0x63d5a0]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d5a7>|0x007|+0x017:'811'
-	// <0x63d5be>|0x01e|+0x004:'812'
-	// <0>
-	// <1>
-	// <0x63d5c2>|0x022|+0x021:'815'
-	// <0x63d5e3>|0x043|+0x02d:'816'
-	// <0>
-	// ******
+	vector< environment_probe* >::iterator	i =
+		std::find_if( m_environment_probes.begin( ), m_environment_probes.end( ), find_environment_probe_predicate( id ) );
+	if ( i != m_environment_probes.end( ) )
+	{
+		DELETE								( *i );
+		m_environment_probes.erase			( i );
+	}
 }
 
-// STATE[STUB]
 void scene::update_sky_ambient_occlusion( u32 id, sky_ambient_occlusion_properties const& properties )
 {
-	// FUNCTION BODY[0x6408b0]: 15
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6408bc>|0x00c|+0x018:'835'
-	// <0>
-	// <0x6408d4>|0x024|+0x004:'837'
-	// <0>
-	// <0x6408d8>|0x028|+0x03b:'839'
-	// <0x640913>|0x063|+0x017:'839'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64092a>|0x07a|-0x01f:'844'
-	// <0>
-	// <0x64090b>|0x05b|+0x017:'846'
-	// <0x640922>|0x072|+0x012:'846'
-	// ******
+	vector< sky_ambient_occlusion* >::iterator	i =
+		std::find_if( m_sky_ao_volumes.begin( ), m_sky_ao_volumes.end( ), find_by_id_predicate< sky_ambient_occlusion >( id ) );
+
+	if ( i == m_sky_ao_volumes.end( ) )
+	{
+		m_sky_ao_volumes.push_back			( NEW( sky_ambient_occlusion )( properties, id ) );
+		return;
+	}
+
+
+	( *i )->set_properties					( properties );
+
 }
 
-// STATE[STUB]
 void scene::remove_sky_ambient_occlusion( u32 id )
 {
-	// LOCALS
-	// sky_ambient_occlusion* 			sky_ao
-	// ******
-
-	// FUNCTION BODY[0x63d530]: 11
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63d536>|0x006|+0x018:'854'
-	// <0x63d54e>|0x01e|+0x004:'855'
-	// <0>
-	// <1>
-	// <0x63d552>|0x022|+0x016:'858'
-	// <0x63d568>|0x038|+0x02f:'859'
-	// <0>
-	// ******
+	vector< sky_ambient_occlusion* >::iterator	i =
+		std::find_if( m_sky_ao_volumes.begin( ), m_sky_ao_volumes.end( ), find_by_id_predicate< sky_ambient_occlusion >( id ) );
+	if ( i != m_sky_ao_volumes.end( ) )
+	{
+		sky_ambient_occlusion* sky_ao		= *i;
+		DELETE								( sky_ao );
+		m_sky_ao_volumes.erase				( i );
+	}
 }
 
 void scene::update_ambient_volume( u32 id, ambient_volume_properties const& properties )
@@ -1687,59 +1490,41 @@ void scene::select_model( render_model_instance_impl_ptr const& instance, const 
 	// ******
 }
 
-// STATE[STUB]
 void scene::set_portal_system( resources::unmanaged_resource_ptr pss )
 {
-	// FUNCTION BODY[0x63e250]: 1
-	// <0x63e250>|0x000|+0x03f:'1180'
-	// ******
+	m_portal_system			= NEW( culling::portal_sector_system )( static_cast_resource_ptr< culling::portal_sector_structure_ptr >( pss ) );
 }
 
-// STATE[STUB]
 void scene::select_models_via_sectors(
 	float4x4 const&							mat_vp,
 	float3 const&							view_point,
 	vector< render_surface_instance* >&		selection
 )
 {
-	// FUNCTION BODY[0x63d500]: 1
-	// <0x63d501>|0x001|+0x01f:'1191'
-	// ******
+	m_portal_system->select_models	( m_models_tree, view_point, mat_vp, selection );
 }
 
-// STATE[STUB]
 void scene::draw_portal_system( system_renderer& r, float3 const& view_pos, float4x4 const& vp )
 {
-	// FUNCTION BODY[0x63fa60]: 2
-	// <0x63fa60>|0x000|+0x00a:'1196'
-	// <0x63fa6a>|0x00a|+0x00b:'1197'
-	// ******
+	if ( m_portal_system )
+		m_portal_system->render		( r, view_pos, vp );
 }
 
-// STATE[STUB]
 void scene::test_action_portal_system( )
 {
-	// FUNCTION BODY[0x63cec0]: 2
-	// <0x63cec0>|0x000|+0x00a:'1202'
-	// <0x63ceca>|0x00a|+0x007:'1203'
-	// ******
+	if ( m_portal_system )
+		m_portal_system->test_action( );
 }
 
-// STATE[STUB]
 void scene::set_grass( grass_world* w )
 {
-	// FUNCTION BODY[0x63ceb0]: 1
-	// <0x63ceb0>|0x000|+0x006:'1208'
-	// ******
+	m_grass					= w;
 }
 
-// STATE[STUB]
 void scene::reset_grass( grass_world* w )
 {
-	// FUNCTION BODY[0x63cf50]: 2
-	// <0>
-	// <0x63cf50>|0x000|+0x00a:'1214'
-	// ******
+	ASSERT					( m_grass == w );
+	m_grass					= NULL;
 }
 
 // STATE[STUB]

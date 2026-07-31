@@ -49,6 +49,7 @@
 #include "scene_cook.h"
 #include "scene_view_cook.h"
 #include "render_output_window_cook.h"
+#include "grass_world.h"
 
 #include <GFx.h>
 
@@ -1149,11 +1150,9 @@ void engine::world::reload_modified_textures( )
 	resource_manager::ref().reload_modified_textures( );
 }
 
-// STATE[STUB]
 void engine::world::build_lpv_geometry( base_scene_ptr const& scene )
 {
-	// FUNCTION BODY[0x6542a0]: 0
-	// ******
+	static_cast_checked<vostok::render::scene*>(scene.c_ptr())->build_lpv_geometry	( );
 }
 
 // STATE[STUB]
@@ -1925,30 +1924,21 @@ void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
 	scene->remove_light	( id);
 }
 
-// STATE[STUB]
 void engine::world::add_clouds( base_scene_ptr const& in_scene, cloud_parameters const& parameters )
 {
-	// FUNCTION BODY[0x654cd0]: 1
-	// <0>
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->add_clouds	( parameters );
 }
 
-// STATE[STUB]
 void engine::world::update_clouds( base_scene_ptr const& in_scene, cloud_parameters const& parameters )
 {
-	// FUNCTION BODY[0x654ec0]: 2
-	// <0x654ec0>|0x000|+0x007:'1564'
-	// <0x654ec7>|0x007|+0x01f:'1565'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+	scene->update_clouds	( parameters );
 }
 
-// STATE[STUB]
 void engine::world::remove_clouds( base_scene_ptr const& in_scene )
 {
-	// FUNCTION BODY[0x654a70]: 2
-	// <0x654a70>|0x000|+0x008:'1570'
-	// <0x654a78>|0x008|+0x01d:'1571'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+	scene->remove_clouds	( );
 }
 
 // STATE[STUB]
@@ -2010,36 +2000,27 @@ void engine::world::apply_clouds_changes( base_scene_ptr const& in_scene )
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::add_tracer(
 	base_scene_ptr const&				in_scene,
 	tracer_model_instance_ptr const&	instance,
 	float4x4 const&						initialize_transform
 )
 {
-	// FUNCTION BODY[0x6555a0]: 1
-	// <0x6555a0>|0x000|+0x014:'1616'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->add_tracer	( instance, initialize_transform );
 }
 
-// STATE[STUB]
 void engine::world::update_tracer(
 	base_scene_ptr const&				in_scene,
 	tracer_model_instance_ptr const&	instance,
 	float4x4 const&						new_transform
 )
 {
-	// FUNCTION BODY[0x654180]: 1
-	// <0x654180>|0x000|+0x032:'1621'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->update_tracer	( instance, new_transform );
 }
 
-// STATE[STUB]
 void engine::world::remove_tracer( base_scene_ptr const& in_scene, tracer_model_instance_ptr const& instance )
 {
-	// FUNCTION BODY[0x655230]: 1
-	// <0x655230>|0x000|+0x029:'1626'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->remove_tracer	( instance );
 }
 
 void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
@@ -2080,43 +2061,32 @@ void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
 	scene->remove_decal	( id);
 }
 
-// STATE[STUB]
 void engine::world::update_environment_probe(
 	base_scene_ptr const&					in_scene,
 	u32										id,
 	environment_probe_properties const&		properties
 )
 {
-	// FUNCTION BODY[0x656520]: 0
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->update_environment_probe	( id, properties );
 }
 
-// STATE[STUB]
 void engine::world::remove_environment_probe( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x654c40]: 1
-	// <0x654c40>|0x000|+0x010:'1657'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->remove_environment_probe	( id );
 }
 
-// STATE[STUB]
 void engine::world::update_sky_ambient_occlusion(
 	base_scene_ptr const&		in_scene,
 	u32							id,
 	sky_ambient_occlusion_properties const&	properties
 )
 {
-	// FUNCTION BODY[0x656500]: 1
-	// <0x656500>|0x000|+0x015:'1662'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->update_sky_ambient_occlusion	( id, properties );
 }
 
-// STATE[STUB]
 void engine::world::remove_sky_ambient_occlusion( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x654c20]: 1
-	// <0x654c20>|0x000|+0x010:'1667'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->remove_sky_ambient_occlusion	( id );
 }
 
 void engine::world::update_ambient_volume(
@@ -2130,14 +2100,9 @@ void engine::world::update_ambient_volume(
 	scene->update_ambient_volume	( id, properties);
 }
 
-// STATE[STUB]
 void engine::world::add_vegetation_trample( base_scene_ptr const& in_scene, trample_desc const& desc )
 {
-	// FUNCTION BODY[0x654ba0]: 1
-	// <0x654ba0>|0x000|+0x043:'1677'
-	// <0x654be3>|0x043|-0x003:'1677'
-	// <0x654be0>|0x040|+0x00e:'1678'
-	// ******
+	static_cast_checked<vostok::render::scene*>(in_scene.c_ptr())->add_trample	( desc );
 }
 
 void engine::world::remove_ambient_volume( base_scene_ptr const& in_scene, u32 id )
@@ -2576,22 +2541,16 @@ void engine::world::execute_scaleform_command( survarium::scaleform_render_comma
 	command.execute	( );
 }
 
-// STATE[STUB]
 void engine::world::set_portal_system( base_scene_ptr const& scene, resources::unmanaged_resource_ptr pss_ptr )
 {
-	// FUNCTION BODY[0x655140]: 2
-	// <0x655140>|0x000|+0x007:'2174'
-	// <0x655147>|0x007|+0x019:'2175'
-	// ******
+	vostok::render::scene* s = static_cast_checked<vostok::render::scene*>(scene.c_ptr());
+	s->set_portal_system	( pss_ptr );
 }
 
-// STATE[STUB]
 void engine::world::test_action_portal_system( base_scene_ptr const& scene )
 {
-	// FUNCTION BODY[0x6540d0]: 2
-	// <0x6540d0>|0x000|+0x006:'2180'
-	// <0x6540d6>|0x006|+0x011:'2181'
-	// ******
+	vostok::render::scene* s = static_cast_checked<vostok::render::scene*>(scene.c_ptr());
+	s->test_action_portal_system	( );
 }
 
 // STATE[STUB]
@@ -2642,24 +2601,18 @@ void engine::world::remove_grass_layer( u8 id, base_scene_ptr const& s )
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x654390]: 3
-	// <0>
-	// <1>
-	// <0x654390>|0x000|+0x010:'2218'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(s.c_ptr());
+
+	scene->set_grass	( static_cast_checked<grass_world*>(grass.c_ptr()) );
 }
 
-// STATE[STUB]
 void engine::world::reset_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x654350]: 3
-	// <0>
-	// <1>
-	// <0x654350>|0x000|+0x010:'2225'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(s.c_ptr());
+
+	scene->reset_grass	( static_cast_checked<grass_world*>(grass.c_ptr()) );
 }
 
 // STATE[STUB]

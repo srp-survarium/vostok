@@ -14,7 +14,7 @@
 namespace vostok {
 namespace render {
 
-class geometry_batch;
+struct geometry_batch;
 class renderer;
 class renderer_context;
 class shader_constant_host;

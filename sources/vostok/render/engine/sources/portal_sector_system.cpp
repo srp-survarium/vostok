@@ -239,9 +239,7 @@ void portal_sector_system::render( system_renderer&, float3 const&, float4x4 con
 
 void portal_sector_system::test_action( )
 {
-	// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9000]
+	m_test_action			= true;
 }
 
 void portal_sector_system::draw_quads( system_renderer& )

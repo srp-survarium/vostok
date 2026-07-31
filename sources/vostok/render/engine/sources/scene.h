@@ -51,10 +51,9 @@ namespace culling {
 class portal_sector_system;
 }
 
-class ambient_volume;
-class clouds;
-class environment_probe;
-class render_surface_instance;
+struct ambient_volume;
+struct clouds;
+struct environment_probe;
 class system_renderer;
 
 struct ambient_volume_properties;
@@ -63,6 +62,7 @@ struct decal_properties;
 struct environment_probe_properties;
 struct grass_patch;
 struct grass_world;
+struct render_surface_instance;
 struct scene_configuration;
 struct speedtree_forest;
 struct trample_desc;
@@ -80,7 +80,6 @@ public:
 		public boost::noncopyable
 	{
 		explicit particle_engine( scene* const in_scene ) :
-			m_particle_world( 0 ),
 			m_scene( in_scene )
 		{
 		}

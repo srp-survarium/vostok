@@ -100,10 +100,9 @@ u32 grass_world::add_template( grass_render_model_ptr const& )
 	return 0;
 }
 
-void grass_world::add_trample( trample_desc const& )
+void grass_world::add_trample( trample_desc const& desc )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635f10]
+	m_trample_array.push_back	( desc );
 }
 
 u32 grass_world::add_instance( u32, math::color const&, float4x4 const&, u8, float )

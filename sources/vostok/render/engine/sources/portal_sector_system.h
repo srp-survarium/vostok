@@ -35,7 +35,7 @@ class plane;
 
 namespace render {
 
-class render_surface_instance;
+struct render_surface_instance;
 class system_renderer;
 
 namespace culling {

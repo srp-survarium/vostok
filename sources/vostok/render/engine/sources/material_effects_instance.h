@@ -11,7 +11,7 @@ namespace render {
 
 class material_effects_instance_cook;
 
-class material_effects_instance : public resources::unmanaged_resource {
+struct material_effects_instance : public resources::unmanaged_resource {
 public:
 	material_effects_instance( )
 	{

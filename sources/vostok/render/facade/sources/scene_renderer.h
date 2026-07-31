@@ -44,7 +44,7 @@ class renderer;
 
 class one_way_render_channel;
 class speedtree_instance;
-class tracer_model_instance;
+struct tracer_model_instance;
 
 struct ambient_volume_properties;
 struct buffer_fragment;

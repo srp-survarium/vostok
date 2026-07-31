@@ -16,7 +16,7 @@ class chunk_reader;
 
 namespace render {
 
-class material_effects_instance_cook_data;
+struct material_effects_instance_cook_data;
 class untyped_buffer;
 struct surface_stats;
 

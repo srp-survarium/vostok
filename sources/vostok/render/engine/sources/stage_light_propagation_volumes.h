@@ -15,7 +15,7 @@
 namespace vostok {
 namespace render {
 
-class geometry_batch;
+struct geometry_batch;
 class light;
 class renderer;
 class renderer_context;
