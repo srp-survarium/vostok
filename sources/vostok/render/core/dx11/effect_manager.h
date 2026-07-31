@@ -193,6 +193,9 @@ private:
 	);
 
 public:
+	template <typename T>
+	static void call_resource_destructor( T* resource) { resource->~T();};
+
 	effect_descriptor* get_effect_descriptor_by_name( pcstr name );
 	void delete_pending_effect( res_effect_ptr* effect )
 	{

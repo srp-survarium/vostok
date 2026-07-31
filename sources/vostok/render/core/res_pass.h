@@ -69,6 +69,8 @@ public:
 	res_xs<gs_data>* get_gs( ) const { return m_gs.c_ptr( ); }
 
 private:
+	friend class effect_manager;
+
 	res_state_ptr m_state;
 
 public:
