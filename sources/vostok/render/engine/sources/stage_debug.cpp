@@ -6,7 +6,6 @@ namespace render {
 
 stage_debug::~stage_debug( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x603f50]
 }
 
