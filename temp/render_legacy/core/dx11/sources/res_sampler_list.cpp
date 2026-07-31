@@ -11,24 +11,11 @@
 namespace vostok {
 namespace render {
 
-res_sampler_list::res_sampler_list	( sampler_slots const & slots) :
-	m_is_registered	( false )
-{
-	u32 const slots_size = slots.size();
-	for (u32 i = 0; i < slots_size; ++i)
-	{
-		if( slots[i].slot_id != enum_slot_ind_null)
-		{
-			m_samplers.resize(i+1, ref_sampler_state (NULL));
-			m_samplers[i] = slots[i].state;
-		}
-	}
-}
+// REMAINDER: equal x2 = ancestor evidence for the canonical compare x2
+// (equal->compare s32 rename; 3-way bodies from 0x739920/0x739860); rebind
+// is target-new.
 
-void res_sampler_list::destroy_impl () const
-{
-	resource_manager::ref().release( this );
-}
+
 
 bool res_sampler_list::equal(const res_sampler_list& base) const
 {
