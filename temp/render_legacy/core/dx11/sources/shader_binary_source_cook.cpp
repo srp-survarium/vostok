@@ -35,21 +35,13 @@ static vostok::command_line::key s_no_cache_shaders_key( "no_cache_shaders", "",
 namespace vostok {
 namespace render {
 
-shader_binary_source_cook::shader_binary_source_cook (): 
-	unmanaged_cook(	
-		resources::shader_binary_source_class, 
-		reuse_false, 
-		use_current_thread_id,
-		use_current_thread_id
-	),
-	m_tasks_type	( tasks::create_new_task_type("compile_shader_task", 0) )
-{
-}
+// REMAINDER: ancestor bodies for the held stubs - converted_shader_loaded
+// (blob->raw redesign, recompile path dropped), create_resource (macro-scan
+// path derivation), destroy_resource blob releases, is_need_recompile/
+// compile_shader_task/all_tasks_finished/save_binary_shader (dropped from
+// the canonical class), shader_type_to_compile_target/string helpers.
 
-shader_binary_source_cook::~shader_binary_source_cook ()
-{
-//!	tasks::delete_task_type	( m_tasks_type );
-}
+
 
 bool shader_binary_source_cook::is_need_recompile(conveted_shader_loaded_data* data,
 												  resources::managed_resource_ptr binary_shader_ptr) const
@@ -517,21 +509,7 @@ void shader_binary_source_cook::destroy_resource(resources::unmanaged_resource* 
 	resource->~binary_shader_source					();
 }
 
-mutable_buffer	shader_binary_source_cook::allocate_resource(resources::query_result_for_cook &	in_query, 
-															 const_buffer				raw_file_data, 
-															 bool						file_exist)
-{
-	VOSTOK_UNREFERENCED_PARAMETERS					(&file_exist, &raw_file_data, &in_query);
-	return											vostok::mutable_buffer(
-		(pvoid)ALLOC(binary_shader_source, 1), 
-		sizeof(binary_shader_source)
-	);
-}
 
-void   shader_binary_source_cook::deallocate_resource (pvoid buffer) 
-{
-	FREE											(buffer);
-}
 
 } // namespace render
 } // namespace vostok
