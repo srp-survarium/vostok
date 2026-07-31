@@ -7,16 +7,22 @@
 #include <vostok/math_float3.h>
 #include <vostok/math_float4.h>
 #include <vostok/math_float4x4.h>
+#include <vostok/render/core/backend.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/res_texture_list.h>
+#include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/untyped_buffer.h>
 
+#include "effect_gather_luminance_histogram.h"
 #include "material.h"
 #include "material_effects.h"
 #include "render_target.h"
+#include "renderer_context.h"
+#include "renderer_context_targets.h"
 #include "res_geometry.h"
 #include "res_texture.h"
+#include "scene_view.h"
 #include "stage.h"
 
 namespace vostok {
@@ -115,6 +121,20 @@ struct remove_model_skeletal_filter_predicate {
 
 STATIC_SIZE_ASSERT( remove_model_skeletal_filter_predicate, 0x1 );
 
+// claude@NOTE: legacy post_process_parameters.h luminance constants relocated here (the canonical
+// header dropped them; legacy NUM_TONEMAP_TEXTURES is superseded by rt_num_frame_luminance_targets)
+#define NUM_HISTOGRAM_VALUES			16
+#define MAX_TONEMAP_TEXTURE_DIMENSION	256
+#define NUM_TONEMAP_PIXELS				(MAX_TONEMAP_TEXTURE_DIMENSION * MAX_TONEMAP_TEXTURE_DIMENSION)
+// TODO: 0.5f
+#define MIN_FRAME_LUMINANCE				0.0f
+#define MAX_FRAME_LUMINANCE				4.0f
+
+template<class T> T linear_interpolation2(T a, T b, float alpha)
+{
+	return a * (1 - alpha) + b * alpha;
+}
+
 class stage_postprocess : public stage {
 public:
 	stage_postprocess( renderer* in_renderer, renderer_context* context );
@@ -146,25 +166,119 @@ private:
 	void compute_per_pixel_eye_adaptated_luminance( );
 
 	void measure_per_pixel_luminance_percentage(
-		res_texture*,
-		float,
-		float
+		res_texture*	scene_texture,
+		float			min_luminanace,
+		float			max_luminanace
 	)
 	{
-		// STATE[STUB]
+	//	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
+
+		s32 const last_target_index = s32(rt_num_frame_luminance_targets) - 1;
+
+		for (u32 lum_rt_index=0; lum_rt_index<rt_num_frame_luminance_targets; lum_rt_index++)
+		{
+			backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, 0, 0, 0);
+			backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.0f);
+		}
+
+		m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_in_range, 0);
+		backend::ref().set_ps_constant(m_luminance_range_parameter_parameter, float4(min_luminanace, max_luminanace, 0.0f, 0.0f));
+		backend::ref().set_ps_texture( "t_frame_color0", scene_texture);
+		fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + last_target_index].target, render_target_ptr( ));
+
+		for (s32 lum_rt_index=last_target_index-1; lum_rt_index>=0; lum_rt_index--)
+		{
+			m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_count, 0);
+			backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index+1].texture);
+			fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, render_target_ptr( ));
+		}
+
+		resource_manager::ref().copy2D(
+			&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
+			0,
+			0,
+			&*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture,
+			0,
+			0,
+			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->width(),
+			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->height(),
+			0,
+			0
+		);
 	}
 
 	float4 compute_luminance_parameters( u32 frame_delta );
 
 	void buid_luminance_histogram(
-		res_texture*,
-		u32,
-		float,
-		float,
-		float*
+		res_texture*	scene_texture,
+		u32				num_values,
+		float			min_value,
+		float			max_value,
+		float*			out_array
 	)
 	{
-		// STATE[STUB]
+		D3D11_VIEWPORT orig_viewport;
+		backend::ref().get_viewport			(orig_viewport);
+
+		backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance_histogram].target, 0, 0, 0);
+		backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.0f);
+
+		u32 const num_histogam_values		= math::min<u32>(num_values, NUM_HISTOGRAM_VALUES);
+		float2* ranges						= (float2*)ALLOCA(sizeof(float2) * num_histogam_values);
+		float const step					= (max_value - min_value) / num_histogam_values;
+		float c								= min_value;
+
+		for (u32 i=0; i<num_histogam_values; i++)
+		{
+			ranges[i] = float2(c, c + step);
+			c += step;
+			if (i==num_histogam_values-1)
+				ranges[i].y = 100000.0f;
+		}
+
+		for (u32 i=0; i<num_histogam_values; i++)
+		{
+			measure_per_pixel_luminance_percentage(scene_texture, ranges[i].x, ranges[i].y);
+
+			D3D11_VIEWPORT tmp_viewport;
+			tmp_viewport.TopLeftX	= float(i);
+			tmp_viewport.TopLeftY	= 0.0f;
+			tmp_viewport.Width		= 1;
+			tmp_viewport.Height		= 1;
+			tmp_viewport.MinDepth	= 0;
+			tmp_viewport.MaxDepth	= 1.f;
+			backend::ref().set_viewport( tmp_viewport);
+
+			m_sh_gather_luminance_histogram->apply(effect_gather_luminance_histogram::gather_luminance_histogram, 0);
+			fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_histogram].target);
+
+			backend::ref().set_viewport( orig_viewport);
+		}
+
+		if (out_array)
+		{
+			resource_manager::ref().copy2D(
+				&*m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture,
+				0,
+				0,
+				&*m_context->m_targets->m_family[rt_frame_luminance_histogram].texture,
+				0,
+				0,
+				m_context->m_targets->m_family[rt_frame_luminance_histogram].texture->width(),
+				m_context->m_targets->m_family[rt_frame_luminance_histogram].texture->height(),
+				0,
+				0
+			);
+
+			u32 row_pitch = 0;
+
+			float4* data = (float4*)m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture->map2D(D3D11_MAP_READ, 0, row_pitch);
+
+			for (u32 i=0; i<num_histogam_values; i++)
+				out_array[i] = (*data++).x;
+
+			m_context->m_targets->m_family[rt_result_frame_luminance_histogram].texture->unmap2D(0);
+		}
 	}
 
 	void buid_luminance_histogram_start(
@@ -175,6 +289,7 @@ private:
 		float*
 	)
 	{
+		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram, no start/step/end split; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -186,6 +301,7 @@ private:
 		u32
 	)
 	{
+		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -197,6 +313,7 @@ private:
 		float*
 	)
 	{
+		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -204,9 +321,77 @@ private:
 
 	float4 get_frame_luminance_parameters( bool& valid )
 	{
-		// STATE[STUB]
-		valid = false;
-		return float4( 0.0f, 0.0f, 0.0f, 0.0f );
+		// claude@NOTE: post-legacy bool& validity out-param - the legacy no-arg body always
+		// computed; assumed always-valid
+		valid = true;
+
+		// Average, Min, Max, Middle Gray
+		vostok::math::float4					parameters(0.5f, 0.0f, 1.0f, 0.18f);
+
+		post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
+
+		u32 const num_values				= NUM_HISTOGRAM_VALUES;
+		float const min_luminance			= MIN_FRAME_LUMINANCE;
+		float const max_luminance			= MAX_FRAME_LUMINANCE;
+		float const luminance_range			= MAX_FRAME_LUMINANCE - MIN_FRAME_LUMINANCE;
+		u32 const num_total_pixels			= NUM_TONEMAP_PIXELS;
+
+		u32 const num_pixels_inv_bright		= u32((1.0f - pp_parameters.tonemap_bright_threshold) * num_total_pixels);
+		u32 const num_pixels_median			= u32(pp_parameters.tonemap_median * num_total_pixels);
+		u32 const num_pixels_darkness		= u32(pp_parameters.tonemap_darkness_threshold * num_total_pixels);
+
+		float values						[num_values];
+		buid_luminance_histogram			(
+			&*m_context->m_targets->m_family[rt_generic_0].texture,
+			array_size(values),
+			min_luminance,
+			max_luminance,
+			values
+		);
+
+		float current_luminance				= min_luminance;
+		u32   num_pixels					= 0;
+
+		bool found_tonemap_bright			= false;
+		bool found_tonemap_median			= false;
+		bool found_tonemap_darkness			= false;
+
+		for (s32 i = 0; i < num_values; i++)
+		{
+			u32 const num_in_next			= math::max<u32>(1, u32(values[i]));
+
+			if (num_pixels + num_in_next >= num_pixels_inv_bright && !found_tonemap_bright)
+			{
+				parameters.z				= linear_interpolation2(
+					current_luminance,
+					current_luminance + luminance_range / num_values,
+					float(num_pixels_inv_bright - num_pixels) / float(num_in_next)
+				);
+				found_tonemap_bright		= true;
+			}
+			if (num_pixels + num_in_next >= num_pixels_median && !found_tonemap_median)
+			{
+				parameters.x				= linear_interpolation2(
+					current_luminance,
+					current_luminance + luminance_range / num_values,
+					float(num_pixels_median - num_pixels) / float(num_in_next)
+				);
+				found_tonemap_median		= true;
+			}
+			if (num_pixels + num_in_next >= num_pixels_darkness && !found_tonemap_darkness)
+			{
+				parameters.y				= linear_interpolation2(
+					current_luminance,
+					current_luminance + luminance_range / num_values,
+					float(num_pixels_darkness - num_pixels) / float(num_in_next)
+				);
+				found_tonemap_darkness		= true;
+			}
+			current_luminance				+= luminance_range / num_values;
+			num_pixels						+= num_in_next;
+		}
+		parameters.w						= pp_parameters.tonemap_middle_gray;
+		return								parameters;
 	}
 
 private:

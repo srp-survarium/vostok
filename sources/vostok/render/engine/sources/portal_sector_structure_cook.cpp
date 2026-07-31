@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no legacy ancestor - the only legacy cook (dx9/model_manager.cpp models_cook) is the retired unmanaged_cook/visual_class contract - matcher-phase work.
 #include "portal_sector_structure_cook.h"
 
 #include <vostok/render/culling/portal_sector_structure.h>

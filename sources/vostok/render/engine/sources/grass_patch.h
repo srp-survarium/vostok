@@ -81,6 +81,7 @@ struct grass_patch : public boost::noncopyable {
 
 	void update_movement_texture( renderer_context* )
 	{
+		// claude@NOTE: no legacy ancestor - no movement-texture token anywhere in the legacy corpus; matcher-phase work.
 		// STATE[STUB]
 	}
 

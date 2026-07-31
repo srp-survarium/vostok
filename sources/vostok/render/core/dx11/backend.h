@@ -7,7 +7,9 @@
 #include <vostok/render/core/index_buffer.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/quasi_singleton.h>
+#include <vostok/render/core/render_target.h>
 #include <vostok/render/core/res_render_output.h>
+#include <vostok/render/core/shader_constant.h>
 #include <vostok/render/core/shader_constant_defines.h>
 #include <vostok/render/core/vertex_buffer.h>
 
@@ -339,20 +341,9 @@ inline void backend::set_sample_mask( u32 sample_mask )
 	m_sample_mask = sample_mask;
 }
 
-inline shader_constant_host* backend::register_constant_host( shader_constant const& )
+inline shader_constant_host* backend::register_constant_host( shader_constant const& constant )
 {
-	// STATE[STUB]
-	return 0;
-}
-
-inline shader_constant_host const* backend::find_constant_host(
-	shared_string const&,
-	enum_constant_type,
-	bool
-)
-{
-	// STATE[STUB]
-	return 0;
+	return register_constant_host( constant.host().name(), constant.host().type() );
 }
 
 inline void backend::set_vb( untyped_buffer* buffer, u32 stride, u32 offset )
@@ -629,9 +620,12 @@ inline void backend::reset_depth_stencil_target( )
 	m_zb = m_base_zb;
 }
 
-inline void backend::set_depth_stencil_target( render_target const* )
+inline void backend::set_depth_stencil_target( render_target const* zrt )
 {
-	// STATE[STUB]
+	ID3D11DepthStencilView* zrt_view = (zrt == NULL) ? NULL : zrt->get_depth_stencil_view();
+
+	m_dirty_targets.depth_stencil |=	m_zb != zrt_view;
+	m_zb = zrt_view;
 }
 
 inline void backend::clear_render_targets( enum_render_target_enum target, math::color color )
@@ -665,11 +659,6 @@ inline void backend::render_indexed_instanced(
 inline void backend::on_device_create( ID3D11Device* device )
 {
 	m_device = device;
-}
-
-inline void backend::reset_constant_update_markers( )
-{
-	ZeroMemory( m_constant_update_markers, sizeof( m_constant_update_markers ) );
 }
 
 inline bool backend::valid_output_window( ) const

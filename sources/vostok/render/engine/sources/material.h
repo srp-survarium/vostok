@@ -20,7 +20,6 @@ public:
 	explicit material( configs::binary_config_ptr in_config ) :
 		m_config( in_config )
 	{
-		// STATE[STUB]
 		// FUNCTION BODY[0x632b0]
 	}
 
@@ -36,10 +35,7 @@ public:
 
 	virtual ~material( ) { }
 
-	static void initialize_nomaterial_material( )
-	{
-	}
-
+	static void initialize_nomaterial_material( );
 	static bool is_nomaterial_material_ready( );
 	static material_effects& nomaterial_material( enum_vertex_input_type vertex_input_type );
 	static void finalize_nomaterial_material( );

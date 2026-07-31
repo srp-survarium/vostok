@@ -917,6 +917,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\convex_volume.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\convex_volume.h"
 			>
 		</File>

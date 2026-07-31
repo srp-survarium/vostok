@@ -9,6 +9,7 @@ namespace render {
 
 s32 res_geometry::compare( res_geometry const& ) const
 {
+	// claude@NOTE: legacy body diverged - legacy is bool equal over the same four members, not an s32 three-way compare (see legacy remainder note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e82b0]
 	return 0;

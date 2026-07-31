@@ -4,6 +4,10 @@
 #include <functional>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/render_include.h>
+#include <vostok/render/core/res_texture.h>
+#include <vostok/render/core/utils.h>
+
+#include "texture_pool.h"
 
 namespace vostok {
 namespace render {
@@ -11,20 +15,41 @@ namespace render {
 class res_texture;
 class texture_pool;
 
+// claude@NOTE: legacy kept get_hash as a file-local free function next to the
+// out-of-line get/release in texture_storage.cpp; the canonical carcass has
+// get/release inline in this header (neither carries a target address, so
+// neither is emitted), so the helper moves here with them.
+inline u32 get_hash( u32 width, u32 height, DXGI_FORMAT format )
+{
+	return (utils::log_2( width) | (utils::log_2( height)<<5) | ( (u32)format<<10));
+}
+
 class texture_storage {
 public:
 	texture_storage( );
 	~texture_storage( );
 
-	res_texture* get( u32, u32, DXGI_FORMAT )
+	res_texture* get( u32 width, u32 height, DXGI_FORMAT format )
 	{
-		// STATE[STUB]
-		return 0;
+		map<u32, texture_pool*, std::less<u32> >::iterator it = m_pools.find( get_hash( width, height, format));
+
+		if( it == m_pools.end())
+			return NULL;
+
+		return it->second->get( );
 	}
 
-	void release( res_texture const* )
+	void release( res_texture const* texture )
 	{
-		// STATE[STUB]
+		map<u32, texture_pool*, std::less<u32> >::iterator it = m_pools.find( get_hash( texture->width(), texture->height(), texture->format()));
+
+		if( it == m_pools.end())
+		{
+			ASSERT( false, "There is no initialized pool with specified parameters.");
+			return;
+		}
+
+		it->second->release( texture);
 	}
 
 private:

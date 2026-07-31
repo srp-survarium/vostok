@@ -4,6 +4,13 @@
 namespace vostok {
 namespace render {
 
+// claude@NOTE: no legacy ancestor anywhere in the corpus (class is target-era;
+// the held gpu_timer.h reference is declarations-only). Expected idiom is the
+// D3D11_QUERY_EVENT sequence already ported in resource_manager.cpp
+// begin_command_list/end_command_list [0x560970/0x560920]: init_query =
+// CreateQuery(D3D11_QUERY_EVENT), issue = d3d_context->End(m_query), wait =
+// spin on GetData(m_query,0,0,0)!=S_OK, release_query = m_query->Release().
+// Matcher-phase work against the 0x5598xx bodies.
 event_query::event_query( )
 	: m_query( 0 )
 {

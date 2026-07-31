@@ -31,17 +31,9 @@ class res_xs : public resource_intrusive_base {
 	friend class resource_manager;
 	friend class res_effect;
 
-	explicit res_xs( xs_descriptor<shader_data> const& )
-		: m_is_registered( false )
-	{
-		// STATE[STUB]
-		// Observed vs_data instantiation [0x12f4d0].
-	}
+	explicit res_xs( xs_descriptor<shader_data> const& binder );
 
-	void destroy_impl( ) const
-	{
-		// STATE[STUB]
-	}
+	void destroy_impl( ) const;
 
 public:
 	bool equal( xs_descriptor<shader_data> const& descriptor ) const
@@ -51,6 +43,7 @@ public:
 
 	s32 compare( xs_descriptor<shader_data> const& ) const
 	{
+		// claude@NOTE: legacy body diverged - legacy is a bool equal(binder) &&-chain, not an s32 ordering (see the legacy res_xs.cpp remainder note); matcher-phase work.
 		// STATE[STUB]
 		// Observed vs_data instantiation [0x12f690].
 		return 0;
@@ -63,6 +56,7 @@ public:
 
 	s32 compare( res_xs<shader_data> const& ) const
 	{
+		// claude@NOTE: no legacy ancestor - the res_xs-vs-res_xs overload has no legacy counterpart (only the descriptor-keyed equal); matcher-phase work.
 		// STATE[STUB]
 		// needed by compare_shader_predicate (canonical header evidence)
 		return 0;

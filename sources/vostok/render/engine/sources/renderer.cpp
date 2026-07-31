@@ -10,7 +10,9 @@
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
 #include <vostok/render/core/shader_constant_binding.h>
 #include <vostok/render/facade/scene_view_mode.h>
+#include <vostok/render/facade/sources/ui_renderer.h>
 #include <vostok/scaleform/sources/flash_renderer.h>
+#include <vostok/ui/ui.h>
 
 #include "effect_editor_gbuffer_to_screen.h"
 #include "grass_world.h"
@@ -148,6 +150,7 @@ bool renderer::is_effects_ready( ) const
 
 static statistics m_statistics;
 
+// claude@NOTE: no legacy ancestor - effect_pick_light_luminance postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_config_value const& config )
 {
@@ -368,6 +371,7 @@ renderer::~renderer( )
 		DELETE				( *it );
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.
 // STATE[STUB]
 void renderer::recreate_stage( enum_render_stage_type arg_0 )
 {
@@ -504,6 +508,7 @@ void renderer::recreate_stage( enum_render_stage_type arg_0 )
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.
 // STATE[STUB]
 void renderer::set_target_context( renderer_context_targets const* targets_context, bool force_set )
 {
@@ -593,6 +598,7 @@ void renderer::toggle_render_stage( enum_render_stage_type stage_type, bool togg
 		m_stages[stage_type]->set_enabled( toggle );
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder (model_manager/engine-world clear_resources are different classes); matcher-phase work.
 // STATE[STUB]
 void renderer::clear_resources( )
 {
@@ -671,6 +677,7 @@ void renderer::execute_stages( )
 	}
 }
 
+// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 bool sort_by_vs_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
@@ -687,6 +694,7 @@ bool sort_by_vs_predicate::operator()( render_surface_instance const* left, rend
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 bool sort_by_distance_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
@@ -720,6 +728,7 @@ bool sort_by_distance_predicate::operator()( render_surface_instance const* left
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
@@ -736,6 +745,7 @@ bool sort_by_texture_predicate::operator()( render_surface_instance const* left,
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - screen_factor postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
@@ -753,6 +763,7 @@ float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 cons
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus (opaque-model gather is new-in-target); matcher-phase work.
 // STATE[STUB]
 void renderer::fill_opaque_models( )
 {
@@ -854,6 +865,7 @@ void renderer::fill_opaque_models( )
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void renderer::sort_models_by_distance( vector< render_surface_instance* >& instances, bool from_near_to_far )
 {
@@ -881,6 +893,7 @@ void renderer::sort_models_by_distance( vector< render_surface_instance* >& inst
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void renderer::sort_models(
 	vector< render_surface_instance* >&		instances,
@@ -922,7 +935,6 @@ void renderer::sort_models(
 	// ******
 }
 
-// STATE[STUB]
 void push_point(
 	vectora< ui::vertex >&		out_vertices,
 	u32							index,
@@ -934,15 +946,14 @@ void push_point(
 	float						v
 )
 {
-	// FUNCTION BODY[0x647360]: 4
-	// <0x647360>|0x000|+0x00e:'707'
-	// <0>
-	// <1>
-	// <0x64736e>|0x00e|+0x041:'710'
-	// ******
+	// FUNCTION BODY[0x638870]
+	// claude@NOTE: VA corrected from stale 0x647360; match.db attributes 0x638870 to statistics.cpp:89 (per-TU static twin).
+	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
+	vertex_item.m_position.set				(x, y, z, 1);
+	vertex_item.m_uv.set					(u, v);
+	vertex_item.m_color						= c;
 }
 
-// STATE[STUB]
 void make_ui_vertices(
 	vectora< ui::vertex >&		out_vertices,
 	pcstr						in_text,
@@ -956,82 +967,58 @@ void make_ui_vertices(
 	u32							end_selection_index
 )
 {
-	// LOCALS
-	// float2 							pos
-	// float 							curr_word_len
-	// const float 						height
-	// pcstr 							next_word
-	// float2 							pos_rt
-	// u32 								symb_count
-	// float 							height_ts
-	// u32 								i
-	// float3 							uv
-	// ******
-
-	// CALL SITE INFO
-	// <0x647460> -> float const& < unknown >() const
-	// <0x647473> -> float < unknown >() const
-	// <0x6474ef> -> float3 < unknown >( u8 const& ) const
-	// <0x647507> -> float3 const& < unknown >( u8 const& ) const
-	// <0x647537> -> void < unknown >( pcstr, float&, pcstr& ) const
-	// ******
-
 	// FUNCTION BODY[0x647410]: 50
-	// <0>
-	// <1>
-	// <0x647413>|0x003|+0x09d:'727'
-	// <0x6474b0>|0x0a0|-0x08d:'727'
-	// <0x647423>|0x013|+0x014:'728'
-	// <0x647437>|0x027|+0x016:'729'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64744d>|0x03d|+0x019:'733'
-	// <0x647466>|0x056|+0x013:'734'
-	// <0>
-	// <0x647479>|0x069|+0x003:'736'
-	// <0x64747c>|0x06c|+0x00c:'737'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x647488>|0x078|+0x030:'744'
-	// <0>
-	// <0x6474b8>|0x0a8|+0x018:'746'
-	// <0>
-	// <0x6474d0>|0x0c0|+0x021:'748'
-	// <0x6474f1>|0x0e1|+0x018:'749'
-	// <0>
-	// <0x647509>|0x0f9|+0x016:'751'
-	// <0>
-	// <0x64751f>|0x10f|+0x01a:'753'
-	// <0>
-	// <0x647539>|0x129|+0x023:'755'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x64755c>|0x14c|+0x05b:'768'
-	// <0x6475b7>|0x1a7|+0x045:'769'
-	// <0x6475fc>|0x1ec|+0x057:'770'
-	// <0x647653>|0x243|+0x04b:'771'
-	// <0>
-	// <0x64769e>|0x28e|+0x021:'773'
-	// <0>
-	// ******
+	using namespace vostok::math;
+
+	float2 pos_rt			(0, 0);
+	float2 pos				= in_position;
+	u32 symb_count			= strlen(in_text);
+
+	pcstr ch				= in_text;
+	float const height		= in_font.get_height();
+	float height_ts			= in_font.get_height_ts();
+
+	float curr_word_len		= 0.0f;
+	pcstr next_word			= NULL;
+
+	if(is_multiline)
+		in_font.parse_word	(ch, curr_word_len, next_word);
+
+	u32 index = 0;
+
+	for(u32 i=0; i<symb_count; ++i, ++ch)
+	{
+		u32 clr = (i>=start_selection_index && i<end_selection_index) ? in_selection_color.m_value : in_color.m_value;
+
+		float3 uv			= in_font.get_char_tc_ts(*ch);
+		float3 const& tc	= in_font.get_char_tc(*ch);
+
+		if (in_text[i]=='\n' || in_text[i]=='\r\n')
+		{
+			in_font.parse_word	(ch, curr_word_len, next_word);
+			pos_rt.x			= 0.0f;
+			pos_rt.y			+= height;
+		}
+
+		if(is_multiline && (ch==next_word))
+		{
+			in_font.parse_word		(ch, curr_word_len, next_word);
+			if(pos_rt.x + curr_word_len > max_line_width)
+			{
+				pos_rt.x		= 0.0f;
+				pos_rt.y		+= height;
+			}
+		}
+
+		push_point(out_vertices, index++, pos.x+pos_rt.x,		pos.y+pos_rt.y+height,	0.0f, clr, uv.x,		uv.y+height_ts);
+		push_point(out_vertices, index++, pos.x+pos_rt.x,		pos.y+pos_rt.y,			0.0f, clr, uv.x,		uv.y);
+		push_point(out_vertices, index++, pos.x+pos_rt.x+tc.z,	pos.y+pos_rt.y+height,	0.0f, clr, uv.x+uv.z,	uv.y+height_ts);
+		push_point(out_vertices, index++, pos.x+pos_rt.x+tc.z,	pos.y+pos_rt.y,			0.0f, clr, uv.x+uv.z,	uv.y);
+
+		pos_rt.x			+= tc.z;
+	}
 }
 
-// STATE[STUB]
 void draw_text(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
@@ -1040,36 +1027,31 @@ void draw_text(
 	u32					clr
 )
 {
-	// LOCALS
-	// vectora< ui::vertex > 			out_vertices
-	// math::color 						string_color
-	// ******
-
 	// FUNCTION BODY[0x648b70]: 20
-	// <0x648b73>|0x003|+0x014:'779'
-	// <0>
-	// <1>
-	// <0x648b87>|0x017|+0x006:'782'
-	// <0x648b8d>|0x01d|+0x052:'783'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x648bdf>|0x06f|+0x049:'796'
-	// <0>
-	// <0x648c28>|0x0b8|+0x03a:'798'
-	// ******
+	// claude@NOTE: legacy (statistics.cpp) took ui::world& and looked up default_font(); the
+	// canonical signature receives the font directly
+	u32 const string_length		= strlen(str);
+	math::color string_color	(clr);
+
+	vostok::vectora<vostok::render::ui::vertex> out_vertices(g_allocator);
+	out_vertices.resize(string_length * 4);
+
+	make_ui_vertices(
+		out_vertices,
+		str,
+		*in_font,
+		float2(float(pos_x), float(pos_y)),
+		string_color,
+		string_color,
+		400,
+		false,
+		0,
+		string_length
+	);
+
+	system_renderer::ref().draw_ui_vertices((vertex_formats::TL*)&out_vertices.front(), out_vertices.size(), 0, 0);
 }
 
-// STATE[STUB]
 void draw_text_shadowed(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
@@ -1079,9 +1061,8 @@ void draw_text_shadowed(
 )
 {
 	// FUNCTION BODY[0x648c80]: 2
-	// <0x648c81>|0x001|+0x039:'803'
-	// <0x648cba>|0x03a|+0x010:'804'
-	// ******
+	draw_text(in_font, str, pos_x + 1, pos_y + 1, vostok::math::color(0, 0, 0, 220).m_value);
+	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
 void renderer::render(
@@ -1821,6 +1802,7 @@ void renderer::render(
 	END_CPUGPU_TIMER;
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus (debug overlay is new-in-target); matcher-phase work.
 // STATE[STUB]
 void renderer::draw_debug(
 	scene*				scene,
@@ -1967,6 +1949,7 @@ void renderer::draw_debug(
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
@@ -2010,6 +1993,7 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
@@ -2131,6 +2115,7 @@ void renderer::present(
 	m_last_frame_time			= m_current_time;
 }
 
+// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
 // STATE[STUB]
 void renderer::draw_frame_histogram( ) const
 {

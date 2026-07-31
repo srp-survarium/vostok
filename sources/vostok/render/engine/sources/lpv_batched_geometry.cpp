@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (batched_geometry family is new-in-target) - matcher-phase work.
 #include "lpv_batched_geometry.h"
 
 namespace vostok {

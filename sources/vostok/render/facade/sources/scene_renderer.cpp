@@ -1,4 +1,10 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: none of the remaining stubs has a
+// legacy body (legacy file consumed; recover via git show 8bb5b3dfc). Notably
+// TARGET_ONLY with no carcass declaration at all:
+// load_props_impl<configs::binary_config_value>(light_props&, binary_config_value const&)
+// at VA 0x1b120 (rva 0xb120), 1664 bytes, 52 stmts, unit = this TU - the
+// out-of-line cook called by object_light::load; reconstruct at matcher phase.
 #include <vostok/render/facade/light_props.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
 #include <vostok/render/engine/world.h>
@@ -875,6 +881,10 @@ void scene_renderer::set_sky_material( base_scene_ptr const& scene, resources::u
 }
 
 // STATE[STUB]
+// claude@NOTE: the only legacy ancestor (facade/scene_renderer.h +
+// facade/sources/scene_renderer.cpp) is set_model_visible(v,
+// virtual_path_string subsurface_name, bool value) - the target refactored to
+// (v, u32 surface_id, u32 flags); body is matcher-phase against 0x6e0950.
 void scene_renderer::set_model_visible( render_model_instance_ptr const& v, u32 surface_id, u32 flags )
 {
 	// FUNCTION BODY[0x6e0950]: 1

@@ -1,8 +1,26 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: the trample/layer/merge/sort/shader-parameter stubs below have no legacy ancestor (absent from the legacy grass_world twin; subsystems are new-in-target); the four DIVERGED fns carry their own notes - matcher-phase work.
+#include <vostok/collision/api.h>
+#include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/console_command.h>
+#include <vostok/render/core/backend.h>
+#include "grass_patch.h"
 #include "grass_world.h"
+#include "renderer_context.h"
+#include "statistics.h"
+#include "system_renderer.h"
 
 namespace vostok {
 namespace render {
+
+static bool s_draw_grass_debug_value				=	false;
+static vostok::console_commands::cc_bool s_draw_grass_debug("draw_grass_debug", s_draw_grass_debug_value, false, vostok::console_commands::command_type_engine_internal);
+
+// claude@NOTE: the legacy grass_world.h declared these typedefs in-class; the canonical
+// header keeps raw vector members, so they live file-local here.
+typedef vector<grass_patch*>	grass_patches_type;
+typedef vector<grass_template*>	grass_templates_type;
+typedef vector<grass_instance*>	grass_instances_type;
 
 grass_world::grass_world( ) :
 	m_patches_tree						( 0 ),
@@ -19,7 +37,10 @@ grass_world::grass_world( ) :
 	m_need_populate						( false )
 {
 	// STATE[STUB]
+	// claude@NOTE: patches tree from the legacy ancestor; the canonical shader-constant
+	// registrations (m_ambient_color .. m_wind_info_parameters) have no legacy seed.
 	// FUNCTION BODY[0x6364e0]
+	m_patches_tree									=	&*collision::new_space_partitioning_tree(g_allocator, 1.f, 1024);
 }
 
 void grass_world::set_wind_parameters( float2 const&, float )
@@ -48,12 +69,32 @@ void grass_world::set_shadow_parameters( u32 )
 
 grass_world::~grass_world( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6370f0]
+	grass_patches_type::const_iterator it_p			=	m_patches.begin();
+	grass_patches_type::const_iterator end_p		=	m_patches.end();
+
+	for (; it_p != end_p; ++it_p)
+	{
+		grass_patch* patch							=	*it_p;
+		DELETE										(patch);
+	}
+
+	grass_templates_type::iterator	it_t			=	m_templates.begin();
+	grass_templates_type::iterator	end_t			=	m_templates.end();
+
+	for (; it_t != end_t; ++it_t)
+	{
+		grass_template* templ						=	(*it_t);
+
+		DELETE										(templ);
+	}
+
+	collision::delete_space_partitioning_tree		(m_patches_tree);
 }
 
 u32 grass_world::add_template( grass_render_model_ptr const& )
 {
+	// claude@NOTE: legacy body diverged - legacy add_template takes an explicit in_id and returns void; canonical generates and returns the id; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x636920]
 	return 0;
@@ -67,36 +108,84 @@ void grass_world::add_trample( trample_desc const& )
 
 u32 grass_world::add_instance( u32, math::color const&, float4x4 const&, u8, float )
 {
+	// claude@NOTE: legacy body diverged - legacy add_instance takes explicit in_id, lacks layer/wind_scale, returns void; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x636090]
 	return 0;
 }
 
-void grass_world::remove_instance( u32 )
+void grass_world::remove_instance( u32 in_id )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x635d90]
+	grass_templates_type::const_iterator	it		=	m_templates.begin();
+	grass_templates_type::const_iterator	end		=	m_templates.end();
+
+	for (; it != end; ++it)
+	{
+		grass_template* templ						=	*it;
+
+		grass_instances_type::iterator it_instance	=	templ->m_instances.begin();
+		grass_instances_type::iterator end_instance	=	templ->m_instances.end();
+
+		for (; it_instance != end_instance; ++it_instance)
+		{
+			grass_instance* instance				=	*it_instance;
+
+			if (instance->m_index == in_id)
+			{
+				DELETE								(instance);
+				templ->m_instances.erase			(it_instance);
+				return;
+			}
+		}
+	}
 }
 
-grass_template* grass_world::id_to_template( u32 ) const
+grass_template* grass_world::id_to_template( u32 id ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x635a70]
-	return 0;
+	grass_template* result							=	NULL;
+	grass_templates_type::const_iterator	it		=	m_templates.begin();
+	grass_templates_type::const_iterator	end		=	m_templates.end();
+
+	for (; it != end; ++it)
+	{
+		result										=	(*it);
+
+		if (result->m_index == id)
+			break;
+	}
+
+	return result;
 }
 
-grass_template* grass_world::find_template( grass_render_model_ptr const& ) const
+grass_template* grass_world::find_template( grass_render_model_ptr const& model ) const
 {
 	// STATE[STUB]
+	// claude@NOTE: no legacy ancestor (legacy looked templates up by id only); matcher-phase.
 	// FUNCTION BODY[0x635a20]
+	VOSTOK_UNREFERENCED_PARAMETER	( model );
 	return 0;
 }
 
-grass_patch* grass_world::find_patch( float3 const& )
+grass_patch* grass_world::find_patch( float3 const& point )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6359c0]
-	return 0;
+	// claude@NOTE: legacy overload also filtered by grass_template*; the canonical
+	// point-only overload drops that filter.
+	grass_patches_type::const_iterator it			=	m_patches.begin();
+	grass_patches_type::const_iterator end			=	m_patches.end();
+
+	for (; it != end; ++it)
+	{
+		grass_patch* patch							=	*it;
+		if (patch->get_aabb().min <= point &&
+			patch->get_aabb().max >= point)
+		{
+			return patch;
+		}
+	}
+	return NULL;
 }
 
 void grass_world::remove_patches( )
@@ -107,6 +196,7 @@ void grass_world::remove_patches( )
 
 void grass_world::populate( float )
 {
+	// claude@NOTE: legacy body diverged - legacy populate has a retired patch_size_height param and instancing tail (create_patch_render_buffers); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x637b90]
 }
@@ -117,9 +207,12 @@ void grass_world::merge_patches( )
 	// FUNCTION BODY[0x6370c0]
 }
 
+// STATE[STUB]
+// claude@NOTE: legacy body iterates grass_patch::m_instances/m_origin, which are private
+// in the canonical grass_patch with no accessor - skipped; seed kept in temp/render_legacy
+// (s_draw_grass_debug cc_bool above belongs to it).
 void grass_world::render_debug( renderer_context* )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x637270]
 }
 
@@ -136,10 +229,34 @@ void grass_world::process_sorting( float3 const&, bool )
 	// FUNCTION BODY[0x636130]
 }
 
-void grass_world::process_culling( renderer_context*, float )
+void grass_world::process_culling( renderer_context* context, float first_lod_distance )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6361b0]
+	m_visible_patches.clear							();
+	m_visible_patches.reserve						(256);
+
+	statistics::ref().grass_stat_group.num_total_patches.value	=	m_patches.size();
+
+	collision::objects_type objects					=	g_allocator;
+	objects.reserve									(m_patches.size());
+
+	math::frustum view_frustum						(context->get_vp());
+
+	m_patches_tree->cuboid_query					(u32(-1), view_frustum, objects );
+
+	float const first_lod_distance_squared			=	first_lod_distance * first_lod_distance;
+
+	for (collision::objects_type::const_iterator it = objects.begin(), end = objects.end(); it != end; ++it)
+	{
+		grass_patch* patch							=	static_cast<grass_patch*>((*it)->user_data());
+
+		float const to_aabb_center_squared			=	math::squared_length(context->get_view_pos() - patch->get_aabb().center());
+
+		if (first_lod_distance_squared < to_aabb_center_squared)
+			continue;
+
+		m_visible_patches.push_back					(patch);
+	}
 }
 
 void grass_world::accumulate_trample( renderer*, renderer_context* )
@@ -166,6 +283,7 @@ void grass_world::render(
 	u32
 )
 {
+	// claude@NOTE: legacy body diverged - legacy render draws via retired per-patch instance decl/vb members and lacks debug_effect/shadow_pass/cascade_index; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x638150]
 }

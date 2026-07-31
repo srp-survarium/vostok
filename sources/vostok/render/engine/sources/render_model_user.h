@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_USER_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_USER_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: legacy render_model_user.{h,cpp} fully consumed; the class had no user ctor and the trivial inlines are already reproduced - matcher-phase work.
 #include "render_model_instance_impl.h"
 #include "render_surface.h"
 #include "render_surface_instance.h"

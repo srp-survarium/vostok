@@ -49,7 +49,10 @@ class shader_constant_binding;
 class shader_constant_buffer;
 class shader_constant_host;
 class shader_constant_table;
-class shader_include_getter;
+// claude@NOTE: shader_include_getter is a struct (see core/shader_include_getter.h);
+// the class-key is part of the MSVC mangling, and the target spells it
+// PAUshader_include_getter, so the forward declaration must say struct.
+struct shader_include_getter;
 class state_descriptor;
 class texture_slot;
 class texture_storage;
@@ -67,6 +70,8 @@ typedef fastdelegate::FastDelegate<
 > shader_compile_error_handler;
 
 class resource_manager : public quasi_singleton<resource_manager> {
+	friend class texture_pool;
+
 public:
 	struct str_pred {
 		bool operator()(

@@ -48,6 +48,7 @@ public:
 	};
 
 public:
+	// claude@NOTE: no legacy ancestor - set_mapping was declaration-only in the legacy header (no definition anywhere in the corpus); matcher-phase work.
 	void set_mapping( ) { /* STATE[STUB] */ }
 
 	effect_compiler& begin_pass(
@@ -99,18 +100,49 @@ public:
 	effect_compiler& color_write_enable( D3D11_COLOR_WRITE_ENABLE mode = D3D11_COLOR_WRITE_ENABLE_ALL );
 	effect_compiler& set_fill_mode( D3D11_FILL_MODE fill_mode );
 
-	effect_compiler& def_sampler( pcstr, sampler_state_descriptor& )
+	effect_compiler& def_sampler( pcstr name, sampler_state_descriptor& sampler_desc )
 	{
-		// STATE[STUB]
+		if (m_shaders_cache_mode)
+			return *this;
+
+		if( resource_manager::ref().find_registered_sampler( name) )
+		{
+			ASSERT( 0, "A sampler with name \"%s\" was already registered globally.", name);
+			return *this;
+		}
+
+		ID3D11SamplerState* sampler  =  resource_manager::ref().create_sampler_state( sampler_desc);
+
+		bool res = false;
+		if( m_vs_hw)
+			res |= m_vs_descriptor.set_sampler( name, sampler);
+
+		if( m_gs_hw)
+			res |= m_gs_descriptor.set_sampler( name, sampler);
+
+		if( m_ps_hw)
+			res |= m_ps_descriptor.set_sampler( name, sampler);
+
+		//if( !res)
+		//	LOG_WARNING( "The sampler \"%s\" was specified in effect descriptor, but not used by any of effect shaders.", name);
+
 		return *this;
 	}
 	effect_compiler& def_sampler(
-		pcstr,
-		D3D11_TEXTURE_ADDRESS_MODE,
-		D3D11_FILTER
+		pcstr name,
+		D3D11_TEXTURE_ADDRESS_MODE address,
+		D3D11_FILTER filter
 	)
 	{
-		// STATE[STUB]
+		if (m_shaders_cache_mode)
+			return *this;
+
+		m_sampler_state_descriptor.reset()
+									.set_address_mode	( address, address, address)
+									.set_filter		( filter);
+
+		def_sampler( name, m_sampler_state_descriptor);
+
 		return *this;
 	}
 	sampler_state_descriptor& begin_sampler( pcstr )
@@ -186,6 +218,7 @@ public:
 
 private:
 	u32 get_sampler( pcstr ) { return 0; }
+	// claude@NOTE: no legacy ancestor - the six set_samp_* below were declaration-only in the legacy header (bodies existed only in the dead D3D9 blender_compiler generation); matcher-phase work.
 	void set_samp_texture( u32, pcstr ) { /* STATE[STUB] */ }
 	void set_samp_address( u32, u32 ) { /* STATE[STUB] */ }
 	void set_samp_filter_min( u32, u32 ) { /* STATE[STUB] */ }

@@ -49,6 +49,7 @@ public:
 	bool equal( res_effect const* other ) const { return equal( *other ); }
 	bool apply( u32 technique_id, u32 pass_id )
 	{
+		// claude@NOTE: legacy body diverged - legacy apply is void with defaulted args; canonical returns bool from apply_pass (body already reproduces the legacy call sequence); matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[0x668e0]
 		select_technique( technique_id );

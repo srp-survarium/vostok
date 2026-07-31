@@ -1,6 +1,7 @@
 #include "pch.h"
 #include <vostok/render/culling/possible_sectors_holder.h>
 #include "material.h"
+#include "material_manager.h"
 #include "render_model.h"
 #include "render_model_instance_impl.h"
 #include "render_surface.h"
@@ -9,17 +10,28 @@
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 render_model::render_model( ) :
-	m_aabbox( math::create_zero_aabb( ) )
+	m_aabbox			( math::create_identity_aabb( ) ),
+	m_locators			( NULL ),
+	m_locators_count	( 0 ),
+	m_lods_descriptor	( NULL ),
+	m_childs			( NULL ),
+	m_childs_count		( 0 )
 {
 	// FUNCTION BODY[0x63c500]
 	// ******
 }
 
-// STATE[STUB]
 render_model::~render_model( )
 {
+	// claude@NOTE: adapted from legacy static_render_model::~static_render_model (children
+	// vector moved into render_model as m_childs array in the shipped tree).
+	for( u8 i = 0; i < m_childs_count; ++i )
+		DELETE				( m_childs[i] );
+
+	if(m_locators)
+		FREE(m_locators);
+
 	// LOCALS
 	// u8 								i
 	// ******
@@ -42,9 +54,28 @@ render_model::~render_model( )
 	// ******
 }
 
-// STATE[STUB]
 void render_model::load_properties( configs::binary_config_value const& properties )
 {
+	m_aabbox.max			= vostok::math::float3(properties["bounding_box"]["max"]);
+	m_aabbox.min			= vostok::math::float3(properties["bounding_box"]["min"]);
+
+	m_locators_count		= (u16)properties.value_exists("locators") ? (u16)properties["locators"].size() : 0;
+
+	if(m_locators_count)
+	{
+		m_locators	= ALLOC(model_locator_item, m_locators_count);
+		for(u16 i=0; i<m_locators_count; ++i)
+		{
+			configs::binary_config_value const& v = properties["locators"][i];
+			model_locator_item& item	= m_locators[i];
+			pcstr name					= v["name"];
+			int bone_idx				= v["bone_idx"];
+			item.m_bone					= u16(bone_idx);
+			strings::copy				( item.m_name, name );
+			item.m_offset				= math::create_rotation(v["rotation"]) * math::create_translation(v["position"]);
+		}
+	}
+
 	// LOCALS
 	// u16 								i
 	// pcstr 							name
@@ -74,9 +105,17 @@ void render_model::load_properties( configs::binary_config_value const& properti
 	// ******
 }
 
-// STATE[STUB]
 bool render_model::get_locator( pcstr locator_name, model_locator_item& result ) const
 {
+	for( u16 i=0; i<m_locators_count; ++i)
+	{
+		model_locator_item const& item = m_locators[i];
+		if(strings::equal(item.m_name, locator_name))
+		{
+			result = item;
+			return true;
+		}
+	}
 	return false;
 
 	// FUNCTION BODY[0x63bfe0]: 10
@@ -94,6 +133,7 @@ bool render_model::get_locator( pcstr locator_name, model_locator_item& result )
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - legacy render_model had only the retired one-at-a-time append_surface contract, no LOD-descriptor set_children; matcher-phase work.
 // STATE[STUB]
 void render_model::set_children( render_surface** children_in, u8 count, model_lods_descriptor* lods )
 {
@@ -133,25 +173,38 @@ material_effects& render_surface::get_material_effects( )
 	// ******
 }
 
-// STATE[STUB]
 render_surface::~render_surface( )
 {
+	material_manager::ref().remove_material_effects(m_materail_effects_instance);
+
 	// FUNCTION BODY[0x63c6e0]: 1
 	// <0x63c6e0>|0x000|+0x01c:'109'
 	// ******
 }
 
-// STATE[STUB]
 void render_surface::set_default_material( )
 {
+	m_materail_effects_instance = 0;
+
 	// FUNCTION BODY[0x63c5e0]: 1
 	// <0x63c5e0>|0x000|+0x02c:'114'
 	// ******
 }
 
-// STATE[STUB]
 void render_surface::set_material_effects( material_effects_instance_ptr mtl_instance_ptr, pcstr material_name )
 {
+	if (mtl_instance_ptr)
+	{
+		material_manager::ref().remove_material_effects(m_materail_effects_instance);
+
+		m_materail_effects_instance	= mtl_instance_ptr;
+
+		material_manager::ref().add_material_effects(
+			m_materail_effects_instance,
+			material_name
+		);
+	}
+
 	// FUNCTION BODY[0x63c610]: 11
 	// <0x63c610>|0x000|+0x01d:'119'
 	// <0>
@@ -167,9 +220,16 @@ void render_surface::set_material_effects( material_effects_instance_ptr mtl_ins
 	// ******
 }
 
-// STATE[STUB]
 void render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
 {
+	(void)&chunk;
+
+	m_aabbox.max			= vostok::math::float3(properties["bounding_box"]["max"]);
+	m_aabbox.min			= vostok::math::float3(properties["bounding_box"]["min"]);
+
+	// claude@NOTE: target body (40 stmts, sphere_origin local) also derives m_bounding_sphere
+	// and streaming-texture factor - evolved past this legacy seed; matcher-phase work.
+
 	// LOCALS
 	// float3 							sphere_origin
 	// ******
@@ -237,9 +297,10 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 	// ******
 }
 
-// STATE[STUB]
 void render_surface_instance::set_constants( )
 {
+	m_parent->set_constants	( );
+
 	// CALL SITE INFO
 	// <0x63bd48> -> void < unknown >()
 	// ******
@@ -248,6 +309,7 @@ void render_surface_instance::set_constants( )
 	// ******
 }
 
+// claude@NOTE: no legacy ancestor - render_surface_instance::is_occluded postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
 bool render_surface_instance::is_occluded( ) const
 {
@@ -260,7 +322,6 @@ bool render_surface_instance::is_occluded( ) const
 	// ******
 }
 
-// STATE[STUB]
 render_model_instance_impl::render_model_instance_impl( ) :
 	m_collision_object( this ),
 	m_transform( math::float4x4( ).identity( ) )

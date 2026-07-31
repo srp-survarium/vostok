@@ -38,6 +38,7 @@ public:
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{
+		// claude@NOTE: no legacy ancestor - consumed legacy inline returned the retired speedtree_frond_vertex_input_type enumerator; matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[0x427c0]
 		return unknown_vertex_input_type;

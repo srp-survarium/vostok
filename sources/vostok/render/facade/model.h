@@ -70,6 +70,7 @@ public:
 
 	virtual void set_lod_params( u8, bool, float, float, float )
 	{
+		// claude@NOTE: no legacy ancestor - legacy facade/model.h remains but lacks set_lod_params (the LOD system is new-in-target); matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[0x61980]
 	}

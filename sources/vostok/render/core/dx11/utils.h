@@ -69,6 +69,21 @@ inline u32 calc_surface_size(
 	);
 }
 
+// Calculates logarithm with base 2 only for powers of 2.
+inline u32 log_2( u32 val )
+{
+#pragma warning( push)
+#pragma warning( disable:4146)
+#pragma warning( disable:4554)
+
+	ASSERT( (val & -val) != 0 || val == 0, "The function works only for powers of 2." );
+
+	float f = (float)( val & -val); // cast the least significant bit in v to a float
+	return (*(u32*)&f >> 23) - 0x7f;	// cast the least significant bit in v to a float
+
+#pragma warning( pop)
+}
+
 } // namespace utils
 } // namespace render
 } // namespace vostok

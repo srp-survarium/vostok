@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_ENGINE_CLOUDS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_CLOUDS_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target cloud system, same as the .cpp) - matcher-phase work.
 #include <vostok/math_float3.h>
 #include <vostok/render/facade/cloud_key.h>
 #include <vostok/tasks_task.h>

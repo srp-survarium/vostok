@@ -65,6 +65,7 @@ public:
 
 inline s32 compare( res_declaration const&, res_declaration const& )
 {
+	// claude@NOTE: legacy body diverged - legacy has only member equal(desc*,count) keyed on a raw desc array, not a two-object s32 compare; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x1246a0]
 	return 0;

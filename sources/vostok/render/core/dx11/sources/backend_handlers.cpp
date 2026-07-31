@@ -165,14 +165,12 @@ void constants_handler<enum_shader_type_vertex>::apply	()
 	m_diff_range_start = m_diff_range_end = 0;
 }
 
-#ifdef DEBUG
 template <enum_shader_type shader_type>
 void	constants_handler<shader_type>::check_for_unset_constants()
 {
 	//for( u32 i = 0; i< m_unset_constants.size(); ++i)
 	//	LOG_ERROR( "The shader constant \"%s\" was not specified for %s!", m_unset_constants[i]->name().c_str(), shader_type_traits<shader_type>::name());
 }
-#endif // DEBUG
 
 template <>
 void constants_handler<enum_shader_type_geometry>::apply	()
@@ -313,7 +311,6 @@ void  textures_handler<shader_type>::fill_changes_buffer( ID3DShaderResourceView
 	}
 }
 
-#ifdef DEBUG
 template <enum_shader_type shader_type>
 void textures_handler<shader_type>::check_for_unset_textures( )
 {
@@ -334,7 +331,6 @@ void textures_handler<shader_type>::check_for_unset_textures( )
 //			LOG_ERROR( "Texture \"%s\" was not specified for %s. ", slots[i].name.c_str(), n);
 		}
 }
-#endif // DEBUG
 
 template <>
 void textures_handler<enum_shader_type_vertex>::apply	()
@@ -437,7 +433,6 @@ void  samplers_handler<shader_type>::fill_changes_buffer( ID3DSamplerState ** bu
 	}
 }
 
-#ifdef DEBUG
 template <enum_shader_type shader_type>
 void samplers_handler<shader_type>::check_for_unset_samplers()
 {
@@ -449,7 +444,6 @@ void samplers_handler<shader_type>::check_for_unset_samplers()
 //		if( slots[i].name != "" && !(*m_current)[i] )		
 //			LOG_ERROR( "Sampler \"%s\" was not for %s.", slots[i].name, shader_type_traits<shader_type>::name());
 }
-#endif // #ifdef DEBUG
 
 template <>
 void samplers_handler<enum_shader_type_vertex>::apply	()

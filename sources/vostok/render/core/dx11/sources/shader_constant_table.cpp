@@ -76,6 +76,7 @@ void shader_constant_table::apply_bindings( shader_constant_bindings const & bin
 
 s32 shader_constant_table::compare( shader_constant_table const& ) const
 {
+	// claude@NOTE: no legacy ancestor - stem file consumed; only bool equal ever existed (already ported to the header inline); the s32 compare is target-generation; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x739190]
 	return 0;

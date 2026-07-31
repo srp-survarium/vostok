@@ -38,6 +38,7 @@ public:
 		m_clouds_geometry		( 0, 0 ),
 		m_type					( type )
 	{
+		// claude@NOTE: no legacy ancestor - stage_atmosphere is new-in-target; matcher-phase work.
 		// STATE[STUB]
 	}
 

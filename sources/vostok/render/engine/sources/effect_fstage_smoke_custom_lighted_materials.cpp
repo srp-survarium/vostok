@@ -1,16 +1,49 @@
 #include "pch.h"
 #include "effect_fstage_smoke_custom_lighted_materials.h"
+#include "blend_mode.h"
+#include <vostok/render/core/dx11/effect_compiler.h>
+#include <vostok/render/core/custom_config_value.h>
 
 namespace vostok {
 namespace render {
 
 void effect_fstage_smoke_custom_lighted_materials::compile(
-	effect_compiler&,
-	custom_config_value const&
+	effect_compiler&			compiler,
+	custom_config_value const&	config
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b9690]
+	shader_configuration configuration;
+	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
+	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
+
+	compile_begin("vertex_base", "forward_base_smoke_custom_lighted", compiler, &configuration, config);
+		//compiler.set_stencil( true, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP);
+
+		float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
+		float   solid_transparency   = 1.0f;
+
+		if( configuration.use_emissive==2)
+		{
+			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, true, 0);
+		}
+		solid_color_specular		= float4(float4(config["constant_emissive"]).xyz(), float(config["constant_emissive_multiplier"]));
+
+		if (configuration.use_transparency_texture)
+		{
+			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, true, 0);
+		}
+		//else
+		{
+			solid_transparency = config.value_exists("constant_transparency") ? float(config["constant_transparency"]) : 1.0f;
+		}
+
+		compiler.set_constant("solid_transparency",   solid_transparency);
+		compiler.set_constant("solid_color_specular", solid_color_specular);
+
+		// TODO: fix it
+		compiler.set_cull_mode(D3D_CULL_NONE);
+	compile_end(compiler);
 }
 
 } // namespace render

@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (tracers are new-in-target; legacy records them TARGET_ONLY) - matcher-phase work.
 #include "tracer_model_instance_cook.h"
 #include "tracer_model_instance.h"
 

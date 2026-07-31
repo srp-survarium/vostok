@@ -24,6 +24,7 @@ struct skeleton_combined_cook_data {
 		resources::managed_resource_ptr		converted_model;
 	};
 
+	// claude@NOTE: no legacy ancestor - skeleton_combined_* postdates the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	explicit skeleton_combined_cook_data( bool owner_cook )
 		: models_count( 0 ),

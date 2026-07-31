@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (temporal jitter is new-in-target) - matcher-phase work.
 #include "temporal_projection_matrix_modifier.h"
 
 namespace vostok {

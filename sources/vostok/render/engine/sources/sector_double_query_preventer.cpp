@@ -5,6 +5,11 @@ namespace vostok {
 namespace render {
 namespace culling {
 
+// claude@NOTE: this class is the canonical replacement for the legacy marker
+// idiom (dx9/model_manager.cpp: sector::marker / portal::marker stamped with
+// m_marker per traversal, marker==0xffffffff at portal::create) - instead of
+// u32 stamps it remembers per-sector max frustums/rects and tests containment;
+// no legacy body maps, matcher-phase against the 0x5e8xxx bodies.
 sector_double_query_preventer::sector_double_query_preventer( spatial_sector const*, u32 ) :
 	m_buffer_for_frustum_vectors( 0 ),
 	m_sectors_max_frustums( 0 ),

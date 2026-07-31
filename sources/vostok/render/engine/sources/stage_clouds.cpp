@@ -1,8 +1,13 @@
 #include "pch.h"
 #include "stage_clouds.h"
 
+#include <vostok/render/core/res_effect.h>
+
 namespace vostok {
 namespace render {
+
+// claude@NOTE: environment_temp / cloud_key_parameters / fill_cloud_texture have no legacy
+// ancestor (legacy clouds_sliced_cube 3d-density design was replaced) - matcher-phase
 
 environment_temp::environment_temp( ) :
 	keys			( 0 ),
@@ -42,14 +47,12 @@ void stage_clouds::fill_cloud_texture( u32 )
 
 bool stage_clouds::is_effects_ready( ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x611650]
-	return false;
+	return m_clouds_effect.c_ptr() != NULL;
 }
 
 stage_clouds::~stage_clouds( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x611ae0]
 }
 
@@ -57,6 +60,8 @@ void stage_clouds::execute( )
 {
 	// STATE[STUB]
 	// FUNCTION BODY[0x611d30]
+	// claude@NOTE: legacy execute drew the sliced-cube density volume; shipped execute is rewritten
+	// around cloud_interp_textures/god-rays - legacy body kept in temp/render_legacy remainder
 }
 
 } // namespace render

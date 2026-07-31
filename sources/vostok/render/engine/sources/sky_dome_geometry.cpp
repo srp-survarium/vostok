@@ -8,6 +8,7 @@ sky_dome_geometry::sky_dome_geometry( ) :
 	m_stride		( sizeof( vertex_type ) ),
 	m_num_indices	( 0 )
 {
+	// claude@NOTE: no legacy ancestor - geometry helper for the post-legacy atmosphere/volume-fog/occlusion stages
 	// STATE[STUB]
 	// FUNCTION BODY[0x7b30a0]
 }

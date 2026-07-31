@@ -1,6 +1,7 @@
 #ifndef VOSTOK_RENDER_CULLING_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
 #define VOSTOK_RENDER_CULLING_POSSIBLE_SECTORS_HOLDER_H_INCLUDED
 
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (possible_sectors_holder is new-in-target) - matcher-phase work.
 #include <vostok/configs_binary_config_value.h>
 #include <vostok/detail_noncopyable.h>
 

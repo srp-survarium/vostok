@@ -9,6 +9,7 @@
 #include <vostok/resources_resource_ptr.h>
 #include <vostok/resources_unmanaged_resource.h>
 
+#include "grass_template.h"
 #include "trample_desc.h"
 
 namespace vostok {
@@ -85,6 +86,7 @@ struct grass_world : public resources::unmanaged_resource {
 
 	grass_patch* find_patch( float3 const&, grass_template* )
 	{
+		// claude@NOTE: no legacy ancestor - declaration-only in the legacy header; the body was consumed into the ported point-only overload; matcher-phase work.
 		// STATE[STUB]
 		return 0;
 	}
@@ -93,6 +95,7 @@ struct grass_world : public resources::unmanaged_resource {
 
 	u32 find_patches( grass_template*, vector<grass_patch*>& )
 	{
+		// claude@NOTE: legacy body reads grass_patch::m_template directly - public in the legacy struct, but private in the canonical grass_patch with no friend/accessor for grass_world; not portable without inventing a friend; matcher-phase work.
 		// STATE[STUB]
 		return 0;
 	}
@@ -126,6 +129,7 @@ struct grass_world : public resources::unmanaged_resource {
 private:
 	void on_test_sub_resources_loaded( resources::queries_result& )
 	{
+		// claude@NOTE: legacy body diverged - legacy on_sub_resources_loaded calls the retired add_template/add_instance/populate signatures; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -147,15 +151,33 @@ private:
 
 	void create_patch_render_buffers( )
 	{
+		// claude@NOTE: legacy body diverged - legacy loops grass_patch::create_render_buffer, a method the canonical patch does not have; matcher-phase work.
 		// STATE[STUB]
 	}
 
 	void merge_patches( );
 	u32 add_template( grass_render_model_ptr const& render_model );
 
-	void remove_template( u32 )
+	void remove_template( u32 in_id )
 	{
-		// STATE[STUB]
+		vector<grass_template*>::iterator	it_t			=	m_templates.begin();
+		vector<grass_template*>::iterator	end_t			=	m_templates.end();
+
+		for (; it_t != end_t; ++it_t)
+		{
+			grass_template* templ						=	*it_t;
+			if (templ->m_index == in_id)
+			{
+				DELETE									(templ);
+				m_templates.erase						(it_t);
+
+#ifndef MASTER_GOLD
+//				find_patches							(templ, m_patches_to_remove);
+#endif // #ifndef MASTER_GOLD
+
+				break;
+			}
+		}
 	}
 
 	u32 add_instance(

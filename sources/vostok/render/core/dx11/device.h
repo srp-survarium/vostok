@@ -29,6 +29,7 @@ public:
 	u32 get_avaliable_video_memory( ) const;
 	u32 get_max_texture_size( ) const
 	{
+		// claude@NOTE: no legacy ancestor - get_max_texture_size has no legacy ancestor (new-in-target); matcher-phase work.
 		// STATE[STUB]
 		return 0;
 	}

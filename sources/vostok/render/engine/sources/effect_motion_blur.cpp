@@ -9,6 +9,7 @@ void effect_motion_blur::compile(
 	custom_config_value const&
 )
 {
+	// claude@NOTE: no legacy ancestor - effect postdates the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x7bba10]
 }

@@ -250,7 +250,6 @@ inline res_effect_ptr effect_manager::create_effect(
 template < typename effect_descriptor_type >
 inline void effect_manager::create_effect( res_effect_ptr* out_effect )
 {
-	// STATE[STUB]
 	// Observed instantiations:
 	// effect_downsample_reflective_shadow_map [0x7d4b0]
 	// effect_translucency [0x7e3d0]
@@ -276,17 +275,29 @@ inline void effect_manager::create_effect( res_effect_ptr* out_effect )
 	// effect_light_mask [0x74470]
 	// effect_sun [0x788b0]
 	// point_light_effect<0, 0> [0x78d10]
-	if ( out_effect )
-		*out_effect = res_effect_ptr( );
+	static effect_descriptor_type	descriptor_object;
+
+	pcvoid					  mem	= ALLOCA(Kb);
+	effect_options_descriptor empty_desc(mem, Kb);
+
+	u32 crc							= 0;
+
+	if (force_sync)
+		*out_effect					= create_new_effect(
+			descriptor_object,
+			render::create_custom_config(empty_desc, crc, false),
+			crc
+		);
+	else
+		create_new_effect				(out_effect, &descriptor_object, render::create_custom_config(empty_desc, crc, false), crc);
 }
 
 template < typename effect_descriptor_type >
 inline void effect_manager::create_effect(
 	res_effect_ptr* out_effect,
-	effect_options_descriptor const&
+	effect_options_descriptor const& desc
 )
 {
-	// STATE[STUB]
 	// Observed instantiations:
 	// effect_debug_tracer [0x7ed60]
 	// effect_motion_vectors_accumulation [0x81ef0]
@@ -294,17 +305,36 @@ inline void effect_manager::create_effect(
 	// effect_system_ui [0x66c50]
 	// effect_gbuffer_nomaterial_materials [0x68dc0]
 	// effect_fill_reflective_shadow_map [0x727d0]
-	if ( out_effect )
-		*out_effect = res_effect_ptr( );
+	static effect_descriptor_type	descriptor_object;
+	u32 crc							= desc.get_crc();
+	if (force_sync)
+	{
+		*out_effect					= create_new_effect(
+			descriptor_object,
+			render::create_custom_config(desc, crc, false),
+			crc
+		);
+	}else
+	{
+		create_new_effect	( out_effect,
+							&descriptor_object,
+							render::create_custom_config(desc, crc, false),
+							crc );
+	}
 }
 
 template < typename effect_descriptor_type >
 inline void effect_manager::create_effect(
-	effect_loader*,
-	effect_options_descriptor const&
+	effect_loader* loader,
+	effect_options_descriptor const& desc
 )
 {
-	// STATE[STUB]
+	static effect_descriptor_type	descriptor_object;
+	u32 crc							= desc.get_crc();
+	create_new_effect	( loader,
+						&descriptor_object,
+						render::create_custom_config(desc, crc, false),
+						crc );
 }
 
 STATIC_SIZE_ASSERT( effect_manager::compare_predicate<res_effect>, 0x1 );

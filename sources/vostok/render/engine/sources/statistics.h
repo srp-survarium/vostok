@@ -77,6 +77,7 @@ struct statistics_value : public statistics_base {
 		history_index( 0 ),
 		min_max_frame_index( 0 )
 	{
+		// claude@NOTE: legacy body diverged - legacy statistics_value is a ring buffer (history[N]); canonical grew min/max/digit tracking (see legacy statistics_inline.h remainder); matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[statistics_value<double>: 0x6f990]
 		history[0] = T( );
@@ -84,6 +85,7 @@ struct statistics_value : public statistics_base {
 
 	virtual void start( ) override
 	{
+		// claude@NOTE: legacy body diverged - legacy start is a ring-buffer advance, no min/max/digit tracking; matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[statistics_value<int>: 0x6fb60]
 	}
@@ -92,6 +94,7 @@ struct statistics_value : public statistics_base {
 
 	virtual void clear( ) override
 	{
+		// claude@NOTE: legacy body diverged - legacy clear resets the ring buffer only (statistics_inline.h, not the statistics.cpp group/clear); matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[statistics_value<double>: 0x6fad0]
 	}
@@ -163,11 +166,13 @@ struct cpu_gpu_timer_scope : public boost::noncopyable {
 	explicit cpu_gpu_timer_scope( statistics_cpu_gpu& counter ) :
 		m_counter( counter )
 	{
+		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; its scope ctor used the retired USE_GPU_TIMERS gpu_timer member (recoverable from git); matcher-phase work.
 		// STATE[STUB]
 	}
 
 	~cpu_gpu_timer_scope( )
 	{
+		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired gpu_timer layout; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -181,11 +186,13 @@ struct timer_scope : public boost::noncopyable {
 	explicit timer_scope( statistics_float& counter ) :
 		m_counter( counter )
 	{
+		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired layout; matcher-phase work.
 		// STATE[STUB]
 	}
 
 	~timer_scope( )
 	{
+		// claude@NOTE: no legacy ancestor - legacy statistics.h consumed; retired layout; matcher-phase work.
 		// STATE[STUB]
 	}
 
@@ -250,6 +257,7 @@ struct particles_statistics_group : public statistics_group {
 	explicit particles_statistics_group( pcstr group_name );
 	~particles_statistics_group( )
 	{
+		// claude@NOTE: no legacy ancestor - legacy declared no dtor (compiler-generated); matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[0x6f710]
 	}

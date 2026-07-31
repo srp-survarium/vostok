@@ -11,6 +11,13 @@ class effect_compiler;
 
 class effect_gather_luminance_histogram : public effect_descriptor {
 public:
+	enum
+	{
+		gather_luminance_in_range,
+		gather_luminance_count,
+		gather_luminance_histogram,
+	};
+
 	effect_gather_luminance_histogram( ) { }
 	virtual ~effect_gather_luminance_histogram( ) { }
 

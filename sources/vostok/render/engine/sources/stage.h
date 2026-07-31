@@ -18,6 +18,7 @@ public:
 
 	virtual void execute_disabled( )
 	{
+		// claude@NOTE: no legacy ancestor - the surviving legacy engine/stage.h is the dead render_dx10 generation; the same-generation stage.h was consumed with only an empty execute_disabled; matcher-phase work.
 		// STATE[STUB]
 		// FUNCTION BODY[0x4f210]
 	}

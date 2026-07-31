@@ -10,6 +10,7 @@ s32 res_texture_list::compare(
 	fixed_vector<texture_slot, 128> const&
 ) const
 {
+	// claude@NOTE: legacy body diverged - legacy is bool equal(texture_slots), not an s32 compare (see legacy remainder note); matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e8080]
 	return 0;
@@ -17,6 +18,7 @@ s32 res_texture_list::compare(
 
 s32 res_texture_list::compare( res_texture_list const& ) const
 {
+	// claude@NOTE: no legacy ancestor - the list-vs-list overload's legacy equal was already consumed into the carcass header inline; the s32 form is new; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x6e8130]
 	return 0;

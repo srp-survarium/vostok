@@ -1,4 +1,6 @@
 #include "pch.h"
+
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (the legacy tree has only stage_clouds/effect_clouds; the cloud simulation core is new-in-target) - matcher-phase work.
 #include "cloud_simulation.h"
 
 namespace vostok {

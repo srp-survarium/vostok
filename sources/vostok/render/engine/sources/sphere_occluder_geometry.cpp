@@ -6,6 +6,7 @@ namespace render {
 
 sphere_occluder_geometry::sphere_occluder_geometry( )
 {
+	// claude@NOTE: no legacy ancestor - geometry helper for the post-legacy atmosphere/volume-fog/occlusion stages
 	// STATE[STUB]
 	// FUNCTION BODY[0x7b2d00]
 }

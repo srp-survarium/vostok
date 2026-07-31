@@ -9,6 +9,7 @@ void effect_apply_decal::compile(
 	custom_config_value const&
 )
 {
+	// claude@NOTE: no legacy ancestor - effect postdates the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x7beec0]
 }

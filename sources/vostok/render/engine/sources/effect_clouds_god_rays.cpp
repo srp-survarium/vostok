@@ -9,6 +9,7 @@ void effect_clouds_god_rays::compile(
 	custom_config_value const&
 )
 {
+	// claude@NOTE: no legacy ancestor - effect postdates the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x7bd350]
 }

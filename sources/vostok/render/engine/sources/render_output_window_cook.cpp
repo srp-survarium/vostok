@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: legacy cook implemented the retired resources::unmanaged_cook contract (see triage_log 'Obsolete predecessor interfaces'); no body maps onto translate_query/delete_resource - matcher-phase work.
 #include "render_output_window_cook.h"
 
 namespace vostok {

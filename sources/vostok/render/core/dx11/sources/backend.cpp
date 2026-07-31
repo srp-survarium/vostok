@@ -42,33 +42,71 @@ backend::~backend( )
 	on_device_destroy();
 }
 
-void backend::clear_depth_stencil( u32, float, u8 )
+void backend::clear_depth_stencil( u32 flags, float z_value, u8 stencil_value )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f5b0]
+ 	//flush_rt();
+	if (m_zb)
+	{
+		device::ref().d3d_context()->ClearDepthStencilView( m_zb, flags, z_value, stencil_value);
+	}
 }
 
-void backend::clear_render_targets( float, float, float, float )
+void backend::clear_render_targets( float r, float g, float b, float a )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f530]
+	float color_elements[4] = {r, g, b, a};
+
+	for( int i = 0; i< enum_target_count; ++i)
+		if( m_targets[i])
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
 }
 
-void backend::clear_render_targets( math::color )
+void backend::clear_render_targets( math::color color )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f860]
+	float color_elements[4];
+	color.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+
+	for( int i = 0; i< enum_target_count; ++i)
+		if( m_targets[i])
+			device::ref().d3d_context()->ClearRenderTargetView( m_targets[i], color_elements );
 }
 
 void backend::clear_render_targets(
-	math::color,
-	math::color,
-	math::color,
-	math::color
+	math::color color0,
+	math::color color1,
+	math::color color2,
+	math::color color3
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55f5f0]
+	COMPILE_ASSERT	( enum_target_count == 4, Unknown_render_targets_count );
+	float color_elements[4];
+
+	if( m_targets[0])
+	{
+		color0.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+		device::ref().d3d_context()->ClearRenderTargetView( m_targets[0], color_elements);
+	}
+
+	if( m_targets[1])
+	{
+		color1.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+		device::ref().d3d_context()->ClearRenderTargetView( m_targets[1], color_elements);
+	}
+
+	if( m_targets[2])
+	{
+		color2.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+		device::ref().d3d_context()->ClearRenderTargetView( m_targets[2], color_elements);
+	}
+
+	if( m_targets[3])
+	{
+		color3.get_RGBA(color_elements[0], color_elements[1], color_elements[2], color_elements[3] );
+		device::ref().d3d_context()->ClearRenderTargetView( m_targets[3], color_elements);
+	}
 }
 
 void backend::on_device_destroy( )
@@ -96,6 +134,36 @@ shader_constant_host* backend::register_constant_host( shared_string const& name
 		return *m_constant_hosts.insert( it, NEW (shader_constant_host)(name, type));
 	else
 		return *it;
+}
+
+shader_constant_host const* backend::find_constant_host( shared_string const& name, enum_constant_type const type, bool const create_if_missing )
+{
+	vector< shader_constant_host* >::iterator it = std::lower_bound( m_constant_hosts.begin(), m_constant_hosts.end(), name, sorted_vector_predicate);
+
+	if ( it == m_constant_hosts.end() || !(**it == name) )
+	{
+		if( !create_if_missing)
+			return  NULL;
+		else
+			return register_constant_host( name, type );
+	}
+	else
+		return *it;
+}
+
+// claude@NOTE: legacy body; the carcass header carried a generated ZeroMemory
+// placeholder over m_constant_update_markers - wrong state, the legacy source
+// resets the hosts and the counter.
+void backend::reset_constant_update_markers( )
+{
+	LOG_INFO("reset_constant_update_markers called !!!");
+	vector< shader_constant_host* >::iterator		it =	m_constant_hosts.begin();
+	vector< shader_constant_host* >::const_iterator	end =	m_constant_hosts.end();
+
+	for( ; it!= end; ++it)
+		(*it)->reset_update_markers	( );
+
+	m_constant_update_counter = 1;
 }
 
 void backend::update_input_layout( )
@@ -129,12 +197,14 @@ void backend::set_render_target( enum_render_target_enum target, render_target c
 
 void start_profiling( )
 {
+	// claude@NOTE: no legacy ancestor - no profiling free functions anywhere in the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x55f4b0]
 }
 
 double end_profiling( pcstr, bool )
 {
+	// claude@NOTE: no legacy ancestor - no profiling free functions anywhere in the legacy corpus; matcher-phase work.
 	// STATE[STUB]
 	// FUNCTION BODY[0x55f4a0]
 	return 0.0;
@@ -244,16 +314,66 @@ void backend::flush( )
 //	}
 }
 
-void backend::render_indexed( D3D_PRIMITIVE_TOPOLOGY, u32, u32, u32 )
+void backend::render_indexed( D3D_PRIMITIVE_TOPOLOGY type, u32 index_count, u32 start_index, u32 base_vertex )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5601b0]
+	flush();
+	update_input_layout();
+	num_draw_calls			++;
+
+	//stat.calls			++;
+	//stat.verts			+= 3*PC;
+	//stat.polys			+= PC;
+
+	device::ref().d3d_context()->IASetPrimitiveTopology(type);
+
+	device::ref().d3d_context()->DrawIndexed(index_count, start_index, base_vertex);
+
+	// TODO
+	switch (type)
+	{
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+			num_total_rendered_triangles += index_count / 3;
+			break;
+
+		case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
+			num_total_rendered_points += index_count;
+			break;
+
+		case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+			num_total_rendered_triangles += index_count / 2;
+			break;
+	}
 }
 
-void backend::render( D3D_PRIMITIVE_TOPOLOGY, u32, u32 )
+void backend::render( D3D_PRIMITIVE_TOPOLOGY type, u32 vertex_count, u32 base_vertex )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x560130]
+	flush();
+	update_input_layout();
+	num_draw_calls			++;
+	//stat.calls			++;
+	//stat.verts			+= 3*PC;
+	//stat.polys			+= PC;
+
+	device::ref().d3d_context()->IASetPrimitiveTopology( type);
+	device::ref().d3d_context()->Draw( vertex_count,  base_vertex);
+
+	// TODO
+	switch (type)
+	{
+		case D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST:
+			num_total_rendered_triangles += vertex_count / 3;
+			break;
+
+		case D3D_PRIMITIVE_TOPOLOGY_POINTLIST:
+			num_total_rendered_points += vertex_count;
+			break;
+
+		case D3D_PRIMITIVE_TOPOLOGY_LINELIST:
+			num_total_rendered_triangles += vertex_count / 2;
+			break;
+	}
 }
 
 } // namespace render

@@ -370,19 +370,17 @@ public:
 
 	void set_default_values( );
 	void register_console_commands( );
-	void save( pcstr ) { /* STATE[STUB] */ }
-	void load( pcstr ) { /* STATE[STUB] */ }
+	void save( pcstr file_name );
+	void load( pcstr file_name );
 	void begin_render_options_changing( long volatile* waiting_for );
 	enum_options_changes_result end_render_options_changing(
 		vector<fs_new::virtual_path_string>& out_changed_defines
 	);
 	void load_from_config( configs::binary_config_value const& config );
-	fs_new::virtual_path_string get_current_configuration( )
-	{
-		// STATE[STUB]
-		return fs_new::virtual_path_string( );
-	}
-	void save_current_configuration( ) { /* STATE[STUB] */ }
+	fs_new::virtual_path_string get_current_configuration( );
+	// claude@NOTE: legacy body is gated #ifndef MASTER_GOLD (saves the current
+	// configuration to file); empty in the shipped MASTER_GOLD build.
+	void save_current_configuration( ) { }
 	void fill_global_macros( shader_defines_list& out_defines );
 
 private:
@@ -390,10 +388,7 @@ private:
 
 	void load_impl( memory::reader& reader );
 	void on_config_loaded( resources::queries_result& data );
-	void on_config_loaded2( resources::queries_result& )
-	{
-		// STATE[STUB]
-	}
+	void on_config_loaded2( resources::queries_result& data );
 
 	render_cc* first_render_command;
 

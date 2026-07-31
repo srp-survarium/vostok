@@ -6,6 +6,7 @@
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/res_texture.h>
 #include <vostok/render/core/resource_intrusive_base.h>
+#include <vostok/render/core/texture_slot.h>
 
 namespace vostok {
 namespace render {
@@ -48,10 +49,17 @@ public:
 		return true;
 	}
 
-	bool equal( fixed_vector<texture_slot, 128> const& ) const
+	bool equal( fixed_vector<texture_slot, 128> const& base ) const
 	{
-		// STATE[STUB]
-		return false;
+		u32 const base_size = base.size( );
+		if ( base_size != m_container.size( ) )
+			return false;
+
+		for ( u32 i = 0; i < base_size; ++i )
+			if ( m_container[i] != base[i].texture )
+				return false;
+
+		return true;
 	}
 
 	s32 compare( res_texture_list const& base ) const;

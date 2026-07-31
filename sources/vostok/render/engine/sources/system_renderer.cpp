@@ -8,6 +8,7 @@
 #include <vostok/render/core/effect_options_descriptor.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/resource_manager.h>
+#include <vostok/render/facade/render_stage_types.h>
 
 #include "aabb_indices.h"
 #include "effect_editor_model_ghost.h"
@@ -18,8 +19,12 @@
 #include "effect_system_line.h"
 #include "effect_system_ui.h"
 #include "effect_wireframe_colored.h"
+#include "render_output_window.h"
 #include "render_particle_emitter_instance.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 #include "renderer_context.h"
+#include "renderer_context_targets.h"
 #include "scene.h"
 #include "stage_particles.h"
 
@@ -235,6 +240,34 @@ void system_renderer::set_w( float4x4 const& m )
 	// FUNCTION BODY[0x644990]: 1
 	// <0x644990>|0x000|+0x009:'293'
 	// ******
+}
+
+// claude@NOTE: set_v/set_p and the three matrix getters are declared by the canonical
+// class but have no out-of-line target copy (/OPT:REF stripped these editor-facing
+// forwarders); ported from the legacy system_renderer.cpp at their legacy position.
+void system_renderer::set_v( float4x4 const& m )
+{
+	m_renderer_context->set_v(m);
+}
+
+void system_renderer::set_p( float4x4 const& m )
+{
+	m_renderer_context->set_p(m);
+}
+
+float4x4 const& system_renderer::get_w( ) const
+{
+	return m_renderer_context->get_w();
+}
+
+float4x4 const& system_renderer::get_v( ) const
+{
+	return m_renderer_context->get_v();
+}
+
+float4x4 const& system_renderer::get_p( ) const
+{
+	return m_renderer_context->get_p();
 }
 
 void system_renderer::draw_lines(
@@ -685,6 +718,7 @@ void system_renderer::draw_3D_point(
 	// ******
 }
 
+// claude@NOTE: legacy body diverged - legacy fill_surface is a static free single-surface TL quad; canonical member takes 4 surfaces + depth + viewport + quad coords (see legacy remainder note); matcher-phase work.
 // STATE[STUB]
 void system_renderer::fill_surface(
 	render_target_ptr		surface0,
@@ -810,6 +844,55 @@ void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& colo
 	// <8>
 	// <0x646698>|0x0f8|+0x0a8:'595'
 	// ******
+}
+
+// claude@NOTE: no target address - draw_obb is declared in the target's class
+// but has no out-of-line copy (fully inlined under LTCG); body ported from the
+// legacy system_renderer.cpp at its legacy position, with the fifth
+// draw_lines argument (covering_effect) spelled out as the canonical
+// declaration has no default.
+void system_renderer::draw_obb( float4x4 const& transform, math::color const& color )
+{
+	if ( !is_effects_ready( ) )
+		return;
+
+	render::vertex_colored vertices[] = {
+		vertex_colored( transform.transform_position( float3( -1.f, -1.f, -1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( -1.f, -1.f, +1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( -1.f, +1.f, -1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( +1.f, -1.f, -1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( -1.f, +1.f, +1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( +1.f, -1.f, +1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( +1.f, +1.f, -1.f ) ), color ),
+		vertex_colored( transform.transform_position( float3( +1.f, +1.f, +1.f ) ), color ),
+	};
+
+	draw_lines	(
+		vertices,
+		vertices + array_size( vertices ),
+		aabb_indices,
+		aabb_indices + array_size( aabb_indices ),
+		false
+	);
+}
+
+// claude@NOTE: the three grid/rotation mode setters are declared by the canonical class
+// but have no out-of-line target copy; ported from the legacy system_renderer.cpp at
+// their legacy position (directly after draw_obb).
+void system_renderer::setup_grid_render_mode( u32 grid_density )
+{
+	m_grid_mode = true;
+	m_grid_density = grid_density/100.f;
+}
+
+void system_renderer::remove_grid_render_mode( )
+{
+	m_grid_mode = false;
+}
+
+void system_renderer::setup_rotation_control_modes( bool color_write )
+{
+	m_color_write = color_write;
 }
 
 void system_renderer::draw_triangles(
@@ -1375,11 +1458,138 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 }
 
 // claude@NOTE: no addressed target record (inlined into renderer::render or
-// folded); legacy body is blocked on dropped members (m_terrain_debug_material)
-// - see temp/render_legacy/engine/sources/system_renderer.cpp. Link stub only.
+// folded); the legacy body is blocked on members the canonical class dropped
+// (m_terrain_debug_material / on_material_loaded) and on the retired render-side
+// terrain subsystem (scene::select_terrain_cells, terrain::m_grid_geom_*), so it
+// has no faithful port - link stub only. Legacy body: `git show
+// 8bb5b3dfc:temp/render_legacy/engine/sources/system_renderer.cpp`.
 // STATE[STUB]
 void system_renderer::draw_debug_terrain( )
 {
+}
+
+// claude@NOTE: the six members below are declared by the canonical class but have no
+// out-of-line target copy (/OPT:REF stripped the editor-facing surface); ported from
+// the legacy system_renderer.cpp at their legacy position, adapted to the canonical
+// declarations (base_scene_view_ptr / base_output_window_ptr / math::rectangle< float2 >
+// spellings, explicit apply( 0, 0 ) arity, PIX scopes dropped).
+void system_renderer::set_model_ghost_mode(
+	polymorph_vector_base< render_model_instance > const& /*render_models*/,
+	bool /*value*/
+)
+{
+	if (!is_effects_ready())
+		return;
+
+	//for (polymorph_vector_base<render_model_instance>::iterator it=render_models.begin(); it!=render_models.end(); ++it)
+	//{
+	//	render_model_instance* instance = (*it);
+	//
+	//	if (value)
+	//	{
+	//		m_render_model_to_material[instance] = instance->m_material_effects;
+	//
+	//		material_effects temp_material;
+	//		temp_material.m_material = instance->m_material_effects.m_material;
+	//		instance->m_material_effects = temp_material;
+	//
+	//		instance->m_material_effects.m_effects[forward_render_stage]	 = m_editor_model_ghost_shader;
+	//		instance->m_material_effects.stage_enable[forward_render_stage] = true;
+	//	}
+	//	else
+	//	{
+	//		if (m_render_model_to_material.find(instance)!=m_render_model_to_material.end())
+	//		{
+	//			instance->m_material_effects = m_render_model_to_material[instance];
+	//			m_render_model_to_material.erase(instance);
+	//		}
+	//	}
+	//}
+}
+
+void system_renderer::draw_ghost_render_models( vector< render_surface_instance* >& render_models )
+{
+	if (!is_effects_ready())
+		return;
+
+	float3 view_pos = m_renderer_context->get_v_inverted().c.xyz();
+
+	for (vector< render_surface_instance* >::iterator it=render_models.begin(); it!=render_models.end(); ++it)
+	{
+		render_surface_instance& instance = *(*it);
+
+		float4x4 selected_transform = *instance.m_transform;
+		m_renderer_context->set_w( selected_transform);
+
+		float4 old_current_selection_color = m_current_selection_color;
+		m_current_selection_color = m_ghost_model_color;
+
+		m_editor_selection_shader[instance.m_render_surface->get_vertex_input_type()]->apply( 0, 0 );
+		instance.set_constants();
+		instance.m_render_surface->m_render_geometry.geom->apply();
+		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, instance.m_render_surface->m_render_geometry.primitive_count*3, 0, 0);
+
+		m_current_selection_color = old_current_selection_color;
+	}
+}
+
+void system_renderer::draw_system_render_models( vector< render_surface_instance* > const& render_models )
+{
+	if (!is_effects_ready())
+		return;
+
+	for (vector< render_surface_instance* >::const_iterator it=render_models.begin(); it!=render_models.end(); ++it)
+	{
+		render_surface_instance const& instance = *(*it);
+
+		m_renderer_context->set_w( *instance.m_transform);
+
+		instance.m_render_surface->get_material_effects().m_effects[forward_render_stage]->apply( 0, 0 );
+		instance.m_render_surface->m_render_geometry.geom->apply();
+		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, instance.m_render_surface->m_render_geometry.primitive_count*3, 0, 0);
+	}
+}
+
+void system_renderer::setup_scene_view( base_scene_view_ptr view_ptr )
+{
+	m_renderer_context->set_scene_view		( view_ptr);
+}
+
+void system_renderer::setup_render_output_window(
+	base_output_window_ptr in_output_window,
+	math::rectangle< float2 > const& viewport
+)
+{
+	render_output_window* output_window = (render_output_window*)in_output_window.c_ptr();
+
+	m_renderer_context->set_target_context		( &output_window->target_context(), false );
+	backend::ref().set_render_output			( output_window->render_output() );
+	backend::ref().reset_depth_stencil_target	();
+
+	backend::ref().set_render_targets			( &*m_renderer_context->m_targets->m_family[rt_present].target,0, 0, 0);
+	backend::ref().reset_depth_stencil_target	( );
+
+	math::rectangle< float2 > res_viewport( float2( 0.f, 0.f ), float2( 1.f, 1.f ) );
+
+	R_ASSERT			( viewport.width() );
+	R_ASSERT			( viewport.height() );
+
+	res_viewport.left	= math::max( res_viewport.left,		viewport.left);
+	res_viewport.right	= math::min( res_viewport.right,	viewport.right);
+	res_viewport.top	= math::max( res_viewport.top,		viewport.top);
+	res_viewport.bottom	= math::min( res_viewport.bottom,	viewport.bottom);
+
+	u32 const window_width	= backend::ref().target_width( );
+	u32 const window_height	= backend::ref().target_height( );
+
+	D3D11_VIEWPORT d3d_viewport	= { window_width * res_viewport.left, window_height * res_viewport.top, window_width * res_viewport.width(), window_height * res_viewport.height(), 0.f, 1.f};
+	backend::ref().set_viewport	( d3d_viewport);
+}
+
+void system_renderer::set_selection_parameters( float4 in_selection_color, float in_selection_rate )
+{
+	m_selection_color = in_selection_color;
+	m_selection_rate  = in_selection_rate;
 }
 
 } // namespace render

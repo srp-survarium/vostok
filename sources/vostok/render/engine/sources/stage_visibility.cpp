@@ -1,4 +1,5 @@
 #include "pch.h"
+// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (the visibility stage and its occlusion-bound gathering are new-in-target) - matcher-phase work.
 #include "stage_visibility.h"
 
 #include <vostok/math_aabb.h>
