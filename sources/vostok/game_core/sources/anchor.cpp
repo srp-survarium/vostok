@@ -21,6 +21,7 @@ IncludeAll::IncludeAll()
 	vostok::anchor_animation_time_in_ms_calculator( );
 	vostok::anchor_animation_player( );
 	vostok::anchor_scaleform( );
+	vostok::render::anchor_render_facade( );
 }
 
 
