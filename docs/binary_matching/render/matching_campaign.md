@@ -30,6 +30,7 @@ they are orchestrator tickets, see `core_header_tickets.md`.
 | B2 | `backend.cpp` + `backend_handlers.cpp` + `effect_manager.cpp` | 427 (16.1%) | 27.3% | 44.65% |
 | B3 | `effect_compiler.cpp` + `shader_constant_table.cpp` + `res_declaration.cpp` | 437 (16.5%) | 28.5% | 44.72% |
 | A2 | `scene.cpp` (scene root) + struct-vs-class sweep | 446 (16.8%) | 28.7% | 44.82% |
+| A3 | `scene_renderer.cpp` (facade root) + facade anchor | 473 (17.9%) | 29.9% | 45.16% |
 
 Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
@@ -64,6 +65,23 @@ the other three are small max resets from faithful structure re-work
 4. **Definition ORDER is structure.** Restore source definition order to target
    order (PDB line numbers prove it) - done in `shader_constant_table.cpp`,
    `res_declaration.cpp`.
+5. **A bodied function can still score zero: check `/OPT:REF` before blaming the
+   body.** Batch A3 set out to body a stubbed facade cone and found the bodies
+   were already there - `reload_shaders` was complete and still unpaired,
+   because nothing referenced it and the linker stripped it. The fix was an
+   address-take anchor (`facade/sources/anchor_render_facade.cpp`), which paired
+   **260** functions in one batch. Two dispatch lines in
+   `game_core/sources/anchor.{h,cpp}` were required as well: a self-dispatching
+   static initializer cannot work, because an `.obj` that resolves no undefined
+   symbol is never extracted from a static lib
+   (`patterns/static-lib-anchor-needs-external-dispatch.md`).
+
+   **Anchors are a reachability hack, not original source.** Keep a pin ONLY
+   while removing it un-pairs the function; expect anchored methods to cap at
+   79-95% because the pin forces a stock `__thiscall` entry where the target's
+   real cross-module callers let LTCG pick a stack-slot convention. Do not try
+   to beat that cap by editing the anchored function - retire the pin instead,
+   once a real caller exists, and verify the function stays paired.
 
 ## Standing rules for dispatched matchers
 
