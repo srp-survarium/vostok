@@ -94,56 +94,55 @@ static uninitialized_reference< system_renderer >				s_system_renderer;
 
 untyped_buffer_ptr		g_quad_ib;
 
-// STATE[STUB]
+static command_line::key	s_no_level( "no_level", "", "", "" );
+
+// claude@NOTE: residual is core-side - the target's cook_base ctor ends with a
+// resources_manager::register_cook call (right after the derived vftable store);
+// ours does not emit it, so that tail is missing here.
  renderer_cook::renderer_cook( ) :
-	resources::unmanaged_cook( resources::renderer_class, reuse_false )
+	resources::unmanaged_cook( resources::renderer_class, reuse_false, use_current_thread_id )
 {
-	// FUNCTION BODY[0x60650]
-	// ******
 }
 
+// claude@NOTE: inline-vs-call wall - the target keeps mutable_buffer's
+// (pvoid,u32) ctor out-of-line (ICF-folded, delinked as boost::_bi::storage2)
+// and pushes the size before the malloc; our build inlines it into two stores.
+// Same wall on effect_cook::allocate_resource, so it is codebase-wide.
 mutable_buffer renderer_cook::allocate_resource(
 	resources::query_result_for_cook&		in_query,
 	const_buffer							raw_file_data,
 	bool									file_exist
 )
 {
-	// @todo Recover renderer resource allocation.
-	VOSTOK_UNREFERENCED_PARAMETERS( &in_query, &raw_file_data, file_exist );
-	return mutable_buffer::zero( );
+	VOSTOK_UNREFERENCED_PARAMETERS			(&file_exist, &raw_file_data, &in_query);
+	return									mutable_buffer((pvoid)MALLOC(sizeof(renderer_resource),"renderer_resource"), sizeof(renderer_resource));
 }
 
-// STATE[STUB]
 void renderer_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY[0x60700]: 1
-	// <0x60700>|0x000|+0x01c:'113'
-	// ******
+	FREE									(buffer);
 }
 
-// STATE[STUB]
+// claude@NOTE: residual is one inline-vs-call - the target inlines
+// query_result_for_cook::user_data() to `mov esi,[edi+14Ch]`, our link keeps it
+// as a call, which then costs the aligned frame (push ebp/and esp,-8) the target
+// does not have and a duplicated `engine_world = NULL` store.
 void renderer_cook::create_resource(
 	resources::query_result_for_cook&		in_out_query,
 	const_buffer							raw_file_data,
 	mutable_buffer							in_out_unmanaged_resource_buffer
 )
 {
-	// LOCALS
-	// engine::world* 					engine_world
-	// ******
+	VOSTOK_UNREFERENCED_PARAMETER			(raw_file_data);
 
-	// FUNCTION BODY[0x60720]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <0x60723>|0x003|+0x01c:'123'
-	// <0x6073f>|0x01f|+0x00b:'124'
-	// <0>
-	// <0x6074a>|0x02a|+0x01b:'126'
-	// <0>
-	// <0x60765>|0x045|+0x020:'128'
-	// <0x60785>|0x065|+0x00b:'129'
-	// ******
+	engine::world* engine_world			=	NULL;
+	in_out_query.user_data()->try_get		(engine_world);
+	engine_world->reset_renderer			(true);
+
+	renderer_resource* new_resource		=	new(in_out_unmanaged_resource_buffer.c_ptr())renderer_resource;
+
+	in_out_query.set_unmanaged_resource		(new_resource, resources::nocache_memory, sizeof(renderer_resource));
+	in_out_query.finish_query				(result_success);
 }
 
 void register_cooks( )
@@ -1032,51 +1031,19 @@ void on_fs_iterator_materials_ready(
 	m_enable_terrain_debug_mode		( false ),
 	m_renderer						( NULL )
 {
-	// FUNCTION BODY[0x655960]: 17
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x655970>|0x010|+0x016:'757'
-	// <0>
-	// <1>
-	// <2>
-	// <0x655986>|0x026|+0x035:'761'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6559bb>|0x05b|+0x005:'765'
-	// <0>
-	// <0x6559c0>|0x060|+0x005:'767'
-	// <0>
-	// <0x6559c5>|0x065|+0x01f:'769'
-	// ******
-
-	VOSTOK_UNREFERENCED_PARAMETER	( in_config );
-	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
-
-	CHECK_OR_EXIT							(
+	CHECK_OR_EXIT					(
 		does_os_support_dx11(),
 		"Your operating system doesn't support DirectX 11.\r\n"
 		"Please upgrade your OS to Windows Vista Service Pack 2 + Platform Update or later."
 	);
 
-	render::core::initialize		( );
-
 	VOSTOK_CONSTRUCT_REFERENCE		( s_options, options )( );
-
-	initialize_options				( );
 
 	initialize_speedtree			( );
 
 	register_cooks					( );
 
-	LOG_INFO("render::engine::world() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
-
 	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_preinitialize, singletons_on_preinitialize )( in_config, is_editor );
-
-	// TODO
-	material::initialize_nomaterial_material( );
 }
 
 void engine::world::on_renderer_configuration_config_loaded( bool async_effects, resources::queries_result& data )
@@ -1107,23 +1074,13 @@ void engine::world::on_renderer_configuration_config_loaded( bool async_effects,
 	reset_renderer					( async_effects );
 }
 
+// claude@NOTE: LOG_INFO embeds __LINE__, so the two log sites push our physical
+// line numbers (0x43E/0x...) where the target pushes 0x323/0x32E - the original
+// .cpp had these statements at lines 803 and 814. That residual only closes when
+// this file's line numbering matches the original (the remaining carcass blocks
+// above are what shifts it).
 void engine::world::reset_renderer( bool async_effects )
 {
-	// FUNCTION BODY[0x656b30]: 12
-	// <0x656b39>|0x009|+0x0cf:'803'
-	// <0>
-	// <0x656c08>|0x0d8|+0x006:'805'
-	// <0x656c0e>|0x0de|+0x02a:'806'
-	// <0>
-	// <0x656c38>|0x108|+0x010:'808'
-	// <0>
-	// <0x656c48>|0x118|+0x025:'810'
-	// <0>
-	// <0x656c6d>|0x13d|+0x00c:'812'
-	// <0>
-	// <0x656c79>|0x149|+0x0bb:'814'
-	// ******
-
 	LOG_INFO						("Renderer creating started...");
 
 	if (m_renderer)
@@ -1140,34 +1097,16 @@ void engine::world::reset_renderer( bool async_effects )
 
 void engine::world::initialize( bool is_editor )
 {
-	// FUNCTION BODY[0x6569b0]: 16
-	// <0>
-	// <1>
-	// <2>
-	// <0x6569bb>|0x00b|+0x018:'853'
-	// <0>
-	// <0x6569d3>|0x023|+0x03d:'855'
-	// <0x656a10>|0x060|+0x01d:'856'
-	// <0x656a2d>|0x07d|+0x045:'857'
-	// <0x656a72>|0x0c2|+0x067:'858'
-	// <0x656ad9>|0x129|+0x00a:'859'
-	// <0>
-	// <1>
-	// <0x656ae3>|0x133|+0x007:'862'
-	// <0>
-	// <0x656aea>|0x13a|+0x017:'864'
-	// <0>
-	// ******
-
 	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
 
 	// model cooker uses material_manager
 	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_initialize, singletons_on_initialize )( );
 
-	while ( !s_singletons_on_preinitialize->scene_manager.scene_count() ) {
-		resources::dispatch_callbacks	( );
-		threading::yield				( 10 );
-	}
+	if ( !s_no_level )
+		while ( !s_singletons_on_preinitialize->scene_manager.scene_count() ) {
+			resources::dispatch_callbacks	( );
+			threading::yield				( 10 );
+		}
 
 	R_ASSERT						( !m_initialized );
 	m_initialized					= true;
@@ -1177,22 +1116,6 @@ void engine::world::initialize( bool is_editor )
 
  engine::world::~world( )
 {
-	// FUNCTION BODY[0x655a30]: 13
-	// <0x655a3b>|0x00b|+0x005:'870'
-	// <0x655a40>|0x010|+0x005:'871'
-	// <0>
-	// <0x655a45>|0x015|+0x00b:'873'
-	// <0x655a50>|0x020|+0x037:'874'
-	// <0x655a87>|0x057|+0x028:'875'
-	// <0x655aaf>|0x07f|+0x017:'876'
-	// <0x655ac6>|0x096|+0x00c:'877'
-	// <0>
-	// <0x655ad2>|0x0a2|+0x00a:'879'
-	// <0>
-	// <0x655adc>|0x0ac|+0x005:'881'
-	// <0>
-	// ******
-
 	material::finalize_nomaterial_material	( );
 	finalize_speedtree						( );
 
@@ -1205,15 +1128,15 @@ void engine::world::initialize( bool is_editor )
 	unregister_cooks				( );
 
 	particle::finalize				( );
-	render::core::finalize			( );
 }
 
+// claude@NOTE: capped core-side, not here - the target inlines
+// resource_manager::reload_shader_sources, whose whole shipped body is
+// `mov byte ptr [eax+298h], 0` (m_loading_incomplete = false, 0x5506e0). Our
+// render/core body sets m_is_shader_reloading/m_need_recompile_shader_if_source_reloaded
+// instead, so this site inlines the wrong two stores. Fix resource_manager.cpp first.
 void engine::world::reload_shaders( )
 {
-	// FUNCTION BODY[0x6542c0]: 1
-	// <0x6542c0>|0x000|+0x00c:'887'
-	// ******
-
 	resource_manager::ref().reload_shader_sources	( true );
 }
 
@@ -1240,15 +1163,9 @@ void engine::world::remove_unused_environment_cubemaps( base_scene_ptr const& sc
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - legacy twin keeps the fn but its body is one commented-out model_manager call; matcher-phase work.
-// STATE[STUB]
 void engine::world::clear_resources( )
 {
-	// FUNCTION BODY[0x655630]: 3
-	// <0>
-	// <1>
-	// <0x655631>|0x001|+0x016:'909'
-	// ******
+	m_renderer->m_renderer_context->clear_resources	( );
 }
 
 // STATE[STUB]
@@ -1384,40 +1301,15 @@ void engine::world::draw_scene(
 	vostok::ui::font const*				default_font
 )
 {
-	// LOCALS
-	// float4x4 						identity
-	// ******
-
-	// FUNCTION BODY[0x657120]: 9
-	// <0>
-	// <0x657124>|0x004|+0x00b:'1035'
-	// <0x65712f>|0x00f|+0x012:'1036'
-	// <0>
-	// <0x657141>|0x021|+0x00a:'1038'
-	// <0x65714b>|0x02b|+0x023:'1039'
-	// <0>
-	// <0x65716e>|0x04e|-0x007:'1041'
-	// <0>
-	// <0x657167>|0x047|+0x013:'1043'
-	// ******
-
 	float4x4 identity;
 	identity.identity			( );
 	system_renderer::ref().set_w( identity );
 
 	if (m_renderer)
-		m_renderer->render	(
-			scene,
-			view,
-			output_window,
-			viewport,
-			on_draw_scene,
-			m_enable_terrain_debug_mode,
-			default_font
-		);
-	else {
-		static_cast_checked<vostok::render::scene*>(scene.c_ptr())->flush	( on_draw_scene, false, false ); // buildability placeholder: legacy flush took only on_draw_scene
-	}
+		m_renderer->render	( scene, view, output_window, viewport, on_draw_scene, m_enable_terrain_debug_mode, default_font );
+	else
+		static_cast_checked<vostok::render::scene*>(scene.c_ptr())->flush	( on_draw_scene, true, true );
+
 }
 
 void engine::world::end_frame( )
@@ -2227,17 +2119,15 @@ void engine::world::remove_sky_ambient_occlusion( base_scene_ptr const& in_scene
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - legacy body is an explicit no-op; the shipped body has real code; matcher-phase work.
-// STATE[STUB]
 void engine::world::update_ambient_volume(
 	base_scene_ptr const&				in_scene,
 	u32									id,
 	ambient_volume_properties const&	properties
 )
 {
-	// FUNCTION BODY[0x654cb0]: 1
-	// <0x654cb0>|0x000|+0x015:'1672'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_ambient_volume	( id, properties);
 }
 
 // STATE[STUB]
@@ -2250,20 +2140,15 @@ void engine::world::add_vegetation_trample( base_scene_ptr const& in_scene, tram
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - legacy body is an explicit no-op; the shipped body has real code; matcher-phase work.
-// STATE[STUB]
 void engine::world::remove_ambient_volume( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x654a50]: 1
-	// <0x654a50>|0x000|+0x010:'1682'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_ambient_volume	( id);
 }
 
 void engine::world::update_lpv_occluder( base_scene_ptr const& in_scene, u32 id, float4x4 const& transform )
 {
-	// FUNCTION BODY[0x654b90]: 0
-	// ******
-
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	scene->update_lpv_occluder	( id, transform);
@@ -2271,9 +2156,6 @@ void engine::world::update_lpv_occluder( base_scene_ptr const& in_scene, u32 id,
 
 void engine::world::remove_lpv_occluder( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x6543f0]: 0
-	// ******
-
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	scene->remove_lpv_occluder	( id);
@@ -2299,11 +2181,6 @@ void engine::world::update_volume_fog(
 	volume_fog_parameters const&	in_parameters
 )
 {
-	// FUNCTION BODY[0x654c00]: 2
-	// <0>
-	// <0x654c00>|0x000|+0x015:'1706'
-	// ******
-
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	scene->update_volume_fog	( id, in_parameters);
@@ -2311,10 +2188,6 @@ void engine::world::update_volume_fog(
 
 void engine::world::remove_volume_fog( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x6543e0]: 1
-	// <0>
-	// ******
-
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	scene->remove_volume_fog	( id);
@@ -2458,12 +2331,6 @@ static uninitialized_reference< engine::world > s_world;
 
 engine::world* engine::create_world( configs::binary_config_ptr const& in_config, bool is_editor )
 {
-	// FUNCTION BODY[0x6559f0]: 3
-	// <0>
-	// <0x6559f1>|0x001|+0x018:'1918'
-	// <0x655a09>|0x019|+0x005:'1919'
-	// ******
-
 	R_ASSERT					( !s_world.initialized() );
 	VOSTOK_CONSTRUCT_REFERENCE	( s_world, engine::world ) ( in_config, is_editor );
 	return						s_world.c_ptr( );
@@ -2529,13 +2396,13 @@ void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, par
 	view->set_particles_render_mode(render_mode);
 }
 
+// claude@NOTE: statement shape already matches (2 stmts); the residual is
+// downstream - the target CALLS scene::set_sky_material (5 stmts at 0x63ebd0:
+// remove_material_effects guard, the assign, add_material_effects guard) while
+// ours is a one-line `m_sky_material = in_material;` stub small enough to inline
+// here. Body scene::set_sky_material in scene.cpp first.
 void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr mtl_ptr )
 {
-	// FUNCTION BODY[0x655690]: 2
-	// <0x655691>|0x001|+0x004:'1958'
-	// <0x655695>|0x005|+0x04b:'1959'
-	// ******
-
 	vostok::render::scene* scn	= static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 	scn->set_sky_material		(static_cast_resource_ptr<material_effects_instance_ptr>(mtl_ptr));
 }
@@ -2560,16 +2427,8 @@ void engine::world::set_post_process(
 	resources::unmanaged_resource_ptr		post_process_resource
 )
 {
-	// FUNCTION BODY[0x656440]: 8
-	// <0x656443>|0x003|+0x008:'2074'
-	// <0x65644b>|0x00b|+0x00e:'2075'
-	// <0>
-	// <0x656459>|0x019|+0x004:'2077'
-	// <0>
-	// <0x65645d>|0x01d|+0x011:'2079'
-	// <0>
-	// <0x65646e>|0x02e|+0x028:'2081'
-	// ******
+	if (!post_process_resource)
+		return;
 
 	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
 

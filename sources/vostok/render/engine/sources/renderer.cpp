@@ -260,6 +260,8 @@ renderer::renderer( renderer_context* renderer_context ) :
 	sampler_sim.set_max_anisotropy	( 16 );
 	resource_manager::ref( ).register_sampler( "s_base", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
 
+	material::initialize_nomaterial_material( );
+
 	sampler_sim.set_filter			( D3D_FILTER_ANISOTROPIC );
 	sampler_sim.set_max_anisotropy	( 16 );
 	resource_manager::ref( ).register_sampler( "s_base_hud", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
