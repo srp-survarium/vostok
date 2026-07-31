@@ -4,6 +4,16 @@
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER: dtor, add_scene, remove_scene, add_scene_view,
+// remove_scene_view and add_render_output_window ported to
+// sources/.../scene_manager.cpp (the render_output_window_predicate struct is
+// already canonical there). Remaining here: remove_render_output_window,
+// create_scene, create_scene_view, create_render_output_window and the three
+// destroy overloads - declared in the canonical header but not yet defined in
+// the carcass. scene_manager.h was fully superseded by the canonical header
+// and removed (its scenes/scene_views/render_output_windows typedefs were
+// dropped canonically - members are direct vector< T* >).
+
 #include "pch.h"
 #include "scene_manager.h"
 #include "scene.h"
@@ -20,69 +30,13 @@
 namespace vostok {
 namespace render {
 
-scene_manager::~scene_manager()
-{
-	scenes::iterator	it_c = m_scenes.begin(),
-						en_c = m_scenes.end();
-
-//!	ASSERT( it_c == en_c, "Some scenes were not deleted before render engine destruction." );
-	if ( it_c != en_c )
-		LOG_ERROR		( "Some scenes were not deleted before render engine destruction." );
-
-	for( ; it_c != en_c; ++it_c)
-		DELETE			(*it_c);
-
-	scene_views::iterator	it_v = m_views.begin(),
-							en_v = m_views.end();
-
-	ASSERT( it_v == en_v, "Some scene views were not deleted before render engine destruction." );
-
-	for( ; it_v != en_v; ++it_v)
-		DELETE(*it_v);
-}
-
-void scene_manager::add_scene		( scene* in_scene)
-{
-	m_scenes.push_back( in_scene);
-}
-
-void scene_manager::remove_scene	( scene* in_scene)
-{
-	scenes::iterator found = std::find(m_scenes.begin(), m_scenes.end(), in_scene);
-	
-	if (found == m_scenes.end())
-		return;
-	
-	m_scenes.erase(found);
-}
-
-void scene_manager::add_scene_view		( scene_view* in_scene_view)
-{
-	m_views.push_back(in_scene_view);
-}
-
-void scene_manager::remove_scene_view	( scene_view* in_scene_view)
-{
-	scene_views::iterator found = std::find(m_views.begin(), m_views.end(), in_scene_view);
-	
-	if(found == m_views.end())
-		return;
-	
-	m_views.erase(found);
-}
-
-void scene_manager::add_render_output_window		( render_output_window* in_output_window)
-{
-	m_output_windows.push_back(in_output_window);
-}
-
 void scene_manager::remove_render_output_window	( render_output_window* in_output_window)
 {
 	render_output_windows::iterator found = std::find(m_output_windows.begin(), m_output_windows.end(), in_output_window);
-	
+
 	if(found == m_output_windows.end())
 		return;
-	
+
 	m_output_windows.erase(found);
 }
 
@@ -126,7 +80,7 @@ void	scene_manager::destroy( scene_view* view)
 	m_views.erase	(it);
 }
 
-struct render_output_window_predicate 
+struct render_output_window_predicate
 {
 	render_output_window_predicate ( HWND window) : m_window(window){}
 

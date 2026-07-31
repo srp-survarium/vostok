@@ -7,6 +7,12 @@
 #ifndef UTILS_DX11_H_INCLUDED
 #define UTILS_DX11_H_INCLUDED
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT only for utils::log_2 /
+// utils::calc_mipmap_count, which the parked texture_storage::get/release port
+// needs and canonical dx11/utils.h does not carry. Everything else here
+// (property_container, fix_path, to_lower, u_diffuse2s, calc_texture_size,
+// get_projection_invert) has ZERO target-symbol evidence - retire with the port.
+
 //////////////////////////////////////////////////////////////////////////
 #define DISABLE_TODO_STAND  1
 #if DISABLE_TODO_STAND == 1

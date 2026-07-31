@@ -4,6 +4,16 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT - PORTABLE. This is the
+// only ancestor of the still-stubbed canonical
+//   shader_binary_source_cook::create_resource        [0x558b70, 1444 B]
+//   shader_binary_source_cook::converted_shader_loaded [0x5589e0, 397 B]
+// in sources/vostok/render/core/dx11/sources/shader_binary_source_cook.cpp.
+// Its private helpers (is_need_recompile / save_binary_shader /
+// all_tasks_finished / compile_shader_task) are NOT on the canonical class
+// (which carries only m_tasks_type + m_blob_creation_counter), so the port
+// needs folding/renaming. Pairs with the sibling .h and include_handler.h.
+
 #include "pch.h"
 #include "shader_binary_source_cook.h"
 #include <vostok/render/core/effect_descriptor.h>

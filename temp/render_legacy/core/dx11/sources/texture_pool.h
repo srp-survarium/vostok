@@ -7,6 +7,10 @@
 #ifndef TEXTURE_POOL_H_INCLUDED
 #define TEXTURE_POOL_H_INCLUDED
 
+// HARVEST REMAINDER: declaration twin of canonical
+// dx11/sources/texture_pool.h (phase 3 ported get/release there). Kept only to
+// pair with the parked ctor/dtor in the sibling texture_pool.cpp.
+
 namespace vostok {
 namespace render {
 

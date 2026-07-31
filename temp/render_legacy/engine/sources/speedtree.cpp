@@ -4,6 +4,16 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT - PORTABLE. Canonical
+// sources/vostok/render/engine/sources/speedtree.cpp carries only "@todo Recover"
+// placeholders, while the target really ships
+//   initialize_speedtree    [0x75a880, 138 B]  (+ s_speed_tree_allocator atexit)
+//   print_speedtree_errors  [0x75a910, 241 B]
+//   finalize_speedtree      [0x75aa10,  73 B]
+// The bodies below (CCore::IsAuthorized guard, CAllocatorInterface,
+// CCoordSys::SetCoordSys, speedtree_cook / speedtree_instance_cook register +
+// unregister, GetError loop) are their direct ancestors.
+
 #include "pch.h"
 #include "speedtree.h"
 #include "speedtree_cook.h"
