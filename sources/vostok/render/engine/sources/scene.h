@@ -355,6 +355,8 @@ public:
 	> m_volume_fogs;
 
 private:
+	friend	class				scene_cook;
+
 	scene* return_this( ) { return this; }
 	void update_lines( u32 add_count );
 	void render_lines( bool covering_effect );
