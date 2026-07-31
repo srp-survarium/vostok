@@ -19,6 +19,11 @@
 namespace vostok {
 namespace render {
 
+// REMAINDER: find_effect(name,texture) heuristic (canonical header inline stub),
+// create_effect x3 (canonical moved to header template machinery), effect_loader
+// path create_new_effect(loader,...), on_effects_recompiled + recompile_shaders
+// (MASTER_GOLD-guarded, shipped body empty).
+
 void effect_loader::on_effect_ready( resources::queries_result& data )
 {
 	if(!query_rejected)
@@ -50,75 +55,10 @@ struct effect_manager_call_destructor_predicate
 
 
 
-effect_manager::effect_manager(): 
-	m_loading_incomplete(false),
-	force_sync(false),
-#ifdef MASTER_GOLD
-	m_shader_cache_info(memory::g_mt_allocator)
-#else // #ifdef MASTER_GOLD
-	m_shader_cache_info(::vostok::debug::g_mt_allocator)
-#endif // #ifdef MASTER_GOLD
-{
-	static effect_cook effect_cooker;
-	register_cook(&effect_cooker);
-}
 
-effect_manager::~effect_manager()
-{
-	map_effect_descriptors_it it  = m_effect_descriptors.begin(),
-							  end = m_effect_descriptors.end();
 
-	for( ; it != end; ++it)
-		DELETE( it->second);
 
-		it  = m_effect_descriptors_by_texture.begin();
-		end = m_effect_descriptors_by_texture.end();
 
-	for( ; it != end; ++it)
-		DELETE( it->second);
-	
-	//unregister_cook(resources::render_effect_class);
-}
-
-res_pass* effect_manager::create_pass( const res_pass& pass)
-{
-	for( u32 it=0; it<m_passes.size(); it++)
-		if( m_passes[it]->equal( pass))
-			return m_passes[it];
-
-	res_pass*	new_pass = NEW( res_pass)( pass.m_vs, pass.m_gs, pass.m_ps, pass.m_state);
-	new_pass->mark_registered();
-
-	m_passes.push_back			( new_pass);
-	return m_passes.back();
-}
-
-void effect_manager::delete_pass( res_pass const* pass)
-{
-	if( !pass->is_registered() )
-		return;
-
-	if( reclaim( m_passes, pass))
-	{
-		DELETE( pass, effect_manager_call_destructor_predicate());
-		return;
-	}
-
-	LOG_ERROR( "!ERROR: Failed to find compiled pass.");
-}
-
-effect_descriptor* effect_manager::get_effect_descriptor_by_name(pcstr name)
-{
-	map_effect_descriptors_it it = m_effect_descriptors.find(name);
-	
-	if( it != m_effect_descriptors.end())
-		return it->second;
-	
-	if (!strings::equal(name, "none"))
-		R_ASSERT(0, "%s disctiptor not found!", name);
-	
-	return 0;
-}
 
 effect_descriptor* effect_manager::find_effect( LPCSTR name, LPCSTR texture /* "texture" for testing only */ )
 {
@@ -136,32 +76,7 @@ effect_descriptor* effect_manager::find_effect( LPCSTR name, LPCSTR texture /* "
 	return 0;
 }
 
-void effect_manager::add_effect(effect_descriptor* in_descriptor, 
-								custom_config_ptr const& in_config, 
-								res_effect* in_effect)
-{
-	effect_holder_struct	holder;
-	holder.effect			= in_effect;
-	holder.config			= in_config;
-	holder.descriptor		= in_descriptor;
-	
-	m_effects.push_back(holder);
-}
 
-void effect_manager::remove_effect(res_effect* in_effect)
-{
-	effects_vector_type::iterator begin_it	= m_effects.begin();
-	effects_vector_type::iterator end_it	= m_effects.end();
-	effects_vector_type::iterator it		= begin_it;
-	
-	for (; it != end_it; ++it)
-	{
-		if (it->effect == in_effect)
-		{
-			m_effects.erase(it);
-		}
-	}
-}
 
 ref_effect effect_manager::create_effect( LPCSTR descriptor_name, vostok::configs::binary_config_value const& in_binary_config, bool force_recompile)
 {
@@ -207,30 +122,7 @@ ref_effect effect_manager::create_effect( LPCSTR descriptor_name, render::effect
 	return 0;
 }
 
-void effect_manager::on_effect_created(ref_effect* out_effect_ptr, resources::queries_result& data)
-{
-	if (data[0].is_successful())
-	{
-		*out_effect_ptr		= static_cast_resource_ptr<ref_effect>(data[0].get_unmanaged_resource());
-	}
-	else
-		*out_effect_ptr		= 0;
-}
 
-void effect_manager::on_async_effect_created(resources::queries_result& data, 
-											 ref_effect* out_effect_ptr,
-											 effect_descriptor* descriptor)
-{
-	(void)&descriptor;
-	
-//	if (std::find(m_effects_deleted_in_pending.begin(), m_effects_deleted_in_pending.end(), out_effect_ptr) != m_effects_deleted_in_pending.end())
-//		return;
-	
-	if (data[0].is_successful())
-		*out_effect_ptr		= static_cast_resource_ptr<ref_effect>(data[0].get_unmanaged_resource());
-	else
-		*out_effect_ptr		= 0;
-}
 
 void effect_manager::create_new_effect(effect_loader* loader, 
 									   effect_descriptor* descriptor, 
@@ -252,51 +144,7 @@ void effect_manager::create_new_effect(effect_loader* loader,
 	);
 }
 
-void effect_manager::create_new_effect(ref_effect* out_effect, 
-									   effect_descriptor* descriptor, 
-									   custom_config_ptr const& config, 
-									   u32 crc)
-{
-	resources::user_data_variant				user_data_variant;
-	
-	effect_compile_data* cook_data				= NEW(effect_compile_data)(descriptor, config, crc);
-	user_data_variant.set						(cook_data);
-	
-	resources::query_create_resource			(
-		"",
-		vostok::const_buffer("", 1),
-		resources::render_effect_class,
-		boost::bind(&effect_manager::on_async_effect_created, this, _1, out_effect, descriptor),
-		g_allocator,
-		&user_data_variant
-	);
-}
 
-ref_effect effect_manager::create_new_effect( effect_descriptor& descriptor, 
-											 render::custom_config_ptr const& ptr, 
-											 u32 crc)
-{
-	resources::user_data_variant				user_data_variant;
-	
-	effect_compile_data* cook_data				= NEW(effect_compile_data)(&descriptor, ptr, crc);
-	user_data_variant.set						(cook_data);
-	
-	resources::user_data_variant const*			user_data_variants[] = {&user_data_variant};
-	
-	resources::creation_request requests[]		= { resources::creation_request("", vostok::const_buffer("", 1), resources::render_effect_class) };
-	
-	ref_effect new_effect_ptr;
-	
-	resources::query_create_resources_and_wait	(
-		requests, 
-		array_size(requests), 
-		boost::bind(&effect_manager::on_effect_created, this, &new_effect_ptr, _1),
-		g_allocator,
-		user_data_variants
-	);
-	
-	return new_effect_ptr;
-}
 
 void effect_manager::on_effects_recompiled(effects_to_recompile_type* effects_to_recompile, resources::queries_result& data)
 {
@@ -370,40 +218,7 @@ void effect_manager::delete_effect( res_effect const* effect)
 	LOG_ERROR( "!ERROR: Failed to find complete shader");
 }
 
-res_shader_technique* effect_manager::create_effect_technique( const res_shader_technique& element)
-{
-	if( element.m_passes.empty())
-		return 0;
 
-	// Search equal in shaders array
-	for( u32 it = 0; it < m_techniques.size(); ++it)
-		if( element.equal( m_techniques[it]))
-			return m_techniques[it];
-
-	// Create _new_ entry
-	res_shader_technique*	new_technique = NEW( res_shader_technique); //( element);
-
-	new_technique->m_flags = element.m_flags;
-	new_technique->m_passes = element.m_passes;
-
-	new_technique->mark_registered();
-	m_techniques.push_back( new_technique);
-	return new_technique;
-}
-
-void effect_manager::delete_effect_technique( res_shader_technique const* technique)
-{
-	if( !technique->is_registered() )
-		return;
-
-	if( reclaim( m_techniques, technique))
-	{
-		DELETE( technique, effect_manager_call_destructor_predicate());
-		return;
-	}
-
-	//LOG_ERROR( "!ERROR: Failed to find complete shader");
-}
 
 void effect_manager::recompile_shaders( render::vector<fs_new::virtual_path_string> const& in_shader_names)
 {
@@ -461,16 +276,7 @@ void effect_manager::recompile_shaders( render::vector<fs_new::virtual_path_stri
 #endif // #ifndef MASTER_GOLD
 }
 
-void effect_manager::register_effect_desctiptor( char const * name, effect_descriptor * dectriptor)
-{
- 	m_effect_descriptors.insert( utils::mk_pair(name, dectriptor));
-}
 
-void effect_manager::delete_pending_effect(ref_effect* effect)
-{
-	if (std::find(m_effects_deleted_in_pending.begin(), m_effects_deleted_in_pending.end(), effect) == m_effects_deleted_in_pending.end())
-		m_effects_deleted_in_pending.push_back(effect);
-}
 
 } // namespace render 
 } // namespace vostok 
