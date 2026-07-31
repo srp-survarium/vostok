@@ -115,6 +115,9 @@ ports).
 | 2026-07-31 | 55090cde2 | wave 1 (facade) | 8 (0.3%) | 0.1% (latent - callees stubbed) | 1,714 | 787 |
 | 2026-07-31 | wave 2 | engine roots + SpeedTree SDK link | 129 (4.9%) | 6.3% | 1,567 | 563 |
 
+| 2026-07-31 | bd12750c4 | wave 3 pt1 (core resource layer) | 168 (6.3%) | 7.5% | 1,393 | 510 |
+
 Wave-2 side effect: overall repo exact 38.13% -> 41.45% (+428 fns), fuzzy
 46.65% -> 50.88% - the restored create_world -> engine world -> cooks chain
-un-DCE'd reachability cones in consumer modules too.
+un-DCE'd reachability cones in consumer modules too. Wave 3 pt1 adds
++39 render exact; overall 41.78%/51.28%.
