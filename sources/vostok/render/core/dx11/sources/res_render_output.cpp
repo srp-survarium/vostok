@@ -347,9 +347,12 @@ void res_render_output::initialize_swap_chain	( IDXGISwapChain* swap_chain)
 		hr = pDXGIDevice->GetParent(__uuidof(IDXGIAdapter), (void **)&pDXGIAdapter);
 		R_ASSERT( hr == S_OK );
 
+		// claude@NOTE: CHECK_RESULT takes the HRESULT the call returns - the harvested
+		// CHECK_RESULT(dxgi_factory) form cannot compile against the target's macro, whose
+		// message argument is make_d3d11_error_string( expression ).
 		IDXGIFactory * dxgi_factory;
-		pDXGIAdapter->GetParent(__uuidof(IDXGIFactory), (void **)&dxgi_factory);
-		CHECK_RESULT(dxgi_factory);
+		hr = pDXGIAdapter->GetParent(__uuidof(IDXGIFactory), (void **)&dxgi_factory);
+		CHECK_RESULT(hr);
 
 		hr = dxgi_factory->CreateSwapChain( device::ref().d3d_device(), &m_swap_chain_desc, &m_swap_chain);
 		R_ASSERT( hr == S_OK );

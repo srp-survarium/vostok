@@ -81,13 +81,31 @@ private:
 };
 
 bool resource_manager::constant_buffer_predicate::operator()(
-	shader_constant_buffer const* const,
-	shader_constant_buffer const* const
+	shader_constant_buffer const* const left,
+	shader_constant_buffer const* const right
 ) const
 {
-	// claude@NOTE: no legacy ancestor - constant_buffer_predicate is new-in-target (legacy kept a plain vector with linear search); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x124a20]
+	if( left->type() < right->type())
+		return true;
+
+	if( left->type() > right->type())
+		return false;
+
+	if( left->size() < right->size())
+		return true;
+
+	if( left->size() > right->size())
+		return false;
+
+	if( left->dest() < right->dest())
+		return true;
+
+	if( left->dest() > right->dest())
+		return false;
+
+	if( left->name() < right->name())
+		return true;
+
 	return false;
 }
 
@@ -200,59 +218,103 @@ ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 }
 
 template <>
-res_xs_hw<vs_data>* resource_manager::create_xs_hw_impl<vs_data>(
+resource_manager::map_vs_hw& resource_manager::xs_hw_registry<vs_data>( )
+{
+	return m_vs_hw_registry;
+}
+
+template <>
+resource_manager::map_gs_hw& resource_manager::xs_hw_registry<gs_data>( )
+{
+	return m_gs_hw_registry;
+}
+
+template <>
+resource_manager::map_ps_hw& resource_manager::xs_hw_registry<ps_data>( )
+{
+	return m_ps_hw_registry;
+}
+
+template <typename shader_data>
+res_xs_hw<shader_data>* resource_manager::create_xs_hw_impl(
 	pcstr name,
 	shader_configuration shader_config,
 	shader_include_getter* include_getter,
 	binary_shader_sources_type* shader_sources
 )
 {
-	// FUNCTION BODY[0x1258c0]
+	typedef map<shader_name_config_pair, res_xs_hw<shader_data>*> xs_registry_type;
+
 	VOSTOK_UNREFERENCED_PARAMETER	(include_getter);
 
 	if (!name)
 		return NULL;
 
-	fs_new::virtual_path_string	reg_name			(name);
-	map_vs_hw::iterator it				= m_vs_hw_registry.find( shader_name_config_pair( reg_name.c_str(), shader_config));
+	xs_registry_type& registry = xs_hw_registry<shader_data>();
 
 	// TODO: Add check of global defines to shader_configuration
-//	if (!m_is_shader_reloading && it != xs_hw_registry.end())
-//	{
-//		return it->second;
-//	}
-//	else
+	typename xs_registry_type::iterator it = registry.find(
+		shader_name_config_pair( name, shader_config)
+	);
+
+	if (!m_is_shader_reloading && it != registry.end())
 	{
-		binary_shader_sources_type::iterator found_binary_source_it = shader_sources->find(
-			binary_shader_key_type(
-				name,
-				(enum_shader_type)vs_data::type,
-				shader_config
-			)
-		);
+		++sh_returned;
+		return it->second;
+	}
 
-		if (found_binary_source_it != shader_sources->end())
+	++sh_created;
+
+	binary_shader_sources_type::iterator found_binary_source_it = shader_sources->find(
+		binary_shader_key_type(
+			name,
+			(enum_shader_type)shader_data::type,
+			shader_config
+		)
+	);
+
+	if (found_binary_source_it != shader_sources->end())
+	{
+		res_xs_hw<shader_data>* xs_hw	= NEW(res_xs_hw<shader_data>);
+		xs_hw->mark_registered			();
+		xs_hw->set_name					(name);
+
+		registry[
+			shader_name_config_pair(xs_hw->name().c_str(), shader_config)
+		]								= xs_hw;
+
+		ID3D10Blob* blob				= NULL;
+		pvoid byte_code					= found_binary_source_it->second->m_shader_byte_code;
+		if (!byte_code)
+			byte_code = found_binary_source_it->second->m_compiled_shader_byte_code;
+
+		if (byte_code)
 		{
-			res_xs_hw<vs_data>* xs_hw	= NEW(res_xs_hw<vs_data>);
-			xs_hw->mark_registered		();
-			xs_hw->set_name				(reg_name.c_str() );
+			CHECK_RESULT				(
+				D3DCreateBlob( found_binary_source_it->second->m_shader_byte_code_size, &blob)
+			);
 
-			m_vs_hw_registry[
-				shader_name_config_pair(xs_hw->name().c_str(), shader_config)
-			]							= xs_hw;
+			memcpy						(
+				blob->GetBufferPointer(),
+				byte_code,
+				found_binary_source_it->second->m_shader_byte_code_size
+			);
 
-			if (FAILED(xs_hw->create_hw_shader((ID3D10Blob*)found_binary_source_it->second->m_shader_byte_code)))
+			if (FAILED(xs_hw->create_hw_shader( blob)))
 			{
 				LOG_ERROR				(
 					"!%s: %s",
-					shader_type_traits<(enum_shader_type)vs_data::type>::short_name(),
+					shader_type_traits<(enum_shader_type)shader_data::type>::short_name(),
 					name
 				);
 				LOG_ERROR				("shader creation failed");
-				FATAL					("!Shader is not created");
 			}
-			return xs_hw;
+
+			if (blob)
+				blob->Release			();
 		}
+
+		return xs_hw;
 	}
 
 	return 0;
@@ -265,57 +327,51 @@ res_xs_hw<vs_data>* resource_manager::create_vs_hw(
 	binary_shader_sources_type* sources
 )
 {
-	// FUNCTION BODY[0x5643d0]
 	return create_xs_hw_impl<vs_data>( name, config, include_getter, sources );
 }
 
 res_xs_hw<gs_data>* resource_manager::create_gs_hw(
-	pcstr,
-	shader_configuration,
-	shader_include_getter*,
-	binary_shader_sources_type*
+	pcstr name,
+	shader_configuration config,
+	shader_include_getter* include_getter,
+	binary_shader_sources_type* sources
 )
 {
-	// claude@NOTE: legacy forwards to create_xs_hw_impl<gs_data>; the target DOES carry that
-	// instantiation (??$create_xs_hw_impl@Ugs_data@... is in match.db), so the shipped source
-	// had ONE generic create_xs_hw_impl template instantiated for vs/gs/ps rather than the
-	// vs_data-only explicit specialization this TU currently holds; genericising it (registry
-	// + shader_type via traits) and restoring the forwards is matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5643a0]
-	return 0;
+	return create_xs_hw_impl<gs_data>( name, config, include_getter, sources );
 }
 
 res_xs_hw<ps_data>* resource_manager::create_ps_hw(
-	pcstr,
-	shader_configuration,
-	shader_include_getter*,
-	binary_shader_sources_type*
+	pcstr name,
+	shader_configuration config,
+	shader_include_getter* include_getter,
+	binary_shader_sources_type* sources
 )
 {
-	// claude@NOTE: legacy forwards to create_xs_hw_impl<ps_data>; the target DOES carry that
-	// instantiation (??$create_xs_hw_impl@Ups_data@... is in match.db) - see create_gs_hw above;
-	// matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x564370]
-	return 0;
+	return create_xs_hw_impl<ps_data>( name, config, include_getter, sources );
 }
 
 void resource_manager::bind_samplers_to_shaders( )
 {
-	// claude@NOTE: no legacy ancestor - bind_samplers_to_shaders has no legacy ancestor; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x560d30]
+	for( set<res_xs<vs_data>*, compare_shader_predicate<vs_data> >::iterator it = m_v_shaders.begin(); it != m_v_shaders.end(); ++it)
+		(*it)->m_samplers->rebind();
+
+	for( set<res_xs<gs_data>*, compare_shader_predicate<gs_data> >::iterator it = m_g_shaders.begin(); it != m_g_shaders.end(); ++it)
+		(*it)->m_samplers->rebind();
+
+	for( set<res_xs<ps_data>*, compare_shader_predicate<ps_data> >::iterator it = m_p_shaders.begin(); it != m_p_shaders.end(); ++it)
+		(*it)->m_samplers->rebind();
 }
 
-template <>
-void resource_manager::release_impl<vs_data>( res_xs_hw<vs_data> const* xs_hw )
+template <typename shader_data>
+void resource_manager::release_impl( res_xs_hw<shader_data> const* xs_hw )
 {
-	// FUNCTION BODY[0x1264b0]
+	typedef map<shader_name_config_pair, res_xs_hw<shader_data>*> xs_registry_type;
+
 	if( !xs_hw->is_registered())
 		return;
 
-	map_vs_hw::iterator begin = m_vs_hw_registry.begin(), end = m_vs_hw_registry.end(), it = m_vs_hw_registry.begin();
+	xs_registry_type& registry = xs_hw_registry<shader_data>();
+	typename xs_registry_type::iterator begin = registry.begin(), end = registry.end(), it = registry.begin();
 
 	while( identity(true))
 	{
@@ -326,7 +382,7 @@ void resource_manager::release_impl<vs_data>( res_xs_hw<vs_data> const* xs_hw )
 		}
 		else if ( it->second==xs_hw)
 		{
-			m_vs_hw_registry.erase(it);
+			registry.erase(it);
 			DELETE( xs_hw, resource_manager_call_destructor_predicate());
 			break;
 		}
@@ -334,24 +390,19 @@ void resource_manager::release_impl<vs_data>( res_xs_hw<vs_data> const* xs_hw )
 	}
 }
 
-void resource_manager::release( res_xs_hw<vs_data> const* shader )
+void resource_manager::release( res_xs_hw<vs_data> const* vs )
 {
-	// FUNCTION BODY[0x562dd0]
-	release_impl<vs_data>( shader );
+	release_impl<vs_data>( vs );
 }
 
-void resource_manager::release( res_xs_hw<gs_data> const* )
+void resource_manager::release( res_xs_hw<gs_data> const* gs )
 {
-	// claude@NOTE: legacy body diverged - legacy release_impl has no gs instantiation in the target (~0x10-byte target body, see legacy UNPORTED note); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x562dc0]
+	release_impl<gs_data>( gs );
 }
 
-void resource_manager::release( res_xs_hw<ps_data> const* )
+void resource_manager::release( res_xs_hw<ps_data> const* ps )
 {
-	// claude@NOTE: legacy body diverged - legacy release_impl has no ps instantiation in the target; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x562db0]
+	release_impl<ps_data>( ps );
 }
 
 pcstr resource_manager::get_converted_shader_path( ) const
@@ -366,8 +417,22 @@ pcstr get_textures_path2( )
 	return "resources/textures";
 }
 
+// claude@NOTE: only the TOTAL size (0xfa0 bytes, from the ctor's memset) and the name are
+// recovered from the target - the element type is a guess; nothing else in the exe touches it.
+static ID3D11CommandList* s_command_lists[1000];
+
 resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
+	sh_created					( 0),
+	sh_returned					( 0),
+	tl_created					( 0),
+	cb_created					( 0),
+	sl_created					( 0),
+	m_deferred_context			( NULL),
+	m_render_target_video_memory( 0),
 	shader_name_to_mask_config	( config),
+	m_num_bytes_of_texture_video_memory( 0),
+	m_num_bytes_of_buffers_video_memory( 0),
+	m_tasks_type				( tasks::create_new_task_type( "texture_create_task", 0)),
 	m_loading_incomplete		( false),
 	m_is_shader_reloading		( false),
 	m_need_recompile_shader_if_source_reloaded( true),
@@ -375,7 +440,8 @@ resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
 	m_texture_storage_staging	( NULL),
 	m_compile_error_handler		( NULL)
 {
-	// FUNCTION BODY[0x563e20]
+	memset( s_command_lists, 0, sizeof( s_command_lists));
+
 	static shader_binary_source_cook shader_binary_source_cooker;
 	resources::register_cook(&shader_binary_source_cooker);
 
@@ -394,9 +460,12 @@ resource_manager::resource_manager( configs::binary_config_ptr const& config ) :
 
 resource_manager::~resource_manager( )
 {
-	// FUNCTION BODY[0x5638f0]
-	for( u32 i = 0; i< m_states.size(); ++i)
-		DELETE( m_states[i], resource_manager_call_destructor_predicate());
+	while( !m_states.empty())
+	{
+		res_state* state = m_states.front();
+		m_states.erase( m_states.begin());
+		DELETE( state, resource_manager_call_destructor_predicate());
+	}
 
 	DELETE( m_texture_storage);
 	DELETE( m_texture_storage_staging);
@@ -508,7 +577,7 @@ void resource_manager::reload_modified_textures( )
 			resources::texture_wrapper_class,
 			boost::bind(
 				static_cast<void (resource_manager::*)( resources::queries_result&, u32, bool, u32 )>(&resource_manager::on_texture_loaded),
-				this, _1, 0, true, 0
+				this, _1, 0, true, u32(-1)
 			),
 			::vostok::render::g_allocator
 		);
@@ -617,25 +686,27 @@ void fix_texture_name( fs_new::virtual_path_string& str )
 
 u32 calc_bytes_per_block( DXGI_FORMAT )
 {
-	// claude@NOTE: no legacy ancestor - calc_bytes_per_block has no legacy ancestor; matcher-phase work.
+	// claude@NOTE: a DXGI_FORMAT switch compiled to `movzx ecx,[eax+<index-table>]; jmp [ecx*4+<jump-table>]`
+	// - the case -> value mapping lives entirely in the .rdata index/jump tables, which the delinker
+	// prints as garbage instructions, so recovering the cases needs a raw .rdata dump of the two
+	// tables at the two addresses the dispatch loads (same for calc_block_size / find_srgb_format).
 	// STATE[STUB]
-	// FUNCTION BODY[0x560660]
 	return 0;
 }
 
 u32 calc_block_size( DXGI_FORMAT )
 {
-	// claude@NOTE: no legacy ancestor - calc_block_size has no legacy ancestor; matcher-phase work.
+	// claude@NOTE: same .rdata index+jump-table wall as calc_bytes_per_block; the surviving return
+	// values are 1 and 4.
 	// STATE[STUB]
-	// FUNCTION BODY[0x5605f0]
 	return 0;
 }
 
 DXGI_FORMAT find_srgb_format( DXGI_FORMAT format, bool )
 {
-	// claude@NOTE: no legacy ancestor - find_srgb_format has no legacy ancestor; matcher-phase work.
+	// claude@NOTE: same .rdata index+jump-table wall; the dispatch is over `format - 0x1c` bounded by
+	// 0x3b and the surviving returns are 0x1d/0x5b/0x48/0x4b/0x4e.
 	// STATE[STUB]
-	// FUNCTION BODY[0x560560]
 	return format;
 }
 
@@ -645,9 +716,11 @@ void resource_manager::on_texture_loaded(
 	u32
 )
 {
-	// claude@NOTE: no legacy ancestor - the managed-ptr on_texture_loaded split has no legacy ancestor (see legacy UNPORTED note); matcher-phase work.
+	// claude@NOTE: 2470-byte target body with 26 PDB-recorded locals (dds_header/dds_info/desc
+	// 2d+3d/pinned_ptr_const<texture_data_resource>/mip+array loops); no legacy ancestor, so it has
+	// to be reconstructed statement by statement from 0x562400 - the largest single item left in
+	// this TU.
 	// STATE[STUB]
-	// FUNCTION BODY[0x562400]
 }
 
 void resource_manager::on_texture_loaded(
@@ -657,17 +730,23 @@ void resource_manager::on_texture_loaded(
 	u32
 )
 {
-	// claude@NOTE: legacy body diverged - legacy is the 3-param D3DX11/texture_data_resource path; the target gained a fourth u32 and split the flow; matcher-phase work.
+	// claude@NOTE: 972-byte D3DX11 path (locals tex/name/base_tex/pinned_ptr_const<u8>/dds_info/
+	// load_info); the legacy ancestor is the 3-param variant, so the fourth u32 and the reworked
+	// flow have to come from the target asm at 0x562de0.
 	// STATE[STUB]
-	// FUNCTION BODY[0x562de0]
 }
 
 u32 resource_manager::get_texture_video_memory_size( )
 {
-	// claude@NOTE: no legacy ancestor - get_texture_video_memory_size has no legacy ancestor; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x560850]
-	return 0;
+	map_texture::iterator it = m_texture_registry.begin();
+	map_texture::iterator end = m_texture_registry.end();
+
+	u32 result = 0;
+
+	for( ; it != end; ++it)
+		result += it->second->m_mem_usage;
+
+	return result >> 20;
 }
 
 void resource_manager::on_texture_loaded_staging(
@@ -676,16 +755,29 @@ void resource_manager::on_texture_loaded_staging(
 	bool
 )
 {
-	// claude@NOTE: legacy body diverged - signature matches but the shipped body is empty (staging pool disabled in the shipped build, see legacy UNPORTED note); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x560550]
+	// claude@NOTE: the shipped body is empty - the target's 147 recorded source lines all
+	// compile out of the Master Gold build (staging texture pool disabled).
 }
+
+// claude@NOTE: recovered from reload_all_textures' trailing `mov byte [s_reload_all_textures], 0`;
+// the console command that sets it (s_reload_all_textures_cc, a dynamic initializer in the target)
+// is not reconstructed here.
+static bool s_reload_all_textures = false;
 
 void resource_manager::reload_all_textures( )
 {
-	// claude@NOTE: no legacy ancestor - reload_all_textures has no legacy ancestor; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x564c50]
+	vector<fs_new::virtual_path_string> textures_to_reload;
+
+	for( map_texture::iterator it = m_texture_registry.begin(); it != m_texture_registry.end(); ++it)
+	{
+		if( it->first.length() && it->first[0] != '$')
+			textures_to_reload.push_back( it->first);
+	}
+
+	for( vector<fs_new::virtual_path_string>::iterator it = textures_to_reload.begin(); it != textures_to_reload.end(); ++it)
+		load_texture( it->c_str(), NULL, 0, false, true, true, u32(-1));
+
+	s_reload_all_textures = false;
 }
 
 res_texture* resource_manager::load_texture(
@@ -698,18 +790,25 @@ res_texture* resource_manager::load_texture(
 	u32 num_last_mips_used
 )
 {
-	// FUNCTION BODY[0x564810]
 	resources::class_id_enum class_id = use_converter ? resources::texture_wrapper_class : resources::raw_data_class;
 	fs_new::virtual_path_string path			  = "resources/textures/";
 
 	if( !use_pool)
 	{
-		res_texture* tex = NEW( res_texture);
-		tex->set_name( texture_name );
-		tex->mark_registered();
-		m_texture_registry.insert( mk_pair( tex->name(), tex));
+		res_texture* tex;
+		map_texture::iterator it = m_texture_registry.find( texture_name);
 
-		if( strstr( tex->name(), "$user$") == 0 && texture_name && texture_name[0])
+		if( it == m_texture_registry.end())
+		{
+			tex = NEW( res_texture);
+			tex->set_name( texture_name );
+			tex->mark_registered();
+			m_texture_registry.insert( mk_pair( tex->name(), tex));
+		}
+		else
+			tex = it->second;
+
+		if( strstr( tex->name(), "$user$") == 0 && texture_name && texture_name[0] && num_last_mips_used)
 		{
 			path += tex->name();
 			path += ".dds";
@@ -721,9 +820,7 @@ res_texture* resource_manager::load_texture(
 						static_cast<void (resource_manager::*)( resources::queries_result&, u32, bool, u32 )>(&resource_manager::on_texture_loaded),
 						this, _1, mip_level_cut, use_converter, num_last_mips_used
 					),
-					::vostok::render::g_allocator,
-					0,
-					parent);
+					::vostok::render::g_allocator);
 			else
 				resources::query_resource( path.c_str(),
 					class_id,
@@ -777,10 +874,10 @@ res_texture* resource_manager::create_texture2d_impl(
 	D3D11_USAGE usage,
 	u32 mip_levels,
 	u32 array_size,
-	bool
+	bool use_for_render_target
 )
 {
-	// FUNCTION BODY[0x5619b0]
+	u32 src_row_pitch;
 	D3D11_TEXTURE2D_DESC texure_desc;
 	ZeroMemory( &texure_desc, sizeof(texure_desc));
 	texure_desc.Width				= width;
@@ -791,14 +888,21 @@ res_texture* resource_manager::create_texture2d_impl(
 	texure_desc.Usage				= usage;
 	texure_desc.MipLevels			= mip_levels;
 	texure_desc.ArraySize			= array_size;
-	texure_desc.BindFlags			= (usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE;
-	texure_desc.CPUAccessFlags		= ((usage == D3D11_USAGE_DYNAMIC) || (usage == D3D11_USAGE_STAGING)) ? D3D11_CPU_ACCESS_WRITE | D3D11_CPU_ACCESS_READ : 0;
+	texure_desc.BindFlags			= ((usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE)
+									| (use_for_render_target ? D3D11_BIND_RENDER_TARGET : 0);
+
+	if (usage == D3D11_USAGE_DYNAMIC)
+		texure_desc.CPUAccessFlags	= D3D11_CPU_ACCESS_WRITE;
+	else
+		texure_desc.CPUAccessFlags	= (usage == D3D11_USAGE_STAGING) ? D3D11_CPU_ACCESS_READ : 0;
 
 	ID3D11Texture2D*	d3d_texture;
 	HRESULT res = device::ref().d3d_device()->CreateTexture2D( &texure_desc, data, &d3d_texture);
 	CHECK_RESULT( res);
 
 	res_texture* tex = NEW		( res_texture);
+
+	tex->m_mem_usage			= utils::calc_surface_size( width, height, format, 0, src_row_pitch);
 
 	tex->set_hw_texture			( d3d_texture, 0, usage == D3D11_USAGE_STAGING);
 
@@ -825,15 +929,26 @@ res_texture* resource_manager::create_texture2d(
 	bool use_as_render_target
 )
 {
-	// FUNCTION BODY[0x561e60]
-	res_texture* tex = create_texture2d_impl( width, height, data, format, usage, mip_levels, array_size, use_as_render_target);
-	tex->set_name( user_name);
-	std::pair<map_texture::iterator, bool> res = m_texture_registry.insert	( mk_pair( tex->name(), tex));
+	res_texture* tex;
 
-	ASSERT( res.second, "A texture with the specified name already exists in texture registry.");
+	if( !user_name)
+	{
+		tex = create_texture2d_impl( width, height, data, format, usage, mip_levels, array_size, use_as_render_target);
+		tex->set_name( user_name);
+	}
+	else
+	{
+		map_texture::iterator it = m_texture_registry.find( user_name);
 
-	if( !res.second)
-		return NULL;
+		if( it != m_texture_registry.end())
+			return it->second;
+
+		tex = create_texture2d_impl( width, height, data, format, usage, mip_levels, array_size, use_as_render_target);
+		tex->set_name( user_name);
+		std::pair<map_texture::iterator, bool> res = m_texture_registry.insert	( mk_pair( tex->name(), tex));
+
+		ASSERT( res.second, "A texture with the specified name already exists in texture registry.");
+	}
 
 	tex->mark_registered	();
 
@@ -851,7 +966,7 @@ res_texture* resource_manager::create_texture3d(
 	u32 mip_levels
 )
 {
-	// FUNCTION BODY[0x5617c0]
+	u32							src_row_pitch;
 	D3D11_TEXTURE3D_DESC		desc;
 	desc.Width					=	width;
 	desc.Height					=	height;
@@ -860,8 +975,7 @@ res_texture* resource_manager::create_texture3d(
 	desc.Format					=	format;
 	desc.Usage					=	(D3D11_USAGE)usage;
 
-	desc.BindFlags				=	(usage == D3D11_USAGE_IMMUTABLE) ?
-									 D3D11_BIND_SHADER_RESOURCE : ((usage == D3D11_USAGE_STAGING) ? 0 : D3D11_BIND_SHADER_RESOURCE);
+	desc.BindFlags				=	D3D11_BIND_SHADER_RESOURCE;
 
 	if (usage == D3D11_USAGE_IMMUTABLE)
 	{
@@ -873,10 +987,6 @@ res_texture* resource_manager::create_texture3d(
 		{
 			desc.CPUAccessFlags	=	D3D11_CPU_ACCESS_WRITE;
 		}
-		else if (usage == D3D11_USAGE_STAGING)
-		{
-			desc.CPUAccessFlags	=	D3D11_CPU_ACCESS_READ;
-		}
 	}
 
 	desc.MiscFlags				=	0;
@@ -884,9 +994,11 @@ res_texture* resource_manager::create_texture3d(
 	ID3D11Texture3D* d3d_texture =	NULL;
 
 	CHECK_RESULT				(device::ref().d3d_device()->CreateTexture3D( &desc, data, &d3d_texture));
-	R_ASSERT					(d3d_texture);
 
 	res_texture* tex = NEW		(res_texture);
+
+	tex->m_mem_usage			=	utils::calc_surface_size( width, height, format, 0, src_row_pitch) * depth;
+
 	tex->set_name				(user_name);
 	m_texture_registry.insert	(mk_pair( tex->name(), tex));
 
@@ -924,8 +1036,9 @@ untyped_buffer* resource_manager::create_buffer(
 	bool staging
 )
 {
-	// FUNCTION BODY[0x561740]
 	untyped_buffer* new_buffer = NEW(untyped_buffer)( size, data, type, dynamic, staging);
+
+	m_num_bytes_of_buffers_video_memory += size;
 
 	m_buffers.push_back( new_buffer);
 
@@ -934,9 +1047,9 @@ untyped_buffer* resource_manager::create_buffer(
 
 void resource_manager::release( untyped_buffer const* buffer )
 {
-	// FUNCTION BODY[0x560a20]
 	if( reclaim( m_buffers, buffer))
 	{
+		m_num_bytes_of_buffers_video_memory -= buffer->size();
 		DELETE( buffer, resource_manager_call_destructor_predicate());
 		return;
 	}
@@ -1416,19 +1529,15 @@ res_geometry* resource_manager::create_geometry(
 	untyped_buffer& ib
 )
 {
-	// FUNCTION BODY[0x564500]
-	u32 vb_stride = vertex_stride;
-	res_geometry g( vb, ib, dcl, vb_stride);
+	res_geometry g( vb, ib, dcl, vertex_stride);
 
-	set<res_geometry*, compare_member_predicate<res_geometry> >::const_iterator it = m_geometries.begin();
-	set<res_geometry*, compare_member_predicate<res_geometry> >::const_iterator end = m_geometries.end();
-	for( ; it != end ; ++it)
-	{
-		if( identity((*it)->equal( g) && g_enable_resource_sharing))
-			return *it;
-	}
+	set<res_geometry*, compare_member_predicate<res_geometry> >::iterator it = m_geometries.find( &g);
 
-	res_geometry* geom = NEW( res_geometry)( vb, ib, dcl, vb_stride);
+	if( it != m_geometries.end())
+		return *it;
+
+	res_geometry* geom = NEW( res_geometry)( vb, ib, dcl, vertex_stride);
+
 	geom->mark_registered();
 	m_geometries.insert( geom);
 
@@ -1527,10 +1636,8 @@ void resource_manager::register_sampler( pcstr name, ID3D11SamplerState* sampler
 
 ID3D11SamplerState* resource_manager::find_registered_sampler( pcstr name )
 {
-	// FUNCTION BODY[0x5609a0]
-	vector<std::pair<fixed_string<64>, ID3D11SamplerState*> >::const_iterator it	= m_samplers_registry.begin();
-	vector<std::pair<fixed_string<64>, ID3D11SamplerState*> >::const_iterator end	= m_samplers_registry.end();
-
+	vector<std::pair<fixed_string<64>, ID3D11SamplerState*> >::const_iterator it	= m_samplers_registry.begin(),
+																			 end	= m_samplers_registry.end();
 	for( ; it != end; ++it)
 	{
 		if( it->first == name)
