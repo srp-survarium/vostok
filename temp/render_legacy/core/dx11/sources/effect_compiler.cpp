@@ -14,60 +14,15 @@
 namespace vostok {
 namespace render {
 
-effect_compiler::effect_compiler	( res_effect& effect, bool shaders_cache_mode, binary_shader_sources_type* in_shader_sources):
-	m_compilation_target		( effect), 
-	m_technique_idx				( 0), 
-	m_pass_idx					( 0),
-#pragma warning(push)
-#pragma warning(disable:4355)
-	m_sampler_state_descriptor	( *this),
-#pragma warning(pop)
-	m_curr_sampler_name			( NULL),
-	m_shaders_cache_mode		( shaders_cache_mode),
-#ifdef MASTER_GOLD
-	m_shader_cache_info			(memory::g_mt_allocator),
-#else // #ifdef MASTER_GOLD
-	m_shader_cache_info			(::vostok::debug::g_mt_allocator),
-#endif // #ifdef MASTER_GOLD
-	m_shader_sources			(in_shader_sources)
-{
-	
-}
+// REMAINDER: set_stencil_ref/set_alpha_to_coverage (canonical header inlines,
+// already faithful), def_sampler/begin_sampler/end_sampler chain + set_texture
+// x2 + begin_pass (need res_sampler/xs_descriptor shader-source wiring -
+// port with the shader_binary_source_cook pass).
 
-effect_compiler::~effect_compiler()
-{
 
-}
 
-effect_compiler& effect_compiler::set_depth		( bool enable, bool write_enable, D3D_COMPARISON_FUNC cmp_func)
-{
-	if (m_shaders_cache_mode)
-		return *this;
 
-	m_state_descriptor.set_depth	( enable, write_enable, cmp_func);
-
-	return *this;
-}
-
-// effect_compiler& effect_compiler::set_stencil				( BOOL enable, u32 ref, u8 read_mask, u8 write_mask)
-// {
-// 	m_state_descriptor.set_stencil	( enable, ref, read_mask, write_mask);
 // 
-// 	return *this;
-// }
-
-effect_compiler& effect_compiler::set_stencil				( BOOL enable, u32 ref, u8 read_mask, u8 write_mask, D3D_COMPARISON_FUNC func, D3D_STENCIL_OP fail, D3D_STENCIL_OP pass, D3D_STENCIL_OP zfail)
-{
-	if (m_shaders_cache_mode)
-		return *this;
-	
-	m_state_descriptor.set_stencil	( enable, ref, read_mask, write_mask);
-	m_state_descriptor.set_stencil_frontface	( func, fail, pass, zfail);
-	m_state_descriptor.set_stencil_backface	( func , fail, pass, zfail);
-
-	return *this;
-}
-
 
 effect_compiler& effect_compiler::set_stencil_ref	( u32 ref)
 {
@@ -79,29 +34,6 @@ effect_compiler& effect_compiler::set_stencil_ref	( u32 ref)
 	return *this;
 }
 
-effect_compiler& effect_compiler::set_alpha_blend(BOOL blend_enable, 
-												  D3D_BLEND src_blend, 
-												  D3D_BLEND dest_blend, 
-												  D3D_BLEND_OP blend_op,
-												  D3D_BLEND src_alpha_blend,
-												  D3D_BLEND dest_alpha_blend,
-												  D3D_BLEND_OP blend_alpha_op)
-{
-	if (m_shaders_cache_mode)
-		return *this;
-
-	m_state_descriptor.set_alpha_blend(
-		blend_enable, 
-		src_blend,
-		dest_blend,
-		blend_op,
-		src_alpha_blend,
-		dest_alpha_blend,
-		blend_alpha_op
-	);
-
-	return *this;
-}
 
 effect_compiler& effect_compiler::set_alpha_to_coverage ( BOOL is_enabled )
 {
@@ -268,40 +200,8 @@ effect_compiler& effect_compiler::set_texture		( char const * name, res_texture 
 // 	return *this;
 // }
 
-effect_compiler& effect_compiler::set_cull_mode		( D3D_CULL_MODE mode)
-{
-	if (m_shaders_cache_mode)
-		return *this;
 
-	m_state_descriptor.set_cull_mode( mode);
-	return  *this;
-}
-effect_compiler& effect_compiler::color_write_enable	( D3D_COLOR_WRITE_ENABLE mode)
-{
-	if (m_shaders_cache_mode)
-		return *this;
 
-	m_state_descriptor.color_write_enable( mode);
-	return *this;
-}
-
-effect_compiler& effect_compiler::set_fill_mode		( D3D_FILL_MODE fill_mode)
-{
-	if (m_shaders_cache_mode)
-		return *this;
-
-	m_state_descriptor.set_fill_mode	( fill_mode);
-	return *this;
-}
-
-effect_compiler& effect_compiler::bind_constant( shader_constant_binding const& binding)
-{
-	if (m_shaders_cache_mode)
-		return *this;
-
-	m_bindings.add( binding);
-	return *this;
-}
 
 
 effect_compiler& effect_compiler::begin_pass(pcstr vs_name, 
@@ -350,66 +250,8 @@ effect_compiler& effect_compiler::begin_pass(pcstr vs_name,
 	return *this;
 }
 
-effect_compiler& effect_compiler::end_pass()
-{
-	if (m_shaders_cache_mode)
-		return *this;
-	
-	m_vs_descriptor.data().constants.apply_bindings(m_bindings);
-	m_gs_descriptor.data().constants.apply_bindings(m_bindings);
-	m_ps_descriptor.data().constants.apply_bindings(m_bindings);
-	
-	ref_state	state	= resource_manager::ref().create_state	( m_state_descriptor);
-	
-	ref_vs		vs		= resource_manager::ref().create_vs (m_vs_descriptor);
-	ref_gs		gs		= resource_manager::ref().create_gs (m_gs_descriptor);
-	ref_ps		ps		= resource_manager::ref().create_ps (m_ps_descriptor);
-	
-//	shader_constant_table_ptr constants= resource_manager::ref().create_const_table( m_constants);
-//	ref_texture_list tex_lst= effect_manager::ref().create_texture_list( m_tex_lst);
-	
-	ref_pass pass = effect_manager::ref().create_pass(res_pass(vs, gs, ps, state));
-	
-	m_sh_technique.m_passes.push_back(pass);
-	
-	m_state_descriptor.reset();
-//	m_constants.clear();
-//	m_tex_lst.clear();
-	m_bindings.clear();
-	
-	m_vs_hw = 0;
-	m_gs_hw = 0;
-	m_ps_hw = 0;
-	
-	++m_pass_idx;
-	
-	return *this;
-}
 
-effect_compiler& effect_compiler::begin_technique()
-{
-	if (m_shaders_cache_mode)
-		return *this;
 
-	m_sh_technique.m_passes.clear();
-	m_pass_idx = 0;
-
-	return *this;
-}
-
-void effect_compiler::end_technique()
-{
-	if (m_shaders_cache_mode)
-		return;
-
-	ref_shader_technique se = effect_manager::ref().create_effect_technique( m_sh_technique);
-
-	m_compilation_target.m_techniques.push_back( se);
-
-	m_sh_technique.m_passes.clear();
-
-	++m_technique_idx; m_pass_idx = 0;
-}
 
 
 
