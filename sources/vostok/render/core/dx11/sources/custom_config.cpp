@@ -2,6 +2,8 @@
 #include <vostok/configs_binary_config.h>
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/effect_options_descriptor.h>
+#include <vostok/render/core/static_type.h>
+#include <boost/crc.hpp>
 
 namespace vostok {
 namespace render {
@@ -9,23 +11,32 @@ namespace render {
 custom_config::custom_config( )
 	: own_buffer( false ), call_destructors( true )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a710]
 }
 
-void custom_config::destroy( custom_config* )
+void custom_config::destroy( custom_config* in_this )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a910]
+	if (call_destructors)
+		in_this->m_root.call_data_destructor();
+
+	if (own_buffer)
+		FREE(in_this);
 }
 
 u32 custom_config::get_need_buffer_size(
-	effect_options_descriptor const&
+	effect_options_descriptor const& v
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a100]
-	return 0;
+	u32 num_fields			= v.get_num_total_fields();// + 1;
+	u32 need_bytes_to_align = 0;
+	u32 last_align_value	= 0;
+
+	u32 num_bytes_for_data  = sizeof(custom_config) + num_fields * sizeof(custom_config_value) + v.get_data_memory_usage(need_bytes_to_align, last_align_value);
+	num_bytes_for_data += need_bytes_to_align;// - last_align_value;
+
+	return num_bytes_for_data;
 }
 
 namespace {
@@ -37,27 +48,38 @@ u16 convert_type( u16 )
 }
 
 template < >
-u16 convert_type<custom_config_value>( u16 )
+u16 convert_type<custom_config_value>( u16 type )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559d00]
-	return 0;
+	return type;
 }
 
 template < >
-u16 convert_type<effect_options_descriptor>( u16 )
+u16 convert_type<effect_options_descriptor>( u16 type )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559cf0]
-	return 0;
+	return type;
 }
 
 template < >
-u16 convert_type<configs::binary_config_value>( u16 )
+u16 convert_type<configs::binary_config_value>( u16 lua_type )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559d60]
-	return 0;
+	switch (lua_type)
+	{
+		case configs::t_boolean:		return static_type::get_type_id<bool>();
+		case configs::t_integer:		return static_type::get_type_id<s32>();
+		case configs::t_float:			return static_type::get_type_id<float>();
+		case configs::t_table_indexed:	return configs::t_table_named;
+		case configs::t_table_named:	return configs::t_table_named;
+		case configs::t_string:			return static_type::get_type_id<pcstr>();
+		case configs::t_float2:			return static_type::get_type_id<math::float2>();
+		case configs::t_float3:			return static_type::get_type_id<math::float3>();
+		case configs::t_float4:			return static_type::get_type_id<math::float4>();
+		default:
+			NODEFAULT();
+	}
+	UNREACHABLE_CODE(return 0;);
 }
 
 template < typename source_type, typename destination_type >
@@ -65,66 +87,111 @@ void copy_destroyer( source_type const&, destination_type& )
 {
 }
 
+// STATE[STUB]
+// claude@NOTE: no legacy ancestor (legacy primary was empty for this pair);
+// the target emits real code here - matcher work.
 template < >
 void copy_destroyer<configs::binary_config_value, custom_config_value>(
 	configs::binary_config_value const&,
 	custom_config_value&
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559c70]
 }
 
 template < >
 void copy_destroyer<custom_config_value, custom_config_value>(
-	custom_config_value const&,
-	custom_config_value&
+	custom_config_value const& value,
+	custom_config_value& item
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559ce0]
+	item.destroyer = value.destroyer;
 }
 
 template < >
 void copy_destroyer<effect_options_descriptor, custom_config_value>(
-	effect_options_descriptor const&,
-	custom_config_value&
+	effect_options_descriptor const& value,
+	custom_config_value& item
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559cd0]
+	item.destroyer = value.destroyer;
 }
 
 template < typename source_type, typename destination_type >
 void construct(
-	source_type const&,
-	destination_type&,
-	mutable_buffer&
+	source_type const& value,
+	destination_type& item,
+	mutable_buffer& data_buffer
 )
 {
-}
+	// FUNCTION BODY[0x55a560] for effect_options_descriptor/custom_config_value
+	item.type						= convert_type<source_type>(value.type);
+	item.id							= value.id;
+	item.data						= 0;
+	item.count						= 0;
+	item.id_crc						= 0;
 
-template < >
-void construct<effect_options_descriptor, custom_config_value>(
-	effect_options_descriptor const&,
-	custom_config_value&,
-	mutable_buffer&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a560]
+	copy_destroyer(value, item);
+
+	switch ( item.type )
+	{
+		case configs::t_table_named :
+		case configs::t_table_indexed :
+		{
+			item.count				= value.count;
+			item.data				= data_buffer.c_ptr();
+
+			destination_type* items = (destination_type*)data_buffer.c_ptr();
+			data_buffer	+= sizeof(destination_type) * value.count;
+
+			for (typename source_type::const_iterator it = value.begin(); it!=value.end(); ++it)
+			{
+				destination_type* next_item = new(items++)destination_type;
+				construct(*it, *next_item, data_buffer);
+
+				if (it->id)
+				{
+					boost::crc_32_type			processor;
+					processor.process_block		( it->id, it->id + vostok::strings::length(it->id) );
+					next_item->id_crc			= processor.checksum();
+				}
+			}
+
+			break;
+		}
+		default:
+			item.data  = value.data;
+			item.count = value.count;
+		break;
+	}
 }
 
 template < typename value_type >
-void sort_by_crc( value_type& )
+void sort_by_crc( value_type& item )
 {
-}
+	// FUNCTION BODY[0x559d10] for custom_config_value
+	switch ( item.type ) {
+		case configs::t_table_named:
+		case configs::t_table_indexed: {
+			value_type* items	= const_cast<value_type*>( static_cast<value_type const*>(static_cast<pcvoid>(item.data)) );
 
-template < >
-void sort_by_crc<custom_config_value>( custom_config_value& )
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x559d10]
+			struct predicate {
+				static inline bool compare	( value_type const& left, value_type const& right )
+				{
+					return			left.id_crc < right.id_crc;
+				}
+			}; // struct predicate
+
+			std::sort( items, items + item.count, &predicate::compare );
+
+			for (u32 i=0; i<item.count; i++)
+				sort_by_crc(*items++);
+
+			break;
+		}
+	}
 }
 
 template < typename value_type >
@@ -135,257 +202,303 @@ struct config_crc_predicate {
 	}
 };
 
+// STATE[STUB]
+// claude@NOTE: no legacy ancestor (target-only binary-config sort path).
 template < >
 bool config_crc_predicate<configs::binary_config_value>::compare(
 	configs::binary_config_value const&,
 	configs::binary_config_value const&
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559ca0]
 	return false;
 }
 
-void* align4( void* )
+void* align4( void* ptr )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x559cc0]
-	return 0;
+	return (void*)((size_t(ptr) + 3) & ~3);
 }
 
 template < typename value_type >
-void fill_data( value_type const&, mutable_buffer& )
+void fill_data( value_type const& value, mutable_buffer& data_buffer )
 {
-}
+	// FUNCTION BODY[0x55a000] for custom_config_value
+	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
+	{
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+			fill_data(*it, data_buffer);
+	}
+	else
+	{
+		pbyte ptr = pbyte(data_buffer.c_ptr());
+		size_t add_types = pbyte(align4(ptr)) - ptr;
+		if (add_types)
+		{
+			vostok::memory::zero(data_buffer.c_ptr(), add_types);
+			data_buffer += u32(add_types);
+		}
 
-template < >
-void fill_data<custom_config_value>(
-	custom_config_value const&,
-	mutable_buffer&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a000]
-}
-
-template < typename value_type >
-void fill_data_crc_buffer( value_type const&, mutable_buffer& )
-{
-}
-
-template < >
-void fill_data_crc_buffer<custom_config_value>(
-	custom_config_value const&,
-	mutable_buffer&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x559e10]
-}
-
-template < typename value_type >
-u32 get_data_crc_buffer_size( value_type const& )
-{
-	return 0;
-}
-
-template < >
-u32 get_data_crc_buffer_size<custom_config_value>(
-	custom_config_value const&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x559eb0]
-	return 0;
+		if (value.count > sizeof(u32) || value.type==static_type::get_type_id<pcstr>())
+		{
+			vostok::memory::copy(data_buffer.c_ptr(), value.count, value.data, value.count);
+			(pcvoid&)(value.data) = data_buffer.c_ptr();
+			data_buffer += value.count;
+		}
+	}
+	if (value.id)
+	{
+		u32 len = strings::length(value.id) + 1;
+		vostok::memory::copy(data_buffer.c_ptr(), len, value.id, len);
+		(pcvoid&)(value.id) = pcstr(data_buffer.c_ptr());
+		data_buffer += len;
+	}
 }
 
 template < typename value_type >
-u32 calc_data_crc( value_type const& )
+void fill_data_crc_buffer( value_type const& value, mutable_buffer& buffer )
 {
-	return 0;
-}
+	// FUNCTION BODY[0x559e10] for custom_config_value
+	if (value.id)
+	{
+		u32 len = strings::length(value.id) + 1;
+		vostok::memory::copy(buffer.c_ptr(), len, value.id, len);
+		buffer += len;
+	}
 
-template < >
-u32 calc_data_crc<custom_config_value>( custom_config_value const& )
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a4f0]
-	return 0;
-}
+	if (value.type==configs::t_table_named)
+	{
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+		{
+			fill_data_crc_buffer(*it, buffer);
+		}
+	}
+	else
+	{
+		pcvoid ptr = 0;
 
-template < typename value_type >
-u32 get_num_config_fields_impl( value_type const& )
-{
-	return 0;
-}
+		if (value.count <= sizeof(u32) && value.type!=static_type::get_type_id<pcstr>())
+			ptr = &value.data;
+		else
+			ptr = value.data;
 
-template < >
-u32 get_num_config_fields_impl<configs::binary_config_value>(
-	configs::binary_config_value const&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a140]
-	return 0;
-}
-
-template < typename value_type >
-u32 get_num_config_fields( value_type const& )
-{
-	return 0;
-}
-
-template < >
-u32 get_num_config_fields<configs::binary_config_value>(
-	configs::binary_config_value const&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a240]
-	return 0;
+		vostok::memory::copy(buffer.c_ptr(), value.count, ptr, value.count);
+		buffer += value.count;
+	}
 }
 
 template < typename value_type >
-u32 get_config_data_memory_usage( value_type const&, u32& )
+u32 get_data_crc_buffer_size( value_type const& value )
 {
-	return 0;
-}
+	// FUNCTION BODY[0x559eb0] for custom_config_value
+	u32 result = 0;
 
-template < >
-u32 get_config_data_memory_usage<configs::binary_config_value>(
-	configs::binary_config_value const&,
-	u32&
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a190]
-	return 0;
+	if (value.id)
+		result += strings::length(value.id) + 1;
+
+	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
+	{
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+			result += get_data_crc_buffer_size(*it);
+	}
+	else
+	{
+		result += value.count;
+	}
+
+	return result;
 }
 
 template < typename value_type >
-u32 calc_config_memory_usage_impl( value_type const& )
+u32 calc_data_crc( value_type const& value )
 {
-	return 0;
+	// FUNCTION BODY[0x55a4f0] for custom_config_value
+	u32 buffer_size = get_data_crc_buffer_size(value);
+
+	pcvoid mem_buffer = ALLOCA(buffer_size);
+	vostok::mutable_buffer buffer(pbyte(mem_buffer), buffer_size);
+
+	fill_data_crc_buffer(value, buffer);
+
+	boost::crc_32_type			processor;
+	processor.process_block		(pbyte(mem_buffer), pbyte(mem_buffer) + buffer_size);
+
+	return processor.checksum();
 }
 
-template < >
-u32 calc_config_memory_usage_impl<configs::binary_config_value>(
-	configs::binary_config_value const&
-)
+template < typename value_type >
+u32 get_num_config_fields_impl( value_type const& value )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a6a0]
-	return 0;
+	// FUNCTION BODY[0x55a140] for configs::binary_config_value
+	u32 result = 1;
+
+	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+			result += get_num_config_fields_impl(*it);
+
+	return result;
+}
+
+template < typename value_type >
+u32 get_num_config_fields( value_type const& value )
+{
+	// FUNCTION BODY[0x55a240] for configs::binary_config_value
+	u32 result = 0;
+
+	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+			result += get_num_config_fields_impl(*it);
+
+	return result;
+}
+
+template < typename value_type >
+u32 get_config_data_memory_usage( value_type const& value, u32& last_align_value )
+{
+	// FUNCTION BODY[0x55a190] for configs::binary_config_value
+	u32 result = 0;
+	if (value.id)
+	{
+		result = strings::length(value.id) + 1;
+	}
+
+	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
+	{
+		for (typename value_type::const_iterator it=value.begin(); it!=value.end(); ++it)
+		{
+			result += get_config_data_memory_usage(*it, last_align_value);
+		}
+	}
+	else
+	{
+		if (value.count > sizeof(u32) || value.type==static_type::get_type_id<pcstr>())
+			result += value.count;
+
+		u32 const rem = result % 4;
+
+		if (rem != 0)
+		{
+			last_align_value = 4 - rem;
+			result += last_align_value;
+		}
+	}
+	return result;
+}
+
+template < typename value_type >
+u32 calc_config_memory_usage_impl( value_type const& value )
+{
+	// FUNCTION BODY[0x55a6a0] for configs::binary_config_value
+	u32 last_align_value = 0;
+	u32 result = sizeof(custom_config);
+	result    += get_num_config_fields(value) * sizeof(custom_config_value);
+	result	  += get_config_data_memory_usage(value, last_align_value);
+	//result	  -= last_align_value;
+
+	return result;
 }
 
 template < >
 u32 calc_config_memory_usage_impl<effect_options_descriptor>(
-	effect_options_descriptor const&
+	effect_options_descriptor const& value
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a6d0]
-	return 0;
+	return custom_config::get_need_buffer_size(value);
 }
 
 template < typename value_type >
 custom_config* create_custom_config_impl(
-	value_type const&,
-	mutable_buffer&,
-	u32&,
-	bool
+	value_type const& value,
+	mutable_buffer& data_buffer,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	return 0;
-}
+	// FUNCTION BODY[0x55a840] for effect_options_descriptor
+	custom_config* config = new(data_buffer.c_ptr())custom_config;
+	data_buffer				+= sizeof(custom_config);
 
-template < >
-custom_config* create_custom_config_impl<effect_options_descriptor>(
-	effect_options_descriptor const&,
-	mutable_buffer&,
-	u32&,
-	bool
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55a840]
-	return 0;
+	construct(value, config->m_root, data_buffer);
+
+	sort_by_crc(config->m_root);
+
+	fill_data(config->m_root, data_buffer);
+
+	if (is_calc_data_crc)
+		out_data_crc = calc_data_crc(config->m_root);
+	else
+		out_data_crc = 0;
+
+	return config;
 }
 
 template < typename value_type >
 custom_config_ptr create_custom_config_impl(
-	value_type const&,
-	u32&,
-	bool
+	value_type const& value,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	return custom_config_ptr( );
-}
+	// FUNCTION BODY[0x55aa60] for effect_options_descriptor
+	u32 num_bytes_for_data = calc_config_memory_usage_impl(value) * 2;
 
-template < >
-custom_config_ptr create_custom_config_impl<effect_options_descriptor>(
-	effect_options_descriptor const&,
-	u32&,
-	bool
-)
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x55aa60]
-	return custom_config_ptr( );
+	vostok::mutable_buffer b( ALLOC(u8, num_bytes_for_data), num_bytes_for_data );
+
+	custom_config* config = create_custom_config_impl(value, b, out_data_crc, is_calc_data_crc);
+
+	config->own_buffer = true;
+
+	return config;
 }
 
 } // namespace
 
 custom_config_ptr create_custom_config(
-	effect_options_descriptor const&,
-	u32&,
-	bool
+	effect_options_descriptor const& value,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55ab30]
-	return custom_config_ptr( );
+	return create_custom_config_impl(value, out_data_crc, is_calc_data_crc);
 }
 
 custom_config_ptr create_custom_config(
-	custom_config_value const&,
-	u32&,
-	bool
+	custom_config_value const& value,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55ab10]
-	return custom_config_ptr( );
+	return create_custom_config_impl(value, out_data_crc, is_calc_data_crc);
 }
 
 custom_config_ptr create_custom_config(
-	configs::binary_config_value const&,
-	u32&,
-	bool
+	configs::binary_config_value const& value,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55aaf0]
-	return custom_config_ptr( );
+	return create_custom_config_impl(value, out_data_crc, is_calc_data_crc);
 }
 
 custom_config_ptr create_custom_config(
-	effect_options_descriptor const&,
-	mutable_buffer&,
-	u32&,
-	bool
+	effect_options_descriptor const& value,
+	mutable_buffer& data_buffer,
+	u32& out_data_crc,
+	bool is_calc_data_crc
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a950]
-	return custom_config_ptr( );
+	return create_custom_config_impl(value, data_buffer, out_data_crc, is_calc_data_crc);
 }
 
-u32 calc_config_memory_usage( effect_options_descriptor const& )
+u32 calc_config_memory_usage( effect_options_descriptor const& value )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x55a8d0]
-	return 0;
+	return calc_config_memory_usage_impl(value);
 }
 
 } // namespace render
