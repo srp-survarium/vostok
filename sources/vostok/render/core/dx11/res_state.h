@@ -12,6 +12,8 @@ namespace render {
 
 class res_state : public resource_intrusive_base {
 protected:
+	friend class resource_manager;
+
 	res_state(
 		ID3D11RasterizerState*		rasterizer_state,
 		ID3D11DepthStencilState*	depth_stencil_state,

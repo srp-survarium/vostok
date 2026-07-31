@@ -150,8 +150,8 @@ public:
 	template < typename resource_type >
 	struct compare_member_predicate {
 		bool operator()(
-			resource_type const* const left,
-			resource_type const* const right
+			resource_type* const left,
+			resource_type* const right
 		) const
 		{
 			// FUNCTION BODY[0x126b70] for res_geometry
@@ -369,6 +369,22 @@ public:
 		untyped_buffer& vertex_buffer,
 		untyped_buffer& index_buffer
 	);
+	template < int size >
+	res_geometry* create_geometry(
+		D3D11_INPUT_ELEMENT_DESC const (&declaration)[size],
+		u32 vertex_stride,
+		untyped_buffer& vertex_buffer,
+		untyped_buffer& index_buffer
+	)
+	{
+		return create_geometry(
+			(D3D11_INPUT_ELEMENT_DESC const*)&declaration,
+			size,
+			vertex_stride,
+			vertex_buffer,
+			index_buffer
+		);
+	}
 	res_geometry* create_geometry(
 		res_declaration* declaration,
 		u32 vertex_stride,
@@ -495,6 +511,12 @@ private:
 	void release_impl( res_xs_hw<shader_data> const* shader );
 
 public:
+	template < typename T >
+	static void call_resource_destructor( T* resource )
+	{
+		resource->~T( );
+	}
+
 	u32 get_texture_video_memory_size( );
 	u32 get_buffers_video_memory_size( ) const
 	{

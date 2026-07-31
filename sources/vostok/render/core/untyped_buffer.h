@@ -2,6 +2,7 @@
 #define VOSTOK_RENDER_CORE_UNTYPED_BUFFER_H_INCLUDED
 
 #include <vostok/intrusive_ptr.h>
+#include <vostok/render/core/device.h>
 #include <vostok/render/core/render_include.h>
 #include <vostok/render/core/resource_intrusive_base.h>
 
@@ -27,8 +28,17 @@ public:
 
 	void destroy_impl( ) const;
 
-	void* map( D3D11_MAP ) { return 0; }
-	void unmap( ) { }
+	void* map( D3D11_MAP mode )
+	{
+		D3D11_MAPPED_SUBRESOURCE			mapped_result;
+		device::ref().d3d_context()->Map	( m_hardware_buffer, 0, mode, 0, &mapped_result );
+		return								mapped_result.pData;
+	}
+
+	void unmap( )
+	{
+		device::ref().d3d_context()->Unmap	( m_hardware_buffer, 0 );
+	}
 	ID3D11Buffer* hardware_buffer( ) const { return m_hardware_buffer; }
 	u32 type( ) const { return m_type; }
 	u32 size( ) const { return m_size; }

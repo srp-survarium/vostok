@@ -35,10 +35,17 @@ public:
 
 	void destroy_impl( ) const;
 
-	bool equal( res_texture_list const& ) const
+	bool equal( res_texture_list const& base ) const
 	{
-		// STATE[STUB]
-		return false;
+		if ( m_container.size( ) != base.m_container.size( ) )
+			return false;
+
+		for ( u32 cmp = 0, size = m_container.size( ); cmp < size; ++cmp ) {
+			if ( m_container[cmp] != base.m_container[cmp] )
+				return false;
+		}
+
+		return true;
 	}
 
 	bool equal( fixed_vector<texture_slot, 128> const& ) const

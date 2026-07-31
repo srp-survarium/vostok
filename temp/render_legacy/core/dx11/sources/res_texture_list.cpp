@@ -4,44 +4,21 @@
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER (2026-07-31): ctor + destroy_impl ported into
+// sources/vostok/render/core/dx11/sources/res_texture_list.cpp; the
+// list-vs-list `equal` body was filled into the canonical res_texture_list.h
+// inline stub. The slots overload below is kept as the surviving ancestor of
+// the still-stubbed
+//   s32 res_texture_list::compare( fixed_vector<texture_slot, 128> const& ) [0x6e8080]
+// (equal -> compare rename; the header inline equal( fixed_vector ... ) stub
+// was NOT filled because core/res_texture_list.h only forward-declares
+// texture_slot).
+
 #include "pch.h"
 #include <vostok/render/core/res_texture_list.h>
-#include <vostok/render/core/resource_manager.h>
 
 namespace vostok {
 namespace render {
-
-res_texture_list::res_texture_list	( texture_slots const & slots) :
-	m_is_registered	( false )
-{
-	u32 const size = slots.size();
-	for (u32 i = 0; i < size; ++i)
-	{
-		if( slots[i].slot_id != enum_slot_ind_null)
-		{
-			m_container.resize(i+1, ref_texture(NULL));
-			m_container[i] = slots[i].texture;
-		}
-	}
-}
-
-void res_texture_list::destroy_impl	() const
-{
-	resource_manager::ref().release( this );
-}
-
-bool res_texture_list::equal(const res_texture_list& base) const
-{
-	if( m_container.size() != base.m_container.size())
-		return false;
-
-	for (u32 cmp = 0, size = m_container.size(); cmp < size; ++cmp)
-	{
-		if (m_container[cmp] != base.m_container[cmp])	return false;
-	}
-
-	return true;
-}
 
 bool res_texture_list::equal( texture_slots const & base) const
 {
@@ -50,7 +27,7 @@ bool res_texture_list::equal( texture_slots const & base) const
 		return false;
 
 	for (u32 i = 0; i < base_size; ++i)
-		if (m_container[i] != base[i].texture)	
+		if (m_container[i] != base[i].texture)
 			return false;
 
 	return true;
@@ -58,4 +35,3 @@ bool res_texture_list::equal( texture_slots const & base) const
 
 } // namespace render
 } // namespace vostok
-
