@@ -30,12 +30,12 @@ STATIC_SIZE_ASSERT( color_grading_pixel, 0x4 );
 
 } // namespace
 
-res_texture_ptr create_color_grading_base_lut( u32 )
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x606e50]
-	return res_texture_ptr( );
-}
+// claude@NOTE: second COMDAT instance of this function lives here in the
+// target (FUNCTION BODY[0x606e50]); the defining copy is core's
+// resource_manager.cpp (0x551b20). Likely a header-inline in the original
+// source - reconcile at matcher phase; declaration only to keep one
+// definition per exe.
+res_texture_ptr create_color_grading_base_lut( u32 );
 
 bloom_shader_constants::bloom_shader_constants( ) :
 	m_bloom_parameters	( 0 ),

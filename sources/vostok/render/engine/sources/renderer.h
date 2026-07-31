@@ -18,8 +18,8 @@
 namespace vostok {
 
 namespace ui {
-class font;
-class world;
+struct font;
+struct world;
 } // namespace ui
 
 namespace render {

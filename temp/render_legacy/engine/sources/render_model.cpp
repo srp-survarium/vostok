@@ -60,18 +60,6 @@ bool render_model::get_locator( pcstr locator_name, model_locator_item& result )
 	return false;
 }
 
-material_effects& render_surface::get_material_effects	( )
-{
-	// TODO: fix it!!!
-	if (!m_materail_effects_instance.c_ptr())
-	{
-		return material::nomaterial_material( get_vertex_input_type() );
-	}
-	else
-	{
-		return m_materail_effects_instance->get_material_effects();
-	}
-}
 
 render_surface::~render_surface()
 {

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "light.h"
+#include "help_math.h"
 
 namespace vostok {
 namespace render {
@@ -49,12 +50,7 @@ light::~light( )
 	// FUNCTION BODY[0x6012d0]
 }
 
-float frac( float )
-{
-	// STATE[STUB]
-	// FUNCTION BODY[0x5ff670]
-	return 0.0f;
-}
+// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x5ff670])
 
 void light::tick_color_animation( float )
 {

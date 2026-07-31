@@ -11,6 +11,13 @@ class effect_compiler;
 
 class effect_particle_selection : public effect_material_base {
 public:
+	enum
+	{
+		billboard		= 0,
+		billboard_subuv,
+		beamtrail,
+	};
+
 	effect_particle_selection( ) { }
 	virtual ~effect_particle_selection( ) { }
 

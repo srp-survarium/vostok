@@ -21,40 +21,6 @@ float3		wform	(float4x4 const& m, float3& v)
 	return		r3;
 }
 
-template <typename list>
-bool calc_lists_diff_range( list const& first, list const& second, u32 &min, u32 &max)
-{
-	list::const_iterator	it	= first.begin();
-	list::const_iterator	end = first.end();
-
-	list::const_iterator	it_oth	= second.begin();
-	list::const_iterator	end_oth = second.end();
-
-	min = max = 0;
-	for( ; it != end && it_oth != end_oth; ++it, ++it_oth, ++min)
-		if( *it != *end_oth)
-			break;
-
-
-	if( first.size() != second.size())
-	{
-		max = math::max( first.size(), second.size());
-		return min != max;
-	}
-
-	int ind = min;
-	for( ; it != end && it_oth != end_oth; ++it, ++it_oth, ++ind)
-	{
-		if( *it != *end_oth)
-		{
-			max = ind+1;
-//			*it = *it_oth;
-		}
-	}
-
-	return min != max;
-}
-
 //////////////////////////////////////////////////////////////////////////
 u32 calc_surface_size ( u32 width, u32 height, DXGI_FORMAT format, u32 row_min_pitch)
 {

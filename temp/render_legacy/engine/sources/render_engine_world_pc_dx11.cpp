@@ -4,6 +4,15 @@
 //	Copyright ( C) GSC Game World - 2009
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER: every direct-map body was ported into
+// sources/vostok/render/engine/sources/render_engine_world_pc_dx11.cpp.
+// What is left below could NOT be ported:
+// - header-inline targets ( /* no source */ in canonical world_pc.h; header is read-only )
+// - members dropped from the shipped class ( console-commands config loading moved to game.cpp )
+// - shipped-enum divergence ( enum_vertex_input_type lost the speedtree_* values )
+// - shipped-signature divergence ( set_model_visible bool -> u32 flags )
+// - removed subsystems ( terrain_* )
+
 #include "pch.h"
 #include <vostok/render/engine/world.h>
 #include <vostok/render/facade/ambient_volume_properties.h>
@@ -16,15 +25,7 @@
 #include "environment.h"
 #include "stage_particles.h"
 #include "engine_options.h"
-#include "model_cooker.h"
-#include "animated_model_instance_cook.h"
-#include "render_model_cooker.h"
-#include "terrain_cook.h"
 #include "scene_manager.h"
-#include "material_cook.h"
-#include "scene_cook.h"
-#include "scene_view_cook.h"
-#include "render_output_window_cook.h"
 #include "scene.h"
 #include "scene_view.h"
 #include "renderer.h"
@@ -33,383 +34,31 @@
 #include "renderer_context.h"
 #include "render_model_user.h"
 #include "render_model_skeleton.h"
-#include <vostok/render/core/effect_constant_storage.h>
-#include <vostok/render/core/custom_config.h>
-#include <vostok/render/core/res_effect.h>
-#include <vostok/particle/world.h>
-#include <vostok/render/facade/render_stage_types.h>
-#include "scene.h"
-#include <vostok/render/core/res_geometry.h>
-#include <vostok/render/core/render_target.h>
-#include <vostok/render/engine/api.h>
-#include "render_output_window.h"
+#include <vostok/render/core/options.h>
 #include "speedtree.h"
 #include "speedtree_cook.h"
 #include "speedtree_forest.h"
-#include <vostok/render/facade/ui_renderer.h>
 #include <vostok/render/facade/material_effects_instance_cook_data.h>
 #include "material_effects_instance_cook.h"
-#include "model_converter.h"
-#include "decal_instance.h"
-#include "flash_renderer.h"
-
-#include <vostok/fs_watcher.h>
+#include "render_output_window.h"
 
 #include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
-#include <vostok/render/core/options.h>
-
-#include <GFx.h>
-
-#pragma comment( lib,"dxgi.lib")
-
-#if !USE_DX10
-#	pragma comment( lib,"d3d11.lib")
-#	pragma comment( lib,"d3dx11.lib")
-#else
-#	pragma comment( lib,"d3d10.lib")
-#	pragma comment( lib,"d3dx10.lib")
-#endif
-
-#pragma comment( lib,"d3dx9.lib")
-
-#pragma comment( lib,"d3dcompiler.lib")
-
 
 namespace vostok {
 namespace render {
-
-void register_texture_cook	( );
-void unregister_texture_cook( );
-
-static void register_cooks				( )
-{
-	using resources::register_cook;
-
-	static terrain_mesh_cook			terrain_mesh_cooker;
-	register_cook						( &terrain_mesh_cooker );
-
-	static terrain_instance_cook		terrain_instance_cooker;
-	register_cook						( &terrain_instance_cooker );
-
-	static terrain_model_cook			terrain_model_cooker;
-	register_cook						( &terrain_model_cooker );
-
-	static user_mesh_cook				user_mesh_cooker;
-	register_cook						( &user_mesh_cooker );
-
-
-	
-	static static_model_instance_cook	static_model_instance_cooker;
-	register_cook						( &static_model_instance_cooker );
-
-	static skeleton_model_instance_cook	skeleton_model_instance_cooker;
-	register_cook						( &skeleton_model_instance_cooker );
-
-
-	static render_model_cook			skeleton_mesh_instance_cooker( resources::skeleton_render_model_class );
-	register_cook						( &skeleton_mesh_instance_cooker );
-	
-	static render_model_cook			render_model_class_cooker( resources::static_render_model_class );
-	register_cook						( &render_model_class_cooker );
-	
-	static render_model_cook			grass_render_model_class_cooker( resources::grass_render_model_class );
-	register_cook						( &grass_render_model_class_cooker );
-	
-
-	static static_render_model_instance_cook static_render_model_instance_cooker;
-	register_cook						( &static_render_model_instance_cooker );
-
-	static skeleton_render_model_instance_cook	skeleton_render_model_instance_cooker;
-	register_cook						( &skeleton_render_model_instance_cooker );
-	
-	static converted_model_cook	converted_model_cooker;
-	register_cook						( &converted_model_cooker );
-
-	static composite_render_model_instance_cook composite_render_model_instance_cooker;
-	register_cook						( &composite_render_model_instance_cooker );
-
-	static composite_render_model_cook composite_render_model_cooker;
-	register_cook						( &composite_render_model_cooker );
-
-	static material_cook				material_cook;
-	register_cook						( &material_cook );
-
-	static material_effects_instance_cook material_effects_instance_cooker;
-	resources::register_cook(&material_effects_instance_cooker);
-
-	register_texture_cook				( );
-
-	particle::initialize				( );
-	
-	static scene_cook					scene_cook;
-	register_cook						( &scene_cook );
-	
-	static scene_view_cook				scene_view_cook;
-	register_cook						( &scene_view_cook );
-
- 	static render_output_window_cook	render_output_window_cook;
- 	register_cook						( &render_output_window_cook );
-
-	static animated_model_instance_cook	animated_model_cook;
-	register_cook						( &animated_model_cook );
-}
-
-static void unregister_cooks				( )
-{
-	vostok::particle::finalize				( );
-	vostok::render::unregister_texture_cook	( );
-}
-
-} // namespace render
-} // namespace vostok
-
-static void initialize_options		( )
-{
-	using namespace vostok::render;
-}
-
-struct singletons_on_preinitialize {
-	vostok::render::resource_manager			resource_manager;
-	vostok::render::device					device;
-	vostok::render::backend					backend;
-	vostok::render::scene_manager				scene_manager;
-	vostok::render::shader_macros				shader_macros;
-	vostok::render::effect_manager			effect_manager;
-	vostok::render::effect_constant_storage	effect_constant_storage;
-}; // struct singletons_on_preinitialize
-
-struct singletons_on_initialize {
-	vostok::render::renderer_context						renderer_context;
-	vostok::render::material_manager						material_manager;
-	vostok::render::environment							environment;
-	vostok::render::particle_shader_constants				particle_shader_constants;
-	vostok::render::decal_shader_constants_and_geometry	decal_shader_constants_and_geometry;
-}; //struct singletons
-
-static vostok::uninitialized_reference< vostok::render::options >			s_options;
-
-static vostok::uninitialized_reference< singletons_on_preinitialize >		s_singletons_on_preinitialize;
-static vostok::uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
-//static vostok::uninitialized_reference< vostok::render::renderer >			s_renderer;
-static vostok::uninitialized_reference< vostok::render::system_renderer >	s_system_renderer;
-
-namespace vostok {
-namespace render {
-
-untyped_buffer_ptr		g_quad_ib;
-untyped_buffer * create_quad_ib();
-
-// Modified helper function from DirectX SDK
-static HRESULT get_dx_version_via_dxdiag	(
-		DWORD& major_version,
-        DWORD& minor_version
-	)
-{
-    HRESULT result;
-    bool should_cleanup_COM = false;
-
-    bool does_major_version_obtained = false;
-    bool does_minor_version_obtained = false;
-
-    // Init COM.  COM may fail if its already been inited with a different 
-    // concurrency model.  And if it fails you shouldn't release it.
-    result = CoInitialize( NULL );
-    should_cleanup_COM = SUCCEEDED( result );
-
-    // Get an IDxDiagProvider
-    bool does_dx_version_obtained = false;
-    IDxDiagProvider* dxdiag_provider = NULL;
-    result = CoCreateInstance( CLSID_DxDiagProvider,
-                           NULL,
-                           CLSCTX_INPROC_SERVER,
-                           IID_IDxDiagProvider,
-                           ( LPVOID* )&dxdiag_provider );
-    if( SUCCEEDED( result ) )
-    {
-        // Fill out a DXDIAG_INIT_PARAMS struct
-        DXDIAG_INIT_PARAMS dxDiagInitParam;
-        ZeroMemory( &dxDiagInitParam, sizeof( DXDIAG_INIT_PARAMS ) );
-        dxDiagInitParam.dwSize = sizeof( DXDIAG_INIT_PARAMS );
-        dxDiagInitParam.dwDxDiagHeaderVersion = DXDIAG_DX9_SDK_VERSION;
-        dxDiagInitParam.bAllowWHQLChecks = false;
-        dxDiagInitParam.pReserved = NULL;
-
-        // Init the m_pDxDiagProvider
-        result = dxdiag_provider->Initialize( &dxDiagInitParam );
-        if( SUCCEEDED( result ) )
-        {
-            IDxDiagContainer* pDxDiagRoot = NULL;
-            IDxDiagContainer* pDxDiagSystemInfo = NULL;
-
-            // Get the DxDiag root container
-            result = dxdiag_provider->GetRootContainer( &pDxDiagRoot );
-            if( SUCCEEDED( result ) )
-            {
-                // Get the object called DxDiag_SystemInfo
-                result = pDxDiagRoot->GetChildContainer( L"DxDiag_SystemInfo", &pDxDiagSystemInfo );
-                if( SUCCEEDED( result ) )
-                {
-                    VARIANT var;
-                    VariantInit( &var );
-
-                    // Get the "dwDirectXVersionMajor" property
-                    result = pDxDiagSystemInfo->GetProp( L"dwDirectXVersionMajor", &var );
-                    if( SUCCEEDED( result ) && var.vt == VT_UI4 )
-                    {
-						major_version = var.ulVal;
-                        does_major_version_obtained = true;
-                    }
-                    VariantClear( &var );
-
-                    // Get the "dwDirectXVersionMinor" property
-                    result = pDxDiagSystemInfo->GetProp( L"dwDirectXVersionMinor", &var );
-                    if( SUCCEEDED( result ) && var.vt == VT_UI4 )
-                    {
-						minor_version = var.ulVal;
-                        does_minor_version_obtained = true;
-                    }
-                    VariantClear( &var );
-
-                    // If it all worked right, then mark it down
-                    if( does_major_version_obtained && does_minor_version_obtained )
-                        does_dx_version_obtained = true;
-
-                    pDxDiagSystemInfo->Release();
-                }
-
-                pDxDiagRoot->Release();
-            }
-        }
-
-        dxdiag_provider->Release();
-    }
-
-    if( should_cleanup_COM )
-        CoUninitialize();
-
-    if( does_dx_version_obtained )
-        return S_OK;
-    else
-        return E_FAIL;
-}
-
-
-static bool does_os_support_dx11	( )
-{
-	OSVERSIONINFOEX OsVersionInfo;
-
-	ZeroMemory( &OsVersionInfo , sizeof( OSVERSIONINFOEX ) );
-	OsVersionInfo.dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
-
-	if ( GetVersionEx( (LPOSVERSIONINFO) &OsVersionInfo ) == 0 )
-		return true; // failed to get OS version information for some reason
-
-	if ( OsVersionInfo.dwMajorVersion > 6 )
-		return true; // unknown OS greater than Win7
-
-	if ( OsVersionInfo.dwMajorVersion == 6 )
-	{
-		 if ( OsVersionInfo.dwMinorVersion >= 1 )
-			 return true; // Win7 + optional update
-		 // Vista here
-		 if ( OsVersionInfo.wServicePackMajor >= 2 )
-		 {
-			// SP2 or greater, check for DX11 ( KB971512 + KB971644 )
-			DWORD major_version, minor_version;
-			if ( SUCCEEDED( get_dx_version_via_dxdiag( major_version, minor_version ) ) )
-			{
-				if ( major_version >= 10 )
-					return true;
-			}
-			else
-				return true; // failed to get DX version for some reason
-		 }			 
-	}
-	return false;
-}
-
-void engine::world::apply_render_options_changes( )
-{
-	reset_renderer								( false );
-#ifndef MASTER_GOLD
-	options::ref().save_current_configuration	( );
-#endif // #ifndef MASTER_GOLD
-}
-
-engine::world::world						( configs::binary_config_ptr const& in_config, bool is_editor ) :
-	m_frame_id						( 0 ),
-	m_initialized					( false ),
-	m_enable_terrain_debug_mode		( false ),
-	m_renderer						( NULL )
-{
-	VOSTOK_UNREFERENCED_PARAMETER	( in_config );
-	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
-
-	CHECK_OR_EXIT							(
-		does_os_support_dx11(),
-		"Your operating system doesn't support DirectX 11.\r\n"
-		"Please upgrade your OS to Windows Vista Service Pack 2 + Platform Update or later."
-	);
-
-	render::core::initialize		( );
-
-	VOSTOK_CONSTRUCT_REFERENCE		( s_options, options )( );
-	
-	initialize_options				( );
-
-	initialize_speedtree			( );
-
-	register_cooks					( );
-
-	LOG_INFO("render::engine::world() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
-
-	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_preinitialize, singletons_on_preinitialize )( );
-	
-	// TODO
-	material::initialize_nomaterial_material( );
-}
 
 void engine::world::set_renderer_configuration( fs_new::virtual_path_string const& config_name, bool async_effects )
 {
 	fs_new::virtual_path_string						path;
 	path.assignf						("resources/render/%s.cfg", config_name.c_str());
-	
-	query_resource( 
-		path.c_str(), 
-		resources::binary_config_class, 
-		boost::bind( &engine::world::on_renderer_config_loaded, this, async_effects, _1), 
+
+	query_resource(
+		path.c_str(),
+		resources::binary_config_class,
+		boost::bind( &engine::world::on_renderer_config_loaded, this, async_effects, _1),
 		g_allocator
 	);
-}
-
-void engine::world::on_renderer_config_loaded(bool async_effects, resources::queries_result& data)
-{
-	if (data.is_successful())
-	{
-		options::ref().load_from_config(
-			vostok::static_cast_resource_ptr<vostok::configs::binary_config_ptr>(
-				data[0].get_unmanaged_resource()
-			)->get_root()["options"]
-		);
-	}
-	reset_renderer					( async_effects );
-}
-
-void engine::world::reset_renderer( bool async_effects )
-{
-	LOG_INFO						("Renderer creating started...");
-	
-	if (m_renderer)
- 		DELETE						(m_renderer);
- 	
- 	effect_manager::ref().force_sync = !async_effects;
- 	
- 	m_renderer						 = NEW( render::renderer )( &s_singletons_on_initialize->renderer_context );
- 	
- 	effect_manager::ref().force_sync = false;
-	
-	LOG_INFO						("Renderer creating finished.");
 }
 
 void engine::world::on_console_commands_config_loaded( bool load_renderer_options, resources::queries_result& data )
@@ -421,11 +70,11 @@ void engine::world::on_console_commands_config_loaded( bool load_renderer_option
 			set_renderer_configuration	( "", true );
 		return;
 	}
-	
+
 	resources::pinned_ptr_const<u8> pinned_data	(data[ 0 ].get_managed_resource( ));
 	memory::reader				F( pinned_data.c_ptr( ), pinned_data.size( ) );
 	vostok::console_commands::load		( F, vostok::console_commands::execution_filter_all );
-	
+
 	if (load_renderer_options)
 		set_renderer_configuration	( options::ref().get_current_configuration(), true );
 }
@@ -436,83 +85,25 @@ void engine::world::load_console_commands_config_query( pcstr cfg_name, bool loa
 		cfg_name,
 		vostok::resources::raw_data_class,
 		boost::bind(&engine::world::on_console_commands_config_loaded, this, load_renderer_options, _1),
-		g_allocator, 
-		NULL, 
-		NULL, 
+		g_allocator,
+		NULL,
+		NULL,
 		assert_on_fail_false
 	);
 }
 
-void engine::world::initialize				( bool const is_editor )
-{
-	VOSTOK_UNREFERENCED_PARAMETER		( is_editor );
-
-// #ifndef MASTER_GOLD
-// 	vostok::resources::subscribe_watcher("resources/render/", fastdelegate::FastDelegate<void ( vostok::vfs::vfs_notification const &) >( this, &engine::world::on_render_config_changed ));
-// #endif // #ifndef MASTER_GOLD
-	
-	// model cooker uses material_manager
-	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_initialize, singletons_on_initialize )( );
-	
-	while ( !s_singletons_on_preinitialize->scene_manager.scene_count() ) {
-		resources::dispatch_callbacks	( );
-		threading::yield				( 10 );
-	}
-	
-	R_ASSERT						( !m_initialized );
-	m_initialized					= true;
-	
-	VOSTOK_CONSTRUCT_REFERENCE		( s_system_renderer, system_renderer ) ( &s_singletons_on_initialize->renderer_context );
-	
-	//set_renderer_configuration		( "", true );
-	
-	static vostok::console_commands::cc_delegate cfg_load_cc_0( "cfg_load", boost::bind(&engine::world::load_console_commands_config_query, this, _1, false ), true );
-	static vostok::console_commands::cc_delegate cfg_load_cc_1( "cfg_load", boost::bind(&engine::world::load_console_commands_config_query, this, _1, true ), true );
-	
-	cfg_load_cc_0.execute				("resources/startup.cfg");
-	cfg_load_cc_1.execute				("user_data/user.cfg");
-}
-	
-engine::world::~world						( )
-{
-//	vostok::resources::unsubscribe_watcher("resources/render/",fastdelegate::FastDelegate<void ( vostok::vfs::vfs_notification const &) >( this, &engine::world::on_render_config_changed ));
-
-	material::finalize_nomaterial_material	( );
-	finalize_speedtree						( );
-	
-	VOSTOK_DESTROY_REFERENCE			( s_system_renderer );
-	//VOSTOK_DESTROY_REFERENCE			( s_renderer );
-	//VOSTOK_DESTROY_REFERENCE			( m_renderer );
-	DELETE							( m_renderer );
-	VOSTOK_DESTROY_REFERENCE			( s_singletons_on_initialize );
-	VOSTOK_DESTROY_REFERENCE			( s_singletons_on_preinitialize );
-	VOSTOK_DESTROY_REFERENCE			( s_options );
-	
-	unregister_cooks				( );
-	
-	particle::finalize				( );
-	render::core::finalize			( );
-}
-
-void engine::world::reload_shaders		( )
-{
-	resource_manager::ref().reload_shader_sources	( true );
-}
-
-void engine::world::reload_modified_textures		( )
-{
-	resource_manager::ref().reload_modified_textures( );
-}
+// legacy initialize() tail dropped on port: the cfg_load cc_delegates moved to
+// game.cpp in the shipped exe (target statics cfg_load_cc / cfg_load_level)
+//	static vostok::console_commands::cc_delegate cfg_load_cc_0( "cfg_load", boost::bind(&engine::world::load_console_commands_config_query, this, _1, false ), true );
+//	static vostok::console_commands::cc_delegate cfg_load_cc_1( "cfg_load", boost::bind(&engine::world::load_console_commands_config_query, this, _1, true ), true );
+//
+//	cfg_load_cc_0.execute				("resources/startup.cfg");
+//	cfg_load_cc_1.execute				("user_data/user.cfg");
 
 void engine::world::clear_resources						()
 {
 	// Not sure if we need this
 	//model_manager::ref().clear_resources		( );
-}
-
-void engine::world::set_view_matrix					( scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
-{
-	static_cast_checked< render::scene_view* >( scene_view.c_ptr() )->camera_set_view		( view_and_culling_matrix );
 }
 
 #ifndef MASTER_GOLD
@@ -522,43 +113,10 @@ void engine::world::set_view_matrix_only			( scene_view_ptr const& scene_view, f
 }
 #endif // #ifndef MASTER_GOLD
 
-void engine::world::set_projection_matrix			( scene_view_ptr const& scene_view, float4x4 const& projection_matrix )
-{
-	static_cast_checked< render::scene_view* >(scene_view.c_ptr())->camera_set_projection	( projection_matrix );
-}
-
 void engine::world::draw_text( pcstr text, vostok::math::float2 const& position, vostok::ui::font* const in_font, vostok::math::color const& in_color )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS(text, &position, in_font, &in_font, &in_color);
 	//NOT_IMPLEMENTED();
-}
-
-void engine::world::draw_scene						(
-		base_scene_ptr const& scene,
-		base_scene_view_ptr const& view,
-		base_output_window_ptr const& output_window,
-		viewport_type const& viewport,
-		boost::function< void ( bool ) > const& on_draw_scene,
-		vostok::ui::font const* const default_font
-	)
-{
-	float4x4 identity;
-	identity.identity			( );
-	system_renderer::ref().set_w( identity );
-	
-	if (m_renderer)
-		m_renderer->render	(
-			scene,
-			view,
-			output_window,
-			viewport,
-			on_draw_scene,
-			m_enable_terrain_debug_mode,
-			default_font
-		);
-	else {
-		static_cast_checked<vostok::render::scene*>(scene.c_ptr())->flush	( on_draw_scene );
-	}
 }
 
 void engine::world::draw_debug_lines			( colored_vertices_type  const& vertices, colored_indices_type  const& indices)
@@ -583,17 +141,6 @@ void engine::world::draw_debug_triangles		( colored_vertices_type const& vertice
 	);
 }
 
-void engine::world::end_frame( )
-{
-//	if ( m_renderer )
-		++m_frame_id;
-}
-
-u32 engine::world::frame_id			()
-{
-	return				( m_frame_id);
-}
-
 pcstr engine::world::type			()
 {
 	return				( "dx11");
@@ -603,11 +150,6 @@ void engine::world::setup_view_and_output		( scene_view_ptr const& view_ptr, ren
 {
 	render::system_renderer::ref().setup_scene_view( view_ptr );
 	render::system_renderer::ref().setup_render_output_window( output_window, viewport );
-}
-
-void engine::world::draw_ui_vertices	( ui_vertices_type vertices, u32 const & count, int prim_type, int point_type)
-{
-	render::system_renderer::ref().draw_ui_vertices( (vertex_formats::TL*)vertices, count, prim_type, point_type );
 }
 
 void engine::world::clear_zbuffer		( float z_value)
@@ -672,7 +214,7 @@ void engine::world::setup_grid_render_mode	( u32 grid_density)
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( grid_density);
 	render::system_renderer::ref().setup_grid_render_mode( grid_density);
-	
+
 }
 void engine::world::remove_grid_render_mode	()
 {
@@ -695,63 +237,9 @@ void engine::world::remove_grid_render_mode	()
 //	return viewport_type( vostok::math::int2( math::floor(viewport.TopLeftX), math::floor(viewport.TopLeftY)), vostok::math::int2( math::floor(viewport.Width), math::floor(viewport.Height) ));
 //}
 
-void engine::world::add_speedtree_instance( vostok::render::scene_ptr const& in_scene, render::speedtree_instance_ptr const& v, float4x4 const& transform, bool populate_forest )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-	
-	scene->add_speedtree_instance(v, transform, populate_forest);
-}
-
-void engine::world::remove_speedtree_instance( vostok::render::scene_ptr const& in_scene, render::speedtree_instance_ptr const& v, bool populate_forest )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-	
-	scene->remove_speedtree_instance(v, populate_forest);
-}
-
-void engine::world::update_speedtree_instance( vostok::render::scene_ptr const& in_scene, render::speedtree_instance_ptr const& v, float4x4 const& transform, bool populate_forest )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-	
-	scene->set_speedtree_instance_transform(v, transform, populate_forest);
-}
-
-void engine::world::populate_speedtree_forest( vostok::render::scene_ptr const& in_scene )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-	
-	scene->populate_speedtree_forest( );
-}
-
-void engine::world::add_model( vostok::render::scene_ptr const& in_scene, render::render_model_instance_ptr const& v, float4x4 const& transform, bool apply_transform )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	
-	if (apply_transform)
-		model->set_transform( transform );
-	
-	scene->add_model( model);
-}
-
-void engine::world::update_model( vostok::render::scene_ptr const& in_scene, render_model_instance_ptr const& v, vostok::math::float4x4 const& transform)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	model->set_transform				( transform );
-	scene->modify_model					( model );
-}
-
-void engine::world::remove_model( vostok::render::scene_ptr const& in_scene, render_model_instance_ptr const& v)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	scene->remove_model( model);
-}
-
+// NOT PORTED: shipped enum_vertex_input_type has no speedtree_* values
+// (facade/vertex_input_type.h is canonical and matches the shipped PDB enum);
+// the shipped constants must be recovered from asm in the matcher phase.
 static enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type(fs_new::virtual_path_string const& subsurface_name)
 {
 	if (subsurface_name=="branch")			return speedtree_branch_vertex_input_type;
@@ -785,31 +273,31 @@ static void on_speedtree_material_effects_instance_ready(resources::queries_resu
 		);
 }
 
-void engine::world::set_speedtree_instance_material (render::speedtree_instance_ptr const& v, 
-													 fs_new::virtual_path_string const& subsurface_name, 
+void engine::world::set_speedtree_instance_material (render::speedtree_instance_ptr const& v,
+													 fs_new::virtual_path_string const& subsurface_name,
 													 resources::unmanaged_resource_ptr in_mtl_ptr)
 {
 	speedtree_tree*		tree				= static_cast_checked<speedtree_tree*>(v->m_speedtree_tree_ptr.c_ptr());
 	material_ptr		mtl_ptr				= static_cast_resource_ptr<material_ptr>(in_mtl_ptr);
-	
+
 	if (!mtl_ptr)
 		return;
-	
+
 	resources::user_data_variant			data_variant;
-	
+
 	data_variant.set						(NEW(material_effects_instance_cook_data)(
-		speedtree_subsurface_name_to_vertex_input_type(subsurface_name), 
+		speedtree_subsurface_name_to_vertex_input_type(subsurface_name),
 		static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
 	);
-	
+
 	// Must be query_resource_and_wait!
 	resources::query_resource_and_wait		(
 		mtl_ptr->get_material_name(),
 		resources::material_effects_instance_class,
 		boost::bind(
-			&on_speedtree_material_effects_instance_ready, 
-			_1, 
-			tree, 
+			&on_speedtree_material_effects_instance_ready,
+			_1,
+			tree,
 			speedtree_subsurface_name_to_vertex_input_type(subsurface_name)
 		),
 		vostok::render::g_allocator,
@@ -817,105 +305,15 @@ void engine::world::set_speedtree_instance_material (render::speedtree_instance_
 	);
 }
 
-static void on_model_material_effects_instance_ready(resources::queries_result& in_data, 
-													 render_surface*			in_render_surface)
-{
-	if (!in_render_surface)
-		return;
- 	
- 	if (in_data[0].is_successful())
-	{
- 		in_render_surface->set_material_effects(
- 			vostok::static_cast_resource_ptr<material_effects_instance_ptr>(in_data[0].get_unmanaged_resource()),
-			in_data[0].get_requested_path()
- 		);
-	}
-}
-
-void engine::world::set_model_material( render::render_model_instance_ptr const& v, 
-										fs_new::virtual_path_string const& subsurface_name, 
-										resources::unmanaged_resource_ptr m )
-{
-	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	
-	render_surface_instances		list;
-	model->get_surfaces				( list, false );
-	
-	bool check_name = (subsurface_name.length()!=0);
-	
-	material_ptr mtl_ptr = static_cast_resource_ptr<material_ptr>(m);
-	
-	for (render_surface_instances::iterator it = list.begin(); it != list.end(); ++it)
-	{
-		render_surface_instance& inst = *(*it);
-		
-		bool const apply = !check_name || (inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name.c_str());
-		
-		if (!apply)
-			continue;
-		
-		if (!mtl_ptr)
-		{
-			inst.m_render_surface->m_materail_effects_instance = 0;
-			continue;
-		}
-		
-		resources::user_data_variant data_variant;
-		
-		data_variant.set						(NEW(material_effects_instance_cook_data)(
-			inst.m_render_surface->get_vertex_input_type(), 
-			static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
-		);
-		
-		// Must be query_resource_and_wait!
-		resources::query_resource_and_wait		(
-			mtl_ptr->get_material_name(),
-			resources::material_effects_instance_class,
-			boost::bind(
-				&on_model_material_effects_instance_ready, 
-				_1, 
-				inst.m_render_surface
-			),
-			vostok::render::g_allocator,
-			&data_variant
-		);
-	}
-#if 0
-	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	
-	render_surface_instances		list;
-	model->get_surfaces	( list );
-	
-	bool check_name = (subsurface_name.length()!=0);
-	
-	material_ptr mtl_ptr = static_cast_resource_ptr<material_ptr>(m);
-
-	for (render_surface_instances::iterator it=list.begin(); it!=list.end(); ++it)
-	{
-		// TODO: Set only render_model_instance m_material?
-		// TODO: Compare sg_name with subsurface_name.
-		render_surface_instance& inst = *(*it);
-
-		bool apply = !check_name || (inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name);
-
-		if( apply )
-		{
-			if(mtl_ptr.c_ptr())
-				inst.m_render_surface->set_material			( mtl_ptr );
-			else
-				inst.m_render_surface->set_default_material	( );
-		}
-	}
-#endif // #if 0
-}
-
+// NOT PORTED: canonical set_model_visible takes u32 flags (legacy bool value);
+// the shipped loop body over the flags is matcher-phase work.
 void engine::world::set_model_visible( render::render_model_instance_ptr const& v, fs_new::virtual_path_string const& subsurface_name, bool value )
 {
 	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	
+
 	render_surface_instances		list;
 	model->get_surfaces	( list, false );
-	
+
 	bool check_name = (subsurface_name.length()!=0);
 
 	for (render_surface_instances::iterator it=list.begin(); it!=list.end(); ++it)
@@ -934,37 +332,9 @@ void engine::world::update_system_model( render::render_model_instance_ptr const
 	model->set_transform				( transform );
 }
 
-
-void engine::world::set_model_ghost_mode( render::render_model_instance_ptr const& v, bool value)
-{
-	VOSTOK_UNREFERENCED_PARAMETERS( v, value );
-	//render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
-	//polymorph_vector_base<render_model_instance> const* render_models = model->get_models_();
-	//system_renderer::ref().set_model_ghost_mode( *render_models, value);
-}
-
 void engine::world::draw_terrain_debug( )
 {
 	//system_renderer::ref().draw_debug_terrain();
-}
-
-void engine::world::update_model_vertex_buffer( render::render_model_instance_ptr const& v, vostok::vectora<vostok::render::buffer_fragment> const& fragments)
-{
-	user_render_model_instance* model = static_cast_checked<user_render_model_instance*>(v.c_ptr());
-
-	ASSERT( fragments.size() > 0 );
-
-	user_render_surface_editable* surface = static_cast_checked<user_render_surface_editable*>(model->m_surface);
-	u8* lock_data	= (u8*)surface->m_vb->map( D3D_MAP_WRITE_DISCARD);
-
-
-	vectora<buffer_fragment>::const_iterator	it	= fragments.begin();
-	vectora<buffer_fragment>::const_iterator	end	= fragments.end();
-
-	for( ; it != end; ++it)
-		memory::copy		( lock_data + it->start, it->size, it->buffer, it->size );
-
-	surface->m_vb->unmap	( );
 }
 
 void engine::world::update_model_index_buffer( render::render_model_instance_ptr const& v, vostok::vectora<vostok::render::buffer_fragment> const& fragments)
@@ -979,86 +349,6 @@ void engine::world::update_model_index_buffer( render::render_model_instance_ptr
 //	//render_model* r_model = static_cast_checked<render_model*>(&(*v));
 //	//r_model->set_shader(shader, texture);
 //}
-
-void engine::world::add_light( vostok::render::scene_ptr const& in_scene, u32 id, render::light_props const& props)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->add_light( id, props);
-}
-
-void engine::world::update_light( vostok::render::scene_ptr const& in_scene, u32 id, render::light_props const& props)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->update_light	( id, props);
-}
-
-void engine::world::remove_light( vostok::render::scene_ptr const& in_scene, u32 id)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->remove_light	( id);
-}
-
-void engine::world::add_decal(vostok::render::scene_ptr const& in_scene, u32 id, render::decal_properties const& properties)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->add_decal(id, properties);
-}
-
-void engine::world::update_decal( vostok::render::scene_ptr const& in_scene, u32 id, render::decal_properties const& properties)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->update_decal	( id, properties);
-}
-
-void engine::world::remove_decal( vostok::render::scene_ptr const& in_scene, u32 id)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->remove_decal	( id);
-}
-
-void engine::world::update_lpv_occluder( vostok::render::scene_ptr const& in_scene, u32 id, math::float4x4 const& transform)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->update_lpv_occluder	( id, transform);
-}
-
-void engine::world::remove_lpv_occluder( vostok::render::scene_ptr const& in_scene, u32 id)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->remove_lpv_occluder	( id);
-}
-
-void engine::world::update_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id, render::ambient_volume_properties const& in_properties)
-{
-	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id, in_properties );
-}
-
-void engine::world::remove_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id)
-{
-	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id );
-}
-
-void engine::world::update_volume_fog( vostok::render::scene_ptr const& in_scene, u32 id, render::volume_fog_parameters const& in_parameters)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->update_volume_fog	( id, in_parameters);
-}
-
-void engine::world::remove_volume_fog( vostok::render::scene_ptr const& in_scene, u32 id)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->remove_volume_fog	( id);
-}
 
 void engine::world::terrain_add_cell( vostok::render::scene_ptr const& in_scene,  render::render_model_instance_ptr const& v )
 {
@@ -1086,7 +376,7 @@ void engine::world::terrain_update_cell_buffer( vostok::render::scene_ptr const&
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	terrain_render_model_instance_ptr t	= static_cast_resource_ptr<terrain_render_model_instance_ptr>(v);
-	
+
 	ASSERT( scene->terrain());
 	if( scene->terrain())
 		scene->terrain()->update_cell_buffer( t, fragments, transform);
@@ -1097,7 +387,7 @@ void engine::world::terrain_update_cell_aabb( vostok::render::scene_ptr const& i
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	terrain_render_model_instance_ptr t	= static_cast_resource_ptr<terrain_render_model_instance_ptr>(v);
-	
+
 	ASSERT( scene->terrain());
 	if( scene->terrain())
 		scene->terrain()->update_cell_aabb	( t, aabb);
@@ -1108,7 +398,7 @@ void engine::world::terrain_add_cell_texture(  vostok::render::scene_ptr const& 
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	terrain_render_model_instance_ptr t	= static_cast_resource_ptr<terrain_render_model_instance_ptr>(v);
-	
+
 	ASSERT( scene->terrain());
 	if( scene->terrain())
 		scene->terrain()->add_cell_texture	( t, texture, user_tex_id);
@@ -1119,7 +409,7 @@ void engine::world::terrain_remove_cell_texture( vostok::render::scene_ptr const
 	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
 
 	terrain_render_model_instance_ptr t	= static_cast_resource_ptr<terrain_render_model_instance_ptr>(v);
-	
+
 	ASSERT( scene->terrain());
 	if( scene->terrain())
 		scene->terrain()->remove_cell_texture	( t, user_tex_id);
@@ -1137,12 +427,6 @@ void engine::world::terrain_exchange_texture( vostok::render::scene_ptr const& i
 void engine::world::setup_rotation_control_modes( bool color_write )
 {
 	render::system_renderer::ref().setup_rotation_control_modes( color_write);
-}
-
-void engine::world::update_skeleton( render::render_model_instance_ptr const& v, math::float4x4* matrices, u32 count )
-{
-	skeleton_render_model_instance* skeleton	= static_cast<skeleton_render_model_instance*>(v.c_ptr());
-	skeleton->update_render_matrices	( matrices, count );
 }
 
 untyped_buffer * create_quad_ib()
@@ -1178,39 +462,6 @@ untyped_buffer * create_quad_ib()
 
 	g_quad_ib = resource_manager::ref().create_buffer( idx_count*sizeof(u16), indices, enum_buffer_type_index, false);
 	return &*g_quad_ib;
-}
-
-void engine::world::play_particle_system			( vostok::render::scene_ptr const& in_scene, particle::particle_system_instance_ptr in_instance, bool use_transform, bool always_looping, math::float4x4 const& transform )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->particle_world()->play(in_instance, transform, use_transform, always_looping);
-}
-
-void engine::world::stop_particle_system			( vostok::render::scene_ptr const& in_scene, particle::particle_system_instance_ptr in_instance )
-{
-	// TODO: time
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	scene->particle_world()->stop(in_instance, 0.0f);
-}
-
-void engine::world::remove_particle_system_instance	( particle::particle_system_instance_ptr particle_system_instance, vostok::render::scene_ptr const& in_scene )
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	R_ASSERT						( particle_system_instance );
-	scene->particle_world()->remove	( particle_system_instance );
-}
-
-void engine::world::update_particle_system_instance	( particle::particle_system_instance_ptr particle_system_instance, vostok::render::scene_ptr const& in_scene, vostok::math::float4x4 const& transform, bool visible, bool paused)
-{
-	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-
-	particle::world& world			= *scene->particle_world();
-	world.set_transform				( particle_system_instance, transform );
-	world.set_visible				( particle_system_instance, visible );
-	world.set_paused				( particle_system_instance, paused );
 }
 
 #ifndef MASTER_GOLD
@@ -1317,53 +568,18 @@ void	engine::world::set_selection_parameters	( vostok::math::float4 const& selec
 	system_renderer::ref().set_selection_parameters( selection_color, selection_rate );
 }
 
-static vostok::uninitialized_reference< engine::world > s_world;
-
-engine::world* engine::create_world	( configs::binary_config_ptr const& in_config, bool is_editor )
+void engine::world::update_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id, render::ambient_volume_properties const& in_properties)
 {
-	R_ASSERT					( !s_world.initialized() );
-	VOSTOK_CONSTRUCT_REFERENCE	( s_world, engine::world ) ( in_config, is_editor );
-	return						s_world.c_ptr( );
+	// NOT PORTED: legacy is a no-op, but the shipped body has real code
+	// ( FUNCTION BODY[0x654cb0] +0x015 ) - matcher-phase work.
+	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id, in_properties );
 }
 
-void engine::destroy			( engine::world*& engine_world )
+void engine::world::remove_ambient_volume( vostok::render::scene_ptr const& in_scene, u32 id)
 {
-	R_ASSERT					( s_world.initialized() );
-	R_ASSERT					( s_world.c_ptr() == engine_world );
-	VOSTOK_DESTROY_REFERENCE		( s_world );
-	engine_world				= 0;
-}
-
-void engine::world::set_slomo	( vostok::render::scene_ptr const& scene, float time_multiplier )
-{
-	render::scene* const scene_ptr	= static_cast_checked< render::scene* >( scene.c_ptr() );
-	scene_ptr->set_slomo			( time_multiplier );
-}
-
-void engine::world::toggle_render_stage	( enum_render_stage_type stage_type, bool toggle )
-{
-	//render::renderer::ref().toggle_render_stage(stage_type, toggle);
-	if (m_renderer)
-		m_renderer->toggle_render_stage(stage_type, toggle);
-}
-
-void engine::world::set_view_mode	( scene_view_ptr view_ptr, scene_view_mode view_mode )
-{
-	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
-	view->set_view_mode(view_mode);
-}
-
-
-void engine::world::set_particles_render_mode		( scene_view_ptr view_ptr, vostok::particle::enum_particle_render_mode render_mode )
-{
-	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
-	view->set_particles_render_mode(render_mode);	
-}
-
-void engine::world::set_sky_material				( scene_ptr const& in_scene, resources::unmanaged_resource_ptr mtl_ptr)
-{
-	vostok::render::scene* scn	= static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
-	scn->set_sky_material		(static_cast_resource_ptr<material_effects_instance_ptr>(mtl_ptr));
+	// NOT PORTED: legacy is a no-op, but the shipped body has real code
+	// ( FUNCTION BODY[0x654a50] +0x010 ) - matcher-phase work.
+	VOSTOK_UNREFERENCED_PARAMETERS( in_scene, id );
 }
 
 #if 0
@@ -1372,9 +588,9 @@ static void fix_specular_in_stage( configs::lua_config_value& material_config, p
 {
 	if (!material_config.value_exists(stage_name))
 		return;
-	
+
 	configs::lua_config_value& stage_config	= material_config[stage_name]["effect"];
-	
+
 	if (stage_config.value_exists("texture_specular_intensity"))
 	{
 		if (stage_config.value_exists("texture_specular_power"))
@@ -1392,7 +608,7 @@ static void on_material_loaded( pstr request_path, resources::queries_result& da
 		fix_specular_in_stage						(material_config->get_root()["material"], "g_stage");
 		fix_specular_in_stage						(material_config->get_root()["material"], "forward");
 		fix_specular_in_stage						(material_config->get_root()["material"], "lighting");
-		
+
 		fs_new::virtual_path_string			physical_path;
 		if (resources::query_result::convert_logical_to_disk_path(&physical_path, request_path))
 		{
@@ -1406,11 +622,11 @@ static void on_fs_iterator_materials_ready( pcstr materials_path, vostok::resour
 {
 	resources::fs_iterator it				= fs_it.children_begin();
 	resources::fs_iterator it_e				= fs_it.children_end();
-	
+
 	for ( ; it!=it_e; ++it )
 	{
 		pcstr mname							= it.get_name();
-		
+
 		if(it.is_folder())
 		{
 			fs_new::virtual_path_string new_materials_path;
@@ -1418,17 +634,17 @@ static void on_fs_iterator_materials_ready( pcstr materials_path, vostok::resour
 			on_fs_iterator_materials_ready(new_materials_path.c_str(), it);
 			continue;
 		}
-		
+
 		if (strstr(mname, ".orig"))
 			continue;
-		
+
 		fs_new::virtual_path_string request_path;
 		request_path.assignf				("%s/%s", materials_path, mname);
-		
+
 		pstr			request_path_buffer = ALLOC(char, 256);
 		memory::zero						(request_path_buffer, 256);
 		memory::copy						(request_path_buffer, request_path.length(), request_path.c_str(), request_path.length());
-		
+
  		resources::query_resource(
  			request_path.c_str(),
 			resources::lua_config_class,
@@ -1465,10 +681,10 @@ static void on_texture_options_loaded( pstr request_path, resources::queries_res
 	{
 		configs::lua_config_ptr options_config			= static_cast_checked<configs::lua_config*>(data[0].get_unmanaged_resource().c_ptr());
 		configs::lua_config_value& options_config_value	= options_config->get_root()["options"];
-		
+
 		if (!options_config_value.value_exists("srgb"))
 			options_config_value["srgb"]				= (u32)support_srgb_format((pcstr)options_config_value["format"]);
-		
+
 		fs_new::virtual_path_string			physical_path;
 		if (resources::query_result::convert_logical_to_disk_path(&physical_path, request_path))
 		{
@@ -1482,11 +698,11 @@ static void on_fs_iterator_texture_options_ready( pcstr options_path, vostok::re
 {
 	resources::fs_iterator it				= fs_it.children_begin();
 	resources::fs_iterator it_e				= fs_it.children_end();
-	
+
 	for ( ; it!=it_e; ++it )
 	{
 		pcstr mname							= it.get_name();
-		
+
 		if(it.is_folder())
 		{
 			fs_new::virtual_path_string new_options_path;
@@ -1494,17 +710,17 @@ static void on_fs_iterator_texture_options_ready( pcstr options_path, vostok::re
 			on_fs_iterator_texture_options_ready(new_options_path.c_str(), it);
 			continue;
 		}
-		
+
 		if (strstr(mname, ".orig") || !strstr(mname, ".options"))
 			continue;
-		
+
 		fs_new::virtual_path_string request_path;
 		request_path.assignf				("%s/%s", options_path, mname);
-		
+
 		pstr			request_path_buffer = DEBUG_ALLOC(char, 256);
 		memory::zero						(request_path_buffer, 256);
 		memory::copy						(request_path_buffer, request_path.length(), request_path.c_str(), request_path.length());
-		
+
  		resources::query_resource(
  			request_path.c_str(),
 			resources::lua_config_class,
@@ -1525,142 +741,9 @@ static void fix_texture_options( pcstr path )
 }
 #endif // #if 0
 
-void engine::world::enable_post_process				( scene_view_ptr view_ptr, bool enable )
-{
-	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
-	view->set_use_post_process(enable);
-	
-	//fix_texture_options("resources/textures");
-	//fix_materials("resources/materials");
-	//fix_materials("resources/material_instances");
-}
-
-void engine::world::set_post_process( scene_view_ptr view_ptr, resources::unmanaged_resource_ptr post_process_resource)
-{
-	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
-	
-	material_ptr mtl = static_cast_checked<vostok::render::material*>(post_process_resource.c_ptr());
-	
-	vostok::render::material_manager::ref().initialize_post_process_parameters(&view->m_post_process_parameters, mtl, false);
-}
-
-particle::world& engine::world::particle_world	( scene_ptr const& scene )
-{
-	return	*static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->particle_world();
-}
-
 math::uint2 engine::world::window_client_size	( render::render_output_window_ptr const& render_output_window )
 {
 	return	static_cast_checked< render::render_output_window* >( render_output_window.c_ptr() )->get_window_client_size( );
-}
-
-void engine::world::draw_lines					( scene_ptr const& scene, debug_vertices_type const& vertices, debug_indices_type const& indices )
-{
-	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_lines	( vertices, indices );
-}
-
-void engine::world::draw_triangles				( scene_ptr const& scene, debug_vertices_type const& vertices, debug_indices_type const& indices )
-{
-	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_triangles( vertices, indices );
-}
-
-void make_ui_vertices(
-	vostok::vectora<vostok::render::ui::vertex>& out_vertices,
-	pcstr in_text, 
-	vostok::ui::font const& in_font,
-	vostok::math::float2 const& in_position,
-	vostok::math::color const& in_color,
-	vostok::math::color const& in_selection_color,
-	u32 max_line_width,
-	bool is_multiline,
-	u32 start_selection_index,
-	u32 end_selection_index
-);
-
-void engine::world::draw_text					(
-	vectora< vostok::render::ui::vertex >& output,
-		pcstr const& text,
-		vostok::ui::font const& font,
-		float2 const& position,
-		math::color const& text_color,
-		math::color const& selection_color,
-		u32 const max_line_width,
-		bool const is_multiline,
-		u32 const start_selection,
-		u32 const end_selection
-	)
-{
-	make_ui_vertices(
-		output,
-		text,
-		font,
-		position,
-		text_color,
-		selection_color,
-		max_line_width,
-		is_multiline,
-		start_selection,
-		end_selection
-	);
-}
-
-void engine::world::show_movie	(
-	base_scene_view_ptr const&			scene_view,
-	survarium::flash_movie_resource_ptr	movie
-)
-{
-	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_movie( movie );
-}
-
-void engine::world::hide_movie(
-	base_scene_view_ptr const&			scene_view,
-	survarium::flash_movie_resource_ptr	movie
-)
-{
-	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_movie( movie );
-}
-
-void engine::world::show_text_manager(
-	base_scene_view_ptr const&		scene_view,
-	survarium::flash_text_manager*	tm
-)
-{
-	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_text_manager( tm );
-}
-
-void engine::world::hide_text_manager(
-	base_scene_view_ptr const&		scene_view,
-	survarium::flash_text_manager*	tm
-)
-{
-	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_text_manager( tm );
-}
-
-void engine::world::execute_scaleform_command(
-	survarium::scaleform_render_command command
-)
-{
-	command.execute	( );
-}
-
-void engine::world::resize_render_output_window(
-	base_output_window_ptr const&	output_window,
-	u32 const						width,
-	u32 const						height,
-	bool const						fullscreen
-)
-{
-	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->set_size(
-		width,
-		height,
-		fullscreen,
-		false
-	);
-}
-
-void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
-{
-	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->goto_fullscreen( );
 }
 
 } // namespace render

@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vostok/render/culling/possible_sectors_holder.h>
+#include "material.h"
 #include "render_model.h"
 #include "render_model_instance_impl.h"
 #include "render_surface.h"
@@ -106,9 +107,18 @@ void render_model::set_children( render_surface** children_in, u8 count, model_l
 	// ******
 }
 
-// STATE[STUB]
 material_effects& render_surface::get_material_effects( )
 {
+	// TODO: fix it!!!
+	if (!m_materail_effects_instance.c_ptr())
+	{
+		return material::nomaterial_material( get_vertex_input_type() );
+	}
+	else
+	{
+		return m_materail_effects_instance->get_material_effects();
+	}
+
 	// FUNCTION BODY[0x63bd70]: 9
 	// <0>
 	// <0x63bd70>|0x000|+0x019:'97'

@@ -99,6 +99,8 @@ private:
 	void remove_collision( );
 
 private:
+	friend class								scene;
+
 	decal_properties						m_properties;
 	math::aabb								m_aabb;
 	u32										m_id;

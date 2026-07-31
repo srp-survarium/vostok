@@ -1,12 +1,31 @@
 #include "pch.h"
 #include "speedtree.h"
 
+#if VOSTOK_PLATFORM_WINDOWS_32
+#	if VOSTOK_STATIC_LIBRARIES
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MT_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MT_Static.lib" )
+#	else // #endif // #if VOSTOK_STATIC_LIBRARIES
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MTDLL_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MTDLL_Static.lib" )
+#	endif // #if VOSTOK_STATIC_LIBRARIES
+#else // #if VOSTOK_PLATFORM_WINDOWS_32
+#	if VOSTOK_STATIC_LIBRARIES
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MT64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MT64_Static.lib" )
+#	else // #endif // #if VOSTOK_STATIC_LIBRARIES
+#		pragma comment( lib, "SpeedTreeCore_v5.2_VC90MTDLL64_Static.lib" )
+#		pragma comment( lib, "SpeedTreeForest_v5.2_VC90MTDLL64_Static.lib" )
+#	endif // #if VOSTOK_STATIC_LIBRARIES
+#endif // #if VOSTOK_PLATFORM_WINDOWS_32
+
 namespace SpeedTree {
 
-// @todo Replace these minimal definitions with the SpeedTree 5.2 runtime library.
-CAllocator*	g_pAllocator		= 0;
-size_t		g_siHeapMemoryUsed	= 0;
-size_t		g_siNumHeapAllocs	= 0;
+// Defined by SpeedTreeCore (Core.obj); declared here because the SDK headers
+// are not part of the repo.
+extern CAllocator*	g_pAllocator;
+extern size_t		g_siHeapMemoryUsed;
+extern size_t		g_siNumHeapAllocs;
 
 CInstance::CInstance( ) :
 	m_vPos					( ),

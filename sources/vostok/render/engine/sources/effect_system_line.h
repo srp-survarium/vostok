@@ -11,6 +11,8 @@ class effect_compiler;
 
 class effect_system_line : public effect_descriptor {
 public:
+	enum techniques{ z_enabled, z_disabled };
+
 	effect_system_line( ) { }
 	virtual ~effect_system_line( ) { }
 

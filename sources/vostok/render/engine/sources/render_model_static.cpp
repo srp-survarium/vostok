@@ -1,4 +1,5 @@
 #include "pch.h"
+#include "help_math.h"
 #include "batched_vertex_source.h"
 #include "render_model_static.h"
 
@@ -110,15 +111,7 @@ template bool read_diffuse_colors< 64 >(
 	math::color (&)[64][64]
 );
 
-// STATE[STUB]
-float frac( float v )
-{
-	return 0.0f;
-
-	// FUNCTION BODY[0x630150]: 1
-	// <0x630151>|0x001|+0x03f:'124'
-	// ******
-}
+// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x630150])
 
 // STATE[STUB]
 template < u32 Size >

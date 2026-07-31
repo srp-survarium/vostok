@@ -3,13 +3,95 @@
 #include <vostok/render/facade/vertex_input_type.h>
 #include "renderer_cook_renderer_resource.h"
 #include "speedtree_tree.h"
+#include <vostok/render/core/api.h>
+#include <vostok/render/core/options.h>
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/device.h>
+#include <vostok/render/core/backend.h>
+#include <vostok/render/core/shader_macros.h>
+#include <vostok/render/core/effect_manager.h>
+#include <vostok/render/core/dx11/effect_constant_storage.h>
+#include <vostok/render/core/untyped_buffer.h>
+#include <vostok/render/facade/render_stage_types.h>
+#include <vostok/render/facade/material_effects_instance_cook_data.h>
+#include <vostok/render/engine/api.h>
+#include <vostok/resources.h>
+#include <vostok/particle/api.h>
+#include <vostok/particle/world.h>
+#include "system_renderer.h"
+#include "scene_manager.h"
+#include "renderer_context.h"
+#include "material_manager.h"
+#include "stage_particles.h"
+#include "decal_instance.h"
+#include "renderer.h"
+#include "scene.h"
+#include "scene_view.h"
+#include "render_output_window.h"
+#include "speedtree.h"
+#include "speedtree_instance.h"
+#include "material.h"
+#include "material_effects_instance.h"
+#include "render_model_instance_impl.h"
+#include "render_surface_instance.h"
+#include "render_model_user.h"
+#include "render_model_skeleton.h"
+#include "model_cooker.h"
+#include "render_model_cooker.h"
+#include "combined_model_cooker.h"
+#include "grass_cook.h"
+#include "tracer_model_instance_cook.h"
+#include "portal_sector_structure_cook.h"
+#include "animated_model_instance_cook.h"
+#include "material_cook.h"
+#include "material_effects_instance_cook.h"
+#include "scene_cook.h"
+#include "scene_view_cook.h"
+#include "render_output_window_cook.h"
+
+#include <GFx.h>
 
 namespace vostok {
 namespace render {
 
+void register_texture_cook	( );
+void unregister_texture_cook( );
+
+struct singletons_on_preinitialize {
+	// resource_manager/device ctors grew args since legacy (config, is_editor);
+	// forwarding ctor is a buildability adaptation - matcher confirms wiring
+	singletons_on_preinitialize( vostok::configs::binary_config_ptr const& config, bool is_editor ) :
+		resource_manager( config ),
+		device( is_editor )
+	{
+	}
+
+	vostok::render::resource_manager		resource_manager;
+	vostok::render::device					device;
+	vostok::render::backend					backend;
+	vostok::render::scene_manager			scene_manager;
+	vostok::render::shader_macros			shader_macros;
+	vostok::render::effect_manager			effect_manager;
+	vostok::render::effect_constant_storage	effect_constant_storage;
+}; // struct singletons_on_preinitialize
+
 struct singletons_on_initialize {
 	singletons_on_initialize( );
-};
+
+	// legacy 'environment' member dropped: no environment class in the new tree
+	vostok::render::renderer_context						renderer_context;
+	vostok::render::material_manager						material_manager;
+	vostok::render::particle_shader_constants				particle_shader_constants;
+	vostok::render::decal_shader_constants_and_geometry	decal_shader_constants_and_geometry;
+}; // struct singletons_on_initialize
+
+static uninitialized_reference< options >						s_options;
+
+static uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
+static uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
+static uninitialized_reference< system_renderer >				s_system_renderer;
+
+untyped_buffer_ptr		g_quad_ib;
 
 // STATE[STUB]
  renderer_cook::renderer_cook( ) :
@@ -63,7 +145,6 @@ void renderer_cook::create_resource(
 	// ******
 }
 
-// STATE[STUB]
 void register_cooks( )
 {
 	// STATICS
@@ -153,26 +234,97 @@ void register_cooks( )
 	// <0>
 	// <0x654a14>|0x354|+0x025:'206'
 	// ******
+
+	using resources::register_cook;
+
+	static render_model_cook			skeleton_mesh_instance_cooker( resources::skeleton_render_model_class );
+	register_cook						( &skeleton_mesh_instance_cooker );
+
+	static render_model_cook			render_model_class_cooker( resources::static_render_model_class );
+	register_cook						( &render_model_class_cooker );
+
+	static renderer_cook				renderer_cooker;
+	register_cook						( &renderer_cooker );
+
+	static user_mesh_cook				user_mesh_cooker;
+	register_cook						( &user_mesh_cooker );
+
+	static static_render_model_instance_cook static_render_model_instance_cooker;
+	register_cook						( &static_render_model_instance_cooker );
+
+	static skeleton_render_model_instance_cook	skeleton_render_model_instance_cooker;
+	register_cook						( &skeleton_render_model_instance_cooker );
+
+	static grass_render_model_cook		grass_render_model_class_cooker;
+	register_cook						( &grass_render_model_class_cooker );
+
+	static static_model_instance_cook	static_model_instance_cooker;
+	register_cook						( &static_model_instance_cooker );
+
+	static skeleton_model_instance_cook	skeleton_model_instance_cooker;
+	register_cook						( &skeleton_model_instance_cooker );
+
+	static tracer_model_instance_cook	tracer_model_instance_cooker;
+	register_cook						( &tracer_model_instance_cooker );
+
+	static skeleton_combined_model_cook	skeleton_combined_model_cooker;
+	register_cook						( &skeleton_combined_model_cooker );
+
+	static skeleton_combined_render_model_instance_cook skeleton_combined_render_model_instance_cooker;
+	register_cook						( &skeleton_combined_render_model_instance_cooker );
+
+	static skeleton_combined_model_instance_cook skeleton_combined_model_instance_cooker;
+	register_cook						( &skeleton_combined_model_instance_cooker );
+
+	static grass_cook					grass_cooker;
+	register_cook						( &grass_cooker );
+
+	static material_cook				material_cook;
+	register_cook						( &material_cook );
+
+	static material_effects_instance_cook material_effects_instance_cooker;
+	register_cook						( &material_effects_instance_cooker );
+
+	register_texture_cook				( );
+
+	particle::initialize				( );
+
+	static scene_cook					scene_cook;
+	register_cook						( &scene_cook );
+
+	static scene_view_cook				scene_view_cook;
+	register_cook						( &scene_view_cook );
+
+	static render_output_window_cook	render_output_window_cook;
+	register_cook						( &render_output_window_cook );
+
+	static animated_model_instance_cook	animated_model_cook;
+	register_cook						( &animated_model_cook );
+
+	static culling::portal_sector_structure_cook s_portal_system_cook;
+	register_cook						( &s_portal_system_cook );
 }
 
-// STATE[STUB]
 void unregister_cooks( )
 {
 	// FUNCTION BODY[0x654eb0]: 2
 	// <0x654eb1>|0x001|+0x005:'212'
 	// <0x654eb6>|0x006|+0x006:'213'
 	// ******
+
+	vostok::particle::finalize				( );
+	vostok::render::unregister_texture_cook	( );
 }
 
-// STATE[STUB]
 void initialize_options( )
 {
 	// FUNCTION BODY[0x654090]: 1
 	// <0>
 	// ******
+
+	using namespace vostok::render;
 }
 
-// STATE[STUB]
  singletons_on_initialize::singletons_on_initialize( )
 {
 	// FUNCTION BODY[0x608c0]: 1
@@ -180,7 +332,7 @@ void initialize_options( )
 	// ******
 }
 
-// STATE[STUB]
+// Modified helper function from DirectX SDK
 HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
 {
 	// LOCALS
@@ -299,9 +451,95 @@ HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& 
 	// <1>
 	// <2>
 	// ******
+
+    HRESULT result;
+    bool should_cleanup_COM = false;
+
+    bool does_major_version_obtained = false;
+    bool does_minor_version_obtained = false;
+
+    // Init COM.  COM may fail if its already been inited with a different
+    // concurrency model.  And if it fails you shouldn't release it.
+    result = CoInitialize( NULL );
+    should_cleanup_COM = SUCCEEDED( result );
+
+    // Get an IDxDiagProvider
+    bool does_dx_version_obtained = false;
+    IDxDiagProvider* dxdiag_provider = NULL;
+    result = CoCreateInstance( CLSID_DxDiagProvider,
+                           NULL,
+                           CLSCTX_INPROC_SERVER,
+                           IID_IDxDiagProvider,
+                           ( LPVOID* )&dxdiag_provider );
+    if( SUCCEEDED( result ) )
+    {
+        // Fill out a DXDIAG_INIT_PARAMS struct
+        DXDIAG_INIT_PARAMS dxDiagInitParam;
+        ZeroMemory( &dxDiagInitParam, sizeof( DXDIAG_INIT_PARAMS ) );
+        dxDiagInitParam.dwSize = sizeof( DXDIAG_INIT_PARAMS );
+        dxDiagInitParam.dwDxDiagHeaderVersion = DXDIAG_DX9_SDK_VERSION;
+        dxDiagInitParam.bAllowWHQLChecks = false;
+        dxDiagInitParam.pReserved = NULL;
+
+        // Init the m_pDxDiagProvider
+        result = dxdiag_provider->Initialize( &dxDiagInitParam );
+        if( SUCCEEDED( result ) )
+        {
+            IDxDiagContainer* pDxDiagRoot = NULL;
+            IDxDiagContainer* pDxDiagSystemInfo = NULL;
+
+            // Get the DxDiag root container
+            result = dxdiag_provider->GetRootContainer( &pDxDiagRoot );
+            if( SUCCEEDED( result ) )
+            {
+                // Get the object called DxDiag_SystemInfo
+                result = pDxDiagRoot->GetChildContainer( L"DxDiag_SystemInfo", &pDxDiagSystemInfo );
+                if( SUCCEEDED( result ) )
+                {
+                    VARIANT var;
+                    VariantInit( &var );
+
+                    // Get the "dwDirectXVersionMajor" property
+                    result = pDxDiagSystemInfo->GetProp( L"dwDirectXVersionMajor", &var );
+                    if( SUCCEEDED( result ) && var.vt == VT_UI4 )
+                    {
+						major_version = var.ulVal;
+                        does_major_version_obtained = true;
+                    }
+                    VariantClear( &var );
+
+                    // Get the "dwDirectXVersionMinor" property
+                    result = pDxDiagSystemInfo->GetProp( L"dwDirectXVersionMinor", &var );
+                    if( SUCCEEDED( result ) && var.vt == VT_UI4 )
+                    {
+						minor_version = var.ulVal;
+                        does_minor_version_obtained = true;
+                    }
+                    VariantClear( &var );
+
+                    // If it all worked right, then mark it down
+                    if( does_major_version_obtained && does_minor_version_obtained )
+                        does_dx_version_obtained = true;
+
+                    pDxDiagSystemInfo->Release();
+                }
+
+                pDxDiagRoot->Release();
+            }
+        }
+
+        dxdiag_provider->Release();
+    }
+
+    if( should_cleanup_COM )
+        CoUninitialize();
+
+    if( does_dx_version_obtained )
+        return S_OK;
+    else
+        return E_FAIL;
 }
 
-// STATE[STUB]
 bool does_os_support_dx11( )
 {
 	// LOCALS
@@ -313,8 +551,6 @@ bool does_os_support_dx11( )
 	// CALL SITE INFO
 	// <0x6542f7> -> int < unknown >( _OSVERSIONINFOA* )
 	// ******
-
-	return false;
 
 	// FUNCTION BODY[0x6542d0]: 30
 	// <0>
@@ -349,9 +585,39 @@ bool does_os_support_dx11( )
 	// <0x654344>|0x074|-0x007:'385'
 	// <0x65433d>|0x06d|+0x009:'386'
 	// ******
+
+	OSVERSIONINFOEX OsVersionInfo;
+
+	ZeroMemory( &OsVersionInfo , sizeof( OSVERSIONINFOEX ) );
+	OsVersionInfo.dwOSVersionInfoSize = sizeof( OSVERSIONINFOEX );
+
+	if ( GetVersionEx( (LPOSVERSIONINFO) &OsVersionInfo ) == 0 )
+		return true; // failed to get OS version information for some reason
+
+	if ( OsVersionInfo.dwMajorVersion > 6 )
+		return true; // unknown OS greater than Win7
+
+	if ( OsVersionInfo.dwMajorVersion == 6 )
+	{
+		 if ( OsVersionInfo.dwMinorVersion >= 1 )
+			 return true; // Win7 + optional update
+		 // Vista here
+		 if ( OsVersionInfo.wServicePackMajor >= 2 )
+		 {
+			// SP2 or greater, check for DX11 ( KB971512 + KB971644 )
+			DWORD major_version, minor_version;
+			if ( SUCCEEDED( get_dx_version_via_dxdiag( major_version, minor_version ) ) )
+			{
+				if ( major_version >= 10 )
+					return true;
+			}
+			else
+				return true; // failed to get DX version for some reason
+		 }
+	}
+	return false;
 }
 
-// STATE[STUB]
 void engine::world::apply_render_options_changes( )
 {
 	// FUNCTION BODY[0x656e10]: 7
@@ -363,6 +629,11 @@ void engine::world::apply_render_options_changes( )
 	// <2>
 	// <3>
 	// ******
+
+	reset_renderer								( false );
+#ifndef MASTER_GOLD
+	options::ref().save_current_configuration	( );
+#endif // #ifndef MASTER_GOLD
 }
 
 // STATE[STUB]
@@ -752,8 +1023,11 @@ void on_fs_iterator_materials_ready(
 	// ******
 }
 
-// STATE[STUB]
- engine::world::world( configs::binary_config_ptr const& in_config, bool is_editor )
+ engine::world::world( configs::binary_config_ptr const& in_config, bool is_editor ) :
+	m_frame_id						( 0 ),
+	m_initialized					( false ),
+	m_enable_terrain_debug_mode		( false ),
+	m_renderer						( NULL )
 {
 	// FUNCTION BODY[0x655960]: 17
 	// <0>
@@ -774,9 +1048,34 @@ void on_fs_iterator_materials_ready(
 	// <0>
 	// <0x6559c5>|0x065|+0x01f:'769'
 	// ******
+
+	VOSTOK_UNREFERENCED_PARAMETER	( in_config );
+	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
+
+	CHECK_OR_EXIT							(
+		does_os_support_dx11(),
+		"Your operating system doesn't support DirectX 11.\r\n"
+		"Please upgrade your OS to Windows Vista Service Pack 2 + Platform Update or later."
+	);
+
+	render::core::initialize		( );
+
+	VOSTOK_CONSTRUCT_REFERENCE		( s_options, options )( );
+
+	initialize_options				( );
+
+	initialize_speedtree			( );
+
+	register_cooks					( );
+
+	LOG_INFO("render::engine::world() gfx heap is %x", Scaleform::Memory::GetGlobalHeap());
+
+	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_preinitialize, singletons_on_preinitialize )( in_config, is_editor );
+
+	// TODO
+	material::initialize_nomaterial_material( );
 }
 
-// STATE[STUB]
 void engine::world::on_renderer_configuration_config_loaded( bool async_effects, resources::queries_result& data )
 {
 	// FUNCTION BODY[0x656d40]: 12
@@ -793,9 +1092,18 @@ void engine::world::on_renderer_configuration_config_loaded( bool async_effects,
 	// <0x656deb>|0x0ab|+0x01a:'797'
 	// <0>
 	// ******
+
+	if (data.is_successful())
+	{
+		options::ref().load_from_config(
+			vostok::static_cast_resource_ptr<vostok::configs::binary_config_ptr>(
+				data[0].get_unmanaged_resource()
+			)->get_root()["options"]
+		);
+	}
+	reset_renderer					( async_effects );
 }
 
-// STATE[STUB]
 void engine::world::reset_renderer( bool async_effects )
 {
 	// FUNCTION BODY[0x656b30]: 12
@@ -812,9 +1120,21 @@ void engine::world::reset_renderer( bool async_effects )
 	// <0>
 	// <0x656c79>|0x149|+0x0bb:'814'
 	// ******
+
+	LOG_INFO						("Renderer creating started...");
+
+	if (m_renderer)
+ 		DELETE						(m_renderer);
+
+ 	effect_manager::ref().force_sync = !async_effects;
+
+ 	m_renderer						 = NEW( render::renderer )( &s_singletons_on_initialize->renderer_context );
+
+ 	effect_manager::ref().force_sync = false;
+
+	LOG_INFO						("Renderer creating finished.");
 }
 
-// STATE[STUB]
 void engine::world::initialize( bool is_editor )
 {
 	// FUNCTION BODY[0x6569b0]: 16
@@ -835,9 +1155,23 @@ void engine::world::initialize( bool is_editor )
 	// <0x656aea>|0x13a|+0x017:'864'
 	// <0>
 	// ******
+
+	VOSTOK_UNREFERENCED_PARAMETER	( is_editor );
+
+	// model cooker uses material_manager
+	VOSTOK_CONSTRUCT_REFERENCE		( s_singletons_on_initialize, singletons_on_initialize )( );
+
+	while ( !s_singletons_on_preinitialize->scene_manager.scene_count() ) {
+		resources::dispatch_callbacks	( );
+		threading::yield				( 10 );
+	}
+
+	R_ASSERT						( !m_initialized );
+	m_initialized					= true;
+
+	VOSTOK_CONSTRUCT_REFERENCE		( s_system_renderer, system_renderer ) ( &s_singletons_on_initialize->renderer_context );
 }
 
-// STATE[STUB]
  engine::world::~world( )
 {
 	// FUNCTION BODY[0x655a30]: 13
@@ -855,22 +1189,38 @@ void engine::world::initialize( bool is_editor )
 	// <0x655adc>|0x0ac|+0x005:'881'
 	// <0>
 	// ******
+
+	material::finalize_nomaterial_material	( );
+	finalize_speedtree						( );
+
+	VOSTOK_DESTROY_REFERENCE		( s_system_renderer );
+	DELETE							( m_renderer );
+	VOSTOK_DESTROY_REFERENCE		( s_singletons_on_initialize );
+	VOSTOK_DESTROY_REFERENCE		( s_singletons_on_preinitialize );
+	VOSTOK_DESTROY_REFERENCE		( s_options );
+
+	unregister_cooks				( );
+
+	particle::finalize				( );
+	render::core::finalize			( );
 }
 
-// STATE[STUB]
 void engine::world::reload_shaders( )
 {
 	// FUNCTION BODY[0x6542c0]: 1
 	// <0x6542c0>|0x000|+0x00c:'887'
 	// ******
+
+	resource_manager::ref().reload_shader_sources	( true );
 }
 
-// STATE[STUB]
 void engine::world::reload_modified_textures( )
 {
 	// FUNCTION BODY[0x655d40]: 1
 	// <0x655d40>|0x000|+0x00b:'892'
 	// ******
+
+	resource_manager::ref().reload_modified_textures( );
 }
 
 // STATE[STUB]
@@ -1003,23 +1353,24 @@ void engine::world::end_render_options_changing(
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
 {
 	// FUNCTION BODY[0x654b00]: 1
 	// <0x654b01>|0x001|+0x016:'1004'
 	// ******
+
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr() )->camera_set_view		( view_and_culling_matrix );
 }
 
-// STATE[STUB]
 void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix )
 {
 	// FUNCTION BODY[0x654490]: 1
 	// <0x654490>|0x000|+0x01b:'1016'
 	// ******
+
+	static_cast_checked< render::scene_view* >(scene_view.c_ptr())->camera_set_projection	( projection_matrix );
 }
 
-// STATE[STUB]
 void engine::world::draw_scene(
 	base_scene_ptr const&				scene,
 	base_scene_view_ptr const&			view,
@@ -1045,27 +1396,44 @@ void engine::world::draw_scene(
 	// <0>
 	// <0x657167>|0x047|+0x013:'1043'
 	// ******
+
+	float4x4 identity;
+	identity.identity			( );
+	system_renderer::ref().set_w( identity );
+
+	if (m_renderer)
+		m_renderer->render	(
+			scene,
+			view,
+			output_window,
+			viewport,
+			on_draw_scene,
+			m_enable_terrain_debug_mode,
+			default_font
+		);
+	else {
+		static_cast_checked<vostok::render::scene*>(scene.c_ptr())->flush	( on_draw_scene, false, false ); // buildability placeholder: legacy flush took only on_draw_scene
+	}
 }
 
-// STATE[STUB]
 void engine::world::end_frame( )
 {
 	// FUNCTION BODY[0x653ee0]: 1
 	// <0x653ee0>|0x000|+0x003:'1111'
 	// ******
+
+	++m_frame_id;
 }
 
-// STATE[STUB]
 u32 engine::world::frame_id( )
 {
-	return 0;
-
 	// FUNCTION BODY[0x653ed0]: 1
 	// <0x653ed0>|0x000|+0x003:'1116'
 	// ******
+
+	return				( m_frame_id);
 }
 
-// STATE[STUB]
 void engine::world::draw_ui_vertices(
 	ui::vertex const*		vertices,
 	u32 const&				count,
@@ -1076,9 +1444,10 @@ void engine::world::draw_ui_vertices(
 	// FUNCTION BODY[0x655c10]: 1
 	// <0x655c10>|0x000|+0x018:'1132'
 	// ******
+
+	render::system_renderer::ref().draw_ui_vertices( (vertex_formats::TL const*)vertices, count, prim_type, point_type );
 }
 
-// STATE[STUB]
 void engine::world::add_speedtree_instance(
 	base_scene_ptr const&				in_scene,
 	speedtree_instance_ptr const&		v,
@@ -1091,9 +1460,12 @@ void engine::world::add_speedtree_instance(
 	// <1>
 	// <0x655bd0>|0x000|+0x039:'1227'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->add_speedtree_instance(v, transform, populate_forest);
 }
 
-// STATE[STUB]
 void engine::world::remove_speedtree_instance(
 	base_scene_ptr const&				in_scene,
 	speedtree_instance_ptr const&		v,
@@ -1105,9 +1477,12 @@ void engine::world::remove_speedtree_instance(
 	// <1>
 	// <0x655b90>|0x000|+0x034:'1234'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_speedtree_instance(v, populate_forest);
 }
 
-// STATE[STUB]
 void engine::world::update_speedtree_instance(
 	base_scene_ptr const&				in_scene,
 	speedtree_instance_ptr const&		v,
@@ -1120,18 +1495,24 @@ void engine::world::update_speedtree_instance(
 	// <1>
 	// <0x655b50>|0x000|+0x039:'1241'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->set_speedtree_instance_transform(v, transform, populate_forest);
 }
 
-// STATE[STUB]
 void engine::world::populate_speedtree_forest( base_scene_ptr const& in_scene )
 {
 	// FUNCTION BODY[0x655b30]: 2
 	// <0>
 	// <1>
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->populate_speedtree_forest( );
 }
 
-// STATE[STUB]
 void engine::world::add_model(
 	base_scene_ptr const&				in_scene,
 	render_model_instance_ptr const&	v,
@@ -1153,9 +1534,17 @@ void engine::world::add_model(
 	// <0>
 	// <0x65586a>|0x03a|+0x023:'1260'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
+
+	if (apply_transform)
+		model->set_transform( transform );
+
+	scene->add_model( model);
 }
 
-// STATE[STUB]
 void engine::world::update_model(
 	base_scene_ptr const&				in_scene,
 	render_model_instance_ptr const&	v,
@@ -1173,9 +1562,14 @@ void engine::world::update_model(
 	// <0x6555e6>|0x026|+0x00e:'1268'
 	// <0x6555f4>|0x034|+0x021:'1269'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
+	model->set_transform				( transform );
+	scene->modify_model					( model );
 }
 
-// STATE[STUB]
 void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_instance_ptr const& v )
 {
 	// FUNCTION BODY[0x6557c0]: 4
@@ -1184,6 +1578,11 @@ void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_i
 	// <0x6557c4>|0x004|+0x01f:'1276'
 	// <0x6557e3>|0x023|+0x024:'1277'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
+	scene->remove_model( model);
 }
 
 // STATE[STUB]
@@ -1276,7 +1675,6 @@ void engine::world::set_speedtree_instance_material(
 	// ******
 }
 
-// STATE[STUB]
 void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
 {
 	// FUNCTION BODY[0x655720]: 10
@@ -1291,9 +1689,19 @@ void on_model_material_effects_instance_ready( resources::queries_result& in_dat
 	// <0x655745>|0x025|+0x06c:'1357'
 	// <0>
 	// ******
+
+	if (!in_render_surface)
+		return;
+
+ 	if (in_data[0].is_successful())
+	{
+ 		in_render_surface->set_material_effects(
+ 			vostok::static_cast_resource_ptr<material_effects_instance_ptr>(in_data[0].get_unmanaged_resource()),
+			in_data[0].get_requested_path()
+ 		);
+	}
 }
 
-// STATE[STUB]
 void engine::world::set_model_material(
 	render_model_instance_ptr const&		v,
 	fs_new::virtual_path_string const&		subsurface_name,
@@ -1387,6 +1795,51 @@ void engine::world::set_model_material(
 	// <26>
 	// <27>
 	// ******
+
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
+
+	vector< render_surface_instance* >	list;
+	model->get_surfaces				( NULL, NULL, list, false, 0, 0 ); // buildability placeholder: legacy get_surfaces took ( list, false )
+
+	bool check_name = (subsurface_name.length()!=0);
+
+	material_ptr mtl_ptr = static_cast_resource_ptr<material_ptr>(m);
+
+	for (vector< render_surface_instance* >::iterator it = list.begin(); it != list.end(); ++it)
+	{
+		render_surface_instance& inst = *(*it);
+
+		bool const apply = !check_name || (inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name.c_str());
+
+		if (!apply)
+			continue;
+
+		if (!mtl_ptr)
+		{
+			inst.m_render_surface->m_materail_effects_instance = 0;
+			continue;
+		}
+
+		resources::user_data_variant data_variant;
+
+		data_variant.set						(NEW(material_effects_instance_cook_data)(
+			inst.m_render_surface->get_vertex_input_type(),
+			static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
+		);
+
+		// Must be query_resource_and_wait!
+		resources::query_resource_and_wait		(
+			mtl_ptr->get_material_name(),
+			resources::material_effects_instance_class,
+			boost::bind(
+				&on_model_material_effects_instance_ready,
+				_1,
+				inst.m_render_surface
+			),
+			vostok::render::g_allocator,
+			&data_variant
+		);
+	}
 }
 
 // STATE[STUB]
@@ -1477,7 +1930,6 @@ void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v,
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bool value )
 {
 	// FUNCTION BODY[0x654260]: 4
@@ -1486,9 +1938,13 @@ void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bo
 	// <2>
 	// <3>
 	// ******
+
+	VOSTOK_UNREFERENCED_PARAMETERS( v, value );
+	//render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
+	//polymorph_vector_base<render_model_instance> const* render_models = model->get_models_();
+	//system_renderer::ref().set_model_ghost_mode( *render_models, value);
 }
 
-// STATE[STUB]
 void engine::world::update_model_vertex_buffer( render_model_instance_ptr const& v, vectora< buffer_fragment > const& fragments )
 {
 	// CALL SITE INFO
@@ -1513,9 +1969,23 @@ void engine::world::update_model_vertex_buffer( render_model_instance_ptr const&
 	// <0>
 	// <0x654463>|0x063|+0x024:'1519'
 	// ******
+
+	user_render_model_instance* model = static_cast_checked<user_render_model_instance*>(v.c_ptr());
+
+	ASSERT( fragments.size() > 0 );
+
+	user_render_surface_editable* surface = static_cast_checked<user_render_surface_editable*>(model->m_surface);
+	u8* lock_data	= (u8*)surface->m_vb->map( D3D_MAP_WRITE_DISCARD);
+
+	vectora<buffer_fragment>::const_iterator	it	= fragments.begin();
+	vectora<buffer_fragment>::const_iterator	end	= fragments.end();
+
+	for( ; it != end; ++it)
+		memory::copy		( lock_data + it->start, it->size, it->buffer, it->size );
+
+	surface->m_vb->unmap	( );
 }
 
-// STATE[STUB]
 void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
 {
 	// FUNCTION BODY[0x656e70]: 3
@@ -1523,9 +1993,12 @@ void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_pro
 	// <1>
 	// <0x656e70>|0x000|+0x01b:'1539'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->add_light( id, props);
 }
 
-// STATE[STUB]
 void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
 {
 	// FUNCTION BODY[0x656e20]: 3
@@ -1533,9 +2006,12 @@ void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_
 	// <1>
 	// <0x656e23>|0x003|+0x047:'1546'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_light	( id, props);
 }
 
-// STATE[STUB]
 void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
 {
 	// FUNCTION BODY[0x655a10]: 3
@@ -1543,6 +2019,10 @@ void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
 	// <1>
 	// <0x655a11>|0x001|+0x018:'1553'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_light	( id);
 }
 
 // STATE[STUB]
@@ -1662,16 +2142,18 @@ void engine::world::remove_tracer( base_scene_ptr const& in_scene, tracer_model_
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
 {
 	// FUNCTION BODY[0x655710]: 2
 	// <0>
 	// <1>
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->add_decal(id, properties);
 }
 
-// STATE[STUB]
 void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
 {
 	// FUNCTION BODY[0x6558b0]: 3
@@ -1679,9 +2161,12 @@ void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_
 	// <1>
 	// <0x6558b0>|0x000|+0x016:'1640'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_decal	( id, properties);
 }
 
-// STATE[STUB]
 void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
 {
 	// FUNCTION BODY[0x654c60]: 3
@@ -1689,6 +2174,10 @@ void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
 	// <1>
 	// <0x654c60>|0x000|+0x00f:'1647'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_decal	( id);
 }
 
 // STATE[STUB]
@@ -1760,18 +2249,24 @@ void engine::world::remove_ambient_volume( base_scene_ptr const& in_scene, u32 i
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::update_lpv_occluder( base_scene_ptr const& in_scene, u32 id, float4x4 const& transform )
 {
 	// FUNCTION BODY[0x654b90]: 0
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_lpv_occluder	( id, transform);
 }
 
-// STATE[STUB]
 void engine::world::remove_lpv_occluder( base_scene_ptr const& in_scene, u32 id )
 {
 	// FUNCTION BODY[0x6543f0]: 0
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_lpv_occluder	( id);
 }
 
 // STATE[STUB]
@@ -1788,7 +2283,6 @@ void engine::world::add_volume_fog(
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::update_volume_fog(
 	base_scene_ptr const&			in_scene,
 	u32								id,
@@ -1799,26 +2293,34 @@ void engine::world::update_volume_fog(
 	// <0>
 	// <0x654c00>|0x000|+0x015:'1706'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->update_volume_fog	( id, in_parameters);
 }
 
-// STATE[STUB]
 void engine::world::remove_volume_fog( base_scene_ptr const& in_scene, u32 id )
 {
 	// FUNCTION BODY[0x6543e0]: 1
 	// <0>
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->remove_volume_fog	( id);
 }
 
-// STATE[STUB]
 void engine::world::update_skeleton( render_model_instance_ptr const& v, float4x4* matrices, u32 count )
 {
 	// FUNCTION BODY[0x6543d0]: 2
 	// <0>
 	// <0x6543d0>|0x000|+0x00d:'1725'
 	// ******
+
+	skeleton_render_model_instance* skeleton	= static_cast<skeleton_render_model_instance*>(v.c_ptr());
+	skeleton->update_render_matrices	( matrices, count );
 }
 
-// STATE[STUB]
 void engine::world::play_particle_system(
 	base_scene_ptr const&					in_scene,
 	resources::unmanaged_resource_ptr		in_instance,
@@ -1836,9 +2338,12 @@ void engine::world::play_particle_system(
 	// <1>
 	// <0x654650>|0x000|+0x038:'1767'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->particle_world()->play(in_instance, transform, use_transform, always_looping);
 }
 
-// STATE[STUB]
 void engine::world::stop_particle_system( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr in_instance )
 {
 	// CALL SITE INFO
@@ -1851,9 +2356,13 @@ void engine::world::stop_particle_system( base_scene_ptr const& in_scene, resour
 	// <0>
 	// <0x6545f4>|0x004|+0x02d:'1775'
 	// ******
+
+	// TODO: time
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->particle_world()->stop(in_instance, 0.0f);
 }
 
-// STATE[STUB]
 void engine::world::remove_particle_system_instance(
 	resources::unmanaged_resource_ptr		particle_system_instance,
 	base_scene_ptr const&					in_scene
@@ -1869,9 +2378,13 @@ void engine::world::remove_particle_system_instance(
 	// <1>
 	// <0x654597>|0x007|+0x022:'1783'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	R_ASSERT						( particle_system_instance );
+	scene->particle_world()->remove	( particle_system_instance );
 }
 
-// STATE[STUB]
 void engine::world::update_particle_system_instance(
 	resources::unmanaged_resource_ptr		particle_system_instance,
 	base_scene_ptr const&					in_scene,
@@ -1894,9 +2407,15 @@ void engine::world::update_particle_system_instance(
 	// <0x65451e>|0x02e|+0x021:'1792'
 	// <0x65453f>|0x04f|+0x021:'1793'
 	// ******
+
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	particle::world& world			= *scene->particle_world();
+	world.set_transform				( particle_system_instance, transform );
+	world.set_visible				( particle_system_instance, visible );
+	world.set_paused				( particle_system_instance, paused );
 }
 
-// STATE[STUB]
 void engine::world::resize_render_output_window(
 	base_output_window_ptr const&		output_window,
 	const u32							width,
@@ -1907,29 +2426,39 @@ void engine::world::resize_render_output_window(
 	// FUNCTION BODY[0x656e90]: 1
 	// <0x656e90>|0x000|+0x01b:'1798'
 	// ******
+
+	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->set_size(
+		width,
+		height,
+		fullscreen,
+		false
+	);
 }
 
-// STATE[STUB]
 void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
 {
 	// FUNCTION BODY[0x654ca0]: 1
 	// <0x654ca0>|0x000|+0x00f:'1803'
 	// ******
+
+	static_cast_checked< render::render_output_window* >( output_window.c_ptr() )->goto_fullscreen( );
 }
 
-// STATE[STUB]
+static uninitialized_reference< engine::world > s_world;
+
 engine::world* engine::create_world( configs::binary_config_ptr const& in_config, bool is_editor )
 {
-	return NULL;
-
 	// FUNCTION BODY[0x6559f0]: 3
 	// <0>
 	// <0x6559f1>|0x001|+0x018:'1918'
 	// <0x655a09>|0x019|+0x005:'1919'
 	// ******
+
+	R_ASSERT					( !s_world.initialized() );
+	VOSTOK_CONSTRUCT_REFERENCE	( s_world, engine::world ) ( in_config, is_editor );
+	return						s_world.c_ptr( );
 }
 
-// STATE[STUB]
 void engine::destroy( engine::world*& engine_world )
 {
 	// FUNCTION BODY[0x655b10]: 4
@@ -1938,18 +2467,24 @@ void engine::destroy( engine::world*& engine_world )
 	// <0x655b10>|0x000|+0x00b:'1926'
 	// <0x655b1b>|0x00b|+0x014:'1927'
 	// ******
+
+	R_ASSERT					( s_world.initialized() );
+	R_ASSERT					( s_world.c_ptr() == engine_world );
+	VOSTOK_DESTROY_REFERENCE	( s_world );
+	engine_world				= 0;
 }
 
-// STATE[STUB]
 void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplier )
 {
 	// FUNCTION BODY[0x654160]: 2
 	// <0>
 	// <0x654160>|0x000|+0x014:'1933'
 	// ******
+
+	render::scene* const scene_ptr	= static_cast_checked< render::scene* >( scene.c_ptr() );
+	scene_ptr->set_slomo			( time_multiplier );
 }
 
-// STATE[STUB]
 void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
 {
 	// FUNCTION BODY[0x654130]: 3
@@ -1957,36 +2492,44 @@ void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool
 	// <0x654130>|0x000|+0x006:'1939'
 	// <0x654136>|0x006|+0x01c:'1940'
 	// ******
+
+	if (m_renderer)
+		m_renderer->toggle_render_stage(stage_type, toggle);
 }
 
-// STATE[STUB]
 void engine::world::set_view_mode( base_scene_view_ptr view_ptr, scene_view_mode view_mode )
 {
 	// FUNCTION BODY[0x655100]: 2
 	// <0>
 	// <0x655100>|0x000|+0x00e:'1946'
 	// ******
+
+	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
+	view->set_view_mode(view_mode);
 }
 
-// STATE[STUB]
 void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, particle::enum_particle_render_mode render_mode )
 {
 	// FUNCTION BODY[0x6550c0]: 2
 	// <0>
 	// <0x6550c0>|0x000|+0x00e:'1953'
 	// ******
+
+	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
+	view->set_particles_render_mode(render_mode);
 }
 
-// STATE[STUB]
 void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr mtl_ptr )
 {
 	// FUNCTION BODY[0x655690]: 2
 	// <0x655691>|0x001|+0x004:'1958'
 	// <0x655695>|0x005|+0x04b:'1959'
 	// ******
+
+	vostok::render::scene* scn	= static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+	scn->set_sky_material		(static_cast_resource_ptr<material_effects_instance_ptr>(mtl_ptr));
 }
 
-// STATE[STUB]
 void engine::world::enable_post_process( base_scene_view_ptr view_ptr, bool enable )
 {
 	// FUNCTION BODY[0x655080]: 6
@@ -1997,9 +2540,11 @@ void engine::world::enable_post_process( base_scene_view_ptr view_ptr, bool enab
 	// <2>
 	// <3>
 	// ******
+
+	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
+	view->set_use_post_process(enable);
 }
 
-// STATE[STUB]
 void engine::world::set_post_process(
 	base_scene_view_ptr						view_ptr,
 	resources::unmanaged_resource_ptr		post_process_resource
@@ -2015,17 +2560,23 @@ void engine::world::set_post_process(
 	// <0>
 	// <0x65646e>|0x02e|+0x028:'2081'
 	// ******
+
+	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
+
+	material_ptr mtl = static_cast_checked<vostok::render::material*>(post_process_resource.c_ptr());
+
+	vostok::render::material_manager::ref().initialize_post_process_parameters(&view->m_post_process_parameters, mtl, false);
 }
 
-// STATE[STUB]
 particle::world& engine::world::particle_world( base_scene_ptr const& scene )
 {
 	// FUNCTION BODY[0x6551f0]: 1
 	// <0x6551f1>|0x001|+0x038:'2086'
 	// ******
+
+	return	*static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->particle_world();
 }
 
-// STATE[STUB]
 void engine::world::draw_lines(
 	base_scene_ptr const&				scene,
 	vectora< vertex_colored > const&	vertices,
@@ -2035,9 +2586,10 @@ void engine::world::draw_lines(
 	// FUNCTION BODY[0x655c80]: 1
 	// <0x655c80>|0x000|+0x040:'2096'
 	// ******
+
+	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_lines	( vertices, indices );
 }
 
-// STATE[STUB]
 void engine::world::draw_triangles(
 	base_scene_ptr const&				scene,
 	vectora< vertex_colored > const&	vertices,
@@ -2047,9 +2599,23 @@ void engine::world::draw_triangles(
 	// FUNCTION BODY[0x655c30]: 1
 	// <0x655c30>|0x000|+0x040:'2101'
 	// ******
+
+	static_cast_resource_ptr< resources::resource_ptr<vostok::render::scene, resources::unmanaged_resource> >( scene )->draw_triangles( vertices, indices );
 }
 
-// STATE[STUB]
+void make_ui_vertices(
+	vostok::vectora<vostok::render::ui::vertex>& out_vertices,
+	pcstr in_text,
+	vostok::ui::font const& in_font,
+	vostok::math::float2 const& in_position,
+	vostok::math::color const& in_color,
+	vostok::math::color const& in_selection_color,
+	u32 max_line_width,
+	bool is_multiline,
+	u32 start_selection_index,
+	u32 end_selection_index
+);
+
 void engine::world::draw_text(
 	vectora< ui::vertex >&		output,
 	pcstr const&				text,
@@ -2077,50 +2643,68 @@ void engine::world::draw_text(
 	// <10>
 	// <0x6544b1>|0x001|+0x034:'2141'
 	// ******
+
+	make_ui_vertices(
+		output,
+		text,
+		font,
+		position,
+		text_color,
+		selection_color,
+		max_line_width,
+		is_multiline,
+		start_selection,
+		end_selection
+	);
 }
 
-// STATE[STUB]
 void engine::world::show_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
 	// FUNCTION BODY[0x655650]: 2
 	// <0>
 	// <0x655651>|0x001|+0x00f:'2146'
 	// ******
+
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_movie( movie );
 }
 
-// STATE[STUB]
 void engine::world::hide_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
 	// FUNCTION BODY[0x655190]: 2
 	// <0x655190>|0x000|+0x008:'2151'
 	// <0x655198>|0x008|+0x021:'2152'
 	// ******
+
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_movie( movie );
 }
 
-// STATE[STUB]
 void engine::world::show_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
 	// FUNCTION BODY[0x654110]: 2
 	// <0>
 	// <0x654110>|0x000|+0x010:'2158'
 	// ******
+
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->add_text_manager( tm );
 }
 
-// STATE[STUB]
 void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
 	// FUNCTION BODY[0x6540f0]: 2
 	// <0>
 	// <0x6540f0>|0x000|+0x010:'2164'
 	// ******
+
+	static_cast_checked< render::scene_view* >( scene_view.c_ptr( ) )->remove_text_manager( tm );
 }
 
-// STATE[STUB]
 void engine::world::execute_scaleform_command( survarium::scaleform_render_command command )
 {
 	// FUNCTION BODY[0x653eb0]: 1
 	// <0x653eb0>|0x000|+0x00b:'2169'
 	// ******
+
+	command.execute	( );
 }
 
 // STATE[STUB]

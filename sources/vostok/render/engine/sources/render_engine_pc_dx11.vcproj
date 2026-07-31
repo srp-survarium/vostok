@@ -889,7 +889,15 @@
 			>
 		</File>
 		<File
+			RelativePath=".\moon_position.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\moon_position.h"
+			>
+		</File>
+		<File
+			RelativePath=".\sun_position.cpp"
 			>
 		</File>
 		<File
@@ -954,6 +962,22 @@
 		</File>
 		<File
 			RelativePath=".\shadow_vertex.h"
+			>
+		</File>
+		<File
+			RelativePath=".\aabb_indices.h"
+			>
+		</File>
+		<File
+			RelativePath=".\du_sphere.cpp"
+			>
+		</File>
+		<File
+			RelativePath=".\du_sphere.h"
+			>
+		</File>
+		<File
+			RelativePath=".\shared_names.h"
 			>
 		</File>
 		<File

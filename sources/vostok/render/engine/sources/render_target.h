@@ -1,20 +1,12 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_TARGET_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_TARGET_H_INCLUDED
 
-#include <vostok/render/core/resource_intrusive_base.h>
+// The engine carcass initially carried a placeholder render_target here; the
+// real class (one type engine-wide) lives in the core module.
+#include <vostok/render/core/dx11/render_target.h>
 
 namespace vostok {
 namespace render {
-
-enum enum_rt_usage {
-	enum_rt_usage_depth_stencil	= 0,
-	enum_rt_usage_render_target	= 1,
-};
-
-class render_target : public resource_intrusive_base {
-public:
-	void destroy_impl( ) const { }
-};
 
 typedef intrusive_ptr<
 	render_target,

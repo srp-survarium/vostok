@@ -10,6 +10,9 @@ inline float frac( float value )
 	// FUNCTION BODY[0x60d450]
 	// FUNCTION BODY[0x5f2af0]
 	// FUNCTION BODY[0x63b300]
+	// FUNCTION BODY[0x6446f0] for system_renderer.cpp
+	// FUNCTION BODY[0x630150] for render_model_static.cpp
+	// FUNCTION BODY[0x5ff670] for light.cpp
 	return value - static_cast< unsigned int >( value );
 }
 
