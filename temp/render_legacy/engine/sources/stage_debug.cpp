@@ -20,17 +20,11 @@
 
 namespace vostok {
 namespace render {
-	
-stage_debug::stage_debug(renderer_context* context) : stage( context)
-{
-	
-}
 
-stage_debug::~stage_debug()
-{
+// REMAINDER: execute references the dropped m_dynamic_visuals member; the
+// shipped execute (0x6040f0) also folds in the env-probe preview path -
+// matcher-phase reconstruction.
 	
-}
-
 void stage_debug::execute()
 {
 	if (!is_enabled())
