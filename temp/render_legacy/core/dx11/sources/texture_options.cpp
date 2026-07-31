@@ -42,21 +42,7 @@ vostok::render::texture_options::ETType get_texture_type_from_name( pcstr name )
 }
 
 // texture options cookers
-texture_options_cooker::texture_options_cooker	( resources::class_id_enum resource_class, reuse_enum reuse_type, u32 translate_query_thread, enum_flags<flags_enum> flags )
-:super(resource_class, reuse_type, translate_query_thread, flags )
-{}
 
-void texture_options_cooker::translate_request_path(pcstr request_path, fs_new::virtual_path_string& new_request) const
-{
-	if( 0==strstr(request_path, ".options") )
-		new_request.assignf	("resources/textures/%s.options", request_path);
-	else
-		new_request = request_path;
-}
-
-void texture_options_cooker::delete_resource( resources::resource_base* )
-{
-}
 
 #ifndef MASTER_GOLD
 texture_options_lua_cooker::texture_options_lua_cooker( ) 
@@ -125,56 +111,9 @@ void texture_options_lua_cooker::create_default_options( resources::query_result
 }
 #endif // #ifndef MASTER_GOLD
 
-texture_options_binary_cooker::texture_options_binary_cooker( ) 
-:super( resources::texture_options_binary_class, reuse_true, use_resource_manager_thread_id) 
-{
-}
 
-void texture_options_binary_cooker::translate_query( resources::query_result_for_cook& parent )
-{
-	pcstr path = parent.get_requested_path();
 
-	resources::query_resource(
-					path, 
-					resources::binary_config_class, 
-					boost::bind(&texture_options_binary_cooker::on_binary_config_loaded, this, _1), 
-					resources::unmanaged_allocator(), 
-					NULL,
-					&parent); 
-}
 
-void texture_options_binary_cooker::on_binary_config_loaded( resources::queries_result& result )
-{
-	resources::query_result_for_cook* parent	= result.get_parent_query();
-
-	if( result[0].is_successful())
-	{
-		// result[0] == binary config
-		resources::unmanaged_resource_ptr	resource =	result[0].get_unmanaged_resource( );
-
-		parent->set_unmanaged_resource	( resource, resource->memory_usage( ) );
-		parent->finish_query			( result_success);
-	}else
-	{
-		pcstr path = parent->get_requested_path();
-		resources::query_resource(
-						path, 
-						resources::texture_options_lua_class, 
-						boost::bind(&texture_options_binary_cooker::on_lua_options_loaded, this, _1), 
-						resources::unmanaged_allocator(), 
-						NULL,
-						parent); 
-		
-	}
-}
-
-void texture_options_binary_cooker::on_lua_options_loaded( resources::queries_result& result )
-{
-	resources::query_result_for_cook* parent	= result.get_parent_query();
-
-	R_ASSERT						( result[0].is_successful() );
-	parent->finish_query			( result_requery );
-}
 
 } //namespace render
 } //namespace vostok
