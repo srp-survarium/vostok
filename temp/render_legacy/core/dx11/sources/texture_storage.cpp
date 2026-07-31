@@ -13,6 +13,11 @@
 namespace vostok {
 namespace render {
 
+// HARVEST REMAINDER (phase 3): ctor and dtor ported into canonical
+// dx11/sources/texture_storage.cpp. Remaining: get/release - BLOCKED on the
+// get_hash helper below (needs utils::log_2, absent from the canonical
+// carcass) - plus storage_pool_tmp_info and the #if 0 initialize block.
+
 struct storage_pool_tmp_info
 {
 	u32 width;
@@ -26,21 +31,6 @@ struct storage_pool_tmp_info
 u32 get_hash( u32 width, u32 height, DXGI_FORMAT format)
 {
 	return (utils::log_2( width) | (utils::log_2( height)<<5) | ( (u32)format<<10));
-}
-
-texture_storage::texture_storage():
-m_initialized	(false)
-{
-	
-}
-
-texture_storage::~texture_storage() 
-{
-	pools::iterator			it	= m_pools.begin();
-	pools::const_iterator	end	= m_pools.end();
-
-	for( ; it != end; ++it)
-		DELETE( it->second);
 }
 
 #if 0

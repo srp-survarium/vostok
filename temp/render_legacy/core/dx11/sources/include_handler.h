@@ -7,6 +7,11 @@
 #ifndef INCLUDE_HANDLER_H_INCLUDED
 #define INCLUDE_HANDLER_H_INCLUDED
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT - the ID3DInclude callback
+// has NO canonical counterpart anywhere in sources/vostok/render/core; it is
+// needed by the parked shader_binary_source_cook::create_resource port.
+// (The byte-identical core/sources/include_handler.h twin was retired.)
+
 #include <vostok/render/core/utils.h>
 #include <vostok/render/core/shader_include_getter.h>
 

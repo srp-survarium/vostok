@@ -7,6 +7,10 @@
 #ifndef VOSTOK_RENDER_SHADER_BINARY_SOURCE_COOK_H_INCLUDED
 #define VOSTOK_RENDER_SHADER_BINARY_SOURCE_COOK_H_INCLUDED
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT - declaration surface for
+// the parked shader_binary_source_cook.cpp port (records the legacy private
+// helper set the canonical class dropped).
+
 #include <vostok/resources_cook_classes.h>
 
 namespace vostok {

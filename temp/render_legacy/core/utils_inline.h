@@ -4,6 +4,10 @@
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
 
+// HARVEST REMAINDER (legacy-drain 2026-07-31): KEPT only for the utils::log_2
+// body (float-bit trick) that the parked texture_storage port needs; wform and
+// the 4-arg calc_surface_size are already canonical.
+
 namespace vostok {
 namespace render {
 namespace utils {

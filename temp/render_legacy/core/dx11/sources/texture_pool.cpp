@@ -12,6 +12,12 @@
 namespace vostok {
 namespace render {
 
+// HARVEST REMAINDER (phase 3): get/release ported into canonical
+// dx11/sources/texture_pool.h. Remaining: ctor and dtor - BLOCKED on canonical
+// resource_manager access (create_texture2d_impl / release_impl are private
+// there with no texture_pool friendship); see claude@NOTEs in the canonical
+// texture_pool.h/.cpp stubs.
+
 texture_pool::texture_pool	( u32 width, u32 height, DXGI_FORMAT format, u32 mips, u32 count, D3D_USAGE usage):
 m_width				(width),
 m_height			(height),
@@ -33,37 +39,6 @@ texture_pool::~texture_pool	()
 {
 	for( u32 i = 0; i < m_textures.size(); ++i)	
 		resource_manager::ref().release_impl( m_textures[i].texture);
-}
-
-res_texture* texture_pool::get	()
-{
-	if( m_unoccupied_count <= 0)
-		return NULL;
-
-	--m_unoccupied_count;
-
-	slot slot = m_textures[m_unoccupied_count];
-
-	slot.occupied = true;
-
-	return slot.texture;
-}
-
-void texture_pool::release	( res_texture const* texture)
-{
-	const u32 count = m_textures.size();
-	
-	for( u32 i = 0; i < count; ++i)
-	{
-		if( m_textures[i].texture != texture)
-			continue;
-
-		m_textures[i].occupied = false;
-		std::swap( *(m_textures.begin() + i), *(m_textures.begin() + m_unoccupied_count));
-		return;
-	}
-
-	ASSERT( false, "The texture could not be found in the pool!");
 }
 
 } // namespace render
