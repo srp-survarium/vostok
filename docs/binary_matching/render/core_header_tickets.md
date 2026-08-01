@@ -91,38 +91,44 @@ semantics move). Note it cuts AGAINST the usual repo rule that MASTER_GOLD
 asserts must be preserved as `call empty_stub` sites: here the target proves
 these two specific functions have none.
 
-## T4 - 247 render paired functions are UNMEASURED (fuzzy_pct IS NULL)
+## T4 - unmeasured paired rows are an INLINE-HEADER SPLIT problem, not a tooling gap
 
-Not a source defect - a scoring blind spot found while checking B3's
-"stripped functions" claim. B3 reported ~8 `resource_manager` create_* fns as
-unpaired/stripped; they are in fact **paired by address** (both `base_rva` and
-`target_rva` present) but carry **NULL `fuzzy_pct`** - objdiff never produced a
-measurement for them.
+**CORRECTED 2026-08-01 by batch B5. The original diagnosis below was wrong and
+the "don't chase these" instruction it produced was actively costing us wins.**
 
-Scale (per `match.db`, at batch B3):
+**Actual cause.** objdiff units come from the delinked TARGET objects (one per
+source file) and pairing is keyed on `unit + mangled symbol`. The original tree
+split non-trivial inline bodies out of `<x>.h` into a sibling `<x>_inline.h`.
+Our reconstructions kept those bodies in the main header, so a byte-identical
+body lives in a DIFFERENT UNIT than the target's and can never pair. Those
+target units appear in `binaries/objdiff/objdiff.json` with
+`base_path: ./dummy.obj` - 319 such units at time of writing.
 
-| module | paired | unmeasured | share |
-|---|---|---|---|
-| render | 1,295 | 247 | 19.1% |
-| scaleform | 433 | 73 | 16.9% |
-| vostok | 1,007 | 155 | 15.4% |
-| stlport | 1,209 | 161 | 13.3% |
-| boost | 2,453 | 278 | 11.3% |
-| core | 1,213 | 18 | 1.5% |
+**It is fixable by matchers, cheaply, with zero code change.** B5 relocated
+eight header groups and paired ~80 functions: `backend_inline.h`
+`reset_render_targets` 100%, `shader_constant_slot_inline.h` ctor 100%,
+`custom_config_value_inline.h` float3/float4 100%, `state_cache_inline.h` 8/8
+avg 95%, `effect_manager_inline.h` 44 rows avg 86%, plus `res_pass::apply`
+34.9 -> 77.9%. Render fuzzy moved 30.7% -> 32.0% on that batch alone; the
+unmeasured render count fell 247 -> 208.
 
-So it is **systemic, not render-specific** - but render is on the high end
-because it is header-inline heavy. The unmeasured rows cluster exactly there:
-`effect_manager_inline.h` 40/40, `res_effect.h` 10/10, `state_cache_inline.h`
-8/8, `backend_inline.h` 8/8, `res_xs_hw_impl.h` 5/5, plus 69 with no unit
-attribution at all. Header-defined functions land in COMDATs whose unit maps to
-a header path, and there is no object pair to diff.
+**Detection recipe (no build required):** `grep dummy.obj
+binaries/objdiff/objdiff.json` lists target units with no base counterpart;
+any `*_inline.h` there is a header group we have not split. Cross-check with
+`sqlite3 docs/binary_matching/match.db "SELECT unit, COUNT(*) FROM paired
+WHERE fuzzy_pct IS NULL GROUP BY unit ORDER BY 2 DESC"`.
 
-**Implication for the "render to 100% max" goal:** these 247 functions cannot
-reach 100% by matching - they are not scored at all, yet they sit in the
-2,647-function denominator the README reports. That is a ~9% hard ceiling on
-render's headline exact %, independent of match quality. Closing it is a
-delinker/objdiff attribution fix (map header COMDATs to a diffable object
-pair), i.e. tooling work, not matcher work. Do NOT let matchers chase these.
+Pattern file: `patterns/inline-header-split-pairing.md`.
+
+**Residual after the splits are done:** some rows will remain unmeasured for the
+original reason (a header COMDAT with genuinely no diffable object pair). Only
+THAT remainder is a tooling matter. Re-measure before assuming any given row is
+in it.
+
+*(Original, superseded diagnosis: "header-defined functions land in COMDATs
+whose unit maps to a header path and there is no object pair to diff -
+a delinker/objdiff attribution fix, i.e. tooling work, not matcher work. Do NOT
+let matchers chase these." That reasoning mistook a symptom for the cause.)*
 
 ## Handling
 
