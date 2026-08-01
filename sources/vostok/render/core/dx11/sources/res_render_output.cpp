@@ -4,6 +4,7 @@
 #include "com_utils.h"
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/device.h>
+#include <vostok/render/core/options.h>
 
 static pcstr const depth_render_target_texture_name	= "$user$depth";
 
@@ -176,8 +177,19 @@ res_render_output::~res_render_output	( )
 void res_render_output::present	( )
 {
 	// FUNCTION BODY[0x55adc0]
+	m_present_sync_mode = options::ref().current.m_vsync ? D3DPRESENT_INTERVAL_ONE : D3DPRESENT_INTERVAL_DEFAULT;
+
 	HRESULT res = m_swap_chain->Present( m_present_sync_mode, 0 );
-	CHECK_RESULT( res);
+
+
+	if ( res == DXGI_ERROR_DEVICE_REMOVED || res == DXGI_ERROR_DEVICE_RESET || res == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
+	{
+		device::ref().on_device_removed();	// claude@NOTE: still a STATE[STUB] in device.cpp, so this call inlines to nothing and this arm's two statements read TRGT_ONLY here; the target body is >0x43c bytes of logging::append over a swap-chain teardown.
+	}
+	else
+	{
+		CHECK_RESULT( res);
+	}
 }
 
 void res_render_output::destroy_impl() const

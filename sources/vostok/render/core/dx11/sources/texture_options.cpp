@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/fs/virtual_path_string.h>
 #include <vostok/render/core/texture_options.h>
 #include <vostok/render/core/texture_options_cooker.h>
 
@@ -63,9 +64,11 @@ void texture_options_binary_cooker::on_binary_config_loaded(
 		parent->finish_query			( result_success);
 	}else
 	{
-		pcstr path = parent->get_requested_path();
+		fs_new::virtual_path_string path;
+		path.assign_replace		( parent->get_requested_path(), "resources/", "resources.sources/" );
+
 		resources::query_resource(
-						path,
+						path.c_str(),
 						resources::texture_options_lua_class,
 						boost::bind(&texture_options_binary_cooker::on_lua_options_loaded, this, _1),
 						resources::unmanaged_allocator(),

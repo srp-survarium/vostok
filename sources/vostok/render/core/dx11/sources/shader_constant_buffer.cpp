@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vostok/render/core/shader_constant_buffer.h>
+#include <vostok/render/core/backend.h>
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/resource_manager.h>
 #include "com_utils.h"
@@ -12,18 +13,9 @@ void shader_constant_buffer::update()
 	// FUNCTION BODY[0x738f40]
 	if ( m_changed)
 	{
-		void	*data;
-		D3D11_MAPPED_SUBRESOURCE	pSubRes;
-		HRESULT res = device::ref().d3d_context()->Map( m_hardware_buffer, 0, D3D_MAP_WRITE_DISCARD, 0, &pSubRes);
-		CHECK_RESULT( res);
-		data = pSubRes.pData;
+		if ( !backend::ref().disabled_shader_constansts_set)
+			device::ref().d3d_context()->UpdateSubresource( m_hardware_buffer, 0, NULL, m_buffer_data, 0, 0);
 
-		ASSERT( data);
-		ASSERT( m_buffer_data);
-		CopyMemory( data, m_buffer_data, m_buffer_size);
-
-
-		device::ref().d3d_context()->Unmap(  m_hardware_buffer, 0);
 		m_changed = false;
 	}
 }
