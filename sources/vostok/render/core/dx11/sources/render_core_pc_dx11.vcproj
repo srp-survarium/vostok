@@ -996,6 +996,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\xs_descriptor.cpp"
+			>
+		</File>
+		<File
 			RelativePath=".\res_effect.cpp"
 			>
 		</File>
@@ -1104,6 +1108,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\shader_constant_buffer_inline.h"
+			>
+		</File>
+		<File
 			RelativePath="..\sampler_slot.h"
 			>
 		</File>
@@ -1117,18 +1125,6 @@
 		</File>
 		<File
 			RelativePath="..\shader_configuration.h"
-			>
-		</File>
-		<File
-			RelativePath="..\binary_shader_source.h"
-			>
-		</File>
-		<File
-			RelativePath="..\binary_shader_cook_data.h"
-			>
-		</File>
-		<File
-			RelativePath="..\binary_shader_key_type.h"
 			>
 		</File>
 		<File
@@ -1257,14 +1253,6 @@
 		</File>
 		<File
 			RelativePath="..\..\options.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\binary_shader_source.h"
-			>
-		</File>
-		<File
-			RelativePath="..\..\binary_shader_key_type.h"
 			>
 		</File>
 		<File
@@ -1425,6 +1413,10 @@
 		</File>
 		<File
 			RelativePath="..\res_xs_hw.h"
+			>
+		</File>
+		<File
+			RelativePath="..\res_xs_hw_impl.h"
 			>
 		</File>
 		<File

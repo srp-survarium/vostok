@@ -13,7 +13,6 @@
 #include <vostok/render/core/shader_constant_bindings.h>
 #include <vostok/render/core/shader_include_getter.h>
 #include <vostok/render/core/texture_named_instance.h>
-#include <vostok/render/core/dx11/binary_shader_key_type.h>
 #include <vostok/render/core/dx11/effect_constant_storage.h>
 #include <vostok/render/core/dx11/res_texture.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>

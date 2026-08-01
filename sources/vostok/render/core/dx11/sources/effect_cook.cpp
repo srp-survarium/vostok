@@ -6,9 +6,7 @@
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/custom_config.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
-#include <vostok/render/core/dx11/binary_shader_source.h>
 #include <vostok/render/core/dx11/shader_binary_source_cook.h>
-#include <vostok/render/core/dx11/binary_shader_cook_data.h>
 
 namespace vostok {
 namespace render {

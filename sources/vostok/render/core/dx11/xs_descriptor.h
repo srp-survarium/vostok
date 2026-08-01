@@ -20,53 +20,12 @@ class xs_descriptor {
 public:
 	xs_descriptor( ) { }
 
-	void reset( res_xs_hw<shader_data>* hardware_shader )
-	{
-		// Observed vs_data instantiation [0x130ec0].
-		m_hardware_shader = hardware_shader;
-		if ( m_hardware_shader )
-			m_shader_data = hardware_shader->data( );
-	}
+	void reset( res_xs_hw<shader_data>* hardware_shader );
 
-	bool set_sampler( pcstr name, ID3D11SamplerState* state )
-	{
-		for ( u32 i = 0; i < m_shader_data.samplers.size( ); ++i ) {
-			if ( m_shader_data.samplers[i].name != name )
-				continue;
-			m_shader_data.samplers[i].state = state;
-			return true;
-		}
-		return false;
-	}
-
-	bool set_texture( pcstr name, res_texture* texture )
-	{
-		// Observed vs_data instantiation [0x130f60].
-		for ( u32 i = 0; i < m_shader_data.textures.size( ); ++i ) {
-			if ( m_shader_data.textures[i].name != name )
-				continue;
-			m_shader_data.textures[i].texture = texture;
-			return true;
-		}
-		return false;
-	}
-
-	bool use_texture( pcstr name ) const
-	{
-		// Observed vs_data instantiation [0x131030].
-		for ( u32 i = 0; i < m_shader_data.textures.size( ); ++i )
-			if ( m_shader_data.textures[i].name == name )
-				return true;
-		return false;
-	}
-
-	bool use_sampler( pcstr name ) const
-	{
-		for ( u32 i = 0; i < m_shader_data.samplers.size( ); ++i )
-			if ( m_shader_data.samplers[i].name == name )
-				return true;
-		return false;
-	}
+	bool set_sampler( pcstr name, ID3D11SamplerState* state );
+	bool set_texture( pcstr name, res_texture* texture );
+	bool use_texture( pcstr name );
+	bool use_sampler( pcstr name );
 
 	shader_data& data( ) { return m_shader_data; }
 	shader_data const& data( ) const { return m_shader_data; }

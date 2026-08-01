@@ -2,8 +2,7 @@
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
 #include <vostok/render/core/shader_defines.h>
-#include <vostok/render/core/dx11/binary_shader_cook_data.h>
-#include <vostok/render/core/dx11/binary_shader_source.h>
+#include <vostok/render/core/res_effect.h>
 
 namespace vostok {
 namespace render {

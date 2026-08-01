@@ -27,9 +27,11 @@ class res_texture :
 	// claude@NOTE: resource_manager::create_texture3d stores the computed surface size
 	// straight into m_mem_usage (mov [tex+34h], eax) and res_texture's PDB member list
 	// records no setter for it, so the manager reaches the private member as a friend.
+	friend class resource_intrusive_base;
 	friend class resource_manager;
+	friend class render_target;
+	friend class res_render_output;
 
-public:
 	explicit res_texture( bool pool_texture = false );
 	virtual ~res_texture( );
 
@@ -43,6 +45,7 @@ public:
 		bool depth_stencil = false
 	);
 
+public:
 	void save_as( pcstr file_name );
 	ID3D11Resource* hw_texture( );
 	ID3D11ShaderResourceView* view( ) { return m_sh_res_view; }
@@ -69,9 +72,8 @@ public:
 	void unmap3D( u32 mip_level );
 
 	pcstr name( ) const { return m_name.c_str( ); }
-	void set_name( pcstr name )
+	void set_name( pcstr const name )
 	{
-		// FUNCTION BODY[0x124670]
 		m_name = name;
 	}
 	void clone( res_texture* other );

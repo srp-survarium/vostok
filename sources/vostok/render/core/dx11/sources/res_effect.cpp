@@ -9,9 +9,10 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: declared in res_pass.h with no legacy out-of-line ancestor
-// (legacy res_pass ctor was header-inline); init-list ctor for the
-// effect_compiler end_pass construction path.
+// claude@NOTE: the target attributes this ctor to dx11/res_effect.h, but that
+// header cannot see res_xs (res_effect.h -> res_xs.h -> res_xs_hw.h ->
+// resource_manager.h -> res_effect.h cycle), so the intrusive_ptr members
+// cannot be copied there; kept here until the cycle is untangled.
 res_pass::res_pass(
 	res_vs_ptr const& vs,
 	res_gs_ptr const& gs,
