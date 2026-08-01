@@ -70,11 +70,17 @@ light::~light( )
 
 // frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x5ff670])
 
-void light::tick_color_animation( float )
+void light::tick_color_animation( float const time_delta )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x6000c0]
-	// claude@NOTE: no legacy ancestor - light color animation (m_color_curve) postdates the legacy corpus
+	if ( !m_is_light_animated )
+		return;
+
+	m_current_animation_time	+= time_delta / math::max( m_light_animation_length, math::epsilon_3 );
+
+	if ( m_current_animation_time > 1.f )
+		m_current_animation_time	= math::abs( m_current_animation_time ) - math::abs( static_cast< int >( m_current_animation_time ) );
+
+	color						= m_color_curve.evaluate( m_current_animation_time, float4( 0.f, 0.f, 0.f, 0.f ) ).xyz( );
 }
 
 void light::remove_collision( )

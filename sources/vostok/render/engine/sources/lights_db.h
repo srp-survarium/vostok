@@ -40,6 +40,11 @@ struct light_data {
 
 STATIC_SIZE_ASSERT( light_data, 0x8 );
 
+inline bool operator<( light_data const& left, u32 const right )
+{
+	return left.id < right;
+}
+
 class lights_db {
 public:
 	typedef vector<light_data> lights_type;
