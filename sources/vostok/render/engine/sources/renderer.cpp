@@ -521,141 +521,36 @@ renderer::~renderer( )
 	DELETE					( m_stage_debug );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.
-// STATE[STUB]
 void renderer::recreate_stage( enum_render_stage_type arg_0 )
 {
-	// STATICS
-	// static < NoType > 				 = <0x64beb0>;
-	// ******
-
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a5ff }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN24") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a654 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN23") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a6ad }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN22") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a704 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN21") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a75e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN20") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a7c3 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN19") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a81d }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN18") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a879 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN17") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a8d5 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN16") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a93c }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN15") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a99a }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN14") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63a9f6 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN13") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63aa50 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN12") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63aaaa }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN11") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ab14 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN10") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ab70 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN9") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63abcf }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN8") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ac2b }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN7") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ac85 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN6") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ace4 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN5") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ad41 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN4") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ad9b }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN3") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63adf9 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN2") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63ae53 }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: false, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1") })
-	// ******
-
-	// FUNCTION BODY[0x64b5f0]: 27
-	// <0x64b5f8>|0x008|+0x007:'285'
-	// <0>
-	// <0x64b5ff>|0x00f|+0x044:'287'
-	// <0x64b643>|0x053|+0x011:'287'
-	// <0x64b654>|0x064|+0x047:'288'
-	// <0x64b69b>|0x0ab|+0x012:'288'
-	// <0x64b6ad>|0x0bd|+0x045:'289'
-	// <0x64b6f2>|0x102|+0x012:'289'
-	// <0x64b704>|0x114|+0x048:'290'
-	// <0x64b74c>|0x15c|+0x012:'290'
-	// <0x64b75e>|0x16e|+0x053:'291'
-	// <0x64b7b1>|0x1c1|+0x012:'291'
-	// <0x64b7c3>|0x1d3|+0x048:'292'
-	// <0x64b80b>|0x21b|+0x012:'292'
-	// <0x64b81d>|0x22d|+0x04a:'293'
-	// <0x64b867>|0x277|+0x012:'293'
-	// <0x64b879>|0x289|+0x04a:'294'
-	// <0x64b8c3>|0x2d3|+0x012:'294'
-	// <0x64b8d5>|0x2e5|+0x055:'295'
-	// <0x64b92a>|0x33a|+0x012:'295'
-	// <0x64b93c>|0x34c|+0x04c:'296'
-	// <0x64b988>|0x398|+0x012:'296'
-	// <0x64b99a>|0x3aa|+0x04a:'297'
-	// <0x64b9e4>|0x3f4|+0x012:'297'
-	// <0x64b9f6>|0x406|+0x048:'298'
-	// <0x64ba3e>|0x44e|+0x012:'298'
-	// <0x64ba50>|0x460|+0x048:'299'
-	// <0x64ba98>|0x4a8|+0x012:'299'
-	// <0x64baaa>|0x4ba|+0x058:'300'
-	// <0x64bb02>|0x512|+0x012:'300'
-	// <0x64bb14>|0x524|+0x04a:'301'
-	// <0x64bb5e>|0x56e|+0x012:'301'
-	// <0x64bb70>|0x580|+0x04d:'302'
-	// <0x64bbbd>|0x5cd|+0x012:'302'
-	// <0x64bbcf>|0x5df|+0x04a:'303'
-	// <0x64bc19>|0x629|+0x012:'303'
-	// <0x64bc2b>|0x63b|+0x048:'304'
-	// <0x64bc73>|0x683|+0x012:'304'
-	// <0x64bc85>|0x695|+0x04d:'305'
-	// <0x64bcd2>|0x6e2|+0x012:'305'
-	// <0x64bce4>|0x6f4|+0x04b:'306'
-	// <0x64bd2f>|0x73f|+0x012:'306'
-	// <0x64bd41>|0x751|+0x048:'307'
-	// <0x64bd89>|0x799|+0x012:'307'
-	// <0x64bd9b>|0x7ab|+0x04c:'308'
-	// <0x64bde7>|0x7f7|+0x012:'308'
-	// <0x64bdf9>|0x809|+0x048:'309'
-	// <0x64be41>|0x851|+0x012:'309'
-	// <0x64be53>|0x863|+0x04a:'310'
-	// <0x64be9d>|0x8ad|-0x861:'310'
-	// <0>
-	// <0x64b63c>|0x04c|+0x011:'312'
-	// <0x64b64d>|0x05d|+0x047:'312'
-	// <0x64b694>|0x0a4|+0x012:'312'
-	// <0x64b6a6>|0x0b6|+0x045:'312'
-	// <0x64b6eb>|0x0fb|+0x012:'312'
-	// <0x64b6fd>|0x10d|+0x048:'312'
-	// <0x64b745>|0x155|+0x012:'312'
-	// <0x64b757>|0x167|+0x053:'312'
-	// <0x64b7aa>|0x1ba|+0x012:'312'
-	// <0x64b7bc>|0x1cc|+0x048:'312'
-	// <0x64b804>|0x214|+0x012:'312'
-	// <0x64b816>|0x226|+0x04a:'312'
-	// <0x64b860>|0x270|+0x012:'312'
-	// <0x64b872>|0x282|+0x04a:'312'
-	// <0x64b8bc>|0x2cc|+0x012:'312'
-	// <0x64b8ce>|0x2de|+0x055:'312'
-	// <0x64b923>|0x333|+0x012:'312'
-	// <0x64b935>|0x345|+0x04c:'312'
-	// <0x64b981>|0x391|+0x012:'312'
-	// <0x64b993>|0x3a3|+0x04a:'312'
-	// <0x64b9dd>|0x3ed|+0x012:'312'
-	// <0x64b9ef>|0x3ff|+0x048:'312'
-	// <0x64ba37>|0x447|+0x012:'312'
-	// <0x64ba49>|0x459|+0x048:'312'
-	// <0x64ba91>|0x4a1|+0x012:'312'
-	// <0x64baa3>|0x4b3|+0x058:'312'
-	// <0x64bafb>|0x50b|+0x012:'312'
-	// <0x64bb0d>|0x51d|+0x04a:'312'
-	// <0x64bb57>|0x567|+0x012:'312'
-	// <0x64bb69>|0x579|+0x04d:'312'
-	// <0x64bbb6>|0x5c6|+0x012:'312'
-	// <0x64bbc8>|0x5d8|+0x04a:'312'
-	// <0x64bc12>|0x622|+0x012:'312'
-	// <0x64bc24>|0x634|+0x048:'312'
-	// <0x64bc6c>|0x67c|+0x012:'312'
-	// <0x64bc7e>|0x68e|+0x04d:'312'
-	// <0x64bccb>|0x6db|+0x012:'312'
-	// <0x64bcdd>|0x6ed|+0x04b:'312'
-	// <0x64bd28>|0x738|+0x012:'312'
-	// <0x64bd3a>|0x74a|+0x048:'312'
-	// <0x64bd82>|0x792|+0x012:'312'
-	// <0x64bd94>|0x7a4|+0x04c:'312'
-	// <0x64bde0>|0x7f0|+0x012:'312'
-	// <0x64bdf2>|0x802|+0x048:'312'
-	// <0x64be3a>|0x84a|+0x012:'312'
-	// <0x64be4c>|0x85c|+0x04a:'312'
-	// <0x64be96>|0x8a6|+0x012:'312'
-	// ******
+	switch ( arg_0 )
+	{
+	case gbuffer_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_gbuffer )( this, m_renderer_context ); break;
+	case decals_accumulate_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_decals_accumulate )( this, m_renderer_context ); break;
+	case accumulate_distortion_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_accumulate_distortion )( this, m_renderer_context ); break;
+	case pre_rain_normal_modify_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_pre_rain )( this, m_renderer_context ); break;
+	case pre_lighting_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_pre_lighting )( this, m_renderer_context ); break;
+	case ambient_occlusion_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_ambient_occlusion )( this, m_renderer_context ); break;
+	case ambient_lighting_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_ambient_lighting )( this, m_renderer_context ); break;
+	case sun_shadows_accumulate_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_shadow_direct )( this, m_renderer_context ); break;
+	case sun_render_stage:						DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_sun )( this, m_renderer_context, m_cloud_interp_textures, m_simulation ); break;
+	case deferred_lighting_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_lights )( this, m_renderer_context, false ); break;
+	case light_propagation_volumes_render_stage: DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_light_propagation_volumes )( this, m_renderer_context ); break;
+	case translucency_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_translucency )( this, m_renderer_context ); break;
+	case resolve_lighting_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_resolve_lighting )( this, m_renderer_context ); break;
+	case clouds_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_clouds )( this, m_cloud_interp_textures, m_simulation, m_renderer_context ); break;
+	case atmosphere_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_sky ); break;
+	case forward_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_base ); break;
+	case atmosphere_on_geometry_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_geometry ); break;
+	case apply_distortion_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_apply_distortion )( this, m_renderer_context ); break;
+	case forward_sky_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_sky ); break;
+	case rain_render_stage:						DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_rain )( this, m_renderer_context ); break;
+	case particles_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_particles )( this, m_renderer_context ); break;
+	case lighting_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_lights )( this, m_renderer_context, true ); break;
+	case volume_fog_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_volume_fog )( this, m_renderer_context ); break;
+	case post_process_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_postprocess )( this, m_renderer_context ); break;
+	default:									break;
+	}
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.

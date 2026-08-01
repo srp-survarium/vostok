@@ -26,6 +26,7 @@
 #include "stage_particles.h"
 #include "decal_instance.h"
 #include "renderer.h"
+#include "register_samplers.h"
 #include "scene.h"
 #include "scene_view.h"
 #include "render_output_window.h"
@@ -1162,15 +1163,13 @@ void engine::world::clear_resources( )
 	m_renderer->m_renderer_context->clear_resources	( );
 }
 
-// STATE[STUB]
 void engine::world::begin_render_options_changing( long volatile* waiting_for )
 {
-	// FUNCTION BODY[0x654270]: 1
-	// <0x654270>|0x000|+0x025:'914'
-	// ******
+	options::ref().previous = options::ref().current;
+	if ( waiting_for )
+		threading::interlocked_exchange( *waiting_for, 0 );
 }
 
-// STATE[STUB]
 void engine::world::end_render_options_changing(
 	base_scene_ptr const&		scene,
 	base_output_window_ptr		output_window,
@@ -1179,93 +1178,66 @@ void engine::world::end_render_options_changing(
 	long volatile*				waiting_for
 )
 {
-	// LOCALS
-	// vector< fs_new::virtual_path_string > changed_defines
-	// ******
+	vector<fs_new::virtual_path_string> changed_defines;
+	enum_options_changes_result const changes = options::ref().end_render_options_changing( changed_defines );
 
-	// FUNCTION BODY[0x656eb0]: 81
-	// <0>
-	// <1>
-	// <2>
-	// <0x656ebc>|0x00c|+0x011:'922'
-	// <0>
-	// <0x656ecd>|0x01d|+0x011:'924'
-	// <0>
-	// <0x656ede>|0x02e|+0x00c:'926'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x656eea>|0x03a|+0x00b:'932'
-	// <0x656ef5>|0x045|+0x011:'933'
-	// <0>
-	// <0x656f06>|0x056|+0x0a9:'935'
-	// <0>
-	// <0x656faf>|0x0ff|-0x092:'937'
-	// <0>
-	// <1>
-	// <2>
-	// <0x656f1d>|0x06d|+0x00c:'941'
-	// <0>
-	// <0x656f29>|0x079|+0x00b:'943'
-	// <0x656f34>|0x084|+0x00b:'944'
-	// <0x656f3f>|0x08f|+0x00b:'945'
-	// <0x656f4a>|0x09a|+0x00b:'946'
-	// <0x656f55>|0x0a5|+0x00b:'947'
-	// <0x656f60>|0x0b0|+0x00b:'948'
-	// <0x656f6b>|0x0bb|+0x00b:'949'
-	// <0x656f76>|0x0c6|+0x00b:'950'
-	// <0x656f81>|0x0d1|+0x00b:'951'
-	// <0x656f8c>|0x0dc|+0x00b:'952'
-	// <0x656f97>|0x0e7|+0x00b:'953'
-	// <0x656fa2>|0x0f2|+0x016:'954'
-	// <0>
-	// <1>
-	// <0x656fb8>|0x108|+0x009:'957'
-	// <0>
-	// <0x656fc1>|0x111|+0x005:'959'
-	// <0>
-	// <1>
-	// <0x656fc6>|0x116|+0x005:'962'
-	// <0>
-	// <0x656fcb>|0x11b|+0x00b:'964'
-	// <0>
-	// <1>
-	// <0x656fd6>|0x126|+0x004:'967'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x656fda>|0x12a|+0x027:'976'
-	// <0>
-	// <0x657001>|0x151|+0x015:'978'
-	// <0>
-	// <1>
-	// <0x657016>|0x166|+0x00b:'981'
-	// <0x657021>|0x171|+0x004:'982'
-	// <0>
-	// <0x657025>|0x175|+0x005:'984'
-	// <0>
-	// <0x65702a>|0x17a|+0x009:'986'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x657033>|0x183|+0x098:'997'
-	// <0>
-	// <1>
-	// ******
+	if ( reload_all_materials )
+	{
+		if ( changes != ocr_need_nothing )
+		{
+			resources::query_vfs_iterator(
+				fs_new::virtual_path_string( "resources.sources/material_instances" ),
+				boost::bind( &on_fs_iterator_materials_ready, "resources/material_instances", _1, waiting_for ),
+				g_allocator,
+				resources::recursive_true
+			);
+			return;
+		}
+	}
+	else
+	{
+		if ( shaders_recompile && changes != ocr_need_nothing )
+			effect_manager::ref().recompile_shaders_async( changed_defines );
+
+		if ( changes & (ocr_need_reset_renderer | ocr_need_reload_shaders) )
+			reset_renderer( true );
+		else if ( changes & (ocr_need_reset_postprocess | ocr_need_reset_lighting | ocr_need_reset_rain) )
+		{
+			m_renderer->recreate_stage( post_process_render_stage );
+			m_renderer->recreate_stage( lighting_render_stage );
+			m_renderer->recreate_stage( light_propagation_volumes_render_stage );
+			m_renderer->recreate_stage( deferred_lighting_render_stage );
+			m_renderer->recreate_stage( sun_shadows_accumulate_render_stage );
+			m_renderer->recreate_stage( sun_render_stage );
+			m_renderer->recreate_stage( translucency_render_stage );
+			m_renderer->recreate_stage( resolve_lighting_render_stage );
+			m_renderer->recreate_stage( ambient_lighting_render_stage );
+			m_renderer->recreate_stage( ambient_occlusion_render_stage );
+			m_renderer->recreate_stage( pre_rain_normal_modify_render_stage );
+			m_renderer->recreate_stage( rain_render_stage );
+		}
+
+		if ( (changes & ocr_need_recreate_samplers) && !(changes & ocr_need_reset_renderer) )
+			register_samplers( );
+
+		if ( changes & ocr_need_reload_textures )
+			resource_manager::ref().reload_all_textures( );
+
+		if ( changes & ocr_need_resize_window )
+		{
+			render_output_window* const window = static_cast_checked<render_output_window*>( output_window.c_ptr( ) );
+			window->set_size(
+				options::ref().current.m_resolution_x,
+				options::ref().current.m_resolution_y,
+				options::ref().current.m_fullscreen,
+				true
+			);
+			m_renderer->m_renderer_context->set_target_context( &window->target_context( ), true );
+		}
+	}
+
+	if ( waiting_for )
+		threading::interlocked_exchange( *waiting_for, 0 );
 }
 
 void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )

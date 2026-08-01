@@ -13,22 +13,22 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,799 / 12,915 functions exact (29.42%) &middot; 5,558 / 12,915 functions exact-max (43.04%) &middot; 60.64% fuzzy &middot; 60.85% fuzzy-max.**
+**Overall: 3,802 / 12,915 functions exact (29.44%) &middot; 5,561 / 12,915 functions exact-max (43.06%) &middot; 60.72% fuzzy &middot; 60.93% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 272 / 2,647 (10.3%) | 272 / 2,647 (10.3%) | 35.6% |     35.6% |
-| `game`          |   141 | 248 / 1,498 (16.6%) | 393 / 1,498 (26.2%) | 45.0% |     45.5% |
+| `render`        |   351 | 275 / 2,647 (10.4%) | 275 / 2,647 (10.4%) | 35.9% |     35.9% |
+| `game`          |   141 | 247 / 1,498 (16.5%) | 392 / 1,498 (26.2%) | 45.0% |     45.4% |
 | `core`          |   136 | 425 / 1,320 (32.2%) | 802 / 1,320 (60.8%) | 82.5% |     82.9% |
-| `vostok`        |   112 | 467 / 1,252 (37.3%) | 594 / 1,252 (47.4%) | 69.9% |     70.0% |
-| `game_core`     |   189 | 333 / 1,171 (28.4%) | 511 / 1,171 (43.6%) | 81.7% |     81.8% |
+| `vostok`        |   112 | 469 / 1,252 (37.5%) | 596 / 1,252 (47.6%) | 69.9% |     70.0% |
+| `game_core`     |   189 | 332 / 1,171 (28.4%) | 510 / 1,171 (43.6%) | 81.7% |     81.8% |
 | `animation`     |   102 |   316 / 763 (41.4%) |   369 / 763 (48.4%) | 50.1% |     50.2% |
 | `ai`            |   124 |   294 / 690 (42.6%) |   421 / 690 (61.0%) | 87.7% |     87.8% |
 | `sound`         |    69 |   216 / 509 (42.4%) |   357 / 509 (70.1%) | 72.6% |     72.8% |
 | `collision`     |    52 |   331 / 503 (65.8%) |   427 / 503 (84.9%) | 96.2% |     96.4% |
-| `scaleform`     |    47 |   170 / 453 (37.5%) |   211 / 453 (46.6%) | 57.8% |     57.8% |
+| `scaleform`     |    47 |   170 / 453 (37.5%) |   211 / 453 (46.6%) | 57.9% |     57.9% |
 | `particle`      |    25 |   142 / 400 (35.5%) |   249 / 400 (62.2%) | 79.7% |     79.9% |
 | `vfs`           |    71 |   158 / 390 (40.5%) |   164 / 390 (42.1%) | 87.2% |     87.2% |
 | `ui`            |    27 |   133 / 227 (58.6%) |   193 / 227 (85.0%) | 80.2% |     80.4% |
