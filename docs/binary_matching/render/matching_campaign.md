@@ -120,10 +120,26 @@ failures. Each fix was too narrow and caused the next one:
 3. **Deleting `vc90.pdb` alone -> C2859 "not the file the compiler used to create
    this precompiled header" x209.** `.pch` and `.pdb` are a MATCHED PAIR.
 
+4. **The real root cause, found last instead of first: ninja defaults to `-j26`
+   on this box.** Up to 26 `cl.exe` instances contend on ONE per-project
+   `vc90.pdb` through mspdbsrv under Wine. That survives a small incremental
+   build (the first seven batches were fine) but NOT a from-scratch rebuild -
+   and it concentrates in the largest module (`scaleform`). Retrying at the same
+   parallelism does not converge: the error count went 522 -> 112 -> 105 and
+   stalled. **`python3 scripts/rebuild.py -j6` built green, 0 errors.**
+   `rebuild.py` forwards unknown flags straight to ninja.
+
 **The correct recovery, if PDB state is ever suspect:** stop all builds, then
 `find binaries/Win32/intermediates \( -name '*.pch' -o -name '*.pdb' -o -name
-'*.idb' \) -delete` and do ONE full rebuild. Clearing a subset is worse than
-clearing nothing.
+'*.idb' \) -delete` and do ONE full rebuild **with `-j6`**. Clearing a subset is
+worse than clearing nothing.
+
+**Meta-lesson: diagnose before acting at full force.** The initial mistake (two
+concurrent rebuilds) was cheap. Every "fix" after it was a guess applied
+destructively - killing the PDB server mid-write, clearing half a matched pair,
+then re-running an unchanged command three times. Checking what the build was
+actually doing (`rebuild.py --help` -> ninja's job count) would have found it in
+one step.
 
 **Never `git commit --amend` a DB snapshot after a failed build.** Doing so
 stamps a stale `match.db`/README onto the batch commit, and the tell is subtle:
