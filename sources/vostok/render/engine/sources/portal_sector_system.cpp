@@ -7,7 +7,43 @@
 #include <vostok/math_plane.h>
 #include <vostok/math_sphere.h>
 
+#include <vostok/console_command.h>
+#include <vostok/math_color.h>
+
 #include "sector_double_query_preventer.h"
+#include "system_renderer.h"
+
+static bool s_use_screeen_space_portals_intersection_value = false;
+static vostok::console_commands::cc_bool s_use_screeen_space_portals_intersection_cc(
+	"r_use_ss_portals_intersection",
+	s_use_screeen_space_portals_intersection_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+
+static bool s_portals_occlusion_culling_value = false;
+static vostok::console_commands::cc_bool s_portals_occlusion_culling_cc(
+	"r_portals_occlusion_culling",
+	s_portals_occlusion_culling_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+
+static bool s_draw_portals_value = false;
+static vostok::console_commands::cc_bool s_draw_portals_cc(
+	"r_draw_portals",
+	s_draw_portals_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+
+static bool s_draw_draw_frustum_images_value = false;
+static vostok::console_commands::cc_bool s_draw_draw_frustum_images_cc(
+	"r_draw_frustum_images",
+	s_draw_draw_frustum_images_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
 
 namespace vostok {
 namespace render {
@@ -230,11 +266,21 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&points)[4] )
 	return true;
 }
 
-void portal_sector_system::render( system_renderer&, float3 const&, float4x4 const& )
+// claude@NOTE: the two switch-guarded statements below are dropped by the optimizer
+// because both callees are still empty: sector_double_query_preventer::render
+// (sector_double_query_preventer.cpp, 0x5fc/13 stmts) and draw_portals (below,
+// 0x153/14 stmts). Bodying either restores its guard.
+void portal_sector_system::render( system_renderer& renderer, float3 const& view_pos, float4x4 const& )
 {
-	// claude@NOTE: no legacy ancestor - legacy model_manager render_static is a DX9 fixed-function level draw, not this debug pass; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fc550]
+	u32 const sector_id				= m_structure->get_sector_id( *g_allocator, view_pos );
+	if ( sector_id )
+		renderer.draw_aabb( m_structure->get_sectors( )[sector_id].get_aabb( ), math::color( 0xff0000ff ) );
+
+	if ( s_draw_draw_frustum_images_value )
+		m_preventer->render( renderer );
+
+	if ( s_draw_portals_value )
+		draw_portals( renderer, sector_id );
 }
 
 void portal_sector_system::test_action( )
@@ -249,7 +295,7 @@ void portal_sector_system::draw_quads( system_renderer& )
 	// FUNCTION BODY[0x5fc300]
 }
 
-void portal_sector_system::draw_portals( system_renderer&, u32 )
+void portal_sector_system::draw_portals( system_renderer&, u32 const )
 {
 	// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference; matcher-phase work.
 	// STATE[STUB]

@@ -882,11 +882,19 @@
 			>
 		</File>
 		<File
+			RelativePath=".\debug_draw_lines_command_inline.h"
+			>
+		</File>
+		<File
 			RelativePath=".\debug_draw_lines_command.cpp"
 			>
 		</File>
 		<File
 			RelativePath=".\debug_draw_triangles_command.h"
+			>
+		</File>
+		<File
+			RelativePath=".\debug_draw_triangles_command_inline.h"
 			>
 		</File>
 		<File
@@ -903,6 +911,10 @@
 		</File>
 		<File
 			RelativePath=".\functor_with_big_buffer_to_copy_command.h"
+			>
+		</File>
+		<File
+			RelativePath=".\functor_with_big_buffer_to_copy_command_inline.h"
 			>
 		</File>
 		<File
@@ -970,7 +982,11 @@
 			>
 		</File>
 		<File
-			RelativePath=".\one_way_render_channel.h"
+			RelativePath="..\one_way_render_channel.h"
+			>
+		</File>
+		<File
+			RelativePath="..\one_way_render_channel_inline.h"
 			>
 		</File>
 		<File

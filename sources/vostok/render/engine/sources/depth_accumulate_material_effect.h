@@ -11,6 +11,7 @@ public:
 	depth_accumulate_material_effect( ) { }
 	virtual ~depth_accumulate_material_effect( ) { }
 
+private:
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

@@ -32,16 +32,7 @@ public:
 		vertices_type const& vertices,
 		indices_type const& indices,
 		bool use_depth = true
-	)
-		: super( true, use_depth ),
-		  m_vertices( vertices ),
-		  m_indices( indices ),
-		  m_scene( scene ),
-		  m_renderer( renderer )
-	{
-		// FUNCTION BODY[0x16b80]
-		ASSERT		( m_indices.size( ) >= m_vertices.size( ) );
-	}
+	);
 
 	template < int vertex_count, int index_count >
 	inline draw_triangles_command(
@@ -51,16 +42,7 @@ public:
 		vertex_colored const (&vertices)[vertex_count],
 		u16 const (&indices)[index_count],
 		bool use_depth = true
-	)
-		: super( true, use_depth ),
-		  m_vertices( allocator, &vertices[0], &vertices[0] + vertex_count ),
-		  m_indices( allocator, &indices[0], &indices[0] + index_count ),
-		  m_scene( scene ),
-		  m_renderer( renderer )
-	{
-		// FUNCTION BODY[0x16e70]
-		COMPILE_ASSERT( index_count >= vertex_count, please_remove_redundant_vertices );
-	}
+	);
 
 	virtual ~draw_triangles_command( );
 	virtual void execute( );
@@ -78,5 +60,7 @@ STATIC_SIZE_ASSERT( draw_triangles_command, 0x7c );
 } // namespace debug
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/facade/sources/debug_draw_triangles_command_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_FACADE_SOURCES_DEBUG_DRAW_TRIANGLES_COMMAND_H_INCLUDED

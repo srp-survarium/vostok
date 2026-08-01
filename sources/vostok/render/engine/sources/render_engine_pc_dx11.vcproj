@@ -941,6 +941,10 @@
 			>
 		</File>
 		<File
+			RelativePath=".\batched_geometry_inline.h"
+			>
+		</File>
+		<File
 			RelativePath=".\geometry_batch.h"
 			>
 		</File>
@@ -994,6 +998,10 @@
 		</File>
 		<File
 			RelativePath=".\camera.h"
+			>
+		</File>
+		<File
+			RelativePath=".\camera_inline.h"
 			>
 		</File>
 		<File
@@ -2490,6 +2498,10 @@
 		</File>
 		<File
 			RelativePath=".\statistics.h"
+			>
+		</File>
+		<File
+			RelativePath=".\statistics_inline.h"
 			>
 		</File>
 		<File
