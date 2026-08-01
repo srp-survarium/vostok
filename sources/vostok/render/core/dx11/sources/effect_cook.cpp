@@ -29,25 +29,11 @@ void effect_cook::on_binary_shaders(
 	resources::queries_result& data
 )
 {
-	// FUNCTION BODY[0x758f10]
-
 	binary_shader_sources_type sources;
 	
 	bool has_one_at_least = false;
 	for (u32 i = 0; i < data.size(); i++)
 	{
-// 		// All effect's shader must be created.
-// 		if (!data[i].is_successful())
-// 		{
-// 			in_out_query->finish_query		(result_error);
-// 			DELETE							(compile_data);
-// 			return;
-// 		}
-// 		
-// 		binary_shader_source_ptr	ptr		= static_cast_resource_ptr<binary_shader_source_ptr>(data[i].get_unmanaged_resource());
-// 		binary_shader_key_type		key		(ptr->shader_name.c_str(), ptr->shader_type, ptr->configuration);
-// 		sources[key]						= ptr;
-
 		// All effect's shader must be created.
 		if (data[i].is_successful())
 		{
@@ -62,11 +48,20 @@ void effect_cook::on_binary_shaders(
 	{
 		in_out_query->finish_query			(result_error);
 		DELETE								(compile_data);
+		effect_resource->~res_effect			();
+		FREE								(effect_resource);
 		return;
 	}
 
 	effect_compiler	compiler				(*effect_resource, in_out_query, false, &sources);
 	compile_data->descriptor->compile		(compiler, compile_data->config->root());
+
+	for (vector<texture_named_instance>::iterator it = compiler.m_ps_used_textures.begin();
+										it != compiler.m_ps_used_textures.end();
+										++it)
+	{
+		effect_resource->push_texture_unique	(it->texture, it->path.c_str());
+	}
 	
 	in_out_query->set_unmanaged_resource	(effect_resource, resources::nocache_memory, sizeof(res_effect));
 	in_out_query->finish_query				(result_success );
