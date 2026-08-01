@@ -10,46 +10,42 @@
 namespace vostok {
 namespace render {
 
+// claude@NOTE: the target CALLS collision::new_space_partitioning_tree (one statement,
+// 0x2f bytes); our base LTCG-inlines it into loose_oct_tree::loose_oct_tree plus the
+// allocation null check, which splits the one statement into three. Cross-module inlining
+// decision, not source-steerable from here.
 lights_db::lights_db( ) :
 	m_lights_tree( 0 )
 {
-	// FUNCTION BODY[0x602f80]
-	//initialize_sun				( );
-
-	m_lights_tree				= &*collision::new_space_partitioning_tree( g_allocator, 1.f, 1024 );
+	m_lights_tree				= &*collision::new_space_partitioning_tree( g_allocator, 1.f, 102400 );
 }
 
 lights_db::~lights_db( )
 {
-	// FUNCTION BODY[0x602ec0]
+	for ( lights_type::iterator i = m_lights.begin( ); i != m_lights.end( ); ++i )
+		(*i).light->remove_collision( );
+
 	collision::delete_space_partitioning_tree	( m_lights_tree );
 }
 
 light_ptr lights_db::get_sun( ) const
 {
-	// FUNCTION BODY[0x602e10]
+	if ( m_sun && !m_sun->m_enabled )
+		return light_ptr( );
+
 	return m_sun;
 }
 
 light* lights_db::create( tree_operation_enum const operation ) const
 {
-	// FUNCTION BODY[0x602de0]
 	return						NEW ( light ) ( operation == tree_operation_add ? m_lights_tree : 0 );
 }
 
 void lights_db::initialize_sun( light_data& light_to_add )
 {
-	// FUNCTION BODY[0x602ea0]
-	//R_ASSERT					( !m_sun );
-	m_sun						= light_to_add.light;//create( tree_operation_no_operation );
+	m_sun						= light_to_add.light;
 
 	m_sun->flags.is_static		= true;
-	//m_sun->set_type				( render::light_type_parallel );
-	//m_sun->set_cast_shadows		( true );
-	//m_sun->set_color			( math::color(0.89578169f, 0.88f, 0.87f, 1.0f), 1.f );
-
-	//m_sun->set_orientation		( (float3(0.0f, 0.0f, 0.0f) - m_sun->position).normalize(), float3(1.f,0.f,0.f) );
-	//m_sun->set_position			( float3(0.f, 500.f, 0.f) );
 }
 
 static u32		s_v0_value = 2011;
@@ -120,9 +116,8 @@ static math::float3 get_sun_direction(light_props const& props)
 	return -math::normalize(dir);
 }
 
-void fill_light( light& light, light_props* props )
+static void fill_light( light& light, light_props* props )
 {
-	// FUNCTION BODY[0x602fb0]
 	float4x4 transform			= props->transform;
 	switch ( props->type ) {
 		case light_type_spot : {
@@ -203,7 +198,6 @@ void fill_light( light& light, light_props* props )
 
 void lights_db::add_light( u32 const id, light_props* props )
 {
-	// FUNCTION BODY[0x603660]
 	light_data light_to_add	( id );
 
 	lights_type::iterator it	= std::lower_bound( m_lights.begin(), m_lights.end(), light_to_add);
@@ -220,32 +214,36 @@ void lights_db::add_light( u32 const id, light_props* props )
 	}
 }
 
+// claude@NOTE: the u32 (not light_data) search value is proven by the target's
+// __lower_bound<light_data*,unsigned int,__less_2<light_data,unsigned int>,...>
+// instantiation, which needs the free operator< in lights_db.h. The target CALLS that
+// __lower_bound; our base inlines the binary search, merging the two statements into one -
+// the mirror image of add_light, where the target inlines and we call. Inlining heuristics.
 void lights_db::update_light( u32 id, light_props* props )
 {
-	// FUNCTION BODY[0x603620]
-	lights_type::iterator found	= std::lower_bound( m_lights.begin(), m_lights.end(), light_data( id ) );
+	lights_type::iterator found	= std::lower_bound( m_lights.begin(), m_lights.end(), id );
 	ASSERT						( found != m_lights.end() && (*found).id == id );
 	fill_light					( *(*found).light, props );
 }
 
-void lights_db::tick( float )
+void lights_db::tick( float time_delta )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x602db0]
-	// claude@NOTE: no legacy ancestor - per-frame light color animation tick postdates the legacy corpus
+	lights_type::iterator i			= m_lights.begin( );
+	lights_type::iterator const e	= m_lights.end( );
+
+	for ( ; i != e; ++i )
+		(*i).light->tick_color_animation( time_delta );
 }
 
 void lights_db::remove_light( u32 const id )
 {
-	// FUNCTION BODY[0x602e50]
 	lights_type::iterator found = std::find( m_lights.begin(), m_lights.end(), id );
 	R_ASSERT					( found != m_lights.end() );
 
 	if (found->light->get_type()==light_type_parallel)
-		m_sun = 0;
-
+		m_sun					= 0;
+	found->light->remove_collision	( );
 	m_lights.erase				( found );
-
 }
 
 } // namespace render

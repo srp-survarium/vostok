@@ -9,21 +9,30 @@
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
 #include <vostok/render/core/shader_constant_binding.h>
+#include <vostok/render/core/sources/event_query.h>
 #include <vostok/render/facade/scene_view_mode.h>
 #include <vostok/render/facade/sources/ui_renderer.h>
 #include <vostok/scaleform/sources/flash_renderer.h>
 #include <vostok/ui/ui.h>
 
 #include "effect_editor_gbuffer_to_screen.h"
+#include "effect_fill_environment_probe_face.h"
+#include "effect_fill_sky_ao_map.h"
+#include "effect_grass_trample.h"
 #include "grass_world.h"
 #include "material.h"
+#include "register_samplers.h"
 #include "render_output_window.h"
 #include "renderer_context.h"
 #include "scene.h"
 #include "scene_view.h"
 #include "speedtree_forest.h"
 #include "stage_accumulate_distortion.h"
+#include "stage_ambient_lighting.h"
 #include "stage_ambient_occlusion.h"
+#include "stage_apply_distortion.h"
+#include "stage_atmosphere.h"
+#include "stage_clouds.h"
 #include "stage_debug.h"
 #include "stage_decals_accumulate.h"
 #include "stage_forward.h"
@@ -33,10 +42,16 @@
 #include "stage_particles.h"
 #include "stage_postprocess.h"
 #include "stage_pre_lighting.h"
+#include "stage_pre_rain.h"
+#include "stage_rain.h"
+#include "stage_resolve_lighting.h"
 #include "stage_screen_image.h"
 #include "stage_shadow_direct.h"
 #include "stage_sun.h"
+#include "stage_translucency.h"
 #include "stage_view_mode.h"
+#include "stage_visibility.h"
+#include "stage_volume_fog.h"
 #include "statistics.h"
 #include "system_renderer.h"
 
@@ -175,135 +190,31 @@ renderer::renderer( renderer_context* renderer_context ) :
 	m_current_time		( 0.f ),
 	m_simulation		( 32, 32, 32 )
 {
-	// FUNCTION BODY[0x64bf20]: 71
-	// <0>
-	// <1>
-	// <0x64c04b>|0x12b|+0x005:'196'
-	// <0>
-	// <0x64c050>|0x130|+0x037:'198'
-	// <0x64c087>|0x167|+0x034:'199'
-	// <0x64c0bb>|0x19b|+0x02c:'200'
-	// <0x64c0e7>|0x1c7|+0x034:'201'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64c11b>|0x1fb|+0x040:'205'
-	// <0>
-	// <0x64c15b>|0x23b|+0x005:'207'
-	// <0>
-	// <0x64c160>|0x240|+0x011:'209'
-	// <0x64c171>|0x251|+0x00d:'210'
-	// <0x64c17e>|0x25e|+0x00d:'211'
-	// <0x64c18b>|0x26b|+0x011:'212'
-	// <0x64c19c>|0x27c|+0x011:'213'
-	// <0>
-	// <0x64c1ad>|0x28d|+0x05d:'215'
-	// <0x64c20a>|0x2ea|+0x05c:'216'
-	// <0x64c266>|0x346|+0x05c:'217'
-	// <0x64c2c2>|0x3a2|+0x05c:'218'
-	// <0>
-	// <0x64c31e>|0x3fe|+0x015:'220'
-	// <0>
-	// <0x64c333>|0x413|+0x007:'222'
-	// <0>
-	// <0x64c33a>|0x41a|+0x016:'224'
-	// <0x64c350>|0x430|+0x011:'225'
-	// <0>
-	// <0x64c361>|0x441|+0x008:'227'
-	// <0x64c369>|0x449|+0x006:'228'
-	// <0x64c36f>|0x44f|+0x006:'229'
-	// <0>
-	// <1>
-	// <0x64c375>|0x455|+0x028:'232'
-	// <0x64c39d>|0x47d|+0x06d:'233'
-	// <0x64c40a>|0x4ea|+0x043:'234'
-	// <0x64c44d>|0x52d|+0x02b:'235'
-	// <0x64c478>|0x558|+0x034:'236'
-	// <0x64c4ac>|0x58c|+0x029:'237'
-	// <0x64c4d5>|0x5b5|+0x02d:'238'
-	// <0x64c502>|0x5e2|+0x02b:'239'
-	// <0x64c52d>|0x60d|+0x036:'240'
-	// <0x64c563>|0x643|+0x02c:'241'
-	// <0x64c58f>|0x66f|+0x02b:'242'
-	// <0x64c5ba>|0x69a|+0x029:'243'
-	// <0x64c5e3>|0x6c3|+0x029:'244'
-	// <0x64c60c>|0x6ec|+0x039:'245'
-	// <0x64c645>|0x725|+0x02a:'246'
-	// <0x64c66f>|0x74f|+0x02d:'247'
-	// <0x64c69c>|0x77c|+0x02b:'248'
-	// <0x64c6c7>|0x7a7|+0x02e:'249'
-	// <0x64c6f5>|0x7d5|+0x046:'250'
-	// <0x64c73b>|0x81b|+0x030:'251'
-	// <0x64c76b>|0x84b|+0x065:'252'
-	// <0x64c7d0>|0x8b0|+0x02d:'253'
-	// <0x64c7fd>|0x8dd|+0x029:'254'
-	// <0x64c826>|0x906|+0x02b:'255'
-	// <0>
-	// <0x64c851>|0x931|+0x02c:'257'
-	// <0x64c87d>|0x95d|+0x02c:'258'
-	// <0x64c8a9>|0x989|+0x02d:'259'
-	// <0x64c8d6>|0x9b6|+0x02a:'260'
-	// <0>
-	// <0x64c900>|0x9e0|+0x03e:'262'
-	// <0x64c93e>|0xa1e|+0x03e:'263'
-	// <0x64c97c>|0xa5c|+0x01f:'264'
-	// ******
+	register_samplers				( );
 
-	static float4 dummy_data( 0.f, 0.f, 0.f, 0.f );
+	m_debug_readed_data[0]			= float4( 0.f, 0.f, 0.f, 0.f );
+	m_debug_readed_data[1]			= float4( 0.f, 0.f, 0.f, 0.f );
+	m_debug_readed_data[2]			= float4( 0.f, 0.f, 0.f, 0.f );
+	m_debug_readed_data[3]			= float4( 0.f, 0.f, 0.f, 0.f );
 
-	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "hemi_cube_pos_faces", &dummy_data ) );
-	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "hemi_cube_neg_faces", &dummy_data ) );
-	resource_manager::ref( ).register_constant_binding( shader_constant_binding( "dt_params", &dummy_data ) );
+	m_picking_lighting_luminance_mode			= false;
 
-	sampler_state_descriptor sampler_sim;
-	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
-	sampler_sim.set_max_anisotropy	( 16 );
-	resource_manager::ref( ).register_sampler( "s_base", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	m_selected_lighting_luminanace_in_screen	= float4( 0.f, 0.f, 0.f, 0.f );
 
 	material::initialize_nomaterial_material( );
 
-	sampler_sim.set_filter			( D3D_FILTER_ANISOTROPIC );
-	sampler_sim.set_max_anisotropy	( 16 );
-	resource_manager::ref( ).register_sampler( "s_base_hud", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	effect_manager::ref( ).create_effect< effect_pick_light_luminance >		( &m_pick_light_luminance_effect );
+	effect_manager::ref( ).create_effect< effect_editor_gbuffer_to_screen >	( &m_gbuffer_to_screen_shader );
+	effect_manager::ref( ).create_effect< effect_fill_environment_probe_face >( &m_fill_environment_probe_face );
+	effect_manager::ref( ).create_effect< effect_fill_sky_ao_map >			( &m_fill_sky_ao_map_effect );
+	effect_manager::ref( ).create_effect< effect_grass_trample >				( &m_grass_trample_effect );
 
-	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
-	sampler_sim.set_max_anisotropy	( 16 );
-	resource_manager::ref( ).register_sampler( "s_detail", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
+	m_c_pick_lighting_luminance_position	= backend::ref( ).register_constant_host( "pick_lighting_luminance_position", rc_float );
+	m_gbuffer_to_screen_type				= backend::ref( ).register_constant_host( "gbuffer_to_screen_type", rc_int );
+	m_c_eye_ray_corner						= backend::ref( ).register_constant_host( "eye_ray_corner", rc_float );
+	m_c_probe_position						= backend::ref( ).register_constant_host( "probe_position", rc_float );
 
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
-	resource_manager::ref( ).register_sampler( "s_position", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-	resource_manager::ref( ).register_sampler( "s_diffuse", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-	resource_manager::ref( ).register_sampler( "s_accumulator", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_ANISOTROPIC, D3D_TEXTURE_ADDRESS_WRAP );
-	sampler_sim.set_max_anisotropy	( 16 );
-	resource_manager::ref( ).register_sampler( "s_material", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-	resource_manager::ref( ).register_sampler( "s_normal", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_CLAMP );
-	resource_manager::ref( ).register_sampler( "s_material1", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_POINT, D3D_TEXTURE_ADDRESS_WRAP );
-	resource_manager::ref( ).register_sampler( "s_nofilter", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_LINEAR_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
-	resource_manager::ref( ).register_sampler( "s_rtlinear", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_WRAP );
-	resource_manager::ref( ).register_sampler( "s_linear", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_MIN_MAG_MIP_LINEAR, D3D_TEXTURE_ADDRESS_BORDER );
-	resource_manager::ref( ).register_sampler( "s_border", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-
-	sampler_sim.set					( D3D_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT, D3D_TEXTURE_ADDRESS_CLAMP );
-	sampler_sim.set_border_color	( float4( 1.f, 1.f, 1.f, 0.f ) );
-	sampler_sim.set_comparison_function( D3D_COMPARISON_LESS_EQUAL );
-	resource_manager::ref( ).register_sampler( "s_shmap", resource_manager::ref( ).create_sampler_state( sampler_sim ) );
-	sampler_sim.reset				( );
-
-	effect_manager::ref( ).create_effect< effect_editor_gbuffer_to_screen >( &m_gbuffer_to_screen_shader );
-
-	m_gbuffer_to_screen_type		= backend::ref( ).register_constant_host( "gbuffer_to_screen_type", rc_float );
+	m_view_to_rain_shadow			= float4x4( ).identity( );
 
 	m_stages.resize					( num_render_stages );
 
@@ -313,26 +224,40 @@ renderer::renderer( renderer_context* renderer_context ) :
 	m_stage_debug					= 0;
 	m_view_mode_stage				= 0;
 	m_present_stage					= 0;
-	m_visibility_stage				= 0;
+
 
 	m_stages[gbuffer_render_stage]					= NEW( stage_gbuffer )					( this, m_renderer_context );
 	m_stages[decals_accumulate_render_stage]		= NEW( stage_decals_accumulate )		( this, m_renderer_context );
 	m_stages[accumulate_distortion_render_stage]	= NEW( stage_accumulate_distortion )	( this, m_renderer_context );
+	m_stages[pre_rain_normal_modify_render_stage]	= NEW( stage_pre_rain )					( this, m_renderer_context );
 	m_stages[pre_lighting_render_stage]				= NEW( stage_pre_lighting )				( this, m_renderer_context );
+	m_stages[ambient_occlusion_render_stage]		= NEW( stage_ambient_occlusion )		( this, m_renderer_context );
+	m_stages[ambient_lighting_render_stage]			= NEW( stage_ambient_lighting )			( this, m_renderer_context );
 	m_stages[sun_shadows_accumulate_render_stage]	= NEW( stage_shadow_direct )			( this, m_renderer_context );
 	m_stages[sun_render_stage]						= NEW( stage_sun )						( this, m_renderer_context, m_cloud_interp_textures, m_simulation );
 	m_stages[deferred_lighting_render_stage]		= NEW( stage_lights )					( this, m_renderer_context, false );
-	m_stages[ambient_occlusion_render_stage]		= NEW( stage_ambient_occlusion )		( this, m_renderer_context );
 	m_stages[light_propagation_volumes_render_stage]= NEW( stage_light_propagation_volumes )( this, m_renderer_context );
+	m_stages[translucency_render_stage]				= NEW( stage_translucency )				( this, m_renderer_context );
+	m_stages[resolve_lighting_render_stage]			= NEW( stage_resolve_lighting )			( this, m_renderer_context );
+	m_stages[clouds_render_stage]					= NEW( stage_clouds )					( this, m_cloud_interp_textures, m_simulation, m_renderer_context );
+	m_stages[atmosphere_render_stage]				= NEW( stage_atmosphere )				( this, m_renderer_context, stage_atmosphere::atmosphere_on_sky );
 	m_stages[forward_render_stage]					= NEW( stage_forward )					( this, m_renderer_context, stage_forward::forward_base );
-	m_stages[lighting_render_stage]					= NEW( stage_lights )					( this, m_renderer_context, true );
+	m_stages[atmosphere_on_geometry_render_stage]	= NEW( stage_atmosphere )				( this, m_renderer_context, stage_atmosphere::atmosphere_on_geometry );
+	m_stages[forward_sky_render_stage]				= NEW( stage_forward )					( this, m_renderer_context, stage_forward::forward_sky );
+	m_stages[apply_distortion_render_stage]			= NEW( stage_apply_distortion )			( this, m_renderer_context );
+	m_stages[rain_render_stage]						= NEW( stage_rain )						( this, m_renderer_context );
 	m_stages[particles_render_stage]				= NEW( stage_particles )				( this, m_renderer_context );
+	m_stages[lighting_render_stage]					= NEW( stage_lights )					( this, m_renderer_context, true );
+	m_stages[volume_fog_render_stage]				= NEW( stage_volume_fog )				( this, m_renderer_context );
 	m_stages[post_process_render_stage]				= NEW( stage_postprocess )				( this, m_renderer_context );
 
+	m_visibility_stage				= NEW( stage_visibility )	( this, m_renderer_context );
 	m_stage_debug					= NEW( stage_debug )		( this, m_renderer_context );
 	m_view_mode_stage				= NEW( stage_view_mode )	( this, m_renderer_context );
 	m_present_stage					= NEW( stage_screen_image )	( this, m_renderer_context );
 
+	m_frame_sync_event				= NEW( event_query )( );
+	m_timing_event					= NEW( event_query )( );
 	m_timer.start					( );
 }
 
@@ -1583,6 +1508,8 @@ void renderer::render(
 
 	float time_delta			= m_current_time - m_last_frame_time;
 	time_delta					= vostok::math::max( time_delta, 0.0f ) * scene->get_slomo( );
+
+	scene->lights( ).tick		( time_delta );
 
 	m_renderer_context->set_current_time( m_last_frame_time );
 	m_renderer_context->set_time_delta( time_delta );
