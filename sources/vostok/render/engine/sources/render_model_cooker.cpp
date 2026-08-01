@@ -548,28 +548,24 @@ void render_model_cook::on_materials_loaded(
 		query_materail_effects(cook_data);
 }
 
-enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum type )
+static enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum type )
 {
-	// FUNCTION BODY[0x650ad0]
 	switch (type)
 	{
 		case mt_static_mesh:
 		case mt_static_submesh:
 			return static_mesh_vertex_input_type;
-		// claude@NOTE: legacy returned the retired single skeletal_mesh_vertex_input_type
-		// for every skinned type; mapped onto the per-weight-count canonical enum. The
-		// canonical mt_static_submesh_colored / mt_user_mesh_editable arms are unverified.
 		case mt_static_submesh_colored:
 			return static_mesh_vertex_colored_input_type;
+		case mt_skinned_submesh_1w:
+			return skeletal_1_bones_mesh_vertex_input_type;
+		case mt_skinned_submesh_2w:
+			return skeletal_2_bones_mesh_vertex_input_type;
+		case mt_skinned_submesh_3w:
+			return skeletal_3_bones_mesh_vertex_input_type;
 		case mt_skinned_mesh:
 		case mt_skinned_submesh_4w:
 			return skeletal_4_bones_mesh_vertex_input_type;
-		case mt_skinned_submesh_3w:
-			return skeletal_3_bones_mesh_vertex_input_type;
-		case mt_skinned_submesh_2w:
-			return skeletal_2_bones_mesh_vertex_input_type;
-		case mt_skinned_submesh_1w:
-			return skeletal_1_bones_mesh_vertex_input_type;
 		case mt_user_mesh_wire:
 			return wires_vertex_input_type;
 		case mt_grass_mesh:
@@ -578,12 +574,11 @@ enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum type )
 	};
 }
 
-fs_new::virtual_path_string get_material_effects_instance_request_path(
+static fs_new::virtual_path_string get_material_effects_instance_request_path(
 	material_ptr mtl,
 	enum_vertex_input_type vertex_input_type
 )
 {
-	// FUNCTION BODY[0x6517b0]
 	VOSTOK_UNREFERENCED_PARAMETER(vertex_input_type);
 /*	fs_new::virtual_path_string					result;
 	result.assignf					(

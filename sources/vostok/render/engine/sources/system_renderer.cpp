@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "system_renderer.h"
-#include "help_math.h"
 
 #include <vostok/particle/world.h>
 #include <vostok/render/core/backend.h>
@@ -344,17 +343,13 @@ void system_renderer::draw_lines(
 	// ******
 }
 
-float2 clip_2_screen(
+static float2 clip_2_screen(
 	float3 const&		world_pixel,
 	float4x4 const&		wvpMatrix,
 	u32					screen_width,
 	u32					screen_height
 )
 {
-	// LOCALS
-	// float4 							result
-	// ******
-
 	float4 result = wvpMatrix.transform( float4( world_pixel, 1.0f ) );
 
 	if ( math::is_zero( result.elements[3], math::epsilon_5 ) )
@@ -394,15 +389,14 @@ float2 clip_2_screen(
 
 static u8 pattern_length = 8;
 
-// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x6446f0])
-
-u8 calc_pattern( float2 const& begin, float2 const& end )
+static float frac( float f )
 {
-	return static_cast_checked< u8 >( frac( math::max( math::abs( end.elements[0] - begin.elements[0] ), math::abs( end.elements[1] - begin.elements[1] ) ) / (float)pattern_length ) * ( (float)pattern_length ) );
+	return		( f - static_cast< int >( f ) );
+}
 
-	// FUNCTION BODY[0x644770]: 1
-	// <0x644776>|0x006|+0x048:'385'
-	// ******
+static u8 calc_pattern( float2 const& begin, float2 const& end )
+{
+	return static_cast_checked< u8 >( frac( math::max( fabsf( end.elements[0] - begin.elements[0] ), fabsf( end.elements[1] - begin.elements[1] ) ) / (float)pattern_length ) * ( (float)pattern_length ) );
 }
 
 void system_renderer::draw_screen_lines(

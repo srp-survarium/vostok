@@ -322,7 +322,7 @@ void speedtree_forest::populate_forest( )
 	m_forest->GetPopulationStats		(sStats);
 }
 
-float4x4 fix_view_matrix( float4x4 const& in_view_matrix )
+static float4x4 fix_view_matrix( float4x4 const& in_view_matrix )
 {
 	// FUNCTION BODY[0x6016f0]
 	const float epsilon			= 0.1f;

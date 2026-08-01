@@ -102,7 +102,7 @@ renderer_context_targets::~renderer_context_targets( )
 	// FUNCTION BODY[0x634730]
 }
 
-u32 get_format_block_size( DXGI_FORMAT format )
+static u32 get_format_block_size( DXGI_FORMAT format )
 {
 	// FUNCTION BODY[0x6343e0]
 	switch ( format )

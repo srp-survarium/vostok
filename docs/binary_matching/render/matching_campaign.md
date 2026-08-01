@@ -659,3 +659,139 @@ recovered two statements of shipped source.
 3. `effect_cook::create_resource` (79.9, BRANCH-COUNT 63/69) and
    `on_binary_shaders` (76.2, 48/46) - the two biggest genuine shape gaps left in
    `render/core` by block delta.
+
+## Batch A10 notes (render/engine, `screen_factor` + the static-linkage sweep)
+
+| batch | scope | render exact | render fuzzy | overall exact |
+|---|---|---|---|---|
+| A10 | `render/engine` linkage + `frac` family | 559 (21.1%) | 35.6% | 46.02% |
+
+### The static-linkage sweep is the batch (13 rows, no body work)
+
+A9 found the lever on `renderer.cpp`; A10 ran it across all of `render/engine` +
+`render/facade`. **12 previously-unpaired functions paired from adding `static`
+alone**, no body change:
+
+| function | unit | after |
+|---|---|---|
+| `clip_2_screen` | system_renderer.cpp | **100%** |
+| `unregister_cooks` | render_engine_world_pc_dx11.cpp | **100%** |
+| `get_material_effects_instance_request_path` | render_model_cooker.cpp | **100%** |
+| `vertex_input_type_to_speedtree_component_type` | render_engine_world_pc_dx11.cpp | **100%** (ICF, body still a STUB) |
+| `mesh_type_to_vertex_input_type` | render_model_cooker.cpp | 99.9 |
+| `does_os_support_dx11` | render_engine_world_pc_dx11.cpp | 98.1 |
+| `on_speedtree_material_effects_instance_ready` | render_engine_world_pc_dx11.cpp | 95.1 |
+| `get_dx_version_via_dxdiag` | render_engine_world_pc_dx11.cpp | 94.9 |
+| `on_model_material_effects_instance_ready` | render_engine_world_pc_dx11.cpp | 90.3 |
+| `get_format_block_size` | renderer_context_targets.cpp | 90.1 |
+| `fix_view_matrix` | speedtree_forest.cpp | 62.8 |
+| `register_cooks` | render_engine_world_pc_dx11.cpp | 38.0 |
+
+**The query B9 said was exhausted is the wrong query.** B9 tested the *inverted*
+pair (one unit holding both an undecorated and a decorated copy of one short
+name) - that really is exhausted. The productive query is one-sided: *target
+undecorated + base decorated + same `file:` + same demangled identifier.* Join
+the two rich indexes on `(file, ident)`; details now in
+`patterns/static-plain-name-pairing.md`.
+
+Three of the fifteen conversions produced **no** row: `calc_pattern`,
+`compute_gaussian_value`, `get_gaussain_weights_offsets` had a single call site,
+so `static` let MSVC inline them away entirely. Keep the `static` (it is what the
+target has); `calc_pattern` came back at 100% once its body was fixed - see below.
+
+### The `frac` family: five independent per-TU definitions, not one header inline
+
+New pattern: `patterns/per-tu-duplicated-static-helper.md`. `frac` appears nine
+times in the target index and the sizes differ (45 / 68 / 118 / 13), so they are
+**different source bodies sharing a name** - a `file:` naming a `.cpp` is a
+definition *in* that `.cpp`, which also means that TU cannot include
+`help_math.h`. Our include set was exactly inverted. The four `help_math.h`
+COMDATs were attributed to their owning TUs by sorting the whole index by `rva`
+and reading the neighbours: `cloud_noise.cpp`, `stage_rain.cpp`,
+`stage_clouds.cpp`, `clouds.cpp` (confirmed independently - those are also the
+only TUs with a `call vostok::render::frac`).
+
+Bodies recovered (`math::abs(float)` = the `and eax,7FFFFFFFh` union trick,
+`math::abs(int)` = `sar/add/xor`):
+
+| owner | source | result |
+|---|---|---|
+| `help_math.h`, `light.cpp` | `math::abs( f ) - math::abs( static_cast< int >( f ) )` | header fixed; light.cpp noted |
+| `render_model_static.cpp` | `math::abs( f ) - math::abs( math::floor( f ) )` | noted (no caller yet) |
+| `render_particle_emitter_instance.cpp` | `math::abs( f ) - math::abs( floorf( f ) )` | 6.3 -> **100%**; `render_subuv_sprites` 83.4 -> **96.2** |
+| `system_renderer.cpp` | `f - static_cast< int >( f )` | unpaired -> **100%** |
+
+`help_math.h`'s records are lines 14/15/16, i.e. the signature is on 13 - six
+lines more than our reconstruction, exactly the standard 5-line GSC banner plus a
+blank. The parameter is named `f` in every copy (PDB `locals`).
+
+### `math::abs` vs `fabsf` is source-steerable and visible in the asm
+
+`calc_pattern` / `draw_screen_lines` are the only `system_renderer.cpp` functions
+whose target uses `movss xmm2,<0x7fffffff mask>` + `andps` (the `fabs`
+intrinsic); every other one uses the store/load `and eax,7FFFFFFFh` of
+`math::abs`. Spelling those two `fabsf(...)` took `calc_pattern` 36.4 -> **100%**
+and `draw_screen_lines` 63.4 -> **77.8**. `andps` vs `and eax,7FFFFFFFh` is a
+reliable tell for which of the two the source used.
+
+### `screen_factor` - body recovered, row cannot pair
+
+```cpp
+bbox.modify        ( model_transform );
+float3 const center   = bbox.center( );
+float3 const extents  = bbox.extents( );
+float const distance  = math::squared_length( view_position - center );
+return ( math::clamp_r( math::max( extents.x, extents.y, extents.z )/
+                        math::max( distance, math::epsilon_6 ), 0.f, 1.f ) );
+```
+`math::clamp_r` reproduces the target's clamp shape exactly (`value <= min` ->
+`comiss min,value; jae`, twice, sharing the `movaps xmm0,xmm1` tail). It stays
+`unpaired`: **the target image contains zero call sites for `screen_factor`** -
+`fill_opaque_models` inlines it and the shipped link keeps the standalone COMDAT
+anyway (the same reason four identical 45-byte `frac` copies survive), whereas
+our link drops an uncalled static. It pairs only when `fill_opaque_models` is
+bodied *and* our LTCG also declines to inline it.
+
+### Rejected hypotheses (do not re-derive)
+
+- **`screen_factor` uses the two-output `aabb::center( float3& size )`.** Under
+  `/fp:fast` that form is byte-indistinguishable from `center( ) + extents( )`
+  (4 ops per component either way), but the target's centre is literally
+  `(min+max)*0.5` (`addss` then `mulss`), which is `center( )`'s own body. Use
+  `center( ) + extents( )`.
+- **`Wm4::Math<float>::ZERO_TOLERANCE` must be spelled as such.** No: that name
+  is only the PDB's representative for the folded `1e-6f` constant (`half` and
+  `clear_value` are the same phenomenon for `0.5f`/`1.0f`, used 314 and 1253
+  times). `epsilon_6` appears nowhere in the target index. WildMagic is not even
+  compiled in our build, so `math::epsilon_6` is both linkable and correct.
+- **The `// frac: COMDAT copy of the help_math.h inline` comments (pre-A10) are
+  right.** They are not - see above. Removed / replaced with the recovered body.
+- **`does_os_support_dx11`'s 1.9% residual is a shape gap.** It is a 4-byte frame
+  difference (`sub esp,0ACh` vs `0A8h`) with an identical 3-local set and an
+  identical 14-statement structure - an extra spill slot, not a source local.
+- **Reordering `mesh_type_to_vertex_input_type`'s cases would raise the %.** It
+  made the *code* arms match exactly (target arm order is 1,2,6,5,4,3,13,11, i.e.
+  the skinned cases ascend 1w->4w) but moved the score 99.92 -> 99.90: the
+  residual is the byte index table, so one `case` label is still on the wrong arm.
+  Kept - the arm order is the faithful reading.
+
+### Suggested A11
+
+1. **`get_format_block_size` (90.1)** - the target's switch has **no** `cmp/ja`
+   range check, so its `default` is `NODEFAULT` and the `4` arm is a real case;
+   arm order is 2,4,1,8,16 against our 16,8,1,2,4. Recover the case->arm map from
+   the byte index table in the delinked target `.obj` (the rich index only prints
+   it as garbage instructions), then reorder. Same technique closes
+   `mesh_type_to_vertex_input_type`'s last 0.1%.
+2. **`stage_clouds::execute` and `stage_rain::execute`** are the only two
+   functions in the image that *call* `frac` out of line (1 and 4 sites). Bodying
+   them restores the `#include "help_math.h"` in those TUs and pairs the two
+   45-byte header COMDATs at the same time.
+3. **The `render_model.h` merge is validated** (unlike 9 of the 11
+   `batched_geometry_inline.h` rows): the target files `set_transform`
+   (t=24, base has b=24 in `render_model_instance_impl.h`) and
+   `render_surface::render_surface` (t=136, base b=120 in `render_surface.h`)
+   under `engine/sources/render_model.h`, and both base symbols exist. Moving the
+   two class declarations into a `render_model.h` pairs them.
+4. `fix_view_matrix` (62.8) and `register_cooks` (38.0) are the two biggest
+   freshly-paired rows with real shape gaps.

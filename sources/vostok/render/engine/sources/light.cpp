@@ -68,7 +68,10 @@ light::~light( )
 	collision::delete_geometry_instance	( g_allocator, m_collision_geometry);
 }
 
-// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x5ff670])
+// claude@NOTE: the target defines its own file-local `static float frac( float f )` here
+// (lines 69-71, 0x5ff670) with the same body as help_math.h's - not a COMDAT copy of it.
+// Not restored yet: no light.cpp function calls frac in our source, so an added static would
+// be dead. Restore it together with whichever body regains the call.
 
 void light::tick_color_animation( float const time_delta )
 {
