@@ -18,20 +18,7 @@ public:
 
 	void clear_state_array( );
 
-	device_state* get_state( state_desc const& desc )
-	{
-		// FUNCTION BODY[0x1250c0] for rasterizer state
-		u32 const crc = state_utils::get_hash( desc );
-		device_state* result = find( desc, crc );
-		if ( result )
-			return result;
-
-		state_record record;
-		record.crc = crc;
-		create_state( desc, &record.state );
-		states.push_back( record );
-		return record.state;
-	}
+	device_state* get_state( state_desc const& desc );
 
 private:
 	struct state_record {
@@ -41,20 +28,7 @@ private:
 
 	void create_state( state_desc desc, device_state** state );
 
-	device_state* find( state_desc const& desc, u32 crc )
-	{
-		// FUNCTION BODY[0x127150] for rasterizer state
-		for ( u32 index = 0; index < states.size( ); ++index ) {
-			if ( states[index].crc != crc )
-				continue;
-
-			state_desc candidate;
-			states[index].state->GetDesc( &candidate );
-			if ( candidate == desc )
-				return states[index].state;
-		}
-		return 0;
-	}
+	device_state* find( state_desc const& desc, u32 crc );
 
 private:
 	vector<state_record> states;
@@ -67,5 +41,7 @@ STATIC_SIZE_ASSERT( (state_cache<ID3D11SamplerState, D3D11_SAMPLER_DESC>), 0xC )
 
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/core/state_cache_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_CORE_DX11_STATE_CACHE_H_INCLUDED

@@ -50,12 +50,9 @@ void res_effect::push_texture_unique( res_texture*, pcstr )
 
 void res_pass::apply() const
 {
-	// FUNCTION BODY[0x6e7e20]
 	m_vs->apply();
 	m_gs->apply();
 	m_ps->apply();
-
-	backend::ref().set_input_layout( m_input_layout.c_ptr());
 
 	m_state->apply();
 }
