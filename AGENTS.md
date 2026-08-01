@@ -68,6 +68,31 @@ semantics are not.
 - Use clangd helpers for source navigation and `pdb_fetch`/`pdb_rich_query` for
   binary evidence.
 
+## Semantic evidence tools
+
+- Start an optimized-function dossier with `python3 scripts/sema.py rva <fn>`,
+  `xref <fn> --callees`, and `strings <fn>`. Use `strings --find <text>` for
+  reverse literal lookup and plain `xref <fn>` to find direct callers. Select
+  `--base` only when investigating what the current build actually emitted.
+- Diagnose control flow with `sema.py blocks <fn> --diff --lite` first, then
+  `blocks --diff` for instruction bodies and `branches --diff` only after the
+  block view establishes a real divergence. Use `dot` for graph output and
+  `sweep --module <m> [--unit <u>]` for a module queue. `BRANCH-COUNT` is the
+  highest-yield class; `FLOW-SAME` is not source-shape work.
+- The rest of the HoMM2/Gruntz sema family maps to existing authoritative
+  Vostok tools: `pdb_fetch` supplies target/base/structure/instruction views,
+  `pdb_rich_query --list` performs PDB symbol lookup, `clangd_query.py` supplies
+  symbol/definition/reference/hover navigation, and `match_db.py` supplies
+  function, unit, queue, attempt, flag, and hash-scoped MAX state.
+- Work optimized modules from owning roots toward leaves. Use `xref --callees`
+  to descend only into blockers that keep a root folded, stripped, or shaped
+  incorrectly; remeasure the root after bodying a callee. An isolated leaf is
+  not useful LTCG evidence until its real caller cone exists.
+- These commands read generated indexes. If their result conflicts with changed
+  source, the base side is stale; run a successful full `rebuild.py` before
+  trusting it. `sema.py` return code 1 means the compared flows differ, not that
+  the tool failed.
+
 ## Source comments and state
 
 - Keep comments lean and explain only non-obvious reasons or matching

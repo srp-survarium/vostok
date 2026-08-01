@@ -120,6 +120,14 @@ contracted per side.
 
 ## Command surface
 
+The navigation front of the HoMM2/Gruntz sema family is available against
+Vostok's PDB-rich indexes as well as the CFG views:
+
+    python3 scripts/sema.py rva      <fn>             # address/source/match dossier
+    python3 scripts/sema.py xref     <fn> --callees   # direct callees (root-first work)
+    python3 scripts/sema.py xref     <fn>             # direct callers
+    python3 scripts/sema.py strings  <fn>             # referenced MSVC literals
+    python3 scripts/sema.py strings  --find <text>    # reverse literal lookup
     python3 scripts/sema.py blocks   <fn>                 # target-side CFG, with bodies
     python3 scripts/sema.py blocks   <fn> --base          # base-side CFG
     python3 scripts/sema.py blocks   <fn> --lite          # one line per block
@@ -129,6 +137,19 @@ contracted per side.
     python3 scripts/sema.py branches <fn> --diff          # branch sequence, diffed
     python3 scripts/sema.py dot      <fn> [--base|--diff] # graphviz
     python3 scripts/sema.py sweep --module render [--unit U] [--min-pct P] [--max N]
+
+`rva`, `xref`, and `strings` were ported as native rich-index readers rather
+than copying either project's PE/COFF assumptions. Direct calls and literal
+symbols are taken from the same symbolized instruction records used by the CFG
+view. MSVC literal names expose a readable prefix; long literals remain
+compiler-truncated, so the command prints both the decoded hint and raw symbol.
+
+Other sema-family capabilities already have stronger Vostok-native owners:
+`pdb_fetch` for statement/assembly/diff views, `pdb_rich_query --list` for PDB
+symbols, `clangd_query.py` for source symbols/definitions/references/hover, and
+`match_db.py` for function/unit status, queues, attempts, flags, and
+hash-scoped MAX. Keeping those as companions avoids a second implementation of
+the authoritative PDB and database logic.
 
 `<fn>` is a mangled name, a demangled substring, or a hex RVA/VA on either side.
 Ambiguous substrings are listed, never guessed at.
