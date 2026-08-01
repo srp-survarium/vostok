@@ -5,6 +5,7 @@
 #include <vostok/console_command.h>
 #include <vostok/math_randoms_generator.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/options.h>
 #include <vostok/render/engine/vertex_colored.h>
 #include "grass_patch.h"
 #include "grass_world.h"
@@ -17,6 +18,15 @@ namespace render {
 
 static bool s_draw_grass_debug_value				=	false;
 static vostok::console_commands::cc_bool s_draw_grass_debug("draw_grass_debug", s_draw_grass_debug_value, false, vostok::console_commands::command_type_engine_internal);
+
+static u32 point_random_x;
+static u32 point_random_z;
+static u32 model_index_random;
+static u32 model_orientation_random;
+static u32 model_density_random;
+static u32 model_scale_random;
+
+void setup_seed_clk( );
 
 // claude@NOTE: the legacy grass_world.h declared these typedefs in-class; the canonical
 // header keeps raw vector members, so they live file-local here.
@@ -35,14 +45,21 @@ grass_world::grass_world( ) :
 	m_patch_parameters					( 0 ),
 	m_trample_parameters					( 0 ),
 	m_shadow_cascade_index_parameter		( 0 ),
-	m_wind_info_parameters					( 0 ),
-	m_need_populate						( false )
+	m_wind_info_parameters					( 0 )
 {
-	// STATE[STUB]
-	// claude@NOTE: patches tree from the legacy ancestor; the canonical shader-constant
-	// registrations (m_ambient_color .. m_wind_info_parameters) have no legacy seed.
 	// FUNCTION BODY[0x6364e0]
 	m_patches_tree									=	&*collision::new_space_partitioning_tree(g_allocator, 1.f, 1024);
+	m_ambient_color									=	backend::ref( ).register_constant_host( "ambient_color", rc_float );
+	setup_seed_clk( );
+	m_c_environment_skylight_upper_color			=	backend::ref( ).register_constant_host( "environment_skylight_upper_color", rc_float );
+	m_c_environment_skylight_lower_color			=	backend::ref( ).register_constant_host( "environment_skylight_lower_color", rc_float );
+	m_c_environment_skylight_parameters			=	backend::ref( ).register_constant_host( "environment_skylight_parameters", rc_float );
+	m_c_sun_direction								=	backend::ref( ).register_constant_host( "sun_direction", rc_float );
+	m_c_sun_color									=	backend::ref( ).register_constant_host( "sun_color", rc_float );
+	m_patch_parameters								=	backend::ref( ).register_constant_host( "patch_parameters", rc_float );
+	m_trample_parameters							=	backend::ref( ).register_constant_host( "trample_parameters", rc_float );
+	m_shadow_cascade_index_parameter				=	backend::ref( ).register_constant_host( "shadow_cascade_index", rc_int );
+	m_wind_info_parameters							=	backend::ref( ).register_constant_host( "wind_info_parameters", rc_float );
 }
 
 void grass_world::set_wind_parameters( float2 const&, float )
@@ -57,10 +74,10 @@ void grass_world::set_patch_parameters( grass_patch* )
 	// FUNCTION BODY[0x635c70]
 }
 
-void grass_world::set_trample_parameters( trample_desc& )
+void grass_world::set_trample_parameters( trample_desc& desc )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x635c40]
+	backend::ref( ).set_ps_constant( m_trample_parameters, desc.multiplier );
 }
 
 void grass_world::set_shadow_parameters( u32 )
@@ -309,16 +326,35 @@ void grass_world::process_culling( renderer_context* context, float first_lod_di
 	}
 }
 
-void grass_world::accumulate_trample( renderer*, renderer_context* )
+void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* in_context )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6371c0]
+	grass_patch* const* it_patch			= m_patches.begin( );
+	grass_patch* const* end_patch		= m_patches.end( );
+
+	for ( ; it_patch != end_patch; ++it_patch )
+	{
+		if ( options::ref( ).current.m_use_hiz_occlusion_culling && (*it_patch)->is_occluded( ) )
+			continue;
+
+		trample_desc* it_trample			= m_trample_array.begin( );
+		trample_desc* end_trample		= m_trample_array.end( );
+
+		for ( ; it_trample != end_trample; ++it_trample )
+			(*it_patch)->try_accumulate_trample( *it_trample, this, in_renderer, in_context );
+	}
+
+	m_trample_array.clear( );
 }
 
 void grass_world::remove_trample( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x635bb0]
+	grass_patch* const* it_patch			= m_patches.begin( );
+	grass_patch* const* end_patch		= m_patches.end( );
+
+	for ( ; it_patch != end_patch; ++it_patch )
+		(*it_patch)->remove_trample( );
 }
 
 void grass_world::render(
@@ -376,8 +412,14 @@ void grass_world::remove_instances( vector<u32> const& )
 
 void setup_seed_clk( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x635990]
+	u32 const seed							= GetTickCount( );
+	point_random_x							= seed;
+	point_random_z							= seed;
+	model_index_random						= seed;
+	model_orientation_random				= seed;
+	model_density_random					= seed;
+	model_scale_random						= seed;
 }
 
 u8 select_model_template( float*, float, u8 )

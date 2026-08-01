@@ -40,6 +40,19 @@ struct vertex_colored_sl {
 
 STATIC_SIZE_ASSERT( vertex_colored_sl, 0x24 );
 
+struct screen_vertex {
+	float4 position;
+	float2 tc;
+
+	void set( float4 const& in_position, float2 const& in_tc )
+	{
+		position	= in_position;
+		tc			= in_tc;
+	}
+};
+
+STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
+
 //TODO: not here
 const D3D_INPUT_ELEMENT_DESC F_L_sl[] =
 {
@@ -712,8 +725,6 @@ void system_renderer::draw_3D_point(
 	// ******
 }
 
-// claude@NOTE: legacy body diverged - legacy fill_surface is a static free single-surface TL quad; canonical member takes 4 surfaces + depth + viewport + quad coords (see legacy remainder note); matcher-phase work.
-// STATE[STUB]
 void system_renderer::fill_surface(
 	render_target_ptr		surface0,
 	render_target_ptr		surface1,
@@ -728,64 +739,51 @@ void system_renderer::fill_surface(
 	float					size_y
 )
 {
-	// LOCALS
-	// D3D11_VIEWPORT 					prev_view_port
-	// D3D11_VIEWPORT 					view_port
-	// u32 								offset
-	// float 							pos_x0
-	// float 							pos_x1
-	// float 							pos_y1
-	// float 							pos_y0
-	// ******
+	D3D11_VIEWPORT prev_view_port;
+	u32 viewport_count					= 1;
+	device::ref( ).d3d_context( )->RSGetViewports( &viewport_count, &prev_view_port );
 
-	// CALL SITE INFO
-	// <0x644a52> -> void < unknown >( u32*, D3D11_VIEWPORT* )
-	// ******
+	D3D11_VIEWPORT view_port;
+	view_port.TopLeftX					= 0.f;
+	view_port.TopLeftY					= 0.f;
+	view_port.Width						= float( surface0->width( ) );
+	view_port.Height						= float( surface0->height( ) );
+	view_port.MinDepth					= 0.f;
+	view_port.MaxDepth					= 1.f;
 
-	// FUNCTION BODY[0x644a20]: 42
-	// <0>
-	// <1>
-	// <0x644a29>|0x009|+0x02b:'532'
-	// <0>
-	// <0x644a54>|0x034|+0x017:'534'
-	// <0x644a6b>|0x04b|+0x010:'535'
-	// <0x644a7b>|0x05b|+0x007:'536'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x644a82>|0x062|+0x035:'541'
-	// <0>
-	// <0x644ab7>|0x097|+0x006:'543'
-	// <0x644abd>|0x09d|+0x015:'544'
-	// <0x644ad2>|0x0b2|+0x002:'545'
-	// <0x644ad4>|0x0b4|+0x019:'546'
-	// <0>
-	// <0x644aed>|0x0cd|+0x00d:'548'
-	// <0x644afa>|0x0da|+0x019:'549'
-	// <0x644b13>|0x0f3|+0x002:'550'
-	// <0x644b15>|0x0f5|+0x01e:'551'
-	// <0>
-	// <1>
-	// <2>
-	// <0x644b33>|0x113|+0x015:'555'
-	// <0x644b48>|0x128|+0x008:'556'
-	// <0>
-	// <1>
-	// <2>
-	// <0x644b50>|0x130|+0x06d:'560'
-	// <0x644bbd>|0x19d|+0x060:'561'
-	// <0x644c1d>|0x1fd|+0x033:'562'
-	// <0x644c50>|0x230|+0x06b:'563'
-	// <0x644cbb>|0x29b|+0x036:'564'
-	// <0x644cf1>|0x2d1|+0x037:'565'
-	// <0>
-	// <0x644d28>|0x308|+0x008:'567'
-	// <0>
-	// <0x644d30>|0x310|+0x076:'569'
-	// <0>
-	// <0x644da6>|0x386|+0x02a:'571'
-	// ******
+	backend::ref( ).set_render_targets(
+		surface0.c_ptr( ),
+		surface1.c_ptr( ),
+		surface2.c_ptr( ),
+		surface3.c_ptr( )
+	);
+
+	if ( reset_depth_rt )
+		backend::ref( ).reset_depth_stencil_target( );
+	else
+		backend::ref( ).set_depth_stencil_target( depth_rt.c_ptr( ) );
+
+	if ( user_view_port )
+		device::ref( ).d3d_context( )->RSSetViewports( 1, user_view_port );
+	else
+		device::ref( ).d3d_context( )->RSSetViewports( 1, &view_port );
+
+	float const pos_x0					= pos_x * 2.f - 1.f;
+	float const pos_x1					= (pos_x + size_x) * 2.f - 1.f;
+	float const pos_y1					= -((pos_y + size_y) * 2.f - 1.f);
+	float const pos_y0					= -(pos_y * 2.f - 1.f);
+
+	u32 offset;
+	screen_vertex* pv					= m_vertex_stream_quad.lock<screen_vertex>( 4, offset );
+	pv->set( float4( pos_x0, pos_y1, 0.f, 1.f ), float2( 0.f, 1.f ) ); ++pv;
+	pv->set( float4( pos_x0, pos_y0, 0.f, 1.f ), float2( 0.f, 0.f ) ); ++pv;
+	pv->set( float4( pos_x1, pos_y1, 0.f, 1.f ), float2( 1.f, 1.f ) ); ++pv;
+	pv->set( float4( pos_x1, pos_y0, 0.f, 1.f ), float2( 1.f, 0.f ) ); ++pv;
+	m_vertex_stream_quad.unlock( );
+
+	m_screen_vertex_geometry->apply( );
+	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 6, 0, offset );
+	device::ref( ).d3d_context( )->RSSetViewports( 1, &prev_view_port );
 }
 
 void system_renderer::draw_aabb( math::aabb const& aabb, math::color const& color )
