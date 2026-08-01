@@ -2138,11 +2138,11 @@ def main():
 
     p = sub.add_parser("tried", help="record a dispatch attempt; queue demotes tried work")
     p.add_argument("mangled", nargs="*")
-    p.add_argument("--unit", help="mark every function of this TU (even 100%-matched)")
+    p.add_argument("--unit", help="mark every function of this TU (even fully matched)")
     p.add_argument(
         "--done",
         action="store_true",
-        help="mark every fn that ever reached 100% (by max) and isn't tried yet -> "
+        help="mark every fn that reached a full match (by max) and isn't tried yet -> "
         "keeps the done set out of the queue until everything else is exhausted",
     )
     p.add_argument("--note", help="optional context, e.g. the worker's park causes")
