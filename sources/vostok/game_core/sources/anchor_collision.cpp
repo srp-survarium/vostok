@@ -67,11 +67,13 @@ namespace vostok
 		render::one_way_render_channel channel = render::one_way_render_channel(alloc);
 		configs::binary_config_ptr render_config;
 		render::engine::world world = render::engine::world(render_config, false);
-		render::debug::renderer renderer = render::debug::renderer(channel, alloc, world);
-
+		// claude@NOTE: debug::renderer's ctor is private in the target and is reachable only
+		// through its friends (game::renderer NEWs it), so this anchor must not construct
+		// one - it only needs the reference to keep draw_collision referenced.
+		render::debug::renderer* renderer = NULL;
 
 		float4x4 transform;
-		ao.draw_collision(scene, renderer, transform);
+		ao.draw_collision(scene, *renderer, transform);
 
 		ao.get_random_surface_point(10);
 		ao.get_head_bone_center();
