@@ -28,6 +28,11 @@ CONTRACTED before anything compares the two graphs - without that, one byte of
 padding on one side renames every later block and prints as a cascade of
 retargeted branches. See `contract`.
 
+    python3 scripts/sema.py rva      <fn>                  # address/source/match dossier
+    python3 scripts/sema.py xref     <fn> --callees        # root -> direct callees
+    python3 scripts/sema.py xref     <fn>                  # direct callers
+    python3 scripts/sema.py strings  <fn>                  # referenced string literals
+    python3 scripts/sema.py strings  --find <text>         # reverse literal lookup
     python3 scripts/sema.py blocks   <fn> --diff --lite    # THE VERDICT VIEW
     python3 scripts/sema.py blocks   <fn> --diff     # same, with per-block bodies
     python3 scripts/sema.py blocks   <fn> [--base]   # one side's CFG
@@ -59,6 +64,9 @@ VOSTOK = Path(__file__).resolve().parent.parent
 RICH = VOSTOK / "binaries" / "rich"
 DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
 OBJDIFF = VOSTOK / "binaries" / "objdiff"
+
+RE_CALL = re.compile(r"^call\s+(.+?)\s*$", re.IGNORECASE)
+RE_LITERAL = re.compile(r"\?\?_C@[^\s,\]\)]+")
 
 
 def die(msg):
@@ -143,6 +151,203 @@ def resolve(sel):
         # pair strictly by mangled name
         base = [r for r in base if r["mangled"] == tgt[0]["mangled"]]
     return (tgt[0] if tgt else None), (base[0] if base else None)
+
+
+def _records(side):
+    with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
+        for line in fh:
+            yield json.loads(line)
+
+
+def _qualified_name(name):
+    """Drop a demangled return type and argument list, preserving scoped names."""
+    head = name.split("(", 1)[0].strip()
+    marker = head.find("operator ")
+    if marker >= 0:
+        scope = head[:marker].rsplit(" ", 1)[-1]
+        return scope + head[marker:]
+    return head.rsplit(" ", 1)[-1]
+
+
+def _call_operand(text):
+    match = RE_CALL.match(text.strip())
+    return match.group(1).strip() if match else None
+
+
+def _literal_symbols(rec):
+    result = []
+    for insn in rec.get("instructions", []):
+        result.extend(RE_LITERAL.findall(insn.get("text", "")))
+    return result
+
+
+def _decode_literal(symbol):
+    """Decode the readable prefix carried by an MSVC ``??_C@`` symbol.
+
+    Long literals are truncated by the compiler, so this is deliberately a hint,
+    not a claim that the returned text is complete.
+    """
+    fields = symbol.split("@")
+    if len(fields) < 3:
+        return symbol
+    payload = fields[-2] if fields[-1] == "" else fields[-1]
+    out = []
+    i = 0
+    digit_escapes = {
+        "0": ",", "1": "/", "2": "\\", "3": ":", "4": ".",
+        "5": " ", "6": "\n", "7": "\t", "8": "'", "9": "-",
+    }
+    while i < len(payload):
+        if payload.startswith("?$", i) and i + 3 < len(payload):
+            hi, lo = payload[i + 2], payload[i + 3]
+            if "A" <= hi <= "P" and "A" <= lo <= "P":
+                value = (ord(hi) - ord("A")) * 16 + ord(lo) - ord("A")
+                if value:
+                    out.append(chr(value))
+                i += 4
+                continue
+        if payload[i] == "?" and i + 1 < len(payload):
+            decoded = digit_escapes.get(payload[i + 1])
+            if decoded is not None:
+                out.append(decoded)
+                i += 2
+                continue
+        out.append(payload[i])
+        i += 1
+    return "".join(out)
+
+
+def _side_record(args):
+    target, base = resolve(args.fn)
+    side = "base" if getattr(args, "base", False) else "target"
+    rec = base if side == "base" else target
+    if rec is None:
+        die(f"'{args.fn}' has no {side} function")
+    return side, rec
+
+
+def _print_record(side, rec):
+    print(f"{side:6}  rva={rec['rva']:#x}  size={rec.get('size', 0):#x}  "
+          f"stmts={len(rec.get('statements', []))}")
+    print(f"        {rec.get('file', '(unknown file)')}")
+    print(f"        {rec['name']}")
+    print(f"        {rec['mangled']}")
+
+
+def cmd_rva(args):
+    target, base = resolve(args.fn)
+    if target is None and base is None:
+        die(f"no function matches '{args.fn}'")
+    if target:
+        _print_record("target", target)
+    if base:
+        _print_record("base", base)
+    mangled = (target or base)["mangled"]
+    if not DB_PATH.is_file():
+        return 0
+    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+    con.row_factory = sqlite3.Row
+    rows = con.execute(
+        """
+        SELECT t.module, u.name AS unit, f.path AS file, p.fuzzy_pct,
+               p.struct_class, p.t_stmts, p.b_stmts,
+               (SELECT group_concat(flag || coalesce(':' || cause, ''), '; ')
+                  FROM flags WHERE mangled = s.mangled) AS flags,
+               a.n AS attempts, m.max_fuzzy_pct, m.exact_proven
+          FROM target_functions t
+          JOIN symbols s ON s.id = t.sym
+          LEFT JOIN units u ON u.id = t.unit
+          LEFT JOIN files f ON f.id = t.file
+          LEFT JOIN pairs p ON p.target_rva = t.rva
+          LEFT JOIN attempts a ON a.mangled = s.mangled
+          LEFT JOIN source_maxima m ON m.mangled = s.mangled
+         WHERE s.mangled = ? ORDER BY t.rva
+        """, (mangled,)).fetchall()
+    con.close()
+    for row in rows:
+        pct = "-" if row["fuzzy_pct"] is None else f"{row['fuzzy_pct']:.2f}%"
+        maximum = "-" if row["max_fuzzy_pct"] is None else f"{row['max_fuzzy_pct']:.2f}%"
+        print(f"match   module={row['module']}  unit={row['unit'] or '-'}")
+        print(f"        current={pct}  max={maximum}  class={row['struct_class'] or '-'}  "
+              f"statements={row['t_stmts'] or '-'}:{row['b_stmts'] or '-'}  "
+              f"attempts={row['attempts'] or 0}")
+        if row["flags"]:
+            print(f"        flags={row['flags']}")
+    return 0
+
+
+def _callee_rows(rec):
+    rows = []
+    for insn in rec.get("instructions", []):
+        operand = _call_operand(insn.get("text", ""))
+        if operand:
+            rows.append((insn.get("off", 0), operand))
+    return rows
+
+
+def _matches_operand(rec, operand):
+    return operand in (rec["mangled"], _qualified_name(rec["name"]))
+
+
+def cmd_xref(args):
+    side, selected = _side_record(args)
+    if args.callees:
+        rows = _callee_rows(selected)
+        if not args.raw:
+            counts = {}
+            first = {}
+            for off, operand in rows:
+                counts[operand] = counts.get(operand, 0) + 1
+                first.setdefault(operand, off)
+            rows = [(first[name], name, counts[name]) for name in sorted(counts)]
+        else:
+            rows = [(off, name, 1) for off, name in rows]
+        print(f"{side} callees of {selected['name']} ({selected['rva']:#x})")
+        for off, operand, count in rows:
+            suffix = f" x{count}" if count > 1 else ""
+            print(f"  +0x{off:04x}  {operand}{suffix}")
+        return 0
+
+    hits = []
+    for rec in _records(side):
+        sites = [(off, operand) for off, operand in _callee_rows(rec)
+                 if _matches_operand(selected, operand)]
+        if sites:
+            hits.append((rec, sites))
+    print(f"{side} callers of {selected['name']} ({selected['rva']:#x})")
+    for rec, sites in hits:
+        if args.raw:
+            for off, _ in sites:
+                print(f"  {rec['rva']:#010x}+0x{off:04x}  {rec['file']}  {rec['name']}")
+        else:
+            print(f"  {rec['rva']:#010x}  calls={len(sites):<3}  {rec['file']}  {rec['name']}")
+    return 0
+
+
+def cmd_strings(args):
+    side = "base" if args.base else "target"
+    if args.find is not None:
+        needle = args.find.casefold()
+        hits = []
+        for rec in _records(side):
+            literals = sorted(set(_literal_symbols(rec)))
+            matched = [s for s in literals
+                       if needle in _decode_literal(s).casefold() or needle in s.casefold()]
+            if matched:
+                hits.append((rec, matched))
+        print(f"{side} functions referencing string '{args.find}'")
+        for rec, literals in hits:
+            hints = ", ".join(repr(_decode_literal(s)) for s in literals)
+            print(f"  {rec['rva']:#010x}  {rec['file']}  {rec['name']}  [{hints}]")
+        return 0
+    if not args.fn:
+        die("strings requires <fn> or --find <text>")
+    _, rec = _side_record(args)
+    literals = sorted(set(_literal_symbols(rec)))
+    print(f"{side} strings of {rec['name']} ({rec['rva']:#x})")
+    for symbol in literals:
+        print(f"  {repr(_decode_literal(symbol)):<38}  {symbol}")
+    return 0
 
 
 def fuzzy_of(mangled):
@@ -941,6 +1146,20 @@ def main():
         description=__doc__.split("\n\n")[0],
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
+    p = sub.add_parser("rva", help="address, source, and match dossier")
+    p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
+    p.set_defaults(func=cmd_rva)
+    p = sub.add_parser("xref", help="direct target/base caller-callee graph")
+    p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
+    p.add_argument("--callees", action="store_true", help="show outgoing calls")
+    p.add_argument("--base", action="store_true", help="read the base side")
+    p.add_argument("--raw", action="store_true", help="show every call site")
+    p.set_defaults(func=cmd_xref)
+    p = sub.add_parser("strings", help="per-function literals or reverse lookup")
+    p.add_argument("fn", nargs="?", help="mangled name, demangled substring, or hex RVA/VA")
+    p.add_argument("--find", metavar="TEXT", help="list functions referencing a literal")
+    p.add_argument("--base", action="store_true", help="read the base side")
+    p.set_defaults(func=cmd_strings)
     for name, fn in (("blocks", cmd_blocks), ("branches", cmd_branches), ("dot", cmd_dot)):
         p = sub.add_parser(name)
         p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
