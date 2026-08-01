@@ -31,6 +31,7 @@ they are orchestrator tickets, see `core_header_tickets.md`.
 | B3 | `effect_compiler.cpp` + `shader_constant_table.cpp` + `res_declaration.cpp` | 437 (16.5%) | 28.5% | 44.72% |
 | A2 | `scene.cpp` (scene root) + struct-vs-class sweep | 446 (16.8%) | 28.7% | 44.82% |
 | A3 | `scene_renderer.cpp` (facade root) + facade anchor | 473 (17.9%) | 29.9% | 45.16% |
+| A5 | `register_samplers.cpp` + `renderer::render` (21 console switches) | - | - | - |
 
 Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
@@ -146,3 +147,38 @@ stamps a stale `match.db`/README onto the batch commit, and the tell is subtle:
 the score line reads *identical to the previous batch*. Verify the build exited
 0 AND that `git diff --stat docs/binary_matching/match.db` is non-empty before
 amending.
+
+## Batch A5 notes
+
+- `register_samplers` 61.0 -> 82.9, **45/45 statements** (structure count match, 0x6a0 vs
+  0x698 bytes). The unreconstructed head was `math::clamp_r( options::ref( ).current
+  .m_max_anisotropic, 0u, 4u )` followed by a `switch` on the SAME member mapping 0..4 to
+  0/2/4/8/16 - the clamp result survives as the `default:` value. The `+0xb8` options member
+  is `current.m_max_anisotropic` (`options::current` at +0x0c, `optinos_table
+  ::m_max_anisotropic` at +0xac). Also recovered: the trailing
+  `resource_manager::ref( ).bind_samplers_to_shaders( )`, and four wrong address modes
+  (`s_base_hud`/`s_position` are CLAMP, `s_nofilter`/`s_linear` are WRAP).
+- `renderer::render` 22.3 -> 57.0. Twenty-one file-scope console switches recovered from
+  `renderer.cpp`'s `dynamic initializer` list - see the batch recipe appended to
+  `patterns/entry-guard-is-file-scope-debug-switch.md`. `s_ui_enabled_console_command` is
+  declared at **global scope**, ahead of `namespace vostok`.
+- Reproduce-exactly note: the target sets `view_mode = unlit_view_mode` for BOTH
+  `s_unlit_value` and `s_distortion_value` (a copy-paste bug - `mov eax, 2` is reused).
+- **Blocker (lane B / core):** `render::event_query::issue` and `::wait` are empty stubs in
+  `render/core/sources/event_query.cpp`, so the `s_do_stages_profiling` and
+  `s_use_gpu_sync_value` blocks DCE away in `renderer::render`.
+- **Blocker (lane A, next batch):** `temporal_projection_matrix_modifier::push_jittering` /
+  `::pop_jittering` are stubs, so the whole jitter cone DCEs - and with it `view_mode`
+  (lines 868-873), `scene::process_streaming` (904-905), the TAA condition (909) and the
+  jitterer ctor/push/pop (911-912, 1210). `pop_jittering` is 0x26 bytes
+  (`if ( m_need_modify ) { pop the projection stack at renderer_context+0x3880; m_jittered
+  = false; }`); `push_jittering` is ~0x180 bytes of halton/2x jitter-sample selection.
+
+## Build gotcha (cost batch A5 three cycles)
+
+`rebuild.py <module>` builds only that `.lib` - **it does not relink the EXE**, so
+`report.json` stays at the previous epoch's numbers and `--view structure-diff` reads a
+stale base. Always run `rebuild.py` with **no** module argument. Second trap: entering
+`nix develop` again while a build runs kills that build's `mspdbsrv` (exit 144 / LNK1318);
+never run a `pdb_fetch` in parallel with a rebuild in the same worktree.
+

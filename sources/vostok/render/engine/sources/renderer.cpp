@@ -4,7 +4,9 @@
 #include <vostok/console_command.h>
 #include <vostok/particle/world.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/device.h>
 #include <vostok/render/core/effect_manager.h>
+#include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
@@ -15,11 +17,14 @@
 #include <vostok/scaleform/sources/flash_renderer.h>
 #include <vostok/ui/ui.h>
 
+#include "clouds.h"
 #include "effect_editor_gbuffer_to_screen.h"
 #include "effect_fill_environment_probe_face.h"
 #include "effect_fill_sky_ao_map.h"
 #include "effect_grass_trample.h"
 #include "grass_world.h"
+#include "light.h"
+#include "lights_db.h"
 #include "material.h"
 #include "register_samplers.h"
 #include "render_output_window.h"
@@ -54,6 +59,18 @@
 #include "stage_volume_fog.h"
 #include "statistics.h"
 #include "system_renderer.h"
+#include "temporal_projection_matrix_modifier.h"
+
+// claude@NOTE: the target records `dynamic initializer for 's_ui_enabled_console_command'`
+// WITHOUT a namespace qualifier while every other console command in this TU carries
+// `vostok::render::` - the pair lives at global scope, ahead of the namespaces.
+static bool s_ui_enabled = true;
+static vostok::console_commands::cc_bool s_ui_enabled_console_command(
+	"ui",
+	s_ui_enabled,
+	false,
+	vostok::console_commands::command_type_user_specific
+);
 
 namespace vostok {
 namespace render {
@@ -61,12 +78,170 @@ namespace render {
 // defined in stage_gbuffer.cpp
 void fill_surface( render_target_ptr surf, renderer_context* context );
 
+static bool s_do_stages_profiling = false;
+static console_commands::cc_bool s_do_stages_profiling_cc(
+	"r_show_stage_stats",
+	s_do_stages_profiling,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_dxt_env_probe = true;
+static console_commands::cc_bool s_dxt_env_probe_cc(
+	"r_dxt_env_probe",
+	s_dxt_env_probe,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_execute_stages = true;
+static console_commands::cc_bool s_execute_stages_cc(
+	"r_execute_stages",
+	s_execute_stages,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_enable_rendering = true;
+static console_commands::cc_bool s_enable_rendering_cc(
+	"debug_enable_rendering",
+	s_enable_rendering,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static u32 s_view_mode_value = lit_view_mode;
+static console_commands::cc_u32 s_view_mode(
+	"r_view_mode",
+	s_view_mode_value,
+	0,
+	num_view_modes,
+	true,
+	console_commands::command_type_user_specific
+);
+
+static bool s_use_gpu_sync_value = true;
+static console_commands::cc_bool s_s_use_gpu_sync_cc(
+	"r_gpu_sync",
+	s_use_gpu_sync_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
 static bool s_disabled_shader_constansts_set = false;
 static vostok::console_commands::cc_bool s_disabled_shader_constansts_set_cc(
 	"disabled_shader_constansts_set",
 	s_disabled_shader_constansts_set,
 	false,
 	vostok::console_commands::command_type_engine_internal
+);
+
+static bool s_wireframe_value = false;
+static console_commands::cc_bool s_wireframe_cc(
+	"wireframe",
+	s_wireframe_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_unlit_value = false;
+static console_commands::cc_bool s_unlit_cc(
+	"unlit",
+	s_unlit_value,
+	true,
+	console_commands::command_type_user_specific
+);
+
+static bool s_distortion_value = false;
+static console_commands::cc_bool s_distortion_cc(
+	"distortion",
+	s_distortion_value,
+	true,
+	console_commands::command_type_engine_internal
+);
+
+static bool s_sorting_value = false;
+static console_commands::cc_bool s_sorting_cc(
+	"r_use_sorting_by_material",
+	s_sorting_value,
+	false,
+	console_commands::command_type_engine_internal
+);
+
+static bool s_sorting2_value = false;
+static console_commands::cc_bool s_sorting2_cc(
+	"r_use_sorting_by_distance",
+	s_sorting2_value,
+	false,
+	console_commands::command_type_engine_internal
+);
+
+static bool s_sorting3_value = true;
+static console_commands::cc_bool s_sorting3_cc(
+	"r_use_sorting_by_textures",
+	s_sorting3_value,
+	false,
+	console_commands::command_type_engine_internal
+);
+
+static bool s_hiz_7_value = true;
+static console_commands::cc_bool s_hiz_7(
+	"hiz_7",
+	s_hiz_7_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_hiz_8_value = true;
+static console_commands::cc_bool s_hiz_8(
+	"hiz_8",
+	s_hiz_8_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_draw_frame_histogram_value = false;
+static console_commands::cc_bool s_draw_fps_histogram_cc(
+	"r_draw_frame_histogram",
+	s_draw_frame_histogram_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static u32 s_draw_most_dips_models_list_value = 3;
+static console_commands::cc_u32 s_draw_most_dips_models_list_cc(
+	"r_draw_most_dips_models_list_by_lod",
+	s_draw_most_dips_models_list_value,
+	0,
+	10,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_dump_scene_statistics_value = false;
+static console_commands::cc_bool s_dump_scene_statistics_cc(
+	"r_dump_scene_statistics",
+	s_dump_scene_statistics_value,
+	false,
+	console_commands::command_type_user_specific
+);
+
+static bool s_debug_remove_trample = false;
+static console_commands::cc_bool s_debug_remove_trample_cc(
+	"r_remove_trample",
+	s_debug_remove_trample,
+	false,
+	console_commands::command_type_user_specific
+);
+
+// claude@NOTE: the console-command string of s_debug_use_skeletel_mesh_lods_cc could not be
+// read back - the object sits past the last one whose `dynamic initializer` was dumped.
+static bool s_debug_use_skeletel_mesh_lods_value = true;
+static console_commands::cc_bool s_debug_use_skeletel_mesh_lods_cc(
+	"r_use_skeletel_mesh_lods",
+	s_debug_use_skeletel_mesh_lods_value,
+	false,
+	console_commands::command_type_user_specific
 );
 
 struct stage_stat {
@@ -85,6 +260,8 @@ struct stage_stat {
 	u32 dips[1];
 	stage* stg;
 };
+
+static stage_stat s_visibility_stage_stats;
 
 struct remove_model_filter_predicate {
 	remove_model_filter_predicate( ) :
@@ -992,6 +1169,9 @@ void draw_text_shadowed(
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
+// claude@NOTE: the second disjunct of the line-1229 guard is an LTCG-folded
+// constant (`mov edx, <code address>; test edx, edx; je`) whose source spelling
+// could not be recovered - only the `output_window.c_ptr( )` half is written here.
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -999,736 +1179,278 @@ void renderer::render(
 	math::rectangle< float2 > const&	viewport,
 	boost::function< void( bool ) > const&	on_draw_scene,
 	bool								draw_debug_terrain,
-	vostok::ui::font const*						default_font
+	vostok::ui::font const*				default_font
 )
 {
-	// LOCALS
-	// scene_view* 						view
-	// const float 						frame_time
-	// temporal_projection_matrix_modifier temporal_jitterer
-	// vector< survarium::flash_movie* > movies_vec
-	// scene_view_mode 					view_mode
-	// const float 						time_delta
-	// survarium::flash_text_manager* 	text_manager
-	// scene_view const* 				s
-	// u32 								i
-	// ******
+	backend::ref( ).num_vs_changes	=
+	backend::ref( ).num_ps_changes	=
+	backend::ref( ).num_il_changes	=
+	backend::ref( ).num_vsc_changes	=
+	backend::ref( ).num_vst_changes	=
+	backend::ref( ).num_vss_changes	=
+	backend::ref( ).num_psc_changes	=
+	backend::ref( ).num_pst_changes	=
+	backend::ref( ).num_pss_changes	= 0;
 
-	// CALL SITE INFO
-	// <0x64cd5e> -> void < unknown >( float, float4x4 const& )
-	// <0x64cd98> -> void < unknown >()
-	// ******
+	float const frame_time		= m_fps_timer.get_elapsed_sec( );
 
-	// FUNCTION BODY[0x64c9c0]: 469
-	// <0>
-	// <1>
-	// <0x64c9c3>|0x003|+0x00f:'825'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x64c9d2>|0x012|+0x02b:'835'
-	// <0>
-	// <0x64c9fd>|0x03d|+0x023:'837'
-	// <0>
-	// <0x64ca20>|0x060|+0x012:'839'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64ca32>|0x072|+0x015:'843'
-	// <0>
-	// <0x64ca47>|0x087|+0x00f:'845'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x64ca56>|0x096|+0x009:'855'
-	// <0>
-	// <0x64ca5f>|0x09f|+0x005:'857'
-	// <0>
-	// <0x64ca64>|0x0a4|+0x01e:'859'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64ca82>|0x0c2|+0x004:'863'
-	// <0x64ca86>|0x0c6|+0x008:'864'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64ca8e>|0x0ce|+0x018:'868'
-	// <0x64caa6>|0x0e6|+0x004:'869'
-	// <0>
-	// <0x64caaa>|0x0ea|+0x011:'871'
-	// <0x64cabb>|0x0fb|+0x012:'872'
-	// <0x64cacd>|0x10d|+0x00d:'873'
-	// <0>
-	// <0x64cada>|0x11a|+0x006:'875'
-	// <0>
-	// <0x64cae0>|0x120|+0x00f:'877'
-	// <0>
-	// <0x64caef>|0x12f|+0x027:'879'
-	// <0>
-	// <0x64cb16>|0x156|+0x01d:'881'
-	// <0>
-	// <0x64cb33>|0x173|+0x006:'883'
-	// <0x64cb39>|0x179|+0x020:'884'
-	// <0x64cb59>|0x199|+0x00e:'885'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64cb67>|0x1a7|+0x032:'889'
-	// <0>
-	// <0x64cb99>|0x1d9|+0x02b:'891'
-	// <0>
-	// <0x64cbc4>|0x204|+0x00e:'893'
-	// <0x64cbd2>|0x212|+0x006:'894'
-	// <0>
-	// <0x64cbd8>|0x218|-0x165:'896'
-	// <0>
-	// <0x64ca73>|0x0b3|+0x857:'898'
-	// <0x64d2ca>|0x90a|-0x6d6:'898'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64cbf4>|0x234|+0x00e:'904'
-	// <0x64cc02>|0x242|+0x02d:'905'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64cc2f>|0x26f|+0x030:'909'
-	// <0>
-	// <0x64cc5f>|0x29f|+0x006:'911'
-	// <0x64cc65>|0x2a5|+0x01f:'912'
-	// <0>
-	// <1>
-	// <0x64cc84>|0x2c4|+0x015:'915'
-	// <0>
-	// <0x64cc99>|0x2d9|+0x01c:'917'
-	// <0>
-	// <0x64ccb5>|0x2f5|+0x004:'919'
-	// <0x64ccb9>|0x2f9|+0x01d:'920'
-	// <0>
-	// <0x64ccd6>|0x316|+0x028:'922'
-	// <0>
-	// <1>
-	// <0x64ccfe>|0x33e|+0x010:'925'
-	// <0>
-	// <0x64cd0e>|0x34e|+0x011:'927'
-	// <0>
-	// <0x64cd1f>|0x35f|+0x00a:'929'
-	// <0x64cd29>|0x369|+0x00c:'930'
-	// <0>
-	// <0x64cd35>|0x375|+0x012:'932'
-	// <0x64cd47>|0x387|+0x004:'933'
-	// <0x64cd4b>|0x38b|+0x015:'934'
-	// <0>
-	// <0x64cd60>|0x3a0|+0x00b:'936'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64cd6b>|0x3ab|+0x009:'940'
-	// <0>
-	// <1>
-	// <0x64cd74>|0x3b4|+0x008:'943'
-	// <0x64cd7c>|0x3bc|+0x009:'944'
-	// <0x64cd85>|0x3c5|+0x008:'945'
-	// <0>
-	// <1>
-	// <0x64cd8d>|0x3cd|+0x00d:'948'
-	// <0>
-	// <0x64cd9a>|0x3da|+0x009:'950'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64cda3>|0x3e3|+0x020:'955'
-	// <0x64cdc3>|0x403|+0x00c:'956'
-	// <0>
-	// <1>
-	// <0x64cdcf>|0x40f|+0x008:'959'
-	// <0x64cdd7>|0x417|+0x009:'960'
-	// <0>
-	// <0x64cde0>|0x420|+0x013:'962'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64cdf3>|0x433|+0x00b:'966'
-	// <0>
-	// <0x64cdfe>|0x43e|+0x020:'968'
-	// <0>
-	// <1>
-	// <0x64ce1e>|0x45e|+0x019:'971'
-	// <0>
-	// <0x64ce37>|0x477|+0x009:'973'
-	// <0>
-	// <0x64ce40>|0x480|+0x005:'975'
-	// <0x64ce45>|0x485|+0x007:'976'
-	// <0>
-	// <1>
-	// <0x64ce4c>|0x48c|+0x00d:'979'
-	// <0>
-	// <1>
-	// <0x64ce59>|0x499|+0x058:'982'
-	// <0x64ceb1>|0x4f1|+0x01d:'983'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x64cece>|0x50e|+0x006:'993'
-	// <0>
-	// <0x64ced4>|0x514|+0x006:'995'
-	// <0>
-	// <0x64ceda>|0x51a|+0x00b:'997'
-	// <0>
-	// <1>
-	// <0x64cee5>|0x525|+0x020:'1000'
-	// <0x64cf05>|0x545|+0x084:'1001'
-	// <0x64cf89>|0x5c9|+0x03d:'1002'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <42>
-	// <43>
-	// <44>
-	// <45>
-	// <46>
-	// <47>
-	// <48>
-	// <49>
-	// <50>
-	// <51>
-	// <52>
-	// <53>
-	// <54>
-	// <55>
-	// <56>
-	// <57>
-	// <58>
-	// <59>
-	// <60>
-	// <61>
-	// <62>
-	// <63>
-	// <64>
-	// <65>
-	// <66>
-	// <67>
-	// <68>
-	// <69>
-	// <70>
-	// <71>
-	// <72>
-	// <73>
-	// <74>
-	// <75>
-	// <76>
-	// <77>
-	// <78>
-	// <79>
-	// <80>
-	// <81>
-	// <82>
-	// <83>
-	// <84>
-	// <85>
-	// <86>
-	// <87>
-	// <88>
-	// <89>
-	// <90>
-	// <91>
-	// <92>
-	// <93>
-	// <94>
-	// <95>
-	// <96>
-	// <97>
-	// <98>
-	// <99>
-	// <100>
-	// <101>
-	// <102>
-	// <103>
-	// <104>
-	// <105>
-	// <106>
-	// <107>
-	// <108>
-	// <109>
-	// <110>
-	// <111>
-	// <112>
-	// <113>
-	// <114>
-	// <115>
-	// <116>
-	// <117>
-	// <118>
-	// <119>
-	// <120>
-	// <121>
-	// <122>
-	// <123>
-	// <124>
-	// <125>
-	// <126>
-	// <127>
-	// <128>
-	// <129>
-	// <130>
-	// <131>
-	// <132>
-	// <133>
-	// <134>
-	// <135>
-	// <136>
-	// <137>
-	// <138>
-	// <139>
-	// <140>
-	// <141>
-	// <142>
-	// <143>
-	// <144>
-	// <145>
-	// <146>
-	// <147>
-	// <148>
-	// <149>
-	// <150>
-	// <151>
-	// <152>
-	// <153>
-	// <154>
-	// <155>
-	// <156>
-	// <157>
-	// <158>
-	// <159>
-	// <160>
-	// <161>
-	// <162>
-	// <163>
-	// <164>
-	// <165>
-	// <166>
-	// <167>
-	// <168>
-	// <169>
-	// <170>
-	// <171>
-	// <172>
-	// <173>
-	// <174>
-	// <175>
-	// <176>
-	// <177>
-	// <178>
-	// <179>
-	// <180>
-	// <181>
-	// <182>
-	// <183>
-	// <184>
-	// <185>
-	// <186>
-	// <187>
-	// <188>
-	// <189>
-	// <190>
-	// <191>
-	// <192>
-	// <193>
-	// <194>
-	// <195>
-	// <196>
-	// <197>
-	// <198>
-	// <199>
-	// <200>
-	// <201>
-	// <202>
-	// <203>
-	// <204>
-	// <205>
-	// <206>
-	// <0x64cfc6>|0x606|+0x009:'1210'
-	// <0>
-	// <0x64cfcf>|0x60f|+0x019:'1212'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64cfe8>|0x628|+0x00c:'1216'
-	// <0x64cff4>|0x634|+0x03d:'1217'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64d031>|0x671|+0x020:'1223'
-	// <0x64d051>|0x691|+0x005:'1224'
-	// <0>
-	// <1>
-	// <0x64d056>|0x696|+0x014:'1227'
-	// <0>
-	// <0x64d06a>|0x6aa|+0x01b:'1229'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64d085>|0x6c5|+0x019:'1233'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64d09e>|0x6de|+0x00c:'1237'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64d0aa>|0x6ea|+0x035:'1241'
-	// <0x64d0df>|0x71f|+0x050:'1242'
-	// <0>
-	// <0x64d12f>|0x76f|+0x00d:'1244'
-	// <0x64d13c>|0x77c|+0x007:'1245'
-	// <0x64d143>|0x783|+0x00b:'1246'
-	// <0>
-	// <0x64d14e>|0x78e|+0x029:'1248'
-	// <0x64d177>|0x7b7|+0x01f:'1249'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64d196>|0x7d6|+0x00b:'1253'
-	// <0x64d1a1>|0x7e1|+0x00f:'1254'
-	// <0>
-	// <1>
-	// <0x64d1b0>|0x7f0|+0x00d:'1257'
-	// <0>
-	// <0x64d1bd>|0x7fd|+0x00b:'1259'
-	// <0>
-	// <1>
-	// <0x64d1c8>|0x808|+0x009:'1262'
-	// <0>
-	// <0x64d1d1>|0x811|+0x009:'1264'
-	// <0x64d1da>|0x81a|+0x008:'1265'
-	// <0>
-	// <1>
-	// <0x64d1e2>|0x822|+0x00c:'1268'
-	// <0>
-	// <0x64d1ee>|0x82e|+0x00d:'1270'
-	// <0>
-	// <0x64d1fb>|0x83b|+0x00d:'1272'
-	// <0>
-	// <0x64d208>|0x848|+0x00f:'1274'
-	// <0>
-	// <0x64d217>|0x857|+0x007:'1276'
-	// <0x64d21e>|0x85e|+0x016:'1277'
-	// <0>
-	// <1>
-	// <0x64d234>|0x874|+0x00d:'1280'
-	// <0x64d241>|0x881|+0x047:'1281'
-	// <0x64d288>|0x8c8|+0x005:'1282'
-	// <0x64d28d>|0x8cd|+0x014:'1283'
-	// <0x64d2a1>|0x8e1|+0x008:'1284'
-	// <0>
-	// <1>
-	// <0x64d2a9>|0x8e9|+0x009:'1287'
-	// <0>
-	// <1>
-	// <0x64d2b2>|0x8f2|-0x866:'1290'
-	// <0>
-	// <0x64ca4c>|0x08c|+0x02c:'1292'
-	// <0x64ca78>|0x0b8|+0x848:'1292'
-	// <0x64d2c0>|0x900|+0x01e:'1292'
-	// ******
+	m_fps_timer.start			( );
 
-	VOSTOK_UNREFERENCED_PARAMETER( default_font );
+	statistics::ref( ).start	( );
 
-	backend::ref( ).disabled_shader_constansts_set = s_disabled_shader_constansts_set;
+	VOSTOK_UNREFERENCED_PARAMETER( draw_debug_terrain );
 
-	vostok::render::scene* scene		= static_cast_checked< vostok::render::scene* >( in_scene.c_ptr( ) );
-	vostok::render::scene_view* view	= static_cast_checked< vostok::render::scene_view* >( in_view.c_ptr( ) );
+
+	if ( !static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->valid_present( ) )
+	{
+		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
+
+		return;
+	}
+
+
+
+
+
+	if ( !s_enable_rendering )
+	{
+		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
+
+		static_cast_checked< render::scene* >( in_scene.c_ptr( ) )->flush( on_draw_scene, true, true );
+
+		return;
+	}
+
+	render::scene* const scene		= static_cast_checked< render::scene* >( in_scene.c_ptr( ) );
+	render::scene_view* view		= static_cast_checked< render::scene_view* >( in_view.c_ptr( ) );
+
+
+
+	scene_view_mode view_mode		= view->get_view_mode( );
+	if ( s_view_mode_value != lit_view_mode )
+		view_mode					= scene_view_mode( s_view_mode_value );
+	if ( s_wireframe_value )		view_mode = wireframe_view_mode;
+	if ( s_unlit_value )			view_mode = unlit_view_mode;
+	if ( s_distortion_value )		view_mode = unlit_view_mode;
 
 	view->inc_render_frame_index( );
 
 	m_current_time				= m_timer.get_elapsed_sec( );
 
-	float time_delta			= m_current_time - m_last_frame_time;
-	time_delta					= vostok::math::max( time_delta, 0.0f ) * scene->get_slomo( );
+	float const time_delta		= math::max( m_current_time - m_last_frame_time, 0.f ) * scene->get_slomo( );
 
 	scene->lights( ).tick		( time_delta );
 
-	m_renderer_context->set_current_time( m_last_frame_time );
-	m_renderer_context->set_time_delta( time_delta );
+	m_renderer_context->set_scene		( scene );
+	m_renderer_context->set_scene_view	( view );
+	m_renderer_context->set_current_time	( m_last_frame_time );
+	m_renderer_context->set_time_delta	( time_delta );
 
-	m_renderer_context->set_scene( scene );
-	m_renderer_context->set_scene_view( view );
+
+	static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->resize( device::ref( ).m_device_removed );
+
+	setup_render_output_window	( output_window, viewport );
+
+	u32 const window_size_x		= static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->width( );
+	u32 const window_size_y		= static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->height( );
 
 	if ( !is_effects_ready( ) || !material::is_nomaterial_material_ready( ) )
 	{
-		vostok::render::scene* const scene = static_cast_checked< vostok::render::scene* >( in_scene.c_ptr( ) );
-		scene->flush			( on_draw_scene, false, false );
+		static_cast_checked< render::scene* >( in_scene.c_ptr( ) )->flush( on_draw_scene, true, true );
+
 		return;
 	}
 
-	statistics::ref( ).start	( );
 
-	BEGIN_CPUGPU_TIMER( statistics::ref( ).general_stat_group.render_frame_time );
-	BEGIN_TIMER( statistics::ref( ).general_stat_group.cpu_render_frame_time );
+	if ( options::ref( ).current.m_use_texture_streaming )
+		scene->process_streaming( m_renderer_context->get_p( ), m_renderer_context->get_view_pos( ), window_size_x, window_size_y );
 
-	static_cast_checked< render::render_output_window* >( output_window.c_ptr( ) )->resize( false );
 
-	setup_render_output_window	( output_window, viewport );
+
+	bool const need_temporal_jittering = options::ref( ).current.m_use_temporal_antialiasing && view_mode == lit_view_mode && m_renderer_context->scene_view( )->m_use_post_process;
+
+	temporal_projection_matrix_modifier temporal_jitterer( m_renderer_context, window_size_x, window_size_y, need_temporal_jittering );
+	temporal_jitterer.push_jittering( );
+
+
+	if ( m_renderer_context->scene( )->get_clouds( ) )
+	{
+		light* const sun		= m_renderer_context->scene( )->lights( ).get_sun( ).c_ptr( );
+
+		if ( sun )
+			m_renderer_context->scene( )->get_clouds( )->set_sun_direction( sun->direction );
+
+		m_renderer_context->scene( )->get_clouds( )->set_time( m_current_time * 0.1f );
+	}
 
 	m_renderer_context->m_light_marker_id = 1;
 
 	m_renderer_context->scene( )->update_models( );
 
-	vostok::particle::world* part_world = m_renderer_context->scene( )->particle_world( );
-
 	if ( scene->get_speedtree_forest( ) )
 		scene->get_speedtree_forest( )->tick( m_renderer_context );
 
+	particle::world* const part_world = m_renderer_context->scene( )->particle_world( );
 	if ( part_world )
 		part_world->tick		( time_delta, m_renderer_context->get_v( ) );
 
-	if ( scene->get_grass( ) )
-		scene->get_grass( )->process_culling( m_renderer_context, 100.0f );
+	backend::ref( ).reset		( );
+
+
+
+	if ( s_do_stages_profiling )
+	{
+
+		m_timing_event->issue	( );
+		m_timing_event->wait	( );
+		m_timing_timer.start	( );
+	}
+
+	m_visibility_stage->execute	( );
+
+	if ( s_do_stages_profiling )
+	{
+		s_visibility_stage_stats.dips[0]				= 0;
+
+
+		s_visibility_stage_stats.elapsed_cpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
+		s_visibility_stage_stats.stg					= m_visibility_stage;
+
+
+		m_timing_event->issue	( );
+		m_timing_event->wait	( );
+
+		s_visibility_stage_stats.elapsed_gpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
+	}
+
 
 	backend::ref( ).reset		( );
 
-	scene_view_mode view_mode	= view->get_view_mode( );
-
-	backend::ref( ).set_render_targets( &*m_renderer_context->m_targets->m_family[rt_position].target, &*m_renderer_context->m_targets->m_family[rt_normal].target, 0, 0 );
 	backend::ref( ).reset_depth_stencil_target( );
-	backend::ref( ).clear_render_targets( math::color( 1.f, 1.f, 1.f, 1.f ), math::color( 0.f, 0.f, 0.f, 0.f ), math::color( 0.f, 0.f, 0.f, 0.f ), math::color( 0.f, 0.f, 0.f, 0.f ) );
 
-	backend::ref( ).reset_depth_stencil_target( );
-	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
 
-#ifdef MASTER_GOLD
-	execute_stages				( );
-	VOSTOK_UNREFERENCED_PARAMETER( view_mode );
-#else // #ifdef MASTER_GOLD
-
-	if ( m_view_mode_stage && m_view_mode_stage->is_support_view_mode( view_mode ) )
+	if ( scene->get_grass( ) && options::ref( ).current.m_use_vegetation_trample )
 	{
-		// opaque pass
-		if ( m_stages[gbuffer_render_stage] )
-			m_stages[gbuffer_render_stage]->execute( );
-
-		m_view_mode_stage->execute( view_mode );
-		statistics::ref( ).visibility_stat_group.num_total_rendered_triangles.value = backend::ref( ).num_total_rendered_triangles;
-	}
-	else
-	{
-		float view_mode_type = float( u32( view_mode ) ) + 0.5f;
-		switch ( view_mode )
+		if ( s_debug_remove_trample )
 		{
-			case lit_view_mode:
-			{
-				execute_stages	( );
-
-				break;
-			}
-			case unlit_view_mode:
-			case unlit_with_ao_view_mode:
-			{
-				m_stages[accumulate_distortion_render_stage]->set_enabled( false );
-				m_stages[pre_lighting_render_stage]->set_enabled( false );
-				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( false );
-				m_stages[sun_render_stage]->set_enabled( false );
-				m_stages[deferred_lighting_render_stage]->set_enabled( false );
-				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( false );
-				m_stages[post_process_render_stage]->set_enabled( false );
-				m_stages[lighting_render_stage]->set_enabled( false );
-
-				execute_stages	( );
-
-				m_stages[accumulate_distortion_render_stage]->set_enabled( true );
-				m_stages[pre_lighting_render_stage]->set_enabled( true );
-				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( true );
-				m_stages[sun_render_stage]->set_enabled( true );
-				m_stages[deferred_lighting_render_stage]->set_enabled( true );
-				m_stages[sun_shadows_accumulate_render_stage]->set_enabled( true );
-				m_stages[post_process_render_stage]->set_enabled( true );
-				m_stages[lighting_render_stage]->set_enabled( true );
-
-				m_gbuffer_to_screen_shader->apply( );
-				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
-				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
-
-				break;
-			}
-			case normals_view_mode:
-			{
-				if ( m_stages[gbuffer_render_stage] )
-					m_stages[gbuffer_render_stage]->execute( );
-
-				if ( m_stages[decals_accumulate_render_stage] )
-					m_stages[decals_accumulate_render_stage]->execute( );
-
-				m_gbuffer_to_screen_shader->apply( );
-				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
-				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
-				break;
-			}
-			case lighting_view_mode:
-			case lighting_diffuse_view_mode:
-			case lighting_specular_view_mode:
-			case emissive_only_view_mode:
-			case distortion_only_view_mode:
-			{
-				if ( m_stages[post_process_render_stage] )
-					m_stages[post_process_render_stage]->set_enabled( false );
-
-				execute_stages	( );
-
-				if ( m_stages[post_process_render_stage] )
-					m_stages[post_process_render_stage]->set_enabled( true );
-
-				m_gbuffer_to_screen_shader->apply( );
-
-				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
-				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
-				break;
-			}
-			case indirect_lighting_view_mode:
-			{
-				m_stages[gbuffer_render_stage]->execute( );
-				m_stages[decals_accumulate_render_stage]->execute( );
-				m_stages[accumulate_distortion_render_stage]->execute( );
-				m_stages[pre_lighting_render_stage]->execute( );
-				m_stages[sun_render_stage]->execute_disabled( );
-				m_stages[sun_shadows_accumulate_render_stage]->execute_disabled( );
-				m_stages[ambient_occlusion_render_stage]->execute( );
-				m_stages[light_propagation_volumes_render_stage]->execute( );
-
-				m_gbuffer_to_screen_shader->apply( );
-
-				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
-				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
-				break;
-			}
-			case ambient_occlusion_only_view_mode:
-			{
-				if ( m_stages[gbuffer_render_stage] )
-					m_stages[gbuffer_render_stage]->execute( );
-
-				if ( m_stages[decals_accumulate_render_stage] )
-					m_stages[decals_accumulate_render_stage]->execute( );
-
-				if ( m_stages[ambient_occlusion_render_stage] )
-					m_stages[ambient_occlusion_render_stage]->execute( );
-
-				m_gbuffer_to_screen_shader->apply( );
-
-				backend::ref( ).set_ps_constant( m_gbuffer_to_screen_type, view_mode_type );
-				fill_surface	( m_renderer_context->m_targets->m_family[rt_present].target, m_renderer_context );
-				break;
-			}
+			scene->get_grass( )->remove_trample( );
+			s_debug_remove_trample = false;
 		}
+
+		scene->get_grass( )->accumulate_trample( this, m_renderer_context );
 	}
 
+	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_generic_0 ), &*m_renderer_context->get_rt( rt_generic_1 ), 0, 0 );
+	backend::ref( ).clear_render_targets( math::color( 0.f, 0.f, 0.f, 0.f ) );
+
+
+
+
+
+
+
+
+
+	fill_opaque_models			( );
+
+	backend::ref( ).disable_DrawIndexed = false;
+
+	execute_stages				( );
+
+
 	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_present ), 0, 0, 0 );
+	scene->flush				( on_draw_scene, true, false );
+#ifndef MASTER_GOLD
+	// claude@NOTE: the non-MASTER_GOLD view-mode debug pipeline occupied target lines
+	// 1003-1209; it is compiled out of the shipped build and was never recovered.
+#endif // #ifndef MASTER_GOLD
+	temporal_jitterer.pop_jittering( );
 
-	if ( m_stages[light_propagation_volumes_render_stage] )
-		( (stage_light_propagation_volumes*)m_stages[light_propagation_volumes_render_stage] )->draw_debug( );
+	draw_debug					( scene, view, frame_time, default_font );
 
-	if ( m_stages[deferred_lighting_render_stage] )
-		( (stage_lights*)m_stages[deferred_lighting_render_stage] )->debug_render( );
 
-	if ( m_stage_debug )
-		m_stage_debug->execute	( );
 
-	backend::ref( ).set_render_targets( &*m_renderer_context->m_targets->m_family[rt_present].target, 0, 0, 0 );
+	backend::ref( ).flush_rt_shader_resources( );
+	scene->flush				( on_draw_scene, true, false );
 
-	scene->flush				( on_draw_scene, false, false );
+
+
+
 
 	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
 
-	if ( m_stages[lighting_render_stage] )
-		m_stages[lighting_render_stage]->debug_render( );
-
-	if ( scene->get_grass( ) )
-		scene->get_grass( )->render_debug( m_renderer_context );
-
-#endif // #ifdef MASTER_GOLD
-
-	statistics::ref( ).visibility_stat_group.num_total_rendered_triangles.value = backend::ref( ).num_total_rendered_triangles;
-	statistics::ref( ).visibility_stat_group.num_total_rendered_points.value = backend::ref( ).num_total_rendered_points;
-
-	double const es				= statistics::ref( ).general_stat_group.render_frame_time.cpu_time.average( ) / 1000.0;
-	double const es2			= statistics::ref( ).general_stat_group.cpu_render_frame_time.average( ) / 1000.0;
-
-	statistics::ref( ).general_stat_group.fps.value = math::floor( float( es > 0.0 ? ( 1.0 / es ) : 0.0 ) );
-	statistics::ref( ).general_stat_group.cpu_fps.value = math::floor( float( es2 > 0.0 ? ( 1.0 / es2 ) : 0.0 ) );
-
-	statistics::ref( ).general_stat_group.num_setted_shader_constants.value = backend::ref( ).num_setted_shader_constants;
-	statistics::ref( ).visibility_stat_group.num_draw_calls.value = backend::ref( ).num_draw_calls;
-
-	backend::ref( ).disabled_shader_constansts_set = false;
-
-	if ( draw_debug_terrain )
-		system_renderer::ref( ).draw_debug_terrain( );
 
 	present						( output_window, viewport );
 
-	END_TIMER;
-	END_CPUGPU_TIMER;
+	if ( static_cast_checked< render_output_window* >( output_window.c_ptr( ) ) )
+	{
+
+
+
+		if ( s_ui_enabled && static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer )
+		{
+
+
+
+			scene_view const* s	= m_renderer_context->scene_view( );
+
+			survarium::flash_text_manager* text_manager = s->m_flash_text_manager;
+
+
+			vector< survarium::flash_movie* > movies_vec;
+			for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
+				movies_vec.push_back( s->m_flash_movies[i]->movie );
+
+			backend::ref( ).reset_depth_stencil_target( );
+			backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
+			backend::ref( ).flush( );
+
+			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.begin( ), movies_vec.size( ), text_manager );
+		}
+
+
+
+		backend::ref( ).flush_rt_shader_resources( );
+		scene->flush			( on_draw_scene, false, true );
+
+
+		device::ref( ).m_device_removed = false;
+
+		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
+	}
+
+	if ( s_use_gpu_sync_value )
+	{
+		m_frame_sync_event->wait( );
+		m_frame_sync_event->issue( );
+	}
+
+	m_last_frame_time			= m_current_time;
+
+	scene->unmove_all_models	( );
+
+	if ( s_draw_frame_histogram_value )
+	{
+		if ( m_fps_history.size( ) >= 512 )
+		{
+			frame_histogram_info* old_info = m_fps_history.pop_front( );
+			DELETE				( old_info );
+		}
+
+		frame_histogram_info* const info = NEW( frame_histogram_info );
+		info->time				= math::clamp_r( 1000.f / math::max( float( statistics::ref( ).general_stat_group.fps.value ), 1.f ), 0.f, 1000.f );
+		info->mem				= 0.f;
+		info->dips				= math::max( statistics::ref( ).visibility_stat_group.num_draw_calls.value, 1 );
+		m_fps_history.push_back	( info );
+	}
+
+	if ( s_dump_scene_statistics_value )
+	{
+		s_dump_scene_statistics_value = false;
+		scene->dump_scene_statistics( );
+	}
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy corpus (debug overlay is new-in-target); matcher-phase work.
