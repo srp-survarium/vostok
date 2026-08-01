@@ -2,7 +2,13 @@
 // claude@NOTE: legacy-harvest disposition: the remaining stubs (ctor tail, trample, LOD, render/sort/merge) are absent from the legacy grass_patch.cpp remainder (only create_render_buffer survives there; trample/LOD/merged-stream design is new-in-target) - matcher-phase work.
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/render/core/backend.h>
+#include <vostok/render/core/options.h>
+#include <vostok/render/core/res_effect.h>
 #include "grass_patch.h"
+#include "grass_world.h"
+#include "renderer.h"
+#include "system_renderer.h"
 
 namespace vostok {
 namespace render {
@@ -86,14 +92,55 @@ grass_patch::grass_patch(
 
 void grass_patch::remove_trample( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f3b10]
+	backend::ref( ).set_render_targets( &*m_movement_rt, 0, 0, 0 );
+	backend::ref( ).clear_render_targets( 0.f, 0.f, 0.f, 0.f );
 }
 
-void grass_patch::try_accumulate_trample( trample_desc&, grass_world*, renderer*, renderer_context* )
+void grass_patch::try_accumulate_trample(
+	trample_desc& desc,
+	grass_world* in_grass_world,
+	renderer* in_renderer,
+	renderer_context*
+)
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f5060]
+	if ( !options::ref( ).current.m_use_vegetation_trample )
+		return;
+
+	float3 const position				= (desc.position - (m_origin - float3( 8.f, 8.f, 8.f ))) * (1.f / 16.f) - float3( 1.f / 63.f, 1.f / 63.f, 1.f / 63.f );
+	float const linear_radius		= desc.radius * (1.f / 16.f);
+
+	if (
+		position.x < 0.f || position.y < -.25f || position.z < 0.f ||
+		position.x > 1.f || position.y > 1.f || position.z > 1.f
+	)
+		return;
+
+	in_renderer->get_grass_trample_effect( )->apply( 0, 0 );
+	in_grass_world->set_trample_parameters( desc );
+
+	D3D11_VIEWPORT view_port;
+	view_port.TopLeftX					= 0.f;
+	view_port.TopLeftY					= 0.f;
+	view_port.Width						= 128.f;
+	view_port.Height						= 128.f;
+	view_port.MinDepth					= 0.f;
+	view_port.MaxDepth					= 1.f;
+
+	system_renderer::ref( ).fill_surface(
+		m_movement_rt,
+		render_target_ptr( ),
+		render_target_ptr( ),
+		render_target_ptr( ),
+		render_target_ptr( ),
+		false,
+		&view_port,
+		position.x - linear_radius,
+		position.z - linear_radius,
+		linear_radius + linear_radius,
+		linear_radius + linear_radius
+	);
 }
 
 grass_patch::~grass_patch( )
