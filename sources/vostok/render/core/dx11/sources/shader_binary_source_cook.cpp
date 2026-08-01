@@ -2,6 +2,7 @@
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
 #include <vostok/render/core/shader_defines.h>
+#include <vostok/render/core/shader_macros.h>
 #include <vostok/render/core/res_effect.h>
 
 namespace vostok {
@@ -24,33 +25,29 @@ shader_binary_source_cook::shader_binary_source_cook( )
 	  m_tasks_type( tasks::create_new_task_type("compile_shader_task", 0) ),
 	  m_blob_creation_counter( 0 )
 {
-	// FUNCTION BODY[0x5588a0]
+	// claude@NOTE: residual is one inline-vs-call - the target inlines the 1-arg
+	// tasks::task_type_parameters ctor (mov [eax],esi) that our base still calls.
 }
 
 shader_binary_source_cook::~shader_binary_source_cook( )
 {
-	// FUNCTION BODY[0x558890]
 //!	tasks::delete_task_type	( m_tasks_type );
 }
 
-// claude@NOTE: the legacy body branched on
-// `!result[0].is_successful() || s_no_cache_shaders_key.is_set() || is_need_recompile(..)`
-// into a spawn-compile_shader_task arm; the canonical class dropped that whole
-// recompile machinery (is_need_recompile / compile_shader_task /
-// all_tasks_finished / save_binary_shader are not members, and
-// resource_manager::get_shader_sources() is gone), so only the legacy else-arm -
-// load the precompiled blob - survives here. Its D3DCreateBlob + memory::copy
-// pair collapses to a raw pointer into the pinned managed resource, which is what
-// the canonical binary_shader_source models with
-// m_shader_byte_code / m_shader_byte_code_size (and why it keeps shader_source
-// alive); that collapse is also what fits the 0x18d-byte target body.
+// claude@NOTE: the shipped body has no recompile arm - the class dropped
+// is_need_recompile / compile_shader_task / all_tasks_finished /
+// save_binary_shader and resource_manager::get_shader_sources(), so the blob is
+// only ever read back out of the pinned managed resource (hence
+// m_shader_byte_code / m_shader_byte_code_size pointing into it and shader_source
+// being kept alive).
 void shader_binary_source_cook::converted_shader_loaded(
 	conveted_shader_loaded_data* data,
 	resources::queries_result& result
 )
 {
-	// FUNCTION BODY[0x5589e0]
 	data->new_resource->shader_source			= result[0].get_managed_resource();
+	if (data->new_resource->shader_source == 0)
+		debug::debug_message_box				("data->new_resource->shader_source == 0");
 
 	resources::pinned_ptr_const<u8>	ptr_managed	(result[0].get_managed_resource());
 
@@ -73,9 +70,8 @@ void shader_binary_source_cook::converted_shader_loaded(
 	DELETE										(data);
 }
 
-pcstr shader_type_to_ext( enum_shader_type const type )
+static pcstr shader_type_to_ext( enum_shader_type const type )
 {
-	// FUNCTION BODY[0x558870]
 	switch(type)
 	{
 		case enum_shader_type_vertex:	return "vs";
@@ -85,51 +81,79 @@ pcstr shader_type_to_ext( enum_shader_type const type )
 	}
 }
 
-static pcstr shader_type_to_compile_target( enum_shader_type const type )
-{
-	switch(type)
-	{
-		case enum_shader_type_vertex:	return "vs_4_0";
-		case enum_shader_type_pixel:	return "ps_4_0";
-		case enum_shader_type_geometry: return "gs_4_0";
-		default: NODEFAULT(return "");
-	}
-}
-
-// claude@NOTE: PARTIAL port of the legacy create_resource - the empty-name guard,
-// the placement-new, the converted-shader base path, finish_query( result_postponed )
-// and the query_resources( .. converted_shader_loaded .. ) tail are faithful. NOT
-// ported: the per-define path-suffix loop between them, which needs
-// resource_manager::get_shader_source_by_short_name (m_sources dropped from the
-// canonical class) plus found_shader_declarated_macroses (shader_declarated_macros
-// retired). shader_macros::merge_with_declared_macroses survives canonically, so the
-// shipped generation still consumes declared macroses from some other source - that
-// choice, and the resulting path spelling, need the 0x558b70 disassembly.
 void shader_binary_source_cook::create_resource(
 	resources::query_result_for_cook&	in_out_query,
 	const_buffer						raw_file_data,
 	mutable_buffer						in_out_unmanaged_resource_buffer
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x558b70]
 	binary_shader_cook_data* user_data				= (binary_shader_cook_data*)raw_file_data.c_ptr();
 
 	if (!user_data->shader_name.length())
 	{
-		in_out_query.finish_query					(result_error, in_out_query.assert_on_fail());
+		in_out_query.finish_query					(resources::query_result_for_user::error_type_cook_failed, assert_on_fail_false);
+
+		// claude@NOTE: the class qualification is load-bearing - the target inlines
+		// deallocate_resource's FREE here, and an unqualified call emits a vtable
+		// dispatch ([this][+0x14]) that the target does not have.
+		shader_binary_source_cook::deallocate_resource(in_out_unmanaged_resource_buffer.c_ptr());
+		DELETE										(user_data);
 		return;
 	}
 
-	binary_shader_source* new_resource				= new(in_out_unmanaged_resource_buffer.c_ptr())binary_shader_source;
-
 	fs_new::virtual_path_string converted_shader_path;
 	converted_shader_path.assignf					(
-		"%s/%s/%s/",
-		resource_manager::ref().get_converted_shader_path(),
+		"%s/%s.%s/",
+		"resources/shaders/sm_4_0",
 		user_data->shader_name.c_str(),
-		shader_type_to_compile_target(user_data->shader_type)
+		shader_type_to_ext(user_data->shader_type)
 	);
+
+	binary_shader_source* new_resource				= new(in_out_unmanaged_resource_buffer.c_ptr())binary_shader_source;
+
+	shader_defines_list working_defines_list;
+	shader_macros::ref().fill_shader_macro_list		(working_defines_list, user_data->configuration);
+
+	configs::binary_config_value const& masks		= resource_manager::ref().shader_name_to_mask_config->get_root();
+
+	if (masks.value_exists(user_data->shader_name.c_str())
+		&& masks[user_data->shader_name.c_str()].value_exists(shader_type_to_ext(user_data->shader_type)))
+	{
+		configs::binary_config_value const& mask_values	= masks[user_data->shader_name.c_str()][shader_type_to_ext(user_data->shader_type)];
+
+		shader_defines_list::const_iterator define		= working_defines_list.begin();
+		shader_defines_list::const_iterator define_end	= working_defines_list.end();
+
+		for ( ; define != define_end; ++define)
+		{
+			configs::binary_config_value::const_iterator mask_end	= mask_values.end();
+
+			if (!define->definition.length())
+				continue;
+
+			bool found									= false;
+			for (configs::binary_config_value::const_iterator mask = mask_values.begin(); mask != mask_end; ++mask)
+			{
+				if (strings::compare(define->name.c_str(), *mask) == 0)
+				{
+					converted_shader_path				+= define->definition.c_str();
+					found								= true;
+					break;
+				}
+			}
+
+			if (!found)
+				converted_shader_path					+= "_";
+		}
+	}
+	else
+	{
+		shader_defines_list::const_iterator define		= working_defines_list.begin();
+		shader_defines_list::const_iterator define_end	= working_defines_list.end();
+
+		for ( ; define != define_end; ++define)
+			converted_shader_path						+= "_";
+	}
 
 	in_out_query.finish_query						(result_postponed);
 
@@ -156,17 +180,21 @@ void shader_binary_source_cook::create_resource(
 		&in_out_query
 	);
 
-	params.assert_on_fail				=	assert_on_fail_false;
-
 	resources::query_resources				(params);
 }
 
-void shader_binary_source_cook::destroy_resource(
-	resources::unmanaged_resource* resource_to_destroy
-)
+void shader_binary_source_cook::destroy_resource( resources::unmanaged_resource* resource_to_destroy )
 {
-	// FUNCTION BODY[0x558950]
 	binary_shader_source* resource					= (binary_shader_source*)resource_to_destroy;
+
+	if (resource->m_compiled_shader_byte_code)
+	{
+		MT_FREE										(resource->m_compiled_shader_byte_code);
+		resource->m_compiled_shader_byte_code		= 0;
+	}
+
+	if (resource->error_code)
+		resource->error_code->Release				();
 
 	resource->~binary_shader_source					();
 }
@@ -177,7 +205,8 @@ mutable_buffer shader_binary_source_cook::allocate_resource(
 	bool file_exist
 )
 {
-	// FUNCTION BODY[0x5589b0]
+	// claude@NOTE: residual is one inline-vs-call - the target returns through an
+	// out-of-line mutable_buffer(pvoid,u32) ctor that our base inlines to two stores.
 	VOSTOK_UNREFERENCED_PARAMETERS					(&file_exist, &raw_file_data, &in_query);
 	return											vostok::mutable_buffer(
 		(pvoid)ALLOC(binary_shader_source, 1),
@@ -187,7 +216,6 @@ mutable_buffer shader_binary_source_cook::allocate_resource(
 
 void shader_binary_source_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY[0x558930]
 	FREE											(buffer);
 }
 
