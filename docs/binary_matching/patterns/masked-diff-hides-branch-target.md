@@ -1,7 +1,7 @@
 # A byte diff that flags no `j*` row is NOT proof the control flow matches
 
 tags: cpp:if cpp:loop cpp:compare | asm:jcc asm:jmp | topic:tooling topic:condition-shape topic:structure-shape
-symptoms: `--view diff` full of `~` operand rows and no branch row; equal byte size and equal statement count on both sides; `~ je short 00000037h -> je short 000000E8h` with two meaningless addresses; a function stuck in the 80s that will not move on operand edits
+symptoms: `--view diff` full of `~` operand rows and no branch row; `~ je short 00000037h -> je short 000000E8h` with two meaningless addresses; a function stuck in the 80s that will not move on operand edits; a CFG diff whose first divergence is a block with NO branch (that one is the tool, not the source)
 confidence: 9/10
 
 ## Symptom
@@ -31,8 +31,8 @@ Neither direction is legible, because the rendered operand is an address, not a 
 ## Fix - ask the CFG, not the bytes
 
 ```sh
-python3 scripts/sema.py blocks   <fn> --diff --lite   # flow SAME/DIFFERS + where it splits
-python3 scripts/sema.py branches <fn> --diff          # each destination named by BLOCK INDEX
+python3 scripts/sema.py blocks   <fn> --diff --lite   # THE VERDICT: flow SAME/DIFFERS + where
+python3 scripts/sema.py branches <fn> --diff          # then read the difference branch by branch
 ```
 
 Naming destinations by block index makes a uniform displacement shift compare EQUAL and a
@@ -41,22 +41,35 @@ instruction diff of two differently-shaped functions is noise.
 
 ## Evidence (render, 2026-08-01)
 
-`effect_options_descriptor::operator[]` - **271 bytes on both sides, 23 blocks on both
-sides, 15 branches on both sides**, 83.15%. `--view diff` flags 40 rows, **zero of them
-branches**. `sema branches --diff` names six branches landing on a different block:
+Sweeping all 796 paired non-100% render functions that have a branch: a majority have a
+provably IDENTICAL CFG (so their residual is genuinely not shape work), and **84 carry a
+flagged branch row that the CFG proves is a false alarm**. In the other direction,
+`effect_options_descriptor::operator[]` (271 bytes, 83.15%) has **40 flagged rows and not
+one of them a branch**. Whether `--view diff` flags a branch carries no information about
+the flow, either way - which is the whole reason to ask the CFG instead.
 
-```
-  #4   B6   @30     jne    target lands on B10, we land on B11
-  #5   B7   @36     je     target lands on B9,  we land on B10
-  #7   B9   @42     jne    target lands on B5,  we land on B6
-  #8   B10  @4c     jmp    target lands on B11, we land on B12
-```
+(That function was first written up as a *silent control-flow divergence*. It is not: its
+CFG matches, and the early `sema` was miscounting blocks - see the two traps below. The
+`--view diff` silence is real; the conclusion drawn from it was not.)
 
-Sweeping all 796 paired non-100% render functions that have a branch: 434 (54.5%) have a
-provably IDENTICAL CFG (so their residual is genuinely not shape work), 84 carry a flagged
-branch row that the CFG proves is a false alarm, and 2 are fully silent as above.
+## Trap 1 - a shape tool must CANONICALISE before it compares
 
-## The trap on the other side - `ORDER-ONLY`
+A `nop`, a `lea ecx,[ecx]` pad, a spill reload or a re-materialised zero sitting right
+after a `jcc` starts its own basic block: one predecessor, one successor, no branch. It
+carries no control flow, but if destinations are named by block INDEX and one side has it,
+**every later name shifts** and the comparison prints a cascade of "retargeted branches".
+`effect_options_descriptor::operator[]` was exactly this - a one-byte `nop` - and it read
+as six retargets. `sema` now contracts such blocks first (`contract()` in
+`scripts/sema.py`): the render/core `TOPOLOGY` class fell from 12 rows to 1, eight of them
+becoming `FLOW-SAME`. **If a first-skeleton-divergence points at a block with no branch,
+suspect the tool, not the source.**
+
+Corollary for reading `sema` output: `blocks --diff [--lite]` aligns by CONTENT and is the
+verdict view; `branches --diff` pairs branches by POSITION, so unequal block counts turn
+one real difference into a run of bogus `POLARITY` rows. Two render/core `COND-FLIP`
+findings (`create_texture`, `create_texture3d`) were entirely this.
+
+## Trap 2 - `ORDER-ONLY`
 
 `jcc X / fall Y` and `jcc' Y / fall X` are the same edge pair. Moving ONE block in the
 linear order therefore flips the polarity of every branch that reaches it and retargets

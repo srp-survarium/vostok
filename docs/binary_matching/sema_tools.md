@@ -45,33 +45,35 @@ branch:
 | **sema: flow DIFFERS** | 360 | **2** |
 | **sema: flow SAME** | **84** | 350 |
 
-Three readings, in descending order of importance:
+(Numbers from the run that first justified the tool. The `flow DIFFERS` row is
+now smaller: the contraction rule below moved a chunk of it to `flow SAME`.)
 
-1. **434 of 796 (54.5%) have a provably IDENTICAL control-flow graph.** Their
-   residual is operands, register allocation or scheduling - not shape. No
-   existing view could say that, so today the choice between "grind on the byte
-   diff" and "the structure is wrong" is made by feel.
-2. **84 false alarms.** objdiff flags a branch instruction as divergent on a
-   function whose CFG `sema` proves identical. `device::destroy_d3d` (89%) is
-   the clean case: the byte diff shows
+Two readings, in descending order of importance:
+
+1. **A majority have a provably IDENTICAL control-flow graph.** Their residual is
+   operands, register allocation or scheduling - not shape. No existing view
+   could say that, so the choice between "grind on the byte diff" and "the
+   structure is wrong" was being made by feel.
+2. **objdiff's branch rows are not usable as a control-flow signal in either
+   direction.** 84 times it flags a branch on a function whose CFG is identical -
+   `device::destroy_d3d` (89%) shows
    `~ 0x13: je short 00000037h -> je short 000000E8h`, two numbers from two
-   address spaces, and the actual difference is a `push ecx`/`pop ecx` pair.
-   A reader who chases the `je` is chasing nothing.
-3. **The fully silent cell is real, just rare (2).** It is worth the tool on its
-   own, because of *where* it lands.
-   `effect_options_descriptor::operator[]` is **271 bytes on both sides, 23
-   blocks on both sides, 15 branches on both sides**, scores 83.15%, and its
-   comparison web is shaped differently - `sema branches --diff` names six
-   branches that land on a different block. `pdb_fetch --view diff` flags 40
-   rows for it and **not one of them is a branch**. Everything that view can
-   show you is an operand; the actual defect is invisible. That is the function
-   a matcher would spend a session on.
+   address spaces, and the actual difference is a `push ecx`/`pop ecx` pair. And
+   it is capable of flagging nothing at all: for
+   `effect_options_descriptor::operator[]` (271 bytes, 83.15%) it flags **40 rows,
+   not one of them a branch**. Whether a branch row appears carries no information
+   about the flow.
 
 The practical consequence is the one that costs sessions: a matcher runs the
 first-look command, sees a wall of `~` operand rows, and either grinds on
 register spellings that can never converge (the shape is wrong), or writes the
 residual off as "LTCG/regalloc" (the shape is right, but nothing proved it).
 `sema` turns both of those guesses into a one-line fact.
+
+> `effect_options_descriptor::operator[]` was originally written up here as a
+> *silent control-flow divergence*. It is not - see **Cost of getting this wrong**
+> at the end of this file. Its CFG matches; the tool was miscounting blocks. The
+> `--view diff` silence is real, the conclusion drawn from it was not.
 
 ## What it does
 
@@ -94,6 +96,27 @@ Leaders are branch destinations **plus every post-branch instruction**. The
 second rule is not optional: a jump table's dispatch arms carry no label, and
 without it they get absorbed into the preceding block, erasing its terminator
 and inventing a flow difference that is not there.
+
+### Flow-free blocks are contracted first
+
+That same leader rule manufactures blocks that carry no control flow at all. The
+instruction after a `jcc` always starts a block - even when it is an alignment
+`nop`, a `lea ecx,[ecx]` pad, a spill reload or a re-materialised zero. Such a
+block has one predecessor (reached by that fall-through), one successor and no
+branch: it contributes nothing to the shape, but because destinations are named
+by INDEX, one appearing on only one side shifts every later name and the whole
+comparison reads as a cascade of retargeted branches.
+
+`contract()` splices them out before anything else looks at the graph. A block
+goes only when **its exit is a bare `fall`**, **exactly one block reaches it and
+reaches it by fall-through**, and merging would not leave a terminator with two
+edges to one block. The fall-through requirement preserves real structure: an
+`if`/`else` arm entered by the TAKEN edge of its guard is never contracted. And
+because only branch-free blocks are ever removed, contraction cannot change the
+branch COUNT - it can never hide a missing guard. The elided instructions are
+prepended to the successor, where they physically sit, so the block listing
+stays a correct linear disassembly. Every `--diff` reports how many blocks it
+contracted per side.
 
 ## Command surface
 
@@ -126,6 +149,13 @@ Ambiguous substrings are listed, never guessed at.
 different destination block), `POLARITY` (inverted condition), `SIGNEDNESS` (a
 signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 
+> **Take the verdict from `blocks --diff [--lite]`, not from `branches --diff`.**
+> The block views align by CONTENT; `branches --diff` pairs branches by POSITION,
+> which is only meaningful when both sides have the same number of blocks. When
+> they do not it now says so, prints no per-row interpretation, and points back
+> here - but the rows are still evidence, not a defect count. `branches --diff`
+> is for READING a difference `blocks --diff` has already established.
+
 `sweep` classifies a whole module in one pass:
 
 | verdict | meaning | what to do |
@@ -133,10 +163,52 @@ signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 | `IDENTICAL` | same blocks, same bodies | the residual is relocation/symbol identity - check the objdiff pairing, not the source |
 | `FLOW-SAME` | same CFG, different block bodies | operands / regalloc / scheduling; **not** shape work |
 | `ORDER-ONLY` | CFGs isomorphic, different block LAYOUT | one merged exit placed elsewhere - ONE fact, see below |
-| `COND-FLIP` | a branch mnemonic differs | inverted condition or signed/unsigned twin - a real source bug |
-| `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BRANCH-COUNT` | different number of branches | a guard we are missing, or an `if` one side folded |
+| `BLOCK-COUNT` | equal branches, unequal blocks | an extra block contraction could not remove; positional branch pairing is meaningless here |
+| `COND-FLIP` | equal blocks AND branches, a mnemonic differs | inverted condition or signed/unsigned twin - a real source bug |
+| `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BLOCK-SPLIT` | same branch sequence, different block count | usually an unreachable/padding artifact |
+
+### Which classes are worth a matcher's time (measured, batch B7)
+
+Batch B7 worked one full render/core sweep by hand and recorded the hit rate.
+Work the classes in this order:
+
+| class | opened | real source bugs | verdict |
+|---|---:|---:|---|
+| `BRANCH-COUNT` | 9 | **5** | **work this first** - a missing/extra branch is a missing/extra guard, and neither contraction nor alignment can manufacture one |
+| `TOPOLOGY` | 6 | 0 | **skip** - it was almost all uncontracted padding; the class is now 12x smaller (see below), so the survivors deserve a look, but not before `BRANCH-COUNT` |
+| `COND-FLIP` | 2 | 0 | both were `branches --diff` positional-pairing artifacts; the class no longer fires on them at all |
+
+The five `BRANCH-COUNT` hits: `backend::flush_rt` 49.7 -> 100
+(`render_dirty_targets::any()` was `|` where the target has `||`),
+`res_effect::apply` 62.2 -> 100, `res_render_output::select_resolution`
+71.4 -> 100, `constant_data_predicate` -> 100, `store_constant<T>` x4 - in a
+subtree six earlier batches had already been over.
+
+`SIGNEDNESS` has no sample yet, but a signed/unsigned twin is a type bug by
+construction, so treat it like `BRANCH-COUNT` when one appears.
+
+### What the contraction fix did to those classes
+
+Same 252 render/core functions, same artifacts, contraction off vs on:
+
+| verdict | before | after |
+|---|---:|---:|
+| `FLOW-SAME` (not shape work) | 162 | **170** |
+| `BRANCH-COUNT` | 75 | 75 |
+| `BLOCK-COUNT` | - | 5 |
+| `TOPOLOGY` | **12** | **1** |
+| `COND-FLIP` | 2 | 0 |
+| `ORDER-ONLY` | 1 | 1 |
+
+Eleven of the twelve `TOPOLOGY` rows were padding. Eight became `FLOW-SAME` -
+`effect_options_descriptor::operator[]`, `constants_handler<0..2>::assign`,
+`effect_manager::~effect_manager`, `res_texture_list::compare` x2,
+`effect_constant_storage::is_equal` - i.e. eight functions a matcher would have
+opened looking for a control-flow bug that was not there. Three more, plus both
+`COND-FLIP` rows, moved to the honest `BLOCK-COUNT` label. `BRANCH-COUNT` is
+unchanged at 75, which is the invariant the contraction rule guarantees.
 
 ## `ORDER-ONLY` - the verdict that collapses five defects into one
 
@@ -188,10 +260,21 @@ exactly the case a human under-investigates.
   A base index older than your source is the single most likely cause of a
   surprising verdict - `ls -la binaries/rich/base/index.jsonl` before believing
   one.
+* **`branches --diff` pairs branches BY POSITION.** `blocks --diff [--lite]`
+  aligns by CONTENT and is the view to take a verdict from. When the two sides
+  have different block counts, `branches --diff` now says so and drops its
+  per-row interpretation, but the rows are still shifted evidence, not a defect
+  count. This is what produced batch B7's two phantom `COND-FLIP` rows
+  (`create_texture`, `create_texture3d`): the mnemonics agree, the pairing did
+  not. Those two now classify as `BLOCK-COUNT`.
 * **Block alignment is content-based** (`difflib` over whole-block text). When
   both sides are heavily rewritten the pairing is a guess; the `flow` verdict
   and the first-skeleton-divergence line stay meaningful, the per-block bodies
   become advisory.
+* **Contraction merges into the successor, so a back-edge into a contracted
+  block's successor now points one block earlier** in the listing. The edge set
+  is unchanged and both sides contract by the same rule, so no verdict depends
+  on it; only the arrow's printed landing offset is loose.
 * **Jump tables are opaque.** A computed `jmp` yields `jmp <ext>`: the tool
   knows a branch happened, not where it went. Two switch statements with
   different case counts therefore compare on their range checks and arm blocks,
@@ -202,7 +285,7 @@ exactly the case a human under-investigates.
   trailing blocks that are unreachable from the entry and do not branch back
   into the kept prefix - which removes the phantom tail but keeps jump-table
   arms, since those DO jump forward to the merge block. `register_samplers`
-  went from a bogus 17-vs-18-block verdict to a clean 14-vs-14 that isolates
+  went from a bogus 17-vs-18-block verdict to a clean 13-vs-13 that isolates
   the one real difference (we tail-`jmp` the last call, the target `call`s and
   returns).
 * **Degenerate fall-through blocks are NOT contracted before the isomorphism
@@ -230,6 +313,30 @@ exactly the case a human under-investigates.
   `~=` ("same kind/shifted target"), so **prefer `blocks --diff` over
   `branches --diff` for the verdict** and use `branches` only to read a
   confirmed difference.
+
+## Cost of getting this wrong - the contraction bug (found by batch B7, fixed)
+
+Between the first version of this tool and the contraction rule above, `sema`
+did not remove flow-free blocks, and the write-up in this file used
+`effect_options_descriptor::operator[]` as its flagship example of a control-flow
+divergence hidden from the byte diff. **That reading was wrong.** The function is
+271 bytes with 16-of-16 statements and identical line deltas on both sides; the
+"missing early-out at B2" was our own next block, displaced by a one-byte `nop`
+pad. The real residual is a CSE'd zero: the target keeps 0 in `edx` and spells
+its null tests `cmp reg,edx` where we emit `test reg,reg`.
+
+The blind spot the tool exists to close is still real (see the evidence table
+above - `pdb_fetch --view diff` flags 40 rows for that function and not one is a
+branch). What was wrong was the direction of the finding. Two lessons, both now
+built in:
+
+1. **A shape tool must canonicalise before it compares.** Naming destinations by
+   index is only sound once the node set is canonical; otherwise the tool
+   converts one byte of padding into a dozen "retargeted branches" and reads as
+   authoritative while doing it.
+2. **When a first-skeleton-divergence points at a block with no branch, suspect
+   the tool.** That is now impossible by construction, but it remains the right
+   instinct for whatever the next canonicalisation gap turns out to be.
 * **It says nothing about statements or locals.** Structure verdicts stay
   `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
   statement level.
