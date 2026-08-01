@@ -261,6 +261,7 @@ struct stage_stat {
 	stage* stg;
 };
 
+static stage_stat s_render_stages[num_render_stages];
 static stage_stat s_visibility_stage_stats;
 
 struct remove_model_filter_predicate {
@@ -711,73 +712,52 @@ void renderer::clear_resources( )
 	// ******
 }
 
+// claude@NOTE: the two profiling blocks (target lines 430/433-434 and 465-466) DCE away
+// here because render::event_query::issue/::wait are empty stubs in
+// render/core/sources/event_query.cpp - a different lane owns that file. The rest of the
+// body is structure-complete; the target also spills `it` / `prev_draw_calls` to stack
+// slots only because those blocks' register pressure forces it.
 void renderer::execute_stages( )
 {
-	// LOCALS
-	// stage** 							it
-	// u32 								prev_draw_calls
-	// ******
+	if ( !s_execute_stages )
+		return;
 
-	// CALL SITE INFO
-	// <0x6478c8> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x647810]: 46
-	// <0x647819>|0x009|+0x00f:'425'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x647828>|0x018|+0x009:'430'
-	// <0>
-	// <1>
-	// <0x647831>|0x021|+0x019:'433'
-	// <0x64784a>|0x03a|+0x01f:'434'
-	// <0>
-	// <1>
-	// <0x647869>|0x059|-0x016:'437'
-	// <0x647853>|0x043|+0x0d8:'438'
-	// <0x64792b>|0x11b|-0x0bb:'438'
-	// <0>
-	// <0x647870>|0x060|+0x002:'440'
-	// <0>
-	// <0x647872>|0x062|+0x003:'442'
-	// <0>
-	// <0x647875>|0x065|+0x008:'444'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x64787d>|0x06d|+0x016:'452'
-	// <0>
-	// <0x647893>|0x083|+0x02e:'454'
-	// <0>
-	// <1>
-	// <0x6478c1>|0x0b1|+0x009:'457'
-	// <0>
-	// <0x6478ca>|0x0ba|+0x009:'459'
-	// <0>
-	// <0x6478d3>|0x0c3|+0x00d:'461'
-	// <0x6478e0>|0x0d0|+0x012:'462'
-	// <0>
-	// <1>
-	// <0x6478f2>|0x0e2|+0x01c:'465'
-	// <0x64790e>|0x0fe|+0x009:'466'
-	// <0>
-	// <0x647917>|0x107|+0x02a:'468'
-	// <0>
-	// <1>
-	// ******
-
-	for ( stage** it = m_stages.begin( ); it != m_stages.end( ); ++it )
+	if ( s_do_stages_profiling )
 	{
-		stage* current_stage = *it;
+		m_timing_event->issue	( );
+		m_timing_event->wait	( );
+	}
 
-		if ( current_stage )
-			current_stage->execute( );
+	stage_stat* stat			= s_render_stages;
+	for ( stage** it = m_stages.begin( ); it != m_stages.end( ); ++it, ++stat )
+	{
+		stage* current_stage	= *it;
+
+		stat->stg				= current_stage;
+
+		if ( !current_stage )
+			continue;
+
+		u32 prev_draw_calls;
+
+		if ( s_do_stages_profiling )
+		{
+			m_timing_timer.start( );
+			prev_draw_calls		= backend::ref( ).num_draw_calls;
+		}
+
+		current_stage->execute	( );
+
+		if ( s_do_stages_profiling )
+		{
+			stat->dips[0]				= backend::ref( ).num_draw_calls - prev_draw_calls;
+			stat->elapsed_cpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
+
+			m_timing_event->issue	( );
+			m_timing_event->wait	( );
+
+			stat->elapsed_gpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
+		}
 	}
 }
 
@@ -1453,8 +1433,12 @@ void renderer::render(
 	}
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus (debug overlay is new-in-target); matcher-phase work.
-// STATE[STUB]
+// claude@NOTE: every remaining unreproduced statement here is a guard whose callee is still
+// an empty stub, so LTCG deletes the guard with it: draw_luminance_picker_info,
+// draw_stages_stats, draw_frame_histogram, culling::portal_sector_system::render (reached
+// through scene::draw_portal_system) and grass_world::render_debug. The render_target_ptr
+// temp is a second, non-steerable gap - the target inlines the intrusive refcount ops that
+// we emit as calls to threading::single_threading_policy::increment/decrement.
 void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
@@ -1462,142 +1446,93 @@ void renderer::draw_debug(
 	vostok::ui::font const*		default_font
 )
 {
-	// LOCALS
-	// u32 								num_vss_changes
-	// u32 								num_pss_changes
-	// u32 								num_pst_changes
-	// const double 					es2
-	// u32 								num_psc_changes
-	// u32 								num_vst_changes
-	// ******
+	backend::ref( ).disable_DrawIndexed		= false;
 
-	// CALL SITE INFO
-	// <0x64b52b> -> void < unknown >()
-	// <0x64b564> -> void < unknown >()
-	// <0x64b5b1> -> void < unknown >()
-	// <0x64b5d6> -> void < unknown >()
-	// ******
+	backend::ref( ).reset_depth_stencil_target( );
 
-	// FUNCTION BODY[0x64b230]: 117
-	// <0>
-	// <1>
-	// <2>
-	// <0x64b23a>|0x00a|+0x006:'1299'
-	// <0>
-	// <0x64b240>|0x010|+0x025:'1301'
-	// <0>
-	// <0x64b265>|0x035|+0x37d:'1303'
-	// <0x64b5e2>|0x3b2|-0x2ef:'1303'
-	// <0>
-	// <0x64b2f3>|0x0c3|+0x008:'1305'
-	// <0x64b2fb>|0x0cb|+0x00e:'1306'
-	// <0>
-	// <1>
-	// <0x64b309>|0x0d9|+0x00c:'1309'
-	// <0x64b315>|0x0e5|+0x00c:'1310'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x64b321>|0x0f1|+0x003:'1317'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <0x64b324>|0x0f4|+0x044:'1331'
-	// <0x64b368>|0x138|+0x013:'1332'
-	// <0x64b37b>|0x14b|+0x013:'1333'
-	// <0x64b38e>|0x15e|+0x006:'1334'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x64b394>|0x164|+0x06d:'1349'
-	// <0>
-	// <0x64b401>|0x1d1|+0x009:'1351'
-	// <0x64b40a>|0x1da|+0x003:'1352'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x64b40d>|0x1dd|+0x014:'1357'
-	// <0x64b421>|0x1f1|+0x008:'1358'
-	// <0>
-	// <0x64b429>|0x1f9|+0x030:'1360'
-	// <0x64b459>|0x229|+0x033:'1361'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64b48c>|0x25c|+0x015:'1367'
-	// <0x64b4a1>|0x271|+0x01c:'1368'
-	// <0x64b4bd>|0x28d|+0x006:'1369'
-	// <0x64b4c3>|0x293|+0x029:'1370'
-	// <0x64b4ec>|0x2bc|+0x01d:'1371'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x64b509>|0x2d9|+0x017:'1381'
-	// <0x64b520>|0x2f0|+0x00d:'1382'
-	// <0>
-	// <0x64b52d>|0x2fd|+0x00c:'1384'
-	// <0>
-	// <0x64b539>|0x309|+0x017:'1386'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64b550>|0x320|+0x009:'1392'
-	// <0x64b559>|0x329|+0x00d:'1393'
-	// <0>
-	// <0x64b566>|0x336|+0x009:'1395'
-	// <0x64b56f>|0x33f|+0x006:'1396'
-	// <0>
-	// <0x64b575>|0x345|+0x026:'1398'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64b59b>|0x36b|+0x00c:'1404'
-	// <0x64b5a7>|0x377|+0x00c:'1405'
-	// <0>
-	// <0x64b5b3>|0x383|+0x00a:'1407'
-	// <0x64b5bd>|0x38d|+0x005:'1408'
-	// <0>
-	// <0x64b5c2>|0x392|+0x00c:'1410'
-	// <0x64b5ce>|0x39e|+0x00a:'1411'
-	// <0>
-	// ******
+	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_present ), 0, 0, 0 );
+
+	if ( m_picking_lighting_luminance_mode && default_font )
+		draw_luminance_picker_info			( default_font );
+
+	if ( s_do_stages_profiling && default_font )
+		draw_stages_stats					( default_font );
+
+	u32 num_vs_changes		= backend::ref( ).num_vs_changes;
+	u32 num_ps_changes		= backend::ref( ).num_ps_changes;
+	u32 num_il_changes		= backend::ref( ).num_il_changes;
+	u32 num_vsc_changes		= backend::ref( ).num_vsc_changes;
+	u32 num_vst_changes		= backend::ref( ).num_vst_changes;
+	u32 num_vss_changes		= backend::ref( ).num_vss_changes;
+	u32 num_psc_changes		= backend::ref( ).num_psc_changes;
+	u32 num_pst_changes		= backend::ref( ).num_pst_changes;
+	u32 num_pss_changes		= backend::ref( ).num_pss_changes;
+
+	statistics::ref( ).debug_stat_group.textures_compression_duration.value		= backend::ref( ).m_texture_compression_time;
+	statistics::ref( ).debug_stat_group.dxt_rt_tex_creation_duration.value		= backend::ref( ).m_dxt_rt_tex_creation_time;
+	statistics::ref( ).debug_stat_group.cpu_textures_compression_duration.value	= backend::ref( ).m_cpu_compression_time;
+	statistics::ref( ).debug_stat_group.gpu_num_compressed_textures.value		= backend::ref( ).m_gpu_num_compressed_textures;
+	statistics::ref( ).debug_stat_group.cpu_num_compressed_textures.value		= backend::ref( ).m_cpu_num_compressed_textures;
+
+	statistics::ref( ).debug_stat_group.num_vertex_shader_changes.value			= num_vs_changes;
+	statistics::ref( ).debug_stat_group.num_pixel_shader_changes.value			= num_ps_changes;
+	statistics::ref( ).debug_stat_group.num_vs_textures_changes.value			= num_vst_changes;
+	statistics::ref( ).debug_stat_group.num_vs_constants_changes.value			= num_vsc_changes;
+	statistics::ref( ).debug_stat_group.num_vs_samplers_changes.value			= num_vss_changes;
+	statistics::ref( ).debug_stat_group.num_ps_textures_changes.value			= num_pst_changes;
+	statistics::ref( ).debug_stat_group.num_ps_constants_changes.value			= num_psc_changes;
+	statistics::ref( ).debug_stat_group.num_ps_samplers_changes.value			= num_pss_changes;
+	statistics::ref( ).debug_stat_group.num_input_layout_changes.value			= num_il_changes;
+
+	statistics::ref( ).general_stat_group.cpu_render_frame_time.value			= frame_time;
+
+	statistics::ref( ).visibility_stat_group.num_total_rendered_triangles.value	= backend::ref( ).num_total_rendered_triangles;
+	statistics::ref( ).visibility_stat_group.num_total_rendered_points.value	= backend::ref( ).num_total_rendered_points;
+
+	const double es2 = frame_time;
+
+	statistics::ref( ).general_stat_group.render_frame_time.cpu_time.value		= es2 * 1000.;
+	statistics::ref( ).general_stat_group.render_frame_time.gpu_time.value		= es2 * 1000.;
+
+	statistics::ref( ).general_stat_group.fps.value			= math::floor( es2 > 0. ? 1. / es2 : 0. );
+	statistics::ref( ).general_stat_group.cpu_fps.value		= math::floor( es2 > 0. ? 1. / es2 : 0. );
+
+	statistics::ref( ).general_stat_group.num_setted_shader_constants.value		= backend::ref( ).num_setted_shader_constants;
+	statistics::ref( ).visibility_stat_group.num_draw_calls.value				= backend::ref( ).num_draw_calls;
+	statistics::ref( ).general_stat_group.render_only_time.value				= 0.;
+	statistics::ref( ).debug_stat_group.texture_video_memory.value				= resource_manager::ref( ).get_texture_video_memory_size( );
+	statistics::ref( ).debug_stat_group.avaliable_video_memory.value			= device::ref( ).get_avaliable_video_memory( );
+	statistics::ref( ).debug_stat_group.gbuffer_video_memory.value				= m_renderer_context->m_targets->memory_usage( ) >> 20;
+	statistics::ref( ).debug_stat_group.render_tergets_video_memory.value		=
+		( resource_manager::ref( ).get_render_target_video_memory( ) >> 20 ) -
+		statistics::ref( ).debug_stat_group.gbuffer_video_memory.value;
+
+	if ( m_stage_debug && view->editor_debug_mode )
+		m_stage_debug->execute				( );
+
+	if ( m_stages[sun_shadows_accumulate_render_stage] )
+		m_stages[sun_shadows_accumulate_render_stage]->m_context->set_w_identity( );
+
+	if ( m_visibility_stage )
+		m_visibility_stage->debug_render	( );
+
+	if ( s_draw_frame_histogram_value )
+		draw_frame_histogram				( );
+
+	scene->draw_portal_system(
+		system_renderer::ref( ),
+		m_renderer_context->get_view_pos( ),
+		m_renderer_context->get_vp( )
+	);
+
+	if ( m_stages[lighting_render_stage] )
+		m_stages[lighting_render_stage]->debug_render( );
+
+	if ( scene->get_grass( ) )
+		scene->get_grass( )->render_debug	( m_renderer_context );
+
+	if ( m_stages[decals_accumulate_render_stage] )
+		m_stages[decals_accumulate_render_stage]->debug_render( );
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
