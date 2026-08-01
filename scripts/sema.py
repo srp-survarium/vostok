@@ -22,13 +22,21 @@ so - unlike the two-disassembler setups this idea comes from - almost no
 instruction-spelling normalization is needed: only the branch operand is masked.
 Every other textual difference between the two sides is a real byte difference.
 
-    python3 scripts/sema.py blocks   <fn>            # target-side CFG
-    python3 scripts/sema.py blocks   <fn> --base     # base-side CFG
-    python3 scripts/sema.py blocks   <fn> --diff     # aligned CFG diff  (the main view)
-    python3 scripts/sema.py blocks   <fn> --diff --lite    # skeleton only
-    python3 scripts/sema.py branches <fn> --diff     # ordered branch sequence, diffed
+Blocks that carry no control flow (an alignment pad, a spill reload, a
+re-materialised zero starting a block only because it follows a `jcc`) are
+CONTRACTED before anything compares the two graphs - without that, one byte of
+padding on one side renames every later block and prints as a cascade of
+retargeted branches. See `contract`.
+
+    python3 scripts/sema.py blocks   <fn> --diff --lite    # THE VERDICT VIEW
+    python3 scripts/sema.py blocks   <fn> --diff     # same, with per-block bodies
+    python3 scripts/sema.py blocks   <fn> [--base]   # one side's CFG
+    python3 scripts/sema.py branches <fn> --diff     # read a difference branch by branch
     python3 scripts/sema.py dot      <fn> [--diff]   # graphviz
     python3 scripts/sema.py sweep --module render [--unit U] [--max N]
+
+`blocks` aligns by CONTENT and is what a verdict comes from; `branches` pairs
+POSITIONALLY, so it is for reading a difference `blocks` already established.
 
 <fn> is a mangled name, a demangled substring, or a hex RVA/VA on either side.
 
@@ -224,14 +232,15 @@ def is_ret(m):
     return m.startswith("ret") or m == "iret"
 
 
-def cfg(insns, labels, stmts=None):
+def cfg(insns, labels, stmts=None, stats=None):
     """[(off, [masked insns], term, src)] with every branch destination named by
     BLOCK INDEX, which is what makes the two sides comparable.
 
     Leaders = block starts = every label target PLUS every post-branch/post-ret
     instruction. That second rule matters: without it a jump-table's dispatch
     arms (which carry no label) get absorbed into the preceding block and their
-    terminators vanish."""
+    terminators vanish. It also manufactures blocks that carry no control flow at
+    all, which `contract` then removes - see there."""
     if not insns:
         return []
     leaders = {insns[0][0]} | set(labels.values())
@@ -275,11 +284,83 @@ def cfg(insns, labels, stmts=None):
     out = [tuple(b) for b in blocks]
     while out and all(x.startswith(("nop", "int3")) for x in out[-1][1]):
         out.pop()                                       # alignment padding
-    return trim_tail(out)
+    out, n = contract(trim_tail(out))
+    if stats is not None:
+        stats["contracted"] = n
+    return out
 
 
 def succs(term):
     return {int(x) for x in re.findall(r"B(\d+)", term or "")}
+
+
+def fall_of(term):
+    """The index a terminator falls through to, or None."""
+    m = re.search(r"fall B(\d+)", term or "")
+    return int(m.group(1)) if m else None
+
+
+def contract(blocks):
+    """Splice out blocks that carry NO control flow, and say how many.
+
+    The leader rule starts a new block after every branch, so the instruction
+    following a `jcc` always begins one - even when it is an alignment `nop`, a
+    `lea ecx,[ecx]` pad, a spill reload or a re-materialised zero. Such a block
+    has ONE predecessor (reached by that fall-through), ONE successor, and no
+    branch of its own: it contributes nothing to the shape. When one side has it
+    and the other does not - or has it somewhere else - the two CFGs are still
+    isomorphic, but every index-named destination after it shifts and the whole
+    comparison reads as a cascade of retargeted branches. That cost batch B7 real
+    time on `effect_options_descriptor::operator[]` (271 bytes and 23 blocks on
+    BOTH sides; the "missing early-out" was our own next block, displaced by a
+    one-byte `nop`).
+
+    A block is spliced out only when
+
+      * its exit is a bare `fall` to the next block,
+      * exactly one block reaches it, and reaches it by FALL-THROUGH, and
+      * that predecessor's other successor is not the same block we would merge
+        into (which would leave a terminator with two edges to one block).
+
+    The fall-through requirement is what keeps real structure: an `if`/`else`
+    body entered by the TAKEN edge of its guard is never contracted, so a missing
+    branch arm still shows. Contraction can never change the branch COUNT - it
+    only ever removes blocks that have no branch - so it cannot mask a missing
+    guard either.
+
+    The elided instructions are prepended to the successor, which is where they
+    physically sit, so the block listing stays a correct linear disassembly."""
+    n = 0
+    for _ in range(len(blocks)):
+        for i in range(1, len(blocks) - 1):
+            if (blocks[i][2] or "") != f"fall B{i + 1}":
+                continue
+            preds = [j for j, b in enumerate(blocks) if i in succs(b[2])]
+            if len(preds) != 1 or fall_of(blocks[preds[0]][2]) != i:
+                continue
+            if i + 1 in succs(blocks[preds[0]][2]):
+                continue                        # would double an edge
+            off, body, _, src = blocks[i]
+            _, nbody, nterm, nsrc = blocks[i + 1]
+            blocks[i + 1] = (off, body + nbody, nterm, src or nsrc)
+            del blocks[i]
+            remap = {j: (j if j <= i else j - 1) for j in range(len(blocks) + 1)}
+            blocks = [(o, bd, _renumber(t, remap, k), s)
+                      for k, (o, bd, t, s) in enumerate(blocks)]
+            n += 1
+            break
+        else:
+            break
+    return blocks, n
+
+
+def _renumber(term, remap, own):
+    """Rewrite a terminator's block indices through `remap`, recomputing the `^`
+    back-edge marker against the block's new index."""
+    def repl(m):
+        j = remap[int(m.group(1))]
+        return f"B{j}" + ("^" if j <= own else "")
+    return re.sub(r"B(\d+)\^?", repl, term or "")
 
 
 def trim_tail(blocks):
@@ -561,6 +642,16 @@ def branch_diff(b, t):
            "compares EQUAL and a genuine retarget does not]",
            f"  base {len(br)} branch(es), {nbret} ret(s)   |   "
            f"target {len(tr)} branch(es), {ntret} ret(s)"]
+    # Branches are paired POSITIONALLY. That is only meaningful when the two
+    # sides have the same number of blocks; otherwise ONE structural difference
+    # shifts every later pair and prints as a run of POLARITY/TOPOLOGY rows that
+    # are not independent defects. Say so instead of letting a reader count them.
+    skewed = len(b) != len(t)
+    if skewed:
+        out.append(f"  BLOCK COUNTS DIFFER (base {len(b)} vs target {len(t)}) - this view "
+                   "pairs branches BY POSITION, so one structural difference shifts every "
+                   "later pair. Take the verdict from `blocks --diff --lite` (content-"
+                   "aligned); read the rows below as evidence, NOT as a defect count.")
     if len(br) != len(tr):
         out.append("  BRANCH COUNTS DIFFER - structural: a block we did not reconstruct, "
                    "an `if` the optimizer folded, or a different inlining decision. "
@@ -598,6 +689,8 @@ def branch_diff(b, t):
         out.append(f"  {tag}  #{i:<3} B{x[1]:<3} @{b[x[1]][0]:<6x}  base {x[2]:<6} -> "
                    f"target {y[2]}"
                    + (f"   ; {b[x[1]][3]}" if b[x[1]][3] else ""))
+        if skewed:
+            continue            # positional pairing is unreliable - no interpretation
         if tag == "SIGNEDNESS":
             out.append("        a signed/unsigned twin is nearly always a REAL source "
                        "type bug - a member/local/param that wants the other signedness")
@@ -677,24 +770,39 @@ def graphs_for(sel, need_both=True):
         missing = "base" if tgt else "target"
         die(f"'{sel}' has no {missing} side "
             f"({'TARGET_ONLY - nothing compiled yet' if tgt else 'BASE_ONLY - not in the original'})")
-    g = {}
+    g, cut = {}, {}
     for side, rec in (("target", tgt), ("base", base)):
         if rec:
             insns, labels, stmts = parse(disasm(side, rec["rva"]))
-            g[side] = cfg(insns, labels, stmts)
-    return tgt, base, g
+            st = {}
+            g[side] = cfg(insns, labels, stmts, st)
+            cut[side] = st.get("contracted", 0)
+    return tgt, base, g, cut
+
+
+def _contract_note(cut):
+    if not any(cut.values()):
+        return None
+    return ("[contracted %s flow-free block(s) (alignment pad / spill reload / "
+            "re-materialised zero) - see `contract` in scripts/sema.py]"
+            % " / ".join(f"{n} {s}" for s, n in sorted(cut.items()) if n))
 
 
 def cmd_blocks(args):
-    tgt, base, g = graphs_for(args.fn, need_both=args.diff)
+    tgt, base, g, cut = graphs_for(args.fn, need_both=args.diff)
     if args.diff:
         text, rc = blocks_diff(g["base"], g["target"], args.lite)
         print(f"[{tgt['name']}]")
         print(f"[base {base['file']} @ {base['rva']:#x} ({base['size']}B)  vs  "
               f"target {tgt['file']} @ {tgt['rva']:#x} ({tgt['size']}B)]")
+        note = _contract_note(cut)
+        if note:
+            print(note)
         print(text, end="")
-        _, brc = branch_diff(g["base"], g["target"])
-        if rc == 0:
+        # the hint is about SHAPE, so it fires whenever the flow matches - a
+        # byte-dirty diff over a matching CFG is exactly the case worth naming
+        if [x[2] for x in g["base"]] == [x[2] for x in g["target"]]:
+            _, brc = branch_diff(g["base"], g["target"])
             hint(tgt["mangled"], True, brc == 0)
         return rc
     side = "base" if args.base else "target"
@@ -708,9 +816,12 @@ def cmd_blocks(args):
 
 
 def cmd_branches(args):
-    tgt, base, g = graphs_for(args.fn, need_both=args.diff)
+    tgt, base, g, cut = graphs_for(args.fn, need_both=args.diff)
     if args.diff:
         print(f"[{tgt['name']}]")
+        note = _contract_note(cut)
+        if note:
+            print(note)
         text, rc = branch_diff(g["base"], g["target"])
         print(text, end="")
         if rc == 0:
@@ -726,7 +837,7 @@ def cmd_branches(args):
 
 
 def cmd_dot(args):
-    tgt, base, g = graphs_for(args.fn, need_both=args.diff)
+    tgt, base, g, _ = graphs_for(args.fn, need_both=args.diff)
     if args.diff:
         bs = ["\n".join(x[1] + [x[2] or ""]) for x in g["base"]]
         ts = ["\n".join(x[1] + [x[2] or ""]) for x in g["target"]]
@@ -799,6 +910,12 @@ def cmd_sweep(args):
             verdict = "IDENTICAL" if bodies else "FLOW-SAME"
         elif iso_map(bg, tg) is not None:
             verdict = "ORDER-ONLY"
+        elif len(bb) == len(tb) and len(bg) != len(tg):
+            # equal branch count, unequal block count: one side has an extra
+            # block no contraction could remove. Positional branch pairing is
+            # meaningless here, so do NOT call the resulting mnemonic mismatches
+            # COND-FLIP - that label sent batch B7 after two phantom bugs.
+            verdict = "BLOCK-COUNT"
         elif len(bb) != len(tb):
             verdict = "BRANCH-COUNT"
         elif [x[2] for x in bb] != [x[2] for x in tb]:
@@ -814,8 +931,8 @@ def cmd_sweep(args):
     print("[FLOW-SAME/IDENTICAL = not control flow: operands, regalloc, scheduling.]")
     print("[ORDER-ONLY = isomorphic CFG, different block LAYOUT - one merged exit placed "
           "elsewhere; usually downstream, not a per-branch bug.]")
-    print("[BRANCH-COUNT/TOPOLOGY/COND-FLIP = steerable SHAPE work: a missing guard, "
-          "an inverted condition, a folded `if`.]")
+    print("[BRANCH-COUNT first (measured: 5 real source bugs in 9 opened), then "
+          "BLOCK-COUNT; TOPOLOGY was 0 for 6 - see docs/binary_matching/sema_tools.md.]")
     return 0
 
 
