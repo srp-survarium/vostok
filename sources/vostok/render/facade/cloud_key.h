@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (cloud_key_parameters is new-in-target) - matcher-phase work.
 namespace vostok {
 
 namespace configs {
@@ -13,26 +12,15 @@ class binary_config_value;
 namespace render {
 
 struct cloud_key_parameters {
-	// STATE[STUB]
-	cloud_key_parameters( )
-	{
-		// FUNCTION BODY[0x6f1b0]
-	}
+	inline cloud_key_parameters( );
 
-	void load( configs::binary_config_value const& )
-	{
-		// STATE[STUB]
-	}
+	inline void load( configs::binary_config_value const& );
 
-	static cloud_key_parameters lerp(
-		cloud_key_parameters const&,
-		cloud_key_parameters const&,
-		float
-	)
-	{
-		// STATE[STUB]
-		return cloud_key_parameters( );
-	}
+	static inline cloud_key_parameters lerp(
+		cloud_key_parameters const& left,
+		cloud_key_parameters const& right,
+		float const alpha
+	);
 
 	float	cloud_generate_octaves;
 	float	cloud_generate_cloudiness;
@@ -57,5 +45,7 @@ STATIC_SIZE_ASSERT( cloud_key_parameters, 0x44 );
 
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/facade/cloud_key_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_FACADE_CLOUD_KEY_H_INCLUDED
