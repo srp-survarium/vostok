@@ -84,6 +84,41 @@ the other three are small max resets from faithful structure re-work
    to beat that cap by editing the anchored function - retire the pin instead,
    once a real caller exists, and verify the function stays paired.
 
+## Batch B5 - the `*_inline.h` file-placement discovery (2026-08-01)
+
+The largest single lever found so far in render is not code at all, it is FILE
+PLACEMENT. objdiff units come from the delinked TARGET objects, one per source
+file; pairing is `unit + mangled symbol`. The original tree split every
+non-trivial inline body out of `<x>.h` into a sibling `<x>_inline.h`, and our
+reconstructions kept them in the main header - so byte-identical bodies sat in
+two different units and never paired. See
+`patterns/inline-header-split-pairing.md` for the detection recipe (per-file
+function-count diff of the two rich indexes, confirmed by mangled-name
+intersection) and the mechanical fix.
+
+B5 relocated eight header groups with no code change and took render/core from
+zero paired rows in those units to 84 paired rows (state_cache 8/8 avg 95%,
+effect_manager 44/114 avg 86%, backend 8, backend_handlers 11, utils 3/3,
+shader_constant family 4/4, custom_config_value 3/4, `core/res_xs.h` 3/3).
+Whole-EXE headline 36.32% -> 37.08% code, 53.02% -> 53.88% functions.
+
+Still un-split and worth a follow-up batch: `dx11/res_effect.h` (20 target
+rows), `dx11/res_xs_hw_impl.h` (13), `dx11/destroy_data_helper.h` (7, ours is at
+`core/`), `dx11/effect_options_descriptor.h` (4), `dx11/shader_constant_buffer_inline.h`
+(1), `dx11/effect_descriptor.h` (1), plus the 70 `effect_manager_inline.h` rows
+whose base counterpart is still an in-class body.
+
+**Two traps this batch hit, both worth remembering.**
+
+1. `rebuild.py <module>` builds only that module's `.lib` and does NOT relink the
+   EXE - the delink then re-measures the OLD binary and reports `+0.00` with
+   `0 regressed, 0 improved`. Always rebuild with NO module argument when you
+   want a score.
+2. `nix develop /abs/worktree` does NOT reset `WINEPREFIX`; it inherits the
+   orchestrator's. Two worktrees then share one `mspdbsrv` and the link dies with
+   `fatal error LNK1318: Unexpected PDB error; RPC (23)`. Prefix every build with
+   `WINEPREFIX=/abs/worktree/binaries/.wineprefix`.
+
 ## Standing rules for dispatched matchers
 
 - **Never reverse correct code.** The metric is MAX %, which banks each

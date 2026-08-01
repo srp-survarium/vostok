@@ -6,7 +6,7 @@
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/dx11/res_state.h>
-#include <vostok/render/core/dx11/res_xs.h>
+#include <vostok/render/core/res_xs.h>
 
 namespace vostok {
 namespace render {

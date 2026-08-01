@@ -11,7 +11,6 @@ template <typename shader_data>
 res_xs<shader_data>::res_xs( xs_descriptor<shader_data> const& binder ) :
 	m_is_registered	( false )
 {
-	// Observed vs_data instantiation [0x12f4d0].
 	m_hardware_shader = binder.hardware_shader();
 	m_constants = resource_manager::ref().create_const_table	( binder.data().constants);
 	m_textures	= resource_manager::ref().create_texture_list	( binder.data().textures);
@@ -24,10 +23,28 @@ void res_xs<shader_data>::destroy_impl( ) const
 	resource_manager::ref().release( this );
 }
 
+template <typename shader_data>
+s32 res_xs<shader_data>::compare( xs_descriptor<shader_data> const& descriptor ) const
+{
+	s32 result = m_hardware_shader < descriptor.hardware_shader( ) ? -1
+		: descriptor.hardware_shader( ) < m_hardware_shader ? 1 : 0;
+	if ( result )
+		return result;
+	result = m_constants->compare( descriptor.data( ).constants );
+	if ( result )
+		return result;
+
+	result = m_textures->compare( descriptor.data( ).textures );
+	if ( result )
+		return result;
+
+	return m_samplers->compare( descriptor.data( ).samplers );
+
+}
+
 template <>
 void res_xs<ps_data>::apply( ) const
 {
-	// FUNCTION BODY[0x7b1b00]
 	backend::ref().set_ps			( &*m_hardware_shader);
 	backend::ref().set_ps_constants ( &*m_constants);
 	backend::ref().set_ps_textures	( &*m_textures);
@@ -37,7 +54,6 @@ void res_xs<ps_data>::apply( ) const
 template <>
 void res_xs<gs_data>::apply( ) const
 {
-	// FUNCTION BODY[0x7b1950]
 	if (m_hardware_shader)
 	{
 		backend::ref().set_gs			( &*m_hardware_shader);
@@ -57,13 +73,6 @@ void res_xs<gs_data>::apply( ) const
 template <>
 void res_xs<vs_data>::apply( ) const
 {
-	// FUNCTION BODY[0x7b1880]
-	// setting shader
-	// maybe setting input layout
-	// setting constants
-	// setting textures
-	// setting sampler states
-
 	backend::ref().set_vs			( &*m_hardware_shader);
 	backend::ref().set_vs_constants ( &*m_constants);
 	backend::ref().set_vs_textures	( &*m_textures);

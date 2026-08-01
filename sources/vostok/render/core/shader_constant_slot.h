@@ -10,14 +10,7 @@ enum {
 
 class shader_constant_slot {
 public:
-	shader_constant_slot( ) :
-		m_class_id( static_cast<u16>( -1 ) ),
-		m_array_size( 0 ),
-		m_buffer_index( slot_dest_buffer_null ),
-		m_slot_index( static_cast<u16>( -1 ) )
-	{
-		// FUNCTION BODY[0x129130]
-	}
+	shader_constant_slot( );
 
 	u16 class_id( ) const { return m_class_id; }
 	u16 array_size( ) const { return m_array_size; }
@@ -39,12 +32,11 @@ public:
 	};
 };
 
-inline bool operator==( shader_constant_slot const& left, shader_constant_slot const& right )
-{
-	return left.value( ) == right.value( );
-}
+inline bool operator==( shader_constant_slot const& left, shader_constant_slot const& right );
 
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/core/shader_constant_slot_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_SLOT_H_INCLUDED
