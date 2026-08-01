@@ -169,22 +169,55 @@ signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 | `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BLOCK-SPLIT` | same branch sequence, different block count | usually an unreachable/padding artifact |
 
-### Which classes are worth a matcher's time (measured, batch B7)
+### Which classes are worth a matcher's time (measured, batches B7 + B8)
 
-Batch B7 worked one full render/core sweep by hand and recorded the hit rate.
+Two full render/core sweeps have been worked by hand with the hit rate recorded.
 Work the classes in this order:
 
 | class | opened | real source bugs | verdict |
 |---|---:|---:|---|
-| `BRANCH-COUNT` | 9 | **5** | **work this first** - a missing/extra branch is a missing/extra guard, and neither contraction nor alignment can manufacture one |
-| `TOPOLOGY` | 6 | 0 | **skip** - it was almost all uncontracted padding; the class is now 12x smaller (see below), so the survivors deserve a look, but not before `BRANCH-COUNT` |
+| `BRANCH-COUNT` | 23 | **8** | **work this first** - a missing/extra branch is a missing/extra guard, and neither contraction nor alignment can manufacture one |
+| `TOPOLOGY` | 7 | 0 | **skip** - almost all uncontracted padding; the one survivor after contraction (`backend::flush`) turned out to be cross-jumping, see below |
 | `COND-FLIP` | 2 | 0 | both were `branches --diff` positional-pairing artifacts; the class no longer fires on them at all |
 
-The five `BRANCH-COUNT` hits: `backend::flush_rt` 49.7 -> 100
+**The ranking held on a second batch, but the yield falls as a subtree matures.**
+B7 hit 5 of 9 on its first pass; B8 hit 3 of 14 on what was left. The 11 misses
+were not tool errors - they were **core-header inline-vs-call walls**, where the
+target inlines a callee (`intrusive_ptr::operator=`,
+`single_threading_policy::increment/decrement`, `~textures_handler<N>`,
+`detail::strcmp_s` behind `operator==`) that our base still calls, or the reverse
+(the target *calls* a `math::max(u32,u32)` overload we do not declare, so we
+inline where it does not). Those give large block deficits -
+`effect_compiler::begin_pass` is 29 vs 77 - with **zero** caller-side work to do.
+Read the BASE block first: if it ends in a `call` to a known small callee and the
+target's extra blocks are that callee's body expanded in place, close the row.
+Full recipe in `patterns/branch-count-row-triage.md`.
+
+`BLOCK-COUNT` is the natural next queue once `BRANCH-COUNT` thins out.
+
+B7's five `BRANCH-COUNT` hits: `backend::flush_rt` 49.7 -> 100
 (`render_dirty_targets::any()` was `|` where the target has `||`),
 `res_effect::apply` 62.2 -> 100, `res_render_output::select_resolution`
 71.4 -> 100, `constant_data_predicate` -> 100, `store_constant<T>` x4 - in a
 subtree six earlier batches had already been over.
+
+B8's three: `res_render_output::present` (a missing
+`DXGI_ERROR_DEVICE_REMOVED/_DEVICE_RESET/_DRIVER_INTERNAL_ERROR` ->
+`device::on_device_removed()` arm), `shader_constant_buffer::update` (the target
+uses `UpdateSubresource` under a `backend::ref().disabled_shader_constansts_set`
+guard, not `Map`/`CopyMemory`/`Unmap` - which also un-walls
+`constants_handler<0..2>::update_buffers`, since the real body is small enough to
+inline and ours was not), and
+`texture_options_binary_cooker::on_binary_config_loaded` (a stack
+`fs_new::virtual_path_string` plus
+`replace("resources/", "resources.sources/")`).
+
+**The one surviving `TOPOLOGY` row is explained and closed.** `backend::flush` is
+63 blocks / 35 branches on both sides with a single retargeted `jmp`; the target
+**cross-jumped** the two `IASetVertexBuffers` call sites onto one shared
+four-instruction indirect-call suffix and the base emitted both copies. A pure
+optimizer decision - the arms even push different argument counts. Do not reopen
+it.
 
 `SIGNEDNESS` has no sample yet, but a signed/unsigned twin is a type bug by
 construction, so treat it like `BRANCH-COUNT` when one appears.

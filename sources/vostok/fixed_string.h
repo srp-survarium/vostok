@@ -32,6 +32,7 @@ public:
 							fixed_string	(src_iterator const& begin, src_iterator const& end);
 
  	fixed_string const&		operator =		(fixed_string const& s);
+ 	fixed_string const&		operator =		(value_type const* const src);
 							template <class src_type>
  	fixed_string const&		operator =		(src_type const& s);
 
