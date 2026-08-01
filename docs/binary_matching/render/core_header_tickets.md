@@ -120,6 +120,15 @@ WHERE fuzzy_pct IS NULL GROUP BY unit ORDER BY 2 DESC"`.
 
 Pattern file: `patterns/inline-header-split-pairing.md`.
 
+**Status after batch B6: DONE for `render/core`.** B6 relocated
+`res_xs_hw_impl.h` (9 rows), `sources/xs_descriptor.cpp` (7), `res_effect.h` (7,
+folding in four of our headers), `effect_options_descriptor.h` (3),
+`destroy_data_helper.h` and `shader_constant_buffer_inline.h` (1). Render fuzzy
+32.0% -> 32.9%, unmeasured render rows 208 -> 143. Every remaining `render/core`
+mismatch is engine-owned, include-cycle blocked, an ICF/neighbour artifact, or a
+missing template instantiation rather than a misplaced body - see the B6 section of
+`matching_campaign.md`. **`render/engine` and `render/facade` have NOT been swept.**
+
 **Residual after the splits are done:** some rows will remain unmeasured for the
 original reason (a header COMDAT with genuinely no diffable object pair). Only
 THAT remainder is a tooling matter. Re-measure before assuming any given row is

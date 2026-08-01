@@ -83,61 +83,12 @@ public:
 	}
 
 private:
-	void set( shader_constant_slot const& slot, void* pointer, u32 )
-	{
-		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
-		set_memory( slot.slot_index( ), static_cast<pcstr>( pointer ), data_size );
-	}
-
-	void set( shader_constant_slot const& slot, void* pointer, u32, u32 array_size )
-	{
-		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
-		set_memory(
-			slot.slot_index( ),
-			static_cast<pcstr>( pointer ),
-			data_size * array_size
-		);
-	}
-
-	void zero( shader_constant_slot const& slot, u32 )
-	{
-		u32 const data_size = slot.class_id( ) & constant_class_size_mask;
-		zero_memory( slot.slot_index( ), data_size );
-	}
-
-	void set_memory( u32 offset, pcstr source, u32 size )
-	{
-		// FUNCTION BODY[0x66860]
-		char* destination = static_cast<char*>( m_buffer_data ) + offset;
-		u32 const available = offset < m_buffer_size ? m_buffer_size - offset : 0;
-		u32 const copy_size = size < available ? size : available;
-		u8 difference = 0;
-		for ( u32 index = 0; index < copy_size; ++index ) {
-			difference |= destination[index] ^ source[index];
-			destination[index] = source[index];
-		}
-		m_changed |= difference != 0;
-	}
-
-	void zero_memory( u32 offset, u32 size )
-	{
-		char* destination = static_cast<char*>( m_buffer_data ) + offset;
-		u32 const available = offset < m_buffer_size ? m_buffer_size - offset : 0;
-		u32 const clear_size = size < available ? size : available;
-		u8 difference = 0;
-		for ( u32 index = 0; index < clear_size; ++index ) {
-			difference |= destination[index];
-			destination[index] = 0;
-		}
-		m_changed |= difference != 0;
-	}
-
-	void* access( u32 offset )
-	{
-		return offset < m_buffer_size
-			? static_cast<char*>( m_buffer_data ) + offset
-			: 0;
-	}
+	void set( shader_constant_slot const& slot, void* pointer, u32 );
+	void set( shader_constant_slot const& slot, void* pointer, u32, u32 array_size );
+	void zero( shader_constant_slot const& slot, u32 );
+	void set_memory( u32 const offset, pcstr source, u32 const size );
+	void zero_memory( u32 const offset, u32 const size );
+	void* access( u32 offset );
 
 private:
 	fixed_string<64> m_name;
@@ -164,5 +115,7 @@ typedef intrusive_ptr<
 
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/core/dx11/shader_constant_buffer_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_CORE_DX11_SHADER_CONSTANT_BUFFER_H_INCLUDED

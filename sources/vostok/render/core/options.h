@@ -175,11 +175,10 @@ public:
 
 	virtual ~render_cc_bool( ) { }
 	virtual void execute( pcstr args );
-
-private:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
+private:
 	bool& m_prev_value;
 };
 
@@ -202,11 +201,10 @@ public:
 
 	virtual ~render_cc_float( ) { }
 	virtual void execute( pcstr args );
-
-private:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
+private:
 	float& m_prev_value;
 };
 
@@ -229,11 +227,10 @@ public:
 
 	virtual ~render_cc_u32( ) { }
 	virtual void execute( pcstr args );
-
-private:
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
 
+private:
 	u32& m_prev_value;
 };
 

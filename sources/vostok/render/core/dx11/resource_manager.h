@@ -10,7 +10,7 @@
 #include <vostok/fs/virtual_path_string.h>
 #include <vostok/math_int2.h>
 #include <vostok/math_rectangle.h>
-#include <vostok/render/core/binary_shader_key_type.h>
+#include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/quasi_singleton.h>
 #include <vostok/render/core/render_target.h>

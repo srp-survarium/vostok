@@ -92,6 +92,45 @@ after the namespaces are closed:
   `core/res_xs.h` where we had `dx11/res_xs.h` (a shim). `git mv` the real file up and
   delete the shim.
 
+## Three variants beyond `<x>.h` -> `<x>_inline.h` (batch B6)
+
+1. **Header -> `.cpp`.** The target may file a template's bodies under
+   `sources/<x>.cpp`, not a header at all: `xs_descriptor<T>::reset/set_texture/
+   use_texture` and the implicit `vs_data::operator=` they instantiate all live in
+   `dx11/sources/xs_descriptor.cpp`. Reconstruct as out-of-line template definitions in a
+   NEW `.cpp` plus whole-class explicit instantiation (`template class xs_descriptor<vs_data>;`
+   - the tree already uses that idiom in `res_xs.cpp`). Members the target does not show are
+   NOT evidence against this: an explicit instantiation emits every member and `/OPT:REF`
+   strips the unreferenced ones. Remember to add the new `.cpp` to the module `.vcproj`.
+2. **`<x>_impl.h`, not `_inline.h`.** Same mechanism, different suffix
+   (`res_xs_hw.h` -> `res_xs_hw_impl.h`). Read the target file name, don't assume.
+3. **N of our headers were ONE of theirs.** `dx11/res_effect.h` holds what we had split
+   across `core/res_effect.h`, `core/effect_compile_data.h`,
+   `dx11/binary_shader_{source,key_type,cook_data}.h`. Fold them into the target-named
+   header and delete the extra files (repoint the includers); a compiler-generated ctor/dtor
+   is attributed to the file that physically holds the CLASS, so the class itself has to move.
+
+## Two traps
+
+* **ICF folds poison the attribution.** The rich index is RVA-keyed, so several mangled
+  names can share one record and inherit the file of whichever symbol won the fold. Before
+  moving anything, check the target RVAs are DISTINCT and the sizes non-trivial. Small
+  compiler-generated dtors sitting at an RVA adjacent to a real function in some unrelated
+  header (`shader_constant_table::~shader_constant_table` filed under `res_geometry.h`) are
+  usually fold/neighbour artifacts - do not chase them.
+* **Include cycles cap the fold.** `res_pass::res_pass` is attributed to `dx11/res_effect.h`,
+  but defining it there needs `res_xs` complete, and `res_effect.h -> res_xs.h ->
+  res_xs_hw.h -> resource_manager.h -> res_effect.h` closes a cycle. Leave the body where it
+  compiles and note it; a partial relocation that breaks the build costs a whole cycle.
+
+## What is NOT a split
+
+A target row whose mangled name is absent from the WHOLE base index is a missing
+instantiation, not a misplaced body. All 70 remaining `effect_manager_inline.h` rows are
+`effect_manager::create_effect<effect_xxx>` for engine effect types our build never
+instantiates - relocating anything cannot pair them. Check `mangled in BASE` before
+adding a file to the worklist.
+
 ## Payoff (render/core, 2026-08-01, batch B5)
 Zero code changes, pure file relocation:
 
@@ -107,6 +146,18 @@ Zero code changes, pure file relocation:
 | `core/res_xs.h` | 0 | 3/3 at 77.1% |
 
 Whole-EXE headline moved 36.32% -> 37.08% code / 53.02% -> 53.88% functions.
+
+## Payoff (render/core, 2026-08-01, batch B6)
+
+| unit | before | after |
+|---|---|---|
+| `dx11/res_xs_hw_impl.h` | 0 paired | 9 (ctor/dtor 100%, create_hw_shader 87-93%) |
+| `dx11/sources/xs_descriptor.cpp` | 0 | 7 distinct (gs_data::operator= 91.9%) |
+| `dx11/res_effect.h` | 0 | 7 (cook_data ctor 100%, effect_compile_data 92.2%) |
+| `dx11/effect_options_descriptor.h` | 0 | 3 (two at 100%, pcstr 99.5%) |
+| `dx11/shader_constant_buffer_inline.h` | 0 | 1 |
+
+Render fuzzy 32.0% -> 32.9%, exact 490 -> 496; unmeasured render rows 208 -> 143.
 
 ## Related
 - `address-taken-anchor-emits-header-comdat.md` - why a header COMDAT exists at all.

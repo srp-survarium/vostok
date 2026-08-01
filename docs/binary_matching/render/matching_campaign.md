@@ -278,3 +278,44 @@ stale base. Always run `rebuild.py` with **no** module argument. Second trap: en
 `nix develop` again while a build runs kills that build's `mspdbsrv` (exit 144 / LNK1318);
 never run a `pdb_fetch` in parallel with a rebuild in the same worktree.
 
+
+## Batch B6 notes (render/core, inline-header splits round 2)
+
+Continues B5. Detection and the three new variants are written up in
+`patterns/inline-header-split-pairing.md`; the payoff table lives there too.
+Render fuzzy 32.0% -> 32.9%, exact 490 -> 496, unmeasured render rows 208 -> 143.
+
+**The splits are now DRY in `render/core`.** Every remaining target-vs-base file
+mismatch in that subtree is one of:
+- **Lane A (engine) owned:** `dx11/res_effect.h` also wants `material_effects`,
+  `material_effects_instance`, `post_process_parameters` (4 rows, currently in
+  `engine/sources/material_effects_instance.h`); `dx11/destroy_data_helper.h` wants
+  `stage_forward`'s deleting dtor; `backend_handlers_inline.h` wants a
+  `renderer_context_targets.h` row.
+- **Include-cycle blocked:** `res_pass::res_pass` (see the pattern file).
+- **ICF/neighbour artifacts:** `shader_constant_table::~shader_constant_table` filed
+  under `res_geometry.h`.
+- **Not splits at all:** the ~70 `effect_manager_inline.h` rows are
+  `effect_manager::create_effect<effect_xxx>` instantiations our build never makes
+  (engine effect types). B5's hand-off listed these as split work; they are not.
+
+**Second lever found in B6: the access/CV-char mangling sweep**
+(`patterns/access-cv-char-mangling-sweep.md`). One scripted pass over `render/core`
+found 11 unpaired target functions whose base twin differed only in the
+`@@<access><cv>E` mangling group, and fixing the declarations paired all of them
+(`res_texture` dtor 100%, `set_hw_texture` 96.4%, `render_cc_*::fill_macro` 76.4%).
+The sweep has not been run on `render/engine` or `render/facade` - do that first in B7,
+it is minutes of work per module.
+
+**Structure verdicts recorded this batch (do not re-open):**
+- `res_xs_hw<T>::parse_resources` - STRUCTURE MATCH (16/16 statements, identical line
+  deltas, 5/5 locals). The whole 53% residual is one inline-vs-call wall: the target
+  out-lines the compiler-generated `texture_slot::operator=` (96 bytes, present in
+  `res_xs_hw_impl.h`) where our build inlines it, so `textures[i] = tex_slot` is 0x14
+  bytes there and 0x7f here. Not source-steerable.
+- `res_effect::res_effect` and `binary_shader_source::binary_shader_source` -
+  STRUCTURE MATCH, byte residual only.
+- `shader_constant_buffer::set_memory` 18.4 -> 33.0: the target walks a POINTER pair to a
+  precomputed end pointer (no index), clamps with `math::min( size, m_buffer_size - offset )`
+  and has NO `offset < m_buffer_size` guard. Params are `u32 const offset` / `u32 const size`
+  per the PDB. Residual is register/scheduling.
