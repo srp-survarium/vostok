@@ -277,9 +277,8 @@ amending.
   declared at **global scope**, ahead of `namespace vostok`.
 - Reproduce-exactly note: the target sets `view_mode = unlit_view_mode` for BOTH
   `s_unlit_value` and `s_distortion_value` (a copy-paste bug - `mov eax, 2` is reused).
-- **Blocker (lane B / core):** `render::event_query::issue` and `::wait` are empty stubs in
-  `render/core/sources/event_query.cpp`, so the `s_do_stages_profiling` and
-  `s_use_gpu_sync_value` blocks DCE away in `renderer::render`.
+- **Resolved by the render-to-100 root campaign:** the complete `event_query` TU now pairs
+  at 99.44-99.74%; restoring it recovered the profiling and GPU-sync caller cones.
 - **Blocker (lane A, next batch):** `temporal_projection_matrix_modifier::push_jittering` /
   `::pop_jittering` are stubs, so the whole jitter cone DCEs - and with it `view_mode`
   (lines 868-873), `scene::process_streaming` (904-905), the TAA condition (909) and the
@@ -321,9 +320,9 @@ amending.
   `renderer_context::get_rt( rt_present )` is the `+0x1cb8` load (index = (0x1cb8-0x98)/0xa0
   = 45). `draw_debug` reads `m_stages[..]->m_context` directly, so `stage` needs
   `friend class renderer;` (codegen-neutral).
-- **Blocker (lane B / core, unchanged):** `event_query::issue`/`::wait` are empty, so the
-  two profiling blocks of `execute_stages` (target lines 430/433/434 and 465/466) and of
-  `renderer::render` DCE away. Lane A cannot fix this.
+- **Resolved by the render-to-100 root campaign:** `event_query::issue`/`::wait` and their
+  constructor/destructor helpers now pair, and `execute_stages` re-measures at 70.39% with
+  both profiling blocks present.
 - **Blocker (lane A, next batch):** every remaining `draw_debug` TRGT_ONLY row is an empty
   stub callee DCE-ing its own guard - `draw_luminance_picker_info` (0xc89),
   `draw_stages_stats` (0x1670), `draw_frame_histogram` (0x247),

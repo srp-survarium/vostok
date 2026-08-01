@@ -8,19 +8,16 @@ struct ID3D11Query;
 namespace vostok {
 namespace render {
 
-class event_query : public core::noncopyable {
-public:
+struct event_query : public core::noncopyable {
 	event_query( );
 	~event_query( );
 
 	void issue( );
 	void wait( );
 
-private:
 	void init_query( );
 	void release_query( );
 
-private:
 	ID3D11Query* m_query;
 };
 

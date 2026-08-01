@@ -1,51 +1,46 @@
 #include "pch.h"
+#include <vostok/render/core/dx11/device.h>
+#include <vostok/render/core/dx11/sources/com_utils.h>
 #include <vostok/render/core/sources/event_query.h>
 
 namespace vostok {
 namespace render {
 
-// claude@NOTE: no legacy ancestor anywhere in the corpus (class is target-era;
-// the held gpu_timer.h reference is declarations-only). Expected idiom is the
-// D3D11_QUERY_EVENT sequence already ported in resource_manager.cpp
-// begin_command_list/end_command_list [0x560970/0x560920]: init_query =
-// CreateQuery(D3D11_QUERY_EVENT), issue = d3d_context->End(m_query), wait =
-// spin on GetData(m_query,0,0,0)!=S_OK, release_query = m_query->Release().
-// Matcher-phase work against the 0x5598xx bodies.
 event_query::event_query( )
 	: m_query( 0 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x559900]
+	init_query( );
 }
 
 event_query::~event_query( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x559850]
+	release_query( );
 }
 
 void event_query::init_query( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5598d0]
+	D3D11_QUERY_DESC query_desc;
+	query_desc.MiscFlags = 0;
+	query_desc.Query = D3D11_QUERY_EVENT;
+	device::ref( ).d3d_device( )->CreateQuery( &query_desc, &m_query );
 }
 
 void event_query::release_query( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x559830]
+	safe_release( m_query );
 }
 
 void event_query::issue( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5598b0]
+	device::ref( ).d3d_context( )->End( m_query );
 }
 
 void event_query::wait( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x559870]
+	BOOL result = FALSE;
+	while ( device::ref( ).get_query_data( m_query, &result, sizeof( result ), true ) && !result )
+	{
+	}
 }
 
 } // namespace render
