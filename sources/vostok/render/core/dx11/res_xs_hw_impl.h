@@ -4,9 +4,21 @@
 namespace vostok {
 namespace render {
 
+//	claude@NOTE: the shipped PDB pins every body in this header at once - the ctor on
+//	20..22, the dtor on 26..28, create_hw_shader on 52..100 and parse_resources on
+//	106..155 - and its statements land on 55, 56, 58, 60, 66, 70, 74, 75, 77, 96, 99
+//	and on 111, 113, 116, 120, 122, 123, 126, 129, 130, 131, 133, 134, 135, 136, 140,
+//	143. That fixes the file's geometry exactly; the spans held open below (6..16,
+//	29..49, 62..65, 81..95, 107..110) emit nothing in the shipped image and their
+//	CONTENT is not recoverable. The one byte-visible consequence is create_hw_shader's
+//	LOG_ERROR, whose __LINE__ the target bakes as 60h = 96 - its __FILE__ stays the
+//	build-machine path (C:\survarium\sources\...) and cannot be reproduced from here.
+
 template < typename shader_data >
-res_xs_hw<shader_data>::res_xs_hw( ) : m_is_registered( false )
+res_xs_hw<shader_data>::res_xs_hw( ) :
+	m_is_registered( false )
 {
+
 }
 
 template < typename shader_data >
@@ -14,6 +26,26 @@ res_xs_hw<shader_data>::~res_xs_hw( )
 {
 	safe_release( m_shader_data.hardware_shader );
 }
+
+//	claude@NOTE: 29..49 is the largest of those holes - twenty-one lines. The three
+//	per-shader-type create_hw_shader( ID3D10Blob*, hw_interface** ) specialisations do
+//	NOT live here: the target keeps them in res_vs_hw.cpp (19..30) and res_gs_hw.cpp /
+//	res_ps_hw.cpp (18..27), each with its own line records. So whatever stood on these
+//	lines is commentary or debug-only code that MASTER_GOLD compiles away, and nothing
+//	in the image distinguishes the two.
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 template < typename shader_data >
 HRESULT res_xs_hw<shader_data>::create_hw_shader( ID3D10Blob* shader_code )
@@ -28,9 +60,13 @@ HRESULT res_xs_hw<shader_data>::create_hw_shader( ID3D10Blob* shader_code )
 	if ( SUCCEEDED( hr))
 	{
 		ID3D11ShaderReflection* shader_reflection;
+
+
+
 		hr			= D3DReflect( buffer, buffer_size, IID_ID3D11ShaderReflection, (void**)&shader_reflection);
 
 		D3D11_SHADER_DESC shader_desc;
+
 		shader_reflection->GetDesc(&shader_desc);
 
 		m_shader_data.instruction_count = static_cast<u16>( shader_desc.InstructionCount );
@@ -42,6 +78,21 @@ HRESULT res_xs_hw<shader_data>::create_hw_shader( ID3D10Blob* shader_code )
 	}
 	else
 	{
+//	claude@NOTE: 81..95 emit nothing either, and the LOG_ERROR below is the only
+//	statement the shipped else-arm records (on 96, through its baked __LINE__ 60h).
+//	Fifteen lines of a failure arm that leave no code is the signature of a
+//	MASTER_GOLD-compiled-out block, but the image does not say what it held.
+
+
+
+
+
+
+
+
+
+
+
 		LOG_ERROR( "! CreateVertexShader hr == %08x", ( int)hr);
 	}
 
@@ -49,13 +100,14 @@ HRESULT res_xs_hw<shader_data>::create_hw_shader( ID3D10Blob* shader_code )
 }
 
 template < typename shader_data >
-void res_xs_hw<shader_data>::parse_resources(
-	ID3D11ShaderReflection* shader_reflection,
+void res_xs_hw<shader_data>::parse_resources( ID3D11ShaderReflection* shader_reflection,
 	fixed_vector<sampler_slot, 16>& samplers,
-	fixed_vector<texture_slot, 128>& textures
-)
+	fixed_vector<texture_slot, 128>& textures )
 {
 	D3D11_SHADER_DESC	shader_desc;
+
+
+
 	shader_reflection->GetDesc( &shader_desc);
 
 	for( u32 i=0; i<shader_desc.BoundResources; ++i)

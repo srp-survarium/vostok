@@ -39,7 +39,6 @@ public:
 
 	void set_name( shared_string const& name )
 	{
-		// Observed vs_data instantiation [0x126bd0].
 		m_name = name;
 	}
 

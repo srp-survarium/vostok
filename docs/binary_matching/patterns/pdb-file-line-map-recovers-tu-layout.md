@@ -2,7 +2,7 @@
 tags: cpp:file-layout cpp:macro | asm:push | topic:line-records topic:structure-shape topic:logging topic:data-recovery
 symptoms: log call pushes a __LINE__ immediate that cannot be reached by our source; functions match in order but every __LINE__/__FILE__ site is off; want to know how many lines a compiled-out block occupied
 confidence: 9/10
-variants: log-line-verbosity-immediates.md, multiline-statement-closing-line-record.md, statement-line-gap-recovers-zero-byte-statements.md
+variants: log-line-verbosity-immediates.md, multiline-statement-closing-line-record.md, statement-line-gap-recovers-zero-byte-statements.md, sunk-store-statement-loses-line-record.md
 
 `binaries/rich/target/index.jsonl` carries `file` and a `statements[]` array of
 `{off,size,line}` for **every** function. One `jq` pass therefore prints the shipped

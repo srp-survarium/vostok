@@ -14,14 +14,14 @@ public:
 
 	ID3D11Device* d3d_device( ) const;
 	ID3D11DeviceContext* d3d_context( ) const;
-	IDXGIOutput* get_output( u32 monitor_index ) const;
+	IDXGIOutput* get_output( u32 const monitor_index ) const;
 
 	void on_device_removed( );
 
 	bool get_query_data(
 		ID3D11Query* in_query,
 		void* in_out_data,
-		u32 in_data_size,
+		u32 const in_data_size,
 		bool in_wait
 	);
 
