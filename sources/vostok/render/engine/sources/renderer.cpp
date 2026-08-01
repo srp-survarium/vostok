@@ -1701,63 +1701,53 @@ void renderer::present(
 	m_last_frame_time			= m_current_time;
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
-// STATE[STUB]
+// claude@NOTE: the three float scales are loop-invariant and get hoisted into the
+// loop preheader, so only screen_width/screen_height keep their own statements; the
+// dips scale never needs a frame slot because its factor stays on the x87 stack
+// (info->dips goes through fild) while the time scale is reloaded into SSE.
+// claude@NOTE: residual cause - the target folds the inner `m_render_output ? ... : 0`
+// out of backend::target_width/target_height (the guard above already proves it
+// non-null) and reuses the guard's register for `->width()`/`->height()`; our base
+// re-tests through a different expression, which adds 4 CFG blocks and ~0x1a bytes
+// (sema: base 26 blocks vs target 22, first skeleton divergence at B3). Those
+// accessors live in render/core/dx11/backend_inline.h, outside this lane's scope.
 void renderer::draw_frame_histogram( ) const
 {
-	// LOCALS
-	// float3[512] 						lines_time
-	// float3[512] 						lines_dips
-	// const float 						screen_width
-	// const float 						scale_x
-	// const float 						scale_time_y
-	// const float 						screen_height
-	// ******
+	if ( !backend::ref( ).m_render_output )
+		return;
 
-	// FUNCTION BODY[0x6488c0]: 38
-	// <0x6488ca>|0x00a|+0x016:'1619'
-	// <0>
-	// <1>
-	// <0x6488e0>|0x020|+0x028:'1622'
-	// <0x648908>|0x048|+0x021:'1623'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x648929>|0x069|+0x03c:'1635'
-	// <0x648965>|0x0a5|+0x008:'1636'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x64896d>|0x0ad|+0x06d:'1642'
-	// <0x6489da>|0x11a|-0x01a:'1642'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6489c0>|0x100|+0x026:'1647'
-	// <0x6489e6>|0x126|+0x044:'1647'
-	// <0x648a2a>|0x16a|+0x005:'1648'
-	// <0x648a2f>|0x16f|+0x036:'1649'
-	// <0>
-	// <1>
-	// <0x648a65>|0x1a5|+0x094:'1652'
-	// <0x648af9>|0x239|-0x08b:'1652'
-	// <0>
-	// <0x648a6e>|0x1ae|+0x034:'1654'
-	// <0x648aa2>|0x1e2|+0x04b:'1655'
-	// <0>
-	// <0x648aed>|0x22d|+0x00e:'1657'
-	// ******
+	float const screen_width	= float( backend::ref( ).target_width( ) );
+	float const screen_height	= float( backend::ref( ).target_height( ) );
+
+	float const scale_x			= screen_width / 512.f;
+	float const scale_time_y	= screen_height / 100.f;
+	float const scale_dips_y	= screen_height / 10000.f;
+
+	float3 lines_time[512];
+	float3 lines_dips[512];
+
+	u32 count					= 0;
+	for ( frame_histogram_info* info = m_fps_history.front( ); info; info = info->next )
+	{
+		lines_time[count]		= float3(
+			count * scale_x * 2.f / screen_width - 1.f,
+			info->time * scale_time_y * 2.f / screen_height - 1.f,
+			0.f
+		);
+
+		lines_dips[count]		= float3(
+			count * scale_x * 2.f / screen_width - 1.f,
+			info->dips * scale_dips_y * 2.f / screen_height - 1.f,
+			0.f
+		);
+		++count;
+	}
+
+	if ( count > 1 )
+	{
+		system_renderer::ref( ).draw_screen_lines( lines_time, count, math::color( math::color_rgba( 0.f, 1.f, 0.f, 1.f ) ), 1, 0xffffffff, true, true );
+		system_renderer::ref( ).draw_screen_lines( lines_dips, count, math::color( math::color_rgba( .5f, .5f, .7f, 1.f ) ), 1, 0xffffffff, true, true );
+	}
 }
 
 	// TYPEDEFS

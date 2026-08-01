@@ -1,6 +1,10 @@
 #include "pch.h"
 #include "sector_double_query_preventer.h"
 
+#include <vostok/render/engine/vertex_colored.h>
+
+#include "system_renderer.h"
+
 namespace vostok {
 namespace render {
 namespace culling {
@@ -72,10 +76,32 @@ bool sector_double_query_preventer::is_visible_aabb( math::aabb const&, u16 cons
 	return false;
 }
 
-void sector_double_query_preventer::render( system_renderer& )
+void sector_double_query_preventer::render( system_renderer& r )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8d10]
+	u16 const frustrum_edges_indices[]	= {
+		0, 1,	1, 2,	2, 3,	3, 0,
+		4, 5,	5, 6,	6, 7,	7, 4,
+		0, 4,	1, 5,	2, 6,	3, 7
+	};
+
+	for ( vector<frustum_image>::const_iterator i = m_frustum_images.begin( ), e = m_frustum_images.end( ); i != e; ++i )
+	{
+		vertex_colored vertices[] = {
+			vertex_colored( i->vertices[0], i->c ),
+			vertex_colored( i->vertices[1], i->c ),
+			vertex_colored( i->vertices[2], i->c ),
+			vertex_colored( i->vertices[3], i->c ),
+			vertex_colored( i->vertices[4], i->c ),
+			vertex_colored( i->vertices[5], i->c ),
+			vertex_colored( i->vertices[6], i->c ),
+			vertex_colored( i->vertices[7], i->c ),
+		};
+		r.draw_lines	(
+			vertices, vertices + array_size( vertices ),
+			frustrum_edges_indices, frustrum_edges_indices + array_size( frustrum_edges_indices ),
+			false
+		);
+	}
 }
 
 void sector_double_query_preventer::make_frustum_images( float3 const* )

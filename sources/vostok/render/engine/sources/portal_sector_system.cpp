@@ -9,6 +9,7 @@
 
 #include <vostok/console_command.h>
 #include <vostok/math_color.h>
+#include <vostok/render/engine/vertex_colored.h>
 
 #include "sector_double_query_preventer.h"
 #include "system_renderer.h"
@@ -266,10 +267,6 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&points)[4] )
 	return true;
 }
 
-// claude@NOTE: the two switch-guarded statements below are dropped by the optimizer
-// because both callees are still empty: sector_double_query_preventer::render
-// (sector_double_query_preventer.cpp, 0x5fc/13 stmts) and draw_portals (below,
-// 0x153/14 stmts). Bodying either restores its guard.
 void portal_sector_system::render( system_renderer& renderer, float3 const& view_pos, float4x4 const& )
 {
 	u32 const sector_id				= m_structure->get_sector_id( *g_allocator, view_pos );
@@ -288,18 +285,60 @@ void portal_sector_system::test_action( )
 	m_test_action			= true;
 }
 
-void portal_sector_system::draw_quads( system_renderer& )
+void portal_sector_system::draw_quads( system_renderer& renderer )
 {
-	// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fc300]
+	u16 const quad_indices[]	= {
+		0, 1,
+		1, 2,
+		2, 3,
+		3, 0
+	};
+
+	vector<quad>::const_iterator const quads_end = m_quads.end( );
+	for ( vector<quad>::const_iterator i = m_quads.begin( ); i != quads_end; ++i )
+	{
+		vertex_colored const vertices[] = {
+			vertex_colored( i->vertices[0], math::color( 0xff00ffff ) ),
+			vertex_colored( i->vertices[1], math::color( 0xff00ffff ) ),
+			vertex_colored( i->vertices[2], math::color( 0xff00ffff ) ),
+			vertex_colored( i->vertices[3], math::color( 0xff00ffff ) ),
+		};
+
+		renderer.draw_lines( vertices, vertices + array_size( vertices ), quad_indices, quad_indices + array_size( quad_indices ), false );
+	}
 }
 
-void portal_sector_system::draw_portals( system_renderer&, u32 const )
+void portal_sector_system::draw_portals( system_renderer& renderer, u32 const active_sector_id )
 {
-	// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fc3f0]
+	u16 const frustum_indices[]		= {
+		0, 1, 2,
+		0, 2, 3,
+		0, 2, 1,
+		0, 3, 2
+	};
+
+	spatial_sector const& s			= m_structure->get_sectors( )[active_sector_id];
+	u32 const* const portals_end	= s.get_portals( ) + s.get_portals_count( );
+	for ( u32 const* i = s.get_portals( ); i != portals_end; ++i )
+	{
+		portal const& p				= m_structure->get_portals( )[*i];
+		if ( !p.is_visible( ) )
+			continue;
+
+		vertex_colored const vertices[] = {
+			vertex_colored( p.get_points( )[0], math::color( 0x6464c864 ) ),
+			vertex_colored( p.get_points( )[1], math::color( 0x6464c864 ) ),
+			vertex_colored( p.get_points( )[2], math::color( 0x6464c864 ) ),
+			vertex_colored( p.get_points( )[3], math::color( 0x6464c864 ) ),
+		};
+		renderer.draw_triangles	(
+			vertices, vertices + array_size( vertices ),
+			frustum_indices, frustum_indices + array_size( frustum_indices ),
+			false
+		);
+	}
+
+	draw_quads( renderer );
 }
 
 // claude@NOTE: ported from dx9/model_manager.cpp

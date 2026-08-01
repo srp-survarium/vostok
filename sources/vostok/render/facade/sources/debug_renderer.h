@@ -43,12 +43,9 @@ private:
 	friend class editor::renderer;
 	friend class game::renderer;
 
-public:
-	// claude@NOTE: the target mangles this ctor private (??0renderer@debug@render@vostok@@AAE@...);
-	// it stays public only because game_core/sources/anchor_collision.cpp constructs one
-	// directly. Drop that anchor construction, then move this below `private:`.
 	renderer( one_way_render_channel& channel, memory::base_allocator& allocator, engine::world& engine_world );
 
+public:
 	void draw_line( base_scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
 	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float half_size, bool use_depth = true );
 	void draw_cross( base_scene_ptr const& scene, float3 const& point, float half_size, math::color const& color, bool use_depth = true );
