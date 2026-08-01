@@ -8,6 +8,7 @@
 #include <vostok/render/core/effect_manager.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>
+#include <vostok/render/core/res_xs.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
 #include <vostok/render/core/shader_constant_binding.h>
@@ -28,6 +29,9 @@
 #include "material.h"
 #include "register_samplers.h"
 #include "render_output_window.h"
+#include "render_model_instance_impl.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 #include "renderer_context.h"
 #include "scene.h"
 #include "scene_view.h"
@@ -234,11 +238,9 @@ static console_commands::cc_bool s_debug_remove_trample_cc(
 	console_commands::command_type_user_specific
 );
 
-// claude@NOTE: the console-command string of s_debug_use_skeletel_mesh_lods_cc could not be
-// read back - the object sits past the last one whose `dynamic initializer` was dumped.
 static bool s_debug_use_skeletel_mesh_lods_value = true;
 static console_commands::cc_bool s_debug_use_skeletel_mesh_lods_cc(
-	"r_use_skeletel_mesh_lods",
+	"r_debug_use_skeletel_mesh_lods",
 	s_debug_use_skeletel_mesh_lods_value,
 	false,
 	console_commands::command_type_user_specific
@@ -696,21 +698,20 @@ void renderer::execute_stages( )
 	}
 }
 
-// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
 bool sort_by_vs_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
-	return false;
+	material_effects const& left_material_effects =
+		left->m_render_surface->get_material_effects( );
+	material_effects const& right_material_effects =
+		right->m_render_surface->get_material_effects( );
 
-	// FUNCTION BODY[0x64d60]: 7
-	// <0x64d60>|0x000|+0x029:'481'
-	// <0x64d89>|0x029|+0x028:'482'
-	// <0>
-	// <1>
-	// <0x64db1>|0x051|+0x02c:'485'
-	// <0>
-	// <0x64ddd>|0x07d|+0x01b:'487'
-	// ******
+	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]
+		->get_technique( m_tech_index )->get_pass( 0 );
+	res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]
+		->get_technique( m_tech_index )->get_pass( 0 );
+
+	return left_pass->get_ps( )->hardware_shader( )->hardware_shader( )
+		< right_pass->get_ps( )->hardware_shader( )->hardware_shader( );
 }
 
 // claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
@@ -747,27 +748,23 @@ bool sort_by_distance_predicate::operator()( render_surface_instance const* left
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
 bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
-	return false;
+	material_effects const& left_material_effects =
+		left->m_render_surface->get_material_effects( );
+	material_effects const& right_material_effects =
+		right->m_render_surface->get_material_effects( );
 
-	// FUNCTION BODY[0x64f50]: 7
-	// <0x64f50>|0x000|+0x02c:'531'
-	// <0x64f7c>|0x02c|+0x028:'532'
-	// <0>
-	// <1>
-	// <0x64fa4>|0x054|+0x02c:'535'
-	// <0>
-	// <0x64fd0>|0x080|+0x021:'537'
-	// ******
+	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]
+		->get_technique( m_tech_index )->get_pass( 0 );
+	res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]
+		->get_technique( m_tech_index )->get_pass( 0 );
+
+	return left_pass->get_ps( )->m_textures->compare(
+		*right_pass->get_ps( )->m_textures
+	) < 0;
 }
 
-// claude@NOTE: body recovered from the target asm, but the row cannot pair: the target image
-// contains ZERO call sites for screen_factor (fill_opaque_models inlines it and keeps the
-// standalone COMDAT anyway), while our link drops an uncalled static. It will pair only once
-// fill_opaque_models is bodied AND our LTCG also declines to inline it.
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	bbox.modify					( model_transform );
@@ -778,106 +775,88 @@ static float screen_factor( float3 const& view_position, math::aabb bbox, float4
 	return						( math::clamp_r( math::max( extents.x, extents.y, extents.z )/math::max( distance, math::epsilon_6 ), 0.f, 1.f ) );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus (opaque-model gather is new-in-target); matcher-phase work.
-// STATE[STUB]
 void renderer::fill_opaque_models( )
 {
-	// LOCALS
-	// vector< render_surface_instance* >& opaque_models
-	// vector< render_surface_instance* > opaque_models_lod0
-	// vector< render_surface_instance* > opaque_models_lod1
-	// render_surface_instance* const* 	e
-	// material_effects const& 			me
-	// render_surface_instance* const* 	i
-	// render_surface_instance* const* 	i
-	// ******
+	if ( !options::ref( ).current.m_use_shader_lods )
+	{
+		vector<render_surface_instance*>& opaque_models =
+			m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+		opaque_models.clear( );
 
-	// CALL SITE INFO
-	// <0x647c2b> -> math::aabb < unknown >()
-	// ******
+		for ( render_surface_instance* const* i = m_renderer_context->get_scene_view( )->get_visible_models( ).begin( ), * const* e = m_renderer_context->get_scene_view( )->get_visible_models( ).end( ); i != e; ++i )
+		{
+			material_effects const& me = ( *i )->m_render_surface->get_material_effects( );
+			if ( me.m_effects[gbuffer_render_stage].c_ptr( ) )
+				opaque_models.push_back( *i );
+		}
 
-	// OTHER SYMBOLS
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x63712e }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1177") })
-	// Label(LabelSymbol { offset: PdbInternalSectionOffset { section: 0x1, offset: 0x636ffb }, flags: ProcedureFlags { nofpo: false, int: false, far: false, never: false, notreached: true, cust_call: false, noinline: false, optdbginfo: false }, name: RawString("$LN1183") })
-	// ******
+		sort_models( opaque_models, gbuffer_render_stage, 0 );
+		return;
+	}
 
-	// FUNCTION BODY[0x647a00]: 72
-	// <0x647a00>|0x000|+0x01e:'577'
-	// <0>
-	// <0x647a1e>|0x01e|+0x00c:'579'
-	// <0>
-	// <1>
-	// <0x647a2a>|0x02a|+0x03a:'582'
-	// <0>
-	// <0x647a64>|0x064|+0x02c:'584'
-	// <0>
-	// <0x647a90>|0x090|+0x029:'586'
-	// <0x647ab9>|0x0b9|+0x009:'587'
-	// <0x647ac2>|0x0c2|+0x020:'588'
-	// <0>
-	// <0x647ae2>|0x0e2|+0x05c:'590'
-	// <0>
-	// <1>
-	// <2>
-	// <0x647b3e>|0x13e|+0x00c:'594'
-	// <0>
-	// <0x647b4a>|0x14a|+0x03e:'596'
-	// <0>
-	// <0x647b88>|0x188|+0x01a:'598'
-	// <0>
-	// <0x647ba2>|0x1a2|+0x02e:'600'
-	// <0>
-	// <0x647bd0>|0x1d0|+0x003:'602'
-	// <0>
-	// <0x647bd3>|0x1d3|+0x027:'604'
-	// <0>
-	// <0x647bfa>|0x1fa|+0x011:'606'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x647c0b>|0x20b|+0x11e:'613'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x647d29>|0x329|+0x024:'618'
-	// <0>
-	// <0x647d4d>|0x34d|+0x022:'620'
-	// <0>
-	// <1>
-	// <2>
-	// <0x647d6f>|0x36f|+0x02f:'624'
-	// <0>
-	// <0x647d9e>|0x39e|+0x005:'626'
-	// <0>
-	// <0x647da3>|0x3a3|+0x00a:'628'
-	// <0x647dad>|0x3ad|+0x01b:'629'
-	// <0x647dc8>|0x3c8|+0x005:'630'
-	// <0x647dcd>|0x3cd|+0x031:'631'
-	// <0>
-	// <1>
-	// <0x647dfe>|0x3fe|+0x013:'634'
-	// <0x647e11>|0x411|+0x038:'635'
-	// <0x647e49>|0x449|+0x00f:'636'
-	// <0x647e58>|0x458|+0x044:'637'
-	// <0>
-	// <0x647e9c>|0x49c|+0x006:'639'
-	// <0x647ea2>|0x4a2|+0x006:'640'
-	// <0>
-	// <0x647ea8>|0x4a8|+0x00c:'642'
-	// <0>
-	// <0x647eb4>|0x4b4|+0x010:'644'
-	// <0x647ec4>|0x4c4|+0x12d:'645'
-	// <0x647ff1>|0x5f1|-0x027:'645'
-	// <0>
-	// <0x647fca>|0x5ca|+0x012:'647'
-	// <0x647fdc>|0x5dc|+0x01f:'648'
-	// <0x647ffb>|0x5fb|-0x4c7:'648'
-	// <0x647b34>|0x134|+0x5b4:'649'
-	// ******
+	vector<render_surface_instance*>& opaque_models =
+		m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+	opaque_models.clear( );
+
+	vector<render_surface_instance*> opaque_models_lod0, opaque_models_lod1;
+
+	for ( render_surface_instance* const* i = m_renderer_context->get_scene_view( )->get_visible_models( ).begin( ), * const* e = m_renderer_context->get_scene_view( )->get_visible_models( ).end( ); i != e; ++i )
+	{
+		material_effects const& me =
+			( *i )->m_render_surface->get_material_effects( );
+		if ( !me.m_effects[gbuffer_render_stage].c_ptr( ) )
+			continue;
+
+		float const factor = screen_factor(
+			m_renderer_context->get_view_pos( ),
+			( *i )->m_parent->get_aabb( ),
+			*( *i )->m_transform
+		);
+
+		bool const skeletal_mesh =
+			me.get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type
+			|| me.get_vertex_input_type( ) == skeletal_3_bones_mesh_vertex_input_type
+			|| me.get_vertex_input_type( ) == skeletal_2_bones_mesh_vertex_input_type
+			|| me.get_vertex_input_type( ) == skeletal_1_bones_mesh_vertex_input_type;
+
+		float const lod0_threshold =
+			s_debug_use_skeletel_mesh_lods_value && skeletal_mesh ? 0.01f : 0.005f;
+
+		( *i )->m_shader_lod_index = factor > lod0_threshold
+			? 0
+			: factor <= 0.0000333f
+				&& ( *i )->m_render_surface
+				&& ( *i )->m_render_surface->get_vertex_input_type( ) == static_mesh_vertex_input_type
+				? 2
+				: 1;
+
+		( *i )->m_dynamic_screen_factor = factor;
+
+		if ( ( *i )->m_shader_lod_index == 0 )
+			opaque_models_lod0.push_back( *i );
+		else if ( ( *i )->m_shader_lod_index == 1 )
+			opaque_models_lod1.push_back( *i );
+	}
+
+	if ( opaque_models_lod0.size( ) )
+		sort_models( opaque_models_lod0, gbuffer_render_stage, 1 );
+
+	if ( opaque_models_lod1.size( ) )
+		sort_models( opaque_models_lod1, gbuffer_render_stage, 3 );
+
+	if (
+		!opaque_models_lod0.size( )
+		&& !opaque_models_lod1.size( )
+	)
+		return;
+
+	opaque_models.reserve( opaque_models_lod0.size( ) + opaque_models_lod1.size( ) );
+
+	for ( render_surface_instance* const* i = opaque_models_lod0.begin( ), * const* e = opaque_models_lod0.end( ); i != e; ++i )
+		opaque_models.push_back( *i );
+
+	for ( render_surface_instance* const* i = opaque_models_lod1.begin( ), * const* e = opaque_models_lod1.end( ); i != e; ++i )
+		opaque_models.push_back( *i );
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
@@ -908,46 +887,25 @@ void renderer::sort_models_by_distance( vector< render_surface_instance* >& inst
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
-// STATE[STUB]
 void renderer::sort_models(
-	vector< render_surface_instance* >&		instances,
-	enum_render_stage_type					stage_type,
-	const u32								tech_index
+	vector<render_surface_instance*>& instances,
+	enum_render_stage_type stage_type,
+	u32 const tech_index
 )
 {
-	// FUNCTION BODY[0x6476e0]: 30
-	// <0x6476e0>|0x000|+0x014:'673'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6476f4>|0x014|+0x00f:'681'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x647703>|0x023|+0x009:'694'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x64770c>|0x02c|+0x00f:'702'
-	// ******
+	if ( s_sorting_value )
+		std::sort(
+			instances.begin( ),
+			instances.end( ),
+			sort_by_vs_predicate( stage_type, tech_index )
+		);
+
+	if ( s_sorting3_value )
+		std::sort(
+			instances.begin( ),
+			instances.end( ),
+			sort_by_texture_predicate( stage_type, tech_index )
+		);
 }
 
 static void push_point(

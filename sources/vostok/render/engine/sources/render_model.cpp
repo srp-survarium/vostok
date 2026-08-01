@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/console_command.h>
 #include <vostok/render/culling/possible_sectors_holder.h>
 #include "material.h"
 #include "material_manager.h"
@@ -9,6 +10,14 @@
 
 namespace vostok {
 namespace render {
+
+static bool s_use_one_material_value = false;
+static console_commands::cc_bool s_use_one_material(
+	"use_one_material",
+	s_use_one_material_value,
+	true,
+	console_commands::command_type_user_specific
+);
 
 render_model::render_model( ) :
 	m_aabbox			( math::create_identity_aabb( ) ),
@@ -149,28 +158,10 @@ void render_model::set_children( render_surface** children_in, u8 count, model_l
 
 material_effects& render_surface::get_material_effects( )
 {
-	// TODO: fix it!!!
-	if (!m_materail_effects_instance.c_ptr())
-	{
-		return material::nomaterial_material( get_vertex_input_type() );
-	}
-	else
-	{
-		return m_materail_effects_instance->get_material_effects();
-	}
+	if ( m_materail_effects_instance.c_ptr( ) && !s_use_one_material_value )
+		return m_materail_effects_instance->get_material_effects( );
 
-	// FUNCTION BODY[0x63bd70]: 9
-	// <0>
-	// <0x63bd70>|0x000|+0x019:'97'
-	// <0>
-	// <0x63bd89>|0x019|-0x006:'99'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63bd83>|0x013|+0x005:'103'
-	// <0>
-	// <0x63bd88>|0x018|+0x00b:'105'
-	// ******
+	return material::nomaterial_material( get_vertex_input_type( ) );
 }
 
 render_surface::~render_surface( )
