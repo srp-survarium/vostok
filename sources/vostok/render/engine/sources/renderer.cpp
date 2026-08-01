@@ -509,12 +509,16 @@ renderer::~renderer( )
 	// <0x64849b>|0x18b|+0x040:'280'
 	// ******
 
-	DELETE					( m_view_mode_stage );
-	DELETE					( m_present_stage );
-	DELETE					( m_stage_debug );
+	DELETE					( m_frame_sync_event );
+	DELETE					( m_timing_event );
 
 	for ( std::reverse_iterator< stage** > it = m_stages.rbegin( ), e = m_stages.rend( ); it != e; ++it )
 		DELETE				( *it );
+
+	DELETE					( m_visibility_stage );
+	DELETE					( m_view_mode_stage );
+	DELETE					( m_present_stage );
+	DELETE					( m_stage_debug );
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.
@@ -753,11 +757,6 @@ void renderer::clear_resources( )
 	// ******
 }
 
-// claude@NOTE: the two profiling blocks (target lines 430/433-434 and 465-466) DCE away
-// here because render::event_query::issue/::wait are empty stubs in
-// render/core/sources/event_query.cpp - a different lane owns that file. The rest of the
-// body is structure-complete; the target also spills `it` / `prev_draw_calls` to stack
-// slots only because those blocks' register pressure forces it.
 void renderer::execute_stages( )
 {
 	if ( !s_execute_stages )
