@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_ENGINE_CLOUD_SIMULATION_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_CLOUD_SIMULATION_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target cloud simulation core, same as the .cpp) - matcher-phase work.
 #include <boost/noncopyable.hpp>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4x4.h>
