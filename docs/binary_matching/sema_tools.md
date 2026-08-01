@@ -145,11 +145,22 @@ view. MSVC literal names expose a readable prefix; long literals remain
 compiler-truncated, so the command prints both the decoded hint and raw symbol.
 
 Other sema-family capabilities already have stronger Vostok-native owners:
-`pdb_fetch` for statement/assembly/diff views, `pdb_rich_query --list` for PDB
-symbols, `clangd_query.py` for source symbols/definitions/references/hover, and
-`match_db.py` for function/unit status, queues, attempts, flags, and
-hash-scoped MAX. Keeping those as companions avoids a second implementation of
-the authoritative PDB and database logic.
+
+| HoMM2/Gruntz view | Vostok owner |
+|---|---|
+| `disasm` / rich source lines | `pdb_fetch --view target|base|diff|structure|structure-diff` |
+| `match` | `match_db.py report --function`, `--unit --per-function`, or `--module --per-unit` |
+| `symbol`, `def`, `refs`, `hover` | `clangd_query.py` with the same operation name |
+| symbol/function map | `pdb_rich_query --list` and `match_db.py list` |
+| class hierarchy and layout | generated `binaries/structure/target/headers` |
+| vtable order and slot use | target structure headers plus `pdb_fetch --view target` at a real vcall |
+
+Gruntz needs separate `map`, `class`, and `vtable` inference because its retail
+binary is stripped. Vostok's retail PDB already records the declarations and
+ownership those commands try to infer. Treat the PDB-derived structure and real
+vcall assembly as authoritative instead of importing stripped-binary guesses.
+Keeping these commands as companions also avoids a second implementation of the
+PDB and match-database logic.
 
 `<fn>` is a mangled name, a demangled substring, or a hex RVA/VA on either side.
 Ambiguous substrings are listed, never guessed at.

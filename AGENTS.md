@@ -79,11 +79,20 @@ semantics are not.
   block view establishes a real divergence. Use `dot` for graph output and
   `sweep --module <m> [--unit <u>]` for a module queue. `BRANCH-COUNT` is the
   highest-yield class; `FLOW-SAME` is not source-shape work.
-- The rest of the HoMM2/Gruntz sema family maps to existing authoritative
-  Vostok tools: `pdb_fetch` supplies target/base/structure/instruction views,
-  `pdb_rich_query --list` performs PDB symbol lookup, `clangd_query.py` supplies
-  symbol/definition/reference/hover navigation, and `match_db.py` supplies
-  function, unit, queue, attempt, flag, and hash-scoped MAX state.
+- The complete useful HoMM2/Gruntz sema family is covered, but its commands map
+  to the strongest Vostok evidence owner rather than being duplicated:
+  `pdb_fetch --view target|base|diff|structure|structure-diff|callees|info`
+  owns disassembly and PDB statement/local evidence; `pdb_rich_query --list`
+  owns symbol and RVA listing; `clangd_query.py symbol|def|refs|hover` owns
+  source-semantic navigation; and `match_db.py report|list|queue|max` owns
+  function/unit status, queues, attempts, flags, and hash-scoped MAX state.
+- Gruntz's `map`, `class`, and `vtable` commands compensate for a stripped
+  binary. Vostok has the retail PDB: use `binaries/structure/target/headers` for
+  class layout, inheritance, and virtual declaration order, target
+  `pdb_rich_query --list`/`match_db.py list` for the emitted function map, and
+  `pdb_fetch --view target` at real virtual call sites for slot offsets. These
+  are authoritative; do not port stripped-binary hierarchy or ownership guesses
+  over the PDB evidence.
 - Work optimized modules from owning roots toward leaves. Use `xref --callees`
   to descend only into blockers that keep a root folded, stripped, or shaped
   incorrectly; remeasure the root after bodying a callee. An isolated leaf is
