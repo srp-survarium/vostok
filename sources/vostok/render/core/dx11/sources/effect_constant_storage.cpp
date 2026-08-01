@@ -7,9 +7,7 @@ namespace render {
 
 bool constant_data_predicate( data_indexer const& left, data_indexer const& right )
 {
-	// FUNCTION BODY[0x55f3f0]
-	return left.class_id < right.class_id
-		|| (left.class_id == right.class_id && left.data_ptr < right.data_ptr);
+	return left.class_id < right.class_id;
 }
 
 effect_constant_storage::effect_constant_storage( ) : m_constant_buffer( 0 )

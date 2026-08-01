@@ -100,25 +100,16 @@ bool set_client_rect( HWND, s32, s32, s32, s32 )
 
 void res_render_output::select_resolution( u32 & width, u32 & height, bool windowed, HWND window) const
 {
-	// FUNCTION BODY[0x55abe0]
-	if( windowed)
+	RECT rect;
+	if (windowed ? GetClientRect( window, &rect) : GetWindowRect( window, &rect))
 	{
-		RECT rect;
-		if (GetClientRect( window, &rect))
-		{
-			width = rect.right - rect.left;
-			height = rect.bottom - rect.top;
-		}
-		else
-		{
-			DWORD error_code = GetLastError();
-			VOSTOK_UNREFERENCED_PARAMETER(error_code);
-		}
+		width = rect.right - rect.left;
+		height = rect.bottom - rect.top;
 	}
 	else
 	{
-		width	= 1024;
-		height	= 768;
+		DWORD error_code = GetLastError();
+		VOSTOK_UNREFERENCED_PARAMETER(error_code);
 	}
 }
 

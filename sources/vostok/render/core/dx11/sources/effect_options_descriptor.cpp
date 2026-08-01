@@ -121,9 +121,15 @@ u32 effect_options_descriptor::get_num_used_bytes( ) const
 	return result;
 }
 
+// claude@NOTE: 271 bytes and 23 blocks on both sides, 16/16 statements with identical line
+// deltas. `sema blocks --diff` reports flow DIFFERS and names a "missing early-out" at B2 -
+// that is an artifact: our 1-byte `nop` alignment pad is its own block and displaces every
+// later index (see sema_tools.md "degenerate fall-through blocks"). The real residual is
+// register allocation: the target keeps a CSE'd zero in edx (an extra `xor edx,edx` at
+// entry and one more at the loop tail) and spells the two null tests `cmp reg,edx` where we
+// emit `test reg,reg`, then reuses that zero for the placement-new ctor's four stores.
 effect_options_descriptor& effect_options_descriptor::operator[]( pcstr key )
 {
-	// FUNCTION BODY[0x559ac0]
 	u32 offset = 0;
 
 	if (type==configs::t_table_named)

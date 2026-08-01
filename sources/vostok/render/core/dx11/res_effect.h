@@ -175,13 +175,9 @@ public:
 		return m_techniques == other.m_techniques;
 	}
 	bool equal( res_effect const* other ) const { return equal( *other ); }
-	// claude@NOTE: the target records THREE statements here, we emit two - it has a
-	// trailing 3-byte record after `return apply_pass( pass_id );` (a separate epilogue
-	// block), and its `select_technique` inline expands to 0x28 bytes against our 0x19.
 	bool apply( u32 technique_id, u32 pass_id )
 	{
-		select_technique( technique_id );
-		return apply_pass( pass_id );
+		return select_technique( technique_id ) && apply_pass( pass_id );
 	}
 	bool select_technique( u32 technique_id )
 	{

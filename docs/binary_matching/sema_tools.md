@@ -205,6 +205,31 @@ exactly the case a human under-investigates.
   went from a bogus 17-vs-18-block verdict to a clean 14-vs-14 that isolates
   the one real difference (we tail-`jmp` the last call, the target `call`s and
   returns).
+* **Degenerate fall-through blocks are NOT contracted before the isomorphism
+  check** (found by batch B7). The "every post-branch instruction is a leader"
+  rule manufactures single-instruction blocks with one predecessor, one
+  successor and no terminator - a `nop`/`lea ecx,[ecx]` alignment pad, a
+  spill reload, a re-materialised zero. If such a block sits at a DIFFERENT
+  place on the two sides, the CFGs are still isomorphic after contracting
+  single-pred/single-succ fall-through chains, but `sema` reports
+  `flow DIFFERS`, points its first-skeleton-divergence line at the pad, and -
+  because destinations are named by block INDEX - reports every later branch as
+  retargeted. Three render/core rows were exactly this and cost real time:
+  `effect_options_descriptor::operator[]` (271 bytes and 23 blocks on BOTH
+  sides; the "missing early-out" at B2 is our base's B3, displaced by a 1-byte
+  `nop`), `resource_manager::create_texture` (a `jmp`+pad vs a fall-through+pad),
+  `res_texture_list::compare` x2 (a 1-instruction `mov edx,[esp+18h]` reload).
+  Until this is fixed: when the first divergence is a block with no branch,
+  contract it by hand before believing the verdict.
+* **`branches --diff` aligns branches POSITIONALLY.** One extra or missing
+  branch shifts every later pair, so a single real difference prints as a run of
+  `POLARITY` / `TOPOLOGY` rows. That is how `sweep`'s two render/core
+  `COND-FLIP` rows (`create_texture`, `create_texture3d`) were produced, and
+  both are false alarms - the mnemonics agree once the extra pad block is
+  removed. `blocks --diff [--lite]` uses content-based alignment and marks these
+  `~=` ("same kind/shifted target"), so **prefer `blocks --diff` over
+  `branches --diff` for the verdict** and use `branches` only to read a
+  confirmed difference.
 * **It says nothing about statements or locals.** Structure verdicts stay
   `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
   statement level.
