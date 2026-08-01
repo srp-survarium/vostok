@@ -16,6 +16,64 @@ semantics are not.
 - Use the repository skills under `.agents/skills/` for unit matching,
   structure verification, match review, and module orchestration.
 
+## Render-to-100 campaign
+
+The active render campaign is `campaign/render-to-100` in
+`/home/sheep/Projects/surv/vostok`. Keep all render investigation, source
+changes, builds, database writes, and commits in this one worktree. Do not
+dispatch render workers into sibling worktrees. Other modules may continue in
+their existing disjoint worktrees, but they must not touch render or this
+worktree's generated artifacts.
+
+The starting snapshot is 35.49% target-byte-weighted: 2,647 target functions,
+1,478 paired, 271 byte-exact, and 1,169 target-only. These are campaign-start
+figures only; `match.db` and `report.json` remain authoritative. The goal is
+100% hash-scoped source MAX for every recoverable render function, with every
+irreducible remainder proved and queryably parked. Current fuzzy percentage or
+ordinary best-seen history is not MAX evidence.
+
+Work the optimized call graph from owning roots toward leaves:
+
+1. Establish world and renderer roots first: `render_engine_world_pc_dx11.cpp`,
+   `renderer.cpp`, and the stage-dispatch paths they own. Use `xref --callees`
+   to identify only the descendants blocking each root, implement those, then
+   immediately remeasure the root. Do not start with isolated effect/helper
+   leaves merely because the queue lists them first.
+2. Drain the large stage cones next: postprocess, light-propagation volumes,
+   shadow-direct, visibility, atmosphere/clouds, rain, and gbuffer. Preserve
+   execution order and target line structure; each stage and its necessary
+   callees form one bounded caller cone.
+3. Reconstruct resource and cook roots, including combined-model cooking,
+   render-model construction, options, effect/resource managers, and shader
+   callbacks. A stubbed/null accessor or empty callee that collapses a caller
+   is higher priority than a locally high-scoring leaf.
+4. Complete effect compiler/descriptor families and effect `compile` bodies
+   through real stage/registration callers. Prefer real reachability; use a
+   minimal target-evidenced anchor only while required, and retire it when the
+   real call graph keeps the symbol alive.
+5. Apply cross-cutting structural levers in deliberate batches: target header
+   location and `*_inline.h` ownership, access/CV/struct mangling, declaration
+   and vtable order, layouts, globals, and shared-header fixes. Batch shared
+   header changes so compiler-context hashes reset once, not piecemeal.
+6. Audit residuals with `structure-diff`, named locals, `sema.py`, and real
+   call-site assembly. Work `QUANTITY`, `SPLIT`, `LOCALS`, target-only bodies,
+   and verified low-score shape mismatches. Park ordinary `SIZE`, frameless
+   convention, ICF, or LTCG claims only after proving the exact non-steerable
+   boundary.
+7. When a remaining gap is caused by measurement rather than source, improve
+   the tool instead of falsifying code. In particular, finish function-scoped
+   compiler-context/MAX attribution and the highly-COMDAT source-tree matching
+   needed to preserve genuine islands up to 100%.
+
+The campaign ledger is the linear Git history plus the per-commit database.
+For every complete TU or bounded caller cone: inspect target structure and
+assembly, record each worked function exactly once in `attempts`, run the full
+`python3 scripts/rebuild.py -j6`, inspect `report-changes.json`, and commit the
+source together with the regenerated README and `match.db`. Then run a
+clean-HEAD no-op rebuild and amend its provenance metadata into that same
+commit. Never borrow a later database snapshot. After each 10-15 TUs, perform a
+separate structure-verification and stale-comment audit before continuing.
+
 ## Build and measurement
 
 - Enter the Nix development environment; do not use sibling tool checkouts.
