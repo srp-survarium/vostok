@@ -1,74 +1,79 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: the remaining stubs have no legacy ancestor (legacy device remainder holds only setup_states/get_device_state; the d3d_device/d3d_context inlines were consumed and are already reproduced; on_device_removed/get_query_data/get_output/video-memory are new-in-target) - matcher-phase work.
 #include <vostok/render/core/device.h>
 #include <vostok/render/core/dx11/device_caps.h>
 #include <vostok/render/core/dx11/sources/com_utils.h>
 
 #pragma comment( lib, "d3d11.lib" )
 #pragma comment( lib, "dxgi.lib" )
-// claude@NOTE: D3DReflect (res_xs_hw.h) lives in d3dcompiler.lib; the legacy
-// tree pulled it in from the retired render_base platform_dx11.cpp, so the
-// pragma moves next to the other DX import libs.
+// claude@NOTE: D3DReflect (res_xs_hw.h) lives in d3dcompiler.lib; the legacy tree
+// pulled it in from the retired render_base platform_dx11.cpp.
 #pragma comment( lib, "d3dcompiler.lib" )
 
-vostok::command_line::key g_debug_render_device(
-	"debug_dx",
-	"",
-	"render",
-	"create d3d device with D3D_CREATE_DEVICE_DEBUG flag"
-);
+vostok::command_line::key g_debug_render_device( "debug_dx", "", "render", "create d3d device with D3D_CREATE_DEVICE_DEBUG flag" );
 
 namespace vostok {
 namespace render {
 
 device::device( bool is_editor ) :
-	m_feature_level( D3D_FEATURE_LEVEL_9_1 ),
-	m_adapter( 0 ),
-	m_device( 0 ),
-	m_context( 0 ),
-	m_is_editor( is_editor ),
-	m_use_perfhud( false ),
-	m_device_removed( false ),
-	m_avaliable_video_memory( 0 )
+	m_device					( 0 ),
+	m_context					( 0 ),
+	m_is_editor					( is_editor ),
+	m_device_removed			( false ),
+	m_avaliable_video_memory	( 0 )
 {
-	for ( u32 i = 0; i < array_size( m_outputs ); ++i )
-		m_outputs[i] = 0;
-
-	// FUNCTION BODY[0x565eb0]
-	//	Just check if initialization order is correct
-	ASSERT( device::ptr());
-
-	create();
-
-	////	need device to be already created.
-	//m_caps.update();
+	create( );
 }
 
 device::~device( )
 {
-	// FUNCTION BODY[0x565a90]
-	destroy();
+	destroy( );
 }
 
-// STATE[STUB]
 void device::on_device_removed( )
 {
-	// FUNCTION BODY[0x5655e0]
+	HRESULT const reason = device::ref( ).d3d_device( )->GetDeviceRemovedReason( );
+
+//	claude@NOTE: every line of this function is load-bearing - the six LOG_ERROR
+//	sites below bake __LINE__ (38..43 in the shipped image), do not reflow them.
+	if ( reason == DXGI_ERROR_DEVICE_HUNG )					LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_HUNG" );
+	else if ( reason == DXGI_ERROR_DEVICE_REMOVED )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_REMOVED" );
+	else if ( reason == DXGI_ERROR_DEVICE_RESET )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DEVICE_RESET" );
+	else if ( reason == DXGI_ERROR_DRIVER_INTERNAL_ERROR )	LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_DRIVER_INTERNAL_ERROR" );
+	else if ( reason == DXGI_ERROR_INVALID_CALL )			LOG_ERROR( "Device remove reason: %s", "DXGI_ERROR_INVALID_CALL" );
+	else if ( reason == S_OK )								LOG_ERROR( "Device remove reason: %s", "S_OK" );
+
+	m_device_removed = true;
+
+//	claude@NOTE: lines 47..52 emit no code in the shipped build (its PDB line map puts
+//	this function's closing brace on 53) and their content is unrecoverable; the span
+//	is kept so the __LINE__ constants above stay correct. Residual vs the target: MSVC
+//	spends its inline budget on the FIRST arm's log-temp destructor and out-lines the
+//	merged one, where the target inlines the single merged copy at the join.
+
 }
 
-// STATE[STUB]
 bool is_resolution_already_exists( u32 const& monitor_index, math::int2 const& res )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( monitor_index );
-	VOSTOK_UNREFERENCED_PARAMETER( res );
+	for ( u32 i = 0; i < 512; ++i )
+	{
 
-	// FUNCTION BODY[0x5651c0]
+		if ( g_monitor_resolutions[monitor_index][i] == res )
+			return true;
+	}
 	return false;
 }
 
+// claude@NOTE: the shipped create_d3d spans lines 67..159 (0x3aa bytes) and also
+// enumerates the outputs of the selected adapter into m_outputs / g_num_monitors /
+// g_monitor_resolutions (alloca'd DXGI_MODE_DESC list, LOG_INFO "monitor %d" at
+// line 135 and "  %dx%d" at line 142), with the NVPerfHUD search below sitting in
+// the compiled-out 71..99 span. This body is the pre-enumeration remnant. Until it
+// is reconstructed, is_resolution_already_exists above has no caller and /OPT:REF
+// strips it, so it cannot pair - and device::create, destroy_d3d, destroy and
+// get_query_data cannot reach their own recorded lines (168..230, 162..165,
+// 233..239, 242..280) either.
 void device::create_d3d( )
 {
-	// FUNCTION BODY[0x565230]
 	IDXGIFactory * dxgi_factory;
 	HRESULT res = CreateDXGIFactory( __uuidof( IDXGIFactory), ( void**)( &dxgi_factory));
 	CHECK_RESULT(res);
@@ -105,106 +110,66 @@ void device::create_d3d( )
 
 void device::destroy_d3d( )
 {
-	// FUNCTION BODY[0x565200]
 	log_ref_count	( "m_Adapter", m_adapter);
 	safe_release	( m_adapter);
 }
 
-// claude@NOTE: legacy fill_vid_mode_list(this) shim dropped - the target
-// replaced it with real monitor/resolution enumeration (m_outputs,
-// is_resolution_already_exists) - matcher work from 0x565ab0.
 void device::create( )
 {
-	// FUNCTION BODY[0x565ab0]
-	create_d3d();
+	create_d3d( );
 
-	// TODO: DX10: Create appropriate initialization
-	// General - select adapter and device
-
-	// Display the name of video board
+	//	Display the name of video board
 	DXGI_ADAPTER_DESC Desc;
-	CHECK_RESULT( m_adapter->GetDesc( &Desc));
+	CHECK_RESULT( m_adapter->GetDesc( &Desc ) );
 
-	//	Warning: Desc.Description is wide string
-	LOG_INFO ( "* GPU [vendor:%X]-[device:%X]: %S", Desc.VendorId, Desc.DeviceId, Desc.Description);
+	//	Warning: Desc.Description is a wide string
+	LOG_INFO( "* gpu [vendor:%X]-[device:%X]: %S", Desc.VendorId, Desc.DeviceId, Desc.Description );
 
-	UINT createDeviceFlags = 0;
-
-#ifdef DEBUG
-	if(g_debug_render_device.is_set())
-		createDeviceFlags |= D3D_CREATE_DEVICE_DEBUG;
-#endif
-
-	HRESULT R;
+	UINT create_device_flags = D3D11_CREATE_DEVICE_SINGLETHREADED;
+	if ( g_debug_render_device.is_set( ) )
+		create_device_flags |= D3D11_CREATE_DEVICE_DEBUG;
 
 	D3D_DRIVER_TYPE driver_type = D3D_DRIVER_TYPE_HARDWARE;
-	// driver_type = m_caps.bForceGPU_REF ? D3D_DRIVER_TYPE_REFERENCE : D3D_DRIVER_TYPE_HARDWARE;
-
-	if ( m_use_perfhud)
-		driver_type =  D3D_DRIVER_TYPE_REFERENCE;
-
+	if ( m_use_perfhud )
+	{
+		LOG_WARNING( "using reference d3d device" );
+		driver_type = D3D_DRIVER_TYPE_REFERENCE;
+	}
 
 	D3D_FEATURE_LEVEL feature_levels[] =
 	{
 		D3D_FEATURE_LEVEL_11_0,
 		D3D_FEATURE_LEVEL_10_1,
 		D3D_FEATURE_LEVEL_10_0,
-		D3D_FEATURE_LEVEL_9_3,
-		D3D_FEATURE_LEVEL_9_2,
-		D3D_FEATURE_LEVEL_9_1,
 	};
 
-	R =  D3D11CreateDevice( 0,//m_adapter,//What wrong with adapter??? We should use another version of DXGI?????
+	HRESULT const result = D3D11CreateDevice(
+		m_use_perfhud ? m_adapter : 0,
 		driver_type,
 		NULL,
-		createDeviceFlags,
+		create_device_flags,
 		feature_levels,
-		sizeof( feature_levels)/sizeof( feature_levels[0]),
+		array_size( feature_levels ),
 		D3D11_SDK_VERSION,
 		&m_device,
 		&m_feature_level,
-		&m_context);
+		&m_context
+	);
+	CHECK_RESULT( result );
 
-	if ( FAILED( R))
-	{
-		// Fatal error! Cannot create rendering device AT STARTUP !!!
-		LOG_INFO	( 	"Failed to initialize graphics hardware.\n"
-						"Please try to restart the game.\n"
-						"CreateDevice returned 0x%08x", R);
+	log_ref_count( "* create: deviceref:", m_device );
 
-		//MessageBox			( NULL,"Failed to initialize graphics hardware.\nPlease try to restart the game.","Error!",MB_OK|MB_ICONERROR);
-		TerminateProcess	( GetCurrentProcess(),0);
-	};
-	CHECK_RESULT( R);
-
-	UINT out_sample_quality;
-
-	for (u32 i = 0; i < 32; i++)
-	{
-		m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_R16G16B16A16_FLOAT, i, &out_sample_quality);
-	}
-	for (u32 i = 0; i < 32; i++)
-	{
-		m_device->CheckMultisampleQualityLevels(DXGI_FORMAT_R8G8B8A8_UNORM, i, &out_sample_quality);
-	}
-	log_ref_count	( "* CREATE: DeviceREF:",m_device);
-
-	size_t	memory		= Desc.DedicatedVideoMemory;
-	LOG_INFO			( "*     Texture memory: %d M",		memory/( 1024*1024));
+	m_avaliable_video_memory = Desc.DedicatedVideoMemory / ( 1024 * 1024 );
+	LOG_INFO( "* texture memory: %d Mb", m_avaliable_video_memory );
 }
 
 void device::destroy( )
 {
-	// FUNCTION BODY[0x565a20]
-	// moved to backend destructor
-	//backend::ref().on_device_destroy();
+	m_context->ClearState( );
 
-	m_context->ClearState();
-
-	log_ref_count( "* DESTROY: Device", m_device);
-	safe_release( m_device);
-
-	destroy_d3d();
+	log_ref_count( "* destroy: device", m_device );
+	safe_release( m_device );
+	destroy_d3d( );
 }
 
 // STATE[STUB]
@@ -224,31 +189,30 @@ bool device::get_query_data(
 	return false;
 }
 
-// STATE[STUB]
 ID3D11Device* device::d3d_device( ) const
 {
-	// FUNCTION BODY[0x565140]
 	return m_device;
 }
 
-// STATE[STUB]
 IDXGIOutput* device::get_output( u32 monitor_index ) const
 {
-	// FUNCTION BODY[0x565130]
 	return m_outputs[monitor_index];
 }
 
-// STATE[STUB]
 ID3D11DeviceContext* device::d3d_context( ) const
 {
-	// FUNCTION BODY[0x565120]
 	return m_context;
 }
 
-// STATE[STUB]
+// claude@NOTE: the shipped device.cpp has a 13-line hole between d3d_context (296..298)
+// and get_avaliable_video_memory (312..314), and both globals are read by
+// is_resolution_already_exists above, so they are declared in device.h and defined
+// here - the only file-scope room the PDB line map leaves for them.
+int g_num_monitors;
+math::int2 g_monitor_resolutions[6][512];
+
 u32 device::get_avaliable_video_memory( ) const
 {
-	// FUNCTION BODY[0x565110]
 	return m_avaliable_video_memory;
 }
 

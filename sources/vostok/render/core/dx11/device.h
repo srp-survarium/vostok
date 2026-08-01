@@ -58,6 +58,13 @@ public:
 
 STATIC_SIZE_ASSERT( device, 0x154 );
 
+// claude@NOTE: filled by device::create_d3d while it enumerates the adapter outputs;
+// read back by is_resolution_already_exists and by the game's video options page
+// (game/sources/options_items.cpp). Mangled as ?g_monitor_resolutions@render@vostok@@
+// 3PAY0CAA@Vint2@math@2@A, i.e. the outer dimension decays - [6][512] of int2.
+extern int g_num_monitors;
+extern math::int2 g_monitor_resolutions[6][512];
+
 } // namespace render
 } // namespace vostok
 
