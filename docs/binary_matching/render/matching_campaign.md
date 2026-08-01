@@ -100,3 +100,33 @@ the other three are small max resets from faithful structure re-work
 - Structure before %; named locals ARE structure; keep faithful even if % falls;
   no cross-unit out-lining; R_ASSERT guards verbatim; `STATE[STUB]` removed only
   on a real port.
+
+## Build hygiene for the ORCHESTRATOR (learned the hard way at batch B4)
+
+One integration cost four rebuild cycles through a chain of self-inflicted
+failures. Each fix was too narrow and caused the next one:
+
+1. **Two `rebuild.py` runs at once in the same worktree -> C2471 "cannot update
+   program database" across every TU.** The rule was already known
+   (serialize integration rebuilds) but not *checked*. **Always
+   `pgrep -f scripts/rebuild.py` before starting one**, and confirm the log file
+   exists a few seconds after launching - a detached launch that silently failed
+   looks exactly like one that is running.
+2. **`pkill -f mspdbsrv` -> C1090 "PDB API call failed, error code 23".** Killing
+   the PDB server mid-write corrupts every intermediate `vc90.pdb`. Also note the
+   pattern matched the killing command's OWN command line and killed the
+   launcher, so the "retry" never started. Never pattern-kill with a string that
+   appears in your own command.
+3. **Deleting `vc90.pdb` alone -> C2859 "not the file the compiler used to create
+   this precompiled header" x209.** `.pch` and `.pdb` are a MATCHED PAIR.
+
+**The correct recovery, if PDB state is ever suspect:** stop all builds, then
+`find binaries/Win32/intermediates \( -name '*.pch' -o -name '*.pdb' -o -name
+'*.idb' \) -delete` and do ONE full rebuild. Clearing a subset is worse than
+clearing nothing.
+
+**Never `git commit --amend` a DB snapshot after a failed build.** Doing so
+stamps a stale `match.db`/README onto the batch commit, and the tell is subtle:
+the score line reads *identical to the previous batch*. Verify the build exited
+0 AND that `git diff --stat docs/binary_matching/match.db` is non-empty before
+amending.

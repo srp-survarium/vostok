@@ -1,5 +1,5 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: stem file consumed; rebind never existed in the corpus and the two compares descend from bool equal overloads (equal->compare is a target-generation refactor) - matcher-phase work.
+// claude@NOTE: legacy-harvest disposition: stem file consumed; rebind never existed in the corpus - matcher-phase work.
 #include <vostok/render/core/res_sampler_list.h>
 #include <vostok/render/core/resource_manager.h>
 
@@ -32,19 +32,43 @@ void res_sampler_list::destroy_impl( ) const
 	resource_manager::ref().release( this );
 }
 
-s32 res_sampler_list::compare( res_sampler_list const& ) const
+s32 res_sampler_list::compare( res_sampler_list const& base ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x739920]
-	return 0;
+	u32 const size = std::min( m_samplers.size( ), base.m_samplers.size( ) );
+	for ( u32 cmp = 0; cmp < size; ++cmp )
+	{
+		if ( m_samplers[cmp] < base.m_samplers[cmp] )
+			return -1;
+
+		if ( m_samplers[cmp] > base.m_samplers[cmp] )
+			return 1;
+	}
+
+	if ( m_samplers.size( ) < base.m_samplers.size( ) )
+		return -1;
+
+	return base.m_samplers.size( ) < m_samplers.size( ) ? 1 : 0;
 }
 
 s32 res_sampler_list::compare(
-	fixed_vector<sampler_slot, 16> const&
+	fixed_vector<sampler_slot, 16> const& base
 ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x739860]
+	u32 const base_size = base.size( );
+	for ( u32 i = 0, count = m_samplers.size( ); i < base_size; ++i )
+	{
+		if ( i < count )
+		{
+			if ( m_samplers[i] < base[i].state )
+				return -1;
+
+			if ( m_samplers[i] > base[i].state )
+				return 1;
+		}
+		else if ( base[i].slot_id != enum_slot_ind_null )
+			return -1;
+	}
+
 	return 0;
 }
 

@@ -384,12 +384,19 @@ inline void backend::set_ib( untyped_buffer* buffer, u32 offset )
 inline void backend::set_vs( res_vs_hw* shader )
 {
 	m_dirty_objects.vertex_shader |= m_vs != shader;
+	if ( m_vs != shader )
+		++num_vs_changes;
 	m_vs = shader;
+	if ( m_dirty_objects.vertex_shader )
+		m_input_layout = 0;
+	m_dirty_objects.input_layout = m_dirty_objects.vertex_shader;
 }
 
 inline void backend::set_ps( res_ps_hw* shader )
 {
 	m_dirty_objects.pixel_shader |= m_ps != shader;
+	if ( m_ps != shader )
+		++num_ps_changes;
 	m_ps = shader;
 }
 
@@ -417,36 +424,61 @@ inline void backend::set_input_layout( res_input_layout* layout )
 
 inline void backend::set_vs_constants( shader_constant_table* table )
 {
+	if ( m_vs_constants_handler.m_current == table )
+		return;
+
+	++num_vsc_changes;
 	m_vs_constants_handler.assign( table );
 	m_dirty_objects.vertex_constants = true;
+	m_constant_update_markers[enum_shader_type_vertex] = m_constant_update_counter;
 }
 
 inline void backend::set_gs_constants( shader_constant_table* table )
 {
+	if ( m_gs_constants_handler.m_current == table )
+		return;
+
 	m_gs_constants_handler.assign( table );
 	m_dirty_objects.geometry_constants = true;
+	m_constant_update_markers[enum_shader_type_geometry] = m_constant_update_counter;
 }
 
 inline void backend::set_ps_constants( shader_constant_table* table )
 {
+	if ( m_ps_constants_handler.m_current == table )
+		return;
+
+	++num_psc_changes;
 	m_ps_constants_handler.assign( table );
 	m_dirty_objects.pixel_constants = true;
+	m_constant_update_markers[enum_shader_type_pixel] = m_constant_update_counter;
 }
 
 inline void backend::set_vs_textures( res_texture_list* textures )
 {
+	if ( m_vs_textures_handler.m_current == textures )
+		return;
+
+	++num_vst_changes;
 	m_vs_textures_handler.assign( textures );
 	m_dirty_objects.vertex_textures = true;
 }
 
 inline void backend::set_gs_textures( res_texture_list* textures )
 {
+	if ( m_gs_textures_handler.m_current == textures )
+		return;
+
 	m_gs_textures_handler.assign( textures );
 	m_dirty_objects.geometry_textures = true;
 }
 
 inline void backend::set_ps_textures( res_texture_list* textures )
 {
+	if ( m_ps_textures_handler.m_current == textures )
+		return;
+
+	++num_pst_changes;
 	m_ps_textures_handler.assign( textures );
 	m_dirty_objects.pixel_textures = true;
 }
@@ -469,18 +501,29 @@ inline void backend::set_ps_texture( pcstr name, res_texture* texture )
 
 inline void backend::set_vs_samplers( res_sampler_list* samplers )
 {
+	if ( m_vs_samplers_handler.m_current == samplers )
+		return;
+
+	++num_vss_changes;
 	m_vs_samplers_handler.assign( samplers );
 	m_dirty_objects.vertex_samplers = true;
 }
 
 inline void backend::set_gs_samplers( res_sampler_list* samplers )
 {
+	if ( m_gs_samplers_handler.m_current == samplers )
+		return;
+
 	m_gs_samplers_handler.assign( samplers );
 	m_dirty_objects.geometry_samplers = true;
 }
 
 inline void backend::set_ps_samplers( res_sampler_list* samplers )
 {
+	if ( m_ps_samplers_handler.m_current == samplers )
+		return;
+
+	++num_pss_changes;
 	m_ps_samplers_handler.assign( samplers );
 	m_dirty_objects.pixel_samplers = true;
 }
