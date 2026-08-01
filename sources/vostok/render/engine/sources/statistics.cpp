@@ -53,7 +53,7 @@ static void push_point(
 	vertex_item.m_color						= c;
 }
 
-static void make_ui_vertices(
+void make_ui_vertices(
 	vectora< ui::vertex >& out_vertices,
 	pcstr in_text,
 	vostok::ui::font const& in_font,

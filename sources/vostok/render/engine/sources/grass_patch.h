@@ -92,7 +92,7 @@ struct grass_patch : public boost::noncopyable {
 		renderer_context* in_context
 	);
 
-private:
+public:
 	float m_movement_data[64][64];
 	render_target_ptr m_movement_rt;
 	res_texture_ptr m_movement_texture;
