@@ -146,7 +146,7 @@ void renderer_cook::create_resource(
 	in_out_query.finish_query				(result_success);
 }
 
-void register_cooks( )
+static void register_cooks( )
 {
 	// STATICS
 	// static skeleton_combined_model_instance_cook skeleton_combined_model_instance_cooker = <0x4c279e8>;
@@ -306,13 +306,8 @@ void register_cooks( )
 	register_cook						( &s_portal_system_cook );
 }
 
-void unregister_cooks( )
+static void unregister_cooks( )
 {
-	// FUNCTION BODY[0x654eb0]: 2
-	// <0x654eb1>|0x001|+0x005:'212'
-	// <0x654eb6>|0x006|+0x006:'213'
-	// ******
-
 	vostok::particle::finalize				( );
 	vostok::render::unregister_texture_cook	( );
 }
@@ -334,7 +329,7 @@ void initialize_options( )
 }
 
 // Modified helper function from DirectX SDK
-HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
+static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
 {
 	// LOCALS
 	// IDxDiagProvider* 				dxdiag_provider
@@ -541,7 +536,7 @@ HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& 
         return E_FAIL;
 }
 
-bool does_os_support_dx11( )
+static bool does_os_support_dx11( )
 {
 	// LOCALS
 	// _OSVERSIONINFOEXA 				OsVersionInfo
@@ -1497,7 +1492,7 @@ enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::v
 
 // claude@NOTE: legacy body diverged - legacy switch labels are the retired speedtree_*_vertex_input_type enumerators; matcher-phase work.
 // STATE[STUB]
-speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( enum_vertex_input_type type )
+static speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( enum_vertex_input_type type )
 {
 	// FUNCTION BODY[0x653ec0]: 10
 	// <0>
@@ -1518,7 +1513,7 @@ speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( en
 	return speedtree_tree::branch;
 }
 
-void on_speedtree_material_effects_instance_ready(
+static void on_speedtree_material_effects_instance_ready(
 	resources::queries_result&		data,
 	speedtree_tree*					tree,
 	enum_vertex_input_type			vertex_input_type
@@ -1573,7 +1568,7 @@ void engine::world::set_speedtree_instance_material(
 	);
 }
 
-void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
+static void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
 {
 	// FUNCTION BODY[0x655720]: 10
 	// <0x655723>|0x003|+0x00c:'1349'

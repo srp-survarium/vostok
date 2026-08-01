@@ -27,6 +27,41 @@ fails to pair: `static void f( )` -> `vostok::render::f`, while `namespace { voi
 is why `custom_config.cpp`'s anonymous-namespace `sort_by_crc` / `convert_type` /
 `copy_destroyer` family still reads unpaired against a `static` target).
 
+**Sweep form that actually finds the rows (batch A10, 12 free pairings in `render/engine`).**
+Do not stop at "the same short name appears undecorated on one side and decorated on the
+other in the same unit" - that INVERTED form is rare (A9 found the one instance in all of
+`render`). The productive form is one-sided: *target undecorated, base decorated, same
+`file:`, same short name.* Join the two rich indexes on `(file, demangled function
+identifier)`:
+
+```python
+def undec(o): m = o.get('mangled',''); return not m.startswith('?') and '`' not in m
+def ident(name): return name.split('(')[0].split('::')[-1].strip().split(' ')[-1]
+# for every target fn with undec() in scope, find base fns in the SAME file whose
+# ident() matches and which are NOT undec() -> add `static` to that definition.
+```
+
+Two filters keep the output honest: drop `` `dynamic initializer for ... ` `` /
+`` `dynamic atexit destructor ...` `` rows (always undecorated, never a linkage bug), and
+match on the demangled **identifier**, not a substring - `sh in mangled` reports every
+`register_cooks` in the image.
+
+A10 yield on `render/engine` (all were `unpaired` before, so the sweep is pure upside):
+`clip_2_screen` / `unregister_cooks` / `get_material_effects_instance_request_path` /
+`vertex_input_type_to_speedtree_component_type` **100%**, `mesh_type_to_vertex_input_type`
+99.9, `does_os_support_dx11` 98.1, `on_speedtree_material_effects_instance_ready` 95.1,
+`get_dx_version_via_dxdiag` 94.9, `on_model_material_effects_instance_ready` 90.3,
+`get_format_block_size` 90.1, `fix_view_matrix` 62.8, `register_cooks` 38.0.
+
+**Negative result worth keeping:** a target static with NO base symbol *anywhere* is not a
+linkage bug - our body is a stub small enough to inline at every call site, so nothing is
+emitted to mis-link (twelve such names in `render/core`, and `decal_instance`'s
+`get_world_to_decal_matrix`, `grass_patch`'s `transform_packed_normal`, ... in
+`render/engine`). And adding `static` can *cost* an emission: with a single call site
+MSVC then inlines the helper away entirely (A10: `calc_pattern`, `compute_gaussian_value`,
+`get_gaussain_weights_offsets` went decorated-unpaired -> inlined-away). Keep the `static`
+anyway - it is what the target has - but do not count those as wins.
+
 Sweep a whole module for the class of them in one shot - any row printed for ONE side only is
 a linkage mismatch, not a matching gap:
 

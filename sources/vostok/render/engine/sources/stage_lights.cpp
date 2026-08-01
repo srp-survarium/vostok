@@ -540,14 +540,14 @@ void stage_lights::render_particle_lighting(
 	}
 }
 
-float compute_gaussian_value( float x, float /*mean*/, float std_deviation )
+static float compute_gaussian_value( float x, float /*mean*/, float std_deviation )
 {
 	// FUNCTION BODY[0x61a9a0]
 	return ( 1.0f / math::sqrt( 2.0f * math::pi * std_deviation * std_deviation ) )
 		* math::exp( (-x*x)/(2.0f * std_deviation * std_deviation) );
 }
 
-void get_gaussain_weights_offsets(
+static void get_gaussain_weights_offsets(
 	float*	out_weights,
 	float*	out_offsets,
 	u32		buffer_size,

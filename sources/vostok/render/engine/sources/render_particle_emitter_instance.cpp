@@ -263,8 +263,7 @@ void render_particle_emitter_instance::render_sprites( )
 
 static float frac( float f )
 {
-	// FUNCTION BODY[0x5fc700]
-	return f - (u32)f;
+	return		( math::abs( f ) - math::abs( floorf( f ) ) );
 }
 
 void render_particle_emitter_instance::render_subuv_sprites( )

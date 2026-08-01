@@ -870,22 +870,18 @@ bool sort_by_texture_predicate::operator()( render_surface_instance const* left,
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - screen_factor postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
+// claude@NOTE: body recovered from the target asm, but the row cannot pair: the target image
+// contains ZERO call sites for screen_factor (fill_opaque_models inlines it and keeps the
+// standalone COMDAT anyway), while our link drops an uncalled static. It will pair only once
+// fill_opaque_models is bodied AND our LTCG also declines to inline it.
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
-	return 0.0f;
+	bbox.modify					( model_transform );
 
-	// FUNCTION BODY[0x647730]: 8
-	// <0x647730>|0x000|+0x009:'565'
-	// <0>
-	// <0x647739>|0x009|+0x023:'567'
-	// <0x64775c>|0x02c|+0x036:'568'
-	// <0x647792>|0x062|+0x04c:'569'
-	// <0x6477de>|0x0ae|+0x02c:'570'
-	// <0>
-	// <1>
-	// ******
+	float3 const center			= bbox.center( );
+	float3 const extents		= bbox.extents( );
+	float const distance		= math::squared_length( view_position - center );
+	return						( math::clamp_r( math::max( extents.x, extents.y, extents.z )/math::max( distance, math::epsilon_6 ), 0.f, 1.f ) );
 }
 
 // claude@NOTE: no legacy ancestor - absent from the legacy corpus (opaque-model gather is new-in-target); matcher-phase work.

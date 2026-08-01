@@ -115,7 +115,10 @@ template bool read_diffuse_colors< 64 >(
 	math::color (&)[64][64]
 );
 
-// frac: COMDAT copy of the help_math.h inline (FUNCTION BODY[0x630150])
+// claude@NOTE: the target defines its own file-local `static float frac( float f )` here
+// (lines 123-125, 0x630150) - NOT a COMDAT copy of help_math.h's: this one is
+// `math::abs( f ) - math::abs( math::floor( f ) )`, i.e. it calls the int-returning
+// math::floor. Restore it with interpolated_color<64>, its only caller.
 
 // STATE[STUB]
 template < u32 Size >
