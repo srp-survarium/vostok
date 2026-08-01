@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: the remaining stubs have no legacy ancestor - legacy render_cc_bool/float/u32 override only fill_macro (no execute/is_changed/m_prev_value machinery), and parse_resolution/begin-end_render_options_changing are new-in-target - matcher-phase work.
 #include <vostok/math_int2.h>
 #include <vostok/render/core/options.h>
 #include <vostok/console_command_processor.h>
@@ -41,17 +40,15 @@ render_cc_bool::render_cc_bool(
 	// FUNCTION BODY[0x12b550]
 }
 
-void render_cc_bool::execute( pcstr )
+void render_cc_bool::execute( pcstr args )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b5b0]
+	m_prev_value = cc_bool::m_value;
+	cc_bool::execute( args );
 }
 
 bool render_cc_bool::is_changed( ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b5c0]
-	return false;
+	return cc_bool::m_value != m_prev_value;
 }
 
 bool render_cc_bool::fill_macro( shader_macro& out_macro ) const
@@ -92,17 +89,15 @@ render_cc_float::render_cc_float(
 	// FUNCTION BODY[0x12b630]
 }
 
-void render_cc_float::execute( pcstr )
+void render_cc_float::execute( pcstr args )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b690]
+	m_prev_value = cc_float::m_value;
+	cc_float::execute( args );
 }
 
 bool render_cc_float::is_changed( ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b6a0]
-	return false;
+	return cc_float::m_value != m_prev_value;
 }
 
 bool render_cc_float::fill_macro( shader_macro& out_macro ) const
@@ -143,17 +138,15 @@ render_cc_u32::render_cc_u32(
 	// FUNCTION BODY[0x12b720]
 }
 
-void render_cc_u32::execute( pcstr )
+void render_cc_u32::execute( pcstr args )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b780]
+	m_prev_value = cc_u32::m_value;
+	cc_u32::execute( args );
 }
 
 bool render_cc_u32::is_changed( ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12b790]
-	return false;
+	return cc_u32::m_value != m_prev_value;
 }
 
 bool render_cc_u32::fill_macro( shader_macro& out_macro ) const
@@ -263,28 +256,35 @@ fs_new::virtual_path_string options::get_current_configuration( )
 	return file_name;
 }
 
-math::uint2 parse_resolution( pcstr )
+math::uint2 parse_resolution( pcstr in_str )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x55ce00]
-	return math::uint2( 1, 1 );
+	char xy_str[16];
+
+	if ( in_str && in_str[0] )
+	{
+		pcstr const height_str = strings::get_token( in_str, xy_str, strings::length( in_str ), 'x' );
+		if ( height_str )
+		{
+			u32 const width = atoi( xy_str );
+			u32 const height = atoi( height_str );
+			if ( width && height )
+				return math::uint2( width, height );
+		}
+	}
+
+	return math::uint2( 1280, 720 );
 }
 
 string256 s_current_render_configuration = "default";
+string16 s_r_resolution_value = "1280x720";
 
-// claude@NOTE: legacy registrations adapted to the canonical two-table
-// (current/previous) signature; every changed_result is the ocr_need_nothing
-// placeholder - the real per-cc values live in the immediates at 0x55cfa0
-// (matcher work), as do the target-added ccs (clouds/fxaa/grass/ssao/quality
-// tiers/resolution/...). Legacy ccs on fields dropped from optinos_table
-// (use_branching, use_loop_unrolling, gbuffer_pos_packing,
-// gbuffer_normal_packing) are dropped with their fields.
 void options::register_console_commands( )
 {
 	// FUNCTION BODY[0x55cfa0]
 	using namespace console_commands;
 
 	static cc_string current_render_configuration_cc("r_current_render_configuration", s_current_render_configuration, 256, true, command_type_engine_internal );
+	static cc_string resolution_cc("r_resolution", s_r_resolution_value, 16, true, command_type_engine_internal );
 
 	static render_cc_bool	enabled_g_stage_cc					("r_enabled_g_stage",					ocr_need_nothing, 0, current.m_enabled_g_stage,					previous.m_enabled_g_stage,					true, command_type_engine_internal);
 	static render_cc_bool	enabled_g_stage_pre_pass_cc			("r_enabled_g_stage_pre_pass",			ocr_need_nothing, 0, current.m_enabled_g_stage_pre_pass,		previous.m_enabled_g_stage_pre_pass,		true, command_type_engine_internal);
@@ -375,19 +375,74 @@ void options::register_console_commands( )
 	}
 }
 
-void options::begin_render_options_changing( long volatile* )
+void options::begin_render_options_changing( long volatile* waiting_for )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x55cd50]
+	threading::interlocked_exchange( *waiting_for, 0 );
 }
 
 enum_options_changes_result options::end_render_options_changing(
-	vector<fs_new::virtual_path_string>&
+	vector<fs_new::virtual_path_string>& out_changed_defines
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x55f180]
-	return ocr_need_nothing;
+	math::uint2 res_str = parse_resolution( s_r_resolution_value );
+	current.m_resolution_x = res_str.x;
+	current.m_resolution_y = res_str.y;
+	current.m_enabled_local_light_shadows = current.m_lighting_quality != uro_lighting_quality_low;
+
+	if ( current.m_shadow_quality > uro_shadow_quality_low && current.m_shadow_quality < uro_shadow_quality_count )
+	{
+		switch ( current.m_antialiasing_method )
+		{
+		case 0:
+			current.m_use_temporal_antialiasing = false;
+			current.m_use_poisson_disc_shadow_filter = false;
+			break;
+		case 1:
+			current.m_use_temporal_antialiasing = true;
+			current.m_enabled_sharpen = true;
+			break;
+		case 2:
+			current.m_use_temporal_antialiasing = true;
+			break;
+		}
+	}
+
+	if ( current.m_shadow_quality > uro_shadow_quality_low && current.m_shadow_quality < uro_shadow_quality_count )
+	{
+		current.m_use_poisson_disc_shadow_filter = true;
+		current.m_shadow_map_size = 1024;
+	}
+	else
+	{
+		current.m_use_poisson_disc_shadow_filter = false;
+		current.m_shadow_map_size = 512;
+	}
+
+	if ( current.m_ambient_occlusion_quality == uro_ambient_occlusion_quality_off )
+		current.m_enabled_ambient_occlusion_stage = false;
+	else if ( current.m_ambient_occlusion_quality < uro_ambient_occlusion_quality_count )
+		current.m_enabled_ambient_occlusion_stage = true;
+
+	if ( current.m_motion_blur_quality == uro_motion_blur_quality_off )
+		current.m_use_motion_blur = false;
+	else if ( current.m_motion_blur_quality < uro_motion_blur_quality_count )
+		current.m_use_motion_blur = true;
+	if ( !current.m_post_process_quality )
+		current.m_ssao_use_temporal_filtering = false;
+
+	enum_options_changes_result result = ocr_need_nothing;
+	for ( render_cc* command = first_render_command; command; command = command->render_next )
+	{
+		if ( !command->is_changed( ) )
+			continue;
+
+		result = static_cast<enum_options_changes_result>( result | command->get_changes_result( ) );
+		out_changed_defines.push_back( fs_new::virtual_path_string( command->define_name( ) ) );
+	}
+
+	previous = current;
+	console_commands::save( "user.cfg", console_commands::command_type_user_specific, memory::g_mt_allocator );
+	return result;
 }
 
 void options::save( pcstr file_name )
