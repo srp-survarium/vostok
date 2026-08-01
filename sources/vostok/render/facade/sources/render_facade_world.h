@@ -2,7 +2,7 @@
 #define VOSTOK_RENDER_FACADE_SOURCES_RENDER_FACADE_WORLD_H_INCLUDED
 
 #include <vostok/render/api.h>
-#include <vostok/render/facade/sources/one_way_render_channel.h>
+#include <vostok/render/facade/one_way_render_channel.h>
 
 namespace vostok {
 namespace render {

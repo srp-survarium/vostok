@@ -44,7 +44,9 @@ private:
 	friend class game::renderer;
 
 public:
-	// @todo Restrict direct construction once collision anchors use a renderer supplied by the facade.
+	// claude@NOTE: the target mangles this ctor private (??0renderer@debug@render@vostok@@AAE@...);
+	// it stays public only because game_core/sources/anchor_collision.cpp constructs one
+	// directly. Drop that anchor construction, then move this below `private:`.
 	renderer( one_way_render_channel& channel, memory::base_allocator& allocator, engine::world& engine_world );
 
 	void draw_line( base_scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
@@ -91,6 +93,8 @@ public:
 		math::color const& color,
 		bool use_depth = true
 	);
+
+private:
 	void draw_lines(
 		base_scene_ptr const& scene,
 		float4x4 const& matrix,
@@ -102,6 +106,8 @@ public:
 		math::color const& color,
 		bool use_depth = true
 	);
+
+public:
 	void draw_triangles( base_scene_ptr const& scene, debug_vertices_type const& vertices, bool use_depth = true );
 	void draw_triangles( base_scene_ptr const& scene, debug_vertices_type const& vertices, debug_indices_type const& indices, bool use_depth = true );
 

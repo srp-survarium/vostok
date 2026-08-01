@@ -5,7 +5,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include <vostok/render/facade/sources/one_way_render_channel.h>
+#include <vostok/render/facade/one_way_render_channel.h>
 
 using vostok::render::one_way_render_channel;
 

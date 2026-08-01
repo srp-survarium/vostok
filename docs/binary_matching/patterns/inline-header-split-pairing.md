@@ -91,6 +91,34 @@ after the namespaces are closed:
 * Same trick for a header filed under the wrong DIRECTORY: the target had
   `core/res_xs.h` where we had `dx11/res_xs.h` (a shim). `git mv` the real file up and
   delete the shim.
+* The `_inline.h` may sit one directory ABOVE the class header we wrote. The target has
+  `render/facade/one_way_render_channel_inline.h` while we had the class in
+  `render/facade/sources/one_way_render_channel.h` behind a shim at `facade/` level. The
+  facade convention (visible in the already-paired `facade/decal_properties.h` +
+  `facade/decal_properties_inline.h`) is *real header + `_inline.h` sibling at the public
+  level*, so `git mv` the class header up over the shim, retarget the three or four
+  `#include <.../facade/sources/x.h>` lines, and put the new `_inline.h` next to it.
+
+### Delete the explicit empty destructor - it is what pins the dtor to the wrong unit
+A compiler-generated member is recorded at **line 0** and is filed with the unit that
+completes the class - which, once the bodies move, is the `_inline.h`. Writing
+`~x( ) { }` (or `virtual ~x( ) { /* no source */ }`) by hand gives the dtor a real line
+number in the *class* header and strands it there. If the target row is `line 0`, the
+original never declared it: delete the explicit definition and let it be implicit.
+`one_way_render_channel::~one_way_render_channel` went 0 -> 100% in
+`one_way_render_channel_inline.h` on exactly this change. Note the sibling case that is
+NOT a relocation: `functor_with_big_buffer_to_copy_command<T>`'s dtors are line 0 under
+`scene_renderer.cpp` in the target - a *template* instantiation point, not a placement -
+so deleting the explicit dtor is still right, but there is nothing to move.
+
+### An `_inline.h` whose rows have no base symbol AT ALL cannot be paired by relocating
+Check `d['mangled'] in base_index` first. Bodies that are still `{ /* STATE[STUB] */ }`
+emit nothing (or ICF-fold into a foreign `ret`), so there is no base twin to pair with and
+the relocation buys nothing until the body is written. `batched_geometry_inline.h` took 11
+target rows and paired only the 2 that had real base bodies (the dtors, 89.4%); the other 9
+stay unpaired until `add_data`/`finalize_batch`/`invalidate`/`for_each_batch_render` have
+bodies. Same root cause as B6's `effect_manager::create_effect<...>` finding - always
+confirm the mangled name EXISTS on the base side before assuming a split.
 
 ## Three variants beyond `<x>.h` -> `<x>_inline.h` (batch B6)
 
@@ -158,6 +186,22 @@ Whole-EXE headline moved 36.32% -> 37.08% code / 53.02% -> 53.88% functions.
 | `dx11/shader_constant_buffer_inline.h` | 0 | 1 |
 
 Render fuzzy 32.0% -> 32.9%, exact 490 -> 496; unmeasured render rows 208 -> 143.
+## Payoff (render/engine + render/facade, 2026-08-01, batch A7)
+Same recipe, lane A. Everything except `statistics_inline.h` (whose bodies were
+reconstructed in the same commit) is pure relocation with zero code change:
+
+| unit | before | after |
+|---|---|---|
+| `facade/sources/functor_with_big_buffer_to_copy_command_inline.h` | 0 paired | 24/24 at 100% |
+| `facade/sources/debug_draw_lines_command_inline.h` | 0 | 6/6 at 100% |
+| `facade/sources/debug_draw_triangles_command_inline.h` | 0 | 3/3 at 100% |
+| `facade/one_way_render_channel_inline.h` | 0 | 4/4 at 100% (header moved up a level) |
+| `engine/sources/camera_inline.h` | 0 | 1/1 at 100% |
+| `engine/sources/statistics_inline.h` | 0 | 6/6 (two 100%, ctor 98.1%) |
+| `engine/sources/batched_geometry_inline.h` | 0 | 2/11 (the rest are stub bodies) |
+
+`render` module 492 -> 520 exact functions, 32.2% -> 32.7% fuzzy; whole-EXE 44.94% ->
+45.66% functions exact.
 
 ## Related
 - `address-taken-anchor-emits-header-comdat.md` - why a header COMDAT exists at all.

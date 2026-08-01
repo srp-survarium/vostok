@@ -64,43 +64,14 @@ STATIC_SIZE_ASSERT( statistics_base, 0x98 );
 
 template < typename T >
 struct statistics_value : public statistics_base {
-	statistics_value( statistics_group* group, pcstr name ) :
-		statistics_base( group, name ),
-		value( T( ) ),
-		min_value( T( ) ),
-		max_value( T( ) ),
-		value_num_max_digits( 0 ),
-		min_value_num_max_digits( 0 ),
-		max_value_num_max_digits( 0 ),
-		min_value_temp( T( ) ),
-		max_value_temp( T( ) ),
-		history_index( 0 ),
-		min_max_frame_index( 0 )
-	{
-		// claude@NOTE: legacy body diverged - legacy statistics_value is a ring buffer (history[N]); canonical grew min/max/digit tracking (see legacy statistics_inline.h remainder); matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[statistics_value<double>: 0x6f990]
-		history[0] = T( );
-	}
+	statistics_value( statistics_group* group, pcstr name );
 
-	virtual void start( ) override
-	{
-		// claude@NOTE: legacy body diverged - legacy start is a ring-buffer advance, no min/max/digit tracking; matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[statistics_value<int>: 0x6fb60]
-	}
-
+	virtual void start( ) override;
 	virtual void print( fs_new::virtual_path_string& out_result ) override = 0;
+	virtual void clear( ) override;
 
-	virtual void clear( ) override
-	{
-		// claude@NOTE: legacy body diverged - legacy clear resets the ring buffer only (statistics_inline.h, not the statistics.cpp group/clear); matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[statistics_value<double>: 0x6fad0]
-	}
-
-	T average( ) { return T( ); }
-	~statistics_value( ) { }
+	T average( );
+	~statistics_value( );
 
 	T	value;
 	T	min_value;
@@ -492,5 +463,7 @@ STATIC_SIZE_ASSERT( statistics, 0x7EB8 );
 
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/engine/sources/statistics_inline.h>
 
 #endif // #ifndef VOSTOK_RENDER_ENGINE_STATISTICS_H_INCLUDED
