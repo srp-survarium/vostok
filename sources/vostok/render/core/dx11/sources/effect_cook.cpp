@@ -79,6 +79,13 @@ void effect_cook::on_binary_shaders(
 	DELETE									(compile_data);
 }
 
+
+
+
+
+
+
+
 void effect_cook::create_resource(
 	resources::query_result_for_cook& in_out_query,
 	const_buffer raw_file_data,
@@ -90,12 +97,14 @@ void effect_cook::create_resource(
 	VOSTOK_UNREFERENCED_PARAMETER				(raw_file_data);
 	
 	effect_compile_data* compile_data		= 0;
-	if (in_out_query.user_data())
-		in_out_query.user_data()->try_get	(compile_data);
+	resources::user_data_variant* user_data	= in_out_query.user_data();
+	if (user_data)
+		user_data->try_get					(compile_data);
 	
 	if (!compile_data)
 	{
 		in_out_query.finish_query			(result_error, assert_on_fail_false);
+		g_allocator->free_impl				(in_out_unmanaged_resource_buffer.c_ptr());
 		DELETE								(compile_data);
 		return;
 	}
@@ -107,6 +116,8 @@ void effect_cook::create_resource(
 	{
 		LOG_ERROR("No effect descriptor!");
 		in_out_query.finish_query			(result_error);
+
+		g_allocator->free_impl				(in_out_unmanaged_resource_buffer.c_ptr());
 		DELETE								(compile_data);
 		return;
 	}
@@ -115,6 +126,7 @@ void effect_cook::create_resource(
 	{
 		LOG_ERROR("No effect config!");
 		in_out_query.finish_query			(result_error);
+		g_allocator->free_impl				(in_out_unmanaged_resource_buffer.c_ptr());
 		DELETE								(compile_data);
 		return;
 	}
@@ -130,8 +142,8 @@ void effect_cook::create_resource(
 	u32 const num_shader_info				= cached_shaders_info.size();
 	u32 const num_requests					= num_shader_info * num_shader_types;
 	
-	resources::creation_request* requests	= (resources::creation_request*)ALLOCA(sizeof(resources::creation_request) * num_requests);
-	fs_new::virtual_path_string* pathes		= (fs_new::virtual_path_string*)ALLOCA(sizeof(fs_new::virtual_path_string) * num_requests);
+	resources::creation_request* requests	= (resources::creation_request*)MALLOC(sizeof(resources::creation_request) * num_requests, "");
+	fs_new::virtual_path_string* pathes		= (fs_new::virtual_path_string*)MALLOC(sizeof(fs_new::virtual_path_string) * num_requests, "");
 	fs_new::virtual_path_string* pathes_init= pathes;
 	
 	for (u32 i = 0; i < num_requests; i++)
@@ -225,6 +237,9 @@ void effect_cook::create_resource(
 		& in_out_query,
 		assert_on_fail_false
 	);
+
+	FREE									(requests);
+	FREE									(pathes);
 }
 
 void effect_cook::destroy_resource( resources::unmanaged_resource* resource_to_destroy )
