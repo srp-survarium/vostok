@@ -247,12 +247,20 @@ static console_commands::cc_bool s_debug_use_skeletel_mesh_lods_cc(
 struct stage_stat {
 	double average_time( bool gpu_time ) const
 	{
-		return gpu_time ? elapsed_gpu_msec[0] : elapsed_cpu_msec[0];
+		double result	= 0.;
+		for ( u32 i = 0; i < array_size( elapsed_gpu_msec ); ++i )
+			result		+= gpu_time ? elapsed_gpu_msec[i] : elapsed_cpu_msec[i];
+
+		return result / array_size( elapsed_gpu_msec );
 	}
 
 	u32 average_dips( ) const
 	{
-		return dips[0];
+		double result	= 0.;
+		for ( u32 i = 0; i < array_size( dips ); ++i )
+			result		+= dips[i];
+
+		return u32( result / array_size( dips ) );
 	}
 
 	double elapsed_gpu_msec[1];
@@ -263,6 +271,39 @@ struct stage_stat {
 
 static stage_stat s_render_stages[num_render_stages];
 static stage_stat s_visibility_stage_stats;
+
+pcstr render_stage_names[] = {
+	"g-buffer",
+	"decals accumulate",
+	"accumulate distortion",
+	"pre rain_normal modify",
+	"pre lighting",
+	"ambient occlusion",
+	"ambient lighting",
+	"sun cascade shadow",
+	"sun",
+	"deferred lighting",
+	"light propagation volumes",
+	"translucency",
+	"resolve lighting",
+	"skybox",
+	"skysphere",
+	"clouds",
+	"atmosphere",
+	"forward",
+	"atmosphere on geometry",
+	"apply distortion",
+	"forward sky",
+	"rain",
+	"lighting",
+	"particles",
+	"volume fog",
+	"post process",
+	"debug post process",
+	"debug",
+	"shadow",
+	"visibility"
+};
 
 struct remove_model_filter_predicate {
 	remove_model_filter_predicate( ) :
@@ -831,7 +872,7 @@ bool sort_by_texture_predicate::operator()( render_surface_instance const* left,
 
 // claude@NOTE: no legacy ancestor - screen_factor postdates the legacy corpus; matcher-phase work.
 // STATE[STUB]
-float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
+static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	return 0.0f;
 
@@ -1019,7 +1060,7 @@ void renderer::sort_models(
 	// ******
 }
 
-void push_point(
+static void push_point(
 	vectora< ui::vertex >&		out_vertices,
 	u32							index,
 	float						x,
@@ -1038,7 +1079,7 @@ void push_point(
 	vertex_item.m_color						= c;
 }
 
-void make_ui_vertices(
+static void make_ui_vertices(
 	vectora< ui::vertex >&		out_vertices,
 	pcstr						in_text,
 	vostok::ui::font const&				in_font,
@@ -1103,7 +1144,7 @@ void make_ui_vertices(
 	}
 }
 
-void draw_text(
+static void draw_text(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
 	u32					pos_x,
@@ -1136,7 +1177,7 @@ void draw_text(
 	system_renderer::ref().draw_ui_vertices((vertex_formats::TL*)&out_vertices.front(), out_vertices.size(), 0, 0);
 }
 
-void draw_text_shadowed(
+static void draw_text_shadowed(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
 	u32					pos_x,
@@ -1145,7 +1186,7 @@ void draw_text_shadowed(
 )
 {
 	// FUNCTION BODY[0x648c80]: 2
-	draw_text(in_font, str, pos_x + 1, pos_y + 1, vostok::math::color(0, 0, 0, 220).m_value);
+	draw_text(in_font, str, pos_x + 1, pos_y + 1, math::color_rgba(0.f, 0.f, 0.f, 1.f));
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
@@ -1433,12 +1474,13 @@ void renderer::render(
 	}
 }
 
-// claude@NOTE: every remaining unreproduced statement here is a guard whose callee is still
-// an empty stub, so LTCG deletes the guard with it: draw_luminance_picker_info,
-// draw_stages_stats, draw_frame_histogram, culling::portal_sector_system::render (reached
-// through scene::draw_portal_system) and grass_world::render_debug. The render_target_ptr
-// temp is a second, non-steerable gap - the target inlines the intrusive refcount ops that
-// we emit as calls to threading::single_threading_policy::increment/decrement.
+// claude@NOTE: the remaining unreproduced guards are the ones whose callee is still an empty
+// stub, so LTCG deletes the guard with it: draw_frame_histogram and
+// culling::portal_sector_system::render (reached through scene::draw_portal_system). The
+// render_target_ptr temp is a second, non-steerable gap - the target inlines the intrusive
+// refcount ops that we emit as calls to
+// threading::single_threading_policy::increment/decrement. The grass row carries an extra
+// cmp/je because our LTCG partial-inlines grass_world::render_debug's entry test to here.
 void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
@@ -1535,133 +1577,102 @@ void renderer::draw_debug(
 		m_stages[decals_accumulate_render_stage]->debug_render( );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
-// STATE[STUB]
+// claude@NOTE: residual cause - the target inlines draw_text_shadowed (and math::color_rgba
+// with its four math::floor expansions) at every call site here and in
+// draw_luminance_picker_info, ~0x250 bytes per site; our LTCG emits a plain call, and it
+// also leaves fixed_string<32>::fixed_string<32> out-of-line where the target inlines it.
+// The statement shape below is complete - the gap is the inliner, not the source.
 void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
-	// LOCALS
-	// fixed_string< 64 >[8] 			strings
-	// const float 						lum_final
-	// math::color[4] 					rgbl_colors
-	// const float 						lum_diffuse
-	// ******
+	fixed_string< 64 > strings[8];
+	math::color rgbl_colors[4]				= {
+		math::color( math::color_rgba( 0.5f, 1.f, 0.5f, 1.f ) ),
+		math::color( math::color_rgba( 0.5f, 0.5f, 1.f, 1.f ) ),
+		math::color( math::color_rgba( 1.f, 0.5f, 0.5f, 1.f ) ),
+		math::color( math::color_rgba( 1.f, 1.f, 1.f, 1.f ) )
+	};
+	const float lum_diffuse					= m_debug_readed_data[0].x * 0.2125f + m_debug_readed_data[0].y * 0.7154f + m_debug_readed_data[0].z * 0.0721f;
+	const float lum_final					= m_debug_readed_data[1].x * 0.2125f + m_debug_readed_data[1].y * 0.7154f + m_debug_readed_data[1].z * 0.0721f;
 
-	// FUNCTION BODY[0x64a5a0]: 29
-	// <0x64a5ac>|0x00c|+0x07b:'1417'
-	// <0>
-	// <0x64a627>|0x087|+0x023:'1419'
-	// <0x64a64a>|0x0aa|+0x027:'1420'
-	// <0x64a671>|0x0d1|+0x027:'1421'
-	// <0x64a698>|0x0f8|+0x021:'1422'
-	// <0>
-	// <0x64a6b9>|0x119|+0x04a:'1424'
-	// <0x64a703>|0x163|+0x032:'1425'
-	// <0>
-	// <0x64a735>|0x195|+0x02e:'1427'
-	// <0x64a763>|0x1c3|+0x025:'1428'
-	// <0x64a788>|0x1e8|+0x025:'1429'
-	// <0x64a7ad>|0x20d|+0x020:'1430'
-	// <0>
-	// <0x64a7cd>|0x22d|+0x025:'1432'
-	// <0x64a7f2>|0x252|+0x025:'1433'
-	// <0x64a817>|0x277|+0x025:'1434'
-	// <0x64a83c>|0x29c|+0x020:'1435'
-	// <0>
-	// <0x64a85c>|0x2bc|+0x060:'1437'
-	// <0>
-	// <1>
-	// <0x64a8bc>|0x31c|+0x25f:'1440'
-	// <0>
-	// <0x64ab1b>|0x57b|+0x4a5:'1442'
-	// <0>
-	// <1>
-	// <0x64afc0>|0xa20|+0x25c:'1445'
-	// ******
+	strings[0].assignf						( "r: %f", m_debug_readed_data[0].x );
+	strings[1].assignf						( "g: %f", m_debug_readed_data[0].y );
+	strings[2].assignf						( "b: %f", m_debug_readed_data[0].z );
+	strings[3].assignf						( "lum: %f", lum_diffuse );
+
+	strings[4].assignf						( "r: %f", m_debug_readed_data[1].x );
+	strings[5].assignf						( "g: %f", m_debug_readed_data[1].y );
+	strings[6].assignf						( "b: %f", m_debug_readed_data[1].z );
+	strings[7].assignf						( "lum: %f", lum_final );
+
+	draw_text_shadowed	( default_font, "hdr diffuse lighting only:", 5, 5, rgbl_colors[3].m_value );
+
+	for ( u32 i = 0; i < 4; ++i )
+		draw_text_shadowed	( default_font, strings[i].get_buffer( ), 5, 17 + i * 12, rgbl_colors[i].m_value );
+
+	draw_text_shadowed	( default_font, "hdr final scene:", 5, 70, math::color_rgba( 1.f, 1.f, 1.f, 1.f ) );
+
+	for ( u32 i = 0; i < 4; ++i )
+		draw_text_shadowed	( default_font, strings[4 + i].get_buffer( ), 5, 82 + i * 12, rgbl_colors[i].m_value );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
-// STATE[STUB]
 void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
-	// LOCALS
-	// double 							total_cpu_time
-	// double 							total_gpu_time
-	// u32 								total_dips
-	// fixed_string< 32 > 				total_result_string_cpu_time
-	// fixed_string< 32 > 				total_result_string_gpu_time
-	// fixed_string< 32 > 				total_result_string_dips
-	// const u32 						y_pos
-	// u32 								string_index
-	// const u32 						char_color
-	// u32 								stage_index
-	// fixed_string< 32 > 				result_string_dips
-	// fixed_string< 32 > 				result_string_gpu_time
-	// fixed_string< 32 > 				result_string_cpu_time
-	// const u32 						char_color
-	// ******
+	double total_gpu_time					= 0.;
+	double total_cpu_time					= 0.;
+	u32 total_dips							= 0;
 
-	// FUNCTION BODY[0x648cd0]: 60
-	// <0>
-	// <1>
-	// <0x648cd6>|0x006|+0x01d:'1452'
-	// <0x648cf3>|0x023|+0x009:'1453'
-	// <0x648cfc>|0x02c|+0x004:'1454'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x648d00>|0x030|+0x00f:'1462'
-	// <0>
-	// <1>
-	// <0x648d0f>|0x03f|+0x020:'1465'
-	// <0>
-	// <0x648d2f>|0x05f|+0x00a:'1467'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x648d39>|0x069|+0x0a1:'1474'
-	// <0x648dda>|0x10a|+0x01b:'1475'
-	// <0x648df5>|0x125|+0x048:'1476'
-	// <0>
-	// <1>
-	// <2>
-	// <0x648e3d>|0x16d|+0x0a3:'1480'
-	// <0>
-	// <1>
-	// <0x648ee0>|0x210|+0x262:'1483'
-	// <0x649142>|0x472|+0x298:'1484'
-	// <0x6493da>|0x70a|+0x261:'1485'
-	// <0x64963b>|0x96b|+0x26a:'1486'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6498a5>|0xbd5|+0x008:'1490'
-	// <0>
-	// <0x6498ad>|0xbdd|+0x085:'1492'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x649932>|0xc62|+0x259:'1500'
-	// <0>
-	// <0x649b8b>|0xebb|+0x07e:'1502'
-	// <0x649c09>|0xf39|+0x01f:'1503'
-	// <0x649c28>|0xf58|+0x017:'1504'
-	// <0>
-	// <0x649c3f>|0xf6f|+0x245:'1506'
-	// <0x649e84>|0x11b4|+0x257:'1507'
-	// <0x64a0db>|0x140b|+0x25b:'1508'
-	// <0x64a336>|0x1666|+0x25d:'1509'
-	// ******
+	fixed_string< 32 > total_result_string_gpu_time;
+	fixed_string< 32 > total_result_string_cpu_time;
+	fixed_string< 32 > total_result_string_dips;
+
+	u32 string_index						= 0;
+
+	for ( u32 stage_index = 0; stage_index < num_render_stages + 1; ++stage_index )
+	{
+		stage_stat const& stat				= stage_index == num_render_stages ? s_visibility_stage_stats : s_render_stages[stage_index];
+
+		if ( !stat.stg )
+			continue;
+
+		fixed_string< 32 > result_string_gpu_time;
+		fixed_string< 32 > result_string_cpu_time;
+		fixed_string< 32 > result_string_dips;
+
+		result_string_gpu_time.assignf		( "all: %4.4f", stat.average_time( true ) );
+		result_string_cpu_time.assignf		( "cpu: %4.4f", stat.average_time( false ) );
+		result_string_dips.assignf			( "dips: %d", stat.average_dips( ) );
+
+		const u32 char_color				= string_index & 1 ?
+			math::color_rgba( 0.75f, 1.f, 0.75f, 1.f ) :
+			math::color_rgba( 0.5f, 0.75f, 1.f, 1.f );
+
+		draw_text_shadowed	( default_font, render_stage_names[stage_index], 5, string_index * 12 + 5, char_color );
+		draw_text_shadowed	( default_font, result_string_gpu_time.c_str( ), 201, string_index * 12 + 5, char_color );
+		draw_text_shadowed	( default_font, result_string_cpu_time.c_str( ), 285, string_index * 12 + 5, char_color );
+		draw_text_shadowed	( default_font, result_string_dips.c_str( ), 369, string_index * 12 + 5, char_color );
+
+
+
+		total_gpu_time						+= stat.average_time( true );
+
+		total_cpu_time						+= stat.average_time( false );
+		total_dips							+= stat.average_dips( );
+
+		++string_index;
+	}
+
+	const u32 y_pos							= string_index * 12 + 5;
+
+	const u32 char_color					= math::color_rgba( 0.5f, 1.f, 0.5f, 1.f );
+
+	total_result_string_gpu_time.assignf	( "all: %4.4f", total_gpu_time );
+	total_result_string_cpu_time.assignf	( "cpu: %4.4f", total_cpu_time );
+	total_result_string_dips.assignf		( "dips: %d", total_dips );
+
+	draw_text_shadowed	( default_font, "total", 5, y_pos, char_color );
+	draw_text_shadowed	( default_font, total_result_string_gpu_time.c_str( ), 201, y_pos, char_color );
+	draw_text_shadowed	( default_font, total_result_string_cpu_time.c_str( ), 285, y_pos, char_color );
+	draw_text_shadowed	( default_font, total_result_string_dips.c_str( ), 369, y_pos, char_color );
 }
 
 void renderer::present(

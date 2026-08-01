@@ -3,7 +3,9 @@
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
+#include <vostok/math_randoms_generator.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/engine/vertex_colored.h>
 #include "grass_patch.h"
 #include "grass_world.h"
 #include "renderer_context.h"
@@ -206,13 +208,62 @@ void grass_world::merge_patches( )
 	// FUNCTION BODY[0x6370c0]
 }
 
-// STATE[STUB]
-// claude@NOTE: legacy body iterates grass_patch::m_instances/m_origin, which are private
-// in the canonical grass_patch with no accessor - skipped; seed kept in temp/render_legacy
-// (s_draw_grass_debug cc_bool above belongs to it).
-void grass_world::render_debug( renderer_context* )
+// claude@NOTE: residual cause - our LTCG partial-inlines the s_draw_grass_debug_value guard
+// into renderer::draw_debug (the cmp/je moves to the call site and the standalone body
+// loses it, -0xd bytes and a different prologue/frame layout); the target keeps the whole
+// guard here. The rest is register-allocation drift inside the four inlined math::floor
+// expansions of math::color.
+void grass_world::render_debug( renderer_context* context )
 {
-	// FUNCTION BODY[0x637270]
+	if ( !s_draw_grass_debug_value )
+		return;
+
+	VOSTOK_UNREFERENCED_PARAMETER		( context );
+
+	grass_patch* const* it				= m_visible_patches.begin( );
+	grass_patch* const* end				= m_visible_patches.end( );
+	float const fnum_patches			= float( m_visible_patches.size( ) );
+	float fpatch_index					= 0.f;
+
+	math::random32 r;
+
+	for ( ; it != end; ++it )
+	{
+		grass_patch* patch				= *it;
+
+		system_renderer::ref( ).draw_aabb	(
+			patch->get_aabb( ),
+			math::color( 1.f - fpatch_index / fnum_patches, 1.f - fpatch_index / fnum_patches, 1.f - fpatch_index / fnum_patches, 1.f )
+		);
+
+		grass_instance** it_instance	= patch->m_instances.begin( );
+		grass_instance** end_instance	= patch->m_instances.end( );
+		float const fnum_instances		= float( patch->m_instances.size( ) );
+		float finstance_index			= 0.f;
+
+		for ( ; it_instance != end_instance; ++it_instance )
+		{
+			grass_instance* instance	= *it_instance;
+			float3 origin				= instance->m_transform.c.xyz( );
+
+			math::color const c			= math::color(
+				1.f - finstance_index / fnum_instances,
+				1.f - finstance_index / fnum_instances,
+				1.f - finstance_index / fnum_instances,
+				1.f );
+
+			vertex_colored vertices[]	= {
+				vertex_colored( origin, c ),
+				vertex_colored( origin + float3( r.random_f( 2.f ) - 1.f, 1.2f, r.random_f( 2.f ) - 1.f ), c )
+			};
+			u16 indices[]				= { 0, 1 };
+			system_renderer::ref( ).draw_lines( vertices, vertices + array_size( vertices ), indices, indices + array_size( indices ), false );
+
+			finstance_index				+= 1.f;
+		}
+
+		fpatch_index					+= 1.f;
+	}
 }
 
 bool sort_grass_patch_predicate::operator()( grass_patch const*, grass_patch const* ) const

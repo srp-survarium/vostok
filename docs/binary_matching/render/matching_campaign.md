@@ -52,6 +52,7 @@ regression.
 | A6 | `temporal_projection_matrix_modifier.cpp` + `renderer::draw_debug`/`execute_stages` | - | - | - |
 | B6 | inline-header splits round 2 + access/CV mangling sweep | 498 (18.8%) | 33.1% | - |
 | B7 | **first sema-driven batch** - 6 condition/predicate shape fixes | 507 (19.2%) | 33.2% | - |
+| A9 | the two big debug renderers + static-linkage sweep | 549 (20.7%) | 34.9% | 45.96% |
 
 Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
@@ -461,3 +462,81 @@ whichever target call site we have not reconstructed yet.
    clean proof and it uncaps the `fill_macro` trio plus every `= pcstr` in render.
 3. Run B6's access/CV mangling sweep on `render/engine` and `render/facade`; it
    was never done and is minutes of work.
+
+
+## Batch A9 notes (render/engine, debug renderers + static-linkage sweep)
+
+Bodied `grass_world::render_debug` (57.9), `renderer::draw_luminance_picker_info`
+(61.8) and `renderer::draw_stages_stats` (15.5) from their target asm; that also
+lifted `renderer::draw_debug` to 90.2 by un-DCEing two of its guards. A8's
+line-record technique held on all three - every statement boundary was placed
+before the first build and only two rows moved afterwards.
+
+**The batch's biggest single win was not a body at all: a static-linkage sweep.**
+The delinker prints an *undecorated* name (`vostok::render::push_point`) for a
+function that is `static` in the target and a decorated one
+(`?push_point@render@vostok@@YAX...@Z`) for a non-static one, so a
+linkage mismatch makes the function **unpairable no matter how right the body
+is** - the exact twin of A2's struct-vs-class mangling sweep. `renderer.cpp`
+had five functions the target keeps `static`:
+
+| function | target size | after |
+|---|---|---|
+| `make_ui_vertices` (renderer.cpp) | 0x2b7 | **100%** |
+| `push_point` (renderer.cpp) | 0x50 | **100%** |
+| `draw_text` | 0x10b | 92.5% |
+| `draw_text_shadowed` | 0x4f | 11.2% |
+| `screen_factor` | 0xdb | still a stub |
+
+The pair swaps: `make_ui_vertices` is `static` in `renderer.cpp` and **extern in
+`statistics.cpp`** (0x345, the one `engine::world::draw_text` links against); we
+had it exactly the other way round. Fixing both sides paired a second
+`make_ui_vertices` and a second `push_point` at 100% for free. **Sweep tell:**
+`jq '.units[] | select(.name|test("<file>")) | .functions[] | select(.fuzzy_match_percent == null) | .name'`
+- every *undecorated* name in that list is a `static` we declare extern.
+
+### Rejected hypotheses (do not re-derive)
+
+- **`stage_stat::average_dips` returns `dips[0]`.** It does not - both its call
+  sites round-trip `u32 -> double -> u32` (`fild`, unsigned fixup, `fnstcw`/
+  `fistp qword`). The double-accumulator form (`result += dips[i]` over
+  `array_size(dips)`, `return u32( result / array_size(dips) )`) reproduces it,
+  and its sibling `average_time` folds to the bare `movsd` the target has
+  because render is `/fp:fast` (`FloatingPointModel="2"`), which also explains
+  the reciprocal-multiply of the `/ fnum_patches` divides in `render_debug`.
+- **`draw_text_shadowed`'s shadow colour is not `math::color(0,0,0,220)`** (the
+  pre-A9 guess); it is `math::color_rgba( 0.f, 0.f, 0.f, 1.f )` - the target
+  pushes three floats and passes `r` in `xmm0` to the out-of-line
+  `?color_rgba@math@vostok@@YAIMMMM@Z`.
+- **`grass_world::render_debug` iterates `m_patches`.** It iterates
+  `m_visible_patches` (`[ecx+12Ch]`/`[ecx+130h]`; `m_patches` is at 0x120).
+- **`grass_patch`'s data members are private.** The target's generated header
+  marks them `public:`, and the generator does distinguish (it prints `private:`
+  for `backend`, `device`, ...). `m_instances` had to become public for
+  `render_debug` to compile - that is the faithful shape, not a workaround.
+- **The guard missing from `render_debug` is a DCE.** It is LTCG *partial
+  inlining* - see `patterns/ltcg-partial-inlined-entry-guard.md`. Do not delete
+  or re-spell the guard.
+
+### Suggested A10
+
+1. **`screen_factor` (0xdb, still `return 0.0f;`).** Fully read already:
+   `bbox.modify( model_transform )`, then `bbox.center( size )` (the two-output
+   overload - the target computes centre *and* extents in one block at line 568),
+   `math::max( ext.x, math::max( ext.y, ext.z ) )`, divided by
+   `math::max( squared_length( view_position - centre ),
+   Wm4::Math<float>::ZERO_TOLERANCE )`, clamped to `[0.f, 1.f]` by two
+   `comiss/ja` pairs. Only the spelling of the tolerance constant and the clamp
+   helper are open.
+2. **Run the static-linkage sweep across the rest of `render/engine` and
+   `render/facade`** - `renderer.cpp` alone had five, and it is a `jq` one-liner
+   per unit.
+3. `draw_stages_stats` is parked at 15.5 on an inliner wall, **not** a structure
+   gap (`--view structure-diff` is clean apart from it): the target inlines
+   `draw_text_shadowed` at all eight sites (~0x250 each, because `color_rgba` and
+   its four `math::floor`s expand inside) and inlines
+   `fixed_string<32>::fixed_string<32>`; our LTCG emits calls for both. It
+   inlines the same helper at three of four sites in
+   `draw_luminance_picker_info`, so the decision is budget/nondeterminism, not a
+   source lever. Re-measure after any core-header inline ticket lands rather than
+   re-working the body.
