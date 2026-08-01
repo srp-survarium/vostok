@@ -35,6 +35,12 @@ they are orchestrator tickets, see `core_header_tickets.md`.
 | B4 | compare chain (`shader_constant` -> `res_*_list::compare`) | 481 (18.2%) | 30.6% | 44.83%* |
 | A5 | `register_samplers.cpp` + `renderer::render` (20 console switches) | 485 (18.3%) | 30.7% | 44.87%* |
 | B5 | **inline-header split** (8 groups) + backend setters | 490 (18.5%) | 32.0% | 44.90%* |
+| A6 | jitter modifier + `draw_debug` / `execute_stages` | 492 (18.6%) | 32.2% | 44.94%* |
+| B6 | core inline-header splits + access/CV mangling sweep | 498 (18.8%) | 33.1% | 44.99%* |
+| A7 | lane-A inline-header splits (facade 37 rows @100%) | 530 (20.0%) | 33.7% | 45.22%* |
+| B7 | **sema-driven** shape work (5 real bugs) | 539 (20.4%) | 33.8% | 45.28%* |
+| A8 | portal cone callees + access sweep | 541 (20.4%) | 34.1% | 45.29%* |
+| B8 | sema BRANCH-COUNT queue + T5 `fixed_string` guard | 546 (20.6%) | 34.1% | **45.54%** |
 
 \* From B4 onward the `overall exact` column is CURRENT, which dipped when a
 from-scratch rebuild reshuffled ICF fold representatives across untouched
@@ -150,6 +156,63 @@ whose base counterpart is still an in-class body.
 - Structure before %; named locals ARE structure; keep faithful even if % falls;
   no cross-unit out-lining; R_ASSERT guards verbatim; `STATE[STUB]` removed only
   on a real port.
+
+
+## Shared-header tickets: land them TOGETHER, not one at a time
+
+Batch B8 landed ticket T5 (a one-line self-assign guard). It was faithful and
+net-positive on current measurement: **+39 improve / -11 regress repo-wide,
+byte-exact 9839 -> 9854**, eight functions to 100% across fs/game/engine.
+
+It also **reset banked maxima repo-wide**, because editing a shared core header
+changes the effective-source fingerprint of every function that sees it.
+Immediately after: exact-max fell 5,918 -> 5,881 and became identical to
+current exact, i.e. every function's banked peak was discarded and re-seeded in
+the new epoch. Nothing was lost to worse matching - the peaks were simply from
+the old epoch - and max can only climb from there. But the headline exact-max
+figure is NOT comparable across such a change.
+
+**Consequence for T1 / T2 / T3** (`math_functions_inline.h`, `math_color.h`,
+`threading_policies.h`): land them in ONE pass, not piecemeal. Each separate
+landing pays the full reset again. The orchestrator should NOT authorise them
+individually, as it did for T5.
+
+B8 also corrected where T5 belonged. B7 placed the guard in
+`buffer_string::operator=(pcstr)`; adding it there turned a 100% row UNPAIRED,
+because the target's standalone COMDAT for that function is four instructions
+with no guard. The guard lives in a wrapper we never declared -
+`fixed_string<Size>::operator=(value_type const* const src)`, a by-value pcstr
+overload (`QBD` = top-level pointer const). Pattern:
+`patterns/inlined-guard-belongs-to-wrapper.md`.
+
+## sema: what two batches of use established
+
+- Empirical class yield: **BRANCH-COUNT productive** (B7 5/9, B8 3/14),
+  **TOPOLOGY skip** (0/6; 11 of 12 rows were padding artifacts and dissolved
+  once flow-free block contraction landed), **COND-FLIP** was 2 false positives,
+  now 0 rows. **FLOW-SAME is not shape work.**
+- `blocks --diff [--lite]` is the verdict view; `branches --diff` aligns
+  positionally and its POLARITY/SIGNEDNESS rows are unreliable when block counts
+  differ (it now warns).
+- **Two limits.** (A8) sema says WHERE shapes differ, never WHY - pair it with
+  `pdb_fetch --view structure-diff` / `--view target`. (B8) **it cannot
+  distinguish "the target inlined our callee" from "the target has code we
+  don't"** - both present as target-only blocks, and this cost B8 eleven of
+  fourteen rows. Triage recipe: `patterns/branch-count-row-triage.md`.
+- The tool's own first flagship claim was WRONG (a phantom missing early-out in
+  `effect_options_descriptor::operator[]` that was a one-byte `nop` pad). Lesson
+  recorded in `patterns/masked-diff-hides-branch-target.md`: *a shape tool must
+  canonicalise before it compares; if the first divergence is a branchless
+  block, suspect the tool.*
+
+## Harness defect worth knowing (cost B8 three 600s timeouts)
+
+`until ! pgrep -f rebuild.py; do sleep N; done` is **self-matching** - the
+waiting shell's own command line contains `rebuild.py`, so the loop never exits.
+Wait on a MARKER FILE instead (`echo $? > b.done`; `until [ -f b.done ]`). The
+same self-match trap made an orchestrator `pkill -f mspdbsrv` kill its own
+launcher. **Never `pkill -f rebuild.py`** on this box - it kills the
+orchestrator's integration build.
 
 ## Build hygiene for the ORCHESTRATOR (learned the hard way at batch B4)
 
