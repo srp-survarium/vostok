@@ -540,3 +540,122 @@ had it exactly the other way round. Fixing both sides paired a second
    `draw_luminance_picker_info`, so the decision is budget/nondeterminism, not a
    source lever. Re-measure after any core-header inline ticket lands rather than
    re-working the body.
+
+## Batch B9 notes (render/core, `shader_binary_source_cook.cpp`)
+
+| batch | unit(s) | render exact | render fuzzy | overall exact |
+|---|---|---|---|---|
+| B9 | `shader_binary_source_cook.cpp` (whole TU) | 553 (20.9%) | 35.2% | 45.99% |
+
+### Fixed
+
+- **`create_resource` 33.2 -> 92.2** and its statement structure now matches the
+  target exactly (32/32 statements, `--view structure-diff` shows only SIZE rows
+  that cancel pairwise). The elided per-define loop is recovered; the pre-B9
+  `claude@NOTE` claiming it needed `get_shader_source_by_short_name` and
+  `found_shader_declarated_macroses` was **wrong** - see rejected hypotheses.
+- **`destroy_resource` 12.9 -> 100.** The cook's own body frees
+  `m_compiled_shader_byte_code` with `MT_FREE` (the `pthreads3_allocator`, i.e.
+  the delinker's `pt3free`, *not* render's `g_allocator`) and `Release()`s
+  `error_code` before the explicit `~binary_shader_source()`. Offsets pin it:
+  `+0x110` = `m_compiled_shader_byte_code`, `+0x118` = `error_code` (an
+  `ID3D10Blob*`, hence `[vtbl+8]` = `IUnknown::Release`).
+- **`converted_shader_loaded` 89.2 -> 94.4** by restoring a shipped debug check
+  (see the string-CRC technique below). Residual is register-allocation churn
+  plus two ICF/naming artifacts; the structure matches.
+- **`shader_type_to_ext` unpaired -> 100** - it is `static` in the target
+  (undecorated delinked name). This is the A9 static-linkage lever landing a row
+  in `render/core` after all.
+
+### New technique: recovering a truncated string literal exactly
+
+`patterns/truncated-string-literal-crc-recovery.md`. MSVC truncates the readable
+part of a `??_C@` name at 32 characters, but the name still carries the exact
+byte count and `~crc32(bytes+nul)`, so a guessed completion is *verifiable*.
+That recovered `"data->new_resource->shader_source == 0"` (38 chars) from
+`??_C@_0CH@BANAFJDE@data?9?$DOnew_resource?9?$DOshader_sourc@`, which in turn
+recovered two statements of shipped source.
+
+### Rejected hypotheses (do not re-derive)
+
+- **The cook builds a *converted* shader path.** It does not. The target's
+  `assignf` is `"%s/%s.%s/"` over the literal `"resources/shaders/sm_4_0"` - NOT
+  `resource_manager::get_converted_shader_path()` (which returns
+  `"resources.converted/shaders/sm_4_0"`, a different string). Dropping that call
+  strips `get_converted_shader_path` from our build (it had no other caller), so
+  its row goes 100 -> unpaired; the banked max holds and the change is faithful.
+- **`shader_type_to_compile_target` is real.** It is not - `"vs_4_0"`/`"ps_4_0"`/
+  `"gs_4_0"` appear **nowhere** in the target image. It was a harvest
+  fabrication; deleted. The cook uses `shader_type_to_ext` at all three sites.
+- **The per-define loop needs the retired `shader_declarated_macros`
+  machinery.** It needs none of it: the mask list is
+  `resource_manager::ref().shader_name_to_mask_config->get_root()[name][ext]`, a
+  table of macro-name *string values*, and the loop appends
+  `define->definition` when `strings::compare(define->name.c_str(), *mask) == 0`
+  and `"_"` otherwise. `fill_shader_macro_list` (not the two private helpers
+  directly) fills the vector - the target's single line record covering both
+  `options::fill_global_macros` and
+  `shader_macros::fill_shader_configuration_macros`, plus the redundant second
+  `m_end = m_begin` store, is that wrapper inlined including its `clear()`.
+- **`converted_shader_path += x` should be spelled `.append(x)`.** No - both
+  sides instantiate `virtual_path_string::operator+=<char const*>`; the target
+  merely inlines the wrapper at this one call site and calls
+  `path_string_impl::append<char const*>`, while it keeps `path_string_impl::
+  operator=` out of line 200 bytes earlier. Per-call-site inlining, not a lever.
+- **A `render/core` static-linkage sweep yields free rows in
+  `resource_manager.cpp` / `options.cpp`.** It does not. Those twelve
+  undecorated target names (`calc_block_size`, `is_equal_formats`,
+  `read_srgb_flag`, `r_string`, `parse_resolution`, ...) have **no base symbol at
+  all** - our bodies are stubs small enough to inline everywhere, so nothing is
+  emitted to mis-link. The generalised query (a unit holding BOTH an unpaired
+  undecorated name and an unpaired decorated one with the same short name)
+  returns **zero rows across all of `render`**: A9 took the only inverted pair,
+  and B9 took the only "ours is extern, theirs is static" one.
+- **`render_cc_bool::fill_macro`'s two missing blocks are a shape bug.** They are
+  not. The base block ends in `call path_string_impl::operator=<char const*>`;
+  the target inlines that call into the same clear-guard + `buffer_string::
+  operator+=` pair it uses for `definition`. Its *line* structure already matches
+  the target delta-for-delta once the `// FUNCTION BODY[...]` carcass comment is
+  removed. Row closed per `patterns/branch-count-row-triage.md`.
+
+### Parked, with the cause proven
+
+- **`allocate_resource` 55.3** - the target returns through an out-of-line
+  `mutable_buffer(pvoid,u32)` ctor (ICF-folded onto a boost `storage2`); ours
+  inlines it to two stores. Inline-vs-call on a core header.
+- **`shader_binary_source_cook::shader_binary_source_cook` 84.5** - same class of
+  wall: the target inlines a 1-argument ctor in the `create_new_task_type`
+  argument (`mov [eax],esi`) that our base calls.
+- **`create_resource`'s 7.8% residual** - the target *calls*
+  `platform_pointer_selector<char const,1>::helper_pod::operator char const*` for
+  `raw_file_data.c_ptr()`; we inline it to `mov eax,[ebp+0Ch]`. That one decision
+  cascades: with `user_data` no longer pinned in a register the base
+  strength-reduces `&user_data->shader_name` and `&user_data->shader_type` into
+  an extra 4-byte stack slot, which shifts every later `[esp+NN]` by 4.
+- **`s_no_cache_shaders_key` (target-only, 0x13 bytes)** - a file-scope
+  `command_line::key` global outside the namespaces. Not reconstructed: its
+  dynamic initializer contains *only* `protected_call(protected_key_construct,
+  &obj)` with **no string pushes**, and no `no_cache_shaders` literal exists in
+  the target image, so the five ctor arguments are unrecoverable from the binary.
+
+### Suggested B10
+
+1. **`device::on_device_removed` (0x43f, 10 statements) - fully read, ready to
+   write.** It is `GetDeviceRemovedReason()` (`[pinst+0x12C]`, vtable `+0x9C`)
+   followed by a five-way `if`/`else if` chain, each arm one `LOG_*` of
+   `"Device remove reason: %s"` under filter `"render:"` verbosity 2:
+   `0x887A0006` -> `"DXGI_ERROR_DEVICE_HUNG"` (line 38), `0x887A0005` ->
+   `"DXGI_ERROR_DEVICE_REMOVED"` (39), `0x887A0007` -> `"DXGI_ERROR_DEVICE_RESET"`
+   (40), `0x887A0020` -> `"DXGI_ERROR_DRIVER_INTERNAL_ERROR"` (41), `0x887A0001`
+   -> `"DXGI_ERROR_INVALID_CALL"` (42), else `"S_OK"` (43).
+   **The log macro bakes `__LINE__` (`push 26h` = 38) and `"./device.cpp"`**, so
+   the six calls must land on source lines 38-43 *exactly* - which also proves
+   `on_device_removed` is near the TOP of the target's `device.cpp` (ours has it
+   at 54, after the ctor/dtor). Re-derive the whole file's definition order from
+   the target line records before writing it. Unblocks the last 10.6% of
+   `res_render_output::present`.
+2. `res_xs_hw<T>::create_hw_shader` x3 (92.6/87.4/87.4, BLOCK-COUNT 19/18) - one
+   base block the target lacks, same template, three rows for one fix.
+3. `effect_cook::create_resource` (79.9, BRANCH-COUNT 63/69) and
+   `on_binary_shaders` (76.2, 48/46) - the two biggest genuine shape gaps left in
+   `render/core` by block delta.
