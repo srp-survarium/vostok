@@ -31,7 +31,17 @@ they are orchestrator tickets, see `core_header_tickets.md`.
 | B3 | `effect_compiler.cpp` + `shader_constant_table.cpp` + `res_declaration.cpp` | 437 (16.5%) | 28.5% | 44.72% |
 | A2 | `scene.cpp` (scene root) + struct-vs-class sweep | 446 (16.8%) | 28.7% | 44.82% |
 | A3 | `scene_renderer.cpp` (facade root) + facade anchor | 473 (17.9%) | 29.9% | 45.16% |
-| A5 | `register_samplers.cpp` + `renderer::render` (21 console switches) | - | - | - |
+| A4 | `lights_db.cpp` + `renderer.cpp` roots | 478 (18.1%) | 30.5% | 45.33% |
+| B4 | compare chain (`shader_constant` -> `res_*_list::compare`) | 481 (18.2%) | 30.6% | 44.83%* |
+| A5 | `register_samplers.cpp` + `renderer::render` (20 console switches) | 485 (18.3%) | 30.7% | 44.87%* |
+| B5 | **inline-header split** (8 groups) + backend setters | 490 (18.5%) | 32.0% | 44.90%* |
+
+\* From B4 onward the `overall exact` column is CURRENT, which dipped when a
+from-scratch rebuild reshuffled ICF fold representatives across untouched
+third-party code. `exact-MAX` - the campaign's actual metric - rose monotonically
+throughout: 45.34 (A4) -> 45.36 (B4) -> 45.40 (A5) -> **45.43** (B5), with
+fuzzy-max at **59.73%**. Nothing was lost; the dip is banked-wobble, not
+regression.
 
 Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
