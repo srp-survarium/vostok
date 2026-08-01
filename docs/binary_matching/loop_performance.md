@@ -490,3 +490,21 @@ regen-ninja-blind-to-include-changes trap): after flipping access specifiers or 
 `network/login_client.h`, the link fails with stale-anchor LNK2001/LNK2005 (the obj still holds
 the OLD manglings/COMDATs). `touch sources/vostok/game_core/sources/temp_include_all.cpp`
 before the rebuild whenever a network public header changes.
+
+## Macro-dispatched platform headers (`VOSTOK_RENDER_CORE_FILE(x.h)`) are dep-INVISIBLE - edits to `render/core/dx11/*.h` do not rebuild anything
+`sources/vostok/render/core/backend.h` (and `res_xs.h`, ...) are 4-line shims whose only
+content is `#include VOSTOK_RENDER_CORE_FILE(backend.h)`, i.e. a MACRO include that expands to
+`vostok/render/core/dx11/backend.h`. vcproj2ninja's scanner cannot resolve a macro include, so
+the ninja implicit-dep list for every render TU contains `render/core/backend.h` but NOT
+`render/core/dx11/backend.h` (`grep -c "dx11.backend.h" binaries/ninja/render_core_pc_dx11.ninja`
+returns only unrelated hits). Editing the dx11 header therefore leaves ninja with nothing to do -
+and if some *other* file in the same project changed, the project's batch `cl` still runs, the
+`.obj` mtimes still advance, and the link still happens, so every freshness check you can think of
+(obj newer than header, lib newer than header, exe relinked, `report-changes.json` non-empty)
+says "fresh" while the codegen is the OLD header. Symptom: a header edit that provably compiles
+produces byte-identical output - e.g. new `++num_ps_changes` / early-out guards in
+`backend::set_ps*` never appeared in `res_xs<T>::apply`.
+FIX: `touch sources/vostok/render/core/<name>.h` (the tracked SHIM) after editing
+`render/core/dx11/<name>.h`, then rebuild; the shim is in every dep list, so this forces the
+recompile. Applies to any `VOSTOK_*_FILE(...)` platform-dispatch header in the tree.
+Cost when missed: one full rebuild cycle plus a bogus "the change had no effect" conclusion.

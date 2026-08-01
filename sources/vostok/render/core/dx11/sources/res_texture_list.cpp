@@ -6,24 +6,6 @@
 namespace vostok {
 namespace render {
 
-s32 res_texture_list::compare(
-	fixed_vector<texture_slot, 128> const&
-) const
-{
-	// claude@NOTE: legacy body diverged - legacy is bool equal(texture_slots), not an s32 compare (see legacy remainder note); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x6e8080]
-	return 0;
-}
-
-s32 res_texture_list::compare( res_texture_list const& ) const
-{
-	// claude@NOTE: no legacy ancestor - the list-vs-list overload's legacy equal was already consumed into the carcass header inline; the s32 form is new; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x6e8130]
-	return 0;
-}
-
 res_texture_list::res_texture_list	( fixed_vector<texture_slot, 128> const & slots) :
 	m_is_registered	( false )
 {
@@ -43,6 +25,44 @@ void res_texture_list::destroy_impl	() const
 {
 	// FUNCTION BODY[0x6e82a0]
 	resource_manager::ref().release( this );
+}
+
+s32 res_texture_list::compare( res_texture_list const& base ) const
+{
+	u32 const size = std::min( m_container.size( ), base.m_container.size( ) );
+	for ( u32 cmp = 0; cmp < size; ++cmp )
+	{
+		if ( m_container[cmp] < base.m_container[cmp] )
+			return -1;
+
+		if ( m_container[cmp] > base.m_container[cmp] )
+			return 1;
+	}
+
+	if ( m_container.size( ) < base.m_container.size( ) )
+		return -1;
+
+	return base.m_container.size( ) < m_container.size( ) ? 1 : 0;
+}
+
+s32 res_texture_list::compare(
+	fixed_vector<texture_slot, 128> const& base
+) const
+{
+	u32 const size = std::min( m_container.size( ), base.size( ) );
+	for ( u32 i = 0; i < size; ++i )
+	{
+		if ( m_container[i] < base[i].texture )
+			return -1;
+
+		if ( m_container[i] > base[i].texture )
+			return 1;
+	}
+
+	if ( m_container.size( ) < base.size( ) )
+		return -1;
+
+	return base.size( ) < m_container.size( ) ? 1 : 0;
 }
 
 } // namespace render

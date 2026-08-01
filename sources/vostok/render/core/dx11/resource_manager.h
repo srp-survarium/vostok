@@ -189,7 +189,7 @@ public:
 			res_xs<shader_data> const* const right
 		) const
 		{
-			return left->compare( *right ) < 0;
+			return compare( *left, *right ) < 0;
 		}
 
 		bool operator()(

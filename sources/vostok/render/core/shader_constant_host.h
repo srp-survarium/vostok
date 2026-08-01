@@ -1,7 +1,7 @@
 #ifndef VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
 #define VOSTOK_RENDER_CORE_SHADER_CONSTANT_HOST_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: the seven set() overloads were declaration-only in the consumed legacy header (no definition anywhere in the corpus) and the free compare never existed (legacy had operator==/operator< only) - matcher-phase work.
+// claude@NOTE: legacy-harvest disposition: the seven set() overloads were declaration-only in the consumed legacy header (no definition anywhere in the corpus) - matcher-phase work.
 #include <vostok/math_float2.h>
 #include <vostok/math_float3.h>
 #include <vostok/math_float4.h>
@@ -95,11 +95,12 @@ inline bool operator<( shader_constant_host const& left, shader_constant_host co
 	return left.name( ) < right.name( );
 }
 
-inline s32 compare( shader_constant_host const&, shader_constant_host const& )
+inline s32 compare( shader_constant_host const& left, shader_constant_host const& right )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x12e990]
-	return 0;
+	if ( left.name( ).c_str( ) < right.name( ).c_str( ) )
+		return -1;
+
+	return right.name( ).c_str( ) < left.name( ).c_str( ) ? 1 : 0;
 }
 
 } // namespace render

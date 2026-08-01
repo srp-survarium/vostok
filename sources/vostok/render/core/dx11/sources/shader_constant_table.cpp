@@ -302,16 +302,23 @@ void shader_constant_table::clear()
 	m_const_buffers.clear();
 }
 
-s32 shader_constant_table::compare( shader_constant_table const& ) const
+s32 shader_constant_table::compare( shader_constant_table const& other ) const
 {
-	// claude@NOTE: body recovered from the target (min-size loop over m_table calling
-	// the free compare( shader_constant const&, shader_constant const& ), then the
-	// size tie-break), but writing it here is premature: that free compare is itself a
-	// STATE[STUB] `return 0` in shader_constant.h, so the loop folds away. Body the
-	// free compare first, then port this one.
-	// STATE[STUB]
-	// FUNCTION BODY[0x739190]
-	return 0;
+	u32 const size = std::min( m_table.size( ), other.m_table.size( ) );
+	for ( u32 it = 0; it < size; ++it )
+	{
+		s32 const result = render::compare( m_table[it], other.m_table[it] );
+		if ( result == -1 )
+			return -1;
+
+		if ( result )
+			return 1;
+	}
+
+	if ( m_table.size( ) < other.m_table.size( ) )
+		return -1;
+
+	return other.m_table.size( ) < m_table.size( ) ? 1 : 0;
 }
 
 void shader_constant_table::apply_bindings( shader_constant_bindings const & bindings)

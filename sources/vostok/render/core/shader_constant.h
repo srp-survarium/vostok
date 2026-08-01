@@ -61,12 +61,22 @@ inline bool operator!=( shader_constant const& left, shader_constant const& righ
 	return !(left == right);
 }
 
-inline s32 compare( shader_constant const&, shader_constant const& )
+inline s32 compare( shader_constant const& left, shader_constant const& right )
 {
-	// claude@NOTE: no legacy ancestor - stem file consumed; the s32 compare family is a target-generation refactor (no legacy compare ever); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x12ea00]
-	return 0;
+	s32 const result = compare( left.host( ), right.host( ) );
+	if ( result )
+		return result;
+
+	if ( left.source( ).pointer( ) < right.source( ).pointer( ) )
+		return -1;
+	if ( left.source( ).pointer( ) > right.source( ).pointer( ) )
+		return 1;
+	if ( left.source( ).size( ) < right.source( ).size( ) )
+		return -1;
+	if ( left.source( ).size( ) > right.source( ).size( ) )
+		return 1;
+	return left.slot( ).value( ) < right.slot( ).value( ) ? -1
+		: left.slot( ).value( ) > right.slot( ).value( ) ? 1 : 0;
 }
 
 } // namespace render

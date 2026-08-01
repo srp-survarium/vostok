@@ -41,12 +41,22 @@ public:
 		return compare( descriptor ) == 0;
 	}
 
-	s32 compare( xs_descriptor<shader_data> const& ) const
+	s32 compare( xs_descriptor<shader_data> const& descriptor ) const
 	{
-		// claude@NOTE: legacy body diverged - legacy is a bool equal(binder) &&-chain, not an s32 ordering (see the legacy res_xs.cpp remainder note); matcher-phase work.
-		// STATE[STUB]
-		// Observed vs_data instantiation [0x12f690].
-		return 0;
+		s32 result = m_hardware_shader < descriptor.hardware_shader( ) ? -1
+			: descriptor.hardware_shader( ) < m_hardware_shader ? 1 : 0;
+		if ( result )
+			return result;
+
+		result = m_constants->compare( descriptor.data( ).constants );
+		if ( result )
+			return result;
+
+		result = m_textures->compare( descriptor.data( ).textures );
+		if ( result )
+			return result;
+
+		return m_samplers->compare( descriptor.data( ).samplers );
 	}
 
 	bool less( xs_descriptor<shader_data> const& descriptor ) const
@@ -54,12 +64,22 @@ public:
 		return compare( descriptor ) < 0;
 	}
 
-	s32 compare( res_xs<shader_data> const& ) const
+	friend s32 compare( res_xs<shader_data> const& left, res_xs<shader_data> const& right )
 	{
-		// claude@NOTE: no legacy ancestor - the res_xs-vs-res_xs overload has no legacy counterpart (only the descriptor-keyed equal); matcher-phase work.
-		// STATE[STUB]
-		// needed by compare_shader_predicate (canonical header evidence)
-		return 0;
+		s32 result = left.m_hardware_shader < right.m_hardware_shader ? -1
+			: right.m_hardware_shader < left.m_hardware_shader ? 1 : 0;
+		if ( result )
+			return result;
+
+		result = left.m_constants->compare( *right.m_constants );
+		if ( result )
+			return result;
+
+		result = left.m_textures->compare( *right.m_textures );
+		if ( result )
+			return result;
+
+		return left.m_samplers->compare( *right.m_samplers );
 	}
 
 	void apply( ) const;
