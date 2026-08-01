@@ -40,7 +40,23 @@ the non-template overloads, so both forms coexist there.
 Caps observed: `backend_handlers` textures/samplers `assign` + `set_overwrite`
 (our template inlines where the target calls).
 
-**Fix to test:** drop `__forceinline` to `inline` on the min family only.
+**REFINED by batch A7 (2026-08-01) - the fix is the OPPOSITE direction.** A7
+found `statistics_value<int>::start` (34.9%, structure MATCH 12/12) capped
+because the target **calls** `int math::max(int,int)` while we inline
+`max_integral` and the whole chain collapses. So the target's `max(int,int)` is
+a REAL out-of-line function that gets called - which is what happens if
+`max_integral` is `__forceinline`d INTO `max` (exactly the treatment
+`min_integral` already has). So:
+
+**Fix to test:** add `__forceinline` to `max_integral` (mirroring the existing
+`min_integral`), NOT remove it from the min family. That makes `max(int,int)`
+an emittable, callable body instead of a fully-collapsing inline chain, which
+is what the target ships. Re-check T1's TARGET_ONLY rows after the change -
+`min(u32,u32)` may resolve for the same reason.
+
+*(Superseded first guess: "drop `__forceinline` to `inline` on the min family
+only." The symbol table showed the target ships an out-of-line `min(u32,u32)`,
+which is true, but the mechanism was read backwards.)*
 **Keep criterion:** builds + the target-only `min(u32,u32)` starts pairing.
 Accept a current-% dip elsewhere (faithful-change rule) but measure the
 fingerprint-reset cost across modules before committing.
