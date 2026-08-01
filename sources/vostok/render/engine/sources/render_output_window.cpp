@@ -10,10 +10,6 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: legacy body; the legacy .cpp generation carried an
-// m_current_size member the shipped class does not have (both the legacy
-// header and the canonical one are 0x2CF0 without it) - current-size reads
-// are adapted to locals / m_targets.size().
 render_output_window::render_output_window(
 	output_window_configuration const& window_configuration
 ) :
@@ -23,7 +19,7 @@ render_output_window::render_output_window(
 	m_windowed			( window_configuration.windowed )
 {
 	// FUNCTION BODY[0x653c70]
-	math::uint2 const current_size = get_window_client_size( m_window, m_windowed );
+	m_current_size = get_window_client_size( m_window, m_windowed );
 
 	if ( window_configuration.create_flash_renderer )
 	{
@@ -36,8 +32,8 @@ render_output_window::render_output_window(
 			device::ref().d3d_context()
 		);
 		m_flash_renderer->on_reset_device(
-			current_size.x,
-			current_size.y,
+			m_current_size.x,
+			m_current_size.y,
 			device::ref().d3d_device(),
 			device::ref().d3d_context()
 		);
@@ -74,14 +70,15 @@ void render_output_window::set_size(
 	bool const windowed = !fullscreen;
 	if (
 		!force_resize &&
-		width == m_targets.size().x &&
-		height == m_targets.size().y &&
+		width == m_current_size.x &&
+		height == m_current_size.y &&
 		windowed == m_windowed
 	)
 		return;
 
+	m_current_size	= math::uint2( width, height );
 	m_windowed		= windowed;
-	m_targets.resize( math::uint2( width, height ), force_resize );
+	m_targets.resize( m_current_size, force_resize );
 	m_output->set_size( width, height, fullscreen, force_resize );
 
 	if ( m_flash_renderer )
@@ -107,9 +104,10 @@ void render_output_window::resize( bool force_resize )
 	if ( (new_size.x == 0) || (new_size.y == 0) )
 		return;
 
-	if ( !force_resize && (new_size.x == m_targets.size().x) && (new_size.y == m_targets.size().y) )
+	if ( !force_resize && (new_size.x == m_current_size.x) && (new_size.y == m_current_size.y) )
 		return;
 
+	m_current_size = new_size;
 	m_targets.resize( new_size, force_resize );
 	m_output->resize( force_resize );
 
@@ -118,8 +116,8 @@ void render_output_window::resize( bool force_resize )
 		backend::ref().set_render_targets	( &*m_targets.m_family[rt_generic_0].target, 0, 0, 0 );
 		backend::ref().flush				( );
 		m_flash_renderer->on_reset_device(
-			new_size.x,
-			new_size.y,
+			m_current_size.x,
+			m_current_size.y,
 			device::ref().d3d_device(),
 			device::ref().d3d_context()
 		);
