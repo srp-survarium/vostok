@@ -50,7 +50,6 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 	template < typename T >
 	T* store_constant( T const value )
 	{
-		// Observed float3 instantiation [0x88aa0] and float2 [0x8cd40].
 		u32 const class_id = constant_type_traits<T>::class_id;
 		data_indexer sought( reinterpret_cast<u32*>( const_cast<T*>( &value ) ), class_id );
 		indexers_type::iterator found = std::lower_bound(
@@ -60,7 +59,7 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 			constant_data_predicate
 		);
 
-		for ( ; found != m_indexers.end( ) && found->class_id == class_id; ++found )
+		for ( ; found != m_indexers.end( ); ++found )
 			if ( is_equal( found->data_ptr, sought.data_ptr, sizeof( T ) / sizeof( u32 ) ) )
 				return reinterpret_cast<T*>( found->data_ptr );
 

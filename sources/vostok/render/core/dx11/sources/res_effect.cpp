@@ -82,10 +82,11 @@ void res_shader_technique::destroy_impl() const
 
 bool res_effect::apply_pass(u32 id)
 {
-	// FUNCTION BODY[0x6e7f70]
 	res_shader_technique_ptr	technique = m_techniques[m_cur_technique];
 
-	ASSERT(id < technique->m_passes.size());
+
+	if (id >= technique->m_passes.size())
+		return false;
 
 	res_pass_ptr pass = technique->m_passes[id];
 

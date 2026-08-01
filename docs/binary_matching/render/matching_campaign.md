@@ -44,6 +44,8 @@ fuzzy-max at **59.73%**. Nothing was lost; the dip is banked-wobble, not
 regression.
 | A5 | `register_samplers.cpp` + `renderer::render` (21 console switches) | - | - | - |
 | A6 | `temporal_projection_matrix_modifier.cpp` + `renderer::draw_debug`/`execute_stages` | - | - | - |
+| B6 | inline-header splits round 2 + access/CV mangling sweep | 498 (18.8%) | 33.1% | - |
+| B7 | **first sema-driven batch** - 6 condition/predicate shape fixes | 507 (19.2%) | 33.2% | - |
 
 Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
@@ -319,3 +321,80 @@ it is minutes of work per module.
   precomputed end pointer (no index), clamps with `math::min( size, m_buffer_size - offset )`
   and has NO `offset < m_buffer_size` guard. Params are `u32 const offset` / `u32 const size`
   per the PDB. Residual is register/scheduling.
+
+## Batch B7 notes (render/core, first sema-driven batch)
+
+The queue came from `python3 scripts/sema.py sweep --unit render/core/ --min-pct 30`
+(254 rows): `BRANCH-COUNT` 63, `TOPOLOGY` 15, `COND-FLIP` 2, `ORDER-ONLY` 1,
+`FLOW-SAME` 168. Render fuzzy 33.1% -> 33.2%, render exact 498 -> 507.
+
+**The classification held up in ONE direction only, and the direction was the
+opposite of the dispatch's expectation.**
+
+- `BRANCH-COUNT` was the productive class: of nine rows opened, **five were
+  genuine source-shape bugs** and all five were fixed to 100% or near it. Work
+  this class first.
+- `TOPOLOGY` was not productive: of six rows opened, none was steerable. Its
+  destination-by-block-INDEX comparison shifts whenever the two sides differ by
+  one block, so a single displaced fall-through block prints as "every later
+  branch retargeted".
+- `COND-FLIP` - advertised as the highest-value class - was a **false positive
+  in both rows** (`create_texture`, `create_texture3d`). `branches --diff`
+  aligns branches positionally, so one extra pad block cascades into bogus
+  `POLARITY` rows. Both limits are now written up in `sema_tools.md`.
+
+Practical rule for the next batch: run `blocks --diff --lite` before believing
+any verdict, and if the first skeleton divergence is a block with **no branch**
+(a `nop`, an alignment `lea`, a spill reload), contract it by hand - the CFGs
+are almost certainly isomorphic and the row is not shape work.
+
+### Fixed
+
+| function | before -> after | the actual defect |
+|---|---|---|
+| `backend::flush_rt` | 49.7 -> **100** | `render_dirty_targets::any()` is `\|` not `\|\|` (`patterns/bitwise-or-flag-aggregate.md`) |
+| `res_effect::apply` | 62.2 -> **100** | `return select_technique(id) && apply_pass(pass_id);`, not two statements |
+| `res_render_output::select_resolution` | 71.4 -> **100** | one statement: `if ( windowed ? GetClientRect(...) : GetWindowRect(...) )`; there is no `else { width=1024; height=768; }` arm |
+| `constant_data_predicate` | -> **100** | one clause: `left.class_id < right.class_id` (target body is 19 bytes) |
+| `res_effect::apply_pass` | 48.3 -> 67.8, **flow SAME 14/14** | the `ASSERT(id < ...)` is a real `if (id >= technique->m_passes.size()) return false;` guard; rest is T3 |
+| `store_constant<T>` x4 | 50.5-54.8 -> 71.0-75.3 | predicate size was blocking `lower_bound` inlining; the scan loop has **no** `&& found->class_id == class_id` term (`patterns/trivial-predicate-unlocks-stl-inline.md`) |
+| `texture_cook_wrapper::query_converted_texture` | 43.0 -> 62.9, **STRUCTURE MATCH** | no `assign_replace`: the path is constructed straight from `parent->get_requested_path()` |
+
+`query_converted_texture` dropped the engine's only call to
+`buffer_string::assign_replace`, so that function (100%, 44 bytes, real in the
+target) is now unreachable and unpaired. Its `max` is banked; it comes back with
+whichever target call site we have not reconstructed yet.
+
+### Parked, with the cause proven
+
+- `effect_options_descriptor::operator[]` (83.1) - 271 bytes, 23 blocks, 16/16
+  statements, identical line deltas on both sides. The dispatch named it as a
+  silent early-out miss; it is not. Residual is a CSE'd zero register. `claude@NOTE` in place.
+- `res_texture_list::compare` x2 (55.8/62.3) - LTCG `this`-convention (`ret 8`
+  vs `ret 4`) forces a spill+reload; CFGs isomorphic after contracting it. Third
+  deferral, now with a note in the source so it stops coming back.
+- `resource_manager::create_texture` / `create_texture3d` - LTCG convention plus
+  `find_texture` inline-vs-call. `effect_constant_storage::is_equal`,
+  `constants_handler<N>::assign`, `state_descriptor::color_write_enable` - LTCG
+  argument passing (`color_write_enable` has its argument constant-propagated to 0).
+- `backend::flush` (95.6) - the target cross-jumps the two `IASetVertexBuffers`
+  epilogues into one tail block. Compiler decision, no source lever.
+- `effect_compiler::end_technique` - STRUCTURE MATCH; residual is
+  `vector::push_back` inline-vs-call.
+- `render_cc_{bool,float,u32}::fill_macro`, `find_registered_sampler`,
+  `register_sampler`, `res_texture::destroy_impl`, `post_process_parameters::operator=` -
+  **all blocked on shared core headers**, see tickets T3 and the new **T5**
+  (`buffer_string::operator=(pcstr)` is missing its `m_begin != s` self-assign
+  guard - proven twice inside `render_cc_bool::fill_macro`).
+
+### Suggested B8
+
+1. Work the rest of the `BRANCH-COUNT` list (54 rows unopened), skipping
+   `TOPOLOGY` entirely. High-block-deficit rows first: `effect_compiler::begin_pass`
+   (29/77 - its line deltas already match, so the gap is downstream),
+   `shader_binary_source_cook::create_resource` (25/68), `backend::~backend` (41/65),
+   `textures_handler<1>::set_overwrite` (24/35), `options::register_console_commands` (117/241).
+2. Land **T5** in a core pass - it is a one-line header change with an unusually
+   clean proof and it uncaps the `fill_macro` trio plus every `= pcstr` in render.
+3. Run B6's access/CV mangling sweep on `render/engine` and `render/facade`; it
+   was never done and is minutes of work.

@@ -155,6 +155,63 @@ whose unit maps to a header path and there is no object pair to diff -
 a delinker/objdiff attribution fix, i.e. tooling work, not matcher work. Do NOT
 let matchers chase these." That reasoning mistook a symptom for the cause.)*
 
+## T5 - `buffer_string::operator = (value_type const*)` is missing its self-assignment guard
+
+Raised by batch B7 (sema `BRANCH-COUNT`, `render_cc_bool::fill_macro` 5 base
+blocks vs 9 target blocks). Ours (`buffer_string_inline.h:133`) is
+
+```cpp
+buffer_string const&   buffer_string::operator = (value_type const* s)
+{
+	clear						();
+	return						*this += s;
+}
+```
+
+The target's inlined expansion, twice inside `render_cc_bool::fill_macro`
+(0x11b5d0), is
+
+```
+mov  eax, [esi+114h]      ; m_begin
+lea  ecx, [esi+114h]
+cmp  eax, edx             ; edx = the source pointer
+je   <skip>               ; <-- the guard WE DO NOT EMIT
+mov  [ecx+4], eax         ; clear(): m_end = m_begin
+push edx
+mov  byte ptr [eax], 0    ;          *m_begin = 0
+call buffer_string::operator+=
+```
+
+so the shipped body is
+
+```cpp
+buffer_string const&   buffer_string::operator = (value_type const* s)
+{
+	if ( m_begin != s )
+	{
+		clear					();
+		*this					+= s;
+	}
+	return						*this;
+}
+```
+
+(the `buffer_string const&` overload at `:147` already carries the analogous
+`this == &s` guard, so the pointer overload having one is consistent, not
+exotic). `cmp reg, reg` rather than `test reg, reg` proves it compares two
+pointers, i.e. self-assignment, not `if (s)`.
+
+Caps observed: `render_cc_bool::fill_macro` 76.4%, `render_cc_float::fill_macro`
+86.1%, `render_cc_u32::fill_macro`, and every `= pcstr` on a `fixed_string` /
+`path_string_impl` in render (`xs_descriptor::set_texture`,
+`effect_compiler::set_texture`). Blast radius is engine-wide - it is one of the
+most-instantiated inline bodies in the tree - so it belongs in the same
+deliberate core pass as T1-T3.
+
+**Fix to test:** add the `m_begin != s` guard. **Keep criterion:** builds + the
+`fill_macro` trio picks up the two extra guard blocks. Faithful-change rule
+applies: keep it even if some current %s dip.
+
 ## Handling
 
 Run these as ONE deliberate core-structure pass with a full before/after

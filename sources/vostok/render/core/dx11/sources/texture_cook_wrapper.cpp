@@ -43,12 +43,7 @@ void texture_cook_wrapper::query_converted_texture(
 	resources::query_result_for_cook* parent
 )
 {
-	// FUNCTION BODY[0x759a90]
-	virtual_path_string						converted_texture_path;
-	// legacy make_converted_path, inlined (member dropped from the canonical class)
-	converted_texture_path.assign_replace	(parent->get_requested_path(),
-											 resources_textures_string,
-											 resources_textures_converted_string);
+	virtual_path_string						converted_texture_path	(parent->get_requested_path());
 	set_extension_for_path					(& converted_texture_path, converted_texture_extension);
 
 	query_resource							(converted_texture_path.c_str(),

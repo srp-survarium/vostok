@@ -246,8 +246,8 @@ private:
 		void reset( ) { ZeroMemory( this, sizeof( *this ) ); }
 		bool any( ) const
 		{
-			return depth_stencil || render_targets[0] || render_targets[1]
-				|| render_targets[2] || render_targets[3];
+			return render_targets[0] | render_targets[1] | render_targets[2]
+				| render_targets[3] | depth_stencil;
 		}
 
 		bool render_targets[enum_target_count];
