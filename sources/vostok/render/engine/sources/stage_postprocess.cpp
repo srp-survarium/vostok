@@ -606,24 +606,123 @@ void stage_postprocess::execute_disabled( )
 }
 
 void stage_postprocess::process_blur(
-	render_target*,
-	res_texture*,
-	render_target*,
-	res_texture*,
-	u32
+	render_target*	rt0,
+	res_texture*	t0,
+	render_target*	rt1,
+	res_texture*	t1,
+	u32			kernel_index
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x6082c0]
-	// claude@NOTE: no legacy ancestor - the blur ping-pong was inlined inside the legacy execute;
-	// the shipped kernel-indexed split is matcher-phase
+	backend::ref( ).flush_rt_shader_resources( );
+
+	float t_w = float( rt0->width( ) );
+	float t_h = float( rt0->height( ) );
+
+	u32 const bloom_kernal = supported_kernels[kernel_index];
+
+	float* weights_h = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+	float* offsets_h = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+	float* weights_v = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+	float* offsets_v = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+
+	float const bloom_radius = float( bloom_kernal - 1 ) * 0.5f;
+
+	get_gaussain_weights_offsets( weights_h, offsets_h, u32( t_w ), bloom_radius, bloom_radius, bloom_kernal, bloom_radius );
+	get_gaussain_weights_offsets( weights_v, offsets_v, u32( t_h ), bloom_radius, bloom_radius, bloom_kernal, bloom_radius );
+
+	float4* offsets_weights = static_cast<float4*>( ALLOCA( sizeof( float4 ) * bloom_kernal ) );
+
+	for ( u32 i = 0; i < bloom_kernal; ++i ) {
+		offsets_weights[i] = float4( offsets_h[i], weights_h[i], offsets_v[i], weights_v[i] );
+	}
+	m_sh_blur[kernel_index]->apply( 0, 0 );
+	backend::ref( ).set_ps_texture( "t_base", t0 );
+	backend::ref( ).set_ps_constant( m_blur_offsets_weights, offsets_weights, bloom_kernal );
+	fill_surface( rt1, render_target_ptr( ) );
+
+	backend::ref( ).flush_rt_shader_resources( );
+
+	m_sh_blur[kernel_index]->apply( 1, 0 );
+	backend::ref( ).set_ps_texture( "t_base", t1 );
+	backend::ref( ).set_ps_constant( m_blur_offsets_weights, offsets_weights, bloom_kernal );
+	fill_surface( rt0, render_target_ptr( ) );
 }
 
 void stage_postprocess::advanced_bloom( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x608e00]
-	// claude@NOTE: no legacy ancestor - advanced bloom postdates the legacy corpus
+	post_process_parameters const& pp_parameters = m_context->scene_view( )->post_process_parameters( );
+
+	u32 const kernel_index = math::clamp_r( pp_parameters.blur_kernel, 0u, 7u );
+
+	float t_w = float( m_context->get_t( rt_blur_0 )->width( ) );
+	float t_h = float( m_context->get_t( rt_blur_0 )->height( ) );
+	float t_w_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->width( ) );
+	float t_h_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->height( ) );
+
+
+	m_sh_blur[0]->apply( 3, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
+	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w, t_h, t_w_inv, t_h_inv ) );
+	fill_surface( m_context->get_rt( rt_blur_4 ), render_target_ptr( ) );
+	backend::ref( ).flush_rt_views( );
+
+
+	m_sh_blur[0]->apply( 3, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_4 ) );
+	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.5f, t_h * 0.5f, t_w_inv * 2.0f, t_h_inv * 2.0f ) );
+	fill_surface( m_context->get_rt( rt_blur_5 ), render_target_ptr( ) );
+	backend::ref( ).flush_rt_views( );
+
+
+	m_sh_blur[0]->apply( 3, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_5 ) );
+	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.25f, t_h * 0.25f, t_w_inv * 4.0f, t_h_inv * 4.0f ) );
+	fill_surface( m_context->get_rt( rt_blur_6 ), render_target_ptr( ) );
+	backend::ref( ).flush_rt_views( );
+
+
+	m_sh_blur[0]->apply( 3, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_6 ) );
+	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.125f, t_h * 0.125f, t_w_inv * 8.0f, t_h_inv * 8.0f ) );
+	fill_surface( m_context->get_rt( rt_blur_7 ), render_target_ptr( ) );
+	backend::ref( ).flush_rt_views( );
+
+
+	process_blur( m_context->get_rt( rt_blur_2 ).c_ptr( ), m_context->get_t( rt_blur_2 ).c_ptr( ), m_context->get_rt( rt_blur_3 ).c_ptr( ), m_context->get_t( rt_blur_3 ).c_ptr( ), kernel_index );
+
+
+	process_blur( m_context->get_rt( rt_blur_4 ).c_ptr( ), m_context->get_t( rt_blur_4 ).c_ptr( ), m_context->get_rt( rt_blur_4_0 ).c_ptr( ), m_context->get_t( rt_blur_4_0 ).c_ptr( ), kernel_index );
+
+
+	process_blur( m_context->get_rt( rt_blur_5 ).c_ptr( ), m_context->get_t( rt_blur_5 ).c_ptr( ), m_context->get_rt( rt_blur_5_0 ).c_ptr( ), m_context->get_t( rt_blur_5_0 ).c_ptr( ), kernel_index );
+
+
+	process_blur( m_context->get_rt( rt_blur_6 ).c_ptr( ), m_context->get_t( rt_blur_6 ).c_ptr( ), m_context->get_rt( rt_blur_6_0 ).c_ptr( ), m_context->get_t( rt_blur_6_0 ).c_ptr( ), kernel_index );
+
+
+	process_blur( m_context->get_rt( rt_blur_7 ).c_ptr( ), m_context->get_t( rt_blur_7 ).c_ptr( ), m_context->get_rt( rt_blur_7_0 ).c_ptr( ), m_context->get_t( rt_blur_7_0 ).c_ptr( ), kernel_index );
+
+	clear_surface( m_context->get_rt( rt_blur_3 ) );
+
+	m_sh_blur[0]->apply( 4, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
+	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
+
+	m_sh_blur[0]->apply( 5, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_4 ) );
+	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
+
+	m_sh_blur[0]->apply( 5, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_5 ) );
+	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
+
+	m_sh_blur[0]->apply( 5, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_6 ) );
+	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
+
+	m_sh_blur[0]->apply( 5, 0 );
+	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_7 ) );
+	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 }
 
 bool remove_model_skeletal_filter_predicate::operator()( render_surface_instance* )
