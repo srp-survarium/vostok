@@ -123,7 +123,6 @@ public:
 
 	res_texture_ptr get_t( enum_render_target_index index )
 	{
-		// FUNCTION BODY[0x64580]
 		return m_targets->m_family[index].texture;
 	}
 

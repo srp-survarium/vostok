@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: the remaining stubs (ctor tail, trample, LOD, render/sort/merge) are absent from the legacy grass_patch.cpp remainder (only create_render_buffer survives there; trample/LOD/merged-stream design is new-in-target) - matcher-phase work.
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/core/backend.h>
@@ -92,7 +91,6 @@ grass_patch::grass_patch(
 
 void grass_patch::remove_trample( )
 {
-	// FUNCTION BODY[0x5f3b10]
 	backend::ref( ).set_render_targets( &*m_movement_rt, 0, 0, 0 );
 	backend::ref( ).clear_render_targets( 0.f, 0.f, 0.f, 0.f );
 }
@@ -104,7 +102,6 @@ void grass_patch::try_accumulate_trample(
 	renderer_context*
 )
 {
-	// FUNCTION BODY[0x5f5060]
 	if ( !options::ref( ).current.m_use_vegetation_trample )
 		return;
 
