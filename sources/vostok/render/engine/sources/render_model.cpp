@@ -1,5 +1,6 @@
 #include "pch.h"
 #include <vostok/console_command.h>
+#include <vostok/render/core/options.h>
 #include <vostok/render/culling/possible_sectors_holder.h>
 #include "material.h"
 #include "material_manager.h"
@@ -300,11 +301,9 @@ void render_surface_instance::set_constants( )
 	// ******
 }
 
-// claude@NOTE: no legacy ancestor - render_surface_instance::is_occluded postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
 bool render_surface_instance::is_occluded( ) const
 {
-	return false;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 
 	// FUNCTION BODY[0x63bd50]: 1
 	// <0x63bd50>|0x000|+0x01a:'183'
