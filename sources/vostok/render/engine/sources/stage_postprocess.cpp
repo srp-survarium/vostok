@@ -1,7 +1,10 @@
 #include "pch.h"
 #include "stage_postprocess.h"
 
+#include <vostok/console_command.h>
+#include <vostok/math_randoms_generator.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/device.h>
 #include <vostok/render/core/effect_manager.h>
 #include "effect_gather_bloom.h"
 #include "effect_gather_luminance.h"
@@ -37,6 +40,58 @@
 
 namespace vostok {
 namespace render {
+
+static u32 const supported_kernels[] = { 3, 5, 7, 9, 13, 17, 21, 25 };
+
+static bool s_debug_pp_0 = true;
+static console_commands::cc_bool s_debug_pp_0_cc(
+	"r_debug_pp_0", s_debug_pp_0, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_1 = true;
+static console_commands::cc_bool s_debug_pp_1_cc(
+	"r_debug_pp_1", s_debug_pp_1, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_2 = true;
+static console_commands::cc_bool s_debug_pp_2_cc(
+	"r_debug_pp_2", s_debug_pp_2, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_3 = true;
+static console_commands::cc_bool s_debug_pp_3_cc(
+	"r_debug_pp_3", s_debug_pp_3, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_4 = true;
+static console_commands::cc_bool s_debug_pp_4_cc(
+	"r_debug_pp_4", s_debug_pp_4, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_5 = true;
+static console_commands::cc_bool s_debug_pp_5_cc(
+	"r_debug_pp_5", s_debug_pp_5, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_6 = true;
+static console_commands::cc_bool s_debug_pp_6_cc(
+	"r_debug_pp_6", s_debug_pp_6, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_7 = true;
+static console_commands::cc_bool s_debug_pp_7_cc(
+	"r_debug_pp_7", s_debug_pp_7, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_8 = true;
+static console_commands::cc_bool s_debug_pp_8_cc(
+	"r_debug_pp_8", s_debug_pp_8, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_9 = true;
+static console_commands::cc_bool s_debug_pp_9_cc(
+	"r_debug_pp_9", s_debug_pp_9, false, console_commands::command_type_user_specific
+);
+static bool s_debug_pp_10 = true;
+static console_commands::cc_bool s_debug_pp_10_cc(
+	"r_debug_pp_10", s_debug_pp_10, false, console_commands::command_type_user_specific
+);
+
+static bool s_pp_map2d_value = false;
+static console_commands::cc_bool s_pp_map2d(
+	"pp_map2d", s_pp_map2d_value, false, console_commands::command_type_user_specific
+);
 
 struct screen_vertex {
 	float4	position;
@@ -587,11 +642,513 @@ void stage_postprocess::accumulate_motion_vectors( )
 
 void stage_postprocess::execute( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x609c50]
-	// claude@NOTE: legacy execute blocked - shipped pipeline adds motion blur/sraa/olta/temporal
-	// AA/lens flares/aberration around the reshaped m_sh_blur[8] ping-pong; legacy ~250-line body
-	// kept in temp/render_legacy/engine/sources/stage_postprocess.cpp as the remainder
+	if ( !is_effects_ready( ) )
+		return;
+
+	if ( !is_enabled( ) )
+	{
+		execute_disabled( );
+		return;
+	}
+
+	static bool prev_view_initialized = false;
+	if ( !prev_view_initialized )
+	{
+		m_prev_view_matrix = m_context->get_v( );
+		prev_view_initialized = true;
+	}
+
+	if ( !m_context->scene_view( )->is_use_post_process( ) )
+	{
+		m_sh_effect_copy_image->apply( effect_copy_image::copy_rewrite, 0 );
+		backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_generic_0 ) );
+		backend::ref( ).set_ps_constant( m_gamma_correction_factor, 1.0f );
+		fill_surface( m_context->get_rt( rt_present ), render_target_ptr( ) );
+		m_context->set_w( float4x4( ).identity( ) );
+		return;
+	}
+
+	post_process_parameters const& pp_parameters =
+		m_context->scene_view( )->post_process_parameters( );
+
+	if ( options::ref( ).current.m_post_process_quality &&
+		 pp_parameters.use_image_space_reflections )
+	{
+		m_post_process_downsample_frame_effect->apply( 0, 0 );
+		fill_surface2( m_context->get_rt( rt_final_frame_downsampled ) );
+		m_post_process_downsample_frame_effect->apply( 1, 0 );
+		fill_surface2( m_context->get_rt( rt_final_frame_downsampled_temp ) );
+		backend::ref( ).flush_rt_shader_resources( );
+		m_post_process_downsample_frame_effect->apply( 2, 0 );
+		fill_surface2( m_context->get_rt( rt_final_frame_downsampled ) );
+
+		m_image_space_reflections_effect->apply( 0, 0 );
+		backend::ref( ).set_ps_constant(
+			m_blur_target_size_parameter,
+			m_context->get_screen_resolution( )
+		);
+		fill_surface2( m_context->get_rt( rt_generic_0 ) );
+	}
+
+	float3 sun_direction( 0.0f, 0.0f, 0.0f );
+	light* the_sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
+	if ( options::ref( ).current.m_post_process_quality &&
+		 options::ref( ).current.m_use_god_rays &&
+		 the_sun && the_sun->m_enabled )
+	{
+		m_god_rays_effect->apply( 0, 0 );
+		sun_direction = the_sun->direction;
+		backend::ref( ).set_ps_constant( m_sun_direction_parameter, sun_direction );
+		fill_surface2( m_context->get_rt( rt_light_scattering_mask ) );
+
+		m_god_rays_effect->apply( 1, 0 );
+		backend::ref( ).set_ps_constant( m_sun_direction_parameter, sun_direction );
+		backend::ref( ).set_ps_constant(
+			m_god_rays_parameters0,
+			float4(
+				pp_parameters.god_rays_color_0.xyz( ),
+				pp_parameters.god_rays_color_blend_power
+			)
+		);
+		backend::ref( ).set_ps_constant(
+			m_god_rays_parameters1,
+			float4(
+				pp_parameters.god_rays_color_1.xyz( ),
+				pp_parameters.god_rays_intensity
+			)
+		);
+		backend::ref( ).set_ps_constant(
+			m_god_rays_parameters2,
+			float4( pp_parameters.god_rays_attenuation_power, 0.0f, 0.0f, 0.0f )
+		);
+		fill_surface2( m_context->get_rt( rt_light_scattering_result ) );
+	}
+
+	float t_w = float( m_context->get_t( rt_blur_0 )->width( ) );
+	float t_h = float( m_context->get_t( rt_blur_0 )->height( ) );
+	float s_u = 1.0f / backend::ref( ).target_width( );
+	float s_v = 1.0f / backend::ref( ).target_height( );
+
+	kernel_offsets[0] = float4( -s_u,  s_v, 0.0f, 0.0f );
+	kernel_offsets[1] = float4(  s_u,  s_v, 0.0f, 0.0f );
+	kernel_offsets[2] = float4( -s_u, -s_v, 0.0f, 0.0f );
+	kernel_offsets[3] = float4(  s_u, -s_v, 0.0f, 0.0f );
+	kernel_offsets[4] = float4( -s_u, 0.0f, 0.0f, 0.0f );
+	kernel_offsets[5] = float4(  s_u, 0.0f, 0.0f, 0.0f );
+	kernel_offsets[6] = float4( 0.0f, -s_v, 0.0f, 0.0f );
+	kernel_offsets[7] = float4( 0.0f,  s_v, 0.0f, 0.0f );
+
+	backend::ref( ).flush_rt_views( );
+	clear_surface( m_context->get_rt( rt_blur_0 ) );
+	clear_surface( m_context->get_rt( rt_blur_1 ) );
+	clear_surface( m_context->get_rt( rt_blur_2 ) );
+	clear_surface( m_context->get_rt( rt_blur_3 ) );
+
+	float4 frame_luminance_parameter = compute_luminance_parameters( 16 );
+
+	if ( s_debug_pp_2 && pp_parameters.enable_bloom )
+	{
+		m_sh_gather_bloom->apply( 0, 0 );
+		m_dof_shader_constants.set(
+			pp_parameters.dof_height_lights,
+			pp_parameters.dof_focus_distance,
+			pp_parameters.dof_focus_region,
+			pp_parameters.dof_focus_power,
+			pp_parameters.dof_near_blur_amount,
+			pp_parameters.dof_far_blur_amount,
+			pp_parameters.bokeh_dof_radius,
+			pp_parameters.bokeh_dof_density
+		);
+		backend::ref( ).set_ps_constant( m_kernel_offsets, kernel_offsets );
+		m_bloom_shader_constants.set(
+			pp_parameters.bloom_scale,
+			pp_parameters.bloom_max_color,
+			pp_parameters.bloom_halo_color
+		);
+		backend::ref( ).set_ps_constant(
+			m_frame_luminance_parameter,
+			frame_luminance_parameter
+		);
+		fill_surface(
+			m_context->get_rt( rt_blur_0 ),
+			m_context->get_rt( rt_blur_2 )
+		);
+	}
+
+	if ( s_debug_pp_3 )
+	{
+		u32 const dof_kernel_index = math::clamp_r(
+			pp_parameters.dof_blur_kernel,
+			0u,
+			7u
+		);
+		u32 const dof_kernal = supported_kernels[dof_kernel_index];
+		float* weights_h = static_cast<float*>( ALLOCA( sizeof( float ) * dof_kernal ) );
+		float* offsets_h = static_cast<float*>( ALLOCA( sizeof( float ) * dof_kernal ) );
+		float* weights_v = static_cast<float*>( ALLOCA( sizeof( float ) * dof_kernal ) );
+		float* offsets_v = static_cast<float*>( ALLOCA( sizeof( float ) * dof_kernal ) );
+		float const dof_radius = float( dof_kernal - 1 ) * 0.5f;
+
+		get_gaussain_weights_offsets(
+			weights_h, offsets_h, u32( t_w ),
+			dof_radius, dof_radius, dof_kernal, dof_radius
+		);
+		get_gaussain_weights_offsets(
+			weights_v, offsets_v, u32( t_h ),
+			dof_radius, dof_radius, dof_kernal, dof_radius
+		);
+
+		float4* offsets_weights = static_cast<float4*>(
+			ALLOCA( sizeof( float4 ) * dof_kernal )
+		);
+		for ( u32 i = 0; i < dof_kernal; ++i )
+			offsets_weights[i] = float4(
+				offsets_h[i], weights_h[i], offsets_v[i], weights_v[i]
+			);
+
+		m_sh_blur[dof_kernel_index]->apply( 0, 0 );
+		m_textures[0] = m_context->get_t( rt_blur_0 );
+		backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_0 ) );
+		backend::ref( ).set_ps_constant(
+			m_blur_offsets_weights, offsets_weights, dof_kernal
+		);
+		fill_surface( m_context->get_rt( rt_blur_1 ), render_target_ptr( ) );
+
+		backend::ref( ).flush_rt_shader_resources( );
+
+		m_sh_blur[dof_kernel_index]->apply( 1, 0 );
+		m_textures[1] = m_context->get_t( rt_blur_1 );
+		backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_1 ) );
+		backend::ref( ).set_ps_constant(
+			m_blur_offsets_weights, offsets_weights, dof_kernal
+		);
+		fill_surface( m_context->get_rt( rt_blur_0 ), render_target_ptr( ) );
+	}
+
+	static math::random32 randomizer( 1000 );
+	if ( m_context->scene_view( )->get_render_frame_index( ) %
+		 pp_parameters.image_grain_update_frequency == 0 )
+	{
+		m_image_grain_random_offsets = float2(
+			randomizer.random_f( 1.0f ),
+			randomizer.random_f( 1.0f )
+		);
+	}
+
+	float4 image_grain_parameters(
+		m_image_grain_random_offsets.x,
+		m_image_grain_random_offsets.y,
+		pp_parameters.image_grain_scale,
+		pp_parameters.vignette_power
+	);
+
+	if ( s_debug_pp_4 )
+	{
+		if ( options::ref( ).current.m_post_process_quality &&
+			 pp_parameters.enable_advanced_bloom )
+		{
+			advanced_bloom( );
+		}
+		else
+		{
+			u32 const kernel_index = math::clamp_r(
+				pp_parameters.blur_kernel,
+				0u,
+				7u
+			);
+			u32 const bloom_kernal = supported_kernels[kernel_index];
+			float* weights_h = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+			float* offsets_h = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+			float* weights_v = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+			float* offsets_v = static_cast<float*>( ALLOCA( sizeof( float ) * bloom_kernal ) );
+			float const bloom_radius = float( bloom_kernal - 1 ) * 0.5f;
+
+			get_gaussain_weights_offsets(
+				weights_h, offsets_h, u32( t_w ),
+				bloom_radius, bloom_radius, bloom_kernal, bloom_radius
+			);
+			get_gaussain_weights_offsets(
+				weights_v, offsets_v, u32( t_h ),
+				bloom_radius, bloom_radius, bloom_kernal, bloom_radius
+			);
+
+			float4* offsets_weights = static_cast<float4*>(
+				ALLOCA( sizeof( float4 ) * bloom_kernal )
+			);
+			for ( u32 i = 0; i < bloom_kernal; ++i )
+				offsets_weights[i] = float4(
+					offsets_h[i], weights_h[i], offsets_v[i], weights_v[i]
+				);
+
+			backend::ref( ).flush_rt_shader_resources( );
+			m_sh_blur[kernel_index]->apply( 0, 0 );
+			m_textures[0] = m_context->get_t( rt_blur_2 );
+			backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
+			backend::ref( ).set_ps_constant(
+				m_blur_offsets_weights, offsets_weights, bloom_kernal
+			);
+			fill_surface( m_context->get_rt( rt_blur_1 ), render_target_ptr( ) );
+
+			backend::ref( ).flush_rt_shader_resources( );
+			m_sh_blur[kernel_index]->apply( 2, 0 );
+			m_textures[1] = m_context->get_t( rt_blur_1 );
+			backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_1 ) );
+			backend::ref( ).set_ps_constant(
+				m_blur_offsets_weights, offsets_weights, bloom_kernal
+			);
+			fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
+		}
+	}
+
+	if ( s_debug_pp_5 && pp_parameters.use_dynamic_lens_flares )
+	{
+		backend::ref( ).flush_rt_shader_resources( );
+		m_lens_flares_effect->apply( 0, 0 );
+		if ( pp_parameters.lens_flares_mask_texture )
+			backend::ref( ).set_ps_texture(
+				"t_lensdirt",
+				&*pp_parameters.lens_flares_mask_texture
+			);
+		float4 lens_flares_parameters(
+			pp_parameters.lens_flares_multiplier,
+			0.0f,
+			0.0f,
+			0.0f
+		);
+		backend::ref( ).set_ps_constant(
+			m_lens_flares_parameters,
+			lens_flares_parameters
+		);
+		fill_surface2( m_context->get_rt( rt_lens_flares ) );
+	}
+	else
+	{
+		clear_surface( m_context->get_rt( rt_lens_flares ) );
+	}
+
+	if ( s_debug_pp_6 )
+	{
+		bool use_bokeh_dof = false;
+		bool use_bokeh_image = false;
+		bool use_image_grain = false;
+		if ( options::ref( ).current.m_post_process_quality )
+		{
+			use_bokeh_dof = pp_parameters.use_bokeh_dof;
+			if ( use_bokeh_dof )
+				use_bokeh_image = pp_parameters.use_bokeh_image;
+			use_image_grain = pp_parameters.use_image_grain;
+		}
+
+		m_sh_complex_blend
+			[use_bokeh_dof]
+			[use_bokeh_image]
+			[use_image_grain]->apply( 0, 0 );
+		m_dof_shader_constants.set(
+			pp_parameters.dof_height_lights,
+			pp_parameters.dof_focus_distance,
+			pp_parameters.dof_focus_region,
+			pp_parameters.dof_focus_power,
+			pp_parameters.dof_near_blur_amount,
+			pp_parameters.dof_far_blur_amount,
+			pp_parameters.bokeh_dof_radius,
+			pp_parameters.bokeh_dof_density
+		);
+		m_scene_shader_constants.set(
+			m_context,
+			pp_parameters.frame_height_lights,
+			pp_parameters.frame_mid_tones,
+			pp_parameters.frame_shadows,
+			pp_parameters.frame_fade_color,
+			pp_parameters.frame_fade_amount,
+			options::ref( ).current.m_gamma_correction_factor,
+			pp_parameters.frame_desaturation,
+			image_grain_parameters,
+			pp_parameters
+		);
+
+		if ( options::ref( ).current.m_post_process_quality &&
+			 pp_parameters.use_color_grading_lut &&
+			 pp_parameters.color_grading_texture.c_ptr( ) )
+		{
+			backend::ref( ).set_ps_texture(
+				"t_color_grading_lut",
+				&*pp_parameters.color_grading_texture
+			);
+		}
+		else
+		{
+			backend::ref( ).set_ps_texture(
+				"t_color_grading_lut",
+				&*m_color_grading_base_lut
+			);
+		}
+
+		backend::ref( ).set_ps_constant( m_sun_direction_parameter, sun_direction );
+		backend::ref( ).set_ps_constant(
+			m_frame_luminance_parameter,
+			frame_luminance_parameter
+		);
+		fill_surface( m_context->get_rt( rt_generic_1 ), render_target_ptr( ) );
+	}
+
+	if ( s_debug_pp_7 )
+	{
+		if ( options::ref( ).current.m_enabled_fxaa &&
+			 !options::ref( ).current.m_use_temporal_antialiasing )
+		{
+			backend::ref( ).flush_rt_shader_resources( );
+			m_post_process_antialiasing_shader_fxaa->apply( 0, 0 );
+			backend::ref( ).set_ps_constant(
+				m_fxaa_parameters,
+				float4(
+					options::ref( ).current.m_fxaa_quality_subpix,
+					options::ref( ).current.m_fxaa_quality_edge_threshold,
+					options::ref( ).current.m_fxaa_quality_edge_threshold_min,
+					0.0f
+				)
+			);
+			fill_surface2( m_context->get_rt( rt_generic_0 ) );
+		}
+
+		if ( options::ref( ).current.m_enabled_fxaa &&
+			 options::ref( ).current.m_enabled_sharpen &&
+			 !options::ref( ).current.m_use_temporal_antialiasing )
+		{
+			backend::ref( ).flush_rt_shader_resources( );
+			m_post_process_shader_sharpen->apply( 0, 0 );
+			fill_surface2( m_context->get_rt( rt_generic_1 ) );
+			m_post_process_shader_sharpen->apply( 1, 0 );
+			fill_surface2( m_context->get_rt( rt_present ) );
+		}
+		else
+		{
+			m_sh_effect_copy_image->apply( effect_copy_image::copy_rewrite, 0 );
+			if ( options::ref( ).current.m_enabled_fxaa &&
+				 !options::ref( ).current.m_use_temporal_antialiasing )
+			{
+				backend::ref( ).set_ps_texture(
+					"t_base",
+					&*m_context->get_t( rt_generic_0 )
+				);
+			}
+			else
+			{
+				backend::ref( ).set_ps_texture(
+					"t_base",
+					&*m_context->get_t( rt_generic_1 )
+				);
+			}
+			backend::ref( ).set_ps_constant(
+				m_gamma_correction_factor,
+				options::ref( ).current.m_gamma_correction_factor
+			);
+			fill_surface( m_context->get_rt( rt_present ), render_target_ptr( ) );
+		}
+	}
+
+	float3 const* const eye_rays = m_context->get_eye_rays( );
+	VOSTOK_UNREFERENCED_PARAMETER( eye_rays );
+
+	if ( s_debug_pp_8 )
+	{
+		m_olta_effect->apply( 0, 0 );
+		fill_surface2( m_context->get_rt( rt_albedo ) );
+		backend::ref( ).flush_rt_shader_resources( );
+		m_olta_effect->apply( 1, 0 );
+		fill_surface2( m_context->get_rt( rt_present ) );
+	}
+
+	if ( options::ref( ).current.m_use_temporal_antialiasing )
+	{
+		device::ref( ).d3d_context( )->CopyResource(
+			m_context->get_t( rt_albedo )->hw_texture( ),
+			m_context->get_t( rt_present )->hw_texture( )
+		);
+		m_temporal_antialiasing_effect->apply( 0, 0 );
+		backend::ref( ).set_ps_constant(
+			m_prev_view_matrix_parameter,
+			transpose( m_prev_view_matrix )
+		);
+		backend::ref( ).set_ps_constant(
+			m_blur_target_size_parameter,
+			m_context->get_screen_resolution( )
+		);
+		backend::ref( ).set_ps_constant(
+			m_c_frame_index,
+			m_context->scene_view( )->get_render_frame_index( ) & 1
+		);
+		fill_surface2( m_context->get_rt( rt_present ) );
+		device::ref( ).d3d_context( )->CopyResource(
+			m_context->get_t( rt_previous_present )->hw_texture( ),
+			m_context->get_t( rt_albedo )->hw_texture( )
+		);
+	}
+
+	if ( options::ref( ).current.m_use_motion_blur ||
+		 ( options::ref( ).current.m_use_motion_vectors_in_taa &&
+		   options::ref( ).current.m_use_temporal_antialiasing ) )
+	{
+		if ( options::ref( ).current.m_use_temporal_antialiasing ||
+			 options::ref( ).current.m_post_process_quality )
+		{
+			backend::ref( ).flush_rt_shader_resources( );
+			accumulate_motion_vectors( );
+		}
+	}
+
+	if ( options::ref( ).current.m_use_temporal_antialiasing ||
+		 options::ref( ).current.m_post_process_quality )
+	{
+		if ( options::ref( ).current.m_use_motion_blur )
+		{
+			backend::ref( ).flush_rt_shader_resources( );
+			m_motion_blur_effect->apply( 0, 0 );
+			backend::ref( ).set_ps_constant(
+				m_prev_view_matrix_parameter,
+				transpose( m_prev_view_matrix )
+			);
+			backend::ref( ).set_ps_constant(
+				m_blur_target_size_parameter,
+				m_context->get_screen_resolution( )
+			);
+			backend::ref( ).set_ps_constant(
+				m_frame_delta_parameter,
+				m_context->get_time_delta( )
+			);
+			backend::ref( ).set_ps_constant(
+				m_motion_blur_scale_parameter,
+				options::ref( ).current.m_motion_blur_scale
+			);
+			fill_surface2( m_context->get_rt( rt_albedo ) );
+			device::ref( ).d3d_context( )->CopyResource(
+				m_context->get_t( rt_present )->hw_texture( ),
+				m_context->get_t( rt_albedo )->hw_texture( )
+			);
+		}
+
+		if ( options::ref( ).current.m_post_process_quality &&
+			 pp_parameters.use_aberration )
+		{
+			m_aberration_effect->apply( 0, 0 );
+			backend::ref( ).set_ps_constant(
+				m_aberration_parameters,
+				float4(
+					pp_parameters.aberration_max_variance,
+					pp_parameters.aberration_min_variance,
+					pp_parameters.aberration_power,
+					0.0f
+				)
+			);
+			fill_surface2( m_context->get_rt( rt_albedo ) );
+			device::ref( ).d3d_context( )->CopyResource(
+				m_context->get_t( rt_present )->hw_texture( ),
+				m_context->get_t( rt_albedo )->hw_texture( )
+			);
+		}
+	}
+
+	m_prev_view_matrix = m_context->get_v( );
+	m_context->set_w( float4x4( ).identity( ) );
 }
 
 } // namespace render
