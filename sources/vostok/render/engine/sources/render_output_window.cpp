@@ -18,7 +18,6 @@ render_output_window::render_output_window(
 	m_window			( (HWND__*)window_configuration.hwnd ),
 	m_windowed			( window_configuration.windowed )
 {
-	// FUNCTION BODY[0x653c70]
 	m_current_size = get_window_client_size( m_window, m_windowed );
 
 	if ( window_configuration.create_flash_renderer )
@@ -63,7 +62,6 @@ void render_output_window::set_size(
 	bool			force_resize
 )
 {
-	// FUNCTION BODY[0x653b70]
 	if ( !width || !height )
 		return;
 
@@ -96,7 +94,6 @@ void render_output_window::set_size(
 
 void render_output_window::resize( bool force_resize )
 {
-	// FUNCTION BODY[0x653a70]
 	if ( !m_windowed )
 		return;
 

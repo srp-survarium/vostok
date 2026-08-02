@@ -304,12 +304,6 @@ void render_surface_instance::set_constants( )
 bool render_surface_instance::is_occluded( ) const
 {
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
-
-	// FUNCTION BODY[0x63bd50]: 1
-	// <0x63bd50>|0x000|+0x01a:'183'
-	// <0x63bd6a>|0x01a|-0x001:'183'
-	// <0x63bd69>|0x019|+0x003:'184'
-	// ******
 }
 
 render_model_instance_impl::render_model_instance_impl( ) :

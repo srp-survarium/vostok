@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: the trample/layer/merge/sort/shader-parameter stubs below have no legacy ancestor (absent from the legacy grass_world twin; subsystems are new-in-target); the four DIVERGED fns carry their own notes - matcher-phase work.
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
@@ -28,8 +27,6 @@ static u32 model_scale_random;
 
 void setup_seed_clk( );
 
-// claude@NOTE: the legacy grass_world.h declared these typedefs in-class; the canonical
-// header keeps raw vector members, so they live file-local here.
 typedef vector<grass_patch*>	grass_patches_type;
 typedef vector<grass_template*>	grass_templates_type;
 typedef vector<grass_instance*>	grass_instances_type;
@@ -47,7 +44,6 @@ grass_world::grass_world( ) :
 	m_shadow_cascade_index_parameter		( 0 ),
 	m_wind_info_parameters					( 0 )
 {
-	// FUNCTION BODY[0x6364e0]
 	m_patches_tree									=	&*collision::new_space_partitioning_tree(g_allocator, 1.f, 1024);
 	m_ambient_color									=	backend::ref( ).register_constant_host( "ambient_color", rc_float );
 	setup_seed_clk( );
@@ -76,7 +72,6 @@ void grass_world::set_patch_parameters( grass_patch* )
 
 void grass_world::set_trample_parameters( trample_desc& desc )
 {
-	// FUNCTION BODY[0x635c40]
 	backend::ref( ).set_ps_constant( m_trample_parameters, desc.multiplier );
 }
 
@@ -328,7 +323,6 @@ void grass_world::process_culling( renderer_context* context, float first_lod_di
 
 void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* in_context )
 {
-	// FUNCTION BODY[0x6371c0]
 	grass_patch* const* it_patch			= m_patches.begin( );
 	grass_patch* const* end_patch		= m_patches.end( );
 
@@ -349,7 +343,6 @@ void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* i
 
 void grass_world::remove_trample( )
 {
-	// FUNCTION BODY[0x635bb0]
 	grass_patch* const* it_patch			= m_patches.begin( );
 	grass_patch* const* end_patch		= m_patches.end( );
 
@@ -412,7 +405,6 @@ void grass_world::remove_instances( vector<u32> const& )
 
 void setup_seed_clk( )
 {
-	// FUNCTION BODY[0x635990]
 	u32 const seed							= GetTickCount( );
 	point_random_x							= seed;
 	point_random_z							= seed;
