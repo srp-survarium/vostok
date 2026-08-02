@@ -549,44 +549,10 @@ void stage_postprocess::compute_per_pixel_eye_adaptated_luminance( )
 
 float4 stage_postprocess::compute_luminance_parameters( u32 frame_delta )
 {
-	// FUNCTION BODY[0x609bd0]
-	// claude@NOTE: get_frame_luminance_parameters grew a bool& validity out-param (still a header
-	// stub) - legacy no-arg calls adapted
 	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
 
 	float4								frame_luminance_parameter;
-	bool								frame_luminance_valid;
-
-	if (m_context->scene_view()->get_render_frame_index() % frame_delta == 0)
-	{
-		frame_luminance_parameter		= get_frame_luminance_parameters(frame_luminance_valid);
-		m_context->get_scene_view()->set_luminance_parameters(frame_luminance_parameter);
-
-		if (m_context->scene_view()->get_render_frame_index() == frame_delta)
-			m_context->get_scene_view()->set_prev_luminance_parameters(frame_luminance_parameter);
-	}
-
-	float time_delta					= m_context->get_time_delta();
-	math::clamp							(time_delta, 1.0f / 300.0f, 1.0f / 30.0f);
-
-	m_context->get_scene_view()->set_prev_luminance_parameters(
-			m_context->scene_view()->get_prev_luminance_parameters()
-		+
-			(
-				m_context->get_scene_view()->get_luminance_parameters() - m_context->scene_view()->get_prev_luminance_parameters()
-			) * time_delta / pp_parameters.adaptation_speed
-		);
-
-	frame_luminance_parameter			= m_context->scene_view()->get_prev_luminance_parameters();
-
-	for (u32 lum_rt_index=0; lum_rt_index<rt_num_frame_luminance_targets; lum_rt_index++)
-	{
-		backend::ref().set_render_targets	(&*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, 0, 0, 0);
-		backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 1.0f);
-	}
-
-	float4 frame_luminance_parameter0;
-	measure_per_pixel_luminance			(&*m_context->m_targets->m_family[rt_generic_0].texture, frame_luminance_parameter0);
+	measure_per_pixel_luminance			(&*m_context->get_t(rt_generic_0), frame_luminance_parameter);
 
 	if (!math::is_similar(pp_parameters.adaptation_speed, 0.0f, 0.05f))
 		compute_per_pixel_eye_adaptated_luminance();
