@@ -301,64 +301,82 @@ inline u32 backend::target_height( ) const
 		: (m_render_output ? m_render_output->height( ) : 0);
 }
 
-template < typename T >
-inline void backend::set_vs_constant( shader_constant_host const* constant, T const& arg )
+template < enum_shader_type shader_type >
+inline u32 backend::get_constants_marker( )
 {
-	if ( constant )
-		m_vs_constants_handler.set_constant( *constant, arg );
+	return m_constant_update_markers[shader_type];
+}
+
+template < typename T >
+inline void backend::set_vs_constant( shader_constant_host const* c, T const& arg )
+{
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported );
+	ASSERT( c != NULL );
+	m_vs_constants_handler.set_constant( *c, arg );
+	++num_setted_shader_constants;
 }
 
 template < typename T, u32 array_size >
-inline void backend::set_vs_constant( shader_constant_host const* constant, T const (&values)[array_size] )
+inline void backend::set_vs_constant( shader_constant_host const* c, T const (&arg)[array_size] )
 {
-	set_vs_constant( constant, values, array_size );
+	set_vs_constant( c, &arg[0], array_size );
 }
 
 template < typename T >
-inline void backend::set_vs_constant( shader_constant_host const* constant, T const* values, u32 array_size )
+inline void backend::set_vs_constant( shader_constant_host const* c, T const* arg, u32 array_size )
 {
-	if ( constant )
-		m_vs_constants_handler.set_constant_array( *constant, values, array_size );
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported_ );
+	ASSERT( c != NULL );
+	m_vs_constants_handler.set_constant_array( *c, arg, array_size );
+	++num_setted_shader_constants;
 }
 
 template < typename T >
-inline void backend::set_gs_constant( shader_constant_host const* constant, T const& arg )
+inline void backend::set_gs_constant( shader_constant_host const* c, T const& arg )
 {
-	if ( constant )
-		m_gs_constants_handler.set_constant( *constant, arg );
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported );
+	ASSERT( c != NULL );
+	m_gs_constants_handler.set_constant( *c, arg );
+	++num_setted_shader_constants;
 }
 
 template < typename T, u32 array_size >
-inline void backend::set_gs_constant( shader_constant_host const* constant, T const (&values)[array_size] )
+inline void backend::set_gs_constant( shader_constant_host const* c, T const (&arg)[array_size] )
 {
-	set_gs_constant( constant, values, array_size );
+	set_gs_constant( c, &arg[0], array_size );
 }
 
 template < typename T >
-inline void backend::set_gs_constant( shader_constant_host const* constant, T const* values, u32 array_size )
+inline void backend::set_gs_constant( shader_constant_host const* c, T const* arg, u32 array_size )
 {
-	if ( constant )
-		m_gs_constants_handler.set_constant_array( *constant, values, array_size );
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported_ );
+	ASSERT( c != NULL );
+	m_gs_constants_handler.set_constant_array( *c, arg, array_size );
+	++num_setted_shader_constants;
 }
 
 template < typename T >
-inline void backend::set_ps_constant( shader_constant_host const* constant, T const& arg )
+inline void backend::set_ps_constant( shader_constant_host const* c, T const& arg )
 {
-	if ( constant )
-		m_ps_constants_handler.set_constant( *constant, arg );
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported );
+	ASSERT( c != NULL );
+	m_ps_constants_handler.set_constant( *c, arg );
+	++num_setted_shader_constants;
 }
 
 template < typename T, u32 array_size >
-inline void backend::set_ps_constant( shader_constant_host const* constant, T const (&values)[array_size] )
+inline void backend::set_ps_constant( shader_constant_host const* c, T const (&arg)[array_size] )
 {
-	set_ps_constant( constant, values, array_size );
+	set_ps_constant( c, &arg[0], array_size );
 }
 
 template < typename T >
-inline void backend::set_ps_constant( shader_constant_host const* constant, T const* values, u32 array_size )
+inline void backend::set_ps_constant( shader_constant_host const* c, T const* arg, u32 array_size )
 {
-	if ( constant )
-		m_ps_constants_handler.set_constant_array( *constant, values, array_size );
+	COMPILE_ASSERT( constant_type_traits<T>::value == true, Only_types_described_in_constant_type_traits_are_supported_ );
+	ASSERT( c != NULL );
+	m_ps_constants_handler.set_constant_array( *c, arg, array_size );
+	++num_setted_shader_constants;
 }
 
 inline void backend::clear_render_targets( enum_render_target_enum target, math::color color )

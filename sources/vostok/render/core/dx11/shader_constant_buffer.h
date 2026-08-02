@@ -30,37 +30,14 @@ protected:
 public:
 	void destroy_impl( ) const;
 
-	void set( shader_constant const& constant )
-	{
-		set(
-			constant.slot( ),
-			constant.source( ).pointer( ),
-			constant.source( ).size( ),
-			constant.slot( ).array_size( )
-		);
-	}
-
-	void zero( shader_constant const& constant )
-	{
-		zero( constant.slot( ), constant.source( ).size( ) );
-	}
+	void set( shader_constant const& constant );
+	void zero( shader_constant const& constant );
 
 	template < typename T >
-	void set_typed( shader_constant_slot const& slot, T const& value )
-	{
-		set( slot, const_cast<T*>( &value ), constant_type_traits<T>::size );
-	}
+	void set_typed( shader_constant_slot const& slot, T const& value );
 
 	template < typename T >
-	void set_typed( shader_constant_slot const& slot, T const* values, u32 array_size )
-	{
-		set(
-			slot,
-			const_cast<T*>( values ),
-			constant_type_traits<T>::size,
-			array_size
-		);
-	}
+	void set_typed( shader_constant_slot const& slot, T const* values, u32 array_size );
 
 	bool similiar( shader_constant_buffer const& other ) const
 	{
@@ -69,12 +46,22 @@ public:
 	}
 
 	void update( );
-	ID3D11Buffer* hardware_buffer( ) const { return m_hardware_buffer; }
-	fixed_string<64> const& name( ) const { return m_name; }
-	enum_shader_type& dest( ) { return m_dest; }
-	enum_shader_type const& dest( ) const { return m_dest; }
-	D3D_CBUFFER_TYPE type( ) const { return m_type; }
-	u32 size( ) const { return m_buffer_size; }
+	ID3D11Buffer* hardware_buffer( ) const;
+
+private:
+	void set( shader_constant_slot const& slot, void* pointer, u32 size );
+	void set( shader_constant_slot const& slot, void* pointer, u32 size, u32 array_size );
+	void zero( shader_constant_slot const& slot, u32 size );
+	void set_memory( u32 const offset, pcstr source, u32 const size );
+	void zero_memory( u32 const offset, u32 const size );
+	void* access( u32 offset );
+
+public:
+	fixed_string<64> const& name( ) const;
+	enum_shader_type& dest( );
+	enum_shader_type const& dest( ) const;
+	D3D_CBUFFER_TYPE type( ) const;
+	u32 size( ) const;
 	bool is_registered( ) const { return m_is_registered; }
 	void mark_registered( )
 	{
@@ -82,13 +69,7 @@ public:
 		m_is_registered = true;
 	}
 
-private:
-	void set( shader_constant_slot const& slot, void* pointer, u32 );
-	void set( shader_constant_slot const& slot, void* pointer, u32, u32 array_size );
-	void zero( shader_constant_slot const& slot, u32 );
-	void set_memory( u32 const offset, pcstr source, u32 const size );
-	void zero_memory( u32 const offset, u32 const size );
-	void* access( u32 offset );
+	enum { line_size = 1 };
 
 private:
 	fixed_string<64> m_name;
