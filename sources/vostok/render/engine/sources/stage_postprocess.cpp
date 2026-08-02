@@ -441,7 +441,6 @@ void stage_postprocess::fill_surface( render_target_ptr surf, render_target_ptr 
 // TODO: rename
 void stage_postprocess::fill_surface2( render_target_ptr surf )
 {
-	// FUNCTION BODY[0x607510]
 	backend::ref().set_render_targets( &*surf, 0, 0, 0);
 	backend::ref().set_depth_stencil_target(0);
 
@@ -456,7 +455,21 @@ void stage_postprocess::fill_surface2( render_target_ptr surf )
 
 	m_screen_vertex_geometry->apply( );
 
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( surf->width( ) );
+	tmp_viewport.Height = float( surf->height( ) );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref( ).set_viewport( tmp_viewport );
+
 	backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 2*3, 0, offset);
+
+	backend::ref( ).set_viewport( orig_viewport );
 }
 
 void stage_postprocess::clear_surface( render_target_ptr surf )
