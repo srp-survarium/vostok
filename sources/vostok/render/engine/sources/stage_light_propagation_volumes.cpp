@@ -7,25 +7,32 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/device.h>
 #include <vostok/render/core/effect_manager.h>
 #include <vostok/render/core/effect_options_descriptor.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/dx11/res_geometry.h>
+#include <vostok/render/facade/render_stage_types.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include "effect_apply_indirect_lighting.h"
 #include "effect_downsample_gbuffer.h"
 #include "effect_downsample_reflective_shadow_map.h"
 #include "effect_fill_reflective_shadow_map.h"
+#include "geometry_batch.h"
 #include "light.h"
 #include "lights_db.h"
+#include "material_effects.h"
 #include "radiance_volume.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 #include "renderer_context.h"
 #include "renderer_context_targets.h"
 #include "scene.h"
 #include "scene_view.h"
 #include "shared_names.h"
+#include "statistics.h"
 
 namespace vostok {
 namespace render {
@@ -102,8 +109,18 @@ struct screen_vertex {
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
 
 struct remove_lpv_inappropriate_models {
-	bool operator()( lpv_render_surface const& )
+	bool operator()( lpv_render_surface const& surface )
 	{
+		if (
+			surface.surface->m_dynamic_screen_factor < 0.0005f ||
+			( options::ref( ).current.m_use_hiz_occlusion_culling && surface.surface->m_occluded ) ||
+			surface.surface->m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type
+		)
+		{
+			statistics::ref( ).lpv_stat_group.num_clipped_dips.value++;
+			return true;
+		}
+
 		return false;
 	}
 };
@@ -284,54 +301,365 @@ void stage_light_propagation_volumes::register_light_constans( )
 }
 
 void stage_light_propagation_volumes::pre_lpv_batch_render(
-	float3 const&,
-	float,
-	geometry_batch const&
+	float3 const&		light_color,
+	float const			light_intensity,
+	geometry_batch const& batch
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6168f0]
+	m_fill_rsm_effect[static_mesh_vertex_input_type]->apply( 0, 0 );
+	m_context->set_w( float4x4( ).identity( ) );
+	backend::ref( ).set_ps_constant( m_c_light_color, light_color );
+	backend::ref( ).set_ps_constant( m_c_light_intensity, light_intensity );
 }
 
 void stage_light_propagation_volumes::post_lpv_batch_render( geometry_batch const& )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x614750]
+	statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
 }
 
 void stage_light_propagation_volumes::render_to_rms(
-	float3 const&,
-	float,
-	float4x4 const&,
-	float4x4 const&,
-	vector<float4x4>,
-	u32
+	float3 const&		light_color,
+	float const			light_intensity,
+	float4x4 const&	view_matrix,
+	float4x4 const&	projection_matrix,
+	vector<float4x4>	transforms,
+	u32 const			cascade_index
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x616c80]
+	if ( !s_draw_to_rsm_value )
+		return;
+
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_rsm_source_size );
+	tmp_viewport.Height = float( m_rsm_source_size );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref( ).set_viewport( tmp_viewport );
+
+	m_context->push_set_v( view_matrix );
+	m_context->push_set_p( projection_matrix );
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source,
+		&*m_radiance_volume[cascade_index].m_rt_rms_normal_source,
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
+		0
+	);
+	backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
+	backend::ref( ).set_depth_stencil_target( &*m_rms_depth_stencil_source[cascade_index] );
+	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
+		0,
+		0,
+		0
+	);
+	for (
+		vector<float4x4>::const_iterator it = transforms.begin( ), end = transforms.end( );
+		it != end;
+		++it
+	)
+	{
+		m_context->set_w( *it );
+		m_fill_rsm_effect[null_vertex_input_type]->apply( 1, 0 );
+		m_box_geometry.draw( );
+	}
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source,
+		&*m_radiance_volume[cascade_index].m_rt_rms_normal_source,
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
+		0
+	);
+
+	if ( s_use_batched_lpv_geometry )
+	{
+		m_context->scene( )->get_lpv_geometry( ).for_each_batch_render(
+			m_context,
+			boost::bind(
+				&stage_light_propagation_volumes::pre_lpv_batch_render,
+				this,
+				light_color,
+				light_intensity,
+				_1
+			),
+			boost::bind( &stage_light_propagation_volumes::post_lpv_batch_render, this, _1 )
+		);
+	}
+	else
+	{
+		vector<render_surface_instance*> visible_render_models;
+		m_context->scene( )->select_models(
+			m_context->get_culling_vp( ),
+			visible_render_models,
+			m_context->get_view_pos( ),
+			visible_flag,
+			false
+		);
+
+		vector<render_surface_instance*>::iterator it_d = visible_render_models.begin( );
+		vector<render_surface_instance*>::const_iterator end_d = visible_render_models.end( );
+		for ( ; it_d != end_d; ++it_d )
+		{
+			render_surface_instance& instance = **it_d;
+			material_effects& me = instance.m_render_surface->get_material_effects( );
+			render_geometry& geometry = instance.m_render_surface->m_render_geometry;
+
+			if ( instance.m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type )
+				continue;
+
+			if ( !me.m_effects[light_propagation_volumes_render_stage] )
+				continue;
+
+			if ( !geometry.lpv_pass_geom )
+				continue;
+
+			me.m_effects[light_propagation_volumes_render_stage]->apply( 4, 0 );
+			backend::ref( ).set_ps_constant( m_c_light_color, light_color );
+			backend::ref( ).set_ps_constant( m_c_light_intensity, light_intensity );
+
+			m_context->set_w( *instance.m_transform );
+			instance.set_constants( );
+			geometry.lpv_pass_geom->apply( );
+			backend::ref( ).render_indexed(
+				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+				geometry.primitive_count * 3,
+				0,
+				0
+			);
+			statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
+		}
+	}
+
+	backend::ref( ).reset_render_targets( );
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).set_viewport( orig_viewport );
+	m_context->pop_v( );
+	m_context->pop_p( );
 }
 
-bool remove_model_if_in_frustum_predicate::operator()( lpv_render_surface const& )
+bool remove_model_if_in_frustum_predicate::operator()( lpv_render_surface const& surface )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7d230]
+	math::aabb bbox = surface.surface->m_parent->get_aabb( );
+	bbox *= 2.0f;
+	bbox.modify( *surface.surface->m_transform );
+
+	if ( m_frustum->test_inexact( bbox ) == math::intersection_inside )
+	{
+		statistics::ref( ).lpv_stat_group.num_clipped_dips.value++;
+		return true;
+	}
+
 	return false;
 }
 
 void stage_light_propagation_volumes::render_to_rms_smoothed2(
-	float3 const&,
-	float,
-	float4x4 const&,
-	float4x4 const&,
-	vector<float4x4>,
-	u32,
-	u32,
-	u32
+	float3 const&		light_color,
+	float const			light_intensity,
+	float4x4 const&	view_matrix,
+	float4x4 const&	projection_matrix,
+	vector<float4x4>	transforms,
+	u32 const			cascade_index,
+	u32 const			render_stage_index,
+	u32 const			num_render_stages
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x615f70]
+	if ( !s_draw_to_rsm_value )
+		return;
+
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_rsm_source_size );
+	tmp_viewport.Height = float( m_rsm_source_size );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref( ).set_viewport( tmp_viewport );
+
+	float4x4 real_view_projection = m_context->get_culling_vp( );
+	math::frustum view_frustum( real_view_projection );
+
+	m_context->push_set_v( view_matrix );
+	m_context->push_set_p( projection_matrix );
+
+	if ( render_stage_index == 0 )
+	{
+		device::ref( ).d3d_context( )->CopyResource(
+			m_radiance_volume[cascade_index].m_t_rms_albedo_source_temp->hw_texture( ),
+			m_radiance_volume[cascade_index].m_t_rms_albedo_source->hw_texture( )
+		);
+		device::ref( ).d3d_context( )->CopyResource(
+			m_radiance_volume[cascade_index].m_t_rms_normal_source_temp->hw_texture( ),
+			m_radiance_volume[cascade_index].m_t_rms_normal_source->hw_texture( )
+		);
+		device::ref( ).d3d_context( )->CopyResource(
+			m_radiance_volume[cascade_index].m_t_rms_position_source_temp->hw_texture( ),
+			m_radiance_volume[cascade_index].m_t_rms_position_source->hw_texture( )
+		);
+
+		backend::ref( ).set_render_targets(
+			&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source_temp,
+			&*m_radiance_volume[cascade_index].m_rt_rms_normal_source_temp,
+			&*m_radiance_volume[cascade_index].m_rt_rms_position_source_temp,
+			0
+		);
+		backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
+		backend::ref( ).set_depth_stencil_target( &*m_rms_depth_stencil_source[cascade_index] );
+		backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
+
+		vector<render_surface_instance*> caster_models;
+		m_context->scene( )->select_models(
+			m_context->get_culling_vp( ),
+			caster_models,
+			m_context->get_view_pos( ),
+			visible_flag,
+			false
+		);
+
+		vector<render_surface_instance*>::iterator it = caster_models.begin( );
+		vector<render_surface_instance*>::const_iterator end = caster_models.end( );
+		for ( ; it != end; ++it )
+		{
+			lpv_render_surface surface;
+			surface.surface = *it;
+			surface.model = surface.surface->m_parent;
+			m_caster_models[cascade_index].push_back( surface );
+		}
+
+		if ( s_lpv_dips_skipping0_value )
+		{
+			m_caster_models[cascade_index].erase(
+				std::remove_if(
+					m_caster_models[cascade_index].begin( ),
+					m_caster_models[cascade_index].end( ),
+					remove_lpv_inappropriate_models( )
+				),
+				m_caster_models[cascade_index].end( )
+			);
+		}
+
+		if ( cascade_index != 0 && s_lpv_dips_skipping1_value )
+		{
+			math::frustum prev_cascade_frustum(
+				m_previous_view_matrix[cascade_index - 1] *
+				m_previous_proj_matrix[cascade_index - 1]
+			);
+			m_caster_models[cascade_index].erase(
+				std::remove_if(
+					m_caster_models[cascade_index].begin( ),
+					m_caster_models[cascade_index].end( ),
+					remove_model_if_in_frustum_predicate( prev_cascade_frustum )
+				),
+				m_caster_models[cascade_index].end( )
+			);
+		}
+	}
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source_temp,
+		0,
+		0,
+		0
+	);
+	backend::ref( ).set_depth_stencil_target( &*m_rms_depth_stencil_source[cascade_index] );
+	for (
+		vector<float4x4>::const_iterator it = transforms.begin( ), end = transforms.end( );
+		it != end;
+		++it
+	)
+	{
+		m_context->set_w( *it );
+		m_fill_rsm_effect[null_vertex_input_type]->apply( 1, 0 );
+		m_box_geometry.draw( );
+	}
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source_temp,
+		&*m_radiance_volume[cascade_index].m_rt_rms_normal_source_temp,
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source_temp,
+		0
+	);
+
+	u32 num_render = m_caster_models[cascade_index].size( ) /
+		( num_render_stages - render_stage_index );
+	u32 render_index = 0;
+	lpv_render_surface* begin_d = m_caster_models[cascade_index].begin( );
+	lpv_render_surface* it_d = begin_d;
+	lpv_render_surface const* end_d = m_caster_models[cascade_index].end( );
+	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
+	{
+		render_surface_instance& instance = *it_d->surface;
+		material_effects& me = instance.m_render_surface->get_material_effects( );
+		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
+
+		if ( instance.m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type )
+			continue;
+
+		if ( !me.m_effects[light_propagation_volumes_render_stage] )
+			continue;
+
+		if ( !geometry.lpv_pass_geom && !geometry.geom )
+			continue;
+
+		if ( geometry.lpv_pass_geom )
+			me.m_effects[light_propagation_volumes_render_stage]->apply( 2, 0 );
+		else
+			me.m_effects[light_propagation_volumes_render_stage]->apply( 4, 0 );
+
+		backend::ref( ).set_ps_constant( m_c_light_color, light_color );
+		backend::ref( ).set_ps_constant( m_c_light_intensity, light_intensity );
+
+		m_context->set_w( *instance.m_transform );
+		instance.set_constants( );
+		if ( geometry.lpv_pass_geom )
+			geometry.lpv_pass_geom->apply( );
+		else
+			geometry.geom->apply( );
+
+		statistics::ref( ).lpv_stat_group.num_dips.value++;
+		switch ( cascade_index )
+		{
+		case 0:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_0.value++;
+			break;
+		case 1:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_1.value++;
+			break;
+		case 2:
+			statistics::ref( ).lpv_stat_group.num_dips_in_cascade_2.value++;
+			break;
+		}
+
+		backend::ref( ).render_indexed(
+			D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			geometry.primitive_count * 3,
+			0,
+			0
+		);
+		statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
+	}
+
+	m_caster_models[cascade_index].erase( begin_d, it_d );
+
+	backend::ref( ).reset_render_targets( );
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).set_viewport( orig_viewport );
+	m_context->pop_v( );
+	m_context->pop_p( );
 }
 
 static float3 compute_aligment( float3 const& lightXZshift, float4x4 const& light_space_transform, float smap_res )
