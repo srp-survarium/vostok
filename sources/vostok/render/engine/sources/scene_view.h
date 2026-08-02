@@ -179,6 +179,7 @@ public:
 
 private:
 	friend class renderer;
+	friend class stage_atmosphere;
 
 	void inc_render_frame_index( ) { ++m_render_frame_index; }
 
