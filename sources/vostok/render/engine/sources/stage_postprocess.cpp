@@ -557,17 +557,16 @@ float4 stage_postprocess::compute_luminance_parameters( u32 frame_delta )
 
 void stage_postprocess::execute_disabled( )
 {
-	// FUNCTION BODY[0x608770]
-	// claude@NOTE: legacy PIX_EVENT( stage_postprocess) dropped - zero PIX symbols in target
-
 	if (!is_effects_ready())
 		return;
 
 	m_sh_effect_copy_image->apply	(effect_copy_image::copy_rewrite, 0);
-	backend::ref().set_ps_texture	( "t_base", &*m_context->m_targets->m_family[rt_generic_0].texture);
+	backend::ref().set_ps_texture	( "t_base", &*m_context->get_t(rt_generic_0));
 	backend::ref().set_ps_constant	(m_gamma_correction_factor, 1.0f);
-	fill_surface					(m_context->m_targets->m_family[rt_present].target, render_target_ptr( ));
+	fill_surface					(m_context->get_rt(rt_present), render_target_ptr( ));
 	m_context->set_w				(float4x4().identity());
+
+	m_prev_view_matrix = m_context->get_v();
 }
 
 void stage_postprocess::process_blur(
