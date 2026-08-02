@@ -16,7 +16,7 @@ inline void constants_handler< shader_type >::set_constant(
 	COMPILE_ASSERT(	constant_type_traits<T>::value == true, Only_types_described_in_constant_h_are_supported );
 
 	u32 buffer_index = c.shader_slot(shader_type).buffer_index();
-	if( c.m_update_markers[shader_type] == backend::ref().m_constant_update_markers[shader_type]
+	if( c.m_update_markers[shader_type] == backend::ref().get_constants_marker<shader_type>( )
 		&& ( buffer_index = c.shader_slot(shader_type).buffer_index()) != slot_dest_buffer_null)
 	{
 		ASSERT( c.shader_slot(shader_type).array_size() == 1, "Single shader constant can't be set into an array.");
@@ -49,7 +49,7 @@ inline void constants_handler< shader_type >::set_constant_array(
 	COMPILE_ASSERT(	constant_type_traits<T>::value == true, Only_types_described_in_constant_h_are_supported );
 
 	u32 buffer_index;
-	if( c.m_update_markers[shader_type] == backend::ref().constant_update_counter()
+	if( c.m_update_markers[shader_type] == backend::ref().get_constants_marker<shader_type>( )
 		&& ( buffer_index = c.shader_slot(shader_type).buffer_index()) != slot_dest_buffer_null)
 	{
 		// == may be changed to <

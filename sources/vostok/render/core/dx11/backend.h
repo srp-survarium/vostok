@@ -181,7 +181,10 @@ public:
 	void on_device_create( ID3D11Device* device );
 	void on_device_destroy( );
 	void reset_constant_update_markers( );
-	u32 constant_update_counter( ) const { return m_constant_update_counter; }
+	u32 constant_update_counter( ) { return m_constant_update_counter; }
+
+	template < enum_shader_type shader_type >
+	u32 get_constants_marker( );
 	bool valid_output_window( ) const;
 	void set_user_output( bool enabled, u32 width, u32 height );
 	ID3D11RenderTargetView* get_base_rt( ) const { return m_base_rt; }
