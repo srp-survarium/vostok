@@ -853,14 +853,54 @@ void stage_light_propagation_volumes::render_quad( )
 }
 
 void stage_light_propagation_volumes::downsample_rsm(
-	float3 const&,
-	float3 const&,
-	float,
-	u32
+	float3 const&	light_direction,
+	float3 const&	grid_origin,
+	float const		grid_scale,
+	u32 const		cascade_index
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x615d50]
+	m_downsample_rsm_effect->apply( 0, 0 );
+	set_rsm_contants( light_direction, grid_origin, grid_scale );
+
+	backend::ref( ).set_render_targets(
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo,
+		&*m_radiance_volume[cascade_index].m_rt_rms_normal,
+		&*m_radiance_volume[cascade_index].m_rt_rms_position,
+		0
+	);
+	backend::ref( ).set_depth_stencil_target( 0 );
+
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_rsm_downsampled_size );
+	tmp_viewport.Height = float( m_rsm_downsampled_size );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref( ).set_viewport( tmp_viewport );
+
+	backend::ref( ).set_ps_texture(
+		"t_lpv_rsm_albedo_source",
+		&*m_radiance_volume[cascade_index].m_t_rms_albedo_source
+	);
+	backend::ref( ).set_ps_texture(
+		"t_lpv_rsm_normal_source",
+		&*m_radiance_volume[cascade_index].m_t_rms_normal_source
+	);
+	backend::ref( ).set_ps_texture(
+		"t_lpv_rsm_position_source",
+		&*m_radiance_volume[cascade_index].m_t_rms_position_source
+	);
+
+	render_quad( );
+
+	backend::ref( ).reset_render_targets( );
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).set_viewport( orig_viewport );
 }
 
 void stage_light_propagation_volumes::inject_lighting(

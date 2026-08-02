@@ -168,8 +168,8 @@ struct radiance_volume : public boost::noncopyable {
 	);
 
 	void inject_camera_occluders( renderer_context* context );
-	void propagate_lighting( u32 cascade_index );
-	void propagate_lighting_iter( u32 cascade_index, u32 iteration_index );
+	void propagate_lighting( u32 const cascade_index );
+	void propagate_lighting_iter( u32 const cascade_index, u32 const iteration_index );
 	void prepare_final( );
 	bool is_effects_ready( ) const;
 
