@@ -24,6 +24,16 @@
 #include <vostok/render/core/options.h>
 #include "effect_post_process_mlaa.h"
 #include "effect_post_process_fxaa.h"
+#include "effect_post_process_sraa.h"
+#include "effect_post_process_sharpen.h"
+#include "effect_post_process_downsample_frame.h"
+#include "effect_image_space_reflections.h"
+#include "effect_lens_flares.h"
+#include "effect_motion_blur.h"
+#include "effect_olta.h"
+#include "effect_temporal_antialiasing.h"
+#include "effect_aberration.h"
+#include "effect_motion_vectors_accumulation.h"
 
 namespace vostok {
 namespace render {
@@ -185,22 +195,39 @@ void get_gaussain_weights_offsets(
 
 bool stage_postprocess::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x6065e0]
-	// claude@NOTE: legacy singular m_sh_blur / m_sh_complex_blend[3] checks remapped onto the
-	// canonical [8] / [2][2][2] array shapes; new sraa/sharpen/motion effects unchecked yet
 	return
 		   m_sh_gather_bloom.c_ptr() != NULL
 		&& m_sh_gather_luminance.c_ptr() != NULL
 		&& m_sh_gather_luminance_histogram.c_ptr() != NULL
 		&& m_sh_eye_adaptation.c_ptr() != NULL
 		&& m_sh_blur[0].c_ptr() != NULL
+		&& m_sh_blur[1].c_ptr() != NULL
+		&& m_sh_blur[2].c_ptr() != NULL
+		&& m_sh_blur[3].c_ptr() != NULL
+		&& m_sh_blur[4].c_ptr() != NULL
+		&& m_sh_blur[5].c_ptr() != NULL
+		&& m_sh_blur[6].c_ptr() != NULL
+		&& m_sh_blur[7].c_ptr() != NULL
+		&& m_image_space_reflections_effect.c_ptr() != NULL
 		&& m_sh_complex_blend[0][0][0].c_ptr() != NULL
 		&& m_sh_complex_blend[1][0][0].c_ptr() != NULL
 		&& m_sh_complex_blend[1][1][0].c_ptr() != NULL
+		&& m_sh_complex_blend[0][0][1].c_ptr() != NULL
+		&& m_sh_complex_blend[1][0][1].c_ptr() != NULL
+		&& m_sh_complex_blend[1][1][1].c_ptr() != NULL
 		&& m_sh_effect_copy_image.c_ptr() != NULL
-		&& m_post_process_antialiasing_shader.c_ptr() != NULL
+		&& m_lens_flares_effect.c_ptr() != NULL
+		&& m_post_process_antialiasing_shader != NULL
 		&& m_post_process_antialiasing_shader_fxaa.c_ptr() != NULL
-		&& m_god_rays_effect.c_ptr() != NULL;
+		&& m_post_process_antialiasing_shader_sraa.c_ptr() != NULL
+		&& m_post_process_shader_sharpen.c_ptr() != NULL
+		&& m_god_rays_effect.c_ptr() != NULL
+		&& m_post_process_downsample_frame_effect.c_ptr() != NULL
+		&& m_motion_blur_effect.c_ptr() != NULL
+		&& m_olta_effect.c_ptr() != NULL
+		&& m_aberration_effect.c_ptr() != NULL
+		&& m_temporal_antialiasing_effect.c_ptr() != NULL
+		&& m_motion_vectors_accumulation_effect.c_ptr() != NULL;
 }
 
 stage_postprocess::stage_postprocess(
@@ -208,6 +235,7 @@ stage_postprocess::stage_postprocess(
 	renderer_context* context
 ) :
 	stage										( in_renderer, context ),
+	m_prev_view_matrix						( float4x4().identity() ),
 	m_kernel_offsets							( 0 ),
 	m_blur_offsets_weights						( 0 ),
 	m_luminance_range_parameter_parameter			( 0 ),
@@ -229,28 +257,48 @@ stage_postprocess::stage_postprocess(
 	m_lens_flares_parameters						( 0 ),
 	m_sun_direction_parameter						( 0 ),
 	m_frame_luminance_parameter					( 0 ),
-	m_fxaa_parameters							( 0 ),
-	m_image_grain_random_offsets					( 0.0f, 0.0f )
+	m_fxaa_parameters							( 0 )
 {
-	// FUNCTION BODY[0x60b940]
-	// claude@NOTE: legacy slice - effect_blur seeded only into m_sh_blur[0] (legacy had ONE blur
-	// effect; the shipped 8-kernel family and the third complex-blend axis, sraa/sharpen/god-rays
-	// parameters, motion/olta/temporal/aberration effects have no legacy ancestor - matcher-phase);
-	// legacy effect_gather_sun_light_scattering_zone maps to m_god_rays_effect (rename)
 	effect_manager::ref().create_effect<effect_gather_bloom>(&m_sh_gather_bloom);
 	effect_manager::ref().create_effect<effect_gather_luminance>(&m_sh_gather_luminance);
 	effect_manager::ref().create_effect<effect_gather_luminance_histogram>(&m_sh_gather_luminance_histogram);
 	effect_manager::ref().create_effect<effect_eye_adaptation>(&m_sh_eye_adaptation);
-	effect_manager::ref().create_effect<effect_blur_3>(&m_sh_blur[0]);
+	effect_manager::ref().create_effect< effect_blur<3> >(&m_sh_blur[0]);
+	effect_manager::ref().create_effect< effect_blur<5> >(&m_sh_blur[1]);
+	effect_manager::ref().create_effect< effect_blur<7> >(&m_sh_blur[2]);
+	effect_manager::ref().create_effect< effect_blur<9> >(&m_sh_blur[3]);
+	effect_manager::ref().create_effect< effect_blur<13> >(&m_sh_blur[4]);
+	effect_manager::ref().create_effect< effect_blur<17> >(&m_sh_blur[5]);
+	effect_manager::ref().create_effect< effect_blur<21> >(&m_sh_blur[6]);
+	effect_manager::ref().create_effect< effect_blur<25> >(&m_sh_blur[7]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<false, false, false> >(&m_sh_complex_blend[0][0][0]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, false, false> >(&m_sh_complex_blend[1][0][0]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, true, false> >(&m_sh_complex_blend[1][1][0]);
+	effect_manager::ref().create_effect< effect_complex_post_process_blend<false, false, true> >(&m_sh_complex_blend[0][0][1]);
+	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, false, true> >(&m_sh_complex_blend[1][0][1]);
+	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, true, true> >(&m_sh_complex_blend[1][1][1]);
 	effect_manager::ref().create_effect<effect_copy_image>(&m_sh_effect_copy_image);
 	effect_manager::ref().create_effect<effect_post_process_mlaa>(&m_post_process_antialiasing_shader);
 	effect_manager::ref().create_effect<effect_post_process_fxaa>(&m_post_process_antialiasing_shader_fxaa);
-
+	effect_manager::ref().create_effect<effect_post_process_sraa>(&m_post_process_antialiasing_shader_sraa);
+	effect_manager::ref().create_effect<effect_post_process_sharpen>(&m_post_process_shader_sharpen);
 	effect_manager::ref().create_effect<effect_god_rays>(&m_god_rays_effect);
+	effect_manager::ref().create_effect<effect_post_process_downsample_frame>(&m_post_process_downsample_frame_effect);
+	effect_manager::ref().create_effect<effect_image_space_reflections>(&m_image_space_reflections_effect);
+	effect_manager::ref().create_effect<effect_lens_flares>(&m_lens_flares_effect);
+	effect_manager::ref().create_effect<effect_motion_blur>(&m_motion_blur_effect);
+	effect_manager::ref().create_effect<effect_olta>(&m_olta_effect);
+	effect_manager::ref().create_effect<effect_temporal_antialiasing>(&m_temporal_antialiasing_effect);
+	effect_manager::ref().create_effect<effect_aberration>(&m_aberration_effect);
 
+	u8 data[Kb];
+	effect_options_descriptor desc(data, sizeof(data));
+	desc["vertex_input_type"] = skeletal_4_bones_mesh_vertex_input_type;
+	desc["cull_mode"] = D3D11_CULL_NONE;
+	effect_manager::ref().create_effect<effect_motion_vectors_accumulation>(
+		&m_motion_vectors_accumulation_effect,
+		desc
+	);
 
 	m_blur_offsets_weights	= backend::ref().register_constant_host("offsets_weights", rc_float);
 	m_kernel_offsets		= backend::ref().register_constant_host("kernel_offsets", rc_float);
@@ -265,18 +313,22 @@ stage_postprocess::stage_postprocess(
 	m_luminance_range_parameter_parameter			 = backend::ref().register_constant_host( "luminance_range_parameter", rc_float );
 
 	m_gamma_correction_factor							= backend::ref().register_constant_host( "gamma_correction_factor", rc_float );
+	m_fxaa_parameters								= backend::ref().register_constant_host( "fxaa_parameters", rc_float );
+	m_god_rays_parameters0							= backend::ref().register_constant_host( "god_rays_parameters0", rc_float );
+	m_god_rays_parameters1							= backend::ref().register_constant_host( "god_rays_parameters1", rc_float );
+	m_god_rays_parameters2							= backend::ref().register_constant_host( "god_rays_parameters2", rc_float );
+	m_c_eye_ray_corner								= backend::ref().register_constant_host( "s_eye_ray_corner", rc_float );
+	m_c_frame_index									= backend::ref().register_constant_host( "frame_index", rc_int );
+	m_blur_target_size_parameter						= backend::ref().register_constant_host( "blur_target_size", rc_float );
+	m_lens_flares_parameters							= backend::ref().register_constant_host( "lens_flares_parameters", rc_float );
+	m_prev_view_matrix_parameter						= backend::ref().register_constant_host( "prev_view_matrix_parameter", rc_float );
+	m_prev_world_view_matrix_parameter				= backend::ref().register_constant_host( "prev_world_view_matrix_parameter", rc_float );
+	m_inverse_world_matrix_parameter					= backend::ref().register_constant_host( "inverse_world_matrix_parameter", rc_float );
+	m_frame_delta_parameter							= backend::ref().register_constant_host( "frame_delta_parameter", rc_float );
+	m_motion_blur_scale_parameter						= backend::ref().register_constant_host( "motion_blur_scale_parameter", rc_float );
+	m_aberration_parameters							= backend::ref().register_constant_host( "aberration_parameters", rc_float );
 
 	m_color_grading_base_lut = create_color_grading_base_lut(16);
-	//resource_manager::ref().create_texture("resources/textures/color_grading/color_grading_base_lut");
-
-	//m_material_post_effects.push_back(material_effects());
-
-	//vostok::resources::query_resource(
- 	//	"default_post_process_and_environment",
- 	//	resources::material_class,
- 	//	boost::bind(&stage_postprocess::on_material_loaded, this, _1),
- 	//	render::g_allocator
- 	//);
 	m_textures.resize(10, NULL);
 
 	const D3D_INPUT_ELEMENT_DESC screen_vertex_layout[] =
@@ -295,8 +347,7 @@ stage_postprocess::stage_postprocess(
 	);
 
 	m_enabled						= options::ref().current.m_enabled_post_process_stage;
-
-
+	m_image_grain_random_offsets	= float2(0.0f, 0.0f);
 }
 
 void stage_postprocess::fill_surface( render_target_ptr surf, render_target_ptr surf1 )
