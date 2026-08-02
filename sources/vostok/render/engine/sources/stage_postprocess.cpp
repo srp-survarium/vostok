@@ -510,8 +510,7 @@ void stage_postprocess::measure_per_pixel_luminance( res_texture* scene_texture,
 
 void stage_postprocess::compute_per_pixel_eye_adaptated_luminance( )
 {
-	// FUNCTION BODY[0x6088c0]
-	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();//m_material_post_effects[0].m_post_process_stage_parameters;
+	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
 
 	m_sh_eye_adaptation->apply( 0, 0 );
 
@@ -519,35 +518,28 @@ void stage_postprocess::compute_per_pixel_eye_adaptated_luminance( )
 	math::clamp							(time_delta, 0.0f, 1.0f / 30.0f);
 
 	backend::ref().set_ps_constant( m_elapsed_time_parameter, time_delta );
-	//backend::ref().set_ps_constant( m_adaptation_factor, (1.0f - math::pow(0.98f, pp_parameters.adaptation_rate * m_context->get_time_delta())) );
+
 	backend::ref().set_ps_constant( m_adaptation_factor, time_delta * (1.0f / pp_parameters.adaptation_speed));
 
 	static bool fist_pass = true;
 	if (fist_pass)
 	{
-		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture );
+		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->get_t(rt_frame_luminance0) );
 		fist_pass = false;
 	}
 	else
 	{
-		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->m_targets->m_family[rt_frame_luminance_previous].texture );
+		backend::ref().set_ps_texture( "t_previous_luminance", &*m_context->get_t(rt_frame_luminance_previous) );
 	}
 
-	backend::ref().set_ps_texture( "t_current_luminanace", &*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture );
+	backend::ref().set_ps_texture( "t_current_luminanace", &*m_context->get_t(rt_frame_luminance0) );
 	fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_current].target);
 
-	resource_manager::ref().copy2D(
-		&*m_context->m_targets->m_family[rt_frame_luminance_previous].texture,
-		0,
-		0,
-		&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
-		0,
-		0,
-		m_context->m_targets->m_family[rt_frame_luminance_current].texture->width(),
-		m_context->m_targets->m_family[rt_frame_luminance_current].texture->height(),
-		0,
-		0
-	);
+	backend::ref().flush_rt_shader_resources();
+
+	m_sh_eye_adaptation->apply( 1, 0 );
+	backend::ref().set_ps_texture( "t_luminance", &*m_context->get_t(rt_frame_luminance_current) );
+	fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_previous].target);
 }
 
 float4 stage_postprocess::compute_luminance_parameters( u32 frame_delta )
