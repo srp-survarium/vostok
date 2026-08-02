@@ -468,41 +468,44 @@ void stage_postprocess::clear_surface( render_target_ptr surf )
 
 void stage_postprocess::measure_per_pixel_luminance( res_texture* scene_texture, float4& out_avrg_min_max )
 {
-	// FUNCTION BODY[0x608b90]
 	VOSTOK_UNREFERENCED_PARAMETER(out_avrg_min_max);
 
-	s32 const last_target_index = s32(rt_num_frame_luminance_targets) - 1;
+	s32 const last_target_index = s32(rt_frame_luminance0 + rt_num_frame_luminance_targets) - 1;
 
 	m_sh_gather_luminance->apply( effect_gather_luminance::gather_log_luminance, 0 );
 	backend::ref().set_ps_texture( "t_frame_color0", scene_texture);
-	fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + last_target_index].target, render_target_ptr( ));
+	fill_surface2(m_context->m_targets->m_family[last_target_index].target);
 
-	for (s32 lum_rt_index=last_target_index-1; lum_rt_index>=0; lum_rt_index--)
+	for (s32 lum_rt_index=last_target_index-1; lum_rt_index>=rt_frame_luminance0; lum_rt_index--)
 	{
-		if (lum_rt_index==0)
+		if (lum_rt_index==rt_frame_luminance0)
 			m_sh_gather_luminance->apply( effect_gather_luminance::gather_exp_luminance, 0 );
 		else
 			m_sh_gather_luminance->apply( effect_gather_luminance::gather_luminance, 0 );
 
-		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index+1].texture);
-		fill_surface(m_context->m_targets->m_family[rt_frame_luminance0 + lum_rt_index].target, render_target_ptr( ));
+		backend::ref().set_ps_texture( "t_frame_color1", &*m_context->get_t(enum_render_target_index(lum_rt_index+1)) );
+		fill_surface2(m_context->m_targets->m_family[lum_rt_index].target);
 	}
 
+
 	post_process_parameters const& pp_parameters = m_context->scene_view()->post_process_parameters();
-//	if not using eye adaptation
 	if (math::is_similar(pp_parameters.adaptation_speed, 0.0f, 0.05f))
-		resource_manager::ref().copy2D(
-			&*m_context->m_targets->m_family[rt_frame_luminance_current].texture,
-			0,
-			0,
-			&*m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture,
-			0,
-			0,
-			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->width(),
-			m_context->m_targets->m_family[rt_frame_luminance0 + 0].texture->height(),
-			0,
-			0
-		);
+	{
+
+
+
+
+
+
+
+
+
+
+
+		m_sh_eye_adaptation->apply( 1, 0 );
+		backend::ref().set_ps_texture( "t_luminance", &*m_context->get_t(rt_frame_luminance0) );
+		fill_surface2(m_context->m_targets->m_family[rt_frame_luminance_current].target);
+	}
 }
 
 void stage_postprocess::compute_per_pixel_eye_adaptated_luminance( )
