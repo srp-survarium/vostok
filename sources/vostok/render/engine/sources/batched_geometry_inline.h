@@ -1,6 +1,10 @@
 #ifndef VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_INLINE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_INLINE_H_INCLUDED
 
+#include <vostok/render/core/backend.h>
+
+#include "renderer_context.h"
+
 namespace vostok {
 namespace render {
 
@@ -66,13 +70,32 @@ inline u32 batched_geometry< Vertex >::get_num_visible_batches( u32 index ) cons
 
 template < typename Vertex >
 inline void batched_geometry< Vertex >::for_each_batch_render(
-	renderer_context*,
-	boost::function<void ( geometry_batch const& )> const&,
-	boost::function<void ( geometry_batch const& )> const&
+	renderer_context*												context,
+	boost::function<void ( geometry_batch const& )> const&	pre_render,
+	boost::function<void ( geometry_batch const& )> const&	post_render
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x7d2d0] for <lpv_vertex>
+	if ( m_geometry_batches.size( ) == 0 )
+		return;
+
+	geometry_batch const* end = m_geometry_batches.end( );
+	math::frustum view_frustum( context->get_culling_vp( ) );
+	for ( geometry_batch* it = m_geometry_batches.begin( ); it != end; ++it )
+	{
+		if ( view_frustum.test_inexact( it->bbox ) == math::intersection_outside )
+			continue;
+
+		it->geometry->apply( );
+		pre_render( *it );
+		backend::ref( ).render_indexed(
+			D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			it->num_indices,
+			0,
+			0
+		);
+		post_render( *it );
+	}
 }
 
 template < typename Vertex >
