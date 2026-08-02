@@ -1224,37 +1224,34 @@ void stage_postprocess::execute( )
 	}
 
 	float3 const* const eye_rays = m_context->get_eye_rays( );
-	VOSTOK_UNREFERENCED_PARAMETER( eye_rays );
 
 	if ( s_debug_pp_8 )
 	{
 		m_olta_effect->apply( 0, 0 );
 		fill_surface2( m_context->get_rt( rt_albedo ) );
+
 		backend::ref( ).flush_rt_shader_resources( );
+
 		m_olta_effect->apply( 1, 0 );
 		fill_surface2( m_context->get_rt( rt_present ) );
 	}
 
+
 	if ( options::ref( ).current.m_use_temporal_antialiasing )
 	{
+
 		device::ref( ).d3d_context( )->CopyResource(
 			m_context->get_t( rt_albedo )->hw_texture( ),
 			m_context->get_t( rt_present )->hw_texture( )
 		);
+
 		m_temporal_antialiasing_effect->apply( 0, 0 );
-		backend::ref( ).set_ps_constant(
-			m_prev_view_matrix_parameter,
-			transpose( m_prev_view_matrix )
-		);
-		backend::ref( ).set_ps_constant(
-			m_blur_target_size_parameter,
-			m_context->get_screen_resolution( )
-		);
-		backend::ref( ).set_ps_constant(
-			m_c_frame_index,
-			m_context->scene_view( )->get_render_frame_index( ) & 1
-		);
+		backend::ref( ).set_ps_constant( m_prev_view_matrix_parameter, transpose( m_prev_view_matrix ) );
+		backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
+		backend::ref( ).set_ps_constant( m_c_frame_index, m_context->scene_view( )->get_render_frame_index( ) & 1 );
 		fill_surface2( m_context->get_rt( rt_present ) );
+
+
 		device::ref( ).d3d_context( )->CopyResource(
 			m_context->get_t( rt_previous_present )->hw_texture( ),
 			m_context->get_t( rt_albedo )->hw_texture( )
@@ -1262,8 +1259,7 @@ void stage_postprocess::execute( )
 	}
 
 	if ( options::ref( ).current.m_use_motion_blur ||
-		 ( options::ref( ).current.m_use_motion_vectors_in_taa &&
-		   options::ref( ).current.m_use_temporal_antialiasing ) )
+		 ( options::ref( ).current.m_use_motion_vectors_in_taa && options::ref( ).current.m_use_temporal_antialiasing ) )
 	{
 		if ( options::ref( ).current.m_use_temporal_antialiasing ||
 			 options::ref( ).current.m_post_process_quality )
@@ -1273,58 +1269,49 @@ void stage_postprocess::execute( )
 		}
 	}
 
-	if ( options::ref( ).current.m_use_temporal_antialiasing ||
-		 options::ref( ).current.m_post_process_quality )
+	if ( ( options::ref( ).current.m_use_temporal_antialiasing ||
+		   options::ref( ).current.m_post_process_quality ) &&
+		 options::ref( ).current.m_use_motion_blur )
 	{
-		if ( options::ref( ).current.m_use_motion_blur )
-		{
-			backend::ref( ).flush_rt_shader_resources( );
-			m_motion_blur_effect->apply( 0, 0 );
-			backend::ref( ).set_ps_constant(
-				m_prev_view_matrix_parameter,
-				transpose( m_prev_view_matrix )
-			);
-			backend::ref( ).set_ps_constant(
-				m_blur_target_size_parameter,
-				m_context->get_screen_resolution( )
-			);
-			backend::ref( ).set_ps_constant(
-				m_frame_delta_parameter,
-				m_context->get_time_delta( )
-			);
-			backend::ref( ).set_ps_constant(
-				m_motion_blur_scale_parameter,
-				options::ref( ).current.m_motion_blur_scale
-			);
-			fill_surface2( m_context->get_rt( rt_albedo ) );
-			device::ref( ).d3d_context( )->CopyResource(
-				m_context->get_t( rt_present )->hw_texture( ),
-				m_context->get_t( rt_albedo )->hw_texture( )
-			);
-		}
+		backend::ref( ).flush_rt_shader_resources( );
 
-		if ( options::ref( ).current.m_post_process_quality &&
-			 pp_parameters.use_aberration )
-		{
-			m_aberration_effect->apply( 0, 0 );
-			backend::ref( ).set_ps_constant(
-				m_aberration_parameters,
-				float4(
-					pp_parameters.aberration_max_variance,
-					pp_parameters.aberration_min_variance,
-					pp_parameters.aberration_power,
-					0.0f
-				)
-			);
-			fill_surface2( m_context->get_rt( rt_albedo ) );
-			device::ref( ).d3d_context( )->CopyResource(
-				m_context->get_t( rt_present )->hw_texture( ),
-				m_context->get_t( rt_albedo )->hw_texture( )
-			);
-		}
+
+		m_motion_blur_effect->apply( 0, 0 );
+		backend::ref( ).set_ps_constant( m_prev_view_matrix_parameter, transpose( m_prev_view_matrix ) );
+		backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ((float4*)eye_rays)[0] );
+		backend::ref( ).set_ps_constant( m_frame_delta_parameter, m_context->get_time_delta( ) );
+		backend::ref( ).set_ps_constant( m_motion_blur_scale_parameter, options::ref( ).current.m_motion_blur_scale );
+		fill_surface2( m_context->get_rt( rt_albedo ) );
+
+		device::ref( ).d3d_context( )->CopyResource(
+			m_context->get_t( rt_present )->hw_texture( ),
+			m_context->get_t( rt_albedo )->hw_texture( )
+		);
+	}
+	if ( options::ref( ).current.m_post_process_quality &&
+		 pp_parameters.use_aberration )
+	{
+		m_aberration_effect->apply( 0, 0 );
+		backend::ref( ).set_ps_constant(
+			m_aberration_parameters,
+			float4(
+				pp_parameters.aberration_max_variance,
+				pp_parameters.aberration_min_variance,
+				pp_parameters.aberration_power,
+				0.0f
+			)
+		);
+		fill_surface2( m_context->get_rt( rt_albedo ) );
+
+		device::ref( ).d3d_context( )->CopyResource(
+			m_context->get_t( rt_present )->hw_texture( ),
+			m_context->get_t( rt_albedo )->hw_texture( )
+		);
 	}
 
 	m_prev_view_matrix = m_context->get_v( );
+
+
 	m_context->set_w( float4x4( ).identity( ) );
 }
 
