@@ -13,15 +13,15 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,824 / 12,915 functions exact (29.61%) &middot; 5,583 / 12,915 functions exact-max (43.23%) &middot; 63.16% fuzzy &middot; 63.37% fuzzy-max.**
+**Overall: 3,799 / 12,915 functions exact (29.42%) &middot; 5,584 / 12,915 functions exact-max (43.24%) &middot; 62.69% fuzzy &middot; 63.46% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 294 / 2,647 (11.1%) | 294 / 2,647 (11.1%) | 43.6% |     43.6% |
-| `game`          |   141 | 247 / 1,498 (16.5%) | 392 / 1,498 (26.2%) | 45.0% |     45.4% |
-| `core`          |   136 | 425 / 1,320 (32.2%) | 802 / 1,320 (60.8%) | 82.7% |     83.1% |
+| `render`        |   351 | 294 / 2,647 (11.1%) | 294 / 2,647 (11.1%) | 43.9% |     43.9% |
+| `game`          |   141 | 248 / 1,498 (16.6%) | 393 / 1,498 (26.2%) | 45.0% |     45.5% |
+| `core`          |   136 | 399 / 1,320 (30.2%) | 802 / 1,320 (60.8%) | 74.9% |     83.1% |
 | `vostok`        |   112 | 471 / 1,252 (37.6%) | 598 / 1,252 (47.8%) | 70.6% |     70.8% |
 | `game_core`     |   189 | 333 / 1,171 (28.4%) | 511 / 1,171 (43.6%) | 81.7% |     81.8% |
 | `animation`     |   102 |   316 / 763 (41.4%) |   369 / 763 (48.4%) | 50.1% |     50.2% |
