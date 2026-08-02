@@ -20,7 +20,11 @@
 #include "scene.h"
 #include "lights_db.h"
 #include "light.h"
+#include "material_effects.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 #include "renderer_context_targets.h"
+#include <vostok/render/facade/render_stage_types.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/effect_options_descriptor.h>
 #include "statistics.h"
@@ -725,18 +729,119 @@ void stage_postprocess::advanced_bloom( )
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 }
 
-bool remove_model_skeletal_filter_predicate::operator()( render_surface_instance* )
+bool remove_model_skeletal_filter_predicate::operator()( render_surface_instance* in_model )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x7fbf0]
-	return false;
+	material_effects& effects = in_model->m_render_surface->get_material_effects( );
+
+	if ( !effects.m_effects[gbuffer_render_stage] )
+		return true;
+
+	bool result =
+		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type ||
+		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_3_bones_mesh_vertex_input_type ||
+		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_2_bones_mesh_vertex_input_type ||
+		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_1_bones_mesh_vertex_input_type;
+
+	if ( m_inverse_flag )
+		result = !result;
+
+	return result;
 }
 
 void stage_postprocess::accumulate_motion_vectors( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x607b00]
-	// claude@NOTE: no legacy ancestor - motion-vector accumulation postdates the legacy corpus
+	backend::ref( ).reset_depth_stencil_target( );
+	backend::ref( ).set_render_targets(
+		&*m_context->get_rt( rt_object_motion_vectors ),
+		0,
+		0,
+		0
+	);
+	backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
+
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_context->get_rt( rt_object_motion_vectors )->width( ) );
+	tmp_viewport.Height = float( m_context->get_rt( rt_object_motion_vectors )->height( ) );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = 1.0f;
+	backend::ref( ).set_viewport( tmp_viewport );
+
+	vector< render_surface_instance* > visible_models;
+	vector< render_surface_instance* > visible_moved_models;
+	visible_models.reserve( 1024 );
+	visible_moved_models.reserve( 256 );
+	visible_models = m_context->get_scene_view( )->get_visible_opaque_models( );
+	visible_moved_models = m_context->get_scene_view( )->get_visible_moved_opaque_models( );
+
+	visible_models.erase(
+		std::remove_if(
+			visible_models.begin( ),
+			visible_models.end( ),
+			remove_model_skeletal_filter_predicate( true )
+		),
+		visible_models.end( )
+	);
+	visible_moved_models.erase(
+		std::remove_if(
+			visible_moved_models.begin( ),
+			visible_moved_models.end( ),
+			remove_model_skeletal_filter_predicate( false )
+		),
+		visible_moved_models.end( )
+	);
+
+	render_surface_instance** it = visible_moved_models.begin( );
+	for ( ; it != visible_moved_models.end( ); ++it )
+		visible_models.push_back( *it );
+
+	it = visible_models.begin( );
+	for ( ; it != visible_models.end( ); ++it )
+	{
+		render_surface_instance& instance = **it;
+		material_effects& effects = instance.m_render_surface->get_material_effects( );
+
+		m_context->set_w( *instance.m_transform );
+		effects.m_effects[gbuffer_render_stage]->apply( 6, 0 );
+
+		float4x4 local_to_world = *instance.m_transform;
+		float4x4 prev_world_matrix = local_to_world;
+
+		if ( m_prev_matrix_map.find( &instance ) != m_prev_matrix_map.end( ) )
+		{
+			prev_world_matrix = m_prev_matrix_map[&instance];
+			m_prev_matrix_map[&instance] = local_to_world;
+		}
+		else
+		{
+			m_prev_matrix_map.insert( std::make_pair( &instance, *instance.m_transform ) );
+		}
+
+		local_to_world.try_invert( local_to_world );
+		backend::ref( ).set_ps_constant(
+			m_prev_world_view_matrix_parameter,
+			transpose( mul4x3( prev_world_matrix, m_prev_view_matrix ) )
+		);
+		backend::ref( ).set_ps_constant(
+			m_inverse_world_matrix_parameter,
+			transpose( local_to_world )
+		);
+
+		instance.set_constants( );
+		instance.m_render_surface->m_render_geometry.geom->apply( );
+		backend::ref( ).render_indexed(
+			D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+			instance.m_render_surface->m_render_geometry.primitive_count * 3,
+			0,
+			0
+		);
+	}
+
+	backend::ref( ).set_viewport( orig_viewport );
 }
 
 void stage_postprocess::execute( )

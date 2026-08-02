@@ -49,6 +49,9 @@ enum enum_render_target_enum {
 #define render_output_default reinterpret_cast< res_render_output* >( 0xFFFFFFFF )
 
 class backend : public quasi_singleton<backend> {
+	template < enum_shader_type shader_type >
+	friend class constants_handler;
+
 public:
 	backend( );
 	~backend( );
