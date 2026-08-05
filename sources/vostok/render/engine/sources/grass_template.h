@@ -11,16 +11,14 @@ namespace render {
 struct grass_instance;
 
 struct grass_template {
-	grass_template( u32 in_index, grass_render_model_ptr const& in_model_ptr );
+	grass_template( u32 const in_index, grass_render_model_ptr const& in_model_ptr );
 	~grass_template( );
 
 	void apply( )
 	{
 	}
 
-private:
-	friend struct grass_world;
-
+public:
 	grass_render_model_ptr m_render_model;
 	u32 m_index;
 	vector<grass_instance*> m_instances;

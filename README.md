@@ -13,37 +13,37 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,825 / 12,915 functions exact (29.62%) &middot; 5,584 / 12,915 functions exact-max (43.24%) &middot; 64.03% fuzzy &middot; 64.24% fuzzy-max.**
+**Overall: 3,828 / 12,915 functions exact (29.64%) &middot; 3,828 / 12,915 functions exact-max (29.64%) &middot; 64.59% fuzzy &middot; 64.59% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
-| `render`        |   351 | 297 / 2,647 (11.2%) | 297 / 2,647 (11.2%) | 46.5% |     46.5% |
-| `game`          |   141 | 247 / 1,498 (16.5%) | 392 / 1,498 (26.2%) | 45.0% |     45.4% |
-| `core`          |   136 | 425 / 1,320 (32.2%) | 802 / 1,320 (60.8%) | 82.7% |     83.1% |
-| `vostok`        |   112 | 469 / 1,252 (37.5%) | 596 / 1,252 (47.6%) | 70.6% |     70.8% |
-| `game_core`     |   189 | 333 / 1,171 (28.4%) | 511 / 1,171 (43.6%) | 81.7% |     81.8% |
-| `animation`     |   102 |   316 / 763 (41.4%) |   369 / 763 (48.4%) | 50.1% |     50.2% |
-| `ai`            |   124 |   294 / 690 (42.6%) |   421 / 690 (61.0%) | 87.7% |     87.8% |
-| `sound`         |    69 |   216 / 509 (42.4%) |   357 / 509 (70.1%) | 72.6% |     72.8% |
-| `collision`     |    52 |   331 / 503 (65.8%) |   427 / 503 (84.9%) | 96.2% |     96.4% |
-| `scaleform`     |    47 |   170 / 453 (37.5%) |   211 / 453 (46.6%) | 57.8% |     57.8% |
-| `particle`      |    25 |   142 / 400 (35.5%) |   249 / 400 (62.2%) | 79.7% |     79.9% |
-| `vfs`           |    71 |   158 / 390 (40.5%) |   164 / 390 (42.1%) | 87.2% |     87.2% |
-| `ui`            |    27 |   133 / 227 (58.6%) |   193 / 227 (85.0%) | 80.2% |     80.4% |
-| `physics`       |    14 |    51 / 197 (25.9%) |    88 / 197 (44.7%) | 69.1% |     71.2% |
-| `fs`            |    25 |    60 / 165 (36.4%) |    73 / 165 (44.2%) | 84.0% |     84.2% |
-| `engine`        |    22 |    47 / 162 (29.0%) |   118 / 162 (72.8%) | 85.4% |     86.2% |
-| `network`       |    25 |    30 / 158 (19.0%) |    69 / 158 (43.7%) | 84.8% |     85.4% |
-| `network_core`  |    22 |    25 / 127 (19.7%) |    35 / 127 (27.6%) | 83.9% |     84.1% |
-| `debug`         |    16 |    21 / 122 (17.2%) |   111 / 122 (91.0%) | 96.2% |     96.8% |
-| `logging`       |    10 |     31 / 72 (43.1%) |     33 / 72 (45.8%) | 91.2% |     91.2% |
-| `input`         |     9 |     21 / 53 (39.6%) |     41 / 53 (77.4%) | 87.8% |     88.2% |
-| `survarium`     |     5 |       2 / 22 (9.1%) |     14 / 22 (63.6%) | 85.0% |     86.3% |
-| `ai_navigation` |     3 |      6 / 14 (42.9%) |     13 / 14 (92.9%) | 93.5% |     98.1% |
+| `render`        |   351 | 300 / 2,647 (11.3%) | 300 / 2,647 (11.3%) | 48.3% |     48.3% |
+| `game`          |   141 | 248 / 1,498 (16.6%) | 248 / 1,498 (16.6%) | 45.0% |     45.0% |
+| `core`          |   136 | 425 / 1,320 (32.2%) | 425 / 1,320 (32.2%) | 82.7% |     82.7% |
+| `vostok`        |   112 | 468 / 1,252 (37.4%) | 468 / 1,252 (37.4%) | 70.8% |     70.8% |
+| `game_core`     |   189 | 333 / 1,171 (28.4%) | 333 / 1,171 (28.4%) | 81.7% |     81.7% |
+| `animation`     |   102 |   316 / 763 (41.4%) |   316 / 763 (41.4%) | 50.1% |     50.1% |
+| `ai`            |   124 |   294 / 690 (42.6%) |   294 / 690 (42.6%) | 87.7% |     87.7% |
+| `sound`         |    69 |   216 / 509 (42.4%) |   216 / 509 (42.4%) | 72.6% |     72.6% |
+| `collision`     |    52 |   331 / 503 (65.8%) |   331 / 503 (65.8%) | 96.2% |     96.2% |
+| `scaleform`     |    47 |   170 / 453 (37.5%) |   170 / 453 (37.5%) | 57.7% |     57.7% |
+| `particle`      |    25 |   142 / 400 (35.5%) |   142 / 400 (35.5%) | 79.7% |     79.7% |
+| `vfs`           |    71 |   158 / 390 (40.5%) |   158 / 390 (40.5%) | 87.2% |     87.2% |
+| `ui`            |    27 |   133 / 227 (58.6%) |   133 / 227 (58.6%) | 80.2% |     80.2% |
+| `physics`       |    14 |    51 / 197 (25.9%) |    51 / 197 (25.9%) | 69.1% |     69.1% |
+| `fs`            |    25 |    60 / 165 (36.4%) |    60 / 165 (36.4%) | 84.0% |     84.0% |
+| `engine`        |    22 |    47 / 162 (29.0%) |    47 / 162 (29.0%) | 85.4% |     85.4% |
+| `network`       |    25 |    30 / 158 (19.0%) |    30 / 158 (19.0%) | 84.8% |     84.8% |
+| `network_core`  |    22 |    25 / 127 (19.7%) |    25 / 127 (19.7%) | 83.9% |     83.9% |
+| `debug`         |    16 |    21 / 122 (17.2%) |    21 / 122 (17.2%) | 96.2% |     96.2% |
+| `logging`       |    10 |     31 / 72 (43.1%) |     31 / 72 (43.1%) | 91.2% |     91.2% |
+| `input`         |     9 |     21 / 53 (39.6%) |     21 / 53 (39.6%) | 87.8% |     87.8% |
+| `survarium`     |     5 |       2 / 22 (9.1%) |       2 / 22 (9.1%) | 85.0% |     85.0% |
+| `ai_navigation` |     3 |      6 / 14 (42.9%) |      6 / 14 (42.9%) | 93.5% |     93.5% |
 
-_Updated 2026-08-02 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
+_Updated 2026-08-05 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements
@@ -255,7 +255,33 @@ python3 scripts/match_db.py tried --done
 # QUANTITY is real (recoverable statements) vs a stale label (0/0 STRUCTURE MATCH) vs blocked.
 pdb_fetch --target-index binaries/rich/target/index.jsonl --base-index binaries/rich/base/index.jsonl \
   --function 'weapon_core::tick' --view structure-diff
+
+# Raw CodeView topology around one target function: exact procedure/frame/scope
+# records, PDB line lengths, TPI neighbors, the owning class field-list entry,
+# and physical/module-level symbol neighbors. Adjacency sections are explicitly
+# labelled heuristic; explicit references and class bindings are authoritative.
+pdb_topology --pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --module render_engine_world_pc_dx11 --function 'world::draw_scene'
+
+# Compare the same raw evidence while ignoring PDB-local RVA/type-index churn.
+pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb \
+  --module render_engine_world_pc_dx11 --function 'world::draw_scene'
+
+# Compare every complete target class/struct/interface definition to base.
+# Text prints differing/missing classes; --json preserves the complete model.
+pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes
+
+# Narrow a class audit without changing whole-scan semantics.
+pdb_topology --target-pdb "$SURVARIUM_BIN/survarium.pdb" \
+  --base-pdb binaries/Win32/survarium-dx11-win32-gold.pdb --classes \
+  --class 'vostok::render::engine::world'
 ```
+
+See [`pdb_topology.md`](docs/binary_matching/pdb_topology.md) for how to interpret
+the record-order evidence without confusing linker/type deduplication with source
+order.
 
 **`cls` (structure class)** is the DB's *approximate* shape verdict (the
 authoritative one is the structure-verifier's `pdb_fetch --view structure-diff`;

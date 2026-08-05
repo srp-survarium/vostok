@@ -50,24 +50,24 @@ public:
 	void prepare_models(
 		vector<render_surface_instance*>&	caster_models,
 		float4x4 const&						original_view_projection,
-		u32									cascade_index,
-		u32									shadow_map_size,
+		u32 const							cascade_index,
+		u32 const							shadow_map_size,
 		float3 const&						view_position
 	);
 
 	void render_models(
 		vector<render_surface_instance*>&	caster_models,
 		float4x4 const&						original_view_projection,
-		u32									cascade_index,
-		u32									shadow_map_size,
+		u32 const							cascade_index,
+		u32 const							shadow_map_size,
 		float3 const&						real_view_position,
-		u32									pass_index,
-		u32									refresh_rate
+		u32 const							pass_index,
+		u32 const							refresh_rate
 	);
 
 	void render_dynamic_models(
-		u32				cascade_index,
-		u32				shadow_map_size,
+		u32 const		cascade_index,
+		u32 const		shadow_map_size,
 		float3 const&	view_position
 	);
 

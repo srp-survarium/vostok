@@ -9,6 +9,7 @@
 #include "grass_patch.h"
 #include "grass_world.h"
 #include "renderer_context.h"
+#include "scene_view.h"
 #include "statistics.h"
 #include "system_renderer.h"
 
@@ -17,6 +18,12 @@ namespace render {
 
 static bool s_draw_grass_debug_value				=	false;
 static vostok::console_commands::cc_bool s_draw_grass_debug("draw_grass_debug", s_draw_grass_debug_value, false, vostok::console_commands::command_type_engine_internal);
+
+static bool s_use_grass_patches_sorting_value	=	true;
+static vostok::console_commands::cc_bool s_use_grass_patches_sorting("use_grass_patches_sorting", s_use_grass_patches_sorting_value, false, vostok::console_commands::command_type_engine_internal);
+
+static bool s_use_grass_instances_sorting_value	=	false;
+static vostok::console_commands::cc_bool s_use_grass_instances_sorting("use_grass_instances_sorting", s_use_grass_instances_sorting_value, false, vostok::console_commands::command_type_engine_internal);
 
 static u32 point_random_x;
 static u32 point_random_z;
@@ -28,7 +35,6 @@ static u32 model_scale_random;
 void setup_seed_clk( );
 
 typedef vector<grass_patch*>	grass_patches_type;
-typedef vector<grass_template*>	grass_templates_type;
 typedef vector<grass_instance*>	grass_instances_type;
 
 grass_world::grass_world( ) :
@@ -58,16 +64,14 @@ grass_world::grass_world( ) :
 	m_wind_info_parameters							=	backend::ref( ).register_constant_host( "wind_info_parameters", rc_float );
 }
 
-void grass_world::set_wind_parameters( float2 const&, float )
+void grass_world::set_wind_parameters( float2 const& dir, float const strength )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635d10]
+	backend::ref( ).set_vs_constant( m_wind_info_parameters, float3( dir.x, dir.y, strength ) );
 }
 
-void grass_world::set_patch_parameters( grass_patch* )
+void grass_world::set_patch_parameters( grass_patch* patch )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635c70]
+	backend::ref( ).set_vs_constant( m_patch_parameters, float4( patch->m_origin, 16.f ) );
 }
 
 void grass_world::set_trample_parameters( trample_desc& desc )
@@ -75,10 +79,9 @@ void grass_world::set_trample_parameters( trample_desc& desc )
 	backend::ref( ).set_ps_constant( m_trample_parameters, desc.multiplier );
 }
 
-void grass_world::set_shadow_parameters( u32 )
+void grass_world::set_shadow_parameters( u32 const )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635be0]
+	backend::ref( ).set_vs_constant( m_shadow_cascade_index_parameter, 0 );
 }
 
 grass_world::~grass_world( )
@@ -119,7 +122,7 @@ void grass_world::add_trample( trample_desc const& desc )
 	m_trample_array.push_back	( desc );
 }
 
-u32 grass_world::add_instance( u32, math::color const&, float4x4 const&, u8, float )
+u32 grass_world::add_instance( u32 const, math::color const&, float4x4 const&, u8 const, float const )
 {
 	// claude@NOTE: legacy body diverged - legacy add_instance takes explicit in_id, lacks layer/wind_scale, returns void; matcher-phase work.
 	// STATE[STUB]
@@ -127,7 +130,7 @@ u32 grass_world::add_instance( u32, math::color const&, float4x4 const&, u8, flo
 	return 0;
 }
 
-void grass_world::remove_instance( u32 in_id )
+void grass_world::remove_instance( u32 const in_id )
 {
 	// FUNCTION BODY[0x635d90]
 	grass_templates_type::const_iterator	it		=	m_templates.begin();
@@ -154,7 +157,7 @@ void grass_world::remove_instance( u32 in_id )
 	}
 }
 
-grass_template* grass_world::id_to_template( u32 id ) const
+grass_template* grass_world::id_to_template( u32 const id ) const
 {
 	// FUNCTION BODY[0x635a70]
 	grass_template* result							=	NULL;
@@ -184,16 +187,18 @@ grass_template* grass_world::find_template( grass_render_model_ptr const& model 
 grass_patch* grass_world::find_patch( float3 const& point )
 {
 	// FUNCTION BODY[0x6359c0]
-	// claude@NOTE: legacy overload also filtered by grass_template*; the canonical
-	// point-only overload drops that filter.
 	grass_patches_type::const_iterator it			=	m_patches.begin();
 	grass_patches_type::const_iterator end			=	m_patches.end();
 
 	for (; it != end; ++it)
 	{
 		grass_patch* patch							=	*it;
-		if (patch->get_aabb().min <= point &&
-			patch->get_aabb().max >= point)
+		if (
+			patch->get_aabb( ).min.x <= point.x &&
+			patch->get_aabb( ).min.z <= point.z &&
+			patch->get_aabb( ).max.x >= point.x &&
+			patch->get_aabb( ).max.z >= point.z
+		)
 		{
 			return patch;
 		}
@@ -203,15 +208,70 @@ grass_patch* grass_world::find_patch( float3 const& point )
 
 void grass_world::remove_patches( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x636ee0]
+	grass_patch** it_p					=	m_patches.begin( );
+	grass_patch* const* end_p			=	m_patches.end( );
+
+	for ( ; it_p != end_p; ++it_p )
+	{
+		grass_patch* patch				=	*it_p;
+		DELETE								( patch );
+	}
+
+	m_patches.clear( );
+	m_visible_patches.clear( );
 }
 
-void grass_world::populate( float )
+void grass_world::populate( float const patch_size_ground )
 {
-	// claude@NOTE: legacy body diverged - legacy populate has a retired patch_size_height param and instancing tail (create_patch_render_buffers); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x637b90]
+	remove_patches( );
+
+	grass_template** it					=	m_templates.begin( );
+	grass_template** end				=	m_templates.end( );
+
+	for ( ; it != end; ++it )
+	{
+		grass_template* templ			=	*it;
+
+		grass_instance** it_instance	=	templ->m_instances.begin( );
+		grass_instance** end_instance	=	templ->m_instances.end( );
+
+		for ( ; it_instance != end_instance; ++it_instance )
+		{
+			grass_instance* instance	=	*it_instance;
+			float3 origin				=	instance->m_transform.c.xyz( );
+			float3 origin_aligned		=	float3(
+				math::floor( origin.x / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f,
+				0.f,
+				math::floor( origin.z / patch_size_ground ) * patch_size_ground + patch_size_ground * .5f
+			);
+
+			grass_patch* new_patch		=	find_patch( origin_aligned );
+			if ( !new_patch )
+			{
+				new_patch					=	NEW( grass_patch )(
+					m_patches_tree,
+					templ,
+					origin_aligned,
+					patch_size_ground
+				);
+				m_patches.push_back		( new_patch );
+				new_patch->m_instances.push_back( instance );
+			}
+			else
+			{
+				new_patch->m_instances.push_back( instance );
+			}
+		}
+	}
+
+	grass_patch** it_patch				=	m_patches.begin( );
+	grass_patch* const* end_patch		=	m_patches.end( );
+	for ( ; it_patch != end_patch; ++it_patch )
+	{
+		grass_patch* patch				=	*it_patch;
+		patch->init_collision( );
+		patch->merge_instances( );
+	}
 }
 
 void grass_world::merge_patches( )
@@ -278,28 +338,44 @@ void grass_world::render_debug( renderer_context* context )
 	}
 }
 
-bool sort_grass_patch_predicate::operator()( grass_patch const*, grass_patch const* ) const
+bool sort_grass_patch_predicate::operator()( grass_patch const* left, grass_patch const* right ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x70670]
-	return false;
+	return math::squared_length( left->m_origin - m_view_pos ) <
+		math::squared_length( right->m_origin - m_view_pos );
 }
 
-void grass_world::process_sorting( float3 const&, bool )
+void grass_world::process_sorting( float3 const& viewer_position, bool sort_instances )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x636130]
+	if ( s_use_grass_patches_sorting_value )
+		std::sort(
+			m_visible_patches.begin( ),
+			m_visible_patches.end( ),
+			sort_grass_patch_predicate( viewer_position )
+		);
+
+	if ( !s_use_grass_instances_sorting_value || !sort_instances )
+		return;
+
+	grass_patch** it = m_visible_patches.begin( );
+	grass_patch** end = m_visible_patches.end( );
+	u32 num_sorted_patches = 0;
+	for ( ; it != end; ++it ) {
+		if ( num_sorted_patches > 5 )
+			break;
+
+		(*it)->sort_instances( viewer_position );
+		++num_sorted_patches;
+	}
 }
 
-void grass_world::process_culling( renderer_context* context, float first_lod_distance )
+void grass_world::process_culling( renderer_context* context, float const first_lod_distance )
 {
 	// FUNCTION BODY[0x6361b0]
 	m_visible_patches.clear							();
-	m_visible_patches.reserve						(256);
 
 	statistics::ref().grass_stat_group.num_total_patches.value	=	m_patches.size();
 
-	collision::objects_type objects					=	g_allocator;
+	collision::objects_type objects					(	g_allocator );
 	objects.reserve									(m_patches.size());
 
 	math::frustum view_frustum						(context->get_vp());
@@ -317,8 +393,23 @@ void grass_world::process_culling( renderer_context* context, float first_lod_di
 		if (first_lod_distance_squared < to_aabb_center_squared)
 			continue;
 
+		patch->m_current_lod_index						=	0;
+		float const distance							=	math::sqrt( to_aabb_center_squared );
+		if ( distance > options::ref( ).current.m_grass_lod1_distance )
+			patch->m_current_lod_index					=	1;
+		else if ( distance > options::ref( ).current.m_grass_lod2_distance )
+			patch->m_current_lod_index					=	2;
+
+		patch->m_current_lod_index						=	patch->get_valid_lod_index(
+			patch->m_current_lod_index
+		);
 		m_visible_patches.push_back					(patch);
 	}
+
+	process_sorting(
+		context->get_view_pos( ),
+		!( context->scene_view( )->get_render_frame_index( ) & 31 )
+	);
 }
 
 void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* in_context )
@@ -351,20 +442,57 @@ void grass_world::remove_trample( )
 }
 
 void grass_world::render(
-	renderer_context*,
-	float3 const&,
-	enum_render_stage_type,
-	u32,
-	float,
+	renderer_context*		context,
+	float3 const&			viewer_position,
+	enum_render_stage_type	stage_type,
+	u32 const				tech_index,
+	float const				draw_distance,
 	bool,
-	res_effect*,
-	bool,
-	u32
+	res_effect*				debug_effect,
+	bool					shadow_pass,
+	u32 const				cascade_index
 )
 {
-	// claude@NOTE: legacy body diverged - legacy render draws via retired per-patch instance decl/vb members and lacks debug_effect/shadow_pass/cascade_index; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x638150]
+	if ( !options::ref( ).current.m_draw_grass )
+		return;
+
+	if (
+		!m_templates.empty( ) &&
+		!m_templates.front( )->m_instances.empty( ) &&
+		m_patches.empty( )
+	)
+		m_need_populate = true;
+
+	if ( m_need_populate ) {
+		populate( 16.f );
+		m_need_populate = false;
+	}
+
+	grass_patch** it_patch = m_visible_patches.begin( );
+	grass_patch* const* end_patch = m_visible_patches.end( );
+	for ( ; it_patch != end_patch; ++it_patch ) {
+		grass_patch* patch = *it_patch;
+		if ( options::ref( ).current.m_use_hiz_occlusion_culling && patch->is_occluded( ) )
+			continue;
+
+		if ( shadow_pass ) {
+			math::frustum shadow_frustum( context->get_culling_vp( ) );
+			if ( shadow_frustum.test_inexact( patch->get_aabb( ) ) == math::intersection_outside )
+				continue;
+		}
+
+		patch->render(
+			this,
+			context,
+			viewer_position,
+			stage_type,
+			tech_index,
+			draw_distance,
+			debug_effect,
+			cascade_index
+		);
+	}
 }
 
 void grass_world::add_grass_layer( grass_layer_desc*, grass_layer_data*, bool, bool )

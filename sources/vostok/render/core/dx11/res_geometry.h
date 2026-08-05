@@ -45,15 +45,17 @@ public:
 	void apply( );
 	bool is_registered( ) const { return m_is_registered; }
 	void mark_registered( ) { m_is_registered = true; }
-	u32 get_stride( ) const { return m_vb_stride; }
-	untyped_buffer_const_ptr vertex_buffer( ) const { return &*m_vb; }
-	untyped_buffer_const_ptr intex_buffer( ) const { return &*m_ib; }
+	u32 get_stride( ) { return m_vb_stride; }
+	untyped_buffer_const_ptr vertex_buffer( ) { return &*m_vb; }
+	untyped_buffer_const_ptr intex_buffer( ) { return &*m_ib; }
 
-private:
+	public:
 	untyped_buffer_ptr m_vb;
 	untyped_buffer_ptr m_ib;
 	u32 m_vb_stride;
 	res_declaration_ptr m_dcl;
+
+	private:
 	bool m_is_registered;
 };
 

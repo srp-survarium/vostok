@@ -45,10 +45,10 @@ struct grass_patch : public boost::noncopyable {
 	STATIC_SIZE_ASSERT( sort_info, 0x14 );
 
 	grass_patch(
-		collision::space_partitioning_tree* in_collision_tree,
+		collision::space_partitioning_tree* const in_collision_tree,
 		grass_template* templ,
 		float3 const& in_origin,
-		float in_size
+		float const in_size
 	);
 	~grass_patch( );
 
@@ -71,13 +71,13 @@ struct grass_patch : public boost::noncopyable {
 		renderer_context* context,
 		float3 const& viewer_position,
 		enum_render_stage_type stage_type,
-		u32 tech_index,
-		float draw_distance,
+		u32 const tech_index,
+		float const draw_distance,
 		res_effect* debug_effect,
-		u32 cascade_index
+		u32 const cascade_index
 	);
 
-	u32 get_valid_lod_index( u32 lod_index ) const;
+	u32 get_valid_lod_index( u32 const lod_index ) const;
 
 	void update_movement_texture( renderer_context* )
 	{
@@ -92,8 +92,12 @@ struct grass_patch : public boost::noncopyable {
 		renderer_context* in_context
 	);
 
+	static s32 const num_lods = 3;
+	static s32 const mm_tex_dim = 64;
+	typedef float mm_tex_type;
+
 public:
-	float m_movement_data[64][64];
+	mm_tex_type m_movement_data[mm_tex_dim][mm_tex_dim];
 	render_target_ptr m_movement_rt;
 	res_texture_ptr m_movement_texture;
 	float3 m_prev_view_pos;
@@ -104,12 +108,12 @@ public:
 	u32 m_current_lod_index;
 	u32 m_num_avaliable_lods;
 	vector<grass_instance*> m_instances;
-	res_geometry_ptr m_geometry[3];
-	untyped_buffer_ptr m_vb_stream_1[3];
-	u16* m_merged_indices[3];
-	sort_info* m_sort_info[3];
-	u32 m_num_merged_vertices[3];
-	u32 m_num_merged_indices[3];
+	res_geometry_ptr m_geometry[num_lods];
+	untyped_buffer_ptr m_vb_stream_1[num_lods];
+	u16* m_merged_indices[num_lods];
+	sort_info* m_sort_info[num_lods];
+	u32 m_num_merged_vertices[num_lods];
+	u32 m_num_merged_indices[num_lods];
 	grass_template* m_template;
 	collision::space_partitioning_tree* const m_collision_tree;
 	collision::geometry_instance* m_collision_geometry;
