@@ -38,7 +38,7 @@ struct grass_layer_data;
 struct grass_layer_desc;
 struct grass_patch;
 class grass_render_model;
-class grass_template;
+struct grass_template;
 class renderer;
 class renderer_context;
 class res_effect;
@@ -64,6 +64,9 @@ private:
 STATIC_SIZE_ASSERT( sort_grass_patch_predicate, 0xC );
 
 struct grass_world : public resources::unmanaged_resource {
+	typedef vector<grass_template*> grass_templates_type;
+	typedef vector<trample_desc> trample_desc_array_type;
+
 	grass_world( );
 	virtual ~grass_world( );
 
@@ -71,16 +74,16 @@ struct grass_world : public resources::unmanaged_resource {
 		renderer_context* context,
 		float3 const& viewer_position,
 		enum_render_stage_type stage_type,
-		u32 tech_index,
-		float draw_distance,
+		u32 const tech_index,
+		float const draw_distance,
 		bool stencil_mask,
 		res_effect* debug_effect,
 		bool shadow_pass,
-		u32 cascade_index
+		u32 const cascade_index
 	);
 
 	void accumulate_trample( renderer* in_renderer, renderer_context* in_context );
-	void process_culling( renderer_context* context, float first_lod_distance );
+	void process_culling( renderer_context* context, float const first_lod_distance );
 	void process_sorting( float3 const& viewer_position, bool sort_instances );
 	void render_debug( renderer_context* context );
 
@@ -95,7 +98,6 @@ struct grass_world : public resources::unmanaged_resource {
 
 	u32 find_patches( grass_template*, vector<grass_patch*>& )
 	{
-		// claude@NOTE: legacy body reads grass_patch::m_template directly - public in the legacy struct, but private in the canonical grass_patch with no friend/accessor for grass_world; not portable without inventing a friend; matcher-phase work.
 		// STATE[STUB]
 		return 0;
 	}
@@ -122,7 +124,7 @@ struct grass_world : public resources::unmanaged_resource {
 
 	void remove_grass_layer( u8 id, bool do_populate );
 	void remove_trample( );
-	void populate( float patch_size_ground );
+	void populate( float const patch_size_ground );
 	void clear( );
 	void add_trample( trample_desc const& desc );
 
@@ -158,7 +160,7 @@ private:
 	void merge_patches( );
 	u32 add_template( grass_render_model_ptr const& render_model );
 
-	void remove_template( u32 in_id )
+	void remove_template( u32 const in_id )
 	{
 		vector<grass_template*>::iterator	it_t			=	m_templates.begin();
 		vector<grass_template*>::iterator	end_t			=	m_templates.end();
@@ -181,28 +183,22 @@ private:
 	}
 
 	u32 add_instance(
-		u32 template_id,
+		u32 const template_id,
 		math::color const& color,
 		float4x4 const& transform,
-		u8 layer,
-		float wind_scale
+		u8 const layer,
+		float const wind_scale
 	);
 
-	void remove_instance( u32 id );
+	void remove_instance( u32 const id );
 	void remove_instances( vector<u32> const& ids );
 	void remove_patches( );
-	grass_template* id_to_template( u32 id ) const;
+	grass_template* id_to_template( u32 const id ) const;
 	grass_template* find_template( grass_render_model_ptr const& model ) const;
 
-public:
-	void set_patch_parameters( grass_patch* patch );
-	void set_wind_parameters( float2 const& direction, float strength );
-	void set_trample_parameters( trample_desc& desc );
-	void set_shadow_parameters( u32 cascade_index );
-
 private:
-	vector<trample_desc>				m_trample_array;
-	vector<grass_template*>			m_templates;
+	trample_desc_array_type			m_trample_array;
+	grass_templates_type				m_templates;
 	vector<grass_patch*>				m_patches;
 	vector<grass_patch*>				m_visible_patches;
 	collision::space_partitioning_tree*	m_patches_tree;
@@ -218,6 +214,11 @@ private:
 	shader_constant_host*				m_wind_info_parameters;
 
 public:
+	void set_patch_parameters( grass_patch* patch );
+	void set_wind_parameters( float2 const& direction, float const strength );
+	void set_trample_parameters( trample_desc& desc );
+	void set_shadow_parameters( u32 const cascade_index );
+
 	bool m_need_populate;
 };
 

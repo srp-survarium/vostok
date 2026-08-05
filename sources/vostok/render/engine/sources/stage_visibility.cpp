@@ -4,9 +4,15 @@
 
 #include <vostok/math_aabb.h>
 #include <vostok/math_float4x4.h>
+#include <vostok/render/core/options.h>
 
+#include "grass_world.h"
+#include "hw_hiz_occlusion_manager.h"
 #include "light.h"
 #include "render_surface_instance.h"
+#include "renderer_context.h"
+#include "scene.h"
+#include "scene_view.h"
 
 namespace vostok {
 namespace render {
@@ -52,7 +58,21 @@ void stage_visibility::debug_render( )
 void stage_visibility::execute( )
 {
 	// STATE[STUB]
-	// FUNCTION BODY[0x606050]
+	if ( !options::ref( ).current.m_use_hiz_occlusion_culling )
+		frustum_culling( );
+	else {
+		m_data_ready = m_occlusion_manager->quary_and_get_results_if_ready(
+			m_static_results_array,
+			m_current_occlusion_buffer_size
+		);
+		frustum_culling( );
+		if ( m_data_ready ) {
+			occlusion_culling( );
+			m_data_ready = false;
+		}
+	}
+
+	gather_statistics( );
 }
 
 bool stage_visibility::query_data( )
@@ -65,7 +85,12 @@ bool stage_visibility::query_data( )
 void stage_visibility::frustum_culling( )
 {
 	// STATE[STUB]
-	// FUNCTION BODY[0x605760]
+	scene* render_scene = m_context->scene( );
+	if ( render_scene->get_grass( ) ) {
+		render_scene->get_grass( )->process_culling( m_context, 100.f );
+		m_context->get_scene_view( )->get_visible_grass_patches( ) =
+			render_scene->get_grass( )->get_visible_patches( );
+	}
 }
 
 void stage_visibility::occlusion_culling( )
