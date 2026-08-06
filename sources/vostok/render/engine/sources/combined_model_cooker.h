@@ -8,8 +8,9 @@ namespace vostok {
 namespace render {
 
 struct skeleton_combined_model_cook : public resources::translate_query_cook {
+	typedef resources::translate_query_cook super;
+
 	skeleton_combined_model_cook( );
-	virtual ~skeleton_combined_model_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -51,9 +52,10 @@ STATIC_SIZE_ASSERT( skeleton_combined_model_cook, 0x20 );
 class skeleton_combined_render_model_instance_cook :
 	public resources::translate_query_cook
 {
+	typedef resources::translate_query_cook super;
+
 public:
 	skeleton_combined_render_model_instance_cook( );
-	virtual ~skeleton_combined_render_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -68,8 +70,9 @@ private:
 STATIC_SIZE_ASSERT( skeleton_combined_render_model_instance_cook, 0x20 );
 
 struct skeleton_combined_model_instance_cook : public resources::translate_query_cook {
+	typedef resources::translate_query_cook super;
+
 	skeleton_combined_model_instance_cook( );
-	virtual ~skeleton_combined_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );

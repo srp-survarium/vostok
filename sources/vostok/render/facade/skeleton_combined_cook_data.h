@@ -11,10 +11,17 @@ namespace vostok {
 namespace render {
 
 struct skeleton_combined_cook_data {
-	struct model_def {
-		model_def( ) { }
-		~model_def( ) { }
+	explicit skeleton_combined_cook_data( bool owner_cook )
+	{
+		owner_is_cook = owner_cook;
+	}
 
+	fs_new::virtual_path_string		skeleton_name;
+	animation::skeleton_ptr			skeleton;
+	fs_new::virtual_path_string		bind_pose_name;
+	resources::managed_resource_ptr	bind_pose;
+	configs::binary_config_ptr		model_config;
+	struct model_def {
 		fs_new::virtual_path_string			base_model_name;
 		fs_new::virtual_path_string			part_name;
 		fs_new::virtual_path_string			material_name;
@@ -22,25 +29,7 @@ struct skeleton_combined_cook_data {
 		configs::binary_config_ptr			export_properties_config;
 		resources::unmanaged_resource_ptr	material_effects;
 		resources::managed_resource_ptr		converted_model;
-	};
-
-	// claude@NOTE: no legacy ancestor - skeleton_combined_* postdates the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	explicit skeleton_combined_cook_data( bool owner_cook )
-		: models_count( 0 ),
-		  owner_is_cook( owner_cook )
-	{
-		// FUNCTION BODY[0x62a40]
-	}
-
-	~skeleton_combined_cook_data( ) { }
-
-	fs_new::virtual_path_string		skeleton_name;
-	animation::skeleton_ptr			skeleton;
-	fs_new::virtual_path_string		bind_pose_name;
-	resources::managed_resource_ptr	bind_pose;
-	configs::binary_config_ptr		model_config;
-	model_def						model_defs[8];
+	} model_defs[8];
 	u8								models_count;
 	bool							owner_is_cook;
 };
