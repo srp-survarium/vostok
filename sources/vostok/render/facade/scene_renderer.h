@@ -2,6 +2,7 @@
 #define VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
 
 #include <boost/bind.hpp>
+#include <vostok/render/engine/sources/speedtree_instance.h>
 #include <vostok/render/engine/world.h>
 #include <vostok/render/engine/sources/cloud_parameters.h>
 #include <vostok/render/facade/cloud_key.h>
@@ -13,6 +14,66 @@
 
 namespace vostok {
 namespace render {
+
+inline void scene_renderer::set_speedtree_instance_material(
+	speedtree_instance_ptr const&			instance,
+	fs_new::virtual_path_string const&	subsurface_name,
+	resources::unmanaged_resource_ptr const&	material
+)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< fs_new::virtual_path_string > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_speedtree_instance_material,
+				&m_render_engine_world,
+				instance,
+				_1,
+				material
+			),
+			subsurface_name
+		)
+	);
+}
+
+inline void scene_renderer::set_model_material(
+	render_model_instance_ptr const&		model,
+	fs_new::virtual_path_string const&	subsurface_name,
+	resources::unmanaged_resource_ptr const&	material
+)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< fs_new::virtual_path_string > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_model_material,
+				&m_render_engine_world,
+				model,
+				_1,
+				material
+			),
+			subsurface_name
+		)
+	);
+}
+
+inline void scene_renderer::set_model_visible(
+	render_model_instance_ptr const&		model,
+	fs_new::virtual_path_string const&	subsurface_name,
+	u32								flags
+)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< fs_new::virtual_path_string > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_model_visible,
+				&m_render_engine_world,
+				model,
+				_1,
+				flags
+			),
+			subsurface_name
+		)
+	);
+}
 
 inline void scene_renderer::set_model_lod_params(
 	render_model_instance_ptr const&	model,

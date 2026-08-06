@@ -109,21 +109,21 @@ public:
 	void update_model_vertex_buffer( render_model_instance_ptr const&, vectora< buffer_fragment > const& ) { /* no source */ }
 	void update_skeleton( render_model_instance_ptr const& model, float4x4 const* matrices, u32 count );
 	void set_model_ghost_mode( render_model_instance_ptr const&, bool ) { /* no source */ }
-	void set_speedtree_instance_material(
+	inline void set_speedtree_instance_material(
 		speedtree_instance_ptr const&,
 		fs_new::virtual_path_string const&,
 		resources::unmanaged_resource_ptr const&
-	) { /* no source */ }
-	void set_model_material(
+	);
+	inline void set_model_material(
 		render_model_instance_ptr const&,
 		fs_new::virtual_path_string const&,
 		resources::unmanaged_resource_ptr const&
-	) { /* no source */ }
-	void set_model_visible(
+	);
+	inline void set_model_visible(
 		render_model_instance_ptr const&,
 		fs_new::virtual_path_string const&,
 		u32
-	) { /* no source */ }
+	);
 	void set_model_visible( render_model_instance_ptr const& model, u32 surface_id, u32 flags );
 	inline void set_model_lod_params( render_model_instance_ptr const& model, u8 type, bool use_default, float p0, float p1, float p2 );
 

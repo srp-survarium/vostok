@@ -1416,7 +1416,7 @@ void engine::world::set_model_material(
 	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
 
 	vector< render_surface_instance* >	list;
-	model->get_surfaces				( NULL, NULL, list, false, 0, 0 ); // buildability placeholder: legacy get_surfaces took ( list, false )
+	model->get_surfaces				( NULL, NULL, list, false, 0, 0 );
 
 	bool check_name = (subsurface_name.length()!=0);
 
@@ -1426,36 +1426,34 @@ void engine::world::set_model_material(
 	{
 		render_surface_instance& inst = *(*it);
 
-		bool const apply = !check_name || (inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name.c_str());
-
-		if (!apply)
-			continue;
-
-		if (!mtl_ptr)
+		if (!check_name || (inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name.c_str()))
 		{
-			inst.m_render_surface->m_materail_effects_instance = 0;
-			continue;
+			if (!mtl_ptr)
+			{
+				inst.m_render_surface->m_materail_effects_instance = 0;
+			}
+			else
+			{
+				resources::user_data_variant data_variant;
+
+				data_variant.set						(NEW(material_effects_instance_cook_data)(
+					inst.m_render_surface->get_vertex_input_type(),
+					static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
+				);
+
+				resources::query_resource_and_wait		(
+					mtl_ptr->get_material_name(),
+					resources::material_effects_instance_class,
+					boost::bind(
+						&on_model_material_effects_instance_ready,
+						_1,
+						inst.m_render_surface
+					),
+					vostok::render::g_allocator,
+					&data_variant
+				);
+			}
 		}
-
-		resources::user_data_variant data_variant;
-
-		data_variant.set						(NEW(material_effects_instance_cook_data)(
-			inst.m_render_surface->get_vertex_input_type(),
-			static_cast_resource_ptr<resources::unmanaged_resource_ptr>(mtl_ptr))
-		);
-
-		// Must be query_resource_and_wait!
-		resources::query_resource_and_wait		(
-			mtl_ptr->get_material_name(),
-			resources::material_effects_instance_class,
-			boost::bind(
-				&on_model_material_effects_instance_ready,
-				_1,
-				inst.m_render_surface
-			),
-			vostok::render::g_allocator,
-			&data_variant
-		);
 	}
 }
 
