@@ -142,9 +142,6 @@ typedef resources::resource_ptr<
 > skin_ptr;
 
 struct animated_model_instance : public resources::unmanaged_resource {
-	animated_model_instance( ) { }
-	virtual ~animated_model_instance( ) { }
-
 	render_model_instance_ptr	m_model;
 	skin_ptr					m_skin;
 	fixed_string< 32 >			m_hit_params;
