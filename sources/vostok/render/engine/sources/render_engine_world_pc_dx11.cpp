@@ -929,11 +929,9 @@ void engine::world::build_lpv_geometry( base_scene_ptr const& scene )
 	static_cast_checked<vostok::render::scene*>(scene.c_ptr())->build_lpv_geometry	( );
 }
 
-// STATE[STUB]
 void engine::world::remove_unused_environment_cubemaps( base_scene_ptr const& scene )
 {
-	// FUNCTION BODY[0x655cd0]: 0
-	// ******
+	static_cast_checked<vostok::render::scene*>(scene.c_ptr())->remove_unused_environment_cubemaps( );
 }
 
 void engine::world::clear_resources( )
