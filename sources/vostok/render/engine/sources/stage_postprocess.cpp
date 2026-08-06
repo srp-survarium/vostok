@@ -144,13 +144,8 @@ void bloom_shader_constants::set( float bloom_scale, float bloom_max_color, floa
 	backend::ref().set_ps_constant(m_bloom_parameters1, float4(halo_color, 0.0f));
 }
 
-dof_shader_constants::dof_shader_constants( ) :
-	m_dof_parameters			( 0 ),
-	m_dof_height_lights		( 0 ),
-	m_blurriness_amount		( 0 ),
-	m_bokeh_dof_parameters	( 0 )
+dof_shader_constants::dof_shader_constants( )
 {
-	// FUNCTION BODY[0x607230]
 	m_dof_height_lights		= backend::ref().register_constant_host( "dof_height_lights", rc_float );
 	m_dof_parameters		= backend::ref().register_constant_host( "dof_parameters", rc_float );
 	m_blurriness_amount		= backend::ref().register_constant_host( "blurriness_amount", rc_float );
