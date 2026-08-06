@@ -138,7 +138,6 @@ template<class T> T linear_interpolation2(T a, T b, float alpha)
 class stage_postprocess : public stage {
 public:
 	stage_postprocess( renderer* in_renderer, renderer_context* context );
-	virtual ~stage_postprocess( ) { }
 
 	virtual void execute( ) override;
 	virtual void execute_disabled( ) override;
@@ -295,10 +294,10 @@ private:
 
 	void buid_luminance_histogram_step(
 		res_texture*,
-		u32,
+		u32 const,
 		float,
 		float,
-		u32
+		u32 const
 	)
 	{
 		// claude@NOTE: no legacy ancestor - legacy has only the monolithic buid_luminance_histogram; matcher-phase work.
@@ -449,11 +448,12 @@ private:
 	vector<material_effects>		m_material_post_effects;
 	material_ptr					m_test_material;
 	float2						m_image_grain_random_offsets;
-	map<
+	typedef map<
 		render_surface_instance*,
 		float4x4,
 		std::less<render_surface_instance*>
-	>							m_prev_matrix_map;
+	>							prev_matrix_map_type;
+	prev_matrix_map_type			m_prev_matrix_map;
 };
 
 STATIC_SIZE_ASSERT( stage_postprocess, 0x23C );
