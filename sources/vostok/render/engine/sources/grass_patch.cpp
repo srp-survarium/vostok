@@ -522,7 +522,7 @@ void grass_patch::merge_instances( )
 bool grass_patch::is_occluded( ) const
 {
 	// FUNCTION BODY[0x5f3af0]
-	return m_occluded;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 } // namespace render

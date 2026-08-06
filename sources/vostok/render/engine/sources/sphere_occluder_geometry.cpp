@@ -1,4 +1,7 @@
 #include "pch.h"
+
+#include <vostok/render/core/backend.h>
+
 #include "sphere_occluder_geometry.h"
 
 namespace vostok {
@@ -13,8 +16,8 @@ sphere_occluder_geometry::sphere_occluder_geometry( )
 
 void sphere_occluder_geometry::render( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x7b2c60]
+	m_geometry->apply( );
+	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 540, 0, 0 );
 }
 
 } // namespace render

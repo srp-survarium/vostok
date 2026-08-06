@@ -4,6 +4,7 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/geometry_primitives.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/options.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/facade/render_stage_types.h>
@@ -105,7 +106,7 @@ void decal_shader_constants_and_geometry::create_decal_geometry( )
 decal_instance::decal_instance(
 	collision::space_partitioning_tree*	tree,
 	decal_properties const&				properties,
-	u32									id
+	u32 const							id
 ) :
 	m_aabb						( math::create_zero_aabb( ) ),
 	m_id						( id ),
@@ -157,10 +158,8 @@ void decal_instance::remove_collision( )
 
 bool decal_instance::is_occluded( ) const
 {
-	// STATE[STUB]
-	// claude@NOTE: no legacy ancestor (occlusion flags are canonical-only); matcher-phase.
 	// FUNCTION BODY[0x640b00]
-	return false;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 void decal_instance::set_materail_effects( resources::unmanaged_resource_ptr const& in_ptr )

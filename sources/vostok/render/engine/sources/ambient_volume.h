@@ -13,7 +13,7 @@ struct ambient_volume :
 	public resource_intrusive_base,
 	public boost::noncopyable
 {
-	ambient_volume( ambient_volume_properties const& properties, u32 id );
+	ambient_volume( ambient_volume_properties const& properties, u32 const id );
 	~ambient_volume( ) { }
 
 	void set_properties( ambient_volume_properties const& in_properties );

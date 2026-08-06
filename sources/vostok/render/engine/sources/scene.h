@@ -16,6 +16,7 @@
 #include "lights_db.h"
 #include "lpv_batched_geometry.h"
 #include "material_effects_instance.h"
+#include "portal_sector_system.h"
 #include "render_model_instance_impl.h"
 #include "shadow_batched_geometry.h"
 #include "sky_ambient_occlusion.h"
@@ -245,9 +246,20 @@ public:
 	);
 	void test_action_portal_system( );
 
-	u32 get_portals_count( ) const;
-	void get_portals_occlusion_bounds( float4* bounds ) const;
-	void update_portals_occlusion_culling( pcbyte results );
+	u32 get_portals_count( ) const
+	{
+		return m_portal_system ? m_portal_system->get_portals_count( ) : 0;
+	}
+
+	void get_portals_occlusion_bounds( float4* bounds ) const
+	{
+		m_portal_system->get_portals_occlusion_bounds( bounds );
+	}
+
+	void update_portals_occlusion_culling( pcbyte results )
+	{
+		m_portal_system->update_portals_occlusion_culling( results );
+	}
 
 	void unmove_all_models( );
 	void draw_lines(

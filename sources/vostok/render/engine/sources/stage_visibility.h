@@ -34,10 +34,12 @@ private:
 	void get_results_and_prepare_bounds_particles( float4*& out_bounds, u32& out_counter );
 	void get_results_and_prepare_bounds_portals( float4*& out_bounds, u32& out_counter );
 
-	bool occluded( u32 index ) const;
+	bool occluded( u32 const index ) const;
 	void gather_statistics( ) const;
 
 private:
+	static s32 const occlusion_buffer_size = 16384;
+
 	bool						m_data_ready;
 	hw_hiz_occlusion_manager*	m_occlusion_manager;
 	float4*						m_static_bounds_array;

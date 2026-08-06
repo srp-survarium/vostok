@@ -86,7 +86,7 @@ public:
 	virtual void set_transform( float4x4 const& transform ) override;
 	virtual void set_aabb( math::aabb const& bbox ) override;
 
-	bool is_occluded( ) const;
+	virtual bool is_occluded( ) const override;
 
 	particle::enum_particle_locked_axis locked_axis( ) const
 	{
@@ -130,6 +130,8 @@ public:
 	math::aabb const& get_aabb( ) const;
 
 private:
+	friend class stage_visibility;
+
 	material_effects					m_material_effects;
 	material_effects_instance_ptr			m_material_effects_ptr;
 	math::aabb						m_bbox;
