@@ -7,9 +7,10 @@ namespace vostok {
 namespace render {
 
 class scene_view_cook : public resources::translate_query_cook {
+	typedef resources::translate_query_cook super;
+
 public:
 	scene_view_cook( );
-	virtual ~scene_view_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent ) override;
 	virtual void delete_resource( resources::resource_base* resource ) override;
