@@ -21,7 +21,6 @@ class vfs_locked_iterator;
 namespace render {
 
 struct model_asset {
-	model_asset( ) { }
 	~model_asset( ) { }
 
 	resources::managed_resource_ptr		converted_model_buffer;
@@ -38,10 +37,6 @@ struct cook_intermediate_data {
 		resources::query_result_for_cook*	in_query_result
 	);
 
-	s32 find_material_index( pcstr surface_name );
-	s32 find_surface_index( pcstr surface_name );
-	void register_models( vfs::vfs_iterator const& fs_it );
-
 	fs_new::virtual_path_string			root_model_path;
 	resources::query_result_for_cook*	parent_query;
 	bool								status_failed;
@@ -53,6 +48,10 @@ struct cook_intermediate_data {
 	u8									m_num_render_models;
 	configs::binary_config_ptr			model_settings_config;
 	vector< pcstr >						m_surface_materials;
+
+	s32 find_material_index( pcstr surface_name );
+	s32 find_surface_index( pcstr surface_name );
+	void register_models( vfs::vfs_iterator const& fs_it );
 };
 
 STATIC_SIZE_ASSERT( cook_intermediate_data, 0x138 );
@@ -135,8 +134,9 @@ protected:
 STATIC_SIZE_ASSERT( render_model_cook, 0x20 );
 
 struct grass_render_model_cook : public render_model_cook {
+	typedef render_model_cook super;
+
 	grass_render_model_cook( );
-	virtual ~grass_render_model_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 };

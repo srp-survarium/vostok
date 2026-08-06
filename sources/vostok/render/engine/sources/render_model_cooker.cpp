@@ -7,6 +7,7 @@
 #include "render_model_skeleton.h"
 #include "render_model_static.h"
 #include "render_model_user.h"
+#include "render_surface.h"
 
 namespace vostok {
 namespace render {
@@ -20,7 +21,6 @@ user_mesh_cook::user_mesh_cook( ) :
 		flag_create_allocates_destroy_deallocates
 	)
 {
-	// FUNCTION BODY[0x650df0]
 }
 
 mutable_buffer user_mesh_cook::allocate_resource(
@@ -29,14 +29,12 @@ mutable_buffer user_mesh_cook::allocate_resource(
 	bool file_exist
 )
 {
-	// FUNCTION BODY[0x650c10]
 	VOSTOK_UNREFERENCED_PARAMETERS	( in_query, &raw_file_data, file_exist );
 	return mutable_buffer::zero		( );
 }
 
 void user_mesh_cook::deallocate_resource( pvoid buffer )
 {
-	// FUNCTION BODY[0x650c00]
 	VOSTOK_UNREFERENCED_PARAMETERS	( buffer );
 }
 
@@ -46,7 +44,6 @@ void user_mesh_cook::create_resource(
 	mutable_buffer in_out_unmanaged_resource_buffer
 )
 {
-	// FUNCTION BODY[0x652200]
 	VOSTOK_UNREFERENCED_PARAMETER		(in_out_unmanaged_resource_buffer);
 	memory::chunk_reader chunk		( (pcbyte)raw_file_data.c_ptr(), raw_file_data.size(), memory::chunk_reader::chunk_type_sequential );
 
@@ -59,14 +56,12 @@ void user_mesh_cook::create_resource(
 	user_render_model_instance* created_resource	= NEW(user_render_model_instance);
 	created_resource->assign_surface				( surface );
 
-	// TODO: pass correct sizeof, not sizeof of a base class
 	in_out_query.set_unmanaged_resource			( created_resource, resources::nocache_memory, sizeof(user_render_model_instance) );
 	in_out_query.finish_query					( result_success );
 }
 
 void user_mesh_cook::destroy_resource( resources::unmanaged_resource* resource )
 {
-	// FUNCTION BODY[0x650f30]
 	user_render_model_instance* instance = static_cast_checked<user_render_model_instance*>( resource );
 	R_ASSERT						( instance );
 
@@ -82,12 +77,10 @@ static_render_model_instance_cook::static_render_model_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x650d80]
 }
 
 void static_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x652e20]
 	fs_new::virtual_path_string render_path = parent.get_requested_path();
 	resources::query_resource(	render_path.c_str(),
 					resources::static_render_model_class,
@@ -99,7 +92,6 @@ void static_render_model_instance_cook::translate_query( resources::query_result
 
 void static_render_model_instance_cook::on_sub_resources_loaded( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x651b20]
 	resources::query_result_for_cook* parent = data.get_parent_query();
 
 	if (!data.is_successful())
@@ -108,10 +100,16 @@ void static_render_model_instance_cook::on_sub_resources_loaded( resources::quer
 		return;
 	}
 
-	// TODO: Iterate lods
 	static_render_model_ptr v			= static_cast_resource_ptr<static_render_model_ptr>(data[0].get_unmanaged_resource());
 
 	static_render_model_instance* created_resource = NEW(static_render_model_instance);
+	if ( parent->user_data( ) )
+	{
+		configs::binary_config_value cfg;
+		parent->user_data( )->try_get( cfg );
+		created_resource->add_sectors_holder( cfg );
+	}
+
 	created_resource->assign_original		( v );
 
 	parent->set_unmanaged_resource			( created_resource, resources::nocache_memory, sizeof(static_render_model_instance) );
@@ -120,7 +118,6 @@ void static_render_model_instance_cook::on_sub_resources_loaded( resources::quer
 
 void static_render_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x650ef0]
 	DELETE( resource );
 }
 
@@ -131,12 +128,10 @@ skeleton_render_model_instance_cook::skeleton_render_model_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x650d10]
 }
 
 void skeleton_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x652d60]
 	fs_new::virtual_path_string render_path = parent.get_requested_path();
 	resources::query_resource(	render_path.c_str(),
 					resources::skeleton_render_model_class,
@@ -148,7 +143,6 @@ void skeleton_render_model_instance_cook::translate_query( resources::query_resu
 
 void skeleton_render_model_instance_cook::on_sub_resources_loaded( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x651a10]
 	resources::query_result_for_cook* parent	=	data.get_parent_query();
 
 	if (!data.is_successful())
@@ -167,7 +161,6 @@ void skeleton_render_model_instance_cook::on_sub_resources_loaded( resources::qu
 
 void skeleton_render_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x650eb0]
 	DELETE( resource );
 }
 
@@ -184,20 +177,19 @@ cook_intermediate_data::cook_intermediate_data(
 	assets					( 0 ),
 	m_num_render_models		( 0 )
 {
-	// FUNCTION BODY[0x651980]
 }
 
-s32 cook_intermediate_data::find_surface_index( pcstr )
+s32 cook_intermediate_data::find_surface_index( pcstr surface_name )
 {
-	// claude@NOTE: no legacy ancestor - legacy cook_intermediate_data has only find_material_index/register_models; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x650ca0]
-	return 0;
+	for ( u32 idx = 0; idx < m_num_render_models; ++idx )
+		if ( strings::equal( assets[idx].m_surface_name.c_str( ), surface_name ) )
+			return idx;
+
+	return -1;
 }
 
 s32 cook_intermediate_data::find_material_index( pcstr surface_name )
 {
-	// FUNCTION BODY[0x650fb0]
 	for(u32 idx=0; idx<m_surface_materials.size(); ++idx)
 		if(strings::equal(m_surface_materials[idx], surface_name))
 			return idx;
@@ -208,7 +200,6 @@ s32 cook_intermediate_data::find_material_index( pcstr surface_name )
 
 void cook_intermediate_data::register_models( vfs::vfs_iterator const& fs_it )
 {
-	// FUNCTION BODY[0x651830]
 	R_ASSERT			( m_num_render_models==0 );
 	R_ASSERT			( assets==NULL );
 
@@ -239,27 +230,39 @@ void cook_intermediate_data::register_models( vfs::vfs_iterator const& fs_it )
 grass_render_model_cook::grass_render_model_cook( ) :
 	render_model_cook( resources::grass_render_model_class )
 {
-	// claude@NOTE: no legacy ancestor - legacy had no grass_render_model_cook class (grass was a class-id branch inside render_model_cook); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x650c80]
 }
 
-void grass_render_model_cook::translate_query( resources::query_result_for_cook& )
+void grass_render_model_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// claude@NOTE: no legacy ancestor - legacy had no grass_render_model_cook class; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x653880]
+	fs_new::virtual_path_string model_path;
+	model_path.assignf( "%s.model", parent.get_requested_path( ) );
+
+	cook_intermediate_data* data = NEW( cook_intermediate_data )( model_path, &parent );
+
+	fs_new::virtual_path_string render_path;
+	render_path.assignf( "resources/models/%s/render", model_path.c_str( ) );
+
+	resources::query_vfs_iterator(
+		render_path.c_str( ),
+		boost::bind(
+			&grass_render_model_cook::on_fs_iterator_ready_submeshes,
+			this,
+			data,
+			_1
+		),
+		g_allocator,
+		resources::recursive_true,
+		&parent
+	);
 }
 
 render_model_cook::render_model_cook( resources::class_id_enum model_type ) :
 	resources::translate_query_cook( model_type, reuse_true, use_current_thread_id )
 {
-	// FUNCTION BODY[0x650c30]
 }
 
 void render_model_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x6536f0]
 	fs_new::virtual_path_string model_path	= parent.get_requested_path();
 	int idx						= model_path.find("/render");
 	R_ASSERT					(-1!=idx);
@@ -284,7 +287,6 @@ void render_model_cook::on_fs_iterator_ready_submeshes(
 	vfs::vfs_locked_iterator const& fs_it
 )
 {
-	// FUNCTION BODY[0x653320]
 	fs_new::virtual_path_string	render_dir  = cook_data->root_model_path;
 	render_dir.append					( "/render" );
 
@@ -372,8 +374,6 @@ void render_model_cook::on_model_settings_loaded(
 	cook_intermediate_data* cook_data
 )
 {
-	// FUNCTION BODY[0x6528b0]
-	// claude@NOTE: legacy name was on_material_settings_loaded; canonical renamed it.
 	if( !data.is_successful() )
 	{
 		cook_data->material_data_ready	= true;
@@ -383,8 +383,10 @@ void render_model_cook::on_model_settings_loaded(
 		return;
 	}
 
-	configs::binary_config_ptr settings_config		= static_cast_resource_ptr<configs::binary_config_ptr>(data[0].get_unmanaged_resource());
-	configs::binary_config_value root				= settings_config->get_root();
+	cook_data->model_settings_config = static_cast_resource_ptr< configs::binary_config_ptr >(
+		data[0].get_unmanaged_resource( )
+	);
+	configs::binary_config_value root = cook_data->model_settings_config->get_root( );
 
 	u32 num_render_models = 0;
 	bool bvalid = root.value_exists("material_settings");
@@ -455,7 +457,6 @@ void render_model_cook::on_subresources_loaded(
 	cook_intermediate_data* cook_data
 )
 {
-	// FUNCTION BODY[0x652ee0]
 	if (!data.is_successful())
 	{
 		cook_data->status_failed = true;
@@ -485,8 +486,6 @@ void render_model_cook::on_subresources_loaded(
 
 	for(u32 model_index=0; model_index<num_models; model_index++)
 	{
-		memory::writer destination(render::g_allocator);
-
 		cook_data->assets[model_index].converted_model_buffer = data[request_index].get_managed_resource( );
 		++request_index;
 
@@ -529,7 +528,6 @@ void render_model_cook::on_materials_loaded(
 	cook_intermediate_data* cook_data
 )
 {
-	// FUNCTION BODY[0x652790]
 	if(cook_data->status_failed)
 	{
 		query_materail_effects	( cook_data );
@@ -597,7 +595,6 @@ static fs_new::virtual_path_string get_material_effects_instance_request_path(
 
 void render_model_cook::query_materail_effects( cook_intermediate_data* cook_data )
 {
-	// FUNCTION BODY[0x652300]
 	resources::query_result_for_cook* parent_query = cook_data->parent_query;
 
 	if (cook_data->status_failed)
@@ -670,28 +667,212 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 	FREE												(pathes);
 }
 
-void arrange_surfaces_by_lod( cook_intermediate_data*, model_lods_descriptor*& )
-{
-	// claude@NOTE: no legacy ancestor - the model_lods_descriptor pipeline is new-in-target; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x651110]
-}
-
-// STATE[STUB]
-// claude@NOTE: legacy body appended surfaces via render_model::append_surface, which the
-// canonical tree replaced with set_children + arrange_surfaces_by_lod (both target-only);
-// diverged - legacy seed kept in temp/render_legacy.
-void render_model_cook::finish_model_creation(
-	resources::queries_result&,
-	cook_intermediate_data*
+void arrange_surfaces_by_lod(
+	cook_intermediate_data*	cook_data,
+	model_lods_descriptor*&	lods_descriptor
 )
 {
-	// FUNCTION BODY[0x651ca0]
+	u8 result_lod_surfaces_count[3] = { 0 };
+	pbyte result_lod_surfaces[3] = { 0 };
+
+	if ( !cook_data->model_settings_config )
+	{
+		lods_descriptor = NEW( model_lods_descriptor );
+		for ( u8 i = 0; i < 3; ++i )
+		{
+			lods_descriptor->m_lod_surfaces_count[i] = 0;
+			lods_descriptor->m_lod_surfaces[i] = 0;
+		}
+
+		LOG_ERROR(
+			"Incorrect model settings for %s",
+			cook_data->root_model_path.c_str( )
+		);
+		return;
+	}
+
+	configs::binary_config_value t_root = cook_data->model_settings_config->get_root( );
+	pcstr lods[3] = { "LOD0", "LOD1", "LOD2" };
+	if ( !t_root.value_exists( "lod_hierrarchy" ) )
+		return;
+
+	configs::binary_config_value t_lods = t_root["lod_hierrarchy"];
+	for ( u8 i = 0; i < 3; ++i )
+	{
+		if ( !t_lods.value_exists( lods[i] ) ||
+			 !t_lods[lods[i]].value_exists( "surfaces" ) )
+			continue;
+
+		configs::binary_config_value t_surfaces = t_lods[lods[i]]["surfaces"];
+		u8 surfaces_count = (u8)t_surfaces.size( );
+		result_lod_surfaces[i] = NEW_ARRAY( u8, surfaces_count );
+		u8 surface_idx = 0;
+
+		configs::binary_config_value const* it = t_surfaces.begin( );
+		configs::binary_config_value const* it_e = t_surfaces.end( );
+		for ( ; it != it_e; ++it )
+		{
+			s32 index = cook_data->find_surface_index( (pcstr)*it );
+			if ( index == -1 )
+			{
+				--surfaces_count;
+				LOG_ERROR(
+					"Incorrect model LOD settings for %s",
+					cook_data->root_model_path.c_str( )
+				);
+			}
+			else
+				result_lod_surfaces[i][surface_idx++] = (u8)index;
+		}
+
+		if ( surfaces_count )
+			result_lod_surfaces_count[i] = surfaces_count;
+	}
+
+	lods_descriptor = new(
+		MALLOC(
+			sizeof( model_lods_descriptor ) +
+			result_lod_surfaces_count[0] +
+			result_lod_surfaces_count[1] +
+			result_lod_surfaces_count[2],
+			""
+		)
+	) model_lods_descriptor;
+
+	if ( t_root.value_exists( "lod_switching" ) )
+	{
+		lods_descriptor->m_lod_calc_type =
+			(u8)t_root["lod_switching"]["type"];
+		lods_descriptor->m_lod_params_default =
+			(bool)t_root["lod_switching"]["default_params"];
+
+		if ( !lods_descriptor->m_lod_params_default )
+		{
+			lods_descriptor->m_lod_custom_params[0] =
+				(float)t_root["lod_switching"]["param0"];
+			lods_descriptor->m_lod_custom_params[1] =
+				(float)t_root["lod_switching"]["param1"];
+
+			if ( t_root["lod_switching"].value_exists( "param2" ) )
+				lods_descriptor->m_lod_custom_params[2] =
+					(float)t_root["lod_switching"]["param2"];
+			else
+				lods_descriptor->m_lod_custom_params[2] =
+					lods_descriptor->m_lod_calc_type == 0 ? 240.f : math::epsilon_3;
+		}
+	}
+
+	u32 surfaces_shift = 0;
+	for ( u8 i = 0; i < 3; ++i )
+	{
+		lods_descriptor->m_lod_surfaces_count[i] = result_lod_surfaces_count[i];
+		lods_descriptor->m_lod_surfaces[i] =
+			(pbyte)lods_descriptor + sizeof( model_lods_descriptor ) + surfaces_shift;
+		memory::copy(
+			lods_descriptor->m_lod_surfaces[i],
+			result_lod_surfaces_count[i],
+			result_lod_surfaces[i],
+			result_lod_surfaces_count[i]
+		);
+		surfaces_shift += result_lod_surfaces_count[i];
+		DELETE_ARRAY( result_lod_surfaces[i] );
+	}
+}
+
+void render_model_cook::finish_model_creation(
+	resources::queries_result&	data_material_effects,
+	cook_intermediate_data*		cook_data
+)
+{
+	resources::query_result_for_cook* parent_query = cook_data->parent_query;
+
+	if ( cook_data->status_failed )
+	{
+		parent_query->finish_query( result_error );
+		if ( cook_data->assets )
+			DELETE_ARRAY( cook_data->assets );
+		DELETE( cook_data );
+		return;
+	}
+
+	render_surface** surfaces = ALLOC( render_surface*, cook_data->m_num_render_models );
+	for ( u32 model_index = 0; model_index < cook_data->m_num_render_models; ++model_index )
+	{
+		configs::binary_config_ptr prop_config_ptr =
+			cook_data->assets[model_index].export_properties_config;
+		configs::binary_config_value const& properties = prop_config_ptr->get_root( );
+		mesh_type_enum model_type = (mesh_type_enum)(u16)properties["type"];
+		if ( get_class_id( ) == resources::grass_render_model_class )
+			model_type = mt_grass_mesh;
+
+		resources::pinned_ptr_const< u8 > converted_model_ptr(
+			cook_data->assets[model_index].converted_model_buffer
+		);
+		render_surface* surface = model_factory::create_render_surface( model_type );
+		pcstr sg_name = cook_data->assets[model_index].m_surface_name.c_str( );
+		surface->m_render_geometry.shading_group_name = sg_name;
+
+		bool material_result = false;
+		if ( cook_data->material_settings_valid )
+		{
+			s32 material_index = cook_data->find_material_index( sg_name );
+			if ( material_index != -1 )
+			{
+				resources::unmanaged_resource_ptr m =
+					cook_data->assets[material_index].material;
+				if ( m )
+				{
+					material_result = data_material_effects[model_index].is_successful( );
+					if ( material_result )
+						surface->set_material_effects(
+							static_cast_resource_ptr< material_effects_instance_ptr >(
+								data_material_effects[model_index].get_unmanaged_resource( )
+							),
+							static_cast< material* >( m.c_ptr( ) )->get_material_name( )
+						);
+				}
+			}
+		}
+
+		if ( !material_result )
+		{
+			surface->m_materail_effects_instance = 0;
+			LOG_ERROR(
+				"material not loaded for %s : %s",
+				cook_data->root_model_path.c_str( ),
+				sg_name
+			);
+		}
+
+		memory::chunk_reader model_reader(
+			converted_model_ptr.c_ptr( ),
+			converted_model_ptr.size( ),
+			memory::chunk_reader::chunk_type_sequential
+		);
+		surface->load( properties, model_reader );
+		surfaces[model_index] = surface;
+	}
+
+	model_lods_descriptor* lods_descriptor = 0;
+	arrange_surfaces_by_lod( cook_data, lods_descriptor );
+	cook_data->result_model->set_children(
+		surfaces,
+		cook_data->m_num_render_models,
+		lods_descriptor
+	);
+	parent_query->set_unmanaged_resource(
+		cook_data->result_model.c_ptr(),
+		resources::nocache_memory,
+		sizeof( cook_intermediate_data )
+	);
+	parent_query->finish_query( result_success );
+
+	DELETE_ARRAY( cook_data->assets );
+	DELETE( cook_data );
 }
 
 void render_model_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x650e70]
 	render_model* model					= static_cast_checked<render_model*>(resource);
 	R_ASSERT							( model );
 	model_factory::destroy_render_model	( model );

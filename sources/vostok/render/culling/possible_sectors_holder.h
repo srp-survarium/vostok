@@ -9,14 +9,21 @@ namespace vostok {
 namespace render {
 namespace culling {
 
-class possible_sectors_holder : public core::noncopyable {
+class possible_sectors_holder : private core::noncopyable {
 public:
 	explicit possible_sectors_holder( configs::binary_config_value config ) :
 		m_buffer		( 0 ),
 		m_buffer_end	( 0 )
 	{
-		// STATE[STUB]
-		(void)config;
+		u32 const count = config.size( );
+		m_buffer = ALLOC( u16, count );
+		m_buffer_end = m_buffer + count;
+
+		u16* destination = m_buffer;
+		configs::binary_config_value const* it = config.begin( );
+		configs::binary_config_value const* it_e = config.end( );
+		for ( ; it != it_e; ++it, ++destination )
+			*destination = (u16)*it;
 	}
 
 	~possible_sectors_holder( )
