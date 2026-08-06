@@ -2520,32 +2520,24 @@ void engine::world::test_action_portal_system( base_scene_ptr const& scene )
 	s->test_action_portal_system	( );
 }
 
-// STATE[STUB]
 void engine::world::clear_grass( base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x655af0]: 1
-	// <0>
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>( s.c_ptr( ) );
+	scene->get_grass( )->clear( );
 }
 
-// STATE[STUB]
 void engine::world::populate_grass( base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x656b10]: 1
-	// <0>
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>( s.c_ptr( ) );
+	scene->get_grass( )->populate( 16.f );
 }
 
-// STATE[STUB]
 void engine::world::add_grass_layer( grass_layer_desc* desc, grass_layer_data* data, base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x655d10]: 2
-	// <0>
-	// <0x655d10>|0x000|+0x021:'2199'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>( s.c_ptr( ) );
+	scene->get_grass( )->update_grass_layer( desc, data, true, false, false );
 }
 
-// STATE[STUB]
 void engine::world::update_grass_layer(
 	grass_layer_desc*			desc,
 	grass_layer_data*			data,
@@ -2553,19 +2545,14 @@ void engine::world::update_grass_layer(
 	bool						is_set
 )
 {
-	// FUNCTION BODY[0x655ce0]: 2
-	// <0>
-	// <0x655ce0>|0x000|+0x024:'2205'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>( s.c_ptr( ) );
+	scene->get_grass( )->update_grass_layer( desc, data, is_set, true, false );
 }
 
-// STATE[STUB]
 void engine::world::remove_grass_layer( u8 id, base_scene_ptr const& s )
 {
-	// FUNCTION BODY[0x654b20]: 2
-	// <0>
-	// <0x654b20>|0x000|+0x017:'2211'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>( s.c_ptr( ) );
+	scene->get_grass( )->remove_grass_layer( id, true );
 }
 
 void engine::world::set_grass( resources::unmanaged_resource_ptr grass, base_scene_ptr const& s )

@@ -25,13 +25,14 @@ namespace render {
 struct grass_world;
 
 struct grass_layer_desc {
-	struct model_desc {
-		model_desc( ) :
-			probability_( 0.f ),
-			scale( 0.f )
-		{
-		}
+	u8 id;
+	float max_slope_ang;
+	bool use_face_normal;
+	bool random_orient;
+	float random_scale;
+	float wind_factor;
 
+	struct model_desc {
 		fixed_string<260> name;
 		float probability_;
 		float scale;
@@ -39,22 +40,6 @@ struct grass_layer_desc {
 
 	STATIC_SIZE_ASSERT( model_desc, 0x118 );
 
-	grass_layer_desc( ) :
-		id( 0 ),
-		max_slope_ang( 0.f ),
-		use_face_normal( false ),
-		random_orient( false ),
-		random_scale( 0.f ),
-		wind_factor( 0.f )
-	{
-	}
-
-	u8 id;
-	float max_slope_ang;
-	bool use_face_normal;
-	bool random_orient;
-	float random_scale;
-	float wind_factor;
 	fixed_vector<model_desc, 16> models_list;
 };
 
@@ -66,8 +51,8 @@ struct grass_layer_data {
 		lt_z_m( 0.f ),
 		size_x_cells( 0 ),
 		size_z_cells( 0 ),
-		grass_cell_size_m( 0.f ),
-		grass_cells_per_meter( 0 ),
+		grass_cell_size_m( 1.f ),
+		grass_cells_per_meter( 1 ),
 		stencil_data( 0 ),
 		instances_positions( 0 ),
 		instances_normals( 0 ),

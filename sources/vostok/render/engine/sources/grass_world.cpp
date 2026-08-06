@@ -3,9 +3,12 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
 #include <vostok/math_randoms_generator.h>
+#include <vostok/memory_chunk_reader.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/engine/vertex_colored.h>
+#include <vostok/resources_pinned_ptr.h>
+#include "grass_data.h"
 #include "grass_patch.h"
 #include "grass_world.h"
 #include "renderer_context.h"
@@ -25,12 +28,14 @@ static vostok::console_commands::cc_bool s_use_grass_patches_sorting("use_grass_
 static bool s_use_grass_instances_sorting_value	=	false;
 static vostok::console_commands::cc_bool s_use_grass_instances_sorting("use_grass_instances_sorting", s_use_grass_instances_sorting_value, false, vostok::console_commands::command_type_engine_internal);
 
-static u32 point_random_x;
-static u32 point_random_z;
-static u32 model_index_random;
-static u32 model_orientation_random;
-static u32 model_density_random;
-static u32 model_scale_random;
+static math::random32 point_random_x;
+static math::random32 point_random_z;
+static math::random32 model_index_random;
+static math::random32 model_orientation_random;
+static math::random32 model_density_random;
+static math::random32 model_scale_random;
+static u32 g_template_counter;
+static u32 g_instance_counter;
 
 void setup_seed_clk( );
 
@@ -109,12 +114,10 @@ grass_world::~grass_world( )
 	collision::delete_space_partitioning_tree		(m_patches_tree);
 }
 
-u32 grass_world::add_template( grass_render_model_ptr const& )
+u32 grass_world::add_template( grass_render_model_ptr const& render_model )
 {
-	// claude@NOTE: legacy body diverged - legacy add_template takes an explicit in_id and returns void; canonical generates and returns the id; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x636920]
-	return 0;
+	m_templates.push_back( NEW( grass_template )( ++g_template_counter, render_model ) );
+	return g_template_counter;
 }
 
 void grass_world::add_trample( trample_desc const& desc )
@@ -122,12 +125,26 @@ void grass_world::add_trample( trample_desc const& desc )
 	m_trample_array.push_back	( desc );
 }
 
-u32 grass_world::add_instance( u32 const, math::color const&, float4x4 const&, u8 const, float const )
+u32 grass_world::add_instance(
+	u32 const template_id,
+	math::color const& color,
+	float4x4 const& transform,
+	u8 const layer,
+	float const wind_scale
+)
 {
-	// claude@NOTE: legacy body diverged - legacy add_instance takes explicit in_id, lacks layer/wind_scale, returns void; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x636090]
-	return 0;
+	grass_template* templ = id_to_template( template_id );
+	u32 const id = ++g_instance_counter;
+	grass_instance* instance = NEW( grass_instance )(
+		id,
+		templ,
+		color,
+		transform,
+		layer,
+		wind_scale
+	);
+	templ->m_instances.push_back( instance );
+	return id;
 }
 
 void grass_world::remove_instance( u32 const in_id )
@@ -177,11 +194,17 @@ grass_template* grass_world::id_to_template( u32 const id ) const
 
 grass_template* grass_world::find_template( grass_render_model_ptr const& model ) const
 {
-	// STATE[STUB]
-	// claude@NOTE: no legacy ancestor (legacy looked templates up by id only); matcher-phase.
-	// FUNCTION BODY[0x635a20]
-	VOSTOK_UNREFERENCED_PARAMETER	( model );
-	return 0;
+	grass_template* result = NULL;
+	grass_templates_type::const_iterator it = m_templates.begin( );
+	grass_templates_type::const_iterator end = m_templates.end( );
+	for ( ; it != end; ++it )
+	{
+		result = *it;
+		if ( result->m_render_model == model )
+			break;
+	}
+
+	return result;
 }
 
 grass_patch* grass_world::find_patch( float3 const& point )
@@ -502,93 +525,275 @@ void grass_world::add_grass_layer( grass_layer_desc*, grass_layer_data*, bool, b
 }
 
 void grass_world::update_grass_layer(
-	grass_layer_desc*,
-	grass_layer_data*,
-	bool,
-	bool,
-	bool
+	grass_layer_desc* desc,
+	grass_layer_data* layer_data,
+	bool is_set,
+	bool do_populate,
+	bool from_cook
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x637940]
+	if ( is_set )
+	{
+		u8 const models_count = (u8)desc->models_list.size( );
+		buffer_vector<resources::request> r( ALLOCA( sizeof( resources::request ) * models_count ), models_count );
+		r.resize( models_count );
+		for ( u8 i = 0; i < models_count; ++i )
+		{
+			r[i].path = desc->models_list[i].name.c_str( );
+			r[i].id = resources::grass_render_model_class;
+		}
+
+		resources::query_resources(
+			r.begin( ),
+			r.size( ),
+			from_cook ?
+				boost::bind( &grass_world::grass_layer_resources_ready_from_cook, this, _1, desc, layer_data, do_populate ) :
+				boost::bind( &grass_world::grass_layer_resources_ready, this, _1, desc, layer_data, do_populate ),
+			g_allocator
+		);
+	}
+	else
+	{
+		for ( u16 x = 0; x < layer_data->size_x_cells; ++x )
+		{
+			for ( u16 z = 0; z < layer_data->size_z_cells; ++z )
+			{
+				float2 const cell_pos_lt(
+					layer_data->lt_x_m + x * layer_data->grass_cell_size_m,
+					layer_data->lt_z_m + z * layer_data->grass_cell_size_m
+				);
+				float2 const cell_pos_rb = cell_pos_lt + float2(
+					layer_data->grass_cell_size_m,
+					layer_data->grass_cell_size_m
+				);
+
+				if ( layer_data->stencil_data[z * layer_data->size_x_cells + x] )
+					remove_layer_instances( desc->id, cell_pos_lt, cell_pos_rb );
+			}
+		}
+
+		if ( do_populate )
+			m_need_populate = true;
+	}
 }
 
 void grass_world::clear( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x636fb0]
+	remove_patches( );
+
+	grass_templates_type::iterator it_t = m_templates.begin( );
+	grass_templates_type::iterator end_t = m_templates.end( );
+	for ( ; it_t != end_t; ++it_t )
+	{
+		grass_template* templ = *it_t;
+		grass_instances_type::iterator it_i = templ->m_instances.begin( );
+		grass_instances_type::iterator end_i = templ->m_instances.end( );
+		for ( ; it_i != end_i; ++it_i )
+		{
+			grass_instance* instance = *it_i;
+			DELETE( instance );
+		}
+
+		templ->m_instances.clear( );
+		DELETE( templ );
+	}
+
+	m_templates.clear( );
 }
 
-void grass_world::remove_grass_layer( u8, bool )
+void grass_world::remove_grass_layer( u8 id, bool )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635e40]
+	vector<u32> instances_to_remove;
+	grass_templates_type::iterator it = m_templates.begin( );
+	grass_templates_type::iterator end = m_templates.end( );
+	for ( ; it != end; ++it )
+	{
+		grass_template* templ = *it;
+		grass_instances_type::iterator it_instance = templ->m_instances.begin( );
+		grass_instances_type::iterator end_instance = templ->m_instances.end( );
+		for ( ; it_instance != end_instance; ++it_instance )
+		{
+			grass_instance* instance = *it_instance;
+			if ( instance->m_layer_id == id )
+				instances_to_remove.push_back( instance->m_index );
+		}
+	}
+
+	remove_instances( instances_to_remove );
 }
 
-void grass_world::remove_instances( vector<u32> const& )
+void grass_world::remove_instances( vector<u32> const& v )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635e10]
+	vector<u32>::const_iterator it = v.begin( );
+	vector<u32>::const_iterator end = v.end( );
+	for ( ; it != end; ++it )
+		remove_instance( *it );
 }
 
 void setup_seed_clk( )
 {
 	u32 const seed							= GetTickCount( );
-	point_random_x							= seed;
-	point_random_z							= seed;
-	model_index_random						= seed;
-	model_orientation_random				= seed;
-	model_density_random					= seed;
-	model_scale_random						= seed;
+	point_random_x.seed						( seed );
+	point_random_z.seed						( seed );
+	model_index_random.seed					( seed );
+	model_orientation_random.seed			( seed );
+	model_density_random.seed				( seed );
+	model_scale_random.seed					( seed );
 }
 
-u8 select_model_template( float*, float, u8 )
+u8 select_model_template( float* values, float sum, u8 const count )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635b50]
-	return 0;
+	float const p = model_index_random.random_f( sum );
+	for ( u8 i = 0; i < count; ++i )
+	{
+		if ( values[i] > p )
+			return i;
+	}
+
+	return count - 1;
 }
 
 float select_model_orientation( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635b10]
-	return 0.0f;
+	return model_orientation_random.random_f( math::pi_x2 );
 }
 
-float select_model_scale( float, float )
+float select_model_scale( float const delta, float const base_scale )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635ac0]
-	return 0.0f;
+	return base_scale - delta + model_scale_random.random_f( delta * 2.f );
 }
 
 void grass_world::grass_layer_resources_ready_from_cook(
-	resources::queries_result&,
-	grass_layer_desc*,
-	grass_layer_data*,
-	bool
+	resources::queries_result& data,
+	grass_layer_desc* desc,
+	grass_layer_data* layer_data,
+	bool do_populate
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x636da0]
+	resources::pinned_ptr_const<u8> pdata( layer_data->layer_data_raw_file );
+	memory::chunk_reader chunk(
+		pdata.c_ptr( ),
+		pdata.size( ),
+		memory::chunk_reader::chunk_type_sequential
+	);
+
+	if ( chunk.chunk_exists( 0x58 ) )
+	{
+		memory::reader instances_reader = chunk.open_reader( 0x58 );
+		layer_data->instances_positions = (float3*)instances_reader.pointer( );
+		layer_data->instances_count = instances_reader.length( ) / sizeof( float3 );
+
+		if ( desc->use_face_normal )
+		{
+			memory::reader normals_reader = chunk.open_reader( 0x59 );
+			layer_data->instances_normals = (float3*)normals_reader.pointer( );
+		}
+
+		grass_layer_resources_ready( data, desc, layer_data, do_populate );
+	}
+	else
+	{
+		layer_data->instances_positions = 0;
+		layer_data->instances_count = 0;
+		grass_layer_resources_ready( data, desc, layer_data, do_populate );
+	}
+
+	DELETE( desc );
+	DELETE( layer_data );
 }
 
 void grass_world::grass_layer_resources_ready(
-	resources::queries_result&,
-	grass_layer_desc*,
-	grass_layer_data*,
-	bool
+	resources::queries_result& data,
+	grass_layer_desc* desc,
+	grass_layer_data* layer_data,
+	bool do_populate
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x636990]
+	u8 models_count = (u8)desc->models_list.size( );
+	u32* model_ids = (u32*)ALLOCA( sizeof( u32 ) * models_count );
+	for ( u8 i = 0; i < models_count; ++i )
+	{
+		grass_render_model_ptr model = static_cast_resource_ptr<grass_render_model_ptr>(
+			data[i].get_unmanaged_resource( )
+		);
+		grass_template* templ = find_template( model );
+		if ( templ )
+			model_ids[i] = templ->m_index;
+		else
+			model_ids[i] = add_template( model );
+	}
+
+	float* probabilities = (float*)ALLOCA( sizeof( float ) * models_count );
+	float prob_sum = 0.f;
+	for ( u8 i = 0; i < models_count; ++i )
+	{
+		prob_sum += desc->models_list[i].probability_;
+		probabilities[i] = prob_sum;
+	}
+
+	math::color clr( 200, 200, 200 );
+	for ( u32 i = 0; i < layer_data->instances_count; ++i )
+	{
+		u8 const model_index = select_model_template( probabilities, prob_sum, models_count );
+		float orient = desc->random_orient ? select_model_orientation( ) : 0.f;
+		float4x4 m = math::create_rotation_y( orient );
+		m.c.xyz( ) = layer_data->instances_positions[i];
+
+		if ( desc->use_face_normal )
+		{
+			m.j.xyz( ) = layer_data->instances_normals[i];
+			m.k.xyz( ) = math::cross_product( m.i.xyz( ), m.j.xyz( ) );
+			m.i.xyz( ) = math::cross_product( m.j.xyz( ), m.k.xyz( ) );
+		}
+
+		float const scale = select_model_scale(
+			desc->random_scale,
+			desc->models_list[model_index].scale
+		);
+		m.set_scale( float3( scale, scale, scale ) );
+		add_instance( model_ids[model_index], clr, m, desc->id, desc->wind_factor );
+	}
+
+	m_need_populate = true;
+	if ( do_populate )
+		m_need_populate = true;
 }
 
-void grass_world::remove_layer_instances( u8, float2 const&, float2 const& )
+void grass_world::remove_layer_instances(
+	u8 layer_id,
+	float2 const& cell_pos_lt,
+	float2 const& cell_pos_rb
+)
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x635f50]
+	float3 pt( cell_pos_lt.x + 0.5f, 0.f, cell_pos_lt.y + 0.5f );
+	grass_patch* patch = find_patch( pt );
+	if ( !patch )
+		return;
+
+	vector<u32> instances_to_remove;
+	grass_instances_type::iterator it = patch->m_instances.begin( );
+	grass_instances_type::iterator end = patch->m_instances.end( );
+	for ( ; it != end; ++it )
+	{
+		grass_instance* instance = *it;
+		if ( instance->m_layer_id != layer_id )
+			continue;
+
+		float3 p = instance->m_transform.c.xyz( );
+		if (
+			p.x > cell_pos_lt.x &&
+			p.z > cell_pos_lt.y &&
+			p.x < cell_pos_rb.x &&
+			p.z < cell_pos_rb.y
+		)
+			instances_to_remove.push_back( instance->m_index );
+	}
+
+	if ( !instances_to_remove.empty( ) )
+	{
+		remove_instances( instances_to_remove );
+		m_need_populate = true;
+	}
 }
 
 } // namespace render
