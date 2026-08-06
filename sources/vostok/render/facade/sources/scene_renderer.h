@@ -125,10 +125,10 @@ public:
 		u32
 	) { /* no source */ }
 	void set_model_visible( render_model_instance_ptr const& model, u32 surface_id, u32 flags );
-	void set_model_lod_params( render_model_instance_ptr const&, u8, bool, float, float, float ) { /* no source */ }
+	inline void set_model_lod_params( render_model_instance_ptr const& model, u8 type, bool use_default, float p0, float p1, float p2 );
 
 	void build_lpv_geometry( base_scene_ptr const& scene );
-	void remove_unused_environment_cubemaps( base_scene_ptr const& ) { /* no source */ }
+	inline void remove_unused_environment_cubemaps( base_scene_ptr const& scene );
 
 	void add_vegetation_trample( base_scene_ptr const& scene, trample_desc const& desc );
 	void add_speedtree_instance( base_scene_ptr const&, speedtree_instance_ptr const&, float4x4 const&, bool ) { /* no source */ }
@@ -176,7 +176,7 @@ public:
 
 	void update_lpv_occluder( base_scene_ptr const& scene, u32 id, float4x4 const& transform );
 	void remove_lpv_occluder( base_scene_ptr const& scene, u32 id );
-	void add_volume_fog( base_scene_ptr const&, u32, volume_fog_parameters const& ) { /* no source */ }
+	inline void add_volume_fog( base_scene_ptr const& scene, u32 id, volume_fog_parameters const& parameters );
 	void update_volume_fog( base_scene_ptr const& scene, u32 id, volume_fog_parameters const& parameters );
 	void remove_volume_fog( base_scene_ptr const& scene, u32 id );
 

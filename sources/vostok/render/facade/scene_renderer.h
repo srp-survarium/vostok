@@ -6,12 +6,73 @@
 #include <vostok/render/engine/sources/cloud_parameters.h>
 #include <vostok/render/facade/cloud_key.h>
 #include <vostok/render/facade/one_way_render_channel.h>
+#include <vostok/render/facade/volume_fog_parameters.h>
 #include <vostok/render/facade/sources/functor_command.h>
 #include <vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
 
 namespace vostok {
 namespace render {
+
+inline void scene_renderer::set_model_lod_params(
+	render_model_instance_ptr const&	model,
+	u8								type,
+	bool							use_default,
+	float							p0,
+	float							p1,
+	float							p2
+)
+{
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_model_lod_params,
+				&m_render_engine_world,
+				model,
+				type,
+				use_default,
+				p0,
+				p1,
+				p2
+			)
+		)
+	);
+}
+
+inline void scene_renderer::remove_unused_environment_cubemaps( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_unused_environment_cubemaps,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::add_volume_fog(
+	base_scene_ptr const&			scene,
+	u32							id,
+	volume_fog_parameters const&	parameters
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< volume_fog_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::add_volume_fog,
+				&m_render_engine_world,
+				scene,
+				id,
+				_1
+			),
+			parameters
+		)
+	);
+}
 
 inline void scene_renderer::add_clouds( base_scene_ptr const& scene, cloud_parameters const& parameters )
 {

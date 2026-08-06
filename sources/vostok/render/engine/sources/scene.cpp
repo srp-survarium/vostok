@@ -1065,7 +1065,7 @@ void scene::remove_decal( u32 id )
 
 void scene::add_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
-	m_volume_fogs.insert			( std::make_pair( id, in_parameters ) );
+	m_volume_fogs.insert			( std::pair< u32, volume_fog_parameters >( id, in_parameters ) );
 
 	// FUNCTION BODY[0x63d2f0]: 1
 	// <0x63d2fc>|0x00c|+0x024:'958'
