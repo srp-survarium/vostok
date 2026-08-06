@@ -1222,41 +1222,20 @@ void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_i
 	scene->remove_model( model);
 }
 
-// claude@NOTE: legacy body diverged - legacy returns the retired speedtree_*_vertex_input_type enumerators deleted from the shipped enum; matcher-phase work.
-// STATE[STUB]
 enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::virtual_path_string const& subsurface_name )
 {
-	// FUNCTION BODY[0x654aa0]: 6
-	// <0x654aa0>|0x000|+0x016:'1282'
-	// <0x654ab6>|0x016|+0x010:'1283'
-	// <0x654ac6>|0x026|+0x010:'1284'
-	// <0x654ad6>|0x036|+0x010:'1285'
-	// <0x654ae6>|0x046|-0x031:'1286'
-	// <0>
-	// <0x654ab5>|0x015|+0x047:'1288'
-	// ******
+	if ( subsurface_name == "branch" ||
+		 subsurface_name == "frond" ||
+		 subsurface_name == "leafmesh" ||
+		 subsurface_name == "leafcard" ||
+		 subsurface_name == "billboard" )
+		return unknown_vertex_input_type;
+
+	return null_vertex_input_type;
 }
 
-// claude@NOTE: legacy body diverged - legacy switch labels are the retired speedtree_*_vertex_input_type enumerators; matcher-phase work.
-// STATE[STUB]
 static speedtree_tree::component_type vertex_input_type_to_speedtree_component_type( enum_vertex_input_type type )
 {
-	// FUNCTION BODY[0x653ec0]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x653ec0>|0x000|+0x002:'1301'
-	// ******
-	// claude@NOTE: legacy default arm was NODEFAULT( return speedtree_tree::branch ),
-	// which collapses to __assume(0) in MASTER_GOLD and leaves the function
-	// without a return (C4716 -> LNK1257 at LTCG); the constant return also
-	// matches the target's 2-byte body.
 	return speedtree_tree::branch;
 }
 
@@ -1482,7 +1461,6 @@ void engine::world::set_model_material(
 	}
 }
 
-// STATE[STUB]
 void engine::world::set_model_lod_params(
 	render_model_instance_ptr const&	v,
 	u8									type,
@@ -1492,14 +1470,8 @@ void engine::world::set_model_lod_params(
 	float								p2
 )
 {
-	// CALL SITE INFO
-	// <0x655578> -> void < unknown >( u8, bool, float, float, float )
-	// ******
-
-	// FUNCTION BODY[0x655530]: 2
-	// <0x655530>|0x000|+0x01d:'1441'
-	// <0x65554d>|0x01d|+0x02d:'1442'
-	// ******
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>( v );
+	model->set_lod_params( type, use_default, p0, p1, p2 );
 }
 
 void engine::world::set_model_visible(
@@ -1824,18 +1796,15 @@ void engine::world::remove_lpv_occluder( base_scene_ptr const& in_scene, u32 id 
 	scene->remove_lpv_occluder	( id);
 }
 
-// STATE[STUB]
 void engine::world::add_volume_fog(
 	base_scene_ptr const&			in_scene,
 	u32								id,
 	volume_fog_parameters const&	in_parameters
 )
 {
-	// FUNCTION BODY[0x654b40]: 3
-	// <0x654b4c>|0x00c|+0x003:'1697'
-	// <0>
-	// <0x654b4f>|0x00f|+0x02b:'1699'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	scene->add_volume_fog( id, in_parameters );
 }
 
 void engine::world::update_volume_fog(
@@ -2300,23 +2269,14 @@ void engine::world::reset_grass( resources::unmanaged_resource_ptr grass, base_s
 	scene->reset_grass	( static_cast_checked<grass_world*>(grass.c_ptr()) );
 }
 
-// STATE[STUB]
 bool engine::world::is_playing( resources::unmanaged_resource_ptr const& instance )
 {
-	return false;
-
-	// FUNCTION BODY[0x6540c0]: 2
-	// <0>
-	// <0x6540c0>|0x000|+0x009:'2231'
-	// ******
+	return particle::is_playing( instance );
 }
 
-// STATE[STUB]
 void engine::world::set_gamma_correction_factor( const float value )
 {
-	// FUNCTION BODY[0x6540a0]: 1
-	// <0x6540a0>|0x000|+0x010:'2236'
-	// ******
+	options::ref( ).current.m_gamma_correction_factor = value;
 }
 
 	// TYPEDEFS
