@@ -301,29 +301,7 @@ stage_postprocess::stage_postprocess(
 	renderer_context* context
 ) :
 	stage										( in_renderer, context ),
-	m_prev_view_matrix						( float4x4().identity() ),
-	m_kernel_offsets							( 0 ),
-	m_blur_offsets_weights						( 0 ),
-	m_luminance_range_parameter_parameter			( 0 ),
-	m_elapsed_time_parameter						( 0 ),
-	m_adaptation_factor							( 0 ),
-	m_gamma_correction_factor						( 0 ),
-	m_prev_view_matrix_parameter					( 0 ),
-	m_prev_world_view_matrix_parameter				( 0 ),
-	m_inverse_world_matrix_parameter				( 0 ),
-	m_god_rays_parameters0						( 0 ),
-	m_god_rays_parameters1						( 0 ),
-	m_god_rays_parameters2						( 0 ),
-	m_c_eye_ray_corner							( 0 ),
-	m_c_frame_index								( 0 ),
-	m_frame_delta_parameter						( 0 ),
-	m_motion_blur_scale_parameter					( 0 ),
-	m_aberration_parameters						( 0 ),
-	m_blur_target_size_parameter					( 0 ),
-	m_lens_flares_parameters						( 0 ),
-	m_sun_direction_parameter						( 0 ),
-	m_frame_luminance_parameter					( 0 ),
-	m_fxaa_parameters							( 0 )
+	m_prev_view_matrix						( float4x4().identity() )
 {
 	effect_manager::ref().create_effect<effect_gather_bloom>(&m_sh_gather_bloom);
 	effect_manager::ref().create_effect<effect_gather_luminance>(&m_sh_gather_luminance);
@@ -392,9 +370,13 @@ stage_postprocess::stage_postprocess(
 	m_inverse_world_matrix_parameter					= backend::ref().register_constant_host( "inverse_world_matrix_parameter", rc_float );
 	m_frame_delta_parameter							= backend::ref().register_constant_host( "frame_delta_parameter", rc_float );
 	m_motion_blur_scale_parameter						= backend::ref().register_constant_host( "motion_blur_scale_parameter", rc_float );
+
+
 	m_aberration_parameters							= backend::ref().register_constant_host( "aberration_parameters", rc_float );
 
+
 	m_color_grading_base_lut = create_color_grading_base_lut(16);
+
 	m_textures.resize(10, NULL);
 
 	const D3D_INPUT_ELEMENT_DESC screen_vertex_layout[] =
@@ -413,6 +395,7 @@ stage_postprocess::stage_postprocess(
 	);
 
 	m_enabled						= options::ref().current.m_enabled_post_process_stage;
+
 	m_image_grain_random_offsets	= float2(0.0f, 0.0f);
 }
 
