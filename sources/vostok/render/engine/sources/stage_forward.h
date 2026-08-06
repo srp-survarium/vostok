@@ -37,24 +37,7 @@ public:
 		renderer* in_renderer,
 		renderer_context* in_context,
 		stage_type type
-	) :
-		stage( in_renderer, in_context ),
-		m_tree_position_and_scale_parameter( 0 ),
-		m_tree_rotation_parameter( 0 ),
-		m_far_fog_color_and_distance( 0 ),
-		m_fog_alpha( 0 ),
-		m_near_fog_distance( 0 ),
-		m_eye_ray_corner_parameter( 0 ),
-		m_view_to_shadow_parameter( 0 ),
-		m_rain_offset_parameter( 0 ),
-		m_use_rain_parameter( 0 ),
-		m_tracer_debug_color_parameter( 0 ),
-		m_c_inscatter_parameters( 0 ),
-		m_rain_offset( 0.0f ),
-		m_rain_offset_counter( 0.0f ),
-		m_type( type )
-	{
-	}
+	);
 
 	virtual ~stage_forward( );
 	virtual void execute( ) override;
@@ -64,7 +47,7 @@ public:
 	void render_opaque_models( );
 	void render_forward_models(
 		vector<render_surface_instance*>& dynamic_visuals,
-		u32 pass_index
+		u32 const pass_index
 	);
 
 private:
