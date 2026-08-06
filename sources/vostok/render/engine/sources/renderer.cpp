@@ -1051,14 +1051,14 @@ void renderer::render(
 	vostok::ui::font const*				default_font
 )
 {
-	backend::ref( ).num_vs_changes	=
-	backend::ref( ).num_ps_changes	=
-	backend::ref( ).num_il_changes	=
-	backend::ref( ).num_vsc_changes	=
-	backend::ref( ).num_vst_changes	=
-	backend::ref( ).num_vss_changes	=
-	backend::ref( ).num_psc_changes	=
-	backend::ref( ).num_pst_changes	=
+	backend::ref( ).num_vs_changes	= 0;
+	backend::ref( ).num_ps_changes	= 0;
+	backend::ref( ).num_il_changes	= 0;
+	backend::ref( ).num_vsc_changes	= 0;
+	backend::ref( ).num_vst_changes	= 0;
+	backend::ref( ).num_vss_changes	= 0;
+	backend::ref( ).num_psc_changes	= 0;
+	backend::ref( ).num_pst_changes	= 0;
 	backend::ref( ).num_pss_changes	= 0;
 
 	float const frame_time		= m_fps_timer.get_elapsed_sec( );
