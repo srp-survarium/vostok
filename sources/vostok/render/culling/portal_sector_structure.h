@@ -52,8 +52,8 @@ public:
 		float3 const& point2,
 		float3 const& point3
 	) :
-		m_plane( ),
-		m_visible( false )
+		m_plane( math::create_plane( point0, point1, point2 ) ),
+		m_visible( true )
 	{
 		m_sectors[0] = sector0;
 		m_sectors[1] = sector1;
@@ -144,6 +144,10 @@ STATIC_SIZE_ASSERT( spatial_sector, 0x20 );
 
 class portal_sector_structure : public resources::unmanaged_resource {
 public:
+	typedef buffer_vector<portal> portals_type;
+	typedef buffer_vector<spatial_sector> sectors_type;
+	typedef collision::space_partitioning_tree* tree_ptr;
+
 	portal_sector_structure(
 		memory::base_allocator* allocator,
 		u32 sectors_count,
@@ -153,12 +157,12 @@ public:
 
 	u32 get_sector_id( memory::base_allocator& allocator, float3 const& pos ) const;
 
-	buffer_vector<portal> const& get_portals( ) const
+	portals_type const& get_portals( ) const
 	{
 		return m_portals;
 	}
 
-	buffer_vector<spatial_sector> const& get_sectors( ) const
+	sectors_type const& get_sectors( ) const
 	{
 		return m_sectors;
 	}
@@ -191,12 +195,12 @@ private:
 private:
 	memory::base_allocator* m_allocator;
 	void* m_portals_buffer;
-	buffer_vector<portal> m_portals;
+	portals_type m_portals;
 	u32* m_portal_ids_buffer;
 	void* m_sectors_buffer;
-	buffer_vector<spatial_sector> m_sectors;
-	collision::space_partitioning_tree* m_sectors_spatial_tree;
-	collision::space_partitioning_tree* m_portals_spatial_tree;
+	sectors_type m_sectors;
+	tree_ptr m_sectors_spatial_tree;
+	tree_ptr m_portals_spatial_tree;
 	collision::geometry* m_portals_geometry;
 };
 
