@@ -12,20 +12,14 @@ namespace vostok {
 namespace render {
 
 struct speedtree_data {
-	bool all_assests_ready( ) { return false; }
-
-	speedtree_data( ) :
-		m_parent_query( NULL ),
-		m_failed( false )
-	{
-	}
-
 	resources::query_result_for_cook* m_parent_query;
 	material_ptr m_materials[5];
 	material_effects_instance_ptr m_material_effects[5];
 	fs_new::virtual_path_string m_material_path[5];
 	speedtree_tree_base_ptr m_model;
 	bool m_failed;
+
+	bool all_assests_ready( ) { return false; }
 };
 
 STATIC_SIZE_ASSERT( speedtree_data, 0x598 );

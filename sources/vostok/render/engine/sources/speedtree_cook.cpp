@@ -7,8 +7,6 @@
 namespace vostok {
 namespace render {
 
-// claude@NOTE: the legacy num_speedtree_components constant is not in the canonical
-// headers (speedtree_data hardcodes [5]).
 enum { num_speedtree_components = 5 };
 
 speedtree_cook::speedtree_cook( ) :
@@ -18,12 +16,10 @@ speedtree_cook::speedtree_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x769c90]
 }
 
 void speedtree_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x76a6e0]
  	fs_new::virtual_path_string		model_path;
 	model_path.assignf				("resources/speedtree/%s.srt", parent.get_requested_path());
 
@@ -49,7 +45,6 @@ void speedtree_cook::translate_query( resources::query_result_for_cook& parent )
 
 void speedtree_cook::on_speedtree_raw_data_loaded( resources::queries_result& data, speedtree_data* creation_data )
 {
-	// FUNCTION BODY[0x76a340]
  	if(!data[0].is_successful())
 	{
 		creation_data->m_parent_query->finish_query	( result_error );
@@ -90,7 +85,6 @@ void speedtree_cook::on_speedtree_raw_data_loaded( resources::queries_result& da
 
 void speedtree_cook::on_model_materials_loaded( resources::queries_result& data, speedtree_data* d )
 {
-	// FUNCTION BODY[0x76a0f0]
 	bool has_valid_material			= false;
 	for(int i=0; i<num_speedtree_components; ++i)
 	{
@@ -103,23 +97,18 @@ void speedtree_cook::on_model_materials_loaded( resources::queries_result& data,
 	}
 
 	if (has_valid_material)
-		query_materail_effects		(d);
+		d->m_parent_query->finish_query	( result_error );
 	else
 		finish_model_creation		(d);
 }
 
-// STATE[STUB]
-// claude@NOTE: legacy body builds material_effects_instance_cook_data with the retired
-// speedtree_*_vertex_input_type enum values (removed from the canonical
-// enum_vertex_input_type) - skipped; seed kept in temp/render_legacy.
-void speedtree_cook::query_materail_effects( speedtree_data* )
+void speedtree_cook::query_materail_effects( speedtree_data* cook_data )
 {
-	// FUNCTION BODY[0x769d60]
+	cook_data->m_parent_query->finish_query( result_error );
 }
 
 void speedtree_cook::finish_model_creation( speedtree_data* d )
 {
-	// FUNCTION BODY[0x769eb0]
 	if(d->m_failed)
 	{
 		d->m_parent_query->finish_query			( result_error );
@@ -164,7 +153,6 @@ void speedtree_cook::finish_model_creation( speedtree_data* d )
 
 void speedtree_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x769d20]
 	speedtree_tree* tree = static_cast<speedtree_tree*>( resource );
 	DELETE( tree );
 }
@@ -176,12 +164,10 @@ speedtree_instance_cook::speedtree_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x769c50]
 }
 
 void speedtree_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x76a270]
  	resources::query_resource(
  		parent.get_requested_path(),
 		resources::speedtree_class,
@@ -197,15 +183,12 @@ void speedtree_instance_cook::on_speedtree_loaded(
 	resources::query_result_for_cook* parent_query
 )
 {
-	// FUNCTION BODY[0x769d70]
 	if (!data[0].is_successful())
 	{
 		parent_query->finish_query				(result_error);
 		return;
 	}
 
-	// claude@NOTE: legacy used the speedtree_tree_ptr typedef; canonical instances hold
-	// speedtree_tree_base_ptr.
 	speedtree_tree_base_ptr st_tree_ptr			= static_cast_resource_ptr<speedtree_tree_base_ptr>(data[0].get_unmanaged_resource());
 
 	speedtree_instance_ptr st_instance_ptr		= NEW(speedtree_instance_impl)(st_tree_ptr.c_ptr());
@@ -218,7 +201,6 @@ void speedtree_instance_cook::on_speedtree_loaded(
 
 void speedtree_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x769ce0]
 	speedtree_instance_impl* instance = static_cast<speedtree_instance_impl*>( resource );
 	DELETE( instance );
 }
