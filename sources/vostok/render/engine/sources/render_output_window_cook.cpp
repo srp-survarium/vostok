@@ -1,55 +1,39 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: legacy cook implemented the retired resources::unmanaged_cook contract (see triage_log 'Obsolete predecessor interfaces'); no body maps onto translate_query/delete_resource - matcher-phase work.
 #include "render_output_window_cook.h"
+#include "render_output_window.h"
+#include "scene_manager.h"
+#include <vostok/render/facade/common_types.h>
 
 namespace vostok {
 namespace render {
 
-// STATE[STUB]
 render_output_window_cook::render_output_window_cook( ) :
-	resources::translate_query_cook(
+	super(
 		resources::render_output_window_class,
 		reuse_false,
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x76ac70]
-	// ******
 }
 
-// STATE[STUB]
 void render_output_window_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// LOCALS
-	// output_window_configuration 		window_configuration
-	// ******
+	output_window_configuration window_configuration;
+	parent.user_data( )->try_get( window_configuration );
 
-	// FUNCTION BODY[0x76ad40]: 8
-	// <0>
-	// <0x76ad49>|0x009|+0x034:'22'
-	// <0>
-	// <0x76ad7d>|0x03d|+0x023:'24'
-	// <0x76ada0>|0x060|+0x02c:'25'
-	// <0>
-	// <0x76adcc>|0x08c|+0x01f:'27'
-	// <0x76adeb>|0x0ab|+0x00a:'28'
-	// ******
+	render_output_window* created_resource = NEW( render_output_window )( window_configuration );
+	scene_manager::ref( ).add_render_output_window( created_resource );
+
+	parent.set_unmanaged_resource( created_resource, resources::nocache_memory, sizeof( render_output_window ) );
+	parent.finish_query( result_success );
 }
 
-// STATE[STUB]
 void render_output_window_cook::delete_resource( resources::resource_base* resource )
 {
-	// CALL SITE INFO
-	// <0x76ad20> -> void* < unknown >( u32 )
-	// ******
+	render_output_window* output_window = static_cast_checked<render_output_window*>( resource );
+	scene_manager::ref( ).add_render_output_window( output_window );
 
-	// FUNCTION BODY[0x76acd0]: 5
-	// <0>
-	// <1>
-	// <0x76acd2>|0x002|+0x031:'35'
-	// <0>
-	// <0x76ad03>|0x033|+0x034:'37'
-	// ******
+	DELETE( output_window );
 }
 
 } // namespace render
