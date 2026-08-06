@@ -270,6 +270,8 @@ void effect_manager::on_effects_recompiled(
 #endif // #ifndef MASTER_GOLD
 		}
 	}
+
+	m_is_effects_query_processing = false;
 }
 
 res_shader_technique* effect_manager::create_effect_technique(
@@ -311,11 +313,55 @@ void effect_manager::delete_effect_technique( res_shader_technique const* techni
 }
 
 void effect_manager::recompile_shaders_async(
-	vector<fs_new::virtual_path_string> const&
+	vector<fs_new::virtual_path_string> const& in_changed_defines
 )
 {
-	// claude@NOTE: legacy body diverged - closest ancestor recompile_shaders is entirely #ifndef MASTER_GOLD over the retired used_shaders member; recompile_shaders_async has zero corpus hits; matcher-phase work.
-	// STATE[STUB]
+	vectora<effect_to_recompile_struct> effects_to_recompile( memory::g_mt_allocator );
+
+	for ( vector<effect_holder_struct>::iterator it = m_effects.begin( ); it != m_effects.end( ); ++it )
+	{
+		if ( it->descriptor->should_recompile_when_global_changes( in_changed_defines ) )
+			effects_to_recompile.push_back( effect_to_recompile_struct( it->effect, it->descriptor, it->config, 0 ) );
+	}
+
+	u32 const num_requests = effects_to_recompile.size( );
+	if ( !num_requests )
+		return;
+
+	resources::user_data_variant** user_data_variants_ptr = (resources::user_data_variant**)ALLOCA( sizeof(resources::user_data_variant*) * num_requests );
+	resources::creation_request* requests = (resources::creation_request*)ALLOCA( sizeof(resources::creation_request) * num_requests );
+	resources::user_data_variant* user_data_variants = (resources::user_data_variant*)ALLOCA( sizeof(resources::user_data_variant) * num_requests );
+
+	u32 request_index = 0;
+	for ( vectora<effect_to_recompile_struct>::iterator it = effects_to_recompile.begin( ); it != effects_to_recompile.end( ); ++it )
+	{
+		resources::user_data_variant* variant = new(&user_data_variants[request_index]) resources::user_data_variant;
+		variant->set( NEW(effect_compile_data)( it->descriptor, it->config, it->crc, false ) );
+		user_data_variants_ptr[request_index] = variant;
+
+		new(&requests[request_index]) resources::creation_request(
+			"",
+			vostok::const_buffer( "", 1 ),
+			resources::render_effect_class
+		);
+		++request_index;
+	}
+
+	m_is_effects_query_processing = true;
+
+	resources::query_create_resources(
+		requests,
+		num_requests,
+		boost::bind( &effect_manager::on_effects_recompiled, this, &effects_to_recompile, _1 ),
+		g_allocator,
+		(resources::user_data_variant const**)user_data_variants_ptr
+	);
+
+	while ( m_is_effects_query_processing )
+	{
+		resources::dispatch_callbacks( );
+		threading::yield( 1 );
+	}
 }
 
 void effect_manager::register_effect_desctiptor( pcstr name, effect_descriptor* dectriptor )
