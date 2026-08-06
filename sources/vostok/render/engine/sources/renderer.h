@@ -96,8 +96,7 @@ private:
 	u32 m_tech_index;
 };
 
-class sort_by_distance_predicate {
-public:
+struct sort_by_distance_predicate {
 	sort_by_distance_predicate(
 		float3 const& eye_position,
 		bool from_near_to_far
@@ -112,7 +111,7 @@ public:
 		render_surface_instance const* right
 	) const;
 
-private:
+public:
 	float3 m_eye_position;
 	bool m_from_near_to_far;
 };

@@ -720,38 +720,23 @@ bool sort_by_vs_predicate::operator()( render_surface_instance const* left, rend
 		< right_pass->get_ps( )->hardware_shader( )->hardware_shader( );
 }
 
-// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
 bool sort_by_distance_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
-	// LOCALS
-	// float3 							pos0
-	// float3 							pos1
-	// ******
+	float3 pos0 = left->m_transform->c.xyz( );
+	float3 pos1 = right->m_transform->c.xyz( );
 
-	return false;
+	pos0.x = float( math::floor( pos0.x ) );
+	pos0.y = float( math::floor( pos0.y ) );
+	pos0.z = float( math::floor( pos0.z ) );
 
-	// FUNCTION BODY[0x64e00]: 17
-	// <0x64e03>|0x003|+0x00e:'501'
-	// <0x64e11>|0x011|+0x00b:'502'
-	// <0>
-	// <0x64e1c>|0x01c|+0x021:'504'
-	// <0x64e3d>|0x03d|+0x016:'505'
-	// <0x64e53>|0x053|+0x016:'506'
-	// <0>
-	// <0x64e69>|0x069|+0x016:'508'
-	// <0x64e7f>|0x07f|+0x016:'509'
-	// <0x64e95>|0x095|+0x016:'510'
-	// <0>
-	// <0x64eab>|0x0ab|+0x03a:'512'
-	// <0x64ee5>|0x0e5|+0x036:'513'
-	// <0>
-	// <1>
-	// <2>
-	// <0x64f1b>|0x11b|+0x028:'517'
-	// <0x64f43>|0x143|-0x004:'517'
-	// <0x64f3f>|0x13f|+0x006:'518'
-	// ******
+	pos1.x = float( math::floor( pos1.x ) );
+	pos1.y = float( math::floor( pos1.y ) );
+	pos1.z = float( math::floor( pos1.z ) );
+
+	float const distance0 = math::squared_length( pos0 - m_eye_position );
+	float const distance1 = math::squared_length( pos1 - m_eye_position );
+
+	return m_from_near_to_far ? distance0 < distance1 : distance0 > distance1;
 }
 
 bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
@@ -865,32 +850,22 @@ void renderer::fill_opaque_models( )
 		opaque_models.push_back( *i );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy corpus; matcher-phase work.
-// STATE[STUB]
 void renderer::sort_models_by_distance( vector< render_surface_instance* >& instances, bool from_near_to_far )
 {
-	// LOCALS
-	// float3 							pos
-	// ******
+	float3 pos = m_renderer_context->get_view_pos( );
 
-	// FUNCTION BODY[0x647950]: 16
-	// <0x647953>|0x003|+0x020:'653'
-	// <0>
-	// <0x647973>|0x023|+0x011:'655'
-	// <0x647984>|0x034|+0x016:'656'
-	// <0x64799a>|0x04a|+0x016:'657'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x6479b0>|0x060|+0x03e:'668'
-	// ******
+	pos.x = float( math::floor( pos.x ) );
+	pos.y = float( math::floor( pos.y ) );
+	pos.z = float( math::floor( pos.z ) );
+
+	std::sort(
+		instances.begin( ),
+		instances.end( ),
+		sort_by_distance_predicate(
+			pos,
+			from_near_to_far
+		)
+	);
 }
 
 void renderer::sort_models(
