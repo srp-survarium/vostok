@@ -20,7 +20,7 @@
 // Retire pin by pin as each real game consumer is matched: a pin whose removal
 // leaves the method paired is redundant and must go.
 
-#include <vostok/render/facade/sources/scene_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 #include <vostok/render/facade/environment_probe_properties.h>
 #include <vostok/render/facade/sky_ambient_occlusion_properties.h>
 #include <vostok/render/engine/sources/trample_desc.h>
