@@ -1727,43 +1727,28 @@ void engine::world::set_model_lod_params(
 	// ******
 }
 
-// claude@NOTE: legacy body diverged - legacy set_model_visible takes bool, canonical takes u32 flags; matcher-phase work.
-// STATE[STUB]
 void engine::world::set_model_visible(
 	render_model_instance_ptr const&		v,
 	fs_new::virtual_path_string const&		subsurface_name,
 	u32										flags
 )
 {
-	// LOCALS
-	// render_model_instance_impl_ptr 	model
-	// vector< render_surface_instance* > list
-	// bool 							check_name
-	// ******
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>( v );
 
-	// CALL SITE INFO
-	// <0x655461> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
-	// ******
+	vector< render_surface_instance* > list;
+	model->get_surfaces( NULL, NULL, list, false, 0xaa, 3 );
 
-	// FUNCTION BODY[0x655410]: 17
-	// <0x655413>|0x003|+0x02c:'1447'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x65543f>|0x02f|+0x024:'1452'
-	// <0>
-	// <0x655463>|0x053|+0x00a:'1454'
-	// <0>
-	// <0x65546d>|0x05d|+0x011:'1456'
-	// <0>
-	// <0x65547e>|0x06e|+0x002:'1458'
-	// <0x655480>|0x070|+0x059:'1459'
-	// <0>
-	// <1>
-	// <0x6554d9>|0x0c9|+0x018:'1462'
-	// <0>
-	// ******
+	bool check_name = subsurface_name.length( ) != 0;
+
+	for ( vector< render_surface_instance* >::iterator it = list.begin( ); it != list.end( ); ++it )
+	{
+		render_surface_instance& inst = **it;
+
+		if ( !check_name || inst.m_render_surface->m_render_geometry.shading_group_name == subsurface_name.c_str( ) )
+		{
+			inst.m_flags = flags;
+		}
+	}
 }
 
 void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v, u32 subsurface_id, u32 flags )
