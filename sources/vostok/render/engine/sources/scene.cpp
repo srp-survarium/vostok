@@ -6,6 +6,7 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/options.h>
+#include <vostok/render/core/resource_manager.h>
 #include <vostok/render/facade/common_types.h>
 #include "ambient_volume.h"
 #include "clouds.h"
@@ -418,7 +419,6 @@ void scene::remove_tracer( tracer_model_instance_ptr const& instance )
 	m_tracers.erase				( it );
 }
 
-// STATE[STUB]
 void scene::process_streaming(
 	float4x4 const&		projection_matrix,
 	float3				viewer_position,
@@ -426,185 +426,138 @@ void scene::process_streaming(
 	const u32			screen_size_y
 )
 {
-	// LOCALS
-	// streamable_texture_info* 		info_it
-	// streamable_texture_info* 		info_end
-	// u32 								num_mips
-	// u32 								num_wanted_mips
-	// float 							distance
-	// fs_new::virtual_path_string 		path
-	// fs_new::virtual_path_string 		path_add
-	// requested_streamable_texture 	texture_request
-	// timing::timer 					creation_timer
-	// float 							creation_time
-	// u32 								index
-	// streaming_ready_texture* 		first
-	// ******
+	struct remove_texture_predicate {
+		bool operator()( streamable_texture_info const& info )
+		{
+			return info.texture->m_loaded && info.texture->m_reference_count == 1;
+		}
+	};
 
-	// TYPEDEFS
-	// typedef
-	// 	scene::process_streaming::__l3::remove_requested_texture_predicate
-	// 	scene::process_streaming::__l3::remove_requested_texture_predicate;
+	streaming_textures.erase(
+		std::remove_if( streaming_textures.begin( ), streaming_textures.end( ), remove_texture_predicate( ) ),
+		streaming_textures.end( )
+	);
 
-	// typedef
-	// 	scene::process_streaming::__l2::remove_texture_predicate
-	// 	scene::process_streaming::__l2::remove_texture_predicate;
+	struct remove_requested_texture_predicate {
+		bool operator()( requested_streamable_texture const& texture )
+		{
+			return texture.texture && texture.texture->m_reference_count == 1;
+		}
+	};
 
-	// typedef
-	// 	scene::process_streaming::__l16::ready_texture_comparer
-	// 	scene::process_streaming::__l16::ready_texture_comparer;
+	requested_streamable_textures.erase(
+		std::remove_if(
+			requested_streamable_textures.begin( ),
+			requested_streamable_textures.end( ),
+			remove_requested_texture_predicate( )
+		),
+		requested_streamable_textures.end( )
+	);
 
-	// ******
+	streamable_texture_info* info_it	= streaming_textures.begin( );
+	streamable_texture_info* info_end	= streaming_textures.end( );
+	for ( ; info_it != info_end; ++info_it )
+	{
+		requested_streamable_texture* requested_it = std::find_if(
+			requested_streamable_textures.begin( ),
+			requested_streamable_textures.end( ),
+			find_requested_texture_predicate( info_it->texture )
+		);
 
-	// FUNCTION BODY[0x640160]: 147
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <0x64016d>|0x00d|+0x069:'374'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <0x6401d6>|0x076|+0x065:'391'
-	// <0>
-	// <0x64023b>|0x0db|+0x006:'393'
-	// <0x640241>|0x0e1|+0x00e:'394'
-	// <0>
-	// <0x64024f>|0x0ef|+0x015:'396'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x640264>|0x104|+0x094:'404'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6402f8>|0x198|+0x00a:'409'
-	// <0>
-	// <1>
-	// <2>
-	// <0x640302>|0x1a2|+0x025:'413'
-	// <0>
-	// <1>
-	// <0x640327>|0x1c7|+0x009:'416'
-	// <0>
-	// <0x640330>|0x1d0|+0x004:'418'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x640334>|0x1d4|+0x01c:'430'
-	// <0x640350>|0x1f0|+0x017:'431'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x640367>|0x207|+0x00a:'436'
-	// <0>
-	// <0x640371>|0x211|+0x00a:'438'
-	// <0>
-	// <0x64037b>|0x21b|+0x0bc:'440'
-	// <0x640437>|0x2d7|+0x00a:'441'
-	// <0x640441>|0x2e1|+0x036:'442'
-	// <0>
-	// <0x640477>|0x317|+0x017:'444'
-	// <0x64048e>|0x32e|+0x07d:'445'
-	// <0>
-	// <0x64050b>|0x3ab|+0x027:'447'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <0x640532>|0x3d2|+0x0d6:'457'
-	// <0x640608>|0x4a8|+0x09c:'458'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6406a4>|0x544|+0x023:'462'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6406c7>|0x567|+0x01b:'469'
-	// <0>
-	// <0x6406e2>|0x582|+0x005:'471'
-	// <0>
-	// <0x6406e7>|0x587|+0x02c:'473'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x640713>|0x5b3|+0x06d:'481'
-	// <0>
-	// <1>
-	// <2>
-	// <0x640780>|0x620|+0x02e:'485'
-	// <0>
-	// <0x6407ae>|0x64e|+0x041:'487'
-	// <0>
-	// <0x6407ef>|0x68f|+0x00f:'489'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x6407fe>|0x69e|+0x055:'496'
-	// <0>
-	// <0x640853>|0x6f3|+0x008:'498'
-	// <0x64085b>|0x6fb|+0x011:'499'
-	// <0>
-	// <0x64086c>|0x70c|+0x012:'501'
-	// <0>
-	// <0x64087e>|0x71e|+0x01b:'503'
-	// <0>
-	// <1>
-	// ******
+		u32 num_mips = info_it->texture->num_mips;
+		if ( requested_it != requested_streamable_textures.end( ) )
+			continue;
+
+		u32 num_wanted_mips = 0;
+		float distance;
+		for (
+			streaming_texture_instance* instance_it = info_it->instances.begin( );
+			instance_it != info_it->instances.end( );
+			++instance_it
+		)
+		{
+			num_wanted_mips = math::max(
+				num_wanted_mips,
+				(u32)calculate_needed_texture_mip_levels(
+					projection_matrix,
+					viewer_position,
+					instance_it->object_sphere,
+					screen_size_x,
+					screen_size_y,
+					instance_it->texel_factor,
+					distance
+				)
+			);
+		}
+
+		if ( num_wanted_mips == num_mips )
+			continue;
+
+		requested_streamable_texture texture_request;
+		texture_request.texture		= info_it->texture;
+		texture_request.num_mips	= num_wanted_mips;
+		texture_request.path		= info_it->path;
+		requested_streamable_textures.push_back( texture_request );
+
+		fs_new::virtual_path_string path;
+		fs_new::virtual_path_string path_add( texture_request.path.c_str( ) );
+		path.assignf( "%s/%s.dds", "resources/textures", path_add.c_str( ) );
+
+		resources::request requests[] = {
+			{ path.c_str( ), resources::texture_wrapper_class }
+		};
+		resources::query_resources(
+			requests,
+			array_size( requests ),
+			boost::bind(
+				&scene::on_texture_loaded,
+				this,
+				_1,
+				texture_request.texture,
+				num_wanted_mips,
+				distance
+			),
+			g_allocator
+		);
+	}
+
+	if ( ready_streaming_textures.empty( ) )
+		return;
+
+	struct ready_texture_comparer {
+		bool operator()( streaming_ready_texture const& left, streaming_ready_texture const& right )
+		{
+			return left.distance > right.distance;
+		}
+	};
+
+	std::sort(
+		ready_streaming_textures.begin( ),
+		ready_streaming_textures.end( ),
+		ready_texture_comparer( )
+	);
+
+	u32 index = 0;
+	timing::timer creation_timer;
+	float creation_time = 0.f;
+	while ( !ready_streaming_textures.empty( ) && index < 4 && creation_time <= 2.f )
+	{
+		creation_timer.start( );
+		streaming_ready_texture* first = ready_streaming_textures.begin( );
+		resource_manager::ref( ).on_texture_loaded( first->data, first->name.c_str( ), first->num_mips );
+		creation_time += creation_timer.get_elapsed_sec( ) * 1000.f;
+
+		requested_streamable_texture* requested_it = std::find_if(
+			requested_streamable_textures.begin( ),
+			requested_streamable_textures.end( ),
+			find_requested_texture_predicate( first->texture )
+		);
+		if ( requested_it != requested_streamable_textures.end( ) )
+			requested_streamable_textures.erase( requested_it );
+
+		ready_streaming_textures.erase( ready_streaming_textures.begin( ) );
+		++index;
+	}
 }
 
 void scene::add_trample( trample_desc const& desc )
@@ -615,7 +568,6 @@ void scene::add_trample( trample_desc const& desc )
 	m_grass->add_trample	( desc );
 }
 
-// STATE[STUB]
 void scene::on_texture_loaded(
 	resources::queries_result&		data,
 	res_texture_ptr					texture,
@@ -623,34 +575,21 @@ void scene::on_texture_loaded(
 	float							distance
 )
 {
-	// LOCALS
-	// streaming_ready_texture 			ready_texture
-	// ******
+	requested_streamable_texture* requested_it = std::find_if(
+		requested_streamable_textures.begin( ),
+		requested_streamable_textures.end( ),
+		find_requested_texture_predicate( texture )
+	);
+	if ( requested_it == requested_streamable_textures.end( ) || !data[0].is_successful( ) )
+		return;
 
-	// FUNCTION BODY[0x63e070]: 22
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x63e07f>|0x00f|+0x040:'523'
-	// <0>
-	// <0x63e0bf>|0x04f|+0x029:'525'
-	// <0>
-	// <0x63e0e8>|0x078|+0x015:'527'
-	// <0x63e0fd>|0x08d|+0x03f:'528'
-	// <0x63e13c>|0x0cc|+0x057:'529'
-	// <0>
-	// <0x63e193>|0x123|+0x052:'531'
-	// <0x63e1e5>|0x175|+0x005:'532'
-	// <0>
-	// <0x63e1ea>|0x17a|+0x019:'534'
-	// <0>
-	// <1>
-	// <0x63e203>|0x193|+0x029:'537'
-	// <0>
-	// <1>
-	// ******
+	streaming_ready_texture ready_texture;
+	ready_texture.texture	= texture;
+	ready_texture.data		= data[0].get_managed_resource( );
+	ready_texture.name		= data[0].get_requested_path( );
+	ready_texture.num_mips	= num_mips;
+	ready_texture.distance	= distance;
+	ready_streaming_textures.push_back( ready_texture );
 }
 
 // STATE[STUB]
