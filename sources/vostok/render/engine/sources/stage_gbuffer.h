@@ -104,7 +104,6 @@ public:
 
 	bool is_effects_ready( ) const;
 
-private:
 	void render_models(
 		vector<render_surface_instance*>&	models,
 		u32								shader_lod_index,
