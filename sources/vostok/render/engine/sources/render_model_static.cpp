@@ -2,6 +2,7 @@
 // claude@NOTE: legacy-harvest disposition: the remaining template helpers and LPV/shadow-pass/LOD/batched-vertex/sectors machinery below have no legacy ancestor (new-in-target; legacy twin keeps only load/append_surface/get_surfaces) - matcher-phase work.
 #include "help_math.h"
 #include "batched_vertex_source.h"
+#include <vostok/render/culling/possible_sectors_holder.h>
 #include "render_model_static.h"
 
 namespace vostok {
@@ -1068,15 +1069,9 @@ void static_render_model_instance::get_surface_stats( u32 surface_id, surface_st
 	// ******
 }
 
-// STATE[STUB]
 void static_render_model_instance::add_sectors_holder( configs::binary_config_value sectotrs_cfg )
 {
-	// FUNCTION BODY[0x6310c0]: 2
-	// <0>
-	// <0x6310c0>|0x000|+0x048:'1064'
-	// <0x631108>|0x048|-0x004:'1064'
-	// <0x631104>|0x044|+0x00c:'1065'
-	// ******
+	m_sectors_holder = NEW( culling::possible_sectors_holder )( sectotrs_cfg );
 }
 
 } // namespace render

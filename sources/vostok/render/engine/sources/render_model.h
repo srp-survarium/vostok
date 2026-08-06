@@ -18,7 +18,11 @@ class render_surface;
 struct model_locator_item;
 
 struct model_lods_descriptor {
-	model_lods_descriptor( ) { }
+	model_lods_descriptor( )
+	{
+		m_lod_calc_type = 0;
+		m_lod_params_default = true;
+	}
 
 	u8		m_lod_surfaces_count[3];
 	pbyte	m_lod_surfaces[3];
