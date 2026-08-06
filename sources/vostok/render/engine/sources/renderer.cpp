@@ -657,10 +657,13 @@ void renderer::clear_resources( )
 void renderer::execute_stages( )
 {
 	if ( !s_execute_stages )
+	{
 		return;
+	}
 
 	if ( s_do_stages_profiling )
 	{
+
 		m_timing_event->issue	( );
 		m_timing_event->wait	( );
 	}
@@ -676,6 +679,9 @@ void renderer::execute_stages( )
 			continue;
 
 		u32 prev_draw_calls;
+
+
+
 
 		if ( s_do_stages_profiling )
 		{
