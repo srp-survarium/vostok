@@ -28,6 +28,7 @@
 #include "renderer.h"
 #include "register_samplers.h"
 #include "scene.h"
+#include "clouds.h"
 #include "scene_view.h"
 #include "render_output_window.h"
 #include "speedtree.h"
@@ -1653,63 +1654,48 @@ void engine::world::remove_clouds( base_scene_ptr const& in_scene )
 	scene->remove_clouds	( );
 }
 
-// STATE[STUB]
 void engine::world::set_num_clouds_keys( base_scene_ptr const& in_scene, const u32 num_keys )
 {
-	// FUNCTION BODY[0x654240]: 4
-	// <0x654240>|0x000|+0x006:'1576'
-	// <0>
-	// <0x654246>|0x006|+0x00a:'1578'
-	// <0x654250>|0x010|+0x00a:'1579'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	if ( scene->has_clouds() )
+		scene->get_clouds()->set_num_keys( num_keys );
 }
 
-// STATE[STUB]
 void engine::world::set_clouds_key(
 	base_scene_ptr const&			in_scene,
 	const u32						index,
 	cloud_key_parameters const&		parameters
 )
 {
-	// FUNCTION BODY[0x654210]: 4
-	// <0x654210>|0x000|+0x006:'1584'
-	// <0>
-	// <0x654216>|0x006|+0x00a:'1586'
-	// <0x654220>|0x010|+0x01d:'1587'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	if ( scene->has_clouds() )
+		scene->get_clouds()->set_key( index, parameters );
 }
 
-// STATE[STUB]
 void engine::world::set_clouds_time( base_scene_ptr const& in_scene, const float time )
 {
-	// FUNCTION BODY[0x654c80]: 4
-	// <0x654c80>|0x000|+0x006:'1592'
-	// <0>
-	// <0x654c86>|0x006|+0x00a:'1594'
-	// <0x654c90>|0x010|+0x00c:'1595'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	if ( scene->has_clouds() )
+		scene->get_clouds()->set_time( time );
 }
 
-// STATE[STUB]
 void engine::world::set_editor_mode( base_scene_ptr const& in_scene, bool is_editor_mode )
 {
-	// FUNCTION BODY[0x6541f0]: 4
-	// <0x6541f0>|0x000|+0x006:'1600'
-	// <0>
-	// <0x6541f6>|0x006|+0x00a:'1602'
-	// <0x654200>|0x010|+0x00a:'1603'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	if ( scene->has_clouds() )
+		scene->get_clouds()->set_editor_mode( is_editor_mode );
 }
 
-// STATE[STUB]
 void engine::world::apply_clouds_changes( base_scene_ptr const& in_scene )
 {
-	// FUNCTION BODY[0x6541c0]: 4
-	// <0x6541c0>|0x000|+0x006:'1608'
-	// <0>
-	// <0x6541c6>|0x006|+0x00a:'1610'
-	// <0x6541d0>|0x010|+0x00f:'1611'
-	// ******
+	vostok::render::scene* scene = static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
+
+	if ( scene->has_clouds() )
+		scene->get_clouds()->invalidate();
 }
 
 void engine::world::add_tracer(

@@ -1,6 +1,145 @@
 #ifndef VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
 #define VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED
 
+#include <boost/bind.hpp>
+#include <vostok/render/engine/world.h>
+#include <vostok/render/engine/sources/cloud_parameters.h>
+#include <vostok/render/facade/cloud_key.h>
+#include <vostok/render/facade/one_way_render_channel.h>
+#include <vostok/render/facade/sources/functor_command.h>
+#include <vostok/render/facade/sources/functor_with_big_buffer_to_copy_command.h>
 #include <vostok/render/facade/sources/scene_renderer.h>
+
+namespace vostok {
+namespace render {
+
+inline void scene_renderer::add_clouds( base_scene_ptr const& scene, cloud_parameters const& parameters )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< cloud_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::add_clouds,
+				&m_render_engine_world,
+				scene,
+				_1
+			),
+			parameters
+		)
+	);
+}
+
+inline void scene_renderer::update_clouds( base_scene_ptr const& scene, cloud_parameters const& parameters )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< cloud_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_clouds,
+				&m_render_engine_world,
+				scene,
+				_1
+			),
+			parameters
+		)
+	);
+}
+
+inline void scene_renderer::remove_clouds( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_clouds,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::set_num_clouds_keys( base_scene_ptr const& scene, const u32 num_keys )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_num_clouds_keys,
+				&m_render_engine_world,
+				scene,
+				num_keys
+			)
+		)
+	);
+}
+
+inline void scene_renderer::apply_clouds_changes( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::apply_clouds_changes,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
+inline void scene_renderer::set_clouds_key(
+	base_scene_ptr const&			scene,
+	const u32					index,
+	cloud_key_parameters const&	parameters
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< cloud_key_parameters > ) (
+			boost::bind(
+				&vostok::render::engine::world::set_clouds_key,
+				&m_render_engine_world,
+				scene,
+				index,
+				_1
+			),
+			parameters
+		)
+	);
+}
+
+inline void scene_renderer::set_clouds_time( base_scene_ptr const& scene, const float time )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_clouds_time,
+				&m_render_engine_world,
+				scene,
+				time
+			)
+		)
+	);
+}
+
+inline void scene_renderer::set_editor_mode( base_scene_ptr const& scene, bool is_editor_mode )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::set_editor_mode,
+				&m_render_engine_world,
+				scene,
+				is_editor_mode
+			)
+		)
+	);
+}
+
+} // namespace render
+} // namespace vostok
 
 #endif // #ifndef VOSTOK_RENDER_FACADE_SCENE_RENDERER_H_INCLUDED

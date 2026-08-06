@@ -1,6 +1,6 @@
 #include "pch.h"
 #include <vostok/render/facade/light_props.h>
-#include <vostok/render/facade/sources/scene_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 #include <vostok/render/engine/world.h>
 #include <vostok/render/engine/sources/tracer_model_instance.h>
 #include <vostok/render/engine/sources/trample_desc.h>

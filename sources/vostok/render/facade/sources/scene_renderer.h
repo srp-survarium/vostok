@@ -69,7 +69,7 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > tracer_model_instance_ptr;
 
-class scene_renderer : public core::noncopyable {
+class scene_renderer : private core::noncopyable {
 private:
 	friend class game::renderer;
 
@@ -138,7 +138,7 @@ public:
 
 	void play_particle_system(
 		base_scene_ptr const& scene,
-		resources::unmanaged_resource_ptr instance,
+		const resources::unmanaged_resource_ptr instance,
 		float4x4 const& transform
 	);
 	void stop_particle_system( base_scene_ptr const&, resources::unmanaged_resource_ptr const& ) { /* no source */ }
@@ -153,7 +153,7 @@ public:
 	bool is_playing( resources::unmanaged_resource_ptr const& instance );
 	void set_particles_render_mode( base_scene_view_ptr const&, particle::enum_particle_render_mode ) { /* no source */ }
 	void set_slomo( base_scene_ptr const&, float ) { /* no source */ }
-	void set_gamma_correction_factor( float value );
+	void set_gamma_correction_factor( const float value );
 
 	void add_light( base_scene_ptr const& scene, u32 id, light_props* props );
 	void update_light( base_scene_ptr const& scene, u32 id, light_props* props );
@@ -180,14 +180,14 @@ public:
 	void update_volume_fog( base_scene_ptr const& scene, u32 id, volume_fog_parameters const& parameters );
 	void remove_volume_fog( base_scene_ptr const& scene, u32 id );
 
-	void add_clouds( base_scene_ptr const&, cloud_parameters const& ) { /* no source */ }
-	void update_clouds( base_scene_ptr const&, cloud_parameters const& ) { /* no source */ }
-	void remove_clouds( base_scene_ptr const& ) { /* no source */ }
-	void set_num_clouds_keys( base_scene_ptr const&, u32 ) { /* no source */ }
-	void apply_clouds_changes( base_scene_ptr const& ) { /* no source */ }
-	void set_clouds_key( base_scene_ptr const&, u32, cloud_key_parameters const& ) { /* no source */ }
-	void set_clouds_time( base_scene_ptr const&, float ) { /* no source */ }
-	void set_editor_mode( base_scene_ptr const&, bool ) { /* no source */ }
+	inline void add_clouds( base_scene_ptr const& scene, cloud_parameters const& parameters );
+	inline void update_clouds( base_scene_ptr const& scene, cloud_parameters const& parameters );
+	inline void remove_clouds( base_scene_ptr const& scene );
+	inline void set_num_clouds_keys( base_scene_ptr const& scene, const u32 num_keys );
+	inline void apply_clouds_changes( base_scene_ptr const& scene );
+	inline void set_clouds_key( base_scene_ptr const& scene, const u32 index, cloud_key_parameters const& parameters );
+	inline void set_clouds_time( base_scene_ptr const& scene, const float time );
+	inline void set_editor_mode( base_scene_ptr const& scene, bool is_editor_mode );
 
 	void set_post_process( base_scene_view_ptr const& scene_view, resources::unmanaged_resource_ptr const& resource );
 	void enable_post_process( base_scene_view_ptr const&, bool ) { /* no source */ }
@@ -212,9 +212,6 @@ public:
 
 private:
 	void draw_present_impl( ) { /* no source */ }
-
-public:
-	~scene_renderer( ) { /* no source */ }
 
 private:
 	engine::world& m_render_engine_world;
