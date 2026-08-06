@@ -130,22 +130,18 @@ STATIC_SIZE_ASSERT( color_grading_pixel, 0x4 );
 // definition per exe.
 res_texture_ptr create_color_grading_base_lut( u32 );
 
-bloom_shader_constants::bloom_shader_constants( ) :
-	m_bloom_parameters	( 0 ),
-	m_bloom_parameters1	( 0 )
+bloom_shader_constants::bloom_shader_constants( )
 {
-	// FUNCTION BODY[0x6073a0]
-	// claude@NOTE: m_bloom_parameters1 registration has no legacy ancestor - matcher-phase
 	m_bloom_parameters = backend::ref().register_constant_host( "bloom_parameters", rc_float );
+	m_bloom_parameters1 = backend::ref().register_constant_host( "bloom_parameters1", rc_float );
 }
 
-void bloom_shader_constants::set( float bloom_scale, float bloom_max_color, float3 const& )
+void bloom_shader_constants::set( float bloom_scale, float bloom_max_color, float3 const& halo_color )
 {
-	// FUNCTION BODY[0x606ab0]
-	// claude@NOTE: halo_color parameter is post-legacy (feeds m_bloom_parameters1) - matcher-phase
 	float4 bloom_parameters(bloom_scale, bloom_max_color, 0.0f, 0.0f);
 
 	backend::ref().set_ps_constant(m_bloom_parameters, bloom_parameters);
+	backend::ref().set_ps_constant(m_bloom_parameters1, float4(halo_color, 0.0f));
 }
 
 dof_shader_constants::dof_shader_constants( ) :
