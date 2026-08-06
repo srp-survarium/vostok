@@ -73,7 +73,15 @@ struct scene_configuration {
 STATIC_SIZE_ASSERT( scene_configuration, 0x1 );
 
 struct output_window_configuration {
-	inline output_window_configuration( ) { }
+	inline output_window_configuration( ) :
+		hwnd( 0 ),
+		width( 0 ),
+		height( 0 ),
+		create_flash_renderer( false ),
+		windowed( true ),
+		scaleform_render_queue( 0 )
+	{
+	}
 
 	void*										hwnd;
 	u32											width;
