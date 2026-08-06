@@ -16,9 +16,6 @@ struct world;
 namespace render {
 
 struct static_model_instance_user_data {
-	static_model_instance_user_data( ) { }
-	~static_model_instance_user_data( ) { }
-
 	configs::binary_config_value const* config;
 	sound::world* sound_world;
 	resources::unmanaged_resource_ptr sound_scene;
@@ -31,33 +28,103 @@ static_model_instance_cook::static_model_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x76c2d0]
 }
 
-// STATE[STUB]
-// claude@NOTE: legacy body queried render + collision_geometry and stored the result in
-// static_model_instance::m_collision_geom, which the canonical class replaced with
-// m_sound_environment (see static_model_instance_user_data above) - diverged, left in
-// temp/render_legacy for the matcher.
-void static_model_instance_cook::translate_query( resources::query_result_for_cook& )
+void static_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x76cd40]
+	fs_new::virtual_path_string render_path;
+	render_path.assignf( "%s.model/render", parent.get_requested_path( ) );
+
+	u8 resource_count = 1;
+	if ( parent.user_data( ) )
+	{
+		static_model_instance_user_data model_user_data;
+		parent.user_data( )->try_get( model_user_data );
+		if ( model_user_data.config->value_exists( "sound_environment" ) &&
+			 strings::length( (pcstr)(*model_user_data.config)["sound_environment"] ) )
+			resource_count = 2;
+	}
+
+	resources::request* requests = (resources::request*)ALLOCA(
+		sizeof(resources::request) * resource_count
+	);
+	requests[0].path = render_path.c_str( );
+	requests[0].id = resources::static_render_model_instance_class;
+
+	resources::user_data_variant const** user_data =
+		(resources::user_data_variant const**)ALLOCA(
+			sizeof(resources::user_data_variant const*) * resource_count
+		);
+	for ( u32 i = 0; i < resource_count; ++i )
+		user_data[i] = 0;
+
+	resources::user_data_variant sectors_environment_data;
+	resources::user_data_variant sound_environment_data;
+	if ( parent.user_data( ) )
+	{
+		static_model_instance_user_data model_user_data;
+		parent.user_data( )->try_get( model_user_data );
+		if ( model_user_data.config->value_exists( "sectors" ) )
+		{
+			sectors_environment_data.set( (*model_user_data.config)["sectors"] );
+			user_data[0] = &sectors_environment_data;
+		}
+
+		if ( model_user_data.config->value_exists( "sound_environment" ) &&
+			 strings::length( (pcstr)(*model_user_data.config)["sound_environment"] ) )
+		{
+			requests[1].path = (pcstr)(*model_user_data.config)["sound_environment"];
+			requests[1].id = resources::sound_environment_class;
+			sound_environment_data.set( model_user_data );
+			user_data[1] = &sound_environment_data;
+		}
+	}
+
+	resources::query_resources(
+		requests,
+		resource_count,
+		boost::bind(
+			&static_model_instance_cook::on_subresources_loaded,
+			this,
+			_1,
+			&parent
+		),
+		g_allocator,
+		user_data,
+		&parent
+	);
 }
 
-// STATE[STUB]
-// claude@NOTE: same divergence as translate_query (m_collision_geom removed from the
-// canonical static_model_instance).
 void static_model_instance_cook::on_subresources_loaded(
-	resources::queries_result&,
-	resources::query_result_for_cook*
+	resources::queries_result& data,
+	resources::query_result_for_cook* parent_query
 )
 {
-	// FUNCTION BODY[0x76c7a0]
+	if ( data.is_successful( ) )
+	{
+		static_model_instance* created_resource = NEW(static_model_instance)( );
+		created_resource->m_render_model =
+			static_cast_resource_ptr<render_model_instance_ptr>(
+				data[0].get_unmanaged_resource( )
+			);
+		created_resource->m_sound_environment = 0;
+
+		if ( data.size( ) > 1 )
+			created_resource->m_sound_environment = data[1].get_unmanaged_resource( );
+
+		parent_query->set_unmanaged_resource(
+			created_resource,
+			resources::nocache_memory,
+			sizeof(static_model_instance)
+		);
+		parent_query->finish_query( result_success );
+	}
+	else
+		parent_query->finish_query( result_error );
 }
 
 void static_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x76c380]
 	DELETE( resource );
 }
 
@@ -68,12 +135,10 @@ skeleton_model_instance_cook::skeleton_model_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x76c260]
 }
 
 void skeleton_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x76cb10]
 	skeleton_model_instance_cook_data* cook_data = NEW(skeleton_model_instance_cook_data)(&parent);
 
 	fs_new::virtual_path_string	skeleton_config_path;
@@ -105,7 +170,6 @@ void skeleton_model_instance_cook::on_skeleton_config_loaded(
 	skeleton_model_instance_cook_data* cook_data
 )
 {
-	// FUNCTION BODY[0x76c9c0]
 	resources::query_result_for_cook* parent_query = cook_data->parent_query;
 	if (!result.is_successful())
 	{
@@ -131,7 +195,6 @@ void skeleton_model_instance_cook::on_skeleton_loaded(
 	skeleton_model_instance_cook_data* cook_data
 )
 {
-	// FUNCTION BODY[0x76c6b0]
 	if (!result.is_successful())
 	{
 		resources::query_result_for_cook* parent_query = cook_data->parent_query;
@@ -152,7 +215,6 @@ void skeleton_model_instance_cook::on_render_model_loaded(
 	skeleton_model_instance_cook_data* cook_data
 )
 {
-	// FUNCTION BODY[0x76c5c0]
 	if (!result.is_successful())
 	{
 		resources::query_result_for_cook* parent_query = cook_data->parent_query;
@@ -172,7 +234,6 @@ void skeleton_model_instance_cook::on_all_subresources_ready(
 	skeleton_model_instance_cook_data* cook_data
 )
 {
-	// FUNCTION BODY[0x76c3c0]
 	resources::query_result_for_cook* parent_query = cook_data->parent_query;
 
 	render::skeleton_model_instance* created_resource= NEW(render::skeleton_model_instance)();
@@ -195,7 +256,6 @@ void skeleton_model_instance_cook::on_all_subresources_ready(
 
 void skeleton_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	// FUNCTION BODY[0x76c340]
 	DELETE( resource );
 }
 
