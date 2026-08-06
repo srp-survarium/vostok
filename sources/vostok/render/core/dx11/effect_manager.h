@@ -183,7 +183,7 @@ public:
 	void register_effect_desctiptor( pcstr name, effect_descriptor* descriptor );
 	void recompile_shaders( vector<fs_new::virtual_path_string> const& ) { }
 	void recompile_shaders_async(
-		vector<fs_new::virtual_path_string> const& changed_defines
+		vector<fs_new::virtual_path_string> const& in_changed_defines
 	);
 
 private:

@@ -1181,25 +1181,12 @@ void engine::world::end_render_options_changing(
 	vector<fs_new::virtual_path_string> changed_defines;
 	enum_options_changes_result const changes = options::ref().end_render_options_changing( changed_defines );
 
-	if ( reload_all_materials )
-	{
-		if ( changes != ocr_need_nothing )
-		{
-			resources::query_vfs_iterator(
-				fs_new::virtual_path_string( "resources.sources/material_instances" ),
-				boost::bind( &on_fs_iterator_materials_ready, "resources/material_instances", _1, waiting_for ),
-				g_allocator,
-				resources::recursive_true
-			);
-			return;
-		}
-	}
-	else
+	if ( !reload_all_materials )
 	{
 		if ( shaders_recompile && changes != ocr_need_nothing )
 			effect_manager::ref().recompile_shaders_async( changed_defines );
 
-		if ( changes & (ocr_need_reset_renderer | ocr_need_reload_shaders) )
+		if ( (changes & ocr_need_reset_renderer) || (changes & ocr_need_reload_shaders) )
 			reset_renderer( true );
 		else if ( changes & (ocr_need_reset_postprocess | ocr_need_reset_lighting | ocr_need_reset_rain) )
 		{
@@ -1234,10 +1221,19 @@ void engine::world::end_render_options_changing(
 			);
 			m_renderer->m_renderer_context->set_target_context( &window->target_context( ), true );
 		}
-	}
 
-	if ( waiting_for )
-		threading::interlocked_exchange( *waiting_for, 0 );
+		if ( waiting_for )
+			threading::interlocked_exchange( *waiting_for, 0 );
+	}
+	else if ( changes != ocr_need_nothing )
+	{
+		resources::query_vfs_iterator(
+			fs_new::virtual_path_string( "resources.sources/material_instances" ),
+			boost::bind( &on_fs_iterator_materials_ready, "resources/material_instances", _1, waiting_for ),
+			&memory::g_mt_allocator,
+			resources::recursive_true
+		);
+	}
 }
 
 void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
