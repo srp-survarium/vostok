@@ -1258,6 +1258,7 @@ void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view
 	static_cast_checked< render::scene_view* >(scene_view.c_ptr())->camera_set_projection	( projection_matrix );
 }
 
+// claude@NOTE: LTCG drops the two constant bool arguments to scene::flush in the base call site.
 void engine::world::draw_scene(
 	base_scene_ptr const&				scene,
 	base_scene_view_ptr const&			view,
