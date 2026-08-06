@@ -20,11 +20,8 @@ class stage_apply_distortion : public stage {
 public:
 	stage_apply_distortion(
 		renderer* in_renderer,
-		renderer_context* in_context
-	) :
-		stage( in_renderer, in_context )
-	{
-	}
+		renderer_context* context
+	);
 
 	virtual ~stage_apply_distortion( );
 	virtual void execute( ) override;

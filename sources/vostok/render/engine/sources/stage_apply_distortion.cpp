@@ -11,78 +11,61 @@
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/effect_options_descriptor.h>
 #include "statistics.h"
+#include "system_renderer.h"
 
 namespace vostok {
 namespace render {
 
+
+
+
+
+
+
+
+
+stage_apply_distortion::stage_apply_distortion( renderer* in_renderer, renderer_context* context ) : stage( in_renderer, context )
+{
+	effect_manager::ref( ).create_effect<effect_apply_distortion>( &m_sh_apply_distortion );
+}
+
 stage_apply_distortion::~stage_apply_distortion( )
 {
-	// FUNCTION BODY[0x70bc50]
+
 }
 
 bool stage_apply_distortion::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x70bc40]
-	return m_sh_apply_distortion.c_ptr() != NULL;
+	return m_sh_apply_distortion.c_ptr( ) != NULL;
 }
 
 void stage_apply_distortion::execute( )
 {
-	// FUNCTION BODY[0x70bc90]
-	// claude@NOTE: legacy PIX_EVENT( stage_apply_distortion) dropped - zero PIX symbols in target
 
-	if (!is_effects_ready())
+
+	if ( !is_effects_ready( ) )
 		return;
 
-	if (!is_enabled())
+	if ( !is_enabled( ) )
 	{
-		execute_disabled();
+		execute_disabled( );
 		return;
 	}
 
-	//backend::ref().flush_rt_shader_resources();
 
-	BEGIN_CPUGPU_TIMER(statistics::ref().distortion_pass_stat_group.apply_time);
 
-	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
-	backend::ref().clear_render_targets(math::color(0,0,0,0));
-	backend::ref().reset_depth_stencil_target();
-
-	//D3D_VIEWPORT viewport;
-	//backend::ref().get_viewport( viewport);
-
-	float	w = float( backend::ref().target_width());
-	float	h = float( backend::ref().target_height());
-
-	u32		color = math::color_rgba( 255u, 255u, 255u, 255u );
-
-	// Adjust texture coord that center of pixel matches center of texel
-	float2	p0( 0.5f/w, 0.5f/h);
-	float2	p1( ( w+0.5f)/w, ( h+0.5f)/h);
-
-	// Fill vertex buffer
-	u32		offset;
-
-	//FIX ME: May be we can fill this vb's once????
-	vertex_formats::TL* pv = ( vertex_formats::TL*)backend::ref().vertex.lock( 4, sizeof(vertex_formats::TL)/*m_context->m_g_quad_uv->get_stride()*/, offset);
-	pv->set( 0, h, 0, 1.0, color, p0.x, p1.y); pv++;
-	pv->set( 0, 0, 0, 1.0, color, p0.x, p0.y); pv++;
-	pv->set( w, h, 0, 1.0, color, p1.x, p1.y); pv++;
-	pv->set( w, 0, 0, 1.0, color, p1.x, p0.y); pv++;
-	backend::ref().vertex.unlock();
-
-	// Setup rendering states and objects
-	m_context->m_g_quad_uv->apply();
 	m_sh_apply_distortion->apply( 0, 0 );
-	backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 2*3, 0, offset);
+	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 
-	END_CPUGPU_TIMER;
+	backend::ref( ).flush_rt_shader_resources( );
 
-	m_context->set_w					( float4x4().identity() );
+	m_sh_apply_distortion->apply( 1, 0 );
+	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_present ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 
 
-	backend::ref().reset_render_targets();
-	backend::ref().reset_depth_stencil_target();
+
+	backend::ref( ).reset_render_targets( );
+	backend::ref( ).reset_depth_stencil_target( );
 }
 
 } // namespace render
