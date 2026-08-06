@@ -416,14 +416,12 @@ stage_postprocess::stage_postprocess(
 	m_image_grain_random_offsets	= float2(0.0f, 0.0f);
 }
 
-void stage_postprocess::fill_surface( render_target_ptr surf, render_target_ptr surf1 )
+void stage_postprocess::fill_surface( render_target_ptr surf0, render_target_ptr surf1 )
 {
-	// FUNCTION BODY[0x607880]
-	// claude@NOTE: second target parameter is post-legacy; bound into RT slot 1 when present
-	float t_w = float(surf->width());
-	float t_h = float(surf->height());
+	float t_w = float(surf0->width());
+	float t_h = float(surf0->height());
 
-	backend::ref().set_render_targets( &*surf, surf1.c_ptr() ? &*surf1 : 0, 0, 0);
+	backend::ref().set_render_targets( &*surf0, surf1.c_ptr() ? &*surf1 : 0, 0, 0);
 	backend::ref().set_depth_stencil_target(0);//reset_depth_stencil_target();
 
 	u32	    color = math::color_rgba( 255u, 255u, 255u, 255u);
@@ -481,7 +479,6 @@ void stage_postprocess::fill_surface2( render_target_ptr surf )
 
 void stage_postprocess::clear_surface( render_target_ptr surf )
 {
-	// FUNCTION BODY[0x607460]
 	backend::ref().set_render_targets	( &*surf, 0, 0, 0);
 	backend::ref().clear_render_targets	(0.0f, 0.0f, 0.0f, 0.f);
 }
