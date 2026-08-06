@@ -209,132 +209,91 @@ void scene::build_lpv_geometry( )
 	m_lpv_geometry.build	( m_render_model_instances );
 }
 
-// STATE[STUB]
 void scene::on_fs_iterator_probes_ready( char* path, vfs::vfs_locked_iterator const& fs_it )
 {
-	// LOCALS
-	// vfs::vfs_iterator 				names_end
-	// vector< fixed_string< 260 > > 	remove_names
-	// fixed_string< 260 > 				probes_path
-	// vector< fixed_string< 260 > > 	used_names
-	// vfs::vfs_iterator 				names_it
-	// fixed_string< 260 > 				probe_name
-	// fixed_string< 260 > 				name
-	// fs_new::synchronous_device_interface const& device
-	// fixed_string< 260 > 				logical_name_options
-	// fs_new::native_path_string 		physical_path_tga
-	// fs_new::native_path_string 		physical_path_options
-	// fixed_string< 260 > 				logical_name_tga
-	// ******
+	if ( fs_it.is_end() || !fs_it.get_children_count() )
+		return;
 
-	// TYPEDEFS
-	// typedef
-	// 	vector< fixed_string< 260 > >
-	// 	file_names_array;
+	vfs::vfs_iterator names_it	= fs_it.children_begin();
+	vfs::vfs_iterator names_end	= fs_it.children_end();
 
-	// ******
+	vector< environment_probe* >::iterator probes_it	= m_environment_probes.begin();
+	vector< environment_probe* >::iterator probes_end	= m_environment_probes.end();
 
-	// FUNCTION BODY[0x63d990]: 62
-	// <0x63d99e>|0x00e|+0x024:'188'
-	// <0>
-	// <1>
-	// <0x63d9c2>|0x032|+0x00c:'191'
-	// <0x63d9ce>|0x03e|+0x00c:'192'
-	// <0>
-	// <0x63d9da>|0x04a|+0x006:'194'
-	// <0x63d9e0>|0x050|+0x006:'195'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d9e6>|0x056|+0x00c:'199'
-	// <0x63d9f2>|0x062|+0x00c:'200'
-	// <0>
-	// <0x63d9fe>|0x06e|+0x008:'202'
-	// <0>
-	// <0x63da06>|0x076|+0x002:'204'
-	// <0x63da08>|0x078|+0x01d:'205'
-	// <0x63da25>|0x095|+0x021:'206'
-	// <0x63da46>|0x0b6|+0x034:'207'
-	// <0x63da7a>|0x0ea|+0x019:'208'
-	// <0>
-	// <1>
-	// <0x63da93>|0x103|+0x01d:'211'
-	// <0>
-	// <0x63dab0>|0x120|+0x050:'213'
-	// <0x63db00>|0x170|+0x027:'214'
-	// <0>
-	// <0x63db27>|0x197|+0x00f:'216'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63db36>|0x1a6|+0x034:'220'
-	// <0x63db6a>|0x1da|+0x035:'221'
-	// <0>
-	// <1>
-	// <0x63db9f>|0x20f|+0x010:'224'
-	// <0x63dbaf>|0x21f|+0x038:'225'
-	// <0x63dbe7>|0x257|+0x02a:'226'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63dc11>|0x281|+0x015:'231'
-	// <0>
-	// <1>
-	// <0x63dc26>|0x296|+0x010:'234'
-	// <0>
-	// <0x63dc36>|0x2a6|+0x01e:'236'
-	// <0x63dc54>|0x2c4|+0x045:'237'
-	// <0x63dc99>|0x309|+0x01d:'238'
-	// <0>
-	// <1>
-	// <0x63dcb6>|0x326|+0x1b9:'241'
-	// <0x63de6f>|0x4df|+0x157:'242'
-	// <0>
-	// <0x63dfc6>|0x636|+0x021:'244'
-	// <0x63dfe7>|0x657|+0x02d:'245'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63e014>|0x684|+0x01e:'249'
-	// ******
+	typedef vector< fixed_string< 260 > > file_names_array;
+	file_names_array used_names;
+	file_names_array remove_names;
+
+	for ( ; probes_it != probes_end; ++probes_it )
+	{
+		environment_probe* probe = *probes_it;
+		fixed_string< 260 > probe_name;
+		u32 const slash_position = probe->m_properties.texture_name.rfind( '/' );
+		probe_name = probe->m_properties.texture_name.c_str() + slash_position + 1;
+		used_names.push_back( probe_name );
+	}
+
+	for ( ; names_it != names_end; ++names_it )
+	{
+		fixed_string< 260 > name = names_it.get_name();
+		name.set_length( name.rfind( '.' ) );
+
+		if ( names_it.is_folder() )
+			continue;
+
+		if ( std::find( used_names.begin(), used_names.end(), name ) == used_names.end() &&
+			 std::find( remove_names.begin(), remove_names.end(), name ) == remove_names.end() )
+			remove_names.push_back( name );
+	}
+
+	fixed_string< 260 > probes_path;
+	probes_path = m_environment_probes[0]->m_properties.texture_name;
+	probes_path.set_length( probes_path.rfind( '/' ) );
+
+	fs_new::synchronous_device_interface const& device = resources::get_synchronous_device();
+	file_names_array::iterator it = remove_names.begin();
+
+	for ( ; it != remove_names.end(); ++it )
+	{
+		fixed_string< 260 > logical_name_tga, logical_name_options;
+		logical_name_tga.assignf( "resources.sources/textures/%s/%s.tga", probes_path.c_str(), it->c_str() );
+		logical_name_options.assignf( "resources.sources/textures/%s/%s.options", probes_path.c_str(), it->c_str() );
+
+		fs_new::native_path_string physical_path_tga;
+		fs_new::native_path_string physical_path_options;
+		resources::convert_virtual_to_physical_path( &physical_path_tga, logical_name_tga, resources::sources_mount );
+		resources::convert_virtual_to_physical_path( &physical_path_options, logical_name_options, resources::sources_mount );
+
+		device->erase( physical_path_tga );
+		device->erase( physical_path_options );
+	}
+
+	FREE( path );
 }
 
-// STATE[STUB]
 void scene::remove_unused_environment_cubemaps( )
 {
-	// LOCALS
-	// fixed_string< 260 > 				path
-	// fixed_string< 260 > 				query_path
-	// ******
+	vector< environment_probe* >::iterator probe_it = m_environment_probes.begin();
+	if ( probe_it == m_environment_probes.end() )
+		return;
 
-	// FUNCTION BODY[0x63ff70]: 25
-	// <0x63ff80>|0x010|+0x008:'254'
-	// <0>
-	// <1>
-	// <0x63ff88>|0x018|+0x00c:'257'
-	// <0>
-	// <1>
-	// <0x63ff94>|0x024|+0x03e:'260'
-	// <0x63ffd2>|0x062|+0x026:'261'
-	// <0x63fff8>|0x088|+0x009:'262'
-	// <0>
-	// <0x640001>|0x091|+0x008:'264'
-	// <0x640009>|0x099|+0x00d:'265'
-	// <0x640016>|0x0a6|+0x00b:'266'
-	// <0x640021>|0x0b1|+0x012:'267'
-	// <0>
-	// <0x640033>|0x0c3|+0x009:'269'
-	// <0x64003c>|0x0cc|+0x037:'270'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x640073>|0x103|+0x0e3:'277'
-	// <0>
-	// ******
+	fixed_string< 260 > path = (*probe_it)->m_properties.texture_name;
+	u32 const slash_position = path.rfind( '/' );
+	path.set_length( slash_position );
+
+	u32 const path_size = path.length() + 1;
+	char* allocated_path = ALLOC( char, path_size );
+	memory::zero( allocated_path, path_size );
+	memory::copy( allocated_path, path_size, path.c_str(), path_size );
+
+	fixed_string< 260 > query_path;
+	query_path.assignf( "resources.sources/textures/%s", allocated_path );
+
+	resources::query_vfs_iterator(
+		query_path.c_str(),
+		boost::bind( &scene::on_fs_iterator_probes_ready, this, allocated_path, _1 ),
+		g_allocator
+	);
 }
 
 particle::world* scene::particle_world( )
