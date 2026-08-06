@@ -10,11 +10,10 @@ namespace render {
 
 struct hw_hiz_point_list {
 	hw_hiz_point_list( );
-	~hw_hiz_point_list( ) { }
 
-	void set_points( float4 const* in_data, u32 culling_results_buffer_width );
-	void initialize( u32 num_points );
-	void render( u32 num_points );
+	void set_points( float4 const* in_data, u32 const culling_results_buffer_width );
+	void initialize( u32 const num_points );
+	void render( u32 const num_points );
 
 private:
 	res_declaration_ptr	m_declaration;
