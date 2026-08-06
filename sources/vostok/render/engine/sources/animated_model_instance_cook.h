@@ -10,7 +10,6 @@ namespace render {
 class animated_model_instance_cook : public resources::translate_query_cook {
 public:
 	animated_model_instance_cook( );
-	virtual ~animated_model_instance_cook( ) { }
 
 	virtual void translate_request_path(
 		pcstr							request,
@@ -32,6 +31,9 @@ private:
 		resources::queries_result&	data,
 		configs::binary_config_ptr	config
 	);
+
+public:
+	virtual ~animated_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( animated_model_instance_cook, 0x20 );
