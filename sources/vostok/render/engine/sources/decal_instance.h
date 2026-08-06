@@ -69,7 +69,7 @@ struct decal_instance :
 	decal_instance(
 		collision::space_partitioning_tree*	tree,
 		decal_properties const&				properties,
-		u32									id
+		u32 const							id
 	);
 
 	~decal_instance( );
@@ -100,6 +100,7 @@ private:
 
 private:
 	friend class								scene;
+	friend class								stage_visibility;
 
 	decal_properties						m_properties;
 	math::aabb								m_aabb;

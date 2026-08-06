@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/render/core/options.h>
 
 // claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target subsystem) - matcher-phase work.
 #include "ambient_volume.h"
@@ -8,7 +9,7 @@ namespace render {
 
 ambient_volume::ambient_volume(
 	ambient_volume_properties const&	properties,
-	u32									id
+	u32 const							id
 ) :
 	m_properties				( properties ),
 	m_aabb						( math::create_zero_aabb( ) ),
@@ -22,9 +23,8 @@ ambient_volume::ambient_volume(
 
 bool ambient_volume::is_occluded( ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x748870]
-	return false;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 void ambient_volume::set_properties( ambient_volume_properties const& )

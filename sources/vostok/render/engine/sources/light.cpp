@@ -4,6 +4,7 @@
 
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
+#include <vostok/render/core/options.h>
 
 namespace vostok {
 namespace render {
@@ -98,10 +99,8 @@ void light::remove_collision( )
 
 bool light::is_occluded( ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x5ff650]
-	// claude@NOTE: no legacy ancestor - occlusion query info postdates the legacy corpus
-	return false;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 bool light::is_cast_shadows( ) const

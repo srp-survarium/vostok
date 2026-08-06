@@ -510,11 +510,9 @@ void portal_sector_system::perform_frustum_culling_and_sectors_test(
 	// FUNCTION BODY[0x5fbae0]
 }
 
-void portal_sector_system::get_portals_occlusion_bounds( float4* )
+void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
 {
-	// claude@NOTE: no legacy ancestor - no GPU portal occlusion-query system in the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9010]
+	std::copy( m_occlusion_bounds.begin( ), m_occlusion_bounds.end( ), bounds );
 }
 
 void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
@@ -524,11 +522,16 @@ void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 	// FUNCTION BODY[0x5f9940]
 }
 
-void portal_sector_system::update_portals_occlusion_culling( pcbyte )
+void portal_sector_system::update_portals_occlusion_culling( pcbyte occlusion_results )
 {
-	// claude@NOTE: no legacy ancestor - no GPU portal occlusion-query system in the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9040]
+	if ( s_portals_occlusion_culling_value )
+		std::copy(
+			occlusion_results,
+			occlusion_results + m_occlusion_results.size( ),
+			m_occlusion_results.begin( )
+		);
+	else
+		std::fill( m_occlusion_results.begin( ), m_occlusion_results.end( ), u8( -1 ) );
 }
 
 void portal_sector_system::calculate_portal_rects_in_screen_space(

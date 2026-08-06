@@ -2,6 +2,7 @@
 #include <vostok/render/facade/particles.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/dx11/res_geometry.h>
+#include <vostok/render/core/options.h>
 #include "material.h"
 #include "material_effects_instance.h"
 #include "render_particle_emitter_instance.h"
@@ -165,7 +166,7 @@ render_particle_emitter_instance::~render_particle_emitter_instance( )
 bool render_particle_emitter_instance::is_occluded( ) const
 {
 	// FUNCTION BODY[0x5fc780]
-	return m_occluded;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 math::aabb const& render_particle_emitter_instance::get_aabb( ) const

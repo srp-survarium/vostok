@@ -73,8 +73,7 @@ public:
 
 	u32 get_portals_count( ) const
 	{
-		// STATE[STUB]
-		return 0;
+		return m_structure->get_portals( ).size( );
 	}
 
 	void get_portals_occlusion_bounds( float4* bounds );

@@ -65,7 +65,7 @@ struct hw_hiz_occlusion_manager : public boost::noncopyable {
 		u32					in_num_bounds_and_results
 	);
 
-	bool quary_and_get_results_if_ready( pbyte out_results, u32 in_num_results );
+	bool quary_and_get_results_if_ready( pbyte out_results, u32 const in_num_results );
 
 private:
 	void render_occluders( renderer_context* in_context );

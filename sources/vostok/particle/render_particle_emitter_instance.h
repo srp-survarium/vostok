@@ -24,6 +24,7 @@ struct VOSTOK_NOVTABLE render_particle_emitter_instance {
 					) = 0;
 	virtual	void	set_transform			( math::float4x4 const& transform ) = 0;
 	virtual	void	set_aabb				( math::aabb const& bbox ) = 0;
+	virtual bool	is_occluded			( ) const = 0;
 	
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( render_particle_emitter_instance )

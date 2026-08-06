@@ -1,4 +1,5 @@
 #include "pch.h"
+#include <vostok/render/core/options.h>
 
 // claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target subsystem) - matcher-phase work.
 #include "environment_probe.h"
@@ -9,7 +10,7 @@ namespace render {
 environment_probe::environment_probe(
 	collision::space_partitioning_tree*	tree,
 	environment_probe_properties const&	properties,
-	u32									id
+	u32 const							id
 ) :
 	m_properties				( properties ),
 	m_aabb						( math::create_zero_aabb( ) ),
@@ -39,9 +40,8 @@ void environment_probe::remove_collision( )
 
 bool environment_probe::is_occluded( ) const
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x70b040]
-	return false;
+	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 u32 calc_mip_map_count( u32 )

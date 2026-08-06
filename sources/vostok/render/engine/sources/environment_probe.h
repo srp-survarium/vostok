@@ -33,7 +33,7 @@ struct environment_probe :
 	environment_probe(
 		collision::space_partitioning_tree*	tree,
 		environment_probe_properties const&	properties,
-		u32									id
+		u32 const							id
 	);
 
 	~environment_probe( );
