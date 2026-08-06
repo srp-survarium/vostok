@@ -15,7 +15,6 @@ class scene_cook :
 {
 public:
 	scene_cook( );
-	virtual ~scene_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& in_out_query ) override;
 	virtual void delete_resource( resources::resource_base* resource ) override;
