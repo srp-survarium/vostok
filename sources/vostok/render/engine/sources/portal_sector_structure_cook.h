@@ -14,7 +14,6 @@ class portal_sector_structure_cook :
 {
 public:
 	portal_sector_structure_cook( );
-	virtual ~portal_sector_structure_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
