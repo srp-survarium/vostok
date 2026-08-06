@@ -1766,34 +1766,20 @@ void engine::world::set_model_visible(
 	// ******
 }
 
-// STATE[STUB]
 void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v, u32 subsurface_id, u32 flags )
 {
-	// LOCALS
-	// render_model_instance_impl_ptr 	model
-	// vector< render_surface_instance* > list
-	// ******
+	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>( v );
 
-	// CALL SITE INFO
-	// <0x6552b9> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
-	// ******
+	vector< render_surface_instance* > list;
+	model->get_surfaces( NULL, NULL, list, false, 0xaa, 3 );
 
-	// FUNCTION BODY[0x655260]: 13
-	// <0x655269>|0x009|+0x087:'1468'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6552f0>|0x090|+0x0a4:'1476'
-	// <0x655394>|0x134|+0x02f:'1477'
-	// <0>
-	// <1>
-	// <0x6553c3>|0x163|-0x153:'1480'
-	// <0x655270>|0x010|+0x15c:'1481'
-	// ******
+	if ( subsurface_id >= list.size( ) )
+	{
+		LOG_ERROR( "There is no surface with id[%d]!", subsurface_id );
+		return;
+	}
+
+	list[subsurface_id]->m_flags = flags;
 }
 
 void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bool value )
