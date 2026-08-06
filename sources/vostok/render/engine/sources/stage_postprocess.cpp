@@ -225,31 +225,35 @@ void scene_shader_constants::set(
 	backend::ref().set_ps_constant(m_scene_fade_parameters, scene_fade);
 }
 
-float gaussian( float x, float /*mean*/, float std_deviation )
+static float gaussian( float x, float mu, float sigma )
 {
-	// FUNCTION BODY[0x606730]
-	return ( 1.0f / vostok::math::sqrt( 2.0f * vostok::math::pi * std_deviation * std_deviation ) )
-		* vostok::math::exp( (-x*x)/(2.0f * std_deviation * std_deviation) );
+	float const g = ( x - mu ) / sigma;
+	return vostok::math::exp( -0.5f * g * g );
 }
 
-void get_gaussain_weights_offsets(
+static void get_gaussain_weights_offsets(
 	float*	out_weights,
 	float*	out_offsets,
 	u32		buffer_size,
-	float	blur_scale,
-	float	blur_intencity,
+	float,
+	float,
 	u32		num_samples,
-	float
+	float	bloom_kernel
 )
 {
-	// FUNCTION BODY[0x606760]
-	// claude@NOTE: trailing float parameter is post-legacy - unused in the ported body
-	for (u32 i=0; i<num_samples; i++)
+	float const sigma = bloom_kernel * 0.5f;
+	float sum = 0.0f;
+
+	for ( u32 i = 0; i < num_samples; ++i )
 	{
-		out_offsets[i] = (static_cast<float>(i)-4.0f)*(1.0f/static_cast<float>(buffer_size));
-		float x = (static_cast<float>(i) - 4.0f) / 4.0f;
-		out_weights[i] = blur_intencity * gaussian( x, 0.0f, math::max(blur_scale,0.25f));
+		out_offsets[i] = ( float( i ) - bloom_kernel ) * ( 1.0f / float( buffer_size ) );
+
+		out_weights[i] = gaussian( float( i ), bloom_kernel, sigma );
+		sum += out_weights[i];
 	}
+
+	for ( u32 i = 0; i < num_samples; ++i )
+		out_weights[i] /= sum;
 }
 
 bool stage_postprocess::is_effects_ready( ) const
