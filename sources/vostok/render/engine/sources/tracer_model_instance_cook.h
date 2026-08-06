@@ -9,7 +9,6 @@ namespace render {
 class tracer_model_instance_cook : public resources::translate_query_cook {
 public:
 	tracer_model_instance_cook( );
-	virtual ~tracer_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );

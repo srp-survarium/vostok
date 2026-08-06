@@ -1,5 +1,4 @@
 #include "pch.h"
-// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (tracers are new-in-target; legacy records them TARGET_ONLY) - matcher-phase work.
 #include "tracer_model_instance_cook.h"
 #include "tracer_model_instance.h"
 
@@ -13,20 +12,40 @@ tracer_model_instance_cook::tracer_model_instance_cook( ) :
 		use_current_thread_id
 	)
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x76bfc0]
+	resources::register_cook( this );
 }
 
-void tracer_model_instance_cook::translate_query( resources::query_result_for_cook& )
+void tracer_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x76c1c0]
+	resources::query_resource(
+		parent.get_requested_path( ),
+		resources::static_model_instance_class,
+		boost::bind( &tracer_model_instance_cook::on_model_ready, this, _1 ),
+		g_allocator,
+		0,
+		&parent
+	);
 }
 
-void tracer_model_instance_cook::on_model_ready( resources::queries_result& )
+void tracer_model_instance_cook::on_model_ready( resources::queries_result& data )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x76c070]
+	resources::query_result_for_cook& parent = *data.get_parent_query( );
+	if ( !data[0].is_successful( ) )
+	{
+		parent.finish_query( result_success );
+		return;
+	}
+
+	tracer_model_instance* instance = NEW( tracer_model_instance );
+	static_model_ptr static_model = static_cast_resource_ptr<static_model_ptr>(
+		data[0].get_unmanaged_resource( )
+	);
+	instance->m_model = static_model->m_render_model;
+	instance->m_transform = math::float4x4( ).identity( );
+	instance->set_color( math::color( 0 ) );
+
+	parent.set_unmanaged_resource( instance, resources::nocache_memory, sizeof( tracer_model_instance ) );
+	parent.finish_query( result_success );
 }
 
 void tracer_model_instance_cook::delete_resource( resources::resource_base* resource )

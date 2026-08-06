@@ -9,9 +9,6 @@ namespace render {
 
 struct tracer_model_instance : public resources::unmanaged_resource {
 public:
-	tracer_model_instance( ) { }
-	virtual ~tracer_model_instance( ) { }
-
 	void set_color( math::color const& color ) { m_color = color; }
 
 	float4x4 m_transform;
