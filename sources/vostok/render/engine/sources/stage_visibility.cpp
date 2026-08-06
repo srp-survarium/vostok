@@ -312,6 +312,7 @@ void stage_visibility::occlusion_culling( )
 	get_results_and_prepare_bounds_env_probes( bounds_it, occlusion_info_index_iterator );
 	get_results_and_prepare_bounds_ambient_volumes( bounds_it, occlusion_info_index_iterator );
 	get_results_and_prepare_bounds_particles( bounds_it, occlusion_info_index_iterator );
+
 	get_results_and_prepare_bounds_portals( bounds_it, occlusion_info_index_iterator );
 
 	m_current_occlusion_buffer_size = occlusion_info_index_iterator;
