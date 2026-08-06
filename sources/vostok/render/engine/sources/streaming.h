@@ -21,11 +21,7 @@ typedef intrusive_ptr<
 > res_texture_ptr;
 
 struct streaming_ready_texture {
-	streaming_ready_texture( ) :
-		num_mips( 0 ),
-		distance( 0.f )
-	{
-	}
+	streaming_ready_texture( ) { }
 
 	fixed_string<260> name;
 	res_texture_ptr texture;
