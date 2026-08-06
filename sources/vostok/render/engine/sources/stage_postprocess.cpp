@@ -175,28 +175,21 @@ void dof_shader_constants::set(
 	backend::ref().set_ps_constant(m_bokeh_dof_parameters, float4(bokeh_dof_radius, bokeh_dof_density, 0, 0));
 }
 
-scene_shader_constants::scene_shader_constants( ) :
-	m_frame_height_lights_and_desaturation_parameters	( 0 ),
-	m_scene_mid_tones_parameters						( 0 ),
-	m_scene_shadows_parameters						( 0 ),
-	m_gamma_correction_factor							( 0 ),
-	m_scene_fade_parameters							( 0 ),
-	m_filmic_tonemap_packed_parameters_0				( 0 ),
-	m_filmic_tonemap_packed_parameters_1				( 0 ),
-	m_c_eye_ray_corner								( 0 ),
-	m_image_grain_parameters							( 0 )
+scene_shader_constants::scene_shader_constants( )
 {
-	// FUNCTION BODY[0x606f00]
-	// claude@NOTE: filmic-tonemap/eye-ray/image-grain registrations have no legacy ancestor
 	m_frame_height_lights_and_desaturation_parameters	= backend::ref().register_constant_host( "frame_height_lights_and_desaturation", rc_float );
 	m_scene_mid_tones_parameters						= backend::ref().register_constant_host( "frame_mid_tones", rc_float );
 	m_scene_shadows_parameters							= backend::ref().register_constant_host( "frame_shadows", rc_float );
 	m_gamma_correction_factor							= backend::ref().register_constant_host( "gamma_correction_factor", rc_float );
 	m_scene_fade_parameters								= backend::ref().register_constant_host( "frame_fade", rc_float );
+	m_filmic_tonemap_packed_parameters_0				= backend::ref().register_constant_host( "filmic_tonemap_packed_parameters_0", rc_float );
+	m_filmic_tonemap_packed_parameters_1				= backend::ref().register_constant_host( "filmic_tonemap_packed_parameters_1", rc_float );
+	m_c_eye_ray_corner									= backend::ref().register_constant_host( "s_eye_ray_corner", rc_float );
+	m_image_grain_parameters								= backend::ref().register_constant_host( "image_grain_parameters", rc_float );
 }
 
 void scene_shader_constants::set(
-	renderer_context*,
+	renderer_context* context,
 	float3 const&	height_lights,
 	float3 const&	mid_tones,
 	float3 const&	shadows,
@@ -204,13 +197,10 @@ void scene_shader_constants::set(
 	float			fade_amount,
 	float			gamma_correction_factor,
 	float			desaturation,
-	float4 const&,
-	post_process_parameters const&
+	float4 const&	image_grain_parameters,
+	post_process_parameters const& parameters
 )
 {
-	// FUNCTION BODY[0x606bc0]
-	// claude@NOTE: context/image-grain/parameters arguments are post-legacy (filmic tonemap,
-	// eye-ray, grain constants) - legacy slice ported, remainder matcher-phase
 	float4 frame_height_lights_and_desaturation(height_lights, desaturation);
 	float4 scene_fade(fade_color, fade_amount);
 
@@ -219,6 +209,28 @@ void scene_shader_constants::set(
 	backend::ref().set_ps_constant(m_scene_shadows_parameters, shadows);
 	backend::ref().set_ps_constant(m_gamma_correction_factor, gamma_correction_factor);
 	backend::ref().set_ps_constant(m_scene_fade_parameters, scene_fade);
+
+	backend::ref().set_ps_constant(
+		m_filmic_tonemap_packed_parameters_0,
+		float4(
+			parameters.filmic_tonemap_shoulder_strength,
+			parameters.filmic_tonemap_linear_strength,
+			parameters.filmic_tonemap_linear_angle,
+			parameters.filmic_tonemap_toe_strength
+		)
+	);
+
+	backend::ref().set_ps_constant(
+		m_filmic_tonemap_packed_parameters_1,
+		float4(
+			parameters.filmic_tonemap_toe_numerator,
+			parameters.filmic_tonemap_toe_denominator,
+			parameters.filmic_tonemap_liner_white,
+			parameters.frame_dark_desaturation_limit
+		)
+	);
+
+	backend::ref().set_ps_constant(m_image_grain_parameters, image_grain_parameters);
 }
 
 static float gaussian( float x, float mu, float sigma )
