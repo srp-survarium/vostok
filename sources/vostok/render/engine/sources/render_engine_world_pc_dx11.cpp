@@ -633,393 +633,170 @@ void engine::world::apply_render_options_changes( )
 #endif // #ifndef MASTER_GOLD
 }
 
-// claude@NOTE: no legacy ancestor - the same-named legacy fn sits in an #if 0 block and is a different tool (rewrites lua material configs from a request path); matcher-phase work.
-// STATE[STUB]
-void on_material_loaded( resources::queries_result& data, long volatile* waiting_for )
+static void on_material_loaded( resources::queries_result& data, long volatile* waiting_for )
 {
-	// STATICS
-	// static u32 						num_materials_processed = <0x4c26484>;
-	// ******
+	static u32 num_materials_processed = 0;
 
-	// FUNCTION BODY[0x654ce0]: 101
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <42>
-	// <43>
-	// <44>
-	// <45>
-	// <46>
-	// <47>
-	// <48>
-	// <49>
-	// <50>
-	// <51>
-	// <52>
-	// <53>
-	// <54>
-	// <55>
-	// <56>
-	// <57>
-	// <58>
-	// <59>
-	// <60>
-	// <61>
-	// <62>
-	// <63>
-	// <64>
-	// <65>
-	// <66>
-	// <67>
-	// <68>
-	// <69>
-	// <70>
-	// <71>
-	// <72>
-	// <73>
-	// <74>
-	// <75>
-	// <76>
-	// <77>
-	// <78>
-	// <79>
-	// <80>
-	// <81>
-	// <82>
-	// <83>
-	// <84>
-	// <85>
-	// <86>
-	// <87>
-	// <88>
-	// <89>
-	// <90>
-	// <91>
-	// <0x654ce9>|0x009|+0x01f:'497'
-	// <0x654d08>|0x028|+0x0c0:'498'
-	// <0>
-	// <0x654dc8>|0x0e8|+0x00c:'500'
-	// <0>
-	// <0x654dd4>|0x0f4|+0x0c2:'502'
-	// <0>
-	// <0x654e96>|0x1b6|+0x007:'504'
-	// <0x654e9d>|0x1bd|+0x004:'505'
-	// ******
+	u32 const pending_queries_count = resources::pending_queries_count();
+	LOG_ERROR					( "pending qc:%d", pending_queries_count );
+	num_materials_processed			+= data.size();
+	LOG_ERROR					( "num nmtls:%d", num_materials_processed );
+
+	if ( waiting_for )
+		threading::interlocked_exchange( *waiting_for, 0 );
 }
 
-// STATE[STUB]
-void on_fs_iterator_materials_ready_children(
+static void on_fs_iterator_materials_ready_children(
 	vector< fs_new::virtual_path_string >&	out_material_names,
 	pcstr						materials_path,
 	vfs::vfs_iterator const&	fs_it
 )
 {
-	// LOCALS
-	// vfs::vfs_iterator 				it
-	// fs_new::virtual_path_string 		request_path
-	// fs_new::virtual_path_string 		new_materials_path
-	// ******
+	vfs::vfs_iterator it = fs_it;
+	for ( ; it; ++it )
+	{
+		pcstr mname = it.get_name();
 
-	// FUNCTION BODY[0x654ef0]: 77
-	// <0x654ef0>|0x000|+0x018:'510'
-	// <0>
-	// <0x654f08>|0x018|+0x019:'512'
-	// <0>
-	// <0x654f21>|0x031|+0x009:'514'
-	// <0>
-	// <0x654f2a>|0x03a|+0x00f:'516'
-	// <0>
-	// <1>
-	// <0x654f39>|0x049|+0x049:'519'
-	// <0x654f82>|0x092|+0x023:'520'
-	// <0x654fa5>|0x0b5|+0x004:'521'
-	// <0x654fa9>|0x0b9|+0x005:'522'
-	// <0>
-	// <0x654fae>|0x0be|+0x012:'524'
-	// <0>
-	// <0x654fc0>|0x0d0|+0x005:'526'
-	// <0x654fc5>|0x0d5|+0x005:'527'
-	// <0>
-	// <1>
-	// <2>
-	// <0x654fca>|0x0da|+0x040:'531'
-	// <0>
-	// <0x65500a>|0x11a|+0x00a:'533'
-	// <0x655014>|0x124|+0x013:'534'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <42>
-	// <43>
-	// <44>
-	// <45>
-	// <46>
-	// <47>
-	// <48>
-	// <0x655027>|0x137|+0x026:'584'
-	// <0x65504d>|0x15d|+0x019:'585'
-	// <0>
-	// ******
+		if ( it.is_folder() )
+		{
+			fs_new::virtual_path_string new_materials_path;
+			new_materials_path.assignf( "%s/%s", materials_path, mname );
+			on_fs_iterator_materials_ready_children(
+				out_material_names,
+				new_materials_path.c_str(),
+				it.children_begin()
+			);
+			continue;
+		}
+
+		if ( strstr( mname, ".orig" ) )
+		{
+			continue;
+		}
+
+		fs_new::virtual_path_string request_path;
+		request_path.assignf( "%s/%s", materials_path, mname );
+		request_path.rtrim();
+		request_path.replace( "resources/material_instances/", "" );
+		out_material_names.push_back( fs_new::virtual_path_string( request_path.c_str() ) );
+	}
 }
 
-// STATE[STUB]
-void query_materials_and_wait( vector< fs_new::virtual_path_string > const& in_material_names )
+static void query_materials_and_wait( vector< fs_new::virtual_path_string > const& in_material_names )
 {
-	// LOCALS
-	// const u32 						num_resuests
-	// variant< 32 >** 					user_data_variants_ptrs
-	// volatile long 					waiting_for
-	// variant< 32 >* 					user_data_variants
-	// resources::request* 				requests
-	// fs_new::virtual_path_string const* name_it
-	// u32 								vi_type
-	// ******
+	fs_new::virtual_path_string const* name_it = in_material_names.begin();
+	fs_new::virtual_path_string const* name_end = in_material_names.end();
+	u32 const num_resuests = in_material_names.size() * num_vertex_input_types;
 
-	// FUNCTION BODY[0x655d50]: 46
-	// <0x655d59>|0x009|+0x002:'591'
-	// <0x655d5b>|0x00b|+0x003:'592'
-	// <0>
-	// <0x655d5e>|0x00e|+0x012:'594'
-	// <0>
-	// <0x655d70>|0x020|+0x02b:'596'
-	// <0x655d9b>|0x04b|+0x018:'597'
-	// <0x655db3>|0x063|+0x017:'598'
-	// <0>
-	// <1>
-	// <0x655dca>|0x07a|+0x102:'601'
-	// <0x655ecc>|0x17c|-0x0ec:'601'
-	// <0>
-	// <0x655de0>|0x090|+0x024:'603'
-	// <0>
-	// <1>
-	// <0x655e04>|0x0b4|+0x011:'606'
-	// <0>
-	// <0x655e15>|0x0c5|+0x013:'608'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x655e28>|0x0d8|+0x06f:'614'
-	// <0x655e97>|0x147|+0x039:'615'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x655ed0>|0x180|+0x092:'626'
-	// <0>
-	// <0x655f62>|0x212|+0x01e:'628'
-	// <0x655f80>|0x230|+0x01a:'629'
-	// <0x655f9a>|0x24a|+0x014:'630'
-	// <0>
-	// <0x655fae>|0x25e|+0x027:'632'
-	// <0>
-	// <0x655fd5>|0x285|+0x078:'634'
-	// <0x65604d>|0x2fd|+0x05e:'635'
-	// <0>
-	// ******
+	resources::request* requests = (resources::request*)MALLOC( sizeof( resources::request ) * num_resuests, "" );
+	resources::user_data_variant* user_data_variants = (resources::user_data_variant*)MALLOC( sizeof( resources::user_data_variant ) * num_resuests, "" );
+	resources::user_data_variant** user_data_variants_ptrs = (resources::user_data_variant**)MALLOC( sizeof( resources::user_data_variant* ) * num_resuests, "" );
+
+	u32 request_index = 0;
+	for ( ; name_it != name_end; ++name_it )
+	{
+		for ( u32 vi_type = 0; vi_type < num_vertex_input_types; ++vi_type, ++request_index )
+		{
+			requests[request_index].set( name_it->c_str(), resources::material_effects_instance_class );
+
+			user_data_variants_ptrs[request_index] = new(
+				&user_data_variants[request_index]
+			) resources::user_data_variant;
+			user_data_variants_ptrs[request_index]->set(
+				NEW( material_effects_instance_cook_data )(
+					(enum_vertex_input_type)vi_type,
+					0
+				)
+			);
+		}
+	}
+
+	volatile long waiting_for = 1;
+	resources::query_resources(
+		requests,
+		num_resuests,
+		boost::bind( &on_material_loaded, _1, &waiting_for ),
+		g_allocator,
+		(resources::user_data_variant const**)user_data_variants_ptrs,
+		NULL,
+		assert_on_fail_true
+	);
+
+	FREE( user_data_variants_ptrs );
+	FREE( user_data_variants );
+	FREE( requests );
+
+	while ( waiting_for )
+	{
+		resources::dispatch_callbacks();
+		threading::yield( 1 );
+	}
 }
 
-// claude@NOTE: no legacy ancestor - legacy version is #if 0 and takes resources::fs_iterator, not the vfs_locked_iterator+waiting_for surface; matcher-phase work.
-// STATE[STUB]
-void on_fs_iterator_materials_ready(
+static void on_fs_iterator_materials_ready(
 	pcstr								materials_path,
 	vfs::vfs_locked_iterator const&		fs_it,
 	long volatile*						waiting_for
 )
 {
-	// LOCALS
-	// fs_new::virtual_path_string const* name_end
-	// vfs::vfs_iterator 				end
-	// vector< fs_new::virtual_path_string > query_names
-	// vector< fs_new::virtual_path_string > out_material_names
-	// vfs::vfs_iterator 				it
-	// fs_new::virtual_path_string 		new_materials_path
-	// fs_new::virtual_path_string 		name
-	// ******
+	if ( !fs_it.get_children_count() || !fs_it )
+		return;
 
-	// FUNCTION BODY[0x6560c0]: 93
-	// <0x6560cf>|0x00f|+0x019:'641'
-	// <0x6560e8>|0x028|+0x008:'642'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6560f0>|0x030|+0x018:'647'
-	// <0x656108>|0x048|+0x00c:'648'
-	// <0>
-	// <0x656114>|0x054|+0x0d8:'650'
-	// <0x6561ec>|0x12c|-0x0bc:'650'
-	// <0>
-	// <0x656130>|0x070|+0x009:'652'
-	// <0>
-	// <0x656139>|0x079|+0x00f:'654'
-	// <0>
-	// <1>
-	// <0x656148>|0x088|+0x049:'657'
-	// <0x656191>|0x0d1|+0x01f:'658'
-	// <0>
-	// <0x6561b0>|0x0f0|+0x002:'660'
-	// <0>
-	// <0x6561b2>|0x0f2|+0x03c:'662'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6561ee>|0x12e|+0x008:'667'
-	// <0>
-	// <1>
-	// <0x6561f6>|0x136|+0x012:'670'
-	// <0x656208>|0x148|+0x0e4:'671'
-	// <0x6562ec>|0x22c|-0x0dc:'671'
-	// <0>
-	// <0x656210>|0x150|+0x047:'673'
-	// <0x656257>|0x197|+0x032:'674'
-	// <0>
-	// <1>
-	// <0x656289>|0x1c9|+0x011:'677'
-	// <0x65629a>|0x1da|+0x022:'678'
-	// <0>
-	// <0x6562bc>|0x1fc|+0x009:'680'
-	// <0x6562c5>|0x205|+0x02b:'681'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6562f0>|0x230|+0x015:'685'
-	// <0x656305>|0x245|+0x009:'686'
-	// <0>
-	// <0x65630e>|0x24e|+0x007:'688'
-	// <0x656315>|0x255|+0x004:'689'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <31>
-	// <32>
-	// <33>
-	// <34>
-	// <35>
-	// <36>
-	// <37>
-	// <38>
-	// <39>
-	// <40>
-	// <41>
-	// <0x656319>|0x259|-0x247:'732'
-	// <0>
-	// <0x6560d2>|0x012|+0x329:'734'
-	// ******
+	vector< fs_new::virtual_path_string > out_material_names;
+	vfs::vfs_iterator it = fs_it.children_begin();
+	vfs::vfs_iterator end = fs_it.children_end();
+	for ( ; it != end; ++it )
+	{
+		pcstr mname = it.get_name();
+		if ( it.is_folder() )
+		{
+			fs_new::virtual_path_string new_materials_path;
+			new_materials_path.assignf( "%s/%s", materials_path, mname );
+			on_fs_iterator_materials_ready_children(
+				out_material_names,
+				new_materials_path.c_str(),
+				it.children_begin()
+			);
+		}
+		else
+		{
+			on_fs_iterator_materials_ready_children(
+				out_material_names,
+				materials_path,
+				it
+			);
+		}
+	}
+
+	vector< fs_new::virtual_path_string > query_names;
+	fs_new::virtual_path_string const* name_end = out_material_names.end();
+	for (
+		fs_new::virtual_path_string const* name_it = out_material_names.begin();
+		name_it != name_end;
+		++name_it
+	)
+	{
+		fs_new::virtual_path_string name = *name_it;
+		if (
+			name.length() < strings::length( "post_process/" ) ||
+			!strstr( name.c_str(), "post_process/" )
+		)
+			query_names.push_back( name );
+
+		if ( query_names.size() == 50 )
+		{
+			query_materials_and_wait( query_names );
+			query_names.clear();
+		}
+	}
+
+	if ( query_names.size() )
+		query_materials_and_wait( query_names );
+
+	if ( waiting_for )
+		threading::interlocked_exchange( *waiting_for, 0 );
+
+	LOG_ERROR( "pending qc:%d", resources::pending_queries_count() );
 }
 
  engine::world::world( configs::binary_config_ptr const& in_config, bool is_editor ) :
