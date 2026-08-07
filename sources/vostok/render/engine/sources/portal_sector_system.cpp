@@ -2,6 +2,7 @@
 #include "portal_sector_system.h"
 
 #include <vostok/collision/common_types.h>
+#include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/fixed_vector.h>
 #include <vostok/math_frustum.h>
 #include <vostok/math_plane.h>
@@ -11,8 +12,10 @@
 
 #include <vostok/console_command.h>
 #include <vostok/math_color.h>
+#include <vostok/render/culling/possible_sectors_holder.h>
 #include <vostok/render/engine/vertex_colored.h>
 
+#include "render_model_instance_impl.h"
 #include "sector_double_query_preventer.h"
 #include "statistics.h"
 #include "system_renderer.h"
@@ -566,17 +569,38 @@ void portal_sector_system::process_portal_in_screen_space(
 }
 
 void portal_sector_system::perform_frustum_culling_and_sectors_test(
-	collision::space_partitioning_tree*,
-	u32,
-	math::frustum const&,
-	vector<render_surface_instance*>&,
-	float3 const&,
-	float4x4 const&
+	collision::space_partitioning_tree* tree,
+	u32 active_sector_id,
+	math::frustum const& f,
+	vector<render_surface_instance*>& visible_surfaces,
+	float3 const& view_pos,
+	float4x4 const& mat_vp
 )
 {
-	// claude@NOTE: legacy body diverged - legacy add_visual_to_selection frustum-tests the render_visual hierarchy; canonical queries the space_partitioning_tree with sector cross-check; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fbae0]
+	collision::objects_type query_result( *g_allocator );
+	tree->cuboid_query( u32( -1 ), f, query_result );
+
+	vector<render_surface_instance*> surfaces;
+	collision::object const* const* query_result_end = query_result.end( );
+	for ( collision::object const** it = query_result.begin( ); it != query_result_end; ++it )
+	{
+		render_collision_object<render_model_instance_impl> const* const object =
+			static_cast_checked<render_collision_object<render_model_instance_impl> const*>( *it );
+		possible_sectors_holder const* const sectors = object->owner( )->get_sectors_holder( );
+
+		if ( sectors &&
+			!sectors->is_possible_sector( (u16)active_sector_id ) &&
+			!m_preventer->is_visible_aabb( object->get_aabb( ), sectors->begin( ), sectors->end( ) ) )
+			continue;
+
+		surfaces.clear( );
+
+		object->owner( )->get_surfaces( &mat_vp, &view_pos, surfaces, true, u8( -1 ), 3 );
+
+		render_surface_instance* const* const surfaces_end = surfaces.end( );
+		for ( render_surface_instance* const* it = surfaces.begin( ); it != surfaces_end; ++it )
+			visible_surfaces.push_back( *it );
+	}
 }
 
 void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
