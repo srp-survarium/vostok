@@ -11,8 +11,10 @@ class effect_compiler;
 
 class effect_god_rays : public effect_descriptor {
 public:
-	effect_god_rays( ) { }
-	virtual ~effect_god_rays( ) { }
+	enum {
+		mask_pass,
+		apply_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,
