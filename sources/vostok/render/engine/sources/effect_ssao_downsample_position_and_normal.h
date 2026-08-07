@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_ssao_downsample_position_and_normal : public effect_descriptor {
 public:
-	effect_ssao_downsample_position_and_normal( ) { }
-	virtual ~effect_ssao_downsample_position_and_normal( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config

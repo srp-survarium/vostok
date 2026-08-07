@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_ambient_volume : public effect_descriptor {
 public:
-	effect_ambient_volume( ) { }
-	virtual ~effect_ambient_volume( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
