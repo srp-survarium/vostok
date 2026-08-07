@@ -16,10 +16,10 @@ public:
 		gather_luminance_in_range,
 		gather_luminance_count,
 		gather_luminance_histogram,
+		gather_luminance_histogram_downsample_scene_color,
 	};
 
 	effect_gather_luminance_histogram( ) { }
-	virtual ~effect_gather_luminance_histogram( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,
