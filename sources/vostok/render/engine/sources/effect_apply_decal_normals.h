@@ -11,8 +11,11 @@ class effect_compiler;
 
 class effect_apply_decal : public effect_descriptor {
 public:
-	effect_apply_decal( ) { }
-	virtual ~effect_apply_decal( ) { }
+	enum {
+		normals_blend_pass,
+		normals_write_pass,
+		diffuse_write_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,

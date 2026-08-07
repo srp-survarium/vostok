@@ -16,12 +16,9 @@ public:
 		all_types
 	};
 
-	effect_decal_mask( ) { }
-	virtual ~effect_decal_mask( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&
 	) override;
 };
 
