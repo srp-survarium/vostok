@@ -1156,7 +1156,6 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 void stage_light_propagation_volumes::execute_impl( )
 {
-	// FUNCTION BODY[0x618b60]
 	light_ptr sun = m_context->scene( )->lights( ).get_sun( );
 
 	lights_db::lights_type const& e_lights = m_context->scene( )->lights( ).get_lights( );
@@ -1173,7 +1172,9 @@ void stage_light_propagation_volumes::execute_impl( )
 	m_has_indirect_lighting = false;
 
 	if ( sun && sun->use_with_lpv )
+	{
 		m_has_indirect_lighting = true;
+	}
 
 	for ( collision::objects_type::const_iterator i = objects.begin( ), e = objects.end( ); i != e; ++i )
 	{
@@ -1187,6 +1188,8 @@ void stage_light_propagation_volumes::execute_impl( )
 		case light_type_spot:
 		case light_type_point:
 			m_has_indirect_lighting = true;
+			break;
+		default:
 			break;
 		}
 	}
