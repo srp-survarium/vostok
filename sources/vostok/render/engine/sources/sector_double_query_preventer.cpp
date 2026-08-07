@@ -9,31 +9,39 @@ namespace vostok {
 namespace render {
 namespace culling {
 
-// claude@NOTE: this class is the canonical replacement for the legacy marker
-// idiom (dx9/model_manager.cpp: sector::marker / portal::marker stamped with
-// m_marker per traversal, marker==0xffffffff at portal::create) - instead of
-// u32 stamps it remembers per-sector max frustums/rects and tests containment;
-// no legacy body maps, matcher-phase against the 0x5e8xxx bodies.
-sector_double_query_preventer::sector_double_query_preventer( spatial_sector const*, u32 ) :
-	m_buffer_for_frustum_vectors( 0 ),
-	m_sectors_max_frustums( 0 ),
-	m_buffer_for_rect_vectors( 0 ),
-	m_sectors_max_rects( 0 )
+sector_double_query_preventer::sector_double_query_preventer( spatial_sector const* sectors, u32 sectors_count ) :
+	m_buffer_for_frustum_vectors( ALLOC( vector<math::frustum>, sectors_count ) ),
+	m_sectors_max_frustums( NEW( buffer_vector<vector<math::frustum> > )( m_buffer_for_frustum_vectors, sectors_count ) ),
+	m_buffer_for_rect_vectors( ALLOC( vector<aab_rect>, sectors_count ) ),
+	m_sectors_max_rects( NEW( buffer_vector<vector<aab_rect> > )( m_buffer_for_rect_vectors, sectors_count ) )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8c30]
+	m_sectors_max_frustums->resize( sectors_count );
+	m_sectors_max_rects->resize( sectors_count );
+	for ( u32 i = 0; i < sectors_count; ++i )
+	{
+		( *m_sectors_max_frustums )[i].reserve( sectors[i].get_portals_count( ) * 2 );
+		( *m_sectors_max_rects )[i].reserve( sectors[i].get_portals_count( ) * 2 );
+	}
 }
 
 sector_double_query_preventer::~sector_double_query_preventer( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8b60]
+	clear( );
+	DELETE( m_sectors_max_frustums );
+	FREE( m_buffer_for_frustum_vectors );
+	DELETE( m_sectors_max_rects );
+	FREE( m_buffer_for_rect_vectors );
 }
 
 void sector_double_query_preventer::clear( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e84c0]
+	buffer_vector<vector<math::frustum> >::iterator const frustums_end = m_sectors_max_frustums->end( );
+	for ( buffer_vector<vector<math::frustum> >::iterator i = m_sectors_max_frustums->begin( ); i != frustums_end; ++i )
+		i->clear( );
+
+	buffer_vector<vector<aab_rect> >::iterator const rects_end = m_sectors_max_rects->end( );
+	for ( buffer_vector<vector<aab_rect> >::iterator i = m_sectors_max_rects->begin( ); i != rects_end; ++i )
+		i->clear( );
 }
 
 bool sector_double_query_preventer::is_possible_points_for_frustum( float3 const (&)[4], u32 ) const
