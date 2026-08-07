@@ -669,7 +669,6 @@ void radiance_volume::inject_occluders(
 
 void radiance_volume::inject_camera_occluders( renderer_context* context )
 {
-	// FUNCTION BODY[0x5f0320]
 	// Inject occluders from camera view.
 	if (m_is_position_changed && options::ref().current.m_lpv_gather_occluders_from_camera_view)
 	{
@@ -689,11 +688,6 @@ void radiance_volume::inject_camera_occluders( renderer_context* context )
 
 		context->set_v(context->get_v());
 		context->set_p(context->get_p());
-
-		m_injection_geometry_from_camera.prepare(
-			context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->width(),
-			context->m_targets->m_family[rt_gbuffer_position_downsampled].texture->height()
-		);
 
 		m_injection_geometry_from_camera.draw	();
 
