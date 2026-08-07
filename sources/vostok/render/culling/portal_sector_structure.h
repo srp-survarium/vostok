@@ -4,6 +4,7 @@
 #include <vostok/buffer_vector.h>
 #include <vostok/math_aabb.h>
 #include <vostok/math_plane.h>
+#include <vostok/render/culling/portal_id_closer_to_point.h>
 #include <vostok/resources_resource_ptr.h>
 #include <vostok/resources_unmanaged_resource.h>
 
@@ -128,10 +129,13 @@ public:
 		return m_aabb;
 	}
 
-	void sort_portal_ids( float const* )
+	void sort_portal_ids( float const* distances )
 	{
-		// claude@NOTE: no legacy ancestor - spatial_sector::sort_portal_ids postdates the legacy corpus (legacy culling header had no spatial_sector); matcher-phase work.
-		// STATE[STUB]
+		std::sort(
+			m_portal_ids,
+			m_portal_ids + m_portals_count,
+			portal_id_closer_to_point( distances )
+		);
 	}
 
 private:
@@ -175,7 +179,7 @@ public:
 		m_portals[portal_id].set_visible( visible );
 	}
 
-	void update_portals_visability( math::frustum const& f, pcbyte occlusion_results );
+	void update_portals_visability( math::frustum const& f, pcbyte oclusion_results );
 
 private:
 	// claude@NOTE: the legacy ancestor (dx9/model_manager.cpp portal::create)
