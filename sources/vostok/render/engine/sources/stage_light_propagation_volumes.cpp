@@ -282,7 +282,6 @@ void stage_light_propagation_volumes::set_rsm_contants(
 	float			grid_scale
 )
 {
-	// FUNCTION BODY[0x614cd0]
 	backend::ref().set_ps_constant	(m_c_grid_origin, grid_origin);
 	backend::ref().set_ps_constant	(m_c_grid_cell_size, grid_scale / float(m_grid_size));
 	backend::ref().set_ps_constant	(m_c_invert_rsm_size, 1.0f / float(m_rsm_downsampled_size));
@@ -291,7 +290,6 @@ void stage_light_propagation_volumes::set_rsm_contants(
 
 void stage_light_propagation_volumes::register_rsm_constans( )
 {
-	// FUNCTION BODY[0x615510]
 	m_c_grid_origin					= backend::ref().register_constant_host("grid_origin",  rc_float );
 	m_c_grid_cell_size				= backend::ref().register_constant_host("grid_cell_size",  rc_float );
 	m_c_grid_size					= backend::ref().register_constant_host("grid_size",  rc_float );
@@ -448,7 +446,6 @@ void stage_light_propagation_volumes::render_to_rms(
 
 bool remove_model_if_in_frustum_predicate::operator()( lpv_render_surface const& surface )
 {
-	// FUNCTION BODY[0x7d230]
 	math::aabb bbox = surface.surface->m_parent->get_aabb( );
 	bbox *= 2.0f;
 	bbox.modify( *surface.surface->m_transform );
@@ -663,7 +660,6 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 
 static float3 compute_aligment( float3 const& lightXZshift, float4x4 const& light_space_transform, float smap_res )
 {
-	// FUNCTION BODY[0x614760]
 	float3 align_origin				(0.0f, 0.0f, 0.0f);
 
 	align_origin					-= lightXZshift;
@@ -866,7 +862,6 @@ void stage_light_propagation_volumes::propagate_lighting_smoothed(
 
 void stage_light_propagation_volumes::render_quad( )
 {
-	// FUNCTION BODY[0x615760]
 	u32	offset;
 
 	screen_vertex* pv = (screen_vertex*)backend::ref().vertex.lock(4, sizeof(screen_vertex), offset);
