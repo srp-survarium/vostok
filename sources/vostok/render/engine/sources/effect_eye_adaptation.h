@@ -11,8 +11,10 @@ class effect_compiler;
 
 class effect_eye_adaptation : public effect_descriptor {
 public:
-	effect_eye_adaptation( ) { }
-	virtual ~effect_eye_adaptation( ) { }
+	enum {
+		adaptation,
+		copy_to_previous
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,
