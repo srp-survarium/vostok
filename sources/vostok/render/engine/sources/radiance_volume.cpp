@@ -573,15 +573,38 @@ void radiance_volume::propagate_lighting( u32 const cascade_index )
 }
 
 void radiance_volume::inject_occluder_geometry(
-	renderer_context*,
-	float3 const&,
-	float3 const&,
-	vector<float4x4> const&
+	renderer_context*		context,
+	float3 const&			light_position,
+	float3 const&			light_direction,
+	vector<float4x4> const&	transforms
 )
 {
-	// claude@NOTE: no legacy ancestor - no transform-list occluder injector in the legacy remainder; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x5f07c0]
+	if ( !transforms.size( ) )
+		return;
+
+	backend::ref( ).set_render_targets( &*m_3d_rt_occluders, 0, 0, 0 );
+	begin_render_to_cells( );
+
+	m_lpv_effect->apply( 3, 0 );
+
+	backend::ref( ).set_vs_constant( m_c_grid_origin_and_inv_grid_scale, float4( m_bbox.min, 1.0f / get_scale( ) ) );
+
+	backend::ref( ).set_gs_constant( m_c_grid_size, float( m_num_cells ) );
+	backend::ref( ).set_gs_constant( m_c_light_position, light_position );
+	backend::ref( ).set_gs_constant( m_c_light_direction, light_direction );
+	backend::ref( ).set_ps_constant( m_c_light_position, light_position );
+
+	vector<float4x4>::const_iterator it = transforms.begin( );
+	vector<float4x4>::const_iterator end = transforms.end( );
+
+	for ( ; it != end; ++it )
+	{
+		context->set_w( *it );
+		m_box_geometry.draw( );
+	}
+
+	end_render_to_cells( );
 }
 
 void radiance_volume::inject_occluders(
@@ -608,6 +631,8 @@ void radiance_volume::inject_occluders(
 		backend::ref().set_gs_constant			(m_c_light_position, light_position);
 		backend::ref().set_gs_constant			(m_c_light_direction, light_direction);
 		backend::ref().set_ps_constant			(m_c_light_position, light_position);
+		backend::ref().set_ps_texture			("t_lpv_rsm_normal", &*m_t_rms_normal);
+		backend::ref().set_ps_texture			("t_lpv_rsm_position", &*m_t_rms_position);
 
 		m_injection_geometry.draw				();
 
