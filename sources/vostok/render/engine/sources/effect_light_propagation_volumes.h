@@ -11,6 +11,15 @@ class effect_compiler;
 
 class effect_light_propagation_volumes : public effect_descriptor {
 public:
+	enum {
+		inject_lighting_stage = 0,
+		inject_occluders_light_view_stage,
+		inject_occluders_camera_view_stage,
+		inject_occluder_geometry_stage,
+		propagate_lighting_stage,
+		accumulate_propagation_stage,
+	};
+
 	effect_light_propagation_volumes( ) { }
 	virtual ~effect_light_propagation_volumes( ) { }
 

@@ -75,11 +75,11 @@ STATIC_SIZE_ASSERT( sliced_cube_geometry, 0x14 );
 
 struct radiance_volume : public boost::noncopyable {
 	radiance_volume(
-		u32		in_rsm_size,
-		u32		in_num_cells,
-		u32		in_num_propagate_iterations,
-		float	in_scale,
-		float	in_flux_amplifier
+		u32 const	in_rsm_size,
+		u32 const	in_num_cells,
+		u32 const	in_num_propagate_iterations,
+		float const	in_scale,
+		float const	in_flux_amplifier
 	);
 
 	~radiance_volume( );
