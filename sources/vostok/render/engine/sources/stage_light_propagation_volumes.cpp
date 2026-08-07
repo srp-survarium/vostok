@@ -697,7 +697,7 @@ static float3 compute_aligment( float3 const& lightXZshift, float4x4 const& ligh
 
 void stage_light_propagation_volumes::render_to_sun_rms(
 	light*				sun,
-	u32					cascade_index,
+	u32 const			cascade_index,
 	vector<float4x4>	transforms
 )
 {
@@ -722,10 +722,10 @@ void stage_light_propagation_volumes::render_to_sun_rms(
 
 void stage_light_propagation_volumes::render_to_sun_rms_smoothed(
 	light*				sun,
-	u32				cascade_index,
+	u32 const		cascade_index,
 	vector<float4x4>	transforms,
-	u32				stage_render_index,
-	u32				num_render_stages
+	u32 const		stage_render_index,
+	u32 const		num_render_stages
 )
 {
 	// FUNCTION BODY[0x6169b0]
@@ -777,7 +777,7 @@ static float3 view_matrix_parameters[6][3] = {
 
 void stage_light_propagation_volumes::render_to_point_rms(
 	light*				l,
-	u32					face_index,
+	u32 const			face_index,
 	vector<float4x4>	transforms
 )
 {
@@ -795,8 +795,8 @@ void stage_light_propagation_volumes::render_to_point_rms(
 
 void stage_light_propagation_volumes::render_to_sky_rms(
 	light*,
-	u32,
-	u32,
+	u32 const,
+	u32 const,
 	vector<float4x4>
 )
 {
@@ -818,15 +818,15 @@ void stage_light_propagation_volumes::render_to_spot_rms( light* l, vector<float
 	render_to_rms					(l->color, l->intensity, view_matrix, projection_matrix, transforms, 0);
 }
 
-void stage_light_propagation_volumes::propagate_lighting( u32 cascade_index )
+void stage_light_propagation_volumes::propagate_lighting( u32 const cascade_index )
 {
 	// FUNCTION BODY[0x615f50]
 	m_radiance_volume[cascade_index].propagate_lighting(cascade_index);
 }
 
 void stage_light_propagation_volumes::propagate_lighting_smoothed(
-	u32 cascade_index,
-	u32 propagation_iteration_index
+	u32 const cascade_index,
+	u32 const propagation_iteration_index
 )
 {
 	// FUNCTION BODY[0x615f30]
@@ -855,7 +855,7 @@ void stage_light_propagation_volumes::render_quad( )
 void stage_light_propagation_volumes::downsample_rsm(
 	float3 const&	light_direction,
 	float3 const&	grid_origin,
-	float const		grid_scale,
+	float			grid_scale,
 	u32 const		cascade_index
 )
 {
@@ -904,24 +904,22 @@ void stage_light_propagation_volumes::downsample_rsm(
 }
 
 void stage_light_propagation_volumes::inject_lighting(
-	u32				cascade_index,
+	u32 const		cascade_index,
 	float3 const&	light_position,
 	float3 const&	light_direction,
 	float			light_fov
 )
 {
-	// FUNCTION BODY[0x615d20]
 	m_radiance_volume[cascade_index].inject_lighting(light_position, light_direction, light_fov, m_rsm_downsampled_size);
 }
 
 void stage_light_propagation_volumes::inject_occluders(
-	u32				cascade_index,
+	u32 const		cascade_index,
 	float3 const&	light_position,
 	float3 const&	light_direction,
 	vector<float4x4>	transforms
 )
 {
-	// FUNCTION BODY[0x615cc0]
 	m_radiance_volume[cascade_index].inject_occluders(m_context, light_position, light_direction, m_rsm_downsampled_size);
 	m_radiance_volume[cascade_index].inject_occluder_geometry(
 		m_context,
@@ -934,11 +932,11 @@ void stage_light_propagation_volumes::inject_occluders(
 static float blend_alpha = 0.0f;
 
 void stage_light_propagation_volumes::execute_smoothed_impl(
-	u32 current_cascade_index,
-	u32 stage_index,
-	u32 propagation_iteration_index,
-	u32 render_stage_index,
-	u32 num_render_stages
+	u32 const current_cascade_index,
+	u32 const stage_index,
+	u32 const propagation_iteration_index,
+	u32 const render_stage_index,
+	u32 const num_render_stages
 )
 {
 	// FUNCTION BODY[0x6173c0]
