@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_lens_flares : public effect_descriptor {
 public:
-	effect_lens_flares( ) { }
-	virtual ~effect_lens_flares( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
