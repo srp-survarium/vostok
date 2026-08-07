@@ -727,17 +727,18 @@ void stage_light_propagation_volumes::render_to_sun_rms_smoothed(
 	u32 const		num_render_stages
 )
 {
-	// FUNCTION BODY[0x6169b0]
 	float max_scale = m_radiance_volume[cascade_index].get_scale( );
 
-	float3 sun_position = start_render_eye_position - sun->direction * max_scale * 1.41421f * 2.0f;
+
+
+	float3 sun_position = start_render_eye_position + -sun->direction * max_scale * 1.41421f * 2.0f;
 
 	float4x4 view_matrix = create_camera_direction( sun_position, sun->direction, float3( 1, 0, 0 ) );
 	float4x4 projection_matrix = math::create_orthographic_projection(
 		max_scale,
 		max_scale,
 		0.01f,
-		1.41421f * max_scale * 20.0f
+		1.41421f * max_scale * 100.0f
 	);
 
 	if ( stage_render_index == 0 )
