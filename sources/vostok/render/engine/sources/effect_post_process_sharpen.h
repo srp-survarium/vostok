@@ -11,12 +11,14 @@ class effect_compiler;
 
 class effect_post_process_sharpen : public effect_descriptor {
 public:
-	effect_post_process_sharpen( ) { }
-	virtual ~effect_post_process_sharpen( ) { }
+	enum {
+		pre_pass,
+		post_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
 };
 
