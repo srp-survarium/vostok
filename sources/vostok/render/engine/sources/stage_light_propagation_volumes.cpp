@@ -1465,7 +1465,7 @@ void stage_light_propagation_volumes::execute( )
 	if ( !is_effects_ready( ) )
 		return;
 
-	if ( !options::ref( ).current.m_enabled_light_propagation_volumes_stage || !is_enabled( ) )
+	if ( !options::ref( ).current.m_lighting_quality || !is_enabled( ) )
 	{
 		execute_disabled( );
 		return;
