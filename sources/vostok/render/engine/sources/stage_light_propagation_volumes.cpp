@@ -794,14 +794,45 @@ void stage_light_propagation_volumes::render_to_point_rms(
 }
 
 void stage_light_propagation_volumes::render_to_sky_rms(
-	light*,
-	u32 const,
-	u32 const,
-	vector<float4x4>
+	light*				sun,
+	u32 const			face_index,
+	u32 const			cascade_index,
+	vector<float4x4>	transforms
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x618200]
+	float3 light_color = m_context->scene_view()->post_process_parameters().environment_skycolor[face_index].xyz();
+	float const light_intensity = 1.0f;
+
+
+
+
+
+	float const max_scale = m_radiance_volume[cascade_index].get_scale();
+
+	float4x4 sun_rotation = sun
+		? math::create_rotation(float3(sun->direction.x, 0.0f, sun->direction.z))
+		: float4x4().identity();
+
+	float3 direction = math::normalize(sun_rotation.transform_direction(view_matrix_parameters[face_index][1]));
+	float3 up = math::normalize(math::cross_product(
+		math::normalize(math::cross_product(direction, float3(1.0f, 1.0f, 1.0f))),
+		direction
+	));
+
+	float3 sky_position = m_context->get_view_pos() - direction * max_scale * 1.41421f * 2.0f;
+
+	float4x4 view_matrix = create_camera_direction(sky_position, direction, up);
+	float4x4 projection_matrix = math::create_orthographic_projection(
+		max_scale * 1.41421f,
+		max_scale * 1.41421f,
+		0.01f,
+		1.41421f * max_scale * 20.0f
+	);
+
+	float3 adjastment = compute_aligment(float3(0.0f, 0.0f, 0.0f), view_matrix * projection_matrix, m_rsm_source_size);
+	view_matrix = create_camera_direction(sky_position + adjastment, direction, up);
+
+	render_to_rms(light_color, light_intensity, view_matrix, projection_matrix, transforms, cascade_index);
 }
 
 void stage_light_propagation_volumes::render_to_spot_rms( light* l, vector<float4x4> transforms )
