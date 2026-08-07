@@ -971,7 +971,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 			m_radiance_volume[current_cascade_index].prepare(
 				m_context->get_view_pos( ),
 				m_context->get_view_dir( ),
-				0.4f
+				0.2f
 			);
 		}
 
@@ -1219,7 +1219,7 @@ void stage_light_propagation_volumes::execute_impl( )
 			m_radiance_volume[cascade_index].prepare(
 				m_context->get_view_pos( ),
 				m_context->get_view_dir( ),
-				0.4f
+				0.2f
 			);
 		}
 
