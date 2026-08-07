@@ -5,6 +5,11 @@
 #include <vostok/math_float3.h>
 
 namespace vostok {
+namespace math {
+class float4x4;
+class plane;
+} // namespace math
+
 namespace render {
 namespace culling {
 
@@ -51,6 +56,14 @@ private:
 
 	friend class portal_sector_system;
 	friend aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right );
+	friend bool portal_screen_rect_to_four_points(
+		aab_rect const& portal_rect,
+		math::plane const& portal_plane,
+		math::float4x4 const& inv_mat_vp,
+		aab_rect const& limiting_rect,
+		math::float3 (&io_points)[4],
+		aab_rect& limited_rect
+	);
 };
 
 STATIC_SIZE_ASSERT( aab_rect, 0x10 );
