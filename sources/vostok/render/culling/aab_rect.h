@@ -10,9 +10,6 @@ namespace culling {
 
 class aab_rect {
 public:
-	float2 min;
-	float2 max;
-
 	aab_rect& modify( float3 const& point )
 	{
 		return modify( float2( point.x, point.y ) );
@@ -29,8 +26,8 @@ public:
 
 	bool intersects( aab_rect const& other ) const
 	{
-		return min.x <= other.max.x && max.x >= other.min.x &&
-			min.y <= other.max.y && max.y >= other.min.y;
+		return min.x < other.max.x && max.x > other.min.x &&
+			min.y < other.max.y && max.y > other.min.y;
 	}
 
 	bool contains( aab_rect const& other ) const
@@ -40,12 +37,15 @@ public:
 			max.x >= other.max.x && max.y >= other.max.y;
 	}
 
-private:
 	aab_rect( )
 	{
 		min = float2( -1.f, -1.f );
 		max = float2( 1.f, 1.f );
 	}
+
+private:
+	float2 min;
+	float2 max;
 
 	friend class portal_sector_system;
 	friend aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right );
