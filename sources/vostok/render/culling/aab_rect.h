@@ -10,6 +10,9 @@ namespace culling {
 
 class aab_rect {
 public:
+	float2 min;
+	float2 max;
+
 	aab_rect& modify( float3 const& point )
 	{
 		return modify( float2( point.x, point.y ) );
@@ -38,17 +41,14 @@ public:
 	}
 
 private:
-	aab_rect( ) :
-		min( 0.f, 0.f ),
-		max( 0.f, 0.f )
+	aab_rect( )
 	{
+		min = float2( -1.f, -1.f );
+		max = float2( 1.f, 1.f );
 	}
 
+	friend class portal_sector_system;
 	friend aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right );
-
-public:
-	float2 min;
-	float2 max;
 };
 
 STATIC_SIZE_ASSERT( aab_rect, 0x10 );

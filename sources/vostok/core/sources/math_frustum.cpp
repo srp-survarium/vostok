@@ -62,3 +62,44 @@ frustum::frustum						( float4x4 const& view_multiplied_by_projection )
 	for ( ; i != e; ++i)
 		( *i ).normalize			( );
 }
+
+bool vostok::math::get_frustum_vertices( frustum const& f, float3 (&vertices)[8] )
+{
+	enum frustum_plane_id {
+		left,
+		right,
+		top,
+		bottom,
+		far,
+		near,
+	};
+
+	frustum_plane_id const plane_itersections[] = {
+		top, left, far,
+		top, right, far,
+		bottom, right, far,
+		bottom, left, far,
+		top, left, near,
+		top, right, near,
+		bottom, right, near,
+		bottom, left, near,
+	};
+
+	for ( u32 i = 0; i < 8; ++i )
+	{
+		float3 b(
+			-f.planes( )[plane_itersections[i * 3 + 0]].plane.d,
+			-f.planes( )[plane_itersections[i * 3 + 1]].plane.d,
+			-f.planes( )[plane_itersections[i * 3 + 2]].plane.d
+		);
+		if ( !try_solve_linear_equations_system(
+			f.planes( )[plane_itersections[i * 3 + 0]].plane.normal,
+			f.planes( )[plane_itersections[i * 3 + 1]].plane.normal,
+			f.planes( )[plane_itersections[i * 3 + 2]].plane.normal,
+			b,
+			vertices[i]
+		) )
+			return false;
+	}
+	return true;
+}

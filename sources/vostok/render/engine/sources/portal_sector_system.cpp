@@ -14,6 +14,7 @@
 #include <vostok/render/engine/vertex_colored.h>
 
 #include "sector_double_query_preventer.h"
+#include "statistics.h"
 #include "system_renderer.h"
 
 static bool s_use_screeen_space_portals_intersection_value = false;
@@ -347,17 +348,6 @@ void portal_sector_system::draw_portals( system_renderer& renderer, u32 const ac
 	draw_quads( renderer );
 }
 
-// claude@NOTE: ported from dx9/model_manager.cpp
-// select_visuals(sector*, float4x4, vector<render_visual*>&) (the float3
-// overload is #if1-dead): the legacy m_visuals guard/selection swap and the
-// add_visual_to_selection recursion over render_visuals are replaced by the
-// canonical flow - locate the start sector (get_sector_id, replacing the
-// legacy update/detect_sector), reset the preventer (the ++m_marker analog),
-// recurse the portal graph (traverse -> process_sector), then gather
-// render_surface_instances via perform_frustum_culling_and_sectors_test (the
-// add_visual_to_selection analog); the legacy start-sector null check has no
-// id-space analog (get_sector_id returns 0 on not-found). Verify against
-// 0x5fbd80 at matcher phase.
 void portal_sector_system::select_models(
 	collision::space_partitioning_tree* tree,
 	float3 const& view_pos,
@@ -365,15 +355,47 @@ void portal_sector_system::select_models(
 	vector<render_surface_instance*>& selection
 )
 {
-	// FUNCTION BODY[0x5fbd80]
-	math::frustum const frustum( mat_vp );
-
-	u32 const sector_id				= m_structure->get_sector_id( *g_allocator, view_pos );
-
 	m_preventer->clear( );
-	process_sector( sector_id, u32(-1), view_pos, frustum );
+	selection.clear( );
+	m_quads.clear( );
 
-	perform_frustum_culling_and_sectors_test( tree, sector_id, frustum, selection, view_pos, mat_vp );
+
+	math::frustum f( mat_vp );
+	u32 const active_sector_id = m_structure->get_sector_id( *g_allocator, view_pos );
+	m_preventer->add_frustum( f, active_sector_id );
+	m_structure->update_portals_visability( f, m_occlusion_results.begin( ) );
+	if ( !s_use_screeen_space_portals_intersection_value )
+	{
+
+
+		process_sector( active_sector_id, u32( -1 ), view_pos, f );
+	}
+	else
+	{
+		float4x4 inverted_vp;
+		if ( math::try_invert4x4( mat_vp, inverted_vp ) )
+		{
+			buffer_vector<aab_rect> portal_rects( ALLOCA( sizeof( aab_rect ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
+			float const min_z = mat_vp.transform_position( view_pos + f.planes( )[4].plane.normal * .01f ).z * 2.f;
+			sort_portals_and_calculate_rects_in_screen_space( mat_vp, min_z, portal_rects );
+			aab_rect limiting_rect;
+			m_preventer->add_ss_aab_rect( limiting_rect, active_sector_id );
+			process_sector( active_sector_id, u32( -1 ), portal_rects, view_pos, f.planes( )[4].plane, mat_vp, inverted_vp, limiting_rect );
+		}
+		else
+		{
+			DEBUG_BREAK( );
+			process_sector( active_sector_id, u32( -1 ), view_pos, f );
+		}
+	}
+
+	perform_frustum_culling_and_sectors_test( tree, active_sector_id, f, selection, view_pos, mat_vp );
+	if ( m_test_action )
+	{
+		m_test_action = false;
+		make_frustum_images( -f.planes( )[4].plane.normal );
+	}
+	statistics::ref( ).visibility_stat_group.frustums_count.value = m_preventer->frustums_count( );
 }
 
 // claude@NOTE: ported from the sector half of dx9/model_manager.cpp
@@ -561,29 +583,38 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 }
 
 void portal_sector_system::sort_portals_and_calculate_rects_in_screen_space(
-	float4x4 const&,
-	float,
-	buffer_vector<aab_rect>&
+	float4x4 const& mat_vp,
+	float min_z,
+	buffer_vector<aab_rect>& rects
 )
 {
-	// claude@NOTE: no legacy ancestor - only the commented-out scissor block in dx9/model_manager.cpp; no portal sort anywhere in the corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9b60]
+	buffer_vector<float> distances( ALLOCA( sizeof( float ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
+	calculate_portal_rects_in_screen_space( mat_vp, min_z, rects, distances );
+	m_structure->sort_portal_ids( distances.begin( ) );
 }
 
-u32 get_aabb_furthest_vertex_id( float3 )
+u32 get_aabb_furthest_vertex_id( float3 const view_dir )
 {
-	// claude@NOTE: no legacy ancestor - no counterpart in the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f8f90]
-	return 0;
+	if ( view_dir.x >= 0.f )
+	{
+		if ( view_dir.y >= 0.f )
+			return view_dir.z >= 0.f ? 7 : 6;
+		return view_dir.z >= 0.f ? 5 : 4;
+	}
+	if ( view_dir.y >= 0.f )
+		return view_dir.z >= 0.f ? 2 : 3;
+	return view_dir.z >= 0.f ? 1 : 0;
 }
 
-void portal_sector_system::make_frustum_images( float3 const& )
+void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
-	// claude@NOTE: no legacy ancestor - frustum-image debug set is new-in-target; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fb340]
+	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
+	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
+	spatial_sector const* const sectors_end = m_structure->get_sectors( ).end( );
+	float3* output = furthest_vertices;
+	for ( spatial_sector const* i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+		*output = i->get_aabb( ).vertex( furthest_vertex_id );
+	m_preventer->make_frustum_images( furthest_vertices );
 }
 
 } // namespace culling

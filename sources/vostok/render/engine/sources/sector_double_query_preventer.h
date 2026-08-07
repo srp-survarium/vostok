@@ -18,15 +18,6 @@ namespace culling {
 
 class sector_double_query_preventer {
 public:
-	struct frustum_image {
-		frustum_image( ) : c( 0, 0, 0, 0 ) { }
-
-		float3 vertices[8];
-		math::color c;
-	};
-
-	STATIC_SIZE_ASSERT( frustum_image, 0x64 );
-
 	sector_double_query_preventer( spatial_sector const* sectors, u32 sectors_count );
 	~sector_double_query_preventer( );
 
@@ -42,11 +33,25 @@ public:
 	u32 frustums_count( ) const;
 
 private:
+	struct frustum_image {
+		frustum_image( ) { }
+
+		float3 vertices[8];
+		math::color c;
+	};
+	STATIC_SIZE_ASSERT( frustum_image, 0x64 );
+
+	typedef vector<frustum_image> frustrum_images_type;
+	typedef vector<math::frustum> frustums_type;
+	typedef buffer_vector<frustums_type> sectors_max_frustums_type;
+	typedef vector<aab_rect> aab_rects_type;
+	typedef buffer_vector<aab_rects_type> sectors_max_rects_type;
+
 	void* m_buffer_for_frustum_vectors;
-	buffer_vector<vector<math::frustum> >* m_sectors_max_frustums;
+	sectors_max_frustums_type* m_sectors_max_frustums;
 	void* m_buffer_for_rect_vectors;
-	buffer_vector<vector<aab_rect> >* m_sectors_max_rects;
-	vector<frustum_image> m_frustum_images;
+	sectors_max_rects_type* m_sectors_max_rects;
+	frustrum_images_type m_frustum_images;
 };
 
 STATIC_SIZE_ASSERT( sector_double_query_preventer, 0x1C );
