@@ -131,17 +131,12 @@ stage_light_propagation_volumes::stage_light_propagation_volumes(
 ) :
 	stage						( in_renderer, context ),
 	start_render_eye_position	( 0.0f, 0.0f, 0.0f ),
-	m_radiance_volume			( 0 ),
-	m_num_cascades				( 0 ),
-	m_rsm_source_size			( 0 ),
-	m_rsm_downsampled_size		( 0 ),
-	m_grid_size					( 0 ),
 	m_has_indirect_lighting		( false )
 {
-	// FUNCTION BODY[0x619bf0]
+
 	m_num_cascades				= options::ref().current.m_lpv_num_cascades;
 
-	math::clamp<u32>			(m_num_cascades, 1, 4);
+	math::clamp<u32>			(m_num_cascades, 1, 7);
 
 	m_grid_size					= options::ref().current.m_num_radiance_volume_cells;
 
@@ -150,10 +145,12 @@ stage_light_propagation_volumes::stage_light_propagation_volumes(
 
 	m_radiance_volume			= ALLOC(radiance_volume, m_num_cascades);
 
-	float cascade_scales			[] = {1.0f, 2.0f, 4.0f, 6.0f, };
-	float cascade_cells_scales		[] = {1.0f, 1.0f, 1.0f, 1.0f, };
-	float cascade_flux_scales		[] = {1.0f, 1.0f, 1.0f, 1.0f, };
-	float cascade_iteration_scales	[] = {1.0f, 1.0f / 2.0f, 1.0f / 4.0f, 1.0f / 8.0f, };
+	float cascade_scales			[] = {1.0f, 2.0f, 5.0f, 6.0f, 12.0f, 16.0f, 24.0f, 32.0f, };
+	float cascade_cells_scales		[] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+	float cascade_flux_scales		[] = {1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, 1.0f, };
+	float cascade_iteration_scales	[] = {1.0f, 1.0f / 2.0f, 1.0f / 4.0f, 1.0f / 8.0f, 1.0f / 8.0f, 1.0f / 8.0f, 1.0f / 8.0f, 1.0f / 8.0f, };
+
+	float fs = options::ref().current.m_radiance_volume_scale;
 
 	for (u32 cascade_index = 0; cascade_index < m_num_cascades; cascade_index++)
 	{
@@ -161,18 +158,43 @@ stage_light_propagation_volumes::stage_light_propagation_volumes(
 			m_rsm_downsampled_size,
 			u32(options::ref().current.m_num_radiance_volume_cells * cascade_cells_scales[cascade_index]),
 			u32(options::ref().current.m_num_propagate_iterations * cascade_iteration_scales[cascade_index]),
-			options::ref().current.m_radiance_volume_scale * cascade_scales[cascade_index],
+			fs * cascade_scales[cascade_index],
 			options::ref().current.m_lpv_flux_amplifier * cascade_flux_scales[cascade_index]
 		);
-
-		m_previous_view_matrix[cascade_index].identity( );
-		m_previous_proj_matrix[cascade_index].identity( );
+		m_previous_view_matrix[cascade_index] = float4x4( ).identity( );
+		m_previous_proj_matrix[cascade_index] = float4x4( ).identity( );
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	m_rms_depth_stencil_source[0] = resource_manager::ref().create_render_target("$user$rms_depth_stencil0", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[1] = resource_manager::ref().create_render_target("$user$rms_depth_stencil1", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[2] = resource_manager::ref().create_render_target("$user$rms_depth_stencil2", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[3] = resource_manager::ref().create_render_target("$user$rms_depth_stencil3", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
+
+
+
+
+
+
+
 
 	m_c_interreflection_contribution		= backend::ref().register_constant_host("interreflection_contribution", rc_float);
 	m_c_cascade_index						= backend::ref().register_constant_host("cascade_index", rc_int);
@@ -225,7 +247,9 @@ stage_light_propagation_volumes::stage_light_propagation_volumes(
 
 stage_light_propagation_volumes::~stage_light_propagation_volumes( )
 {
-	// FUNCTION BODY[0x615980]
+	for (u32 cascade_index = 0; cascade_index < m_num_cascades; cascade_index++)
+		m_radiance_volume[cascade_index].~radiance_volume();
+
 	FREE(m_radiance_volume);
 }
 
