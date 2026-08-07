@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_aberration : public effect_descriptor {
 public:
-	effect_aberration( ) { }
-	virtual ~effect_aberration( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config

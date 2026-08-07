@@ -11,12 +11,14 @@ class effect_compiler;
 
 class effect_motion_blur : public effect_descriptor {
 public:
-	effect_motion_blur( ) { }
-	virtual ~effect_motion_blur( ) { }
+	enum {
+		motion_blur_accum_pass,
+		motion_blur_apply_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
 };
 

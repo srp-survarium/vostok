@@ -11,12 +11,9 @@ class effect_compiler;
 
 class effect_post_process_downsample_frame : public effect_descriptor {
 public:
-	effect_post_process_downsample_frame( ) { }
-	virtual ~effect_post_process_downsample_frame( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
 };
 
