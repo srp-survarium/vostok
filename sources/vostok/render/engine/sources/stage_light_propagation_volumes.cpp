@@ -700,17 +700,18 @@ void stage_light_propagation_volumes::render_to_sun_rms(
 	vector<float4x4>	transforms
 )
 {
-	// FUNCTION BODY[0x6188a0]
 	float max_scale					= m_radiance_volume[cascade_index].get_scale();
 
-	float3 sun_position				= m_context->get_view_pos() - sun->direction * max_scale * 1.41421f * 2.0f;// * 20.0f;
+
+
+	float3 sun_position				= m_context->get_view_pos() + m_context->get_view_dir() * 0.2f * max_scale - sun->direction * max_scale * 1.41421f * 2.0f;
 
 	float4x4 view_matrix			= create_camera_direction(sun_position, sun->direction, float3(1, 0, 0));
 	float4x4 projection_matrix		= math::create_orthographic_projection(
-		max_scale,
-		max_scale,
+		max_scale * 0.5f,
+		max_scale * 0.5f,
 		0.01f,
-		1.41421f * max_scale * 20.0f
+		1.41421f * max_scale * 100.0f
 	);
 
 	float3 adjastment				= compute_aligment(float3(0.0f, 0.0f, 0.0f), view_matrix * projection_matrix, m_rsm_source_size);
