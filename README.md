@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,890 / 12,915 functions exact (30.12%) &middot; 3,890 / 12,915 functions exact-max (30.12%) &middot; 68.52% fuzzy &middot; 68.52% fuzzy-max.**
+**Overall: 3,890 / 12,915 functions exact (30.12%) &middot; 3,890 / 12,915 functions exact-max (30.12%) &middot; 68.53% fuzzy &middot; 68.54% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
