@@ -11,12 +11,9 @@ class effect_compiler;
 
 class effect_translucency : public effect_descriptor {
 public:
-	effect_translucency( ) { }
-	virtual ~effect_translucency( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&
 	) override;
 };
 

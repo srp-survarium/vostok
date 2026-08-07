@@ -9,21 +9,27 @@ namespace render {
 
 void effect_translucency::compile(
 	effect_compiler&			compiler,
-	custom_config_value const&	custom_config
+	custom_config_value const&
 )
 {
-	// FUNCTION BODY[0x7bd780]
-	// claude@NOTE: ported from legacy effect_post_process_deferred_transparency
-	// (rename proven in temp/render_legacy/triage_log.md)
-	VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
+	compiler.begin_technique( );
+	compiler.begin_pass( "translucency", NULL, "translucency", shader_configuration( ), NULL );
 
-	compiler.begin_technique();
-		compiler.begin_pass("post_process0", NULL, "post_process_deferred_transparency", shader_configuration(), NULL);
-			compiler.set_texture("t_position", r2_rt_p, 0, false, 0);				// set here?
-			compiler.set_texture("t_normal", r2_rt_n, 0, false, 0);					// set here?
-			compiler.set_depth( true, false);
-		compiler.end_pass();
-	compiler.end_technique();
+	compiler.set_texture( "t_diffuse", r2_rt_albedo, 0, false, 0 );
+	compiler.set_texture( "t_position", r2_rt_p, 0, false, 0 );
+	compiler.set_texture( "t_normal", r2_rt_n, 0, false, 0 );
+
+	compiler.set_texture( "t_sun_translucensy_help_data", "$user$sun_translucensy_help_data", 0, false, 0 );
+
+	compiler.set_depth( false, false );
+	compiler.set_stencil( true, 0xff, 0x04, 0xff, D3D_COMPARISON_EQUAL );
+	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
+
+	compiler.set_cull_mode( D3D_CULL_NONE );
+	compiler.set_fill_mode( D3D_FILL_SOLID );
+
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 } // namespace render

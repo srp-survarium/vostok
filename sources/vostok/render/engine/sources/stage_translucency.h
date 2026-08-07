@@ -21,23 +21,13 @@ class stage_translucency : public stage {
 public:
 	stage_translucency(
 		renderer* in_renderer,
-		renderer_context* in_context
-	) :
-		stage( in_renderer, in_context ),
-		m_c_sun_direction( 0 ),
-		m_c_sun_color( 0 ),
-		m_c_eye_ray_corner( 0 )
-	{
-		for ( u32 i = 0; i < 4; ++i )
-			m_shadow[i] = 0;
-	}
-
-	virtual ~stage_translucency( ) { }
+		renderer_context* context
+	);
 	virtual void execute( ) override;
 
 	bool is_effects_ready( ) const;
 
-private:
+	// The target PDB declares these after is_effects_ready in the public section.
 	res_effect_ptr			m_translucency_effect;
 	shader_constant_host*	m_shadow[4];
 	shader_constant_host*	m_c_sun_direction;
