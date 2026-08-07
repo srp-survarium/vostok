@@ -829,7 +829,6 @@ void stage_light_propagation_volumes::render_to_spot_rms( light* l, vector<float
 
 void stage_light_propagation_volumes::propagate_lighting( u32 const cascade_index )
 {
-	// FUNCTION BODY[0x615f50]
 	m_radiance_volume[cascade_index].propagate_lighting(cascade_index);
 }
 
@@ -838,7 +837,6 @@ void stage_light_propagation_volumes::propagate_lighting_smoothed(
 	u32 const propagation_iteration_index
 )
 {
-	// FUNCTION BODY[0x615f30]
 	m_radiance_volume[cascade_index].propagate_lighting_iter(
 		cascade_index,
 		propagation_iteration_index
@@ -1045,7 +1043,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 		if ( stage_index > 2 && !options::ref( ).current.m_lpv_disable_propagation )
 		{
-			m_radiance_volume[current_cascade_index].propagate_lighting_iter(
+			propagate_lighting_smoothed(
 				current_cascade_index,
 				propagation_iteration_index
 			);
@@ -1254,11 +1252,11 @@ void stage_light_propagation_volumes::execute_impl( )
 
 				if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 				{
-					m_radiance_volume[cascade_index].inject_lighting(
+					inject_lighting(
+						cascade_index,
 						sun->position,
 						sun->direction,
-						1.0f,
-						m_rsm_downsampled_size
+						1.0f
 					);
 				}
 
@@ -1298,11 +1296,11 @@ void stage_light_propagation_volumes::execute_impl( )
 
 					if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 					{
-						m_radiance_volume[cascade_index].inject_lighting(
+						inject_lighting(
+							cascade_index,
 							l->position,
 							l->direction,
-							math::max( l->spot_umbra_angle, l->spot_penumbra_angle ),
-							m_rsm_downsampled_size
+							math::max( l->spot_umbra_angle, l->spot_penumbra_angle )
 						);
 					}
 
@@ -1337,11 +1335,11 @@ void stage_light_propagation_volumes::execute_impl( )
 
 						if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 						{
-							m_radiance_volume[cascade_index].inject_lighting(
+							inject_lighting(
+								cascade_index,
 								l->position,
 								face_direction,
-								math::pi_d2,
-								m_rsm_downsampled_size
+								math::pi_d2
 							);
 						}
 
@@ -1352,14 +1350,14 @@ void stage_light_propagation_volumes::execute_impl( )
 					m_has_indirect_lighting = true;
 				}
 				break;
+			default:
+				break;
 			}
 		}
 
 		if ( !options::ref( ).current.m_lpv_disable_propagation )
-		{
 			for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
-				m_radiance_volume[cascade_index].propagate_lighting( cascade_index );
-		}
+				propagate_lighting( cascade_index );
 
 		if ( blend_alpha > 1.0f )
 			blend_alpha = 0.0f;
