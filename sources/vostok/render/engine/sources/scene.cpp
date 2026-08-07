@@ -1068,37 +1068,23 @@ void scene::remove_volume_fog( u32 id )
 	// ******
 }
 
-// STATE[STUB]
 void scene::select_volume_fog_instances( float4x4 const& vp, vector< volume_fog_parameters >& out_instances )
 {
-	// LOCALS
-	// math::aabb 						bbox
-	// math::frustum 					view_frustum
-	// ******
+	for (
+		associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator i = m_volume_fogs.begin( );
+		i != m_volume_fogs.end( );
+		++i
+	)
+	{
+		math::frustum view_frustum( vp );
+		math::aabb bbox = math::create_identity_aabb( );
+		bbox.modify( i->second.transform );
 
-	// FUNCTION BODY[0x63d1f0]: 21
-	// <0x63d1f0>|0x000|+0x027:'985'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x63d217>|0x027|+0x06b:'991'
-	// <0x63d282>|0x092|+0x011:'992'
-	// <0>
-	// <0x63d293>|0x0a3|+0x00f:'994'
-	// <0>
-	// <1>
-	// <0x63d2a2>|0x0b2|+0x039:'997'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// ******
+		if ( view_frustum.test_inexact( bbox ) == math::intersection_outside )
+			continue;
+
+		out_instances.push_back( i->second );
+	}
 }
 
 void scene::set_slomo( float time_multiplier )
