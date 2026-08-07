@@ -1,15 +1,26 @@
 #include "pch.h"
+#include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/effect_manager.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/dx11/res_declaration.h>
 #include <vostok/render/core/dx11/res_geometry.h>
 #include <vostok/render/core/resource_manager.h>
+#include "effect_light_propagation_volumes.h"
 #include "radiance_volume.h"
 #include "renderer_context.h"
 #include "renderer_context_targets.h"
 
 namespace vostok {
 namespace render {
+
+static bool s_lpv1_value = false;
+static console_commands::cc_bool s_lpv1(
+	"lpv1",
+	s_lpv1_value,
+	false,
+	console_commands::command_type_user_specific
+);
 
 const D3D_INPUT_ELEMENT_DESC injection_geometry_vertex_layout[] =
 {
@@ -158,34 +169,112 @@ void sliced_cube_geometry::draw( )
 }
 
 radiance_volume::radiance_volume(
-	u32		in_rsm_size,
-	u32		in_num_cells,
-	u32		in_num_propagate_iterations,
-	float	in_scale,
-	float	in_flux_amplifier
+	u32 const	in_rsm_size,
+	u32 const	in_num_cells,
+	u32 const	in_num_propagate_iterations,
+	float const	in_scale,
+	float const	in_flux_amplifier
 ) :
-	m_rsm_downsampled_size			( in_rsm_size ),
-	m_rsm_source_size				( in_rsm_size ),
 	m_injection_geometry			( in_rsm_size ),
-	m_injection_geometry_from_camera( in_rsm_size ),
+	m_injection_geometry_from_camera( 128, 128 ),
 	m_sliced_cube_geometry			( in_num_cells ),
-	m_cell_size						( 0.0f ),
 	m_scale							( in_scale ),
 	m_flux_amplifier				( in_flux_amplifier ),
 	m_num_cells						( in_num_cells ),
 	m_bbox							( math::create_zero_aabb( ) ),
 	m_previous_origin				( 0.0f, 0.0f, 0.0f ),
-	m_prev_previous_origin			( 0.0f, 0.0f, 0.0f ),
-	m_next_origin					( 0.0f, 0.0f, 0.0f ),
 	m_num_propagate_iterations		( in_num_propagate_iterations ),
-	m_is_position_changed			( false ),
+	m_is_position_changed			( true ),
 	m_prev_position					( 0.0f, 0.0f, 0.0f )
 {
-	// STATE[STUB]
-	// claude@NOTE: legacy ctor body (volume render targets, constants, lpv effect
-	// registration) is blocked on the canonical create_render_target signature (grew to
-	// 10 parameters) and lives in temp/render_legacy - matcher-phase.
 	// FUNCTION BODY[0x5f1780]
+	DXGI_FORMAT rv_format = s_lpv1_value ? DXGI_FORMAT_R8G8B8A8_UNORM : DXGI_FORMAT_R16G16B16A16_FLOAT;
+
+	m_3d_rt_previous_radiance_r = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_previous_radiance_g = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_previous_radiance_b = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+
+	m_3d_rt_accumulated_propagation_r = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_accumulated_propagation_g = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_accumulated_propagation_b = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+
+	m_3d_t_accumulated_propagation_r = m_3d_rt_accumulated_propagation_r->get_texture( );
+	m_3d_t_accumulated_propagation_g = m_3d_rt_accumulated_propagation_g->get_texture( );
+	m_3d_t_accumulated_propagation_b = m_3d_rt_accumulated_propagation_b->get_texture( );
+
+	m_3d_rt_radiance_r = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_g = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_b = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+
+	m_3d_t_radiance_r = m_3d_rt_radiance_r->get_texture( );
+	m_3d_t_radiance_g = m_3d_rt_radiance_g->get_texture( );
+	m_3d_t_radiance_b = m_3d_rt_radiance_b->get_texture( );
+
+	m_3d_rt_radiance_r_apply = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_g_apply = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_b_apply = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+
+	m_3d_t_radiance_r_apply = m_3d_rt_radiance_r_apply->get_texture( );
+	m_3d_t_radiance_g_apply = m_3d_rt_radiance_g_apply->get_texture( );
+	m_3d_t_radiance_b_apply = m_3d_rt_radiance_b_apply->get_texture( );
+
+	m_3d_t_previous_radiance_r = m_3d_rt_previous_radiance_r->get_texture( );
+	m_3d_t_previous_radiance_g = m_3d_rt_previous_radiance_g->get_texture( );
+	m_3d_t_previous_radiance_b = m_3d_rt_previous_radiance_b->get_texture( );
+
+	m_3d_rt_occluders = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_t_occluders = m_3d_rt_occluders->get_texture( );
+
+	m_3d_rt_radiance_intermediate_r = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_intermediate_g = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+	m_3d_rt_radiance_intermediate_b = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
+
+	m_3d_t_radiance_intermediate_r = m_3d_rt_radiance_intermediate_r->get_texture( );
+	m_3d_t_radiance_intermediate_g = m_3d_rt_radiance_intermediate_g->get_texture( );
+	m_3d_t_radiance_intermediate_b = m_3d_rt_radiance_intermediate_b->get_texture( );
+
+	m_rsm_source_size = options::ref( ).current.m_light_propagation_volumes_rsm_size;
+	m_rsm_downsampled_size = m_rsm_source_size / 2;
+
+	m_rt_rms_albedo_source = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_albedo_source = m_rt_rms_albedo_source->get_texture( );
+	m_rt_rms_normal_source = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_normal_source = m_rt_rms_normal_source->get_texture( );
+	m_rt_rms_position_source = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_position_source = m_rt_rms_position_source->get_texture( );
+
+	m_rt_rms_albedo_source_temp = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_albedo_source_temp = m_rt_rms_albedo_source_temp->get_texture( );
+	m_rt_rms_normal_source_temp = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_normal_source_temp = m_rt_rms_normal_source_temp->get_texture( );
+	m_rt_rms_position_source_temp = resource_manager::ref( ).create_render_target( NULL, m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_position_source_temp = m_rt_rms_position_source_temp->get_texture( );
+
+	m_rt_rms_albedo = resource_manager::ref( ).create_render_target( NULL, m_rsm_downsampled_size, m_rsm_downsampled_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_albedo = m_rt_rms_albedo->get_texture( );
+	m_rt_rms_normal = resource_manager::ref( ).create_render_target( NULL, m_rsm_downsampled_size, m_rsm_downsampled_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_normal = m_rt_rms_normal->get_texture( );
+	m_rt_rms_position = resource_manager::ref( ).create_render_target( NULL, m_rsm_downsampled_size, m_rsm_downsampled_size, DXGI_FORMAT_R16G16B16A16_FLOAT, enum_rt_usage_render_target, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+	m_t_rms_position = m_rt_rms_position->get_texture( );
+
+	m_radiance_depth_stencil = resource_manager::ref( ).create_render_target( NULL, in_num_cells, in_num_cells, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
+
+	m_c_rsm_size = backend::ref( ).register_constant_host( "rsm_size", rc_int );
+	m_c_grid_size = backend::ref( ).register_constant_host( "grid_size", rc_float );
+	m_c_grid_origin = backend::ref( ).register_constant_host( "grid_origin", rc_float );
+	m_c_grid_origin_and_inv_grid_scale = backend::ref( ).register_constant_host( "grid_origin_and_inv_grid_scale", rc_float );
+	m_c_grid_cell_size = backend::ref( ).register_constant_host( "grid_cell_size", rc_float );
+	m_c_num_grid_cells = backend::ref( ).register_constant_host( "num_grid_cells", rc_float );
+	m_c_light_direction = backend::ref( ).register_constant_host( "light_direction", rc_float );
+	m_c_light_position = backend::ref( ).register_constant_host( "light_position", rc_float );
+	m_c_propagate_iteration_index = backend::ref( ).register_constant_host( "propagate_iteration_index", rc_int );
+	m_c_inject_flux_weight = backend::ref( ).register_constant_host( "inject_flux_weight", rc_float );
+	m_c_flux_amplifier = backend::ref( ).register_constant_host( "flux_amplifier", rc_float );
+	m_c_eye_ray_corner = backend::ref( ).register_constant_host( "s_eye_ray_corner", rc_float );
+	m_c_cascade_index = backend::ref( ).register_constant_host( "cascade_index", rc_int );
+	m_c_occlusion_amplifier = backend::ref( ).register_constant_host( "occlusion_amplifier", rc_float );
+
+	effect_manager::ref( ).create_effect< effect_light_propagation_volumes >( &m_lpv_effect );
 }
 
 radiance_volume::~radiance_volume( )
