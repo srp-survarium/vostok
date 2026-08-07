@@ -1,20 +1,49 @@
 #include "pch.h"
 #include "stage_particles.h"
 
+#include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/dx11/effect_compiler.h>
+#include <vostok/render/core/effect_manager.h>
 #include <vostok/render/core/options.h>
+#include <vostok/render/facade/render_stage_types.h>
+
+#include "material_effects.h"
+#include "render_particle_emitter_instance.h"
+#include "renderer_context.h"
+#include "scene.h"
+#include "scene_view.h"
 
 namespace vostok {
 namespace render {
 
+static u32 s_particle_render_mode_value = 0;
+static console_commands::cc_u32 s_particle_render_mode(
+	"particle_render_mode",
+	s_particle_render_mode_value,
+	0,
+	100,
+	true,
+	console_commands::command_type_engine_internal
+);
+
 void effect_resolve_particles::compile(
-	effect_compiler&,
+	effect_compiler& compiler,
 	custom_config_value const&
 )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x68950]
-	// claude@NOTE: no legacy ancestor - particle resolve effect postdates the legacy corpus
+	compiler.begin_technique( );
+	compiler.begin_pass( "eye_adaptation", NULL, "resolve_particles", shader_configuration( ), NULL );
+	compiler.set_depth( false, false );
+	compiler.set_cull_mode( D3D_CULL_NONE );
+	compiler.set_fill_mode( D3D_FILL_SOLID );
+	compiler.set_alpha_blend( false );
+	compiler.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA );
+	compiler.set_texture( "t_particle_result", "$user$particle_result", 0, false, 0 );
+
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 particle_shader_constants::particle_shader_constants( ) :
@@ -102,11 +131,12 @@ stage_particles::stage_particles(
 	renderer* in_renderer,
 	renderer_context* context
 ) :
-	stage					( in_renderer, context ),
-	m_particles_initialized	( false )
+	stage( in_renderer, context )
 {
 	// FUNCTION BODY[0x642600]
-	m_enabled						= options::ref().current.m_enabled_particles_stage;
+	m_enabled = options::ref( ).current.m_enabled_particles_stage;
+
+	effect_manager::ref( ).create_effect< effect_resolve_particles >( &m_resolve_particles_effect );
 }
 
 stage_particles::~stage_particles( )
@@ -116,19 +146,97 @@ stage_particles::~stage_particles( )
 
 bool stage_particles::is_effects_ready( ) const
 {
-	// claude@NOTE: no legacy ancestor - absent from the legacy stage_particles (only execute survives there); matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x641a60]
-	return false;
+	return m_resolve_particles_effect.c_ptr( ) != NULL;
 }
 
 void stage_particles::execute( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x642130]
-	// claude@NOTE: legacy execute's emitter loop depends on render_particle_emitter_instance /
-	// material_effects wiring plus the new resolve/lighting targets - legacy body kept in
-	// temp/render_legacy remainder, matcher-phase
+	if ( !is_enabled( ) || !is_effects_ready( ) )
+	{
+		execute_disabled( );
+		return;
+	}
+
+	particle::world* part_world = m_context->scene( )->particle_world( );
+	if ( !part_world )
+	{
+		m_context->set_w( float4x4( ).identity( ) );
+		return;
+	}
+
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
+
+	D3D11_VIEWPORT tmp_viewport;
+	tmp_viewport.TopLeftX = 0.0f;
+	tmp_viewport.TopLeftY = 0.0f;
+	tmp_viewport.Width = float( m_context->get_rt( rt_particle_result )->width( ) );
+	tmp_viewport.Height = float( m_context->get_rt( rt_particle_result )->height( ) );
+	tmp_viewport.MinDepth = 0.0f;
+	tmp_viewport.MaxDepth = clear_value;
+	backend::ref( ).set_viewport( tmp_viewport );
+
+	backend::ref( ).set_render_targets(
+		&*m_context->get_rt( rt_particle_result ),
+		0,
+		0,
+		0
+	);
+	backend::ref( ).reset_depth_stencil_target( );
+
+	bool has_particles = false;
+	vectora< particle::render_particle_emitter_instance* >& emitters =
+		m_context->get_scene_view( )->get_visible_particle_instances( );
+
+	for ( particle::render_particle_emitter_instances_type::const_iterator it = emitters.begin( ); it != emitters.end( ); ++it )
+	{
+		render_particle_emitter_instance* instance =
+			static_cast< render_particle_emitter_instance* >( *it );
+
+		if ( instance->is_occluded( ) )
+			continue;
+
+		u32 const num_particles = instance->get_num_particles( );
+		if ( !num_particles )
+			continue;
+
+		particle::enum_particle_render_mode particle_render_mode =
+			m_context->get_scene_view( )->get_particles_render_mode( );
+
+		if (
+			particle_render_mode == particle::normal_particle_render_mode &&
+			instance->get_material_effects( ).stage_enable[particles_render_stage]
+		)
+		{
+			instance->get_material_effects( ).m_effects[particles_render_stage]->apply( 0, 0 );
+
+			particle_shader_constants::ref( ).set(
+				m_context->get_v_inverted( ).transform_direction( float3( 0, 1000, 0 ) ).normalize( ),
+				m_context->get_v_inverted( ).transform_direction( float3( 1000, 0, 0 ) ).normalize( ),
+				m_context->get_v_inverted( ).lines[3].xyz( ),
+				instance->locked_axis( ),
+				instance->screen_alignment( )
+			);
+			particle_shader_constants::ref( ).set_time( m_context->m_current_time );
+
+			m_context->set_w( instance->transform( ) );
+			instance->render( m_context->get_v_inverted( ).lines[3].xyz( ), num_particles );
+
+			if ( !has_particles )
+				has_particles = true;
+		}
+		else
+		{
+			instance->draw_debug( m_context->get_v( ), particle_render_mode );
+		}
+	}
+
+	backend::ref( ).set_viewport( orig_viewport );
+	m_context->set_w( float4x4( ).identity( ) );
+	backend::ref( ).reset_render_targets( );
+	backend::ref( ).reset_depth_stencil_target( );
 }
 
 } // namespace render
