@@ -306,7 +306,6 @@ void stage_light_propagation_volumes::pre_lpv_batch_render(
 	geometry_batch const& batch
 )
 {
-	// FUNCTION BODY[0x6168f0]
 	m_fill_rsm_effect[static_mesh_vertex_input_type]->apply( 0, 0 );
 	m_context->set_w( float4x4( ).identity( ) );
 	backend::ref( ).set_ps_constant( m_c_light_color, light_color );
@@ -315,7 +314,6 @@ void stage_light_propagation_volumes::pre_lpv_batch_render(
 
 void stage_light_propagation_volumes::post_lpv_batch_render( geometry_batch const& )
 {
-	// FUNCTION BODY[0x614750]
 	statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
 }
 
@@ -1461,7 +1459,6 @@ void stage_light_propagation_volumes::execute_impl( )
 
 void stage_light_propagation_volumes::execute_disabled( )
 {
-	// FUNCTION BODY[0x615690]
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_accumulator_diffuse ), 0, 0, 0 );
 	backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
 }
