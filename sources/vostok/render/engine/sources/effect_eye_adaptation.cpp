@@ -20,6 +20,13 @@ void effect_eye_adaptation::compile(
 			compiler.set_depth( false, false);
 		compiler.end_pass();
 	compiler.end_technique();
+
+
+	compiler.begin_technique();
+		compiler.begin_pass("eye_adaptation", NULL, "eye_adaptation_copy", shader_configuration(), NULL);
+			compiler.set_depth( false, false);
+		compiler.end_pass();
+	compiler.end_technique();
 }
 
 } // namespace render
