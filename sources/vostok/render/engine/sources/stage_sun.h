@@ -25,11 +25,9 @@ public:
 	stage_sun(
 		renderer*				in_renderer,
 		renderer_context*		in_context,
-		cloud_interp_textures&	cloud_interp_textures,
-		cloud_simulation&		simulation
+		cloud_interp_textures&	in_cloud_interp_textures,
+		cloud_simulation&		in_simulation
 	);
-
-	virtual ~stage_sun( ) { }
 
 	virtual void execute( ) override;
 
