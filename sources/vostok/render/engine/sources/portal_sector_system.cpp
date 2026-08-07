@@ -556,15 +556,66 @@ void portal_sector_system::update_portals_occlusion_culling( pcbyte occlusion_re
 }
 
 void portal_sector_system::calculate_portal_rects_in_screen_space(
-	float4x4 const&,
-	float,
-	buffer_vector<aab_rect>&,
-	buffer_vector<float>&
+	float4x4 const& mat_vp,
+	float min_z,
+	buffer_vector<aab_rect>& rects,
+	buffer_vector<float>& distances
 )
 {
-	// claude@NOTE: no legacy ancestor - only the commented-out scissor block in dx9/model_manager.cpp; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9180]
+	rects.clear( );
+	distances.clear( );
+	portal const* const portals_end = m_structure->get_portals( ).end( );
+	for ( portal const* it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
+	{
+		aab_rect portal_rect;
+		if ( !it->is_visible( ) )
+		{
+			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
+			rects.push_back( portal_rect );
+			distances.push_back( math::float_max );
+			continue;
+		}
+
+		u32 const portal_id = u32( it - m_structure->get_portals( ).begin( ) );
+		float4 const cs_f4[4] = {
+			mat_vp.transform( float4( it->get_points( )[0], 1.f ) ),
+			mat_vp.transform( float4( it->get_points( )[1], 1.f ) ),
+			mat_vp.transform( float4( it->get_points( )[2], 1.f ) ),
+			mat_vp.transform( float4( it->get_points( )[3], 1.f ) ),
+		};
+		float3 const hs_f3[4] = {
+			cs_f4[0].xyz( ) / math::max( math::epsilon_3, cs_f4[0].w ),
+			cs_f4[1].xyz( ) / math::max( math::epsilon_3, cs_f4[1].w ),
+			cs_f4[2].xyz( ) / math::max( math::epsilon_3, cs_f4[2].w ),
+			cs_f4[3].xyz( ) / math::max( math::epsilon_3, cs_f4[3].w ),
+		};
+
+		if ( cs_f4[0].z < min_z && cs_f4[1].z < min_z && cs_f4[2].z < min_z && cs_f4[3].z < min_z )
+		{
+			m_structure->set_portal_visible( portal_id, false );
+			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
+			rects.push_back( portal_rect );
+			distances.push_back( math::float_max );
+			continue;
+		}
+
+		portal_rect.min = portal_rect.max = float2( hs_f3[0].x, hs_f3[0].y );
+		portal_rect.modify( hs_f3[1] );
+		portal_rect.modify( hs_f3[2] );
+		portal_rect.modify( hs_f3[3] );
+		rects.push_back( portal_rect );
+		bool const visible = portal_rect.intersects( aab_rect( ) );
+		m_structure->set_portal_visible( portal_id, visible );
+		distances.push_back(
+			visible ? math::max(
+				0.f,
+				math::min(
+					math::min( cs_f4[0].z, cs_f4[1].z ),
+					math::min( cs_f4[2].z, cs_f4[3].z )
+				)
+			) : math::float_max
+		);
+	}
 }
 
 void portal_sector_system::sort_portals_and_calculate_rects_in_screen_space(
