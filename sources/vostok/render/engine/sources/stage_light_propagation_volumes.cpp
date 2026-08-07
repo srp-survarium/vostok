@@ -891,7 +891,6 @@ void stage_light_propagation_volumes::downsample_rsm(
 	u32 const		cascade_index
 )
 {
-	// FUNCTION BODY[0x615d50]
 	m_downsample_rsm_effect->apply( 0, 0 );
 	set_rsm_contants( light_direction, grid_origin, grid_scale );
 
