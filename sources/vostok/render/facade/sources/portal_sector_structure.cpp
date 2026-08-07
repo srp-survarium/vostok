@@ -181,11 +181,11 @@ void portal_sector_structure::load( configs::binary_config_value* value_ptr )
 	initialize_portals_geometry();
 }
 
-// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference; matcher-phase work.
-// STATE[STUB]
-void portal_sector_structure::sort_portal_ids( float const* )
+void portal_sector_structure::sort_portal_ids( float const* distances )
 {
-	// FUNCTION BODY[0x75e5d0]
+	spatial_sector* const sectors_end = m_sectors.end( );
+	for ( spatial_sector* i = m_sectors.begin( ); i != sectors_end; ++i )
+		i->sort_portal_ids( distances );
 }
 
 void portal_sector_structure::initialize_portals_geometry( )
@@ -217,11 +217,22 @@ void portal_sector_structure::initialize_portals_geometry( )
 	);
 }
 
-// claude@NOTE: no legacy ancestor - absent from the held dx9/model_manager.cpp reference (portal marker/dual_render flags are the retired equivalent); matcher-phase work.
-// STATE[STUB]
-void portal_sector_structure::update_portals_visability( math::frustum const&, pcbyte )
+void portal_sector_structure::update_portals_visability( math::frustum const& f, pcbyte oclusion_results )
 {
-	// FUNCTION BODY[0x75e520]
+	portal* const portals_end = m_portals.end( );
+	for ( portal* i = m_portals.begin( ); i != portals_end; ++i )
+		i->set_visible( false );
+
+	collision::triangles_type triangles( m_allocator );
+	if ( m_portals_geometry->cuboid_query( 0, f, triangles ) )
+	{
+		collision::triangle_result const* const triangles_end = triangles.end( );
+		for ( collision::triangle_result const* i = triangles.begin( ); i != triangles_end; ++i )
+		{
+			u32 const portal_id = i->triangle_id / 2;
+			m_portals[portal_id].set_visible( oclusion_results[portal_id] != 0 );
+		}
+	}
 }
 
 } // namespace culling

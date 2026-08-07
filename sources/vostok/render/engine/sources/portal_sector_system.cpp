@@ -70,21 +70,6 @@ private:
 	u32 m_user_data;
 };
 
-struct portal_id_closer_to_point : public std::binary_function< u32, u32, bool > {
-	explicit portal_id_closer_to_point( float const* distances ) :
-		m_distances( distances )
-	{
-	}
-
-	bool operator()( u32 left, u32 right ) const
-	{
-		return m_distances[left] < m_distances[right];
-	}
-
-private:
-	float const* m_distances;
-};
-
 struct portal_object_belongs_to_sector :
 	public std::unary_function< collision::triangle_result const&, bool >
 {
