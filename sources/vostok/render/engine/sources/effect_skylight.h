@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_skylight : public effect_descriptor {
 public:
-	effect_skylight( ) { }
-	virtual ~effect_skylight( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
