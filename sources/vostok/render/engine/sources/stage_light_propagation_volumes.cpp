@@ -474,7 +474,6 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	u32 const			num_render_stages
 )
 {
-	// FUNCTION BODY[0x615f70]
 	if ( !s_draw_to_rsm_value )
 		return;
 
@@ -531,7 +530,7 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 		);
 
 		vector<render_surface_instance*>::iterator it = caster_models.begin( );
-		vector<render_surface_instance*>::const_iterator end = caster_models.end( );
+		vector<render_surface_instance*>::iterator end = caster_models.end( );
 		for ( ; it != end; ++it )
 		{
 			lpv_render_surface surface;
