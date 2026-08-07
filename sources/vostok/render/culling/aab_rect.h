@@ -30,11 +30,13 @@ public:
 			min.y < other.max.y && max.y > other.min.y;
 	}
 
-	bool contains( aab_rect const& other ) const
+	bool contains( aab_rect const& another ) const
 	{
 		// FUNCTION BODY[0x8a470]
-		return min.x <= other.min.x && min.y <= other.min.y &&
-			max.x >= other.max.x && max.y >= other.max.y;
+		return ( min.x <= another.min.x || math::is_similar( min.x, another.min.x ) ) &&
+			( max.x >= another.max.x || math::is_similar( max.x, another.max.x ) ) &&
+			( min.y <= another.min.y || math::is_similar( min.y, another.min.y ) ) &&
+			( max.y >= another.max.y || math::is_similar( max.y, another.max.y ) );
 	}
 
 	aab_rect( )

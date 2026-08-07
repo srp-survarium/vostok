@@ -463,19 +463,25 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 }
 
 void portal_sector_system::process_sector(
-	u32,
-	u32,
-	buffer_vector<aab_rect> const&,
-	float3 const&,
-	math::plane const&,
-	float4x4 const&,
-	float4x4 const&,
-	aab_rect const&
+	u32 sector_id,
+	u32 input_portal_id,
+	buffer_vector<aab_rect> const& portals_rects,
+	float3 const& view_pos,
+	math::plane const& far_plane,
+	float4x4 const& mat_vp,
+	float4x4 const& inv_mat_vp,
+	aab_rect const& rect
 )
 {
-	// claude@NOTE: no legacy ancestor - the screen-space scissor traversal exists in dx9/model_manager.cpp only as commented-out code; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9090]
+	spatial_sector const& s = m_structure->get_sectors( )[sector_id];
+	u32 const* const portals_end = s.get_portals( ) + s.get_portals_count( );
+	for ( u32 const* i = s.get_portals( ); i != portals_end; ++i )
+	{
+		if ( *i == input_portal_id || !m_structure->get_portals( )[*i].is_visible( ) )
+			continue;
+
+		process_portal_in_screen_space( *i, sector_id, portals_rects, view_pos, far_plane, mat_vp, inv_mat_vp, rect );
+	}
 }
 
 bool portal_screen_rect_to_four_points(
@@ -494,19 +500,43 @@ bool portal_screen_rect_to_four_points(
 }
 
 void portal_sector_system::process_portal_in_screen_space(
-	u32,
-	u32,
-	buffer_vector<aab_rect> const&,
-	float3 const&,
-	math::plane const&,
-	float4x4 const&,
-	float4x4 const&,
-	aab_rect const&
+	u32 portal_id,
+	u32 sector_id,
+	buffer_vector<aab_rect> const& portals_rects,
+	float3 const& view_pos,
+	math::plane const& far_plane,
+	float4x4 const& mat_vp,
+	float4x4 const& inv_mat_vp,
+	aab_rect const& limiting_rect
 )
 {
-	// claude@NOTE: no legacy ancestor - only the commented-out scissor block in dx9/model_manager.cpp; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fb630]
+	portal const& p = m_structure->get_portals( )[portal_id];
+	if ( ( p.get_plane( ).classify( view_pos ) > 0 ? p.get_sectors( )[1] : p.get_sectors( )[0] ) == sector_id )
+		return;
+
+	float3 points[4];
+	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
+	aab_rect limited_portal_rect = portals_rects[portal_id];
+	if ( !limiting_rect.contains( portals_rects[portal_id] ) &&
+		!portal_screen_rect_to_four_points( portals_rects[portal_id], far_plane, inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
+		return;
+
+	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
+	if ( !m_preventer->is_possible_ss_aab_rect( limited_portal_rect, next_sector_id ) )
+		return;
+
+	if ( points[0].is_similar( points[1] ) ||
+		points[1].is_similar( points[2] ) ||
+		points[2].is_similar( points[3] ) ||
+		points[3].is_similar( points[0] ) )
+		return;
+
+	m_quads.push_back( quad( ) );
+	std::copy( &points[0], &points[4], &m_quads.back( ).vertices[0] );
+	math::frustum const portal_frustum = create_frustum_from_four_points( view_pos, points, far_plane );
+	m_preventer->add_frustum( portal_frustum, next_sector_id );
+	m_preventer->add_ss_aab_rect( limited_portal_rect, next_sector_id );
+	process_sector( next_sector_id, portal_id, portals_rects, view_pos, far_plane, mat_vp, inv_mat_vp, limited_portal_rect );
 }
 
 void portal_sector_system::perform_frustum_culling_and_sectors_test(

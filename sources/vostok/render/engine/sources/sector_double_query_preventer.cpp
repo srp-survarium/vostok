@@ -57,11 +57,17 @@ void sector_double_query_preventer::add_ss_aab_rect( aab_rect const& rect, u32 s
 	( *m_sectors_max_rects )[sector_id].push_back( rect );
 }
 
-bool sector_double_query_preventer::is_possible_ss_aab_rect( aab_rect const&, u32 ) const
+bool sector_double_query_preventer::is_possible_ss_aab_rect( aab_rect const& rect, u32 sector_id ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8540]
-	return false;
+	aab_rects_type const& rects = ( *m_sectors_max_rects )[sector_id];
+	aab_rects_type::const_iterator const rects_end = rects.end( );
+	for ( aab_rects_type::const_iterator i = rects.begin( ); i != rects_end; ++i )
+	{
+		if ( i->contains( rect ) )
+			return false;
+	}
+
+	return true;
 }
 
 void sector_double_query_preventer::add_frustum( math::frustum const& f, u32 sector_id )
