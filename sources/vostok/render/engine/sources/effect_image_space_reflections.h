@@ -11,12 +11,9 @@ class effect_compiler;
 
 class effect_image_space_reflections : public effect_descriptor {
 public:
-	effect_image_space_reflections( ) { }
-	virtual ~effect_image_space_reflections( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
 };
 

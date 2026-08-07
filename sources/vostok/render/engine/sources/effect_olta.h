@@ -11,12 +11,14 @@ class effect_compiler;
 
 class effect_olta : public effect_descriptor {
 public:
-	effect_olta( ) { }
-	virtual ~effect_olta( ) { }
+	enum {
+		blend_pass,
+		blur_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
 };
 
