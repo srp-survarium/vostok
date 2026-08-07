@@ -35,11 +35,8 @@ const D3D_INPUT_ELEMENT_DESC sliced_cube_vertex_layout[] =
 
 injection_geometry::injection_geometry( u32 rsm_size ) :
 	m_num_points	( rsm_size * rsm_size ),
-	m_stride		( sizeof( float2 ) ),
-	m_rsm_size_x	( rsm_size ),
-	m_rsm_size_y	( rsm_size )
+	m_stride		( sizeof( float2 ) )
 {
-	// FUNCTION BODY[0x5efee0]
 	float2* vertices					= ALLOC(float2, m_num_points);
 	float2* vertices_begin				= vertices;
 
