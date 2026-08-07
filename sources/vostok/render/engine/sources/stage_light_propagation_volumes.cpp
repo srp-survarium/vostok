@@ -328,58 +328,42 @@ void stage_light_propagation_volumes::render_to_rms(
 	u32 const			cascade_index
 )
 {
-	// FUNCTION BODY[0x616c80]
 	if ( !s_draw_to_rsm_value )
 		return;
 
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
 
-	D3D11_VIEWPORT tmp_viewport;
-	tmp_viewport.TopLeftX = 0.0f;
-	tmp_viewport.TopLeftY = 0.0f;
+	D3D11_VIEWPORT tmp_viewport; tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
 	tmp_viewport.Width = float( m_rsm_source_size );
 	tmp_viewport.Height = float( m_rsm_source_size );
 	tmp_viewport.MinDepth = 0.0f;
 	tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
 
+
+
 	m_context->push_set_v( view_matrix );
 	m_context->push_set_p( projection_matrix );
-
 	backend::ref( ).set_render_targets(
-		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source,
-		&*m_radiance_volume[cascade_index].m_rt_rms_normal_source,
-		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
-		0
-	);
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source, &*m_radiance_volume[cascade_index].m_rt_rms_normal_source, &*m_radiance_volume[cascade_index].m_rt_rms_position_source, 0 );
 	backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
 	backend::ref( ).set_depth_stencil_target( &*m_rms_depth_stencil_source[cascade_index] );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
-
 	backend::ref( ).set_render_targets(
-		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
-		0,
-		0,
-		0
-	);
+		&*m_radiance_volume[cascade_index].m_rt_rms_position_source, 0, 0, 0 );
+
 	for (
 		vector<float4x4>::const_iterator it = transforms.begin( ), end = transforms.end( );
-		it != end;
-		++it
+		it != end; ++it
 	)
 	{
 		m_context->set_w( *it );
 		m_fill_rsm_effect[null_vertex_input_type]->apply( 1, 0 );
 		m_box_geometry.draw( );
 	}
-
 	backend::ref( ).set_render_targets(
-		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source,
-		&*m_radiance_volume[cascade_index].m_rt_rms_normal_source,
-		&*m_radiance_volume[cascade_index].m_rt_rms_position_source,
-		0
-	);
+		&*m_radiance_volume[cascade_index].m_rt_rms_albedo_source, &*m_radiance_volume[cascade_index].m_rt_rms_normal_source, &*m_radiance_volume[cascade_index].m_rt_rms_position_source, 0 );
 
 	if ( s_use_batched_lpv_geometry )
 	{
@@ -387,27 +371,20 @@ void stage_light_propagation_volumes::render_to_rms(
 			m_context,
 			boost::bind(
 				&stage_light_propagation_volumes::pre_lpv_batch_render,
-				this,
-				light_color,
-				light_intensity,
-				_1
+				this, light_color, light_intensity, _1
 			),
-			boost::bind( &stage_light_propagation_volumes::post_lpv_batch_render, this, _1 )
-		);
+			boost::bind( &stage_light_propagation_volumes::post_lpv_batch_render, this, _1 ) );
 	}
 	else
 	{
 		vector<render_surface_instance*> visible_render_models;
 		m_context->scene( )->select_models(
-			m_context->get_culling_vp( ),
-			visible_render_models,
-			m_context->get_view_pos( ),
-			visible_flag,
-			false
-		);
+			m_context->get_culling_vp( ), visible_render_models, m_context->get_view_pos( ), visible_flag, false );
+
 
 		vector<render_surface_instance*>::iterator it_d = visible_render_models.begin( );
 		vector<render_surface_instance*>::const_iterator end_d = visible_render_models.end( );
+
 		for ( ; it_d != end_d; ++it_d )
 		{
 			render_surface_instance& instance = **it_d;
@@ -424,18 +401,19 @@ void stage_light_propagation_volumes::render_to_rms(
 				continue;
 
 			me.m_effects[light_propagation_volumes_render_stage]->apply( 4, 0 );
+
+
 			backend::ref( ).set_ps_constant( m_c_light_color, light_color );
 			backend::ref( ).set_ps_constant( m_c_light_intensity, light_intensity );
+
+
 
 			m_context->set_w( *instance.m_transform );
 			instance.set_constants( );
 			geometry.lpv_pass_geom->apply( );
 			backend::ref( ).render_indexed(
-				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-				geometry.primitive_count * 3,
-				0,
-				0
-			);
+				D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, geometry.primitive_count * 3, 0, 0 );
+
 			statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
 		}
 	}
@@ -480,17 +458,18 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
 
-	D3D11_VIEWPORT tmp_viewport;
-	tmp_viewport.TopLeftX = 0.0f;
-	tmp_viewport.TopLeftY = 0.0f;
+	D3D11_VIEWPORT tmp_viewport; tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
 	tmp_viewport.Width = float( m_rsm_source_size );
 	tmp_viewport.Height = float( m_rsm_source_size );
 	tmp_viewport.MinDepth = 0.0f;
 	tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
 
+
+
 	float4x4 real_view_projection = m_context->get_culling_vp( );
 	math::frustum view_frustum( real_view_projection );
+
 
 	m_context->push_set_v( view_matrix );
 	m_context->push_set_p( projection_matrix );
