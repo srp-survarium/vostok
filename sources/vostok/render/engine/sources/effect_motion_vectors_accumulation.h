@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_motion_vectors_accumulation : public effect_material_base {
 public:
-	effect_motion_vectors_accumulation( ) { }
-	virtual ~effect_motion_vectors_accumulation( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

@@ -10,17 +10,26 @@ void effect_motion_vectors_accumulation::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bc360]
-	// claude@NOTE: ported from legacy make_vcm_effect (lower-confidence rename per
-	// temp/render_legacy/triage_log.md; make_vcm shaders still ship); begin_pass adapted
-	// from the legacy 2-arg generation
-	VOSTOK_UNREFERENCED_PARAMETER	( config);
-	compiler.begin_technique();
-		compiler.begin_pass("make_vcm", NULL, "make_vcm", shader_configuration(), NULL);
-			compiler.set_depth(true, false);
-			compiler.set_cull_mode(D3D_CULL_NONE);
-		compiler.end_pass();
-	compiler.end_technique();
+	shader_configuration configuration;
+
+	configuration.use_alpha_test = config.value_exists("use_alpha_test") ? bool(config["use_alpha_test"]) : false;
+	configuration.use_diffuse_texture = config.value_exists("use_tdiffuse") ? bool(config["use_tdiffuse"]) : false;
+
+	compile_begin("vertex_base", "motion_vectors_accumulation", compiler, &configuration, config);
+		compiler.set_depth(true, false);
+
+		float alpha_ref = 0.25f;
+
+		if (configuration.use_diffuse_texture)
+			compiler.set_texture("t_base", pcstr(config["texture_diffuse"]), 0, false, u32(-1));
+
+		if (configuration.use_alpha_test && config.value_exists("alpha_ref"))
+			alpha_ref = float(config["alpha_ref"]);
+
+		compiler.set_constant("alpha_ref_parameter", alpha_ref);
+
+		compiler.set_cull_mode(D3D_CULL_NONE);
+	compile_end(compiler);
 }
 
 } // namespace render
