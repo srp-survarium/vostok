@@ -23,16 +23,9 @@ class stage_resolve_lighting : public stage {
 public:
 	stage_resolve_lighting(
 		renderer* in_renderer,
-		renderer_context* in_context
-	) :
-		stage( in_renderer, in_context ),
-		m_wind_info_parameters( 0 ),
-		m_sun_light_parameters( 0 ),
-		m_eye_ray_corner_parameter( 0 )
-	{
-	}
+		renderer_context* context
+	);
 
-	virtual ~stage_resolve_lighting( ) { }
 	virtual void execute( ) override;
 
 	bool is_effects_ready( ) const;
@@ -41,7 +34,6 @@ public:
 		u32& out_num_rendered
 	);
 
-private:
 	res_effect_ptr			m_resolve_lighting_effect;
 	shader_constant_host*	m_wind_info_parameters;
 	shader_constant_host*	m_sun_light_parameters;

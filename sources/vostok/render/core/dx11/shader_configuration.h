@@ -111,6 +111,7 @@ struct shader_configuration : public union_base::shader_configuration {
 	{
 		configuration[0] = 0;
 		configuration[1] = 0;
+		num_used_terrain_layers = 4;
 	}
 };
 
