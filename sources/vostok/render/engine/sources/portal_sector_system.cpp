@@ -485,18 +485,44 @@ void portal_sector_system::process_sector(
 }
 
 bool portal_screen_rect_to_four_points(
-	aab_rect const&,
-	math::plane const&,
-	float4x4 const&,
-	aab_rect const&,
-	float3 (&)[4],
-	aab_rect&
+	aab_rect const& portal_rect,
+	math::plane const& portal_plane,
+	float4x4 const& inv_mat_vp,
+	aab_rect const& limiting_rect,
+	float3 (&io_points)[4],
+	aab_rect& limited_rect
 )
 {
-	// claude@NOTE: no legacy ancestor - only the commented-out scissor block in dx9/model_manager.cpp (struct scissor is declaration-only); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9bd0]
-	return false;
+	if ( !portal_rect.intersects( limiting_rect ) )
+		return false;
+
+	limited_rect = get_intersection_rect( portal_rect, limiting_rect );
+	float const limited_rect_square =
+		( limited_rect.max.x - limited_rect.min.x ) * ( limited_rect.max.y - limited_rect.min.y );
+	if ( math::is_zero( limited_rect_square ) )
+		return false;
+
+	float3 ws_near_rect[4] = {
+		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.min.y, 0 ) ),
+		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.max.y, 0 ) ),
+		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.max.y, 0 ) ),
+		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.min.y, 0 ) ),
+	};
+
+	float3 ws_far_rect[4] = {
+		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.min.y, 1 ) ),
+		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.max.y, 1 ) ),
+		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.max.y, 1 ) ),
+		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.min.y, 1 ) ),
+	};
+
+	if ( !portal_plane.intersect_segment( ws_near_rect[0], ws_far_rect[0], io_points[0] ) ||
+		!portal_plane.intersect_segment( ws_near_rect[1], ws_far_rect[1], io_points[1] ) ||
+		!portal_plane.intersect_segment( ws_near_rect[2], ws_far_rect[2], io_points[2] ) ||
+		!portal_plane.intersect_segment( ws_near_rect[3], ws_far_rect[3], io_points[3] ) )
+		std::copy( &ws_near_rect[0], &ws_near_rect[4], &io_points[0] );
+
+	return true;
 }
 
 void portal_sector_system::process_portal_in_screen_space(
