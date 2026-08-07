@@ -7,6 +7,8 @@
 #include <vostok/math_plane.h>
 #include <vostok/math_sphere.h>
 
+#include <numeric>
+
 #include <vostok/console_command.h>
 #include <vostok/math_color.h>
 #include <vostok/render/engine/vertex_colored.h>
@@ -127,22 +129,26 @@ portal_sector_system::portal_sector_system( portal_sector_structure_ptr structur
 	m_structure					( structure ),
 	m_test_action				( false ),
 	m_preventer					( 0 ),
-	m_occlusion_bounds_buffer		( 0 ),
-	m_occlusion_bounds				( 0, 0 ),
-	m_occlusion_results_buffer		( 0 ),
-	m_occlusion_results			( 0, 0 ),
+	m_occlusion_bounds_buffer		( ALLOC( float4, structure->get_portals( ).size( ) ) ),
+	m_occlusion_bounds				( m_occlusion_bounds_buffer, structure->get_portals( ).size( ) ),
+	m_occlusion_results_buffer		( ALLOC( u8, structure->get_portals( ).size( ) ) ),
+	m_occlusion_results			( m_occlusion_results_buffer, structure->get_portals( ).size( ), structure->get_portals( ).size( ) ),
 	m_portals_geometry				( 0 )
 {
-	// claude@NOTE: legacy body diverged - legacy model_manager ctor inits view point/marker/D3D9 collision handles, not the canonical preventer/occlusion buffers; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fc180]
+	initialize_portals_occlusion_bounds_and_results( );
+	m_preventer = NEW( sector_double_query_preventer )(
+		m_structure->get_sectors( ).begin( ),
+		m_structure->get_sectors( ).size( )
+	);
 }
 
 portal_sector_system::~portal_sector_system( )
 {
-	// claude@NOTE: legacy body diverged - legacy model_manager dtor releases D3D9 VB/IB and heap sector/portal arrays; only the collision teardown maps; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5fc080]
+	m_occlusion_results.clear( );
+	FREE( m_occlusion_results_buffer );
+	m_occlusion_bounds.clear( );
+	FREE( m_occlusion_bounds_buffer );
+	DELETE( m_preventer );
 }
 
 // claude@NOTE: ported from dx9/model_manager.cpp create_frustum_from_portal,
@@ -517,9 +523,17 @@ void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
 
 void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 {
-	// claude@NOTE: no legacy ancestor - no GPU portal occlusion-query system in the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x5f9940]
+	portal const* const portals_end = m_structure->get_portals( ).end( );
+	for ( portal const* i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
+	{
+		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
+
+
+
+		float const radius = math::max( math::max( math::squared_length( i->get_points( )[0] - center ), math::squared_length( i->get_points( )[1] - center ) ), math::max( math::squared_length( i->get_points( )[2] - center ), math::squared_length( i->get_points( )[3] - center ) ) );
+		m_occlusion_bounds.push_back( float4( center, math::sqrt( radius ) ) );
+	}
+	std::fill( m_occlusion_results.begin( ), m_occlusion_results.end( ), u8( -1 ) );
 }
 
 void portal_sector_system::update_portals_occlusion_culling( pcbyte occlusion_results )

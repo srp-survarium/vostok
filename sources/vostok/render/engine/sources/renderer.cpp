@@ -1292,13 +1292,9 @@ void renderer::render(
 	}
 }
 
-// claude@NOTE: the remaining unreproduced guards are the ones whose callee is still an empty
-// stub, so LTCG deletes the guard with it: draw_frame_histogram and
-// culling::portal_sector_system::render (reached through scene::draw_portal_system). The
-// render_target_ptr temp is a second, non-steerable gap - the target inlines the intrusive
-// refcount ops that we emit as calls to
-// threading::single_threading_policy::increment/decrement. The grass row carries an extra
-// cmp/je because our LTCG partial-inlines grass_world::render_debug's entry test to here.
+// claude@NOTE: target inlines the render_target_ptr refcount operations that base emits as
+// threading::single_threading_policy::increment/decrement calls; base also partial-inlines
+// grass_world::render_debug's entry guard here.
 void renderer::draw_debug(
 	scene*				scene,
 	scene_view*			view,
