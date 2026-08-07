@@ -12,7 +12,6 @@ class effect_compiler;
 class effect_gather_bloom : public effect_descriptor {
 public:
 	effect_gather_bloom( ) { }
-	virtual ~effect_gather_bloom( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

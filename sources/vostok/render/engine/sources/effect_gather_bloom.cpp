@@ -17,9 +17,9 @@ void effect_gather_bloom::compile(
 
 	compiler.begin_technique();
 		compiler.begin_pass("gather_bloom", NULL, "gather_bloom", shader_configuration(), NULL);
-			//compiler.set_texture("t_frame_color", r2_rt_generic0);
-			compiler.set_texture("t_position", r2_rt_p, 0, false, 0);
-			compiler.set_texture("t_frame_luminance", r2_rt_frame_luminance, 0, false, 0);
+			compiler.set_texture("t_frame_color", r2_rt_generic0, 0, false, u32(-1));
+			compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
+			compiler.set_texture("t_frame_luminance", r2_rt_frame_luminance, 0, false, u32(-1));
 			compiler.set_depth( true, false);
 		compiler.end_pass();
 	compiler.end_technique();
