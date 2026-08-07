@@ -42,11 +42,11 @@ public:
 
 	void execute_impl( );
 	void execute_smoothed_impl(
-		u32	current_cascade_index,
-		u32	stage_index,
-		u32	propagation_iteration_index,
-		u32	render_stage_index,
-		u32	num_render_stages
+		u32 const	current_cascade_index,
+		u32 const	stage_index,
+		u32 const	propagation_iteration_index,
+		u32 const	render_stage_index,
+		u32 const	num_render_stages
 	);
 
 	bool is_effects_ready( ) const;
@@ -57,7 +57,7 @@ private:
 
 	void pre_lpv_batch_render(
 		float3 const&			light_color,
-		float					light_intensity,
+		float const			light_intensity,
 		geometry_batch const&	batch
 	);
 
@@ -65,54 +65,56 @@ private:
 
 	void render_to_rms(
 		float3 const&		light_color,
-		float				light_intensity,
+		float const			light_intensity,
 		float4x4 const&		view_matrix,
 		float4x4 const&		projection_matrix,
 		vector<float4x4>	transforms,
-		u32					cascade_index
+		u32 const			cascade_index
 	);
 
 	void render_to_rms_smoothed(
 		float3 const&,
-		float,
+		float const,
 		float4x4 const&,
 		float4x4 const&,
 		vector<float4x4>,
-		u32,
-		u32,
-		u32
+		u32 const,
+		u32 const,
+		u32 const
 	)
 	{
 	}
 
 	void render_to_rms_smoothed2(
 		float3 const&		light_color,
-		float				light_intensity,
+		float const			light_intensity,
 		float4x4 const&		view_matrix,
 		float4x4 const&		projection_matrix,
 		vector<float4x4>	transforms,
-		u32					cascade_index,
-		u32					render_stage_index,
-		u32					num_render_stages
+		u32 const			cascade_index,
+		u32 const			render_stage_index,
+		u32 const			num_render_stages
 	);
 
-	void render_to_point_rms( light* l, u32 face_index, vector<float4x4> transforms );
-	void render_to_sky_rms( light* sun, u32 face_index, u32 cascade_index, vector<float4x4> transforms );
+	void render_to_point_rms( light* l, u32 const face_index, vector<float4x4> transforms );
+	void render_to_sky_rms( light* sun, u32 const face_index, u32 const cascade_index, vector<float4x4> transforms );
 	void render_to_spot_rms( light* l, vector<float4x4> transforms );
-	void render_to_sun_rms( light* sun, u32 cascade_index, vector<float4x4> transforms );
+	void render_to_sun_rms( light* sun, u32 const cascade_index, vector<float4x4> transforms );
 	void render_to_sun_rms_smoothed(
 		light*				sun,
-		u32					cascade_index,
+		u32 const			cascade_index,
 		vector<float4x4>	transforms,
-		u32					stage_render_index,
-		u32					num_render_stages
+		u32 const			stage_render_index,
+		u32 const			num_render_stages
 	);
+
+	float3 start_render_eye_position;
 
 	void downsample_rsm(
 		float3 const&	light_direction,
 		float3 const&	grid_origin,
 		float			grid_scale,
-		u32				cascade_index
+		u32 const		cascade_index
 	);
 
 	void downsample_gbuffer( )
@@ -120,21 +122,21 @@ private:
 	}
 
 	void inject_lighting(
-		u32				cascade_index,
+		u32 const		cascade_index,
 		float3 const&	light_position,
 		float3 const&	light_direction,
 		float			light_fov
 	);
 
 	void inject_occluders(
-		u32					cascade_index,
+		u32 const			cascade_index,
 		float3 const&		light_position,
 		float3 const&		light_direction,
 		vector<float4x4>	transforms
 	);
 
-	void propagate_lighting( u32 cascade_index );
-	void propagate_lighting_smoothed( u32 cascade_index, u32 propagation_iteration_index );
+	void propagate_lighting( u32 const cascade_index );
+	void propagate_lighting_smoothed( u32 const cascade_index, u32 const propagation_iteration_index );
 
 	void register_light_constans( );
 	void register_rsm_constans( );
@@ -147,8 +149,7 @@ private:
 
 	void render_quad( );
 
-public:
-	float3							start_render_eye_position;
+private:
 	box_geometry					m_box_geometry;
 	radiance_volume*				m_radiance_volume;
 	u32								m_num_cascades;
