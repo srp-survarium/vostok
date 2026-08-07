@@ -782,7 +782,6 @@ void stage_light_propagation_volumes::render_to_point_rms(
 	vector<float4x4>	transforms
 )
 {
-	// FUNCTION BODY[0x618750]
 	math::float4x4 face_view_matrix = math::create_camera_at(
 		l->position + view_matrix_parameters[face_index][0],
 		l->position + view_matrix_parameters[face_index][1],
@@ -838,7 +837,6 @@ void stage_light_propagation_volumes::render_to_sky_rms(
 
 void stage_light_propagation_volumes::render_to_spot_rms( light* l, vector<float4x4> transforms )
 {
-	// FUNCTION BODY[0x618010]
 	float const max_angle			 = math::max(l->spot_umbra_angle, l->spot_penumbra_angle);
 
 	math::float4x4 projection_matrix = math::create_perspective_projection(max_angle, 1.0f, l->range / 1000.0f, l->range);
