@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_post_process_sraa : public effect_descriptor {
 public:
-	effect_post_process_sraa( ) { }
-	virtual ~effect_post_process_sraa( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
