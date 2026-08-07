@@ -300,7 +300,6 @@ void stage_light_propagation_volumes::register_rsm_constans( )
 
 void stage_light_propagation_volumes::register_light_constans( )
 {
-	// FUNCTION BODY[0x614de0]
 	m_c_view_to_light_matrix		= backend::ref().register_constant_host("view_to_light_matrix",  rc_float );
 	m_c_light_color					= backend::ref().register_constant_host("light_color", rc_float );
 	m_c_light_intensity				= backend::ref().register_constant_host("light_intensity", rc_float );
@@ -1182,7 +1181,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 void stage_light_propagation_volumes::execute_impl( )
 {
-	light_ptr sun = m_context->scene( )->lights( ).get_sun( );
+	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 
 	lights_db::lights_type const& e_lights = m_context->scene( )->lights( ).get_lights( );
 
@@ -1260,7 +1259,7 @@ void stage_light_propagation_volumes::execute_impl( )
 			for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 			{
 				if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
-					render_to_sun_rms( sun.c_ptr( ), cascade_index, box_occluder_transforms );
+					render_to_sun_rms( sun, cascade_index, box_occluder_transforms );
 
 				if ( !options::ref( ).current.m_lpv_disable_rsm_downsampling )
 				{
@@ -1526,8 +1525,6 @@ void stage_light_propagation_volumes::execute( )
 
 void stage_light_propagation_volumes::draw_debug( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x6146d0]
 }
 
 } // namespace render
