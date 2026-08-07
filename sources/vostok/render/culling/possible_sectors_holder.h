@@ -33,9 +33,7 @@ public:
 
 	bool is_possible_sector( u16 sector_id ) const
 	{
-		// STATE[STUB]
-		(void)sector_id;
-		return false;
+		return std::find( m_buffer, m_buffer_end, sector_id ) != m_buffer_end;
 	}
 
 	u16 const* begin( ) const

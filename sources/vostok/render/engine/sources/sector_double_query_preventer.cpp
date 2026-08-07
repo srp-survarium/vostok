@@ -75,17 +75,27 @@ void sector_double_query_preventer::add_frustum( math::frustum const& f, u32 sec
 	( *m_sectors_max_frustums )[sector_id].push_back( f );
 }
 
-bool sector_double_query_preventer::is_aabb_in_sector( math::aabb const&, u32 ) const
+bool sector_double_query_preventer::is_aabb_in_sector( math::aabb const& bbox, u32 sector_id ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8650]
+	frustums_type const& frustums = ( *m_sectors_max_frustums )[sector_id];
+	frustums_type::const_iterator const frustums_end = frustums.end( );
+	for ( frustums_type::const_iterator i = frustums.begin( ); i != frustums_end; ++i )
+	{
+		if ( i->test_inexact( bbox ) != math::intersection_outside )
+			return true;
+	}
+
 	return false;
 }
 
-bool sector_double_query_preventer::is_visible_aabb( math::aabb const&, u16 const*, u16 const* ) const
+bool sector_double_query_preventer::is_visible_aabb( math::aabb const& bbox, u16 const* sectors_begin, u16 const* sectors_end ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e8700]
+	for ( ; sectors_begin != sectors_end; ++sectors_begin )
+	{
+		if ( is_aabb_in_sector( bbox, *sectors_begin ) )
+			return true;
+	}
+
 	return false;
 }
 
