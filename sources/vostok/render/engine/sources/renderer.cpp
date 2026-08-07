@@ -10,6 +10,7 @@
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/res_xs.h>
 #include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/dx11/effect_compiler.h>
 #include <vostok/render/core/dx11/sampler_state_descriptor.h>
 #include <vostok/render/core/shader_constant_binding.h>
 #include <vostok/render/core/sources/event_query.h>
@@ -35,6 +36,7 @@
 #include "renderer_context.h"
 #include "scene.h"
 #include "scene_view.h"
+#include "shared_names.h"
 #include "speedtree_forest.h"
 #include "stage_accumulate_distortion.h"
 #include "stage_ambient_lighting.h"
@@ -386,23 +388,18 @@ bool renderer::is_effects_ready( ) const
 
 static statistics m_statistics;
 
-// claude@NOTE: no legacy ancestor - effect_pick_light_luminance postdates the legacy corpus; matcher-phase work.
-// STATE[STUB]
 void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_config_value const& config )
 {
-	// FUNCTION BODY[0x64c70]: 11
-	// <0>
-	// <0x64c7b>|0x00b|+0x009:'174'
-	// <0x64c84>|0x014|+0x02d:'175'
-	// <0x64cb1>|0x041|+0x048:'176'
-	// <0x64cf9>|0x089|+0x00a:'177'
-	// <0x64d03>|0x093|+0x00c:'178'
-	// <0x64d0f>|0x09f|+0x014:'179'
-	// <0x64d23>|0x0b3|+0x014:'180'
-	// <0x64d37>|0x0c7|+0x014:'181'
-	// <0x64d4b>|0x0db|+0x006:'182'
-	// <0x64d51>|0x0e1|+0x005:'183'
-	// ******
+	compiler.begin_technique( );
+	compiler.begin_pass( "pick_lighting_luminace", NULL, "pick_lighting_luminace", shader_configuration( ), NULL );
+	compiler.set_depth( false, false );
+	compiler.set_cull_mode( D3D_CULL_NONE );
+	compiler.set_alpha_blend( false );
+	compiler.set_texture( "t_accumulator_dif", r2_rt_accum_diffuse, 0, false, 0 );
+	compiler.set_texture( "t_accumulator_spec", r2_rt_accum_specular, 0, false, 0 );
+	compiler.set_texture( "t_frame_color", r2_rt_generic0, 0, false, 0 );
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 renderer::renderer( renderer_context* renderer_context ) :
@@ -555,13 +552,9 @@ void renderer::recreate_stage( enum_render_stage_type arg_0 )
 	}
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder; matcher-phase work.
-// STATE[STUB]
 void renderer::set_target_context( renderer_context_targets const* targets_context, bool force_set )
 {
-	// FUNCTION BODY[0x6476d0]: 1
-	// <0x6476d1>|0x001|+0x00d:'316'
-	// ******
+	m_renderer_context->set_target_context( targets_context, force_set );
 }
 
 void renderer::setup_render_output_window(
@@ -645,13 +638,9 @@ void renderer::toggle_render_stage( enum_render_stage_type stage_type, bool togg
 		m_stages[stage_type]->set_enabled( toggle );
 }
 
-// claude@NOTE: no legacy ancestor - absent from the legacy renderer.cpp remainder (model_manager/engine-world clear_resources are different classes); matcher-phase work.
-// STATE[STUB]
 void renderer::clear_resources( )
 {
-	// FUNCTION BODY[0x6488a0]: 1
-	// <0x6488a1>|0x001|+0x014:'358'
-	// ******
+	m_renderer_context->clear_resources( );
 }
 
 void renderer::execute_stages( )

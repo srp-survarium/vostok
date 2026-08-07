@@ -69,9 +69,6 @@ typedef intrusive_list<
 
 class effect_pick_light_luminance : public effect_descriptor {
 public:
-	effect_pick_light_luminance( ) { }
-	virtual ~effect_pick_light_luminance( ) { }
-
 	virtual void compile(
 		effect_compiler& compiler,
 		custom_config_value const& config
@@ -134,8 +131,7 @@ private:
 	u32 m_tech_index;
 };
 
-class sort_by_textures_predicate {
-public:
+struct sort_by_textures_predicate {
 	bool operator()(
 		render_surface_instance const*,
 		render_surface_instance const*
