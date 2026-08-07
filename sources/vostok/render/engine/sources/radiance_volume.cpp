@@ -290,26 +290,20 @@ bool radiance_volume::is_effects_ready( ) const
 
 void radiance_volume::set_origin( float3 const& in_origin )
 {
-	// claude@NOTE: legacy body diverged - legacy set_origin rebuilds m_bbox from scale+origin, no origin-history trio; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x5eecc0]
-	m_prev_previous_origin = m_previous_origin;
-	m_previous_origin = m_next_origin;
-	m_next_origin = in_origin;
+	m_bbox.zero( );
+	m_bbox.max += m_scale;
+	m_bbox.move( in_origin );
 }
 
 float3 const& radiance_volume::get_origin( ) const
 {
-	// claude@NOTE: legacy body diverged - legacy get_origin returns m_bbox.min; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x5eebe0]
-	return m_next_origin;
+	return m_bbox.min;
 }
 
 float3 const& radiance_volume::get_previous_origin( ) const
 {
-	// claude@NOTE: no legacy ancestor - no origin history in the legacy radiance_volume; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x5eebd0]
 	return m_previous_origin;
 }
