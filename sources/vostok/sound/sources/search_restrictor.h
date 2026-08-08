@@ -19,7 +19,7 @@ inline vertex_id_type search_restrictor::start_vertex_id( u32 const start_vertex
 	render::culling::portal const& p = m_graph->get_portals( )[m_graph->get_sectors( )[m_start_sector_id].get_portals( )[start_vertex_id]];
 	result.portal_id = m_graph->get_sectors( )[m_start_sector_id].get_portals( )[start_vertex_id];
 	result.incoming_sector_index = p.get_sectors( )[0] != m_graph->get_sectors( )[m_start_sector_id].get_portals( )[start_vertex_id];
-	result.source_to_portal_distance = ( p.get_points( )[0] - m_source_position ).length( );
+	result.source_to_portal_distance = math::length( p.get_points( )[0] - m_source_position );
 	return result;
 }
 
