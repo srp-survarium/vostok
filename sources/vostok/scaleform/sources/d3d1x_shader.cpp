@@ -368,7 +368,7 @@ bool ShaderManager::Initialize(HAL* phal)
         }
     }
 #elif (SF_D3D_VERSION == 11)
-    ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL11X;
+    ShaderModel = (ShaderDesc::ShaderVersion)2;
     switch(pDevice->GetFeatureLevel())
     {
     case D3D_FEATURE_LEVEL_9_1:
@@ -385,11 +385,6 @@ bool ShaderManager::Initialize(HAL* phal)
     #error SF_D3D_VERSION must be 10 or 11.
 #endif
 
-    if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL11X && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
-    {
-        SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_11_0+ was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_10_0.");
-        ShaderModel = ShaderDesc::ShaderVersion_D3D1xFL10X;
-    }
     if ( ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL10X && !ShaderDesc::IsShaderVersionSupported(ShaderModel))
     {
         SF_DEBUG_MESSAGE(1, "Support for D3D_FEATURE_LEVEL_10_0+ was not included when running GFxShaderMaker. Trying D3D_FEATURE_LEVEL_9_3.");
@@ -407,7 +402,7 @@ bool ShaderManager::Initialize(HAL* phal)
     }
 
     // Now, initialize all the shaders that use our current ShaderModel version.
-    for (unsigned i = 0; i < VertexShaderDesc::VSI_Count; i++)
+    for (unsigned i = 0; i < sizeof(StaticVShaders) / sizeof(StaticVShaders[0]); i++)
     {
         const VertexShaderDesc* desc = VertexShaderDesc::Descs[i];
         if ( desc && desc->Version == ShaderModel && desc->pBinary)
@@ -417,7 +412,7 @@ bool ShaderManager::Initialize(HAL* phal)
         }
     }
 
-    for (unsigned i = 0; i < FragShaderDesc::FSI_Count; i++)
+    for (unsigned i = 0; i < sizeof(StaticFShaders) / sizeof(StaticFShaders[0]); i++)
     {
         const FragShaderDesc* desc = FragShaderDesc::Descs[i];
         if (desc && desc->Version == ShaderModel && desc->pBinary)
@@ -442,14 +437,14 @@ void ShaderManager::EndScene()
 
 void ShaderManager::Reset()
 {
-    for (unsigned i = 0; i < VertexShaderDesc::VSI_Count; i++)
+    for (unsigned i = 0; i < sizeof(StaticVShaders) / sizeof(StaticVShaders[0]); i++)
     {
         const VertexShaderDesc* desc = VertexShaderDesc::Descs[i];
         if ( desc && desc->pBinary)
             StaticVShaders[i].Shutdown();
     }
 
-    for (unsigned i = 0; i < FragShaderDesc::FSI_Count; i++)
+    for (unsigned i = 0; i < sizeof(StaticFShaders) / sizeof(StaticFShaders[0]); i++)
     {
         const FragShaderDesc* desc = FragShaderDesc::Descs[i];
         if (desc && desc->pBinary)
