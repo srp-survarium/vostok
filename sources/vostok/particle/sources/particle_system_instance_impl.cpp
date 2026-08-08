@@ -337,6 +337,7 @@ bool particle_system_instance_impl::is_finished()
 	if (!instance)
 		return false;
 	
+	bool ps_finished = true;
 	while(instance)
 	{
 		bool finished = instance->is_finished();
@@ -363,13 +364,14 @@ bool particle_system_instance_impl::is_finished()
 			instance->remove_particles();
 			emitter_instances_list.erase(instance);
 		}
+		ps_finished = ps_finished && finished;
 		instance = emitter_instances_list.get_next_of_object(instance);
 	}
 	
 	if (m_always_looping)
 		return false;
 	
-	return true;
+	return ps_finished;
 }
 
 void particle_system_instance_impl::set_template(u32 lod_index, particle_system_ptr templ)
