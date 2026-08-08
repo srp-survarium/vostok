@@ -16,12 +16,8 @@ namespace sound {
 pcstr composite_extention				= ".composite_sound";
 
 composite_sound_cook::composite_sound_cook( sound_world& world ) :
-	super										(
-		resources::composite_sound_class,
-		reuse_true,
-		use_resource_manager_thread_id
-	),
-	m_world( world )
+		super( resources::composite_sound_class, reuse_true, use_resource_manager_thread_id ),
+		m_world( world )
 {
 }
 
