@@ -437,7 +437,7 @@ void particle_system_instance_impl::play_impl( particle_world* particle_world )
 {
 	m_particle_world = particle_world;
 	prepare_render_resources();
-	m_is_playing = true;
+	threading::interlocked_exchange(m_is_playing, true);
 	m_no_more_create = false;
 }
 
@@ -453,7 +453,7 @@ void particle_system_instance_impl::stop_impl(float time)
 	// TODO: ���� time==0 �� ������� �� ����������.
 	// time - ����� ����������� ��.
 	// ���� time ������ �� ������� �����, �� �� ������ �������� �� ����� � ��������.
-	m_is_playing = false;
+	threading::interlocked_exchange(m_is_playing, false);
 	m_no_more_create = true;
 }
 
