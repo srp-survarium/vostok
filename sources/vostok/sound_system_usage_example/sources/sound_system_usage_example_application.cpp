@@ -202,13 +202,13 @@ void application::execute	( )
 			else if ( ch == 'm' )
 			{
 				LOG_DEBUG				( "m_npc_marsh->say" );
-				m_npc_marsh->emit		( m_sound_scene, user );
+				m_npc_marsh->emit_point_sound		( m_sound_scene, user );
 				m_npc_marsh->say		( );
 			}
 			else if ( ch == 'b' )
 			{
 				LOG_DEBUG				( "m_npc_broflovski->say" );
-				m_npc_broflovski->emit	( m_sound_scene, user );
+				m_npc_broflovski->emit_point_sound	( m_sound_scene, user );
 				m_npc_broflovski->say	( );
 			}
 		}

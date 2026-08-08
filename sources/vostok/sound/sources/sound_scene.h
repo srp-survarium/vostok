@@ -110,30 +110,6 @@ public:
 	void						tick						( sound_world& world, u32 time_delta );
 
 	// proxies
-	sound_instance_proxy_ptr	create_sound_instance_proxy	
-								(
-									sound_emitter_ptr emitter,
-									sound_propagator_emitter const& propagator_emitter,
-									world_user& user
-								);
-
-	sound_instance_proxy_ptr	create_sound_instance_proxy	
-								(
-									sound_emitter_ptr emitter,
-									sound_propagator_emitter const& propagator_emitter,
-									world_user& user,
-									sound_cone_type cone_type
-								);
-
-	sound_instance_proxy_ptr	create_sound_instance_proxy
-								(
-									sound_emitter_ptr emitter,
-									sound_propagator_emitter const& propagator_emitter,
-									world_user& user,
-									collision::geometry_instance& geometry,
-									float radius
-								);
-
 	sound_instance_proxy_ptr	new_point_sound_instance_proxy
 								(
 									sound_emitter_ptr const& emitter,
@@ -164,6 +140,9 @@ public:
 									sound_propagator_emitter const& propagator_emitter,
 									world_user& user
 								);
+
+		void					set_graph					( render::culling::portal_sector_structure_ptr& graph );
+		bool					graph_exist					( ) const;
 
 		void					free_sound_instance_proxy	( sound_instance_proxy* proxy );
 
@@ -218,7 +197,6 @@ public:
 				void			register_receiver			( sound_receiver* receiver, atomic_half3* position );
 				void			unregister_receiver			( world_user& user, sound_receiver* receiver );
 
-				void			set_listener_properties		( float4x4 const& inv_view_matrix );
 				void			set_listener_properties		(	
 																float3 const& position,
 																float3 const& orient_front,
@@ -245,13 +223,6 @@ public:
 				void			calculate_3d_sound			( sound_voice& voice, panning_lut_ptr panning_lut );
 				void			clear_resources				( );
 
-				void			set_graph					( render::culling::portal_sector_structure_ptr& graph );
-				bool			graph_exist					( ) const;
-				float3			get_portal_center			( u32 portal_id ) const;
-				float3			get_portal_nearest_point	( u32 portal_id, float3 segment_start, float3 segment_end ) const;
-				bool			is_segment_pass_portal		( u32 portal_id, float3 segment_start, float3 segment_end ) const;
-				void			find_path					( float3 const& destination_point, vectora< fixed_vector< u32, 32 > >& result_paths ) const;
-
 				void			update_stats				( sound_debug_stats& stats ) const;
 
 #ifndef MASTER_GOLD
@@ -267,6 +238,11 @@ public:
 				void			pause								( );
 				void			resume								( );
 				bool			is_paused							( ) const;
+
+				void			find_path					( float3 const& destination_point, vectora< fixed_vector< u32, 32 > >& result_paths ) const;
+				float3			get_portal_center			( u32 portal_id ) const;
+				float3			get_portal_nearest_point	( u32 portal_id, float3 segment_start, float3 segment_end ) const;
+				bool			is_segment_pass_portal		( u32 portal_id, float3 segment_start, float3 segment_end ) const;
 
 				void			insert_environment					( sound_environment& environment, float4x4 const& transform );
 				void			add_environment_params				( pcstr name, XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params, u32& id );
@@ -303,7 +279,6 @@ private:
 																float* channels_result,
 																float& lp_filter_result
 															) const;
-			void		calculate_hdr_audio					( );
 			void		x3daudio_calculate					( sound_world const&, sound_voice& );
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;

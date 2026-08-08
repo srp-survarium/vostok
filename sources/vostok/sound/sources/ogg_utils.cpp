@@ -88,7 +88,7 @@ u32 decompress(OggVorbis_File* ovf, pbyte dest, u32& pcm_pointer, u32 bytes_need
 		ret					= ov_read(	ovf, 
 										dest_ptr, 
 										bytes_needed-total_readed, 
-									bigendianp, 
+									bigendianp,
 										2, 
 										1, 
 										&current_section

@@ -72,7 +72,7 @@ void ai_sound_player::play(
 	sounds_collection_type const* type	= find( sound_type );
 	R_ASSERT						( type, "such a type is absent in sound collections" );
 
-	m_active_sound					= type->emitter->emit( m_scene, m_user );
+	m_active_sound					= type->emitter->emit_point_sound( m_scene, m_user );
 	m_active_sound->set_callback	( boost::bind( &ai_sound_player::on_finish_playing, this ) );
 
 	if ( sound_is_positioned )
@@ -88,7 +88,7 @@ void ai_sound_player::play(
 )
 {
 	sound::sound_emitter_ptr sound	= static_cast_resource_ptr< sound::sound_emitter_ptr >( sound_to_be_played );
-	m_active_sound					= sound->emit( m_scene, m_user );
+	m_active_sound					= sound->emit_point_sound( m_scene, m_user );
 	m_active_sound->set_callback	( finish_callback );
 	m_active_sound->set_position	( position );
 	m_active_sound->play			( sound::once, m_sound_producer, m_ignorable_receiver );
@@ -106,7 +106,7 @@ void ai_sound_player::play_once(
 	sounds_collection_type const* type		= find( sound_type );
 	R_ASSERT								( type, "such a type is absent in sound collections" );
 
-	sound::sound_instance_proxy_ptr proxy	= type->emitter->emit( m_scene, m_user );
+	sound::sound_instance_proxy_ptr proxy	= type->emitter->emit_point_sound( m_scene, m_user );
 	type->emitter->emit_and_play_once( m_scene, m_user, position, m_sound_producer, m_ignorable_receiver );
 
 }
