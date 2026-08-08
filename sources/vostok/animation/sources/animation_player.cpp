@@ -488,9 +488,10 @@ void animation_player::compact_callbacks( )
 {
 	m_callbacks_are_actual					= true;
 
+	subscribed_channel const* i				= m_first_subscribed_channel;
 	subscribed_channel const* first_cloned_channel	= 0;
 	subscribed_channel* previous_channel	= 0;
-	for ( subscribed_channel const* i = m_first_subscribed_channel ; i ; i = i->next )
+	for ( ; i ; i = i->next )
 	{
 		subscribed_channel* const new_channel	= (subscribed_channel*)ALLOCA( sizeof( subscribed_channel ) );
 		if ( first_cloned_channel )
@@ -498,29 +499,29 @@ void animation_player::compact_callbacks( )
 		else
 			first_cloned_channel			= new_channel;
 
-		R_ASSERT							( new_channel );
+		memory::detail::call_constructor		( new_channel );
 
 		pstr channel_id;
 		STR_DUPLICATEA						( channel_id, i->channel_id );
 		new_channel->channel_id				= channel_id;
 
-		new_channel->next					= 0;
 		new_channel->first_callback			= 0;
-		animation_callback* previous_callback	= 0;
-		for ( animation_callback* k = i->first_callback ; k ; k = k->next )
+		new_channel->next					= 0;
+		animation_callback* k				= 0;
+		for ( animation_callback* j = i->first_callback ; j ; j = j->next )
 		{
-			if ( !k->enabled )
+			if ( !j->enabled )
 				continue;
 
 			animation_callback* const new_callback	= (animation_callback*)ALLOCA( sizeof( animation_callback ) );
-			new ( new_callback ) animation_callback( k->callback, k->callback_uid, k->animation, k->event_type, k->animated_object );
+			new ( new_callback ) animation_callback( j->callback, j->callback_uid, j->animation, j->event_type, j->animated_object );
 
-			if ( previous_callback )
-				previous_callback->next		= new_callback;
+			if ( k )
+				k->next					= new_callback;
 			else
 				new_channel->first_callback	= new_callback;
 
-			previous_callback				= new_callback;
+			k							= new_callback;
 		}
 
 		if ( new_channel->first_callback )
@@ -533,11 +534,12 @@ void animation_player::compact_callbacks( )
 
 	destroy_subscriptions					( m_first_subscribed_channel );
 
-	m_first_subscribed_channel = 0, m_callbacks_buffer = mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
+	m_first_subscribed_channel				= 0;
+	m_callbacks_buffer.~mutable_buffer		( );
+	new (&m_callbacks_buffer) mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
 
 	u32 channels_count						= 0;
-	previous_channel						= 0;
-	for ( subscribed_channel const* i = first_cloned_channel ; i ; i = i->next )
+	for ( i = first_cloned_channel ; i ; i = i->next )
 	{
 		subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr( ) );
 		++channels_count;
@@ -548,7 +550,7 @@ void animation_player::compact_callbacks( )
 		else
 			m_first_subscribed_channel		= new_channel;
 
-		R_ASSERT							( new_channel );
+		memory::detail::call_constructor		( new_channel );
 
 		u32 const length					= strings::length( i->channel_id ) + 1;
 		memory::copy						( m_callbacks_buffer.c_ptr( ), length, i->channel_id, length );
@@ -556,21 +558,20 @@ void animation_player::compact_callbacks( )
 		m_callbacks_buffer					+= math::align_up( length, u32( 4 ) )*sizeof( char );
 
 		new_channel->next					= 0;
-		new_channel->first_callback			= 0;
-		animation_callback* previous_callback	= 0;
-		for ( animation_callback* k = i->first_callback ; k ; k = k->next )
+		animation_callback* k				= 0;
+		for ( animation_callback* j = i->first_callback ; j ; j = j->next )
 		{
 			animation_callback* const new_callback	= static_cast<animation_callback*>( m_callbacks_buffer.c_ptr( ) );
 			m_callbacks_buffer				+= sizeof( animation_callback );
 
-			new ( new_callback ) animation_callback( k->callback, k->callback_uid, k->animation, k->event_type, k->animated_object );
+			new ( new_callback ) animation_callback( j->callback, j->callback_uid, j->animation, j->event_type, j->animated_object );
 
-			if ( previous_callback )
-				previous_callback->next		= new_callback;
+			if ( k )
+				k->next					= new_callback;
 			else
 				new_channel->first_callback	= new_callback;
 
-			previous_callback				= new_callback;
+			k							= new_callback;
 		}
 
 		previous_channel					= new_channel;
