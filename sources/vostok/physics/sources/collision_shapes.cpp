@@ -62,7 +62,6 @@ u16 bt_collision_shape::get_triangle_material( const s32 triangle_id, const bool
 {
 	if ( is_shape_index )
 	{
-		// sushi@NOTE: ASSERT?
 		return m_shapes_face_data[triangle_id];
 	}
 	else
@@ -99,7 +98,6 @@ void destroy_shape( bt_collision_shape* shape )
 	VOSTOK_DELETE_IMPL( g_ph_allocator, shape );
 }
 
-// sushi@TODO: Analyzers in Ghidra break for functions with jump tables.
 btCollisionShape* create_bt_primitive( collision::primitive_type type, float3 const& dim, float3 const& __formal )
 {
 	btCollisionShape*	result = NULL;
@@ -138,7 +136,6 @@ bt_collision_shape* create_primitive_shape( collision::primitive_type type, floa
 
 	bt_collision_shape* result = VOSTOK_NEW_IMPL( g_ph_allocator, bt_collision_shape )( bt_shape );
 
-	// ASSERT? sushi@TODO: How exactly `m_shapes_face_data` is set?
 	result->m_shapes_face_data = VOSTOK_NEW_IMPL( g_ph_allocator, u16 );
 	*result->m_shapes_face_data = 0;
 	return result;
@@ -164,7 +161,7 @@ bt_collision_shape* create_compound_shape( configs::binary_config_value const& s
 		float3 dim							= (*it)["scale"];
 
 		*face_data_it = it->value_exists("mtl") ? (u16)(*it)["mtl"] : 0;
-		btCollisionShape* child_shape = create_bt_primitive( type, dim, dim );														// sushi@NOTE: Note sure the last argument is needed.
+		btCollisionShape* child_shape = create_bt_primitive( type, dim, dim );
 
 		float4x4 child_transform			= create_rotation(rotation) * create_translation(position);
 
