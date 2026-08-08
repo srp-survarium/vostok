@@ -953,8 +953,8 @@ void sound_scene::stop_propagate_sound	( sound_instance_proxy_internal& proxy )
 	new_sound_propagator* prop		= proxy.get_propagators( ).front( );
 	while ( prop )
 	{
-		new_sound_propagator* next	= proxy.get_propagators( ).get_next_of_object( prop );
 		prop->stop_propagation		( );
+		new_sound_propagator* next	= proxy.get_propagators( ).get_next_of_object( prop );
 		R_ASSERT					( prop->can_be_deleted( ) );
 
 		delete_sound_propagator		( proxy, prop );
