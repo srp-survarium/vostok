@@ -1378,11 +1378,11 @@ struct closets_point_predicate
 
 	void operator( )( std::pair< float, float3 > const& value )
 	{
-		if ( value.first >= min_val )
-			return;
-
-		min_val			= value.first;
-		closest_point	= value.second;
+		if ( min_val > value.first )
+		{
+			min_val			= value.first;
+			closest_point	= value.second;
+		}
 	}
 
 	float3	closest_point;
@@ -1414,7 +1414,7 @@ float3 sound_scene::get_portal_nearest_point	( u32 portal_id, float3 segment_sta
 
 	vectora< std::pair< float, float3 > > portal_segments( g_allocator );
 
-	std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) );
+	closets_point_predicate p( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) );
 	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
 	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
 	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
@@ -1453,7 +1453,7 @@ float3 sound_scene::get_portal_nearest_point	( u32 portal_id, float3 segment_sta
 	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
 	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
 
-	closets_point_predicate p( portal_segments.front( ).first, portal_segments.front( ).second ); std::for_each( portal_segments.begin( ), portal_segments.end( ), p );
+	std::for_each( portal_segments.begin( ), portal_segments.end( ), p );
 	return p.closest_point;
 }
 
