@@ -443,15 +443,12 @@ enum PrimitiveFillType
 enum PrimitiveFillFlags
 {
     FF_Multiply     = 0x01,     // Multiply blend mode applied (requires different color output).
-    FF_Invert       = 0x02,     // Invert blend mode applied (requires different color output).
-    FF_AlphaWrite   = 0x04,     // The alpha channel should be written to.
-    FF_Cxform       = 0x08,     // The fill requires a color transform.
-    FF_3DProjection = 0x10,     // The fill is for a 3D object.
-    FF_Blending     = 0x20,     // Blending operations need to be performed for the fill.
-    FF_LeaveOpen    = 0x40,     // Leaves the primitive uniform update open (eg. does not call Finish).
+    FF_AlphaWrite   = 0x02,     // The alpha channel should be written to.
+    FF_Cxform       = 0x04,     // The fill requires a color transform.
+    FF_3DProjection = 0x08,     // The fill is for a 3D object.
+    FF_Blending     = 0x10,     // Blending operations need to be performed for the fill.
+    FF_LeaveOpen    = 0x20,     // Leaves the primitive uniform update open (eg. does not call Finish).
                                 // This is used on X360, because it may need to set the instSize variable.
-
-    FF_BlendMask    = FF_Multiply | FF_Invert,     // Bitmask, which covers the fillflags associated with different blend modes.
 };
 
 class Texture;
