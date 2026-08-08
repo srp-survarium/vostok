@@ -133,7 +133,9 @@ void particle_system_instance_cook::on_materials_loaded(
 	parent->finish_query						( result_success );
 
 	for (u32 i=0; i<num_queries; i++)
+	{
 		cook_data[i].~material_effects_instance_cook_data();
+	}
 
 	MT_FREE(material_data);
 	MT_FREE(cook_data);
