@@ -1,0 +1,5 @@
+# alias<TAB>target choice
+# Target emits this u32 particle helper as a singleton.  The base linker folds
+# it with an identical signed-int COMDAT, so the generated target-only fold map
+# has no entry from which the delinker can recover the target symbol name.
+??$read_config_value@IVbinary_config_value@configs@vostok@@@particle@vostok@@YAIABVbinary_config_value@configs@1@PBDABI@Z	??$read_config_value@IVbinary_config_value@configs@vostok@@@particle@vostok@@YAIABVbinary_config_value@configs@1@PBDABI@Z
