@@ -26,7 +26,7 @@ void n_ary_tree_animation_event_iterator::invert_times( u32 const time_in_ms )
 }
 
 n_ary_tree_animation_event_iterator::n_ary_tree_animation_event_iterator	(
-		animation_state&				animation_state, // sushi@TODO
+		animation_state&				animation_state,
 		n_ary_tree_animation_node&		animation_node,
 		u32								start_time_in_ms,
 		u16								event_types,
@@ -53,11 +53,13 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		float const start_time,
 		float target_time,
 		u16& event_type,
-		u8&								channel_ids, // sushi@TODO
+		u8&								channel_ids,
 		u8&								domain_data,
 		bool							start_time_may_be_used
 	)
 {
+	channel_ids						= 0;
+	domain_data						= u8( -1 );
 	int const time_direction			= start_time <= target_time ? 1 : -1;
 
 	cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation() );
@@ -65,7 +67,9 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 	event_type							= time_event_animation_interval_ended;
 	float const animation_length		= pinned_animation->length_in_frames() / default_fps;
 	float const animation_end_time		= animation_length - interval.start_time();
-	if ( (time_direction*(interval.start_time() + start_time) < time_direction*animation_length ) ) {
+	if ( start_time_may_be_used ?
+		 time_direction*(interval.start_time() + start_time) <= time_direction*animation_length :
+		 time_direction*(interval.start_time() + start_time) < time_direction*animation_length ) {
 		if ( time_direction*(interval.start_time() + target_time) >= time_direction*animation_length ) {
 			if ( interval.start_time() + target_time == animation_length )
 				event_type				|= time_direction == 1 ? time_event_animation_ended_in_positive_direction : time_event_animation_ended_in_negative_direction;
@@ -89,20 +93,46 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		float const* current_knot		= time_direction == 1 ? channel.knots() : (channel.knots() + knots_count - 1);
 		float const* const knots_end	= time_direction == 1 ? (channel.knots() + knots_count) : (channel.knots() - 1);
 		for ( ; current_knot != knots_end; current_knot += time_direction ) {
-			float const knot_time		=  (*current_knot) / default_fps - interval.start_time();
-			R_ASSERT_CMP				( knot_time, >=, 0.f);
-			if ( knot_time * time_direction <= start_time * time_direction )
+			float current_knot_time		= (*current_knot) / default_fps;
+			if ( animation_length <= current_knot_time )
+				current_knot_time		-= animation_length;
+
+			current_knot_time			-= interval.start_time();
+			if ( current_knot_time < 0.f ) {
+				current_knot_time		+= animation_length;
+				if ( current_knot_time*time_direction > target_time*time_direction &&
+					 !math::is_relatively_similar( current_knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
+					continue;
+			}
+
+			if ( start_time_may_be_used ?
+				 current_knot_time*time_direction < start_time*time_direction :
+				 current_knot_time*time_direction <= start_time*time_direction ||
+				 math::is_relatively_similar( current_knot_time*time_direction, start_time*time_direction, math::epsilon_5 ) ) {
+				current_knot_time		+= animation_length;
+				if ( current_knot_time*time_direction >= target_time*time_direction )
+					continue;
+			}
+
+			if ( current_knot_time*time_direction > target_time*time_direction &&
+				 !math::is_relatively_similar( current_knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
 				continue;
 
-			if ( knot_time * time_direction > target_time * time_direction )
-				break;
-
-			if ( knot_time == target_time )
+			u8 const channel_bit		= u8( 1 ) << channel_id;
+			if ( current_knot_time == target_time ) {
 				event_type				|= time_event_channel_callback_should_be_fired;
-			else
+				channel_ids				|= channel_bit;
+			}
+			else {
 				event_type				= time_event_channel_callback_should_be_fired;
+				channel_ids				= channel_bit;
+			}
 
-			target_time					= knot_time;
+			if ( channel.type() != channel_type_events )
+				domain_data				= channel.domain( u32( current_knot - channel.knots() ) % knots_count ).data;
+			else
+				domain_data				= u8( -1 );
+			target_time					= current_knot_time;
 			break;
 		}
 	}
@@ -133,90 +163,149 @@ u32 n_ary_tree_animation_event_iterator::get_time_in_ms				(
 
 void n_ary_tree_animation_event_iterator::advance					( u16 const initial_event_types )
 {
-	animation_interval const* current_interval	= m_animation->animation_intervals() + m_value.animation_interval_id;
-	R_ASSERT_CMP						( (*current_interval).length(), >=, m_value.animation_interval_time );
-
-	vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
-		m_value.event_time_in_ms,
-		m_value.animation_interval_time,
-		m_value.event_time_in_ms
-	// sushi@TODO:	vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
-	);
-	n_ary_tree_animation_node& driving_animation = *(m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation); // sushi@TODO
-	R_ASSERT							( !driving_animation.driving_animation() );
-	(*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->accept	( time_scale_calculator );
-	float time_scale					= time_scale_calculator.time_scale();
-	// check if we start at the time moment, where time scale is 0,
-	// but it changes over time
-	// (it is possible to have animation with time scale = 0 as a constant)
-	if ( !initial_event_types && (time_scale == 0.f) ) {
-		vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
-			m_value.event_time_in_ms + 1,
-			m_value.animation_interval_time,
-			m_value.event_time_in_ms + 1
-		// sushi@TODO:	vostok::animation::mixing::n_ary_tree_time_scale_calculator::forbid_transitions_destroying
-		);
-		(*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->accept	( time_scale_calculator );
-		time_scale						= time_scale_calculator.time_scale();
+	bool const start_time_may_be_used	= !!(initial_event_types & time_event_animation_lexeme_started);
+	if ( !initial_event_types && (m_animation->playback_type() == play_once_and_freeze_at_end) ) {
+		animation_state const* const state = m_animation->get_animation_state();
+		if ( (state && state->is_freezed) || (m_value.event_type & time_event_animation_ended_in_positive_direction) ) {
+			m_value						= animation_event( u32(-1), 0, 0 );
+			m_animation					= 0;
+			return;
+		}
 	}
 
-	if ( !initial_event_types && (time_scale == 0.f) ) {
-		m_animation						= 0;
+	if ( m_animation->time_calculator() && !start_time_may_be_used ) {
 		m_value							= animation_event( u32(-1), 0, 0 );
+		m_animation						= 0;
 		return;
 	}
 
-	// here we assume, that driving and driven animations must have the same interval ids and interval cycles
-	animation_interval const* current_driving_interval	= (m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation )->animation_intervals() + m_value.animation_interval_id; // sushi@TODO
-	float const driving_animation_factor = current_driving_interval->length() / current_interval->length();
-	m_value.event_type					= initial_event_types;
-	u16 event_type;
-	if ( time_scale >= 0.f ) {
-		u8 temp = 10;
-		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, (*current_interval).length(), event_type, temp, temp, true ); // sushi@TODO
-		R_ASSERT_CMP					( channel_event_time, <=, (*current_interval).length() );
-		float const event_time			= channel_event_time;//? vostok::math::min( channel_event_time, (*current_interval).length() );
-		float new_event_time			= event_time*driving_animation_factor;
-		u32 const new_event_time_in_ms	= get_time_in_ms( m_value.event_time_in_ms, m_value.animation_interval_time*driving_animation_factor, new_event_time, event_type );
-		if ( initial_event_types && (new_event_time_in_ms != m_value.event_time_in_ms) )
-			return;
+	float animation_state_interval_time =
+		m_animation->time_driving_animation() ?
+		m_animation->time_driving_animation()->animation_state().animation_interval_time :
+		m_value.animation_interval_time;
+	u32 iteration						= 0;
+	for ( ;; ++iteration ) {
+		animation_interval const* current_interval	= m_animation->animation_intervals() + m_value.animation_interval_id;
+		if ( current_interval->length() < m_value.animation_interval_time )
+			m_value.animation_interval_time	= current_interval->length();
 
-		new_event_time					/= driving_animation_factor;
-		R_ASSERT_CMP					( m_value.event_time_in_ms, <=, new_event_time_in_ms );
-		m_value.event_time_in_ms		= new_event_time_in_ms;
-		m_value.animation_interval_time	= new_event_time;
-		m_value.event_type				|= event_type;
+		if ( iteration )
+			animation_state_interval_time	= m_value.animation_interval_time;
 
-		if ( m_value.event_type & time_event_animation_interval_ended ) {
-			if ( ++m_value.animation_interval_id == m_animation->animation_intervals_count() )
-				m_value.animation_interval_id	= m_animation->start_cycle_animation_interval_id( );
-
-			m_value.animation_interval_time	= 0.f;
+		n_ary_tree_animation_node& driving_animation =
+			*(m_animation->time_driving_animation() ? m_animation->time_driving_animation() : m_animation);
+		float time_scale;
+		if ( driving_animation.operands_count() &&
+			 (*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->is_time_scale() ) {
+			vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
+				m_value.event_time_in_ms,
+				m_value.animation_interval_time,
+				m_value.event_time_in_ms
+			);
+			(*driving_animation.operands( sizeof(n_ary_tree_animation_node) ))->accept( time_scale_calculator );
+			time_scale					= time_scale_calculator.time_scale();
 		}
-	}
-	else {
-		u8 temp = 10;
-		float const channel_event_time	= get_nearest_animation_interval_event_time( *current_interval, m_value.animation_interval_time, 0.f, event_type, temp, temp, true ); // sushi@TODO
-		R_ASSERT_CMP					( channel_event_time, >=, 0.f );
-		float const event_time			= channel_event_time;//? vostok::math::max( channel_event_time, 0.f );
-		float new_event_time			= event_time*driving_animation_factor;
-		u32 const new_event_time_in_ms	= get_time_in_ms( m_value.event_time_in_ms, m_value.animation_interval_time*driving_animation_factor, new_event_time, event_type );
-		if ( initial_event_types && (new_event_time_in_ms != m_value.event_time_in_ms) )
-			return;
+		else
+			time_scale					= 1.f;
 
-		new_event_time					/= driving_animation_factor;
-		R_ASSERT_CMP					( m_value.event_time_in_ms, <=, new_event_time_in_ms );
-		m_value.event_time_in_ms		= new_event_time_in_ms;
-		m_value.animation_interval_time	= new_event_time;
-		m_value.event_type				|= event_type;
+		if ( !initial_event_types && (time_scale == 0.f) ) {
+			vostok::animation::mixing::n_ary_tree_time_scale_calculator time_scale_calculator(
+				m_value.event_time_in_ms + 1,
+				m_value.animation_interval_time,
+				m_value.event_time_in_ms + 1
+			);
+			n_ary_tree_base_node* const time_scale_node =
+				driving_animation.operands_count() ?
+				*driving_animation.operands( sizeof(n_ary_tree_animation_node) ) :
+				0;
+			if ( time_scale_node && time_scale_node->is_time_scale() ) {
+				time_scale_node->accept	( time_scale_calculator );
+				time_scale				= time_scale_calculator.time_scale();
+			}
+			else
+				time_scale				= 1.f;
 
-		if ( m_value.event_type & time_event_animation_interval_ended ) {
-			if ( !m_value.animation_interval_id || (--m_value.animation_interval_id < m_animation->start_cycle_animation_interval_id()) )
-				m_value.animation_interval_id	= m_animation->animation_intervals_count() - 1;
-
-			m_value.animation_interval_time	= m_animation->animation_intervals()[m_value.animation_interval_id].length( );
+			if ( time_scale == 0.f ) {
+				m_value					= animation_event( u32(-1), 0, 0 );
+				m_animation				= 0;
+				return;
+			}
 		}
+
+		animation_interval const* current_driving_interval =
+			driving_animation.animation_intervals() + m_value.animation_interval_id;
+		float const driving_animation_factor = current_driving_interval->length() / current_interval->length();
+		m_value.event_type				= initial_event_types;
+		animation_event value			= m_value;
+		u16 event_type;
+		if ( time_scale >= 0.f ) {
+			if ( animation_state_interval_time > m_value.animation_interval_time )
+				animation_state_interval_time = m_value.animation_interval_time;
+
+			float new_event_time			= get_nearest_animation_interval_event_time(
+				*current_interval,
+				m_value.animation_interval_time,
+				current_interval->length(),
+				event_type,
+				m_value.channel_ids,
+				m_value.domain_data,
+				start_time_may_be_used
+			) * driving_animation_factor;
+			u32 const new_event_time_in_ms = get_time_in_ms(
+				m_value.event_time_in_ms,
+				animation_state_interval_time*driving_animation_factor,
+				new_event_time,
+				event_type
+			);
+			if ( initial_event_types && (new_event_time_in_ms != m_value.event_time_in_ms) )
+				return;
+
+			m_value.event_type |= event_type, new_event_time /= driving_animation_factor, m_value.event_time_in_ms = new_event_time_in_ms, m_value.animation_interval_time = new_event_time;
+
+			if ( m_value.event_type & time_event_animation_interval_ended ) {
+				if ( ++m_value.animation_interval_id == m_animation->animation_intervals_count() )
+					m_value.animation_interval_id = m_animation->start_cycle_animation_interval_id();
+				m_value.animation_interval_time = 0.f;
+			}
+		}
+		else {
+			if ( m_value.animation_interval_time > animation_state_interval_time )
+				animation_state_interval_time = m_value.animation_interval_time;
+
+			float new_event_time			= get_nearest_animation_interval_event_time(
+				*current_interval,
+				m_value.animation_interval_time,
+				0.f,
+				event_type,
+				m_value.channel_ids,
+				m_value.domain_data,
+				start_time_may_be_used
+			) * driving_animation_factor;
+			u32 const new_event_time_in_ms = get_time_in_ms(
+				m_value.event_time_in_ms,
+				animation_state_interval_time*driving_animation_factor,
+				new_event_time,
+				event_type
+			);
+			if ( initial_event_types && (new_event_time_in_ms != m_value.event_time_in_ms) )
+				return;
+
+			m_value.event_type |= event_type, new_event_time /= driving_animation_factor, m_value.event_time_in_ms = new_event_time_in_ms, m_value.animation_interval_time = new_event_time;
+
+			if ( m_value.event_type & time_event_animation_interval_ended ) {
+				if ( !m_value.animation_interval_id || (--m_value.animation_interval_id < m_animation->start_cycle_animation_interval_id()) )
+					m_value.animation_interval_id = m_animation->animation_intervals_count() - 1;
+				m_value.animation_interval_time = m_animation->animation_intervals()[m_value.animation_interval_id].length();
+			}
+		}
+
+		if ( initial_event_types || (m_value.event_time_in_ms != value.event_time_in_ms) )
+			break;
 	}
+
+	if ( (m_animation->playback_type() == play_once_and_remove_at_end) &&
+		 (m_value.event_type & time_event_animation_ended_in_positive_direction) )
+		m_value.event_type				|= time_event_animation_lexeme_ended;
 }
 
 n_ary_tree_animation_event_iterator& n_ary_tree_animation_event_iterator::operator ++	( )
