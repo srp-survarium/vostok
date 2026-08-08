@@ -325,7 +325,7 @@ bool animation_player::set_target_and_tick(
 	boost::function< float4x4( pcvoid ) > const&	get_transform_functor
 )
 {
-	if ( m_mixing_tree.animations_count( ) )
+	if ( m_mixing_tree.animations_count( ) > 0 )
 		tick								( current_time_in_ms );
 
 	bool result							= set_target( expression, current_time_in_ms, get_transform_functor );
