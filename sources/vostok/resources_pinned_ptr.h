@@ -14,8 +14,8 @@ template <class T>
 class pinned_ptr_base
 {
 protected:
-	pinned_ptr_base	(managed_resource_ptr ptr) : m_resource(ptr), m_data(ptr ? ptr->pin() : 0), m_size(ptr ? ptr->get_size() : 0) { }
-	pinned_ptr_base	(pinned_ptr_base const & other) : m_resource(other.m_resource), m_data(other.m_resource ? (pcbyte)other.m_resource->pin() : 0), m_size(other.m_resource ? other.m_resource->get_size() : 0) {}
+	explicit pinned_ptr_base	(managed_resource_ptr ptr) : m_resource(ptr), m_data(ptr ? ptr->pin() : 0), m_size(ptr ? ptr->get_size() : 0) { }
+	explicit pinned_ptr_base	(pinned_ptr_base const & other) : m_resource(other.m_resource), m_data(other.m_resource ? (pcbyte)other.m_resource->pin() : 0), m_size(other.m_resource ? other.m_resource->get_size() : 0) {}
 public:
 							~pinned_ptr_base() { if (m_resource) m_resource->unpin(m_data); }
 
@@ -48,9 +48,7 @@ template <class T>
 class pinned_ptr_const : public pinned_ptr_base<T const>
 {
 public:
-							pinned_ptr_const	(managed_resource_ptr ptr) : pinned_ptr_base<T const>(ptr) { }
-							pinned_ptr_const	(pinned_ptr_const<T> const & other) : pinned_ptr_base<T const>(other) {}
-	pinned_ptr_const<T>&	operator =			(pinned_ptr_const<T> const & other) { pinned_ptr_base<T const>::operator = ( other ); return *this; }
+							explicit pinned_ptr_const	(managed_resource_ptr ptr) : pinned_ptr_base<T const>(ptr) { }
 };
 
 template <class T>
