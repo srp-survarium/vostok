@@ -12,18 +12,6 @@
 #include <vostok/physics/bullet_utils.h>
 #include <vostok/collision/hit_targets_creation_utils.h>
 
-/* sushi@TODO
- * This module has problems with matching `switch` statements.
- * The problem is that Ghidra considers them to be a function return.
- * This can be solved by:
- * - generating object files manually (tiresome)
- * - possibly by activating more analyzers in Ghidra (increases iteration loops, but can be done in specific cases)
- * - by not relying on delinker and Ghidra (needs be explored further)
- *
- * There are also problems with sizes being allocated. I see the constants but I don't know where they are coming from.
- * This should be cleared from further usage
- */
-
 namespace vostok {
 namespace physics {
 
@@ -80,7 +68,6 @@ float4x4 bt_animated_rigid_body::get_bone_transform( const u32 index ) const
 	return from_bullet ( transform );
 }
 
-// sushi@TODO: switch statement problems
 static btCollisionShape* new_bt_primitive( const collision::primitive_type type, float3 const& dimension, memory::base_allocator* allocator )
 {
 	switch ( type )
@@ -111,17 +98,6 @@ static btCollisionShape* new_bt_primitive( const collision::primitive_type type,
 	}
 }
 
-// claude@NOTE: structure matches the target (statement count + named-local set
-// verified via structure-diff). Residual is the engine-wide strip_pointer
-// inline-vs-call LTCG wall: the gold build inlines memory::strip_pointer at every
-// VOSTOK_NEW/MALLOC/DELETE_IMPL site here (delinker renders the folded out-of-line
-// copy as boost::get_pointer<weapon_user_animations_selector>), our /Ox+/GL base
-// keeps the call. Proven decisive: a global __forceinline strip_pointer drives this
-// TU's allocation fns to 100% but regresses ~170 functions across ai/network/
-// particle/logging, so it is NOT a blanket forceinline - it is context-specific
-// LTCG we cannot reproduce per-site from source. Same cause in new_animated_rigid_body,
-// new_compound_shape_from_hit_targets_config, new_animated_bt_hit_model (docs/binary_matching
-// /patterns/strip-pointer-delete-resource.md).
 static btCompoundShape* new_bt_element_joint( configs::binary_config_value const& target, memory::base_allocator* allocator, collision::bone_collision_data* data )
 {
 	btCompoundShape* bt_shape = VOSTOK_NEW_IMPL( allocator, btCompoundShape );
@@ -142,11 +118,6 @@ static btCompoundShape* new_bt_element_joint( configs::binary_config_value const
 	return bt_shape;
 }
 
-// claude@NOTE: 12 statements + locals match the target. Beyond the strip_pointer
-// wall (see new_bt_element_joint), the gold build also INLINES new_bt_element_joint,
-// the bone_collision_data ctor (two fixed_string base-ctors) and buffer_vector::push_back
-// into the loop body (target 0x485 bytes vs base 0x142, base CALLs each helper). That is
-// LTCG inline-budget, not source-steerable; the loop's brace/statement shape is faithful.
 btCompoundShape* new_compound_shape_from_hit_targets_config( configs::binary_config_value const& config, geometries_type& geometries_data, memory::base_allocator* allocator )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];
@@ -187,13 +158,7 @@ static u32 calculate_bt_hit_target_size( configs::binary_config_value const& con
 	}
 }
 
-// claude@NOTE: target keeps this as a standalone symbol but the target PDB records it as
-// the DEMANGLED name `vostok::physics::calculate_bt_joint_size` while our base emits the
-// mangled `?calculate_bt_joint_size@physics@vostok@@YAIAB...` - objdiff/match.db pair by
-// exact symbol string, so the two never pair (same name-representation gap as the file-scope
-// console-var dynamic init/atexit pairs). Body is faithful (joint = primitive shape +
-// btCompoundShape). It is `static` with no caller (target has no call-site either), so the
-// base also DCEs it. Pairing is a tooling normalization issue, not source-steerable.
+// The target retains this helper even though no shipped call site references it.
 static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 {
 	collision::primitive_type type = (collision::primitive_type)(u32)config["type"];
@@ -213,27 +178,19 @@ static u32 calculate_bt_joint_size( configs::binary_config_value const& config )
 	}
 }
 
-// sushi@TODO: Constants need to be converted to proper `sizeof` operations.
-// STATIC_SIZE_ASSERT(bone_collision_data, 0x70);
 u32 calculate_bt_animated_body_size_from_hit_targets_config( configs::binary_config_value const& config )
 {
 	configs::binary_config_value const& targets_table = config["hit_targets"];
 	u32 hit_targets_count = targets_table.size( );
 
-	u32 result = 0x70 * hit_targets_count + 0x60;
+	u32 result = sizeof( collision::bone_collision_data ) * hit_targets_count + sizeof( btCompoundShape );
 
 	for ( u32 i = 0 ; i < hit_targets_count ; ++i )
-		result += calculate_bt_hit_target_size(targets_table[i]) + 0x60;
+		result += calculate_bt_hit_target_size(targets_table[i]) + sizeof( btCompoundShape );
 
 	return result;
 }
 
-// claude@NOTE: 6 statements + locals match the target. Two LTCG walls on top of the
-// strip_pointer one (see new_bt_element_joint): the gold build CALLs the
-// bt_animated_rigid_body ctor here while our base inlines it, and that ctor is itself
-// an optimized/frameless COMDAT (it inlines loose_ptr_base::loose_ptr_base -> pt3malloc,
-// ret 8, no ebp frame; our base CALLs loose_ptr_base instead). Both are inline-budget
-// decisions, not source-steerable.
 bt_animated_rigid_body* new_animated_rigid_body( btCompoundShape* shape, u16 game_material_id, memory::base_allocator* allocator )
 {
 	btVector3	local_inertia( 0.f, 0.f, 0.f );
