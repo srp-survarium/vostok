@@ -875,61 +875,54 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 	animation_state* current_animation_state		= m_animation_states;
 	animation_state* current_alive_animation_state	= current_animation_state;
 	n_ary_tree_animation_node* previous_animation	= 0;
-	for ( n_ary_tree_animation_node* current_animation = m_weight_root;
-		  current_animation; )
-	{
+	for ( n_ary_tree_animation_node* current_animation = m_weight_root; current_animation; ++current_animation_state ) {
 		if ( current_animation_state->event_iterator->event_time_in_ms == target_time_in_ms &&
 			 ( current_animation_state->event_iterator->event_type &
 			   time_event_animation_lexeme_ended ) )
 		{
-			animation_state** const end	= m_animation_events + m_animations_count;
-			std::remove						( m_animation_events, end, &current_animation->animation_state( ) );
+			std::remove						(
+				m_animation_events,
+				m_animation_events + m_animations_count,
+				&current_animation->animation_state( )
+			);
 			remove_animation				( current_animation, previous_animation );
-			++current_animation_state;
 			continue;
 		}
 
-		pcvoid const animated_object	= current_animation->animated_object( );
 		if ( std::find(
 				animated_objects.begin( ),
 				animated_objects.end( ),
-				animated_object
+				current_animation->animated_object( )
 			) == animated_objects.end( ) )
-			animated_objects.push_back	( animated_object );
+			animated_objects.push_back	( current_animation->animated_object( ) );
 
-		if ( current_animation_state != current_alive_animation_state )
+		if ( current_animation_state != current_alive_animation_state ) {
 			*current_alive_animation_state	= *current_animation_state;
-		current_animation->set_animation_state( *current_alive_animation_state );
+			current_animation->set_animation_state( *current_alive_animation_state );
+		}
 
+		++current_alive_animation_state;
 		previous_animation				= current_animation;
 		current_animation				= current_animation->m_next_weight_animation;
-		++current_alive_animation_state;
-		++current_animation_state;
 	}
 
 	if ( current_alive_animation_state != current_animation_state ) {
-		animation_state** event			= m_animation_events;
-		animation_state* const end		= m_animation_states + m_animations_count;
-		for ( animation_state* i = m_animation_states; i != end; ++i )
-			*event++					= i;
+		for ( animation_state* i = m_animation_states, * const e = i + m_animations_count, **j = m_animation_events; i != e; ++i, ++j )
+			*j						= i;
 
 		stlp_std::sort					(
 			m_animation_events,
 			m_animation_events + m_animations_count,
 			event_iterator_predicate( )
 		);
-
-		for ( animation_state* i = current_alive_animation_state;
-			  i != current_animation_state;
-			  ++i )
-			i->~animation_state			( );
 	}
 
+	for ( ; current_alive_animation_state != current_animation_state; ++current_alive_animation_state )
+		current_alive_animation_state->~animation_state( );
+
 	if ( m_animated_objects_count != animated_objects.size( ) ) {
-		animated_object_holder* alive		= m_animated_objects;
-		animated_object_holder* const end	=
-			m_animated_objects + m_animated_objects_count;
-		for ( animated_object_holder* i = m_animated_objects; i != end; ++i ) {
+		animated_object_holder* j			= m_animated_objects;
+		for ( animated_object_holder* i = m_animated_objects, * const e = i + m_animated_objects_count; i != e; ++i ) {
 			if ( std::find(
 					animated_objects.begin( ),
 					animated_objects.end( ),
@@ -937,9 +930,9 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 				) == animated_objects.end( ) )
 				continue;
 
-			if ( alive != i )
-				*alive					= *i;
-			++alive;
+			if ( j != i )
+				*j						= *i;
+			++j;
 		}
 
 		m_animated_objects_count		= animated_objects.size( );
@@ -954,14 +947,11 @@ bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 {
 	callback_generator_info const* callback_generators_head	= 0;
 	callback_generator_info* previous_generator_info			= 0;
-	animation_state const* const end							=
-		m_animation_states + m_animations_count;
-	for ( animation_state const* i = m_animation_states; i != end; ++i ) {
-		animation_event const& event	= *i->event_iterator;
-		if ( event.event_time_in_ms != target_time_in_ms )
+	for ( animation_state const* i = m_animation_states, * const e = i + m_animations_count; i != e; ++i ) {
+		if ( i->event_iterator->event_time_in_ms != target_time_in_ms )
 			continue;
 
-		u16 const event_type			= event.event_type;
+		u16 const event_type			= i->event_iterator->event_type;
 		if ( !( event_type & (
 			time_event_animation_lexeme_ended |
 			time_event_animation_interval_ended |
@@ -978,17 +968,18 @@ bool n_ary_tree::update_event_iterators_and_dispatch_callbacks(
 		if ( !animation.can_generate_events( ) )
 			continue;
 
+		callback_generator_info* const generator	=
+			static_cast< callback_generator_info* >( ALLOCA( sizeof( callback_generator_info ) ) );
 		u32 const animation_interval_id	=
 			( event_type & time_event_animation_interval_ended ) ?
 			i->previous_animation_interval_id :
 			i->animation_interval_id;
-		callback_generator_info* const generator	=
-			new ( ALLOCA( sizeof( callback_generator_info ) ) ) callback_generator_info(
+		new ( generator ) callback_generator_info(
 				animation.animated_object( ),
 				animation.animation_intervals( )[ animation_interval_id ].animation( ),
 				i->animation_time,
 				event_type,
-				event.channel_ids,
+				i->event_iterator->channel_ids,
 				animation.user_data,
 				u8( animation_interval_id )
 			);
