@@ -563,12 +563,6 @@ public:
         VertexFormatComputedHash.Set(sourceKey, result);
     }
 
-    // claude@NOTE: structure-fixed (removed the stock outer FF_Blending|FF_Cxform guard
-    // around the cxform loop - survarium's instantiation runs it unconditionally). Byte
-    // residual is the survarium-modified GFx ShaderDesc/FF_ enum divergence: FF_Blending
-    // is 0x10 here vs 0x20 in our Render_Primitive.h, and the blending flag is read/written
-    // through pfill rather than the fillFlags reference. Needs survarium's modified GFx
-    // shader header / FF_ enum to close further.
     const Shader& SetPrimitiveFill(PrimitiveFill* pfill, unsigned& fillFlags, unsigned batchType, const VertexFormat* pvf, unsigned meshCount,
                                    const MatrixState* Matrices, const Primitive::MeshEntry* pmeshes, ShaderInterface* psi)
     {
