@@ -45,22 +45,22 @@ public:
 	inline	bool					has_bone			( pcstr id ) const;
 	inline	float					get_frames_per_second( ) const { return 30.f; }
 public:
-			u32						bones_count			( ) const { return m_bone_count; }
+	inline	u32						bones_count			( ) const { return m_bone_count; }
 	inline	float					max_time_in_frames	( ) const { return bone_data()[0].max_time(); }
 	inline	float					min_time_in_frames	( ) const { return bone_data()[0].min_time(); }
 	inline	float					length_in_frames	( ) const { return max_time_in_frames() - min_time_in_frames(); }
 	inline	animation_types_enum	animation_type		( ) const { return m_animation_type; }
 
 public:
-			bone_names const&		get_bone_names		( ) const { return m_bone_names; }
+	inline	bone_names const&		get_bone_names		( ) const { return m_bone_names; }
 
 	inline	animation_event_channels const& event_channels		( ) const;
 
 private:
-						cubic_spline_skeleton_animation	( bi_spline_skeleton_animation_baked const& animation );
+		explicit			cubic_spline_skeleton_animation	( bi_spline_skeleton_animation_baked const& animation );
 						~cubic_spline_skeleton_animation( );
-			bone_animation*			bone_data			( )			{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
-			bone_animation const*	bone_data			( ) const	{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
+	inline	bone_animation*			bone_data			( )			{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
+	inline	bone_animation const*	bone_data			( ) const	{ return (bone_animation*) ( pbyte(this) + m_internal_memory_position ); }
 
 private:
 	bone_names						m_bone_names;
