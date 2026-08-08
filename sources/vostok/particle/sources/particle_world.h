@@ -22,11 +22,9 @@ struct base_particle;
 
 class particle_world:
 	public particle::world,
-	private boost::noncopyable
+	public boost::noncopyable
 {
-	// The target stores resource_ptr elements in an offset-based no-debug intrusive list;
-	// the available member-pointer list supports only raw node pointers.
-	typedef vostok::intrusive_list<particle_system_instance_impl, particle_system_instance_impl*, &particle_system_instance_impl::m_next> particle_instances_list_type;
+	typedef vostok::intrusive_list<particle_system_instance_impl, particle_system_instance_impl_ptr, &particle_system_instance_impl::m_next> particle_system_instance_impl_list;
 
 
 public:
@@ -37,6 +35,7 @@ public:
 	virtual	void	remove_particle_system_instance		(particle_system_instance* instance);
 	virtual	void	change_material						( particle_emitter_instance& instance, resources::unmanaged_resource_ptr const& material );
 	virtual void	get_render_emitter_instances		(float4x4 const& view_proj_matrix, render_particle_emitter_instances_type& out_particle_emitter_instances);
+	virtual void	get_render_emitter_instances		( particle::particle_system_instance_ptr instance, render_particle_emitter_instances_type& out_particle_emitter_instances );
 	
 	virtual	void	play							( particle_system_instance_ptr particle_system_instance, vostok::math::float4x4 const& transform, bool use_transform, bool always_loop );
 	virtual	void	stop							( particle_system_instance_ptr particle_system_instance, float time );
@@ -57,8 +56,6 @@ public:
 	virtual	void	gather_stats					( particle_system** preview_particle_system, preview_particle_emitter_info* out_info );
 #endif // #ifndef MASTER_GOLD
 
-	virtual void	get_render_emitter_instances	( particle::particle_system_instance_ptr instance, render_particle_emitter_instances_type& out_particle_emitter_instances );
-	
 	inline	engine&	engine								( ) const { return m_engine; }
 
 public:
@@ -85,13 +82,15 @@ private:
 
 private:
 	particle_allocator_type			m_allocator;
-	particle_instances_list_type	m_ticked_instances_list;
+	particle_system_instance_impl_list	m_ticked_instances_list;
 	particle::engine&				m_engine;
 	u32								m_num_particles;
 
 public:
 	u32								m_max_particles;
 }; // class particle_world
+
+STATIC_SIZE_ASSERT(particle_world, 0x188);
 
 } // namespace particle
 } // namespace vostok

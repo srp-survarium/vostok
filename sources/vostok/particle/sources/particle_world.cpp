@@ -140,7 +140,7 @@ void particle_world::set_max_particles(u32 num_max_particles)
 
 void particle_world::check_lods(vostok::math::float3 const& view_location)
 {
- 	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
  	while(instance)
  	{
  		instance->check_lods(view_location);
@@ -152,7 +152,7 @@ u32 particle_world::calc_num_new_particles( float time_delta )
 {
 	u32 total_summ = 0;
 	
- 	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
  	while(instance)
  	{
  		total_summ += instance->calc_num_new_particles(time_delta);
@@ -165,7 +165,7 @@ u32 particle_world::calc_num_max_particles(float time_delta)
 {
 	u32 total_summ = 0;
 
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
 		total_summ += instance->calc_num_max_particles(time_delta);
@@ -178,7 +178,7 @@ u32 particle_world::remove_dead_particles()
 {
 	u32 num_removed = 0;
 
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
 		num_removed += instance->remove_dead_particles();
@@ -189,7 +189,7 @@ u32 particle_world::remove_dead_particles()
 
 void particle_world::remove_overflowing_particles()
 {
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
 		instance->remove_overflowing_particles();
@@ -200,7 +200,7 @@ void particle_world::remove_overflowing_particles()
 
 void particle_world::shrink_particles( float time_delta, float limit_over_total, u32 num_need_particles)
 {
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
 		instance->shrink_particles(time_delta, limit_over_total, num_need_particles);
@@ -230,7 +230,7 @@ void particle_world::tick( float time_delta, vostok::math::float4x4 const& view_
 	
 	remove_overflowing_particles();
 	
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
 		bool is_finished = false;
@@ -240,10 +240,10 @@ void particle_world::tick( float time_delta, vostok::math::float4x4 const& view_
 			is_finished = instance->tick( time_delta );
 		}
 		
-		particle_system_instance_impl* next = m_ticked_instances_list.get_next_of_object(instance);
+		particle_system_instance_impl_ptr next = m_ticked_instances_list.get_next_of_object(instance);
 		if (is_finished && !instance->m_child_played)
 		{
-			remove(instance);
+			remove(instance.c_ptr());
 		}
 		
 		instance = next;
@@ -254,21 +254,21 @@ void particle_world::tick( float time_delta, vostok::math::float4x4 const& view_
 void particle_world::add_particle_system_instance(particle_system_instance* instance)
 {
 	particle_system_instance_impl* impl = static_cast_checked<particle_system_instance_impl*>( instance );
-	if ( !m_ticked_instances_list.find( impl ) )
-	{
-		m_ticked_instances_list.push_back( impl );
-	}
+	if ( m_ticked_instances_list.find( impl ) )
+		return;
+
+	m_ticked_instances_list.push_back( impl );
 }
 
 void particle_world::remove_particle_system_instance(particle_system_instance* in_instance)
 {
-	particle_system_instance_impl* inst = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr inst = m_ticked_instances_list.front();
 	
 	bool found = false;
 	
 	while(inst)
 	{
-		if (inst==in_instance)
+		if (inst.c_ptr()==in_instance)
 		{
 			found = true;
 			break;
@@ -281,7 +281,6 @@ void particle_world::remove_particle_system_instance(particle_system_instance* i
 	
 	inst->stop(0.0f);
 	inst->remove_particles();
-	
 	m_ticked_instances_list.erase( static_cast_checked<particle_system_instance_impl*>(in_instance) );
 }
 
@@ -289,7 +288,7 @@ void particle_world::get_render_emitter_instances( particle::particle_system_ins
 {
 	// TODO: duplicated code!
 	
-	particle_system_instance_impl* instance =  static_cast_checked<particle_system_instance_impl*>(in_instance.c_ptr());
+	particle_system_instance_impl_ptr instance = static_cast_checked<particle_system_instance_impl*>(in_instance.c_ptr());
 	
 	if (!instance->get_ticked() || !instance->get_visible())
 	{
@@ -331,7 +330,7 @@ void particle_world::get_render_emitter_instances( float4x4 const& view_proj_mat
 {
 	math::frustum view_frustum(view_proj_matrix);
 	
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	
 	while(instance)
 	{
@@ -497,10 +496,10 @@ void particle_world::show									( particle_system** in_particle_system )
 {
 	preview_particle_system* preview_ps = *(preview_particle_system**)in_particle_system;
 	
-	particle_system_instance_impl* instance = m_ticked_instances_list.front();
+	particle_system_instance_impl_ptr instance = m_ticked_instances_list.front();
 	while(instance)
 	{
-		particle_system_instance_impl* next = m_ticked_instances_list.get_next_of_object(instance);
+		particle_system_instance_impl_ptr next = m_ticked_instances_list.get_next_of_object(instance);
 		
 		instance->set_ticked(false);
 		

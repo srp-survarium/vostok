@@ -18,7 +18,7 @@ particle_system_instance_impl::particle_system_instance_impl( ):
 {
 	m_pinned			 = false;
 	
-	m_is_playing		 = false;
+	threading::interlocked_exchange( m_is_playing, false );
 	m_no_more_create	 = false;
 	
 	m_paused			 = false;
