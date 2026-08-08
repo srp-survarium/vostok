@@ -35,7 +35,7 @@ inline vertex_id_type graph_wrapper::vertex_id(
 ) const
 {
 	render::culling::portal const& current_portal = m_graph->get_portals( )[vertex_id.portal_id];
-	u32 const current_sector_id = current_portal.get_sectors( )[vertex_id.incoming_sector_index ? 0 : 1];
+	u32 const current_sector_id = vertex_id.incoming_sector_index ? current_portal.get_sectors( )[0] : current_portal.get_sectors( )[1];
 	render::culling::portal const& next_portal = m_graph->get_portals( )[*iterator];
 
 	vertex_id_type result;
