@@ -43,7 +43,6 @@ u32 bt_ghost_object::get_overlapping_objects_count( ) const
 
 u16 bt_ghost_object::get_collision_group( ) const
 {
-	// sushi@TODO: ASSERT?
 	return m_bt_object->getBroadphaseHandle( )->m_collisionFilterGroup;
 }
 
@@ -59,15 +58,13 @@ bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 con
 
 void destroy_ghost_object( bt_ghost_object* obj )
 {
-	bt_collision_shape* shape = obj->m_shape.c_ptr(); // sushi@TODO: Understand and document why the object is destroyed outside of `resource_ptr`.
+	bt_collision_shape* shape = obj->m_shape.c_ptr();
 	VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );
 	VOSTOK_DELETE_IMPL( *g_ph_allocator, obj );
 }
 
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )
 {
-	// claude@NOTE: one statement, no bt_test_object local (target has 0 body locals) -> STRUCTURE MATCH.
-	// Residual is arg-eval-order: target inlines get_bt_collision_obect() and schedules it first; not steerable.
 	static_cast<bullet_physics_world*>(world)->get_bt_internal( )->contactPairTest( m_bt_object, object->get_bt_collision_obect( ), contact_result_callback( &predicate ) );
 }
 
@@ -122,17 +119,12 @@ static void get_non_compound_shapes_centers( btCollisionShape* shape, btTransfor
 	}
 }
 
-// sushi@TODO: The problem with `operator->` somehow not being inlined on Master Gold with debug usage.
 void bt_ghost_object::non_compound_shapes_centers( vectora<float3>& centres_results ) const
 {
 	btTransform& transform = m_bt_object->getWorldTransform( );
-	// claude@NOTE: target keeps m_shape's operator* deref as its own out-of-line CALL
-	// (a 3rd statement at line +1); our /Od base inlines the deref into the call line.
-	// intrusive_ptr operator* inline-vs-call wall (strip_pointer family); not steerable.
 	get_non_compound_shapes_centers( m_shape->get_bt_shape( ), transform, centres_results );
 }
 
-// sushi@NOTE: Doesn't match function body, also might be some other type of cast
 void bt_ghost_object::insert( world* w, u16 group, u16 mask )
 {
 	static_cast<bullet_physics_world*>(w)->get_bt_internal( )->addCollisionObject( m_bt_object, group, mask );
