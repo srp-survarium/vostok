@@ -402,7 +402,7 @@ void animation_player::reset( const bool clear_callbacks )
 	if ( clear_callbacks )
 	{
 		destroy_subscriptions				( m_first_subscribed_channel );
-		m_first_subscribed_channel = 0, m_callbacks_buffer = mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
+		m_first_subscribed_channel = 0, new (&m_callbacks_buffer) mutable_buffer( m_callbacks_buffer_raw, callbacks_buffer_size );
 	}
 }
 
