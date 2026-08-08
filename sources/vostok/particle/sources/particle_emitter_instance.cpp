@@ -682,7 +682,7 @@ void particle_emitter_instance::on_material_loaded(vostok::resources::queries_re
 		change_material							( result[0].get_unmanaged_resource() );
 	
 	if (m_cook_data_to_delete)
-		VOSTOK_DELETE_IMPL(&::vostok::memory::g_mt_allocator, m_cook_data_to_delete);
+		MT_DELETE(m_cook_data_to_delete);
 	//m_particle_system_instance_ptr = 0;
 }
 
