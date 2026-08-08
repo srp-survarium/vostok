@@ -16,14 +16,14 @@
 namespace survarium {
 
 // flash_value stores a GFx::Value in its opaque body buffer.
-Scaleform::GFx::Value* gfx( flash_value const* value )
+Scaleform::GFx::Value& gfx( flash_value const& v )
 {
-	return ( Scaleform::GFx::Value* )( value->body );
+	return *( Scaleform::GFx::Value* )( v.body );
 }
 
-Scaleform::GFx::Value& gfx( flash_value const& value )
+Scaleform::GFx::Value* gfx( flash_value const* v )
 {
-	return *( Scaleform::GFx::Value* )( value.body );
+	return ( Scaleform::GFx::Value* )( v->body );
 }
 
 flash_value::flash_value( )
@@ -41,14 +41,17 @@ void flash_value::SetBoolean( bool value )
 	gfx( this )->SetBoolean( value );
 }
 
+// claude@NOTE: the target inlines the string assignments; this compiler island keeps them out of line.
 void flash_value::SetString( pcstr value )
 {
-	*gfx( this ) = Scaleform::GFx::Value( value );
+	Scaleform::GFx::Value vv( value );
+	*gfx( this ) = vv;
 }
 
 void flash_value::SetStringW( wchar_t const* value )
 {
-	*gfx( this ) = Scaleform::GFx::Value( value );
+	Scaleform::GFx::Value vv( value );
+	*gfx( this ) = vv;
 }
 
 void flash_value::SetInt( s32 value )
@@ -86,14 +89,15 @@ void flash_value::GetMember( pcstr member_name, flash_value* value )
 	gfx( this )->GetMember( member_name, gfx( value ) );
 }
 
-void flash_value::SetElement( u32 index, flash_value& value )
+void flash_value::SetElement( u32 idx, flash_value& value )
 {
-	gfx( this )->SetElement( index, gfx( value ) );
+	gfx( this )->SetElement( idx, gfx( value ) );
 }
 
-void flash_value::SetElement( u32 index, pcstr value )
+// claude@NOTE: the target passes the string argument in ESI through a custom LTCG convention.
+void flash_value::SetElement( u32 idx, pcstr value )
 {
-	gfx( this )->SetElement( index, Scaleform::GFx::Value( value ) );
+	gfx( this )->SetElement( idx, Scaleform::GFx::Value( value ) );
 }
 
 void flash_value::PushBack( flash_value& value )
@@ -202,8 +206,8 @@ flash_external_handler::~flash_external_handler( )
 	delete impl;
 }
 
-flash_function_handler_impl::flash_function_handler_impl( flash_function_handler& handler )
-	:	owner	( handler )
+flash_function_handler_impl::flash_function_handler_impl( flash_function_handler& o )
+	:	owner	( o )
 {
 }
 

@@ -23,7 +23,6 @@ namespace survarium {
 static vostok_file_opener		g_file_opener;
 static vostok_scaleform_log		g_vostok_logger;
 static void ( *g_log_output_ptr )( u8, pcstr );
-static bool						created_image_creator;
 
 void* scaleform_engine::xrSysAllocMalloc::Alloc( u32 size, u32 align )
 {
@@ -48,23 +47,23 @@ void scaleform_engine::xrSysAllocMalloc::Free( void* ptr, u32 size, u32 align )
 	m_mem_free_ptr( ( u8* )ptr - ( ( u32* )ptr )[ -1 ] );
 }
 
-void* scaleform_engine::xrSysAllocMalloc::Realloc( void* old_ptr, u32 old_size, u32 new_size, u32 align )
+void* scaleform_engine::xrSysAllocMalloc::Realloc( void* oldPtr, u32 oldSize, u32 newSize, u32 align )
 {
-	void*	new_ptr	= Alloc( new_size, align );
+	void*	new_ptr	= Alloc( newSize, align );
 	if ( new_ptr )
 	{
-		memcpy( new_ptr, old_ptr, new_size < old_size ? new_size : old_size );
-		Free( old_ptr, old_size, align );
+		memcpy( new_ptr, oldPtr, newSize < oldSize ? newSize : oldSize );
+		Free( oldPtr, oldSize, align );
 	}
 	return new_ptr;
 }
 
-Scaleform::File* vostok_file_opener::OpenFile( pcstr url, s32 flags, s32 mode )
+Scaleform::File* vostok_file_opener::OpenFile( pcstr purl, s32 flags, s32 mode )
 {
 	if ( cached_file.raw_data )
-		return SF_NEW Scaleform::MemoryFile( url, ( const Scaleform::UByte* )cached_file.raw_data, cached_file.raw_data_size );
+		return SF_NEW Scaleform::MemoryFile( purl, ( const Scaleform::UByte* )cached_file.raw_data, cached_file.raw_data_size );
 
-	return Scaleform::GFx::FileOpener::OpenFile( url, flags, mode );
+	return Scaleform::GFx::FileOpener::OpenFile( purl, flags, mode );
 }
 
 void vostok_scaleform_log::LogMessageVarg( Scaleform::LogMessageId message_id, pcstr fmt, va_list args )
@@ -114,8 +113,10 @@ void scaleform_engine::destroy( )
 	Scaleform::GFx::System::Destroy( );
 }
 
-flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr file_name )
+flash_movie* flash_factory::build_movie( void* raw_data, u32 raw_data_size, pcstr movie_name )
 {
+	static bool created_image_creator;
+
 	if ( !created_image_creator )
 	{
 		created_image_creator	= true;
@@ -124,18 +125,21 @@ flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr fi
 		m_gfx_loader->SetImageCreator( image_creator );
 	}
 
-	g_file_opener.cached_file.raw_data		= buffer;
-	g_file_opener.cached_file.raw_data_size	= buffer_size;
+	g_file_opener.cached_file.raw_data		= raw_data;
+	g_file_opener.cached_file.raw_data_size	= raw_data_size;
 
 	flash_movie*	movie	= new flash_movie;
-	movie->m_movie_def	= m_gfx_loader->CreateMovie( file_name, 0, 0 );
+	movie->m_movie_def	= m_gfx_loader->CreateMovie( movie_name, 0, 0 );
 
 	g_file_opener.cached_file.raw_data		= NULL;
 	g_file_opener.cached_file.raw_data_size	= 0;
 
-	Scaleform::Render::ThreadCommandQueue*		render_queue	= m_render_thread_queue->impl;
-	Scaleform::GFx::MovieDef*					movie_def		= movie->m_movie_def;
-	Scaleform::GFx::MemoryParams					memory_params; movie->m_movie	= movie_def->CreateInstance( memory_params, true, NULL, render_queue );
+	movie->m_movie	= movie->m_movie_def->CreateInstance(
+		Scaleform::GFx::MemoryParams( ),
+		true,
+		NULL,
+		m_render_thread_queue->impl
+	);
 	movie->m_movie->SetUserData( movie );
 	movie->m_movie->SetMouseCursorCount( 1 );
 	movie->m_movie->SetControllerCount( 1 );
@@ -145,14 +149,14 @@ flash_movie* flash_factory::build_movie( void* buffer, u32 buffer_size, pcstr fi
 }
 
 void scaleform_engine::initialize(
-		void* ( *alloc )( u32 ),
-		void ( *free )( void* ),
-		void ( *log )( u8, pcstr )
+		void* ( *alloc_function )( u32 ),
+		void ( *free_function )( void* ),
+		void ( *log_function )( u8, pcstr )
 	)
 {
-	static xrSysAllocMalloc scaleform_alloc( alloc, free );
+	static xrSysAllocMalloc scaleform_alloc( alloc_function, free_function );
 	Scaleform::GFx::System::Init( &scaleform_alloc );
-	g_log_output_ptr = log;
+	g_log_output_ptr = log_function;
 }
 
 flash_text_manager* flash_factory::create_text_manager( )
@@ -160,7 +164,7 @@ flash_text_manager* flash_factory::create_text_manager( )
 	return new flash_text_manager( m_gfx_loader );
 }
 
-flash_factory::flash_factory( scaleform_game_engine& engine )
+flash_factory::flash_factory( scaleform_game_engine& game_engine )
 {
 	m_gfx_loader	= new Scaleform::GFx::Loader;
 	m_gfx_loader->SetFileOpener( &g_file_opener );
@@ -182,7 +186,7 @@ flash_factory::flash_factory( scaleform_game_engine& engine )
 	image_handlers->AddHandler( &Scaleform::Render::DDS::FileReader::Instance );
 	m_gfx_loader->SetImageFileHandlerRegistry( image_handlers );
 
-	m_render_thread_queue	= new scaleform_render_command_queue( engine );
+	m_render_thread_queue	= new scaleform_render_command_queue( game_engine );
 }
 
 } // namespace survarium

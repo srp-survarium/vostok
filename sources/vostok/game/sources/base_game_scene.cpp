@@ -15,6 +15,7 @@
 #include <vostok/sound/world.h>
 #include <vostok/sound/world_user.h>
 #include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_factory.h>
 #include <vostok/scaleform/sources/flash_text_manager.h>
 #include <vostok/memory_extensions.h>
 #include <vostok/console_command.h>
@@ -203,16 +204,10 @@ swf_input_translator& base_game_scene::input_translator( )
 	return m_game.input_translator( );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on the render facade (renderer::show_text_manager) + the
-// flash_text_manager(Scaleform::GFx::Loader*) ctor. Target body:
-//   m_text_manager = NEW( flash_text_manager )( m_game.get_flash_factory()...loader );
-//   m_text_manager->set_viewport( output_window_size( ).x, output_window_size( ).y );
-//   renderer( ).show_text_manager( render_scene_view( ), m_text_manager );
-// (the 2 structure stmts are the alloc+set_viewport and the renderer call). Needs the
-// render facade show_text_manager + output_window_size() (both blocked).
 void base_game_scene::create_text_manager( )
 {
+	m_text_manager = m_game.get_flash_factory( ).create_text_manager( );
+	show_text_manager( m_text_manager );
 }
 
 void base_game_scene::on_after_tick( )

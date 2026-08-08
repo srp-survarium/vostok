@@ -25,7 +25,7 @@ void flash_renderer::present( flash_movie** movies, u32 movies_count, flash_text
 		Scaleform::Render::TreeRootDisplayHandle& handle = *movie->m_handle;
 		m_R2dRenderer->BeginFrame( );
 		if ( handle.NextCapture( m_R2dRenderer->GetContextNotify( ) ) )
-			m_R2dRenderer->Display( handle.GetRenderEntry( ) );
+			m_R2dRenderer->Display( handle );
 		m_R2dRenderer->EndFrame( );
 	}
 
@@ -41,7 +41,7 @@ void flash_renderer::present( flash_movie** movies, u32 movies_count, flash_text
 			text_manager->text_manager_impl->GetDisplayHandle( );
 		m_R2dRenderer->BeginFrame( );
 		if ( handle.NextCapture( m_R2dRenderer->GetContextNotify( ) ) )
-			m_R2dRenderer->Display( handle.GetRenderEntry( ) );
+			m_R2dRenderer->Display( handle );
 		m_R2dRenderer->EndFrame( );
 	}
 }

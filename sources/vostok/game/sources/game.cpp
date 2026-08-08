@@ -1073,16 +1073,11 @@ void scaleform_movie_cook::translate_query( resources::query_result_for_cook& pa
 	resources::query_resources		( &resources::create_request( parent.get_requested_path( ), resources::raw_data_class ), 1, boost::bind( &scaleform_movie_cook::on_raw_data_loaded, this, _1, &parent ), g_allocator, NULL, &parent );
 }
 
-// claude@NOTE: 2-statement target. `delete movie` byte-residual: our scaleform/flash_movie.h
-// declares flash_movie with a TRIVIAL dtor, so the delete folds into operator-delete only; the
-// target's flash_movie dtor zeroes its 3 leading members first (its own statement) -> base
-// merges line 1279 into 1280. The VOSTOK_DELETE_IMPL half is the usual inline-vs-call allocator
-// wall (delete_helper out-of-line). Both are cross-module, not steerable from here.
 void scaleform_movie_cook::delete_resource( resources::resource_base* resource )
 {
-	delete							static_cast< flash_movie_resource* >( resource )->movie;
+	m_factory.destroy_movie			( static_cast< flash_movie_resource* >( resource )->movie );
 
-	VOSTOK_DELETE_IMPL				( g_allocator, resource );
+	VOSTOK_DELETE_IMPL				( *g_allocator, resource );
 }
 
 void scaleform_movie_cook::on_raw_data_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )

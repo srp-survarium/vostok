@@ -4,11 +4,11 @@
 
 // Scaleform-module /OPT:REF reachability anchor. The survarium scaleform
 // wrappers (flash_factory / flash_movie / flash_text(_manager) / flash_renderer /
-// scaleform_render_command(_queue(_impl)) / scaleform_engine / vostok_scaleform_log /
-// vostok_file_opener) are reached only through the real engine startup, which is
-// a never-instantiated stub in our sources, so /OPT:REF would strip their matched
-// out-of-line bodies. use_scaleform() references every out-of-line wrapper method
-// so the linker keeps them in the base EXE for the delinker to score.
+// scaleform_render_command(_queue(_impl)) / vostok_scaleform_log /
+// vostok_file_opener) are not all reached through the reconstructed game/render
+// owners yet, so /OPT:REF would strip their matched out-of-line bodies.
+// use_scaleform() references those remaining methods so the linker keeps them in
+// the base EXE for the delinker to score.
 //
 // Self-guarded (s_run is never set), so the placeholder objects are never actually
 // constructed/dereferenced; the compiler still emits every reference. Every scalar
@@ -16,8 +16,7 @@
 // the sole caller with a constant argument and const-propagate it into the matched
 // bodies.
 //
-// Retire once the real engine call graph (the scaleform_game_engine startup) reaches
-// these for itself.
+// Retire each reference once its real owner reaches it.
 
 #include "pch.h"
 
@@ -61,10 +60,6 @@ void use_scaleform( )
 	scaleform_game_engine&	engine	= *s_engine;
 	const u32				any_u32	= s_u32;
 	const float				any_f	= s_f;
-
-	// scaleform_engine namespace free functions + the allocator hook
-	scaleform_engine::initialize( 0, 0, 0 );
-	scaleform_engine::destroy( );
 
 	// flash_factory
 	flash_factory	factory( engine );
@@ -123,9 +118,11 @@ void use_scaleform( )
 	command.thread_command	= s_command;
 	command.execute( );
 
-	// flash_value: SetConvertStringW is the only out-of-line value.cpp method not
-	// reached by the game anchors (game uses the rest); pin it here.
+	// flash_value: keep the generic GetVariable path alongside the methods not
+	// otherwise reached by reconstructed owners. The sole live game call passes
+	// "root.chat", which lets LTCG replace GetVariable's path parameter.
 	flash_value	value;
+	movie.GetVariable( &value, s_str );
 	value.SetConvertStringW( );
 }
 
