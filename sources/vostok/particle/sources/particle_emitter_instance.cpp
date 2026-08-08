@@ -218,7 +218,7 @@ void particle_emitter_instance::play_child( particle_event* evt, vostok::math::f
 		for (u32 i=0; i<m_emitter.m_particle_system->m_lods[lod_index].m_num_emitters; i++)
 		{
 			particle_emitter* emitter = &m_emitter.m_particle_system->m_lods[lod_index].m_emitters_array[i];
-			if (emitter->m_event!=evt)
+			if (emitter->m_event!=evt || !emitter->get_enable())
 				continue;
 			
 			found_emitter = true;
