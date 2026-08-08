@@ -71,19 +71,24 @@ long ov_tell_func(void *datasource)
 u32 decompress(OggVorbis_File* ovf, pbyte dest, u32& pcm_pointer, u32 bytes_needed)
 {
 	int			current_section;
+
 	u32			total_readed	= 0;
 	long			ret;
 
 	ov_pcm_seek	(ovf, pcm_pointer);
 
+	int			bigendianp		= 0;
+
+
 	// Read loop
+
 	while(total_readed < bytes_needed)
 	{
 		char*	dest_ptr	= (char*)(dest+total_readed);
 		ret					= ov_read(	ovf, 
 										dest_ptr, 
 										bytes_needed-total_readed, 
-										0, 
+									bigendianp, 
 										2, 
 										1, 
 										&current_section
