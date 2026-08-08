@@ -30,23 +30,28 @@ mouse_button mouse::convert_to_binder_mouse_button	( s32 receiver_button )
 void mouse::process		( handlers_type& handlers )
 {
 	u16 const changed_buttons	= u16( m_current_state.buttons ^ m_previous_state.buttons );
-
 	handlers_type::iterator const it_e = handlers.end();
-	for ( u16 i = u16( m_current_state.buttons & changed_buttons ); i; i &= i - 1 )
+
+	for ( u16 i = u16( m_current_state.buttons & changed_buttons ); i; i &= i - 1 ) {
 		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
-			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_down )
-			   | (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_hold ) )
+		{
+			mouse_button const button = convert_to_binder_mouse_button( i & ~( i - 1 ) );
+			bool const down = (*it)->on_mouse_key_action( &m_world, button, ms_key_down ), hold = (*it)->on_mouse_key_action( &m_world, button, ms_key_hold );
+			if ( down || hold )
 				break;
+		}
+	}
 
 	for ( u16 i = u16( ~m_current_state.buttons & changed_buttons ); i; i &= i - 1 )
 		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
 			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_up ) )
 				break;
 
-	for ( u16 i = u16( m_current_state.buttons & m_previous_state.buttons ); i; i &= i - 1 )
+	for ( u16 i = u16( m_previous_state.buttons & m_current_state.buttons ); i; i &= i - 1 )
 		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
 			if ( (*it)->on_mouse_key_action( &m_world, convert_to_binder_mouse_button( i & ~( i - 1 ) ), ms_key_hold ) )
 				break;
+
 
 	if ( m_current_state.x || m_current_state.y || m_current_state.z )
 		for ( handlers_type::iterator it = handlers.begin(); it != it_e; ++it )
