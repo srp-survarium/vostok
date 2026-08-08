@@ -14,29 +14,34 @@ using vostok::input::receiver::keyboard;
 
 void keyboard::process		( handlers_type& handlers )
 {
-	for ( u32 i = 0; i < m_current_events_count; ++i ) {
+
+	for ( u32 i = 0; i < m_current_events_count; ++i )
+	{
 		enum_keyboard const		key = enum_keyboard( m_current_events[ i ].dwOfs );
-		bool const				down = is_key_down( (char)m_current_events[ i ].dwData );
-		if ( down ) {
+		if ( m_current_events[ i ].dwData & 0x80 )
+		{
 			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
 				if ( (*it)->on_keyboard_action	( &m_world, key, kb_key_down ) )
 					break;
 		}
-		else {
+		else
+		{
 			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
 				if ( (*it)->on_keyboard_action	( &m_world, key, kb_key_up ) )
 					break;
 		}
 	}
 
-	for ( u32 i = 0; i < 256; ++i ) {
-		if ( m_current_key_state[ i ] ) {
+
+	for ( u32 i = 0; i < 256; ++i )
+	{
+		if ( m_current_key_state[ i ] )
+		{
 			for ( handlers_type::iterator it = handlers.begin(), it_e = handlers.end(); it != it_e; ++it )
 				if ( (*it)->on_keyboard_action	( &m_world, enum_keyboard( i ), kb_key_hold ) )
 					break;
 		}
 	}
-
 	m_current_events_count	= 0;
 }
 
