@@ -22,13 +22,8 @@ static void save_minidump						( pcstr const output_file_name, _EXCEPTION_POINTE
 
 	string_path					file_name;
 	strcpy_s					( file_name, vostok::debug::debug_engine()->current_directory() );
-	// claude@NOTE: structure matches (20/20); only byte residual is this strcat_s -
-	// target CALLS the out-of-line strcat_s<260> template-instance COMDAT (the same
-	// instance __delayLoadHelper2 emits, reused via /OPT:ICF), our /Ob2 build INLINES
-	// the template body to a 3-arg _strcat_s. Both sides spell the array form
-	// strcat_s(file_name, library_id); the inline-vs-call choice on that COMDAT is a
-	// cross-TU /Ob2+ICF decision (the adjacent strcpy_s, identically spelled, is inlined
-	// in BOTH and matches) - not source-steerable from this TU.
+	// Target calls the shared strcat_s<260> COMDAT reused through ICF; this /Ob2
+	// caller inlines the same array overload to _strcat_s.
 	strcat_s					( file_name, library_id );
 	library_handle				= LoadLibrary ( file_name );
 

@@ -171,16 +171,9 @@ void vostok::debug::platform::on_error	( bool* do_debug_break, char* const messa
 	}
 
 	call_stack_size_calculator		calculator;
-	// claude@NOTE: structure matches (29/29); the two byte residuals are the
-	// boost::function7::assign_to<bind_t<...>> machinery on BOTH iterate calls (the
-	// call_stack_size_calculator bind here and the error_helper bind below) - target
-	// CALLS function7::assign_to out-of-line at each, our /Ob2 build inlines it one level
-	// deeper to basic_vtable1::assign_to. The target out-lines both because on_error's
-	// inline budget (large body, two bind/iterate sites) tips the /Ob2 cost model that
-	// way; the tiny single-bind dump_call_stack inlines on BOTH sides and matches, and
-	// debug.cpp's process() (which shares the calc bind COMDAT) also out-lines + matches.
-	// Per-caller /Ob2 cost decision - the body is already an exact structural match, not
-	// source-steerable without dropping real statements.
+	// Target keeps function7::assign_to out of line at both bind sites; this /Ob2
+	// caller inlines one level deeper. The shared bind template and caller budget fix
+	// that boundary without removing target statements.
 	vostok::debug::call_stack::iterate( NULL, NULL, boost::bind( & call_stack_size_calculator::predicate, &calculator, _1, _2, _3, _4, _5, _6, _7), false );
 	u32 const message_length		= strlen( message );
 	u32 const buffer_size			= message_length + calculator.needed_size() * 4 + 4096;

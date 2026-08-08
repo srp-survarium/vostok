@@ -35,6 +35,8 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import normalize_objdiff_symbols
+
 VOSTOK = Path(__file__).resolve().parent.parent
 DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
 REPORT = VOSTOK / "binaries" / "objdiff" / "report.json"
@@ -364,17 +366,6 @@ def dyn_canon_base(mangled):
     if not _IDENT_RE.match(var) or any(not _IDENT_RE.match(s) for s in scopes):
         return None
     return (kc, "::".join(scopes + [var]))
-
-
-def dyn_compiler_name(canonical):
-    """MSVC-decorated thunk name for a ``(kind, qualified variable)`` key."""
-    kind, fqn = canonical
-    parts = fqn.split("::")
-    if not parts or any(not _IDENT_RE.match(part) for part in parts):
-        return None
-    variable, scopes = parts[-1], parts[:-1]
-    scope_suffix = "".join(f"@{scope}" for scope in reversed(scopes))
-    return f"??__{kind}{variable}{scope_suffix}@@YAXXZ"
 
 
 def is_framed(rec):
@@ -729,8 +720,7 @@ def regen():
     # objects. The rich indexes retain the authoritative PDB names; reflect each
     # normalized report score back onto that identity before building pair rows.
     for mangled in target:
-        canonical = dyn_canon_rich(mangled)
-        compiler = dyn_compiler_name(canonical) if canonical else None
+        compiler = normalize_objdiff_symbols.compiler_name(mangled)
         if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
             fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
     pair_rows = []
@@ -832,6 +822,39 @@ def regen():
         n_cross += 1
     if n_cross:
         log(f"cross-name paired {n_cross} dynamic-init/atexit thunks (??__E/??__F <-> demangled)")
+
+    # The retail and candidate PDBs render a small audited set of template type
+    # spellings differently (for example, an explicit ``enum`` keyword).  The
+    # disposable target COFF normalizer gives objdiff the candidate-side name;
+    # pair the unchanged rich-index identities through that exact same map.
+    n_alias = 0
+    for tm in sorted(set(target) - paired_primary - cross_paired_mangled):
+        bm = normalize_objdiff_symbols.pdb_alias_name(tm)
+        if not bm or bm not in base:
+            continue
+        if bm in paired_primary or bm in cross_paired_mangled:
+            continue
+        if target[tm]["file"] != base[bm]["file"]:
+            continue
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
+        pair_rows.append(
+            (
+                sym_id[tm],
+                target[tm]["rva"],
+                base[bm]["rva"],
+                fuzzy_by_mangled.get(tm, fuzzy_by_mangled.get(bm)),
+                cls,
+                t_n,
+                b_n,
+                n_size,
+                n_tonly,
+                n_bonly,
+            )
+        )
+        cross_paired_mangled.update((tm, bm))
+        n_alias += 1
+    if n_alias:
+        log(f"cross-name paired {n_alias} exact PDB spelling aliases")
     pair_rows.sort()
 
     unit_rows = sorted(
