@@ -44,6 +44,7 @@ public:
 			void	set_data_type_action( particle_action_data_type* data_type_act );
 	
 	inline	particle_action_source*	get_source_action		( ) const { return m_source_action;}
+	inline	particle_action_random_velocity* get_target_action ( ) const { return m_target_action;}
 	inline	particle_action_data_type* get_data_type_action ( ) const { return m_data_type_action;}
 	inline	bool	get_world_space		( ) const { return m_world_space;}
 	inline	u32		get_num_loops		( ) const { return m_num_loops; }
