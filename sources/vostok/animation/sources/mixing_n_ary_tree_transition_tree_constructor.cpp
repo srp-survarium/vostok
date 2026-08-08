@@ -24,6 +24,7 @@
 #include "mixing_n_ary_tree_target_time_scale_calculator.h"
 #include "mixing_n_ary_tree_weight_calculator.h"
 #include <vostok/animation/mixing_animated_object_holder.h>
+#include <vostok/animation/mixing_time_animations_predicate.h>
 
 #define VOSTOK_DEBUG_ANIMATIONS_COUNT			0
 
@@ -31,8 +32,7 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-struct time_animations_predicate {
-	inline bool operator ( )(
+inline bool time_animations_predicate::operator ( )(
 		n_ary_tree_animation_node const* const left,
 		n_ary_tree_animation_node const* const right
 	) const
@@ -47,7 +47,6 @@ struct time_animations_predicate {
 
 		return left < right;
 	}
-};
 
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
