@@ -82,9 +82,9 @@ void encoded_sound_with_qualities::increase_quality_to_target	(query_result_for_
 {
 	m_parent_query					= parent_query;
 
-	u32 const target_quality		= target_quality_level();
-
 	request all_requests [max_quality_levels_count];
+
+
 	fixed_string<128> names[max_quality_levels_count];
 
 	float satisfactions[max_quality_levels_count];
@@ -99,6 +99,22 @@ void encoded_sound_with_qualities::increase_quality_to_target	(query_result_for_
 	{
 		m_sound_interface_type			= ogg_encoded_sound_interface_class; // default value
 	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	for ( u32 i = 0; i <  max_quality_levels_count; ++i )
 	{
@@ -120,17 +136,14 @@ void encoded_sound_with_qualities::increase_quality_to_target	(query_result_for_
 		quality_indexes[i]			=	i;
 
 		all_requests[i].path	=	names[i].c_str( );
-		all_requests[i].id		=	m_sound_interface_type;
+		all_requests[i].id		=	i == 0 ? m_sound_interface_type : unknown_data_class;
 		satisfactions[i]		=	m_parent_query ? 
 									m_parent_query->satisfaction(i) : satisfaction(i);
 
 	}
 
-
-	request* requests	= &*all_requests + target_quality;
-	u32 const current_quality		=	current_quality_level();
-	u32 const requests_count		=	((current_quality == u32(-1)) ? 
-										 quality_levels_count() : current_quality) - target_quality;
+	request* requests				= &*all_requests;
+	u32 const requests_count		= max_quality_levels_count;
 
 	query_resource_params				params (requests, 
 												NULL, 
