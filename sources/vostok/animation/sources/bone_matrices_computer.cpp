@@ -363,21 +363,12 @@ void bone_matrices_computer::convert_to_object_matrices( float4x4* begin, float4
 float4x4 bone_matrices_computer::get_object_transform( ) const
 {
 	typedef std::pair< float3, float > weighted_transform;
-	buffer_vector< weighted_transform > rotations(
-		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
-		m_animations_count
-	);
-	buffer_vector< weighted_transform > translations(
-		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
-		m_animations_count
-	);
-	buffer_vector< weighted_transform > scales(
-		ALLOCA( sizeof( weighted_transform ) * m_animations_count ),
-		m_animations_count
-	);
+	buffer_vector< weighted_transform > rotations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+	buffer_vector< weighted_transform > translations( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
+	buffer_vector< weighted_transform > scales( ALLOCA( sizeof( weighted_transform ) * m_animations_count ), m_animations_count );
 
-	mixing::animation_state* const end	= m_animations + m_animations_count;
-	for ( mixing::animation_state* i = m_animations; i != end; ++i ) {
+	mixing::animation_state* const e	= m_animations + m_animations_count;
+	for ( mixing::animation_state* i = m_animations; i != e; ++i ) {
 		mixing::n_ary_tree_animation_node& animation_node	= i->event_iterator.animation( );
 		if ( animation_node.animated_object( ) != m_animated_object )
 			continue;
