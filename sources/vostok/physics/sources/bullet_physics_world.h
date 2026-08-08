@@ -15,7 +15,7 @@
 namespace vostok {
 namespace physics {
 
-class bullet_physics_world : public world, boost::noncopyable {
+class bullet_physics_world : public world, public boost::noncopyable {
 public:
 											bullet_physics_world		( memory::base_allocator& allocator, engine& engine );
 
@@ -29,13 +29,13 @@ public:
 	virtual	void							draw_object					( btCollisionShape* const shape, btTransform const& transform, btVector3 const& color ) override;
 	virtual	void							debug_draw_world			( ) override;
 
-	virtual	void							add							( bt_constraint* constraint ) override;
-	virtual	void							add							( bt_soft_body_rope* body ) override;
 	virtual	void							add							( bt_rigid_body_base* body, u16 filter_group, u16 filter_mask ) override;
+	virtual	void							add							( bt_soft_body_rope* body ) override;
+	virtual	void							add							( bt_constraint* constraint ) override;
 
-	virtual	void							remove						( bt_constraint* constraint ) override;
-	virtual	void							remove						( bt_soft_body_rope* body ) override;
 	virtual	void							remove						( bt_rigid_body_base* body ) override;
+	virtual	void							remove						( bt_soft_body_rope* body ) override;
+	virtual	void							remove						( bt_constraint* constraint ) override;
 
 	virtual	void							move						( bt_rigid_body_base* body, float4x4 const& new_transform ) override;
 
@@ -102,7 +102,6 @@ public:
 
 private:
 			void							notify_about_contact		( );
-
 
 private:
 	/* 0x0000 */	/* world */

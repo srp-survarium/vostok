@@ -214,7 +214,7 @@ collision::animated_object* new_animated_bt_hit_model(
 	animation::skeleton_ptr const&		model_skeleton,
 	memory::base_allocator*				allocator)
 {
-	u32 const arena_size			=	calculate_bt_animated_body_size_from_hit_targets_config( config ) + 0x304; // sushi@TODO: Figure out where this constant is coming from
+	u32 const arena_size			=	calculate_bt_animated_body_size_from_hit_targets_config( config ) + 0x304;
 	pvoid const arena_ptr			=	VOSTOK_MALLOC_IMPL( allocator, arena_size, "collision::animated_object memory" );
 
 	memory::stack_allocator				stack_allocator; // sushi@NOTE: Misnomer for bump allocator or arena?

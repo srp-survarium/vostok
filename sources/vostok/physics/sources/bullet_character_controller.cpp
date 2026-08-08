@@ -24,6 +24,9 @@ static console_commands::cc_float s_cc_max_allowed_penetration_cc			( "cc_max_al
 static bool  s_cc_prevent_step_bouncing_value			= true;
 static console_commands::cc_bool  s_cc_prevent_step_bouncing_cc				( "cc_prevent_step_bouncing", s_cc_prevent_step_bouncing_value, false, console_commands::command_type_engine_internal );
 
+static u32 s_cc_smooth_positions_count_value			= 3;
+static console_commands::cc_u32 s_cc_smooth_positions_count_cc				( "cc_smooth_positions_count", s_cc_smooth_positions_count_value, 1, 100, true, console_commands::command_type_engine_internal );
+
 
 u16 const*	g_game_material_groups;
 s32			g_game_materials_count;
