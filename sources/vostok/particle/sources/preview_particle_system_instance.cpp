@@ -70,7 +70,7 @@ void preview_particle_system_instance::updated_from_config			( particle_system_l
 			if (emitter->m_event || !emitter->get_enable())
 				continue;
 			
-			particle_emitter_instance* instance = m_particle_world->create_emitter_instance( *emitter );
+			particle_emitter_instance* instance = particle_world::create_emitter_instance( *emitter, false, true );
 			add_emitter_instance(lod_index, instance);
 		}
 	}

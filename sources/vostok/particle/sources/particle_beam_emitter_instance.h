@@ -19,13 +19,12 @@ class particle_action_beam;
 class particle_beam_emitter_instance : public particle_emitter_instance {
 public:
 					particle_beam_emitter_instance	(
-						particle_world& particle_world,
 						particle_emitter& emitter,
-						engine& engine,
-						bool is_child_emitter_instance
+						bool is_child_emitter_instance,
+						bool need_query_material
 					);
 	virtual			~particle_beam_emitter_instance	( );
-	virtual	void create_render_particle_emitter_instance ( engine& engine );
+	virtual	void create_render_particle_emitter_instance ( render::base_scene_ptr const& scene, engine& engine );
 
 	virtual void	tick							( float time_delta, bool create_new_particles, float alpha );
 	virtual u32		calc_num_new_particles			( float time_delta, bool allow_to_create_new );

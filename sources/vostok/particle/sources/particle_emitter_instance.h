@@ -9,6 +9,8 @@
 
 #include <vostok/intrusive_list.h>
 #include <vostok/particle/base_particle.h>
+#include <vostok/render/engine/base_classes.h>
+#include <vostok/render/facade/vertex_input_type.h>
 
 namespace vostok {
 namespace render{
@@ -40,17 +42,16 @@ class particle_event;
 
 struct engine;
 
-class particle_emitter_instance : private boost::noncopyable {
+class particle_emitter_instance : public boost::noncopyable {
 public:
 					particle_emitter_instance	(
-						particle_world& particle_world,
 						particle_emitter& emitter,
-						engine& engine,
-						bool is_child_emitter_instance
+						bool is_child_emitter_instance,
+						bool need_query_material
 					);
 	virtual			~particle_emitter_instance	( );
 	
-	virtual	void create_render_particle_emitter_instance ( engine& engine );
+	virtual	void create_render_particle_emitter_instance ( render::base_scene_ptr const& scene, engine& engine );
 			
 			void	play_child					( particle_event* evt, vostok::math::float4x4 const& transform );
 			
@@ -61,6 +62,8 @@ public:
 	virtual void	shrink_particles			( float time_delta, float limit_over_total, u32 num_need_particles );
 	virtual bool	is_finished					( ) const;
 	virtual	u32		get_num_sheets				( ) const { return 0; }
+
+			void	reset						( );
 
 			void	change_material				( resources::unmanaged_resource_ptr const& material );
 			float	get_max_particle_lifetime	() const;
@@ -86,6 +89,7 @@ public:
 			void	load_material				( pcstr material_name );
 			void	recalc_duration				( );
 			void	update_render_buffers		( enum_particle_data_type const& datatype, bool use_subuv );
+			render::enum_vertex_input_type get_vertex_input_type ( ) const;
 
 	inline	particle_action_data_type* get_data_type_action ( ) const { return m_data_type_action;}
 
@@ -102,7 +106,8 @@ public:
 protected:
 	math::float4					m_instance_color;
 	particle_list_type				m_particle_list;
-	vostok::particle::engine&			m_engine;
+	render::base_scene_ptr				m_scene;
+	vostok::particle::engine*			m_engine;
 
 public:
 	math::uint2						m_subuv_pos_uv;
@@ -112,7 +117,7 @@ public:
 	resources::unmanaged_resource_ptr	m_material;
 	
 protected:
-	particle_world&					m_particle_world;
+	particle_world*					m_particle_world;
 
 public:
 	particle_system_instance_ptr	m_particle_system_instance_ptr;
@@ -187,6 +192,8 @@ private:
 protected:
 	bool							m_world_space;
 }; // class particle_emitter_instance
+
+STATIC_SIZE_ASSERT(particle_emitter_instance, 0x128);
 
 } // namespace particle
 } // namespace vostok

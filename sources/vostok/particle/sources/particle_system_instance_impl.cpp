@@ -8,6 +8,7 @@
 #include "particle_system_instance_impl.h"
 #include "particle_world.h"
 #include "particle_emitter.h"
+#include <vostok/particle/engine.h>
 
 namespace vostok {
 namespace particle {
@@ -49,6 +50,20 @@ particle_system_instance_impl::particle_system_instance_impl( ):
 particle_system_instance_impl::~particle_system_instance_impl()
 {
 	remove_emitter_instances();
+}
+
+void particle_system_instance_impl::reset()
+{
+	for (u32 i=0; i<m_num_lods; i++)
+	{
+		emitter_instance_list_type& emitters_list = m_lods[i].m_emitter_instance_list;
+		particle_emitter_instance* instance = emitters_list.front();
+		while(instance)
+		{
+			instance->reset();
+			instance = emitters_list.get_next_of_object(instance);
+		}
+	}
 }
 
 void particle_system_instance_impl::remove_particles()
@@ -291,12 +306,6 @@ void particle_system_instance_impl::remove_emitter_instances()
 
 bool particle_system_instance_impl::is_finished()
 {
-	// claude@NOTE: ~95% structural (42 target / 40 base). Target has 2 extra tail statements
-	//   (lines run to ~378 vs our 358) and names the finished local `ps_finished` not `finished`.
-	//   Its emitter list local is intrusive_list<...,224,single_threading_policy,size_policy,
-	//   no_debug_policy> (the same offset-based/no_debug list-typedef root cause as particle_world).
-	//   Closing needs the missing tail body reconstructed + the list typedef corrected - not a
-	//   localized resteer.
 	if (m_no_more_create)
 	{
 		particle_emitter_instance* instance = m_lods[m_current_lod].m_emitter_instance_list.front();
@@ -394,17 +403,38 @@ void particle_system_instance_impl::add_emitter_instance( u32 lod_index, particl
 	
 	m_lods[lod_index].m_emitter_instance_list.push_back(new_instance);
 
-	// claude@NOTE: QUANTITY -2 vs target. After push_back the target emits a guarded
-	//   `if ( m_is_playing /*+0x2A4*/ ) prepare_render_resources();` (cmp [this+2A4h],0/je;
-	//   call particle_system_instance_impl::prepare_render_resources). prepare_render_resources
-	//   is a real 13-stmt target member NOT yet reconstructed in our source (absent from base);
-	//   the 2-stmt guard cannot be added until that method body is recovered (would not link).
+	if (m_is_playing)
+		prepare_render_resources();
+
 	//new_instance->process_event(particle_event::on_play,m_transform.lines[3].xyz());
+}
+
+void particle_system_instance_impl::prepare_render_resources()
+{
+	m_scene = m_particle_world->m_engine.get_scene(*m_particle_world);
+
+	for (u32 i=0; i<max_supported_lods; i++)
+	{
+		lod_entry& e = m_lods[i];
+		if (!e.m_template.c_ptr())
+			break;
+
+		particle_emitter_instance* instance = e.m_emitter_instance_list.front();
+		while(instance)
+		{
+			instance->m_particle_world = m_particle_world;
+			if (!instance->m_render_instance)
+				instance->create_render_particle_emitter_instance(m_particle_world->m_engine.get_scene(*m_particle_world), m_particle_world->m_engine);
+
+			instance = instance->m_next;
+		}
+	}
 }
 
 void particle_system_instance_impl::play_impl( particle_world* particle_world )
 {
 	m_particle_world = particle_world;
+	prepare_render_resources();
 	m_is_playing = true;
 	m_no_more_create = false;
 }

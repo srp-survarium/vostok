@@ -10,17 +10,19 @@
 #include "particle_actions.h"
 #include "particle_emitter.h"
 #include <vostok/particle/engine.h>
+#include <vostok/particle/render_particle_emitter_instance.h>
 
 namespace vostok {
 namespace particle {
 
+void prepare_render_emitter_instance(particle_emitter_instance* em_instance);
+
 particle_beam_emitter_instance::particle_beam_emitter_instance(
-		particle_world& particle_world,
 		particle_emitter& emitter,
-		engine& engine,
-		bool const is_child_emitter_instance
+		bool const is_child_emitter_instance,
+		bool need_query_material
 	) :
-	particle_emitter_instance( particle_world, emitter, engine, is_child_emitter_instance ),
+	particle_emitter_instance( emitter, is_child_emitter_instance, need_query_material ),
 	m_beam_particles_allocated(false),
 	m_particle_beam_index(0.0f),
 	m_beams_source_position(float3(0.0f,0.0f,0.0f)),
@@ -51,8 +53,10 @@ particle_beam_emitter_instance::particle_beam_emitter_instance(
 	generate_offsets			( );
 }
 
-void particle_beam_emitter_instance::create_render_particle_emitter_instance	( engine& engine )
+void particle_beam_emitter_instance::create_render_particle_emitter_instance	( render::base_scene_ptr const& scene, engine& engine )
 {
+	m_engine							= &engine;
+	m_scene							= scene;
 	R_ASSERT							( !m_render_instance );
 	m_render_instance					=
 		engine.create_render_emitter_instance(
@@ -65,6 +69,9 @@ void particle_beam_emitter_instance::create_render_particle_emitter_instance	( e
 			m_world_space ? math::float4x4().identity() : m_transform,
 			m_instance_color
 		);
+	prepare_render_emitter_instance		( this );
+	m_render_instance->set_transform	( m_world_space ? math::float4x4().identity() : m_transform );
+	m_render_instance->change_material	( m_material );
 }
 
 void particle_beam_emitter_instance::alloc_dynamic_data(u32 num_curves, u32 num_points)
@@ -243,7 +250,7 @@ void particle_beam_emitter_instance::tick(float time_delta, bool /*create_new_pa
 			m_particle_list.erase(P);
 			base_particle* to_del = P;
 			P = P->next;
-			m_particle_world.deallocate_particle(to_del);
+			m_particle_world->deallocate_particle(to_del);
 			m_num_live_particles--;
 		}
 		else
@@ -289,7 +296,7 @@ u32 particle_beam_emitter_instance::calc_num_new_particles(float time_delta, boo
 		if (m_num_live_particles+1 > m_max_num_particles)
 			break;
 		
-		base_particle* new_particle = m_particle_world.allocate_particle();
+		base_particle* new_particle = m_particle_world->allocate_particle();
 		
 		if (!new_particle)
 			continue;

@@ -76,9 +76,7 @@ particle_world::particle_world	( particle::engine& engine ) :
 
 particle_world::~particle_world	( )
 {
-	// claude@NOTE: target dtor has NO drain loop (base had 5 extra stmts). Body is a single
-	//   compiled-out statement (MASTER_GOLD assert eater); the list is drained elsewhere.
-	//   Reconstructed as ASSERT(empty()); the eater byte count is build-validated.
+	// External owners drain the list before the world is destroyed.
 	ASSERT( m_ticked_instances_list.empty() );
 }
 
@@ -110,10 +108,7 @@ void particle_world::play(particle_system_instance_ptr instance, vostok::math::f
 	if ( !impl )
 		return;
 
-	// claude@NOTE: target emits `impl->reset();` here before the play_impl branch. reset() is a
-	//   real 8-stmt target member of particle_system_instance_impl, NOT reconstructed in our
-	//   source (absent from base) - cannot add the call until that body is recovered (would not
-	//   link). With the early-return guard added, the residual QUANTITY is this one reset() stmt.
+	impl->reset();
 
 	if (use_transform)
 		impl->play_impl(this, transform);
@@ -258,17 +253,6 @@ void particle_world::tick( float time_delta, vostok::math::float4x4 const& view_
 
 void particle_world::add_particle_system_instance(particle_system_instance* instance)
 {
-	//ps_instance_entry* new_entry = MT_NEW(ps_instance_entry)();
-	//m_ticked_instances_list2.push_back( new_entry );
-	// claude@NOTE: source shape now matches the target (decl / braced if-find guard / guarded
-	//   push_back, NO `self_ptr = impl` store). The lone remaining target statement is the braced
-	//   if's block-exit jmp (target line 259, +0x002): the target keeps it because the resource_ptr
-	//   list element needs cleanup on that path, while our raw-ptr list folds the empty block-exit
-	//   into the function epilogue. Root cause is the m_ticked_instances_list typedef divergence -
-	//   target intrusive_list<...,resource_ptr<particle_system_instance_impl,unmanaged_intrusive_base>,
-	//   656,mutex,size_policy,no_debug_policy> (resource_ptr PointerType + offset-based + no_debug)
-	//   vs ours intrusive_list<impl,impl*,&m_next> (raw ptr + member-ptr + debug). Correcting it is a
-	//   shared-infrastructure change (see particle_world.h NOTE) outside this TU's scope.
 	particle_system_instance_impl* impl = static_cast_checked<particle_system_instance_impl*>( instance );
 	if ( !m_ticked_instances_list.find( impl ) )
 	{
@@ -390,13 +374,13 @@ void particle_world::get_render_emitter_instances( float4x4 const& view_proj_mat
 	}
 }
 
-particle_emitter_instance* particle_world::create_emitter_instance	( particle_emitter& emitter, bool is_child_emitter_instance )
+particle_emitter_instance* particle_world::create_emitter_instance	( particle_emitter& emitter, bool is_child_emitter_instance, bool need_query_material )
 {
 	particle_action_data_type* action	= emitter.get_data_type_action();
 	if ( action && (action->get_data_type() == particle_data_type_beam) )
-		return							MT_NEW ( particle_beam_emitter_instance ) ( *this, emitter, m_engine, is_child_emitter_instance );
+		return							MT_NEW ( particle_beam_emitter_instance ) ( emitter, is_child_emitter_instance, need_query_material );
 
-	return								MT_NEW ( particle_emitter_instance ) ( *this, emitter, m_engine, is_child_emitter_instance );
+	return								MT_NEW ( particle_emitter_instance ) ( emitter, is_child_emitter_instance, need_query_material );
 }
 
 void particle_world::change_material	( particle_emitter_instance& instance, resources::unmanaged_resource_ptr const& material )
