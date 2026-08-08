@@ -15,7 +15,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include "pch.h"
 
-#include "Render/D3D1x/D3D1x_Shader.h"
+#include "d3d1x_shader.h"
 #include "Render/D3D1x/D3D1x_HAL.h"
 #include "Kernel/SF_Debug.h"
 

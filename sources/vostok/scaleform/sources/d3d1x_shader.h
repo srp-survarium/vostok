@@ -1,199 +1,144 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 13.06.2026
-////////////////////////////////////////////////////////////////////////////
+/**********************************************************************
 
-#ifndef D3D1X_SHADER_H_INCLUDED
-#define D3D1X_SHADER_H_INCLUDED
+Filename    :   D3D1x_Shader.h
+Content     :
+Created     :   Jun 2011
+Authors     :   Bart Muzzin
 
-// survarium's fork of the Scaleform 4.x D3D1x_Shader.h (merged with the
-// ShaderManager) - the shipped binary tracks a NEWER SDK than the vendored
-// 4.0.15 (StaticShaderManager/ShaderInterfaceBase bases, generated shader
-// descs); skeleton rebuilt from the canonical PDB type dumps.
+Copyright   :   Copyright 2011 Autodesk, Inc. All Rights reserved.
 
+Use of this software is subject to the terms of the Autodesk license
+agreement provided at the time of installation or download, or which
+otherwise accompanies this software in either electronic or hard copy form.
+
+***********************************************************************/
+
+#ifndef INC_SF_D3D1x_SHADER_H
+#define INC_SF_D3D1x_SHADER_H
+#pragma once
+
+#include "Render/D3D1x/D3D1x_Config.h"
+#include "Render/D3D1x/D3D1x_ShaderDescs.h"
 #include "Render/Render_Shader.h"
-#include "d3d1x_shaderdescs.h"
 
-#include <d3d11.h>
-
-namespace Scaleform {
-namespace Render {
-namespace D3D1x {
+namespace Scaleform { namespace Render { namespace D3D1x {
 
 class HAL;
 class Texture;
 
-struct VertexShader {
-	// STATE[STUB]
-	inline			VertexShader	( )
-	{
-		// FUNCTION BODY[0x012ae0] (ICF-folded with an unrelated vostok ctor)
-	}
-	inline			~VertexShader	( ) { /* no source */ }
+struct VertexShader
+{
+    const VertexShaderDesc*             pDesc;
+    Ptr<ID3D1x(VertexShader)>           pProg;
+    int                                 UniformOffset[Uniform::SU_Count];
 
-	// Init/Shutdown are out-of-line in d3d1x_shader.cpp per the rich index
-			bool	Init			( ID3D11Device* arg_0, VertexShaderDesc const* arg_1 );
+    VertexShader() : pDesc(0), pProg(0) {}
+    ~VertexShader() { Shutdown(); }
 
-			void	Shutdown		( );
+    bool Init(ID3D1x(Device)* pdevice, const VertexShaderDesc* pd);
+    void Shutdown();
+};
+
+struct FragShader
+{
+    const FragShaderDesc*       pDesc;
+    Ptr<ID3D1x(PixelShader)>    pProg;
+    UPInt                       Offset;
+    int                         UniformOffset[Uniform::SU_Count];
+
+    FragShader() { pProg = 0; Offset = 0; }
+    ~FragShader() { Shutdown(); };
+
+    bool Init(ID3D1x(Device)* pdevice, const FragShaderDesc* pd);
+    void Shutdown();
+};
+
+struct ShaderPair
+{
+    const VertexShader*     pVS;
+    const VertexShaderDesc* pVDesc;
+    const FragShader*       pFS;
+    const FragShaderDesc*   pFDesc;
+    const VertexFormat*     pVFormat;
+
+    ShaderPair() : pVS(0), pVDesc(0), pFS(0), pFDesc(0), pVFormat(0) {}
+
+    const ShaderPair* operator->() const { return this; }
+    operator bool() const { return pVS && pFS && pVS->pProg && pFS->pProg && pVFormat; }
+};
+
+class SysVertexFormat : public Render::SystemVertexFormat
+{
+public:
+    Ptr<ID3D1x(InputLayout)>    pVDecl;
+    static const unsigned       MaxVertexElements = 8;
+    D3D1x(INPUT_ELEMENT_DESC)   VertexElements[MaxVertexElements];
+    unsigned                    VertexElementCount;
+
+    SysVertexFormat(ID3D1x(Device)* pdevice, const VertexFormat* vf, const VertexShaderDesc* vdesc);
+};
+
+class ShaderInterface : public ShaderInterfaceBase<Uniform,ShaderPair>
+{
+    friend class ShaderManager;
+
+    HAL*                            pHal;
+    ShaderPair                      CurShaders;     // Currently used set of VS/FS.
+    ID3D1x(VertexShader)*           pLastVS;        // Last used Vertex Shader (for removing redundant changes)
+    ID3D1x(PixelShader)*            pLastFS;        // Last used Fragment Shader (for removing redundant changes)
+    ID3D1x(InputLayout)*            pLastDecl;      // Last used VertexDeclaration
+
+    inline  HAL* GetHAL() const { return pHal; }
 
 public:
-	/* 0x0000 */	VertexShaderDesc const*		pDesc;
-	/* 0x0004 */	Ptr< ID3D11VertexShader >	pProg;
-	/* 0x0008 */	s32							UniformOffset[15];
-}; // struct VertexShader
+    typedef const ShaderPair Shader;
 
-struct FragShader {
-	// STATE[STUB]
-	inline			FragShader	( )
-	{
-		// FUNCTION BODY[0x0b36f0]
-	}
-	inline			~FragShader	( ) { /* no source */ }
+    ShaderInterface(Render::HAL* phal): pHal((HAL*)phal), pLastVS(0), pLastDecl(0), pLastFS(0) { }
 
-	// Init/Shutdown are out-of-line in d3d1x_shader.cpp per the rich index
-			bool	Init		( ID3D11Device* arg_0, FragShaderDesc const* arg_1 );
+    void                BeginScene();
 
-			void	Shutdown	( );
+    const Shader&       GetCurrentShaders() const { return CurShaders; }
+    bool                SetStaticShader(ShaderDesc::ShaderType shader, const VertexFormat* pvf);
 
+    void                SetTexture(Shader, unsigned stage, Render::Texture* ptexture, ImageFillMode fm, unsigned index = 0);
+
+    void                Finish(unsigned meshCount);
+};
+
+class ShaderManager : public StaticShaderManager<ShaderDesc, VertexShaderDesc, Uniform, ShaderInterface, Texture>
+{
+    friend class ShaderInterface;
 public:
-	/* 0x0000 */	FragShaderDesc const*		pDesc;
-	/* 0x0004 */	Ptr< ID3D11PixelShader >	pProg;
-	/* 0x0008 */	u32							Offset;
-	/* 0x000c */	s32							UniformOffset[15];
-}; // struct FragShader
+    typedef StaticShaderManager<ShaderDesc, VertexShaderDesc, Uniform, ShaderInterface, Texture> Base;
+    typedef Uniform UniformType;
 
-struct ShaderPair {
-	inline						ShaderPair		( ) { /* no source */ }
+    ShaderManager(ProfileViews* prof);
 
-	inline	ShaderPair const*	operator ->		( ) const { /* no source */ return this; }
+    // *** StaticShaderManager
+    void    MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
+                            const VertexFormat** single, const VertexFormat** batch, const VertexFormat** instanced);
 
-	inline	operator bool						( ) const { /* no source */ return false; }
+    // D3D1x Specific.
+    bool    HasInstancingSupport() const;
 
-public:
-	/* 0x0000 */	VertexShader const*			pVS;
-	/* 0x0004 */	VertexShaderDesc const*		pVDesc;
-	/* 0x0008 */	FragShader const*			pFS;
-	/* 0x000c */	FragShaderDesc const*		pFDesc;
-	/* 0x0010 */	VertexFormat const*			pVFormat;
-}; // struct ShaderPair
+    bool    Initialize(HAL* phal);
+    void    Reset();
 
-class SysVertexFormat : public Render::SystemVertexFormat {
-public:
-	// out-of-line in d3d1x_shader.cpp per the rich index
-				SysVertexFormat	(
-					ID3D11Device*				arg_0,
-					VertexFormat const*			arg_1,
-					VertexShaderDesc const*		arg_2
-				);
-	virtual		~SysVertexFormat( ) { /* no source */ }
+    void    BeginScene();
+    void    EndScene();
+
+    ShaderDesc::ShaderVersion GetShaderVersion() const { return ShaderModel; }
+    static unsigned GetDrawableImageFlags() { return 0; }
 
 private:
-	/* 0x0000 */	/* Scaleform::Render::SystemVertexFormat */
-	/* 0x0008 */	Ptr< ID3D11InputLayout >	pVDecl;
-	/* 0x000c */	D3D11_INPUT_ELEMENT_DESC	VertexElements[8];
-	/* 0x00ec */	u32							VertexElementCount;
-}; // class SysVertexFormat
+    FragShader                      StaticFShaders[FragShaderDesc::FSI_Count];
+    VertexShader                    StaticVShaders[VertexShaderDesc::VSI_Count];
 
-struct ShaderConstantRange {
-	inline			ShaderConstantRange	( HAL* arg_0, float* arg_1 ) { /* no source */ }
+    Ptr<ID3D1x(Device)>             pDevice;        // Pointer to the D3D device.
+    ShaderDesc::ShaderVersion       ShaderModel;    // Holds which ShaderModel version should be used.
+};
 
-	// out-of-line in d3d1x_shader.cpp per the rich index
-			void	Update				( s32 arg_0, s32 arg_1, s32 arg_2 );
+}}}
 
-	inline	void	Finish				( bool arg_0 ) { /* no source */ }
 
-public:
-	/* 0x0000 */	float*						UniformData;
-	/* 0x0004 */	D3D11_MAPPED_SUBRESOURCE	MappedBuffer;
-	/* 0x0010 */	ID3D11Buffer*				pConstantBuffer;
-	/* 0x0014 */	HAL*						pHal;
-}; // struct ShaderConstantRange
-
-class ShaderInterface : public Render::ShaderInterfaceBase< Uniform, ShaderPair > {
-public:
-	inline	HAL*				GetHAL				( ) const { /* no source */ return pHal; }
-
-	// STATE[STUB]
-	inline	explicit			ShaderInterface		( Render::HAL* arg_0 )
-	{
-		// FUNCTION BODY[0x0aecf0]
-		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
-	}
-
-	// BeginScene/SetStaticShader/SetTexture/Finish are out-of-line in
-	// d3d1x_shader.cpp per the rich index
-			void				BeginScene			( );
-
-	inline	ShaderPair const&	GetCurrentShaders	( ) const { /* no source */ return CurShaders; }
-
-			bool				SetStaticShader		( ShaderDesc::ShaderType arg_0, VertexFormat const* arg_1 );
-
-			void				SetTexture			(
-									const ShaderPair	arg_0,
-									u32					arg_1,
-									Render::Texture*	arg_2,
-									ImageFillMode		arg_3,
-									u32					arg_4
-								);
-
-			void				Finish				( u32 arg_0 );
-
-private:
-	/* 0x0000 */	/* Scaleform::Render::ShaderInterfaceBase< Uniform, ShaderPair > */
-	/* 0x1120 */	HAL*					pHal;
-	/* 0x1124 */	ShaderPair				CurShaders;
-	/* 0x1138 */	ID3D11VertexShader*		pLastVS;
-	/* 0x113c */	ID3D11PixelShader*		pLastFS;
-	/* 0x1140 */	ID3D11InputLayout*		pLastDecl;
-}; // class ShaderInterface
-
-class ShaderManager : public Render::StaticShaderManager< ShaderDesc, VertexShaderDesc, Uniform, ShaderInterface, Texture > {
-public:
-	// everything unmarked is out-of-line in d3d1x_shader.cpp per the rich index
-			explicit		ShaderManager		( ProfileViews* arg_0 );
-
-			void			MapVertexFormat		(
-								PrimitiveFillType		arg_0,
-								VertexFormat const*		arg_1,
-								VertexFormat const**	arg_2,
-								VertexFormat const**	arg_3,
-								VertexFormat const**	arg_4
-							);
-
-			bool			HasInstancingSupport( ) const;
-
-			bool			Initialize			( HAL* arg_0 );
-
-			void			Reset				( );
-
-			void			BeginScene			( );
-
-			void			EndScene			( );
-
-	inline	ShaderDesc::ShaderVersion	GetShaderVersion	( ) const { /* no source */ return ShaderModel; }
-
-	// the dtor body lives in d3d1x_hal.h per the rich index (see there)
-							~ShaderManager		( );
-
-	static	inline	u32		GetDrawableImageFlags( ) { /* no source */ return 0; }
-
-private:
-	/* 0x0000 */	/* Scaleform::Render::StaticShaderManager< ... > */
-	/* 0x0018 */	FragShader					StaticFShaders[598];
-	/* 0xa848 */	VertexShader				StaticVShaders[232];
-	/* 0xe5e8 */	Ptr< ID3D11Device >			pDevice;
-	/* 0xe5ec */	ShaderDesc::ShaderVersion	ShaderModel;
-}; // class ShaderManager
-
-} // namespace D3D1x
-} // namespace Render
-} // namespace Scaleform
-
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::VertexShader, 0x44);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::FragShader, 0x48);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::ShaderPair, 0x14);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::SysVertexFormat, 0xF0);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::ShaderConstantRange, 0x18);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::ShaderInterface, 0x1144);
-STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::ShaderManager, 0xE5F0);
-
-#endif // #ifndef D3D1X_SHADER_H_INCLUDED
+#endif // INC_SF_D3D1x_SHADER_H
