@@ -1,25 +1,11 @@
 #include "pch.h"
 #include "model_cooker.h"
 #include <vostok/render/facade/model.h>
+#include <vostok/render/static_model_instance_user_data.h>
 #include "render_model_skeleton.h"
 
 namespace vostok {
-
-namespace configs {
-class binary_config_value;
-}
-
-namespace sound {
-struct world;
-}
-
 namespace render {
-
-struct static_model_instance_user_data {
-	configs::binary_config_value const* config;
-	sound::world* sound_world;
-	resources::unmanaged_resource_ptr sound_scene;
-};
 
 static_model_instance_cook::static_model_instance_cook( ) :
 	resources::translate_query_cook(

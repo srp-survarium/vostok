@@ -5,7 +5,9 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "debug_statistic.h"
+#include <vostok/sound/propagator_statistic.h>
+#include <vostok/sound/proxy_statistic.h>
+#include <vostok/sound/sound_scene_statistic.h>
 #include <vostok/ui/text_tree_draw_helper.h>
 
 namespace vostok {
@@ -77,6 +79,13 @@ void proxy_statistic::fill_text_tree		( strings::text_tree_item* item, bool draw
 				temp.assignf				( "%.2f, %.2f, %.2f", m_position[0], m_position[1], m_position[2] );
 				detail->add_column			( temp.c_str( ) );
 			} break;
+		case hud:
+			{
+				detail->add_column			( "hud" );
+				detail						= stats->new_child( "position" );
+				temp.assignf				( "%.2f, %.2f, %.2f", m_position[0], m_position[1], m_position[2] );
+				detail->add_column			( temp.c_str( ) );
+			} break;
 		default:			NODEFAULT		( );
 		};
 
@@ -91,37 +100,27 @@ void proxy_statistic::fill_text_tree		( strings::text_tree_item* item, bool draw
 		}
 }
 
-void debug_statistic::fill_text_tree	( strings::text_tree_item* item ) const
+sound_scene_statistic::sound_scene_statistic( )
+{
+	memory::zero( &values, sizeof( values ) );
+}
+
+void sound_scene_statistic::fill_text_tree( strings::text_tree_item* item ) const
 {
 	fixed_string<64> temp;
-	text_tree_item* stats				= item->new_child( "listener position" );
-	temp.assignf						( "%.2f, %.2f, %.2f", m_listener_position[0], m_listener_position[1], m_listener_position[2] );
-	stats->add_column					( temp.c_str( ) );
-	stats								= item->new_child( "listener orient front" );
-	temp.assignf						( "%.2f, %.2f, %.2f", m_listener_orient_front[0], m_listener_orient_front[1], m_listener_orient_front[2] );
-	stats->add_column					( temp.c_str( ) );
-	stats								= item->new_child( "listener orient top" );
-	temp.assignf						( "%.2f, %.2f, %.2f", m_listener_orient_top[0], m_listener_orient_top[1], m_listener_orient_top[2] );
-	stats->add_column					( temp.c_str( ) );
-	
-	stats								= item->new_child( "registered receivers count" );
-	temp.assignf						( "%d", m_registered_receivers_count );
-	stats->add_column					( temp.c_str( ) );
-	stats								= item->new_child( "active voices count" );
-	temp.assignf						( "%d", m_active_voices_count );
-	stats->add_column					( temp.c_str( ) );
-	stats								= item->new_child( "active proxies count" );
-	temp.assignf						( "%d", m_active_proxies_count );
-	stats->add_column					( temp.c_str( ) );
-
-	stats								= item->new_child( "proxies:" );
-
-	proxy_statistic* prox_stats			= m_proxies_statistic.front( );
-	while ( prox_stats )
-	{
-		prox_stats->fill_text_tree		( item, false );
-		prox_stats						= m_proxies_statistic.get_next_of_object( prox_stats );
-	}
+	strings::text_tree_item* stats = 0;
+	stats = item->new_child( "voices count(mono:st)" );
+	temp.assignf( "%d:%d", values.m_active_voices_count[0], values.m_active_voices_count[1] );
+	stats->add_column( temp.c_str( ) );
+	stats = item->new_child( "proxies count" );
+	temp.assignf( "%d", values.m_active_proxies_count );
+	stats->add_column( temp.c_str( ) );
+	stats = item->new_child( "propagators count" );
+	temp.assignf( "%d", values.m_propagators_count );
+	stats->add_column( temp.c_str( ) );
+	stats = item->new_child( "proxy types" );
+	temp.assignf( "point:[%d] hud:[%d]", values.m_sound_types[point], values.m_sound_types[hud] );
+	stats->add_column( temp.c_str( ) );
 }
 
 } // namespace sound

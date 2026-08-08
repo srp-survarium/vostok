@@ -9,6 +9,7 @@
 
 #include <vostok/sound/api.h>
 #include <vostok/sound/sound_instance_proxy.h>
+#include <vostok/sound/emitter_type.h>
 
 namespace vostok {
 namespace sound {
@@ -21,13 +22,6 @@ class sound_propagator_emitter;
 typedef intrusive_ptr<	sound_instance_proxy,
 						sound_instance_proxy,
 						threading::single_threading_policy > sound_instance_proxy_ptr;
-
-enum emitter_type
-{
-	single,
-	composite,
-	collection
-};
 
 class VOSTOK_SOUND_API sound_emitter : public resources::unmanaged_resource
 {

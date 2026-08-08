@@ -18,9 +18,9 @@
 #include "sound_instance_proxy_internal.h"
 #include "sound_voice.h"
 #include "panning_lut.h"
+#include <vostok/sound/sound_scene_statistic.h>
 #ifndef MASTER_GOLD
 #include "debug_snapshot.h"
-#include "debug_statistic.h"
 #endif // MASTER_GOLD
 
 
@@ -134,16 +134,33 @@ public:
 									float radius
 								);
 
-	sound_instance_proxy_ptr	new_hud_sound_instance_proxy
+	sound_instance_proxy_ptr	new_point_sound_instance_proxy
 								(
-									sound_emitter_ptr emitter,
+									sound_emitter_ptr const& emitter,
 									sound_propagator_emitter const& propagator_emitter,
 									world_user& user
 								);
 
-	sound_instance_proxy_ptr	new_point_sound_instance_proxy
+	sound_instance_proxy_ptr	new_spot_sound_instance_proxy
 								(
 									sound_emitter_ptr const& emitter,
+									sound_propagator_emitter const& propagator_emitter,
+									world_user& user,
+									const sound_cone_type cone_type
+								);
+
+	sound_instance_proxy_ptr	new_volumetric_sound_instance_proxy
+								(
+									sound_emitter_ptr const& emitter,
+									sound_propagator_emitter const& propagator_emitter,
+									world_user& user,
+									collision::geometry_instance& geometry,
+									float radius
+								);
+
+	sound_instance_proxy_ptr	new_hud_sound_instance_proxy
+								(
+									sound_emitter_ptr emitter,
 									sound_propagator_emitter const& propagator_emitter,
 									world_user& user
 								);
@@ -234,17 +251,17 @@ public:
 				bool			is_segment_pass_portal		( u32 portal_id, float3 segment_start, float3 segment_end ) const;
 				void			find_path					( float3 const& destination_point, vectora< fixed_vector< u32, 32 > >& result_paths ) const;
 
-#ifndef MASTER_GOLD
 				void			update_stats				( sound_debug_stats& stats ) const;
 
+#ifndef MASTER_GOLD
 				void			enable_debug_stream_writing			( );
 				void			disable_debug_stream_writing		( );
 				bool			is_debug_stream_writing_enabled		( ) const { return m_is_debug_stream_writing_enabled != 0; }
 				void			dump_debug_stream_writing			( ) const;
-
-			debug_statistic*	create_statistic					( ) const;
-				void			delete_statistic					( debug_statistic* statistic ) const;
 #endif //#ifndef MASTER_GOLD
+
+			sound_scene_statistic*	create_statistic				( ) const;
+				void			delete_statistic					( sound_scene_statistic* statistic ) const;
 
 				void			pause								( );
 				void			resume								( );
@@ -290,6 +307,7 @@ private:
 			void		process_fade						( sound_world& world, u64 time_delta );
 			void		pause_propagate_all_sounds			( ) const;
 			void		resume_propagate_all_sounds			( ) const;
+			void		calculate_in_graph_position			( float3 const& proxy_position );
 	IXAudio2SubmixVoice*
 						create_environment_submix_voice	( sound_world const& world ) const;
 private:
