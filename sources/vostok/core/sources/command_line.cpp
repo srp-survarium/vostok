@@ -489,7 +489,7 @@ bool	show_help	( )
 
 void	set_finger_print ( pcstr finger_print )
 {
-	strings::copy			(s_finger_print, finger_print);
+	strings::copy			(s_finger_print, sizeof(s_finger_print), finger_print);
 }
 
 static bool is_whitespace_or_assign_symbol	( char const value )

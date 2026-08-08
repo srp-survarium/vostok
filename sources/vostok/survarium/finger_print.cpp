@@ -13,7 +13,7 @@ static u8 const s_finger_print_original[s_finger_print_max_length]	=	{	179, 166,
 																			53, 56, 19, 40, 15, 142, 112, 13, 136, 44, 15, 231, 46, 13, 1, 212,	};
 
 
-void   decode_finger_print (vostok::fixed_string512 * out_finger_print)
+void   decode_finger_print (char (&out_finger_print)[64])
 {
 	bool differ_from_original		=	false;
 	for ( int i=0; i<s_finger_print_max_length; ++i )
@@ -24,16 +24,13 @@ void   decode_finger_print (vostok::fixed_string512 * out_finger_print)
 		}
 
 	if ( !differ_from_original )
-		* out_finger_print			=	"<this build has not been finger printed>";
+		vostok::strings::copy		( out_finger_print, "<this build has not been finger printed>" );
 	else
 	{
-		char buffer[s_finger_print_max_length+1];
 		for ( int i=0; i<s_finger_print_max_length; ++i )
-			buffer[i]				=	s_finger_print[16+i] ^ (1 + 4 + 16 + 64);
-		buffer[s_finger_print_max_length]	=	0;
-
-		* out_finger_print			=	buffer;
+			out_finger_print[i]		=	s_finger_print[16+i] ^ (1 + 4 + 16 + 64);
+		out_finger_print[s_finger_print_max_length]	=	0;
 	}
 
-	vostok::command_line::set_finger_print	( out_finger_print->c_str() );
+	vostok::command_line::set_finger_print	( out_finger_print );
 }
