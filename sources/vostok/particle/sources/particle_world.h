@@ -24,16 +24,8 @@ class particle_world:
 	public particle::world,
 	private boost::noncopyable
 {
-	// claude@NOTE: ROOT CAUSE of the particle_world list-walker byte residuals (calc_num_new/
-	//   max_particles, remove_overflowing_particles, add_particle_system_instance: all STRUCTURE
-	//   MATCH on stmt shape/count/order/local NAMES, but byte-short and with a divergent `instance`
-	//   local TYPE). The target's m_ticked_instances_list is intrusive_list<particle_system_instance_impl,
-	//   resource_ptr<particle_system_instance_impl,unmanaged_intrusive_base>, 656 /*byte offset, not a
-	//   member-ptr*/, mutex, size_policy, no_debug_policy> - a resource_ptr-element, OFFSET-based,
-	//   no_debug variant. Ours is the member-pointer (&m_next), raw-ptr, debug_policy form, so front()/
-	//   get_next_of_object()/dec get inlined differently and the element type is raw* not resource_ptr.
-	//   Correcting it needs a different intrusive_list template (offset-based) + resource_ptr storage -
-	//   a cross-cutting list-infrastructure change, not a per-function resteer.
+	// The target stores resource_ptr elements in an offset-based no-debug intrusive list;
+	// the available member-pointer list supports only raw node pointers.
 	typedef vostok::intrusive_list<particle_system_instance_impl, particle_system_instance_impl*, &particle_system_instance_impl::m_next> particle_instances_list_type;
 
 
@@ -81,7 +73,7 @@ public:
 			void	check_lods							(vostok::math::float3 const& view_location);
 			void	set_max_particles					(u32 num_max_particles);
 			void	on_material_loaded					( particle_emitter_instance& emitter_instance ); // m_data, m_material 
-	particle_emitter_instance* create_emitter_instance	( particle_emitter& emitter, bool is_child_emitter_instance = false );
+	static particle_emitter_instance* create_emitter_instance ( particle_emitter& emitter, bool is_child_emitter_instance, bool need_query_material );
 	
 private:
 	typedef memory::fixed_size_allocator<
@@ -89,6 +81,7 @@ private:
 		threading::mutex
 	>								particle_allocator_type;
 	friend class particle_world_cooker;
+	friend class particle_system_instance_impl;
 
 private:
 	particle_allocator_type			m_allocator;

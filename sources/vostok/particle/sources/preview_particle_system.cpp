@@ -648,7 +648,7 @@ void preview_particle_system::play_preview(math::float4x4 const& transform, bool
 			if (emitter->m_event)
 				continue;
 			
-			particle_emitter_instance* instance = m_particle_world.create_emitter_instance( *emitter );
+			particle_emitter_instance* instance = particle_world::create_emitter_instance( *emitter, false, true );
 			m_preview_instance->add_emitter_instance(lod_index, instance);
 		}
 	}

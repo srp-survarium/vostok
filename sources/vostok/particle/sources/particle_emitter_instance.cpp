@@ -25,7 +25,7 @@ static float calc_duration(float duration, float duration_variance)
 	return result;
 }
 
-static void prepare_render_emitter_instance(particle_emitter_instance* em_instance)
+void prepare_render_emitter_instance(particle_emitter_instance* em_instance)
 {
 	if (!em_instance->get_data_type_action())
 		return;
@@ -42,14 +42,13 @@ static void prepare_render_emitter_instance(particle_emitter_instance* em_instan
 }
 
 particle_emitter_instance::particle_emitter_instance(
-		particle_world& particle_world,
 		particle_emitter& emitter,
-		engine& engine,
-		bool const is_child_emitter_instance
+		bool const is_child_emitter_instance,
+		bool need_query_material
 	) :
-	m_particle_world( particle_world ),
 	m_emitter(emitter),
-	m_engine(engine),
+	m_engine(0),
+	m_particle_world(0),
 	m_render_instance(0),
 	m_next(0),
 	m_num_live_particles(0),
@@ -77,6 +76,7 @@ particle_emitter_instance::particle_emitter_instance(
 	m_subuv_size_uv( math::float2(1,1) ),
 	m_instance_color( math::float4(1.0f,1.0f,1.0f,1.0f) ),
 	m_transform( math::float4x4().identity() ),
+	m_scene(),
 	m_billboard_parameters(0),
 	m_beamtrail_parameters(0),
 	m_cook_data_to_delete(NULL),
@@ -112,10 +112,6 @@ particle_emitter_instance::particle_emitter_instance(
 	
 	m_world_space						= m_emitter.get_world_space();
 	
-	create_render_particle_emitter_instance	( engine );
-	
-	prepare_render_emitter_instance		( this );
-	
 	if (m_data_type_action && 
 		(m_data_type_action->get_data_type()==particle_data_type_mesh || 
 		m_data_type_action->get_data_type()==particle_data_type_decal)
@@ -123,6 +119,9 @@ particle_emitter_instance::particle_emitter_instance(
 	{
 		return;
 	}
+
+	if (!need_query_material)
+		return;
 	
 	pcstr const material_name			= emitter.m_material_name[0] ? emitter.m_material_name : "default_particle";
 	load_material						( material_name );
@@ -132,7 +131,34 @@ particle_emitter_instance::~particle_emitter_instance()
 {
 	remove_particles();
 	if (m_render_instance)
-		m_engine.destroy(m_render_instance);
+		m_engine->destroy(m_render_instance);
+}
+
+void particle_emitter_instance::reset()
+{
+	remove_particles();
+	m_num_live_particles = 0;
+	m_num_created_particles = 0;
+	m_waiting_for_end = false;
+	m_emitter_time = 0.0f;
+	m_current_loop = 0;
+	m_delayed = false;
+	m_delay_time = 0.0f;
+	m_time_to_create_new_one = 0.0f;
+	m_max_num_particles = m_emitter.m_max_num_particles;
+	m_current_max_num_particles = m_emitter.m_max_num_particles;
+	m_create_rate = 2;
+	m_current_create_rate = 2;
+	m_current_calc_num_max_particles = 0;
+	m_num_particles_to_create = 0;
+	m_subimage_index = 0.0f;
+	m_visible = true;
+	m_particle_added = false;
+	m_current_duration = calc_duration(m_emitter.m_duration, m_emitter.m_duration_variance);
+	m_subuv_pos_uv = math::uint2(0,0);
+	m_subuv_size_uv = math::float2(1,1);
+	m_instance_color = math::float4(1.0f,1.0f,1.0f,1.0f);
+	m_transform = math::float4x4().identity();
 }
 
 u32 particle_emitter_instance::get_current_max_particles() const
@@ -140,8 +166,10 @@ u32 particle_emitter_instance::get_current_max_particles() const
 	return m_current_calc_num_max_particles;
 }
 
-void particle_emitter_instance::create_render_particle_emitter_instance	( engine& engine )
+void particle_emitter_instance::create_render_particle_emitter_instance	( render::base_scene_ptr const& scene, engine& engine )
 {
+	m_engine							= &engine;
+	m_scene							= scene;
 	R_ASSERT							( !m_render_instance );
 	m_render_instance					=
 		engine.create_render_emitter_instance(
@@ -154,6 +182,9 @@ void particle_emitter_instance::create_render_particle_emitter_instance	( engine
 			m_world_space ? math::float4x4().identity() : m_transform,
 			m_instance_color
 		);
+	prepare_render_emitter_instance		( this );
+	m_render_instance->set_transform	( m_world_space ? math::float4x4().identity() : m_transform );
+	m_render_instance->change_material	( m_material );
 }
 
 float particle_emitter_instance::get_max_particle_lifetime() const
@@ -207,7 +238,7 @@ void particle_emitter_instance::play_child( particle_event* evt, vostok::math::f
 			if (emitter->m_event!=evt || !emitter->m_event->get_visibility())
 				continue;
 			
-			particle_emitter_instance* instance = m_particle_world.create_emitter_instance( *emitter, true );
+			particle_emitter_instance* instance = particle_world::create_emitter_instance( *emitter, true, false );
 			instance->set_transform(transform);
 			m_particle_system_instance->add_emitter_instance(lod_index, instance);
 		}
@@ -263,7 +294,7 @@ u32 particle_emitter_instance::remove_dead_particles()
 			
 			P = m_particle_list.get_next_of_object(P);
 			
-			m_particle_world.deallocate_particle(to_del);
+			m_particle_world->deallocate_particle(to_del);
 			
 			m_num_live_particles--;
 			num_removed++;
@@ -294,7 +325,7 @@ void particle_emitter_instance::remove_particles(u32 num)
 		P = m_particle_list.get_next_of_object(P);
 		
 		m_num_live_particles--;
-		m_particle_world.deallocate_particle(to_del);
+		m_particle_world->deallocate_particle(to_del);
 	}
 	
 	if (num==(u32)-1)
@@ -374,7 +405,7 @@ void particle_emitter_instance::append_particles( float time_delta)
 		if (m_num_live_particles + 1 > m_max_num_particles)
 			break;
 		
-		base_particle* new_particle = m_particle_world.allocate_particle();
+		base_particle* new_particle = m_particle_world->allocate_particle();
 		
 		if (!new_particle)
 			continue;
@@ -515,7 +546,7 @@ void particle_emitter_instance::tick(float time_delta, bool /*create_new_particl
 			m_particle_list.erase(P);
 			base_particle* to_del = P;
 			P = m_particle_list.get_next_of_object(P);
-			m_particle_world.deallocate_particle(to_del);
+			m_particle_world->deallocate_particle(to_del);
 			m_num_live_particles--;
 		}
 		else
@@ -530,6 +561,35 @@ void particle_emitter_instance::tick(float time_delta, bool /*create_new_particl
 	}
 	
 	m_render_instance->set_aabb(m_aabbox);
+}
+
+vostok::render::enum_vertex_input_type particle_emitter_instance::get_vertex_input_type() const
+{
+	vostok::render::enum_vertex_input_type vertex_input_type = vostok::render::null_vertex_input_type;
+
+	if (m_billboard_parameters)
+	{
+		vertex_input_type = vostok::render::particle_vertex_input_type;
+
+		if (get_data_type_action())
+		{
+			enum_particle_data_type datatype = get_data_type_action()->get_data_type();
+			bool use_subuv = false;
+			if (datatype==particle_data_type_billboard)
+			{
+				particle_action_billboard* billboard = static_cast_checked<particle_action_billboard*>(get_data_type_action());
+				use_subuv = billboard->m_use_sub_uv;
+			}
+			if (use_subuv)
+				vertex_input_type = vostok::render::particle_subuv_vertex_input_type;
+		}
+	}
+	else if (m_beamtrail_parameters)
+	{
+		vertex_input_type = vostok::render::particle_beamtrail_vertex_input_type;
+	}
+
+	return vertex_input_type;
 }
 
 void particle_emitter_instance::load_material(pcstr material_name)

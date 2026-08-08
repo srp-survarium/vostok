@@ -9,12 +9,14 @@
 
 #include <vostok/particle/particle_data_type.h>
 #include <vostok/particle/base_particle.h>
+#include <vostok/render/engine/base_classes.h>
 
 namespace vostok {
 namespace particle {
 
 class particle_emitter_instance;
 struct render_particle_emitter_instance;
+struct world;
 
 struct VOSTOK_NOVTABLE engine {
 	virtual	render_particle_emitter_instance*	create_render_emitter_instance	(
@@ -28,6 +30,7 @@ struct VOSTOK_NOVTABLE engine {
 													math::float4 const& instance_color
 												) = 0;
 	virtual	void								destroy							( render_particle_emitter_instance*& instance ) = 0;
+	virtual	render::base_scene_ptr				get_scene						( world& world ) = 0;
 
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( engine )

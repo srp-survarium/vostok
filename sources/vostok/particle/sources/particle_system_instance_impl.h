@@ -21,6 +21,8 @@ class particle_system_instance_impl : public particle_system_instance {
 public:
 	particle_system_instance_impl			();
 	virtual ~particle_system_instance_impl	();
+
+	void prepare_render_resources			();
 	
 	bool tick								(float time_delta);
 	void set_template						(u32 lod_index, particle_system_ptr templ);
@@ -32,6 +34,7 @@ public:
 	void play_impl							(particle_world* particle_world);
 	void play_impl							(particle_world* particle_world, vostok::math::float4x4 const& transform);
 	void stop_impl							(float time_to_stop);
+	void reset								();
 	
 	void set_pause							(bool pause);
 	

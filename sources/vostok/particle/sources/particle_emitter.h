@@ -61,6 +61,7 @@ private:
 	friend class particle_system_cooker;
 	friend class particle_world;
 	friend class particle_system;
+	friend class particle_system_instance_cook;
 	friend class particle_emitter_instance;
 	friend class particle_beam_emitter_instance;
 
