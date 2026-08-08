@@ -608,10 +608,15 @@ void sound_scene::calculate_channel_matrix
 	float& lp_filter_result
 ) const
 {
-	float dry_gain_hf		= 1.0f;
+	if ( proxy.get_sound_type( ) == hud )
+	{
+		channels_result[0]						= 1.0f;
+		channels_result[1]						= 1.0f;
+		lp_filter_result							= 0.0f;
+		return;
+	}
 
-	sound_type type								= proxy.get_sound_type( );
-	//get context properties
+	float dry_gain_hf		= 1.0f;
 	u32 frequency				= 44100;
 	float head_dampen			= 0.25f;
 	u32 num_channels			= 2;
@@ -626,6 +631,7 @@ void sound_scene::calculate_channel_matrix
 	float outer_angle			= 360.0f;
 	float outer_gain			= 0.0f;
 
+	sound_type type								= proxy.get_sound_type( );
 	if ( type == cone )
 	{
 		switch( proxy.get_cone_type ( ) )
@@ -663,14 +669,15 @@ void sound_scene::calculate_channel_matrix
 	matrix.k[0] = u[2]; matrix.k[1] = v[2]; matrix.k[2] = -n[2]; matrix.k[3] = 0.0f;
 	matrix.c[0] = 0.0f; matrix.c[1] = 0.0f; matrix.c[2] =  0.0f; matrix.c[3] = 1.0f;
 
-	float3 position					= graph_position;
+	float3 position					= float3( 0.0f, 0.0f, 0.0f );
 	float3 direction				= float3( 0.0f, 0.0f, 0.0f );
+
 
 	switch( type )
 	{
 	case cone:			direction		= proxy.get_direction( );
-	case point:
-	case volumetric:	break;
+	case point:			position		= graph_position; break;
+	case volumetric:	position		= proxy.get_volumetric_position( get_listenet_position( ) ); break;
 	default:			NODEFAULT		( );
 	}
 
@@ -691,13 +698,26 @@ void sound_scene::calculate_channel_matrix
 	direction.normalize_safe			( direction );
 
 	//2. Calculate distance attenuation
+
     float orig_dist						= distance;
 
 	distance							= math::max ( distance, min_dist );
 	distance							= math::min ( distance, max_dist );
 
 	// Source Gain + Attenuation
+
+
+
+
+
+
     float dry_gain						= source_volume * attenuation;
+
+
+
+
+
+
 
 	float effective_dist = 0.0f;
     if( min_dist > 0.0f && attenuation < 1.0f )
@@ -790,9 +810,16 @@ void sound_scene::calculate_channel_matrix
 		}
     }
 
+
+
+
+
 	float channel_matrix[2];
 	channel_matrix[0]				= ch_r;
 	channel_matrix[1]				= ch_l;
+
+
+
 
 	/* Update filter coefficients. */
 	float const LOWPASSFREQCUTOFF   = 5000;
