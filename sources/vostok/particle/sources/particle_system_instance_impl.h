@@ -7,6 +7,7 @@
 #ifndef PARTICLE_SYSTEM_INSTANCE_IMPL_H_INCLUDED
 #define PARTICLE_SYSTEM_INSTANCE_IMPL_H_INCLUDED
 
+#include <vostok/render/engine/base_classes.h>
 #include "particle_system_instance.h"
 
 namespace vostok {
@@ -24,6 +25,7 @@ public:
 	bool tick								(float time_delta);
 	void set_template						(u32 lod_index, particle_system_ptr templ);
 	
+	bool is_playing						() const { return m_is_playing != 0; }
 	virtual bool is_finished				();
 	
 	void apply_lod							(u32 lod_index);
@@ -74,9 +76,11 @@ protected:
 public:
 	// Lods.
 	particle_system_instance_impl*			m_next;	
+	render::base_scene_ptr					m_scene;
 	u32										m_current_lod;
 	u32										m_old_lod;
 	u32										m_num_lods;
+	volatile long							m_is_playing;
 	
 	float									m_particle_system_time;
 	// 0.0f -> 1.0f, from previous lod to current.
@@ -88,17 +92,14 @@ public:
 	bool									m_child_played;
 	
 protected:
-	
-	// Used for saving reference in particle_world.
-	particle_system_instance_ptr			self_ptr;
-	
 	bool									m_pinned;
-	bool									m_is_playing;
 	bool									m_no_more_create;
 	bool									m_paused;
 	bool									m_visible;
 	bool									m_ticked;
 }; // class particle_system_instance
+
+STATIC_SIZE_ASSERT( particle_system_instance_impl, 0x2C0 );
 
 } // namespace particle
 } // namespace vostok
