@@ -189,11 +189,7 @@ sound_scene::sound_scene	(
 		{
 			{ pReverbEffect_1, true, 1 }
 		};
-		XAUDIO2_EFFECT_CHAIN effectChain_1 =
-		{
-			1,
-			effects_1
-		};
+		XAUDIO2_EFFECT_CHAIN effectChain_1 = { 1, effects_1 };
 		hr								= m_fade_in_environment->SetEffectChain( &effectChain_1 );
 
 		IUnknown* pReverbEffect_2		= 0;
@@ -202,29 +198,10 @@ sound_scene::sound_scene	(
 		{
 			{ pReverbEffect_2, true, 1 }
 		};
-		XAUDIO2_EFFECT_CHAIN effectChain_2 =
-		{
-			1,
-			effects_2
-		};
+		XAUDIO2_EFFECT_CHAIN effectChain_2 = { 1, effects_2 };
 		hr								= m_fade_out_environment->SetEffectChain( &effectChain_2 );
 
-		XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2_params =
-		{
-			100.0f,
-			-10000,
-			0,
-			0.0f,
-			1.0f,
-			0.5f,
-			-10000,
-			0.02f,
-			-10000,
-			0.04f,
-			100.0f,
-			100.0f,
-			5000.0f
-		};
+		XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2_params = { 100.0f, -10000, 0, 0.0f, 1.0f, 0.5f, -10000, 0.02f, -10000, 0.04f, 100.0f, 100.0f, 5000.0f };
 		XAUDIO2FX_REVERB_I3DL2_PARAMETERS* default_params =
 			VOSTOK_NEW_IMPL( g_allocator, XAUDIO2FX_REVERB_I3DL2_PARAMETERS )( i3dl2_params );
 		m_environment_parameters.push_back( std::make_pair( fixed_string< 64 >( "" ), default_params ) );
