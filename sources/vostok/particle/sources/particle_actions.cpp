@@ -7,6 +7,7 @@
 #include "pch.h"
 #include "particle_actions.h"
 #include "particle_emitter_instance.h"
+#include "particle_emitter.h"
 
 namespace vostok {
 namespace particle {
@@ -761,12 +762,12 @@ void particle_action_random_velocity::init( particle_emitter_instance* instance,
 {
 	VOSTOK_UNREFERENCED_PARAMETERS(instance,time);
 
-	P->start_velocity = instance->m_transform.transform_direction( m_domain.generate() );
+	P->start_velocity = instance->m_emitter.get_world_space() ? instance->m_transform.transform_direction( m_domain.generate() ) : m_domain.generate();
 	
 	float3 target_location = m_domain.generate();
 	float3 start_location  = P->position;
 
-	P->start_velocity = m_velocity_multiplier * instance->m_transform.transform_direction( (target_location - start_location) );
+	P->start_velocity = m_velocity_multiplier * (instance->m_emitter.get_world_space() ? instance->m_transform.transform_direction( (target_location - start_location) ) : (target_location - start_location));
 	P->velocity		 += P->start_velocity;
 }
 
