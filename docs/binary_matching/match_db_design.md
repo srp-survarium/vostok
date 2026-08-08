@@ -89,11 +89,14 @@ demangled form (`vostok::sound::\`dynamic initializer for 's_debug_audio''`),
 while the base index may store either the raw mangled form
 (`??__Es_debug_audio@sound@vostok@@YAXXZ`) or a demangled form with the namespace
 inside the quoted variable name
-(`\`dynamic initializer for 'vostok::sound::s_debug_audio''`). A by-name
-intersection misses both variants, so they double-list as `target_only` and
+(`\`dynamic initializer for 'vostok::sound::s_debug_audio''`). Function-local
+statics have a second safe spelling gap: one PDB may put the owner and numeric
+compiler scope outside the quoted variable while the other puts them inside.
+A by-name intersection misses both variants, so they double-list as `target_only` and
 `base_only` even when the body is byte-identical. The pass canonicalizes the SAFE subset (fully-qualified plain
-identifiers; anon-ns/`?A0x` hash, template, and `\`local'`/cook scope are deferred
-to a Rust-side demangler fix in pdb-parser), pairs 1:1 + identical statement-shape
+identifiers, plus local statics with a plain qualified owner, numeric scope, and
+plain variable; anon-ns/`?A0x` hash, template, and cook scopes are deferred to a
+Rust-side demangler fix in pdb-parser), pairs 1:1 + identical statement-shape
 only (never onto the wrong variable), and records the pair keyed by the TARGET sym.
 Because such a pair's base twin carries a *different* sym, the anti-join views
 exclude by **RVA** (`p.target_rva`/`p.base_rva`), not by sym, so both sides drop
