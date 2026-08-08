@@ -423,7 +423,7 @@ void sound_instance_proxy_internal::dbg_set_quality_impl	( u32 quality )
 float3 sound_instance_proxy_internal::get_volumetric_position	( float3 const& listener_position ) const
 {
 	R_ASSERT									( m_type == volumetric );
-	return m_collision->get_closest_point_to	( listener_position );
+	return m_collision->get_closest_point_to	( listener_position, m_collision->get_matrix( ) );
 }
 
 void sound_instance_proxy_internal::calculate_graph_position
