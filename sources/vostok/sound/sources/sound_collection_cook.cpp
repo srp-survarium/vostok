@@ -189,9 +189,9 @@ sound_collection* sound_collection_cook::create_collection	( configs::binary_con
 	u16 cyclic_repeating_index							= collection["cyclic_repeat_from_sound"];
 	
 	u32 const sound_collection_size						= sizeof( sound_collection );
-	u32 sounds_buffer_size								= 0;
-	if( collection.value_exists( "sound_items" ) )
-		sounds_buffer_size								= sizeof( sound_emitter_ptr ) * collection["sound_items"].size();
+
+	u32 const sound_items_count						= collection.value_exists( "sound_items" ) ? collection["sound_items"].size() : 0;
+	u32 const sounds_buffer_size						= sizeof( sound_emitter_ptr ) * sound_items_count;
 
 	char* buffer										= UNMANAGED_ALLOC( char, sound_collection_size + sounds_buffer_size );
 	sound_collection* new_collection					= new( buffer )sound_collection(
@@ -199,7 +199,7 @@ sound_collection* sound_collection_cook::create_collection	( configs::binary_con
 															can_repeat_successively,
 															cyclic_repeating_index,
 															buffer + sound_collection_size,
-															collection["sound_items"].size(),
+														sound_items_count,
 															m_world.get_last_time()
 														);
 		
