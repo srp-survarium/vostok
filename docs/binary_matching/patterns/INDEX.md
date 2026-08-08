@@ -6,6 +6,8 @@ One line per pattern: `- [title](file.md) — cN — tags — symptoms` (cN = co
 Authoring: new pattern = new file (schema in `../assembly_patterns.md`) + one
 line here, same commit.
 
+- [Rich-index exact evidence fills an objdiff score gap](rich-index-exact-fills-objdiff-gap.md) — c9 — cpp:comdat cpp:inline | topic:measurement topic:pairing topic:scoring-artifact — same mangled function and equal size with an identical non-empty normalized rich-index instruction stream proves exactness when objdiff omits the fuzzy score
+
 - [A whole objdiff unit that is 100% unpaired is a FILE-PLACEMENT bug, not a matching gap](inline-header-split-pairing.md) — c10 — cpp:header cpp:inline cpp:template | asm:none | topic:pairing topic:objdiff-units topic:file-layout — whole header unit unpaired, base_path ./dummy.obj, base emits same mangled symbols from <x>.h while target files them under <x>_inline.h; move the inline bodies, pure relocation
 - [Speculative ASSERT in an inline ctor multiplies into every inline site](speculative-assert-inline-ctor.md) — c9 — cpp:assert cpp:inline cpp:ctor | asm:call | topic:assert-eater — eater bytes at every inlining consumer, ~0x10 per site, several consumers capped at once
 - [Guarded eater WITH arg pushes = ASSERT_U / ASSERT_CMP_U / ASSERT_T_U](assert-u-eater.md) — c9 — cpp:assert cpp:macro | asm:push asm:call asm:test asm:jcc | topic:assert-eater — expression_eater, identity(false), push 0 before eater call, movzx test je, add esp, rep movsd

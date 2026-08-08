@@ -525,6 +525,30 @@ def compiled_state_id(rec):
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
 
 
+def instruction_stream_exact(target_rec, base_rec):
+    """Prove exact code when objdiff omitted a function score.
+
+    The rich-index producer has already normalized branch labels and relocation
+    operands to symbolic instruction text. Equal size plus an identical,
+    non-empty ordered instruction stream is therefore strict function-scoped
+    exact evidence; an absent instruction stream is never evidence.
+    """
+    if target_rec is None or base_rec is None:
+        return False
+    target_instructions = target_rec.get("instructions") or []
+    base_instructions = base_rec.get("instructions") or []
+    if not target_instructions or target_rec.get("size") != base_rec.get("size"):
+        return False
+
+    def identity(instructions):
+        return [
+            (ins.get("off"), ins.get("len"), ins.get("text"))
+            for ins in instructions
+        ]
+
+    return identity(target_instructions) == identity(base_instructions)
+
+
 def file_mtime_iso(path):
     import datetime
 
@@ -743,14 +767,19 @@ def regen():
         if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
             fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
     pair_rows = []
+    rich_exact = 0
     for mangled in sorted(set(target) & set(base)):
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[mangled], base[mangled])
+        fuzzy = fuzzy_by_mangled.get(mangled)
+        if fuzzy is None and instruction_stream_exact(target[mangled], base[mangled]):
+            fuzzy = 100.0
+            rich_exact += 1
         pair_rows.append(
             (
                 sym_id[mangled],
                 target[mangled]["rva"],
                 base[mangled]["rva"],
-                fuzzy_by_mangled.get(mangled),
+                fuzzy,
                 cls,
                 t_n,
                 b_n,
@@ -758,6 +787,11 @@ def regen():
                 n_tonly,
                 n_bonly,
             )
+        )
+    if rich_exact:
+        log(
+            f"function-scoped rich-index exact attribution recovered "
+            f"{rich_exact} objdiff score gap(s)"
         )
     # Cross-name pairing first recovers PDB aliases whose base rich-index record
     # carries another folded symbol's mangled name.  The delink report proves
