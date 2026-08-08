@@ -5,21 +5,21 @@
 - Sources: `sources/vostok/logging/sources/` (low-level); high-level API in `vostok/core/logging_extensions`.
 - Reachability anchor: `use_log` in `game/sources/temp_include_all.cpp`
   (lived in game_core until the game carcass rebuild).
-- Status: nearly complete (1 `STUB` left).
+- Status: reconstructed; remaining emitted-code gaps are audited below.
 
 ### Matching dept
 
 * Previously there were multiple `operator()` overloads, which allowed `LOG_*` macro to pass flags and log location. With current `append` functions this was not possible and is instead replaced with a menagerie of `LOG_*` macros: `LOG_ERROR`, `LOGF_ERROR`, `LOGFD_ERROR`, `LOGIFD_ERROR` `LOGFD_FORCED`, etc. I don't think this is how they actually wrote this code, but based on the pdb file I cannot assume anything else for now.
 * Also those macro are not compiled into the same assembly. This needs to be investigated further.
 * Devs forgot to remove `static vostok::logging::log_callback_boost	s_log_callback` in `logger.cpp`. It doesn't seem to be used by anything according to IDA, but it did generate a dynamic constructor function, which is not generated in my case. Why? Maybe I should initialize it to something?
-  * claude (2026-06): RESOLVED - the base DOES emit it. `??__Es_log_callback@@YAXXZ` (logger.cpp,
-    byte-equivalent modulo LTCG conv) and `??__Fs_log_callback` exist in the base PDB; the report
-    counts them "missing" only because the base symbols keep the raw `??__E`/`??__F` mangling while
-    the target side is pretty-printed as `dynamic initializer for '...'`, so objdiff never pairs
-    them. Same story for ALL `format_*` dynamic initializers/atexit dtors in `format_specifier.cpp`
-    (that unit's 2/15 is almost entirely this pairing artifact - the five `??__E` bodies are
-    instruction-identical to the target). TOOLING fix needed (delinker/objdiff `??__E`/`??__F`
-    demangling), not source.
+  * claude (2026-06): the base emits both helpers. Their PDBs use different demangled spellings;
+    `match_db.py` safely canonicalizes plain fully-qualified static names before pairing. The six
+    `format_*` atexit helpers remain a compiler-context wall: the target calls the folded empty
+    destructor while the base elides it. Explicitly declaring the empty destructor leaves the base
+    thunks unchanged.
+* `verbosity_to_string` preserves the shipped error/info display-string swap. Target and base have
+  the same seven symbolic returns and statement structure; the remaining report residual is the
+  comparator's failed absolute-relocation handling for the embedded switch jump table.
 
 #### LOG_* macro verdict (claude, 2026-06, from target bytes at a real call site)
 
@@ -111,9 +111,8 @@ the per-function `// VERDICT:` lines name the helper.
   * claude (2026-06): the only target symbol matching is `vostok::core::debug_log_callback`
     (core/logging_extensions.cpp - out of logging's scope). Nothing in vostok/logging itself.
 * `log_file::on_terminate` is declared in `log_file.h` (so it was in the original class - the PDB
-  type record carries it) but the TARGET emits no body for it anywhere - our `{ close(); }` STUB
-  body is an invention that LTCG strips from the link. Keep the declaration, treat the body as
-  unverifiable.
+  type record carries it) but the target emits no body for it anywhere. Keep the declaration; an
+  unverifiable out-of-line `{ close(); }` reconstruction was removed.
 * `log_file::flush`: the target re-checks `strings::compare_insensitive( m_file_name.c_str(),
   in_file_name )` and returns early when the requested name equals the current log name -
   recovered 2026-06 (was a missing condition, not LTCG).

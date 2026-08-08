@@ -304,12 +304,18 @@ def mangled_name_part(mangled):
 #
 #   TARGET (original game PDB): demangled form, emitted verbatim by
 #     pdb_rich_context -   vostok::sound::`dynamic initializer for 's_debug_audio''
-#   BASE   (our PDB):          raw mangled form -
+#   BASE   (our PDB): either the raw mangled form -
 #     ??__Es_debug_audio@sound@vostok@@YAXXZ
+#   or a demangled form with the namespace inside the quotes -
+#     `dynamic initializer for 'vostok::sound::s_debug_audio''
 #
 # Rich indexes can place a local static's qualified scope either outside or
 # inside the thunk's quotes. Canonicalize both forms to the exact
-# (kind, fully-qualified-variable-name) identity and pair only unique 1:1 keys.
+# (kind, fully-qualified-variable-name) identity and pair only unique 1:1 keys
+# attributed to the same source file. The safe subset is limited to
+# fully-qualified plain identifiers (no anonymous-namespace `?A0x...` hash, no
+# template/local/cook scope, which need the real demangler). Body and statement
+# differences remain visible as ordinary measured differences.
 
 _DYN_RE = re.compile(r"^(.*?)`dynamic (initializer|atexit destructor) for '(.*)''$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
@@ -803,6 +809,8 @@ def regen():
         tm, bm = tm_list[0], bm_list[0]
         if target[tm]["rva"] in used_target_rvas or base[bm]["rva"] in used_base_rvas:
             continue
+        if target[tm]["file"] != base[bm]["file"]:
+            continue  # same-named statics in different owners are not proven identical
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
         pair_rows.append(
             (
@@ -1142,8 +1150,12 @@ def cmd_list(args):
         module_col, unit_col = "module", "unit"
     elif args.presence == "BASE_ONLY":
         base = """SELECT b.demangled, b.mangled, b.unit, b.module, b.size, b.n_stmts,
-                         st.status, st.detail
-                  FROM base_only b LEFT JOIN base_only_status st ON st.mangled = b.mangled"""
+                         coalesce(fl.flag, st.status) AS status,
+                         coalesce(fl.cause, st.detail) AS detail
+                  FROM base_only b
+                  LEFT JOIN base_only_status st ON st.mangled = b.mangled
+                  LEFT JOIN flags fl ON fl.mangled = b.mangled
+                                    AND fl.flag = 'OUT_OF_SCOPE'"""
         size_col = "b.size"
         name_col = "b.mangled"
         module_col, unit_col = "b.module", "b.unit"

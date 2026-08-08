@@ -10,11 +10,6 @@
 namespace vostok {
 namespace logging {
 
-// claude@NOTE: ALL six dynamic initializers + atexit dtors ARE emitted by the base, instruction-identical
-// to the target (??__Eformat_* / ??__Fformat_* in the base PDB). The report counts them missing only
-// because objdiff never demangles ??__E/??__F base names to pair with the target's pretty
-// "dynamic initializer for '...'" names - tooling gap, see the logging README. The unit's 2/15 is
-// almost entirely this artifact.
 format_specifier		format_thread_id	(format_specifier_thread_id);
 format_specifier		format_initiator	(format_specifier_initiator);
 format_specifier		format_time			(format_specifier_time);
@@ -61,4 +56,3 @@ void   format_specifier::fill_specifier_list	(format_specifier_list & list, form
 
 } // namespace logging
 } // namespace vostok
-

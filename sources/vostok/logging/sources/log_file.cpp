@@ -288,12 +288,6 @@ void log_file::close		( )
 	m_device->close		( file );
 }
 
-// STATE[STUB]
-void log_file::on_terminate			( )
-{
-	close			( );
-}
-
 log_file* new_log_file(
 	memory::base_allocator&				allocator,
 	fs_new::device_file_system_proxy&	device,
