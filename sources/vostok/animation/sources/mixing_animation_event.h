@@ -53,7 +53,8 @@ struct VOSTOK_ANIMATION_API animation_event {
 		animation_interval_time	( vostok::memory::uninitialized_value<float>() ),
 		event_time_in_ms		( event_time_in_ms ),
 		event_type				( event_type ),
-		channel_ids				( channel_ids )
+		channel_ids				( channel_ids ),
+		domain_data				( u8(-1) )
 	{
 	}
 
@@ -74,6 +75,7 @@ struct VOSTOK_ANIMATION_API animation_event {
 	{
 	}
 
+public:
 	u32							animation_interval_id;
 	float						animation_interval_time;
 	u32							event_time_in_ms;
