@@ -18,15 +18,15 @@ public:
 	virtual	float		interpolated_value	( float current_transition_time ) const;
 	virtual	float		transition_time		( ) const;
 
-	virtual	linear_interpolator* clone		( mixing::n_ary_tree_transition_tree_constructor& constructor ) const; //sushi@TODO: Add override
 	virtual	linear_interpolator* clone		( mutable_buffer& buffer ) const;
+	virtual	linear_interpolator* clone		( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 
-	virtual void		accept				( interpolator_comparer& dispatcher, base_interpolator const& interpolator ) const;
 	virtual void		accept				( interpolator_visitor& visitor ) const;
+	virtual void		accept				( interpolator_comparer& dispatcher, base_interpolator const& interpolator ) const;
 
-	virtual void		visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const;
-	virtual void		visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const;
 	virtual void		visit				( interpolator_comparer& dispatcher, instant_interpolator const& interpolator ) const;
+	virtual void		visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const;
+	virtual void		visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const;
 
 private:
 	float	m_total_transition_time;

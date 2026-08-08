@@ -19,8 +19,8 @@ public:
 	virtual	float	transition_time		( ) const;
 	inline	float	epsilon				( ) const { return m_epsilon; }
 
-	virtual	fermi_interpolator*	clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 	virtual	fermi_interpolator* clone	( mutable_buffer& buffer ) const;
+	virtual	fermi_interpolator*	clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 
 	virtual void	accept				( interpolator_visitor& visitor ) const;
 
@@ -29,11 +29,7 @@ public:
 	virtual void	visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const;
 	virtual void	visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const;
 
-	// claude@MATCH: members are non-const and operator= is the compiler-implicit
-	// memberwise one (per PDB ground-truth structure header) - legs_ik_processor::
-	// set_{heel,toe}_on_ground assigns `m_*_interpolator = fermi_interpolator(...)`,
-	// emitting a 2-float copy (+4/+8) that skips the vtable. `float const` members
-	// or a private operator= (the prior reconstruction) make that assignment illegal.
+	// Target assignment copies the two floats without the vtable.
 private:
 	float			m_total_transition_time;
 	float			m_epsilon;

@@ -33,14 +33,12 @@ class n_ary_tree_transition_tree_constructor;
 
 } // namespace mixing
 
-// sushi@TODO: Structure has different order for those functions
-
 struct VOSTOK_ANIMATION_API VOSTOK_NOVTABLE base_interpolator {
 public:
 	virtual	float	interpolated_value	( float transition_time ) const = 0;
 
-	virtual base_interpolator*  clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const = 0;
 	virtual	base_interpolator*	clone	( mutable_buffer& buffer ) const = 0;
+	virtual base_interpolator*  clone	( mixing::n_ary_tree_transition_tree_constructor& constructor ) const = 0;
 
 	virtual	float	transition_time		( ) const = 0;
 
@@ -48,8 +46,8 @@ public:
 	virtual	void	accept				( interpolator_visitor& visitor ) const = 0;
 	virtual	void	accept				( interpolator_comparer& dispatcher, base_interpolator const& interpolator ) const = 0;
 
-	virtual void	visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const = 0;
 	virtual void	visit				( interpolator_comparer& dispatcher, instant_interpolator const& interpolator ) const = 0;
+	virtual void	visit				( interpolator_comparer& dispatcher, linear_interpolator const& interpolator ) const = 0;
 	virtual void	visit				( interpolator_comparer& dispatcher, fermi_interpolator const& interpolator ) const = 0;
 
 protected:

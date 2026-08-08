@@ -18,44 +18,50 @@ using vostok::animation::base_interpolator;
 using vostok::animation::mixing::animation_interval;
 
 binary_tree_animation_node::binary_tree_animation_node			( vostok::animation::mixing::animation_lexeme_parameters const& parameters ) :
+	m_time_calculator					( parameters.time_calculator() ),
 	m_buffer							( &parameters.buffer() ),
 #ifndef MASTER_GOLD
 	m_identifier						( clone( parameters.buffer(), parameters.identifier() ) ),
 #endif // #ifndef MASTER_GOLD
 	m_animation_intervals				( clone( parameters.buffer(), parameters.animation_intervals(), parameters.animation_intervals() + parameters.animation_intervals_count() ) ),
+	m_weight_interpolator				(
+		parameters.weight_driving_animation() ?
+		0 : (
+			parameters.weight_interpolator() ?
+			parameters.weight_interpolator()->clone( parameters.buffer() ) :
+			instant_interpolator().clone( parameters.buffer() )
+		)
+	),
+	m_time_scale_interpolator			(
+		parameters.time_driving_animation() ?
+		0 : (
+			parameters.time_scale_interpolator() ?
+			parameters.time_scale_interpolator()->clone( parameters.buffer() ) :
+			instant_interpolator().clone( parameters.buffer() )
+		)
+	),
+	m_animated_object					( parameters.animated_object() ),
+	m_time_driving_animation			( parameters.time_driving_animation() ),
+	m_weight_driving_animation			( parameters.weight_driving_animation() ),
+	m_n_ary_animation					( 0 ),
+	m_next_weight_animation			( 0 ),
+	m_unique_weights_count				( 0 ),
+	user_data							( parameters.user_data() ),
 	m_animation_intervals_count			( parameters.animation_intervals_count() ),
 	m_start_animation_interval_id		( parameters.start_animation_interval_id() ),
 	m_start_animation_interval_time		( parameters.start_animation_interval_time() ),
 	m_start_cycle_animation_interval_id	( parameters.start_cycle_animation_interval_id() ),
-	m_unique_weights_count				( 0 ),
-	m_weight_interpolator				(
-		parameters.weight_interpolator() ?
-		parameters.weight_interpolator()->clone( parameters.buffer() ) :
-		instant_interpolator().clone( parameters.buffer() )
-	),
 	m_time_scale						( parameters.time_scale() ),
-	m_time_scale_interpolator			(
-		// parameters.driving_animation() ?
-		0 //:
-		//(
-		//	parameters.time_scale_interpolator() ?
-		//	parameters.time_scale_interpolator()->clone( parameters.buffer() ) :
-		//	instant_interpolator().clone( parameters.buffer() )
-		// )
-	),
-	// sushi@TODO:
-	m_animated_object					( NULL ),
-	m_playback_type						( vostok::animation::mixing::play_cyclically ),
-	m_time_synchronization_group_id		( 0 ),
-	m_weight_synchronization_group_id	( 0 ),
-	m_bones_mask						( 0 ),
-	m_unique_animation_id				( 0 ),
-	m_is_positive_event_direction		( false ),
-	m_can_generate_user_defined_events	( false ),
-
-	m_null_weight_found					( false ),
+	m_playback_type						( parameters.playback_type() ),
+	m_time_synchronization_group_id		( parameters.time_synchronization_group_id() ),
+	m_weight_synchronization_group_id	( parameters.weight_synchronization_group_id() ),
+	m_additivity_priority				( parameters.additivity_priority() ),
+	m_bones_mask						( parameters.bones_mask() ),
+	m_unique_animation_id				( parameters.unique_animation_id() ),
 	m_override_existing_animation		( parameters.override_existing_animation() ),
-	m_additivity_priority				( parameters.additivity_priority() )
+	m_is_positive_event_direction		( parameters.is_positive_event_direction() ),
+	m_can_generate_user_defined_events	( parameters.can_generate_events() ),
+	m_null_weight_found					( false )
 {
 	assign_uninitialized_user_data		( );
 }
@@ -74,13 +80,13 @@ animation_interval const* binary_tree_animation_node::clone			(
 	animation_interval* const result	= static_cast<animation_interval*>( buffer.c_ptr( ) );
 	buffer								+= u32(animation_intervals_end - animation_intervals_begin) * sizeof( animation_interval );
 
+
 	animation_interval* j				= result;
 	for ( animation_interval const* i = animation_intervals_begin; i != animation_intervals_end; ++i, ++j )
-		new ( j ) animation_interval	( (*i).animation(), (*i).start_time(), (*i).length() );
 
+		new ( j ) animation_interval	( (*i).animation(), (*i).start_time(), (*i).length() );
 	return								result;
 }
-
 void binary_tree_animation_node::destroy_animation_intervals	( )
 {
 	for ( animation_interval const* i = m_animation_intervals, *e = i + m_animation_intervals_count; i != e; ++i )
