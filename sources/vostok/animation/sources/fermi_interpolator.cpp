@@ -27,10 +27,8 @@ fermi_interpolator::fermi_interpolator			( float const transition_time, float co
 {
 }
 
-// claude@NOTE: optimized-COMDAT wall. Target inlines __libm_sse2_log / expf and the
-// clamp_r as an SSE comiss/jb chain (frameless, register temps - only t0 named), our
-// /Od base calls math::log/math::exp with named stack locals. Statement structure is
-// faithful; residual is /Od-vs-LTCG codegen, not source-steerable from this TU.
+// Target /GL removes the derived locals from PDB and schedules this upstream body
+// through direct SSE libm calls; the unoptimized base retains their stack lifetimes.
 float fermi_interpolator::interpolated_value			( float current_transition_time ) const
 {
 	R_ASSERT				( current_transition_time < m_total_transition_time );
