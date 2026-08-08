@@ -72,7 +72,7 @@ sound_world::sound_world	(
 	m_logic_world_user			( 0 ),
 	m_editor_world_user			( 0 ),
 	m_last_current_time_in_ms	( 0 ),
-	m_sound_voices_count		( 8 ),
+	m_sound_voices_count		( 64 ),
 	m_is_destroying				( false ),
 	m_master_voice				( 0 ),
 	m_is_audio_device_exist		( false ),
