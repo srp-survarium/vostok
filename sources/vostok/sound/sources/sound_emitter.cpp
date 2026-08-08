@@ -56,7 +56,7 @@ sound_instance_proxy_ptr sound_emitter::emit_point_sound( sound_scene_ptr& scene
 	world_user& specific_user		= static_cast_checked< world_user& >( user );
 	sound_scene& scn				= static_cast_checked< sound_scene& >( *scene.c_ptr( ) );
 
-	sound_instance_proxy_ptr proxy	= scn.create_sound_instance_proxy
+	sound_instance_proxy_ptr proxy	= scn.new_point_sound_instance_proxy
 									(
 										this,
 										*get_sound_propagator_emitter( ),
@@ -74,7 +74,7 @@ sound_instance_proxy_ptr sound_emitter::emit_spot_sound	(	sound_scene_ptr& scene
 	world_user& specific_user		= static_cast_checked< world_user& >( user );
 	sound_scene& scn				= static_cast_checked< sound_scene& >( *scene.c_ptr( ) );
 
-	sound_instance_proxy_ptr proxy	= scn.create_sound_instance_proxy
+	sound_instance_proxy_ptr proxy	= scn.new_spot_sound_instance_proxy
 									(
 										this,
 										*get_sound_propagator_emitter( ),
@@ -94,7 +94,7 @@ sound_instance_proxy_ptr sound_emitter::emit_volumetric_sound	(	sound_scene_ptr&
 	world_user& specific_user		= static_cast_checked< world_user& >( user );
 	sound_scene& scn				= static_cast_checked< sound_scene& >( *scene.c_ptr( ) );
 
-	sound_instance_proxy_ptr proxy	= scn.create_sound_instance_proxy
+	sound_instance_proxy_ptr proxy	= scn.new_volumetric_sound_instance_proxy
 									(
 										this,
 										*get_sound_propagator_emitter( ),
