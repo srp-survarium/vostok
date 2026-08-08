@@ -55,6 +55,9 @@ void keyboard::reset_current_state	( )
 	memory::zero		( &m_current_key_state, sizeof( m_current_key_state ) );
 }
 
+
+
+
 void keyboard::on_activate	( )
 {
 	HRESULT	result		= m_device->Acquire	( );
@@ -79,11 +82,18 @@ bool keyboard::is_key_down	( enum_keyboard const key ) const
 	return				( is_key_down( (char)m_current_key_state[ key ] ) );
 }
 
+
+
+
+
+
+
+
 void keyboard::execute		( )
 {
 	DWORD				events_count	= 64;
-	HRESULT	result		= m_device->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), m_current_events, &events_count, 0 );
-	if ( FAILED( result ) ) {
+	HRESULT	result;
+	if ( FAILED( result = m_device->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), m_current_events, &events_count, 0 ) ) ) {
 		if ( result == DIERR_INPUTLOST )
 		{
 			LOG_ERROR		( "DIERR_INPUTLOST" );
@@ -99,29 +109,40 @@ void keyboard::execute		( )
 		if ( result == DIERR_NOTINITIALIZED )
 		{
 			LOG_ERROR		( "DIERR_NOTINITIALIZED" );
-			return;
 		}else
 		if ( result == E_PENDING )
 		{
 			LOG_ERROR		( "E_PENDING" );
-			return;
 		}
+	}
 
-		if ( result != DIERR_INPUTLOST && result != DIERR_NOTACQUIRED )
-			return;
+	if ( result == DIERR_INPUTLOST || result == DIERR_NOTACQUIRED )
+	{
 
 		result				= m_device->Acquire();
+
 		reset_current_state	( );
 
-		events_count		= 64;
+		if ( FAILED( result ) )
+			return;
+
+
+
+
 		result				= m_device->GetDeviceData( sizeof( DIDEVICEOBJECTDATA ), m_current_events, &events_count, 0 );
-		if ( FAILED( result ) ) {
+
+		if ( FAILED( result ) )
+		{
 			LOG_ERROR		( "can't get mouse keyboard" );
 			return;
 		}
 	}
 
+	if ( FAILED( result ) )
+		return;
+
 	m_current_events_count	= events_count;
 	for ( u32 i = 0; i < m_current_events_count; ++i )
 		m_current_key_state[ m_current_events[i].dwOfs ]	= m_current_events[i].dwData & 0x80;
+
 }
