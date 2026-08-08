@@ -644,31 +644,32 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 {
 	*((u32*)buffer + 0) = 0xB19B00B5;
 	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
-	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size ); // sushi@NOTE: Assembly has +4 twice, so possibly buffer itself is modified
+	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
 
 	mixing::n_ary_tree* tree = static_cast<mixing::n_ary_tree*>( tree_buffer.c_ptr() );
 	tree_buffer += sizeof( mixing::n_ary_tree );
 
 	if ( m_mixing_tree_buffer_size )
 	{
-		mixing::n_ary_tree_transition_tree_constructor tree_constructor(
-			tree_buffer,
-			m_mixing_tree,
-			m_mixing_tree,
-			m_mixing_tree.animations_count( ),
-			m_mixing_tree.animated_objects_count( ),
-			m_mixing_tree.tree_actual_time_in_ms( ),
-			m_first_subscribed_channel,
-			mixing::n_ary_tree_transition_tree_constructor::transform_functor_type( )
+		new (tree) mixing::n_ary_tree(
+			mixing::n_ary_tree_transition_tree_constructor(
+				tree_buffer,
+				m_mixing_tree,
+				m_mixing_tree,
+				m_mixing_tree.animations_count( ),
+				m_mixing_tree.animated_objects_count( ),
+				m_mixing_tree.tree_actual_time_in_ms( ),
+				m_first_subscribed_channel,
+				mixing::n_ary_tree_transition_tree_constructor::transform_functor_type( )
+			).computed_tree( )
 		);
-		*tree = tree_constructor.computed_tree( );
 	}
 	else
 	{
 		new (tree) mixing::n_ary_tree( );
 	}
 
-	tree->adjust_animation_events_times( m_mixing_tree ); // sushi@TODO: To call this I added animation_player as friend class
+	tree->adjust_animation_events_times( m_mixing_tree );
 
 	for ( mixing::n_ary_tree_animation_node* root = tree->weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
 		invert_animation_times( *root, m_mixing_tree.tree_actual_time_in_ms( ) );
