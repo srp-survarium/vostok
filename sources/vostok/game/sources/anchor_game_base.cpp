@@ -33,9 +33,6 @@ void use_game_base( )
 	void						( base_game_scene::* const m_hide_movie )( flash_movie_resource_ptr& )	= &base_game_scene::hide_movie;
 	void						( base_game_scene::* const m_show_tm )( flash_text_manager* )			= &base_game_scene::show_text_manager;
 	void						( base_game_scene::* const m_hide_tm )( flash_text_manager* )			= &base_game_scene::hide_text_manager;
-	// create_text_manager is protected (IAE) - not address-takeable from this free
-	// function; it is reached via the derived scenes that call it once matched.
-
 	s_sink = *( pcvoid const* )&m_scheduler;
 	s_sink = *( pcvoid const* )&m_input;
 	s_sink = *( pcvoid const* )&m_scene_rndr;
