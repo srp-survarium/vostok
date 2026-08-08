@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 6,354 / 12,915 functions exact (49.20%) &middot; 6,354 / 12,915 functions exact-max (49.20%) &middot; 71.12% fuzzy &middot; 71.12% fuzzy-max.**
+**Overall: 6,356 / 12,915 functions exact (49.21%) &middot; 6,356 / 12,915 functions exact-max (49.21%) &middot; 71.13% fuzzy &middot; 71.13% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
@@ -22,14 +22,14 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `render`        |   351 | 784 / 2,647 (29.6%) | 784 / 2,647 (29.6%) | 62.4% |     62.4% |
 | `game`          |   141 | 403 / 1,498 (26.9%) | 403 / 1,498 (26.9%) | 45.8% |     45.8% |
 | `core`          |   136 | 848 / 1,320 (64.2%) | 848 / 1,320 (64.2%) | 83.8% |     83.8% |
-| `vostok`        |   112 | 640 / 1,252 (51.1%) | 640 / 1,252 (51.1%) | 76.0% |     76.0% |
-| `game_core`     |   189 | 511 / 1,171 (43.6%) | 511 / 1,171 (43.6%) | 81.9% |     81.9% |
+| `vostok`        |   112 | 642 / 1,252 (51.3%) | 642 / 1,252 (51.3%) | 76.1% |     76.1% |
+| `game_core`     |   189 | 510 / 1,171 (43.6%) | 510 / 1,171 (43.6%) | 81.9% |     81.9% |
 | `animation`     |   102 |   382 / 763 (50.1%) |   382 / 763 (50.1%) | 60.0% |     60.0% |
 | `ai`            |   124 |   437 / 690 (63.3%) |   437 / 690 (63.3%) | 90.2% |     90.2% |
 | `sound`         |    69 |   375 / 509 (73.7%) |   375 / 509 (73.7%) | 84.6% |     84.6% |
 | `collision`     |    52 |   428 / 503 (85.1%) |   428 / 503 (85.1%) | 96.4% |     96.4% |
 | `scaleform`     |    47 |   259 / 453 (57.2%) |   259 / 453 (57.2%) | 57.9% |     57.9% |
-| `particle`      |    25 |   319 / 400 (79.8%) |   319 / 400 (79.8%) | 95.9% |     95.9% |
+| `particle`      |    25 |   320 / 400 (80.0%) |   320 / 400 (80.0%) | 96.0% |     96.0% |
 | `vfs`           |    71 |   164 / 390 (42.1%) |   164 / 390 (42.1%) | 87.2% |     87.2% |
 | `ui`            |    27 |   196 / 227 (86.3%) |   196 / 227 (86.3%) | 92.9% |     92.9% |
 | `physics`       |    14 |    94 / 197 (47.7%) |    94 / 197 (47.7%) | 71.8% |     71.8% |

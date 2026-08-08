@@ -413,7 +413,7 @@ void particle_system_instance_impl::add_emitter_instance( u32 lod_index, particl
 
 void particle_system_instance_impl::prepare_render_resources()
 {
-	m_scene = m_particle_world->m_engine.get_scene(*m_particle_world);
+	m_scene = m_particle_world->engine().get_scene(*m_particle_world);
 
 	for (u32 i=0; i<max_supported_lods; i++)
 	{
@@ -426,7 +426,7 @@ void particle_system_instance_impl::prepare_render_resources()
 		{
 			instance->m_particle_world = m_particle_world;
 			if (!instance->m_render_instance)
-				instance->create_render_particle_emitter_instance(m_particle_world->m_engine.get_scene(*m_particle_world), m_particle_world->m_engine);
+				instance->create_render_particle_emitter_instance(m_particle_world->engine().get_scene(*m_particle_world), m_particle_world->engine());
 
 			instance = instance->m_next;
 		}
