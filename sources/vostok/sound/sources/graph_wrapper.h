@@ -22,9 +22,11 @@ inline void graph_wrapper::edge_iterators(
 )
 {
 	render::culling::portal const& current_portal = m_graph->get_portals( )[vertex.id( ).portal_id];
-	render::culling::spatial_sector const& current_sector = m_graph->get_sectors( )[current_portal.get_sectors( )[vertex.id( ).incoming_sector_index ? 0 : 1]];
+	render::culling::spatial_sector const& current_sector = m_graph->get_sectors( )[
+		vertex.id( ).incoming_sector_index ? current_portal.get_sectors( )[0] : current_portal.get_sectors( )[1]
+	];
 	begin = current_sector.get_portals( );
-	end = begin + current_sector.get_portals_count( );
+	end = current_sector.get_portals( ) + current_sector.get_portals_count( );
 }
 
 inline vertex_id_type graph_wrapper::vertex_id(
