@@ -132,7 +132,7 @@ void sound_environment_cook::on_environment_options_loaded	(
 
 void sound_environment_cook::delete_resource	( resources::resource_base* resource )
 {
-	UNMANAGED_DELETE					( resource );
+	DELETE								( resource );
 }
 
 } // namespace sound
