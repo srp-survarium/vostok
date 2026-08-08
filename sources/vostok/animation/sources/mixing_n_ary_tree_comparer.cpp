@@ -408,7 +408,7 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 	n_ary_tree_weight_node temp				( interpolator, 0.f );
 	n_ary_tree_node_comparer comparer;
 	for ( ; i != operands_end; ++i ) {
-		if ( comparer.compare( **i, temp ) == n_ary_tree_node_comparer::more )
+		if ( comparer.compare( **i, temp ) == vostok::animation::more )
 			break;
 
 		increase_buffer_size					( **i );
@@ -425,7 +425,7 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 void n_ary_tree_comparer::new_time_scale_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
 {
 	n_ary_tree_node_comparer comparer;
-	if ( comparer.compare( from, to ) == n_ary_tree_node_comparer::equal ) {
+	if ( comparer.compare( from, to ) == vostok::animation::equal ) {
 		increase_buffer_size		( from );
 		return;
 	}
@@ -499,7 +499,7 @@ void n_ary_tree_comparer::new_weight_transition(
 	increase_buffer_size		( from );
 	n_ary_tree_weight_node weight( from_animation_interpolator, to );
 	n_ary_tree_node_comparer comparer;
-	if ( comparer.compare( from, weight ) == n_ary_tree_node_comparer::equal )
+	if ( comparer.compare( from, weight ) == vostok::animation::equal )
 		return;
 
 	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node ) + sizeof( n_ary_tree_weight_node );
@@ -515,7 +515,7 @@ void n_ary_tree_comparer::new_weight_transition(
 	increase_buffer_size		( to );
 	n_ary_tree_weight_node weight( to_animation_interpolator, from );
 	n_ary_tree_node_comparer comparer;
-	if ( comparer.compare( weight, to ) == n_ary_tree_node_comparer::equal )
+	if ( comparer.compare( weight, to ) == vostok::animation::equal )
 		return;
 
 	m_equal						= false;
@@ -560,17 +560,17 @@ void n_ary_tree_comparer::add_operands(
 			break;
 
 		switch ( comparer.compare( **i, **j ) ) {
-			case n_ary_tree_node_comparer::equal :
+			case vostok::animation::equal :
 				new_weight_transition			( **i, **j );
 				++i;
 				++j;
 				break;
-			case n_ary_tree_node_comparer::less :
+			case vostok::animation::less :
 				(*i)->accept					( interpolator_selector );
 				new_weight_transition			( *interpolator_selector.result( ), **i, 0.f );
 				++i;
 				break;
-			case n_ary_tree_node_comparer::more :
+			case vostok::animation::more :
 				(*j)->accept					( interpolator_selector );
 				new_weight_transition			( *interpolator_selector.result( ), 0.f, **j );
 				++j;
@@ -816,12 +816,12 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 	n_ary_tree_node_comparer comparer;
 	while ( i && j ) {
 		switch ( comparer.compare( *i, *j ) ) {
-			case n_ary_tree_node_comparer::equal :
+			case vostok::animation::equal :
 				change_animation	( *i, *j, false );
 				i				= i->m_next_weight_animation;
 				j				= j->m_next_weight_animation;
 				break;
-			case n_ary_tree_node_comparer::less :
+			case vostok::animation::less :
 				remove_animation	( *i, 0, false );
 				i				= i->m_next_weight_animation;
 				break;

@@ -20,26 +20,38 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 		animation_lexeme* const	weight_driving_animation
 	) :
 	m_buffer							( buffer ),
-	m_time_driving_animation			( time_driving_animation ),
-	m_weight_driving_animation			( weight_driving_animation ),
+	m_time_driving_animation			( time_driving_animation ? time_driving_animation->cloned_in_buffer() : 0 ),
+	m_weight_driving_animation			( weight_driving_animation ? weight_driving_animation->cloned_in_buffer() : 0 ),
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
 	m_user_data							( memory::uninitialized_value<u32>() ),
-	m_animation_intervals				( animation_intervals_begin ),
+	m_animation_intervals				( static_cast<animation_interval const*>( buffer.c_ptr() ) ),
 	m_animation_intervals_count			( u32(animation_intervals_end - animation_intervals_begin) ),
 	m_weight_interpolator				( 0 ),
 	m_time_scale_interpolator			( 0 ),
+	m_animated_object					( 0 ),
 	m_start_animation_interval_id		( 0 ),
 	m_start_animation_interval_time		( 0.f ),
 	m_start_cycle_animation_interval_id	( 0 ),
 	m_time_scale						( 1.f ),
 	m_playback_type						( play_cyclically ),
-	m_time_synchronization_group_id		( u32(-1) ),
-	m_weight_synchronization_group_id	( u32(-1) ),
+	m_time_synchronization_group_id		( time_driving_animation ? time_driving_animation->time_synchronization_group_id() : u32(-1) ),
+	m_weight_synchronization_group_id	( weight_driving_animation ? weight_driving_animation->weight_synchronization_group_id() : u32(-1) ),
 	m_additivity_priority				( 0 ),
-	m_override_existing_animation		( false )
+	m_bones_mask						( u32(-1) ),
+	m_unique_animation_id				( u8(-1) ),
+	m_override_existing_animation		( false ),
+	m_is_positive_event_direction		( true ),
+	m_can_generate_events				( true )
 {
+	animation_interval* const animation_intervals = static_cast<animation_interval*>( buffer.c_ptr() );
+	buffer								+= m_animation_intervals_count * sizeof(animation_interval);
+
+	animation_interval* j				= animation_intervals;
+	for ( animation_interval const* i = animation_intervals_begin; i != animation_intervals_end; ++i, ++j )
+		new ( j ) animation_interval	( *i );
+
 #ifdef MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETERS		( identifier );
 #endif
@@ -54,26 +66,35 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 		animation_lexeme* const	weight_driving_animation
 	) :
 	m_buffer							( buffer ),
-	m_time_driving_animation			( time_driving_animation ),
-	m_weight_driving_animation			( weight_driving_animation ),
+	m_time_driving_animation			( time_driving_animation ? time_driving_animation->cloned_in_buffer() : 0 ),
+	m_weight_driving_animation			( weight_driving_animation ? weight_driving_animation->cloned_in_buffer() : 0 ),
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
 	m_user_data							( memory::uninitialized_value<u32>() ),
-	m_animation_intervals				( &animation_intervals[0] ),
+	m_animation_intervals				( static_cast<animation_interval const*>( buffer.c_ptr() ) ),
 	m_animation_intervals_count			( AnimationIntervalsCount ),
 	m_weight_interpolator				( 0 ),
 	m_time_scale_interpolator			( 0 ),
+	m_animated_object					( 0 ),
 	m_start_animation_interval_id		( 0 ),
 	m_start_animation_interval_time		( 0.f ),
 	m_start_cycle_animation_interval_id	( 0 ),
 	m_time_scale						( 1.f ),
 	m_playback_type						( play_cyclically ),
-	m_time_synchronization_group_id		( u32(-1) ),
-	m_weight_synchronization_group_id	( u32(-1) ),
+	m_time_synchronization_group_id		( time_driving_animation ? time_driving_animation->time_synchronization_group_id() : u32(-1) ),
+	m_weight_synchronization_group_id	( weight_driving_animation ? weight_driving_animation->weight_synchronization_group_id() : u32(-1) ),
 	m_additivity_priority				( 0 ),
-	m_override_existing_animation		( false )
+	m_bones_mask						( u32(-1) ),
+	m_unique_animation_id				( u8(-1) ),
+	m_override_existing_animation		( false ),
+	m_is_positive_event_direction		( true ),
+	m_can_generate_events				( true )
 {
+	animation_interval* const destination = static_cast<animation_interval*>( buffer.c_ptr() );
+	buffer								+= m_animation_intervals_count * sizeof(animation_interval);
+	for ( u32 i = 0; i < m_animation_intervals_count; ++i )
+		new ( destination + i ) animation_interval( animation_intervals[i] );
 }
 
 inline animation_lexeme_parameters::animation_lexeme_parameters	(
@@ -84,26 +105,34 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 		animation_lexeme* const	weight_driving_animation
 	) :
 	m_buffer							( buffer ),
-	m_time_driving_animation			( time_driving_animation ),
-	m_weight_driving_animation			( weight_driving_animation ),
+	m_time_driving_animation			( time_driving_animation ? time_driving_animation->cloned_in_buffer() : 0 ),
+	m_weight_driving_animation			( weight_driving_animation ? weight_driving_animation->cloned_in_buffer() : 0 ),
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
 	m_user_data							( memory::uninitialized_value<u32>() ),
-	m_animation_intervals				( &animation_interval ),
+	m_animation_intervals				( static_cast<vostok::animation::mixing::animation_interval const*>( buffer.c_ptr() ) ),
 	m_animation_intervals_count			( 1 ),
 	m_weight_interpolator				( 0 ),
 	m_time_scale_interpolator			( 0 ),
+	m_animated_object					( 0 ),
 	m_start_animation_interval_id		( 0 ),
 	m_start_animation_interval_time		( 0.f ),
 	m_start_cycle_animation_interval_id	( 0 ),
 	m_time_scale						( 1.f ),
 	m_playback_type						( play_cyclically ),
-	m_time_synchronization_group_id		( u32(-1) ),
-	m_weight_synchronization_group_id	( u32(-1) ),
+	m_time_synchronization_group_id		( time_driving_animation ? time_driving_animation->time_synchronization_group_id() : u32(-1) ),
+	m_weight_synchronization_group_id	( weight_driving_animation ? weight_driving_animation->weight_synchronization_group_id() : u32(-1) ),
 	m_additivity_priority				( 0 ),
-	m_override_existing_animation		( false )
+	m_bones_mask						( u32(-1) ),
+	m_unique_animation_id				( u8(-1) ),
+	m_override_existing_animation		( false ),
+	m_is_positive_event_direction		( true ),
+	m_can_generate_events				( true )
 {
+	vostok::animation::mixing::animation_interval* const destination = static_cast<vostok::animation::mixing::animation_interval*>( buffer.c_ptr() );
+	buffer								+= sizeof(vostok::animation::mixing::animation_interval);
+	new ( destination ) vostok::animation::mixing::animation_interval( animation_interval );
 #ifndef MASTER_GOLD
 #else
 	VOSTOK_UNREFERENCED_PARAMETERS		( identifier );
@@ -118,8 +147,8 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 		animation_lexeme* const	weight_driving_animation
 	) :
 	m_buffer							( buffer ),
-	m_time_driving_animation			( time_driving_animation ),
-	m_weight_driving_animation			( weight_driving_animation ),
+	m_time_driving_animation			( time_driving_animation ? time_driving_animation->cloned_in_buffer() : 0 ),
+	m_weight_driving_animation			( weight_driving_animation ? weight_driving_animation->cloned_in_buffer() : 0 ),
 #ifndef MASTER_GOLD
 	m_identifier						( identifier ),
 #endif // #ifndef MASTER_GOLD
@@ -128,21 +157,22 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 	m_animation_intervals_count			( animation_intervals_count(animation) ),
 	m_weight_interpolator				( 0 ),
 	m_time_scale_interpolator			( 0 ),
+	m_animated_object					( 0 ),
 	m_start_animation_interval_id		( 0 ),
 	m_start_animation_interval_time		( 0.f ),
 	m_start_cycle_animation_interval_id	( 0 ),
 	m_time_scale						( 1.f ),
 	m_playback_type						( play_cyclically ),
-	m_time_synchronization_group_id		( u32(-1) ),
-	m_weight_synchronization_group_id	( u32(-1) ),
+	m_time_synchronization_group_id		( time_driving_animation ? time_driving_animation->time_synchronization_group_id() : u32(-1) ),
+	m_weight_synchronization_group_id	( weight_driving_animation ? weight_driving_animation->weight_synchronization_group_id() : u32(-1) ),
 	m_additivity_priority				( 0 ),
-	m_override_existing_animation		( false )
+	m_bones_mask						( u32(-1) ),
+	m_unique_animation_id				( u8(-1) ),
+	m_override_existing_animation		( false ),
+	m_is_positive_event_direction		( true ),
+	m_can_generate_events				( true )
 {
 	create_animation_intervals			( animation );
-#ifndef MASTER_GOLD
-#else
-	VOSTOK_UNREFERENCED_PARAMETERS		( identifier );
-#endif // #ifndef MASTER_GOLD
 }
 
 

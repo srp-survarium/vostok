@@ -8,6 +8,7 @@
 #define VOSTOK_ANIMATION_ANIMATION_COLLECTION_H_INCLUDED
 
 #include <vostok/animation/animation_expression_emitter.h>
+#include "collection_playback_types.h"
 #include <vostok/math_randoms_generator.h>
 
 namespace vostok {
@@ -17,17 +18,11 @@ namespace mixing {
 	class animation_lexeme;
 } // namespace mixing
 
-enum collection_playing_types
-{
-	collection_playing_type_random,
-	collection_playing_type_sequential
-};
-
 class animation_collection : public animation_expression_emitter
 {
 public:
 									animation_collection	(
-										collection_playing_types type,
+										collection_playback_types type,
 										bool can_repeat_successively,
 										bool cyclic_repeating_index,
 										pvoid buffer,
@@ -55,7 +50,7 @@ private:
 	animations_type					m_animations;
 	mutable math::random32			m_random_number;
 	mutable u32						m_current_animation_index;
-	collection_playing_types		m_type;
+	collection_playback_types		m_type;
 	bool							m_is_cyclic_repeating;
 	bool							m_can_repeat_successively;
 	mutable bool					m_is_child_last_animation;

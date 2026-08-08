@@ -1,22 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
-//	/OPT:REF reachability anchor for the mixing::n_ary_tree_cloner carcass.
+//	Reachability anchor for mixing::n_ary_tree_cloner's optimized call graph.
 ////////////////////////////////////////////////////////////////////////////
-
-// The n_ary_tree_cloner visitor is constructed only by mixer::set_target_impl
-// (mixer.cpp, not compiled in this build), so /OPT:REF strips the whole class from
-// the base EXE and the delinker never produces a body to pair its methods against
-// the target. anchor_animation_cloner() constructs the cloner and calls its public
-// surface (ctor + initialize + the three public clone() overloads + interpolators
-// accessors). Constructing it pins the visitor vtable, so LTCG emits the visit()
-// overrides and the propagate<>/new_constructed<>/private clone() helpers
-// out-of-line (as the shipped EXE did) for the delinker to score.
-//
-// Self-guarded: the volatile guard is never true at runtime, but the compiler still
-// emits every reference, and every argument is sourced through a volatile placeholder
-// so LTCG cannot const-fold the carcass bodies away.
-//
-// Dispatched from survarium::IncludeAll::IncludeAll() (game_core/sources/anchor.cpp).
-// TEMPORARY - retire once the real mixer::set_target call graph reaches the cloner.
 
 #include "pch.h"
 
@@ -60,18 +44,10 @@ void anchor_animation_cloner( )
 	s_sink_interps	= cloner.interpolators( );
 	s_sink_count	= cloner.interpolators_count( );
 
-	// Pin the real public root change_animation(); LTCG then emits the genuine
-	// constructor call graph (new_animation -> add_operands -> the new_*_transition
-	// node-construction leaves) out-of-line, as the shipped EXE did. The leaves are
-	// reached through their TRUE callers here, not enumerated in this anchor.
 	static n_ary_tree_animation_node* volatile	s_anim	= 0;
 	static bool volatile						s_flag	= false;
 	constructor.change_animation( *s_anim, *s_anim, s_anim, s_flag );
 
-	// Pin the other public root add_animation() (the single-animation builder, reached in
-	// the real call graph through add_synchronization_group/merge_trees, both still STUBs).
-	// Un-DCEs add_animation + its leaf new_weight_transition(base_interpolator const&,float,float).
-	// TEMPORARY - retire once merge_trees reaches add_animation.
 	static n_ary_tree_animation_node* volatile	s_sink_anim	= 0;
 	s_sink_anim	= constructor.add_animation( *s_anim, s_anim );
 }

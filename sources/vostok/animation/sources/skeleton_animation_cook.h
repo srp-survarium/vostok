@@ -12,11 +12,7 @@
 namespace vostok {
 namespace animation {
 
-// sushi@TODO: Remove
-// bi_spline_data renamed?
-class bi_spline_skeleton_animation_baked : public resources::unmanaged_resource {
-  resources::resource_ptr< configs::binary_config, unmanaged_intrusive_base > m_bones_names;
-};
+class bi_spline_skeleton_animation_baked;
 
 typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::unmanaged_intrusive_base >
 	bi_spline_skeleton_animation_baked_ptr;

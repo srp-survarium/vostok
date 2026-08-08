@@ -22,7 +22,7 @@ class VOSTOK_ANIMATION_API addition_lexeme :
 public:
 	template < typename T1, typename T2 >
 	inline					addition_lexeme		( T1& left, T2& right );
-	inline					addition_lexeme		( addition_lexeme const& other, bool );
+	inline					addition_lexeme		( addition_lexeme const& other );
 	inline	addition_lexeme* cloned_in_buffer	( );
 
 protected:
@@ -33,6 +33,14 @@ STATIC_SIZE_ASSERT(addition_lexeme, 0x24);
 
 	template < typename T1, typename T2 >
 	inline addition_lexeme&	operator +			( T1& left, T2& right );
+	template < typename T >
+	inline expression		operator +			( expression& left, T& right );
+	template < typename T >
+	inline expression		operator +			( T& left, expression& right );
+	inline expression		operator +			( expression& left, expression& right );
+	inline expression		operator +			( expression const& left, expression& right );
+	inline expression		operator +			( expression& left, expression const& right );
+	inline expression		operator +			( expression const& left, expression const& right );
 
 } // namespace mixing
 } // namespace animation

@@ -88,6 +88,7 @@ public:
 	//
 	// accessors
 	//
+	inline	animation_state const*			get_animation_state					( ) const;
 	inline	animation_state&				animation_state						( ) const;
 #ifndef MASTER_GOLD
 	inline	pcstr							identifier							( ) const;

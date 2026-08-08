@@ -187,8 +187,8 @@ void animation_collection_cook::sub_animations_loaded ( resources::queries_resul
 animation_collection* animation_collection_cook::new_collection ( configs::binary_config_value const& collection )
 {
 	pcstr collection_type								= collection["collection_type"];
-	collection_playing_types type						= strings::equal( collection_type, "random" ) ?
-														collection_playing_type_random : collection_playing_type_sequential;
+	collection_playback_types type					= strings::equal( collection_type, "random" ) ?
+														collection_playback_type_random : collection_playback_type_sequential;
 	bool can_repeat_successively						= collection["is_dont_repeat_previous"];
 	bool cyclic_repeating_index							= collection["is_cyclic_repeat"];
 

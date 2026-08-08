@@ -8,6 +8,7 @@
 #include "animation_world.h"
 #include <vostok/animation/api.h>
 #include <vostok/linkage_helper.h>
+#include <vostok/math_float4x4.h>
 #include "mixing_binary_tree_writer.h"
 
 #ifndef MASTER_GOLD
@@ -71,6 +72,14 @@ void vostok::animation::set_memory_allocator( allocator_type& allocator )
 	g_allocator					= &allocator;
 }
 
+vostok::math::float4x4 vostok::animation::calculated_head_matrix( vostok::math::float4x4 const& head_matrix, vostok::math::float4x4 const& object_matrix )
+{
+	math::float4x4 result = math::mul4x3( math::mul4x3( math::mul4x3( math::create_rotation( math::float3( 0.f, math::pi_d2, 0.f ) ), math::create_rotation( math::float3( 0.f, 0.f, math::pi_d2 ) ) ), head_matrix ), object_matrix );
+	result.c.xyz( ) += result.j.xyz( ) * .1f;
+	result.c.xyz( ) += result.i.xyz( ) * 0.f;
+	result.c.xyz( ) += result.k.xyz( ) * 0.f;
+	return result;
+}
 
 #ifndef MASTER_GOLD
 vostok::animation::i_editor_animation* vostok::animation::create_editor_animation( allocator_type& allocator, skeleton_animation_ptr const& anim )

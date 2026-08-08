@@ -46,14 +46,14 @@ expression single_animation::emit	( mutable_buffer& buffer, bool& is_last_animat
 	return							expression( lexeme );
 }
 
-expression single_animation::emit	( mutable_buffer& buffer, animation_lexeme& driving_animation, bool& is_last_animation ) const
+expression single_animation::emit	( mutable_buffer& buffer, animation_lexeme& time_driving_animation, bool& is_last_animation ) const
 {
 	is_last_animation				= true;
 	mixing::animation_lexeme_parameters parameters (
 		buffer,
 		request_path(),
 		m_animation,
-		&driving_animation, NULL
+		&time_driving_animation, NULL
 	);
 	animation_lexeme				lexeme( parameters );
 	return							expression( lexeme );

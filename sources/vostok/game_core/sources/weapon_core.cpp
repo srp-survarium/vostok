@@ -25,7 +25,7 @@
 extern bool g_is_server;
 
 namespace vostok { namespace animation {
-math::float4x4 calculated_head_matrix( math::float4x4 const& weapon_transform, math::float4x4 const& head_matrix );
+math::float4x4 calculated_head_matrix( math::float4x4 const& head_matrix, math::float4x4 const& object_matrix );
 } } // namespace vostok::animation
 
 namespace survarium {
@@ -912,8 +912,7 @@ void weapon_core::on_player_model_removed( )
 
 // claude@NOTE: structure recovered (29/29 stmts). % walled by intrusive_ptr operator* + animation
 // inline-vs-call (compute_bones_matrices/convert_to_object_matrices/skeleton accessors out-of-line
-// target-side, inlined here). calculated_head_matrix is an animation-module helper not in our tree
-// (link-only stub in anchor_game_core.cpp).
+// target-side, inlined here).
 void weapon_core::update_bones_matrices(
 	resources::resource_ptr<animation::skeleton,resources::unmanaged_intrusive_base> const&	user_skeleton,
 	float4x4* const						user_matrices,
@@ -971,7 +970,7 @@ void weapon_core::update_bones_matrices(
 	on_skeleton_matrices_changed( current_time_in_ms, weapon_transform, weapon_matrices, weapon_matrices + weapon_matrices_count, user_transform, user_matrices, user_matrices + user_matrices_count, weapon_transform );
 
 	u32 const		head_bone_index			= ( *user_skeleton ).get_bone_index( "Head" ) - ( *user_skeleton ).get_root_bones_count( );
-	character_head_transform = animation::calculated_head_matrix( weapon_transform, user_matrices[head_bone_index] );
+	character_head_transform = animation::calculated_head_matrix( user_matrices[head_bone_index], weapon_transform );
 	set_fire_bullet_transform( character_head_transform );
 
 	u32 const		root_bone_index			= ( *user_skeleton ).get_bone_index( "Root" ) - ( *user_skeleton ).get_root_bones_count( );

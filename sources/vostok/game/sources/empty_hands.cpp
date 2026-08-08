@@ -15,7 +15,7 @@
 #include <vostok/math_float4x4.h>
 
 namespace vostok { namespace animation {
-math::float4x4 calculated_head_matrix( math::float4x4 const& weapon_transform, math::float4x4 const& head_matrix );
+math::float4x4 calculated_head_matrix( math::float4x4 const& head_matrix, math::float4x4 const& object_matrix );
 } } // namespace vostok::animation
 
 namespace survarium {
@@ -67,9 +67,8 @@ animation::mixing::expression empty_hands::selected_animations( mutable_buffer& 
 }
 
 // claude@NOTE: STRUCTURE MATCH (7 stmts). Direct analog of weapon_core::update_bones_matrices.
-// Capped by the animation inline-vs-call wall (compute/convert_*_matrices, skeleton bone-index
-// accessors and calculated_head_matrix are inlined gold-side, called here) plus calculated_head_matrix
-// being a link-only stub (anchor_game_core.cpp) - not source-steerable.
+// Capped by the animation inline-vs-call wall (compute/convert_*_matrices and skeleton bone-index
+// accessors are inlined gold-side, called here).
 void empty_hands::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,

@@ -85,10 +85,6 @@ weapon_lexeme_pair weapon_core_shotgun_reload_base_substate::get_weapon_lexeme_p
 	);
 }
 
-// claude@NOTE: structure-correct; residual is the shared mixing builder family - target
-// out-of-lines the animation_lexeme_parameters fluent setters and uses
-// addition_lexeme/cloned_in_buffer where /Od inlines the free operator+. Same wall as the
-// chamber weapon_and_hands_expression; only fixable in the shared mixing_addition_lexeme API.
 animation::mixing::expression weapon_core_shotgun_reload_base_substate::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	const bool							is_third_view,

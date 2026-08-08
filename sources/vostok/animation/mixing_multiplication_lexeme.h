@@ -22,7 +22,7 @@ class VOSTOK_ANIMATION_API multiplication_lexeme :
 public:
 	template < typename T1, typename T2 >
 	inline					multiplication_lexeme	( T1& left, T2& right );
-	inline					multiplication_lexeme	( multiplication_lexeme const& other, bool );
+	inline					multiplication_lexeme	( multiplication_lexeme const& other );
 	inline	multiplication_lexeme* cloned_in_buffer	( );
 
 protected:

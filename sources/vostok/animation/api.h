@@ -28,6 +28,10 @@
 
 namespace vostok {
 
+namespace math {
+	class float4x4;
+} // namespace math
+
 namespace render {
 
 class scene_renderer;
@@ -72,6 +76,7 @@ VOSTOK_ANIMATION_API	world*							create_world				(
 													);
 VOSTOK_ANIMATION_API	void							destroy_world				( world*& world );
 VOSTOK_ANIMATION_API	void							set_memory_allocator		( allocator_type& allocator );
+VOSTOK_ANIMATION_API	math::float4x4				calculated_head_matrix		( math::float4x4 const& head_matrix, math::float4x4 const& object_matrix );
 
 #ifndef MASTER_GOLD
 VOSTOK_ANIMATION_API	i_editor_animation*				create_editor_animation		( allocator_type& allocator, skeleton_animation_ptr const& anim );

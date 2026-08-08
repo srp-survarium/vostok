@@ -17,7 +17,7 @@ using vostok::animation::mixing::expression;
 using vostok::animation::mixing::animation_lexeme;
 
 animation_collection::animation_collection	(
-		collection_playing_types type,
+		collection_playback_types type,
 		bool can_repeat_successively,
 		bool is_cyclic_repeating,
 		pvoid buffer,
@@ -47,7 +47,7 @@ expression animation_collection::emit_impl	( mutable_buffer& buffer, animation_l
 
 	switch ( m_type )
 	{
-		case collection_playing_type_random:
+		case collection_playback_type_random:
 		{
 			is_last_animation				= !m_is_cyclic_repeating;
 			u32 const animations_count		= m_animations.size( );
@@ -67,7 +67,7 @@ expression animation_collection::emit_impl	( mutable_buffer& buffer, animation_l
 			break;
 		}
 
-		case collection_playing_type_sequential:
+		case collection_playback_type_sequential:
 		{
 			if( !m_is_child_last_animation )
 				break;
@@ -130,7 +130,7 @@ void animation_collection::serialize			( memory::writer& w ) const
 
 void animation_collection::deserialize			( memory::reader& r )
 {
-	r.r											( &m_type, sizeof( collection_playing_types ), sizeof( collection_playing_types ) );
+	r.r											( &m_type, sizeof( collection_playback_types ), sizeof( collection_playback_types ) );
 	m_random_number.deserialize					( r );
 	r.r											( &m_is_cyclic_repeating, sizeof( bool ), sizeof( bool ) );
 	m_current_animation_index					= r.r_u32( );

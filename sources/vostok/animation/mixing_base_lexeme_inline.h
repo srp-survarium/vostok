@@ -23,6 +23,12 @@ inline base_lexeme::base_lexeme				( base_lexeme const& other, bool ) :
 {
 }
 
+inline base_lexeme::base_lexeme				( base_lexeme const& other ) :
+	m_buffer		( other.m_buffer ),
+	m_cloned		( false )
+{
+}
+
 inline mutable_buffer& base_lexeme::buffer	( ) const
 {
 	ASSERT			( m_buffer );
@@ -38,7 +44,9 @@ inline T* base_lexeme::cloned_in_buffer		( )
 	mutable_buffer& buffer = *m_buffer;
 	T* const result	= static_cast<T*>( buffer.c_ptr( ) );
 	buffer			+= sizeof(T);
-	return			new(result) T( *static_cast<T*>(this), true );
+	new(result) T( *static_cast<T*>(this) );
+	result->m_cloned = true;
+	return			result;
 }
 
 inline bool	base_lexeme::is_cloned			( ) const

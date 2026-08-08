@@ -11,8 +11,6 @@
 
 namespace vostok {
 
-// temporary /OPT:REF reachability anchor (see anchor_animation_animation_time_calculator.cpp);
-// befriended so it can call the private fill_time. Retire with the anchor.
 void anchor_animation_animation_time_calculator( );
 
 namespace animation {
@@ -25,9 +23,6 @@ class n_ary_tree_animation_time_calculator :
 	public n_ary_tree_visitor,
 	private boost::noncopyable
 {
-	// claude@NOTE: temporary /OPT:REF reachability anchor (anchor_animation_animation_time_calculator.cpp)
-	// calls the private fill_time so the carcass pairs; retire with the anchor once the real
-	// mixer time-integration path reaches this calculator.
 	friend void ::vostok::anchor_animation_animation_time_calculator( );
 
 public:

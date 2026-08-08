@@ -44,7 +44,7 @@ class VOSTOK_ANIMATION_API animation_lexeme :
 {
 public:
 			explicit			animation_lexeme	( animation_lexeme_parameters const& parameters );
-	inline						animation_lexeme	( animation_lexeme& other, bool );
+	inline						animation_lexeme	( animation_lexeme const& other );
 	inline						~animation_lexeme	( );
 	inline	animation_lexeme*	cloned_in_buffer	( );
 

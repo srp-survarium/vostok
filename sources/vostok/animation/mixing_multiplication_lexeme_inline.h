@@ -22,9 +22,9 @@ inline multiplication_lexeme::multiplication_lexeme						( T1& left, T2& right )
 	ASSERT					( left.buffer() == right.buffer() );
 }
 
-inline multiplication_lexeme::multiplication_lexeme						( multiplication_lexeme const& other, bool ) :
+inline multiplication_lexeme::multiplication_lexeme						( multiplication_lexeme const& other ) :
 	binary_tree_multiplication_node	( other ),
-	binary_operation_lexeme ( other, true )
+	binary_operation_lexeme ( other )
 {
 }
 

@@ -34,6 +34,15 @@ using namespace vostok::animation;
 struct transform_getter : boost::noncopyable
 {
 public:
+	transform_getter(
+		animation_player&						animation_player,
+		boost::function< float4x4 ( pcvoid ) >&	functor
+	) :
+		animation_player	( animation_player ),
+		functor			( functor )
+	{
+	}
+
 	float4x4 get_transform( pcvoid const animated_object ) const;
 
 private:
@@ -162,184 +171,100 @@ bool animation_player::try_get_transform( pcvoid const animated_object, float4x4
 	return false;
 }
 
-// STATE[STUB]
 bool animation_player::set_target(
 	mixing::expression const&						expression,
 	const u32										current_time_in_ms,
 	boost::function< float4x4( pcvoid ) > const&	get_transform_functor
 )
 {
-	// LOCALS
-	// mutable_buffer 					buffer
-	// mixing::n_ary_tree 				target_tree
-	// mixing::n_ary_tree_converter 	builder
-	// mutable_buffer 					mixing_buffer
-	// mixing::n_ary_tree 				transition_tree
-	// transform_getter 				transform_getter_instance
-	// mixing::n_ary_tree_comparer 		comparer
-	// const bool 						first_time
-	// mixing::animated_object_holder* 	i
-	// mixing::callback_generator_info* const generators_head
-	// ******
+	mixing::n_ary_tree_converter builder	( expression );
+	u32 const buffer_size					= builder.needed_buffer_size( );
+	bool const first_time					= !m_mixing_tree.animations_count( );
+	pvoid const buffer_raw					=
+		first_time
+			? get_next_buffer( buffer_size )
+			: ALLOCA( buffer_size );
+	mutable_buffer buffer					( buffer_raw, buffer_size );
+	mixing::n_ary_tree target_tree			= builder.constructed_n_ary_tree(
+		buffer,
+		first_time,
+		current_time_in_ms,
+		m_first_subscribed_channel
+	);
 
-	return false;
+	if ( first_time ) {
+		m_mixing_tree_buffer_size	= buffer_size;
+		m_mixing_tree				= target_tree;
+		mixing::animated_object_holder* i	= m_mixing_tree.animated_objects( );
+		mixing::animated_object_holder* const end	=
+			i + m_mixing_tree.animated_objects_count( );
+		for ( ; i != end; ++i )
+			i->transform			= get_transform_functor( i->animated_object );
 
-	// FUNCTION BODY
-	// <0x570b10>|0x000|+0x00f:'173'	{
-	// <0>
-	// <0x570b1f>|0x00f|+0x00c:'175'
-	// <0>
-	// <1>
-	// <0x570b2b>|0x01b|+0x015:'178'
-	// <0x570b40>|0x030|+0x025:'179'
-	// <0>
-	// <0x570b65>|0x055|+0x00a:'181'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x570b6f>|0x05f|+0x01f:'189'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x570b8e>|0x07e|+0x00a:'197'
-	// <0>
-	// <0x570b98>|0x088|+0x006:'199'
-	// <0x570b9e>|0x08e|+0x00e:'200'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x570bac>|0x09c|+0x027:'206'
-	// <0x570bd3>|0x0c3|+0x02e:'207'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <0x570c01>|0x0f1|+0x042:'216'
-	// <0>
-	// <1>
-	// <2>
-	// <0x570c43>|0x133|+0x013:'220'
-	// <0x570c56>|0x146|+0x006:'221'
-	// <0x570c5c>|0x14c|+0x039:'222'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x570c95>|0x185|+0x014:'227'
-	// <0>
-	// <1>
-	// <2>
-	// <0x570ca9>|0x199|+0x009:'231'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <0x570cb2>|0x1a2|+0x017:'246'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x570cc9>|0x1b9|+0x00c:'257'
-	// <0>
-	// <0x570cd5>|0x1c5|+0x003:'259'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x570cd8>|0x1c8|+0x071:'271'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <0x570d49>|0x239|+0x01c:'296'
-	// <0>
-	// <0x570d65>|0x255|+0x014:'298'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x570d79>|0x269|+0x007:'304'
-	// <0>
-	// <0x570d80>|0x270|+0x01f:'306'
-	// <0x570d9f>|0x28f|+0x016:'307'
-	// <0>
-	// <0x570db5>|0x2a5|+0x009:'309'
-	// <0x570dbe>|0x2ae|+0x006:'310'
-	// <0>
-	// <1>
-	// <0x570dc4>|0x2b4|+0x002:'313'
-	// <0x570dc6>|0x2b6|+0x003:'314'
-	// <0x570dc9>|0x2b9|+0x009:'315'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x570dd2>|0x2c2|+0x017:'320'
-	// <0x570de9>|0x2d9|-0x1b7:'321'
-	// <0x570c32>|0x122|+0x1e0:'322'
-	// <0x570e12>|0x302|-0x1de:'322'
-	// <0x570c34>|0x124|+0x052:'323'
-	// <0x570c86>|0x176|+0x18e:'323'
-	// <0x570e14>|0x304|      :'323'	}
-	// ******
+		return						true;
+	}
+
+	mixing::n_ary_tree_comparer comparer	( m_mixing_tree, target_tree, current_time_in_ms );
+	if ( comparer.equal( ) )
+		return						false;
+
+	mixing::callback_generator_info* const callback_generators_buffer	=
+		static_cast< mixing::callback_generator_info* >(
+			ALLOCA( m_mixing_tree.animations_count( ) * sizeof( mixing::callback_generator_info ) )
+		);
+	m_mixing_tree_buffer_size			= comparer.needed_buffer_size( );
+	mutable_buffer mixing_buffer(
+		get_next_buffer( m_mixing_tree_buffer_size + 32 * sizeof( pvoid ) ),
+		m_mixing_tree_buffer_size + 32 * sizeof( pvoid )
+	);
+	m_mixing_tree.set_objects_transform	( );
+
+	transform_getter transform_getter_instance(
+		*this,
+		const_cast< boost::function< float4x4( pcvoid ) >& >( get_transform_functor )
+	);
+	mixing::n_ary_tree transition_tree	=
+		mixing::n_ary_tree_transition_tree_constructor(
+			mixing_buffer,
+			m_mixing_tree,
+			target_tree,
+			comparer.animations_count( ),
+			comparer.animated_objects_count( ),
+			current_time_in_ms,
+			m_first_subscribed_channel,
+			boost::bind( &transform_getter::get_transform, &transform_getter_instance, _1 )
+		).computed_tree( );
+
+	mixing::callback_generator_info* const generators_head	=
+		mixing::n_ary_tree::generate_animation_lexeme_end_events(
+			m_mixing_tree,
+			transition_tree,
+			callback_generators_buffer,
+			callback_generators_buffer + m_mixing_tree.animations_count( ),
+			m_first_subscribed_channel
+		);
+	m_mixing_tree					= transition_tree;
+
+	if ( generators_head ) {
+		++m_in_tick;
+		mixing::n_ary_tree::dispatch_callbacks(
+			generators_head,
+			m_first_subscribed_channel,
+			current_time_in_ms,
+			m_callbacks_are_actual
+		);
+		--m_in_tick;
+		if ( !m_in_tick && !m_callbacks_are_actual )
+			compact_callbacks		( );
+	}
+
+	for ( mixing::callback_generator_info const* i = generators_head; i; ) {
+		mixing::callback_generator_info const* const next	= i->next;
+		i->~callback_generator_info	( );
+		i							= next;
+	}
+
+	return							true;
 
 }
 

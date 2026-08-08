@@ -59,37 +59,77 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_animation_node& node )
 	m_result			= 0;
 }
 
-void n_ary_tree_weight_calculator::visit		( n_ary_tree_weight_transition_node& node )
+void n_ary_tree_weight_calculator::remove_transition( n_ary_tree_weight_transition_node& node )
 {
-	float const transition_time		= float( m_current_time_in_ms - node.start_time_in_ms() )/1000.f;
-	float const interpolated_value	= (transition_time >= node.interpolator().transition_time()) ? 1.f : node.interpolator().interpolated_value( transition_time );
-	R_ASSERT_CMP		( interpolated_value, >=, 0.f );
-	R_ASSERT_CMP		( interpolated_value, <=, 1.f );
-	if ( interpolated_value == 1.f ) {
-		node.to().accept( *this );
-		if ( m_weight == 0.f ) {
-			m_weight_transition_ended_time_in_ms = node.start_time_in_ms() + math::floor( node.interpolator().transition_time()*1000.f );
-			m_null_weight_found	= true;
-			return;
-		}
+	if ( m_weight == 0.f ) {
+		m_weight_transition_ended_time_in_ms	= node.start_time_in_ms() + math::floor( node.interpolator().transition_time()*1000.f );
+		m_null_weight_found	= true;
+	}
 
-		m_result		= &node.to();
-		n_ary_tree_destroyer	destroyer;
-		node.from().accept	( destroyer );
-		node.~n_ary_tree_weight_transition_node	( );
+	if ( !m_animation ) {
+		m_result			= 0;
 		return;
 	}
 
-	node.from().accept	( *this );
-	if ( m_result )
-		node.on_from_changed( *m_result );
+	m_result				= &node.to();
+	n_ary_tree_destroyer destroyer;
+	node.from().accept	( destroyer );
+	node.~n_ary_tree_weight_transition_node	( );
 
-	float const weight_from	= m_weight;
+	if ( m_recursion_level != 1 )
+		return;
 
-	node.to().accept	( *this );
-	float const weight_to	= m_weight;
+	n_ary_tree_base_node** const operands	= m_animation->operands( sizeof(n_ary_tree_animation_node) );
+	if ( m_weight == 1.f ) {
+		n_ary_tree_base_node** i		= operands;
+		n_ary_tree_base_node** j		= i;
+		n_ary_tree_base_node** const e	= i + m_animation->operands_count();
+		for ( ; j != e; ++j ) {
+			if ( *i == &node )
+				continue;
 
-	m_weight			= weight_from*(1.f - interpolated_value) + weight_to*interpolated_value;
+			*i++			= *j;
+		}
+
+		m_animation->decrement_operands_count();
+		return;
+	}
+
+	n_ary_tree_base_node** i		= operands;
+	n_ary_tree_base_node** const e	= i + m_animation->operands_count();
+	for ( ; i != e; ++i ) {
+		if ( *i == &node )
+			*i				= m_result;
+	}
+}
+
+void n_ary_tree_weight_calculator::visit		( n_ary_tree_weight_transition_node& node )
+{
+	++m_recursion_level;
+
+	float const transition_time		= float( m_current_time_in_ms - node.start_time_in_ms() )/1000.f;
+	float const interpolated_value	= (transition_time >= node.interpolator().transition_time()) ? 1.f : node.interpolator().interpolated_value( transition_time );
+	if ( interpolated_value == 1.f ) {
+		node.to().accept	( *this );
+		remove_transition	( node );
+	}
+	else {
+		node.from().accept	( *this );
+		bool const from_changed	= !!m_result;
+		if ( m_result )
+			node.on_from_changed	( *m_result );
+
+		float const weight_from	= m_weight;
+		node.to().accept	( *this );
+		if ( from_changed && (weight_from == m_weight) )
+			remove_transition	( node );
+		else {
+			m_weight			= weight_from*(1.f - interpolated_value) + m_weight*interpolated_value;
+			m_null_weight_found	= false;
+		}
+	}
+
+	--m_recursion_level;
 }
 
 void n_ary_tree_weight_calculator::visit		( n_ary_tree_time_scale_transition_node& node )

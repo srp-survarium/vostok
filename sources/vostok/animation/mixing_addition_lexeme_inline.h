@@ -19,9 +19,9 @@ inline addition_lexeme::addition_lexeme						( T1& left, T2& right ) :
 	ASSERT				( left.buffer() == right.buffer() );
 }
 
-inline addition_lexeme::addition_lexeme						( addition_lexeme const& other, bool ) :
+inline addition_lexeme::addition_lexeme						( addition_lexeme const& other ) :
 	binary_tree_addition_node( other ),
-	binary_operation_lexeme ( other, true )
+	binary_operation_lexeme ( other )
 {
 }
 
@@ -34,6 +34,72 @@ template < typename T1, typename T2 >
 inline addition_lexeme& operator +							( T1& left, T2& right )
 {
 	return				*addition_lexeme( left, right ).cloned_in_buffer( );
+}
+
+template < typename T >
+inline expression operator +								( expression& left, T& right )
+{
+	if ( left.is_empty( ) )
+		return			expression( right );
+
+	return				expression( *addition_lexeme( left, right ).cloned_in_buffer( ) );
+}
+
+template < typename T >
+inline expression operator +								( T& left, expression& right )
+{
+	if ( right.is_empty( ) )
+		return			expression( left );
+
+	return				expression( *addition_lexeme( left, right ).cloned_in_buffer( ) );
+}
+
+inline expression operator +								( expression& left, expression& right )
+{
+	if ( left.is_empty( ) )
+		return			expression( right );
+
+	if ( right.is_empty( ) )
+		return			expression( left );
+
+	return				expression( *addition_lexeme( left, right ).cloned_in_buffer( ) );
+}
+
+inline expression operator +								( expression const& left, expression& right )
+{
+	if ( left.is_empty( ) )
+		return			expression( right );
+
+	if ( right.is_empty( ) )
+		return			expression( left );
+
+	expression left_real	( left );
+	return				expression( *addition_lexeme( left_real, right ).cloned_in_buffer( ) );
+}
+
+inline expression operator +								( expression& left, expression const& right )
+{
+	if ( left.is_empty( ) )
+		return			expression( right );
+
+	if ( right.is_empty( ) )
+		return			expression( left );
+
+	expression right_real	( right );
+	return				expression( *addition_lexeme( left, right_real ).cloned_in_buffer( ) );
+}
+
+inline expression operator +								( expression const& left, expression const& right )
+{
+	if ( left.is_empty( ) )
+		return			expression( right );
+
+	if ( right.is_empty( ) )
+		return			expression( left );
+
+	expression left_real	( left );
+	expression right_real	( right );
+	return				expression( *addition_lexeme( left_real, right_real ).cloned_in_buffer( ) );
 }
 
 } // namespace mixing

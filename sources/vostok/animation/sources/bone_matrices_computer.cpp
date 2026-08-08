@@ -15,8 +15,13 @@ using vostok::animation::skeleton;
 using vostok::animation::bone_matrices_computer;
 using vostok::math::float4x4;
 using vostok::math::float3;
+using vostok::math::float4;
 using vostok::math::quaternion;
 using vostok::animation::animation_types_enum;
+using vostok::animation::frame;
+using vostok::buffer_vector;
+
+namespace math = vostok::math;
 
 namespace vostok {
 namespace animation {
@@ -113,7 +118,10 @@ bone_matrices_computer::~bone_matrices_computer( )
 		i->bone_matrices_computer.pinned_animation	= cubic_spline_skeleton_animation_pinned( 0 );
 }
 
-float3 mix_translations( buffer_vector< std::pair< float3, float > > const& transforms )
+} // namespace animation
+} // namespace vostok
+
+static float3 mix_translations( buffer_vector< std::pair< float3, float > > const& transforms )
 {
 	float3	result( 0.f, 0.f, 0.f );
 	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
@@ -122,11 +130,14 @@ float3 mix_translations( buffer_vector< std::pair< float3, float > > const& tran
 	return	result;
 }
 
-math::quaternion mix_rotations(
+static math::quaternion mix_rotations(
 		buffer_vector< std::pair< float3, float > >&	transforms,
 		const bool										do_normalization
 	)
 {
+	if ( transforms.empty( ) )
+		return				quaternion( float4( 0.f, 0.f, 0.f, 1.f ) );
+
 	typedef buffer_vector< std::pair< quaternion, float > >	rotations_type;
 	rotations_type	rotations( ALLOCA( sizeof( rotations_type::value_type ) * transforms.size( ) ), transforms.size( ) );
 	for ( std::pair< float3, float > const* i = transforms.begin( ), * const e = transforms.end( ); i != e; ++i ) {
@@ -164,7 +175,7 @@ math::quaternion mix_rotations(
 	return					math::extrapolated_slerp( rotations.begin( ), rotations.end( ) );
 }
 
-float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )
+static float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )
 {
 	float3	result( 1.f, 1.f, 1.f );
 	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
@@ -181,6 +192,9 @@ frame identity_frame( )
 	result.scale		= float3( 1.f, 1.f, 1.f );
 	return	result;
 }
+
+namespace vostok {
+namespace animation {
 
 bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_bone const& bone, const u32 bone_mask, const u32 animation_layer_id ) const
 {

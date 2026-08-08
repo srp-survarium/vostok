@@ -15,8 +15,10 @@ inline animation_player::animation_player			( ) :
 	m_mixing_tree				( ),
 	m_callbacks_buffer			( m_callbacks_buffer_raw, sizeof(m_callbacks_buffer_raw) ),
 	m_first_subscribed_channel	( 0 ),
+	m_mixing_tree_buffer_size	( 0 ),
 	m_in_tick					( 0 ),
-	m_callbacks_are_actual		( true )
+	m_callbacks_are_actual		( true ),
+	m_is_logging_enabled		( false )
 {
 }
 

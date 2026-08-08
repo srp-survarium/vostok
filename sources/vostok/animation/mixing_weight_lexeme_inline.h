@@ -32,9 +32,9 @@ inline weight_lexeme::weight_lexeme							(
 {
 }
 
-inline weight_lexeme::weight_lexeme							( weight_lexeme const& other, bool ) :
+inline weight_lexeme::weight_lexeme							( weight_lexeme const& other ) :
 	binary_tree_weight_node		( other ),
-	base_lexeme					( other, true )
+	base_lexeme					( other )
 {
 }
 

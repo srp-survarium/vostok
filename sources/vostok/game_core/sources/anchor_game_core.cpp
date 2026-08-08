@@ -8,14 +8,6 @@
 // provide it here in the anchor TU to satisfy the link (weapon_core.obj only references it).
 bool g_is_server = false;
 
-// claude@NOTE: calculated_head_matrix is an animation-module helper (target @0x763c80) not yet
-// implemented in our source tree; weapon_core::update_bones_matrices references it. Provide a
-// link-only stub here in the anchor TU so the structure of update_bones_matrices compiles+links;
-// the real body belongs to the animation module's PR.
-namespace vostok { namespace animation {
-math::float4x4 calculated_head_matrix( math::float4x4 const&, math::float4x4 const& ) { return math::float4x4( ); }
-} }
-
 // This file's only collision anchors are collision_geometry / collision_sensor,
 // which never reference animated_object or bone_collision_data - so it does NOT
 // include animated_object.h. That keeps its dllexport explicit instantiation
