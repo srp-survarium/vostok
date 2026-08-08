@@ -8,6 +8,7 @@
 #include "receiver_mouse.h"
 #include "direct_input_include.h"
 #include <vostok/input/handler.h>
+#include <vostok/command_line_extensions.h>
 
 using vostok::input::receiver::mouse;
 using vostok::input::handler;
@@ -18,6 +19,9 @@ namespace command_line {
 	bool key_is_set			( pcstr key_raw );
 } // namespace command_line
 } // namespace vostok
+
+static vostok::command_line::key s_mouse_unlock ( "mouse_unlock", "", "", "" );
+static vostok::command_line::key s_mouse_lock ( "mouse_lock", "", "", "" );
 
 mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& input_world ) 
 :	m_window_handle		( window_handle ),
@@ -36,8 +40,7 @@ mouse::mouse			( IDirectInput8A& direct_input, HWND const window_handle, world& 
 			DISCL_FOREGROUND |
 				( ( !debug::is_debugger_present( ) || command_line::key_is_set( "mouse_lock" ) ) &&
 				  !command_line::key_is_set( "mouse_unlock" ) ?
-					DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE )
-		);
+					DISCL_EXCLUSIVE : DISCL_NONEXCLUSIVE ) );
 	R_ASSERT			( !FAILED( result ) );
 
 	memory::zero		( &m_current_state,  sizeof(m_current_state)  );
