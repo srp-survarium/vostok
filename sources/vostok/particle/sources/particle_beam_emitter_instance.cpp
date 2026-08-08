@@ -161,7 +161,7 @@ void particle_beam_emitter_instance::set_particles_positions(bool gen_new)
 	
 	float3 beams_vector = m_beams_direction;
 	
-	float3 temp_vector  = float3(beams_vector.z*m_random_offsets[0][0].x, beams_vector.x*m_random_offsets[0][0].y, beams_vector.y*m_random_offsets[0][0].z).normalize();
+	float3 temp_vector  = float3(beams_vector.z*m_random_offsets[0][0].x, beams_vector.x*m_random_offsets[0][0].y, beams_vector.y*m_random_offsets[0][0].z).normalize_safe(float3(random_float(0.0f, 1.0f), random_float(0.0f, 1.0f), random_float(0.0f, 1.0f)));
 	
 	float3 up_vector	= vostok::math::cross_product(beams_vector, temp_vector);
 	float3 right_vector = vostok::math::cross_product(beams_vector, up_vector);
