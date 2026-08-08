@@ -9,16 +9,9 @@
 #include "LinearMath/btQuickProf.h"
 #include <vostok/console_command.h>
 
-/* sushi@TODO
- * There are still a lot of warnings in the code that need to be dealt with.
- */
-
 namespace vostok {
 namespace physics {
 
-// sushi@TODO: these console-var statics emit in base but stay TARGET_ONLY due to the
-// mangled-(base ??__E/F)-vs-demangled-(target) symbol-name pairing gap - tooling, not
-// source-steerable. See review_todos.md.
 static float s_step_height								= 0.6f;
 static console_commands::cc_float s_step_height_command						( "character_controller_step_height", s_step_height, 0.0f, 2.0f, true, console_commands::command_type_engine_internal );
 
@@ -54,9 +47,6 @@ btVector3 computeReflectionDirection( btVector3 const& direction, btVector3 cons
 
 btVector3 parallelComponent( btVector3 const& direction, btVector3 const& normal )
 {
-	// claude@NOTE: byte-identical (21/21); the 1-vs-0 statement-count diff is a line-table
-	// attribution artifact (target draws a statement boundary at the dot/multiply split,
-	// our build doesn't) - not source-steerable.
 	return direction.dot( normal ) * normal;
 }
 
@@ -65,7 +55,6 @@ btVector3 perpindicularComponent( btVector3 const& direction, btVector3 const& n
 	return direction - normal.dot( direction ) * normal;
 }
 
-// sushi@NOTE: This function is used in `survarium` module.
 void setup_game_material_groups( u16 const* game_material_groups, u16 game_materials_count )
 {
 	g_game_material_groups = game_material_groups;
@@ -83,21 +72,21 @@ public:
 	virtual	float		addSingleResult					( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 	{
 		if ( convexResult.m_hitCollisionObject == m_self )
-			return 2.0f; // sushi@NOTE: In bullet this was 1.0f. Why?
+			return 2.0f;
 
 		btVector3 hitNormalWorld;
 		if (normalInWorldSpace)
 		{
 			hitNormalWorld = convexResult.m_hitNormalLocal;
 		} else
-		{	// sushi@NOTE: I did the transform with origin as well. Does this matter? Understand this better
+		{
 			///need to transform normal into worldspace
 			hitNormalWorld = convexResult.m_hitCollisionObject->getWorldTransform().getBasis()*convexResult.m_hitNormalLocal;
 		}
 
 		btScalar dotUp = m_up_vector.dot(hitNormalWorld);
 		if (dotUp < m_minSlopeDot) {
-			return btScalar(0.0);  // sushi@NOTE: In bullet this was 1.0f. Why?
+			return btScalar(0.0);
 		}
 		return ClosestConvexResultCallback::addSingleResult (convexResult, normalInWorldSpace);
 	}
@@ -113,7 +102,6 @@ private:
 
 STATIC_SIZE_ASSERT(character_move_test_callback, 0x80);
 
-// sushi@NOTE: Target writes to local stack zero and then clear that local stack. Possibly LTCG artifacts
 bullet_character_controller::bullet_character_controller(
 	btPairCachingGhostObject*	ghost_object,
 	float2 const&				stand_shape_dim,
@@ -137,8 +125,8 @@ bullet_character_controller::bullet_character_controller(
 	m_max_fall_speed			( 55.0f ),
 	m_jump_speed				( 10.0f ),
 	m_in_crouch					( false ),
-	m_collision_filter_group	( collisionFilterGroup ),	// sushi@TODO: LTCG'ed to 4
-	m_collision_filter_mask		( collisionFilterMask ),	// sushi@TODO: LTCG'ed to 2
+	m_collision_filter_group	( collisionFilterGroup ),
+	m_collision_filter_mask		( collisionFilterMask ),
 	m_max_slope_in_radians		( math::pi_d3 ),
 	m_max_slope_angle_cos		( cosf( math::pi_d3 ) ),
 	m_gravity					( 29.4f ),
@@ -157,9 +145,6 @@ bullet_character_controller::~bullet_character_controller( )
 {
 }
 
-// The implementation is based on `btKinematicCharacterController::updateTargetPositionBasedOnCollision`.
-// Further matches might come from updating `computeReflectionDirection`, possibly, even though it matches 100%, when inlined, it doesn't.
-// Can also be because of `normalMag` check that was compiled out by LTCG.
 btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	btVector3 const&	hitNormal,
 	btVector3 const&	target_pos,
@@ -175,20 +160,17 @@ btVector3 bullet_character_controller::updateTargetPositionBasedOnCollision(
 	float movement_length = movementDirection.length( );
 	if ( movement_length > FLT_EPSILON )
 	{
-		movementDirection.normalize( ); // sushi@NOTE: As far as I understand, normalizing movement gives more precise math, but isn't required
+		movementDirection.normalize( );
 
-		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal ); // reflection here is not needed
+		btVector3 reflectDir = computeReflectionDirection( movementDirection, hitNormal );
 		reflectDir.normalize( );
 
 		btVector3 perpindicularDir  = perpindicularComponent( reflectDir, hitNormal );
 
-		// if (normalMag != 0.0) // sushi@NOTE: While LTCG should get rid of it, this reduces the match
 		{
 			btVector3 perpComponent = perpindicularDir * btScalar ( normalMag * movement_length );
 			result += perpComponent;
 		}
-
-		// sushi@NOTE: Based on the `vostok_structure` this makes more sense, but when I do that assembly breaks in other places.
 	}
 	return result;
 }
@@ -212,8 +194,6 @@ void bullet_character_controller::updateAction( btCollisionWorld* collisionWorld
 
 void bullet_character_controller::player_step( float dt )
 {
-	// static bool use_shape_size = <0x10000>;
-
 	BT_PROFILE("player_step");
 
 	m_has_updates = true;
@@ -222,7 +202,7 @@ void bullet_character_controller::player_step( float dt )
 	if ( m_jumping )
 		m_vertical_velocity = m_walk_vector.y( ) / dt;
 	else
-	{  // sushi@NOTE: Why are we always falling
+	{
 		float fall_speed = m_vertical_velocity - m_gravity * dt;
 		m_vertical_velocity = math::clamp_r( fall_speed, -m_max_fall_speed, m_jump_speed );
 	}
@@ -246,10 +226,6 @@ void bullet_character_controller::player_step( float dt )
 	m_ghost_object->setWorldTransform( new_transform );
 }
 
-// claude@NOTE: capped by optimization, not source. Target registerizes the inner-loop
-// temporaries (isFirstBody/directionSign/k/dist/weight) we spill under /Od - target frame
-// sub esp,54h vs base 64h, exactly the 5 phantom slots. Same structure otherwise; byte
-// residual is the register-allocation difference, not source-steerable here.
 float bullet_character_controller::recover_from_penetration( )
 {
 	BT_PROFILE("recover_from_penetration");
@@ -292,7 +268,7 @@ float bullet_character_controller::recover_from_penetration( )
 						btVector3 pos_on_shape = isFirstBody ? contact.m_localPointA : contact.m_localPointB;
 
                         float pos_on_shape_y = ( shape_y - math::abs( pos_on_shape.y( ) ) ) / shape_y;
-						float weight = pos_on_shape_y * pos_on_shape_y * pos_on_shape_y; // gold inlines math::pow( x, 3 ) as x*x*x
+						float weight = pos_on_shape_y * pos_on_shape_y * pos_on_shape_y;
 
 						btVector3 displacement = contact.m_normalWorldOnB * directionSign * dist;
 						btVector3 weighedDisplacement = displacement * btVector3( weight, 1.0f - weight, weight );
@@ -321,21 +297,6 @@ void bullet_character_controller::step_up( bool change_shape_size, btVector3& po
     m_current_pos += pos_up_correction;
 	m_current_step_offset = pos_up_correction.y( );
 
-	/* This one is way easier to read, but doesn't match exactly
-
-	// float diameter = m_current_shape_dim.x;
-	// float full_height = m_current_shape_dim.y;
-	// float new_cylinder_height = ( full_height - diameter ) - s_step_height;
-	// new_cylinder_height = math::max( 0.0f, new_cylinder_height );
-
-	float new_full_height = diameter + new_cylinder_height;
-	setup_shape_dim( float2( diameter, new_full_height ) );
-
-	pos_up_correction.setValue( 0.0f,  ( full_height - new_full_height ) * 0.5f, 0.0f );
-
-    m_current_pos += pos_up_correction;
-	m_current_step_offset = pos_up_correction.y( );
-	*/
 }
 
 void bullet_character_controller::step_forward_and_strafe( btVector3 const& walkMove )
@@ -351,7 +312,7 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	btScalar fraction = 1.0;
 	btScalar distance2 = (m_current_pos-target_pos).length2();
 
-	if ( distance2 < FLT_EPSILON ) // check is done in a different order
+	if ( distance2 < FLT_EPSILON )
 		return;
 
 	int maxIter = 10;
@@ -395,7 +356,6 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 				}
 			} else
 			{
-//				printf("currentDir: don't normalize a zero vector\n");
 				break;
 			}
 
@@ -406,10 +366,6 @@ void bullet_character_controller::step_forward_and_strafe( btVector3 const& walk
 	}
 }
 
-// claude@NOTE: capped by optimization, not source. Target folds finish_pos/worldTransformInv
-// into their single use (frame sub esp,148h vs base 164h) and DSEs the else-branch assign;
-// our /Od build materializes those slots. setIdentity()/setOrigin() merged onto one line to
-// match the target's statement merge. Remaining residual is the fold, not source-steerable.
 void bullet_character_controller::step_down( float dt, bool change_size_only, btVector3 const& pos_up_correction )
 {
 	BT_PROFILE("step_down");
@@ -440,8 +396,6 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 
 	if ( callback.hasHit( ) )
 	{
-		// sushi@NOTE: Even though target has it, seems like the transform here is not needed in general,
-		// since `ghost_object` isn't supposed to rotate anyway. So the same y coordinates can be used.
 		btTransform worldTransformInv = m_ghost_object->getWorldTransform( ).inverse( );
 		btVector3 hitPointLocal = worldTransformInv * callback.m_hitPointWorld;
 
@@ -454,8 +408,6 @@ void bullet_character_controller::step_down( float dt, bool change_size_only, bt
 		} else
 		{
 			LOG_INFO( "dddd" );
-
-			// sushi@NOTE: There is no code here. Which means the player will be stuck in air when the fall is too high?
 		}
 	} else
 		m_current_pos = finish.getOrigin( );
@@ -490,8 +442,6 @@ void bullet_character_controller::pre_step( float dt )
 
 	m_current_pos = m_ghost_object->getWorldTransform( ).getOrigin( );
 }
-
-// sushi@NOTE: 300 empty lines
 
 bool bullet_character_controller::can_jump( ) const
 {
@@ -530,9 +480,6 @@ void bullet_character_controller::setup_shape_dim( float2 const& shape_dim )
 	);
 }
 
-// claude@NOTE: capped by optimization, not source (frames equal). Target dead-store-eliminates
-// the setZero() write to .y (overwritten by setY()) and interleaves the setY multiply; our /Od
-// build keeps the dead store. Same source/structure; residual is the DSE, not source-steerable.
 void bullet_character_controller::setup_crouch_state( bool crouch )
 {
 	btVector3 prev_shape_offset = m_shape_offset;
@@ -541,16 +488,16 @@ void bullet_character_controller::setup_crouch_state( bool crouch )
     if ( crouch )
     {
     	m_current_shape_dim = m_crouch_shape_dim;
-		setup_shape_dim( m_current_shape_dim );		// up until this point no breakpoints in structure
+		setup_shape_dim( m_current_shape_dim );
         shape_y = m_crouch_shape_dim.y;
-    }												// this empty line is the most confusing, since it doesn't match structure
-    else											// while everything else (including this `else`) does
+    }
+    else
     {
         m_current_shape_dim = m_stand_shape_dim;
 		setup_shape_dim( m_current_shape_dim );
         shape_y = m_stand_shape_dim.y;
     }
-	m_shape_offset.setZero( ); // Creating a new btVector and assigning it results in new stack variables.`
+	m_shape_offset.setZero( );
 	m_shape_offset.setY( shape_y * 0.5f );
 
 	btVector3 orign = m_ghost_object->getWorldTransform( ).getOrigin( );
@@ -578,7 +525,6 @@ void bullet_character_controller::insert( btDynamicsWorld* world )
 
 void bullet_character_controller::remove( btDynamicsWorld* world )
 {
-	// ASSERT( m_collision_world == world )? Why do we even need to pass world
 	m_collision_world->removeAction( this );
 	m_collision_world->removeCollisionObject( m_ghost_object );
 	m_positions.clear( );
