@@ -12,11 +12,10 @@ class btRigidBody;
 namespace vostok {
 namespace physics {
 
-/* VOSTOK_PHYSICS_API was causing problems here. sushi@TODO: Which? */
 class  bt_rigid_body_base : public base_physics_object
 {
 public:
-	virtual					~bt_rigid_body_base		( )														{} ;
+	virtual					~bt_rigid_body_base		( )														= 0;
 	virtual btRigidBody*	get_rigid_body			( )														= 0;
 
 	virtual u16				get_triangle_material	( s32 triangle_id, bool is_shape_index ) const			= 0;
@@ -25,6 +24,8 @@ public:
 	virtual void			set_transform			( float4x4 const& transform )							= 0;
 	virtual float4x4		get_transform			( ) const												= 0;
 }; // class bt_rigid_body_base
+
+inline bt_rigid_body_base::~bt_rigid_body_base( ) { }
 
 STATIC_SIZE_ASSERT(bt_rigid_body_base, 0xC);
 

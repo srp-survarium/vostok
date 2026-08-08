@@ -307,44 +307,38 @@ def mangled_name_part(mangled):
 #   BASE   (our PDB):          raw mangled form -
 #     ??__Es_debug_audio@sound@vostok@@YAXXZ
 #
-# pdb_rich_context surfaces only the form each PDB happens to store (the base
-# PDB *does* carry the demangled string too, but the tool discards it - a proper
-# fix belongs there). Here we canonicalize the unpaired thunks on both sides to
-# a (kind, fully-qualified-variable-name) key and pair the SAFE subset only:
-# fully-qualified plain identifiers (no anonymous-namespace `?A0x...` hash, no
-# template/local/cook scope - those need the real demangler), 1:1 on both sides,
-# AND with an identical statement-size sequence (so we never pair a thunk onto
-# the wrong variable's twin). Everything else is left for the Rust-side fix.
+# Rich indexes can place a local static's qualified scope either outside or
+# inside the thunk's quotes. Canonicalize both forms to the exact
+# (kind, fully-qualified-variable-name) identity and pair only unique 1:1 keys.
 
 _DYN_RE = re.compile(r"^(.*?)`dynamic (initializer|atexit destructor) for '(.*)''$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
-_QUALIFIED_RE = re.compile(r"^([A-Za-z_][A-Za-z0-9_]*::)*[A-Za-z_][A-Za-z0-9_]*$")
 
 
-def dyn_canon_target(mangled):
-    """Canonical (kind, fqn) for a TARGET-side demangled dynamic thunk, or None
-    if it is not a safely-canonicalizable thunk (template/local/anon scope)."""
+def dyn_canon_rich(mangled):
+    """Canonical identity for a rich-index dynamic-init thunk."""
     m = _DYN_RE.match(mangled)
     if not m:
         return None
     pfx, kind, inner = m.group(1), m.group(2), m.group(3)
     kc = "E" if kind == "initializer" else "F"
-    # pfx is the namespace ("a::b::") OR empty (the var sits fully inside quotes).
+    # pfx is the namespace/local scope, or empty when it sits inside the quotes.
     if pfx:
         if not pfx.endswith("::"):
             return None
         fqn = pfx + inner
     else:
         fqn = inner
-    if not _QUALIFIED_RE.match(fqn):  # rejects anon-ns, templates, `local' scopes, $
+    if not fqn or "\n" in fqn or "\r" in fqn:
         return None
     return (kc, fqn)
 
 
 def dyn_canon_base(mangled):
-    """Canonical (kind, fqn) for a BASE-side mangled ??__E/??__F thunk, or None
-    if not safely canonicalizable (templated/local/anon-scope encodings carry
-    '?' or '$' and are deferred to the Rust-side demangler)."""
+    """Canonical identity for either rich spelling or raw ??__E/??__F form."""
+    rich = dyn_canon_rich(mangled)
+    if rich:
+        return rich
     if mangled.startswith("??__E"):
         kc = "E"
     elif mangled.startswith("??__F"):
@@ -729,7 +723,7 @@ def regen():
     # objects. The rich indexes retain the authoritative PDB names; reflect each
     # normalized report score back onto that identity before building pair rows.
     for mangled in target:
-        canonical = dyn_canon_target(mangled)
+        canonical = dyn_canon_rich(mangled)
         compiler = dyn_compiler_name(canonical) if canonical else None
         if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
             fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
@@ -789,12 +783,12 @@ def regen():
     if n_alias:
         log(f"cross-name paired {n_alias} report-grounded folded PDB aliases")
 
-    # Then pair dynamic-init/atexit thunks the two sides label differently
-    # (??__E/??__F mangled on base vs a demangled target name). Canonicalize the
-    # safe subset 1:1 with identical statement shape.
+    # Then pair dynamic-init/atexit thunks across their several rich/raw name
+    # spellings. The canonical identity must be unique on each side; emitted
+    # size may legitimately differ and is what the fuzzy matcher measures.
     t_canon, b_canon = {}, {}     # (kind, fqn) -> [mangled, ...]
     for m in set(target) - paired_primary:
-        c = dyn_canon_target(m)
+        c = dyn_canon_rich(m)
         if c:
             t_canon.setdefault(c, []).append(m)
     for m in set(base) - paired_primary:
@@ -809,8 +803,6 @@ def regen():
         tm, bm = tm_list[0], bm_list[0]
         if target[tm]["rva"] in used_target_rvas or base[bm]["rva"] in used_base_rvas:
             continue
-        if stmt_seq(target[tm]) != stmt_seq(base[bm]):
-            continue  # not byte-shape identical - genuinely unmatched, do not pair
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
         pair_rows.append(
             (
@@ -1574,7 +1566,10 @@ def cmd_report(args):
     uq = """
       SELECT {scope} AS scope, count(*) AS n
       FROM base_only b JOIN base_only_status st ON st.mangled = b.mangled
-      WHERE st.status IN ('UNEXPLAINED', 'NEAR_MISS') {extra} GROUP BY scope
+      WHERE st.status IN ('UNEXPLAINED', 'NEAR_MISS')
+        AND b.mangled NOT IN (
+          SELECT mangled FROM flags WHERE flag = 'OUT_OF_SCOPE'
+        ) {extra} GROUP BY scope
     """.format(scope=scope_expr, extra=sub_extra)
     suspicious = {r["scope"]: r["n"] for r in con.execute(uq, sub_params)}
     for r in rows:

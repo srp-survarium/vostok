@@ -13,10 +13,6 @@
 namespace vostok {
 namespace physics {
 
-// claude@NOTE: STRUCTURE MATCH (3 stmts). Residual is non-steerable: optimized-COMDAT
-// convention (this-in-esi, ret 4); register_cook() is an out-of-line call in the target
-// but /GL inlines its body in our base; and the translate_query_cook base-ctor resolves
-// thread_id_unset to a direct GetCurrentThreadId() in the target vs a cached global here.
 collision_shape_cook::collision_shape_cook( bool static_object ):
 	resources::translate_query_cook			(
 		static_object ? resources::collision_bt_shape_class_static : resources::collision_bt_shape_class_dynamic,

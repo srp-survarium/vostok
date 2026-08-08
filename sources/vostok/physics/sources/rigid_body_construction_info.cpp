@@ -8,10 +8,6 @@
 namespace vostok {
 namespace physics {
 
-// claude@NOTE: STRUCTURE MATCH (init-list only, 0 stmts). Residual is non-steerable:
-// the target is an optimized-COMDAT (this-in-eax, frameless) that inlines the
-// m_collisionShape( NULL ) resource_ptr ctor to a plain zero store, where our /Od base
-// emits a resource_ptr::resource_ptr call + uses a framed esi convention.
 bt_rigid_body_construction_info::bt_rigid_body_construction_info( ) :
 	m_mass						( 0.0f ),
 	m_collisionShape			( NULL ),

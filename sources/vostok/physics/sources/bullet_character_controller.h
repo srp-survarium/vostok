@@ -14,17 +14,7 @@ class btPairCachingGhostObject;
 namespace vostok {
 namespace physics {
 
-/*
-// STATE[STUB]
-// void* vostok::physics::character_move_test_callback::`scalar deleting destructor'(unsigned int)
-void* character_move_test_callback::`scalar deleting destructor'( )
-{
-}
-*/
-
-// sushi@NOTE: Based on `btKinematicCharacterController`.
-// Can be used to compare assembly.
-class bullet_character_controller : btActionInterface, boost::noncopyable {
+class bullet_character_controller : public btActionInterface, public boost::noncopyable {
 public:
 											bullet_character_controller		(
 												btPairCachingGhostObject*	ghost_object,
@@ -102,9 +92,9 @@ private:
 			void							setup_shape_dim					( float2 const& shape_dim );
 
 
-public:
 	static const	btVector3							m_up_vector;
 
+public:
 	/* 0x0000 */	/* btActionInterface */
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	btDynamicsWorld*					m_collision_world;
@@ -120,17 +110,17 @@ public:
 	/* 0x0088 */	btPairCachingGhostObject*			m_ghost_object;
 	/* 0x0090 */	btCapsuleShape						m_shape;
 	/* 0x00e0 */	bool								m_in_crouch;
-	/* 0x00e2 */	s16									m_collision_filter_group;
-	/* 0x00e4 */	s16									m_collision_filter_mask;
+	/* 0x00e2 */	const s16								m_collision_filter_group;
+	/* 0x00e4 */	const s16								m_collision_filter_mask;
 	/* 0x00e8 */	float								m_vertical_velocity;
-	/* 0x00ec */	float								m_max_fall_speed;
-	/* 0x00f0 */	float								m_jump_speed;
-	/* 0x00f4 */	float								m_max_slope_in_radians;
-	/* 0x00f8 */	float								m_max_slope_angle_cos;
-	/* 0x00fc */	float								m_gravity;
+	/* 0x00ec */	const float							m_max_fall_speed;
+	/* 0x00f0 */	const float							m_jump_speed;
+	/* 0x00f4 */	const float							m_max_slope_in_radians;
+	/* 0x00f8 */	const float							m_max_slope_angle_cos;
+	/* 0x00fc */	const float							m_gravity;
 	/* 0x0100 */	bool								m_was_on_ground;
 	/* 0x0101 */	bool								m_jumping;
-	/* 0x0102 */	bool								m_useGhostObjectSweepTest;
+	/* 0x0102 */	const bool							m_useGhostObjectSweepTest;
 	/* 0x0103 */	bool								m_walk_vector_applied;
 	/* 0x0104 */	bool								m_on_steep_slope;
 	/* 0x0105 */	bool								m_has_updates;

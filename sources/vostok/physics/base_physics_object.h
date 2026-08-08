@@ -18,12 +18,14 @@ namespace collision {
 namespace vostok {
 namespace physics {
 
-class base_physics_object : loose_ptr_base {
+class base_physics_object : public loose_ptr_base {
 public:
 	inline						base_physics_object		( ) : user_data( NULL ) { }
 
 	virtual u16					get_collision_group		( ) const	= 0;
 	virtual btCollisionObject*	get_bt_collision_obect	( )			= 0;
+
+	inline						~base_physics_object	( ) { }
 public:
 	/* 0x0004 */	/* loose_ptr_base */
 	/* 0x0008 */	collision::game_object*		user_data;

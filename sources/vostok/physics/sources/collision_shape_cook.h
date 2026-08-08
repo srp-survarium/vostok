@@ -12,7 +12,7 @@ namespace physics {
 
 class bt_collision_shape;
 
-class collision_shape_cook : resources::translate_query_cook {
+class collision_shape_cook : public resources::translate_query_cook {
 public:
 								collision_shape_cook		( bool static_object );
 
