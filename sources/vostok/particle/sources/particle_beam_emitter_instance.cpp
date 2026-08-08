@@ -25,10 +25,6 @@ particle_beam_emitter_instance::particle_beam_emitter_instance(
 	particle_emitter_instance( emitter, is_child_emitter_instance, need_query_material ),
 	m_beam_particles_allocated(false),
 	m_particle_beam_index(0.0f),
-	m_beams_source_position(float3(0.0f,0.0f,0.0f)),
-	m_beams_target_position(float3(50.0f, 50.0f, 50.0f)),
-	m_beams_end_position(m_beams_target_position),
-	m_beams_direction( normalize(m_beams_target_position - m_beams_source_position) ),
 	m_move_from_source_to_target(0.0f),
 	m_curve_line(0),
 	m_num_curves(0),
@@ -37,6 +33,11 @@ particle_beam_emitter_instance::particle_beam_emitter_instance(
 	m_random_offsets(0),
 	m_particle_action_beam(0)
 {
+	m_beams_source_position = !emitter.get_source_action() ? float3(0.0f, 0.0f, 0.0f) : emitter.get_source_action()->get_transform().c.xyz();
+	m_beams_target_position = !emitter.get_target_action() ? float3(50.0f, 50.0f, 50.0f) : emitter.get_target_action()->domain().generate();
+	m_beams_end_position = m_beams_target_position;
+	m_beams_direction = normalize_safe(m_beams_target_position - m_beams_source_position, float3(random_float(0.0f, 1.0f), random_float(0.0f, 1.0f), random_float(0.0f, 1.0f)));
+
 	m_max_num_particles			= m_beamtrail_parameters->num_beams * m_emitter.m_max_num_particles;
 	m_current_max_num_particles	= m_max_num_particles;
 
@@ -208,20 +209,6 @@ void particle_beam_emitter_instance::tick(float time_delta, bool /*create_new_pa
 	
 	m_beams_direction		= (m_beams_end_position - m_beams_source_position).normalize_safe(m_beams_target_position - m_beams_source_position);
 	
-	// Hack! Find source action.
-	particle_action* modifier = m_emitter.m_actions;
-	while(modifier)
-	{
-#pragma message( VOSTOK_TODO("Dima to IronNick: do not use dynamic_casts, use virtual function here instead") )
-		particle_action_source* source_action = dynamic_cast<particle_action_source*>(modifier);
-		if (source_action)
-		{
-			m_beams_source_position = source_action->get_transform().c.xyz() + m_transform.c.xyz();
-			break;
-		}
-		modifier = modifier->m_next;
-	}
-	
 	base_particle* P = m_particle_list.front();
 	while(P)
 	{
@@ -236,10 +223,7 @@ void particle_beam_emitter_instance::tick(float time_delta, bool /*create_new_pa
 			modifier = modifier->m_next;
 		}
 		
-		P->lifetime		= P->lifetime + /*P->lifetime_numerator * */time_delta;
-		
-// 		if (math::is_similar(P->lifetime_numerator, 0.0f, math::epsilon_3))
-// 			P->lifetime += time_delta;
+		P->lifetime		= P->lifetime + time_delta;
 		
 		P->position		= P->old_position;
 		
