@@ -69,7 +69,7 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_node& node
 	if ( node.time_scale() == 0.f )
 		m_time_in_ms						= u32( -1 );
 	else {
-		if ( node.time_scale_start_time_in_ms() >= m_start_time_in_ms) {
+		if ( node.time_scale_start_time_in_ms() > m_start_time_in_ms) {
 #ifndef MASTER_GOLD
 			if ( node.time_scale() >= 0.f ) {
 				if ( m_target_animation_time < node.animation_time_before_scale_starts() ) {
@@ -96,8 +96,16 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 	// here we use numerical integration to find how much time passed during time scale transition
 
 	R_ASSERT_CMP							( m_start_time_in_ms, >=, node.start_time_in_ms() );
-	u32 const time_passed_since_last_query	= m_start_time_in_ms - node.start_time_in_ms();
+
+	if (
+		m_start_animation_time == m_target_animation_time
+	) {
+		m_time_in_ms						= m_start_time_in_ms;
+		return;
+	}
+
 	float accumulated_animation_time		= m_start_animation_time;
+	u32 const time_passed_since_last_query	= m_start_time_in_ms - node.start_time_in_ms();
 
 	float const integration_interval_length	= integration_interval_length_in_ms/1000.f;
 
@@ -108,7 +116,6 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 		m_start_time_in_ms,
 		accumulated_animation_time,
 		transition_start_time_in_ms + (start_integration_interval_id ? 2*start_integration_interval_id-1 : 0)*integration_interval_length_in_ms/2
-		// sushi@TODO: n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 	);
 	time_scale_calculator.visit				( node );
 	float current_time_direction			= math::sign( time_scale_calculator.time_scale() );
@@ -118,7 +125,6 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 			transition_start_time_in_ms + (2*i+1)*integration_interval_length_in_ms/2,
 			accumulated_animation_time,
 			transition_start_time_in_ms + (i ? 2*i-1 : 0)*integration_interval_length_in_ms/2
-			// sushi@TODO: n_ary_tree_time_scale_calculator::forbid_transitions_destroying
 		);
 		time_scale_calculator.visit			( node );
 		R_ASSERT							( &node == time_scale_calculator.result() );
@@ -126,7 +132,6 @@ void n_ary_tree_time_in_ms_calculator::visit		( n_ary_tree_time_scale_transition
 		float const time_scale				= time_scale_calculator.time_scale( );
 		if ( (current_time_direction == 0.f) && (time_scale != 0.f) )
 			current_time_direction			= math::sign(time_scale);
-
 		bool const has_time_direction_changed	= (current_time_direction != 0.f) && (math::sign(time_scale) * current_time_direction <= 0.f);
 
 		float const animation_time_to_add	= time_scale * integration_interval_length;
@@ -176,5 +181,16 @@ n_ary_tree_time_in_ms_calculator::n_ary_tree_time_in_ms_calculator	(
 	m_event_time( target_animation_time ),
 	m_event_type( event_type )
 {
-	(**animation.operands( sizeof(n_ary_tree_animation_node) )).accept( *this );
+	n_ary_tree_base_node* const operand = animation.operands_count( ) ? *animation.operands( sizeof(n_ary_tree_animation_node) ) : 0;
+	if ( !operand || !operand->is_time_scale( ) )
+		m_time_in_ms = m_start_time_in_ms + math::floor( (m_target_animation_time - m_start_animation_time)*1000.f );
+	else {
+
+
+		operand->accept( *this );
+		if ( m_time_in_ms != u32(-1) ) {
+
+			m_time_in_ms = math::max( m_time_in_ms, m_start_time_in_ms );
+		}
+	}
 }
