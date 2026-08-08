@@ -47,14 +47,17 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 {
 	animation_interval* const animation_intervals = static_cast<animation_interval*>( buffer.c_ptr() );
 	buffer								+= m_animation_intervals_count * sizeof(animation_interval);
-
 	animation_interval* j				= animation_intervals;
-	for ( animation_interval const* i = animation_intervals_begin; i != animation_intervals_end; ++i, ++j )
-		new ( j ) animation_interval	( *i );
+
+	for ( animation_interval const* i = animation_intervals_begin;
+		i != animation_intervals_end; ++i, ++j )
+		new ( j ) animation_interval	( (*i).animation(), (*i).start_time(), (*i).length() );
+
 
 #ifdef MASTER_GOLD
 	VOSTOK_UNREFERENCED_PARAMETERS		( identifier );
 #endif
+
 }
 
 template < int AnimationIntervalsCount >
@@ -172,9 +175,6 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 	m_is_positive_event_direction		( true ),
 	m_can_generate_events				( true )
 {
-
-
-
 
 
 
