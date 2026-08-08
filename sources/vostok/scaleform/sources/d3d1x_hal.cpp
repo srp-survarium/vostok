@@ -17,6 +17,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include "Kernel/SF_Debug.h"
 #include "Kernel/SF_Random.h"
+#include "d3d1x_shader.h"
 #include "Render/D3D1x/D3D1x_HAL.h"
 #include "Render/Render_BufferGeneric.h"
 #include "Kernel/SF_HeapNew.h"
