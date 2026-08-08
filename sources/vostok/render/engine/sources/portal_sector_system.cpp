@@ -369,44 +369,19 @@ void portal_sector_system::select_models(
 	statistics::ref( ).visibility_stat_group.frustums_count.value = m_preventer->frustums_count( );
 }
 
-// claude@NOTE: ported from the sector half of dx9/model_manager.cpp
-// model_manager::traverse(sector*, convex_volume): the legacy
-// marker/m_selection/view_volumes bookkeeping maps to
-// sector_double_query_preventer::add_frustum, and the portal loop walks the
-// canonical id arrays, skipping the portal we entered through
-// (input_portal_id) instead of the legacy per-portal marker stamp; the
-// per-portal loop body lives in process_portal_by_frustum_intersection
-// below. Verify against 0x5f9110 at matcher phase.
 void portal_sector_system::process_sector( u32 sector_id, u32 input_portal_id, float3 const& view_pos, math::frustum const& frustum )
 {
-	// FUNCTION BODY[0x5f9110]
-	// register traversal process
-	m_preventer->add_frustum( frustum, sector_id );
-
-	spatial_sector const& s			= m_structure->get_sectors( )[sector_id];
-	u32 const* const portal_ids		= s.get_portals( );
-	u32 const portals_count			= s.get_portals_count( );
-
-	for ( u32 i = 0; i < portals_count; ++i )
+	spatial_sector const& s = m_structure->get_sectors( )[sector_id];
+	u32 const* const portals_end = s.get_portals( ) + s.get_portals_count( );
+	for ( u32 const* i = s.get_portals( ); i != portals_end; ++i )
 	{
-		if ( portal_ids[i] == input_portal_id )
+		if ( *i == input_portal_id || !m_structure->get_portals( )[*i].is_visible( ) )
 			continue;
 
-		process_portal_by_frustum_intersection( portal_ids[i], frustum, sector_id, view_pos );
+		process_portal_by_frustum_intersection( *i, frustum, sector_id, view_pos );
 	}
 }
 
-// claude@NOTE: ported from the per-portal loop body of dx9/model_manager.cpp
-// model_manager::traverse (:240-312): sphere early-out (canonical portals
-// keep no sphere member - rebuilt from the 4 points' aabb per legacy
-// portal::create; the legacy !f.test(sphere) truthiness is the intended
-// ==intersection_outside); far-side sector resolve (get_sector_back(view_point)
-// == plane-classify against the sectors pair; the legacy dual_render branch
-// has no canonical member) with the self skip; the start-sector skip and the
-// portal marker stamp collapse into is_possible_points_for_frustum on the
-// preventer; then clip, build the new frustum (far plane reused from the
-// current frustum's planes( )[4]) and recurse. Verify against 0x5fb8b0 at
-// matcher phase.
 void portal_sector_system::process_portal_by_frustum_intersection(
 	u32 portal_id,
 	math::frustum const& frustum,
@@ -414,37 +389,25 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 	float3 const& view_pos
 )
 {
-	// FUNCTION BODY[0x5fb8b0]
-	portal const& p					= m_structure->get_portals( )[portal_id];
-
-	// early-out sphere
-	// claude@NOTE: legacy spelled this `math::aabb bb; bb.invalidate( );`;
-	// the canonical math::aabb default ctor is private (friend-only), so the
-	// repo-wide create_invalid_aabb( ) idiom is used instead.
-	math::aabb bounds = math::create_invalid_aabb( );
-	for ( u32 i = 0; i < 4; ++i )
-		bounds.modify( p.get_points( )[i] );
-
-	if ( frustum.test( bounds.sphere( ) ) == math::intersection_outside )
+	portal const& p = m_structure->get_portals( )[portal_id];
+	if ( p.get_sectors( )[p.get_plane( ).classify( -frustum.planes( )[4].plane.normal ) > 0.f] == sector_id )
 		return;
 
-	// select the far-side sector
-	u32 const next_sector_id		= p.get_plane( ).classify( view_pos ) > 0 ? p.get_sectors( )[1] : p.get_sectors( )[0];
-	if ( next_sector_id == sector_id )
-		return;
-
-	// clip by frustum
-	float3	points[4];
+	float3 points[4];
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
-
 	if ( !cull_points_by_frustum( frustum, points ) )
 		return;
 
+	float3 const edge = points[2] - points[1];
+	if ( math::is_zero( edge.length( ) * ( points[1] - points[0] ).length( ), math::epsilon_3 ) )
+		return;
+
+	u32 const next_sector_id = p.get_sectors( )[0] == sector_id ? p.get_sectors( )[1] : p.get_sectors( )[0];
 	if ( !m_preventer->is_possible_points_for_frustum( points, next_sector_id ) )
 		return;
 
-	// create _new_ frustum and recurse
-	math::frustum const clip		= create_frustum_from_four_points( view_pos, points, frustum.planes( )[4].plane );
+	math::frustum const clip = create_frustum_from_four_points( view_pos, points, frustum.planes( )[4].plane );
+	m_preventer->add_frustum( clip, next_sector_id );
 	process_sector( next_sector_id, portal_id, view_pos, clip );
 }
 
