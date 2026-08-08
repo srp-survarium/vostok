@@ -275,9 +275,8 @@ struct receiver_unconditional_erasing_predicate : private boost::noncopyable
 
 sound_scene::~sound_scene	( )
 {
-	R_ASSERT						( !is_debug_stream_writing_enabled( ) );
+	m_graph							= 0;
 	delete_space_partitioning_tree	( m_spatial_tree );
-	delete_space_partitioning_tree	( m_environments_tree );
 
 	if ( !m_receivers.empty( ) )
 	{
