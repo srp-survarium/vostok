@@ -264,10 +264,8 @@ void application::postinitialize				( )
 	PostMessage						( s_splash_screen, WM_DESTROY, 0, 0 );
 }
 
-// claude@NOTE: optimized-target wall - structure MATCHes (8/8 stmts). Byte residual
-// is the `return s_presence_mutex != 0;` codegen: target does setne al on the live
-// CreateMutexA result (eax) right after storing, base materialises the bool via
-// xor ecx/setne cl/mov al,cl. Not source-steerable from /Od source.
+// Target returns the live CreateMutexA result with setne al; this compiler
+// materializes the same bool through ecx before moving it to al.
 bool check_presence_mutex						( )
 {
 	s_presence_mutex				= OpenMutexA( READ_CONTROL, FALSE, "survarium_already_running" );

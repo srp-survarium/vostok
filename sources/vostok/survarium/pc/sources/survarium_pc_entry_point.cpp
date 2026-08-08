@@ -59,7 +59,8 @@ int __stdcall WinMain					(
 	VOSTOK_UNREFERENCED_PARAMETERS		( hInstance, hPrevInstance, nCmdShow, lpCmdLine );
 
 	if ( !check_presence_mutex( ) )
-		return							( 0 );
+		// The shipped entry point reports presence-mutex rejection as failure.
+		return							( 1 );
 
 	vostok::debug::protected_call			( &main_protected, 0 );
 
