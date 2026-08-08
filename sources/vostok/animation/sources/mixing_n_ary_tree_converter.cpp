@@ -31,6 +31,7 @@
 #include "mixing_n_ary_tree_animation_node.h"
 #include <vostok/animation/i_editor_mixer.h>
 #include <vostok/animation/mixing_animated_object_holder.h>
+#include <vostok/animation/mixing_time_animations_predicate.h>
 #include "mixing_n_ary_tree_weight_calculator.h"
 #include "i_editor_mixer_inline.h"
 #include "interpolator_comparer.h"
@@ -47,6 +48,30 @@ using vostok::animation::mixing::expression;
 using vostok::animation::mixing::n_ary_tree;
 using vostok::animation::base_interpolator;
 using vostok::animation::mixing::binary_tree_null_weight_searcher;
+
+namespace vostok {
+namespace animation {
+namespace mixing {
+
+inline bool time_animations_predicate::operator ( )(
+		n_ary_tree_animation_node const* const left,
+		n_ary_tree_animation_node const* const right
+	) const
+{
+	if ( left->time_synchronization_group_id( ) != right->time_synchronization_group_id( ) )
+		return left->time_synchronization_group_id( ) < right->time_synchronization_group_id( );
+
+	if ( !left->time_driving_animation( ) && right->time_driving_animation( ) )
+		return true;
+	if ( left->time_driving_animation( ) && !right->time_driving_animation( ) )
+		return false;
+
+	return left < right;
+}
+
+} // namespace mixing
+} // namespace animation
+} // namespace vostok
 
 typedef std::pair<
 	u32,
@@ -654,11 +679,15 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 	m_animation_events			= static_cast<animation_state**>( buffer.c_ptr() );
 	buffer						+= m_animations_count*sizeof( animation_state* );
 
-	n_ary_tree_animation_node* root		= 0;
+	m_animated_objects			= static_cast<animated_object_holder*>( buffer.c_ptr() );
+	buffer						+= m_animated_objects_count*sizeof( animated_object_holder );
+
+	n_ary_tree_animation_node* weight_root	= 0;
 	n_ary_tree_animation_node* previous	= 0;
 
 	animation_state* j			= m_animation_states;
 	animation_state** event		= m_animation_events;
+	animated_object_holder* animated_objects_end = m_animated_objects;
 
 	n_ary_tree_animation_node* driving_animation_tester = 0;
 
@@ -668,7 +697,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 #endif // #ifndef MASTER_GOLD
 
 	n_ary_tree_node_constructor	node_constructor(buffer, m_interpolators, m_interpolators + m_interpolators_count);
-	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i = NULL ) {
+	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
 		if ( (*i).m_null_weight_found )
 			continue;
 
@@ -679,8 +708,11 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 		buffer					+= buffer_size;
 #endif // #ifndef MASTER_GOLD
 
-		R_ASSERT				( !i->driving_animation() || i->driving_animation()->n_ary_driving_animation() );
-		n_ary_tree_animation_node* const driving_animation	= NULL;
+		R_ASSERT				( !i->weight_driving_animation() || i->weight_driving_animation()->n_ary_animation() );
+		n_ary_tree_animation_node* const driving_animation	=
+			i->weight_driving_animation() ?
+			i->weight_driving_animation()->n_ary_animation() :
+			0;
 
 		if ( driving_animation_tester && (driving_animation_tester->time_synchronization_group_id() != -1) ) { // sushi@TODO
 			if ( !driving_animation )
@@ -697,7 +729,13 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 				);
 		}
 
-		base_interpolator const** const found	= NULL;
+		base_interpolator const** const found	= std::find_if(
+			m_interpolators,
+			m_interpolators + m_interpolators_count,
+			interpolator_predicate(
+				*(i->weight_driving_animation() ? i->weight_driving_animation()->weight_interpolator() : i->weight_interpolator())
+			)
+		);
 		R_ASSERT				( found != m_interpolators + m_interpolators_count );
 
 		animation_interval const* current_interval	= i->animation_intervals_begin( );
@@ -710,6 +748,11 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 				current_interval->length()
 			);
 
+		if ( std::find( m_animated_objects, animated_objects_end, i->animated_object() ) == animated_objects_end )
+			new ( animated_objects_end++ ) animated_object_holder( i->animated_object() );
+
+		u32 const operands_count	= i->m_unique_weights_count + (!i->time_driving_animation() && (i->time_scale() != 1.f) ? 1 : 0);
+
 		n_ary_tree_animation_node* const animation =
 			driving_animation ?
 			new ( buffer.c_ptr() ) n_ary_tree_animation_node (
@@ -719,7 +762,9 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 				*driving_animation,
 				cloned_intervals_begin,
 				cloned_intervals_begin + i->animation_intervals_count(),
-				0, 0, NULL,
+				i->unique_animation_id(),
+				i->start_cycle_animation_interval_id(),
+				i->animated_object(),
 				i->playback_type(),
 				i->time_calculator( ),
 				i->time_synchronization_group_id( ),
@@ -729,7 +774,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 				i->additivity_priority(),
 				i->bones_mask( ),
 
-				i->m_unique_weights_count,
+				operands_count,
 				false
 			) :
 			new ( buffer.c_ptr() ) n_ary_tree_animation_node (
@@ -751,7 +796,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 				i->can_generate_user_defined_events(),
 				i->additivity_priority(),
 				i->bones_mask(),
-				i->m_unique_weights_count + 1, // one for time scale node,
+				operands_count,
 				false
 			);
 
@@ -769,21 +814,19 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 		i->set_n_ary_animation	( *animation );
 		buffer					+= sizeof( n_ary_tree_animation_node );
 
-		if ( !root ) {
-			root				= animation;
-			animation->m_next_time_animation	= 0;
+		if ( !weight_root ) {
+			weight_root			= animation;
+			animation->m_next_weight_animation	= 0;
 		}
 		else
-			previous->m_next_time_animation	= animation;
+			previous->m_next_weight_animation	= animation;
 
 		previous				= animation;
 
 		n_ary_tree_base_node** multiplicands = static_cast<n_ary_tree_base_node**>( buffer.c_ptr() );
-		buffer					+= i->m_unique_weights_count * sizeof(n_ary_tree_base_node*);
+		buffer					+= operands_count * sizeof(n_ary_tree_base_node*);
 
-		if ( !i->time_driving_animation() ) {
-			buffer				+= sizeof(n_ary_tree_base_node*);
-
+		if ( !i->time_driving_animation() && (i->time_scale() != 1.f) ) {
 			base_interpolator const** const found	= std::find_if( m_interpolators, m_interpolators + m_interpolators_count, interpolator_predicate( *(*i).time_scale_interpolator() ) );
 			R_ASSERT				( found != m_interpolators + m_interpolators_count );
 			n_ary_tree_time_scale_node* const time_scale_node	=
@@ -843,31 +886,62 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 		*event++				= j;
 		n_ary_tree_weight_calculator weight_calculator( current_time_in_ms, NULL );
 		weight_calculator.visit( *animation );
-		animation_state const* const driving_animation_state = driving_animation ? &driving_animation->animation_state() : 0;
-		new ( j ) animation_state	(
+		if ( i->time_driving_animation() )
+			j->weight			= weight_calculator.weight();
+		else
+			new ( j ) animation_state	(
+				*animation,
+				current_time_in_ms,
+				time_event_animation_lexeme_started,
+				i->start_animation_interval_id(),
+				i->start_animation_interval_id(),
+				i->start_animation_interval_time(),
+				0,
+				weight_calculator.weight(),
+				channels_head, false
+			);
+		animation->set_animation_state	( *j++ );
+	}
+
+	n_ary_tree_animation_node** const time_animations =
+		static_cast<n_ary_tree_animation_node**>( ALLOCA( m_animations_count*sizeof(n_ary_tree_animation_node*) ) );
+	n_ary_tree_animation_node** time_animations_end = time_animations;
+	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
+		* time_animations_end++		= i->n_ary_animation();
+		if ( !i->time_driving_animation() )
+			continue;
+
+		n_ary_tree_animation_node* const animation = i->n_ary_animation();
+		n_ary_tree_animation_node& time_driving_animation = *i->time_driving_animation()->n_ary_animation();
+		animation->set_time_driving_animation( time_driving_animation );
+
+		u32 const animation_interval_id = time_driving_animation.animation_state().animation_interval_id;
+		new ( &animation->animation_state() ) animation_state(
 			*animation,
 			current_time_in_ms,
 			time_event_animation_lexeme_started,
-			driving_animation ? driving_animation_state->animation_interval_id : i->start_animation_interval_id(),
+			animation_interval_id,
+			animation_interval_id,
+			animation->animation_intervals()[ animation_interval_id ].length() /
+				time_driving_animation.animation_intervals()[ animation_interval_id ].length() *
+				time_driving_animation.animation_state().animation_interval_time,
 			0,
-			driving_animation ?
-					animation->animation_intervals()[ driving_animation_state->animation_interval_id ].length() /
-					driving_animation->animation_intervals()[ driving_animation_state->animation_interval_id ].length() *
-					driving_animation_state->animation_interval_time :
-				i->start_animation_interval_time(),
-			0,
-			weight_calculator.weight(),
-			channels_head, false
+			animation->animation_state().weight,
+			channels_head,
+			false
 		);
-		animation->set_animation_state	( *j++ );
 	}
+
+	std::sort					( time_animations, time_animations_end, vostok::animation::mixing::time_animations_predicate() );
+	for ( n_ary_tree_animation_node** i=time_animations + 1, **previous=time_animations; i != time_animations_end; ++i, ++previous )
+		(*previous)->m_next_time_animation = *i;
 
 #ifndef MASTER_GOLD
 	if ( !math::is_zero( full_animations_weight - 1.f, math::epsilon_3) )
 		LOG_ERROR				( "animation mixing weight error: sum of weights is not equal to 1 (%f)", full_animations_weight );
 #endif // #ifndef MASTER_GOLD
 	return						n_ary_tree(
-		root, root,
+		weight_root, *time_animations,
 		m_interpolators, m_animation_states, m_animation_events, m_animated_objects,
 		m_reference_counter,
 		m_animations_count, m_animated_objects_count, m_interpolators_count,

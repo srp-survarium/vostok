@@ -69,7 +69,7 @@ inline n_ary_tree_animation_node::n_ary_tree_animation_node						(
 #ifndef MASTER_GOLD
 		pcstr const						identifier,
 #endif // #ifndef MASTER_GOLD
-		n_ary_tree_animation_node&		time_driving_animation,			// sushi@TODO: weight_driving_animation
+		n_ary_tree_animation_node&		weight_driving_animation,
 		animation_interval const*		animation_intervals_begin,
 		animation_interval const*		animation_intervals_end,
 		u8								unique_animation_id,
@@ -77,7 +77,7 @@ inline n_ary_tree_animation_node::n_ary_tree_animation_node						(
 		pcvoid const					animated_object,
 		playback_enum					playback_type,
 		time_calculator_fn const&		time_calculator,
-		u32								time_synchronization_group_id,	// sushi@TODO: weight_synchronization_group_id
+		u32								time_synchronization_group_id,
 		bool							override_existing_animation,
 		bool							is_positive_event_direction,
 		const bool						can_generate_user_defined_events,
@@ -86,26 +86,22 @@ inline n_ary_tree_animation_node::n_ary_tree_animation_node						(
 		u32								operands_count,
 		bool							is_transitting_to_zero
 	) :
-/*
-	m_synchronization_group_id		( driving_animation.synchronization_group_id() ),
-	m_start_cycle_interval_id		( driving_animation.start_cycle_animation_interval_id() )
-*/
 	n_ary_tree_n_ary_operation_node	( operands_count ),
 	m_time_calculator				( time_calculator ),
 	m_animation_intervals			( animation_intervals_begin ),
 	m_animation_intervals_count		( u32 ( animation_intervals_end - animation_intervals_begin ) ),
-	m_time_driving_animation		( &time_driving_animation ),						// sushi@TODO
-	m_weight_driving_animation		( NULL ),											// sushi@TODO
+	m_time_driving_animation		( NULL ),
+	m_weight_driving_animation		( &weight_driving_animation ),
 	m_animation_state				( NULL ),
-	m_weight_interpolator			( time_driving_animation.m_weight_interpolator ),	// sushi@TODO
+	m_weight_interpolator			( weight_driving_animation.m_weight_interpolator ),
 #ifndef MASTER_GOLD
 	m_identifier					( identifier ),
 #endif // #ifndef MASTER_GOLD
 	m_animated_object				( animated_object ),
 	m_next_weight_animation			( NULL ),
 	m_next_time_animation			( NULL ),
-	m_time_synchronization_group_id	( time_synchronization_group_id ),					// sushi@TODO
-	m_weight_synchronization_group_id( 0 ),												// sushi@TODO
+	m_time_synchronization_group_id	( time_synchronization_group_id ),
+	m_weight_synchronization_group_id( weight_driving_animation.m_weight_synchronization_group_id ),
 	m_start_cycle_interval_id		( start_cycle_animation_interval_id ),
 	m_playback_type					( playback_type ),
 	m_additivity_priority			( additivity_priority ),

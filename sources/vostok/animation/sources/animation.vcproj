@@ -2501,6 +2501,10 @@
 				RelativePath="..\mixing_animated_object_holder.h"
 				>
 			</File>
+			<File
+				RelativePath="..\mixing_time_animations_predicate.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="private_api"

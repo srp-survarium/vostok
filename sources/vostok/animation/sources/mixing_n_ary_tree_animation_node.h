@@ -55,7 +55,7 @@ public:
 #ifndef MASTER_GOLD
 												pcstr const						identifier,
 #endif // #ifndef MASTER_GOLD
-												n_ary_tree_animation_node&		time_driving_animation,			// sushi@TODO: weight_driving_animation
+												n_ary_tree_animation_node&		weight_driving_animation,
 												animation_interval const*		animation_intervals_begin,
 												animation_interval const*		animation_intervals_end,
 												u8								unique_animation_id,
@@ -63,7 +63,7 @@ public:
 												pcvoid const					animated_object,
 												playback_enum					playback_type,
 												time_calculator_fn const&		time_calculator,
-												u32								time_synchronization_group_id,	// sushi@TODO: weight_synchronization_group_id
+												u32								time_synchronization_group_id,
 												bool							override_existing_animation,
 												bool							is_positive_event_direction,
 												const bool						can_generate_user_defined_events,
