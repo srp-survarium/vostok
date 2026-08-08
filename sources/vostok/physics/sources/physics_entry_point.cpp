@@ -21,28 +21,16 @@ VOSTOK_DECLARE_LINKAGE_ID(physics_entry_point)
 namespace vostok {
 namespace physics {
 
-// claude@NOTE: the static_cast<base_allocator&> keeps malloc_impl virtual (matches the
-// target's [g_mt_allocator+10h] vtable call); a concrete pthreads3_allocator devirtualises
-// to pt3malloc in /Od. Remaining residual is the bullet_physics_world ctor's optimized
-// COMDAT convention (this-in-eax + returns this), which spills through esi in our base.
 vostok::physics::world* create_world_bt( vostok::memory::base_allocator* allocator, physics::engine& engine )
 {
 	return VOSTOK_NEW_IMPL( static_cast<memory::base_allocator&>( memory::g_mt_allocator ), bullet_physics_world )( memory::g_mt_allocator, engine );
 }
 
-// claude@NOTE: STRUCTURE MATCH (3/3 stmts). Residual is non-steerable: (1) LTCG
-// const-folds the sole caller's g_mt_allocator arg into g_ph_allocator (base reads
-// the parameter); (2) the inlined collision_shape_cook base-ctor reads thread id via
-// GetCurrentThreadId() in the target vs a cached global in our /Od base (cross-module).
 void set_memory_allocator( memory::base_allocator* allocator )
 {
 	ASSERT				( !g_ph_allocator || g_ph_allocator==allocator );
 	g_ph_allocator		= allocator;
 
-	// sushi@TODO: these function-local cook statics emit their atexit destructors in base
-	// (set_memory_allocator is anchored) but stay TARGET_ONLY due to the mangled-(base
-	// ??__F...@?5?)-vs-demangled-(target ``6'``) symbol-name pairing gap - tooling, not
-	// source-steerable. See review_todos.md.
 	static collision_shape_cook collision_shape_cooker_static( true );
 	static collision_shape_cook collision_shape_cooker_dynamic( false );
 	static animated_model_instance_cook animated_model_cook;
