@@ -120,11 +120,10 @@ particle_emitter_instance::particle_emitter_instance(
 		return;
 	}
 
-	if (!need_query_material)
-		return;
-	
-	pcstr const material_name			= emitter.m_material_name[0] ? emitter.m_material_name : "default_particle";
-	load_material						( material_name );
+	if (need_query_material) {
+		pcstr const material_name		= emitter.m_material_name[0] ? emitter.m_material_name : "default_particle";
+		load_material					( material_name );
+	}
 }
 	
 particle_emitter_instance::~particle_emitter_instance()
