@@ -46,6 +46,14 @@ public:
 									world_user& user 
 									);
 
+							sound_instance_proxy_internal	(
+									sound_scene& scene,
+									sound_emitter_ptr sound_emitter,
+									sound_propagator_emitter const& propagator_emitter,
+									world_user& user,
+									sound_type type
+									);
+
 							sound_instance_proxy_internal	( 
 									sound_scene& scene,
 									sound_emitter_ptr sound_emitter,

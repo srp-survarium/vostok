@@ -36,6 +36,25 @@ sound_instance_proxy_internal::sound_instance_proxy_internal(	sound_scene& scene
 {
 }
 
+sound_instance_proxy_internal::sound_instance_proxy_internal	(
+										sound_scene& scene,
+										sound_emitter_ptr sound_emitter,
+										sound_propagator_emitter const& propagator_emitter,
+										world_user& user,
+										sound_type type
+									) :
+	m_scene					( scene ),
+	m_user					( user ),
+	m_sound_emitter			( sound_emitter ),
+	m_propagator_emitter	( propagator_emitter ),
+	m_next_for_sound_world	( 0 ),
+	m_collision				( 0 ),
+	m_destruction_pending	( false ),
+	m_playback_id			( 0 ),
+	m_volumetric_radius		( 0.0f ),
+	m_type					( type )
+{}
+
 sound_instance_proxy_internal::sound_instance_proxy_internal	( 
 										sound_scene& scene,
 										sound_emitter_ptr sound_emitter,
