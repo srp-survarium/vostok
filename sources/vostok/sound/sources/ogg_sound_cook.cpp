@@ -27,7 +27,7 @@ void ogg_sound_cook::translate_query( resources::query_result_for_cook& parent )
 	
 	fs_new::virtual_path_string req_path;
 
-	req_path.assignf( "%s%s%s", _converted_local_path, parent.get_requested_path(), _ogg_ext );
+	req_path.assignf( "%s%s%s", "resources/sounds/single/", parent.get_requested_path(), ".ogg" );
 	resources::request request_array[] = {	
 		{ req_path.c_str(), resources::ogg_file_contents_class },
 		{ req_path.c_str(), resources::sound_rms_class }

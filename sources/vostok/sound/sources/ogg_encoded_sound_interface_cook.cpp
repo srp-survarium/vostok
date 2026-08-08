@@ -25,7 +25,7 @@ ogg_encoded_sound_interface_cook::~ogg_encoded_sound_interface_cook 	( )
 void ogg_encoded_sound_interface_cook::translate_query		( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string req_path;
-	req_path.assignf( "%s%s%s", _converted_local_path, parent.get_requested_path(), _ogg_ext );
+	req_path.assignf( "%s%s%s", "resources/sounds/single/", parent.get_requested_path(), ".ogg" );
 
 	resources::class_id_enum type		= resources::ogg_raw_file;
 
