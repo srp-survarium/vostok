@@ -1005,10 +1005,11 @@ void sound_scene::set_listener_properties	(
 												float3 const& orient_top
 											)
 {
+	R_ASSERT						( position.valid( ) && orient_front.valid( ) && orient_top.valid( ) );
+	m_is_listener_position_set = true;
 	m_list_position.set		( position );
 	m_list_orient_front.set	( orient_front );
 	m_list_orient_top.set	( orient_top );
-	m_is_listener_position_set = true;
 }
 
 void sound_scene::fade_in	( sound_world& world, u32 time_in_msec )
