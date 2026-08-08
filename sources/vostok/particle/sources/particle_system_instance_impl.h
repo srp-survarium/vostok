@@ -16,6 +16,12 @@ namespace particle {
 class particle_system;
 struct world;
 struct particle_system_lod;
+class particle_system_instance_impl;
+
+typedef resources::resource_ptr<
+	particle_system_instance_impl,
+	resources::unmanaged_intrusive_base
+> particle_system_instance_impl_ptr;
 
 class particle_system_instance_impl : public particle_system_instance {
 public:
@@ -78,7 +84,7 @@ protected:
 	
 public:
 	// Lods.
-	particle_system_instance_impl*			m_next;	
+	particle_system_instance_impl_ptr		m_next;
 	render::base_scene_ptr					m_scene;
 	u32										m_current_lod;
 	u32										m_old_lod;
