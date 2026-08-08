@@ -31,15 +31,11 @@ single_sound_cook::~single_sound_cook	( )
 void single_sound_cook::translate_query	( query_result_for_cook& parent )
 {
 	pcstr const req_path			= parent.get_requested_path();
-	fs_new::virtual_path_string spl_config_path			= req_path;
-	spl_config_path.append					( spl_extention );
-	
-
 	resources::request request_array[] =
 	{	
 		{ req_path, encoded_sound_interface_class },
 		{ req_path, sound_rms_class },
-		{ spl_config_path.c_str(), sound_spl_class },
+		{ req_path, sound_spl_class },
 	};
 
 	resources::autoselect_quality_bool	autoselect_quality[] =
