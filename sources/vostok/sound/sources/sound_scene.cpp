@@ -385,12 +385,6 @@ sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy
 	return sound_instance_proxy_ptr		( new_proxy );
 }
 
-void sound_scene::free_sound_instance_proxy	( sound_instance_proxy* proxy )
-{
-	LOG_INFO							( "sound instance proxy with id %d is deallocated", proxy->get_id( ) );
-	VOSTOK_DELETE_IMPL					( m_proxies_allocator.c_ptr(), proxy );
-}
-
 void sound_scene::init_allocators	( resources::query_result_for_cook& parent )
 {
 	LOG_DEBUG						( "sound_scene::init_allocators" );

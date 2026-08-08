@@ -80,5 +80,11 @@ sound_instance_proxy_ptr sound_scene::new_volumetric_sound_instance_proxy	(
 	return sound_instance_proxy_ptr		( new_proxy );
 }
 
+void sound_scene::free_sound_instance_proxy	( sound_instance_proxy* proxy )
+{
+	LOG_INFO							( "sound instance proxy with id %d is deallocated", proxy->get_id( ) );
+	VOSTOK_DELETE_IMPL					( m_proxies_allocator.c_ptr(), proxy );
+}
+
 } // namespace sound
 } // namespace vostok
