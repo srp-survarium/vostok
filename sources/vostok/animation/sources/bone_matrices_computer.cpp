@@ -218,11 +218,7 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 		frame animation_frame;
 		current_frame_position frame_position;
 		cubic_spline_skeleton_animation const& animation	= *i->bone_matrices_computer.pinned_animation;
-		u32 const bone_index	= animation.get_bone_names( ).bone_index( bone.id( ) );
-		if ( bone_index == u32(-1) )
-			animation_frame	= identity_frame( );
-		else
-			animation.bone( bone_index ).get_frame( i->animation_time * default_fps, animation_frame, frame_position );
+		if ( animation.get_bone_names( ).bone_index( bone.id( ) ) == u32(-1) ) animation_frame = identity_frame( ); else animation.bone( animation.get_bone_names( ).bone_index( bone.id( ) ) ).get_frame( i->animation_time * default_fps, animation_frame, frame_position );
 
 		translations.push_back	( std::make_pair( animation_frame.translation, i->weight ) );
 		rotations.push_back		( std::make_pair( animation_frame.rotation, i->weight ) );
@@ -234,7 +230,7 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 		for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
 			total_weight	+= i->second;
 
-		if ( math::abs( total_weight - 1.f ) > math::epsilon_5 ) {
+		if ( math::abs( total_weight - 1.f ) >= math::epsilon_5 ) {
 			float const inverted_total_weight	= 1.f / total_weight;
 			for ( weighted_transform* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
 				i->second	*= inverted_total_weight;
@@ -262,11 +258,16 @@ float4x4 bone_matrices_computer::computed_local_bone_matrix( skeleton_bone const
 	for ( u32 i = 0; i < m_layers_count; ++i )
 		bone_transforms.push_back	( computed_local_bone_transform( bone, bone_mask, i ) );
 
+
 	bone_transform	result	= bone_transforms.front( );
 	for ( bone_transform const* i = bone_transforms.begin( ) + 1; i != bone_transforms.end( ); ++i )
 		result.apply			( *i );
-
-	return					mul4x3( mul4x3( create_scale( result.scale ), create_rotation( result.rotation ) ), create_translation( result.translation ) );
+	return					mul4x3(
+		mul4x3(
+			create_scale( result.scale ), create_rotation( result.rotation )
+		),
+		create_translation( result.translation )
+	);
 }
 
 void bone_matrices_computer::compute_skeleton_branch(
