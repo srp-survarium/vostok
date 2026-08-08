@@ -60,8 +60,6 @@ void single_animation_cook::translate_query				( resources::query_result_for_coo
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (switch + cases 0/1/2 + NODEFAULT, if/else); capped by
-// inline-vs-call - gold inlines the instant/linear/fermi interpolator ctors and operator float().
 void single_animation_cook::on_sub_resources_loaded		( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query( );
@@ -126,11 +124,9 @@ void single_animation_cook::on_sub_resources_loaded		( resources::queries_result
 	parent->finish_query							( result_success );
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt); reports unpaired because gold out-of-lines
-// delete_helper<base_allocator,resource_base> (thin call) while our /Od base inlines its
-// get_top_pointer / call_destructor_predicate expansion - inline-vs-call wall.
 void single_animation_cook::delete_resource			( resources::resource_base* res )
 {
+	res->~resource_base								( );
 	UNMANAGED_DELETE								( res );
 }
 
