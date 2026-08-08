@@ -326,14 +326,16 @@ struct curve_line_ranged_xyz_float
 				   m_line_y.save_binary(buffer, calc_size) +
 				   m_line_z.save_binary(buffer, calc_size) + 1;
 		}
+		else
+		{
+			u8 tmp = (u8)m_evaluate_type;
+			vostok::memory::copy(buffer.c_ptr(), sizeof(tmp), &tmp, sizeof(tmp));
+			buffer += sizeof(tmp);
 
-		u8 tmp = (u8)m_evaluate_type;
-		vostok::memory::copy(buffer.c_ptr(), sizeof(tmp), &tmp, sizeof(tmp));
-		buffer += sizeof(tmp);
-
-		return m_line_x.save_binary(buffer, calc_size) +
-			   m_line_y.save_binary(buffer, calc_size) +
-			   m_line_z.save_binary(buffer, calc_size);
+			return m_line_x.save_binary(buffer, calc_size) +
+				   m_line_y.save_binary(buffer, calc_size) +
+				   m_line_z.save_binary(buffer, calc_size);
+		}
 	}
 	inline void load_binary(vostok::mutable_buffer& buffer)
 	{
