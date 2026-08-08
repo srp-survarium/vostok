@@ -1341,13 +1341,25 @@ float3 sound_scene::get_portal_center	( u32 portal_id ) const
 	return								m_graph->get_portals( )[portal_id].get_points( )[0];
 }
 
-bool sound_scene::is_segment_pass_portal	( u32 portal_id, float3 segment_start, float3 segment_end ) const
+struct closets_point_predicate
 {
-	render::culling::portal const& portal	= m_graph->get_portals( )[portal_id];
-	float result_a, result_b				= 0.0f;
+	closets_point_predicate	( float min_value, float3 const& point ) :
+		closest_point		( point ),
+		min_val				( min_value )
+	{}
 
-	return collision::test_triangle( portal.get_points( )[0], portal.get_points( )[1], portal.get_points( )[2], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_a ) || collision::test_triangle( portal.get_points( )[0], portal.get_points( )[2], portal.get_points( )[3], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_b );
-}
+	void operator( )( std::pair< float, float3 > const& value )
+	{
+		if ( value.first >= min_val )
+			return;
+
+		min_val			= value.first;
+		closest_point	= value.second;
+	}
+
+	float3	closest_point;
+	float	min_val;
+};
 
 float3 closest_point_on_segment	(
 	float3 const&		point,
@@ -1358,6 +1370,71 @@ float3 closest_point_on_segment	(
 	float domen_value					= ( point - segment_origin ).dot_product( segment_displacement ) / segment_displacement.squared_length( );
 	domen_value							= math::clamp_r( domen_value, 0.f, 1.f );
 	return								segment_origin + segment_displacement * domen_value;
+}
+
+float3 sound_scene::get_portal_nearest_point	( u32 portal_id, float3 segment_start, float3 segment_end ) const
+{
+	render::culling::portal const& portal	= m_graph->get_portals( )[portal_id];
+
+	float3 p1							= segment_start;
+	float3 p3							= segment_end;
+	float3 p2							= portal.get_points( )[0];
+	float3 p4							= portal.get_points( )[1];
+
+	float3 d1							= p3 - p1;
+	float3 d2							= p4 - p2;
+
+	vectora< std::pair< float, float3 > > portal_segments( g_allocator );
+
+	std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) );
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
+
+	p2									= portal.get_points( )[1];
+	p4									= portal.get_points( )[2];
+
+	d1									= p3 - p1;
+	d2									= p4 - p2;
+
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
+
+	p2									= portal.get_points( )[2];
+	p4									= portal.get_points( )[3];
+
+	d1									= p3 - p1;
+	d2									= p4 - p2;
+
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
+
+	p2									= portal.get_points( )[3];
+	p4									= portal.get_points( )[0];
+
+	d1									= p3 - p1;
+	d2									= p4 - p2;
+
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
+
+	closets_point_predicate p( portal_segments.front( ).first, portal_segments.front( ).second ); std::for_each( portal_segments.begin( ), portal_segments.end( ), p );
+	return p.closest_point;
+}
+
+bool sound_scene::is_segment_pass_portal	( u32 portal_id, float3 segment_start, float3 segment_end ) const
+{
+	render::culling::portal const& portal	= m_graph->get_portals( )[portal_id];
+	float result_a, result_b				= 0.0f;
+
+	return collision::test_triangle( portal.get_points( )[0], portal.get_points( )[1], portal.get_points( )[2], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_a ) || collision::test_triangle( portal.get_points( )[0], portal.get_points( )[2], portal.get_points( )[3], segment_end, ( segment_start - segment_end ).normalize( ), ( segment_end - segment_start ).length( ), result_b );
 }
 
 
