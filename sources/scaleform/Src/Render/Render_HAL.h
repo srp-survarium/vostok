@@ -98,7 +98,6 @@ public:
 
     const Matrix4F&     GetUVP() const;
     const Matrix4F&     GetUVP( const Rect<int> & viewRect ) const;
-    virtual Matrix2F&   GetFullViewportMatrix();
 
     virtual void        SetUserMatrix(const Matrix2F& user);
     virtual void        SetViewportMatrix(const Matrix2F& vp);
@@ -114,8 +113,6 @@ protected:
     // 3D stereo support
     void                getStereoProjectionMatrix(Matrix4F *left, Matrix4F *right, const Matrix4F &original, float screenDist, float factor = 1.0f) const;
     const               Matrix4F& updateStereoProjection(float factor = 1.0f) const;
-
-    Matrix2F            FullViewportMVP;        // MVP for a 2D quad to fill the entire viewport.
 };
 
 
