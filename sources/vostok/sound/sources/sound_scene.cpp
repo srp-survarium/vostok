@@ -1333,7 +1333,7 @@ void sound_scene::set_graph	( render::culling::portal_sector_structure_ptr& grap
 
 bool sound_scene::graph_exist	( ) const
 {
-	return								!!m_graph;
+	return								m_graph.c_ptr( ) != 0;
 }
 
 float3 sound_scene::get_portal_center	( u32 portal_id ) const
