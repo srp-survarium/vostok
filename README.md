@@ -13,14 +13,14 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 3,903 / 12,915 functions exact (30.22%) &middot; 3,903 / 12,915 functions exact-max (30.22%) &middot; 68.89% fuzzy &middot; 68.89% fuzzy-max.**
+**Overall: 3,904 / 12,915 functions exact (30.23%) &middot; 3,904 / 12,915 functions exact-max (30.23%) &middot; 68.91% fuzzy &middot; 68.91% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max | Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | ----: | --------: |
 | `render`        |   351 | 364 / 2,647 (13.8%) | 364 / 2,647 (13.8%) | 61.8% |     61.8% |
-| `game`          |   141 | 247 / 1,498 (16.5%) | 247 / 1,498 (16.5%) | 45.0% |     45.0% |
+| `game`          |   141 | 248 / 1,498 (16.6%) | 248 / 1,498 (16.6%) | 45.0% |     45.0% |
 | `core`          |   136 | 427 / 1,320 (32.3%) | 427 / 1,320 (32.3%) | 83.1% |     83.1% |
 | `vostok`        |   112 | 477 / 1,252 (38.1%) | 477 / 1,252 (38.1%) | 72.8% |     72.8% |
 | `game_core`     |   189 | 333 / 1,171 (28.4%) | 333 / 1,171 (28.4%) | 81.7% |     81.7% |
@@ -43,7 +43,7 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `survarium`     |     5 |       2 / 22 (9.1%) |       2 / 22 (9.1%) | 85.0% |     85.0% |
 | `ai_navigation` |     3 |      6 / 14 (42.9%) |      6 / 14 (42.9%) | 93.5% |     93.5% |
 
-_Updated 2026-08-07 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
+_Updated 2026-08-08 &middot; delinker `83bc6fc` (folded-symbol reconciliation)._
 <!-- match-score:end -->
 
 ## Requirements

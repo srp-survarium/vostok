@@ -6,13 +6,13 @@
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/collision/geometry.h>
 #include <vostok/configs_binary_config_value.h>
+#include <vostok/math_cuboid.h>
+#include <vostok/render/culling/collision_result_user_data_equalls_to.h>
 #include <vostok/render/core/memory.h>
 
 namespace vostok {
 namespace render {
 namespace culling {
-
-bool get_first( collision::ray_triangle_result const& ) { return true; }
 
 portal_sector_structure::portal_sector_structure(
 	memory::base_allocator* allocator,
@@ -38,46 +38,51 @@ portal_sector_structure::~portal_sector_structure( )
 	// FUNCTION BODY[0x75e8c0]
 }
 
-// claude@NOTE: ported from the ONLY surviving ancestor,
-// dx9/model_manager.cpp model_manager::detect_sector(view_point) +
-// detect_sector(view_point, dir), adapted to the canonical id-based
-// structure: the down-then-up two-ray wrapper is folded into the single
-// canonical method; sector*-returning get_sector_facing is inlined as the
-// legacy header defined it (plane.classify(v)>0 ? face : back, face =
-// sector_front = m_sectors[0]); the static-geometry branch was already
-// disabled in the legacy body (id2 stays -1); query mask adapted from the
-// legacy object_type_geometry to the canonical portal_object_type; not-found
-// keeps the carcass return 0. Verify against 0x75e620 at matcher phase.
 u32 portal_sector_structure::get_sector_id( memory::base_allocator& allocator, float3 const& pos ) const
 {
-	// FUNCTION BODY[0x75e620]
-	float3	dir( 0.f, -1.f, 0.f );
-
-	for ( u32 attempt = 0; attempt < 2; ++attempt, dir = float3( 0.f, 1.f, 0.f ) )
+	u32 active_sector_id = 0;
+	math::aabb const bbox = math::create_aabb_center_radius( pos, float3( .1f, .1f, .1f ) );
+	collision::triangles_type results( &allocator );
+	if ( m_sectors_spatial_tree->aabb_query( sectors_volume_object_type, bbox, results ) )
 	{
-		collision::ray_triangles_type	results( &allocator );
-
-		// Portals model
-		int		id1		= -1;
-		float	range1	= 500.f;
-		if ( m_portals_spatial_tree )
+		active_sector_id = reinterpret_cast<u32>( results[0].object->user_data( ) );
+		if ( std::find_if(
+			results.begin( ) + 1,
+			results.end( ),
+			std::not1( collision_result_user_data_equalls_to( active_sector_id ) )
+		) != results.end( ) )
 		{
-			m_portals_spatial_tree->ray_query( portal_object_type, pos, dir, range1, results, collision::triangles_predicate_type( &get_first ) );
+			results.clear( );
+			math::cuboid c( bbox, math::float4x4( ).identity( ) );
+			if ( m_portals_geometry->cuboid_query( 0, c, results ) )
+			{
+				active_sector_id = results[0].triangle_id / 2;
+				float min_dist = math::abs( m_portals[active_sector_id].get_plane( ).classify( pos ) );
 
-			if ( !results.empty( ) )
-				id1 = results[0].triangle_id;
+				collision::triangles_type::const_iterator it = results.begin( ) + 1;
+				collision::triangles_type::const_iterator const end = results.end( );
+				for ( ; it != end; ++it )
+				{
+					u32 const portal_id = it->triangle_id / 2;
+					if ( portal_id == active_sector_id )
+						continue;
+
+					float const dist = math::abs( m_portals[portal_id].get_plane( ).classify( pos ) );
+					if ( min_dist > dist )
+					{
+						min_dist = dist;
+						active_sector_id = portal_id;
+					}
+				}
+
+				portal const& p = m_portals[active_sector_id];
+				bool const is_front = p.get_plane( ).classify( pos ) > 0;
+				return p.get_sectors( )[is_front ? 0 : 1];
+			}
 		}
-
-		if ( id1 < 0 )
-			continue;
-
-		// Take sector, facing to our point from portal
-		u32 const portal_id = m_portals_geometry->get_custom_data( id1 );
-		portal const& p = m_portals[portal_id];
-		return p.get_plane( ).classify( pos ) > 0 ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	}
 
-	return 0;
+	return active_sector_id;
 }
 
 void portal_sector_structure::load( configs::binary_config_value* value_ptr )
