@@ -65,39 +65,22 @@ public:
     virtual ~SysAllocMalloc() {}
 
 #if defined(SF_OS_WIN32) || defined(SF_OS_WINCE) || defined(SF_OS_XBOX) || defined(SF_OS_XBOX360)
-    // survarium: route Scaleform heap traffic through the engine allocator
-    // instead of the CRT (the engine #defines _aligned_malloc/_aligned_free to
-    // a void unreachable-code trap, see memory_override_operators.h).
-    virtual void* Alloc(UPInt size, UPInt /*align*/)
+    virtual void* Alloc(UPInt size, UPInt align)
     {
-        //return _aligned_malloc(size, align);
-#ifdef MASTER_GOLD
-		return VOSTOK_MALLOC_IMPL( vostok::memory::g_mt_allocator, size, "scaleform" );
-#else
-		return VOSTOK_MALLOC_IMPL( vostok::debug::g_mt_allocator, size, "scaleform" );
-#endif
+        return (::_aligned_malloc)(size, align);
     }
 
     virtual void  Free(void* ptr, UPInt size, UPInt align)
     {
         SF_UNUSED2(size, align);
-        //_aligned_free(ptr);
-#ifdef MASTER_GOLD
-		return VOSTOK_FREE_IMPL( vostok::memory::g_mt_allocator, ptr );
-#else
-		return VOSTOK_FREE_IMPL( vostok::debug::g_mt_allocator, ptr );
-#endif
+        (::_aligned_free)(ptr);
     }
 
-    virtual void* Realloc(void* oldPtr, UPInt oldSize, UPInt newSize, UPInt /*align*/)
+    virtual void* Realloc(void* oldPtr, UPInt oldSize, UPInt newSize, UPInt align)
     {
-        SF_UNUSED(oldSize);
-        //return _aligned_realloc(oldPtr, newSize, align);
-#ifdef MASTER_GOLD
-		return VOSTOK_REALLOC_IMPL( vostok::memory::g_mt_allocator, oldPtr, newSize, "scaleform");
-#else
-		return VOSTOK_REALLOC_IMPL( vostok::debug::g_mt_allocator, oldPtr, newSize, "scaleform");
-#endif
+        if (newSize == oldSize)
+            return oldPtr;
+        return SysAllocMalloc::Alloc(newSize, align);
     }
 #elif defined(SF_OS_PS3)
     virtual void* Alloc(UPInt size, UPInt align)
