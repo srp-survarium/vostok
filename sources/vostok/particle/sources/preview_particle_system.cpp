@@ -664,7 +664,7 @@ void preview_particle_system::play_preview(math::float4x4 const& transform, bool
 	m_preview_instance->m_always_looping = always_looping;
 	m_preview_instance->m_use_lods		 = false;
 	
-	m_preview_instance->play(transform);
+	m_preview_instance->play(&m_particle_world, transform);
 }
 
 } // namespace particle

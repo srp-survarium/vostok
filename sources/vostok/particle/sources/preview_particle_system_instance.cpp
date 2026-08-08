@@ -14,8 +14,9 @@ namespace vostok {
 namespace particle {
 
 preview_particle_system_instance::preview_particle_system_instance	( particle_world& particle_world ):
-	particle_system_instance_impl	( particle_world )
+	particle_system_instance_impl	( )
 {
+	m_particle_world = &particle_world;
 }
 
 struct delete_predicate {
@@ -69,7 +70,7 @@ void preview_particle_system_instance::updated_from_config			( particle_system_l
 			if (emitter->m_event || !emitter->get_enable())
 				continue;
 			
-			particle_emitter_instance* instance = m_particle_world.create_emitter_instance( *emitter );
+			particle_emitter_instance* instance = m_particle_world->create_emitter_instance( *emitter );
 			add_emitter_instance(lod_index, instance);
 		}
 	}
