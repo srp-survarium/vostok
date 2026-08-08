@@ -850,7 +850,7 @@ void particle_action_initial_size::init( particle_emitter_instance* instance, ba
 {
 	VOSTOK_UNREFERENCED_PARAMETERS(instance,time);
 	
-	P->start_size = m_init_size.evaluate(instance->get_linear_emitter_time(), float3(1.0f, 1.0f, 1.0f), range_time_type, P->seed());
+	P->start_size = m_init_size.evaluate(instance->get_linear_emitter_time(), float3(0.0f, 0.0f, 0.0f), range_time_type, P->seed());
 	P->size		  += P->start_size;
 }
 
