@@ -131,8 +131,8 @@ public:
     static unsigned GetDrawableImageFlags() { return 0; }
 
 private:
-    FragShader                      StaticFShaders[FragShaderDesc::FSI_Count];
-    VertexShader                    StaticVShaders[VertexShaderDesc::VSI_Count];
+    FragShader                      StaticFShaders[598];
+    VertexShader                    StaticVShaders[232];
 
     Ptr<ID3D1x(Device)>             pDevice;        // Pointer to the D3D device.
     ShaderDesc::ShaderVersion       ShaderModel;    // Holds which ShaderModel version should be used.
