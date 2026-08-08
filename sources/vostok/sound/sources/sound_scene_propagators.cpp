@@ -84,7 +84,9 @@ void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params c
 	LOG_DEBUG							( "sound_scene::emit_sound_propagators_impl" );
 	sound_instance_proxy_internal& proxy		= params.m_proxy;
 	sound_propagator_emitter const& emitter		= proxy.get_sound_propagator_emitter( );
+
 	u32 old_props_count							= proxy.get_propagators( ).size( );
+
 
 	emitter.emit_sound_propagators
 	(
@@ -96,6 +98,7 @@ void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params c
 		params.m_producer,
 		params.m_ignorable_receiver
 	);
+
 
 	new_sound_propagator* prop					= proxy.get_propagators( ).front( );
 	for ( u32 i = 0; i < old_props_count; ++i )
@@ -111,11 +114,16 @@ void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params c
 		prop										= proxy.get_propagators( ).get_next_of_object( prop );
 	}
 
+	R_ASSERT									( last );
 	last->set_as_callback_executer				( true );
+
 	LOG_INFO									( "sound propagators with id %d created", params.m_proxy.get_id() );
 
 	if ( old_props_count == 0 )
+	{
+		R_ASSERT								( !m_active_proxies.contains_object( &proxy ) );
 		m_active_proxies.push_back				( &proxy );
+	}
 }
 
 new_sound_propagator* sound_scene::create_sound_propagator
