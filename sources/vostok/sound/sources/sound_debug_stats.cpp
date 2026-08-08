@@ -39,13 +39,14 @@ void sound_debug_stats::set_detail_view_proxy_id	( u32 proxy_id )
 	threading::interlocked_exchange		( m_s_proxy_id, proxy_id );
 }
 
-sound_debug_stats::sound_debug_stats	( memory::base_allocator* allocator, world_user& user, sound_scene_ptr const& scene, ui::world& ui_world ) :
+sound_debug_stats::sound_debug_stats	( memory::base_allocator* allocator, world_user& user, resources::unmanaged_resource_ptr const& scene, ui::world& ui_world ) :
 	m_ui_world					( ui_world ),
 	m_world_user				( user ),
 	m_scene						( static_cast_checked<sound_scene*>( scene.c_ptr() ) ),
 	m_allocator					( *allocator ),
 	m_actual_statistic			( -1 )
 {
+	R_ASSERT					( m_scene );
 	m_statistic[0]				= 0;
 	m_statistic[1]				= 0;
 
@@ -73,6 +74,8 @@ sound_debug_stats::sound_debug_stats	( memory::base_allocator* allocator, world_
 
 sound_debug_stats::~sound_debug_stats	( )
 {
+	R_ASSERT					( !m_main_window );
+	m_scene						= 0;
 }
 
 void sound_debug_stats::clear_resources	( world_user& user )
@@ -101,10 +104,10 @@ void sound_debug_stats::clear_resources	( world_user& user )
 
 }
 
-#ifndef MASTER_GOLD
 void sound_debug_stats::create_statistic	( )
 {
 	R_ASSERT							( m_actual_statistic == -1 );
+	R_ASSERT							( m_scene );
 	m_statistic[0]						= m_scene->create_statistic( );
 	m_statistic[1]						= m_scene->create_statistic( );
 	threading::interlocked_exchange		( m_actual_statistic, 0 );
@@ -140,9 +143,7 @@ void sound_debug_stats::on_statistic_updated( )
 		( boost::bind( &sound_debug_stats::update_statistic, this ) );
 	m_world_user.add_order				( order );
 }
-#endif //#ifndef MASTER_GOLD
-
-void sound_debug_stats::draw( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
+void sound_debug_stats::draw( render::base_scene_ptr const& scene, render::base_scene_view_ptr const& scene_view )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 
@@ -150,14 +151,15 @@ void sound_debug_stats::draw( render::scene_ptr const& scene, render::scene_view
 	{
 	case none:		return;
 	case overall:	draw_overall_stats		( scene, scene_view );				break;
+#ifndef MASTER_GOLD
 	case detail:	draw_detail_stats		( scene, scene_view, m_s_proxy_id );break;
 	case hdr:		draw_hdr_stats			( scene, scene_view );				break;
-	default:		NODEFAULT				( );
+#endif // #ifndef MASTER_GOLD
+	default:		break;
 	};
 }
 
-#ifndef MASTER_GOLD
-void sound_debug_stats::draw_overall_stats( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
+void sound_debug_stats::draw_overall_stats( render::base_scene_ptr const&, render::base_scene_view_ptr const& scene_view )
 {
 	R_ASSERT										( m_actual_statistic != -1 );
 
@@ -168,12 +170,13 @@ void sound_debug_stats::draw_overall_stats( render::scene_ptr const& scene, rend
 	update_window									( &text_tree_view.root( ), scene_view );
 }
 
-void sound_debug_stats::draw_hdr_stats		( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view )
+#ifndef MASTER_GOLD
+void sound_debug_stats::draw_hdr_stats		( render::base_scene_ptr const& scene, render::base_scene_view_ptr const& scene_view )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 }
 
-void sound_debug_stats::draw_detail_stats( render::scene_ptr  const& scene, render::scene_view_ptr const& scene_view, u32 proxy_id )
+void sound_debug_stats::draw_detail_stats( render::base_scene_ptr  const& scene, render::base_scene_view_ptr const& scene_view, u32 proxy_id )
 {
 	R_ASSERT								( m_actual_statistic != -1 );
 
@@ -208,11 +211,10 @@ void sound_debug_stats::draw_detail_stats( render::scene_ptr  const& scene, rend
 			params.row_height					= 15.0f;
 			params.space_between_pages			= 10.0f;
 			params.start_pos					= float2(0.0f, 0.0f);
-			ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, debug::g_mt_allocator );
+			ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, memory::g_mt_allocator );
 
 			h.output							( &text_tree_view.root( ) );
 			m_main_window->draw					( m_ui_world.get_renderer(), scene_view );
-//			update_window							( &text_tree_view.root( ) );
 			return;
 		}
 		stats									= m_statistic[m_actual_statistic]->m_proxies_statistic.get_next_of_object( stats );
@@ -223,8 +225,9 @@ void sound_debug_stats::draw_detail_stats( render::scene_ptr  const& scene, rend
 	text_tree_view.root( ).new_child		( "proxy with current id not exist" );
 	update_window							( &text_tree_view.root( ), scene_view );
 }
+#endif // #ifndef MASTER_GOLD
 
-void sound_debug_stats::update_window( vostok::strings::text_tree_item* item, render::scene_view_ptr const& scene_view  )
+void sound_debug_stats::update_window( vostok::strings::text_tree_item* item, render::base_scene_view_ptr const& scene_view  )
 {
 	R_ASSERT								( m_main_window );
 	R_ASSERT								( item );
@@ -239,13 +242,10 @@ void sound_debug_stats::update_window( vostok::strings::text_tree_item* item, re
 	params.row_height					= 15.0f;
 	params.space_between_pages			= 10.0f;
 	params.start_pos					= float2(0.0f, 0.0f);
-	ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, debug::g_mt_allocator );
+	ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, memory::g_mt_allocator );
 
 	h.output							( item );
 	m_main_window->draw					( m_ui_world.get_renderer(), scene_view );
 }
-#endif //#ifndef MASTER_GOLD
-
-
 } // namespace sound
 } // namespace vostok

@@ -32,21 +32,15 @@ namespace sound {
 
 class world_user;
 class sound_scene;
-struct debug_statistic;
+struct sound_scene_statistic;
 
-namespace statistics {
-	struct sound_scene_stats;
-	struct propagator_stats;
-	struct proxy_stats;
-} // namespace statistics
-
-class VOSTOK_SOUND_API sound_debug_stats : private sound::noncopyable
+class VOSTOK_SOUND_API sound_debug_stats : public sound::noncopyable
 {
 public:
-					sound_debug_stats			( memory::base_allocator* allocator, world_user& user, sound_scene_ptr const& scene, ui::world& ui_world );
+					sound_debug_stats			( memory::base_allocator* allocator, world_user& user, resources::unmanaged_resource_ptr const& scene, ui::world& ui_world );
 					~sound_debug_stats			( );
 
-			void	draw						( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view );
+			void	draw						( render::base_scene_ptr const& scene, render::base_scene_view_ptr const& scene_view );
 	inline	bool	is_stats_available			( ) const { return m_actual_statistic != -1; }
 			void	clear_resources				( world_user& user );
 public:
@@ -61,16 +55,21 @@ public:
 	static	void	set_debug_draw_mode			( mode debug_draw_mode );
 	static	void	set_detail_view_proxy_id	( u32 proxy_id );
 private:
-			void	draw_overall_stats			( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view  );
-			void	draw_hdr_stats				( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view  );
-			void	draw_detail_stats			( render::scene_ptr const& scene, render::scene_view_ptr const& scene_view, u32 proxy_id );
+			void	draw_overall_stats			( render::base_scene_ptr const&, render::base_scene_view_ptr const& scene_view  );
+#ifdef MASTER_GOLD
+	inline	void	draw_hdr_stats				( render::base_scene_ptr const&, render::base_scene_view_ptr const& ) { }
+	inline	void	draw_detail_stats			( render::base_scene_ptr const&, render::base_scene_view_ptr const&, u32 ) { }
+#else
+			void	draw_hdr_stats				( render::base_scene_ptr const& scene, render::base_scene_view_ptr const& scene_view  );
+			void	draw_detail_stats			( render::base_scene_ptr const& scene, render::base_scene_view_ptr const& scene_view, u32 proxy_id );
+#endif
 
 			void	create_statistic			( );
 			void	update_statistic			( );
 			void	on_statistic_updated		( );
-			void	update_window				( strings::text_tree_item* item, render::scene_view_ptr const& scene_view );
+			void	update_window				( strings::text_tree_item* item, render::base_scene_view_ptr const& scene_view );
 private:
-	debug_statistic*				m_statistic[2];
+	sound_scene_statistic*			m_statistic[2];
 	ui::progress_bar**				m_progress_bars;
 	ui::world&						m_ui_world;
 	ui::window*						m_main_window;

@@ -11,6 +11,7 @@
 #include <vostok/sound/sound_object_commands.h>
 #include <vostok/sound/sound_producer.h>
 #include <vostok/sound/sound_emitter.h>
+#include <vostok/sound/sound_type.h>
 #include <vostok/sound/atomic_half3.h>
 #include "new_sound_propagator.h"
 
@@ -27,15 +28,6 @@ namespace sound {
 
 class sound_scene;
 struct proxy_statistic;
-
-enum sound_type
-{
-	point,
-	cone,
-	volumetric,
-	hud,
-	sound_types_count
-};
 
 class sound_instance_proxy_internal : public sound_instance_proxy
 {

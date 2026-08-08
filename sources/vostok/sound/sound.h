@@ -9,6 +9,7 @@
 
 #include <vostok/sound/api.h>
 #include <vostok/sound/playback_mode.h>
+#include <vostok/sound/sound_cone_type.h>
 
 namespace vostok {
 namespace sound {
@@ -33,12 +34,6 @@ private:  // emphasize the following members are private
 								noncopyable	( const noncopyable& );
 	inline	noncopyable const&	operator=	( const noncopyable& );
 }; // class noncopyable 
-
-
-enum sound_cone_type
-{
-	human,
-};
 
 
 enum command_result_enum

@@ -22,9 +22,9 @@
 #include "ogg_encoded_sound_interface_cook.h"
 #include "wav_encoded_sound_interface_cook.h"
 #include "panning_lut_cook.h"
-#include "spl_cook.h"
 #include "sound_spl_cook.h"
 #include "sound_scene_cook.h"
+#include "sound_environment_cook.h"
 #include "voice_factory.h"
 #include "sound_buffer_factory.h"
 #include "sound_instance_proxy_order.h"
@@ -259,8 +259,9 @@ bool sound_world::initialize_xaudio		( )
 										);
 	ASSERT						( !FAILED( res ) );
 	m_xaudio->GetDeviceDetails		( preferred_device_id, &deviceDetails );
+	u32 channelMask					= deviceDetails.OutputFormat.dwChannelMask;
 	X3DAudioInitialize				(
-		deviceDetails.OutputFormat.dwChannelMask,
+		channelMask,
 		X3DAUDIO_SPEED_OF_SOUND,
 		m_x3d_instance
 	);
@@ -406,34 +407,46 @@ sound_buffer* sound_world::get_mute_sound_buffer	( encoded_sound_ptr const& enco
 void sound_world::register_sound_cooks	( )
 {
 	static ogg_source_cook						s_ogg_source_cook;
-	static ogg_sound_cook						s_ogg_sound_cook;
-	static sound_rms_cook						s_sound_rms_cook;
-	static ogg_file_contents_cook				s_ogg_file_contents_cook;
-	static sound_collection_cook				s_sound_cll_cook( *this );
-	static composite_sound_cook					s_composite_sound_cook( *this );
-	static single_sound_cook					s_single_sound_cook;
-	static encoded_sound_with_qualities_cook	s_encoded_sound_with_qualities_cook;
-	static ogg_encoded_sound_interface_cook		s_ogg_encoded_sound_interface_cook;
-	static wav_encoded_sound_interface_cook		s_wav_encoded_sound_interface_cook;
-	static spl_cook								s_spl_cook;
-	static sound_spl_cook						s_sound_spl_cook;
-	static panning_lut_cook						s_panning_lut_cook;
-	static sound_scene_cook						s_sound_scene_cook( *this );
-
 	register_cook								( &s_ogg_source_cook );
+
+	static ogg_sound_cook						s_ogg_sound_cook;
 	register_cook								( &s_ogg_sound_cook );
-	register_cook								( &s_ogg_file_contents_cook );
+
+	static sound_rms_cook						s_sound_rms_cook;
 	register_cook								( &s_sound_rms_cook );
+
+	static ogg_file_contents_cook				s_ogg_file_contents_cook;
+	register_cook								( &s_ogg_file_contents_cook );
+
+	static sound_collection_cook				s_sound_cll_cook( *this );
 	register_cook								( &s_sound_cll_cook );
+
+	static composite_sound_cook					s_composite_sound_cook( *this );
 	register_cook								( &s_composite_sound_cook );
+
+	static single_sound_cook					s_single_sound_cook;
 	register_cook								( &s_single_sound_cook );
+
+	static encoded_sound_with_qualities_cook	s_encoded_sound_with_qualities_cook;
 	register_cook								( &s_encoded_sound_with_qualities_cook );
+
+	static ogg_encoded_sound_interface_cook		s_ogg_encoded_sound_interface_cook;
 	register_cook								( &s_ogg_encoded_sound_interface_cook );
+
+	static wav_encoded_sound_interface_cook		s_wav_encoded_sound_interface_cook;
 	register_cook								( &s_wav_encoded_sound_interface_cook );
-	register_cook								( &s_spl_cook );
+
+	static sound_spl_cook						s_sound_spl_cook;
 	register_cook								( &s_sound_spl_cook );
+
+	static panning_lut_cook						s_panning_lut_cook;
 	register_cook								( &s_panning_lut_cook );
+
+	static sound_scene_cook						s_sound_scene_cook( *this );
+	static sound_environment_cook				s_sound_environment_cook;
 	register_cook								( &s_sound_scene_cook );
+
+	register_cook								( &s_sound_environment_cook );
 }
 	
 void sound_world::clear_resources	( )
@@ -655,7 +668,8 @@ void sound_world::set_time_scale_factor		( float factor )
 	else
 	{
 		// maybe we need update time factor only for active and new voices
-		m_voice_factory->set_frequency_ratio( factor );
+		if ( m_is_audio_device_exist )
+			m_voice_factory->set_frequency_ratio( factor );
 		if ( !math::is_zero( previous_time_factor ) )
 			return;
 

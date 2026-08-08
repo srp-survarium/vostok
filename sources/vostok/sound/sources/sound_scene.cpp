@@ -16,6 +16,7 @@
 #include <vostok/sound/single_sound.h>
 #include <vostok/sound/sound_debug_stats.h>
 #include <vostok/sound/sound_scene_creation_params.h>
+#include <vostok/sound/search/search_service.h>
 #include <vostok/core_entry_point.h>
 #include "effect_cross_fader.h"
 #include "sound_environment.h"
@@ -449,6 +450,24 @@ void sound_scene::notify_receivers	( )
 		proxy->notify_receivers					( *m_spatial_tree );
 		proxy									= m_active_proxies.get_next_of_object( proxy );
 	}
+}
+
+void sound_scene::calculate_in_graph_position( float3 const& proxy_position )
+{
+	vectora< fixed_vector< u32, 32 > > paths( g_allocator );
+	vector< search::vertex_id_type > path;
+	search::search_service s( g_allocator );
+	s.search( *g_allocator, m_graph, &path, proxy_position, m_list_position.get( ), 200.0f, paths );
+}
+
+void sound_scene::find_path(
+	float3 const& destination_point,
+	vectora< fixed_vector< u32, 32 > >& result_paths
+) const
+{
+	vector< search::vertex_id_type > path;
+	search::search_service s( g_allocator );
+	s.search( *g_allocator, m_graph, &path, m_list_position.get( ), destination_point, 200.0f, result_paths );
 }
 
 unique_propagator_info::unique_propagator_info	( ) :
@@ -1083,13 +1102,12 @@ void sound_scene::remove_active_voice	( sound_voice& voice )
 	m_active_voices.erase				( &voice );
 }
 
-#ifndef MASTER_GOLD
-
 void sound_scene::update_stats			( sound_debug_stats& stats ) const
 {
 	stats.update_statistic				( );
 }
 
+#ifndef MASTER_GOLD
 
 void sound_scene::enable_debug_stream_writing	( )
 {
@@ -1191,41 +1209,32 @@ void sound_scene::dump_debug_stream_writing	( ) const
 
 
 }
+#endif // #ifndef MASTER_GOLD
 
-debug_statistic* sound_scene::create_statistic	( ) const
+sound_scene_statistic* sound_scene::create_statistic	( ) const
 {
-	return 0;
-	debug_statistic* statistic					= VOSTOK_NEW_IMPL( g_allocator, debug_statistic )( );
-	statistic->m_listener_position				= m_list_position.get( );
-	statistic->m_listener_orient_front			= m_list_orient_front.get( );
-	statistic->m_listener_orient_top			= m_list_orient_top.get( );
-	
-	statistic->m_registered_receivers_count		= m_receivers.size		( );
-	statistic->m_active_proxies_count			= m_active_proxies.size	( );
-	statistic->m_active_voices_count			= m_active_voices.size	( );
+	sound_scene_statistic* statistic			= VOSTOK_NEW_IMPL( g_allocator, sound_scene_statistic )( );
+	statistic->values.m_registered_receivers_count	= m_receivers.size		( );
+	statistic->values.m_active_proxies_count		= m_active_proxies.size	( );
 
-	sound_instance_proxy_internal* proxy		= m_active_proxies.front( );
+	sound_voice* voice = m_active_voices.front( );
+	while ( voice )
+	{
+		++statistic->values.m_active_voices_count[voice->get_channels_num( ) - 1];
+		voice = m_active_voices.get_next_of_object( voice );
+	}
+
+	sound_instance_proxy_internal* proxy = m_active_proxies.front( );
 	while ( proxy )
 	{
-		proxy_statistic* prx_stats					= VOSTOK_NEW_IMPL( g_allocator, proxy_statistic )( );
-		R_ASSERT									( prx_stats );
-		proxy->fill_statistic						( *prx_stats );
-		sound_propagator* prop						= proxy->get_propagators( ).front( );
-		while ( prop )
-		{
-			propagator_statistic* prop_stats			= VOSTOK_NEW_IMPL( g_allocator, propagator_statistic )( );
-			R_ASSERT									( prop_stats );
-			prop->fill_statistic						( *prop_stats );
-			prx_stats->m_propagator_statistics.push_back( prop_stats );
-			prop										= proxy->get_propagators( ).get_next_of_object( prop );
-		}
-		statistic->m_proxies_statistic.push_back	( prx_stats );
-		proxy = m_active_proxies.get_next_of_object	( proxy );
+		++statistic->values.m_sound_types[proxy->get_sound_type( )];
+		statistic->values.m_propagators_count += proxy->get_propagators( ).size( );
+		proxy = m_active_proxies.get_next_of_object( proxy );
 	}
 	return statistic;
 }
 
-void sound_scene::delete_statistic			( debug_statistic* statistic ) const
+void sound_scene::delete_statistic			( sound_scene_statistic* statistic ) const
 {
 	if ( statistic )
 	{
@@ -1249,8 +1258,6 @@ void sound_scene::delete_statistic			( debug_statistic* statistic ) const
 		statistic							= 0;
 	}
 }
-#endif // #ifndef MASTER_GOLD
-
 void sound_scene::pause							( )
 {
 	R_ASSERT								( !m_is_paused );

@@ -885,7 +885,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\emitter_type.h"
+				>
+			</File>
+			<File
 				RelativePath="..\playback_mode.h"
+				>
+			</File>
+			<File
+				RelativePath="..\propagator_statistic.h"
+				>
+			</File>
+			<File
+				RelativePath="..\proxy_statistic.h"
 				>
 			</File>
 			<File
@@ -897,7 +909,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\sound_cone_type.h"
+				>
+			</File>
+			<File
 				RelativePath="..\sound_debug_stats.h"
+				>
+			</File>
+			<File
+				RelativePath="..\sound_scene_statistic.h"
+				>
+			</File>
+			<File
+				RelativePath="..\sound_type.h"
 				>
 			</File>
 			<File
@@ -1471,14 +1495,6 @@
 					RelativePath=".\sound_spl_cook.h"
 					>
 				</File>
-				<File
-					RelativePath=".\spl_cook.cpp"
-					>
-				</File>
-				<File
-					RelativePath=".\spl_cook.h"
-					>
-				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -1537,6 +1553,46 @@
 				>
 			</File>
 			<Filter
+				Name="search"
+				>
+				<File
+					RelativePath=".\search_service.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\graph_wrapper.h"
+					>
+				</File>
+				<File
+					RelativePath=".\graph_heuristics.h"
+					>
+				</File>
+				<File
+					RelativePath=".\search_restrictor.h"
+					>
+				</File>
+				<File
+					RelativePath="..\search\vertex_id_type.h"
+					>
+				</File>
+				<File
+					RelativePath="..\search\graph_wrapper.h"
+					>
+				</File>
+				<File
+					RelativePath="..\search\graph_heuristics.h"
+					>
+				</File>
+				<File
+					RelativePath="..\search\search_restrictor.h"
+					>
+				</File>
+				<File
+					RelativePath="..\search\search_service.h"
+					>
+				</File>
+			</Filter>
+			<Filter
 				Name="cook"
 				>
 				<File
@@ -1547,6 +1603,14 @@
 					RelativePath=".\sound_scene_cook.h"
 					>
 				</File>
+				<File
+					RelativePath=".\sound_environment_cook.cpp"
+					>
+				</File>
+				<File
+					RelativePath=".\sound_environment_cook.h"
+					>
+				</File>
 			</Filter>
 		</Filter>
 		<Filter
@@ -1555,30 +1619,10 @@
 			<File
 				RelativePath=".\debug_statistic.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\debug_statistic.h"
-				>
 			</File>
 			<File
 				RelativePath=".\sound_debug_stats.cpp"
 				>
-				<FileConfiguration
-					Name="Master Gold|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<File
