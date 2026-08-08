@@ -86,9 +86,13 @@ void sound_voice::play		( playback_mode mode )
 	if ( m_mode == once )
 	{
 		if ( m_playing_offset > 10  )
+		{
 			m_stream_cursor_pcm				= find_nearest_adjective_pcm_offset ( );
+		}
 		else
+		{
 			m_stream_cursor_pcm				= 0;
+		}
 	}
 	else if ( m_mode == looped )
 	{
@@ -152,7 +156,8 @@ void sound_voice::set_output_matrix	( float const* level_matrix )
 	R_ASSERT						( m_voice != 0 );
 	if ( m_channels_num == 1 )
 		m_voice->set_output_matrix	( level_matrix );
-	else if ( m_channels_num == 2 )
+	else
+	if ( m_channels_num == 2 )
 		m_voice->set_channel_volumes( m_channels_num, level_matrix );
 }
 
