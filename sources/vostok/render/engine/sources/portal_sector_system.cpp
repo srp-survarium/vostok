@@ -56,23 +56,6 @@ namespace vostok {
 namespace render {
 namespace culling {
 
-struct collision_result_user_data_equalls_to :
-	public std::unary_function< collision::triangle_result const&, bool >
-{
-	explicit collision_result_user_data_equalls_to( u32 user_data ) :
-		m_user_data( user_data )
-	{
-	}
-
-	bool operator()( collision::triangle_result const& ) const
-	{
-		return false;
-	}
-
-private:
-	u32 m_user_data;
-};
-
 struct portal_object_belongs_to_sector :
 	public std::unary_function< collision::triangle_result const&, bool >
 {
