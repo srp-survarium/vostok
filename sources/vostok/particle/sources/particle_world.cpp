@@ -298,7 +298,6 @@ void particle_world::remove_particle_system_instance(particle_system_instance* i
 	inst->remove_particles();
 	
 	m_ticked_instances_list.erase( static_cast_checked<particle_system_instance_impl*>(in_instance) );
-	inst->self_ptr = 0;
 }
 
 void particle_world::get_render_emitter_instances( particle::particle_system_instance_ptr in_instance, render_particle_emitter_instances_type& out_particle_emitter_instances )
