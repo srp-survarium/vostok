@@ -153,8 +153,8 @@ new_sound_propagator* sound_scene::create_sound_propagator
 	)
 	(
 		proxy.get_sound_type( ) == volumetric ?
-			proxy.get_volumetric_position( m_list_position.get( ) ) : proxy.get_position( ),
-		m_list_position.get( ),
+			proxy.get_volumetric_position( m_list_orient_front.get( ) ) : proxy.get_position( ),
+		m_list_orient_front.get( ),
 		mode,
 		playback_id,
 		playing_offset,
