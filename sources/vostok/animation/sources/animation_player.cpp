@@ -586,19 +586,22 @@ void animation_player::compact_callbacks( )
 void animation_player::unsubscribe( pcstr const channel_id, pcvoid const callback_uid )
 {
 	subscribed_channel* channel				= m_first_subscribed_channel;
-	for ( ; strings::compare( channel->channel_id, channel_id ) != 0 ; channel = channel->next )
-		;
+	for ( ; ; channel = channel->next )
+	{
+		if ( strings::compare( channel->channel_id, channel_id ) == 0 )
+			break;
+	}
 
 	animation_callback* callback			= channel->first_callback;
-	for ( ; callback && callback->callback_uid != callback_uid ; callback = callback->next )
-		;
-
-	if ( callback )
-	{
+	for ( ; callback ; callback = callback->next ) {
+		if ( callback->callback_uid != callback_uid )
+			continue;
 		callback->callback					= new_callback_type( );
 		callback->callback_uid				= 0;
 		callback->enabled					= false;
+
 		m_callbacks_are_actual				= false;
+		break;
 	}
 
 	if ( m_in_tick == 0 )
