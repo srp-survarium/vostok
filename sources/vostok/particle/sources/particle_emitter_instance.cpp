@@ -529,16 +529,37 @@ void particle_emitter_instance::tick(float time_delta, bool /*create_new_particl
 		
 		P->position		+= P->velocity * time_delta;
 		
-		m_aabbox.modify(P->position);
-		
-		//LOG_INFO("%.3f, %.3f, %.3f", P->position.x, P->position.y, P->position.z);
-		
 		float3 ratation_rate	= P->rotation_rate * time_delta * vostok::math::pi_x2;
 		
 		P->rotation		= P->rotation  + ratation_rate.x;
 		P->rotationY	= P->rotationY + ratation_rate.y;
 		P->rotationZ	= P->rotationZ + ratation_rate.z;
+
+		m_aabbox.modify(P->position);
 		
+		if (m_world_space)
+		{
+			P->position += float3(0.0f, -P->gravity * time_delta, 0.0f);
+			P->render_position = P->position;
+			P->render_old_position = P->old_position;
+		}
+		else
+		{
+			if (vostok::math::is_similar(P->gravity_accumulation, 0.0f))
+			{
+				P->render_position = m_transform.transform_position(P->position);
+				P->render_old_position = m_transform.transform_position(P->old_position);
+			}
+			else
+			{
+				P->render_position += m_transform.transform_direction(P->velocity * time_delta);
+				P->render_old_position += m_transform.transform_direction(P->velocity * time_delta);
+			}
+			P->gravity_accumulation = -P->gravity;
+			P->render_position += float3(0.0f, P->gravity_accumulation * time_delta, 0.0f);
+			P->render_old_position += float3(0.0f, P->gravity_accumulation * time_delta, 0.0f);
+		}
+
 		if (P->is_dead())
 		{
 			process_event(event_on_death,P->position);
