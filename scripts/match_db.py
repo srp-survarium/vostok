@@ -162,9 +162,9 @@ def module_of(unit_or_file):
     return parts[0]  # third-party root, or a shared vostok/*.h -> "vostok"
 
 
-def load_index(path):
-    """rich index.jsonl -> {mangled: record} (lowest rva wins on duplicates)."""
-    return index_by_mangled(load_index_records(path))
+def load_index(path, preferred_files=None):
+    """Return one deterministic rich-index record per mangled spelling."""
+    return index_by_mangled(load_index_records(path), preferred_files)
 
 
 def load_index_records(path):
@@ -173,14 +173,22 @@ def load_index_records(path):
         return [json.loads(line) for line in f]
 
 
-def index_by_mangled(records):
-    """Collapse rich records by mangled identity (lowest rva wins)."""
-    out = {}
+def index_by_mangled(records, preferred_files=None):
+    """Collapse rich records by mangled identity, preferring the other side's owner.
+
+    Static helpers and COMDATs can have the same PDB spelling in several
+    translation units. When the other side selected an owner, prefer that same
+    source file; otherwise retain the historical lowest-RVA rule.
+    """
+    candidates = {}
     for rec in records:
-        key = rec["mangled"]
-        prev = out.get(key)
-        if prev is None or rec["rva"] < prev["rva"]:
-            out[key] = rec
+        candidates.setdefault(rec["mangled"], []).append(rec)
+    out = {}
+    preferred_files = preferred_files or {}
+    for key, records in candidates.items():
+        preferred = preferred_files.get(key)
+        same_owner = [rec for rec in records if rec["file"] == preferred]
+        out[key] = min(same_owner or records, key=lambda rec: rec["rva"])
     return out
 
 
@@ -387,14 +395,22 @@ def _source_extent(rec):
         return None
     path = VOSTOK / "sources" / rec["file"]
     lines = [s["line"] for s in rec["statements"] if s.get("line")]
-    if not lines or not path.is_file():
+    if not path.is_file():
         return None
-    lo, hi = min(lines), max(lines)
     try:
         with open(path, encoding="latin-1") as f:
-            text = "".join(f.readlines()[lo - 1 : hi])
+            source_lines = f.readlines()
     except OSError:
         return None
+    if lines:
+        lo, hi = min(lines), max(lines)
+        text = "".join(source_lines[lo - 1 : hi])
+    else:
+        # Compiler-generated helpers and some ICF-selected header bodies carry
+        # a real source file but no line records. Hash the whole owning file:
+        # broader than a function extent, but conservative and source-scoped.
+        lo, hi = 1, len(source_lines)
+        text = "".join(source_lines)
     return rec["file"], lo, hi, text
 
 
@@ -650,7 +666,10 @@ def regen():
     log("loading rich indexes ...")
     target = load_index(TARGET_IDX)
     base_records = load_index_records(BASE_IDX)
-    base = index_by_mangled(base_records)
+    base = index_by_mangled(
+        base_records,
+        {mangled: rec["file"] for mangled, rec in target.items()},
+    )
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
 
     log("loading report.json ...")

@@ -60,9 +60,8 @@ void filter_tree::push_filter( pcstr initiator, verbosity verbosity, u32 thread_
 	build_tree								();
 }
 
-// claude@NOTE: STRUCTURE MATCH + locals match (1: it). Residual is toolchain inlining depth:
-// target keeps buffer_string::find as an out-of-line call, base inlines it down to strstr +
-// offset math. Not source-steerable from this TU. PARK.
+// Target keeps buffer_string::find out of line; this compiler inlines it to
+// strstr and offset arithmetic.
 bool filter_tree::filter_is_overwritten( initiator_filter* filter ) const
 {
 
