@@ -179,7 +179,8 @@ bool animation_player::set_target(
 {
 	mixing::n_ary_tree_converter builder	( expression );
 	u32 const buffer_size					= builder.needed_buffer_size( );
-	bool const first_time					= !m_mixing_tree.animations_count( );
+
+	bool const first_time					= m_mixing_tree.animations_count( ) <= 0;
 	pvoid const buffer_raw					=
 		first_time
 			? get_next_buffer( buffer_size )
