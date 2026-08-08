@@ -7,7 +7,7 @@
 #ifndef VOSTOK_ANIMATION_MIXING_ANIMATION_LEXEME_PARAMETERS_H_INCLUDED
 #define VOSTOK_ANIMATION_MIXING_ANIMATION_LEXEME_PARAMETERS_H_INCLUDED
 
-#include <vostok/animation/noncopyable.h>
+#include <vostok/detail_noncopyable.h>
 #include <vostok/animation/mixing.h>
 #include <vostok/animation/mixing_animation_interval.h>
 #include <vostok/animation/mixing_animation_lexeme.h>
@@ -19,7 +19,7 @@ struct base_interpolator;
 
 namespace mixing {
 
-class VOSTOK_ANIMATION_API animation_lexeme_parameters : private animation::noncopyable {
+class VOSTOK_ANIMATION_API animation_lexeme_parameters : public core::noncopyable {
 public:
 	inline									animation_lexeme_parameters			(
 												mutable_buffer& buffer,
@@ -46,12 +46,13 @@ public:
 											);
 
 	inline									animation_lexeme_parameters			(
-												mutable_buffer& buffer,
-												pcstr identifier,
-												skeleton_animation_ptr const& animation,
-												animation_lexeme* const	time_driving_animation,
-												animation_lexeme* const	weight_driving_animation
+												mutable_buffer&				buffer,
+												pcstr						identifier,
+												skeleton_animation_ptr const&	animation,
+												animation_lexeme* const		time_driving_animation,
+												animation_lexeme* const		weight_driving_animation
 											);
+	inline									~animation_lexeme_parameters		( );
 public:
 	typedef fastdelegate::FastDelegate< float( float, float, u32, u32, u32, float ) > time_calculator_fn;
 
