@@ -9,6 +9,8 @@
 
 #pragma comment( lib, "delayimp.lib" )
 
+namespace vostok { namespace debug { void set_support_email( pcstr support_email ); } }
+
 static vostok::uninitialized_reference<survarium::application>	s_application;
 
 static int s_exit_code					= 0;
@@ -18,8 +20,8 @@ struct guard {
 	{
 //		R_ASSERT						( vostok::memory::g_crt_allocations_are_enabled );
 //		vostok::memory::g_crt_allocations_are_enabled	= false;
-		// sushi@TODO: Recover debug::set_support_email once its debug-module implementation exists.
 		VOSTOK_CONSTRUCT_REFERENCE		( s_application, survarium::application );
+		vostok::debug::set_support_email	( "game_crash_reports@survarium.com" );
 		s_application->initialize		( );
 	}
 

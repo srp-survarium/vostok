@@ -16,7 +16,7 @@
 
 using vostok::debug::bugtrap_usage;
 using vostok::debug::error_mode;
-
+namespace vostok { namespace debug { void set_support_email( pcstr support_email ); } }
 static HMODULE			s_bugtrap_handle			= 0;
 #if VOSTOK_PLATFORM_WINDOWS_64
 	static pcstr		s_bugtrap_native_id			= "BugTrap-x64.dll";
@@ -28,7 +28,7 @@ static HMODULE			s_bugtrap_handle			= 0;
 static error_mode		s_error_mode				= vostok::debug::error_mode_verbose;
 static bugtrap_usage	s_bugtrap_usage				= vostok::debug::native_bugtrap;
 static bool				s_initialized				= false;
-
+static char				s_support_email[64];
 typedef void CDECL BT_CallCppFilter_type			();
 static BT_CallCppFilter_type						*s_BT_CallCppFilter = 0;
 
@@ -132,6 +132,16 @@ static pcstr convert_to_unicode_if_needed			( pcstr const message, WCHAR (&outpu
 	return							convert_to_unicode_if_needed( message, &output[0], count );
 }
 
+void vostok::debug::set_support_email				( pcstr support_email )
+{
+	WCHAR unicode_message[64];
+
+	strcpy_s						( s_support_email, support_email );
+
+	if ( s_BT_SetSupportEMail )
+		s_BT_SetSupportEMail		( convert_to_unicode_if_needed(s_support_email, unicode_message) );
+}
+
 static void install									( )
 {
 	s_BT_InstallSehFilter			( );
@@ -148,7 +158,7 @@ static void install									( )
 
 	pcstr bugtrap_application_name	=	vostok::debug::debug_engine()->bugtrap_application_name();
 	s_BT_SetAppName					( convert_to_unicode_if_needed(bugtrap_application_name, unicode_message) );
-	s_BT_SetSupportEMail			( convert_to_unicode_if_needed("iassenev@gsc-game.kiev.ua",unicode_message) );
+	s_BT_SetSupportEMail			( convert_to_unicode_if_needed(s_support_email,unicode_message) );
 
 	s_BT_SetReportFormat			( BTRF_TEXT );
 	s_BT_SetFlags					( BTF_DETAILEDMODE | /**BTF_EDIETMAIL | /**/BTF_ATTACHREPORT /**| BTF_LISTPROCESSES /**| BTF_SHOWADVANCEDUI /**| BTF_SCREENCAPTURE/**/ );
