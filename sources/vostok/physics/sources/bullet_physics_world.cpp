@@ -11,18 +11,10 @@
 #include <vostok/physics/collision_shapes.h>
 #include <vostok/physics/engine.h>
 #include <vostok/physics/rigid_body_base.h>
-#include <vostok/physics/contact_test_predicate.h> // sushi@TODO: Should be private?
+#include <vostok/physics/contact_test_predicate.h>
 
 #include "LinearMath/btQuickProf.h"
 
-// sushi@TODO: these file-scope console-var statics ARE emitted in our base (their dynamic
-// initializer / atexit destructor pair, sizes 79/87/240/60... matching the target), but they
-// stay TARGET_ONLY because objdiff/match.db pair by exact symbol string: the base PDB records
-// the raw `??__Es_physics_max_substeps_cc@@YAXXZ` / `??__F...` mangling while the target PDB
-// records the DEMANGLED `dynamic initializer for 's_physics_max_substeps_cc'`. Function-LOCAL
-// statics (e.g. render's create_effect::descriptor_object, scope `?1?`/``2'``) DO pair, so the
-// gap is specific to file-scope (and `?5?`/``6'`` function-local-cook) dynamic init/atexit. A
-// tooling name-normalization issue, not source-steerable. See review_todos.md.
 static u32 s_physics_max_substeps_value = 1;
 static console_commands::cc_u32 s_physics_max_substeps_cc (
 	"physics_max_substeps",
@@ -66,7 +58,6 @@ void reset_physics_profiler( pcstr __formal )
 	CProfileManager::Reset();
 }
 
-// sushi@NOTE: static name conflict. Could be renamed in the future.
 static console_commands::cc_delegate s_dump_statistics (
 	"dump_physics_profiler", &dump_physics_profiler, false
 );
@@ -103,10 +94,6 @@ float4x4 from_bullet( btTransform const& m )
 	return create_rotation(q_vostok) * create_translation( from_bullet(m.getOrigin()) );
 }
 
-// claude@NOTE: LTCG-specialised COMDAT (this-in-eax, ret 4 = allocator arg const-folded
-// to g_mt_allocator by the sole anchor caller). The /Od base passes the real arg + emits
-// an extra eater, so the convention residual is non-steerable. The fix here is the
-// empty-aabb idiom: min=+inf, max=-inf (target xorps NegFloat on the max float3).
 bullet_physics_world::bullet_physics_world( memory::base_allocator& allocator, engine& engine ):
 	m_allocator		( allocator ),
 	m_engine		( engine ),
@@ -122,9 +109,6 @@ void log_cb( char* text )
 	LOG_INFO( text );
 }
 
-// claude@NOTE: STRUCTURE MATCH (23/23 stmts, identical byte total). 8-instruction
-// residual is non-steerable: register-allocation scheduling (eax vs ecx on the
-// setInternalGhostPairCallback chain) + delinker symbol-name artifact on physics_log_fn.
 void bullet_physics_world::initialize( )
 {
 	btAlignedAllocSetCustom		( bullet_alloc, bullet_free );
@@ -164,7 +148,7 @@ void bullet_physics_world::initialize( )
 	m_ghost_pair_callback		= VOSTOK_NEW_IMPL( m_allocator, btGhostPairCallback );
 	m_dynamicsWorld->getBroadphase( )->getOverlappingPairCache( )->setInternalGhostPairCallback( m_ghost_pair_callback );
 
-	m_last_frame_delta = 0.0f; // sushi@TODO: Maybe on_before_reuse
+	m_last_frame_delta = 0.0f;
 	m_last_frame_time = 0.0f;
 	CProfileManager::set_log_callback( log_cb );
 }
@@ -219,11 +203,6 @@ void bullet_physics_world::tick( u32 current_time_in_ms )
 	m_softBodyWorldInfo->m_sparsesdf.GarbageCollect( );
 }
 
-// sushi@TODO: Shouldn't be needed for server logic.
-// claude@NOTE: bodied from target disasm (was NOT_IMPLEMENTED stub, 0.5%). STRUCTURE near-match
-// (16 vs 15 stmts). Residual is /Od reloading the 1.0/0.0 color constants per block (target hoists
-// them into the loop head) + btVector3 ctor / debugDrawObject virtual-call inlining. The filter-bit
-// masks (6, 8, 0x81) are raw values - no named collision-group enum covers all three.
 void bullet_physics_world::debug_draw_world( )
 {
 	btCollisionObjectArray& objects = m_dynamicsWorld->getCollisionObjectArray( );
@@ -274,7 +253,6 @@ void bullet_physics_world::move( bt_rigid_body_base* body, float4x4 const& new_t
 	body->set_transform( new_transform );
 }
 
-// sushi@NOTE: Why filter_group with filter_mask is not passed here.
 void bullet_physics_world::add( bt_soft_body_rope* body )
 {
 	m_dynamicsWorld->addSoftBody( body->m_bt_body );
@@ -297,8 +275,6 @@ void bullet_physics_world::remove( bt_constraint* constraint )
 
 void bullet_physics_world::create_test_scene( )
 {
-	// <1> sushi@NOTE: this is ifdefed original xray impl
-	// <26>
 }
 
 struct closest_ray_result_callback : btCollisionWorld::RayResultCallback {
@@ -335,7 +311,7 @@ float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayRe
 	if ( rayResult.m_localShapeInfo )
 	{
 		m_triangleIndex = rayResult.m_localShapeInfo->m_triangleIndex;
-		m_is_shape_index = rayResult.m_localShapeInfo->m_is_shape_index; // sushi@TODO: Bullet impl was changed, we need to match it as well
+		m_is_shape_index = rayResult.m_localShapeInfo->m_is_shape_index;
 	} else
 	{
 		m_triangleIndex = -1;
@@ -354,7 +330,6 @@ float closest_ray_result_callback::addSingleResult( btCollisionWorld::LocalRayRe
 	return rayResult.m_hitFraction;
 }
 
-// sushi@NOTE: Lots of instructions reordered. Logic seems to be the same. Don't really care about getting this 100% correct for now.
 closest_ray_result bullet_physics_world::ray_test(
 	float3 const&		ray_from,
 	float3 const&		ray_dir,
@@ -387,9 +362,6 @@ closest_ray_result bullet_physics_world::ray_test(
 	return result;
 }
 
-// claude@NOTE: STRUCTURE largely aligned; residual is btVector3 default-ctor / brace-exit-jmp
-// line-splitting (the BASE_ONLY 0x5/0x8 rows) plus Bullet manifold/transform inlining in the
-// nested loops - the ~10-stmt delta is /Od split noise, not source-steerable.
 bool bullet_physics_world::recover_from_penetrations(
 	bt_collision_shape*		const shape,
 	float4x4 const&			transform_initial,
@@ -452,10 +424,10 @@ bool bullet_physics_world::recover_from_penetrations(
 				}
 			}
 
-			btVector3 delta = touching_normal * maxPen; // sushi@NOTE: This is slightly different
+			btVector3 delta = touching_normal * maxPen;
 			float3 delta_v = from_bullet( touching_normal * maxPen ) ;
 
-			LOG_INFO( // sushi@NOTE: If logging is fixed, hopefully everything else will be too.
+			LOG_INFO(
 				"recover from %x:%x delta %.3f %.3f %.3f",
 				pair.m_pProxy0->m_clientObject,
 				pair.m_pProxy1->m_clientObject,
@@ -466,7 +438,6 @@ bool bullet_physics_world::recover_from_penetrations(
 
 			current_pos += delta;
 		}
-		// sushi@NOTE: test_ghost_object.getWorldTransform( ).setOrigin( current_pos )
 		btTransform newTrans = test_ghost_object.getWorldTransform( );
 		newTrans.setOrigin( current_pos );
 		test_ghost_object.setWorldTransform( newTrans );
@@ -478,11 +449,6 @@ bool bullet_physics_world::recover_from_penetrations(
 	return true;
 }
 
-// transfrom_from - starting position + starting rotation (local -> world)
-// transfrom_to   - ending position + ending rotation	  (local -> world)
-// claude@NOTE: STRUCTURE near-match (15 vs 14 stmts, 0 named locals both sides). Residual is
-// Bullet-method inlining in the isConvex/isCompound branches (convexSweepTest, float4x4 inverse()
-// and operator*) - large TRGT_ONLY/BASE_ONLY blocks that differ only by inline depth, not steerable.
 void bullet_physics_world::object_query(
 	bt_collision_shape*				const shape,
 	float4x4 const&					transform_from,
@@ -492,10 +458,6 @@ void bullet_physics_world::object_query(
 	u16								filter_mask
 )
 {
-	// claude@NOTE: this local-struct's ctor + addSingleResult are OPTIMIZED COMDATs in gold
-	// (this-in-eax, ret 8, setIdentity()/from_bullet inlined as flat movss stores, the whole
-	// query_result build merged onto one line) while our base builds /Od and splits them. Locals
-	// already match; the residual is the opt-vs-Od convention/line-merge wall, not source-steerable.
 	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
 	public:
 		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 filter_group, u16 filter_mask ) :
@@ -506,7 +468,6 @@ void bullet_physics_world::object_query(
 			m_modify_result_transform.setIdentity( );
 		}
 
-		// sushi@TODO: Ghidra scripts cannot generate symbols for this function.
 		virtual	float		addSingleResult			( btCollisionWorld::LocalConvexResult& convexResult, bool normalInWorldSpace ) override
 		{
 			closest_ray_result query_result;
@@ -579,7 +540,6 @@ public:
 
 STATIC_SIZE_ASSERT(distance_predicate, 0xC);
 
-// sushi@TODO: Noticed that `m_shape_id` was added to bt ray callback
 void bullet_physics_world::ray_query(
 	float3 const&					ray_from,
 	float3 const&					ray_dir,
@@ -603,7 +563,7 @@ void bullet_physics_world::ray_query(
 		s32 size = cb.m_collisionObjects.size( );
 		for ( s32 i = 0 ; i < size ; ++i )
 		{
-			closest_ray_result ray_result; // sushi@NOTE: One day I will reorder those assignments to the declaration order.
+			closest_ray_result ray_result;
 			ray_result.hit_point_world = from_bullet( cb.m_hitPointWorld[i] );
 			ray_result.object = static_cast< base_physics_object* >( cb.m_collisionObjects[i]->getUserPointer( ) );
 			ray_result.triangle_index = cb.m_triangleIndex[i];
@@ -616,18 +576,6 @@ void bullet_physics_world::ray_query(
 		std::sort( results.begin( ), results.end( ), distance_predicate( ray_from ) );
 	}
 }
-
-//
-// sushi@NOTE: All of this is extremely confusing.
-// All functions actually have different static consts,
-//		which are also unnamed (compiler generated?).
-// All functions expect only 4 cases, while this table has 5
-//		(6, if you count 0xCC, which is its own share of problems).
-// Box, Sphere and Cylinder actually matched properly.
-// 0x04 is confusing since it matches many different types.
-// 0xCC is even more confusing, since there are 36 types,
-//		while they cover only 24.
-//
 
 static const u8 s_convert_from_bullet_type[] = {
     0x00, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
@@ -679,10 +627,6 @@ static float3 dimensions_from_bullet_shape( btCollisionShape const* bullet_shape
 	}
 }
 
-// claude@NOTE: STRUCTURE MATCH (7/7 stmts, same order: type/transform/dim x2 then
-// return). Capped because the target obj (rva 0x36570) is an OPTIMIZED COMDAT while our
-// base builds /Od: base inlines from_bullet_shape_type into the return (0x82 vs 0x44) and
-// gives shape_0/1_type stack slots the optimizer elided. Not source-steerable.
 float contact_result_callback::addSingleResult(
 	btManifoldPoint&			cp,
 	btCollisionObject const*	colObj0,
@@ -712,21 +656,12 @@ float contact_result_callback::addSingleResult(
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (2/2 stmts, same order). Residual is LTCG argument-passing:
-// the gold build is the function's only caller and gave it a custom convention (ret 8 vs
-// our ret 0Ch - one stack arg promoted to a register), which reschedules the cb-construction
-// stores. Not source-steerable.
 void bullet_physics_world::contact_pair_test( contact_test_predicate& predicate, btCollisionObject* first_object, btCollisionObject* second_object )
 {
 	contact_result_callback cb( &predicate );
 	m_dynamicsWorld->contactPairTest( first_object, second_object, cb );
 }
 
-// sushi@TODO: Need to play around with this function. Didn't match the variable names, though I did the structure (somewhat)
-// claude@NOTE: local set now matches target's inner block (clamp_r drops `value`, const angle,
-// rotation_axis, rotation inlined into mul4x3). Remaining 3-local gap (q/btStart/btEnd) is the
-// optimizer leaving them unnamed in gold while /Od names them - not source-steerable. Residual is
-// also Bullet from_vostok/convexSweepTest inlining.
 bool bullet_physics_world::adjust_foot_transform(
 	float3 const&		half_size,
 	float3 const&		start,
@@ -736,7 +671,7 @@ bool bullet_physics_world::adjust_foot_transform(
 	float4x4&			transform
 )
 {
-	static bool s_ik_change_foot_rotation_value = false; // sushi@TODO: Should it be false? <0x4c25f0b>; sushi@NOTE: Constructor inlined
+	static bool s_ik_change_foot_rotation_value = false;
 	static console_commands::cc_bool s_ik_change_foot_rotation_cc( "ik_change_foot_rotation", s_ik_change_foot_rotation_value, false, console_commands::command_type_engine_internal );
 
 	btCapsuleShape collision_shape( half_size.x, half_size.y );
@@ -772,9 +707,6 @@ bool bullet_physics_world::adjust_foot_transform(
 	return callback.hasHit( );
 }
 
-// claude@NOTE: STRUCTURE MATCH (12/12 stmts). Byte residual is the STLport multimap
-// inline-vs-call wall: our /Od base inlines the _Rb_tree equal_range / iterator walk that
-// the target reaches via _M_increment calls. Not source-steerable. (subscribe/unsubscribe same.)
 void bullet_physics_world::notify_about_contact( )
 {
 	const s32 num_manifolds = m_dispatcher->getNumManifolds( );
@@ -783,7 +715,7 @@ void bullet_physics_world::notify_about_contact( )
 		btPersistentManifold* manifold = m_dispatcher->getManifoldByIndexInternal( i );
 		for ( s32 j = 0 ; j < manifold->getNumContacts( ) ; ++j )
 		{
-			if ( 0.0f <= manifold->getContactPoint( j ).m_distance1 )								// sushi@NOTE: comiss reversed
+			if ( 0.0f <= manifold->getContactPoint( j ).m_distance1 )
 				continue;
 
 			base_physics_object* base_obj_a = static_cast< base_physics_object* >(
@@ -795,16 +727,13 @@ void bullet_physics_world::notify_about_contact( )
 
 			callbacks_begin_end_pair begin_end = m_contact_callbacks.equal_range( base_obj_a );
 			for ( callbacks_type::iterator it = begin_end.first ; it != begin_end.second ; ++it )
-				(*it->second)( base_obj_a, base_obj_b, from_bullet( manifold->getContactPoint( j ).getPositionWorldOnA( ) ) );	// sushi@NOTE: slightly different asm order
+				(*it->second)( base_obj_a, base_obj_b, from_bullet( manifold->getContactPoint( j ).getPositionWorldOnA( ) ) );
 
 			break;
 		}
 	}
 }
 
-// claude@NOTE: STRUCTURE MATCH (3/3 stmts; dropped a non-target ASSERT(callback) and the
-// it/it_end locals). Byte residual is the STLport _Rb_tree inline-vs-call wall (our /Od base
-// inlines equal_range / the iterator walk that gold reaches via _M_increment). unsubscribe same.
 void bullet_physics_world::subscribe_on_contact( base_physics_object* object, callback_type* callback )
 {
 	callbacks_begin_end_pair ret = m_contact_callbacks.equal_range( object );
