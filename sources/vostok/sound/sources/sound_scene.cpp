@@ -477,49 +477,56 @@ bool compare_propagator_info_by_distance	( propagator_info const& lhs, propagato
 void sound_scene::notify_listener	( sound_world const& world )
 {
 	float3 const listener					= m_list_position.get( );
+
+
+
+
+
 	vectora< propagator_info > props		( g_allocator );
 	sound_instance_proxy_internal* proxy	= m_active_proxies.front( );
 	while ( proxy )
 	{
+
+
+
+
+
 		vectora< std::pair< float, float3 > > results	( g_allocator );
 		proxy->calculate_graph_position		( listener, results );
+
+		R_ASSERT							( !proxy->get_propagators( ).empty( ) );
 
 		new_sound_propagator* propagator	= proxy->get_propagators().front();
 		while ( propagator )
 		{
-			for ( u32 i = 0; i < results.size( ); ++i )
+			u32 i = 0;
+			while ( i < results.size( ) )
 			{
 				propagator_info info;
 				info.prop						= propagator;
 				info.in_graph_position			= results[i].second;
 				info.distance_to_listener		= results[i].first;
 				props.push_back					( info );
+				++i;
 			}
+
 			propagator			= proxy->get_propagators().get_next_of_object( propagator );
 		}
+
 		proxy					= m_active_proxies.get_next_of_object( proxy );
 	}
 
 	std::sort								( props.begin( ), props.end( ), &compare_propagator_info_by_distance );
+
 	vectora< unique_propagator_info > unique	( g_allocator );
 	for ( u32 i = 0; i < props.size( ) && i < 20; ++i )
 	{
+
 		float distance_to_listener	= props[i].distance_to_listener;
 		float distance				= math::max( distance_to_listener, 1.0f );
 		distance					= math::min( distance, math::float_max );
 		float attenuation			= props[i].prop->get_proxy( ).get_sound_propagator_emitter( ).get_sound_spl( )->get_loudness( distance );
-
-		sound_voice_params params;
-		calculate_channel_matrix
-		(
-			world.get_panning_lut( ),
-			props[i].prop->get_proxy( ),
-			props[i].in_graph_position,
-			distance,
-			attenuation,
-			params.channel_matrix,
-			params.lp_filter_coeff
-		);
+		sound_voice_params params; calculate_channel_matrix	( world.get_panning_lut( ), props[i].prop->get_proxy( ), props[i].in_graph_position, distance, attenuation, params.channel_matrix, params.lp_filter_coeff );
 
 		compare_by_propagator predicate	( props[i].prop );
 		vectora< unique_propagator_info >::iterator it	= std::find_if( unique.begin( ), unique.end( ), predicate );
