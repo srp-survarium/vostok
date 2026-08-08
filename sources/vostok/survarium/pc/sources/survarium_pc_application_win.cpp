@@ -246,22 +246,14 @@ static void splash_screen_main		( )
 }
 #pragma warning(pop)
 
-// claude@NOTE: STRUCTURE MISMATCH (quantity) - base 4 stmts / target 5. The
-// target declared decode_finger_print as `void(char (&)[64])` (mangled
-// ?decode_finger_print@@YAXAAY0EA@D@Z), fills a 64-byte LOCAL, then a 5th stmt
-// `s_finger_print = local;` (buffer_string::operator=). Our finger_print.cpp
-// keeps the old `void(fixed_string512*)` signature (unpaired, name differs) and
-// writes the global directly, so the assign stmt is absent. Fixing this needs
-// the char[64]& signature + body rewrite in finger_print.cpp AND resolving the
-// s_finger_print name collision there (its `static u8 const s_finger_print[48]`
-// vs this 512-byte fixed_string the target's decode also strcpy_s's into).
-// Cross-unit refactor with ambiguous symbol resolution - capped, not steered.
 void application::preinitialize					( )
 {
 	vostok::engine::preinitialize		( m_game_proxy, GetCommandLine( ), "survarium", __DATE__ );
 
-	void   decode_finger_print		(vostok::fixed_string512 * );
-	decode_finger_print				( & s_finger_print );
+	char temp[64];
+	void   decode_finger_print		(char (&)[64]);
+	decode_finger_print				( temp );
+	s_finger_print					=	temp;
 
 	if ( !vostok::engine::command_line_no_splash_screen() )
 		vostok::threading::spawn		( &splash_screen_main, "splash screen", "splash", 0, 0, vostok::threading::tasks_unaware );
