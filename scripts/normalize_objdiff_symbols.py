@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-"""Normalize project-specific compiler thunk names in objdiff target objects.
+"""Normalize project-specific PDB symbol names in objdiff target objects.
 
 vostok-delinker deliberately emits PDB procedure names verbatim.  The retail
 PDB spells static initializer/finalizer thunks as readable backtick names,
 while MSVC 8 emits decorated ``??__E``/``??__F`` names in candidate COFF
-objects.  objdiff pairs functions by COFF symbol identity, so normalize the
-safe, fully-qualified retail names to the compiler-native spelling in the
-disposable target comparison objects.
+objects.  A few template instantiations also differ only in PDB type-rendering
+spelling.  objdiff pairs functions by COFF symbol identity, so normalize the
+safe, fully-qualified retail names and exact known aliases to the compiler-side
+spelling in the disposable target comparison objects.
 
 This is intentionally a project-side comparison transform: the delinker's raw
 output remains generic, the source PDB identity remains available in the rich
@@ -34,9 +35,29 @@ _NM_RE = re.compile(
     r"^\s*(?:[0-9A-Fa-f]+\s+)?[A-Za-z?]\s+(?P<name>.+)$"
 )
 
+_PDB_ALIAS_TO_COMPILER_NAME = {
+    "load_function<void __stdcall(enum BUGTRAP_ACTIVITY_tag)>":
+        "load_function<void __stdcall(BUGTRAP_ACTIVITY_tag)>",
+    "load_function<void __stdcall(enum BUGTRAP_DIALOGMESSAGE_tag,char const *)>":
+        "load_function<void __stdcall(BUGTRAP_DIALOGMESSAGE_tag,char const *)>",
+    "load_function<void __stdcall(enum BUGTRAP_REPORTFORMAT_tag)>":
+        "load_function<void __stdcall(BUGTRAP_REPORTFORMAT_tag)>",
+    "load_function<long (__stdcall*__stdcall(void))(_EXCEPTION_POINTERS *)>":
+        "load_function<long (__stdcall*)(_EXCEPTION_POINTERS *) __stdcall(void)>",
+}
+
+
+def pdb_alias_name(pdb_name: str) -> str | None:
+    """Return a compiler-side name for an exact, audited PDB spelling alias."""
+    return _PDB_ALIAS_TO_COMPILER_NAME.get(pdb_name)
+
 
 def compiler_name(pdb_name: str) -> str | None:
-    """Return the exact MSVC ``??__E``/``??__F`` spelling when invertible."""
+    """Return the compiler-side spelling when the mapping is exact."""
+    alias = pdb_alias_name(pdb_name)
+    if alias:
+        return alias
+
     match = _DYNAMIC_RE.match(pdb_name)
     if not match:
         return None
