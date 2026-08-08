@@ -20,8 +20,8 @@ public:
 	virtual	float	interpolated_value	( float current_transition_time ) const;
 	virtual	float	transition_time		( ) const;
 
-	virtual instant_interpolator* clone ( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 	virtual	instant_interpolator* clone	( mutable_buffer& buffer ) const;
+	virtual instant_interpolator* clone ( mixing::n_ary_tree_transition_tree_constructor& constructor ) const;
 
 	virtual void	accept				( interpolator_visitor& visitor ) const;
 
