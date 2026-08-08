@@ -11,9 +11,9 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-inline animation_lexeme::animation_lexeme					( animation_lexeme& other, bool ) :
+inline animation_lexeme::animation_lexeme					( animation_lexeme const& other ) :
 	binary_tree_animation_node	( other ),
-	base_lexeme					( other, true ),
+	base_lexeme					( other ),
 	m_cloned_instance			( 0 )
 {
 	if ( other.m_cloned_instance != this )

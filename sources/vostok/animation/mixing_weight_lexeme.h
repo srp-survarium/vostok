@@ -25,7 +25,7 @@ public:
 								float const weight,
 								base_interpolator const& interpolator
 							);
-	inline					weight_lexeme	( weight_lexeme const& other, bool );
+	inline					weight_lexeme	( weight_lexeme const& other );
 	inline	weight_lexeme&	cloned_modified_lexeme ( float const new_weight ) const;
 	inline	weight_lexeme&	operator =		( float const new_weight );
 	inline	weight_lexeme* cloned_in_buffer	( );

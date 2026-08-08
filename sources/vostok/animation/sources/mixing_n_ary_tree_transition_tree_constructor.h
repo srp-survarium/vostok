@@ -39,9 +39,9 @@ public:
 												mutable_buffer&					buffer,
 												n_ary_tree const&				from,
 												n_ary_tree const&				to,
-												u32								animations_count,
-												u32								animated_objects_count,
-												u32								current_time_in_ms,
+												u32 const						animations_count,
+												u32 const						animated_objects_count,
+												u32 const						current_time_in_ms,
 												subscribed_channel*&			channels_head,
 												transform_functor_type const&	get_transform_functor
 											);
@@ -93,8 +93,8 @@ private:
 												bool							skip_time_scale_node
 											);
 
-			n_ary_tree_animation_node*		add_animation						( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation );
-			n_ary_tree_animation_node*		remove_animation					( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* weight_driving_animation, bool is_new_driving_animation );
+			n_ary_tree_animation_node*		add_animation						( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* const weight_driving_animation );
+			n_ary_tree_animation_node*		remove_animation					( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* const weight_driving_animation, bool is_new_driving_animation );
 			void							change_animation					(
 												n_ary_tree_animation_node&		from,
 												n_ary_tree_animation_node&		to,
@@ -103,10 +103,10 @@ private:
 											);
 
 			void							merge_weight_asynchronous_groups	(
-												n_ary_tree_animation_node*		from_begin,
-												n_ary_tree_animation_node*		from_end,
-												n_ary_tree_animation_node*		to_begin,
-												n_ary_tree_animation_node*		to_end
+												n_ary_tree_animation_node* const	from_begin,
+												n_ary_tree_animation_node* const	from_end,
+												n_ary_tree_animation_node* const	to_begin,
+												n_ary_tree_animation_node* const	to_end
 											);
 			void							merge_weight_synchronization_groups	(
 												n_ary_tree_animation_node*		from_begin,

@@ -54,9 +54,6 @@ weapon_core_chamber_a_round_state::weapon_core_chamber_a_round_state(
 	ASSERT( UNKNOWN_EXPRESSION );
 }
 
-// claude@NOTE: recovering this needs the full expression-returning operator+ family
-// added to the shared mixing_addition_lexeme API - a separate cross-cutting unit, not
-// this chamber file.
 animation::mixing::expression weapon_core_chamber_a_round_state::weapon_and_hands_expression(
 	mutable_buffer&						buffer,
 	bool const							is_third_view,

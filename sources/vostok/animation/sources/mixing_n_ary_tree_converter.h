@@ -34,7 +34,6 @@ public:
 					vostok::mutable_buffer& buffer,
 					bool const is_final_tree,
 					u32 const current_time_in_ms,
-					float4x4 const& object_transform,
 					subscribed_channel*& channels_head
 				);
 

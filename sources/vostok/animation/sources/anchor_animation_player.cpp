@@ -1,22 +1,6 @@
 ////////////////////////////////////////////////////////////////////////////
-//	/OPT:REF reachability anchor for the animation_player carcass.
+//	Reachability anchor for animation_player's optimized call graph.
 ////////////////////////////////////////////////////////////////////////////
-
-// animation_player's public surface (set_target_and_tick / subscribe / unsubscribe
-// / serialize/deserialize / object-transform accessors) is only reached by the game
-// animation-controller graph (not fully wired in this build), so /OPT:REF strips the
-// class methods from the base EXE and the delinker never produces bodies to pair
-// against the optimized target. anchor_animation_player() constructs an animation_player
-// and calls its public surface; the public entry points reach the private callees
-// (set_target, compact_callbacks, get_next_buffer, try_get_transform, skip_time_if_needed,
-// invert_times) so LTCG emits them out-of-line for the delinker to score.
-//
-// Self-guarded: the volatile guard is never true at runtime, but the compiler still
-// emits every reference, and every argument is sourced through a volatile placeholder
-// so LTCG cannot const-fold the carcass bodies away.
-//
-// Dispatched from survarium::IncludeAll::IncludeAll() (game_core/sources/anchor.cpp).
-// TEMPORARY - retire once the real game animation-controller call graph reaches the player.
 
 #include "pch.h"
 
@@ -73,6 +57,7 @@ void anchor_animation_player( )
 	static void* volatile	s_buffer	= 0;
 	player.serialize_state( s_buffer, s_time );
 	player.deserialize_state( s_buffer, s_time );
+	animation_player::invert_times( player.m_mixing_tree, s_time, s_sink, s_sink );
 
 	player.set_object_transform( transform, s_object );
 	math::float4x4	out	= player.get_object_transform( s_object );

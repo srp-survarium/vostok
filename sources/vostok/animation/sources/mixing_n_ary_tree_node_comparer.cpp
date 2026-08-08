@@ -27,7 +27,7 @@ using vostok::animation::mixing::n_ary_tree_weight_transition_node;
 using vostok::animation::mixing::n_ary_tree_time_scale_transition_node;
 using vostok::animation::mixing::n_ary_tree_base_node;
 
-n_ary_tree_node_comparer::enum_result n_ary_tree_node_comparer::compare	(
+vostok::animation::comparison_result_enum n_ary_tree_node_comparer::compare	(
 		n_ary_tree_base_node& left,
 		n_ary_tree_base_node& right
 	)
@@ -37,13 +37,13 @@ n_ary_tree_node_comparer::enum_result n_ary_tree_node_comparer::compare	(
 	return				result;
 }
 
-static inline n_ary_tree_node_comparer::enum_result	revert	( n_ary_tree_node_comparer::enum_result result )
+static inline vostok::animation::comparison_result_enum	revert	( vostok::animation::comparison_result_enum result )
 {
-	if ( result == n_ary_tree_node_comparer::more )
-		return			n_ary_tree_node_comparer::less;
+	if ( result == vostok::animation::more )
+		return			vostok::animation::less;
 
-	if ( result == n_ary_tree_node_comparer::less )
-		return			n_ary_tree_node_comparer::more;
+	if ( result == vostok::animation::less )
+		return			vostok::animation::more;
 
 	return				result;
 }
@@ -54,7 +54,7 @@ static inline n_ary_tree_node_comparer::enum_result	revert	( n_ary_tree_node_com
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_animation_node& right )
 {
 	animation_comparer_predicate predicate( true, true );
-	result				= static_cast< enum_result >( predicate( left, right ) );
+	result				= static_cast< vostok::animation::comparison_result_enum >( predicate( left, right ) );
 }
 
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_weight_transition_node& right )

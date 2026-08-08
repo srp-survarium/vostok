@@ -117,8 +117,7 @@ private:
 	/* 0x0000 */	mutable_buffer&						m_buffer;
 	/* 0x0004 */	time_calculator_fn					m_time_calculator;
 
-	// it's a pity, but the order of the next 3 members is important.
-	// sushi@NOTE: Why important? Note that this comment is outdated.
+	// Definition order is codegen-significant.
 #ifndef MASTER_GOLD
 					pcstr const							m_identifier;
 #endif // #ifndef MASTER_GOLD

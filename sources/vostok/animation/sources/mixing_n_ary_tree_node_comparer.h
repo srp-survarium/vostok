@@ -7,6 +7,7 @@
 #ifndef N_ARY_TREE_NODE_COMPARER_H_INCLUDED
 #define N_ARY_TREE_NODE_COMPARER_H_INCLUDED
 
+#include <vostok/animation/base_interpolator.h>
 #include "mixing_n_ary_tree_double_dispatcher.h"
 
 namespace vostok {
@@ -15,15 +16,8 @@ namespace mixing {
 
 class n_ary_tree_node_comparer : public n_ary_tree_double_dispatcher {
 public:
-	enum enum_result {
-		equal,
-		less,
-		more,
-	}; // enum enum_result
-
-public:
 	inline	n_ary_tree_node_comparer	( ) : result(equal) { }
-		enum_result	compare		( n_ary_tree_base_node& left,					n_ary_tree_base_node& right );
+		comparison_result_enum	compare		( n_ary_tree_base_node& left,					n_ary_tree_base_node& right );
 	inline	bool	operator ( )( n_ary_tree_base_node& left,					n_ary_tree_base_node& right ) { return compare( left, right ) == less; }
 	inline	bool	operator ( )( n_ary_tree_base_node* left,					n_ary_tree_base_node* right ) { return compare( *left, *right ) == less; }
 
@@ -105,7 +99,7 @@ private:
 	inline void		propagate	( T& left, T& right );
 
 public:
-	enum_result		result;
+	comparison_result_enum	result;
 }; // class n_ary_tree_node_comparer
 
 STATIC_SIZE_ASSERT(n_ary_tree_node_comparer, 0x8);

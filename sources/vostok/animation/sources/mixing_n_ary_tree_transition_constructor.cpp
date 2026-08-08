@@ -243,17 +243,17 @@ void n_ary_tree_transition_constructor::compute_operands_count	(
 	n_ary_tree_base_node* const* const j_e	= j_b + to_animation.operands_count( );
 	for ( ; (i != i_e) && (j != j_e); ) {
 		switch ( comparer.compare(**i, **j) ) {
-			case n_ary_tree_node_comparer::less : {
+			case vostok::animation::less : {
 				++left_unique_count;
 				++i;
 				break;
 			}
-			case n_ary_tree_node_comparer::more : {
+			case vostok::animation::more : {
 				++right_unique_count;
 				++j;
 				break;
 			}
-			case n_ary_tree_node_comparer::equal : {
+			case vostok::animation::equal : {
 				++operands_count;
 				++i;
 				++j;
@@ -286,15 +286,15 @@ void n_ary_tree_transition_constructor::fill_operands	(
 
 	for ( ; (i != i_e) && (j != j_e); ) {
 		switch ( comparer.compare(**i, **j) ) {
-			case n_ary_tree_node_comparer::less : {
+			case vostok::animation::less : {
 				*left_unique_nodes++	= *i++;
 				break;
 			}
-			case n_ary_tree_node_comparer::more : {
+			case vostok::animation::more : {
 				*right_unique_nodes++	= *j++;
 				break;
 			}
-			case n_ary_tree_node_comparer::equal : {
+			case vostok::animation::equal : {
 				(*i)->accept	( *this );
 				*operands++		= m_cloned_tree;
 				++i;

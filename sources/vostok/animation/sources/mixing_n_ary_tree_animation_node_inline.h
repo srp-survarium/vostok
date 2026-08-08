@@ -142,6 +142,11 @@ inline n_ary_tree_animation_node::n_ary_tree_animation_node						( n_ary_tree_an
 }
 */
 
+inline animation_state const* n_ary_tree_animation_node::get_animation_state	( ) const
+{
+	return							m_animation_state;
+}
+
 inline animation_state&	n_ary_tree_animation_node::animation_state				( ) const
 {
 	R_ASSERT						( m_animation_state );

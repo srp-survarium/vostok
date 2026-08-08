@@ -275,76 +275,65 @@ void n_ary_tree::update_synchronization_group_using_integration(
 	const u32						target_time_in_ms
 )
 {
-	animation_state& state					= animation_node.animation_state( );
+	animation_state& animation_state		= animation_node.animation_state( );
 	n_ary_tree_base_node* time_scale_node	=
 		animation_node.operands_count( )
 			? *animation_node.operands( sizeof( n_ary_tree_animation_node ) )
 			: 0;
 	bool is_time_scale_node					= time_scale_node && time_scale_node->is_time_scale( );
-	float accumulated_animation_time		= state.animation_interval_time;
+	float accumulated_animation_time		= animation_state.animation_interval_time;
 	animation_interval const& interval		=
-		animation_node.animation_intervals( )[ state.animation_interval_id ];
+		animation_node.animation_intervals( )[ animation_state.animation_interval_id ];
 	float const animation_interval_length	= interval.length( );
 
 	u32 const integration_interval_length_in_ms	= 10;
-	float const integration_interval_length		=
-		float( integration_interval_length_in_ms ) / 1000.f;
 	u32 const full_intervals_count				=
 		( target_time_in_ms - start_time_in_ms ) / integration_interval_length_in_ms;
 
 	for ( u32 i = 0; i <= full_intervals_count; ++i ) {
-		u32 const previous_sample_time	=
-			i < full_intervals_count
-				? start_time_in_ms + ( i ? 2 * i - 1 : 0 ) * ( integration_interval_length_in_ms / 2 )
-				: start_time_in_ms + full_intervals_count * integration_interval_length_in_ms;
-		u32 const sample_time			=
-			i < full_intervals_count
-				? start_time_in_ms + ( 2 * i + 1 ) * ( integration_interval_length_in_ms / 2 )
-				: target_time_in_ms;
 		n_ary_tree_time_scale_calculator time_scale_calculator(
-			sample_time,
+			i < full_intervals_count ? start_time_in_ms + ( 2*i + 1 )*( integration_interval_length_in_ms/2 ) : target_time_in_ms,
 			accumulated_animation_time,
-			previous_sample_time,
+			i < full_intervals_count ? start_time_in_ms + ( i ? 2*i - 1 : 0 )*( integration_interval_length_in_ms/2 ) : start_time_in_ms + full_intervals_count*integration_interval_length_in_ms,
 			&animation_node
 		);
 
 		if ( is_time_scale_node ) {
 			u32 const operands_count		= animation_node.operands_count( );
 			time_scale_node->accept		( time_scale_calculator );
-			if ( time_scale_calculator.result( ) )
-				time_scale_node			= time_scale_calculator.result( );
+			time_scale_node				= time_scale_calculator.result( ) ? time_scale_calculator.result( ) : time_scale_node;
 			if ( operands_count != animation_node.operands_count( ) ) {
 				time_scale_node			= 0;
 				is_time_scale_node		= false;
 			}
 		}
 
-		float const time_scale			=
-			is_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
-		u32 const update_time			=
-			i < full_intervals_count
-				? start_time_in_ms + ( i + 1 ) * integration_interval_length_in_ms
-				: target_time_in_ms;
-		float const interval_fraction	=
-			i < full_intervals_count
-				? 1.f
-				: float( ( target_time_in_ms - start_time_in_ms ) % integration_interval_length_in_ms )
-					/ float( integration_interval_length_in_ms );
-		accumulated_animation_time		+= time_scale * integration_interval_length * interval_fraction;
+		accumulated_animation_time		= computed_animation_time(
+			animation_node,
+			accumulated_animation_time,
+			start_time_in_ms + i*integration_interval_length_in_ms,
+			i < full_intervals_count ? start_time_in_ms + ( i + 1 )*integration_interval_length_in_ms : target_time_in_ms,
+			start_time_in_ms + i*integration_interval_length_in_ms,
+			is_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f
+		);
+		accumulated_animation_time		=
+			math::min( math::max( accumulated_animation_time, 0.f ), animation_interval_length );
 
-		if ( state.are_there_any_weight_transitions )
+		u32 const update_time			=
+			i < full_intervals_count ? start_time_in_ms + ( i + 1 )*integration_interval_length_in_ms : target_time_in_ms;
+		if ( animation_state.are_there_any_weight_transitions )
 			accumulate_object_movement	( animation_node, accumulated_animation_time, update_time );
 
-		u32 const group_id				= animation_node.time_synchronization_group_id( );
-		if ( group_id == u32( -1 ) )
+		u32 const time_synchronization_group_id	= animation_node.time_synchronization_group_id( );
+		if ( time_synchronization_group_id == u32( -1 ) )
 			continue;
 
 		for (
 			n_ary_tree_animation_node* current = animation_node.m_next_time_animation;
-			current && current->time_synchronization_group_id( ) == group_id;
+			current && current->time_synchronization_group_id( ) == time_synchronization_group_id;
 			current = current->m_next_time_animation
 		) {
-			animation_state& current_state	= current->animation_state( );
+			mixing::animation_state& current_state	= current->animation_state( );
 			if ( !current_state.are_there_any_weight_transitions )
 				continue;
 
@@ -376,6 +365,28 @@ void n_ary_tree::update_animation_time( animation_state& animation_state )
 		math::max( animation_time - animation_state.animation_time_threshold, 0.f ),
 		animation_length
 	);
+}
+
+float n_ary_tree::computed_animation_time(
+	n_ary_tree_animation_node&	animation,
+	const float					animation_time_before_scale_starts,
+	const u32					time_scale_start_time_in_ms,
+	const u32					current_time_in_ms,
+	const u32					target_time_in_ms,
+	const float					time_scale
+) const
+{
+	if ( !animation.time_calculator() )
+		return						animation_time_before_scale_starts + (current_time_in_ms - time_scale_start_time_in_ms)*time_scale/1000.f;
+
+	return						animation.time_calculator()(
+										animation_time_before_scale_starts,
+										animation.animation_intervals()->length(),
+										time_scale_start_time_in_ms,
+										current_time_in_ms,
+										target_time_in_ms,
+										time_scale
+									);
 }
 
 void n_ary_tree::update_animation_state(
@@ -501,259 +512,185 @@ void n_ary_tree::remove_animation( n_ary_tree_animation_node*& i, n_ary_tree_ani
 
 }
 
-// STATE[STUB]
 void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_node, const u32 event_types )
 {
-	// LOCALS
-	// const u32 						event_type
-	// n_ary_tree_time_scale_calculator time_scale_calculator
-	// const u32 						event_time_in_ms
-	// n_ary_tree_time_scale_calculator time_scale_calculator
-	// const float 						animation_time
-	// const float 						animation_length
-	// animation_interval const& 		interval
-	// const float 						animation_length
-	// animation_interval const& 		interval
-	// current_frame_position 			frame_position
-	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
-	// current_frame_position 			frame_position
-	// n_ary_tree_weight_calculator 	weight_calculator
-	// n_ary_tree_event_iterator 		event_iterator
-	// resources::pinned_ptr_const< cubic_spline_skeleton_animation > pinned_animation
-	// ******
+	animation_state& state		= current_animation_node.animation_state( );
+	u32 const event_type		= state.event_iterator->event_type & event_types;
 
-	// CALL SITE INFO
-	// <0x6efdcc> -> bool < unknown >()
-	// <0x6efde1> -> void < unknown >( n_ary_tree_visitor& )
-	// <0x6efdea> -> bool < unknown >()
-	// <0x6efe59> -> void < unknown >( n_ary_tree_visitor& )
-	// ******
+	if ( event_type & time_event_animation_lexeme_started ) {
+		u32 const event_time_in_ms	= state.event_iterator->event_time_in_ms;
+		n_ary_tree_time_scale_calculator time_scale_calculator(
+			event_time_in_ms,
+			state.animation_interval_time,
+			event_time_in_ms
+		);
+		n_ary_tree_animation_node* const driving_animation	=
+			current_animation_node.time_driving_animation( )
+				? current_animation_node.time_driving_animation( )
+				: &current_animation_node;
+		n_ary_tree_base_node* const time_scale_node	=
+			driving_animation->operands_count( )
+				? *driving_animation->operands( sizeof( n_ary_tree_animation_node ) )
+				: 0;
+		if ( time_scale_node && time_scale_node->is_time_scale( ) )
+			time_scale_node->accept( time_scale_calculator );
 
-	// FUNCTION BODY
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6efd2f>|0x00f|+0x003:'1244'
-	// <0x6efd32>|0x012|+0x010:'1245'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <18>
-	// <19>
-	// <20>
-	// <21>
-	// <22>
-	// <23>
-	// <24>
-	// <25>
-	// <26>
-	// <27>
-	// <28>
-	// <29>
-	// <30>
-	// <0x6efd42>|0x022|+0x019:'1277'
-	// <0x6efd5b>|0x03b|+0x05e:'1278'
-	// <0>
-	// <0x6efdb9>|0x099|+0x046:'1280'
-	// <0x6efdff>|0x0df|-0x03e:'1280'
-	// <0x6efdc1>|0x0a1|+0x011:'1281'
-	// <0x6efdd2>|0x0b2|+0x011:'1282'
-	// <0x6efde3>|0x0c3|+0x01e:'1283'
-	// <0x6efe01>|0x0e1|+0x008:'1283'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6efe09>|0x0e9|+0x00c:'1287'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6efe15>|0x0f5|+0x010:'1292'
-	// <0x6efe25>|0x105|+0x036:'1293'
-	// <0x6efe5b>|0x13b|+0x006:'1294'
-	// <0>
-	// <1>
-	// <0x6efe61>|0x141|+0x00d:'1297'
-	// <0x6efe6e>|0x14e|+0x00c:'1298'
-	// <0x6efe7a>|0x15a|+0x00a:'1299'
-	// <0x6efe84>|0x164|+0x08e:'1300'
-	// <0>
-	// <0x6eff12>|0x1f2|+0x00f:'1302'
-	// <0x6eff21>|0x201|+0x008:'1303'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x6eff29>|0x209|+0x00b:'1309'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6eff34>|0x214|+0x00c:'1314'
-	// <0x6eff40>|0x220|+0x006:'1315'
-	// <0x6eff46>|0x226|+0x008:'1316'
-	// <0x6eff4e>|0x22e|+0x008:'1317'
-	// <0x6eff56>|0x236|+0x064:'1318'
-	// <0>
-	// <0x6effba>|0x29a|+0x005:'1320'
-	// <0x6effbf>|0x29f|+0x011:'1321'
-	// <0x6effd0>|0x2b0|+0x070:'1322'
-	// <0x6f0040>|0x320|+0x006:'1323'
-	// <0>
-	// <0x6f0046>|0x326|+0x017:'1325'
-	// <0x6f005d>|0x33d|+0x007:'1326'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6f0064>|0x344|+0x00b:'1331'
-	// <0x6f006f>|0x34f|+0x004:'1332'
-	// <0x6f0073>|0x353|+0x086:'1333'
-	// <0x6f00f9>|0x3d9|+0x007:'1334'
-	// <0x6f0100>|0x3e0|+0x003:'1335'
-	// <0>
-	// <0x6f0103>|0x3e3|+0x002:'1337'
-	// <0>
-	// <0x6f0105>|0x3e5|+0x008:'1339'
-	// <0x6f010d>|0x3ed|+0x00c:'1340'
-	// <0x6f0119>|0x3f9|-0x009:'1340'
-	// <0x6f0110>|0x3f0|+0x005:'1341'
-	// <0x6f0115>|0x3f5|+0x009:'1342'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f011e>|0x3fe|+0x00b:'1346'
-	// <0x6f0129>|0x409|+0x00a:'1347'
-	// <0x6f0133>|0x413|+0x003:'1348'
-	// <0>
-	// <0x6f0136>|0x416|+0x012:'1350'
-	// <0>
-	// <0x6f0148>|0x428|+0x010:'1352'
-	// <0x6f0158>|0x438|+0x073:'1353'
-	// <0x6f01cb>|0x4ab|+0x026:'1354'
-	// <0x6f01f1>|0x4d1|+0x016:'1355'
-	// <0x6f0207>|0x4e7|+0x006:'1356'
-	// <0x6f020d>|0x4ed|+0x002:'1357'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f020f>|0x4ef|+0x003:'1361'
-	// <0>
-	// <0x6f0212>|0x4f2|+0x00e:'1363'
-	// <0>
-	// <1>
-	// <0x6f0220>|0x500|+0x005:'1366'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f0225>|0x505|+0x044:'1370'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <0x6f0269>|0x549|+0x007:'1389'
-	// <0x6f0270>|0x550|+0x005:'1390'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f0275>|0x555|+0x044:'1394'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x6f02b9>|0x599|+0x00b:'1402'
-	// <0x6f02c4>|0x5a4|+0x009:'1403'
-	// <0x6f02cd>|0x5ad|+0x026:'1404'
-	// <0>
-	// <1>
-	// <0x6f02f3>|0x5d3|+0x046:'1407'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6f0339>|0x619|+0x02d:'1412'
-	// <0x6f0366>|0x646|+0x007:'1413'
-	// <0>
-	// <1>
-	// <0x6f036d>|0x64d|+0x042:'1416'
-	// <0x6f03af>|0x68f|+0x158:'1417'
-	// <0x6f0507>|0x7e7|+0x04b:'1418'
-	// <0x6f0552>|0x832|+0x006:'1419'
-	// <0>
-	// <1>
-	// <2>
-	// <0x6f0558>|0x838|+0x00e:'1423'
-	// <0>
-	// <0x6f0566>|0x846|+0x00c:'1425'
-	// <0x6f0572>|0x852|+0x032:'1426'
-	// <0>
-	// <1>
-	// <0x6f05a4>|0x884|+0x046:'1429'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6f05ea>|0x8ca|+0x030:'1434'
-	// <0x6f061a>|0x8fa|+0x007:'1435'
-	// <0>
-	// <1>
-	// <0x6f0621>|0x901|+0x033:'1438'
-	// <0x6f0654>|0x934|+0x044:'1439'
-	// <0x6f0698>|0x978|+0x036:'1440'
-	// <0>
-	// <1>
-	// <0x6f06ce>|0x9ae|+0x01b:'1443'
-	// <0x6f06e9>|0x9c9|+0x026:'1444'
-	// <0>
-	// <1>
-	// <0x6f070f>|0x9ef|+0x011:'1447'
-	// <0x6f0720>|0xa00|+0x03a:'1448'
-	// <0x6f075a>|0xa3a|+0x030:'1449'
-	// <0>
-	// <0x6f078a>|0xa6a|+0x057:'1451'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// ******
+		float time_scale	= time_scale_node && time_scale_node->is_time_scale( )
+			? time_scale_calculator.time_scale( )
+			: 1.f;
+		if ( time_scale == 0.f ) {
+			n_ary_tree_time_scale_calculator time_scale_calculator(
+				event_time_in_ms + 1,
+				state.animation_interval_time,
+				event_time_in_ms + 1
+			);
+			time_scale_node->accept( time_scale_calculator );
+			time_scale		= time_scale_calculator.time_scale( );
+		}
+
+		if ( time_scale >= 0.f ) {
+			animation_interval const& interval	=
+				current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+			float const animation_time	= interval.start_time( ) + state.animation_interval_time;
+			float const animation_length	=
+				cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+			if ( animation_time == animation_length )
+				state.animation_time	= 0.f;
+		}
+
+		state.are_there_any_weight_transitions	= false;
+		set_object_transform						( current_animation_node );
+	}
+
+	if ( event_type & time_event_animation_ended_in_positive_direction ) {
+		if ( current_animation_node.playback_type( ) != play_once_and_freeze_at_end ) {
+			state.animation_time	= 0.f;
+			if ( !( event_type & time_event_animation_interval_ended ) ) {
+				animation_interval const& interval	=
+					current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+				state.animation_time_threshold	=
+					cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+			}
+		}
+		else {
+			animation_interval const& interval	=
+				current_animation_node.animation_intervals( )[ current_animation_node.animation_intervals_count( ) - 1 ];
+			float const animation_length	=
+				cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+			state.animation_time			= animation_length;
+			state.animation_time_threshold	= animation_length;
+			state.animation_interval_time	= animation_length - interval.start_time( );
+			state.is_freezed				= true;
+		}
+	}
+
+	if ( event_type & time_event_animation_ended_in_negative_direction ) {
+		animation_interval const& interval	=
+			current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+		if ( current_animation_node.playback_type( ) != play_once_and_freeze_at_end ) {
+			state.animation_time	=
+				cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+			if ( !( event_type & time_event_animation_interval_ended ) )
+				state.animation_time_threshold	= 0.f;
+		}
+		else {
+			state.animation_time			= interval.start_time( );
+			state.animation_interval_time	= 0.f;
+			state.is_freezed				= true;
+			state.animation_time_threshold	= 0.f;
+		}
+	}
+
+	if ( event_type & time_event_animation_interval_ended ) {
+		if ( !state.is_freezed ) {
+			state.previous_animation_interval_id	= state.animation_interval_id;
+			state.animation_interval_id			= state.event_iterator->animation_interval_id;
+			state.animation_interval_time		= state.event_iterator->animation_interval_time;
+			animation_interval const& interval	=
+				current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+			float const animation_length	=
+				cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+			state.animation_time_threshold	=
+				animation_length < interval.start_time( ) + interval.length( ) &&
+				animation_length < interval.start_time( ) + state.animation_interval_time
+					? animation_length
+					: 0.f;
+			update_animation_time	( state );
+		}
+
+		if ( !current_animation_node.time_driving_animation( ) )
+			n_ary_tree_time_scale_start_time_modifier(
+				current_animation_node,
+				state.event_iterator->event_time_in_ms,
+				state.animation_interval_time
+			);
+	}
+
+	if ( event_type & time_event_time_direction_changed ) {
+		if ( !current_animation_node.time_driving_animation( ) )
+			n_ary_tree_time_scale_start_time_modifier(
+				current_animation_node,
+				state.event_iterator->event_time_in_ms,
+				state.animation_interval_time
+			);
+	}
+
+	if ( event_type & time_event_weight_transitions_started ) {
+		animation_interval const& interval	=
+			current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+		current_frame_position frame_position;
+		frame frame_transform;
+		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
+		pinned_animation->bone( u32( 0 ) ).get_frame(
+			state.animation_time * default_fps,
+			frame_transform,
+			frame_position
+		);
+
+		object_movement& accumulated	= state.bone_matrices_computer.accumulated_object_movement;
+		accumulated.translation		= frame_transform.translation - accumulated.translation;
+		accumulated.rotation		= math::quaternion( frame_transform.rotation ) * math::conjugate( accumulated.rotation );
+		accumulated.scale			= frame_transform.scale / accumulated.scale;
+		state.are_there_any_weight_transitions	= true;
+	}
+
+	if ( event_type & time_event_weight_transitions_ended ) {
+		animation_interval const& interval	=
+			current_animation_node.animation_intervals( )[ state.animation_interval_id ];
+		current_frame_position frame_position;
+		frame frame_transform;
+		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
+		pinned_animation->bone( u32( 0 ) ).get_frame(
+			state.animation_time * default_fps,
+			frame_transform,
+			frame_position
+		);
+
+		object_movement& accumulated	= state.bone_matrices_computer.accumulated_object_movement;
+		accumulated.translation		= frame_transform.translation;
+		accumulated.rotation		= math::quaternion( frame_transform.rotation );
+		accumulated.scale			= frame_transform.scale;
+
+		n_ary_tree_weight_calculator weight_calculator( state.event_iterator->event_time_in_ms, &current_animation_node );
+		weight_calculator.visit		( current_animation_node );
+		n_ary_tree_event_iterator event_iterator	= state.event_iterator;
+		if ( event_types & time_event_animation_lexeme_started )
+			event_iterator.m_animation_event_iterator.advance( 0 );
+		if ( event_types & time_event_animation_lexeme_ended )
+			++event_iterator.m_weight_event_iterator;
+		event_iterator.select_state	( );
+		state.are_there_any_weight_transitions	= event_iterator.are_there_any_weight_transitions( );
+
+		n_ary_tree_animation_node& animation	=
+			current_animation_node.time_driving_animation( )
+				? *current_animation_node.time_driving_animation( )
+				: current_animation_node;
+		n_ary_tree_time_scale_start_time_modifier(
+			animation,
+			state.event_iterator->event_time_in_ms,
+			animation.animation_state( ).animation_interval_time
+		);
+	}
 }
 
 void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_types )
@@ -789,9 +726,7 @@ bool n_ary_tree::dispatch_callbacks(
 )
 {
 	bool result								= false;
-	for ( callback_generator_info const* generator = callback_generators_head;
-		  generator;
-		  generator = generator->next )
+	for ( callback_generator_info const* generator = callback_generators_head; generator; generator = generator->next )
 	{
 		if ( generator->event_type & (
 				time_event_animation_lexeme_ended |
@@ -800,32 +735,28 @@ bool n_ary_tree::dispatch_callbacks(
 				time_event_animation_ended_in_negative_direction
 			) )
 		{
-			for ( subscribed_channel const* channel = channels_head;
-				  channel;
-				  channel = channel->next )
+			for ( subscribed_channel const* subscribed_channel = channels_head; subscribed_channel; subscribed_channel = subscribed_channel->next )
 			{
-				u8 const channel_id				= *reinterpret_cast< u8 const* >( channel->channel_id );
-				if ( channel_id >= channel_id_max )
+				if ( subscribed_channel->channel_id[ 0 ] >= channel_id_max )
 					continue;
 
-				bool const matches_animation_end	=
-					( generator->event_type & (
+				bool found						= false;
+				if ( !found && ( generator->event_type & (
 						time_event_animation_ended_in_positive_direction |
 						time_event_animation_ended_in_negative_direction
-					) ) &&
-					channel_id == channel_id_on_animation_end;
-				bool const matches_interval_end	=
-					( generator->event_type & time_event_animation_interval_ended ) &&
-					channel_id == channel_id_on_animation_interval_end;
-				bool const matches_lexeme_end		=
-					( generator->event_type & time_event_animation_lexeme_ended ) &&
-					channel_id == channel_id_on_animation_lexeme_end;
-				if ( !matches_animation_end && !matches_interval_end && !matches_lexeme_end )
+					) ) )
+					found							=
+						subscribed_channel->channel_id[ 0 ] == channel_id_on_animation_end;
+				if ( !found && ( generator->event_type & time_event_animation_interval_ended ) )
+					found							=
+						subscribed_channel->channel_id[ 0 ] == channel_id_on_animation_interval_end;
+				if ( !found && ( generator->event_type & time_event_animation_lexeme_ended ) )
+					found							=
+						subscribed_channel->channel_id[ 0 ] == channel_id_on_animation_lexeme_end;
+				if ( !found )
 					continue;
 
-				for ( animation_callback* callback = channel->first_callback;
-					  callback;
-					  callback = callback->next )
+				for ( animation_callback* callback = subscribed_channel->first_callback; callback; callback = callback->next )
 				{
 					if ( !callback->enabled )
 						continue;
@@ -839,16 +770,15 @@ bool n_ary_tree::dispatch_callbacks(
 					animation_callback_params params(
 						generator->animated_object,
 						generator->animation,
-						channel->channel_id,
+						subscribed_channel->channel_id,
 						current_time_in_ms,
 						generator->user_data,
 						u8( -1 ),
 						generator->animation_interval_id
 					);
-					callback_return_type_enum const callback_result	= callback->callback( params );
 					callback->enabled				=
 						callback->enabled &&
-						callback_result == callback_return_type_call_me_again;
+						callback->callback( params ) == callback_return_type_call_me_again;
 					callbacks_are_actual			= callbacks_are_actual && callback->enabled;
 					result							= result || params.interrupt_animation_player_tick;
 				}
@@ -863,15 +793,14 @@ bool n_ary_tree::dispatch_callbacks(
 		if ( !event_channels.channels_count( ) )
 			continue;
 
-		for ( subscribed_channel const* subscribed_channel = channels_head;
-			  subscribed_channel;
-			  subscribed_channel = subscribed_channel->next )
+		for ( subscribed_channel const* subscribed_channel = channels_head; subscribed_channel; subscribed_channel = subscribed_channel->next )
 		{
 			u32 const channel_id			=
 				event_channels.get_channel_id( subscribed_channel->channel_id );
 			if ( channel_id == u32( -1 ) )
 				continue;
-			if ( ( generator->channel_ids & ( u8( 1 ) << channel_id ) ) == 0 )
+			if ( ( generator->channel_ids & ( u8( 1 ) << channel_id ) ) !=
+				 ( u8( 1 ) << channel_id ) )
 				continue;
 
 			event_channel const& channel	= event_channels.channel( channel_id );
@@ -885,12 +814,14 @@ bool n_ary_tree::dispatch_callbacks(
 				( knot_upper_id + knots_count - 1 ) % knots_count;
 			float const animation_length	= pinned_animation->length_in_frames( );
 
-			float lower_time				= channel.knot( knot_lower_id );
-			if ( animation_time < lower_time )
-				lower_time					-= animation_length;
-			float upper_time				= channel.knot( knot_upper_id );
-			if ( upper_time < animation_time )
-				upper_time					+= animation_length;
+			float const lower_time			=
+				animation_time < channel.knot( knot_lower_id ) ?
+				channel.knot( knot_lower_id ) - animation_length :
+				channel.knot( knot_lower_id );
+			float const upper_time			=
+				channel.knot( knot_upper_id ) < animation_time ?
+				channel.knot( knot_upper_id ) + animation_length :
+				channel.knot( knot_upper_id );
 
 			float const clamped_time		= math::min( animation_time, upper_time );
 			u32 const domain_id			=
@@ -899,9 +830,7 @@ bool n_ary_tree::dispatch_callbacks(
 				knot_upper_id;
 			u8 const domain_data			= channel.domain( domain_id ).data;
 
-			for ( animation_callback* callback = subscribed_channel->first_callback;
-				  callback;
-				  callback = callback->next )
+			for ( animation_callback* callback = subscribed_channel->first_callback; callback; callback = callback->next )
 			{
 				if ( !callback->enabled )
 					continue;
@@ -924,10 +853,9 @@ bool n_ary_tree::dispatch_callbacks(
 					domain_data,
 					generator->animation_interval_id
 				);
-				callback_return_type_enum const callback_result	= callback->callback( params );
 				callback->enabled				=
 					callback->enabled &&
-					callback_result == callback_return_type_call_me_again;
+					callback->callback( params ) == callback_return_type_call_me_again;
 				callbacks_are_actual			= callbacks_are_actual && callback->enabled;
 				result							= result || params.interrupt_animation_player_tick;
 			}
@@ -955,9 +883,7 @@ void n_ary_tree::remove_animations( const u32 target_time_in_ms )
 			   time_event_animation_lexeme_ended ) )
 		{
 			animation_state** const end	= m_animation_events + m_animations_count;
-			animation_state** const found	=
-				std::find( m_animation_events, end, current_animation_state );
-			std::copy						( found + 1, end, found );
+			std::remove						( m_animation_events, end, &current_animation->animation_state( ) );
 			remove_animation				( current_animation, previous_animation );
 			++current_animation_state;
 			continue;

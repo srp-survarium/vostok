@@ -64,6 +64,7 @@ private:
 	/* 0x0017 */	const u8								animation_interval_id;
 
 	friend class n_ary_tree;
+	friend class ::vostok::animation::animation_player;
 }; // class callback_generator_info
 
 STATIC_SIZE_ASSERT(callback_generator_info, 0x18);
@@ -118,7 +119,11 @@ public:
 
 
 			void							set_object_transform				( pcvoid animated_object, float4x4 const& object_transform );
+
+private:
 			void							set_object_transform				( n_ary_tree_animation_node& animation_node );
+
+public:
 			float4x4						get_object_transform				( pcvoid animated_object ) const;
 
 	inline	bool							has_object							( pcvoid const arg_0 ) const { /* no source */ }
@@ -221,14 +226,14 @@ private:
 											);
 	inline	void							update_weight						( n_ary_tree_animation_node& arg_0, u32 arg_1, u32 arg_2 ) { /* no source */ }
 
-	inline	float							computed_animation_time				(
-												n_ary_tree_animation_node&		arg_0,
-												const float						arg_1,
-												const u32						arg_2,
-												const u32						arg_3,
-												const u32						arg_4,
-												const float						arg_5
-											) const { /* no source */ }
+			float							computed_animation_time				(
+												n_ary_tree_animation_node&		animation,
+												const float						animation_time_before_scale_starts,
+												const u32						time_scale_start_time_in_ms,
+												const u32						current_time_in_ms,
+												const u32						target_time_in_ms,
+												const float						time_scale
+											) const;
 
 			void							remove_animations					( const u32 target_time_in_ms );
 			void							set_objects_transform				( );

@@ -20,6 +20,7 @@ inline animation_interval::animation_interval	(
 	m_start_time	( start_time ),
 	m_length		( length )
 {
+	ASSERT						( UNKNOWN_EXPRESSION_T( animation ) );
 }
 
 } // namespace mixing

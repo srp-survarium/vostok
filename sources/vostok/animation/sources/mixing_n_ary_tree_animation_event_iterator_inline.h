@@ -28,12 +28,6 @@ inline bool n_ary_tree_animation_event_iterator::is_equal						( n_ary_tree_anim
 	return						(m_animation == other.m_animation) && (m_value == other.m_value);
 }
 
-//inline n_ary_tree_animation_node& n_ary_tree_animation_event_iterator::animation( ) const
-//{
-//	R_ASSERT					( m_animation );
-//	return						*m_animation;
-//}
-
 inline bool operator ==															( n_ary_tree_animation_event_iterator const& left, n_ary_tree_animation_event_iterator const& right )
 {
 	return						left.is_equal( right );
