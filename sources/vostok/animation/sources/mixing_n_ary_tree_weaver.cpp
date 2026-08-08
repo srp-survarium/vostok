@@ -51,7 +51,8 @@ static bool is_unique_animation_lexeme	( binary_tree_animation_node& node, binar
 	if ( node.m_next_weight_animation )
 		return					false;
 
-	for ( binary_tree_animation_node* i = animations_root; i; i = i->m_next_weight_animation.c_ptr() ) {
+	binary_tree_animation_node* i	= animations_root;
+	for ( ; i; i = i->m_next_weight_animation.c_ptr() ) {
 		if ( i != &node )
 			continue;
 
@@ -66,6 +67,8 @@ void n_ary_tree_weaver::visit			( binary_tree_animation_node& node )
 {
 	binary_tree_animation_node* unique_node;
 	if ( !is_unique_animation_lexeme(node, m_current_animations_root) ) {
+
+
 		unique_node				= static_cast<binary_tree_animation_node*>( m_buffer.c_ptr() );
 		m_buffer				+= sizeof( binary_tree_animation_node );
 		new ( unique_node ) binary_tree_animation_node( node );
@@ -78,10 +81,20 @@ void n_ary_tree_weaver::visit			( binary_tree_animation_node& node )
 	clean						( *unique_node );
 
 	unique_node->m_unique_weights_count	= 0;
+
 	unique_node->m_next_weight_animation	= m_animations_root;
 	m_animations_root					= unique_node;
-	if ( !unique_node->weight_driving_animation() || !unique_node->time_driving_animation() )
+
+	if ( !unique_node->weight_driving_animation() ) {
 		add_interpolator		( *unique_node, *unique_node->time_scale_interpolator() );
+		return;
+	}
+
+	if ( !unique_node->time_driving_animation() )
+		add_interpolator		( *unique_node, *unique_node->time_scale_interpolator() );
+	else
+		R_ASSERT				( !unique_node->time_scale_interpolator() );
+
 }
 
 void n_ary_tree_weaver::visit			( binary_tree_weight_node& node )
