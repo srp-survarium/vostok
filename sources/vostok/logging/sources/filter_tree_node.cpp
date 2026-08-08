@@ -112,7 +112,6 @@ static inline bool is_terminal_character( char character )
 	return character == '\0' || character == vostok::logging::initiator_separator;
 }
 
-// sushi@TODO: Ghidra script does not handle static functions. https://decomp.me/scratch/aXNEg
 static bool   compare_parts				(pcstr s1, pcstr s2)
 {
     for ( ;; ++s1, ++s2 ) {
@@ -132,9 +131,8 @@ static bool   compare_parts				(pcstr s1, pcstr s2)
     }
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 return stmt). Residual: target inlines buffer_string::operator<
-// (c_str + strcmp_s + ==-1), base keeps it as a call to vostok::operator<. Inlining depth, PARK.
-// The boost-intrusive find/iterator/destructor inlining depth is the same wall in set/get_verbosity/~node.
+// Target inlines buffer_string::operator<; this context keeps the shared
+// operator as a call. The intrusive operations below hit the same boundary.
 bool   compare_nodes::operator ()		(node_base const & left, node_base const & right) const
 {
 	return									left.name < right.name;

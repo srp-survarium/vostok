@@ -23,11 +23,8 @@ format_specifier::format_specifier		(format_specifier_enum specifier)
 format_specifier::format_specifier		(format_specifier const & left, format_specifier const & right)
 	: m_left(& left), m_right(& right), m_specifier(format_specifier_unset) {;}
 
-// claude@NOTE: structure + 3 locals MATCH the target; the byte residual is an /Od inline-depth wall
-// on strings::copy<512> (target out-lines the wrapper as a single `call`; base inlines it, leaving a
-// `mov ecx,200h` + `call copy` per site, +8B frame). Sibling strings::append<512> pairs in both - its
-// inner append carries an R_ASSERT_U that keeps the wrapper un-inlinable. Not steerable from this call
-// site without touching the shared strings::copy template. See patterns/od-helper-inline-depth-wall.md.
+// Target keeps the shared strings::copy<512> wrapper out of line; this /Od
+// caller inlines it. The matching append wrapper has a different inline budget.
 void   format_specifier::fill_specifier_list	(format_specifier_list & list, format_string_type * out_format_string) const
 {
 	if ( m_left )

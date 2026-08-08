@@ -67,8 +67,7 @@ void log_file::flush			( pcstr in_file_name )
 
 	m_device->flush		( m_file );
 
-	// claude@MATCH: target compares the requested name against m_file_name and bails when equal
-	// (cmp [ebp+8],0; je return + compare_insensitive(m_file_name.c_str(), in_file_name); je return)
+	// Target skips the copy when the requested name already matches the current file.
 	if ( !in_file_name || !strings::compare_insensitive( m_file_name.c_str(), in_file_name ) )
 		return;
 
@@ -205,9 +204,8 @@ char log_file::read_next_char	( )
 	return				( m_cache[0] );
 }
 
-// claude@NOTE: STRUCTURE MATCH + locals match (2: last_pos, current_char). Residual is the
-// math::min(u32,u32) call: target keeps it out-of-line (call vostok::math::min), base inlines
-// min_integral's branchless sbb/neg/and/add. Inline-vs-call decision, not source-steerable. PARK.
+// Target keeps math::min(u32,u32) out of line; this context inlines its
+// branchless integral implementation.
 template <typename processor_type>
 bool log_file::process_next_line ( u32 const buffer_size, processor_type const& processor )
 {

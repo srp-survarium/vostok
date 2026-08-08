@@ -30,9 +30,6 @@ extern format_specifier		format_time;
 extern format_specifier		format_verbosity;
 extern format_specifier		format_message;
 
-// sushi@TODO: vostok::core::core_debug_engine::flush_log_file
-//	VOSTOK_LOGGING_API	void			flush_log_file		( pcstr file_name = 0 );
-
 } // namespace logging
 } // namespace vostok
 

@@ -16,9 +16,7 @@ namespace logging {
 struct log_format
 {
 	inline	log_format		( format_specifier const& format_expression ) { set( format_expression ); }
-	// claude@NOTE: the target's vostok/logging/format.h unit carries exactly one 1-byte empty COMDAT
-	// ("empty_stub") - this default ctor, emitted-but-not-expanded in their LTCG link; our link always
-	// expands it, which costs the appends in logger.cpp one empty call each (see README).
+	// Target emits this empty constructor out of line; this LTCG context expands it at callers.
 	inline	log_format		( ) { }
 
 			void	set		( format_specifier const& format_expression );

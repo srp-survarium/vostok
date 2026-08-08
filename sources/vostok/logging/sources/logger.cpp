@@ -27,14 +27,7 @@ namespace logging {
 } // namespace logging
 } // namespace vostok
 
-// claude@MATCH: the '/'->':' fixup in fill_log_string is ONE 0x43-byte record on ONE line ('81',
-// next stmt '83', the if-block's '}' line gets no bytes) and the target PDB records NO char* loop
-// local for it (its only 'i' is the s32 of the '101' loop - the PDB does keep same-named block
-// locals, see log_format::set's two u32 i) - so the loop reached fill_log_string INLINED from a
-// one-line helper call (VC8 attributes inlined bytes to the call-site line and drops inlinee
-// locals), confirming sushi's review hypothesis (PR #286).
-// sushi@TODO: helper name/home unknowable in v0.100b (fully inlined, no symbol survives); a different
-// Survarium build might emit it out-of-line and reveal the real name - check via vostok-versions.
+// Target inlines this slash fixup into fill_log_string; no standalone target name survives.
 static inline void convert_slashes_to_colons( pstr const string )
 {
 	for ( pstr i = string; *i; ++i )
@@ -42,7 +35,6 @@ static inline void convert_slashes_to_colons( pstr const string )
 			*i							=	':';
 }
 
-// sushi@TODO: Ghidra script does not handle static functions
 static void fill_log_string(
 	vostok::buffer_string&				dest,
 	pstr const							message_start,
