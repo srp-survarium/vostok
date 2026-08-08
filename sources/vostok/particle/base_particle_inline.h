@@ -61,6 +61,9 @@ inline	bool base_particle::is_dead				() const
 
 inline void base_particle::set_defaults			()
 {
+	gravity_accumulation	= 0.0f;
+	render_position			= vostok::math::float3(0.0f,0.0f,0.0f);
+	render_old_position		= vostok::math::float3(0.0f,0.0f,0.0f);
 	color					= vostok::math::float4(1.0f,1.0f,1.0f,1.0f);
 	target_color_y_position = 0.5f;
 	lifetime				= 0.0f;
@@ -83,6 +86,7 @@ inline void base_particle::set_defaults			()
 	next_subimage_index		= 0.0f;
 	prev_offset_position	= vostok::math::float3(0.0f,0.0f,0.0f);
 	m_seed					= 0;
+	gravity					= 0.0f;
 }
 
 } // namespace particle
