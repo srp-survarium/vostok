@@ -8,15 +8,6 @@
 #include <vostok/physics/model.h>
 #include <vostok/physics/world.h>
 
-/*
- * Based on the original xr2 source. The query-translation handlers
- * (translate_query / on_config_loaded / on_skeleton_config_loaded) match ~100%.
- * on_subresources_loaded is STRUCTURE MATCH but capped on a non-steerable release wall:
- * the target inlines the resource_ptr / intrusive_ptr refcount machinery (lock xadd)
- * that our /Od base still CALLs; the ctor + delete_resource carry the same inline-vs-call
- * delta plus the optimized-COMDAT this-convention.
- */
-
 namespace vostok {
 namespace physics {
 
@@ -78,7 +69,6 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 	);
 }
 
-// sushi@NOTE: Only skeleton config is left from xray, collision_config and ragdoll config were removed (as well with `config` argument)
 void animated_model_instance_cook::on_skeleton_config_loaded( resources::queries_result& data )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
