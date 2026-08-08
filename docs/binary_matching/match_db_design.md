@@ -158,6 +158,12 @@ from the function's source extent plus conservative module/compiler context:
 module and shared headers, project files, anchor sources, and pinned
 build/delink configuration.
 
+When objdiff omits a function score, refresh may recover only a strict exact
+observation from the rich indexes: target and base must have equal size and an
+identical non-empty ordered stream of normalized `(offset, length, instruction
+text)` tuples. This is function-scoped evidence for COMDAT/source-tree pairing
+gaps, not a fuzzy estimate; any differing or absent stream remains unscored.
+
 - The same effective hash retains `max(old, current)`.
 - A changed effective hash starts a new epoch at the current observation.
 - Ordinary `history` maxima are never imported.
