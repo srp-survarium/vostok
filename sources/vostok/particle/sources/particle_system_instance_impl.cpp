@@ -12,8 +12,8 @@
 namespace vostok {
 namespace particle {
 
-particle_system_instance_impl::particle_system_instance_impl( particle_world& particle_world ):
-	particle_system_instance( particle_world )
+particle_system_instance_impl::particle_system_instance_impl( ):
+	particle_system_instance( )
 {
 	m_pinned			 = false;
 	
@@ -402,16 +402,17 @@ void particle_system_instance_impl::add_emitter_instance( u32 lod_index, particl
 	//new_instance->process_event(particle_event::on_play,m_transform.lines[3].xyz());
 }
 
-void particle_system_instance_impl::play_impl()
+void particle_system_instance_impl::play_impl( particle_world* particle_world )
 {
+	m_particle_world = particle_world;
 	m_is_playing = true;
-	//m_particle_world.add_particle_system_instance(this);
+	m_no_more_create = false;
 }
 
-void particle_system_instance_impl::play_impl(vostok::math::float4x4 const& transform)
+void particle_system_instance_impl::play_impl( particle_world* particle_world, vostok::math::float4x4 const& transform )
 {
 	set_transform(transform);
-	play_impl();
+	play_impl(particle_world);
 }
 
 void particle_system_instance_impl::stop_impl(float time)

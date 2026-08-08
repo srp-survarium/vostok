@@ -19,7 +19,7 @@ struct particle_system_lod;
 
 class particle_system_instance_impl : public particle_system_instance {
 public:
-	particle_system_instance_impl			(particle_world& particle_world);
+	particle_system_instance_impl			();
 	virtual ~particle_system_instance_impl	();
 	
 	bool tick								(float time_delta);
@@ -29,8 +29,8 @@ public:
 	virtual bool is_finished				();
 	
 	void apply_lod							(u32 lod_index);
-	void play_impl							();
-	void play_impl							(vostok::math::float4x4 const& transform);
+	void play_impl							(particle_world* particle_world);
+	void play_impl							(particle_world* particle_world, vostok::math::float4x4 const& transform);
 	void stop_impl							(float time_to_stop);
 	
 	void set_pause							(bool pause);

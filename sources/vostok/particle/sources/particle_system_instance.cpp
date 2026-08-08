@@ -11,29 +11,29 @@
 namespace vostok {
 namespace particle {
 
-particle_system_instance::particle_system_instance( particle_world& particle_world ):
-	m_particle_world	( particle_world )
+particle_system_instance::particle_system_instance( ):
+	m_particle_world	( 0 )
 {
 }
 
-void particle_system_instance::play()
+void particle_system_instance::play( particle_world* particle_world )
 {
-	m_particle_world.play(this, vostok::math::float4x4().identity(), false, false);
+	particle_world->play(this, vostok::math::float4x4().identity(), false, false);
 }
 
-void particle_system_instance::play(vostok::math::float4x4 const& transform)
+void particle_system_instance::play( particle_world* particle_world, vostok::math::float4x4 const& transform )
 {
-	m_particle_world.play(this, transform, true, false);
+	particle_world->play(this, transform, true, false);
 }
 
 void particle_system_instance::set_transform(vostok::math::float4x4 const& transform)
 {
-	m_particle_world.set_transform_to_particle_instance(this, transform);
+	m_particle_world->set_transform_to_particle_instance(this, transform);
 }
 
 void particle_system_instance::stop(float time)
 {
-	m_particle_world.stop(this, time);
+	m_particle_world->stop(this, time);
 }
 
 } // namespace particle

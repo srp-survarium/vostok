@@ -54,7 +54,7 @@ void particle_system_instance_cook::on_sub_resources_loaded( resources::queries_
 	
 	particle_system* part_system = static_cast_checked<particle_system*>( data[0].get_unmanaged_resource().c_ptr() );
 	
-	particle_system_instance_impl* created_resource = MT_NEW(particle_system_instance_impl)(*(particle::particle_world*)p_world);
+	particle_system_instance_impl* created_resource = MT_NEW(particle_system_instance_impl)();
 	
 	for (u32 lod_index=0; lod_index<part_system->m_num_lods; lod_index++)
 	{

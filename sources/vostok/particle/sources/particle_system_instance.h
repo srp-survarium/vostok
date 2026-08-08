@@ -42,12 +42,12 @@ struct lod_entry {
 
 class particle_system_instance :
 	public resources::unmanaged_resource,
-	private boost::noncopyable
+	public boost::noncopyable
 {
 public:
-	particle_system_instance( particle_world& particle_world );
-	void	play			( );
-	void	play			( vostok::math::float4x4 const& transform );
+	particle_system_instance( );
+	void	play			( particle_world* particle_world );
+	void	play			( particle_world* particle_world, vostok::math::float4x4 const& transform );
 	void	stop			( float time_to_stop );
 	void	set_transform	( vostok::math::float4x4 const& transform );
 
@@ -58,7 +58,7 @@ public:
 	lod_entry		m_lods[ max_supported_lods ];
 
 protected:
-	particle_world&	m_particle_world;
+	particle_world*	m_particle_world;
 }; // class particle_system_instance
 
 typedef	resources::resource_ptr<

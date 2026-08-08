@@ -116,9 +116,9 @@ void particle_world::play(particle_system_instance_ptr instance, vostok::math::f
 	//   link). With the early-return guard added, the residual QUANTITY is this one reset() stmt.
 
 	if (use_transform)
-		impl->play_impl(transform);
+		impl->play_impl(this, transform);
 	else
-		impl->play_impl();
+		impl->play_impl(this);
 
 	impl->m_always_looping = always_loop;
 
@@ -295,6 +295,7 @@ void particle_world::remove_particle_system_instance(particle_system_instance* i
 	if (!found)
 		return;
 	
+	inst->stop(0.0f);
 	inst->remove_particles();
 	
 	m_ticked_instances_list.erase( static_cast_checked<particle_system_instance_impl*>(in_instance) );
