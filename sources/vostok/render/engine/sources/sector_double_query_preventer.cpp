@@ -45,11 +45,28 @@ void sector_double_query_preventer::clear( )
 		i->clear( );
 }
 
-bool sector_double_query_preventer::is_possible_points_for_frustum( float3 const (&)[4], u32 ) const
+bool sector_double_query_preventer::is_possible_points_for_frustum( float3 const (&vertices)[4], u32 sector_id ) const
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x5e86a0]
-	return false;
+	frustums_type const& frustums = ( *m_sectors_max_frustums )[sector_id];
+	frustums_type::const_iterator const frustums_end = frustums.end( );
+	for ( frustums_type::const_iterator i = frustums.begin( ); i != frustums_end; ++i )
+	{
+		bool is_inside = true;
+		u32 j = 0;
+		for ( ; j < 4; ++j )
+		{
+			if ( !math::is_point_inside_cuboid( vertices[j], *i ) )
+			{
+				is_inside = false;
+				break;
+			}
+		}
+
+		if ( is_inside )
+			return false;
+	}
+
+	return true;
 }
 
 void sector_double_query_preventer::add_ss_aab_rect( aab_rect const& rect, u32 sector_id )
