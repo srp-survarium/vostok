@@ -15,7 +15,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include "pch.h"
 
-#include "Render/D3D1x/D3D1x_Texture.h"
+#include "d3d1x_texture.h"
 #include "Render\Render_TextureUtil.h"
 #include "Kernel\SF_Debug.h"
 

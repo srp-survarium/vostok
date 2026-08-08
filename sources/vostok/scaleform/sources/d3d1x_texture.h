@@ -10,7 +10,9 @@
 // TextureManagerLocks, ...); skeleton rebuilt from the canonical PDB type
 // dumps.
 
+#include "Render/D3D1x/D3D1x_Config.h"
 #include "Render/Render_Image.h"
+#include "Kernel/SF_HeapNew.h"
 
 #include <d3d11.h>
 
@@ -26,36 +28,17 @@ struct TextureFormat : public Render::TextureFormat {
 		/* 0x0000 */	ImageFormat		Format;
 		/* 0x0004 */	DXGI_FORMAT		D3DFormat;
 		/* 0x0008 */	u8				BytesPerPixel;
-		/* 0x000c */	void ( *CopyFunc )( pbyte, pcbyte, u32, Palette*, void* );
-		/* 0x0010 */	void ( *UncopyFunc )( pbyte, pcbyte, u32, Palette*, void* );
+		/* 0x000c */	Image::CopyScanlineFunc	CopyFunc;
+		/* 0x0010 */	Image::CopyScanlineFunc	UncopyFunc;
 	}; // struct Mapping
 
-	inline					TextureFormat		( Mapping const* arg_0, unsigned long arg_1 ) { /* no source */ }
+	inline					TextureFormat		( Mapping const* arg_0, unsigned long arg_1 ) : pMapping(arg_0), D3DUsage(arg_1) { }
 
-	// STATE[STUB]
-	virtual	ImageFormat		GetImageFormat		( ) const override
-	{
-		// FUNCTION BODY[0x0b4fd0]
-		return pMapping->Format;
-	}
+	virtual	ImageFormat		GetImageFormat		( ) const override { return pMapping->Format; }
+	virtual	Image::CopyScanlineFunc GetScanlineCopyFn( ) const override { return pMapping->CopyFunc; }
+	virtual	Image::CopyScanlineFunc GetScanlineUncopyFn( ) const override { return pMapping->UncopyFunc; }
 
-	// STATE[STUB]
-	virtual	void ( *GetScanlineCopyFn( ) const override )( pbyte, pcbyte, u32, Palette*, void* )
-	{
-		// FUNCTION BODY[0x0b4fe0]
-		return pMapping->CopyFunc;
-	}
-
-	// STATE[STUB]
-	virtual	void ( *GetScanlineUncopyFn( ) const override )( pbyte, pcbyte, u32, Palette*, void* )
-	{
-		// FUNCTION BODY[0x0b4ff0]
-		return pMapping->UncopyFunc;
-	}
-
-	inline	DXGI_FORMAT		GetD3DFormat		( ) const { /* no source */ return pMapping->D3DFormat; }
-
-	virtual					~TextureFormat		( ) { /* no source */ }
+	inline	DXGI_FORMAT		GetD3DFormat		( ) const { return pMapping->D3DFormat; }
 
 public:
 	/* 0x0000 */	/* Scaleform::Render::TextureFormat */
@@ -65,9 +48,9 @@ public:
 
 class Texture : public Render::Texture {
 public:
-	struct HWTextureDesc {
-		inline		HWTextureDesc	( ) { /* no source */ }
+	static const u8 MaxTextureCount = 4;
 
+	struct HWTextureDesc {
 	public:
 		/* 0x0000 */	Size< unsigned long >		Size;
 		/* 0x0008 */	ID3D11Texture2D*			pTexture;
@@ -92,52 +75,32 @@ public:
 					);
 	virtual			~Texture						( );
 
-	// STATE[STUB]
-	virtual	Size< unsigned long >	GetTextureSize	( u32 arg_0 ) const override
-	{
-		// FUNCTION BODY[0x0b5030]
-		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
-		return Size< unsigned long >( );
-	}
+	virtual	Size< unsigned long >	GetTextureSize	( u32 arg_0 ) const override { return pTextures[arg_0].Size; }
 
-	inline	TextureManager*			GetManager		( ) const { /* no source */ return 0; }
+	inline	TextureManager*			GetManager		( ) const { return (TextureManager*)pManagerLocks->pManager; }
 
-	// STATE[STUB]
-	virtual	bool	IsValid							( ) const override
-	{
-		// FUNCTION BODY[0x0b5050]
-		return pTextures != 0;
-	}
+	virtual	bool	IsValid							( ) const override { return pTextures != 0; }
 
 	virtual	bool	Initialize						( ) override;
 			bool	Initialize						( ID3D11Texture2D* arg_0 );
 
-	virtual	void	ReleaseHWTextures				( bool arg_0 ) override;
+	virtual	void	ReleaseHWTextures				( bool arg_0 = true ) override;
 
 	virtual	void	ApplyTexture					( u32 arg_0, ImageFillMode const& arg_1 ) override;
 
-	// STATE[STUB]
-	virtual	Image*	GetImage						( ) const override
-	{
-		// FUNCTION BODY[0x0abed0]
-		return 0;
-	}
+	virtual	Image*	GetImage						( ) const override { SF_ASSERT(!pImage || (pImage->GetImageType() != Image::Type_ImageBase)); return (Image*)pImage; }
 
-	// STATE[STUB]
-	virtual	ImageFormat	GetFormat					( ) const override
-	{
-		// FUNCTION BODY[0x0b5060]
-		return GetTextureFormat( )->GetImageFormat( );
-	}
+	virtual	ImageFormat	GetFormat					( ) const override { return GetImageFormat( ); }
 
-	inline	TextureFormat const*	GetTextureFormat		( ) const { /* no source */ return 0; }
+	inline	TextureFormat const*	GetTextureFormat		( ) const { return reinterpret_cast<TextureFormat const*>(pFormat); }
 
-	inline	TextureFormat::Mapping const*	GetTextureFormatMapping	( ) const { /* no source */ return 0; }
+	inline	TextureFormat::Mapping const*	GetTextureFormatMapping	( ) const { return pFormat ? reinterpret_cast<TextureFormat const*>(pFormat)->pMapping : 0; }
 
 	virtual	void	GetUVGenMatrix					( Matrix2x4< float >* arg_0 ) const override;
 
 	virtual	bool	Update							( UpdateDesc const* arg_0, u32 arg_1, u32 arg_2 ) override;
 
+protected:
 	virtual	void	computeUpdateConvertRescaleFlags(
 						bool				arg_0,
 						bool				arg_1,
@@ -147,7 +110,7 @@ public:
 						bool&				arg_5
 					) override;
 
-private:
+public:
 	/* 0x0000 */	/* Scaleform::Render::Texture */
 	/* 0x0034 */	HWTextureDesc*		pTextures;
 	/* 0x0038 */	HWTextureDesc		Texture0;
@@ -155,14 +118,13 @@ private:
 
 class MappedTexture : public MappedTextureBase {
 public:
-	inline			MappedTexture	( ) { /* no source */ }
+	inline			MappedTexture	( ) : MappedTextureBase( ) { }
 
 	// Map/Unmap are out-of-line in d3d1x_texture.cpp per the rich index
 	virtual	bool	Map				( Render::Texture* arg_0, u32 arg_1, u32 arg_2 ) override;
 
 	virtual	void	Unmap			( bool arg_0 ) override;
 
-	virtual			~MappedTexture	( ) { /* no source */ }
 }; // class MappedTexture
 
 class DepthStencilSurface : public Render::DepthStencilSurface {
@@ -170,13 +132,13 @@ public:
 	// ctor/dtor/Initialize are out-of-line in d3d1x_texture.cpp per the rich index
 					DepthStencilSurface	(
 						TextureManagerLocks*	arg_0,
-						Size< unsigned long > const&	arg_1
+						Render::Size< unsigned long > const&	arg_1
 					);
 	virtual			~DepthStencilSurface( );
 
 	virtual	bool	Initialize			( ) override;
 
-private:
+public:
 	/* 0x0000 */	/* Scaleform::Render::DepthStencilSurface */
 	/* 0x0020 */	ID3D11Texture2D*		pDepthStencilSurface;
 	/* 0x0024 */	ID3D11DepthStencilView*	pDepthStencilSurfaceView;
@@ -187,28 +149,21 @@ bool	IsD3DFormatMipGenCompatible		( DXGI_FORMAT arg_0 );
 bool	IsD3DFormatRescaleCompatible	( DXGI_FORMAT arg_0, ImageFormat* arg_1, ResizeImageType* arg_2 );
 
 class TextureManager : public Render::TextureManager {
-public:
+    friend class Texture;
+    friend class DepthStencilSurface;
+
+private:
 	// everything unmarked is out-of-line in d3d1x_texture.cpp per the rich index
 			void		initTextureFormats			( );
 
-	// STATE[STUB]
-	virtual	MappedTextureBase&	getDefaultMappedTexture	( ) override
-	{
-		// FUNCTION BODY[0x0b50d0]
-		return MappedTexture0;
-	}
-
-	// STATE[STUB]
-	virtual	MappedTextureBase*	createMappedTexture		( ) override
-	{
-		// FUNCTION BODY[0x0b50e0]
-		return 0;
-	}
+	virtual	MappedTextureBase&	getDefaultMappedTexture	( ) override { return MappedTexture0; }
+	virtual	MappedTextureBase*	createMappedTexture		( ) override { return SF_HEAP_AUTO_NEW(this) MappedTexture; }
 
 	virtual	void		processTextureKillList		( ) override;
 
 	virtual	void		processInitTextures			( ) override;
 
+public:
 						TextureManager				(
 							ID3D11Device*			arg_0,
 							ID3D11DeviceContext*	arg_1,
@@ -245,7 +200,7 @@ public:
 
 	virtual	u32			GetTextureUseCaps			( ImageFormat arg_0 ) override;
 
-	inline	bool		IsMultiThreaded				( ) const { /* no source */ return false; }
+	inline	bool		IsMultiThreaded				( ) const { return RenderThreadId != 0; }
 
 	virtual	Render::DepthStencilSurface*	CreateDepthStencilSurface	(
 							Size< unsigned long > const&	arg_0,
@@ -253,17 +208,11 @@ public:
 						) override;
 	virtual	Render::DepthStencilSurface*	CreateDepthStencilSurface	( ID3D11Texture2D* arg_0 );
 
-	// STATE[STUB]
-	virtual	bool		IsDrawableImageFormat		( ImageFormat arg_0 ) const override
-	{
-		// FUNCTION BODY[0x0b5120]
-		VOSTOK_UNREFERENCED_PARAMETER	( arg_0 );
-		return false;
-	}
+	virtual	bool		IsDrawableImageFormat		( ImageFormat arg_0 ) const override { return (arg_0 == Image_B8G8R8A8) || (arg_0 == Image_R8G8B8A8); }
 
-	inline	ID3D11Device*			GetDevice		( ) const { /* no source */ return pDevice; }
+	inline	ID3D11Device*			GetDevice		( ) const { return pDevice; }
 
-	inline	ID3D11DeviceContext*	GetDeviceContext( ) const { /* no source */ return pDeviceContext; }
+	inline	ID3D11DeviceContext*	GetDeviceContext( ) const { return pDeviceContext; }
 
 private:
 	/* 0x0000 */	/* Scaleform::Render::TextureManager */
@@ -273,6 +222,7 @@ private:
 	/* 0x00e8 */	ArrayLH< ID3D11Resource*, 75, ArrayConstPolicy< 8, 8, 0 > >	D3DTextureKillList;
 	/* 0x00f4 */	ArrayLH< ID3D11View*, 75, ArrayConstPolicy< 8, 8, 0 > >		D3DTexViewKillList;
 	/* 0x0100 */	ID3D11SamplerState*		SamplerStates[4];
+	static const int MaximumStages = 4;
 	/* 0x0110 */	ID3D11SamplerState*		CurrentSamplers[4];
 	/* 0x0120 */	ID3D11View*				CurrentTextures[4];
 }; // class TextureManager
