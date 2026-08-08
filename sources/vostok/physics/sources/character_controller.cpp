@@ -39,7 +39,6 @@ memory::base_allocator& bt_character_controller::allocator( )
 	return m_bt_physics_world->allocator( );
 }
 
-// sushi@TODO: Figure out what collision flags mean, also filter group and filter mask
 void bt_character_controller::initialize( )
 {
 	btPairCachingGhostObject* ghost = VOSTOK_NEW_IMPL( allocator( ), btPairCachingGhostObject );
@@ -56,21 +55,17 @@ void bt_character_controller::initialize( )
 
 void bt_character_controller::activate( float4x4 const& t )
 {
-	ASSERT( !m_bt_controller->m_collision_world );						// <1> sushi@NOTE: Just my assumption
+	ASSERT( !m_bt_controller->m_collision_world );
 	m_bt_controller->insert( m_bt_physics_world->get_bt_internal( ) );
 	m_bt_controller->set_transform( from_vostok( t ) );
 }
 
 void bt_character_controller::deactivate( )
 {
-	ASSERT( m_bt_controller->m_collision_world );					// <1> sushi@NOTE: Just my assumption
+	ASSERT( m_bt_controller->m_collision_world );
 	m_bt_controller->remove( m_bt_controller->m_collision_world );
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Residual is non-steerable register scheduling:
-// the target's bullet_character_controller::get_transform is an optimized COMDAT taking
-// this in a register (no push), so the caller keeps m_bt_controller in edx/eax; our /Od
-// base pushes it and spills through esi. Convention lives in bullet_character_controller.cpp.
 float4x4 bt_character_controller::get_transform( )
 {
 	return from_bullet( m_bt_controller->get_transform( ) );
@@ -93,7 +88,7 @@ bool bt_character_controller::has_updates( ) const
 
 void bt_character_controller::jump( )
 {
-	m_bt_controller->jump( ); // sushi@TODO: This function doesn't have breakpoints in structure
+	m_bt_controller->jump( );
 }
 
 void bt_character_controller::end_jump( )
@@ -101,7 +96,6 @@ void bt_character_controller::end_jump( )
 	m_bt_controller->end_jump( );
 }
 
-// sushi@TODO: Figure out what __format is supposed to be used for
 bool bt_character_controller::adjust_foot_transform(
 	float3 const&		half_size,
 	float3 const&		start,
@@ -136,7 +130,7 @@ void bt_character_controller::set_crouch( bool crouch )
 
 bool bt_character_controller::can_crouch( ) const
 {
-	return true;	// sushi@NOTE: There is no `can_crouch` in the `m_bt_controller`.
+	return true;
 }
 
 bool bt_character_controller::can_stand( ) const
