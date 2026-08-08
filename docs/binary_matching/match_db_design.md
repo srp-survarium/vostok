@@ -84,12 +84,14 @@ WHERE t.size <= 0x80 ORDER BY t.size;
 
 Pairing is by **mangled name** (`set(target) & set(base)`), PLUS a small
 **cross-name pass** for the compiler-generated dynamic-init/atexit thunks the two
-sides label differently: the original-game PDB stores the demangled form
-(`vostok::sound::\`dynamic initializer for 's_debug_audio''`) while our PDB stores
-the raw mangled form (`??__Es_debug_audio@sound@vostok@@YAXXZ`), and
-`pdb_rich_context` emits each verbatim - so a by-name intersection misses them and
-they double-list as both `target_only` AND `base_only` even though the body is
-byte-identical. The pass canonicalizes the SAFE subset (fully-qualified plain
+sides label differently: the original-game PDB stores a namespace-prefixed
+demangled form (`vostok::sound::\`dynamic initializer for 's_debug_audio''`),
+while the base index may store either the raw mangled form
+(`??__Es_debug_audio@sound@vostok@@YAXXZ`) or a demangled form with the namespace
+inside the quoted variable name
+(`\`dynamic initializer for 'vostok::sound::s_debug_audio''`). A by-name
+intersection misses both variants, so they double-list as `target_only` and
+`base_only` even when the body is byte-identical. The pass canonicalizes the SAFE subset (fully-qualified plain
 identifiers; anon-ns/`?A0x` hash, template, and `\`local'`/cook scope are deferred
 to a Rust-side demangler fix in pdb-parser), pairs 1:1 + identical statement-shape
 only (never onto the wrong variable), and records the pair keyed by the TARGET sym.
