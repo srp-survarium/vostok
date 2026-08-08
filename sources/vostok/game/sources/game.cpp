@@ -760,12 +760,12 @@ void game::update_stats( const u32 current_frame_id )
 	//       m_sound_stats->draw( m_active_scene->render_scene( ), m_active_scene->render_scene_view( ) );
 	//     }
 	//   }
-	// BLOCKED: sound_debug_stats.cpp is ExcludedFromBuild for Master Gold in
-	// sources/vostok/sound/sources/sound.vcproj (and its private helpers
-	// create_statistic/draw_*_stats are unimplemented stubs), so the ctor/draw/
-	// set_debug_draw_mode calls won't link. The TARGET build compiles that TU
-	// (vostok::sound::sound_debug_stats::draw exists at 0x145f60). Restore this tail
-	// once the sound module implements sound_debug_stats.cpp and un-excludes it.
+	// SOUND SIDE RESOLVED: sound_debug_stats.cpp is built for Master Gold and its
+	// ctor/create_statistic/draw_overall_stats/draw calls link. The remaining
+	// blocker is s_draw_snd_stats_value: its backing cc_bool's command-name
+	// string and command_type have not been recovered from target data, so the
+	// static cannot be defined faithfully. Restore this tail together with that
+	// static once its data-section evidence is available.
 }
 
 void game::clear_resources( )

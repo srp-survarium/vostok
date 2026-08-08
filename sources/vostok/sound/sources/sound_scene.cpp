@@ -301,66 +301,6 @@ void sound_scene::tick		( sound_world& world, u32 time_delta )
 		notify_listener			( world );
 }
 
-sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy	
-										(
-											sound_emitter_ptr emitter,
-											sound_propagator_emitter const& propagator_emitter,
-											world_user& user
-										)
-{
-	LOG_DEBUG							( "sound_scene::create_sound_instance_proxy" );
-	if ( m_proxies_allocator->total_size( ) == m_proxies_allocator->allocated_size( ) )
-	{
-		LOG_ERROR						( "can't allocate sound_instance_proxy, memory is full" );
-		return sound_instance_proxy_ptr	( 0 );
-	}
-
-	sound_instance_proxy* new_proxy		= VOSTOK_NEW_IMPL( m_proxies_allocator.c_ptr(), sound_instance_proxy_internal )( *this, emitter, propagator_emitter, user );
-	LOG_INFO							( "new sound_instance_proxy allocated, id %d", new_proxy->get_id( ) );
-	return sound_instance_proxy_ptr		( new_proxy );
-}
-
-sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy	
-										(
-											sound_emitter_ptr emitter,
-											sound_propagator_emitter const& propagator_emitter,
-											world_user& user,
-											sound_cone_type cone_type
-										)
-{
-	LOG_DEBUG							( "sound_scene::create_sound_instance_proxy" );
-	if ( m_proxies_allocator->total_size( ) == m_proxies_allocator->allocated_size( ) )
-	{
-		LOG_ERROR						( "can't allocate sound_instance_proxy, memory is full" );
-		return sound_instance_proxy_ptr	( 0 );
-	}
-
-	sound_instance_proxy* new_proxy		= VOSTOK_NEW_IMPL( m_proxies_allocator.c_ptr(), sound_instance_proxy_internal )( *this, emitter, propagator_emitter, user, cone_type );
-	LOG_INFO							( "new sound_instance_proxy allocated, id %d", new_proxy->get_id( ) );
-	return sound_instance_proxy_ptr		( new_proxy );
-}
-
-sound_instance_proxy_ptr sound_scene::create_sound_instance_proxy	
-											(
-												sound_emitter_ptr emitter,
-												sound_propagator_emitter const& propagator_emitter,
-												world_user& user,
-												collision::geometry_instance& geometry,
-												float radius
-											)
-{
-	LOG_DEBUG							( "sound_scene::create_sound_instance_proxy" );
-	if ( m_proxies_allocator->total_size( ) == m_proxies_allocator->allocated_size( ) )
-	{
-		LOG_ERROR						( "can't allocate sound_instance_proxy, memory is full" );
-		return sound_instance_proxy_ptr	( 0 );
-	}
-
-	sound_instance_proxy* new_proxy		= VOSTOK_NEW_IMPL( m_proxies_allocator.c_ptr(), sound_instance_proxy_internal )( *this, emitter, propagator_emitter, user, geometry, radius );
-	LOG_INFO							( "new sound_instance_proxy allocated, id %d", new_proxy->get_id( ) );
-	return sound_instance_proxy_ptr		( new_proxy );
-}
-
 void sound_scene::init_allocators	( resources::query_result_for_cook& parent )
 {
 	LOG_DEBUG						( "sound_scene::init_allocators" );
@@ -841,10 +781,6 @@ void sound_scene::calculate_channel_matrix
 	lp_filter_result				= 1.0f - iir_filter_coeff;
 }
 
-void sound_scene::calculate_hdr_audio	( )
-{
-}
-
 struct compare_receivers_predicate : private boost::noncopyable
 {
 	inline compare_receivers_predicate	( sound_receiver* const receiver )
@@ -976,11 +912,6 @@ void sound_scene::resume_propagate_sound	( sound_instance_proxy_internal& proxy 
 		prop						= proxy.get_propagators( ).get_next_of_object( prop );
 	}
 
-}
-
-void sound_scene::set_listener_properties( float4x4 const& inv_view_matrix )
-{
-	set_listener_properties			( inv_view_matrix.c.xyz(), inv_view_matrix.k.xyz(), inv_view_matrix.j.xyz() );
 }
 
 void sound_scene::set_listener_properties	(	

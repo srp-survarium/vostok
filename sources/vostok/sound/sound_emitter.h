@@ -27,12 +27,6 @@ class VOSTOK_SOUND_API sound_emitter : public resources::unmanaged_resource
 {
 public:
 								sound_emitter		( );
-	sound_instance_proxy_ptr	emit
-								(
-									sound_scene_ptr& scene,
-									world_user& user
-								);
-
 	sound_instance_proxy_ptr	emit_hud_sound
 								(
 									sound_scene_ptr& scene,
