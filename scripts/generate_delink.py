@@ -48,6 +48,45 @@ WIN32_DIR   = VOSTOK_DIR / "binaries" / "Win32"
 # reproduces target's names where it can. Lives at the objdiff root so it
 # survives the per-side rmtree and is shared across base rebuilds.
 SYMBOL_MAP  = OBJDIFF_DIR / "target-symbol-map.tsv"
+SYMBOL_MAP_OVERRIDES = VOSTOK_DIR / "docs" / "binary_matching" / "folded_symbol_overrides.tsv"
+EFFECTIVE_SYMBOL_MAP = OBJDIFF_DIR / "effective-target-symbol-map.tsv"
+
+
+def _effective_symbol_map() -> Path:
+    """Merge reviewed alias choices over the delinker's generated target map.
+
+    The target map only contains addresses that are folded in the target.  A
+    target singleton can nevertheless be folded with another symbol in the
+    base image, in which case the generated map has no preference to apply.
+    Reviewed overrides cover those asymmetric fold groups without changing
+    source merely to steer /OPT:ICF.
+    """
+    choices: dict[str, str] = {}
+    order: list[str] = []
+    for path in (SYMBOL_MAP, SYMBOL_MAP_OVERRIDES):
+        if not path.is_file():
+            continue
+        for line_number, raw_line in enumerate(path.read_text().splitlines(), 1):
+            line = raw_line.strip()
+            if not line or line.startswith("#"):
+                continue
+            fields = line.split("\t")
+            if len(fields) != 2 or not all(fields):
+                raise RuntimeError(
+                    f"{path}:{line_number}: expected <alias>\\t<target choice>"
+                )
+            alias, choice = fields
+            if alias not in choices:
+                order.append(alias)
+            choices[alias] = choice
+
+    if not choices:
+        return SYMBOL_MAP
+
+    EFFECTIVE_SYMBOL_MAP.write_text(
+        "".join(f"{alias}\t{choices[alias]}\n" for alias in order)
+    )
+    return EFFECTIVE_SYMBOL_MAP
 
 
 def log(msg: str) -> None:
@@ -242,7 +281,7 @@ def generate(side: str) -> None:
         engine = ["--engine-path", _wine_path(VOSTOK_DIR / "sources") + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
-        symbol_map = ["--read-symbol-map", str(SYMBOL_MAP)]
+        symbol_map = ["--read-symbol-map", str(_effective_symbol_map())]
         hint = "build first (python3 scripts/rebuild.py)"
     elif side == "target":
         survarium_bin = Path(

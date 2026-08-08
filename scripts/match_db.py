@@ -162,14 +162,23 @@ def module_of(unit_or_file):
 
 def load_index(path):
     """rich index.jsonl -> {mangled: record} (lowest rva wins on duplicates)."""
-    out = {}
+    return index_by_mangled(load_index_records(path))
+
+
+def load_index_records(path):
+    """Load every rich-index record, including same-RVA PDB aliases."""
     with open(path, encoding="utf-8") as f:
-        for line in f:
-            rec = json.loads(line)
-            key = rec["mangled"]
-            prev = out.get(key)
-            if prev is None or rec["rva"] < prev["rva"]:
-                out[key] = rec
+        return [json.loads(line) for line in f]
+
+
+def index_by_mangled(records):
+    """Collapse rich records by mangled identity (lowest rva wins)."""
+    out = {}
+    for rec in records:
+        key = rec["mangled"]
+        prev = out.get(key)
+        if prev is None or rec["rva"] < prev["rva"]:
+            out[key] = rec
     return out
 
 
@@ -649,7 +658,8 @@ def regen():
 
     log("loading rich indexes ...")
     target = load_index(TARGET_IDX)
-    base = load_index(BASE_IDX)
+    base_records = load_index_records(BASE_IDX)
+    base = index_by_mangled(base_records)
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
 
     log("loading report.json ...")
@@ -740,14 +750,48 @@ def regen():
                 n_bonly,
             )
         )
-    # cross-name pairing: pair the dynamic-init/atexit thunks the two sides label
-    # differently (??__E/??__F mangled on base vs `dynamic initializer for ...`
-    # demangled on target). Canonicalize the SAFE subset and pair 1:1 + identical
-    # statement-shape only, so we never pair a thunk onto the wrong variable.
-    # Recorded keyed by the TARGET sym (the demangled name the `paired` view shows);
-    # base_only/target_only exclusion is by RVA, so both rva's drop out cleanly.
+    # Cross-name pairing first recovers PDB aliases whose base rich-index record
+    # carries another folded symbol's mangled name.  The delink report proves
+    # that the target name was emitted and compared; additionally require one
+    # free base RVA, an exact demangled signature, and identical statement shape.
     paired_primary = set(target) & set(base)
-    cross_paired_mangled = set()  # base AND target names we pair across the name gap
+    cross_paired_mangled = set()  # base AND target names paired across a name gap
+    used_target_rvas = {row[1] for row in pair_rows}
+    used_base_rvas = {row[2] for row in pair_rows}
+    base_aliases_by_name = {}
+    for rec in base_records:
+        base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
+    n_alias = 0
+    for tm in sorted(set(target) - paired_primary):
+        if tm not in fuzzy_by_mangled:
+            continue
+        trec = target[tm]
+        candidates = [
+            rec
+            for rva, rec in base_aliases_by_name.get(trec["name"], {}).items()
+            if rva not in used_base_rvas and stmt_seq(trec) == stmt_seq(rec)
+        ]
+        if trec["rva"] in used_target_rvas or len(candidates) != 1:
+            continue
+        brec = candidates[0]
+        bm = brec["mangled"]
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(trec, brec)
+        pair_rows.append(
+            (
+                sym_id[tm], trec["rva"], brec["rva"], fuzzy_by_mangled[tm], cls,
+                t_n, b_n, n_size, n_tonly, n_bonly,
+            )
+        )
+        used_target_rvas.add(trec["rva"])
+        used_base_rvas.add(brec["rva"])
+        cross_paired_mangled.update((tm, bm))
+        n_alias += 1
+    if n_alias:
+        log(f"cross-name paired {n_alias} report-grounded folded PDB aliases")
+
+    # Then pair dynamic-init/atexit thunks the two sides label differently
+    # (??__E/??__F mangled on base vs a demangled target name). Canonicalize the
+    # safe subset 1:1 with identical statement shape.
     t_canon, b_canon = {}, {}     # (kind, fqn) -> [mangled, ...]
     for m in set(target) - paired_primary:
         c = dyn_canon_target(m)
@@ -763,6 +807,8 @@ def regen():
         if len(tm_list) != 1 or len(bm_list) != 1:
             continue  # ambiguous - leave for the Rust-side demangler
         tm, bm = tm_list[0], bm_list[0]
+        if target[tm]["rva"] in used_target_rvas or base[bm]["rva"] in used_base_rvas:
+            continue
         if stmt_seq(target[tm]) != stmt_seq(base[bm]):
             continue  # not byte-shape identical - genuinely unmatched, do not pair
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
@@ -781,6 +827,8 @@ def regen():
             )
         )
         cross_paired_mangled.update((tm, bm))
+        used_target_rvas.add(target[tm]["rva"])
+        used_base_rvas.add(base[bm]["rva"])
         n_cross += 1
     if n_cross:
         log(f"cross-name paired {n_cross} dynamic-init/atexit thunks (??__E/??__F <-> demangled)")
