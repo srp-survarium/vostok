@@ -656,7 +656,7 @@ void particle_action_initial_velocity::init( particle_emitter_instance* instance
 	VOSTOK_UNREFERENCED_PARAMETERS(instance,time);
 	
 	float3 vel			= m_init_velocity.evaluate(instance->get_linear_emitter_time(), float3(0.0f, 0.0f, 0.0f), range_time_type, P->seed());
-	P->start_velocity	= instance->m_transform.transform_direction( vel );
+	P->start_velocity	= instance->m_emitter.get_world_space() ? instance->m_transform.transform_direction( vel ) : vel;
 	P->velocity			+= P->start_velocity;
 }
 
