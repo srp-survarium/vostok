@@ -18,7 +18,7 @@ inline float graph_heuristics::estimate(
 	vertex_id_type const& neighbour_vertex_id
 ) const
 {
-	return ( m_target_position - m_graph->get_portals( )[neighbour_vertex_id.portal_id].get_points( )[0] ).length( );
+	return math::length( m_target_position - m_graph->get_portals( )[neighbour_vertex_id.portal_id].get_points( )[0] );
 }
 
 template < typename vertex_type >
@@ -28,10 +28,10 @@ inline float graph_heuristics::evaluate(
 	u32 const* const&
 ) const
 {
-	return (
-		m_graph->get_portals( )[neighbour_vertex.id( ).portal_id].get_points( )[0] -
-		m_graph->get_portals( )[current_vertex.id( ).portal_id].get_points( )[0]
-	).length( ) + current_vertex.g( ) + current_vertex.id( ).source_to_portal_distance;
+	return math::length(
+		m_graph->get_portals( )[current_vertex.id( ).portal_id].get_points( )[0] -
+		m_graph->get_portals( )[neighbour_vertex.id( ).portal_id].get_points( )[0]
+	) + current_vertex.g( ) + current_vertex.id( ).source_to_portal_distance;
 }
 
 } // namespace search
