@@ -172,7 +172,28 @@ inline animation_lexeme_parameters::animation_lexeme_parameters	(
 	m_is_positive_event_direction		( true ),
 	m_can_generate_events				( true )
 {
+
+
+
+
+
+
+
+
+
 	create_animation_intervals			( animation );
+}
+
+
+
+
+
+
+
+inline animation_lexeme_parameters::~animation_lexeme_parameters( )
+{
+	for ( animation_interval const* i = m_animation_intervals, *e = i + m_animation_intervals_count; i != e; ++i )
+		(*i).~animation_interval		( );
 }
 
 
