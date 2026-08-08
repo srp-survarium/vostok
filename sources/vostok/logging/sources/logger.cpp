@@ -19,13 +19,10 @@
 #include <stdarg.h>						// for va_list
 
 // sushi@NOTE: This static is unused. They forgot to remove it.
-// claude@NOTE: base DOES emit its dynamic init/atexit dtor (??__Es_log_callback / ??__Fs_log_callback,
-// byte-equivalent modulo LTCG conv); the report shows them unmatched only because objdiff never
-// demangles ??__E/??__F base symbols to pair with the target's pretty names - tooling, see README.
-static vostok::logging::log_callback_boost	s_log_callback;
-
 namespace vostok {
 namespace logging {
+	static log_callback_boost s_log_callback;
+
 	void fill_local_time( format_string_type& dest, bool brief ); // sushi@NOTE: logger_win_xbox360.cpp doesn't have any headers
 } // namespace logging
 } // namespace vostok
