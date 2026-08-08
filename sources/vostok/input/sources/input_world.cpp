@@ -35,11 +35,7 @@ input_world::~input_world	( )
 	destroy_devices	( );
 }
 
-// claude@NOTE: optimized-target wall - structure MATCHes (26/26 stmts, 0xfa bytes
-// both sides; current_time_in_ms now threaded into handler::on_before_processing
-// per the target). Byte residual is the optimizer's register allocation
-// (target caches [ebx+4]/[ebx+1Ch] in ebp/eax where base picks edi), which
-// byte-cascades the objdiff fuzzy %; not source-steerable from /Od source.
+// Optimized target uses different register allocation for the handler-processing loop.
 void input_world::tick		( u32 const current_time_in_ms )
 {
 	if ( !m_acquired )		return;
