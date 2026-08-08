@@ -15,6 +15,7 @@ otherwise accompanies this software in either electronic or hard copy form.
 
 #include "pch.h"
 
+#include "d3d1x_sync.h"
 #include "Render/D3D1x/D3D1x_MeshCache.h"
 #include "Render/D3D1x/D3D1x_ShaderDescs.h"
 #include "Render/D3D1x/D3D1x_Shader.h"

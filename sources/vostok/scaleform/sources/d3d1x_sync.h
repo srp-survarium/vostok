@@ -2,8 +2,8 @@
 //	Created 	: 13.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef D3D1X_SYNC_H_INCLUDED
-#define D3D1X_SYNC_H_INCLUDED
+#ifndef INC_SF_D3D1x_Sync_H
+#define INC_SF_D3D1x_Sync_H
 
 #include "Render/Render_Sync.h"
 #include "Kernel/SF_Threads.h"
@@ -90,6 +90,7 @@ public:
 		SF_UNUSED( wait_type );
 	}
 
+protected:
 	virtual	u64		SetFence		( ) override
 	{
 		if ( pNextEndFrameFence )
@@ -154,8 +155,6 @@ public:
 			query->Release( );
 	}
 
-	virtual			~RenderSync		( ) { }
-
 private:
 	/* 0x0000 */	/* Scaleform::Render::RenderSync */
 	/* 0x0060 */	ID3D11Query*				pNextEndFrameFence;
@@ -169,4 +168,4 @@ private:
 
 STATIC_SIZE_ASSERT(Scaleform::Render::D3D1x::RenderSync, 0x70);
 
-#endif // #ifndef D3D1X_SYNC_H_INCLUDED
+#endif // #ifndef INC_SF_D3D1x_Sync_H
