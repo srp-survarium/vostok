@@ -21,12 +21,6 @@ inline float3		from_bullet_pos	( btVector3 const& v )	{ return float3(v.x(), v.y
 btTransform			from_vostok		( float4x4 const& m );
 float4x4			from_bullet		( btTransform const& m );
 
-// claude@NOTE: 1 statement + 1 local (`from`) match the target. SIZE residual is
-// argument-evaluation scheduling inside the single return expression: the gold build
-// evaluates from_bullet(from.getAxis()) (the float3& arg) BEFORE from.getAngle()
-// (acosf), our base does the standard right-to-left (angle first). Forcing axis-first
-// would need a named temp, which the target's 0-extra-local structure forbids - so the
-// scheduling residual is taken; structure is faithful.
 inline math::quaternion from_bullet( btQuaternion const& from )
 {
 	return math::quaternion( from_bullet(from.getAxis()), from.getAngle() );
