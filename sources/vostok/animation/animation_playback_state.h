@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
-//	animation_playback_state - own header. In the original the class lives here
-//	and the build compiles this header as its own TU (target emits reset()'s
-//	COMDAT into animation_playback_state.h.obj).
+//	Created 	: 06.12.2025
+//
+//	Playback state shared by animation clients.
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef VOSTOK_ANIMATION_ANIMATION_PLAYBACK_STATE_H_INCLUDED

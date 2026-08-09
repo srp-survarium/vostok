@@ -43,8 +43,6 @@ void weapon_core_shotgun_reload_one_round_substate::initialize( )
 	);
 }
 
-// claude@NOTE: structure-correct; residual is animation_playback_state::reset() inlined by /Od
-// where the target keeps it out-of-line (shared-header noinline only; cross-unit).
 void weapon_core_shotgun_reload_one_round_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
