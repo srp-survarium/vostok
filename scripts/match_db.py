@@ -549,6 +549,23 @@ def instruction_stream_exact(target_rec, base_rec):
     return identity(target_instructions) == identity(base_instructions)
 
 
+def strict_source_alias_candidates(target_rec, base_aliases_by_name, used_base_rvas):
+    """Find exact same-source bodies hidden behind a different ICF name.
+
+    A folded RVA may inherit another function's mangled identity independently
+    on each side.  The PDB still records every alias's demangled signature and
+    source owner, so a unique same-name, same-file, byte-exact rich record is
+    sufficient function-scoped attribution without relying on fuzzy history.
+    """
+    return [
+        rec
+        for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
+        if rva not in used_base_rvas
+        and rec["file"] == target_rec["file"]
+        and instruction_stream_exact(target_rec, rec)
+    ]
+
+
 def file_mtime_iso(path):
     import datetime
 
@@ -831,6 +848,37 @@ def regen():
         n_alias += 1
     if n_alias:
         log(f"cross-name paired {n_alias} report-grounded folded PDB aliases")
+
+    # Some highly-COMDAT functions never reach objdiff because target and base
+    # choose different canonical mangled names for the same folded RVA.  Recover
+    # only unique, same-source aliases whose complete rich instruction streams
+    # are identical; unlike the report-grounded pass above, this also covers
+    # target-only score gaps.
+    n_rich_alias = 0
+    for tm in sorted(set(target) - paired_primary - cross_paired_mangled):
+        trec = target[tm]
+        if trec["rva"] in used_target_rvas:
+            continue
+        candidates = strict_source_alias_candidates(
+            trec, base_aliases_by_name, used_base_rvas
+        )
+        if len(candidates) != 1:
+            continue
+        brec = candidates[0]
+        bm = brec["mangled"]
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(trec, brec)
+        pair_rows.append(
+            (
+                sym_id[tm], trec["rva"], brec["rva"], 100.0, cls,
+                t_n, b_n, n_size, n_tonly, n_bonly,
+            )
+        )
+        used_target_rvas.add(trec["rva"])
+        used_base_rvas.add(brec["rva"])
+        cross_paired_mangled.update((tm, bm))
+        n_rich_alias += 1
+    if n_rich_alias:
+        log(f"cross-name paired {n_rich_alias} strict same-source rich aliases")
 
     # Then pair dynamic-init/atexit thunks across their several rich/raw name
     # spellings. The canonical identity must be unique on each side; emitted

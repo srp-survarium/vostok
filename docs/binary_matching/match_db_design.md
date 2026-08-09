@@ -161,8 +161,12 @@ build/delink configuration.
 When objdiff omits a function score, refresh may recover only a strict exact
 observation from the rich indexes: target and base must have equal size and an
 identical non-empty ordered stream of normalized `(offset, length, instruction
-text)` tuples. This is function-scoped evidence for COMDAT/source-tree pairing
-gaps, not a fuzzy estimate; any differing or absent stream remains unscored.
+text)` tuples. If ICF selected different canonical mangled identities for the
+two RVAs, their rich aliases must also provide a unique unused base RVA with the
+same demangled signature and source file. This is function-scoped evidence for
+COMDAT/source-tree pairing gaps, not a fuzzy estimate; any ambiguous, differently
+owned, differing, or absent stream remains unscored. Structure classification
+remains independent, so exact bytes do not suppress a `QUANTITY` warning.
 
 - The same effective hash retains `max(old, current)`.
 - A changed effective hash starts a new epoch at the current observation.

@@ -37,5 +37,39 @@ class InstructionStreamExactTests(unittest.TestCase):
         self.assertFalse(MATCH_DB.instruction_stream_exact(empty, empty))
 
 
+class StrictSourceAliasCandidateTests(unittest.TestCase):
+    def record(self, file="scaleform/src/render/render_matrix2x4.h", text="ret   4"):
+        return {
+            "name": "Scaleform::Render::Matrix2x4<float>::Matrix2x4<float>(copy)",
+            "file": file,
+            "size": 3,
+            "instructions": [{"off": 0, "len": 3, "text": text}],
+        }
+
+    def test_accepts_unique_same_source_exact_alias(self):
+        target = self.record()
+        base = self.record()
+        aliases = {target["name"]: {0x1234: base}}
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(target, aliases, set()), [base]
+        )
+
+    def test_rejects_used_different_source_or_different_body(self):
+        target = self.record()
+        used = self.record()
+        other_source = self.record(file="scaleform/src/render/other.h")
+        other_body = self.record(text="ret   8")
+        aliases = {
+            target["name"]: {
+                0x1000: used,
+                0x2000: other_source,
+                0x3000: other_body,
+            }
+        }
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(target, aliases, {0x1000}), []
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
