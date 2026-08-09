@@ -759,10 +759,6 @@
 			>
 		</File>
 		<File
-			RelativePath=".\anchor_animation_cloner.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\anchor_animation_time_in_ms_calculator.cpp"
 			>
 		</File>
