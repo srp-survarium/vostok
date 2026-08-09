@@ -812,10 +812,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
 {
-	n_ary_tree_interpolator_selector	interpolator_selector;
-	to.accept				( interpolator_selector );
-
-	if ( interpolator_selector.result()->transition_time() == 0.f )
+	if ( static_cast< n_ary_tree_weight_node& >( to ).interpolator( ).transition_time( ) == 0.f )
 		return				m_cloner.clone( to );
 
 	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
@@ -824,11 +821,14 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transit
 	n_ary_tree_base_node* const weight_from	= m_cloner.clone( from );
 
 	n_ary_tree_base_node* const cloned_to	= m_cloner.clone( to );
+	n_ary_tree_interpolator_selector	interpolator_selector;
+	cloned_to->accept			( interpolator_selector );
+	base_interpolator const* const cloned_interpolator	= m_cloner.clone( *interpolator_selector.result( ) );
 
 	new ( result ) n_ary_tree_weight_transition_node(
 		*weight_from,
 		*cloned_to,
-		*m_cloner.clone( *interpolator_selector.result() ),
+		*cloned_interpolator,
 		m_current_time_in_ms
 	);
 
@@ -1082,11 +1082,12 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 	{
 		n_ary_tree_base_node** const	from_end	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
 		n_ary_tree_base_node**			multiplicands	= to.operands( sizeof( n_ary_tree_animation_node ) );
-		n_ary_tree_base_node** const	to_end		= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+		n_ary_tree_base_node**			to_begin	= from.operands( sizeof( n_ary_tree_animation_node ) );
+		n_ary_tree_base_node** const	to_end		= to_begin + from.operands_count( );
 
 		u32								operands_offset	=
 			( to.operands_count( ) && (*multiplicands)->is_time_scale( ) )
-			|| ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+			|| ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
 			? 1 : 0;
 
 		u32								animation_interval_id	= 0;
@@ -1109,67 +1110,73 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		n_ary_tree_base_node** new_operands	= result->operands( sizeof( n_ary_tree_animation_node ) );
 		m_buffer				+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
 
-		if ( to.operands_count( ) && (*multiplicands)->is_time_scale( ) ) {
-			if ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ) {
-				*new_operands++	= new_time_scale_transition( to, from, **multiplicands, **from.operands( sizeof( n_ary_tree_animation_node ) ) );
-				++multiplicands;
+		if ( !time_scale_operands_count ) {
+			if ( to.operands_count( ) && (*multiplicands)->is_time_scale( ) ) {
+				if ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
+					*new_operands++	= new_time_scale_transition( to, from, **multiplicands++, **to_begin++ );
+				else
+					*new_operands++	= new_time_scale_transition( to, **multiplicands++, from.animation_state( ).animation_interval_time );
 			}
-			else
-				*new_operands++	= new_time_scale_transition( to, **multiplicands, from.animation_state( ).animation_interval_time );
+			else if ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
+				*new_operands++	= new_time_scale_transition( animation_interval_time, animation_interval_time, **to_begin++ );
 		}
-		else if ( from.operands_count( ) && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
-			*new_operands++	= new_time_scale_transition( animation_interval_time, animation_interval_time, **from.operands( sizeof( n_ary_tree_animation_node ) ) );
 
 		u32								left_multiplicands_count	= u32( from_end - multiplicands );
 		if ( left_multiplicands_count && (*multiplicands)->is_time_scale( ) )
 			--left_multiplicands_count;
 
 		n_ary_tree_base_node*			weight_from;
-		if ( left_multiplicands_count >= 2 ) {
-			n_ary_tree_base_node* const	left	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+		switch ( left_multiplicands_count ) {
+			case 0 :
+				weight_from				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+				m_buffer				+= sizeof( n_ary_tree_weight_node );
+				new ( weight_from ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
+				break;
+			case 1 :
+				weight_from				= m_cloner.clone( **(from_end - 1) );
+				break;
+			default : {
+			weight_from				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
-			n_ary_tree_multiplication_node* const	multiplication	= new ( left ) n_ary_tree_multiplication_node( left_multiplicands_count );
+			new ( weight_from ) n_ary_tree_multiplication_node( left_multiplicands_count );
 
-			n_ary_tree_base_node**	operands	= multiplication->operands( sizeof( n_ary_tree_multiplication_node ) );
+			n_ary_tree_base_node**	operands	= (n_ary_tree_base_node**)m_buffer.c_ptr( );
 			m_buffer				+= left_multiplicands_count * sizeof( n_ary_tree_base_node* );
 
 			for ( n_ary_tree_base_node** i = multiplicands + ( operands_offset && (*multiplicands)->is_time_scale( ) ? 1 : 0 ); i != from_end; ++i )
 				*operands++			= m_cloner.clone( **i );
 
-			weight_from				= left;
+			break;
 		}
-		else if ( left_multiplicands_count == 1 )
-			weight_from				= m_cloner.clone( **(multiplicands - 1) );
-		else {
-			weight_from				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
-			m_buffer				+= sizeof( n_ary_tree_weight_node );
-			new ( weight_from ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
 		}
 
-		u32								right_multiplicands_count	= u32( to_end - from.operands( sizeof( n_ary_tree_animation_node ) ) );
-		if ( right_multiplicands_count && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) )
+		u32								right_multiplicands_count	= u32( to_end - to_begin );
+		if ( right_multiplicands_count && (*to_begin)->is_time_scale( ) )
 			--right_multiplicands_count;
 
 		n_ary_tree_base_node*			weight_to;
-		if ( right_multiplicands_count >= 2 ) {
-			n_ary_tree_base_node* const	right	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+		switch ( right_multiplicands_count ) {
+			case 0 :
+				weight_to				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+				m_buffer				+= sizeof( n_ary_tree_weight_node );
+				new ( weight_to ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
+				break;
+			case 1 :
+				weight_to				= m_cloner.clone( **(to_end - 1) );
+				break;
+			default : {
+			weight_to				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 			m_buffer				+= sizeof( n_ary_tree_multiplication_node );
-			n_ary_tree_multiplication_node* const	multiplication	= new ( right ) n_ary_tree_multiplication_node( right_multiplicands_count );
+			new ( weight_to ) n_ary_tree_multiplication_node( right_multiplicands_count );
 
-			n_ary_tree_base_node**	operands	= multiplication->operands( sizeof( n_ary_tree_multiplication_node ) );
+			n_ary_tree_base_node**	operands	= (n_ary_tree_base_node**)m_buffer.c_ptr( );
 			m_buffer				+= right_multiplicands_count * sizeof( n_ary_tree_base_node* );
 
-			for ( n_ary_tree_base_node** i = from.operands( sizeof( n_ary_tree_animation_node ) ) + ( operands_offset && (*from.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0 ); i != to_end; ++i )
+			for ( n_ary_tree_base_node** i = to_begin + ( operands_offset && (*to_begin)->is_time_scale( ) ? 1 : 0 ); i != to_end; ++i )
 				*operands++			= m_cloner.clone( **i );
 
-			weight_to				= right;
+			break;
 		}
-		else if ( right_multiplicands_count == 1 )
-			weight_to				= m_cloner.clone( **(to_end - 1) );
-		else {
-			weight_to				= (n_ary_tree_base_node*)m_buffer.c_ptr( );
-			m_buffer				+= sizeof( n_ary_tree_weight_node );
-			new ( weight_to ) n_ary_tree_weight_node( result->weight_interpolator( ), 0.f );
 		}
 
 		*new_operands			= new_weight_transition( *weight_from, *weight_to );
@@ -1184,7 +1191,7 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		return;
 	}
 
-	std::pair< u32, u32 >	operands_counts	= computed_operands_count( from, to );
+	std::pair< u32, u32 > const operands_counts	= computed_operands_count( from, to );
 
 	u32						time_scale_operands_count	= operands_counts.first;
 	u32						operands_offset				= operands_counts.second;
