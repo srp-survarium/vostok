@@ -833,7 +833,7 @@ bool n_ary_tree::dispatch_callbacks(
 				clamped_time - lower_time <= upper_time - clamped_time ?
 				knot_lower_id :
 				knot_upper_id;
-			u8 const domain_data			= channel.domain( domain_id ).data;
+			u8 domain_data				= channel.domain( domain_id ).data;
 
 			for ( animation_callback* callback = subscribed_channel->first_callback; callback; callback = callback->next )
 			{
