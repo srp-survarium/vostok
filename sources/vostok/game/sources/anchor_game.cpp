@@ -24,7 +24,6 @@
 #include <vostok/ai_navigation/api.h>
 #include <vostok/animation/api.h>
 #include <vostok/input/api.h>
-#include <vostok/rtp/api.h>
 #include <vostok/ui/api.h>
 
 #include <vostok/render/facade/one_way_render_channel.h>
@@ -185,10 +184,6 @@ namespace vostok
 		input::world* input_world = input::create_world( *( input::engine* )NULL, NULL );
 		input::destroy_world( input_world );
 		input::set_memory_allocator( *( input::allocator_type* )NULL );
-
-		rtp::world* rtp_world = rtp::create_world( *( rtp::engine* )NULL, *( animation::world* )NULL, *( render::scene_ptr const* )NULL, NULL, NULL );
-		rtp::destroy_world( rtp_world );
-		rtp::set_memory_allocator( *( rtp::allocator_type* )NULL );
 
 		ai::navigation::world* ai_navigation_world = ai::navigation::create_world( *( ai::navigation::engine* )NULL, *( render::scene_ptr const* )NULL, *( render::debug::renderer* )NULL );
 		ai::navigation::destroy_world( ai_navigation_world );
