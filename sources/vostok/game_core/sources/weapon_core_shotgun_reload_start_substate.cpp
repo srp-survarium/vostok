@@ -49,9 +49,6 @@ void weapon_core_shotgun_reload_start_substate::initialize( )
 	}
 }
 
-// claude@NOTE: structure-correct; residual is animation_playback_state::reset() - target
-// keeps it out-of-line (its COMDAT in animation_playback_state.h.obj) while /Od inlines the
-// trivial in-class body here. Cross-unit: only fixable by noinline'ing the shared header.
 void weapon_core_shotgun_reload_start_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );

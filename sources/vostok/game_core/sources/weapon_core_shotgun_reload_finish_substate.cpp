@@ -44,9 +44,6 @@ void weapon_core_shotgun_reload_finish_substate::initialize( )
 	);
 }
 
-// claude@NOTE: the deserializing/chamber_a_round/ammo_in_magazine/instant_chamber_a_round guard
-// chain is structure-correct (clean structure-diff); residual is animation_playback_state::reset()
-// inlined by /Od where the target keeps it out-of-line (shared-header noinline only; cross-unit).
 void weapon_core_shotgun_reload_finish_substate::finalize( )
 {
 	ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );

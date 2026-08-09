@@ -21,17 +21,6 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 {
 }
 
-// claude@NOTE: in the target these two live inline in the header (.h source
-// attribution) and emit as COMDATs from an OPTIMIZED TU - execute(0x97f80) is a
-// frame-less leaf with reset() inlined, finalize(0xc40c0) calls reset() out of
-// line. Defined here out-of-line so the /Od game_core callers (fire/aimed_fire
-// execute) emit `call weapon_core_base_state::execute` and pair (99%); these two
-// own bodies stay at the /Od-vs-optimized leaf residual.
-// claude@NOTE: inline-vs-call wall - target keeps animation_playback_state::reset()
-//   out-of-line here (call @0x087f60), base inlines its 2-field zero. Not steerable
-//   from this TU: reset() is inline in vostok/animation/animation_playback_state.h
-//   (another unit) and forcing it out-of-line is the cross-unit out-line device we
-//   don't use. Structure/body are correct (single reset() call).
 void weapon_core_base_state::finalize( )
 {
 	m_animation_playback_state.reset( );

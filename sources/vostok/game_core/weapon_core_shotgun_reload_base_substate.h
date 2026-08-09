@@ -41,14 +41,14 @@ protected:
 							pcstr									hands_jump_animation_id
 						);
 
+public:
 	// STATE[STUB]
 	virtual	void		initialize						( ) override { /* <0x2a800> */ }
 	// STATE[STUB]
 	virtual	void		execute							( ) override { /* <0x98860> */ }
-	// STATE[STUB]
-	virtual	void		finalize						( ) override { /* <0xc47d0> */ }
-
-public:
+	virtual	void		finalize						( ) override {
+		ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );
+	}
 			animation::mixing::expression
 					weapon_and_hands_expression			(
 						mutable_buffer&							buffer,
