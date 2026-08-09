@@ -76,7 +76,7 @@ void n_ary_tree::initialize( )
 
 	animation_state* const end	= m_animation_states + m_animations_count;
 	for ( animation_state* i = m_animation_states; i != end; ++i )
-		if ( i->event_iterator->event_type & time_event_weight_transitions_started )
+		if ( (*i->event_iterator).event_type & time_event_weight_transitions_started )
 			set_object_transform	( i->event_iterator.animation( ) );
 }
 
