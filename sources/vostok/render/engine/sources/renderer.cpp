@@ -934,14 +934,14 @@ void renderer::render(
 {
 
 
-	backend::ref( ).num_vs_changes	= 0;
-	backend::ref( ).num_ps_changes	= 0;
-	backend::ref( ).num_il_changes	= 0;
-	backend::ref( ).num_vsc_changes	= 0;
-	backend::ref( ).num_vst_changes	= 0;
-	backend::ref( ).num_vss_changes	= 0;
-	backend::ref( ).num_psc_changes	= 0;
-	backend::ref( ).num_pst_changes	= 0;
+	backend::ref( ).num_vs_changes	=
+	backend::ref( ).num_ps_changes	=
+	backend::ref( ).num_il_changes	=
+	backend::ref( ).num_vsc_changes	=
+	backend::ref( ).num_vst_changes	=
+	backend::ref( ).num_vss_changes	=
+	backend::ref( ).num_psc_changes	=
+	backend::ref( ).num_pst_changes	=
 	backend::ref( ).num_pss_changes	= 0;
 
 	float const frame_time		= m_fps_timer.get_elapsed_sec( );
@@ -1113,8 +1113,8 @@ void renderer::render(
 	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_present ), 0, 0, 0 );
 	scene->flush				( on_draw_scene, true, false );
 #ifndef MASTER_GOLD
-	// claude@NOTE: the non-MASTER_GOLD view-mode debug pipeline occupied target lines
-	// 1003-1209; it is compiled out of the shipped build and was never recovered.
+	// The non-MASTER_GOLD view-mode debug pipeline occupies target lines
+	// 1003-1209 and emits no retail code.
 #endif // #ifndef MASTER_GOLD
 	temporal_jitterer.pop_jittering( );
 
@@ -1139,19 +1139,15 @@ void renderer::render(
 	{
 
 
-
 		if ( s_ui_enabled && static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer )
 		{
 
 
-
 			scene_view const* s	= m_renderer_context->scene_view( );
 
-			survarium::flash_text_manager* text_manager = s->m_flash_text_manager;
 
 
-			vector< survarium::flash_movie* > movies_vec;
-			for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
+			survarium::flash_text_manager* text_manager = s->m_flash_text_manager; vector< survarium::flash_movie* > movies_vec; for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
 				movies_vec.push_back( s->m_flash_movies[i]->movie );
 
 			backend::ref( ).reset_depth_stencil_target( );
