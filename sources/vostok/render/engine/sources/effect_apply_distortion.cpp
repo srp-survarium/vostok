@@ -14,9 +14,7 @@ void effect_apply_distortion::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "apply_distortion", NULL, "apply_distortion", shader_configuration( ), NULL );
 	compiler.set_texture( "t_base", r2_rt_generic0, 0, false, u32( -1 ) );

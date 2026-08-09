@@ -1,6 +1,4 @@
-
-
-
+// 3 target lines are likely retail-compiled-out source.
 #include "pch.h"
 #include "effect_system_colored.h"
 #include <vostok/render/core/dx11/effect_compiler.h>

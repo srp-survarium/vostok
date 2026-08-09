@@ -61,9 +61,7 @@ void material::initialize_nomaterial_material()
 
 material_effects& material::nomaterial_material(enum_vertex_input_type vi)
 {
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	ASSERT_CMP(s_nomaterial_material_effects[vi], !=, 0);
 	return *s_nomaterial_material_effects[vi];
 }

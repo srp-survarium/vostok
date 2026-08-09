@@ -12,10 +12,7 @@ void effect_clouds_god_rays::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER(config);
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("god_rays_accumulate3", NULL, "god_rays_accumulate3", shader_configuration(), NULL);
 			compiler.set_depth(true, false);

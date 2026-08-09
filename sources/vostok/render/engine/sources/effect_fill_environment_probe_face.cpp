@@ -12,10 +12,7 @@ void effect_fill_environment_probe_face::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER(config);
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass("fill_environment_probe_face", NULL, "fill_environment_probe_face", shader_configuration(), NULL);
 			compiler.set_depth(false, false);

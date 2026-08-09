@@ -12,20 +12,14 @@ void effect_light_propagation_volumes::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_lighting", "lpv_inject_lighting", "lpv_inject_lighting", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
 
 
 	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_MAX, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_MAX );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	compiler.end_pass( );
 	compiler.end_technique( );
 
@@ -33,14 +27,9 @@ void effect_light_propagation_volumes::compile(
 	compiler.begin_technique( );
 	compiler.begin_pass( "lpv_inject_occluders", "lpv_inject_occluders", "lpv_inject_occluders", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.set_alpha_blend( false );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	compiler.end_pass( );
 	compiler.end_technique( );
 

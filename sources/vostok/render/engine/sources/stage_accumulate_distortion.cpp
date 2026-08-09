@@ -89,9 +89,7 @@ void stage_accumulate_distortion::execute( )
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_distortion ), &*m_context->get_rt( rt_distortion_mask ), 0, 0 );
 	backend::ref( ).clear_render_targets( math::color( 0.0f, 0.0f, 0.0f, 0.0f ) );
 	backend::ref( ).reset_depth_stencil_target( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	{
 		particle::world* part_world = m_context->scene( )->particle_world( );
 
@@ -129,10 +127,7 @@ void stage_accumulate_distortion::execute( )
 
 
 	backend::ref( ).flush_rt_shader_resources( );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	render_surface_instance** it_d = m_dynamic_visuals.begin( );
 	render_surface_instance* const* end_d = m_dynamic_visuals.end( );
 

@@ -13,12 +13,7 @@
 
 namespace vostok {
 namespace render {
-
-
-
-
-
-
+// 6 target lines are likely retail-compiled-out source.
 hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 	bool const	use_scene_depth_buffer,
 	u32 const	rasterize_width,
@@ -44,9 +39,7 @@ hw_hiz_occlusion_manager::hw_hiz_occlusion_manager(
 {
 	for ( u32 mip_index = 0; mip_index < m_num_mips; ++mip_index ) {
 		fixed_string<128> name;
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		name.assignf( "%s_work_%d", "$user$hiz_occlusion_depth_mips", mip_index );
 		m_rt_depth_mips_work[mip_index] = resource_manager::ref( ).create_render_target(
 			name.c_str( ),
@@ -159,17 +152,7 @@ void hw_hiz_occlusion_manager::process_culling(
 	downsample_occlusion_buffer( );
 
 	render_model_bounds( in_context, in_bounds, in_num_bounds_and_results );
-
-
-
-
-
-
-
-
-
-
-
+	// 11 target lines are likely retail-compiled-out source.
 	device::ref( ).d3d_context( )->CopyResource(
 		m_t_culling_result_lockable->hw_texture( ),
 		m_t_culling_result->hw_texture( )
@@ -202,16 +185,12 @@ void hw_hiz_occlusion_manager::render_occluders( renderer_context* in_context )
 	view_port.MaxDepth = clear_value;
 
 	backend::ref( ).set_viewport( view_port );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_render_targets( m_rt_depth_mips[0].c_ptr( ), 0, 0, 0 );
 	backend::ref( ).set_depth_stencil_target( m_ds_occlusion_depth.c_ptr( ) );
 	backend::ref( ).clear_render_targets( 1.f, 1.f, 1.f, clear_value );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, clear_value, 0 );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	in_context->set_w( math::create_scale( float3( 3.f, 3.f, 3.f ) ) );
 	m_hiz_occlusion_effect->apply( 3, 0 );
 	m_sphere_occluder_geometry.render( );
@@ -262,9 +241,7 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 
 		backend::ref( ).set_viewport( prev_view_port );
 	}
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	res_texture_ptr read_texture = m_t_depth_mips;
 
 	for ( u32 mip_level_index = 1; mip_level_index < m_num_mips; ++mip_level_index ) {
@@ -289,22 +266,15 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 
 
 	for ( u32 mip_level_index = 1; mip_level_index < m_num_mips; ++mip_level_index ) {
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		m_hiz_occlusion_effect->apply( 5, 0 );
 		backend::ref( ).set_ps_texture( "hiz_depth_texture", m_t_depth_mips_work[mip_level_index].c_ptr( ) );
 		system_renderer::ref( ).fill_surface( m_rt_depth_mips[mip_level_index], render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), false, 0, 0.f, 0.f, 1.f, 1.f );
 	}
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );
-
-
-
+// 3 target lines are likely retail-compiled-out source.
 }
 
 void hw_hiz_occlusion_manager::render_model_bounds(
@@ -373,38 +343,23 @@ bool hw_hiz_occlusion_manager::quary_and_get_results_if_ready( pbyte out_results
 
 	if ( !data )
 		return false;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	for ( u32 y = 0; y < m_culling_buffer_height; ++y ) {
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		for ( u32 x = 0; x < m_culling_buffer_width; ++x ) {
 
 
 			u32 const index = y * m_culling_buffer_width + x; if ( index > in_num_results - 1 )
 				goto unmap;
-
-
-
-
+			// 4 target lines are likely retail-compiled-out source.
 			out_results[index] = data[x];
 		}
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		data += row_pitch;
 	}
 unmap:
 	m_t_culling_result_lockable->unmap2D( 0 );
-
-
-
-
-
-
-
+	// 7 target lines are likely retail-compiled-out source.
 	return true;
 }
 

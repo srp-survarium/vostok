@@ -10,10 +10,7 @@ void effect_shadow_map::compile(
 	custom_config_value const&
 )
 {
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	shader_configuration configuration;
 
 

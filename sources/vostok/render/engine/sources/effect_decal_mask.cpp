@@ -11,10 +11,7 @@ void effect_decal_mask::compile(
 	custom_config_value const&
 )
 {
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "accum_mask", NULL, "dumb", shader_configuration( ), NULL );
 	compiler.set_depth( true, false, D3D_COMPARISON_LESS_EQUAL );

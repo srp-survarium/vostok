@@ -14,10 +14,7 @@ void effect_fstage_blend_subuv_materials::compile(
 {
 	// FUNCTION BODY[0x7b9d40]
 	shader_configuration configuration;
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 
@@ -29,11 +26,7 @@ void effect_fstage_blend_subuv_materials::compile(
 
 		float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
 		float   solid_transparency   = 1.0f;
-
-
-
-
-
+		// 5 target lines are likely retail-compiled-out source.
 		if( configuration.use_emissive==2)
 		{
 			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));

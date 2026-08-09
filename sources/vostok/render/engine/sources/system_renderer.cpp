@@ -80,47 +80,19 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 	m_renderer_context->m_g_quad_2uv		= resource_manager::ref( ).create_geometry( vertex_formats::F_TL2uv, array_size( vertex_formats::F_TL2uv ), sizeof( vertex_formats::TL2uv ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
 	m_renderer_context->m_g_quad_eye_ray	= resource_manager::ref( ).create_geometry( vertex_formats::F_Tquad, array_size( vertex_formats::F_Tquad ), sizeof( vertex_formats::Tquad ), backend::ref( ).vertex.buffer( ), *m_renderer_context->m_quad_ib );
 
+#ifndef MASTER_GOLD
 	m_colored_geom		= resource_manager::ref( ).create_geometry( vertex_formats::F_L, array_size( vertex_formats::F_L ), sizeof( vertex_formats::L ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
+#endif // #ifndef MASTER_GOLD
 
 	m_colored_geom_sl	= resource_manager::ref( ).create_geometry( F_L_sl, array_size( F_L_sl ), sizeof( vertex_colored_sl ), m_vertex_stream.buffer( ), m_index_stream.buffer( ) );
 
 	m_selection_color = math::float4( 0.0f, 0.0f, 0.5f, 1.0f );
 	m_selection_rate = 1.0f;
 	m_current_selection_color = math::float4( 0.0f, 0.0f, 0.0f, 0.0f );
+#ifndef MASTER_GOLD
 	m_ghost_model_color = math::float4( 0.2f, 0.2f, 0.2f, 0.2f );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+#endif // #ifndef MASTER_GOLD
+	// 33 target lines are likely retail-compiled-out source.
 	effect_manager::ref( ).create_effect< effect_system_colored >( &m_sh_vcolor );
 
 	effect_manager::ref( ).create_effect< effect_system_line >( &m_sh_sl );
@@ -159,35 +131,13 @@ system_renderer::system_renderer( renderer_context* renderer_context ) :
 	effect_manager::ref( ).create_effect< effect_particle_selection >( &m_sh_particle_selection );
 
 	m_c_start_corner = backend::ref( ).register_constant_host( "start_corner", rc_float );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 15 target lines are likely retail-compiled-out source.
 	m_cook_data_to_delete = MT_NEW( material_effects_instance_cook_data )(
 		post_process_vertex_input_type,
 		NULL,
 		false
 	);
-
-
-
-
-
-
-
-
-
+	// 9 target lines are likely retail-compiled-out source.
 	D3D_INPUT_ELEMENT_DESC const screen_vertex_layout[] =
 	{
 		{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D_INPUT_PER_VERTEX_DATA, 0 },
@@ -522,10 +472,7 @@ void system_renderer::draw_screen_lines(
 	m_index_stream.unlock	( );
 
 	m_colored_geom_sl->apply( );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	m_sh_sl->apply( effect_system_line::z_disabled, 0 );
 
 	backend::ref( ).set_vs_constant( m_WVP_sl, transpose( wvpMatrix ) );
@@ -803,9 +750,7 @@ void system_renderer::draw_triangles(
 	backend::ref( ).set_ps_constant( m_grid_density_constant, m_grid_density );
 
 	backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, indices_size, ioffset /* ? */, voffset );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	m_sh_vcolor->apply( effect_system_colored::wireframe, 0 );
 	m_colored_geom->apply( );
 	backend::ref( ).set_ps_constant( m_grid_density_constant, m_grid_density );
@@ -914,10 +859,7 @@ void system_renderer::draw_render_models_selection( vector< render_model_instanc
 	if ( !render_models.size( ) )
 		return;
 	math::aabb draw_box = math::create_invalid_aabb( );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	for ( vector< render_model_instance_impl_ptr >::iterator it = render_models.begin( ), it_end = render_models.end( ); it != it_end; ++it )
 	{
 		render_model_instance_impl_ptr& instance = *it;
@@ -925,23 +867,7 @@ void system_renderer::draw_render_models_selection( vector< render_model_instanc
 
 		draw_box.modify( instance->get_aabb( ).modify( instance->transform( ) ) );
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 17 target lines are likely retail-compiled-out source.
 	m_current_selection_color		= m_selection_color * math::pow( math::abs( math::cos( m_renderer_context->m_current_time * m_selection_rate ) ), 0.5f );
 	draw_aabb						(
 		draw_box,
@@ -974,9 +900,7 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 
 
 	// TODO: LODs?
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	particle::world* part_world	= m_renderer_context->scene( )->particle_world( );
 
 	for ( vector< resources::unmanaged_resource_ptr >::const_iterator instance_it = instances.begin( );
@@ -990,18 +914,7 @@ void system_renderer::draw_particle_system_instance_selections( vector< resource
 		for ( particle::render_particle_emitter_instances_type::const_iterator it = emitters.begin( ); it != emitters.end( ); ++it )
 		{
 			render::render_particle_emitter_instance*	instance		= static_cast< render::render_particle_emitter_instance* >( *it );
-
-
-
-
-
-
-
-
-
-
-
-
+			// 12 target lines are likely retail-compiled-out source.
 			u32 const									num_particles	= instance->get_num_particles( );
 
 			if ( !num_particles )
@@ -1066,59 +979,7 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 			)
 		);
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 53 target lines are likely retail-compiled-out source.
 }
 
 // claude@NOTE: no addressed target record (inlined into renderer::render or

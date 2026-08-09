@@ -12,11 +12,7 @@ void effect_aberration::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "aberration", NULL, "aberration", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

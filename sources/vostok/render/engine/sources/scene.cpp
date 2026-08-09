@@ -367,9 +367,7 @@ void scene::remove_tracer( tracer_model_instance_ptr const& instance )
 {
 	vector< tracer_model_instance_ptr >::iterator	it	= std::find( m_tracers.begin( ), m_tracers.end( ), instance );
 	ASSERT						( it != m_tracers.end( ) );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	m_tracers.erase				( it );
 }
 
@@ -676,9 +674,7 @@ void scene::select_models(
 		if ( !selection.empty( ) )
 			return;
 	}
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	math::frustum view_frustum (mat_vp);
 
 	selection.clear();

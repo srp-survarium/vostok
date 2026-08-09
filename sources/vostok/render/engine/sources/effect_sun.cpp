@@ -11,10 +11,7 @@ void effect_sun::compile(
 	custom_config_value const&
 )
 {
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "sun", NULL, "sun", shader_configuration( ), NULL );
 	compiler.set_depth( false, false, D3D_COMPARISON_GREATER_EQUAL );

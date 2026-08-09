@@ -11,18 +11,11 @@ void effect_distortion_stage_panner_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	float3 distortion_scale = float3( custom_config["distortion_scale"] );
 	float3 panner = float3( custom_config["panner"] );
 	shader_configuration shader_config;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	compile_begin( "vertex_base", "distortion_panner", compiler, &shader_config, custom_config );
 	compiler.set_stencil( false, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP );
 	compiler.set_texture( "t_base", pcstr( custom_config["texture_distortion"] ), 0, false, u32( -1 ) );
