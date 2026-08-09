@@ -590,9 +590,9 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 
 	u32 operands_offset				= interpolator.transition_time( ) != 0.f ? 1 : 0;
 
-	u32 time_scale_operands_count	= 0;
-	u32 animation_interval_id		= 0;
-	float animation_interval_time	= 0.f;
+	u32 time_scale_operands_count;
+	u32 animation_interval_id;
+	float animation_interval_time;
 	n_ary_tree_animation_node* const result	= new_animation(
 		animation,
 		animation,
@@ -609,7 +609,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	bool has_weight_transition_been_added	= weight_driving_animation == 0
 		&& animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
 
-	n_ary_tree_base_node** new_operands	= result->operands( sizeof( n_ary_tree_animation_node ) );
+	n_ary_tree_base_node** new_operands	= static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) );
 	m_buffer						+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
 
 	n_ary_tree_weight_node			temp( interpolator, 1.f );
@@ -618,21 +618,23 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	n_ary_tree_base_node** const	operands_end	= animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
 	n_ary_tree_base_node**			i				= animation.operands( sizeof( n_ary_tree_animation_node ) ) + ( has_weight_transition_been_added ? 1 : 0 );
 	for ( ; i != operands_end; ++i ) {
-		if ( comparer.compare( **i, temp ) == vostok::animation::more ) {
-			*new_operands++			= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
+		if ( comparer.compare( **i, temp ) == vostok::animation::more )
 			break;
-		}
 
 		*new_operands++				= (*i)->is_time_scale( ) ? m_cloner.clone( **i, 1.f ) : m_cloner.clone( **i );
 	}
 
-	for ( ; i != operands_end; ++i )
-		*new_operands++				= m_cloner.clone( **i );
+	if ( i != operands_end ) {
+		if ( interpolator.transition_time( ) == 0.f )
+			*new_operands++			= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
 
-	if ( i == operands_end && interpolator.transition_time( ) == 0.f )
+		for ( ; i != operands_end; ++i )
+			*new_operands++			= m_cloner.clone( **i );
+	}
+	else if ( interpolator.transition_time( ) == 0.f )
 		*new_operands++				= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
 
-	stlp_std::sort					( result->operands( sizeof( n_ary_tree_animation_node ) ), new_operands, comparer );
+	stlp_std::sort					( animation.operands( sizeof( n_ary_tree_animation_node ) ), operands_end, comparer );
 
 	return							add_animation_node( *result, &animation.animation_state( ), animation_interval_id, animation_interval_time, true );
 }
