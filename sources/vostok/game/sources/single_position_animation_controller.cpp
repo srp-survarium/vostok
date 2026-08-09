@@ -14,12 +14,21 @@
 #include "animation_space_vertex_id.h"
 // m_owner.on_movement_end() needs the complete human_npc
 #include "human_npc.h"
+#include <vostok/ai_navigation/world.h>
+#include <vostok/animation/linear_interpolator.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/mixing_multiplication_lexeme.h>
+#include <vostok/animation/mixing_weight_lexeme.h>
 // debug_draw: render.debug().draw_origin/draw_cube/draw_arrow + matrix/color builders
 #include <vostok/render/facade/game_renderer.h>
 #include <vostok/render/facade/debug_renderer.h>
 #include <vostok/math_float4x4.h>
 
 namespace survarium {
+
+static float s_aim_transition_time = 0.3f;
 
 // claude@NOTE: ctor STRUCTURE MATCH (all members in the init list, 0 body statements).
 // Residual is LTCG: the target inlines vectora<float3>::vectora( base_allocator* ) (the
@@ -83,23 +92,128 @@ void single_position_animation_controller::query_new_target_if_needed( )
 	}
 }
 
-// STATE[STUB]
-// claude@NOTE: 46-statement movement-path lexeme builder (13 named locals:
-// target_position, movement_position, path<u32>, time_scale, right_animation,
-// start_vertex_id, left_weight, left_animation, target_node_id, i,
-// previous_to_current_length, lexeme). Runs animations_search_service::search over the
-// A*-path, then builds per-segment animation/weight/multiplication/addition lexemes
-// (mixing::animation_lexeme/weight_lexeme + operator*/operator+) into the result
-// expression. PARKED as a buildability stub returning the empty expression: a faithful
-// reconstruction needs the mixing-lexeme construction idioms (animation_lexeme_parameters
-// ::create_animation_intervals/animation_intervals_count, the operator*/operator+ lexeme
-// combinators, expression<T>(T&) converting ctor) confirmed and the search-service API
-// wired. Structure @0x776bc0 (--view target). NEXT STEP: reconstruct statement-by-statement
-// once the per-segment lexeme combinators are confirmed (start from the simple_animation_
-// controller::selected_animations idiom, which uses emitter->emit).
 animation::mixing::expression single_position_animation_controller::selected_animations( mutable_buffer& buffer )
 {
-	return													animation::mixing::expression( );
+	if ( m_current_parameters != m_target_parameters )
+		m_current_parameters = m_target_parameters;
+
+	m_target_vertex->rotation = math::create_quaternion_from_direction_vector( m_current_parameters.eyes_direction );
+
+	float3 const& movement_position = m_owner.get_position( float3( 0.f, 0.f, 0.f ) );
+	if ( !m_target_vertex->translation.is_similar( movement_position ) )
+		m_target_vertex->translation = movement_position;
+
+	u32 const start_node_id = m_ai_navigation_world.get_node_id_at( movement_position );
+	u32 const target_node_id = m_ai_navigation_world.get_node_id_at( m_target_vertex->translation );
+	if (
+		start_node_id != u32( -1 ) &&
+		target_node_id != u32( -1 ) &&
+		m_ai_navigation_world.find_path(
+			start_node_id,
+			movement_position,
+			target_node_id,
+			m_target_vertex->translation,
+			m_animation_space_graph->agent_radius( ),
+			m_navigation_path
+		) &&
+		!m_navigation_path.empty( )
+	)
+		m_next_key_point = 1;
+	else
+		m_next_key_point = u32( -1 );
+
+	float3 target_position;
+	if ( m_next_key_point == u32( -1 ) )
+		target_position = movement_position;
+	else {
+		for ( u32 i = m_next_key_point; i < m_navigation_path.size( ); ++i ) {
+			float const previous_to_current_length = ( m_navigation_path[i] - m_navigation_path[i - 1] ).length( );
+			if (
+				( ( movement_position - m_navigation_path[i - 1] ) | ( m_navigation_path[i] - m_navigation_path[i - 1] ) / previous_to_current_length ) < previous_to_current_length &&
+				( movement_position - m_navigation_path[i] ).length( ) > s_aim_transition_time
+			)
+				break;
+
+			++m_next_key_point;
+		}
+
+		if ( m_next_key_point >= m_navigation_path.size( ) ) {
+			LOG_INFO( "path is over!" );
+			m_next_key_point = u32( -1 );
+			target_position = movement_position;
+		}
+		else
+			target_position = m_navigation_path[m_next_key_point];
+	}
+
+	m_target_vertex->translation = target_position;
+
+	animation_space_vertex_id start_vertex_id = {
+		math::quaternion( m_owner.get_transform( ).get_angles_xyz( ) ),
+		target_position
+	};
+
+	vector< u32 > path;
+	if ( !m_search_service->search( m_animation_space_graph, &path, start_vertex_id, *m_target_vertex ) || path.empty( ) ) {
+		while ( m_next_key_point < m_navigation_path.size( ) - 1 ) {
+			++m_next_key_point;
+			m_target_vertex->translation = m_navigation_path[m_next_key_point];
+			if ( m_search_service->search( m_animation_space_graph, &path, start_vertex_id, *m_target_vertex ) && !path.empty( ) )
+				break;
+		}
+
+		if ( m_next_key_point >= m_navigation_path.size( ) - 1 ) {
+			m_next_key_point = u32( -1 );
+			m_target_vertex->translation = movement_position;
+
+			animation::mixing::animation_lexeme lexeme(
+				animation::mixing::animation_lexeme_parameters(
+					buffer,
+					NULL,
+					m_animation_space_graph->get_animations( )[0].animation,
+					NULL,
+					NULL
+				).weight_interpolator( animation::linear_interpolator( 0.25f ) )
+			);
+			return animation::mixing::expression( lexeme );
+		}
+	}
+
+	m_target_vertex->translation = movement_position;
+
+	float const time_scale = m_animation_space_graph->edge( path[0] ).mixable_pair->first->length / m_animation_space_graph->edge( path[0] ).animation_length;
+
+	animation::mixing::animation_lexeme right_animation(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			NULL,
+			m_animation_space_graph->edge( path[0] ).mixable_pair->first->animation,
+			NULL,
+			NULL
+		)
+		.weight_interpolator( animation::linear_interpolator( 0.25f ) )
+		.time_scale_interpolator( animation::linear_interpolator( 0.25f ) )
+		.time_scale( time_scale )
+	);
+
+	animation::mixing::weight_lexeme left_weight(
+		buffer,
+		m_animation_space_graph->edge( path[0] ).first_animation_weight,
+		animation::linear_interpolator( 0.25f )
+	);
+
+	animation::mixing::animation_lexeme left_animation(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			NULL,
+			m_animation_space_graph->edge( path[0] ).mixable_pair->second->animation,
+			&right_animation,
+			NULL
+		)
+		.time_scale( time_scale )
+	);
+
+	return animation::mixing::expression( left_animation*( 1.f - left_weight ) + right_animation*left_weight );
 }
 
 // claude@NOTE: structure correct (the downcast assignment). Residual is an LTCG call-boundary
