@@ -8,8 +8,6 @@
 namespace survarium {
 
 struct animation_space_vertex_id {
-	inline		animation_space_vertex_id	( ) { /* no source */ }
-
 public:
 	/* 0x0000 */	math::quaternion	rotation;
 	/* 0x0010 */	float3				translation;
