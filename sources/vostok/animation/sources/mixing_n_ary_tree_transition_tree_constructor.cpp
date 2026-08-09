@@ -1162,17 +1162,19 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 
 		n_ary_tree_base_node** new_operands	=
 			static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) ) + time_scale_operands_count;
-		m_buffer				+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
+		m_buffer				+= ( time_scale_operands_count + 1 ) * sizeof( n_ary_tree_base_node* );
 
 		if ( !time_scale_operands_count ) {
 			if ( to.operands_count( ) && (*multiplicands)->is_time_scale( ) ) {
 				if ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
 					*new_operands++	= new_time_scale_transition( to, from, **multiplicands++, **to_begin++ );
 				else
-					*new_operands++	= new_time_scale_transition( to, **multiplicands++, from.animation_state( ).animation_interval_time );
+					*new_operands++	= new_time_scale_transition( to, **multiplicands++, 1.f );
 			}
-			else if ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
-				*new_operands++	= new_time_scale_transition( animation_interval_time, animation_interval_time, **to_begin++ );
+			else {
+				if ( from.operands_count( ) && (*to_begin)->is_time_scale( ) )
+					*new_operands++	= new_time_scale_transition( to.animation_state( ).animation_interval_time, 1.f, **to_begin++ );
+			}
 		}
 
 		u32								left_multiplicands_count	= u32( from_end - multiplicands );
@@ -1233,14 +1235,42 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		}
 		}
 
-		*new_operands			= new_weight_transition( *weight_from, *weight_to );
+		n_ary_tree_base_node*	weight;
+		if (
+				left_multiplicands_count < 2 &&
+				right_multiplicands_count < 2 &&
+				!weight_from->is_transition( ) &&
+				static_cast< n_ary_tree_weight_node& >( *weight_from ).weight( ) == static_cast< n_ary_tree_weight_node& >( *weight_to ).weight( )
+			)
+		{
+			weight					= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_weight_node );
+			base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : to ).weight_interpolator( );
+			new ( weight ) n_ary_tree_weight_node(
+				*m_cloner.clone( interpolator ),
+				static_cast< n_ary_tree_weight_node& >( *weight_to ).weight( )
+			);
+		}
+		else {
+			weight					= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+			m_buffer				+= sizeof( n_ary_tree_weight_transition_node );
+			base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : to ).weight_interpolator( );
+			new ( weight ) n_ary_tree_weight_transition_node(
+				*weight_from,
+				*weight_to,
+				*m_cloner.clone( interpolator ),
+				m_current_time_in_ms
+			);
+		}
+
+		*new_operands			= weight;
 
 		add_animation_node(
 			*result,
 			&to.animation_state( ),
 			animation_interval_id,
 			animation_interval_time,
-			true
+			false
 		);
 		return;
 	}
@@ -1282,7 +1312,7 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 		&to.animation_state( ),
 		animation_interval_id,
 		animation_interval_time,
-		true
+		false
 	);
 }
 
