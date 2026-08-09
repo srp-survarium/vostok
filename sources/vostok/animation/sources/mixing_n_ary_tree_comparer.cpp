@@ -118,12 +118,13 @@ void n_ary_tree_comparer::process_interpolators( n_ary_tree const& from, n_ary_t
 {
 	u32 const from_interpolators_count				= from.interpolators_count( );
 	base_interpolator const* const* const to_interpolators_begin	= to.interpolators( );
+	base_interpolator const* const* const from_interpolators_begin	= from.interpolators( );
 	base_interpolator const** const interpolators	= static_cast< base_interpolator const** >(
 		ALLOCA( sizeof( base_interpolator const* ) * ( from_interpolators_count + to.interpolators_count( ) ) )
 	);
 	base_interpolator const** const merged_end		= std::merge(
-		from.interpolators( ),
-		from.interpolators( ) + from_interpolators_count,
+		from_interpolators_begin,
+		from_interpolators_begin + from_interpolators_count,
 		to_interpolators_begin,
 		to_interpolators_begin + to.interpolators_count( ),
 		interpolators,
@@ -941,10 +942,11 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 
 	process_interpolators( from, to );
 
-	m_animated_objects = m_animated_objects_end = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( from.animated_objects_count() + to.animated_objects_count() ) );
+	m_animated_objects_end = m_animated_objects = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( from.animated_objects_count() + to.animated_objects_count() ) );
 	merge_trees( from, to );
 
-	m_needed_buffer_size += m_animations_count * sizeof( animation_state ) + ( m_animated_objects_count = m_animated_objects_end - m_animated_objects ) * sizeof( animated_object_holder );
+	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
+	m_needed_buffer_size += m_animations_count * sizeof( animation_state ) + m_animated_objects_count * sizeof( animated_object_holder );
 }
 
 } // namespace mixing
