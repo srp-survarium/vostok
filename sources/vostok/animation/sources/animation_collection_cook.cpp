@@ -67,9 +67,7 @@ void animation_collection_cook::collection_config_loaded ( resources::queries_re
 		parent->finish_query							( result_error );
 		return;
 	}
-
 	configs::binary_config_ptr config_ptr				= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
-
 	CURE_ASSERT	( config_ptr->get_root().value_exists( "collection" ), { parent->finish_query( result_error ); return; } );
 
 	configs::binary_config_value const& collection		= (*config_ptr)["collection"];
