@@ -21,12 +21,9 @@ public:
 						base_interpolator const& interpolator,
 						u32 const current_time_in_ms
 					);
+	virtual			~n_ary_tree_time_scale_transition_node			( );
 
 	virtual	void	accept										( n_ary_tree_visitor& visitor );
-
-private:
-	n_ary_tree_time_scale_transition_node						( n_ary_tree_weight_transition_node const& other);
-	n_ary_tree_time_scale_transition_node& operator=			( n_ary_tree_weight_transition_node const& other);
 
 private:
 	virtual	bool	is_time_scale								( ) { return true; }
