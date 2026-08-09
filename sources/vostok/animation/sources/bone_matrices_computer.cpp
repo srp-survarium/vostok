@@ -315,7 +315,6 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 void bone_matrices_computer::convert_skeleton_branch( skeleton_bone const& bone, float4x4* const result, float4x4 const& parent ) const
 {
 	*result	= mul4x3( *result, parent );
-
 	skeleton_bone const* i			= bone.children_begin();
 	skeleton_bone const* const e	= bone.children_end();
 	for ( ; i != e; ++i )
@@ -363,12 +362,17 @@ void bone_matrices_computer::compute_bones_local_matrices( float4x4* const begin
 	}
 }
 
-void bone_matrices_computer::convert_to_object_matrices( float4x4* begin, float4x4* const end ) const
+void bone_matrices_computer::convert_to_object_matrices( float4x4* const begin, float4x4* const end ) const
 {
-	skeleton_bone const* const roots_end	= m_skeleton->get_root().children_begin();
-	for ( skeleton_bone const* i = &m_skeleton->get_root(); i != roots_end; ++i )
-		for ( skeleton_bone const* j = i->children_begin(); j != i->children_end(); ++j, ++begin )
-			convert_skeleton_branch( *j, begin, float4x4( ).identity( ) );
+	float4x4* current					= begin;
+	skeleton_bone const* const roots_begin	= &m_skeleton->get_root();
+	skeleton_bone const* const roots_end	= roots_begin->children_begin();
+	for ( skeleton_bone const* i = roots_begin; i != roots_end; ++i ) {
+		skeleton_bone const* const children_begin	= i->children_begin(),
+							* const children_end	= i->children_end();
+		for ( skeleton_bone const* j = children_begin; j != children_end; ++j, ++current )
+			convert_skeleton_branch( *j, current, float4x4( ).identity( ) );
+	}
 }
 
 float4x4 bone_matrices_computer::get_object_transform( ) const

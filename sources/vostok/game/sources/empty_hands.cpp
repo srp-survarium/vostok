@@ -66,9 +66,6 @@ animation::mixing::expression empty_hands::selected_animations( mutable_buffer& 
 	return animation::mixing::expression( lexeme );
 }
 
-// claude@NOTE: STRUCTURE MATCH (7 stmts). Direct analog of weapon_core::update_bones_matrices.
-// Capped by the animation inline-vs-call wall (compute/convert_*_matrices and skeleton bone-index
-// accessors are inlined gold-side, called here).
 void empty_hands::update_bones_matrices(
 	animation::skeleton_ptr const&			user_skeleton,
 	float4x4* const							user_matrices,
@@ -82,7 +79,6 @@ void empty_hands::update_bones_matrices(
 	VOSTOK_UNREFERENCED_PARAMETER	( current_time_in_ms );
 
 	animation_player.compute_bones_local_matrices	( *user_skeleton, user_matrices, user_matrices + user_matrices_count, m_user, NULL );
-
 	animation_player.convert_to_object_matrices		( *user_skeleton, user_matrices, user_matrices + user_matrices_count, m_user );
 
 	float4x4 const&	user_transform					= m_user->get_transform( );
