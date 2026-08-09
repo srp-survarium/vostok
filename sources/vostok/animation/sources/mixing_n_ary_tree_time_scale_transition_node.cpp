@@ -28,6 +28,10 @@ using vostok::animation::mixing::n_ary_tree_multiplication_node;
 using vostok::animation::mixing::n_ary_tree_weight_transition_node;
 using vostok::animation::mixing::n_ary_tree_time_scale_transition_node;
 
+n_ary_tree_time_scale_transition_node::~n_ary_tree_time_scale_transition_node( )
+{
+}
+
 void n_ary_tree_time_scale_transition_node::check_consistency( )
 {
 	time_scale_transition_debug		( *this );
