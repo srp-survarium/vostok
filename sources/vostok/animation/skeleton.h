@@ -19,8 +19,8 @@ class skeleton_bone;
 class VOSTOK_ANIMATION_API skeleton : public resources::unmanaged_resource {
 public:
 	explicit						skeleton		( u32 bones_count );
-									~skeleton		( );
-			pcstr					get_bone_name	( bone_index_type index ) const;
+	virtual							~skeleton		( );
+	inline	pcstr					get_bone_name	( bone_index_type index ) const;
 			bone_index_type			get_bone_index	( pcstr name ) const;
 	inline	u32						get_bone_index	( skeleton_bone const& bone ) const;
 	inline	u32						get_bones_count	( ) const;
@@ -29,11 +29,9 @@ public:
 	inline	skeleton_bone const&	get_bone		( bone_index_type index ) const;
 	inline	skeleton_bone const&	get_bone_by_name( pcstr name ) const;
 	inline	skeleton_bone const&	get_root		( ) const;
+	inline	skeleton_bone&			get_root		( );
 	inline	skeleton_bone const&	get_root_bone	( ) const;
 	inline	bool					is_root_bone	( bone_index_type index ) const;
-
-private:
-	inline	skeleton_bone&			get_root		( );
 
 private:
 	bone_index_type					m_bones_count;

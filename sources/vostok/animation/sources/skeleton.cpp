@@ -46,11 +46,6 @@ bone_index_type vostok::animation::skeleton_bone_index	( skeleton const& skeleto
 	return					std::find_if( begin, begin + skeleton.get_bones_count(), bone_id_predicate( bone_name ) ) - begin;
 }
 
-pcstr skeleton::get_bone_name	( bone_index_type const index ) const
-{
-	return					get_bone( index ).id();
-}	
-
 bone_index_type	skeleton::get_bone_index	( pcstr const name ) const
 {
 	return					skeleton_bone_index( *this, name );
