@@ -30,10 +30,10 @@ void create_baked_animation_in_place( void* const raw_buffer, const u32 buffer_s
 		typedef platform_pointer_selector<
 			bi_spline_channel_animation_baked,
 			platform_pointer_64bit
-		>::helper channel_pointer;
+		>::helper bi_spline_channel_animation_baked_ptr;
 
-		channel_pointer* channel = bone->m_channel_animations;
-		channel_pointer* const channels_end = channel + channel_max;
+		bi_spline_channel_animation_baked_ptr* channel = bone->m_channel_animations;
+		bi_spline_channel_animation_baked_ptr* const channels_end = channel + channel_max;
 		for ( ; channel != channels_end; ++channel )
 		{
 			bi_spline_channel_animation_baked* const channel_animation =
