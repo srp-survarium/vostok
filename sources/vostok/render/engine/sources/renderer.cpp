@@ -492,30 +492,30 @@ void renderer::recreate_stage( enum_render_stage_type arg_0 )
 {
 	switch ( arg_0 )
 	{
-	case gbuffer_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_gbuffer )( this, m_renderer_context ); break;
-	case decals_accumulate_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_decals_accumulate )( this, m_renderer_context ); break;
-	case accumulate_distortion_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_accumulate_distortion )( this, m_renderer_context ); break;
-	case pre_rain_normal_modify_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_pre_rain )( this, m_renderer_context ); break;
-	case pre_lighting_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_pre_lighting )( this, m_renderer_context ); break;
-	case ambient_occlusion_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_ambient_occlusion )( this, m_renderer_context ); break;
-	case ambient_lighting_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_ambient_lighting )( this, m_renderer_context ); break;
-	case sun_shadows_accumulate_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_shadow_direct )( this, m_renderer_context ); break;
-	case sun_render_stage:						DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_sun )( this, m_renderer_context, m_cloud_interp_textures, m_simulation ); break;
-	case deferred_lighting_render_stage:		DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_lights )( this, m_renderer_context, false ); break;
-	case light_propagation_volumes_render_stage: DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_light_propagation_volumes )( this, m_renderer_context ); break;
-	case translucency_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_translucency )( this, m_renderer_context ); break;
-	case resolve_lighting_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_resolve_lighting )( this, m_renderer_context ); break;
-	case clouds_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_clouds )( this, m_cloud_interp_textures, m_simulation, m_renderer_context ); break;
-	case atmosphere_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_sky ); break;
-	case forward_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_base ); break;
-	case atmosphere_on_geometry_render_stage:	DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_geometry ); break;
-	case apply_distortion_render_stage:			DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_apply_distortion )( this, m_renderer_context ); break;
-	case forward_sky_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_sky ); break;
-	case rain_render_stage:						DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_rain )( this, m_renderer_context ); break;
-	case particles_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_particles )( this, m_renderer_context ); break;
-	case lighting_render_stage:					DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_lights )( this, m_renderer_context, true ); break;
-	case volume_fog_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_volume_fog )( this, m_renderer_context ); break;
-	case post_process_render_stage:				DELETE( m_stages[arg_0] ); m_stages[arg_0] = NEW( stage_postprocess )( this, m_renderer_context ); break;
+	case gbuffer_render_stage:					DELETE( m_stages[gbuffer_render_stage] ); m_stages[gbuffer_render_stage] = NEW( stage_gbuffer )( this, m_renderer_context ); break;
+	case decals_accumulate_render_stage:		DELETE( m_stages[decals_accumulate_render_stage] ); m_stages[decals_accumulate_render_stage] = NEW( stage_decals_accumulate )( this, m_renderer_context ); break;
+	case accumulate_distortion_render_stage:	DELETE( m_stages[accumulate_distortion_render_stage] ); m_stages[accumulate_distortion_render_stage] = NEW( stage_accumulate_distortion )( this, m_renderer_context ); break;
+	case pre_rain_normal_modify_render_stage:	DELETE( m_stages[pre_rain_normal_modify_render_stage] ); m_stages[pre_rain_normal_modify_render_stage] = NEW( stage_pre_rain )( this, m_renderer_context ); break;
+	case pre_lighting_render_stage:				DELETE( m_stages[pre_lighting_render_stage] ); m_stages[pre_lighting_render_stage] = NEW( stage_pre_lighting )( this, m_renderer_context ); break;
+	case ambient_occlusion_render_stage:		DELETE( m_stages[ambient_occlusion_render_stage] ); m_stages[ambient_occlusion_render_stage] = NEW( stage_ambient_occlusion )( this, m_renderer_context ); break;
+	case ambient_lighting_render_stage:			DELETE( m_stages[ambient_lighting_render_stage] ); m_stages[ambient_lighting_render_stage] = NEW( stage_ambient_lighting )( this, m_renderer_context ); break;
+	case sun_shadows_accumulate_render_stage:	DELETE( m_stages[sun_shadows_accumulate_render_stage] ); m_stages[sun_shadows_accumulate_render_stage] = NEW( stage_shadow_direct )( this, m_renderer_context ); break;
+	case sun_render_stage:						DELETE( m_stages[sun_render_stage] ); m_stages[sun_render_stage] = NEW( stage_sun )( this, m_renderer_context, m_cloud_interp_textures, m_simulation ); break;
+	case deferred_lighting_render_stage:		DELETE( m_stages[deferred_lighting_render_stage] ); m_stages[deferred_lighting_render_stage] = NEW( stage_lights )( this, m_renderer_context, false ); break;
+	case light_propagation_volumes_render_stage: DELETE( m_stages[light_propagation_volumes_render_stage] ); m_stages[light_propagation_volumes_render_stage] = NEW( stage_light_propagation_volumes )( this, m_renderer_context ); break;
+	case translucency_render_stage:				DELETE( m_stages[translucency_render_stage] ); m_stages[translucency_render_stage] = NEW( stage_translucency )( this, m_renderer_context ); break;
+	case resolve_lighting_render_stage:			DELETE( m_stages[resolve_lighting_render_stage] ); m_stages[resolve_lighting_render_stage] = NEW( stage_resolve_lighting )( this, m_renderer_context ); break;
+	case clouds_render_stage:					DELETE( m_stages[clouds_render_stage] ); m_stages[clouds_render_stage] = NEW( stage_clouds )( this, m_cloud_interp_textures, m_simulation, m_renderer_context ); break;
+	case atmosphere_render_stage:				DELETE( m_stages[atmosphere_render_stage] ); m_stages[atmosphere_render_stage] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_sky ); break;
+	case forward_render_stage:					DELETE( m_stages[forward_render_stage] ); m_stages[forward_render_stage] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_base ); break;
+	case atmosphere_on_geometry_render_stage:	DELETE( m_stages[atmosphere_on_geometry_render_stage] ); m_stages[atmosphere_on_geometry_render_stage] = NEW( stage_atmosphere )( this, m_renderer_context, stage_atmosphere::atmosphere_on_geometry ); break;
+	case apply_distortion_render_stage:			DELETE( m_stages[apply_distortion_render_stage] ); m_stages[apply_distortion_render_stage] = NEW( stage_apply_distortion )( this, m_renderer_context ); break;
+	case forward_sky_render_stage:				DELETE( m_stages[forward_sky_render_stage] ); m_stages[forward_sky_render_stage] = NEW( stage_forward )( this, m_renderer_context, stage_forward::forward_sky ); break;
+	case rain_render_stage:						DELETE( m_stages[rain_render_stage] ); m_stages[rain_render_stage] = NEW( stage_rain )( this, m_renderer_context ); break;
+	case particles_render_stage:					DELETE( m_stages[particles_render_stage] ); m_stages[particles_render_stage] = NEW( stage_particles )( this, m_renderer_context ); break;
+	case lighting_render_stage:					DELETE( m_stages[lighting_render_stage] ); m_stages[lighting_render_stage] = NEW( stage_lights )( this, m_renderer_context, true ); break;
+	case volume_fog_render_stage:				DELETE( m_stages[volume_fog_render_stage] ); m_stages[volume_fog_render_stage] = NEW( stage_volume_fog )( this, m_renderer_context ); break;
+	case post_process_render_stage:				DELETE( m_stages[post_process_render_stage] ); m_stages[post_process_render_stage] = NEW( stage_postprocess )( this, m_renderer_context ); break;
 	default:									break;
 	}
 }
