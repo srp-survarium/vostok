@@ -56,6 +56,27 @@ Residuals at a correct site (bank, do not chase):
   <= 127 push imm8 (2 bytes), >= 128 push imm32 (5 bytes) - if our site and the original's
   straddle that boundary the statement SIZE shifts by 3; keep log-bearing lines on the same side.
 
+#### Inline-overload experiment (2026-08)
+
+The old X-Ray-style single-name overload facade was tested, including fixed C++03 template
+arities for the default, format-only, format+data, and forced forms. Plain `inline` was rejected
+immediately: it emitted 16 base-only `logging::detail::log_inline` specializations and left calls
+to them in `/Od` units. `__forceinline` removed every facade symbol, but was still not byte-
+equivalent to the direct macro expansion. Against the archived direct-macro baseline:
+
+* `weapon_core_fire_state_base::on_shot_event`: 95.26 -> 87.36;
+* `build::initialize`: 79.57 -> 52.53;
+* `command_line::key_is_set_impl`: 98.32 -> 83.66;
+* `vfs::db_callback`: 95.02 -> 89.65.
+
+Therefore do not replace the current direct expansion with a universal inline dispatcher. This
+does **not** prove that the shipped public spellings were `LOGF_*`, `LOGFD_*`, or `LOGIFD_*`:
+preprocessor names do not survive in the PDB or executable. It proves only that the source form
+used at these sites must expand directly to the observed `append` call. The custom-form public
+names remain reconstruction placeholders until the 2011 logging header or equivalent source
+evidence surfaces; private `__LOG`, a direct `append`, and differently named macros are byte-
+indistinguishable when their expansions are identical.
+
 #### logging_extensions.cpp (core, /Ox) - swept 2026-06, 56.7 -> 69.4
 
 * **`debug::log_callback` was a RAW function pointer, not boost::function.** The target PDB types
