@@ -66,25 +66,28 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 		initial_event_types				= time_event_weight_transitions_started;
 
 	n_ary_tree_weight_calculator weight_calculator( m_current_time_in_ms, 0 );
-	new_animation.accept				( weight_calculator );
+	weight_calculator.visit				( new_animation );
 	new_animation.set_animation_state	( *m_new_animation_state );
+	n_ary_tree_base_node** i				= new_animation.operands( sizeof( n_ary_tree_animation_node ) );
+	n_ary_tree_base_node** const end		= i + new_animation.operands_count( );
+	for ( ; i != end; ++i )
+		(*i)->is_time_scale				( ); // Target discards the predicate result.
 
-	animation_state const* const previous	=
+	bool const use_previous_animation_state	=
 		previous_animation_state
 		&& (
-			!previous_animation_state->is_freezed
-			|| previous_animation_state->event_iterator.animation( ).is_transitting_to_zero( )
+			!previous_animation_state->event_iterator.animation( ).is_transitting_to_zero( )
 			|| new_animation.is_transitting_to_zero( )
+			|| !previous_animation_state->is_freezed
 		)
-			? previous_animation_state
-			: 0;
+		;
 	new ( m_new_animation_state ) animation_state_params(
 		initial_event_types,
 		animation_interval_id,
 		animation_interval_time,
-		previous ? previous->animation_time_threshold : 0.f,
+		use_previous_animation_state ? previous_animation_state->animation_time_threshold : 0.f,
 		weight_calculator.weight( ),
-		previous
+		use_previous_animation_state ? previous_animation_state : 0
 	);
 	++m_new_animation_state;
 
@@ -647,14 +650,15 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 {
 	base_interpolator const& interpolator	= animation.weight_interpolator( );
 	bool const has_time_scale				= animation.operands_count( )
-		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
+		? (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+		: false;
 	u32 const weight_operands_count			= animation.operands_count( ) - ( has_time_scale ? 1 : 0 )
 		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
 
-	u32 time_scale_operands_count			= 0;
-	u32 operands_offset						= 0;
-	u32 animation_interval_id				= 0;
-	float animation_interval_time			= 0.f;
+	u32 time_scale_operands_count;
+	u32 operands_offset						= has_time_scale;
+	u32 animation_interval_id;
+	float animation_interval_time;
 	n_ary_tree_animation_node* const result	= new_animation(
 		animation,
 		animation,
@@ -669,7 +673,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	);
 
 	n_ary_tree_base_node** new_operands		=
-		result->operands( sizeof( n_ary_tree_animation_node ) ) + time_scale_operands_count;
+		static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) ) + time_scale_operands_count;
 	m_buffer								+= ( time_scale_operands_count + operands_offset )
 		* sizeof( n_ary_tree_base_node* );
 
@@ -698,8 +702,8 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 		*new_operands++						= m_cloner.clone( **i );
 
 	stlp_std::sort(
-		result->operands( sizeof( n_ary_tree_animation_node ) ),
-		new_operands,
+		animation.operands( sizeof( n_ary_tree_animation_node ) ),
+		operands_end,
 		comparer
 	);
 
@@ -1052,15 +1056,15 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 {
 	std::pair< u32, u32 > const operands_counts	=
 		computed_operands_count( new_driving_animation_in_previous_target, new_weight_driving_animation );
-	u32 time_scale_operands_count	= operands_counts.first;
+	u32 time_scale_operands_count;
 	u32 operands_offset				= operands_counts.second;
-	u32 animation_interval_id		= 0;
-	float animation_interval_time	= 0.f;
+	u32 animation_interval_id;
+	float animation_interval_time;
 	n_ary_tree_animation_node* const result	= new_animation(
 		new_weight_driving_animation,
 		new_driving_animation_in_previous_target,
 		0,
-		0,
+		operands_counts.first,
 		time_scale_operands_count,
 		operands_offset,
 		animation_interval_id,
@@ -1070,7 +1074,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	);
 
 	n_ary_tree_base_node** const operands	=
-		result->operands( sizeof( n_ary_tree_animation_node ) ) + time_scale_operands_count;
+		static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) ) + time_scale_operands_count;
 	m_buffer					+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
 	add_operands(
 		new_driving_animation_in_previous_target,
