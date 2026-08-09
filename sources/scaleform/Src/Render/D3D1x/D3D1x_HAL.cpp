@@ -118,7 +118,7 @@ bool HAL::InitHAL(const D3D1x::HALInitParams& params)
         else
         {
             // Create the default render target, and manager.
-            pRenderBufferManager = *SF_HEAP_AUTO_NEW(this) RenderBufferManagerGeneric(RBGenericImpl::DSSM_Exact);
+            pRenderBufferManager = *SF_HEAP_AUTO_NEW(this) RenderBufferManagerGeneric(true);
             if ( !pRenderBufferManager || !createDefaultRenderBuffer())
             {
                 ShutdownHAL();
