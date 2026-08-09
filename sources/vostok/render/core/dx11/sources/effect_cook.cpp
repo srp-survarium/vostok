@@ -74,13 +74,7 @@ void effect_cook::on_binary_shaders(
 	DELETE									(compile_data);
 }
 
-
-
-
-
-
-
-
+// 7 target lines are likely retail-compiled-out source.
 void effect_cook::create_resource(
 	resources::query_result_for_cook& in_out_query,
 	const_buffer raw_file_data,

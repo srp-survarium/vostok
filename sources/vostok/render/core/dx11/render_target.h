@@ -70,14 +70,14 @@ public:
 
 	ID3D11RenderTargetView* get_target_view( ) const { return m_rt; }
 	ID3D11DepthStencilView* get_depth_stencil_view( ) const { return m_zrt; }
-	bool valid( ) const { return !!m_texture; }
-	u32 width( ) const { return m_width; }
-	u32 height( ) const { return m_height; }
-	DXGI_FORMAT format( ) const { return m_format; }
-	enum_rt_usage usage( ) const { return m_usage; }
+	bool valid( ) { return !!m_texture; }
+	u32 width( ) { return m_width; }
+	u32 height( ) { return m_height; }
+	DXGI_FORMAT format( ) { return m_format; }
+	enum_rt_usage usage( ) { return m_usage; }
 	shared_string name( ) const { return m_name; }
 
-	void set_name( pcstr name )
+	void set_name( pcstr const name )
 	{
 		// FUNCTION BODY[0x1248b0]
 		R_ASSERT( !m_name.c_str( ) );

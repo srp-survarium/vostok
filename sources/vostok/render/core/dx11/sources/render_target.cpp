@@ -2,6 +2,7 @@
 #include <vostok/render/core/render_target.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/device.h>
+#include <vostok/render/core/utils.h>
 #include "com_utils.h"
 
 #ifndef MASTER_GOLD
@@ -13,7 +14,6 @@ namespace render {
 
 void render_target::save_as	(pcstr file_name)
 {
-	// FUNCTION BODY[0x55b700]
 #ifndef MASTER_GOLD
 	if (m_surface)
 		D3DX11SaveTextureToFile(device::ref().d3d_context(), m_surface, D3DX11_IFF_DDS, file_name);
@@ -26,11 +26,15 @@ void render_target::save_as	(pcstr file_name)
 
 void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT format, enum_rt_usage usage, res_texture_ptr in_texture, u32 first_array_slice_index, u32 mip_slice)
 {
-	// FUNCTION BODY[0x55b710]
 	if( m_surface)
 		return;
 
 	R_ASSERT( device::ref().d3d_context() && name && name[0] && width && height);
+
+	m_width		= width;
+	m_height	= height;
+	m_format	= format;
+	m_usage		= usage;
 
 	// Select usage
 	if( usage == enum_rt_usage_depth_stencil)
@@ -45,16 +49,19 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		}
 	}
 
+	m_memory_usage = utils::calc_surface_size( width, height, format );
+	resource_manager::ref().m_render_target_video_memory += m_memory_usage;
+
 	if (usage == enum_rt_usage_depth_stencil)
 	{
 		D3D_DEPTH_STENCIL_VIEW_DESC				desc_rt;
 		vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
 
 		desc_rt.Format							= format;
-		desc_rt.ViewDimension					= D3D_DSV_DIMENSION_TEXTURE2DARRAY;
-		desc_rt.Texture2DArray.MipSlice			= mip_slice;
+		desc_rt.ViewDimension					= in_texture->array_size() > 1 ? D3D_DSV_DIMENSION_TEXTURE2DARRAY : D3D_DSV_DIMENSION_TEXTURE2D;
+		desc_rt.Texture2DArray.MipSlice			= first_array_slice_index;
 		desc_rt.Texture2DArray.ArraySize		= 1;
-		desc_rt.Texture2DArray.FirstArraySlice	= first_array_slice_index;
+		desc_rt.Texture2DArray.FirstArraySlice	= 0;
 
 		switch (desc_rt.Format)
 		{
@@ -73,10 +80,18 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		D3D_RENDER_TARGET_VIEW_DESC				desc_rt;
 		vostok::memory::zero						(&desc_rt, sizeof(desc_rt));
 		desc_rt.Format							= in_texture->format();
-		desc_rt.ViewDimension					= D3D_RTV_DIMENSION_TEXTURE2DARRAY;
-		desc_rt.Texture2DArray.MipSlice			= mip_slice;
-		desc_rt.Texture2DArray.ArraySize		= 1;
-		desc_rt.Texture2DArray.FirstArraySlice	= first_array_slice_index;
+		if (in_texture->array_size() > 1)
+		{
+			desc_rt.ViewDimension					= D3D_RTV_DIMENSION_TEXTURE2DARRAY;
+			desc_rt.Texture2DArray.MipSlice			= first_array_slice_index;
+			desc_rt.Texture2DArray.ArraySize		= 1;
+			desc_rt.Texture2DArray.FirstArraySlice	= 0;
+		}
+		else
+		{
+			desc_rt.ViewDimension					= D3D11_RTV_DIMENSION_TEXTURE2D;
+			desc_rt.Texture2D.MipSlice				= first_array_slice_index;
+		}
 
 		CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( in_texture->hw_texture(), &desc_rt, &m_rt ) );
 	}
@@ -85,7 +100,6 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 render_target::render_target() :
 	m_is_registered ( false )
 {
-	// FUNCTION BODY[0x55b970]
 	m_memory_usage = 0;
 	m_surface_3d = NULL;
 	m_surface = NULL;
@@ -97,7 +111,6 @@ render_target::render_target() :
 
 void render_target::destroy()
 {
-	// FUNCTION BODY[0x55b9a0]
 	if ( m_texture.c_ptr())
 	{
 		m_texture->set_hw_texture( 0);
@@ -122,20 +135,17 @@ void render_target::destroy()
 
 render_target::~render_target()
 {
-	// FUNCTION BODY[0x55baf0]
 	destroy();
-
+	resource_manager::ref().m_render_target_video_memory -= m_memory_usage;
 }
 
 void render_target::destroy_impl() const
 {
-	// FUNCTION BODY[0x55bb40]
 	resource_manager::ref().release( this );
 }
 
 void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT format, enum_rt_usage usage, D3D11_USAGE memory_usage, u32 sample_count)
 {
-	// FUNCTION BODY[0x55bb50]
 	if( m_surface)
 		return;
 
@@ -151,6 +161,7 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 	if( usage == enum_rt_usage_depth_stencil)
 	{
 		if (	DXGI_FORMAT_R24G8_TYPELESS != format
+				&& DXGI_FORMAT_R16_TYPELESS != format
 				&& DXGI_FORMAT_D24_UNORM_S8_UINT != format
 				&& DXGI_FORMAT_D16_UNORM != format
 				// This is a hardware specific format need to check what formats can be used for modern hardware.
@@ -162,11 +173,13 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		}
 	}
 
+	m_memory_usage = utils::calc_surface_size( width, height, format );
+	resource_manager::ref().m_render_target_video_memory += m_memory_usage;
+
 	m_width			= width;
 	m_height		= height;
 	m_format		= format;
 	m_usage			= usage;
-	m_memory_usage	= memory_usage;
 
 	D3D_TEXTURE2D_DESC desc;
 	ZeroMemory( &desc, sizeof(desc) );
@@ -217,6 +230,9 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		case DXGI_FORMAT_R32_TYPELESS:
 			ViewDesc.Format = DXGI_FORMAT_D32_FLOAT;
 			break;
+		case DXGI_FORMAT_R16_TYPELESS:
+			ViewDesc.Format = DXGI_FORMAT_D16_UNORM;
+			break;
 		}
 
 		CHECK_RESULT( device::ref().d3d_device()->CreateDepthStencilView( m_surface, &ViewDesc, &m_zrt) );
@@ -238,7 +254,7 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 	}
 
 	if (name)
-		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, 0 );
+		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
 	else
 	{
 		m_texture = NEW( res_texture);
@@ -250,7 +266,6 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 
 void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXGI_FORMAT format, enum_rt_usage usage, D3D11_USAGE memory_usage )
 {
-	// FUNCTION BODY[0x55bed0]
 	if( m_surface_3d)
 		return;
 
@@ -262,6 +277,9 @@ void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXG
 		ASSERT(0, "3d depth stencil is not supported.");
 		return;
 	}
+
+	m_memory_usage = utils::calc_surface_size( width, height, format );
+	resource_manager::ref().m_render_target_video_memory += m_memory_usage;
 
 	D3D_TEXTURE3D_DESC		desc;
 	vostok::memory::zero		(&desc, sizeof(desc));
@@ -286,7 +304,7 @@ void render_target::create_3d( pcstr name, u32 width, u32 height, u32 depth, DXG
 	CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( m_surface_3d, &desc_rt, &m_rt ) );
 
 	if (name)
-		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, 0 );
+		m_texture = resource_manager::ref().create_texture( name, 0, 0, false, true, true, u32(-1) );
 	else
 	{
 		m_texture = NEW( res_texture);

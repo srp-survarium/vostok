@@ -33,6 +33,10 @@ void renderer::draw_line(
 )
 {
 	// FUNCTION BODY[0x771cc0]
+	if (frustum.test_inexact(create_aabb_min_max(start_point, end_point)) == math::intersection_outside)
+		return;
+
+	// 6 target lines are likely retail-compiled-out source.
 	vertex_colored const vertices[2]	= { vertex_colored( start_point, color ), vertex_colored( end_point, color ) };
 	u16 const indices[2]		= { 0, 1 };
 	m_channel.owner_push_back	( VOSTOK_NEW_IMPL( m_allocator, debug::draw_lines_command ) ( scene, m_render_engine_world, m_allocator, vertices, indices, use_depth ) );
