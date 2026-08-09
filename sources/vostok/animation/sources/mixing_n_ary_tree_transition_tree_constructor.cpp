@@ -651,8 +651,9 @@ void n_ary_tree_transition_tree_constructor::add_weight_synchronization_group( n
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_driving_animation( n_ary_tree_animation_node& animation )
 {
 	base_interpolator const& interpolator	= animation.weight_interpolator( );
+	n_ary_tree_base_node** operands_begin	= animation.operands( sizeof( n_ary_tree_animation_node ) );
 	bool const has_time_scale				= animation.operands_count( )
-		? (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( )
+		? (*operands_begin)->is_time_scale( )
 		: false;
 	u32 const weight_operands_count			= animation.operands_count( ) - ( has_time_scale ? 1 : 0 )
 		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
@@ -680,10 +681,9 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 		* sizeof( n_ary_tree_base_node* );
 
 	n_ary_tree_base_node** const operands_end	=
-		animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
+		operands_begin + animation.operands_count( );
 	n_ary_tree_base_node** i					=
-		animation.operands( sizeof( n_ary_tree_animation_node ) )
-			+ ( has_time_scale ? time_scale_operands_count : 0 );
+		operands_begin + ( has_time_scale ? time_scale_operands_count : 0 );
 
 	n_ary_tree_weight_node temp				( interpolator, 0.f );
 	n_ary_tree_node_comparer comparer;
@@ -691,9 +691,10 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 		if ( comparer.compare( **i, temp ) == vostok::animation::more )
 			break;
 
-		*new_operands++						= (*i)->is_time_scale( )
-			? m_cloner.clone( **i, 0.f )
-			: m_cloner.clone( **i );
+		if ( (*i)->is_time_scale( ) )
+			*new_operands++					= m_cloner.clone( **i, 0.f );
+		else
+			*new_operands++					= m_cloner.clone( **i );
 	}
 
 	if ( interpolator.transition_time( ) != 0.f )
@@ -704,7 +705,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 		*new_operands++						= m_cloner.clone( **i );
 
 	stlp_std::sort(
-		animation.operands( sizeof( n_ary_tree_animation_node ) ),
+		operands_begin,
 		operands_end,
 		comparer
 	);
