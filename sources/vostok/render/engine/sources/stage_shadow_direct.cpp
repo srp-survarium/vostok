@@ -479,10 +479,7 @@ void stage_shadow_direct::render_models(
 	tmp_viewport.MaxDepth = 1.f;
 
 	backend::ref( ).set_viewport( tmp_viewport );
-	render_surface_instance** begin_d = m_caster_model.begin( );
-	render_surface_instance** it_d = begin_d;
-	render_surface_instance* const* end_d = m_caster_model.end( );
-	u32 render_index = 0;
+	render_surface_instance** begin_d = m_caster_model.begin( ); render_surface_instance** it_d = begin_d; render_surface_instance* const* end_d = m_caster_model.end( ); u32 render_index = 0;
 	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
 	{
 		render_surface_instance& instance = **it_d;
