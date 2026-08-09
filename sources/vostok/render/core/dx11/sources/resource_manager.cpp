@@ -1842,12 +1842,9 @@ res_geometry* resource_manager::create_geometry(
 	untyped_buffer& ib
 )
 {
-	// FUNCTION BODY[0x5645e0]
 	R_ASSERT( decl);
 
-	res_declaration_ptr dcl	= resource_manager::ref().create_declaration( decl, decl_size);
-
-	return create_geometry( &*dcl, vertex_stride, vb, ib);
+	res_declaration_ptr dcl	= resource_manager::ref().create_declaration( decl, decl_size); return create_geometry( &*dcl, vertex_stride, vb, ib);
 }
 
 res_geometry* resource_manager::create_geometry(
