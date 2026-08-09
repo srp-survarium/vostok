@@ -65,8 +65,7 @@ void stage_resolve_lighting::render_models(
 
 		if ( effects.is_wind_swings )
 		{
-			post_process_parameters const& parameters =
-				m_context->scene_view( )->post_process_parameters( );
+			post_process_parameters const& parameters = m_context->scene_view( )->post_process_parameters( );
 			float3 wind_info_parameters(
 				parameters.wind_direction.x,
 				parameters.wind_direction.z,
@@ -76,12 +75,7 @@ void stage_resolve_lighting::render_models(
 		}
 
 		backend::ref( ).set_ps_constant( m_sun_light_parameters, sun_light_parameters );
-		backend::ref( ).render_indexed(
-			D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
-			instance.m_render_surface->m_render_geometry.primitive_count * 3,
-			0,
-			0
-		);
+		backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, instance.m_render_surface->m_render_geometry.primitive_count * 3, 0, 0 );
 		++out_num_rendered;
 	}
 }
@@ -96,28 +90,15 @@ void stage_resolve_lighting::execute( )
 		execute_disabled( );
 		return;
 	}
-
+	// 5 target lines are likely retail-compiled-out source.
 	m_resolve_lighting_effect->apply( 0, 0 );
 	backend::ref( ).set_ps_constant( m_eye_ray_corner_parameter, m_context->get_eye_rays( )[0].x );
-	system_renderer::ref( ).fill_surface(
-		m_context->get_rt( rt_generic_0 ),
-		render_target_ptr( ),
-		render_target_ptr( ),
-		render_target_ptr( ),
-		render_target_ptr( ),
-		true,
-		0,
-		0.f,
-		0.f,
-		1.f,
-		1.f
-	);
-
+	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.f, 0.f, 1.f, 1.f );
+	// 6 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
 	backend::ref( ).reset_depth_stencil_target( );
 
-	vector<render_surface_instance*> visible_models =
-		m_context->get_scene_view( )->get_visible_opaque_models( );
+	vector<render_surface_instance*> visible_models = m_context->get_scene_view( )->get_visible_opaque_models( );
 	u32 num_rendered = 0;
 	render_models( visible_models, num_rendered );
 

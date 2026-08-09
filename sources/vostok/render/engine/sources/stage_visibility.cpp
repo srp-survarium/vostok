@@ -70,10 +70,7 @@ stage_visibility::stage_visibility(
 	m_portals_offset_to_results( 0 )
 {
 	m_data_ready = true;
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	m_occlusion_manager = NEW( hw_hiz_occlusion_manager )(
 		true, options::ref( ).current.m_hiz_occlusion_culling_width, options::ref( ).current.m_hiz_occlusion_culling_height );
 	m_static_bounds_array = NEW_ARRAY( float4, occlusion_buffer_size );
@@ -122,7 +119,8 @@ void stage_visibility::execute( )
 			m_context->get_scene_view( )->get_visible_models( );
 		vector< render_surface_instance* >::iterator i = visible_models.begin( ),
 			e = visible_models.end( );
-		vector< render_model_instance_impl* > models;
+		typedef vector< render_model_instance_impl* > models_array_type;
+		models_array_type models;
 		models.reserve( 1024 );
 		for ( ; i != e; ++i ) {
 			render_surface_instance* instance = *i;
@@ -210,56 +208,62 @@ void stage_visibility::frustum_culling( )
 			view->get_visible_particle_instances( )
 		);
 
-	collision::objects_type light_objects( g_allocator );
-	light_objects.reserve( 1024 );
-	render_scene->lights( ).lights_tree( ).cuboid_query(
-		u32( -1 ),
-		view_frustum,
-		light_objects
-	);
-	for (
-		collision::objects_type::const_iterator i = light_objects.begin( ),
-			e = light_objects.end( );
-		i != e;
-		++i
-	)
-		view->get_visible_lights( ).push_back(
-			static_cast< light* >( ( *i )->user_data( ) )
+	{
+		collision::objects_type light_objects( g_allocator );
+		light_objects.reserve( 1024 );
+		render_scene->lights( ).lights_tree( ).cuboid_query(
+			u32( -1 ),
+			view_frustum,
+			light_objects
 		);
+		for (
+			collision::objects_type::const_iterator i = light_objects.begin( ),
+				e = light_objects.end( );
+			i != e;
+			++i
+		)
+			view->get_visible_lights( ).push_back(
+				static_cast< light* >( ( *i )->user_data( ) )
+			);
+	}
 
-	collision::objects_type decals_objects( g_allocator );
-	decals_objects.reserve( render_scene->decals( ).size( ) );
-	render_scene->decals_tree( ).cuboid_query(
-		u32( -1 ),
-		view_frustum,
-		decals_objects
-	);
-	for (
-		collision::objects_type::const_iterator i = decals_objects.begin( ),
-			e = decals_objects.end( );
-		i != e;
-		++i
-	)
-		view->get_visible_decals( ).push_back(
-			static_cast< decal_instance* >( ( *i )->user_data( ) )
+	{
+		collision::objects_type decals_objects( g_allocator );
+		decals_objects.reserve( render_scene->decals( ).size( ) );
+		render_scene->decals_tree( ).cuboid_query(
+			u32( -1 ),
+			view_frustum,
+			decals_objects
 		);
+		for (
+			collision::objects_type::const_iterator i = decals_objects.begin( ),
+				e = decals_objects.end( );
+			i != e;
+			++i
+		)
+			view->get_visible_decals( ).push_back(
+				static_cast< decal_instance* >( ( *i )->user_data( ) )
+			);
+	}
 
-	collision::objects_type probe_objects( g_allocator );
-	probe_objects.reserve( render_scene->environment_probes( ).size( ) );
-	render_scene->environment_probes_tree( ).cuboid_query(
-		u32( -1 ),
-		view_frustum,
-		probe_objects
-	);
-	for (
-		collision::objects_type::const_iterator i = probe_objects.begin( ),
-			e = probe_objects.end( );
-		i != e;
-		++i
-	)
-		view->get_visible_environment_probes( ).push_back(
-			static_cast< environment_probe* >( ( *i )->user_data( ) )
+	{
+		collision::objects_type probe_objects( g_allocator );
+		probe_objects.reserve( render_scene->environment_probes( ).size( ) );
+		render_scene->environment_probes_tree( ).cuboid_query(
+			u32( -1 ),
+			view_frustum,
+			probe_objects
 		);
+		for (
+			collision::objects_type::const_iterator i = probe_objects.begin( ),
+				e = probe_objects.end( );
+			i != e;
+			++i
+		)
+			view->get_visible_environment_probes( ).push_back(
+				static_cast< environment_probe* >( ( *i )->user_data( ) )
+			);
+	}
 
 	vector< ambient_volume* >& ambient_volumes = render_scene->ambient_volumes( );
 	ambient_volume** end = ambient_volumes.end( );
@@ -352,7 +356,7 @@ void stage_visibility::get_results_and_prepare_bounds_lights(
 )
 {
 	vector< light_ptr >& lights = m_context->get_scene_view( )->get_visible_lights( );
-	for ( vector< light_ptr >::iterator i = lights.begin( ), e = lights.end( ); i != e; ++i ) {
+	for ( vector< light_ptr >::iterator i = lights.begin( ), end = lights.end( ); i != end; ++i ) {
 		light* instance = i->c_ptr( );
 		instance->m_occluded = occluded( instance->m_occlusion_info_index );
 		instance->m_occlusion_info_index = out_counter++;
@@ -366,7 +370,7 @@ void stage_visibility::get_results_and_prepare_bounds_grass(
 )
 {
 	vector< grass_patch* >& grass = m_context->get_scene_view( )->get_visible_grass_patches( );
-	for ( vector< grass_patch* >::iterator i = grass.begin( ), e = grass.end( ); i != e; ++i ) {
+	for ( vector< grass_patch* >::iterator i = grass.begin( ), end = grass.end( ); i != end; ++i ) {
 		grass_patch* instance = *i;
 		instance->m_occluded = occluded( instance->m_occlusion_info_index );
 		instance->m_occlusion_info_index = out_counter++;

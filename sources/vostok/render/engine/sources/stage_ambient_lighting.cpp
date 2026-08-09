@@ -254,16 +254,18 @@ void stage_ambient_lighting::execute( )
 			m_context->set_w( world_transform );
 
 			m_effect_accum_mask->apply( 0, 0 );
+			u32 num_indices;
 			if ( probe->m_properties.geometry == 0 )
 			{
 				m_sphere_geometry->apply( );
-				backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, DU_SPHERE_NUMFACES * 3, 0, 0 );
+				num_indices = DU_SPHERE_NUMFACES * 3;
 			}
 			else
 			{
 				m_box_geometry->apply( );
-				backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 36, 0, 0 );
+				num_indices = 36;
 			}
+			backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, num_indices, 0, 0 );
 
 			u32 const clip_by_normal = probe->m_properties.clip_by_normal;
 			u32 const with_shadows = probe->m_properties.with_shadows;
@@ -290,7 +292,7 @@ void stage_ambient_lighting::execute( )
 				if ( probe->m_properties.geometry == 0 )
 				{
 					m_sphere_geometry->apply( );
-					backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, DU_SPHERE_NUMFACES * 3, 0, 0 );
+					num_indices = DU_SPHERE_NUMFACES * 3;
 				}
 				else
 				{
@@ -298,8 +300,9 @@ void stage_ambient_lighting::execute( )
 					world_to_probe.try_invert( world_to_probe );
 					backend::ref( ).set_ps_constant( m_c_world_to_probe, math::transpose( world_to_probe ) );
 					m_box_geometry->apply( );
-					backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 36, 0, 0 );
+					num_indices = 36;
 				}
+				backend::ref( ).render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, num_indices, 0, 0 );
 			}
 		}
 	}

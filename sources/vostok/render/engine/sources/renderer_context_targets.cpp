@@ -3,12 +3,12 @@
 
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/options.h>
 
 namespace vostok {
 namespace render {
 
 static u32 s_new_id = 0;
-static command_line::key s_target_test( "target_test", "", "", "" );
 
 pcstr rt_index_to_name( enum_render_target_index index )
 {
@@ -188,37 +188,20 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	m_id = s_new_id++;
 	m_memory_usage = 0;
 
-	math::uint2 const size_d2(
-		math::max( size.x >> 1, 1u ),
-		math::max( size.y >> 1, 1u )
-	);
-	math::uint2 const size_d4(
-		math::max( size.x >> 2, 1u ),
-		math::max( size.y >> 2, 1u )
-	);
-	math::uint2 const size_d8(
-		math::max( size.x >> 3, 1u ),
-		math::max( size.y >> 3, 1u )
-	);
-	math::uint2 const size_d16(
-		math::max( size.x >> 4, 1u ),
-		math::max( size.y >> 4, 1u )
-	);
-	math::uint2 const size_d32(
-		math::max( size.x >> 5, 1u ),
-		math::max( size.y >> 5, 1u )
-	);
-	math::uint2 const size_d64(
-		math::max( size.x >> 6, 1u ),
-		math::max( size.y >> 6, 1u )
-	);
-	math::uint2 const size_d128(
-		math::max( size.x >> 7, 1u ),
-		math::max( size.y >> 7, 1u )
-	);
+	math::uint2 const size_blur_1x( math::max( size.x >> 2, 1u ), math::max( size.y >> 2, 1u ) );
+	math::uint2 const size_blur_2x( math::max( size.x >> 3, 1u ), math::max( size.y >> 3, 1u ) );
+	math::uint2 const size_blur_4x( math::max( size.x >> 4, 1u ), math::max( size.y >> 4, 1u ) );
+	math::uint2 const size_blur_8x( math::max( size.x >> 5, 1u ), math::max( size.y >> 5, 1u ) );
+	math::uint2 const size_blur_16x( math::max( size.x >> 6, 1u ), math::max( size.y >> 6, 1u ) );
+	math::uint2 const size_blur_32x( math::max( size.x >> 7, 1u ), math::max( size.y >> 7, 1u ) );
+	math::uint2 const size_d2( math::max( size.x >> 1, 1u ), math::max( size.y >> 1, 1u ) );
+	math::uint2 const size_d4( math::max( size.x >> 2, 1u ), math::max( size.y >> 2, 1u ) );
+	math::uint2 const size_d8( math::max( size.x >> 3, 1u ), math::max( size.y >> 3, 1u ) );
+	math::uint2 const size_d16( math::max( size.x >> 4, 1u ), math::max( size.y >> 4, 1u ) );
 
 	new_rt( rt_generic_0, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
 	new_rt( rt_generic_1, DXGI_FORMAT_R11G11B10_FLOAT, size, enum_rt_usage_render_target, true );
+	// 7 target lines are likely retail-compiled-out source.
 	new_rt( rt_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_previous_present, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_accumulator_diffuse, DXGI_FORMAT_R10G10B10A2_UNORM, size, enum_rt_usage_render_target, true );
@@ -238,11 +221,11 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	new_rt( rt_decals_diffuse, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_decals_normal, DXGI_FORMAT_R8G8B8A8_UNORM, size, enum_rt_usage_render_target, true );
 	new_rt( rt_decals_smoothness, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, true );
-	new_rt( rt_ssao_prev_accumulator_full_x, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, true );
-	new_rt( rt_ssao_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, true );
-	new_rt( rt_ssao_prev_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_prev_accumulator_full_x, DXGI_FORMAT_R8G8_UNORM, size, enum_rt_usage_render_target, options::ref( ).current.m_ssao_use_temporal_filtering );
+	new_rt( rt_ssao_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, options::ref( ).current.m_ssao_use_temporal_filtering );
+	new_rt( rt_ssao_prev_accumulator_z, DXGI_FORMAT_R16_FLOAT, size, enum_rt_usage_render_target, options::ref( ).current.m_ssao_use_temporal_filtering );
 
-	new_rt( rt_ssao_temporal_mask, DXGI_FORMAT_R8G8_UNORM, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_ssao_temporal_mask, DXGI_FORMAT_R8G8_UNORM, size_d2, enum_rt_usage_render_target, options::ref( ).current.m_ssao_use_temporal_filtering );
 	new_rt( rt_lpv_accumulation, DXGI_FORMAT_R11G11B10_FLOAT, size_d2, enum_rt_usage_render_target, true );
 	new_rt( rt_indirect_lighting_specular, DXGI_FORMAT_R11G11B10_FLOAT, size_d2, enum_rt_usage_render_target, true );
 	new_rt( rt_ssao_accumulator, DXGI_FORMAT_R16G16_FLOAT, size_d2, enum_rt_usage_render_target, true );
@@ -250,42 +233,39 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	new_rt( rt_light_scattering_mask, DXGI_FORMAT_R8_UNORM, size_d2, enum_rt_usage_render_target, true );
 	new_rt( rt_light_scattering_result, DXGI_FORMAT_R10G10B10A2_UNORM, size_d2, enum_rt_usage_render_target, true );
 	new_rt( rt_rain_result, DXGI_FORMAT_R8G8B8A8_UNORM, size_d2, enum_rt_usage_render_target, true );
-	new_rt( rt_particle_result, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
-	new_rt( rt_particle_lighting, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
-	new_rt( rt_frame_lum_scene_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
-	new_rt( rt_local_reflection_result, DXGI_FORMAT_R8G8B8A8_UNORM, size_d2, enum_rt_usage_render_target, true );
-	new_rt( rt_local_reflection_result_params, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d2, enum_rt_usage_render_target, true );
+	new_rt( rt_particle_result, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_particle_lighting, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_frame_lum_scene_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_local_reflection_result, DXGI_FORMAT_R8G8B8A8_UNORM, size_d4, enum_rt_usage_render_target, true );
+	new_rt( rt_local_reflection_result_params, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
 
-	new_rt( rt_final_frame_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_final_frame_downsampled_temp, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_lens_flares, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_1, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_2, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_3, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d4, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_4, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d8, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_4_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d8, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_5, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_5_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_6, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d32, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_6_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d32, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_7, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d64, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_7_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d64, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_8, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d128, enum_rt_usage_render_target, true );
-	new_rt( rt_blur_8_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d128, enum_rt_usage_render_target, true );
+	new_rt( rt_final_frame_downsampled, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
+	new_rt( rt_final_frame_downsampled_temp, DXGI_FORMAT_R16G16B16A16_FLOAT, size_d16, enum_rt_usage_render_target, true );
+	new_rt( rt_lens_flares, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_1x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_1x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_1, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_1x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_2, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_1x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_3, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_1x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_4, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_2x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_4_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_2x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_5, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_4x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_5_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_4x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_6, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_8x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_6_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_8x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_7, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_16x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_7_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_16x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_8, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_32x, enum_rt_usage_render_target, true );
+	new_rt( rt_blur_8_0, DXGI_FORMAT_R16G16B16A16_FLOAT, size_blur_32x, enum_rt_usage_render_target, true );
 
-	u32 luminance_size = 1;
-	for ( u32 i = 0; i < rt_num_frame_luminance_targets; ++i )
-	{
-		new_rt(
-			enum_render_target_index( rt_frame_luminance0 + i ),
-			DXGI_FORMAT_R32G32B32A32_FLOAT,
-			math::uint2( luminance_size, luminance_size ),
-			enum_rt_usage_render_target,
-			true
-		);
-		luminance_size <<= 1;
-	}
+	new_rt( rt_frame_luminance0, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 1, 1 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance1, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 2, 2 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance2, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 4, 4 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance3, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 8, 8 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance4, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 16, 16 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance5, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 32, 32 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance6, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 64, 64 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance7, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 128, 128 ), enum_rt_usage_render_target, true );
+	new_rt( rt_frame_luminance8, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 256, 256 ), enum_rt_usage_render_target, true );
 
 	new_rt( rt_frame_luminance_current, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 1, 1 ), enum_rt_usage_render_target, true );
 	new_rt( rt_frame_luminance_previous, DXGI_FORMAT_R32G32B32A32_FLOAT, math::uint2( 1, 1 ), enum_rt_usage_render_target, true );

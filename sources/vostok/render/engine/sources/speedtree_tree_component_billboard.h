@@ -32,7 +32,6 @@ STATIC_SIZE_ASSERT( billboard_vertex, 0x24 );
 class speedtree_tree_component_billboard : public speedtree_tree_component {
 public:
 	explicit speedtree_tree_component_billboard( speedtree_tree& parent );
-	virtual ~speedtree_tree_component_billboard( ) { }
 
 	void init(
 		speedtree_forest& forest,
@@ -55,6 +54,8 @@ public:
 	}
 
 	bool is_initialized( ) const { return m_is_init; }
+
+	virtual ~speedtree_tree_component_billboard( ) { }
 
 private:
 	bool m_is_init;

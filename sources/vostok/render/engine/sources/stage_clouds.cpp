@@ -35,26 +35,7 @@ environment_temp::environment_temp( ) :
 	key_time_step	( 5.0f ),
 	num_keys		( 3 )
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 20 target lines are likely retail-compiled-out source.
 	keys = NEW_ARRAY( cloud_key_parameters, num_keys );
 
 	keys[0].cloud_base = 3200.0f;
@@ -89,19 +70,7 @@ environment_temp::~environment_temp( )
 {
 	DELETE_ARRAY( keys );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 13 target lines are likely retail-compiled-out source.
 cloud_key_parameters environment_temp::get_next_key( u32 const index )
 {
 	u32 const next_index = index + 1;
@@ -122,10 +91,7 @@ cloud_key_parameters environment_temp::get_interp_key( float time )
 	u32 const target_index = source_index + 1 < num_keys ? source_index + 1 : 0;
 	float local_time = math::abs( key_time ) - static_cast<float>( math::abs( ipos ) );
 
-
-
 	float alpha = math::pow( local_time, 1.0f );
-
 
 	result = cloud_key_parameters::lerp( keys[source_index], keys[target_index], alpha );
 	result.interp_alpha = alpha;
@@ -160,72 +126,13 @@ stage_clouds::stage_clouds(
 	m_y_rotation				( 0.0f ),
 	m_prev_right_vector			( 0.0f, 0.0f, 0.0f ),
 	m_prev_up_vector			( 0.0f, 0.0f, 0.0f )
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 34 target lines are likely retail-compiled-out source.
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 18 target lines are likely retail-compiled-out source.
 	m_clouds_scale_multiplier *= options::ref( ).current.m_clouds_scale; m_clouds_scale = float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) * m_clouds_scale_multiplier;
-
-
-
 
 	for ( u32 i = 0; i < 2; ++i )
 	{
-
-
-
-
-
-
 
 		pcstr const texture_name = i == 0 ? "$user$cloud_density0" : "$user$cloud_density1";
 		m_3d_clouds_density_texture[i] = resource_manager::ref( ).create_texture3d( texture_name, m_clouds_size_x, m_clouds_size_y, m_clouds_size_z, 0, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 1 );
@@ -233,13 +140,11 @@ stage_clouds::stage_clouds(
 	m_3d_clouds_density_texture_left = m_3d_clouds_density_texture[0];
 	m_3d_clouds_density_texture_right = m_3d_clouds_density_texture[1];
 
-
 	if ( m_context->scene( ) && m_context->scene( )->get_clouds( ) )
 	{
 		fill_cloud_texture( 0 );
 		fill_cloud_texture( 1 );
 	}
-
 
 	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture_left;
 	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture_right;
@@ -247,8 +152,6 @@ stage_clouds::stage_clouds(
 	effect_manager::ref( ).create_effect<effect_clouds>( &m_clouds_effect );
 	effect_manager::ref( ).create_effect<effect_read_cloud_base>( &m_read_cloud_base_effect );
 	effect_manager::ref( ).create_effect<effect_clouds_god_rays>( &m_god_rays_effect );
-
-
 
 	m_c_sphere_to_sky_matrix = backend::ref( ).register_constant_host( "sphere_to_sky_matrix", rc_float );
 	m_c_clouds_grid_size = backend::ref( ).register_constant_host( "clouds_grid_size", rc_float );
@@ -263,18 +166,10 @@ stage_clouds::stage_clouds(
 
 	m_enabled = options::ref( ).current.m_enabled_clouds_stage;
 
-
-
-
 	D3D_INPUT_ELEMENT_DESC const screen_vertex_layout[] = { { "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0, D3D_INPUT_PER_VERTEX_DATA, 0 }, { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 16, D3D_INPUT_PER_VERTEX_DATA, 0 } };
-
 
 	u16 indices[6] = { 0, 1, 2, 3, 2, 1 };
 	m_screen_vertex_ib = resource_manager::ref( ).create_buffer( 6 * sizeof(u16), indices, enum_buffer_type_index, false, false );
-
-
-
-
 
 	m_screen_vertex_geometry = resource_manager::ref( ).create_geometry( screen_vertex_layout, sizeof(screen_vertex), backend::ref( ).vertex.buffer( ), *m_screen_vertex_ib );
 }
@@ -290,15 +185,8 @@ void stage_clouds::fill_cloud_texture( u32 index )
 	if ( data )
 	{
 
-
-
-
-
-
 		memory::copy( data, data_size, index == 0 ? m_context->scene( )->get_clouds( )->m_cloud_simulation_0->get_voxels( ) : m_context->scene( )->get_clouds( )->m_cloud_simulation_1->get_voxels( ), data_size );
 	}
-
-
 
 	m_3d_clouds_density_texture[index]->unmap3D( 0 );
 }
@@ -306,36 +194,16 @@ void stage_clouds::fill_cloud_texture( u32 index )
 bool stage_clouds::is_effects_ready( ) const
 {
 
-
 	return m_clouds_effect.c_ptr( ) != 0 &&
 		m_read_cloud_base_effect.c_ptr( ) != 0 &&
 		m_god_rays_effect.c_ptr( ) != 0;
 }
 
 stage_clouds::~stage_clouds( )
-{ tasks::wait_for_task_list( &m_parent_task );
+{
+	tasks::wait_for_task_list( &m_parent_task );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 21 target lines are likely retail-compiled-out source.
 void stage_clouds::execute( )
 {
 	if ( !is_effects_ready( ) )
@@ -359,28 +227,12 @@ void stage_clouds::execute( )
 		fill_cloud_texture( 1 );
 	}
 
-
-
-
-
 	m_fixed_time = 0.0f;
-
 
 	float const interp_alpha = m_context->scene( )->get_clouds( )->m_interp_alpha;
 
-
-
-
 	cloud_key_parameters interp_key = m_context->scene( )->get_clouds( )->m_interp_key;
 	float4x4 sphere_to_clouds_matrix;
-
-
-
-
-
-
-
-
 
 	math::try_invert4x4(
 		math::create_scale(
@@ -417,15 +269,12 @@ void stage_clouds::execute( )
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), &*m_context->get_rt( rt_generic_1 ), 0, 0 );
 	backend::ref( ).reset_depth_stencil_target( );
 
-
 	static bool s_first_pass = true;
 	if ( s_first_pass )
 	{
 		m_previous_view_position = m_context->get_view_pos( );
-	} s_first_pass = false;
-
-
-
+		s_first_pass = false;
+	}
 
 	float2 const view_dir_2d = math::normalize_safe( float2( m_context->get_view_dir( ).x, m_context->get_view_dir( ).z ), float2( 0.0f, 0.0f ) );
 	float2 const offset_vector_ground(
@@ -440,39 +289,24 @@ void stage_clouds::execute( )
 	if ( abs_ov_dot_dir_ground < 0.0f )
 	{ m_camera_offset -= offset_vector_ground.length( ) / m_clouds_scale_multiplier * math::abs( abs_ov_dot_dir_ground ); }
 
-
 	m_previous_view_position = m_context->get_view_pos( );
 
 	float3 const view_dir_2d2 = math::normalize_safe(
 		float3( m_context->get_view_dir( ).x, 0.0f, m_context->get_view_dir( ).z ),
 		float3( 0.0f, 0.0f, 0.0f )
 
-
-
-
-
-
-
 	);
-
-
 
 	if ( options::ref( ).current.m_clouds_allow_moving )
 	{
 
-
-
 		if ( math::abs( m_wind_direction | view_dir_2d2 ) > 0.0f )
 		{
-
-
 
 			m_camera_offset += math::sign( m_wind_direction | view_dir_2d2 ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( m_wind_direction | view_dir_2d2 ) * m_clouds_scale_multiplier;
 		}
 		m_wind_offset += m_wind_direction * ( m_clouds_scale_multiplier * 0.0125f ) * m_clouds_scale_multiplier;
 	}
-
-
 
 	if ( m_camera_offset >= 1.0f )
 	{
@@ -484,16 +318,11 @@ void stage_clouds::execute( )
 			m_camera_offset = 1.0f - frac( m_camera_offset );
 	}
 
-
-
 	m_simulation.cloud_offset = m_wind_offset;
 
 	m_simulation.world_to_cloud = sphere_to_clouds_matrix;
 	m_simulation.interp_alpha = interp_alpha;
 	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture_left;
-
-
-
 
 	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture_right;
 
@@ -501,29 +330,13 @@ void stage_clouds::execute( )
 
 	light* const sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 
-
 	if ( sun ) to_sun_direction = -sun->direction;
 
-
-
-
-
 	float4x4 proj_matrix = m_context->get_p( );
-
-
-
-
 
 	proj_matrix.k.z = 1.0000001f; proj_matrix.c.z = -1.0000001f;
 
 	m_context->push_set_p( proj_matrix );
-
-
-
-
-
-
-
 
 	for ( s32 i = options::ref( ).current.m_clouds_num_evaluate_slices; i > 0; --i )
 	{
@@ -532,7 +345,6 @@ void stage_clouds::execute( )
 			0.0f,
 			math::abs( cloud_base ) * 0.0f * 1.25f,
 			0.0f
-
 
 		);
 		{
@@ -547,10 +359,8 @@ void stage_clouds::execute( )
 			m_evaluate_geometry.draw( );
 		}
 
-
 		if ( options::ref( ).current.m_use_god_rays )
 		{
-
 
 			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
 
@@ -569,77 +379,10 @@ void stage_clouds::execute( )
 		}
 	}
 
-
-
-
-
 	m_context->pop_p( );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 42 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 23 target lines are likely retail-compiled-out source.
 	m_interp_textures.cloud_density_0 = m_3d_clouds_density_texture[0];
 	m_interp_textures.cloud_density_1 = m_3d_clouds_density_texture[1];
 

@@ -12,10 +12,12 @@ void sky_default_material_effect::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b8dd0]
-	shader_configuration configuration;
-	compile_begin("vertex_base", "forward_empty", compiler, &configuration, config);
-	compile_end(compiler);
+	compiler.begin_technique();
+		compiler.begin_pass("vertex_base", NULL, "skybox_preview", shader_configuration(), NULL);
+			compiler.set_texture("t_skybox", pcstr(config["sky_texture"]), 0, true, 0);
+			compiler.set_cull_mode(D3D_CULL_FRONT);
+		compiler.end_pass();
+	compiler.end_technique();
 
 	compiler.begin_technique();
 		compiler.begin_pass("sky2", NULL, "sky2", shader_configuration(), NULL);

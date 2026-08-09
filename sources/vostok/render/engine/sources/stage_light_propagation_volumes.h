@@ -108,8 +108,6 @@ private:
 		u32 const			num_render_stages
 	);
 
-	float3 start_render_eye_position;
-
 	void downsample_rsm(
 		float3 const&	light_direction,
 		float3 const&	grid_origin,
@@ -150,6 +148,7 @@ private:
 	void render_quad( );
 
 private:
+	float3							start_render_eye_position;
 	box_geometry					m_box_geometry;
 	radiance_volume*				m_radiance_volume;
 	u32								m_num_cascades;

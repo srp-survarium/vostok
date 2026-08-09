@@ -593,12 +593,7 @@ void renderer::execute_stages( )
 
 		if ( !current_stage )
 			continue;
-
-
-
-
-
-
+		// 6 target lines are likely retail-compiled-out source.
 		u32 prev_draw_calls = backend::ref( ).num_draw_calls;
 		if ( s_do_stages_profiling ) {
 			m_timing_timer.start( );
@@ -806,9 +801,7 @@ static void push_point(
 	float						v
 )
 {
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
 	vertex_item.m_position.set				(x, y, z, 1);
 	vertex_item.m_uv.set					(u, v);
@@ -958,12 +951,7 @@ void renderer::render(
 
 		return;
 	}
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	if ( !s_enable_rendering )
 	{
 		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
@@ -974,9 +962,7 @@ void renderer::render(
 	}
 	render::scene* const scene		= static_cast_checked< render::scene* >( in_scene.c_ptr( ) );
 	render::scene_view* view		= static_cast_checked< render::scene_view* >( in_view.c_ptr( ) );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	scene_view_mode view_mode		= view->get_view_mode( );
 	if ( s_view_mode_value != lit_view_mode )
 		view_mode					= scene_view_mode( s_view_mode_value );
@@ -1015,9 +1001,7 @@ void renderer::render(
 
 	if ( options::ref( ).current.m_use_texture_streaming )
 		scene->process_streaming( m_renderer_context->get_p( ), m_renderer_context->get_view_pos( ), window_size_x, window_size_y );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	bool const need_temporal_jittering = options::ref( ).current.m_use_temporal_antialiasing && view_mode == lit_view_mode && m_renderer_context->scene_view( )->m_use_post_process;
 
 	temporal_projection_matrix_modifier temporal_jitterer( m_renderer_context, window_size_x, window_size_y, need_temporal_jittering );
@@ -1046,9 +1030,7 @@ void renderer::render(
 		part_world->tick		( time_delta, m_renderer_context->get_v( ) );
 
 	backend::ref( ).reset		( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	if ( s_do_stages_profiling )
 	{
 
@@ -1093,15 +1075,7 @@ void renderer::render(
 
 	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_generic_0 ), &*m_renderer_context->get_rt( rt_generic_1 ), 0, 0 );
 	backend::ref( ).clear_render_targets( math::color( 0.f, 0.f, 0.f, 0.f ) );
-
-
-
-
-
-
-
-
-
+	// 9 target lines are likely retail-compiled-out source.
 	fill_opaque_models			( );
 
 	backend::ref( ).disable_DrawIndexed = false;
@@ -1113,22 +1087,15 @@ void renderer::render(
 	backend::ref( ).set_render_targets( &*m_renderer_context->get_rt( rt_present ), 0, 0, 0 );
 	scene->flush				( on_draw_scene, true, false );
 #ifndef MASTER_GOLD
-	// The non-MASTER_GOLD view-mode debug pipeline occupies target lines
-	// 1003-1209 and emits no retail code.
+	// 207 target lines are likely retail-compiled-out source.
 #endif // #ifndef MASTER_GOLD
 	temporal_jitterer.pop_jittering( );
 
 	draw_debug					( scene, view, frame_time, default_font );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).flush_rt_shader_resources( );
 	scene->flush				( on_draw_scene, true, false );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_depth_stencil_target( );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.f, 0 );
 
@@ -1144,9 +1111,7 @@ void renderer::render(
 
 
 			scene_view const* s	= m_renderer_context->scene_view( );
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			survarium::flash_text_manager* text_manager = s->m_flash_text_manager; vector< survarium::flash_movie* > movies_vec; for ( u32 i = 0; i < s->m_flash_movies.size( ); ++i )
 				movies_vec.push_back( s->m_flash_movies[i]->movie );
 
@@ -1156,9 +1121,7 @@ void renderer::render(
 
 			static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->m_flash_renderer->present( movies_vec.begin( ), movies_vec.size( ), text_manager );
 		}
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		backend::ref( ).flush_rt_shader_resources( );
 		scene->flush			( on_draw_scene, false, true );
 
@@ -1210,9 +1173,7 @@ void renderer::draw_debug(
 	vostok::ui::font const*		default_font
 )
 {
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).disable_DrawIndexed		= false;
 
 	backend::ref( ).reset_depth_stencil_target( );
@@ -1225,12 +1186,7 @@ void renderer::draw_debug(
 
 	if ( s_do_stages_profiling && default_font )
 		draw_stages_stats					( default_font );
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	u32 num_vs_changes		= backend::ref( ).num_vs_changes;
 	u32 num_ps_changes		= backend::ref( ).num_ps_changes;
 	u32 num_il_changes		= backend::ref( ).num_il_changes;
@@ -1240,19 +1196,13 @@ void renderer::draw_debug(
 	u32 num_psc_changes		= backend::ref( ).num_psc_changes;
 	u32 num_pst_changes		= backend::ref( ).num_pst_changes;
 	u32 num_pss_changes		= backend::ref( ).num_pss_changes;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	statistics::ref( ).debug_stat_group.textures_compression_duration.value		= backend::ref( ).m_texture_compression_time;
 	statistics::ref( ).debug_stat_group.dxt_rt_tex_creation_duration.value		= backend::ref( ).m_dxt_rt_tex_creation_time;
 	statistics::ref( ).debug_stat_group.cpu_textures_compression_duration.value	= backend::ref( ).m_cpu_compression_time;
 	statistics::ref( ).debug_stat_group.gpu_num_compressed_textures.value		= backend::ref( ).m_gpu_num_compressed_textures;
 	statistics::ref( ).debug_stat_group.cpu_num_compressed_textures.value		= backend::ref( ).m_cpu_num_compressed_textures;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	statistics::ref( ).debug_stat_group.num_vertex_shader_changes.value			= num_vs_changes;
 	statistics::ref( ).debug_stat_group.num_pixel_shader_changes.value			= num_ps_changes;
 	statistics::ref( ).debug_stat_group.num_vs_textures_changes.value			= num_vst_changes;
@@ -1276,11 +1226,7 @@ void renderer::draw_debug(
 
 	statistics::ref( ).general_stat_group.fps.value			= math::floor( es2 > 0. ? 1. / es2 : 0. );
 	statistics::ref( ).general_stat_group.cpu_fps.value		= math::floor( es2 > 0. ? 1. / es2 : 0. );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	statistics::ref( ).general_stat_group.num_setted_shader_constants.value		= backend::ref( ).num_setted_shader_constants;
 	statistics::ref( ).visibility_stat_group.num_draw_calls.value				= backend::ref( ).num_draw_calls;
 	statistics::ref( ).general_stat_group.render_only_time.value				= 0.;
@@ -1290,22 +1236,14 @@ void renderer::draw_debug(
 	statistics::ref( ).debug_stat_group.render_tergets_video_memory.value		=
 		( resource_manager::ref( ).get_render_target_video_memory( ) >> 20 ) -
 		statistics::ref( ).debug_stat_group.gbuffer_video_memory.value;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	if ( m_stage_debug && view->editor_debug_mode )
 		m_stage_debug->execute				( );
 
 	if ( m_stages[sun_shadows_accumulate_render_stage] )
 
 		m_stages[sun_shadows_accumulate_render_stage]->m_context->set_w_identity( );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	if ( m_visibility_stage )
 		m_visibility_stage->debug_render	( );
 
@@ -1402,9 +1340,7 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 		draw_text_shadowed	( default_font, result_string_gpu_time.c_str( ), 201, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_cpu_time.c_str( ), 285, string_index * 12 + 5, char_color );
 		draw_text_shadowed	( default_font, result_string_dips.c_str( ), 369, string_index * 12 + 5, char_color );
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		total_gpu_time						+= stat.average_time( true );
 
 		total_cpu_time						+= stat.average_time( false );

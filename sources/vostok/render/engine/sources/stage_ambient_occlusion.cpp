@@ -24,22 +24,14 @@
 
 namespace vostok {
 namespace render {
-
-
-
-
-
-
-
+// 7 target lines are likely retail-compiled-out source.
 static u32 debug_ssao_tech = 0;
 static console_commands::cc_u32 s_debug_ssao_techh(
 	"r_debug_ssao_tech", debug_ssao_tech, 0, 1, true, console_commands::command_type_user_specific );
 static bool s_ssao_filter_0 = true;
 
 static console_commands::cc_bool s_ssao_filter_0_cc( "r_ssao_filter_0", s_ssao_filter_0, false, console_commands::command_type_engine_internal );
-
-
-
+// 3 target lines are likely retail-compiled-out source.
 stage_ambient_occlusion::stage_ambient_occlusion(
 	renderer*			in_renderer,
 	renderer_context*	context
@@ -73,12 +65,9 @@ static void fill_surface( render_target_ptr surf, renderer_context* context, boo
 	float h = float(surf->height());
 	float z = 0.0f;
 	backend::ref().set_render_targets( &*surf, 0, 0, 0);
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	backend::ref().set_depth_stencil_target(0);
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref().clear_render_targets( vostok::math::color( float3(0.5f, 0.5f, 1.0f)));
 
 	float2	p0( 0,0);
@@ -87,10 +76,7 @@ static void fill_surface( render_target_ptr surf, renderer_context* context, boo
 	u32		offset;
 
 	float3 const* eye_rays = context->get_eye_rays();
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	vertex_formats::Tquad* pv = backend::ref().vertex.lock<vertex_formats::Tquad>( 4, offset);
 	pv->set( 0, h, z, 1.0, eye_rays[1].x, eye_rays[1].y, eye_rays[1].z, p0.x, p1.y); pv++;
 	pv->set( 0, 0, z, 1.0, eye_rays[0].x, eye_rays[0].y, eye_rays[0].z, p0.x, p0.y); pv++;
@@ -105,14 +91,13 @@ static void fill_surface( render_target_ptr surf, renderer_context* context, boo
 
 void stage_ambient_occlusion::execute_disabled( )
 {
-	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_ssao_accumulator_full_x].target, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->get_rt( rt_ssao_accumulator_full_x ), 0, 0, 0);
 	backend::ref().clear_render_targets( vostok::math::color( float3( 0.0f, 0.0f, 1.0f ) ) * 1.0f );
 }
 
 void stage_ambient_occlusion::execute( )
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -130,28 +115,21 @@ void stage_ambient_occlusion::execute( )
 		backend::ref( ).clear_render_targets( vostok::math::color( float3( 0.0f, 0.0f, 0.0f ) ) );
 	}
 
-	backend::ref( ).set_render_targets( &*m_context->m_targets->m_family[rt_ssao_accumulator].target, 0, 0, 0 );
+	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_ssao_accumulator ), 0, 0, 0 );
 	backend::ref( ).clear_render_targets( vostok::math::color( float3( 1.0f, 1.0f, 1.0f ) ) );
 
-	backend::ref( ).set_render_targets( &*m_context->m_targets->m_family[rt_ssao_accumulator_full_x].target, 0, 0, 0 );
+	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_ssao_accumulator_full_x ), 0, 0, 0 );
 	backend::ref( ).clear_render_targets( vostok::math::color( float3( 1.0f, 1.0f, 1.0f ) ) );
 
 	render::post_process_parameters const& pp_parameters = m_context->scene_view( )->post_process_parameters( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	BEGIN_CPUGPU_TIMER(statistics::ref( ).ssao_stat_group.ssao_accumulate_time);
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	m_sh_ssao_accumulation->apply( 0, 0 );
 	backend::ref( ).set_ps_constant( m_ao_parameters, float4( pp_parameters.ssao_saturation, pp_parameters.ssao_radius_scale, 0.0f, 0.0f ) );
-	fill_surface( m_context->m_targets->m_family[rt_ssao_accumulator].target, m_context, false );
+	fill_surface( m_context->get_rt( rt_ssao_accumulator ), m_context, false );
 	END_CPUGPU_TIMER;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	static float4x4 prev_view = float4x4( ).identity( );
 
 	backend::ref( ).flush_rt_shader_resources( );
@@ -190,10 +168,7 @@ void stage_ambient_occlusion::execute( )
 	}
 	else
 	{
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		m_sh_ssao_filter4x4->apply( 0, 0 );
 		system_renderer::ref( ).fill_surface( m_context->get_rt( rt_ssao_accumulator_full_x ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 	}
@@ -218,12 +193,9 @@ void stage_ambient_occlusion::execute( )
 			0, 0
 		);
 	}
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	prev_view = m_context->get_v( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );
 }

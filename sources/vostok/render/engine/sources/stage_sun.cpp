@@ -39,15 +39,7 @@ stage_sun::stage_sun(
 	m_cloud_interp_textures		( in_cloud_interp_textures ),
 	m_simulation				( in_simulation )
 {
-
-
-
-
-
-
-
-
-
+	// 9 target lines are likely retail-compiled-out source.
 	m_c_light_color					= backend::ref().register_constant_host( "light_color", rc_float );
 	m_c_light_direction				= backend::ref().register_constant_host( "light_direction", rc_float );
 	m_c_light_intensity				= backend::ref().register_constant_host( "light_intensity", rc_float );
@@ -68,11 +60,7 @@ stage_sun::stage_sun(
 	m_c_environment_skylight_lower_color = backend::ref().register_constant_host( "environment_skylight_lower_color", rc_float );
 
 	m_enabled					= options::ref().current.m_enabled_sun_stage;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	struct half2 {
 		math::half x;
 		math::half y;
@@ -89,8 +77,7 @@ stage_sun::stage_sun(
 				float angle = random.random_f( SpeedTree::c_fTwoPi );
 				half2& value = temp_data[z * jitter_size * jitter_size + y * jitter_size + x];
 				value.x = math::half( cos( angle ) );
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				value.y = math::half( sinf( angle ) );
 			}
 
@@ -98,14 +85,7 @@ stage_sun::stage_sun(
 	data.pSysMem = temp_data;
 	data.SysMemPitch = jitter_size * sizeof( half2 );
 	data.SysMemSlicePitch = jitter_size * jitter_size * sizeof( half2 );
-
-
-
-
-
-
-
-
+	// 8 target lines are likely retail-compiled-out source.
 	m_shadow_jitter = resource_manager::ref().create_texture3d( "$user$jitter_lookup", jitter_size, jitter_size, jitter_size, &data, DXGI_FORMAT_R16G16_FLOAT, D3D11_USAGE_IMMUTABLE, 1 );
 
 	FREE( temp_data );
@@ -120,28 +100,20 @@ bool stage_sun::is_effects_ready( ) const
 
 void stage_sun::execute( )
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_effects_ready( ) )
 		return;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
-
-
-
+	if ( !sun )
+		return;
 
 	float3 sun_dir = m_context->get_v( ).transform_direction( sun->direction );
 
 	float3 const* const eye_rays = m_context->get_eye_rays( );
 	float3 sun_clr = sun->color;
 	sun_dir.normalize( );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	m_sun_effect->apply( 0, 0 );
 	backend::ref( ).set_ps_constant( m_c_light_direction, float4( sun_dir, 0.f ) );
 	backend::ref( ).set_ps_constant( m_c_light_color, float4( sun_clr, clear_value ) );
@@ -162,14 +134,7 @@ void stage_sun::execute( )
 	backend::ref( ).set_ps_constant( m_c_shadow_transparency, sun->shadow_transparency );
 
 	backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( (float4*)eye_rays )[0] );
-
-
-
-
-
-
-
-
+	// 8 target lines are likely retail-compiled-out source.
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_accumulator_diffuse ), m_context->get_rt( rt_accumulator_specular ), m_context->get_rt( rt_sun_translucensy_help_data ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.f, 0.f, 1.f, 1.f );
 
 	m_context->set_w( float4x4( ).identity( ) );
