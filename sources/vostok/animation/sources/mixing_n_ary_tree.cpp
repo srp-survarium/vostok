@@ -439,6 +439,7 @@ void n_ary_tree::update_time_synchronization_group(
 			current && current->time_synchronization_group_id( ) == synchronization_group_id;
 			current = current->m_next_time_animation
 		) {
+
 			if ( !current->animation_state( ).are_there_any_weight_transitions )
 				continue;
 
@@ -457,11 +458,10 @@ void n_ary_tree::update_time_synchronization_group(
 
 	n_ary_tree_animation_node* current	=
 		are_there_any_weight_transitions ? &animation_node : animation_node.m_next_time_animation;
-	for (
-		;
-		current && current->time_synchronization_group_id( ) == synchronization_group_id;
+	for ( ; current && current->time_synchronization_group_id( ) == synchronization_group_id;
 		current = current->m_next_time_animation
 	) {
+
 		if ( current->animation_state( ).are_there_any_weight_transitions )
 			continue;
 
