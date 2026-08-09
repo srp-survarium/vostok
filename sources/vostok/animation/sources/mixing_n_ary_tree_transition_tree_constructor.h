@@ -10,9 +10,6 @@
 #include "mixing_n_ary_tree_cloner.h"
 
 namespace vostok {
-
-void anchor_animation_cloner( );
-
 namespace animation {
 
 struct base_interpolator;
@@ -29,8 +26,6 @@ class animated_object_holder;
 enum interpolation_direction;
 
 class n_ary_tree_transition_tree_constructor : private boost::noncopyable {
-	friend void ::vostok::anchor_animation_cloner( );
-
 public:
 	typedef boost::function<float4x4(pcvoid)> transform_functor_type;
 
