@@ -78,11 +78,6 @@ void animation_collection_cook::collection_config_loaded ( resources::queries_re
 	request_items										( config_ptr, collection, parent );
 }
 
-// claude@NOTE: 28/28 statements, locals match; residual is inline-vs-call - gold inlines
-// buffer_vector::push_back + variant<32>::operator= leaner and CALLs the creation_request
-// buffer_vector ctor (the others inlined), plus the query_resource_params ctor SIZE delta.
-// The user_data_ptrs/creation_requests TRGT_ONLY/BASE_ONLY is a line-attribution swap, not a
-// real divergence. Not source-steerable.
 void animation_collection_cook::request_items ( configs::binary_config_ptr config_ptr, configs::binary_config_value const& collection_value, resources::query_result_for_cook* const parent )
 {
 	if( !( collection_value.value_exists( "animation_items" ) ) )
