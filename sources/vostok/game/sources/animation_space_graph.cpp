@@ -12,6 +12,12 @@
 #include <vostok/animation/cubic_spline_skeleton_animation.h>
 // max_speed(): an animation_player drives get_movement() per vertex
 #include <vostok/animation/animation_player.h>
+#include <vostok/animation/instant_interpolator.h>
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
+#include <vostok/animation/mixing_multiplication_lexeme.h>
+#include <vostok/animation/mixing_weight_lexeme.h>
 
 namespace survarium {
 
@@ -60,22 +66,6 @@ animation_space_vertex const* animation_space_graph::get_animation_by_path( pcst
 	return NULL;
 }
 
-// STATE[STUB]
-// claude@NOTE: 10-statement lexeme builder (structure @0x765a70, 4 locals: buffer,
-// left_lexeme/right_lexeme animation_lexeme, left_weight_lexeme weight_lexeme). Decoded
-// flow: player.reset(false); build a mutable_buffer over a 0x4000-byte alloca; construct
-// animation_lexeme_parameters (animation_intervals_count -> create_animation_intervals)
-// for the right then the left animation, wrap each in a binary_tree_animation_node +
-// animation_lexeme, and cloned_in_buffer them; build a weight_lexeme over an
-// instant_interpolator (call [0x9735AC] = the interpolator vtable thunk) for
-// (1 - left_weight); combine via the lexeme operator*/operator+ combinators; run the
-// player and read back the resulting object_movement into the returned vertex_id.
-// The lexeme TYPES are now available (mixing_animation_lexeme.h / mixing_weight_lexeme.h /
-// animation_lexeme_parameters::create_animation_intervals), but the exact per-segment
-// combinator spelling + the instant_interpolator construction idiom are unconfirmed.
-// PARKED buildability return. NEXT STEP: reconstruct statement-by-statement against
-// --view target, cross-referencing animation_space_graph_cook.cpp (same lexeme idiom over
-// a buffer_vector<u32>) and simple_animation_controller::selected_animations (emitter->emit).
 animation_space_vertex_id animation_space_graph::get_movement(
 	animation::animation_player&		player,
 	animation_space_vertex const*		left_animation,
@@ -83,7 +73,23 @@ animation_space_vertex_id animation_space_graph::get_movement(
 	const float							left_weight
 )
 {
-	return animation_space_vertex_id( );
+	player.reset( false );
+
+	mutable_buffer buffer( ALLOCA( animation::animation_player::stack_buffer_size ), animation::animation_player::stack_buffer_size );
+
+	animation::mixing::animation_lexeme right_lexeme( animation::mixing::animation_lexeme_parameters( buffer, "", left_animation->animation, NULL, NULL ) );
+	animation::mixing::weight_lexeme left_weight_lexeme( buffer, left_weight, animation::instant_interpolator( ) );
+	animation::mixing::animation_lexeme left_lexeme( animation::mixing::animation_lexeme_parameters( buffer, "", right_animation->animation, &right_lexeme, NULL ) );
+
+	player.set_target_and_tick( left_lexeme*(1.f - left_weight_lexeme) + right_lexeme*left_weight_lexeme, 0, math::float4x4( ).identity( ) );
+	player.tick( math::floor( 1000.f*(left_weight*left_animation->length + (1.f - left_weight)*right_animation->length) ) );
+	math::float4x4 const object_movement = player.get_object_transform( NULL );
+
+	animation_space_vertex_id result = {
+		math::quaternion( object_movement.get_angles_xyz( ) ),
+		object_movement.c.xyz( )
+	};
+	return result;
 }
 
 animation_space_edge const& animation_space_graph::edge( const u32 index ) const
@@ -91,11 +97,6 @@ animation_space_edge const& animation_space_graph::edge( const u32 index ) const
 	return get_edges( )[ index ];
 }
 
-// claude@NOTE: 1 named local (player) matching the target - the loop body is a single
-// statement (get_movement(...).translation.length() inlined; the target records no named
-// `movement` local). The byte residual is dominated by
-// get_movement still being a STATE[STUB] (its body is unrecovered) plus the EH-scope brace
-// line the target emits for player's destructor (a lone TRGT_ONLY branch row, not steerable).
 float animation_space_graph::max_speed( ) const
 {
 	if ( m_max_speed < 0.f )
