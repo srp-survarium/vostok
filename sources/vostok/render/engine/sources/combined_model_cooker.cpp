@@ -10,16 +10,7 @@
 
 namespace vostok {
 namespace render {
-
-
-
-
-
-
-
-
-
-
+// 10 target lines are likely retail-compiled-out source.
 skeleton_combined_model_cook::skeleton_combined_model_cook( ) : resources::translate_query_cook( resources::skeleton_combined_model_class, reuse_true, use_current_thread_id )
 { resources::register_cook( this );
 }
@@ -35,12 +26,7 @@ void skeleton_combined_model_cook::translate_query( resources::query_result_for_
 	{ query_resources_by_data( &parent, cook_data );
 		return;
 	}
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	fs_new::virtual_path_string config_path;
 	config_path.assignf( "resources/models/%s.combined_skin", parent.get_requested_path( ) );
 	resources::query_resource(
@@ -70,9 +56,7 @@ void build_from_config( configs::binary_config_ptr& cfg, skeleton_combined_cook_
 	}
 
 }
-
-
-
+// 3 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_config_loaded( resources::queries_result& result, resources::query_result_for_cook* parent )
 { if ( !result.is_successful( ) )
 	{
@@ -86,9 +70,7 @@ void skeleton_combined_model_cook::on_config_loaded( resources::queries_result& 
 	build_from_config( config, cook_data );
 	query_resources_by_data( parent, cook_data );
 }
-
-
-
+// 3 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::query_resources_by_data( resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
 { u32 request_count = cook_data->models_count * 3 + 2;
 	resources::request* requests = ALLOC( resources::request, request_count );
@@ -160,10 +142,7 @@ static enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum typ
 		default: NODEFAULT( return unknown_vertex_input_type );
 	};
 }
-
-
-
-
+// 4 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_resources_loaded( resources::queries_result& data, resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
 { if ( !data.is_successful( ) )
 	{
@@ -218,54 +197,12 @@ void skeleton_combined_model_cook::on_resources_loaded( resources::queries_resul
 	FREE( user_data_variants );
 	FREE( requests );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 41 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_material_effects_loaded( resources::queries_result& data, resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
 { if ( !data.is_successful( ) )
 
 		LOG_ERROR( "skeleton_combined_model_cook::on_material_effects_loaded : data loading failed" );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	render_model* result_model = model_factory::create_render_model( mt_skinned_mesh );
 
 	resources::pinned_ptr_const< u8 > bind_pose_ptr( cook_data->bind_pose );
@@ -304,10 +241,7 @@ void skeleton_combined_model_cook::on_material_effects_loaded( resources::querie
 void skeleton_combined_model_cook::delete_resource( resources::resource_base* resource )
 { DELETE( resource );
 }
-
-
-
-
+// 4 target lines are likely retail-compiled-out source.
 skeleton_combined_render_model_instance_cook::skeleton_combined_render_model_instance_cook( ) : resources::translate_query_cook( resources::skeleton_combined_render_model_instance_class, reuse_false, use_current_thread_id )
 { resources::register_cook( this );
 }
@@ -318,9 +252,7 @@ void skeleton_combined_render_model_instance_cook::translate_query( resources::q
 
 
 		parent.user_data( )->try_get( cook_data );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	fs_new::virtual_path_string render_path( parent.get_requested_path( ) );
 	resources::query_resource(
 		render_path.c_str( ), resources::skeleton_combined_model_class,
@@ -350,13 +282,7 @@ void skeleton_combined_render_model_instance_cook::on_resources_loaded( resource
 void skeleton_combined_render_model_instance_cook::delete_resource( resources::resource_base* resource )
 { DELETE( resource );
 }
-
-
-
-
-
-
-
+// 7 target lines are likely retail-compiled-out source.
 skeleton_combined_model_instance_cook::skeleton_combined_model_instance_cook( ) : resources::translate_query_cook( resources::skeleton_combined_model_instance_class, reuse_false, use_current_thread_id )
 { resources::register_cook( this );
 }

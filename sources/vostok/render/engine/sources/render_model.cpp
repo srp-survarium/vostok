@@ -141,10 +141,7 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 	m_bounding_sphere = math::sphere(
 		sphere_origin,
 		(sphere_origin - m_aabbox.min).length());
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	mesh_type_enum type = (mesh_type_enum)(u16)properties["type"];
 
 	m_vertex_input_type = null_vertex_input_type;

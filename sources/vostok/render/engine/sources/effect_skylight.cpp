@@ -10,13 +10,7 @@ void effect_skylight::compile(
 	custom_config_value const& config
 )
 {
-
-
-
-
-
-
-
+	// 7 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "skylight", NULL, "skylight", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

@@ -14,11 +14,7 @@ void effect_light_mask::compile(
 {
 	// FUNCTION BODY[0x7be000]
 	VOSTOK_UNREFERENCED_PARAMETER	( config);
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique();
 		compiler.begin_pass	("accum_mask", NULL, "dumb", shader_configuration(), NULL);
  			compiler.set_depth			( true, false, D3D_COMPARISON_LESS_EQUAL);

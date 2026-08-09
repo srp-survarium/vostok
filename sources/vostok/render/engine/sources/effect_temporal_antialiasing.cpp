@@ -12,10 +12,7 @@ void effect_temporal_antialiasing::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "temporal_antialiasing", NULL, "temporal_antialiasing", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

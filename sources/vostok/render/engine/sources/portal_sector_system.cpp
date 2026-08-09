@@ -210,9 +210,7 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 
 	if ( pos.size( ) < 3 )
 		return false;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
 	u32 longest_edge_id = 0;
 	for ( u32 i = 1; i < pos.size( ); ++i )
@@ -236,10 +234,7 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 	local_to_world.c.xyz( ) = pos[0];
 	float4x4 world_to_local;
 	world_to_local.try_invert( local_to_world );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	wm_vertices_2d_buffer_type wm_vertices_2d( ALLOCA( pos.size( ) * sizeof( wm_vertex_2d ) ), pos.size( ) );
 
 	for ( u32 i = 0; i < pos.size( ); ++i )
@@ -578,9 +573,7 @@ void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 	for ( portals_type::const_iterator i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
 	{
 		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		float const radius = math::max( math::max( math::squared_length( i->get_points( )[0] - center ), math::squared_length( i->get_points( )[1] - center ) ), math::max( math::squared_length( i->get_points( )[2] - center ), math::squared_length( i->get_points( )[3] - center ) ) );
 		m_occlusion_bounds.push_back( float4( center, math::sqrt( radius ) ) );
 	}

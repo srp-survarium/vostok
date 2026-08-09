@@ -13,10 +13,7 @@ void effect_ssao_accumulation::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process0", NULL, "ssao_accumulation", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

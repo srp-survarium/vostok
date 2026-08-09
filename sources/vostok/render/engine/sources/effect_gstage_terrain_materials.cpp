@@ -13,10 +13,7 @@ void effect_gstage_terrain_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	for (u32 pass_index = 0; pass_index < 2; pass_index++)
 	{
 		shader_configuration configuration;

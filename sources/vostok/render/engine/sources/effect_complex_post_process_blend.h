@@ -37,9 +37,7 @@ public:
 				compiler.set_texture("t_blurred_frame_bloom_only_color2", "$user$blur3", 0, false, u32(-1));
 				compiler.set_texture("t_frame_color", r2_rt_generic0, 0, false, u32(-1));
 				compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
-
-
-
+				// 3 target lines are likely retail-compiled-out source.
 				compiler.set_texture("t_frame_luminance", r2_rt_frame_luminance, 0, false, u32(-1));
 
 
@@ -57,25 +55,7 @@ public:
 					compiler.set_texture("t_grain_noise", "engine/noise_64x64", 0, false, u32(-1));
 
 				compiler.set_texture("t_hiz_depth", "$user$hiz_occlusion_depth_mips", 0, false, u32(-1));
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			// 19 target lines are likely retail-compiled-out source.
 			compiler.end_pass();
 		compiler.end_technique();
 	}

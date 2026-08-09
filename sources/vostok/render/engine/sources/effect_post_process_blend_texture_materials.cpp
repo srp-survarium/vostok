@@ -11,9 +11,7 @@ void effect_post_process_blend_texture_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	float4 modulate_color = float4( custom_config["constant_modulate_color"] );
 
 	compiler.begin_technique( );

@@ -12,10 +12,7 @@ void effect_post_process_downsample_frame::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_downsample_frame", NULL, "post_process_downsample_frame", shader_configuration( ), NULL );
 	compiler.set_texture( "t_frame_color", r2_rt_generic0, 0, false, u32( -1 ) );

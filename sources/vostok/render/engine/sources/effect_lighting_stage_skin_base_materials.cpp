@@ -33,51 +33,24 @@ void effect_lighting_stage_skin_base_materials::compile(
 		configuration.use_specular_intensity_texture = custom_config.value_exists("use_tspecular_inensity") ? bool(custom_config["use_tspecular_inensity"]) : false;
 		configuration.use_fresnel_texture = custom_config.value_exists("use_tfresnel") ? bool(custom_config["use_tfresnel"]) : false;
 		configuration.use_roughness_texture = custom_config.value_exists("use_troughness") ? bool(custom_config["use_troughness"]) : false;
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		configuration.light_type = 0;
 		configuration.shadowed_light				= true;
 
 		compile_begin("unwrap_mesh", "skin_forward_lighting", compiler, &configuration, custom_config);
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			compiler.set_depth( false, false);
 			compiler.set_cull_mode(D3D_CULL_NONE);
 			compiler.set_fill_mode(D3D_FILL_SOLID);
 			compiler.set_alpha_blend(false);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+			// 21 target lines are likely retail-compiled-out source.
 			if( configuration.use_diffuse_texture)
 				compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, false, u32(-1));
 
 
 			float4 solid_color_specular = float4(custom_config["constant_diffuse"]);
 			solid_color_specular.w = 0.0f;
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			if( configuration.use_normal_texture)
 				compiler.set_texture("t_normal", pcstr(custom_config["texture_normal"]), 0, false, u32(-1));
 
@@ -91,10 +64,7 @@ void effect_lighting_stage_skin_base_materials::compile(
 			compiler.set_constant( "solid_color_specular", solid_color_specular);
 
 			float specular_power = 50.0f;
-
-
-
-
+			// 4 target lines are likely retail-compiled-out source.
 			if( configuration.use_roughness_texture)
 				compiler.set_texture("t_specular_power", pcstr(custom_config["texture_specular_power"]), 0, false, u32(-1));
 			else
@@ -106,10 +76,7 @@ void effect_lighting_stage_skin_base_materials::compile(
 
 			float   solid_transparency   = 1.0f;
 			compiler.set_constant("solid_transparency",   solid_transparency);
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		compile_end(compiler);
 	}
 
@@ -159,11 +126,7 @@ void effect_lighting_stage_skin_base_materials::compile(
 		configuration.use_organic_subdermal_texture				= custom_config.value_exists("use_subdermal_texture") ? bool(custom_config["use_subdermal_texture"]) : false;
 
 		compile_begin("vertex_base", "skin_combine", compiler, &configuration, custom_config);
-
-
-
-
-
+			// 5 target lines are likely retail-compiled-out source.
 			compiler.set_depth( true, false);
 			compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_ONE);
 
@@ -200,9 +163,7 @@ void effect_lighting_stage_skin_base_materials::compile(
 
 			if (custom_config.value_exists("scattering_color_multiplier") && custom_config.value_exists("scattering_color_multiplier"))
 				compiler.set_constant( "scattering_color_multiplier", float(custom_config["scattering_color_multiplier"]));
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			compiler.set_constant( "solid_color_specular", solid_color_specular);
 
 				compiler.set_texture("t_skin_scattering", "$user$skin_scattering", 0, false, u32(-1));

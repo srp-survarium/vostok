@@ -4,21 +4,7 @@
 
 namespace vostok {
 namespace render {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 15 target lines are likely retail-compiled-out source.
 material_cook::material_cook( ) : resources::translate_query_cook( resources::material_class, reuse_true, use_current_thread_id ) { }
 void material_cook::translate_query(
 	resources::query_result_for_cook& parent
@@ -33,17 +19,7 @@ void material_cook::translate_query(
 	else
 	{
 		fs_new::virtual_path_string			path;
-
-
-
-
-
-
-
-
-
-
-
+		// 11 target lines are likely retail-compiled-out source.
 		path.assignf						("resources/material_instances/%s.", parent.get_requested_path());
 
 		resources::query_resource			(
@@ -56,25 +32,7 @@ void material_cook::translate_query(
 	}
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 19 target lines are likely retail-compiled-out source.
 void material_cook::on_material_config_loaded( resources::queries_result& result )
 {
 	resources::query_result_for_cook* const parent = result.get_parent_query();

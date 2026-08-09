@@ -13,11 +13,7 @@ void effect_ssao_filter4x4::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_fxaa", NULL, "ssao_filter4x4", shader_configuration( ), NULL );
 	compiler.set_depth( true, false );

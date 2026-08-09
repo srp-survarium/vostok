@@ -12,11 +12,7 @@ void effect_post_process_sharpen::compile(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "post_process_sharpen", NULL, "post_process_pre_sharpen", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

@@ -12,11 +12,7 @@ void effect_hiz_occlusion::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "dumb", NULL, "hiz_debug_color", shader_configuration( ), NULL );
 	compiler.set_depth( true, true );

@@ -604,9 +604,7 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 		DELETE						(cook_data);
 		return;
 	}
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	using namespace resources;
 	u32 const num_requests								= cook_data->m_num_render_models;
 	fs_new::virtual_path_string* pathes					= (fs_new::virtual_path_string*)	MALLOC(sizeof(fs_new::virtual_path_string) * num_requests, "");
@@ -668,9 +666,7 @@ void arrange_surfaces_by_lod(
 
 	if ( !cook_data->model_settings_config )
 	{
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		lods_descriptor = NEW( model_lods_descriptor );
 		for ( u8 i = 0; i < 3; ++i )
 		{

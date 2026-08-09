@@ -12,11 +12,7 @@ void effect_atmospheric_scattering::compile(
 {
 
 	VOSTOK_UNREFERENCED_PARAMETER( config );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	compiler.begin_technique( );
 	compiler.begin_pass( "make_mie_rayleigh_texture", NULL, "make_mie_rayleigh_texture", shader_configuration( ), NULL );
 	compiler.end_pass( );
