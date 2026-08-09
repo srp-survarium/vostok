@@ -14,7 +14,6 @@ IncludeAll::IncludeAll()
 	vostok::anchor_logging( );
 	vostok::anchor_ai_navigation( );
 	vostok::anchor_game( );
-	vostok::anchor_animation_player( );
 	vostok::anchor_scaleform( );
 	vostok::render::anchor_render_facade( );
 }

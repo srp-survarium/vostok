@@ -23,8 +23,6 @@ namespace vostok
 
 	void anchor_game( );
 
-	void anchor_animation_player( );
-
 	void anchor_scaleform( );
 
 	namespace render {
