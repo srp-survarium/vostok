@@ -264,7 +264,10 @@ void n_ary_tree_comparer::remove_animation(
 	bool								is_new_driving_animation
 )
 {
-	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
+	base_interpolator const& interpolator	=
+		weight_driving_animation
+			? weight_driving_animation->weight_interpolator( )
+			: animation.weight_interpolator( );
 	if ( interpolator.transition_time( ) == 0.f )
 		return;
 
