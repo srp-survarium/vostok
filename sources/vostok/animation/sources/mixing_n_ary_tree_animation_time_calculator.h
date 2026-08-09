@@ -10,9 +10,6 @@
 #include "mixing_n_ary_tree_visitor.h"
 
 namespace vostok {
-
-void anchor_animation_animation_time_calculator( );
-
 namespace animation {
 namespace mixing {
 
@@ -23,8 +20,6 @@ class n_ary_tree_animation_time_calculator :
 	public n_ary_tree_visitor,
 	private boost::noncopyable
 {
-	friend void ::vostok::anchor_animation_animation_time_calculator( );
-
 public:
 					n_ary_tree_animation_time_calculator	(
 						n_ary_tree_animation_node& animation,

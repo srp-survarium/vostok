@@ -755,23 +755,11 @@
 	</References>
 	<Files>
 		<File
-			RelativePath=".\anchor_animation_comparer.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\anchor_animation_player.cpp"
 			>
 		</File>
 		<File
-			RelativePath=".\anchor_animation_weaver.cpp"
-			>
-		</File>
-		<File
 			RelativePath=".\anchor_animation_cloner.cpp"
-			>
-		</File>
-		<File
-			RelativePath=".\anchor_animation_animation_time_calculator.cpp"
 			>
 		</File>
 		<File
