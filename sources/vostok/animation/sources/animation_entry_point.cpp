@@ -5,7 +5,6 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
-#include "animation_world.h"
 #include <vostok/animation/api.h>
 #include <vostok/linkage_helper.h>
 #include <vostok/math_float4x4.h>
@@ -15,6 +14,7 @@
 #include "animation_collection_cook.h"
 
 #ifndef MASTER_GOLD
+#	include "animation_world.h"
 #	include "editor_animation.h"
 #	include "editor_mixer.h"
 #endif // #ifndef MASTER_GOLD
@@ -26,9 +26,6 @@ VOSTOK_DECLARE_LINKAGE_ID(animation_entry_point)
 #pragma comment( linker, "/include:??_7bi_spline_skeleton_animation_baked_cook@animation@vostok@@6B@" )
 #pragma comment( linker, "/include:??_7cubic_spline_skeleton_animation_cook@animation@vostok@@6B@" )
 
-using vostok::animation::animation_world;
-
-static vostok::uninitialized_reference< animation_world >	s_world;
 vostok::animation::allocator_type*	vostok::animation::g_allocator = 0;
 
 namespace vostok {
@@ -53,6 +50,12 @@ static configs::enum_tuple animation_tuples[] =
 
 } // namespace animation
 } // namespace vostok
+
+#ifndef MASTER_GOLD
+
+using vostok::animation::animation_world;
+
+static vostok::uninitialized_reference< animation_world > s_world;
 
 vostok::animation::world* vostok::animation::create_world(
 		engine& engine,
@@ -79,6 +82,8 @@ void vostok::animation::destroy_world( vostok::animation::world*& world )
 	VOSTOK_DESTROY_REFERENCE		( s_world );
 	world						= 0;
 }
+
+#endif // #ifndef MASTER_GOLD
 
 void vostok::animation::set_memory_allocator( allocator_type& allocator )
 {
