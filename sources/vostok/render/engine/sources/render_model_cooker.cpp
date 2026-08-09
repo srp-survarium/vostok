@@ -19,8 +19,9 @@ user_mesh_cook::user_mesh_cook( ) :
 		use_current_thread_id,
 		0,
 		flag_create_allocates_destroy_deallocates
-	)
+)
 {
+	resources::register_cook( this );
 }
 
 mutable_buffer user_mesh_cook::allocate_resource(
@@ -75,8 +76,9 @@ static_render_model_instance_cook::static_render_model_instance_cook( ) :
 		resources::static_render_model_instance_class,
 		reuse_false,
 		use_current_thread_id
-	)
+)
 {
+	resources::register_cook( this );
 }
 
 void static_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
@@ -118,7 +120,8 @@ void static_render_model_instance_cook::on_sub_resources_loaded( resources::quer
 
 void static_render_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	DELETE( resource );
+	static_render_model_instance* instance = static_cast_checked<static_render_model_instance*>(resource);
+	DELETE( instance );
 }
 
 skeleton_render_model_instance_cook::skeleton_render_model_instance_cook( ) :
@@ -126,8 +129,9 @@ skeleton_render_model_instance_cook::skeleton_render_model_instance_cook( ) :
 		resources::skeleton_render_model_instance_class,
 		reuse_false,
 		use_current_thread_id
-	)
+)
 {
+	resources::register_cook( this );
 }
 
 void skeleton_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
@@ -161,7 +165,8 @@ void skeleton_render_model_instance_cook::on_sub_resources_loaded( resources::qu
 
 void skeleton_render_model_instance_cook::delete_resource( resources::resource_base* resource )
 {
-	DELETE( resource );
+	skeleton_render_model_instance* instance = static_cast_checked<skeleton_render_model_instance*>(resource);
+	DELETE( instance );
 }
 
 cook_intermediate_data::cook_intermediate_data(
@@ -234,8 +239,10 @@ grass_render_model_cook::grass_render_model_cook( ) :
 
 void grass_render_model_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	pcstr model_name = parent.get_requested_path( );
+
 	fs_new::virtual_path_string model_path;
-	model_path.assignf( "%s.model", parent.get_requested_path( ) );
+	model_path.assignf( "%s.model", model_name );
 
 	cook_intermediate_data* data = NEW( cook_intermediate_data )( model_path, &parent );
 
@@ -259,6 +266,7 @@ void grass_render_model_cook::translate_query( resources::query_result_for_cook&
 render_model_cook::render_model_cook( resources::class_id_enum model_type ) :
 	resources::translate_query_cook( model_type, reuse_true, use_current_thread_id )
 {
+	resources::register_cook( this );
 }
 
 void render_model_cook::translate_query( resources::query_result_for_cook& parent )
@@ -271,7 +279,7 @@ void render_model_cook::translate_query( resources::query_result_for_cook& paren
 	cook_intermediate_data* data	= NEW(cook_intermediate_data)(model_path, &parent);
 
 	fs_new::virtual_path_string render_path;
-	render_path.assignf("%s/render", model_path.c_str());
+	render_path.assignf("resources/models/%s/render", model_path.c_str());
 
 	resources::query_vfs_iterator(
 		render_path.c_str(),
@@ -317,7 +325,7 @@ void render_model_cook::on_fs_iterator_ready_submeshes(
 	u32 request_index				= 0;
 	u32 model_index					= 0;
 
-	paths[request_index].assignf	( "%s/export_properties", render_dir.c_str() );
+	paths[request_index].assignf	( "resources/models/%s/export_properties", render_dir.c_str() );
 	requests[request_index].id		= resources::binary_config_class;
 	requests[request_index].path	= paths[request_index].c_str();
 	++request_index;
@@ -333,12 +341,12 @@ void render_model_cook::on_fs_iterator_ready_submeshes(
 		pcstr sname									= it.get_name();
 		cook_data->assets[model_index].m_surface_name	= sname;
 
-		paths[request_index].assignf	( "%s/%s/converted_model", render_dir.c_str(), sname );
+		paths[request_index].assignf	( "resources/models/%s/%s/converted_model", render_dir.c_str(), sname );
 		requests[request_index].id		= resources::converted_model_class;
 		requests[request_index].path	= paths[request_index].c_str();
 		++request_index;
 
-		paths[request_index].assignf	( "%s/%s/export_properties", render_dir.c_str(), sname );
+		paths[request_index].assignf	( "resources/models/%s/%s/export_properties", render_dir.c_str(), sname );
 		requests[request_index].id		= resources::binary_config_class;
 		requests[request_index].path	= paths[request_index].c_str();
 		++request_index;
@@ -347,7 +355,7 @@ void render_model_cook::on_fs_iterator_ready_submeshes(
 
 	if( get_class_id() == resources::skeleton_render_model_class )
 	{
-		paths[request_index].assignf	( "%s/bind_pose", render_dir.c_str(), model_index );
+		paths[request_index].assignf	( "resources/models/%s/bind_pose", render_dir.c_str(), model_index );
 		requests[request_index].id		= resources::raw_data_class;
 		requests[request_index].path	= paths[request_index].c_str();
 		++request_index;
@@ -578,25 +586,14 @@ static fs_new::virtual_path_string get_material_effects_instance_request_path(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETER(vertex_input_type);
-/*	fs_new::virtual_path_string					result;
-	result.assignf					(
-		"%s/%s",
-		mtl ? mtl->get_material_name() : "",
-		vertex_input_type_to_string(vertex_input_type)
-	);
-*/
-	fs_new::virtual_path_string		result;
-	result.assignf					(
-		"%s",
-		mtl ? mtl->get_material_name() : ""
-	);
-	return							result;
+	fs_new::virtual_path_string result;
+	result.assignf("%s", mtl ? mtl->get_material_name() : "");
+	return result;
 }
 
 void render_model_cook::query_materail_effects( cook_intermediate_data* cook_data )
 {
 	resources::query_result_for_cook* parent_query = cook_data->parent_query;
-
 	if (cook_data->status_failed)
 	{
 		parent_query->finish_query	(result_error);
@@ -605,12 +602,12 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 			DELETE_ARRAY			(cook_data->assets);
 
 		DELETE						(cook_data);
-
 		return;
 	}
 
-	using namespace resources;
 
+
+	using namespace resources;
 	u32 const num_requests								= cook_data->m_num_render_models;
 	fs_new::virtual_path_string* pathes					= (fs_new::virtual_path_string*)	MALLOC(sizeof(fs_new::virtual_path_string) * num_requests, "");
 	request* requests									= (request*)			MALLOC(sizeof(request) * num_requests, "");
@@ -632,11 +629,9 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 		if (mtl_idx != -1)
 			mtl											= static_cast_resource_ptr<material_ptr>(cook_data->assets[mtl_idx].material);
 
-		*new(&pathes[model_index])fs_new::virtual_path_string		= get_material_effects_instance_request_path(
-			mtl,
-			mesh_type_to_vertex_input_type(model_type)
-		);
+		*new(&pathes[model_index])fs_new::virtual_path_string = get_material_effects_instance_request_path(mtl, mesh_type_to_vertex_input_type(model_type));
 		resources::request* request						= new(&requests[model_index])resources::request;
+
 		request->path									= pathes[model_index].length() ? pathes[model_index].c_str() : "nomaterial";
 		request->id										= material_effects_instance_class;
 		user_data_variants_ptrs[model_index]			= new(&user_data_variants[model_index])user_data_variant;
@@ -648,23 +643,18 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 		);
 	}
 
-	query_resources										(
+	query_resources(
 		requests,
 		num_requests,
-		boost::bind(
-			&render_model_cook::finish_model_creation,
-			this,
-			_1,
-			cook_data
-		),
+		boost::bind(&render_model_cook::finish_model_creation, this, _1, cook_data),
 		vostok::render::g_allocator,
 		(resources::user_data_variant const**)user_data_variants_ptrs,
 		cook_data->parent_query
 	);
-	FREE												(user_data_variants_ptrs);
-	FREE												(user_data_variants);
-	FREE												(requests);
-	FREE												(pathes);
+	FREE(user_data_variants_ptrs);
+	FREE(user_data_variants);
+	FREE(requests);
+	FREE(pathes);
 }
 
 void arrange_surfaces_by_lod(
@@ -675,8 +665,12 @@ void arrange_surfaces_by_lod(
 	u8 result_lod_surfaces_count[3] = { 0 };
 	pbyte result_lod_surfaces[3] = { 0 };
 
+
 	if ( !cook_data->model_settings_config )
 	{
+
+
+
 		lods_descriptor = NEW( model_lods_descriptor );
 		for ( u8 i = 0; i < 3; ++i )
 		{
@@ -789,30 +783,36 @@ void render_model_cook::finish_model_creation(
 	if ( cook_data->status_failed )
 	{
 		parent_query->finish_query( result_error );
+
 		if ( cook_data->assets )
 			DELETE_ARRAY( cook_data->assets );
+
 		DELETE( cook_data );
+
 		return;
 	}
 
 	render_surface** surfaces = ALLOC( render_surface*, cook_data->m_num_render_models );
-	for ( u32 model_index = 0; model_index < cook_data->m_num_render_models; ++model_index )
-	{
-		configs::binary_config_ptr prop_config_ptr =
-			cook_data->assets[model_index].export_properties_config;
+
+	for ( u32 model_index = 0; model_index < cook_data->m_num_render_models; ++model_index ) {
+		configs::binary_config_ptr prop_config_ptr = cook_data->assets[model_index].export_properties_config;
 		configs::binary_config_value const& properties = prop_config_ptr->get_root( );
 		mesh_type_enum model_type = (mesh_type_enum)(u16)properties["type"];
-		if ( get_class_id( ) == resources::grass_render_model_class )
-			model_type = mt_grass_mesh;
 
+		if ( get_class_id( ) == resources::grass_render_model_class )
+
+			model_type = mt_grass_mesh;
 		resources::pinned_ptr_const< u8 > converted_model_ptr(
 			cook_data->assets[model_index].converted_model_buffer
 		);
+
 		render_surface* surface = model_factory::create_render_surface( model_type );
+
 		pcstr sg_name = cook_data->assets[model_index].m_surface_name.c_str( );
 		surface->m_render_geometry.shading_group_name = sg_name;
 
 		bool material_result = false;
+
 		if ( cook_data->material_settings_valid )
 		{
 			s32 material_index = cook_data->find_material_index( sg_name );
@@ -828,48 +828,36 @@ void render_model_cook::finish_model_creation(
 							static_cast_resource_ptr< material_effects_instance_ptr >(
 								data_material_effects[model_index].get_unmanaged_resource( )
 							),
-							static_cast< material* >( m.c_ptr( ) )->get_material_name( )
+							static_cast_resource_ptr< material_ptr >(
+								m
+							)->get_material_name( )
 						);
 				}
 			}
 		}
 
+
 		if ( !material_result )
 		{
-			surface->m_materail_effects_instance = 0;
-			LOG_ERROR(
-				"material not loaded for %s : %s",
-				cook_data->root_model_path.c_str( ),
-				sg_name
-			);
+			surface->set_default_material( );
+			LOG_ERROR("material not loaded for %s : %s", cook_data->root_model_path.c_str( ), sg_name);
 		}
-
-		memory::chunk_reader model_reader(
-			converted_model_ptr.c_ptr( ),
-			converted_model_ptr.size( ),
-			memory::chunk_reader::chunk_type_sequential
-		);
+		memory::chunk_reader model_reader(converted_model_ptr.c_ptr( ), converted_model_ptr.size( ), memory::chunk_reader::chunk_type_sequential);
 		surface->load( properties, model_reader );
 		surfaces[model_index] = surface;
 	}
 
-	model_lods_descriptor* lods_descriptor = 0;
-	arrange_surfaces_by_lod( cook_data, lods_descriptor );
-	cook_data->result_model->set_children(
-		surfaces,
-		cook_data->m_num_render_models,
-		lods_descriptor
-	);
-	parent_query->set_unmanaged_resource(
-		cook_data->result_model.c_ptr(),
-		resources::nocache_memory,
-		sizeof( cook_intermediate_data )
-	);
+
+	model_lods_descriptor* lods_descriptor = 0; arrange_surfaces_by_lod( cook_data, lods_descriptor );
+	cook_data->result_model->set_children(surfaces, cook_data->m_num_render_models, lods_descriptor);
+
+	parent_query->set_unmanaged_resource(cook_data->result_model.c_ptr(), resources::nocache_memory, sizeof(cook_intermediate_data));
 	parent_query->finish_query( result_success );
 
 	DELETE_ARRAY( cook_data->assets );
 	DELETE( cook_data );
 }
+
 
 void render_model_cook::delete_resource( resources::resource_base* resource )
 {

@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_clouds : public effect_descriptor {
 public:
-	effect_clouds( ) { }
-	virtual ~effect_clouds( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_clouds( ) { }
+	virtual ~effect_clouds( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_clouds, 0x4 );

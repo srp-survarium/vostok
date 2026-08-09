@@ -22,13 +22,13 @@ typedef resources::resource_ptr<
 class stage_ambient_occlusion : public stage {
 public:
 	stage_ambient_occlusion( renderer* in_renderer, renderer_context* context );
-	virtual ~stage_ambient_occlusion( ) { }
 
 	virtual void execute( ) override;
 	virtual void execute_disabled( ) override;
 
-private:
 	bool is_effects_ready( ) const;
+
+	virtual ~stage_ambient_occlusion( ) { }
 
 private:
 	res_effect_ptr			m_sh_combine;

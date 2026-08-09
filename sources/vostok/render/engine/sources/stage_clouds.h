@@ -2,13 +2,12 @@
 #define VOSTOK_RENDER_ENGINE_STAGE_CLOUDS_H_INCLUDED
 
 #include <vostok/math_float3.h>
-#include <vostok/math_float4.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/untyped_buffer.h>
-#include <vostok/render/facade/cloud_key.h>
 #include <vostok/tasks_task.h>
 
 #include "cloud_interp_textures.h"
+#include "environment_temp.h"
 #include "render_target.h"
 #include "res_geometry.h"
 #include "sphere_geometry.h"
@@ -27,34 +26,17 @@ typedef resources::resource_ptr<
 	resources::unmanaged_intrusive_base
 > res_effect_ptr;
 
-struct environment_temp {
-	environment_temp( );
-	~environment_temp( );
-
-	void tick( float )
-	{
-		// STATE[STUB]
-	}
-
-	cloud_key_parameters get_interp_key( float time );
-	cloud_key_parameters get_next_key( u32 index );
-
-	float3 get_sun_direction( float )
-	{
-		// STATE[STUB]
-		return float3( 0.0f, 0.0f, 0.0f );
-	}
-
-	cloud_key_parameters*	keys;
-	float					key_time_step;
-	u32						num_keys;
-	float4					sky_light[5];
-	float					time;
-};
-
-STATIC_SIZE_ASSERT( environment_temp, 0x60 );
-
 class stage_clouds : public stage {
+private:
+	struct voxel {
+		u8 x;
+		u8 y;
+		u8 z;
+		u8 w;
+	};
+
+	STATIC_SIZE_ASSERT( voxel, 0x4 );
+
 public:
 	stage_clouds(
 		renderer*				in_renderer,
@@ -68,16 +50,6 @@ public:
 	virtual void execute( ) override;
 
 	bool is_effects_ready( ) const;
-
-private:
-	struct voxel {
-		u8 x;
-		u8 y;
-		u8 z;
-		u8 w;
-	};
-
-	STATIC_SIZE_ASSERT( voxel, 0x4 );
 
 	float evaluate_noise( float, float, u32 )
 	{
@@ -95,6 +67,7 @@ private:
 		// STATE[STUB]
 	}
 
+private:
 	void fill_cloud_texture( u32 index );
 
 	res_texture_ptr			m_3d_clouds_density_texture[2];

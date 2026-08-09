@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_fill_reflective_shadow_map : public effect_material_base {
 public:
-	effect_fill_reflective_shadow_map( ) { }
-	virtual ~effect_fill_reflective_shadow_map( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_fill_reflective_shadow_map( ) { }
+	virtual ~effect_fill_reflective_shadow_map( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fill_reflective_shadow_map, 0x4 );

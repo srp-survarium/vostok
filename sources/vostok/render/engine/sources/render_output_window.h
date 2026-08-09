@@ -16,18 +16,19 @@ struct flash_renderer;
 namespace vostok {
 namespace render {
 
+class renderer;
+
 class render_output_window : public base_output_window {
 public:
 	explicit render_output_window(
 		output_window_configuration const& window_configuration
 	);
-	virtual ~render_output_window( ) { }
 
 	void resize( bool force_resize );
 	void set_size(
-		u32 width,
-		u32 height,
-		bool fullscreen,
+		u32 const width,
+		u32 const height,
+		bool const fullscreen,
 		bool force_resize
 	);
 
@@ -40,17 +41,17 @@ public:
 	}
 
 	void goto_fullscreen( );
+	virtual ~render_output_window( ) { }
 
-private:
 	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
 
 private:
+	friend class renderer;
+
 	renderer_context_targets m_targets;
 	res_render_output_ptr m_output;
 	HWND__* m_window;
 	bool m_windowed;
-
-public:
 	survarium::flash_renderer* m_flash_renderer;
 };
 

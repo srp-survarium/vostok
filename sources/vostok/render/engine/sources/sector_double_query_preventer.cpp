@@ -123,7 +123,6 @@ void sector_double_query_preventer::render( system_renderer& r )
 		4, 5,	5, 6,	6, 7,	7, 4,
 		0, 4,	1, 5,	2, 6,	3, 7
 	};
-
 	for ( frustrum_images_type::const_iterator i = m_frustum_images.begin( ), e = m_frustum_images.end( ); i != e; ++i )
 	{
 		vertex_colored vertices[] = {
@@ -170,14 +169,15 @@ void sector_double_query_preventer::make_frustum_images( float3 const* furthest_
 				math::get_frustum_vertices( f, m_frustum_images.back( ).vertices );
 				m_frustum_images.back( ).c = color;
 			}
-			continue;
 		}
-
-		for ( frustums_type::const_iterator frustum_it = it->begin( ); frustum_it != frutums_end; ++frustum_it )
+		else
 		{
-			m_frustum_images.push_back( frustum_image( ) );
-			math::get_frustum_vertices( *frustum_it, m_frustum_images.back( ).vertices );
-			m_frustum_images.back( ).c = math::color( 0xff00ff00 );
+			for ( frustums_type::const_iterator frustum_it = it->begin( ); frustum_it != frutums_end; ++frustum_it )
+			{
+				m_frustum_images.push_back( frustum_image( ) );
+				math::get_frustum_vertices( *frustum_it, m_frustum_images.back( ).vertices );
+				m_frustum_images.back( ).c = math::color( 0xff00ff00 );
+			}
 		}
 	}
 }

@@ -56,10 +56,9 @@ public:
 		shader_defines_list& macros
 	);
 
-	void append_macros_name( shader_defines_names_list&, pcstr )
+	void append_macros_name( shader_defines_names_list& names, pcstr name )
 	{
-		// claude@NOTE: no legacy ancestor - append_macros_name has no legacy ancestor (legacy shader_macros declares only the fill/merge trio); matcher-phase work.
-		// STATE[STUB]
+		names.push_back( name );
 	}
 
 private:

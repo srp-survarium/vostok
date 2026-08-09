@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_fstage_sky_materials : public effect_material_base {
 public:
-	effect_fstage_sky_materials( ) { }
-	virtual ~effect_fstage_sky_materials( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_fstage_sky_materials( ) { }
+	virtual ~effect_fstage_sky_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fstage_sky_materials, 0x4 );

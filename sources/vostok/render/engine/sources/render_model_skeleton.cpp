@@ -254,9 +254,7 @@ void skeleton_render_model_instance::get_surfaces(
 	for( u32 i = 0; i < m_instances_count; ++i )
 	{
 		render_surface_instance* inst = m_surface_instances+i;
-		// claude@NOTE: legacy tested inst->m_visible; canonical replaced the bool with m_flags
-		// (visible_flag chosen; surface_flags/lod params unused by the legacy ancestor).
-		if( !visible_only || (inst->m_flags & visible_flag) )
+		if( !visible_only || (inst->m_flags & surface_flags) )
 			list.push_back		( inst );
 	}
 

@@ -196,7 +196,12 @@ private:
 	grass_template* id_to_template( u32 const id ) const;
 	grass_template* find_template( grass_render_model_ptr const& model ) const;
 
-private:
+public:
+	void set_patch_parameters( grass_patch* patch );
+	void set_wind_parameters( float2 const& direction, float const strength );
+	void set_trample_parameters( trample_desc& desc );
+	void set_shadow_parameters( u32 const cascade_index );
+
 	trample_desc_array_type			m_trample_array;
 	grass_templates_type				m_templates;
 	vector<grass_patch*>				m_patches;
@@ -212,13 +217,6 @@ private:
 	shader_constant_host*				m_trample_parameters;
 	shader_constant_host*				m_shadow_cascade_index_parameter;
 	shader_constant_host*				m_wind_info_parameters;
-
-public:
-	void set_patch_parameters( grass_patch* patch );
-	void set_wind_parameters( float2 const& direction, float const strength );
-	void set_trample_parameters( trample_desc& desc );
-	void set_shadow_parameters( u32 const cascade_index );
-
 	bool m_need_populate;
 };
 

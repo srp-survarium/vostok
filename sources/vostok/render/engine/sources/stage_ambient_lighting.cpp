@@ -46,7 +46,6 @@ stage_ambient_lighting::stage_ambient_lighting(
 ) :
 	stage( in_renderer, context )
 {
-	// FUNCTION BODY[0x62a800]
 	set_ambient_multiplier( 0.0f );
 	use_probes( true );
 
@@ -115,7 +114,6 @@ stage_ambient_lighting::stage_ambient_lighting(
 
 bool stage_ambient_lighting::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x629a20]
 	return m_skylight_effect.c_ptr( ) != NULL &&
 		m_sky_ambient_occlusion_effect.c_ptr( ) != NULL &&
 		m_ambient_volume_effect.c_ptr( ) != NULL &&

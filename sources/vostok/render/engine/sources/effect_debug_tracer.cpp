@@ -1,17 +1,22 @@
 #include "pch.h"
 #include "effect_debug_tracer.h"
+#include <vostok/render/core/dx11/effect_compiler.h>
 
 namespace vostok {
 namespace render {
 
 void effect_debug_tracer::compile(
-	effect_compiler&,
-	custom_config_value const&
+	effect_compiler& compiler,
+	custom_config_value const& config
 )
 {
-	// claude@NOTE: no legacy ancestor - effect postdates the legacy corpus; matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x7b5130]
+	shader_configuration configuration;
+
+	compile_begin("vertex_base", "tracer", compiler, &configuration, config);
+		compiler.set_depth(true, true);
+		compiler.set_cull_mode(D3D_CULL_NONE);
+	compile_end(compiler);
 }
 
 } // namespace render

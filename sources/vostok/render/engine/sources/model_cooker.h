@@ -11,7 +11,6 @@ namespace render {
 
 struct static_model_instance_cook : public resources::translate_query_cook {
 	static_model_instance_cook( );
-	virtual ~static_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -21,6 +20,9 @@ private:
 		resources::queries_result&			data,
 		resources::query_result_for_cook*	parent_query
 	);
+
+public:
+	virtual ~static_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( static_model_instance_cook, 0x20 );
@@ -46,7 +48,6 @@ STATIC_SIZE_ASSERT( skeleton_model_instance_cook_data, 0x10 );
 
 struct skeleton_model_instance_cook : public resources::translate_query_cook {
 	skeleton_model_instance_cook( );
-	virtual ~skeleton_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -68,6 +69,9 @@ private:
 	);
 
 	void on_all_subresources_ready( skeleton_model_instance_cook_data* cook_data );
+
+public:
+	virtual ~skeleton_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( skeleton_model_instance_cook, 0x20 );

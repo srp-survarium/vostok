@@ -22,13 +22,12 @@ typedef resources::resource_ptr<
 
 class stage_screen_image : public stage {
 public:
-	stage_screen_image( renderer* in_renderer, renderer_context* in_context );
+	stage_screen_image( renderer* in_renderer, renderer_context* context );
 
 	virtual ~stage_screen_image( ) { }
 
 	void execute( res_texture_ptr image );
 
-private:
 	bool is_effects_ready( ) const;
 
 private:

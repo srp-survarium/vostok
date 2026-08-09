@@ -10,7 +10,6 @@ void effect_ssao_downsample_position_and_normal::compile(
 	custom_config_value const& custom_config
 )
 {
-	// FUNCTION BODY[0x7be290]
 	compiler.begin_technique( );
 	compiler.begin_pass( "ssao_downsample_depth_and_normal", NULL, "ssao_downsample_depth_and_normal", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );

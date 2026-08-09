@@ -30,9 +30,8 @@ public:
 	);
 
 	virtual void execute( ) override;
-
-private:
 	bool is_effects_ready( ) const;
+	virtual ~stage_sun( ) { }
 
 private:
 	res_effect_ptr			m_sun_effect;

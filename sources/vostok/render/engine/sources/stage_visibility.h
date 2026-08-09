@@ -38,10 +38,9 @@ private:
 	void gather_statistics( ) const;
 
 private:
-	static s32 const occlusion_buffer_size = 16384;
-
 	bool						m_data_ready;
 	hw_hiz_occlusion_manager*	m_occlusion_manager;
+	static s32 const occlusion_buffer_size = 16384;
 	float4*						m_static_bounds_array;
 	pbyte						m_static_results_array;
 	u32							m_current_occlusion_buffer_size;

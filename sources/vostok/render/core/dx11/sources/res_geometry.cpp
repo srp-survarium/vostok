@@ -7,12 +7,30 @@
 namespace vostok {
 namespace render {
 
-s32 res_geometry::compare( res_geometry const& ) const
+s32 res_geometry::compare( res_geometry const& other ) const
 {
-	// claude@NOTE: legacy body diverged - legacy is bool equal over the same four members, not an s32 three-way compare (see legacy remainder note); matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x6e82b0]
-	return 0;
+	if ( m_vb < other.m_vb )
+		return -1;
+
+	if ( m_vb > other.m_vb )
+		return 1;
+
+	if ( m_ib < other.m_ib )
+		return -1;
+
+	if ( m_ib > other.m_ib )
+		return 1;
+
+	if ( m_dcl < other.m_dcl )
+		return -1;
+
+	if ( m_dcl > other.m_dcl )
+		return 1;
+
+	if ( m_vb_stride < other.m_vb_stride )
+		return -1;
+
+	return other.m_vb_stride < m_vb_stride ? 1 : 0;
 }
 
 void res_geometry::apply()

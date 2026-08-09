@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_fill_sky_ao_map : public effect_descriptor {
 public:
-	effect_fill_sky_ao_map( ) { }
-	virtual ~effect_fill_sky_ao_map( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_fill_sky_ao_map( ) { }
+	virtual ~effect_fill_sky_ao_map( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fill_sky_ao_map, 0x4 );

@@ -17,6 +17,7 @@ public:
 	);
 
 	virtual ~stage_accumulate_distortion( );
+
 	virtual void execute( ) override;
 };
 

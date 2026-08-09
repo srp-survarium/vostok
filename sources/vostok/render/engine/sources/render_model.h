@@ -34,6 +34,7 @@ struct model_lods_descriptor {
 STATIC_SIZE_ASSERT( model_lods_descriptor, 0x24 );
 
 class render_model : public resources::unmanaged_resource {
+	typedef render_surface* children;
 public:
 	render_model( );
 	virtual ~render_model( );
@@ -50,7 +51,7 @@ protected:
 
 public:
 	model_lods_descriptor*	m_lods_descriptor;
-	render_surface**		m_childs;
+	children*				m_childs;
 	u8						m_childs_count;
 };
 

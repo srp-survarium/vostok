@@ -12,17 +12,18 @@ void effect_fix_irradiance_texture::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7bdb00]
-	VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
 
-	compiler.begin_technique();
-		compiler.begin_pass("blur_irradiance_texture", NULL, "fix_irradiance_texture", shader_configuration(), NULL);
-			compiler.set_depth( false, false);
-			compiler.set_cull_mode(D3D_CULL_NONE);
-			compiler.set_fill_mode(D3D_FILL_SOLID);
-			compiler.set_texture("t_skin_scattering_temp", r2_rt_skin_scattering_temp, 0, false, 0);
-		compiler.end_pass();
-	compiler.end_technique();
+	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
+
+
+	compiler.begin_technique( );
+	compiler.begin_pass( "blur_irradiance_texture", NULL, "fix_irradiance_texture", shader_configuration( ), NULL );
+	compiler.set_depth( false, false );
+	compiler.set_cull_mode( D3D_CULL_NONE );
+	compiler.set_fill_mode( D3D_FILL_SOLID );
+	compiler.set_texture( "t_skin_scattering_temp", r2_rt_skin_scattering_temp, 0, false, 0 );
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 } // namespace render

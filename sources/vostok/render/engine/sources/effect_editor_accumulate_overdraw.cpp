@@ -10,7 +10,6 @@ void effect_editor_accumulate_overdraw::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b4560]
 	shader_configuration configuration;
 
 /*
@@ -30,7 +29,6 @@ void effect_editor_accumulate_overdraw::compile(
 	compile_begin("vertex_base", "editor_accumulate_overdraw", compiler, &configuration, config);
 		compiler.set_depth(true, true);
 		compiler.set_stencil(true, 0xff, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INCR, D3D_STENCIL_OP_KEEP);
-		compiler.set_cull_mode(D3D_CULL_BACK);
 		//compiler.color_write_enable(D3D_COLOR_WRITE_ENABLE_NONE);
 	compile_end(compiler);
 }

@@ -27,7 +27,10 @@ void event_query::init_query( )
 
 void event_query::release_query( )
 {
-	safe_release( m_query );
+	if ( m_query )
+		m_query->Release( );
+
+	m_query = 0;
 }
 
 void event_query::issue( )

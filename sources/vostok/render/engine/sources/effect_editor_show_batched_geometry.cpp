@@ -11,9 +11,7 @@ void effect_editor_show_batched_geometry::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b4620]
 	shader_configuration configuration;
-	configuration.vertex_input_type = u32(static_mesh_vertex_input_type);
 
 	compile_begin("vertex_base_lpv", "editor_show_lpv_geometry", compiler, &configuration, config);
 	compile_end(compiler);

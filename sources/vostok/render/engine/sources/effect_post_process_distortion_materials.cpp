@@ -11,18 +11,20 @@ void effect_post_process_distortion_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7b9af0]
-	float distortion_scale = float(custom_config["constant_distortion_scale"]);
+
+
+
+	float distortion_scale = float( custom_config["constant_distortion_scale"] );
 
 	shader_configuration shader_config;
 
-	compile_begin("post_process", "post_process_distortion", compiler, &shader_config, custom_config);
-		compiler.set_texture("t_base", pcstr(custom_config["texture_base"]), 0, true, 0);
-		compiler.set_constant("distortion_scale", distortion_scale);
-		compiler.set_depth(true, false);
-		//compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_INV_SRC_ALPHA);
-		compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-	compile_end(compiler);
+	compile_begin( "post_process", "post_process_distortion", compiler, &shader_config, custom_config );
+	compiler.set_texture( "t_base", pcstr( custom_config["texture_base"] ), 0, false, u32( -1 ) );
+	compiler.set_constant( "distortion_scale", distortion_scale );
+	compiler.set_depth( true, false );
+
+	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
+	compile_end( compiler );
 }
 
 } // namespace render

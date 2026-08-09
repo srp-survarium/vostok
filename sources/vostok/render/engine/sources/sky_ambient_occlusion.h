@@ -23,7 +23,7 @@ struct sky_ambient_occlusion :
 {
 	sky_ambient_occlusion(
 		sky_ambient_occlusion_properties const&	properties,
-		u32										id
+		u32 const								id
 	);
 
 	~sky_ambient_occlusion( );

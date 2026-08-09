@@ -140,10 +140,8 @@ decal_instance::~decal_instance( )
 
 void decal_instance::destroy_impl( ) const
 {
-	// STATE[STUB]
-	// claude@NOTE: no legacy ancestor (deferred-destruction path added with
-	// resource_intrusive_base); matcher-phase.
-	// FUNCTION BODY[0x640f90]
+	decal_instance const* this_ptr = this;
+	DELETE( this_ptr );
 }
 
 void decal_instance::remove_collision( )

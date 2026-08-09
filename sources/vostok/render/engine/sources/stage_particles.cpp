@@ -32,7 +32,6 @@ void effect_resolve_particles::compile(
 	custom_config_value const&
 )
 {
-	// FUNCTION BODY[0x68950]
 	compiler.begin_technique( );
 	compiler.begin_pass( "eye_adaptation", NULL, "resolve_particles", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
@@ -46,17 +45,8 @@ void effect_resolve_particles::compile(
 	compiler.end_technique( );
 }
 
-particle_shader_constants::particle_shader_constants( ) :
-	m_right_view_vector				( 0 ),
-	m_up_view_vector				( 0 ),
-	m_use_align_by_dir				( 0 ),
-	m_view_location					( 0 ),
-	m_current_time					( 0 ),
-	m_use_fixed_axis				( 0 ),
-	m_rotation_fixed_axis			( 0 ),
-	m_locked_no_ratate_axis_index	( 0 )
+particle_shader_constants::particle_shader_constants( )
 {
-	// FUNCTION BODY[0x641d80]
 	m_right_view_vector				= backend::ref().register_constant_host( "right_view_vector", rc_float );
 	m_up_view_vector				= backend::ref().register_constant_host( "up_view_vector", rc_float );
 	m_view_location					= backend::ref().register_constant_host( "view_location", rc_float );
@@ -72,7 +62,6 @@ particle_shader_constants::particle_shader_constants( ) :
 
 void particle_shader_constants::set_time( float time )
 {
-	// FUNCTION BODY[0x641d30]
 	backend::ref().set_ps_constant ( m_current_time, time);
 }
 
@@ -84,7 +73,6 @@ void particle_shader_constants::set(
 	particle::enum_particle_screen_alignment screen_alignment
 )
 {
-	// FUNCTION BODY[0x641a70]
 	backend::ref().set_vs_constant ( m_right_view_vector, right_vector);
 	backend::ref().set_vs_constant ( m_up_view_vector, up_vector);
 	backend::ref().set_vs_constant ( m_view_location, view_location);
@@ -133,7 +121,6 @@ stage_particles::stage_particles(
 ) :
 	stage( in_renderer, context )
 {
-	// FUNCTION BODY[0x642600]
 	m_enabled = options::ref( ).current.m_enabled_particles_stage;
 
 	effect_manager::ref( ).create_effect< effect_resolve_particles >( &m_resolve_particles_effect );
@@ -141,18 +128,15 @@ stage_particles::stage_particles(
 
 stage_particles::~stage_particles( )
 {
-	// FUNCTION BODY[0x642060]
 }
 
 bool stage_particles::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x641a60]
 	return m_resolve_particles_effect.c_ptr( ) != NULL;
 }
 
 void stage_particles::execute( )
 {
-	// FUNCTION BODY[0x642130]
 	if ( !is_enabled( ) || !is_effects_ready( ) )
 	{
 		execute_disabled( );

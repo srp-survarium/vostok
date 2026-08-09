@@ -5,82 +5,32 @@
 #include <vostok/math_float3.h>
 
 namespace vostok {
-namespace math {
-class float4x4;
-class plane;
-} // namespace math
-
 namespace render {
 namespace culling {
 
 class aab_rect {
 public:
-	aab_rect& modify( float3 const& point )
-	{
-		return modify( float2( point.x, point.y ) );
-	}
-
-	aab_rect& modify( float2 const& point )
-	{
-		min.x = min.x < point.x ? min.x : point.x;
-		min.y = min.y < point.y ? min.y : point.y;
-		max.x = max.x > point.x ? max.x : point.x;
-		max.y = max.y > point.y ? max.y : point.y;
-		return *this;
-	}
-
-	bool intersects( aab_rect const& other ) const
-	{
-		return min.x < other.max.x && max.x > other.min.x &&
-			min.y < other.max.y && max.y > other.min.y;
-	}
-
-	bool contains( aab_rect const& another ) const
-	{
-		// FUNCTION BODY[0x8a470]
-		return ( min.x <= another.min.x || math::is_similar( min.x, another.min.x ) ) &&
-			( max.x >= another.max.x || math::is_similar( max.x, another.max.x ) ) &&
-			( min.y <= another.min.y || math::is_similar( min.y, another.min.y ) ) &&
-			( max.y >= another.max.y || math::is_similar( max.y, another.max.y ) );
-	}
-
-	aab_rect( )
-	{
-		min = float2( -1.f, -1.f );
-		max = float2( 1.f, 1.f );
-	}
-
-private:
 	float2 min;
 	float2 max;
 
+	inline aab_rect& modify( float3 const& point );
+	inline aab_rect& modify( float2 const& point );
+	inline bool intersects( aab_rect const& other ) const;
+	inline bool contains( aab_rect const& another ) const;
+
+private:
+	inline aab_rect( );
+
 	friend class portal_sector_system;
 	friend aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right );
-	friend bool portal_screen_rect_to_four_points(
-		aab_rect const& portal_rect,
-		math::plane const& portal_plane,
-		math::float4x4 const& inv_mat_vp,
-		aab_rect const& limiting_rect,
-		math::float3 (&io_points)[4],
-		aab_rect& limited_rect
-	);
 };
 
 STATIC_SIZE_ASSERT( aab_rect, 0x10 );
 
-inline aab_rect get_intersection_rect( aab_rect const& left, aab_rect const& right )
-{
-	// FUNCTION BODY[0x8a530]
-	aab_rect result;
-	result.min.x = left.min.x > right.min.x ? left.min.x : right.min.x;
-	result.min.y = left.min.y > right.min.y ? left.min.y : right.min.y;
-	result.max.x = left.max.x < right.max.x ? left.max.x : right.max.x;
-	result.max.y = left.max.y < right.max.y ? left.max.y : right.max.y;
-	return result;
-}
-
 } // namespace culling
 } // namespace render
 } // namespace vostok
+
+#include <vostok/render/engine/sources/aab_rect_inline.h>
 
 #endif // VOSTOK_RENDER_CULLING_AAB_RECT_H_INCLUDED

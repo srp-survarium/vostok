@@ -39,6 +39,15 @@ stage_sun::stage_sun(
 	m_cloud_interp_textures		( in_cloud_interp_textures ),
 	m_simulation				( in_simulation )
 {
+
+
+
+
+
+
+
+
+
 	m_c_light_color					= backend::ref().register_constant_host( "light_color", rc_float );
 	m_c_light_direction				= backend::ref().register_constant_host( "light_direction", rc_float );
 	m_c_light_intensity				= backend::ref().register_constant_host( "light_intensity", rc_float );
@@ -48,12 +57,10 @@ stage_sun::stage_sun(
 	m_c_inverted_view_projection_matrix = backend::ref().register_constant_host( "inverted_view_projection_matrix", rc_float );
 	m_c_sun_fixed_matrix				= backend::ref().register_constant_host( "sun_fixed_matrix", rc_float );
 	m_c_eye_ray_corner				= backend::ref().register_constant_host( "s_eye_ray_corner", rc_float );
-
 	m_shadow[0]					= backend::ref().register_constant_host( "m_shadow0", rc_float );
 	m_shadow[1]					= backend::ref().register_constant_host( "m_shadow1", rc_float );
 	m_shadow[2]					= backend::ref().register_constant_host( "m_shadow2", rc_float );
 	m_shadow[3]					= backend::ref().register_constant_host( "m_shadow3", rc_float );
-
 	m_c_clouds_offset				= backend::ref().register_constant_host( "clouds_offset", rc_float );
 	m_c_world_to_cloud				= backend::ref().register_constant_host( "world_to_cloud", rc_float );
 	m_c_cloud_interp_alpha			= backend::ref().register_constant_host( "cloud_interp_alpha", rc_float );
@@ -61,6 +68,10 @@ stage_sun::stage_sun(
 	m_c_environment_skylight_lower_color = backend::ref().register_constant_host( "environment_skylight_lower_color", rc_float );
 
 	m_enabled					= options::ref().current.m_enabled_sun_stage;
+
+
+
+
 
 	struct half2 {
 		math::half x;
@@ -78,6 +89,8 @@ stage_sun::stage_sun(
 				float angle = random.random_f( SpeedTree::c_fTwoPi );
 				half2& value = temp_data[z * jitter_size * jitter_size + y * jitter_size + x];
 				value.x = math::half( cos( angle ) );
+
+
 				value.y = math::half( sinf( angle ) );
 			}
 
@@ -85,16 +98,16 @@ stage_sun::stage_sun(
 	data.pSysMem = temp_data;
 	data.SysMemPitch = jitter_size * sizeof( half2 );
 	data.SysMemSlicePitch = jitter_size * jitter_size * sizeof( half2 );
-	m_shadow_jitter = resource_manager::ref().create_texture3d(
-		"$user$jitter_lookup",
-		jitter_size,
-		jitter_size,
-		jitter_size,
-		&data,
-		DXGI_FORMAT_R16G16_FLOAT,
-		D3D11_USAGE_IMMUTABLE,
-		1
-	);
+
+
+
+
+
+
+
+
+	m_shadow_jitter = resource_manager::ref().create_texture3d( "$user$jitter_lookup", jitter_size, jitter_size, jitter_size, &data, DXGI_FORMAT_R16G16_FLOAT, D3D11_USAGE_IMMUTABLE, 1 );
+
 	FREE( temp_data );
 
 	effect_manager::ref().create_effect< effect_sun >( &m_sun_effect );
@@ -107,61 +120,57 @@ bool stage_sun::is_effects_ready( ) const
 
 void stage_sun::execute( )
 {
+
+
 	if ( !is_effects_ready( ) )
 		return;
 
+
+
 	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 
+
+
+
 	float3 sun_dir = m_context->get_v( ).transform_direction( sun->direction );
+
 	float3 const* const eye_rays = m_context->get_eye_rays( );
 	float3 sun_clr = sun->color;
 	sun_dir.normalize( );
 
-	m_sun_effect->apply( 0, 0 );
 
+
+
+
+	m_sun_effect->apply( 0, 0 );
 	backend::ref( ).set_ps_constant( m_c_light_direction, float4( sun_dir, 0.f ) );
 	backend::ref( ).set_ps_constant( m_c_light_color, float4( sun_clr, clear_value ) );
 	backend::ref( ).set_ps_constant( m_c_light_intensity, sun->intensity );
 	backend::ref( ).set_ps_constant( m_c_diffuse_influence_factor, sun->diffuse_influence_factor );
-	backend::ref( ).set_ps_constant( m_c_specular_influence_factor, sun->specular_influence_factor );
 
+	backend::ref( ).set_ps_constant( m_c_specular_influence_factor, sun->specular_influence_factor );
 	for ( u32 i = 0; i < 4; ++i )
 		backend::ref( ).set_ps_constant( m_shadow[i], math::transpose( m_context->get_view2shadow( i ) ) );
-
 	backend::ref( ).set_ps_constant( m_c_clouds_offset, m_simulation.cloud_offset );
 	backend::ref( ).set_ps_constant( m_c_world_to_cloud, math::transpose( m_simulation.world_to_cloud ) );
 	backend::ref( ).set_ps_constant( m_c_cloud_interp_alpha, m_simulation.interp_alpha );
-	backend::ref( ).set_ps_constant(
-		m_c_inverted_view_projection_matrix,
-		math::transpose( math::invert4x4( m_context->get_vp( ) ) )
-	);
+	backend::ref( ).set_ps_constant( m_c_inverted_view_projection_matrix, math::transpose( math::invert4x4( m_context->get_vp( ) ) ) );
 
-	float4x4 sun_fixed_matrix = math::create_camera_direction(
-		sun->direction * -10000.f,
-		sun->direction,
-		float3( clear_value, 0.f, 0.f )
-	);
-	backend::ref( ).set_ps_constant(
-		m_c_sun_fixed_matrix,
-		math::transpose( math::invert4x4( sun_fixed_matrix ) )
-	);
+	float4x4 sun_fixed_matrix = math::create_camera_direction( sun->direction * -10000.f, sun->direction, float3( clear_value, 0.f, 0.f ) );
+
+	backend::ref( ).set_ps_constant( m_c_sun_fixed_matrix, math::transpose( math::invert4x4( sun_fixed_matrix ) ) );
 	backend::ref( ).set_ps_constant( m_c_shadow_transparency, sun->shadow_transparency );
 
 	backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( (float4*)eye_rays )[0] );
 
-	system_renderer::ref( ).fill_surface(
-		m_context->get_rt( rt_accumulator_diffuse ),
-		m_context->get_rt( rt_accumulator_specular ),
-		m_context->get_rt( rt_sun_translucensy_help_data ),
-		render_target_ptr( ),
-		render_target_ptr( ),
-		true,
-		0,
-		0.f,
-		0.f,
-		1.f,
-		1.f
-	);
+
+
+
+
+
+
+
+	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_accumulator_diffuse ), m_context->get_rt( rt_accumulator_specular ), m_context->get_rt( rt_sun_translucensy_help_data ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.f, 0.f, 1.f, 1.f );
 
 	m_context->set_w( float4x4( ).identity( ) );
 	backend::ref( ).reset_render_targets( );

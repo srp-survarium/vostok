@@ -39,7 +39,7 @@ class render_model_instance : public resources::unmanaged_resource {
 public:
 	render_model_instance( ) :
 		m_sectors_holder		( 0 ),
-		m_current_lod_index	( 0 )
+		m_current_lod_index	( u8(-1) )
 	{
 	}
 
@@ -70,9 +70,6 @@ public:
 
 	virtual void set_lod_params( u8, bool, float, float, float )
 	{
-		// claude@NOTE: no legacy ancestor - legacy facade/model.h remains but lacks set_lod_params (the LOD system is new-in-target); matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[0x61980]
 	}
 
 protected:
@@ -91,9 +88,6 @@ typedef resources::resource_ptr<
 
 class static_model_instance : public resources::unmanaged_resource {
 public:
-	static_model_instance( ) { }
-	virtual ~static_model_instance( ) { }
-
 	render_model_instance_ptr m_render_model;
 	resources::unmanaged_resource_ptr m_sound_environment;
 };
@@ -107,16 +101,13 @@ typedef resources::resource_ptr<
 
 class skeleton_model_instance : public resources::unmanaged_resource {
 public:
-	skeleton_model_instance( ) { }
-	virtual ~skeleton_model_instance( ) { }
+	render_model_instance_ptr m_render_model;
+	animation::skeleton_ptr m_skeleton;
 
 	void get_bind_pose( float4x4* matrices, u32 count ) const
 	{
 		m_render_model->get_bind_pose( matrices, count );
 	}
-
-	render_model_instance_ptr m_render_model;
-	animation::skeleton_ptr m_skeleton;
 };
 
 STATIC_SIZE_ASSERT( skeleton_model_instance, 0x110 );

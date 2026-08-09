@@ -19,9 +19,6 @@ public:
 		vector< fs_new::virtual_path_string > const&
 	) const
 	{
-		// claude@NOTE: no legacy ancestor - should_recompile_when_global_changes has no legacy ancestor; matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[0xab100]
 		return false;
 	}
 

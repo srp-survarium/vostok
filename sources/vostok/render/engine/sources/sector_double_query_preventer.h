@@ -34,8 +34,6 @@ public:
 
 private:
 	struct frustum_image {
-		frustum_image( ) { }
-
 		float3 vertices[8];
 		math::color c;
 	};

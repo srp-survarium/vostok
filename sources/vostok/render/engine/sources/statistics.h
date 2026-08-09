@@ -228,9 +228,6 @@ struct particles_statistics_group : public statistics_group {
 	explicit particles_statistics_group( pcstr group_name );
 	~particles_statistics_group( )
 	{
-		// claude@NOTE: no legacy ancestor - legacy declared no dtor (compiler-generated); matcher-phase work.
-		// STATE[STUB]
-		// FUNCTION BODY[0x6f710]
 	}
 
 	statistics_cpu_gpu	execute_time;

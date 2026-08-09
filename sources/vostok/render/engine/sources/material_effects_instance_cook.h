@@ -14,7 +14,6 @@ struct material_effects_instance_cook_data;
 class material_effects_instance_cook : public resources::translate_query_cook {
 public:
 	material_effects_instance_cook( );
-	virtual ~material_effects_instance_cook( ) { }
 
 	virtual void translate_query(
 		resources::query_result_for_cook& parent

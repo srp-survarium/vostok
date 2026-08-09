@@ -292,13 +292,13 @@ inline void backend::set_render_output( res_render_output const* render_output )
 inline u32 backend::target_width( ) const
 {
 	return m_user_output ? m_user_output_width
-		: (m_render_output ? m_render_output->width( ) : 0);
+		: m_render_output->width( );
 }
 
 inline u32 backend::target_height( ) const
 {
 	return m_user_output ? m_user_output_height
-		: (m_render_output ? m_render_output->height( ) : 0);
+		: m_render_output->height( );
 }
 
 template < enum_shader_type shader_type >

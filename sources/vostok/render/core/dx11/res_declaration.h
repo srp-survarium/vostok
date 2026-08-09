@@ -63,12 +63,20 @@ public:
 	bool m_is_registered;
 };
 
-inline s32 compare( res_declaration const&, res_declaration const& )
+inline s32 compare( res_declaration const& left, res_declaration const& right )
 {
-	// claude@NOTE: legacy body diverged - legacy has only member equal(desc*,count) keyed on a raw desc array, not a two-object s32 compare; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x1246a0]
-	return 0;
+	if ( left.dcl_code.size( ) < right.dcl_code.size( ) )
+		return -1;
+
+	if ( left.dcl_code.size( ) > right.dcl_code.size( ) )
+		return 1;
+
+	u32 const count = math::min( left.dcl_code.size( ), right.dcl_code.size( ) );
+	return std::memcmp(
+		&left.dcl_code[0],
+		&right.dcl_code[0],
+		count * sizeof(D3D11_INPUT_ELEMENT_DESC)
+	);
 }
 
 inline bool operator<( res_declaration const& left, res_declaration const& right )

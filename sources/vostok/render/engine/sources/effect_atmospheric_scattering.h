@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_atmospheric_scattering : public effect_descriptor {
 public:
-	effect_atmospheric_scattering( ) { }
-	virtual ~effect_atmospheric_scattering( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_atmospheric_scattering( ) { }
+	virtual ~effect_atmospheric_scattering( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_atmospheric_scattering, 0x4 );

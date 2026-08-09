@@ -98,7 +98,7 @@ private:
 	void set_materail_effects( resources::unmanaged_resource_ptr const& in_ptr );
 	void remove_collision( );
 
-private:
+public:
 	friend class								scene;
 	friend class								stage_visibility;
 

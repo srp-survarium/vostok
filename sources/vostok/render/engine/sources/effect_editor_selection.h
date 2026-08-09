@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_editor_selection : public effect_material_base {
 public:
-	effect_editor_selection( ) { }
-	virtual ~effect_editor_selection( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_editor_selection( ) { }
+	virtual ~effect_editor_selection( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_editor_selection, 0x4 );

@@ -13,9 +13,6 @@ void effect_editor_wireframe_accumulation::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b47e0]
-	// claude@NOTE: legacy color-table entries for skeletal_mesh/speedtree_*/terrain/grassbillboard
-	// vertex-input types dropped/remapped - those enumerators left the shipped enum_vertex_input_type
 	shader_configuration configuration;
 
 	u32 vertex_input_type = 0;
@@ -34,9 +31,9 @@ void effect_editor_wireframe_accumulation::compile(
 
 	wireframe_colors[particle_vertex_input_type] =
  	wireframe_colors[particle_subuv_vertex_input_type] =
- 	wireframe_colors[particle_beamtrail_vertex_input_type] = float3(1.0f, 0.25f, 0.25f);
+	wireframe_colors[particle_beamtrail_vertex_input_type] = float3(1.0f, 0.25f, 0.75f);
 
-	wireframe_colors[grassmesh_vertex_input_type] = float3(0.25f, 0.5f, 0.25f);
+	wireframe_colors[grassmesh_vertex_input_type] = float3(0.1f, 0.75f, 0.1f);
 
 	wireframe_colors[wires_vertex_input_type] = float3(0.7f, 0.5f, 0.1f);
 

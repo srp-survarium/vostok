@@ -15,6 +15,9 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
+
+	effect_aberration( ) { }
+	virtual ~effect_aberration( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_aberration, 0x4 );

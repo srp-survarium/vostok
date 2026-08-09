@@ -8,10 +8,10 @@ namespace vostok {
 namespace render {
 
 static u32 s_new_id = 0;
+static command_line::key s_target_test( "target_test", "", "", "" );
 
 pcstr rt_index_to_name( enum_render_target_index index )
 {
-	// FUNCTION BODY[0x634460]
 	switch ( index )
 	{
 	case rt_gbuffer_position_downsampled:		return "$user$gbuffer_position_downsampled";
@@ -93,18 +93,15 @@ renderer_context_targets::renderer_context_targets( math::uint2 size ) :
 	m_id			( 0 ),
 	m_memory_usage	( 0 )
 {
-	// FUNCTION BODY[0x635890]
 	create_targets( size, true );
 }
 
 renderer_context_targets::~renderer_context_targets( )
 {
-	// FUNCTION BODY[0x634730]
 }
 
 static u32 get_format_block_size( DXGI_FORMAT format )
 {
-	// FUNCTION BODY[0x6343e0]
 	switch ( format )
 	{
 	case DXGI_FORMAT_R32G32B32A32_FLOAT:	return 16;
@@ -124,7 +121,6 @@ void renderer_context_targets::new_rt(
 	bool						enabled
 )
 {
-	// FUNCTION BODY[0x634910]
 	if ( !enabled )
 		return;
 
@@ -156,7 +152,6 @@ void renderer_context_targets::new_lt(
 	math::uint2 const			in_size
 )
 {
-	// FUNCTION BODY[0x634830]
 	render_target_instance& instance = m_family[index];
 	pcstr const original_name = rt_index_to_name( index );
 	if ( instance.orig_name != original_name )
@@ -180,7 +175,6 @@ void renderer_context_targets::new_lt(
 
 void renderer_context_targets::create_targets( math::uint2 size, bool force_resize )
 {
-	// FUNCTION BODY[0x634a30]
 	if ( !force_resize && m_size == size )
 		return;
 
@@ -301,6 +295,8 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	new_rt( rt_mie_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 	new_rt( rt_rayleigh_scattering, DXGI_FORMAT_R16G16B16A16_FLOAT, math::uint2( 256, 128 ), enum_rt_usage_render_target, true );
 
+	LOG_INFO( "render targets memory usage: %d", m_memory_usage );
+
 	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_previous].target, 0, 0, 0 );
 	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
 	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_current].target, 0, 0, 0 );
@@ -313,7 +309,6 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 
 void renderer_context_targets::resize( math::uint2 size, bool force_resize )
 {
-	// FUNCTION BODY[0x6358e0]
 	create_targets( size, force_resize );
 }
 

@@ -8,11 +8,9 @@ namespace render {
 
 struct sphere_occluder_geometry {
 	sphere_occluder_geometry( );
+	void render( );
 	~sphere_occluder_geometry( ) { }
 
-	void render( );
-
-private:
 	res_geometry_ptr m_geometry;
 };
 

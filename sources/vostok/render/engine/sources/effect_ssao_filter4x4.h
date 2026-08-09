@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_ssao_filter4x4 : public effect_descriptor {
 public:
-	effect_ssao_filter4x4( ) { }
-	virtual ~effect_ssao_filter4x4( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
+
+	effect_ssao_filter4x4( ) { }
+	virtual ~effect_ssao_filter4x4( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_ssao_filter4x4, 0x4 );

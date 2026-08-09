@@ -12,6 +12,8 @@ namespace render {
 class res_declaration;
 
 class res_input_layout : public resource_intrusive_base {
+	friend bool operator<( res_input_layout const& left, res_input_layout const& right );
+
 public:
 	res_input_layout( res_declaration const* declaration, res_signature const* signature );
 	~res_input_layout( );
@@ -43,12 +45,13 @@ typedef intrusive_ptr<
 
 STATIC_SIZE_ASSERT( res_input_layout, 0x14 );
 
-// claude@NOTE: no legacy ancestor - legacy res_input_layout has only equal(declaration,signature), no ordering operator (target moved to a sorted set); matcher-phase work.
-// STATE[STUB]
-// ordering for compare_predicate< res_input_layout >
-inline bool operator<( res_input_layout const&, res_input_layout const& )
+inline bool operator<( res_input_layout const& left, res_input_layout const& right )
 {
-	return false;
+	if ( left.m_declaration < right.m_declaration )
+		return true;
+	if ( left.m_declaration > right.m_declaration )
+		return false;
+	return left.m_signature < right.m_signature;
 }
 
 } // namespace render

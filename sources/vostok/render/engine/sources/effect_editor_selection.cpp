@@ -10,14 +10,16 @@ void effect_editor_selection::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b5cf0]
+
 	shader_configuration configuration;
-	compile_begin("vertex_base", "editor_selection", compiler, &configuration, config);
-		compiler.set_depth(true, false);
-		compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-		compiler.set_cull_mode(D3D_CULL_NONE);
-		compiler.set_fill_mode(D3D_FILL_WIREFRAME);
-	compile_end(compiler);
+
+
+	compile_begin( "vertex_base", "editor_selection", compiler, &configuration, config );
+	compiler.set_depth( true, false );
+	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
+	compiler.set_cull_mode( D3D_CULL_NONE );
+	compiler.set_fill_mode( D3D_FILL_WIREFRAME );
+	compile_end( compiler );
 }
 
 } // namespace render

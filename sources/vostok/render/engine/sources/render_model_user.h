@@ -62,16 +62,12 @@ class user_render_model_instance : public render_model_instance_impl {
 public:
 	user_render_model_instance( )
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x619f0]
 	}
 
 	virtual ~user_render_model_instance( ) { }
 
 	virtual math::aabb get_aabb( )
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x619b0]
 		return m_surface->m_aabbox;
 	}
 
@@ -87,8 +83,6 @@ public:
 
 	virtual u32 get_surfaces_count( ) const
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0xb53b0]
 		return 1;
 	}
 

@@ -7,6 +7,7 @@
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/options.h>
 #include <vostok/render/core/resource_manager.h>
+#include <vostok/render/core/texture_named_instance.h>
 #include <vostok/render/facade/common_types.h>
 #include "ambient_volume.h"
 #include "clouds.h"
@@ -14,9 +15,12 @@
 #include "find_by_id_predicate.h"
 #include "grass_world.h"
 #include "material_manager.h"
+#include "material_effects.h"
 #include "moved_object_predicate_helper.h"
 #include "portal_sector_system.h"
 #include "render_particle_emitter_instance.h"
+#include "render_surface.h"
+#include "render_surface_instance.h"
 #include "sky_ambient_occlusion.h"
 #include "speedtree_forest.h"
 #include "statistics.h"
@@ -144,24 +148,15 @@ scene::scene( scene_configuration const& renderer_configuration ) :
 
 scene::~scene( )
 {
+	if ( m_sky_material.c_ptr( ) )
+		material_manager::ref( ).remove_material_effects( m_sky_material );
+
 	DELETE			( m_speedtree_forest );
 	DELETE			( m_grass );
 
 	collision::delete_space_partitioning_tree( m_decals_tree );
 	collision::delete_space_partitioning_tree( m_environment_probes_tree );
 	collision::delete_space_partitioning_tree( m_models_tree );
-
-	// FUNCTION BODY[0x63f110]: 9
-	// <0x63f117>|0x007|+0x018:'122'
-	// <0x63f12f>|0x01f|+0x00c:'123'
-	// <0>
-	// <0x63f13b>|0x02b|+0x02d:'125'
-	// <0x63f168>|0x058|+0x03f:'126'
-	// <0>
-	// <0x63f1a7>|0x097|+0x035:'128'
-	// <0x63f1dc>|0x0cc|+0x035:'129'
-	// <0x63f211>|0x101|+0x035:'130'
-	// ******
 }
 
 void scene::set_sky_material( material_effects_instance_ptr const& in_material )
@@ -398,9 +393,9 @@ void scene::process_streaming(
 	);
 
 	struct remove_requested_texture_predicate {
-		bool operator()( requested_streamable_texture const& texture )
+		bool operator()( requested_streamable_texture const& req )
 		{
-			return texture.texture && texture.texture->m_reference_count == 1;
+			return req.texture.c_ptr( ) && req.texture->m_reference_count == 1;
 		}
 	};
 
@@ -551,115 +546,78 @@ void scene::on_texture_loaded(
 	ready_streaming_textures.push_back( ready_texture );
 }
 
-// STATE[STUB]
 void scene::gather_streamable_textures( render_model_instance_impl_ptr model, bool update_only )
 {
-	// LOCALS
-	// float3 							temp_view_pos
-	// render_surface_instance** 		end
-	// vector< render_surface_instance* > surfaces
-	// float4x4 						temp_vp_matrix
-	// render_surface_instance** 		it
-	// math::aabb 						bbox
-	// streaming_texture_instance 		texture_instance
-	// vector< texture_named_instance > effect_used_textures
-	// texture_named_instance* 			tex_it
-	// streamable_texture_info 			info
-	// ******
+	struct find_texture_predicate {
+		explicit find_texture_predicate( res_texture* texture ) :
+			m_texture( texture )
+		{
+		}
 
-	// TYPEDEFS
-	// typedef
-	// 	scene::gather_streamable_textures::__l2::find_texture_predicate
-	// 	scene::gather_streamable_textures::__l2::find_texture_predicate;
+		bool operator()( streamable_texture_info const& info ) const
+		{
+			return info.texture == m_texture;
+		}
 
-	// ******
+		res_texture* m_texture;
+	};
 
-	// CALL SITE INFO
-	// <0x63e33c> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
-	// ******
+	vector< render_surface_instance* > surfaces;
+	float3 temp_view_pos( 0.f, 0.f, 0.f );
+	float4x4 temp_vp_matrix = float4x4( ).identity( );
+	model->get_surfaces( &temp_vp_matrix, &temp_view_pos, surfaces, false, 0xaa, 3 );
 
-	// FUNCTION BODY[0x63e2c0]: 79
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x63e2cc>|0x00c|+0x008:'556'
-	// <0x63e2d4>|0x014|+0x033:'557'
-	// <0>
-	// <0x63e307>|0x047|+0x037:'559'
-	// <0>
-	// <0x63e33e>|0x07e|+0x004:'561'
-	// <0x63e342>|0x082|+0x00c:'562'
-	// <0>
-	// <0x63e34e>|0x08e|+0x4b9:'564'
-	// <0x63e807>|0x547|-0x4b1:'564'
-	// <0>
-	// <0x63e356>|0x096|+0x006:'566'
-	// <0>
-	// <0x63e35c>|0x09c|+0x007:'568'
-	// <0x63e363>|0x0a3|+0x02b:'569'
-	// <0>
-	// <0x63e38e>|0x0ce|+0x027:'571'
-	// <0>
-	// <1>
-	// <0x63e3b5>|0x0f5|+0x016:'574'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x63e3cb>|0x10b|+0x0b3:'581'
-	// <0x63e47e>|0x1be|+0x025:'582'
-	// <0x63e4a3>|0x1e3|+0x004:'583'
-	// <0>
-	// <0x63e4a7>|0x1e7|+0x00a:'585'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x63e4b1>|0x1f1|+0x025:'592'
-	// <0>
-	// <0x63e4d6>|0x216|+0x008:'594'
-	// <0>
-	// <0x63e4de>|0x21e|+0x04a:'596'
-	// <0x63e528>|0x268|+0x0b6:'597'
-	// <0x63e5de>|0x31e|+0x014:'598'
-	// <0x63e5f2>|0x332|+0x059:'599'
-	// <0>
-	// <0x63e64b>|0x38b|+0x03b:'601'
-	// <0x63e686>|0x3c6|+0x0ca:'602'
-	// <0x63e750>|0x490|+0x002:'603'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x63e752>|0x492|+0x018:'614'
-	// <0>
-	// <0x63e76a>|0x4aa|+0x004:'616'
-	// <0x63e76e>|0x4ae|+0x037:'617'
-	// <0x63e7a5>|0x4e5|+0x002:'618'
-	// <0x63e7a7>|0x4e7|+0x032:'619'
-	// <0>
-	// <1>
-	// <0x63e7d9>|0x519|+0x032:'622'
-	// ******
+	render_surface_instance** it = surfaces.begin( );
+	render_surface_instance** end = surfaces.end( );
+	for ( ; it != end; ++it )
+	{
+		render_surface_instance* surface_instance = *it;
+
+		math::aabb bbox = surface_instance->m_render_surface->m_aabbox;
+		bbox.modify( *surface_instance->m_transform );
+
+		vector< texture_named_instance > effect_used_textures;
+		surface_instance->m_render_surface->get_material_effects( ).get_used_textures(
+			effect_used_textures
+		);
+
+		streaming_texture_instance texture_instance;
+		texture_instance.object_sphere = bbox.sphere( );
+		texture_instance.texel_factor = surface_instance->m_render_surface->m_streaming_texture_factor;
+		texture_instance.surface_instance = surface_instance;
+
+		texture_named_instance* tex_it = effect_used_textures.begin( );
+		for ( ; tex_it != effect_used_textures.end( ); ++tex_it )
+		{
+			streamable_texture_info* info_it = std::find_if(
+				streaming_textures.begin( ),
+				streaming_textures.end( ),
+				find_texture_predicate( tex_it->texture )
+			);
+
+			if ( info_it == streaming_textures.end( ) )
+			{
+				streamable_texture_info info;
+				info.texture = tex_it->texture;
+				info.path = tex_it->path;
+				info.instances.push_back( texture_instance );
+				streaming_textures.push_back( info );
+				continue;
+			}
+
+			streaming_texture_instance* instance_it = update_only ?
+				std::find(
+					info_it->instances.begin( ),
+					info_it->instances.end( ),
+					texture_instance
+				) :
+				info_it->instances.end( );
+			if ( instance_it == info_it->instances.end( ) )
+				info_it->instances.push_back( texture_instance );
+			else
+				instance_it->object_sphere = texture_instance.object_sphere;
+		}
+	}
 }
 
 void scene::add_model( render_model_instance_impl_ptr v )
@@ -759,32 +717,11 @@ void scene::select_models(
 
 void scene::update_models( )
 {
-	BEGIN_TIMER(statistics::ref().visibility_stat_group.models_updating_time);
-
 	vector< render_model_instance_impl_ptr >::iterator			it	=	m_render_model_instances.begin();
 	vector< render_model_instance_impl_ptr >::const_iterator	end =	m_render_model_instances.end();
 
 	for( ; it !=  end; ++it)
 		(*it)->update();
-
-	END_TIMER;
-
-	// CALL SITE INFO
-	// <0x63d0e9> -> void < unknown >()
-	// ******
-
-	// FUNCTION BODY[0x63d0d0]: 10
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d0d1>|0x001|+0x007:'748'
-	// <0x63d0d8>|0x008|+0x006:'749'
-	// <0>
-	// <0x63d0de>|0x00e|+0x004:'751'
-	// <0x63d0e2>|0x012|+0x012:'752'
-	// <0>
-	// <1>
-	// ******
 }
 
 void scene::add_light( u32 id, light_props* props )
@@ -868,8 +805,7 @@ void scene::remove_sky_ambient_occlusion( u32 id )
 		std::find_if( m_sky_ao_volumes.begin( ), m_sky_ao_volumes.end( ), find_by_id_predicate< sky_ambient_occlusion >( id ) );
 	if ( i != m_sky_ao_volumes.end( ) )
 	{
-		sky_ambient_occlusion* sky_ao		= *i;
-		DELETE								( sky_ao );
+		DELETE								( *i );
 		m_sky_ao_volumes.erase				( i );
 	}
 }
@@ -904,35 +840,18 @@ void scene::remove_ambient_volume( u32 id )
 
 void scene::update_lpv_occluder( u32 id, float4x4 const& transform )
 {
-	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
-	if ( i == m_lpv_occluders.end( ) || id < i->first )
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.find( id );
+	if ( i == m_lpv_occluders.end( ) )
 		m_lpv_occluders.insert			( std::make_pair( id, transform ) );
 	else
 		i->second						= transform;
-
-	// FUNCTION BODY[0x63d330]: 6
-	// <0x63d33e>|0x00e|+0x03e:'899'
-	// <0>
-	// <1>
-	// <0x63d37c>|0x04c|+0x035:'902'
-	// <0>
-	// <0x63d3b1>|0x081|-0x006:'904'
-	// <0x63d3ab>|0x07b|+0x013:'905'
-	// ******
 }
 
 void scene::remove_lpv_occluder( u32 id )
 {
-	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.lower_bound( id );
-	if ( i != m_lpv_occluders.end( ) && i->first == id )
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::iterator	i = m_lpv_occluders.find( id );
+	if ( i != m_lpv_occluders.end( ) )
 		m_lpv_occluders.erase			( i );
-
-	// FUNCTION BODY[0x63d050]: 4
-	// <0x63d057>|0x007|+0x041:'909'
-	// <0>
-	// <0x63d098>|0x048|+0x008:'911'
-	// <0x63d0a0>|0x050|+0x020:'912'
-	// ******
 }
 
 void scene::add_decal( u32 id, decal_properties const& properties )
@@ -1033,48 +952,23 @@ void scene::add_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 
 void scene::update_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
-	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
-	if ( i == m_volume_fogs.end( ) || id < i->first )
-		m_volume_fogs.insert			( std::make_pair( id, in_parameters ) );
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.find( id );
+	if ( i == m_volume_fogs.end( ) )
+		m_volume_fogs.insert			( std::pair< u32, volume_fog_parameters >( id, in_parameters ) );
 	else
 		i->second						= in_parameters;
-
-	// FUNCTION BODY[0x63d460]: 10
-	// <0x63d471>|0x011|+0x03f:'963'
-	// <0>
-	// <0x63d4b0>|0x050|+0x008:'965'
-	// <0>
-	// <0x63d4b8>|0x058|+0x016:'967'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63d4ce>|0x06e|-0x009:'971'
-	// <0>
-	// <0x63d4c5>|0x065|+0x02d:'973'
-	// ******
 }
 
 void scene::remove_volume_fog( u32 id )
 {
-	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.lower_bound( id );
-	if ( i != m_volume_fogs.end( ) && i->first == id )
+	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.find( id );
+	if ( i != m_volume_fogs.end( ) )
 		m_volume_fogs.erase			( i );
-
-	// FUNCTION BODY[0x63cfd0]: 4
-	// <0x63cfd7>|0x007|+0x041:'977'
-	// <0>
-	// <0x63d018>|0x048|+0x008:'979'
-	// <0x63d020>|0x050|+0x020:'980'
-	// ******
 }
 
 void scene::select_volume_fog_instances( float4x4 const& vp, vector< volume_fog_parameters >& out_instances )
 {
-	for (
-		associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator i = m_volume_fogs.begin( );
-		i != m_volume_fogs.end( );
-		++i
-	)
+	for ( associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator i = m_volume_fogs.begin( ); i != m_volume_fogs.end( ); ++i )
 	{
 		math::frustum view_frustum( vp );
 		math::aabb bbox = math::create_identity_aabb( );
@@ -1130,26 +1024,6 @@ void scene::render_lines( bool covering_effect )
 
 	m_line_vertices.resize		( 0 );
 	m_line_indices.resize		( 0 );
-
-	// FUNCTION BODY[0x63f9b0]: 17
-	// <0x63f9b6>|0x006|+0x014:'1023'
-	// <0>
-	// <0x63f9ca>|0x01a|+0x002:'1025'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x63f9cc>|0x01c|+0x02a:'1036'
-	// <0>
-	// <0x63f9f6>|0x046|+0x013:'1038'
-	// <0x63fa09>|0x059|+0x016:'1039'
-	// ******
 }
 
 void scene::update_triangles( const u32 add_count )
@@ -1187,23 +1061,6 @@ void scene::render_triangles( bool covering_effect )
 	);
 	m_triangle_vertices.resize	( 0 );
 	m_triangle_indices.resize	( 0 );
-
-	// FUNCTION BODY[0x63f900]: 14
-	// <0x63f906>|0x006|+0x016:'1054'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x63f91c>|0x01c|+0x02b:'1065'
-	// <0x63f947>|0x047|+0x013:'1066'
-	// <0x63f95a>|0x05a|+0x016:'1067'
-	// ******
 }
 
 void scene::draw_lines( vectora< vertex_colored > const& vertices, vectora< u16 > const& indices )
@@ -1292,59 +1149,29 @@ void scene::flush(
 	bool	all_depth_unused
 )
 {
-	backend::ref().reset_depth_stencil_target();
+	if ( all_depth_used )
+	{
+		backend::ref().reset_depth_stencil_target();
 
-	on_draw_scene				( true );
-	render_lines				( false );
-	render_triangles			( false );
+		on_draw_scene				( true );
+		render_lines				( false );
+		render_triangles			( false );
+	}
 
-	backend::ref().reset_depth_stencil_target	( );
-	backend::ref().clear_depth_stencil			( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);
+	if ( all_depth_unused )
+	{
+		backend::ref().reset_depth_stencil_target	( );
+		backend::ref().clear_depth_stencil			( D3D_CLEAR_DEPTH|D3D_CLEAR_STENCIL, 1.0f, 0);
 
-	// render selected models
-	system_renderer::ref().draw_render_models_selection				( m_selected_models );
-	system_renderer::ref().draw_particle_system_instance_selections	( m_particle_system_instances );
-	system_renderer::ref().draw_speedtree_instance_selections		( m_speedtree_instances );
+		// render selected models
+		system_renderer::ref().draw_render_models_selection				( m_selected_models );
+		system_renderer::ref().draw_particle_system_instance_selections	( m_particle_system_instances );
+		system_renderer::ref().draw_speedtree_instance_selections		( m_speedtree_instances );
 
-	on_draw_scene				( false );
-	render_lines				( true );
-	render_triangles			( true );
-
-	// FUNCTION BODY[0x63fe70]: 33
-	// <0x63fe70>|0x000|+0x00d:'1101'
-	// <0>
-	// <0x63fe7d>|0x00d|+0x020:'1103'
-	// <0>
-	// <0x63fe9d>|0x02d|+0x009:'1105'
-	// <0x63fea6>|0x036|+0x009:'1106'
-	// <0x63feaf>|0x03f|+0x009:'1107'
-	// <0>
-	// <1>
-	// <0x63feb8>|0x048|+0x00b:'1110'
-	// <0>
-	// <0x63fec3>|0x053|+0x020:'1112'
-	// <0x63fee3>|0x073|+0x02e:'1113'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <0x63ff11>|0x0a1|+0x012:'1126'
-	// <0x63ff23>|0x0b3|+0x012:'1127'
-	// <0x63ff35>|0x0c5|+0x012:'1128'
-	// <0>
-	// <0x63ff47>|0x0d7|+0x009:'1130'
-	// <0x63ff50>|0x0e0|+0x009:'1131'
-	// <0x63ff59>|0x0e9|+0x009:'1132'
-	// <0>
-	// ******
+		on_draw_scene				( false );
+		render_lines				( true );
+		render_triangles			( true );
+	}
 }
 
 void scene::select_model( render_model_instance_impl_ptr const& instance, const bool is_selected )
@@ -1411,61 +1238,36 @@ void scene::reset_grass( grass_world* w )
 	m_grass					= NULL;
 }
 
-// STATE[STUB]
 void scene::dump_scene_statistics( ) const
 {
-	// LOCALS
-	// vector< render_model_instance_impl_ptr > dump_instances
-	// fixed_string< 128 > 				model_name
-	// ******
+	struct sort_predicate {
+		bool operator()(
+			render_model_instance_impl_ptr const& left,
+			render_model_instance_impl_ptr const& right
+		) const
+		{
+			return left->get_surfaces_count( ) < right->get_surfaces_count( );
+		}
+	};
 
-	// TYPEDEFS
-	// typedef
-	// 	scene::dump_scene_statistics::__l2::sort_predicate
-	// 	scene::dump_scene_statistics::__l2::sort_predicate;
+	vector< render_model_instance_impl_ptr > dump_instances = m_render_model_instances;
+	std::sort( dump_instances.begin( ), dump_instances.end( ), sort_predicate( ) );
 
-	// ******
-
-	// CALL SITE INFO
-	// <0x63edff> -> u32 < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x63ec50]: 33
-	// <0x63ec5b>|0x00b|+0x05d:'1219'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <11>
-	// <12>
-	// <13>
-	// <14>
-	// <15>
-	// <16>
-	// <17>
-	// <0x63ecb8>|0x068|+0x03c:'1238'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63ecf4>|0x0a4|+0x013:'1242'
-	// <0x63ed07>|0x0b7|-0x0a0:'1243'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x63ec67>|0x017|+0x12a:'1250'
-	// <0x63ed91>|0x141|+0x0ed:'1250'
-	// <0>
-	// ******
+	u32 index = 1;
+	for (
+		render_model_instance_impl_ptr* it = dump_instances.begin( );
+		it != dump_instances.end( );
+		++it, ++index
+	)
+	{
+		fixed_string< 128 > model_name( "<unknown>" );
+		LOG_INFO(
+			"%d: surfaces: %d, model: %s",
+			index,
+			( *it )->get_surfaces_count( ),
+			model_name.c_str( )
+		);
+	}
 }
 
 } // namespace render

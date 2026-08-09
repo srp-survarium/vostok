@@ -18,12 +18,13 @@ public:
 	};
 
 	effect_copy_image( ) { }
-	virtual ~effect_copy_image( ) { }
 
 	virtual void compile(
-		effect_compiler&,
-		custom_config_value const&
+		effect_compiler&			compiler,
+		custom_config_value const&	custom_config
 	) override;
+
+	virtual ~effect_copy_image( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_copy_image, 0x4 );

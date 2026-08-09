@@ -5,6 +5,7 @@
 
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/res_effect.h>
+#include <vostok/render/facade/render_stage_types.h>
 #include <vostok/render/facade/vertex_input_type.h>
 #include <vostok/resources_unmanaged_resource.h>
 
@@ -21,29 +22,20 @@ typedef resources::resource_ptr<
 > res_effect_ptr;
 
 struct material_effects {
-	enum { stage_count = 29 };
-
 	material_effects( );
 
-	u32 get_render_complexity( ) const
-	{
-		return 0;
-	}
+	inline u32 get_render_complexity( ) const;
 
-	void get_max_used_texture_dimension(
+	inline void get_max_used_texture_dimension(
 		u32& size_x,
 		u32& size_y
-	) const
-	{
-		size_x = 1;
-		size_y = 1;
-	}
+	) const;
 
 	enum_vertex_input_type get_vertex_input_type( ) const;
 	void get_used_textures( vector< texture_named_instance >& out_array ) const;
 
 	post_process_parameters	m_post_process_stage_parameters;
-	bool					stage_enable[stage_count];
+	bool					stage_enable[num_render_stages];
 	bool					is_emissive;
 	bool					is_organic;
 	bool					use_subsurface_scattering;
@@ -60,7 +52,7 @@ struct material_effects {
 	float4					organic_clear_color;
 	enum_vertex_input_type	m_vertex_input_type;
 	D3D11_CULL_MODE			m_cull_mode;
-	res_effect_ptr			m_effects[stage_count];
+	res_effect_ptr			m_effects[num_render_stages];
 };
 
 STATIC_SIZE_ASSERT( material_effects, 0x390 );

@@ -249,6 +249,12 @@ static console_commands::cc_bool s_debug_use_skeletel_mesh_lods_cc(
 );
 
 struct stage_stat {
+	static s32 const history_size = 1;
+
+	double elapsed_gpu_msec[history_size];
+	double elapsed_cpu_msec[history_size];
+	u32 dips[history_size];
+
 	double average_time( bool gpu_time ) const
 	{
 		double result	= 0.;
@@ -267,9 +273,6 @@ struct stage_stat {
 		return u32( result / array_size( dips ) );
 	}
 
-	double elapsed_gpu_msec[1];
-	double elapsed_cpu_msec[1];
-	u32 dips[1];
 	stage* stg;
 };
 
@@ -373,17 +376,7 @@ struct remove_model_if_olt_predicate {
 
 bool renderer::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x6473d0]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6473d0>|0x000|+0x033:'163'
-	// <0x647403>|0x033|-0x001:'163'
-	// <0x647402>|0x032|+0x003:'164'
-	// ******
-
-	return m_gbuffer_to_screen_shader.c_ptr( ) != NULL;
+	return m_gbuffer_to_screen_shader.c_ptr( ) && m_fill_sky_ao_map_effect.c_ptr( ) && m_fill_environment_probe_face.c_ptr( ) && m_pick_light_luminance_effect.c_ptr( ) && m_grass_trample_effect.c_ptr( );
 }
 
 static statistics m_statistics;
@@ -481,32 +474,7 @@ renderer::renderer( renderer_context* renderer_context ) :
 
 renderer::~renderer( )
 {
-	// LOCALS
-	// std::reverse_iterator< stage** > e
-	// ******
 
-	// CALL SITE INFO
-	// <0x6483b4> -> void* < unknown >( u32 )
-	// <0x648402> -> void* < unknown >( u32 )
-	// <0x648441> -> void* < unknown >( u32 )
-	// <0x648481> -> void* < unknown >( u32 )
-	// <0x6484c1> -> void* < unknown >( u32 )
-	// ******
-
-	// FUNCTION BODY[0x648310]: 12
-	// <0>
-	// <1>
-	// <0x64831a>|0x00a|+0x034:'271'
-	// <0x64834e>|0x03e|+0x031:'272'
-	// <0>
-	// <0x64837f>|0x06f|+0x014:'274'
-	// <0x648393>|0x083|+0x047:'275'
-	// <0>
-	// <0x6483da>|0x0ca|+0x041:'277'
-	// <0x64841b>|0x10b|+0x040:'278'
-	// <0x64845b>|0x14b|+0x040:'279'
-	// <0x64849b>|0x18b|+0x040:'280'
-	// ******
 
 	DELETE					( m_frame_sync_event );
 	DELETE					( m_timing_event );
@@ -552,9 +520,9 @@ void renderer::recreate_stage( enum_render_stage_type arg_0 )
 	}
 }
 
-void renderer::set_target_context( renderer_context_targets const* targets_context, bool force_set )
+void renderer::set_target_context( renderer_context_targets const* targets_context, bool )
 {
-	m_renderer_context->set_target_context( targets_context, force_set );
+	m_renderer_context->set_target_context( targets_context, true );
 }
 
 void renderer::setup_render_output_window(
@@ -562,45 +530,6 @@ void renderer::setup_render_output_window(
 	math::rectangle< float2 > const&	viewport
 )
 {
-	// LOCALS
-	// math::rectangle< float2 > 		res_viewport
-	// D3D11_VIEWPORT 					d3d_viewport
-	// ******
-
-	// CALL SITE INFO
-	// <0x6482d6> -> void < unknown >( u32, D3D11_VIEWPORT const* )
-	// ******
-
-	// FUNCTION BODY[0x648130]: 27
-	// <0>
-	// <0x648133>|0x003|+0x00a:'322'
-	// <0>
-	// <0x64813d>|0x00d|+0x015:'324'
-	// <0x648152>|0x022|+0x011:'325'
-	// <0x648163>|0x033|+0x011:'326'
-	// <0>
-	// <1>
-	// <0x648174>|0x044|+0x06a:'329'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6481de>|0x0ae|+0x010:'334'
-	// <0x6481ee>|0x0be|+0x012:'335'
-	// <0x648200>|0x0d0|+0x016:'336'
-	// <0x648216>|0x0e6|+0x012:'337'
-	// <0>
-	// <0x648228>|0x0f8|+0x018:'339'
-	// <0x648240>|0x110|+0x015:'340'
-	// <0>
-	// <1>
-	// <2>
-	// <0x648255>|0x125|+0x034:'344'
-	// <0>
-	// <1>
-	// <0x648289>|0x159|+0x04f:'347'
-	// ******
-
 	R_ASSERT				( in_output_window );
 	render_output_window* const output_window = (render_output_window*)in_output_window.c_ptr( );
 
@@ -622,18 +551,16 @@ void renderer::setup_render_output_window(
 	u32 const window_width	= backend::ref( ).target_width( );
 	u32 const window_height	= backend::ref( ).target_height( );
 
-	D3D11_VIEWPORT d3d_viewport = { window_width * res_viewport.left, window_height * res_viewport.top, window_width * res_viewport.width( ), window_height * res_viewport.height( ), 0.f, 1.f };
+	D3D11_VIEWPORT d3d_viewport = {
+		window_width * res_viewport.left, window_height * res_viewport.top, window_width * res_viewport.width( ), window_height * res_viewport.height( ), 0.f, 1.f
+	};
+
 
 	backend::ref( ).set_viewport( d3d_viewport );
 }
 
 void renderer::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
 {
-	// FUNCTION BODY[0x6473b0]: 2
-	// <0x6473b0>|0x000|+0x00f:'352'
-	// <0x6473bf>|0x00f|+0x009:'353'
-	// ******
-
 	if ( m_stages[stage_type] )
 		m_stages[stage_type]->set_enabled( toggle );
 }
@@ -667,15 +594,14 @@ void renderer::execute_stages( )
 		if ( !current_stage )
 			continue;
 
-		u32 prev_draw_calls;
 
 
 
 
-		if ( s_do_stages_profiling )
-		{
+
+		u32 prev_draw_calls = backend::ref( ).num_draw_calls;
+		if ( s_do_stages_profiling ) {
 			m_timing_timer.start( );
-			prev_draw_calls		= backend::ref( ).num_draw_calls;
 		}
 
 		current_stage->execute	( );
@@ -685,6 +611,7 @@ void renderer::execute_stages( )
 			stat->dips[0]				= backend::ref( ).num_draw_calls - prev_draw_calls;
 			stat->elapsed_cpu_msec[0]	= m_timing_timer.get_elapsed_sec( ) * 1000.0;
 
+
 			m_timing_event->issue	( );
 			m_timing_event->wait	( );
 
@@ -693,7 +620,7 @@ void renderer::execute_stages( )
 	}
 }
 
-bool sort_by_vs_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
+inline bool sort_by_vs_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
 	material_effects const& left_material_effects =
 		left->m_render_surface->get_material_effects( );
@@ -709,7 +636,7 @@ bool sort_by_vs_predicate::operator()( render_surface_instance const* left, rend
 		< right_pass->get_ps( )->hardware_shader( )->hardware_shader( );
 }
 
-bool sort_by_distance_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
+inline bool sort_by_distance_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
 	float3 pos0 = left->m_transform->c.xyz( );
 	float3 pos1 = right->m_transform->c.xyz( );
@@ -728,7 +655,7 @@ bool sort_by_distance_predicate::operator()( render_surface_instance const* left
 	return m_from_near_to_far ? distance0 < distance1 : distance0 > distance1;
 }
 
-bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
+inline bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
 	material_effects const& left_material_effects =
 		left->m_render_surface->get_material_effects( );
@@ -748,7 +675,6 @@ bool sort_by_texture_predicate::operator()( render_surface_instance const* left,
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	bbox.modify					( model_transform );
-
 	float3 const center			= bbox.center( );
 	float3 const extents		= bbox.extents( );
 	float const distance		= math::squared_length( view_position - center );
@@ -757,10 +683,10 @@ static float screen_factor( float3 const& view_position, math::aabb bbox, float4
 
 void renderer::fill_opaque_models( )
 {
-	if ( !options::ref( ).current.m_use_shader_lods )
-	{
-		vector<render_surface_instance*>& opaque_models =
-			m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+	if ( !options::ref( ).current.m_use_shader_lods ) {
+		vector<render_surface_instance*>& opaque_models = m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+
+
 		opaque_models.clear( );
 
 		for ( render_surface_instance* const* i = m_renderer_context->get_scene_view( )->get_visible_models( ).begin( ), * const* e = m_renderer_context->get_scene_view( )->get_visible_models( ).end( ); i != e; ++i )
@@ -769,65 +695,56 @@ void renderer::fill_opaque_models( )
 			if ( me.m_effects[gbuffer_render_stage].c_ptr( ) )
 				opaque_models.push_back( *i );
 		}
-
 		sort_models( opaque_models, gbuffer_render_stage, 0 );
 		return;
 	}
 
-	vector<render_surface_instance*>& opaque_models =
-		m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+	vector<render_surface_instance*>& opaque_models = m_renderer_context->get_scene_view( )->get_visible_opaque_models( );
+
 	opaque_models.clear( );
 
 	vector<render_surface_instance*> opaque_models_lod0, opaque_models_lod1;
 
 	for ( render_surface_instance* const* i = m_renderer_context->get_scene_view( )->get_visible_models( ).begin( ), * const* e = m_renderer_context->get_scene_view( )->get_visible_models( ).end( ); i != e; ++i )
 	{
-		material_effects const& me =
-			( *i )->m_render_surface->get_material_effects( );
+		render_surface_instance* instance = *i;
+
+		material_effects const& me = instance->m_render_surface->get_material_effects( );
+
 		if ( !me.m_effects[gbuffer_render_stage].c_ptr( ) )
 			continue;
 
 		float const factor = screen_factor(
 			m_renderer_context->get_view_pos( ),
-			( *i )->m_parent->get_aabb( ),
-			*( *i )->m_transform
+			instance->m_parent->get_aabb( ),
+			*instance->m_transform
 		);
 
 		bool const skeletal_mesh =
-			me.get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type
-			|| me.get_vertex_input_type( ) == skeletal_3_bones_mesh_vertex_input_type
+			me.get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type || me.get_vertex_input_type( ) == skeletal_3_bones_mesh_vertex_input_type
 			|| me.get_vertex_input_type( ) == skeletal_2_bones_mesh_vertex_input_type
 			|| me.get_vertex_input_type( ) == skeletal_1_bones_mesh_vertex_input_type;
 
-		float const lod0_threshold =
-			s_debug_use_skeletel_mesh_lods_value && skeletal_mesh ? 0.01f : 0.005f;
+		float const lod0_threshold = s_debug_use_skeletel_mesh_lods_value && skeletal_mesh ? 0.01f : 0.005f;
 
-		( *i )->m_shader_lod_index = factor > lod0_threshold
-			? 0
-			: factor <= 0.0000333f
-				&& ( *i )->m_render_surface
-				&& ( *i )->m_render_surface->get_vertex_input_type( ) == static_mesh_vertex_input_type
-				? 2
-				: 1;
+		instance->m_shader_lod_index = factor > lod0_threshold ? 0
+			: factor <= 0.0000333f && instance->m_render_surface
+				&& instance->m_render_surface->get_vertex_input_type( ) == static_mesh_vertex_input_type ? 2 : 1;
 
-		( *i )->m_dynamic_screen_factor = factor;
+		instance->m_dynamic_screen_factor = factor;
 
-		if ( ( *i )->m_shader_lod_index == 0 )
-			opaque_models_lod0.push_back( *i );
-		else if ( ( *i )->m_shader_lod_index == 1 )
-			opaque_models_lod1.push_back( *i );
+		if ( instance->m_shader_lod_index == 0 )
+			opaque_models_lod0.push_back( instance );
+		else if ( instance->m_shader_lod_index == 1 )
+			opaque_models_lod1.push_back( instance );
 	}
 
 	if ( opaque_models_lod0.size( ) )
 		sort_models( opaque_models_lod0, gbuffer_render_stage, 1 );
-
 	if ( opaque_models_lod1.size( ) )
 		sort_models( opaque_models_lod1, gbuffer_render_stage, 3 );
 
-	if (
-		!opaque_models_lod0.size( )
-		&& !opaque_models_lod1.size( )
-	)
+	if ( !opaque_models_lod0.size( ) && !opaque_models_lod1.size( ) )
 		return;
 
 	opaque_models.reserve( opaque_models_lod0.size( ) + opaque_models_lod1.size( ) );
@@ -889,8 +806,9 @@ static void push_point(
 	float						v
 )
 {
-	// FUNCTION BODY[0x638870]
-	// claude@NOTE: VA corrected from stale 0x647360; match.db attributes 0x638870 to statistics.cpp:89 (per-TU static twin).
+
+
+
 	vostok::render::ui::vertex& vertex_item	= out_vertices[index];
 	vertex_item.m_position.set				(x, y, z, 1);
 	vertex_item.m_uv.set					(u, v);
@@ -910,12 +828,12 @@ static void make_ui_vertices(
 	u32							end_selection_index
 )
 {
-	// FUNCTION BODY[0x647410]: 50
 	using namespace vostok::math;
 
 	float2 pos_rt			(0, 0);
 	float2 pos				= in_position;
 	u32 symb_count			= strlen(in_text);
+
 
 	pcstr ch				= in_text;
 	float const height		= in_font.get_height();
@@ -970,9 +888,6 @@ static void draw_text(
 	u32					clr
 )
 {
-	// FUNCTION BODY[0x648b70]: 20
-	// claude@NOTE: legacy (statistics.cpp) took ui::world& and looked up default_font(); the
-	// canonical signature receives the font directly
 	u32 const string_length		= strlen(str);
 	math::color string_color	(clr);
 
@@ -1003,14 +918,10 @@ static void draw_text_shadowed(
 	u32					clr
 )
 {
-	// FUNCTION BODY[0x648c80]: 2
 	draw_text(in_font, str, pos_x + 1, pos_y + 1, math::color_rgba(0.f, 0.f, 0.f, 1.f));
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
-// claude@NOTE: the second disjunct of the line-1229 guard is an LTCG-folded
-// constant (`mov edx, <code address>; test edx, edx; je`) whose source spelling
-// could not be recovered - only the `output_window.c_ptr( )` half is written here.
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -1021,6 +932,8 @@ void renderer::render(
 	vostok::ui::font const*				default_font
 )
 {
+
+
 	backend::ref( ).num_vs_changes	= 0;
 	backend::ref( ).num_ps_changes	= 0;
 	backend::ref( ).num_il_changes	= 0;
@@ -1039,13 +952,13 @@ void renderer::render(
 
 	VOSTOK_UNREFERENCED_PARAMETER( draw_debug_terrain );
 
-
 	if ( !static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->valid_present( ) )
 	{
 		static_cast_checked< render_output_window* >( output_window.c_ptr( ) )->render_output( )->present( );
 
 		return;
 	}
+
 
 
 
@@ -1059,7 +972,6 @@ void renderer::render(
 
 		return;
 	}
-
 	render::scene* const scene		= static_cast_checked< render::scene* >( in_scene.c_ptr( ) );
 	render::scene_view* view		= static_cast_checked< render::scene_view* >( in_view.c_ptr( ) );
 
@@ -1272,7 +1184,7 @@ void renderer::render(
 
 	if ( s_draw_frame_histogram_value )
 	{
-		if ( m_fps_history.size( ) >= 512 )
+		if ( m_fps_history.size( ) >= m_num_fps_history_values )
 		{
 			frame_histogram_info* old_info = m_fps_history.pop_front( );
 			DELETE				( old_info );
@@ -1302,6 +1214,9 @@ void renderer::draw_debug(
 	vostok::ui::font const*		default_font
 )
 {
+
+
+
 	backend::ref( ).disable_DrawIndexed		= false;
 
 	backend::ref( ).reset_depth_stencil_target( );
@@ -1311,8 +1226,14 @@ void renderer::draw_debug(
 	if ( m_picking_lighting_luminance_mode && default_font )
 		draw_luminance_picker_info			( default_font );
 
+
 	if ( s_do_stages_profiling && default_font )
 		draw_stages_stats					( default_font );
+
+
+
+
+
 
 	u32 num_vs_changes		= backend::ref( ).num_vs_changes;
 	u32 num_ps_changes		= backend::ref( ).num_ps_changes;
@@ -1324,11 +1245,17 @@ void renderer::draw_debug(
 	u32 num_pst_changes		= backend::ref( ).num_pst_changes;
 	u32 num_pss_changes		= backend::ref( ).num_pss_changes;
 
+
+
+
+
 	statistics::ref( ).debug_stat_group.textures_compression_duration.value		= backend::ref( ).m_texture_compression_time;
 	statistics::ref( ).debug_stat_group.dxt_rt_tex_creation_duration.value		= backend::ref( ).m_dxt_rt_tex_creation_time;
 	statistics::ref( ).debug_stat_group.cpu_textures_compression_duration.value	= backend::ref( ).m_cpu_compression_time;
 	statistics::ref( ).debug_stat_group.gpu_num_compressed_textures.value		= backend::ref( ).m_gpu_num_compressed_textures;
 	statistics::ref( ).debug_stat_group.cpu_num_compressed_textures.value		= backend::ref( ).m_cpu_num_compressed_textures;
+
+
 
 	statistics::ref( ).debug_stat_group.num_vertex_shader_changes.value			= num_vs_changes;
 	statistics::ref( ).debug_stat_group.num_pixel_shader_changes.value			= num_ps_changes;
@@ -1347,11 +1274,16 @@ void renderer::draw_debug(
 
 	const double es2 = frame_time;
 
+
 	statistics::ref( ).general_stat_group.render_frame_time.cpu_time.value		= es2 * 1000.;
 	statistics::ref( ).general_stat_group.render_frame_time.gpu_time.value		= es2 * 1000.;
 
 	statistics::ref( ).general_stat_group.fps.value			= math::floor( es2 > 0. ? 1. / es2 : 0. );
 	statistics::ref( ).general_stat_group.cpu_fps.value		= math::floor( es2 > 0. ? 1. / es2 : 0. );
+
+
+
+
 
 	statistics::ref( ).general_stat_group.num_setted_shader_constants.value		= backend::ref( ).num_setted_shader_constants;
 	statistics::ref( ).visibility_stat_group.num_draw_calls.value				= backend::ref( ).num_draw_calls;
@@ -1363,11 +1295,20 @@ void renderer::draw_debug(
 		( resource_manager::ref( ).get_render_target_video_memory( ) >> 20 ) -
 		statistics::ref( ).debug_stat_group.gbuffer_video_memory.value;
 
+
+
+
+
 	if ( m_stage_debug && view->editor_debug_mode )
 		m_stage_debug->execute				( );
 
 	if ( m_stages[sun_shadows_accumulate_render_stage] )
+
 		m_stages[sun_shadows_accumulate_render_stage]->m_context->set_w_identity( );
+
+
+
+
 
 	if ( m_visibility_stage )
 		m_visibility_stage->debug_render	( );
@@ -1389,6 +1330,7 @@ void renderer::draw_debug(
 
 	if ( m_stages[decals_accumulate_render_stage] )
 		m_stages[decals_accumulate_render_stage]->debug_render( );
+
 }
 
 // claude@NOTE: residual cause - the target inlines draw_text_shadowed (and math::color_rgba
@@ -1490,52 +1432,13 @@ void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 }
 
 void renderer::present(
-	base_output_window_ptr				in_output_window,
-	math::rectangle< float2 > const&	viewport
+	base_output_window_ptr,
+	math::rectangle< float2 > const&
 )
 {
-	// FUNCTION BODY[0x648b10]: 6
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x648b10>|0x000|+0x02c:'1519'
-	// ******
-
-	render_output_window* const output_window = static_cast_checked< render_output_window* >( in_output_window.c_ptr( ) );
-	setup_render_output_window	( in_output_window, viewport );
-
-	// Present the final image to base render target
 	m_present_stage->execute	( m_renderer_context->get_t( rt_present ) );
-
-	if ( output_window )
-	{
-		if ( output_window->m_flash_renderer )
-			output_window->m_flash_renderer->present( 0, 0, 0 );
-
-		output_window->render_output( )->present( );
-	}
-
-	backend::ref( ).reset_depth_stencil_target( );
-	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
-
-	backend::ref( ).reset		( );
-	backend::ref( ).flush		( );
-
-	m_last_frame_time			= m_current_time;
 }
 
-// claude@NOTE: the three float scales are loop-invariant and get hoisted into the
-// loop preheader, so only screen_width/screen_height keep their own statements; the
-// dips scale never needs a frame slot because its factor stays on the x87 stack
-// (info->dips goes through fild) while the time scale is reloaded into SSE.
-// claude@NOTE: residual cause - the target folds the inner `m_render_output ? ... : 0`
-// out of backend::target_width/target_height (the guard above already proves it
-// non-null) and reuses the guard's register for `->width()`/`->height()`; our base
-// re-tests through a different expression, which adds 4 CFG blocks and ~0x1a bytes
-// (sema: base 26 blocks vs target 22, first skeleton divergence at B3). Those
-// accessors live in render/core/dx11/backend_inline.h, outside this lane's scope.
 void renderer::draw_frame_histogram( ) const
 {
 	if ( !backend::ref( ).m_render_output )
@@ -1552,14 +1455,16 @@ void renderer::draw_frame_histogram( ) const
 	float3 lines_dips[512];
 
 	u32 count					= 0;
+
+
 	for ( frame_histogram_info* info = m_fps_history.front( ); info; info = info->next )
 	{
+
 		lines_time[count]		= float3(
 			count * scale_x * 2.f / screen_width - 1.f,
 			info->time * scale_time_y * 2.f / screen_height - 1.f,
 			0.f
 		);
-
 		lines_dips[count]		= float3(
 			count * scale_x * 2.f / screen_width - 1.f,
 			info->dips * scale_dips_y * 2.f / screen_height - 1.f,
@@ -1567,6 +1472,7 @@ void renderer::draw_frame_histogram( ) const
 		);
 		++count;
 	}
+
 
 	if ( count > 1 )
 	{

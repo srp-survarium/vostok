@@ -12,6 +12,8 @@
 #undef NOMSG
 #undef NOGDI
 #undef NOTEXTMETRIC
+#undef NOWINSTYLES
+#undef NOWINOFFSETS
 #include <vostok/os_include.h>
 
 #	if !USE_DX10

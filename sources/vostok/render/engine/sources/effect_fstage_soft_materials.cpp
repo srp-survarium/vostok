@@ -15,6 +15,8 @@ void effect_fstage_soft_materials::compile(
 {
 	// FUNCTION BODY[0x7ba8b0]
 	shader_configuration configuration;
+
+
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 
@@ -24,20 +26,20 @@ void effect_fstage_soft_materials::compile(
 
 		if( configuration.use_emissive==2)
 		{
-			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, true, 0);
+			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		}
 		solid_color_specular		= float4(float4(config["constant_emissive"]).xyz(), float(config["constant_emissive_multiplier"]));
 
 		if (configuration.use_transparency_texture)
 		{
-			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, true, 0);
+			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, false, u32(-1));
 		}
-		//else
+
 		{
 			solid_transparency = config.value_exists("constant_transparency") ? float(config["constant_transparency"]) : 1.0f;
 		}
 
-		compiler.set_texture("t_position", r2_rt_p, 0, false, 0);
+		compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
 
 		compiler.set_constant("solid_transparency",   solid_transparency);
 		compiler.set_constant("solid_color_specular", solid_color_specular);
@@ -45,7 +47,7 @@ void effect_fstage_soft_materials::compile(
 		if (config.value_exists("constant_soft_distance"))
 			compiler.set_constant("soft_distance", float(config["constant_soft_distance"]));
 
-		// TODO: fix it
+
 		compiler.set_cull_mode(D3D_CULL_NONE);
 	compile_end(compiler);
 }

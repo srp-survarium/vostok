@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_ENGINE_CLOUDS_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_CLOUDS_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: no temp/render_legacy ancestor (new-in-target cloud system, same as the .cpp) - matcher-phase work.
 #include <vostok/math_float3.h>
 #include <vostok/render/facade/cloud_key.h>
 #include <vostok/tasks_task.h>
@@ -21,14 +20,16 @@ class binary_config_value;
 namespace render {
 
 struct clouds {
+	typedef configs::binary_config_value ConfigType;
+	static s32 const num_max_keys = 32;
+
 	clouds( );
-	~clouds( ) { }
 
 	void initialize( cloud_parameters const& parameters );
 	void set_time( float time );
-	void set_key( u32 index, cloud_key_parameters const& in_cloud_key_parameters );
+	void set_key( u32 const index, cloud_key_parameters const& in_cloud_key_parameters );
 
-	cloud_key_parameters get_key( u32 index ) const
+	cloud_key_parameters get_key( u32 const index ) const
 	{
 		return m_keys[index];
 	}
@@ -38,7 +39,7 @@ struct clouds {
 		return m_num_keys;
 	}
 
-	void set_num_keys( u32 num_keys );
+	void set_num_keys( u32 const num_keys );
 	void invalidate( );
 
 	bool is_updated( ) const
@@ -73,20 +74,22 @@ struct clouds {
 	}
 
 private:
-	cloud_key_parameters get_next_key_of( u32 index ) const
+	cloud_key_parameters get_next_key_of( u32 const index ) const
 	{
 		return m_keys[get_next_index_of( index )];
 	}
 
-	u32 get_next_index_of( u32 index ) const;
+	u32 get_next_index_of( u32 const index ) const;
 
-	u32 get_prev_index_of( u32 index ) const
+	u32 get_prev_index_of( u32 const index ) const
 	{
 		return index ? index - 1 : m_num_keys - 1;
 	}
 
 public:
-	cloud_key_parameters					m_keys[32];
+	~clouds( ) { }
+
+	cloud_key_parameters					m_keys[num_max_keys];
 	u32										m_num_keys;
 	uninitialized_reference<cloud_simulation>	m_cloud_simulation_0;
 	uninitialized_reference<cloud_simulation>	m_cloud_simulation_1;
@@ -94,8 +97,6 @@ public:
 	bool									m_is_updated;
 	cloud_key_parameters					m_interp_key;
 	float									m_interp_alpha;
-
-private:
 	tasks::task_type*	m_tasks_type;
 	tasks::task			m_parent_task;
 	float				m_key_time_step;

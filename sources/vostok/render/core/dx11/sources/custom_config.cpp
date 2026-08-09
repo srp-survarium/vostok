@@ -87,9 +87,6 @@ void copy_destroyer( source_type const&, destination_type& )
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: no legacy ancestor (legacy primary was empty for this pair);
-// the target emits real code here - matcher work.
 template < >
 void copy_destroyer<configs::binary_config_value, custom_config_value>(
 	configs::binary_config_value const&,
@@ -192,26 +189,6 @@ void sort_by_crc( value_type& item )
 			break;
 		}
 	}
-}
-
-template < typename value_type >
-struct config_crc_predicate {
-	static bool compare( value_type const&, value_type const& )
-	{
-		return false;
-	}
-};
-
-// STATE[STUB]
-// claude@NOTE: no legacy ancestor (target-only binary-config sort path).
-template < >
-bool config_crc_predicate<configs::binary_config_value>::compare(
-	configs::binary_config_value const&,
-	configs::binary_config_value const&
-)
-{
-	// FUNCTION BODY[0x559ca0]
-	return false;
 }
 
 void* align4( void* ptr )

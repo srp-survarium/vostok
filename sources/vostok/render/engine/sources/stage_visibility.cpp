@@ -67,14 +67,15 @@ stage_visibility::stage_visibility(
 	renderer_context* context
 ) :
 	stage( in_renderer, context ),
-	m_data_ready( true ),
 	m_portals_offset_to_results( 0 )
 {
+	m_data_ready = true;
+
+
+
+
 	m_occlusion_manager = NEW( hw_hiz_occlusion_manager )(
-		true,
-		options::ref( ).current.m_hiz_occlusion_culling_width,
-		options::ref( ).current.m_hiz_occlusion_culling_height
-	);
+		true, options::ref( ).current.m_hiz_occlusion_culling_width, options::ref( ).current.m_hiz_occlusion_culling_height );
 	m_static_bounds_array = NEW_ARRAY( float4, occlusion_buffer_size );
 	m_static_results_array = NEW_ARRAY( u8, occlusion_buffer_size );
 	m_current_occlusion_buffer_size = 0;
@@ -89,14 +90,10 @@ stage_visibility::~stage_visibility( )
 
 void stage_visibility::debug_render( )
 {
-	static volatile bool s_draw = false;
+	static bool s_draw = false;
+
 	if ( s_draw )
-		m_occlusion_manager->render_debug(
-			m_context,
-			m_static_bounds_array,
-			m_static_results_array,
-			m_current_occlusion_buffer_size
-		);
+		m_occlusion_manager->render_debug( m_context, m_static_bounds_array, m_static_results_array, m_current_occlusion_buffer_size );
 }
 
 void stage_visibility::execute( )
@@ -104,10 +101,7 @@ void stage_visibility::execute( )
 	if ( !options::ref( ).current.m_use_hiz_occlusion_culling )
 		frustum_culling( );
 	else {
-		m_data_ready = m_occlusion_manager->quary_and_get_results_if_ready(
-			m_static_results_array,
-			m_current_occlusion_buffer_size
-		);
+		m_data_ready = query_data( );
 		frustum_culling( );
 		if ( m_data_ready ) {
 			occlusion_culling( );

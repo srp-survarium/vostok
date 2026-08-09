@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_debug_environment_probe_preview : public effect_descriptor {
 public:
+	virtual void compile(
+		effect_compiler&			compiler,
+		custom_config_value const&	config
+	) override;
+
 	effect_debug_environment_probe_preview( ) { }
 	virtual ~effect_debug_environment_probe_preview( ) { }
-
-	virtual void compile(
-		effect_compiler&,
-		custom_config_value const&
-	) override;
 };
 
 STATIC_SIZE_ASSERT( effect_debug_environment_probe_preview, 0x4 );

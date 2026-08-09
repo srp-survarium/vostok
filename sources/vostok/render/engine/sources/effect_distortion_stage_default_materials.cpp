@@ -11,19 +11,26 @@ void effect_distortion_stage_default_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7ba150]
-	vostok::math::float3 distortion_scale = vostok::math::float3(config["distortion_scale"]);
+
+
+
+
+	vostok::math::float3 distortion_scale = vostok::math::float3( config["distortion_scale"] );
 	shader_configuration shader_config;
 
-	compile_begin("vertex_base", "distortion_base", compiler, &shader_config, config);
-		compiler.set_stencil( true, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP);
-		compiler.set_texture("t_base", pcstr(config["texture_distortion"]), 0, true, 0);
-		compiler.set_constant("distortion_scale", distortion_scale);
-		compiler.set_depth( true, false);
-		compiler.set_cull_mode(D3D_CULL_NONE);
-		//compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_INV_SRC_ALPHA);
-		compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-	compile_end(compiler);
+
+
+	compile_begin( "vertex_base", "distortion_base", compiler, &shader_config, config );
+	compiler.set_stencil( false, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP );
+	compiler.set_texture( "t_base", pcstr( config["texture_distortion"] ), 0, false, u32( -1 ) );
+
+
+	compiler.set_texture( "t_position", "$user$position", 0, false, u32( -1 ) );
+
+	compiler.set_constant( "distortion_scale", distortion_scale );
+	compiler.set_depth( true, false );
+	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
+	compile_end( compiler );
 }
 
 } // namespace render

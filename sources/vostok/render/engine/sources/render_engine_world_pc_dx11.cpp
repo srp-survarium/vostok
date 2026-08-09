@@ -99,12 +99,10 @@ untyped_buffer_ptr		g_quad_ib;
 
 static command_line::key	s_no_level( "no_level", "", "", "" );
 
-// claude@NOTE: residual is core-side - the target's cook_base ctor ends with a
-// resources_manager::register_cook call (right after the derived vftable store);
-// ours does not emit it, so that tail is missing here.
- renderer_cook::renderer_cook( ) :
-	resources::unmanaged_cook( resources::renderer_class, reuse_false, use_current_thread_id )
+renderer_cook::renderer_cook( ) :
+ resources::unmanaged_cook( resources::renderer_class, reuse_false, use_current_thread_id )
 {
+	resources::register_cook( this );
 }
 
 // claude@NOTE: inline-vs-call wall - the target keeps mutable_buffer's
@@ -150,137 +148,22 @@ void renderer_cook::create_resource(
 
 static void register_cooks( )
 {
-	// STATICS
-	// static skeleton_combined_model_instance_cook skeleton_combined_model_instance_cooker = <0x4c279e8>;
-	// static static_model_instance_cook static_model_instance_cooker = <0x4c27a88>;
-	// static tracer_model_instance_cook tracer_model_instance_cooker = <0x4c27a48>;
-	// static skeleton_combined_render_model_instance_cook skeleton_combined_render_model_instance_cooker = <0x4c27a08>;
-	// static render_model_cook 		skeleton_mesh_instance_cooker = <0x4c27bf0>;
-	// static render_model_cook 		render_model_class_cooker = <0x4c27bd0>;
-	// static skeleton_combined_model_cook skeleton_combined_model_cooker = <0x4c27a28>;
-	// static material_effects_instance_cook material_effects_instance_cooker = <0x4c27988>;
-	// static user_mesh_cook 			user_mesh_cooker = <0x4c27b08>;
-	// static culling::portal_sector_structure_cook s_portal_system_cook = <0x4c278e8>;
-	// static material_cook 			material_cook = <0x4c279a8>;
-	// static scene_cook 				scene_cook = <0x4c27968>;
-	// static scene_view_cook 			scene_view_cook = <0x4c27948>;
-	// static render_output_window_cook render_output_window_cook = <0x4c27928>;
-	// static grass_cook 				grass_cooker = <0x4c279c8>;
-	// static animated_model_instance_cook animated_model_cook = <0x4c27908>;
-	// static grass_render_model_cook 	grass_render_model_class_cooker = <0x4c27aa8>;
-	// static renderer_cook 			renderer_cooker = <0x4c27b28>;
-	// static skeleton_render_model_instance_cook skeleton_render_model_instance_cooker = <0x4c27ac8>;
-	// static static_render_model_instance_cook static_render_model_instance_cooker = <0x4c27ae8>;
-	// static skeleton_model_instance_cook skeleton_model_instance_cooker = <0x4c27a68>;
-	// ******
-
-	// FUNCTION BODY[0x6546c0]: 61
-	// <0x6546c0>|0x000|+0x025:'146'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <0x6546e5>|0x025|+0x025:'157'
-	// <0>
-	// <0x65470a>|0x04a|+0x025:'159'
-	// <0x65472f>|0x06f|+0x025:'160'
-	// <0x654754>|0x094|+0x025:'161'
-	// <0x654779>|0x0b9|+0x030:'162'
-	// <0x6547a9>|0x0e9|+0x02f:'163'
-	// <0x6547d8>|0x118|+0x039:'164'
-	// <0x654811>|0x151|+0x026:'165'
-	// <0x654837>|0x177|+0x025:'166'
-	// <0>
-	// <0x65485c>|0x19c|+0x025:'168'
-	// <0x654881>|0x1c1|+0x025:'169'
-	// <0x6548a6>|0x1e6|+0x025:'170'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x6548cb>|0x20b|+0x025:'182'
-	// <0>
-	// <0x6548f0>|0x230|+0x025:'184'
-	// <0x654915>|0x255|+0x00a:'185'
-	// <0>
-	// <0x65491f>|0x25f|+0x025:'187'
-	// <0x654944>|0x284|+0x00a:'188'
-	// <0>
-	// <0x65494e>|0x28e|+0x005:'190'
-	// <0>
-	// <0x654953>|0x293|+0x005:'192'
-	// <0>
-	// <0x654958>|0x298|+0x025:'194'
-	// <0x65497d>|0x2bd|+0x00a:'195'
-	// <0>
-	// <0x654987>|0x2c7|+0x025:'197'
-	// <0x6549ac>|0x2ec|+0x00a:'198'
-	// <0>
-	// <0x6549b6>|0x2f6|+0x025:'200'
-	// <0x6549db>|0x31b|+0x00a:'201'
-	// <0>
-	// <0x6549e5>|0x325|+0x025:'203'
-	// <0x654a0a>|0x34a|+0x00a:'204'
-	// <0>
-	// <0x654a14>|0x354|+0x025:'206'
-	// ******
-
 	using resources::register_cook;
 
-	static render_model_cook			skeleton_mesh_instance_cooker( resources::skeleton_render_model_class );
-	register_cook						( &skeleton_mesh_instance_cooker );
-
-	static render_model_cook			render_model_class_cooker( resources::static_render_model_class );
-	register_cook						( &render_model_class_cooker );
-
 	static renderer_cook				renderer_cooker;
-	register_cook						( &renderer_cooker );
-
 	static user_mesh_cook				user_mesh_cooker;
-	register_cook						( &user_mesh_cooker );
-
-	static static_render_model_instance_cook static_render_model_instance_cooker;
-	register_cook						( &static_render_model_instance_cooker );
-
-	static skeleton_render_model_instance_cook	skeleton_render_model_instance_cooker;
-	register_cook						( &skeleton_render_model_instance_cooker );
-
-	static grass_render_model_cook		grass_render_model_class_cooker;
-	register_cook						( &grass_render_model_class_cooker );
-
 	static static_model_instance_cook	static_model_instance_cooker;
-	register_cook						( &static_model_instance_cooker );
-
 	static skeleton_model_instance_cook	skeleton_model_instance_cooker;
-	register_cook						( &skeleton_model_instance_cooker );
-
 	static tracer_model_instance_cook	tracer_model_instance_cooker;
-	register_cook						( &tracer_model_instance_cooker );
-
+	static render_model_cook			skeleton_mesh_instance_cooker( resources::skeleton_render_model_class );
+	static render_model_cook			render_model_class_cooker( resources::static_render_model_class );
+	static grass_render_model_cook		grass_render_model_class_cooker;
+	static static_render_model_instance_cook static_render_model_instance_cooker;
+	static skeleton_render_model_instance_cook skeleton_render_model_instance_cooker;
 	static skeleton_combined_model_cook	skeleton_combined_model_cooker;
-	register_cook						( &skeleton_combined_model_cooker );
-
 	static skeleton_combined_render_model_instance_cook skeleton_combined_render_model_instance_cooker;
-	register_cook						( &skeleton_combined_render_model_instance_cooker );
-
 	static skeleton_combined_model_instance_cook skeleton_combined_model_instance_cooker;
-	register_cook						( &skeleton_combined_model_instance_cooker );
-
 	static grass_cook					grass_cooker;
-	register_cook						( &grass_cooker );
 
 	static material_cook				material_cook;
 	register_cook						( &material_cook );
@@ -316,7 +199,6 @@ static void unregister_cooks( )
 
 void initialize_options( )
 {
-	// FUNCTION BODY[0x654090]: 1
 	// <0>
 	// ******
 
@@ -325,7 +207,6 @@ void initialize_options( )
 
  singletons_on_initialize::singletons_on_initialize( )
 {
-	// FUNCTION BODY[0x608c0]: 1
 	// <0>
 	// ******
 }
@@ -361,7 +242,6 @@ static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned
 	// <0x65406c> -> void < unknown >()
 	// ******
 
-	// FUNCTION BODY[0x653ef0]: 86
 	// <0>
 	// <1>
 	// <2>
@@ -550,7 +430,6 @@ static bool does_os_support_dx11( )
 	// <0x6542f7> -> int < unknown >( _OSVERSIONINFOA* )
 	// ******
 
-	// FUNCTION BODY[0x6542d0]: 30
 	// <0>
 	// <1>
 	// <0x6542d6>|0x006|+0x014:'358'
@@ -618,7 +497,6 @@ static bool does_os_support_dx11( )
 
 void engine::world::apply_render_options_changes( )
 {
-	// FUNCTION BODY[0x656e10]: 7
 	// <0>
 	// <1>
 	// <0x656e10>|0x000|+0x007:'392'
@@ -823,7 +701,6 @@ static void on_fs_iterator_materials_ready(
 
 void engine::world::on_renderer_configuration_config_loaded( bool async_effects, resources::queries_result& data )
 {
-	// FUNCTION BODY[0x656d40]: 12
 	// <0x656d43>|0x003|+0x017:'787'
 	// <0>
 	// <1>
@@ -905,11 +782,6 @@ void engine::world::initialize( bool is_editor )
 	particle::finalize				( );
 }
 
-// claude@NOTE: capped core-side, not here - the target inlines
-// resource_manager::reload_shader_sources, whose whole shipped body is
-// `mov byte ptr [eax+298h], 0` (m_loading_incomplete = false, 0x5506e0). Our
-// render/core body sets m_is_shader_reloading/m_need_recompile_shader_if_source_reloaded
-// instead, so this site inlines the wrong two stores. Fix resource_manager.cpp first.
 void engine::world::reload_shaders( )
 {
 	resource_manager::ref().reload_shader_sources	( true );
@@ -917,7 +789,6 @@ void engine::world::reload_shaders( )
 
 void engine::world::reload_modified_textures( )
 {
-	// FUNCTION BODY[0x655d40]: 1
 	// <0x655d40>|0x000|+0x00b:'892'
 	// ******
 
@@ -1014,7 +885,6 @@ void engine::world::end_render_options_changing(
 
 void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, float4x4 const& view_and_culling_matrix )
 {
-	// FUNCTION BODY[0x654b00]: 1
 	// <0x654b01>|0x001|+0x016:'1004'
 	// ******
 
@@ -1023,7 +893,6 @@ void engine::world::set_view_matrix( base_scene_view_ptr const& scene_view, floa
 
 void engine::world::set_projection_matrix( base_scene_view_ptr const& scene_view, float4x4 const& projection_matrix )
 {
-	// FUNCTION BODY[0x654490]: 1
 	// <0x654490>|0x000|+0x01b:'1016'
 	// ******
 
@@ -1053,7 +922,6 @@ void engine::world::draw_scene(
 
 void engine::world::end_frame( )
 {
-	// FUNCTION BODY[0x653ee0]: 1
 	// <0x653ee0>|0x000|+0x003:'1111'
 	// ******
 
@@ -1062,7 +930,6 @@ void engine::world::end_frame( )
 
 u32 engine::world::frame_id( )
 {
-	// FUNCTION BODY[0x653ed0]: 1
 	// <0x653ed0>|0x000|+0x003:'1116'
 	// ******
 
@@ -1076,7 +943,6 @@ void engine::world::draw_ui_vertices(
 	s32						point_type
 )
 {
-	// FUNCTION BODY[0x655c10]: 1
 	// <0x655c10>|0x000|+0x018:'1132'
 	// ******
 
@@ -1090,7 +956,6 @@ void engine::world::add_speedtree_instance(
 	bool								populate_forest
 )
 {
-	// FUNCTION BODY[0x655bd0]: 3
 	// <0>
 	// <1>
 	// <0x655bd0>|0x000|+0x039:'1227'
@@ -1107,7 +972,6 @@ void engine::world::remove_speedtree_instance(
 	bool								populate_forest
 )
 {
-	// FUNCTION BODY[0x655b90]: 3
 	// <0>
 	// <1>
 	// <0x655b90>|0x000|+0x034:'1234'
@@ -1125,7 +989,6 @@ void engine::world::update_speedtree_instance(
 	bool								populate_forest
 )
 {
-	// FUNCTION BODY[0x655b50]: 3
 	// <0>
 	// <1>
 	// <0x655b50>|0x000|+0x039:'1241'
@@ -1138,7 +1001,6 @@ void engine::world::update_speedtree_instance(
 
 void engine::world::populate_speedtree_forest( base_scene_ptr const& in_scene )
 {
-	// FUNCTION BODY[0x655b30]: 2
 	// <0>
 	// <1>
 	// ******
@@ -1159,7 +1021,6 @@ void engine::world::add_model(
 	// <0x655868> -> void < unknown >( float4x4 const& )
 	// ******
 
-	// FUNCTION BODY[0x655830]: 8
 	// <0x655831>|0x001|+0x004:'1253'
 	// <0>
 	// <0x655835>|0x005|+0x020:'1255'
@@ -1190,7 +1051,6 @@ void engine::world::update_model(
 	// <0x6555f2> -> void < unknown >( float4x4 const& )
 	// ******
 
-	// FUNCTION BODY[0x6555c0]: 5
 	// <0x6555c1>|0x001|+0x004:'1265'
 	// <0>
 	// <0x6555c5>|0x005|+0x021:'1267'
@@ -1207,7 +1067,6 @@ void engine::world::update_model(
 
 void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_instance_ptr const& v )
 {
-	// FUNCTION BODY[0x6557c0]: 4
 	// <0x6557c0>|0x000|+0x004:'1274'
 	// <0>
 	// <0x6557c4>|0x004|+0x01f:'1276'
@@ -1243,7 +1102,6 @@ static void on_speedtree_material_effects_instance_ready(
 	enum_vertex_input_type			vertex_input_type
 )
 {
-	// FUNCTION BODY[0x6558d0]: 6
 	if (data[0].is_successful())
 		tree->set_material_effects(
 			vostok::static_cast_resource_ptr<material_effects_instance_ptr>(data[0].get_unmanaged_resource()),
@@ -1263,7 +1121,6 @@ void engine::world::set_speedtree_instance_material(
 	// variant< 32 > 					data_variant
 	// ******
 
-	// FUNCTION BODY[0x656810]: 26
 	speedtree_tree*		tree				= static_cast_checked<speedtree_tree*>(v->m_speedtree_tree_ptr.c_ptr());
 	material_ptr		mtl_ptr				= static_cast_resource_ptr<material_ptr>(in_mtl_ptr);
 
@@ -1294,7 +1151,6 @@ void engine::world::set_speedtree_instance_material(
 
 static void on_model_material_effects_instance_ready( resources::queries_result& in_data, render_surface* in_render_surface )
 {
-	// FUNCTION BODY[0x655720]: 10
 	// <0x655723>|0x003|+0x00c:'1349'
 	// <0>
 	// <1>
@@ -1338,7 +1194,6 @@ void engine::world::set_model_material(
 	// <0x656581> -> void < unknown >( float4x4 const*, float3 const*, vector< render_surface_instance* >&, bool, u8, u32 )
 	// ******
 
-	// FUNCTION BODY[0x656530]: 72
 	// <0x656539>|0x009|+0x024:'1365'
 	// <0>
 	// <1>
@@ -1512,7 +1367,6 @@ void engine::world::set_model_visible_by_id( render_model_instance_ptr const& v,
 
 void engine::world::set_model_ghost_mode( render_model_instance_ptr const& v, bool value )
 {
-	// FUNCTION BODY[0x654260]: 4
 	// <0>
 	// <1>
 	// <2>
@@ -1532,7 +1386,6 @@ void engine::world::update_model_vertex_buffer( render_model_instance_ptr const&
 	// <0x654481> -> void < unknown >( ID3D11Resource*, u32 )
 	// ******
 
-	// FUNCTION BODY[0x654400]: 15
 	// <0>
 	// <1>
 	// <2>
@@ -1568,7 +1421,6 @@ void engine::world::update_model_vertex_buffer( render_model_instance_ptr const&
 
 void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
 {
-	// FUNCTION BODY[0x656e70]: 3
 	// <0>
 	// <1>
 	// <0x656e70>|0x000|+0x01b:'1539'
@@ -1581,7 +1433,6 @@ void engine::world::add_light( base_scene_ptr const& in_scene, u32 id, light_pro
 
 void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_props* props )
 {
-	// FUNCTION BODY[0x656e20]: 3
 	// <0>
 	// <1>
 	// <0x656e23>|0x003|+0x047:'1546'
@@ -1594,7 +1445,6 @@ void engine::world::update_light( base_scene_ptr const& in_scene, u32 id, light_
 
 void engine::world::remove_light( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x655a10]: 3
 	// <0>
 	// <1>
 	// <0x655a11>|0x001|+0x018:'1553'
@@ -1691,7 +1541,6 @@ void engine::world::remove_tracer( base_scene_ptr const& in_scene, tracer_model_
 
 void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
 {
-	// FUNCTION BODY[0x655710]: 2
 	// <0>
 	// <1>
 	// ******
@@ -1703,7 +1552,6 @@ void engine::world::add_decal( base_scene_ptr const& in_scene, u32 id, decal_pro
 
 void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_properties const& properties )
 {
-	// FUNCTION BODY[0x6558b0]: 3
 	// <0>
 	// <1>
 	// <0x6558b0>|0x000|+0x016:'1640'
@@ -1716,7 +1564,6 @@ void engine::world::update_decal( base_scene_ptr const& in_scene, u32 id, decal_
 
 void engine::world::remove_decal( base_scene_ptr const& in_scene, u32 id )
 {
-	// FUNCTION BODY[0x654c60]: 3
 	// <0>
 	// <1>
 	// <0x654c60>|0x000|+0x00f:'1647'
@@ -1823,7 +1670,6 @@ void engine::world::remove_volume_fog( base_scene_ptr const& in_scene, u32 id )
 
 void engine::world::update_skeleton( render_model_instance_ptr const& v, float4x4* matrices, u32 count )
 {
-	// FUNCTION BODY[0x6543d0]: 2
 	// <0>
 	// <0x6543d0>|0x000|+0x00d:'1725'
 	// ******
@@ -1844,7 +1690,6 @@ void engine::world::play_particle_system(
 	// <0x654686> -> void < unknown >( resources::unmanaged_resource_ptr, float4x4 const&, bool, bool )
 	// ******
 
-	// FUNCTION BODY[0x654650]: 3
 	// <0>
 	// <1>
 	// <0x654650>|0x000|+0x038:'1767'
@@ -1861,7 +1706,6 @@ void engine::world::stop_particle_system( base_scene_ptr const& in_scene, resour
 	// <0x65461f> -> void < unknown >( resources::unmanaged_resource_ptr, float )
 	// ******
 
-	// FUNCTION BODY[0x6545f0]: 4
 	// <0>
 	// <0x6545f0>|0x000|+0x004:'1773'
 	// <0>
@@ -1883,7 +1727,6 @@ void engine::world::remove_particle_system_instance(
 	// <0x6545b7> -> void < unknown >( resources::unmanaged_resource_ptr )
 	// ******
 
-	// FUNCTION BODY[0x654590]: 4
 	// <0x654590>|0x000|+0x007:'1780'
 	// <0>
 	// <1>
@@ -1910,7 +1753,6 @@ void engine::world::update_particle_system_instance(
 	// <0x65455e> -> void < unknown >( resources::unmanaged_resource_ptr, bool )
 	// ******
 
-	// FUNCTION BODY[0x6544f0]: 6
 	// <0>
 	// <1>
 	// <2>
@@ -1934,7 +1776,6 @@ void engine::world::resize_render_output_window(
 	const bool							fullscreen
 )
 {
-	// FUNCTION BODY[0x656e90]: 1
 	// <0x656e90>|0x000|+0x01b:'1798'
 	// ******
 
@@ -1948,7 +1789,6 @@ void engine::world::resize_render_output_window(
 
 void engine::world::goto_fullscreen( base_output_window_ptr const& output_window )
 {
-	// FUNCTION BODY[0x654ca0]: 1
 	// <0x654ca0>|0x000|+0x00f:'1803'
 	// ******
 
@@ -1966,7 +1806,6 @@ engine::world* engine::create_world( configs::binary_config_ptr const& in_config
 
 void engine::destroy( engine::world*& engine_world )
 {
-	// FUNCTION BODY[0x655b10]: 4
 	// <0>
 	// <1>
 	// <0x655b10>|0x000|+0x00b:'1926'
@@ -1981,7 +1820,6 @@ void engine::destroy( engine::world*& engine_world )
 
 void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplier )
 {
-	// FUNCTION BODY[0x654160]: 2
 	// <0>
 	// <0x654160>|0x000|+0x014:'1933'
 	// ******
@@ -1992,7 +1830,6 @@ void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplie
 
 void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
 {
-	// FUNCTION BODY[0x654130]: 3
 	// <0>
 	// <0x654130>|0x000|+0x006:'1939'
 	// <0x654136>|0x006|+0x01c:'1940'
@@ -2004,7 +1841,6 @@ void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool
 
 void engine::world::set_view_mode( base_scene_view_ptr view_ptr, scene_view_mode view_mode )
 {
-	// FUNCTION BODY[0x655100]: 2
 	// <0>
 	// <0x655100>|0x000|+0x00e:'1946'
 	// ******
@@ -2015,7 +1851,6 @@ void engine::world::set_view_mode( base_scene_view_ptr view_ptr, scene_view_mode
 
 void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, particle::enum_particle_render_mode render_mode )
 {
-	// FUNCTION BODY[0x6550c0]: 2
 	// <0>
 	// <0x6550c0>|0x000|+0x00e:'1953'
 	// ******
@@ -2024,11 +1859,6 @@ void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, par
 	view->set_particles_render_mode(render_mode);
 }
 
-// claude@NOTE: statement shape already matches (2 stmts); the residual is
-// downstream - the target CALLS scene::set_sky_material (5 stmts at 0x63ebd0:
-// remove_material_effects guard, the assign, add_material_effects guard) while
-// ours is a one-line `m_sky_material = in_material;` stub small enough to inline
-// here. Body scene::set_sky_material in scene.cpp first.
 void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources::unmanaged_resource_ptr mtl_ptr )
 {
 	vostok::render::scene* scn	= static_cast_checked<vostok::render::scene*>(in_scene.c_ptr());
@@ -2037,7 +1867,6 @@ void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources:
 
 void engine::world::enable_post_process( base_scene_view_ptr view_ptr, bool enable )
 {
-	// FUNCTION BODY[0x655080]: 6
 	// <0>
 	// <0x655080>|0x000|+0x00e:'2065'
 	// <0>
@@ -2067,7 +1896,6 @@ void engine::world::set_post_process(
 
 particle::world& engine::world::particle_world( base_scene_ptr const& scene )
 {
-	// FUNCTION BODY[0x6551f0]: 1
 	// <0x6551f1>|0x001|+0x038:'2086'
 	// ******
 
@@ -2080,7 +1908,6 @@ void engine::world::draw_lines(
 	vectora< u16 > const&				indices
 )
 {
-	// FUNCTION BODY[0x655c80]: 1
 	// <0x655c80>|0x000|+0x040:'2096'
 	// ******
 
@@ -2093,7 +1920,6 @@ void engine::world::draw_triangles(
 	vectora< u16 > const&				indices
 )
 {
-	// FUNCTION BODY[0x655c30]: 1
 	// <0x655c30>|0x000|+0x040:'2101'
 	// ******
 
@@ -2126,7 +1952,6 @@ void engine::world::draw_text(
 	const u32					end_selection
 )
 {
-	// FUNCTION BODY[0x6544b0]: 12
 	// <0>
 	// <1>
 	// <2>
@@ -2157,7 +1982,6 @@ void engine::world::draw_text(
 
 void engine::world::show_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
-	// FUNCTION BODY[0x655650]: 2
 	// <0>
 	// <0x655651>|0x001|+0x00f:'2146'
 	// ******
@@ -2167,7 +1991,6 @@ void engine::world::show_movie( base_scene_view_ptr const& scene_view, survarium
 
 void engine::world::hide_movie( base_scene_view_ptr const& scene_view, survarium::flash_movie_resource_ptr movie )
 {
-	// FUNCTION BODY[0x655190]: 2
 	// <0x655190>|0x000|+0x008:'2151'
 	// <0x655198>|0x008|+0x021:'2152'
 	// ******
@@ -2177,7 +2000,6 @@ void engine::world::hide_movie( base_scene_view_ptr const& scene_view, survarium
 
 void engine::world::show_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x654110]: 2
 	// <0>
 	// <0x654110>|0x000|+0x010:'2158'
 	// ******
@@ -2187,7 +2009,6 @@ void engine::world::show_text_manager( base_scene_view_ptr const& scene_view, su
 
 void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, survarium::flash_text_manager* tm )
 {
-	// FUNCTION BODY[0x6540f0]: 2
 	// <0>
 	// <0x6540f0>|0x000|+0x010:'2164'
 	// ******
@@ -2197,7 +2018,6 @@ void engine::world::hide_text_manager( base_scene_view_ptr const& scene_view, su
 
 void engine::world::execute_scaleform_command( survarium::scaleform_render_command command )
 {
-	// FUNCTION BODY[0x653eb0]: 1
 	// <0x653eb0>|0x000|+0x00b:'2169'
 	// ******
 

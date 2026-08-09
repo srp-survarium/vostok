@@ -11,14 +11,16 @@ void effect_downsample_gbuffer::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bda30]
+
 	VOSTOK_UNREFERENCED_PARAMETER(config);
+
+
 
 	compiler.begin_technique();
 		compiler.begin_pass("lpv_downsample_reflective_shadow_map", NULL, "lpv_downsample_gbuffer", shader_configuration(), NULL);
 			compiler.set_depth(false, false);
-			compiler.set_texture("t_position", r2_rt_p, 0, false, 0);
-			compiler.set_texture("t_normal", r2_rt_n, 0, false, 0);
+			compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
+			compiler.set_texture("t_normal", r2_rt_n, 0, false, u32(-1));
 		compiler.end_pass();
 	compiler.end_technique();
 }

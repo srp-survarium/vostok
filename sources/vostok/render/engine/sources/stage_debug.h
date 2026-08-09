@@ -21,17 +21,14 @@ typedef resources::resource_ptr<
 
 class stage_debug : public stage {
 public:
-	stage_debug( renderer* in_renderer, renderer_context* in_context ) :
-		stage							( in_renderer, in_context ),
-		m_sphere_geometry				( 16, 16 ),
-		m_preview_mip_index_parameter	( 0 )
-	{
-	}
+	stage_debug( renderer* in_renderer, renderer_context* context );
 
 	virtual ~stage_debug( );
+
 	virtual void execute( ) override;
 
 	void render_environment_probe_preview( );
+
 	bool is_effects_ready( ) const;
 
 private:

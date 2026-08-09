@@ -30,14 +30,13 @@ public:
 
 	scene* create_scene( scene_configuration const& renderer_configuration );
 	void destroy( scene* scene );
+	void destroy( scene_view* view );
+	void destroy( render_output_window* output_window );
 
 	scene_view* create_scene_view( );
-	void destroy( scene_view* view );
-
 	render_output_window* create_render_output_window(
 		output_window_configuration const& window_configuration
 	);
-	void destroy( render_output_window* output_window );
 
 	u32 scene_count( ) const { return m_scenes.size( ); }
 

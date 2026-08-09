@@ -40,6 +40,8 @@ typedef intrusive_ptr<
 > res_ps_ptr;
 
 class res_pass : public resource_intrusive_base {
+	friend s32 compare( res_pass const& left, res_pass const& right );
+
 public:
 	res_pass(
 		res_vs_ptr const& vs,

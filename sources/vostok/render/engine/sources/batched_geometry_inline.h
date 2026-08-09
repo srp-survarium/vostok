@@ -2,6 +2,8 @@
 #define VOSTOK_RENDER_ENGINE_BATCHED_GEOMETRY_INLINE_H_INCLUDED
 
 #include <vostok/render/core/backend.h>
+#include <vostok/render/core/resource_manager.h>
+#include <vostok/render/engine/model_format.h>
 
 #include "renderer_context.h"
 
@@ -10,26 +12,21 @@ namespace render {
 
 template < typename Vertex >
 inline batched_geometry< Vertex >::batched_geometry(
-	D3D11_INPUT_ELEMENT_DESC const*,
-	u32,
+	D3D11_INPUT_ELEMENT_DESC const* declaration,
+	u32 declaration_size,
 	u32 in_batched_geometry_max_vertices_count
 ) :
 	m_batched_geometry_max_vertices_count	( in_batched_geometry_max_vertices_count ),
 	m_bbox									( math::create_zero_aabb( ) )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x891e0] for <lpv_vertex>
-	// FUNCTION BODY[0x894b0] for <shadow_vertex>
-
-	for ( u32 i = 0; i < 8; ++i )
-		m_num_visible_batches[i] = 0;
+	m_layout = resource_manager::ref( ).create_declaration( declaration, declaration_size );
+	m_indices.reserve( m_batched_geometry_max_vertices_count );
+	m_vertices.reserve( m_batched_geometry_max_vertices_count );
 }
 
 template < typename Vertex >
 inline batched_geometry< Vertex >::~batched_geometry( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x694f0] for <lpv_vertex>
 }
 
 template < typename Vertex >
@@ -101,29 +98,106 @@ inline void batched_geometry< Vertex >::for_each_batch_render(
 template < typename Vertex >
 inline void batched_geometry< Vertex >::finalize_batch( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x6ae50] for <lpv_vertex>
+	if ( m_vertices.empty( ) || m_indices.empty( ) )
+		return;
+
+	untyped_buffer_ptr vb = resource_manager::ref( ).create_buffer(
+		m_vertices.size( ) * sizeof( Vertex ),
+		m_vertices.begin( ),
+		enum_buffer_type_vertex,
+		false,
+		false
+	);
+	untyped_buffer_ptr ib = resource_manager::ref( ).create_buffer(
+		m_indices.size( ) * sizeof( u16 ),
+		m_indices.begin( ),
+		enum_buffer_type_index,
+		false,
+		false
+	);
+
+	m_geometry_batches.push_back(
+		geometry_batch(
+			m_bbox,
+			resource_manager::ref( ).create_geometry(
+				m_layout.c_ptr( ),
+				sizeof( Vertex ),
+				*vb,
+				*ib
+			),
+			m_indices.size( ),
+			m_materail_effects_instance
+		)
+	);
+
+	m_bbox = math::create_zero_aabb( );
+	m_indices.clear( );
+	m_vertices.clear( );
 }
 
 template < typename Vertex >
 inline void batched_geometry< Vertex >::invalidate( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x6b0d0] for <lpv_vertex>
+	geometry_batch* it = m_geometry_batches.begin( );
+	geometry_batch* end = m_geometry_batches.end( );
+	for ( ; it != end; ++it )
+	{
+		it->geometry = 0;
+		it->mtl = 0;
+	}
+
+	m_geometry_batches.clear( );
+	m_indices.clear( );
+	m_vertices.clear( );
 }
 
 template < typename Vertex >
 inline void batched_geometry< Vertex >::add_data(
-	batched_vertex_source const*,
-	u32,
-	u16 const*,
-	u32,
-	float4x4 const&,
-	material_effects_instance_ptr const&
+	batched_vertex_source const* vertices,
+	u32 num_vertices,
+	u16 const* indices,
+	u32 num_indices,
+	float4x4 const& transform,
+	material_effects_instance_ptr const& in_materail_effects_instance
 )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x69600] for <lpv_vertex>
+	if ( !num_vertices || !num_indices )
+		return;
+
+	if (
+		m_vertices.size( ) + num_vertices >= m_batched_geometry_max_vertices_count
+		|| m_materail_effects_instance != in_materail_effects_instance
+	)
+	{
+		finalize_batch( );
+		m_materail_effects_instance = in_materail_effects_instance;
+	}
+
+	for ( u32 i = 0; i < num_indices; ++i )
+		m_indices.push_back( m_vertices.size( ) + indices[i] );
+
+	for ( u32 i = 0; i < num_vertices; ++i )
+	{
+		batched_vertex_source vertex = vertices[i];
+		float3 normal = math::normalize_safe(
+			float3(
+				vertex.normal.get_Rf( ) * 2.f - 1.f,
+				vertex.normal.get_Gf( ) * 2.f - 1.f,
+				vertex.normal.get_Bf( ) * 2.f - 1.f
+			),
+			float3( 0.f, 0.f, 0.f )
+		);
+		float3 not_modified_pos = vertex.position;
+		vertex.position = transform.transform_position( vertex.position );
+		normal = transform.transform_direction( normal );
+
+		base_basis basis;
+		basis.set( normal );
+		vertex.normal = math::color( basis.x, basis.y, basis.z, 127 );
+		m_bbox.modify( vertex.position );
+		m_materail_effects_instance = in_materail_effects_instance;
+		add_vertex( vertex, not_modified_pos );
+	}
 }
 
 } // namespace render
