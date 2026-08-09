@@ -17,7 +17,6 @@ public:
 		custom_config_value const& config
 	) override
 	{
-		// FUNCTION BODY[0x740a0]
 		shader_configuration configuration;
 
 		compiler.begin_technique( );
@@ -42,6 +41,9 @@ public:
 		compiler.end_pass( );
 		compiler.end_technique( );
 	}
+
+	effect_sky_ambient_occlusion( ) { }
+	virtual ~effect_sky_ambient_occlusion( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_sky_ambient_occlusion, 0x4 );

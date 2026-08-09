@@ -47,6 +47,15 @@ struct streaming_texture_instance {
 
 STATIC_SIZE_ASSERT( streaming_texture_instance, 0x18 );
 
+inline bool operator==(
+	streaming_texture_instance const& left,
+	streaming_texture_instance const& right
+)
+{
+	return left.texel_factor == right.texel_factor &&
+		left.surface_instance == right.surface_instance;
+}
+
 struct streamable_texture_info {
 	streamable_texture_info( ) { }
 

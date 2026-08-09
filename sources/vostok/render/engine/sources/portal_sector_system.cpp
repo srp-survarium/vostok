@@ -3,10 +3,12 @@
 
 #include <vostok/collision/common_types.h>
 #include <vostok/collision/space_partitioning_tree.h>
-#include <vostok/fixed_vector.h>
+#include <vostok/buffer_vector.h>
 #include <vostok/math_frustum.h>
 #include <vostok/math_plane.h>
 #include <vostok/math_sphere.h>
+
+#include <wildmagic/sdk/include/Wm4ContBox2.h>
 
 #include <numeric>
 
@@ -123,126 +125,140 @@ portal_sector_system::~portal_sector_system( )
 	DELETE( m_preventer );
 }
 
-// claude@NOTE: ported from dx9/model_manager.cpp create_frustum_from_portal,
-// adapted from the legacy n-point polygon + convex_volume to the canonical
-// fixed 4 points + math::frustum: the poly>6 aabb-simplify pass is moot for a
-// fixed quad; the far plane comes in as a parameter instead of being rebuilt
-// from the view-projection rows; plane order follows the math::frustum matrix
-// ctor (sides 0-3, far 4, near 5 - legacy wrote near,far,sides) so
-// planes( )[4] stays the far plane on both creation paths; the winding-fix
-// classify uses the canonical inward-looking plane convention (the legacy
-// volume planes looked outward, and its uninitialized plane p is a
-// transcription artifact of the near plane); the out-of-range poly[4] edge of
-// the legacy side loop wraps to poly[0]. Verify against 0x5fb460 at matcher
-// phase.
 math::frustum create_frustum_from_four_points(
 	float3 const& view_pos,
 	float3 const (&points)[4],
 	math::plane const& far_plane
 )
 {
-	// FUNCTION BODY[0x5fb460]
-	float3	poly[4];
-	std::copy( &points[0], &points[4], &poly[0] );
+	math::plane const plane = math::create_plane( points[0], points[1], points[2] );
+	float const distance = plane.classify( view_pos );
+	if ( distance > 0.f )
+	{
+		math::plane frustrum_planes[math::cuboid::plane_count];
 
-	// check plane orientation relative to viewer and reverse if needed
-	if ( math::create_plane_precise( poly[0], poly[1], poly[2] ).classify( view_pos ) > 0 )
-		std::reverse( &poly[0], &poly[4] );
+		frustrum_planes[0] = math::create_plane( view_pos, points[1], points[0] );
 
-	math::plane	clip_planes[math::cuboid::plane_count];
+		frustrum_planes[1] = math::create_plane( view_pos, points[3], points[2] );
 
-	// side clip planes through the view point and consecutive poly edges
-	for ( u32 i = 0; i < 4; ++i )
-		clip_planes[i]	= math::create_plane_precise( view_pos, poly[i], poly[( i + 1 ) % 4] );
+		frustrum_planes[2] = math::create_plane( view_pos, points[2], points[1] );
 
-	// far clip plane
-	clip_planes[4]	= far_plane;
+		frustrum_planes[3] = math::create_plane( view_pos, points[0], points[3] );
 
-	// near clip plane
-	clip_planes[5]	= math::create_plane_precise( poly[0], poly[1], poly[2] );
+		frustrum_planes[4] = far_plane;
 
-	math::cuboid const result( clip_planes );
-	return static_cast< math::frustum const& >( result );
+
+		frustrum_planes[5].normal = -plane.normal;
+		frustrum_planes[5].d = -plane.d;
+
+		math::frustum result( frustrum_planes );
+		return result;
+	}
+	else
+	{
+		math::plane frustrum_planes[math::cuboid::plane_count];
+		frustrum_planes[0] = math::create_plane( view_pos, points[0], points[1] );
+
+		frustrum_planes[1] = math::create_plane( view_pos, points[2], points[3] );
+
+		frustrum_planes[2] = math::create_plane( view_pos, points[1], points[2] );
+
+		frustrum_planes[3] = math::create_plane( view_pos, points[3], points[0] );
+		frustrum_planes[4] = far_plane;
+
+
+		frustrum_planes[5] = plane;
+		math::frustum result( frustrum_planes );
+
+		return result;
+	}
 }
 
-// claude@NOTE: ported from dx9/model_manager.cpp clip_polygon_against_volume
-// (the swap-src/dest per-plane Sutherland-Hodgman clip), adapted from the
-// polygon-returning legacy to the canonical in-place float3(&)[4] + bool:
-// iterates the frustum's fixed 6 planes (the legacy i<src.size() loop bound
-// is a transcription artifact of the plane loop); the inside test flips to
-// classify>0 for the canonical inward-looking planes (legacy volumes looked
-// outward); the legacy dest.back()=...;push_back(float3()) pair is the
-// X-Ray last()/inc() idiom, i.e. a push_back of the intersection point; the
-// clipped polygon is written back over the 4 points - extra vertices are
-// dropped and a short result pads with its last vertex. Verify against
-// 0x5fa5d0 at matcher phase.
-bool cull_points_by_frustum( math::frustum const& f, float3 (&points)[4] )
+bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 {
-	// FUNCTION BODY[0x5fa5d0]
-	enum { max_points = 48 };
-	typedef fixed_vector< float3, max_points >	polygon;
+	typedef buffer_vector< Wm4::Vector2< float > > wm_vertices_2d_buffer_type;
+	typedef buffer_vector< float3 > vertices_buffer_type;
+	typedef Wm4::Vector2< float > wm_vertex_2d;
 
-	polygon	src;
-	polygon	dest( &points[0], &points[4] );
+	float3 const normal = math::normalize( ( io_points[1] - io_points[0] ) ^ ( io_points[2] - io_points[0] ) );
 
-	for ( u32 i = 0; i < math::cuboid::plane_count; ++i )
+
+	vertices_buffer_type temp( ALLOCA( 16 * sizeof( float3 ) ), 16 );
+	vertices_buffer_type pos( ALLOCA( 16 * sizeof( float3 ) ), 16 );
+	std::copy( io_points, io_points + 4, std::back_inserter( temp ) );
+
+
+	for ( u32 plane_id = 0; plane_id < math::cuboid::plane_count; ++plane_id )
 	{
-		// cache plane and swap lists
-		math::plane const& p = f.planes( )[i].plane;
-		std::swap( src, dest );
-		dest.clear( );
+		pos.clear( );
 
-		// classify all points relative to plane #i
-		float	cls[max_points];
-		for ( u32 j = 0; j < src.size( ); j++ )
-			cls[j] = p.classify( src[j] );
-
-		// clip everything against this plane
-		cls[src.size( )] = cls[0];
-		src.push_back( src[0] );
-		float3 d; float denum, t;
-
-		for ( u32 j = 0; j < src.size( ) - 1; ++j )
+		u32 const temp_count = temp.size( );
+		for ( u32 i = 0; i < temp_count; ++i )
 		{
-			if ( src[j].is_similar( src[j + 1], math::epsilon_7 ) )
-				continue;
-
-			bool intersect = cls[j] * cls[j + 1] < 0;
-
-			if ( cls[j] > 0 )
-			{
-				dest.push_back( src[j] );
-			}
-
-			if ( intersect )
-			{
-				// segment intersects plane
-				d		= src[j + 1] - src[j];
-				denum	= p.normal.dot_product( d );
-
-				if ( denum != 0 )
-				{
-					t	= -cls[j] / denum;
-					dest.push_back( src[j] + d * t );
-				}
-			}
+			float const distance = f.planes( )[plane_id].plane.classify( temp[i] );
+			if ( math::is_zero( distance ) || distance > 0.f )
+				pos.push_back( temp[i] );
+			float3 intersection_position;
+			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) && ( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) ) )
+				pos.push_back( intersection_position );
 		}
-
-		// here we end up with complete polygon in 'dest' which is inside plane #i
-		if ( dest.size( ) < 3 )
-		{
-			dest.clear( );
-			break;
-		}
+		if ( pos.size( ) < 3 )
+			return false;
+		temp.clear( );
+		std::copy( pos.begin( ), pos.end( ), std::back_inserter( temp ) );
 	}
 
-	if ( dest.size( ) < 3 )
+	if ( pos.size( ) < 3 )
 		return false;
 
-	for ( u32 i = 0; i < 4; ++i )
-		points[i] = dest[i < dest.size( ) ? i : dest.size( ) - 1];
 
-	return true;
+
+	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
+	u32 longest_edge_id = 0;
+	for ( u32 i = 1; i < pos.size( ); ++i )
+	{
+		float const edge_length = ( pos[( i + 1 ) % pos.size( )] - pos[i] ).squared_length( );
+		if ( edge_length > longest_edge_length )
+		{
+			longest_edge_length = edge_length;
+			longest_edge_id = i;
+		}
+	}
+	if ( math::is_zero( longest_edge_length ) )
+		return false;
+	float3 const x_axis = ( pos[( longest_edge_id + 1 ) % pos.size( )] - pos[longest_edge_id] ).normalize( );
+	float3 const y_axis = ( normal ^ x_axis ).normalize( );
+	float4x4 local_to_world;
+	local_to_world.identity( );
+	local_to_world.i.xyz( ) = x_axis;
+	local_to_world.j.xyz( ) = y_axis;
+	local_to_world.k.xyz( ) = normal;
+	local_to_world.c.xyz( ) = pos[0];
+	float4x4 world_to_local;
+	world_to_local.try_invert( local_to_world );
+
+
+
+
+	wm_vertices_2d_buffer_type wm_vertices_2d( ALLOCA( pos.size( ) * sizeof( wm_vertex_2d ) ), pos.size( ) );
+
+	for ( u32 i = 0; i < pos.size( ); ++i )
+	{
+		float3 const local_position = world_to_local.transform_position( pos[i] );
+		wm_vertices_2d.push_back( wm_vertex_2d( local_position.x, local_position.y ) );
+	}
+	Wm4::Box2< float > min_box = Wm4::ContMinBox( wm_vertices_2d.size( ), &wm_vertices_2d.front( ), 0.f, Wm4::Query::QT_REAL, false );
+	wm_vertex_2d min_box_points[4];
+	min_box.ComputeVertices( min_box_points );
+	io_points[0] = local_to_world.transform_position( float3( min_box_points[0].X( ), min_box_points[0].Y( ), 0.f ) );
+
+	io_points[1] = local_to_world.transform_position( float3( min_box_points[1].X( ), min_box_points[1].Y( ), 0.f ) );
+	io_points[2] = local_to_world.transform_position( float3( min_box_points[2].X( ), min_box_points[2].Y( ), 0.f ) );
+	io_points[3] = local_to_world.transform_position( float3( min_box_points[3].X( ), min_box_points[3].Y( ), 0.f ) );
+	return !math::is_zero(
+		( ( io_points[1] - io_points[0] ) ^ ( io_points[2] - io_points[0] ) ).length( ) * 0.5f +
+		( ( io_points[2] - io_points[0] ) ^ ( io_points[3] - io_points[0] ) ).length( ) * 0.5f
+	);
 }
 
 void portal_sector_system::render( system_renderer& renderer, float3 const& view_pos, float4x4 const& )
@@ -272,8 +288,8 @@ void portal_sector_system::draw_quads( system_renderer& renderer )
 		3, 0
 	};
 
-	vector<quad>::const_iterator const quads_end = m_quads.end( );
-	for ( vector<quad>::const_iterator i = m_quads.begin( ); i != quads_end; ++i )
+	quads_type::const_iterator const quads_end = m_quads.end( );
+	for ( quads_type::const_iterator i = m_quads.begin( ); i != quads_end; ++i )
 	{
 		vertex_colored const vertices[] = {
 			vertex_colored( i->vertices[0], math::color( 0xff00ffff ) ),
@@ -281,7 +297,6 @@ void portal_sector_system::draw_quads( system_renderer& renderer )
 			vertex_colored( i->vertices[2], math::color( 0xff00ffff ) ),
 			vertex_colored( i->vertices[3], math::color( 0xff00ffff ) ),
 		};
-
 		renderer.draw_lines( vertices, vertices + array_size( vertices ), quad_indices, quad_indices + array_size( quad_indices ), false );
 	}
 }
@@ -338,15 +353,17 @@ void portal_sector_system::select_models(
 	if ( !s_use_screeen_space_portals_intersection_value )
 	{
 
-
 		process_sector( active_sector_id, u32( -1 ), view_pos, f );
 	}
 	else
 	{
 		float4x4 inverted_vp;
-		if ( math::try_invert4x4( mat_vp, inverted_vp ) )
+		if ( math::try_invert4x4(
+			mat_vp,
+			inverted_vp
+		) )
 		{
-			buffer_vector<aab_rect> portal_rects( ALLOCA( sizeof( aab_rect ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
+			aab_rects_buffer_type portal_rects( ALLOCA( sizeof( aab_rect ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
 			float const min_z = mat_vp.transform_position( view_pos + f.planes( )[4].plane.normal * .01f ).z * 2.f;
 			sort_portals_and_calculate_rects_in_screen_space( mat_vp, min_z, portal_rects );
 			aab_rect limiting_rect;
@@ -356,10 +373,10 @@ void portal_sector_system::select_models(
 		else
 		{
 			DEBUG_BREAK( );
+
 			process_sector( active_sector_id, u32( -1 ), view_pos, f );
 		}
 	}
-
 	perform_frustum_culling_and_sectors_test( tree, active_sector_id, f, selection, view_pos, mat_vp );
 	if ( m_test_action )
 	{
@@ -397,14 +414,13 @@ void portal_sector_system::process_portal_by_frustum_intersection(
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
 	if ( !cull_points_by_frustum( frustum, points ) )
 		return;
-
-	float3 const edge = points[2] - points[1];
-	if ( math::is_zero( edge.length( ) * ( points[1] - points[0] ).length( ), math::epsilon_3 ) )
+	float3 const edge0 = points[2] - points[1], edge1 = points[1] - points[0];
+	if ( math::is_zero( edge0.length( ) * edge1.length( ), math::epsilon_3 ) )
 		return;
-
-	u32 const next_sector_id = p.get_sectors( )[0] == sector_id ? p.get_sectors( )[1] : p.get_sectors( )[0];
+	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_points_for_frustum( points, next_sector_id ) )
 		return;
+
 
 	math::frustum const clip = create_frustum_from_four_points( view_pos, points, frustum.planes( )[4].plane );
 	m_preventer->add_frustum( clip, next_sector_id );
@@ -444,10 +460,8 @@ bool portal_screen_rect_to_four_points(
 {
 	if ( !portal_rect.intersects( limiting_rect ) )
 		return false;
-
 	limited_rect = get_intersection_rect( portal_rect, limiting_rect );
-	float const limited_rect_square =
-		( limited_rect.max.x - limited_rect.min.x ) * ( limited_rect.max.y - limited_rect.min.y );
+	float const limited_rect_square = ( limited_rect.max.x - limited_rect.min.x ) * ( limited_rect.max.y - limited_rect.min.y );
 	if ( math::is_zero( limited_rect_square ) )
 		return false;
 
@@ -455,29 +469,30 @@ bool portal_screen_rect_to_four_points(
 		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.min.y, 0 ) ),
 		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.max.y, 0 ) ),
 		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.max.y, 0 ) ),
+
 		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.min.y, 0 ) ),
 	};
-
 	float3 ws_far_rect[4] = {
 		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.min.y, 1 ) ),
 		inv_mat_vp.transform( float3( limited_rect.min.x, limited_rect.max.y, 1 ) ),
 		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.max.y, 1 ) ),
+
 		inv_mat_vp.transform( float3( limited_rect.max.x, limited_rect.min.y, 1 ) ),
 	};
-
 	if ( !portal_plane.intersect_segment( ws_near_rect[0], ws_far_rect[0], io_points[0] ) ||
 		!portal_plane.intersect_segment( ws_near_rect[1], ws_far_rect[1], io_points[1] ) ||
 		!portal_plane.intersect_segment( ws_near_rect[2], ws_far_rect[2], io_points[2] ) ||
 		!portal_plane.intersect_segment( ws_near_rect[3], ws_far_rect[3], io_points[3] ) )
+	{
 		std::copy( &ws_near_rect[0], &ws_near_rect[4], &io_points[0] );
-
+	}
 	return true;
 }
 
 void portal_sector_system::process_portal_in_screen_space(
 	u32 portal_id,
 	u32 sector_id,
-	buffer_vector<aab_rect> const& portals_rects,
+	aab_rects_buffer_type const& portals_rects,
 	float3 const& view_pos,
 	math::plane const& far_plane,
 	float4x4 const& mat_vp,
@@ -487,7 +502,10 @@ void portal_sector_system::process_portal_in_screen_space(
 {
 	portal const& p = m_structure->get_portals( )[portal_id];
 	if ( ( p.get_plane( ).classify( view_pos ) > 0 ? p.get_sectors( )[1] : p.get_sectors( )[0] ) == sector_id )
+
+
 		return;
+
 
 	float3 points[4];
 	std::copy( &p.get_points( )[0], &p.get_points( )[4], &points[0] );
@@ -495,7 +513,6 @@ void portal_sector_system::process_portal_in_screen_space(
 	if ( !limiting_rect.contains( portals_rects[portal_id] ) &&
 		!portal_screen_rect_to_four_points( portals_rects[portal_id], far_plane, inv_mat_vp, limiting_rect, points, limited_portal_rect ) )
 		return;
-
 	u32 const next_sector_id = p.get_sectors( )[0] != sector_id ? p.get_sectors( )[0] : p.get_sectors( )[1];
 	if ( !m_preventer->is_possible_ss_aab_rect( limited_portal_rect, next_sector_id ) )
 		return;
@@ -505,13 +522,14 @@ void portal_sector_system::process_portal_in_screen_space(
 		points[2].is_similar( points[3] ) ||
 		points[3].is_similar( points[0] ) )
 		return;
-
 	m_quads.push_back( quad( ) );
 	std::copy( &points[0], &points[4], &m_quads.back( ).vertices[0] );
 	math::frustum const portal_frustum = create_frustum_from_four_points( view_pos, points, far_plane );
+
 	m_preventer->add_frustum( portal_frustum, next_sector_id );
 	m_preventer->add_ss_aab_rect( limited_portal_rect, next_sector_id );
 	process_sector( next_sector_id, portal_id, portals_rects, view_pos, far_plane, mat_vp, inv_mat_vp, limited_portal_rect );
+
 }
 
 void portal_sector_system::perform_frustum_culling_and_sectors_test(
@@ -556,8 +574,8 @@ void portal_sector_system::get_portals_occlusion_bounds( float4* bounds )
 
 void portal_sector_system::initialize_portals_occlusion_bounds_and_results( )
 {
-	portal const* const portals_end = m_structure->get_portals( ).end( );
-	for ( portal const* i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
+	portals_type::const_iterator const portals_end = m_structure->get_portals( ).end( );
+	for ( portals_type::const_iterator i = m_structure->get_portals( ).begin( ); i != portals_end; ++i )
 	{
 		float3 const center = std::accumulate( &i->get_points( )[0], &i->get_points( )[4], float3( 0, 0, 0 ) ) / 4.f;
 
@@ -584,16 +602,17 @@ void portal_sector_system::update_portals_occlusion_culling( pcbyte occlusion_re
 void portal_sector_system::calculate_portal_rects_in_screen_space(
 	float4x4 const& mat_vp,
 	float min_z,
-	buffer_vector<aab_rect>& rects,
-	buffer_vector<float>& distances
+	aab_rects_buffer_type& rects,
+	float_buffer_type& distances
 )
 {
+	aab_rect portal_rect;
+
 	rects.clear( );
 	distances.clear( );
-	portal const* const portals_end = m_structure->get_portals( ).end( );
-	for ( portal const* it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
+	portals_type::const_iterator const portals_end = m_structure->get_portals( ).end( );
+	for ( portals_type::const_iterator it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
 	{
-		aab_rect portal_rect;
 		if ( !it->is_visible( ) )
 		{
 			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
@@ -601,21 +620,22 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 			distances.push_back( math::float_max );
 			continue;
 		}
-
 		u32 const portal_id = u32( it - m_structure->get_portals( ).begin( ) );
 		float4 const cs_f4[4] = {
 			mat_vp.transform( float4( it->get_points( )[0], 1.f ) ),
 			mat_vp.transform( float4( it->get_points( )[1], 1.f ) ),
 			mat_vp.transform( float4( it->get_points( )[2], 1.f ) ),
+
 			mat_vp.transform( float4( it->get_points( )[3], 1.f ) ),
 		};
 		float3 const hs_f3[4] = {
+
 			cs_f4[0].xyz( ) / math::max( math::epsilon_3, cs_f4[0].w ),
 			cs_f4[1].xyz( ) / math::max( math::epsilon_3, cs_f4[1].w ),
 			cs_f4[2].xyz( ) / math::max( math::epsilon_3, cs_f4[2].w ),
+
 			cs_f4[3].xyz( ) / math::max( math::epsilon_3, cs_f4[3].w ),
 		};
-
 		if ( cs_f4[0].z < min_z && cs_f4[1].z < min_z && cs_f4[2].z < min_z && cs_f4[3].z < min_z )
 		{
 			m_structure->set_portal_visible( portal_id, false );
@@ -624,7 +644,6 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 			distances.push_back( math::float_max );
 			continue;
 		}
-
 		portal_rect.min = portal_rect.max = float2( hs_f3[0].x, hs_f3[0].y );
 		portal_rect.modify( hs_f3[1] );
 		portal_rect.modify( hs_f3[2] );
@@ -634,11 +653,7 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 		m_structure->set_portal_visible( portal_id, visible );
 		distances.push_back(
 			visible ? math::max(
-				0.f,
-				math::min(
-					math::min( cs_f4[0].z, cs_f4[1].z ),
-					math::min( cs_f4[2].z, cs_f4[3].z )
-				)
+				0.f, math::min( math::min( cs_f4[0].z, cs_f4[1].z ), math::min( cs_f4[2].z, cs_f4[3].z ) )
 			) : math::float_max
 		);
 	}
@@ -647,10 +662,10 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 void portal_sector_system::sort_portals_and_calculate_rects_in_screen_space(
 	float4x4 const& mat_vp,
 	float min_z,
-	buffer_vector<aab_rect>& rects
+	aab_rects_buffer_type& rects
 )
 {
-	buffer_vector<float> distances( ALLOCA( sizeof( float ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
+	float_buffer_type distances( ALLOCA( sizeof( float ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
 	calculate_portal_rects_in_screen_space( mat_vp, min_z, rects, distances );
 	m_structure->sort_portal_ids( distances.begin( ) );
 }
@@ -672,10 +687,12 @@ void portal_sector_system::make_frustum_images( float3 const& view_dir )
 {
 	u32 const furthest_vertex_id = get_aabb_furthest_vertex_id( view_dir );
 	float3* const furthest_vertices = static_cast<float3*>( ALLOCA( sizeof( float3 ) * m_structure->get_sectors( ).size( ) ) );
-	spatial_sector const* const sectors_end = m_structure->get_sectors( ).end( );
+	sectors_type::const_iterator const sectors_end = m_structure->get_sectors( ).end( );
 	float3* output = furthest_vertices;
-	for ( spatial_sector const* i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
+	{
 		*output = i->get_aabb( ).vertex( furthest_vertex_id );
+	}
 	m_preventer->make_frustum_images( furthest_vertices );
 }
 

@@ -128,9 +128,11 @@ inline effect_options_descriptor& effect_options_descriptor::operator=<pcstr>( p
 	// FUNCTION BODY[0x66930]
 	count = u16( strings::length( value ) + 1 );
 	memory::copy( data, count, value, count );
-	if ( type == configs::t_table_named )
-		bytes += count;
+
+	if ( type == configs::t_table_named ) bytes += count;
+
 	type = static_type::get_type_id<pcstr>( );
+
 	return *this;
 }
 

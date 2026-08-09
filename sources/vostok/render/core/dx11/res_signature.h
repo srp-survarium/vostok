@@ -50,12 +50,9 @@ typedef intrusive_ptr<
 
 STATIC_SIZE_ASSERT( res_signature, 0xC );
 
-// claude@NOTE: no legacy ancestor - legacy res_signature has only equal(ID3DBlob*), no ordering operator; matcher-phase work.
-// STATE[STUB]
-// ordering for compare_predicate< res_signature > (evidence 0x126aa0)
-inline bool operator<( res_signature const&, res_signature const& )
+inline bool operator<( res_signature const& left, res_signature const& right )
 {
-	return false;
+	return left.hw_signature( ) < right.hw_signature( );
 }
 
 } // namespace render

@@ -3,6 +3,7 @@
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/dx11/res_geometry.h>
 #include <vostok/render/core/options.h>
+#include <vostok/render/core/resource_manager.h>
 #include "material.h"
 #include "material_effects_instance.h"
 #include "render_particle_emitter_instance.h"
@@ -95,6 +96,34 @@ STATIC_SIZE_ASSERT( subuv_particle_sprite_vertex, 0x58 );
 
 #pragma pack( pop )
 
+D3D11_INPUT_ELEMENT_DESC const v_particle_sprite_fvf[] = {
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 3, DXGI_FORMAT_R32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 4, DXGI_FORMAT_R32_FLOAT, 0, 48, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 5, DXGI_FORMAT_R32G32B32_FLOAT, 0, 52, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+};
+
+D3D11_INPUT_ELEMENT_DESC const v_subuv_particle_sprite_fvf[] = {
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 2, DXGI_FORMAT_R32G32_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 3, DXGI_FORMAT_R32_FLOAT, 0, 44, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 4, DXGI_FORMAT_R32_FLOAT, 0, 48, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 5, DXGI_FORMAT_R32G32B32_FLOAT, 0, 52, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 6, DXGI_FORMAT_R32G32_FLOAT, 0, 64, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 7, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 72, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+};
+
+D3D11_INPUT_ELEMENT_DESC const v_particle_beamtrail_fvf[] = {
+	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+	{ "TEXCOORD", 1, DXGI_FORMAT_R32G32_FLOAT, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 }
+};
+
 void particle_sprite_vertex::set(
 	float3	position_value,
 	float4	color_value,
@@ -175,18 +204,110 @@ math::aabb const& render_particle_emitter_instance::get_aabb( ) const
 	return m_bbox;
 }
 
-// STATE[STUB]
-// claude@NOTE: legacy body creates geometries via the v_particle_sprite_fvf /
-// v_subuv_particle_sprite_fvf / v_particle_beamtrail_fvf declaration globals, which have
-// no canonical counterpart - skipped; seed kept in temp/render_legacy.
 void render_particle_emitter_instance::update_render_buffers(
-	particle::enum_particle_data_type,
-	bool,
-	u32,
-	u32
+	particle::enum_particle_data_type datatype,
+	bool use_subuv,
+	u32 in_num_max_particles,
+	u32 beamtrail_parameters_num_sheets
 )
 {
 	// FUNCTION BODY[0x5fe4a0]
+	m_particle_sprite_geometry = 0;
+	m_subuv_particle_sprite_geometry = 0;
+	m_particle_beamtrail_geometry = 0;
+	m_num_vertices = 0;
+	m_num_indices = 0;
+
+	m_max_particles = math::max<u32>( m_max_particles, in_num_max_particles );
+	m_max_particles = math::min<u32>( m_max_particles, 2000 );
+
+	switch ( datatype ) {
+	case particle::particle_data_type_billboard: {
+		if ( use_subuv ) {
+			m_vertex_type = particle::particle_vertex_type_billboard_subuv;
+			m_num_vertices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 4;
+			m_num_indices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 6;
+			if ( m_vertices.initialized( ) )
+				VOSTOK_DESTROY_REFERENCE( m_vertices );
+			VOSTOK_CONSTRUCT_REFERENCE( m_vertices, vertex_buffer )( m_num_vertices );
+
+			if ( m_indices.initialized( ) )
+				VOSTOK_DESTROY_REFERENCE( m_indices );
+			VOSTOK_CONSTRUCT_REFERENCE( m_indices, index_buffer )( m_num_indices );
+
+			m_subuv_particle_sprite_geometry = resource_manager::ref( ).create_geometry(
+				v_subuv_particle_sprite_fvf,
+				sizeof( subuv_particle_sprite_vertex ),
+				m_vertices->buffer( ),
+				m_indices->buffer( )
+			);
+			m_particle_sprite_geometry = 0;
+			m_particle_beamtrail_geometry = 0;
+		} else {
+			m_vertex_type = particle::particle_vertex_type_billboard;
+			m_num_vertices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 4;
+			m_num_indices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 6;
+			if ( m_vertices.initialized( ) )
+				VOSTOK_DESTROY_REFERENCE( m_vertices );
+			VOSTOK_CONSTRUCT_REFERENCE( m_vertices, vertex_buffer )( m_num_vertices );
+
+			if ( m_indices.initialized( ) )
+				VOSTOK_DESTROY_REFERENCE( m_indices );
+			VOSTOK_CONSTRUCT_REFERENCE( m_indices, index_buffer )( m_num_indices );
+
+			m_particle_sprite_geometry = resource_manager::ref( ).create_geometry(
+				v_particle_sprite_fvf,
+				sizeof( particle_sprite_vertex ),
+				m_vertices->buffer( ),
+				m_indices->buffer( )
+			);
+			m_subuv_particle_sprite_geometry = 0;
+			m_particle_beamtrail_geometry = 0;
+		}
+		break;
+	}
+
+	case particle::particle_data_type_trail:
+	case particle::particle_data_type_beam: {
+		if ( datatype == particle::particle_data_type_trail )
+			m_vertex_type = particle::particle_vertex_type_trail;
+		else
+			m_vertex_type = particle::particle_vertex_type_beam;
+
+		u32 num_sheets = math::max<u32>( beamtrail_parameters_num_sheets, 1 );
+		num_sheets = math::min<u32>( num_sheets, 10000 );
+
+		m_num_vertices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 2 * num_sheets;
+		m_num_indices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 6 * num_sheets;
+		if ( m_vertices.initialized( ) )
+			VOSTOK_DESTROY_REFERENCE( m_vertices );
+		VOSTOK_CONSTRUCT_REFERENCE( m_vertices, vertex_buffer )( m_num_vertices );
+
+		if ( m_indices.initialized( ) )
+			VOSTOK_DESTROY_REFERENCE( m_indices );
+		VOSTOK_CONSTRUCT_REFERENCE( m_indices, index_buffer )( m_num_indices );
+
+		m_particle_beamtrail_geometry = resource_manager::ref( ).create_geometry(
+			v_particle_beamtrail_fvf,
+			sizeof( particle_beamtrail_vertex ),
+			m_vertices->buffer( ),
+			m_indices->buffer( )
+		);
+		m_particle_sprite_geometry = 0;
+		m_subuv_particle_sprite_geometry = 0;
+		break;
+	}
+
+	case particle::particle_data_type_decal: {
+		m_vertex_type = particle::particle_vertex_type_decal;
+		break;
+	}
+
+	default: {
+		m_vertex_type = particle::particle_vertex_type_unknown;
+		break;
+	}
+	}
 }
 
 u32 render_particle_emitter_instance::get_num_particles( ) const

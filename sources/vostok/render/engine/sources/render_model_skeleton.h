@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_SKELETON_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_RENDER_MODEL_SKELETON_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: legacy render_model_skeleton.h fully consumed; its get_aabb was a TMP identity-aabb stub and get_surfaces_count is already reproduced - matcher-phase work.
 #include <vostok/render/core/memory.h>
 #include "render_model.h"
 #include "render_model_instance_impl.h"
@@ -71,9 +70,7 @@ public:
 
 	virtual math::aabb get_aabb( )
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x6f3f0]
-		return m_original->m_aabbox;
+		return math::create_identity_aabb( ) * 2;
 	}
 
 	void assign_original( skeleton_render_model_ptr v );
@@ -82,8 +79,6 @@ public:
 
 	virtual u32 get_surfaces_count( ) const
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x6f450]
 		return m_instances_count;
 	}
 

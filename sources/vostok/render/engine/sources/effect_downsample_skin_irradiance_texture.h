@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_downsample_skin_irradiance_texture : public effect_descriptor {
 public:
-	effect_downsample_skin_irradiance_texture( ) { }
-	virtual ~effect_downsample_skin_irradiance_texture( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
+
+	effect_downsample_skin_irradiance_texture( ) { }
+	virtual ~effect_downsample_skin_irradiance_texture( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_downsample_skin_irradiance_texture, 0x4 );

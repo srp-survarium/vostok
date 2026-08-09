@@ -44,14 +44,6 @@ class sector_double_query_preventer;
 
 class portal_sector_system : public resources::unmanaged_resource {
 public:
-	struct quad {
-		quad( ) { }
-
-		float3 vertices[4];
-	};
-
-	STATIC_SIZE_ASSERT( quad, 0x30 );
-
 	explicit portal_sector_system( portal_sector_structure_ptr structure );
 	virtual ~portal_sector_system( );
 
@@ -80,8 +72,11 @@ public:
 	void update_portals_occlusion_culling( pcbyte occlusion_results );
 
 private:
+	typedef buffer_vector<spatial_sector> sectors_type;
+	typedef buffer_vector<portal> portals_type;
+
 	void draw_quads( system_renderer& renderer );
-	void draw_portals( system_renderer& renderer, u32 active_sector_id );
+	void draw_portals( system_renderer& renderer, u32 const active_sector_id );
 
 	void process_sector(
 		u32 sector_id,
@@ -120,10 +115,12 @@ private:
 	void initialize_portals_occlusion_bounds_and_results( );
 	void make_frustum_images( float3 const& view_dir );
 
+	typedef buffer_vector<aab_rect> aab_rects_buffer_type;
+
 	void process_portal_in_screen_space(
 		u32 portal_id,
 		u32 sector_id,
-		buffer_vector<aab_rect> const& portals_rects,
+		aab_rects_buffer_type const& portals_rects,
 		float3 const& view_pos,
 		math::plane const& far_plane,
 		float4x4 const& mat_vp,
@@ -131,28 +128,40 @@ private:
 		aab_rect const& limiting_rect
 	);
 
+	typedef buffer_vector<float> float_buffer_type;
+
 	void sort_portals_and_calculate_rects_in_screen_space(
 		float4x4 const& mat_vp,
 		float min_z,
-		buffer_vector<aab_rect>& rects
+		aab_rects_buffer_type& rects
 	);
 
 	void calculate_portal_rects_in_screen_space(
 		float4x4 const& mat_vp,
 		float min_z,
-		buffer_vector<aab_rect>& rects,
-		buffer_vector<float>& distances
+		aab_rects_buffer_type& rects,
+		float_buffer_type& distances
 	);
 
 private:
 	portal_sector_structure_ptr	m_structure;
-	vector<quad>					m_quads;
+
+	struct quad {
+		float3 vertices[4];
+	};
+
+	STATIC_SIZE_ASSERT( quad, 0x30 );
+
+	typedef vector<quad> quads_type;
+	quads_type					m_quads;
 	bool						m_test_action;
 	sector_double_query_preventer*	m_preventer;
+	typedef buffer_vector<float4> occlusion_bounds_buffer_type;
 	void*						m_occlusion_bounds_buffer;
-	buffer_vector<float4>			m_occlusion_bounds;
+	occlusion_bounds_buffer_type	m_occlusion_bounds;
+	typedef buffer_vector<u8> bytes_buffer_type;
 	void*						m_occlusion_results_buffer;
-	buffer_vector<u8>				m_occlusion_results;
+	bytes_buffer_type				m_occlusion_results;
 	collision::geometry*			m_portals_geometry;
 };
 

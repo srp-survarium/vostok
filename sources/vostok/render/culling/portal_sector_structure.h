@@ -45,6 +45,9 @@ enum {
 
 class portal {
 public:
+	typedef u32 sector_ids_type[2];
+	typedef float3 points_type[4];
+
 	portal(
 		u32 sector0,
 		u32 sector1,
@@ -64,12 +67,12 @@ public:
 		m_points[3] = point3;
 	}
 
-	u32 const ( &get_sectors( ) const )[2]
+	sector_ids_type const& get_sectors( ) const
 	{
 		return m_sectors;
 	}
 
-	float3 const ( &get_points( ) const )[4]
+	points_type const& get_points( ) const
 	{
 		return m_points;
 	}
@@ -98,8 +101,8 @@ public:
 
 private:
 	math::plane m_plane;
-	u32 m_sectors[2];
-	float3 m_points[4];
+	sector_ids_type m_sectors;
+	points_type m_points;
 	bool m_visible;
 };
 
@@ -107,6 +110,8 @@ STATIC_SIZE_ASSERT( portal, 0x4C );
 
 class spatial_sector {
 public:
+	typedef buffer_vector<u32> portal_ids_type;
+
 	spatial_sector( u32* portal_ids, u32 portals_count, math::aabb const& bounds ) :
 		m_aabb( bounds ),
 		m_portal_ids( portal_ids ),
@@ -139,6 +144,8 @@ public:
 	}
 
 private:
+	spatial_sector const& operator=( spatial_sector const& );
+
 	math::aabb m_aabb;
 	u32* m_portal_ids;
 	u32 m_portals_count;
@@ -150,7 +157,6 @@ class portal_sector_structure : public resources::unmanaged_resource {
 public:
 	typedef buffer_vector<portal> portals_type;
 	typedef buffer_vector<spatial_sector> sectors_type;
-	typedef collision::space_partitioning_tree* tree_ptr;
 
 	portal_sector_structure(
 		memory::base_allocator* allocator,
@@ -203,6 +209,7 @@ private:
 	u32* m_portal_ids_buffer;
 	void* m_sectors_buffer;
 	sectors_type m_sectors;
+	typedef collision::space_partitioning_tree* tree_ptr;
 	tree_ptr m_sectors_spatial_tree;
 	tree_ptr m_portals_spatial_tree;
 	collision::geometry* m_portals_geometry;

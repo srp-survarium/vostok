@@ -88,7 +88,6 @@ enum enum_render_target_index {
 };
 
 pcstr rt_index_to_name( enum_render_target_index index );
-u32 get_format_block_size( DXGI_FORMAT format );
 
 struct render_target_instance {
 	render_target_instance( ) { }
@@ -133,14 +132,13 @@ public:
 	u32 memory_usage( ) const { return m_memory_usage; }
 	u32 get_id( ) const { return static_cast< u32 >( m_id ); }
 
-private:
 	void create_targets( math::uint2 size, bool force_resize );
 
 public:
 	render_target_instance	m_family[rt_num_render_targets];
-	math::uint2				m_size;
 
 private:
+	math::uint2				m_size;
 	s32 m_id;
 	u32 m_memory_usage;
 };

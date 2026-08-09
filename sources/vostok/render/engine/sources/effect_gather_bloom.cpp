@@ -12,17 +12,18 @@ void effect_gather_bloom::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7bc890]
-	VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
+	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
 
-	compiler.begin_technique();
-		compiler.begin_pass("gather_bloom", NULL, "gather_bloom", shader_configuration(), NULL);
-			compiler.set_texture("t_frame_color", r2_rt_generic0, 0, false, u32(-1));
-			compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
-			compiler.set_texture("t_frame_luminance", r2_rt_frame_luminance, 0, false, u32(-1));
-			compiler.set_depth( true, false);
-		compiler.end_pass();
-	compiler.end_technique();
+
+
+	compiler.begin_technique( );
+	compiler.begin_pass( "gather_bloom", NULL, "gather_bloom", shader_configuration( ), NULL );
+	compiler.set_texture( "t_frame_color", r2_rt_generic0, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_position", r2_rt_p, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_frame_luminance", r2_rt_frame_luminance, 0, false, u32( -1 ) );
+	compiler.set_depth( true, false );
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 } // namespace render

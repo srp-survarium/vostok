@@ -1,3 +1,6 @@
+
+
+
 #include "pch.h"
 #include "effect_system_colored.h"
 #include <vostok/render/core/dx11/effect_compiler.h>
@@ -11,39 +14,42 @@ void effect_system_colored::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bfcd0]
+
 	VOSTOK_UNREFERENCED_PARAMETER	( config );
 
 	c.begin_technique( /*solid*/)
 		.begin_pass	( "color", NULL, "color", shader_configuration(), NULL)
-			.set_stencil( true, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
 			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
-			//.set_cull_mode(D3D11_CULL_NONE)
+
 		.end_pass	()
 	.end_technique();
 
 	c.begin_technique( /*stenciled*/)
 		.begin_pass	( "color_top", NULL, "color_doted", shader_configuration(), NULL)
 			.set_depth	( true, true, D3D_COMPARISON_ALWAYS)
-			.set_stencil( true, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
-			//.set_cull_mode(D3D11_CULL_NONE)
+
 		.end_pass	()
 	.end_technique();
 
 	c.begin_technique( /*voided*/)
 		.begin_pass	( "color", NULL, "color", shader_configuration(), NULL)
 			.color_write_enable( D3D_COLOR_WRITE_ENABLE_NONE)
-			.set_stencil( true, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
-			//.set_cull_mode(D3D11_CULL_NONE)
+
 		.end_pass	()
 	.end_technique();
 
 	c.begin_technique( /*cover*/)
 		.begin_pass	( "color_cover", NULL, "color_cover", shader_configuration(), NULL)
-			.set_stencil( true, 0x20, 0x00, 0xFF, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP)
 			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
 			.set_texture("t_position", r2_rt_p, 0, false, 0)
 			.set_texture("t_random_rotates", "engine/ssao_rotate", 0, true, 0)
+		.end_pass	()
+	.end_technique();
+
+	c.begin_technique( /*wireframe*/)
+		.begin_pass	( "color", NULL, "color_wireframe", shader_configuration(), NULL)
+			.set_alpha_blend( true, D3D_BLEND_SRC_ALPHA, D3D_BLEND_INV_SRC_ALPHA)
+			.set_fill_mode( D3D_FILL_WIREFRAME)
 		.end_pass	()
 	.end_technique();
 }

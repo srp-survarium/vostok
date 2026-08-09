@@ -22,18 +22,12 @@ struct render_output_window_predicate {
 	HWND__* m_window;
 };
 
-// claude@NOTE: no legacy ancestor - legacy scene_manager declared no ctor (compiler-generated); the explicit ctor is new-in-target; matcher-phase work.
-// STATE[STUB]
- scene_manager::scene_manager( )
+scene_manager::scene_manager( )
 {
-	// FUNCTION BODY[0x749240]: 1
-	// <0>
-	// ******
 }
 
- scene_manager::~scene_manager( )
+scene_manager::~scene_manager( )
 {
-	// FUNCTION BODY[0x749270]
 	vector< scene* >::iterator	it_c = m_scenes.begin(),
 								en_c = m_scenes.end();
 
@@ -55,13 +49,11 @@ struct render_output_window_predicate {
 
 void scene_manager::add_scene( scene* in_scene )
 {
-	// FUNCTION BODY[0x749210]
 	m_scenes.push_back( in_scene);
 }
 
 void scene_manager::remove_scene( scene* in_scene )
 {
-	// FUNCTION BODY[0x749170]
 	vector< scene* >::iterator found = std::find(m_scenes.begin(), m_scenes.end(), in_scene);
 
 	if (found == m_scenes.end())
@@ -72,13 +64,11 @@ void scene_manager::remove_scene( scene* in_scene )
 
 void scene_manager::add_scene_view( scene_view* in_scene_view )
 {
-	// FUNCTION BODY[0x7491e0]
 	m_views.push_back(in_scene_view);
 }
 
 void scene_manager::remove_scene_view( scene_view* in_scene_view )
 {
-	// FUNCTION BODY[0x749120]
 	vector< scene_view* >::iterator found = std::find(m_views.begin(), m_views.end(), in_scene_view);
 
 	if(found == m_views.end())
@@ -89,7 +79,6 @@ void scene_manager::remove_scene_view( scene_view* in_scene_view )
 
 void scene_manager::add_render_output_window( render_output_window* in_output_window )
 {
-	// FUNCTION BODY[0x7491b0]
 	m_output_windows.push_back(in_output_window);
 }
 

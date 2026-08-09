@@ -18,8 +18,11 @@ public:
 
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
+
+	effect_eye_adaptation( ) { }
+	virtual ~effect_eye_adaptation( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_eye_adaptation, 0x4 );

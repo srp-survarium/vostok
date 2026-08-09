@@ -16,9 +16,9 @@ public:
 	{
 	}
 
-	virtual ~stage_pre_lighting( ) { }
-
 	virtual void execute( ) override;
+
+	virtual ~stage_pre_lighting( ) { }
 };
 
 STATIC_SIZE_ASSERT( stage_pre_lighting, 0x10 );

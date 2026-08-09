@@ -14,6 +14,8 @@ void effect_fstage_volume_sphere_base_materials::compile(
 {
 	// FUNCTION BODY[0x7ba5c0]
 	shader_configuration configuration;
+
+
 	configuration.use_diffuse_texture	    = bool(config["use_tdiffuse"]);
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 
@@ -29,16 +31,16 @@ void effect_fstage_volume_sphere_base_materials::compile(
 		compiler.set_constant("mode_direction_and_uv_tile", float4(float3(config["move_direction"]), float(config["uv_tile"])));
 
 		compiler.set_constant("volume_color", float4(volume_color.xyz()*multiplier, volume_color.w));
-		compiler.set_texture("t_position", r2_rt_p, 0, false, 0);
+		compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
 
 		if( configuration.use_diffuse_texture)
-			compiler.set_texture("t_diffuse", pcstr(config["texture_diffuse"]), 0, true, 0);
+			compiler.set_texture("t_diffuse", pcstr(config["texture_diffuse"]), 0, false, u32(-1));
 
-		compiler.set_texture("t_sphere_falloff", "fx/sphere_falloff", 0, true, 0);
+		compiler.set_texture("t_sphere_falloff", "fx/sphere_falloff", 0, false, u32(-1));
 
 		if (configuration.use_transparency_texture)
-			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, true, 0);
-		//else
+			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, false, u32(-1));
+
 			solid_transparency = config.value_exists("constant_transparency") ? float(config["constant_transparency"]) : 1.0f;
 
 		compiler.set_constant("attenuation_scale", float(config["attenuation_scale"]));

@@ -1,17 +1,26 @@
 #include "pch.h"
 #include "effect_debug_environment_probe_preview.h"
+#include <vostok/render/core/dx11/effect_compiler.h>
 
 namespace vostok {
 namespace render {
 
 void effect_debug_environment_probe_preview::compile(
-	effect_compiler&,
-	custom_config_value const&
+	effect_compiler& compiler,
+	custom_config_value const& config
 )
 {
-	// claude@NOTE: no legacy ancestor - effect postdates the legacy corpus; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x7b4c50]
+
+	VOSTOK_UNREFERENCED_PARAMETER(config);
+
+
+
+	compiler.begin_technique();
+		compiler.begin_pass("environment_probe_preview", NULL, "environment_probe_preview", shader_configuration(), NULL);
+			compiler.set_depth(true, true);
+			compiler.set_cull_mode(D3D_CULL_FRONT);
+		compiler.end_pass();
+	compiler.end_technique();
 }
 
 } // namespace render

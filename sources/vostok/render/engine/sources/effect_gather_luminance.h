@@ -18,13 +18,13 @@ public:
 		gather_exp_luminance,
 	};
 
-	effect_gather_luminance( ) { }
-	virtual ~effect_gather_luminance( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
+
+	effect_gather_luminance( ) { }
+	virtual ~effect_gather_luminance( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_gather_luminance, 0x4 );

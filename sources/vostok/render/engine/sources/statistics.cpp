@@ -145,19 +145,22 @@ void statistics_float::print( fs_new::virtual_path_string& out_result )
 	out_result.assignf("%s: %f", m_name.c_str(), average());
 }
 
-u32 get_num_digits( u32 )
+u32 get_num_digits( u32 v )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x638830]
-	return 0;
+	math::clamp( v, u32( 0 ), u32( 10000000 ) );
+
+	u32 result = 0;
+	for ( u32 divider = 1; divider < 1000000 && v / divider; divider *= 10 )
+		++result;
+
+	return result;
 }
 
-fixed_string< 260 > u32_to_string( u32 )
+fixed_string< 260 > u32_to_string( u32 v )
 {
-	// claude@NOTE: no legacy ancestor - legacy statistics.cpp never had u32_to_string/get_num_digits; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x638cf0]
-	return fixed_string< 260 >( );
+	fixed_string< 260 > result;
+	result.assignf( "%d", v );
+	return result;
 }
 
 void statistics_int::print( fs_new::virtual_path_string& out_result )
@@ -355,30 +358,27 @@ grass_statistics_group::grass_statistics_group( pcstr group_name ) :
 }
 
 debug_statistics_group::debug_statistics_group( pcstr group_name ) :
-	statistics_group( group_name ),
-	avaliable_video_memory( this, "avaliable video memory" ),
-	texture_video_memory( this, "texture video memory" ),
-	render_tergets_video_memory( this, "render targets video memory" ),
-	gbuffer_video_memory( this, "gbuffer video memory" ),
-	num_dips_in_lpv( this, "num dips in lpv" ),
-	num_vertex_shader_changes( this, "num vertex shader changes" ),
-	num_pixel_shader_changes( this, "num pixel shader changes" ),
-	num_vs_textures_changes( this, "num vs textures changes" ),
-	num_vs_constants_changes( this, "num vs constants changes" ),
-	num_vs_samplers_changes( this, "num vs samplers changes" ),
-	num_ps_textures_changes( this, "num ps textures changes" ),
-	num_ps_constants_changes( this, "num ps constants changes" ),
-	num_ps_samplers_changes( this, "num ps samplers changes" ),
-	num_input_layout_changes( this, "num input layout changes" ),
-	textures_compression_duration( this, "textures compression duration" ),
-	dxt_rt_tex_creation_duration( this, "dxt rt tex creation duration" ),
-	cpu_textures_compression_duration( this, "cpu textures compression duration" ),
-	gpu_num_compressed_textures( this, "gpu num compressed textures" ),
-	cpu_num_compressed_textures( this, "cpu num compressed textures" )
+	statistics_group( "debug statistics" ),
+	avaliable_video_memory( this, "avaliable video memory (Mb)" ),
+	texture_video_memory( this, "texture video memory (Mb)" ),
+	render_tergets_video_memory( this, "other rt video memory (Mb)" ),
+	gbuffer_video_memory( this, "G-Buffer video memory (Mb)" ),
+	num_dips_in_lpv( this, "dips in lpv" ),
+	num_vertex_shader_changes( this, "vertex shader changes" ),
+	num_pixel_shader_changes( this, "pixel shader changes" ),
+	num_vs_textures_changes( this, "vs textures changes" ),
+	num_vs_constants_changes( this, "vs constants changes" ),
+	num_vs_samplers_changes( this, "vs samplers changes" ),
+	num_ps_textures_changes( this, "ps textures changes" ),
+	num_ps_constants_changes( this, "ps constants changes" ),
+	num_ps_samplers_changes( this, "ps samplers changes" ),
+	num_input_layout_changes( this, "input layout changes" ),
+	textures_compression_duration( this, "GPU compressor time" ),
+	dxt_rt_tex_creation_duration( this, "GPU compressor RT create time" ),
+	cpu_textures_compression_duration( this, "CPU compressor time" ),
+	gpu_num_compressed_textures( this, "GPU num compressed textures" ),
+	cpu_num_compressed_textures( this, "CPU num compressed textures" )
 {
-	// claude@NOTE: no legacy ancestor - debug_statistics_group is new-in-target; matcher-phase work.
-	// STATE[STUB]
-	// FUNCTION BODY[0x638f10]
 }
 
 statistics::statistics( ) :

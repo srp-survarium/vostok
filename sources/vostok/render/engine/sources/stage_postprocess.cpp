@@ -163,7 +163,6 @@ void dof_shader_constants::set(
 	float			bokeh_dof_density
 )
 {
-	// FUNCTION BODY[0x6068d0]
 	backend::ref().set_ps_constant(m_dof_height_lights, float4(blurriness_height_lights, 0));
 	backend::ref().set_ps_constant(m_dof_parameters, float4(distance, region, power, 0));
 	backend::ref().set_ps_constant(m_blurriness_amount, float4(near_blur_amout, far_blur_amout, 0, 0));
@@ -230,8 +229,8 @@ void scene_shader_constants::set(
 
 static float gaussian( float x, float mu, float sigma )
 {
-	float const g = ( x - mu ) / sigma;
-	return vostok::math::exp( -0.5f * g * g );
+	float const g = ( x - mu ) * ( 1.0f / sigma );
+	return expf( -0.5f * g * g );
 }
 
 static void get_gaussain_weights_offsets(
@@ -283,7 +282,7 @@ bool stage_postprocess::is_effects_ready( ) const
 		&& m_sh_complex_blend[1][1][1].c_ptr() != NULL
 		&& m_sh_effect_copy_image.c_ptr() != NULL
 		&& m_lens_flares_effect.c_ptr() != NULL
-		&& m_post_process_antialiasing_shader != NULL
+		&& m_post_process_antialiasing_shader
 		&& m_post_process_antialiasing_shader_fxaa.c_ptr() != NULL
 		&& m_post_process_antialiasing_shader_sraa.c_ptr() != NULL
 		&& m_post_process_shader_sharpen.c_ptr() != NULL
@@ -307,6 +306,8 @@ stage_postprocess::stage_postprocess(
 	effect_manager::ref().create_effect<effect_gather_luminance>(&m_sh_gather_luminance);
 	effect_manager::ref().create_effect<effect_gather_luminance_histogram>(&m_sh_gather_luminance_histogram);
 	effect_manager::ref().create_effect<effect_eye_adaptation>(&m_sh_eye_adaptation);
+
+
 	effect_manager::ref().create_effect< effect_blur<3> >(&m_sh_blur[0]);
 	effect_manager::ref().create_effect< effect_blur<5> >(&m_sh_blur[1]);
 	effect_manager::ref().create_effect< effect_blur<7> >(&m_sh_blur[2]);
@@ -315,12 +316,14 @@ stage_postprocess::stage_postprocess(
 	effect_manager::ref().create_effect< effect_blur<17> >(&m_sh_blur[5]);
 	effect_manager::ref().create_effect< effect_blur<21> >(&m_sh_blur[6]);
 	effect_manager::ref().create_effect< effect_blur<25> >(&m_sh_blur[7]);
+
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<false, false, false> >(&m_sh_complex_blend[0][0][0]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, false, false> >(&m_sh_complex_blend[1][0][0]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, true, false> >(&m_sh_complex_blend[1][1][0]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<false, false, true> >(&m_sh_complex_blend[0][0][1]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, false, true> >(&m_sh_complex_blend[1][0][1]);
 	effect_manager::ref().create_effect< effect_complex_post_process_blend<true, true, true> >(&m_sh_complex_blend[1][1][1]);
+
 	effect_manager::ref().create_effect<effect_copy_image>(&m_sh_effect_copy_image);
 	effect_manager::ref().create_effect<effect_post_process_mlaa>(&m_post_process_antialiasing_shader);
 	effect_manager::ref().create_effect<effect_post_process_fxaa>(&m_post_process_antialiasing_shader_fxaa);
@@ -330,32 +333,32 @@ stage_postprocess::stage_postprocess(
 	effect_manager::ref().create_effect<effect_post_process_downsample_frame>(&m_post_process_downsample_frame_effect);
 	effect_manager::ref().create_effect<effect_image_space_reflections>(&m_image_space_reflections_effect);
 	effect_manager::ref().create_effect<effect_lens_flares>(&m_lens_flares_effect);
+
 	effect_manager::ref().create_effect<effect_motion_blur>(&m_motion_blur_effect);
 	effect_manager::ref().create_effect<effect_olta>(&m_olta_effect);
+
 	effect_manager::ref().create_effect<effect_temporal_antialiasing>(&m_temporal_antialiasing_effect);
+
 	effect_manager::ref().create_effect<effect_aberration>(&m_aberration_effect);
 
 	u8 data[Kb];
 	effect_options_descriptor desc(data, sizeof(data));
 	desc["vertex_input_type"] = skeletal_4_bones_mesh_vertex_input_type;
 	desc["cull_mode"] = D3D11_CULL_NONE;
-	effect_manager::ref().create_effect<effect_motion_vectors_accumulation>(
-		&m_motion_vectors_accumulation_effect,
-		desc
-	);
+
+	effect_manager::ref().create_effect<effect_motion_vectors_accumulation>(&m_motion_vectors_accumulation_effect, desc);
+
+
+
+
 
 	m_blur_offsets_weights	= backend::ref().register_constant_host("offsets_weights", rc_float);
 	m_kernel_offsets		= backend::ref().register_constant_host("kernel_offsets", rc_float);
-
 	m_elapsed_time_parameter= backend::ref().register_constant_host("elapsed_time", rc_float);
 	m_adaptation_factor		= backend::ref().register_constant_host("adaptation_factor", rc_float);
-
 	m_sun_direction_parameter = backend::ref().register_constant_host("sun_direction_parameter", rc_float);
-
 	m_frame_luminance_parameter = backend::ref().register_constant_host("frame_luminance_parameter", rc_float);
-
 	m_luminance_range_parameter_parameter			 = backend::ref().register_constant_host( "luminance_range_parameter", rc_float );
-
 	m_gamma_correction_factor							= backend::ref().register_constant_host( "gamma_correction_factor", rc_float );
 	m_fxaa_parameters								= backend::ref().register_constant_host( "fxaa_parameters", rc_float );
 	m_god_rays_parameters0							= backend::ref().register_constant_host( "god_rays_parameters0", rc_float );
@@ -363,7 +366,9 @@ stage_postprocess::stage_postprocess(
 	m_god_rays_parameters2							= backend::ref().register_constant_host( "god_rays_parameters2", rc_float );
 	m_c_eye_ray_corner								= backend::ref().register_constant_host( "s_eye_ray_corner", rc_float );
 	m_c_frame_index									= backend::ref().register_constant_host( "frame_index", rc_int );
+
 	m_blur_target_size_parameter						= backend::ref().register_constant_host( "blur_target_size", rc_float );
+
 	m_lens_flares_parameters							= backend::ref().register_constant_host( "lens_flares_parameters", rc_float );
 	m_prev_view_matrix_parameter						= backend::ref().register_constant_host( "prev_view_matrix_parameter", rc_float );
 	m_prev_world_view_matrix_parameter				= backend::ref().register_constant_host( "prev_world_view_matrix_parameter", rc_float );
@@ -689,7 +694,7 @@ void stage_postprocess::advanced_bloom( )
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 }
 
-bool remove_model_skeletal_filter_predicate::operator()( render_surface_instance* in_model )
+inline bool remove_model_skeletal_filter_predicate::operator()( render_surface_instance* in_model )
 {
 	material_effects& effects = in_model->m_render_surface->get_material_effects( );
 
@@ -771,9 +776,10 @@ void stage_postprocess::accumulate_motion_vectors( )
 		float4x4 local_to_world = *instance.m_transform;
 		float4x4 prev_world_matrix = local_to_world;
 
-		if ( m_prev_matrix_map.find( &instance ) != m_prev_matrix_map.end( ) )
+		prev_matrix_map_type::iterator prev_matrix_it = m_prev_matrix_map.find( &instance );
+		if ( prev_matrix_it != m_prev_matrix_map.end( ) )
 		{
-			prev_world_matrix = m_prev_matrix_map[&instance];
+			prev_world_matrix = prev_matrix_it->second;
 			m_prev_matrix_map[&instance] = local_to_world;
 		}
 		else

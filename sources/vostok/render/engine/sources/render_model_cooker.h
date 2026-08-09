@@ -58,7 +58,6 @@ STATIC_SIZE_ASSERT( cook_intermediate_data, 0x138 );
 
 struct user_mesh_cook : public resources::unmanaged_cook {
 	user_mesh_cook( );
-	virtual ~user_mesh_cook( ) { }
 
 	virtual mutable_buffer allocate_resource(
 		resources::query_result_for_cook&	in_query,
@@ -75,6 +74,7 @@ struct user_mesh_cook : public resources::unmanaged_cook {
 	);
 
 	virtual void destroy_resource( resources::unmanaged_resource* resource );
+	virtual ~user_mesh_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( user_mesh_cook, 0x20 );
@@ -82,13 +82,15 @@ STATIC_SIZE_ASSERT( user_mesh_cook, 0x20 );
 class static_render_model_instance_cook : public resources::translate_query_cook {
 public:
 	static_render_model_instance_cook( );
-	virtual ~static_render_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
 
 private:
 	void on_sub_resources_loaded( resources::queries_result& data );
+
+public:
+	virtual ~static_render_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( static_render_model_instance_cook, 0x20 );
@@ -96,20 +98,21 @@ STATIC_SIZE_ASSERT( static_render_model_instance_cook, 0x20 );
 class skeleton_render_model_instance_cook : public resources::translate_query_cook {
 public:
 	skeleton_render_model_instance_cook( );
-	virtual ~skeleton_render_model_instance_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
 
 private:
 	void on_sub_resources_loaded( resources::queries_result& data );
+
+public:
+	virtual ~skeleton_render_model_instance_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( skeleton_render_model_instance_cook, 0x20 );
 
 struct render_model_cook : public resources::translate_query_cook {
 	explicit render_model_cook( resources::class_id_enum model_type );
-	virtual ~render_model_cook( ) { }
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
 	virtual void delete_resource( resources::resource_base* resource );
@@ -129,6 +132,9 @@ protected:
 	{
 		return 0;
 	}
+
+public:
+	virtual ~render_model_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( render_model_cook, 0x20 );

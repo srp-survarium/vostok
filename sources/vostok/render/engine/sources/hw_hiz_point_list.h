@@ -14,8 +14,8 @@ struct hw_hiz_point_list {
 	void set_points( float4 const* in_data, u32 const culling_results_buffer_width );
 	void initialize( u32 const num_points );
 	void render( u32 const num_points );
+	~hw_hiz_point_list( ) { }
 
-private:
 	res_declaration_ptr	m_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	u32					m_num_points;

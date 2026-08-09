@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_downsample_reflective_shadow_map : public effect_descriptor {
 public:
-	effect_downsample_reflective_shadow_map( ) { }
-	virtual ~effect_downsample_reflective_shadow_map( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_downsample_reflective_shadow_map( ) { }
+	virtual ~effect_downsample_reflective_shadow_map( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_downsample_reflective_shadow_map, 0x4 );

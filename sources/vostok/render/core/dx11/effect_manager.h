@@ -57,8 +57,6 @@ public:
 			  config( config ),
 			  crc( crc )
 		{
-			// STATE[STUB]
-			// FUNCTION BODY[0x12a100]
 		}
 
 		res_effect_ptr effect;

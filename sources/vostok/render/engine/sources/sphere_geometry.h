@@ -18,12 +18,10 @@ struct sphere_geometry : public core::noncopyable {
 		float2	uv;
 	};
 
-	sphere_geometry( u32 num_sides, u32 num_rings );
+	sphere_geometry( u32 const num_sides, u32 const num_rings );
+	void draw( );
 	~sphere_geometry( ) { }
 
-	void draw( );
-
-private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;

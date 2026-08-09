@@ -10,7 +10,6 @@ void effect_ambient_volume::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x7b53e0]
 	shader_configuration configuration;
 
 	compiler.begin_technique( );

@@ -75,9 +75,8 @@ public:
 	) override;
 };
 
-class sort_by_vs_predicate {
-public:
-	sort_by_vs_predicate( enum_render_stage_type stage_type, u32 tech_index ) :
+struct sort_by_vs_predicate {
+	sort_by_vs_predicate( enum_render_stage_type stage_type, u32 const tech_index ) :
 		m_stage_type( stage_type ),
 		m_tech_index( tech_index )
 	{
@@ -88,7 +87,6 @@ public:
 		render_surface_instance const* right
 	) const;
 
-private:
 	enum_render_stage_type m_stage_type;
 	u32 m_tech_index;
 };
@@ -113,9 +111,8 @@ public:
 	bool m_from_near_to_far;
 };
 
-class sort_by_texture_predicate {
-public:
-	sort_by_texture_predicate( enum_render_stage_type stage_type, u32 tech_index ) :
+struct sort_by_texture_predicate {
+	sort_by_texture_predicate( enum_render_stage_type stage_type, u32 const tech_index ) :
 		m_stage_type( stage_type ),
 		m_tech_index( tech_index )
 	{
@@ -126,24 +123,17 @@ public:
 		render_surface_instance const* right
 	) const;
 
-private:
 	enum_render_stage_type m_stage_type;
 	u32 m_tech_index;
 };
 
 struct sort_by_textures_predicate {
-	bool operator()(
-		render_surface_instance const*,
-		render_surface_instance const*
-	) const
-	{
-		// claude@NOTE: no legacy ancestor - sort predicate postdates the legacy corpus; matcher-phase work.
-		// STATE[STUB]
-		return false;
-	}
 };
 
 class renderer : public boost::noncopyable {
+	typedef fixed_vector< stage*, 29 > stages_type;
+	typedef frame_histogram_info_list fps_historgram_type;
+
 	// claude@NOTE: world::clear_resources reads m_renderer_context directly
 	// (m_renderer->m_renderer_context->clear_resources() inlined at 0x655631);
 	// the PDB records no accessor on renderer, so the original granted friendship.
@@ -181,16 +171,17 @@ public:
 		base_scene_ptr const& scene,
 		base_scene_view_ptr const& view,
 		base_output_window_ptr const& output_window,
-		u32 face,
+		u32 const face,
 		float3 const& position,
-		u32 resolution,
+		u32 const resolution,
 		float4& result,
-		float near_plane
+		float const near_plane
 	);
 
 	void recreate_stage( enum_render_stage_type stage_type );
-	void pick_lighting_luminance( u32 x, u32 y );
+	void pick_lighting_luminance( u32 const x, u32 const y );
 	void set_picking_lighting_luminance_mode( bool value );
+	bool m_picking_lighting_luminance_mode;
 
 	void present(
 		base_output_window_ptr in_output_window,
@@ -204,7 +195,7 @@ public:
 	void sort_models(
 		vector< render_surface_instance* >& instances,
 		enum_render_stage_type stage_type,
-		u32 tech_index
+		u32 const tech_index
 	);
 	void sort_models_by_distance(
 		vector< render_surface_instance* >& instances,
@@ -230,9 +221,9 @@ public:
 
 	void draw_top_dip_models_list(
 		vostok::ui::world& world,
-		u32 x,
-		u32 y,
-		u32 count
+		u32 const x,
+		u32 const y,
+		u32 const count
 	) const;
 
 	void gather_statistics( );
@@ -249,7 +240,7 @@ public:
 	void draw_debug(
 		scene* scene,
 		scene_view* view,
-		float frame_time,
+		float const frame_time,
 		vostok::ui::font const* default_font
 	);
 
@@ -261,10 +252,6 @@ private:
 	void execute_stages( );
 	bool is_effects_ready( ) const;
 
-public:
-	bool m_picking_lighting_luminance_mode;
-
-private:
 	float4x4 m_view_to_rain_shadow;
 	timing::timer m_timing_timer;
 	event_query* m_timing_event;
@@ -273,7 +260,7 @@ private:
 	res_texture_ptr m_debug_1x1_gpu_data[4];
 	res_texture_ptr m_debug_1x1_cpu_data[4];
 	float4 m_debug_readed_data[4];
-	fixed_vector< stage*, 29 > m_stages;
+	stages_type m_stages;
 	cloud_interp_textures m_cloud_interp_textures;
 	hw_hiz_occlusion_manager* m_occlusion_manager;
 	renderer_context* m_renderer_context;
@@ -297,7 +284,8 @@ private:
 	float m_current_time;
 	u32 m_frame_id;
 	cloud_simulation m_simulation;
-	frame_histogram_info_list m_fps_history;
+	static u32 const m_num_fps_history_values = 512;
+	fps_historgram_type m_fps_history;
 	float4 m_selected_lighting_luminanace_in_screen;
 };
 

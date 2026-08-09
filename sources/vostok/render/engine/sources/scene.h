@@ -76,67 +76,6 @@ typedef intrusive_ptr<
 
 class scene : public base_scene {
 public:
-	struct particle_engine :
-		public particle::engine,
-		public boost::noncopyable
-	{
-		explicit particle_engine( scene* const in_scene ) :
-			m_scene( in_scene )
-		{
-		}
-
-		void set_particle_world( particle::world& particle_world )
-		{
-			m_particle_world = &particle_world;
-		}
-
-		virtual particle::render_particle_emitter_instance*
-		create_render_emitter_instance(
-			particle::particle_emitter_instance& particle_emitter_instance,
-			particle::base_particle_list const& particle_list,
-			particle::billboard_parameters* billboard_parameters,
-			particle::beamtrail_parameters* beamtrail_parameters,
-			particle::enum_particle_locked_axis locked_axis,
-			particle::enum_particle_screen_alignment screen_alignment,
-			float4x4 const& transform,
-			float4 const& instance_color
-		);
-
-		virtual void destroy(
-			particle::render_particle_emitter_instance*& instance
-		);
-		virtual base_scene_ptr get_scene( particle::world& world );
-		virtual ~particle_engine( ) { }
-
-		particle::world* m_particle_world;
-
-	private:
-		scene* const m_scene;
-	};
-
-	struct decal_instance_node {
-		explicit decal_instance_node( decal_instance* instance ) :
-			decal( instance ),
-			next( 0 )
-		{
-		}
-
-		~decal_instance_node( ) { }
-
-		decal_instance_ptr decal;
-		decal_instance_node* next;
-	};
-
-	typedef intrusive_list<
-		decal_instance_node,
-		decal_instance_node*,
-		&decal_instance_node::next,
-		threading::single_threading_policy,
-		size_policy,
-		no_debug_policy
-	> decal_instance_node_list;
-
-public:
 	explicit scene( scene_configuration const& renderer_configuration );
 	virtual ~scene( );
 
@@ -253,12 +192,14 @@ public:
 
 	void get_portals_occlusion_bounds( float4* bounds ) const
 	{
-		m_portal_system->get_portals_occlusion_bounds( bounds );
+		if ( m_portal_system )
+			m_portal_system->get_portals_occlusion_bounds( bounds );
 	}
 
 	void update_portals_occlusion_culling( pcbyte results )
 	{
-		m_portal_system->update_portals_occlusion_culling( results );
+		if ( m_portal_system )
+			m_portal_system->update_portals_occlusion_culling( results );
 	}
 
 	void unmove_all_models( );
@@ -280,8 +221,8 @@ public:
 	void process_streaming(
 		float4x4 const& projection_matrix,
 		float3 viewer_position,
-		u32 screen_size_x,
-		u32 screen_size_y
+		const u32 screen_size_x,
+		const u32 screen_size_y
 	);
 	void gather_streamable_textures(
 		render_model_instance_impl_ptr model,
@@ -318,52 +259,9 @@ public:
 	bool use_occlusion_culling( ) const { return m_use_occlusion_culling; }
 	void dump_scene_statistics( ) const;
 
-	void select_volume_fog_instances(
-		float4x4 const& view_projection,
-		vector< volume_fog_parameters >& instances
-	);
-
-	decal_instance_node_list& decals( ) { return m_decals; }
-	collision::space_partitioning_tree& decals_tree( )
-	{
-		return *m_decals_tree;
-	}
-
-	vector< environment_probe* >& environment_probes( )
-	{
-		return m_environment_probes;
-	}
-	collision::space_partitioning_tree& environment_probes_tree( )
-	{
-		return *m_environment_probes_tree;
-	}
-
-	vector< sky_ambient_occlusion* >& sky_ao_volumes( )
-	{
-		return m_sky_ao_volumes;
-	}
-
-	associative_vector< u32, float4x4, vector, std::less< u32 > >&
-	lpv_occluders( )
-	{
-		return m_lpv_occluders;
-	}
-
-	vector< tracer_model_instance_ptr >& tracers( ) { return m_tracers; }
-	vector< ambient_volume* >& ambient_volumes( ) { return m_ambient_volumes; }
-	lpv_batched_geometry& get_lpv_geometry( ) { return m_lpv_geometry; }
-	shadow_batched_geometry& get_shadow_geometry( ) { return m_shadow_geometry; }
-
-public:
 	vector< streamable_texture_info > streaming_textures;
 	vector< requested_streamable_texture > requested_streamable_textures;
 	vector< streaming_ready_texture > ready_streaming_textures;
-	associative_vector<
-		u32,
-		volume_fog_parameters,
-		vector,
-		std::less< u32 >
-	> m_volume_fogs;
 
 private:
 	friend	class				scene_cook;
@@ -379,32 +277,139 @@ private:
 		vector< render_surface_instance* >& selection
 	);
 
+public:
+	struct particle_engine :
+		public particle::engine,
+		public boost::noncopyable
+	{
+		explicit particle_engine( scene* const in_scene ) :
+			m_scene( in_scene )
+		{
+		}
+
+		void set_particle_world( particle::world& particle_world )
+		{
+			m_particle_world = &particle_world;
+		}
+
+		virtual particle::render_particle_emitter_instance*
+		create_render_emitter_instance(
+			particle::particle_emitter_instance& particle_emitter_instance,
+			particle::base_particle_list const& particle_list,
+			particle::billboard_parameters* billboard_parameters,
+			particle::beamtrail_parameters* beamtrail_parameters,
+			particle::enum_particle_locked_axis locked_axis,
+			particle::enum_particle_screen_alignment screen_alignment,
+			float4x4 const& transform,
+			float4 const& instance_color
+		);
+
+		virtual void destroy(
+			particle::render_particle_emitter_instance*& instance
+		);
+		virtual base_scene_ptr get_scene( particle::world& world );
+		virtual ~particle_engine( ) { }
+
+		particle::world* m_particle_world;
+
+	private:
+		scene* const m_scene;
+	};
+
+	typedef vector< vertex_colored > vertices_type;
+	typedef vector< u16 > indices_type;
+	typedef vector< resources::unmanaged_resource_ptr > particle_system_instances_type;
+	typedef vector< speedtree_instance_ptr > speedtree_instances_type;
+	typedef associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > > volume_fog_instances_type;
+
+public:
+	volume_fog_instances_type m_volume_fogs;
+
+	typedef vector< volume_fog_parameters > visible_volume_fog_instances_type;
+
+	void select_volume_fog_instances(
+		float4x4 const& view_projection,
+		visible_volume_fog_instances_type& instances
+	);
+
+	struct decal_instance_node {
+		explicit decal_instance_node( decal_instance* instance ) :
+			decal( instance ),
+			next( 0 )
+		{
+		}
+
+		~decal_instance_node( ) { }
+
+		decal_instance_ptr decal;
+		decal_instance_node* next;
+	};
+
+	typedef intrusive_list<
+		decal_instance_node,
+		decal_instance_node*,
+		&decal_instance_node::next,
+		threading::single_threading_policy,
+		size_policy,
+		no_debug_policy
+	> decal_instance_list_type;
+	typedef vector< environment_probe* > environment_probe_array_type;
+	typedef vector< sky_ambient_occlusion* > sky_ambient_occlusion_array_type;
+	typedef vector< ambient_volume* > ambient_volume_array_type;
+	typedef vector< tracer_model_instance_ptr > tracers_array_type;
+	typedef associative_vector< u32, float4x4, vector, std::less< u32 > > lpv_occluders_array_type;
+
+	decal_instance_list_type& decals( ) { return m_decals; }
+	collision::space_partitioning_tree& decals_tree( )
+	{
+		return *m_decals_tree;
+	}
+
+	environment_probe_array_type& environment_probes( )
+	{
+		return m_environment_probes;
+	}
+	collision::space_partitioning_tree& environment_probes_tree( )
+	{
+		return *m_environment_probes_tree;
+	}
+
+	sky_ambient_occlusion_array_type& sky_ao_volumes( )
+	{
+		return m_sky_ao_volumes;
+	}
+
+	lpv_occluders_array_type& lpv_occluders( )
+	{
+		return m_lpv_occluders;
+	}
+
+	tracers_array_type& tracers( ) { return m_tracers; }
+	ambient_volume_array_type& ambient_volumes( ) { return m_ambient_volumes; }
+	lpv_batched_geometry& get_lpv_geometry( ) { return m_lpv_geometry; }
+	shadow_batched_geometry& get_shadow_geometry( ) { return m_shadow_geometry; }
+
 private:
 	material_effects_instance_ptr m_sky_material;
 	lpv_batched_geometry m_lpv_geometry;
 	shadow_batched_geometry m_shadow_geometry;
 	particle_engine m_particle_engine;
-	vector< vertex_colored > m_line_vertices;
-	vector< u16 > m_line_indices;
-	vector< vertex_colored > m_triangle_vertices;
-	vector< u16 > m_triangle_indices;
+	vertices_type m_line_vertices;
+	indices_type m_line_indices;
+	vertices_type m_triangle_vertices;
+	indices_type m_triangle_indices;
 	vector< render_model_instance_impl_ptr > m_selected_models;
-	vector< resources::unmanaged_resource_ptr > m_particle_system_instances;
-	vector< speedtree_instance_ptr > m_speedtree_instances;
-	vector< tracer_model_instance_ptr > m_tracers;
-	vector< sky_ambient_occlusion* > m_sky_ao_volumes;
-	vector< ambient_volume* > m_ambient_volumes;
-	decal_instance_node_list m_decals;
-	vector< environment_probe* > m_environment_probes;
+	particle_system_instances_type m_particle_system_instances;
+	speedtree_instances_type m_speedtree_instances;
+	tracers_array_type m_tracers;
+	sky_ambient_occlusion_array_type m_sky_ao_volumes;
+	ambient_volume_array_type m_ambient_volumes;
+	decal_instance_list_type m_decals;
+	environment_probe_array_type m_environment_probes;
 	collision::space_partitioning_tree* m_decals_tree;
 	collision::space_partitioning_tree* m_environment_probes_tree;
 	collision::space_partitioning_tree* m_models_tree;
-	associative_vector<
-		u32,
-		float4x4,
-		vector,
-		std::less< u32 >
-	> m_lpv_occluders;
+	lpv_occluders_array_type m_lpv_occluders;
 	vector< render_model_instance_impl_ptr > m_render_model_instances;
 	unique_ptr< lights_db > m_lights;
 	particle::world_ptr m_particle_world;

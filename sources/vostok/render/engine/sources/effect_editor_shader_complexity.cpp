@@ -10,7 +10,6 @@ void effect_editor_shader_complexity::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b4740]
 	shader_configuration configuration;
 
 	compile_begin("vertex_base", "editor_shader_complexity", compiler, &configuration, config);

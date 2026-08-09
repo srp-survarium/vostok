@@ -1,4 +1,8 @@
 #include "pch.h"
+#include <ddraw.h>
+#include <d3dx11tex.h>
+
+#pragma comment( lib, "d3dx11.lib" )
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
 #include "texture_storage.h"
@@ -17,6 +21,8 @@
 #include <vostok/render/core/dx11/xs_data.h>
 #include <vostok/render/core/res_texture.h>
 #include <vostok/render/core/res_render_output.h>
+#include <vostok/render/core/options.h>
+#include <vostok/render/core/texture_cook.h>
 #include "manager_common_inline.h"
 
 #include <vostok/resources.h>
@@ -30,6 +36,7 @@ namespace vostok {
 namespace render {
 
 bool g_enable_resource_sharing = true;
+static bool s_debug_clip_texture_quality = true;
 
 struct resource_manager_call_destructor_predicate {
 	template <typename T>
@@ -213,7 +220,7 @@ ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 	else
 	{
 		R_ASSERT				(0, "sRGB for 3d and 1d types not implemented yet.");
-		return					0;
+		return					in_texture;
 	}
 }
 
@@ -586,9 +593,7 @@ void resource_manager::reload_modified_textures( )
 
 void resource_manager::reload_shader_sources( bool is_recompile_shaders )
 {
-	// FUNCTION BODY[0x5606e0]
-	m_is_shader_reloading					   = true;
-	m_need_recompile_shader_if_source_reloaded = is_recompile_shaders;
+	m_loading_incomplete = false;
 }
 
 shader_constant_table* resource_manager::create_const_table(
@@ -684,56 +689,379 @@ void fix_texture_name( fs_new::virtual_path_string& str )
 		str.set_length(pos);
 }
 
-u32 calc_bytes_per_block( DXGI_FORMAT )
+u32 calc_bytes_per_block( DXGI_FORMAT format )
 {
-	// claude@NOTE: a DXGI_FORMAT switch compiled to `movzx ecx,[eax+<index-table>]; jmp [ecx*4+<jump-table>]`
-	// - the case -> value mapping lives entirely in the .rdata index/jump tables, which the delinker
-	// prints as garbage instructions, so recovering the cases needs a raw .rdata dump of the two
-	// tables at the two addresses the dispatch loads (same for calc_block_size / find_srgb_format).
-	// STATE[STUB]
-	return 0;
+	switch ( format ) {
+		case DXGI_FORMAT_R8_UNORM:
+			return 1;
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+			return 4;
+		case DXGI_FORMAT_BC1_UNORM:
+			return 8;
+		case DXGI_FORMAT_BC2_UNORM:
+		case DXGI_FORMAT_BC3_UNORM:
+			return 16;
+		default:
+			NODEFAULT( return 0 );
+	}
 }
 
-u32 calc_block_size( DXGI_FORMAT )
+u32 calc_block_size( DXGI_FORMAT format )
 {
-	// claude@NOTE: same .rdata index+jump-table wall as calc_bytes_per_block; the surviving return
-	// values are 1 and 4.
-	// STATE[STUB]
-	return 0;
+	switch ( format ) {
+		case DXGI_FORMAT_R8_UNORM:
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+			return 1;
+		case DXGI_FORMAT_BC1_UNORM:
+		case DXGI_FORMAT_BC2_UNORM:
+		case DXGI_FORMAT_BC3_UNORM:
+			return 4;
+		default:
+			NODEFAULT( return 0 );
+	}
 }
 
 DXGI_FORMAT find_srgb_format( DXGI_FORMAT format, bool )
 {
-	// claude@NOTE: same .rdata index+jump-table wall; the dispatch is over `format - 0x1c` bounded by
-	// 0x3b and the surviving returns are 0x1d/0x5b/0x48/0x4b/0x4e.
-	// STATE[STUB]
-	return format;
+	switch ( format ) {
+		case DXGI_FORMAT_R8G8B8A8_UNORM:
+			return DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		case DXGI_FORMAT_B8G8R8A8_UNORM:
+			return DXGI_FORMAT_B8G8R8A8_UNORM_SRGB;
+		case DXGI_FORMAT_BC1_UNORM:
+			return DXGI_FORMAT_BC1_UNORM_SRGB;
+		case DXGI_FORMAT_BC2_UNORM:
+			return DXGI_FORMAT_BC2_UNORM_SRGB;
+		case DXGI_FORMAT_BC3_UNORM:
+			return DXGI_FORMAT_BC3_UNORM_SRGB;
+		default:
+			return format;
+	}
 }
 
 void resource_manager::on_texture_loaded(
-	resources::managed_resource_ptr,
-	pcstr,
-	u32
+	resources::managed_resource_ptr data,
+	pcstr in_name,
+	u32 num_last_mips_used
 )
 {
-	// claude@NOTE: 2470-byte target body with 26 PDB-recorded locals (dds_header/dds_info/desc
-	// 2d+3d/pinned_ptr_const<texture_data_resource>/mip+array loops); no legacy ancestor, so it has
-	// to be reconstructed statement by statement from 0x562400 - the largest single item left in
-	// this TU.
-	// STATE[STUB]
+	struct dds_header {
+		u32 signature0;
+		DDSURFACEDESC2 header0;
+	};
+
+	fs_new::virtual_path_string name( in_name );
+	fix_texture_name( name );
+
+	res_texture* tex = create_texture( name.c_str( ), NULL, 0, false, true, true, u32(-1) );
+
+	resources::managed_resource_ptr managed_ptr = data;
+	resources::pinned_ptr_const< texture_data_resource > managed_typed_ptr( managed_ptr );
+
+	pcbyte const dds_ptr = static_cast< pcbyte >( managed_typed_ptr->buffer( ).c_ptr( ) );
+	u32 dds_size = managed_typed_ptr->buffer( ).size( );
+	bool is_srgb_option = read_srgb_flag( dds_ptr, dds_size );
+	--dds_size;
+
+	D3DX_IMAGE_INFO dds_info = { 0 };
+	if ( FAILED( D3DXGetImageInfoFromMemory( dds_ptr, dds_size, NULL, &dds_info, NULL ) ) )
+		return;
+
+	pbyte copy_ptr = const_cast< pbyte >( dds_ptr ) + sizeof(dds_header);
+	u32 mem_usage = 0;
+	ID3D11Resource* base_tex = NULL;
+
+	u32 orig_width;
+	u32 orig_height;
+
+	if ( dds_info.Format == DXGI_FORMAT_R8G8B8A8_UNORM )
+		dds_info.Format = DXGI_FORMAT_B8G8R8A8_UNORM;
+
+	if ( (dds_info.Format == DXGI_FORMAT_R8G8B8A8_UNORM ||
+		  dds_info.Format == DXGI_FORMAT_B8G8R8A8_UNORM) &&
+		 dds_size == dds_info.Width * dds_info.Height + sizeof(dds_header) )
+	{
+		dds_info.Format = DXGI_FORMAT_R8_UNORM;
+	}
+
+	u32 const block_size = calc_block_size( dds_info.Format );
+	u32 const block_bytes = calc_bytes_per_block( dds_info.Format );
+	u32 texture_quality = options::ref( ).current.m_texture_quality;
+	u32 const min_dimension = math::min( dds_info.Width, dds_info.Height );
+	u32 const video_memory = device::ref( ).get_avaliable_video_memory( );
+	bool const weapon_or_flora = strstr( name.c_str( ), "weapons/" ) != NULL ||
+		strstr( name.c_str( ), "flora/" ) != NULL;
+
+	if ( s_debug_clip_texture_quality && !device::ref( ).get_is_editor( ) )
+	{
+		if ( texture_quality == 1 )
+			texture_quality = weapon_or_flora ? 1 : 0;
+		else if ( texture_quality == 2 )
+		{
+			if ( video_memory <= 512 )
+				texture_quality = 0;
+			else if ( video_memory <= 1024 )
+				texture_quality = weapon_or_flora ? 2 : 1;
+		}
+	}
+
+	u32 mip_level_cut = 0;
+	if ( min_dimension > 128 )
+		mip_level_cut = 2 - texture_quality;
+
+	if ( dds_info.ArraySize == 1 &&
+		 dds_info.MipLevels > mip_level_cut &&
+		 dds_info.Depth == 1 &&
+		 texture_quality < 2 )
+	{
+		for ( u32 mip_index = 0; mip_index < mip_level_cut; ++mip_index )
+		{
+			u32 const width_in_blocks =
+				(math::max( dds_info.Width >> mip_index, block_size ) + block_size - 1) / block_size;
+			u32 const height_in_blocks =
+				(math::max( dds_info.Height >> mip_index, block_size ) + block_size - 1) / block_size;
+			copy_ptr += width_in_blocks * height_in_blocks * block_bytes;
+		}
+
+		dds_info.MipLevels -= mip_level_cut;
+		dds_info.Width /= static_cast<u32>( math::pow( 2.f, mip_level_cut ) );
+		dds_info.Height /= static_cast<u32>( math::pow( 2.f, mip_level_cut ) );
+		num_last_mips_used -= mip_level_cut;
+	}
+
+	bool const use_cutting =
+		(dds_info.Format == DXGI_FORMAT_BC1_UNORM || dds_info.Format == DXGI_FORMAT_BC3_UNORM) &&
+		num_last_mips_used != u32(-1) &&
+		num_last_mips_used < dds_info.MipLevels &&
+		dds_info.Depth == 1;
+
+	u32 cut_diff = 0;
+	u32 num_orig_mips = dds_info.MipLevels;
+	orig_width = dds_info.Width;
+	orig_height = dds_info.Height;
+
+	if ( use_cutting )
+	{
+		cut_diff = dds_info.MipLevels - num_last_mips_used;
+		dds_info.Width = math::max( dds_info.Width >> cut_diff, block_size );
+		dds_info.Height = math::max( dds_info.Height >> cut_diff, block_size );
+		dds_info.MipLevels = num_last_mips_used;
+	}
+
+	HRESULT creation_result;
+	if ( dds_info.Depth == 1 )
+	{
+		D3D11_TEXTURE2D_DESC desc;
+		ZeroMemory( &desc, sizeof(desc) );
+		desc.ArraySize = dds_info.ArraySize;
+		desc.Format = is_srgb_option ? find_srgb_format( dds_info.Format, true ) : dds_info.Format;
+		desc.Width = dds_info.Width;
+		desc.Height = dds_info.Height;
+		desc.MipLevels = dds_info.MipLevels;
+		desc.MiscFlags = dds_info.MiscFlags;
+		desc.SampleDesc.Count = 1;
+		desc.SampleDesc.Quality = 0;
+		desc.CPUAccessFlags = 0;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+
+		if ( dds_info.ArraySize == 1 )
+		{
+			creation_result = device::ref( ).d3d_device( )->CreateTexture2D(
+				&desc,
+				NULL,
+				reinterpret_cast< ID3D11Texture2D** >( &base_tex )
+			);
+
+			for ( u32 array_slice = 0; array_slice < dds_info.ArraySize; ++array_slice )
+			{
+				for ( u32 mip_index = 0; mip_index < num_orig_mips; ++mip_index )
+				{
+					u32 const width_in_blocks =
+						(math::max( orig_width >> mip_index, block_size ) + block_size - 1) / block_size;
+					u32 const height_in_blocks =
+						(math::max( orig_height >> mip_index, block_size ) + block_size - 1) / block_size;
+					u32 const mip_size = width_in_blocks * height_in_blocks * block_bytes;
+					u32 const row_pitch = width_in_blocks * block_bytes;
+
+					if ( use_cutting && num_last_mips_used < num_orig_mips - mip_index )
+						copy_ptr += mip_size;
+					else
+					{
+						device::ref( ).d3d_context( )->UpdateSubresource(
+							base_tex,
+							D3D11CalcSubresource( mip_index - cut_diff, array_slice, desc.MipLevels ),
+							NULL,
+							copy_ptr,
+							row_pitch,
+							0
+						);
+						copy_ptr += mip_size;
+						mem_usage += mip_size;
+					}
+				}
+			}
+		}
+		else
+		{
+			creation_result = device::ref( ).d3d_device( )->CreateTexture2D(
+				&desc,
+				NULL,
+				reinterpret_cast< ID3D11Texture2D** >( &base_tex )
+			);
+		}
+
+		CHECK_RESULT( creation_result, "texture creation failed: %s", name.c_str( ) );
+
+		if ( dds_info.ArraySize != 1 )
+		{
+			for ( u32 array_slice = 0; array_slice < dds_info.ArraySize; ++array_slice )
+			{
+				for ( u32 mip_index = 0; mip_index < num_orig_mips; ++mip_index )
+				{
+					u32 const width_in_blocks =
+						(math::max( orig_width >> mip_index, block_size ) + block_size - 1) / block_size;
+					u32 const height_in_blocks =
+						(math::max( orig_height >> mip_index, block_size ) + block_size - 1) / block_size;
+					u32 const mip_size = width_in_blocks * height_in_blocks * block_bytes;
+					u32 const row_pitch = width_in_blocks * block_bytes;
+
+					if ( use_cutting && num_last_mips_used < num_orig_mips - mip_index )
+						copy_ptr += mip_size;
+					else
+					{
+						device::ref( ).d3d_context( )->UpdateSubresource(
+							base_tex,
+							D3D11CalcSubresource( mip_index - cut_diff, array_slice, desc.MipLevels ),
+							NULL,
+							copy_ptr,
+							row_pitch,
+							0
+						);
+						copy_ptr += mip_size;
+						mem_usage += mip_size;
+					}
+				}
+			}
+		}
+	}
+	else
+	{
+		D3D11_TEXTURE3D_DESC desc;
+		desc.Format = is_srgb_option ? find_srgb_format( dds_info.Format, true ) : dds_info.Format;
+		desc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+		desc.CPUAccessFlags = 0;
+		desc.Width = dds_info.Width;
+		desc.Height = dds_info.Height;
+		desc.Depth = dds_info.Depth;
+		desc.MipLevels = dds_info.MipLevels;
+		desc.MiscFlags = dds_info.MiscFlags;
+		desc.Usage = D3D11_USAGE_DEFAULT;
+
+		creation_result = device::ref( ).d3d_device( )->CreateTexture3D(
+			&desc,
+			NULL,
+			reinterpret_cast< ID3D11Texture3D** >( &base_tex )
+		);
+		CHECK_RESULT( creation_result );
+
+		for ( u32 mip_index = 0; mip_index < dds_info.MipLevels; ++mip_index )
+		{
+			u32 const width_in_blocks =
+				((dds_info.Width >> mip_index) + block_size - 1) / block_size;
+			u32 const height_in_blocks =
+				((dds_info.Height >> mip_index) + block_size - 1) / block_size;
+			u32 const row_pitch = width_in_blocks * block_bytes;
+			u32 const mip_size =
+				width_in_blocks * height_in_blocks * dds_info.Depth * block_bytes;
+
+			device::ref( ).d3d_context( )->UpdateSubresource(
+				base_tex,
+				mip_index,
+				NULL,
+				copy_ptr,
+				row_pitch,
+				row_pitch * height_in_blocks
+			);
+			copy_ptr += mip_size;
+		}
+
+		mem_usage = dds_size + sizeof(dds_header);
+	}
+
+	tex->m_mem_usage = mem_usage;
+	tex->set_hw_texture( base_tex );
+	tex->m_loaded = true;
+
+	if ( base_tex )
+		base_tex->Release( );
 }
 
 void resource_manager::on_texture_loaded(
-	resources::queries_result&,
-	u32,
-	bool,
-	u32
+	resources::queries_result& data,
+	u32 mip_level_cut,
+	bool use_converter,
+	u32 num_last_mips_used
 )
 {
-	// claude@NOTE: 972-byte D3DX11 path (locals tex/name/base_tex/pinned_ptr_const<u8>/dds_info/
-	// load_info); the legacy ancestor is the 3-param variant, so the fourth u32 and the reworked
-	// flow have to come from the target asm at 0x562de0.
-	// STATE[STUB]
+	fs_new::virtual_path_string name( data[0].get_requested_path( ) );
+
+	if ( !data.is_successful( ) )
+	{
+		LOG_ERROR( "Texture %s was not found!", name.c_str( ) );
+		return;
+	}
+
+	fix_texture_name( name );
+
+	vector<fs_new::virtual_path_string>::iterator to_delete =
+		std::find( m_textures_to_reload.begin( ), m_textures_to_reload.end( ), name );
+	if ( to_delete != m_textures_to_reload.end( ) )
+		m_textures_to_reload.erase( to_delete );
+
+	res_texture* tex = create_texture( name.c_str( ), NULL, 0, false, true, true, u32(-1) );
+
+	if ( use_converter )
+	{
+		on_texture_loaded(
+			data[0].get_managed_resource( ),
+			data[0].get_requested_path( ),
+			num_last_mips_used
+		);
+		return;
+	}
+
+	resources::pinned_ptr_const< u8 > ptr_man( data[0].get_managed_resource( ) );
+
+	D3DX_IMAGE_INFO dds_info = { 0 };
+	CHECK_RESULT(
+		D3DXGetImageInfoFromMemory(
+			ptr_man.c_ptr( ),
+			ptr_man.size( ),
+			NULL,
+			&dds_info,
+			NULL
+		)
+	);
+
+	D3DX_IMAGE_LOAD_INFO load_info;
+	ID3DBaseTexture* base_tex = NULL;
+	CHECK_RESULT(
+		D3DXCreateTextureFromMemory(
+			device::ref( ).d3d_device( ),
+			ptr_man.c_ptr( ),
+			ptr_man.size( ),
+			&load_info,
+			NULL,
+			&base_tex,
+			NULL
+		)
+	);
+
+	tex->set_hw_texture( base_tex, mip_level_cut );
+	base_tex->Release( );
 }
 
 u32 resource_manager::get_texture_video_memory_size( )

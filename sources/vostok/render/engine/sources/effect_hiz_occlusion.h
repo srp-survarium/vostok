@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_hiz_occlusion : public effect_descriptor {
 public:
-	effect_hiz_occlusion( ) { }
-	virtual ~effect_hiz_occlusion( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_hiz_occlusion( ) { }
+	virtual ~effect_hiz_occlusion( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_hiz_occlusion, 0x4 );

@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_post_process_blend_texture_materials : public effect_descriptor {
 public:
-	effect_post_process_blend_texture_materials( ) { }
-	virtual ~effect_post_process_blend_texture_materials( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
-		custom_config_value const&	config
+		custom_config_value const&	custom_config
 	) override;
+
+	effect_post_process_blend_texture_materials( ) { }
+	virtual ~effect_post_process_blend_texture_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_blend_texture_materials, 0x4 );

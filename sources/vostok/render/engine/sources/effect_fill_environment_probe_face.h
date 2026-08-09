@@ -11,13 +11,13 @@ class effect_compiler;
 
 class effect_fill_environment_probe_face : public effect_descriptor {
 public:
-	effect_fill_environment_probe_face( ) { }
-	virtual ~effect_fill_environment_probe_face( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
+
+	effect_fill_environment_probe_face( ) { }
+	virtual ~effect_fill_environment_probe_face( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fill_environment_probe_face, 0x4 );

@@ -10,7 +10,6 @@ void effect_editor_show_overdraw::compile(
 	custom_config_value const&
 )
 {
-	// FUNCTION BODY[0x7b4260]
 /*
 	NewStencilBufferValue = (StencilBufferValue & ~StencilWriteMask) |
 							(StencilWriteMask & StencilOp(StencilBufferValue))
@@ -50,7 +49,7 @@ void effect_editor_show_overdraw::compile(
 	for (u32 layer_index = 0; layer_index < effect_editor_show_overdraw::num_overdraw_layers; layer_index++)
 	{
 		compiler.begin_technique();
-			compiler.begin_pass("post_process0", NULL, "editor_show_overdraw", shader_configuration(), NULL);
+			compiler.begin_pass("eye_adaptation", NULL, "editor_show_overdraw", shader_configuration(), NULL);
 				compiler.set_depth(false, false);
 				compiler.set_alpha_blend(false);
 

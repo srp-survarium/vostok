@@ -33,12 +33,10 @@ typedef resources::resource_ptr<
 struct injection_geometry : public boost::noncopyable {
 	explicit injection_geometry( u32 rsm_size );
 	injection_geometry( u32 rsm_size_x, u32 rsm_size_y );
-	~injection_geometry( ) { }
-
 	void draw( );
 	void prepare( u32 rsm_size_x, u32 rsm_size_y );
+	~injection_geometry( ) { }
 
-private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	u32					m_num_points;
@@ -57,12 +55,10 @@ struct sliced_cube_geometry : public boost::noncopyable {
 		float4	xy_and_slice_index;
 	};
 
-	explicit sliced_cube_geometry( u32 in_num_cells );
+	explicit sliced_cube_geometry( u32 const in_num_cells );
+	void draw( );
 	~sliced_cube_geometry( ) { }
 
-	void draw( );
-
-private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;
@@ -208,7 +204,6 @@ public:
 	u32					m_rsm_downsampled_size;
 	u32					m_rsm_source_size;
 
-private:
 	box_geometry		m_box_geometry;
 	D3D11_VIEWPORT		m_saved_viewport;
 	injection_geometry	m_injection_geometry;

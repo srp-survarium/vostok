@@ -91,12 +91,27 @@ void res_render_output::update_window_properties()
 	*/
 }
 
-bool set_client_rect( HWND, s32, s32, s32, s32 )
+bool set_client_rect(
+	HWND h_wnd,
+	s32 pos_x,
+	s32 pos_y,
+	s32 size_x,
+	s32 size_y
+)
 {
-	// claude@NOTE: no legacy ancestor - set_client_rect has no legacy ancestor (absent from the consumed res_render_output too); matcher-phase work.
-	// STATE[STUB]
 	// FUNCTION BODY[0x55ab60]
-	return false;
+	RECT rect = { pos_x, pos_x, pos_x + size_x, pos_y + size_y };
+	AdjustWindowRect( &rect, GetWindowLong( h_wnd, GWL_STYLE ), FALSE );
+	RECT rect2;
+	GetWindowRect( h_wnd, &rect2 );
+
+	SetWindowLong(
+		h_wnd,
+		GWL_STYLE,
+		GetWindowLong( h_wnd, GWL_STYLE ) | WS_CAPTION | WS_SYSMENU | WS_VISIBLE
+	);
+	SetWindowPos( h_wnd, NULL, pos_x, pos_y, size_x, size_y, SWP_SHOWWINDOW );
+	return true;
 }
 
 void res_render_output::select_resolution( u32 & width, u32 & height, bool windowed, HWND window) const
@@ -184,7 +199,7 @@ void res_render_output::present	( )
 
 	if ( res == DXGI_ERROR_DEVICE_REMOVED || res == DXGI_ERROR_DEVICE_RESET || res == DXGI_ERROR_DRIVER_INTERNAL_ERROR )
 	{
-		device::ref().on_device_removed();	// claude@NOTE: still a STATE[STUB] in device.cpp, so this call inlines to nothing and this arm's two statements read TRGT_ONLY here; the target body is >0x43c bytes of logging::append over a swap-chain teardown.
+		device::ref().on_device_removed();
 	}
 	else
 	{

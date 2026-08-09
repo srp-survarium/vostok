@@ -14,18 +14,28 @@
 #include "material_effects.h"
 #include "material_effects_instance.h"
 
+
+
+
+
+
 static vostok::command_line::key s_sync_effects_creation_key( "sync_effects_creation", "", "", "enable sync effects creation" );
 
 namespace vostok {
 namespace render {
 
-// TODO: remove this functions!
-static void replace_value_data(
-	custom_config_value const& to,
-	custom_config_value from
-)
+material_effects_instance_cook::material_effects_instance_cook( ):
+	resources::translate_query_cook(
+		resources::material_effects_instance_class,
+		reuse_false,
+		use_current_thread_id
+	)
 {
-	// FUNCTION BODY[0x64d310]
+}
+
+
+static void replace_value_data( custom_config_value const& to, custom_config_value from )
+{
 	custom_config_value& w_value	= const_cast<custom_config_value&>(to);
 	(u16&)w_value.count				= from.count;
 	(u16&)w_value.type				= from.type;
@@ -38,37 +48,43 @@ static void replace_value_data(
 */
 static void replace_values( custom_config_value const& in_v )
 {
-	// FUNCTION BODY[0x64d4d0]
 	if ((in_v.type==configs::t_table_indexed || in_v.type==configs::t_table_named))
 	{
-		if ( in_v.value_exists("value"))
+		if ( in_v.value_exists("default_value"))
 		{
-			replace_value_data(in_v, in_v["value"]);
+			replace_value_data(in_v, in_v["default_value"]);
 		}
 		else
 		{
 			for (custom_config_value::const_iterator it=in_v.begin(); it!=in_v.end(); ++it)
 				replace_values(*it);
 		}
-	}
-}
 
+		if ( in_v.value_exists("value"))
+		{
+			replace_value_data(in_v, in_v["value"]);
+		}
+		else
+		{
+			for (custom_config_value::const_iterator it=in_v.begin(); it!=in_v.end(); ++it) replace_values(*it);
+		}
+	}
+
+}
 static void merge_configs(
 	custom_config_value const*& current,
 	custom_config_value const*& values,
 	custom_config_value const& base,
 	custom_config_value const* replace
-)
-{
-	// FUNCTION BODY[0x64d380]
+) {
 	if (base.type==vostok::configs::t_table_named || base.type==vostok::configs::t_table_indexed)
 	{
 		vostok::memory::copy((pvoid)current, sizeof(custom_config_value), (pvoid)&base, sizeof(custom_config_value));
 
 		custom_config_value* root_values = const_cast<custom_config_value*>(current);
-		//values++;
 
-		root_values->count = u16(base.size());
+
+		root_values->count = u16(base.end() - base.begin());
 		root_values->data  = (pvoid)values;
 		custom_config_value const* data_values = values;
 		values+=root_values->count;
@@ -102,23 +118,17 @@ static void merge_configs(
 
 static u32 get_num_fields( custom_config_value const& value )
 {
-	// FUNCTION BODY[0x64d330]
-	u32 result = 1;
 
+
+	u32 result = 1;
 	if (value.type==configs::t_table_named || value.type==configs::t_table_indexed)
 		for (custom_config_value::const_iterator it=value.begin(); it!=value.end(); ++it)
 			result += get_num_fields(*it);
-
 	return result;
 }
 
-static custom_config_ptr merge_effect_options(
-	custom_config_value const& effect_config,
-	effect_options_descriptor const& desc,
-	u32& out_crc
-)
-{
-	// FUNCTION BODY[0x64d690]
+
+static custom_config_ptr merge_effect_options( custom_config_value const& effect_config, effect_options_descriptor const& desc, u32& out_crc ) {
 	u32 crc = 0;
 	custom_config_ptr C = create_custom_config(desc, crc, false);
 
@@ -137,37 +147,10 @@ static custom_config_ptr merge_effect_options(
 
 	return create_custom_config(*values_root, out_crc, false);
 }
-
-static D3D11_CULL_MODE base_cull_mode_to_d3d_cull_mode(
-	enum_cull_mode cull_mode
-)
-{
-	// FUNCTION BODY[0x64d2f0]
-	switch (cull_mode)
-	{
-		case cull_mode_none:	return D3D11_CULL_NONE;
-		case cull_mode_back:	return D3D11_CULL_BACK;
-		case cull_mode_front:	return D3D11_CULL_FRONT;
-		default:				NODEFAULT(return D3D11_CULL_NONE);
-	}
-}
-
-material_effects_instance_cook::material_effects_instance_cook( ) :
-	resources::translate_query_cook(
-		resources::material_effects_instance_class,
-		reuse_false,
-		use_current_thread_id
-	)
-{
-	// FUNCTION BODY[0x64d5f0]
-}
-
 void material_effects_instance_cook::on_material_ready(
 	resources::queries_result& data,
 	material_effects_instance_cook_data* cook_data
-)
-{
-	// FUNCTION BODY[0x64edd0]
+) {
 	if (data[0].is_successful())
 	{
 		cook_data->material						= data[0].get_unmanaged_resource();
@@ -175,6 +158,7 @@ void material_effects_instance_cook::on_material_ready(
 	}
 	else
 	{
+		LOG_ERROR							("material not loaded: %s", data.get_parent_query()->get_requested_path());
 		data.get_parent_query()->finish_query	(result_error, assert_on_fail_false);
 
 		if (cook_data->delete_in_cook)
@@ -182,23 +166,221 @@ void material_effects_instance_cook::on_material_ready(
 	}
 }
 
+static D3D11_CULL_MODE base_cull_mode_to_d3d_cull_mode(
+	enum_cull_mode cull_mode
+) {
+	switch (cull_mode) {
+		case cull_mode_none:	return D3D11_CULL_NONE;
+		case cull_mode_back:	return D3D11_CULL_BACK;
+		case cull_mode_front:	return D3D11_CULL_FRONT;
+
+
+		default:				NODEFAULT(return D3D11_CULL_NONE);
+	}
+}
+
+
+
+
+
+
+
 void material_effects_instance_cook::query_effects(
 	resources::query_result_for_cook& parent,
 	material_effects_instance_cook_data* cook_data
 )
 {
-	// FUNCTION BODY[0x64e6b0]
 	enum_vertex_input_type	vertex_type			= cook_data->vertex_input_type;
 	material_ptr			material			= static_cast_resource_ptr<material_ptr>(cook_data->material);
 
 	u32 crc										= 0;
+
+
 	custom_config_ptr material_config			= create_custom_config(material->m_config->get_root()["material"], crc, false);
 
 	bool is_two_sided							= false;
 	bool from_material							= false;
 
-	if (cook_data->cull_mode != cull_mode_none &&
-		material_config->root().value_exists("g_stage") && material_config->root()["g_stage"].value_exists("effect"))
+	configs::binary_config_value const& mtl_config = material->m_config->get_root()["material"];
+
+	if (mtl_config.value_exists("g_stage"))
+	{
+		configs::binary_config_value const& g_stage = mtl_config["g_stage"];
+		bool with_vegetation = g_stage.value_exists("with_vegetation") ?
+			bool(g_stage["with_vegetation"]["value"]) : false;
+		bool with_skeletal_meshes = g_stage.value_exists("with_skeletal_meshes") ? bool(g_stage["with_skeletal_meshes"]["value"]) : false;
+		bool with_static_vertex_color_meshes = g_stage.value_exists("with_static_vertex_color_meshes") ? bool(g_stage["with_static_vertex_color_meshes"]["value"]) : false;
+		bool with_static_meshes = g_stage.value_exists("with_static_meshes") ? bool(g_stage["with_static_meshes"]["value"]) : false;
+		bool with_particles = g_stage.value_exists("with_particles") ? bool(g_stage["with_particles"]["value"]) : false;
+
+
+
+
+
+
+		if (vertex_type == static_mesh_vertex_colored_input_type && !with_static_vertex_color_meshes)
+		{
+			parent.finish_query(result_error, assert_on_fail_false);
+			return;
+		}
+
+		if (vertex_type >= skeletal_4_bones_mesh_vertex_input_type && vertex_type <= skeletal_1_bones_mesh_vertex_input_type && !with_skeletal_meshes)
+		{
+			parent.finish_query(result_error, assert_on_fail_false);
+			return;
+		}
+
+		if (vertex_type == grassmesh_vertex_input_type && !with_vegetation)
+		{
+			parent.finish_query(result_error, assert_on_fail_false);
+			return;
+		}
+
+		if (vertex_type >= particle_vertex_input_type &&
+			vertex_type <= particle_beamtrail_vertex_input_type && !with_particles)
+		{
+			parent.finish_query(result_error, assert_on_fail_false);
+			return;
+		}
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+	if (cook_data->cull_mode != cull_mode_none && material_config->root().value_exists("g_stage") && material_config->root()["g_stage"].value_exists("effect"))
 	{
 		if (material_config->root()["g_stage"]["effect"].value_exists("two_sided"))
 		{
@@ -207,18 +389,18 @@ void material_effects_instance_cook::query_effects(
 		}
 	}
 
+
 	byte data[Kb];
 	vostok::render::effect_options_descriptor		additional_parameters(data, sizeof(data) );
+
 	additional_parameters["vertex_input_type"]	= vertex_type;
 
-	if (from_material)
-	{
-		additional_parameters["cull_mode"]		= base_cull_mode_to_d3d_cull_mode(is_two_sided ? cull_mode_none : cull_mode_back);
-	}
-	else
-	{
-		additional_parameters["cull_mode"]		= base_cull_mode_to_d3d_cull_mode(cook_data->cull_mode);
-	}
+	additional_parameters["cull_mode"] =
+		base_cull_mode_to_d3d_cull_mode(
+			from_material ?
+				(is_two_sided ? cull_mode_none : cull_mode_back) :
+				cook_data->cull_mode );
+
 
 	replace_values								(material_config->root());
 
@@ -260,6 +442,13 @@ void material_effects_instance_cook::query_effects(
 		);
 	}
 
+
+	for (u32 i = 0; i < num_requests; i++)
+	{
+
+		user_data_variants[i].~variant();
+	}
+
 	FREE										(user_data_variants);
 	FREE										(user_data_variants_ptrs);
 	FREE										(requests);
@@ -269,11 +458,8 @@ void material_effects_instance_cook::translate_query(
 	resources::query_result_for_cook& parent
 )
 {
-	// FUNCTION BODY[0x64efa0]
 	ASSERT_CMP									(parent.user_data(), !=, NULL);
-
-	material_effects_instance_cook_data*		cook_data = NULL;
-	parent.user_data()->try_get					(cook_data);
+	material_effects_instance_cook_data*		cook_data = NULL; parent.user_data()->try_get(cook_data);
 
 	ASSERT_CMP									(cook_data, !=, NULL);
 
@@ -300,13 +486,8 @@ void material_effects_instance_cook::translate_query(
 	}
 }
 
-void material_effects_instance_cook::on_effect_ready(
-	resources::queries_result& data,
-	material_effects_instance_cook_data* cook_data
-)
+void material_effects_instance_cook::on_effect_ready( resources::queries_result& data, material_effects_instance_cook_data* cook_data )
 {
-	// FUNCTION BODY[0x64db60]
-	// claude@NOTE: legacy geometry_render_stage adapted to the canonical gbuffer_render_stage.
 	resources::query_result_for_cook& parent	= *data.get_parent_query();
 
 	material_effects_instance* new_resource		= NEW(material_effects_instance);
@@ -325,14 +506,44 @@ void material_effects_instance_cook::on_effect_ready(
 			vostok::configs::binary_config_value const& mtl_config =
 				static_cast_resource_ptr<material_ptr>(cook_data->material)->m_config->get_root()["material"];
 
-			if (mtl_config.value_exists("g_stage") && mtl_config["g_stage"].value_exists("is_emissive"))
-				mtl_effects.is_emissive			= (bool)mtl_config["g_stage"]["is_emissive"]["value"];
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("use_emissive"))
+				mtl_effects.is_emissive			= (bool)mtl_config["g_stage"]["effect"]["use_emissive"]["value"];
 
 			if (mtl_config.value_exists("g_stage") && mtl_config["g_stage"].value_exists("is_cast_shadow"))
 				mtl_effects.is_cast_shadow		= (bool)mtl_config["g_stage"]["is_cast_shadow"]["value"];
+
+			if (mtl_config.value_exists("g_stage") && mtl_config["g_stage"].value_exists("use_bound_normals"))
+				mtl_effects.is_use_bound_normals	= (bool)mtl_config["g_stage"]["use_bound_normals"]["value"];
+
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("use_alpha_test"))
+				mtl_effects.is_use_alpha_test		= (bool)mtl_config["g_stage"]["effect"]["use_alpha_test"]["value"];
+
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("wind_motion"))
+				mtl_effects.is_wind_swings		= (bool)mtl_config["g_stage"]["effect"]["wind_motion"]["value"];
+
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("use_ttranslucency"))
+				mtl_effects.has_translucency		= (bool)mtl_config["g_stage"]["effect"]["use_ttranslucency"]["value"];
+
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("use_subsurface_scattering"))
+				mtl_effects.use_subsurface_scattering = (bool)mtl_config["g_stage"]["effect"]["use_subsurface_scattering"]["value"];
+
+			if (mtl_config.value_exists("g_stage") &&
+				mtl_config["g_stage"].value_exists("effect") &&
+				mtl_config["g_stage"]["effect"].value_exists("use_olta"))
+				mtl_effects.has_transparency		= (bool)mtl_config["g_stage"]["effect"]["use_olta"]["value"];
 		}
 
-		if (i == lighting_render_stage)
+		else if (i == lighting_render_stage)
 		{
 			vostok::configs::binary_config_value const& mtl_config =
 				static_cast_resource_ptr<material_ptr>(cook_data->material)->m_config->get_root()["material"];
@@ -343,6 +554,31 @@ void material_effects_instance_cook::on_effect_ready(
 			if (mtl_config.value_exists("lighting") && mtl_config["lighting"].value_exists("constant_clear_color"))
 				mtl_effects.organic_clear_color	= float4(mtl_config["lighting"]["constant_clear_color"]["value"]);
 		}
+
+		else if (i == forward_render_stage)
+		{
+			vostok::configs::binary_config_value const& mtl_config =
+				static_cast_resource_ptr<material_ptr>(cook_data->material)->m_config->get_root()["material"];
+
+			if (mtl_config.value_exists("forward") && mtl_config["forward"].value_exists("effect") && mtl_config["forward"]["effect"].value_exists("effect_id"))
+				mtl_effects.is_background_sky = strings::equal((pcstr)mtl_config["forward"]["effect"]["effect_id"], "forward_sky");
+
+			if (mtl_config.value_exists("forward") && mtl_config["forward"].value_exists("effect") && mtl_config["forward"]["effect"].value_exists("effect_id"))
+			{
+				if (strings::equal((pcstr)mtl_config["forward"]["effect"]["effect_id"], "forward_default_simpe_water"))
+					mtl_effects.has_local_reflections = true;
+			}
+			if (mtl_config.value_exists("forward") && mtl_config["forward"].value_exists("effect") && mtl_config["forward"]["effect"].value_exists("effect_id"))
+			{
+				if (strings::equal((pcstr)mtl_config["forward"]["effect"]["effect_id"], "forward_default_view_angle_dependent"))
+					mtl_effects.is_forward_after_fog = true;
+			}
+			if (mtl_config.value_exists("forward") && mtl_config["forward"].value_exists("effect") &&
+				mtl_config["forward"]["effect"].value_exists("blend_mode"))
+				mtl_effects.blend_mode = (u32)mtl_config["forward"]["effect"]["blend_mode"]["value"];
+		}
+
+
 
 		if (data[i].is_successful())
 			mtl_effects.m_effects[i]			= static_cast_resource_ptr<ref_effect>(data[i].get_unmanaged_resource());
@@ -357,30 +593,27 @@ void material_effects_instance_cook::on_effect_ready(
 		DELETE									(cook_data);
 }
 
+
+
 void material_effects_instance_cook::gather_request_user_data(
 	variant< 32 >* user_data,
 	custom_config_value const* root_config,
 	effect_options_descriptor const* additional_parameters
-)
-{
-	// FUNCTION BODY[0x64d7a0]
+) {
 	bool				has_gstage				= false;
 
-	custom_config_ptr	gstage_config;
-	u32					gstage_config_crc		= 0;
+	custom_config_ptr	gstage_config; u32 gstage_config_crc = 0;
 
-	for (u32 i = 0; i < num_render_stages; i++)
-	{
+	for (u32 i = 0; i < num_render_stages; i++) {
 		enum_render_stage_type type				= (enum_render_stage_type)i;
 		pcstr stage_name						= stage_type_to_string(type);
-
 		if (!(*root_config).value_exists(stage_name))
 		{
 			user_data[i].set					((effect_compile_data*)0);
 		}
 		else
 		{
-			if (i == gbuffer_render_stage/* || i == forward_render_stage*/)
+			if (i == gbuffer_render_stage || i == forward_render_stage)
 				has_gstage						= true;
 
 			effect_descriptor* descriptor		= effect_manager::ref().get_effect_descriptor_by_name(
@@ -391,7 +624,7 @@ void material_effects_instance_cook::gather_request_user_data(
 			effect_compile_data* cook_data		= NEW(effect_compile_data)(descriptor, config, crc);
 			user_data[i].set					(cook_data);
 
-			if (i == gbuffer_render_stage/* || i == forward_render_stage*/)
+			if (i == gbuffer_render_stage || i == forward_render_stage)
 			{
 				gstage_config					= config;
 				gstage_config_crc				= crc;
@@ -413,12 +646,10 @@ void material_effects_instance_cook::gather_request_user_data(
 
 void material_effects_instance_cook::delete_resource(
 	resources::resource_base* resource
-)
-{
-	// FUNCTION BODY[0x64d650]
-	material_effects_instance* instance = static_cast<material_effects_instance*>(resource);
-	DELETE(instance);
+) {
+	material_effects_instance* instance_to_delete = static_cast<material_effects_instance*>(resource); DELETE(instance_to_delete);
 }
+
 
 } // namespace render
 } // namespace vostok

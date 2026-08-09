@@ -11,14 +11,14 @@ ambient_volume::ambient_volume(
 	ambient_volume_properties const&	properties,
 	u32 const							id
 ) :
-	m_properties				( properties ),
-	m_aabb						( math::create_zero_aabb( ) ),
+	m_properties				( ),
+	m_aabb						( math::create_identity_aabb( ) ),
 	m_id						( id ),
-	m_occlusion_info_index		( 0 ),
+	m_occlusion_info_index		( u32(-1) ),
 	m_occluded					( false )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x748920]
+	set_properties(properties);
 }
 
 bool ambient_volume::is_occluded( ) const
@@ -27,10 +27,12 @@ bool ambient_volume::is_occluded( ) const
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
-void ambient_volume::set_properties( ambient_volume_properties const& )
+void ambient_volume::set_properties( ambient_volume_properties const& in_properties )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x748890]
+	m_properties = in_properties;
+	m_aabb = math::create_identity_aabb();
+	m_aabb.modify(in_properties.transform);
 }
 
 } // namespace render

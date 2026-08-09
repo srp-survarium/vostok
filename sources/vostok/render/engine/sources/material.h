@@ -20,8 +20,12 @@ public:
 	explicit material( configs::binary_config_ptr in_config ) :
 		m_config( in_config )
 	{
-		// FUNCTION BODY[0x632b0]
 	}
+
+	static void initialize_nomaterial_material( );
+	static bool is_nomaterial_material_ready( );
+	static material_effects& nomaterial_material( enum_vertex_input_type vi );
+	static void finalize_nomaterial_material( );
 
 	pcstr get_material_name( ) const
 	{
@@ -32,13 +36,6 @@ public:
 	{
 		return m_config->get_root( );
 	}
-
-	virtual ~material( ) { }
-
-	static void initialize_nomaterial_material( );
-	static bool is_nomaterial_material_ready( );
-	static material_effects& nomaterial_material( enum_vertex_input_type vertex_input_type );
-	static void finalize_nomaterial_material( );
 
 private:
 	friend struct material_cook;

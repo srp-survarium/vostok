@@ -51,7 +51,6 @@ render_output_window::render_output_window(
 
 void render_output_window::goto_fullscreen( )
 {
-	// FUNCTION BODY[0x653a60]
 	m_output->goto_fullscreen	( );
 }
 
@@ -123,7 +122,6 @@ void render_output_window::resize( bool force_resize )
 
 math::uint2 render_output_window::get_window_client_size( HWND__* const window, bool windowed )
 {
-	// FUNCTION BODY[0x653a00]
 	RECT			rect;
 	BOOL const result = windowed ?
 		GetClientRect( window, &rect ) :

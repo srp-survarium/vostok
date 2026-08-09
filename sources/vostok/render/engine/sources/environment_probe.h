@@ -39,6 +39,7 @@ struct environment_probe :
 	~environment_probe( );
 
 	void set_properties( environment_probe_properties const& in_properties );
+
 	bool is_occluded( ) const;
 
 	void destroy_impl( ) const { }
@@ -50,6 +51,7 @@ struct environment_probe :
 
 	void remove_collision( );
 
+public:
 	environment_probe_properties				m_properties;
 	math::aabb									m_aabb;
 	res_texture_ptr								m_texture;

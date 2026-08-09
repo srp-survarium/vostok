@@ -299,8 +299,14 @@ void grass_world::populate( float const patch_size_ground )
 
 void grass_world::merge_patches( )
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x6370c0]
+	grass_patch** it_patch = m_patches.begin( );
+	grass_patch* const* end_patch = m_patches.end( );
+	for ( ; it_patch != end_patch; ++it_patch ) {
+		grass_patch* patch = *it_patch;
+		patch->init_collision( );
+		patch->merge_instances( );
+	}
 }
 
 // claude@NOTE: residual cause - our LTCG partial-inlines the s_draw_grass_debug_value guard
@@ -437,8 +443,8 @@ void grass_world::process_culling( renderer_context* context, float const first_
 
 void grass_world::accumulate_trample( renderer* in_renderer, renderer_context* in_context )
 {
-	grass_patch* const* it_patch			= m_patches.begin( );
-	grass_patch* const* end_patch		= m_patches.end( );
+	grass_patch* const* it_patch			= m_visible_patches.begin( );
+	grass_patch* const* end_patch		= m_visible_patches.end( );
 
 	for ( ; it_patch != end_patch; ++it_patch )
 	{
@@ -518,10 +524,15 @@ void grass_world::render(
 	}
 }
 
-void grass_world::add_grass_layer( grass_layer_desc*, grass_layer_data*, bool, bool )
+void grass_world::add_grass_layer(
+	grass_layer_desc* desc,
+	grass_layer_data* layer_data,
+	bool populate,
+	bool from_cook
+)
 {
-	// STATE[STUB]
 	// FUNCTION BODY[0x637b70]
+	update_grass_layer( desc, layer_data, true, populate, from_cook );
 }
 
 void grass_world::update_grass_layer(

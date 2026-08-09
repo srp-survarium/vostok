@@ -22,7 +22,6 @@ public:
 		custom_config_value const& config
 	) override
 	{
-		// FUNCTION BODY[0x75280] for <false, false, false>
 		shader_configuration configuration;
 		configuration.env_probe_clip_by_normal = t_option_0;
 		configuration.env_probe_with_shadows = t_option_1;
@@ -58,6 +57,9 @@ public:
 		compiler.end_pass( );
 		compiler.end_technique( );
 	}
+
+	effect_environment_probe_lighting( ) { }
+	virtual ~effect_environment_probe_lighting( ) { }
 };
 
 typedef effect_environment_probe_lighting<

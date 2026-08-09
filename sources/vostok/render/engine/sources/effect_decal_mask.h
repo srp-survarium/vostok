@@ -20,6 +20,9 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&
 	) override;
+
+	effect_decal_mask( ) { }
+	virtual ~effect_decal_mask( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_decal_mask, 0x4 );

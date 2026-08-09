@@ -11,18 +11,20 @@ void effect_image_space_reflections::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7bb5f0]
-	VOSTOK_UNREFERENCED_PARAMETER(custom_config);
+	VOSTOK_UNREFERENCED_PARAMETER( custom_config );
 
-	compiler.begin_technique();
-		compiler.begin_pass("image_space_reflections", NULL, "image_space_reflections", shader_configuration(), NULL);
-			compiler.set_depth(false, false);
-			compiler.set_texture("t_final_frame_donwsampled", "$user$final_frame_downsampled", 0, false, u32(-1));
-			compiler.set_texture("t_normal", r2_rt_n, 0, false, u32(-1));
-			compiler.set_texture("t_position", r2_rt_p, 0, false, u32(-1));
-			compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE);
-		compiler.end_pass();
-	compiler.end_technique();
+
+
+
+	compiler.begin_technique( );
+	compiler.begin_pass( "image_space_reflections", NULL, "image_space_reflections", shader_configuration( ), NULL );
+	compiler.set_depth( false, false );
+	compiler.set_texture( "t_final_frame_donwsampled", "$user$final_frame_downsampled", 0, false, u32( -1 ) );
+	compiler.set_texture( "t_normal", r2_rt_n, 0, false, u32( -1 ) );
+	compiler.set_texture( "t_position", r2_rt_p, 0, false, u32( -1 ) );
+	compiler.set_alpha_blend( true, D3D_BLEND_ONE, D3D_BLEND_ONE );
+	compiler.end_pass( );
+	compiler.end_technique( );
 }
 
 } // namespace render

@@ -11,7 +11,7 @@ class effect_compiler;
 
 class effect_system_colored : public effect_descriptor {
 public:
-	enum techniques{ solid, stenciled, voided, cover };
+	enum techniques{ solid, stenciled, voided, cover, wireframe };
 
 	effect_system_colored( ) { }
 	virtual ~effect_system_colored( ) { }

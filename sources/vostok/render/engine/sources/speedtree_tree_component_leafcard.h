@@ -41,9 +41,7 @@ public:
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{
-		// claude@NOTE: no legacy ancestor - consumed legacy inline returned the retired speedtree_leafcard_vertex_input_type enumerator; matcher-phase work.
-		// STATE[STUB]
-		return unknown_vertex_input_type;
+		return null_vertex_input_type;
 	}
 
 	void init_index_buffer(

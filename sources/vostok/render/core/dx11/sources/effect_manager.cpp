@@ -187,14 +187,18 @@ void effect_manager::on_async_effect_created(
 }
 
 void effect_manager::on_async_effect_created_callback(
-	resources::queries_result&,
-	res_effect_ptr*,
-	effect_descriptor*,
-	boost::function<void( )>
+	resources::queries_result& data,
+	res_effect_ptr* out_effect_ptr,
+	effect_descriptor* descriptor,
+	boost::function<void( )> callback
 )
 {
-	// claude@NOTE: no legacy ancestor - new-in-target overload; the corpus only ever had the 3-param on_async_effect_created (already ported); matcher-phase work.
-	// STATE[STUB]
+	if ( data[0].is_successful( ) )
+		*out_effect_ptr = static_cast_resource_ptr<res_effect_ptr>( data[0].get_unmanaged_resource( ) );
+	else
+		*out_effect_ptr = 0;
+
+	callback( );
 }
 
 void effect_manager::create_new_effect(

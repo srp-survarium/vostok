@@ -15,42 +15,57 @@ void effect_fstage_default_materials::compile(
 {
 	// FUNCTION BODY[0x7bb070]
 	shader_configuration configuration;
+
+
+
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
+	configuration.use_soft_edges = config.value_exists("use_soft_edges") ? bool(config["use_soft_edges"]) : false;
 
 	compile_begin("vertex_base", "forward_base", compiler, &configuration, config);
-		//compiler.set_stencil( true, 0x80, 0xff, 0xff, D3D_COMPARISON_ALWAYS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_REPLACE, D3D_STENCIL_OP_KEEP);
+
+
+
+
+
+
+		compiler.set_texture("t_position", "$user$position", 0, false, u32(-1));
+		compiler.set_texture("t_particle_lighting", "$user$particle_lighting", 0, false, u32(-1));
 
 		float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
 		float   solid_transparency   = 1.0f;
 
+
 		if( configuration.use_emissive==2)
 		{
-			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, true, 0);
+			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		}
-		solid_color_specular		= float4(float4(config["constant_emissive"]).xyz(), float(config["constant_emissive_multiplier"]));
-
+		solid_color_specular = float4(
+			float4(config["constant_emissive"]).xyz() * float(config["constant_emissive_multiplier"]),
+			0.0f);
 		if (configuration.use_transparency_texture)
-			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, true, 0);
-		//else
-			solid_transparency = config.value_exists("constant_transparency") ? float(config["constant_transparency"]) : 1.0f;
-
+		{
+			compiler.set_texture("t_transparency", pcstr(config["texture_transparency"]), 0, false, u32(-1));
+		}
+		solid_transparency = config.value_exists("constant_transparency") ? float(config["constant_transparency"]) : 1.0f;
 		compiler.set_constant("solid_transparency",   solid_transparency);
+
 		compiler.set_constant("solid_color_specular", solid_color_specular);
-
-		if (config.value_exists("constant_tile_u") && config.value_exists("constant_tile_v"))
-			compiler.set_constant("constant_tile_uv", float2(float(config["constant_tile_u"]), float(config["constant_tile_v"])));
-		else
-			compiler.set_constant("constant_tile_uv", float2(1.0f, 1.0f));
-
-		//compiler.set_texture("t_skin_scattering", r2_rt_skin_scattering);
-		//compiler.set_texture("t_skin_scattering_blurred_0", r2_rt_skin_scattering_blurred_0);
-		//compiler.set_texture("t_skin_scattering_blurred_1", r2_rt_skin_scattering_blurred_1);
+		compiler.set_constant("constant_tile_uv", config.value_exists("constant_tile_u") && config.value_exists("constant_tile_v") ?
+				float2(float(config["constant_tile_u"]), float(config["constant_tile_v"])) :
+				float2(1.0f, 1.0f));
 
 
-		// TODO: fix it
-		//compiler.set_cull_mode(D3D_CULL_NONE);
-		//compiler.set_alpha_to_coverage(true);
+
+
+
+
+
+
+
+
+		compiler.set_cull_mode(D3D_CULL_NONE);
+
 	compile_end(compiler);
 }
 

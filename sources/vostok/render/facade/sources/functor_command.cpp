@@ -28,11 +28,10 @@ void functor_command::defer_execution( )
 	m_on_defer_execution( *this );
 }
 
-// claude@NOTE: no legacy ancestor - legacy functor_command.{h,cpp} defined only functor_command, not functor_command_with_notify; matcher-phase work.
-// STATE[STUB]
 functor_command_with_notify::~functor_command_with_notify( )
 {
 	// FUNCTION BODY[0x7712a0]
+	m_on_destroy( );
 }
 
 } // namespace render

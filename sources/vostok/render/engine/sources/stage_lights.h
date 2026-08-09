@@ -46,36 +46,6 @@ typedef resources::resource_ptr<
 
 class stage_lights : public stage {
 public:
-	struct instance_data {
-		instance_data( ) { }
-
-		float3	color;
-		float3	position;
-		float	range;
-	};
-
-	STATIC_SIZE_ASSERT( instance_data, 0x1C );
-
-	struct light_geometry {
-		light_geometry( ) { }
-		~light_geometry( ) { }
-
-		untyped_buffer_ptr	vertex_buffer;
-		untyped_buffer_ptr	index_buffer;
-		res_geometry_ptr	geometry;
-	};
-
-	STATIC_SIZE_ASSERT( light_geometry, 0xC );
-
-	struct lights_instance {
-		lights_instance( ) { }
-		~lights_instance( ) { }
-
-		untyped_buffer_ptr m_instance_vb;
-	};
-
-	STATIC_SIZE_ASSERT( lights_instance, 0x4 );
-
 	stage_lights(
 		renderer*			in_renderer,
 		renderer_context*	context,
@@ -89,6 +59,8 @@ public:
 	virtual void debug_render( ) override;
 
 private:
+	bool					m_enable_env_probes;
+
 	bool is_effects_ready( ) const;
 
 	void render_model_lighting( render_surface_instance* instance, light* l );
@@ -148,11 +120,17 @@ private:
 
 	void make_skin_scattering_texture( render_surface_instance* instance, light* l );
 
-	void render_instanced_lights( ) { }
-	void flush_instanced_lights( u32 ) { }
+	struct light_geometry {
+		light_geometry( ) { }
+		~light_geometry( ) { }
 
-private:
-	bool					m_enable_env_probes;
+		untyped_buffer_ptr	vertex_buffer;
+		untyped_buffer_ptr	index_buffer;
+		res_geometry_ptr	geometry;
+	};
+
+	STATIC_SIZE_ASSERT( light_geometry, 0xC );
+
 	render_target_ptr		m_rt_skin_scattering_position;
 	res_texture_ptr			m_t_skin_scattering_position;
 	render_target_ptr		m_rt_skin_scattering_temp;
@@ -215,12 +193,37 @@ private:
 	light_geometry			m_obb_geometry;
 	untyped_buffer_ptr		m_screen_vertex_ib;
 	res_geometry_ptr		m_screen_vertex_geometry;
+
+	struct lights_instance {
+		lights_instance( ) { }
+		~lights_instance( ) { }
+
+		untyped_buffer_ptr m_instance_vb;
+	};
+
+	STATIC_SIZE_ASSERT( lights_instance, 0x4 );
+
 	untyped_buffer_ptr		m_instance_vb_small;
 	res_declaration_ptr		m_instance_declaration;
 	res_declaration_ptr		m_instance_declaration_small;
 	u32						m_num_instanced_lights;
+
+	struct instance_data {
+		instance_data( ) { }
+
+		float3	color;
+		float3	position;
+		float	range;
+	};
+
+	STATIC_SIZE_ASSERT( instance_data, 0x1C );
+
 	instance_data*			m_instance_data_array;
 	lights_instance			m_lights_instance[4];
+
+	void render_instanced_lights( ) { }
+	void flush_instanced_lights( u32 const ) { }
+
 	shader_constant_host*	m_probe_parameters0;
 	shader_constant_host*	m_probe_parameters1;
 	shader_constant_host*	m_gamma_correction_factor;

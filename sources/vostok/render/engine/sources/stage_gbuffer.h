@@ -77,7 +77,7 @@ STATIC_SIZE_ASSERT( remove_model_if_not_translucency_predicate, 0x1 );
 struct sort_by_ps_predicate {
 	sort_by_ps_predicate(
 		enum_render_stage_type stage_type,
-		u32 tech_index
+		u32 const tech_index
 	) :
 		m_stage_type( stage_type ),
 		m_tech_index( tech_index )
@@ -104,6 +104,7 @@ public:
 
 	bool is_effects_ready( ) const;
 
+private:
 	void render_models(
 		vector<render_surface_instance*>&	models,
 		u32								shader_lod_index,
@@ -116,7 +117,6 @@ public:
 	void render_particles( bool z_only );
 	void z_only_pass( );
 
-private:
 	res_state_ptr			m_state;
 	shader_constant_host*	m_sun_direction;
 	shader_constant_host*	m_c_start_corner;
@@ -142,7 +142,6 @@ private:
 	res_effect_ptr			m_fill_depth_effect;
 	bool					m_is_pre_pass;
 
-public:
 	bool m_fill_view_space_depth;
 };
 

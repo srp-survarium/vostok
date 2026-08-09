@@ -60,7 +60,6 @@ void effect_material_base::compile_begin(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b3d40]
 	compile_begin(vertex_shader_name, 0, pixel_shader_name, compiler, shader_config, config);
 }
 
@@ -73,7 +72,6 @@ void effect_material_base::compile_begin(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b3bb0]
 	if (config.value_exists("vertex_input_type"))
 		shader_config->vertex_input_type = u32((enum_vertex_input_type)config["vertex_input_type"]);
 
@@ -110,6 +108,7 @@ void effect_material_base::compile_begin(
 		case blend_mode_modulate:
 			compiler.set_depth( true, false);
 			compiler.set_alpha_blend(true,D3D_BLEND_ZERO,D3D_BLEND_SRC_COLOR);
+			compiler.color_write_enable( static_cast<D3D11_COLOR_WRITE_ENABLE>( D3D_COLOR_WRITE_ENABLE_RED | D3D_COLOR_WRITE_ENABLE_GREEN | D3D_COLOR_WRITE_ENABLE_BLUE ) );
 			break;
 		case blend_mode_subtractive:
 			compiler.set_depth( true, false);
@@ -126,7 +125,6 @@ void effect_material_base::compile_begin(
 
 void effect_material_base::compile_end( effect_compiler& compiler )
 {
-	// FUNCTION BODY[0x7b3d60]
 	compiler.end_pass();
 	compiler.end_technique();
 }

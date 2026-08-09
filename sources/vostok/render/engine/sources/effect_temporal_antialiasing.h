@@ -15,6 +15,9 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
+
+	effect_temporal_antialiasing( ) { }
+	virtual ~effect_temporal_antialiasing( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_temporal_antialiasing, 0x4 );

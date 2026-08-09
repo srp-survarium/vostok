@@ -56,18 +56,15 @@ injection_geometry::injection_geometry( u32 rsm_size ) :
 }
 
 injection_geometry::injection_geometry( u32 rsm_size_x, u32 rsm_size_y ) :
-	m_num_points	( 0 ),
 	m_stride		( sizeof( float2 ) ),
 	m_rsm_size_x	( 0 ),
 	m_rsm_size_y	( 0 )
 {
-	// FUNCTION BODY[0x5efec0]
 	prepare(rsm_size_x, rsm_size_y);
 }
 
 void injection_geometry::prepare( u32 rsm_size_x, u32 rsm_size_y )
 {
-	// FUNCTION BODY[0x5efd80]
 	if (m_rsm_size_x == rsm_size_x && m_rsm_size_y == rsm_size_y)
 		return;
 
@@ -95,18 +92,16 @@ void injection_geometry::prepare( u32 rsm_size_x, u32 rsm_size_y )
 
 void injection_geometry::draw( )
 {
-	// FUNCTION BODY[0x5ef240]
 	backend::ref().set_declaration			(m_vertext_declaration.c_ptr());
 	backend::ref().set_vb					(m_vertex_buffer.c_ptr(), m_stride);
 	backend::ref().set_ib					(NULL);
 	backend::ref().render					(D3D_PRIMITIVE_TOPOLOGY_POINTLIST, m_num_points, 0);
 }
 
-sliced_cube_geometry::sliced_cube_geometry( u32 in_num_cells ) :
+sliced_cube_geometry::sliced_cube_geometry( u32 const in_num_cells ) :
 	m_slices	( in_num_cells ),
 	m_stride	( sizeof( sliced_cube_geometry_vertex ) )
 {
-	// FUNCTION BODY[0x5ef970]
 	u32 const						num_vertices	= m_slices * 4;
 	u32 const						num_indices		= m_slices * 6;
 
@@ -158,7 +153,6 @@ sliced_cube_geometry::sliced_cube_geometry( u32 in_num_cells ) :
 
 void sliced_cube_geometry::draw( )
 {
-	// FUNCTION BODY[0x5ef100]
 	backend::ref().set_declaration		(m_vertext_declaration.c_ptr());
 	backend::ref().set_vb				(m_vertex_buffer.c_ptr(), m_stride);
 	backend::ref().set_ib				(m_index_buffer.c_ptr(), 0);
@@ -184,7 +178,6 @@ radiance_volume::radiance_volume(
 	m_is_position_changed			( true ),
 	m_prev_position					( 0.0f, 0.0f, 0.0f )
 {
-	// FUNCTION BODY[0x5f1780]
 	DXGI_FORMAT rv_format = s_lpv1_value ? DXGI_FORMAT_R8G8B8A8_UNORM : DXGI_FORMAT_R16G16B16A16_FLOAT;
 
 	m_3d_rt_previous_radiance_r = resource_manager::ref( ).create_volume_render_target( NULL, in_num_cells, in_num_cells, in_num_cells, rv_format, enum_rt_usage_render_target, D3D11_USAGE_DEFAULT );
@@ -276,18 +269,15 @@ radiance_volume::radiance_volume(
 
 radiance_volume::~radiance_volume( )
 {
-	// FUNCTION BODY[0x5ef340]
 }
 
 bool radiance_volume::is_effects_ready( ) const
 {
-	// FUNCTION BODY[0x5eebf0]
 	return m_lpv_effect.c_ptr() != NULL;
 }
 
 void radiance_volume::set_origin( float3 const& in_origin )
 {
-	// FUNCTION BODY[0x5eecc0]
 	m_bbox.zero( );
 	m_bbox.max += m_scale;
 	m_bbox.move( in_origin );
@@ -295,34 +285,27 @@ void radiance_volume::set_origin( float3 const& in_origin )
 
 float3 const& radiance_volume::get_origin( ) const
 {
-	// FUNCTION BODY[0x5eebe0]
 	return m_bbox.min;
 }
 
 float3 const& radiance_volume::get_previous_origin( ) const
 {
-	// FUNCTION BODY[0x5eebd0]
 	return m_previous_origin;
 }
 
 float radiance_volume::get_scale( ) const
 {
-	// FUNCTION BODY[0x5eebc0]
 	return m_scale;
 }
 
 u32 radiance_volume::get_num_cells( ) const
 {
-	// FUNCTION BODY[0x5eebb0]
 	return m_num_cells;
 }
 
 void radiance_volume::prepare_gv( )
 {
-	// FUNCTION BODY[0x5eec00]
 	m_is_position_changed	= false;
-
-//	if (!math::is_similar(m_prev_position, m_bbox.min, math::epsilon_3) || !options::ref().current.m_lpv_gather_occluders_from_camera_view)
 	{
 		m_is_position_changed	= true;
 		m_prev_position			= m_bbox.min;
@@ -335,7 +318,6 @@ void radiance_volume::prepare_gv( )
 
 void radiance_volume::prepare( float3 const& view_position, float3 const& view_direction, float offset_from_center )
 {
-	// FUNCTION BODY[0x5eedc0]
 	backend::ref().set_render_targets		(&*m_3d_rt_radiance_r, &*m_3d_rt_radiance_g, &*m_3d_rt_radiance_b, 0);
 	backend::ref().clear_render_targets		(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -363,7 +345,6 @@ void radiance_volume::prepare( float3 const& view_position, float3 const& view_d
 
 void radiance_volume::begin_render_to_cells( )
 {
-	// FUNCTION BODY[0x5ef050]
 	backend::ref().get_viewport				(m_saved_viewport);
 	backend::ref().set_depth_stencil_target	(NULL);
 
@@ -381,7 +362,6 @@ void radiance_volume::begin_render_to_cells( )
 
 void radiance_volume::end_render_to_cells( )
 {
-	// FUNCTION BODY[0x5ef000]
 	backend::ref().reset_render_targets		();
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().set_viewport				(m_saved_viewport);
@@ -389,15 +369,10 @@ void radiance_volume::end_render_to_cells( )
 
 void radiance_volume::fill_previous_result( )
 {
-	// FUNCTION BODY[0x5eeba0]
-	//resource_manager::ref().copy3D(&*m_3d_t_previous_radiance_r, 0, 0, 0, &*m_3d_t_accumulated_propagation_r, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-	//resource_manager::ref().copy3D(&*m_3d_t_previous_radiance_g, 0, 0, 0, &*m_3d_t_accumulated_propagation_g, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-	//resource_manager::ref().copy3D(&*m_3d_t_previous_radiance_b, 0, 0, 0, &*m_3d_t_accumulated_propagation_b, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
 }
 
 void radiance_volume::prepare_final( )
 {
-	// FUNCTION BODY[0x5f1620]
 	begin_render_to_cells( );
 
 	backend::ref( ).set_render_targets(
@@ -431,7 +406,6 @@ void radiance_volume::propagate_lighting_iter(
 	u32 const iteration_index
 )
 {
-	// FUNCTION BODY[0x5f1090]
 	begin_render_to_cells( );
 
 	if ( iteration_index == 0 )
@@ -501,7 +475,6 @@ void radiance_volume::propagate_lighting_iter(
 
 void radiance_volume::propagate_lighting( u32 const cascade_index )
 {
-	// FUNCTION BODY[0x5f0a30]
 	begin_render_to_cells( );
 
 	backend::ref( ).set_render_targets(
@@ -570,7 +543,6 @@ void radiance_volume::inject_occluder_geometry(
 	vector<float4x4> const&	transforms
 )
 {
-	// FUNCTION BODY[0x5f07c0]
 	if ( !transforms.size( ) )
 		return;
 
@@ -605,7 +577,6 @@ void radiance_volume::inject_occluders(
 	u32					rsm_size
 )
 {
-	// FUNCTION BODY[0x5f0580]
 	VOSTOK_UNREFERENCED_PARAMETER(rsm_size);
 
 	// Inject occluders from light view.
@@ -629,39 +600,6 @@ void radiance_volume::inject_occluders(
 
 		end_render_to_cells						();
 	}
-/*
-
-	// Inject occluders from camera view.
-	if (m_is_position_changed && options::ref().m_lpv_gather_occluders_from_camera_view)
-	{
-		backend::ref().set_render_targets		(&*m_3d_rt_occluders, 0, 0, 0);
-		begin_render_to_cells					();
-
-		m_lpv_effect->apply						(effect_light_propagation_volumes::inject_occluders_camera_view_stage);
-
-		backend::ref().set_vs_constant			(m_c_grid_origin, m_bbox.min);
-		backend::ref().set_vs_constant			(m_c_grid_cell_size, m_scale / float(m_num_cells));
-		backend::ref().set_vs_constant			(m_c_num_grid_cells, float(m_num_cells));
-
-		backend::ref().set_gs_constant			(m_c_grid_size, float(m_num_cells));
-		backend::ref().set_gs_constant			(m_c_light_position, light_position);
-		backend::ref().set_gs_constant			(m_c_light_direction, light_direction);
-
-		float3 const* const eye_rays			= context->get_eye_rays();
-		backend::ref().set_vs_constant			(m_c_eye_ray_corner,	((float4*)eye_rays)[0]);
-
-		m_injection_geometry_from_camera.draw	();
-
-		end_render_to_cells						();
-	}
-	*/
-#ifndef MASTER_GOLD
-	if (options::ref().current.m_lpv_gather_occluders_from_light_view ||
-		options::ref().current.m_lpv_gather_occluders_from_camera_view)
-	{
-		//resource_manager::ref().copy3D			(&*m_3d_t_occluders_lockable, 0, 0, 0, &*m_3d_t_occluders, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-	}
-#endif // #ifndef MASTER_GOLD
 }
 
 void radiance_volume::inject_camera_occluders( renderer_context* context )
@@ -690,14 +628,6 @@ void radiance_volume::inject_camera_occluders( renderer_context* context )
 
 		end_render_to_cells						();
 	}
-
-// #ifndef MASTER_GOLD
-// 	if (options::ref().m_lpv_gather_occluders_from_light_view ||
-// 		options::ref().m_lpv_gather_occluders_from_camera_view)
-// 	{
-// 		resource_manager::ref().copy3D			(&*m_3d_t_occluders_lockable, 0, 0, 0, &*m_3d_t_occluders, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-// 	}
-// #endif // #ifndef MASTER_GOLD
 }
 
 void radiance_volume::inject_lighting(
@@ -707,7 +637,6 @@ void radiance_volume::inject_lighting(
 	u32				rsm_size
 )
 {
-	// FUNCTION BODY[0x5f0060]
 	backend::ref().set_render_targets		(&*m_3d_rt_radiance_r, &*m_3d_rt_radiance_g, &*m_3d_rt_radiance_b, 0);
 
 	begin_render_to_cells					();
@@ -723,7 +652,6 @@ void radiance_volume::inject_lighting(
 	backend::ref().set_gs_constant			(m_c_light_position, light_position);
 	backend::ref().set_gs_constant			(m_c_light_direction, light_direction);
 
-	// use or not?
 	backend::ref().set_ps_constant			(m_c_light_position, light_position);
 	backend::ref().set_ps_constant			(m_c_light_direction, light_direction);
 
@@ -739,14 +667,6 @@ void radiance_volume::inject_lighting(
 	backend::ref().set_ps_constant			(m_c_inject_flux_weight, flux_weight);
 
 	m_injection_geometry.draw				();
-
-#ifndef MASTER_GOLD
-	// for show VPL
-	//resource_manager::ref().copy3D			(&*m_3d_t_radiance_r_lockable, 0, 0, 0, &*m_3d_t_radiance_r, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-	//resource_manager::ref().copy3D			(&*m_3d_t_radiance_g_lockable, 0, 0, 0, &*m_3d_t_radiance_g, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-	//resource_manager::ref().copy3D			(&*m_3d_t_radiance_b_lockable, 0, 0, 0, &*m_3d_t_radiance_b, 0, 0, 0, m_num_cells, m_num_cells, m_num_cells);
-#endif // #ifndef MASTER_GOLD
-
 	end_render_to_cells						();
 }
 

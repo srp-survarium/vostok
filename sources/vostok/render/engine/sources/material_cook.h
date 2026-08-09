@@ -21,7 +21,6 @@ namespace render {
 
 struct material_cook : public resources::translate_query_cook {
 	material_cook( );
-	virtual ~material_cook( ) { }
 
 	virtual void translate_query(
 		resources::query_result_for_cook& parent
@@ -33,13 +32,12 @@ struct material_cook : public resources::translate_query_cook {
 
 	void on_material_config_loaded( resources::queries_result& result );
 
-private:
 	void on_material_binary_config_loaded(
 		resources::query_result_for_cook*	parent,
 		configs::binary_config*			config
 	);
 
-	void on_fs_iterator_ready(
+	inline void on_fs_iterator_ready(
 		vfs::vfs_locked_iterator const&,
 		resources::query_result_for_cook*
 	);

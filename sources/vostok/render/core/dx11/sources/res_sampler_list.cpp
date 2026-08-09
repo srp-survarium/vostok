@@ -15,15 +15,17 @@ res_sampler_list::res_sampler_list( fixed_vector<sampler_slot, 16> const& slots 
 		if( slots[i].slot_id != enum_slot_ind_null)
 		{
 			m_samplers.resize(i+1, (ID3D11SamplerState*)NULL);
+			m_names.resize(i+1, fixed_string<32>( ));
 			m_samplers[i] = slots[i].state;
+			m_names[i] = slots[i].name;
 		}
 	}
 }
 
 void res_sampler_list::rebind( )
 {
-	// STATE[STUB]
-	// FUNCTION BODY[0x739a00]
+	for ( u32 i = 0, count = m_samplers.size( ); i < count; ++i )
+		m_samplers[i] = resource_manager::ref( ).find_registered_sampler( m_names[i].c_str( ) );
 }
 
 void res_sampler_list::destroy_impl( ) const

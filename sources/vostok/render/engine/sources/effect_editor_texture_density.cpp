@@ -10,7 +10,6 @@ void effect_editor_texture_density::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b46a0]
 	shader_configuration configuration;
 
 	compile_begin("vertex_base", "editor_texture_density", compiler, &configuration, config);

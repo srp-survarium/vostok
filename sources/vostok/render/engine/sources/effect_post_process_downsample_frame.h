@@ -15,6 +15,9 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
+
+	effect_post_process_downsample_frame( ) { }
+	virtual ~effect_post_process_downsample_frame( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_downsample_frame, 0x4 );

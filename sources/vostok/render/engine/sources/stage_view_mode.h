@@ -1,7 +1,6 @@
 #ifndef VOSTOK_RENDER_ENGINE_STAGE_VIEW_MODE_H_INCLUDED
 #define VOSTOK_RENDER_ENGINE_STAGE_VIEW_MODE_H_INCLUDED
 
-// claude@NOTE: legacy-harvest disposition: the shadow batch-render hooks are absent from the legacy stage_view_mode (it defines only execute) - matcher-phase work.
 #include <vostok/render/core/memory.h>
 #include <vostok/render/core/res_effect.h>
 #include <vostok/render/core/backend.h>
@@ -18,6 +17,7 @@
 #include "effect_editor_show_miplevel.h"
 #include "effect_editor_show_overdraw.h"
 #include "effect_editor_texture_density.h"
+#include "effect_editor_vertex_alpha.h"
 #include "effect_editor_wireframe_accumulation.h"
 #include "stage.h"
 
@@ -36,19 +36,9 @@ typedef resources::resource_ptr<
 
 class stage_view_mode : public stage {
 public:
-	stage_view_mode( renderer* in_renderer, renderer_context* in_context ) :
-		stage( in_renderer, in_context ),
-		m_debug_color_parameter( 0 ),
-		m_show_lpv_geometry_component_index_parameter( 0 ),
-		m_shader_complexity_parameter( 0 ),
-		m_shader_complexity_min_parameter( 0 ),
-		m_shader_complexity_max_parameter( 0 ),
-		m_current_max_texture_dimension_parameter( 0 ),
-		m_geometry_complexity_parameters( 0 ),
-		m_c_start_corner( 0 )
+	stage_view_mode( renderer* in_renderer, renderer_context* context ) :
+		stage( in_renderer, context )
 	{
-		// claude@NOTE: legacy ctor body ported; m_editor_vertex_alpha_effect and the debug-color/
-		// show-lpv-component constants have no legacy ancestor - matcher-phase
 		for (u32 i=0; i<num_vertex_input_types; i++)
 		{
 			if (i==post_process_vertex_input_type)
@@ -57,6 +47,7 @@ public:
 			byte data[Kb];
 			effect_options_descriptor desc(data, Kb);
 			desc["vertex_input_type"] = (enum_vertex_input_type)i;
+			desc["cull_mode"] = D3D11_CULL_BACK;
 
 			effect_manager::ref().create_effect<effect_editor_wireframe_accumulation>(&m_editor_wireframe_accumulation_effect[i], desc);
 			effect_manager::ref().create_effect<effect_editor_texture_density>(&m_editor_texture_density_effect[i], desc);
@@ -66,11 +57,27 @@ public:
 			effect_manager::ref().create_effect<effect_editor_geometry_complexity>(&m_editor_geometry_complexity_effect[i], desc);
 		}
 
-		effect_manager::ref().create_effect<effect_editor_show_batched_geometry>(&m_editor_show_geometry_effect);
+		{
+			byte data[Kb];
+			effect_options_descriptor desc(data, Kb);
+			desc["vertex_input_type"] = static_mesh_vertex_input_type;
+			desc["cull_mode"] = D3D11_CULL_NONE;
+			effect_manager::ref().create_effect<effect_editor_show_batched_geometry>(&m_editor_show_geometry_effect, desc);
+		}
+
+		{
+			byte data[Kb];
+			effect_options_descriptor desc(data, Kb);
+			desc["vertex_input_type"] = static_mesh_vertex_colored_input_type;
+			desc["cull_mode"] = D3D11_CULL_NONE;
+			effect_manager::ref().create_effect<effect_editor_vertex_alpha>(&m_editor_vertex_alpha_effect, desc);
+		}
+
 		effect_manager::ref().create_effect<effect_editor_apply_wireframe>(&m_editor_apply_wireframe_shader);
 		effect_manager::ref().create_effect<effect_editor_show_overdraw>(&m_editor_show_overdraw_shader);
 
-
+		m_show_lpv_geometry_component_index_parameter	= backend::ref().register_constant_host("show_component_index", rc_int);
+		m_debug_color_parameter					= backend::ref().register_constant_host("debug_color", rc_float);
 		m_shader_complexity_parameter				= backend::ref().register_constant_host("shader_complexity", rc_float);
 		m_shader_complexity_min_parameter			= backend::ref().register_constant_host("shader_complexity_min", rc_float);
 		m_shader_complexity_max_parameter			= backend::ref().register_constant_host("shader_complexity_max", rc_float);
@@ -79,8 +86,6 @@ public:
 
 		m_c_start_corner							= backend::ref().register_constant_host( "start_corner", rc_float);
 	}
-
-	virtual ~stage_view_mode( ) { }
 
 	bool is_support_view_mode( scene_view_mode view_mode ) const
 	{
@@ -124,8 +129,6 @@ public:
 	{
 		// STATE[STUB]
 	}
-
-private:
 	bool is_effects_ready( ) const
 	{
 		for (u32 i = 0; i < num_vertex_input_types; i++)
@@ -144,6 +147,8 @@ private:
 
 		return m_editor_apply_wireframe_shader.c_ptr()!=NULL && m_editor_show_overdraw_shader.c_ptr()!=NULL;
 	}
+
+	virtual ~stage_view_mode( ) { }
 
 private:
 	res_effect_ptr			m_editor_wireframe_accumulation_effect[15];

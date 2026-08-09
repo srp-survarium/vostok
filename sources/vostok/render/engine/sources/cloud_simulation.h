@@ -18,31 +18,26 @@ public:
 		u8 w;
 	};
 
-	cloud_simulation( u32 in_size_x, u32 in_size_y, u32 in_size_z );
+	cloud_simulation( u32 const in_size_x, u32 const in_size_y, u32 const in_size_z );
 	~cloud_simulation( );
 
 	voxel* get_voxels( ) const;
 	void generate( cloud_key_parameters const& init_key, float3 const& sun_direction );
 	void copy_from( cloud_simulation const& other );
 
-	float3		cloud_offset;
-	float4x4	world_to_cloud;
-	float		interp_alpha;
-
 private:
-	void set_voxel( voxel const& value, u32 x, u32 y, u32 z );
+	void set_voxel( voxel const& v, u32 const x, u32 const y, u32 const z );
 
-	void set_voxel( voxel*, voxel const&, u32, u32, u32 )
+	void set_voxel( voxel* voxels, voxel const& v, u32 const x, u32 const y, u32 const z )
 	{
-		// STATE[STUB]
+		voxels[(z * m_clouds_size_y + y) * m_clouds_size_x + x] = v;
 	}
 
-	voxel const& get_voxel( u32 x, u32 y, u32 z ) const;
+	voxel const& get_voxel( u32 const x, u32 const y, u32 const z ) const;
 
-	voxel const& get_voxel( voxel* voxels, u32, u32, u32 ) const
+	voxel const& get_voxel( voxel* voxels, u32 const x, u32 const y, u32 const z ) const
 	{
-		// STATE[STUB]
-		return *voxels;
+		return voxels[(z * m_clouds_size_y + y) * m_clouds_size_x + x];
 	}
 
 	voxel get_interp_voxel( float, float, float ) const
@@ -59,16 +54,16 @@ private:
 		return result;
 	}
 
-	bool is_empty( u32 x, u32 y, u32 z ) const;
-	bool in_grid( u32 y, u32 z, u32 arg_2 ) const;
+	bool is_empty( u32 const x, u32 const y, u32 const z ) const;
+	bool in_grid( u32 const y, u32 const z, u32 const arg_2 ) const;
 
 	void smooth_transparency( );
 	void smooth_voxels_around( );
 	void fill_default_volume( );
 
-	float get_cloud_density( u32, u32, u32 ) { return 0.0f; }
-	float get_cloud_density_near( u32, u32, u32 ) { return 0.0f; }
-	float get_cloud_density_interp( float, float, float ) { return 0.0f; }
+	float get_cloud_density( u32 const, u32 const, u32 const ) { return 0.0f; }
+	float get_cloud_density_near( u32 const, u32 const, u32 const ) { return 0.0f; }
+	float get_cloud_density_interp( float const, float const, float const ) { return 0.0f; }
 
 	void compute_direct_light( float3 const& sun_direction, cloud_key_parameters const& init_key );
 
@@ -86,6 +81,12 @@ private:
 
 	void compute_cloud_density( );
 
+	friend class stage_clouds;
+	friend class stage_sun;
+
+	float3		cloud_offset;
+	float4x4	world_to_cloud;
+	float		interp_alpha;
 	voxel*		m_voxels;
 	float*		m_densities;
 	u32 const	m_clouds_size_x;

@@ -348,7 +348,7 @@ void stage_forward::execute( )
 	accumulate_local_reflections( );
 	render_forward_models( m_dynamic_visuals, 0 );
 
-	scene::decal_instance_node_list& decals = m_context->scene( )->decals( );
+	scene::decal_instance_list_type& decals = m_context->scene( )->decals( );
 	collision::objects_type decals_objects( g_allocator );
 
 	backend::ref( ).reset_depth_stencil_target( );

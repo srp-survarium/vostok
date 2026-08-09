@@ -53,8 +53,6 @@ public:
 
 	virtual math::aabb get_aabb( )
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x71760]
 		return m_original->m_aabbox;
 	}
 
@@ -72,8 +70,6 @@ public:
 
 	virtual u32 get_surfaces_count( ) const
 	{
-		// STATE[STUB]
-		// FUNCTION BODY[0x717a0]
 		return m_instances_count;
 	}
 

@@ -10,7 +10,13 @@ void effect_skylight::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x7bde30]
+
+
+
+
+
+
+
 	compiler.begin_technique( );
 	compiler.begin_pass( "skylight", NULL, "skylight", shader_configuration( ), NULL );
 	compiler.set_depth( false, false );
