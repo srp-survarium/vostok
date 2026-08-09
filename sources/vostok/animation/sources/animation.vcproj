@@ -758,10 +758,6 @@
 			RelativePath=".\anchor_animation_player.cpp"
 			>
 		</File>
-		<File
-			RelativePath=".\anchor_animation_time_in_ms_calculator.cpp"
-			>
-		</File>
 		<Filter
 			Name="core"
 			>

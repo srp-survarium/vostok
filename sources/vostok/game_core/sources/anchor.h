@@ -23,8 +23,6 @@ namespace vostok
 
 	void anchor_game( );
 
-	void anchor_animation_time_in_ms_calculator( );
-
 	void anchor_animation_player( );
 
 	void anchor_scaleform( );
