@@ -38,8 +38,8 @@ void skeleton_animation_cook::on_bi_spline_animation_arrived( vostok::resources:
 		result.get_parent_query( )->finish_query( result_error );
 		return;
 	}
-
 	bi_spline_skeleton_animation_baked_ptr bi_spline_animation = static_cast_resource_ptr< bi_spline_skeleton_animation_baked_ptr >( result[ 0 ].get_unmanaged_resource( ) );
+
 	resources::query_create_resource(
 		"",
 		const_buffer( (pvoid)bi_spline_animation.c_ptr( ), sizeof( bi_spline_animation ) ),
