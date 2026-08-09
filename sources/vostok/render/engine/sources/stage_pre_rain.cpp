@@ -112,6 +112,7 @@ float3 stage_pre_rain::compute_aligment(
 	origin_pixel.xyz( ) = light_space_transform_invert.transform_direction( origin_pixel.xyz( ) );
 
 	return origin_pixel.xyz( );
+	// 3 target lines are likely retail-compiled-out source.
 }
 
 float4x4 stage_pre_rain::render_rain_shadow_map( )
@@ -286,19 +287,11 @@ void stage_pre_rain::execute( )
 
 	backend::ref( ).flush_rt_shader_resources( );
 	m_wet_surface_effect->apply( 0, 0 );
-	backend::ref( ).set_ps_constant(
-		m_eye_ray_corner_parameter,
-		m_context->get_eye_rays( )[0]
-	);
-	backend::ref( ).set_ps_constant(
-		m_view_to_shadow_parameter,
-		math::transpose( view_to_shadow )
-	);
+	backend::ref( ).set_ps_constant( m_eye_ray_corner_parameter,
+		m_context->get_eye_rays( )[0].x );
+	backend::ref( ).set_ps_constant( m_view_to_shadow_parameter, math::transpose( view_to_shadow ) );
 	backend::ref( ).set_ps_constant( m_rain_offset_parameter, m_rain_offset );
-	backend::ref( ).set_ps_constant(
-		m_rain_density_parameter,
-		m_context->get_scene_view( )->post_process_parameters( ).environment_rain_density
-	);
+	backend::ref( ).set_ps_constant( m_rain_density_parameter, m_context->get_scene_view( )->post_process_parameters( ).environment_rain_density );
 	system_renderer::ref( ).fill_surface(
 		m_context->get_rt( rt_normal ),
 		render_target_ptr( ),

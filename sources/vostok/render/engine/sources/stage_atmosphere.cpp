@@ -242,8 +242,8 @@ void stage_atmosphere::execute( )
 				float4( L_dir, 0.0f ), float4( sun->position, 1.0f ) );
 			// 5 target lines are likely retail-compiled-out source.
 			scale *= pp_parameters.sun_moon_billboard_scale;
-			float4x4 world_transform = math::create_scale( float3( scale, scale, scale ) ) *
-				math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
+			float4x4 world_transform =
+				math::create_scale( float3( scale, scale, scale ) ) * math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
 			m_context->set_w( world_transform );
 
 			backend::ref( ).set_ps_texture( "sun_moon_texture", pp_parameters.sun_moon_texture.c_ptr( ) );

@@ -200,8 +200,7 @@ void stage_forward::render_forward_models(
 		if ( options::ref( ).current.m_use_hiz_occlusion_culling && ( *it_d )->m_occluded )
 			continue;
 
-		render_surface_instance& instance = **it_d;
-		material_effects& effects = instance.m_render_surface->get_material_effects( );
+		render_surface_instance& instance = **it_d; material_effects& effects = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
 		if ( pass_index == 0 && effects.is_forward_after_fog )
