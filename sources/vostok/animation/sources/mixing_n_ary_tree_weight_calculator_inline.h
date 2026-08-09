@@ -14,6 +14,7 @@ namespace mixing {
 inline n_ary_tree_weight_calculator::n_ary_tree_weight_calculator	( u32 const current_time_in_ms, n_ary_tree_animation_node* const animation ) :
 	m_animation			( animation ),
 	m_result			( 0 ),
+	m_recursion_level	( 0 ),
 	m_current_time_in_ms( current_time_in_ms ),
 	m_weight			( 0.f ),
 	m_null_weight_found	( false ),

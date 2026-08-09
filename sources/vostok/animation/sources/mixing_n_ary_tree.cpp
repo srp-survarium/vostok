@@ -357,11 +357,10 @@ void n_ary_tree::update_animation_time( animation_state& animation_state )
 	if ( animation_state.is_freezed )
 		return;
 
-	animation_interval const& interval	=
-		animation_state.event_iterator.animation( ).animation_intervals( )[ animation_state.animation_interval_id ];
+	animation_interval const& interval	= animation_state.event_iterator.animation( ).animation_intervals( )[ animation_state.animation_interval_id ];
 	float const animation_time			= interval.start_time( ) + animation_state.animation_interval_time;
-	float const animation_length		=
-		cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+	float const animation_length		= cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
+
 	animation_state.animation_time		= math::min(
 		math::max( animation_time - animation_state.animation_time_threshold, 0.f ),
 		animation_length
@@ -401,11 +400,11 @@ void n_ary_tree::update_animation_state(
 	weight_calculator.visit		( animation_node );
 	state.weight				= weight_calculator.weight( );
 
-	if ( state.is_freezed )
-		return;
 
-	n_ary_tree_animation_node* const driving_animation	= animation_node.time_driving_animation( );
-	if ( !driving_animation ) {
+	if ( state.is_freezed ) return;
+
+
+	n_ary_tree_animation_node* const driving_animation	= animation_node.time_driving_animation( ); if ( !driving_animation ) {
 		state.animation_interval_time	=
 			n_ary_tree_animation_time_calculator(
 				animation_node,
@@ -414,17 +413,14 @@ void n_ary_tree::update_animation_state(
 				target_time_in_ms,
 				false
 			).animation_time( );
-		update_animation_time	( state );
-		return;
+	}
+	else {
+		animation_state const& driving_state	= driving_animation->animation_state( );
+		animation_interval const& driving_interval	= driving_animation->animation_intervals( )[ driving_state.animation_interval_id ];
+		animation_interval const& interval	= animation_node.animation_intervals( )[ state.animation_interval_id ];
+		state.animation_interval_time	= interval.length( ) / driving_interval.length( ) * driving_state.animation_interval_time;
 	}
 
-	animation_state const& driving_state	= driving_animation->animation_state( );
-	animation_interval const& driving_interval	=
-		driving_animation->animation_intervals( )[ driving_state.animation_interval_id ];
-	animation_interval const& interval	=
-		animation_node.animation_intervals( )[ state.animation_interval_id ];
-	state.animation_interval_time	=
-		interval.length( ) / driving_interval.length( ) * driving_state.animation_interval_time;
 	update_animation_time		( state );
 }
 
