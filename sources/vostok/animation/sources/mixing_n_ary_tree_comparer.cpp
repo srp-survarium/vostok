@@ -90,16 +90,26 @@ comparison_result_enum animation_comparer_predicate::operator()(
 	if ( left.unique_animation_id() < right.unique_animation_id() )
 		return									more;
 
-	if ( left.can_generate_events() != right.can_generate_events() )
-		return									left.can_generate_events() ? less : more;
+	if ( !left.can_generate_events() ) {
+		if ( right.can_generate_events() )
+			return								less;
+	}
+	else if ( !right.can_generate_events() )
+		return									more;
 
 	switch ( compare_animation_intervals( left, right ) ) {
 		case less:	return					less;
 		case more:	return					more;
 	}
 
-	if ( m_use_overriding_animations && left.override_existing_animation() != right.override_existing_animation() )
-		return									left.override_existing_animation() ? less : more;
+	if ( m_use_overriding_animations ) {
+		if ( !left.override_existing_animation() ) {
+			if ( right.override_existing_animation() )
+				return							less;
+		}
+		else if ( !right.override_existing_animation() )
+			return								more;
+	}
 
 	return										equal;
 }
