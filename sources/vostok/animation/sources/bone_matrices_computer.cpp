@@ -280,6 +280,7 @@ void bone_matrices_computer::compute_skeleton_branch(
 {
 	*result	= mul4x3( computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() ), parent );
 
+
 	skeleton_bone const* const e	= bone.children_end();
 	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
 		compute_skeleton_branch(
@@ -300,13 +301,14 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 {
 	*result	= computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() );
 
+
 	skeleton_bone const* const e	= bone.children_end();
 	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
 		compute_skeleton_branch_local(
 			*i,
 			result + ( i - &bone ),
-			bone_mask ? bone_mask + ( bone.children_begin() - &bone ) : 0,
-			bone_mask ? bone_mask + ( i - &bone ) : 0
+			result_masks ? result_masks + ( bone.children_begin() - &bone ) : 0,
+			result_masks ? result_masks + ( i - &bone ) : 0
 		);
 }
 
