@@ -105,6 +105,11 @@ DEFAULT_ORDER = ["libgfx_zlib", "libgfx_libpng", "libgfx_libjpeg",
                  "libgfxexpat", "pcre",
                  "libgfx_as2", "libgfx_as3", "libgfx"]
 
+SOURCE_OVERRIDES = {
+    "Src/Render/Render_BufferGeneric.cpp":
+        VOSTOK_DIR / "sources/scaleform/Src/Render/Render_BufferGeneric.cpp",
+}
+
 
 def wine_path(p: Path) -> str:
     return "Z:" + str(p).replace("/", "\\")
@@ -142,7 +147,7 @@ def build_one(name):
     built = skipped = failed = 0
     fails, objs = [], []
     for i, rel in enumerate(tu_list, 1):
-        src = SDK / rel
+        src = SOURCE_OVERRIDES.get(rel, SDK / rel)
         if not src.is_file():
             print(f"[{name}] [{i}] MISSING SRC {rel}")
             failed += 1

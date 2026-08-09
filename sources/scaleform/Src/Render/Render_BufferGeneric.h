@@ -39,7 +39,7 @@ namespace RBGenericImpl {
 // RenderBuffer RBCacheListType; may be used by RenderBufferManager as needed.
 enum RBCacheListType
 {
-    RBCL_Uncached,   // The item isn't cached yet.    
+    RBCL_Uncached,   // The item isn't cached yet.
     RBCL_InUse,      // The item is queued up for rendering and not complete yet.
     RBCL_ThisFrame,  // The item is used in the current frame.
     RBCL_PrevFrame,  // The item was used in previous frame.
@@ -48,14 +48,6 @@ enum RBCacheListType
     RBCL_Reuse_LRU,
     // Total number of cache lists
     RBCL_ItemCount
-};
-
-// RenderBuffer DSSizeMode; used to indicate depth-stencil size preference.
-enum DSSizeMode
-{
-    DSSM_None,          // Use the default depth stencil size mode
-    DSSM_Exact,         // Depth stencil requests must be identical to potential matches
-    DSSM_EqualOrBigger  // Depth stencil requests must be identical to color sizes
 };
 
 
@@ -83,17 +75,17 @@ public:
     inline RenderTarget*       GetRenderTarget() const;
     inline DepthStencilBuffer* GetDepthStencilBuffer() const;
 
-    bool Match(const ImageSize& size, DSSizeMode sizeMode, RenderBufferType type, ImageFormat format) const;
+    bool Match(const ImageSize& size, bool exact, RenderBufferType type, ImageFormat format) const;
 };
 
 
 //------------------------------------------------------------------------
-// RenderBufferManager allocates textures 
+// RenderBufferManager allocates textures
 
 class RenderBufferManager : public Render::RenderBufferManager
 {
     friend class RenderTarget;
-    friend class DepthStencilBuffer;    
+    friend class DepthStencilBuffer;
 public:
 
     // These special value of ReuseLimit dictate limit policy.
@@ -106,7 +98,7 @@ public:
         ReuseLimit_ScreenSize  = 0xFFFFFFFF
     };
 
-    RenderBufferManager(DSSizeMode depthStencilSizeMode = DSSM_None,
+    RenderBufferManager(bool requireExactDepthStencil = false,
                         UPInt memReuseLimit = ReuseLimit_ScreenSize,
                         UPInt memAbsoluteLimit = 0);
 
@@ -123,7 +115,7 @@ public:
 
     virtual Render::RenderTarget* CreateRenderTarget(const ImageSize& size, RenderBufferType type,
                                                      ImageFormat format, Texture* texture = 0);
-    
+
     // Allocates a temporary render target of specified type
     //  - call TextureManager to allocate texture
     virtual Render::RenderTarget* CreateTempRenderTarget(const ImageSize& size);
@@ -155,19 +147,19 @@ protected:
 
     void pushFront(RBCacheListType ltype, CacheData* p)
     {
-        p->ListType = ltype;        
+        p->ListType = ltype;
         BufferCache[ltype].PushFront(p);
     }
     void moveToFront(RBCacheListType ltype, CacheData* p)
-    {                
+    {
         p->RemoveNode();
-        pushFront(ltype, p);     
+        pushFront(ltype, p);
     }
 
     void moveListToFront(RBCacheListType to, RBCacheListType from)
     {
         List<CacheData>& src = BufferCache[from];
-        BufferCache[to].PushListToFront(src);        
+        BufferCache[to].PushListToFront(src);
     }
 
     void evict(CacheData* p);
@@ -182,7 +174,7 @@ protected:
     UPInt               AllocSize; // Currently allocated size
     ImageFormat         DefImageFormat;
     bool                RequirePow2;
-    DSSizeMode          DepthStencilSizeMode;
+    bool                RequireExactDepthStencil;   // If true, allocated depth stencil buffers will match requested dimensions exactly.
 
     List<CacheData> BufferCache[RBCL_ItemCount];
 };
@@ -224,7 +216,7 @@ protected:
     void initViewRect(const Rect<int>& viewRect)
     {
         ViewRect = viewRect;
-    }    
+    }
 
     Ptr<Texture>        pTexture;
     RenderTargetStatus  RTStatus;
