@@ -301,7 +301,7 @@ ShaderManager::ShaderManager( ProfileViews* prof ) :
 bool ShaderManager::HasInstancingSupport() const
 {
     // Only FeatureLevel 10.0+ has instancing (but it always has it).
-    return ShaderModel >= ShaderDesc::ShaderVersion_D3D1xFL10X;
+    return ShaderModel == ShaderDesc::ShaderVersion_D3D1xFL10X;
 }
 
 void ShaderManager::MapVertexFormat(PrimitiveFillType fill, const VertexFormat* sourceFormat,
