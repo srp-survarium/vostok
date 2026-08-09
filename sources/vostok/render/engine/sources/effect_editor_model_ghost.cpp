@@ -10,7 +10,6 @@ void effect_editor_model_ghost::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b5c30]
 	shader_configuration configuration;
 	compile_begin("vertex_base", "ghost", compiler, &configuration, config);
 		compiler.set_depth(true, false);
