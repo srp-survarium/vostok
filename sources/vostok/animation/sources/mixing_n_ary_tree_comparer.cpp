@@ -137,7 +137,7 @@ void n_ary_tree_comparer::process_interpolators( n_ary_tree const& from, n_ary_t
 
 bool n_ary_tree_comparer::new_time_scale( n_ary_tree_animation_node& new_time_driving_animation )
 {
-	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.time_root( );
+	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.weight_root( );
 	for ( ; previous_time_driving_animation; previous_time_driving_animation = previous_time_driving_animation->m_next_weight_animation ) {
 		if ( previous_time_driving_animation->time_driving_animation( ) )
 			continue;
@@ -161,60 +161,71 @@ bool n_ary_tree_comparer::new_time_scale( n_ary_tree_animation_node& new_time_dr
 		new_time_driving_animation.animation_intervals( )[ animation_interval_id ].length( )
 		/ previous_time_driving_animation->animation_intervals( )[ animation_interval_id ].length( );
 	float const directional_time_scale_factor	=
-		new_time_driving_animation.is_positive_event_direction( )
+		new_driving_animation_length *
+		( new_time_driving_animation.is_positive_event_direction( )
 			== previous_time_driving_animation->is_positive_event_direction( )
-				? new_driving_animation_length
-				: -new_driving_animation_length;
+				? 1.f
+				: -1.f );
 
 	n_ary_tree_time_scale_calculator time_scale_calculator(
 		m_current_time_in_ms,
 		0.f,
 		m_current_time_in_ms
 	);
-	n_ary_tree_base_node* target_time_scale_node	= NULL;
-	if ( new_time_driving_animation.operands_count( ) ) {
-		n_ary_tree_base_node* const node	=
-			*new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) );
-		if ( node && node->is_time_scale( ) ) {
-			target_time_scale_node			= node;
-			node->accept					( time_scale_calculator );
-		}
-	}
+	n_ary_tree_base_node* const target_time_scale_node	=
+		new_time_driving_animation.operands_count( )
+			? *new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) )
+			: NULL;
+	bool const target_has_time_scale		=
+		target_time_scale_node && target_time_scale_node->is_time_scale( );
+	if ( target_has_time_scale )
+		target_time_scale_node->accept		( time_scale_calculator );
 
 	float const time_scale_factor			=
-		target_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
+		target_time_scale_node && target_time_scale_node->is_time_scale( )
+			? time_scale_calculator.time_scale( )
+			: 1.f;
 	base_interpolator const* const time_scale_interpolator	=
-		target_time_scale_node
+		target_has_time_scale
 			? time_scale_calculator.interpolator( )
 			: &new_time_driving_animation.weight_interpolator( );
-	if ( !target_time_scale_node && time_scale_interpolator->transition_time( ) <= 0.f )
+	if ( time_scale_interpolator->transition_time( ) > 0.f ) {
+		n_ary_tree_base_node* const previous_time_scale_node	=
+			previous_time_driving_animation->operands_count( )
+				&& ( *previous_time_driving_animation->operands( sizeof( n_ary_tree_animation_node ) ) )->is_time_scale( )
+					? *previous_time_driving_animation->operands( sizeof( n_ary_tree_animation_node ) )
+					: NULL;
+		if ( previous_time_scale_node )
+			increase_buffer_size				( *previous_time_scale_node );
+
+		n_ary_tree_target_time_scale_calculator target_time_scale_calculator( *previous_time_driving_animation );
+		float const new_time_driving_animation_target_time_scale	=
+			target_time_scale_calculator.result( ) * directional_time_scale_factor;
+		if ( time_scale_factor == new_time_driving_animation_target_time_scale
+			&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
+		{
+			if ( !previous_time_scale_node )
+				m_needed_buffer_size			+= sizeof( n_ary_tree_time_scale_node );
+			m_needed_buffer_size				+= sizeof( n_ary_tree_time_scale_node )
+				+ sizeof( n_ary_tree_time_scale_transition_node );
+			m_equal							= false;
+			return							true;
+		}
+
+		return								previous_time_scale_node != NULL;
+	}
+
+	if ( time_scale_factor != 1.f )
 		return								false;
 
-	n_ary_tree_base_node* previous_time_scale_node	= NULL;
-	if ( previous_time_driving_animation->operands_count( ) ) {
-		n_ary_tree_base_node* const node	=
-			*previous_time_driving_animation->operands( sizeof( n_ary_tree_animation_node ) );
-		if ( node && node->is_time_scale( ) ) {
-			previous_time_scale_node		= node;
-			increase_buffer_size			( *node );
-		}
-	}
-
+	m_needed_buffer_size					+= sizeof( n_ary_tree_time_scale_node );
 	n_ary_tree_target_time_scale_calculator target_time_scale_calculator( *previous_time_driving_animation );
-	float const previous_target_time_scale	=
+	float const new_time_driving_animation_target_time_scale	=
 		target_time_scale_calculator.result( ) * directional_time_scale_factor;
-	if ( time_scale_factor == previous_target_time_scale
-		&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
-	{
-		if ( !previous_time_scale_node )
-			m_needed_buffer_size			+= sizeof( n_ary_tree_time_scale_node );
-		m_needed_buffer_size				+= sizeof( n_ary_tree_time_scale_node )
-			+ sizeof( n_ary_tree_time_scale_transition_node );
-		m_equal							= false;
-		return							true;
-	}
-
-	return									previous_time_scale_node != NULL;
+	m_equal								= m_equal
+		&& time_scale_factor == new_time_driving_animation_target_time_scale
+		&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) );
+	return								true;
 }
 
 void n_ary_tree_comparer::new_animation(
