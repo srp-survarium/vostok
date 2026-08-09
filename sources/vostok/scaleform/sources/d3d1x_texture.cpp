@@ -874,7 +874,10 @@ Render::Texture* TextureManager::CreateTexture(ImageFormat format, unsigned mipL
     Texture* ptexture =
         SF_HEAP_AUTO_NEW(this) Texture(pLocks, ptformat, mipLevels, size, use, pimage);
 
-    return postCreateTexture(ptexture, use);
+    if ( RenderThreadId == GetCurrentThreadId() )
+        return postCreateTexture(ptexture, use);
+
+    TextureInitQueue.PushBack(ptexture); // Target falls through without returning ptexture.
 }
 
 Render::Texture* TextureManager::CreateTexture(ID3D1x(Texture2D)* pd3dtexture, ImageSize imgSize, ImageBase* image )
@@ -884,7 +887,11 @@ Render::Texture* TextureManager::CreateTexture(ID3D1x(Texture2D)* pd3dtexture, I
 
     Texture* ptexture = SF_HEAP_AUTO_NEW(this) Texture(pLocks, pd3dtexture, imgSize, image);
 
-    return postCreateTexture(ptexture, 0);
+    if ( RenderThreadId == GetCurrentThreadId() )
+        return postCreateTexture(ptexture, 0);
+
+    TextureInitQueue.PushBack(ptexture);
+    return ptexture;
 }
 
 unsigned TextureManager::GetTextureUseCaps(ImageFormat format)
