@@ -25,7 +25,7 @@ public:
 											animation_state& animation,
 											n_ary_tree_animation_node& animation_node,
 											u32 start_time_in_ms,
-											u32 initial_event_types,
+											u16 initial_event_types,
 											subscribed_channel*& channels_head
 										);
 	inline				n_ary_tree_event_iterator	( );
