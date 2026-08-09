@@ -33,7 +33,6 @@ class decal_shader_constants_and_geometry :
 {
 public:
 	decal_shader_constants_and_geometry( );
-	~decal_shader_constants_and_geometry( ) { }
 
 	void set(
 		renderer_context*	context,
@@ -102,6 +101,7 @@ public:
 	friend class								scene;
 	friend class								stage_visibility;
 
+private:
 	decal_properties						m_properties;
 	math::aabb								m_aabb;
 	u32										m_id;

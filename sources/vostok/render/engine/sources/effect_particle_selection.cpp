@@ -13,7 +13,6 @@ void effect_particle_selection::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x7b5a60]
 	VOSTOK_UNREFERENCED_PARAMETERS(custom_config);
 
 	enum_vertex_input_type vertex_types[] = {particle_vertex_input_type,
@@ -33,40 +32,7 @@ void effect_particle_selection::compile(
 		compile_end(compiler);
 	}
 
-#if 0
-	shader_configuration configuration;
-	//configuration.use_subuv				= false;
-
-	compiler.begin_technique(/*billboard*/);
-		compiler.begin_pass("particle_billboard", "particle_selected", configuration);
-			compiler.set_depth( true, false);
-			compiler.set_cull_mode(D3D_CULL_NONE);
-			//compiler.set_fill_mode(D3D_FILL_WIREFRAME);
-			//compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_INV_SRC_ALPHA);
-			compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-		compiler.end_pass();
-	compiler.end_technique();
-
-	configuration.use_subuv				= true;
-	compiler.begin_technique(/*billboard_subuv*/);
-		compiler.begin_pass("particle_billboard", "particle_selected", configuration);
-			compiler.set_depth( true, false);
-			compiler.set_cull_mode(D3D_CULL_NONE);
-			//compiler.set_fill_mode(D3D_FILL_WIREFRAME);
-			//compiler.set_alpha_blend(true,D3D_BLEND_SRC_ALPHA,D3D_BLEND_INV_SRC_ALPHA);
-			compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-		compiler.end_pass();
-	compiler.end_technique();
-
-	compiler.begin_technique(/*beamtrail*/);
-		compiler.begin_pass("particle_beamtrail", "particle_selected", configuration);
-			compiler.set_depth( true, false);
-			compiler.set_cull_mode(D3D_CULL_NONE);
-			//compiler.set_fill_mode(D3D_FILL_WIREFRAME);
-			compiler.set_alpha_blend(true,D3D_BLEND_ONE,D3D_BLEND_ONE);
-		compiler.end_pass();
-	compiler.end_technique();
-#endif
+	// 34 target lines are likely retail-compiled-out source.
 }
 
 } // namespace render

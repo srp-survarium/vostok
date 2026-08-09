@@ -12,16 +12,14 @@ namespace render {
 
 struct sky_dome_geometry : public boost::noncopyable {
 	struct vertex_type {
-		vertex_type( ) { }
-
 		float4	position;
 		float2	uv;
 	};
 
 	sky_dome_geometry( );
 	void draw( );
-	~sky_dome_geometry( ) { }
 
+private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;

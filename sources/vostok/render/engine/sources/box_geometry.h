@@ -11,15 +11,13 @@ namespace render {
 
 struct box_geometry : public core::noncopyable {
 	struct vertex_type {
-		vertex_type( ) { }
-
 		float4 position;
 	};
 
 	box_geometry( );
 	void draw( );
-	~box_geometry( ) { }
 
+private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;

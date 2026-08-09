@@ -324,12 +324,11 @@ void speedtree_forest::populate_forest( )
 
 static float4x4 fix_view_matrix( float4x4 const& in_view_matrix )
 {
-	// FUNCTION BODY[0x6016f0]
 	const float epsilon			= 0.1f;
 	float4x4 view_matrix		= in_view_matrix;
 	float3 fixed_view_dir		= float3(view_matrix.i.z, view_matrix.j.z, view_matrix.k.z);
-	bool const looking_up		= math::is_similar(fixed_view_dir, float3(0.0f,  1.0f, 0.0f), epsilon);
-	bool const looking_down		= math::is_similar(fixed_view_dir, float3(0.0f, -1.0f, 0.0f), epsilon);
+	bool const looking_up		= fixed_view_dir.is_similar(float3(0.0f,  1.0f, 0.0f), epsilon);
+	bool const looking_down		= fixed_view_dir.is_similar(float3(0.0f, -1.0f, 0.0f), epsilon);
 	if (looking_up || looking_down)
 	{
 		view_matrix.i.z			+= epsilon * 10.0f;
