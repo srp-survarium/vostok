@@ -31,8 +31,6 @@ namespace maya_animation {
 
 namespace animation {
 
-command_line::key	test_animation("test_animation", "", "animation", "");
-
 extern command_line::key	check_animation_b_spline_approximation;
 
 animation_world::animation_world(
