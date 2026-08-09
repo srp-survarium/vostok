@@ -21,10 +21,10 @@
 
 VOSTOK_DECLARE_LINKAGE_ID(animation_entry_point)
 
-#pragma comment( linker, "/include:??0skeleton_animation_cook@animation@vostok@@QAE@XZ" )
-#pragma comment( linker, "/include:??0bi_spline_skeleton_animation_impl_cook@animation@vostok@@QAE@XZ" )
-#pragma comment( linker, "/include:??0bi_spline_skeleton_animation_baked_cook@animation@vostok@@QAE@XZ" )
-#pragma comment( linker, "/include:??0cubic_spline_skeleton_animation_cook@animation@vostok@@QAE@XZ" )
+#pragma comment( linker, "/include:??_7skeleton_animation_cook@animation@vostok@@6B@" )
+#pragma comment( linker, "/include:??_7bi_spline_skeleton_animation_impl_cook@animation@vostok@@6B@" )
+#pragma comment( linker, "/include:??_7bi_spline_skeleton_animation_baked_cook@animation@vostok@@6B@" )
+#pragma comment( linker, "/include:??_7cubic_spline_skeleton_animation_cook@animation@vostok@@6B@" )
 
 using vostok::animation::animation_world;
 
