@@ -203,10 +203,6 @@ animation_collection* animation_collection_cook::new_collection ( configs::binar
 	return new_collection;
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt: dtor folds into prologue, UNMANAGED_FREE is the
-// statement). Capped by the strip_pointer/free_helper_impl wall - gold CALLs
-// free_helper_impl, our base inlines strip_pointer (folded boost::get_pointer) + virtual
-// free through [edx+18h]; global de-inline regresses ~170 fns, so not steerable here.
 void animation_collection_cook::delete_resource ( resources::resource_base* res )
 {	res->~resource_base( );
 	UNMANAGED_FREE( res );
