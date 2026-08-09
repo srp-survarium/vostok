@@ -233,35 +233,44 @@ void n_ary_tree::accumulate_object_movement(
 	const u32						time_in_ms
 )
 {
-	animation_state& state					= animation_node.animation_state( );
+	animation_state& animation_state		= animation_node.animation_state( );
 	n_ary_tree_weight_calculator weight_calculator( time_in_ms, &animation_node );
 	animation_node.accept					( weight_calculator );
-	state.weight							= weight_calculator.weight( );
-	state.animation_interval_time			= animation_interval_time;
-	update_animation_time					( state );
+	float const weight						= weight_calculator.weight( );
+	animation_state.weight					= weight;
+	animation_state.animation_interval_time	= animation_interval_time;
+	update_animation_time					( animation_state );
 
-	animation_interval const& interval		=
-		animation_node.animation_intervals( )[ state.animation_interval_id ];
-	cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
+	animation_interval const* animation_interval	=
+		animation_node.animation_intervals( ) + animation_state.animation_interval_id;
+	cubic_spline_skeleton_animation_pinned pinned_animation	=
+		cubic_spline_skeleton_animation_pinned( animation_interval->animation( ) );
+
 	current_frame_position frame_position;
-	frame frame_transform;
-	frame_transform = pinned_animation->bone( u32( 0 ) ).bone_frame(
-		state.animation_time * default_fps,
+	frame const& frame_transform			=
+		pinned_animation->bone( u32( 0 ) ).bone_frame(
+		animation_state.animation_time * default_fps,
 		frame_position
 	);
 
-	math::quaternion const frame_rotation	( frame_transform.rotation );
-	object_movement& previous				= state.bone_matrices_computer.previous_object_movement;
-	object_movement& accumulated			= state.bone_matrices_computer.accumulated_object_movement;
+	math::quaternion const& frame_transform_rotation	= math::quaternion( frame_transform.rotation );
 
-	accumulated.translation					+= frame_transform.translation - previous.translation;
-	accumulated.rotation					=
-		( frame_rotation * math::conjugate( previous.rotation ) ) * accumulated.rotation;
-	accumulated.scale						*= frame_transform.scale / previous.scale;
+	object_movement& previous_object_movement		=
+		animation_state.bone_matrices_computer.previous_object_movement;
+	object_movement& accumulated_object_movement	=
+		animation_state.bone_matrices_computer.accumulated_object_movement;
 
-	previous.translation					= frame_transform.translation;
-	previous.rotation						= frame_rotation;
-	previous.scale							= frame_transform.scale;
+	accumulated_object_movement.translation	+=
+		frame_transform.translation - previous_object_movement.translation;
+	accumulated_object_movement.rotation	=
+		frame_transform_rotation * math::conjugate( previous_object_movement.rotation ) *
+		accumulated_object_movement.rotation;
+	accumulated_object_movement.scale		*=
+		frame_transform.scale / previous_object_movement.scale;
+
+	previous_object_movement.translation	= frame_transform.translation;
+	previous_object_movement.rotation		= frame_transform_rotation;
+	previous_object_movement.scale			= frame_transform.scale;
 }
 
 void n_ary_tree::update_synchronization_group_using_integration(
