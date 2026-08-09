@@ -34,6 +34,8 @@ vostok::animation::allocator_type*	vostok::animation::g_allocator = 0;
 namespace vostok {
 namespace animation {
 
+command_line::key test_animation( "test_animation", "", "animation", "" );
+
 static skeleton_cook s_skeleton_cook;
 static single_animation_cook s_single_animation_cook;
 static animation_collection_cook s_animation_collection_cook;
