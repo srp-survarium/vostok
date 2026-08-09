@@ -782,17 +782,17 @@ void n_ary_tree_comparer::merge_weight_synchronization_groups(
 )
 {
 	u32 animations_count			= 0;
-	for ( n_ary_tree_animation_node* i = from_begin; i != from_end; i = i->m_next_weight_animation )
+	for ( n_ary_tree_animation_node* j = from_begin; j != from_end; j = j->m_next_weight_animation )
 		++animations_count;
 
-	n_ary_tree_animation_node** const animations	=
-		(n_ary_tree_animation_node**)ALLOCA( animations_count * sizeof( n_ary_tree_animation_node* ) );
-	n_ary_tree_animation_node** animation	= animations;
 	bool new_driving_animation_in_old_target_found	= false;
 	animation_comparer_equal_predicate equal_predicate( false, true );
-	for ( n_ary_tree_animation_node* i = from_begin; i != from_end; i = i->m_next_weight_animation ) {
-		if ( !equal_predicate( *i, new_weight_driving_animation ) )
-			*animation++			= i;
+	n_ary_tree_animation_node** const animations	=
+		(n_ary_tree_animation_node**)ALLOCA( animations_count * sizeof( n_ary_tree_animation_node* ) );
+	n_ary_tree_animation_node** i	= animations;
+	for ( n_ary_tree_animation_node* j = from_begin; j != from_end; j = j->m_next_weight_animation ) {
+		if ( !equal_predicate( *j, new_weight_driving_animation ) )
+			*i++					= j;
 		else
 			new_driving_animation_in_old_target_found	= true;
 	}
@@ -803,30 +803,30 @@ void n_ary_tree_comparer::merge_weight_synchronization_groups(
 	n_ary_tree_animation_node** const animations_end	= animations + animations_count;
 	stlp_std::sort				( animations, animations_end, animation_comparer_less_predicate( false, true ) );
 
-	animation					= animations;
-	n_ary_tree_animation_node* i	= to_begin;
+	i							= animations;
+	n_ary_tree_animation_node* j	= to_begin;
 	animation_comparer_predicate comparer( false, true );
-	while ( animation != animations_end && i != to_end ) {
-		switch ( comparer( **animation, *i ) ) {
+	while ( i != animations_end && j != to_end ) {
+		switch ( comparer( **i, *j ) ) {
 			case animation::equal :
-				change_animation	( **animation++, *i, is_new_driving_animation );
-				i				= i->m_next_weight_animation;
+				change_animation	( **i++, *j, is_new_driving_animation );
+				j				= j->m_next_weight_animation;
 				break;
 			case animation::less :
-				remove_animation	( **animation++, &new_weight_driving_animation, is_new_driving_animation );
+				remove_animation	( **i++, &new_weight_driving_animation, is_new_driving_animation );
 				break;
 			default :
-				add_animation	( *i, &new_weight_driving_animation );
-				i				= i->m_next_weight_animation;
+				add_animation	( *j, &new_weight_driving_animation );
+				j				= j->m_next_weight_animation;
 				break;
 		}
 	}
 
-	for ( ; animation != animations_end; ++animation )
-		remove_animation			( **animation, &new_weight_driving_animation, is_new_driving_animation );
+	for ( ; i != animations_end; ++i )
+		remove_animation			( **i, &new_weight_driving_animation, is_new_driving_animation );
 
-	for ( ; i != to_end; i = i->m_next_weight_animation )
-		add_animation				( *i, &new_weight_driving_animation );
+	for ( ; j != to_end; j = j->m_next_weight_animation )
+		add_animation				( *j, &new_weight_driving_animation );
 }
 
 void n_ary_tree_comparer::merge_weight_asynchronous_groups(
