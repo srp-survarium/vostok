@@ -45,30 +45,13 @@ stage_pre_rain::stage_pre_rain(
 	renderer_context*	context
 ) :
 	stage( in_renderer, context ),
-	m_shadow_map_size( 0 ),
-	m_view_to_shadow_parameter( 0 ),
-	m_eye_ray_corner_parameter( 0 ),
-	m_rain_offset_parameter( 0 ),
-	m_rain_density_parameter( 0 ),
 	m_rain_offset( 0.0f ),
 	m_rain_offset_counter( 0.0f )
 {
-	m_view_to_shadow_parameter = backend::ref( ).register_constant_host(
-		"view_to_shadow",
-		rc_float
-	);
-	m_eye_ray_corner_parameter = backend::ref( ).register_constant_host(
-		"s_eye_ray_corner",
-		rc_float
-	);
-	m_rain_offset_parameter = backend::ref( ).register_constant_host(
-		"rain_offset",
-		rc_float
-	);
-	m_rain_density_parameter = backend::ref( ).register_constant_host(
-		"rain_density",
-		rc_float
-	);
+	m_view_to_shadow_parameter = backend::ref( ).register_constant_host( "view_to_shadow", rc_float );
+	m_eye_ray_corner_parameter = backend::ref( ).register_constant_host( "s_eye_ray_corner", rc_float );
+	m_rain_offset_parameter = backend::ref( ).register_constant_host( "rain_offset", rc_float );
+	m_rain_density_parameter = backend::ref( ).register_constant_host( "rain_density", rc_float );
 
 	m_shadow_map_size = 128;
 	m_rt_rain_shadow_map = resource_manager::ref( ).create_render_target(
@@ -78,20 +61,9 @@ stage_pre_rain::stage_pre_rain(
 		DXGI_FORMAT_R16_TYPELESS,
 		enum_rt_usage_depth_stencil,
 		res_texture_ptr( ),
-		0,
-		D3D11_USAGE_DEFAULT,
-		1,
-		0
-	);
+		0, D3D11_USAGE_DEFAULT, 1, 0 );
 	m_t_rain_shadow_map = resource_manager::ref( ).create_texture(
-		"$user$rain_shadow_map",
-		0,
-		0,
-		false,
-		true,
-		true,
-		-1
-	);
+		"$user$rain_shadow_map", 0, 0, false, true, true, -1 );
 
 	effect_manager::ref( ).create_effect<effect_wet_surface>( &m_wet_surface_effect );
 	effect_manager::ref( ).create_effect<effect_shadow_map>( &m_effect_shadow_direct );
