@@ -692,11 +692,12 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 void n_ary_tree::process_events( const u32 target_time_in_ms, const u32 event_types )
 {
 	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
-		if ( ( i->animation_state( ).event_iterator->event_time_in_ms == target_time_in_ms ) &&
-			 ( event_types & i->animation_state( ).event_iterator->event_type ) )
-			process_event			( *i, event_types );
+		if ( i->animation_state( ).event_iterator->event_time_in_ms == target_time_in_ms )
+			if ( event_types & i->animation_state( ).event_iterator->event_type )
+				process_event			( *i, event_types );
 }
 
+// claude@NOTE: target passes the inlined iterator's this in eax to select_state; base retains it in edi.
 void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 {
 	while ( (*m_animation_events)->event_iterator->event_time_in_ms == target_time_in_ms ) {
