@@ -2,22 +2,28 @@
 
 ## Signal
 
-A function is present by the same mangled name in both executable PDB indexes,
-but objdiff reports `fuzzy_pct IS NULL` because its COMDATs were attributed to
-different source trees or units. `pdb_fetch --view diff` nevertheless reports
-100% and shows identical instructions.
+A function may be present by the same mangled name in both executable PDB
+indexes while objdiff reports `fuzzy_pct IS NULL` because its COMDATs were
+attributed to different source trees or units. A second form occurs when ICF
+chooses a different canonical mangled name for the folded RVA on each side,
+leaving the real target identity in `target_only`. In both cases the rich PDB
+aliases can still identify the same demangled signature and source owner.
 
 ## Proof and handling
 
 The rich-index producer normalizes local branch labels and relocation operands
 to symbolic instruction text. Equal function size plus an identical non-empty
 ordered stream of `(offset, instruction length, instruction text)` is therefore
-strict function-scoped exact evidence. It is safe to record 100%; it is not a
-fuzzy approximation.
+strict function-scoped exact evidence. For a cross-name fold, additionally
+require an exact demangled signature, the same source file, a unique unused base
+RVA, and preserve the PDB statement classifier independently. It is safe to
+record 100%; it is not a fuzzy approximation and does not turn a `QUANTITY`
+result into `MATCH`.
 
 Never infer a score when either stream is empty or any tuple differs. Those
 rows remain source work or a different measurement problem.
 
-This recovered 48 Scaleform COMDAT/header functions whose direct bodies were
-already exact while leaving its eight genuinely different NULL-score rows
-uncredited.
+The same-name pass originally recovered 48 Scaleform COMDAT/header functions.
+The strict cross-name pass later recovered four more Scaleform identities whose
+direct bodies were already exact while leaving genuinely different or absent
+bodies uncredited.
