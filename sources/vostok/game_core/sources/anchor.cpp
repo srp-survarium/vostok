@@ -14,10 +14,7 @@ IncludeAll::IncludeAll()
 	vostok::anchor_logging( );
 	vostok::anchor_ai_navigation( );
 	vostok::anchor_game( );
-	vostok::anchor_animation_comparer( );
-	vostok::anchor_animation_weaver( );
 	vostok::anchor_animation_cloner( );
-	vostok::anchor_animation_animation_time_calculator( );
 	vostok::anchor_animation_time_in_ms_calculator( );
 	vostok::anchor_animation_player( );
 	vostok::anchor_scaleform( );

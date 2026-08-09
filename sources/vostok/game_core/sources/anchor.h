@@ -23,10 +23,7 @@ namespace vostok
 
 	void anchor_game( );
 
-	void anchor_animation_comparer( );
-	void anchor_animation_weaver( );
 	void anchor_animation_cloner( );
-	void anchor_animation_animation_time_calculator( );
 	void anchor_animation_time_in_ms_calculator( );
 
 	void anchor_animation_player( );
