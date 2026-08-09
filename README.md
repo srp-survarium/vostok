@@ -13,18 +13,18 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 6,936 / 12,915 functions exact (53.70%) &middot; 6,942 / 12,915 functions exact-max (53.75%) &middot; 74.03% fuzzy &middot; 74.04% fuzzy-max.**
+**Overall: 6,964 / 12,915 functions exact (53.92%) &middot; 6,964 / 12,915 functions exact-max (53.92%) &middot; 74.43% fuzzy &middot; 74.43% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |     Functions exact | Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | ------------------: | ------------------: | -----: | --------: |
-| `render`        |   351 | 881 / 2,647 (33.3%) | 882 / 2,647 (33.3%) |  63.6% |     63.6% |
-| `game`          |   141 | 451 / 1,498 (30.1%) | 451 / 1,498 (30.1%) |  46.8% |     46.8% |
+| `render`        |   351 | 881 / 2,647 (33.3%) | 881 / 2,647 (33.3%) |  63.6% |     63.6% |
+| `game`          |   141 | 452 / 1,498 (30.2%) | 452 / 1,498 (30.2%) |  47.3% |     47.3% |
 | `core`          |   136 | 920 / 1,320 (69.7%) | 920 / 1,320 (69.7%) |  84.9% |     84.9% |
-| `vostok`        |   112 | 710 / 1,252 (56.7%) | 711 / 1,252 (56.8%) |  79.6% |     79.7% |
-| `game_core`     |   189 | 527 / 1,171 (45.0%) | 527 / 1,171 (45.0%) |  82.3% |     82.3% |
-| `animation`     |   102 |   390 / 763 (51.1%) |   390 / 763 (51.1%) |  60.5% |     60.5% |
+| `vostok`        |   112 | 712 / 1,252 (56.9%) | 712 / 1,252 (56.9%) |  79.7% |     79.7% |
+| `game_core`     |   189 | 526 / 1,171 (44.9%) | 526 / 1,171 (44.9%) |  82.1% |     82.1% |
+| `animation`     |   102 |   416 / 763 (54.5%) |   416 / 763 (54.5%) |  70.2% |     70.2% |
 | `ai`            |   124 |   444 / 690 (64.3%) |   444 / 690 (64.3%) |  90.4% |     90.4% |
 | `sound`         |    69 |   398 / 509 (78.2%) |   398 / 509 (78.2%) |  94.9% |     94.9% |
 | `collision`     |    52 |   431 / 503 (85.7%) |   431 / 503 (85.7%) |  96.6% |     96.6% |
@@ -37,7 +37,7 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `engine`        |    22 |   127 / 162 (78.4%) |   127 / 162 (78.4%) |  88.9% |     88.9% |
 | `network`       |    25 |    70 / 158 (44.3%) |    70 / 158 (44.3%) |  85.5% |     85.5% |
 | `network_core`  |    22 |    35 / 127 (27.6%) |    35 / 127 (27.6%) |  84.1% |     84.1% |
-| `debug`         |    16 |   114 / 122 (93.4%) |   118 / 122 (96.7%) |  97.3% |     98.8% |
+| `debug`         |    16 |   114 / 122 (93.4%) |   114 / 122 (93.4%) |  97.3% |     97.3% |
 | `logging`       |    10 |     40 / 72 (55.6%) |     40 / 72 (55.6%) |  94.0% |     94.0% |
 | `input`         |     9 |     45 / 53 (84.9%) |     45 / 53 (84.9%) |  96.3% |     96.3% |
 | `survarium`     |     5 |     18 / 22 (81.8%) |     18 / 22 (81.8%) |  94.0% |     94.0% |
