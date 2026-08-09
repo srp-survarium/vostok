@@ -27,7 +27,7 @@ public:
 
 	bool is_effects_ready( ) const;
 
-	// The target PDB declares these after is_effects_ready in the public section.
+private:
 	res_effect_ptr			m_translucency_effect;
 	shader_constant_host*	m_shadow[4];
 	shader_constant_host*	m_c_sun_direction;

@@ -47,12 +47,7 @@ struct screen_vertex {
 	}
 };
 STATIC_SIZE_ASSERT( screen_vertex, 0x18 );
-
-
-
-
-
-
+// 6 target lines are likely retail-compiled-out source.
 static bool s_lpv_dips_skipping0_value = false, s_lpv_dips_skipping1_value = false;
 static console_commands::cc_bool s_lpv_dips_skipping0_cc( "r_lpv_dips_skipping0", s_lpv_dips_skipping0_value, false, console_commands::command_type_user_specific );
 static console_commands::cc_bool s_lpv_dips_skipping1_cc( "r_lpv_dips_skipping1", s_lpv_dips_skipping1_value, false, console_commands::command_type_user_specific );
@@ -86,7 +81,8 @@ static console_commands::cc_bool s_use_smooothed_lpv_cc( "r_use_smooothed_lpv", 
 stage_light_propagation_volumes::stage_light_propagation_volumes(
 	renderer* in_renderer, renderer_context* context
 ) :
-	stage( in_renderer, context ), start_render_eye_position( 0.0f, 0.0f, 0.0f ), m_has_indirect_lighting( false ) {
+	stage( in_renderer, context ), m_has_indirect_lighting( false ) {
+	start_render_eye_position = float3( 0.0f, 0.0f, 0.0f );
 	m_num_cascades				= options::ref().current.m_lpv_num_cascades;
 
 	math::clamp<u32>			(m_num_cascades, 1, 7);
@@ -109,48 +105,17 @@ stage_light_propagation_volumes::stage_light_propagation_volumes(
 
 	for (u32 cascade_index = 0; cascade_index < m_num_cascades; cascade_index++)
 	{
-
-
-
-
-
-
+		// 6 target lines are likely retail-compiled-out source.
 		new(&m_radiance_volume[cascade_index])radiance_volume( m_rsm_downsampled_size, u32(options::ref().current.m_num_radiance_volume_cells * cascade_cells_scales[cascade_index]), u32(options::ref().current.m_num_propagate_iterations * cascade_iteration_scales[cascade_index]), fs * cascade_scales[cascade_index], options::ref().current.m_lpv_flux_amplifier * cascade_flux_scales[cascade_index] );
 		m_previous_view_matrix[cascade_index] = float4x4( ).identity( );
 		m_previous_proj_matrix[cascade_index] = float4x4( ).identity( );
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 20 target lines are likely retail-compiled-out source.
 	m_rms_depth_stencil_source[0] = resource_manager::ref().create_render_target("$user$rms_depth_stencil0", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[1] = resource_manager::ref().create_render_target("$user$rms_depth_stencil1", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[2] = resource_manager::ref().create_render_target("$user$rms_depth_stencil2", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
 	m_rms_depth_stencil_source[3] = resource_manager::ref().create_render_target("$user$rms_depth_stencil3", m_rsm_source_size, m_rsm_source_size, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0);
-
-
-
-
-
-
-
-
+	// 8 target lines are likely retail-compiled-out source.
 	m_c_interreflection_contribution		= backend::ref().register_constant_host("interreflection_contribution", rc_float);
 	m_c_cascade_index						= backend::ref().register_constant_host("cascade_index", rc_int);
 	m_c_num_cascades						= backend::ref().register_constant_host("num_cascades", rc_int);
@@ -275,42 +240,7 @@ void stage_light_propagation_volumes::register_light_constans( )
 	m_c_light_local_to_world		= backend::ref().register_constant_host("light_local_to_world", rc_float );
 	m_c_light_sphere_radius			= backend::ref().register_constant_host("light_sphere_radius", rc_float );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 36 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::pre_lpv_batch_render(
 	float3 const&		light_color,
 	float const			light_intensity,
@@ -328,8 +258,7 @@ void stage_light_propagation_volumes::pre_lpv_batch_render(
 
 void stage_light_propagation_volumes::post_lpv_batch_render( geometry_batch const& )
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	statistics::ref( ).debug_stat_group.num_dips_in_lpv.value++;
 }
 
@@ -345,16 +274,11 @@ void stage_light_propagation_volumes::render_to_rms(
 
 	D3D11_VIEWPORT orig_viewport;
 	backend::ref( ).get_viewport( orig_viewport );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	D3D11_VIEWPORT tmp_viewport; tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f; tmp_viewport.Width = float( m_rsm_source_size ); tmp_viewport.Height = float( m_rsm_source_size ); tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_viewport( tmp_viewport );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	m_context->push_set_v( view_matrix );
 	m_context->push_set_p( projection_matrix );
 
@@ -392,8 +316,7 @@ void stage_light_propagation_volumes::render_to_rms(
 		vector<render_surface_instance*> visible_render_models;
 		m_context->scene( )->select_models(
 			m_context->get_culling_vp( ), visible_render_models, m_context->get_view_pos( ), visible_flag, false );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		vector<render_surface_instance*>::iterator it_d = visible_render_models.begin( );
 		vector<render_surface_instance*>::const_iterator end_d = visible_render_models.end( );
 
@@ -413,13 +336,10 @@ void stage_light_propagation_volumes::render_to_rms(
 				continue;
 
 			me.m_effects[light_propagation_volumes_render_stage]->apply( 4, 0 );
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			backend::ref( ).set_ps_constant( m_c_light_color, light_color );
 			backend::ref( ).set_ps_constant( m_c_light_intensity, light_intensity );
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			m_context->set_w( *instance.m_transform );
 			instance.set_constants( );
 			geometry.lpv_pass_geom->apply( );
@@ -436,125 +356,7 @@ void stage_light_propagation_volumes::render_to_rms(
 	m_context->pop_v( );
 	m_context->pop_p( );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 119 target lines are likely retail-compiled-out source.
 bool remove_model_if_in_frustum_predicate::operator()( lpv_render_surface const& surface )
 {
 	math::aabb bbox = surface.surface->m_parent->get_aabb( );
@@ -570,29 +372,7 @@ bool remove_model_if_in_frustum_predicate::operator()( lpv_render_surface const&
 
 	return false;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 23 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	float3 const&		light_color,
 	float const			light_intensity,
@@ -615,13 +395,10 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	tmp_viewport.MinDepth = 0.0f;
 	tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	float4x4 real_view_projection = m_context->get_culling_vp( );
 	math::frustum view_frustum( real_view_projection );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	m_context->push_set_v( view_matrix );
 	m_context->push_set_p( projection_matrix );
 
@@ -639,16 +416,12 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 		vector<render_surface_instance*> caster_models;
 		m_context->scene( )->select_models( m_context->get_culling_vp( ), caster_models, m_context->get_view_pos( ), visible_flag, false );
 		vector<render_surface_instance*>::iterator it = caster_models.begin( );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		vector<render_surface_instance*>::iterator end = caster_models.end( );
 
 		for ( ; it != end; ++it )
 		{
-
-
-
-
+			// 4 target lines are likely retail-compiled-out source.
 			lpv_render_surface surface; surface.surface = *it; surface.model = surface.surface->m_parent;
 			m_caster_models[cascade_index].push_back( surface );
 		}
@@ -663,15 +436,7 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 				),
 				m_caster_models[cascade_index].end( ) );
 		}
-
-
-
-
-
-
-
-
-
+		// 9 target lines are likely retail-compiled-out source.
 		if ( cascade_index != 0 && s_lpv_dips_skipping1_value )
 		{
 			math::frustum prev_cascade_frustum(
@@ -702,11 +467,7 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 	}
 
 	backend::ref( ).set_render_targets( &*m_radiance_volume[cascade_index].m_rt_rms_albedo_source_temp, &*m_radiance_volume[cascade_index].m_rt_rms_normal_source_temp, &*m_radiance_volume[cascade_index].m_rt_rms_position_source_temp, 0 );
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	u32 num_render = m_caster_models[cascade_index].size( ) / ( num_render_stages - render_stage_index );
 	u32 render_index = 0;
 	lpv_render_surface* begin_d = m_caster_models[cascade_index].begin( );
@@ -718,22 +479,16 @@ void stage_light_propagation_volumes::render_to_rms_smoothed2(
 		render_surface_instance& instance = *it_d->surface;
 		material_effects& me = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		if ( instance.m_render_surface->get_vertex_input_type( ) != static_mesh_vertex_input_type ) continue;
 		if ( !me.m_effects[light_propagation_volumes_render_stage] ) continue;
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		if ( !geometry.lpv_pass_geom && !geometry.geom ) continue;
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		if ( geometry.lpv_pass_geom )
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			me.m_effects[light_propagation_volumes_render_stage]->apply( 2, 0 );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		else
 			me.m_effects[light_propagation_volumes_render_stage]->apply( 4, 0 );
 
@@ -808,9 +563,7 @@ void stage_light_propagation_volumes::render_to_sun_rms(
 	vector<float4x4>	transforms
 	) {
 	float max_scale					= m_radiance_volume[cascade_index].get_scale();
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	float3 sun_position				= m_context->get_view_pos() + m_context->get_view_dir() * 0.2f * max_scale - sun->direction * max_scale * 1.41421f * 2.0f;
 
 	float4x4 view_matrix			= create_camera_direction(sun_position, sun->direction, float3(1, 0, 0));
@@ -835,9 +588,7 @@ void stage_light_propagation_volumes::render_to_sun_rms_smoothed(
 	u32 const		num_render_stages
 	) {
 	float max_scale = m_radiance_volume[cascade_index].get_scale( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	float3 sun_position = start_render_eye_position + -sun->direction * max_scale * 1.41421f * 2.0f;
 
 	float4x4 view_matrix = create_camera_direction( sun_position, sun->direction, float3( 1, 0, 0 ) );
@@ -868,12 +619,7 @@ static float3 view_matrix_parameters[6][3] = {
 	{float3(0.0f, 0.0f, 0.0f), float3(0.0f, 0.0f, 1.0f),	float3(0.0f, 1.0f, 0.0f)},	//  z
 	{float3(0.0f, 0.0f, 0.0f), float3(0.0f, 0.0f, -1.0f),	float3(0.0f, 1.0f, 0.0f)},	// -z
 };
-
-
-
-
-
-
+// 6 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::render_to_point_rms(
 	light*				l,
 	u32 const			face_index,
@@ -895,11 +641,7 @@ void stage_light_propagation_volumes::render_to_sky_rms( light* sun, u32 const f
 {
 	float3 light_color = m_context->scene_view()->post_process_parameters().environment_skycolor[face_index].xyz();
 	float const light_intensity = 1.0f;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 	float const max_scale = m_radiance_volume[cascade_index].get_scale();
 
 	float4x4 sun_rotation = sun ? math::create_rotation(float3(sun->direction.x, 0.0f, sun->direction.z)) : float4x4().identity();
@@ -935,41 +677,7 @@ void stage_light_propagation_volumes::render_to_spot_rms( light* l, vector<float
 
 	render_to_rms					(l->color, l->intensity, view_matrix, projection_matrix, transforms, 0);
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 35 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::propagate_lighting( u32 const cascade_index )
 {
 	m_radiance_volume[cascade_index].propagate_lighting(cascade_index);
@@ -994,10 +702,7 @@ void stage_light_propagation_volumes::render_quad( )
 	m_screen_vertex_geometry->apply			();
 	backend::ref().render_indexed			(D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, 2*3, 0, offset);
 }
-
-
-
-
+// 4 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::downsample_rsm( float3 const& light_direction, float3 const& grid_origin, float grid_scale, u32 const cascade_index )
 {
 	m_downsample_rsm_effect->apply( 0, 0 );
@@ -1014,10 +719,7 @@ void stage_light_propagation_volumes::downsample_rsm( float3 const& light_direct
 	tmp_viewport.Width = float( m_rsm_downsampled_size ); tmp_viewport.Height = float( m_rsm_downsampled_size );
 	tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
 	backend::ref( ).set_viewport( tmp_viewport );
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_ps_texture( "t_lpv_rsm_albedo_source", &*m_radiance_volume[cascade_index].m_t_rms_albedo_source );
 
 	backend::ref( ).set_ps_texture( "t_lpv_rsm_normal_source", &*m_radiance_volume[cascade_index].m_t_rms_normal_source );
@@ -1030,48 +732,7 @@ void stage_light_propagation_volumes::downsample_rsm( float3 const& light_direct
 
 	backend::ref( ).set_viewport( orig_viewport );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 42 target lines are likely retail-compiled-out source.
 void stage_light_propagation_volumes::inject_lighting( u32 const cascade_index, float3 const& light_position, float3 const& light_direction, float light_fov )
 {
 	m_radiance_volume[cascade_index].inject_lighting(light_position, light_direction, light_fov, m_rsm_downsampled_size);
@@ -1096,53 +757,20 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 	u32 const num_render_stages
 	) {
 	light_ptr sun = m_context->scene( )->lights( ).get_sun( );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 15 target lines are likely retail-compiled-out source.
 	m_has_indirect_lighting = false;
 	if ( sun && sun->use_with_lpv )
 		m_has_indirect_lighting = true;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 20 target lines are likely retail-compiled-out source.
 	m_has_indirect_lighting = !!m_has_indirect_lighting;
 
 	vector< float4x4 > box_occluder_transforms;
-	for (
-		associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator it =
-			m_context->scene( )->lpv_occluders( ).begin( ),
-			end = m_context->scene( )->lpv_occluders( ).end( );
-		it != end; ++it
-	) { box_occluder_transforms.push_back( it->second ); }
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator it =
+		m_context->scene( )->lpv_occluders( ).begin( );
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator end =
+		m_context->scene( )->lpv_occluders( ).end( );
+	for ( ; it != end; ++it )
+		box_occluder_transforms.push_back( it->second );
 
 	if ( m_has_indirect_lighting )
 	{
@@ -1164,35 +792,27 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 		if ( sun && sun->use_with_lpv )
 		{
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			if ( stage_index == 0 )
 
 				start_render_eye_position = m_context->get_view_pos( );
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
 				render_to_sun_rms_smoothed( sun.c_ptr( ), current_cascade_index, box_occluder_transforms, render_stage_index, num_render_stages );
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			if ( stage_index == 0 )
 			{
 
 				if ( !options::ref( ).current.m_lpv_disable_rsm_downsampling )
 					downsample_rsm( sun->direction, m_radiance_volume[current_cascade_index].get_origin( ), m_radiance_volume[current_cascade_index].get_scale( ), current_cascade_index );
 			}
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			else if ( stage_index == 1 )
 			{
 
 				if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 				{
-
-
-
-
+					// 4 target lines are likely retail-compiled-out source.
 					inject_lighting( current_cascade_index, sun->position, sun->direction, 1.0f );
 				}
 
@@ -1203,183 +823,38 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 				if ( !options::ref( ).current.m_lpv_disable_gv_injection )
 					inject_occluders( current_cascade_index, sun->position, sun->direction, box_occluder_transforms );
 			}
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			m_has_indirect_lighting = true;
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		// 133 target lines are likely retail-compiled-out source.
 		if ( stage_index > 2 )
 		{
 
 			if ( !options::ref( ).current.m_lpv_disable_propagation )
 				propagate_lighting_smoothed( current_cascade_index, propagation_iteration_index );
 		}
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		if ( blend_alpha > 1.0f )
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			blend_alpha = 0.0f;
 	}
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( propagation_iteration_index == options::ref( ).current.m_num_propagate_iterations - 1 )
 
 		m_radiance_volume[current_cascade_index].prepare_final( );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_lpv_accumulation ), 0, 0, 0 );
 	backend::ref( ).clear_render_targets( 0.0f, 0.0f, 0.0f, 0.0f );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( m_has_indirect_lighting && !options::ref( ).current.m_lpv_disable_lpv_lookup )
 	{
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		D3D11_VIEWPORT orig_viewport;
 		backend::ref( ).get_viewport( orig_viewport );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		D3D11_VIEWPORT tmp_viewport;
 		tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
 
 		for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
@@ -1388,9 +863,19 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 			for ( u32 pass_index = 0; pass_index < 2; ++pass_index )
 			{
 				if ( pass_index == 1 )
-				{ backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 ); m_apply_indirect_lighting_effect->apply_pass( 1 ); tmp_viewport.Width = float( m_context->get_rt( rt_indirect_lighting_specular )->width( ) ); tmp_viewport.Height = float( m_context->get_rt( rt_indirect_lighting_specular )->height( ) ); }
-
-				else { backend::ref( ).set_render_targets( &*m_context->get_rt( rt_lpv_accumulation ), 0, 0, 0 ); m_apply_indirect_lighting_effect->apply_pass( 0 ); tmp_viewport.Width = float( m_context->get_rt( rt_lpv_accumulation )->width( ) ); tmp_viewport.Height = float( m_context->get_rt( rt_lpv_accumulation )->height( ) ); }
+				{
+					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 );
+					m_apply_indirect_lighting_effect->apply_pass( 1 );
+					tmp_viewport.Width = float( m_context->get_rt( rt_indirect_lighting_specular )->width( ) );
+					tmp_viewport.Height = float( m_context->get_rt( rt_indirect_lighting_specular )->height( ) );
+				}
+				else
+				{
+					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_lpv_accumulation ), 0, 0, 0 );
+					m_apply_indirect_lighting_effect->apply_pass( 0 );
+					tmp_viewport.Width = float( m_context->get_rt( rt_lpv_accumulation )->width( ) );
+					tmp_viewport.Height = float( m_context->get_rt( rt_lpv_accumulation )->height( ) );
+				}
 				backend::ref( ).set_viewport( tmp_viewport );
 
 				backend::ref( ).set_depth_stencil_target( 0 );
@@ -1400,8 +885,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 				backend::ref( ).set_ps_texture( "t_radiance_b", &*m_radiance_volume[cascade_index].get_accumulated_propagation_b( ) );
 				backend::ref( ).set_ps_constant( m_c_cascade_index, cascade_index );
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				backend::ref( ).set_ps_constant( m_c_num_cascades, m_num_cascades );
 
 				backend::ref( ).set_ps_constant( m_c_ambient_color, math::pow( m_context->scene_view( )->post_process_parameters( ).environment_ambient_color, 2.2f ) );
@@ -1412,7 +896,10 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 				blend_alpha += m_context->get_time_delta( );
 				backend::ref( ).set_ps_constant( m_c_radiance_blend_factor, blend_alpha );
-				bool const first = cascade_index == 0; float smaller_cascade_grid_cell_size = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_scale( ) / float( m_grid_size ); float smaller_cascade_grid_size = float( m_grid_size ); float3 smaller_cascade_grid_origin = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_previous_origin( );
+				bool const first = cascade_index == 0;
+				float smaller_cascade_grid_cell_size = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_scale( ) / float( m_grid_size );
+				float smaller_cascade_grid_size = float( m_grid_size );
+				float3 smaller_cascade_grid_origin = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_previous_origin( );
 
 				backend::ref( ).set_ps_constant( m_c_smaller_cascade_grid_cell_size, smaller_cascade_grid_cell_size );
 				backend::ref( ).set_ps_constant( m_c_smaller_cascade_grid_size, smaller_cascade_grid_size );
@@ -1420,10 +907,9 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 				backend::ref( ).set_ps_constant( m_c_interreflection_contribution, options::ref( ).current.m_lpv_interreflection_contribution );
 
-				float3 const* const eye_rays = m_context->get_eye_rays( ); backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( ( float4* )eye_rays )[0] );
-
-
-
+				float3 const* const eye_rays = m_context->get_eye_rays( );
+				backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( ( float4* )eye_rays )[0] );
+				// 3 target lines are likely retail-compiled-out source.
 				render_quad( );
 
 				backend::ref( ).reset_render_targets( );
@@ -1434,20 +920,7 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 
 		backend::ref( ).set_viewport( orig_viewport );
 	}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 14 target lines are likely retail-compiled-out source.
 }
 
 void stage_light_propagation_volumes::execute_impl( )
@@ -1493,20 +966,18 @@ void stage_light_propagation_volumes::execute_impl( )
 	m_has_indirect_lighting = !!m_has_indirect_lighting;
 
 	vector< float4x4 > box_occluder_transforms;
-	for (
-		associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator it =
-			m_context->scene( )->lpv_occluders( ).begin( ),
-			end = m_context->scene( )->lpv_occluders( ).end( );
-		it != end;
-		++it ) box_occluder_transforms.push_back( it->second );
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator it =
+		m_context->scene( )->lpv_occluders( ).begin( );
+	associative_vector< u32, float4x4, vector, std::less< u32 > >::const_iterator end =
+		m_context->scene( )->lpv_occluders( ).end( );
+	for ( ; it != end; ++it )
+		box_occluder_transforms.push_back( it->second );
 
 	if ( is_need_refresh && m_has_indirect_lighting )
 	{
 		for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 			m_radiance_volume[cascade_index].prepare_gv( );
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		backend::ref( ).set_depth_stencil_target( &*m_context->get_rt( rt_apply_indirect_lighting_ds ) );
 		backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
 		backend::ref( ).reset_depth_stencil_target( );
@@ -1520,26 +991,18 @@ void stage_light_propagation_volumes::execute_impl( )
 		}
 		for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 			m_radiance_volume[cascade_index].inject_camera_occluders( m_context );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		if ( sun && sun->use_with_lpv )
 		{
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 			{
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
 					render_to_sun_rms( sun, cascade_index, box_occluder_transforms );
-
-
-
+				// 3 target lines are likely retail-compiled-out source.
 				if ( !options::ref( ).current.m_lpv_disable_rsm_downsampling )
-				{ downsample_rsm( sun->direction,
-					m_radiance_volume[cascade_index].get_origin( ),
-					m_radiance_volume[cascade_index].get_scale( ),
-					cascade_index ); }
+					downsample_rsm( sun->direction, m_radiance_volume[cascade_index].get_origin( ), m_radiance_volume[cascade_index].get_scale( ), cascade_index );
 				if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 				{
 					inject_lighting(
@@ -1548,8 +1011,7 @@ void stage_light_propagation_volumes::execute_impl( )
 						sun->direction,
 						1.0f );
 				}
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				if ( !options::ref( ).current.m_lpv_disable_gv_injection )
 					inject_occluders( cascade_index, sun->position, sun->direction, box_occluder_transforms );
 			}
@@ -1566,22 +1028,17 @@ void stage_light_propagation_volumes::execute_impl( )
 			switch ( l->get_type( ) )
 			{
 			case light_type_spot:
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
 					render_to_spot_rms( l, box_occluder_transforms );
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 				{
 					backend::ref( ).flush_rt_shader_resources( );
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					if ( !options::ref( ).current.m_lpv_disable_rsm_downsampling )
 						downsample_rsm( l->direction, m_radiance_volume[cascade_index].get_origin( ), m_radiance_volume[cascade_index].get_scale( ), cascade_index );
-
-
-
+					// 3 target lines are likely retail-compiled-out source.
 					if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 					{
 						inject_lighting(
@@ -1590,13 +1047,11 @@ void stage_light_propagation_volumes::execute_impl( )
 							l->direction,
 							math::max( l->spot_umbra_angle, l->spot_penumbra_angle ) );
 					}
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					if ( !options::ref( ).current.m_lpv_disable_gv_injection )
 						inject_occluders( cascade_index, l->position, l->direction, box_occluder_transforms );
 				}
-
-
+				// 2 target lines are likely retail-compiled-out source.
 				m_has_indirect_lighting = true;
 
 				break;
@@ -1605,22 +1060,17 @@ void stage_light_propagation_volumes::execute_impl( )
 				for ( s32 face_index = 0; face_index < 6; ++face_index )
 				{
 					float3 face_direction = view_matrix_parameters[face_index][1];
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					if ( !options::ref( ).current.m_lpv_disable_rsm_generating )
 						render_to_point_rms( l, face_index, box_occluder_transforms );
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 					{
 						backend::ref( ).flush_rt_shader_resources( );
-
-
+						// 2 target lines are likely retail-compiled-out source.
 						if ( !options::ref( ).current.m_lpv_disable_rsm_downsampling )
 							downsample_rsm( face_direction, m_radiance_volume[cascade_index].get_origin( ), m_radiance_volume[cascade_index].get_scale( ), cascade_index );
-
-
-
+						// 3 target lines are likely retail-compiled-out source.
 						if ( !options::ref( ).current.m_lpv_disable_vpl_injection )
 						{
 							inject_lighting(
@@ -1629,13 +1079,11 @@ void stage_light_propagation_volumes::execute_impl( )
 								face_direction,
 								math::pi_d2 );
 						}
-
-
+						// 2 target lines are likely retail-compiled-out source.
 						if ( !options::ref( ).current.m_lpv_disable_gv_injection )
 							inject_occluders( cascade_index, l->position, face_direction, box_occluder_transforms );
 					}
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					m_has_indirect_lighting = true;
 				}
 				break;
@@ -1643,79 +1091,25 @@ void stage_light_propagation_volumes::execute_impl( )
 				break;
 			}
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+		// 44 target lines are likely retail-compiled-out source.
 		if ( !options::ref( ).current.m_lpv_disable_propagation )
 			for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
 				propagate_lighting( cascade_index );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		if ( blend_alpha > 1.0f )
-
-
-
+			// 3 target lines are likely retail-compiled-out source.
 			blend_alpha = 0.0f;
 	}
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( m_has_indirect_lighting && !options::ref( ).current.m_lpv_disable_lpv_lookup )
 	{
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		D3D11_VIEWPORT orig_viewport;
 		backend::ref( ).get_viewport( orig_viewport );
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		D3D11_VIEWPORT tmp_viewport;
 		tmp_viewport.TopLeftX = 0.0f; tmp_viewport.TopLeftY = 0.0f;
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		tmp_viewport.MinDepth = 0.0f; tmp_viewport.MaxDepth = 1.0f;
 
 		for ( s32 cascade_index = m_num_cascades - 1; cascade_index >= 0; --cascade_index )
@@ -1724,14 +1118,17 @@ void stage_light_propagation_volumes::execute_impl( )
 			for ( u32 pass_index = 0; pass_index < 1; ++pass_index )
 			{
 				if ( pass_index == 1 )
-				{ backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 );
+				{
+					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 );
 
 					m_apply_indirect_lighting_effect->apply_pass( 1 );
 					tmp_viewport.Width = float( m_context->get_rt( rt_indirect_lighting_specular )->width( ) );
 
 					tmp_viewport.Height = float( m_context->get_rt( rt_indirect_lighting_specular )->height( ) );
 				}
-				else { backend::ref( ).set_render_targets( &*m_context->get_rt( rt_accumulator_diffuse ), 0, 0, 0 );
+				else
+				{
+					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_accumulator_diffuse ), 0, 0, 0 );
 					m_apply_indirect_lighting_effect->apply_pass( 0 );
 
 					tmp_viewport.Width = float( m_context->get_rt( rt_accumulator_diffuse )->width( ) );
@@ -1757,10 +1154,11 @@ void stage_light_propagation_volumes::execute_impl( )
 				blend_alpha += m_context->get_time_delta( );
 
 				backend::ref( ).set_ps_constant( m_c_radiance_blend_factor, blend_alpha );
-
-
-
-				bool const first = cascade_index == 0; float smaller_cascade_grid_cell_size = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_scale( ) / float( m_grid_size ); float smaller_cascade_grid_size = float( m_grid_size ); float3 smaller_cascade_grid_origin = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_origin( );
+				// 3 target lines are likely retail-compiled-out source.
+				bool const first = cascade_index == 0;
+				float smaller_cascade_grid_cell_size = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_scale( ) / float( m_grid_size );
+				float smaller_cascade_grid_size = float( m_grid_size );
+				float3 smaller_cascade_grid_origin = m_radiance_volume[cascade_index - ( first ? 0 : 1 )].get_origin( );
 
 				backend::ref( ).set_ps_constant( m_c_smaller_cascade_grid_cell_size, smaller_cascade_grid_cell_size );
 
@@ -1768,7 +1166,8 @@ void stage_light_propagation_volumes::execute_impl( )
 				backend::ref( ).set_ps_constant( m_c_smaller_cascade_grid_origin, smaller_cascade_grid_origin );
 				backend::ref( ).set_ps_constant( m_c_interreflection_contribution, options::ref( ).current.m_lpv_interreflection_contribution );
 
-				float3 const* const eye_rays = m_context->get_eye_rays( ); backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( ( float4* )eye_rays )[0] );
+				float3 const* const eye_rays = m_context->get_eye_rays( );
+				backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( ( float4* )eye_rays )[0] );
 
 				render_quad( );
 				backend::ref( ).reset_render_targets( );
@@ -1777,13 +1176,10 @@ void stage_light_propagation_volumes::execute_impl( )
 
 			}
 		}
-
-
-
+		// 3 target lines are likely retail-compiled-out source.
 		backend::ref( ).set_viewport( orig_viewport );
 	}
-
-
+	// 2 target lines are likely retail-compiled-out source.
 }
 
 void stage_light_propagation_volumes::execute_disabled( )
@@ -1794,8 +1190,7 @@ void stage_light_propagation_volumes::execute_disabled( )
 
 void stage_light_propagation_volumes::execute( )
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -1809,57 +1204,17 @@ void stage_light_propagation_volumes::execute( )
 	{
 		u32 const num_render_stages = options::ref( ).current.m_num_propagate_iterations + 3;
 
-		u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages;
-
-		u32 propagation_step_index = 0;
+		u32 const render_stage_index = m_context->scene_view( )->get_render_frame_index( ) % num_render_stages; u32 propagation_step_index = 0;
 
 		if ( render_stage_index > 2 )
 			propagation_step_index = render_stage_index - 3;
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		for ( u32 cascade_index = 0; cascade_index < m_num_cascades; ++cascade_index )
 		{ execute_smoothed_impl( cascade_index, render_stage_index, propagation_step_index, render_stage_index, num_render_stages ); }
 	}
 	else
 	{ execute_impl( ); }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 38 target lines are likely retail-compiled-out source.
 }
 
 void stage_light_propagation_volumes::draw_debug( )

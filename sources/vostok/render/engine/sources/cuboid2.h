@@ -10,12 +10,11 @@ namespace render {
 
 class cuboid2 {
 public:
-	cuboid2( ) :
-		m_num_planes( 0 )
+	cuboid2( )
 	{
 	}
 
-	cuboid2( math::plane* planes, u32 num_planes ) :
+	cuboid2( math::plane* planes, u32 const num_planes ) :
 		m_num_planes( num_planes )
 	{
 		for ( u32 i = 0; i < m_num_planes; ++i ) {
@@ -41,7 +40,7 @@ public:
 		return result;
 	}
 
-protected:
+private:
 	math::aabb_plane	m_planes[16];
 	u32					m_num_planes;
 };

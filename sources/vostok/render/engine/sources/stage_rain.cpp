@@ -26,36 +26,7 @@ static console_commands::cc_bool s_rain_debug2_cc(
 	false,
 	console_commands::command_type_user_specific
 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 30 target lines are likely retail-compiled-out source.
 stage_rain::stage_rain(
 	renderer*			in_renderer,
 	renderer_context*	context
@@ -83,8 +54,7 @@ stage_rain::stage_rain(
 
 	math::random32 r( 1000 ); for ( u32 i = 0; i < 100; ++i )
 	{
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		m_rain_offsets[i] = float2( r.random_f( 1.0f ) * 2.0f - 1.0f, r.random_f( 1.0f ) * 2.0f - 1.0f );
 		m_rain_rotation_x[i] = 0.0f;
 		m_rain_rotation_y[i] = 0.0f;
@@ -104,8 +74,7 @@ stage_rain::~stage_rain( )
 
 void stage_rain::execute( )
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	if ( !is_effects_ready( ) )
 		return;
 
@@ -121,56 +90,27 @@ void stage_rain::execute( )
 		execute_disabled( );
 		return;
 	}
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	vector< render_surface_instance* > m_caster_model;
 	device::ref( ).d3d_context( )->CopyResource(
 		m_context->get_t( rt_generic_1 )->hw_texture( ), m_context->get_t( rt_generic_0 )->hw_texture( ) );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	static bool s_first_pass = true;
 	if ( s_first_pass )
+	{
 		m_previous_view_position = m_context->get_view_pos( );
-	s_first_pass = false;
-
-
-
-
+		s_first_pass = false;
+	}
+	// 4 target lines are likely retail-compiled-out source.
 	float4x4 view_to_shadow = m_renderer->get_view_to_rain_shadow( );
 
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 23 target lines are likely retail-compiled-out source.
 	float4x4 view_matrix = m_context->get_v( );
 	math::random32 r( 1000 );
 	float2 view_dir_2d = math::normalize_safe( float2( m_context->get_view_dir( ).x, m_context->get_view_dir( ).z ), float2( 0.0f, 0.0f ) );
 	float2 right_dir_2d = math::normalize_safe( float2( view_matrix.i.x, view_matrix.k.x ), float2( 0.0f, 0.0f ) );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	float2 offset_vector_ground( m_context->get_view_pos( ).x - m_previous_view_position.x, m_context->get_view_pos( ).z - m_previous_view_position.z );
 	float2 offset_direction_ground = math::normalize_safe( offset_vector_ground, float2( 0.0f, 0.0f ) );
 
@@ -203,19 +143,13 @@ void stage_rain::execute( )
 	float2 rain_uv_scales( m_context->get_scene_view( )->post_process_parameters( ).environment_rain_u_scale,
 		m_context->get_scene_view( )->post_process_parameters( ).environment_rain_v_scale );
 	float mult = 1.0f;
-
-
-
-
-
-
-
+	// 7 target lines are likely retail-compiled-out source.
 	if ( s_rain_debug2 ) {
 		u32 i = m_context->get_scene_view( )->post_process_parameters( ).environment_rain_start_cone_index;
 		for ( ; i < num_cones;
 			  ++i )
 		{
-			float const cone_scale = ( i == 1 ? 1.0f : 2.0f ) * float( i ) * mult;
+			float const cone_scale = float( i ) * ( i == 1 ? 1.0f : 2.0f ) * mult;
 			float4x4 cone_transform =
 				math::create_scale( float3( cone_scale, cone_scale * 10.0f, cone_scale ) ) *
 				math::create_rotation_y( r.random_f( 1.0f ) * math::pi_x2 ) *
@@ -243,14 +177,7 @@ void stage_rain::execute( )
 
 	m_previous_view_position = m_context->get_view_pos( );
 	m_context->set_w( float4x4( ).identity( ) );
-
-
-
-
-
-
-
-
+	// 8 target lines are likely retail-compiled-out source.
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );
 }

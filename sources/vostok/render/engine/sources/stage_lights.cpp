@@ -1439,7 +1439,7 @@ void stage_lights::execute( )
 		for (vector< light_ptr >::const_iterator it = visible_lights.begin(); it != visible_lights.end(); ++it)
 		{
 			light* const l = &**it;
-			if (l->is_occluded() || !l->m_enabled)
+			if ((options::ref().current.m_use_hiz_occlusion_culling && l->is_occluded()) || !l->m_enabled)
 				continue;
 
 			render_light(l, false);
@@ -1493,7 +1493,7 @@ void stage_lights::execute( )
 		for ( ; probe_it != m_context->get_scene_view()->get_visible_environment_probes().end(); ++probe_it)
 		{
 			environment_probe* probe = *probe_it;
-			if (probe->is_occluded() || !probe->m_texture || !probe->m_properties.enabled)
+			if ((options::ref().current.m_use_hiz_occlusion_culling && probe->is_occluded()) || !probe->m_texture || !probe->m_properties.enabled)
 				continue;
 
 			math::aabb bbox = instance.m_parent->get_aabb();
@@ -1550,7 +1550,7 @@ void stage_lights::execute( )
 		for (lights_db::lights_type::const_iterator e_it=e_lights.begin() ; e_it!=e_lights.end(); ++e_it)
 		{
 			light_ptr L = e_it->light;
-			if (L->is_occluded() || !L->m_enabled)
+			if ((options::ref().current.m_use_hiz_occlusion_culling && L->is_occluded()) || !L->m_enabled)
 				continue;
 
 			render_model_lighting( &instance, &*L);
@@ -1623,7 +1623,7 @@ void stage_lights::execute( )
 			for ( ; probe_it != m_context->get_scene_view()->get_visible_environment_probes().end(); ++probe_it)
 			{
 				environment_probe* probe = *probe_it;
-				if (probe->is_occluded() || !probe->m_texture || !probe->m_properties.enabled)
+				if ((options::ref().current.m_use_hiz_occlusion_culling && probe->is_occluded()) || !probe->m_texture || !probe->m_properties.enabled)
 					continue;
 
 				math::aabb bbox = instance->get_aabb();
@@ -2193,6 +2193,7 @@ void stage_lights::debug_render( )
 
 	math::color const color	= math::color(u32(0), 255, 32);
 
+	// 8 target lines are likely retail-compiled-out source.
 	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
 
 	typedef lights_db::lights_type	lights_type;
@@ -2202,6 +2203,7 @@ void stage_lights::debug_render( )
 		if ( (*i).light->get_type() != light_type_plane_spot )
 			continue;
 
+		// 26 target lines are likely retail-compiled-out source.
 		float4x4 transform		= (*i).light->m_xform;
 		vertex_colored vertices[8];
 		for ( u32 i = 0; i<array_size(vertices); ++i )

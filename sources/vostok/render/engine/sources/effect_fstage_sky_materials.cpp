@@ -12,41 +12,19 @@ void effect_fstage_sky_materials::compile(
 	custom_config_value const& config
 )
 {
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	shader_configuration configuration;
 	configuration.vertex_input_type = static_mesh_vertex_input_type;
-
-
-
-
-
-
-
-
-
-
-
+	// 11 target lines are likely retail-compiled-out source.
 	compile_begin("forward_sky", "forward_sky", compiler, &configuration, config);
 		float4 sky_color = float4(config["sky_color"]);
 		sky_color.xyz() *= float(config["sky_color_multiplier"]);
 		compiler.set_constant("sky_color", sky_color);
 		compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		compiler.set_depth(false, false);
-
-
-
-
-
-
-
+		// 7 target lines are likely retail-compiled-out source.
 		compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE);
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		compiler.set_stencil(true, 0, 0xff, 0, D3D_COMPARISON_EQUAL);
 		compiler.set_cull_mode(D3D_CULL_NONE);
 

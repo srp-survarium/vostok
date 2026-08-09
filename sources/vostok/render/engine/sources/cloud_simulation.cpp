@@ -17,21 +17,7 @@ cloud_simulation::cloud_simulation(
 	m_clouds_size_y	( in_size_y ),
 	m_clouds_size_z	( in_size_z )
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 15 target lines are likely retail-compiled-out source.
 	m_voxels = NEW_ARRAY( voxel, m_clouds_size_x * m_clouds_size_y * m_clouds_size_z );
 	m_densities = NEW_ARRAY( float, m_clouds_size_x * m_clouds_size_y * m_clouds_size_z );
 	cloud_offset = float3( 0.0f, 0.0f, 0.0f );
@@ -76,24 +62,7 @@ cloud_simulation::voxel const& cloud_simulation::get_voxel(
 
 void cloud_simulation::compute_cloud_density( )
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 18 target lines are likely retail-compiled-out source.
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
@@ -108,18 +77,11 @@ void cloud_simulation::compute_cloud_density( )
 					out_density = 0.0f;
 					continue;
 				}
-
-
-
-
+				// 4 target lines are likely retail-compiled-out source.
 				float accumulated = 0.0f;
 
 				float num = 0.0f;
-
-
-
-
-
+				// 5 target lines are likely retail-compiled-out source.
 				for ( s32 x0 = -2; x0 <= 2; ++x0 ) for ( s32 y0 = -2; y0 <= 2; ++y0 ) for ( s32 z0 = -2; z0 <= 2; ++z0 ) {
 					++num;
 
@@ -130,16 +92,10 @@ void cloud_simulation::compute_cloud_density( )
 
 						sample_z %= m_clouds_size_z;
 					}
-
-
-
-
-
+					// 5 target lines are likely retail-compiled-out source.
 					if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
 				}
-
-
-
+				// 3 target lines are likely retail-compiled-out source.
 				if ( num > 0.0f )
 					out_density = accumulated / num;
 				else
@@ -148,116 +104,7 @@ void cloud_simulation::compute_cloud_density( )
 		}
 	}
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 110 target lines are likely retail-compiled-out source.
 bool cloud_simulation::is_empty( u32 const x, u32 const y, u32 const z ) const
 {
 	return get_voxel( x, y, z ).x == 0;
@@ -265,8 +112,7 @@ bool cloud_simulation::is_empty( u32 const x, u32 const y, u32 const z ) const
 
 bool cloud_simulation::in_grid( u32 const y, u32 const z, u32 const ) const
 {
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	return y < m_clouds_size_y &&
 		z < m_clouds_size_z;
 }
@@ -279,12 +125,7 @@ void cloud_simulation::smooth_transparency( ) {
 			for ( u32 y = 1; y < m_clouds_size_y - 1; ++y )
 			{
 				voxel v = get_voxel( x, y, z );
-
-
-
-
-
-
+				// 6 target lines are likely retail-compiled-out source.
 				float transparency = static_cast<float>( v.x );
 
 				if ( x - 1 < m_clouds_size_x && in_grid( y, z, x - 1 ) && is_empty( x - 1, y, z ) )
@@ -317,76 +158,12 @@ void cloud_simulation::compute_direct_light(
 	cloud_key_parameters const& init_key
 )
 {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 65 target lines are likely retail-compiled-out source.
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
-		for ( u32 x = 0; x < m_clouds_size_x; ++x )
+		for ( u32 y = 0; y < m_clouds_size_y; ++y )
 		{
-			for ( u32 y = 0; y < m_clouds_size_y; ++y )
+			for ( u32 x = 0; x < m_clouds_size_x; ++x )
 			{
 				voxel v = get_voxel( x, y, z );
 				v.z = static_cast<u8>( math::clamp_r( math::pow( math::pow( v.y / 255.0f, 16.0f ), init_key.extinction ) * 4.0f, 0.0f, 1.0f ) * 255.0f );
@@ -412,56 +189,31 @@ void cloud_simulation::compute_indirect_light(
 				voxel v = get_voxel( x, y, z );
 
 				if ( v.x ) {
-
-
-
-
-
-
-
+					// 7 target lines are likely retail-compiled-out source.
 					float accumulated = 0.0f; for ( u32 i = 0; i < num; ++i ) {
-
-
-
+						// 3 target lines are likely retail-compiled-out source.
 						float3 coord = float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) + sun_direction * static_cast<float>( i + 1 );
 
 						u32 sample_x = static_cast<u32>( math::max( coord.x, 0.0f ) ); u32 const sample_y = static_cast<u32>( math::max( coord.y, 0.0f ) ); u32 sample_z = static_cast<u32>( math::max( coord.z, 0.0f ) );
-
-
+						// 2 target lines are likely retail-compiled-out source.
 						if ( sample_x >= m_clouds_size_x ||
-
-
-
+							// 3 target lines are likely retail-compiled-out source.
 							!in_grid( sample_y, sample_z, sample_x ) ) {
-
-
+							// 2 target lines are likely retail-compiled-out source.
 							sample_x = math::floor( coord.x ) % m_clouds_size_x;
 							sample_z = math::floor( coord.z ) % m_clouds_size_z;
 						}
 						if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) break;
-
-
-
-
-
-
-
-
+						// 8 target lines are likely retail-compiled-out source.
 						if ( is_empty( sample_x, sample_y, sample_z ) ) break;
-
-
-
-
+						// 4 target lines are likely retail-compiled-out source.
 						accumulated += 1.0f;
 					}
-
-
+					// 2 target lines are likely retail-compiled-out source.
 					accumulated /= static_cast<float>( num );
 
 					accumulated = math::clamp_r( accumulated, 0.0f, 1.0f );
-
-
-
+					// 3 target lines are likely retail-compiled-out source.
 					v.y = static_cast<u8>( math::clamp_r( math::pow( 1.0f - accumulated, init_key.extinction ), 0.0f, 1.0f ) * 255.0f );
 					set_voxel( v, x, y, z );
 				}
@@ -483,9 +235,9 @@ void cloud_simulation::fill_default_volume( )
 
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
-		for ( u32 y = 0; y < m_clouds_size_y; ++y )
+		for ( u32 x = 0; x < m_clouds_size_x; ++x )
 		{
-			for ( u32 x = 0; x < m_clouds_size_x; ++x )
+			for ( u32 y = 0; y < m_clouds_size_y; ++y )
 			{
 				voxel v;
 				v.x = 0;

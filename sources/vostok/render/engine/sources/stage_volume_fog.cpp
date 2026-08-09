@@ -107,8 +107,7 @@ void stage_volume_fog::execute( )
 		float const far_plane = m_context->get_far( );
 		float const near_plane = far_plane - accuracy;
 		float4x4 new_p = m_context->get_p( );
-		new_p.e22 = far_plane / near_plane;
-		new_p.e32 = near_plane / far_plane * -accuracy;
+		new_p.e22 = far_plane / near_plane; new_p.e32 = near_plane / far_plane * -accuracy;
 		m_context->push_set_p( new_p );
 
 		for (

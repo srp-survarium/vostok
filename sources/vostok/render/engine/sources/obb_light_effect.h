@@ -19,7 +19,6 @@ class obb_light_effect : public effect_descriptor {
 		custom_config_value const& config
 	) override
 	{
-		// FUNCTION BODY[0x7bc30] for <false>
 		VOSTOK_UNREFERENCED_PARAMETER	( config);
 
 		shader_configuration configuration;
@@ -28,7 +27,6 @@ class obb_light_effect : public effect_descriptor {
 		compiler.begin_technique(); // front side of obb
 			compiler.begin_pass	( "light", NULL, "obb_light_accumulator", configuration, NULL);
 				compiler.set_depth			( true, false, D3D_COMPARISON_LESS_EQUAL);
-				//compiler.set_stencil		( true, 0x81, 0x81, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_DECR, D3D_STENCIL_OP_DECR);
 				compiler.set_stencil		( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_INVERT);
 				compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE);
 				compiler.set_cull_mode		( D3D_CULL_BACK);
@@ -40,14 +38,13 @@ class obb_light_effect : public effect_descriptor {
 				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
 				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
 
-				compiler.set_texture		( "t_tangents", r2_rt_tangents, 0, false, 0);
+				compiler.set_texture		( "t_diffuse", r2_rt_albedo, 0, false, 0);
 			compiler.end_pass();
 		compiler.end_technique();
 
 		compiler.begin_technique(); // back side of obb
 			compiler.begin_pass	( "light", NULL, "obb_light_accumulator", shader_configuration(), NULL);
 				compiler.set_depth			( false, false, D3D_COMPARISON_LESS_EQUAL);
-				//compiler.set_stencil		( true, 0x81, 0x81, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_DECR, D3D_STENCIL_OP_KEEP);
 				compiler.set_stencil		( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_KEEP);
 				compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE);
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
@@ -59,7 +56,7 @@ class obb_light_effect : public effect_descriptor {
 				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
 				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
 
-				compiler.set_texture		( "t_tangents", r2_rt_tangents, 0, false, 0);
+				compiler.set_texture		( "t_diffuse", r2_rt_albedo, 0, false, 0);
 			compiler.end_pass();
 		compiler.end_technique();
 	}

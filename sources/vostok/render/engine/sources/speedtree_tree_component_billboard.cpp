@@ -9,7 +9,7 @@
 namespace vostok {
 namespace render {
 
-const D3D_INPUT_ELEMENT_DESC billboard_layout[] =
+const D3D_INPUT_ELEMENT_DESC layout[] =
 {
 	{ "POSITION", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 0,  D3D_INPUT_PER_VERTEX_DATA, 0 },
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 16, D3D_INPUT_PER_VERTEX_DATA, 0 },
@@ -31,7 +31,7 @@ void speedtree_tree_component_billboard::init(
 )
 {
 	// FUNCTION BODY[0x5f55e0]
-	ref_declaration decl				= resource_manager::ref().create_declaration( billboard_layout, array_size( billboard_layout ) );
+	ref_declaration decl				= resource_manager::ref().create_declaration( layout, array_size( layout ) );
 
 	render::vector<u16>					total_indices;
 	render::vector<billboard_vertex>	total_vertices;

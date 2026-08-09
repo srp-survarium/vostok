@@ -33,13 +33,6 @@ typedef resources::resource_ptr<
 
 class stage_shadow_direct : public stage {
 public:
-	enum enum_sun_cascade
-	{
-		enum_cascade_near = 0,
-		enum_cascade_middle = 1,
-		enum_cascade_far = 2
-	};
-
 	stage_shadow_direct( renderer* in_renderer, renderer_context* context );
 	virtual ~stage_shadow_direct( );
 
@@ -77,8 +70,6 @@ public:
 		u32 const		shadow_map_size,
 		float3 const&	view_position
 	);
-
-private:
 	float3 compute_aligment(
 		float3 const&		light_xz_shift,
 		float4x4 const&		light_space_transform,

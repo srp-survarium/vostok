@@ -4,7 +4,6 @@
 #include <vostok/render/core/custom_config_value.h>
 #include <vostok/render/core/dx11/effect_compiler.h>
 
-#include "geometry_type.h"
 #include "shared_names.h"
 
 namespace vostok {
@@ -15,7 +14,6 @@ void decal_default_material_effect::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7b8f20]
 	shader_configuration configuration;
 
 	configuration.use_diffuse_texture	= bool(config["use_tdiffuse"]);
@@ -28,18 +26,21 @@ void decal_default_material_effect::compile(
 	{
 		compile_begin("vertex_base", "decal_base", compiler, &configuration, config);
 
+			compiler.set_depth( false, false, D3D_COMPARISON_LESS_EQUAL );
+			compiler.set_stencil( false );
+
 			if (pass_index == 0)
 			{
-				compiler.set_depth		(true, false, D3D_COMPARISON_LESS_EQUAL);
-				compiler.set_stencil	( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_INVERT);
+				// 5 target lines are likely retail-compiled-out source.
 				compiler.set_cull_mode	(D3D_CULL_BACK);
 			}
 			else
 			{
-				compiler.set_depth		(false, false, D3D_COMPARISON_LESS_EQUAL);
-				compiler.set_stencil	( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_KEEP);
+				// 5 target lines are likely retail-compiled-out source.
 				compiler.set_cull_mode	(D3D_CULL_FRONT);
 			}
+
+			compiler.set_stencil( true, 0, 0xff, 0, D3D_COMPARISON_NOT_EQUAL );
 
 			if (!m_is_forward)
 				compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
@@ -52,6 +53,17 @@ void decal_default_material_effect::compile(
 
 			if (config.value_exists("normal_multiplier"))
 				compiler.set_constant	("constant_normal_multiplier", math::float3(config["normal_multiplier"]));
+
+			compiler.set_constant(
+				"smoothness_interpolation",
+				config.value_exists("smoothness_interpolation") ? float(config["smoothness_interpolation"]) : 0.0f
+			);
+
+			if (config.value_exists("fresnel_multiplier"))
+				compiler.set_constant("fresnel_multiplier", float(config["fresnel_multiplier"]));
+
+			if (config.value_exists("diffuse_alpha"))
+				compiler.set_constant("diffuse_alpha", float(config["diffuse_alpha"]));
 
 			if (configuration.use_normal_texture)
 				compiler.set_texture	("t_normal_map", pcstr(config["texture_normal"]), 0, true, 0);

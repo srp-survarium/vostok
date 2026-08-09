@@ -1,13 +1,7 @@
-
-
-
-
-
-
+// 6 target lines are likely retail-compiled-out source.
 #include "pch.h"
 #include "clouds.h"
 #include <vostok/console_command.h>
-
 
 static float s_clouds_time_value = 0.0f;
 static vostok::console_commands::cc_float s_clouds_time( 0, s_clouds_time_value, 0.0f, 1.0f, true, vostok::console_commands::command_type_engine_internal, vostok::console_commands::execution_filter_early );
@@ -28,59 +22,14 @@ clouds::clouds( ) :
 	m_is_editor_mode	( false )
 {
 	m_is_updated = false;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+	// 37 target lines are likely retail-compiled-out source.
 }
 
 void clouds::generate_cloud_right( u32 key_index )
 {
 	m_cloud_simulation_2->generate( get_next_key_of( key_index ), -m_sun_direction );
 }
-
-
-
-
-
-
-
-
-
-
+// 10 target lines are likely retail-compiled-out source.
 void clouds::set_editor_mode( bool value )
 {
 	m_is_editor_mode = value;
@@ -121,29 +70,9 @@ void clouds::initialize( cloud_parameters const& parameters )
 u32 clouds::get_next_index_of( u32 const index ) const
 {
 	return index + 1 < m_num_keys ? index + 1 : 0;
-
-
-
-
-
+	// 5 target lines are likely retail-compiled-out source.
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+// 17 target lines are likely retail-compiled-out source.
 void clouds::invalidate( )
 {
 	m_current_key_0 = u32(-1);
@@ -153,14 +82,9 @@ void clouds::invalidate( )
 void clouds::set_sun_direction( float3 const& sun_direction )
 {
 	if ( m_sun_direction != sun_direction )
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		invalidate( );
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	m_sun_direction = sun_direction;
 }
 
@@ -168,14 +92,7 @@ void clouds::set_time( float time )
 {
 	if ( !m_num_keys )
 		return;
-
-
-
-
-
-
-
-
+	// 8 target lines are likely retail-compiled-out source.
 	time = math::abs( time ) - math::abs( static_cast<int>( time ) );
 
 	bool const async = !m_is_editor_mode;
@@ -202,10 +119,7 @@ void clouds::set_time( float time )
 		u32 k0 = m_current_key_0;
 		u32 k1 = m_current_key_1;
 		m_interp_key = m_keys[k0];
-
-
-
-
+		// 4 target lines are likely retail-compiled-out source.
 		if ( time >= first_key.linear_time && time <= last_key.linear_time )
 		{
 			for ( u32 i = 0; i < m_num_keys - 1; ++i )
@@ -230,13 +144,11 @@ void clouds::set_time( float time )
 		{
 			m_current_key_0 = m_num_keys - 1;
 			m_current_key_1 = 0;
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			cloud_key_parameters key_0 = m_keys[m_current_key_0];
 			cloud_key_parameters key_1 = m_keys[m_current_key_1];
 			float const interval = 1.0f - key_0.linear_time + key_1.linear_time;
-
-
+			// 2 target lines are likely retail-compiled-out source.
 			if ( time > key_0.linear_time )
 				m_interp_alpha = (time - key_0.linear_time) / interval;
 
@@ -278,9 +190,7 @@ void clouds::set_time( float time )
 			{
 
 				m_is_updated = false;
-
-
-
+				// 3 target lines are likely retail-compiled-out source.
 				if ( m_current_key_0 == k1 )
 				{
 					m_cloud_simulation_0->copy_from( *m_cloud_simulation_1 );
@@ -307,30 +217,19 @@ void clouds::set_time( float time )
 			}
 		}
 	}
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 	m_interp_key = cloud_key_parameters::lerp( m_keys[m_current_key_0], m_keys[m_current_key_1], m_interp_alpha );
 }
 
 void clouds::set_num_keys( u32 const num_keys )
 {
 	m_num_keys = num_keys;
-
-
-
-
+	// 4 target lines are likely retail-compiled-out source.
 }
 
 void clouds::set_key( u32 const index, cloud_key_parameters const& in_cloud_key_parameters )
 {
-
-
-
-
-
-
+	// 6 target lines are likely retail-compiled-out source.
 	m_keys[index] = in_cloud_key_parameters;
 }
 

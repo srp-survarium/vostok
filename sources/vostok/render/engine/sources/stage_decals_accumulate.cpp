@@ -89,9 +89,7 @@ void stage_decals_accumulate::execute( )
 		execute_disabled( );
 		return;
 	}
-
-
-
+	// 3 target lines are likely retail-compiled-out source.
 	backend::ref( ).set_render_targets(
 		&*m_context->get_rt( rt_decals_diffuse ),
 		&*m_context->get_rt( rt_decals_normal ),
@@ -108,14 +106,12 @@ void stage_decals_accumulate::execute( )
 		clear_color,
 		clear_color
 	);
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	D3D11_VIEWPORT tmp_viewport;
 	D3D11_VIEWPORT orig_viewport;
 
 	backend::ref( ).get_viewport( orig_viewport );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 	tmp_viewport.TopLeftX = 0.0f;
 	tmp_viewport.TopLeftY = 0.0f;
 	tmp_viewport.Width = float( m_context->get_rt( rt_decals_diffuse )->width( ) );
@@ -160,8 +156,7 @@ void stage_decals_accumulate::execute( )
 
 	backend::ref( ).reset_render_targets( );
 	backend::ref( ).reset_depth_stencil_target( );
-
-
+	// 2 target lines are likely retail-compiled-out source.
 }
 
 } // namespace render
