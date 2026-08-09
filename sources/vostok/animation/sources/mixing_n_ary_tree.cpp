@@ -1028,8 +1028,9 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 		  previous_animation = previous_animation->m_next_weight_animation )
 	{
 		n_ary_tree_animation_node* new_animation	= new_tree.m_weight_root;
+		animation_comparer_predicate const predicate	( false, false );
 		for ( ; new_animation; new_animation = new_animation->m_next_weight_animation )
-			if ( animation_comparer_predicate( false, false )(
+			if ( predicate(
 				*new_animation,
 				*previous_animation
 			) == equal )
@@ -1038,55 +1039,53 @@ callback_generator_info* n_ary_tree::generate_animation_lexeme_end_events(
 		if ( new_animation )
 			continue;
 
-		animation_state const& state	= previous_animation->animation_state( );
-		animation_interval const& interval	=
-			previous_animation->animation_intervals( )[ state.animation_interval_id ];
-		bool subscribed				= false;
-		for ( subscribed_channel const* channel = channels_head; channel && !subscribed; channel = channel->next ) {
+		for ( subscribed_channel const* channel = channels_head; channel; channel = channel->next ) {
 			if ( u8( channel->channel_id[ 0 ] ) != channel_id_on_animation_lexeme_end )
 				continue;
 
-			for ( animation_callback const* callback = channel->first_callback;
-				  callback;
+			animation_callback const* callback	= channel->first_callback;
+			for ( ; callback;
 				  callback = callback->next )
 			{
 				if ( !callback->enabled )
 					continue;
-				if ( callback->animation.c_ptr( ) &&
-					 callback->animation.c_ptr( ) != interval.animation( ).c_ptr( ) )
+				if ( callback->animation &&
+					 callback->animation.c_ptr( ) != previous_animation->animation_intervals( )[ previous_animation->animation_state( ).animation_interval_id ].animation( ).c_ptr( ) )
 					continue;
 				if ( callback->animated_object &&
 					 callback->animated_object != previous_animation->animated_object( ) )
 					continue;
 
-				subscribed				= true;
 				break;
 			}
-		}
 
-		if ( !subscribed )
-			continue;
+			if ( !callback )
+				continue;
 
-		R_ASSERT_CMP					(
-			callback_generators_buffer_begin,
-			<,
-			callback_generators_buffer_end
-		);
-		callback_generator_info* const generator	=
-			new ( callback_generators_buffer_begin++ ) callback_generator_info(
-				previous_animation->animated_object( ),
-				interval.animation( ),
-				state.animation_time,
-				time_event_animation_lexeme_ended,
-				0,
-				previous_animation->user_data,
-				u8( state.animation_interval_id )
+			u32 const animation_interval_id	= previous_animation->animation_state( ).animation_interval_id;
+			animation_interval const* const animation_intervals	= previous_animation->animation_intervals( );
+			R_ASSERT_CMP					(
+				callback_generators_buffer_begin,
+				<,
+				callback_generators_buffer_end
 			);
-		if ( previous_generator_info )
-			previous_generator_info->next	= generator;
-		else
-			callback_generators_head			= generator;
-		previous_generator_info				= generator;
+			callback_generator_info* const generator	=
+				new ( callback_generators_buffer_begin++ ) callback_generator_info(
+					previous_animation->animated_object( ),
+					animation_intervals[ animation_interval_id ].animation( ),
+					previous_animation->animation_state( ).animation_time,
+					time_event_animation_lexeme_ended,
+					0,
+					previous_animation->user_data,
+					u8( animation_interval_id )
+				);
+			if ( previous_generator_info )
+				previous_generator_info->next	= generator;
+			else
+				callback_generators_head			= generator;
+			previous_generator_info				= generator;
+			break;
+		}
 	}
 
 	return							callback_generators_head;
