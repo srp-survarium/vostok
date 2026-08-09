@@ -853,8 +853,6 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 
 	n_ary_tree_animation_node* const previous_weight_driving_animation	=
 		find_animation( from_begin, from_end, *to_begin );
-	bool const is_new_driving_animation	= !previous_weight_driving_animation
-		|| previous_weight_driving_animation->is_transitting_to_zero( );
 	if ( previous_weight_driving_animation )
 		new_weight_driving_animation		( *to_begin, *previous_weight_driving_animation );
 	else
@@ -866,7 +864,7 @@ void n_ary_tree_comparer::change_weight_synchronization_group(
 		to_begin,
 		to_end,
 		*to_begin,
-		is_new_driving_animation
+		!previous_weight_driving_animation || previous_weight_driving_animation->is_transitting_to_zero( )
 	);
 }
 
@@ -883,14 +881,12 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 			get_next_synchronization_group		( i_begin, i_end );
 			continue;
 		}
-
 		if ( (*i_begin).weight_synchronization_group_id() > (*j_begin).weight_synchronization_group_id() ) {
 			m_equal							= false;
 			add_weight_synchronization_group	( j_begin, j_end );
 			get_next_synchronization_group		( j_begin, j_end );
 			continue;
 		}
-
 		change_weight_synchronization_group	( i_begin, i_end, j_begin, j_end );
 		get_next_synchronization_group		( i_begin, i_end );
 		get_next_synchronization_group		( j_begin, j_end );
