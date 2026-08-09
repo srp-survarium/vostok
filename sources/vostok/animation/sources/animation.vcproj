@@ -754,10 +754,6 @@
 	<References>
 	</References>
 	<Files>
-		<File
-			RelativePath=".\anchor_animation_player.cpp"
-			>
-		</File>
 		<Filter
 			Name="core"
 			>

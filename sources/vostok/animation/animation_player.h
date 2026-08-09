@@ -13,9 +13,6 @@
 struct transform_getter;
 
 namespace vostok {
-
-void anchor_animation_player( );
-
 namespace render {
 namespace debug {
 	class renderer;
@@ -44,7 +41,6 @@ enum reserved_channel_ids_enum {
 class VOSTOK_ANIMATION_API animation_player
 {
 	friend struct ::transform_getter;
-	friend void ::vostok::anchor_animation_player( );
 
 public:
 						animation_player		( );
