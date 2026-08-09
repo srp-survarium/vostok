@@ -138,18 +138,12 @@ float4x4 n_ary_tree::get_object_transform( pcvoid const animated_object ) const
 {
 	animated_object_holder const* const holder	=
 		std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, animated_object );
-	float4x4 result;
 	if ( m_animation_states )
-		result						=
-			bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
-				.get_object_transform( );
-	if ( m_animation_states )
-		result						= mul4x3(
-			bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
-				.get_object_transform( ),
-			holder->transform
-		);
-	return							result;
+		bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
+			.get_object_transform( );
+	return m_animation_states ?
+		bone_matrices_computer( animated_object, 0, m_animation_states, m_animations_count )
+			.get_object_transform( ) * holder->transform : holder->transform;
 }
 
 void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node )
