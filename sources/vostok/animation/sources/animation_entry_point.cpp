@@ -10,6 +10,9 @@
 #include <vostok/linkage_helper.h>
 #include <vostok/math_float4x4.h>
 #include "mixing_binary_tree_writer.h"
+#include "skeleton_cook.h"
+#include "single_animation_cook.h"
+#include "animation_collection_cook.h"
 
 #ifndef MASTER_GOLD
 #	include "editor_animation.h"
@@ -18,6 +21,11 @@
 
 VOSTOK_DECLARE_LINKAGE_ID(animation_entry_point)
 
+#pragma comment( linker, "/include:??0skeleton_animation_cook@animation@vostok@@QAE@XZ" )
+#pragma comment( linker, "/include:??0bi_spline_skeleton_animation_impl_cook@animation@vostok@@QAE@XZ" )
+#pragma comment( linker, "/include:??0bi_spline_skeleton_animation_baked_cook@animation@vostok@@QAE@XZ" )
+#pragma comment( linker, "/include:??0cubic_spline_skeleton_animation_cook@animation@vostok@@QAE@XZ" )
+
 using vostok::animation::animation_world;
 
 static vostok::uninitialized_reference< animation_world >	s_world;
@@ -25,6 +33,10 @@ vostok::animation::allocator_type*	vostok::animation::g_allocator = 0;
 
 namespace vostok {
 namespace animation {
+
+static skeleton_cook s_skeleton_cook;
+static single_animation_cook s_single_animation_cook;
+static animation_collection_cook s_animation_collection_cook;
 
 static bool is_enum_exported = false;
 

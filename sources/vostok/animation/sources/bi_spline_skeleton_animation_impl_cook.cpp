@@ -9,6 +9,8 @@
 namespace vostok {
 namespace animation {
 
+static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
+
 typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::unmanaged_intrusive_base >
 	bi_spline_skeleton_animation_baked_ptr;
 
@@ -70,11 +72,6 @@ void bi_spline_skeleton_animation_impl_cook::delete_resource( resources::resourc
 {
 	resource_to_delete->~resource_base( );
 }
-
-/* sushi@TODO: I have no idea how to make it included
-//  `dynamic atexit destructor for 's_bi_spline_skeleton_animation_impl_cook'' <0x7deac0>
-static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
-*/
 
 } // namespace animation
 } // namespace vostok

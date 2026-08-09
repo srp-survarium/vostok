@@ -11,6 +11,14 @@
 
 using vostok::animation::cubic_spline_skeleton_animation_cook;
 
+namespace vostok {
+namespace animation {
+
+static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
+
+} // namespace animation
+} // namespace vostok
+
 cubic_spline_skeleton_animation_cook::cubic_spline_skeleton_animation_cook	( ) :
 	super								(
 		resources::cubic_spline_skeleton_animation_class,

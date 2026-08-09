@@ -17,21 +17,12 @@
 #include <vostok/animation/engine.h>
 #include <vostok/fs_utils.h>
 
-#include "bi_spline_skeleton_animation_impl_cook.h"
-#include "bi_spline_skeleton_animation_baked_cook.h"
-
 #if	VOSTOK_USE_MAYA_ANIMATION
 #	include <vostok/maya_animation/engine.h>
 #	include <vostok/maya_animation/api.h>
 #endif // #if VOSTOK_USE_MAYA_ANIMATION
 
 #include <vostok/maya_animation/api.h>
-#include "skeleton_animation_cook.h"
-#include "cubic_spline_skeleton_animation_cook.h"
-#include "skeleton_cook.h"
-#include "single_animation_cook.h"
-#include "animation_collection_cook.h"
-
 namespace vostok {
 
 namespace maya_animation {
@@ -55,16 +46,6 @@ animation_world::animation_world(
 	m_debug_renderer			( debug_renderer )
 //	m_test_scene				( test_scene )
 {
-	static skeleton_animation_cook s_skeleton_animation_cook;
-	static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_cook;
-	static skeleton_cook s_skeleton_cook;
-	static single_animation_cook s_single_animation_cook;
-	static animation_collection_cook s_animation_collection_cook;
-
-
-	static bi_spline_skeleton_animation_impl_cook s_bi_spline_skeleton_animation_impl_cook;
-	static bi_spline_skeleton_animation_baked_cook s_bi_spline_skeleton_animation_baked_cook;
-
 #if VOSTOK_USE_MAYA_ANIMATION
 	if ( check_animation_b_spline_approximation )
 		vostok::maya_animation::set_memory_allocator( *vostok::animation::g_allocator );

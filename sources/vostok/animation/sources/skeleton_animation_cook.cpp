@@ -11,6 +11,8 @@
 using vostok::animation::skeleton_animation_cook;
 using vostok::animation::bi_spline_skeleton_animation_baked_ptr;
 
+static skeleton_animation_cook s_skeleton_animation_cook;
+
 skeleton_animation_cook::skeleton_animation_cook		( ) :
 	super(
 		resources::animation_class,

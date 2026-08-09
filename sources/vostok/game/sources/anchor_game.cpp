@@ -182,10 +182,6 @@ namespace vostok
 		ui::world* ui_world = ui::create_world( *( ui::engine* )NULL, *( render::ui::renderer* )NULL, *( memory::base_allocator* )NULL, NULL );
 		ui::destroy_world( ui_world );
 
-		animation::world* animation_world = animation::create_world( *( animation::engine* )NULL, NULL, NULL );
-		animation::destroy_world( animation_world );
-		animation::set_memory_allocator( *( animation::allocator_type* )NULL );
-
 		input::world* input_world = input::create_world( *( input::engine* )NULL, NULL );
 		input::destroy_world( input_world );
 		input::set_memory_allocator( *( input::allocator_type* )NULL );
