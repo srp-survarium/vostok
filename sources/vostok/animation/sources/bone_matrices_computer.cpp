@@ -343,16 +343,20 @@ void bone_matrices_computer::compute_bones_matrices( float4x4* const begin, floa
 
 void bone_matrices_computer::compute_bones_local_matrices( float4x4* const begin, float4x4* const end, u32 const* const bones_masks ) const
 {
+
 	skeleton_bone const* const roots_begin	= &m_skeleton->get_root();
 	skeleton_bone const* const roots_end	= roots_begin->children_begin();
-	for ( skeleton_bone const* i = roots_begin; i != roots_end; ++i ) {
-		skeleton_bone const* const children_end	= i->children_end();
-		for ( skeleton_bone const* j = i->children_begin(); j != children_end; ++j )
+	for ( skeleton_bone const* i = roots_begin; i != roots_end; ++i )
+	{
+		skeleton_bone const* const children_begin	= i->children_begin(),
+							* const children_end	= i->children_end();
+		for ( skeleton_bone const* j = children_begin; j != children_end; ++j )
 			compute_skeleton_branch_local(
 				*j,
-				begin + ( j - i->children_begin() ),
-				bones_masks ? bones_masks + ( j - roots_begin ) : 0,
-				bones_masks ? bones_masks + ( j - i->children_begin() ) : 0
+				begin + ( j - children_begin ),
+				bones_masks ? bones_masks + ( j - i ) : 0,
+				bones_masks ? bones_masks + ( j - children_begin ) : 0
+
 			);
 	}
 }
