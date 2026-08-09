@@ -66,12 +66,11 @@ void bone_names::create_internals_in_place	( configs::binary_config_ptr const& n
 	);
 	for ( u32 n = 0; n < bones_number(); ++n )
 	{
-		pcstr const name = static_cast<pcstr>( bones_names[n] );
-		strings::copy				( indices[n].name, name );
+		strings::copy				( indices[n].name, static_cast<pcstr>( bones_names[n] ) );
 		indices[n].index			= n;
 
 		boost::crc_32_type processor;
-		processor.process_block		( name, name + strings::length(name) );
+		processor.process_block		( indices[n].name, indices[n].name + strings::length(indices[n].name) );
 		indices[n].crc				= processor.checksum();
 	}
 
