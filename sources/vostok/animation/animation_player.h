@@ -135,7 +135,7 @@ private:
 							const u32										current_time_in_ms,
 							boost::function< float4x4( pcvoid ) > const&	get_transform_functor
 						);
-	inline	pvoid		get_next_buffer				( u32 buffer_size );
+			pvoid		get_next_buffer				( u32 buffer_size );
 			void		compact_callbacks			( );
 			bool		try_get_transform			( pcvoid animated_object, float4x4& result ) const;
 			void		skip_time_if_needed			( const u32 current_time_in_ms );

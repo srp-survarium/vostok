@@ -149,7 +149,7 @@ animation_player::~animation_player( )
 
 void* animation_player::get_next_buffer( const u32 buffer_size )
 {
-	if ( m_current_buffer == &m_tree_buffers[ 0 ] )
+	if ( &m_tree_buffers[ 0 ] == m_current_buffer )
 		return m_current_buffer = &m_tree_buffers[ 1 ];
 
 	return m_current_buffer = &m_tree_buffers[ 0 ];
