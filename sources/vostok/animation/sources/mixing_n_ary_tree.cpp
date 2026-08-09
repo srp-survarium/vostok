@@ -122,6 +122,9 @@ void n_ary_tree::destroy( )
 	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
 		i->accept				( tree_destroyer );
 
+	m_weight_root				= 0,
+	m_time_root					= 0;
+
 	for ( base_interpolator const* const* i = m_interpolators, * const* const e = i + m_interpolators_count; i != e; ++i )
 		(*i)->~base_interpolator( );
 
