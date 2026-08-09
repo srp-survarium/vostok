@@ -45,8 +45,6 @@ void anchor_animation_cloner( )
 	s_sink_count	= cloner.interpolators_count( );
 
 	static n_ary_tree_animation_node* volatile	s_anim	= 0;
-	static bool volatile						s_flag	= false;
-	constructor.change_animation( *s_anim, *s_anim, s_anim, s_flag );
 
 	static n_ary_tree_animation_node* volatile	s_sink_anim	= 0;
 	s_sink_anim	= constructor.add_animation( *s_anim, s_anim );
