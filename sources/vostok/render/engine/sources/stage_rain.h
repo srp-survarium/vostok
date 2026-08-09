@@ -34,6 +34,7 @@ public:
 
 	virtual void execute( ) override;
 
+private:
 	bool is_effects_ready( ) const;
 
 private:

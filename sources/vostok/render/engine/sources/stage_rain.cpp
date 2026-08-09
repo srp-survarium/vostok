@@ -85,7 +85,7 @@ stage_rain::stage_rain(
 	{
 
 
-		m_rain_offsets[i].set( r.random_f( 2.0f ) - 1.0f, r.random_f( 2.0f ) - 1.0f );
+		m_rain_offsets[i] = float2( r.random_f( 1.0f ) * 2.0f - 1.0f, r.random_f( 1.0f ) * 2.0f - 1.0f );
 		m_rain_rotation_x[i] = 0.0f;
 		m_rain_rotation_y[i] = 0.0f;
 	}
