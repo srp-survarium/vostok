@@ -10,6 +10,11 @@
 namespace vostok {
 namespace animation {
 
+inline pcstr skeleton::get_bone_name				( bone_index_type const index ) const
+{
+	return				get_bone( index ).id();
+}
+
 inline u32 skeleton::get_bone_index				( skeleton_bone const& bone ) const
 {
 	u32 const result	= u32(&bone - &get_root());
