@@ -330,7 +330,8 @@ void stage_clouds::execute( )
 
 	light* const sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
 
-	if ( sun ) to_sun_direction = -sun->direction;
+	if ( sun )
+		to_sun_direction = -sun->direction;
 
 	float4x4 proj_matrix = m_context->get_p( );
 
@@ -349,7 +350,16 @@ void stage_clouds::execute( )
 		);
 		{
 			float scale = ( static_cast<float>( i ) - m_camera_offset ) * m_clouds_scale_multiplier;
-			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position ); m_clouds_effect->apply( 0, 0 ); m_context->set_w( world_matrix ); backend::ref( ).set_ps_constant( m_c_sphere_to_sky_matrix, math::transpose( sphere_to_clouds_matrix ) ); backend::ref( ).set_ps_constant( m_c_clouds_grid_size, float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) ); backend::ref( ).set_ps_constant( m_c_clouds_offset, m_wind_offset + horizont_down_offset ); backend::ref( ).set_ps_constant( m_c_interp_alpha, interp_alpha ); backend::ref( ).set_ps_constant( m_c_layer_height, math::max( 0.5f, interp_key.layer_height ) ); backend::ref( ).set_ps_constant( m_c_cloud_base, cloud_base ); backend::ref( ).set_ps_constant( m_c_light_multiplier_parameters, float4( interp_key.direct_light, interp_key.indirect_light, interp_key.ambient, 0.0f ) );
+			float4x4 world_matrix = math::create_scale( float3( scale, scale, scale ) ) * math::create_translation( m_previous_view_position );
+			m_clouds_effect->apply( 0, 0 );
+			m_context->set_w( world_matrix );
+			backend::ref( ).set_ps_constant( m_c_sphere_to_sky_matrix, math::transpose( sphere_to_clouds_matrix ) );
+			backend::ref( ).set_ps_constant( m_c_clouds_grid_size, float3( static_cast<float>( m_clouds_size_x ), static_cast<float>( m_clouds_size_y ), static_cast<float>( m_clouds_size_z ) ) );
+			backend::ref( ).set_ps_constant( m_c_clouds_offset, m_wind_offset + horizont_down_offset );
+			backend::ref( ).set_ps_constant( m_c_interp_alpha, interp_alpha );
+			backend::ref( ).set_ps_constant( m_c_layer_height, math::max( 0.5f, interp_key.layer_height ) );
+			backend::ref( ).set_ps_constant( m_c_cloud_base, cloud_base );
+			backend::ref( ).set_ps_constant( m_c_light_multiplier_parameters, float4( interp_key.direct_light, interp_key.indirect_light, interp_key.ambient, 0.0f ) );
 			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, to_sun_direction );
 			backend::ref( ).set_ps_constant( m_c_inverted_view_projection_matrix, math::transpose( math::invert4x4( m_context->get_vp( ) ) ) );
 

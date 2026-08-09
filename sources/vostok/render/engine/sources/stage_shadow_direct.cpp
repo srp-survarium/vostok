@@ -92,7 +92,8 @@ stage_shadow_direct::stage_shadow_direct(
 	m_t_shadow_map = resource_manager::ref( ).create_texture( "$user$cascaded_shadow_map", 0, 0, false, true, true, u32(-1) );
 	// 7 target lines are likely retail-compiled-out source.
 	for ( u32 i = 0; i < 4; ++i )
-	{ m_previous_position[i] = float3( 0.0f, 0.0f, 0.0f ); m_previous_view_matrix[i] = float4x4( ).identity( ); m_previous_projection_matrix[i] = float4x4( ).identity( ); m_previous_real_view_matrix[i] = float4x4( ).identity( ); m_view_to_shadow[i] = float4x4( ).identity( ); m_prev_view_to_shadow[i] = float4x4( ).identity( ); }
+	{ m_view_to_shadow[i] = float4x4( ).identity( ); m_previous_view_matrix[i] = float4x4( ).identity( ); m_previous_projection_matrix[i] = float4x4( ).identity( ); m_previous_real_view_matrix[i] = float4x4( ).identity( ); m_previous_position[i] = float3( 0.0f, 0.0f, 0.0f );
+	  m_prev_view_to_shadow[i] = float4x4( ).identity( ); }
 	// 2 target lines are likely retail-compiled-out source.
 	m_previous_direction = float3( 0.0f, 0.0f, 1.0f );
 }
@@ -448,12 +449,12 @@ void stage_shadow_direct::render_models(
 	if ( !num_render )
 		return;
 
-	backend::ref( ).set_render_targets( 0, 0, 0, 0 ); backend::ref( ).set_depth_stencil_target( &*m_rt_shadow_map ); D3D11_VIEWPORT orig_viewport; backend::ref( ).get_viewport( orig_viewport );
+	backend::ref( ).set_render_targets( 0, 0, 0, 0 );
+	backend::ref( ).set_depth_stencil_target( &*m_rt_shadow_map );
+	D3D11_VIEWPORT orig_viewport;
+	backend::ref( ).get_viewport( orig_viewport );
 	struct int4 {
-		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w )
-		{
-			x = in_x; y = in_y; z = in_z; w = in_w;
-		}
+		int4( s32 in_x, s32 in_y, s32 in_z, s32 in_w ) { x = in_x; y = in_y; z = in_z; w = in_w; }
 
 		s32 x;
 		s32 y;
@@ -478,16 +479,23 @@ void stage_shadow_direct::render_models(
 	tmp_viewport.MaxDepth = 1.f;
 
 	backend::ref( ).set_viewport( tmp_viewport );
-	render_surface_instance** begin_d = m_caster_model.begin( ); render_surface_instance** it_d = begin_d; render_surface_instance* const* end_d = m_caster_model.end( ); u32 render_index = 0;
+	render_surface_instance** begin_d = m_caster_model.begin( );
+	render_surface_instance** it_d = begin_d;
+	render_surface_instance* const* end_d = m_caster_model.end( );
+	u32 render_index = 0;
 	for ( ; it_d != end_d && render_index < num_render; ++it_d, ++render_index )
 	{
-		render_surface_instance& instance = **it_d; render_surface* surface = instance.m_render_surface; material_effects& effects = surface->get_material_effects( );
+		render_surface_instance& instance = **it_d;
+		render_surface* surface = instance.m_render_surface;
+		material_effects& effects = surface->get_material_effects( );
 		// 5 target lines are likely retail-compiled-out source.
 		if ( effects.m_effects[forward_render_stage].c_ptr( ) ) continue;
 
 		if ( !effects.m_effects[gbuffer_render_stage].c_ptr( ) && effects.m_effects[lighting_render_stage].c_ptr( ) ) continue;
 		// 2 target lines are likely retail-compiled-out source.
-		if ( !effects.is_cast_shadow ) continue; render_geometry& geometry = surface->m_render_geometry; if ( !geometry.geom.c_ptr( ) && !geometry.shadow_pass_geom.c_ptr( ) ) continue;
+		if ( !effects.is_cast_shadow ) continue;
+		render_geometry& geometry = surface->m_render_geometry;
+		if ( !geometry.geom.c_ptr( ) && !geometry.shadow_pass_geom.c_ptr( ) ) continue;
 		// 4 target lines are likely retail-compiled-out source.
 		if ( effects.stage_enable[shadow_render_stage] && effects.m_effects[shadow_render_stage].c_ptr( ) )
 			effects.m_effects[shadow_render_stage]->apply( 0, 0 );
@@ -535,7 +543,8 @@ void stage_shadow_direct::render_models(
 		// 10 target lines are likely retail-compiled-out source.
 		m_context->scene( )->get_grass( )->render( m_context, real_view_pos, shadow_render_stage, 0, 25.f, false, 0, true, cascade_index );
 
-	backend::ref( ).set_viewport( orig_viewport ); VOSTOK_UNREFERENCED_PARAMETER( orig_view_projection );
+	backend::ref( ).set_viewport( orig_viewport );
+	VOSTOK_UNREFERENCED_PARAMETER( orig_view_projection );
 }
 
 void stage_shadow_direct::render_dynamic_models(
