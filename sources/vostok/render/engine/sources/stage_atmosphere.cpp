@@ -43,7 +43,8 @@ void stage_atmosphere::fill_surfaces(
 		backend::ref( ).set_depth_stencil_target( 0 );
 
 	D3D11_VIEWPORT view_port;
-	view_port.TopLeftX = 0.0f; view_port.TopLeftY = 0.0f;
+	view_port.TopLeftX = 0.0f;
+	view_port.TopLeftY = 0.0f;
 	view_port.Width = static_cast<float>( surf0->width( ) );
 	view_port.Height = static_cast<float>( surf0->height( ) );
 	view_port.MinDepth = 0.0f;
@@ -155,7 +156,8 @@ void stage_atmosphere::execute( )
 			m_context->get_scene_view( )->need_recalc_atmosphere = false;
 
 			m_atmospheric_scattering_effect->apply( 0, 0 );
-			float sun_int = sun ? sun->intensity : 1.0f; backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
+			float sun_int = sun ? sun->intensity : 1.0f;
+			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 			// 8 target lines are likely retail-compiled-out source.
 			backend::ref( ).set_ps_constant( m_c_atmosphere_parameters, float4( pp_parameters.atmosphere_kresun_multiplier, pp_parameters.atmosphere_kmesun_multiplier, pp_parameters.atmosphere_kr4pi_multiplier, pp_parameters.atmosphere_km4pi_multiplier ) );
 			fill_surfaces( m_context->get_rt( rt_mie_scattering ), m_context->get_rt( rt_rayleigh_scattering ), false );
@@ -167,7 +169,8 @@ void stage_atmosphere::execute( )
 		backend::ref( ).reset_depth_stencil_target( );
 
 		float sun_int = sun ? sun->intensity : 1.0f;
-		if ( !pp_parameters.use_sun_moon_atmosphere_illumination ) sun_int = 0.0f;
+		if ( !pp_parameters.use_sun_moon_atmosphere_illumination )
+			sun_int = 0.0f;
 
 		m_atmospheric_scattering_effect->apply( 1, 0 );
 		backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
@@ -238,7 +241,8 @@ void stage_atmosphere::execute( )
 			float4x4 rotation_X_translation( float4( L_up, 0.0f ), float4( L_right, 0.0f ),
 				float4( L_dir, 0.0f ), float4( sun->position, 1.0f ) );
 			// 5 target lines are likely retail-compiled-out source.
-			scale *= pp_parameters.sun_moon_billboard_scale; float4x4 world_transform = math::create_scale( float3( scale, scale, scale ) ) *
+			scale *= pp_parameters.sun_moon_billboard_scale;
+			float4x4 world_transform = math::create_scale( float3( scale, scale, scale ) ) *
 				math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
 			m_context->set_w( world_transform );
 
