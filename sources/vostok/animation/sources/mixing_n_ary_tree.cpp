@@ -157,9 +157,8 @@ void n_ary_tree::set_object_transform( n_ary_tree_animation_node& animation_node
 	frame frame_transform;
 	{
 		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
-		pinned_animation->bone( u32( 0 ) ).get_frame(
+		frame_transform = pinned_animation->bone( u32( 0 ) ).bone_frame(
 			state.animation_time * default_fps,
-			frame_transform,
 			frame_position
 		);
 	}
@@ -249,9 +248,8 @@ void n_ary_tree::accumulate_object_movement(
 	cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
 	current_frame_position frame_position;
 	frame frame_transform;
-	pinned_animation->bone( u32( 0 ) ).get_frame(
+	frame_transform = pinned_animation->bone( u32( 0 ) ).bone_frame(
 		state.animation_time * default_fps,
-		frame_transform,
 		frame_position
 	);
 
@@ -641,9 +639,8 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 		current_frame_position frame_position;
 		frame frame_transform;
 		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
-		pinned_animation->bone( u32( 0 ) ).get_frame(
+		frame_transform = pinned_animation->bone( u32( 0 ) ).bone_frame(
 			state.animation_time * default_fps,
-			frame_transform,
 			frame_position
 		);
 
@@ -660,9 +657,8 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 		current_frame_position frame_position;
 		frame frame_transform;
 		cubic_spline_skeleton_animation_pinned pinned_animation( interval.animation( ) );
-		pinned_animation->bone( u32( 0 ) ).get_frame(
+		frame_transform = pinned_animation->bone( u32( 0 ) ).bone_frame(
 			state.animation_time * default_fps,
-			frame_transform,
 			frame_position
 		);
 
