@@ -180,6 +180,8 @@ inline	quaternion		operator *	( quaternion const& left, float right );
 
 inline	void			hemi_flip	( quaternion &q, quaternion const& to );
 
+inline	quaternion		create_quaternion_from_direction_vector( float3 const& direction );
+
 inline	quaternion		conjugate	( quaternion const& value );
 inline	quaternion		logn		( quaternion const& value );
 inline	quaternion		exp			( quaternion const& value );

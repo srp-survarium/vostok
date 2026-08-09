@@ -137,6 +137,17 @@ inline	void hemi_flip						( quaternion& q, quaternion const& to )
 		q.vector	= -q.vector; 
 }
 
+inline quaternion create_quaternion_from_direction_vector( float3 const& direction )
+{
+	float const z = direction.z;
+	return quaternion(
+		mul4x3(
+			create_rotation_y( atan2( direction.x, z ) ),
+			create_rotation_x( atan2( direction.y, z ) )
+		)
+	);
+}
+
 inline quaternion conjugate					( quaternion const& value )
 {
 	return			quaternion( value ).conjugate( );
