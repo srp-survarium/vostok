@@ -1129,7 +1129,7 @@ bool n_ary_tree::tick(
 		return						false;
 	}
 
-	for ( u32 event_time_in_ms; ( event_time_in_ms = (*m_animation_events)->event_iterator->event_time_in_ms ) <= target_time_in_ms; ) {
+	for ( u32 event_time_in_ms; m_weight_root && ( event_time_in_ms = (*m_animation_events)->event_iterator->event_time_in_ms ) <= target_time_in_ms; ) {
 		if ( m_tree_actual_time_in_ms < event_time_in_ms )
 			update_animation_states	( m_tree_actual_time_in_ms, event_time_in_ms );
 
@@ -1150,7 +1150,7 @@ bool n_ary_tree::tick(
 			process_events			( event_time_in_ms, time_event_all_events );
 
 		m_tree_actual_time_in_ms	= event_time_in_ms;
-		user_handled_callbacks		= update_event_iterators_and_dispatch_callbacks( event_time_in_ms, channels_head, callbacks_are_actual );
+		user_handled_callbacks		= update_event_iterators_and_dispatch_callbacks( event_time_in_ms, channels_head, callbacks_are_actual ) || user_handled_callbacks;
 	}
 
 	if ( m_weight_root && m_tree_actual_time_in_ms != target_time_in_ms )
