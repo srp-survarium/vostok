@@ -1885,13 +1885,6 @@ void resource_manager::release( res_geometry const* geom )
 
 res_render_output* resource_manager::create_render_output( HWND__* window, bool windowed )
 {
-	// FUNCTION BODY[0x564dc0]
-	for ( u32 it=0; it<m_render_outputs.size(); it++)
-	{
-		if( m_render_outputs[it]->equal( window))
-			return m_render_outputs[it];
-	}
-
 	res_render_output * r_output = NEW(res_render_output)( window, windowed);
 	r_output->mark_registered();
 	m_render_outputs.push_back( r_output);
