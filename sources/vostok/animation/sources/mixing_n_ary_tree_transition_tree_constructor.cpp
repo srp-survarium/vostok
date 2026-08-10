@@ -653,7 +653,9 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 {
 	base_interpolator const& interpolator	= animation.weight_interpolator( );
 	n_ary_tree_base_node** operands_begin	= animation.operands( sizeof( n_ary_tree_animation_node ) );
-	u32 operands_offset						= animation.operands_count( ) && (*operands_begin)->is_time_scale( ) ? 1 : 0;
+	u32 operands_offset						= animation.operands_count( )
+		? (*operands_begin)->is_time_scale( )
+		: false;
 	u32 const weight_operands_count			= animation.operands_count( ) - operands_offset
 		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
 
