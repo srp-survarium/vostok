@@ -18,7 +18,7 @@ u32 animation_event_channels::count_internal_memory_size(
 {
 	u32 size = u32( channels_self_memory_size( channels_count ) );
 
-	for ( u32 i = 0; i < channels_count; ++i )
+	for ( u32 i = 0; i != channels_count; ++i )
 		size += event_channel::count_internal_memory_size( channels[i] );
 
 	return size;
