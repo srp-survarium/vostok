@@ -138,23 +138,22 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 		0.f,
 		m_current_time_in_ms
 	);
-	n_ary_tree_base_node* target_time_scale_node	= NULL;
-	if ( new_time_driving_animation.operands_count( ) ) {
-		n_ary_tree_base_node* const node	=
-			*new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) );
-		if ( node && node->is_time_scale( ) ) {
-			target_time_scale_node			= node;
-			node->accept					( time_scale_calculator );
-		}
-	}
+	n_ary_tree_base_node* const target_time_scale_node	=
+		new_time_driving_animation.operands_count( )
+			? *new_time_driving_animation.operands( sizeof( n_ary_tree_animation_node ) )
+			: NULL;
+	bool const is_target_time_scale_node	=
+		target_time_scale_node && target_time_scale_node->is_time_scale( );
+	if ( is_target_time_scale_node )
+		target_time_scale_node->accept		( time_scale_calculator );
 
-	float const time_scale_factor				=
-		target_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
+	float const new_time_driving_animation_target_time_scale	=
+		is_target_time_scale_node ? time_scale_calculator.time_scale( ) : 1.f;
 	base_interpolator const* time_scale_interpolator	=
-		target_time_scale_node
+		is_target_time_scale_node
 			? time_scale_calculator.interpolator( )
 			: &new_time_driving_animation.weight_interpolator( );
-	if ( !target_time_scale_node && time_scale_interpolator->transition_time( ) <= 0.f )
+	if ( !is_target_time_scale_node && time_scale_interpolator->transition_time( ) <= 0.f )
 		return								NULL;
 
 	n_ary_tree_base_node* previous_time_scale_node	= NULL;
@@ -166,10 +165,10 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 	}
 
 	n_ary_tree_target_time_scale_calculator target_time_scale_calculator( *previous_time_driving_animation );
-	float const previous_target_time_scale	=
+	float const time_scale_factor	=
 		target_time_scale_calculator.result( ) * directional_time_scale_factor;
-	if ( time_scale_factor == previous_target_time_scale
-		&& ( !target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
+	if ( new_time_driving_animation_target_time_scale == time_scale_factor
+		&& ( !is_target_time_scale_node || !target_time_scale_node->is_transition( ) ) )
 	{
 		base_interpolator const& interpolator	= *m_cloner.clone( *time_scale_interpolator );
 		n_ary_tree_base_node* const from	=
@@ -187,7 +186,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 		n_ary_tree_base_node* const to	=
 			new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_node(
 				interpolator,
-				time_scale_factor,
+				new_time_driving_animation_target_time_scale,
 				animation_interval_time,
 				m_current_time_in_ms
 			);
@@ -205,7 +204,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 	}
 
 	if ( previous_time_scale_node ) {
-		if ( time_scale_factor == 0.f && !previous_time_scale_node->is_transition( ) ) {
+		if ( new_time_driving_animation_target_time_scale == 0.f && !previous_time_scale_node->is_transition( ) ) {
 			n_ary_tree_time_scale_node& node	=
 				static_cast_checked< n_ary_tree_time_scale_node& >( *previous_time_scale_node );
 			node.set_time_scale_start_time(
@@ -216,13 +215,13 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_
 		return							previous_time_scale_node;
 	}
 
-	if ( time_scale_factor == 1.f )
+	if ( new_time_driving_animation_target_time_scale == 1.f )
 		return								NULL;
 
 	n_ary_tree_time_scale_node* const result	=
 		new ( m_buffer.c_ptr( ) ) n_ary_tree_time_scale_node(
 			*m_cloner.clone( *time_scale_interpolator ),
-			time_scale_factor,
+			new_time_driving_animation_target_time_scale,
 			animation_interval_time,
 			m_current_time_in_ms
 		);
