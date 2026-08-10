@@ -79,7 +79,7 @@ void n_ary_tree_cloner::initialize								(
 	m_constructor.advance_buffer( m_interpolators_count*sizeof( base_interpolator* ) );
 
 	for ( base_interpolator const** i = interpolators_begin, **j = m_interpolators; i != interpolators_end; ++i, ++j )
-		*j						= (*i)->clone( m_constructor.m_buffer );
+		*j						= (*i)->clone( m_constructor );
 }
 
 n_ary_tree_base_node* n_ary_tree_cloner::clone				(
