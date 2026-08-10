@@ -37,6 +37,9 @@ public:
 		m_ambient_multiplier = value;
 	}
 
+	virtual ~stage_ambient_lighting( ) {}
+
+private:
 	res_effect_ptr			m_effect_accum_mask;
 	res_effect_ptr			m_environment_probe_lighting_effect[2][2][2];
 	res_effect_ptr			m_skylight_effect;
