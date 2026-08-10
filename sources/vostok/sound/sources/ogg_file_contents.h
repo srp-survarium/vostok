@@ -8,7 +8,6 @@
 #define OGG_FILE_CONTENTS_H_INCLUDED
 
 #include "ogg_utils.h"
-#include <vostok/sound/channels_type.h>
 #include <vostok/sound/encoded_sound_interface.h>
 
 namespace vostok {
@@ -21,11 +20,11 @@ class ogg_file_contents :
 public:
 							ogg_file_contents			(resources::managed_resource_ptr raw_file);
 	virtual					~ogg_file_contents			( );
+	inline	u32				get_length_in_pcm			( ) const { return m_pcm_total; }
+	inline	u32				get_length_in_msec			( ) const { return (m_pcm_total * 1000) / m_wfx.nSamplesPerSec; }
+	inline	u32				get_samples_per_sec			( ) const { return m_wfx.nSamplesPerSec; }
+	inline	u8				get_channels_num			( ) const { return (u8)m_wfx.nChannels; }
 
-			u32				get_length_in_pcm			( ) const;
-			u32				get_length_in_msec			( ) const;
-			u32				get_samples_per_sec			( ) const;
-			channels_type	get_channels_type			( ) const;
 			u32				pcm_total					( ) const	{ return m_pcm_total; }
 			u32				decompress					( pbyte dest, u32 pcm_pointer, u32& pcm_pointer_after_decompress, u32 bytes_needed );
 

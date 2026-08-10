@@ -16,16 +16,16 @@ sound_environment_cook::sound_environment_cook	( ) :
 	super(
 		resources::sound_environment_class,
 		reuse_false,
-		use_resource_manager_thread_id
+		use_current_thread_id
 	)
-{
-}
+{}
 
 void sound_environment_cook::translate_query	( resources::query_result_for_cook& parent )
 {
+	R_ASSERT					( parent.user_data( ) );
 	render::static_model_instance_user_data model_user_data;
 	bool const success				= parent.user_data( )->try_get( model_user_data );
-	R_ASSERT						( success );
+	R_ASSERT_U					( success );
 	pcstr model_name				= (*model_user_data.config)["lib_name"];
 
 	fixed_string<256> path;
@@ -43,13 +43,15 @@ void sound_environment_cook::translate_query	( resources::query_result_for_cook&
 
 void sound_environment_cook::on_model_config_loaded	( resources::queries_result& data )
 {
-	configs::binary_config_ptr cfg =
-		static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
+	R_ASSERT					( data.is_successful( ) );
+	configs::binary_config_ptr cfg = static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
+	R_ASSERT					( cfg );
 	resources::query_result_for_cook& parent	= *data.get_parent_query( );
+	R_ASSERT					( parent.user_data( ) );
 
 	render::static_model_instance_user_data model_user_data;
 	bool const success				= parent.user_data( )->try_get( model_user_data );
-	R_ASSERT						( success );
+	R_ASSERT_U					( success );
 
 	float3 min_aabb					= cfg->get_root( )["bounding_box"]["min"];
 	float3 max_aabb					= cfg->get_root( )["bounding_box"]["max"];
@@ -61,10 +63,10 @@ void sound_environment_cook::on_model_config_loaded	( resources::queries_result&
 	*transform						=
 		math::create_scale( dimension / 2.0f ) *
 		math::create_rotation( rotation ) *
-		math::create_translation( position + float3( 0.0f, dimension.y / 2.0f, 0.0f ) );
+		math::create_translation( position + float3( 0.0f, dimension[1] / 2.0f, 0.0f ) );
 
 	pcstr environment_name			= (*model_user_data.config)["sound_environment"];
-	sound_scene& scn				= *static_cast<sound_scene*>( model_user_data.sound_scene.c_ptr( ) );
+	sound_scene& scn				= static_cast_checked<sound_scene&>( *model_user_data.sound_scene.c_ptr( ) );
 	u32 env_params_id				= scn.get_environment_params_id( environment_name );
 	if ( env_params_id != u32( -1 ) )
 	{
@@ -77,7 +79,7 @@ void sound_environment_cook::on_model_config_loaded	( resources::queries_result&
 	}
 
 	fixed_string<256> path;
-	path.assignf					( "resources/sounds/environments/%s.environment", environment_name );
+	path.assignf					( "resources/sounds/environments/%s", environment_name );
 	resources::query_resource(
 		path.c_str( ),
 		resources::binary_config_class,
@@ -93,15 +95,13 @@ void sound_environment_cook::on_environment_options_loaded	(
 	float4x4* transform
 )
 {
-	resources::query_result_for_cook& parent	= *data.get_parent_query( );
+	R_ASSERT					( data.is_successful( ) );
 	render::static_model_instance_user_data model_user_data;
-	bool const success				= parent.user_data( )->try_get( model_user_data );
-	R_ASSERT						( success );
+	bool const success				= data.get_parent_query( )->user_data( )->try_get( model_user_data );
+	R_ASSERT_U					( success );
 
-	configs::binary_config_ptr cfg =
-		static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
+	configs::binary_config_ptr cfg = static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource( ) );
 	configs::binary_config_value root	= cfg->get_root( )["environment"];
-
 	XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params = NEW(XAUDIO2FX_REVERB_I3DL2_PARAMETERS);
 	params->DecayHFRatio				= (float)root["decay_hf_ratio"];
 	params->DecayTime					= (float)root["decay_time"];
@@ -117,17 +117,19 @@ void sound_environment_cook::on_environment_options_loaded	(
 	params->RoomRolloffFactor			= (float)root["room_rolloff_factor"];
 	params->WetDryMix					= (float)root["wet_dry_mix"];
 
-	sound_scene& scn				= *static_cast<sound_scene*>( model_user_data.sound_scene.c_ptr( ) );
-	pcstr environment_name			= (*model_user_data.config)["sound_environment"];
-	u32 environment_params_id			= scn.get_environment_params_id( environment_name );
+	sound_scene& scn				= static_cast_checked<sound_scene&>( *model_user_data.sound_scene.c_ptr( ) );
+	u32 environment_params_id			= scn.get_environment_params_id( (*model_user_data.config)["sound_environment"] );
 	if ( environment_params_id == u32( -1 ) )
-		scn.add_environment_params		( environment_name, params, environment_params_id );
+	{
+		scn.add_environment_params		( (*model_user_data.config)["sound_environment"], params, environment_params_id );
+		R_ASSERT					( environment_params_id != u32( -1 ) );
+	}
 
 	sound_environment* created_resource	= NEW(sound_environment)( environment_params_id );
 	scn.insert_environment				( *created_resource, *transform );
 	DELETE								( transform );
-	parent.set_unmanaged_resource		( created_resource, resources::nocache_memory, sizeof( sound_environment ) );
-	parent.finish_query					( result_success );
+	data.get_parent_query( )->set_unmanaged_resource( created_resource, resources::nocache_memory, sizeof( sound_environment ) );
+	data.get_parent_query( )->finish_query	( result_success );
 }
 
 void sound_environment_cook::delete_resource	( resources::resource_base* resource )

@@ -15,6 +15,8 @@ inline u32 vostok::strings::length		( pcstr string )
 
 inline int vostok::strings::compare		( pcstr left, pcstr right )
 {
+	R_ASSERT			( left );
+	R_ASSERT			( right );
 	return				( strcmp( left, right ) );
 }
 

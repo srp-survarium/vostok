@@ -12,7 +12,7 @@
 namespace vostok {
 namespace strings {
 
-	inline pcstr make_str(pcstr format, ...)
+	inline pcstr make_str_impl(pcstr format, ...)
 	{
 		va_list args;
 		va_start(args, format);
@@ -20,11 +20,12 @@ namespace strings {
 		h.appendf_va_list(format, args);
 		return h.c_str();
 	}
+	inline pcstr make_str(pcstr s) {return s;}
 	inline pcstr make_str(bool b) {return b ? "+" : "-";}
-	inline pcstr make_str(float f) {return make_str("%f", f);}
-	inline pcstr make_str(s32 d) {return make_str("%i", d);}
-	inline pcstr make_str(u32 d) {return make_str("%u", d);}
-	inline pcstr make_str(vostok::math::float3 v) {return make_str("[%f][%f][%f]", v.x, v.y, v.z);}
+	inline pcstr make_str(float f) {return make_str_impl("%f", f);}
+	inline pcstr make_str(s32 d) {return make_str_impl("%i", d);}
+	inline pcstr make_str(u32 d) {return make_str_impl("%u", d);}
+	inline pcstr make_str(vostok::math::float3 v) {return make_str_impl("[%f][%f][%f]", v.x, v.y, v.z);}
 
 	class text_tree_item;
 

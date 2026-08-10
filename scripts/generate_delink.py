@@ -33,6 +33,7 @@ import subprocess
 import sys
 from pathlib import Path
 
+import generate_objdiff_cross_unit
 import normalize_objdiff_symbols
 
 
@@ -171,6 +172,11 @@ def _generate_report() -> None:
 
     if previous is not None:
         _report_changes(previous, report)
+
+    candidates, scored = generate_objdiff_cross_unit.generate(
+        OBJDIFF_DIR, objdiff_cli=objdiff_cli
+    )
+    log(f"Cross-unit COMDAT scores: {scored}/{candidates}")
 
 
 def _report_changes(previous: Path, current: Path) -> None:
@@ -347,6 +353,24 @@ def generate(side: str) -> None:
         log(
             f"Normalized {symbols} project-specific static-init symbols "
             f"in {objects} target objects"
+        )
+    elif (OBJDIFF_DIR / "target").is_dir():
+        # The target tree is persistent, but normalization rules can improve.
+        # Reapply the idempotent transform before every comparison so a script
+        # update does not require regenerating the retail delink by hand.
+        nm = shutil.which("llvm-nm")
+        objcopy = shutil.which("llvm-objcopy")
+        if not nm or not objcopy:
+            raise RuntimeError(
+                "llvm-nm and llvm-objcopy are required to normalize retail "
+                "static-init thunk names"
+            )
+        objects, symbols = normalize_objdiff_symbols.normalize_tree(
+            OBJDIFF_DIR / "target", nm=nm, objcopy=objcopy
+        )
+        log(
+            f"Updated {symbols} project-specific static-init symbols "
+            f"in {objects} persistent target objects"
         )
 
     log("Refreshing objdiff config ...")

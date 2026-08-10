@@ -23,48 +23,8 @@ static inline sound_world* get_world	( sound_instance_proxy_internal const& prox
 	return proxy.get_world_user().get_sound_world();
 }
 
+#if 0
 static u32 prop_id					= 0;
-
-new_sound_propagator::new_sound_propagator
-(
-	float3 const&						start_position,
-	float3 const&						listener_position,
-	playback_mode						mode,
-	u32									playback_id,
-	u32									playing_offset,
-	u32									before_playing_offset,
-	u32									after_playing_offset,
-	sound_instance_proxy_internal&		proxy,
-	sound_propagator_emitter const&		emitter
-) :
-	m_voice						( 0 ),
-	m_start_position			( start_position ),
-	m_proxy						( proxy ),
-	m_emitter					( emitter ),
-	m_mode						( mode ),
-	m_is_callback_executer		( false ),
-	m_playing_offset			( playing_offset ),
-	m_playback_id				( playback_id ),
-	m_propagation_time			( 0 ),
-	m_before_playing_offsets	( before_playing_offset ),
-	m_after_playing_offsets		( after_playing_offset ),
-	m_propagation_state			( propagating ),
-	m_perceived_loudness		( 0.0f ),
-	m_attenuated_loudness		( 0.0f )
-{
-	m_sound_length				= (u32)emitter.get_quality_for_resource( )->get_length_in_msec( );
-	m_sound_length_with_offsets	= m_before_playing_offsets + m_sound_length + m_after_playing_offsets;
-
-	if ( m_proxy.get_sound_type( ) != hud )
-		m_time_to_listener		= (u32)( ( listener_position - start_position ).length( ) / get_world( proxy )->get_speed_of_sound( ) );
-	else
-		m_time_to_listener		= 0;
-
-	if ( mode == once )
-		m_end_propagation_time	= m_time_to_listener + m_sound_length_with_offsets - playing_offset;
-	else
-		m_end_propagation_time	= u32(-1);
-}
 
 sound_propagator::sound_propagator	(	playback_mode mode,
 										u32 playback_id,
@@ -547,11 +507,53 @@ void sound_propagator::set_quality	( u32 quality )
 	if ( m_sound_voice )
 		m_sound_voice->set_quality( quality );
 }
+#endif
 
-void new_sound_propagator::resume_propagation	( )
+new_sound_propagator::new_sound_propagator
+(
+	float3 const&						start_position,
+	float3 const&						listener_position,
+	playback_mode						mode,
+	u32									playback_id,
+	u32									playing_offset,
+	u32									before_playing_offset,
+	u32									after_playing_offset,
+	sound_instance_proxy_internal&		proxy,
+	sound_propagator_emitter const&		emitter
+) :
+	m_voice						( 0 ),
+	m_start_position			( start_position ),
+	m_proxy						( proxy ),
+	m_emitter					( emitter ),
+	m_mode						( mode ),
+	m_is_callback_executer		( false ),
+	m_playing_offset			( playing_offset ),
+	m_playback_id				( playback_id ),
+	m_propagation_time			( 0 ),
+	m_before_playing_offsets	( before_playing_offset ),
+	m_after_playing_offsets		( after_playing_offset ),
+	m_propagation_state			( propagating ),
+	m_perceived_loudness		( 0.0f ),
+	m_attenuated_loudness		( 0.0f )
 {
-	if ( m_propagation_state == propagating_paused )
-		m_propagation_state = propagating;
+	m_sound_length				= (u32)emitter.get_quality_for_resource( )->get_length_in_msec( );
+	m_sound_length_with_offsets	= m_before_playing_offsets + m_sound_length + m_after_playing_offsets;
+
+	if ( m_proxy.get_sound_type( ) != hud )
+		m_time_to_listener		= (u32)( ( listener_position - start_position ).length( ) / get_world( proxy )->get_speed_of_sound( ) );
+	else
+		m_time_to_listener		= 0;
+
+	if ( mode == once )
+		m_end_propagation_time	= m_time_to_listener + m_sound_length_with_offsets - playing_offset;
+	else
+		m_end_propagation_time	= u32(-1);
+}
+
+new_sound_propagator::~new_sound_propagator	( )
+{
+	if ( m_voice )
+		detach_voice				( m_voice );
 }
 
 void new_sound_propagator::tick	( u32 time_delta_in_msec )
@@ -577,6 +579,12 @@ void new_sound_propagator::pause_propagation	( )
 	}
 }
 
+void new_sound_propagator::resume_propagation	( )
+{
+	if ( m_propagation_state == propagating_paused )
+		m_propagation_state = propagating;
+}
+
 void new_sound_propagator::stop_propagation	( )
 {
 	m_propagation_state		= propagating_finished;
@@ -588,41 +596,6 @@ u32 new_sound_propagator::stop_produce	( )
 	u32 producing_time			= m_propagation_time + m_playing_offset;
 	m_end_propagation_time		= m_propagation_time + m_time_to_listener;
 	return						producing_time;
-}
-
-u32 new_sound_propagator::sound_playing_time	( ) const
-{
-	u32 offset					= sound_playing_time_with_offsets( );
-	if ( offset == u32(-1) )
-		return					u32(-1);
-
-	R_ASSERT					( offset >= m_before_playing_offsets && offset <= m_before_playing_offsets + m_sound_length );
-	if ( offset < m_before_playing_offsets || offset > m_before_playing_offsets + m_sound_length )
-		return					u32(-1);
-
-	return						offset - m_before_playing_offsets;
-}
-
-u32 new_sound_propagator::sound_playing_time_with_offsets	( ) const
-{
-	if ( m_propagation_time < m_time_to_listener )
-		return					u32(-1);
-
-	u32 offset					= m_propagation_time - m_time_to_listener;
-	if ( m_mode == once )
-		return					offset + m_playing_offset;
-	else
-		return					( offset + m_playing_offset ) % m_sound_length_with_offsets;
-}
-
-void new_sound_propagator::detach_voices	( u32 )
-{
-}
-
-new_sound_propagator::~new_sound_propagator	( )
-{
-	if ( m_voice )
-		detach_voice				( m_voice );
 }
 
 void new_sound_propagator::distribute_voices	( u32 count, vectora< sound_voice_params > const& voices_params )
@@ -647,6 +620,10 @@ void new_sound_propagator::attach_voices	( u32 count, vectora< sound_voice_param
 	}
 
 	m_voice->set_output_matrix	( voices_params[0].channel_matrix );
+}
+
+void new_sound_propagator::detach_voices	( u32 )
+{
 }
 
 sound_voice* new_sound_propagator::attach_voice	( u32 offset )
@@ -683,6 +660,31 @@ void new_sound_propagator::set_voice_channel_matrix	( sound_voice* voice, float 
 {
 	voice->set_output_matrix			( channel_matrix );
 	voice->set_low_pass_filter_params	( lp_coeff );
+}
+
+u32 new_sound_propagator::sound_playing_time	( ) const
+{
+	u32 offset					= sound_playing_time_with_offsets( );
+	if ( offset == u32(-1) )
+		return					u32(-1);
+
+	R_ASSERT					( offset >= m_before_playing_offsets && offset <= m_before_playing_offsets + m_sound_length );
+	if ( offset < m_before_playing_offsets || offset > m_before_playing_offsets + m_sound_length )
+		return					u32(-1);
+
+	return						offset - m_before_playing_offsets;
+}
+
+u32 new_sound_propagator::sound_playing_time_with_offsets	( ) const
+{
+	if ( m_propagation_time < m_time_to_listener )
+		return					u32(-1);
+
+	u32 offset					= m_propagation_time - m_time_to_listener;
+	if ( m_mode == once )
+		return					offset + m_playing_offset;
+	else
+		return					( offset + m_playing_offset ) % m_sound_length_with_offsets;
 }
 
 void new_sound_propagator::execute_callback	( )

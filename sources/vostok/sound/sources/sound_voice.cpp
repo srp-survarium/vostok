@@ -177,8 +177,62 @@ sound_scene const& sound_voice::get_sound_scene	( ) const
 	return m_proxy.get_sound_scene( );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void sound_voice::set_quality	( u32 quality )
 {
+
+
 	if ( quality == m_current_quality )
 		return;
 
@@ -196,6 +250,9 @@ void sound_voice::set_quality	( u32 quality )
 
 	m_target_sound_quality		= m_emitter.dbg_get_encoded_sound( quality );
 	m_current_quality			= quality;
+
+
+
 }
 
 void sound_voice::submit_muted_buffers	( u32 msec )

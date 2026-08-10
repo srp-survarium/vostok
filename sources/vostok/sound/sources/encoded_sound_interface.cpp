@@ -16,9 +16,7 @@ encoded_sound_interface::encoded_sound_interface ( ) :
 	m_samples_per_sec		( 0 ),
 	m_bytes_per_sample		( 0 ),
 	m_channels_num			( 1 )
-{
-
-}
+{}
 
 } // namespace sound
 } // namespace vostok

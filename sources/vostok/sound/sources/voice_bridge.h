@@ -25,17 +25,13 @@ class voice_bridge :
 public:
 	inline	u8				get_channels_num				( ) const { return m_channels_num; }
 	inline	u32				get_sample_rate					( ) const { return m_sample_rate; }
-			u8				get_bytes_per_second			( ) const;
 
 			void			start							( );
 			void			stop							( );
 			void			submit_source_buff				( sound_buffer* buffer );
-			void			submit_source_buffer			( sound_buffer* buffer, u32 playing_offset = 0, u32 playing_length = 0 );
 			void			flush_source_buffers			( );
 
 			u32				buffers_queued					( ) const;
-			sound_buffer*	current_sound_buffer			( ) const;
-			u64				samples_played					( ) const;
 
 			void			set_output_matrix				( float const* level_matrix );
 			void			set_channel_volumes				( u8 channels_num, float const* level_matrix );

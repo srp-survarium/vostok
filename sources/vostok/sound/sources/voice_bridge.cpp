@@ -103,6 +103,26 @@ void voice_bridge::stop ( )
 	R_ASSERT_U				( !FAILED(result) );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void voice_bridge::submit_source_buff	( sound_buffer* buffer )
 {
 	XAUDIO2_BUFFER* xaudio_buffer	= buffer->get_xaudio_buffer( );
@@ -112,37 +132,12 @@ void voice_bridge::submit_source_buff	( sound_buffer* buffer )
 	R_ASSERT_U						( !FAILED(hr) );
 }
 
-void voice_bridge::submit_source_buffer	( sound_buffer* buffer, u32 playing_offset, u32 playing_length )
-{
-
-	XAUDIO2_BUFFER* xaudio_buffer	= buffer->get_xaudio_buffer( );
-
-	if ( playing_offset )
-	{
-
-		R_ASSERT					( playing_offset <= buffer->get_length_in_pcm( ) );
-
-		xaudio_buffer->PlayBegin	= playing_offset;
-		xaudio_buffer->PlayLength	= buffer->get_length_in_pcm() - playing_offset;
-	}
-	else
-	{
-		xaudio_buffer->PlayBegin	= 0; 
-		xaudio_buffer->PlayLength	= playing_length;
-
-	}
-
-	HRESULT hr		= m_source_voice->SubmitSourceBuffer( xaudio_buffer );
-	R_ASSERT_U		(!FAILED(hr));
-}
-
 void voice_bridge::flush_source_buffers ( )
 {
 	HRESULT hr		= m_source_voice->FlushSourceBuffers( );
 	R_ASSERT_U		(!FAILED(hr));
 
 }
-
 u32 voice_bridge::buffers_queued ( ) const
 {
 	XAUDIO2_VOICE_STATE			vstate;
@@ -150,20 +145,6 @@ u32 voice_bridge::buffers_queued ( ) const
 	return						vstate.BuffersQueued;
 }
 
-u64	voice_bridge::samples_played	( ) const
-{
-	XAUDIO2_VOICE_STATE			vstate;
-	m_source_voice->GetState	( &vstate );
-	return						vstate.SamplesPlayed;
-}
-
-
-sound_buffer* voice_bridge::current_sound_buffer ( ) const
-{
-	XAUDIO2_VOICE_STATE			vstate;
-	m_source_voice->GetState	( &vstate );
-	return static_cast_checked<sound_buffer*>( vstate.pCurrentBufferContext );
-}
 
 void voice_bridge::set_output_matrix ( float const* level_matrix )
 {
@@ -186,6 +167,8 @@ void voice_bridge::set_low_pass_filter_params		( float coeff )
 
 }
 
+
+
 void voice_bridge::set_frequency_ratio				( float ratio )
 {
 	R_ASSERT_U				( !( ratio < 0.0f ) );
@@ -194,10 +177,9 @@ void voice_bridge::set_frequency_ratio				( float ratio )
 	R_ASSERT_U				(!FAILED(hr));
 }
 
-u8 voice_bridge::get_bytes_per_second( ) const
-{
-	return default_bits_per_sample >> 3;
-}
+
+
+
 
 void voice_bridge::OnVoiceProcessingPassStart	( UINT32 BytesRequired )
 {
@@ -211,6 +193,7 @@ void voice_bridge::OnStreamEnd	( )
 {
 	R_ASSERT_U					(m_handler);
 }
+
 
 void voice_bridge::OnBufferStart( void* pBufferContext )
 {

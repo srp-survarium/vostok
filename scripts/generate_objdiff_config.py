@@ -24,6 +24,24 @@ VOSTOK_PRESET = [
     "vostok/physics",
 ]
 
+
+def find_base_path(objdiff_dir: Path, unit: str) -> str:
+    direct = objdiff_dir / "base" / f"{unit}.obj"
+    if direct.is_file():
+        return f"./base/{unit}.obj"
+
+    parts = Path(unit).parts
+    scope_parts = parts[:2] if parts and parts[0] == "vostok" else parts[:1]
+    scope = objdiff_dir / "base" / Path(*scope_parts)
+    if scope.is_dir():
+        candidates = sorted(scope.rglob(f"{Path(unit).name}.obj"))
+        if len(candidates) == 1:
+            relative = candidates[0].relative_to(objdiff_dir).as_posix()
+            return f"./{relative}"
+
+    return "./dummy.obj"
+
+
 def write_dummy(path: Path):
     symbol_table_offset = 20 + 40  # header + 1 section header
 
@@ -81,10 +99,7 @@ def gather_units(
             continue
 
         target_path = f"./target/{unit}.obj"
-        base_path   = f"./base/{unit}.obj"
-
-        if not (objdiff_dir / base_path).exists():
-            base_path = "./dummy.obj"
+        base_path = find_base_path(objdiff_dir, unit)
 
         units.append({
             "name": unit,

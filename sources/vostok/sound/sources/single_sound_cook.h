@@ -21,8 +21,6 @@ class single_sound_cook :
 public:
 					single_sound_cook		( );
 
-	virtual			~single_sound_cook	( );
-
 	virtual	void	translate_query			( resources::query_result_for_cook& parent );
 	virtual void	delete_resource			( resources::resource_base* res );
 

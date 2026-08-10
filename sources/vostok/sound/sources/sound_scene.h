@@ -220,7 +220,7 @@ public:
 				void			add_active_voice			( sound_voice& voice );
 				void			remove_active_voice			( sound_voice& voice );
 
-				void			calculate_3d_sound			( sound_voice& voice, panning_lut_ptr panning_lut );
+	inline		void			calculate_3d_sound			( sound_voice& voice, panning_lut_ptr panning_lut );
 				void			clear_resources				( );
 
 				void			update_stats				( sound_debug_stats& stats ) const;

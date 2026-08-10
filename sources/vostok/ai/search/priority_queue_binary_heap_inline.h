@@ -19,14 +19,14 @@ inline queue::impl				( vertex_manager_type& manager, u32 const vertex_count ) :
 	m_manager					( manager )
 {
 	u32 const bytes_count		= vertex_count * sizeof( vertex_type* );
-	m_heap						= static_cast< vertex_type** >( MALLOC ( bytes_count, typeid( vertex_type* ).name() ) );
+	m_heap						= static_cast< vertex_type** >( VOSTOK_MALLOC_IMPL( m_manager.allocator( ).memory_allocator( ), bytes_count, typeid( vertex_type* ).name() ) );
 	memory::zero				( m_heap, bytes_count );
 }
 
 TEMPLATE_SPECIALIZATION
 inline queue::~impl				( )
 {
-	FREE						( m_heap );
+	VOSTOK_FREE_IMPL			( m_manager.allocator( ).memory_allocator( ), m_heap );
 }
 
 TEMPLATE_SPECIALIZATION

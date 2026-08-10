@@ -182,6 +182,29 @@ sound_world::sound_world	(
 	m_timer.start					( );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 bool sound_world::initialize_xaudio		( )
 {
 	LOG_INFO									( "Sound initialization..." );
@@ -218,11 +241,11 @@ bool sound_world::initialize_xaudio		( )
 	if ( s_debug_audio )
 	{
 		XAUDIO2_DEBUG_CONFIGURATION dc;
-		dc.TraceMask				= XAUDIO2_LOG_WARNINGS | XAUDIO2_LOG_FUNC_CALLS; // XAUDIO2_LOG_STREAMING;
+		dc.TraceMask				= XAUDIO2_LOG_WARNINGS; // XAUDIO2_LOG_STREAMING;
 		dc.BreakMask				= 0;
 		dc.LogThreadID				= TRUE;
-		dc.LogFileline				= TRUE;
-		dc.LogFunctionName			= TRUE;
+		dc.LogFileline				= FALSE;
+		dc.LogFunctionName			= FALSE;
 		dc.LogTiming				= 0;
 
 		m_xaudio->SetDebugConfiguration(&dc);
@@ -258,15 +281,13 @@ bool sound_world::initialize_xaudio		( )
 										NULL 
 										);
 	ASSERT						( !FAILED( res ) );
+
 	m_xaudio->GetDeviceDetails		( preferred_device_id, &deviceDetails );
 	u32 channelMask					= deviceDetails.OutputFormat.dwChannelMask;
-	X3DAudioInitialize				(
-		channelMask,
-		X3DAUDIO_SPEED_OF_SOUND,
-		m_x3d_instance
-	);
+	X3DAudioInitialize				( channelMask, X3DAUDIO_SPEED_OF_SOUND, m_x3d_instance );
 	return true;
 }
+
 
 
 void sound_world::on_unmanaged_resources_allocated	( resources::queries_result& queries )
@@ -532,6 +553,84 @@ void sound_world::set_calculation_type	( calculation_type type )
 	threading::interlocked_exchange ( m_calc_type, (u32)type );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 sound_voice* sound_world::create_sound_voice(	sound_scene& scene,
 												s32 playing_offset,
 												u32 before_playing_offset,
@@ -644,7 +743,8 @@ void sound_world::set_time_scale_factor		( float factor )
 	R_ASSERT							( !( factor < 0.0f ) );
 
 	float const previous_time_factor	= m_time_factor.get( );
-	float const min_freq_ratio			= m_voice_factory->get_min_frequency_ratio( );
+	float const min_freq_ratio			= is_audio_device_exist( ) ?
+		m_voice_factory->get_min_frequency_ratio( ) : 0.0f;
 
 	// can't set time factor between 0.0 and min_freq_ratio
 	factor = factor < min_freq_ratio ? 0.0f : factor;
@@ -668,7 +768,7 @@ void sound_world::set_time_scale_factor		( float factor )
 	else
 	{
 		// maybe we need update time factor only for active and new voices
-		if ( m_is_audio_device_exist )
+		if ( is_audio_device_exist( ) )
 			m_voice_factory->set_frequency_ratio( factor );
 		if ( !math::is_zero( previous_time_factor ) )
 			return;

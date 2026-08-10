@@ -133,6 +133,8 @@ inline T max_integral	( T const& left, T const& right )
 // sushi@NOTE: Why not use templated function instead.
 inline float max		( float left, float right )
 {
+	R_ASSERT	( valid(left) );
+	R_ASSERT	( valid(right) );
 	return		( left > right ? left : right );
 }
 

@@ -79,6 +79,9 @@ void sound_scene::emit_sound_propagators	(	sound_instance_proxy_internal& proxy,
 	proxy.get_world_user( ).add_order	( order );
 }
 
+
+
+
 void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params const& params )
 {
 	LOG_DEBUG							( "sound_scene::emit_sound_propagators_impl" );
@@ -126,17 +129,14 @@ void sound_scene::emit_sound_propagators_impl	( create_sound_propagator_params c
 	}
 }
 
-new_sound_propagator* sound_scene::create_sound_propagator
-(
+new_sound_propagator* sound_scene::create_sound_propagator (
 	sound_propagator_emitter const& owner,
 	sound_instance_proxy_internal& proxy,
 	playback_mode mode,
 	u32 playback_id,
-	u32 playing_offset,
-	u32 before_playing_offset,
+	u32 playing_offset, u32 before_playing_offset,
 	u32 after_playing_offset,
-	sound_producer const* const,
-	sound_receiver const* const
+	sound_producer const* const, sound_receiver const* const
 )
 {
 	LOG_DEBUG							( "sound_scene::create_sound_propagator" );
@@ -146,18 +146,14 @@ new_sound_propagator* sound_scene::create_sound_propagator
 		return							0;
 	}
 
-	new_sound_propagator* new_propagator	= VOSTOK_NEW_IMPL
-	(
+	new_sound_propagator* new_propagator	= VOSTOK_NEW_IMPL (
 		m_propagators_allocator.c_ptr( ),
 		new_sound_propagator
-	)
-	(
-		proxy.get_sound_type( ) == volumetric ?
-			proxy.get_volumetric_position( m_list_orient_front.get( ) ) : proxy.get_position( ),
+	) (
+		proxy.get_sound_type( ) == volumetric ? proxy.get_volumetric_position( m_list_orient_front.get( ) ) : proxy.get_position( ),
 		m_list_orient_front.get( ),
 		mode,
-		playback_id,
-		playing_offset,
+		playback_id, playing_offset,
 		before_playing_offset,
 		after_playing_offset,
 		proxy,
@@ -174,15 +170,16 @@ void sound_scene::delete_sound_propagator	( sound_instance_proxy_internal& proxy
 	if ( propagator == 0 )
 	{
 		LOG_ERROR						( "can't delete sound_propagator, pointer == 0" );
+		return;
 	}
-	else
-	{
-		proxy.get_propagators().erase		( propagator );
-		VOSTOK_DELETE_IMPL					( m_propagators_allocator.c_ptr(), propagator );
 
-		if ( proxy.get_propagators().empty() )
-			m_active_proxies.erase			( &proxy );
-	}
+	R_ASSERT							( propagator->can_be_deleted( ) );
+	proxy.get_propagators().erase		( propagator );
+	VOSTOK_DELETE_IMPL					( m_propagators_allocator.c_ptr(), propagator );
+
+	R_ASSERT							( propagator == 0 );
+	if ( proxy.get_propagators().empty() )
+		m_active_proxies.erase			( &proxy );
 }
 
 } // namespace sound

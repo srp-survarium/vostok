@@ -16,9 +16,7 @@ panning_lut_cook::panning_lut_cook 		( ) :
 {}
 
 panning_lut_cook::~panning_lut_cook 	( )
-{
-
-}
+{}
 
 
 void panning_lut_cook::translate_query	( resources::query_result_for_cook&	parent )

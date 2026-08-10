@@ -24,10 +24,6 @@ single_sound_cook::single_sound_cook	( ) :
 {
 }
 
-single_sound_cook::~single_sound_cook	( )
-{
-}
-
 void single_sound_cook::translate_query	( query_result_for_cook& parent )
 {
 	pcstr const req_path			= parent.get_requested_path();

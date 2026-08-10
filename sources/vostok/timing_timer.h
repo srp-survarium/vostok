@@ -21,7 +21,7 @@ public:
 	inline	u32			get_elapsed_msec		() const;
 	inline	float		get_elapsed_sec			() const;
 
-	inline	void		set_time_factor			( float	time_factor );
+	inline	void		set_time_factor			( float const time_factor );
 	inline	float		get_time_factor			() const;
 
 	inline	bool		is_paused				() const;

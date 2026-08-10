@@ -132,6 +132,7 @@ struct wavfile
 };
 
 
+#ifndef MASTER_GOLD
 void encode_sound_file (		fs_new::native_path_string const & input_file_path,
 								fs_new::native_path_string const & output_file_path,	
 								fs_new::synchronous_device_interface const & device, 
@@ -142,7 +143,6 @@ void encode_sound_file (		fs_new::native_path_string const & input_file_path,
 							)
 {
 	VOSTOK_UNREFERENCED_PARAMETERS(&input_file_path, &output_file_path, bits_per_sample, number_of_chanels, samples_per_second, output_bitrate);
-#ifndef MASTER_GOLD
 
 	using namespace fs_new;
 	file_type_pointer	input_file			(input_file_path, device, file_mode::open_existing, file_access::read);
@@ -161,14 +161,12 @@ void encode_sound_file (		fs_new::native_path_string const & input_file_path,
 	ogg_encode_impl(input_file, output_file, device, number_of_chanels, samples_per_second, output_bitrate);
 #endif // #if VOSTOK_PLATFORM_WINDOWS
 
-#endif // #ifndef MASTER_GOLD
 }
 
 void make_sound_rms( fs_new::native_path_string & end_file_path )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( end_file_path );
 
-#ifndef MASTER_GOLD
 	//make path's
 	fs_new::native_path_string		file_path;
 
@@ -198,8 +196,8 @@ void make_sound_rms( fs_new::native_path_string & end_file_path )
 		WaitForSingleObject(pi.hProcess, INFINITE);
 #endif // VOSTOK_PLATFORM_WINDOWS
 
-#endif // #ifndef MASTER_GOLD
 }
+#endif // #ifndef MASTER_GOLD
 
 }; // namespace ogg_utils
 

@@ -22,24 +22,24 @@ public:
 	//-----------------------------------------------------------------------------------
 	// initializations
 	//-----------------------------------------------------------------------------------
-							fixed_string	();
-							fixed_string	(fixed_string const&	src);
-							fixed_string	(buffer_string const&	src);
-							fixed_string	(value_type const*		src);
-							fixed_string	(value_type				src);
-							fixed_string	(value_type const*		src, size_type const& count);
+	inline					fixed_string	();
+	inline					fixed_string	(fixed_string const&	src);
+	inline					fixed_string	(buffer_string const&	src);
+	inline					fixed_string	(value_type const*		src);
+	inline					fixed_string	(value_type				src);
+	inline					fixed_string	(value_type const*		src, size_type const& count);
 							template <class src_iterator>
-							fixed_string	(src_iterator const& begin, src_iterator const& end);
+	inline					fixed_string	(src_iterator const& begin, src_iterator const& end);
 
- 	fixed_string const&		operator =		(fixed_string const& s);
- 	fixed_string const&		operator =		(value_type const* const src);
+	inline fixed_string const&	operator =		(fixed_string const& s);
+	inline fixed_string const&	operator =		(value_type const* const src);
 							template <class src_type>
- 	fixed_string const&		operator =		(src_type const& s);
+	inline fixed_string const&	operator =		(src_type const& s);
 
 	char*					get_buffer		() { return m_buffer; } // when writing NULL, call set_size
 	u32						get_buffer_size	() { return Size; }
 
-	static self_type 		createf			(pcstr format, ...);
+	static inline self_type 	createf			(pcstr format, ...);
 
 	//-----------------------------------------------------------------------------------
 	// operations
@@ -47,10 +47,10 @@ public:
 	self_type				append			(self_type const & s) { return buffer_string::append(s.begin(), s.end()); }
 	using					buffer_string::append;
 
-	void					substr			(size_type pos, size_type count, buffer_string * out_dest) const;
-	fixed_string			substr			(size_type pos, size_type count=npos) const;
+	inline void				substr			(size_type pos, size_type count, buffer_string * out_dest) const;
+	inline fixed_string		substr			(size_type pos, size_type count=npos) const;
 
-	void					verify_self		();
+	inline void				verify_self		();
 private:
 	char					m_buffer[Size];
 };
