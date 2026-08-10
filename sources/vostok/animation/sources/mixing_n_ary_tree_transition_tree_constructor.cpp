@@ -585,8 +585,9 @@ void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* const weight_driving_animation )
 {
 	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
+	n_ary_tree_base_node** const operands_begin	= animation.operands( sizeof( n_ary_tree_animation_node ) );
 
-	u32 const to_operands_count		= animation.operands_count( ) - ( animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0 );
+	u32 const to_operands_count		= animation.operands_count( ) - ( animation.operands_count( ) && (*operands_begin)->is_time_scale( ) ? 1 : 0 );
 
 	u32 operands_offset				= interpolator.transition_time( ) != 0.f ? 1 : 0;
 
@@ -607,7 +608,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	);
 
 	bool has_weight_transition_been_added	= weight_driving_animation == 0
-		&& animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
+		&& animation.operands_count( ) && (*operands_begin)->is_time_scale( );
 
 	n_ary_tree_base_node** new_operands	= static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) );
 	m_buffer						+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
@@ -615,8 +616,8 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	n_ary_tree_weight_node			temp( interpolator, 1.f );
 	n_ary_tree_node_comparer		comparer;
 
-	n_ary_tree_base_node** const	operands_end	= animation.operands( sizeof( n_ary_tree_animation_node ) ) + animation.operands_count( );
-	n_ary_tree_base_node**			i				= animation.operands( sizeof( n_ary_tree_animation_node ) ) + ( has_weight_transition_been_added ? 1 : 0 );
+	n_ary_tree_base_node** const	operands_end	= operands_begin + animation.operands_count( );
+	n_ary_tree_base_node**			i				= operands_begin + ( has_weight_transition_been_added ? 1 : 0 );
 	for ( ; i != operands_end; ++i ) {
 		if ( comparer.compare( **i, temp ) == vostok::animation::more )
 			break;
@@ -634,7 +635,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	else if ( interpolator.transition_time( ) == 0.f )
 		*new_operands++				= new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
 
-	stlp_std::sort					( animation.operands( sizeof( n_ary_tree_animation_node ) ), operands_end, comparer );
+	stlp_std::sort					( operands_begin, operands_end, comparer );
 
 	return							add_animation_node( *result, &animation.animation_state( ), animation_interval_id, animation_interval_time, true );
 }
