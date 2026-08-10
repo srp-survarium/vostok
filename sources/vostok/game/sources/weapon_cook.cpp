@@ -6,6 +6,17 @@
 #include "weapon_cook.h"
 #include "weapon.h"
 #include "game.h"
+#include "shotgun_weapon_reload_state_cook.h"
+#include "weapon_sound_events_handler_state_cook.h"
+
+#include <vostok/game_core/double_barreled_weapon_core_aimed_idle_state.h>
+#include <vostok/game_core/double_barreled_weapon_core_idle_state.h>
+#include <vostok/game_core/pistol_weapon_core_aimed_idle_state.h>
+#include <vostok/game_core/pistol_weapon_core_idle_state.h>
+#include <vostok/game_core/weapon_core_aimed_state.h>
+#include <vostok/game_core/weapon_core_idle_state.h>
+#include <vostok/game_core/weapon_core_inactive_state_cook.h>
+#include <vostok/game_core/weapon_core_state_cook_template.h>
 
 namespace survarium {
 
@@ -18,31 +29,36 @@ weapon_cook::weapon_cook( game& g ) :
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: structure recovered (28 function-local `static <CookType> s_*;` in the
-// $S6-guard order: inactive, idle, aimed, show, hide, reload, chamber_a_round,
-// chamber_a_round_aimed, fire, aimed_fire, shotgun_reload, shotgun_{start,one_round,
-// finish}, double_barreled {idle, aimed_idle, show, hide, reload, fire, aimed_fire},
-// pistol {idle, aimed_idle, show, hide, reload, fire, aimed_fire}). Each declaration is
-// a magic-statics guard + cook ctor + atexit(dtor). BLOCKED: emitting the bodies forces
-// instantiation of the cook-template ctors. UPDATE 2026-06-24: the first blocker is RESOLVED
-// - weapon_core_state_cook_template<T>::ctor in weapon_core_state_cook_template_inline.h now
-// calls `unmanaged_cook( weapon_core_state_cook_class<T>(), reuse_false, use_current_thread_id,
-// use_current_thread_id )` + register_cook(this) (exactly the prior NEXT step). The REMAINING
-// blocker is the *sound*-cook ctor weapon_sound_events_handler_state_cook<T>::ctor in
-// weapon_sound_events_handler_state_cook_inline.h, still an empty STUB `{}` whose implicit
-// base default-construct of resources::unmanaged_cook (NO default ctor) is C2512 once the 7
-// sound cooks (show/hide/...) here instantiate it. That ctor lives in ANOTHER TU
-// (weapon_sound_events_handler_state_cook_inline.h) - per the no-cross-unit-out-line rule it
-// must be matched by THAT unit first, not here. NEXT: match weapon_sound_events_handler_state_cook<T>::
-// ctor (same unmanaged_cook(class_id, reuse_false, use_current_thread_id, use_current_thread_id)
-// + register_cook(this) shape, per its target ctor 0x98a20), THEN the 28-static body here builds
-// and pairs (target order: inactive, idle, aimed, show, hide, reload, chamber_a_round,
-// chamber_a_round_aimed, fire, aimed_fire, shotgun_reload, shotgun_{start,one_round,finish},
-// double_barreled {idle, aimed_idle, show, hide, reload, fire, aimed_fire}, pistol {idle,
-// aimed_idle, show, hide, reload, fire, aimed_fire}; each = magic-statics guard + ctor + atexit dtor).
 void weapon_cook::register_cooks_for_logic_states( )
 {
+	static weapon_core_inactive_state_cook s_weapon_core_inactive_state_cook;
+	static weapon_core_state_cook_template< weapon_core_idle_state > s_weapon_core_idle_state_cook;
+	static weapon_core_state_cook_template< weapon_core_aimed_state > s_weapon_core_aimed_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_show_state > > s_show_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_hide_state > > s_hide_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_reload_state > > s_reload_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_chamber_a_round_state > > s_chamber_a_round_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_chamber_a_round_aimed_state > > s_chamber_a_round_aimed_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_fire_state > > s_fire_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_aimed_fire_state > > s_aimed_fire_cook;
+	static shotgun_weapon_reload_state_cook s_shotgun_weapon_reload_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_start_substate > > s_shotgun_reload_start_substate_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_one_round_substate > > s_shotgun_reload_one_round_substate_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< weapon_core_shotgun_reload_finish_substate > > s_shotgun_reload_finish_substate_cook;
+	static weapon_core_state_cook_template< double_barreled_weapon_core_idle_state > s_double_barreled_weapon_core_idle_state_cook;
+	static weapon_core_state_cook_template< double_barreled_weapon_core_aimed_idle_state > s_double_barreled_weapon_core_aimed_idle_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_show_state > > s_double_barreled_show_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state > > s_double_barreled_hide_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_reload_state > > s_double_barreled_reload_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_fire_state > > s_double_barreled_fire_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< double_barreled_weapon_core_aimed_fire_state > > s_double_barreled_aimed_fire_cook;
+	static weapon_core_state_cook_template< pistol_weapon_core_idle_state > s_pistol_weapon_core_idle_state_cook;
+	static weapon_core_state_cook_template< pistol_weapon_core_aimed_idle_state > s_pistol_weapon_core_aimed_idle_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_show_state > > s_pistol_show_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_hide_state > > s_pistol_hide_state_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_reload_state > > s_pistol_reload_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_fire_state > > s_pistol_fire_cook;
+	static weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< pistol_weapon_core_aimed_fire_state > > s_pistol_aimed_fire_cook;
 }
 
 // STATE[STUB]

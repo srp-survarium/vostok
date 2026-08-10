@@ -65,8 +65,6 @@ namespace vostok
 			static survarium::game* volatile			s_game	= 0;
 			static sound::world* volatile				s_snd	= 0;
 			survarium::weapon					wpn( 0u, 0u, 0u );
-			survarium::weapon_cook				wcook( *s_game );
-			survarium::shotgun_weapon_reload_state_cook	srcook;
 			survarium::sound_player_cook		scook( s_snd, resources::class_id_enum( 0 ) );
 			survarium::project_cooker_simple	pcook( false );
 
@@ -77,41 +75,6 @@ namespace vostok
 			static survarium::weapon* volatile			s_wpn_pfx	= 0;
 			s_wpn_pfx->play_weapon_shell_pfx( );
 			s_wpn_pfx->play_weapon_fire_pfx( );
-
-			// ---- weapon_sound_events_handler_state cook cluster -------------
-			// register_cooks_for_logic_states (weapon_cook.cpp) is the real
-			// instantiation site (still a STUB); construct each cook here so its
-			// vtable + private cook virtuals (allocate/deallocate/create/destroy)
-			// survive /OPT:REF, and new_state/on_subresources_ready are reached
-			// transitively from create_resource's bind chain once those are bodied.
-			// NOTE: these are STACK locals (this in a register), so the ctor pairs at
-			// the generic-this convention (~44%); the real caller uses function-LOCAL
-			// STATICS, which LTCG specializes for the known static `this` (member
-			// stores to absolute addresses) and lifts the ctor to ~84%. We do NOT use
-			// statics here: the 20 magic-statics atexit dtors reshuffle ICF fold
-			// representatives and regress ~28 unrelated `vector deleting destructor`
-			// COMDATs. The ctor reaches its true % once register_cooks_for_logic_states
-			// bodies the real statics (then this anchor block can be dropped).
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_show_state						> >	sc_show;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_hide_state						> >	sc_hide;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_reload_state						> >	sc_reload;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_chamber_a_round_state			> >	sc_chamber;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_chamber_a_round_aimed_state		> >	sc_chamber_aimed;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_fire_state						> >	sc_fire;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_aimed_fire_state					> >	sc_aimed_fire;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_shotgun_reload_start_substate		> >	sc_sg_start;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_shotgun_reload_one_round_substate	> >	sc_sg_one;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::weapon_core_shotgun_reload_finish_substate	> >	sc_sg_finish;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::double_barreled_weapon_core_show_state		> >	sc_db_show;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::double_barreled_weapon_core_hide_state		> >	sc_db_hide;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::double_barreled_weapon_core_reload_state		> >	sc_db_reload;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::double_barreled_weapon_core_fire_state		> >	sc_db_fire;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::double_barreled_weapon_core_aimed_fire_state	> >	sc_db_aimed_fire;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_show_state				> >	sc_p_show;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_hide_state				> >	sc_p_hide;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_reload_state				> >	sc_p_reload;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_fire_state				> >	sc_p_fire;
-			survarium::weapon_sound_events_handler_state_cook< survarium::weapon_sound_events_handler_state< survarium::pistol_weapon_core_aimed_fire_state			> >	sc_p_aimed_fire;
 
 			// Construct each handler state so its VTABLE (carrying the real
 			// initialize/finalize bodies, now un-walled) is emitted; the cook's
@@ -193,8 +156,6 @@ namespace vostok
 		keep( &wc::on_weapon_config_loaded );
 		keep( &wc::delete_resource );
 		keep( &wc::cooked_object_size );
-		survarium::weapon_cook::register_cooks_for_logic_states( );
-
 		// ---- shotgun_weapon_reload_state_cook --------------------------------
 		typedef survarium::shotgun_weapon_reload_state_cook src;
 		keep( &src::allocate_resource );

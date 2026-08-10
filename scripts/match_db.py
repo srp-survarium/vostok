@@ -346,13 +346,16 @@ def mangled_name_part(mangled):
 # Rich indexes can place a local static's qualified scope either outside or
 # inside the thunk's quotes. Canonicalize both forms to the exact
 # (kind, fully-qualified-variable-name) identity and pair only unique 1:1 keys
-# attributed to the same source file. The safe subset is limited to
-# fully-qualified plain identifiers (no anonymous-namespace `?A0x...` hash, no
-# template/local/cook scope, which need the real demangler). Body and statement
-# differences remain visible as ordinary measured differences.
+# attributed to compatible source files. Rich spellings preserve complete local
+# scopes and can therefore pair function-local statics directly. Raw mangled
+# spellings remain limited to fully-qualified plain identifiers (no anonymous-
+# namespace `?A0x...` hash or template/local scope, which need the real
+# demangler). Body and statement differences remain visible as ordinary measured
+# differences.
 
 _DYN_RE = re.compile(r"^(.*?)`dynamic (initializer|atexit destructor) for '(.*)''$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
+_LOCAL_SCOPE_RE = re.compile(r"::`\d+'::")
 
 
 def dyn_canon_rich(mangled):
@@ -398,6 +401,26 @@ def dyn_canon_base(mangled):
     if not _IDENT_RE.match(var) or any(not _IDENT_RE.match(s) for s in scopes):
         return None
     return (kc, "::".join(scopes + [var]))
+
+
+def dyn_owner_compatible(target_rec, base_rec, canon):
+    """Whether source attribution can disambiguate a dynamic thunk pair.
+
+    Compiler-generated local-static destructors can have no base-side source
+    record even when the target PDB assigns them to an unrelated inline header.
+    A unique canonical local scope is sufficient even when both PDBs report
+    different owners: the enclosing function and compiler local-scope ordinal
+    disambiguate it. Global/static names with two known owners still require an
+    exact owner match.
+    """
+    target_file = target_rec.get("file")
+    base_file = base_rec.get("file")
+    return (
+        not target_file
+        or not base_file
+        or target_file == base_file
+        or bool(_LOCAL_SCOPE_RE.search(canon[1]))
+    )
 
 
 def is_framed(rec):
@@ -1005,8 +1028,8 @@ def regen():
         tm, bm = tm_list[0], bm_list[0]
         if target[tm]["rva"] in used_target_rvas or base[bm]["rva"] in used_base_rvas:
             continue
-        if target[tm]["file"] != base[bm]["file"]:
-            continue  # same-named statics in different owners are not proven identical
+        if not dyn_owner_compatible(target[tm], base[bm], c):
+            continue  # same-named statics in different known owners are not proven identical
         cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
         pair_rows.append(
             (

@@ -930,10 +930,6 @@ namespace vostok
 		survarium::weapon_core_idle_state*			object	= cook->cook_type::new_object( buffer, params, animations, 4 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
 
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
-
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
@@ -962,10 +958,6 @@ namespace vostok
 		cook->cook_type::create_resource( cook_query, vostok::const_buffer( ), buffer );
 		cook->cook_type::on_subresources_ready( cook_results, buffer, params );
 		example_callback( reinterpret_cast< pcstr >( allocated.c_ptr( ) ) );
-
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
@@ -1007,10 +999,6 @@ namespace vostok
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::pistol_weapon_core_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
-
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
@@ -1296,10 +1284,6 @@ namespace vostok
 		survarium::double_barreled_weapon_core_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
 
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
-
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
 
@@ -1319,10 +1303,6 @@ namespace vostok
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::pistol_weapon_core_aimed_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 8 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
-
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
@@ -1366,10 +1346,6 @@ namespace vostok
 		survarium::weapon_state_creation_params const*	params	= reinterpret_cast< survarium::weapon_state_creation_params const* >( NULL );
 		survarium::double_barreled_weapon_core_aimed_idle_state*	object	= cook->cook_type::new_object( buffer, params, animations, 12 );
 		example_callback( reinterpret_cast< pcstr >( object ) );
-
-		// Construct a real cook so the template ctor (+ vtable virtuals) are ODR-used and pair.
-		static cook_type							s_cook;
-		example_callback( reinterpret_cast< pcstr >( &s_cook ) );
 
 		example_callback( reinterpret_cast< pcstr >( &state ) );
 	}
