@@ -695,12 +695,17 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 			*new_operands++					= m_cloner.clone( **i );
 	}
 
-	if ( interpolator.transition_time( ) != 0.f )
+	if ( i != operands_end ) {
+		if ( interpolator.transition_time( ) != 0.f )
+			*new_operands++					=
+				new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
+
+		for ( ; i != operands_end; ++i )
+			*new_operands++					= m_cloner.clone( **i );
+	}
+	else if ( interpolator.transition_time( ) != 0.f )
 		*new_operands++						=
 			new_weight_transition( *m_cloner.clone( interpolator ), 0.f, 1.f );
-
-	for ( ; i != operands_end; ++i )
-		*new_operands++						= m_cloner.clone( **i );
 
 	stlp_std::sort(
 		operands_begin,
