@@ -1900,6 +1900,7 @@ void stage_lights::render_light( light* l, bool shadowers_pass )
 			geometry				= m_pyramid_geometry.geometry;
 			break;
 		}
+		// 11 target lines are likely retail-compiled-out source.
 		case light_type_obb :
 		case light_type_capsule :
 		case light_type_plane_spot : {
@@ -1981,7 +1982,10 @@ void stage_lights::render_light( light* l, bool shadowers_pass )
 					backend::ref().set_ps_constant( m_c_view_to_light_matrix, transpose(m_view_to_light_matrix));
 					backend::ref().set_ps_constant( m_c_shadow_z_bias, m_shadow_z_bias);
 					backend::ref().set_ps_constant( m_c_shadow_map_size, m_shadow_map_size);
-					backend::ref().set_ps_texture("shadowmap_texture", &*m_shadow_depth_stencil_texture[l->shadow_map_size_index]);
+					if (l->static_shadows)
+						backend::ref().set_ps_texture("shadowmap_texture", &*l->m_shadow_depth_stencil_texture);
+					else
+						backend::ref().set_ps_texture("shadowmap_texture", &*m_shadow_depth_stencil_texture[l->shadow_map_size_index]);
 				}
 				else
 					m_spot_light_accumulator->apply	( tech_index, 0 );
