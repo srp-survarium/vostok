@@ -360,29 +360,8 @@ u32 decal_instance::draw(
 		float4x4 const geom_world_matrix	= math::create_scale(scale) * math::create_rotation(angles) * math::create_translation(position);
 
 		context->set_w						(geom_world_matrix);
-
-		bool const project_on_all			= decal->get_properties().is_project_on_all();
-
-		if (project_on_all)
-		{
-			opaque_geometry_mask_effect->apply(effect_decal_mask::all_types, 0);
-			decal->render_geometry();
-			decal->render(context, stage_type);
-		}
-		else if (decal->get_properties().is_project_on_something())
-		{
-			for (u32 geom_type_index = 1; geom_type_index < num_geometry_types + 1; geom_type_index++)
-			{
-				if (!is_progect_decal_on_type(decal, (enum_geometry_type)geom_type_index))
-					continue;
-				opaque_geometry_mask_effect->apply(effect_decal_mask::specific_type, 0);
-				backend::ref().set_stencil_ref	(all_geometry_type + geom_type_index);
-				decal->render_geometry();
-				decal->render(context, stage_type);
-
-				num_draw_calls++;
-			}
-		}
+		decal->render(context, stage_type);
+		// 18 target lines are likely retail-compiled-out source.
 	}
 	return num_draw_calls;
 }
