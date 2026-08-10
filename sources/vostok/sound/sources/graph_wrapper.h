@@ -41,6 +41,7 @@ inline vertex_id_type graph_wrapper::vertex_id(
 	vertex_id_type result;
 	result.portal_id = *iterator;
 	result.incoming_sector_index = next_portal.get_sectors( )[0] != current_sector_id;
+	R_ASSERT( result.portal_id != u32(-1) );
 	return result;
 }
 

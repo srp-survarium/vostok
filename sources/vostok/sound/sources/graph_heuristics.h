@@ -13,6 +13,30 @@ namespace vostok {
 namespace sound {
 namespace search {
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 inline float graph_heuristics::estimate(
 	vertex_id_type const* const current_vertex_id_ptr,
 	vertex_id_type const& neighbour_vertex_id
@@ -20,6 +44,11 @@ inline float graph_heuristics::estimate(
 {
 	return math::length( m_target_position - m_graph->get_portals( )[neighbour_vertex_id.portal_id].get_points( )[0] );
 }
+
+
+
+
+
 
 template < typename vertex_type >
 inline float graph_heuristics::evaluate(

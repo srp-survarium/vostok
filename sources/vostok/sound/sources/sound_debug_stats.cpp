@@ -235,13 +235,13 @@ void sound_debug_stats::update_window( vostok::strings::text_tree_item* item, re
 	m_main_window->remove_all_children();
 
 	ui::text_tree_draw_helper_params	params;	
-	params.color1						= math::color( 77, 109, 243 ).m_value;
-	params.color2						= math::color( 91, 192, 247 ).m_value;
+	params.color1						= math::color( 0, 255, 30 ).m_value;
+	params.color2						= math::color( 0, 255, 80 ).m_value;
 	params.is_multipaged				= false;
 	params.fnt							= ui::fnt_arial;
 	params.row_height					= 15.0f;
 	params.space_between_pages			= 10.0f;
-	params.start_pos					= float2(0.0f, 0.0f);
+	params.start_pos					= float2(300.0f, 0.0f);
 	ui::text_tree_draw_helper h			( m_ui_world, m_main_window, params, memory::g_mt_allocator );
 
 	h.output							( item );

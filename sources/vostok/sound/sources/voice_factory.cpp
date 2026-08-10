@@ -39,8 +39,7 @@ voice_factory::voice_factory( u8* buffer, u32 buffer_size, sound_world const& wo
 	}
 }
 
-voice_factory::~voice_factory			( )
-{
+voice_factory::~voice_factory			( ) {
 	for (u32 i = 0; i < 2; ++i)
 	{
 		voice_bridge* current_voice	= m_voices_pool[i].front( );
@@ -54,6 +53,7 @@ voice_factory::~voice_factory			( )
 	}
 
 }
+
 
 voice_bridge* voice_factory::new_voice ( sound_voice* callback_handler, u8 const channels_num, u32 const sample_rate )
 {

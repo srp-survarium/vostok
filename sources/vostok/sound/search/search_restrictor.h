@@ -34,8 +34,10 @@ public:
 		m_source_position( source_position ),
 		m_max_range( max_range ),
 		m_max_iteration_count( max_iteration_count ),
-		m_max_visited_vertex_count( max_visited_vertex_count )
+		m_max_visited_vertex_count( max_visited_vertex_count ),
+		m_different_paths_left( 0 )
 	{
+		R_ASSERT( m_graph );
 	}
 
 	inline vertex_id_type start_vertex_id( u32 const start_vertex_id ) const;

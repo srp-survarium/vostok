@@ -20,10 +20,6 @@ sound_spl_cook::sound_spl_cook			( )
 {
 }
 
-sound_spl_cook::~sound_spl_cook			( )
-{
-}
-
 void sound_spl_cook::translate_query	( query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string	source_path;

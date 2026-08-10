@@ -10,6 +10,46 @@ MATCH_DB = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MATCH_DB)
 
 
+class IndexByMangledTests(unittest.TestCase):
+    def record(self, name, rva, file="vostok/sound/sources/sound_scene.cpp"):
+        return {
+            "mangled": "vostok::sound::fill_x3daudio_vector",
+            "name": name,
+            "rva": rva,
+            "file": file,
+        }
+
+    def test_preserves_distinct_signatures_hidden_by_pdb_placeholder(self):
+        first = self.record(
+            "fill_x3daudio_vector(vector&, float, float, float)", 0x1000
+        )
+        second = self.record("fill_x3daudio_vector(vector&, float3 const&)", 0x1020)
+
+        indexed = MATCH_DB.index_by_mangled([first, second])
+
+        self.assertEqual(len(indexed), 2)
+        self.assertIs(indexed[first["mangled"]], first)
+        self.assertIs(indexed[f"{first['mangled']}@@pdb-overload:1020"], second)
+
+    def test_still_collapses_distinct_same_rva_aliases(self):
+        first = self.record("first alias()", 0x1000)
+        second = self.record("second alias()", 0x1000)
+
+        indexed = MATCH_DB.index_by_mangled([first, second])
+
+        self.assertEqual(indexed, {first["mangled"]: first})
+
+    def test_still_collapses_same_signature_aliases_to_preferred_owner(self):
+        first = self.record("static helper()", 0x1000, "first.cpp")
+        preferred = self.record("static helper()", 0x2000, "preferred.cpp")
+
+        indexed = MATCH_DB.index_by_mangled(
+            [first, preferred], {first["mangled"]: "preferred.cpp"}
+        )
+
+        self.assertEqual(indexed, {first["mangled"]: preferred})
+
+
 class InstructionStreamExactTests(unittest.TestCase):
     def record(self, size=6, text="call  Scaleform::Render::HAL::EndFrame"):
         return {
@@ -68,6 +108,17 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         }
         self.assertEqual(
             MATCH_DB.strict_source_alias_candidates(target, aliases, {0x1000}), []
+        )
+
+    def test_accepts_exact_used_rva_when_shared_aliases_are_allowed(self):
+        target = self.record()
+        base = self.record()
+        aliases = {target["name"]: {0x1234: base}}
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target, aliases, {0x1234}, allow_used=True
+            ),
+            [base],
         )
 
 

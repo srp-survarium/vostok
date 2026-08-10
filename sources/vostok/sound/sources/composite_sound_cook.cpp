@@ -119,9 +119,9 @@ void composite_sound_cook::on_sounds_loaded	( resources::queries_result& data, c
 		sound_emitter_ptr emitter		= static_cast_resource_ptr<sound_emitter_ptr>( data[i].get_unmanaged_resource() );
 		pcstr file_name					= data[i].get_requested_path( );
 		configs::binary_config_value const& sound_value	= *it;
-		R_ASSERT						( strcmp( file_name, sound_value["filename"] ) == 0 );
+		R_ASSERT_U					( strcmp( file_name, sound_value["filename"] ) == 0 );
 		std::pair< u32, u32 >		offsets;
-		fixed_string<16> type		= "random";
+		fixed_string<16> type		( "random" );
 		if ( type == sound_value["offset_type"] )
 		{
 			offsets.first				= sound_value["playing_offset_min"];
@@ -137,7 +137,7 @@ void composite_sound_cook::on_sounds_loaded	( resources::queries_result& data, c
 		++it;
 	}
 
-	parent->set_unmanaged_resource	( new_composite_sound, resources::nocache_memory, sizeof( composite_sound ) );
+	parent->set_unmanaged_resource	( resources::unmanaged_resource_ptr( new_composite_sound ), resources::nocache_memory, sizeof( composite_sound ) );
 	parent->finish_query			( result_success );
 }
 

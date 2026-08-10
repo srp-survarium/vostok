@@ -27,7 +27,7 @@
 
 #define __LOG( level, format, data, initiator, ... )	__CHECK_VERBOSITY( level )			\
 		? ::vostok::logging::append(														\
-				::vostok::logging::log_callback_boost( ::vostok::core::g_log_callback ),	\
+				::vostok::core::g_log_callback,										\
 				(void*)data,																\
 				format,																		\
 				__FILE__,																	\
@@ -40,7 +40,7 @@
 
 #define __LOG_FORCED( level, format, data, initiator, ... )									\
 		::vostok::logging::append(															\
-				::vostok::logging::log_callback_boost( ::vostok::core::g_log_callback ),	\
+				::vostok::core::g_log_callback,										\
 				(void*)data,																\
 				format,																		\
 				__FILE__,																	\

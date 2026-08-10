@@ -22,6 +22,8 @@
 #include <vostok/os_include.h>
 
 #	include <xaudio2.h>
+#	undef XAUDIO2_DEFAULT_SAMPLERATE
+#	define XAUDIO2_DEFAULT_SAMPLERATE 44100
 #	include <x3daudio.h>
 #	include <xapo.h>
 #	include <xapobase.h>

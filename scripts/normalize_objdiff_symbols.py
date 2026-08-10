@@ -34,6 +34,33 @@ _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _NM_RE = re.compile(
     r"^\s*(?:[0-9A-Fa-f]+\s+)?[A-Za-z?]\s+(?P<name>.+)$"
 )
+_EXACT_COMPILER_NAMES = {
+    "vostok::sound::closest_point_on_segment":
+        "?closest_point_on_segment@sound@vostok@@YA?AVfloat3@math@2@ABV342@00@Z",
+    "vostok::sound::compare_propagator_info_by_distance":
+        "?compare_propagator_info_by_distance@sound@vostok@@YA_NABUpropagator_info@12@0@Z",
+}
+_SOUND_COOK_LOCAL_ATEXIT_PREFIX = (
+    "`vostok::sound::sound_world::register_sound_cooks'::`2'::"
+    "`dynamic atexit destructor for '"
+)
+_SOUND_COOK_LOCAL_ATEXIT_SUFFIX = "''"
+_SOUND_COOK_LOCALS = {
+    "s_composite_sound_cook",
+    "s_encoded_sound_with_qualities_cook",
+    "s_ogg_encoded_sound_interface_cook",
+    "s_ogg_file_contents_cook",
+    "s_ogg_sound_cook",
+    "s_ogg_source_cook",
+    "s_panning_lut_cook",
+    "s_single_sound_cook",
+    "s_sound_cll_cook",
+    "s_sound_environment_cook",
+    "s_sound_rms_cook",
+    "s_sound_scene_cook",
+    "s_sound_spl_cook",
+    "s_wav_encoded_sound_interface_cook",
+}
 
 _PDB_ALIAS_TO_COMPILER_NAME = {
     "load_function<void __stdcall(enum BUGTRAP_ACTIVITY_tag)>":
@@ -57,6 +84,22 @@ def compiler_name(pdb_name: str) -> str | None:
     alias = pdb_alias_name(pdb_name)
     if alias:
         return alias
+    exact = _EXACT_COMPILER_NAMES.get(pdb_name)
+    if exact:
+        return exact
+
+    if (
+        pdb_name.startswith(_SOUND_COOK_LOCAL_ATEXIT_PREFIX)
+        and pdb_name.endswith(_SOUND_COOK_LOCAL_ATEXIT_SUFFIX)
+    ):
+        variable = pdb_name[
+            len(_SOUND_COOK_LOCAL_ATEXIT_PREFIX) : -len(_SOUND_COOK_LOCAL_ATEXIT_SUFFIX)
+        ]
+        if variable in _SOUND_COOK_LOCALS:
+            return (
+                f"??__F{variable}@?1??register_sound_cooks@"
+                "sound_world@sound@vostok@@AAEXXZ@YAXXZ"
+            )
 
     match = _DYNAMIC_RE.match(pdb_name)
     if not match:

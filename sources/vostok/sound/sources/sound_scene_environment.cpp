@@ -49,8 +49,10 @@ void sound_scene::add_environment_params	(
 u32 sound_scene::get_environment_params_id	( pcstr name )
 {
 	for ( u32 i = 0; i < m_environment_parameters.size( ); ++i )
-		if ( strings::compare( m_environment_parameters[i].first.c_str( ), name ) == 0 )
+	{
+		if ( strings::equal( m_environment_parameters[i].first.c_str( ), name ) )
 			return i;
+	}
 
 	return u32( -1 );
 }
@@ -60,7 +62,7 @@ XAUDIO2FX_REVERB_I3DL2_PARAMETERS* sound_scene::get_environment_params	( pcstr n
 	XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params = 0;
 	for ( u32 i = 0; i < m_environment_parameters.size( ); ++i )
 	{
-		if ( strings::compare( m_environment_parameters[i].first.c_str( ), name ) == 0 )
+		if ( strings::equal( m_environment_parameters[i].first.c_str( ), name ) )
 		{
 			params						= m_environment_parameters[i].second;
 			break;

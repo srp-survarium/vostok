@@ -49,32 +49,5 @@ u32	ogg_file_contents::decompress( pbyte dest, u32 pcm_pointer, u32& pcm_pointer
 	return							res;
 }
 
-u32 ogg_file_contents::get_length_in_pcm ( ) const
-{
-	return m_pcm_total;
-}
-
-u32 ogg_file_contents::get_length_in_msec ( ) const
-{
-	return (m_pcm_total * 1000) / m_wfx.nSamplesPerSec;
-}
-
-u32  ogg_file_contents::get_samples_per_sec	( ) const
-{
-	return m_wfx.nSamplesPerSec;
-}
-
-channels_type ogg_file_contents::get_channels_type ( ) const
-{
-	switch (m_wfx.nChannels)
-	{
-	case 1:	 return mono;
-	case 2:	 return stereo;
-	default: NODEFAULT();
-	}
-	return channels_type_count;
-
-}
-
 } // namespace sound
 } // namespace vostok

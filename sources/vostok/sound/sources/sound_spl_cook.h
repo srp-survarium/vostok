@@ -18,7 +18,6 @@ class sound_spl_cook : 	public resources::translate_query_cook,
 	typedef resources::translate_query_cook	super;
 public:
 					sound_spl_cook		( );
-	virtual			~sound_spl_cook		( );
 
 	virtual	void	translate_query		( resources::query_result_for_cook& parent );
 	virtual void	delete_resource		( resources::resource_base* res );

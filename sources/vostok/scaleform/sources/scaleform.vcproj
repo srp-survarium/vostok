@@ -943,6 +943,54 @@
 			Name="source"
 			>
 			<File
+				RelativePath="..\..\..\scaleform\Src\Render\Render_BufferGeneric.cpp"
+				>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|Win32"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|Win32"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						UsePrecompiledHeader="0"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|x64"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Debug|x64"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Release(static)|x64"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Debug(static)|x64"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+				<FileConfiguration
+					Name="Master Gold|x64"
+					ExcludedFromBuild="true"
+					><Tool Name="VCCLCompilerTool"/></FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\command_queue.cpp"
 				>
 				<FileConfiguration

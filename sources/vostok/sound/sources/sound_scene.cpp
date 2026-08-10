@@ -83,12 +83,14 @@ effect_cross_fader::effect_cross_fader	(
 
 void effect_cross_fader::tick	( u32 delta_time_in_ms, sound_environment* current_environment )
 {
+	float fade_out_value;
 	if ( m_fade_in_environment != current_environment )
 	{
 		if ( math::is_similar( m_fade_in_value, 1.0f ) )
 		{
 			XAUDIO2FX_REVERB_I3DL2_PARAMETERS* params =
 				m_scene.get_environment_params( m_fade_out_environment->env_params_id( ) );
+			R_ASSERT						( params );
 			XAUDIO2FX_REVERB_PARAMETERS native;
 			ReverbConvertI3DL2ToNative	( params, &native );
 			m_fade_out_submix->SetEffectParameters( 0, &native, sizeof( native ) );
@@ -103,34 +105,33 @@ void effect_cross_fader::tick	( u32 delta_time_in_ms, sound_environment* current
 
 			m_fade_in_submix->SetVolume	( m_fade_in_value );
 			m_fade_out_submix->SetVolume( 1.0f - m_fade_in_value );
+			return;
 		}
-		else
-		{
-			m_fade_out_environment		= m_fade_in_environment;
-			m_fade_in_environment		= current_environment;
-			m_fade_in_value				= 1.0f - m_fade_in_value;
 
-			IXAudio2SubmixVoice* temp	= m_fade_in_submix;
-			m_fade_in_submix			= m_fade_out_submix;
-			m_fade_out_submix			= temp;
+		IXAudio2SubmixVoice* temp;
+		m_fade_out_environment		= m_fade_in_environment;
+		m_fade_in_environment		= current_environment;
+		m_fade_in_value				= 1.0f - m_fade_in_value;
 
-			m_fade_in_submix->SetVolume	( m_fade_in_value );
-			m_fade_out_submix->SetVolume( 1.0f - m_fade_in_value );
-		}
+		temp							= m_fade_in_submix;
+		m_fade_in_submix			= m_fade_out_submix;
+		m_fade_out_submix			= temp;
+
+		m_fade_in_submix->SetVolume	( m_fade_in_value );
+		m_fade_out_submix->SetVolume( 1.0f - m_fade_in_value );
+		return;
 	}
-	else
+
+	fade_out_value					= 0.0f;
+	if ( m_fade_in_value < 1.0f )
 	{
-		float fade_out_value			= 0.0f;
-		if ( m_fade_in_value < 1.0f )
-		{
-			m_fade_in_value				+= delta_time_in_ms * 1.0f / ( m_fade_time * 1.0f );
-			m_fade_in_value				= math::min( m_fade_in_value, 1.0f );
-			fade_out_value				= 1.0f - m_fade_in_value;
-		}
-
-		m_fade_in_submix->SetVolume		( m_fade_in_value );
-		m_fade_out_submix->SetVolume	( 1.0f - m_fade_in_value );
+		m_fade_in_value				+= delta_time_in_ms * 1.0f / ( m_fade_time * 1.0f );
+		m_fade_in_value				= std::min( m_fade_in_value, 1.0f );
+		fade_out_value				= 1.0f - m_fade_in_value;
 	}
+
+	m_fade_in_submix->SetVolume		( m_fade_in_value );
+	m_fade_out_submix->SetVolume	( 1.0f - m_fade_in_value );
 }
 
 sound_scene::sound_scene	(
@@ -174,7 +175,6 @@ sound_scene::sound_scene	(
 	m_spatial_tree						= &*collision::new_space_partitioning_tree( g_allocator, 0.0001f, 1024 );
 	ASSERT								( m_spatial_tree );
 
-	ASSERT								( !m_environments_tree );
 	m_environments_tree					= &*collision::new_space_partitioning_tree( g_allocator, 0.0001f, 64 );
 	ASSERT								( m_environments_tree );
 
@@ -190,7 +190,7 @@ sound_scene::sound_scene	(
 			{ pReverbEffect_1, true, 1 }
 		};
 		XAUDIO2_EFFECT_CHAIN effectChain_1 = { 1, effects_1 };
-		hr								= m_fade_in_environment->SetEffectChain( &effectChain_1 );
+		m_fade_in_environment->SetEffectChain( &effectChain_1 );
 
 		IUnknown* pReverbEffect_2		= 0;
 		hr								= XAudio2CreateReverb( &pReverbEffect_2 );
@@ -199,39 +199,36 @@ sound_scene::sound_scene	(
 			{ pReverbEffect_2, true, 1 }
 		};
 		XAUDIO2_EFFECT_CHAIN effectChain_2 = { 1, effects_2 };
-		hr								= m_fade_out_environment->SetEffectChain( &effectChain_2 );
+		m_fade_out_environment->SetEffectChain( &effectChain_2 );
 
 		XAUDIO2FX_REVERB_I3DL2_PARAMETERS i3dl2_params = { 100.0f, -10000, 0, 0.0f, 1.0f, 0.5f, -10000, 0.02f, -10000, 0.04f, 100.0f, 100.0f, 5000.0f };
+		XAUDIO2FX_REVERB_PARAMETERS native;
 		XAUDIO2FX_REVERB_I3DL2_PARAMETERS* default_params =
-			VOSTOK_NEW_IMPL( g_allocator, XAUDIO2FX_REVERB_I3DL2_PARAMETERS )( i3dl2_params );
+			VOSTOK_NEW_IMPL( g_allocator, XAUDIO2FX_REVERB_I3DL2_PARAMETERS );
+		*default_params					= i3dl2_params;
 		m_environment_parameters.push_back( std::make_pair( fixed_string< 64 >( "" ), default_params ) );
 
 		u32 env_params_id				= 0;
 		add_environment_params			( "", default_params, env_params_id );
 		m_default_environment			= VOSTOK_NEW_IMPL( g_allocator, sound_environment )( env_params_id );
 
-		XAUDIO2FX_REVERB_PARAMETERS native;
 		ReverbConvertI3DL2ToNative		( &i3dl2_params, &native );
 		hr								= m_fade_in_environment->SetEffectParameters( 0, &native, sizeof( native ) );
 		hr								= m_fade_out_environment->SetEffectParameters( 0, &native, sizeof( native ) );
 
-		XAUDIO2_SEND_DESCRIPTOR send_descriptor =
-		{
-			0,
-			m_submix_voice
-		};
-		XAUDIO2_VOICE_SENDS sends =
-		{
-			1,
-			&send_descriptor
-		};
+		XAUDIO2_SEND_DESCRIPTOR send_descriptor;
+		send_descriptor.pOutputVoice	= m_submix_voice;
+		send_descriptor.Flags			= 0;
+		XAUDIO2_VOICE_SENDS sends;
+		sends.pSends					= &send_descriptor;
+		sends.SendCount					= 1;
 		hr								= m_fade_in_environment->SetOutputVoices( &sends );
 		hr								= m_fade_out_environment->SetOutputVoices( &sends );
 
 		m_environment_crossfader		=
 			VOSTOK_NEW_IMPL( g_allocator, effect_cross_fader )
 			( *this, 100, m_fade_in_environment, m_fade_out_environment );
-		VOSTOK_UNREFERENCED_PARAMETER	( hr );
+		R_ASSERT							( !FAILED( hr ) );
 	}
 }
 
@@ -377,14 +374,24 @@ void sound_scene::find_path(
 {
 	vector< search::vertex_id_type > path;
 	search::search_service s( g_allocator );
-	s.search( *g_allocator, m_graph, &path, m_list_position.get( ), destination_point, 200.0f, result_paths );
+
+	R_ASSERT						( m_graph );
+	s.search(
+		*g_allocator,
+		m_graph,
+		&path,
+		destination_point,
+		m_list_position.get( ),
+		200.0f,
+		result_paths
+	);
 }
 
 unique_propagator_info::unique_propagator_info	( ) :
 	voice_params	( g_allocator ),
 	prop			( 0 )
-{
-}
+{}
+
 
 bool compare_propagator_info_by_distance	( propagator_info const& lhs, propagator_info const& rhs )
 {
@@ -482,16 +489,14 @@ static float coeff_calc		( float g, float cw )
 {
     float a		= 0.0f;
 
-    /* Be careful with gains < 0.01, as that causes the coefficient
-     * head towards 1, which will flatten the signal */
-	g = math::max(	g, 0.01f );
+	R_ASSERT		( g >= 0.0f && g <= 1.0f ); R_ASSERT( cw >= -1.0f && cw <= 1.0f ); g = g > 0.01f ? g : 0.01f;
     if ( g < 0.9999f ) /* 1-epsilon */
 		a = (1 - g*cw - math::sqrt ( 2 * g * ( 1 - cw ) - g * g * ( 1 - cw * cw ))) / (1 - g);
 
     return a;
 }
 
-void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panning_lut )
+inline void sound_scene::calculate_3d_sound	( sound_voice& voice, panning_lut_ptr panning_lut )
 {
 	sound_instance_proxy_internal const& proxy	= voice.get_proxy( );
 	float3 position								= proxy.get_sound_type( ) == volumetric ?
@@ -797,6 +802,24 @@ struct compare_receivers_predicate : private boost::noncopyable
 }; // struct receivers_erase_predicate
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void sound_scene::register_receiver		( sound_receiver* receiver, atomic_half3* position )
 {
 	LOG_DEBUG							( "sound_scene::register_receiver" );
@@ -818,12 +841,10 @@ void sound_scene::register_receiver		( sound_receiver* receiver, atomic_half3* p
 	float4x4 scale			= math::create_scale( new_receiver->get_collision_object( )->get_aabb().extents( ));
 	float4x4 translation	= math::create_translation( new_receiver->get_position( ) );
 	float4x4 local_to_world	= scale * translation;
-	m_spatial_tree->insert	
-	(
+	m_spatial_tree->insert	(
 		new_receiver->get_collision_object( ),
 		local_to_world
 	);
-
 }
 
 void sound_scene::unregister_receiver	( world_user& user, sound_receiver* receiver )
@@ -990,6 +1011,42 @@ void sound_scene::process_fade	( sound_world& world, u64 time_delta )
 			m_submix_voice->SetVolume( m_volume );
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 atomic_half3* sound_scene::create_receiver_position	( )
 {
@@ -1303,8 +1360,8 @@ float3 closest_point_on_segment	(
 	float3 const&		segment_displacement
 )
 {
-	float domen_value					= ( point - segment_origin ).dot_product( segment_displacement ) / segment_displacement.squared_length( );
-	domen_value							= math::clamp_r( domen_value, 0.f, 1.f );
+	float domen_value					= ( ( point - segment_origin ) | segment_displacement ) / segment_displacement.squared_length( );
+	math::clamp							( domen_value, 0.f, 1.f );
 	return								segment_origin + segment_displacement * domen_value;
 }
 
@@ -1313,52 +1370,52 @@ float3 sound_scene::get_portal_nearest_point	( u32 portal_id, float3 segment_sta
 	render::culling::portal const& portal	= m_graph->get_portals( )[portal_id];
 
 	float3 p1							= segment_start;
-	float3 p3							= segment_end;
-	float3 p2							= portal.get_points( )[0];
+	float3 p2							= segment_end;
+	float3 p3							= portal.get_points( )[0];
 	float3 p4							= portal.get_points( )[1];
 
-	float3 d1							= p3 - p1;
-	float3 d2							= p4 - p2;
+	float3 d1							= p2 - p1;
+	float3 d2							= p4 - p3;
 
 	vectora< std::pair< float, float3 > > portal_segments( g_allocator );
 
-	closets_point_predicate p( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) );
-	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	closets_point_predicate p( ( p1 - sound::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p3, d2 ) );
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p2, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p3, p1, d1 ) ) );
 	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
 
-	p2									= portal.get_points( )[1];
+	p3									= portal.get_points( )[1];
 	p4									= portal.get_points( )[2];
 
-	d1									= p3 - p1;
-	d2									= p4 - p2;
+	d1									= p2 - p1;
+	d2									= p4 - p3;
 
-	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p2, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p3, p1, d1 ) ) );
 	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
 
-	p2									= portal.get_points( )[2];
+	p3									= portal.get_points( )[2];
 	p4									= portal.get_points( )[3];
 
-	d1									= p3 - p1;
-	d2									= p4 - p2;
+	d1									= p2 - p1;
+	d2									= p4 - p3;
 
-	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p2, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p3, p1, d1 ) ) );
 	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
 
-	p2									= portal.get_points( )[3];
+	p3									= portal.get_points( )[3];
 	p4									= portal.get_points( )[0];
 
-	d1									= p3 - p1;
-	d2									= p4 - p2;
+	d1									= p2 - p1;
+	d2									= p4 - p3;
 
-	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p2, d2 ) ).squared_length( ), sound::closest_point_on_segment( p3, p2, d2 ) ) );
-	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p2, p1, d1 ) ) );
+	portal_segments.push_back( std::make_pair( ( p1 - sound::closest_point_on_segment( p1, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p1, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p2 - sound::closest_point_on_segment( p2, p3, d2 ) ).squared_length( ), sound::closest_point_on_segment( p2, p3, d2 ) ) );
+	portal_segments.push_back( std::make_pair( ( p3 - sound::closest_point_on_segment( p3, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p3, p1, d1 ) ) );
 	portal_segments.push_back( std::make_pair( ( p4 - sound::closest_point_on_segment( p4, p1, d1 ) ).squared_length( ), sound::closest_point_on_segment( p4, p1, d1 ) ) );
 
 	std::for_each( portal_segments.begin( ), portal_segments.end( ), p );

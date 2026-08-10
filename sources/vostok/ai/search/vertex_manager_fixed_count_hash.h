@@ -79,6 +79,7 @@ struct fixed_count_hash
 	public:
 		inline path_id_type const&	current_path_id		( ) const;
 		inline u32					visited_vertex_count( ) const;
+		inline allocator_type&		allocator			( ) const;
 
 	private:
 		inline void					prepare_cell		( LookUpCellType& cell );

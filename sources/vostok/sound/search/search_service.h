@@ -112,8 +112,7 @@ public:
 	);
 
 	inline ~search_service( )
-	{
-	}
+	{}
 
 private:
 	vertex_allocator_impl_type m_vertex_allocator;

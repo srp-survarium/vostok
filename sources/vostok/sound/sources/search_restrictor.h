@@ -29,6 +29,7 @@ inline bool search_restrictor::target_reached( vertex_id_type const& vertex_id )
 	u32 const outcoming_sector_id = vertex_id.incoming_sector_index ? portal.get_sectors( )[0] : portal.get_sectors( )[1];
 	if ( m_target_sector_id == outcoming_sector_id )
 	{
+		R_ASSERT( m_different_paths_left );
 		--m_different_paths_left;
 		m_vertex_ids.push_back( vertex_id );
 	}
@@ -49,7 +50,7 @@ inline bool search_restrictor::accessible(
 	u32 const* const& edge_iterator
 ) const
 {
-	if ( *edge_iterator == current_vertex.id( ).portal_id )
+	if ( current_vertex.id( ).portal_id == *edge_iterator )
 		return false;
 
 	render::culling::portal const& portal = m_graph->get_portals( )[current_vertex.id( ).portal_id];
@@ -63,6 +64,7 @@ inline bool search_restrictor::accessible(
 inline void search_restrictor::on_before_search( )
 {
 	m_different_paths_left = math::min( m_graph->get_sectors( )[m_target_sector_id].get_portals_count( ), 4u );
+	R_ASSERT( m_different_paths_left );
 	m_vertex_ids.clear( );
 }
 

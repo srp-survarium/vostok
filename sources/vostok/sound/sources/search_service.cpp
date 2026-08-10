@@ -33,7 +33,6 @@ bool search_service::search(
 		return true;
 
 	path_constructor_type path_constructor( path );
-	graph_wrapper graph_wrapper( graph );
 	search_restrictor restrictor(
 		graph,
 		source_sector_id,
@@ -43,9 +42,17 @@ bool search_service::search(
 		u32(-1),
 		4096 - graph->get_portals( ).size( )
 	);
+	graph_wrapper graph_wrapper( graph );
 	graph_heuristics heuristics( graph, target_position );
 
-	ai::a_star::find( m_priority_queue, graph_wrapper, path_constructor, heuristics, restrictor );
+	ai::a_star::find
+	(
+		m_priority_queue,
+		graph_wrapper,
+		path_constructor,
+		heuristics,
+		restrictor
+	);
 
 	result_paths.resize( restrictor.vertex_ids( ).size( ) );
 	vertex_id_type const* i = restrictor.vertex_ids( ).begin( );
@@ -53,7 +60,8 @@ bool search_service::search(
 	for ( u32 k = 0; i != e; ++i, ++k )
 	{
 		result_paths[k].clear( );
-		path_constructor.construct_path( m_vertex_manager.vertex( *i ) );
+		path_constructor.construct_path( m_priority_queue.vertex( *i ) );
+		result_paths[k].reserve( path->size( ) );
 
 		{
 			vertex_id_type const* i = path->begin( );

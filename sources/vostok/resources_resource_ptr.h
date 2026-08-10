@@ -25,7 +25,7 @@ private:
 
 public:
 	inline			resource_ptr	() {}
-					resource_ptr	(object_type * object);
+	inline			resource_ptr	(object_type * object);
 					resource_ptr	(self_type const & object);
 	
 	self_type &		operator =		(object_type * object);

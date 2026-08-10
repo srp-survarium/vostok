@@ -29,9 +29,6 @@ public:
 private:
 			void	on_model_config_loaded			( resources::queries_result& data );
 			void	on_environment_options_loaded	( resources::queries_result& data, float4x4* transform );
-
-public:
-	virtual			~sound_environment_cook			( ) { }
 }; // class sound_environment_cook
 
 STATIC_SIZE_ASSERT(sound_environment_cook, 0x20);

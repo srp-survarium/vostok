@@ -23,7 +23,6 @@ inline void timer::start				()
 {
 	m_start_time				= get_QPC();
 	m_current_time				= 0;
-	m_time_factor				= 1.0f;
 }
 
 inline u64 timer::get_elapsed_ticks		() const
@@ -41,7 +40,7 @@ inline float timer::get_elapsed_sec		() const
 	return ( float( double(get_elapsed_ticks())/g_qpc_per_second) );
 }
 
-inline void timer::set_time_factor		( float	time_factor )
+inline void timer::set_time_factor		( float const time_factor )
 {
 	R_ASSERT					( !(time_factor < 0.0f) );
 	m_current_time				= get_elapsed_ticks();

@@ -20,6 +20,7 @@ long	ov_tell_func		(void *datasource);
 // return number of bytes readed
 u32		decompress			(OggVorbis_File* ovf, pbyte dest, u32& pcm_pointer, u32 bytes_needed);
 
+#ifndef MASTER_GOLD
 void	encode_sound_file	(	fs_new::native_path_string const& input_file_path,
 								fs_new::native_path_string const& output_file_path,	
 								fs_new::synchronous_device_interface const & device,
@@ -27,9 +28,8 @@ void	encode_sound_file	(	fs_new::native_path_string const& input_file_path,
 								u16 number_of_chanels,
 								s32 samples_per_second,
 								s32 output_bitrate
-							);
+								);
 
-#ifndef MASTER_GOLD
 int ogg_encode_impl(fs_new::file_type* input_file,
 					fs_new::file_type* output_file,
 					fs_new::synchronous_device_interface const & device,

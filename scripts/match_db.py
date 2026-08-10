@@ -40,6 +40,7 @@ import normalize_objdiff_symbols
 VOSTOK = Path(__file__).resolve().parent.parent
 DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
 REPORT = VOSTOK / "binaries" / "objdiff" / "report.json"
+CROSS_UNIT_REPORT = VOSTOK / "binaries" / "objdiff" / "report-cross-unit.json"
 TARGET_IDX = VOSTOK / "binaries" / "rich" / "target" / "index.jsonl"
 BASE_IDX = VOSTOK / "binaries" / "rich" / "base" / "index.jsonl"
 DECLARATIONS = VOSTOK / "binaries" / "rich" / "target" / "declarations.jsonl"
@@ -174,21 +175,44 @@ def load_index_records(path):
 
 
 def index_by_mangled(records, preferred_files=None):
-    """Collapse rich records by mangled identity, preferring the other side's owner.
+    """Collapse rich records by PDB identity, preferring the other side's owner.
 
     Static helpers and COMDATs can have the same PDB spelling in several
     translation units. When the other side selected an owner, prefer that same
-    source file; otherwise retain the historical lowest-RVA rule.
+    source file; otherwise retain the historical lowest-RVA rule. Some retail
+    PDB records lose the decorated signature for overloads and expose the same
+    scope-qualified placeholder as ``mangled``. Preserve each distinct full
+    demangled signature in that case instead of dropping target functions.
     """
     candidates = {}
     for rec in records:
-        candidates.setdefault(rec["mangled"], []).append(rec)
+        candidates.setdefault(rec["mangled"], {}).setdefault(rec["name"], []).append(
+            rec
+        )
     out = {}
     preferred_files = preferred_files or {}
-    for key, records in candidates.items():
-        preferred = preferred_files.get(key)
-        same_owner = [rec for rec in records if rec["file"] == preferred]
-        out[key] = min(same_owner or records, key=lambda rec: rec["rva"])
+    for mangled, signatures in candidates.items():
+        selected = []
+        preferred = preferred_files.get(mangled)
+        for signature_records in signatures.values():
+            same_owner = [
+                rec for rec in signature_records if rec["file"] == preferred
+            ]
+            selected.append(
+                min(same_owner or signature_records, key=lambda rec: rec["rva"])
+            )
+
+        # The schema intentionally stores one canonical symbol per RVA. Keep
+        # same-RVA aliases collapsed, but never collapse distinct overload
+        # bodies merely because the PDB gave them the same placeholder name.
+        selected_by_rva = {}
+        for rec in selected:
+            selected_by_rva.setdefault(rec["rva"], rec)
+        for index, rec in enumerate(
+            sorted(selected_by_rva.values(), key=lambda rec: rec["rva"])
+        ):
+            key = mangled if index == 0 else f"{mangled}@@pdb-overload:{rec['rva']:x}"
+            out[key] = rec
     return out
 
 
@@ -549,7 +573,9 @@ def instruction_stream_exact(target_rec, base_rec):
     return identity(target_instructions) == identity(base_instructions)
 
 
-def strict_source_alias_candidates(target_rec, base_aliases_by_name, used_base_rvas):
+def strict_source_alias_candidates(
+    target_rec, base_aliases_by_name, used_base_rvas, allow_used=False
+):
     """Find exact same-source bodies hidden behind a different ICF name.
 
     A folded RVA may inherit another function's mangled identity independently
@@ -560,7 +586,7 @@ def strict_source_alias_candidates(target_rec, base_aliases_by_name, used_base_r
     return [
         rec
         for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
-        if rva not in used_base_rvas
+        if (allow_used or rva not in used_base_rvas)
         and rec["file"] == target_rec["file"]
         and instruction_stream_exact(target_rec, rec)
     ]
@@ -725,6 +751,16 @@ def regen():
     for units in units_by_mangled.values():
         units.sort()
 
+    cross_unit_fuzzy = {}
+    if CROSS_UNIT_REPORT.is_file():
+        cross_report = json.loads(CROSS_UNIT_REPORT.read_text())
+        for function in cross_report.get("functions", []):
+            fuzzy = function.get("fuzzy_match_percent")
+            if fuzzy is not None:
+                cross_unit_fuzzy[function["name"]] = fuzzy
+        if cross_unit_fuzzy:
+            log(f"loaded {len(cross_unit_fuzzy)} cross-unit COMDAT scores")
+
     # interners: collect every name, then assign ids in sorted order
     syms, units_i, files_i = Interner(), Interner(), Interner()
     demangled_by_mangled = {}
@@ -775,6 +811,8 @@ def regen():
         if fuzzy is not None:
             prev = fuzzy_by_mangled.get(mangled)
             fuzzy_by_mangled[mangled] = fuzzy if prev is None else max(prev, fuzzy)
+    for mangled, fuzzy in cross_unit_fuzzy.items():
+        fuzzy_by_mangled.setdefault(mangled, fuzzy)
     # The disposable target COFF tree normalizes safe retail PDB backtick names
     # to MSVC's ??__E/??__F spelling so objdiff can pair them with candidate
     # objects. The rich indexes retain the authoritative PDB names; reflect each
@@ -783,6 +821,15 @@ def regen():
         compiler = normalize_objdiff_symbols.compiler_name(mangled)
         if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
             fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
+        # The retail PDB records the link-selected scalar deleting destructor
+        # (??_G), while delinked COFF commonly exposes the byte-identical vector
+        # flavor (??_E) used by the per-object comparison.  The rest of the
+        # decorated name is a complete class/signature identity, so this alias
+        # is exact rather than a demangled-name heuristic.
+        if mangled.startswith("??_G"):
+            vector_dtor = f"??_E{mangled[4:]}"
+            if vector_dtor in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
+                fuzzy_by_mangled[mangled] = fuzzy_by_mangled[vector_dtor]
     pair_rows = []
     rich_exact = 0
     for mangled in sorted(set(target) & set(base)):
@@ -818,6 +865,30 @@ def regen():
     cross_paired_mangled = set()  # base AND target names paired across a name gap
     used_target_rvas = {row[1] for row in pair_rows}
     used_base_rvas = {row[2] for row in pair_rows}
+    n_compiler_alias = 0
+    for tm in sorted(set(target) - paired_primary):
+        bm = normalize_objdiff_symbols.compiler_name(tm)
+        if (
+            bm not in base
+            or tm not in fuzzy_by_mangled
+            or target[tm]["rva"] in used_target_rvas
+            or base[bm]["rva"] in used_base_rvas
+        ):
+            continue
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(target[tm], base[bm])
+        pair_rows.append(
+            (
+                sym_id[tm], target[tm]["rva"], base[bm]["rva"],
+                fuzzy_by_mangled[tm], cls, t_n, b_n, n_size, n_tonly, n_bonly,
+            )
+        )
+        used_target_rvas.add(target[tm]["rva"])
+        used_base_rvas.add(base[bm]["rva"])
+        cross_paired_mangled.update((tm, bm))
+        n_compiler_alias += 1
+    if n_compiler_alias:
+        log(f"cross-name paired {n_compiler_alias} exact compiler aliases")
+
     base_aliases_by_name = {}
     for rec in base_records:
         base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
@@ -879,6 +950,40 @@ def regen():
         n_rich_alias += 1
     if n_rich_alias:
         log(f"cross-name paired {n_rich_alias} strict same-source rich aliases")
+
+    # A single ICF-selected body can legitimately own several PDB aliases.  If
+    # the base RVA was already consumed by another target symbol, retain a
+    # second target pairing only when the base PDB still records this exact
+    # demangled signature in the same source file and the normalized rich
+    # instruction stream is byte-exact.  This recovers genuine header islands
+    # without treating an arbitrary same-body fold as source ownership.
+    n_shared_rich_alias = 0
+    for tm in sorted(set(target) - paired_primary - cross_paired_mangled):
+        trec = target[tm]
+        if trec["rva"] in used_target_rvas:
+            continue
+        candidates = strict_source_alias_candidates(
+            trec, base_aliases_by_name, used_base_rvas, allow_used=True
+        )
+        if len(candidates) != 1 or candidates[0]["rva"] not in used_base_rvas:
+            continue
+        brec = candidates[0]
+        bm = brec["mangled"]
+        cls, t_n, b_n, n_size, n_tonly, n_bonly = classify(trec, brec)
+        pair_rows.append(
+            (
+                sym_id[tm], trec["rva"], brec["rva"], 100.0, cls,
+                t_n, b_n, n_size, n_tonly, n_bonly,
+            )
+        )
+        used_target_rvas.add(trec["rva"])
+        cross_paired_mangled.update((tm, bm))
+        n_shared_rich_alias += 1
+    if n_shared_rich_alias:
+        log(
+            "cross-name paired "
+            f"{n_shared_rich_alias} shared-RVA same-source rich aliases"
+        )
 
     # Then pair dynamic-init/atexit thunks across their several rich/raw name
     # spellings. The canonical identity must be unique on each side; emitted

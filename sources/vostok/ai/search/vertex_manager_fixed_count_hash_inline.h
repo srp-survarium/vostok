@@ -22,19 +22,19 @@ inline manager::impl		( AllocatorType& allocator, u32 const hash_size, u32 const
 	m_current_path_id		( path_id_type( 0 ) )
 {
 	u32	bytes_count			= hash_size * sizeof( LookUpCellType* );
-	m_hash					= static_cast< LookUpCellType** >( MALLOC( bytes_count, typeid( LookUpCellType* ).name() ) );
+	m_hash					= static_cast< LookUpCellType** >( VOSTOK_MALLOC_IMPL( m_allocator.memory_allocator( ), bytes_count, typeid( LookUpCellType* ).name() ) );
 	memory::zero			( m_hash, bytes_count );
 
 	bytes_count				= fix_size * sizeof( LookUpCellType );
-	m_vertices				= static_cast< LookUpCellType* >( MALLOC( bytes_count, typeid( LookUpCellType ).name() ) );
+	m_vertices				= static_cast< LookUpCellType* >( VOSTOK_MALLOC_IMPL( m_allocator.memory_allocator( ), bytes_count, typeid( LookUpCellType ).name() ) );
 	memory::zero			( m_vertices, bytes_count );
 }
 
 TEMPLATE_SPECIALIZATION
 inline manager::~impl		( )
 {
-	FREE					( m_hash );
-	FREE					( m_vertices );
+	VOSTOK_FREE_IMPL		( m_allocator.memory_allocator( ), m_hash );
+	VOSTOK_FREE_IMPL		( m_allocator.memory_allocator( ), m_vertices );
 }
 
 TEMPLATE_SPECIALIZATION
@@ -199,6 +199,12 @@ TEMPLATE_SPECIALIZATION
 inline u32 manager::visited_vertex_count								( ) const
 {
 	return						m_allocator.visited_vertex_count();
+}
+
+TEMPLATE_SPECIALIZATION
+inline typename manager::allocator_type& manager::allocator				( ) const
+{
+	return						m_allocator;
 }
 
 #undef manager

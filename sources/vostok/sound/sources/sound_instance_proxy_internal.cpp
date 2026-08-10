@@ -93,7 +93,8 @@ sound_instance_proxy_internal::sound_instance_proxy_internal	(
 	m_playback_id			( 0 ),
 	m_type					( volumetric ),
 	m_volumetric_radius		( radius )
-{}
+{
+}
 
 sound_instance_proxy_internal::~sound_instance_proxy_internal	( )
 {
@@ -456,7 +457,7 @@ void sound_instance_proxy_internal::calculate_graph_position
 		return;
 	}
 
-	for ( u32 i = 0; i < 4 && i < paths.size( ); ++i )
+	for ( u32 i = 0; i < 4 && i < paths.end( ) - paths.begin( ); ++i )
 	{
 		fixed_vector< u32, 32 > current_path	= paths[i];
 		u32 const path_size						= current_path.size( );
@@ -479,18 +480,21 @@ void sound_instance_proxy_internal::calculate_graph_position
 		}
 		else
 		{
+			float3 start_point;
+			float3 pos;
 			if ( m_scene.is_segment_pass_portal( current_path[current_path.size( ) - 1], listener_position, m_scene.get_portal_center( current_path[current_path.size( ) - 2] ) ) )
 			{
-				float3 start_point			= m_scene.get_portal_center( current_path[current_path.size( ) - 2] );
+				float3 start_point;
+				start_point					= m_scene.get_portal_center( current_path[current_path.size( ) - 2] );
 				float distance_to_listener	= 0.0f;
-				float3 pos					= position;
+				pos							= position;
 				for ( u32 i = 0; i < current_path.size( ) - 1; ++i )
 				{
 					float3 end_point			= m_scene.get_portal_center( current_path[i] );
 					distance_to_listener		+= math::sqrt( ( pos - end_point ).squared_length( ) );
 					pos							= end_point;
 				}
-				distance_to_listener		+= math::sqrt( ( pos - listener_position ).squared_length( ) );
+				distance_to_listener		+= math::sqrt( float3( pos.x - listener_position.x, pos.y - listener_position.y, pos.z - listener_position.z ).squared_length( ) );
 				results.push_back			( std::make_pair( distance_to_listener, start_point ) );
 				continue;
 			}
@@ -498,18 +502,18 @@ void sound_instance_proxy_internal::calculate_graph_position
 			{
 				float3 nearest_point_on_portal	= m_scene.get_portal_nearest_point( current_path[current_path.size( ) - 1], listener_position, m_scene.get_portal_center( current_path[current_path.size( ) - 2] ) );
 				float distance_to_sound			= math::sqrt( ( nearest_point_on_portal - listener_position ).squared_length( ) ) + math::sqrt( ( m_scene.get_portal_center( current_path[current_path.size( ) - 2] ) - nearest_point_on_portal ).squared_length( ) );
-				float3 start_point				= nearest_point_on_portal + ( nearest_point_on_portal - listener_position ).normalize( ) * distance_to_sound;
-				float distance_to_listener		= 0.0f;
-				float3 pos						= position;
-				for ( u32 i = 0; i < current_path.size( ); ++i )
-				{
-					float3 end_point				= m_scene.get_portal_center( current_path[i] );
-					distance_to_listener			+= math::sqrt( ( pos - end_point ).squared_length( ) );
-					pos								= end_point;
-				}
-				distance_to_listener			+= math::sqrt( ( pos - listener_position ).squared_length( ) );
-				results.push_back				( std::make_pair( distance_to_listener, start_point ) );
+				start_point						= float3( nearest_point_on_portal + ( nearest_point_on_portal - listener_position ).normalize( ) * distance_to_sound );
 			}
+			float distance_to_listener		= 0.0f;
+			pos								= position;
+			for ( u32 i = 0; i < current_path.size( ); ++i )
+			{
+				float3 end_point				= m_scene.get_portal_center( current_path[i] );
+				distance_to_listener			+= math::sqrt( ( pos - end_point ).squared_length( ) );
+				pos								= end_point;
+			}
+			distance_to_listener			+= math::sqrt( ( pos - listener_position ).squared_length( ) );
+			results.push_back				( std::make_pair( distance_to_listener, start_point ) );
 		}
 	}
 }
