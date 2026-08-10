@@ -58,7 +58,7 @@ bool stage_ambient_occlusion::is_effects_ready( ) const
 }
 
 // TODO: Make as general functions.
-static void fill_surface( render_target_ptr surf, renderer_context* context, bool )
+static void fill_surface( render_target_ptr surf, renderer_context* context, bool null_depth_stencil )
 {
 
 	float w = float(surf->width());
