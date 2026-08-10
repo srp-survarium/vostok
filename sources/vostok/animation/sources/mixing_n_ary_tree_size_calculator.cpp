@@ -48,41 +48,41 @@ n_ary_tree_size_calculator::n_ary_tree_size_calculator	( n_ary_tree_comparer* co
 void n_ary_tree_size_calculator::visit					( binary_tree_animation_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_animation_node);
-	size( )						+= node.animation_intervals_count() * sizeof(animation_interval);
+	advance_buffer				( sizeof(n_ary_tree_animation_node) );
+	advance_buffer				( node.animation_intervals_count() * sizeof(animation_interval) );
 #ifndef MASTER_GOLD
-	size( )						+= math::align_up(strings::length( node.identifier() ) + 1, u32(4)) * sizeof(char);
+	advance_buffer				( math::align_up(strings::length( node.identifier() ) + 1, u32(4)) * sizeof(char) );
 #endif // #ifndef MASTER_GOLD
 }
 
 void n_ary_tree_size_calculator::visit					( binary_tree_weight_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_weight_node);
-	size( )						+= sizeof(n_ary_tree_base_node*);
+	advance_buffer				( sizeof(n_ary_tree_weight_node) );
+	advance_buffer				( sizeof(n_ary_tree_base_node*) );
 }
 
 void n_ary_tree_size_calculator::visit					( binary_tree_addition_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_addition_node);
-	size( )						+= sizeof(n_ary_tree_base_node*);
+	advance_buffer				( sizeof(n_ary_tree_addition_node) );
+	advance_buffer				( sizeof(n_ary_tree_base_node*) );
 	propagate					( static_cast<binary_tree_binary_operation_node&>(node) );
 }
 
 void n_ary_tree_size_calculator::visit					( binary_tree_subtraction_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_subtraction_node);
-	size( )						+= sizeof(n_ary_tree_base_node*);
+	advance_buffer				( sizeof(n_ary_tree_subtraction_node) );
+	advance_buffer				( sizeof(n_ary_tree_base_node*) );
 	propagate					( static_cast<binary_tree_binary_operation_node&>(node) );
 }
 
 void n_ary_tree_size_calculator::visit					( binary_tree_multiplication_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_multiplication_node);
-	size( )						+= sizeof(n_ary_tree_base_node*);
+	advance_buffer				( sizeof(n_ary_tree_multiplication_node) );
+	advance_buffer				( sizeof(n_ary_tree_base_node*) );
 	propagate					( static_cast<binary_tree_binary_operation_node&>(node) );
 }
 
@@ -95,23 +95,23 @@ void n_ary_tree_size_calculator::propagate				( binary_tree_binary_operation_nod
 void n_ary_tree_size_calculator::visit					( n_ary_tree_animation_node& node )
 {
 #ifndef MASTER_GOLD
-	size( )						+= math::align_up(strings::length( node.identifier() ) + 1, u32(4)) * sizeof(char);
+	advance_buffer				( math::align_up(strings::length( node.identifier() ) + 1, u32(4)) * sizeof(char) );
 #endif // #ifndef MASTER_GOLD
-	size( )						+= node.animation_intervals_count() * sizeof(animation_interval);
-	size( )						+= sizeof( n_ary_tree_event_iterator* );
+	advance_buffer				( node.animation_intervals_count() * sizeof(animation_interval) );
+	advance_buffer				( sizeof( n_ary_tree_event_iterator* ) );
 	propagate					( node );
 }
 
 void n_ary_tree_size_calculator::visit					( n_ary_tree_weight_transition_node& node )
 {
-	size( )						+= sizeof(n_ary_tree_weight_transition_node);
+	advance_buffer				( sizeof(n_ary_tree_weight_transition_node) );
 	node.from().accept			( *this );
 	node.to().accept			( *this );
 }
 
 void n_ary_tree_size_calculator::visit					( n_ary_tree_time_scale_transition_node& node )
 {
-	size( )						+= sizeof(n_ary_tree_time_scale_transition_node);
+	advance_buffer				( sizeof(n_ary_tree_time_scale_transition_node) );
 	node.from().accept			( *this );
 	node.to().accept			( *this );
 }
@@ -119,13 +119,13 @@ void n_ary_tree_size_calculator::visit					( n_ary_tree_time_scale_transition_no
 void n_ary_tree_size_calculator::visit					( n_ary_tree_weight_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_weight_node);
+	advance_buffer				( sizeof(n_ary_tree_weight_node) );
 }
 
 void n_ary_tree_size_calculator::visit					( n_ary_tree_time_scale_node& node )
 {
 	VOSTOK_UNREFERENCED_PARAMETER	( node );
-	size( )						+= sizeof(n_ary_tree_time_scale_node);
+	advance_buffer				( sizeof(n_ary_tree_time_scale_node) );
 }
 
 void n_ary_tree_size_calculator::visit					( n_ary_tree_addition_node& node )
@@ -146,10 +146,10 @@ void n_ary_tree_size_calculator::visit					( n_ary_tree_multiplication_node& nod
 template < typename T >
 inline void n_ary_tree_size_calculator::propagate		( T& node )
 {
-	size( )						+= sizeof(T);
+	advance_buffer				( sizeof(T) );
 
 	u32 const operands_count	= node.operands_count( );
-	size( )						+= operands_count*sizeof(n_ary_tree_base_node*);
+	advance_buffer				( operands_count*sizeof(n_ary_tree_base_node*) );
 
 	n_ary_tree_base_node* const* i		= node.operands( sizeof(T) );
 	n_ary_tree_base_node* const* const e	= i + operands_count;
