@@ -96,7 +96,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale( n_ary_tree_animation_node& new_time_driving_animation, u32& animation_interval_id, float& animation_interval_time )
 {
-	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.time_root( );
+	n_ary_tree_animation_node* previous_time_driving_animation	= m_from.weight_root( );
 	for ( ; previous_time_driving_animation; previous_time_driving_animation = previous_time_driving_animation->m_next_weight_animation ) {
 		if ( previous_time_driving_animation->time_driving_animation( ) )
 			continue;
