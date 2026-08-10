@@ -122,5 +122,50 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         )
 
 
+class DynamicThunkAliasTests(unittest.TestCase):
+    def test_canonicalizes_local_static_scope_in_both_rich_spellings(self):
+        target = (
+            "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
+            "`dynamic atexit destructor for 's_fire_cook''"
+        )
+        base = (
+            "`dynamic atexit destructor for '"
+            "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
+            "s_fire_cook''"
+        )
+        expected = (
+            "F",
+            "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
+            "s_fire_cook",
+        )
+        self.assertEqual(MATCH_DB.dyn_canon_rich(target), expected)
+        self.assertEqual(MATCH_DB.dyn_canon_base(base), expected)
+
+    def test_allows_missing_synthetic_owner_but_rejects_known_mismatch(self):
+        target = {"file": "vostok/animation/anim_track_common.h"}
+        global_canon = ("F", "vostok::sound::s_debug_audio")
+        local_canon = (
+            "F",
+            "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
+            "s_fire_cook",
+        )
+        self.assertTrue(
+            MATCH_DB.dyn_owner_compatible(target, {"file": None}, global_canon)
+        )
+        self.assertTrue(MATCH_DB.dyn_owner_compatible(target, dict(target), global_canon))
+        self.assertTrue(
+            MATCH_DB.dyn_owner_compatible(
+                target, {"file": "vostok/game/sources/weapon_cook.cpp"}, local_canon
+            )
+        )
+        self.assertFalse(
+            MATCH_DB.dyn_owner_compatible(
+                target,
+                {"file": "vostok/game/sources/weapon_cook.cpp"},
+                global_canon,
+            )
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
