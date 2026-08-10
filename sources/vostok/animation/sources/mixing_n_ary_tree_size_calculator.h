@@ -49,9 +49,13 @@ private:
 	inline	void	propagate		( T& node );
 
 
-	inline	void	advance_buffer	( const u32 size ) { /* no source */ }
-
-	inline	u32&	size			( ) { return m_comparer ? m_comparer->m_needed_buffer_size : m_size; }
+	inline	void	advance_buffer	( const u32 size )
+	{
+		if ( m_comparer )
+			m_comparer->m_needed_buffer_size += size;
+		else
+			m_size += size;
+	}
 
 private:
 	/* 0x0008 */	n_ary_tree_comparer*	m_comparer;
