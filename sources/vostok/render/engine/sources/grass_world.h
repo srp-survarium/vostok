@@ -128,7 +128,6 @@ struct grass_world : public resources::unmanaged_resource {
 	void clear( );
 	void add_trample( trample_desc const& desc );
 
-private:
 	void on_test_sub_resources_loaded( resources::queries_result& )
 	{
 		// claude@NOTE: legacy body diverged - legacy on_sub_resources_loaded calls the retired add_template/add_instance/populate signatures; matcher-phase work.

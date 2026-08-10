@@ -91,26 +91,7 @@ void grass_world::set_shadow_parameters( u32 const )
 
 grass_world::~grass_world( )
 {
-	// FUNCTION BODY[0x6370f0]
-	grass_patches_type::const_iterator it_p			=	m_patches.begin();
-	grass_patches_type::const_iterator end_p		=	m_patches.end();
-
-	for (; it_p != end_p; ++it_p)
-	{
-		grass_patch* patch							=	*it_p;
-		DELETE										(patch);
-	}
-
-	grass_templates_type::iterator	it_t			=	m_templates.begin();
-	grass_templates_type::iterator	end_t			=	m_templates.end();
-
-	for (; it_t != end_t; ++it_t)
-	{
-		grass_template* templ						=	(*it_t);
-
-		DELETE										(templ);
-	}
-
+	clear( );
 	collision::delete_space_partitioning_tree		(m_patches_tree);
 }
 
