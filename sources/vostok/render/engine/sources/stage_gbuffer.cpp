@@ -423,9 +423,9 @@ void stage_gbuffer::execute( )
 			0
 		);
 
-		render_surface_instance* const* it_d = m_context->get_scene_view()->get_visible_opaque_models().begin(), * const* end_d = m_context->get_scene_view()->get_visible_opaque_models().end();
+		render_surface_instance* const* end_d = m_context->get_scene_view()->get_visible_opaque_models().end();
 
-		for (; it_d != end_d; ++it_d)
+		for (render_surface_instance* const* it_d = m_context->get_scene_view()->get_visible_opaque_models().begin(); it_d != end_d; ++it_d)
 		{
 			render_surface_instance& instance = **it_d;
 
