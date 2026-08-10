@@ -22,8 +22,9 @@ class VOSTOK_ANIMATION_API addition_lexeme :
 public:
 	template < typename T1, typename T2 >
 	inline					addition_lexeme		( T1& left, T2& right );
-	inline					addition_lexeme		( addition_lexeme const& other );
+	inline explicit			addition_lexeme		( addition_lexeme const& other );
 	inline	addition_lexeme* cloned_in_buffer	( );
+	virtual					~addition_lexeme	( );
 
 protected:
 	using binary_operation_lexeme::cloned_in_buffer;
