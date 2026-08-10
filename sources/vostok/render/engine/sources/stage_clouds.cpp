@@ -299,11 +299,10 @@ void stage_clouds::execute( )
 
 	if ( options::ref( ).current.m_clouds_allow_moving )
 	{
-
-		if ( math::abs( m_wind_direction | view_dir_2d2 ) > 0.0f )
+		float const wind_dot_view_direction = m_wind_direction | view_dir_2d2;
+		if ( math::abs( wind_dot_view_direction ) > 0.0f )
 		{
-
-			m_camera_offset += math::sign( m_wind_direction | view_dir_2d2 ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( m_wind_direction | view_dir_2d2 ) * m_clouds_scale_multiplier;
+			m_camera_offset += math::sign( wind_dot_view_direction ) * ( m_wind_direction * 0.0125f ).length( ) / m_wind_direction.length( ) * math::abs( wind_dot_view_direction ) * m_clouds_scale_multiplier;
 		}
 		m_wind_offset += m_wind_direction * ( m_clouds_scale_multiplier * 0.0125f ) * m_clouds_scale_multiplier;
 	}
