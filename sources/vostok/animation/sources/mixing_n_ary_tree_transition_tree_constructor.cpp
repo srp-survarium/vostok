@@ -653,14 +653,11 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 {
 	base_interpolator const& interpolator	= animation.weight_interpolator( );
 	n_ary_tree_base_node** operands_begin	= animation.operands( sizeof( n_ary_tree_animation_node ) );
-	bool const has_time_scale				= animation.operands_count( )
-		? (*operands_begin)->is_time_scale( )
-		: false;
-	u32 const weight_operands_count			= animation.operands_count( ) - ( has_time_scale ? 1 : 0 )
+	u32 operands_offset						= animation.operands_count( ) && (*operands_begin)->is_time_scale( ) ? 1 : 0;
+	u32 const weight_operands_count			= animation.operands_count( ) - operands_offset
 		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
 
 	u32 time_scale_operands_count;
-	u32 operands_offset						= has_time_scale;
 	u32 animation_interval_id;
 	float animation_interval_time;
 	n_ary_tree_animation_node* const result	= new_animation(
@@ -684,7 +681,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 	n_ary_tree_base_node** const operands_end	=
 		operands_begin + animation.operands_count( );
 	n_ary_tree_base_node** i					=
-		operands_begin + ( has_time_scale ? time_scale_operands_count : 0 );
+		operands_begin + ( operands_offset ? time_scale_operands_count : 0 );
 
 	n_ary_tree_weight_node temp				( interpolator, 0.f );
 	n_ary_tree_node_comparer comparer;
