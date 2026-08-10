@@ -122,8 +122,8 @@ void stage_forward::accumulate_local_reflections( )
 		false
 	);
 
-	render_surface_instance** it_d = m_dynamic_visuals.begin( );
 	render_surface_instance* const* end_d = m_dynamic_visuals.end( );
+	render_surface_instance** it_d = m_dynamic_visuals.begin( );
 
 	if ( m_dynamic_visuals.size( ) )
 	{
@@ -347,30 +347,32 @@ void stage_forward::execute( )
 	accumulate_local_reflections( );
 	render_forward_models( m_dynamic_visuals, 0 );
 
-	scene::decal_instance_list_type& decals = m_context->scene( )->decals( );
-	collision::objects_type decals_objects( g_allocator );
-
-	backend::ref( ).reset_depth_stencil_target( );
-
-	decals_objects.reserve( decals.size( ) );
-
-	math::frustum frustum = m_context->get_culling_vp( );
-	m_context->scene( )->decals_tree( ).cuboid_query( u32( -1 ), frustum, decals_objects );
-
-	if ( decals_objects.size( ) )
 	{
-		backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
+		scene::decal_instance_list_type& decals = m_context->scene( )->decals( );
+		collision::objects_type decals_objects( g_allocator );
+
 		backend::ref( ).reset_depth_stencil_target( );
-	}
 
-	for ( collision::objects_type::iterator i = decals_objects.begin( ), e = decals_objects.end( ); i != e; ++i )
-	{
-		decal_instance* decal = static_cast_checked< decal_instance* >( ( *i )->user_data( ) );
+		decals_objects.reserve( decals.size( ) );
 
-		statistics::ref( ).forward_decals_stat_group.num_decal_draw_calls.value +=
-			decal->draw( m_context, m_opaque_geometry_mask_effect, forward_render_stage );
+		math::frustum frustum = m_context->get_culling_vp( );
+		m_context->scene( )->decals_tree( ).cuboid_query( u32( -1 ), frustum, decals_objects );
 
-		statistics::ref( ).forward_decals_stat_group.num_decals.value++;
+		if ( decals_objects.size( ) )
+		{
+			backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
+			backend::ref( ).reset_depth_stencil_target( );
+		}
+
+		for ( collision::objects_type::iterator i = decals_objects.begin( ); i != decals_objects.end( ); ++i )
+		{
+			decal_instance* decal = static_cast_checked< decal_instance* >( ( *i )->user_data( ) );
+
+			statistics::ref( ).forward_decals_stat_group.num_decal_draw_calls.value +=
+				decal->draw( m_context, m_opaque_geometry_mask_effect, forward_render_stage );
+
+			statistics::ref( ).forward_decals_stat_group.num_decals.value++;
+		}
 	}
 
 	m_context->set_w( float4x4( ).identity( ) );
