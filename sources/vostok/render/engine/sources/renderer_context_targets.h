@@ -132,13 +132,13 @@ public:
 	u32 memory_usage( ) const { return m_memory_usage; }
 	u32 get_id( ) const { return static_cast< u32 >( m_id ); }
 
-	void create_targets( math::uint2 size, bool force_resize );
-
 public:
 	render_target_instance	m_family[rt_num_render_targets];
+	math::uint2				m_size;
 
 private:
-	math::uint2				m_size;
+	void create_targets( math::uint2 size, bool force_resize );
+	static u32				s_new_id;
 	s32 m_id;
 	u32 m_memory_usage;
 };

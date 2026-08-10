@@ -8,7 +8,7 @@
 namespace vostok {
 namespace render {
 
-static u32 s_new_id = 0;
+u32 renderer_context_targets::s_new_id = 0;
 
 pcstr rt_index_to_name( enum_render_target_index index )
 {
