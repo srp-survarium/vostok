@@ -92,10 +92,12 @@ void n_ary_tree_time_scale_calculator::visit	( n_ary_tree_time_scale_transition_
 		remove_transition	( node );
 	}
 	else {
+		bool from_changed	= false;
 		node.from().accept	( *this );
-		bool const from_changed	= !!m_result;
-		if ( m_result )
+		if ( m_result ) {
 			node.on_from_changed	( *m_result );
+			from_changed		= true;
+		}
 
 		float const time_scale_from	= m_time_scale;
 		node.to().accept	( *this );
