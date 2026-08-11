@@ -10,12 +10,6 @@
 
 namespace survarium {
 
-// claude@NOTE: the target ctor is the constant-folded static-init for the single
-// `static global_input_handler g_input_handler` inside game::on_base_resources_created
-// (still a STUB): `this` folds to the global address, so it stores straight to
-// [g_input_handler]/[g_input_handler+4] instead of via ecx. Built from the anchor's
-// generic local it emits the register form (82.5%); reaches 100% once
-// on_base_resources_created bodies the static and the real call graph reaches it.
 global_input_handler::global_input_handler( game& game ) :
 	m_game( game )
 {

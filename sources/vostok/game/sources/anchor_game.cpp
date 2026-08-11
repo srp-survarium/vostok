@@ -144,10 +144,6 @@ namespace survarium {
 	// (anchor_game_anomaly_veg.cpp); self-guarded, never runs.
 	void use_game_anomaly_veg( );
 
-	// the global_input_handler carcass anchor (anchor_game_global_input.cpp);
-	// self-guarded, never runs. Reached only from the still-stub
-	// game::on_base_resources_created static g_input_handler initializer.
-	void use_game_global_input( );
 }
 
 namespace vostok
@@ -456,8 +452,6 @@ namespace vostok
 		survarium::use_game_fingers( );
 		survarium::use_game_player_cook( );
 		survarium::use_game_anomaly_veg( );
-		survarium::use_game_global_input( );
-
 		// drive the self-guarded network-client carcass anchor; the placeholder
 		// game& is never dereferenced (the anchor returns before touching it).
 		survarium::anchor_game_network_clients( *( survarium::game* )NULL );

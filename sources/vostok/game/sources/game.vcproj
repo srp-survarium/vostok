@@ -1070,10 +1070,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\anchor_game_global_input.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\anchor_game_options.cpp"
 				>
 			</File>
