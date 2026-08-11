@@ -74,8 +74,7 @@ void n_ary_tree::initialize( )
 		event_iterator_predicate( )
 	);
 
-	animation_state* const end	= m_animation_states + m_animations_count;
-	for ( animation_state* i = m_animation_states; i != end; ++i )
+	for ( animation_state* i = m_animation_states, * const end = i + m_animations_count; i != end; ++i )
 		if ( (*i->event_iterator).event_type & time_event_weight_transitions_started )
 			set_object_transform	( i->event_iterator.animation( ) );
 }
@@ -485,7 +484,9 @@ bool n_ary_tree::need_new_transform( const u32 target_time_in_ms ) const
 	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation )
 		if ( i->animation_state( ).event_iterator->event_time_in_ms == target_time_in_ms )
 			if ( i->animation_state( ).event_iterator->event_type & time_event_need_new_object_transform ) {
-				std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, i->animated_object( ) )->need_new_transform = true;
+				animated_object_holder* const animated_object = std::find( m_animated_objects, m_animated_objects + m_animated_objects_count, i->animated_object( ) );
+
+				animated_object->need_new_transform = true;
 				need_new_transform	= true;
 			}
 
