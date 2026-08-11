@@ -666,8 +666,8 @@ void n_ary_tree_comparer::change_animation(
 		n_ary_tree_base_node** const	from_end	= from_begin + from.operands_count( );
 
 		u32 operands_offset			=
-			( to_begin != to_end && (*to_begin)->is_time_scale( ) )
-			|| ( from_begin != from_end && (*from_begin)->is_time_scale( ) )
+			( to.operands_count( ) && (*to_begin)->is_time_scale( ) )
+			|| ( from.operands_count( ) && (*from_begin)->is_time_scale( ) )
 				? 1
 				: 0;
 		u32 time_scale_operands_count;
@@ -675,8 +675,8 @@ void n_ary_tree_comparer::change_animation(
 		m_needed_buffer_size		+= ( operands_offset + 1 ) * sizeof( n_ary_tree_base_node* );
 
 		if ( !time_scale_operands_count ) {
-			if ( to_begin != to_end && (*to_begin)->is_time_scale( ) ) {
-				if ( from_begin != from_end && (*from_begin)->is_time_scale( ) ) {
+			if ( to.operands_count( ) && (*to_begin)->is_time_scale( ) ) {
+				if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) ) {
 					new_time_scale_transition	( **to_begin, **from_begin );
 					++from_begin;
 				}
@@ -684,7 +684,7 @@ void n_ary_tree_comparer::change_animation(
 					new_time_scale_transition	( **to_begin, 0.f );
 				++to_begin;
 			}
-			else if ( from_begin != from_end && (*from_begin)->is_time_scale( ) ) {
+			else if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) ) {
 				new_time_scale_transition		( 0.f, **from_begin );
 				++from_begin;
 			}
@@ -751,13 +751,13 @@ void n_ary_tree_comparer::change_animation(
 		return;
 	}
 
-	interpolator_comparer animation_interpolator_comparer;
+	interpolator_comparer interpolator_comparer;
 	from.weight_interpolator( ).accept(
-		animation_interpolator_comparer,
+		interpolator_comparer,
 		to.weight_interpolator( )
 	);
 	m_equal						= m_equal
-		&& animation_interpolator_comparer.result == animation::equal;
+		&& interpolator_comparer.result == animation::equal;
 
 	if ( to.override_existing_animation( ) )
 		m_equal					= m_equal
