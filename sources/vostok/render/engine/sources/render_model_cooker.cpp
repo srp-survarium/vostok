@@ -178,7 +178,6 @@ cook_intermediate_data::cook_intermediate_data(
 	status_failed			( false ),
 	render_model_data_ready	( false ),
 	material_data_ready		( false ),
-	material_settings_valid	( false ),
 	assets					( 0 ),
 	m_num_render_models		( 0 )
 {
