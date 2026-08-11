@@ -693,7 +693,10 @@ void n_ary_tree_comparer::change_animation(
 			}
 		}
 
-		u32 const left_multiplicands_count	= u32( to_end - to_begin );
+		u32 left_multiplicands_count		= u32( to_end - to_begin );
+		if ( left_multiplicands_count && (*to_begin)->is_time_scale( ) )
+			--left_multiplicands_count;
+
 		bool left_is_pure_weight				= false;
 		float left_weight					= math::float_max;
 		switch ( left_multiplicands_count ) {
@@ -712,12 +715,15 @@ void n_ary_tree_comparer::change_animation(
 			default :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_multiplication_node )
 					+ left_multiplicands_count * sizeof( n_ary_tree_base_node* );
-				for ( ; to_begin != to_end; ++to_begin )
-					increase_buffer_size		( **to_begin );
+				for ( n_ary_tree_base_node** i = to_begin + ( operands_offset && (*to_begin)->is_time_scale( ) ? 1 : 0 ); i != to_end; ++i )
+					increase_buffer_size		( **i );
 				break;
 		}
 
-		u32 const right_multiplicands_count	= u32( from_end - from_begin );
+		u32 right_multiplicands_count		= u32( from_end - from_begin );
+		if ( right_multiplicands_count && (*from_begin)->is_time_scale( ) )
+			--right_multiplicands_count;
+
 		bool right_is_pure_weight			= false;
 		float right_weight					= math::float_max;
 		switch ( right_multiplicands_count ) {
@@ -736,8 +742,8 @@ void n_ary_tree_comparer::change_animation(
 			default :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_multiplication_node )
 					+ right_multiplicands_count * sizeof( n_ary_tree_base_node* );
-				for ( ; from_begin != from_end; ++from_begin )
-					increase_buffer_size		( **from_begin );
+				for ( n_ary_tree_base_node** i = from_begin + ( operands_offset && (*from_begin)->is_time_scale( ) ? 1 : 0 ); i != from_end; ++i )
+					increase_buffer_size		( **i );
 				break;
 		}
 
