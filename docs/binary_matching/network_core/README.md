@@ -3,14 +3,10 @@
 - Namespace: `vostok::network_core`.
 - Build: `/Od` (optimization off) + LTCG, `Master Gold` - see [../MATCHING.md](../MATCHING.md).
 - Sources: `sources/vostok/network_core/sources/`.
-- Reachability: since the network module was matched, network_core is reached
-  through REAL callers (network's tcp_packet_client/http_client/login_client/
-  match_client_impl wrap their network_core counterparts). The only remaining
-  `temp_include_all.cpp` anchor is `use_network_core_entry_point`, kept for the
-  three devices with no real caller yet: `get_connection_info_from_string` and
-  the `operator-` / `udp_match_packet::header_size` address-takes (their real
-  callers live in the unmatched game module) - see
-  [../agentic_loop.md](../agentic_loop.md) section 3.
+- Reachability: network_core is retained through real network and game callers.
+  The former `temp_include_all.cpp`/`anchor_network_core.cpp` reachability layer
+  has been retired; `get_connection_info_from_string`, sequence subtraction, and
+  `udp_match_packet::header_size` are all owned by the reconstructed call graph.
 - Best reversed reference: `http_client.cpp`. Heavy Boost.Asio - expect the body
   to lean on asio / `boost::bind` shapes.
 
