@@ -1,0 +1,11 @@
+# target symbol<TAB>base physical-body representative
+#
+# These reviewed asymmetric ICF identities are used only when the complete
+# normalized rich instruction streams are byte-identical and the candidate is
+# unique. They do not permit fuzzy or same-shape pairing.
+#
+# The retail PDB folds animation_interval::animation with the device proxy
+# operator-> and collision_geometry::cast_to_collision_geometry at RVA 0x17600.
+# The base emits the same 14-byte body under collision_geometry's name but does
+# not retain the animation accessor as a readable alias.
+?animation@animation_interval@mixing@0vostok@@QBEABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@XZ	?cast_to_collision_geometry@collision_geometry@survarium@@UAEPAV12@XZ
