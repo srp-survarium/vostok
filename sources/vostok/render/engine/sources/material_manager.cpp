@@ -90,7 +90,6 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 	
 	post_process_parameters& out_post_process_parameters		= *out_post_process_parameters_ptr;
 	out_post_process_parameters									=  post_process_parameters();
-	// 3 target lines are likely retail-compiled-out source.
 	if (config.value_exists("atmosphere_kresun_multiplier"))
 	{
 		out_post_process_parameters.atmosphere_params_changed		= true;
@@ -99,16 +98,19 @@ void material_manager::initialize_post_process_parameters(post_process_parameter
 
 	if (config.value_exists("atmosphere_kmesun_multiplier"))
 	{
+		out_post_process_parameters.atmosphere_params_changed		= true;
 		out_post_process_parameters.atmosphere_kmesun_multiplier	= float(config["atmosphere_kmesun_multiplier"]["value"]);
 	}
 
 	if (config.value_exists("atmosphere_kr4pi_multiplier"))
 	{
+		out_post_process_parameters.atmosphere_params_changed		= true;
 		out_post_process_parameters.atmosphere_kr4pi_multiplier	= float(config["atmosphere_kr4pi_multiplier"]["value"]);
 	}
 
 	if (config.value_exists("atmosphere_km4pi_multiplier"))
 	{
+		out_post_process_parameters.atmosphere_params_changed		= true;
 		out_post_process_parameters.atmosphere_km4pi_multiplier	= float(config["atmosphere_km4pi_multiplier"]["value"]);
 	}
 
