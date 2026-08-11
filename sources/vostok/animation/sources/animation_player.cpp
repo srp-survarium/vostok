@@ -436,8 +436,8 @@ void animation_player::subscribe(
 
 	subscribed_channel* const new_channel	= static_cast<subscribed_channel*>( m_callbacks_buffer.c_ptr( ) );
 	m_callbacks_buffer						+= sizeof( subscribed_channel );
-
-	R_ASSERT								( new_channel );
+	memory::detail::call_constructor		( new_channel );
+	new_channel->next						= 0;
 
 	u32 const length						= strings::length( channel_id ) + 1;
 	memory::copy							( m_callbacks_buffer.c_ptr( ), length, channel_id, length );
