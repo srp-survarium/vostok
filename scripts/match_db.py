@@ -639,6 +639,24 @@ def effective_source_hash_at(source_file, lo, hi, module):
     return f"{body}.{context}"
 
 
+def retained_max_effective_hash(previous, rec):
+    """Re-hash a retained MAX without trusting a different folded owner.
+
+    LTCG/ICF can leave the same mangled spelling attached only to an unrelated
+    PDB alias in the canonical build. Island evidence pins its reviewed source
+    locator, so a different current owner must not invalidate that epoch. A
+    same-owner record still supplies the current statement extent, preserving
+    normal edit/reset behavior.
+    """
+    module, source_file, lo, hi = previous[5:9]
+    if rec is None or rec.get("file") != source_file:
+        return effective_source_hash_at(source_file, lo, hi, module)
+    extent = _source_extent(rec)
+    if extent is None:
+        return None
+    return effective_source_hash(rec, module or module_of(source_file))
+
+
 def compiled_state_id(rec):
     """Identity for the observed candidate state (size + ordered instructions)."""
     if rec is None:
@@ -1493,16 +1511,8 @@ def regen():
         if mangled in maxima_rows:
             continue
         brec = base.get(mangled)
-        if brec is not None:
-            extent = _source_extent(brec)
-            if extent is None:
-                continue
-            source_file, lo, hi, _text = extent
-            module = previous[5] or module_of(source_file)
-            effective_hash = effective_source_hash(brec, module)
-        else:
-            module, source_file, lo, hi = previous[5:9]
-            effective_hash = effective_source_hash_at(source_file, lo, hi, module)
+        module, source_file, lo, hi = previous[5:9]
+        effective_hash = retained_max_effective_hash(previous, brec)
         if effective_hash == previous[1]:
             maxima_rows[mangled] = (
                 *previous[:5], module, source_file, lo, hi, previous[9], previous[10]
