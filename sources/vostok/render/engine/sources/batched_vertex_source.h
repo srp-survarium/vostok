@@ -7,8 +7,6 @@ namespace vostok {
 namespace render {
 
 struct batched_vertex_source {
-	batched_vertex_source( ) { }
-
 	float3		position;
 	math::color	normal;
 	math::color	tangent;

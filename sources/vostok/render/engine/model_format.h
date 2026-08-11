@@ -47,6 +47,10 @@ enum mesh_type_enum {
 
 class base_basis {
 public:
+	u8 x;
+	u8 y;
+	u8 z;
+
 	void set( float3 n )
 	{
 		n.normalize_safe( n );
@@ -56,10 +60,6 @@ public:
 		s32 ny = math::floor( n.y ); math::clamp( ny, 0, 255 ); y = u8( ny );
 		s32 nz = math::floor( n.z ); math::clamp( nz, 0, 255 ); z = u8( nz );
 	}
-
-	u8 x;
-	u8 y;
-	u8 z;
 };
 
 STATIC_SIZE_ASSERT( base_basis, 0x3 );

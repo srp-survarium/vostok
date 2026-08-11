@@ -74,9 +74,6 @@ typedef base_scene_view* base_scene_view_pointer;
 struct base_output_window : public resources::unmanaged_resource {
 	inline	math::uint2 const&	current_size		( ) const { return m_current_size; }
 
-	inline						base_output_window	( ) { }
-	virtual						~base_output_window	( ) { }
-
 protected:
 	/* 0x0108 */	math::uint2		m_current_size;
 }; // struct base_output_window

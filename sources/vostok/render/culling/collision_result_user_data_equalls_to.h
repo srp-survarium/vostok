@@ -20,7 +20,7 @@ struct collision_result_user_data_equalls_to :
 		return reinterpret_cast<u32>( result.object->user_data( ) ) == m_user_data;
 	}
 
-public:
+private:
 	u32 m_user_data;
 };
 
