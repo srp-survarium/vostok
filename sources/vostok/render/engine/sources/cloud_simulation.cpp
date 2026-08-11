@@ -82,18 +82,25 @@ void cloud_simulation::compute_cloud_density( )
 
 				float num = 0.0f;
 				// 5 target lines are likely retail-compiled-out source.
-				for ( s32 x0 = -2; x0 <= 2; ++x0 ) for ( s32 y0 = -2; y0 <= 2; ++y0 ) for ( s32 z0 = -2; z0 <= 2; ++z0 ) {
-					++num;
+				for ( s32 x0 = -2; x0 <= 2; ++x0 )
+				{
+					for ( s32 y0 = -2; y0 <= 2; ++y0 )
+					{
+						for ( s32 z0 = -2; z0 <= 2; ++z0 )
+						{
+							++num;
 
-					u32 sample_x = x + x0; u32 const sample_y = y + y0; u32 sample_z = z + z0;
+							u32 sample_x = x + x0; u32 const sample_y = y + y0; u32 sample_z = z + z0;
 
-					if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) {
-						sample_x %= m_clouds_size_x;
+							if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) {
+								sample_x %= m_clouds_size_x;
 
-						sample_z %= m_clouds_size_z;
+								sample_z %= m_clouds_size_z;
+							}
+							// 5 target lines are likely retail-compiled-out source.
+							if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
+						}
 					}
-					// 5 target lines are likely retail-compiled-out source.
-					if ( sample_x < m_clouds_size_x && in_grid( sample_y, sample_z, sample_x ) ) accumulated += get_voxel( sample_x, sample_y, sample_z ).x / 255.0f;
 				}
 				// 3 target lines are likely retail-compiled-out source.
 				if ( num > 0.0f )
