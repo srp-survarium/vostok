@@ -12,6 +12,15 @@ class custom_config_value;
 template < u32 t_sample_count >
 class effect_blur : public effect_descriptor {
 public:
+	enum {
+		horizontally,
+		vertically,
+		blur_accumulate,
+		blur_downsample,
+		blur_add_first,
+		blur_add
+	};
+
 	effect_blur( ) { }
 
 	virtual void compile(
@@ -77,8 +86,6 @@ public:
 			compiler.end_pass();
 		compiler.end_technique();
 	}
-
-	virtual ~effect_blur( ) { }
 };
 
 typedef effect_blur< 3 > effect_blur_3;

@@ -586,14 +586,14 @@ void stage_postprocess::process_blur(
 	for ( u32 i = 0; i < bloom_kernal; ++i ) {
 		offsets_weights[i] = float4( offsets_h[i], weights_h[i], offsets_v[i], weights_v[i] );
 	}
-	m_sh_blur[kernel_index]->apply( 0, 0 );
+	m_sh_blur[kernel_index]->apply( effect_blur_3::horizontally, 0 );
 	backend::ref( ).set_ps_texture( "t_base", t0 );
 	backend::ref( ).set_ps_constant( m_blur_offsets_weights, offsets_weights, bloom_kernal );
 	fill_surface( rt1, render_target_ptr( ) );
 
 	backend::ref( ).flush_rt_shader_resources( );
 
-	m_sh_blur[kernel_index]->apply( 1, 0 );
+	m_sh_blur[kernel_index]->apply( effect_blur_3::vertically, 0 );
 	backend::ref( ).set_ps_texture( "t_base", t1 );
 	backend::ref( ).set_ps_constant( m_blur_offsets_weights, offsets_weights, bloom_kernal );
 	fill_surface( rt0, render_target_ptr( ) );
@@ -610,25 +610,25 @@ void stage_postprocess::advanced_bloom( )
 	float t_w_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->width( ) );
 	float t_h_inv = 1.0f / float( m_context->get_t( rt_blur_0 )->height( ) );
 	// 2 target lines are likely retail-compiled-out source.
-	m_sh_blur[0]->apply( 3, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w, t_h, t_w_inv, t_h_inv ) );
 	fill_surface( m_context->get_rt( rt_blur_4 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
 	// 2 target lines are likely retail-compiled-out source.
-	m_sh_blur[0]->apply( 3, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_4 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.5f, t_h * 0.5f, t_w_inv * 2.0f, t_h_inv * 2.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_5 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
 	// 2 target lines are likely retail-compiled-out source.
-	m_sh_blur[0]->apply( 3, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_5 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.25f, t_h * 0.25f, t_w_inv * 4.0f, t_h_inv * 4.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_6 ), render_target_ptr( ) );
 	backend::ref( ).flush_rt_views( );
 	// 2 target lines are likely retail-compiled-out source.
-	m_sh_blur[0]->apply( 3, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_downsample, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_6 ) );
 	backend::ref( ).set_ps_constant( m_blur_target_size_parameter, float4( t_w * 0.125f, t_h * 0.125f, t_w_inv * 8.0f, t_h_inv * 8.0f ) );
 	fill_surface( m_context->get_rt( rt_blur_7 ), render_target_ptr( ) );
@@ -646,23 +646,23 @@ void stage_postprocess::advanced_bloom( )
 
 	clear_surface( m_context->get_rt( rt_blur_3 ) );
 
-	m_sh_blur[0]->apply( 4, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_add_first, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 
-	m_sh_blur[0]->apply( 5, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_add, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_4 ) );
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 
-	m_sh_blur[0]->apply( 5, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_add, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_5 ) );
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 
-	m_sh_blur[0]->apply( 5, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_add, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_6 ) );
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 
-	m_sh_blur[0]->apply( 5, 0 );
+	m_sh_blur[0]->apply( effect_blur_3::blur_add, 0 );
 	backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_7 ) );
 	fill_surface( m_context->get_rt( rt_blur_3 ), render_target_ptr( ) );
 }
@@ -949,7 +949,7 @@ void stage_postprocess::execute( )
 				offsets_h[i], weights_h[i], offsets_v[i], weights_v[i]
 			);
 
-		m_sh_blur[dof_kernel_index]->apply( 0, 0 );
+		m_sh_blur[dof_kernel_index]->apply( effect_blur_3::horizontally, 0 );
 		m_textures[0] = m_context->get_t( rt_blur_0 );
 		backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_0 ) );
 		backend::ref( ).set_ps_constant(
@@ -959,7 +959,7 @@ void stage_postprocess::execute( )
 
 		backend::ref( ).flush_rt_shader_resources( );
 
-		m_sh_blur[dof_kernel_index]->apply( 1, 0 );
+		m_sh_blur[dof_kernel_index]->apply( effect_blur_3::vertically, 0 );
 		m_textures[1] = m_context->get_t( rt_blur_1 );
 		backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_1 ) );
 		backend::ref( ).set_ps_constant(
@@ -1024,7 +1024,7 @@ void stage_postprocess::execute( )
 				);
 
 			backend::ref( ).flush_rt_shader_resources( );
-			m_sh_blur[kernel_index]->apply( 0, 0 );
+			m_sh_blur[kernel_index]->apply( effect_blur_3::horizontally, 0 );
 			m_textures[0] = m_context->get_t( rt_blur_2 );
 			backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_2 ) );
 			backend::ref( ).set_ps_constant(
@@ -1033,7 +1033,7 @@ void stage_postprocess::execute( )
 			fill_surface( m_context->get_rt( rt_blur_1 ), render_target_ptr( ) );
 
 			backend::ref( ).flush_rt_shader_resources( );
-			m_sh_blur[kernel_index]->apply( 2, 0 );
+			m_sh_blur[kernel_index]->apply( effect_blur_3::blur_accumulate, 0 );
 			m_textures[1] = m_context->get_t( rt_blur_1 );
 			backend::ref( ).set_ps_texture( "t_base", &*m_context->get_t( rt_blur_1 ) );
 			backend::ref( ).set_ps_constant(

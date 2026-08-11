@@ -11,13 +11,15 @@ class effect_compiler;
 
 class effect_apply_distortion : public effect_descriptor {
 public:
+	enum {
+		apply_distortion,
+		copy_result
+	};
+
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
-
-	effect_apply_distortion( ) { }
-	virtual ~effect_apply_distortion( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_apply_distortion, 0x4 );

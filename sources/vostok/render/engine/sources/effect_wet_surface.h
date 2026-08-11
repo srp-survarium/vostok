@@ -11,8 +11,13 @@ class effect_compiler;
 
 class effect_wet_surface : public effect_descriptor {
 public:
-	effect_wet_surface( ) { }
-	virtual ~effect_wet_surface( ) { }
+	enum {
+		enum_normal_modify_pass,
+		enum_normal_write_pass,
+		enum_color_modify_pass,
+		enum_color_write_pass,
+		enum_copy
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,

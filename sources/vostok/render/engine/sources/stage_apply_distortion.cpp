@@ -54,12 +54,12 @@ void stage_apply_distortion::execute( )
 
 
 
-	m_sh_apply_distortion->apply( 0, 0 );
+	m_sh_apply_distortion->apply( effect_apply_distortion::apply_distortion, 0 );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 
 	backend::ref( ).flush_rt_shader_resources( );
 
-	m_sh_apply_distortion->apply( 1, 0 );
+	m_sh_apply_distortion->apply( effect_apply_distortion::copy_result, 0 );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_present ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 
 
