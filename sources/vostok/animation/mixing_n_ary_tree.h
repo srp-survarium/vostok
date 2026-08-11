@@ -151,7 +151,7 @@ public:
 
 	inline	bool							is_consistent						( ) const {  return false; /* no source */ }
 	inline	void							dump_animation_states				( animation_states_dumper& arg_0 ) const { /* no source */ }
-	inline	bool							are_there_any_animations			( ) const { return false; /* no source */ }
+	inline	bool							are_there_any_animations			( ) const { return m_animations_count > 0; }
 
 	inline	u32								interpolators_count					( ) const { return m_interpolators_count	; }
 	inline	base_interpolator const**		interpolators						( ) const { return m_interpolators			; }
