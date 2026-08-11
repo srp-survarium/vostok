@@ -12,7 +12,6 @@ class effect_compiler;
 class effect_fstage_default_materials : public effect_material_base {
 public:
 	effect_fstage_default_materials( ) { }
-	virtual ~effect_fstage_default_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

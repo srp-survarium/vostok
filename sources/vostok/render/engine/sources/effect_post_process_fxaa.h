@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_post_process_fxaa( ) { }
-	virtual ~effect_post_process_fxaa( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_fxaa, 0x4 );

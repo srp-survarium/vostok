@@ -18,7 +18,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	virtual ~effect_gather_bloom( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_gather_bloom, 0x4 );

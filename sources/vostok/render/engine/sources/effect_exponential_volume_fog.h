@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_exponential_volume_fog : public effect_material_base {
 public:
-	effect_exponential_volume_fog( ) { }
-	virtual ~effect_exponential_volume_fog( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

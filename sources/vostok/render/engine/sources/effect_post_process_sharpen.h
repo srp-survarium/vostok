@@ -21,8 +21,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_post_process_sharpen( ) { }
-	virtual ~effect_post_process_sharpen( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_sharpen, 0x4 );

@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_fill_reflective_shadow_map( ) { }
-	virtual ~effect_fill_reflective_shadow_map( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fill_reflective_shadow_map, 0x4 );

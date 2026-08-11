@@ -24,7 +24,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	virtual ~effect_copy_image( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_copy_image, 0x4 );

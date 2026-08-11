@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_texture_density : public effect_material_base {
 public:
-	effect_editor_texture_density( ) { }
-	virtual ~effect_editor_texture_density( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

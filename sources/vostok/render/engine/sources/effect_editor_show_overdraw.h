@@ -16,8 +16,6 @@ public:
 		num_overdraw_layers = 10,
 	};
 
-	effect_editor_show_overdraw( ) { }
-	virtual ~effect_editor_show_overdraw( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

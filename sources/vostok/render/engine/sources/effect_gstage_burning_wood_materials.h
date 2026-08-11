@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_gstage_burning_wood_materials : public effect_material_base {
 public:
-	effect_gstage_burning_wood_materials( ) { }
-	virtual ~effect_gstage_burning_wood_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

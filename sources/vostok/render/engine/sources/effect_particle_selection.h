@@ -18,8 +18,6 @@ public:
 		beamtrail,
 	};
 
-	effect_particle_selection( ) { }
-	virtual ~effect_particle_selection( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

@@ -23,8 +23,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_post_process_mlaa( ) { }
-	virtual ~effect_post_process_mlaa( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_mlaa, 0x4 );

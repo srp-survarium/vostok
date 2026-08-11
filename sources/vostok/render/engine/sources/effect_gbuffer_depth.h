@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_gbuffer_depth : public effect_material_base {
 public:
-	effect_gbuffer_depth( ) { }
-	virtual ~effect_gbuffer_depth( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

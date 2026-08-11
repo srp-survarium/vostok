@@ -21,8 +21,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_motion_blur( ) { }
-	virtual ~effect_motion_blur( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_motion_blur, 0x4 );

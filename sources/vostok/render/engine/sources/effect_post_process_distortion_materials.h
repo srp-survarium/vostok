@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_post_process_distortion_materials( ) { }
-	virtual ~effect_post_process_distortion_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_post_process_distortion_materials, 0x4 );

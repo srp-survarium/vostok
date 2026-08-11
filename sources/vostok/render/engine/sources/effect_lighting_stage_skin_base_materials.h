@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_lighting_stage_skin_base_materials : public effect_material_base {
 public:
-	effect_lighting_stage_skin_base_materials( ) { }
-	virtual ~effect_lighting_stage_skin_base_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

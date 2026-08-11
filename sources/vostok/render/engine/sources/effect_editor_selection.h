@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_editor_selection( ) { }
-	virtual ~effect_editor_selection( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_editor_selection, 0x4 );

@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_forward_system : public effect_descriptor {
 public:
-	effect_forward_system( ) { }
-	virtual ~effect_forward_system( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

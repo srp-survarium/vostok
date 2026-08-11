@@ -25,8 +25,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_light_propagation_volumes( ) { }
-	virtual ~effect_light_propagation_volumes( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_light_propagation_volumes, 0x4 );

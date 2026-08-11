@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_rain( ) { }
-	virtual ~effect_rain( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_rain, 0x4 );

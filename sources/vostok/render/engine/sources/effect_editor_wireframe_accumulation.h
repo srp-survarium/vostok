@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_wireframe_accumulation : public effect_material_base {
 public:
-	effect_editor_wireframe_accumulation( ) { }
-	virtual ~effect_editor_wireframe_accumulation( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

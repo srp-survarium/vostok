@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_gbuffer_nomaterial_materials : public effect_material_base {
 public:
-	effect_gbuffer_nomaterial_materials( ) { }
-	virtual ~effect_gbuffer_nomaterial_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

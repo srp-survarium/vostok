@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_gbuffer_to_screen : public effect_descriptor {
 public:
-	effect_editor_gbuffer_to_screen( ) { }
-	virtual ~effect_editor_gbuffer_to_screen( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,
