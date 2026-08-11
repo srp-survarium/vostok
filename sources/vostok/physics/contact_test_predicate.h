@@ -5,22 +5,20 @@
 #ifndef VOSTOK_PHYSICS_CONTACT_TEST_PREDICATE_H_INCLUDED
 #define VOSTOK_PHYSICS_CONTACT_TEST_PREDICATE_H_INCLUDED
 
-#include <vostok/collision/primitives.h>
+#include <vostok/physics/enums/primitive_type.h>
 #include <vostok/physics/sources/bullet_include.h>
 
 namespace vostok {
 namespace physics {
 
-// sushi@TODO: Might be stored in a different module
-// sushi@TODO: Primitive type moved from collision to physics
 struct contact_test_predicate {
 public:
 	virtual	float		add_single_result		(
 							void*						user_data,
-							collision::primitive_type	first_shape_type,
+							primitive_type				first_shape_type,
 							float4x4 const&				first_shape_transform,
 							float3 const&				first_shape_dimension,
-							collision::primitive_type	second_shape_type,
+							primitive_type				second_shape_type,
 							float4x4 const&				second_shape_transform,
 							float3 const&				second_shape_dimension
 						) = 0;

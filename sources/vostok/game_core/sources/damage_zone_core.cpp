@@ -14,10 +14,6 @@
 #include <vostok/game_core/zone_group.h>
 #include <vostok/game_core/generic_anomaly_core.h>
 
-// sushi@TODO: Everything is skipped, since v0.100b is not using anomalies at all.
-// Will come back to this if/when this will be needed.
-// Might be to improve matching, might be because something from here is actually used.
-
 namespace survarium {
 
 hit_receiver_info::hit_receiver_info( hit_receiver* receiver, physics::base_physics_object* rigid_body ) :
@@ -74,12 +70,6 @@ static bool compare_bone_data_predicate( std::pair< collision::bone_collision_da
 	return lhs.first->skeleton_bone_index == rhs.first->skeleton_bone_index;
 }
 
-// defined further down (after is_filter_passed); forward-declared so the add_single_result
-// anchor below can take its address and keep it emitted (target records it static).
-static bool remove_null_receivers_predicate( hit_receiver_info const& info );
-
-// static in the target (PDB plain-name record): internal linkage is what lets objdiff pair
-// these four helpers; anchored from the add_single_result stub below, not temp_include_all.
 static float distance_from_sphere_center_to_point_on_shape( float radius )
 {
 	return radius;
@@ -162,16 +152,35 @@ static float distance_from_cylinder_center_to_point_on_shape(
 	return ( center - ( surface_center + circle_proj_vec ) ).length( );
 }
 
+struct compare_body_parts_predicate {
+	inline explicit compare_body_parts_predicate( pcstr name ) : m_name( name ) { }
+
+	inline bool operator()( fixed_string<16> const& body_part ) const
+	{
+		return strings::equal( m_name, body_part.c_str( ) );
+	}
+	pcstr	m_name;
+};
+
+STATIC_SIZE_ASSERT(compare_body_parts_predicate, 0x4);
+
 struct dz_bone_data_contact_test_predicate : public physics::contact_test_predicate {
 public:
-	inline	dz_bone_data_contact_test_predicate( vectora<std::pair<collision::bone_collision_data *,float> >& arg_0, vector<fixed_string<16> > const* arg_1 ) { /* no source */ }
+	inline dz_bone_data_contact_test_predicate(
+		vectora<std::pair<collision::bone_collision_data *, float> >& result,
+		vector<fixed_string<16> > const* body_parts_filter
+	) :
+		m_result( &result ),
+		m_body_parts_filter( body_parts_filter )
+	{
+	}
 
 	virtual	float		add_single_result				(
 							void*						user_data,
-							collision::primitive_type	first_shape_type,
+							physics::primitive_type		first_shape_type,
 							float4x4 const&				first_shape_transform,
 							float3 const&				first_shape_dimension,
-							collision::primitive_type	second_shape_type,
+							physics::primitive_type		second_shape_type,
 							float4x4 const&				second_shape_transform,
 							float3 const&				second_shape_dimension
 						) override;
@@ -183,46 +192,52 @@ public:
 
 STATIC_SIZE_ASSERT(dz_bone_data_contact_test_predicate, 0xC);
 
-// STATE[STUB]: claude@NOTE: target rva 0xb7be0, 20 stmts. Switches on second_shape_type
-// to the four distance_from_*_center helpers above, then result.first=bone,
-// result.second=dist/radius, m_result->push_back(result). BLOCKER: the override mangles
-// its primitive_type param under physics:: in the target but collision:: here, because the
-// base virtual in contact_test_predicate.h still uses collision::primitive_type (its
-// sushi@TODO "moved from collision to physics"). Matching requires introducing
-// physics::primitive_type and retyping contact_test_predicate::add_single_result -
-// a cross-unit change owned by contact_test_predicate's PR. Belongs with the hit_on_*
-// block (they instantiate this predicate). The four helpers it calls already pair.
 float dz_bone_data_contact_test_predicate::add_single_result(
 	void*						user_data,
-	collision::primitive_type	first_shape_type,
+	physics::primitive_type		first_shape_type,
 	float4x4 const&				first_shape_transform,
 	float3 const&				first_shape_dimension,
-	collision::primitive_type	second_shape_type,
+	physics::primitive_type		second_shape_type,
 	float4x4 const&				second_shape_transform,
 	float3 const&				second_shape_dimension
 )
 {
-	// temp anchor: the real body dispatches to the four static distance_from_* helpers above
-	// and the two file-local predicates; keep them emitted (paired against the target statics)
-	// until that dispatch and the hit_on_* callers are matched.
-	{
-		typedef float ( *shape_fn0 )( float );
-		typedef float ( *shape_fn1 )( float4x4 const&, float3 const&, float3 const& );
-		typedef float ( *shape_fn2 )( float4x4 const&, float, float, float3 const& );
-		volatile shape_fn0 p0 = &distance_from_sphere_center_to_point_on_shape;
-		volatile shape_fn1 p1 = &distance_from_box_center_to_point_on_shape;
-		volatile shape_fn2 p2 = &distance_from_capsule_center_to_point_on_shape;
-		volatile shape_fn2 p3 = &distance_from_cylinder_center_to_point_on_shape;
-		(void)p0; (void)p1; (void)p2; (void)p3;
+	VOSTOK_UNREFERENCED_PARAMETERS( first_shape_type, first_shape_dimension );
 
-		// the two file-local predicates are likewise only referenced from the hit_on_*
-		// stubs; keep them emitted (paired against the target statics) until those match.
-		typedef bool ( *cmp_fn )( std::pair< collision::bone_collision_data *, float > const&, std::pair< collision::bone_collision_data *, float > const& );
-		typedef bool ( *null_fn )( hit_receiver_info const& );
-		volatile cmp_fn  q0 = &compare_bone_data_predicate;
-		volatile null_fn q1 = &remove_null_receivers_predicate;
-		(void)q0; (void)q1;
+	std::pair< collision::bone_collision_data*, float > result;
+	result.first = static_cast< collision::bone_collision_data* >( user_data );
+
+	if ( m_body_parts_filter )
+	{
+		if ( std::find_if(
+			m_body_parts_filter->begin( ),
+			m_body_parts_filter->end( ),
+			compare_body_parts_predicate( result.first->body_part_name.c_str( ) )
+		) == m_body_parts_filter->end( ) )
+			return 0.0f;
 	}
+
+	float max_distance = 1.0f;
+	switch ( second_shape_type )
+	{
+	case physics::primitive_sphere:
+		max_distance = distance_from_sphere_center_to_point_on_shape( second_shape_dimension[0] );
+		break;
+	case physics::primitive_box:
+		max_distance = distance_from_box_center_to_point_on_shape( second_shape_transform, second_shape_dimension, first_shape_transform.c.xyz( ) );
+		break;
+	case physics::primitive_capsule:
+		max_distance = distance_from_capsule_center_to_point_on_shape( second_shape_transform, second_shape_dimension[0], second_shape_dimension[1], first_shape_transform.c.xyz( ) );
+		break;
+	case physics::primitive_cylinder:
+		max_distance = distance_from_cylinder_center_to_point_on_shape( second_shape_transform, second_shape_dimension[0], second_shape_dimension[1], first_shape_transform.c.xyz( ) );
+		break;
+	default: NODEFAULT( );
+	}
+
+	float const d_1 = ( second_shape_transform.c.xyz( ) - first_shape_transform.c.xyz( ) ).length( );
+	result.second = d_1 / max_distance;
+	m_result->push_back( result );
 
 	return 0.0f;
 }
@@ -304,32 +319,140 @@ bool damage_zone_core::is_filter_passed( physics::base_physics_object* object ) 
 	return ( object->get_collision_group( ) & 0x40 ) != 0;
 }
 
-// STATE[STUB]: claude@NOTE: target rva 0x588f80, 26 stmts. Per-receiver: build a
-// dz_bone_data_contact_test_predicate, run a contact test filling a
-// vectora<pair<bone_collision_data*,float>> results, copy/sort into unique_bones via
-// insert_iterator + compare_bone_data_predicate, then for each unique bone call
-// hit_receiver::hit(hit_initiator, bone_data, damage_type, amount, armor_piercing, bullet).
-// BLOCKER: needs dz_bone_data_contact_test_predicate::add_single_result matched first
-// (blocked on physics::primitive_type, see above) plus a full vectora/insert_iterator/sort
-// STL reconstruction. Parked as a coherent hit_on_* block.
 void damage_zone_core::hit_on_enter( const u32 frame_delta, const u32 current_time )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta, current_time );
+
+	if ( m_receivers.empty( ) )
+		return;
+
+	hit_receiver_info* it = m_receivers.begin( );
+	hit_receiver_info* end = m_receivers.end( );
+	for ( ; it != end ; ++it )
+	{
+		if ( it->m_was_hit )
+			continue;
+
+		typedef vectora<std::pair<collision::bone_collision_data*, float> > bone_data_container;
+		bone_data_container results( g_allocator );
+		dz_bone_data_contact_test_predicate predicate( results, &m_body_parts_filter );
+
+		ASSERT( UNKNOWN_EXPRESSION_T( it->m_rigid_body ) );
+		contact_test( it->m_rigid_body, predicate );
+
+		bone_data_container unique_bones( g_allocator );
+		std::insert_iterator<bone_data_container> insert_it( unique_bones, unique_bones.begin( ) );
+		std::unique_copy( results.begin( ), results.end( ), insert_it, compare_bone_data_predicate );
+
+		std::pair<collision::bone_collision_data*, float> const* ub_it = unique_bones.begin( );
+		std::pair<collision::bone_collision_data*, float> const* ub_end = unique_bones.end( );
+		for ( ; ub_it != ub_end ; ++ub_it )
+		{
+			if ( ub_it->second <= 1.0f )
+			{
+				it->m_receiver->hit( this, *ub_it->first, m_damage_type.c_str( ), m_max_hit, m_max_armor_piercing, NULL );
+				it->m_was_hit = true;
+			}
+		}
+
+		ASSERT( UNKNOWN_EXPRESSION_T( it->m_receiver ) );
+		if ( it->m_was_hit && m_owner )
+			m_owner->on_zone_act( this, it->m_receiver );
+	}
 }
 
-// STATE[STUB]: claude@NOTE: target rva 0x588bf0, 47 stmts. Like hit_on_enter but only
-// hits receivers already in m_receivers and folds in hit_value/armor_piercing_value via
-// m_hit_curve plus a hit_coeff. Same BLOCKER (predicate vtable/add_single_result +
-// physics::primitive_type + STL). Parked with the hit_on_* block.
 void damage_zone_core::hit_on_inside( const u32 frame_delta, const u32 current_time )
 {
+	m_accumulated_hit_time_ms += frame_delta;
+
+	if ( m_receivers.empty( ) )
+		return;
+
+	if ( m_accumulated_hit_time_ms >= m_hit_interval_ms )
+	{
+		hit_receiver_info* it = m_receivers.begin( );
+		hit_receiver_info* end = m_receivers.end( );
+		for ( ; it != end ; ++it )
+		{
+			it->m_was_hit = false;
+
+			typedef vectora<std::pair<collision::bone_collision_data*, float> > bone_data_container;
+			bone_data_container results( g_allocator );
+			dz_bone_data_contact_test_predicate predicate( results, &m_body_parts_filter );
+
+			ASSERT( UNKNOWN_EXPRESSION_T( it->m_rigid_body ) );
+			contact_test( it->m_rigid_body, predicate );
+
+			bone_data_container unique_bones( g_allocator );
+			std::insert_iterator<bone_data_container> insert_it( unique_bones, unique_bones.begin( ) );
+			std::unique_copy( results.begin( ), results.end( ), insert_it, compare_bone_data_predicate );
+
+			std::pair<collision::bone_collision_data*, float> const* ub_it = unique_bones.begin( );
+			std::pair<collision::bone_collision_data*, float> const* ub_end = unique_bones.end( );
+			for ( ; ub_it != ub_end ; ++ub_it )
+			{
+				if ( ub_it->second <= 1.0f )
+				{
+					float hit_coeff = m_hit_curve.evaluate( ub_it->second, 0.0f, math::range_time_type, 0.0f, 0.0f );
+					math::clamp( hit_coeff, 0.0f, 1.0f );
+					float const hit_value = math::lerp( m_min_hit, m_max_hit, hit_coeff );
+					float const armor_piercing_value = math::lerp( m_min_armor_piercing, m_max_armor_piercing, hit_coeff );
+					it->m_receiver->hit( this, *ub_it->first, m_damage_type.c_str( ), hit_value, armor_piercing_value, NULL );
+					it->m_was_hit = true;
+				}
+			}
+
+			ASSERT( UNKNOWN_EXPRESSION_T( it->m_receiver ) );
+			if ( it->m_was_hit && m_owner )
+				m_owner->on_zone_act( this, it->m_receiver );
+		}
+
+		m_accumulated_hit_time_ms = 0;
+	}
 }
 
-// STATE[STUB]: claude@NOTE: target rva 0x588860, 40 stmts. Like hit_on_enter but mixes
-// on_bound_hit/on_center_hit from m_motion_on_bound_curve / m_motion_on_center_curve into
-// hit_val. Same BLOCKER (predicate vtable/add_single_result + physics::primitive_type +
-// STL). Parked with the hit_on_* block.
 void damage_zone_core::hit_on_motion_inside( const u32 frame_delta, const u32 current_time )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( frame_delta, current_time );
+
+	if ( m_receivers.empty( ) )
+		return;
+
+	hit_receiver_info* it = m_receivers.begin( );
+	hit_receiver_info* end = m_receivers.end( );
+	for ( ; it != end ; ++it )
+	{
+		it->m_was_hit = false;
+
+		typedef vectora<std::pair<collision::bone_collision_data*, float> > bone_data_container;
+		bone_data_container results( g_allocator );
+		dz_bone_data_contact_test_predicate predicate( results, &m_body_parts_filter );
+
+		ASSERT( UNKNOWN_EXPRESSION_T( it->m_rigid_body ) );
+		contact_test( it->m_rigid_body, predicate );
+
+		bone_data_container unique_bones( g_allocator );
+		std::insert_iterator<bone_data_container> insert_it( unique_bones, unique_bones.begin( ) );
+		std::unique_copy( results.begin( ), results.end( ), insert_it, compare_bone_data_predicate );
+
+		std::pair<collision::bone_collision_data*, float> const* ub_it = unique_bones.begin( );
+		std::pair<collision::bone_collision_data*, float> const* ub_end = unique_bones.end( );
+		for ( ; ub_it != ub_end ; ++ub_it )
+		{
+			if ( ub_it->second <= 1.0f )
+			{
+				float on_bound_hit = m_motion_on_bound_curve.evaluate( it->m_receiver->get_speed( ), 0.0f, math::range_time_type, 0.0f, 0.0f );
+				float on_center_hit = m_motion_on_center_curve.evaluate( it->m_receiver->get_speed( ), 0.0f, math::range_time_type, 0.0f, 0.0f );
+				float const hit_val = math::lerp( m_min_hit, m_max_hit, ( on_bound_hit + on_center_hit ) / 2.0f );
+				it->m_receiver->hit( this, *ub_it->first, m_damage_type.c_str( ), hit_val, m_min_armor_piercing, NULL );
+				it->m_was_hit = true;
+			}
+		}
+
+		ASSERT( UNKNOWN_EXPRESSION_T( it->m_receiver ) );
+		if ( it->m_was_hit && m_owner )
+			m_owner->on_zone_act( this, it->m_receiver );
+	}
 }
 
 void damage_zone_core::activate( zone_group* owner, physics::world* p_world, scheduler& scheduler )

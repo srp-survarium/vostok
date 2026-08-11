@@ -61,7 +61,6 @@ private:
 	virtual	void			on_leave					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 	virtual	void			on_enter					( buffer_vector<physics::base_physics_object *> const& objects ) override;
 
-public:
 	inline	void			remove_null_receivers		( ) { /* no source */ }
 	inline	void			remove_left_receivers		( buffer_vector<physics::base_physics_object *> const& arg_0 ) { /* no source */ }
 

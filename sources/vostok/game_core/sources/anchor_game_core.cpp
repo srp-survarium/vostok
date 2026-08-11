@@ -470,10 +470,6 @@ namespace vostok
 
 		survarium::hit_receiver_info hit_receiver_info( NULL, NULL );
 		hit_receiver_info == hit_receiver_info;
-
-		// the four static distance_from_* shape helpers are now anchored in-TU from the
-		// dz_bone_data_contact_test_predicate::add_single_result stub (internal linkage,
-		// matching the target's static records - see damage_zone_core.cpp).
 	}
 
 	void use_generic_anomaly_core( )
@@ -2131,43 +2127,10 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &gmlc ) );
 	}
 
-	struct ghost_predicate : physics::contact_test_predicate {
-	virtual	float		add_single_result		(
-							void*				arg_0,
-							collision::primitive_type		arg_1,
-							float4x4 const&		arg_2,
-							float3 const&		arg_3,
-							collision::primitive_type		arg_4,
-							float4x4 const&		arg_5,
-							float3 const&		arg_6
-						) override { return 0.0;}
-	};
-
-
-	// claude@MATCH: use_game_core_collision_sensor trimmed - is_filter_passed /
-	// get_collision_geometry / get_overlapping_objects_count / load / resolve_links / tick
-	// now have real callers (collision_sensor is a base subobject of damage_zone_core /
-	// booby_trap_core). Only the two-arg contact_test( base_physics_object*, predicate& )
-	// has no real caller yet, so keep just that anchor.
-	void use_game_core_collision_sensor()
-	{
-		survarium::collision_sensor& sensor = *reinterpret_cast< survarium::collision_sensor* >( NULL );
-		ghost_predicate gp;
-		sensor.contact_test( NULL, gp );
-	}
-
-
-	// claude@MATCH: use_game_core_collision_geometry trimmed - ctor + load are reached by
-	// booby_trap_core.cpp:45, and get_overlapping_objects_count / get_overlapping_objects /
-	// destroy_ghost_object / subscribe / set_transform / get_transform now have real callers
-	// in matched collision_sensor.cpp / collision_geometry.cpp. Only the two-arg contact_test
-	// and get_shapes_centers (which cascade into physics bt_ghost_object) lack a real caller.
+	// get_shapes_centers has no target caller in the reconstructed game path yet.
 	void use_game_core_collision_geometry()
 	{
 		survarium::collision_geometry& gm = *reinterpret_cast< survarium::collision_geometry* >( NULL );
-		ghost_predicate predicate;
-		gm.contact_test( NULL, predicate );
-
 		vostok::vectora<float3> centers_results( NULL );
 		gm.get_shapes_centers( centers_results );
 	}
@@ -2517,7 +2480,6 @@ namespace vostok
 		use_game_core_jump_logic_state_landing();
 		use_game_core_jump_logic_state_start();
 		use_game_core_jump_logic();
-		use_game_core_collision_sensor();
 		use_game_core_collision_geometry();
 		use_game_core_scheduler();
 		use_game_core_inventory_holder();
