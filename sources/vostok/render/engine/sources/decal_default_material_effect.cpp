@@ -54,10 +54,10 @@ void decal_default_material_effect::compile(
 			if (config.value_exists("normal_multiplier"))
 				compiler.set_constant	("constant_normal_multiplier", math::float3(config["normal_multiplier"]));
 
-			compiler.set_constant(
-				"smoothness_interpolation",
-				config.value_exists("smoothness_interpolation") ? float(config["smoothness_interpolation"]) : 0.0f
-			);
+			if (config.value_exists("smoothness_interpolation"))
+				compiler.set_constant("smoothness_interpolation", float(config["smoothness_interpolation"]));
+			else
+				compiler.set_constant("smoothness_interpolation", 0.0f);
 
 			if (config.value_exists("fresnel_multiplier"))
 				compiler.set_constant("fresnel_multiplier", float(config["fresnel_multiplier"]));

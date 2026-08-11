@@ -36,7 +36,7 @@ void sky_ambient_occlusion::set_properties(
 	}
 
 	float4x4 new_transform = math::create_translation(in_properties.location);
-	new_transform.set_scale(float3(in_properties.width, in_properties.height, in_properties.depth));
+	new_transform.set_scale(float3(in_properties.width, in_properties.depth, in_properties.height));
 
 	m_aabb = math::create_identity_aabb();
 	m_aabb.modify(new_transform);
