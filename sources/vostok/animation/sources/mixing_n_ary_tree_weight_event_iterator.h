@@ -28,7 +28,7 @@ public:
 			void		invert_times						( u32 time_in_ms );
 
 			n_ary_tree_weight_event_iterator&	operator ++	( );
-	inline	animation_event						operator *	( );
+	inline	animation_event						operator *	( ) const;
 	inline	bool								is_equal	( n_ary_tree_weight_event_iterator const& other ) const;
 
 private:

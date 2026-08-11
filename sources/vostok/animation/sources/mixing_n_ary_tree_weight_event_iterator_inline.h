@@ -18,7 +18,7 @@ inline n_ary_tree_weight_event_iterator::n_ary_tree_weight_event_iterator				( )
 {
 }
 
-inline animation_event n_ary_tree_weight_event_iterator::operator *						( )
+inline animation_event n_ary_tree_weight_event_iterator::operator *						( ) const
 {
 	return				animation_event( m_time_in_ms, m_event_type, 0 );
 }
