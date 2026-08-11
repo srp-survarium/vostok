@@ -53,7 +53,7 @@ public:
 
 	inline	u32									last_send_queed_packets_time_in_ms	( ) const { /* no source */ return m_last_send_queed_packets_time_in_ms; }
 
-	inline	network_core::udp_match_packet*		new_packet							( match_client_message_types_enum arg_0 ) { /* no source */ return NULL; }
+	inline	network_core::udp_match_packet*		new_packet							( match_client_message_types_enum arg_0 ) { return m_client.new_packet( ( u8 )arg_0 ); }
 	inline	void								delete_packet						( network_core::udp_match_packet*& arg_0 ) { /* no source */ }
 
 	inline	void								set_on_packet_received				( boost::function< void( u8, network_core::packet_reader& ) > const& arg_0 ) { m_client.set_on_packet_received( arg_0 ); }
