@@ -15,6 +15,8 @@ struct surface_stats;
 
 class static_render_surface : public render_surface {
 public:
+	typedef render_surface super;
+
 	explicit static_render_surface( bool colored );
 	virtual ~static_render_surface( ) { }
 
@@ -28,7 +30,7 @@ public:
 	virtual void add_shadow_vertices( batched_geometry_interface* in_out_geometry, float4x4 const& transform );
 
 	void create_material_pass_geometry( ) { }
-	void create_shadow_pass_geometry( pcbyte data, u32 num_vertices, u32 stride );
+	void create_shadow_pass_geometry( pcbyte data, u32 const num_vertices, u32 const stride );
 };
 
 STATIC_SIZE_ASSERT( static_render_surface, 0x9C );
@@ -48,6 +50,8 @@ typedef resources::resource_ptr<
 
 class static_render_model_instance : public render_model_instance_impl {
 public:
+	typedef render_model_instance_impl super;
+
 	static_render_model_instance( );
 	virtual ~static_render_model_instance( );
 

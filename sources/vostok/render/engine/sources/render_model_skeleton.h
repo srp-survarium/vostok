@@ -22,10 +22,11 @@ struct surface_stats;
 
 class skeleton_render_surface : public render_surface {
 public:
+	typedef render_surface super;
+
 	skeleton_render_surface( );
 	virtual void update( vector< float4x4 > const& bones ) = 0;
 	virtual bool is_dynamic( ) const { return true; }
-	virtual ~skeleton_render_surface( ) { }
 };
 
 STATIC_SIZE_ASSERT( skeleton_render_surface, 0x9C );
@@ -33,11 +34,15 @@ STATIC_SIZE_ASSERT( skeleton_render_surface, 0x9C );
 class skeleton_render_model : public render_model {
 public:
 	skeleton_render_model( );
-	virtual ~skeleton_render_model( ) { }
 
 	void load_bones( memory::reader& bones_chunk );
 	void update( vector< float4x4 > const& bones );
 	void get_bind_pose( float4x4* matrices, u32 count ) const;
+
+private:
+	friend class skeleton_combined_model_instance_cook;
+	friend class skeleton_model_instance_cook;
+	friend class skeleton_render_model_instance;
 
 	shader_constant_host*	m_bones_matrices_shader_constant;
 	shader_constant_host*	m_prev_bones_matrices_shader_constant;
@@ -87,6 +92,10 @@ public:
 	virtual u32 get_surfaces_count( u32 ) const;
 	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
 	virtual void get_bind_pose( float4x4* matrices, u32 count ) const;
+
+private:
+	friend class skeleton_combined_model_instance_cook;
+	friend class skeleton_model_instance_cook;
 
 	vector< float4x4 >			m_prev_bones_matrices;
 	vector< float4x4 >			m_bones_matrices;
