@@ -35,8 +35,8 @@ struct injection_geometry : public boost::noncopyable {
 	injection_geometry( u32 rsm_size_x, u32 rsm_size_y );
 	void draw( );
 	void prepare( u32 rsm_size_x, u32 rsm_size_y );
-	~injection_geometry( ) { }
 
+private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	u32					m_num_points;
@@ -49,16 +49,14 @@ STATIC_SIZE_ASSERT( injection_geometry, 0x18 );
 
 struct sliced_cube_geometry : public boost::noncopyable {
 	struct sliced_cube_geometry_vertex {
-		sliced_cube_geometry_vertex( ) { }
-
 		float4	position;
 		float4	xy_and_slice_index;
 	};
 
 	explicit sliced_cube_geometry( u32 const in_num_cells );
 	void draw( );
-	~sliced_cube_geometry( ) { }
 
+private:
 	res_declaration_ptr	m_vertext_declaration;
 	untyped_buffer_ptr	m_vertex_buffer;
 	untyped_buffer_ptr	m_index_buffer;
@@ -178,11 +176,6 @@ struct radiance_volume : public boost::noncopyable {
 	void prepare_gv( );
 	void fill_previous_result( );
 
-private:
-	void begin_render_to_cells( );
-	void end_render_to_cells( );
-
-public:
 	render_target_ptr	m_rt_rms_albedo_source;
 	res_texture_ptr		m_t_rms_albedo_source;
 	render_target_ptr	m_rt_rms_normal_source;
@@ -203,6 +196,10 @@ public:
 	res_texture_ptr		m_t_rms_position;
 	u32					m_rsm_downsampled_size;
 	u32					m_rsm_source_size;
+
+private:
+	void begin_render_to_cells( );
+	void end_render_to_cells( );
 
 	box_geometry		m_box_geometry;
 	D3D11_VIEWPORT		m_saved_viewport;

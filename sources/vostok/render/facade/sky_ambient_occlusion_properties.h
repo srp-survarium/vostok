@@ -8,8 +8,6 @@ namespace vostok {
 namespace render {
 
 struct sky_ambient_occlusion_properties {
-	sky_ambient_occlusion_properties( ) { }
-
 	fixed_string<260>	texture_name;
 	float3				location;
 	float				width;

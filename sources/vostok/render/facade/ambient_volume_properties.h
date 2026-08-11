@@ -7,8 +7,6 @@ namespace vostok {
 namespace render {
 
 struct ambient_volume_properties {
-	ambient_volume_properties( ) { }
-
 	float4x4	transform;
 	float		ambient_multiplier;
 	bool		enabled;
