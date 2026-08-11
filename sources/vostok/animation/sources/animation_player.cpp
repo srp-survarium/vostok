@@ -652,12 +652,11 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 	*((u32*)buffer + 1) = m_mixing_tree_buffer_size;
 	mutable_buffer tree_buffer( (void*)((u32*)buffer + 2), buffer_size );
 
-	mixing::n_ary_tree* tree = static_cast<mixing::n_ary_tree*>( tree_buffer.c_ptr() );
 	tree_buffer += sizeof( mixing::n_ary_tree );
 
 	if ( m_mixing_tree_buffer_size )
 	{
-		new (tree) mixing::n_ary_tree(
+		new ((u32*)buffer + 2) mixing::n_ary_tree(
 			mixing::n_ary_tree_transition_tree_constructor(
 				tree_buffer,
 				m_mixing_tree,
@@ -672,20 +671,19 @@ void animation_player::serialize_state( void* buffer, const u32 buffer_size )
 	}
 	else
 	{
-		new (tree) mixing::n_ary_tree( );
+		new ((u32*)buffer + 2) mixing::n_ary_tree( );
 	}
 
-	tree->adjust_animation_events_times( m_mixing_tree );
-
-	for ( mixing::n_ary_tree_animation_node* root = tree->weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
-		invert_animation_times( *root, m_mixing_tree.tree_actual_time_in_ms( ) );
+	m_mixing_tree.adjust_animation_events_times( *(mixing::n_ary_tree*)((u32*)buffer + 2) );
+	invert_times( *(mixing::n_ary_tree*)((u32*)buffer + 2), m_mixing_tree.tree_actual_time_in_ms( ), false, false );
 }
 
 void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 {
-	m_mixing_tree_buffer_size					= *((u32*)buffer + 1);
+	buffer										= (u32*)buffer + 1;
+	m_mixing_tree_buffer_size					= *(u32*)buffer;
 
-	mixing::n_ary_tree& tree					= *(mixing::n_ary_tree*)( (u32*)buffer + 2 );
+	mixing::n_ary_tree& tree					= *(mixing::n_ary_tree*)( (u32*)buffer + 1 );
 	if ( tree.animations_count( ) == 0 )
 	{
 		m_mixing_tree.~n_ary_tree			( );
@@ -693,8 +691,7 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 		return;
 	}
 
-	for ( mixing::n_ary_tree_animation_node* root = tree.weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
-		invert_animation_times( *root, time_in_ms );
+	invert_times( tree, time_in_ms, false, false );
 
 	tree.m_tree_actual_time_in_ms				= time_in_ms;
 
@@ -713,8 +710,7 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 
 	tree.adjust_animation_events_times( m_mixing_tree );
 
-	for ( mixing::n_ary_tree_animation_node* root = tree.weight_root( ) ; root != NULL ; root = root->m_next_weight_animation )
-		invert_animation_times( *root, time_in_ms );
+	invert_times( tree, time_in_ms, false, false );
 }
 
 void animation_player::destroy_state( void* buffer )
