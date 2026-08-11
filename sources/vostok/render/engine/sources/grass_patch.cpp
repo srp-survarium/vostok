@@ -151,8 +151,8 @@ void grass_patch::try_accumulate_trample(
 	D3D11_VIEWPORT view_port;
 	view_port.TopLeftX					= 0.f;
 	view_port.TopLeftY					= 0.f;
-	view_port.Width						= 128.f;
-	view_port.Height						= 128.f;
+	view_port.Width						= 64.f;
+	view_port.Height						= 64.f;
 	view_port.MinDepth					= 0.f;
 	view_port.MaxDepth					= 1.f;
 
@@ -174,8 +174,7 @@ void grass_patch::try_accumulate_trample(
 grass_patch::~grass_patch( )
 {
 	for ( u32 i = 0; i < num_lods; ++i ) {
-		FREE( m_merged_indices[i] );
-		FREE( m_sort_info[i] );
+		FREE( m_merged_indices[i] ); FREE( m_sort_info[i] );
 	}
 
 	if (m_collision_tree && m_collision_object)
@@ -192,9 +191,7 @@ void grass_patch::init_collision( )
 	m_aabb.min.y = math::float_max;
 	m_aabb.max.y = math::float_min;
 
-	grass_instance** it = m_instances.begin( );
-	grass_instance* const* end = m_instances.end( );
-	for ( ; it != end; ++it ) {
+	for ( grass_instance** it = m_instances.begin( ); it != m_instances.end( ); ++it ) {
 		m_aabb.modify( (*it)->m_transform.c.xyz( ) );
 	}
 
