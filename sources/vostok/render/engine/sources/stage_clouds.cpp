@@ -102,8 +102,8 @@ cloud_key_parameters environment_temp::get_interp_key( float time )
 
 stage_clouds::stage_clouds(
 	renderer*				in_renderer,
-	cloud_interp_textures&	interp_textures,
-	cloud_simulation&		simulation,
+	cloud_interp_textures&	in_interp_textures,
+	cloud_simulation&		in_simulation,
 	renderer_context*		context
 ) :
 	stage						( in_renderer, context ),
@@ -120,8 +120,8 @@ stage_clouds::stage_clouds(
 	m_need_generate				( false ),
 	m_tasks_type				( tasks::create_new_task_type( "generate_clouds_task", 0 ) ),
 	m_first_tick				( true ),
-	m_simulation				( simulation ),
-	m_interp_textures			( interp_textures ),
+	m_simulation				( in_simulation ),
+	m_interp_textures			( in_interp_textures ),
 	m_x_rotation				( 0.0f ),
 	m_y_rotation				( 0.0f ),
 	m_prev_right_vector			( 0.0f, 0.0f, 0.0f ),
