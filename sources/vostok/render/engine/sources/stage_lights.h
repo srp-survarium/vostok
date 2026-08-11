@@ -121,9 +121,6 @@ private:
 	void make_skin_scattering_texture( render_surface_instance* instance, light* l );
 
 	struct light_geometry {
-		light_geometry( ) { }
-		~light_geometry( ) { }
-
 		untyped_buffer_ptr	vertex_buffer;
 		untyped_buffer_ptr	index_buffer;
 		res_geometry_ptr	geometry;
@@ -195,9 +192,6 @@ private:
 	res_geometry_ptr		m_screen_vertex_geometry;
 
 	struct lights_instance {
-		lights_instance( ) { }
-		~lights_instance( ) { }
-
 		untyped_buffer_ptr m_instance_vb;
 	};
 
@@ -209,8 +203,6 @@ private:
 	u32						m_num_instanced_lights;
 
 	struct instance_data {
-		instance_data( ) { }
-
 		float3	color;
 		float3	position;
 		float	range;
