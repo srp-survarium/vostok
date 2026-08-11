@@ -940,7 +940,7 @@ void stage_lights::make_skin_scattering_texture(
 		fill_surface						(m_rt_skin_scattering_blurred_4);
 
 		// Set old. TODO: get_render_targets(), set_render_targets()
-		backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
+		backend::ref().set_render_targets( &*m_context->get_rt(rt_generic_0), 0, 0, 0);
 		backend::ref().reset_depth_stencil_target();
 		backend::ref().set_viewport( orig_viewport);
 
@@ -963,7 +963,7 @@ void stage_lights::make_skin_scattering_texture(
 	}
 
 	// Set old. TODO: get_render_targets(), set_render_targets()
-	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->get_rt(rt_generic_0), 0, 0, 0);
 	backend::ref().reset_depth_stencil_target();
 	backend::ref().set_viewport( orig_viewport);
 }
@@ -1733,7 +1733,7 @@ void stage_lights::render_shadowed_light( light* l )
 
 		BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.accumulate_lighting_time);
 
-		backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
+		backend::ref().set_render_targets			(&*m_context->get_rt(rt_accumulator_diffuse), &*m_context->get_rt(rt_accumulator_specular), 0, 0);
 		backend::ref().reset_depth_stencil_target	();
 
 		// Mask opaque geometry.
@@ -1932,7 +1932,7 @@ void stage_lights::render_light( light* l, bool shadowers_pass )
 
 	BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.accumulate_lighting_time);
 
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
+	backend::ref().set_render_targets	( &*m_context->get_rt(rt_accumulator_diffuse), &*m_context->get_rt(rt_accumulator_specular), 0, 0);
 	backend::ref().reset_depth_stencil_target();
 
 	{
@@ -2202,7 +2202,7 @@ void stage_lights::debug_render( )
 	math::color const color	= math::color(u32(0), 255, 32);
 
 	// 8 target lines are likely retail-compiled-out source.
-	backend::ref().set_render_targets	( &*m_context->m_targets->m_family[rt_present].target, 0, 0, 0);
+	backend::ref().set_render_targets	( &*m_context->get_rt(rt_present), 0, 0, 0);
 
 	typedef lights_db::lights_type	lights_type;
 	lights_type const& lights	= m_context->scene()->lights().get_lights();
