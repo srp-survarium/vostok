@@ -349,7 +349,7 @@ void stage_lights::make_plane_spot_light_shadowmap( u32 shadow_quality, light* l
 void stage_lights::render_to_hw_shadowmap(
 	light*				l,
 	u32					shadow_quality,
-	float				z_bias,
+	float const			z_bias,
 	u32					smap_size,
 	u32					smap_size_index,
 	float4x4 const&		view_matrix,
