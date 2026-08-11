@@ -138,13 +138,6 @@ bool weapon_core::is_aimed( ) const
 	return m_aimed;
 }
 
-// claude@NOTE: out-of-line so callers emit `call get_user` instead of inlining the
-// m_user read (matches the target's standalone symbol @0x09b330).
-base_player* weapon_core::get_user( ) const
-{
-	return m_user;
-}
-
 // claude@NOTE: out-of-line so callers emit `call is_double_handed` instead of inlining the
 // m_is_double_handed read (matches the target's standalone symbol @0x09b340).
 bool weapon_core::is_double_handed( ) const

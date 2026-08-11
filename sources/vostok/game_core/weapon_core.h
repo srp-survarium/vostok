@@ -185,7 +185,7 @@ public:
 	inline	void									set_user_animations				( weapon_user_animations_container_ptr const& user_animations ) { /* no source */ }
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
-			base_player*						get_user						( ) const;	// out-of-line: target emits `call get_user` @0x09b330
+	inline	base_player*						get_user						( ) const { return m_user; }
 			bool								is_double_handed				( ) const;	// out-of-line: target emits `call is_double_handed` @0x09b340
 	// claude@NOTE: reconstructed for weapon_core_cook::load_weapon_parameters (direct byte
 	// stores to m_is_double_handed/m_chamber_a_round_on_reload, no symbol - always inlined).

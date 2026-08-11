@@ -141,11 +141,6 @@ void weapon::set_fire_bullet_transform( float4x4 const& transform )
 	weapon_core::set_fire_bullet_transform( m_is_third_view ? m_barrel_transform : transform );
 }
 
-// claude@NOTE: structure matched (set_target_fov_factor / set_near_plane_factor /
-// set_key_binder_context inlined on user()). Residual is the get_user() inline-vs-call
-// LTCG wall: the target inlines get_user() to [esi+44Ch] here (and spills nothing), while
-// our build keeps the out-of-line `call get_user` (get_user MUST stay out-of-line - the
-// target calls it elsewhere @0x09b330) + an xmm spill across the call. Not source-steerable.
 void weapon::instant_aim_start( )
 {
 	weapon_core::instant_aim_start( );
@@ -158,8 +153,6 @@ void weapon::instant_aim_start( )
 	}
 }
 
-// claude@NOTE: structure matched; same get_user inline-vs-call LTCG residual as
-// instant_aim_start. clear_value (1.0f) is the idle fov target.
 void weapon::instant_aim_end( )
 {
 	weapon_core::instant_aim_end( );
@@ -546,9 +539,7 @@ void weapon::activate( base_player& user, engine& engine )
 {
 }
 
-// claude@NOTE: structure matched (4 remove_animation_callback + base deactivate). Capped by
-// inline-vs-call: the target INLINES remove_animation_callback (the m_user->unsubscribe_animation_player
-// virtual) and get_user(), while our LTCG keeps both as `call`s. Not source-steerable from here.
+// The target inlines remove_animation_callback at these call sites.
 void weapon::deactivate( )
 {
 	remove_animation_callback( "sound_events", get_user( ) );
@@ -559,12 +550,6 @@ void weapon::deactivate( )
 	weapon_core::deactivate( );
 }
 
-// claude@NOTE: structure correct (5 stmts: toe ternary, is_demo guard, get_game_scene,
-// on_step args, return). Walled by step_manager::on_step being an empty STUB (parked,
-// physics ray-cast in step_manager.cpp): LTCG sees the empty callee, DCE-collapses the
-// whole on_step call + its toe/game_world arg eval, so our base drops 3 statements.
-// get_user() is also out-of-line in our base (target inlines [esi+44Ch]). Both recover
-// once step_manager::on_step lands a body.
 animation::callback_return_type_enum weapon::on_foot_step( animation::animation_callback_params& params )
 {
 	if ( params.animated_object == get_user( ) && ( params.domain_data == 5 || params.domain_data == 6 ) )
