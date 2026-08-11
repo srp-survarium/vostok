@@ -77,13 +77,8 @@ void base_network_client::fill_current_player_stats( boost::function< void( u32,
 }
 
 // claude@NOTE: attach_to_player_cc / attach_to_player / detach_from_player statement
-// structure matches the target. The residual is carcass-anchor artificial reachability:
-// anchor_game_clients.cpp is the sole caller, on a freshly-built network_client whose
-// m_current_player is provably NULL, so LTCG const-folds away the `if ( m_current_player
-// && m_current_player->game_ui( ) ) detach_controller( )` detach guards (attach/detach)
-// and the resource_ptr copy paths. The `if ( player )` byte residual is player.h's inline
-// c_ptr()/bool-conversion devirt. Both lift once the real game call graph (a connected
-// client with an attached player) reaches these and the anchor is removed.
+// structure matches the target. The remaining byte residual includes player.h's inline
+// c_ptr()/bool-conversion devirtualisation and the resource_ptr copy paths.
 void base_network_client::attach_to_player_cc( pcstr const arguments )
 {
 	u8 player_id;

@@ -46,7 +46,7 @@ void network_client::on_match_packet_received( const u8 message_type, network_co
 		case 0x89:	process_player_hit					( packet );	break;
 		case 0x8a:	process_affect_damage_model			( packet );	break;
 		case 0x8b:	process_sync_response				( packet );	break;
-		case 0x8c:	close_current_match					( false );	break;
+		case 0x8c:	process_match_finished				( packet );	break;
 		case 0x91:	player_visibility_change			( packet );	break;
 		case 0x96:	on_trap_placed						( packet );	break;
 		case 0x97:	on_trap_removed						( packet );	break;

@@ -44,9 +44,6 @@ class player_input;
 // void* network_client::`scalar deleting destructor'( u32 ) // FUNCTION BODY[0x921e0]: <0x921d0>|0x000|      :'74'	{
 
 class network_client : public base_network_client {
-	// /OPT:REF reachability: the anchor references the private process_*/on_*
-	// message handlers (otherwise stripped - the dispatch handler is still a stub)
-	friend void anchor_game_network_clients( game& g );
 public:
 										network_client						( game& g, const bool is_spectator );
 	virtual								~network_client						( );

@@ -7,14 +7,11 @@
 //   - use_engine_user_world_cone(): the ai/ui/animation/input/rtp world cone the
 //     game module pulls up,
 //   - use_inventory(): the (still-empty) inventory stub,
-//   - use_game_skeleton(): the game/menu/camera/scene/stats/key_binder object cone,
-//   - anchor_game_network_clients(): the matched network-client carcass
-//     (anchor_game_clients.cpp).
+//   - use_game_skeleton(): the game/menu/camera/scene/stats/key_binder object cone.
 // anchor_game() is dispatched from survarium::IncludeAll::IncludeAll() (anchor.cpp),
 // instantiated in game_entry_point.cpp::create_world - the real engine startup root
 // (the game_world ctor is a never-instantiated stub, so an anchor wired there gets
-// /OPT:REF-stripped along with its whole cone). This file + anchor_game_clients.cpp
-// replace the deleted monolithic temp_include_all.cpp.
+// /OPT:REF-stripped along with its whole cone).
 //
 // Retire once the real game call graph (game_module::create_world and friends)
 // reaches these for itself.
@@ -78,11 +75,6 @@
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
 
-// the network-client carcass anchor (anchor_game_clients.cpp); it self-guards and
-// never runs, so the placeholder game& is never dereferenced. Driving it from the
-// reachable anchor_game() keeps the matched network_client / lobby_client /
-// match_client / messaging_client / network_stats objects AND the game/menu/
-// camera/cook/stats skeleton they reference through game& in the base EXE.
 namespace vostok {
 	// defined in anchor_game_stats.cpp: keeps the debug-HUD stats cone
 	// (stats / stats_graph / npc_stats) past /OPT:REF.
@@ -90,7 +82,6 @@ namespace vostok {
 }
 
 namespace survarium {
-	void anchor_game_network_clients( game& g );
 	void use_game_world( );	// anchor_game_world.cpp (game-class public methods)
 
 	// the options-menu item-widget carcass anchor (anchor_game_options_items.cpp);
@@ -452,10 +443,6 @@ namespace vostok
 		survarium::use_game_fingers( );
 		survarium::use_game_player_cook( );
 		survarium::use_game_anomaly_veg( );
-		// drive the self-guarded network-client carcass anchor; the placeholder
-		// game& is never dereferenced (the anchor returns before touching it).
-		survarium::anchor_game_network_clients( *( survarium::game* )NULL );
-
 		// keep the player tick/history + input-handler carcass objects linked.
 		survarium::use_game_player_input( );
 		// pin the survarium::player carcass symbols.

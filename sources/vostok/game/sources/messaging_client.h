@@ -26,11 +26,6 @@ namespace survarium {
 class chat_handler;
 class game;
 
-// the game-module /OPT:REF reachability anchor (anchor_game_clients.cpp); a
-// friend so it can reference the private packet-handling/read surface that has
-// no public caller until the full login flow is wired
-void anchor_game_network_clients( game& g );
-
 class messaging_client : public boost::noncopyable {
 public:
 			explicit								messaging_client				( game& g );
@@ -98,8 +93,6 @@ private:
 			messaging::message_channel_enum			parse_receiver_channel			( wchar_t const* w_receiver_name, const bool in_match );
 
 private:
-	friend void ::survarium::anchor_game_network_clients( game& g );
-
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	game&							m_game;
 	/* 0x0004 */	chat_handler&					m_chat_handler;

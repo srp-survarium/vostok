@@ -52,7 +52,7 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 			LOG_INFO	( "[R] connect_to_game_server: %s: %d", host, m_last_tick_time_in_ms );
 
 			m_match_client.set_on_disconnect	( boost::bind( &network_client::on_match_disconnected, this, _1 ) );
-			m_match_client.connect	( host, port, lobby_client( ).connection_info( ).session_id, m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
+			m_match_client.connect	( host, port, lobby_client( ).session_id( ), m_last_tick_time_in_ms, boost::bind( &network_client::on_connected_to_match, this, _1, _2, _3, _4 ) );
 
 			messaging_client( ).assign_match_channel_order	( lobby_client( ).match_id( ), lobby_client( ).team_id( ) );
 
@@ -128,6 +128,10 @@ void network_client::on_lobby_packet_received( network_core::packet_reader& read
 
 			m_game.lobby_menu( ).on_operation_denied_received	( op, description );
 		}
+		break;
+
+	case vostok::ping_server_answer:
+		lobby_client( ).read_ping_server_answer( reader );
 		break;
 	}
 }
@@ -208,7 +212,7 @@ void network_client::close_current_match( bool user_initiate )
 	if ( match_client( ).is_connected( ) )
 		match_client( ).disconnect		( );
 
-	m_game.get_game_world( ).unload	( );
+	get_game_world( ).unload	( );
 
 	if ( user_initiate )
 		lobby_client( ).discard_playing_order_on_connected	( );
@@ -216,7 +220,7 @@ void network_client::close_current_match( bool user_initiate )
 	if ( !lobby_client( ).net_connected( ) )
 		lobby_client( ).connection_info( ).need_resolve	= true;
 
-	if ( !m_game.get_game_world( ).is_loading( ) )
+	if ( !get_game_world( ).is_loading( ) )
 		m_game.switch_to_lobby	( );
 }
 

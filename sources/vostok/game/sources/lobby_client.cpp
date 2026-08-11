@@ -204,10 +204,8 @@ void lobby_client::query_profile_contents(
 
 // claude@NOTE: the read_*/send handlers below are STRUCTURE-MATCHed but byte-capped:
 // network_core::packet_reader::r<T>()/r_string()/eof() and tcp_packet::append()/send()
-// are whole-program-inlined in the target but emitted as calls in our base (network_core
-// not yet fully built), and the carcass anchor (anchor_game_clients.cpp) supplies
-// artificial reachability. Both lift when all networking is matched and the network/
-// network_core anchors are removed - do not chase these bytes here.
+// are whole-program-inlined in the target but emitted as calls in our base. Match the
+// networking implementations before chasing the remaining bytes here.
 bool lobby_client::read_status_info( network_core::packet_reader& reader )
 {
 	m_status	= (lobby::client_state_enum)reader.r< u8 >( );
