@@ -56,20 +56,8 @@
 
 #include <GFx.h>
 
-namespace vostok {
-namespace render {
-
-void register_texture_cook	( );
-void unregister_texture_cook( );
-
 struct singletons_on_preinitialize {
-	// resource_manager/device ctors grew args since legacy (config, is_editor);
-	// forwarding ctor is a buildability adaptation - matcher confirms wiring
-	singletons_on_preinitialize( vostok::configs::binary_config_ptr const& config, bool is_editor ) :
-		resource_manager( config ),
-		device( is_editor )
-	{
-	}
+	singletons_on_preinitialize( vostok::configs::binary_config_ptr const& config, bool is_editor );
 
 	vostok::render::resource_manager		resource_manager;
 	vostok::render::device					device;
@@ -83,18 +71,36 @@ struct singletons_on_preinitialize {
 struct singletons_on_initialize {
 	singletons_on_initialize( );
 
-	// legacy 'environment' member dropped: no environment class in the new tree
 	vostok::render::renderer_context						renderer_context;
 	vostok::render::material_manager						material_manager;
 	vostok::render::particle_shader_constants				particle_shader_constants;
 	vostok::render::decal_shader_constants_and_geometry	decal_shader_constants_and_geometry;
 }; // struct singletons_on_initialize
 
-static uninitialized_reference< options >						s_options;
+static vostok::uninitialized_reference< vostok::render::options >						s_options;
 
-static uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
-static uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
-static uninitialized_reference< system_renderer >				s_system_renderer;
+static vostok::uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
+static vostok::uninitialized_reference< singletons_on_initialize >		s_singletons_on_initialize;
+static vostok::uninitialized_reference< vostok::render::system_renderer >	s_system_renderer;
+
+singletons_on_preinitialize::singletons_on_preinitialize(
+	vostok::configs::binary_config_ptr const& config,
+	bool is_editor
+) :
+	resource_manager( config ),
+	device( is_editor )
+{
+}
+
+singletons_on_initialize::singletons_on_initialize( )
+{
+}
+
+namespace vostok {
+namespace render {
+
+void register_texture_cook	( );
+void unregister_texture_cook( );
 
 untyped_buffer_ptr		g_quad_ib;
 
@@ -204,12 +210,6 @@ void initialize_options( )
 	// ******
 
 	using namespace vostok::render;
-}
-
- singletons_on_initialize::singletons_on_initialize( )
-{
-	// <0>
-	// ******
 }
 
 // Modified helper function from DirectX SDK
