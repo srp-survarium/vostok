@@ -519,6 +519,21 @@ def _source_extent(rec):
     return rec["file"], lo, hi, text
 
 
+def _whole_source_extent(rec):
+    """Return a conservative whole-file extent for object-only evidence."""
+    if rec is None or not rec.get("file"):
+        return None
+    path = VOSTOK / "sources" / rec["file"]
+    if not path.is_file():
+        return None
+    try:
+        with open(path, encoding="latin-1") as source:
+            lines = source.readlines()
+    except OSError:
+        return None
+    return rec["file"], 1, len(lines), "".join(lines)
+
+
 def src_fingerprint(rec):
     """Hash of the function's source extent (file + statement line range text).
 
@@ -700,6 +715,12 @@ def report_score_for_target(mangled, scores):
     if fuzzy is None and mangled.startswith("??_G"):
         fuzzy = scores.get(f"??_E{mangled[4:]}")
     return fuzzy
+
+
+def cross_unit_exact_score(mangled, scores):
+    """Return strict object-level exact evidence for a target PDB identity."""
+    fuzzy = report_score_for_target(mangled, scores)
+    return fuzzy if fuzzy is not None and fuzzy >= 99.995 else None
 
 
 def sha256_file(path):
@@ -1914,6 +1935,161 @@ def cmd_rank_island(args):
     emit(observations, args.json)
 
 
+def cmd_import_cross_unit(args):
+    """Import reviewed exact source-tree COMDAT evidence for target-only rows."""
+    evidence = Path(args.evidence)
+    if evidence.is_absolute():
+        try:
+            evidence = evidence.relative_to(VOSTOK)
+        except ValueError:
+            sys.exit("[match_db] --evidence must be inside the repository worktree")
+    evidence_path = VOSTOK / evidence
+    if not evidence_path.is_file():
+        sys.exit(f"[match_db] missing evidence manifest: {evidence}")
+
+    report_path = _artifact_path(args.report)
+    if not report_path.is_file():
+        sys.exit(f"[match_db] missing cross-unit report: {report_path}")
+    manifest = json.loads(evidence_path.read_text())
+    if manifest.get("kind") != "cross-unit-source-tree":
+        sys.exit("[match_db] evidence kind must be 'cross-unit-source-tree'")
+    expected_report_hash = manifest.get("report_sha256")
+    measured_report_hash = sha256_file(report_path)
+    if not expected_report_hash or expected_report_hash != measured_report_hash:
+        sys.exit(
+            "[match_db] report_sha256 mismatch: "
+            f"expected {expected_report_hash or '<missing>'}, "
+            f"measured {measured_report_hash}"
+        )
+
+    requested = manifest.get("functions")
+    if not isinstance(requested, list) or not requested:
+        sys.exit("[match_db] evidence manifest has no functions")
+    mangled_names = [row.get("mangled") for row in requested]
+    if any(not name for name in mangled_names) or len(set(mangled_names)) != len(
+        mangled_names
+    ):
+        sys.exit("[match_db] evidence functions need unique, non-empty mangled names")
+
+    report = json.loads(report_path.read_text())
+    scores = {
+        row["name"]: row["fuzzy_match_percent"]
+        for row in report.get("functions", [])
+        if row.get("fuzzy_match_percent") is not None
+    }
+    target = index_by_mangled(load_index_records(TARGET_IDX))
+    con = open_db(check_schema=True)
+    observations = []
+    for expected in requested:
+        mangled = expected["mangled"]
+        target_rec = target.get(mangled)
+        if target_rec is None:
+            con.close()
+            sys.exit(f"[match_db] cross-unit symbol absent from target index: {mangled}")
+        inventory = con.execute(
+            "SELECT module FROM target_only WHERE mangled = ?", (mangled,)
+        ).fetchone()
+        if inventory is None:
+            con.close()
+            sys.exit(f"[match_db] cross-unit symbol is not canonical target-only: {mangled}")
+        module = inventory["module"]
+        if expected.get("module") and expected["module"] != module:
+            con.close()
+            sys.exit(
+                f"[match_db] module changed for {mangled}: "
+                f"expected {expected['module']}, measured {module}"
+            )
+
+        fuzzy = cross_unit_exact_score(mangled, scores)
+        expected_fuzzy = expected.get("expected_fuzzy_pct")
+        if fuzzy is None or expected_fuzzy is None or abs(expected_fuzzy - fuzzy) > 0.0001:
+            con.close()
+            sys.exit(
+                f"[match_db] cross-unit exact score changed for {mangled}: "
+                f"expected {expected_fuzzy}, measured {fuzzy}"
+            )
+
+        extent = _whole_source_extent(target_rec)
+        if extent is None:
+            con.close()
+            sys.exit(f"[match_db] cross-unit symbol has no source file: {mangled}")
+        source_file, lo, hi, _text = extent
+        effective_hash = effective_source_hash_at(source_file, lo, hi, module)
+        expected_hash = expected.get("expected_hash")
+        if not args.dry_run and not expected_hash:
+            con.close()
+            sys.exit(f"[match_db] evidence lacks expected_hash for: {mangled}")
+        if expected_hash and expected_hash != effective_hash:
+            con.close()
+            sys.exit(
+                f"[match_db] effective hash changed for {mangled}: "
+                f"expected {expected_hash}, measured {effective_hash}"
+            )
+
+        previous = con.execute(
+            "SELECT * FROM source_maxima WHERE mangled = ?", (mangled,)
+        ).fetchone()
+        if previous is not None and previous["effective_hash"] != effective_hash:
+            con.close()
+            sys.exit(
+                f"[match_db] canonical source epoch disagrees for {mangled}: "
+                f"{previous['effective_hash']} != {effective_hash}"
+            )
+        if previous is not None and previous["exact_proven"]:
+            con.close()
+            sys.exit(f"[match_db] cross-unit observation is not a MAX gain: {mangled}")
+        observations.append(
+            {
+                "mangled": mangled,
+                "module": module,
+                "fuzzy_pct": fuzzy,
+                "exact_proven": 1,
+                "effective_hash": effective_hash,
+                "state_id": compiled_state_id(target_rec),
+                "source_file": source_file,
+                "source_lo": lo,
+                "source_hi": hi,
+                "previous_fuzzy_pct": (
+                    previous["max_fuzzy_pct"] if previous is not None else None
+                ),
+            }
+        )
+
+    if args.dry_run:
+        con.close()
+        emit(observations, True)
+        return
+
+    for row in observations:
+        con.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(mangled) DO UPDATE SET "
+            "effective_hash=excluded.effective_hash, "
+            "max_fuzzy_pct=excluded.max_fuzzy_pct, "
+            "exact_proven=excluded.exact_proven, state_id=excluded.state_id, "
+            "module=excluded.module, source_file=excluded.source_file, "
+            "source_lo=excluded.source_lo, source_hi=excluded.source_hi, "
+            "origin=excluded.origin, evidence=excluded.evidence",
+            (
+                row["mangled"],
+                row["effective_hash"],
+                row["fuzzy_pct"],
+                row["exact_proven"],
+                row["state_id"],
+                row["module"],
+                row["source_file"],
+                row["source_lo"],
+                row["source_hi"],
+                "cross-unit",
+                evidence.as_posix(),
+            ),
+        )
+    con.commit()
+    con.close()
+    log(f"imported {len(observations)} exact source-tree COMDAT observation(s)")
+    emit(observations, True)
+
+
 def cmd_import_island(args):
     """Import explicitly manifested observations from isolated link artifacts.
 
@@ -3048,6 +3224,22 @@ def main():
     p.add_argument("--module", help="only rank canonical functions in this module")
     p.add_argument("--json", action="store_true")
 
+    p = sub.add_parser(
+        "import-cross-unit",
+        help="import reviewed exact target-only source-tree COMDAT evidence",
+    )
+    p.add_argument(
+        "--report",
+        default=str(CROSS_UNIT_REPORT.relative_to(VOSTOK)),
+        help="cross-unit report (default: binaries/objdiff/report-cross-unit.json)",
+    )
+    p.add_argument("--evidence", required=True, help="tracked JSON evidence manifest")
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate and print observations without changing match.db",
+    )
+
     p = sub.add_parser("report", help="per-module/TU rollup")
     p.add_argument("--module")
     p.add_argument(
@@ -3143,6 +3335,7 @@ def main():
         "record-max": cmd_record_max,
         "import-island": cmd_import_island,
         "rank-island": cmd_rank_island,
+        "import-cross-unit": cmd_import_cross_unit,
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,

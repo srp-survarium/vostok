@@ -1,0 +1,14 @@
+{
+  "kind": "cross-unit-source-tree",
+  "description": "Reviewed the animation skeleton deleting-destructor COMDAT whose current source-tree objects compare byte-exact even though the linked base PDB renames and drops its record.",
+  "report_sha256": "534005a6981883c66ac1657cc60e1e2c54a45142805731ce732e0f7466f63d2f",
+  "functions": [
+    {
+      "mangled": "??_Gskeleton@animation@vostok@@UAEPAXI@Z",
+      "module": "animation",
+      "expected_hash": "8f9d4ea46823.9fff9ae0c2fb519e",
+      "expected_fuzzy_pct": 100.0,
+      "review": "The unique target ??_E skeleton header object and base ??_E compiler-COMDAT object compare byte-exact at 36 bytes. The retail linked PDB exposes the same MSVC deleting destructor under the scalar ??_G identity."
+    }
+  ]
+}
