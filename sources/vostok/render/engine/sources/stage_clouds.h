@@ -40,8 +40,8 @@ private:
 public:
 	stage_clouds(
 		renderer*				in_renderer,
-		cloud_interp_textures&	interp_textures,
-		cloud_simulation&		simulation,
+		cloud_interp_textures&	in_interp_textures,
+		cloud_simulation&		in_simulation,
 		renderer_context*		context
 	);
 
