@@ -725,8 +725,9 @@ void n_ary_tree::update_event_iterators( const u32 target_time_in_ms )
 	}
 }
 
+// claude@NOTE: target passes callback_generators_head on the stack; base uses EAX after restoring the target callback branches.
 bool n_ary_tree::dispatch_callbacks(
-	callback_generator_info const* const	callback_generators_head,
+	callback_generator_info const*		callback_generators_head,
 	subscribed_channel*&	channels_head,
 	const u32				current_time_in_ms,
 	bool&					callbacks_are_actual
@@ -767,7 +768,7 @@ bool n_ary_tree::dispatch_callbacks(
 				{
 					if ( !callback->enabled )
 						continue;
-					if ( callback->animation.c_ptr( ) &&
+					if ( callback->animation &&
 						 callback->animation.c_ptr( ) != generator->animation.c_ptr( ) )
 						continue;
 					if ( callback->animated_object &&
@@ -784,8 +785,8 @@ bool n_ary_tree::dispatch_callbacks(
 						generator->animation_interval_id
 					);
 					callback->enabled				=
-						callback->enabled &&
-						callback->callback( params ) == callback_return_type_call_me_again;
+						callback->callback( params ) == callback_return_type_call_me_again &&
+						callback->enabled;
 					callbacks_are_actual			= callbacks_are_actual && callback->enabled;
 					result							= result || params.interrupt_animation_player_tick;
 				}
@@ -841,7 +842,7 @@ bool n_ary_tree::dispatch_callbacks(
 			{
 				if ( !callback->enabled )
 					continue;
-				if ( callback->animation.c_ptr( ) &&
+				if ( callback->animation &&
 					 callback->animation.c_ptr( ) != generator->animation.c_ptr( ) )
 					continue;
 				if ( callback->event_type != u8( -1 ) &&
@@ -861,8 +862,8 @@ bool n_ary_tree::dispatch_callbacks(
 					generator->animation_interval_id
 				);
 				callback->enabled				=
-					callback->enabled &&
-					callback->callback( params ) == callback_return_type_call_me_again;
+					callback->callback( params ) == callback_return_type_call_me_again &&
+					callback->enabled;
 				callbacks_are_actual			= callbacks_are_actual && callback->enabled;
 				result							= result || params.interrupt_animation_player_tick;
 			}
