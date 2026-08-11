@@ -60,7 +60,9 @@ The comparison resolves PDB-local type indexes before equality and reports:
 - method names, return/argument types, member-function CV qualifiers, calling
   convention/constructor flags, visibility, virtual/pure/introducing/sealed
   attributes, vtable slots, presence, and declaration order;
-- nested type names, resolved types, visibility, presence, and order.
+- nested type names, resolved types, visibility, presence, and order; anonymous
+  enums also include their enumerator names and values when the field list is
+  readable.
 
 Overloads are paired first by name and resolved signature, then by name and
 argument count. A remaining target declaration may pair with an otherwise

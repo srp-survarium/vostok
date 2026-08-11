@@ -624,7 +624,7 @@ fn append_class_entry(
             attributes: field_attribute_labels(nested.attributes),
             raw_attributes: comparable_field_attributes(nested.attributes),
             vtable_offset: None,
-            details: Vec::new(),
+            details: nested_type_details(finder, nested.nested_type)?,
         }),
         pdb::TypeData::BaseClass(base) => class.entries.push(ClassEntry {
             kind: "base",
@@ -698,6 +698,53 @@ fn append_class_entry(
             }
         }
         _ => {}
+    }
+    Ok(())
+}
+
+fn nested_type_details(
+    finder: &pdb::TypeFinder<'_>,
+    type_index: pdb::TypeIndex,
+) -> vostok_pdb_parser::Result<Vec<String>> {
+    let Ok(record) = finder.find(type_index) else {
+        return Ok(Vec::new());
+    };
+    let Ok(pdb::TypeData::Enumeration(enumeration)) = record.parse() else {
+        return Ok(Vec::new());
+    };
+
+    let mut details = Vec::new();
+    collect_enumerators(
+        finder,
+        enumeration.fields,
+        &mut details,
+        &mut HashSet::new(),
+    )?;
+    Ok(details)
+}
+
+fn collect_enumerators(
+    finder: &pdb::TypeFinder<'_>,
+    field_index: pdb::TypeIndex,
+    details: &mut Vec<String>,
+    seen: &mut HashSet<u32>,
+) -> vostok_pdb_parser::Result<()> {
+    if !seen.insert(field_index.0) {
+        return Ok(());
+    }
+    let Ok(record) = finder.find(field_index) else {
+        return Ok(());
+    };
+    let Ok(pdb::TypeData::FieldList(list)) = record.parse() else {
+        return Ok(());
+    };
+    for field in list.fields {
+        if let pdb::TypeData::Enumerate(enumerator) = field {
+            details.push(format!("{}={:?}", enumerator.name, enumerator.value));
+        }
+    }
+    if let Some(continuation) = list.continuation {
+        collect_enumerators(finder, continuation, details, seen)?;
     }
     Ok(())
 }
@@ -1160,6 +1207,9 @@ fn entry_summary(entry: &ClassEntry) -> String {
     }
     if !entry.attributes.is_empty() {
         let _ = write!(value, " attributes={}", entry.attributes.join(","));
+    }
+    if !entry.details.is_empty() {
+        let _ = write!(value, " details={}", entry.details.join(","));
     }
     value
 }

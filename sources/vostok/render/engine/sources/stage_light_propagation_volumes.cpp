@@ -867,14 +867,14 @@ void stage_light_propagation_volumes::execute_smoothed_impl(
 				if ( pass_index == 1 )
 				{
 					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 );
-					m_apply_indirect_lighting_effect->apply_pass( 1 );
+					m_apply_indirect_lighting_effect->apply_pass( effect_apply_indirect_lighting::apply_indirect_specular_pass );
 					tmp_viewport.Width = float( m_context->get_rt( rt_indirect_lighting_specular )->width( ) );
 					tmp_viewport.Height = float( m_context->get_rt( rt_indirect_lighting_specular )->height( ) );
 				}
 				else
 				{
 					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_lpv_accumulation ), 0, 0, 0 );
-					m_apply_indirect_lighting_effect->apply_pass( 0 );
+					m_apply_indirect_lighting_effect->apply_pass( effect_apply_indirect_lighting::apply_indirect_diffuse_pass );
 					tmp_viewport.Width = float( m_context->get_rt( rt_lpv_accumulation )->width( ) );
 					tmp_viewport.Height = float( m_context->get_rt( rt_lpv_accumulation )->height( ) );
 				}
@@ -1123,7 +1123,7 @@ void stage_light_propagation_volumes::execute_impl( )
 				{
 					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_indirect_lighting_specular ), 0, 0, 0 );
 
-					m_apply_indirect_lighting_effect->apply_pass( 1 );
+					m_apply_indirect_lighting_effect->apply_pass( effect_apply_indirect_lighting::apply_indirect_specular_pass );
 					tmp_viewport.Width = float( m_context->get_rt( rt_indirect_lighting_specular )->width( ) );
 
 					tmp_viewport.Height = float( m_context->get_rt( rt_indirect_lighting_specular )->height( ) );
@@ -1131,7 +1131,7 @@ void stage_light_propagation_volumes::execute_impl( )
 				else
 				{
 					backend::ref( ).set_render_targets( &*m_context->get_rt( rt_accumulator_diffuse ), 0, 0, 0 );
-					m_apply_indirect_lighting_effect->apply_pass( 0 );
+					m_apply_indirect_lighting_effect->apply_pass( effect_apply_indirect_lighting::apply_indirect_diffuse_pass );
 
 					tmp_viewport.Width = float( m_context->get_rt( rt_accumulator_diffuse )->width( ) );
 					tmp_viewport.Height = float( m_context->get_rt( rt_accumulator_diffuse )->height( ) );

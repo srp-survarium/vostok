@@ -11,8 +11,10 @@ class effect_compiler;
 
 class effect_apply_indirect_lighting : public effect_descriptor {
 public:
-	effect_apply_indirect_lighting( ) { }
-	virtual ~effect_apply_indirect_lighting( ) { }
+	enum {
+		apply_indirect_diffuse_pass,
+		apply_indirect_specular_pass
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,

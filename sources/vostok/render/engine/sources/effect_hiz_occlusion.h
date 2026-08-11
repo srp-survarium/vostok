@@ -11,13 +11,21 @@ class effect_compiler;
 
 class effect_hiz_occlusion : public effect_descriptor {
 public:
+	enum {
+		hiz_render_debug_geometry_pass,
+		hiz_render_debug_geometry_invisible_pass,
+		hiz_copy_scene_depth_pass,
+		hiz_occluders_depth_pass,
+		hiz_downsample_depth_pass,
+		hiz_merge_mip_pass,
+		hiz_fill_culling_results_buffer_pass,
+		hiz_copy_to_lockable_render_target
+	};
+
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
-
-	effect_hiz_occlusion( ) { }
-	virtual ~effect_hiz_occlusion( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_hiz_occlusion, 0x4 );
