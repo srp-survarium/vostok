@@ -74,32 +74,26 @@ namespace survarium {
 // statics take one template arg each
 template < typename SendingMessageType, typename ReceivedMessageType >
 class network_packets_orderer : public network_core::udp_match_packets_orderer {
-public:
-	inline	network_packets_orderer( ) { /* no source */ }
-
-	// STATE[STUB]
+private:
 	virtual	network_core::udp_match_message_type_info	get_sending_message_info	( u8 message_type )
 	{
-		// FUNCTION BODY[0xa7db0]: 1
-		// <0xa7db0>|0x000|+0x007:'35'
-		// ******
-
-		// buildability return
-		return network_core::udp_match_message_type_info( false, false, 0 );
+		return get_message_type_info( ( SendingMessageType )message_type );
 	}
 
-	// STATE[STUB]
-	virtual	network_core::udp_match_message_type_info	get_received_message_info	( u8 arg_0 )
+	virtual	network_core::udp_match_message_type_info	get_received_message_info	( u8 message_type )
 	{
-		// buildability return
-		return network_core::udp_match_message_type_info( false, false, 0 );
+		return get_message_type_info( ( ReceivedMessageType )message_type );
 	}
 
-	static	inline	network_core::udp_match_message_type_info	unreliable			( ) { /* no source */ return network_core::udp_match_message_type_info( false, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	reliable			( ) { /* no source */ return network_core::udp_match_message_type_info( false, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	ordered_reliable	( const u8 arg_0 ) { /* no source */ return network_core::udp_match_message_type_info( false, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	get_message_type_info( SendingMessageType arg_0 ) { /* no source */ return network_core::udp_match_message_type_info( false, false, 0 ); }
-	static	inline	network_core::udp_match_message_type_info	get_message_type_info( ReceivedMessageType arg_0 ) { /* no source */ return network_core::udp_match_message_type_info( false, false, 0 ); }
+public:
+	inline	network_packets_orderer( ) { }
+
+private:
+	static	inline	network_core::udp_match_message_type_info	unreliable			( ) { return network_core::udp_match_message_type_info( false, false, 0 ); }
+	static	inline	network_core::udp_match_message_type_info	reliable			( ) { return network_core::udp_match_message_type_info( true, false, 0 ); }
+	static	inline	network_core::udp_match_message_type_info	ordered_reliable	( const u8 channel ) { return network_core::udp_match_message_type_info( true, true, channel ); }
+	static	inline	network_core::udp_match_message_type_info	get_message_type_info( SendingMessageType ) { return ordered_reliable( 0 ); }
+	static	inline	network_core::udp_match_message_type_info	get_message_type_info( ReceivedMessageType ) { return ordered_reliable( 0 ); }
 }; // class network_packets_orderer
 
 // comma in the template-id breaks the assert macro - alias first (the

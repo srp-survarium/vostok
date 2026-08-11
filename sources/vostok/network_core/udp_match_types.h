@@ -21,10 +21,12 @@ enum udp_match_packets_count_enum
 }; // enum udp_match_packets_count_enum
 
 struct udp_match_message_type_info {
-	// STATE[REMOVED]: constructed only inside the orderer's concrete get_*_message_info
-	// override, whose impl lives outside network_core (the abstract orderer is used
-	// by-reference here); no in-scope TU constructs this value. Uninstantiated both sides.
-	inline	udp_match_message_type_info	( bool is_reliable, bool is_ordered, u8 channel_id ) { /* no source */ } // STATE[REMOVED]
+	inline	udp_match_message_type_info	( bool reliable, bool ordered, u8 channel ) :
+		channel_id	( channel ),
+		is_reliable	( reliable ),
+		is_ordered	( ordered )
+	{
+	}
 
 public:
 	/* 0x0000 */	u8		channel_id	: 6;
