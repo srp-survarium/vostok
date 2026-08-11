@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed mix_rotations observation from the disposable physics-before-animation LTCG link. The candidate preserves the target's complete 28-statement body and source-local set; the improvement is instruction scheduling and call-lowering only.",
+  "link_perturbation": "physics immediately before animation; all other libraries and link flags preserved",
+  "report_sha256": "af9dd58a5b540adc54e09edb45daaee21c72899ed025708d7036b214baf231b3",
+  "base_index_sha256": "bdfdbee5bf52721c93765da07b5b89878ed83504efc75181a9d6f0fe4ea0a4bd",
+  "candidate_exe_sha256": "595777647c58f1123553e0540ada8618029c9fbfb532f883ca381dec503b9eda",
+  "candidate_pdb_sha256": "aa5fa78748c83cdcc3dd540eac32ce575254a350b32ae4c0c8ca979815004c13",
+  "functions": [
+    {
+      "mangled": "mix_rotations",
+      "module": "animation",
+      "expected_hash": "2e18988e2710.9fff9ae0c2fb519e.39ffb185c9ac68cb",
+      "expected_fuzzy_pct": 96.72514,
+      "review": "Target and candidate retain the same complete 28-statement rotation-filter, one/two/many-input cases, locals, and caller reachability. Remaining differences are quaternion-load scheduling plus slerp/extrapolated_slerp call lowering."
+    }
+  ]
+}
