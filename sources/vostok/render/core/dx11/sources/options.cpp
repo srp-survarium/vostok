@@ -506,17 +506,18 @@ enum_options_changes_result options::end_render_options_changing(
 	current.m_resolution_y = res_str.y;
 	current.m_enabled_local_light_shadows = current.m_lighting_quality != uro_lighting_quality_low;
 
-	if ( current.m_shadow_quality > uro_shadow_quality_low && current.m_shadow_quality < uro_shadow_quality_count )
+	if ( current.m_shadow_quality > uro_shadow_quality_low )
 	{
 		switch ( current.m_antialiasing_method )
 		{
 		case 0:
+			current.m_enabled_fxaa = false;
 			current.m_use_temporal_antialiasing = false;
-			current.m_use_poisson_disc_shadow_filter = false;
 			break;
 		case 1:
-			current.m_use_temporal_antialiasing = true;
+			current.m_enabled_fxaa = true;
 			current.m_enabled_sharpen = true;
+			current.m_use_temporal_antialiasing = false;
 			break;
 		case 2:
 			current.m_use_temporal_antialiasing = true;
