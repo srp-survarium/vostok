@@ -139,10 +139,7 @@ statistics_base::~statistics_base( )
 
 void statistics_float::print( fs_new::virtual_path_string& out_result )
 {
-	// FUNCTION BODY[0x638d20]
-	// claude@NOTE: canonical statistics_value grew min/max/digit tracking; legacy print
-	// only reports the average.
-	out_result.assignf("%s: %f", m_name.c_str(), average());
+	out_result.assignf( "%s: %f (%f..%f)", m_name.c_str( ), value, min_value, max_value );
 }
 
 u32 get_num_digits( u32 v )
@@ -185,8 +182,7 @@ void statistics_int::print( fs_new::virtual_path_string& out_result )
 
 void statistics_cpu_gpu::print( fs_new::virtual_path_string& out_result )
 {
-	// FUNCTION BODY[0x638ca0]
-	out_result.assignf("%s: CPU:%.3f, GPU:%.3f", m_name.c_str(), cpu_time.average(), gpu_time.average());
+	out_result.assignf( "%s: CPU:%.4f(%.4f..%.4f), GPU:%.4f", m_name.c_str( ), cpu_time.value, cpu_time.min_value, cpu_time.max_value, gpu_time.value );
 }
 
 void statistics_cpu_gpu::start( )
