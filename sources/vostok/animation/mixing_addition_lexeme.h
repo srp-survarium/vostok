@@ -24,7 +24,6 @@ public:
 	inline					addition_lexeme		( T1& left, T2& right );
 	inline explicit			addition_lexeme		( addition_lexeme const& other );
 	inline	addition_lexeme* cloned_in_buffer	( );
-	virtual					~addition_lexeme	( );
 
 protected:
 	using binary_operation_lexeme::cloned_in_buffer;
