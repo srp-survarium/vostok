@@ -238,8 +238,8 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	u32&							operands_offset,
 	u32&							animation_interval_id,
 	float&							animation_interval_time,
-	bool							is_transitting_to_zero,
-	bool							can_be_time_driving_animation
+	const bool						is_transitting_to_zero,
+	const bool						can_be_time_driving_animation
 )
 {
 	animation_interval_id			= ( from.override_existing_animation( ) || to.animation_state( ).is_freezed ? from : to ).animation_state( ).animation_interval_id;
@@ -324,13 +324,9 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	else if ( from.time_driving_animation( ) ) {
 		animation_state const& time_driving_animation_state	= from.time_driving_animation( )->animation_state( );
 		animation_interval_id		= time_driving_animation_state.animation_interval_id;
-		animation_interval const* const time_driving_animation_interval	=
-			from.time_driving_animation( )->animation_intervals( ) + animation_interval_id;
-		animation_interval const* const animation_interval	=
-			from.animation_intervals( ) + animation_interval_id;
 		animation_interval_time		=
-			animation_interval->length( ) / time_driving_animation_interval->length( )
-			* time_driving_animation_state.animation_interval_time;
+			from.animation_intervals( )[ animation_interval_id ].length( ) / from.time_driving_animation( )->animation_intervals( )[ animation_interval_id ].length( );
+		animation_interval_time		*= time_driving_animation_state.animation_interval_time;
 	}
 	else {
 		animation_interval_id		= ( from.override_existing_animation( ) || to.animation_state( ).is_freezed ? from : to ).animation_state( ).animation_interval_id;
@@ -342,16 +338,14 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	if ( existing == m_new_animated_object ) {
 		new ( m_new_animated_object ) animated_object_holder( result->animated_object( ) );
 
-		animated_object_holder const* const from_objects	= m_from.animated_objects( );
-		animated_object_holder const* const from_end		=
-			from_objects + m_from.animated_objects_count( );
+		animated_object_holder const* const from_objects	= m_from.animated_objects( ), * const from_end = from_objects + m_from.animated_objects_count( );
 		animated_object_holder const* const from_holder	=
 			std::find( from_objects, from_end, result->animated_object( ) );
 
-		m_new_animated_object->transform	=
-			from_holder != from_end ?
-			from_holder->transform :
-			m_get_transform_functor( result->animated_object( ) );
+		if ( from_holder != from_end )
+			m_new_animated_object->transform	= from_holder->transform;
+		else
+			m_new_animated_object->transform	= m_get_transform_functor( result->animated_object( ) );
 		++m_new_animated_object;
 	}
 

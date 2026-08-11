@@ -61,8 +61,8 @@ private:
 												u32&							operands_offset,
 												u32&							animation_interval_id,
 												float&							animation_interval_time,
-												bool							is_transitting_to_zero,
-												bool							can_be_time_driving_animation
+												const bool						is_transitting_to_zero,
+												const bool						can_be_time_driving_animation
 											);
 
 			n_ary_tree_base_node*			new_time_scale						( n_ary_tree_animation_node& new_time_driving_animation, u32& animation_interval_id, float& animation_interval_time );
