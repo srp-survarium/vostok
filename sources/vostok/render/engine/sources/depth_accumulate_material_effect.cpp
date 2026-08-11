@@ -15,15 +15,15 @@ void depth_accumulate_material_effect::compile(
 	// FUNCTION BODY[0x7c06a0]
 	bool is_static_mesh = false;
 	if (config.value_exists("vertex_input_type")) {
-		enum_vertex_input_type vertex_input_type = (enum_vertex_input_type)config["vertex_input_type"];
-		is_static_mesh = vertex_input_type != grassmesh_vertex_input_type;
+		is_static_mesh = (enum_vertex_input_type)config["vertex_input_type"] != grassmesh_vertex_input_type;
 	}
 
 	u32 const debug_last_mips = is_static_mesh ? 5 : u32(-1);
 
 
 	shader_configuration configuration;
-	configuration.use_alpha_test = config.value_exists("use_alpha_test") ? bool(config["use_alpha_test"]) : false;
+	if (config.value_exists("use_alpha_test"))
+		configuration.use_alpha_test = bool(config["use_alpha_test"]);
 
 	if (config.value_exists("wind_motion"))
 		configuration.wind_motion = s32(config["wind_motion"]);

@@ -31,7 +31,7 @@ void effect_sky_sphere_default_materials::compile(
 			if (config.value_exists("sky_rotation"))
 			{
 				float const angle_in_rad = math::deg2rad(float(config["sky_rotation"]));
-				compiler.set_constant("sky_cos_sin", float4(math::sin(angle_in_rad), math::cos(angle_in_rad), 0.f, 0.f));
+				compiler.set_constant("sky_cos_sin", float4(math::cos(angle_in_rad), math::sin(angle_in_rad), 0.f, 0.f));
 			}
 			else
 				compiler.set_constant("sky_cos_sin", float4(1.f, 0.f, 0.f, 0.f));
