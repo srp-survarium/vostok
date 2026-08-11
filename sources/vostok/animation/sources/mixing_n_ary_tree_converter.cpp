@@ -697,7 +697,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 #endif // #ifndef MASTER_GOLD
 
 	n_ary_tree_node_constructor	node_constructor(buffer, m_interpolators, m_interpolators + m_interpolators_count);
-	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
+	for ( binary_tree_animation_node* i=m_animations_root; i; i=i->m_next_weight_animation.c_ptr() ) {
 		if ( (*i).m_null_weight_found )
 			continue;
 
@@ -906,7 +906,7 @@ n_ary_tree n_ary_tree_converter::constructed_n_ary_tree	(
 	n_ary_tree_animation_node** const time_animations =
 		static_cast<n_ary_tree_animation_node**>( ALLOCA( m_animations_count*sizeof(n_ary_tree_animation_node*) ) );
 	n_ary_tree_animation_node** time_animations_end = time_animations;
-	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
+	for ( binary_tree_animation_node* i=m_animations_root; i; i=i->m_next_weight_animation.c_ptr() ) {
 		* time_animations_end++		= i->n_ary_animation();
 		if ( !i->time_driving_animation() )
 			continue;
