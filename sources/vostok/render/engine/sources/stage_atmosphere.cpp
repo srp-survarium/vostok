@@ -34,8 +34,8 @@ void stage_atmosphere::fill_surfaces(
 )
 {
 
-	backend::ref( ).set_render_targets(
-		&*surf0, surf1.c_ptr( ) ? &*surf1 : 0, 0, 0 );
+	if ( surf1.c_ptr( ) ) backend::ref( ).set_render_targets( &*surf0, &*surf1, 0, 0 );
+	else backend::ref( ).set_render_targets( &*surf0, 0, 0, 0 );
 
 	if ( use_base_depth_stencil )
 		backend::ref( ).reset_depth_stencil_target( );
@@ -43,8 +43,7 @@ void stage_atmosphere::fill_surfaces(
 		backend::ref( ).set_depth_stencil_target( 0 );
 
 	D3D11_VIEWPORT view_port;
-	view_port.TopLeftX = 0.0f;
-	view_port.TopLeftY = 0.0f;
+	view_port.TopLeftX = 0.0f; view_port.TopLeftY = 0.0f;
 	view_port.Width = static_cast<float>( surf0->width( ) );
 	view_port.Height = static_cast<float>( surf0->height( ) );
 	view_port.MinDepth = 0.0f;
