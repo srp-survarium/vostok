@@ -90,9 +90,6 @@ enum enum_render_target_index {
 pcstr rt_index_to_name( enum_render_target_index index );
 
 struct render_target_instance {
-	render_target_instance( ) { }
-	~render_target_instance( ) { }
-
 	fixed_string< 64 >	orig_name;
 	fixed_string< 64 >	name;
 	render_target_ptr	target;

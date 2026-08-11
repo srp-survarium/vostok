@@ -16,13 +16,6 @@ enum {
 };
 
 struct shader_macro {
-	shader_macro( ) { }
-
-	shader_macro( shader_macro const& other )
-		: name( other.name ), definition( other.definition )
-	{
-	}
-
 	fs_new::virtual_path_string name;
 	fixed_string<256> definition;
 };
@@ -44,7 +37,6 @@ struct shader_macros_sort_predicate {
 class shader_macros : public quasi_singleton<shader_macros> {
 public:
 	shader_macros( );
-	~shader_macros( ) { }
 
 	void fill_shader_macro_list(
 		shader_defines_list& macros,

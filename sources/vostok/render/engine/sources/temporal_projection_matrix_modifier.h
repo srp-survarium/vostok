@@ -19,8 +19,6 @@ struct temporal_projection_matrix_modifier : public core::noncopyable {
 	void push_jittering( );
 	void pop_jittering( );
 
-	~temporal_projection_matrix_modifier( ) { }
-
 	renderer_context* const	m_renderer_context;
 	u32 const				m_window_size_x;
 	u32 const				m_window_size_y;

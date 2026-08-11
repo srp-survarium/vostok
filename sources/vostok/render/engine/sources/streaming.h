@@ -21,8 +21,6 @@ typedef intrusive_ptr<
 > res_texture_ptr;
 
 struct streaming_ready_texture {
-	streaming_ready_texture( ) { }
-
 	fixed_string<260> name;
 	res_texture_ptr texture;
 	resources::managed_resource_ptr data;
@@ -57,8 +55,6 @@ inline bool operator==(
 }
 
 struct streamable_texture_info {
-	streamable_texture_info( ) { }
-
 	vector<streaming_texture_instance>	instances;
 	fixed_string<260>					path;
 	res_texture_ptr						texture;
@@ -67,8 +63,6 @@ struct streamable_texture_info {
 STATIC_SIZE_ASSERT( streamable_texture_info, 0x120 );
 
 struct requested_streamable_texture {
-	requested_streamable_texture( ) { }
-
 	fixed_string<260>	path;
 	res_texture_ptr		texture;
 	u32					num_mips;

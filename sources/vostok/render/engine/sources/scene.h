@@ -338,8 +338,6 @@ public:
 		{
 		}
 
-		~decal_instance_node( ) { }
-
 		decal_instance_ptr decal;
 		decal_instance_node* next;
 	};

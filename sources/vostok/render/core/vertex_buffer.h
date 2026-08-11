@@ -31,7 +31,6 @@ public:
 
 	void* lock( u32 vertex_count, u32 vertex_stride, u32& vertex_offset );
 	void unlock( );
-	~vertex_buffer( ) { }
 
 private:
 	untyped_buffer_ptr	m_buffer;

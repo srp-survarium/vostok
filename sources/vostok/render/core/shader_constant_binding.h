@@ -40,7 +40,6 @@ public:
 	shader_constant_source const& source( ) const { return m_source; }
 	enum_constant_class class_id( ) const { return m_class_id; }
 	enum_constant_type type( ) const { return m_type; }
-	~shader_constant_binding( ) { }
 
 private:
 	shader_constant_source m_source;

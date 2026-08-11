@@ -12,9 +12,6 @@ class shader_constant_bindings : private boost::noncopyable {
 public:
 	typedef vector<shader_constant_binding> bindings_type;
 
-	shader_constant_bindings( ) { }
-	~shader_constant_bindings( ) { }
-
 	void add( shader_constant_binding const& binding )
 	{
 		bindings_type::iterator const end = m_bindings.end( );

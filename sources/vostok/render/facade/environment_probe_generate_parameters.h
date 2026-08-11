@@ -8,8 +8,6 @@ namespace vostok {
 namespace render {
 
 struct environment_probe_generate_parameters {
-	environment_probe_generate_parameters( ) { }
-
 	fixed_string<260>	filename;
 	float3				location;
 	u32					resolution;

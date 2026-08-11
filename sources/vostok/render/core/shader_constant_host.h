@@ -49,8 +49,6 @@ public:
 
 	shared_string const& name( ) const { return m_name; }
 	enum_constant_type type( ) const { return m_type; }
-	~shader_constant_host( ) { }
-
 	shader_constant_source m_source;
 	shader_constant_slot m_shader_slots[enum_shader_types_count];
 	shared_string m_name;

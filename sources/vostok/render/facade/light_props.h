@@ -27,7 +27,6 @@ enum light_type {
 
 struct light_props {
 	light_props( );
-	~light_props( ) { }
 
 	void load_light_props( configs::binary_config_value const& cfg );
 

@@ -38,7 +38,6 @@ class particle_shader_constants :
 {
 public:
 	particle_shader_constants( );
-	~particle_shader_constants( ) { }
 
 	void set_time( float time );
 	void set(

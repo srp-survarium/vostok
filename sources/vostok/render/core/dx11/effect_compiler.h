@@ -30,8 +30,6 @@ namespace render {
 class effect_compiler : public boost::noncopyable {
 public:
 	struct shader_cache_info {
-		shader_cache_info( ) { }
-
 		fs_new::virtual_path_string vertex_shader_name;
 		fs_new::virtual_path_string pixel_shader_name;
 		fs_new::virtual_path_string geometry_shader_name;

@@ -11,8 +11,6 @@ namespace vostok {
 namespace render {
 
 struct grass_source_vertex {
-	grass_source_vertex( ) { }
-
 	float3 position;
 	math::color normal;
 	math::color tangent;
