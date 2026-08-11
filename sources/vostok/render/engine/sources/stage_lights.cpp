@@ -427,7 +427,11 @@ void stage_lights::render_to_hw_shadowmap(
 			material_effects& me = instance.m_render_surface->get_material_effects();
 			render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
-			if (!me.is_cast_shadow || !geometry.geom.c_ptr())
+			if (
+				!me.is_cast_shadow ||
+				!geometry.geom.c_ptr() ||
+				!me.stage_enable[shadow_render_stage]
+			)
 				continue;
 
 			if ( options::ref().current.m_use_hiz_occlusion_culling && instance.m_occluded )
