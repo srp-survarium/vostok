@@ -171,14 +171,15 @@ void stage_gbuffer::render_models(
 
 		if (!z_only)
 		{
-			float const wet_intensity =
-				options::ref().current.m_shading_quality == 0
-				? m_context->scene_view()->post_process_parameters().environment_rain_wet_intensity
-				:
-
-				1.f;
-
-			backend::ref().set_ps_constant(m_smoothness_multiplier, wet_intensity);
+			if (options::ref().current.m_shading_quality == 0)
+			{
+				float const wet_intensity = m_context->scene_view()->post_process_parameters().environment_rain_wet_intensity;
+				backend::ref().set_ps_constant(m_smoothness_multiplier, wet_intensity);
+			}
+			else
+			{
+				backend::ref().set_ps_constant(m_smoothness_multiplier, 1.f);
+			}
 		}
 		// 2 target lines are likely retail-compiled-out source.
 		backend::ref().render_indexed( D3D_PRIMITIVE_TOPOLOGY_TRIANGLELIST, surface->m_render_geometry.primitive_count * 3, 0, 0 );
