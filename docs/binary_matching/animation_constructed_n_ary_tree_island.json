@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed constructed_n_ary_tree observation from the disposable game_core-before-animation LTCG link. This preserves a small partial MAX improvement for the existing fully reconstructed body; it is not an exact or structurally closed claim.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.9fff9ae0c2fb519e.3e9d8bfa6fc7c340",
+      "expected_fuzzy_pct": 79.89428,
+      "review": "The real animation_player caller and the complete allocation, interpolator cloning, node construction, weight, time-driving, sort, and final n_ary_tree initialization phases are present. The target has 81 versus candidate 71 attributed body statements and 131 versus 121 current CFG blocks because LTCG selects different intrusive-pointer/accessor and constructor conventions; this remains a partial MAX only."
+    }
+  ]
+}
