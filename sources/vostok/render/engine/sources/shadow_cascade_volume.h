@@ -22,15 +22,6 @@ public:
 		math::plane	plane;
 	};
 
-public:
-	shadow_cascade_volume( )
-	{
-	}
-
-	~shadow_cascade_volume( )
-	{
-	}
-
 	void compute_planes( )
 	{
 		// FUNCTION BODY[0x76a20]
@@ -274,6 +265,9 @@ public:
 		for( s32 i = 0; i < 4; ++i )
 			light_cuboid_polys[i].plane.d -= translate.dot_product	(light_cuboid_polys[i].plane.normal);
 	}
+
+private:
+	friend class stage_shadow_direct;
 
 	fixed_vector<ray, 8>	view_frustum_rays;
 	ray						view_ray;
