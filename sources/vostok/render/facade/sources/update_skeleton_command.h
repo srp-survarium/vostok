@@ -23,7 +23,6 @@ public:
 	);
 
 	virtual void execute( );
-	virtual ~update_skeleton_command( ) { /* no source */ }
 
 private:
 	float4x4 m_matrices[80];

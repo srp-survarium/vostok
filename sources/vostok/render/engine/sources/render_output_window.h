@@ -41,7 +41,6 @@ public:
 	}
 
 	void goto_fullscreen( );
-	virtual ~render_output_window( ) { }
 
 	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
 
