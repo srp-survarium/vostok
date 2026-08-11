@@ -230,7 +230,7 @@ void scene_shader_constants::set(
 static float gaussian( float x, float mu, float sigma )
 {
 	float const g = ( x - mu ) * ( 1.0f / sigma );
-	return expf( -0.5f * g * g );
+	return vostok::math::exp( -0.5f * g * g );
 }
 
 static void get_gaussain_weights_offsets(
