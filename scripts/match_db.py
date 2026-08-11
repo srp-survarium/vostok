@@ -44,6 +44,9 @@ CROSS_UNIT_REPORT = VOSTOK / "binaries" / "objdiff" / "report-cross-unit.json"
 TARGET_IDX = VOSTOK / "binaries" / "rich" / "target" / "index.jsonl"
 BASE_IDX = VOSTOK / "binaries" / "rich" / "base" / "index.jsonl"
 DECLARATIONS = VOSTOK / "binaries" / "rich" / "target" / "declarations.jsonl"
+EXACT_FOLD_ALIASES = (
+    VOSTOK / "docs" / "binary_matching" / "exact_fold_aliases.tsv"
+)
 
 SCHEMA = """
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
@@ -684,6 +687,25 @@ def instruction_stream_exact(target_rec, base_rec):
     return identity(target_instructions) == identity(base_instructions)
 
 
+def load_exact_fold_aliases(path=EXACT_FOLD_ALIASES):
+    """Load reviewed target-to-base identities for asymmetric ICF groups."""
+    aliases = {}
+    if not Path(path).is_file():
+        return aliases
+    for line_number, raw_line in enumerate(Path(path).read_text().splitlines(), 1):
+        line = raw_line.strip()
+        if not line or line.startswith("#"):
+            continue
+        fields = line.split("\t")
+        if len(fields) != 2 or not all(fields):
+            raise RuntimeError(
+                f"{path}:{line_number}: expected <target>\\t<base alias>"
+            )
+        target, base = fields
+        aliases[target] = base
+    return aliases
+
+
 def shared_icf_alias_owner_compatible(
     target_rec, base_rec, target_alias_names_by_rva, base_alias_names_by_rva
 ):
@@ -713,6 +735,8 @@ def strict_source_alias_candidates(
     allow_used=False,
     target_alias_names_by_rva=None,
     base_alias_names_by_rva=None,
+    exact_fold_aliases=None,
+    base_aliases_by_mangled=None,
 ):
     """Find exact same-source bodies hidden behind a different ICF name.
 
@@ -724,7 +748,7 @@ def strict_source_alias_candidates(
     from linker alias selection, not a same-named internal helper in another
     TU.
     """
-    return [
+    candidates = [
         rec
         for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
         if (allow_used or rva not in used_base_rvas)
@@ -739,6 +763,22 @@ def strict_source_alias_candidates(
         )
         and instruction_stream_exact(target_rec, rec)
     ]
+
+    # A reviewed asymmetric ICF identity may bridge disjoint readable PDB
+    # aliases. It still earns a pair only when the complete body is identical;
+    # uniqueness is enforced by the caller.
+    exact_fold_aliases = exact_fold_aliases or {}
+    base_aliases_by_mangled = base_aliases_by_mangled or {}
+    base_mangled = exact_fold_aliases.get(target_rec.get("mangled"))
+    if base_mangled:
+        seen_rvas = {rec["rva"] for rec in candidates}
+        for rva, rec in base_aliases_by_mangled.get(base_mangled, {}).items():
+            if rva in seen_rvas or (not allow_used and rva in used_base_rvas):
+                continue
+            if instruction_stream_exact(target_rec, rec):
+                candidates.append(rec)
+                seen_rvas.add(rva)
+    return candidates
 
 
 def exact_paired_source_alias(
@@ -1083,6 +1123,10 @@ def regen():
     base_aliases_by_name = {}
     for rec in base_records:
         base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
+    exact_fold_aliases = load_exact_fold_aliases()
+    base_aliases_by_mangled = {}
+    for rec in base_records:
+        base_aliases_by_mangled.setdefault(rec["mangled"], {})[rec["rva"]] = rec
     target_alias_names_by_rva = {}
     for rec in target_records:
         target_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
@@ -1133,6 +1177,8 @@ def regen():
             used_base_rvas,
             target_alias_names_by_rva=target_alias_names_by_rva,
             base_alias_names_by_rva=base_alias_names_by_rva,
+            exact_fold_aliases=exact_fold_aliases,
+            base_aliases_by_mangled=base_aliases_by_mangled,
         )
         if len(candidates) != 1:
             continue
@@ -1170,6 +1216,8 @@ def regen():
             allow_used=True,
             target_alias_names_by_rva=target_alias_names_by_rva,
             base_alias_names_by_rva=base_alias_names_by_rva,
+            exact_fold_aliases=exact_fold_aliases,
+            base_aliases_by_mangled=base_aliases_by_mangled,
         )
         if len(candidates) != 1 or candidates[0]["rva"] not in used_base_rvas:
             continue

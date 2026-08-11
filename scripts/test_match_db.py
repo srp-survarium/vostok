@@ -173,9 +173,12 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         file="scaleform/src/render/render_matrix2x4.h",
         text="ret   4",
         rva=0x1234,
+        name="Scaleform::Render::Matrix2x4<float>::Matrix2x4<float>(copy)",
+        mangled="??0Matrix2x4@Render@Scaleform@@QAE@ABV012@@Z",
     ):
         return {
-            "name": "Scaleform::Render::Matrix2x4<float>::Matrix2x4<float>(copy)",
+            "name": name,
+            "mangled": mangled,
             "file": file,
             "rva": rva,
             "size": 3,
@@ -272,6 +275,44 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
                 base_alias_names_by_rva={
                     base["rva"]: {target["name"], shared, "base-only alias"}
                 },
+            ),
+            [],
+        )
+
+    def test_accepts_exact_reviewed_fold_alias(self):
+        target = self.record(
+            name="vostok::animation::mixing::animation_interval::animation() const",
+            mangled="?animation@animation_interval@@QBEABVresource_ptr@@XZ",
+            file="vostok/animation/mixing_animation_interval.h",
+            rva=0x1000,
+        )
+        base = self.record(
+            name="survarium::collision_geometry::cast_to_collision_geometry()",
+            mangled="?cast_to_collision_geometry@collision_geometry@@QAEXXZ",
+            file="vostok/game_core/collision_geometry.h",
+            rva=0x2000,
+        )
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target,
+                {},
+                set(),
+                exact_fold_aliases={target["mangled"]: base["mangled"]},
+                base_aliases_by_mangled={base["mangled"]: {base["rva"]: base}},
+            ),
+            [base],
+        )
+
+    def test_rejects_reviewed_fold_alias_with_different_body(self):
+        target = self.record(mangled="?target@@", rva=0x1000)
+        base = self.record(mangled="?base@@", rva=0x2000, text="ret   8")
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target,
+                {},
+                set(),
+                exact_fold_aliases={target["mangled"]: base["mangled"]},
+                base_aliases_by_mangled={base["mangled"]: {base["rva"]: base}},
             ),
             [],
         )
