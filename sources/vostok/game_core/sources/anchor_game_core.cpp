@@ -1770,45 +1770,12 @@ namespace vostok
 		input.is_empty();
 	}
 
-	void use_client_player_update( network_core::udp_match_packet* packet )
-	{
-		survarium::client_player_update update;
-		update.serialize( *packet );
-	}
-
-	// Exercises the typed serialize/deserialize chain so the packet< T >::append
-	// and packet_reader::r< T > / r_string primitives keep real out-of-line call
-	// sites in the LTCG image (they would otherwise be inlined away / DCE'd).
+	// Retains serialization bodies whose real game callers are not reconstructed yet.
 	void use_game_core_serialization(
 		network_core::udp_match_packet*	packet,
 		network_core::packet_reader*	reader
 	)
 	{
-		survarium::player_input			input;
-		input.serialize	( *packet );
-		input.deserialize( *reader );
-
-		survarium::player_state			state;
-		state.serialize	( *packet );
-		state.deserialize( *reader );
-
-		survarium::server_player_update	server_update;
-		server_update.deserialize( *reader );
-
-		survarium::hit_info				hit;
-		hit.deserialize	( *reader );
-
-		// The parameterized hit_info ctor is otherwise DCE'd ( /OPT:REF ) - its real
-		// call site (hit_initiator) is not yet in the image; anchor it explicitly.
-		survarium::hit_info				hit_constructed(
-			0, 0, NULL, NULL, 0.f, 0.f, NULL
-		);
-		hit_constructed.deserialize( *reader );
-
-		// player_stamina::deserialize is otherwise DCE'd ( /OPT:REF ); public, call directly.
-		survarium::player_stamina		stamina;
-		stamina.deserialize( *reader );
-
 		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
 		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
 		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
@@ -2249,7 +2216,6 @@ namespace vostok
 		p.unsubscribe_from_player_death( NULL );
 		p.on_player_death( );
 		p.tick_active_object( );
-		p.deserialize_game_world_object( *reinterpret_cast< vostok::network_core::packet_reader* >( NULL ) );
 		p.send_game_world_object(
 			reinterpret_cast< survarium::game_world_object const* >( NULL ),
 			*reinterpret_cast< boost::function< vostok::network_core::udp_match_packet& ( ) >* >( NULL ),
@@ -2468,7 +2434,6 @@ namespace vostok
 		use_game_core_player_stamina();
 		use_game_core_player_stealth();
 		use_game_core_player_input();
-		use_client_player_update( NULL );
 		use_game_core_serialization( NULL, NULL );
 		use_game_core_weapon_state();
 		use_game_core_player_logic_base_state();
