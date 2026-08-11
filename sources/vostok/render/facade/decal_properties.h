@@ -27,7 +27,6 @@ struct decal_properties {
 
 	inline bool is_project_on_all( ) const;
 	inline bool is_project_on_something( ) const;
-	inline ~decal_properties( ) { }
 
 	float4x4							transform;
 	resources::unmanaged_resource_ptr	material;
