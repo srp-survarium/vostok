@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed n_ary_tree::dispatch_callbacks from the disposable game-before-animation LTCG link. The complete callback dispatch phases and target local set remain source-aligned while the real gameplay caller boundary improves the emitted body.",
+  "link_perturbation": "game moved immediately before animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "a9f5cf2c8db038bacdb312862190903e1651654f8b86777ed71dbe6bce2346d7",
+  "base_index_sha256": "c6c75ce2f6751b74c52f2b7c5b4ad813979554866c3e9bd7f2f2a96db629b575",
+  "candidate_exe_sha256": "1475c31f996a10f9a77de544faf7371cd0d9219d0a20c66ba9d0709802b617b5",
+  "candidate_pdb_sha256": "519d2f542c4ffb20448c6a07a83181c29609c78d54aa9dc9a789097a3b47bfc6",
+  "functions": [
+    {
+      "mangled": "?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z",
+      "module": "animation",
+      "expected_hash": "0e3174dc91db.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 82.60133,
+      "review": "The target and candidate retain both event-match cascades, callback filtering and invocation, channel lookup, knot wrapping, and the same eight visible locals. Target has 58 versus candidate 56 attributed statements and 1459 versus 1456 bytes; the remaining difference is the already-proven intrusive-pointer and argument-passing LTCG boundary."
+    }
+  ]
+}
