@@ -12,7 +12,10 @@
 #include "effect_forward_system.h"
 #include "effect_fstage_blend_subuv_materials.h"
 #include "effect_fstage_default_materials.h"
+#include "effect_fstage_default_view_angle_dependent_materials.h"
 #include "effect_fstage_fire_fresnel_materials.h"
+#include "effect_fstage_simpe_water_materials.h"
+#include "effect_fstage_sky_materials.h"
 #include "effect_fstage_smoke_custom_lighted_materials.h"
 #include "effect_fstage_soft_materials.h"
 #include "effect_fstage_volume_cone_base_materials.h"
@@ -31,6 +34,7 @@
 #include "point_light_effect.h"
 #include "renderer_register_effects.h"
 #include "sky_default_material_effect.h"
+#include "effect_sky_sphere_default_materials.h"
 #include "sphere_light_effect.h"
 #include "spot_light_effect.h"
 
@@ -39,13 +43,10 @@ namespace render {
 
 void register_effect_descriptors( )
 {
-	// FUNCTION BODY[0x79c4f0]
-	// claude@NOTE: legacy seed only - the target's registration list is larger (the pre-port
-	// include set names capsule/obb/plane_spot/point/sphere/spot light effects, blur and
-	// complex_post_process_blend at least); matcher completes it
 	effect_manager::ref().register_effect_desctiptor( "#forward_system",				NEW(effect_forward_system));
 	effect_manager::ref().register_effect_desctiptor("forward_fire_fresnel",			NEW(effect_fstage_fire_fresnel_materials));
 	effect_manager::ref().register_effect_desctiptor("forward_default",					NEW(effect_fstage_default_materials));
+	effect_manager::ref().register_effect_desctiptor("forward_sky",						NEW(effect_fstage_sky_materials));
 	effect_manager::ref().register_effect_desctiptor("forward_default_tiled",			NEW(effect_fstage_default_materials));
 	effect_manager::ref().register_effect_desctiptor("forward_default_subuv",			NEW(effect_fstage_blend_subuv_materials));
 	effect_manager::ref().register_effect_desctiptor("forward_soft",					NEW(effect_fstage_soft_materials));
@@ -69,6 +70,9 @@ void register_effect_descriptors( )
 	effect_manager::ref().register_effect_desctiptor("decals_default",					NEW(decal_default_material_effect)(false));
 	effect_manager::ref().register_effect_desctiptor("forward_decal",					NEW(decal_default_material_effect)(true));
 	effect_manager::ref().register_effect_desctiptor("sky_default",						NEW(sky_default_material_effect));
+	effect_manager::ref().register_effect_desctiptor("sky_sphere_default",				NEW(effect_sky_sphere_default_materials));
+	effect_manager::ref().register_effect_desctiptor("forward_default_simpe_water",		NEW(effect_fstage_simpe_water_materials));
+	effect_manager::ref().register_effect_desctiptor("forward_default_view_angle_dependent", NEW(effect_fstage_default_view_angle_dependent_materials));
 }
 
 } // namespace render
