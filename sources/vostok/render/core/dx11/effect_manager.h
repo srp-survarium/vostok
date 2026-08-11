@@ -26,16 +26,10 @@ struct effect_loader;
 
 class effect_manager : public quasi_singleton<effect_manager> {
 public:
-	template < typename resource_type >
-	struct compare_predicate {
-		bool operator()(
-			resource_type const* const left,
-			resource_type const* const right
-		) const
-		{
-			return left < right;
-		}
-	};
+	typedef boost::function<void( )> creation_callback_type;
+
+	effect_manager( );
+	~effect_manager( );
 
 	struct effect_holder_struct {
 		effect_holder_struct( ) : descriptor( 0 ), effect( 0 ) { }
@@ -44,38 +38,6 @@ public:
 		custom_config_ptr config;
 		res_effect* effect;
 	};
-
-	struct effect_to_recompile_struct {
-		effect_to_recompile_struct(
-			res_effect_ptr effect,
-			effect_descriptor* descriptor,
-			custom_config_ptr config,
-			u32 crc
-		)
-			: effect( effect ),
-			  descriptor( descriptor ),
-			  config( config ),
-			  crc( crc )
-		{
-		}
-
-		res_effect_ptr effect;
-		effect_descriptor* descriptor;
-		custom_config_ptr config;
-		u32 crc;
-	};
-
-	struct shader_cache_info {
-		shader_cache_info( ) { }
-
-		fs_new::virtual_path_string vertex_shader_name;
-		fs_new::virtual_path_string pixel_shader_name;
-		shader_configuration configuration;
-	};
-
-public:
-	effect_manager( );
-	~effect_manager( );
 
 	void add_effect(
 		effect_descriptor* descriptor,
@@ -142,7 +104,7 @@ private:
 		resources::queries_result& data,
 		res_effect_ptr* out_effect,
 		effect_descriptor* descriptor,
-		boost::function<void( )> callback
+		creation_callback_type callback
 	);
 	res_effect_ptr create_new_effect(
 		effect_descriptor& descriptor,
@@ -160,7 +122,7 @@ private:
 		effect_descriptor*,
 		custom_config_ptr const&,
 		u32,
-		boost::function<void( )>
+		creation_callback_type
 	)
 	{
 	}
@@ -185,8 +147,47 @@ public:
 	);
 
 private:
+	typedef map<fixed_string<128>, effect_descriptor*> map_effect_descriptors;
+	typedef map_effect_descriptors::iterator map_effect_descriptors_it;
+	typedef vector<effect_holder_struct> effects_vector_type;
+	typedef map<u32, effect_descriptor*> map_effect_descriptors_by_id;
+
+	struct shader_cache_info {
+		shader_cache_info( ) { }
+
+		fs_new::virtual_path_string vertex_shader_name;
+		fs_new::virtual_path_string pixel_shader_name;
+		shader_configuration configuration;
+	};
+
+	bool m_is_effects_query_processing;
+	typedef vectora<shader_cache_info> shader_cache_info_vector;
+	shader_cache_info_vector m_shader_cache_info;
+
+	struct effect_to_recompile_struct {
+		effect_to_recompile_struct(
+			res_effect_ptr effect,
+			effect_descriptor* descriptor,
+			custom_config_ptr config,
+			u32 crc
+		)
+			: effect( effect ),
+			  descriptor( descriptor ),
+			  config( config ),
+			  crc( crc )
+		{
+		}
+
+		res_effect_ptr effect;
+		effect_descriptor* descriptor;
+		custom_config_ptr config;
+		u32 crc;
+	};
+
+	typedef vectora<effect_to_recompile_struct> effects_to_recompile_type;
+
 	void on_effects_recompiled(
-		vectora<effect_to_recompile_struct>* effects,
+		effects_to_recompile_type* effects,
 		resources::queries_result& data
 	);
 
@@ -199,6 +200,7 @@ public:
 	{
 		m_effects_deleted_in_pending.push_back( effect );
 	}
+	bool force_sync;
 
 private:
 	effect_descriptor* find_effect( pcstr, pcstr ) { return 0; }
@@ -206,31 +208,36 @@ private:
 	void load_raw_file( resources::queries_result& ) { }
 	effect_descriptor* make_effect( u64 ) { return 0; }
 
-private:
-	bool m_is_effects_query_processing;
-	vectora<shader_cache_info> m_shader_cache_info;
+	template < typename resource_type >
+	struct compare_predicate {
+		bool operator()(
+			resource_type const* const left,
+			resource_type const* const right
+		) const
+		{
+			return left < right;
+		}
+	};
 
-public:
-	bool force_sync;
-
-private:
-	set<res_pass*, compare_predicate<res_pass> > m_passes;
-	set<res_effect*, compare_predicate<res_effect> > m_shaders;
-	set<
+	typedef set<res_pass*, compare_predicate<res_pass> > passes_type;
+	typedef set<res_effect*, compare_predicate<res_effect> > effects_type;
+	typedef set<
 		res_shader_technique*,
 		compare_predicate<res_shader_technique>
-	> m_techniques;
-	vector<effect_holder_struct> m_effects;
-	map<fixed_string<128>, effect_descriptor*> m_effect_descriptors;
-	map<fixed_string<128>, effect_descriptor*> m_effect_descriptors_by_texture;
+	> techniques_type;
+
+	passes_type m_passes;
+	effects_type m_shaders;
+	techniques_type m_techniques;
+	effects_vector_type m_effects;
+	map_effect_descriptors m_effect_descriptors;
+	map_effect_descriptors m_effect_descriptors_by_texture;
 	bool m_loading_incomplete;
-	vector<res_effect_ptr*> m_effects_deleted_in_pending;
+	typedef vector<res_effect_ptr*> effects_deleted_in_pending_type;
+	effects_deleted_in_pending_type m_effects_deleted_in_pending;
 };
 
-STATIC_SIZE_ASSERT( effect_manager::compare_predicate<res_effect>, 0x1 );
 STATIC_SIZE_ASSERT( effect_manager::effect_holder_struct, 0xC );
-STATIC_SIZE_ASSERT( effect_manager::effect_to_recompile_struct, 0x10 );
-STATIC_SIZE_ASSERT( effect_manager::shader_cache_info, 0x238 );
 STATIC_SIZE_ASSERT( effect_manager, 0xAC );
 
 } // namespace render
