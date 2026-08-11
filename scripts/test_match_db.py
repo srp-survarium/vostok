@@ -82,6 +82,27 @@ class IndexByMangledTests(unittest.TestCase):
         self.assertEqual(indexed, {first["mangled"]: preferred})
 
 
+class AuthoritativeDemangledNamesTests(unittest.TestCase):
+    def test_target_name_wins_when_base_fold_alias_reuses_mangled_name(self):
+        mangled = "?animation@animation_interval@@QBEABVresource_ptr@@XZ"
+        target = {mangled: {"name": "animation_interval::animation() const"}}
+        base = {mangled: {"name": "collision_geometry::cast_to_collision_geometry()"}}
+
+        self.assertEqual(
+            MATCH_DB.authoritative_demangled_names(target, base)[mangled],
+            target[mangled]["name"],
+        )
+
+    def test_base_only_symbol_keeps_base_name(self):
+        mangled = "?base_only@@YAXXZ"
+        base = {mangled: {"name": "base_only()"}}
+
+        self.assertEqual(
+            MATCH_DB.authoritative_demangled_names({}, base)[mangled],
+            base[mangled]["name"],
+        )
+
+
 class InstructionStreamExactTests(unittest.TestCase):
     def record(self, size=6, text="call  Scaleform::Render::HAL::EndFrame"):
         return {
