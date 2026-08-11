@@ -75,12 +75,12 @@ public:
 			float								get_dispersion					( ) const;
 
 			void								set_magazine_capacity			( u16 magazine_capacity );
-			u16									get_magazine_capacity			( ) const;	// out-of-line: target emits `call get_magazine_capacity` @0x09cc20 (double-barreled ctor ASSERT_CMP_U); optimized-COMDAT wall
+	inline	u16									get_magazine_capacity			( ) const	{ return m_magazine_capacity; }
 
 	inline	weapon_ammunition_ptr				ammunition						( ) const										{ return m_ammunition;				}
 			void								set_ammunition					( weapon_ammunition_ptr const& ammunition_to_set );
 
-			u16									ammo_in_magazine				( ) const;	// out-of-line: target emits `call ammo_in_magazine` @0x09b270 (idle-state getters); optimized-COMDAT wall
+			u16									ammo_in_magazine				( ) const;
 	inline	u16									ammo_in_weapon					( ) const										{ return 0; /* sushi@TODO return m_ammo_in_weapon;	*/		}
 
 			u16									maximum_ammo_in_weapon			( ) const;
@@ -100,7 +100,7 @@ public:
 	inline	u8									get_fire_queue_type				( ) const { /* no source */ }
 
 	inline	u16									get_bullets_in_queue			( ) const { return m_bullets_in_queue; }
-			u16									fire_queue_length				( ) const;	// out-of-line: target emits `call fire_queue_length` @0x09b290
+			u16									fire_queue_length				( ) const;
 
 	inline	float4x4							get_transform					( ) const { /* no source */ }
 	virtual	float4x4							transform						( ) const override { return m_transform; }							// optimized-COMDAT wall (STRUCTURE MATCH)
@@ -155,7 +155,7 @@ public:
 	virtual	bool								can_hold_breath					( ) const { return m_aimed; }				// optimized-COMDAT wall (STRUCTURE MATCH)
 			void								reset_fire_queue				( );
 
-			bool								is_aimed						( ) const;	// out-of-line: target emits `call is_aimed` @0x09b310 (e.g. from the recoil-value getters)
+			bool								is_aimed						( ) const;
 	// claude@MATCH: body proven by weapon_user_animations_selector::is_weapon_in_idle target asm
 	// (m_is_idle || (m_aimed && !m_is_firing), with the [+0x492]/[+0x488]/[+0x48c] field reads).
 	inline	bool								is_idle							( ) const { return m_is_idle || ( m_aimed && !m_is_firing ); }
@@ -178,7 +178,7 @@ public:
 	inline	float								aim_fov_factor					( ) const { return m_aim_fov_factor; }
 	inline	float								aim_near_plane_factor			( ) const { return m_aim_near_plane_factor; }
 
-			profile_slot_enum					ammo_slot						( );	// out-of-line: target emits `call ammo_slot` @0x09b320 (e.g. from get_ammo_info)
+			profile_slot_enum					ammo_slot						( );
 
 	inline	void								set_weapon_fire_queue_types		( pbyte weapon_fire_queue_types, u8 count ) { m_weapon_fire_queue_types = weapon_fire_queue_types; m_weapon_fire_queue_types_count = count; }
 
@@ -186,7 +186,7 @@ public:
 	inline	weapon_user_animations_container const&	user_animations					( ) const { /* no source */ }
 
 	inline	base_player*						get_user						( ) const { return m_user; }
-			bool								is_double_handed				( ) const;	// out-of-line: target emits `call is_double_handed` @0x09b340
+			bool								is_double_handed				( ) const;
 	// claude@NOTE: reconstructed for weapon_core_cook::load_weapon_parameters (direct byte
 	// stores to m_is_double_handed/m_chamber_a_round_on_reload, no symbol - always inlined).
 	inline	void								set_double_handed				( bool is_double_handed ) { m_is_double_handed = is_double_handed; }
@@ -209,7 +209,7 @@ public:
 	// weapon_state_creation_params `bool& shown` binds &m_is_shown (lea object+487h).
 	inline	bool&								is_shown						( ) { return m_is_shown; }
 	inline	bool								has_chamber_a_round_state		( ) const { /* no source */ }
-			bool								round_is_chambered				( ) const;	// out-of-line: target emits `call round_is_chambered` @0x09b360 (reload_state_base::initialize); optimized-COMDAT wall
+			bool								round_is_chambered				( ) const;
 	inline	bool								chamber_a_round_on_reload		( ) const { return m_chamber_a_round_on_reload; }
 	inline	void								load_ammo_on_next_activate		( ) { m_load_ammo_on_next_activate = true; }
 
