@@ -301,16 +301,8 @@ void cloud_simulation::generate(
 
 	fill_default_volume( );
 
-	float const cloudiness = math::clamp_r(
-		1.0f - init_key.cloud_generate_cloudiness + 0.05f,
-		0.0f,
-		1.0f
-	);
-	float const cloudiness2 = math::clamp_r(
-		1.0f - init_key.cloud_generate_cloudiness + 0.1f,
-		0.0f,
-		1.0f
-	);
+	float const cloudiness = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.05f, 0.0f, 1.0f );
+	float const cloudiness2 = math::clamp_r( 1.0f - init_key.cloud_generate_cloudiness + 0.1f, 0.0f, 1.0f );
 	u32 const num_octaves = math::floor( init_key.cloud_generate_octaves );
 	float const cloudiness3 = 1.0f - init_key.cloud_generate_cloudiness;
 
@@ -318,28 +310,22 @@ void cloud_simulation::generate(
 	{
 		for ( u32 x = 0; x < m_clouds_size_x; ++x )
 		{
-			float const noise = cloud_noise::evaluate(
-				static_cast<float>( z ) / static_cast<float>( m_clouds_size_z ),
-				static_cast<float>( x ) / static_cast<float>( m_clouds_size_x ),
-				num_octaves
-			);
-
-			u32 min_y = 1;
-			u32 max_y = 1;
+			float const noise = cloud_noise::evaluate( static_cast<float>( z ) / static_cast<float>( m_clouds_size_z ), static_cast<float>( x ) / static_cast<float>( m_clouds_size_x ), num_octaves );
+			u32 min_y = 1, max_y = 1;
 
 			if ( noise - cloudiness2 > 0.0f )
 			{
-				max_y = m_clouds_size_y - 1;
+				max_y = m_clouds_size_y;
 			}
 			else if ( noise - cloudiness > 0.0f )
 			{
 				min_y = 2;
-				max_y = m_clouds_size_y - 3;
+				max_y = m_clouds_size_y - 2;
 			}
 			else if ( noise - cloudiness3 > 0.0f )
 			{
 				min_y = 3;
-				max_y = m_clouds_size_y - 4;
+				max_y = m_clouds_size_y - 3;
 			}
 
 			if ( max_y - min_y > 1 && min_y < max_y )
