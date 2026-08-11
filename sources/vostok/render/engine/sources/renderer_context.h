@@ -105,8 +105,8 @@ public:
 	void reset_matrices( );
 	void update_eye_rays( );
 
-	u32 get_lighting_material_strtegy( ) { return 0; }
-	float get_shadow_map_z_bias( ) { return 0.0f; }
+	u32 get_lighting_material_strtegy( );
+	float get_shadow_map_z_bias( );
 
 	void set_time_delta( float time_delta );
 	void set_current_time( float current_time );

@@ -26,14 +26,15 @@
 #include <vostok/render/core/res_xs.h>
 #include <vostok/render/facade/vertex_input_type.h>
 // 31 target lines are likely retail-compiled-out source.
+
+static bool s_debug_profile_dip = false;
+static vostok::console_commands::cc_bool s_debug_profile_dip_cc( "r_debug_profile_dip", s_debug_profile_dip, false, vostok::console_commands::command_type_user_specific );
+
+static vostok::command_line::key s_z_only_1("z_only_1", "", "", "");
+// 6 target lines are likely retail-compiled-out source.
 namespace vostok {
 namespace render {
 
-static bool s_debug_profile_dip = false;
-static console_commands::cc_bool s_debug_profile_dip_cc( "r_debug_profile_dip", s_debug_profile_dip, false, console_commands::command_type_user_specific );
-
-static command_line::key s_z_only_1("z_only_1", "", "", "");
-// 6 target lines are likely retail-compiled-out source.
 void effect_copy_depth_rt::compile(
 	effect_compiler& compiler,
 	custom_config_value const&

@@ -29,8 +29,16 @@
 #include <vostok/resources_fs.h>
 
 #include <vostok/tasks_system.h>
+#include <vostok/command_line_extensions.h>
 
 #include <algorithm>
+
+static vostok::command_line::key s_no_srgb_textures_result(
+	"no_srgb_textures",
+	"",
+	"",
+	""
+);
 
 namespace vostok {
 namespace render {

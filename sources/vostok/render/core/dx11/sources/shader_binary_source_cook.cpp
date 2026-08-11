@@ -4,6 +4,14 @@
 #include <vostok/render/core/shader_defines.h>
 #include <vostok/render/core/shader_macros.h>
 #include <vostok/render/core/res_effect.h>
+#include <vostok/command_line_extensions.h>
+
+static vostok::command_line::key s_no_cache_shaders_key(
+	"no_cache_shaders",
+	"",
+	"",
+	"disable binary shaders caching"
+);
 
 namespace vostok {
 namespace render {
