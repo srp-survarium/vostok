@@ -13,10 +13,9 @@ namespace resources {
 template <class T>
 class pinned_ptr_base
 {
-protected:
+public:
 	explicit pinned_ptr_base	(managed_resource_ptr ptr) : m_resource(ptr), m_data(ptr ? ptr->pin() : 0), m_size(ptr ? ptr->get_size() : 0) { }
 	explicit pinned_ptr_base	(pinned_ptr_base const & other) : m_resource(other.m_resource), m_data(other.m_resource ? (pcbyte)other.m_resource->pin() : 0), m_size(other.m_resource ? other.m_resource->get_size() : 0) {}
-public:
 							~pinned_ptr_base() { if (m_resource) m_resource->unpin(m_data); }
 
 	pinned_ptr_base<T>&	operator =		(pinned_ptr_base<T> const & other)
