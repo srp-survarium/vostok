@@ -88,26 +88,16 @@ weapon_core::~weapon_core( )
 	VOSTOK_DELETE_IMPL( g_allocator, m_logic );
 }
 
-// claude@NOTE: out-of-line so the idle-state getters emit `call ammo_in_magazine`
-// instead of inlining `m_ammo_in_magazine` (matches the target's out-of-line call).
+// The target source is inline, but the remaining real consumer set does not retain
+// this COMDAT yet. Keep the call boundary until that consumer is reconstructed.
 u16 weapon_core::ammo_in_magazine( ) const
 {
 	return m_ammo_in_magazine;
 }
 
-// claude@NOTE: out-of-line so reload_state_base::initialize emits `call round_is_chambered`
-// instead of inlining `m_is_round_chambered` (matches the target's out-of-line call @0x09b360).
 bool weapon_core::round_is_chambered( ) const
 {
 	return m_is_round_chambered;
-}
-
-// claude@NOTE: out-of-line so the double-barreled ctor's ASSERT_CMP_U emits
-// `call get_magazine_capacity` instead of inlining `m_magazine_capacity`
-// (matches the target's out-of-line call; symbol @0x09cc20).
-u16 weapon_core::get_magazine_capacity( ) const
-{
-	return m_magazine_capacity;
 }
 
 void weapon_core::set_magazine_capacity( u16 magazine_capacity )
@@ -116,30 +106,21 @@ void weapon_core::set_magazine_capacity( u16 magazine_capacity )
 	m_magazine_capacity = magazine_capacity;
 }
 
-// claude@NOTE: out-of-line so reset_fire_queue emits `call fire_queue_length`
-// instead of inlining the m_weapon_fire_queue_types[m_fire_queue_type] read
-// (matches the target's standalone symbol @0x09b290).
 u16 weapon_core::fire_queue_length( ) const
 {
 	return m_weapon_fire_queue_types[m_fire_queue_type];
 }
 
-// claude@NOTE: out-of-line so get_ammo_info emits `call ammo_slot` instead of
-// inlining the m_ammo_slot read (matches the target's standalone symbol @0x09b320).
 profile_slot_enum weapon_core::ammo_slot( )
 {
 	return m_ammo_slot;
 }
 
-// claude@NOTE: out-of-line so the recoil-value getters emit `call is_aimed`
-// instead of inlining the m_aimed read (matches the target's standalone symbol @0x09b310).
 bool weapon_core::is_aimed( ) const
 {
 	return m_aimed;
 }
 
-// claude@NOTE: out-of-line so callers emit `call is_double_handed` instead of inlining the
-// m_is_double_handed read (matches the target's standalone symbol @0x09b340).
 bool weapon_core::is_double_handed( ) const
 {
 	return m_is_double_handed;
