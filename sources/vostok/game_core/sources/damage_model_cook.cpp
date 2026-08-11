@@ -72,7 +72,7 @@ void damage_model_cook::delete_resource( resources::resource_base* resource )
 static u32 calculate_model_size( configs::binary_config_value const& model_value )
 {
 	const u32 body_parts_count	= model_value.size( );
-	u32 result					= sizeof( body_part_parameters ) * body_parts_count;
+	u32 result					= sizeof( damage_model ) + sizeof( body_part_parameters ) * body_parts_count;
 
 	configs::binary_config_value const* it_model		= model_value.begin( );
 	configs::binary_config_value const* it_model_end	= model_value.end( );
@@ -92,7 +92,7 @@ static u32 calculate_model_size( configs::binary_config_value const& model_value
 			configs::binary_config_value const& type_value = *it_type;
 			configs::binary_config_value const& bdbs_value = type_value["bdb_coeff"];
 
-			result += sizeof( bdb_coeff ) * bdbs_value.size( ); // sushi@NOTE: Might be incorrect.
+			result += sizeof( bdb_coeff ) * bdbs_value.size( );
 		}
 
 		configs::binary_config_value const& thresholds_value = part_value["thresholds"];
