@@ -40,10 +40,6 @@ public:
 		return m_transform;
 	}
 
-	virtual ~render_model_instance_impl( )
-	{
-	}
-
 	render_collision_object< render_model_instance_impl >	m_collision_object;
 
 protected:

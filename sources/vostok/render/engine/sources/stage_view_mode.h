@@ -148,8 +148,6 @@ public:
 		return m_editor_apply_wireframe_shader.c_ptr()!=NULL && m_editor_show_overdraw_shader.c_ptr()!=NULL;
 	}
 
-	virtual ~stage_view_mode( ) { }
-
 private:
 	res_effect_ptr			m_editor_wireframe_accumulation_effect[15];
 	res_effect_ptr			m_editor_texture_density_effect[15];

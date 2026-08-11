@@ -38,7 +38,6 @@ STATIC_SIZE_ASSERT( static_render_surface, 0x9C );
 class static_render_model : public render_model {
 public:
 	static_render_model( ) { }
-	virtual ~static_render_model( ) { }
 };
 
 STATIC_SIZE_ASSERT( static_render_model, 0x138 );

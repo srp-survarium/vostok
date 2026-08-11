@@ -26,9 +26,6 @@ public:
 		return m_material_name;
 	}
 
-	material_effects_instance( ) { }
-	virtual ~material_effects_instance( ) { }
-
 	material_effects			m_material_effects;
 	fs_new::virtual_path_string	m_material_name;
 };

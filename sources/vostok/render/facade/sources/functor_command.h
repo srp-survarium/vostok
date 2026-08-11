@@ -20,7 +20,6 @@ public:
 
 	virtual void execute( );
 	virtual void defer_execution( );
-	virtual ~functor_command( ) { /* no source */ }
 
 private:
 	on_execute_type m_on_execute;
