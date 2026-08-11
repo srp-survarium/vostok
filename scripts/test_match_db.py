@@ -192,6 +192,26 @@ class ReportFuzzyScoreTests(unittest.TestCase):
 
         self.assertEqual(scores, {"?fn@@": 42.5})
 
+    def test_cross_unit_exact_maps_scalar_pdb_to_vector_coff_destructor(self):
+        scalar = "??_Gskeleton@animation@vostok@@UAEPAXI@Z"
+        vector = "??_Eskeleton@animation@vostok@@UAEPAXI@Z"
+
+        self.assertEqual(
+            MATCH_DB.cross_unit_exact_score(scalar, {vector: 100.0}),
+            100.0,
+        )
+
+    def test_cross_unit_exact_accepts_same_name_and_rejects_partial_score(self):
+        mangled = "??0expression@mixing@animation@vostok@@QAE@ABV0123@@Z"
+
+        self.assertEqual(
+            MATCH_DB.cross_unit_exact_score(mangled, {mangled: 100.0}),
+            100.0,
+        )
+        self.assertIsNone(
+            MATCH_DB.cross_unit_exact_score(mangled, {mangled: 99.0})
+        )
+
 
 class RankIslandDeltaTests(unittest.TestCase):
     def test_discovers_target_only_candidate_from_zero_floor(self):
