@@ -155,7 +155,7 @@ void stage_atmosphere::execute( )
 		{
 			m_context->get_scene_view( )->need_recalc_atmosphere = false;
 
-			m_atmospheric_scattering_effect->apply( 0, 0 );
+			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::make_mie_rayleigh_pass, 0 );
 			float sun_int = sun ? sun->intensity : 1.0f;
 			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 			// 8 target lines are likely retail-compiled-out source.
@@ -172,7 +172,7 @@ void stage_atmosphere::execute( )
 		if ( !pp_parameters.use_sun_moon_atmosphere_illumination )
 			sun_int = 0.0f;
 
-		m_atmospheric_scattering_effect->apply( 1, 0 );
+		m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::atmosphere_pass, 0 );
 		backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 		backend::ref( ).set_vs_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 
@@ -188,7 +188,7 @@ void stage_atmosphere::execute( )
 		if ( pp_parameters.sky_clouds_texture )
 		{
 
-			m_atmospheric_scattering_effect->apply( pp_parameters.sky_clouds_blend_mode ? 2 : 3, 0 );
+			m_atmospheric_scattering_effect->apply( pp_parameters.sky_clouds_blend_mode ? effect_atmospheric_scattering::clouds_pass_alpha_blend : effect_atmospheric_scattering::clouds_pass_modulate, 0 );
 			backend::ref( ).set_ps_texture( "sky_clouds_texture", pp_parameters.sky_clouds_texture.c_ptr( ) );
 
 			backend::ref( ).set_ps_constant( m_sky_clouds_parameters0, float4( pp_parameters.sky_clouds_color.xyz( ), pp_parameters.sky_clouds_u_tile ) );
@@ -214,7 +214,7 @@ void stage_atmosphere::execute( )
 
 			m_screen_vertex_geometry->apply( );
 			// 3 target lines are likely retail-compiled-out source.
-			m_atmospheric_scattering_effect->apply( 4, 0 );
+			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::sun_moon_pass_for_alpha_blend_clouds, 0 );
 			// 5 target lines are likely retail-compiled-out source.
 			float3 L_dir = sun->direction;
 			float3 L_right;
@@ -265,14 +265,14 @@ void stage_atmosphere::execute( )
 
 		if ( pp_parameters.use_atmosphere_inscattering_on_geometry )
 		{
-			m_atmospheric_scattering_effect->apply( 6, 0 );
+			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::scattering_on_geometry_pass_mul, 0 );
 			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, 1.0f ) );
 			backend::ref( ).set_ps_constant( m_c_inverted_view_projection_matrix, math::transpose( math::invert4x4( m_context->get_vp( ) ) ) );
 			backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( (float4*)eye_rays )[0] );
 			backend::ref( ).set_ps_constant( m_c_inscatter_parameters, float4( pp_parameters.atmosphere_inscatter_distance, pp_parameters.atmosphere_inscatter_power, 0.0f, 0.0f ) );
 			fill_surfaces( m_context->get_rt( rt_generic_0 ), 0, true );
 
-			m_atmospheric_scattering_effect->apply( 7, 0 );
+			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::scattering_on_geometry_pass_add, 0 );
 			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, 1.0f ) );
 			backend::ref( ).set_ps_constant( m_c_inverted_view_projection_matrix, math::transpose( math::invert4x4( m_context->get_vp( ) ) ) );
 			backend::ref( ).set_ps_constant( m_c_eye_ray_corner, ( (float4*)eye_rays )[0] );

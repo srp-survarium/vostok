@@ -8,6 +8,11 @@ namespace render {
 
 class scr_quad_effect : public effect_descriptor {
 public:
+	enum {
+		back_buffer_only,
+		prev_and_back_buffer
+	};
+
 	virtual void compile(
 		effect_compiler& compiler,
 		custom_config_value const& config

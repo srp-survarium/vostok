@@ -11,8 +11,10 @@ class effect_compiler;
 
 class effect_lighting_stage_default_materials : public effect_material_base {
 public:
-	effect_lighting_stage_default_materials( ) { }
-	virtual ~effect_lighting_stage_default_materials( ) { }
+	enum {
+		brdf_lighting,
+		probe_lighting
+	};
 
 	virtual bool should_recompile_when_global_changes(
 		vector< fs_new::virtual_path_string > const& changed_defines
