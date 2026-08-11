@@ -108,13 +108,13 @@ decal_instance::decal_instance(
 	decal_properties const&				properties,
 	u32 const							id
 ) :
-	m_aabb						( math::create_zero_aabb( ) ),
+	m_aabb						( math::create_identity_aabb( ) ),
 	m_id						( id ),
 	m_collision_tree			( tree ),
 	m_collision_geometry		( 0 ),
 	m_collision_object			( 0 ),
-	m_occlusion_info_index		( 0 ),
-	m_draw_priority				( properties.draw_priority ),
+	m_occlusion_info_index		( u32(-1) ),
+	m_draw_priority				( 0.0f ),
 	m_occluded					( false )
 {
 	// FUNCTION BODY[0x6412b0]
