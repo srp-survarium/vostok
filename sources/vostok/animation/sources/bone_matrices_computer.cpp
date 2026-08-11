@@ -124,7 +124,9 @@ bone_matrices_computer::~bone_matrices_computer( )
 static float3 mix_translations( buffer_vector< std::pair< float3, float > > const& transforms )
 {
 	float3	result( 0.f, 0.f, 0.f );
-	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
+	std::pair< float3, float > const* i = transforms.begin();
+	std::pair< float3, float > const* const e = transforms.end();
+	for ( ; i != e; ++i )
 		result	+= i->first * i->second;
 
 	return	result;
@@ -178,7 +180,8 @@ static math::quaternion mix_rotations(
 static float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )
 {
 	float3	result( 1.f, 1.f, 1.f );
-	for ( std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end(); i != e; ++i )
+	std::pair< float3, float > const* i = transforms.begin(), * const e = transforms.end();
+	for ( ; i != e; ++i )
 		result	*= math::pow( i->first, i->second );
 
 	return	result;
