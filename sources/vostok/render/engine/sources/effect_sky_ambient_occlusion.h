@@ -41,9 +41,6 @@ public:
 		compiler.end_pass( );
 		compiler.end_technique( );
 	}
-
-	effect_sky_ambient_occlusion( ) { }
-	virtual ~effect_sky_ambient_occlusion( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_sky_ambient_occlusion, 0x4 );

@@ -9,8 +9,6 @@ namespace vostok {
 namespace render {
 
 struct sky_ambient_occlusion_map_generate_parameters {
-	sky_ambient_occlusion_map_generate_parameters( ) { }
-
 	fixed_string<260>	texture_name;
 	math::int2			resolution;
 	float3				location;
