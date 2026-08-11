@@ -248,7 +248,7 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 	m_timer.start( );
 	m_permanent_timer.start( );
 
-	m_flash_factory = NEW( flash_factory )( *this );
+	m_flash_factory = VOSTOK_NEW_IMPL( *g_allocator, flash_factory )( *this );
 
 	static inventory_cook s_inventory_cook;
 	static player_parameters_modifyer_cook s_player_parameters_cook;
@@ -258,7 +258,7 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 
 	query_base_resources( );
 
-	m_chat_handler = NEW( chat_handler )( *this );
+	m_chat_handler = VOSTOK_NEW_IMPL( *g_allocator, chat_handler )( *this );
 }
 
 void game::execute_scaleform_command( scaleform_render_command command )

@@ -1,24 +1,16 @@
 #include "pch.h"
 
-// Game-module /OPT:REF reachability anchor for the player_cook.cpp translation
-// unit (player_cook + profile_skin_visual_cook). The real callers are the
-// static cook instances in game_world::register_cooks() / game::register_cooks(),
-// both still stub bodies, so without this anchor the linker /OPT:REF-strips every
-// cook symbol (the TU then shows up unpaired in objdiff).
+// Game-module /OPT:REF reachability anchor for the player_cook methods not yet
+// retained by its real registration path.
 //
 // Self-guarded like the other anchor_game_* helpers: the heavy ctors never run
 // (s_run stays false), the compiler still emits every reference, so the cook
 // carcass survives into the base EXE for matching. Driven from anchor_game().
 //
-// Constructing each cook keeps its ctor/dtor/vtable; calling the public virtual
-// translate_query keeps the whole resource-query call graph (the private on_*
-// callbacks are reached through the boost::bind sites inside translate_query /
-// on_config_loaded, all in the same TU, so /OPT:REF keeps them too).
-//
-// Retire once register_cooks() is matched and constructs these for real.
+// Constructing the cook keeps its ctor/dtor/vtable; calling the public virtual
+// translate_query keeps the resource-query call graph.
 
 #include "player_cook.h"
-#include "profile_skin_visual_cook.h"
 #include <vostok/resources_query_result.h>
 
 namespace survarium {
@@ -45,10 +37,6 @@ void use_game_player_cook( )
 	s_sink = *( pcvoid const* )&m_sub;
 	s_sink = *( pcvoid const* )&m_hit;
 
-	game&					g	= *( game* )NULL;
-	profile_skin_visual_cook	psvc( g );
-	psvc.translate_query	( parent );
-	psvc.delete_resource	( NULL );
 }
 
 } // namespace survarium

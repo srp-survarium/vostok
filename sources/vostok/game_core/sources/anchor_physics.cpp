@@ -24,7 +24,6 @@ namespace vostok
 		physics::engine engine;
 		physics::create_world_bt( NULL, engine );
 		physics::destroy_world( NULL, NULL );
-		physics::set_memory_allocator( NULL );
 	}
 
 	void use_bt_character_controller()
