@@ -1519,14 +1519,13 @@ void n_ary_tree_transition_tree_constructor::merge_trees( n_ary_tree const& from
 
 		if ( animation->time_driving_animation( ) ) {
 			n_ary_tree_animation_node& driver	= *animation->time_driving_animation( );
-			animation_state const& driver_state	= driver.animation_state( );
-			animation_interval_id				= driver_state.animation_interval_id;
+			animation_interval_id				= driver.animation_state( ).animation_interval_id;
 			animation_interval const* const time_driving_animation_interval	=
 				driver.animation_intervals( ) + animation_interval_id;
 			animation_interval_time				=
 				animation->animation_intervals( )[ animation_interval_id ].length( )
 				/ time_driving_animation_interval->length( )
-				* driver_state.animation_interval_time;
+				* driver.animation_state( ).animation_interval_time;
 			animation_time_threshold			= 0.f;
 		}
 		else {
