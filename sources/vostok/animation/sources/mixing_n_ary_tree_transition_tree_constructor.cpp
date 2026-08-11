@@ -238,8 +238,8 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_animation
 	u32&							operands_offset,
 	u32&							animation_interval_id,
 	float&							animation_interval_time,
-	const bool						is_transitting_to_zero,
-	const bool						can_be_time_driving_animation
+	bool							is_transitting_to_zero,
+	bool							can_be_time_driving_animation
 )
 {
 	animation_interval_id			= ( from.override_existing_animation( ) || to.animation_state( ).is_freezed ? from : to ).animation_state( ).animation_interval_id;
