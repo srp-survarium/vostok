@@ -691,11 +691,12 @@ void static_render_model_instance::set_lod_params(
 	float		p2
 )
 {
-	m_original->m_lods_descriptor->m_lod_calc_type = type;
-	m_original->m_lods_descriptor->m_lod_params_default = use_default;
-	m_original->m_lods_descriptor->m_lod_custom_params[0] = p0;
-	m_original->m_lods_descriptor->m_lod_custom_params[1] = p1;
-	m_original->m_lods_descriptor->m_lod_custom_params[2] = p2;
+	model_lods_descriptor* lods = m_original->m_lods_descriptor;
+	lods->m_lod_calc_type = type;
+	lods->m_lod_params_default = use_default;
+	lods->m_lod_custom_params[0] = p0;
+	lods->m_lod_custom_params[1] = p1;
+	lods->m_lod_custom_params[2] = p2;
 }
 
 u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 const& view_pos )
@@ -742,7 +743,7 @@ u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 cons
 			float3 vertices[8];
 			owner_aabb.vertices(vertices);
 
-			float3 pt_min(1.f, 1.f, 1.f);
+			float3 pt_min(0.f, 0.f, 0.f);
 			float3 pt_max(-1.f, -1.f, -1.f);
 
 			for (u32 i = 0; i < 8; ++i)
@@ -789,8 +790,12 @@ void static_render_model_instance::get_surfaces(
 
 	if (lod_id != 0xaa)
 	{
-		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id] && lod_id)
+		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id])
+		{
+			if (!lod_id)
+				break;
 			--lod_id;
+		}
 	}
 
 	if (lod_id == 0xaa)
