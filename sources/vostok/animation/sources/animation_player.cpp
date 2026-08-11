@@ -722,8 +722,8 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 void animation_player::destroy_state( void* buffer )
 {
 	*(u32*)buffer = 0xFFBDDDDD;
-	mixing::n_ary_tree* tree				= (mixing::n_ary_tree*)( (u32*)buffer + 2 );
-	tree->~n_ary_tree						( );
+	buffer = (u32*)buffer + 2;
+	((mixing::n_ary_tree*)buffer)->~n_ary_tree( );
 }
 
 u32 animation_player::last_tick_time_in_ms( ) const
