@@ -7,6 +7,7 @@
 
 #include <vostok/console_command.h>	// cc_float (max_angular_velocity_command)
 #include <vostok/console_command_processor.h>	// console_commands::save (cfg_save_*)
+#include <vostok/command_line_extensions.h>
 #include <vostok/memory_extensions.h>	// memory::g_mt_allocator (cfg_save_*)
 #include <vostok/render/world.h>	// game_renderer() (ctor init)
 #include <vostok/render/facade/game_renderer.h>	// renderer().ui() (draw_debug_window)
@@ -42,6 +43,7 @@ using vostok::console_commands::command_type_engine_internal;
 #include "stats_graph.h"	// DELETE( m_fps_graph ) (~game)
 #include "key_binder.h"	// DELETE( m_key_binder ) (~game)
 #include "chat_handler.h"	// DELETE( m_chat_handler ) (~game)
+#include "global_input_handler.h"
 #include "main_menu.h"	// main_menu derives base_game_scene (switch_to_main_menu)
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 #include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
@@ -95,31 +97,10 @@ static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, 
 static u32 s_particle_lod_value = 0;
 static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
 
+static vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
+static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
+
 namespace survarium {
-
-// TU static 's_net_login_client' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_net_login_client''( )
-{
-	// FUNCTION BODY[0x7d79c0]
-	// <0x7d79c0>|0x000|      :'54'	{
-	// ******
-}
-*/
-
-// TU static 's_is_spectator' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_is_spectator''( )
-{
-	// FUNCTION BODY[0x7d79e0]
-	// <0x7d79e0>|0x000|      :'55'	{
-	// ******
-}
-*/
 
 // TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
 // in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
@@ -408,40 +389,81 @@ void game::on_render_output_window_created( resources::queries_result& data )
 	);
 }
 
-// claude@NOTE: 28-statement central init. Structure FULLY decoded from 0x5e7200; two
-// classes of blocker stop a clean body, so it stays a STUB (bodying it with the parts
-// below would emit the high-leverage `static global_input_handler g_input_handler(*this)`
-// that unblocks the global_input_handler ctor 82%->100%, but the residual pieces are
-// unrecoverable and risk fabrication):
-//   399 m_items_dictionary = static_cast_resource_ptr<items_dictionary_ptr>( data[0].get_unmanaged_resource() );
-//   403 static global_input_handler g_input_handler( *this );    // <- the leverage point
-//   404 m_input_world->add_handler( g_input_handler );
-//   406 register_cooks( );
-//   408 m_game_options.initialize( );
-//   410 m_chat_handler->initialize( data[1].get_unmanaged_resource() );
-//   412 m_text_wnd = m_ui_world->create_window( );
-//   413 m_text_wnd->set_position( float2( 300.f, 0.f ) );
-//   414 m_text_wnd->set_size( float2( 600.f, 600.f ) );
-//   415 m_text_wnd->set_visible( true );
-//   417 m_console = m_engine.create_game_console( ui_world( ), input_world( ) );
-//   418 m_stats = NEW(stats)( *m_ui_world ); m_stats->create( );
-//   422 m_fps_graph = NEW(stats_graph)( <t>, math::infinity, <fps>, 60.f, 0xFF00FF00 );  // <t>,<fps> = UNRESOLVED float pool consts (clear_value/default_fps)
-//   424 m_main_menu = NEW(main_menu)( *this ); m_main_menu->query_resources( );
-//   426 create_debug_window( );
-//   428 m_viewport = rectangle<float2>( float2(0,0), float2(<v>,<v>) );   // <v> = UNRESOLVED (clear_value)
-//   433 enable( m_enabled );
-//   435/438 if ( m_is_active ) { on_application_deactivate( ); m_is_active = false; }
-//   446-471 if ( s_net_login_client.is_set_as_string( &client_str ) && strchr(client_str,':') )
-//             create_and_assign_network_client( client_str, s_is_spectator.is_set( ) );
-//           else create_and_assign_network_client( "188.93.23.27:5100", false );
-// BLOCKERS: (1) the m_fps_graph/m_viewport float pool constants resolve only to delinker
-// symbol names (clear_value/default_fps), not literal values; (2) the s_net_login_client /
-// s_is_spectator command_line::key statics' ctor strings live in the data section, not the
-// init asm, so declaring them (and their own dynamic-initializer STUBs) would be a guess.
-// Finish once those data-section strings + float literals are recovered.
-// STATE[STUB]
 void game::on_base_resources_created( resources::queries_result& data )
 {
+	m_items_dictionary = static_cast_resource_ptr< items_dictionary_ptr >( data[0].get_unmanaged_resource( ) );
+	m_initialized = true;
+
+	static global_input_handler g_input_handler( *this );
+	m_input_world->add_handler( g_input_handler );
+
+	register_cooks( );
+
+	m_game_options.initialize( );
+
+	m_chat_handler->initialize( data[1].get_unmanaged_resource( ) );
+
+	m_text_wnd = m_ui_world->create_window( );
+	m_text_wnd->set_position( float2( 300.f, 0.f ) );
+	m_text_wnd->set_size( float2( 600.f, 600.f ) );
+	m_text_wnd->set_visible( true );
+
+
+	m_console = m_engine.create_game_console( ui_world( ), input_world( ) );
+	m_stats = VOSTOK_NEW_IMPL( *g_allocator, stats )( *m_ui_world );
+
+
+
+	m_fps_graph = VOSTOK_NEW_IMPL( *g_allocator, stats_graph )( 1.f, math::infinity, 30.f, 60.f, 0xff00ff00 );
+
+	m_main_menu = VOSTOK_NEW_IMPL( *g_allocator, class main_menu )( *this );
+
+	create_debug_window( );
+
+	m_viewport.left = 0.f; m_viewport.top = 0.f; m_viewport.right = 1.f; m_viewport.bottom = 1.f;
+
+
+
+
+	enable( m_enabled );
+
+	if ( m_is_active )
+	{
+		m_is_active = false;
+		on_application_deactivate( );
+	}
+
+
+
+
+
+
+	fixed_string< 512 > client_str;
+	if ( s_net_login_client.is_set_as_string( &client_str ) )
+	{
+		fixed_string< 512 > host;
+		u32 const offset = client_str.find( ':' );
+		if ( offset != u32( -1 ) )
+
+			create_and_assign_network_client( client_str, s_is_spectator.is_set( ) );
+	}
+	else
+	{
+
+
+
+		create_and_assign_network_client( "188.93.23.27:25100", false );
+
+
+
+
+
+
+
+
+
+
+	}
 }
 
 void game::create_and_assign_network_client( fixed_string< 512 > client_options, const bool is_spectator )
