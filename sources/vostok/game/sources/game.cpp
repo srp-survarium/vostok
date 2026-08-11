@@ -13,6 +13,8 @@
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
+#include <vostok/sound/world.h>	// m_sound_world.get_logic_world_user (pause/resume)
+#include <vostok/sound/world_user.h>	// sound time-scale accessors (pause/resume)
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
 #include <vostok/resources.h>	// query_resources / request (query_base_resources) + fill_stats (draw_debug_window)
 #include <vostok/text_tree.h>	// strings::text_tree (draw_debug_window)
@@ -924,66 +926,26 @@ flash_factory& game::get_flash_factory( )
 	return *m_flash_factory;
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on cross-module timing::timer header. Target body:
-//   m_is_paused = !m_is_paused;
-//   if ( m_is_paused )  pause( );
-//   else {  m_timer.resume( );  m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );  }
-// but timing::timer::resume()/pause()/is_paused() are NOT declared in our
-// sources/vostok/timing_timer.h (they ARE inline in the target timing/timer.h).
-// That header is the core/timing module's; cannot add them here. Keep stub buildable.
 void game::toggle_pause( )
 {
-	// CALL SITE INFO
-	// <0x5e5d90> -> sound::world_user& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5e5d50]: 5
-	// <0x5e5d50>|0x000|+0x010:'1185'
-	// <0x5e5d60>|0x010|+0x004:'1186'
-	// <0x5e5d64>|0x014|+0x008:'1187'
-	// <0>
-	// <0x5e5d6c>|0x01c|+0x02e:'1189'
-	// ******
+	m_is_paused						= !m_is_paused;
+	if ( m_is_paused )
+		pause						( );
+	else
+		resume						( );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
-//   m_is_paused = true;  m_timer.pause( );
-//   m_last_sound_timescale_factor = m_sound_world.get_logic_world_user().get_time_scale_factor( );
-//   m_sound_world.get_logic_world_user().set_time_scale_factor( 0.f );
-// timing::timer::pause() not in our sources/vostok/timing_timer.h. Keep stub buildable.
 void game::pause( )
 {
-	// CALL SITE INFO
-	// <0x5e5d1c> -> sound::world_user& < unknown >() const
-	// <0x5e5d3c> -> sound::world_user& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5e5cc0]: 4
-	// <0>
-	// <0x5e5cc7>|0x007|+0x04a:'1195'
-	// <0x5e5d11>|0x051|+0x01a:'1196'
-	// <0x5e5d2b>|0x06b|+0x01c:'1197'
-	// ******
+	m_is_paused = true;				m_timer.pause( );
+	m_last_sound_timescale_factor	= m_sound_world.get_logic_world_user( ).get_time_scale_factor( );
+	m_sound_world.get_logic_world_user( ).set_time_scale_factor( 0.f );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on cross-module timing::timer header (see toggle_pause). Target:
-//   m_is_paused = false;  m_timer.resume( );
-//   m_sound_world.get_logic_world_user().set_time_scale_factor( m_last_sound_timescale_factor );
-// timing::timer::resume() not in our sources/vostok/timing_timer.h. Keep stub buildable.
 void game::resume( )
 {
-	// CALL SITE INFO
-	// <0x5e5928> -> sound::world_user& < unknown >() const
-	// ******
-
-	// FUNCTION BODY[0x5e5900]: 3
-	// <0>
-	// <0x5e5904>|0x004|+0x00f:'1203'
-	// <0x5e5913>|0x013|+0x020:'1204'
-	// ******
+	m_is_paused = false;				m_timer.resume( );
+	m_sound_world.get_logic_world_user( ).set_time_scale_factor( m_last_sound_timescale_factor );
 }
 
 void game::set_network_client(
