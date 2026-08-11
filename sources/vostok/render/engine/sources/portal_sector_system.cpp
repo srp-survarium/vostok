@@ -199,11 +199,9 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 			if ( math::is_zero( distance ) || distance > 0.f )
 				pos.push_back( temp[i] );
 			float3 intersection_position;
-			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) )
-			{
-				if ( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) )
-					pos.push_back( intersection_position );
-			}
+			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) &&
+				( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) ) )
+				pos.push_back( intersection_position );
 		}
 		if ( pos.size( ) < 3 )
 			return false;
@@ -211,8 +209,6 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 		std::copy( pos.begin( ), pos.end( ), std::back_inserter( temp ) );
 	}
 
-	if ( pos.size( ) < 3 )
-		return false;
 	// 3 target lines are likely retail-compiled-out source.
 	float longest_edge_length = ( pos[1] - pos[0] ).squared_length( );
 	u32 longest_edge_id = 0;
