@@ -132,7 +132,7 @@ public:
 	// PDB: first param __formal, genuinely unused
 	virtual	void								unload							( pcstr __formal, bool destroying ) override;
 
-	virtual	bool								is_loading						( ) const;
+	virtual	bool								is_loading						( ) const override;
 
 			void								load_config_query				( pcstr cfg_name, bool create_renderer );
 
@@ -255,8 +255,7 @@ private:
 	virtual	void								on_application_activate			( ) override;
 	virtual	void								on_application_deactivate		( ) override;
 
-	// not in our legacy engine_user.h world interface (see load above)
-	virtual	void								on_fullscreen_alttab			( bool first );
+	virtual	void								on_fullscreen_alttab			( bool first ) override;
 
 			void								query_base_resources			( );
 	inline	void								query_render_window				( bool arg_0 ) { /* no source */ }

@@ -275,64 +275,73 @@ void game_world::load(
 	m_is_loading = true;
 
 	const u8 victory_items_count = get_game( ).get_network_client( )->match_options( ).victory_items_count;
-
 	const u32 user_datas_count = victory_items_count + s_max_tracers_count + 23;
-	const u32 requests_count = ( requests_end - requests_begin ) + user_datas_count;
+	const u32 requests_count = requests_end - requests_begin;
 
-	buffer_vector< resources::request >		requests		( ALLOCA( requests_count * sizeof( resources::request ) ), requests_count );
+	buffer_vector< resources::request >		requests		( ALLOCA( ( requests_count + user_datas_count ) * sizeof( resources::request ) ), requests_count + user_datas_count );
 	buffer_vector< variant< 32 > >			user_datas		( ALLOCA( user_datas_count * sizeof( variant< 32 > ) ), user_datas_count );
-	buffer_vector< variant< 32 > const* >	user_data_ptrs	( ALLOCA( requests_count * sizeof( variant< 32 > const* ) ), requests_count );
+	buffer_vector< variant< 32 > const* >	user_data_ptrs	( ALLOCA( ( requests_count + user_datas_count ) * sizeof( variant< 32 > const* ) ), requests_count + user_datas_count );
 
-	for ( resources::request* it = requests_begin; it != requests_end; ++it, ++user_datas_begin )
-	{
-		requests.push_back( *it );
+	for ( ; requests_begin != requests_end; ++requests_begin, ++user_datas_begin ) {
+		requests.push_back( *requests_begin );
 		user_data_ptrs.push_back( *user_datas_begin );
 	}
 
-	render::scene_configuration scene_configuration;
-	scene_configuration.m_create_terrain			= false;
-	scene_configuration.m_create_particle_world		= true;
-	scene_configuration.m_create_speedtree_world	= false;
 
-	user_datas.push_back( variant< 32 >( ) );
-	user_datas.back( ).set( scene_configuration );
+	if ( !render_scene( ) ) {
+		m_damage_model_stats = VOSTOK_NEW_IMPL( *g_allocator, damage_model_stats )( get_game( ).ui_world( ) );
+		m_active_npc_stats = VOSTOK_NEW_IMPL( *g_allocator, npc_stats )( get_game( ).ui_world( ) );
 
-	sound::sound_scene_creation_params sound_configuration;
-	sound_configuration.proxies_count		= 0x80;
-	sound_configuration.propagators_count	= 0xc4;
-	sound_configuration.receivers_count		= 0;
+		render::scene_configuration scene_configuration;
+		scene_configuration.m_create_terrain			= false;
+		scene_configuration.m_create_particle_world		= true;
+		scene_configuration.m_create_speedtree_world	= false;
 
-	user_datas.push_back( variant< 32 >( ) );
-	user_datas.back( ).set( sound_configuration );
+		sound::sound_scene_creation_params sound_configuration;
+		sound_configuration.proxies_count		= 0x80;
+		sound_configuration.propagators_count	= 0xc4;
+		sound_configuration.receivers_count		= 1;
 
-	requests.push_back( resources::create_request( "game_scene", resources::scene_class ) );
-	user_data_ptrs.push_back( &user_datas[0] );
 
-	requests.push_back( resources::create_request( "game_scene_view", resources::scene_view_class ) );
-	user_data_ptrs.push_back( NULL );
 
-	requests.push_back( resources::create_request( "game_sound_scene", resources::sound_scene_class ) );
-	user_data_ptrs.push_back( &user_datas[1] );
+		user_datas.push_back( variant< 32 >( ) );
+		user_datas.back( ).set( scene_configuration );
 
-	requests.push_back( resources::create_request( "resources/flash_movies/hud.swf", resources::flash_movie_class ) );
-	user_data_ptrs.push_back( NULL );
+		user_datas.push_back( variant< 32 >( ) );
+		user_datas.back( ).set( sound_configuration );
 
-	for ( u32 i = 0; i < s_max_tracers_count; ++i )
-	{
-		requests.push_back( resources::create_request( "weapons/trace", resources::tracer_model_instance_class ) );
+		requests.push_back( resources::create_request( "game_scene", resources::scene_class ) );
+		user_data_ptrs.push_back( &user_datas[0] );
+
+		requests.push_back( resources::create_request( "game_scene_view", resources::scene_view_class ) );
 		user_data_ptrs.push_back( NULL );
+
+		requests.push_back( resources::create_request( "game_sound_scene", resources::sound_scene_class ) );
+		user_data_ptrs.push_back( &user_datas[1] );
+
+		requests.push_back( resources::create_request( "resources/flash_movies/hud.swf", resources::flash_movie_class ) );
+		user_data_ptrs.push_back( NULL );
+
+
+
+
+
+
+		for ( u32 i = 0; i < s_max_tracers_count; ++i ) {
+			requests.push_back( resources::create_request( "weapons/trace", resources::tracer_model_instance_class ) );
+			user_data_ptrs.push_back( NULL );
+		}
+
+		for ( u32 i = 0; i < 16; ++i ) {
+			requests.push_back( resources::create_request( "player_death", resources::particle_system_instance_class ) );
+			user_data_ptrs.push_back( NULL );
+		}
 	}
 
-	for ( u8 i = 0; i < victory_items_count; ++i )
-	{
-		requests.push_back( resources::create_request( "player_death", resources::particle_system_instance_class ) );
-		user_data_ptrs.push_back( NULL );
-	}
-
-	if ( m_game_project )
+	if ( m_game_project.c_ptr( ) )
 		unload( );
 
-	LOG_INFO( "game_world::load: %s", project_resource_name );
+	LOG_INFO( "game_world::load : %s", project_resource_name );
 
 	if ( !m_game_material_manager )
 	{
@@ -346,6 +355,8 @@ void game_world::load(
 	requests.push_back( resources::create_request( project_resource_name, resources::client_game_project_class ) );
 	user_data_ptrs.push_back( &user_datas.back( ) );
 
+
+
 	for ( u8 i = 0; i < victory_items_count; ++i )
 	{
 		fixed_string< 8 > name;
@@ -354,10 +365,11 @@ void game_world::load(
 		user_data_ptrs.push_back( NULL );
 	}
 
+
 	resources::query_resources(
 		requests.begin( ),
 		requests.size( ),
-		boost::bind( &game_world::on_project_loaded, this, _1, requests_end - requests_begin, callback ),
+		boost::bind( &game_world::on_project_loaded, this, _1, requests_count, callback ),
 		g_allocator,
 		user_data_ptrs.begin( ) );
 }

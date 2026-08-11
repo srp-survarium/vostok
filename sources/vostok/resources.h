@@ -38,7 +38,6 @@ struct request
 	void				set				( pcstr in_path, class_id_enum in_id ) { path = in_path; id = in_id; }
 };
 
-__declspec( noinline )
 inline request create_request( pcstr path, class_id_enum id )
 {
     request r = { path, id };
