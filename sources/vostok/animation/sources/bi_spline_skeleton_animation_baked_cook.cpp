@@ -49,7 +49,7 @@ void bi_spline_skeleton_animation_baked_cook::create_resource(
 	create_resource_inplace( in_out_query, in_out_unmanaged_resource_buffer );
 }
 
-void bi_spline_skeleton_animation_baked_cook::create_resource_inplace(
+inline void bi_spline_skeleton_animation_baked_cook::create_resource_inplace(
 	resources::query_result_for_cook&		in_out_query,
 	mutable_buffer							in_out_unmanaged_resource_buffer
 )

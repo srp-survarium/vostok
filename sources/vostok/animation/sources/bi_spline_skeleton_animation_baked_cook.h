@@ -34,7 +34,7 @@ private:
 	virtual	resource_delegate	get_create_resource_inplace_in_creation_data_delegate( ) override;
 
 private:
-			void				create_resource_inplace	(
+	inline	void				create_resource_inplace	(
 									resources::query_result_for_cook&		in_out_query,
 									mutable_buffer							in_out_unmanaged_resource_buffer
 								);
