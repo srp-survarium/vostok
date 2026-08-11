@@ -48,7 +48,7 @@ struct bloom_shader_constants {
 		float3 const& halo_color
 	);
 
-public:
+private:
 	shader_constant_host*	m_bloom_parameters;
 	shader_constant_host*	m_bloom_parameters1;
 };
@@ -69,7 +69,7 @@ struct dof_shader_constants {
 		float bokeh_dof_density
 	);
 
-public:
+private:
 	shader_constant_host*	m_dof_parameters;
 	shader_constant_host*	m_dof_height_lights;
 	shader_constant_host*	m_blurriness_amount;
@@ -94,7 +94,7 @@ struct scene_shader_constants {
 		post_process_parameters const& parameters
 	);
 
-public:
+private:
 	shader_constant_host*	m_frame_height_lights_and_desaturation_parameters;
 	shader_constant_host*	m_scene_mid_tones_parameters;
 	shader_constant_host*	m_scene_shadows_parameters;
