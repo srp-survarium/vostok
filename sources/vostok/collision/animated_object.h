@@ -9,16 +9,9 @@
 
 #include <vostok/collision/api.h>
 #include <vostok/collision/bone_collision_data.h>
-#include <vostok/render/engine/base_classes.h>
 #include <vostok/physics/animated_rigid_body.h>
 
 namespace vostok {
-
-namespace render {
-namespace debug {
-	class renderer;
-} // namespace debug
-} // namespace render
 
 namespace collision {
 
@@ -53,9 +46,6 @@ public:
 	inline	physics::bt_animated_rigid_body*	get_rigid_body	( ) const { return m_body; }
 	inline	void								set_owner		( game_object* owner ) { m_body->user_data = owner; } // sushi@TODO: What is set exactly?
 	inline	geometry*							get_geometry	( ) const { return m_geometry; }
-
-			// sushi@NOTE: Not generated in `target`. Most likely unused.
-			void	draw_collision	( render::scene_ptr const& scene, render::debug::renderer& renderer, float4x4 const& transform ) const;
 
 			pcstr	body_part_name			( u32 const bone_index ) const;
 

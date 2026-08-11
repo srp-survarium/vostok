@@ -24,10 +24,22 @@ static vostok::command_line::key			s_build_resources		("build_resources", "", "a
 
 using vostok::engine::engine_world;
 
-static void on_mounted_resources		( vostok::resources::mount_ptr * out_mount, vostok::resources::mount_ptr result )
+static void on_shader_masks_ready		( vostok::resources::queries_result& result, vostok::configs::binary_config_ptr* out_config_ptr )
+{
+	* out_config_ptr					= vostok::static_cast_resource_ptr< vostok::configs::binary_config_ptr >( result[0].get_unmanaged_resource( ) );
+}
+
+static void on_mounted_resources		( vostok::resources::mount_ptr * out_mount, vostok::configs::binary_config_ptr* out_config_ptr, vostok::resources::mount_ptr result )
 {
 	CHECK_OR_EXIT						( result, "Cannot mount resources. Please reinstall an application and try again." );
 	* out_mount							= result;
+
+	vostok::resources::query_resource	(
+		"resources/shaders/masks",
+		vostok::resources::binary_config_class,
+		boost::bind( &on_shader_masks_ready, _1, out_config_ptr ),
+		&vostok::memory::g_mt_allocator
+	);
 }
 
 static void on_mounted_user_data		( vostok::resources::mount_ptr * out_mount, vostok::resources::mount_ptr result )
@@ -82,6 +94,7 @@ void engine_world::initialize			( )
 	initialize_terminate_on_timeout		( );
 
 	core::run_tests						( );
+	m_timer.start						( );
 
 	if ( m_destruction_started )
 	{
@@ -101,7 +114,7 @@ void engine_world::initialize			( )
 										   resources::recursive_false );
 
 	resources::query_mount				( "resources", 
-										   boost::bind(& on_mounted_resources, & m_resources_mount, _1), 
+										   boost::bind(& on_mounted_resources, & m_resources_mount, & m_shader_mask_config, _1),
 										   & g_allocator );
 
 	fixed_string<256>					build_resources_string;
@@ -186,6 +199,7 @@ static void thread_dispatch_callbacks	( )
 
 void engine_world::finalize				( )
 {
+	m_shader_mask_config				= 0;
 	bool const is_editor				= (m_editor != 0);
 	if ( m_early_destruction_started )
 	{

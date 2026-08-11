@@ -10,6 +10,7 @@
 #include <vostok/memory_extensions.h>	// memory::g_mt_allocator (cfg_save_*)
 #include <vostok/render/world.h>	// game_renderer() (ctor init)
 #include <vostok/render/facade/game_renderer.h>	// renderer().ui() (draw_debug_window)
+#include <vostok/render/facade/scene_renderer.h>
 #include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
 #include <vostok/ui/world.h>	// m_ui_world->create_window (debug window)
 #include <vostok/engine/console.h>	// m_console->get_active/on_activate (toggle_console)
@@ -43,6 +44,10 @@ using vostok::console_commands::command_type_engine_internal;
 #include "lobby_menu.h"	// lobby_menu derives base_game_scene (switch_to_lobby)
 #include "login_menu.h"	// login_menu derives base_game_scene + set_status (switch_to_login)
 #include "animated_model_instance_cook.h"	// register_cooks function-statics
+#include "profile_skin_visual_cook.h"
+#include <vostok/game_core/inventory_cook.h>
+#include <vostok/game_core/player_parameters_modifyer_cook.h>
+#include <vostok/game_core/items_dictionary_cook.h>
 #include <vostok/game_core/game_material_manager_cook.h>
 #include "project_cooker_simple.h"
 #include <vostok/game_core/animation_analysis_result_cook.h>
@@ -69,14 +74,6 @@ static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_typ
 // claude@NOTE: PARKED - 's_show_profiler_command' (profiler cc_bool): command-name
 // string + command_type unrecoverable (data-section string), same as s_draw_snd_stats.
 
-// claude@NOTE: cfg_save_user is GLOBAL (?cfg_save_user@@YAXXZ); target body is
-//   console_commands::save( "user.cfg", command_type_user_specific, s_engine->allocator( ) );
-// where s_engine is a file-static engine pointer (the engine virtual at vtable+0x4C
-// yields the allocator). That static is compiler-generated and NOT in our source, so
-// the allocator arg cannot be reproduced; we approximate with g_mt_allocator. The path
-// + command_type ARE matched. Restore the engine-allocator form once s_engine is recovered.
-// sushi@TODO: recover the s_engine file-static (+ its write site) to lift cfg_save_user
-// AND game::~game line 279 to byte-exact - see docs/binary_matching/review_todos.md.
 void cfg_save_user( )
 {
 	vostok::console_commands::save( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
@@ -135,7 +132,7 @@ public:
 						const console_commands::execution_filter	arg_5 /* console_commands::execution_filter execution_filter */
 					);
 
-	inline	void	set_engine						( engine_user::engine& arg_0 ) { /* no source */ }
+	inline	void	set_engine						( engine_user::engine& arg_0 ) { m_engine = &arg_0; }
 
 	virtual	void	execute							( pcstr arg_0 ) override { /* no source */ }
 
@@ -163,128 +160,103 @@ STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
 {
 }
 
-// TU static 's_max_angular_velocity_command' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_max_angular_velocity_command''( )
-{
-	// FUNCTION BODY[0x7d7af0]
-	// <0x7d7af0>|0x000|      :'114'	{
-	// ******
-}
-*/
+static max_angular_velocity_command s_max_angular_velocity_command(
+	"max_angular_velocity",
+	360.f,
+	3600.f,
+	true,
+	command_type_engine_internal,
+	console_commands::execution_filter_general
+);
 
-// TU static 's_max_angular_velocity_command' (compiler-generated; a matcher recovers its type
-// and initializer from the init asm).
-/*
-// STATE[STUB]
-void `dynamic atexit destructor for 's_max_angular_velocity_command''( )
-{
-	// FUNCTION BODY[0x7ef9f0]
-	// <0x7d7d70>|0x000|      :'144'	{
-	// ******
-}
-*/
-
-// STATE[STUB]
  game::game(
 	engine_user::engine&	engine,
 	render::world&			render_world,
 	sound::world&			sound,
 	network::world&			network
 ) :
-	// ref/value-member sources per the legacy ctor (temp/game_legacy/game.cpp:170);
-	// m_scheduler's allocator is a buildability placeholder - a matcher confirms
+	hide_game_stats( false ),
 	m_engine( engine ),
 	m_render_world( render_world ),
 	m_sound_world( sound ),
 	m_network_world( network ),
+	m_input_world( NULL ),
+	m_ui_world( NULL ),
 	m_renderer( render_world.game_renderer( ) ),
 	m_game_world( *this ),
+	m_main_menu( NULL ),
+	m_lobby_menu( NULL ),
+	m_login_menu( NULL ),
 	m_scheduler( g_allocator ),
-	m_game_options( *this )
+	m_active_scene( NULL ),
+	m_text_wnd( NULL ),
+	m_network_client( NULL ),
+	m_is_active( false ),
+	m_first_frame_time_in_ms( 0 ),
+	m_previous_frame_time_in_ms( 0 ),
+	m_permanent_time_in_ms( 0 ),
+	m_last_frame_time( 0.f ),
+	m_current_frame_id( u32(-1) ),
+	m_current_time_in_ms( 0 ),
+	m_enabled( false ),
+	m_initialized( false ),
+	m_last_sound_timescale_factor( 1.f ),
+	m_is_paused( false ),
+	m_lpv_geometry_builded( false ),
+	m_game_options( *this ),
+	m_debug_window_type( debug_window_none ),
+	m_debug_window( NULL )
 {
-	// STATICS
-	// static player_parameters_modifyer_cook s_player_parameters_cook = <0x4c2bb70>;
-	// static console_commands::cc_string s_current_render_configuration_cc = <0x4c2bd30>;
-	// static profile_skin_visual_cook 	s_profile_skin_visual_cook = <0x4c277d0>;
-	// static console_commands::cc_delegate pause_game_command = <0x4c2bc70>;
-	// static console_commands::cc_delegate commit_suicide_cc = <0x4c2bbb0>;
-	// static console_commands::cc_delegate s_reload_shaders = <0x4c2bd78>;
-	// static console_commands::cc_delegate s_reload_modified_textures = <0x4c2bcd0>;
-	// static fixed_string< 512 > 		s_current_render_configuration = <0x4c26a20>;
-	// static inventory_cook 			s_inventory_cook = <0x4c2bb90>;
-	// static scaleform_movie_cook 		s_scaleform_movie_cook = <0x4c27838>;
-	// static items_dictionary_cook 	s_items_dictionary_cook = <0x4c2bb50>;
-	// static console_commands::cc_delegate s_build_lpv_geometry = <0x4c2bdd8>;
-	// static console_commands::cc_delegate resume_game_command = <0x4c2bc10>;
-	// ******
+	s_max_angular_velocity_command.set_engine( engine );
 
-	// FUNCTION BODY[0x5e7a70]: 58
-	// <0x5e7a70>|0x000|+0x1e8:'206'	{
-	// <0x5e7c58>|0x1e8|+0x05e:'207'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e7cb6>|0x246|+0x097:'214'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e7d4d>|0x2dd|+0x075:'221'
-	// <0>
-	// <0x5e7dc2>|0x352|+0x02e:'223'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <0x5e7df0>|0x380|+0x039:'231'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x5e7e29>|0x3b9|+0x075:'238'
-	// <0x5e7e9e>|0x42e|+0x092:'239'
-	// <0x5e7f30>|0x4c0|+0x092:'240'
-	// <0x5e7fc2>|0x552|+0x08f:'241'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <0x5e8051>|0x5e1|+0x02e:'247'
-	// <0x5e807f>|0x60f|+0x01c:'248'
-	// <0>
-	// <0x5e809b>|0x62b|+0x031:'250'
-	// <0>
-	// <0x5e80cc>|0x65c|+0x02a:'252'
-	// <0x5e80f6>|0x686|+0x02a:'253'
-	// <0x5e8120>|0x6b0|+0x02a:'254'
-	// <0x5e814a>|0x6da|+0x02c:'255'
-	// <0x5e8176>|0x706|+0x026:'256'
-	// <0>
-	// <0x5e819c>|0x72c|+0x007:'258'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x5e81a3>|0x733|+0x02a:'263'
-	// <0x5e81cd>|0x75d|-0x00b:'263'
-	// <0>
-	// <0x5e81c2>|0x752|+0x011:'265'
-	// <0x5e81d3>|0x763|      :'265'	}
-	// ******
+	static cc_delegate s_build_lpv_geometry(
+		"build_lpv_geometry",
+		boost::bind( &game::build_lpv_geometry, this ),
+		false,
+		command_type_engine_internal
+	);
+
+	static cc_delegate s_reload_shaders(
+		"reload_shaders",
+		boost::bind( &render::scene_renderer::reload_shaders, &m_renderer.scene( ) ),
+		false,
+		command_type_engine_internal
+	);
+
+	static fixed_string< 512 > s_current_render_configuration;
+	static console_commands::cc_string s_current_render_configuration_cc(
+		"r_current_render_configuration",
+		s_current_render_configuration.c_str( ),
+		256,
+		true,
+		command_type_user_specific
+	);
+
+	static cc_delegate s_reload_modified_textures(
+		"reload_modified_textures",
+		boost::bind( &render::scene_renderer::reload_modified_textures, &m_renderer.scene( ) ),
+		false,
+		command_type_engine_internal
+	);
+
+	static cc_delegate pause_game_command( "pause", boost::bind( &game::pause, this ), false, command_type_engine_internal );
+	static cc_delegate resume_game_command( "resume", boost::bind( &game::resume, this ), false, command_type_engine_internal );
+	static cc_delegate commit_suicide_cc( "suicide", boost::bind( &game::commit_suicide, this ), false, command_type_engine_internal );
+
+	m_timer.start( );
+	m_permanent_timer.start( );
+
+	m_flash_factory = NEW( flash_factory )( *this );
+
+	static inventory_cook s_inventory_cook;
+	static player_parameters_modifyer_cook s_player_parameters_cook;
+	static items_dictionary_cook s_items_dictionary_cook;
+	static scaleform_movie_cook s_scaleform_movie_cook( *m_flash_factory );
+	static profile_skin_visual_cook s_profile_skin_visual_cook( *this );
+
+	query_base_resources( );
+
+	m_chat_handler = NEW( chat_handler )( *this );
 }
 
 void game::execute_scaleform_command( scaleform_render_command command )
@@ -308,9 +280,6 @@ void game::build_lpv_geometry( )
 
  game::~game( )
 {
-	// claude@NOTE: line 279 calls console_commands::save( "user.cfg", ..., s_engine->allocator() )
-	// where s_engine is the same unrecoverable file-static as cfg_save_user (see its note +
-	// review_todos.md); approximated with g_mt_allocator. Remaining 11 statements are exact.
 	vostok::console_commands::save	( "user.cfg", command_type_user_specific, memory::g_mt_allocator );
 
 	DELETE							( m_network_client );

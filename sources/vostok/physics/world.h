@@ -38,7 +38,7 @@ STATIC_SIZE_ASSERT(bt_constraint, 0x10);
 struct VOSTOK_NOVTABLE world {
 public:
 	virtual							~world				( )												{};
-	virtual	void					tick				( u32 current_time_in_ms )						= 0;
+	virtual	void					tick				( const u32 current_time_in_ms )				= 0;
 
 	virtual void					initialize			( )												= 0;
 	virtual void					destroy				( )												= 0;
@@ -61,7 +61,7 @@ public:
 	virtual	closest_ray_result		ray_test					(
 										float3 const&		ray_from,
 										float3 const&		ray_dir,
-										float				ray_length,
+										const float			ray_length,
 										u16					filter_group,
 										u16					filter_mask
 									) = 0;
@@ -69,7 +69,7 @@ public:
 	virtual	void					ray_query					(
 										float3 const&					ray_from,
 										float3 const&					ray_dir,
-										float							ray_length,
+										const float						ray_length,
 										vectora<closest_ray_result>&	results,
 										u16								filter_group,
 										u16								filter_mask

@@ -342,9 +342,7 @@ closest_ray_result bullet_physics_world::ray_test(
 	btVector3 to = from_vostok( ray_from + ray_dir * ray_length );
 
 	closest_ray_result_callback cb( from, to );
-	cb.m_collisionFilterGroup = filter_group;
-	cb.m_collisionFilterMask = filter_mask;
-	cb.m_flags |= 1 << 1;
+	cb.m_collisionFilterGroup = filter_group; cb.m_collisionFilterMask = filter_mask; cb.m_flags |= 1 << 1;
 
 	m_dynamicsWorld->rayTest( from, to, cb );
 
@@ -352,11 +350,11 @@ closest_ray_result bullet_physics_world::ray_test(
 
 	if ( cb.m_collisionObject )
 	{
-		result.object = static_cast< base_physics_object* >( cb.m_collisionObject->getUserPointer( ) );
 		result.hit_point_world = from_bullet( cb.m_hitPointWorld );
-		result.hit_normal_world = from_bullet( cb.m_hitNormalWorld );
+		result.object = static_cast< base_physics_object* >( cb.m_collisionObject->getUserPointer( ) );
 		result.triangle_index = cb.m_triangleIndex;
 		result.is_shape_index = cb.m_is_shape_index;
+		result.hit_normal_world = from_bullet( cb.m_hitNormalWorld );
 		result.fraction = cb.m_closestHitFraction;
 	}
 	return result;
@@ -370,14 +368,15 @@ bool bullet_physics_world::recover_from_penetrations(
 	u16						filter_mask
 )
 {
+	btCollisionShape* bt_shape = shape->get_bt_shape( );
 	btPairCachingGhostObject test_ghost_object;
-	test_ghost_object.setCollisionShape( shape->get_bt_shape( ) );
+	test_ghost_object.setCollisionShape( bt_shape );
 	test_ghost_object.setCollisionFlags( btCollisionObject::CF_CHARACTER_OBJECT );
 	test_ghost_object.setWorldTransform( from_vostok( transform_initial ) );
 
 	m_dynamicsWorld->addCollisionObject( &test_ghost_object, filter_group, filter_mask );
 
-	for ( int maxIter = 3 ; maxIter != 0 ; --maxIter )
+	for ( s32 i = 3 ; i != 0 ; --i )
 	{
 		m_dynamicsWorld->getDispatcher( )->dispatchAllCollisionPairs(
 			test_ghost_object.getOverlappingPairCache( ),
@@ -388,42 +387,38 @@ bool bullet_physics_world::recover_from_penetrations(
 		btVector3 current_pos = test_ghost_object.getWorldTransform( ).getOrigin( );
 		btManifoldArray manifold_array;
 
-		for ( s32 i = 0 ; i < test_ghost_object.getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++i )
+
+		for ( s32 j = 0 ; j < test_ghost_object.getOverlappingPairCache( )->getNumOverlappingPairs( ) ; ++j )
 		{
 			float maxPen = 0.0f;
 			btVector3 touching_normal; // sushi@NOTE: Should be initialized,but isn't in target
 
 			manifold_array.resize( 0 );
 
-			btBroadphasePair& pair = test_ghost_object.getOverlappingPairCache( )->getOverlappingPairArray( )[i];
+			btBroadphasePair& pair = test_ghost_object.getOverlappingPairCache( )->getOverlappingPairArray( )[j];
 
 			if ( pair.m_algorithm )
 				pair.m_algorithm->getAllContactManifolds( manifold_array );
 
-			for ( s32 j = 0 ; j < manifold_array.size( ) ; ++j )
+			for ( s32 i = 0 ; i < manifold_array.size( ) ; ++i )
 			{
-				btPersistentManifold* manifold = manifold_array[j];
+				btPersistentManifold* manifold = manifold_array[i];
 				float directionSign = manifold->getBody0( ) == &test_ghost_object ? -1.0f : 1.0f;
 
-				for ( s32 k = 0 ; k < manifold->getNumContacts( ) ; ++k )
+				for ( s32 j = 0 ; j < manifold->getNumContacts( ) ; ++j )
 				{
-					btManifoldPoint& contact = manifold->getContactPoint( k );
+					btManifoldPoint& contact = manifold->getContactPoint( j );
 					btScalar dist = contact.getDistance( );
 					if ( dist < 0.0f )
 					{
-						if ( dist < maxPen )
+						if ( dist < maxPen && contact.m_normalWorldOnB.y( ) > 0.0f ) // sushi@NOTE: They forgot direction sign?
 						{
-							float y = contact.m_normalWorldOnB.y( );
-							if ( y > 0.0f ) // sushi@NOTE: They forgot direction sign?
-							{
-								maxPen = dist;
-								touching_normal = contact.m_normalWorldOnB * directionSign;
-							}
+							maxPen = dist;
+							touching_normal = contact.m_normalWorldOnB * directionSign;
 						}
 					}
 				}
 			}
-
 			btVector3 delta = touching_normal * maxPen;
 			float3 delta_v = from_bullet( touching_normal * maxPen ) ;
 
@@ -435,8 +430,8 @@ bool bullet_physics_world::recover_from_penetrations(
 				delta_v.y,
 				delta_v.z
 			);
-
 			current_pos += delta;
+
 		}
 		btTransform newTrans = test_ghost_object.getWorldTransform( );
 		newTrans.setOrigin( current_pos );
@@ -460,7 +455,7 @@ void bullet_physics_world::object_query(
 {
 	struct object_query_callback : public btCollisionWorld::ConvexResultCallback , public boost::noncopyable {
 	public:
-		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 filter_group, u16 filter_mask ) :
+		explicit			object_query_callback	( vectora<closest_ray_result>& results, u16 const filter_group, u16 const filter_mask ) :
 								m_results	( results )
 		{
 			m_collisionFilterGroup = filter_group;
@@ -501,20 +496,22 @@ void bullet_physics_world::object_query(
 	btTransform t2 = from_vostok( transform_to );
 	object_query_callback resultCallback( results, filter_group, filter_mask );
 
+	btCollisionShape* bt_shape = shape->get_bt_shape( );
 	btConvexShape* cast_shape;
 
-	if ( shape->get_bt_shape( )->isConvex( ) )
+	if ( bt_shape->isConvex( ) )
 	{
-		cast_shape = static_cast< btConvexShape* >( shape->get_bt_shape( ) );
+		cast_shape = static_cast< btConvexShape* >( bt_shape );
 	} else {
-		if ( shape->get_bt_shape( )->isCompound( ) )
+		if ( bt_shape->isCompound( ) )
 		{
-			btCompoundShape* comp_shape = static_cast< btCompoundShape* >( shape->get_bt_shape( ) );
+			btCompoundShape* comp_shape = static_cast< btCompoundShape* >( bt_shape );
 			cast_shape = static_cast< btConvexShape* >( comp_shape->getChildShape( 0 ) );
 			btTransform& child_transform = comp_shape->getChildTransform( 0 );
 			resultCallback.m_modify_result_transform = child_transform.inverse( );
 			t1 = t1 * child_transform;
 			t2 = t2 * child_transform;
+
 		}
 		else
 		{
@@ -726,8 +723,8 @@ void bullet_physics_world::notify_about_contact( )
 			);
 
 			callbacks_begin_end_pair begin_end = m_contact_callbacks.equal_range( base_obj_a );
-			for ( callbacks_type::iterator it = begin_end.first ; it != begin_end.second ; ++it )
-				(*it->second)( base_obj_a, base_obj_b, from_bullet( manifold->getContactPoint( j ).getPositionWorldOnA( ) ) );
+			for ( ; begin_end.first != begin_end.second ; ++begin_end.first )
+				(*begin_end.first->second)( base_obj_a, base_obj_b, from_bullet( manifold->getContactPoint( j ).getPositionWorldOnA( ) ) );
 
 			break;
 		}
@@ -738,8 +735,9 @@ void bullet_physics_world::subscribe_on_contact( base_physics_object* object, ca
 {
 	callbacks_begin_end_pair ret = m_contact_callbacks.equal_range( object );
 
-	for ( callbacks_type::iterator it = ret.first; it != ret.second; ++it )
-		ASSERT( it->second != callback );
+
+	for ( ; ret.first != ret.second; ++ret.first )
+		ASSERT( ret.first->second != callback );
 
 	m_contact_callbacks.insert( callbacks_type::value_type( object, callback ) );
 }
@@ -748,11 +746,17 @@ void bullet_physics_world::unsubscribe_from_contact( base_physics_object* object
 {
 	callbacks_begin_end_pair ret = m_contact_callbacks.equal_range( object );
 
-	callbacks_type::iterator it = ret.first;
-	for ( ; it != ret.second; ++it )
-		if ( it->second == callback )
-			break;
 
+	callbacks_type::iterator it = m_contact_callbacks.end( );
+
+	for ( ; ret.first != ret.second; ++ret.first )
+	{
+		if ( ret.first->second == callback ) { it = ret.first; break; }
+	}
+
+	ASSERT(
+		it != m_contact_callbacks.end( )
+	);
 	m_contact_callbacks.erase( it );
 }
 

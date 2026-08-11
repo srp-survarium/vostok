@@ -14,35 +14,25 @@ namespace vostok {
 namespace core {
 namespace configs {
 
-class binary_config_cook_impl : public resources::unmanaged_cook
-{
-public:
-								binary_config_cook_impl		();
-
-	virtual	mutable_buffer		allocate_resource		(resources::query_result_for_cook &	in_query, 
-														 const_buffer						raw_file_data, 
-														 bool								file_exist);
-
-	virtual void				destroy_resource		(resources::unmanaged_resource *	resource);
-	virtual void				deallocate_resource		(pvoid buffer);
-	virtual void				create_resource			(resources::query_result_for_cook &	in_out_query, 
-												 		 const_buffer						raw_file_data,
-													 	 mutable_buffer						in_out_unmanaged_resource_buffer);
-}; // class binary_config_cook_impl
+class binary_config;
 
 class binary_config_cook : public resources::translate_query_cook {
 	typedef resources::translate_query_cook				super;
 public:
-								binary_config_cook		();
+								explicit binary_config_cook		(resources::class_id_enum cls_id);
 	virtual	void				translate_query			(resources::query_result_for_cook& parent);
 	virtual void				delete_resource			(resources::resource_base* resource);
+			void				register_object_to_delete	(binary_config* resource, u32 deallocation_thread_id);
 
-private:
+protected:
 #ifndef MASTER_GOLD
 			void				on_lua_config_loaded	(resources::queries_result& data, resources::query_result_for_cook* parent_query);
 #endif // #ifndef MASTER_GOLD
 			void				on_fs_iterators_ready	(resources::queries_result & results);
 			void				on_binary_config_loaded	(resources::queries_result& data, resources::query_result_for_cook* parent_query);
+
+public:
+	virtual					~binary_config_cook		() {}
 }; // class binary_config_cook
 
 } // namespace configs

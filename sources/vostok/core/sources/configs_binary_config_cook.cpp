@@ -6,6 +6,7 @@
 
 #include "pch.h"
 #include "configs_binary_config_cook.h"
+#include "configs_binary_config_cook_impl.h"
 #include "configs_binary_config.h"
 #include <vostok/resources_fs.h>
 #include <vostok/memory_stream.h>
@@ -18,8 +19,8 @@ namespace configs {
 
 using namespace vostok::resources;
 
-binary_config_cook_impl::binary_config_cook_impl( ) 
-:unmanaged_cook(config_class, reuse_true, use_resource_manager_thread_id, use_resource_manager_thread_id) 
+binary_config_cook_impl::binary_config_cook_impl( )
+:unmanaged_cook(binary_config_class, reuse_true, use_resource_manager_thread_id, use_resource_manager_thread_id)
 {
 }
 
@@ -62,38 +63,54 @@ void   binary_config_cook_impl::create_resource (query_result_for_cook &	in_out_
 }
 
 static pcstr resources_converted_string	=	"resources.converted/";
-static pcstr resources					=	"resources/";
+static pcstr resources_sources_string	=	"resources.sources/";
 static pcstr mounts_converted_string	=	"mounts.converted/";
+
+#ifndef MASTER_GOLD
+static pcstr resources_string			=	"resources/";
 static pcstr mounts_string				=	"mounts/";
 
-void make_converted_path				( fs_new::virtual_path_string *			out_converted_path, 
+void make_converted_path				( fs_new::virtual_path_string *			out_converted_path,
 										  fs_new::virtual_path_string const &	in_source_path )
 {
-	* out_converted_path				=	in_source_path;
+	*out_converted_path				=	in_source_path;
 
-	if ( in_source_path.find(resources) != u32(-1) )
-	{
-		out_converted_path->replace			(resources, resources_converted_string);
-	}
+	if ( in_source_path.find(resources_string) != u32(-1) )
+		out_converted_path->replace			(resources_string, resources_converted_string);
 	else if ( in_source_path.find(mounts_string) != u32(-1) )
-	{
 		out_converted_path->replace			(mounts_string, mounts_converted_string);
-	}
-	else 
+	else
 	{
-		*out_converted_path				=	resources_converted_string;
-		*out_converted_path				+=	in_source_path;
+		*out_converted_path			=	resources_converted_string;
+		*out_converted_path			+=	in_source_path;
 	}
-} 
+}
+#endif // #ifndef MASTER_GOLD
 
-binary_config_cook::binary_config_cook	( ) : 
+void make_source_path					( fs_new::virtual_path_string *			out_sources_path,
+										  fs_new::virtual_path_string const &	in_converted_path )
+{
+	* out_sources_path					=	in_converted_path;
+
+	if ( in_converted_path.find(resources_converted_string) != u32(-1) )
+	{
+		out_sources_path->replace			(resources_converted_string, resources_sources_string);
+	}
+	else if ( in_converted_path.find(mounts_converted_string) != u32(-1) )
+	{
+		out_sources_path->replace			(mounts_converted_string, "mounts.sources/");
+	}
+	else
+	{
+		*out_sources_path				=	resources_sources_string;
+		*out_sources_path				+=	in_converted_path;
+	}
+}
+
+binary_config_cook::binary_config_cook	( resources::class_id_enum cls_id ) :
 	super	(
-		binary_config_class, 
-#ifdef MASTER_GOLD
-		reuse_true, 
-#else // #ifdef MASTER_GOLD
-		reuse_false, 
-#endif // #ifdef MASTER_GOLD
+		cls_id,
+		reuse_true,
 		use_resource_manager_thread_id
 	)
 {
@@ -101,10 +118,9 @@ binary_config_cook::binary_config_cook	( ) :
 
 void binary_config_cook::translate_query	( query_result_for_cook & parent )
 {
-	fs_new::virtual_path_string const		source_path	=	parent.get_requested_path();
-	R_ASSERT								(source_path.length());
-	fs_new::virtual_path_string				converted_path;
-	make_converted_path						(& converted_path, source_path);
+	fs_new::virtual_path_string const		converted_path	=	parent.get_requested_path();
+	fs_new::virtual_path_string				source_path;
+	make_source_path							(& source_path, converted_path);
 
 	request	fs_iterator_requests[]		=	{	{ source_path.c_str(), fs_iterator_class }, 
 												{ converted_path.c_str(), fs_iterator_class } };
@@ -121,65 +137,35 @@ void binary_config_cook::translate_query	( query_result_for_cook & parent )
 void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 {
 	query_result_for_cook * const parent	=	results.get_parent_query();
-	fs_new::virtual_path_string const		source_path	=	parent->get_requested_path();
-	fs_new::virtual_path_string				converted_path;
-	make_converted_path						(& converted_path, source_path);
+	fs_new::virtual_path_string const		converted_path	=	parent->get_requested_path();
+	fs_new::virtual_path_string				source_path;
+	make_source_path							(& source_path, converted_path);
 
 	vfs::vfs_iterator const & source_path_it	=	results[0].get_result_iterator();
-
-#ifndef	MASTER_GOLD
-	if ( !source_path_it ) 
+	vfs::vfs_iterator const & converted_path_it	=	results[1].get_result_iterator();
+	if ( !converted_path_it )
 	{
 		parent->finish_query				(query_result_for_user::error_type_file_not_found, assert_on_fail_false);
 		return;
 	}
-#endif // #ifndef	MASTER_GOLD
-
-	vfs::vfs_iterator const & converted_path_it	=	results[1].get_result_iterator();
 
 	fs_new::physical_path_info const source_info	=	get_physical_path_info(source_path_it);
 	fs_new::physical_path_info const converted_info	=	get_physical_path_info(converted_path_it);
 
-	bool const force_lua_mount_config	=	
-#ifdef MASTER_GOLD
-		false;
-#else // #ifdef MASTER_GOLD
-		(source_path.find(mounts_string) == 0);
-#endif // #ifdef MASTER_GOLD
-
-
- 	if	( 
-			!identity(force_lua_mount_config) &&
+	 if	(
 			converted_info.exists() &&
  			(source_info.last_time_of_write() < converted_info.last_time_of_write()) 
 		)
- 	{
-		// load converted binary config
+	 {
  		query_resource(
  			converted_path.c_str(),
- 			config_class,
+			binary_config_class,
  			boost::bind(&binary_config_cook::on_binary_config_loaded, this, _1, parent),
  			helper_allocator(),
 			NULL,
 			parent
  		);
- 	}
- 	else
- 	{
-#ifndef	MASTER_GOLD
-	// load lua config
- 		query_resource(
- 			source_path.c_str(),
- 			lua_config_class,
- 			boost::bind(& binary_config_cook::on_lua_config_loaded, this, _1, parent),
- 			helper_allocator(),
-			NULL,
-			parent
- 			);
-#else // #ifndef MASTER_GOLD
-		FATAL( "cannot find binary config [%s]!", source_path.c_str() );
-#endif // #ifndef MASTER_GOLD
- 	}
+	 }
 }
 
 #ifndef MASTER_GOLD
@@ -231,6 +217,12 @@ void binary_config_cook::delete_resource( resource_base * resource )
 	R_ASSERT				( config );
 	memory::base_allocator * const allocator	=	config->get_allocator();
 	VOSTOK_DELETE_IMPL		(allocator, config);	
+}
+
+void binary_config_cook::register_object_to_delete( binary_config* const resource, const u32 deallocation_thread_id )
+{
+	resource->set_deleter_object			(this, deallocation_thread_id);
+	resource->set_class_id				(get_class_id());
 }
 
 } // namespace configs

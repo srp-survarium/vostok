@@ -1106,10 +1106,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\anchor_game_animated_model_cook.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\anchor_game_world_ui.cpp"
 				>
 			</File>

@@ -12,6 +12,7 @@
 #include "resources_thread_local_data.h"
 #include "vfs_sub_fat_cook.h"
 #include "configs_binary_config_cook.h"
+#include "configs_binary_config_cook_impl.h"
 
 #ifndef MASTER_GOLD
 	#include "configs_ltx_config_cook.h"
@@ -132,7 +133,7 @@ void   resources_manager::do_mount_mounts_path ()
 vostok::core::configs::binary_config_cook & resources_manager::get_binary_config_cook	()
 {
 	static bool initialized								= false;
-	static vostok::core::configs::binary_config_cook		cook;
+	static vostok::core::configs::binary_config_cook		cook(inherits_binary_config_class);
 	static vostok::core::configs::binary_config_cook_impl	cook2;
 	if ( !initialized ) 
 	{
@@ -420,5 +421,4 @@ bool   resources_manager::replicate_resource (vfs::vfs_iterator		fat_it,
 
 } // namespace resources
 } // namespace vostok
-
 

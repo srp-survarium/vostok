@@ -29,6 +29,7 @@ pcstr   get_command_line		( );
 pcstr	VOSTOK_CORE_API user_data_directory		( );
 
 void	set_application_name	( pcstr application_name );
+VOSTOK_CORE_API void	core_engine_flush	( );
 fs_new::device_file_system_interface *		get_core_device_file_system	( );
 fs_new::synchronous_device_interface &		get_core_synchronous_device	( );
 

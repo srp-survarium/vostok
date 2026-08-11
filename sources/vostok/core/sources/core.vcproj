@@ -8894,6 +8894,10 @@
 							RelativePath=".\configs_binary_config_cook.h"
 							>
 						</File>
+						<File
+							RelativePath=".\configs_binary_config_cook_impl.h"
+							>
+						</File>
 					</Filter>
 				</Filter>
 				<Filter

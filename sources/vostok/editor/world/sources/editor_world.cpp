@@ -865,9 +865,7 @@ void editor_world::editor_mode(bool beditor_mode)
 		fs_new::virtual_path_string					project_resource_name;	
 		project_resource_name.assignf	("#%s", m_level_editor->get_project()->cfg_resource_name().c_str());
 		
-		//fs_new::virtual_path_string	project_resource_path = le->get_project()->project_resources_path();
-		fs_new::virtual_path_string	project_resource_path = unmanaged_string(m_level_editor->get_project()->project_name()).c_str();
-		engine().load_level				( project_resource_name.c_str(), project_resource_path.c_str() );
+		engine().load_level				( project_resource_name.c_str() );
 
 		m_view_window->clip_cursor		( );
 

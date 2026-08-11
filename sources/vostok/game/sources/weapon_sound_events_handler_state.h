@@ -29,6 +29,8 @@
 #include <vostok/game_core/double_barreled_weapon_core_reload_state.h>
 #include <vostok/game_core/double_barreled_weapon_core_show_state.h>
 
+namespace vostok { void use_game_weapons( ); }
+
 namespace survarium {
 
 class weapon;
@@ -44,7 +46,7 @@ class weapon_sound_events_handler_state : public T {
 	// the cook over this state owns the sounds buffer (allocated in new_state,
 	// freed in destroy_resource) and reads m_buffer_for_sounds directly.
 	friend class weapon_sound_events_handler_state_cook< weapon_sound_events_handler_state< T > >;
-public:
+	friend void vostok::use_game_weapons( );
 	inline			weapon_sound_events_handler_state	(
 						weapon&			weapon,
 						const float		animation_time_scale,
@@ -70,6 +72,7 @@ public:
 	virtual	void	initialize	( ) override;
 	virtual	void	finalize	( ) override;
 
+public:
 	virtual			~weapon_sound_events_handler_state	( ) { /* no source */ }
 
 private:

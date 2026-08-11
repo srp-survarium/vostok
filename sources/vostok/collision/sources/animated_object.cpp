@@ -18,12 +18,6 @@
 namespace vostok {
 namespace collision {
 
-// claude@NOTE: structure divergence (target 12 stmts / 2 locals vs base 11 / 3, extra
-// root_bones_count) is driven by get_bone_index inlining __find_if + the index math and
-// the compiler scheduling its pieces across the assign/`-=` line records differently
-// (target combines find_if + subtract on one line, base inlines get_bone twice). Not
-// source-steerable from this TU; root_bones_count == get_root_bones_count() and the local
-// naming is register-allocation, not a phantom-temp to drop.
 animated_object::animated_object(
 		configs::binary_config_value const& config,
 		animation::skeleton_ptr const& model_skeleton,
@@ -62,7 +56,6 @@ animated_object::~animated_object	( )
 	physics::destroy_animated_rigid_body( m_body, &m_allocator );
 }
 
-// sushi@NOTE: As I understand, destructors are not used to not store allocators inside objects
 void animated_object::destroy		( memory::base_allocator* allocator )
 {
 	if ( !m_geometry )
@@ -184,18 +177,6 @@ float3 animated_object::get_eyes_direction( ) const
 		float3 direction = matrix.k.xyz();
 		return direction.normalize();
 	}
-}
-
-void animated_object::draw_collision		(
-		render::scene_ptr const& scene,
-		render::debug::renderer& renderer,
-		float4x4 const& transform
-	) const
-{
-//	m_geometry->set_matrix					( transform );
-//	composite_geometry_instance const* cg	= static_cast_checked<composite_geometry_instance const*>( m_geometry );
-	m_geometry->render						( scene, renderer, transform );
-//	cg->get_geometry()->render				( scene, renderer, cg->get_matrix( ) * transform );
 }
 
 pcstr animated_object::body_part_name(

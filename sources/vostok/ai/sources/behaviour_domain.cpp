@@ -101,10 +101,7 @@ static planning::generalized_action* create_action_prototype(
 		result->add_parameter_type	( parameter_type_owner );
 		result->add_parameter_type	( parameter_type_animation );
 		
-		result->set_preconditions	( !predicate( predicate_type_animation_played, _0, _1 ) &&
-									  !predicate( predicate_type_animation_playing, _0 ) &&
-									  !predicate( predicate_type_is_moving, _0 ) &&
-									  !predicate( predicate_type_sound_playing, _0 ) );
+		result->set_preconditions	( !predicate( predicate_type_animation_played, _0, _1 ) );
 		result->set_effects			( predicate( predicate_type_animation_played, _0, _1 ) );
 	}
 	else if ( action_type == action_type_play_sound )
@@ -112,10 +109,7 @@ static planning::generalized_action* create_action_prototype(
 		result->add_parameter_type	( parameter_type_owner );
 		result->add_parameter_type	( parameter_type_sound );
 		
-		result->set_preconditions	( !predicate( predicate_type_sound_played, _0, _1 ) &&
-									  !predicate( predicate_type_sound_playing, _0 ) &&
-									  !predicate( predicate_type_is_moving, _0 ) &&
-									  !predicate( predicate_type_animation_playing, _0 ) );
+		result->set_preconditions	( !predicate( predicate_type_sound_played, _0, _1 ) );
 		result->set_effects			( predicate( predicate_type_sound_played, _0, _1 ) );
 	}
 	else if ( action_type == action_type_play_animation_with_sound )
@@ -124,10 +118,7 @@ static planning::generalized_action* create_action_prototype(
 		result->add_parameter_type	( parameter_type_animation );
 		result->add_parameter_type	( parameter_type_sound );
 		
-		result->set_preconditions	( !predicate( predicate_type_animation_with_sound_played, _0, _1, _2 ) &&
-									  !predicate( predicate_type_animation_playing, _0 ) &&
-									  !predicate( predicate_type_is_moving, _0 ) &&
-									  !predicate( predicate_type_sound_playing, _0 ) );
+		result->set_preconditions	( !predicate( predicate_type_animation_with_sound_played, _0, _1, _2 ) );
 		result->set_effects			( predicate( predicate_type_animation_with_sound_played, _0, _1, _2 ) );
 	}
 	else if ( action_type == action_type_move_to_point )
@@ -135,8 +126,7 @@ static planning::generalized_action* create_action_prototype(
 		result->add_parameter_type	( parameter_type_owner );
 		result->add_parameter_type	( parameter_type_position );
 		
-		result->set_preconditions	( !predicate( predicate_type_is_moving, _0 ) &&
-									  !predicate( predicate_type_is_at_position, _0, _1 ) );
+		result->set_preconditions	( !predicate( predicate_type_is_at_position, _0, _1 ) );
 		result->set_effects			( predicate( predicate_type_is_at_position, _0, _1 ) );
 	}
 	

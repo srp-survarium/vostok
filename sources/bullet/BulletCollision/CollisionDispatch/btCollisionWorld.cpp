@@ -13,6 +13,8 @@ subject to the following restrictions:
 3. This notice may not be removed or altered from any source distribution.
 */
 
+#define BT_USE_SSE
+
 #include "btCollisionWorld.h"
 #include "btCollisionDispatcher.h"
 #include "BulletCollision/CollisionDispatch/btCollisionObject.h"
@@ -553,19 +555,6 @@ void	btCollisionWorld::rayTestSingle(const btTransform& rayFromTrans,const btTra
 	}
 }
 
-// claude@NOTE: compound branch is vostok's btDbvt-traversal rewrite (input_params /
-// LocalInfoAdder / VolumeTester + collideTV<VolumeTester>, mirrors RayTester). All 11
-// function-local-class symbols match 100%. Body residual: the target's LTCG dead-
-// eliminates the dbvt==NULL else loop (keeping only its __l57 LocalInfoAdder COMDAT,
-// which our live loop reproduces) and inlines the swept-volume math deeper than ours,
-// so objdiff leaves the objectQuerySingle body itself unpaired.
-// claude@NOTE(structure-verifier): named-local sets diverge target 45 vs base 50 - the
-// 6 base-only locals (dbvt, i, childTrans, childWorldTrans, saveCollisionShape, my_cb)
-// are exactly the dbvt==NULL else-loop's scope locals. The target's optimizer dead-
-// eliminated that loop body (so it records 0 of them), but the loop existed in the
-// target SOURCE (its __l57 LocalInfoAdder COMDAT is present and matches 100%), so the
-// faithful source MUST keep the loop - the local-count delta is the same LTCG dead-
-// code-elimination artifact as the unpaired body, NOT a steerable source-shape error.
 void	btCollisionWorld::objectQuerySingle(const btConvexShape* castShape,const btTransform& convexFromTrans,const btTransform& convexToTrans,
 											btCollisionObject* collisionObject,
 											const btCollisionShape* collisionShape,
@@ -1653,4 +1642,3 @@ void	btCollisionWorld::serialize(btSerializer* serializer)
 	
 	serializer->finishSerialization();
 }
-

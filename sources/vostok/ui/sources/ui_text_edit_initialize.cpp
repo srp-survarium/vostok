@@ -62,14 +62,6 @@ void  ui_text_edit::add_action(base_edit_action* action)
 	m_edit_actions.push_back(action);
 }
 
-// claude@NOTE: structure matches the target (the per-site BASE_ONLY entries in the
-// structure-diff are diff-alignment artifacts of the size gap, not real extra statements).
-// Residual is a register-coloring difference: the target hoists m_ui_world.input_world()
-// into edi once and reuses it (push edi) at every create_char_action site while keeping the
-// push_back stride 4 as an immediate; our base instead keeps 4 in edi and reloads
-// [m_ui_world]+m_input_world (8 bytes) per site. No faithful source change flips this - the
-// PDB records no input_world local (and ctrl_sh_state's missing name is /Ox eliding a real,
-// used local, not a phantom to drop).
 void ui_text_edit::init_internals(enum_text_edit_mode mode)
 {
 	shift_state							any_sh_state;
@@ -132,84 +124,85 @@ void ui_text_edit::init_internals(enum_text_edit_mode mode)
 // fill alphabet
 //	if(mode==im_number_only)----implement this !!!
 //	if(mode==im_file_name_mode)
+	input::world* input_world = m_ui_world.input_world();
 	{
-	add_action(create_char_action(this,input::key_0,		input::kb_key_down, '0',')', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad0,	input::kb_key_down, '0','0', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_0,		input::kb_key_down, '0',')', false, input_world));
+	add_action(create_char_action(this,input::key_numpad0,	input::kb_key_down, '0','0', false, input_world));
 	
-	add_action(create_char_action(this,input::key_1,		input::kb_key_down,	'1','!', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad1,	input::kb_key_down,	'1','1', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_1,		input::kb_key_down,	'1','!', false, input_world));
+	add_action(create_char_action(this,input::key_numpad1,	input::kb_key_down,	'1','1', false, input_world));
 	
-	add_action(create_char_action(this,input::key_2,		input::kb_key_down,	'2','@', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad2,	input::kb_key_down,	'2','2', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_2,		input::kb_key_down,	'2','@', false, input_world));
+	add_action(create_char_action(this,input::key_numpad2,	input::kb_key_down,	'2','2', false, input_world));
 	
-	add_action(create_char_action(this,input::key_3,		input::kb_key_down,	'3','#', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad3,	input::kb_key_down,	'3','3', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_3,		input::kb_key_down,	'3','#', false, input_world));
+	add_action(create_char_action(this,input::key_numpad3,	input::kb_key_down,	'3','3', false, input_world));
 	
-	add_action(create_char_action(this,input::key_4,		input::kb_key_down,	'4','$', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad4,	input::kb_key_down,	'4','4', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_4,		input::kb_key_down,	'4','$', false, input_world));
+	add_action(create_char_action(this,input::key_numpad4,	input::kb_key_down,	'4','4', false, input_world));
 	
-	add_action(create_char_action(this,input::key_5,		input::kb_key_down,	'5','%', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad5,	input::kb_key_down,	'5','5', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_5,		input::kb_key_down,	'5','%', false, input_world));
+	add_action(create_char_action(this,input::key_numpad5,	input::kb_key_down,	'5','5', false, input_world));
 	
-	add_action(create_char_action(this,input::key_6,		input::kb_key_down,	'6','^', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad6,	input::kb_key_down,	'6','6', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_6,		input::kb_key_down,	'6','^', false, input_world));
+	add_action(create_char_action(this,input::key_numpad6,	input::kb_key_down,	'6','6', false, input_world));
 	
-	add_action(create_char_action(this,input::key_7,		input::kb_key_down,	'7','&', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad7,	input::kb_key_down,	'7','7', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_7,		input::kb_key_down,	'7','&', false, input_world));
+	add_action(create_char_action(this,input::key_numpad7,	input::kb_key_down,	'7','7', false, input_world));
 	
-	add_action(create_char_action(this,input::key_8,		input::kb_key_down,	'8','*', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad8,	input::kb_key_down,	'8','8', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_8,		input::kb_key_down,	'8','*', false, input_world));
+	add_action(create_char_action(this,input::key_numpad8,	input::kb_key_down,	'8','8', false, input_world));
 	
-	add_action(create_char_action(this,input::key_9,		input::kb_key_down,	'9','(', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpad9,	input::kb_key_down,	'9','9', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_9,		input::kb_key_down,	'9','(', false, input_world));
+	add_action(create_char_action(this,input::key_numpad9,	input::kb_key_down,	'9','9', false, input_world));
 	}
 	{
-	add_action(create_char_action(this,input::key_a,		input::kb_key_down,	'a','A',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_b,		input::kb_key_down,	'b','B',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_c,		input::kb_key_down,	'c','C',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_d,		input::kb_key_down,	'd','D',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_e,		input::kb_key_down,	'e','E',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_f,		input::kb_key_down,	'f','F',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_g,		input::kb_key_down,	'g','G',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_h,		input::kb_key_down,	'h','H',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_i,		input::kb_key_down,	'i','I',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_j,		input::kb_key_down,	'j','J',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_k,		input::kb_key_down,	'k','K',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_l,		input::kb_key_down,	'l','L',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_m,		input::kb_key_down,	'm','M',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_n,		input::kb_key_down,	'n','N',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_o,		input::kb_key_down,	'o','O',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_p,		input::kb_key_down,	'p','P',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_q,		input::kb_key_down,	'q','Q',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_r,		input::kb_key_down,	'r','R',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_s,		input::kb_key_down,	's','S',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_t,		input::kb_key_down,	't','T',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_u,		input::kb_key_down,	'u','U',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_v,		input::kb_key_down,	'v','V',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_w,		input::kb_key_down,	'w','W',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_x,		input::kb_key_down,	'x','X',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_y,		input::kb_key_down,	'y','Y',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_z,		input::kb_key_down,	'z','Z',true, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_a,		input::kb_key_down,	'a','A',true, input_world));
+	add_action(create_char_action(this,input::key_b,		input::kb_key_down,	'b','B',true, input_world));
+	add_action(create_char_action(this,input::key_c,		input::kb_key_down,	'c','C',true, input_world));
+	add_action(create_char_action(this,input::key_d,		input::kb_key_down,	'd','D',true, input_world));
+	add_action(create_char_action(this,input::key_e,		input::kb_key_down,	'e','E',true, input_world));
+	add_action(create_char_action(this,input::key_f,		input::kb_key_down,	'f','F',true, input_world));
+	add_action(create_char_action(this,input::key_g,		input::kb_key_down,	'g','G',true, input_world));
+	add_action(create_char_action(this,input::key_h,		input::kb_key_down,	'h','H',true, input_world));
+	add_action(create_char_action(this,input::key_i,		input::kb_key_down,	'i','I',true, input_world));
+	add_action(create_char_action(this,input::key_j,		input::kb_key_down,	'j','J',true, input_world));
+	add_action(create_char_action(this,input::key_k,		input::kb_key_down,	'k','K',true, input_world));
+	add_action(create_char_action(this,input::key_l,		input::kb_key_down,	'l','L',true, input_world));
+	add_action(create_char_action(this,input::key_m,		input::kb_key_down,	'm','M',true, input_world));
+	add_action(create_char_action(this,input::key_n,		input::kb_key_down,	'n','N',true, input_world));
+	add_action(create_char_action(this,input::key_o,		input::kb_key_down,	'o','O',true, input_world));
+	add_action(create_char_action(this,input::key_p,		input::kb_key_down,	'p','P',true, input_world));
+	add_action(create_char_action(this,input::key_q,		input::kb_key_down,	'q','Q',true, input_world));
+	add_action(create_char_action(this,input::key_r,		input::kb_key_down,	'r','R',true, input_world));
+	add_action(create_char_action(this,input::key_s,		input::kb_key_down,	's','S',true, input_world));
+	add_action(create_char_action(this,input::key_t,		input::kb_key_down,	't','T',true, input_world));
+	add_action(create_char_action(this,input::key_u,		input::kb_key_down,	'u','U',true, input_world));
+	add_action(create_char_action(this,input::key_v,		input::kb_key_down,	'v','V',true, input_world));
+	add_action(create_char_action(this,input::key_w,		input::kb_key_down,	'w','W',true, input_world));
+	add_action(create_char_action(this,input::key_x,		input::kb_key_down,	'x','X',true, input_world));
+	add_action(create_char_action(this,input::key_y,		input::kb_key_down,	'y','Y',true, input_world));
+	add_action(create_char_action(this,input::key_z,		input::kb_key_down,	'z','Z',true, input_world));
 
-	add_action(create_char_action(this,input::key_numpadminus,		input::kb_key_down,'-','-', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpadplus,		input::kb_key_down,'+','+', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpadperiod,		input::kb_key_down,'.','.', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_numpadminus,		input::kb_key_down,'-','-', false, input_world));
+	add_action(create_char_action(this,input::key_numpadplus,		input::kb_key_down,'+','+', false, input_world));
+	add_action(create_char_action(this,input::key_numpadperiod,		input::kb_key_down,'.','.', false, input_world));
 
-	add_action(create_char_action(this,input::key_minus,		input::kb_key_down,'-','_', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_space,		input::kb_key_down,' ',' ', false, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_grave,		input::kb_key_down,'`','~', false, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_minus,		input::kb_key_down,'-','_', false, input_world));
+	add_action(create_char_action(this,input::key_space,		input::kb_key_down,' ',' ', false, input_world));
+	add_action(create_char_action(this,input::key_grave,		input::kb_key_down,'`','~', false, input_world));
 
-	add_action(create_char_action(this,input::key_backslash,	input::kb_key_down,'\\'	,'|',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_lbracket,		input::kb_key_down,'['	,'{',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_rbracket,		input::kb_key_down,']'	,'}',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_apostrophe,	input::kb_key_down,'\''	,'\"',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_comma,		input::kb_key_down,','	,'<',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_period,		input::kb_key_down,'.'	,'>',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_equals,		input::kb_key_down,'='	,'+',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_semicolon,	input::kb_key_down,';'	,':',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_slash,		input::kb_key_down,'/'	,'?',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpadstar,	input::kb_key_down,'*'	,'*',true, m_ui_world.input_world()));
-	add_action(create_char_action(this,input::key_numpadslash,	input::kb_key_down,'/'	,'/',true, m_ui_world.input_world()));
+	add_action(create_char_action(this,input::key_backslash,	input::kb_key_down,'\\'	,'|',true, input_world));
+	add_action(create_char_action(this,input::key_lbracket,		input::kb_key_down,'['	,'{',true, input_world));
+	add_action(create_char_action(this,input::key_rbracket,		input::kb_key_down,']'	,'}',true, input_world));
+	add_action(create_char_action(this,input::key_apostrophe,	input::kb_key_down,'\''	,'\"',true, input_world));
+	add_action(create_char_action(this,input::key_comma,		input::kb_key_down,','	,'<',true, input_world));
+	add_action(create_char_action(this,input::key_period,		input::kb_key_down,'.'	,'>',true, input_world));
+	add_action(create_char_action(this,input::key_equals,		input::kb_key_down,'='	,'+',true, input_world));
+	add_action(create_char_action(this,input::key_semicolon,	input::kb_key_down,';'	,':',true, input_world));
+	add_action(create_char_action(this,input::key_slash,		input::kb_key_down,'/'	,'?',true, input_world));
+	add_action(create_char_action(this,input::key_numpadstar,	input::kb_key_down,'*'	,'*',true, input_world));
+	add_action(create_char_action(this,input::key_numpadslash,	input::kb_key_down,'/'	,'/',true, input_world));
 	}
 
 //	std::sort(m_edit_actions.begin(), m_edit_actions.end(), action_less);

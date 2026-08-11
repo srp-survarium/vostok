@@ -34,7 +34,6 @@ bool g_is_server = false;
 #include <vostok/game_core/client_player_update.h>
 #include <vostok/game_core/collision_geometry.h>
 #include <vostok/game_core/collision_sensor.h>
-#include <vostok/game_core/damage_model_cook.h>
 #include <vostok/game_core/inventory.h>
 #include <vostok/game_core/inventory_holder.h>
 #include <vostok/game_core/inventory_item.h>
@@ -164,19 +163,8 @@ namespace survarium
 	float get_additional_length( float3 const& upleg_dir, float3 const& leg_dir, float knee_len );
 }
 
-// fsm_state has a pure-virtual dtor (= 0) with no body in our sources; the
-// concrete weapon_core_base_state anchor below needs it to LINK (vtable slot).
-// Define it here in the (non-target) anchor TU so it can't regress a matched obj.
-// Link stopgaps in this non-target TU (cannot regress a matched obj): both dtors
-// are declared but undefined in our sources. fsm_state's dtor is the documented
-// foundational gap (game_core/README.md); ~player_logic_base_state is the analogous
-// gap one level down, pulled in via the abstract class's vtable once the obj is
-// kept by the movement_animation_index anchor. claude@NOTE: real bodies belong to
-// the ai module / a future ~player_logic_base_state unit; these are just stopgaps.
-namespace vostok { namespace ai {
-	fsm_state::~fsm_state( ) { }
-} }
-
+// player_logic_base_state's declared destructor is still needed by the abstract
+// class vtable retained through the movement_animation_index anchor.
 namespace survarium
 {
 	player_logic_base_state::~player_logic_base_state( ) { }
@@ -1720,12 +1708,6 @@ namespace vostok
 	}
 
 
-	void use_damage_model_cook( )
-	{
-		survarium::damage_model_cook cook;
-		cook.delete_resource( NULL );
-	}
-
 	void use_ladder( survarium::ladder* ladder )
 	{
 		ladder->activate( NULL );
@@ -2481,15 +2463,12 @@ namespace vostok
 		use_game_core_double_barreled_weapon_core_idle_state( );
 		use_game_core_pistol_weapon_core_aimed_idle_state( );
 		use_game_core_weapon_core_reload_state( );
-		use_game_core_pistol_weapon_core_idle_state( );
 		use_game_core_pistol_weapon_core_show_state( );
 		use_game_core_weapon_core_show_state( );
 		use_game_core_double_barreled_weapon_core_show_state( );
 		use_game_core_double_barreled_weapon_core_hide_state( );
 		use_game_core_pistol_weapon_core_hide_state( );
 		use_game_core_weapon_core_hide_state( );
-		use_game_core_double_barreled_weapon_core_idle_state( );
-		use_game_core_pistol_weapon_core_aimed_idle_state( );
 		use_game_core_pistol_weapon_core_aimed_fire_state( );
 		use_game_core_double_barreled_weapon_core_aimed_idle_state( );
 		use_game_core_weapon_core_show_state_base( );
@@ -2500,7 +2479,6 @@ namespace vostok
 		use_game_core_weapon_core_initialize_weapon_logic( );
 		use_game_core_weapon_core_chamber_a_round_state( );
 		use_game_core_weapon_core_chamber_a_round_aimed_state( );
-		use_game_core_weapon_core_fire_state_base( );
 		use_game_core_weapon_core_shotgun_reload_state( );
 		use_game_core_weapon_core_shotgun_reload_start_substate( );
 		use_game_core_weapon_core_shotgun_reload_one_round_substate( );
@@ -2513,10 +2491,8 @@ namespace vostok
 
 		use_game_core_weapon_core_fire_state( );
 		use_game_core_weapon_core_aimed_fire_state( );
-		use_game_core_weapon_core_initialize_weapon_logic( );
 		use_game_core_weapon_core_small_setters( );
 		use_bullet( );
-		use_damage_model_cook( );
 		use_ladder( NULL );
 		use_game_core_affects_threshold();
 		use_game_core_player_stamina();
@@ -2540,7 +2516,6 @@ namespace vostok
 		use_game_core_inventory_holder();
 		use_game_core_weapon_user_animations_selector();
 		use_game_core_base_player();
-		use_game_core_weapon_user_animations_selector();
 		use_game_core_weapon_user_animations_container_cook();
 		use_game_core_base_project();
 		use_game_core_booby_trap_core_get_speed();

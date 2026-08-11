@@ -128,6 +128,7 @@ void game_options::show_options( bool b_val )
 
 game_options::game_options( game& g ) :
 	m_game( g ),
+	m_mouse_pos( 0, 0 ),
 	m_waiting_for_bind_action( kLASTACTION )
 {
 }

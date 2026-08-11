@@ -1035,18 +1035,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\anchor_logging.cpp"
-					>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							GeneratePreprocessedFile="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath=".\anchor_ai_navigation.cpp"
 					>
 					<FileConfiguration

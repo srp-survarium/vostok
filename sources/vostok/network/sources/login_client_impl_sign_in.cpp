@@ -8,14 +8,7 @@
 namespace vostok {
 namespace network {
 
-// claude@NOTE: STRUCTURE MATCH (39/39). The answer dispatch is a SWITCH over *buffer (one
-// case + default), not if/else: the target spills the byte and emits cmp-mem + je-case/
-// jmp-default; the braced case carries the locals and `break;` merges the scope dtors + exit
-// jmp into the case statement. length1/length2 are plain `u8` (NOT const) to match the
-// target's recorded locals (locals are structure - target records u8, base had const u8).
-// Residual = the function4::operator() inline-vs-call wall
-// (+0x3d/0x49 per callback site) + LOG ctor scheduling; global boost-header knob.
-// See template-accessor-deinline-global-knob.md.
+// The target keeps the answer dispatch scoped and records both length locals as non-const.
 void login_client_impl::on_sign_in_answer_received(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -87,8 +80,6 @@ void login_client_impl::on_sign_in_answer_received(
 	}
 }
 
-// claude@NOTE: STRUCTURE MATCH (17/17). Residual = function4::operator() inline-vs-call wall
-// x2 + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_password_written(
 		boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const&	callback,
 		boost::system::error_code const&	error_code,
@@ -130,8 +121,6 @@ void login_client_impl::on_sign_in_password_written(
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (13/13). Residual = function4::operator() inline-vs-call wall
-// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_handshaked( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, const handshaking_error_types_enum error )
 {
 	if ( error == cannot_handshake ) {
@@ -161,11 +150,7 @@ void login_client_impl::on_sign_in_handshaked( boost::function< void ( connectio
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (27/27). default-case `return` is load-bearing: the target's
-// 2-byte jmp goes to the EPILOGUE, skipping handshake (a `break;` would fall through to
-// handshake on unknown message types). Residual = the function4::operator() inline-vs-call
-// wall x4 (the dominant 47% cost: 4 callback sites, each base +0x3d/0x49) + jmp-distance
-// bloat; global boost-header knob (see note above).
+// Unknown messages return instead of falling through to the handshake.
 void login_client_impl::on_user_name_answer_received( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, const u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -216,8 +201,6 @@ void login_client_impl::on_user_name_answer_received( boost::function< void ( co
 		false
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (15/15). Residual = function4::operator() inline-vs-call wall
-// x2 + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::on_sign_in_written( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback, boost::system::error_code const& error_code, u32 bytes_transferred )
 {
 	ASSERT					( UNKNOWN_EXPRESSION_T( m_client_state == signing_in ) );
@@ -251,8 +234,6 @@ void login_client_impl::on_sign_in_written( boost::function< void ( connection_e
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (18/18). Residual = function4::operator() inline-vs-call wall
-// x1 + the async_write callback bind-copy lowering; global boost-header knob (see note above).
 void login_client_impl::sign_in_on_connected( connection_error_types_enum connection_result, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
 	if ( connection_result ) {
@@ -292,8 +273,6 @@ void login_client_impl::sign_in_on_connected( connection_error_types_enum connec
 		)
 	);
 }
-// claude@NOTE: STRUCTURE MATCH (18/18). Residual = the function1(bind_t) conversion lowering
-// at the establish_connection boundary + LOG ctor scheduling; global boost-header knob (see note above).
 void login_client_impl::sign_in( pcstr host, u16 port, pcstr account_name, pcstr password, boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) > const& callback )
 {
 	LOG_INFO				( "signing in to LOGIN Server: host[%s], port[%d], account[%s], password[%s]", host, port, account_name, password );

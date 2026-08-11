@@ -35,7 +35,7 @@ struct VOSTOK_NOVTABLE engine {
 	virtual	void			on_resize				( ) = 0;
 	virtual	void			enable_game				( bool value ) = 0;
 	virtual	void			enter_editor_mode		( ) = 0;
-	virtual	void 			load_level				( pcstr project_resource_name, pcstr project_resource_path=NULL ) = 0;
+	virtual	void 			load_level				( pcstr project_resource_name ) = 0;
 	virtual	pcstr			get_resources_path		( ) const = 0;
 	virtual	void 			unload_level			( ) = 0;
 

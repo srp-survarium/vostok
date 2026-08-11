@@ -180,16 +180,16 @@ bool engine_world::command_line_editor_singlethread	( )
 #endif // #ifndef VOSTOK_STATIC_LIBRARIES
 }
 
-void engine_world::load_level( pcstr project_resource_name, pcstr project_resource_path )
+void engine_world::load_level( pcstr project_resource_name )
 {
 	if ( command_line_editor_singlethread() ) {
-		engine_user_world().load			( project_resource_name, project_resource_path );
+		engine_user_world().load			( project_resource_name );
 		return;
 	}
 
 	apc::run							(
 		apc::logic,
-		boost::bind( &vostok::engine_user::world::load, &engine_user_world(), project_resource_name, project_resource_path ),
+		boost::bind( &vostok::engine_user::world::load, &engine_user_world(), project_resource_name ),
 		apc::continue_process_loop,
 		apc::wait_for_completion
 	);
