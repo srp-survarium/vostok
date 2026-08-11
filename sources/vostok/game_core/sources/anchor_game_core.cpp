@@ -1770,42 +1770,20 @@ namespace vostok
 		input.is_empty();
 	}
 
-	// Retains serialization bodies whose real game callers are not reconstructed yet.
+	// Retains inventory and body-part serialization until their real callers are reconstructed.
 	void use_game_core_serialization(
-		network_core::udp_match_packet*	packet,
-		network_core::packet_reader*	reader
+		network_core::udp_match_packet*	packet
 	)
 	{
-		// weapon_core::serialize/deserialize are PRIVATE virtuals; reach them through the
-		// public inventory_item::serialize/deserialize override slot so /OPT:REF keeps
-		// their out-of-line bodies (they transitively anchor hand_to_weapon_ik_processor +
-		// weapon_user_animations_selector + the logic-state serialize forwards).
-		survarium::weapon_core			weapon;
-		survarium::inventory_item&		item = weapon;
-		item.serialize	( *packet, 0 );
-		item.deserialize( *reader );
-
-		// hand_to_weapon_ik_processor serialize/deserialize are public; call them directly.
-		survarium::hand_to_weapon_ik_processor	hand_ik;
-		hand_ik.serialize	( *packet, 0 );
-		hand_ik.deserialize	( *reader );
-
-		// inventory::serialize/deserialize are otherwise DCE'd ( /OPT:REF ); anchoring them
-		// also emits the static call_item_serialize/call_item_deserialize bind targets
-		// (address-taken, kept out-of-line - target inventory.cpp has both helpers).
+		// inventory::serialize is otherwise DCE'd ( /OPT:REF ); anchoring it also emits
+		// the static call_item_serialize bind target.
 		survarium::inventory					inventory;
 		inventory.serialize		( *packet, 0 );
-		inventory.deserialize	( *reader );
 
 		// body_part_parameters::serialize is otherwise DCE'd (target rva 0x5871f0); no
 		// default ctor, so reach it through an opaque pointer (the anchor never runs).
 		survarium::body_part_parameters*		body_part = NULL;
 		body_part->serialize	( *packet, 0 );
-
-		// damage_model::deserialize is otherwise DCE'd (target rva 0x6f0250); noncopyable
-		// with a real ctor, so reach it through an opaque pointer (the anchor never runs).
-		survarium::damage_model*				damage_model = NULL;
-		damage_model->deserialize( *reader );
 	}
 
 	void use_game_core_weapon_state()
@@ -2434,7 +2412,7 @@ namespace vostok
 		use_game_core_player_stamina();
 		use_game_core_player_stealth();
 		use_game_core_player_input();
-		use_game_core_serialization( NULL, NULL );
+		use_game_core_serialization( NULL );
 		use_game_core_weapon_state();
 		use_game_core_player_logic_base_state();
 		use_game_core_player_logic_jump_state();
