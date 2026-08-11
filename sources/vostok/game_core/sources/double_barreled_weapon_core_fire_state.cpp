@@ -88,7 +88,7 @@ animation::mixing::expression double_barreled_weapon_core_fire_state::weapon_and
 	animation::mixing::expression hands_expression =
 		get_user_hands_expression( lexeme_pair.offset_lexeme, buffer, is_third_view, user_state_id, weight_driving_animation );
 
-	return lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme ) + hands_expression;
+	return hands_expression + lexeme_pair.main_lexeme + animation::mixing::expression( lexeme_pair.offset_lexeme );
 }
 
 weapon_lexeme_pair double_barreled_weapon_core_fire_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
