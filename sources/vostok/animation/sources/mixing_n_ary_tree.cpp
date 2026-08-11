@@ -20,6 +20,7 @@
 #include "mixing_n_ary_tree_time_scale_calculator.h"
 #include "mixing_n_ary_tree_time_scale_start_time_modifier.h"
 #include <vostok/animation/animation_callback.h>
+#include <vostok/animation/animation_callback_params.h>
 #include "i_editor_mixer_inline.h"
 #include "mixing_animation_state.h"
 #include <vostok/animation/animation_player.h>
