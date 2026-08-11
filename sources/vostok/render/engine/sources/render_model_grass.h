@@ -41,6 +41,8 @@ public:
 STATIC_SIZE_ASSERT( grass_render_surface, 0xAC );
 
 class grass_render_model : public render_model {
+	typedef grass_render_surface* child;
+
 public:
 	grass_render_model( ) :
 		m_l0( 0 ),
@@ -49,12 +51,11 @@ public:
 	{
 	}
 
-	virtual ~grass_render_model( ) { }
 	virtual void set_children( render_surface** children, u8 count, model_lods_descriptor* lods );
 
-	grass_render_surface* m_l0;
-	grass_render_surface* m_l1;
-	grass_render_surface* m_l2;
+	child m_l0;
+	child m_l1;
+	child m_l2;
 };
 
 STATIC_SIZE_ASSERT( grass_render_model, 0x148 );

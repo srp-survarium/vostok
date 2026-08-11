@@ -15,6 +15,7 @@ namespace render {
 class res_sampler_list : public resource_intrusive_base {
 public:
 	typedef vector<ID3D11SamplerState*> samplers_type;
+	typedef vector<fixed_string<32> > samplers_names_type;
 	typedef samplers_type::const_iterator const_iterator;
 	typedef samplers_type::iterator iterator;
 
@@ -57,8 +58,8 @@ public:
 	s32 compare( fixed_vector<sampler_slot, 16> const& base ) const;
 
 	u32 size( ) const { return m_samplers.size( ); }
-	ID3D11SamplerState* const& operator[]( u32 index ) const { return m_samplers[index]; }
-	ID3D11SamplerState*& operator[]( u32 index ) { return m_samplers[index]; }
+	ID3D11SamplerState* const& operator[]( u32 const index ) const { return m_samplers[index]; }
+	ID3D11SamplerState*& operator[]( u32 const index ) { return m_samplers[index]; }
 	const_iterator begin( ) const { return m_samplers.begin( ); }
 	iterator begin( ) { return m_samplers.begin( ); }
 	const_iterator end( ) const { return m_samplers.end( ); }
@@ -75,7 +76,7 @@ public:
 
 private:
 	samplers_type m_samplers;
-	vector<fixed_string<32> > m_names;
+	samplers_names_type m_names;
 	bool m_is_registered;
 };
 

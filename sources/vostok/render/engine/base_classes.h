@@ -32,6 +32,8 @@ typedef resources::resource_ptr<
 > base_scene_view_ptr;
 
 struct base_scene : public resources::unmanaged_resource {
+	typedef base_scene_ptr scene_ptr;
+
 	inline	base_scene	( ) :
 		first_command	( 0 ),
 		last_command	( 0 ),
@@ -39,11 +41,9 @@ struct base_scene : public resources::unmanaged_resource {
 	{
 	}
 
-	virtual	~base_scene	( ) { }
-
 	/* 0x0108 */	base_command*		first_command;
 	/* 0x010c */	base_command*		last_command;
-	/* 0x0110 */	base_scene_ptr		next_scene;
+	/* 0x0110 */	scene_ptr			next_scene;
 	/* 0x0114 */	volatile long		fixed_lod_value;
 }; // struct base_scene
 
@@ -52,6 +52,8 @@ STATIC_SIZE_ASSERT( base_scene, 0x118 );
 typedef base_scene* base_scene_pointer;
 
 struct base_scene_view : public resources::unmanaged_resource {
+	typedef base_scene_view_ptr scene_view_ptr;
+
 	inline	base_scene_view	( ) :
 		first_command		( 0 ),
 		last_command		( 0 ),
@@ -59,11 +61,9 @@ struct base_scene_view : public resources::unmanaged_resource {
 	{
 	}
 
-	virtual	~base_scene_view	( ) { }
-
 	/* 0x0108 */	base_command*			first_command;
 	/* 0x010c */	base_command*			last_command;
-	/* 0x0110 */	base_scene_view_ptr		next_scene_view;
+	/* 0x0110 */	scene_view_ptr			next_scene_view;
 	/* 0x0114 */	volatile long			editor_debug_mode;
 }; // struct base_scene_view
 
