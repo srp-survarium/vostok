@@ -199,7 +199,8 @@ void skeleton_combined_model_cook::on_resources_loaded( resources::queries_resul
 }
 // 41 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_material_effects_loaded( resources::queries_result& data, resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
-{ if ( !data.is_successful( ) )
+{
+	if ( !data.is_successful( ) )
 
 		LOG_ERROR( "skeleton_combined_model_cook::on_material_effects_loaded : data loading failed" );
 	// 3 target lines are likely retail-compiled-out source.
