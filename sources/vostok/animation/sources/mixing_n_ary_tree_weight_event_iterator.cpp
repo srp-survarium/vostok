@@ -6,7 +6,7 @@
 
 #include "pch.h"
 #include "mixing_n_ary_tree_weight_event_iterator.h"
-#include "mixing_n_ary_tree_visitor.h"
+#include "mixing_n_ary_tree_weight_transition_end_time_calculator.h"
 #include "mixing_n_ary_tree_animation_node.h"
 #include "mixing_n_ary_tree_weight_transition_node.h"
 #include "mixing_n_ary_tree_weight_node.h"
@@ -19,125 +19,83 @@ namespace vostok {
 namespace animation {
 namespace mixing {
 
-class n_ary_tree_weight_transition_end_time_calculator :
-	public n_ary_tree_visitor,
-	public boost::noncopyable
+void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_animation_node& node )
 {
-public:
-	inline	n_ary_tree_weight_transition_end_time_calculator( ) : m_weight_transition_end_time_in_ms( u32(-1) ), m_event_type( 0 ) { }
-	inline	u32		weight_transition_end_time				( ) const { return m_weight_transition_end_time_in_ms; }
-	inline	u16		event_type								( ) const { return m_event_type; }
-
 	// claude@NOTE: target spills min_weight before the virtual call and reloads float_max; base hoists float_max into xmm2.
-	virtual	void	visit									( n_ary_tree_animation_node& node )
-	{
-		u32 const operands_count		= node.operands_count( );
-		n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_animation_node) );
-		n_ary_tree_base_node** const e	= i + operands_count;
+	u32 const operands_count		= node.operands_count( );
+	n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_animation_node) );
+	n_ary_tree_base_node** const e	= i + operands_count;
 
-		if ( operands_count && (*i)->is_time_scale() )
-			++i;
+	if ( operands_count && (*i)->is_time_scale() )
+		++i;
 
-		m_min_weight					= math::float_max;
+	m_min_weight					= math::float_max;
+	m_weight_transition_end_time_in_ms	= u32( -1 );
+
+	for ( ; i != e; ++i ) {
+		float const min_weight		= m_min_weight;
+		u32 const weight_transition_end_time	= m_weight_transition_end_time_in_ms;
+
+		m_min_weight				= math::float_max;
 		m_weight_transition_end_time_in_ms	= u32( -1 );
+		(*i)->accept				( *this );
 
-		for ( ; i != e; ++i ) {
-			float const min_weight		= m_min_weight;
-			u32 const weight_transition_end_time	= m_weight_transition_end_time_in_ms;
-
-			m_min_weight				= math::float_max;
-			m_weight_transition_end_time_in_ms	= u32( -1 );
-			(*i)->accept				( *this );
-
-			if ( m_min_weight > min_weight ) {
-				m_min_weight			= min_weight;
-				if ( min_weight == math::float_max )
-					m_weight_transition_end_time_in_ms	= weight_transition_end_time;
-				else
-					m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
-			}
-			else if ( m_min_weight == min_weight ) {
-				if ( min_weight == math::float_max )
-					m_weight_transition_end_time_in_ms	= weight_transition_end_time;
-				else
-					m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
-			}
+		if ( m_min_weight > min_weight ) {
+			m_min_weight			= min_weight;
+			if ( min_weight == math::float_max )
+				m_weight_transition_end_time_in_ms	= weight_transition_end_time;
+			else
+				m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
 		}
-
-		if ( m_weight_transition_end_time_in_ms == u32( -1 ) ) {
-			m_event_type				= 0;
-			return;
-		}
-
-		m_event_type					= time_event_weight_transitions_ended;
-		if ( m_min_weight == 0.f )
-			m_event_type				|= time_event_animation_lexeme_ended;
-	}
-
-	virtual	void visit										( n_ary_tree_weight_transition_node& node )
-	{
-		node.from( ).accept			( *this );
-		u32 const weight_transition_end_time	=
-			node.start_time_in_ms( ) + math::floor( node.interpolator( ).transition_time( ) * 1000.f );
-		float const min_weight			= node.to( ).is_transition( )
-			? m_min_weight
-			: static_cast_checked< n_ary_tree_weight_node& >( node.to( ) ).weight( );
-
-		if ( m_min_weight == min_weight )
-			m_weight_transition_end_time_in_ms	= math::min( weight_transition_end_time, m_weight_transition_end_time_in_ms );
-		else {
-			m_weight_transition_end_time_in_ms	= weight_transition_end_time;	 m_min_weight = min_weight;
+		else if ( m_min_weight == min_weight ) {
+			if ( min_weight == math::float_max )
+				m_weight_transition_end_time_in_ms	= weight_transition_end_time;
+			else
+				m_weight_transition_end_time_in_ms	= math::min( m_weight_transition_end_time_in_ms, weight_transition_end_time );
 		}
 	}
 
-	virtual	void visit										( n_ary_tree_time_scale_transition_node& node )
-	{
-		VOSTOK_UNREFERENCED_PARAMETER		( node );
-		NODEFAULT						( );
+	if ( m_weight_transition_end_time_in_ms == u32( -1 ) ) {
+		m_event_type				= 0;
+		return;
 	}
 
-	virtual	void visit										( n_ary_tree_weight_node& node )
-	{
-		m_min_weight					= node.weight( );
+	m_event_type					= time_event_weight_transitions_ended;
+	if ( m_min_weight == 0.f )
+		m_event_type				|= time_event_animation_lexeme_ended;
+}
+
+void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_weight_transition_node& node )
+{
+	node.from( ).accept			( *this );
+	u32 const weight_transition_end_time	=
+		node.start_time_in_ms( ) + math::floor( node.interpolator( ).transition_time( ) * 1000.f );
+	float const min_weight			= node.to( ).is_transition( )
+		? m_min_weight
+		: static_cast_checked< n_ary_tree_weight_node& >( node.to( ) ).weight( );
+
+	if ( m_min_weight == min_weight )
+		m_weight_transition_end_time_in_ms	= math::min( weight_transition_end_time, m_weight_transition_end_time_in_ms );
+	else {
+		m_weight_transition_end_time_in_ms	= weight_transition_end_time;	 m_min_weight = min_weight;
 	}
+}
 
-	virtual	void visit										( n_ary_tree_time_scale_node& node )
-	{
-		VOSTOK_UNREFERENCED_PARAMETER		( node );
-		NODEFAULT						( );
-	}
+void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_time_scale_transition_node& node )
+{
+	VOSTOK_UNREFERENCED_PARAMETER		( node );
+	NODEFAULT						( );
+}
 
-	virtual	void visit										( n_ary_tree_addition_node& node )
-	{
-		n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_addition_node) );
-		n_ary_tree_base_node** const e	= i + node.operands_count( );
-		for ( ; i != e; ++i )
-			(*i)->accept				( *this );
-	}
+void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_weight_node& node )
+{
+	m_min_weight					= node.weight( );
+}
 
-	virtual	void visit										( n_ary_tree_subtraction_node& node )
-	{
-		n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_addition_node) );
-		n_ary_tree_base_node** const e	= i + node.operands_count( );
-		for ( ; i != e; ++i )
-			(*i)->accept				( *this );
-	}
-
-	virtual	void visit										( n_ary_tree_multiplication_node& node )
-	{
-		n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_addition_node) );
-		n_ary_tree_base_node** const e	= i + node.operands_count( );
-		for ( ; i != e; ++i )
-			(*i)->accept				( *this );
-	}
-
-private:
-	u32		m_weight_transition_end_time_in_ms;
-	float	m_min_weight;
-	u16		m_event_type;
-}; // class n_ary_tree_weight_transition_end_time_calculator
-
-STATIC_SIZE_ASSERT(n_ary_tree_weight_transition_end_time_calculator, 0x10);
+void n_ary_tree_weight_transition_end_time_calculator::visit( n_ary_tree_addition_node& node )
+{
+	VOSTOK_UNREFERENCED_PARAMETER		( node );
+}
 
 void n_ary_tree_weight_event_iterator::invert_times( u32 const time_in_ms )
 {
