@@ -686,6 +686,35 @@ def strict_source_alias_candidates(
     ]
 
 
+def exact_paired_source_alias(
+    source_rec,
+    candidate_aliases_by_name,
+    paired_candidate_rvas,
+    source_alias_names_by_rva=None,
+    candidate_alias_names_by_rva=None,
+):
+    """Return one exact source alias already represented by a paired RVA.
+
+    ICF may fold several target functions onto one RVA while the base keeps a
+    separate body for every symbol (or vice versa).  The extra bodies are not
+    unexplained source: a rich record with the same complete demangled name,
+    compatible source ownership, and identical instructions proves that the
+    paired side already represents the function.
+    """
+    candidates = strict_source_alias_candidates(
+        source_rec,
+        candidate_aliases_by_name,
+        set(),
+        allow_used=True,
+        target_alias_names_by_rva=source_alias_names_by_rva,
+        base_alias_names_by_rva=candidate_alias_names_by_rva,
+    )
+    candidates = [
+        rec for rec in candidates if rec["rva"] in paired_candidate_rvas
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
 def file_mtime_iso(path):
     import datetime
 
@@ -984,6 +1013,9 @@ def regen():
     if n_compiler_alias:
         log(f"cross-name paired {n_compiler_alias} exact compiler aliases")
 
+    target_aliases_by_name = {}
+    for rec in target_records:
+        target_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
     base_aliases_by_name = {}
     for rec in base_records:
         base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
@@ -1342,6 +1374,13 @@ def regen():
         rec = base[mangled]
         near = target_only_parts.get(mangled_name_part(mangled))
         qn = qualified_name(rec["name"])
+        folded_target = exact_paired_source_alias(
+            rec,
+            target_aliases_by_name,
+            used_target_rvas,
+            source_alias_names_by_rva=base_alias_names_by_rva,
+            candidate_alias_names_by_rva=target_alias_names_by_rva,
+        )
         if qn is None or mangled.startswith("??__") or "?A0x" in mangled:
             # thunks, backtick names, dynamic initializers/finalizers, anon-ns
             status, detail = "COMPILER", None
@@ -1349,6 +1388,12 @@ def regen():
             status, detail = "ANCHOR", None  # our reachability scaffolding
         elif near is not None:
             status, detail = "NEAR_MISS", near
+        elif folded_target is not None:
+            status = "JITTER"
+            detail = (
+                f"exact ICF alias of {folded_target['mangled']} "
+                f"at target RVA 0x{folded_target['rva']:x}"
+            )
         elif mangled in old_history:
             status, detail = "JITTER", None
         elif declared_methods or declared_free:

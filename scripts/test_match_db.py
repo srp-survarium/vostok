@@ -217,6 +217,23 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             [],
         )
 
+    def test_finds_exact_alias_already_represented_by_paired_rva(self):
+        base = self.record(rva=0x2000)
+        target = self.record(rva=0x1000)
+        aliases = {base["name"]: {target["rva"]: target}}
+
+        self.assertEqual(
+            MATCH_DB.exact_paired_source_alias(base, aliases, {target["rva"]}),
+            target,
+        )
+
+    def test_rejects_exact_alias_at_unpaired_rva(self):
+        base = self.record(rva=0x2000)
+        target = self.record(rva=0x1000)
+        aliases = {base["name"]: {target["rva"]: target}}
+
+        self.assertIsNone(MATCH_DB.exact_paired_source_alias(base, aliases, set()))
+
 
 class DynamicThunkAliasTests(unittest.TestCase):
     def test_canonicalizes_local_static_scope_in_both_rich_spellings(self):
