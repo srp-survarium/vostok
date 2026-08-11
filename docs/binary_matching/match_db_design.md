@@ -155,8 +155,10 @@ and ICF/fold diagnosis. It is not correctness-facing MAX evidence.
 `source_maxima` is the separate HoMM2-style ledger. A refresh records the
 current fuzzy score and compiled-state identity under an effective hash made
 from the function's source extent plus conservative module/compiler context:
-module and shared headers, project files, anchor sources, and pinned
-build/delink configuration.
+the complete owning implementation file when the PDB identifies one, module
+and shared headers, project files, anchor sources, and pinned build/delink
+configuration. Hashing the complete translation unit is required because LTCG
+can change a function after an edit to a different body in the same `.cpp`.
 
 When objdiff omits a function score, refresh may recover only a strict exact
 observation from the rich indexes: target and base must have equal size and an
