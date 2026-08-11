@@ -1,0 +1,39 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed residual n_ary_tree observations from the disposable game_core-before-animation LTCG link. These are partial MAX states for the existing target-era bodies; no row is claimed exact.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z",
+      "module": "animation",
+      "expected_hash": "dc4971413022.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 69.64286,
+      "review": "Target and candidate retain the same fifteen attributed body statements, the exact five target PDB locals, and the complete weight, pinned-frame, quaternion, and movement-accumulation sequence. The residual is LTCG register allocation, wrapper inlining, and straight-line quaternion scheduling."
+    },
+    {
+      "mangled": "?update_animation_time@n_ary_tree@mixing@animation@vostok@@CAXAAUanimation_state@234@@Z",
+      "module": "animation",
+      "expected_hash": "e69fbde4421a.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 62.050846,
+      "review": "The target-era interval, temporary pinned animation, length, threshold, and clamped assignment source is verified. Target has six versus candidate five attributed body statements because LTCG groups the pinned-wrapper lifetime and retains a target-only tail range; this remains partial evidence."
+    },
+    {
+      "mangled": "?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "e560232013d7.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 77.99083,
+      "review": "The complete 26-statement source, identical nineteen-block current CFG, callback construction, remove/update/dispatch ordering, and destructor loop are verified. The island PDB groups several later phases differently and retains 23 versus 24 attributed body statements, so the score is recorded only as partial MAX."
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 83.083336,
+      "review": "The target-era nested animation/channel/callback loops and real comparer call are verified. Target has 22 versus candidate 24 attributed body statements; the first control-skeleton divergence occurs only in LTCG scheduling of managed-resource callback construction, and the target omits the source-required comparator local from PDB locals."
+    }
+  ]
+}
