@@ -47,10 +47,10 @@ void constants_handler<shader_type>::assign( shader_constant_table const * table
 	if( m_current)
 	{
 		// Update hosts
-		shader_constant_table::constants_type::const_iterator it = m_current->m_table.begin();
-		shader_constant_table::constants_type::const_iterator end = m_current->m_table.end();
+		shader_constant_table::c_table::const_iterator it = m_current->m_table.begin();
+		shader_constant_table::c_table::const_iterator end = m_current->m_table.end();
 
-		shader_constant_table::buffers_type const & buffers = m_current->m_const_buffers;
+		shader_constant_table::c_buffers const & buffers = m_current->m_const_buffers;
 
 		u32 update_marker = backend::ref().constant_update_counter();
 		for( ; it != end; ++it)
@@ -90,10 +90,10 @@ void constants_handler<shader_type>::assign( shader_constant_table const * table
 template <enum_shader_type shader_type>
 void constants_handler <shader_type>::gather_data()
 {
-	shader_constant_table::constants_type::const_iterator	it	= m_current->m_table.begin();
-	shader_constant_table::constants_type::const_iterator	end	= m_current->m_table.end();
+	shader_constant_table::c_table::const_iterator	it	= m_current->m_table.begin();
+	shader_constant_table::c_table::const_iterator	end	= m_current->m_table.end();
 
-	shader_constant_table::buffers_type const & buffers = m_current->m_const_buffers;
+	shader_constant_table::c_buffers const & buffers = m_current->m_const_buffers;
 	for ( ; it!=end; ++it)
 	{
 		u32 buff_ind = it->slot().buffer_index();
@@ -130,8 +130,8 @@ void constants_handler<shader_type>::update_buffers()
 {
 	if( m_current)
 	{
-		shader_constant_table::buffers_type::const_iterator	it = m_current->m_const_buffers.begin();
-		shader_constant_table::buffers_type::const_iterator	end = m_current->m_const_buffers.end();
+		shader_constant_table::c_buffers::const_iterator	it = m_current->m_const_buffers.begin();
+		shader_constant_table::c_buffers::const_iterator	end = m_current->m_const_buffers.end();
 
 		for( ; it != end; ++it)
 			(*it)->update();

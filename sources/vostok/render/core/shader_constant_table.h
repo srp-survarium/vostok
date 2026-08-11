@@ -19,8 +19,8 @@ class shader_constant_bindings;
 
 class shader_constant_table : public resource_intrusive_base {
 public:
-	typedef vector<shader_constant> constants_type;
-	typedef vector<shader_constant_buffer_ptr> buffers_type;
+	typedef vector<shader_constant_buffer_ptr> c_buffers;
+	typedef vector<shader_constant> c_table;
 
 	shader_constant_table( ) :
 		m_is_registered( false )
@@ -46,7 +46,7 @@ public:
 	bool parse( ID3D11ShaderReflection* reflection, enum_shader_type destination );
 	void apply_bindings( shader_constant_bindings const& bindings );
 
-	shader_constant const* get( pcstr name ) const
+	shader_constant const* get( pcstr const name ) const
 	{
 		return const_cast<shader_constant_table*>( this )->get( name );
 	}
@@ -74,10 +74,9 @@ public:
 		u32 buffer_index
 	);
 	bool is_registered( ) const { return m_is_registered; }
-	~shader_constant_table( ) { }
 
 private:
-	shader_constant* get( pcstr name );
+	shader_constant* get( pcstr const name );
 	void fatal( pcstr msg )
 	{
 		VOSTOK_UNREFERENCED_PARAMETER( msg );
@@ -85,8 +84,8 @@ private:
 	}
 
 public:
-	constants_type m_table;
-	buffers_type m_const_buffers;
+	c_table m_table;
+	c_buffers m_const_buffers;
 	bool m_is_registered;
 };
 
