@@ -96,10 +96,7 @@ grass_patch::grass_patch(
 {
 	VOSTOK_UNREFERENCED_PARAMETER( in_size );
 
-	for ( u32 i = 0; i != 3; ++i ) {
-		m_merged_indices[i] = 0;
-		m_sort_info[i] = 0;
-	}
+	m_merged_indices[0] = 0; m_sort_info[0] = 0; m_merged_indices[1] = 0; m_sort_info[1] = 0; m_merged_indices[2] = 0; m_sort_info[2] = 0;
 
 	if ( options::ref( ).current.m_use_vegetation_trample ) {
 		m_movement_rt = resource_manager::ref( ).create_render_target(
