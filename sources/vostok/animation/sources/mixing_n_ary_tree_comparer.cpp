@@ -498,8 +498,7 @@ void n_ary_tree_comparer::new_time_scale_transition( float from, n_ary_tree_base
 void n_ary_tree_comparer::new_weight_transition( n_ary_tree_base_node& from, n_ary_tree_base_node& to )
 {
 	m_equal						= false;
-	base_interpolator const& interpolator	= static_cast< n_ary_tree_weight_node& >( to ).interpolator( );
-	if ( interpolator.transition_time( ) == 0.f ) {
+	if ( static_cast< n_ary_tree_weight_node& >( to ).interpolator( ).transition_time( ) == 0.f ) {
 		increase_buffer_size		( to );
 		return;
 	}
