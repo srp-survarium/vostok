@@ -24,10 +24,9 @@ public:
 
 			bool	is_empty			( ) const;
 	inline	bool	is_moving			( ) const { /* no source */ }
-	// claude@MATCH: body proven by weapon_user_animations_selector::tick target asm
-	// ([input+10h] & 0x200 with the !=0 neg/sbb/neg bool materialization). sushi@TODO: mask constant
-	inline	bool	is_trying_to_sprint	( ) const { return ( actions_mask & 0x200 ) != 0; }
-	inline	bool	is_sprinting		( ) const;
+	// Target callers materialize the bool result before consuming it.
+	__forceinline bool is_trying_to_sprint	( ) const { return ( actions_mask & 0x200 ) != 0; }
+	__declspec(noinline) inline bool is_sprinting	( ) const;
 	inline	bool	is_walking			( ) const { /* no source */ }
 	inline	bool	is_crouching		( ) const { return ( actions_mask & 0x100 ) != 0; }
 	inline	bool	is_jumping			( ) const { return ( actions_mask & 0x10 ) != 0; }

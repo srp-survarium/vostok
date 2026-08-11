@@ -1763,13 +1763,6 @@ namespace vostok
 	}
 
 
-	void use_game_core_player_input()
-	{
-		survarium::player_input input;
-		input.is_sprinting();
-		input.is_empty();
-	}
-
 	// Retains inventory and body-part serialization until their real callers are reconstructed.
 	void use_game_core_serialization(
 		network_core::udp_match_packet*	packet
@@ -2411,7 +2404,6 @@ namespace vostok
 		use_game_core_affects_threshold();
 		use_game_core_player_stamina();
 		use_game_core_player_stealth();
-		use_game_core_player_input();
 		use_game_core_serialization( NULL );
 		use_game_core_weapon_state();
 		use_game_core_player_logic_base_state();
