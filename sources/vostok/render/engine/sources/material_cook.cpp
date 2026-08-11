@@ -10,10 +10,11 @@ void material_cook::translate_query(
 	resources::query_result_for_cook& parent
 )
 {
-	if ( parent.user_data() )
+	resources::user_data_variant* const user_data = parent.user_data();
+	if ( user_data )
 	{
 		configs::binary_config_ptr			cfg;
-		parent.user_data()->try_get			(cfg);
+		user_data->try_get					(cfg);
 		on_material_binary_config_loaded	( &parent, cfg.c_ptr() );
 	}
 	else
