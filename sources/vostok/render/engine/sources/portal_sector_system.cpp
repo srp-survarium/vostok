@@ -199,8 +199,11 @@ bool cull_points_by_frustum( math::frustum const& f, float3 (&io_points)[4] )
 			if ( math::is_zero( distance ) || distance > 0.f )
 				pos.push_back( temp[i] );
 			float3 intersection_position;
-			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) && ( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) ) )
-				pos.push_back( intersection_position );
+			if ( f.planes( )[plane_id].plane.intersect_segment( temp[i], temp[( i + 1 ) % temp_count], intersection_position ) )
+			{
+				if ( pos.empty( ) || !pos.back( ).is_similar( intersection_position ) )
+					pos.push_back( intersection_position );
+			}
 		}
 		if ( pos.size( ) < 3 )
 			return false;
