@@ -687,7 +687,7 @@ void portal_sector_system::make_frustum_images( float3 const& view_dir )
 	float3* output = furthest_vertices;
 	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
 	{
-		*output = i->get_aabb( ).vertex( furthest_vertex_id );
+		new ( output ) float3( i->get_aabb( ).vertex( furthest_vertex_id ) );
 	}
 	m_preventer->make_frustum_images( furthest_vertices );
 }
