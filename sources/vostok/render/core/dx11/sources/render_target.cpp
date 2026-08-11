@@ -59,9 +59,9 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 
 		desc_rt.Format							= format;
 		desc_rt.ViewDimension					= in_texture->array_size() > 1 ? D3D_DSV_DIMENSION_TEXTURE2DARRAY : D3D_DSV_DIMENSION_TEXTURE2D;
-		desc_rt.Texture2DArray.MipSlice			= first_array_slice_index;
+		desc_rt.Texture2DArray.MipSlice			= mip_slice;
 		desc_rt.Texture2DArray.ArraySize		= 1;
-		desc_rt.Texture2DArray.FirstArraySlice	= 0;
+		desc_rt.Texture2DArray.FirstArraySlice	= first_array_slice_index;
 
 		switch (desc_rt.Format)
 		{
@@ -83,14 +83,14 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 		if (in_texture->array_size() > 1)
 		{
 			desc_rt.ViewDimension					= D3D_RTV_DIMENSION_TEXTURE2DARRAY;
-			desc_rt.Texture2DArray.MipSlice			= first_array_slice_index;
+			desc_rt.Texture2DArray.MipSlice			= mip_slice;
 			desc_rt.Texture2DArray.ArraySize		= 1;
-			desc_rt.Texture2DArray.FirstArraySlice	= 0;
+			desc_rt.Texture2DArray.FirstArraySlice	= first_array_slice_index;
 		}
 		else
 		{
 			desc_rt.ViewDimension					= D3D11_RTV_DIMENSION_TEXTURE2D;
-			desc_rt.Texture2D.MipSlice				= first_array_slice_index;
+			desc_rt.Texture2D.MipSlice				= mip_slice;
 		}
 
 		CHECK_RESULT( device::ref().d3d_device()->CreateRenderTargetView( in_texture->hw_texture(), &desc_rt, &m_rt ) );
