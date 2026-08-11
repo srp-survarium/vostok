@@ -34,7 +34,7 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_animation_node& node )
 	u32 const operands_count		= node.operands_count( );
 	n_ary_tree_base_node** e		= i + operands_count;
 
-	if ( (*i)->is_time_scale() ) {
+	if ( operands_count && (*i)->is_time_scale() ) {
 		++i;
 	}
 
