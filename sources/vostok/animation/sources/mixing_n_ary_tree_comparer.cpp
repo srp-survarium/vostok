@@ -655,7 +655,7 @@ void n_ary_tree_comparer::new_weight_driving_animation(
 void n_ary_tree_comparer::change_animation(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
-	bool							is_new_driving_animation
+	const bool						is_new_driving_animation
 )
 {
 	if ( ( to.is_transitting_to_zero( ) && !from.is_transitting_to_zero( ) )
