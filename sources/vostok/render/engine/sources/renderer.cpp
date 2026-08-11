@@ -676,8 +676,7 @@ static float screen_factor( float3 const& view_position, math::aabb bbox, float4
 	bbox.modify					( model_transform );
 	float3 const center			= bbox.center( );
 	float3 const extents		= bbox.extents( );
-	float const distance		= math::squared_length( view_position - center );
-	return						( math::clamp_r( math::max( extents.x, extents.y, extents.z )/math::max( distance, math::epsilon_6 ), 0.f, 1.f ) );
+	return						( math::clamp_r( math::max( extents.x, extents.y, extents.z )/math::max( math::squared_length( view_position - center ), math::epsilon_6 ), 0.f, 1.f ) );
 }
 
 void renderer::fill_opaque_models( )
