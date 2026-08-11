@@ -16,15 +16,8 @@ const D3D11_INPUT_ELEMENT_DESC vertex_layout[] = {
 sky_dome_geometry::sky_dome_geometry( ) :
 	m_stride		( sizeof( vertex_type ) )
 {
-	u32 const num_vertices = 256;
-	u32 const num_indices = 1260;
-
-	vertex_type* vertices = static_cast<vertex_type*>( ALLOCA( m_stride * num_vertices ) );
-	u16* indices = static_cast<u16*>( ALLOCA( sizeof(u16) * num_indices ) );
-	vertex_type* vertices_it = vertices;
-	for ( u32 i = 0; i < num_vertices; ++i )
-		new (vertices_it++) vertex_type;
-
+	vertex_type vertices[256];
+	u16 indices[1260];
 	u32 vertex_index = 0;
 
 	for ( float i = 0.f; i < 16.f; i += 1.f )
@@ -101,20 +94,20 @@ sky_dome_geometry::sky_dome_geometry( ) :
 		array_size( vertex_layout )
 	);
 	m_vertex_buffer = resource_manager::ref( ).create_buffer(
-		m_stride * num_vertices,
+		m_stride * array_size( vertices ),
 		vertices,
 		enum_buffer_type_vertex,
 		false,
 		false
 	);
 	m_index_buffer = resource_manager::ref( ).create_buffer(
-		sizeof(u16) * num_indices,
+		sizeof( indices ),
 		indices,
 		enum_buffer_type_index,
 		false,
 		false
 	);
-	m_num_indices = num_indices;
+	m_num_indices = array_size( indices );
 }
 
 void sky_dome_geometry::draw( )
