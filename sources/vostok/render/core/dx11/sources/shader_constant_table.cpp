@@ -315,10 +315,10 @@ s32 shader_constant_table::compare( shader_constant_table const& other ) const
 			return 1;
 	}
 
-	if ( m_table.size( ) < other.m_table.size( ) )
+	if ( other.m_table.size( ) < m_table.size( ) )
 		return -1;
 
-	return other.m_table.size( ) < m_table.size( ) ? 1 : 0;
+	return m_table.size( ) < other.m_table.size( ) ? 1 : 0;
 }
 
 void shader_constant_table::apply_bindings( shader_constant_bindings const & bindings)
