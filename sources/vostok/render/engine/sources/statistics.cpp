@@ -13,10 +13,8 @@ struct vertex;
 
 statistics_group::statistics_group( pcstr group_name ) :
 	first_statistics( 0 ),
-	m_name( group_name ),
-	m_next( 0 )
+	m_name( group_name )
 {
-	// FUNCTION BODY[0x638c60]
 	m_next							= statistics::ref().first_group;
 	statistics::ref().first_group	= this;
 }
