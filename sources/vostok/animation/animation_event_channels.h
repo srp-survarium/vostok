@@ -29,6 +29,10 @@ static	u32		count_internal_memory_size(
 						bi_spline_event_channel_baked const* channels,
 						u32 channels_count
 					);
+static inline u32 count_internal_memory_size( animation_event_channels const& event_channels );
+
+public:
+inline	void	create_in_place_internals ( animation_event_channels const& event_channels, void* memory_buff );
 
 public:
 template	<class ConfigValueType>
@@ -39,17 +43,14 @@ void create_in_place_internals ( ConfigValueType const& config, void* memory_buf
 						void* memory_buffer
 					);
 
-public:
-		void				create_in_place_internals ( animation_event_channels const& event_channels, void* memory_buff );
-
 #ifndef	MASTER_GOLD
 public:
 		void				write( configs::lua_config_value &cfg )const;
 #endif
 
 public:
-		size_t				internal_memory_size	()const;
-		void				copy_internals			( void* mem_buff )const;
+	inline	size_t				internal_memory_size	()const;
+	inline	void				copy_internals			( void* mem_buff )const;
 
 public:
 inline	u32						channels_count		( )	const		{ return m_channels_count; }

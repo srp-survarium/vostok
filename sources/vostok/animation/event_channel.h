@@ -30,11 +30,12 @@ public:
 public:
 	template < class ConfigValueType >
 	static inline u32			count_internal_memory_size	( ConfigValueType const& config  );
-	static	u32					count_internal_memory_size	( bi_spline_event_channel_baked const& channel );
+	static inline u32			count_internal_memory_size	( bi_spline_event_channel_baked const& channel );
+	static inline u32			count_internal_memory_size	( event_channel const& channel );
 
 	template < class ConfigValueType >
 	inline	void				create_in_place_internals	( ConfigValueType const& config, void* memory_buff );
-			void				create_in_place_internals	( bi_spline_event_channel_baked const& channel, void* memory_buff );
+	inline	void				create_in_place_internals	( bi_spline_event_channel_baked const& channel, void* memory_buff );
 
 #ifndef	MASTER_GOLD
 public:
@@ -42,7 +43,7 @@ public:
 #endif // #ifndef MASTER_GOLD
 
 public:
-			u32					internal_memory_size		( )const;
+	inline	u32					internal_memory_size		( )const;
 	inline	u32					domain_id					( float t, u32& current_domain  ) const	{ return m_time_channel.domain( t, current_domain  ); }
 	inline	domain_data const&	domain						( u32 id ) const						{ return m_time_channel.domain( id ); }
 	inline	u32					domains_count				( ) const								{ return m_time_channel.domains_count(); }
@@ -64,6 +65,8 @@ private:
 } // namespace animation
 } // namespace vostok
 
-#include <vostok/animation/event_channel_inline.h>
+#ifndef ANIMATION_BI_SPLINE_EVENT_CHANNEL_BAKED_H_INCLUDED
+#	include <vostok/animation/event_channel_inline.h>
+#endif
 
 #endif // #ifndef VOSTOK_ANIMATION_EVENT_CHANNEL_H_INCLUDED

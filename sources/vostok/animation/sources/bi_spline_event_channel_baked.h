@@ -50,4 +50,6 @@ STATIC_SIZE_ASSERT(bi_spline_event_channel_baked, 0x10);
 } // namespace animation
 } // namespace vostok
 
+#include <vostok/animation/event_channel_inline.h>
+
 #endif // #ifndef ANIMATION_BI_SPLINE_EVENT_CHANNEL_BAKED_H_INCLUDED
