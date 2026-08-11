@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed destruction-cone observations from the disposable late game_core-before-animation LTCG link. All three source bodies retain target statement structure and become exact in the isolated report; the compiler-generated scalar deleting destructor is intentionally excluded because it has no rich-PDB source record.",
+  "link_perturbation": "animation moved to the original late game_core slot, immediately after game_core; all other libraries and link flags preserved",
+  "report_sha256": "f848bf113ebf7afaf35503e4136d703dc5619c340cbfff86d0cf9ecb802ac71f",
+  "base_index_sha256": "7022a65eb443af9f1c27b5a016d99cc1c33740b974eec944ae6990bd8e2d0b4d",
+  "candidate_exe_sha256": "90d70b5166756eb5671198b9a4e04719820112817e10958eb706b455cdf30ccb",
+  "candidate_pdb_sha256": "e1ae9787dc9a266935b95af2793673044fd5e7bb590cb06ff0531e3bb562c885",
+  "functions": [
+    {
+      "mangled": "?visit@n_ary_tree_destroyer@mixing@animation@vostok@@EAEXAAVn_ary_tree_animation_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "564c2832fd8f.9fff9ae0c2fb519e.7c45577a28b987b4",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate retain the same propagation, interval bounds, and destruction loop; structure matches at five attributed body statements and 0x33 bytes."
+    },
+    {
+      "mangled": "?destroy_animation_intervals@binary_tree_animation_node@mixing@animation@vostok@@IAEXXZ",
+      "module": "animation",
+      "expected_hash": "cdcfe4747055.9fff9ae0c2fb519e.442670b4259c55c6",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate retain the same interval bounds and destruction loop; structure matches at two attributed body statements and 0x23 bytes."
+    },
+    {
+      "mangled": "??1animation_lexeme@mixing@animation@vostok@@UAE@XZ",
+      "module": "animation",
+      "expected_hash": "a1e4109a0ffa.9fff9ae0c2fb519e",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate retain the is_cloned guard and interval destruction call; structure matches at two attributed body statements and 0x6c bytes."
+    }
+  ]
+}
