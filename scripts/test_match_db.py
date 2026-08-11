@@ -172,6 +172,72 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             MATCH_DB.report_score_for_target(scalar, {vector: 88.5}), 88.5
         )
 
+    def test_uses_fuzzy_match_percent_not_unrelated_match_percent(self):
+        report = {
+            "units": [
+                {
+                    "name": "vostok/animation/example.cpp",
+                    "functions": [
+                        {
+                            "name": "?fn@@",
+                            "match_percent": 100.0,
+                            "fuzzy_match_percent": 42.5,
+                        }
+                    ],
+                }
+            ]
+        }
+
+        scores, _units = MATCH_DB.report_fuzzy_scores(report)
+
+        self.assertEqual(scores, {"?fn@@": 42.5})
+
+
+class RankIslandDeltaTests(unittest.TestCase):
+    def test_discovers_target_only_candidate_from_zero_floor(self):
+        delta = MATCH_DB.rank_island_delta(
+            87.5,
+            "source-hash",
+            previous=None,
+            current_fuzzy=None,
+        )
+
+        self.assertEqual(delta["previous_fuzzy_pct"], None)
+        self.assertEqual(delta["baseline_fuzzy_pct"], 0.0)
+        self.assertEqual(delta["gain_pct"], 87.5)
+        self.assertEqual(delta["exact_proven"], 0)
+
+    def test_rejects_would_be_gain_from_stale_source_epoch(self):
+        previous = {
+            "effective_hash": "current-hash",
+            "max_fuzzy_pct": 50.0,
+            "exact_proven": 0,
+        }
+
+        with self.assertRaisesRegex(ValueError, "source epoch disagrees"):
+            MATCH_DB.rank_island_delta(
+                75.0,
+                "stale-hash",
+                previous=previous,
+                current_fuzzy=50.0,
+            )
+
+    def test_ignores_non_improving_stale_observation(self):
+        previous = {
+            "effective_hash": "current-hash",
+            "max_fuzzy_pct": 75.0,
+            "exact_proven": 0,
+        }
+
+        self.assertIsNone(
+            MATCH_DB.rank_island_delta(
+                60.0,
+                "stale-hash",
+                previous=previous,
+                current_fuzzy=75.0,
+            )
+        )
+
 
 class EffectiveSourceHashTests(unittest.TestCase):
     def test_cpp_epoch_changes_when_another_function_in_the_tu_changes(self):
