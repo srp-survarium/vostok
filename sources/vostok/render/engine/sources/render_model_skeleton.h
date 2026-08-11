@@ -53,6 +53,8 @@ typedef resources::resource_ptr<
 
 class skeleton_render_model_instance : public render_model_instance_impl {
 public:
+	typedef render_model_instance_impl super;
+
 	skeleton_render_model_instance( );
 	virtual ~skeleton_render_model_instance( );
 
@@ -82,7 +84,7 @@ public:
 		return m_instances_count;
 	}
 
-	virtual u32 get_surfaces_count( u32 lod_id ) const;
+	virtual u32 get_surfaces_count( u32 ) const;
 	virtual void get_surface_stats( u32 surface_id, surface_stats& stats ) const;
 	virtual void get_bind_pose( float4x4* matrices, u32 count ) const;
 
