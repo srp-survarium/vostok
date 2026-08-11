@@ -58,7 +58,7 @@ static void fill_surface( render_target_ptr surf, renderer_context* context )
 	float z = 0.0f;
 
 	backend::ref().set_render_targets( &*surf, 0, 0, 0);
-	backend::ref().reset_depth_stencil_target();
+	backend::ref().set_depth_stencil_target(0);
 	backend::ref().clear_render_targets( vostok::math::color( 1.0f, 1.0f, 1.0f, 0.0f));
 
 	float2	p0( 0,0);
