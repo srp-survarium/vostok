@@ -30,10 +30,6 @@ inline addition_lexeme* addition_lexeme::cloned_in_buffer	( )
 	return				base_lexeme::cloned_in_buffer< addition_lexeme >( );
 }
 
-inline addition_lexeme::~addition_lexeme						( )
-{
-}
-
 template < typename T1, typename T2 >
 inline addition_lexeme& operator +							( T1& left, T2& right )
 {
