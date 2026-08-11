@@ -60,9 +60,11 @@ struct VOSTOK_NOVTABLE world {
 	virtual	void	tick						( u32 current_frame_id ) = 0;
 	virtual	void	clear_resources				( ) = 0;
 	virtual	void 	load						( pcstr project_resource_name ) = 0;
+	virtual	bool	is_loading					( ) const = 0;
 	virtual	void 	unload						( pcstr, bool ) = 0;
 	virtual	void 	on_application_activate		( ) = 0;
 	virtual	void 	on_application_deactivate	( ) = 0;
+	virtual	void	on_fullscreen_alttab		( bool first ) = 0;
 	virtual ui::world&		ui_world			( ) = 0;
 	virtual input::world&	input_world			( ) = 0;
 protected:

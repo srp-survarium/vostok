@@ -38,7 +38,7 @@ public:
 
 	virtual	void			load						( pcstr arg_0 ) override { /* no source */ }
 
-	virtual	bool			is_loading					( ) const { /* no source */ return false; }
+	virtual	bool			is_loading					( ) const override { /* no source */ return false; }
 
 	virtual	void			unload						( pcstr, bool ) override
 	{
@@ -47,8 +47,7 @@ public:
 	virtual	void			on_application_activate		( ) override { /* no source */ }
 	virtual	void			on_application_deactivate	( ) override { /* no source */ }
 
-	// not in our legacy engine_user.h world interface (see load above)
-	virtual	void			on_fullscreen_alttab		( bool arg_0 ) { /* no source */ }
+	virtual	void			on_fullscreen_alttab		( bool arg_0 ) override { /* no source */ }
 
 	virtual	ui::world&		ui_world					( ) override
 	{
