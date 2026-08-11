@@ -364,7 +364,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transit
 	if ( interpolator.transition_time() == 0.f ) {
 		n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 		m_buffer				+= sizeof( n_ary_tree_weight_node );
-		new ( result ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), 0.f );
+		new ( result ) n_ary_tree_weight_node( *m_cloner.clone( interpolator ), to );
 		return					result;
 	}
 
