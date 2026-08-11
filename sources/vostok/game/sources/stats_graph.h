@@ -61,9 +61,9 @@ public:
 	inline	float		cumulative_value	( ) const { /* no source */ return m_cumulative_value; }
 			float		average_value		( ) const;
 
+private:
 			void		adjust_time_interval( );
 
-private:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	stats_value*		m_newest_value;
 	/* 0x0004 */	stats_value*		m_values_pool;

@@ -49,9 +49,9 @@ void stats_graph::adjust_time_interval( )
 		return;
 
 	while ( m_newest_value->time - m_newest_value->next->next->time >= m_time_interval ) {
-		m_cumulative_value			-= m_newest_value->next->value;
-
 		stats_value* const old_value	= m_newest_value->next;
+
+		m_cumulative_value			-= old_value->value;
 		m_newest_value->next		= old_value->next;
 		old_value->next->previous	= m_newest_value;
 		--m_count;
@@ -125,10 +125,11 @@ float stats_graph::cumulative_time( ) const
 
 float stats_graph::average_value( ) const
 {
-	if ( math::is_zero( cumulative_time() ) )
+	const float current_cumulative_time	= cumulative_time( );
+	if ( math::is_zero( current_cumulative_time ) )
 		return						( 0.f );
 
-	return							( m_cumulative_value - m_newest_value->next->value ) / cumulative_time();
+	return							( m_cumulative_value - m_newest_value->next->value ) / current_cumulative_time;
 }
 
 void stats_graph::render(
