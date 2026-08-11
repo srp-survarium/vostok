@@ -18,6 +18,8 @@
 #include <vostok/game_core/inventory_cooker_data.h>
 #include <vostok/game_core/player_profile.h>
 #include <vostok/game_core/items_dictionary.h>
+#include <vostok/game_core/affects_applying_type_enum.h>
+#include <vostok/physics/animated_rigid_body.h>
 
 namespace survarium {
 
@@ -53,29 +55,89 @@ void player_cook::delete_resource( resources::resource_base* resource )
 	DELETE												( player_resource );
 }
 
-// claude@NOTE: on_config_loaded is CROSS-MODULE-BLOCKED on the (target-real but
-// unbuilt) base_player_creation_params::base_player_creation_params() ctor - NEW(
-// player_creation_params ) emits a call to it, but no game_core TU defines it
-// (anchor_game_core.cpp explicitly side-steps it as "no compiled default ctor"),
-// so the full body fails to LINK. Parked as a buildable stub until that base ctor
-// is matched in game_core; the faithful reconstruction (config root, the
-// vectora<request> skin/model/inventory/player_parameters push_backs, the recoil/
-// breath/dispersion/stamina/stealth loads, the inventory + parameters cooker_data,
-// and the 3-entry user_data query_resources -> on_subresources_loaded) is recorded
-// in the commit message.
-// STATE[STUB]
+// claude@NOTE: target inlines create_request at these push_back sites, while the
+// shared resources declaration keeps it out-of-line for another matched unit.
 void player_cook::on_config_loaded( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x5dde10]: 77
-	data.get_parent_query()->finish_query				( result_success );
+	resources::query_result_for_cook* const	parent		= data.get_parent_query( );
+
+
+
+
+	configs::binary_config_ptr					config		= static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	configs::binary_config_value const&			root		= config->get_root( )["player"];
+
+	vectora< resources::request >				requests	( g_allocator );
+
+	requests.push_back							( resources::create_request( "combined_skin_123", resources::player_skin_visual_class ) );
+
+
+	requests.push_back							( resources::create_request( "character/human/scavengers_01/sc", resources::skeleton_model_instance_class ) );
+
+	fs_new::virtual_path_string					damage_config_path;
+	damage_config_path.assignf					( "resources/models/%s.skinned_model/skeleton", (pcstr)root["skeleton_model_instance"] );
+	requests.push_back							( resources::create_request( damage_config_path.c_str( ), resources::binary_config_class_impl ) );
+
+	fs_new::virtual_path_string					model_settings_config_path;
+	model_settings_config_path.assignf			( "resources/models/%s.skinned_model/settings", (pcstr)root["skeleton_model_instance"] );
+	requests.push_back							( resources::create_request( model_settings_config_path.c_str( ), resources::binary_config_class_impl ) );
+
+
+	requests.push_back							( resources::create_request( "inventory", resources::inventory_class ) );
+	requests.push_back							( resources::create_request( "player_parameters", resources::player_parameters_class ) );
+
+	player_creation_params* params				= NEW( player_creation_params );
+
+	parent->user_data( )->try_get				( params->initial_info );
+
+	params->game_scene							= static_cast< base_game_scene* >( params->initial_info.game_scene );
+	params->foot_3rd_view_game_material_id		= root["foot_material_id"];
+	params->foot_1st_view_game_material_id		= root["foot_1st_view_material_id"];
+	params->recoil_params.load					( root["character_recoil_params"] );
+	params->breath_holding_params.load			( root["character_breath_holding_params"] );
+	params->dispersion_params.load				( root["character_dispersion_params"] );
+	params->initial_stamina.load					( root["stamina_params"] );
+	params->initial_stealth.load					( root["stealth_params"] );
+	params->items_dictionary						= &params->game_scene->get_game( ).items_dictionary( );
+
+	if ( params->initial_info.is_demo_player )
+		requests.push_back						( resources::create_request( root["empty_hands"], resources::empty_hands_class ) );
+
+	u32 const requests_count					= requests.size( );
+	buffer_vector< variant<32> const* > user_data	( ALLOCA( requests_count * sizeof( variant<32> const* ) ), requests_count, requests_count, NULL );
+
+	inventory_cooker_data* inventory_cook_data		= NEW( inventory_cooker_data );
+	inventory_cook_data->profile					= params->initial_info.profile;
+	inventory_cook_data->dictionary				= params->items_dictionary;
+	inventory_cook_data->damage_model				= NULL;
+
+	variant<32> ud_skin_visual;
+	ud_skin_visual.set							( params->initial_info.profile );
+	user_data[0]								= &ud_skin_visual;
+
+
+	variant<32> id;
+	id.set									( inventory_cook_data );
+	user_data[4]								= &id;
+
+	player_parameters_cooker_data* player_parameters_cook_data = NEW( player_parameters_cooker_data );
+	player_parameters_cook_data->profile			= params->initial_info.profile;
+	player_parameters_cook_data->dictionary			= params->items_dictionary;
+
+	variant<32> pd;
+	pd.set									( player_parameters_cook_data );
+	user_data[5]								= &pd;
+
+	resources::query_resources						(
+		requests.begin( ), requests_count,
+		boost::bind( &player_cook::on_subresources_loaded, this, _1, params, inventory_cook_data, player_parameters_cook_data ),
+		g_allocator,
+		user_data.begin( ),
+		parent,
+		assert_on_fail_true
+	);
 }
 
-// claude@NOTE: on_subresources_loaded is reconstructed to its tractable core
-// (free the cooker_data, assign character_model from data[0], requery the hit
-// params config -> on_hit_params_loaded). The target carries ~9 more statements
-// (server_character_model, empty_hands, foot/material-id and game_material lookups,
-// further model assignments) that read player_creation_params members still defined
-// only as game_core stubs; the residual is steerable once those are matched.
 void player_cook::on_subresources_loaded(
 	resources::queries_result&			data,
 	player_creation_params*				params,
@@ -84,22 +146,40 @@ void player_cook::on_subresources_loaded(
 )
 {
 	resources::query_result_for_cook* const	parent		= data.get_parent_query();
-
 	FREE												( inventory_cook_data );
 	FREE												( player_parameters_cook_data );
 
+
+
+
 	params->character_model								= static_cast_resource_ptr< render::skeleton_model_ptr >( data[0].get_unmanaged_resource() );
+	params->server_character_model							= static_cast_resource_ptr< render::skeleton_model_ptr >( data[1].get_unmanaged_resource() );
+	configs::binary_config_ptr damage_cfg					= static_cast_resource_ptr< configs::binary_config_ptr >( data[2].get_unmanaged_resource() );
+	configs::binary_config_ptr settings_cfg					= static_cast_resource_ptr< configs::binary_config_ptr >( data[3].get_unmanaged_resource() );
+	params->inventory										= static_cast_resource_ptr< inventory_ptr >( data[4].get_unmanaged_resource() );
+	params->player_parameters								= static_cast_resource_ptr< player_parameters_modifyer_ptr >( data[5].get_unmanaged_resource() );
+
+
+	params->empty_hands										= params->initial_info.is_demo_player ?
+		static_cast_resource_ptr< interactive_object_ptr >( data[6].get_unmanaged_resource() ) : NULL;
+	params->damage_collision								= physics::new_animated_bt_hit_model(
+		damage_cfg->get_root( ), params->character_model->m_skeleton, g_allocator );
 
 	fs_new::virtual_path_string							hit_params_config_path;
-	hit_params_config_path.assignf						( "resources/%s", data[2].get_requested_path() );
+	hit_params_config_path.assignf						( "resources/gameplay/hit_params/%s", (pcstr)settings_cfg->get_root( )["hit_params"] );
 
+
+	affects_applying_type_enum const affects_applying_type = params->initial_info.profile->is_local ? type_apply_directly : type_read_only;
+	resources::user_data_variant new_ud;
+	new_ud.set										( affects_applying_type );
 	resources::query_resource							(
-		hit_params_config_path.c_str(),
-		resources::binary_config_class_impl,
+		hit_params_config_path.c_str( ),
+		resources::damage_model_class,
 		boost::bind( &player_cook::on_hit_params_loaded, this, _1, params ),
 		g_allocator,
-		0,
-		parent
+		&new_ud,
+		parent,
+		assert_on_fail_true
 	);
 }
 

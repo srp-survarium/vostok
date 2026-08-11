@@ -34,8 +34,7 @@ private:
 public:
 	virtual			~player_cook			( ) { /* no source */ }
 
-	// codegen-neutral: lets the /OPT:REF reachability anchor address-take the
-	// private on_* callbacks while on_config_loaded is cross-module-stubbed.
+	// Lets the /OPT:REF reachability anchor address-take the private callbacks.
 	friend	void	use_game_player_cook	( );
 }; // class player_cook
 
