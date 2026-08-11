@@ -283,25 +283,22 @@ void options::register_console_commands( )
 	// FUNCTION BODY[0x55cfa0]
 	using namespace console_commands;
 
-	static cc_string current_render_configuration_cc("r_current_render_configuration", s_current_render_configuration, 256, true, command_type_engine_internal );
-	static cc_string resolution_cc("r_resolution", s_r_resolution_value, 16, true, command_type_engine_internal );
-
-	static render_cc_bool	enabled_g_stage_cc					("r_enabled_g_stage",					ocr_need_nothing, 0, current.m_enabled_g_stage,					previous.m_enabled_g_stage,					true, command_type_engine_internal);
-	static render_cc_bool	enabled_g_stage_pre_pass_cc			("r_enabled_g_stage_pre_pass",			ocr_need_nothing, 0, current.m_enabled_g_stage_pre_pass,		previous.m_enabled_g_stage_pre_pass,		true, command_type_engine_internal);
-	static render_cc_bool	enabled_g_stage_material_pass_cc	("r_enabled_g_stage_material_pass",		ocr_need_nothing, 0, current.m_enabled_g_stage_material_pass,	previous.m_enabled_g_stage_material_pass,	true, command_type_engine_internal);
-	static render_cc_bool	enabled_decals_accumulate_stage_cc	("r_enabled_decals_accumulate_stage",	ocr_need_nothing, 0, current.m_enabled_decals_accumulate_stage,	previous.m_enabled_decals_accumulate_stage,	true, command_type_engine_internal);
-	static render_cc_bool	enabled_distortion_stage_cc			("r_enabled_distortion_stage",			ocr_need_nothing, 0, current.m_enabled_distortion_stage,		previous.m_enabled_distortion_stage,		true, command_type_engine_internal);
-	static render_cc_bool	enabled_sun_shadows_stage_cc		("r_enabled_sun_shadows_stage",			ocr_need_nothing, 0, current.m_enabled_sun_shadows_stage,		previous.m_enabled_sun_shadows_stage,		true, command_type_engine_internal);
-	static render_cc_bool	enabled_sun_stage_cc				("r_enabled_sun_stage",					ocr_need_nothing, 0, current.m_enabled_sun_stage,				previous.m_enabled_sun_stage,				true, command_type_engine_internal);
-	static render_cc_bool	enabled_lighting_stage_cc			("r_enabled_lighting_stage",			ocr_need_nothing, 0, current.m_enabled_lighting_stage,			previous.m_enabled_lighting_stage,			true, command_type_engine_internal);
-	static render_cc_bool	enabled_forward_lighting_stage_cc	("r_enabled_forward_lighting_stage",	ocr_need_nothing, 0, current.m_enabled_forward_lighting_stage,	previous.m_enabled_forward_lighting_stage,	true, command_type_engine_internal);
-	static render_cc_bool	enabled_deferred_lighting_stage_cc	("r_enabled_deferred_lighting_stage",	ocr_need_nothing, 0, current.m_enabled_deferred_lighting_stage,	previous.m_enabled_deferred_lighting_stage,	true, command_type_engine_internal);
-	static render_cc_bool	enabled_forward_stage_cc			("r_enabled_forward_stage",				ocr_need_nothing, 0, current.m_enabled_forward_stage,			previous.m_enabled_forward_stage,			true, command_type_engine_internal);
-	static render_cc_bool	enabled_particles_stage_cc			("r_enabled_particles_stage",			ocr_need_nothing, 0, current.m_enabled_particles_stage,			previous.m_enabled_particles_stage,			true, command_type_engine_internal);
-	static render_cc_bool	enabled_post_process_stage_cc		("r_enabled_post_process_stage",		ocr_need_nothing, 0, current.m_enabled_post_process_stage,		previous.m_enabled_post_process_stage,		true, command_type_engine_internal);
-	static render_cc_bool	enabled_sky_box_stage_cc			("r_enabled_sky_box_stage",				ocr_need_nothing, 0, current.m_enabled_sky_box_stage,			previous.m_enabled_sky_box_stage,			true, command_type_engine_internal);
-	static render_cc_bool	enabled_ambient_occlusion_stage_cc	("r_enabled_ambient_occlusion_stage",	ocr_need_nothing, 0, current.m_enabled_ambient_occlusion_stage,	previous.m_enabled_ambient_occlusion_stage,	true, command_type_engine_internal);
-	static render_cc_bool	enabled_clouds_stage_cc				("r_enabled_clouds_stage",				ocr_need_nothing, 0, current.m_enabled_clouds_stage,			previous.m_enabled_clouds_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_g_stage_cc					("r_enabled_g_stage",					ocr_need_reset_renderer, 0, current.m_enabled_g_stage,					previous.m_enabled_g_stage,					true, command_type_engine_internal);
+	static render_cc_bool	enabled_g_stage_pre_pass_cc			("r_enabled_g_stage_pre_pass",			ocr_need_reset_renderer, 0, current.m_enabled_g_stage_pre_pass,		previous.m_enabled_g_stage_pre_pass,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_g_stage_material_pass_cc	("r_enabled_g_stage_material_pass",		ocr_need_reset_renderer, 0, current.m_enabled_g_stage_material_pass,	previous.m_enabled_g_stage_material_pass,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_decals_accumulate_stage_cc	("r_enabled_decals_accumulate_stage",	ocr_need_reset_renderer, 0, current.m_enabled_decals_accumulate_stage,	previous.m_enabled_decals_accumulate_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_distortion_stage_cc			("r_enabled_distortion_stage",			ocr_need_reset_renderer, 0, current.m_enabled_distortion_stage,		previous.m_enabled_distortion_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sun_shadows_stage_cc		("r_enabled_sun_shadows_stage",			ocr_need_reset_renderer, 0, current.m_enabled_sun_shadows_stage,		previous.m_enabled_sun_shadows_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sun_stage_cc				("r_enabled_sun_stage",					ocr_need_reset_renderer, 0, current.m_enabled_sun_stage,				previous.m_enabled_sun_stage,				true, command_type_engine_internal);
+	static render_cc_bool	enabled_lighting_stage_cc			("r_enabled_lighting_stage",			ocr_need_reset_renderer, 0, current.m_enabled_lighting_stage,			previous.m_enabled_lighting_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_forward_lighting_stage_cc	("r_enabled_forward_lighting_stage",	ocr_need_reset_renderer, 0, current.m_enabled_forward_lighting_stage,	previous.m_enabled_forward_lighting_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_deferred_lighting_stage_cc	("r_enabled_deferred_lighting_stage",	ocr_need_reset_renderer, 0, current.m_enabled_deferred_lighting_stage,	previous.m_enabled_deferred_lighting_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_forward_stage_cc			("r_enabled_forward_stage",				ocr_need_reset_renderer, 0, current.m_enabled_forward_stage,			previous.m_enabled_forward_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_particles_stage_cc			("r_enabled_particles_stage",			ocr_need_reset_renderer, 0, current.m_enabled_particles_stage,			previous.m_enabled_particles_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_post_process_stage_cc		("r_enabled_post_process_stage",		ocr_need_reset_renderer, 0, current.m_enabled_post_process_stage,		previous.m_enabled_post_process_stage,		true, command_type_engine_internal);
+	static render_cc_bool	enabled_sky_box_stage_cc			("r_enabled_sky_box_stage",				ocr_need_reset_renderer, 0, current.m_enabled_sky_box_stage,			previous.m_enabled_sky_box_stage,			true, command_type_engine_internal);
+	static render_cc_bool	enabled_ambient_occlusion_stage_cc	("r_enabled_ambient_occlusion_stage",	ocr_need_reset_renderer, 0, current.m_enabled_ambient_occlusion_stage,	previous.m_enabled_ambient_occlusion_stage,	true, command_type_engine_internal);
+	static render_cc_bool	enabled_clouds_stage_cc				("r_enabled_clouds_stage",				ocr_need_reset_renderer, 0, current.m_enabled_clouds_stage,			previous.m_enabled_clouds_stage,			true, command_type_engine_internal);
 
 	// Terrain parameters.
 	static render_cc_bool	enabled_draw_terrain_cc				("r_enabled_draw_terrain",				ocr_need_nothing, 0, current.m_enabled_draw_terrain,			previous.m_enabled_draw_terrain,			true, command_type_engine_internal);
@@ -318,6 +315,7 @@ void options::register_console_commands( )
 	// Models parameters.
 	static render_cc_bool	enabled_draw_models_cc				("r_enabled_draw_models",				ocr_need_nothing, 0, current.m_enabled_draw_models,				previous.m_enabled_draw_models,				true, command_type_engine_internal);
 
+	static render_cc_bool	enabled_sharpen_cc					("r_enabled_sharpen",					ocr_need_nothing, 0, current.m_enabled_sharpen,					previous.m_enabled_sharpen,					true, command_type_engine_internal);
 	static render_cc_bool	enabled_fxaa_cc						("r_enabled_fxaa",						ocr_need_nothing, 0, current.m_enabled_fxaa,					previous.m_enabled_fxaa,					true, command_type_engine_internal);
 	static render_cc_bool	enabled_mlaa_cc						("r_enabled_mlaa",						ocr_need_nothing, 0, current.m_enabled_mlaa,					previous.m_enabled_mlaa,					true, command_type_engine_internal);
 	static render_cc_bool	use_cpu_mlaa_cc						("r_use_cpu_mlaa",						ocr_need_nothing, 0, current.m_use_cpu_mlaa,					previous.m_use_cpu_mlaa,					false, command_type_engine_internal);
@@ -325,26 +323,25 @@ void options::register_console_commands( )
 	// Lighting stage parameters.
 	static render_cc_bool	enabled_local_light_shadows_cc		("r_enabled_local_light_shadows",		ocr_need_nothing, 0, current.m_enabled_local_light_shadows,		previous.m_enabled_local_light_shadows,		true, command_type_engine_internal);
 
-	static render_cc_bool	use_parallax_cc						("r_use_parallax",						ocr_need_nothing, "GLOBAL_ALLOW_STEEPPARALLAX",				current.m_use_parallax, previous.m_use_parallax, true, command_type_engine_internal);
+	static render_cc_bool	use_parallax_cc						("r_use_parallax",						ocr_need_reset_renderer, "GLOBAL_ALLOW_STEEPPARALLAX",				current.m_use_parallax, previous.m_use_parallax, true, command_type_engine_internal);
 
 	static render_cc_u32	organic_irradiance_texture_size_cc	("r_organic_irradiance_texture_size",	ocr_need_nothing, "GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE",	current.m_organic_irradiance_texture_size, previous.m_organic_irradiance_texture_size, 128, 2048, true, command_type_engine_internal);
-	static render_cc_u32	shadow_map_size_cc					("r_shadow_map_size",					ocr_need_nothing, "GLOBAL_SHADOWMAP_SIZE",					current.m_shadow_map_size, previous.m_shadow_map_size, 128, 2048, true, command_type_engine_internal);
-	static render_cc_u32	spot_shadow_map_size_cc				("r_spot_shadow_map_size",				ocr_need_nothing, "GLOBAL_SPOT_SHADOWMAP_SIZE",				current.m_spot_shadow_map_size, previous.m_spot_shadow_map_size, 128, 2048, true, command_type_engine_internal);
-	static render_cc_u32	shadow_quality_cc					("r_shadow_quality",					ocr_need_nothing, "GLOBAL_SHADOWMAP_QUALITY",				current.m_shadow_quality, previous.m_shadow_quality, 0, 2, true, command_type_engine_internal);
-	static render_cc_float  test_float_option_cc				("r_test_float_option",					ocr_need_nothing, "GLOBAL_TEST_FLOAT",						current.m_test_float_option, previous.m_test_float_option, 0.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_u32	shadow_map_size_cc					("r_shadow_map_size",					ocr_need_reset_lighting, "GLOBAL_SHADOWMAP_SIZE",					current.m_shadow_map_size, previous.m_shadow_map_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32	spot_shadow_map_size_cc				("r_spot_shadow_map_size",				ocr_need_reset_lighting, "GLOBAL_SPOT_SHADOWMAP_SIZE",				current.m_spot_shadow_map_size, previous.m_spot_shadow_map_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32	shadow_quality_cc					("r_shadow_quality",					ocr_need_reset_lighting, "GLOBAL_SHADOWMAP_QUALITY",				current.m_shadow_quality, previous.m_shadow_quality, 0, 3, true, command_type_engine_internal);
 
 	// Light Propagation Volumes stage parameters.
-	static render_cc_bool	enabled_light_propagation_volumes_stage_cc	("r_enabled_light_propagation_volumes_stage",	ocr_need_nothing, 0, current.m_enabled_light_propagation_volumes_stage, previous.m_enabled_light_propagation_volumes_stage, true, command_type_engine_internal);
-	static render_cc_u32	light_propagation_volumes_rsm_size_cc		("r_light_propagation_volumes_rsm_size",		ocr_need_nothing, 0, current.m_light_propagation_volumes_rsm_size, previous.m_light_propagation_volumes_rsm_size, 1, 2048, true, command_type_engine_internal);
-	static render_cc_u32	num_radiance_volume_cells_cc				("r_num_radiance_volume_cells",					ocr_need_nothing, 0, current.m_num_radiance_volume_cells,	previous.m_num_radiance_volume_cells,	8, 128, true, command_type_engine_internal);
-	static render_cc_u32	num_propagate_iterations_cc					("r_num_propagate_iterations",					ocr_need_nothing, 0, current.m_num_propagate_iterations,	previous.m_num_propagate_iterations,	0, 32, true, command_type_engine_internal);
-	static render_cc_float	radiance_volume_scale_cc					("r_radiance_volume_scale",						ocr_need_nothing, 0, current.m_radiance_volume_scale,		previous.m_radiance_volume_scale,		1.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_bool	enabled_light_propagation_volumes_stage_cc	("r_enabled_light_propagation_volumes_stage",	ocr_need_reset_renderer, 0, current.m_enabled_light_propagation_volumes_stage, previous.m_enabled_light_propagation_volumes_stage, true, command_type_engine_internal);
+	static render_cc_u32	light_propagation_volumes_rsm_size_cc		("r_light_propagation_volumes_rsm_size",		ocr_need_reset_renderer, 0, current.m_light_propagation_volumes_rsm_size, previous.m_light_propagation_volumes_rsm_size, 1, 2048, true, command_type_engine_internal);
+	static render_cc_u32	num_radiance_volume_cells_cc				("r_num_radiance_volume_cells",					ocr_need_reset_renderer, 0, current.m_num_radiance_volume_cells,	previous.m_num_radiance_volume_cells,	8, 128, true, command_type_engine_internal);
+	static render_cc_u32	num_propagate_iterations_cc					("r_num_propagate_iterations",					ocr_need_reset_renderer, 0, current.m_num_propagate_iterations,	previous.m_num_propagate_iterations,	0, 32, true, command_type_engine_internal);
+	static render_cc_float	radiance_volume_scale_cc					("r_radiance_volume_scale",						ocr_need_reset_renderer, 0, current.m_radiance_volume_scale,		previous.m_radiance_volume_scale,		1.0f, 10000.0f, true, command_type_engine_internal);
 
 	static render_cc_float	lpv_flux_amplifier_cc						("r_lpv_flux_amplifier",						ocr_need_nothing, 0, current.m_lpv_flux_amplifier,			previous.m_lpv_flux_amplifier,			0.0f, 100.0f, true, command_type_engine_internal);
 	static render_cc_float	lpv_interreflection_contribution_cc			("r_lpv_interreflection_contribution",			ocr_need_nothing, 0, current.m_lpv_interreflection_contribution, previous.m_lpv_interreflection_contribution, 0.0f, 100.0f, true, command_type_engine_internal);
 	static render_cc_bool	lpv_movable_cc								("r_lpv_movable",								ocr_need_nothing, 0, current.m_lpv_movable,					previous.m_lpv_movable,					true, command_type_engine_internal);
 
-	static render_cc_u32	lpv_num_cascades_cc							("r_lpv_num_cascades",							ocr_need_nothing, 0, current.m_lpv_num_cascades,			previous.m_lpv_num_cascades,			1, 4, true, command_type_engine_internal);
+	static render_cc_u32	lpv_num_cascades_cc							("r_lpv_num_cascades",							ocr_need_reset_renderer, 0, current.m_lpv_num_cascades,			previous.m_lpv_num_cascades,			1, 4, true, command_type_engine_internal);
 
 	static render_cc_bool	lpv_gather_occluders_from_light_view_cc		("r_lpv_gather_occluders_from_light_view",		ocr_need_nothing, 0, current.m_lpv_gather_occluders_from_light_view, previous.m_lpv_gather_occluders_from_light_view, true, command_type_engine_internal);
 	static render_cc_bool	lpv_gather_occluders_from_camera_view_cc	("r_lpv_gather_occluders_from_camera_view",		ocr_need_nothing, 0, current.m_lpv_gather_occluders_from_camera_view, previous.m_lpv_gather_occluders_from_camera_view, true, command_type_engine_internal);
@@ -356,10 +353,75 @@ void options::register_console_commands( )
 	static render_cc_bool	lpv_disable_propagation_cc					("r_lpv_disable_propagation",					ocr_need_nothing, 0, current.m_lpv_disable_propagation,		previous.m_lpv_disable_propagation,		false, command_type_engine_internal);
 	static render_cc_bool	lpv_disable_lpv_lookup_cc					("r_lpv_disable_lpv_lookup",					ocr_need_nothing, 0, current.m_lpv_disable_lpv_lookup,		previous.m_lpv_disable_lpv_lookup,		false, command_type_engine_internal);
 
-	static render_cc_u32	lpv_refresh_once_per_frames_cc				("r_lpv_refresh_once_per_frames",				ocr_need_nothing, 0, current.m_lpv_refresh_once_per_frames,	previous.m_lpv_refresh_once_per_frames,	1, 20, true, command_type_engine_internal);
+	static render_cc_u32	lpv_refresh_once_per_frames_cc				("r_lpv_refresh_once_per_frames",				ocr_need_nothing, 0, current.m_lpv_refresh_once_per_frames,	previous.m_lpv_refresh_once_per_frames,	1, 1024, true, command_type_engine_internal);
 	static render_cc_float	lpv_occlusion_amplifier_cc					("r_lpv_occlusion_amplifier",					ocr_need_nothing, 0, current.m_lpv_occlusion_amplifier,		previous.m_lpv_occlusion_amplifier,		0.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_bool	lpv_use_specular_reflection_cc				("r_lpv_use_specular_reflection",				ocr_need_nothing, 0, current.m_lpv_use_specular_reflection,	previous.m_lpv_use_specular_reflection,	true, command_type_engine_internal);
 
 	static render_cc_u32	num_test_lights_cc							("r_num_test_lights",							ocr_need_nothing, 0, current.m_num_test_lights,				previous.m_num_test_lights,				16, 1024 * 1024, true, command_type_engine_internal);
+	static render_cc_float clouds_noise_octaves_cc("r_clouds_noise_octaves", ocr_need_nothing, 0, current.m_clouds_noise_octaves, previous.m_clouds_noise_octaves, 0.0f, 10000.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_noise_frequency_cc("r_clouds_noise_frequency", ocr_need_nothing, 0, current.m_clouds_noise_frequency, previous.m_clouds_noise_frequency, 0.0f, 10000000.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_noise_amplitude_cc("r_clouds_noise_amplitude", ocr_need_nothing, 0, current.m_clouds_noise_amplitude, previous.m_clouds_noise_amplitude, -10000.0f, 10000000.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_noise_power_cc("r_clouds_noise_power", ocr_need_nothing, 0, current.m_clouds_noise_power, previous.m_clouds_noise_power, -10000.0f, 10000000.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_height_cc("r_clouds_height", ocr_need_nothing, 0, current.m_clouds_height, previous.m_clouds_height, -10000.0f, 10000000.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_scale_cc("r_clouds_scale", ocr_need_nothing, 0, current.m_clouds_scale, previous.m_clouds_scale, -10000.0f, 10000000.0f, true, command_type_engine_internal);
+	static render_cc_u32 clouds_grid_width_cc("r_clouds_grid_width", ocr_need_nothing, 0, current.m_clouds_grid_width, previous.m_clouds_grid_width, 1, 2048, true, command_type_engine_internal);
+	static render_cc_u32 clouds_grid_height_cc("r_clouds_grid_height", ocr_need_nothing, 0, current.m_clouds_grid_height, previous.m_clouds_grid_height, 1, 256, true, command_type_engine_internal);
+	static render_cc_bool clouds_allow_moving_cc("r_clouds_allow_moving", ocr_need_nothing, 0, current.m_clouds_allow_moving, previous.m_clouds_allow_moving, true, command_type_engine_internal);
+	static render_cc_float clouds_moving_speed_cc("r_clouds_moving_speed", ocr_need_nothing, 0, current.m_clouds_moving_speed, previous.m_clouds_moving_speed, 0.0f, 1000.0f, true, command_type_engine_internal);
+	static render_cc_u32 clouds_num_evaluate_slices_cc("r_clouds_num_evaluate_slices", ocr_need_nothing, 0, current.m_clouds_num_evaluate_slices, previous.m_clouds_num_evaluate_slices, 1, 1024, true, command_type_engine_internal);
+	static render_cc_float clouds_scale_by_distance_cc("r_clouds_scale_by_distance", ocr_need_nothing, 0, current.m_clouds_scale_by_distance, previous.m_clouds_scale_by_distance, 0.0f, 32.0f, true, command_type_engine_internal);
+	static render_cc_float clouds_scale_xy_cc("r_clouds_scale_xy", ocr_need_nothing, 0, current.m_clouds_scale_xy, previous.m_clouds_scale_xy, 0.0f, 100000.0f, true, command_type_engine_internal);
+	static render_cc_bool clouds_debug_mode_cc("r_clouds_debug_mode", ocr_need_nothing, 0, current.m_clouds_debug_mode, previous.m_clouds_debug_mode, true, command_type_engine_internal);
+	static render_cc_bool use_god_rays_cc("r_use_god_rays", ocr_need_reset_postprocess, "GLOBAL_USE_GOD_RAYS", current.m_use_god_rays, previous.m_use_god_rays, true, command_type_engine_internal);
+	static render_cc_bool use_hiz_occlusion_culling_cc("r_use_hiz_occlusion_culling", ocr_need_nothing, 0, current.m_use_hiz_occlusion_culling, previous.m_use_hiz_occlusion_culling, true, command_type_engine_internal);
+	static render_cc_u32 hiz_occlusion_culling_framerate_cc("r_hiz_occlusion_culling_framerate", ocr_need_nothing, 0, current.m_hiz_occlusion_culling_framerate, previous.m_hiz_occlusion_culling_framerate, 1, 128, true, command_type_engine_internal);
+	static render_cc_u32 num_shadow_cascades_cc("r_num_shadow_cascades", ocr_need_nothing, 0, current.m_num_shadow_cascades, previous.m_num_shadow_cascades, 1, 4, true, command_type_engine_internal);
+	static render_cc_u32 cascaded_shadow_map_size_cc("r_cascaded_shadow_map_size", ocr_need_reset_lighting, "GLOBAL_CASCADED_SHADOW_MAP_SIZE", current.m_cascaded_shadow_map_size, previous.m_cascaded_shadow_map_size, 128, 2048, true, command_type_engine_internal);
+	static render_cc_u32 num_max_light_instances_cc("r_num_max_light_instances", ocr_need_reset_lighting, "GLOBAL_NUM_MAX_LIGHT_INSTANCES", current.m_num_max_light_instances, previous.m_num_max_light_instances, 1, 2048, true, command_type_engine_internal);
+	static render_cc_bool enabled_sky_sphere_stage_cc("r_enabled_sky_sphere_stage", ocr_need_nothing, 0, current.m_enabled_sky_sphere_stage, previous.m_enabled_sky_sphere_stage, true, command_type_engine_internal);
+	static render_cc_bool enabled_atmosphere_stage_cc("r_enabled_atmosphere_stage", ocr_need_nothing, 0, current.m_enabled_atmosphere_stage, previous.m_enabled_atmosphere_stage, true, command_type_engine_internal);
+	static render_cc_float fxaa_quality_subpix_cc("r_fxaa_quality_subpix", ocr_need_nothing, 0, current.m_fxaa_quality_subpix, previous.m_fxaa_quality_subpix, -10000.0f, 100000.0f, true, command_type_engine_internal);
+	static render_cc_float fxaa_quality_edge_threshold_cc("r_fxaa_quality_edge_threshold", ocr_need_nothing, 0, current.m_fxaa_quality_edge_threshold, previous.m_fxaa_quality_edge_threshold, -10000.0f, 100000.0f, true, command_type_engine_internal);
+	static render_cc_float fxaa_quality_edge_threshold_min_cc("r_fxaa_quality_edge_threshold_min", ocr_need_nothing, 0, current.m_fxaa_quality_edge_threshold_min, previous.m_fxaa_quality_edge_threshold_min, -10000.0f, 100000.0f, true, command_type_engine_internal);
+	static render_cc_float ssao_screen_ratio_cc("r_ssao_screen_ratio", ocr_need_resize_window, 0, current.m_ssao_screen_ratio, previous.m_ssao_screen_ratio, 0.01f, 1.0f, true, command_type_engine_internal);
+	static render_cc_u32 ssao_num_samples_cc("r_ssao_num_samples", ocr_need_reset_postprocess, "GLOBAL_SSAO_NUM_SAMPLES", current.m_ssao_num_samples, previous.m_ssao_num_samples, 8, 128, true, command_type_engine_internal);
+	static render_cc_bool ssao_use_filtering_cc("r_ssao_use_filtering", ocr_need_resize_window, 0, current.m_ssao_use_filtering, previous.m_ssao_use_filtering, true, command_type_engine_internal);
+	static render_cc_bool ssao_use_temporal_filtering_cc("r_ssao_use_temporal_filtering", ocr_need_nothing, 0, current.m_ssao_use_temporal_filtering, previous.m_ssao_use_temporal_filtering, true, command_type_engine_internal);
+	static render_cc_bool draw_grass_cc("r_draw_grass", ocr_need_nothing, 0, current.m_draw_grass, previous.m_draw_grass, true, command_type_engine_internal);
+	static render_cc_bool enabled_volume_fog_stage_cc("r_enabled_volume_fog_stage", ocr_need_reset_renderer, 0, current.m_enabled_volume_fog_stage, previous.m_enabled_volume_fog_stage, true, command_type_engine_internal);
+	static render_cc_bool use_16bit_rt_cc("r_use_16bit_rt", ocr_need_reset_renderer, "GLOBAL_USE_16BIT_RT", current.m_use_16bit_rt, previous.m_use_16bit_rt, true, command_type_engine_internal);
+	static render_cc_bool use_shader_lods_cc("r_use_shader_lods", ocr_need_nothing, 0, current.m_use_shader_lods, previous.m_use_shader_lods, true, command_type_engine_internal);
+	static render_cc_bool update_shadows_every_frame_cc("r_update_shadows_every_frame", ocr_need_reset_lighting, "GLOBAL_UPDATE_SHADOWS_EVERY_FRAME", current.m_update_shadows_every_frame, previous.m_update_shadows_every_frame, true, command_type_engine_internal);
+	static render_cc_bool use_screenspace_reflections_mask_cc("r_use_screenspace_reflections_mask", ocr_need_reset_lighting, "GLOBAL_USE_SCREENSPACE_REFLECTIONS_MASK", current.m_use_screenspace_reflections_mask, previous.m_use_screenspace_reflections_mask, true, command_type_engine_internal);
+	static render_cc_bool use_poisson_disc_shadow_filter_cc("r_use_poisson_disc_shadow_filter", ocr_need_reset_lighting, "GLOBAL_USE_POISSON_DISC_SHADOW_FILTER", current.m_use_poisson_disc_shadow_filter, previous.m_use_poisson_disc_shadow_filter, true, command_type_engine_internal);
+	static render_cc_bool use_temporal_antialiasing_cc("r_use_temporal_antialiasing", ocr_need_nothing, 0, current.m_use_temporal_antialiasing, previous.m_use_temporal_antialiasing, true, command_type_engine_internal);
+	static render_cc_bool use_motion_blur_cc("r_use_motion_blur", ocr_need_reset_postprocess, 0, current.m_use_motion_blur, previous.m_use_motion_blur, true, command_type_engine_internal);
+	static render_cc_float grass_lod1_distance_cc("r_grass_lod1_distance", ocr_need_nothing, 0, current.m_grass_lod1_distance, previous.m_grass_lod1_distance, 0.01f, 1000.0f, true, command_type_engine_internal);
+	static render_cc_float grass_lod2_distance_cc("r_grass_lod2_distance", ocr_need_nothing, 0, current.m_grass_lod2_distance, previous.m_grass_lod2_distance, 0.01f, 1000.0f, true, command_type_engine_internal);
+	static render_cc_bool use_texture_streaming_cc("r_use_texture_streaming", ocr_need_reload_textures, 0, current.m_use_texture_streaming, previous.m_use_texture_streaming, true, command_type_engine_internal);
+	static render_cc_bool use_motion_vectors_in_taa_cc("r_use_motion_vectors_in_taa", ocr_need_nothing, 0, current.m_use_motion_vectors_in_taa, previous.m_use_motion_vectors_in_taa, true, command_type_engine_internal);
+	static render_cc_float motion_blur_scale_cc("r_motion_blur_scale", ocr_need_nothing, 0, current.m_motion_blur_scale, previous.m_motion_blur_scale, 0.0f, 100.0f, true, command_type_engine_internal);
+	static render_cc_u32 texture_quality_cc("r_texture_quality", ocr_need_reload_textures, 0, current.m_texture_quality, previous.m_texture_quality, 0, 2, true, command_type_engine_internal);
+	static render_cc_bool use_vegetation_trample_cc("r_use_vegetation_trample", ocr_need_update_vegetation, "GLOBAL_USE_VEGETATION_TRAMPLE", current.m_use_vegetation_trample, previous.m_use_vegetation_trample, false, command_type_engine_internal);
+	static render_cc_float gamma_correction_factor_cc("r_gamma_correction_factor", ocr_need_nothing, 0, current.m_gamma_correction_factor, previous.m_gamma_correction_factor, 0.5f, 1.5f, true, command_type_engine_internal);
+	static render_cc_u32 max_anisotropic_cc("r_max_anisotropic", ocr_need_recreate_samplers, 0, current.m_max_anisotropic, previous.m_max_anisotropic, 0, 16, true, command_type_engine_internal);
+	static render_cc_u32 monitor_index_cc("r_monitor_index", ocr_need_resize_window, 0, current.m_monitor_index, previous.m_monitor_index, 0, 5, true, command_type_engine_internal);
+	static render_cc_u32 geometry_quality_cc("r_geometry_quality", ocr_need_nothing, 0, current.m_geometry_quality, previous.m_geometry_quality, 0, 5, true, command_type_engine_internal);
+	static render_cc_bool vsync_cc("r_vsync", ocr_need_nothing, 0, current.m_vsync, previous.m_vsync, true, command_type_engine_internal);
+	static render_cc_bool fullscreen_cc("r_fullscreen", ocr_need_resize_window, 0, current.m_fullscreen, previous.m_fullscreen, true, command_type_engine_internal);
+	static render_cc_u32 resolution_x_cc("r_resolution_x", ocr_need_resize_window, 0, current.m_resolution_x, previous.m_resolution_x, 1, 8192, true, command_type_engine_internal);
+	static render_cc_u32 resolution_y_cc("r_resolution_y", ocr_need_resize_window, 0, current.m_resolution_y, previous.m_resolution_y, 1, 8192, true, command_type_engine_internal);
+
+	// Five target source lines are absent under the retail preprocessor configuration.
+	static render_cc_u32 lighting_quality_cc("r_lighting_quality", ocr_need_reset_lighting, "GLOBAL_LIGHTING_QUALITY", current.m_lighting_quality, previous.m_lighting_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 post_process_quality_cc("r_post_process_quality", static_cast<enum_options_changes_result>(ocr_need_reset_lighting | ocr_need_reset_postprocess), "GLOBAL_POST_PROCESS_QUALITY", current.m_post_process_quality, previous.m_post_process_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 particles_quality_cc("r_particles_quality", ocr_need_nothing, 0, current.m_particles_quality, previous.m_particles_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 motion_blur_quality_cc("r_motion_blur_quality", ocr_need_reset_postprocess, 0, current.m_motion_blur_quality, previous.m_motion_blur_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 shading_quality_cc("r_shading_quality", ocr_need_reset_lighting, "GLOBAL_SHADING_QUALITY", current.m_shading_quality, previous.m_shading_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 ambient_occlusion_quality_cc("r_ambient_occlusion_quality", ocr_need_nothing, 0, current.m_ambient_occlusion_quality, previous.m_ambient_occlusion_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 antialiasing_method_cc("r_antialiasing_method", ocr_need_nothing, 0, current.m_antialiasing_method, previous.m_antialiasing_method, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 decorations_quality_cc("r_decorations_quality", ocr_need_nothing, 0, current.m_decorations_quality, previous.m_decorations_quality, 0, 100, true, command_type_engine_internal);
+	static render_cc_u32 graphics_quality_cc("r_graphics_quality", ocr_need_nothing, 0, current.m_graphics_quality, previous.m_graphics_quality, 0, 100, true, command_type_engine_internal);
 
 	first_command				= &enabled_g_stage_cc;
 	console_command* command	= first_command;
