@@ -363,7 +363,6 @@ public:
 
 public:
 	options( );
-	~options( ) { }
 
 	void set_default_values( );
 	void register_console_commands( );
@@ -379,13 +378,13 @@ public:
 	// configuration to file); empty in the shipped MASTER_GOLD build.
 	void save_current_configuration( ) { }
 	void fill_global_macros( shader_defines_list& out_defines );
-
-private:
-	friend class render_cc;
-
 	void load_impl( memory::reader& reader );
 	void on_config_loaded( resources::queries_result& data );
 	void on_config_loaded2( resources::queries_result& data );
+	~options( ) { }
+
+private:
+	friend class render_cc;
 
 	render_cc* first_render_command;
 
