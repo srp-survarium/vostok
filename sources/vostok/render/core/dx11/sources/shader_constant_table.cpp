@@ -27,7 +27,7 @@ shader_constant* shader_constant_table::get( shared_string const& name)
 {
 	// FUNCTION BODY[0x7390d0]
 	 //linear search, but only ptr-compare
-	constants_type::iterator it  = m_table.begin(),
+	c_table::iterator it  = m_table.begin(),
 							end = m_table.end();
 
 	for ( ; it != end; ++it)
@@ -40,7 +40,7 @@ shader_constant* shader_constant_table::get( shared_string const& name)
 shader_constant* shader_constant_table::get( pcstr const name)
 {
 	// FUNCTION BODY[0x7392e0]
-	constants_type::iterator	it  = m_table.begin(),
+	c_table::iterator	it  = m_table.begin(),
 							end = m_table.end();
 
 	for ( ; it != end; ++it)
