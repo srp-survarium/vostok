@@ -1775,6 +1775,145 @@ def _artifact_path(value):
     return path if path.is_absolute() else VOSTOK / path
 
 
+def rank_island_delta(
+    candidate_fuzzy,
+    candidate_hash,
+    previous=None,
+    current_fuzzy=None,
+):
+    """Return a prospective MAX delta, rejecting a different source epoch.
+
+    ``previous`` is a source_maxima row (or any mapping with the same fields).
+    When correctness-facing MAX evidence does not yet exist, the canonical
+    physical score is the floor. Target-only symbols therefore start at zero
+    instead of disappearing from island discovery.
+    """
+    previous_fuzzy = previous["max_fuzzy_pct"] if previous is not None else None
+    previous_exact = previous["exact_proven"] if previous is not None else 0
+    baseline = previous_fuzzy
+    if baseline is None:
+        baseline = current_fuzzy if current_fuzzy is not None else 0.0
+    exact = int(candidate_fuzzy >= 99.995)
+    improves = (
+        candidate_fuzzy > baseline + 0.000001
+        or exact > previous_exact
+    )
+    if not improves:
+        return None
+    if not candidate_hash:
+        raise ValueError("candidate has no effective source hash")
+    if previous is not None and previous["effective_hash"] != candidate_hash:
+        raise ValueError(
+            "canonical source epoch disagrees: "
+            f"{previous['effective_hash']} != {candidate_hash}"
+        )
+    return {
+        "previous_fuzzy_pct": previous_fuzzy,
+        "baseline_fuzzy_pct": baseline,
+        "gain_pct": candidate_fuzzy - baseline,
+        "exact_proven": max(previous_exact, exact),
+    }
+
+
+def cmd_rank_island(args):
+    """Discover source-current MAX gains in an isolated link report.
+
+    This command never mutates match.db. Its output is a review queue for
+    ``import-island``, which still requires a hash-pinned tracked manifest.
+    """
+    report_path = _artifact_path(args.report)
+    base_index_path = _artifact_path(args.base_index)
+    for label, path in (("report", report_path), ("base index", base_index_path)):
+        if not path.is_file():
+            sys.exit(f"[match_db] missing island {label}: {path}")
+
+    report = json.loads(report_path.read_text())
+    scores, _units = report_fuzzy_scores(report)
+    target_records = load_index_records(TARGET_IDX)
+    target = index_by_mangled(target_records)
+    candidate_records = load_index_records(base_index_path)
+    candidate = index_by_mangled(
+        candidate_records,
+        {mangled: rec["file"] for mangled, rec in target.items()},
+    )
+
+    con = open_db(check_schema=True)
+    staleness_check(con)
+    query = """
+      SELECT mangled, demangled, module, fuzzy_pct AS current_fuzzy_pct
+      FROM paired
+      UNION ALL
+      SELECT mangled, demangled, module, NULL AS current_fuzzy_pct
+      FROM target_only
+    """
+    inventory = [dict(row) for row in con.execute(query)]
+    if args.module:
+        inventory = [row for row in inventory if row["module"] == args.module]
+
+    observations = []
+    measured = 0
+    for item in inventory:
+        mangled = item["mangled"]
+        target_rec = target.get(mangled)
+        candidate_rec = candidate.get(mangled)
+        if target_rec is None or candidate_rec is None:
+            continue
+        fuzzy = report_score_for_target(mangled, scores)
+        if fuzzy is None and instruction_stream_exact(target_rec, candidate_rec):
+            fuzzy = 100.0
+        if fuzzy is None:
+            continue
+        measured += 1
+
+        previous = con.execute(
+            "SELECT * FROM source_maxima WHERE mangled = ?", (mangled,)
+        ).fetchone()
+        extent = _source_extent(candidate_rec)
+        candidate_hash = (
+            effective_source_hash(candidate_rec, item["module"])
+            if extent is not None
+            else None
+        )
+        try:
+            delta = rank_island_delta(
+                fuzzy,
+                candidate_hash,
+                previous=previous,
+                current_fuzzy=item["current_fuzzy_pct"],
+            )
+        except ValueError as error:
+            con.close()
+            sys.exit(f"[match_db] stale island candidate for {mangled}: {error}")
+        if delta is None:
+            continue
+
+        source_file, lo, hi, _text = extent
+        observations.append(
+            {
+                "mangled": mangled,
+                "demangled": item["demangled"],
+                "module": item["module"],
+                "candidate_fuzzy_pct": fuzzy,
+                "current_max_fuzzy_pct": delta["previous_fuzzy_pct"],
+                "gain_pct": delta["gain_pct"],
+                "exact_proven": delta["exact_proven"],
+                "effective_hash": candidate_hash,
+                "state_id": compiled_state_id(candidate_rec),
+                "source_file": source_file,
+                "source_lo": lo,
+                "source_hi": hi,
+            }
+        )
+
+    con.close()
+    observations.sort(key=lambda row: (-row["gain_pct"], row["mangled"]))
+    log(
+        f"ranked {measured} measured canonical function(s): "
+        f"{len(observations)} source-current MAX gain(s)"
+    )
+    emit(observations, args.json)
+
+
 def cmd_import_island(args):
     """Import explicitly manifested observations from isolated link artifacts.
 
@@ -2900,6 +3039,15 @@ def main():
         help="validate and print observations without changing match.db",
     )
 
+    p = sub.add_parser(
+        "rank-island",
+        help="rank source-current MAX gains in isolated artifacts (read-only)",
+    )
+    p.add_argument("--report", required=True, help="isolated objdiff report.json")
+    p.add_argument("--base-index", required=True, help="isolated base rich index.jsonl")
+    p.add_argument("--module", help="only rank canonical functions in this module")
+    p.add_argument("--json", action="store_true")
+
     p = sub.add_parser("report", help="per-module/TU rollup")
     p.add_argument("--module")
     p.add_argument(
@@ -2994,6 +3142,7 @@ def main():
         "max": cmd_max,
         "record-max": cmd_record_max,
         "import-island": cmd_import_island,
+        "rank-island": cmd_rank_island,
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,

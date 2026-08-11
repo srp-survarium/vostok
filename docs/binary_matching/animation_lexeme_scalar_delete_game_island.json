@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed animation_lexeme scalar deleting destructor from the disposable animation-before-game LTCG link. The compiler-generated target and candidate bodies have the same 32-byte normalized instruction stream; only the PDB spelling of operator delete differs before normalization.",
+  "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "4d8ef5a4182ca0d3c683e2c46c3b6f116ef2389673c3aa08dea2978ff1e65c20",
+  "base_index_sha256": "6a39e4af9ef49a196839a84c93ff30bcf7650eec4acae6d073183547980c546a",
+  "candidate_exe_sha256": "a53d35047494501d4d3ad4e2126aa4833ee5587af487e1be1083d87bd5f66eee",
+  "candidate_pdb_sha256": "87c5fef39257a6a19e4511e48ec01fb8208d307ce8e32bba6e8420779b541e7a",
+  "functions": [
+    {
+      "mangled": "??_Ganimation_lexeme@mixing@animation@vostok@@UAEPAXI@Z",
+      "module": "animation",
+      "expected_hash": "bb2c0b0e1129.9fff9ae0c2fb519e",
+      "expected_fuzzy_pct": 100.0,
+      "review": "The target and candidate both emit the virtual destructor call, delete-flag test, conditional operator delete, and identical return sequence in 32 bytes. This is compiler-generated code selected by the real gameplay caller context, not a fabricated anchor or source-shape change."
+    }
+  ]
+}
