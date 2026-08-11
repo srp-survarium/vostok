@@ -50,10 +50,10 @@ inline bool time_animations_predicate::operator ( )(
 
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation_node(
 	n_ary_tree_animation_node&		new_animation,
-	animation_state const*			previous_animation_state,
-	u32								animation_interval_id,
-	float							animation_interval_time,
-	bool							is_new_animation
+	animation_state const* const	previous_animation_state,
+	const u32						animation_interval_id,
+	const float						animation_interval_time,
+	const bool						is_new_animation
 )
 {
 	*m_new_animation_event++			= m_new_animation_state;
@@ -941,17 +941,17 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_weight_transit
 void n_ary_tree_transition_tree_constructor::add_operands(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
-	n_ary_tree_base_node**			operands_begin,
-	n_ary_tree_base_node**			operands_end,
-	bool const						skip_time_scale_node
+	n_ary_tree_base_node** const	operands_begin,
+	n_ary_tree_base_node** const	operands_end,
+	const bool						skip_time_scale_node
 )
 {
 	n_ary_tree_base_node**				operands			= operands_begin;
 	base_interpolator const&			from_interpolator	= from.weight_interpolator( );
 	n_ary_tree_node_comparer	comparer;
-	n_ary_tree_base_node** const		i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+	n_ary_tree_base_node* const* const	i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
 	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
-	n_ary_tree_base_node** const		j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+	n_ary_tree_base_node* const* const	j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
 	n_ary_tree_base_node**				j	= to.operands( sizeof( n_ary_tree_animation_node ) );
 
 	if ( i != i_e && (*i)->is_time_scale( ) ) {
@@ -1023,9 +1023,9 @@ void n_ary_tree_transition_tree_constructor::add_operands(
 
 std::pair< u32, u32 > computed_operands_count( n_ary_tree_animation_node& from, n_ary_tree_animation_node& to )
 {
-	n_ary_tree_base_node** const		i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+	n_ary_tree_base_node* const* const	i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
 	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
-	n_ary_tree_base_node** const		j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+	n_ary_tree_base_node* const* const	j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
 	n_ary_tree_base_node**				j	= to.operands( sizeof( n_ary_tree_animation_node ) );
 
 	u32									operands_count			= 0;
