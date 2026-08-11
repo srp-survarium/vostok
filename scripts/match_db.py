@@ -217,10 +217,22 @@ def index_by_mangled(records, preferred_files=None):
 
 
 def stmt_seq(rec):
-    """Alignment alphabet: statement sizes only. Source LINE numbers (and their
-    deltas) legitimately differ between target and reconstructed base
-    (blank lines, comments), so they must not enter the comparison."""
+    """Primary alignment alphabet: statement sizes."""
     return [s["size"] for s in rec["statements"]]
+
+
+def normalized_stmt_lines(rec):
+    """Return function-relative PDB line numbers when every row has one.
+
+    Absolute lines legitimately move as files are reconstructed. Exact relative
+    line geometry, however, is strong evidence that equal-count rows correspond
+    in source order even when repeated statement sizes confuse SequenceMatcher.
+    """
+    lines = [s.get("line") for s in rec["statements"]]
+    if not lines or any(not isinstance(line, int) for line in lines):
+        return None
+    first = lines[0]
+    return [line - first for line in lines]
 
 
 def classify(t_rec, b_rec):
@@ -230,6 +242,18 @@ def classify(t_rec, b_rec):
     t_n, b_n = len(t_seq), len(b_seq)
     if t_seq == b_seq:
         return "MATCH", t_n, b_n, 0, 0, 0
+
+    # Prefer exact PDB line geometry over a size-only fuzzy alignment. This is
+    # deliberately an exact shortcut: differing relative lines still fall back
+    # to the established size alignment below.
+    t_lines = normalized_stmt_lines(t_rec)
+    if (
+        t_n == b_n
+        and t_lines is not None
+        and t_lines == normalized_stmt_lines(b_rec)
+    ):
+        n_size = sum(t_size != b_size for t_size, b_size in zip(t_seq, b_seq))
+        return "SIZE", t_n, b_n, n_size, 0, 0
 
     sm = difflib.SequenceMatcher(a=t_seq, b=b_seq, autojunk=False)
     n_size = n_trgt_only = n_base_only = 0

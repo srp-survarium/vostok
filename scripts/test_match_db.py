@@ -108,6 +108,35 @@ class EffectiveSourceHashTests(unittest.TestCase):
             self.assertNotEqual(first, second)
 
 
+class StructureClassificationTests(unittest.TestCase):
+    @staticmethod
+    def record(sizes, lines):
+        return {
+            "statements": [
+                {"size": size, "line": line} for size, line in zip(sizes, lines)
+            ]
+        }
+
+    def test_exact_relative_line_geometry_defeats_repeated_size_misalignment(self):
+        target = self.record([1, 2, 1], [10, 11, 12])
+        base = self.record([1, 1, 2], [30, 31, 32])
+
+        self.assertEqual(
+            MATCH_DB.classify(target, base),
+            ("SIZE", 3, 3, 2, 0, 0),
+        )
+
+    def test_different_relative_lines_keep_size_alignment_fallback(self):
+        target = self.record([1, 2, 1], [10, 11, 12])
+        base = self.record([1, 1, 2], [30, 32, 33])
+
+        classification = MATCH_DB.classify(target, base)
+
+        self.assertEqual(classification[0], "SPLIT")
+        self.assertGreater(classification[4], 0)
+        self.assertGreater(classification[5], 0)
+
+
 class StrictSourceAliasCandidateTests(unittest.TestCase):
     def record(
         self,

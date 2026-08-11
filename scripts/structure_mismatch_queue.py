@@ -25,11 +25,12 @@ re-test-after-core-fix backlog (wrong core sizes/layouts/types change inline +
 codegen decisions downstream; see the [ltcg-walls-may-be-core-structure-
 downstream] memory), so it is tracked but NOT mixed with QUANTITY.
 
-LOCALS: match.db's classifier aligns on STATEMENT SIZES only (stmt_seq), so it does
-NOT independently surface named-local divergence. "Locals are structure" (sushi);
-that work shows up inside QUANTITY/SPLIT/SIZE rows and the authoritative per-
-function local check stays `pdb_fetch --view structure-diff`. There is no separate
-LOCALS section because the DB carries no LOCALS class - see the doc's note.
+LOCALS: match.db's classifier primarily aligns on statement sizes, with an exact
+normalized-PDB-line fallback for equal-count rows. It does NOT independently surface
+named-local divergence. "Locals are structure" (sushi); that work shows up inside
+QUANTITY/SPLIT/SIZE rows and the authoritative per-function local check stays
+`pdb_fetch --view structure-diff`. There is no separate LOCALS section because the
+DB carries no LOCALS class - see the doc's note.
 
 TARGET_ONLY: unpaired real bodies (framed, >=1 statement) - genuine MISSING
 structure - get their own section.
@@ -320,9 +321,10 @@ authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
    leaves (custom-conv, pair only inlined into callers) are excluded.
 
 LOCALS note: "locals are structure" (sushi), but match.db's classifier aligns on
-statement SIZES only and does not independently surface named-local divergence, so
-there is no standalone LOCALS section - that work rides inside the QUANTITY / SPLIT
-/ SIZE rows and is checked per function with `pdb_fetch --view structure-diff`.
+statement sizes/PDB line geometry and does not independently surface named-local
+divergence, so there is no standalone LOCALS section - that work rides inside the
+QUANTITY / SPLIT / SIZE rows and is checked per function with
+`pdb_fetch --view structure-diff`.
 
 layout_diff.py caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
