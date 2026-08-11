@@ -53,6 +53,20 @@ class backend : public quasi_singleton<backend> {
 	friend class constants_handler;
 
 public:
+	u32 num_vs_changes;
+	u32 num_ps_changes;
+	u32 num_il_changes;
+	u32 num_vsc_changes;
+	u32 num_vst_changes;
+	u32 num_vss_changes;
+	u32 num_psc_changes;
+	u32 num_pst_changes;
+	u32 num_pss_changes;
+	bool max_triagles_per_dip;
+	bool disable_DrawIndexed;
+	bool m_set_ps_sources;
+	bool allow_debug_profile_dip;
+
 	backend( );
 	~backend( );
 
@@ -186,23 +200,6 @@ public:
 	template < enum_shader_type shader_type >
 	u32 get_constants_marker( );
 	bool valid_output_window( ) const;
-	void set_user_output( bool enabled, u32 width, u32 height );
-	ID3D11RenderTargetView* get_base_rt( ) const { return m_base_rt; }
-
-public:
-	u32 num_vs_changes;
-	u32 num_ps_changes;
-	u32 num_il_changes;
-	u32 num_vsc_changes;
-	u32 num_vst_changes;
-	u32 num_vss_changes;
-	u32 num_psc_changes;
-	u32 num_pst_changes;
-	u32 num_pss_changes;
-	bool max_triagles_per_dip;
-	bool disable_DrawIndexed;
-	bool m_set_ps_sources;
-	bool allow_debug_profile_dip;
 	vertex_buffer vertex;
 	index_buffer index;
 	u32 num_total_rendered_triangles;
@@ -211,12 +208,24 @@ public:
 	bool disabled_shader_constansts_set;
 	u32 num_draw_calls;
 	bool draw_calls_counting;
+	void set_user_output( bool enabled, u32 const width, u32 const height );
+	ID3D11RenderTargetView* get_base_rt( ) const { return m_base_rt; }
 
 private:
 	void flush_rt( );
 	void update_input_layout( );
 	void flush_c_cache( );
 	void flush_stages( );
+
+	bool m_user_output;
+	u32 m_user_output_width;
+	u32 m_user_output_height;
+	ID3D11Device* m_device;
+	ID3D11RasterizerState* m_rasterizer_state;
+	ID3D11DepthStencilState* m_depth_stencils_state;
+	ID3D11BlendState* m_effect_state;
+	u32 m_stencil_ref;
+	u32 m_sample_mask;
 
 	struct render_dirty_objects {
 		render_dirty_objects( ) { reset( ); }
@@ -246,6 +255,7 @@ private:
 		bool bstat;
 		bool primitive_topology;
 	};
+	render_dirty_objects m_dirty_objects;
 
 	struct render_dirty_targets {
 		render_dirty_targets( ) { reset( ); }
@@ -259,17 +269,6 @@ private:
 		bool render_targets[enum_target_count];
 		bool depth_stencil;
 	};
-
-	bool m_user_output;
-	u32 m_user_output_width;
-	u32 m_user_output_height;
-	ID3D11Device* m_device;
-	ID3D11RasterizerState* m_rasterizer_state;
-	ID3D11DepthStencilState* m_depth_stencils_state;
-	ID3D11BlendState* m_effect_state;
-	u32 m_stencil_ref;
-	u32 m_sample_mask;
-	render_dirty_objects m_dirty_objects;
 	render_dirty_targets m_dirty_targets;
 	untyped_buffer* m_vb;
 	untyped_buffer* m_vb_instance_data;
@@ -288,7 +287,8 @@ private:
 	textures_handler<enum_shader_type_pixel> m_ps_textures_handler;
 	samplers_handler<enum_shader_type_pixel> m_ps_samplers_handler;
 	D3D_PRIMITIVE_TOPOLOGY m_primitive_topology;
-	vector<shader_constant_host*> m_constant_hosts;
+	typedef vector<shader_constant_host*> constant_hosts;
+	constant_hosts m_constant_hosts;
 	res_declaration* m_decl;
 	res_input_layout* m_input_layout;
 	ID3D11RenderTargetView* m_targets[enum_target_count];
@@ -312,7 +312,8 @@ private:
 	u32 m_vb_stride_stream_1;
 	u32 m_vb_offset_stream_1;
 	u32 m_ib_offset;
-	ID3D11Texture2D* m_stages[16];
+	enum { texture_stage_count = 16 };
+	ID3D11Texture2D* m_stages[texture_stage_count];
 	u32 m_constant_update_counter;
 	u32 m_constant_update_markers[enum_shader_types_count];
 };

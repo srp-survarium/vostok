@@ -479,7 +479,7 @@ inline bool backend::valid_output_window( ) const
 	return m_render_output && m_render_output->valid_present( );
 }
 
-inline void backend::set_user_output( bool enabled, u32 width, u32 height )
+inline void backend::set_user_output( bool enabled, u32 const width, u32 const height )
 {
 	m_user_output = enabled;
 	m_user_output_width = width;
