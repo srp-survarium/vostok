@@ -216,7 +216,7 @@ void skeleton_combined_model_cook::on_material_effects_loaded( resources::querie
 	for ( u32 i = 0; i < parts_count; ++i )
 	{
 
-		mesh_type_enum model_type = (mesh_type_enum)(u16) cook_data->model_defs[i].export_properties_config->get_root( )["type"];
+		mesh_type_enum model_type = (mesh_type_enum)(u32) cook_data->model_defs[i].export_properties_config->get_root( )["type"];
 		render_surface* surface = model_factory::create_render_surface( model_type );
 		surfaces[i] = surface;
 
