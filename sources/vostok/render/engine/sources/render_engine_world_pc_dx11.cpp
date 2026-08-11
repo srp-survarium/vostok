@@ -17,6 +17,7 @@
 #include <vostok/render/facade/material_effects_instance_cook_data.h>
 #include <vostok/render/engine/api.h>
 #include <vostok/resources.h>
+#include <vostok/console_command_processor.h>
 #include <vostok/particle/api.h>
 #include <vostok/particle/world.h>
 #include "system_renderer.h"
@@ -724,6 +725,7 @@ void engine::world::on_renderer_configuration_config_loaded( bool async_effects,
 		);
 	}
 	reset_renderer					( async_effects );
+	console_commands::save			( "user.cfg", console_commands::command_type_user_specific, memory::g_mt_allocator );
 }
 
 // claude@NOTE: LOG_INFO embeds __LINE__, so the two log sites push our physical
