@@ -10,27 +10,16 @@ namespace vostok {
 namespace render {
 
 light::light( collision::space_partitioning_tree* tree ) :
-	intensity						( 0.0f ),
-	spot_umbra_angle				( 0.0f ),
-	spot_penumbra_angle				( 0.0f ),
-	spot_falloff					( 0.0f ),
-	attenuation_power				( 0.0f ),
-	range							( 0.0f ),
 	shadow_transparency				( 0.1f ),
-	m_xform_frame					( 0 ),
 	m_occluded						( false ),
 	static_shadows					( false ),
-	need_refresh_static_shadows		( false ),
-	m_enabled						( false ),
-	m_occlusion_info_index			( 0 ),
+	need_refresh_static_shadows		( true ),
+	m_enabled						( true ),
+	m_occlusion_info_index			( u32(-1) ),
 	m_collision_tree				( tree ),
 	m_collision_geometry			( 0 ),
 	m_collision_object				( 0 ),
-	m_is_light_animated				( false ),
-	m_light_animation_length		( 0.0f ),
 	m_current_animation_time		( 0.0f ),
-	diffuse_influence_factor		( 0.0f ),
-	specular_influence_factor		( 0.0f ),
 	is_shadower						( false ),
 	use_with_lpv					( false ),
 	sun_shadow_map_size				( 2048 ),
@@ -38,9 +27,8 @@ light::light( collision::space_partitioning_tree* tree ) :
 	shadow_z_bias					( 0.001f ),
 	shadow_map_size					( 1024 ),
 	shadow_map_size_index			( 0 ),
-	old_shadow_map_size_index		( 0 ),
+	old_shadow_map_size_index		( u32(-1) ),
 	lighting_model					( 1 ),
-	flags							( ),
 	occluded						( false ),
 	m_aabb							( math::create_zero_aabb( ) )
 {
@@ -49,6 +37,7 @@ light::light( collision::space_partitioning_tree* tree ) :
 	flags.is_static			= false;
 	flags.does_cast_shadows	= false;
 	flags.is_hud_mode		= false;
+	previous_direction		= float3( 0.f, 0.f, 0.f );
 	position				= float3( 0.f , -1000.f, 0.f );
 	direction.set			( 0.f, 0.f, 1.f );
 	right.set				( 1.f, 0.f, 0.f );
@@ -62,11 +51,7 @@ light::light( collision::space_partitioning_tree* tree ) :
 light::~light( )
 {
 	// FUNCTION BODY[0x6012d0]
-	if ( m_collision_tree && m_collision_object )
-		m_collision_tree->erase	( m_collision_object );
-
-	collision::delete_object			( g_allocator, m_collision_object );
-	collision::delete_geometry_instance	( g_allocator, m_collision_geometry);
+	remove_collision( );
 }
 
 // claude@NOTE: the target defines its own file-local `static float frac( float f )` here
@@ -90,11 +75,16 @@ void light::tick_color_animation( float const time_delta )
 void light::remove_collision( )
 {
 	// FUNCTION BODY[0x5ff510]
-	if ( m_collision_tree && m_collision_object )
+	if ( !m_collision_object )
+		return;
+
+	if ( m_collision_tree )
 		m_collision_tree->erase	( m_collision_object );
 
 	collision::delete_object			( g_allocator, m_collision_object );
 	collision::delete_geometry_instance	( g_allocator, m_collision_geometry);
+
+	m_collision_object = 0;
 }
 
 bool light::is_occluded( ) const
