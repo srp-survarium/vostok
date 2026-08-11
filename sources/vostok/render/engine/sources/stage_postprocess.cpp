@@ -123,12 +123,42 @@ STATIC_SIZE_ASSERT( color_grading_pixel, 0x4 );
 
 } // namespace
 
-// claude@NOTE: second COMDAT instance of this function lives here in the
-// target (FUNCTION BODY[0x606e50]); the defining copy is core's
-// resource_manager.cpp (0x551b20). Likely a header-inline in the original
-// source - reconcile at matcher phase; declaration only to keep one
-// definition per exe.
-res_texture_ptr create_color_grading_base_lut( u32 );
+static res_texture_ptr create_color_grading_base_lut( u32 const size )
+{
+	u32 const data_size = size * size * size * sizeof(color_grading_pixel);
+	color_grading_pixel* temp_data = (color_grading_pixel*)ALLOCA(data_size);
+
+	for ( u32 z = 0; z < size; ++z )
+	{
+		for ( u32 y = 0; y < size; ++y )
+		{
+			for ( u32 x = 0; x < size; ++x )
+			{
+				color_grading_pixel* p = temp_data + z * size * size + y * size + x;
+				p->red = static_cast_checked<u8>( x * size );
+				p->green = static_cast_checked<u8>( y * size );
+				p->blue = static_cast_checked<u8>( z * size );
+				p->alpha = 255;
+			}
+		}
+	}
+
+	D3D11_SUBRESOURCE_DATA data;
+	data.pSysMem = temp_data;
+	data.SysMemSlicePitch = data_size / size;
+	data.SysMemPitch = data_size / ( size * size );
+
+	return resource_manager::ref( ).create_texture3d(
+		"$user$color_grading_base_3d_lut",
+		size,
+		size,
+		size,
+		&data,
+		DXGI_FORMAT_R8G8B8A8_UNORM,
+		D3D11_USAGE_IMMUTABLE,
+		1
+	);
+}
 
 bloom_shader_constants::bloom_shader_constants( )
 {
