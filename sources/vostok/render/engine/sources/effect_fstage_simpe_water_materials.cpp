@@ -30,7 +30,7 @@ void effect_fstage_simpe_water_materials::compile(
 			compiler.set_texture("t_diffuse", "$user$albedo", 0, false, u32(-1));
 			compiler.set_texture("t_frame_color", "$user$generic1", 0, false, u32(-1));
 
-			float4 packed_water_parameters_0(0.5f, 0.f, 0.5f, 0.f);
+			float4 packed_water_parameters_0(0.5f, 1.f, 0.5f, 1.f);
 			if (custom_config.value_exists("water_fog_color"))
 			{
 				packed_water_parameters_0.xyz() = math::pow(
