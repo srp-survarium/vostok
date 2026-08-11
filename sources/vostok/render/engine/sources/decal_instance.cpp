@@ -212,7 +212,8 @@ void decal_instance::set_properties( decal_properties const& in_properties )
 	remove_collision					();
 	float4x4 m							= m_properties.transform;
 	m.set_scale							(float3(1.0f, 1.0f, 1.0f));
-	m_collision_geometry				= &*collision::new_box_geometry_instance(g_allocator, math::create_scale( 2.0f * in_properties.width_height_far_distance ));
+	float3 sc							= in_properties.width_height_far_distance;
+	m_collision_geometry				= &*collision::new_box_geometry_instance(g_allocator, math::float4x4().identity());
 	m_collision_object					= &*collision::new_collision_object(
 		g_allocator,
 		1,
@@ -220,8 +221,10 @@ void decal_instance::set_properties( decal_properties const& in_properties )
 		this
 	);
 	float4x4 new_transform				= m_properties.transform;
-	new_transform.set_scale				( max( m_properties.transform.get_scale(), 2*float3( 1.f, 1.f, 1.f ) ) );
+	new_transform.set_scale				( sc );
 	m_collision_tree->insert			(m_collision_object, new_transform );
+	m_aabb								= math::create_identity_aabb();
+	m_aabb.modify						( new_transform );
 }
 
 decal_properties const& decal_instance::get_properties( ) const
