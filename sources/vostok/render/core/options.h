@@ -142,16 +142,16 @@ public:
 
 	pcstr define_name( ) const { return m_define_name; }
 
-private:
-	friend class options;
-
 	virtual bool fill_macro( shader_macro& out_macro ) const = 0;
-	virtual bool is_changed( ) const = 0;
 
 	enum_options_changes_result get_changes_result( ) const
 	{
 		return m_changes_result;
 	}
+	virtual bool is_changed( ) const = 0;
+
+private:
+	friend class options;
 
 	render_cc* render_next;
 	pcstr m_define_name;
@@ -170,13 +170,13 @@ public:
 		bool& value,
 		bool& prev_value,
 		bool serializable,
-		console_commands::command_type command_type
+		console_commands::command_type const command_type
 	);
 
-	virtual ~render_cc_bool( ) { }
 	virtual void execute( pcstr args );
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
+	virtual ~render_cc_bool( ) { }
 
 private:
 	bool& m_prev_value;
@@ -193,16 +193,16 @@ public:
 		pcstr define_name,
 		float& value,
 		float& prev_value,
-		float min,
-		float max,
+		float const min,
+		float const max,
 		bool serializable,
-		console_commands::command_type command_type
+		console_commands::command_type const command_type
 	);
 
-	virtual ~render_cc_float( ) { }
 	virtual void execute( pcstr args );
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
+	virtual ~render_cc_float( ) { }
 
 private:
 	float& m_prev_value;
@@ -219,16 +219,16 @@ public:
 		pcstr define_name,
 		u32& value,
 		u32& prev_value,
-		u32 min,
-		u32 max,
+		u32 const min,
+		u32 const max,
 		bool serializable,
-		console_commands::command_type command_type
+		console_commands::command_type const command_type
 	);
 
-	virtual ~render_cc_u32( ) { }
 	virtual void execute( pcstr args );
 	virtual bool is_changed( ) const;
 	virtual bool fill_macro( shader_macro& out_macro ) const;
+	virtual ~render_cc_u32( ) { }
 
 private:
 	u32& m_prev_value;

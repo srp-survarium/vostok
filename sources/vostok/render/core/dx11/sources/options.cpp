@@ -26,7 +26,7 @@ render_cc_bool::render_cc_bool(
 	bool& value,
 	bool& prev_value,
 	bool serializable,
-	console_commands::command_type command_type
+	console_commands::command_type const command_type
 )
 	: render_cc( define_name, changed_result ),
 	  console_commands::cc_bool(
@@ -70,10 +70,10 @@ render_cc_float::render_cc_float(
 	pcstr define_name,
 	float& value,
 	float& prev_value,
-	float min,
-	float max,
+	float const min,
+	float const max,
 	bool serializable,
-	console_commands::command_type command_type
+	console_commands::command_type const command_type
 )
 	: render_cc( define_name, changed_result ),
 	  console_commands::cc_float(
@@ -119,10 +119,10 @@ render_cc_u32::render_cc_u32(
 	pcstr define_name,
 	u32& value,
 	u32& prev_value,
-	u32 min,
-	u32 max,
+	u32 const min,
+	u32 const max,
 	bool serializable,
-	console_commands::command_type command_type
+	console_commands::command_type const command_type
 )
 	: render_cc( define_name, changed_result ),
 	  console_commands::cc_u32(
@@ -154,7 +154,7 @@ bool render_cc_u32::fill_macro( shader_macro& out_macro ) const
 	// FUNCTION BODY[0x12b7a0]
 	if (define_name())
 	{
-		out_macro.definition.assignf("%d", cc_u32::m_value);
+		out_macro.definition.assignf("%d", ((strings::equal(define_name(), "GLOBAL_SHADOWMAP_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_LIGHTING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_SHADING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_POST_PROCESS_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3)) ? 3 : cc_u32::m_value);
 		out_macro.name		 = define_name();
 		return true;
 	}
