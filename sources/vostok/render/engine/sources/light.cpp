@@ -1,6 +1,5 @@
 #include "pch.h"
 #include "light.h"
-#include "help_math.h"
 
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
@@ -54,10 +53,10 @@ light::~light( )
 	remove_collision( );
 }
 
-// claude@NOTE: the target defines its own file-local `static float frac( float f )` here
-// (lines 69-71, 0x5ff670) with the same body as help_math.h's - not a COMDAT copy of it.
-// Not restored yet: no light.cpp function calls frac in our source, so an added static would
-// be dead. Restore it together with whichever body regains the call.
+static float frac( float f )
+{
+	return math::abs( f ) - math::abs( static_cast<int>( f ) );
+}
 
 void light::tick_color_animation( float const time_delta )
 {
@@ -67,7 +66,7 @@ void light::tick_color_animation( float const time_delta )
 	m_current_animation_time	+= time_delta / math::max( m_light_animation_length, math::epsilon_3 );
 
 	if ( m_current_animation_time > 1.f )
-		m_current_animation_time	= math::abs( m_current_animation_time ) - math::abs( static_cast< int >( m_current_animation_time ) );
+		m_current_animation_time	= frac( m_current_animation_time );
 
 	color						= m_color_curve.evaluate( m_current_animation_time, float4( 0.f, 0.f, 0.f, 0.f ) ).xyz( );
 }
@@ -182,9 +181,10 @@ void light::on_properties_changed( )
 				&*collision::new_collision_object	(
 					g_allocator,
 					1,
-					// sushi@TODO: new_sphere_geometry_instance no longer accepts a radius
-					// m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range ),
-					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ) ),
+					m_collision_geometry = &*collision::new_sphere_geometry_instance(
+						g_allocator,
+						math::create_scale( float3(range, range, range) ) * math::create_translation( position )
+					),
 					this
 				);
 			transform			= math::create_scale( float3(range, range, range) ) * math::create_translation( position );
@@ -256,9 +256,10 @@ void light::on_properties_changed( )
 				&*collision::new_collision_object(
 					g_allocator,
 					1,
-					// sushi@TODO: new_sphere_geometry_instance no longer accepts a radius
-					// m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ), range + scale.x ),
-					m_collision_geometry = &*collision::new_sphere_geometry_instance( g_allocator, math::create_translation( position ) ),
+					m_collision_geometry = &*collision::new_sphere_geometry_instance(
+						g_allocator,
+						math::create_scale( float3(range, range, range) ) * math::create_translation( position )
+					),
 					this
 				);
 			transform			=
