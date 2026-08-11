@@ -20,6 +20,8 @@
 #	endif // #if VOSTOK_STATIC_LIBRARIES
 #endif // #if VOSTOK_PLATFORM_WINDOWS_32
 
+static u32 num_speedtree_memory_used = 0;
+
 namespace SpeedTree {
 
 // Defined by SpeedTreeCore (Core.obj); declared here because the SDK headers
@@ -45,11 +47,14 @@ static vostok::uninitialized_reference< vostok::render::speedtree_instance_cook 
 
 void* speed_tree_allocator::Alloc( size_t size )
 {
-	// FUNCTION BODY[0x54440]
-	// claude@NOTE: legacy also accumulated a file-static num_speedtree_memory_used and
-	// threw std::bad_alloc on failure; the canonical carcass has neither the counter nor
-	// exception handling enabled - matcher-phase work against the 0x4c-byte target body.
-	return MALLOC( size, "speed_tree_allocator" );
+	void* block = MALLOC( size, "speed_tree_allocator" );
+
+	num_speedtree_memory_used += size;
+
+	if ( block == 0 )
+		throw std::bad_alloc( );
+	else
+		return block;
 }
 
 void speed_tree_allocator::Free( void* block )
