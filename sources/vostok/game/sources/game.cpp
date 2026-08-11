@@ -97,7 +97,7 @@ static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, 
 static u32 s_particle_lod_value = 0;
 static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
 
-static vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
+vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
 static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
 
 namespace survarium {

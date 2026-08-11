@@ -45,9 +45,9 @@ public:
 
 			void									disconnect							( );
 
-	inline	void									set_on_packet_received				( boost::function< void( network_core::packet_reader& ) > const& arg_0 ) { /* no source */ }
-	inline	void									set_on_connected					( boost::function< void() > const& arg_0 ) { /* no source */ }
-	inline	void									set_on_disconnected					( boost::function< void() > const& arg_0 ) { /* no source */ }
+	inline	void									set_on_packet_received				( boost::function< void( network_core::packet_reader& ) > const& arg_0 ) { m_on_packet_received = arg_0; }
+	inline	void									set_on_connected					( boost::function< void() > const& arg_0 ) { m_on_connected = arg_0; }
+	inline	void									set_on_disconnected					( boost::function< void() > const& arg_0 ) { m_on_disconnected = arg_0; }
 
 			u32										session_id							( ) const;
 
