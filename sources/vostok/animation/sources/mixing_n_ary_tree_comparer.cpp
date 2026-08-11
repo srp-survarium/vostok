@@ -555,9 +555,9 @@ void n_ary_tree_comparer::add_operands(
 )
 {
 	n_ary_tree_node_comparer			comparer;
-	n_ary_tree_base_node** const		i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
+	n_ary_tree_base_node* const* const	i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
 	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
-	n_ary_tree_base_node** const		j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+	n_ary_tree_base_node* const* const	j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
 	n_ary_tree_base_node**				j	= to.operands( sizeof( n_ary_tree_animation_node ) );
 
 	if ( i != i_e && (*i)->is_time_scale( ) ) {
