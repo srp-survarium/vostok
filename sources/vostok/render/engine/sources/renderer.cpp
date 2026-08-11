@@ -399,7 +399,11 @@ renderer::renderer( renderer_context* renderer_context ) :
 	m_renderer_context	( renderer_context ),
 	m_last_frame_time	( 0.f ),
 	m_current_time		( 0.f ),
-	m_simulation		( 32, 32, 32 )
+	m_simulation		(
+		options::ref( ).current.m_clouds_grid_width,
+		options::ref( ).current.m_clouds_grid_height,
+		options::ref( ).current.m_clouds_grid_width
+	)
 {
 	register_samplers				( );
 
