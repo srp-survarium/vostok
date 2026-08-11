@@ -50,6 +50,7 @@ namespace survarium {
 class animations_selector;
 class bullet;
 class game_world;
+class human_npc_cook;
 class hit_initiator;
 struct hit_object;
 
@@ -123,7 +124,9 @@ public:
 	}
 
 	virtual	float3								get_position				( float3 const& requester ) const override;
+private:
 			float3								get_position				( ) const;
+public:
 	virtual	float3								get_eyes_position			( ) const override;
 
 	virtual	void								clear_resources				( ) override;
@@ -297,6 +300,7 @@ public:
 	inline	bool								get_sound_dbg_mode			( ) const { /* no source */ return m_dbg_sound; }
 	inline	float4x4 const&						get_transform				( ) { /* no source */ return m_transform; }
 			void								set_transform				( float4x4 const& transform );
+private:
 			void								set_brain_unit				( resources::unmanaged_resource_ptr const& brain_unit );
 			void								set_model					( animated_model_instance_ptr const& model );
 
@@ -325,18 +329,17 @@ public:
 
 	inline	human_npc*							return_this					( ) { /* no source */ return this; }
 
-	// game_world's human_npc_list member typedef names &human_npc::next_npc
-	// (the PDB intrusive_list offset 320 = 0x140); friend grants the access
-	friend class game_world;
+	friend class human_npc_cook;
 
-private:
 	/* 0x0000 */	/* ai::npc */
 	/* 0x0004 */	/* ai::game_object */
 	/* 0x000c */	/* sound::sound_producer */
 	/* 0x001c */	/* sound::sound_receiver */
 	/* 0x0024 */	/* hit_receiver */
 	/* 0x0030 */	/* game_object_ */
+public:
 	/* 0x0140 */	human_npc_ptr							next_npc;
+private:
 	/* 0x0144 */	ai::world&								m_ai_world;
 	/* 0x0148 */	sound::world&							m_sound_world;
 	/* 0x014c */	physics::world&							m_physics_world;
