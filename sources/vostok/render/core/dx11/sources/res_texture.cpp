@@ -193,31 +193,10 @@ void res_texture::destroy_impl		() const
 	resource_manager::ref().release( this );
 }
 
-static DXGI_FORMAT get_srgb_format(DXGI_FORMAT format)
-{
-	switch (format)
-	{
-		case DXGI_FORMAT_BC1_UNORM:
-		case DXGI_FORMAT_BC1_TYPELESS:
-			return DXGI_FORMAT_BC1_UNORM_SRGB;
-		case DXGI_FORMAT_BC2_UNORM:
-		case DXGI_FORMAT_BC2_TYPELESS:
-			return DXGI_FORMAT_BC2_UNORM_SRGB;
-		case DXGI_FORMAT_BC3_UNORM:
-		case DXGI_FORMAT_BC3_TYPELESS:
-			return DXGI_FORMAT_BC3_UNORM_SRGB;
-		case DXGI_FORMAT_BC7_UNORM:
-		case DXGI_FORMAT_BC7_TYPELESS:
-			return DXGI_FORMAT_BC7_UNORM_SRGB;
-		default:
-			return format;
-	};
-}
-
 void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, bool staging, bool srgb, bool depth_stencil)
 {
+	VOSTOK_UNREFERENCED_PARAMETER( srgb );
 	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
-	// FUNCTION BODY[0x55c6c0]
 	if (surface)
 		surface->AddRef();
 
@@ -279,10 +258,7 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 				}
 			}
 
-			if (srgb)
-				view_desc.Format = get_srgb_format(m_desc.Format);
-			else
-				view_desc.Format = DXGI_FORMAT_UNKNOWN;
+			view_desc.Format = m_desc.Format;
 
 			switch(m_desc.Format)
 			{
@@ -291,6 +267,9 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 				break;
 			case DXGI_FORMAT_R32_TYPELESS:
 				view_desc.Format = DXGI_FORMAT_R32_FLOAT;
+				break;
+			case DXGI_FORMAT_R16_TYPELESS:
+				view_desc.Format = DXGI_FORMAT_R16_UNORM;
 				break;
 			}
 
