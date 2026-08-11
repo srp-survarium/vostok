@@ -9,8 +9,8 @@ namespace render {
 struct fog_box_geometry {
 	fog_box_geometry( );
 	void render( );
-	~fog_box_geometry( ) { }
 
+private:
 	res_geometry_ptr m_geometry;
 };
 
