@@ -49,25 +49,13 @@ namespace vostok
 		survarium::human_npc								human( world );
 
 		static pcvoid volatile s_sink = 0;
-		float3 ( survarium::human_npc::* const hp_get_pos )( ) const			= &survarium::human_npc::get_position;
 		survarium::object_weapon* ( survarium::human_npc::* const hp_pop )( )	= &survarium::human_npc::pop_weapon;
 		void ( survarium::human_npc::* const hp_avail )( vectora< ai::weapon* >& ) const	= &survarium::human_npc::get_available_weapons;
 		void ( survarium::human_npc::* const hp_selgoal )( )						= &survarium::human_npc::select_new_goal;
-		void ( survarium::human_npc::* const hp_setbrain )( resources::unmanaged_resource_ptr const& )	= &survarium::human_npc::set_brain_unit;
-		void ( survarium::human_npc::* const hp_setmodel )( survarium::animated_model_instance_ptr const& )	= &survarium::human_npc::set_model;
-		void ( survarium::human_npc::* const hp_setdefanim )( resources::managed_resource_ptr const& )	= &survarium::human_npc::set_default_animation;
-		void ( survarium::human_npc::* const hp_setgraph )( survarium::animation_space_graph_ptr const& )	= &survarium::human_npc::set_animation_space_graph;
-		void ( survarium::human_npc::* const hp_onaffect )( pcstr, const survarium::hit_affects_type_enum, const survarium::affect_event_type_enum ) const	= &survarium::human_npc::on_affect_event;
 		void ( survarium::human_npc::* const hp_onhit )( survarium::hit_object const& )	= &survarium::human_npc::on_hit_event;
-		s_sink = *( pcvoid const* )&hp_get_pos;
 		s_sink = *( pcvoid const* )&hp_pop;
 		s_sink = *( pcvoid const* )&hp_avail;
 		s_sink = *( pcvoid const* )&hp_selgoal;
-		s_sink = *( pcvoid const* )&hp_setbrain;
-		s_sink = *( pcvoid const* )&hp_setmodel;
-		s_sink = *( pcvoid const* )&hp_setdefanim;
-		s_sink = *( pcvoid const* )&hp_setgraph;
-		s_sink = *( pcvoid const* )&hp_onaffect;
 		s_sink = *( pcvoid const* )&hp_onhit;
 
 		// npc_game_attributes ctor + operator=
