@@ -654,6 +654,44 @@ def compiled_state_id(rec):
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
 
 
+def report_fuzzy_scores(report):
+    """Return the best measured objdiff score for each decorated name."""
+    scores = {}
+    units_by_mangled = {}
+    for unit in report["units"]:
+        uname = unit["name"]
+        for fn in unit["functions"]:
+            mangled = fn["name"]
+            units_by_mangled.setdefault(mangled, []).append(uname)
+            fuzzy = fn.get("fuzzy_match_percent")
+            if fuzzy is None:
+                continue
+            previous = scores.get(mangled)
+            scores[mangled] = fuzzy if previous is None else max(previous, fuzzy)
+    for units in units_by_mangled.values():
+        units.sort()
+    return scores, units_by_mangled
+
+
+def report_score_for_target(mangled, scores):
+    """Map objdiff's normalized spellings back to the retail PDB identity."""
+    fuzzy = scores.get(mangled)
+    compiler = normalize_objdiff_symbols.compiler_name(mangled)
+    if fuzzy is None and compiler:
+        fuzzy = scores.get(compiler)
+    if fuzzy is None and mangled.startswith("??_G"):
+        fuzzy = scores.get(f"??_E{mangled[4:]}")
+    return fuzzy
+
+
+def sha256_file(path):
+    digest = hashlib.sha256()
+    with open(path, "rb") as source:
+        for chunk in iter(lambda: source.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
 def instruction_stream_exact(target_rec, base_rec):
     """Prove exact code when objdiff omitted a function score.
 
@@ -969,15 +1007,12 @@ def regen():
 
     log("loading report.json ...")
     report = json.loads(REPORT.read_text())
+    report_scores, units_by_mangled = report_fuzzy_scores(report)
     report_fns = []  # (unit, mangled, fuzzy)
-    units_by_mangled = {}
     for unit in report["units"]:
         uname = unit["name"]
         for fn in unit["functions"]:
             report_fns.append((uname, fn["name"], fn.get("fuzzy_match_percent")))
-            units_by_mangled.setdefault(fn["name"], []).append(uname)
-    for units in units_by_mangled.values():
-        units.sort()
 
     cross_unit_fuzzy = {}
     if CROSS_UNIT_REPORT.is_file():
@@ -1034,11 +1069,7 @@ def regen():
         return rows
 
     log("classifying structure for paired functions ...")
-    fuzzy_by_mangled = {}
-    for _u, mangled, fuzzy in report_fns:
-        if fuzzy is not None:
-            prev = fuzzy_by_mangled.get(mangled)
-            fuzzy_by_mangled[mangled] = fuzzy if prev is None else max(prev, fuzzy)
+    fuzzy_by_mangled = dict(report_scores)
     for mangled, fuzzy in cross_unit_fuzzy.items():
         fuzzy_by_mangled.setdefault(mangled, fuzzy)
     # The disposable target COFF tree normalizes safe retail PDB backtick names
@@ -1046,18 +1077,9 @@ def regen():
     # objects. The rich indexes retain the authoritative PDB names; reflect each
     # normalized report score back onto that identity before building pair rows.
     for mangled in target:
-        compiler = normalize_objdiff_symbols.compiler_name(mangled)
-        if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
-            fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
-        # The retail PDB records the link-selected scalar deleting destructor
-        # (??_G), while delinked COFF commonly exposes the byte-identical vector
-        # flavor (??_E) used by the per-object comparison.  The rest of the
-        # decorated name is a complete class/signature identity, so this alias
-        # is exact rather than a demangled-name heuristic.
-        if mangled.startswith("??_G"):
-            vector_dtor = f"??_E{mangled[4:]}"
-            if vector_dtor in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
-                fuzzy_by_mangled[mangled] = fuzzy_by_mangled[vector_dtor]
+        fuzzy = report_score_for_target(mangled, fuzzy_by_mangled)
+        if fuzzy is not None:
+            fuzzy_by_mangled[mangled] = fuzzy
     pair_rows = []
     rich_exact = 0
     for mangled in sorted(set(target) & set(base)):
@@ -1724,6 +1746,191 @@ def cmd_max(args):
     rows = [dict(row) for row in con.execute(q, params)]
     con.close()
     emit(rows, args.json)
+
+
+def _artifact_path(value):
+    path = Path(value)
+    return path if path.is_absolute() else VOSTOK / path
+
+
+def cmd_import_island(args):
+    """Import explicitly manifested observations from isolated link artifacts.
+
+    Unlike a wholesale refresh, this preserves the canonical current pairing
+    and imports only reviewed functions.  The manifest pins both artifact
+    hashes plus each expected score and effective source hash, so a stale or
+    accidentally regenerated island cannot silently change correctness-facing
+    MAX evidence.
+    """
+    evidence = Path(args.evidence)
+    if evidence.is_absolute():
+        try:
+            evidence = evidence.relative_to(VOSTOK)
+        except ValueError:
+            sys.exit("[match_db] --evidence must be inside the repository worktree")
+    evidence_path = VOSTOK / evidence
+    if not evidence_path.is_file():
+        sys.exit(f"[match_db] missing evidence manifest: {evidence}")
+
+    report_path = _artifact_path(args.report)
+    base_index_path = _artifact_path(args.base_index)
+    for label, path in (("report", report_path), ("base index", base_index_path)):
+        if not path.is_file():
+            sys.exit(f"[match_db] missing island {label}: {path}")
+
+    manifest = json.loads(evidence_path.read_text())
+    if manifest.get("kind") != "compiler-state-island":
+        sys.exit("[match_db] evidence kind must be 'compiler-state-island'")
+    for key, path in (
+        ("report_sha256", report_path),
+        ("base_index_sha256", base_index_path),
+    ):
+        expected = manifest.get(key)
+        measured = sha256_file(path)
+        if not expected or expected != measured:
+            sys.exit(
+                f"[match_db] {key} mismatch: expected {expected or '<missing>'}, "
+                f"measured {measured}"
+            )
+
+    requested = manifest.get("functions")
+    if not isinstance(requested, list) or not requested:
+        sys.exit("[match_db] evidence manifest has no functions")
+    mangled_names = [row.get("mangled") for row in requested]
+    if any(not name for name in mangled_names) or len(set(mangled_names)) != len(mangled_names):
+        sys.exit("[match_db] evidence functions need unique, non-empty mangled names")
+
+    report = json.loads(report_path.read_text())
+    scores, _units = report_fuzzy_scores(report)
+    target_records = load_index_records(TARGET_IDX)
+    target = index_by_mangled(target_records)
+    candidate_records = load_index_records(base_index_path)
+    candidate = index_by_mangled(
+        candidate_records,
+        {mangled: rec["file"] for mangled, rec in target.items()},
+    )
+
+    con = open_db(check_schema=True)
+    observations = []
+    for expected in requested:
+        mangled = expected["mangled"]
+        target_rec = target.get(mangled)
+        candidate_rec = candidate.get(mangled)
+        if target_rec is None or candidate_rec is None:
+            con.close()
+            sys.exit(f"[match_db] island symbol absent from target/base rich index: {mangled}")
+
+        fuzzy = report_score_for_target(mangled, scores)
+        if fuzzy is None and instruction_stream_exact(target_rec, candidate_rec):
+            fuzzy = 100.0
+        if fuzzy is None:
+            con.close()
+            sys.exit(f"[match_db] island report has no measured score for: {mangled}")
+        expected_fuzzy = expected.get("expected_fuzzy_pct")
+        if expected_fuzzy is None or abs(float(expected_fuzzy) - fuzzy) > 0.0001:
+            con.close()
+            sys.exit(
+                f"[match_db] island score changed for {mangled}: "
+                f"expected {expected_fuzzy}, measured {fuzzy}"
+            )
+
+        inventory = con.execute(
+            "SELECT module FROM paired WHERE mangled = ? "
+            "UNION ALL SELECT module FROM target_only WHERE mangled = ? LIMIT 1",
+            (mangled, mangled),
+        ).fetchone()
+        if inventory is None:
+            con.close()
+            sys.exit(f"[match_db] symbol is not in the canonical target inventory: {mangled}")
+        module = inventory["module"]
+        if expected.get("module") and expected["module"] != module:
+            con.close()
+            sys.exit(
+                f"[match_db] module changed for {mangled}: "
+                f"expected {expected['module']}, measured {module}"
+            )
+
+        extent = _source_extent(candidate_rec)
+        if extent is None:
+            con.close()
+            sys.exit(f"[match_db] island symbol has no source extent: {mangled}")
+        source_file, lo, hi, _text = extent
+        effective_hash = effective_source_hash(candidate_rec, module)
+        expected_hash = expected.get("expected_hash")
+        if not args.dry_run and not expected_hash:
+            con.close()
+            sys.exit(f"[match_db] evidence lacks expected_hash for: {mangled}")
+        if expected_hash and expected_hash != effective_hash:
+            con.close()
+            sys.exit(
+                f"[match_db] effective hash changed for {mangled}: "
+                f"expected {expected_hash}, measured {effective_hash}"
+            )
+
+        previous = con.execute(
+            "SELECT * FROM source_maxima WHERE mangled = ?", (mangled,)
+        ).fetchone()
+        if previous is not None and previous["effective_hash"] != effective_hash:
+            con.close()
+            sys.exit(
+                f"[match_db] canonical source epoch disagrees for {mangled}: "
+                f"{previous['effective_hash']} != {effective_hash}"
+            )
+        previous_fuzzy = previous["max_fuzzy_pct"] if previous is not None else None
+        previous_exact = previous["exact_proven"] if previous is not None else 0
+        exact = int(fuzzy >= 99.995)
+        improves = (
+            previous is None
+            or fuzzy > previous_fuzzy + 0.000001
+            or exact > previous_exact
+        )
+        if not improves:
+            con.close()
+            sys.exit(
+                f"[match_db] island is not a MAX improvement for {mangled}: "
+                f"candidate {fuzzy:.6f}, current {previous_fuzzy:.6f}"
+            )
+        observations.append(
+            {
+                "mangled": mangled,
+                "module": module,
+                "fuzzy_pct": fuzzy,
+                "exact_proven": max(previous_exact, exact),
+                "effective_hash": effective_hash,
+                "state_id": compiled_state_id(candidate_rec),
+                "source_file": source_file,
+                "source_lo": lo,
+                "source_hi": hi,
+                "previous_fuzzy_pct": previous_fuzzy,
+            }
+        )
+
+    if args.dry_run:
+        con.close()
+        emit(observations, True)
+        return
+
+    for row in observations:
+        con.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(mangled) DO UPDATE SET "
+            "effective_hash=excluded.effective_hash, "
+            "max_fuzzy_pct=excluded.max_fuzzy_pct, "
+            "exact_proven=excluded.exact_proven, state_id=excluded.state_id, "
+            "module=excluded.module, source_file=excluded.source_file, "
+            "source_lo=excluded.source_lo, source_hi=excluded.source_hi, "
+            "origin=excluded.origin, evidence=excluded.evidence",
+            (
+                row["mangled"], row["effective_hash"], row["fuzzy_pct"],
+                row["exact_proven"], row["state_id"], row["module"],
+                row["source_file"], row["source_lo"], row["source_hi"],
+                "island", evidence.as_posix(),
+            ),
+        )
+    con.commit()
+    con.close()
+    log(f"imported {len(observations)} function-scoped island MAX observation(s)")
+    emit(observations, True)
 
 
 def cmd_record_max(args):
@@ -2658,6 +2865,19 @@ def main():
     p.add_argument("--evidence", required=True, help="candidate manifest/path in this worktree")
     p.add_argument("--expected-hash", help="refuse if the effective source epoch changed")
 
+    p = sub.add_parser(
+        "import-island",
+        help="import explicitly manifested function MAX from isolated artifacts",
+    )
+    p.add_argument("--report", required=True, help="isolated objdiff report.json")
+    p.add_argument("--base-index", required=True, help="isolated base rich index.jsonl")
+    p.add_argument("--evidence", required=True, help="tracked JSON evidence manifest")
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="validate and print observations without changing match.db",
+    )
+
     p = sub.add_parser("report", help="per-module/TU rollup")
     p.add_argument("--module")
     p.add_argument(
@@ -2751,6 +2971,7 @@ def main():
         "list": cmd_list,
         "max": cmd_max,
         "record-max": cmd_record_max,
+        "import-island": cmd_import_island,
         "report": cmd_report,
         "queue": cmd_queue,
         "sql": cmd_sql,
