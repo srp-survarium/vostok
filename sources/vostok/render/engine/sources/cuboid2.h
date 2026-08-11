@@ -10,6 +10,8 @@ namespace render {
 
 class cuboid2 {
 public:
+	enum { plane_count = 16 };
+
 	cuboid2( )
 	{
 	}
@@ -40,8 +42,8 @@ public:
 		return result;
 	}
 
-private:
-	math::aabb_plane	m_planes[16];
+protected:
+	math::aabb_plane	m_planes[plane_count];
 	u32					m_num_planes;
 };
 

@@ -45,8 +45,10 @@ enum {
 
 class portal {
 public:
+	enum { points_count = 4 };
+
 	typedef u32 sector_ids_type[2];
-	typedef float3 points_type[4];
+	typedef float3 points_type[points_count];
 
 	portal(
 		u32 sector0,
