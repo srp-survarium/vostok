@@ -569,7 +569,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::remove_animat
 	);
 }
 
-void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
+void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group( n_ary_tree_animation_node* const begin, n_ary_tree_animation_node* const end )
 {
 	n_ary_tree_animation_node* const new_animation	= remove_animation( *begin, 0, !begin->is_transitting_to_zero( ) );
 	if ( !new_animation )

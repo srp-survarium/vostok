@@ -360,7 +360,7 @@ void n_ary_tree_comparer::remove_animation(
 	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_node );
 }
 
-void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
+void n_ary_tree_comparer::remove_weight_synchronization_group( n_ary_tree_animation_node* const begin, n_ary_tree_animation_node* const end )
 {
 	if ( begin->weight_interpolator( ).transition_time( ) == 0.f ) {
 		m_equal					= false;
