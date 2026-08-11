@@ -987,30 +987,6 @@
 					</FileConfiguration>
 				</File>
 				<File
-					RelativePath=".\anchor_network_core.cpp"
-					>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							GeneratePreprocessedFile="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
-					RelativePath=".\anchor_network.cpp"
-					>
-					<FileConfiguration
-						Name="Master Gold|Win32"
-						>
-						<Tool
-							Name="VCCLCompilerTool"
-							GeneratePreprocessedFile="0"
-						/>
-					</FileConfiguration>
-				</File>
-				<File
 					RelativePath=".\anchor_physics.cpp"
 					>
 					<FileConfiguration

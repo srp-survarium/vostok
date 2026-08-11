@@ -8,6 +8,13 @@
 // provide it here in the anchor TU to satisfy the link (weapon_core.obj only references it).
 bool g_is_server = false;
 
+namespace vostok {
+	void example_callback( const char* name )
+	{
+		printf( "%s\n", name );
+	}
+}
+
 // This file's only collision anchors are collision_geometry / collision_sensor,
 // which never reference animated_object or bone_collision_data - so it does NOT
 // include animated_object.h. That keeps its dllexport explicit instantiation

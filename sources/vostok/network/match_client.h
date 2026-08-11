@@ -13,10 +13,6 @@
 
 namespace vostok {
 
-// the game_core reachability anchor (temp_include_all.cpp); befriended below so
-// it can call the private on_*/create_* members (free decls + friends emit no bytes)
-void use_network_clients( );
-
 namespace network_core {
 	class packet_reader;
 	class udp_match_packet;
@@ -107,9 +103,6 @@ private:
 			void				on_packet_received					( u8 message_type, network_core::packet_reader& reader );
 			void				on_disconnect_impl					( network_core::disconnect_event_types_enum type );
 			void				on_disconnect						( network_core::disconnect_event_types_enum type );
-
-private:
-	friend void ::vostok::use_network_clients( );
 
 private:
 	network_core::udp_match_packets_allocator_ptr	m_order_packets_allocator;

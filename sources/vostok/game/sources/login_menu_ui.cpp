@@ -3,34 +3,23 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include "game.h"
 #include "login_menu.h"
 #include "login_menu_external_handler.h"
+#include "base_network_client.h"
 
+#include <vostok/network/login_client.h>
+#include <vostok/scaleform/sources/flash_movie.h>
+#include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/console_command.h>
+#include <vostok/console_command_processor.h>
+#include <vostok/memory_extensions.h>
 
 namespace survarium {
 
 static bool s_store_user_pass	= true;
 static vostok::console_commands::cc_bool s_store_user_pass_cc	( "store_user_password", s_store_user_pass, true, vostok::console_commands::command_type_user_specific );
 
-// STATE[STUB]
-// claude@NOTE: parked. The flash /Od wall is now LIFTED (scaleform /Ox, /GL inlines
-// SetVariable/GetVariable + the flash_value ctor/dtor), but this body is still empty -
-// reconstructing it remains blocked on: (a) the login_client::sign_in call is a VTABLE
-// dispatch (`[ebx+8]`) reading host/port members at login_client +0x134 / +0x174 plus a
-// boost::function callback, not the non-virtual sign_in decl we have, so the exact
-// vtable slot + member layout must be mapped first; (b) the exit branch calls
-// `[edi+8]->[eax+7Ch]->vtbl[0]( 0 )` whose target is unconfirmed. Recovered body: if
-// methodName == "sign_in_button_clicked" and !m_login_menu.action_blocked(): get the
-// login_client via m_game.m_network_client->login_client(),
-// SetVariable("root.sign_in_btn.enabled", flash_value(false)),
-// SetVariable("root.status_str.text","Connecting..."), call
-// login_client.sign_in(host,port,account,password,...), GetVariable(
-// "root.save_checkbox.selected") -> s_store_user_pass, then
-// store_user_password_in_settings / reset_user_password_in_settings +
-// console_commands::save("user.cfg",...). else if "exit_button_clicked": exit.
-// login_menu::action_blocked() is an empty inline stub here. Recover in a focused pass
-// once the login_client vtable slots are mapped.
 void login_menu_external_handler::callback(
 	flash_movie*			pmovieView,
 	pcstr					methodName,
@@ -38,6 +27,42 @@ void login_menu_external_handler::callback(
 	u32						argCount
 )
 {
+	if ( strings::equal( methodName, "sign_in_button_clicked" ) )
+	{
+		if ( m_login_menu.action_blocked( ) )
+			return;
+
+		network::login_client& login_client = m_game.network_client( ).login_client( );
+
+		flash_value sign_in_button_enable;
+		sign_in_button_enable.SetBoolean( false );
+		pmovieView->SetVariable( "root.sign_in_btn.enabled", sign_in_button_enable );
+		pmovieView->SetVariable( "root.status_str.text", "Connecting..." );
+
+		pcstr account_name = args[ 0 ].GetString( );
+		pcstr account_password = args[ 1 ].GetString( );
+		m_game.network_client( ).connect_to_login(
+			login_client.m_server_host,
+			login_client.m_server_port,
+			account_name,
+			account_password
+		);
+
+		flash_value need_to_save_password;
+		pmovieView->GetVariable( &need_to_save_password, "root.save_checkbox.selected" );
+		s_store_user_pass = need_to_save_password.GetBool( );
+
+		if ( s_store_user_pass )
+			login_client.store_user_password_in_settings( );
+		else
+			login_client.reset_user_password_in_settings( );
+
+		console_commands::save( "user.cfg", console_commands::command_type_user_specific, memory::g_mt_allocator );
+	}
+	else if ( strings::equal( methodName, "exit_button_clicked" ) )
+	{
+		m_game.engine( ).exit( 0 );
+	}
 }
 
 // STATE[STUB]

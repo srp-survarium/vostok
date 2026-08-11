@@ -14,7 +14,6 @@ namespace vostok
 {
 	// Module entry points keep reconstructed code reachable under /OPT:REF.
 	void anchor_game_core( );
-	void anchor_network( );
 	void anchor_physics( );
 	void anchor_collision( );
 	void anchor_ai_navigation( );

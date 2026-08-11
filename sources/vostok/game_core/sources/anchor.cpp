@@ -7,7 +7,6 @@ namespace survarium
 IncludeAll::IncludeAll()
 {
 	vostok::anchor_game_core( );
-	vostok::anchor_network( );
 	vostok::anchor_physics( );
 	vostok::anchor_collision( );
 	vostok::anchor_ai_navigation( );

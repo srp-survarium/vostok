@@ -12,11 +12,6 @@
 
 namespace vostok {
 
-// the game_core reachability anchor (temp_include_all.cpp); befriended below so
-// it can call the private on_*/create_client/connect_impl members (free decls +
-// friends emit no bytes)
-void use_network_clients( );
-
 namespace network_core {
 	class packet_reader;
 	class tcp_packet;
@@ -71,9 +66,6 @@ private:
 	void		create_client			( );
 
 	void		connect_impl			( pcstr host, u16 port );
-
-private:
-	friend void ::vostok::use_network_clients( );
 
 private:
 	boost::function< void ( network_core::packet_reader& ) >	m_on_packet_received;

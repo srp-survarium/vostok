@@ -13,6 +13,7 @@
 #include "apc.h"
 #include <vostok/fs_utils.h>
 #include <vostok/render/world.h>
+#include <vostok/network/sources/network_entry_point.h>
 
 using vostok::engine::engine_world;
 
@@ -90,6 +91,7 @@ engine_world::engine_world				(
 	}
 
 	memory::allocate_region				( additional_memory_size );
+	network::initialize					( );
 }
 
 engine_world::~engine_world		( )
@@ -97,6 +99,7 @@ engine_world::~engine_world		( )
 	finalize							( );
 
 	destroy_scaleform	( );
+	network::finalize					( );
 	core::finalize						( );
 }
 

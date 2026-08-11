@@ -10,6 +10,10 @@
 #include <vostok/network/api.h>
 #include <vostok/network_core/sources/network_core_entry_point.h>
 
+// The target retains this otherwise-unreferenced /GL survivor; no target object
+// contains a code or data xref to it.
+#pragma comment( linker, "/include:?sign_up@login_client_impl@network@vostok@@QAEXPBDGABUsign_up_info@3@ABV?$function@$$A6AXW4connection_error_types_enum@vostok@@W4handshaking_error_types_enum@2@W4socket_error_types_enum@2@W4login_server_message_types_enum@2@ABUsign_up_info@2@@Z@boost@@@Z" )
+
 using vostok::network::network_world;
 
 // claude@NOTE: objdiff credits 0 (symbols never pair). The base obj DOES

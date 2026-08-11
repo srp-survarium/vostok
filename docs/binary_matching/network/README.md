@@ -9,9 +9,8 @@
   are whole-program inline-budget decisions, NOT source-steerable from a single TU.
 - Sources: `sources/vostok/network/` (public headers at module root,
   orders/responses/impls under `sources/`).
-- Reachability anchor: `use_network_clients()` in `game_core`'s
-  `temp_include_all.cpp`; the engine module is a real consumer
-  (`create_world`/`destroy_world`/`world` vtable via `api.h` + `world.h`).
+- The engine owns the real module lifetime through `network::initialize()` and
+  `network::finalize()`; game login UI supplies the live login-client path.
 - Carcass rebuilt from canonical structure (see
   [../library_carcass_rebuild.md](../library_carcass_rebuild.md)); the 2012-era
   client/server/packet web it replaced is parked verbatim in
@@ -65,12 +64,13 @@
 
 - **Access**: every `on_*`/`*_on_connected`/`create_client`/`sign_in_impl`/impl-plumbing
   method is `AAE` private in the target; the public surface is ctor/dtor +
-  `sign_up/sign_in/sign_out` + getters. The game_core anchor is befriended in
-  `login_client.h` (`friend void ::vostok::use_network_clients( );`).
+  `sign_up/sign_in/sign_out` + getters and the target-public connection-settings
+  fields used by the game login UI.
 - **`login_client::sign_up` has NO standalone target symbol** - LTCG inlined it into its
   optimized-module caller; reconstructed out-of-line in `login_client.cpp` (the impl chain
-  binds `boost::ref( sign_up_info )`, so it must pass the long-lived `m_sign_up_info`).
-  Reachability of the whole impl sign-up chain hangs off it.
+  binds `boost::ref( sign_up_info )`, so it must pass the long-lived `m_sign_up_info`). The
+  target retains `login_client_impl::sign_up` despite having no object-level code or data
+  xref, so `network_entry_point.cpp` mirrors that linker retention explicitly.
 - **Globals**: `s_net_client_account_name` / `s_net_client_account_password_` (trailing
   underscore!) are GLOBAL-scope extern char[128]; the cc_string statics register them as
   "account_name"/"account_password" (user_specific, serializable). `destroy_client` is a
