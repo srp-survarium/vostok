@@ -8,10 +8,6 @@ namespace render {
 
 class depth_accumulate_material_effect : public effect_material_base {
 public:
-	depth_accumulate_material_effect( ) { }
-	virtual ~depth_accumulate_material_effect( ) { }
-
-private:
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

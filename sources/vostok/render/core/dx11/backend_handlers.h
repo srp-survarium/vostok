@@ -70,9 +70,6 @@ private:
 		u32 end;
 	};
 
-public:
-	~constants_handler( );
-
 private:
 	u32 m_diff_range_start;
 	u32 m_diff_range_end;
@@ -98,9 +95,6 @@ private:
 	void apply( );
 	void fill_changes_buffer( ID3D11ShaderResourceView** buffer, s32& out_num_textures );
 	void check_for_unset_textures( );
-
-public:
-	~textures_handler( );
 
 private:
 	res_texture_list_const_ptr m_current;
@@ -132,9 +126,6 @@ private:
 	void apply( );
 	void fill_changes_buffer( ID3D11SamplerState** buffer, u32& out_num_samplers );
 	void check_for_unset_samplers( );
-
-public:
-	~samplers_handler( );
 
 private:
 	u32 m_diff_range_start;

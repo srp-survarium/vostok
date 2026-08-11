@@ -12,21 +12,6 @@
 namespace vostok {
 namespace render {
 
-template < enum_shader_type shader_type >
-constants_handler< shader_type >::~constants_handler( )
-{
-}
-
-template < enum_shader_type shader_type >
-textures_handler< shader_type >::~textures_handler( )
-{
-}
-
-template < enum_shader_type shader_type >
-samplers_handler< shader_type >::~samplers_handler( )
-{
-}
-
 template <enum_shader_type shader_type>
 void constants_handler<shader_type>::assign( shader_constant_table const * table)
 {

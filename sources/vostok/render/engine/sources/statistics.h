@@ -71,7 +71,6 @@ struct statistics_value : public statistics_base {
 	virtual void clear( ) override;
 
 	T average( );
-	~statistics_value( );
 
 	T	value;
 	T	min_value;
@@ -185,7 +184,6 @@ STATIC_SIZE_ASSERT( gbuffer_statistics_group, 0x528 );
 
 struct visibility_statistics_group : public statistics_group {
 	explicit visibility_statistics_group( pcstr group_name );
-	~visibility_statistics_group( ) { }
 
 	statistics_float	portal_culling_time;
 	statistics_int		frustums_count;
@@ -241,7 +239,6 @@ STATIC_SIZE_ASSERT( particles_statistics_group, 0xA78 );
 
 struct cascaded_sun_shadow_statistics_group : public statistics_group {
 	explicit cascaded_sun_shadow_statistics_group( pcstr group_name );
-	~cascaded_sun_shadow_statistics_group( ) { }
 
 	statistics_cpu_gpu	execute_time_cascade_1;
 	statistics_cpu_gpu	execute_time_cascade_2;
@@ -278,7 +275,6 @@ STATIC_SIZE_ASSERT( forward_stage_statistics_group, 0x2E0 );
 
 struct general_statistics_group : public statistics_group {
 	explicit general_statistics_group( pcstr group_name );
-	~general_statistics_group( ) { }
 
 	statistics_cpu_gpu	render_frame_time;
 	statistics_float	cpu_render_frame_time;
@@ -383,7 +379,6 @@ STATIC_SIZE_ASSERT( grass_statistics_group, 0x2C8 );
 
 struct debug_statistics_group : public statistics_group {
 	explicit debug_statistics_group( pcstr group_name );
-	~debug_statistics_group( ) { }
 
 	statistics_int		avaliable_video_memory;
 	statistics_int		texture_video_memory;

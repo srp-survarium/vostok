@@ -60,8 +60,6 @@ public:
 		compiler.end_technique();
 	}
 
-	effect_complex_post_process_blend( ) { }
-	virtual ~effect_complex_post_process_blend( ) { }
 };
 
 typedef effect_complex_post_process_blend<

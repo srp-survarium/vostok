@@ -20,12 +20,7 @@ class res_xs : public resource_intrusive_base {
 		res_xs_hw<shader_data>,
 		resource_intrusive_base,
 		threading::single_threading_policy
-	> hardware_shader_ptr;
-	typedef intrusive_ptr<
-		res_texture_list,
-		resource_intrusive_base,
-		threading::single_threading_policy
-	> texture_list_ptr;
+	> ref_xs_hw;
 
 	friend class resource_intrusive_base;
 	friend class resource_manager;
@@ -77,17 +72,17 @@ public:
 			m_samplers->rebind( );
 	}
 
-	res_xs_hw<shader_data> const* hardware_shader( ) const
+	res_xs_hw<shader_data> const* hardware_shader( )
 	{
 		return m_hardware_shader.c_ptr( );
 	}
 
 private:
-	hardware_shader_ptr m_hardware_shader;
+	ref_xs_hw m_hardware_shader;
 	shader_constant_table_ptr m_constants;
 
 public:
-	texture_list_ptr m_textures;
+	res_texture_list_ptr m_textures;
 
 private:
 	res_sampler_list_ptr m_samplers;
