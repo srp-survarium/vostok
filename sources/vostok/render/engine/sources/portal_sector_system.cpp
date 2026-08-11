@@ -135,39 +135,28 @@ math::frustum create_frustum_from_four_points(
 	float const distance = plane.classify( view_pos );
 	if ( distance > 0.f )
 	{
-		math::plane frustrum_planes[math::cuboid::plane_count];
-
-		frustrum_planes[0] = math::create_plane( view_pos, points[1], points[0] );
-
-		frustrum_planes[1] = math::create_plane( view_pos, points[3], points[2] );
-
-		frustrum_planes[2] = math::create_plane( view_pos, points[2], points[1] );
-
-		frustrum_planes[3] = math::create_plane( view_pos, points[0], points[3] );
-
-		frustrum_planes[4] = far_plane;
-
-
-		frustrum_planes[5].normal = -plane.normal;
-		frustrum_planes[5].d = -plane.d;
+		math::plane frustrum_planes[math::cuboid::plane_count] = {
+			math::create_plane( view_pos, points[1], points[0] ),
+			math::create_plane( view_pos, points[3], points[2] ),
+			math::create_plane( view_pos, points[2], points[1] ),
+			math::create_plane( view_pos, points[0], points[3] ),
+			far_plane,
+			math::plane( -plane.normal, -plane.d )
+		};
 
 		math::frustum result( frustrum_planes );
 		return result;
 	}
 	else
 	{
-		math::plane frustrum_planes[math::cuboid::plane_count];
-		frustrum_planes[0] = math::create_plane( view_pos, points[0], points[1] );
-
-		frustrum_planes[1] = math::create_plane( view_pos, points[2], points[3] );
-
-		frustrum_planes[2] = math::create_plane( view_pos, points[1], points[2] );
-
-		frustrum_planes[3] = math::create_plane( view_pos, points[3], points[0] );
-		frustrum_planes[4] = far_plane;
-
-
-		frustrum_planes[5] = plane;
+		math::plane frustrum_planes[math::cuboid::plane_count] = {
+			math::create_plane( view_pos, points[0], points[1] ),
+			math::create_plane( view_pos, points[2], points[3] ),
+			math::create_plane( view_pos, points[1], points[2] ),
+			math::create_plane( view_pos, points[3], points[0] ),
+			far_plane,
+			plane
+		};
 		math::frustum result( frustrum_planes );
 
 		return result;
