@@ -6,7 +6,8 @@
 namespace vostok {
 namespace render {
 
-res_sampler_list::res_sampler_list( fixed_vector<sampler_slot, 16> const& slots )
+res_sampler_list::res_sampler_list( fixed_vector<sampler_slot, 16> const& slots ) :
+	m_is_registered( false )
 {
 	// FUNCTION BODY[0x739a40]
 	u32 const slots_size = slots.size();
