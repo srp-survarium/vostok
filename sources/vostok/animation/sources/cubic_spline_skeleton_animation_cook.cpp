@@ -19,23 +19,13 @@ static cubic_spline_skeleton_animation_cook s_cubic_spline_skeleton_animation_co
 } // namespace animation
 } // namespace vostok
 
-cubic_spline_skeleton_animation_cook::cubic_spline_skeleton_animation_cook	( ) :
-	super								(
-		resources::cubic_spline_skeleton_animation_class,
-		reuse_true,
-		use_resource_manager_thread_id
-	)
-{
-	register_cook	( this );
-}
-
-u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer bi_spline_skeleton_animation_buffer, bool const file_exist )
+u32 cubic_spline_skeleton_animation_cook::calculate_resource_size			( vostok::const_buffer in_raw_file_data, bool const file_exist )
 {
 	R_ASSERT_U							( file_exist );
 	return
 		cubic_spline_skeleton_animation::count_memory_size(
 			*static_cast_checked< bi_spline_skeleton_animation_baked const* >(
-				bi_spline_skeleton_animation_buffer.c_ptr()
+				in_raw_file_data.c_ptr()
 			)
 		);
 }

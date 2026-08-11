@@ -14,10 +14,18 @@ namespace animation {
 
 class cubic_spline_skeleton_animation_cook :
 	public resources::managed_cook,
-	private boost::noncopyable
+	public boost::noncopyable
 {
 public:
-					cubic_spline_skeleton_animation_cook( );
+	inline			cubic_spline_skeleton_animation_cook( ) :
+		resources::managed_cook(
+			resources::cubic_spline_skeleton_animation_class,
+			reuse_true,
+			use_resource_manager_thread_id
+		)
+	{
+		register_cook	( this );
+	}
 
 	virtual	u32		calculate_resource_size	( const_buffer in_raw_file_data, bool file_exist );
 	virtual void	create_resource			(
@@ -27,8 +35,7 @@ public:
 					);
 	virtual	void	destroy_resource		( resources::managed_resource* dying_resource ) ;
 
-private:
-	typedef resources::managed_cook			super;
+	virtual			~cubic_spline_skeleton_animation_cook( ) { }
 }; // class cubic_spline_skeleton_animation_cook
 
 STATIC_SIZE_ASSERT(cubic_spline_skeleton_animation_cook, 0x20);
