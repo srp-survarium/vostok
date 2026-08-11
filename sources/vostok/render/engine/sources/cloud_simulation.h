@@ -9,7 +9,7 @@
 namespace vostok {
 namespace render {
 
-class cloud_simulation : public boost::noncopyable {
+class cloud_simulation : boost::noncopyable {
 public:
 	struct voxel {
 		u8 x;
@@ -23,6 +23,11 @@ public:
 
 	voxel* get_voxels( ) const;
 	void generate( cloud_key_parameters const& init_key, float3 const& sun_direction );
+
+	float3		cloud_offset;
+	float4x4	world_to_cloud;
+	float		interp_alpha;
+
 	void copy_from( cloud_simulation const& other );
 
 private:
@@ -81,12 +86,6 @@ private:
 
 	void compute_cloud_density( );
 
-	friend class stage_clouds;
-	friend class stage_sun;
-
-	float3		cloud_offset;
-	float4x4	world_to_cloud;
-	float		interp_alpha;
 	voxel*		m_voxels;
 	float*		m_densities;
 	u32 const	m_clouds_size_x;

@@ -12,6 +12,8 @@ class binary_config_value;
 namespace render {
 
 struct cloud_parameters {
+	typedef configs::binary_config_value ConfigType;
+
 	cloud_parameters( ) { }
 
 	void load( configs::binary_config_value const& )

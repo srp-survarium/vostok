@@ -180,41 +180,76 @@ void cloud_simulation::compute_indirect_light(
 {
 	float const vertical_direction = math::clamp_r( math::abs( sun_direction | float3( 0.0f, 1.0f, 0.0f ) ), 0.0f, 1.0f );
 
-	u32 num = static_cast<u32>( (1.0f - vertical_direction) * static_cast<float>( m_clouds_size_y * 6 ) + vertical_direction * static_cast<float>( m_clouds_size_y ) ); for ( u32 z = 0; z < m_clouds_size_z; ++z ) {
+	u32 num = static_cast<u32>( (1.0f - vertical_direction) * static_cast<float>( m_clouds_size_y * 6 ) + vertical_direction * static_cast<float>( m_clouds_size_y ) );
 
-		for ( u32 x = 0; x < m_clouds_size_x; ++x ) {
-
-			for ( u32 y = 0; y < m_clouds_size_y; ++y ) {
-
+	for ( u32 z = 0; z < m_clouds_size_z; ++z )
+	{
+		for ( u32 x = 0; x < m_clouds_size_x; ++x )
+		{
+			for ( u32 y = 0; y < m_clouds_size_y; ++y )
+			{
 				voxel v = get_voxel( x, y, z );
 
-				if ( v.x ) {
-					// 7 target lines are likely retail-compiled-out source.
-					float accumulated = 0.0f; for ( u32 i = 0; i < num; ++i ) {
-						// 3 target lines are likely retail-compiled-out source.
-						float3 coord = float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) + sun_direction * static_cast<float>( i + 1 );
+				if ( v.x )
+				{
+					float accumulated = 0.0f;
 
-						u32 sample_x = static_cast<u32>( math::max( coord.x, 0.0f ) ); u32 const sample_y = static_cast<u32>( math::max( coord.y, 0.0f ) ); u32 sample_z = static_cast<u32>( math::max( coord.z, 0.0f ) );
-						// 2 target lines are likely retail-compiled-out source.
-						if ( sample_x >= m_clouds_size_x ||
-							// 3 target lines are likely retail-compiled-out source.
-							!in_grid( sample_y, sample_z, sample_x ) ) {
-							// 2 target lines are likely retail-compiled-out source.
-							sample_x = math::floor( coord.x ) % m_clouds_size_x;
-							sample_z = math::floor( coord.z ) % m_clouds_size_z;
+					for ( u32 i = 0; i < num; ++i )
+					{
+						float3 coord =
+							float3( static_cast<float>( x ), static_cast<float>( y ), static_cast<float>( z ) ) +
+							sun_direction * static_cast<float>( i + 1 );
+
+						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x ||
+							!in_grid(
+								static_cast<u32>( math::max( coord.y, 0.0f ) ),
+								static_cast<u32>( math::max( coord.z, 0.0f ) ),
+								static_cast<u32>( math::max( coord.x, 0.0f ) )
+							)
+						)
+						{
+							if ( math::floor( coord.x ) < m_clouds_size_x &&
+								math::floor( coord.y ) > m_clouds_size_y &&
+								math::floor( coord.z ) < m_clouds_size_z )
+							{
+								accumulated += 1.0f;
+								continue;
+							}
+
+							coord.x = static_cast<float>( math::floor( coord.x ) % m_clouds_size_x );
+							coord.z = static_cast<float>( math::floor( coord.z ) % m_clouds_size_z );
 						}
-						if ( sample_x >= m_clouds_size_x || !in_grid( sample_y, sample_z, sample_x ) ) break;
-						// 8 target lines are likely retail-compiled-out source.
-						if ( is_empty( sample_x, sample_y, sample_z ) ) break;
-						// 4 target lines are likely retail-compiled-out source.
+
+						if ( static_cast<u32>( math::max( coord.x, 0.0f ) ) >= m_clouds_size_x ||
+							!in_grid(
+								static_cast<u32>( math::max( coord.y, 0.0f ) ),
+								static_cast<u32>( math::max( coord.z, 0.0f ) ),
+								static_cast<u32>( math::max( coord.x, 0.0f ) )
+							)
+						)
+							break;
+
+						if ( is_empty(
+							static_cast<u32>( math::max( coord.x, 0.0f ) ),
+							static_cast<u32>( math::max( coord.y, 0.0f ) ),
+							static_cast<u32>( math::max( coord.z, 0.0f ) )
+						) )
+							break;
+
 						accumulated += 1.0f;
 					}
-					// 2 target lines are likely retail-compiled-out source.
+
 					accumulated /= static_cast<float>( num );
 
 					accumulated = math::clamp_r( accumulated, 0.0f, 1.0f );
-					// 3 target lines are likely retail-compiled-out source.
-					v.y = static_cast<u8>( math::clamp_r( math::pow( 1.0f - accumulated, init_key.extinction ), 0.0f, 1.0f ) * 255.0f );
+
+					v.y = static_cast<u8>(
+						math::clamp_r(
+							math::pow( 1.0f - accumulated, init_key.extinction ),
+							0.0f,
+							1.0f
+						) * 255.0f
+					);
 					set_voxel( v, x, y, z );
 				}
 			}

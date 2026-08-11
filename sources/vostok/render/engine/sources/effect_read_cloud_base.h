@@ -11,9 +11,6 @@ class effect_compiler;
 
 class effect_read_cloud_base : public effect_descriptor {
 public:
-	effect_read_cloud_base( ) { }
-	virtual ~effect_read_cloud_base( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config

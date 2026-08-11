@@ -73,6 +73,15 @@ struct clouds {
 		return m_is_editor_mode;
 	}
 
+	cloud_key_parameters					m_keys[num_max_keys];
+	u32										m_num_keys;
+	uninitialized_reference<cloud_simulation>	m_cloud_simulation_0;
+	uninitialized_reference<cloud_simulation>	m_cloud_simulation_1;
+	uninitialized_reference<cloud_simulation>	m_cloud_simulation_2;
+	bool									m_is_updated;
+	cloud_key_parameters					m_interp_key;
+	float									m_interp_alpha;
+
 private:
 	cloud_key_parameters get_next_key_of( u32 const index ) const
 	{
@@ -86,17 +95,6 @@ private:
 		return index ? index - 1 : m_num_keys - 1;
 	}
 
-public:
-	~clouds( ) { }
-
-	cloud_key_parameters					m_keys[num_max_keys];
-	u32										m_num_keys;
-	uninitialized_reference<cloud_simulation>	m_cloud_simulation_0;
-	uninitialized_reference<cloud_simulation>	m_cloud_simulation_1;
-	uninitialized_reference<cloud_simulation>	m_cloud_simulation_2;
-	bool									m_is_updated;
-	cloud_key_parameters					m_interp_key;
-	float									m_interp_alpha;
 	tasks::task_type*	m_tasks_type;
 	tasks::task			m_parent_task;
 	float				m_key_time_step;
