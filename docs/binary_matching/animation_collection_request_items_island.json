@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed animation_collection_cook::request_items observation from the disposable late game_core-before-animation LTCG link. The complete 28-statement caller remains present; this is a partial MAX observation, not an exact or structure-closure claim.",
+  "link_perturbation": "animation moved to the original late game_core slot, immediately after game_core; all other libraries and link flags preserved",
+  "report_sha256": "f848bf113ebf7afaf35503e4136d703dc5619c340cbfff86d0cf9ecb802ac71f",
+  "base_index_sha256": "7022a65eb443af9f1c27b5a016d99cc1c33740b974eec944ae6990bd8e2d0b4d",
+  "candidate_exe_sha256": "90d70b5166756eb5671198b9a4e04719820112817e10958eb706b455cdf30ccb",
+  "candidate_pdb_sha256": "e1ae9787dc9a266935b95af2793673044fd5e7bb590cb06ff0531e3bb562c885",
+  "functions": [
+    {
+      "mangled": "?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "95b6a06ad8d0.9fff9ae0c2fb519e.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 98.07872,
+      "review": "Target and candidate retain all 28 attributed body statements and the previously audited 13-local design. The 0x463-byte target versus 0x467-byte candidate residual is confined to post-query creation-request temporary destruction, register scheduling, and padding; request construction and dispatch control flow remain present."
+    }
+  ]
+}
