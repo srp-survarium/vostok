@@ -687,7 +687,8 @@ void animation_player::deserialize_state( void* buffer, const u32 time_in_ms )
 	mixing::n_ary_tree& tree					= *(mixing::n_ary_tree*)( (u32*)buffer + 2 );
 	if ( tree.animations_count( ) == 0 )
 	{
-		m_mixing_tree							= mixing::n_ary_tree( );
+		m_mixing_tree.~n_ary_tree			( );
+		new (&m_mixing_tree) mixing::n_ary_tree( );
 		return;
 	}
 
