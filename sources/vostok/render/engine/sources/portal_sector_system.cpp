@@ -587,13 +587,12 @@ void portal_sector_system::calculate_portal_rects_in_screen_space(
 	float_buffer_type& distances
 )
 {
-	aab_rect portal_rect;
-
 	rects.clear( );
 	distances.clear( );
 	portals_type::const_iterator const portals_end = m_structure->get_portals( ).end( );
 	for ( portals_type::const_iterator it = m_structure->get_portals( ).begin( ); it != portals_end; ++it )
 	{
+		aab_rect portal_rect;
 		if ( !it->is_visible( ) )
 		{
 			portal_rect.min = portal_rect.max = float2( 0.f, 0.f );
