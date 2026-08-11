@@ -260,7 +260,7 @@ private:
 	struct render_dirty_targets {
 		render_dirty_targets( ) { reset( ); }
 		void reset( ) { ZeroMemory( this, sizeof( *this ) ); }
-		bool any( ) const
+		bool any( )
 		{
 			return render_targets[0] | render_targets[1] | render_targets[2]
 				| render_targets[3] | depth_stencil;
