@@ -21,8 +21,6 @@ skeleton_render_model::skeleton_render_model( )
 {
 	m_bones_matrices_shader_constant	=
 		backend::ref().register_constant_host( "bones_matrices",  rc_float );
-	// claude@NOTE: second registration inferred from the canonical
-	// m_prev_bones_matrices_shader_constant member; constant name unverified.
 	m_prev_bones_matrices_shader_constant	=
 		backend::ref().register_constant_host( "prev_bones_matrices",  rc_float );
 
@@ -146,8 +144,6 @@ void skeleton_render_model_instance::assign_original( skeleton_render_model_ptr 
 {
 	m_original					= v;
 	m_bones_matrices.resize		( m_original->m_inverted_bones_matrices_in_bind_pose.size() );
-	// claude@NOTE: m_prev_bones_matrices mirror inferred from the canonical member; the
-	// legacy ancestor predates motion-blur prev-frame bones.
 	m_prev_bones_matrices.resize( m_original->m_inverted_bones_matrices_in_bind_pose.size() );
 
 	{
@@ -173,62 +169,13 @@ void skeleton_render_model_instance::assign_original( skeleton_render_model_ptr 
 		info.m_parent				= this;
 		info.m_render_surface		= m_original->m_childs[i];
 		info.m_transform			= &m_transform;
-		// claude@NOTE: legacy set info.m_visible = true; canonical replaced the bool with m_flags.
-		info.m_flags				= visible_flag;
+		info.m_flags				= visible_flag | cast_shadow_flag;
 	}
-
-	// FUNCTION BODY[0x63b010]: 38
-	// <0x63b016>|0x006|+0x048:'85'
-	// <0x63b05e>|0x04e|+0x02c:'86'
-	// <0x63b08a>|0x07a|+0x023:'87'
-	// <0>
-	// <0x63b0ad>|0x09d|+0x002:'89'
-	// <0x63b0af>|0x09f|+0x006:'90'
-	// <0x63b0b5>|0x0a5|+0x00b:'91'
-	// <0x63b0c0>|0x0b0|+0x00e:'92'
-	// <0>
-	// <1>
-	// <0x63b0ce>|0x0be|+0x006:'95'
-	// <0x63b0d4>|0x0c4|+0x006:'96'
-	// <0x63b0da>|0x0ca|+0x006:'97'
-	// <0x63b0e0>|0x0d0|+0x00e:'98'
-	// <0>
-	// <1>
-	// <2>
-	// <0x63b0ee>|0x0de|+0x012:'102'
-	// <0x63b100>|0x0f0|+0x00e:'103'
-	// <0>
-	// <0x63b10e>|0x0fe|+0x022:'105'
-	// <0>
-	// <0x63b130>|0x120|+0x015:'107'
-	// <0x63b145>|0x135|+0x003:'108'
-	// <0x63b148>|0x138|+0x011:'109'
-	// <0x63b159>|0x149|+0x003:'110'
-	// <0x63b15c>|0x14c|+0x015:'111'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// ******
 }
 
-u32 skeleton_render_model_instance::get_surfaces_count( u32 lod_id ) const
+u32 skeleton_render_model_instance::get_surfaces_count( u32 ) const
 {
-	// claude@NOTE: no legacy ancestor (lod overload is new); skeleton models carry no lods,
-	// single-statement target body consistent with returning the flat count.
-	VOSTOK_UNREFERENCED_PARAMETER	( lod_id );
-	return m_instances_count;
-
-	// FUNCTION BODY[0x63a660]: 1
-	// <0x63a660>|0x000|+0x005:'127'
-	// ******
+	return 1;
 }
 
 void skeleton_render_model_instance::get_surfaces(
@@ -342,14 +289,7 @@ void skeleton_render_model_instance::set_constants( )
 	u32 const max_bones_count		= 64;
 	R_ASSERT_CMP					( m_bones_matrices.size( ), <=, max_bones_count );
 	backend::ref().set_vs_constant	( m_original->m_bones_matrices_shader_constant, &*m_bones_matrices.begin(), max_bones_count );
-
-	// FUNCTION BODY[0x63a760]: 5
-	// <0>
-	// <1>
-	// <2>
-	// <0x63a764>|0x004|+0x029:'178'
-	// <0x63a78d>|0x02d|+0x01f:'179'
-	// ******
+	backend::ref().set_vs_constant	( m_original->m_prev_bones_matrices_shader_constant, &*m_prev_bones_matrices.begin(), max_bones_count );
 }
 
 void skeleton_render_model_instance::update_render_matrices( float4x4 const* matrices, u32 count )
@@ -358,19 +298,10 @@ void skeleton_render_model_instance::update_render_matrices( float4x4 const* mat
 	R_ASSERT					( m_original->m_inverted_bones_matrices_in_bind_pose.size() == count );
 
 	for(u32 i=0; i<count; ++i)
+	{
+		m_prev_bones_matrices[i]	= m_bones_matrices[i];
 		m_bones_matrices[i]		= transpose( m_original->m_inverted_bones_matrices_in_bind_pose[i] * matrices[i] );
-
-	// FUNCTION BODY[0x63a6c0]: 9
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x63a6cf>|0x00f|+0x011:'188'
-	// <0>
-	// <0x63a6e0>|0x020|+0x01a:'190'
-	// <0x63a6fa>|0x03a|+0x050:'191'
-	// <0>
-	// ******
+	}
 }
 
 bool skeleton_render_model_instance::get_locator( pcstr locator_name, model_locator_item& result ) const
