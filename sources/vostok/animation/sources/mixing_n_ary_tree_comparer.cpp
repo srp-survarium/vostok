@@ -522,8 +522,7 @@ void n_ary_tree_comparer::new_weight_transition(
 
 	increase_buffer_size		( from );
 	n_ary_tree_weight_node weight( from_animation_interpolator, to );
-	n_ary_tree_node_comparer comparer;
-	if ( comparer.compare( from, weight ) == vostok::animation::equal )
+	if ( n_ary_tree_node_comparer( ).compare( from, weight ) == vostok::animation::equal )
 		return;
 
 	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node ) + sizeof( n_ary_tree_weight_node );
@@ -538,8 +537,7 @@ void n_ary_tree_comparer::new_weight_transition(
 {
 	increase_buffer_size		( to );
 	n_ary_tree_weight_node weight( to_animation_interpolator, from );
-	n_ary_tree_node_comparer comparer;
-	if ( comparer.compare( weight, to ) == vostok::animation::equal )
+	if ( n_ary_tree_node_comparer( ).compare( weight, to ) == vostok::animation::equal )
 		return;
 
 	m_equal						= false;
