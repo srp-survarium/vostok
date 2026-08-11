@@ -967,6 +967,19 @@ class Interner:
         return self.map
 
 
+def authoritative_demangled_names(target, base):
+    """Return one display name per mangled symbol, preferring retail PDB data.
+
+    A folded base RVA can expose the target mangled spelling through a different
+    PDB alias.  That base alias is useful for pairing, but it must not replace
+    the target PDB's authoritative spelling in the canonical symbol inventory.
+    """
+    names = {mangled: rec["name"] for mangled, rec in target.items()}
+    for mangled, rec in base.items():
+        names.setdefault(mangled, rec["name"])
+    return names
+
+
 def cmd_refresh(args):
     regen()
 
@@ -1044,11 +1057,10 @@ def regen():
 
     # interners: collect every name, then assign ids in sorted order
     syms, units_i, files_i = Interner(), Interner(), Interner()
-    demangled_by_mangled = {}
+    demangled_by_mangled = authoritative_demangled_names(target, base)
     for side in (target, base):
         for mangled, rec in side.items():
             syms(mangled)
-            demangled_by_mangled[mangled] = rec["name"]
             files_i(rec["file"])
     for uname, mangled, _f in report_fns:
         syms(mangled)
