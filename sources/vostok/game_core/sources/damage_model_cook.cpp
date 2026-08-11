@@ -246,7 +246,7 @@ static void fill_damage_model(
 		ASSERT( UNKNOWN_EXPRESSION );
 		for ( u8 i = 0 ; i != damage_groups.size( ) ; ++i )
 			for ( config_iterator it_part = damage_groups[i].begin( ), it_part_end = damage_groups[i].end( ) ; it_part != it_part_end ; ++it_part )
-				if ( strings::equal( part_value["name"], *it_part ) )
+				if ( strings::equal( *it_part, part_value["name"] ) )
 				{
 					damage_group = i;
 					break;
