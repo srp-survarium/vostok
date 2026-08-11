@@ -15,10 +15,10 @@ namespace mixing {
 
 class n_ary_tree_target_time_scale_calculator :
 	public n_ary_tree_visitor,
-	private boost::noncopyable
+	public boost::noncopyable
 {
 public:
-	n_ary_tree_target_time_scale_calculator	( n_ary_tree_animation_node& node );
+	explicit n_ary_tree_target_time_scale_calculator	( n_ary_tree_animation_node& node );
 	inline	float	result					( ) const { return m_result; }
 
 private:
