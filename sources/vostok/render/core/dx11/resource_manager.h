@@ -73,6 +73,12 @@ class resource_manager : public quasi_singleton<resource_manager> {
 	friend class texture_pool;
 
 public:
+	u32 sh_created;
+	u32 sh_returned;
+	u32 tl_created;
+	u32 cb_created;
+	u32 sl_created;
+
 	struct str_pred {
 		bool operator()(
 			fs_new::virtual_path_string const& left,
@@ -206,23 +212,6 @@ public:
 		) const
 		{
 			return left->compare( right ) < 0;
-		}
-	};
-
-	struct constant_buffer_predicate {
-		bool operator()(
-			shader_constant_buffer const* const left,
-			shader_constant_buffer const* const right
-		) const;
-	};
-
-	struct constant_table_predicate {
-		bool operator()(
-			shader_constant_table const* const left,
-			shader_constant_table const* const right
-		) const
-		{
-			return left < right;
 		}
 	};
 
@@ -464,6 +453,8 @@ public:
 
 private:
 	void on_texture_source_changed( vfs::vfs_notification const& ) { }
+	ID3D11DeviceContext* m_deferred_context;
+
 	void update_texture_task(
 		ID3D11DeviceContext*, ID3D11Resource*, u32, pbyte, u32, u32
 	)
@@ -545,19 +536,6 @@ public:
 	{
 		return fs_new::virtual_path_string( short_path );
 	}
-	void reload_texture( pcstr name ) { m_textures_to_reload.push_back( name ); }
-	void unregister_all_samplers( ) { m_samplers_registry.clear( ); }
-	void bind_samplers_to_shaders( );
-
-public:
-	u32 sh_created;
-	u32 sh_returned;
-	u32 tl_created;
-	u32 cb_created;
-	u32 sl_created;
-
-private:
-	ID3D11DeviceContext* m_deferred_context;
 
 public:
 	u32 m_render_target_video_memory;
@@ -571,16 +549,51 @@ private:
 	map_ps_hw m_ps_hw_registry;
 	map_rt m_rt_registry;
 	map_texture m_texture_registry;
-	set<shader_constant_table*, constant_table_predicate> m_const_tables;
-	set<shader_constant_buffer*, constant_buffer_predicate> m_const_buffers;
+
+	struct constant_table_predicate {
+		bool operator()(
+			shader_constant_table const* const left,
+			shader_constant_table const* const right
+		) const
+		{
+			return left < right;
+		}
+	};
+
+	struct constant_buffer_predicate {
+		bool operator()(
+			shader_constant_buffer const* const left,
+			shader_constant_buffer const* const right
+		) const;
+	};
+
+	typedef set<shader_constant_table*, constant_table_predicate> const_tables_type;
+	const_tables_type m_const_tables;
+	typedef set<shader_constant_buffer*, constant_buffer_predicate> const_buffers_type;
+	const_buffers_type m_const_buffers;
 	vector<untyped_buffer*> m_buffers;
+
+	typedef set<res_xs<vs_data>*, compare_shader_predicate<vs_data> > vs_cache;
+	typedef set<res_xs<gs_data>*, compare_shader_predicate<gs_data> > gs_cache;
+	typedef set<res_xs<ps_data>*, compare_shader_predicate<ps_data> > ps_cache;
+	typedef set<res_declaration*, compare_predicate<res_declaration> > declarations_type;
+	typedef set<res_signature*, compare_predicate<res_signature> > signatures_type;
+	typedef set<res_input_layout*, compare_predicate<res_input_layout> > input_layouts_type;
+	typedef set<res_texture_list*, compare_member_predicate<res_texture_list> > texture_lists_type;
+	typedef set<res_sampler_list*, compare_member_predicate<res_sampler_list> > sampler_lists_type;
+	typedef vector<res_render_output*> render_outputs_type;
+
 	tasks::task_type* m_tasks_type;
 	tasks::task m_parent_task;
 
 public:
-	set<res_xs<vs_data>*, compare_shader_predicate<vs_data> > m_v_shaders;
-	set<res_xs<gs_data>*, compare_shader_predicate<gs_data> > m_g_shaders;
-	set<res_xs<ps_data>*, compare_shader_predicate<ps_data> > m_p_shaders;
+	vs_cache m_v_shaders;
+	gs_cache m_g_shaders;
+	ps_cache m_p_shaders;
+
+	void reload_texture( pcstr name ) { m_textures_to_reload.push_back( name ); }
+	void unregister_all_samplers( ) { m_samplers_registry.clear( ); }
+	void bind_samplers_to_shaders( );
 
 private:
 	vector<res_state*> m_states;
@@ -588,17 +601,20 @@ private:
 	state_cache<ID3D11DepthStencilState, D3D11_DEPTH_STENCIL_DESC> m_dss_cache;
 	state_cache<ID3D11BlendState, D3D11_BLEND_DESC> m_bs_cache;
 	state_cache<ID3D11SamplerState, D3D11_SAMPLER_DESC> m_sampler_cache;
-	set<res_declaration*, compare_predicate<res_declaration> > m_declarations;
-	set<res_signature*, compare_predicate<res_signature> > m_signatures;
-	set<res_input_layout*, compare_predicate<res_input_layout> > m_input_layouts;
-	set<res_texture_list*, compare_member_predicate<res_texture_list> > m_texture_lists;
-	set<res_sampler_list*, compare_member_predicate<res_sampler_list> > m_sampler_lists;
-	vector<res_render_output*> m_render_outputs;
-	vector<std::pair<fixed_string<64>, ID3D11SamplerState*> > m_samplers_registry;
+	declarations_type m_declarations;
+	signatures_type m_signatures;
+	input_layouts_type m_input_layouts;
+	texture_lists_type m_texture_lists;
+	sampler_lists_type m_sampler_lists;
+	render_outputs_type m_render_outputs;
+	typedef std::pair<fixed_string<64>, ID3D11SamplerState*> samplers_registry_record;
+	typedef vector<samplers_registry_record> samplers_registry;
+	samplers_registry m_samplers_registry;
 	vector<u32> m_vs_ids;
 	vector<u32> m_ps_ids;
 	vector<u32> m_gs_ids;
-	set<res_geometry*, compare_member_predicate<res_geometry> > m_geometries;
+	typedef set<res_geometry*, compare_member_predicate<res_geometry> > geometries_type;
+	geometries_type m_geometries;
 	bool m_loading_incomplete;
 	shader_constant_bindings m_const_bindings;
 	texture_storage* m_texture_storage;
@@ -606,7 +622,8 @@ private:
 	shader_compile_error_handler m_compile_error_handler;
 	bool m_is_shader_reloading;
 	bool m_need_recompile_shader_if_source_reloaded;
-	vector<fs_new::virtual_path_string> m_textures_to_reload;
+	typedef vector<fs_new::virtual_path_string> textures_to_reload_vector;
+	textures_to_reload_vector m_textures_to_reload;
 	res_texture_ptr m_color_grading_base_lut;
 	u32 m_watcher_subscribe_id;
 };
