@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed n_ary_tree_comparer::merge_weight_synchronization_groups from the disposable game_core-before-animation LTCG link. The complete merge helper is recorded as a near-matching partial MAX observation.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "d540e7d02d51.9fff9ae0c2fb519e.991b3a7420172620",
+      "expected_fuzzy_pct": 93.86806,
+      "review": "The source and candidate retain the complete source-group collection, sort, paired comparison, add/change/remove dispatch, and two tail loops with the audited identical 28-block CFG. Target has 27 versus candidate 29 attributed body statements and 0x174 versus 0x171 bytes; sort and loop grouping plus real add_animation call conventions remain, so this is not exact."
+    }
+  ]
+}
