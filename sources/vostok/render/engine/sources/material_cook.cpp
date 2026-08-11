@@ -10,18 +10,17 @@ void material_cook::translate_query(
 	resources::query_result_for_cook& parent
 )
 {
-	resources::user_data_variant* const user_data = parent.user_data();
-	if ( user_data )
+	if ( parent.user_data() )
 	{
 		configs::binary_config_ptr			cfg;
-		user_data->try_get					(cfg);
+		parent.user_data()->try_get			(cfg);
 		on_material_binary_config_loaded	( &parent, cfg.c_ptr() );
 	}
 	else
 	{
 		fs_new::virtual_path_string			path;
 		// 11 target lines are likely retail-compiled-out source.
-		path.assignf						("resources/material_instances/%s.", parent.get_requested_path());
+		path.assignf						("resources/material_instances/%s.material", parent.get_requested_path());
 
 		resources::query_resource			(
 			path.c_str(),
