@@ -27,9 +27,8 @@ public:
 
 	void present( );
 	void resize( bool force_resize );
-	void resize( bool windowed, u32 size_x, u32 size_y, bool force_resize );
-	void set_size( u32 width, u32 height, bool fullscreen, bool force_resize );
-	void goto_fullscreen( );
+	void resize( bool windowed, const u32 size_x, const u32 size_y, bool force_resize );
+	void set_size( const u32 in_width, const u32 in_height, const bool in_fullscreen, bool force_resize );
 
 	math::uint2 size( ) const
 	{
@@ -44,6 +43,7 @@ public:
 	HWND window( ) const { return m_window; }
 	bool equal( HWND window ) const { return m_window == window; }
 	bool valid_present( ) const { return m_valid_previous_present; }
+	void goto_fullscreen( );
 
 	bool is_registered( ) const { return m_is_registered; }
 	void mark_registered( )

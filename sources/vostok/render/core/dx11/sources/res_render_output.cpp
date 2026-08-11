@@ -274,7 +274,7 @@ void res_render_output::update_targets()
 	update_depth_stencil_buffer();
 }
 
-void res_render_output::resize( bool windowed, u32 size_x, u32 size_y, bool force_resize )
+void res_render_output::resize( bool windowed, const u32 size_x, const u32 size_y, bool force_resize )
 {
 	// FUNCTION BODY[0x55b160]
 	m_windowed = windowed;
@@ -344,10 +344,32 @@ void res_render_output::resize( bool force_resize )
 	resize( m_windowed, 0, 0, force_resize );
 }
 
-void res_render_output::set_size( u32 width, u32 height, bool fullscreen, bool force_resize )
+void res_render_output::set_size(
+	const u32 in_width,
+	const u32 in_height,
+	const bool in_fullscreen,
+	bool force_resize
+)
 {
-	// FUNCTION BODY[0x55b4a0]
-	resize( !fullscreen, width, height, force_resize );
+	m_windowed = !in_fullscreen;
+
+	RECT desktop_rect;
+	GetClientRect( GetDesktopWindow( ), &desktop_rect );
+
+	u32 const screen_width = GetSystemMetrics( SM_CXSCREEN );
+	u32 const screen_height = GetSystemMetrics( SM_CYSCREEN );
+
+	// 16 target lines are retail-compiled-out display-mode handling.
+	u32 const pos_x = screen_width > in_width ? (screen_width - in_width) / 2 : 0;
+	u32 const pos_y = screen_height > in_height ? (screen_height - in_height) / 2 : 0;
+
+	if ( in_fullscreen )
+		SetWindowPos( m_window, NULL, 0, 0, in_width, in_height, SWP_SHOWWINDOW );
+
+	resize( !in_fullscreen, in_width, in_height, force_resize );
+
+	if ( !in_fullscreen )
+		set_client_rect( m_window, pos_x, pos_y, in_width, in_height );
 }
 
 void res_render_output::initialize_swap_chain	( IDXGISwapChain* swap_chain)
