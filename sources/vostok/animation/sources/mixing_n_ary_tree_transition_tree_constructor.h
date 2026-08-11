@@ -14,6 +14,9 @@ namespace animation {
 
 struct base_interpolator;
 struct subscribed_channel;
+class fermi_interpolator;
+class instant_interpolator;
+class linear_interpolator;
 
 namespace mixing {
 
@@ -26,6 +29,11 @@ class animated_object_holder;
 enum interpolation_direction;
 
 class n_ary_tree_transition_tree_constructor : private boost::noncopyable {
+	friend class vostok::animation::fermi_interpolator;
+	friend class vostok::animation::instant_interpolator;
+	friend class vostok::animation::linear_interpolator;
+	friend class n_ary_tree_cloner;
+
 public:
 	typedef boost::function<float4x4(pcvoid)> transform_functor_type;
 
@@ -73,7 +81,7 @@ private:
 												n_ary_tree_base_node&			to
 											);
 			n_ary_tree_base_node*			new_time_scale_transition			( n_ary_tree_animation_node& from_animation, n_ary_tree_base_node& from, float to );
-			n_ary_tree_base_node*			new_time_scale_transition			( float animation_time, float from, n_ary_tree_base_node& to );
+			n_ary_tree_base_node*			new_time_scale_transition			( const float animation_time, float from, n_ary_tree_base_node& to );
 
 			n_ary_tree_base_node*			new_weight_transition				( base_interpolator const& interpolator, float from, float to );
 			n_ary_tree_base_node*			new_weight_transition				( n_ary_tree_base_node& from, n_ary_tree_base_node& to );
@@ -85,7 +93,7 @@ private:
 												n_ary_tree_animation_node&		to,
 												n_ary_tree_base_node**			operands_begin,
 												n_ary_tree_base_node**			operands_end,
-												bool							skip_time_scale_node
+												const bool						skip_time_scale_node
 											);
 
 			n_ary_tree_animation_node*		add_animation						( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* const weight_driving_animation );
@@ -129,9 +137,10 @@ private:
 			void							merge_trees							( n_ary_tree const& from, n_ary_tree const& to );
 
 public:
-	inline	void							advance_buffer						( u32 size ) { m_buffer += size; }
+	inline	void							advance_buffer						( const u32 size ) { m_buffer += size; }
+	inline									~n_ary_tree_transition_tree_constructor( ) { }
 
-public:
+private:
 	/* 0x0000 */	transform_functor_type			m_get_transform_functor;
 	/* 0x0020 */	n_ary_tree_cloner				m_cloner;
 	/* 0x0044 */	mutable_buffer&					m_buffer;

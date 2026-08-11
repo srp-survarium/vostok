@@ -804,7 +804,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 	return					result;
 }
 
-n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition( float const animation_time, float from, n_ary_tree_base_node& to )
+n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition( const float animation_time, float from, n_ary_tree_base_node& to )
 {
 	n_ary_tree_time_scale_node&	time_scale_to	= static_cast< n_ary_tree_time_scale_node& >( to );
 	if ( time_scale_to.interpolator( ).transition_time( ) == 0.f )
