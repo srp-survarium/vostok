@@ -142,11 +142,7 @@ private:
 
 static inline void set_animation_user_data	( n_ary_tree_animation_node& n_ary_animation, binary_tree_animation_node const& binary_animation )
 {
-#ifndef MASTER_GOLD
 	n_ary_animation.user_data	= binary_animation.user_data;
-#else // #ifndef MASTER_GOLD
-	VOSTOK_UNREFERENCED_PARAMETERS( &n_ary_animation, &binary_animation );
-#endif // #ifndef MASTER_GOLD
 }
 
 n_ary_tree_converter::n_ary_tree_converter	( expression const& expression ) :
