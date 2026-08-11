@@ -1273,7 +1273,7 @@ void engine::world::set_model_material(
 	render_model_instance_impl_ptr model = static_cast_resource_ptr<render_model_instance_impl_ptr>(v);
 
 	vector< render_surface_instance* >	list;
-	model->get_surfaces				( NULL, NULL, list, false, 0, 0 );
+	model->get_surfaces				( NULL, NULL, list, false, 0xaa, 3 );
 
 	bool check_name = (subsurface_name.length()!=0);
 
