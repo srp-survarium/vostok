@@ -104,8 +104,8 @@ void stage_sun::execute( )
 	if ( !is_effects_ready( ) )
 		return;
 	// 3 target lines are likely retail-compiled-out source.
-	light* sun = m_context->scene( )->lights( ).get_sun( ).c_ptr( );
-	if ( !sun )
+	light_ptr sun = m_context->scene( )->lights( ).get_sun( );
+	if ( !sun || !sun->m_enabled )
 		return;
 
 	float3 sun_dir = m_context->get_v( ).transform_direction( sun->direction );
