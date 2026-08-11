@@ -92,11 +92,8 @@ bool player_input_handler::on_gamepad_action(
 	return false;
 }
 
-// claude@NOTE: STRUCTURE MATCH (ms_key_down hold||toggle push + ms_key_hold hold push both
-// align). Residual is non-steerable LTCG register allocation: the target keeps `this` in
-// ebx and materialises toggle_action(1) into edi early (`cmp ecx,edi`) where the base keeps
-// `this` in esi and compares the literal (`cmp ecx,1`) - callee-save register choice, not
-// source-steerable.
+// sushi@TODO: The target gives the multiline hold-action push closing line its own
+// epilogue PDB row; this compiler folds that row into the following return.
 bool player_input_handler::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
@@ -105,22 +102,19 @@ bool player_input_handler::on_mouse_key_action(
 {
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
+
 	toggle_action_enum	actions_mask_type;
-	game_action_id const	game_action = m_game_world.get_game().get_key_binder( ).get_binded_action( button, actions_mask_type, m_key_binder_context );
+	game_action_id const	game_action = m_game_world.get_game().get_key_binder( ).get_binded_action( button, actions_mask_type, 1 );
 
 	if( game_action == kNOTBINDED )
 		return false;
 
-	if( actions_mask == input::ms_key_down )
-	{
-		if( actions_mask_type == hold_action || actions_mask_type == toggle_action )
-			m_game_actions.push_back( std::make_pair( game_action, down ) );
-	}
-	else if( actions_mask == input::ms_key_hold )
-	{
-		if( actions_mask_type == hold_action )
-			m_game_actions.push_back( std::make_pair( game_action, hold ) );
-	}
+	if( actions_mask == input::ms_key_down && ( actions_mask_type == hold_action || actions_mask_type == toggle_action ) )
+		m_game_actions.push_back( std::make_pair( game_action, down ) );
+	else if( actions_mask == input::ms_key_hold && actions_mask_type == hold_action )
+		m_game_actions.push_back(
+			std::make_pair( game_action, hold )
+		);
 
 	return false;
 }
