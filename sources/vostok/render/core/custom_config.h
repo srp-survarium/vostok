@@ -23,22 +23,22 @@ struct custom_config : public resources::unmanaged_intrusive_base {
 
 	void destroy( custom_config* instance );
 
-	bool operator==( configs::binary_config_value const& ) const
+	bool operator==( configs::binary_config_value const& )
 	{
 		return false;
 	}
 
-	bool operator==( custom_config_value const& ) const
+	bool operator==( custom_config_value const& )
 	{
 		return false;
 	}
 
-	custom_config_value const& root( ) const
+	custom_config_value const& root( )
 	{
 		return m_root;
 	}
 
-	operator custom_config_value const&( ) const
+	operator custom_config_value const&( )
 	{
 		return m_root;
 	}
