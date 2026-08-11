@@ -105,7 +105,7 @@ template< typename Spline_type, class Point_type, u32 Dimension >
 void get_spline_params	( Spline_type const& cv, u32 index, Point_type point_factors[4] )
 {
 
-	float dT[6]						= {
+	float dT[5]						= {
 		float(cv.knot(index - 1) - cv.knot(index - 2)),	// delta Tj-1
 		float(cv.knot(index + 0) - cv.knot(index - 1)),	// delta Tj
 		float(cv.knot(index + 1) - cv.knot(index + 0)),	// delta Tj+1
