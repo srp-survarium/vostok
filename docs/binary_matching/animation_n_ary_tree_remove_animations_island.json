@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed n_ary_tree::remove_animations from the disposable late game_core-before-animation LTCG link. The complete reconstructed removal body is recorded as a near-exact partial MAX observation.",
+  "link_perturbation": "game_core immediately before animation at game_core's late link position; all other libraries and link flags preserved",
+  "report_sha256": "f848bf113ebf7afaf35503e4136d703dc5619c340cbfff86d0cf9ecb802ac71f",
+  "base_index_sha256": "7022a65eb443af9f1c27b5a016d99cc1c33740b974eec944ae6990bd8e2d0b4d",
+  "candidate_exe_sha256": "90d70b5166756eb5671198b9a4e04719820112817e10958eb706b455cdf30ccb",
+  "candidate_pdb_sha256": "e1ae9787dc9a266935b95af2793673044fd5e7bb590cb06ff0531e3bb562c885",
+  "functions": [
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 96.81396,
+      "review": "Target and candidate retain the same 28 attributed body statements and complete filtering, removal, event sorting, state compaction, and animated-object compaction phases. The 0x280-byte target versus 0x27c-byte candidate has one target-only line-table row plus small loop and call-boundary deltas; it is near-exact but not an exact claim."
+    }
+  ]
+}
