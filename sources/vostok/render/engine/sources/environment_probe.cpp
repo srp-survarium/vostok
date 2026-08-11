@@ -46,7 +46,7 @@ bool environment_probe::is_occluded( ) const
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
-u32 calc_mip_map_count( u32 width )
+static u32 calc_mip_map_count( u32 width )
 {
 	return u32(log(double(width)) / log(2.0)) + 1;
 }

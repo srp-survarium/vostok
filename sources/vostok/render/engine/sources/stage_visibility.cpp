@@ -462,24 +462,24 @@ void stage_visibility::get_results_and_prepare_bounds_portals(
 	out_counter += portals_count;
 }
 
-bool is_not_occluded_predicate_light( light_ptr const& value )
+static bool is_not_occluded_predicate_light( light_ptr const& value )
 {
 	return !value->is_occluded( );
 }
 
-bool is_occluded_predicate_light( light_ptr const& value )
+static bool is_occluded_predicate_light( light_ptr const& value )
 {
 	return value->is_occluded( );
 }
 
 template < typename T >
-bool is_not_occluded_predicate( T const* const value )
+static bool is_not_occluded_predicate( T const* const value )
 {
 	return !value->is_occluded( );
 }
 
 template < typename T >
-bool is_occluded_predicate( T const* const value )
+static bool is_occluded_predicate( T const* const value )
 {
 	return value->is_occluded( );
 }
