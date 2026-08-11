@@ -25,17 +25,17 @@ STATIC_SIZE_ASSERT( leafmesh_vertex, 0x40 );
 class speedtree_tree_component_leafmesh : public speedtree_tree_component {
 public:
 	explicit speedtree_tree_component_leafmesh( speedtree_tree& parent );
-	virtual ~speedtree_tree_component_leafmesh( ) { }
 
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
-	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
 		// FUNCTION BODY[0x3aee0]
 		return SpeedTree::GEOMETRY_TYPE_LEAF_MESHES;
 	}
+
+	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{

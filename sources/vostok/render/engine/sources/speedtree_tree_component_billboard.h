@@ -40,13 +40,14 @@ public:
 
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
-	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
 		// FUNCTION BODY[0x3dde0]
 		return SpeedTree::GEOMETRY_TYPE_VERTICAL_BILLBOARDS;
 	}
+
+	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{
@@ -55,9 +56,6 @@ public:
 
 	bool is_initialized( ) const { return m_is_init; }
 
-	virtual ~speedtree_tree_component_billboard( ) { }
-
-private:
 	bool m_is_init;
 };
 

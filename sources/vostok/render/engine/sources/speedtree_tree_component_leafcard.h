@@ -27,17 +27,17 @@ STATIC_SIZE_ASSERT( leafcard_vertex, 0x3c );
 class speedtree_tree_component_leafcard : public speedtree_tree_component {
 public:
 	explicit speedtree_tree_component_leafcard( speedtree_tree& parent );
-	virtual ~speedtree_tree_component_leafcard( ) { }
 
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
-	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
 		// FUNCTION BODY[0x225e0]
 		return SpeedTree::GEOMETRY_TYPE_LEAF_CARDS;
 	}
+
+	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{
