@@ -14,6 +14,7 @@ class custom_config_value;
 
 template < bool t_shadowed >
 class plane_spot_light_effect : public effect_descriptor {
+public:
 	virtual void compile(
 		effect_compiler& compiler,
 		custom_config_value const& config
@@ -60,10 +61,6 @@ class plane_spot_light_effect : public effect_descriptor {
 			compiler.end_pass();
 		compiler.end_technique();
 	}
-
-public:
-	plane_spot_light_effect( ) { }
-	virtual ~plane_spot_light_effect( ) { }
 };
 
 typedef plane_spot_light_effect< false > plane_spot_light_effect_unshadowed;

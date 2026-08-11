@@ -8,9 +8,6 @@ namespace render {
 
 class sky_default_material_effect : public effect_material_base {
 public:
-	sky_default_material_effect( ) { }
-	virtual ~sky_default_material_effect( ) { }
-
 	virtual void compile(
 		effect_compiler& compiler,
 		custom_config_value const& config

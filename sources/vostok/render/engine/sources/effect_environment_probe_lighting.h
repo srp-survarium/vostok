@@ -58,8 +58,6 @@ public:
 		compiler.end_technique( );
 	}
 
-	effect_environment_probe_lighting( ) { }
-	virtual ~effect_environment_probe_lighting( ) { }
 };
 
 typedef effect_environment_probe_lighting<

@@ -95,6 +95,12 @@ private:
 	bool			m_is_registered;
 };
 
+typedef intrusive_ptr<
+	res_texture_list,
+	resource_intrusive_base,
+	threading::single_threading_policy
+> res_texture_list_ptr;
+
 STATIC_SIZE_ASSERT( res_texture_list, 0x14 );
 
 } // namespace render

@@ -65,11 +65,6 @@ inline T statistics_value< T >::average( )
 	return						T( );
 }
 
-template < typename T >
-inline statistics_value< T >::~statistics_value( )
-{
-}
-
 } // namespace render
 } // namespace vostok
 
