@@ -476,6 +476,7 @@ def src_fingerprint(rec):
 
 _MAX_CONTEXT_CACHE = {}
 _MAX_CONTEXT_SUFFIXES = frozenset((".h", ".hh", ".hpp", ".inl", ".vcproj"))
+_TRANSLATION_UNIT_SUFFIXES = frozenset((".c", ".cc", ".cpp", ".cxx"))
 
 
 def _hash_paths(paths):
@@ -527,6 +528,21 @@ def _max_context_hash(module):
     return value
 
 
+def _translation_unit_context_hash(source_file):
+    """Hash the owning implementation file when the PDB identifies one.
+
+    With LTCG, edits to another function in the same translation unit can alter
+    inlining, register allocation, and retained statement rows without changing
+    this function's source extent. Header-owned COMDATs do not identify one
+    unique owning TU here, so they remain covered by the conservative module
+    header/project context until unit-scoped attribution is available.
+    """
+    path = VOSTOK / "sources" / source_file
+    if path.suffix.lower() not in _TRANSLATION_UNIT_SUFFIXES or not path.is_file():
+        return None
+    return _hash_paths([path])
+
+
 def effective_source_hash(rec, module=None):
     """HoMM2-style effective-source epoch for a source-backed function.
 
@@ -540,7 +556,11 @@ def effective_source_hash(rec, module=None):
     source_file, _lo, _hi, text = extent
     owner = module or module_of(source_file)
     body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
-    return f"{body}.{_max_context_hash(owner)}"
+    context = _max_context_hash(owner)
+    unit_context = _translation_unit_context_hash(source_file)
+    if unit_context:
+        context = f"{context}.{unit_context}"
+    return f"{body}.{context}"
 
 
 def effective_source_hash_at(source_file, lo, hi, module):
@@ -554,7 +574,11 @@ def effective_source_hash_at(source_file, lo, hi, module):
     except OSError:
         return None
     body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
-    return f"{body}.{_max_context_hash(module or module_of(source_file))}"
+    context = _max_context_hash(module or module_of(source_file))
+    unit_context = _translation_unit_context_hash(source_file)
+    if unit_context:
+        context = f"{context}.{unit_context}"
+    return f"{body}.{context}"
 
 
 def compiled_state_id(rec):

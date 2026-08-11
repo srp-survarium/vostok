@@ -1,6 +1,8 @@
 import importlib.util
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 
 SPEC = importlib.util.spec_from_file_location(
@@ -80,6 +82,30 @@ class InstructionStreamExactTests(unittest.TestCase):
         target = self.record(text="call  operator delete")
         base = self.record(text="call  ??3@YAXPAX@Z")
         self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
+
+
+class EffectiveSourceHashTests(unittest.TestCase):
+    def test_cpp_epoch_changes_when_another_function_in_the_tu_changes(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text("body line\nother function v1\n", encoding="latin-1")
+            record = {
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 1}],
+            }
+
+            with mock.patch.object(MATCH_DB, "VOSTOK", root):
+                MATCH_DB._MAX_CONTEXT_CACHE.clear()
+                first = MATCH_DB.effective_source_hash(record, "animation")
+                source.write_text(
+                    "body line\nother function v2\n", encoding="latin-1"
+                )
+                MATCH_DB._MAX_CONTEXT_CACHE.clear()
+                second = MATCH_DB.effective_source_hash(record, "animation")
+
+            self.assertNotEqual(first, second)
 
 
 class StrictSourceAliasCandidateTests(unittest.TestCase):
