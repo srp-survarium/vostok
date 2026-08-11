@@ -92,131 +92,120 @@ void clouds::set_time( float time )
 {
 	if ( !m_num_keys )
 		return;
+
 	// 8 target lines are likely retail-compiled-out source.
 	time = math::abs( time ) - math::abs( static_cast<int>( time ) );
-
 	bool const async = !m_is_editor_mode;
 
 	if ( m_num_keys == 1 )
 	{
-
 		m_is_updated = false;
 
-		if ( m_current_key_0 != 0 ) {
+		if ( m_current_key_0 != 0 )
+		{
 			m_cloud_simulation_0->generate( m_keys[0], -m_sun_direction );
 			m_cloud_simulation_1->copy_from( *m_cloud_simulation_0 );
-
 			m_is_updated = true;
 		}
+
 		m_interp_alpha = 0.0f;
 		m_current_key_0 = 0;
 		m_current_key_1 = 0;
+		m_interp_key = m_keys[0];
+		return;
+	}
+
+	cloud_key_parameters first_key = m_keys[0];
+	cloud_key_parameters last_key = m_keys[m_num_keys - 1];
+	u32 k0 = m_current_key_0;
+	u32 k1 = m_current_key_1;
+	m_interp_key = m_keys[k0];
+
+	// 4 target lines are likely retail-compiled-out source.
+	if ( time >= first_key.linear_time && time <= last_key.linear_time )
+	{
+		for ( u32 i = 0; i < m_num_keys - 1; ++i )
+		{
+			if ( time > m_keys[i].linear_time && m_keys[i + 1].linear_time > time )
+			{
+				m_current_key_1 = i + 1;
+				m_current_key_0 = i;
+
+				cloud_key_parameters key_0 = m_keys[m_current_key_0];
+				cloud_key_parameters key_1 = m_keys[m_current_key_1];
+				m_interp_alpha = (time - key_0.linear_time) / (key_1.linear_time - key_0.linear_time);
+			}
+		}
 	}
 	else
 	{
-		cloud_key_parameters first_key = m_keys[0];
-		cloud_key_parameters last_key = m_keys[m_num_keys - 1];
-		u32 k0 = m_current_key_0;
-		u32 k1 = m_current_key_1;
-		m_interp_key = m_keys[k0];
-		// 4 target lines are likely retail-compiled-out source.
-		if ( time >= first_key.linear_time && time <= last_key.linear_time )
+		m_current_key_0 = m_num_keys - 1;
+		m_current_key_1 = 0;
+		// 2 target lines are likely retail-compiled-out source.
+		cloud_key_parameters key_0 = m_keys[m_current_key_0];
+		cloud_key_parameters key_1 = m_keys[m_current_key_1];
+		float const interval = 1.0f - key_0.linear_time + key_1.linear_time;
+		// 2 target lines are likely retail-compiled-out source.
+		if ( time > key_0.linear_time )
+			m_interp_alpha = (time - key_0.linear_time) / interval;
+
+		if ( key_1.linear_time > time )
+			m_interp_alpha = (time + 1.0f - key_0.linear_time) / interval;
+	}
+
+	if ( async )
+	{
+		m_is_updated = false;
+
+		if ( k0 != m_current_key_0 || k1 != m_current_key_1 )
 		{
-			for ( u32 i = 0; i < m_num_keys - 1; ++i )
+			if ( m_current_key_0 == k1 )
 			{
-
-				if ( time > m_keys[i].linear_time && m_keys[i + 1].linear_time > time )
-				{
-
-					m_current_key_1 = i + 1;
-
-					m_current_key_0 = i;
-
-					cloud_key_parameters key_0 = m_keys[m_current_key_0];
-
-					cloud_key_parameters key_1 = m_keys[m_current_key_1];
-
-					m_interp_alpha = (time - key_0.linear_time) / (key_1.linear_time - key_0.linear_time);
-				}
+				tasks::wait_for_task_list( &m_parent_task );
+				m_cloud_simulation_0->copy_from( *m_cloud_simulation_1 );
+				m_cloud_simulation_1->copy_from( *m_cloud_simulation_2 );
+				tasks::spawn_task(
+					boost::bind( &clouds::generate_cloud_right, this, m_current_key_1 ),
+					m_tasks_type,
+					&m_parent_task
+				);
 			}
-		}
-		else
-		{
-			m_current_key_0 = m_num_keys - 1;
-			m_current_key_1 = 0;
-			// 2 target lines are likely retail-compiled-out source.
-			cloud_key_parameters key_0 = m_keys[m_current_key_0];
-			cloud_key_parameters key_1 = m_keys[m_current_key_1];
-			float const interval = 1.0f - key_0.linear_time + key_1.linear_time;
-			// 2 target lines are likely retail-compiled-out source.
-			if ( time > key_0.linear_time )
-				m_interp_alpha = (time - key_0.linear_time) / interval;
-
-			if ( key_1.linear_time > time )
-				m_interp_alpha = (time + 1.0f - key_0.linear_time) / interval;
-		}
-
-		if ( async )
-		{
-			m_is_updated = false;
-
-			if (
-				k0 != m_current_key_0 || k1 != m_current_key_1
-			)
+			else if ( m_current_key_1 != k0 )
 			{
-				if ( m_current_key_0 == k1 )
-				{
-					tasks::wait_for_task_list( &m_parent_task );
-					m_cloud_simulation_0->copy_from( *m_cloud_simulation_1 );
-					m_cloud_simulation_1->copy_from( *m_cloud_simulation_2 );
-					tasks::spawn_task(
-						boost::bind( &clouds::generate_cloud_right, this, m_current_key_1 ),
-						m_tasks_type,
-						&m_parent_task
-					);
-				}
-				else if ( m_current_key_1 != k0 )
-				{
-					m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
-					m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
-					m_cloud_simulation_2->generate( get_next_key_of( m_current_key_1 ), -m_sun_direction );
-				}
-				m_is_updated = true;
+				m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
+				m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
+				m_cloud_simulation_2->generate( get_next_key_of( m_current_key_1 ), -m_sun_direction );
 			}
-		}
-		else
-		{
-			if ( k0 != m_current_key_0 || k1 != m_current_key_1 )
-			{
 
-				m_is_updated = false;
-				// 3 target lines are likely retail-compiled-out source.
-				if ( m_current_key_0 == k1 )
-				{
-					m_cloud_simulation_0->copy_from( *m_cloud_simulation_1 );
-
-					m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
-				}
-				else if (
-
-					m_current_key_1 == k0
-				)
-
-				{
-
-					m_cloud_simulation_1->copy_from( *m_cloud_simulation_0 );
-					m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
-				}
-				else
-				{
-					m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
-					m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
-
-				}
-				m_is_updated = true;
-			}
+			m_is_updated = true;
 		}
 	}
+	else
+	{
+		if ( k0 != m_current_key_0 || k1 != m_current_key_1 )
+		{
+			m_is_updated = false;
+			// 3 target lines are likely retail-compiled-out source.
+			if ( m_current_key_0 == k1 )
+			{
+				m_cloud_simulation_0->copy_from( *m_cloud_simulation_1 );
+				m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
+			}
+			else if ( m_current_key_1 == k0 )
+			{
+				m_cloud_simulation_1->copy_from( *m_cloud_simulation_0 );
+				m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
+			}
+			else
+			{
+				m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
+				m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
+			}
+
+			m_is_updated = true;
+		}
+	}
+
 	// 4 target lines are likely retail-compiled-out source.
 	m_interp_key = cloud_key_parameters::lerp( m_keys[m_current_key_0], m_keys[m_current_key_1], m_interp_alpha );
 }
