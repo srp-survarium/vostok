@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "renderer_context.h"
 
+#include <vostok/console_command.h>
 #include <vostok/render/core/backend.h>
 #include <vostok/render/core/res_texture.h>
 #include <vostok/render/core/resource_manager.h>
@@ -8,6 +9,26 @@
 
 #include "renderer_register_effects.h"
 #include "scene_view.h"
+
+static u32 s_lighting_material_strategy = 0;
+static vostok::console_commands::cc_u32 s_cc_lighting_material_strategy(
+	"lighting_material_strategy",
+	s_lighting_material_strategy,
+	0,
+	4,
+	true,
+	vostok::console_commands::command_type_engine_internal
+);
+
+static float s_shadow_map_z_bias = 0.0001f;
+static vostok::console_commands::cc_float s_cc_shadow_map_z_bias(
+	"shadow_map_z_bias",
+	s_shadow_map_z_bias,
+	0,
+	4,
+	true,
+	vostok::console_commands::command_type_engine_internal
+);
 
 namespace vostok {
 namespace render {
@@ -679,6 +700,16 @@ void renderer_context::reset_matrices( )
 	m_wvp_transposed.identity( );
 
 	m_near_far_invn_invf	= float4( 0.f, 0.f, 0.f, 0.f );
+}
+
+u32 renderer_context::get_lighting_material_strtegy( )
+{
+	return s_lighting_material_strategy;
+}
+
+float renderer_context::get_shadow_map_z_bias( )
+{
+	return s_shadow_map_z_bias;
 }
 
 void renderer_context::update_eye_rays( )

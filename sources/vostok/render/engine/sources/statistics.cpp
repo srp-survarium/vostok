@@ -2,7 +2,16 @@
 #include <vostok/render/core/backend.h>
 #include <vostok/render/facade/sources/ui_renderer.h>
 #include <vostok/ui/ui.h>
+#include <vostok/console_command.h>
 #include "statistics.h"
+
+static bool s_short_statistics_value = false;
+static vostok::console_commands::cc_bool s_short_statistics(
+	"r_short_statistics",
+	s_short_statistics_value,
+	true,
+	vostok::console_commands::command_type_user_specific
+);
 
 namespace vostok {
 namespace render {

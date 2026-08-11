@@ -11,6 +11,29 @@
 #include "renderer_context.h"
 #include "renderer_context_targets.h"
 
+static bool s_draw_radiance_debug_value = false;
+static bool s_draw_propagated_radiance_debug_value = false;
+static bool s_draw_radiance_occluders_debug_value = false;
+
+static vostok::console_commands::cc_bool s_draw_radiance_debug_cc(
+	"draw_radiance_debug",
+	s_draw_radiance_debug_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+static vostok::console_commands::cc_bool s_draw_propagated_radiance_debug_cc(
+	"draw_propagated_radiance_debug",
+	s_draw_propagated_radiance_debug_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+static vostok::console_commands::cc_bool s_draw_radiance_occluders_debug_cc(
+	"draw_radiance_occluders_debug",
+	s_draw_radiance_occluders_debug_value,
+	false,
+	vostok::console_commands::command_type_engine_internal
+);
+
 namespace vostok {
 namespace render {
 
