@@ -26,9 +26,9 @@ public:
 	virtual void execute( ) override;
 	virtual void execute_disabled( ) override;
 
+private:
 	bool is_effects_ready( ) const;
 
-private:
 	res_effect_ptr			m_sh_combine;
 	res_effect_ptr			m_sh_ssao_accumulation;
 	res_effect_ptr			m_sh_ssao_filter4x4;
