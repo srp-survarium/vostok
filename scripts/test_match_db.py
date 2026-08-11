@@ -175,6 +175,69 @@ class EffectiveSourceHashTests(unittest.TestCase):
 
             self.assertNotEqual(first, second)
 
+    def test_retained_max_uses_pinned_locator_for_different_folded_owner(self):
+        previous = (
+            "?accessor@@",
+            "expected-hash",
+            100.0,
+            1,
+            "state-id",
+            "animation",
+            "vostok/animation/accessor.h",
+            86,
+            86,
+            "island",
+            "evidence.json",
+        )
+        folded_alias = {"file": "boost/bind/bind.hpp", "statements": []}
+
+        with mock.patch.object(
+            MATCH_DB,
+            "effective_source_hash_at",
+            return_value="expected-hash",
+        ) as hash_at, mock.patch.object(
+            MATCH_DB, "effective_source_hash"
+        ) as hash_record:
+            result = MATCH_DB.retained_max_effective_hash(previous, folded_alias)
+
+        self.assertEqual(result, "expected-hash")
+        hash_at.assert_called_once_with(
+            "vostok/animation/accessor.h", 86, 86, "animation"
+        )
+        hash_record.assert_not_called()
+
+    def test_retained_max_uses_current_extent_for_same_owner(self):
+        previous = (
+            "?accessor@@",
+            "expected-hash",
+            100.0,
+            1,
+            "state-id",
+            "animation",
+            "vostok/animation/accessor.h",
+            86,
+            86,
+            "island",
+            "evidence.json",
+        )
+        current = {
+            "file": "vostok/animation/accessor.h",
+            "statements": [{"line": 87}],
+        }
+
+        with mock.patch.object(
+            MATCH_DB, "_source_extent", return_value=(current["file"], 87, 87, "body")
+        ), mock.patch.object(
+            MATCH_DB, "effective_source_hash", return_value="current-hash"
+        ) as hash_record, mock.patch.object(
+            MATCH_DB, "effective_source_hash_at"
+        ) as hash_at:
+            result = MATCH_DB.retained_max_effective_hash(previous, current)
+
+        self.assertEqual(result, "current-hash")
+        hash_record.assert_called_once_with(current, "animation")
+        hash_at.assert_not_called()
+
 
 class StructureClassificationTests(unittest.TestCase):
     @staticmethod

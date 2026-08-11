@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed animation_lexeme_parameters::time_driving_animation from the disposable game_core-before-animation LTCG link. The one-statement accessor is recorded as an exact source-MAX observation despite the canonical link's folded PDB-name collision.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?time_driving_animation@animation_lexeme_parameters@mixing@animation@vostok@@QBEQAVanimation_lexeme@234@XZ",
+      "module": "animation",
+      "expected_hash": "b01d3f1b6060.9fff9ae0c2fb519e",
+      "expected_fuzzy_pct": 100.0,
+      "review": "The target-RVA comparison resolves the folded-name ambiguity and shows STRUCTURE MATCH with identical 0x11-byte target and candidate bodies. The accessor is a one-statement member load and the island instruction comparison is exact."
+    }
+  ]
+}
