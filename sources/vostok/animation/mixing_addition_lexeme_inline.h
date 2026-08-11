@@ -65,18 +65,6 @@ inline expression operator +								( expression& left, expression& right )
 	return				expression( *addition_lexeme( left, right ).cloned_in_buffer( ) );
 }
 
-inline expression operator +								( expression const& left, expression& right )
-{
-	if ( left.is_empty( ) )
-		return			expression( right );
-
-	if ( right.is_empty( ) )
-		return			expression( left );
-
-	expression left_real	( left );
-	return				expression( *addition_lexeme( left_real, right ).cloned_in_buffer( ) );
-}
-
 inline expression operator +								( expression& left, expression const& right )
 {
 	if ( left.is_empty( ) )

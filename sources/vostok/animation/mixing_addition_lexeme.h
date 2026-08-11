@@ -38,7 +38,6 @@ STATIC_SIZE_ASSERT(addition_lexeme, 0x24);
 	template < typename T >
 	inline expression		operator +			( T& left, expression& right );
 	inline expression		operator +			( expression& left, expression& right );
-	inline expression		operator +			( expression const& left, expression& right );
 	inline expression		operator +			( expression& left, expression const& right );
 	inline expression		operator +			( expression const& left, expression const& right );
 
