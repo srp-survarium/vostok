@@ -17,7 +17,7 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 	m_base_zb( NULL ),
 	m_window( window ),
 	m_present_sync_mode( D3DPRESENT_INTERVAL_DEFAULT ),
-	m_valid_previous_present( false ),
+	m_valid_previous_present( true ),
 	m_windowed( windowed ),
 	m_is_registered( false )
 {
@@ -39,7 +39,7 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 
 	if ( m_windowed )
 	{
-		m_swap_chain_desc.BufferDesc.RefreshRate.Numerator = 60;
+		m_swap_chain_desc.BufferDesc.RefreshRate.Numerator = 0;
 		m_swap_chain_desc.BufferDesc.RefreshRate.Denominator = 1;
 	}
 	else
@@ -56,7 +56,8 @@ res_render_output::res_render_output( HWND window, bool windowed ) :
 	m_swap_chain_desc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;
 	m_swap_chain_desc.OutputWindow = m_window;
 	m_swap_chain_desc.Windowed = m_windowed;
-	m_swap_chain_desc.Flags = 0;
+	if ( !m_windowed )
+		m_swap_chain_desc.Flags = 0;
 
 	initialize_swap_chain( NULL );
 }
@@ -94,7 +95,7 @@ void res_render_output::initialize_swap_chain( IDXGISwapChain* swap_chain )
 
 		IDXGIFactory* dxgi_factory;
 		hr = pDXGIAdapter->GetParent( __uuidof( IDXGIFactory ), (void**)&dxgi_factory );
-		CHECK_RESULT( hr );
+		R_ASSERT( hr == S_OK );
 
 		hr = dxgi_factory->CreateSwapChain(
 			device::ref().d3d_device(),
@@ -135,7 +136,7 @@ DXGI_RATIONAL res_render_output::select_refresh( u32 width, u32 height, DXGI_FOR
 	VOSTOK_UNREFERENCED_PARAMETERS( width, height, fmt );
 
 	DXGI_RATIONAL res;
-	res.Numerator = 60;
+	res.Numerator = 0;
 	res.Denominator = 1;
 
 	// 21 target lines are retail-compiled-out refresh enumeration.
@@ -222,8 +223,6 @@ void res_render_output::resize(
 	m_windowed = windowed;
 	m_swap_chain_desc.Windowed = m_windowed;
 
-	CHECK_RESULT( m_swap_chain->SetFullscreenState( !m_windowed, NULL ) );
-
 	DXGI_MODE_DESC& buffer_desc = m_swap_chain_desc.BufferDesc;
 
 	math::uint2 new_size = math::uint2( size_x, size_y );
@@ -242,19 +241,7 @@ void res_render_output::resize(
 	buffer_desc.Width = new_size.x;
 	buffer_desc.Height = new_size.y;
 
-	if ( m_windowed )
-	{
-		buffer_desc.RefreshRate.Numerator = 60;
-		buffer_desc.RefreshRate.Denominator = 1;
-	}
-	else
-		buffer_desc.RefreshRate = select_refresh(
-			buffer_desc.Width,
-			buffer_desc.Height,
-			buffer_desc.Format
-		);
-
-	CHECK_RESULT( m_swap_chain->ResizeTarget( &buffer_desc ) );
+	// 19 target lines are retail-compiled-out refresh-target handling.
 
 	log_ref_count( "refCount:pBaseZB", m_base_zb );
 	log_ref_count( "refCount:pBaseRT", m_base_rt );
@@ -268,9 +255,30 @@ void res_render_output::resize(
 			buffer_desc.Width,
 			buffer_desc.Height,
 			buffer_desc.Format,
-			DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH
+			0
 		)
 	);
+
+	IDXGIOutput* output = m_windowed ?
+		NULL : device::ref().get_output( options::ref().current.m_monitor_index );
+
+	if ( m_swap_chain->SetFullscreenState( !m_windowed, output ) != S_OK )
+	{
+		SetFocus( m_window );
+
+		MSG msg;
+		BOOL message_result;
+		while ( (message_result = GetMessage( &msg, NULL, 0, 0 )) )
+		{
+			if ( message_result != -1 )
+			{
+				TranslateMessage( &msg );
+				DispatchMessage( &msg );
+			}
+		}
+
+		CHECK_RESULT( m_swap_chain->SetFullscreenState( !m_windowed, output ) );
+	}
 
 	update_targets();
 	update_window_properties();
