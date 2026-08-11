@@ -977,13 +977,13 @@ void stage_lights::render_particle_probe_lighting(
 	effect->apply( 1, 0 );
 	backend::ref( ).set_ps_texture( "t_probe_cubemap", &*probe->m_texture );
 
+	post_process_parameters const& parameters =
+		m_context->get_scene_view( )->post_process_parameters( );
 	backend::ref( ).set_ps_constant(
 		m_probe_parameters0,
 		float4( probe->m_properties.location, probe->m_properties.radius )
 	);
 
-	post_process_parameters const& parameters =
-		m_context->get_scene_view( )->post_process_parameters( );
 	backend::ref( ).set_ps_constant(
 		m_probe_parameters1,
 		float4(
@@ -1017,6 +1017,8 @@ void stage_lights::render_model_probe_lighting(
 	effects.m_effects[lighting_render_stage]->apply( 1, 0 );
 	backend::ref( ).set_ps_texture( "t_probe_cubemap", &*probe->m_texture );
 
+	post_process_parameters const& parameters =
+		m_context->get_scene_view( )->post_process_parameters( );
 	backend::ref( ).set_ps_constant(
 		m_probe_parameters0,
 		float4(
@@ -1025,8 +1027,6 @@ void stage_lights::render_model_probe_lighting(
 		)
 	);
 
-	post_process_parameters const& parameters =
-		m_context->get_scene_view( )->post_process_parameters( );
 	backend::ref( ).set_ps_constant(
 		m_probe_parameters1,
 		float4(
