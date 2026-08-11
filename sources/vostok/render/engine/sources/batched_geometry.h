@@ -23,48 +23,46 @@ class renderer_context;
 struct batched_geometry_interface {
 	virtual void add_data(
 		batched_vertex_source const*,
-		u32,
+		u32 const,
 		u16 const*,
-		u32,
+		u32 const,
 		float4x4 const&,
 		material_effects_instance_ptr const&
 	) = 0;
 
 	virtual void build( vector<render_model_instance_impl_ptr>& ) = 0;
-
-protected:
-	batched_geometry_interface( )
-	{
-	}
 };
 
 STATIC_SIZE_ASSERT( batched_geometry_interface, 0x4 );
 
 template <typename Vertex>
 struct batched_geometry : public batched_geometry_interface {
+	typedef boost::function<void ( geometry_batch const& )> render_batch_callback_type;
+	typedef vector<geometry_batch> geometry_batches;
+
 	void for_each_batch_render(
 		renderer_context*,
-		boost::function<void ( geometry_batch const& )> const&,
-		boost::function<void ( geometry_batch const& )> const&
+		render_batch_callback_type const&,
+		render_batch_callback_type const&
 	);
 
 	void for_each_batch_visible_render_first_and_remove(
-		boost::function<void ( geometry_batch const& )> const&,
-		boost::function<void ( geometry_batch const& )> const&,
-		u32,
-		u32
+		render_batch_callback_type const&,
+		render_batch_callback_type const&,
+		u32 const,
+		u32 const
 	);
 
-	u32 prepare_visible_batches( renderer_context*, float3 const&, bool, u32 );
-	u32 get_num_visible_batches( u32 index ) const;
+	u32 prepare_visible_batches( renderer_context*, float3 const&, bool, u32 const );
+	u32 get_num_visible_batches( u32 const index ) const;
 
 	batched_geometry( );
 
 protected:
 	batched_geometry(
 		D3D11_INPUT_ELEMENT_DESC const*,
-		u32,
-		u32 in_batched_geometry_max_vertices_count
+		u32 const,
+		u32 const in_batched_geometry_max_vertices_count
 	);
 
 	~batched_geometry( );
@@ -76,9 +74,9 @@ protected:
 
 	virtual void add_data(
 		batched_vertex_source const*,
-		u32,
+		u32 const,
 		u16 const*,
-		u32,
+		u32 const,
 		float4x4 const&,
 		material_effects_instance_ptr const&
 	) override;
@@ -86,8 +84,8 @@ protected:
 	void finalize_batch( );
 	void invalidate( );
 
-	vector<geometry_batch>			m_geometry_batches;
-	vector<geometry_batch>			m_visible_geometry_batches[8];
+	geometry_batches				m_geometry_batches;
+	geometry_batches				m_visible_geometry_batches[8];
 	res_declaration_ptr				m_layout;
 	u32								m_batched_geometry_max_vertices_count;
 	u32								m_num_visible_batches[8];

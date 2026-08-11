@@ -15,9 +15,6 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&	custom_config
 	) override;
-
-	effect_fix_irradiance_texture( ) { }
-	virtual ~effect_fix_irradiance_texture( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fix_irradiance_texture, 0x4 );

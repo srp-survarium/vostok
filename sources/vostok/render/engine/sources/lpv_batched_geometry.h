@@ -8,7 +8,6 @@ namespace render {
 
 struct lpv_batched_geometry : public batched_geometry<lpv_vertex> {
 	lpv_batched_geometry( );
-	virtual ~lpv_batched_geometry( ) { }
 
 	virtual void add_vertex(
 		batched_vertex_source const&	in_vertex,
