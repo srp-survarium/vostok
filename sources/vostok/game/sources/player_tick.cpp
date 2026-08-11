@@ -380,24 +380,14 @@ void `dynamic atexit destructor for 's_net_max_position_discrepancy_command''( )
 }
 */
 
-// claude@NOTE: structure reconstructed and paired (~71%). All statements/calls present:
-// the != angle/position guards, slerp_optimized + create_matrix rotation, per-component
-// position lerp and pitch blend. Residual is optimizer-schedule, not structure:
-//  - the angular factor is deg2rad( s_smooth_angular_speed ) inlined (the target inlines
-//    it; our LTCG emits a `call` to the standalone deg2rad, costing ~7%, so it is written
-//    as deg2rad's body s/180*pi to force the inline). The base still folds 1/180*pi and
-//    reassociates *time_delta earlier than the target's (1/180),(pi),(dt) order.
-//  - the two get_angles_xyz() results live as named locals here but as anonymous temps in
-//    the target (PDB records only 3 named locals: result/right/left_rotation), shifting the
-//    frame +8 and hoisting the `this` load out of the time_delta guard.
 void player::smooth( const float time_delta )
 {
 	if( time_delta > 0.f )
 	{
 		float4x4 result;
 
-		const float3 current_angles	= m_current.transform.get_angles_xyz( );
-		const float3 target_angles	= m_target.transform.get_angles_xyz( );
+		float3 const& current_angles = m_current.transform.get_angles_xyz( );
+		float3 const& target_angles = m_target.transform.get_angles_xyz( );
 		if( current_angles != target_angles )
 		{
 			math::quaternion left_rotation( current_angles );
@@ -420,18 +410,6 @@ void player::smooth( const float time_delta )
 	}
 }
 
-// claude@NOTE: live + paired (target 0x5c62b0, 86 stmts; control flow faithful, structure
-// pairs). The cross-module C4716/LNK1257 link wall is RESOLVED - computed_tree
-// (mixing_n_ary_tree_transition_tree_constructor.cpp) now returns a value, so the
-// animation_player::tick -> skip_time_if_needed -> serialize_state -> computed_tree chain
-// links. Byte residuals (all stub-inlining or optimizer-schedule, not structure):
-//  (A) apply_input_before_new_transform is itself a parked quaternion-blend STUB - its two
-//      calls inline to nothing until matched (the bulk of the TRGT_ONLY statement block);
-//  (B) the camera-name tail (SNaN-seeded point_to_screen float3 + the distance/font clamp,
-//      +0.2 head-z placement) and the angular_velocity integration schedule;
-//  (C) send_local_player_input / set_using_progress_message schedule-reordered (BASE_ONLY at
-//      earlier line, TRGT_ONLY later) - optimizer ordering, callee-driven.
-// PDB records are_there_any_callbacks as const bool but it is loop-assigned then read after.
 void player::tick( const u32 current_time_in_ms )
 {
 	if( m_is_first_tick )
@@ -449,7 +427,7 @@ void player::tick( const u32 current_time_in_ms )
 	if( m_use_physics_controller_for_current )
 	{
 		m_current.update_transform( );
-		if( m_target.physics_controller->has_updates( )
+		if( m_use_physics_controller_for_current && m_target.physics_controller->has_updates( )
 			&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f )
 		{
 			m_current.transform = m_target.transform;
@@ -462,7 +440,7 @@ void player::tick( const u32 current_time_in_ms )
 
 	const bool is_current = m_game.network_client( ).is_player_current( id );
 
-	const player_input previous_input = m_input;
+	player_input previous_input = m_input;
 	m_input = m_is_alive ? ( is_local ? local_input( ) : remote_input( ) ) : player_input( );
 
 	if( is_local )
@@ -510,12 +488,14 @@ void player::tick( const u32 current_time_in_ms )
 		are_there_any_callbacks = m_target.animation_player.tick_to_nearest_user_handled_callback( current_time_in_ms );
 		time_in_ms = m_current.animation_player.last_tick_time_in_ms( );
 
-		apply_input_before_new_transform( m_current, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
+		const float time_delta = ( time_in_ms - previous_time_in_ms ) * 0.001f;
+		apply_input_before_new_transform( m_current, previous_input, time_delta );
 		m_target.animation_player.tick( time_in_ms );
-		apply_input_before_new_transform( m_target, previous_input, ( time_in_ms - previous_time_in_ms ) * 0.001f );
+		apply_input_before_new_transform( m_target, previous_input, time_delta );
 
-		m_input.angular_velocity.x = previous_input.angular_velocity.x + m_input.angular_acceleration.x * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
-		m_input.angular_velocity.y = previous_input.angular_velocity.y + m_input.angular_acceleration.y * ( ( time_in_ms - previous_time_in_ms ) * 0.001f );
+		float2 const& angular_velocity = previous_input.angular_velocity + m_input.angular_acceleration * time_delta;
+		previous_input = m_input;
+		previous_input.angular_velocity = angular_velocity;
 	}
 	while( time_in_ms != current_time_in_ms );
 
@@ -546,21 +526,24 @@ void player::tick( const u32 current_time_in_ms )
 			m_game_ui->set_using_progress_message( usable_object_user_data( )->current_progress );
 	}
 
-	const bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
-	camera_director& cd = m_game.get_game_world( ).get_camera_director( );
-	if( name_visible && m_game.network_client( ).current_player_team( ) == m_team_id && cd.get_active_camera( ) )
+	bool name_visible = !m_is_demo_player && ( !is_current || m_local_input_controller->input_mode( ) != first_person_mode );
+	if( name_visible && m_game.network_client( ).current_player_team( ) == m_team_id && m_game.get_game_world( ).get_camera_director( ).get_active_camera( ) )
 	{
 		float2 screen_p( math::SNaN, math::SNaN );
-		float3 const p( m_character_head_transform.c.x, m_character_head_transform.c.y, m_character_head_transform.c.z + 0.2f );
-		if( m_game_scene.point_to_screen( p, screen_p ) )
+		if( m_game_scene.point_to_screen( float3( m_character_head_transform.c.x, m_character_head_transform.c.y + 0.2f, m_character_head_transform.c.z ), screen_p ) )
 		{
-			game_camera const* const camera = cd.get_active_camera( );
-			const float distance = ( m_character_head_transform.c.xyz( ) - camera->get_inverted_view_matrix( ).c.xyz( ) ).length( );
+			const float near_plane = m_game.get_game_world( ).get_camera_director( ).get_active_camera( )->get_near_plane( );
 			const float font_size = math::max(
-				s_player_name_max_font_size - ( distance - camera->get_near_plane( ) ) / camera->get_far_plane( ) * 1000.f * s_player_name_decrease_koef,
+				s_player_name_max_font_size -
+					( ( m_character_head_transform.c.xyz( ) - m_game.get_game_world( ).get_camera_director( ).get_inverted_view_matrix( ).c.xyz( ) ).length( ) - near_plane ) /
+					( m_game.get_game_world( ).get_camera_director( ).get_active_camera( )->get_far_plane( ) - near_plane ) * 1000.f * s_player_name_decrease_koef,
 				s_player_name_min_font_size );
+			if( !m_text.visible )
+				m_text.set_visible( true );
 			m_text.set_font_size( font_size );
-			m_text.set_position( screen_p.x - m_text.get_width( ) * 0.5f, screen_p.y - m_text.get_height( ) );
+			const float width = m_text.get_width( );
+			float2 p( screen_p.x - width * 0.5f, screen_p.y - m_text.get_height( ) );
+			m_text.set_position( p.x, p.y );
 			return;
 		}
 	}

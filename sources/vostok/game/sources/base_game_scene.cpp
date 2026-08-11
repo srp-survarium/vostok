@@ -183,20 +183,20 @@ void base_game_scene::apply_camera( camera_director& cd )
 	scene_renderer( ).set_projection_matrix	( render_scene_view( ), m_projection_matrix );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on output_window_size() (render-module accessor, see above).
-// Target structure (10 stmts, 3 named locals: float3 pos, float4x4 vp, float4x4 view):
-// reads output_window_size() into a uint2, halves x/y (shr 1), float4x4::try_invert on
-// the camera view, math::mul4x4 to build vp, projects p through vp into screen coords
-// (the SSE/x87 perspective-divide block at 197), writes result, then returns whether the
-// point lands in the [0..size) screen rect. The math is recoverable once
-// output_window_size() is matched - it is the only missing dependency.
 bool base_game_scene::point_to_screen( float3 const& p, float2& result )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( p );			// buildability stub
-	VOSTOK_UNREFERENCED_PARAMETER( result );
+	math::uint2 const& output_size = output_window_size( );
+	u32 const half_width = output_size.x / 2, half_height = output_size.y / 2;
 
-	return false;
+	float4x4 view;
+	view.try_invert( m_inverted_view_matrix );
+	float4x4 vp = math::mul4x4( view, m_projection_matrix );
+	float3 pos = vp.transform( p );
+
+	result.x = ( pos.x + 1.f ) * half_width;
+	result.y = ( 1.f - pos.y ) * half_height;
+
+	return pos.z < 0.f && result.x > 0.f && result.y > 0.f && result.x < output_size.x && result.y < output_size.y;
 }
 
 swf_input_translator& base_game_scene::input_translator( )
