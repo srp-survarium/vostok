@@ -25,10 +25,10 @@ public:
 	virtual void set_default_material( ) = 0;
 	virtual void render( lod_entry const* lod, renderer_context* context ) = 0;
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const = 0;
-	virtual enum_vertex_input_type get_vertex_input_type( ) = 0;
 
 	void set_material_effects( material_effects_instance_ptr instance, pcstr material_name );
 	material_effects& get_material_effects( );
+	virtual enum_vertex_input_type get_vertex_input_type( ) = 0;
 
 	speedtree_tree* m_parent;
 	render_geometry m_render_geometry;

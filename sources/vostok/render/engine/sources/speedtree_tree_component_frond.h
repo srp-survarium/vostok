@@ -24,7 +24,6 @@ STATIC_SIZE_ASSERT( frond_vertex, 0x38 );
 class speedtree_tree_component_frond : public speedtree_tree_component {
 public:
 	explicit speedtree_tree_component_frond( speedtree_tree& parent );
-	virtual ~speedtree_tree_component_frond( ) { }
 
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );

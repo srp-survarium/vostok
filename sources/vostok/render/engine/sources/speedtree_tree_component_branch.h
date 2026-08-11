@@ -24,17 +24,17 @@ STATIC_SIZE_ASSERT( branch_vertex, 0x38 );
 class speedtree_tree_component_branch : public speedtree_tree_component {
 public:
 	explicit speedtree_tree_component_branch( speedtree_tree& parent );
-	virtual ~speedtree_tree_component_branch( ) { }
 
 	virtual void set_material( material_ptr material );
 	virtual void set_default_material( );
-	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual SpeedTree::EGeometryType get_geometry_type( ) const
 	{
 		// FUNCTION BODY[0x427c0]
 		return SpeedTree::GEOMETRY_TYPE_BRANCHES;
 	}
+
+	virtual void render( lod_entry const* lod, renderer_context* context );
 
 	virtual enum_vertex_input_type get_vertex_input_type( )
 	{
