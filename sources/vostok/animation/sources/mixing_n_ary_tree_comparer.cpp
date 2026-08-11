@@ -414,9 +414,8 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 	m_equal								= false;
 	bool const has_time_scale				= animation.operands_count( )
 		&& (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( );
-	base_interpolator const& interpolator	= animation.weight_interpolator( );
 	u32 const weight_operands_count			= animation.operands_count( ) - ( has_time_scale ? 1 : 0 )
-		+ ( interpolator.transition_time( ) != 0.f ? 1 : 0 );
+		+ ( animation.weight_interpolator( ).transition_time( ) != 0.f ? 1 : 0 );
 
 	u32 time_scale_operands_count;
 	u32 operands_offset						= has_time_scale ? 1 : 0;
@@ -430,7 +429,7 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 		animation.operands( sizeof( n_ary_tree_animation_node ) )
 			+ ( has_time_scale ? time_scale_operands_count : 0 );
 
-	n_ary_tree_weight_node temp				( interpolator, 0.f );
+	n_ary_tree_weight_node temp				( animation.weight_interpolator( ), 0.f );
 	n_ary_tree_node_comparer comparer;
 	for ( ; i != operands_end; ++i ) {
 		if ( comparer.compare( **i, temp ) == vostok::animation::more )
@@ -439,7 +438,7 @@ void n_ary_tree_comparer::new_weight_driving_animation( n_ary_tree_animation_nod
 		increase_buffer_size					( **i );
 	}
 
-	if ( interpolator.transition_time( ) != 0.f )
+	if ( animation.weight_interpolator( ).transition_time( ) != 0.f )
 		m_needed_buffer_size				+= sizeof( n_ary_tree_weight_transition_node )
 			+ sizeof( n_ary_tree_weight_node );
 
