@@ -62,6 +62,7 @@ effect_manager::effect_manager( )
 {
 	static effect_cook effect_cooker;
 	register_cook(&effect_cooker);
+	m_is_effects_query_processing = false;
 }
 
 effect_manager::~effect_manager( )
