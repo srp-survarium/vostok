@@ -62,8 +62,6 @@ private:
 		u32 const			in_num_bounds
 	);
 	void check_culling_buffer( u32 const in_num_bounds );
-
-public:
 	bool const					m_use_scene_depth_buffer;
 	res_effect_ptr				m_hiz_occlusion_effect;
 	render_target_ptr			m_rt_depth_mips_work[16];

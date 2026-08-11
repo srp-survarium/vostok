@@ -11,8 +11,10 @@ class effect_compiler;
 
 class effect_editor_show_batched_geometry : public effect_material_base {
 public:
-	effect_editor_show_batched_geometry( ) { }
-	virtual ~effect_editor_show_batched_geometry( ) { }
+	enum {
+		show_lpv_geometry,
+		show_shadow_geometry
+	};
 
 	virtual void compile(
 		effect_compiler&			compiler,

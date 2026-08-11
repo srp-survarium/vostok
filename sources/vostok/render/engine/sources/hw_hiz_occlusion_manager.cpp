@@ -165,7 +165,7 @@ void hw_hiz_occlusion_manager::copy_scene_depth( )
 {
 
 
-	m_hiz_occlusion_effect->apply( 2, 0 );
+	m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_copy_scene_depth_pass, 0 );
 	system_renderer::ref( ).fill_surface( m_rt_depth_mips[0], render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), false, 0, 0.f, 0.f, 1.f, 1.f );
 }
 
@@ -192,7 +192,7 @@ void hw_hiz_occlusion_manager::render_occluders( renderer_context* in_context )
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, clear_value, 0 );
 	// 3 target lines are likely retail-compiled-out source.
 	in_context->set_w( math::create_scale( float3( 3.f, 3.f, 3.f ) ) );
-	m_hiz_occlusion_effect->apply( 3, 0 );
+	m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_occluders_depth_pass, 0 );
 	m_sphere_occluder_geometry.render( );
 
 	backend::ref( ).set_viewport( prev_view_port );
@@ -216,7 +216,7 @@ void hw_hiz_occlusion_manager::render_debug(
 		float4x4 const world_matrix =
 			math::create_scale( float3( in_bounds->w, in_bounds->w, in_bounds->w ) ) *
 			math::create_translation( in_bounds->xyz( ) );
-		in_context->set_w( world_matrix ); m_hiz_occlusion_effect->apply( 1, 0 ); backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( scale, scale, scale, 0.f ) ); m_sphere_occluder_geometry.render( );
+		in_context->set_w( world_matrix ); m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_render_debug_geometry_invisible_pass, 0 ); backend::ref( ).set_ps_constant( m_draw_color_parameter, float4( scale, scale, scale, 0.f ) ); m_sphere_occluder_geometry.render( );
 	}
 }
 
@@ -245,7 +245,7 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 	res_texture_ptr read_texture = m_t_depth_mips;
 
 	for ( u32 mip_level_index = 1; mip_level_index < m_num_mips; ++mip_level_index ) {
-		m_hiz_occlusion_effect->apply( 4, 0 );
+		m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_downsample_depth_pass, 0 );
 		backend::ref( ).set_ps_texture( "hiz_depth_texture", read_texture.c_ptr( ) );
 		backend::ref( ).set_ps_constant(
 			m_prev_texture_size_parameter,
@@ -267,7 +267,7 @@ void hw_hiz_occlusion_manager::downsample_occlusion_buffer( )
 
 	for ( u32 mip_level_index = 1; mip_level_index < m_num_mips; ++mip_level_index ) {
 		// 4 target lines are likely retail-compiled-out source.
-		m_hiz_occlusion_effect->apply( 5, 0 );
+		m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_merge_mip_pass, 0 );
 		backend::ref( ).set_ps_texture( "hiz_depth_texture", m_t_depth_mips_work[mip_level_index].c_ptr( ) );
 		system_renderer::ref( ).fill_surface( m_rt_depth_mips[mip_level_index], render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), false, 0, 0.f, 0.f, 1.f, 1.f );
 	}
@@ -307,7 +307,7 @@ void hw_hiz_occlusion_manager::render_model_bounds(
 	backend::ref( ).set_depth_stencil_target( 0 );
 	backend::ref( ).clear_render_targets( 0.f, 0.f, 0.f, 0.f );
 
-	m_hiz_occlusion_effect->apply( 6, 0 );
+	m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_fill_culling_results_buffer_pass, 0 );
 	backend::ref( ).set_ps_texture( "hiz_depth_texture", m_t_depth_mips.c_ptr( ) );
 	backend::ref( ).set_vs_constant(
 		m_render_target_size_parameter,

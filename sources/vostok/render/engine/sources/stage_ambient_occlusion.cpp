@@ -139,7 +139,7 @@ void stage_ambient_occlusion::execute( )
 	{
 		if ( options::ref( ).current.m_ssao_use_temporal_filtering )
 		{
-			m_sh_ssao_filter4x4->apply( 2, 0 );
+			m_sh_ssao_filter4x4->apply( effect_ssao_filter4x4::temporal_mask_pass, 0 );
 			backend::ref( ).set_ps_constant(
 				m_c_eye_ray_corner, ( (float4*)m_context->get_eye_rays( ) )[0] );
 			backend::ref( ).set_ps_constant( m_prev_view_parameter, math::transpose( prev_view ) );
@@ -147,7 +147,7 @@ void stage_ambient_occlusion::execute( )
 		}
 
 		m_sh_ssao_filter4x4->apply(
-			options::ref( ).current.m_ssao_use_temporal_filtering ? 4 : 3,
+			options::ref( ).current.m_ssao_use_temporal_filtering ? effect_ssao_filter4x4::upsample_pass_temporal : effect_ssao_filter4x4::upsample_pass,
 			0
 		);
 
@@ -169,7 +169,7 @@ void stage_ambient_occlusion::execute( )
 	else
 	{
 		// 4 target lines are likely retail-compiled-out source.
-		m_sh_ssao_filter4x4->apply( 0, 0 );
+		m_sh_ssao_filter4x4->apply( effect_ssao_filter4x4::filter_0_pass, 0 );
 		system_renderer::ref( ).fill_surface( m_context->get_rt( rt_ssao_accumulator_full_x ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.0f, 0.0f, 1.0f, 1.0f );
 	}
 	END_CPUGPU_TIMER;
