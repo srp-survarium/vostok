@@ -82,7 +82,7 @@ std::pair<animation::mixing::expression,animation::mixing::animation_lexeme> pla
 	animation::mixing::animation_lexeme	look_lexeme( look_lexeme_parameters );
 
 	return std::make_pair< animation::mixing::expression, animation::mixing::animation_lexeme >(
-		animation::mixing::expression( movement_lexeme ) + look_lexeme,
+		movement_lexeme + look_lexeme,
 		movement_lexeme
 	);
 }
