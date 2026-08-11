@@ -30,14 +30,11 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_animation_node& node )
 {
 	float weight		= 1.f;
 
+	n_ary_tree_base_node** i		= node.operands( sizeof(n_ary_tree_animation_node) );
 	u32 const operands_count		= node.operands_count( );
-	R_ASSERT						( operands_count );
-	n_ary_tree_base_node** const b	= node.operands( sizeof(n_ary_tree_animation_node) );
-	n_ary_tree_base_node** i		= b;
-	n_ary_tree_base_node** const e	= i + operands_count;
+	n_ary_tree_base_node** e		= i + operands_count;
 
 	if ( (*i)->is_time_scale() ) {
-		R_ASSERT_CMP				( operands_count, >=, 1 );
 		++i;
 	}
 
@@ -46,13 +43,17 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_animation_node& node )
 		R_ASSERT		( !(*i)->is_time_scale() );
 		(*i)->accept	( *this );
 		weight			*= m_weight;
+		if ( m_result ) {
+			if ( node.operands_count() == operands_count )
+				*i			= m_result;
+			else {
+				--i;
+				--e;
+			}
+		}
+
 		if ( weight == 0.f )
 			break;
-
-		if ( !m_result )
-			continue;
-
-		*i				= m_result;
 	}
 
 	m_weight			= weight;
