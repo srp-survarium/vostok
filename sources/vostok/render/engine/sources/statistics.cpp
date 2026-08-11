@@ -119,14 +119,11 @@ void make_ui_vertices(
 }
 
 statistics_base::statistics_base( statistics_group* group, pcstr name ) :
-	m_name( name ? name : "" ),
-	m_next( 0 ),
 	m_group( group )
 {
-	// FUNCTION BODY[0x6388c0]
-	// Not for inner statistics values.
-	if (group)
+	if ( group )
 	{
+		m_name					= name;
 		m_next					= group->first_statistics;
 		group->first_statistics = this;
 	}
