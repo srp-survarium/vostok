@@ -546,19 +546,20 @@ static void on_fs_iterator_materials_ready_children(
 				new_materials_path.c_str(),
 				it.children_begin()
 			);
-			continue;
 		}
-
-		if ( strstr( mname, ".orig" ) )
+		else if ( strstr( mname, ".orig" ) )
 		{
 			continue;
 		}
-
-		fs_new::virtual_path_string request_path;
-		request_path.assignf( "%s/%s", materials_path, mname );
-		request_path.rtrim();
-		request_path.replace( "resources/material_instances/", "" );
-		out_material_names.push_back( fs_new::virtual_path_string( request_path.c_str() ) );
+		else
+		{
+			fs_new::virtual_path_string request_path;
+			request_path.assignf( "%s/%s", materials_path, mname );
+			request_path.rtrim();
+			request_path.replace( "resources/material_instances/", "" );
+			// 49 target lines are retail-compiled-out source.
+			out_material_names.push_back( fs_new::virtual_path_string( request_path.c_str() ) );
+		}
 	}
 }
 
