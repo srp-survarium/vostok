@@ -8,7 +8,7 @@ namespace render {
 
 class VOSTOK_NOVTABLE base_command {
 public:
-	base_command( bool is_deferred = false, bool depth = true )
+	base_command( bool const is_deferred = false, bool const depth = true )
 		: remove_frame_id( 0 ),
 		  is_deferred_command( is_deferred ),
 		  use_depth( depth )

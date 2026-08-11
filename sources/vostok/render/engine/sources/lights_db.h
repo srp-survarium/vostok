@@ -76,7 +76,7 @@ private:
 		tree_operation_no_operation,
 	};
 
-	light* create( tree_operation_enum operation ) const;
+	light* create( tree_operation_enum const operation ) const;
 
 private:
 	lights_type								m_lights;

@@ -40,7 +40,7 @@ namespace ui {
 struct vertex {
 	vertex( ) { }
 
-	vertex( float x, float y, float z, u32 color, float u, float v )
+	vertex( float const x, float const y, float const z, u32 const color, float const u, float const v )
 		: m_position( x, y, z, 0.f ),
 		  m_color( color ),
 		  m_uv( u, v )

@@ -65,7 +65,7 @@ public:
 	);
 	void render_beams( float3 const& view_location, u32 num_particles );
 	void render_meshes( ) { }
-	void render( float3 const& view_location, u32 num_particles );
+	void render( float3 const& view_location, u32 const num_particles );
 	void draw_debug(
 		float4x4 const&				view_matrix,
 		particle::enum_particle_render_mode	debug_mode

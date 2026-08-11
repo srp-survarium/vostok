@@ -25,7 +25,7 @@ namespace ui { class renderer; }
 
 namespace game {
 
-class renderer : public core::noncopyable {
+class renderer : private core::noncopyable {
 private:
 	friend class render::world;
 	renderer( render::world& world, engine::world& engine_world );
@@ -41,9 +41,9 @@ public:
 
 	void resize_render_output_window(
 		base_output_window_ptr const& output_window,
-		u32 width,
-		u32 height,
-		bool fullscreen
+		u32 const width,
+		u32 const height,
+		bool const fullscreen
 	)
 	{
 		m_render_engine_world.resize_render_output_window(
@@ -72,9 +72,6 @@ public:
 
 private:
 	struct draw_scene_params {
-		draw_scene_params( ) { }
-		~draw_scene_params( ) { }
-
 		base_scene_ptr scene;
 		base_scene_view_ptr scene_view;
 		base_output_window_ptr render_output_window;

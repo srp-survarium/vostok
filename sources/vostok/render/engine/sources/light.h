@@ -33,7 +33,7 @@ typedef intrusive_ptr<
 
 class light :
 	public resource_intrusive_base,
-	public boost::noncopyable
+	private boost::noncopyable
 {
 public:
 	enum shadow_distribution_side {
@@ -50,7 +50,7 @@ public:
 
 	void destroy_impl( ) const;
 
-	void set_type( light_type type )
+	void set_type( light_type const type )
 	{
 		flags.type = type;
 	}
@@ -60,7 +60,7 @@ public:
 		return flags.type;
 	}
 
-	void set_cast_shadows( bool value )
+	void set_cast_shadows( bool const value )
 	{
 		flags.does_cast_shadows = value;
 	}
@@ -77,9 +77,9 @@ public:
 	void set_position( float3 const& value );
 	void set_orientation( float3 const& direction, float3 const& right );
 	void set_range( float value );
-	void set_color( math::color const& value, float intensity );
+	void set_color( math::color const& value, float const intensity );
 
-	void set_hud_mode( bool value )
+	void set_hud_mode( bool const value )
 	{
 		flags.is_hud_mode = value;
 	}
@@ -99,7 +99,7 @@ public:
 	void set_scale( float3 const& value );
 	void on_properties_changed( );
 	bool is_occluded( ) const;
-	void tick_color_animation( float time_delta );
+	void tick_color_animation( float const time_delta );
 
 private:
 	struct light_flags {

@@ -6,7 +6,7 @@ namespace render {
 
 template < typename T >
 struct find_by_id_predicate {
-	explicit find_by_id_predicate( u32 id ) :
+	explicit find_by_id_predicate( u32 const id ) :
 		m_id( id )
 	{
 	}
@@ -22,7 +22,7 @@ struct find_by_id_predicate {
 struct environment_probe;
 
 struct find_environment_probe_predicate {
-	explicit find_environment_probe_predicate( u32 id ) :
+	explicit find_environment_probe_predicate( u32 const id ) :
 		m_id( id )
 	{
 	}

@@ -41,7 +41,7 @@ private:
 };
 
 struct effect_constant_storage : public quasi_singleton<effect_constant_storage> {
-	typedef vector<data_indexer> indexers_type;
+	typedef vector<data_indexer> indexers_vector_type;
 
 	effect_constant_storage( );
 	~effect_constant_storage( );
@@ -52,7 +52,7 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 	{
 		u32 const class_id = constant_type_traits<T>::class_id;
 		data_indexer sought( reinterpret_cast<u32*>( const_cast<T*>( &value ) ), class_id );
-		indexers_type::iterator found = std::lower_bound(
+		indexers_vector_type::iterator found = std::lower_bound(
 			m_indexers.begin( ),
 			m_indexers.end( ),
 			sought,
@@ -73,7 +73,7 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 
 		T* stored = new( m_constant_buffer->place<T>( ) ) T( value );
 		data_indexer inserted( reinterpret_cast<u32*>( stored ), class_id );
-		indexers_type::iterator position = std::lower_bound(
+		indexers_vector_type::iterator position = std::lower_bound(
 			m_indexers.begin( ),
 			m_indexers.end( ),
 			inserted,
@@ -84,9 +84,9 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 	}
 
 private:
-	bool is_equal( u32 const* left, u32 const* right, u32 count );
+	bool is_equal( u32 const* left, u32 const* right, u32 const count );
 
-	indexers_type m_indexers;
+	indexers_vector_type m_indexers;
 	fixed_constants_data_buffer* m_constant_buffer;
 };
 

@@ -10,16 +10,10 @@ namespace vostok {
 namespace render {
 
 struct geometry_batch {
-	geometry_batch( ) :
-		bbox		( math::create_zero_aabb( ) ),
-		num_indices( 0 )
-	{
-	}
-
 	geometry_batch(
 		math::aabb const&				in_bbox,
 		res_geometry_ptr const&			in_geometry,
-		u32								in_num_indices,
+		u32 const						in_num_indices,
 		material_effects_instance_ptr	in_material
 	) :
 		bbox		( in_bbox ),
@@ -34,10 +28,6 @@ struct geometry_batch {
 		mtl			( other.mtl ),
 		geometry	( other.geometry ),
 		num_indices	( other.num_indices )
-	{
-	}
-
-	~geometry_batch( )
 	{
 	}
 
