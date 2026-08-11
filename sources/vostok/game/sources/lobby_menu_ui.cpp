@@ -29,6 +29,7 @@
 #include <vostok/resources_queries_result.h>
 #include <vostok/math_constants.h>
 #include <vostok/vectora.h>
+#include <vostok/game_core/game_net_defines.h>
 #include <vostok/game_core/inventory_item_instance.h>
 #include <vostok/network/login_client.h>
 #include <vostok/configs_binary_config_value.h>
@@ -70,123 +71,73 @@ relocate_item_func::relocate_item_func( game& g )
 {
 }
 
-// claude@NOTE: PARKED - the body opens with a LOG macro (try-relocate trace via
-// vostok::logging::has_passed_filters/append) then reads params.pArgs[0] as a RAW GFx Value,
-// calling its internal vtable methods directly ([vt+0x28]=GetArraySize, [vt+0x30]=GetElement,
-// [vt+0x10]=GetMember) - i.e. the flash_value wrapper's getters inlined to the GFx-Value-
-// internal layout, which is not headered here. It then walks the items_dictionary map
-// (dictionary_item copy ctor) + player_creation_params, calls lobby_client::check_compatibility
-// and builds a vector<relocate_item_descr> passed to lobby_client::move_item. All the
-// surfaces (lobby_client, dictionary_item, relocate_item_descr) ARE available; the blocker is
-// the GFx-Value-internal field/vtable access (same wall as the callback args reads) - recover
-// the GFx Value layout to reconstruct the pArgs[0] navigation. Also the scaleform flash /Od wall.
-// STATE[STUB]
 void relocate_item_func::call( flash_function_handler_params& params )
 {
-	// LOCALS
-	// vector< relocate_item_descr > 	descriptions
-	// lobby_client& 					lobby
-	// u32 								second_item_id
-	// flash_value 						descr_member_value
-	// flash_value 						descr_value
-	// dictionary_item 					current_item
-	// relocate_item_descr 				current
-	// ******
+	LOG_INFO( "TRY RELOCATE(FLASH)!!!" );
 
-	// CALL SITE INFO
-	// <0x934c9> -> lobby_client& < unknown >()
-	// ******
+	vector< relocate_item_descr > descriptions;
+	lobby_client& lobby = m_game.network_client( ).lobby_client( );
 
-	// FUNCTION BODY[0x933d0]: 84
-	// <0x933dc>|0x00c|+0x0d1:'35'
-	// <0>
-	// <1>
-	// <0x934ad>|0x0dd|+0x01e:'38'
-	// <0>
-	// <1>
-	// <2>
-	// <0x934cb>|0x0fb|+0x017:'42'
-	// <0>
-	// <0x934e2>|0x112|+0x4c8:'44'
-	// <0x939aa>|0x5da|-0x4b5:'44'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x934f5>|0x125|+0x02d:'51'
-	// <0>
-	// <0x93522>|0x152|+0x02e:'53'
-	// <0>
-	// <1>
-	// <0x93550>|0x180|+0x034:'56'
-	// <0>
-	// <1>
-	// <0x93584>|0x1b4|+0x036:'59'
-	// <0>
-	// <1>
-	// <0x935ba>|0x1ea|+0x034:'62'
-	// <0x935ee>|0x21e|+0x004:'63'
-	// <0>
-	// <0x935f2>|0x222|+0x030:'65'
-	// <0x93622>|0x252|+0x004:'66'
-	// <0>
-	// <0x93626>|0x256|+0x030:'68'
-	// <0>
-	// <1>
-	// <0x93656>|0x286|+0x057:'71'
-	// <0>
-	// <1>
-	// <0x936ad>|0x2dd|+0x0f3:'74'
-	// <0>
-	// <1>
-	// <0x937a0>|0x3d0|+0x029:'77'
-	// <0>
-	// <1>
-	// <2>
-	// <0x937c9>|0x3f9|+0x01b:'81'
-	// <0>
-	// <0x937e4>|0x414|-0x011:'83'
-	// <0>
-	// <0x937d3>|0x403|+0x00a:'85'
-	// <0>
-	// <0x937dd>|0x40d|+0x00c:'87'
-	// <0>
-	// <1>
-	// <0x937e9>|0x419|+0x025:'90'
-	// <0x9380e>|0x43e|-0x013:'91'
-	// <0x937fb>|0x42b|+0x02b:'92'
-	// <0x93826>|0x456|-0x015:'92'
-	// <0>
-	// <0x93811>|0x441|+0x005:'94'
-	// <0x93816>|0x446|+0x016:'95'
-	// <0>
-	// <1>
-	// <2>
-	// <0x9382c>|0x45c|+0x092:'99'
-	// <0x938be>|0x4ee|-0x00c:'99'
-	// <0x938b2>|0x4e2|+0x010:'100'
-	// <0x938c2>|0x4f2|+0x010:'100'
-	// <0>
-	// <1>
-	// <0x938d2>|0x502|+0x008:'103'
-	// <0>
-	// <1>
-	// <0x938da>|0x50a|+0x03f:'106'
-	// <0>
-	// <0x93919>|0x549|+0x095:'108'
-	// <0>
-	// <0x939ae>|0x5de|+0x00f:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// ******
+	for ( u8 i = 0; i < params.pArgs[ 0 ].GetArraySize( ); ++i )
+	{
+		flash_value descr_value;
+		params.pArgs[ 0 ].GetElement( i, &descr_value );
+
+		flash_value descr_member_value;
+		relocate_item_descr current;
+
+		descr_value.GetMember( "profile", &descr_member_value );
+		current.profile_id = descr_member_value.GetUInt( );
+
+		descr_value.GetMember( "id", &descr_member_value );
+		current.item_id = descr_member_value.GetUInt( );
+
+		descr_value.GetMember( "dict_id", &descr_member_value );
+		current.item_dict_id = descr_member_value.GetUInt( );
+
+		descr_value.GetMember( "sourceSlot", &descr_member_value );
+		current.source_slot_id = descr_member_value.GetUInt( );
+
+		descr_value.GetMember( "targetSlot", &descr_member_value );
+		current.target_slot_id = descr_member_value.GetUInt( );
+
+		descr_value.GetMember( "count", &descr_member_value );
+		current.amount = ( u16 )descr_member_value.GetUInt( );
+
+		dictionary_item current_item = m_game.items_dictionary( ).item_by_id( current.item_dict_id );
+
+		LOG_INFO(
+			"try move item %d from %d to %d. ",
+			current.item_id,
+			current.source_slot_id,
+			current.target_slot_id,
+			current.amount
+		);
+
+		u32 second_item_id = 0;
+		if ( current.target_slot_id == ammo1_weapon1_slot || current.target_slot_id == ammo2_weapon1_slot )
+			second_item_id = weapon1_slot;
+		else if ( current.target_slot_id == ammo1_weapon2_slot || current.target_slot_id == ammo2_weapon2_slot )
+			second_item_id = weapon2_slot;
+
+		if ( second_item_id )
+		{
+			profile_slot_enum const weapon_slot = ( profile_slot_enum )second_item_id;
+			second_item_id = lobby.profile( m_game.lobby_menu( ).selected_profile( ) ).slots[ weapon_slot ].item.dict_id;
+
+			for ( vector< relocate_item_descr >::const_iterator j = descriptions.begin( ); j != descriptions.end( ); ++j )
+			{
+				if ( j->target_slot_id == weapon_slot )
+					second_item_id = j->item_dict_id;
+			}
+		}
+
+		if ( lobby.can_move_item( current_item.item_category, current.target_slot_id ) &&
+			( !second_item_id || lobby.check_compatibility( current.item_dict_id, second_item_id ) ) )
+			descriptions.push_back( current );
+	}
+
+	lobby.move_item( descriptions );
 }
 
 // claude@NOTE: flash external-interface dispatch over methodName. The args reads
