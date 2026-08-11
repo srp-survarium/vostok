@@ -1,0 +1,39 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed n_ary_tree time-synchronization caller-cone observations from the disposable game_core-before-animation LTCG link. These are partial MAX states; no row is claimed exact.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?computed_animation_time@n_ary_tree@mixing@animation@vostok@@ABEMAAVn_ary_tree_animation_node@234@MIIIM@Z",
+      "module": "animation",
+      "expected_hash": "756099a89e66.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 94.75,
+      "review": "Target and candidate have STRUCTURE MATCH at three attributed body statements and the same 0x73-byte size. The residual is indirect callback argument and x87 scheduling."
+    },
+    {
+      "mangled": "?update_animation_state@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "f31c8a06041b.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 91.01471,
+      "review": "Target and candidate retain the same thirteen attributed body statements and complete weight/time-calculator/update-time sequence. Three statement-size deltas remain around real call boundaries."
+    },
+    {
+      "mangled": "?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "a906943057d2.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 82.59375,
+      "review": "The natural integration body, target named locals, sole caller, computed_animation_time call, and accumulate_object_movement call are verified. Target has 33 versus candidate 30 attributed statements with substantial LTCG grouping and call/FPU scheduling differences."
+    },
+    {
+      "mangled": "?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "427ce530c0b8.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_fuzzy_pct": 99.04762,
+      "review": "Target and candidate retain the same fifteen attributed body statements and both update paths. The one-byte body residual is the proven animation_node call-boundary convention into the integration callee."
+    }
+  ]
+}
