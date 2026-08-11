@@ -507,7 +507,7 @@ void engine::world::apply_render_options_changes( )
 	// <3>
 	// ******
 
-	reset_renderer								( false );
+	reset_renderer								( true );
 #ifndef MASTER_GOLD
 	options::ref().save_current_configuration	( );
 #endif // #ifndef MASTER_GOLD
