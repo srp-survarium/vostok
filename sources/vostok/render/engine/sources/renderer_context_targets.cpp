@@ -130,7 +130,7 @@ void renderer_context_targets::new_rt(
 
 	render_target_instance& instance = m_family[index];
 	pcstr const original_name = rt_index_to_name( index );
-	if ( instance.orig_name != original_name )
+	if ( instance.orig_name.get_buffer( ) != original_name )
 		instance.orig_name = original_name;
 
 	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
@@ -158,7 +158,7 @@ void renderer_context_targets::new_lt(
 {
 	render_target_instance& instance = m_family[index];
 	pcstr const original_name = rt_index_to_name( index );
-	if ( instance.orig_name != original_name )
+	if ( instance.orig_name.get_buffer( ) != original_name )
 		instance.orig_name = original_name;
 
 	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
