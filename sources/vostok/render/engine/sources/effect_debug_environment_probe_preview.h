@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_debug_environment_probe_preview( ) { }
-	virtual ~effect_debug_environment_probe_preview( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_debug_environment_probe_preview, 0x4 );

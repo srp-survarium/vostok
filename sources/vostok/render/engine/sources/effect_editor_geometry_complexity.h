@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_geometry_complexity : public effect_material_base {
 public:
-	effect_editor_geometry_complexity( ) { }
-	virtual ~effect_editor_geometry_complexity( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

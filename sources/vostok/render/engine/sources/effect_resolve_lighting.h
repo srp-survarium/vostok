@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_resolve_lighting : public effect_descriptor {
 public:
-	effect_resolve_lighting( ) { }
-	virtual ~effect_resolve_lighting( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

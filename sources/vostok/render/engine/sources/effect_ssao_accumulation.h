@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_ssao_accumulation( ) { }
-	virtual ~effect_ssao_accumulation( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_ssao_accumulation, 0x4 );

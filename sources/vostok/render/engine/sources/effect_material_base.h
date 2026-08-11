@@ -31,7 +31,6 @@ public:
 
 	void compile_end( effect_compiler& compiler );
 
-	virtual ~effect_material_base( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_material_base, 0x4 );

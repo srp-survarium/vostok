@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_accumulate_overdraw : public effect_material_base {
 public:
-	effect_editor_accumulate_overdraw( ) { }
-	virtual ~effect_editor_accumulate_overdraw( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

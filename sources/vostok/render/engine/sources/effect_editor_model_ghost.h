@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_model_ghost : public effect_material_base {
 public:
-	effect_editor_model_ghost( ) { }
-	virtual ~effect_editor_model_ghost( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

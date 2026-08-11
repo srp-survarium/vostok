@@ -23,8 +23,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_gather_luminance( ) { }
-	virtual ~effect_gather_luminance( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_gather_luminance, 0x4 );

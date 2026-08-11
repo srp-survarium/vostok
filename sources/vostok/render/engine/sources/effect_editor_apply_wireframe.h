@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_apply_wireframe : public effect_material_base {
 public:
-	effect_editor_apply_wireframe( ) { }
-	virtual ~effect_editor_apply_wireframe( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

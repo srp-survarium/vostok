@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_post_process_terrain_debug_materials : public effect_descriptor {
 public:
-	effect_post_process_terrain_debug_materials( ) { }
-	virtual ~effect_post_process_terrain_debug_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

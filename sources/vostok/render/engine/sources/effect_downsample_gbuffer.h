@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_downsample_gbuffer : public effect_descriptor {
 public:
-	effect_downsample_gbuffer( ) { }
-	virtual ~effect_downsample_gbuffer( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

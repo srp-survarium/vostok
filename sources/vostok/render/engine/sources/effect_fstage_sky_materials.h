@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_fstage_sky_materials( ) { }
-	virtual ~effect_fstage_sky_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_fstage_sky_materials, 0x4 );

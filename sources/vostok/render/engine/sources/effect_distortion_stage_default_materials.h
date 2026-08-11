@@ -18,7 +18,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	virtual ~effect_distortion_stage_default_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_distortion_stage_default_materials, 0x4 );

@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_gstage_terrain_materials : public effect_material_base {
 public:
-	effect_gstage_terrain_materials( ) { }
-	virtual ~effect_gstage_terrain_materials( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

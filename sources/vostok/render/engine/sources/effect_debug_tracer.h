@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_debug_tracer : public effect_material_base {
 public:
-	effect_debug_tracer( ) { }
-	virtual ~effect_debug_tracer( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

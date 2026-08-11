@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	config
 	) override;
 
-	effect_sky_sphere_default_materials( ) { }
-	virtual ~effect_sky_sphere_default_materials( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_sky_sphere_default_materials, 0x4 );

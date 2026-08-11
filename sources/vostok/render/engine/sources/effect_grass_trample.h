@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_grass_trample : public effect_descriptor {
 public:
-	effect_grass_trample( ) { }
-	virtual ~effect_grass_trample( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

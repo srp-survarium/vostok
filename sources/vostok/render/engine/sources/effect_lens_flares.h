@@ -16,8 +16,6 @@ public:
 		custom_config_value const&	custom_config
 	) override;
 
-	effect_lens_flares( ) { }
-	virtual ~effect_lens_flares( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_lens_flares, 0x4 );

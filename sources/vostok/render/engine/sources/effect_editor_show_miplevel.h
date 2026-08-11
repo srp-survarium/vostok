@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_show_miplevel : public effect_material_base {
 public:
-	effect_editor_show_miplevel( ) { }
-	virtual ~effect_editor_show_miplevel( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

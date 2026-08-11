@@ -11,8 +11,6 @@ class effect_compiler;
 
 class effect_editor_vertex_alpha : public effect_material_base {
 public:
-	effect_editor_vertex_alpha( ) { }
-	virtual ~effect_editor_vertex_alpha( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,

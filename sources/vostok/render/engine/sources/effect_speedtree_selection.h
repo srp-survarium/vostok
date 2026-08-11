@@ -20,8 +20,6 @@ public:
 		billboard,
 	};
 
-	effect_speedtree_selection( ) { }
-	virtual ~effect_speedtree_selection( ) { }
 
 	virtual void compile(
 		effect_compiler&			compiler,
