@@ -39,8 +39,8 @@ inline n_ary_tree_animation_node* synchronization_group_end	( n_ary_tree_animati
 {
 	R_ASSERT									( driving_animation );
 	n_ary_tree_animation_node* i			= driving_animation;
-	u32 const current_synchronization_group_id	= driving_animation->time_synchronization_group_id(); // sushi@TODO
-	for (; i && (*i).time_synchronization_group_id() == current_synchronization_group_id; i = i->m_next_time_animation ) ; // sushi@TODO
+	u32 const current_synchronization_group_id	= driving_animation->weight_synchronization_group_id();
+	for (; i && (*i).weight_synchronization_group_id() == current_synchronization_group_id; i = i->m_next_weight_animation ) ;
 	return										i;
 }
 
