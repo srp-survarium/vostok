@@ -10,6 +10,7 @@
 #include "camera_director.h"	// get_camera_director().get_inverted_view_matrix()
 #include "chat_handler.h"	// get_chat_handler().get_movie() (update_ui minimap advance)
 #include "base_network_client.h"	// match_options() / get_player() / current_player_team()
+#include "network_client.h"
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
 #include <vostok/configs_binary_config.h>	// binary_config::get_root() (project_name lookup)
 #include <vostok/network_core/packet_reader.h>	// packet.r<u32>() (initialize_base_points)
@@ -484,14 +485,6 @@ void game_world_ui::on_victory_item_put_take( u8 player_id, bool is_taken, bool 
 	// ******
 }
 
-// claude@NOTE: PARKED - same concrete-client wall as on_victory_item_put_take. The
-// "is the victim the local player" guard reads [client+8] (current player) + an inline
-// sound_emitter c_ptr() + player+0x34 id; who_team/victim_team mix that carrier check
-// with player::team(); combat_log_icon comes from dictionary_item.combat_log_icon
-// (items_dictionary().item_by_id(item_dict_id).combat_log_icon). Strings: action_id/
-// who_name/who_team/victim_name/victim_team + root.reset_damage_indicator. Next: map the
-// concrete client member + player+0x34 id to reconstruct the team/name args faithfully.
-// STATE[STUB]
 void game_world_ui::on_player_killed(
 	u8		victim_id,
 	u8		killer_id,
@@ -499,80 +492,58 @@ void game_world_ui::on_player_killed(
 	u32		item_dict_id
 )
 {
-	// LOCALS
-	// wchar_t const* 					victim_name
-	// flash_value 						out_event
-	// player_ptr 						killer
-	// player_ptr 						victim
-	// flash_value 						out_event_property
-	// u8 								combat_log_icon
-	// ******
+	network_client* const client = static_cast< network_client* >( m_game_world.get_game( ).get_network_client( ) );
 
-	// CALL SITE INFO
-	// <0x5d4159> -> player_ptr < unknown >( const u8 ) const
-	// <0x5d416d> -> player_ptr < unknown >( const u8 ) const
-	// <0x5d42ef> -> game_team_id < unknown >() const
-	// <0x5d42fa> -> game_team_id < unknown >() const
-	// <0x5d4401> -> game_team_id < unknown >() const
-	// <0x5d440c> -> game_team_id < unknown >() const
-	// ******
+	if ( client->is_player_current( victim_id ) )
+	{
+		get_ui( )->movie->Invoke( "root.reset_damage_indicator", NULL, NULL, 0 );
+	}
 
-	// FUNCTION BODY[0x5d40f0]: 54
-	// <0>
-	// <0x5d40f6>|0x006|+0x01b:'560'
-	// <0>
-	// <0x5d4111>|0x021|+0x01a:'562'
-	// <0>
-	// <0x5d412b>|0x03b|+0x01c:'564'
-	// <0>
-	// <1>
-	// <0x5d4147>|0x057|+0x014:'567'
-	// <0x5d415b>|0x06b|+0x014:'568'
-	// <0>
-	// <0x5d416f>|0x07f|+0x004:'570'
-	// <0x5d4173>|0x083|+0x004:'571'
-	// <0>
-	// <0x5d4177>|0x087|+0x043:'573'
-	// <0>
-	// <1>
-	// <0x5d41ba>|0x0ca|+0x023:'576'
-	// <0>
-	// <1>
-	// <0x5d41dd>|0x0ed|+0x023:'579'
-	// <0>
-	// <0x5d4200>|0x110|+0x02e:'581'
-	// <0x5d422e>|0x13e|+0x03c:'582'
-	// <0>
-	// <0x5d426a>|0x17a|+0x009:'584'
-	// <0x5d4273>|0x183|+0x02c:'585'
-	// <0>
-	// <0x5d429f>|0x1af|+0x0ac:'587'
-	// <0x5d434b>|0x25b|+0x02c:'588'
-	// <0>
-	// <0x5d4377>|0x287|+0x00d:'590'
-	// <0x5d4384>|0x294|+0x02c:'591'
-	// <0>
-	// <0x5d43b0>|0x2c0|+0x0a7:'593'
-	// <0x5d4457>|0x367|+0x02c:'594'
-	// <0>
-	// <0x5d4483>|0x393|+0x029:'596'
-	// <0x5d44ac>|0x3bc|+0x034:'597'
-	// <0>
-	// <1>
-	// <0x5d44e0>|0x3f0|+0x00c:'600'
-	// <0x5d44ec>|0x3fc|+0x004:'601'
-	// <0x5d44f0>|0x400|+0x007:'602'
-	// <0x5d44f7>|0x407|+0x002:'603'
-	// <0>
-	// <0x5d44f9>|0x409|+0x02b:'605'
-	// <0x5d4524>|0x434|+0x039:'606'
-	// <0>
-	// <0x5d455d>|0x46d|+0x024:'608'
-	// <0x5d4581>|0x491|+0x036:'609'
-	// <0>
-	// <0x5d45b7>|0x4c7|+0x022:'611'
-	// <0>
-	// ******
+	player_ptr killer = client->get_player( killer_id );
+	player_ptr victim = client->get_player( victim_id );
+
+	wchar_t const* victim_name = victim->get_profile_name( );
+	wchar_t const* killer_name = killer->get_profile_name( );
+
+	u8 const combat_log_icon = item_dict_id ? m_game_world.get_game( ).items_dictionary( ).item_by_id( item_dict_id ).combat_log_icon : 0;
+
+
+	flash_value out_event; get_ui( )->movie->CreateObject( &out_event );
+
+
+	flash_value out_event_property; get_ui( )->movie->CreateObject( &out_event_property );
+
+	out_event_property.SetUInt( victim_id == killer_id ? 2 : 1 );
+	out_event.SetMember( "action_id", out_event_property );
+
+	out_event_property.SetStringW( killer_name );
+	out_event.SetMember( "who_name", out_event_property );
+
+	out_event_property.SetUInt( client->is_player_current( killer_id ) ? 2 : client->get_local_player( )->team( ) != killer->team( ) );
+	out_event.SetMember( "who_team", out_event_property );
+
+	out_event_property.SetStringW( victim_name );
+	out_event.SetMember( "victim_name", out_event_property );
+
+	out_event_property.SetUInt( client->is_player_current( victim_id ) ? 2 : client->get_local_player( )->team( ) != victim->team( ) );
+	out_event.SetMember( "victim_team", out_event_property );
+
+	out_event_property.SetUInt( combat_log_icon );
+	out_event.SetMember( "object_icon", out_event_property );
+
+	u8 extra_icon = 0;
+	if ( victim_id == killer_id )
+		extra_icon = 4;
+	else if ( is_headshot )
+		extra_icon = 1;
+
+	out_event_property.SetUInt( extra_icon );
+	out_event.SetMember( "extra_icon", out_event_property );
+
+	out_event_property.SetUInt( 0 );
+	out_event.SetMember( "mastery_icon", out_event_property );
+
+	get_ui( )->movie->Invoke( "root.add_log_message", NULL, &out_event, 1 );
 }
 
 void game_world_ui::set_crosshair_size( float size )
