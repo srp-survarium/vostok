@@ -8,6 +8,8 @@ namespace vostok {
 namespace render {
 
 class skeleton_mesh_gpu_skinning_2weights : public skeleton_render_surface {
+typedef skeleton_render_surface super;
+
 public:
 	skeleton_mesh_gpu_skinning_2weights( );
 	virtual ~skeleton_mesh_gpu_skinning_2weights( );
