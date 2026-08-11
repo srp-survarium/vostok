@@ -685,17 +685,14 @@ void n_ary_tree_comparer::change_animation(
 
 		if ( !time_scale_operands_count ) {
 			if ( to.operands_count( ) && (*to_begin)->is_time_scale( ) ) {
-				if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) ) {
-					new_time_scale_transition	( **to_begin, **from_begin );
-					++from_begin;
-				}
+				if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) )
+					new_time_scale_transition	( **to_begin++, **from_begin++ );
 				else
-					new_time_scale_transition	( **to_begin, 0.f );
-				++to_begin;
+					new_time_scale_transition	( **to_begin++, 0.f );
 			}
-			else if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) ) {
-				new_time_scale_transition		( 0.f, **from_begin );
-				++from_begin;
+			else {
+				if ( from.operands_count( ) && (*from_begin)->is_time_scale( ) )
+					new_time_scale_transition	( 0.f, **from_begin++ );
 			}
 		}
 
@@ -703,20 +700,19 @@ void n_ary_tree_comparer::change_animation(
 		if ( left_multiplicands_count && (*to_begin)->is_time_scale( ) )
 			--left_multiplicands_count;
 
-		bool left_is_pure_weight				= false;
 		float left_weight					= math::float_max;
+		bool left_is_pure_weight				= false;
 		switch ( left_multiplicands_count ) {
 			case 0 :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_weight_node );
-				left_is_pure_weight			= true;
 				left_weight					= 0.f;
+				left_is_pure_weight			= true;
 				break;
 			case 1 :
-				increase_buffer_size			( **to_begin );
-				if ( (*to_begin)->is_weight( ) && !(*to_begin)->is_transition( ) ) {
-					left_is_pure_weight		= true;
-					left_weight				= static_cast< n_ary_tree_weight_node& >( **to_begin ).weight( );
-				}
+				increase_buffer_size			( **(to_end - 1) );
+				left_is_pure_weight			= (*(to_end - 1))->is_weight( ) && !(*(to_end - 1))->is_transition( );
+				if ( left_is_pure_weight )
+					left_weight				= static_cast< n_ary_tree_weight_node& >( **(to_end - 1) ).weight( );
 				break;
 			default :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_multiplication_node )
@@ -730,20 +726,19 @@ void n_ary_tree_comparer::change_animation(
 		if ( right_multiplicands_count && (*from_begin)->is_time_scale( ) )
 			--right_multiplicands_count;
 
-		bool right_is_pure_weight			= false;
 		float right_weight					= math::float_max;
+		bool right_is_pure_weight			= false;
 		switch ( right_multiplicands_count ) {
 			case 0 :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_weight_node );
-				right_is_pure_weight			= true;
 				right_weight				= 0.f;
+				right_is_pure_weight			= true;
 				break;
 			case 1 :
-				increase_buffer_size			( **from_begin );
-				if ( (*from_begin)->is_weight( ) && !(*from_begin)->is_transition( ) ) {
-					right_is_pure_weight		= true;
-					right_weight			= static_cast< n_ary_tree_weight_node& >( **from_begin ).weight( );
-				}
+				increase_buffer_size			( **(from_end - 1) );
+				right_is_pure_weight			= (*(from_end - 1))->is_weight( ) && !(*(from_end - 1))->is_transition( );
+				if ( right_is_pure_weight )
+					right_weight			= static_cast< n_ary_tree_weight_node& >( **(from_end - 1) ).weight( );
 				break;
 			default :
 				m_needed_buffer_size			+= sizeof( n_ary_tree_multiplication_node )
@@ -753,7 +748,11 @@ void n_ary_tree_comparer::change_animation(
 				break;
 		}
 
-		if ( left_is_pure_weight && right_is_pure_weight && left_weight == right_weight )
+		if ( left_multiplicands_count < 2
+			&& right_multiplicands_count < 2
+			&& left_is_pure_weight
+			&& right_is_pure_weight
+			&& left_weight == right_weight )
 			m_needed_buffer_size			+= sizeof( n_ary_tree_weight_node );
 		else
 			m_needed_buffer_size			+= sizeof( n_ary_tree_weight_transition_node );
@@ -776,12 +775,11 @@ void n_ary_tree_comparer::change_animation(
 				== to.animation_state( ).animation_interval_time;
 
 	std::pair< u32, u32 > const operands_counts	= computed_operands_count( from, to );
-	u32 const operands_count		= operands_counts.first;
 	u32 operands_offset				= operands_counts.second;
 	u32 time_scale_operands_count;
 	new_animation					( from, time_scale_operands_count, operands_offset );
-	m_needed_buffer_size			+= ( operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
-	add_operands					( from, to, operands_offset != 0 );
+	m_needed_buffer_size			+= ( operands_counts.first + operands_offset ) * sizeof( n_ary_tree_base_node* );
+	add_operands					( from, to, time_scale_operands_count > 0 );
 }
 
 void n_ary_tree_comparer::merge_weight_synchronization_groups(
