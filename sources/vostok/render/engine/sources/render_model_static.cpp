@@ -712,9 +712,9 @@ u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 cons
 		lod_def_params[lods->m_lod_calc_type] :
 		lods->m_lod_custom_params;
 
-	float params_mult = options::ref().current.m_geometry_quality ?
-		1.f :
-		.75f;
+	float params_mult = 1.f;
+	if (!options::ref().current.m_geometry_quality)
+		params_mult = .75f;
 
 	math::aabb owner_aabb = m_original->m_aabbox;
 	owner_aabb.modify(m_transform);
