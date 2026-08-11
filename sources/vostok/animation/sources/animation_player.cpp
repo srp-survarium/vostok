@@ -627,9 +627,7 @@ void invert_animation_times( mixing::n_ary_tree_animation_node& animation, const
 {
 	n_ary_tree_time_inverter time_inverter( time_in_ms );
 
-	mixing::n_ary_tree_base_node** i			= animation.operands( sizeof(mixing::n_ary_tree_animation_node) );
-	mixing::n_ary_tree_base_node** const end	= i + animation.operands_count( );
-	for ( ; i != end; ++i )
+	for ( mixing::n_ary_tree_base_node** i = animation.operands( sizeof(mixing::n_ary_tree_animation_node) ), ** const end = i + animation.operands_count( ); i != end; ++i )
 		(*i)->accept				( time_inverter );
 
 	animation.animation_state( ).event_iterator.invert_times( time_in_ms );
