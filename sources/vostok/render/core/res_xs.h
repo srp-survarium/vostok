@@ -82,8 +82,6 @@ public:
 		return m_hardware_shader.c_ptr( );
 	}
 
-	~res_xs( ) { }
-
 private:
 	hardware_shader_ptr m_hardware_shader;
 	shader_constant_table_ptr m_constants;

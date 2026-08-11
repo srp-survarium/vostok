@@ -16,8 +16,6 @@ class possible_sectors_holder;
 } // namespace culling
 
 struct model_locator_item {
-	model_locator_item( ) { }
-
 	char		m_name[32];
 	float4x4	m_offset;
 	u16			m_bone;
@@ -26,8 +24,6 @@ struct model_locator_item {
 STATIC_SIZE_ASSERT( model_locator_item, 0x64 );
 
 struct surface_stats {
-	surface_stats( ) { }
-
 	u32					vcount;
 	u32					tricount;
 	fixed_string< 260 >	material;
@@ -118,9 +114,6 @@ typedef resources::resource_ptr<
 > skeleton_model_ptr;
 
 class skin : public resources::unmanaged_resource {
-public:
-	skin( ) { }
-
 protected:
 	VOSTOK_DECLARE_PURE_VIRTUAL_DESTRUCTOR( skin )
 };

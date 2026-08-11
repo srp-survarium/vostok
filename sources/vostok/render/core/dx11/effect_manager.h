@@ -153,8 +153,6 @@ private:
 	typedef map<u32, effect_descriptor*> map_effect_descriptors_by_id;
 
 	struct shader_cache_info {
-		shader_cache_info( ) { }
-
 		fs_new::virtual_path_string vertex_shader_name;
 		fs_new::virtual_path_string pixel_shader_name;
 		shader_configuration configuration;

@@ -77,8 +77,6 @@ struct model_header {
 };
 
 struct vert_boned_1w {
-	vert_boned_1w( ) { }
-
 	void invalidate( )
 	{
 		P.set( 0.0f, 0.0f, 0.0f );
@@ -98,8 +96,6 @@ struct vert_boned_1w {
 };
 
 struct vert_boned_2w {
-	vert_boned_2w( ) { }
-
 	void invalidate( )
 	{
 		P.set( 0.0f, 0.0f, 0.0f );
@@ -122,8 +118,6 @@ struct vert_boned_2w {
 };
 
 struct vert_boned_3w {
-	vert_boned_3w( ) { }
-
 	void invalidate( )
 	{
 		P.set( 0.0f, 0.0f, 0.0f );
@@ -148,8 +142,6 @@ struct vert_boned_3w {
 };
 
 struct vert_boned_4w {
-	vert_boned_4w( ) { }
-
 	void invalidate( )
 	{
 		P.set( 0.0f, 0.0f, 0.0f );
@@ -176,8 +168,6 @@ struct vert_boned_4w {
 };
 
 struct hardware_1weights_skinning_vertex {
-	hardware_1weights_skinning_vertex( ) { }
-
 	float3	P;
 	u8		indices[4];
 	u32		N;
@@ -187,8 +177,6 @@ struct hardware_1weights_skinning_vertex {
 };
 
 struct hardware_2weights_skinning_vertex {
-	hardware_2weights_skinning_vertex( ) { }
-
 	float3	P;
 	u8		indices[4];
 	float	weights;
@@ -199,8 +187,6 @@ struct hardware_2weights_skinning_vertex {
 };
 
 struct hardware_3weights_skinning_vertex {
-	hardware_3weights_skinning_vertex( ) { }
-
 	float3	P;
 	u8		indices[4];
 	float	weights[2];
@@ -211,8 +197,6 @@ struct hardware_3weights_skinning_vertex {
 };
 
 struct hardware_4weights_skinning_vertex {
-	hardware_4weights_skinning_vertex( ) { }
-
 	float3	P;
 	u8		indices[4];
 	float	weights[3];

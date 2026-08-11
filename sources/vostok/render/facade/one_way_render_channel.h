@@ -77,8 +77,6 @@ private:
 private:
 	struct null_render_command : base_command {
 		virtual void execute( ) { }
-		null_render_command( ) { }
-		virtual ~null_render_command( ) { }
 	};
 
 private:

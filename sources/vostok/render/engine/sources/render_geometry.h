@@ -8,9 +8,6 @@ namespace vostok {
 namespace render {
 
 struct render_geometry {
-	render_geometry( ) { }
-	~render_geometry( ) { }
-
 	res_geometry_ptr		geom;
 	res_geometry_ptr		shadow_pass_geom;
 	res_geometry_ptr		lpv_pass_geom;

@@ -16,7 +16,6 @@ public:
 	untyped_buffer& buffer( ) const { return *m_buffer; }
 	u32 discard_id( ) const { return m_discard_id; }
 	void flush( ) { m_position = m_size; }
-	~index_buffer( ) { }
 
 private:
 	untyped_buffer_ptr	m_buffer;

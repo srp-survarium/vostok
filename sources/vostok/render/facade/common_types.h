@@ -21,8 +21,6 @@ enum {
 #pragma pack(push, 1)
 
 struct terrain_data {
-	terrain_data( ) { }
-
 	float	height;
 	float2	tex_shift;
 	u8		tex_id0;

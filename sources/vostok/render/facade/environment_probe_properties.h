@@ -9,8 +9,6 @@ namespace vostok {
 namespace render {
 
 struct environment_probe_properties {
-	environment_probe_properties( ) { }
-
 	fixed_string<260>	texture_name;
 	float4x4			transform;
 	float3				location;

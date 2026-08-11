@@ -17,8 +17,6 @@ struct sun_cascade {
 	{
 	}
 
-	~sun_cascade( ) { }
-
 	float4x4				transform;
 	fixed_vector< ray, 8 >	rays;
 	float					size;

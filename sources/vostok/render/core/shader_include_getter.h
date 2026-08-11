@@ -5,7 +5,6 @@ namespace vostok {
 namespace render {
 
 struct shader_include_getter {
-	shader_include_getter( ) { }
 	virtual pcstr get_shader_include( pcstr include_file_name ) const
 	{
 		return include_file_name;
