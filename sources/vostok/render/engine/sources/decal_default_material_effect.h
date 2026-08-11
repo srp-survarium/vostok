@@ -13,8 +13,6 @@ public:
 	{
 	}
 
-	virtual ~decal_default_material_effect( ) { }
-
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
