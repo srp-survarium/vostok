@@ -35,11 +35,6 @@ extern bool		g_mouse_invert;
 {
 }
 
-// claude@NOTE: STRUCTURE MATCH (switch case order + the kb_key_down/hold/up arms all
-// align). Residual is non-steerable LTCG: the target keeps `this` in ebx and game_action
-// in esi (callee-saved) where the base uses esi/edi, and MSVC folds the two identical
-// console_commands::execute() case tails (serialize/deserialize) into one shared call in
-// the base but emits them separately in the target. Register choice + /Od ICF, not source.
 bool player_input_handler::on_keyboard_action(
 	input::world* const				input_world,
 	input::enum_keyboard			key,
@@ -49,7 +44,8 @@ bool player_input_handler::on_keyboard_action(
 	VOSTOK_UNREFERENCED_PARAMETER( input_world );
 
 	toggle_action_enum	actions_mask_type;
-	game_action_id const	game_action = m_game_world.get_game().get_key_binder( ).get_binded_action( key, actions_mask_type, m_key_binder_context );
+	game&				current_game = m_game_world.get_game( );
+	game_action_id const	game_action = current_game.get_key_binder( ).get_binded_action( key, actions_mask_type, m_key_binder_context );
 
 	if( game_action == kNOTBINDED )
 		return false;
