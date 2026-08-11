@@ -196,6 +196,16 @@ and then use `record-max <mangled> --evidence <path> --expected-hash <hash>`.
 `record-max` accepts no score: it can annotate only the hash, score, exact bit,
 and state identity already measured by the normal report/index pipeline.
 
+When the island artifacts are deliberately kept outside the canonical build
+tree, use `import-island --report <report.json> --base-index <index.jsonl>
+--evidence <manifest.json>`. The tracked evidence manifest explicitly names
+each reviewed function and pins the candidate report/index SHA-256, expected
+score, module, and effective source hash. The importer updates only those
+`source_maxima` rows; it never changes current pairings, ordinary history,
+flags, or attempts, and refuses stale hashes, absent measurements, and
+non-improvements. Run it once with `--dry-run` to obtain the current effective
+hashes before pinning and importing the evidence.
+
 ## BASE_ONLY taxonomy (declaration-grounded)
 
 The PDB declaration records list every method the original source declared,

@@ -114,6 +114,44 @@ class InstructionStreamExactTests(unittest.TestCase):
         self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
 
 
+class ReportFuzzyScoreTests(unittest.TestCase):
+    def test_keeps_best_duplicate_score_and_sorted_units(self):
+        report = {
+            "units": [
+                {
+                    "name": "vostok/animation/z.cpp",
+                    "functions": [
+                        {"name": "?fn@@", "fuzzy_match_percent": 75.0},
+                        {"name": "?none@@"},
+                    ],
+                },
+                {
+                    "name": "vostok/animation/a.cpp",
+                    "functions": [
+                        {"name": "?fn@@", "fuzzy_match_percent": 100.0},
+                    ],
+                },
+            ]
+        }
+
+        scores, units = MATCH_DB.report_fuzzy_scores(report)
+
+        self.assertEqual(scores, {"?fn@@": 100.0})
+        self.assertEqual(
+            units["?fn@@"],
+            ["vostok/animation/a.cpp", "vostok/animation/z.cpp"],
+        )
+        self.assertEqual(units["?none@@"], ["vostok/animation/z.cpp"])
+
+    def test_maps_scalar_deleting_destructor_to_vector_report_name(self):
+        scalar = "??_Gexample@@UAEPAXI@Z"
+        vector = "??_Eexample@@UAEPAXI@Z"
+
+        self.assertEqual(
+            MATCH_DB.report_score_for_target(scalar, {vector: 88.5}), 88.5
+        )
+
+
 class EffectiveSourceHashTests(unittest.TestCase):
     def test_cpp_epoch_changes_when_another_function_in_the_tu_changes(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
