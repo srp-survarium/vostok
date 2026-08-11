@@ -329,12 +329,10 @@ private:
 
 			void								update_npc_stats				( );
 
-public:
 	virtual	void								set_navmesh_info				( pcstr __formal ) const override
 	{
 	}
 
-private:
 			void								add_enemy_position_for_team		( pcstr team_name );
 			void								clear_enemies_positions_for_team( pcstr team_name );
 
@@ -344,7 +342,7 @@ private:
 
 	static	void								kill_npc						( human_npc_ptr& condemned );
 
-private:
+public:
 	/* 0x0000 */	/* base_game_scene */
 	/* 0x00bc */	/* ai::engine */
 	/* 0x00c0 */	/* ai::navigation::engine */
@@ -352,6 +350,7 @@ private:
 	/* 0x00c8 */	/* resources::unmanaged_resource */
 	/* 0x01d0 */	/* input::handler */
 	/* 0x01d4 */	game_world_ui							game_ui;
+private:
 	/* 0x0214 */	vector< float3 >						m_enemies_for_team_1;
 	/* 0x0220 */	vector< float3 >						m_enemies_for_team_2;
 	/* 0x022c */	simple_game_project_ptr					m_game_project;

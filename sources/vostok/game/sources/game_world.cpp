@@ -72,7 +72,6 @@ game_world::game_world( game& game ) :
 	base_game_scene( game ),
 	game_ui( *this ),
 	m_game_project( NULL ),
-	m_free_fly_camera( NULL ),
 	m_player_camera( NULL ),
 	m_bullet_manager( NULL ),
 	m_step_manager( NULL ),
@@ -87,21 +86,20 @@ game_world::game_world( game& game ) :
 	m_is_loading( false ),
 	m_victory_items( g_allocator )
 {
-	static console_commands::cc_delegate add_enemy_position_cc(
-		"add_enemy", boost::bind( &game_world::add_enemy_position_for_team, this, _1 ), true );
-	static console_commands::cc_delegate clear_enemies_position_cc(
-		"clear_enemies", boost::bind( &game_world::clear_enemies_positions_for_team, this, _1 ), true );
-	static console_commands::cc_delegate clear_player_spawn_cc(
-		"clear_player_spawn", boost::bind( &game_world::clear_player_spawn_info, this ), false );
+	static console_commands::cc_delegate add_enemy_position_cc( "add_enemy", boost::bind( &game_world::add_enemy_position_for_team, this, _1 ), false );
+	static console_commands::cc_delegate clear_enemies_position_cc( "clear_enemies", boost::bind( &game_world::clear_enemies_positions_for_team, this, _1 ), false );
+	static console_commands::cc_delegate clear_player_spawn_cc( "clear_player_spawn", boost::bind( &game_world::clear_player_spawn_info, this ), false );
 
-	m_step_manager = NEW( step_manager )( );
+	m_step_manager = VOSTOK_NEW_IMPL( *g_allocator, step_manager )( );
 
 	init_physics( );
 
-	m_free_fly_camera = NEW( free_fly_camera )( *this, get_camera_director( ) );
 
+
+
+
+	m_free_fly_camera = VOSTOK_NEW_IMPL( *g_allocator, free_fly_camera )( *this, get_camera_director( ) );
 	register_cooks( );
-
 	m_ai_world = ai::create_world( *this );
 	m_ai_navigation_world = ai::navigation::create_world( *this, render_scene( ), get_game( ).renderer( ).debug( ) );
 }
