@@ -90,7 +90,6 @@ pcstr rt_index_to_name( enum_render_target_index index )
 
 renderer_context_targets::renderer_context_targets( math::uint2 size ) :
 	m_size			( 0, 0 ),
-	m_id			( 0 ),
 	m_memory_usage	( 0 )
 {
 	create_targets( size, true );
