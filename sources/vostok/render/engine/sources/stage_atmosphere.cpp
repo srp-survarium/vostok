@@ -155,8 +155,7 @@ void stage_atmosphere::execute( )
 			m_context->get_scene_view( )->need_recalc_atmosphere = false;
 
 			m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::make_mie_rayleigh_pass, 0 );
-			float sun_int = sun ? sun->intensity : 1.0f;
-			backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
+			float sun_int = sun ? sun->intensity : 1.0f; backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
 			// 8 target lines are likely retail-compiled-out source.
 			backend::ref( ).set_ps_constant( m_c_atmosphere_parameters, float4( pp_parameters.atmosphere_kresun_multiplier, pp_parameters.atmosphere_kmesun_multiplier, pp_parameters.atmosphere_kr4pi_multiplier, pp_parameters.atmosphere_km4pi_multiplier ) );
 			fill_surfaces( m_context->get_rt( rt_mie_scattering ), m_context->get_rt( rt_rayleigh_scattering ), false );
@@ -168,8 +167,7 @@ void stage_atmosphere::execute( )
 		backend::ref( ).reset_depth_stencil_target( );
 
 		float sun_int = sun ? sun->intensity : 1.0f;
-		if ( !pp_parameters.use_sun_moon_atmosphere_illumination )
-			sun_int = 0.0f;
+		if ( !pp_parameters.use_sun_moon_atmosphere_illumination ) sun_int = 0.0f;
 
 		m_atmospheric_scattering_effect->apply( effect_atmospheric_scattering::atmosphere_pass, 0 );
 		backend::ref( ).set_ps_constant( m_to_sun_direction_parameter, float4( to_sun_direction, sun_int ) );
@@ -222,14 +220,13 @@ void stage_atmosphere::execute( )
 			if ( sun->right.squared_length( ) > math::epsilon_5 )
 			{
 
-				L_up = sun->right;
-				L_up.normalize( );
+				L_up = sun->right; L_up.normalize( );
 				L_right = L_up ^ L_dir; L_right.normalize( );
 				L_up = L_right ^ L_dir; L_up.normalize( );
 			} else {
-				L_up.set( 0.0f, 1.0f, 0.0f );
-				if ( math::abs( L_dir | L_up ) > 0.99f ) L_up.set( 0.0f, 0.0f, 1.0f );
-				L_right = L_up ^ L_dir; L_right.normalize( ); L_up = L_right ^ L_dir; L_up.normalize( );
+				L_up.set( 0.0f, 1.0f, 0.0f ); if ( math::abs( L_dir | L_up ) > 0.99f ) L_up.set( 0.0f, 0.0f, 1.0f );
+				L_right = L_up ^ L_dir; L_right.normalize( );
+				L_up = L_right ^ L_dir; L_up.normalize( );
 			}
 			// 4 target lines are likely retail-compiled-out source.
 			float scale = ( m_context->get_view_pos( ) - sun->position ).length( );
@@ -240,8 +237,7 @@ void stage_atmosphere::execute( )
 			float4x4 rotation_X_translation( float4( L_up, 0.0f ), float4( L_right, 0.0f ),
 				float4( L_dir, 0.0f ), float4( sun->position, 1.0f ) );
 			// 5 target lines are likely retail-compiled-out source.
-			scale *= pp_parameters.sun_moon_billboard_scale;
-			float4x4 world_transform =
+			scale *= pp_parameters.sun_moon_billboard_scale; float4x4 world_transform =
 				math::create_scale( float3( scale, scale, scale ) ) * math::create_rotation( rotation_X_translation.get_angles_xyz( ) ) * math::create_translation( sun->position + L_dir * 0.0f );
 			m_context->set_w( world_transform );
 
