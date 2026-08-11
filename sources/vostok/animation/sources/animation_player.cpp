@@ -495,10 +495,10 @@ void animation_player::compact_callbacks( )
 	for ( ; i ; i = i->next )
 	{
 		subscribed_channel* const new_channel	= (subscribed_channel*)ALLOCA( sizeof( subscribed_channel ) );
-		if ( first_cloned_channel )
-			previous_channel->next			= new_channel;
-		else
+		if ( !first_cloned_channel )
 			first_cloned_channel			= new_channel;
+		else
+			previous_channel->next			= new_channel;
 
 		memory::detail::call_constructor		( new_channel );
 
@@ -525,12 +525,15 @@ void animation_player::compact_callbacks( )
 			k							= new_callback;
 		}
 
-		if ( new_channel->first_callback )
-			previous_channel				= new_channel;
-		else if ( previous_channel )
-			previous_channel->next			= 0;
+		if ( !new_channel->first_callback )
+		{
+			if ( previous_channel )
+				previous_channel->next		= 0;
+			else
+				first_cloned_channel		= 0;
+		}
 		else
-			first_cloned_channel			= 0;
+			previous_channel				= new_channel;
 	}
 
 	destroy_subscriptions					( m_first_subscribed_channel );
