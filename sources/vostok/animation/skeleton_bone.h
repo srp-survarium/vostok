@@ -24,7 +24,7 @@ public:
 	inline	skeleton_bone const*	parent			( ) const { return m_parent; }
 	inline	skeleton_bone const*	children_begin	( ) const { return m_children_begin; }
 	inline	skeleton_bone const*	children_end	( ) const { return m_children_end; }
-	inline	u32						mask			( ) const { return m_mask; }
+	inline	const u32				mask			( ) const { return m_mask; }
 
 private:
 	pcstr const						m_id;
