@@ -115,17 +115,20 @@ void n_ary_tree_weight_calculator::visit		( n_ary_tree_weight_transition_node& n
 		remove_transition	( node );
 	}
 	else {
+		bool from_changed	= false;
 		node.from().accept	( *this );
-		bool const from_changed	= !!m_result;
-		if ( m_result )
+		if ( m_result ) {
 			node.on_from_changed	( *m_result );
+			from_changed		= true;
+		}
 
 		float const weight_from	= m_weight;
 		node.to().accept	( *this );
-		if ( from_changed && (weight_from == m_weight) )
+		float const weight_to	= m_weight;
+		if ( from_changed && (weight_from == weight_to) )
 			remove_transition	( node );
 		else {
-			m_weight			= weight_from*(1.f - interpolated_value) + m_weight*interpolated_value;
+			m_weight			= weight_from*(1.f - interpolated_value) + weight_to*interpolated_value;
 			m_null_weight_found	= false;
 		}
 	}
