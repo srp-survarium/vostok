@@ -1403,7 +1403,7 @@ void stage_lights::render_speedtree_lighting(
 
 void stage_lights::execute_disabled( )
 {
-	backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
+	backend::ref().set_render_targets			(&*m_context->get_rt(rt_accumulator_diffuse), &*m_context->get_rt(rt_accumulator_specular), 0, 0);
 	backend::ref().reset_depth_stencil_target	();
 
 	float packed_color = math::pow( 0.125f, 0.5f );
@@ -1432,7 +1432,7 @@ void stage_lights::execute( )
 	if (!identity(m_is_forward_lighting_pass))
 	{
 		m_context->set_w							(float4x4().identity());
-		backend::ref().set_render_targets			(&*m_context->m_targets->m_family[rt_accumulator_diffuse].target, &*m_context->m_targets->m_family[rt_accumulator_specular].target, 0, 0);
+		backend::ref().set_render_targets			(&*m_context->get_rt(rt_accumulator_diffuse), &*m_context->get_rt(rt_accumulator_specular), 0, 0);
 		backend::ref().reset_depth_stencil_target	();
 
 		vector< light_ptr >& visible_lights = m_context->get_scene_view()->get_visible_lights();
@@ -1451,7 +1451,7 @@ void stage_lights::execute( )
 
 	BEGIN_CPUGPU_TIMER(statistics::ref().lights_stat_group.forward_lighting_time);
 
-	backend::ref().set_render_targets( &*m_context->m_targets->m_family[rt_generic_0].target, 0, 0, 0);
+	backend::ref().set_render_targets( &*m_context->get_rt(rt_generic_0), 0, 0, 0);
 
 	environment_probe** probe_it = m_context->get_scene_view()->get_visible_environment_probes().begin();
 
