@@ -137,7 +137,7 @@ void statistics_float::print( fs_new::virtual_path_string& out_result )
 	out_result.assignf( "%s: %f (%f..%f)", m_name.c_str( ), value, min_value, max_value );
 }
 
-u32 get_num_digits( u32 v )
+static u32 get_num_digits( u32 v )
 {
 	math::clamp( v, u32( 0 ), u32( 10000000 ) );
 

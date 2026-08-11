@@ -16,7 +16,7 @@
 namespace vostok {
 namespace render {
 
-u32 get_stencil_mask( enum_vertex_input_type vit, bool )
+static u32 get_stencil_mask( enum_vertex_input_type vit, bool )
 {
 
 	switch (vit)

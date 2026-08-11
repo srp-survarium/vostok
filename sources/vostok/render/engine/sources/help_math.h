@@ -4,7 +4,7 @@
 namespace vostok {
 namespace render {
 
-inline float frac( float f )
+static inline float frac( float f )
 {
 	return		( math::abs( f ) - math::abs( static_cast< int >( f ) ) );
 }

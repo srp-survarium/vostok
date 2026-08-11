@@ -55,13 +55,15 @@ private:
 	float3 m_view_pos;
 };
 
-bool has_surface_by_lod( grass_render_model_ptr model, u32 lod_index )
+static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 const lod_index );
+
+static bool has_surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
 {
 	// FUNCTION BODY[0x5f43e0]
 	return surface_by_lod( model, lod_index ) != 0;
 }
 
-grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 lod_index )
+static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
 {
 	// FUNCTION BODY[0x5f4310]
 	if ( !model )
@@ -327,7 +329,7 @@ void grass_patch::sort_instances( float3 const& view_position )
 	FREE( merged_indices_copy );
 }
 
-math::color transform_packed_normal(
+static math::color transform_packed_normal(
 	float4x4 const& transform_matrix,
 	math::color const& packed_normal
 )

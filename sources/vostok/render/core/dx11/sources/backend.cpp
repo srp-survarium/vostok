@@ -201,7 +201,7 @@ void backend::on_device_destroy( )
 // 	index.destroy();
 }
 
-bool sorted_vector_predicate( shader_constant_host const* first, shared_string const& second )
+static bool sorted_vector_predicate( shader_constant_host const* first, shared_string const& second )
 {
 	return first->name() < second;
 }

@@ -52,7 +52,7 @@ void device::on_device_removed( )
 
 }
 
-bool is_resolution_already_exists( u32 const& monitor_index, math::int2 const& res )
+static bool is_resolution_already_exists( u32 const& monitor_index, math::int2 const& res )
 {
 	for ( u32 i = 0; i < 512; ++i )
 	{
