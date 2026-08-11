@@ -354,7 +354,6 @@ STATIC_SIZE_ASSERT( sky_statistics_group, 0x2E0 );
 
 struct lpv_statistics_group : public statistics_group {
 	explicit lpv_statistics_group( pcstr group_name );
-	~lpv_statistics_group( ) { }
 
 	statistics_cpu_gpu	lpv_lookup_time;
 	statistics_cpu_gpu	propagation_time;

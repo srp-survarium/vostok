@@ -13,8 +13,8 @@ namespace render {
 template < typename Vertex >
 inline batched_geometry< Vertex >::batched_geometry(
 	D3D11_INPUT_ELEMENT_DESC const* declaration,
-	u32 declaration_size,
-	u32 in_batched_geometry_max_vertices_count
+	u32 const declaration_size,
+	u32 const in_batched_geometry_max_vertices_count
 ) :
 	m_batched_geometry_max_vertices_count	( in_batched_geometry_max_vertices_count ),
 	m_bbox									( math::create_zero_aabb( ) )
@@ -40,10 +40,10 @@ inline batched_geometry< Vertex >::batched_geometry( ) :
 
 template < typename Vertex >
 inline void batched_geometry< Vertex >::for_each_batch_visible_render_first_and_remove(
-	boost::function<void ( geometry_batch const& )> const&,
-	boost::function<void ( geometry_batch const& )> const&,
-	u32,
-	u32
+	render_batch_callback_type const&,
+	render_batch_callback_type const&,
+	u32 const,
+	u32 const
 )
 {
 }
@@ -53,14 +53,14 @@ inline u32 batched_geometry< Vertex >::prepare_visible_batches(
 	renderer_context*,
 	float3 const&,
 	bool,
-	u32
+	u32 const
 )
 {
 	return 0;
 }
 
 template < typename Vertex >
-inline u32 batched_geometry< Vertex >::get_num_visible_batches( u32 index ) const
+inline u32 batched_geometry< Vertex >::get_num_visible_batches( u32 const index ) const
 {
 	return m_num_visible_batches[index];
 }
@@ -68,8 +68,8 @@ inline u32 batched_geometry< Vertex >::get_num_visible_batches( u32 index ) cons
 template < typename Vertex >
 inline void batched_geometry< Vertex >::for_each_batch_render(
 	renderer_context*												context,
-	boost::function<void ( geometry_batch const& )> const&	pre_render,
-	boost::function<void ( geometry_batch const& )> const&	post_render
+	render_batch_callback_type const&	pre_render,
+	render_batch_callback_type const&	post_render
 )
 {
 	// FUNCTION BODY[0x7d2d0] for <lpv_vertex>
@@ -154,9 +154,9 @@ inline void batched_geometry< Vertex >::invalidate( )
 template < typename Vertex >
 inline void batched_geometry< Vertex >::add_data(
 	batched_vertex_source const* vertices,
-	u32 num_vertices,
+	u32 const num_vertices,
 	u16 const* indices,
-	u32 num_indices,
+	u32 const num_indices,
 	float4x4 const& transform,
 	material_effects_instance_ptr const& in_materail_effects_instance
 )

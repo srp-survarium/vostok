@@ -62,6 +62,8 @@ static u32 s_start_cascade_to_use_batching = 0;
 static console_commands::cc_u32 s_start_cascade_to_use_batching_cc( "r_start_cascade_to_use_batching", s_start_cascade_to_use_batching, 0, 3, true, console_commands::command_type_user_specific );
 
 struct remove_lpv_inappropriate_models {
+	remove_lpv_inappropriate_models( ) { }
+
 	bool operator()( lpv_render_surface const& surface )
 	{
 		if (surface.surface->m_dynamic_screen_factor < 0.0005f || (options::ref().current.m_use_hiz_occlusion_culling && surface.surface->m_occluded) || surface.surface->m_render_surface->get_vertex_input_type() != static_mesh_vertex_input_type)

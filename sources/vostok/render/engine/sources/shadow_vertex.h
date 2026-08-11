@@ -8,10 +8,6 @@ namespace vostok {
 namespace render {
 
 struct shadow_vertex {
-	shadow_vertex( )
-	{
-	}
-
 	float3	position;
 	float3	object_position;
 	float2	uv;

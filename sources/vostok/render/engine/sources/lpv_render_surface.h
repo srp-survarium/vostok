@@ -9,13 +9,6 @@ namespace render {
 struct render_surface_instance;
 
 struct lpv_render_surface {
-	lpv_render_surface( ) :
-		surface( 0 )
-	{
-	}
-
-	~lpv_render_surface( ) { }
-
 	render_surface_instance*			surface;
 	render_model_instance_impl_ptr	model;
 };

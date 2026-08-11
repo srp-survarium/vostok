@@ -322,8 +322,6 @@ void fill_static_lpv_vertex_color(
 void static_render_surface::fill_lpv_vertex_color( batched_geometry_interface* in_out_geometry, float4x4 const& transform )
 {
 	struct static_vertex0 {
-		static_vertex0( ) { }
-
 		float3			position;
 		math::color	normal;
 		math::color	tangent;
@@ -332,8 +330,6 @@ void static_render_surface::fill_lpv_vertex_color( batched_geometry_interface* i
 	};
 
 	struct colored_static_vertex : public static_vertex0 {
-		colored_static_vertex( ) { }
-
 		math::color	color_component;
 	};
 
@@ -431,8 +427,6 @@ void fill_source_vertices(
 )
 {
 	struct static_vertex {
-		static_vertex( ) { }
-
 		float3			position;
 		math::color	normal;
 		math::color	tangent;
@@ -441,8 +435,6 @@ void fill_source_vertices(
 	};
 
 	struct colored_static_vertex : public static_vertex {
-		colored_static_vertex( ) { }
-
 		math::color	color_component;
 	};
 

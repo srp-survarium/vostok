@@ -8,10 +8,6 @@ namespace vostok {
 namespace render {
 
 struct lpv_vertex {
-	lpv_vertex( )
-	{
-	}
-
 	float3		position;
 	math::color	normal;
 	math::color	clr;
