@@ -76,7 +76,11 @@ stage_shadow_direct::stage_shadow_direct(
 	) : stage( in_renderer, context )
 {
 	m_invalid_shadow = false;
-	// 5 target lines are likely retail-compiled-out source.
+	m_cascade_texture_index[0] = false;
+	m_cascade_texture_index[1] = false;
+	m_cascade_texture_index[2] = false;
+	m_cascade_texture_index[3] = false;
+
 	effect_manager::ref().create_effect<effect_shadow_map>(&m_effect_shadow_direct);
 
 	m_c_light_direction = backend::ref().register_constant_host( "light_direction", rc_float );
@@ -86,7 +90,7 @@ stage_shadow_direct::stage_shadow_direct(
 	m_wind_info_parameters = backend::ref().register_constant_host( "wind_info_parameters", rc_float );
 	m_shadow_cascade_index = backend::ref().register_constant_host( "shadow_cascade_index", rc_int );
 	// 6 target lines are likely retail-compiled-out source.
-	m_enabled = options::ref().current.m_enabled_sun_shadows_stage; m_cascade_shadow_map_size = options::ref( ).current.m_cascaded_shadow_map_size; for ( u32 i = 0; i < 4; ++i ) { m_cascade_texture_index[i] = false; m_previous_adjastment[i] = float3( 0.0f, 0.0f, 0.0f ); }
+	m_enabled = options::ref().current.m_enabled_sun_shadows_stage; m_cascade_shadow_map_size = options::ref( ).current.m_cascaded_shadow_map_size; for ( u32 i = 0; i < 4; ++i ) { m_previous_adjastment[i] = float3( 0.0f, 0.0f, 0.0f ); }
 	// 9 target lines are likely retail-compiled-out source.
 	m_rt_shadow_map = resource_manager::ref( ).create_render_target( "$user$cascaded_shadow_map", m_cascade_shadow_map_size * 2, m_cascade_shadow_map_size * 2, DXGI_FORMAT_R16_TYPELESS, enum_rt_usage_depth_stencil, res_texture_ptr( ), 0, D3D11_USAGE_DEFAULT, 1, 0 );
 	m_t_shadow_map = resource_manager::ref( ).create_texture( "$user$cascaded_shadow_map", 0, 0, false, true, true, u32(-1) );
