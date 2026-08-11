@@ -644,10 +644,10 @@ float contact_result_callback::addSingleResult(
 
 	return m_predicate->add_single_result(
 		colObj0->getCollisionShape( )->getUserPointer( ),
-		from_bullet_shape_type( shape_0_type ),
+		(physics::primitive_type)from_bullet_shape_type( shape_0_type ),
 		shape_0_transform,
 		shape_0_dim,
-		from_bullet_shape_type( shape_1_type ),
+		(physics::primitive_type)from_bullet_shape_type( shape_1_type ),
 		shape_1_transform,
 		shape_1_dim
 	);

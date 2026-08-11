@@ -35,4 +35,16 @@
 #include <vostok/math_quaternion.h>
 #include <vostok/math_cuboid.h>
 
+namespace vostok {
+namespace math {
+
+template < typename T >
+__declspec(noinline) inline T lerp( T const& current, T const& target, float amount )
+{
+	return current + ( target - current ) * amount;
+}
+
+} // namespace math
+} // namespace vostok
+
 #endif // #ifndef VOSTOK_MATH_EXTENSIONS_H_INCLUDED
