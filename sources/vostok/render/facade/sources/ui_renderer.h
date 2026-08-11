@@ -54,7 +54,7 @@ struct vertex {
 
 STATIC_SIZE_ASSERT( vertex, 0x1C );
 
-class VOSTOK_RENDER_API renderer : public core::noncopyable {
+class VOSTOK_RENDER_API renderer : private core::noncopyable {
 private:
 	friend class editor::renderer;
 	friend class game::renderer;
@@ -93,8 +93,6 @@ public:
 		u32 start_selection,
 		u32 end_selection
 	);
-
-	~renderer( ) { /* no source */ }
 
 private:
 	one_way_render_channel& m_channel;

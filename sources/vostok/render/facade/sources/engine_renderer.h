@@ -12,7 +12,7 @@ namespace engine {
 
 class world;
 
-class renderer : public core::noncopyable {
+class renderer : private core::noncopyable {
 private:
 	friend class render::world;
 	explicit renderer( engine::world& engine_world );
@@ -20,7 +20,6 @@ private:
 public:
 	void initialize( bool is_editor );
 	u32 frame_id( );
-	~renderer( ) { }
 
 private:
 	engine::world& m_render_engine_world;

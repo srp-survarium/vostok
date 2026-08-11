@@ -280,7 +280,7 @@ private:
 public:
 	struct particle_engine :
 		public particle::engine,
-		public boost::noncopyable
+		private boost::noncopyable
 	{
 		explicit particle_engine( scene* const in_scene ) :
 			m_scene( in_scene )
@@ -308,7 +308,6 @@ public:
 			particle::render_particle_emitter_instance*& instance
 		);
 		virtual base_scene_ptr get_scene( particle::world& world );
-		virtual ~particle_engine( ) { }
 
 		particle::world* m_particle_world;
 

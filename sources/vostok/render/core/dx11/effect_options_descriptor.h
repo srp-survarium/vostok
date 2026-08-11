@@ -12,7 +12,7 @@
 namespace vostok {
 namespace render {
 
-struct effect_options_descriptor : private boost::noncopyable {
+struct effect_options_descriptor : public boost::noncopyable {
 	struct const_iterator;
 
 	effect_options_descriptor( );

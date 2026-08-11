@@ -11,7 +11,7 @@ class object;
 
 namespace render {
 
-class moved_object_predicate_helper : private boost::noncopyable {
+class moved_object_predicate_helper : public boost::noncopyable {
 public:
 	explicit moved_object_predicate_helper( vectora< collision::object const* >& array ) :
 		m_array( array )
@@ -20,7 +20,6 @@ public:
 
 	void check_object( collision::object const& object );
 
-private:
 	vectora< collision::object const* >& m_array;
 };
 
