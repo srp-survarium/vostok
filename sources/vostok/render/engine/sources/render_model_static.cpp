@@ -643,6 +643,7 @@ static_render_model_instance::static_render_model_instance( )
 
 static_render_model_instance::~static_render_model_instance( )
 {
+	DELETE			( m_sectors_holder );
 	DELETE_ARRAY		( m_surface_instances );
 
 	// FUNCTION BODY[0x631120]: 2
