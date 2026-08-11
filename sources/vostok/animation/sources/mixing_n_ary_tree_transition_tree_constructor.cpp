@@ -1108,7 +1108,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::new_weight_dr
 		true
 	);
 
-	n_ary_tree_base_node** const operands	=
+	n_ary_tree_base_node** operands	=
 		static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) ) + time_scale_operands_count;
 	m_buffer					+= ( time_scale_operands_count + operands_offset ) * sizeof( n_ary_tree_base_node* );
 	add_operands(
@@ -1132,7 +1132,7 @@ void n_ary_tree_transition_tree_constructor::change_animation(
 	n_ary_tree_animation_node&		from,
 	n_ary_tree_animation_node&		to,
 	n_ary_tree_animation_node* const	weight_driving_animation,
-	bool							is_new_driving_animation
+	const bool						is_new_driving_animation
 )
 {
 	if ( ( to.is_transitting_to_zero( ) && !from.is_transitting_to_zero( ) )
