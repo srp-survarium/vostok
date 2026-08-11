@@ -44,19 +44,6 @@ void decal_shader_constants_and_geometry::set(
 	backend::ref().set_ps_constant	(m_decal_tangent_to_view_space_matrix_parameter,	math::transpose(decal_tangent_to_view_space_matrix));
 	backend::ref().set_ps_constant	(m_decal_angle_parameters,							float4(alpha_angle, clip_angle, 0.0f, 0.0f));
 	backend::ref().set_ps_constant	(m_eye_ray_corner_parameter,						((float4*)eye_rays)[0]);
-
-	// TODO: optimize or remove it
-	float3 const scale					= decal_width_height_far_distance;
-	float3 const decal_direction		= math::normalize_safe(decal_transform.k.xyz(), float3(0.0f, 0.0f, 1.0f));
-	float3 const position				= decal_transform.c.xyz() + decal_direction * scale.z;
-	float3 const angles					= decal_transform.get_angles_xyz();
-
-	float4x4 const geom_world_matrix	=
-		math::create_scale(scale) *
-		math::create_rotation(angles) *
-		math::create_translation(position);
-
-	//context->set_w						(geom_world_matrix);
 }
 
 void decal_shader_constants_and_geometry::set_geometry( )
@@ -304,12 +291,8 @@ void decal_instance::render( renderer_context* context, enum_render_stage_type s
 	// FUNCTION BODY[0x6416e0]
 	ASSERT(stage_type == decals_accumulate_render_stage || stage_type == forward_render_stage);
 
-	for (u32 pass_index = 0; pass_index < 2; pass_index++)
+	if (get_effects().m_effects[stage_type]->apply(1, 0))
 	{
-		// claude@NOTE: legacy res_effect::apply took one argument; canonical is
-		// apply( technique, pass ).
-		get_effects().m_effects[stage_type]->apply(pass_index, 0);
-
 		decal_shader_constants_and_geometry::ref().set(
 			context,
 			get_world_to_decal_matrix(this),
