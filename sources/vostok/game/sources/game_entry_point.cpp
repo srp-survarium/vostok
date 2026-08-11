@@ -23,9 +23,8 @@ namespace render {
 } // namespace vostok
 
 #include <vostok/game/api.h>
-// /OPT:REF reachability dispatcher: survarium::IncludeAll's ctor fans out to every
-// per-module anchor (anchor_game_core / anchor_network{,_core} / anchor_physics /
-// anchor_collision / anchor_logging / anchor_ai_navigation / anchor_game), keeping
+// /OPT:REF reachability dispatcher: survarium::IncludeAll's ctor fans out to the
+// remaining per-module anchors, keeping
 // the whole carcass cone in the base EXE for the delinker. create_world is the real
 // engine entry point (the game_world ctor is a never-instantiated stub, so an anchor
 // there gets /OPT:REF-stripped). Replaces the old monolithic temp_include_all anchor.

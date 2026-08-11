@@ -13,11 +13,6 @@ namespace survarium { class game; }
 
 namespace vostok {
 
-// the game_core reachability anchor (temp_include_all.cpp); befriended below so
-// it can call the private on_*/create_*/sign_in_impl members (free decls +
-// friends emit no bytes)
-void use_network_clients( );
-
 namespace network {
 
 struct world;
@@ -108,12 +103,6 @@ private:
 								);
 
 private:
-	friend void ::vostok::use_network_clients( );
-	// game::set_network_client writes m_server_host/m_server_port directly
-	// (codegen-neutral friend; emits no bytes)
-	friend class ::survarium::game;
-
-private:
 	sign_up_info				m_sign_up_info;
 	boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum, sign_up_info const& ) >	m_on_sign_up;
 	boost::function< void ( enum connection_error_types_enum, enum handshaking_error_types_enum, enum socket_error_types_enum, enum login_server_message_types_enum ) >	m_on_sign_in;
@@ -121,6 +110,8 @@ private:
 	network_world&				m_world;
 	login_client_impl*			m_client;
 	client_state_enum			m_client_state;
+
+public:
 	char						m_local_host_ip[16];
 	char						m_server_host[64];
 	u16							m_server_port;

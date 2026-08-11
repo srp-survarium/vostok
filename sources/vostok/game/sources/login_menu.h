@@ -67,7 +67,7 @@ public:
 
 			void				fill_labels			( );
 
-	inline	bool				action_blocked		( ) const { /* no source */ return false; }
+	inline	bool				action_blocked		( ) const { return m_block_btn_time != 0; }
 
 	// the menu has no bullet manager; the override returns a null reference
 	virtual	bullet_manager&		get_bullet_manager	( ) const override

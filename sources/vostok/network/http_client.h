@@ -9,10 +9,6 @@
 
 namespace vostok {
 
-// the game_core reachability anchor (temp_include_all.cpp); befriended below so
-// it can call the private impl members (free decls + friends emit no bytes)
-void use_network_clients( );
-
 namespace network_core {
 	class http_client;
 } // namespace network_core
@@ -50,9 +46,6 @@ private:
 			void		on_content_downloaded_impl	( pcstr content );
 			void		on_error					( boost::system::error_code error_code );
 			void		on_error_impl				( boost::system::error_code error_code );
-
-private:
-	friend void ::vostok::use_network_clients( );
 
 private:
 	network_world&						m_world;

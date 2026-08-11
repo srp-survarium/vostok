@@ -5,8 +5,7 @@
 // Game-module /OPT:REF reachability anchor for the survarium network-client
 // carcass (network_client / base_network_client / lobby_client / match_client /
 // messaging_client / network_stats stats_row+stats_stream). These live in the
-// game module, so they can NOT be anchored from game_core's anchor_network.cpp
-// (game_core must not reference up into game). Instead game_world's ctor calls
+// game module, so game_core must not reference up into them. game_world's ctor calls
 // anchor_game_network_clients( *this->m_game ), which references every out-of-line
 // client symbol so the linker keeps the carcass objects in the base EXE for the
 // delinker to score (a stub body references nothing on its own).
