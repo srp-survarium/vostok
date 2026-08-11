@@ -15,9 +15,6 @@ typedef intrusive_ptr<
 > res_texture_ptr;
 
 struct cloud_interp_textures {
-	cloud_interp_textures( ) { }
-	~cloud_interp_textures( ) { }
-
 	res_texture_ptr	cloud_density_0;
 	res_texture_ptr	cloud_density_1;
 };

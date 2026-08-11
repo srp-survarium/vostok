@@ -51,24 +51,12 @@ public:
 
 	bool is_effects_ready( ) const;
 
+private:
 	float evaluate_noise( float, float, u32 )
 	{
 		// STATE[STUB]
 		return 0.0f;
 	}
-
-	void fill_surface( render_target_ptr )
-	{
-		// STATE[STUB]
-	}
-
-	void generate_cloud_task( u32 )
-	{
-		// STATE[STUB]
-	}
-
-private:
-	void fill_cloud_texture( u32 index );
 
 	res_texture_ptr			m_3d_clouds_density_texture[2];
 	res_texture_ptr			m_3d_clouds_density_texture_left;
@@ -81,6 +69,19 @@ private:
 	environment_temp		m_environment;
 	untyped_buffer_ptr		m_screen_vertex_ib;
 	res_geometry_ptr		m_screen_vertex_geometry;
+
+	void fill_surface( render_target_ptr )
+	{
+		// STATE[STUB]
+	}
+
+	void generate_cloud_task( u32 )
+	{
+		// STATE[STUB]
+	}
+
+	void fill_cloud_texture( u32 index );
+
 	shader_constant_host*	m_c_sphere_to_sky_matrix;
 	shader_constant_host*	m_c_clouds_grid_size;
 	shader_constant_host*	m_c_cloud_movement;

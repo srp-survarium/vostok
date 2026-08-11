@@ -12,15 +12,11 @@ class binary_config_value;
 namespace render {
 
 struct cloud_key_parameters {
-	inline cloud_key_parameters( );
+	typedef configs::binary_config_value ConfigType;
 
 	inline void load( configs::binary_config_value const& );
 
-	static inline cloud_key_parameters lerp(
-		cloud_key_parameters const& left,
-		cloud_key_parameters const& right,
-		float const alpha
-	);
+	inline cloud_key_parameters( );
 
 	float	cloud_generate_octaves;
 	float	cloud_generate_cloudiness;
@@ -39,6 +35,12 @@ struct cloud_key_parameters {
 	u32		source_key_index;
 	u32		target_key_index;
 	float	linear_time;
+
+	static inline cloud_key_parameters lerp(
+		cloud_key_parameters const& left,
+		cloud_key_parameters const& right,
+		float const alpha
+	);
 };
 
 STATIC_SIZE_ASSERT( cloud_key_parameters, 0x44 );

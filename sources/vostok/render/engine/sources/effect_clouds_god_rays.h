@@ -15,9 +15,6 @@ public:
 		effect_compiler&			compiler,
 		custom_config_value const&	config
 	) override;
-
-	effect_clouds_god_rays( ) { }
-	virtual ~effect_clouds_god_rays( ) { }
 };
 
 STATIC_SIZE_ASSERT( effect_clouds_god_rays, 0x4 );

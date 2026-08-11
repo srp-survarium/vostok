@@ -4,25 +4,25 @@
 namespace vostok {
 namespace render {
 
-inline cloud_key_parameters::cloud_key_parameters( ) :
-	cloud_generate_octaves		( -1.0f ),
-	cloud_generate_cloudiness	( 0.5f ),
-	direct_light					( -1.0f ),
-	indirect_light				( -1.0f ),
-	ambient						( -1.0f ),
-	extinction					( -1.0f ),
-	diffusivity					( 0.0f ),
-	cloud_base					( 3200.0f ),
-	layer_height					( 7.0f ),
-	detail_noise_wave_lenght	( -1.0f ),
-	detail_noise_amplitude		( -1.0f ),
-	wind_speed					( -1.0f ),
-	persistence					( -1.0f ),
-	interp_alpha					( 0.0f ),
-	source_key_index				( 0 ),
-	target_key_index				( 1 ),
-	linear_time					( 0.0f )
+inline cloud_key_parameters::cloud_key_parameters( )
 {
+	cloud_generate_octaves = -1.0f;
+	cloud_generate_cloudiness = 0.5f;
+	direct_light = -1.0f;
+	indirect_light = -1.0f;
+	ambient = -1.0f;
+	extinction = -1.0f;
+	diffusivity = 0.0f;
+	cloud_base = 3200.0f;
+	layer_height = 7.0f;
+	detail_noise_wave_lenght = -1.0f;
+	detail_noise_amplitude = -1.0f;
+	wind_speed = -1.0f;
+	persistence = -1.0f;
+	interp_alpha = 0.0f;
+	source_key_index = 0;
+	target_key_index = 1;
+	linear_time = 0.0f;
 }
 
 inline void cloud_key_parameters::load( configs::binary_config_value const& )
