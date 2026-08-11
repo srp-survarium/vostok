@@ -70,6 +70,48 @@ inline void	animation_event_channels::write( configs::lua_config_value &cfg )con
 }
 
 #endif
+
+inline u32 animation_event_channels::count_internal_memory_size(
+	animation_event_channels const& event_channels
+)
+{
+	if ( event_channels.channels_count() == u32(-1) )
+		return 0;
+
+	u32 memory_size = u32( channels_self_memory_size( event_channels.channels_count() ) );
+
+	for ( u32 i = 0; i < event_channels.channels_count(); ++i )
+		memory_size += event_channel::count_internal_memory_size( event_channels.channel( i ) );
+
+	return memory_size;
+}
+
+inline size_t animation_event_channels::internal_memory_size( ) const
+{
+	return count_internal_memory_size( *this );
+}
+
+inline void animation_event_channels::copy_internals( void* memory_buffer ) const
+{
+	memory::copy(
+		memory_buffer,
+		internal_memory_size(),
+		(void const*) ( pbyte( this ) + m_internal_memory_position ),
+		internal_memory_size()
+	);
+}
+
+inline void animation_event_channels::create_in_place_internals(
+	animation_event_channels const& event_channels,
+	void* memory_buffer
+)
+{
+	m_internal_memory_position = u32( pbyte( memory_buffer ) - pbyte( this ) );
+	m_channels_count = event_channels.channels_count();
+
+	event_channels.copy_internals( memory_buffer );
+}
+
 } // namespace animation
 } // namespace vostok
 
