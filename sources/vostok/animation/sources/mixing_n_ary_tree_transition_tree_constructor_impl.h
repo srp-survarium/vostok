@@ -27,34 +27,10 @@ inline n_ary_tree_animation_node* find_animation			(
 		n_ary_tree_animation_node& animation_to_find
 	)
 {
-	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_weight_animation ) { // sushi@TODO
-		if ( (*i).animation_intervals_count() != animation_to_find.animation_intervals_count() )
-			continue;
-
-		bool equal							= true;
-		animation_interval const* j			= (*i).animation_intervals();
-		animation_interval const* const e	= (*i).animation_intervals() + (*i).animation_intervals_count();
-		animation_interval const* k			= animation_to_find.animation_intervals();
-		for ( ; j != e; ++j, ++k ) {
-			if ( *j != *k ) {
-				equal						= false;
-				break;
-			}
-		}
-
-		if ( !equal )
-			continue;
-
-		if ( animation_to_find.override_existing_animation() ) {
-			if ( animation_to_find.animation_state().animation_interval_id != (*i).animation_state().animation_interval_id )
-				continue;
-
-			if ( animation_to_find.animation_state().animation_interval_time != (*i).animation_state().animation_interval_time )
-				continue;
-		}
-
-		return								i;
-	}
+	animation_comparer_equal_predicate equal_predicate( false, false );
+	for ( n_ary_tree_animation_node* i = begin; i != end; i = i->m_next_weight_animation )
+		if ( equal_predicate( *i, animation_to_find ) )
+			return								i;
 
 	return										0;
 }
