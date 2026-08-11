@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the interval-range animation_lexeme_parameters constructor from the disposable game_core-before-animation LTCG link. The reconstructed initializer and interval-copy body are recorded as partial MAX evidence.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDPBVanimation_interval@123@2QAVanimation_lexeme@123@3@Z",
+      "module": "animation",
+      "expected_hash": "675640d9efd6.9fff9ae0c2fb519e",
+      "expected_fuzzy_pct": 90.82758,
+      "review": "The target initializer order, cloned driving animations, synchronization-group selection, buffer advance, and interval-copy loop remain present with the audited 22-block flow. Target has 9 versus candidate 7 attributed body statements and 0x26b versus 0x24e bytes, including two target-only cleanup rows; this remains partial MAX evidence."
+    }
+  ]
+}
