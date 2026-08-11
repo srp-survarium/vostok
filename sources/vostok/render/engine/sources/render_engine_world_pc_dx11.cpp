@@ -77,6 +77,7 @@ struct singletons_on_initialize {
 	vostok::render::decal_shader_constants_and_geometry	decal_shader_constants_and_geometry;
 }; // struct singletons_on_initialize
 
+static vostok::command_line::key	s_no_level( "no_level", "", "", "" );
 static vostok::uninitialized_reference< vostok::render::options >						s_options;
 
 static vostok::uninitialized_reference< singletons_on_preinitialize >	s_singletons_on_preinitialize;
@@ -103,8 +104,6 @@ void register_texture_cook	( );
 void unregister_texture_cook( );
 
 untyped_buffer_ptr		g_quad_ib;
-
-static command_line::key	s_no_level( "no_level", "", "", "" );
 
 renderer_cook::renderer_cook( ) :
  resources::unmanaged_cook( resources::renderer_class, reuse_false, use_current_thread_id )
@@ -204,13 +203,15 @@ static void unregister_cooks( )
 	vostok::render::unregister_texture_cook	( );
 }
 
+} // namespace render
+} // namespace vostok
+
 void initialize_options( )
 {
-	// <0>
-	// ******
-
-	using namespace vostok::render;
 }
+
+namespace vostok {
+namespace render {
 
 // Modified helper function from DirectX SDK
 static HRESULT get_dx_version_via_dxdiag( unsigned long& major_version, unsigned long& minor_version )
