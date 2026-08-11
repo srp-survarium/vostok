@@ -444,8 +444,7 @@ void grass_patch::merge_instances( )
 
 			for ( u32 i = 0; i < surface->m_num_indices; ++i )
 			{
-				*merged_indices_it			+=	u16( current_num_vertices );
-				++merged_indices_it;
+				*merged_indices_it			+=	u16( current_num_vertices ); ++merged_indices_it;
 			}
 
 			for ( u32 i = 0; i < surface->m_num_vertices; ++i )
@@ -468,8 +467,7 @@ void grass_patch::merge_instances( )
 					merged_vertices_it->tangent
 				);
 
-				++stream_1_data_it;
-				++merged_vertices_it;
+				++stream_1_data_it; ++merged_vertices_it;
 			}
 
 			current_num_vertices			+=	surface->m_num_vertices;
