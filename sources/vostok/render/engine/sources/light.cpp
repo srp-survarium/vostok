@@ -129,7 +129,7 @@ void light::set_position( float3 const& value )
 	position = (value);
 }
 
-void light::set_color( math::color const& c, float value )
+void light::set_color( math::color const& c, float const value )
 {
 	// FUNCTION BODY[0x5ff5c0]
 	color.x			= c.r;

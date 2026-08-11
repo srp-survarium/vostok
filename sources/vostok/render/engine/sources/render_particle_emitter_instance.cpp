@@ -484,7 +484,7 @@ void render_particle_emitter_instance::render_subuv_sprites( )
 	statistics::ref().visibility_stat_group.num_triangles.value += num_incides_per_particle * num_particles / 3;
 }
 
-void render_particle_emitter_instance::render( float3 const& view_location, u32 num_particles )
+void render_particle_emitter_instance::render( float3 const& view_location, u32 const num_particles )
 {
 	// FUNCTION BODY[0x5fe1f0]
 	switch (m_vertex_type)

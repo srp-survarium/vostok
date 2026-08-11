@@ -24,7 +24,7 @@ effect_constant_storage::~effect_constant_storage( )
 bool effect_constant_storage::is_equal(
 	u32 const* left,
 	u32 const* right,
-	u32 count
+	u32 const count
 )
 {
 	// FUNCTION BODY[0x55f3d0]

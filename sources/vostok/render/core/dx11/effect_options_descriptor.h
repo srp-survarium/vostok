@@ -85,14 +85,14 @@ struct effect_options_descriptor : private boost::noncopyable {
 struct effect_options_descriptor::const_iterator {
 	const_iterator( ) : value( 0 ), child_index( 0 ), size( 0 ) { }
 
-	explicit const_iterator( effect_options_descriptor const* descriptor ) :
+	explicit const_iterator( effect_options_descriptor const* const descriptor ) :
 		value( descriptor ? reinterpret_cast<effect_options_descriptor*>( descriptor->data ) : 0 ),
 		child_index( 0 ),
 		size( descriptor && descriptor->type == configs::t_table_named ? descriptor->count : 0 )
 	{
 	}
 
-	operator bool( ) const { return child_index < size; }
+	operator bool( ) { return child_index < size; }
 
 	void operator++( )
 	{
@@ -102,9 +102,9 @@ struct effect_options_descriptor::const_iterator {
 		);
 	}
 
-	effect_options_descriptor const& operator*( ) const { return *value; }
-	effect_options_descriptor const* operator->( ) const { return value; }
-	bool operator!=( const_iterator const& iterator ) const { return child_index < iterator.size; }
+	effect_options_descriptor const& operator*( ) { return *value; }
+	effect_options_descriptor const* operator->( ) { return value; }
+	bool operator!=( const_iterator const& iterator ) { return child_index < iterator.size; }
 
 private:
 	effect_options_descriptor*	value;

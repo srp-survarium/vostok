@@ -11,7 +11,7 @@ struct grass_template;
 
 struct grass_instance {
 	grass_instance(
-		u32 in_id,
+		u32 const in_id,
 		grass_template* in_template,
 		math::color const& in_color,
 		float4x4 const& in_transform,
