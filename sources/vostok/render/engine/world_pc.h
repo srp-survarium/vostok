@@ -69,7 +69,11 @@ typedef resources::resource_ptr<
 
 namespace engine {
 
-class world : public boost::noncopyable {
+class world : private boost::noncopyable {
+	typedef vector< vertex_colored > colored_vertices_type;
+	typedef vector< u16 > colored_indices_type;
+	typedef ui::vertex const* ui_vertices_type;
+
 public:
 	inline	void				set_renderer_configuration			( fs_new::virtual_path_string const& arg_0, bool arg_1 ) { /* no source */ }
 

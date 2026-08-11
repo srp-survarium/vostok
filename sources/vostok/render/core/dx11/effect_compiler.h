@@ -27,7 +27,7 @@ class query_result_for_cook;
 
 namespace render {
 
-class effect_compiler : private boost::noncopyable {
+class effect_compiler : public boost::noncopyable {
 public:
 	struct shader_cache_info {
 		shader_cache_info( ) { }
@@ -37,6 +37,7 @@ public:
 		fs_new::virtual_path_string geometry_shader_name;
 		shader_configuration configuration;
 	};
+	typedef vectora< shader_cache_info > shader_cache_info_vector;
 
 	struct texture_query_desc {
 		texture_query_desc( ) : m_mip_level_cut( 0 ), m_num_last_mips_used( 0 ) { }
@@ -45,6 +46,7 @@ public:
 		u32 m_mip_level_cut;
 		u32 m_num_last_mips_used;
 	};
+	typedef vector< texture_query_desc > textures_for_query_type;
 
 public:
 	// claude@NOTE: no legacy ancestor - set_mapping was declaration-only in the legacy header (no definition anywhere in the corpus); matcher-phase work.
@@ -209,7 +211,7 @@ public:
 	);
 	~effect_compiler( );
 
-	vectora<shader_cache_info> const get_cached_shaders_info( ) const
+	shader_cache_info_vector const get_cached_shaders_info( ) const
 	{
 		// FUNCTION BODY[0x130450]
 		return m_shader_cache_info;
@@ -230,11 +232,11 @@ public:
 	resources::query_result_for_cook* m_parent_query;
 
 private:
-	vectora<shader_cache_info> m_shader_cache_info;
+	shader_cache_info_vector m_shader_cache_info;
 
 public:
 	vector<texture_named_instance> m_ps_used_textures;
-	vector<texture_query_desc> m_textures_for_query;
+	textures_for_query_type m_textures_for_query;
 
 private:
 	res_ps_hw_ptr m_ps_hw;
