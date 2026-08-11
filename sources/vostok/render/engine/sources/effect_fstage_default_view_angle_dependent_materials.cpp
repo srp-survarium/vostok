@@ -27,7 +27,7 @@ void effect_fstage_default_view_angle_dependent_materials::compile(
 		if (config.value_exists("constant_emissive") && config.value_exists("constant_emissive_multiplier"))
 		{
 			solid_color_specular = float4(
-				float4(config["constant_emissive"]).xyz() * float(config["constant_emissive_multiplier"]),
+				float(config["constant_emissive_multiplier"]) * float4(config["constant_emissive"]).xyz(),
 				1.f
 			);
 		}

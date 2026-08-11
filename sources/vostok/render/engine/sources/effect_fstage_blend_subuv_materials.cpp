@@ -31,7 +31,10 @@ void effect_fstage_blend_subuv_materials::compile(
 		{
 			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		}
-		solid_color_specular		= float4(float4(config["constant_emissive"]).xyz(), float(config["constant_emissive_multiplier"]));
+		solid_color_specular		= float4(
+			float(config["constant_emissive_multiplier"]) * float4(config["constant_emissive"]).xyz(),
+			1.0f
+		);
 
 		if (configuration.use_transparency_texture)
 		{
