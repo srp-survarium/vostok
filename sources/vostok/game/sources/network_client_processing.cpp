@@ -652,14 +652,9 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 		m_current_player->update_camera( );
 }
 
-// claude@NOTE: STRUCTURE match (if-guard + enqueue). The target folds this to a single PDB
-// statement because get_current_player( ) inlines to a direct [this]+8 member load (no call
-// boundary), and the game-layer enqueue wrapper writes m_are_there_any_packets_to_send at the
-// call site then tail-calls the network enqueue; this single-TU base emits get_current_player( )
-// out-of-line, splitting the if from the body. Inline-wall, not source-steerable here.
 void network_client::initiate_kill_current_player( )
 {
-	if ( m_local_player && get_current_player( ) )
+	if ( m_local_player.c_ptr( ) && m_current_player.c_ptr( ) )
 		m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x44 ) );
 }
 
