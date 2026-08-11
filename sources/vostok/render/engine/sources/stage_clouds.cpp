@@ -133,9 +133,15 @@ stage_clouds::stage_clouds(
 
 	for ( u32 i = 0; i < 2; ++i )
 	{
-
-		pcstr const texture_name = i == 0 ? "$user$cloud_density0" : "$user$cloud_density1";
-		m_3d_clouds_density_texture[i] = resource_manager::ref( ).create_texture3d( texture_name, m_clouds_size_x, m_clouds_size_y, m_clouds_size_z, 0, DXGI_FORMAT_R8G8B8A8_UNORM, D3D11_USAGE_DYNAMIC, 1 );
+		m_3d_clouds_density_texture[i] = resource_manager::ref( ).create_texture3d( i == 0 ? "$user$cloud_density0" : "$user$cloud_density1",
+			m_clouds_size_x,
+			m_clouds_size_y,
+			m_clouds_size_z,
+			0,
+			DXGI_FORMAT_R8G8B8A8_UNORM,
+			D3D11_USAGE_DYNAMIC,
+			1
+		);
 	}
 	m_3d_clouds_density_texture_left = m_3d_clouds_density_texture[0];
 	m_3d_clouds_density_texture_right = m_3d_clouds_density_texture[1];

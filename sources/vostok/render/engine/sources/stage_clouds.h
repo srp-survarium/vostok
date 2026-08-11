@@ -51,24 +51,11 @@ public:
 
 	bool is_effects_ready( ) const;
 
-private:
 	float evaluate_noise( float, float, u32 )
 	{
 		// STATE[STUB]
 		return 0.0f;
 	}
-
-	res_texture_ptr			m_3d_clouds_density_texture[2];
-	res_texture_ptr			m_3d_clouds_density_texture_left;
-	res_texture_ptr			m_3d_clouds_density_texture_right;
-	res_effect_ptr			m_clouds_effect;
-	res_effect_ptr			m_read_cloud_base_effect;
-	res_effect_ptr			m_god_rays_effect;
-	res_effect_ptr			m_ss_god_rays_effect;
-	sphere_geometry			m_evaluate_geometry;
-	environment_temp		m_environment;
-	untyped_buffer_ptr		m_screen_vertex_ib;
-	res_geometry_ptr		m_screen_vertex_geometry;
 
 	void fill_surface( render_target_ptr )
 	{
@@ -82,6 +69,18 @@ private:
 
 	void fill_cloud_texture( u32 index );
 
+private:
+	res_texture_ptr			m_3d_clouds_density_texture[2];
+	res_texture_ptr			m_3d_clouds_density_texture_left;
+	res_texture_ptr			m_3d_clouds_density_texture_right;
+	res_effect_ptr			m_clouds_effect;
+	res_effect_ptr			m_read_cloud_base_effect;
+	res_effect_ptr			m_god_rays_effect;
+	res_effect_ptr			m_ss_god_rays_effect;
+	sphere_geometry			m_evaluate_geometry;
+	environment_temp		m_environment;
+	untyped_buffer_ptr		m_screen_vertex_ib;
+	res_geometry_ptr		m_screen_vertex_geometry;
 	shader_constant_host*	m_c_sphere_to_sky_matrix;
 	shader_constant_host*	m_c_clouds_grid_size;
 	shader_constant_host*	m_c_cloud_movement;
