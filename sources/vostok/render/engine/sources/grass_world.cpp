@@ -259,28 +259,16 @@ void grass_world::populate( float const patch_size_ground )
 					patch_size_ground
 				);
 				m_patches.push_back		( new_patch );
-				new_patch->m_instances.push_back( instance );
 			}
-			else
-			{
-				new_patch->m_instances.push_back( instance );
-			}
+			new_patch->m_instances.push_back( instance );
 		}
 	}
 
-	grass_patch** it_patch				=	m_patches.begin( );
-	grass_patch* const* end_patch		=	m_patches.end( );
-	for ( ; it_patch != end_patch; ++it_patch )
-	{
-		grass_patch* patch				=	*it_patch;
-		patch->init_collision( );
-		patch->merge_instances( );
-	}
+	merge_patches( );
 }
 
 void grass_world::merge_patches( )
 {
-	// FUNCTION BODY[0x6370c0]
 	grass_patch** it_patch = m_patches.begin( );
 	grass_patch* const* end_patch = m_patches.end( );
 	for ( ; it_patch != end_patch; ++it_patch ) {
