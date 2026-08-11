@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed n_ary_tree_converter::compute_buffer_size observation from the disposable late game_core-before-animation LTCG link. The complete calculator, animation, object collection, sort/unique, and size-accounting phases retain target structure and the isolated report reaches exact.",
+  "link_perturbation": "animation moved to the original late game_core slot, immediately after game_core; all other libraries and link flags preserved",
+  "report_sha256": "f848bf113ebf7afaf35503e4136d703dc5619c340cbfff86d0cf9ecb802ac71f",
+  "base_index_sha256": "7022a65eb443af9f1c27b5a016d99cc1c33740b974eec944ae6990bd8e2d0b4d",
+  "candidate_exe_sha256": "90d70b5166756eb5671198b9a4e04719820112817e10958eb706b455cdf30ccb",
+  "candidate_pdb_sha256": "e1ae9787dc9a266935b95af2793673044fd5e7bb590cb06ff0531e3bb562c885",
+  "functions": [
+    {
+      "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "f2a4cadb8ef8.9fff9ae0c2fb519e.3e9d8bfa6fc7c340",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate retain all 28 attributed body statements and the same 0x268-byte body. Calculator traversal, null-weight filtering, time-scale accounting, animated-object collection, sort/unique, and final size accounting all align; the displayed residual is relocation-masked constant addressing."
+    }
+  ]
+}
