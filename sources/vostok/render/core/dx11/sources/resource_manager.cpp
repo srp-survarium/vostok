@@ -1350,10 +1350,7 @@ void resource_manager::release( res_texture const* texture )
 	{
 		m_texture_registry.erase( it);
 		release_impl( texture);
-		return;
 	}
-
-	LOG_ERROR( "! ERROR: Failed to find texture surface '%s'", texture->name() );
 }
 
 untyped_buffer* resource_manager::create_buffer(
@@ -1666,13 +1663,12 @@ res_texture_list* resource_manager::create_texture_list(
 	fixed_vector<texture_slot, 128> const& tex_list
 )
 {
-	// FUNCTION BODY[0x561250]
-	for( set<res_texture_list*, compare_member_predicate<res_texture_list> >::iterator it = m_texture_lists.begin(); it != m_texture_lists.end(); ++it)
-	{
-		res_texture_list* base = *it;
-		if( identity(base->equal( tex_list) && g_enable_resource_sharing))
-			return base;
-	}
+	texture_lists_type::iterator it = m_texture_lists.find( tex_list);
+
+	if( it != m_texture_lists.end())
+		return *it;
+
+	++tl_created;
 
 	res_texture_list* lst = NEW( res_texture_list)( tex_list);
 	lst->mark_registered();
@@ -1699,13 +1695,10 @@ res_sampler_list* resource_manager::create_sampler_list(
 	fixed_vector<sampler_slot, 16> const& smp_list
 )
 {
-	// FUNCTION BODY[0x5610e0]
-	for( set<res_sampler_list*, compare_member_predicate<res_sampler_list> >::iterator it = m_sampler_lists.begin(); it != m_sampler_lists.end(); ++it)
-	{
-		res_sampler_list* base = *it;
-		if( identity(base->equal( smp_list) && g_enable_resource_sharing))
-			return base;
-	}
+	sampler_lists_type::iterator it = m_sampler_lists.find( smp_list);
+
+	if( it != m_sampler_lists.end())
+		return *it;
 
 	res_sampler_list* lst = NEW( res_sampler_list)( smp_list);
 	lst->mark_registered();
