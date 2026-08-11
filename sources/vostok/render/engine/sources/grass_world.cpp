@@ -380,13 +380,11 @@ void grass_world::process_sorting( float3 const& viewer_position, bool sort_inst
 
 void grass_world::process_culling( renderer_context* context, float const first_lod_distance )
 {
-	// FUNCTION BODY[0x6361b0]
 	m_visible_patches.clear							();
 
 	statistics::ref().grass_stat_group.num_total_patches.value	=	m_patches.size();
 
-	collision::objects_type objects					(	g_allocator );
-	objects.reserve									(m_patches.size());
+	collision::objects_type objects					(	g_allocator ); objects.reserve( m_patches.size() );
 
 	math::frustum view_frustum						(context->get_vp());
 
@@ -404,8 +402,7 @@ void grass_world::process_culling( renderer_context* context, float const first_
 			continue;
 
 		patch->m_current_lod_index						=	0;
-		float const distance							=	math::sqrt( to_aabb_center_squared );
-		if ( distance > options::ref( ).current.m_grass_lod1_distance )
+		float const distance							=	math::sqrt( to_aabb_center_squared ); if ( distance > options::ref( ).current.m_grass_lod1_distance )
 			patch->m_current_lod_index					=	1;
 		else if ( distance > options::ref( ).current.m_grass_lod2_distance )
 			patch->m_current_lod_index					=	2;
