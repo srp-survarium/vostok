@@ -15,6 +15,9 @@
 #include "flash_text_manager.h"
 #include "login_menu_status_enum.h"	// on_connected_to_login -> game::switch_to_login( status )
 #include <vostok/console_command.h>	// console_commands::cc_delegate
+#include <vostok/command_line_extensions.h>
+
+extern vostok::command_line::key s_net_login_client;
 
 namespace vostok {
 namespace network_core {
@@ -34,15 +37,6 @@ static vostok::console_commands::cc_bool s_show_network_statistics_comand(
 	vostok::console_commands::command_type_engine_internal
 );
 
-// claude@NOTE: the bind setters + member inits are structurally exact. m_is_player_ticked /
-// m_is_time_synchronized_first_time are in the member-init list (the target attributes them to
-// the ctor decl line, not body assignments) - that closed a 2-statement QUANTITY gap. The one
-// remaining base-only `if ( m_is_spectator )` breakpoint is a /Od line-table scheduling artifact:
-// the target folds the m_is_spectator store into the following guard test (the line-56 statement
-// disassembles to `cmp [ebp+4184h],bl; je`), but our build - where is_spectator is a live param,
-// not the anchor's const false - emits the store and the test as separate breakpoints. The
-// boost::function::operator= inlining and that fold lift when the real game owner constructs the
-// client (is_spectator const-propagated) and the anchor is removed (same wall as base_network_client's ctor).
  network_client::network_client( game& g, const bool is_spectator ) :
 	base_network_client( g ),
 	m_login_client( g.get_network_world( ) ),
@@ -58,10 +52,7 @@ static vostok::console_commands::cc_bool s_show_network_statistics_comand(
 	m_lobby_client.set_on_connected			( boost::bind( &network_client::on_connected_to_lobby, this ) );
 	m_lobby_client.set_on_disconnected		( boost::bind( &network_client::on_disconnected_from_lobby, this ) );
 	m_http_client.set_on_error				( boost::bind( &network_client::on_http_error, this, _1 ) );
-
-	m_is_spectator						= is_spectator;
-
-	if ( m_is_spectator )
+	if ( m_is_spectator = is_spectator )
 	{
 		static console_commands::cc_delegate s_attach_to_player(
 			"attach_to_player",
@@ -284,61 +275,76 @@ void network_client::on_connected_to_login(
 }
 
 
-// claude@NOTE: PARKED on a genuinely-missing cross-unit symbol. The recovered body is
-//   fixed_string< 512 > client_str;
-//   if ( s_net_login_client.is_set_as_string( &client_str ) ) {
-//       if ( m_http_client.busy( ) )
-//           return false;
-//       char request_str[ 512 ];
-//       sprintf_s( request_str, "%s&type=%d&local_ip=%s&login_ip=%s",
-//           m_login_client.server_browser_initial_query( ), type,
-//           login_client( ).local_ip_address( ), login_client( ).host_ip_address( ) );
-//       m_http_client.get( m_login_client.server_browser_address( ), request_str,
-//           boost::bind( &network_client::on_http_result_ready, this, _1, type ) );
-//   } else {
-//       if ( type == 2 ) on_http_result_ready( "188.93.23.27:25101", 2 );
-//       else if ( type == 4 ) on_http_result_ready( "188.93.23.27:25102", 4 );
-//   }
-//   return true;
-// Blocker: `s_net_login_client` is the global `vostok::command_line::key` whose canonical
-// home (game.cpp) still parks it as a compiler-generated `dynamic initializer` STUB - the
-// symbol is undefined, so referencing it would not link, and its ctor initializer cannot be
-// recovered from the PDB to define it here (and defining it here would put the symbol in the
-// wrong TU). Restore the body once game.cpp materializes s_net_login_client.
-// STATE[STUB]
 bool network_client::http_query_server_connection_info( u8 type )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( type );
+	fixed_string< 512 > client_str;
+	if ( s_net_login_client.is_set_as_string( &client_str ) )
+	{
+		if ( m_http_client.busy( ) )
+			return false;
 
-	// buildability return
-	return false;
+		pcstr const server_browser_address = m_login_client.server_browser_address( );
+		pcstr const server_browser_initial_query = m_login_client.server_browser_initial_query( );
+		pcstr const local_ip_address = login_client( ).local_ip_address( );
+		pcstr const host_ip_address = login_client( ).host_ip_address( );
+
+		char request_str[ 512 ];
+		::sprintf_s(
+			request_str,
+			"%s&type=%d&local_ip=%s&login_ip=%s",
+			server_browser_initial_query,
+			type,
+			local_ip_address,
+			host_ip_address
+		);
+		m_http_client.get(
+			server_browser_address,
+			request_str,
+			boost::bind( &network_client::on_http_result_ready, this, _1, type )
+		);
+	}
+	else
+	{
+		if ( type == 2 )
+			on_http_result_ready( "188.93.23.27:25101", 2 );
+		else if ( type == 4 )
+			on_http_result_ready( "188.93.23.27:25102", 4 );
+	}
+
+	return true;
 }
 
 void network_client::on_http_result_ready( pcstr content, u8 type )
 {
 	server_connection_info connection_info;
 	connection_info.session_id = login_client( ).session_id( );
+
+
 	strcpy_s( connection_info.password, login_client( ).account_password( ) );
-	if ( network_core::get_connection_info_from_string( content, connection_info.host, connection_info.port ) )
+	bool const is_connection_info_valid = network_core::get_connection_info_from_string( content, connection_info.host, connection_info.port );
+
+	if ( is_connection_info_valid )
 	{
 		if ( type == 2 )
 			lobby_client( ).connect( connection_info );
-		else if ( type == 4 )
+		else
+		if ( type == 4 )
 			messaging_client( ).connect( connection_info );
 	}
-	else
-	{
+	else {
 		if ( type == 2 )
 		{
 			lobby_client( ).connection_info( ).need_resolve = true;
 			++lobby_client( ).connection_info( ).connection_error_count;
 		}
-		else if ( type == 4 )
+		else
+		if ( type == 4 )
 		{
 			messaging_client( ).connection_info( ).need_resolve = true;
 			++messaging_client( ).connection_info( ).connection_error_count;
 		}
 	}
+
 }
 
 void network_client::on_http_error( boost::system::error_code __formal )
@@ -346,12 +352,6 @@ void network_client::on_http_error( boost::system::error_code __formal )
 	LOG_ERROR( "http client error!" );
 }
 
-// claude@NOTE: the switch dispatch is structurally exact (target compiles the same
-// 0/{1,2} range-check switch + close_current_match(false/true)). The byte residual is
-// set_on_disconnect: it clears a boost::function inside m_match_client.m_client
-// (network::match_client, a still-stub vostok::network type), so the assign emits a
-// shorter body here than the target's inlined boost::function::operator=. Lifts when
-// network_core's match_client is built.
 void network_client::on_match_disconnected( network_core::disconnect_event_types_enum disconnect_event_type )
 {
 	m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );

@@ -56,10 +56,10 @@ public:
 	inline	network_core::udp_match_packet*		new_packet							( match_client_message_types_enum arg_0 ) { /* no source */ return NULL; }
 	inline	void								delete_packet						( network_core::udp_match_packet*& arg_0 ) { /* no source */ }
 
-	inline	void								set_on_packet_received				( boost::function< void( u8, network_core::packet_reader& ) > const& arg_0 ) { /* no source */ }
+	inline	void								set_on_packet_received				( boost::function< void( u8, network_core::packet_reader& ) > const& arg_0 ) { m_client.set_on_packet_received( arg_0 ); }
 	inline	void								set_on_disconnect					(
 													boost::function< void( enum network_core::disconnect_event_types_enum ) > const&	arg_0
-												) { /* no source */ }
+												) { m_client.set_on_disconnect( arg_0 ); }
 
 	inline	bool								is_connected						( ) const { return m_client.is_connected( ); }
 	inline	bool								is_disconnected						( ) const { return m_client.is_disconnected( ); }
