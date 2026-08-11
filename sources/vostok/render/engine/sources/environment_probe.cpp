@@ -96,10 +96,10 @@ void environment_probe::set_properties(
 
 		probe_scale3 = new_transform.get_scale();
 
+		float const max_scale = math::max(probe_scale3.x,
+			math::max(probe_scale3.y, probe_scale3.z));
 		m_properties.location = new_transform.c.xyz();
-
-		m_properties.radius = math::max(probe_scale3.x,
-			math::max(probe_scale3.y, probe_scale3.z)) * 0.75f;
+		m_properties.radius = max_scale * 0.75f;
 	}
 
 	m_aabb = math::create_identity_aabb();
