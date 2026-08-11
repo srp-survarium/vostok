@@ -172,77 +172,132 @@ options::options( )
 	set_default_values();
 }
 
-// claude@NOTE: legacy defaults only; target-added table fields (clouds/
-// fxaa-quality/grass/ssao/quality tiers/resolution) get their defaults from
-// the immediates at 0x55c9d0 - matcher work.
 void options::set_default_values( )
 {
 	// FUNCTION BODY[0x55c9d0]
-	current.m_enabled_g_stage					= true;
-	current.m_enabled_g_stage_pre_pass			= true;
-	current.m_enabled_g_stage_material_pass		= true;
-	current.m_enabled_decals_accumulate_stage	= true;
-	current.m_enabled_distortion_stage			= true;
-	current.m_enabled_sun_shadows_stage			= true;
-	current.m_enabled_sun_stage					= true;
-	current.m_enabled_lighting_stage			= true;
-	current.m_enabled_forward_lighting_stage	= true;
-	current.m_enabled_deferred_lighting_stage	= true;
-	current.m_enabled_forward_stage				= true;
-	current.m_enabled_particles_stage			= true;
-	current.m_enabled_post_process_stage		= true;
-	current.m_enabled_sky_box_stage				= true;
-	current.m_test_float_option					= 1.0f;
-	current.m_use_parallax						= true;
-	current.m_enabled_ambient_occlusion_stage	= true;
-	current.m_enabled_light_propagation_volumes_stage = true;
-	current.m_enabled_mlaa						= true;
-	current.m_use_cpu_mlaa						= false;
-	current.m_shadow_map_size					= 1024;
-	current.m_spot_shadow_map_size				= 1024;
-	current.m_organic_irradiance_texture_size	= 1024;
-	current.m_shadow_quality					= 1;
-	current.m_enabled_local_light_shadows		= true;
-	current.m_enabled_terrain_shadows			= true;
-	current.m_enabled_draw_terrain				= true;
-	current.m_enabled_draw_speedtree			= true;
-	current.m_enabled_draw_speedtree_billboards	= true;
-	current.m_enabled_draw_speedtree_branches	= true;
-	current.m_enabled_draw_speedtree_fronds		= true;
-	current.m_enabled_draw_speedtree_leafcards	= true;
-	current.m_enabled_draw_speedtree_leafmeshes	= true;
-	current.m_enabled_fxaa						= false;
-
-	current.m_light_propagation_volumes_rsm_size= 128;
-	current.m_num_radiance_volume_cells			= 32;
-	current.m_radiance_volume_scale				= 10.0f;
-	current.m_num_propagate_iterations			= 2;
-	current.m_enabled_lpv_occluders				= true;
-
-	current.m_lpv_flux_amplifier				= 3.5f;
-	current.m_lpv_interreflection_contribution	= 1.5f;
-
-	current.m_lpv_movable						= true;
-
-	current.m_lpv_num_cascades					= 3;
-
+	current.m_radiance_volume_scale = 10.0f;
+	current.m_lpv_flux_amplifier = 0.17f;
+	current.m_lpv_interreflection_contribution = 0.4f;
+	current.m_test_float_option = 1.0f;
+	current.m_lpv_occlusion_amplifier = 1.0f;
+	current.m_clouds_noise_octaves = 8.0f;
+	current.m_clouds_noise_frequency = 100.0f;
+	current.m_clouds_noise_amplitude = 0.5f;
+	current.m_clouds_noise_power = 1.0f;
+	current.m_clouds_height = 0.0f;
+	current.m_clouds_scale = 1.0f;
+	current.m_clouds_moving_speed = 1.0f;
+	current.m_clouds_scale_by_distance = 0.0f;
+	current.m_clouds_scale_xy = 5.0f;
+	current.m_fxaa_quality_subpix = 0.25f;
+	current.m_fxaa_quality_edge_threshold = 0.166f;
+	current.m_fxaa_quality_edge_threshold_min = 0.03f;
+	current.m_grass_lod1_distance = 40.0f;
+	current.m_grass_lod2_distance = 60.0f;
+	current.m_ssao_screen_ratio = 0.5f;
+	current.m_motion_blur_scale = 1.0f;
+	current.m_gamma_correction_factor = 1.0f;
+	current.m_ssao_num_samples = 24;
+	current.m_clouds_num_evaluate_slices = 128;
+	current.m_clouds_grid_width = 128;
+	current.m_clouds_grid_height = 8;
+	current.m_organic_irradiance_texture_size = 1024;
+	current.m_shadow_map_size = 1024;
+	current.m_spot_shadow_map_size = 1024;
+	current.m_shadow_quality = 3;
+	current.m_light_propagation_volumes_rsm_size = 128;
+	current.m_num_radiance_volume_cells = 32;
+	current.m_num_propagate_iterations = 8;
+	current.m_lpv_num_cascades = 3;
+	current.m_lpv_refresh_once_per_frames = 1;
+	current.m_num_test_lights = 1024;
+	current.m_hiz_occlusion_culling_width = 512;
+	current.m_hiz_occlusion_culling_height = 256;
+	current.m_hiz_occlusion_culling_framerate = 8;
+	current.m_num_shadow_cascades = 4;
+	current.m_cascaded_shadow_map_size = 1024;
+	current.m_num_max_light_instances = 128;
+	current.m_texture_quality = 2;
+	current.m_max_anisotropic = 4;
+	current.m_monitor_index = 0;
+	current.m_geometry_quality = 1;
+	current.m_lighting_quality = 3;
+	current.m_post_process_quality = 3;
+	current.m_particles_quality = 2;
+	current.m_motion_blur_quality = 3;
+	current.m_shading_quality = 3;
+	current.m_ambient_occlusion_quality = 1;
+	current.m_antialiasing_method = 2;
+	current.m_decorations_quality = 2;
+	current.m_graphics_quality = 4;
+	current.m_resolution_x = 1280;
+	current.m_resolution_y = 720;
+	current.m_fullscreen = false;
+	current.m_vsync = false;
+	current.m_enabled_g_stage = true;
+	current.m_enabled_g_stage_pre_pass = true;
+	current.m_enabled_g_stage_material_pass = true;
+	current.m_enabled_decals_accumulate_stage = true;
+	current.m_enabled_distortion_stage = true;
+	current.m_enabled_sun_shadows_stage = true;
+	current.m_enabled_sun_stage = true;
+	current.m_enabled_lighting_stage = true;
+	current.m_enabled_ambient_occlusion_stage = true;
+	current.m_enabled_forward_lighting_stage = true;
+	current.m_enabled_deferred_lighting_stage = true;
+	current.m_enabled_forward_stage = true;
+	current.m_enabled_particles_stage = true;
+	current.m_enabled_post_process_stage = true;
+	current.m_enabled_sky_box_stage = false;
+	current.m_enabled_clouds_stage = true;
+	current.m_enabled_light_propagation_volumes_stage = false;
+	current.m_enabled_terrain_shadows = true;
+	current.m_enabled_draw_terrain = true;
+	current.m_enabled_draw_speedtree = true;
+	current.m_enabled_draw_speedtree_billboards = true;
+	current.m_enabled_draw_speedtree_branches = true;
+	current.m_enabled_draw_speedtree_fronds = true;
+	current.m_enabled_draw_speedtree_leafcards = true;
+	current.m_enabled_draw_speedtree_leafmeshes = true;
+	current.m_enabled_local_light_shadows = true;
+	current.m_use_parallax = true;
+	current.m_enabled_fxaa = true;
+	current.m_enabled_mlaa = true;
+	current.m_use_cpu_mlaa = false;
+	current.m_enabled_sharpen = true;
+	current.m_enabled_lpv_occluders = true;
+	current.m_lpv_movable = true;
 	current.m_lpv_gather_occluders_from_light_view = true;
-	current.m_lpv_gather_occluders_from_camera_view = true;
-
-	current.m_lpv_disable_rsm_generating		= false;
-	current.m_lpv_disable_rsm_downsampling		= false;
-	current.m_lpv_disable_vpl_injection			= false;
-	current.m_lpv_disable_gv_injection			= false;
-	current.m_lpv_disable_propagation			= false;
-	current.m_lpv_disable_lpv_lookup			= false;
-
-	current.m_lpv_refresh_once_per_frames		= 5;
-	current.m_lpv_occlusion_amplifier			= 1.0f;
-
-	current.m_enabled_draw_models				= true;
-	current.m_enabled_clouds_stage				= true;
-
-	current.m_num_test_lights					= 1024;
+	current.m_lpv_gather_occluders_from_camera_view = false;
+	current.m_lpv_disable_rsm_generating = false;
+	current.m_lpv_disable_rsm_downsampling = false;
+	current.m_lpv_disable_vpl_injection = false;
+	current.m_lpv_disable_gv_injection = false;
+	current.m_lpv_disable_propagation = false;
+	current.m_lpv_disable_lpv_lookup = false;
+	current.m_lpv_use_specular_reflection = false;
+	current.m_enabled_draw_models = true;
+	current.m_clouds_allow_moving = true;
+	current.m_clouds_debug_mode = false;
+	current.m_use_god_rays = false;
+	current.m_use_hiz_occlusion_culling = true;
+	current.m_enabled_sky_sphere_stage = false;
+	current.m_enabled_atmosphere_stage = true;
+	current.m_ssao_use_filtering = true;
+	current.m_ssao_use_temporal_filtering = true;
+	current.m_use_temporal_antialiasing = true;
+	current.m_use_motion_blur = true;
+	current.m_draw_grass = true;
+	current.m_enabled_volume_fog_stage = true;
+	current.m_use_16bit_rt = false;
+	current.m_use_shader_lods = true;
+	current.m_update_shadows_every_frame = true;
+	current.m_use_screenspace_reflections_mask = false;
+	current.m_use_poisson_disc_shadow_filter = false;
+	current.m_use_texture_streaming = true;
+	current.m_use_motion_vectors_in_taa = true;
+	current.m_use_vegetation_trample = false;
+	previous = current;
 }
 
 fs_new::virtual_path_string options::get_current_configuration( )
