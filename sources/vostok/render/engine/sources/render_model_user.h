@@ -21,12 +21,10 @@ class untyped_buffer;
 struct surface_stats;
 
 class user_render_surface : public render_surface {
-public:
-	user_render_surface( ) { }
-	virtual ~user_render_surface( ) { }
+typedef render_surface super;
 
+public:
 	virtual void load_from_chunk_data( memory::chunk_reader& chunk ) = 0;
-	virtual bool is_dynamic( ) const { return true; }
 
 protected:
 	void material_ready(
@@ -34,6 +32,7 @@ protected:
 		material_effects_instance_cook_data*	cook_data,
 		char*								material_name
 	);
+	virtual bool is_dynamic( ) const { return true; }
 };
 
 STATIC_SIZE_ASSERT( user_render_surface, 0x9C );
@@ -59,13 +58,9 @@ public:
 STATIC_SIZE_ASSERT( user_render_surface_wire, 0x9C );
 
 class user_render_model_instance : public render_model_instance_impl {
+typedef render_model_instance_impl super;
+
 public:
-	user_render_model_instance( )
-	{
-	}
-
-	virtual ~user_render_model_instance( ) { }
-
 	virtual math::aabb get_aabb( )
 	{
 		return m_surface->m_aabbox;

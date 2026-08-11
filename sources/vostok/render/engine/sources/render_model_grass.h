@@ -23,6 +23,8 @@ struct grass_source_vertex {
 STATIC_SIZE_ASSERT( grass_source_vertex, 0x20 );
 
 class grass_render_surface : public render_surface {
+typedef render_surface super;
+
 public:
 	grass_render_surface( );
 	virtual ~grass_render_surface( );

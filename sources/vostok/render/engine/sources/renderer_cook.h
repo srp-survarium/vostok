@@ -7,6 +7,8 @@ namespace vostok {
 namespace render {
 
 class renderer_cook : public resources::unmanaged_cook {
+typedef resources::unmanaged_cook super;
+
 public:
 	struct renderer_resource;
 
@@ -24,8 +26,6 @@ public:
 									mutable_buffer							in_out_unmanaged_resource_buffer
 								) override;
 	virtual	void				destroy_resource	( resources::unmanaged_resource* arg_0 ) override { /* no source */ }
-
-	virtual						~renderer_cook		( ) { /* no source */ }
 }; // class renderer_cook
 
 STATIC_SIZE_ASSERT(renderer_cook, 0x20);

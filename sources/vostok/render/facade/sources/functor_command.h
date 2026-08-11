@@ -30,20 +30,23 @@ private:
 STATIC_SIZE_ASSERT( functor_command, 0x98 );
 
 class functor_command_with_notify : public functor_command {
+typedef functor_command super;
+typedef boost::function< void ( ) > on_destroy_type;
+
 public:
+	virtual ~functor_command_with_notify( );
+
 	inline functor_command_with_notify(
-		boost::function< void ( ) > const& on_execute,
-		boost::function< void ( ) > const& on_destroy
+		super::on_execute_type const& on_execute,
+		on_destroy_type const& on_destroy
 	)
-		: functor_command( on_execute ),
+		: super( on_execute ),
 		  m_on_destroy( on_destroy )
 	{
 	}
 
-	virtual ~functor_command_with_notify( );
-
 private:
-	boost::function< void ( ) > m_on_destroy;
+	on_destroy_type m_on_destroy;
 };
 
 STATIC_SIZE_ASSERT( functor_command_with_notify, 0xb8 );
