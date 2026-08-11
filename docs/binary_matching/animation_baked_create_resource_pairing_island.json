@@ -1,0 +1,20 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed COFF symbol-normalization probe for bi_spline_skeleton_animation_baked_cook::create_resource_inplace. The target object emits two 178-byte bodies under the virtual create_resource spelling, while the base emits a 29-byte wrapper under that spelling and the real 177-byte helper under its private name. Renaming only the base symbol-table identities exposes the real body comparison.",
+  "link_perturbation": "no link or code perturbation; base COFF create_resource renamed out of the way and create_resource_inplace renamed to the duplicated target create_resource identity",
+  "report_sha256": "9494be2584bb0105e15f72f468a25b34cb317a0d3d2212f4e7b90b2b17f9a2d4",
+  "base_index_sha256": "1fb7d8494c4640064e9cdf9eb7b3019bfd14fa6b5241d6926211d6f01ed4f0d0",
+  "target_object_sha256": "5d4c6a5ab91b88888410cc478aa5e310e8f18e3bbfdfba79a13a275dba7b6d72",
+  "base_object_sha256": "86867fc01a5845246de100e8d1788b42db8917bf92854231a6689e22ac2d8a7a",
+  "normalized_base_object_sha256": "6a3b445c38127cf41d59b1a28a4cff86e1e7adc392dca35cee24eb8bd791031b",
+  "functions": [
+    {
+      "mangled": "?create_resource_inplace@bi_spline_skeleton_animation_baked_cook@animation@vostok@@AAEXAAVquery_result_for_cook@resources@3@Vmutable_buffer@3@@Z",
+      "report_mangled": "?create_resource@bi_spline_skeleton_animation_baked_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@Vmutable_buffer@3@@Z",
+      "module": "animation",
+      "expected_hash": "57d08f1294e5.9fff9ae0c2fb519e.1440b075f4a0667f",
+      "expected_fuzzy_pct": 92.88461,
+      "review": "Target and base helper bodies retain the same six PDB statement phases: raw-size selection, baked pointer fixup, placement construction, unmanaged-resource assignment, and finish_query. The 178/177-byte residual is the reviewed create_baked_animation_in_place custom call boundary and mutable_buffer size accessor inlining, not the unrelated 29-byte virtual forwarding wrapper."
+    }
+  ]
+}

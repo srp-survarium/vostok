@@ -212,6 +212,23 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             MATCH_DB.cross_unit_exact_score(mangled, {mangled: 99.0})
         )
 
+    def test_island_report_score_accepts_explicit_reviewed_alias(self):
+        target = "?create_resource_inplace@@"
+        report_name = "?create_resource@@"
+
+        self.assertEqual(
+            MATCH_DB.island_report_score(
+                {"report_mangled": report_name},
+                target,
+                {report_name: 92.88461},
+            ),
+            92.88461,
+        )
+        self.assertEqual(
+            MATCH_DB.island_report_score({}, target, {target: 75.0}),
+            75.0,
+        )
+
 
 class RankIslandDeltaTests(unittest.TestCase):
     def test_discovers_target_only_candidate_from_zero_floor(self):
