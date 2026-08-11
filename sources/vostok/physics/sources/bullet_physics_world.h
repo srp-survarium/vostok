@@ -21,7 +21,7 @@ public:
 
 	virtual	void							initialize					( ) override;
 	virtual	void							destroy						( ) override;
-	virtual	void							tick						( u32 current_time_in_ms ) override;
+	virtual	void							tick						( const u32 current_time_in_ms ) override;
 
 	virtual	void							create_test_scene			( ) override;
 
@@ -42,7 +42,7 @@ public:
 	virtual	closest_ray_result				ray_test					(
 												float3 const&		ray_from,
 												float3 const&		ray_dir,
-												float				ray_length,
+												const float			ray_length,
 												u16					filter_group,
 												u16					filter_mask
 											) override;
@@ -50,7 +50,7 @@ public:
 	virtual	void							ray_query					(
 												float3 const&					ray_from,
 												float3 const&					ray_dir,
-												float							ray_length,
+												const float						ray_length,
 												vectora<closest_ray_result>&	results,
 												u16								filter_group,
 												u16								filter_mask

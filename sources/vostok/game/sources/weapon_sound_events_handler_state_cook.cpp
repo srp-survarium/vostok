@@ -3,6 +3,7 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+#include "weapon.h"
 #include "weapon_sound_events_handler_state_cook.h"
 
 #include <vostok/game_core/weapon_state_creation_params.h>
@@ -52,5 +53,26 @@ float always_unit_timescale_calculator(
 {
 	return 1.0f;
 }
+
+#define DEFINE_WEAPON_SOUND_STATE_CALCULATOR( state_type, calculator ) \
+	weapon_sound_events_handler_state_cook_traits< weapon_sound_events_handler_state< state_type > >::animation_time_scale_calculator_type \
+	weapon_sound_events_handler_state_cook_traits< weapon_sound_events_handler_state< state_type > >::animation_time_scale_calculator = calculator
+
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_reload_state, reload_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_chamber_a_round_state, always_unit_timescale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_chamber_a_round_aimed_state, always_unit_timescale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_fire_state, fire_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_aimed_fire_state, fire_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_shotgun_reload_start_substate, always_unit_timescale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_shotgun_reload_one_round_substate, shotgun_reload_timescale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( weapon_core_shotgun_reload_finish_substate, always_unit_timescale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( pistol_weapon_core_reload_state, reload_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( pistol_weapon_core_fire_state, fire_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( pistol_weapon_core_aimed_fire_state, fire_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( double_barreled_weapon_core_reload_state, reload_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( double_barreled_weapon_core_fire_state, fire_animation_time_scale_calculator );
+DEFINE_WEAPON_SOUND_STATE_CALCULATOR( double_barreled_weapon_core_aimed_fire_state, fire_animation_time_scale_calculator );
+
+#undef DEFINE_WEAPON_SOUND_STATE_CALCULATOR
 
 } // namespace survarium

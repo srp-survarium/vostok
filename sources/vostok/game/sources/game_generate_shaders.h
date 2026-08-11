@@ -36,14 +36,8 @@ public:
 	{
 	}
 
-	// target mangling has the one-param shape; our legacy engine_user.h world
-	// interface declares load( pcstr, pcstr = NULL ), so no `override` here
-	// (same family as the input::handler quirk; revisit at TU enablement)
-	virtual	void			load						( pcstr arg_0 ) { /* no source */ }
-	// legacy engine_user.h override to make class concrete (target had 1-param load)
-	virtual	void			load						( pcstr, pcstr ) override { /* no source */ }
+	virtual	void			load						( pcstr arg_0 ) override { /* no source */ }
 
-	// not in our legacy engine_user.h world interface (see load above)
 	virtual	bool			is_loading					( ) const { /* no source */ return false; }
 
 	virtual	void			unload						( pcstr, bool ) override

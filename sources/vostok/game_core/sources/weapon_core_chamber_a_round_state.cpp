@@ -68,6 +68,8 @@ animation::mixing::expression weapon_core_chamber_a_round_state::weapon_and_hand
 	return hands_expression + lexeme_pair.main_lexeme + lexeme_pair.offset_lexeme;
 }
 
+// claude@NOTE: Target out-lines the linear_interpolator temporary constructor
+// and destructor; base inlines or elides them through the shared animation header.
 weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mutable_buffer& buffer, const bool is_third_view, const weapon_user_state_enum user_state_id ) const
 {
 	pcstr animation_identifier = "weapon-chamber_a_round";
@@ -90,8 +92,8 @@ weapon_lexeme_pair weapon_core_chamber_a_round_state::get_weapon_lexeme_pair( mu
 	);
 }
 
-// its ASSERT. claude@NOTE: not source-steerable from this file - would need the setters
-// out-of-class or __declspec(noinline) in the shared header.
+// claude@NOTE: Target out-lines animation helper construction, setters, and
+// destruction; base expands or elides them through shared animation headers.
 animation::mixing::expression weapon_core_chamber_a_round_state::get_user_hands_expression(
 	animation::mixing::animation_lexeme&	weapon_lexeme,
 	mutable_buffer&						buffer,

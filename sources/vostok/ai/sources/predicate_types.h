@@ -10,12 +10,6 @@
 namespace vostok {
 namespace ai {
 
-// sushi@TODO: [values] divergence - target ships only 12 enumerators (0x0..0xb ending at
-// predicate_type_is_at_position); the base has predicate_type_animation_playing (0x9),
-// predicate_type_sound_playing (0xb) and predicate_type_is_moving (0xe), shifting the
-// tail. Matching the target requires REMOVING those 3 predicates AND every consumer
-// (behaviour_domain.cpp preconditions / add_predicate blocks + the brain_unit::is_playing_*
-// / is_moving binds) - a behaviour-logic [stmt] change, not an enum-only fix. Parked.
 enum predicate_types_enum
 {
 	predicate_type_target_dead			= 0,
@@ -27,12 +21,9 @@ enum predicate_types_enum
 	predicate_type_invisible,
 	predicate_type_no_danger,
 	predicate_type_animation_played,
-	predicate_type_animation_playing,
 	predicate_type_sound_played,
-	predicate_type_sound_playing,
 	predicate_type_animation_with_sound_played,
-	predicate_type_is_at_position,
-	predicate_type_is_moving
+	predicate_type_is_at_position
 }; // enum predicate_types_enum
 
 static pcstr predicates_captions[] = 
@@ -46,12 +37,9 @@ static pcstr predicates_captions[] =
 	"invisible",			
 	"no_danger",
 	"animation_played",
-	"animation_playing",
 	"sound_played",
-	"sound_playing",
 	"animation_with_sound_played",
-	"be_at_position",
-	"is_moving"
+	"be_at_position"
 };
 
 #ifndef MASTER_GOLD
@@ -66,12 +54,9 @@ static configs::enum_tuple world_state_properties_tuples[] =
 	std::make_pair( predicates_captions[predicate_type_invisible],						predicate_type_invisible					),
 	std::make_pair( predicates_captions[predicate_type_no_danger],						predicate_type_no_danger					),
 	std::make_pair( predicates_captions[predicate_type_animation_played],				predicate_type_animation_played				),
-	std::make_pair( predicates_captions[predicate_type_animation_playing],				predicate_type_animation_playing			),
 	std::make_pair( predicates_captions[predicate_type_sound_played],					predicate_type_sound_played					),
-	std::make_pair( predicates_captions[predicate_type_sound_playing],					predicate_type_sound_playing				),
 	std::make_pair( predicates_captions[predicate_type_animation_with_sound_played],	predicate_type_animation_with_sound_played	),
-	std::make_pair( predicates_captions[predicate_type_is_at_position],					predicate_type_is_at_position				),
-	std::make_pair( predicates_captions[predicate_type_is_moving],						predicate_type_is_moving					)
+	std::make_pair( predicates_captions[predicate_type_is_at_position],					predicate_type_is_at_position				)
 };
 #endif // #ifndef MASTER_GOLD
 

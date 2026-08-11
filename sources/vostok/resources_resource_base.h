@@ -20,6 +20,9 @@ template class	VOSTOK_CORE_API boost::intrusive::set_member_hook< boost::intrusi
 template struct VOSTOK_CORE_API boost::intrusive::link_mode<boost::intrusive::auto_unlink>;
 
 namespace vostok {
+
+namespace core { namespace configs { class binary_config_cook; } }
+
 namespace resources {
 
 class	unmanaged_intrusive_base;
@@ -133,6 +136,7 @@ private:
 	friend	class						quality_increase_functionality;
 	friend	class						releasing_functionality;
 	friend	class						cook_base;
+	friend	class						::vostok::core::configs::binary_config_cook;
 };
 
 STATIC_SIZE_ASSERT(resource_base, 0xD0);

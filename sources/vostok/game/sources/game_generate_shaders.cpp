@@ -60,7 +60,8 @@ void generate_shaders_world::generate_renderer_shaders( )
 						volatile long waiting_for = 1;
 						m_renderer.scene().begin_render_options_changing( &waiting_for );
 
-						resources::wait_and_dispatch_callbacks( false );
+						while ( waiting_for )
+							resources::wait_and_dispatch_callbacks( false );
 
 						antialiasing_method_command_value	= antialiasing_method_values[ antialiasing_method ];
 						shadow_quality_command_value			= shadow_quality_values[ shadow_quality ];
@@ -72,9 +73,10 @@ void generate_shaders_world::generate_renderer_shaders( )
 							render::scene_ptr(), render::render_output_window_ptr(), false, false, &waiting_for
 						);
 
-						resources::wait_and_dispatch_callbacks( false );
+						while ( waiting_for || resources::pending_queries_count() )
+							resources::wait_and_dispatch_callbacks( false );
 
-						LOG_INFO( "pending_queries_count: %d", resources::pending_queries_count() );
+						LOG_ERROR( "pending_queries_count:%d", resources::pending_queries_count() );
 					}
 				}
 			}
@@ -103,7 +105,8 @@ void generate_shaders_world::generate_materials_shaders( )
 			volatile long waiting_for = 1;
 			m_renderer.scene().begin_render_options_changing( &waiting_for );
 
-			resources::wait_and_dispatch_callbacks( false );
+			while ( waiting_for )
+				resources::wait_and_dispatch_callbacks( false );
 
 			shadow_quality_command_value		= shadow_quality_values[ shadow_quality ];
 			shading_quality_command_value	= shading_quality_values[ shading_quality ];
@@ -112,9 +115,10 @@ void generate_shaders_world::generate_materials_shaders( )
 				render::scene_ptr(), render::render_output_window_ptr(), false, false, &waiting_for
 			);
 
-			resources::wait_and_dispatch_callbacks( false );
+			while ( waiting_for || resources::pending_queries_count() )
+				resources::wait_and_dispatch_callbacks( false );
 
-			LOG_INFO( "pending_queries_count: %d", resources::pending_queries_count() );
+			LOG_ERROR( "pending_queries_count:%d", resources::pending_queries_count() );
 		}
 	}
 }
@@ -135,7 +139,7 @@ void generate_shaders_world::tick( u32 current_frame_id )
 
 	if ( tick_id % 100 == 0 )
 	{
-		LOG_INFO( "pending_queries_count: %d", resources::pending_queries_count() );
+		LOG_ERROR( "pending_queries_count:%d", resources::pending_queries_count() );
 	}
 
 	debug::debug_message_box( "shaders generated" );

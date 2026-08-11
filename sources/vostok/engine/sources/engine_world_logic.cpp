@@ -120,7 +120,9 @@ void engine_world::logic				( )
 
 		logic_tick				( );
 
-		if ( ( m_logic_frame_id > m_render_world->engine_renderer().frame_id( ) + 1 ) && !m_destruction_started ) {
+		render::engine::renderer& renderer	=
+			m_render_world->engine_renderer( );
+		if ( ( m_logic_frame_id > renderer.frame_id( ) + 1 ) && !m_destruction_started ) {
 			do {
 				logic_dispatch_callbacks( );
 				if ( m_game_enabled && !m_last_game_enabled_value ) {

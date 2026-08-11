@@ -18,7 +18,6 @@ namespace vostok
 	void anchor_network( );
 	void anchor_physics( );
 	void anchor_collision( );
-	void anchor_logging( );
 	void anchor_ai_navigation( );
 
 	void anchor_game( );

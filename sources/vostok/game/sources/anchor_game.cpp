@@ -123,7 +123,6 @@ namespace survarium {
 
 	// the player_cook carcass anchor (anchor_game_player_cook.cpp); self-guarded.
 	void use_game_player_cook( );
-	void use_game_animated_model_cook( );	// anchor_game_animated_model_cook.cpp
 	// player_logic_preview_state carcass anchor (anchor_game_player_logic.cpp); self-guarded.
 	void use_game_player_logic( );
 
@@ -456,7 +455,6 @@ namespace vostok
 		survarium::use_game_lobby_camera( );
 		survarium::use_game_fingers( );
 		survarium::use_game_player_cook( );
-		survarium::use_game_animated_model_cook( );
 		survarium::use_game_anomaly_veg( );
 		survarium::use_game_global_input( );
 

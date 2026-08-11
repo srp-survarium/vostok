@@ -34,15 +34,6 @@ free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
 {
 }
 
-// claude@NOTE: structure is faithful (call get_binded_action, switch on game_action_id,
-// console execute / toggle_pause). Residual is non-steerable optimizer codegen on this
-// /Ox module: (1) the base TAIL-MERGES the two identical console_commands::execute case
-// bodies (kSERIALIZE/kDESERIALIZE differ only by the string literal) into one shared
-// push/call; the target emits each case its own call (3 extra target stmts). (2) the
-// target CSEs get_game_scene().get_game() into one stack slot reused for both
-// get_binded_action and toggle_pause (the base re-loads it), which shifts register
-// allocation. Both are compiler heuristics, not source shape; the callee is bodied and
-// this function measures 78%.
 bool free_fly_camera::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -51,8 +42,9 @@ bool free_fly_camera::on_keyboard_action(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
 
+	game&				current_game = get_game_scene().get_game();
 	toggle_action_enum	actions_mask_type;
-	game_action_id const action_id	= get_game_scene().get_game().get_key_binder().get_binded_action(
+	game_action_id const action_id	= current_game.get_key_binder().get_binded_action(
 		key, actions_mask_type, 1 );
 
 	if ( action == input::kb_key_down )
@@ -60,7 +52,7 @@ bool free_fly_camera::on_keyboard_action(
 		switch ( action_id )
 		{
 		case kPAUSE:
-			get_game_scene().get_game().toggle_pause	( );
+			current_game.toggle_pause	( );
 			break;
 		case kSERIALIZE_PLAYER_STATE:
 			vostok::console_commands::execute	( "serialize_player_state", vostok::console_commands::execution_filter_all );
@@ -198,17 +190,10 @@ void free_fly_camera::on_activate( camera_director* cd )
 	m_inverted_view_matrix.i.xyz( )	= math::cross_product( m_inverted_view_matrix.j.xyz( ), m_inverted_view_matrix.k.xyz( ) );
 }
 
-// claude@NOTE: structure is faithful (build_view_matrix folds the angle_x/angle_y temps
-// inline, giving the target's 6 PDB locals). Residual is
-// non-steerable /Ox codegen: (1) target CSEs game_permanent_time_ms() into one value reused
-// for both current_time_delta and `m_prev_time_ms = ...`, splitting the decl statement; the
-// base re-calls it. (2) LOG_INFO bakes __LINE__ as `push 0B4h` (=180, the original's line)
-// vs our `push 0D5h` (=213) - we sit ~33 lines later in the file; and the target builds the
-// log callback's boost::function inline while the base emits `call boost::function<...>`
-// (LTCG). Recoverable only by restoring the original cross-fn line layout (risky).
 void free_fly_camera::tick( )
 {
-	float const current_time_delta	= float( get_game_scene().get_game().game_permanent_time_ms( ) - m_prev_time_ms );
+	u32 const current_time_ms		= get_game_scene().get_game().game_permanent_time_ms( );
+	float const current_time_delta	= float( current_time_ms - m_prev_time_ms );
 
 	if ( m_prev_delta_sec < 0.0f )
 		m_prev_delta_sec		= current_time_delta;
@@ -218,7 +203,7 @@ void free_fly_camera::tick( )
 	float factor				= 60.f * 0.001f * m_prev_delta_sec;
 	float angle_factor			= 0.5f;
 
-	m_prev_time_ms				= get_game_scene().get_game().game_permanent_time_ms( );
+	m_prev_time_ms				= current_time_ms;
 
 	static u32 counter = 0;
 	if ( keyb_event_present( input::key_q ) )

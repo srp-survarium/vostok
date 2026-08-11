@@ -334,9 +334,6 @@ void body_part_parameters::fill_new_stats_item( stats_item_type& new_stats_item,
 		new_stats_item.content.push_back( vostok::fixed_string<46>( "none" ) );
 }
 
-// claude@TODO: this explicit instantiation's PLACEMENT may be wrong - the original likely
-//   instantiates fill_new_stats_item where the template is defined/used, not at file scope here.
-//   Warrants verification against the target.
 template void body_part_parameters::fill_new_stats_item<vostok::ai::statistics_item<46,16> >(
 	vostok::ai::statistics_item<46,16>& new_stats_item, const u32 current_time_in_ms ) const;
 
@@ -345,13 +342,7 @@ void body_part_parameters::dump_state( vostok::ai::npc_statistics& stats, const 
 	typedef vostok::ai::statistics_item<46,16> content_type;
 	content_type new_stats_item = content_type( );
 	fill_new_stats_item( new_stats_item, current_time_in_ms );
-	// stats.body_state.push_back( new_stats_item );
-	// claude@NOTE: target's npc_statistics has `fixed_vector<statistics_item<46,16>,12> body_state`
-	//   at offset 0x2798 (member #3, between selectors_state and working_memory_state - see
-	//   binaries/structure/target/headers/vostok/ai/npc_statistics.h). The shipped header omits
-	//   it; adding it shifts working_memory_state..general_state offsets and changes sizeof, so it
-	//   belongs in an AI-module structure pass (it touches every npc_statistics user), not this
-	//   IK/calculator PR. Until then this statement is dropped -> 1 TRGT_ONLY stmt.
+	stats.body_state.push_back( new_stats_item );
 }
 
 void body_part_parameters::dump_state( boost::function<void(u32, float, float, pcstr)> callback, const u32 index ) const

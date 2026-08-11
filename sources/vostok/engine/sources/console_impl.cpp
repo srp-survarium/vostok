@@ -28,11 +28,15 @@ console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a )
 	m_active			( false ),
 	m_executed_history	( a ),
 	m_tips				( a ),
-	m_self_deactivate	( true )
+m_self_deactivate	( true )
 {
+	float2 screen_size				= m_ui_world.base_screen_size();
+	screen_size.y					*= 0.5f;
+
 	m_ui_dialog						= m_ui_world.create_dialog();
 	m_ui_dialog->w()->set_position	(float2(0,0));
-	m_ui_dialog->w()->set_size		(float2(1020,530));
+
+	m_ui_dialog->w()->set_size		(screen_size);
 
 	ui::image* img					= m_ui_world.create_image();
 	img->init_texture				("ui_rect");
@@ -45,13 +49,16 @@ console_impl::console_impl( ui::world& uw, vostok::memory::base_allocator& a )
 
 	m_ui_view						= m_ui_world.create_scroll_view();
 	m_ui_view->w()->set_position	(float2(1,1));
-	m_ui_view->w()->set_size		(float2(1018,500));
+
+	m_ui_view->w()->set_size		(screen_size-float2(2,30));
 	m_ui_view->w()->set_visible		(true);
 	m_ui_dialog->w()->add_child		(m_ui_view->w(), true);
 
 	m_text_edit						= m_ui_world.create_text_edit();
-	float2 edit_pos					(1,510);
-	float2 edit_size				(1018,18);
+
+	float2 edit_pos					(1,screen_size.y-20);
+
+	float2 edit_size				(screen_size.x-2,18);
 	m_text_edit->w()->set_position	(edit_pos);
 	m_text_edit->w()->set_size		(edit_size);
 	m_text_edit->w()->set_visible	(true);
@@ -152,14 +159,12 @@ bool console_impl::get_active()	const
 static u32 string_color(pcstr str)
 {
 	//A-R-G-B
-	if(strstr(str, "<info>"))
-		return 0xffffffff;
 	if(strstr(str, "<Warning>"))
-		return 0xffff7088;
+		return 0xc800ffff;
 	if(strstr(str, "<ERROR>"))
-		return 0xffff0000;
+		return 0xc80000ff;
 
-	return 0xffffffff;
+	return 0xc8ffffff;
 }
 
 struct logging_transaction
@@ -188,7 +193,7 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 
 	float line_height					= 20.0f;
 	float line_width					= 1000.0f;
-	logging::log_file* l				= NULL; // sushi@TODO: logging::get_log_file();
+	logging::log_file* l				= logging::get_log_file();
 
 	logging_transaction		transaction		( l );
 	dialog_guard			dialog_updater	( *m_ui_dialog->w(), m_ui_world.get_renderer(), scene_view );
@@ -229,7 +234,7 @@ void console_impl::tick( render::scene_view_ptr const& scene_view )
 	u32 need_lines_count		= math::floor(visible_height/line_height);
 
 	if(follow_last_line && log_cnt>need_lines_count)
-		scroll_pos				= log_cnt*line_height - visible_height; //make last line visible
+		scroll_pos				= log_cnt*line_height - visible_height + m_text_edit->w()->get_size().y; //make last line visible
 
 	ui::text* txt				= get_item();
 	txt->w()->set_size			(float2(line_width, scroll_pos));
@@ -316,6 +321,18 @@ bool console_impl::on_text_commit(ui::window* w, int p1, int p2)
 	return								true;
 }
 
+struct tips_sorting_predicate
+{
+	inline explicit tips_sorting_predicate( pcstr str ) : editor_str( str ) {}
+	bool operator ()( pcstr s1, pcstr s2 ) const
+	{
+		pcstr s1_pos = strstr( s1, editor_str );
+		pcstr s2_pos = strstr( s2, editor_str );
+		return s1_pos - s1 < s2_pos - s2;
+	}
+	pcstr editor_str;
+};
+
 bool console_impl::on_text_changed(ui::window* w, int p1, int p2)
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	(w, p1, p2);
@@ -332,6 +349,8 @@ bool console_impl::on_text_changed(ui::window* w, int p1, int p2)
 	m_tips.clear			();
 	for(u32 idx=0; idx<res; ++idx)
 		m_tips.push_back	(storage[idx]->name());
+
+	std::sort(m_tips.begin(), m_tips.end(), tips_sorting_predicate(text));
 
 	if(res==0)
 	{

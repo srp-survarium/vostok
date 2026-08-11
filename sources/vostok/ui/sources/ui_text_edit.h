@@ -47,7 +47,7 @@ public:
 	virtual void		draw				(vostok::render::ui::renderer& render, vostok::render::scene_view_ptr const& scene_view);
 	virtual void		tick				();
 
-	virtual void		set_text			(pcstr text);
+	virtual void		set_text			(pcstr str);
 	virtual ui::window*	w					()								{return this;}
 	virtual ui::text*	text				()								{return this;}
 

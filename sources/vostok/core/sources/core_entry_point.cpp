@@ -263,20 +263,13 @@ vostok::fs_new::synchronous_device_interface &	vostok::core::get_core_synchronou
 	return									* s_core_synchronous_device.c_ptr( );
 }
 
-#if 0 // sushi@NOTE: Moved from `core_entry_point_win.cpp`. This should be handled when `core` is matched. Still don't understand why windows related stuff was just moved
-// STATE[STUB]
 void vostok::core::core_engine_flush( )
 {
-	// CALL SITE INFO
-	// <0x6704df> -> void <unknown>()
-	// ******
-
-	// FUNCTION BODY
-	// <0x6704d0>|0x000|0x000:'290'
-	// <0x6704da>|0x00a|0x00a:'291'
-	// ******
+	if ( s_engine )
+		s_engine->on_crash		( );
 }
 
+#if 0 // sushi@NOTE: Moved from `core_entry_point_win.cpp`. This should be handled when `core` is matched. Still don't understand why windows related stuff was just moved
 // STATE[STUB]
 pcstr vostok::core::user_data_directory( )
 {

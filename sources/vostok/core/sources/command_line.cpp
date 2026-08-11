@@ -157,7 +157,12 @@ void   key::initialize (pcstr value)
 
 struct command_line_key_finder
 {
-	command_line_key_finder (pcstr key_name) : key_name(key_name), result(NULL) {}
+	command_line_key_finder (
+		pcstr key_name
+	) :
+		key_name(key_name),
+		result(NULL)
+	{}
 	void operator () (key * const command_line_key)
 	{
 		if ( command_line_key->full_name() == key_name || command_line_key->short_name() == key_name )
@@ -270,7 +275,9 @@ void   iterate_keys (Predicate predicate)
 
 struct initializer
 {
-	void operator () (key * const command_line_key, pcstr key_name, pcstr key_value)
+	void operator () (
+		key * const command_line_key, pcstr key_name, pcstr key_value
+	)
 	{
 		VOSTOK_UNREFERENCED_PARAMETER		(key_name);
 		if ( command_line_key )
@@ -307,20 +314,24 @@ void   key::initialize ()
 
 struct checker
 {
-	void operator () (key * const command_line_key, pcstr key_name, pcstr key_value)
+	void
+	operator ()
+	(
+		key * const command_line_key,
+		pcstr key_name,
+		pcstr key_value
+	)
 	{
-		VOSTOK_UNREFERENCED_PARAMETER		(key_value);
+		VOSTOK_UNREFERENCED_PARAMETER
+		(
+			key_value
+		);
 
 		if ( !command_line_key && !(key_name && * key_name == '.') )
 		{
-			LOGFD_INFO					(logging::format_message, core::log_to_console,
-										"\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
-
-			if ( debug::is_debugger_present() )
-				DEBUG_BREAK				();
-
-			if ( s_engine )
-				s_engine->exit			(0);
+			LOGFD_FORCED
+				(logging::info, logging::format_message, core::log_to_console, "\nkey with name '%s' is not registered, use -help to see list of available commands", key_name);
+			debug::terminate			("Command line argument '%s' has not been registered", key_name);
 		}
 	}
 };
@@ -329,7 +340,7 @@ void   check_keys ()
 {
 	if ( s_command_line_error.length() )
 	{
-		LOGFD_INFO							(logging::format_message, core::log_to_console,
+		LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console,
 											 "%s", s_command_line_error.c_str());
 		if ( debug::is_debugger_present() )
 			DEBUG_BREAK						();
@@ -346,7 +357,11 @@ bool   initialized ()
 	return							s_command_line_initialized;
 }
 
-void   initialize (core::engine * engine, pcstr const command_line, command_line::contains_application_bool const contains_application)
+void   initialize (
+	core::engine * engine,
+	pcstr const command_line,
+	command_line::contains_application_bool const contains_application
+)
 {
 	s_engine			=	engine;
 	typedef	vostok::fixed_string4096	string_type;
@@ -391,7 +406,9 @@ typedef buffer_vector<key *>	keys_array;
 
 struct command_line_key_adder
 {
-	command_line_key_adder (keys_array * keys) : keys_(keys), longest_short_key_name(0), longest_full_key_name(0) {}
+	command_line_key_adder (keys_array * keys) :
+		keys_(keys), longest_short_key_name(0), longest_full_key_name(0)
+	{}
 	command_line_key_adder () {}
 	void operator () (key * const command_line_key)
 	{
@@ -435,11 +452,8 @@ void   show_help_and_exit ( )
 										 adder_predicate.longest_short_key_name +
 										 adder_predicate.longest_full_key_name + 5);
 
-	LOGFD_INFO							(logging::format_message, core::log_to_console,
-										"               " VOSTOK_ENGINE_ID ", build %d, %s\n"
-										"                  Copyright(C) GSC Game World - 2009\n"
-										"      Finger print info: %s",
-										build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
+	LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console,
+		"               " VOSTOK_ENGINE_ID ", build %d, %s\n                  Copyright(C) Vostok Games - 2013\n      Finger print info: %s", build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
 
 	pcstr previous_category			=	"";
 
@@ -451,12 +465,14 @@ void   show_help_and_exit ( )
 		if ( it == keys.begin() || !strings::equal(key->category(), previous_category) )
 		{
 			fixed_string512	category	=	* key->category() ? key->category() : "global";
-			fixed_string512	first_char	=	category;
+			fixed_string512	first_char	=	category.substr(0, 1);
 			first_char.make_uppercase	();
 			category[0]				=	first_char[0];
 
-			LOGFD_INFO					(logging::format_message, core::log_to_console,
-									     "\n%s options: ", category.c_str() );
+			LOGFD_FORCED				(logging::info,
+										 logging::format_message,
+										 core::log_to_console,
+										 "\n%s options: ", category.c_str() );
 			previous_category		=	key->category();
 		}
 
@@ -469,8 +485,8 @@ void   show_help_and_exit ( )
 		if ( * key->argument_description() )
 			key_name.appendf			(" = <%s>", key->argument_description());
 
-		LOGFD_INFO						(logging::format_message, core::log_to_console,
-										 format_string.c_str(),
+		LOGFD_FORCED					(logging::info, logging::format_message, core::log_to_console,
+											 format_string.c_str(),
 										 key_name.c_str(),
 										 * key->description() ? ":" : "",
 										 key->description());

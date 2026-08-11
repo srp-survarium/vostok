@@ -6,12 +6,13 @@
 #define WEAPON_SOUND_EVENTS_HANDLER_STATE_COOK_H_INCLUDED
 
 #include <vostok/resources_cook_classes.h>
+#include <vostok/animation/api.h>
+#include <vostok/animation/cubic_spline_skeleton_animation.h>
+#include <vostok/game_core/weapon_state_creation_params.h>
 
 #include "weapon_sound_events_handler_state.h"
 
 namespace survarium {
-
-struct weapon_state_creation_params;
 
 // Per-state resource class id for the sound-cook ctor; specialized per wrapped
 // logic state. Inlines to the literal in every ctor (no standalone symbol in the
@@ -39,13 +40,54 @@ template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_co
 template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_fire_state					> >( )	{ return resources::pistol_weapon_fire_state_class;					}
 template <>	inline	resources::class_id_enum	weapon_sound_events_handler_state_cook_class< weapon_sound_events_handler_state< pistol_weapon_core_aimed_fire_state			> >( )	{ return resources::pistol_weapon_aimed_fire_state_class;			}
 
+float reload_animation_time_scale_calculator( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
+float fire_animation_time_scale_calculator( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
+float shotgun_reload_timescale_calculator( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
+float always_unit_timescale_calculator( resources::managed_resource_ptr const& arg_0, weapon_state_creation_params const& arg_1 );
+
+typedef float ( &weapon_sound_events_handler_state_animation_time_scale_calculator_type )(
+	resources::managed_resource_ptr const&,
+	weapon_state_creation_params const&
+);
+
+template < typename T >
+struct weapon_sound_events_handler_state_cook_traits;
+
+#define DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( state_type, weapon_count, user_count ) \
+	template < > struct weapon_sound_events_handler_state_cook_traits< weapon_sound_events_handler_state< state_type > > { \
+		enum { weapon_animations_count = weapon_count, user_animations_count = user_count, animations_count = weapon_count + user_count }; \
+		typedef weapon_sound_events_handler_state_animation_time_scale_calculator_type animation_time_scale_calculator_type; \
+		static animation_time_scale_calculator_type animation_time_scale_calculator; \
+	}
+
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_show_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_hide_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_reload_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_chamber_a_round_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_chamber_a_round_aimed_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_fire_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_aimed_fire_state, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_shotgun_reload_start_substate, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_shotgun_reload_one_round_substate, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( weapon_core_shotgun_reload_finish_substate, 4, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( pistol_weapon_core_show_state, 8, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( pistol_weapon_core_hide_state, 8, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( pistol_weapon_core_reload_state, 8, 8 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( pistol_weapon_core_fire_state, 8, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( pistol_weapon_core_aimed_fire_state, 8, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_show_state, 12, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_hide_state, 12, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_reload_state, 8, 8 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_fire_state, 8, 4 );
+DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS( double_barreled_weapon_core_aimed_fire_state, 8, 4 );
+
+#undef DECLARE_WEAPON_SOUND_STATE_COOK_TRAITS
+
 // T is a weapon_sound_events_handler_state< state > instantiation
 template < typename T >
 class weapon_sound_events_handler_state_cook : public resources::unmanaged_cook , public boost::noncopyable {
 public:
 	struct config_params {
-		inline	config_params	( ) { /* no source */ }
-
 	public:
 		/* 0x0000 */	bool	stop_sounds_on_state_finalize;
 		/* 0x0001 */	u8		simultaneous_sounds_queue_size;
@@ -82,12 +124,6 @@ private:
 public:
 	virtual						~weapon_sound_events_handler_state_cook	( ) { /* no source */ }
 }; // class weapon_sound_events_handler_state_cook
-
-// animation time-scale calculators (defined in weapon_sound_events_handler_state_cook.cpp)
-float	reload_animation_time_scale_calculator	( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
-float	fire_animation_time_scale_calculator	( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
-float	shotgun_reload_timescale_calculator		( resources::managed_resource_ptr const& reload_animation, weapon_state_creation_params const& params );
-float	always_unit_timescale_calculator		( resources::managed_resource_ptr const& arg_0, weapon_state_creation_params const& arg_1 );
 
 } // namespace survarium
 

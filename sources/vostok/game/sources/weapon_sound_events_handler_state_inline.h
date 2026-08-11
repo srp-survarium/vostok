@@ -74,7 +74,6 @@ template < typename T >
 void weapon_sound_events_handler_state< T >::initialize( )
 {
 	T::initialize( );
-
 	m_sound_effect.initialize( );
 	this->m_weapon.set_animation_callback( "sound_events", &m_sound_effect, boost::bind( &weapon_sound_effect::on_sound_event, &m_sound_effect, _1 ) );
 }

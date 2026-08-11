@@ -85,7 +85,7 @@ private:
 	// editor
 	virtual	pcstr			get_resources_path		( ) const;
 	virtual	void			enable_game				( bool value );
-	virtual	void 			load_level				( pcstr project_resource_name, pcstr project_resource_path=NULL );
+	virtual	void 			load_level				( pcstr project_resource_name );
 	virtual	void 			unload_level			( );
 	virtual bool			is_application_active	( );
 	virtual	void			run_renderer_commands	( );

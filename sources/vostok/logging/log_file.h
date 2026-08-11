@@ -14,8 +14,13 @@
 
 namespace vostok {
 
+namespace logging {
+	class log_file;
+} // namespace logging
+
 namespace core {
 	enum log_file_usage;
+	extern logging::log_file* g_log_file;
 } // namespace core
 
 namespace memory {
@@ -108,6 +113,7 @@ VOSTOK_LOGGING_API	log_file*		new_log_file		(
 										log_file_usage_enum					log_file_usage
 									);
 VOSTOK_LOGGING_API	void			delete_log_file		( log_file*& log_file );
+inline log_file* get_log_file( ) { return core::g_log_file; }
 
 
 } // namespace logging

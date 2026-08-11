@@ -120,10 +120,7 @@ public:
 
 	inline	float								last_frame_time					( ) const { /* no source */ return m_last_frame_time; }
 
-	// target mangling has the one-param shape; our legacy engine_user.h world
-	// interface declares load( pcstr, pcstr = NULL ), so no `override` here
-	// (same family as the input::handler quirk; revisit at TU enablement)
-	virtual	void								load							( pcstr project_resource_name );
+	virtual	void								load							( pcstr project_resource_name ) override;
 			void								load							(
 													pcstr						project_resource_name,
 													resources::request*			requests_begin,
@@ -135,7 +132,6 @@ public:
 	// PDB: first param __formal, genuinely unused
 	virtual	void								unload							( pcstr __formal, bool destroying ) override;
 
-	// not in our legacy engine_user.h world interface (see load above)
 	virtual	bool								is_loading						( ) const;
 
 			void								load_config_query				( pcstr cfg_name, bool create_renderer );

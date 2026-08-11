@@ -8,13 +8,6 @@
 #include <vostok/collision/api.h>
 
 #include <vostok/configs_binary_config_value.h>
-#include <vostok/managed_allocator.h>
-
-#include <vostok/render/facade/one_way_render_channel.h>
-#include <vostok/render/world.h>
-#include <vostok/render/engine/world.h>
-#include <vostok/render/facade/debug_renderer.h>
-
 #include <vostok/animation/skeleton.h>
 
 // use_collision_shape exercises the physics shape factory (physics:: free funcs).
@@ -61,19 +54,6 @@ namespace vostok
 		ao.get_bones_count();
 		ao.get_aabb();
 		ao.get_geometry();
-
-		render::scene_ptr scene = vostok::render::scene_ptr();
-		memory::managed_allocator alloc = memory::managed_allocator(100, 100);
-		render::one_way_render_channel channel = render::one_way_render_channel(alloc);
-		configs::binary_config_ptr render_config;
-		render::engine::world world = render::engine::world(render_config, false);
-		// claude@NOTE: debug::renderer's ctor is private in the target and is reachable only
-		// through its friends (game::renderer NEWs it), so this anchor must not construct
-		// one - it only needs the reference to keep draw_collision referenced.
-		render::debug::renderer* renderer = NULL;
-
-		float4x4 transform;
-		ao.draw_collision(scene, *renderer, transform);
 
 		ao.get_random_surface_point(10);
 		ao.get_head_bone_center();

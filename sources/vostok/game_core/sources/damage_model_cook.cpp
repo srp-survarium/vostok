@@ -208,7 +208,6 @@ static void fill_body_part_parameters(
 	}
 }
 
-// sushi@NOTE: Possibly requires proper casts
 static body_part_parameters* create_body_part_parameters(
 	memory::stack_allocator*				allocator,
 	configs::binary_config_value const&		part_value,

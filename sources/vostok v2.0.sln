@@ -257,6 +257,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "render_core_pc_dx11", "vostok\render\core\dx11\sources\render_core_pc_dx11.vcproj", "{056D4C47-10DD-49AD-8213-8201E2114B06}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "render_engine_pc_dx11", "vostok\render\engine\sources\render_engine_pc_dx11.vcproj", "{10688643-85EA-4C0B-A19C-FFE025323791}"
+	ProjectSection(ProjectDependencies) = postProject
+		{9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0} = {9CE08AA4-9163-4A42-BCBF-E361B5BA5BC0}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "rms_generator", "vostok\rms_generator\sources\rms_generator.vcproj", "{951FE628-A044-4AB5-86E6-253295216330}"
 	ProjectSection(ProjectDependencies) = postProject

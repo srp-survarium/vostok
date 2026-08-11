@@ -93,9 +93,11 @@ namespace ui {
 				*c = std::max(string_size, *c);
 				++c;
 				for(text_tree_column_item* column=column_items.front(); column; ++c, column=column_items.get_next_of_object(column))
-					*c = std::max(str_length(m_font, column->value), *c);
+					if(c != cols.end())
+						*c = std::max(str_length(m_font, column->value), *c);
 			}
 		}
+
 
 		void create_window(pcstr text, float2 pos, float2 sz)
 		{
@@ -144,7 +146,8 @@ namespace ui {
 						string_size = str_length(m_font, column->value);
 						sz = float2(string_size, m_params.row_height);
 						create_window(column->value, pos, sz);
-						offset += *c;
+						if(c != cols.end())
+							offset += *c;
 					}
 	
 					m_page_width = std::max(offset, m_page_width);

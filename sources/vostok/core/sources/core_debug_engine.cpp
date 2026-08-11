@@ -95,7 +95,13 @@ u32		core_debug_engine::build_station_build_id	() const
 
 void	core_debug_engine::flush_log_file			(pcstr file_name) const
 {
-	// sushi@TODO: logging::flush_log_file							(file_name);
+	if ( g_log_file ) {
+		g_log_file->flush					( NULL );
+		if ( file_name )
+			g_log_file->flush				( file_name );
+
+		core_engine_flush					( );
+	}
 }
 
 bool	core_debug_engine::is_testing				( ) const

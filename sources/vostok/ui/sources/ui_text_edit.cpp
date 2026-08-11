@@ -70,12 +70,21 @@ bool ui_text_edit::on_focus(window* w, int p1, int p2)
 	return						true;
 }
 
-void ui_text_edit::set_text( pcstr text )
+void ui_text_edit::set_text( pcstr str )
 {
-	if( 0!= strings::compare_insensitive(m_text.c_str(), text) )
+	if( 0!= strings::compare_insensitive(m_text.c_str(), str) )
 	{
 		m_text.clear	( );
-		m_text.set		( text );
+
+		if( strings::length( str ) > m_max_chars_count )
+		{
+			pstr new_str = strings::duplicate( allocator(), str );
+			new_str[m_max_chars_count] = 0;
+			m_text.set( new_str );
+			VOSTOK_FREE_IMPL( allocator(), new_str );
+		}else
+			m_text.set( str );
+
 		process_event	(ev_text_changed, 0, 0);
 		u16 str_len		= m_text.length();
 
@@ -85,7 +94,7 @@ void ui_text_edit::set_text( pcstr text )
 		if(!m_b_undo)
 		{
 			m_undo_history.resize		(m_undo_history.size()+1);
-			m_undo_history.back().text	= strings::duplicate(allocator(), text);
+			m_undo_history.back().text	= strings::duplicate(allocator(), m_text.c_str());
 			m_undo_history.back().caret = m_caret_pos;
 			
 			if(!m_b_redo)
