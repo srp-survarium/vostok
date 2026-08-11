@@ -76,12 +76,23 @@ class InstructionStreamExactTests(unittest.TestCase):
         empty = {"size": 0, "instructions": []}
         self.assertFalse(MATCH_DB.instruction_stream_exact(empty, empty))
 
+    def test_accepts_equivalent_operator_delete_pdb_spellings(self):
+        target = self.record(text="call  operator delete")
+        base = self.record(text="call  ??3@YAXPAX@Z")
+        self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
+
 
 class StrictSourceAliasCandidateTests(unittest.TestCase):
-    def record(self, file="scaleform/src/render/render_matrix2x4.h", text="ret   4"):
+    def record(
+        self,
+        file="scaleform/src/render/render_matrix2x4.h",
+        text="ret   4",
+        rva=0x1234,
+    ):
         return {
             "name": "Scaleform::Render::Matrix2x4<float>::Matrix2x4<float>(copy)",
             "file": file,
+            "rva": rva,
             "size": 3,
             "instructions": [{"off": 0, "len": 3, "text": text}],
         }
@@ -119,6 +130,65 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
                 target, aliases, {0x1234}, allow_used=True
             ),
             [base],
+        )
+
+    def test_accepts_different_owner_for_shared_multi_name_icf_cluster(self):
+        target = self.record(file="vostok/animation/sources/cook.cpp", rva=0x1000)
+        base = self.record(file="vostok/memory_buffer.h", rva=0x2000)
+        aliases = {target["name"]: {base["rva"]: base}}
+        target_names = {
+            target["rva"]: {target["name"], "vostok::physics::folded destructor"}
+        }
+        base_names = {
+            base["rva"]: {target["name"], "vostok::physics::folded destructor"}
+        }
+
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target,
+                aliases,
+                set(),
+                target_alias_names_by_rva=target_names,
+                base_alias_names_by_rva=base_names,
+            ),
+            [base],
+        )
+
+    def test_rejects_different_owner_without_shared_multi_name_cluster(self):
+        target = self.record(file="first.cpp", rva=0x1000)
+        base = self.record(file="second.cpp", rva=0x2000)
+        aliases = {target["name"]: {base["rva"]: base}}
+
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target,
+                aliases,
+                set(),
+                target_alias_names_by_rva={target["rva"]: {target["name"]}},
+                base_alias_names_by_rva={base["rva"]: {target["name"]}},
+            ),
+            [],
+        )
+
+    def test_rejects_different_owner_when_alias_clusters_only_overlap(self):
+        target = self.record(file="first.cpp", rva=0x1000)
+        base = self.record(file="second.cpp", rva=0x2000)
+        aliases = {target["name"]: {base["rva"]: base}}
+        shared = "vostok::resources::resource_ptr<T>::~resource_ptr<T>()"
+
+        self.assertEqual(
+            MATCH_DB.strict_source_alias_candidates(
+                target,
+                aliases,
+                set(),
+                target_alias_names_by_rva={
+                    target["rva"]: {target["name"], shared, "target-only alias"}
+                },
+                base_alias_names_by_rva={
+                    base["rva"]: {target["name"], shared, "base-only alias"}
+                },
+            ),
+            [],
         )
 
 

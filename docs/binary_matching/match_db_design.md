@@ -163,9 +163,15 @@ observation from the rich indexes: target and base must have equal size and an
 identical non-empty ordered stream of normalized `(offset, length, instruction
 text)` tuples. If ICF selected different canonical mangled identities for the
 two RVAs, their rich aliases must also provide a unique unused base RVA with the
-same demangled signature and source file. This is function-scoped evidence for
-COMDAT/source-tree pairing gaps, not a fuzzy estimate; any ambiguous, differently
-owned, differing, or absent stream remains unscored. Structure classification
+same demangled signature and source file. When ICF selects different source
+records as the owner, both RVAs may instead expose the same complete multi-name
+alias cluster; combined with identical complete instruction streams, that
+proves the owner-file difference is linker attribution rather than a same-named
+internal helper. Rich instruction comparison also canonicalizes the PDB's
+demangled and decorated spellings of the same `operator delete` operand. This
+is function-scoped evidence for COMDAT/source-tree pairing gaps,
+not a fuzzy estimate; ambiguous, differently owned without shared-cluster
+evidence, differing, or absent streams remain unscored. Structure classification
 remains independent, so exact bytes do not suppress a `QUANTITY` warning.
 
 - The same effective hash retains `max(old, current)`.

@@ -587,30 +587,77 @@ def instruction_stream_exact(target_rec, base_rec):
     if not target_instructions or target_rec.get("size") != base_rec.get("size"):
         return False
 
+    def normalized_text(text):
+        parts = text.split(None, 1)
+        if len(parts) == 2 and parts[0] in {"call", "jmp"}:
+            operand = {
+                "operator delete": "??3@YAXPAX@Z",
+            }.get(parts[1], parts[1])
+            return f"{parts[0]} {operand}"
+        return text
+
     def identity(instructions):
         return [
-            (ins.get("off"), ins.get("len"), ins.get("text"))
+            (ins.get("off"), ins.get("len"), normalized_text(ins.get("text", "")))
             for ins in instructions
         ]
 
     return identity(target_instructions) == identity(base_instructions)
 
 
+def shared_icf_alias_owner_compatible(
+    target_rec, base_rec, target_alias_names_by_rva, base_alias_names_by_rva
+):
+    """Prove an owner-file mismatch is only a shared ICF alias choice.
+
+    A single matching demangled spelling is insufficient because unrelated
+    internal helpers can have the same readable name in different TUs. When
+    both RVAs expose the same two-or-more-name alias cluster, however, the PDBs
+    identify the same folded body even if each linker selected a different
+    source record as its owner.
+    """
+    if not target_alias_names_by_rva or not base_alias_names_by_rva:
+        return False
+    target_names = target_alias_names_by_rva.get(target_rec["rva"], set())
+    base_names = base_alias_names_by_rva.get(base_rec["rva"], set())
+    return (
+        target_names == base_names
+        and target_rec["name"] in target_names
+        and len(target_names) >= 2
+    )
+
+
 def strict_source_alias_candidates(
-    target_rec, base_aliases_by_name, used_base_rvas, allow_used=False
+    target_rec,
+    base_aliases_by_name,
+    used_base_rvas,
+    allow_used=False,
+    target_alias_names_by_rva=None,
+    base_alias_names_by_rva=None,
 ):
     """Find exact same-source bodies hidden behind a different ICF name.
 
     A folded RVA may inherit another function's mangled identity independently
     on each side.  The PDB still records every alias's demangled signature and
-    source owner, so a unique same-name, same-file, byte-exact rich record is
-    sufficient function-scoped attribution without relying on fuzzy history.
+    source owner, so a unique same-name, byte-exact rich record is sufficient
+    when it either has the same source file or both RVAs expose the same
+    multi-name ICF alias cluster. The latter proves differing owner files came
+    from linker alias selection, not a same-named internal helper in another
+    TU.
     """
     return [
         rec
         for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
         if (allow_used or rva not in used_base_rvas)
-        and rec["file"] == target_rec["file"]
+        and (
+            rec["file"] == target_rec["file"]
+            or shared_icf_alias_owner_compatible(
+                target_rec,
+                rec,
+                target_alias_names_by_rva,
+                base_alias_names_by_rva,
+            )
+        )
         and instruction_stream_exact(target_rec, rec)
     ]
 
@@ -754,7 +801,8 @@ def regen():
                     "built) - run rebuild.py first; refreshing anyway")
 
     log("loading rich indexes ...")
-    target = load_index(TARGET_IDX)
+    target_records = load_index_records(TARGET_IDX)
+    target = index_by_mangled(target_records)
     base_records = load_index_records(BASE_IDX)
     base = index_by_mangled(
         base_records,
@@ -915,6 +963,12 @@ def regen():
     base_aliases_by_name = {}
     for rec in base_records:
         base_aliases_by_name.setdefault(rec["name"], {})[rec["rva"]] = rec
+    target_alias_names_by_rva = {}
+    for rec in target_records:
+        target_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
+    base_alias_names_by_rva = {}
+    for rec in base_records:
+        base_alias_names_by_rva.setdefault(rec["rva"], set()).add(rec["name"])
     n_alias = 0
     for tm in sorted(set(target) - paired_primary):
         if tm not in fuzzy_by_mangled:
@@ -954,7 +1008,11 @@ def regen():
         if trec["rva"] in used_target_rvas:
             continue
         candidates = strict_source_alias_candidates(
-            trec, base_aliases_by_name, used_base_rvas
+            trec,
+            base_aliases_by_name,
+            used_base_rvas,
+            target_alias_names_by_rva=target_alias_names_by_rva,
+            base_alias_names_by_rva=base_alias_names_by_rva,
         )
         if len(candidates) != 1:
             continue
@@ -986,7 +1044,12 @@ def regen():
         if trec["rva"] in used_target_rvas:
             continue
         candidates = strict_source_alias_candidates(
-            trec, base_aliases_by_name, used_base_rvas, allow_used=True
+            trec,
+            base_aliases_by_name,
+            used_base_rvas,
+            allow_used=True,
+            target_alias_names_by_rva=target_alias_names_by_rva,
+            base_alias_names_by_rva=base_alias_names_by_rva,
         )
         if len(candidates) != 1 or candidates[0]["rva"] not in used_base_rvas:
             continue
