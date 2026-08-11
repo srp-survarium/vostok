@@ -175,8 +175,15 @@ u32	res_render_output::select_presentation_interval	()
 
 void res_render_output::goto_fullscreen( )
 {
-	// FUNCTION BODY[0x55ac70]
-	set_size( width( ), height( ), true, true );
+	if ( m_swap_chain && m_window && !m_windowed )
+	{
+		CHECK_RESULT(
+			m_swap_chain->SetFullscreenState(
+				!m_windowed,
+				device::ref().get_output( options::ref().current.m_monitor_index )
+			)
+		);
+	}
 }
 
 res_render_output::~res_render_output	( )
