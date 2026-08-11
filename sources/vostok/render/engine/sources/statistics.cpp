@@ -405,10 +405,8 @@ statistics::statistics( ) :
 	visibility_stat_group( "visibility statistics" ),
 	general_stat_group( "general statistics" ),
 	debug_stat_group( "debug statistics" ),
-	m_max_string_width( 0 ),
-	m_max_string_height( 0 )
+	m_max_string_width( 0 )
 {
-	// FUNCTION BODY[0x63a590]
 }
 
 void statistics::start( )
