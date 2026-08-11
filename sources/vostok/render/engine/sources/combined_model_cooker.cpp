@@ -12,7 +12,8 @@ namespace vostok {
 namespace render {
 // 10 target lines are likely retail-compiled-out source.
 skeleton_combined_model_cook::skeleton_combined_model_cook( ) : resources::translate_query_cook( resources::skeleton_combined_model_class, reuse_true, use_current_thread_id )
-{ resources::register_cook( this );
+{
+	resources::register_cook( this );
 }
 
 
@@ -43,7 +44,8 @@ void skeleton_combined_model_cook::translate_query( resources::query_result_for_
 
 
 void build_from_config( configs::binary_config_ptr& cfg, skeleton_combined_cook_data* cook_data )
-{ configs::binary_config_value root = cfg->get_root( );
+{
+	configs::binary_config_value root = cfg->get_root( );
 	cook_data->skeleton_name.assignf( "resources/animations/%s", (pcstr)root["skeleton"] );
 	cook_data->bind_pose_name.assignf( "resources/models/%s.skinned_model/render/bind_pose", (pcstr)root["bind_pose"] );
 	cook_data->models_count = (u8)root["parts"].size( );
@@ -58,7 +60,8 @@ void build_from_config( configs::binary_config_ptr& cfg, skeleton_combined_cook_
 }
 // 3 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_config_loaded( resources::queries_result& result, resources::query_result_for_cook* parent )
-{ if ( !result.is_successful( ) )
+{
+	if ( !result.is_successful( ) )
 	{
 		parent->finish_query( result_error );
 		return;
@@ -144,7 +147,8 @@ static enum_vertex_input_type mesh_type_to_vertex_input_type( mesh_type_enum typ
 }
 // 4 target lines are likely retail-compiled-out source.
 void skeleton_combined_model_cook::on_resources_loaded( resources::queries_result& data, resources::query_result_for_cook* parent, skeleton_combined_cook_data* cook_data )
-{ if ( !data.is_successful( ) )
+{
+	if ( !data.is_successful( ) )
 	{
 		parent->finish_query( result_error );
 		return;
@@ -240,11 +244,14 @@ void skeleton_combined_model_cook::on_material_effects_loaded( resources::querie
 
 
 void skeleton_combined_model_cook::delete_resource( resources::resource_base* resource )
-{ DELETE( resource );
+{
+	render_model* model = static_cast_checked< render_model* >( resource );
+	DELETE( model );
 }
 // 4 target lines are likely retail-compiled-out source.
 skeleton_combined_render_model_instance_cook::skeleton_combined_render_model_instance_cook( ) : resources::translate_query_cook( resources::skeleton_combined_render_model_instance_class, reuse_false, use_current_thread_id )
-{ resources::register_cook( this );
+{
+	resources::register_cook( this );
 }
 
 
@@ -265,7 +272,8 @@ void skeleton_combined_render_model_instance_cook::translate_query( resources::q
 
 
 void skeleton_combined_render_model_instance_cook::on_resources_loaded( resources::queries_result& data, resources::query_result_for_cook* parent )
-{ if ( !data.is_successful( ) )
+{
+	if ( !data.is_successful( ) )
 	{
 		parent->finish_query( result_error );
 		return;
@@ -281,11 +289,14 @@ void skeleton_combined_render_model_instance_cook::on_resources_loaded( resource
 
 
 void skeleton_combined_render_model_instance_cook::delete_resource( resources::resource_base* resource )
-{ DELETE( resource );
+{
+	skeleton_render_model_instance* instance = static_cast_checked< skeleton_render_model_instance* >( resource );
+	DELETE( instance );
 }
 // 7 target lines are likely retail-compiled-out source.
 skeleton_combined_model_instance_cook::skeleton_combined_model_instance_cook( ) : resources::translate_query_cook( resources::skeleton_combined_model_instance_class, reuse_false, use_current_thread_id )
-{ resources::register_cook( this );
+{
+	resources::register_cook( this );
 }
 
 
@@ -319,12 +330,15 @@ void skeleton_combined_model_instance_cook::translate_query( resources::query_re
 
 
 void skeleton_combined_model_instance_cook::delete_resource( resources::resource_base* resource )
-{ DELETE( resource );
+{
+	skeleton_model_instance* instance = static_cast_checked< skeleton_model_instance* >( resource );
+	DELETE( instance );
 }
 
 
 void skeleton_combined_model_instance_cook::on_resources_loaded( resources::queries_result& data, resources::query_result_for_cook* parent_query )
-{ if ( !data.is_successful( ) )
+{
+	if ( !data.is_successful( ) )
 	{
 		parent_query->finish_query( result_error );
 		return;
