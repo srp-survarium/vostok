@@ -1,7 +1,7 @@
 #include "pch.h"
 
 // Game-module /OPT:REF reachability anchor for the NPC / animation cluster
-// (human_npc, human_npc_cook, animations_selector, ai_sound_player). The real
+// (human_npc, animations_selector, ai_sound_player). The real
 // game call graph does not yet reach these out-of-line bodies, so without a
 // reference /OPT:REF strips them and the delinker has nothing to pair against
 // the target (every function shows `unpaired`). use_game_npc() touches each
@@ -12,7 +12,6 @@
 // friends are constructed by the real game world / ai cooks.
 
 #include "human_npc.h"
-#include "human_npc_cook.h"
 #include "animations_selector.h"
 #include "ai_sound_player.h"
 #include "game_world.h"
@@ -75,16 +74,6 @@ namespace vostok
 		survarium::human_npc::npc_game_attributes			attrs;
 		survarium::human_npc::npc_game_attributes			attrs2;
 		attrs = attrs2;
-
-		// ----- human_npc_cook : ctor + vtable (translate_query / delete_resource);
-		// member-ptr sinks for the non-virtual queried/options/subresources handlers.
-		survarium::human_npc_cook							cook( world );
-		void ( survarium::human_npc_cook::* const c_queried )( resources::queries_result& )	= &survarium::human_npc_cook::on_queried_data_received;
-		void ( survarium::human_npc_cook::* const c_options )( configs::binary_config_value const&, resources::query_result_for_cook& )	= &survarium::human_npc_cook::on_npc_options_received;
-		void ( survarium::human_npc_cook::* const c_subres )( resources::queries_result&, survarium::human_npc* const )	= &survarium::human_npc_cook::on_subresources_loaded;
-		s_sink = *( pcvoid const* )&c_queried;
-		s_sink = *( pcvoid const* )&c_options;
-		s_sink = *( pcvoid const* )&c_subres;
 
 		// ----- animations_selector : embeds the single_position/simple animation
 		// controllers; constructing it forces their (matched-later) vtables to emit, so
