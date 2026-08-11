@@ -1082,7 +1082,7 @@ void engine::world::remove_model( base_scene_ptr const& in_scene, render_model_i
 	scene->remove_model( model);
 }
 
-enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::virtual_path_string const& subsurface_name )
+static enum_vertex_input_type speedtree_subsurface_name_to_vertex_input_type( fs_new::virtual_path_string const& subsurface_name )
 {
 	if ( subsurface_name == "branch" ||
 		 subsurface_name == "frond" ||

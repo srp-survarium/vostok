@@ -37,7 +37,7 @@ static_render_surface::static_render_surface( bool colored )
 }
 
 template < u32 Size >
-bool read_diffuse_colors(
+static bool read_diffuse_colors(
 	material_effects_instance_ptr		m_materail_effects_instance,
 	math::color (&results)[Size][Size]
 )
@@ -147,7 +147,7 @@ static float frac( float f )
 }
 
 template < u32 Size >
-math::color interpolated_color(
+static math::color interpolated_color(
 	math::color (&color_grid)[Size][Size],
 	const float2 uv
 )
@@ -170,7 +170,7 @@ template math::color interpolated_color< 64 >(
 );
 
 template < typename StaticVertex, typename OptimizedVertex >
-void create_shadow_pass_geometry_type(
+static void create_shadow_pass_geometry_type(
 	render_geometry&					in_render_geometry,
 	pcbyte								data,
 	const u32							num_vertices,
@@ -205,7 +205,7 @@ void create_shadow_pass_geometry_type(
 }
 
 template < typename StaticVertex >
-void fill_static_lpv_vertex_color(
+static void fill_static_lpv_vertex_color(
 	batched_geometry_interface*			in_out_lpv_geometry,
 	render_geometry&					in_render_geometry,
 	material_effects_instance_ptr&		in_materail_effects_instance,
@@ -350,7 +350,7 @@ void static_render_surface::fill_lpv_vertex_color( batched_geometry_interface* i
 }
 
 template < typename StaticVertex >
-void fill_source_vertices_impl(
+static void fill_source_vertices_impl(
 	render_geometry&					in_render_geometry,
 	vector< batched_vertex_source >&	out_vertices,
 	vector< u16 >&						out_indices
@@ -419,7 +419,7 @@ void fill_source_vertices_impl(
 	FREE( indices_temp_data );
 }
 
-void fill_source_vertices(
+static void fill_source_vertices(
 	const enum_vertex_input_type		in_vertex_input_type,
 	render_geometry&					in_render_geometry,
 	vector< batched_vertex_source >&	out_vertices,

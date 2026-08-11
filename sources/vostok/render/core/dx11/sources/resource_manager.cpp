@@ -141,7 +141,7 @@ bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
 	return false;
 }
 
-bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
+static bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
 {
 	// FUNCTION BODY[0x560990]
 	bool is_srgb_option			= false;
@@ -484,7 +484,7 @@ resource_manager::~resource_manager( )
 #endif // #ifndef MASTER_GOLD
 }
 
-void change_substring( fs_new::virtual_path_string* src_and_dest, pcstr what, pcstr to )
+static void change_substring( fs_new::virtual_path_string* src_and_dest, pcstr what, pcstr to )
 {
 	// FUNCTION BODY[0x560c30]
 	vostok::fs_new::virtual_path_string result;
@@ -500,7 +500,7 @@ void change_substring( fs_new::virtual_path_string* src_and_dest, pcstr what, pc
 	}
 }
 
-res_texture_ptr create_color_grading_base_lut( u32 const size )
+static res_texture_ptr create_color_grading_base_lut( u32 const size )
 {
 	// FUNCTION BODY[0x561b20]
 	struct pixel
@@ -679,7 +679,7 @@ res_texture* resource_manager::create_texture(
 static pcstr resources_textures_converted_string	=	"resources.converted/textures/";
 static pcstr resources_textures						=	"resources/textures/";
 
-void fix_texture_name( fs_new::virtual_path_string& str )
+static void fix_texture_name( fs_new::virtual_path_string& str )
 {
 	// FUNCTION BODY[0x560e90]
 	change_substring(&str, resources_textures, "");
@@ -689,7 +689,7 @@ void fix_texture_name( fs_new::virtual_path_string& str )
 		str.set_length(pos);
 }
 
-u32 calc_bytes_per_block( DXGI_FORMAT format )
+static u32 calc_bytes_per_block( DXGI_FORMAT format )
 {
 	switch ( format ) {
 		case DXGI_FORMAT_R8_UNORM:
@@ -707,7 +707,7 @@ u32 calc_bytes_per_block( DXGI_FORMAT format )
 	}
 }
 
-u32 calc_block_size( DXGI_FORMAT format )
+static u32 calc_block_size( DXGI_FORMAT format )
 {
 	switch ( format ) {
 		case DXGI_FORMAT_R8_UNORM:
@@ -723,7 +723,7 @@ u32 calc_block_size( DXGI_FORMAT format )
 	}
 }
 
-DXGI_FORMAT find_srgb_format( DXGI_FORMAT format, bool )
+static DXGI_FORMAT find_srgb_format( DXGI_FORMAT format, bool )
 {
 	switch ( format ) {
 		case DXGI_FORMAT_R8G8B8A8_UNORM:

@@ -311,7 +311,7 @@ fs_new::virtual_path_string options::get_current_configuration( )
 	return file_name;
 }
 
-math::uint2 parse_resolution( pcstr in_str )
+static math::uint2 parse_resolution( pcstr in_str )
 {
 	char xy_str[16];
 
@@ -595,13 +595,13 @@ void options::on_config_loaded( resources::queries_result& data )
 	load_impl					( F );
 }
 
-bool is_line_term( char a )
+static bool is_line_term( char a )
 {
 	// FUNCTION BODY[0x55c9b0]
 	return (a==13)||(a==10);
 }
 
-u32 advance_term_string( memory::reader& F )
+static u32 advance_term_string( memory::reader& F )
 {
 	// FUNCTION BODY[0x55cd60]
 	u32 sz		= 0;
@@ -619,7 +619,7 @@ u32 advance_term_string( memory::reader& F )
 	return sz;
 }
 
-void r_string( memory::reader& F, char (&dest)[4096] )
+static void r_string( memory::reader& F, char (&dest)[4096] )
 {
 	// FUNCTION BODY[0x55cde0]
 	char *src 	= (char *) F.pointer();

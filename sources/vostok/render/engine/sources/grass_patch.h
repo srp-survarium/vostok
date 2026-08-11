@@ -124,10 +124,6 @@ public:
 
 STATIC_SIZE_ASSERT( grass_patch, 0x40B0 );
 
-bool has_surface_by_lod( grass_render_model_ptr model, u32 lod_index );
-grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 lod_index );
-math::color transform_packed_normal( float4x4 const& transform_matrix, math::color const& packed_normal );
-
 } // namespace render
 } // namespace vostok
 
