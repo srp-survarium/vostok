@@ -165,8 +165,22 @@ fixed_string< 260 > u32_to_string( u32 v )
 
 void statistics_int::print( fs_new::virtual_path_string& out_result )
 {
-	// FUNCTION BODY[0x639520]
-	out_result.assignf("%s: %d", m_name.c_str(), average());
+	value_num_max_digits = u8( math::max( 1u, math::max( u32( value_num_max_digits ), get_num_digits( value ) ) ) );
+	max_value_num_max_digits = u8( math::max( 1u, math::max( u32( max_value_num_max_digits ), get_num_digits( max_value ) ) ) );
+	min_value_num_max_digits = u8( math::max( 1u, math::max( u32( min_value_num_max_digits ), get_num_digits( min_value ) ) ) );
+
+	fixed_string< 260 > rule( "%s: " );
+	rule += "%";
+	rule += u32_to_string( value_num_max_digits );
+	rule += "d (";
+	rule += "%";
+	rule += u32_to_string( min_value_num_max_digits );
+	rule += "d..";
+	rule += "%";
+	rule += u32_to_string( min_value_num_max_digits );
+	rule += "d)";
+
+	out_result.assignf( rule.c_str( ), m_name.c_str( ), value, min_value, max_value );
 }
 
 void statistics_cpu_gpu::print( fs_new::virtual_path_string& out_result )
