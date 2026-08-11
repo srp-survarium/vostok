@@ -73,7 +73,8 @@ void stats_graph::adjust_time_interval( )
 void stats_graph::add_value( const float time, const float value )
 {
 	if ( (m_count > 1) && (time - m_newest_value->next->next->time >= m_time_interval) ) {
-		m_cumulative_value			= m_cumulative_value - m_newest_value->next->value + value;
+		m_cumulative_value			-= m_newest_value->next->value;
+		m_cumulative_value			+= value;
 		m_newest_value				= m_newest_value->next;
 		m_newest_value->time		= time;
 		m_newest_value->value		= value;
