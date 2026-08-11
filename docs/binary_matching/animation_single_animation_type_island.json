@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed single_animation::type from the disposable game_core-before-animation LTCG link. The complete one-statement pinned-resource accessor is recorded as partial MAX evidence.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
+  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
+  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
+  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "functions": [
+    {
+      "mangled": "?type@single_animation@animation@vostok@@UBE?AW4animation_types_enum@23@XZ",
+      "module": "animation",
+      "expected_hash": "01ffe004f93f.9fff9ae0c2fb519e.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 36.96154,
+      "review": "Target and candidate retain the same single attributed return statement and pinned animation/type call chain. The 0x5c-byte target versus 0x5e-byte candidate differs in resource-pin and virtual-call scheduling, so this is partial rather than exact evidence."
+    }
+  ]
+}

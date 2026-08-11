@@ -1,0 +1,25 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed both single_animation::emit overloads from the disposable late game_core-before-animation LTCG link. Their complete reconstructed parameter, lexeme, and expression construction bodies are recorded as partial MAX evidence.",
+  "link_perturbation": "game_core immediately before animation at game_core's late link position; all other libraries and link flags preserved",
+  "report_sha256": "f848bf113ebf7afaf35503e4136d703dc5619c340cbfff86d0cf9ecb802ac71f",
+  "base_index_sha256": "7022a65eb443af9f1c27b5a016d99cc1c33740b974eec944ae6990bd8e2d0b4d",
+  "candidate_exe_sha256": "90d70b5166756eb5671198b9a4e04719820112817e10958eb706b455cdf30ccb",
+  "candidate_pdb_sha256": "e1ae9787dc9a266935b95af2793673044fd5e7bb590cb06ff0531e3bb562c885",
+  "functions": [
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "b372afcb440c.9fff9ae0c2fb519e.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 77.882355,
+      "review": "Target and candidate retain all four attributed body statements: last-animation assignment, parameter construction, lexeme construction, and expression return. The 0x139-byte target versus 0x12c-byte candidate retains different constructor inline boundaries, so this is not exact."
+    },
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AAVanimation_lexeme@523@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "f8301ff2c17e.9fff9ae0c2fb519e.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 72.92727,
+      "review": "Target and candidate retain all three attributed body statements and the target time_driving_animation parameter path. The 0xb9-byte target versus 0xbc-byte candidate groups parameter construction against lexeme/expression construction differently; it remains partial evidence."
+    }
+  ]
+}
