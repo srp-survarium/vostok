@@ -159,13 +159,13 @@ void light::set_range( float value )
 }
 
 void light::set_orientation(
-	float3 const& in_direction,
-	float3 const& in_right
+	float3 const& direction,
+	float3 const& right
 )
 {
 	// FUNCTION BODY[0x601230]
-	direction					= normalize( in_direction );
-	right						= normalize( in_right );
+	this->direction				= normalize_safe( direction, float3( 1.f, 1.f, 1.f ) );
+	this->right					= normalize_safe( right, float3( 1.f, 1.f, 1.f ) );
 }
 
 void light::on_properties_changed( )
