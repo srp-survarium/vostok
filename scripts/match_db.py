@@ -723,6 +723,11 @@ def cross_unit_exact_score(mangled, scores):
     return fuzzy if fuzzy is not None and fuzzy >= 99.995 else None
 
 
+def island_report_score(expected, mangled, scores):
+    """Read a manifested report identity, defaulting to the target spelling."""
+    return report_score_for_target(expected.get("report_mangled", mangled), scores)
+
+
 def sha256_file(path):
     digest = hashlib.sha256()
     with open(path, "rb") as source:
@@ -2157,7 +2162,7 @@ def cmd_import_island(args):
             con.close()
             sys.exit(f"[match_db] island symbol absent from target/base rich index: {mangled}")
 
-        fuzzy = report_score_for_target(mangled, scores)
+        fuzzy = island_report_score(expected, mangled, scores)
         if fuzzy is None and instruction_stream_exact(target_rec, candidate_rec):
             fuzzy = 100.0
         if fuzzy is None:
