@@ -24,23 +24,18 @@ class shader_constant_host;
 class renderer_context {
 public:
 	renderer_context( );
-	~renderer_context( ) { }
 
 	void set_scene( render::scene* in_scene );
 	render::scene* scene( ) { return m_scene; }
 
-	scene_view const* scene_view( ) const;
 	void set_scene_view( base_scene_view_ptr view_ptr );
-	render::scene_view* get_scene_view( );
+	scene_view const* scene_view( ) const;
 
 	void create_casceded_shadow_map_buffers( u32 ) { }
 
-	void set_view2shadow( float4x4 const& view2shadow, u32 index );
-	float4x4 const& get_view2shadow( u32 index ) const;
-
 	void set_target_context( renderer_context_targets const* targets_context, bool force_set );
-	void set_time_delta( float time_delta );
-	void set_current_time( float current_time );
+	void clear_resources( );
+
 	void set_w( float4x4 const& matrix );
 	void set_v( float4x4 const& matrix );
 	void set_p( float4x4 const& matrix );
@@ -71,6 +66,9 @@ public:
 	float4x4 const& get_vp( ) const { return m_vp; }
 	float4x4 const& get_culling_vp( ) const { return m_vp; }
 	float4x4 const& get_wvp( ) const { return m_wvp; }
+
+	void set_view2shadow( float4x4 const& view2shadow, u32 index );
+	float4x4 const& get_view2shadow( u32 index ) const;
 
 	float3 const& get_view_pos( ) const { return m_view_pos.xyz( ); }
 	float3 const& get_view_dir( ) const { return m_view_dir.xyz( ); }
@@ -106,14 +104,18 @@ public:
 
 	void reset_matrices( );
 	void update_eye_rays( );
-	void clear_resources( );
 
 	u32 get_lighting_material_strtegy( ) { return 0; }
 	float get_shadow_map_z_bias( ) { return 0.0f; }
 
+	void set_time_delta( float time_delta );
+	void set_current_time( float current_time );
+
 	float get_time_delta( ) const { return m_time_delta; }
 	float get_current_time( ) const { return m_current_time; }
 	float4 get_screen_resolution( ) const { return m_screen_resolution; }
+
+	renderer_context_targets const* m_targets;
 
 	render_target_ptr get_rt( enum_render_target_index index )
 	{
@@ -126,11 +128,7 @@ public:
 		return m_targets->m_family[index].texture;
 	}
 
-private:
-	void update_near_far( );
-
 public:
-	renderer_context_targets const*			m_targets;
 	render_target_instance				m_family[rt_num_render_targets];
 	math::uint2						m_current_size;
 	res_texture_ptr						m_t_null;
@@ -143,10 +141,12 @@ public:
 	float								m_time_delta;
 	float								m_current_time;
 	fixed_vector< sun_cascade, 4 >		m_sun_cascades;
+	render::scene_view* get_scene_view( );
 	speedtree_forest::tree_render_info_array_type m_visible_trees;
 
 private:
 	float4							m_near_far_invn_invf;
+	void update_near_far( );
 	render::scene*					m_scene;
 	base_scene_view_ptr				m_scene_view;
 	fixed_vector< float4x4, 16 >		m_w_stack;
@@ -201,6 +201,9 @@ private:
 	shader_constant_host const*			m_c_solid_emission_color;
 	shader_constant_host const*			m_c_scene_time;
 	u32								m_frame_index;
+
+public:
+	~renderer_context( ) { }
 };
 
 STATIC_SIZE_ASSERT( renderer_context, 0x4284 );
