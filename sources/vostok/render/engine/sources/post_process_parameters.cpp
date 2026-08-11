@@ -14,9 +14,6 @@ namespace render {
 
 post_process_parameters::post_process_parameters( )
 {
-	// FUNCTION BODY[0x7a4e10]
-	// claude@NOTE: legacy #if VOSTOK_PLATFORM_WINDOWS guards dropped (canonical header carries
-	// none); member sets are identical field-for-field
 	dof_height_lights				= vostok::math::float3( 1.0f, 1.0f, 1.0f );
 	dof_focus_power					= 0.6f;
 	dof_focus_region				= 20.0f;
@@ -80,11 +77,14 @@ post_process_parameters::post_process_parameters( )
 	wind_direction					= vostok::math::float3( 1.0f, 0.0f, 1.0f );
 	wind_strength					= 0.25f;
 	use_color_grading_lut			= true;
+	use_environment_skycolor		= false;
+	color_grading_texture			= resource_manager::ref().get_color_grading_base_lut();
+	lens_flares_mask_texture		= 0;
+	sky_clouds_texture				= 0;
+	sun_moon_texture				= 0;
 	for ( u32 i = 0; i < 6; ++i )
 		environment_skycolor[i]		= vostok::math::float4( 0.0f, 0.0f, 0.0f, 0.0f );
 	environment_suncolor			= vostok::math::float4( 0.0f, 0.0f, 0.0f, 0.0f );
-	use_environment_skycolor		= false;
-	color_grading_texture			= resource_manager::ref().get_color_grading_base_lut();
 	sun_moon_color					= vostok::math::float3( 1.0f, 1.0f, 1.0f );
 	sun_moon_billboard_scale		= 1.0f;
 	use_sun_moon_atmosphere_illumination = true;
