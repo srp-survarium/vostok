@@ -22,7 +22,6 @@ grass_render_surface::grass_render_surface( ) :
 	m_indices( 0 ),
 	m_num_indices( 0 )
 {
-	// FUNCTION BODY[0x779890]
 	m_vertex_input_type = grassmesh_vertex_input_type;
 }
 
@@ -76,9 +75,8 @@ void grass_render_surface::load(
 
 grass_render_surface::~grass_render_surface( )
 {
-	// FUNCTION BODY[0x779830]
-	DELETE_ARRAY(m_vertices);
-	DELETE_ARRAY(m_indices);
+	FREE( m_vertices );
+	FREE( m_indices );
 }
 
 void grass_render_model::set_children(
@@ -87,7 +85,6 @@ void grass_render_model::set_children(
 	model_lods_descriptor* lods
 )
 {
-	// FUNCTION BODY[0x7795f0]
 	render_model::set_children(children, count, lods);
 
 	for (u32 i = 0; i < 3; ++i)
@@ -98,9 +95,9 @@ void grass_render_model::set_children(
 		u8 surface_index = lods->m_lod_surfaces[i][0];
 		switch (i)
 		{
-		case 0: m_l0 = static_cast<grass_render_surface*>(children[surface_index]); break;
-		case 1: m_l1 = static_cast<grass_render_surface*>(children[surface_index]); break;
-		case 2: m_l2 = static_cast<grass_render_surface*>(children[surface_index]); break;
+		case 0: m_l0 = static_cast<grass_render_surface*>(children[surface_index]);
+		case 1: m_l1 = static_cast<grass_render_surface*>(children[surface_index]);
+		case 2: m_l2 = static_cast<grass_render_surface*>(children[surface_index]);
 		}
 	}
 
