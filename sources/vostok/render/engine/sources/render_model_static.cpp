@@ -469,8 +469,6 @@ void static_render_surface::add_shadow_vertices( batched_geometry_interface* in_
 void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 num_vertices, const u32 stride )
 {
 	struct static_vertex0 {
-		static_vertex0( ) { }
-
 		float3			position;
 		math::color	normal;
 		math::color	tangent;
@@ -479,13 +477,13 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 	};
 
 	struct colored_static_vertex : public static_vertex0 {
-		colored_static_vertex( ) { }
-
 		math::color	color_component;
 	};
 
 	struct opt_static_vertex {
-		opt_static_vertex( ) { }
+		float3			position;
+		math::color	normal;
+		float2			uv;
 
 		void set( static_vertex0 const& source )
 		{
@@ -493,10 +491,21 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 			normal = source.normal;
 			uv = source.uv;
 		}
+	};
 
+	struct colored_opt_static_vertex {
 		float3			position;
 		math::color	normal;
 		float2			uv;
+		math::color	color;
+
+		void set( colored_static_vertex const& source )
+		{
+			position = source.position;
+			normal = source.normal;
+			uv = source.uv;
+			color = source.color_component;
+		}
 	};
 
 	const D3D11_INPUT_ELEMENT_DESC layout[3] = {
@@ -522,24 +531,6 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 			array_size(layout)
 		);
 	else if (m_vertex_input_type == static_mesh_vertex_colored_input_type)
-	{
-		struct colored_opt_static_vertex {
-			colored_opt_static_vertex( ) { }
-
-			void set( colored_static_vertex const& source )
-			{
-				position = source.position;
-				normal = source.normal;
-				uv = source.uv;
-				color = source.color_component;
-			}
-
-			float3			position;
-			math::color	normal;
-			float2			uv;
-			math::color	color;
-		};
-
 		create_shadow_pass_geometry_type< colored_static_vertex, colored_opt_static_vertex >(
 			m_render_geometry,
 			data,
@@ -548,7 +539,6 @@ void static_render_surface::create_shadow_pass_geometry( pcbyte data, const u32 
 			colored_layout,
 			array_size(colored_layout)
 		);
-	}
 }
 
 void static_render_surface::load( configs::binary_config_value const& properties, memory::chunk_reader& chunk )
