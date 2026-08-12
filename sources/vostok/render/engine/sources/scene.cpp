@@ -50,8 +50,6 @@ struct find_requested_texture_predicate {
 	{
 		return other.texture == m_texture;
 	}
-
-private:
 	res_texture_ptr	m_texture;
 };
 

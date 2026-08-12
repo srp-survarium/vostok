@@ -38,8 +38,6 @@ public:
 	typedef vectora< shader_cache_info > shader_cache_info_vector;
 
 	struct texture_query_desc {
-		texture_query_desc( ) : m_mip_level_cut( 0 ), m_num_last_mips_used( 0 ) { }
-
 		fixed_string<260> m_query_physicaly_path;
 		u32 m_mip_level_cut;
 		u32 m_num_last_mips_used;

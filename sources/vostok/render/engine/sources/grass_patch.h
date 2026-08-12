@@ -30,13 +30,6 @@ struct trample_desc;
 
 struct grass_patch : public boost::noncopyable {
 	struct sort_info {
-		sort_info( ) :
-			position( 0.f, 0.f, 0.f ),
-			index_offset( 0 ),
-			num_indices( 0 )
-		{
-		}
-
 		float3 position;
 		u32 index_offset;
 		u32 num_indices;

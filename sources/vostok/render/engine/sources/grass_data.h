@@ -76,8 +76,6 @@ struct grass_layer_data {
 STATIC_SIZE_ASSERT( grass_layer_data, 0x28 );
 
 struct grass_loading_data {
-	grass_loading_data( ) : t_current( 0 ) { }
-
 	configs::binary_config_value const* t_current;
 	fixed_string<260> project_resources_path;
 };
