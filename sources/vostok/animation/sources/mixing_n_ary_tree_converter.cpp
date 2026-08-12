@@ -438,17 +438,11 @@ void n_ary_tree_converter::fix_weight_driving_animations_with_null_weights( expr
 {
 	u32 animations_count = 1;
 	u32 synchronization_group_id = m_animations_root->weight_synchronization_group_id();
-	for (
-		binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation;
-		animation;
-		animation = animation->m_next_weight_animation
-	)
-	{
+	for ( binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation; animation; animation = animation->m_next_weight_animation ) {
 		if ( animation->m_null_weight_found )
 			continue;
 
-		u32 const current_group_id = animation->weight_synchronization_group_id();
-		if ( current_group_id == synchronization_group_id )
+		u32 const current_group_id = animation->weight_synchronization_group_id(); if ( current_group_id == synchronization_group_id )
 			continue;
 		if ( current_group_id == u32( -1 ) )
 			break;
@@ -469,17 +463,11 @@ void n_ary_tree_converter::fix_weight_driving_animations_with_null_weights( expr
 	);
 
 	synchronization_group_id = m_animations_root->weight_synchronization_group_id();
-	for (
-		binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation;
-		animation;
-		animation = animation->m_next_weight_animation
-	)
-	{
+	for ( binary_tree_animation_node_ptr animation = m_animations_root->m_next_weight_animation; animation; animation = animation->m_next_weight_animation ) {
 		if ( animation->m_null_weight_found )
 			continue;
 
-		u32 const current_group_id = animation->weight_synchronization_group_id();
-		if ( current_group_id == synchronization_group_id )
+		u32 const current_group_id = animation->weight_synchronization_group_id(); if ( current_group_id == synchronization_group_id )
 			continue;
 		if ( current_group_id == u32( -1 ) )
 			break;
@@ -496,34 +484,27 @@ void n_ary_tree_converter::fix_weight_driving_animations_with_null_weights( expr
 	binary_tree_weight_driving_animation_getter weight_driving_animation_getter( animations );
 	expression.node().accept( weight_driving_animation_getter );
 
-	for (
-		binary_tree_animation_node_ptr animation = m_animations_root;
-		animation;
-		animation = animation->m_next_weight_animation
-	)
-	{
+	for ( binary_tree_animation_node_ptr animation = m_animations_root; animation; animation = animation->m_next_weight_animation ) {
 		if ( animation->m_null_weight_found )
 			continue;
 
-		u32 const current_group_id = animation->weight_synchronization_group_id();
-		if ( current_group_id == u32( -1 ) )
+		if ( animation->weight_synchronization_group_id() == u32( -1 ) )
 			break;
 
 		weight_driving_animations::iterator const found = std::lower_bound(
 			animations.begin(),
 			animations.end(),
-			current_group_id,
+			animation->weight_synchronization_group_id(),
 			find_weight_driving_animation_predicate()
 		);
 		R_ASSERT( found != animations.end() );
 
-		if ( found->second.first != animation.c_ptr() ) {
-			animation->m_weight_driving_animation = found->second.first;
-			continue;
+		if ( found->second.first == animation.c_ptr() ) {
+			animation->m_weight_driving_animation = 0;
+			animation->m_weight_interpolator = found->second.second->m_weight_interpolator;
 		}
-
-		animation->m_weight_driving_animation = 0;
-		animation->m_weight_interpolator = found->second.second->m_weight_interpolator;
+		else
+			animation->m_weight_driving_animation = found->second.first;
 	}
 }
 
