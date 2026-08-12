@@ -35,7 +35,7 @@ public:
 
 	virtual	ai::weapon_types_enum		get_type				( ) const override { /* no source */ return m_type; }
 
-	virtual	bool						is_loaded				( ) const override { /* no source */ return m_ammo_count != 0; }
+	virtual	bool						is_loaded				( ) const override { /* no source */ return m_ammo_count > 0; }
 
 	virtual	pcstr						get_name				( ) const override { /* no source */ return m_name; }
 
