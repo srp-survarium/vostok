@@ -19,6 +19,7 @@ main_menu::main_menu( game& g )
 	query_resources( );
 }
 
+// claude@NOTE: target structure matches; tail-call codegen follows the parked base destructor.
 main_menu::~main_menu( )
 {
 }

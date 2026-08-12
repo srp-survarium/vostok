@@ -120,7 +120,7 @@ void game_world::draw_frustum(
 ) const
 {
 	renderer( ).debug( ).draw_frustum(
-		render_scene( ),
+		m_render_scene,
 		fov_in_radians,
 		0.f,
 		far_plane_distance,
@@ -134,7 +134,7 @@ void game_world::draw_frustum(
 
 void game_world::draw_ray( float3 const& start_point, float3 const& end_point, bool sees_something ) const
 {
-	renderer().debug().draw_arrow( render_scene(), start_point, end_point, sees_something ? math::color( 0, 0, 255 ) : math::color( 255, 255, 0 ) );
+	renderer().debug().draw_arrow( m_render_scene, start_point, end_point, sees_something ? math::color( 255, 0, 0 ) : math::color( 0, 255, 255 ) );
 }
 
 void game_world::get_available_weapons( ai::npc* owner, vectora< ai::weapon* >& list_to_be_filled ) const

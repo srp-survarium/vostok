@@ -13,15 +13,15 @@ class game_scene {
 public:
 	virtual	void							on_activate			( ) = 0;
 	virtual	void							on_deactivate		( ) = 0;
-	virtual	void							tick				( u32 arg_0, u32 arg_1, bool arg_2 ) = 0;
+	virtual	void							tick				( const u32 arg_0, const u32 arg_1, const bool arg_2 ) = 0;
 	virtual	void							on_after_tick		( ) = 0;
 
-	inline	render::scene_ptr const&		render_scene		( ) const { return m_render_scene; }
-	inline	render::scene_view_ptr const&	render_scene_view	( ) const { return m_render_scene_view; }
+	inline	render::base_scene_ptr const&		render_scene		( ) { return m_render_scene; }
+	inline	render::base_scene_view_ptr const&	render_scene_view	( ) { return m_render_scene_view; }
 
 protected:
-	/* 0x0004 */	render::scene_ptr		m_render_scene;
-	/* 0x0008 */	render::scene_view_ptr	m_render_scene_view;
+	/* 0x0004 */	render::base_scene_ptr		m_render_scene;
+	/* 0x0008 */	render::base_scene_view_ptr	m_render_scene_view;
 }; // class game_scene
 
 STATIC_SIZE_ASSERT(game_scene, 0xC);

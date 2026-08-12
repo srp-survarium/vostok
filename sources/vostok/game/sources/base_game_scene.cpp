@@ -5,7 +5,7 @@
 #include "pch.h"
 #include "base_game_scene.h"
 #include "game.h"
-#include "game_memory.h"	// NEW / DELETE (survarium::g_allocator)
+#include "game_memory.h"
 #include "camera_director.h"
 #include "game_camera.h"
 #include <vostok/render/facade/game_renderer.h>
@@ -36,34 +36,22 @@ namespace survarium {
 static bool s_freeze_culling_value = false;
 static vostok::console_commands::cc_bool s_freeze_culling( "freeze_culling", s_freeze_culling_value, true, vostok::console_commands::command_type_engine_internal );
 
-// claude@NOTE: init-list structure is correct (members + the NEW(camera_director)),
-// residual is /Od scheduling: the target hoists every scalar member store before the
-// camera_director malloc and keeps two full epilogues (the alloc-success / alloc-fail
-// branches), my base shares one epilogue and stores the trailing members after the
-// malloc. Also the engine-base vtable at +0x0C is written once in the target but twice
-// in base (engine base ctor then base_game_scene). Both are codegen-scheduling, not a
-// source-structure error.
+// claude@NOTE: target structure matches; residual is the retained engine base-subobject vtable store.
 base_game_scene::base_game_scene( game& g ) :
 	m_mouse_pos			( 0, 0 ),
-	m_camera_director	( NEW( camera_director )( *this ) ),
 	m_text_manager		( NULL ),
 	m_game				( g ),
 	m_is_ui_shown		( false ),
 	m_physics_world		( NULL ),
 	m_is_active			( false )
 {
+	m_camera_director = VOSTOK_NEW_IMPL( *g_allocator, camera_director )( *this );
 }
 
-// claude@NOTE: body is correct (DELETE m_camera_director; the m_sound_scene release +
-// game_scene base destruction are implicit). Residual: (1) the game_scene base dtor in the
-// shipped engine is a boost::_bi::storage3<one_way_render_channel*, base_scene_ptr,
-// base_scene_view_ptr>::~storage3 - our game_core/game_scene.h holds only 2 scene ptrs, no
-// render-channel/storage3 (a game_core base-class structure gap, not editable here); (2) my
-// DELETE inlines ~camera_director which rewrites the camera_director vtable, the target's
-// does not. Both are other-class concerns.
+// claude@NOTE: target structure matches; residual is the retained empty camera_director vtable rewrite.
 base_game_scene::~base_game_scene( )
 {
-	DELETE( m_camera_director );
+	VOSTOK_DELETE_IMPL( *g_allocator, m_camera_director );
 }
 
 math::uint2 const& base_game_scene::output_window_size( ) const

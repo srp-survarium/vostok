@@ -110,15 +110,6 @@ protected:
 			// PDB mangles this IAE (protected), unlike the public methods above
 			void									create_text_manager	( );
 
-private:
-	// game_world reads the inherited m_inverted_view_matrix directly
-	// (on_after_tick / on_activate); PDB does not record friendship, codegen-neutral
-	friend class game_world;
-	// lobby_menu and login_menu read the inherited m_mouse_pos directly (their
-	// input handlers, *_input.cpp); same codegen-neutral friendship.
-	friend class lobby_menu;
-	friend class login_menu;
-
 	/* 0x0000 */	/* game_scene */
 	/* 0x000c */	/* engine */
 	/* 0x0010 */	/* physics::engine */
@@ -131,6 +122,7 @@ private:
 	/* 0x00a4 */	flash_text_manager*						m_text_manager;
 	/* 0x00a8 */	game&									m_game;
 	/* 0x00ac */	bool									m_is_ui_shown;
+private:
 	/* 0x00b0 */	physics::world*							m_physics_world;
 	/* 0x00b4 */	bool									m_is_active;
 	/* 0x00b8 */	u32										m_block_btn_time;

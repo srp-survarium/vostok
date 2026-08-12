@@ -199,7 +199,7 @@ namespace vostok
 		static volatile int s_login_status = survarium::login_menu_status_connected;
 		login.set_status				( (survarium::login_menu_status_enum)s_login_status );
 		survarium::main_menu			main( g );
-		survarium::camera_director		director( scene );
+		survarium::camera_director&		director = scene.get_camera_director( );
 		survarium::game_camera			camera( scene );
 		survarium::free_fly_camera		fly( scene, director );
 		survarium::stats				stats_obj( *( ui::world* )NULL );
