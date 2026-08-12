@@ -40,14 +40,6 @@ void shotgun_weapon_reload_state_cook::create_resource(
 	mutable_buffer							in_out_unmanaged_resource_buffer
 )
 {
-	// claude@NOTE: parked - 12 target statements vs my 9. The three creation_requests
-	// carry a per-request USER_DATA variant (the cfg["start_substate"] / ["reload_one_
-	// substate"] / ["finish_substate"] config_value sub-nodes built as variant<32>[3] via
-	// `vector constructor iterator`), passed alongside the requests array to
-	// query_create_resources - my version uses raw_file_data as the request data with no
-	// user_data array. There are also TRGT_ONLY statements (an ASSERT after try_get, the
-	// user_data-array fill). NEXT: build the variant<32> user_data[3] = { cfg["..."], ... }
-	// and pass it to query_create_resources (see asm 0x80-0x179 at 0x5bd9a0).
 	weapon_state_creation_params const*	params	= static_cast< weapon_state_creation_params const* >( raw_file_data.c_ptr( ) );
 	configs::binary_config_value		cfg;
 	if ( !parent.user_data( )->try_get( cfg ) )
@@ -63,11 +55,17 @@ void shotgun_weapon_reload_state_cook::create_resource(
 		resources::creation_request( "finish_substate",		raw_file_data, resources::weapon_shotgun_reload_finish_substate_class ),
 	};
 
+	variant< 32 > user_data[3];
+	for ( u32 i = 0; i != array_size( requests ); ++i )
+		user_data[i].set( cfg[requests[i].get_name( )] );
+
+	variant< 32 > const* user_data_ptrs[3] = { &user_data[0], &user_data[1], &user_data[2] };
+
 	resources::query_create_resources(
 		requests,
 		boost::bind( &shotgun_weapon_reload_state_cook::on_substates_ready, this, _1, in_out_unmanaged_resource_buffer, params ),
 		g_allocator,
-		NULL,
+		user_data_ptrs,
 		&parent
 	);
 	parent.finish_query( result_postponed );
