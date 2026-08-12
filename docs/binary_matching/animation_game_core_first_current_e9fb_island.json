@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source observations from a disposable game_core-before-animation LTCG link at animation tip 3d3ea5989. The three functions retain their reconstructed caller/loop phases and were rechecked against target PDB structure; each remaining QUANTITY difference is documented below, so these are partial MAX observations rather than closure claims.",
+  "link_perturbation": "game_core immediately before animation at the early animation link position; all other libraries and link flags preserved",
+  "report_sha256": "08f28343e92f97527e3b4d5d8f7d4df239334d9846480178de01e87cc65ed70c",
+  "base_index_sha256": "558679bd0be52a168658da517a57e91241d86a433d18a6b691ae3e0731cc15cc",
+  "candidate_exe_sha256": "77693b0f814567ce9d2560a512228700fcdac13aabb9f439206d335d641b63f9",
+  "candidate_pdb_sha256": "5805d0fcfcb73bb519e32013c6e0f4e4ea71347c9d6e3b51a90b1ed93b03a406",
+  "functions": [
+    {
+      "mangled": "?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z",
+      "module": "animation",
+      "expected_hash": "aa807bd1b828.e9fb1e46fa321f3a.62b9e1b5c9c38851",
+      "expected_fuzzy_pct": 89.0267,
+      "review": "Target and candidate retain the complete synchronization-group merge, time-driver assignment, animation sort, state reconstruction, and cleanup phases. Candidate PDB structure is 61 statements versus target 60; the residual includes the candidate-attributed group-id guard plus retained state/accessor scheduling. Restoring eager parameter initializers and removing the else was tested against this source epoch, worsened the CFG from 76 to 75 blocks versus target 80, and reduced canonical fuzzy from 28.94% to 14.24%, so no faithful source lever was retained."
+    },
+    {
+      "mangled": "?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z",
+      "module": "animation",
+      "expected_hash": "7a3058457dc5.e9fb1e46fa321f3a.0786bb184490c6d6",
+      "expected_fuzzy_pct": 77.77288,
+      "review": "The reconstructed channel and knot search, wrapped-time tests, target current_knot_time/knot_time shape, and const bool parameter remain present. Candidate PDB structure is 50 statements versus target 52; remaining regions are pinned-resource lifetime, loop rotation, and wrapped-knot boundary selection, so this is partial MAX evidence only."
+    },
+    {
+      "mangled": "?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ",
+      "module": "animation",
+      "expected_hash": "791e5a4ba60d.e9fb1e46fa321f3a.167ad65b2deac485",
+      "expected_fuzzy_pct": 79.77991,
+      "review": "The real n_ary_tree caller, animation filtering, accumulated/frame movement paths, weighted scale/rotation/translation collection, and final matrix composition remain reconstructed. Candidate PDB structure is 22 statements versus target 19; the residual is member/accessor inlining and quaternion/translation scheduling, so this remains partial MAX evidence."
+    }
+  ]
+}
