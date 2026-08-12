@@ -121,17 +121,19 @@ public:
 			void									reset_fov_factor					( );
 			void									set_near_plane_factor				( float near_plane_factor );
 			void									set_target_fov_factor				( float target_fov_factor, float transition_time );
+private:
 	inline	void									set_target_fov_factor				( float arg_0 ) { /* no source */ }
+public:
 			float									fov_factor							( const u32 current_time_in_ms ) const;
 	inline	float									target_fov_factor					( ) const { /* no source */ return m_target_fov_factor; }
 
 	inline	circular_buffer< client_player_history_item > const&	history				( ) const { /* no source */ return m_history; }
 
 	inline	float4x4 const&							get_target_character_transform		( ) const { /* no source */ return m_target.transform; }
+private:
 	inline	float									get_player_max_carried_weight		( ) const { /* no source */ return 0.0f; }
 
-private:
-	virtual	float4x4 const&							get_transform						( ) const override			{ return m_root_transform; }
+	virtual	float4x4 const&							get_transform						( ) const override			{ return m_current.transform; }
 
 	virtual	void									hit									(
 														hit_initiator const* const		initiator,
