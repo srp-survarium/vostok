@@ -416,7 +416,9 @@ void scene::process_streaming(
 
 		u32 num_mips = info_it->texture->num_mips;
 		if ( requested_it != requested_streamable_textures.end( ) )
+		{
 			continue;
+		}
 
 		u32 num_wanted_mips = 0;
 		float distance;
@@ -441,7 +443,9 @@ void scene::process_streaming(
 		}
 
 		if ( num_wanted_mips == num_mips )
+		{
 			continue;
+		}
 
 		requested_streamable_texture texture_request;
 		texture_request.texture		= info_it->texture;
