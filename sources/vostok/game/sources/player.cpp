@@ -37,6 +37,7 @@ namespace survarium {
 static float s_death_camera_yaw;
 static float s_death_camera_pitch;
 static float s_death_camera_distance;
+static bool s_first_person_animations_only;
 
 // TU statics (compiler-generated dynamic initializers / atexit
 // destructors); a matcher recovers their types/initializers from the asm.
@@ -1302,47 +1303,23 @@ physics::world* player::get_physics_world( )
 	return m_game_scene.get_physics_world( );
 }
 
-// claude@NOTE: PARKED. 7 stmts (target 0x5e4f60): base_player::tick_active_object(),
-// then a first-person-vs-sound-emitter animation-channel selection, a 0x4000-byte
-// alloca'd mutable_buffer, the active object's selected_animations(buffer, first_person)
-// expression, and two animation_player blocks (m_current at +0x87FC, m_target at +0x228,
-// after the 0x228 add) each: tick / set_target / tick, fed a boost::bind of
-// get_transform_for_animation_player. Walls: the boost::function1/bind_t/cmf2 functor
-// construction and animation_player::tick/set_target are deep animation-module + boost
-// machinery; the s_first_person_animations_only config command (a TU-static) is also
-// still a stub. Next step: revisit once the animation_player tick/set_target + the
-// boost::bind functor inline are reproducible and the config-command statics are bodied.
-// STATE[STUB]
 void player::select_animations( const u32 current_time_in_ms )
 {
-	// LOCALS
-	// mutable_buffer 					buffer
-	// ******
+	tick_active_object( );
 
-	// CALL SITE INFO
-	// <0x5e4ff7> -> animation::mixing::expression < unknown >( mutable_buffer&, const bool ) const
-	// <0x5e511f> -> void* < unknown >( u32 )
-	// ******
 
-	// FUNCTION BODY[0x5e4f60]: 17
-	// <0>
-	// <1>
-	// <0x5e4f6e>|0x00e|+0x007:'1439'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4f75>|0x015|+0x02a:'1443'
-	// <0x5e4f9f>|0x03f|+0x024:'1444'
-	// <0>
-	// <0x5e4fc3>|0x063|+0x01a:'1446'
-	// <0x5e4fdd>|0x07d|+0x01c:'1447'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e4ff9>|0x099|+0x088:'1451'
-	// <0>
-	// <0x5e5081>|0x121|+0x088:'1453'
-	// ******
+
+	const bool is_current = m_game.network_client( ).is_player_current( id );
+	const input_mode_type_enum input_mode = s_first_person_animations_only ? first_person_mode : ( is_current ? m_local_input_controller->input_mode( ) : third_person_mode );
+
+	mutable_buffer buffer( ALLOCA( 0x4000 ), 0x4000 );
+	animation::mixing::expression expression = m_current_active_object->selected_animations( buffer, input_mode == third_person_mode );
+
+
+
+	m_target.animation_player.set_target_and_tick( expression, current_time_in_ms, boost::bind( &player::get_transform_for_animation_player, this, _1, boost::cref( m_target.transform ) ) );
+
+	m_current.animation_player.set_target_and_tick( expression, current_time_in_ms, boost::bind( &player::get_transform_for_animation_player, this, _1, boost::cref( m_current.transform ) ) );
 }
 
 // TU statics (compiler-generated dynamic initializers / atexit
@@ -1374,8 +1351,6 @@ void `dynamic atexit destructor for 's_player_show_animations_command''( )
 */
 
 // claude@NOTE: structure + the camera/UI gate (is_player_current) match. Byte residuals:
-//  - select_animations() inlines to nothing (it is still a STUB) -> the final call is the
-//    TRGT_ONLY statement; reappears once select_animations is bodied;
 //  - set_yaw_pitch_distance args are LTCG const-propagated to the s_death_camera_* globals
 //    inside the standalone callee (arg-passing residual);
 //  - set_input_mode third_person inline schedule.
