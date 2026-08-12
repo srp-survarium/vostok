@@ -37,7 +37,7 @@ n_ary_tree_animation_event_iterator::n_ary_tree_animation_event_iterator	(
 	m_animation							( &animation_node ),
 	m_channels_head						( &channels_head ),
 	m_value								(
-		0,
+		u8( -1 ),
 		animation_state.animation_interval_id,
 		animation_state.animation_interval_time,
 		start_time_in_ms,
