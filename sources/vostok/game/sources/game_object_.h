@@ -42,8 +42,6 @@ public:
 
 	inline	base_game_scene&	get_game_scene	( ) { /* no source */ return m_game_scene; }
 
-	virtual						~game_object_	( ) { /* no source */ }
-
 private:
 	/* 0x0000 */	/* resources::unmanaged_resource */
 	/* 0x0108 */	/* boost::noncopyable */

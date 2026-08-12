@@ -27,14 +27,9 @@ object_wire::object_wire( base_game_scene& w ) :
 {
 }
 
-// claude@NOTE: dtor byte-residual is the inlined base-class dtor chain - the target
-// tail-jmps ~unmanaged_resource without re-writing the game_object_ vtable, while our
-// base inlines ~game_object_ (header-inline {}) which emits that extra vtable store
-// plus an unconditional esi/ecx save. A game_object_ dtor-codegen artifact, not
-// steerable from this TU.
 object_wire::~object_wire( )
 {
-	FREE( m_points );
+	VOSTOK_FREE_IMPL( *::survarium::g_allocator, m_points );
 }
 
 static void create_wire_visual_source(
