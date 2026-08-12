@@ -261,7 +261,7 @@ inline void backend::flush_rt_shader_resources( )
 
 inline void backend::flush_rt_views( )
 {
-	ID3D11RenderTargetView* tv[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = { 0 };
+	__declspec( align( 16 ) ) ID3D11RenderTargetView* tv[D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT] = { 0 };
 	device::ref( ).d3d_context( )->OMSetRenderTargets(
 		D3D11_SIMULTANEOUS_RENDER_TARGET_COUNT, tv, 0
 	);
