@@ -7,7 +7,7 @@
 namespace vostok {
 namespace render {
 
-const D3D_INPUT_ELEMENT_DESC branch_layout[] =
+const D3D_INPUT_ELEMENT_DESC layout[] =
 {
 	{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT,	 0, 0,  D3D_INPUT_PER_VERTEX_DATA, 0 }, // pos.xyz
 	{ "TEXCOORD", 0, DXGI_FORMAT_R32G32B32A32_FLOAT, 0, 12, D3D_INPUT_PER_VERTEX_DATA, 0 },	// LOD position.xyz + wind scalar mag
@@ -23,7 +23,7 @@ speedtree_tree_component_branch::speedtree_tree_component_branch( speedtree_tree
 	speedtree_tree_component( parent )
 {
 	// FUNCTION BODY[0x5f8760]
-	ref_declaration decl = resource_manager::ref().create_declaration( branch_layout, array_size( branch_layout ) );
+	ref_declaration decl = resource_manager::ref().create_declaration( layout, array_size( layout ) );
 
 	// claude@NOTE: legacy bound `CTree& tree = parent` - the canonical speedtree_tree
 	// derives SpeedTree::CCore (GetGeometry lives there).
