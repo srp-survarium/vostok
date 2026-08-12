@@ -1694,6 +1694,7 @@ void stage_lights::render_shadowed_light( light* l )
 
 	for (u32 face_index=0; face_index<6; face_index++)
 	{
+		float const range_X_tan_penumbra_angle_div_2= light_range * math::tan(math::pi_d4);
 		bool const distribute_shadow = l->is_cast_shadows_in(light::shadow_distribution_side(face_index));
 
 		math::float4x4 face_view_matrix = math::create_camera_at(
@@ -1702,7 +1703,6 @@ void stage_lights::render_shadowed_light( light* l )
 			view_matrix_parameters[face_index][2]
 		);
 
-		float const range_X_tan_penumbra_angle_div_2= light_range * math::tan(math::pi_d4);
 		float4x4	scale_matrix					= math::create_scale( float3( range_X_tan_penumbra_angle_div_2, range_X_tan_penumbra_angle_div_2, light_range ) );
 
 		float4x4 local_to_world						= face_view_matrix;
