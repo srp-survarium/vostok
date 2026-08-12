@@ -22,9 +22,9 @@
 namespace vostok {
 namespace render {
 
-float lod_def_params[2][3] = {
-	{ 20.f, 40.f, 240.f },
-	{ .4f, .2f, .001f }
+float lod_def_params[] = {
+	20.f, 40.f, 240.f,
+	.4f, .2f, .001f
 };
 
 static_render_surface::static_render_surface( bool colored )
@@ -711,9 +711,7 @@ u8 static_render_model_instance::select_lod( float4x4 const& mat_vp, float3 cons
 	if (!lods->m_lod_surfaces_count[1])
 		return 0;
 
-	float* params = lods->m_lod_params_default ?
-		lod_def_params[lods->m_lod_calc_type] :
-		lods->m_lod_custom_params;
+	float* params = lods->m_lod_params_default ? lod_def_params + lods->m_lod_calc_type * 3 : lods->m_lod_custom_params;
 
 	float params_mult = 1.f;
 	if (!options::ref().current.m_geometry_quality)
