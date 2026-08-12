@@ -26,7 +26,7 @@ namespace render {
 struct batched_geometry_interface;
 struct material_effects;
 
-class render_surface : public boost::noncopyable {
+class render_surface : boost::noncopyable {
 public:
 	render_surface( ) :
 		m_aabbox( math::create_zero_aabb( ) ),
