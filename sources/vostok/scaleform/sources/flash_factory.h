@@ -36,6 +36,8 @@ public:
 
 private:
 	/* 0x0000 */	Scaleform::GFx::Loader*				m_gfx_loader;
+
+public:
 	/* 0x0004 */	scaleform_render_command_queue*		m_render_thread_queue;
 }; // class flash_factory
 
