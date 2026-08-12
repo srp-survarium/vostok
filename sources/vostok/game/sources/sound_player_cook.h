@@ -24,11 +24,12 @@ public:
 
 	virtual	void	delete_resource		( resources::resource_base* resource ) override;
 
-	virtual			~sound_player_cook	( ) { /* no source */ }
-
 private:
 			void	on_sounds_loaded	( resources::queries_result& data, configs::binary_config_ptr config );
 			void	on_config_loaded	( resources::queries_result& data );
+
+public:
+	virtual			~sound_player_cook	( ) { /* no source */ }
 
 private:
 	/* 0x0000 */	/* resources::translate_query_cook */
