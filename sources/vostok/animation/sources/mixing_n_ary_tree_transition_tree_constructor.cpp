@@ -1473,14 +1473,14 @@ void n_ary_tree_transition_tree_constructor::merge_trees( n_ary_tree const& from
 		get_next_synchronization_group				( j_begin, j_end );
 	}
 
-	while ( j_begin ) {
-		add_weight_synchronization_group			( j_begin, j_end );
-		get_next_synchronization_group				( j_begin, j_end );
-	}
-
 	while ( i_begin ) {
 		remove_weight_synchronization_group		( i_begin, i_end );
 		get_next_synchronization_group				( i_begin, i_end );
+	}
+
+	while ( j_begin ) {
+		add_weight_synchronization_group			( j_begin, j_end );
+		get_next_synchronization_group				( j_begin, j_end );
 	}
 
 	for ( n_ary_tree_animation_node* i = m_weight_root; i; i = i->m_next_weight_animation ) {
