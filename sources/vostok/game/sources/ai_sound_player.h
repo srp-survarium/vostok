@@ -81,7 +81,7 @@ public:
 			sound::command_result_enum		on_finish_playing			( );
 
 	// the sounds array trails the object (m_sounds_count entries)
-	inline	sounds_collection_type const*	sounds						( ) const { /* no source */ return NULL; }
+	inline	sounds_collection_type const*	sounds						( ) const { return reinterpret_cast< sounds_collection_type const* >( this + 1 ); }
 
 	inline	void							serialize					( ) { /* no source */ }
 	inline	void							deserialize					( ) { /* no source */ }
