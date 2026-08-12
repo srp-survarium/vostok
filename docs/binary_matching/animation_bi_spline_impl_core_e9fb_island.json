@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source bi_spline_skeleton_animation_impl_cook::on_resources_ready observation from a disposable core-before-animation LTCG link on xray 7b388235e. Target and candidate are byte-exact with identical statement partitions and control flow; the canonical residual is solely the caller-specific assert_on_fail inline boundary.",
+  "link_perturbation": "core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "18d68b75520259b75245ec635b3efd2b9e39e1c33a65bf22ea358d480a624ea1",
+  "base_index_sha256": "b43c75e13ae29b23cb46801d742914b594cc475026eb4306f1a5b1d2ebf8fe00",
+  "candidate_exe_sha256": "0e862c7d15f052e9ab6b5843cbfc3e33f4e8a7ff67275d4756304b326d2aeafa",
+  "candidate_pdb_sha256": "d2853cd6d83ed8f46b7d71af12603c746a6362c035e6294ccd405f4cab0b8abd",
+  "functions": [
+    {
+      "mangled": "?on_resources_ready@bi_spline_skeleton_animation_impl_cook@animation@vostok@@CAXAAVqueries_result@resources@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "de6844e88210.e9fb1e46fa321f3a.55facc35c5af01b5",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x17b bytes with STRUCTURE MATCH, identical eight-statement byte partitions, identical 23-block CFGs, and a 100.00% operand-aware report. The source retains the target failure/result selection and success resource-publication phases; this context inlines the existing parent_query->assert_on_fail() access that forms the canonical four-byte residual."
+    }
+  ]
+}
