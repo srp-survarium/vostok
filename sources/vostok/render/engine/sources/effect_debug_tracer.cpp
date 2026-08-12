@@ -10,7 +10,6 @@ void effect_debug_tracer::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x7b5130]
 	shader_configuration configuration;
 
 	compile_begin("vertex_base", "tracer", compiler, &configuration, config);
