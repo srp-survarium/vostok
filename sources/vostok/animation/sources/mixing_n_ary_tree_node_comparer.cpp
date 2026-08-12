@@ -53,8 +53,7 @@ static inline vostok::animation::comparison_result_enum	revert	( vostok::animati
 ////////////////////////////////////////////////////////////////////////////
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_animation_node& right )
 {
-	animation_comparer_predicate predicate( true, true );
-	result				= static_cast< vostok::animation::comparison_result_enum >( predicate( left, right ) );
+	result				= static_cast< vostok::animation::comparison_result_enum >( animation_comparer_predicate( true, true )( left, right ) );
 }
 
 void n_ary_tree_node_comparer::dispatch	( n_ary_tree_animation_node& left,		n_ary_tree_weight_transition_node& right )
