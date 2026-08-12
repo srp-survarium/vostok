@@ -32,7 +32,7 @@ struct animation_callback : public boost::noncopyable {
 					pcvoid const					animated_object
 				) :
 		callback				( callback ),
-		animation				( animation ),
+		animation				( animation.c_ptr( ) ),
 		animated_object			( animated_object ),
 		next					( 0 ),
 		callback_uid			( callback_uid ),
