@@ -14,8 +14,7 @@ div m_max_count` (remainder in edx). The element-address `&m_history[i]` is
 new ( &m_history[ m_head ] ) T( );      // slot ptr computed; je-skip ctor if NULL (placement-new guard)
 T& result	= m_history[ m_head ];       // address kept in a reg, returned at the end
 m_head		= next( m_head );
-if ( m_head == m_tail )                   // buffer full -> drop oldest
-	m_tail = next( m_tail );
+if ( m_head == m_tail ) m_tail = next( m_tail ); // buffer full -> drop oldest
 return result;
 ```
 The leading `add slot,[m_history]; je .skip; <T ctor calls>` is the standard
@@ -32,10 +31,12 @@ VOSTOK_FREE_IMPL( m_allocator, m_history );  // free_helper: test ptr; call_free
 through the buffer's own `base_allocator&` member: the asm is `mov ecx,[m_allocator];
 mov edx,[ecx]; push ptr; call [edx+0x18]` (= virtual `call_free`) then `mov [m_history],0`.
 
-Inline-vs-call caveat: the compiler-generated `server_player_update` ctor (sub-objects
-`player_input`+`weapon_state`) and `new_item` itself may be inlined by our LTCG where the
-target keeps them out-of-line (target emits NO standalone `server_player_update` ctor) -
-that residual is a whole-program inline-cost divergence, not source-steerable here.
+The conditional and tail update must occupy one physical source line to reproduce the
+target's four PDB body statements. Splitting them over two lines creates a fifth base
+statement even though the instructions are otherwise unchanged.
 
 Evidence: `~circular_buffer<client_player_history_item>` 100% (2/2 stmts);
-`new_item` structure-faithful but LTCG-inlined into its sole caller.
+`new_item` is a real paired out-of-line function and its real caller
+`player::serialize_current_state` is exact. Its remaining size difference is register
+allocation: target retains `m_max_count` and the new head in separate nonvolatile
+registers, while base reuses one register and stores the division remainder earlier.
