@@ -132,7 +132,7 @@ void stage_forward::accumulate_local_reflections( )
 			&*m_context->get_rt( rt_local_reflection_result_params ),
 			0,
 			0
-		);
+		); backend::ref( ).reset_depth_stencil_target( );
 	}
 
 	for ( ; it_d != end_d; ++it_d )
