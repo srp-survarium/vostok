@@ -43,7 +43,7 @@ void victory_item::put( physics::world* world, float4x4 const& transform, schedu
 		true
 	);
 
-	if ( m_model )
+	if ( m_model.c_ptr( ) )
 		m_game_world.scene_renderer( ).add_model( m_game_world.render_scene( ), m_model->m_render_model, m_transform );
 }
 
