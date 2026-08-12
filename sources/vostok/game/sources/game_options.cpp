@@ -500,7 +500,7 @@ bool game_options::on_mouse_key_action(
 		}
 
 		m_options_ui->movie->HandleMouseBtn(
-			action == input::ms_key_down ? flash_movie::mouse_btn_down : flash_movie::mouse_btn_up,
+			( flash_movie::mouse_btn_action )action,
 			mouse_btn,
 			( float )m_mouse_pos.x,
 			( float )m_mouse_pos.y );
@@ -615,13 +615,15 @@ void game_options::apply_key_bindings( )
 			pstr command;
 			if ( !strings::compare( key_bind_descriptions[i].new_binded_key.c_str( ), "" ) )
 			{
+				console_commands::console_command* console_command = console_commands::find( "unbind" );
 				STR_JOINA( command, m_game.get_key_binder( ).id_to_action_name( key_bind_descriptions[i].action_id ) );
-				console_commands::find( "unbind" )->execute( command );
+				console_command->execute( command );
 			}
 			else
 			{
+				console_commands::console_command* console_command = console_commands::find( "bind" );
 				STR_JOINA( command, m_game.get_key_binder( ).id_to_action_name( key_bind_descriptions[i].action_id ), " ", key_bind_descriptions[i].new_binded_key.c_str( ) );
-				console_commands::find( "bind" )->execute( command );
+				console_command->execute( command );
 			}
 		}
 	}
