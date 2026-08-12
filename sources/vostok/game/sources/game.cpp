@@ -900,13 +900,13 @@ void game::on_application_activate( )
 
 void game::on_application_deactivate( )
 {
-	if ( m_input_world )
-	{
-		threading::mutex_raii guard		( m_application_activation );
+	if ( !m_input_world )
+		return;
 
-		m_input_world->on_deactivate	( );
-		m_is_active						= false;
-	}
+	threading::mutex_raii guard		( m_application_activation );
+
+	m_input_world->on_deactivate		( );
+	m_is_active							= false;
 }
 
 void game::on_fullscreen_alttab( bool first )
