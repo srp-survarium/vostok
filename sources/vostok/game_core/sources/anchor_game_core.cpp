@@ -221,12 +221,6 @@ namespace vostok
 		base_short.tick( 0.0f );
 		base_short.is_ready_for_transition( );
 
-		// breath_holding_params::load is a header-inline; a plain call is inlined by /GL,
-		// so take its address to keep the standalone out-of-line COMDAT the target emits.
-		void ( survarium::breath_holding_params::*load_fn )( configs::binary_config_value const& )
-			= &survarium::breath_holding_params::load;
-		example_callback( reinterpret_cast< pcstr >( &load_fn ) );
-
 		example_callback( reinterpret_cast< pcstr >( &st_normal ) );
 		example_callback( reinterpret_cast< pcstr >( &st_holding ) );
 		example_callback( reinterpret_cast< pcstr >( &st_short ) );
