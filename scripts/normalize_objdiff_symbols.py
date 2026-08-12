@@ -39,6 +39,32 @@ _EXACT_COMPILER_NAMES = {
         "?closest_point_on_segment@sound@vostok@@YA?AVfloat3@math@2@ABV342@00@Z",
     "vostok::sound::compare_propagator_info_by_distance":
         "?compare_propagator_info_by_distance@sound@vostok@@YA_NABUpropagator_info@12@0@Z",
+    (
+        "vostok::render::create_shadow_pass_geometry_type<"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`2'::colored_static_vertex,"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`3'::colored_opt_static_vertex>"
+    ): (
+        "vostok::render::create_shadow_pass_geometry_type<"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`2'::colored_static_vertex,"
+        "`vostok::render::static_render_surface::colored_opt_static_vertex'::"
+        "`3'::colored_opt_static_vertex>"
+    ),
+    (
+        "vostok::render::create_shadow_pass_geometry_type<"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`2'::static_vertex0,"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`2'::opt_static_vertex>"
+    ): (
+        "vostok::render::create_shadow_pass_geometry_type<"
+        "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+        "`2'::static_vertex0,"
+        "`vostok::render::static_render_surface::opt_static_vertex'::"
+        "`2'::opt_static_vertex>"
+    ),
 }
 _SOUND_COOK_LOCAL_ATEXIT_PREFIX = (
     "`vostok::sound::sound_world::register_sound_cooks'::`2'::"
