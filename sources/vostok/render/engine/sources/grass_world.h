@@ -128,6 +128,7 @@ struct grass_world : public resources::unmanaged_resource {
 	void clear( );
 	void add_trample( trample_desc const& desc );
 
+private:
 	void on_test_sub_resources_loaded( resources::queries_result& )
 	{
 		// claude@NOTE: legacy body diverged - legacy on_sub_resources_loaded calls the retired add_template/add_instance/populate signatures; matcher-phase work.
@@ -195,12 +196,6 @@ struct grass_world : public resources::unmanaged_resource {
 	grass_template* id_to_template( u32 const id ) const;
 	grass_template* find_template( grass_render_model_ptr const& model ) const;
 
-	void set_patch_parameters( grass_patch* patch );
-	void set_wind_parameters( float2 const& direction, float const strength );
-	void set_trample_parameters( trample_desc& desc );
-	void set_shadow_parameters( u32 const cascade_index );
-
-public:
 	trample_desc_array_type			m_trample_array;
 	grass_templates_type				m_templates;
 	vector<grass_patch*>				m_patches;
@@ -216,6 +211,12 @@ public:
 	shader_constant_host*				m_trample_parameters;
 	shader_constant_host*				m_shadow_cascade_index_parameter;
 	shader_constant_host*				m_wind_info_parameters;
+
+public:
+	void set_patch_parameters( grass_patch* patch );
+	void set_wind_parameters( float2 const& direction, float const strength );
+	void set_trample_parameters( trample_desc& desc );
+	void set_shadow_parameters( u32 const cascade_index );
 	bool m_need_populate;
 };
 
