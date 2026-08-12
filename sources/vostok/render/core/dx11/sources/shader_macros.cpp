@@ -111,43 +111,7 @@ void add_u8_macro(
 	// FUNCTION BODY[0x129880]
 	shader_macro macro;
 	macro.name       = name;
-	switch( value)
-	{
-		case 0 :  macro.definition = "0"; break;
-		case 1 :  macro.definition = "1"; break;
-		case 2 :  macro.definition = "2"; break;
-		case 3 :  macro.definition = "3"; break;
-		case 4 :  macro.definition = "4"; break;
-		case 5 :  macro.definition = "5"; break;
-		case 6 :  macro.definition = "6"; break;
-		case 7 :  macro.definition = "7"; break;
-		case 8 :  macro.definition = "8"; break;
-		case 9 :  macro.definition = "9"; break;
-		case 10 :  macro.definition = "10"; break;
-		case 11 :  macro.definition = "11"; break;
-		case 12 :  macro.definition = "12"; break;
-		case 13 :  macro.definition = "13"; break;
-		case 14 :  macro.definition = "14"; break;
-		case 15 :  macro.definition = "15"; break;
-		case 16 :  macro.definition = "16"; break;
-		case 17 :  macro.definition = "17"; break;
-		case 18 :  macro.definition = "18"; break;
-		case 19 :  macro.definition = "19"; break;
-		case 20 :  macro.definition = "20"; break;
-		case 21 :  macro.definition = "21"; break;
-		case 22 :  macro.definition = "22"; break;
-		case 23 :  macro.definition = "23"; break;
-		case 24 :  macro.definition = "24"; break;
-		case 25 :  macro.definition = "25"; break;
-		case 26 :  macro.definition = "26"; break;
-		case 27 :  macro.definition = "27"; break;
-		case 28 :  macro.definition = "28"; break;
-		case 29 :  macro.definition = "29"; break;
-		case 30 :  macro.definition = "30"; break;
-		case 31 :  macro.definition = "31"; break;
-
-		default : ASSERT( 0, "Values greather that 31 are not supported." ); break;
-	}
+	macro.definition.assignf( "%d", value );
 	macros.push_back( macro);
 }
 
