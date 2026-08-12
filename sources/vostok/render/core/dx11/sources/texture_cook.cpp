@@ -38,7 +38,7 @@ texture_cook::texture_cook( )
 	: resources::inplace_managed_cook(
 		resources::texture_class,
 		reuse_false,
-		use_current_thread_id
+		use_resource_manager_thread_id
 	)
 {
 	// FUNCTION BODY[0x5594b0]

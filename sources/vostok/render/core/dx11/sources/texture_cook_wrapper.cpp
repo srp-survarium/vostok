@@ -22,7 +22,7 @@ texture_cook_wrapper::texture_cook_wrapper( )
 #else // #ifndef MASTER_GOLD
 		reuse_true,
 #endif // #ifndef MASTER_GOLD
-		use_any_thread_id
+		use_resource_manager_thread_id
 	)
 {
 	// FUNCTION BODY[0x759980]
