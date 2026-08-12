@@ -944,23 +944,24 @@ void n_ary_tree_comparer::merge_trees( n_ary_tree const& from, n_ary_tree const&
 	}
 }
 
- n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, u32 current_time_in_ms ) :
+ n_ary_tree_comparer::n_ary_tree_comparer( n_ary_tree const& from, n_ary_tree const& to, const u32 current_time_in_ms ) :
 	m_animations_count		( 0 ),
 	m_animated_objects_count( 0 ),
 	m_current_time_in_ms	( current_time_in_ms ),
 	m_from					( from ),
 	m_to					( to ),
 	m_equal					( true ),
-	m_needed_buffer_size	( 4 )
+	m_needed_buffer_size	( 0 )
 {
 
+	m_needed_buffer_size += sizeof( n_ary_tree_intrusive_base );
 	process_interpolators( from, to );
 
 	m_animated_objects_end = m_animated_objects = ( animated_object_holder* )ALLOCA( sizeof( animated_object_holder ) * ( from.animated_objects_count() + to.animated_objects_count() ) );
 	merge_trees( from, to );
 
-	m_animated_objects_count = m_animated_objects_end - m_animated_objects;
-	m_needed_buffer_size += m_animations_count * sizeof( animation_state ) + m_animated_objects_count * sizeof( animated_object_holder );
+	m_animated_objects_count = m_animated_objects_end - m_animated_objects; m_needed_buffer_size += m_animations_count * sizeof( animation_state );
+	m_needed_buffer_size += m_animated_objects_count * sizeof( animated_object_holder );
 }
 
 } // namespace mixing
