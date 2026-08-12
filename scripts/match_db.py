@@ -47,6 +47,9 @@ DECLARATIONS = VOSTOK / "binaries" / "rich" / "target" / "declarations.jsonl"
 EXACT_FOLD_ALIASES = (
     VOSTOK / "docs" / "binary_matching" / "exact_fold_aliases.tsv"
 )
+MODULE_OWNERSHIP_OVERRIDES = (
+    VOSTOK / "docs" / "binary_matching" / "module_ownership_overrides.tsv"
+)
 
 SCHEMA = """
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
@@ -414,6 +417,7 @@ def mangled_name_part(mangled):
 _DYN_RE = re.compile(r"^(.*?)`dynamic (initializer|atexit destructor) for '(.*)''$")
 _IDENT_RE = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 _LOCAL_SCOPE_RE = re.compile(r"::`\d+'::")
+_LOCAL_FUNCTION_SCOPE_RE = re.compile(r"^`([^'\r\n]+)'::`\d+'::")
 
 
 def dyn_canon_rich(mangled):
@@ -479,6 +483,82 @@ def dyn_owner_compatible(target_rec, base_rec, canon):
         or target_file == base_file
         or bool(_LOCAL_SCOPE_RE.search(canon[1]))
     )
+
+
+def dynamic_local_owner_modules(records):
+    """Resolve function-local static thunks through their enclosing PDB owner.
+
+    ICF may attribute the thunk body to an unrelated inline header. Its rich
+    name still preserves the complete enclosing function scope and local-scope
+    ordinal. When that enclosing function has one source owner in the target
+    PDB, that source module is the thunk's logical owner.
+    """
+    scopes_by_canon = {}
+    for rec in records:
+        canon = dyn_canon_rich(rec["mangled"])
+        if not canon:
+            continue
+        match = _LOCAL_FUNCTION_SCOPE_RE.match(canon[1])
+        if match:
+            scopes_by_canon[canon] = match.group(1)
+
+    files_by_scope = {}
+    for scope in set(scopes_by_canon.values()):
+        marker = f"{scope}("
+        files = {
+            rec["file"] for rec in records
+            if marker in (rec.get("name") or "") and rec.get("file")
+        }
+        if len(files) == 1:
+            files_by_scope[scope] = next(iter(files))
+
+    return {
+        canon: module_of(files_by_scope[scope])
+        for canon, scope in scopes_by_canon.items()
+        if scope in files_by_scope
+    }
+
+
+def load_module_ownership_overrides(path=MODULE_OWNERSHIP_OVERRIDES):
+    """Load reviewed mangled-name owners for PDB records defeated by ICF."""
+    if not path.is_file():
+        return {}
+    overrides = {}
+    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+        if not raw or raw.startswith("#"):
+            continue
+        fields = raw.split("\t")
+        if len(fields) != 3:
+            raise ValueError(f"{path}:{number}: expected symbol, module, source file")
+        mangled, module, source_file = fields
+        if not mangled or not module or module_of(source_file) != module:
+            raise ValueError(f"{path}:{number}: inconsistent module ownership row")
+        if mangled in overrides:
+            raise ValueError(f"{path}:{number}: duplicate symbol {mangled}")
+        overrides[mangled] = module
+    return overrides
+
+
+def logical_module(mangled, rec, units, dynamic_owners, overrides):
+    """Return logical source ownership, independent of an ICF body owner."""
+    override = overrides.get(mangled)
+    if override:
+        return override
+    canon = dyn_canon_rich(mangled) or dyn_canon_base(mangled)
+    if canon and canon in dynamic_owners:
+        return dynamic_owners[canon]
+    unit_or_file = rec["file"] if units and rec["file"] in units else (
+        units[0] if units else rec["file"]
+    )
+    return module_of(unit_or_file)
+
+
+def dynamic_pair_score(target_mangled, base_mangled, target_rec, base_rec, scores):
+    """Use report score, or strict rich-stream exact evidence when unscored."""
+    fuzzy = scores.get(target_mangled, scores.get(base_mangled))
+    if fuzzy is None and instruction_stream_exact(target_rec, base_rec):
+        return 100.0
+    return fuzzy
 
 
 def is_framed(rec):
@@ -1060,6 +1140,8 @@ def regen():
         target_owners,
         target_primary_signatures,
     )
+    dynamic_owners = dynamic_local_owner_modules(target_records)
+    module_overrides = load_module_ownership_overrides()
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
 
     log("loading report.json ...")
@@ -1114,7 +1196,9 @@ def regen():
                     sym_id[mangled],
                     unit_id.get(unit),
                     file_id[rec["file"]],
-                    module_of(unit or rec["file"]),
+                    logical_module(
+                        mangled, rec, units, dynamic_owners, module_overrides
+                    ),
                     line,
                     rec["size"],
                     len(stmts),
@@ -1345,7 +1429,9 @@ def regen():
                 sym_id[tm],
                 target[tm]["rva"],
                 base[bm]["rva"],
-                fuzzy_by_mangled.get(tm, fuzzy_by_mangled.get(bm)),
+                dynamic_pair_score(
+                    tm, bm, target[tm], base[bm], fuzzy_by_mangled
+                ),
                 cls,
                 t_n,
                 b_n,
@@ -1517,7 +1603,9 @@ def regen():
         units = units_by_mangled.get(mangled)
         if not units and brec is not None:
             units = units_by_mangled.get(brec["mangled"])
-        module = module_of(units[0] if units else source_file)
+        module = logical_module(
+            mangled, brec, units, dynamic_owners, module_overrides
+        )
         effective_hash = effective_source_hash(brec, module)
         state_id = compiled_state_id(brec)
         current_exact = int(fuzzy >= 99.995)
@@ -1713,7 +1801,7 @@ def cmd_list(args):
     where, params = [], []
     if args.presence == "PAIRED" or args.presence is None:
         base = """
-          SELECT s.demangled, s.mangled, u.name AS unit, u.module,
+          SELECT s.demangled, s.mangled, u.name AS unit, t.module,
                  t.size AS t_size, b.size AS b_size,
                  p.fuzzy_pct, p.struct_class,
                  p.t_stmts, p.b_stmts, p.n_size_rows, p.n_trgt_only, p.n_base_only,
@@ -1726,7 +1814,7 @@ def cmd_list(args):
         size_col = "t.size"
         name_col = "s.mangled"
         # module/unit exist on t, b AND u here - qualify or SQLite errors "ambiguous"
-        module_col, unit_col = "u.module", "u.name"
+        module_col, unit_col = "t.module", "u.name"
     elif args.presence == "TARGET_ONLY":
         base = "SELECT demangled, mangled, unit, module, size, n_stmts FROM target_only"
         size_col = "size"

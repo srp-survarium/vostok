@@ -1,0 +1,16 @@
+# target symbol<TAB>logical module<TAB>authoritative source owner
+#
+# The target PDB can attach an ICF-folded body to an unrelated header. These
+# reviewed rows restore logical module ownership only; they do not pair a body
+# or award a score. Function-local static thunks are resolved automatically
+# through their enclosing target-PDB function and do not belong in this file.
+??_Gjump_logic_state_start@survarium@@UAEPAXI@Z	game_core	vostok/game_core/sources/jump_logic_state_start.h
+??1client_player_state@survarium@@QAE@XZ	game	vostok/game/sources/client_player_state.h
+??_Ganimated_model_instance@physics@vostok@@UAEPAXI@Z	physics	vostok/physics/model.h
+??_Gskeleton_render_model@render@vostok@@UAEPAXI@Z	render	vostok/render/engine/sources/render_model_skeleton.h
+??_Gpistol_weapon_core_show_state@survarium@@UAEPAXI@Z	game_core	vostok/game_core/pistol_weapon_core_show_state.h
+??_Gweapon_core_show_state@survarium@@UAEPAXI@Z	game_core	vostok/game_core/weapon_core_show_state.h
+??_Gplayer@survarium@@UAEPAXI@Z	game	vostok/game/sources/player.h
+??_Gskeleton_render_model_instance@render@vostok@@UAEPAXI@Z	render	vostok/render/engine/sources/render_model_skeleton.h
+??0interactive_object@survarium@@QAE@XZ	game_core	vostok/game_core/interactive_object.h
+??1interactive_object@survarium@@UAE@XZ	game_core	vostok/game_core/interactive_object.h

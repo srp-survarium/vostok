@@ -604,6 +604,85 @@ class DynamicThunkAliasTests(unittest.TestCase):
             )
         )
 
+    def test_resolves_local_static_owner_from_enclosing_target_function(self):
+        thunk = (
+            "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
+            "`dynamic atexit destructor for 's_fire_cook''"
+        )
+        records = [
+            {
+                "mangled": thunk,
+                "name": f"void {thunk}()",
+                "file": "vostok/animation/anim_track_common.h",
+            },
+            {
+                "mangled": "?register_cooks_for_logic_states@weapon_cook@@SAXXZ",
+                "name": "void survarium::weapon_cook::register_cooks_for_logic_states()",
+                "file": "vostok/game/sources/weapon_cook.cpp",
+            },
+        ]
+
+        owners = MATCH_DB.dynamic_local_owner_modules(records)
+
+        self.assertEqual(
+            owners[MATCH_DB.dyn_canon_rich(thunk)],
+            "game",
+        )
+
+    def test_exact_rich_stream_fills_only_missing_dynamic_pair_score(self):
+        target = {"size": 1, "instructions": [{"off": 0, "len": 1, "text": "ret"}]}
+        base = dict(target)
+        self.assertEqual(
+            MATCH_DB.dynamic_pair_score("target", "base", target, base, {}),
+            100.0,
+        )
+        self.assertEqual(
+            MATCH_DB.dynamic_pair_score(
+                "target", "base", target, base, {"target": 75.0}
+            ),
+            75.0,
+        )
+        different = {
+            "size": 1,
+            "instructions": [{"off": 0, "len": 1, "text": "int 3"}],
+        }
+        self.assertIsNone(
+            MATCH_DB.dynamic_pair_score("target", "base", target, different, {})
+        )
+
+
+class ModuleOwnershipOverrideTests(unittest.TestCase):
+    def test_loads_reviewed_owner_and_rejects_inconsistent_source_module(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            path = Path(temporary_directory) / "owners.tsv"
+            path.write_text(
+                "?symbol@@\tgame_core\tvostok/game_core/example.h\n",
+                encoding="utf-8",
+            )
+            self.assertEqual(
+                MATCH_DB.load_module_ownership_overrides(path),
+                {"?symbol@@": "game_core"},
+            )
+            path.write_text(
+                "?symbol@@\tanimation\tvostok/game_core/example.h\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, "inconsistent module ownership"):
+                MATCH_DB.load_module_ownership_overrides(path)
+
+    def test_logical_module_prefers_reviewed_owner_over_folded_unit(self):
+        record = {"file": "vostok/animation/folded_inline.h"}
+        self.assertEqual(
+            MATCH_DB.logical_module(
+                "?symbol@@",
+                record,
+                [record["file"]],
+                {},
+                {"?symbol@@": "game_core"},
+            ),
+            "game_core",
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
