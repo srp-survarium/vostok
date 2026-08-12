@@ -218,10 +218,9 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 		if ( !( animation_node.bones_mask( ) & bone_mask ) )
 			continue;
 
-		frame animation_frame;
 		current_frame_position frame_position;
 		cubic_spline_skeleton_animation const& animation	= *i->bone_matrices_computer.pinned_animation;
-		if ( animation.get_bone_names( ).bone_index( bone.id( ) ) == u32(-1) ) animation_frame = identity_frame( ); else animation.bone( animation.get_bone_names( ).bone_index( bone.id( ) ) ).get_frame( i->animation_time * default_fps, animation_frame, frame_position );
+		frame const& animation_frame	= animation.get_bone_names( ).bone_index( bone.id( ) ) != u32(-1) ? animation.bone( animation.get_bone_names( ).bone_index( bone.id( ) ) ).bone_frame( i->animation_time * default_fps, frame_position ) : identity_frame( );
 
 		translations.push_back	( std::make_pair( animation_frame.translation, i->weight ) );
 		rotations.push_back		( std::make_pair( animation_frame.rotation, i->weight ) );
@@ -234,9 +233,8 @@ bone_transform bone_matrices_computer::computed_local_bone_transform( skeleton_b
 			total_weight	+= i->second;
 
 		if ( math::abs( total_weight - 1.f ) >= math::epsilon_5 ) {
-			float const inverted_total_weight	= 1.f / total_weight;
 			for ( weighted_transform* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
-				i->second	*= inverted_total_weight;
+				i->second	*= 1.f / total_weight;
 
 			float normalized_total_weight	= 0.f;
 			for ( weighted_transform const* i = rotations.begin( ), * const end = rotations.end( ); i != end; ++i )
