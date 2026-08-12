@@ -18,10 +18,10 @@
 
 namespace survarium {
 
-// claude@NOTE: logging residual is the repo-wide wall - the target ICF-folds
-// has_passed_filters/append onto empty_stub while the base emits the real logging
-// bodies; structure/verbosity/strings are from the asm. The incoming message-type
-// bytes (0xC9 text, 0xCC friendship) have no named constant in this trimmed tree.
+// claude@NOTE: the source branch structure, message values, and logging calls are
+// target-attested. Gold tail-merges the repeated successful friend/ignore query
+// paths while the base duplicates them; logging expansion then changes statement
+// attribution. Revisit only with function-scoped compiler-context control.
 void messaging_client::on_packet_received( network_core::packet_reader& reader )
 {
 	const u8 message_type = reader.r< u8 >( );
