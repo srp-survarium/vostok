@@ -19,8 +19,6 @@ public:
 							boost::function< void( game_object_& ) >&	cb
 						) override;
 
-	virtual				~game_object_static	( ) { /* no source */ }
-
 protected:
 	/* 0x0000 */	/* game_object_ */
 	/* 0x0110 */	float4x4	m_transform;

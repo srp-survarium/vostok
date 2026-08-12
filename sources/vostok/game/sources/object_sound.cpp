@@ -23,11 +23,7 @@ void load_transform( configs::binary_config_value const& t, float4x4& dest );
 {
 }
 
-// claude@NOTE: dtor byte-residual is the inlined base-class dtor chain - the target
-// tail-jmps ~unmanaged_resource without re-writing the game_object_ vtable, while our
-// base inlines ~game_object_ (header-inline {}) which emits that extra vtable store.
-// A game_object_ dtor-codegen artifact, not steerable from this TU.
- object_sound::~object_sound( )
+object_sound::~object_sound( )
 {
 }
 
