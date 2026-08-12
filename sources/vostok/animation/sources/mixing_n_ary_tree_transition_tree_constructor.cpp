@@ -633,7 +633,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	return							add_animation_node( *result, &animation.animation_state( ), animation_interval_id, animation_interval_time, true );
 }
 
-void n_ary_tree_transition_tree_constructor::add_weight_synchronization_group( n_ary_tree_animation_node* begin, n_ary_tree_animation_node* end )
+void n_ary_tree_transition_tree_constructor::add_weight_synchronization_group( n_ary_tree_animation_node* const begin, n_ary_tree_animation_node* const end )
 {
 	n_ary_tree_animation_node* const new_animation	= add_animation( *begin, 0 );
 	n_ary_tree_animation_node* const weight_driving_animation	=
