@@ -271,8 +271,8 @@ void n_ary_tree_comparer::new_weight_transition( float from, float to )
 
 void n_ary_tree_comparer::remove_animation(
 	n_ary_tree_animation_node&			animation,
-	n_ary_tree_animation_node const*	weight_driving_animation,
-	bool								is_new_driving_animation
+	n_ary_tree_animation_node const* const	weight_driving_animation,
+	bool const							is_new_driving_animation
 )
 {
 	base_interpolator const& interpolator	=
@@ -343,7 +343,7 @@ void n_ary_tree_comparer::remove_animation(
 			break;
 		case 1:
 			increase_buffer_size	( *animation.operands( sizeof( n_ary_tree_animation_node ) )[
-				animation.operands_count( ) && (*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0
+				(*animation.operands( sizeof( n_ary_tree_animation_node ) ))->is_time_scale( ) ? 1 : 0
 			] );
 			break;
 		default: {
