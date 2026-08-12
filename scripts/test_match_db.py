@@ -1,4 +1,5 @@
 import importlib.util
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -38,6 +39,82 @@ class CompilerNameTests(unittest.TestCase):
         )
 
         self.assertEqual(NORMALIZE.compiler_name(target), base)
+
+    def test_derives_only_unique_same_owner_rich_pdb_aliases(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            target_index = root / "target.jsonl"
+            base_index = root / "base.jsonl"
+            target_records = [
+                {
+                    "file": "vostok/render/core/dx11/sources/custom_config.cpp",
+                    "name": "void vostok::render::construct<int>(int)",
+                    "mangled": "vostok::render::construct<int>",
+                },
+                {
+                    "file": "first.cpp",
+                    "name": "void duplicate<int>(int)",
+                    "mangled": "duplicate<int>",
+                },
+                {
+                    "file": "second.cpp",
+                    "name": "void duplicate<float>(float)",
+                    "mangled": "duplicate<int>",
+                },
+                {
+                    "file": "third.cpp",
+                    "name": "void alias_one()",
+                    "mangled": "alias_one",
+                },
+                {
+                    "file": "third.cpp",
+                    "name": "void alias_two()",
+                    "mangled": "alias_two",
+                },
+            ]
+            base_records = [
+                {
+                    "file": "vostok/render/core/dx11/sources/custom_config.cpp",
+                    "name": "void vostok::render::construct<int>(int)",
+                    "mangled": "??$construct@H@render@vostok@@YAXH@Z",
+                },
+                {
+                    "file": "first.cpp",
+                    "name": "void duplicate<int>(int)",
+                    "mangled": "??$duplicate@H@@YAXH@Z",
+                },
+                {
+                    "file": "second.cpp",
+                    "name": "void duplicate<float>(float)",
+                    "mangled": "??$duplicate@M@@YAXM@Z",
+                },
+                {
+                    "file": "third.cpp",
+                    "name": "void alias_one()",
+                    "mangled": "?shared_alias@@YAXXZ",
+                },
+                {
+                    "file": "third.cpp",
+                    "name": "void alias_two()",
+                    "mangled": "?shared_alias@@YAXXZ",
+                },
+            ]
+            target_index.write_text(
+                "".join(json.dumps(record) + "\n" for record in target_records)
+            )
+            base_index.write_text(
+                "".join(json.dumps(record) + "\n" for record in base_records)
+            )
+
+            aliases = NORMALIZE.rich_pdb_aliases(target_index, base_index)
+
+        self.assertEqual(
+            aliases,
+            {
+                "vostok::render::construct<int>":
+                    "??$construct@H@render@vostok@@YAXH@Z"
+            },
+        )
 
 
 class IndexByMangledTests(unittest.TestCase):

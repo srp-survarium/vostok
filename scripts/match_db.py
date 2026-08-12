@@ -1208,7 +1208,21 @@ def regen():
     )
     dynamic_owners = dynamic_local_owner_modules(target_records)
     module_overrides = load_module_ownership_overrides()
+    rich_pdb_aliases = normalize_objdiff_symbols.rich_pdb_aliases(
+        TARGET_IDX,
+        BASE_IDX,
+        source_prefix="vostok/render/",
+    )
+
+    def compiler_alias(mangled):
+        return (
+            rich_pdb_aliases.get(mangled)
+            or normalize_objdiff_symbols.compiler_name(mangled)
+        )
+
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
+    if rich_pdb_aliases:
+        log(f"  render rich-PDB aliases: {len(rich_pdb_aliases)}")
 
     log("loading report.json ...")
     report = json.loads(REPORT.read_text())
@@ -1286,6 +1300,9 @@ def regen():
         fuzzy = report_score_for_target(mangled, fuzzy_by_mangled)
         if fuzzy is not None:
             fuzzy_by_mangled[mangled] = fuzzy
+        compiler = compiler_alias(mangled)
+        if compiler in fuzzy_by_mangled and mangled not in fuzzy_by_mangled:
+            fuzzy_by_mangled[mangled] = fuzzy_by_mangled[compiler]
     pair_rows = []
     rich_exact = 0
     for mangled in sorted(set(target) & set(base)):
@@ -1323,7 +1340,7 @@ def regen():
     used_base_rvas = {row[2] for row in pair_rows}
     n_compiler_alias = 0
     for tm in sorted(set(target) - paired_primary):
-        bm = normalize_objdiff_symbols.compiler_name(tm)
+        bm = compiler_alias(tm)
         if (
             bm not in base
             or tm not in fuzzy_by_mangled

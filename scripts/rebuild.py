@@ -3,12 +3,9 @@
 rebuild.py - full base-side refresh after editing sources.
 
   1. Build survarium via ninja under Wine (scripts/ninja_build.py).
-  2. In parallel (all IO-bound, disjoint outputs):
-       a. binaries/structure/base  - pdb-parser --as-base   (generate_structure.py)
-       b. binaries/objdiff/base    - vostok-delinker COFF   (generate_delink.py)
-          + refreshed objdiff.json
-       c. binaries/rich/base       - pdb_rich_context index (generate_rich.py),
-          the backing store for `pdb_fetch` (target asm + instruction diff).
+  2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
+     normalizer consumes the completed rich index, so those two steps must be
+     ordered. binaries/structure/base remains disjoint and runs in parallel.
   3. Regenerate docs/binary_matching/match.db from the fresh report.json
      (match_db.regen()). rebuild.py is the canonical build step and owns the DB
      regen; `match_db.py refresh` is the regen-only path for an already-built
@@ -194,23 +191,34 @@ def main() -> None:
         except subprocess.CalledProcessError as e:
             die(f"ninja build failed (exit {e.returncode}); not regenerating diff inputs")
 
-        log(f"Build OK ({_summarize(modules)}). "
-            "Regenerating base structure + COFF + rich index in parallel ...")
-        steps = {
-            "base structure":  lambda: generate_structure.generate("base"),
-            "base COFF":       lambda: generate_delink.generate("base"),
-            "base rich index": lambda: generate_rich.generate("base"),
-        }
+        log(
+            f"Build OK ({_summarize(modules)}). Regenerating base rich index "
+            "then COFF; base structure runs in parallel ..."
+        )
         failures = []
-        with ThreadPoolExecutor(max_workers=len(steps)) as ex:
-            futures = {name: ex.submit(fn) for name, fn in steps.items()}
-            for name, fut in futures.items():
+        with ThreadPoolExecutor(max_workers=1) as ex:
+            structure = ex.submit(generate_structure.generate, "base")
+            try:
+                generate_rich.generate("base")
+                log("base rich index: OK")
+            except Exception as e:  # noqa: BLE001 - report every step's failure
+                failures.append("base rich index")
+                log(f"base rich index: FAILED - {e}")
+
+            if "base rich index" not in failures:
                 try:
-                    fut.result()
-                    log(f"{name}: OK")
+                    generate_delink.generate("base")
+                    log("base COFF: OK")
                 except Exception as e:  # noqa: BLE001 - report every step's failure
-                    failures.append(name)
-                    log(f"{name}: FAILED - {e}")
+                    failures.append("base COFF")
+                    log(f"base COFF: FAILED - {e}")
+
+            try:
+                structure.result()
+                log("base structure: OK")
+            except Exception as e:  # noqa: BLE001 - report every step's failure
+                failures.append("base structure")
+                log(f"base structure: FAILED - {e}")
 
         if failures:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
