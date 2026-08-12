@@ -51,6 +51,7 @@ public:
 
 	bool is_effects_ready( ) const;
 
+private:
 	float evaluate_noise( float, float, u32 )
 	{
 		// STATE[STUB]
@@ -69,7 +70,6 @@ public:
 
 	void fill_cloud_texture( u32 index );
 
-private:
 	res_texture_ptr			m_3d_clouds_density_texture[2];
 	res_texture_ptr			m_3d_clouds_density_texture_left;
 	res_texture_ptr			m_3d_clouds_density_texture_right;

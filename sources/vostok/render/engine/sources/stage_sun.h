@@ -30,9 +30,10 @@ public:
 	);
 
 	virtual void execute( ) override;
-	bool is_effects_ready( ) const;
 
 private:
+	bool is_effects_ready( ) const;
+
 	res_effect_ptr			m_sun_effect;
 	res_texture_ptr			m_shadow_jitter;
 	box_geometry			m_box_geometry;
