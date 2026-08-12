@@ -50,37 +50,51 @@ struct effect_constant_storage : public quasi_singleton<effect_constant_storage>
 	template < typename T >
 	T* store_constant( T const value )
 	{
-		u32 const class_id = constant_type_traits<T>::class_id;
-		data_indexer sought( reinterpret_cast<u32*>( const_cast<T*>( &value ) ), class_id );
+		COMPILE_ASSERT( constant_type_traits<T>::size % 4 == 0, The_type_must_be_multiple_to_4_bytes );
+
+		u32 class_id = constant_type_traits<T>::class_id;
+		data_indexer to_find( (u32*)&value, class_id );
 		indexers_vector_type::iterator found = std::lower_bound(
 			m_indexers.begin( ),
 			m_indexers.end( ),
-			sought,
+			to_find,
 			constant_data_predicate
 		);
 
-		for ( ; found != m_indexers.end( ); ++found )
-			if ( is_equal( found->data_ptr, sought.data_ptr, sizeof( T ) / sizeof( u32 ) ) )
-				return reinterpret_cast<T*>( found->data_ptr );
+		while ( found != m_indexers.end( ) ) {
+			if ( is_equal( found->data_ptr, (u32*)&value, sizeof( value ) / 4 ) ) {
+				return (T*)found->data_ptr;
+			}
+
+			++found;
+		}
 
 		if ( !m_constant_buffer )
 			m_constant_buffer = NEW( fixed_constants_data_buffer );
 		if ( m_constant_buffer->is_overflowing( sizeof( T ) ) ) {
-			fixed_constants_data_buffer* buffer = NEW( fixed_constants_data_buffer );
-			buffer->next = m_constant_buffer;
-			m_constant_buffer = buffer;
+			fixed_constants_data_buffer* new_buffer = NEW( fixed_constants_data_buffer );
+			new_buffer->next = m_constant_buffer;
+			m_constant_buffer = new_buffer;
 		}
 
-		T* stored = new( m_constant_buffer->place<T>( ) ) T( value );
-		data_indexer inserted( reinterpret_cast<u32*>( stored ), class_id );
-		indexers_vector_type::iterator position = std::lower_bound(
+		T* new_data = new( m_constant_buffer->place<T>( ) )( T );
+		*new_data = value;
+
+		data_indexer to_insert( (u32*)new_data, class_id );
+		indexers_vector_type::iterator where_insert = std::lower_bound(
 			m_indexers.begin( ),
 			m_indexers.end( ),
-			inserted,
+			to_insert,
 			constant_data_predicate
 		);
-		m_indexers.insert( position, inserted );
-		return stored;
+
+		if ( where_insert != m_indexers.end( ) ) {
+			m_indexers.insert( where_insert, 1, to_insert );
+		}
+		else
+			m_indexers.push_back( to_insert );
+
+		return new_data;
 	}
 
 private:
