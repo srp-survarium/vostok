@@ -12,6 +12,34 @@ MATCH_DB = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MATCH_DB)
 
 
+NORMALIZE_SPEC = importlib.util.spec_from_file_location(
+    "vostok_normalize_objdiff_symbols",
+    Path(__file__).with_name("normalize_objdiff_symbols.py"),
+)
+NORMALIZE = importlib.util.module_from_spec(NORMALIZE_SPEC)
+NORMALIZE_SPEC.loader.exec_module(NORMALIZE)
+
+
+class CompilerNameTests(unittest.TestCase):
+    def test_normalizes_render_local_type_scope_aliases(self):
+        target = (
+            "vostok::render::create_shadow_pass_geometry_type<"
+            "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+            "`2'::static_vertex0,"
+            "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+            "`2'::opt_static_vertex>"
+        )
+        base = (
+            "vostok::render::create_shadow_pass_geometry_type<"
+            "`vostok::render::static_render_surface::create_shadow_pass_geometry'::"
+            "`2'::static_vertex0,"
+            "`vostok::render::static_render_surface::opt_static_vertex'::"
+            "`2'::opt_static_vertex>"
+        )
+
+        self.assertEqual(NORMALIZE.compiler_name(target), base)
+
+
 class IndexByMangledTests(unittest.TestCase):
     def record(self, name, rva, file="vostok/sound/sources/sound_scene.cpp"):
         return {
