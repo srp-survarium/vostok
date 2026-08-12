@@ -193,8 +193,7 @@ void decal_instance::set_properties( decal_properties const& in_properties )
 	m_properties.projection_on_speedtree_geometry	= in_properties.projection_on_speedtree_geometry;
 	m_properties.projection_on_skeleton_geometry	= in_properties.projection_on_skeleton_geometry;
 	m_properties.projection_on_particle_geometry	= in_properties.projection_on_particle_geometry;
-	// claude@NOTE: canonical-only member (absent from the legacy ancestor).
-	m_draw_priority									= in_properties.draw_priority;
+	m_properties.draw_priority					= in_properties.draw_priority;
 
 	remove_collision					();
 	float4x4 m							= m_properties.transform;
