@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "AI-before-animation LTCG observation for the unchanged two-float cloner overload. The candidate retains the target one-block structure at 4:4 rich statements and is partial MAX evidence only.",
+  "link_perturbation": "AI immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "a6dd93cc71ff213d3b22479d0fd8b53c1a801b51987423d8b80d82d10a300779",
+  "base_index_sha256": "dff8ffd7dc2fe0002eb8b21496ae1187d80e197f75ff63691b8c73f9edf28030",
+  "candidate_exe_sha256": "0424aa68e280ed750d3fa2e157ae03446e6a3fd13c55f8883023151c698d484c",
+  "candidate_pdb_sha256": "9d4b0a2d4731ef455780d05e344f95368db4397455735620d901158d6f38676c",
+  "functions": [
+    {
+      "mangled": "?clone@n_ary_tree_cloner@mixing@animation@vostok@@QAEPAUn_ary_tree_base_node@234@AAU5234@MM@Z",
+      "module": "animation",
+      "expected_hash": "8bd94c4e2d6f.e9fb1e46fa321f3a.b915e480988a214b",
+      "expected_fuzzy_pct": 95.71429,
+      "review": "Target and candidate have the same one-block CFG and 4:4 rich statement structure. The body preserves the interval-time pointer setup, visitor dispatch, time-scale reset, and result return; the residual five-byte size gap is optimized operand scheduling, so this is partial MAX evidence."
+    }
+  ]
+}
