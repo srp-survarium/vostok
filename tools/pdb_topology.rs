@@ -473,7 +473,7 @@ fn build_class_report(
         };
 
         compared_classes += 1;
-        let base_class = canonical_class(base_variants);
+        let base_class = closest_base_class(base_variants, target_class);
         let differences = compare_class(base_class, target_class);
         let status = if differences.is_empty() {
             identical_classes += 1;
@@ -906,6 +906,19 @@ fn canonical_class(variants: &[ClassModel]) -> &ClassModel {
         .expect("complete class variant list cannot be empty")
 }
 
+fn closest_base_class<'a>(variants: &'a [ClassModel], target: &ClassModel) -> &'a ClassModel {
+    variants
+        .iter()
+        .min_by_key(|class| {
+            (
+                compare_class(class, target).len(),
+                std::cmp::Reverse(class.entries.len()),
+                std::cmp::Reverse(class.size),
+            )
+        })
+        .expect("complete class variant list cannot be empty")
+}
+
 fn class_summary(class: &ClassModel) -> String {
     format!(
         "{} {} size=0x{:x} declarations={}",
@@ -1332,7 +1345,7 @@ fn render_class_report(report: &ClassReport, show_identical: bool) -> String {
         if class.target_variants > 1 || class.base_variants > 1 {
             let _ = writeln!(
                 out,
-                "  PDB variants: target={} base={} (richest/latest compared)",
+                "  PDB variants: target={} base={} (richest target / closest base compared)",
                 class.target_variants, class.base_variants,
             );
         }
