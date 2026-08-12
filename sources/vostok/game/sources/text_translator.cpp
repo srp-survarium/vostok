@@ -37,18 +37,30 @@ void text_translator::load_text_localization( )
 	);
 }
 
-void text_translator::translate_text( pcstr text_id, wchar_t* const translated_text )
+
+
+
+
+
+
+
+
+
+
+void text_translator::translate_text( pcstr text_id, wchar_t* translated_text )
 {
+	size_t converted_chars_count;
 	pcstr translated;
 	if ( !m_text_data->get_root( )["strings"].value_exists( text_id ) )
 	{
-		LOG_WARNING						( "There is no available localization for [%s] !!!", text_id );
+		LOG_INFO							( "There is no available localization for [%s] !!!", text_id );
 		translated						= text_id;
 	}
 	else
 		translated						= m_text_data->get_root( )["strings"][text_id];
 
-	mbstowcs_s							( NULL, translated_text, 0x200, translated, _TRUNCATE );
+	converted_chars_count				= 0;
+	mbstowcs_s							( &converted_chars_count, translated_text, 0x200, translated, _TRUNCATE );
 }
 
 void text_translator::on_texts_ready( resources::queries_result& data )
