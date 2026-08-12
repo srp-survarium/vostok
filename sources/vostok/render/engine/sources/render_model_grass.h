@@ -39,6 +39,7 @@ public:
 STATIC_SIZE_ASSERT( grass_render_surface, 0xAC );
 
 class grass_render_model : public render_model {
+	typedef render_model super;
 	typedef grass_render_surface* child;
 
 public:
