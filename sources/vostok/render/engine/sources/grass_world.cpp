@@ -97,8 +97,9 @@ grass_world::~grass_world( )
 
 u32 grass_world::add_template( grass_render_model_ptr const& render_model )
 {
-	m_templates.push_back( NEW( grass_template )( ++g_template_counter, render_model ) );
-	return g_template_counter;
+	u32 const id = ++g_template_counter;
+	m_templates.push_back( NEW( grass_template )( id, render_model ) );
+	return id;
 }
 
 void grass_world::add_trample( trample_desc const& desc )
