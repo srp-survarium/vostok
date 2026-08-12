@@ -37,7 +37,7 @@ shader_constant* shader_constant_table::get( shared_string const& name)
 	return	0;
 }
 
-shader_constant* shader_constant_table::get( pcstr const name)
+shader_constant* shader_constant_table::get( pcstr name)
 {
 	// FUNCTION BODY[0x7392e0]
 	c_table::iterator	it  = m_table.begin(),

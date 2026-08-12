@@ -76,7 +76,7 @@ public:
 	bool is_registered( ) const { return m_is_registered; }
 
 private:
-	shader_constant* get( pcstr const name );
+	shader_constant* get( pcstr name );
 	void fatal( pcstr msg )
 	{
 		VOSTOK_UNREFERENCED_PARAMETER( msg );
