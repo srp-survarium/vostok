@@ -42,9 +42,8 @@ namespace survarium {
 {
 	m_active_sound					= 0;
 
-	sounds_collection_type const* const begin	= sounds( );
-	sounds_collection_type const* const end		= begin + m_sounds_count;
-	for ( sounds_collection_type const* i = begin; i != end; ++i )
+	sounds_collection_type const* const end		= sounds( ) + m_sounds_count;
+	for ( sounds_collection_type const* i = sounds( ); i != end; ++i )
 	{
 		i->~sounds_collection_type	( );
 	}
@@ -72,7 +71,9 @@ void ai_sound_player::play(
 	sounds_collection_type const* type	= find( sound_type );
 	R_ASSERT						( type, "such a type is absent in sound collections" );
 
-	m_active_sound					= type->emitter->emit_point_sound( m_scene, m_user );
+	m_active_sound					= sound_is_positioned ?
+		type->emitter->emit_point_sound( m_scene, m_user ) :
+		type->emitter->emit_hud_sound( m_scene, m_user );
 	m_active_sound->set_callback	( boost::bind( &ai_sound_player::on_finish_playing, this ) );
 
 	if ( sound_is_positioned )
