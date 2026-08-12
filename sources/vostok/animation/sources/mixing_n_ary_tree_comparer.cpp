@@ -543,8 +543,12 @@ void n_ary_tree_comparer::new_weight_transition(
 		return;
 
 	m_equal						= false;
-	if ( to_animation_interpolator.transition_time( ) != 0.f )
-		m_needed_buffer_size	+= sizeof( n_ary_tree_weight_transition_node ) + sizeof( n_ary_tree_weight_node );
+
+	if ( static_cast< n_ary_tree_weight_node& >( to ).interpolator( ).transition_time( ) == 0.f )
+		return;
+
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_node );
+	m_needed_buffer_size		+= sizeof( n_ary_tree_weight_transition_node );
 }
 
 void n_ary_tree_comparer::add_operands(
