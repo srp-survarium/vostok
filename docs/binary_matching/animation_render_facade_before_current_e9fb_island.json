@@ -1,0 +1,67 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source render_facade-before-animation LTCG observation on xray 113584ea5. The eight listed functions are operand-aware byte-exact and have identical target/candidate sizes and rich statement partitions. Two other byte-exact observations from this context are deliberately excluded because their line-table statement counts still diverge.",
+  "link_perturbation": "render_facade immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "9f02a4ddeced34543ddb7d2e9beb2a4d030f127fc3521a42665720156e9fe8c5",
+  "base_index_sha256": "a857dde8e5c91a22e07d34892deac0dc2480bace686a5daf8076f2dfa93ae2c0",
+  "candidate_exe_sha256": "3ee2e03dc021a52f59b0885cf4651659053e1d9c9bccdca73c95398c7c52f7b9",
+  "candidate_pdb_sha256": "24a6b8897204697cd21f167acc06fb643c2ea74b26db695338d0ac5e2813ec8f",
+  "functions": [
+    {
+      "mangled": "?destroy_resource@cubic_spline_skeleton_animation_cook@animation@vostok@@UAEXPAVmanaged_resource@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "b1d0eb6dee6a.e9fb1e46fa321f3a.fd2d9689bff15b41",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x2e bytes with zero rich statements. The source performs the pinned mutable-resource acquisition, obtains the concrete instance, and calls the class deletion helper in the target order."
+    },
+    {
+      "mangled": "??0single_animation@animation@vostok@@QAE@V?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@2@PAUbase_interpolator@12@@Z",
+      "module": "animation",
+      "expected_hash": "6d6a388112e1.e9fb1e46fa321f3a.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x3f bytes with zero rich statements. The initializer list preserves animation before interpolator and retains the target assertion body."
+    },
+    {
+      "mangled": "?on_cubic_spline_animation_cooked@skeleton_animation_cook@animation@vostok@@CAXAAVqueries_result@resources@3@V?$resource_ptr@Vbi_spline_skeleton_animation_baked@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@Z",
+      "module": "animation",
+      "expected_hash": "4199d135f968.e9fb1e46fa321f3a.52ab106758f85ff0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0xbf bytes with identical three-statement partitions. The source retrieves the managed result, publishes it to the parent query, then finishes successfully in target order."
+    },
+    {
+      "mangled": "??0callback_generator_info@mixing@animation@vostok@@QAE@QBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@MGEIE@Z",
+      "module": "animation",
+      "expected_hash": "9a34355f0ff1.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x4c bytes with zero rich statements. The constructor initializer order follows the target layout exactly, including the null next pointer and the packed u16/u8 tail fields."
+    },
+    {
+      "mangled": "?animation_intervals_count@animation_lexeme_parameters@mixing@animation@vostok@@SAIABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z",
+      "module": "animation",
+      "expected_hash": "64d679386cbe.e9fb1e46fa321f3a.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x8c bytes with identical nine-statement partitions. The source retains the pinned animation local, missing-channel early return, empty-channel early return, and final knot count."
+    },
+    {
+      "mangled": "??1bone_matrices_computer@animation@vostok@@QAE@XZ",
+      "module": "animation",
+      "expected_hash": "65629376fbd1.e9fb1e46fa321f3a.167ad65b2deac485",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0xa6 bytes with identical two-statement partitions. The destructor walks the complete animation-state range and clears each pinned animation through the target resource-pointer assignment shape."
+    },
+    {
+      "mangled": "?on_sub_resources_loaded@single_animation_cook@animation@vostok@@AAEXAAVqueries_result@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "80a66f90fcfc.e9fb1e46fa321f3a.35840df56a33af4d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x2ed bytes with identical 24-statement partitions. The source preserves the failure exit, resource/config extraction, interpolator-type switch, fallback allocation, animation construction, publication, and success completion."
+    },
+    {
+      "mangled": "??4animation_state@mixing@animation@vostok@@QAEAAU0123@ABU0123@@Z",
+      "module": "animation",
+      "expected_hash": "948383ef6d13.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 0x57 bytes with the same zero-line compiler-generated assignment body and __that local. The base rich-index file is an ICF representative; the emitted instructions, member-copy order, custom convention, and return are identical to the target animation_state operator."
+    }
+  ]
+}
