@@ -85,9 +85,9 @@ float n_ary_tree_animation_time_calculator::computed_animation_time	(
 }
 
 void n_ary_tree_animation_time_calculator::fill_time	(
-		float		time_scale,
-		float		animation_time_before_scale_starts,
-		u32			time_scale_start_time_in_ms
+		float const	time_scale,
+		float const	animation_time_before_scale_starts,
+		u32 const		time_scale_start_time_in_ms
 	)
 {
 	m_animation_time						= computed_animation_time(
