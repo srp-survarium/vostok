@@ -23,12 +23,13 @@ damage_zone_cook::damage_zone_cook( game_world& game_world ) :
 
 void damage_zone_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	variant< 32 >* user_data = parent.user_data( );
+
 	configs::binary_config_value cfg_val;
-	parent.user_data( )->try_get( cfg_val );
+	user_data->try_get( cfg_val );
 
 	vector< resources::request > requests;
-	resources::request request = { "", resources::class_id_enum( 0 ) };
-	requests.push_back( request );
+	requests.push_back( resources::create_request( "", resources::unknown_data_class ) );
 
 	resources::query_resources(
 		&requests.front( ),
