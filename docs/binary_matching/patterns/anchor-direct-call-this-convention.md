@@ -1,6 +1,6 @@
 # Anchor a non-virtual method by a guarded DIRECT CALL (not an address-take) to win the LTCG this-in-eax/esi/edi convention
 tags: cpp:member | asm:mov asm:jmp asm:ret | topic:anchoring topic:convention topic:inline-vs-call
-symptoms: target reads `this` from eax/esi/edi (not ecx), no push/pop of the this-reg, `ret 4` on an arg-taking method, base reaches the fn only via an `anchor_* &C::method` member-fn-ptr sink and scores 65-95% with a pure register-cascade diff
+symptoms: target reads `this` from eax/esi/edi (not ecx), no push/pop of the this-reg, `ret 4` on an arg-taking method, base reaches the fn through an `anchor_* &C::method` member-fn-ptr sink and scores 65-95% with a pure register-cascade diff
 confidence: 9/10
 variants: anchor-sole-caller-convention.md, eax-this-convention.md
 
@@ -52,6 +52,16 @@ taken somewhere in the real program (commit_suicide stayed 100% via the sink). V
 always use `__thiscall`; leave them on the sink. Tell them apart by reading the target's
 first instruction: `mov ecx,[ecx+off]` = sink; `mov ecx,[eax+off]` / `[esi+off]` = direct call.
 
+Retire the sink when a real call site lands. An address-take remains a whole-program
+constraint even when `xref --base` also shows the real caller: it can keep the standalone
+copy on stock `__thiscall` and prevent LTCG from promoting the arguments to match retail.
+For `breath_holding_params::load`, target used `cfg` in ESI and `this` on the stack, while
+the stale sink forced base to save ESI and use ECX/stack in the normal convention. Deleting
+only the sink kept the function alive through `player_cook::on_config_loaded`, changed
+97.26% to 100%, improved the real caller too, and produced zero regressions. Therefore,
+before accepting a convention wall, distinguish "anchor is the only caller" from "anchor
+is now redundant" and remove the latter.
+
 This supersedes the eax-this-convention.md "VERIFIED INEFFECTIVE" verdict for the
 reachable-only-via-anchor case: the methods it tried (header split, __declspec(noinline),
 the member-fn-ptr sink) all FORCE __thiscall; the guarded direct call is the device that
@@ -68,4 +78,4 @@ fire_pfx (esi this-conv) was unpaired until BOTH the direct-call anchor AND maki
 (+friend) landed -> 91.6% STRUCTURE MATCH (residual = a separate non-steerable call-boundary
 arg-eval register cascade). play_weapon_shell_pfx (esi, already QAE-public) went 79.6->91.6
 on the convention fix alone.
-evidence-basis: positive (vostok game, game.cpp/anchor_game_world.cpp 9 methods 65-97%->100%; weapon.cpp play_weapon_*_pfx 79.6/unpaired->91.6 STRUCTURE MATCH)
+evidence-basis: positive (vostok game, game.cpp/anchor_game_world.cpp 9 methods 65-97%->100%; weapon.cpp play_weapon_*_pfx 79.6/unpaired->91.6 STRUCTURE MATCH; game_core breath_holding_params::load 97.26%->100% by retiring a redundant sink)
