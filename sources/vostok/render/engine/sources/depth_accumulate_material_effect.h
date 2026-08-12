@@ -7,7 +7,6 @@ namespace vostok {
 namespace render {
 
 class depth_accumulate_material_effect : public effect_material_base {
-public:
 	virtual void compile(
 		effect_compiler&			compiler,
 		custom_config_value const&	config
