@@ -61,7 +61,8 @@ static void replace_values( custom_config_value const& in_v )
 		}
 		else
 		{
-			for (custom_config_value::const_iterator it=in_v.begin(); it!=in_v.end(); ++it) replace_values(*it);
+			for (custom_config_value::const_iterator it=in_v.begin(); it!=in_v.end(); ++it)
+				replace_values(*it);
 		}
 	}
 
