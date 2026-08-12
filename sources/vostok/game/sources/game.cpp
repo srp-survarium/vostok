@@ -102,6 +102,8 @@ static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect a
 
 namespace survarium {
 
+float g_max_angular_velocity[ 2 ];
+
 // TU-local (canonical headers/max_angular_velocity_command.h; owner mapping
 // in temp/triage_log.md) - the type of the s_max_angular_velocity_command static
 class max_angular_velocity_command : public console_commands::cc_float {
@@ -117,8 +119,10 @@ public:
 
 	inline	void	set_engine						( engine_user::engine& arg_0 ) { m_engine = &arg_0; }
 
-	virtual	void	execute							( pcstr arg_0 ) override { /* no source */ }
+private:
+	virtual	void	execute							( pcstr arg_0 ) override;
 
+public:
 	virtual			~max_angular_velocity_command	( ) { /* no source */ }
 
 private:
@@ -141,6 +145,16 @@ STATIC_SIZE_ASSERT(max_angular_velocity_command, 0x58);
 	m_engine( NULL ),
 	m_value( 720.f )
 {
+}
+
+void max_angular_velocity_command::execute( pcstr args )
+{
+	console_commands::cc_float::execute( args );
+	g_max_angular_velocity[ 1 ] = math::deg2rad( m_value );
+
+	float2 const window_size = m_engine->get_render_window_size( );
+	float const aspect_ratio = window_size.x / window_size.y;
+	g_max_angular_velocity[ 0 ] = aspect_ratio * g_max_angular_velocity[ 1 ];
 }
 
 static max_angular_velocity_command s_max_angular_velocity_command(
