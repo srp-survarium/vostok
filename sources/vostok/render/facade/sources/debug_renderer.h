@@ -47,8 +47,8 @@ private:
 
 public:
 	void draw_line( base_scene_ptr const& scene, float3 const& start_point, float3 const& end_point, math::color const& color, bool use_depth = true );
-	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float half_size, bool use_depth = true );
-	void draw_cross( base_scene_ptr const& scene, float3 const& point, float half_size, math::color const& color, bool use_depth = true );
+	void draw_origin( base_scene_ptr const& scene, float4x4 const& matrix, float const half_size, bool use_depth = true );
+	void draw_cross( base_scene_ptr const& scene, float3 const& point, float const half_size, math::color const& color, bool use_depth = true );
 	void draw_triangle( base_scene_ptr const& scene, vertex_colored const (&vertices)[3], bool use_depth = true );
 	void draw_triangle( base_scene_ptr const& scene, float3 const& point_0, float3 const& point_1, float3 const& point_2, math::color const& color, bool use_depth = true );
 	void draw_triangle( base_scene_ptr const& scene, vertex_colored const& vertex_0, vertex_colored const& vertex_1, vertex_colored const& vertex_2, bool use_depth = true );
