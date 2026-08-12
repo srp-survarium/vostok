@@ -10,6 +10,7 @@
 #include <vostok/command_line_extensions.h>
 #include <vostok/memory_extensions.h>	// memory::g_mt_allocator (cfg_save_*)
 #include <vostok/render/world.h>	// game_renderer() (ctor init)
+#include <vostok/render/facade/common_types.h>
 #include <vostok/render/facade/game_renderer.h>	// renderer().ui() (draw_debug_window)
 #include <vostok/render/facade/scene_renderer.h>
 #include <vostok/input/world.h>	// m_input_world->on_activate/on_deactivate
@@ -261,18 +262,9 @@ void game::execute_scaleform_command( scaleform_render_command command )
 	m_renderer.execute_scaleform_command	( command );
 }
 
-// STATE[STUB]
-// claude@NOTE: target body is
-//   m_renderer.scene( ).build_lpv_geometry( m_game_world.render_scene( ) );
-// but render::scene_renderer::build_lpv_geometry( base_scene_ptr const& ) is NOT
-// declared in our sources/vostok/render/facade/scene_renderer.h (it IS in the target
-// structure). That header is the render cluster's; cannot add the decl here. Keep
-// the stub buildable; restore the real call once render declares build_lpv_geometry.
 void game::build_lpv_geometry( )
 {
-	// FUNCTION BODY[0x5e6750]: 1
-	// <0x5e6750>|0x000|+0x016:'274'
-	// ******
+	m_renderer.scene( ).build_lpv_geometry( m_game_world.render_scene( ) );
 }
 
  game::~game( )
@@ -313,73 +305,51 @@ math::uint2 parse_resolution( pcstr in_str )
 	return vostok::math::uint2( 1280, 720 );
 }
 
-// STATE[STUB]
 void game::on_configs_loaded( resources::queries_result& result )
 {
-	// LOCALS
-	// variant< 32 > 					window_data
-	// variant< 32 > const*[1] 			data
-	// render::output_window_configuration window_configuration
-	// variant< 32 > 					output_window_data
-	// resources::request[1] 			requests
-	// math::uint2 						resolution_xy
-	// console_commands::console_command* fullscreen_command
-	// ******
+	initialize_modules				( );
 
-	// CALL SITE INFO
-	// <0x5e7814> -> HWND__* < unknown >() const
-	// <0x5e7839> -> bool < unknown >()
-	// ******
+	m_key_binder					= NEW( key_binder )( *this );
 
-	// FUNCTION BODY[0x5e7760]: 47
-	// <0x5e7771>|0x011|+0x02d:'330'
-	// <0>
-	// <0x5e779e>|0x03e|+0x021:'332'
-	// <0>
-	// <0x5e77bf>|0x05f|+0x01f:'334'
-	// <0x5e77de>|0x07e|+0x01a:'335'
-	// <0>
-	// <0x5e77f8>|0x098|+0x00c:'337'
-	// <0>
-	// <1>
-	// <0x5e7804>|0x0a4|+0x012:'340'
-	// <0>
-	// <1>
-	// <0x5e7816>|0x0b6|+0x009:'343'
-	// <0>
-	// <0x5e781f>|0x0bf|+0x020:'345'
-	// <0>
-	// <1>
-	// <0x5e783f>|0x0df|+0x018:'348'
-	// <0>
-	// <1>
-	// <2>
-	// <0x5e7857>|0x0f7|+0x00d:'352'
-	// <0>
-	// <1>
-	// <0x5e7864>|0x104|+0x008:'355'
-	// <0x5e786c>|0x10c|+0x00e:'356'
-	// <0x5e787a>|0x11a|+0x00d:'357'
-	// <0>
-	// <1>
-	// <0x5e7887>|0x127|+0x00e:'360'
-	// <0x5e7895>|0x135|+0x01a:'361'
-	// <0>
-	// <1>
-	// <0x5e78af>|0x14f|+0x012:'364'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <6>
-	// <7>
-	// <8>
-	// <9>
-	// <10>
-	// <0x5e78c1>|0x161|+0x0b3:'376'
-	// ******
+	load_cc_script					( result[0].get_managed_resource( ), false );
+	load_cc_script					( result[1].get_managed_resource( ), true );
+
+	m_text_translator.load_text_localization( );
+
+	render::output_window_configuration window_configuration;
+	window_configuration.hwnd				= m_engine.get_render_window_handle( );
+	window_configuration.scaleform_render_queue	= m_flash_factory->m_render_thread_queue;
+	window_configuration.create_flash_renderer	= true;
+	window_configuration.windowed				= true;
+
+	if ( !m_engine.command_line_editor( ) )
+	{
+		console_commands::console_command* fullscreen_command = console_commands::find( "r_fullscreen" );
+		math::uint2 resolution_xy = parse_resolution( static_cast< console_commands::cc_string* >( console_commands::find( "r_resolution" ) )->get_value( ) );
+		window_configuration.width		= resolution_xy.x;
+		window_configuration.height		= resolution_xy.y;
+		window_configuration.windowed	= !static_cast< console_commands::cc_value< bool >* >( fullscreen_command )->get_value( );
+	}
+
+	resources::user_data_variant window_data;
+	window_data.set					( window_configuration );
+	resources::user_data_variant output_window_data;
+	resources::user_data_variant const* data[] = { &window_data };
+
+	resources::request requests[] =
+	{
+		resources::create_request( "game_render_output_window", resources::render_output_window_class ),
+	};
+
+	resources::query_resources		(
+		requests,
+		1,
+		boost::bind					( &game::on_render_output_window_created, this, _1 ),
+		g_allocator,
+		data,
+		NULL,
+		assert_on_fail_true
+	);
 }
 
 void game::on_render_output_window_created( resources::queries_result& data )
@@ -583,6 +553,41 @@ void game::enable( bool value )
 		m_input_world->unacquire	( );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void game::on_renderer_created( resources::queries_result& data )
 {
 }
@@ -598,24 +603,32 @@ void game::on_config_loaded( resources::queries_result& data, bool create_render
 	load_cc_script					( data[0].get_managed_resource( ), create_renderer );
 }
 
-// claude@NOTE: 9-statement body, two halves. First half (608-615) is clean + recoverable:
-//   if ( cfg && cfg.c_ptr( ) ) {
-//     resources::pinned_ptr_const<u8> pinned_data( cfg );
-//     memory::reader F( pinned_data.c_ptr( ), pinned_data.size( ) );
-//     console_commands::load( F, console_commands::execution_filter_general );
-//   }
-// Second half (618-629) is BLOCKED: `if ( create_renderer )` builds a "renderer" creation
-// request whose user_data is the render ENGINE world read straight off the renderer facade
-// (asm: mov ecx,[m_renderer]; mov esi,[ecx+4] == render::game::renderer::m_render_engine_world)
-// then query_create_resources( ..., on_renderer_created, ... ). m_render_engine_world is a
-// PRIVATE member of render::game::renderer with no accessor and game is not a friend, so the
-// exact `[m_renderer+4]` load cannot be produced from game.cpp (m_render_world.engine_world()
-// reads a different slot). Writing only the first half would give the wrong (truncated)
-// structure, so the whole function stays a STUB. Lifts once the render cluster exposes the
-// renderer's engine world (an accessor or friend).
-// STATE[STUB]
 void game::load_cc_script( resources::managed_resource_ptr cfg, bool create_renderer )
 {
+	if ( cfg && cfg.c_ptr( ) )
+	{
+		resources::pinned_ptr_const< u8 > pinned_data( cfg );
+		memory::reader F				( pinned_data.c_ptr( ), pinned_data.size( ) );
+		console_commands::load			( F, console_commands::execution_filter_general );
+	}
+
+	if ( create_renderer )
+	{
+		mutable_buffer creation_buffer	( (pvoid)" ", 1 );
+		resources::user_data_variant ud;
+		ud.set							( &m_renderer.engine_world( ) );
+		resources::user_data_variant const* data[] = { &ud };
+
+		resources::query_create_resources(
+			&resources::creation_request( "renderer", const_buffer( creation_buffer ), resources::renderer_class ),
+			1,
+			boost::bind					( &game::on_renderer_created, this, _1 ),
+			g_allocator,
+			data,
+			NULL,
+			assert_on_fail_true
+		);
+	}
 }
 
 void game::load_config_query( pcstr cfg_name, bool create_renderer )
@@ -937,8 +950,7 @@ void game::draw_debug_window( )
 
 	if ( m_debug_window_type == debug_window_resources )
 		resources::fill_stats		( tree.root( ) );
-	else
-		tasks::fill_stats			( tree.root( ) );
+	else tasks::fill_stats			( tree.root( ) );
 
 	m_debug_window->remove_all_children	( );
 }
