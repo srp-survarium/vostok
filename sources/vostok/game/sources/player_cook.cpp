@@ -20,6 +20,9 @@
 #include <vostok/game_core/items_dictionary.h>
 #include <vostok/game_core/affects_applying_type_enum.h>
 #include <vostok/physics/animated_rigid_body.h>
+#include <vostok/render/facade/skeleton_combined_cook_data.h>
+#include <vostok/render/facade/model.h>
+#include "slot_def.h"
 
 namespace survarium {
 
@@ -217,51 +220,151 @@ void player_cook::on_hit_params_loaded( resources::queries_result& data, player_
 {
 }
 
-// claude@NOTE: profile_skin_visual_cook::translate_query / on_configs_loaded /
-// on_visual_loaded are CROSS-MODULE-CAPPED on render's skeleton_combined_cook_data
-// (declared-only here; render module not built in this tree) and game_core
-// player_profile slot iteration + items_dictionary torso/pants table lookups
-// whose members are still sibling stubs. Bodies kept as buildable skeletons.
-// Re-verified 2026-06-24: `skeleton_combined_cook_data` exists NOWHERE in sources/
-// (not even sources/vostok/render/), so on_visual_loaded's tail DELETE(cook_data) -
-// which needs the COMPLETE type for ~skeleton_combined_cook_data() + a linkable dtor
-// symbol - cannot compile; on_configs_loaded mallocs+constructs the same 0x1C98-byte
-// cook_data (target 0x5dce70) and binds on_visual_loaded(.,.,cook_data). NEXT: unblocks
-// only once the render module's skeleton_combined_cook_data lands in the tree. Decoded
-// targets for the eventual reconstruction: on_visual_loaded 0x5dcc90 (3 stmts: L358
-// parent->set_unmanaged_resource(static_cast_resource_ptr<unmanaged_resource_ptr>(
-// data[0].get_unmanaged_resource()), nocache_memory, 0x110); L359 finish_query(success);
-// L360 DELETE(cook_data)); on_configs_loaded 0x5dce70 (47 stmts) walks player_profile
-// slots + items_dictionary torso/pants tables; translate_query 0x5dd580 (11 stmts).
-// STATE[STUB]
+static slot_def body_parts[] = {
+	{ gloves_slot,	"gloves" },
+	{ torso_slot,	"torso" },
+	{ boots_slot,	"boots" },
+	{ pants_slot,	"pants" },
+	{ helmet_slot,	"helmet" },
+	{ mask_slot,		"mask" },
+	{ back_slot,		"back" }
+};
+
 void profile_skin_visual_cook::translate_query( resources::query_result_for_cook& parent )
 {
-	// FUNCTION BODY[0x5dd580]: 29
-	parent.finish_query									( result_success );
+	player_profile const* profile = NULL;
+	parent.user_data( )->try_get( profile );
+
+	items_dictionary& items_dictionary = m_game.items_dictionary( );
+	vectora< resources::request > requests( g_allocator );
+	requests.push_back( resources::create_request( "resources/gameplay/bodyparts/default", resources::binary_config_class_impl ) );
+
+	for ( u32 i = 0; i < array_size( body_parts ); ++i )
+	{
+		slot_def current = body_parts[i];
+		profile_slot const& current_slot = profile->slots[current.slot];
+		if ( current_slot.item.id )
+		{
+			pstr config_path = NULL;
+			STR_JOINA(
+				config_path,
+				"resources/",
+				items_dictionary.item_by_id( current_slot.item.dict_id ).item_cfg_name.c_str( )
+			);
+			requests.push_back( resources::create_request( config_path, resources::binary_config_class_impl ) );
+		}
+	}
+
+	resources::query_resources(
+		requests.begin( ),
+		requests.size( ),
+		boost::bind( &profile_skin_visual_cook::on_configs_loaded, this, _1, &parent, profile ),
+		g_allocator,
+		NULL,
+		&parent,
+		assert_on_fail_true
+	);
 }
 
-// STATE[STUB]
 void profile_skin_visual_cook::on_configs_loaded(
 	resources::queries_result&				data,
 	resources::query_result_for_cook*		parent,
 	player_profile const*					profile
 )
 {
-	// FUNCTION BODY[0x5dce70]: 94
-	VOSTOK_UNREFERENCED_PARAMETERS						( &data, profile );
-	parent->finish_query								( result_success );
+	render::skeleton_combined_cook_data* cook_data = NEW( render::skeleton_combined_cook_data )( false );
+	variant<32> ud;
+	ud.set( cook_data );
+
+	configs::binary_config_ptr default_config = static_cast_resource_ptr< configs::binary_config_ptr >( data[0].get_unmanaged_resource( ) );
+	configs::binary_config_value default_root = default_config->get_root( )["body_parts"];
+	cook_data->models_count = 0;
+
+	pcstr torso_table_id = "data";
+	pcstr pants_table_id = "data";
+	fixed_string<260> path;
+	configs::binary_config_value current;
+
+	render::skeleton_combined_cook_data::model_def& head = cook_data->model_defs[cook_data->models_count];
+	++cook_data->models_count;
+	current = default_root["head"];
+	head.base_model_name += (pcstr)current["base_model"];
+	head.part_name += (pcstr)current["part_name"];
+	cook_data->skeleton_name += (pcstr)default_root["skeleton"];
+	cook_data->bind_pose_name += (pcstr)default_root["bind_pose"];
+
+	u32 config_index = 1;
+	for ( u32 i = 0; i < array_size( body_parts ); ++i )
+	{
+		slot_def current_slot_def = body_parts[i];
+		render::skeleton_combined_cook_data::model_def& model_def = cook_data->model_defs[cook_data->models_count];
+		bool has_part = false;
+
+		if ( profile->slots[current_slot_def.slot].item.id )
+		{
+			configs::binary_config_ptr cfg = static_cast_resource_ptr< configs::binary_config_ptr >( data[config_index++].get_unmanaged_resource( ) );
+			current = cfg->get_root( )[
+				current_slot_def.slot == torso_slot ? torso_table_id :
+				current_slot_def.slot == pants_slot ? pants_table_id : "data"
+			];
+			has_part = true;
+		}
+		else if ( default_root.value_exists( current_slot_def.table_name ) )
+		{
+			current = default_root[current_slot_def.table_name];
+			has_part = true;
+		}
+
+		path.appendf( "%d_", profile->slots[current_slot_def.slot].item.dict_id );
+		if ( has_part )
+		{
+			if ( current.value_exists( "base_model_hud" ) && current.value_exists( "part_name_hud" ) )
+			{
+				model_def.base_model_name += (pcstr)current["base_model_hud"];
+				model_def.part_name += (pcstr)current["part_name_hud"];
+			}
+			else
+			{
+				model_def.base_model_name = (pcstr)current["base_model"];
+				model_def.part_name = (pcstr)current["part_name"];
+			}
+
+			if ( current.value_exists( "material" ) )
+				model_def.material_name = (pcstr)current["material"];
+
+			if ( current_slot_def.slot == gloves_slot )
+				torso_table_id = current["model_type"];
+			else if ( current_slot_def.slot == boots_slot )
+				pants_table_id = current["model_type"];
+
+			++cook_data->models_count;
+		}
+	}
+
+	resources::query_resource(
+		path.c_str( ),
+		resources::skeleton_combined_model_class,
+		boost::bind( &profile_skin_visual_cook::on_visual_loaded, this, _1, parent, cook_data ),
+		g_allocator,
+		&ud,
+		parent,
+		assert_on_fail_true
+	);
 }
 
-// STATE[STUB]
 void profile_skin_visual_cook::on_visual_loaded(
 	resources::queries_result&				data,
 	resources::query_result_for_cook*		parent,
 	render::skeleton_combined_cook_data*	cook_data
 )
 {
-	// FUNCTION BODY[0x5dcc90]: 5
-	VOSTOK_UNREFERENCED_PARAMETERS						( &data, cook_data );
-	parent->finish_query								( result_success );
+	parent->set_unmanaged_resource(
+		data[0].get_unmanaged_resource( ),
+		resources::nocache_memory,
+		sizeof( render::skeleton_model_instance )
+	);
+	parent->finish_query( result_success );
+	DELETE( cook_data );
 }
 
 void profile_skin_visual_cook::delete_resource( resources::resource_base* __formal )
