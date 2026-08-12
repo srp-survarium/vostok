@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source mix_rotations observation from the disposable physics-before-animation LTCG link on xray 903630e29. The function-source hash and candidate score are identical to the prior dedicated review, which proved the complete 28-statement body and source-local set; only compiler-context/dependency hashes changed.",
+  "link_perturbation": "physics immediately before animation; all other libraries and link flags preserved",
+  "report_sha256": "f5ac35019a275152ed743feae463ab6a85d6e937ef3fa8bc5ded2e471b66a8a0",
+  "base_index_sha256": "0cefd8effa0fc609e810b2665b4689c2e75e20bf15f21468985e7d120803b26b",
+  "candidate_exe_sha256": "5b3b04bb3ba0bc8b9df53acdeb45f4c8ab428e6a7af3c90c437142546c02a4b4",
+  "candidate_pdb_sha256": "0553f53aab32f2c174736f525124d6fcaf102b8926af6cf1574e7cc1c6ce67ff",
+  "functions": [
+    {
+      "mangled": "mix_rotations",
+      "module": "animation",
+      "expected_hash": "2e18988e2710.e9fb1e46fa321f3a.167ad65b2deac485",
+      "expected_fuzzy_pct": 96.72514,
+      "review": "Target and candidate retain the same complete 28-statement rotation-filter, one/two/many-input cases, locals, and caller reachability. Remaining differences are quaternion-load scheduling plus slerp/extrapolated_slerp call lowering."
+    }
+  ]
+}

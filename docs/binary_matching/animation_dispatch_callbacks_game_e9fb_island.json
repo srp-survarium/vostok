@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source n_ary_tree::dispatch_callbacks observation from the disposable game-before-animation LTCG link on xray 903630e29. The function-source hash and candidate score are identical to the prior dedicated review, which proved both callback dispatch cascades and the visible local set; only compiler-context/dependency hashes changed.",
+  "link_perturbation": "game moved immediately before animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "674f58714cd0746c50de9c33873d8220deae8d7acb9eef8ff8e34a3c74c0254a",
+  "base_index_sha256": "647a4e9a160e2c1d0db26fa17874de690179c97fe337fd666420025fea0e0725",
+  "candidate_exe_sha256": "e6b0d8efd52d9763de69aa63e8c82792d812cecde135d2cee8627e7efeddec9f",
+  "candidate_pdb_sha256": "13190390f2845494d3d31244219895676e68cb281c1fdbade108efcd41b24d68",
+  "functions": [
+    {
+      "mangled": "?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z",
+      "module": "animation",
+      "expected_hash": "0e3174dc91db.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 82.60133,
+      "review": "The target and candidate retain both event-match cascades, callback filtering and invocation, channel lookup, knot wrapping, and the same eight visible locals. Target has 58 versus candidate 56 attributed statements and 1459 versus 1456 bytes; the remaining difference is the already-proven intrusive-pointer and argument-passing LTCG boundary."
+    }
+  ]
+}
