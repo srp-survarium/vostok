@@ -8,8 +8,6 @@ namespace render {
 
 skeleton_render_surface::skeleton_render_surface( )
 {
-	// claude@NOTE: legacy set the retired skeletal_mesh_vertex_input_type; the shipped enum
-	// splits it per weight count - 4-bones default chosen, subclass ctors are expected to override.
 	m_vertex_input_type=skeletal_4_bones_mesh_vertex_input_type;
 
 	// FUNCTION BODY[0x63b1a0]: 1
