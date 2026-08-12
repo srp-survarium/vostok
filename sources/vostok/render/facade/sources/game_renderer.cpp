@@ -64,6 +64,8 @@ void renderer::draw_scene_impl( draw_scene_params const& params )
 	R_ASSERT	( params.scene );
 	R_ASSERT	( params.scene_view );
 	R_ASSERT	( params.render_output_window );
+	if ( !params.render_output_window )
+		return;
 
 	m_render_engine_world.draw_scene(
 		params.scene,
