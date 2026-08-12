@@ -1,0 +1,47 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source animation-after-game_core LTCG observation on xray 159f0383f. Every listed function has the same function-source hash and candidate score as its earlier individually reviewed manifest; only compiler-context/dependency hashes changed. This manifest consolidates those prior reviews and pins the current regenerated artifacts. Changed-source, score-shifted, or unreviewed candidates are excluded.",
+  "link_perturbation": "animation moved to the original late game_core slot, immediately after game_core; all other libraries and link flags preserved",
+  "report_sha256": "6dded46cdbeefba874b5c0fd052ccf9df166c3c39e0ccd81715a7140b07dbe25",
+  "base_index_sha256": "660f205178ee19485ae847a6ea68c2f5280f24c146e756636fb53ec4ec47e8e5",
+  "candidate_exe_sha256": "06ca40b047a4c5c08c13c6c3e2ec064725b28eb09d2bfa7e149589d4af50bded",
+  "candidate_pdb_sha256": "c5fdd80bfa0ffd316da0c2b2b6d1ef4cef121986665ea6667942569f73d61b69",
+  "functions": [
+    {
+      "mangled": "?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "16c5b379702e.e9fb1e46fa321f3a.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 100.0
+    },
+    {
+      "mangled": "?delete_resource@single_animation_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "05ebb7be02dd.e9fb1e46fa321f3a.35840df56a33af4d",
+      "expected_fuzzy_pct": 100.0
+    },
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AAVanimation_lexeme@523@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "f8301ff2c17e.e9fb1e46fa321f3a.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 72.92727
+    },
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "b372afcb440c.e9fb1e46fa321f3a.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 77.882355
+    },
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 96.81396
+    },
+    {
+      "mangled": "?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "95b6a06ad8d0.e9fb1e46fa321f3a.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 98.07872
+    }
+  ]
+}
