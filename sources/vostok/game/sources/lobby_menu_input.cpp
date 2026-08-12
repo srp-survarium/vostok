@@ -31,13 +31,6 @@ messaging_client& lobby_menu::messaging_client( )
 	return get_game( ).network_client( ).messaging_client( );
 }
 
-// claude@NOTE: parked - structure recovered (the m_is_connected_to_lobby &&
-// !m_is_in_match_making gate, the action==kb_key_up split, the get_binded_action
-// toggle switch over the show_*_toggle SWF calls, and the key_f5/key_escape tails).
-// Byte residual is the swf_input_translator::process_keyboard wall (that sibling is
-// a parked {return false;} stub with an LTCG-customized calling convention - key and
-// the time/group args register-passed). NEXT: body process_keyboard + reconcile its
-// calling convention.
 bool lobby_menu::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -46,14 +39,20 @@ bool lobby_menu::on_keyboard_action(
 {
 	if ( m_is_connected_to_lobby && !m_is_in_match_making )
 	{
-		if ( action != input::kb_key_up )
-			return get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+		if ( action != input::kb_key_down )
+		{
+			get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+			return false;
+		}
 
 		flash_value is_typing_text;
 		m_lobby_menu_ui->movie->Invoke( "root.is_typing", &is_typing_text, NULL, 0 );
 
 		if ( is_typing_text.GetBool( ) )
-			return get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+		{
+			get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+			return true;
+		}
 
 		toggle_action_enum action_type;
 		switch ( get_game( ).get_key_binder( ).get_binded_action( key, action_type, 2 ) )
@@ -79,7 +78,8 @@ bool lobby_menu::on_keyboard_action(
 			return true;
 		}
 
-		return get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+		get_game( ).input_translator( ).process_keyboard( input_world, key, action, m_lobby_menu_ui->movie, get_game( ).game_time_ms( ) );
+		return false;
 	}
 
 	return true;
@@ -95,13 +95,6 @@ bool lobby_menu::on_gamepad_action(
 	return false;
 }
 
-// claude@NOTE: parked - structure recovered (chat HandleMouseBtn, then the
-// m_is_connected_to_lobby branch routing the click via input_translator().
-// process_mouse_btn to m_message_ui / m_match_making_ui / m_lobby_menu_ui). Byte
-// residual is the swf_input_translator::process_mouse_btn wall (that sibling is a
-// parked {return false;} stub with an LTCG-customized calling convention - args
-// register-passed, this elided), same wall game_options::on_mouse_key_action hits
-// (23%). NEXT: body process_mouse_btn + reconcile its calling convention.
 bool lobby_menu::on_mouse_key_action(
 	input::world*					input_world,
 	input::mouse_button				button,
@@ -117,7 +110,7 @@ bool lobby_menu::on_mouse_key_action(
 	}
 
 	get_game( ).get_chat_handler( ).get_movie( )->movie->HandleMouseBtn(
-		action == input::ms_key_down ? flash_movie::mouse_btn_down : flash_movie::mouse_btn_up,
+		( flash_movie::mouse_btn_action )action,
 		mouse_btn,
 		( float )m_mouse_pos.x,
 		( float )m_mouse_pos.y );

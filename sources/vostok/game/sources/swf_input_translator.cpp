@@ -18,13 +18,6 @@ namespace survarium {
 	initialize( );
 }
 
-// claude@NOTE: capped - LTCG-customized calling convention. Target switches a
-// const-propagated value in EAX (0x151/0x152/0x153 -> {0,1,code+2}, default 0)
-// to a flash_movie::mouse_btn_action, then movie->HandleMouseBtn( action, button,
-// x, y ); return true. The switched value is propagated from the (specialized)
-// caller, so our /Od base (standard thiscall, switch on `action`) cannot reproduce
-// the register-passed args / immediates. Structure (switch -> call -> return) is
-// faithful; the byte residual is the convention wall.
 bool swf_input_translator::process_mouse_btn(
 	input::world*					__formal,
 	input::mouse_button				button,
@@ -34,15 +27,15 @@ bool swf_input_translator::process_mouse_btn(
 	flash_movie*					movie
 )
 {
-	flash_movie::mouse_btn_action	mouse_action = flash_movie::mouse_btn_down;
-	switch ( action )
+	u32 mouse_btn = 0;
+	switch ( button )
 	{
-		case input::ms_key_down:	mouse_action = ( flash_movie::mouse_btn_action )0;	break;
-		case input::ms_key_up:		mouse_action = ( flash_movie::mouse_btn_action )1;	break;
-		case input::ms_key_hold:	mouse_action = ( flash_movie::mouse_btn_action )2;	break;
+		case input::mouse_button_left:		mouse_btn = 0;	break;
+		case input::mouse_button_right:		mouse_btn = 1;	break;
+		case input::mouse_button_middle:	mouse_btn = 2;	break;
 	}
 
-	movie->HandleMouseBtn( mouse_action, button, x, y );
+	movie->HandleMouseBtn( ( flash_movie::mouse_btn_action )action, mouse_btn, x, y );
 	return true;
 }
 
