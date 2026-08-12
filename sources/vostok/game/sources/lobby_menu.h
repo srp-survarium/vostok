@@ -31,7 +31,7 @@ class game_camera;
 class lobby_client;
 class lobby_menu_external_handler;
 class messaging_client;
-class player_parameters_cooker_data;
+struct player_parameters_cooker_data;
 class profile_player_character;
 class relocate_item_func;
 
