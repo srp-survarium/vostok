@@ -38,9 +38,6 @@ u16 get_model_type( memory::chunk_reader& chunk )
 	return			header.type;
 }
 
-// claude@NOTE: legacy switch had only static/4w/user/grass cases; the
-// colored/1w/2w/3w cases follow the shipped sibling classes - verify the
-// case set against the jump table at 0x781a90.
 render_surface* create_render_surface( u16 type )
 {
 	// FUNCTION BODY[0x781a90]
@@ -55,17 +52,17 @@ render_surface* create_render_surface( u16 type )
 		result = NEW(static_render_surface)(true);
 		break;
 
-	case mt_skinned_submesh_1w:
-		result	= NEW(skeleton_mesh_gpu_skinning_1weight)();
-		break;
-	case mt_skinned_submesh_2w:
-		result	= NEW(skeleton_mesh_gpu_skinning_2weights)();
+	case mt_skinned_submesh_4w:
+		result	= NEW(skeleton_mesh_gpu_skinning_4weights)();
 		break;
 	case mt_skinned_submesh_3w:
 		result	= NEW(skeleton_mesh_gpu_skinning_3weights)();
 		break;
-	case mt_skinned_submesh_4w:
-		result	= NEW(skeleton_mesh_gpu_skinning_4weights)();
+	case mt_skinned_submesh_2w:
+		result	= NEW(skeleton_mesh_gpu_skinning_2weights)();
+		break;
+	case mt_skinned_submesh_1w:
+		result	= NEW(skeleton_mesh_gpu_skinning_1weight)();
 		break;
 	case mt_user_mesh_editable:
 		result = NEW(user_render_surface_editable)();
