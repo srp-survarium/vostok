@@ -425,14 +425,13 @@ void player::tick( const u32 current_time_in_ms )
 
 	m_target.update_transform( );
 	if( m_use_physics_controller_for_current )
-	{
 		m_current.update_transform( );
-		if( m_use_physics_controller_for_current && m_target.physics_controller->has_updates( )
-			&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f )
-		{
-			m_current.transform = m_target.transform;
-			m_current.physics_controller->set_transform( m_current.transform );
-		}
+
+	if( m_use_physics_controller_for_current && m_target.physics_controller->has_updates( )
+		&& ( m_current.transform.c.xyz( ) - m_target.transform.c.xyz( ) ).length( ) > 1.f )
+	{
+		m_current.transform = m_target.transform;
+		m_current.physics_controller->set_transform( m_current.transform );
 	}
 
 	if( m_target.physics_controller->has_updates( ) || m_current.physics_controller->has_updates( ) )
