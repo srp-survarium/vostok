@@ -1381,8 +1381,8 @@ void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
 )
 {
 	n_ary_tree_animation_node* i	= from_begin;
-	n_ary_tree_animation_node* j	= to_begin;
 	n_ary_tree_node_comparer comparer;
+	n_ary_tree_animation_node* j	= to_begin;
 	while ( i && j ) {
 		switch ( comparer.compare( *i, *j ) ) {
 			case vostok::animation::equal :
