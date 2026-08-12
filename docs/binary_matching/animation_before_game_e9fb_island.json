@@ -1,106 +1,106 @@
 {
   "kind": "compiler-state-island",
-  "description": "Fresh current-source animation-before-game LTCG observation. All listed functions are exact in the operand-aware report; target and candidate also have identical function sizes and statement byte partitions. Earlier per-function island reviews establish the source-shape fidelity of the same bodies, while this manifest pins the current compiler-context hashes and regenerated artifacts.",
+  "description": "Fresh current-source animation-before-game LTCG observation on xray bae62a91f. All listed functions are exact in the operand-aware report; target and candidate also have identical function sizes and statement byte partitions. Earlier per-function island reviews establish the source-shape fidelity of the same bodies, while this manifest pins the current compiler-context hashes and regenerated artifacts.",
   "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
-  "report_sha256": "ff03d2724dc35ef44380a06677a2a0d74549bd8052a06e3335e7ca71a3d3ff98",
-  "base_index_sha256": "0b3cbd3decfc8c99c3b1203634598479bea9c3a5d8973ed177b181dd0525380e",
-  "candidate_exe_sha256": "7843603f67607a04d84e69f840e3263fcf10cf7615febd9375aea0e2e69c2130",
-  "candidate_pdb_sha256": "b11c4ba653f00bddf54a6cca51ae5af81aa678ab4ef6c1edac21125a3239c991",
+  "report_sha256": "9b9e4f857a4502edfee6354960b43cf90cd1a797fcc81b8602ee168fdf36c599",
+  "base_index_sha256": "e62df7e9f355bfc571ead47317f90dc28594be5a9a831b091b39111ea80f9933",
+  "candidate_exe_sha256": "857767238ac28945b95aa6118a12df076b599aab9faaeda885eedcbf08f23828",
+  "candidate_pdb_sha256": "37f15b5ac6ed6e6af9d0a7729a6c013fba5bee995593c77fb9603c9e73802b00",
   "functions": [
     {
       "mangled": "?time_driving_animation@animation_lexeme_parameters@mixing@animation@vostok@@QBEQAVanimation_lexeme@234@XZ",
       "module": "animation",
-      "expected_hash": "b01d3f1b6060.eb60e941bc38e87b",
+      "expected_hash": "b01d3f1b6060.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?length@animation_interval@mixing@animation@vostok@@QBEMXZ",
       "module": "animation",
-      "expected_hash": "71674c3c0e7b.eb60e941bc38e87b",
+      "expected_hash": "71674c3c0e7b.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?start_time@animation_interval@mixing@animation@vostok@@QBEMXZ",
       "module": "animation",
-      "expected_hash": "d709d3e65f6c.eb60e941bc38e87b",
+      "expected_hash": "d709d3e65f6c.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?animation_type@cubic_spline_skeleton_animation@animation@vostok@@QBE?AW4animation_types_enum@23@XZ",
       "module": "animation",
-      "expected_hash": "0554d3c183a4.eb60e941bc38e87b",
+      "expected_hash": "0554d3c183a4.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "??0animation_interval@mixing@animation@vostok@@QAE@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@MM@Z",
       "module": "animation",
-      "expected_hash": "97839996c9c3.eb60e941bc38e87b",
+      "expected_hash": "97839996c9c3.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?compare_animation_intervals@mixing@animation@vostok@@YA?AW4comparison_result_enum@23@ABVn_ary_tree_animation_node@123@0@Z",
       "module": "animation",
-      "expected_hash": "a3996ce06fa5.eb60e941bc38e87b",
+      "expected_hash": "a3996ce06fa5.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?clone@binary_tree_animation_node@mixing@animation@vostok@@CAPBVanimation_interval@234@AAVmutable_buffer@4@PBV5234@1@Z",
       "module": "animation",
-      "expected_hash": "a2427edcb90e.eb60e941bc38e87b.442670b4259c55c6",
+      "expected_hash": "a2427edcb90e.e9fb1e46fa321f3a.442670b4259c55c6",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "??1animation_lexeme@mixing@animation@vostok@@UAE@XZ",
       "module": "animation",
-      "expected_hash": "a1e4109a0ffa.eb60e941bc38e87b",
+      "expected_hash": "a1e4109a0ffa.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?destroy_animation_intervals@binary_tree_animation_node@mixing@animation@vostok@@IAEXXZ",
       "module": "animation",
-      "expected_hash": "cdcfe4747055.eb60e941bc38e87b.442670b4259c55c6",
+      "expected_hash": "cdcfe4747055.e9fb1e46fa321f3a.442670b4259c55c6",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?visit@n_ary_tree_destroyer@mixing@animation@vostok@@EAEXAAVn_ary_tree_animation_node@234@@Z",
       "module": "animation",
-      "expected_hash": "564c2832fd8f.eb60e941bc38e87b.7c45577a28b987b4",
+      "expected_hash": "564c2832fd8f.e9fb1e46fa321f3a.7c45577a28b987b4",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
       "module": "animation",
-      "expected_hash": "f2a4cadb8ef8.eb60e941bc38e87b.3e9d8bfa6fc7c340",
+      "expected_hash": "f2a4cadb8ef8.e9fb1e46fa321f3a.4bd86037235bedb8",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "??0binary_tree_animation_node@mixing@animation@vostok@@QAE@ABVanimation_lexeme_parameters@123@@Z",
       "module": "animation",
-      "expected_hash": "9ff0009b70d1.eb60e941bc38e87b.442670b4259c55c6",
+      "expected_hash": "9ff0009b70d1.e9fb1e46fa321f3a.442670b4259c55c6",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "??0animation_lexeme@mixing@animation@vostok@@QAE@ABVanimation_lexeme_parameters@123@@Z",
       "module": "animation",
-      "expected_hash": "d0e2b5a77d61.eb60e941bc38e87b.e00a7223f4e0b5d0",
+      "expected_hash": "d0e2b5a77d61.e9fb1e46fa321f3a.e00a7223f4e0b5d0",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?translate_query@skeleton_animation_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@@Z",
       "module": "animation",
-      "expected_hash": "6798fb401816.eb60e941bc38e87b.52ab106758f85ff0",
+      "expected_hash": "6798fb401816.e9fb1e46fa321f3a.52ab106758f85ff0",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "??_Ganimation_lexeme@mixing@animation@vostok@@UAEPAXI@Z",
       "module": "animation",
-      "expected_hash": "bb2c0b0e1129.eb60e941bc38e87b",
+      "expected_hash": "bb2c0b0e1129.e9fb1e46fa321f3a",
       "expected_fuzzy_pct": 100.0
     },
     {
       "mangled": "?collection_config_loaded@animation_collection_cook@animation@vostok@@AAEXAAVqueries_result@resources@3@@Z",
       "module": "animation",
-      "expected_hash": "522b8b45ad26.eb60e941bc38e87b.af53cad05cbcfedc",
+      "expected_hash": "522b8b45ad26.e9fb1e46fa321f3a.af53cad05cbcfedc",
       "expected_fuzzy_pct": 100.0
     }
   ]
