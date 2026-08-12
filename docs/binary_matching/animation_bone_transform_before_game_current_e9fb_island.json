@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source animation-before-game LTCG observation for bone_matrices_computer::get_object_transform. It improves the same partial, structurally reviewed body beyond the game_core-before-animation state.",
+  "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "9b9e4f857a4502edfee6354960b43cf90cd1a797fcc81b8602ee168fdf36c599",
+  "base_index_sha256": "e62df7e9f355bfc571ead47317f90dc28594be5a9a831b091b39111ea80f9933",
+  "candidate_exe_sha256": "857767238ac28945b95aa6118a12df076b599aab9faaeda885eedcbf08f23828",
+  "candidate_pdb_sha256": "37f15b5ac6ed6e6af9d0a7729a6c013fba5bee995593c77fb9603c9e73802b00",
+  "functions": [
+    {
+      "mangled": "?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ",
+      "module": "animation",
+      "expected_hash": "791e5a4ba60d.e9fb1e46fa321f3a.167ad65b2deac485",
+      "expected_fuzzy_pct": 84.339714,
+      "review": "The target and candidate retain the three weighted-transform buffers, animation-state loop and filters, transition/non-transition movement paths, and final rotation/scale/translation composition. Rich structure remains 19 target versus 22 candidate statements because member/accessor and quaternion operations cross different LTCG inline boundaries; this is a partial MAX observation, not exact proof."
+    }
+  ]
+}
