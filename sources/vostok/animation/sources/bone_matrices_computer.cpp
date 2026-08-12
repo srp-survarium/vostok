@@ -414,13 +414,14 @@ float4x4 bone_matrices_computer::get_object_transform( ) const
 				frame_position
 			);
 			bone_transform const movement	( animation_frame );
+			math::quaternion const& conjugate_rotation	= math::conjugate( accumulated_movement.rotation );
 			scales.push_back				( std::make_pair(
 				movement.scale / accumulated_movement.scale,
 				i->weight
 			) );
 			rotations.push_back				( std::make_pair(
 				create_matrix(
-					movement.rotation * math::conjugate( accumulated_movement.rotation ),
+					conjugate_rotation * movement.rotation,
 					float3( 0.f, 0.f, 0.f )
 				).get_angles_xyz( ),
 				i->weight
@@ -434,7 +435,7 @@ float4x4 bone_matrices_computer::get_object_transform( ) const
 							0.f
 						)
 					) *
-					math::conjugate( accumulated_movement.rotation )
+					conjugate_rotation
 				).vector.xyz( ),
 				i->weight
 			) );
