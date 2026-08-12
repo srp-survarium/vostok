@@ -41,6 +41,8 @@ void damage_zone_cook::translate_query( resources::query_result_for_cook& parent
 	);
 }
 
+// claude@NOTE: The target operations are complete. Remaining flow is resource_ptr
+// temporary/inlining codegen, and its load call drops the two unused trailing arguments.
 void damage_zone_cook::on_sub_resources_loaded( resources::queries_result& data, configs::binary_config_value const& cfg_val )
 {
 	damage_zone* zone = VOSTOK_NEW_IMPL( g_allocator, damage_zone )( m_game_world );
@@ -62,10 +64,6 @@ void damage_zone_cook::on_sub_resources_loaded( resources::queries_result& data,
 	data.get_parent_query( )->finish_query( result_success );
 }
 
-// claude@NOTE: 1-statement structure matches (line 97). Target inlines delete_helper
-// (__RTCastToVoid + virtual dtor + inline vostok_mspace_free); base resolves
-// VOSTOK_DELETE_IMPL to out-of-line delete_helper (get_pointer + free_helper) - an
-// inline-vs-call wall on the allocator delete helper, same as the other game cooks.
 void damage_zone_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL( g_allocator, resource );
