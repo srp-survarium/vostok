@@ -75,6 +75,8 @@ class world : private boost::noncopyable {
 	typedef ui::vertex const* ui_vertices_type;
 
 public:
+	/* 0x0000 */	render::renderer*	m_renderer;
+
 	inline	void				set_renderer_configuration			( fs_new::virtual_path_string const& arg_0, bool arg_1 ) { /* no source */ }
 
 			void				apply_render_options_changes		( );
@@ -443,12 +445,11 @@ public:
 									u32							end_selection
 								);
 
-	/* 0x0000 */	/* boost::noncopyable */
-	/* 0x0000 */	renderer*		m_renderer;
 private:
 	/* 0x0004 */	u32				m_frame_id;
 	/* 0x0008 */	bool			m_initialized;
 	/* 0x0009 */	bool			m_enable_terrain_debug_mode;
+
 }; // class world
 
 STATIC_SIZE_ASSERT(engine::world, 0xC);

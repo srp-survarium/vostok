@@ -1130,8 +1130,12 @@ fn append_order_differences(
             differences.push(class_difference(
                 "declaration-order",
                 Some(target[*target_index].name.clone()),
-                format!("#{} {}", base_index, entry_short(&base[*base_index])),
-                format!("#{} {}", target_index, entry_short(&target[*target_index])),
+                format!("#{} {}", base_index, entry_summary(&base[*base_index])),
+                format!(
+                    "#{} {}",
+                    target_index,
+                    entry_summary(&target[*target_index])
+                ),
             ));
         }
     }
