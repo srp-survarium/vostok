@@ -100,8 +100,7 @@ private:
 		if ( node.weight_driving_animation() )
 			return;
 
-		u32 const synchronization_group_id = node.weight_synchronization_group_id();
-		if ( synchronization_group_id == u32( -1 ) )
+		u32 const synchronization_group_id = node.weight_synchronization_group_id(); if ( synchronization_group_id == u32( -1 ) )
 			return;
 
 		weight_driving_animations::iterator const found = std::lower_bound(
