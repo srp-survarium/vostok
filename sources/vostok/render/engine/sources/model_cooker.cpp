@@ -35,8 +35,7 @@ void static_model_instance_cook::translate_query( resources::query_result_for_co
 
 	requests[0].id = resources::static_render_model_instance_class;
 	resources::user_data_variant const** user_data = (resources::user_data_variant const**)ALLOCA( sizeof(resources::user_data_variant const*) * resource_count );
-	for ( u8 i = 0; i < resource_count; ++i )
-		user_data[i] = 0;
+	memory::zero( user_data, sizeof(resources::user_data_variant const*) * resource_count );
 	// 5 target lines are likely retail-compiled-out source.
 	resources::user_data_variant sectors_environment_data;
 	resources::user_data_variant sound_environment_data;
