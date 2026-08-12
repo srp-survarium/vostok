@@ -375,8 +375,12 @@ public:
 	// configuration to file); empty in the shipped MASTER_GOLD build.
 	void save_current_configuration( ) { }
 	void fill_global_macros( shader_defines_list& out_defines );
+
+private:
 	void load_impl( memory::reader& reader );
 	void on_config_loaded( resources::queries_result& data );
+
+public:
 	void on_config_loaded2( resources::queries_result& data );
 	~options( ) { }
 
