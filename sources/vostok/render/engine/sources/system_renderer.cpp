@@ -967,8 +967,7 @@ void system_renderer::draw_speedtree_instance_selections( vector< speedtree_inst
 	for ( vector< speedtree_instance_ptr >::const_iterator it = instances.begin( ); it != instances.end( ); ++it )
 	{
 
-		math::aabb			draw_box( math::create_zero_aabb( ) );
-		draw_box			= it->c_ptr( )->m_speedtree_tree_ptr->m_bbox;
+		math::aabb			draw_box( it->c_ptr( )->m_speedtree_tree_ptr->m_bbox );
 		draw_box.modify		( it->c_ptr( )->m_transform );
 		draw_aabb			( draw_box,
 			math::color(
