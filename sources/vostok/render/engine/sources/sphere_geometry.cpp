@@ -43,17 +43,16 @@ sphere_geometry::sphere_geometry( u32 const num_sides, u32 const num_rings ) :
 
 	vertices_it = vertices;
 	u32 s;
-	for ( i = 0; i < num_sides + 1; ++i )
+	for ( i = 0; i < num_sides + 1; ++i, vertices_it += num_rings + 1 )
 	{
 		float4x4 rotation_matrix = math::create_rotation_y( float(i) * math::pi_x2 / float(num_sides) );
 		float texcoord_u = float(i) / float(num_sides);
 
 		for ( s = 0; s < num_rings + 1; ++s )
 		{
-			vertices_it->position = rotation_matrix.transform( side_vertices[s].position );
-			vertices_it->uv.x = texcoord_u;
-			vertices_it->uv.y = side_vertices[s].uv.y;
-			++vertices_it;
+			vertices_it[s].position = rotation_matrix.transform( side_vertices[s].position );
+			vertices_it[s].uv.x = texcoord_u;
+			vertices_it[s].uv.y = side_vertices[s].uv.y;
 		}
 	}
 
