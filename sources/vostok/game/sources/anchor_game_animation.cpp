@@ -30,6 +30,8 @@
 
 namespace vostok {
 
+#pragma comment( linker, "/include:?get_state_buffer_size@animation_player@animation@vostok@@QBEIXZ" )
+
 void use_game_animation( )
 {
 	static volatile bool s_run = false;
