@@ -55,7 +55,7 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		u16& event_type,
 		u8&								channel_ids,
 		u8&								domain_data,
-		bool							start_time_may_be_used
+		bool const					start_time_may_be_used
 	)
 {
 	channel_ids						= 0;
@@ -93,33 +93,31 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 		float const* current_knot		= time_direction == 1 ? channel.knots() : (channel.knots() + knots_count - 1);
 		float const* const knots_end	= time_direction == 1 ? (channel.knots() + knots_count) : (channel.knots() - 1);
 		for ( ; current_knot != knots_end; current_knot += time_direction ) {
-			float current_knot_time		= (*current_knot) / default_fps;
-			if ( animation_length <= current_knot_time )
-				current_knot_time		-= animation_length;
+			float const current_knot_time	= (*current_knot) / default_fps;
+			float knot_time				= animation_length <= current_knot_time ? current_knot_time - animation_length : current_knot_time;
 
-			current_knot_time			-= interval.start_time();
-			if ( current_knot_time < 0.f ) {
-				current_knot_time		+= animation_length;
-				if ( current_knot_time*time_direction > target_time*time_direction &&
-					 !math::is_relatively_similar( current_knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
+			knot_time					-= interval.start_time();
+			if ( knot_time < 0.f ) {
+				knot_time				+= animation_length;
+				if ( knot_time*time_direction > target_time*time_direction &&
+					 !math::is_relatively_similar( knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
 					continue;
 			}
 
 			if ( start_time_may_be_used ?
-				 current_knot_time*time_direction < start_time*time_direction :
-				 current_knot_time*time_direction <= start_time*time_direction ||
-				 math::is_relatively_similar( current_knot_time*time_direction, start_time*time_direction, math::epsilon_5 ) ) {
-				current_knot_time		+= animation_length;
-				if ( current_knot_time*time_direction >= target_time*time_direction )
+				 knot_time*time_direction < start_time*time_direction :
+				 knot_time*time_direction <= start_time*time_direction ||
+				 math::is_relatively_similar( knot_time*time_direction, start_time*time_direction, math::epsilon_5 ) ) {
+				if ( (knot_time + animation_length)*time_direction >= target_time*time_direction )
 					continue;
 			}
 
-			if ( current_knot_time*time_direction > target_time*time_direction &&
-				 !math::is_relatively_similar( current_knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
+			if ( knot_time*time_direction > target_time*time_direction &&
+				 !math::is_relatively_similar( knot_time*time_direction, target_time*time_direction, math::epsilon_5 ) )
 				continue;
 
 			u8 const channel_bit		= u8( 1 ) << channel_id;
-			if ( current_knot_time == target_time ) {
+			if ( knot_time == target_time ) {
 				event_type				|= time_event_channel_callback_should_be_fired;
 				channel_ids				|= channel_bit;
 			}
@@ -128,11 +126,11 @@ float n_ary_tree_animation_event_iterator::get_nearest_animation_interval_event_
 				channel_ids				= channel_bit;
 			}
 
-			if ( channel.type() != channel_type_events )
-				domain_data				= channel.domain( u32( current_knot - channel.knots() ) % knots_count ).data;
-			else
+			if ( channel.type() > channel_type_partitions )
 				domain_data				= u8( -1 );
-			target_time					= current_knot_time;
+			else
+				domain_data				= channel.domain( u32( current_knot - channel.knots() ) % knots_count ).data;
+			target_time					= knot_time;
 			break;
 		}
 	}
