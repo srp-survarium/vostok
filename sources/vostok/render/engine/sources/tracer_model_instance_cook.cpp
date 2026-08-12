@@ -17,8 +17,10 @@ tracer_model_instance_cook::tracer_model_instance_cook( ) :
 
 void tracer_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
 {
+	pcstr const requested_path = parent.get_requested_path( );
+
 	resources::query_resource(
-		parent.get_requested_path( ),
+		requested_path,
 		resources::static_model_instance_class,
 		boost::bind( &tracer_model_instance_cook::on_model_ready, this, _1 ),
 		g_allocator,
