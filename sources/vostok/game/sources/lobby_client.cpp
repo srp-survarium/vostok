@@ -136,16 +136,17 @@ void lobby_client::sign_in_on_packet_received( network_core::packet_reader& read
 {
 	lobby_client_message_types_enum const op_id = (lobby_client_message_types_enum)reader.r< u8 >( );
 
-	if ( op_id != vostok::lobby_client_sign_in_info )
+	if ( op_id != vostok::connection_successful )
 	{
-		LOG_ERROR	( "Lobby client received unknown SignIn message type [%d]", op_id );
+		LOG_ERROR	( "Lobby client received unknown SignIn message:%d", op_id );
 		return;
 	}
 
+	m_connection_info.connection_error_count	= 0;
 	m_packet_client.set_on_packet_received	( m_on_packet_received );
-	m_net_client_connected	= true;
 
 	LOG_INFO	( "Lobby client: signed in!" );
+	m_net_client_connected	= true;
 
 	if ( m_discard_playing_order_on_connected )
 	{
