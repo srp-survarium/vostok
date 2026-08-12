@@ -447,7 +447,8 @@ void material_effects_instance_cook::gather_request_user_data(
 ) {
 	bool				has_gstage				= false;
 
-	custom_config_ptr	gstage_config; u32 gstage_config_crc = 0;
+	custom_config_ptr	gstage_config;
+	u32					gstage_config_crc		= 0;
 
 	for (u32 i = 0; i < num_render_stages; i++) {
 		enum_render_stage_type type				= (enum_render_stage_type)i;
@@ -458,7 +459,7 @@ void material_effects_instance_cook::gather_request_user_data(
 		}
 		else
 		{
-			if (i == gbuffer_render_stage || i == forward_render_stage)
+			if (i == gbuffer_render_stage)
 				has_gstage						= true;
 
 			effect_descriptor* descriptor		= effect_manager::ref().get_effect_descriptor_by_name(
@@ -469,7 +470,7 @@ void material_effects_instance_cook::gather_request_user_data(
 			effect_compile_data* cook_data		= NEW(effect_compile_data)(descriptor, config, crc);
 			user_data[i].set					(cook_data);
 
-			if (i == gbuffer_render_stage || i == forward_render_stage)
+			if (i == gbuffer_render_stage)
 			{
 				gstage_config					= config;
 				gstage_config_crc				= crc;
