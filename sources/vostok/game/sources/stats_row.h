@@ -20,7 +20,10 @@ class stats_graph;
 struct flash_text_manager;
 
 struct stats_row : public boost::noncopyable {
-	inline			stats_row	( )
+	inline			stats_row	( ) :
+		data_bytes_per_second_graph	( NULL ),
+		data_bytes_per_message_graph	( NULL ),
+		text_manager					( NULL )
 	{
 	}
 					~stats_row	( );

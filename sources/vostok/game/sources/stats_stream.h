@@ -19,7 +19,12 @@ class stats_graph;
 struct flash_text_manager;
 
 struct stats_stream : public boost::noncopyable {
-	inline			stats_stream	( ) { }
+	inline			stats_stream	( ) :
+		graph					( NULL ),
+		bytes_per_second_graph	( NULL ),
+		text_manager			( NULL )
+	{
+	}
 					~stats_stream	( );
 
 			void	create			(

@@ -22,9 +22,9 @@ inline void sprintf_big_number( char ( &text )[256], const u32 value, pcstr cons
 	else if( value < 1000000 )
 		vostok::sprintf( text, "%3d %3d %s", value / 1000, value % 1000, postfix );
 	else if( value < 1000000000 )
-		vostok::sprintf( text, "%3d %3d %3d %s", value / 1000000, ( value / 1000 ) % 1000, value % 1000, postfix );
+		vostok::sprintf( text, "%3d %3d %3d %s", value / 1000000, ( value % 1000000 ) / 1000, value % 1000, postfix );
 	else
-		vostok::sprintf( text, "%3d %3d %3d %3d %s", value / 1000000000, ( value / 1000000 ) % 1000, ( value / 1000 ) % 1000, value % 1000, postfix );
+		vostok::sprintf( text, "%3d %3d %3d %3d %s", value / 1000000000, ( value % 1000000000 ) / 1000000, ( value % 1000000 ) / 1000, value % 1000, postfix );
 }
 
 inline void sprintf_big_number(
@@ -38,11 +38,11 @@ inline void sprintf_big_number(
 	if( value < divider )
 		sprintf_big_number( text, value, simple_postfix );
 	else if( value < divider * divider )
-		vostok::sprintf( text, "%5.1f K%s", (double)value / divider, complex_postfix );
+		vostok::sprintf( text, "%5.1f K%s", (float)value / divider, complex_postfix );
 	else if( value < divider * divider * divider )
-		vostok::sprintf( text, "%5.1f M%s", (double)value / ( divider * divider ), complex_postfix );
+		vostok::sprintf( text, "%5.1f M%s", (float)value / ( divider * divider ), complex_postfix );
 	else
-		vostok::sprintf( text, "%5.1f G%s", (double)value / ( divider * divider * divider ), complex_postfix );
+		vostok::sprintf( text, "%5.1f G%s", (float)value / ( divider * divider * divider ), complex_postfix );
 }
 
 } // namespace survarium
