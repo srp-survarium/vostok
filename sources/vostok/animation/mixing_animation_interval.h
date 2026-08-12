@@ -45,7 +45,7 @@ STATIC_SIZE_ASSERT(animation_interval, 0xC);
 		return						!(left == right);
 	}
 
-	inline	bool					operator <			( animation_interval const& left, animation_interval const& right )
+	__declspec(noinline) inline bool	operator <			( animation_interval const& left, animation_interval const& right )
 	{
 		if ( left.animation() < right.animation() )
 			return					true;
@@ -62,7 +62,7 @@ STATIC_SIZE_ASSERT(animation_interval, 0xC);
 		return						left.length() < right.length();
 	}
 
-	inline	bool					operator >			( animation_interval const& left, animation_interval const& right )
+	__declspec(noinline) inline bool	operator >			( animation_interval const& left, animation_interval const& right )
 	{
 		if ( left.animation() > right.animation() )
 			return					true;
