@@ -15,7 +15,7 @@ typedef resources::resource_ptr< bi_spline_skeleton_animation_baked, resources::
 	bi_spline_skeleton_animation_baked_ptr;
 
  bi_spline_skeleton_animation_impl_cook::bi_spline_skeleton_animation_impl_cook( )
-	: resources::translate_query_cook( resources::bi_spline_skeleton_animation_class, reuse_true, use_resource_manager_thread_id, 1 << 3 /* resources::flag_last */ )
+	: resources::translate_query_cook( resources::bi_spline_skeleton_animation_class, reuse_true, use_resource_manager_thread_id )
 {
 	resources::register_cook( this );
 }
