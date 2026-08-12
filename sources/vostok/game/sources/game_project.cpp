@@ -37,10 +37,12 @@ simple_game_project::simple_game_project( base_game_scene& s ) :
 	m_render_visuals( NULL ),
 	m_is_inserted( false )
 {
+	// claude@NOTE: Target structure matches; residual bytes depend on the owning caller/compiler context.
 }
 
 simple_game_project::~simple_game_project( )
 {
+	// claude@NOTE: Remaining bytes are implicit array/member/base destruction codegen.
 	if ( m_render_visuals )
 		VOSTOK_DELETE_ARRAY_IMPL( g_allocator, m_render_visuals );
 }
@@ -55,40 +57,48 @@ bool simple_game_project::all_loaded( )
 
 void simple_game_project::on_npc_loaded( resources::queries_result& data )
 {
+	// claude@NOTE: Target elides the getter's unmanaged pointer temporary; the isolated base build retains it.
 	static_cast_resource_ptr< sound::sound_emitter_ptr >( data[0].get_unmanaged_resource( ) );
 }
 
 void simple_game_project::insert( scheduler& scheduler )
 {
+	// claude@NOTE: Residual bytes are the target's caller-threaded scheduler ABI, not loop source shape.
 	for ( u32 i = 0; i < m_render_visuals_count; ++i )
 		m_render_visuals[i].insert( m_game_scene );
 
 	for ( u32 i = 0; i < m_static_collision_objects_count; ++i )
 		m_static_collision_objects[i].insert( m_game_scene.get_physics_world( ) );
 
-	for ( vector< game_object_* >::iterator i = m_objects.begin( );
-		i != m_objects.end( );
+	for ( vector< game_object_* >::iterator i = m_objects.begin( ),
+		e = m_objects.end( );
+		i != e;
 		++i )
-		( *i )->insert( );
+		( *i )->
+			insert( );
 
-	for ( vector< damage_zone_ptr >::iterator i = m_damage_zones.begin( );
-		i != m_damage_zones.end( );
+	for ( vector< damage_zone_ptr >::iterator i = m_damage_zones.begin( ),
+		e = m_damage_zones.end( );
+		i != e;
 		++i )
 		if ( ( *i )->is_standalone( ) )
 			( *i )->activate( NULL, m_game_scene.get_physics_world( ), scheduler );
 
-	for ( vector< generic_anomaly_core* >::iterator i = m_anomalies.begin( );
-		i != m_anomalies.end( );
+	for ( vector< generic_anomaly_core* >::iterator i = m_anomalies.begin( ),
+		e = m_anomalies.end( );
+		i != e;
 		++i )
 		( *i )->activate( m_game_scene.get_physics_world( ), scheduler );
 
-	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( );
-		i != m_victory_items_containers.end( );
+	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( ),
+		e = m_victory_items_containers.end( );
+		i != e;
 		++i )
 		( *i )->insert( m_game_scene.get_physics_world( ) );
 
-	for ( vector< ladder_ptr >::iterator i = m_ladders.begin( );
-		i != m_ladders.end( );
+	for ( vector< ladder_ptr >::iterator i = m_ladders.begin( ),
+		e = m_ladders.end( );
+		i != e;
 		++i )
 		( *i )->activate( m_game_scene.get_physics_world( ) );
 
@@ -103,29 +113,35 @@ void simple_game_project::remove( )
 	for ( u32 i = 0; i < m_static_collision_objects_count; ++i )
 		m_static_collision_objects[i].remove( m_game_scene.get_physics_world( ) );
 
-	for ( vector< ladder_ptr >::iterator i = m_ladders.begin( );
-		i != m_ladders.end( );
+	for ( vector< ladder_ptr >::iterator i = m_ladders.begin( ),
+		e = m_ladders.end( );
+		i != e;
 		++i )
 		( *i )->deactivate( );
 
-	for ( vector< generic_anomaly_core* >::iterator i = m_anomalies.begin( );
-		i != m_anomalies.end( );
+	for ( vector< generic_anomaly_core* >::iterator i = m_anomalies.begin( ),
+		e = m_anomalies.end( );
+		i != e;
 		++i )
 		( *i )->deactivate( );
 
-	for ( vector< damage_zone_ptr >::iterator i = m_damage_zones.begin( );
-		i != m_damage_zones.end( );
+	for ( vector< damage_zone_ptr >::iterator i = m_damage_zones.begin( ),
+		e = m_damage_zones.end( );
+		i != e;
 		++i )
 		if ( ( *i )->is_standalone( ) )
 			( *i )->deactivate( );
 
-	for ( vector< game_object_* >::iterator i = m_objects.begin( );
-		i != m_objects.end( );
+	for ( vector< game_object_* >::iterator i = m_objects.begin( ),
+		e = m_objects.end( );
+		i != e;
 		++i )
-		( *i )->remove( );
+		( *i )->
+			remove( );
 
-	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( );
-		i != m_victory_items_containers.end( );
+	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( ),
+		e = m_victory_items_containers.end( );
+		i != e;
 		++i )
 		( *i )->remove( );
 
@@ -134,20 +150,22 @@ void simple_game_project::remove( )
 
 void render_visual::insert( base_game_scene& w )
 {
-	if ( model )
+	if ( model.c_ptr( ) )
 		w.scene_renderer( ).add_model( w.render_scene( ), model->m_render_model, matrix );
 }
 
 void render_visual::remove( base_game_scene& w )
 {
-	if ( model )
+	if ( model.c_ptr( ) )
 		w.scene_renderer( ).remove_model( w.render_scene( ), model->m_render_model );
 }
 
 victory_items_container_core* simple_game_project::get_items_container( u8 id )
 {
-	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( );
-		i != m_victory_items_containers.end( );
+	// claude@NOTE: Source shape matches; residual is target caller-context register and return-epilogue allocation.
+	for ( vector< victory_items_container* >::iterator i = m_victory_items_containers.begin( ),
+		e = m_victory_items_containers.end( );
+		i != e;
 		++i )
 		if ( ( *i )->id( ) == id )
 			return *i;
