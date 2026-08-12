@@ -444,13 +444,14 @@ STATIC_SIZE_ASSERT( statistics, 0x7EB8 );
 #if USE_RENDER_STATISTICS
 #	define BEGIN_CPUGPU_TIMER(c) { cpu_gpu_timer_scope local_cpu_gpu_timer_scope(c);
 #	define END_CPUGPU_TIMER }
+#	define BEGIN_TIMER(c) { timer_scope local_timer_scope(c);
+#	define END_TIMER }
 #else
 #	define BEGIN_CPUGPU_TIMER(c) {
 #	define END_CPUGPU_TIMER }
+#	define BEGIN_TIMER(c) {
+#	define END_TIMER }
 #endif
-
-#define BEGIN_TIMER(c) { timer_scope local_timer_scope(c);
-#define END_TIMER }
 
 } // namespace render
 } // namespace vostok
