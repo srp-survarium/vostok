@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source n_ary_tree_converter::compute_buffer_size observation after restoring the target weight-interpolator guard in the same translation unit. The complete calculator, animation, object collection, sort/unique, and size-accounting phases retain the previously reviewed target structure and remain exact in the regenerated animation-before-game artifact.",
+  "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "368c69f684efcb53d5d6355589a1ddcb4a70f452a1188fcca045b6829f066473",
+  "base_index_sha256": "998e7c626d5af3d402630f5022cf4735a1e695a6c5d2fc8c8933e26ab0906e27",
+  "candidate_exe_sha256": "18a1763ab2cae9a1896f1cd0c9f27512872384a0a4839b993b021f7b3d6bd792",
+  "candidate_pdb_sha256": "1f32429a7b4b6ff9d8081be1de24b46ff72f67848a059e1039e03b4192ceb740",
+  "functions": [
+    {
+      "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "f2a4cadb8ef8.eb60e941bc38e87b.7ec5b4eafc70ec76",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate retain all attributed body statements and the same 0x268-byte body. The source change occurs later in the translation unit; a fresh relink, rich index, delink, and operand-aware report prove this function exact under the new unit hash."
+    }
+  ]
+}

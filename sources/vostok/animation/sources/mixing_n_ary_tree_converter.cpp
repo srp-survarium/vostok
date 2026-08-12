@@ -596,7 +596,8 @@ void n_ary_tree_converter::process_interpolators	( binary_tree_base_node* const 
 	}
 
 	for ( binary_tree_animation_node_ptr j = m_animations_root; j; j = j->m_next_weight_animation ) {
-		*i++					= (*j).weight_interpolator();
+		if ( (*j).weight_interpolator() )
+			*i++				= (*j).weight_interpolator();
 		if ( (*j).time_scale_interpolator() )
 			*i++				=  (*j).time_scale_interpolator();
 	}
