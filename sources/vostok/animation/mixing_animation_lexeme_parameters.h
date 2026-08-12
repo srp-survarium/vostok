@@ -66,16 +66,22 @@ public:
 	inline	animation_lexeme_parameters&	start_animation_interval_time		( float const start_animation_interval_time		);
 	inline	animation_lexeme_parameters&	start_cycle_animation_interval_id	( u32 const start_cycle_animation_interval_id	);
 	inline	animation_lexeme_parameters&	time_scale							( float const time_scale						) { m_time_scale						= time_scale						; return *this; }
-	inline	animation_lexeme_parameters&	playback_type						( playback_enum const playback_type				) { m_playback_type						= playback_type						; return *this; }
-	inline	animation_lexeme_parameters&	time_synchronization_group_id		( u32 const time_synchronization_group_id		) { m_time_synchronization_group_id		= time_synchronization_group_id		; return *this; }
-	inline	animation_lexeme_parameters&	weight_synchronization_group_id		( u32 const weight_synchronization_group_id		) { m_weight_synchronization_group_id	= weight_synchronization_group_id	; return *this; }
+	// sushi@TODO: remove noinline once the retail cross-library inlining cause is recovered.
+	__declspec(noinline) inline
+			animation_lexeme_parameters&	playback_type						( playback_enum const playback_type				) { m_playback_type						= playback_type						; return *this; }
+	__declspec(noinline) inline
+			animation_lexeme_parameters&	time_synchronization_group_id		( u32 const time_synchronization_group_id		) { m_time_synchronization_group_id		= time_synchronization_group_id		; return *this; }
+	__declspec(noinline) inline
+			animation_lexeme_parameters&	weight_synchronization_group_id		( u32 const weight_synchronization_group_id		) { m_weight_synchronization_group_id	= weight_synchronization_group_id	; return *this; }
 	inline	animation_lexeme_parameters&	additivity_priority					( u32 const additivity_priority					) { m_additivity_priority				= additivity_priority				; return *this; }
-	inline	animation_lexeme_parameters&	bones_mask							( u32 const bones_mask							) { m_bones_mask						= bones_mask						; return *this; }
+	__declspec(noinline) inline
+			animation_lexeme_parameters&	bones_mask							( u32 const bones_mask							) { m_bones_mask						= bones_mask						; return *this; }
 	inline	animation_lexeme_parameters&	override_existing_animation			( bool const override_existing_animation		) { m_override_existing_animation		= override_existing_animation		; return *this; }
 	inline	animation_lexeme_parameters&	animated_object						( pcvoid const animated_object					) { m_animated_object					= animated_object					; return *this; }
 	inline	animation_lexeme_parameters&	positive_event_direction			( bool const is_positive_event_direction		) { m_is_positive_event_direction		= is_positive_event_direction		; return *this; }
 	inline	animation_lexeme_parameters&	unique_animation_id					( u8 const unique_animation_id					) { m_unique_animation_id				= unique_animation_id				; return *this; }
-	inline	animation_lexeme_parameters&	time_calculator						( time_calculator_fn const& time_calculator		) { m_time_calculator					= time_calculator					; return *this; }
+	__declspec(noinline) inline
+			animation_lexeme_parameters&	time_calculator						( time_calculator_fn const& time_calculator		) { m_time_calculator					= time_calculator					; return *this; }
 	inline	animation_lexeme_parameters&	can_generate_events					( bool const can_generate_events				) { m_can_generate_events				= can_generate_events				; return *this; }
 
 	//
