@@ -115,6 +115,8 @@ public:
 		return m_particles_render_mode;
 	}
 
+	render::post_process_parameters m_post_process_parameters;
+
 	vector< render_surface_instance* >& get_visible_models( )
 	{
 		return m_visible_models;
@@ -173,7 +175,6 @@ public:
 	}
 
 public:
-	render::post_process_parameters m_post_process_parameters;
 	u32 luminance_pass_index;
 	bool need_recalc_atmosphere;
 
