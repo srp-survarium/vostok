@@ -397,7 +397,7 @@ void stage_lights::render_to_hw_shadowmap(
 	m_context->scene()->select_models(
 		m_context->get_culling_vp(),
 		m_dynamic_visuals_to_shadow,
-		view_position,
+		m_context->get_view_pos(),
 		visible_flag,
 		l->static_shadows
 	);
@@ -409,13 +409,14 @@ void stage_lights::render_to_hw_shadowmap(
 			m_context->scene()->select_models(
 				m_context->get_culling_vp(),
 				m_dynamic_visuals_to_shadow,
-				view_position,
+				m_context->get_view_pos(),
 				visible_flag,
 				false
 			);
 			backend::ref().set_depth_stencil_target( &*l->m_shadow_depth_stencil );
 			backend::ref().clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, 1.0f, 0 );
-			l->need_refresh_static_shadows = false;
+			if ( l->need_refresh_static_shadows )
+				l->need_refresh_static_shadows = false;
 		}
 
 		vector< render_surface_instance* >::iterator it_d = m_dynamic_visuals_to_shadow.begin();
@@ -430,7 +431,7 @@ void stage_lights::render_to_hw_shadowmap(
 			if (
 				!me.is_cast_shadow ||
 				!geometry.geom.c_ptr() ||
-				!me.stage_enable[shadow_render_stage]
+				!me.m_effects[gbuffer_render_stage]
 			)
 				continue;
 
