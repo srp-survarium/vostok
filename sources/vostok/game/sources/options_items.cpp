@@ -95,10 +95,10 @@ void options_item_int::fill_data( flash_value& val )
 {
 	for ( u8 i = 0; i < m_values_count; ++i )
 	{
+		flash_value str_val;
 		wchar_t val_txt[ 512 ];
 		m_parent_tab.get_game( ).text_translator( ).translate_text( m_values[ i ], val_txt );
 
-		flash_value str_val;
 		str_val.SetStringW( val_txt );
 
 		val.SetElement( i, str_val );
@@ -184,22 +184,18 @@ void options_item_float::initialize( )
 	m_current_value	= m_source_value;
 }
 
-// claude@NOTE: structure is the 3 SetMember pairs (snapInterval/minimum/maximum).
-// Base shows one extra statement vs target: the single reused slider_data_member's
-// default ctor folds into line 245 in the target (flash_value ctor inlined there) but
-// emits a distinct statement here because our flash_value ctor is out-of-line - the
-// same scaleform cap that bounds the bytes.
 void options_item_float::fill_data( flash_value& val )
 {
+	console_commands::cc_value< float >* command = ( console_commands::cc_value< float >* )m_console_command;
 	flash_value slider_data_member;
 
 	slider_data_member.SetNumber( m_step );
 	val.SetMember( "snapInterval", slider_data_member );
 
-	slider_data_member.SetNumber( m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_min( ) : 0.0f );
+	slider_data_member.SetNumber( command ? command->get_min( ) : 0.0f );
 	val.SetMember( "minimum", slider_data_member );
 
-	slider_data_member.SetNumber( m_console_command ? ( ( console_commands::cc_value< float >* )m_console_command )->get_max( ) : 100.0f );
+	slider_data_member.SetNumber( command ? command->get_max( ) : 100.0f );
 	val.SetMember( "maximum", slider_data_member );
 }
 
