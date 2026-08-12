@@ -129,6 +129,34 @@ def _matcher(sel):
     return want
 
 
+def _paired_rva(side, rva):
+    """Return the opposite-side RVA recorded by match.db, if paired."""
+    if not DB_PATH.is_file():
+        return None
+    column, opposite = (
+        ("target_rva", "base_rva") if side == "target" else ("base_rva", "target_rva")
+    )
+    try:
+        con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
+        row = con.execute(
+            f"SELECT {opposite} FROM pairs WHERE {column} = ?", (rva,)
+        ).fetchone()
+        con.close()
+        return row[0] if row else None
+    except sqlite3.Error:
+        return None
+
+
+def _record_at_rva(side, rva):
+    hits = _scan_index(
+        side,
+        lambda line: (
+            json.loads(line) if f'"rva":{rva}' in line else None
+        ),
+    )
+    return hits[0] if len(hits) == 1 else None
+
+
 def resolve(sel):
     """(target_record | None, base_record | None) for one selector.
 
@@ -137,6 +165,18 @@ def resolve(sel):
     want = _matcher(sel)
     tgt = _scan_index("target", want)
     base = _scan_index("base", want)
+    if len(tgt) == 1:
+        paired = _paired_rva("target", tgt[0]["rva"])
+        if paired is not None:
+            partner = _record_at_rva("base", paired)
+            if partner is not None:
+                base = [partner]
+    elif len(base) == 1:
+        paired = _paired_rva("base", base[0]["rva"])
+        if paired is not None:
+            partner = _record_at_rva("target", paired)
+            if partner is not None:
+                tgt = [partner]
     exact = [r for r in tgt if r["mangled"] == sel] or \
             [r for r in base if r["mangled"] == sel]
     if exact:
@@ -242,7 +282,6 @@ def cmd_rva(args):
         _print_record("target", target)
     if base:
         _print_record("base", base)
-    mangled = (target or base)["mangled"]
     if not DB_PATH.is_file():
         return 0
     con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
@@ -261,8 +300,13 @@ def cmd_rva(args):
           LEFT JOIN pairs p ON p.target_rva = t.rva
           LEFT JOIN attempts a ON a.mangled = s.mangled
           LEFT JOIN source_maxima m ON m.mangled = s.mangled
-         WHERE s.mangled = ? ORDER BY t.rva
-        """, (mangled,)).fetchall()
+         WHERE t.rva = ? OR p.base_rva = ? ORDER BY t.rva
+        """,
+        (
+            target["rva"] if target else -1,
+            base["rva"] if base else -1,
+        ),
+    ).fetchall()
     con.close()
     for row in rows:
         pct = "-" if row["fuzzy_pct"] is None else f"{row['fuzzy_pct']:.2f}%"

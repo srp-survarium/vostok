@@ -174,7 +174,13 @@ def load_index_records(path):
         return [json.loads(line) for line in f]
 
 
-def index_by_mangled(records, preferred_files=None):
+def overload_key(mangled, name):
+    """Return a side-independent key for a PDB placeholder overload."""
+    digest = hashlib.sha256(name.encode("utf-8")).hexdigest()[:16]
+    return f"{mangled}@@pdb-overload:{digest}"
+
+
+def index_by_mangled(records, preferred_files=None, preferred_signatures=None):
     """Collapse rich records by PDB identity, preferring the other side's owner.
 
     Static helpers and COMDATs can have the same PDB spelling in several
@@ -191,10 +197,11 @@ def index_by_mangled(records, preferred_files=None):
         )
     out = {}
     preferred_files = preferred_files or {}
+    preferred_signatures = preferred_signatures or {}
     for mangled, signatures in candidates.items():
         selected = []
-        preferred = preferred_files.get(mangled)
-        for signature_records in signatures.values():
+        for name, signature_records in signatures.items():
+            preferred = preferred_files.get((mangled, name), preferred_files.get(mangled))
             same_owner = [
                 rec for rec in signature_records if rec["file"] == preferred
             ]
@@ -208,12 +215,36 @@ def index_by_mangled(records, preferred_files=None):
         selected_by_rva = {}
         for rec in selected:
             selected_by_rva.setdefault(rec["rva"], rec)
-        for index, rec in enumerate(
-            sorted(selected_by_rva.values(), key=lambda rec: rec["rva"])
-        ):
-            key = mangled if index == 0 else f"{mangled}@@pdb-overload:{rec['rva']:x}"
+        ordered = sorted(selected_by_rva.values(), key=lambda rec: rec["rva"])
+        primary = preferred_signatures.get(mangled)
+        if primary is not None:
+            ordered.sort(key=lambda rec: rec["name"] != primary)
+        for index, rec in enumerate(ordered):
+            key = mangled if index == 0 else overload_key(mangled, rec["name"])
             out[key] = rec
     return out
+
+
+def legacy_overload_keys(records):
+    """Map the former target-RVA overload keys to stable signature keys."""
+    indexed = index_by_mangled(records)
+    aliases = {}
+    for mangled, primary in indexed.items():
+        if mangled != primary["mangled"]:
+            continue
+        siblings = sorted(
+            (
+                rec
+                for key, rec in indexed.items()
+                if rec["mangled"] == mangled and key != mangled
+            ),
+            key=lambda rec: rec["rva"],
+        )
+        for rec in siblings:
+            aliases[f"{mangled}@@pdb-overload:{rec['rva']:x}"] = overload_key(
+                mangled, rec["name"]
+            )
+    return aliases
 
 
 def stmt_seq(rec):
@@ -881,9 +912,18 @@ def regen():
     target_records = load_index_records(TARGET_IDX)
     target = index_by_mangled(target_records)
     base_records = load_index_records(BASE_IDX)
+    target_primary_signatures = {
+        mangled: rec["name"]
+        for mangled, rec in target.items()
+        if mangled == rec["mangled"]
+    }
+    target_owners = {
+        (rec["mangled"], rec["name"]): rec["file"] for rec in target.values()
+    }
     base = index_by_mangled(
         base_records,
-        {mangled: rec["file"] for mangled, rec in target.items()},
+        target_owners,
+        target_primary_signatures,
     )
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
 
@@ -1272,6 +1312,24 @@ def regen():
         except sqlite3.OperationalError:
             old_attempts = []  # pre-schema-3 DB
         old.close()
+
+    # Schema 4 originally disambiguated placeholder overloads with target RVAs.
+    # Carry persistent evidence onto the signature-derived keys introduced here.
+    legacy_aliases = legacy_overload_keys(target_records)
+    old_history = {
+        legacy_aliases.get(key, key): (legacy_aliases.get(key, key), *row[1:])
+        for key, row in old_history.items()
+    }
+    old_maxima = {
+        legacy_aliases.get(key, key): (legacy_aliases.get(key, key), *row[1:])
+        for key, row in old_maxima.items()
+    }
+    old_flags = [
+        (legacy_aliases.get(row[0], row[0]), *row[1:]) for row in old_flags
+    ]
+    old_attempts = [
+        (legacy_aliases.get(row[0], row[0]), *row[1:]) for row in old_attempts
+    ]
 
     # reconcile history: upsert every CURRENT pairing; reset rows whose source
     # extent changed ("touched" - requirement: the seen-flag dies on any edit)
