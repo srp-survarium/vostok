@@ -54,9 +54,9 @@ inline void statistics_value< T >::start( )
 template < typename T >
 inline void statistics_value< T >::clear( )
 {
-	history[0]					= T( );
+	vostok::memory::zero		( history );
 	history_index				= 0;
-	value						= T( );
+	value						= (T)0;
 }
 
 template < typename T >
