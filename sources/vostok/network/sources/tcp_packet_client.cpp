@@ -45,10 +45,6 @@ static void destroy_client( vostok::network_core::tcp_packet_client* client_to_d
 	VOSTOK_DELETE_IMPL				( vostok::network::g_allocator, client_to_destroy );
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: the folded boost::function
-// member-dtor (clear) COMDATs take `this` in esi (target) vs ecx (base) plus
-// 8-byte frame slack - the receive_response-dtor LTCG convention residual. Not
-// steerable from this TU.
 tcp_packet_client::~tcp_packet_client( )
 {
 	m_world.add_order				(
@@ -128,10 +124,6 @@ void tcp_packet_client::on_packet_received_impl( vostok::network_core::packet_re
 		m_on_packet_received		( reader );
 }
 
-// claude@NOTE: STRUCTURE MATCH (5 stmts). Wall: the clone buffer()/buffer_size()
-// inline-vs-call (as in send) plus the receive_response m_receiver copy lowered
-// via assign_to_own in base vs the function-copy fold in target. Same network_core
-// clone / boost::function ICF class, not steerable from this TU.
 // claude@MATCH: receive_response takes the allocator and packet as PLAIN
 // references (no boost::ref/cref - the target has no addressof calls here,
 // unlike send_order's cref/ref pair)
@@ -151,14 +143,6 @@ void tcp_packet_client::on_packet_received		( vostok::network_core::tcp_packet c
 	);
 }
 
-// claude@NOTE: STRUCTURE MATCH (1 stmt). Wall: target out-lines
-// function1<packet_reader&>::operator= (ICF-folded into function<char const*>
-// ::operator=, custom edi=this/ecx=arg convention); our base INLINES the
-// copy-swap-clear (function1 ctor + assign_to_own + swap + clear) because that
-// operator= COMDAT is never emitted out-of-line program-wide in our partial
-// build. function0 siblings (set_on_connected, 100%) prove the `m_x = arg;`
-// spelling is correct - the residual is whole-program ICF/COMDAT emission, not
-// steerable from this TU.
 void tcp_packet_client::set_on_packet_received	( boost::function< void ( vostok::network_core::packet_reader& ) > const& on_packet_received )
 {
 	m_on_packet_received			= on_packet_received;
