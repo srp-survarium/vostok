@@ -35,14 +35,17 @@ public:
 	res_render_output* render_output( ) const { return &*m_output; }
 	renderer_context_targets const& target_context( ) const { return m_targets; }
 	HWND__* window( ) const { return m_window; }
+
+private:
+	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
+
+public:
 	math::uint2 get_window_client_size( ) const
 	{
 		return get_window_client_size( m_window, m_windowed );
 	}
 
 	void goto_fullscreen( );
-
-	static math::uint2 get_window_client_size( HWND__* window, bool windowed );
 
 private:
 	friend class renderer;
