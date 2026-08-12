@@ -96,7 +96,7 @@ inline void batched_geometry< Vertex >::for_each_batch_render(
 }
 
 template < typename Vertex >
-inline void batched_geometry< Vertex >::finalize_batch( )
+void batched_geometry< Vertex >::finalize_batch( )
 {
 	if ( m_vertices.empty( ) || m_indices.empty( ) )
 		return;
@@ -152,7 +152,7 @@ inline void batched_geometry< Vertex >::invalidate( )
 }
 
 template < typename Vertex >
-inline void batched_geometry< Vertex >::add_data(
+void batched_geometry< Vertex >::add_data(
 	batched_vertex_source const* vertices,
 	u32 const num_vertices,
 	u16 const* indices,
