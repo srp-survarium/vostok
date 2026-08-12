@@ -8,7 +8,6 @@ namespace render {
 
 struct shadow_batched_geometry : public batched_geometry<shadow_vertex> {
 	shadow_batched_geometry( );
-	virtual ~shadow_batched_geometry( ) { }
 
 	virtual void add_vertex(
 		batched_vertex_source const&	in_vertex,
