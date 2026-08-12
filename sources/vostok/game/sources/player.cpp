@@ -370,12 +370,6 @@ void player::apply_input(
 	apply_input( player_state, rotation_to_apply );
 }
 
-// claude@NOTE: unblocked + builds now that circular_buffer<T>::new_item and the
-// client_player_history_item ctor are bodied (was C4716). Body is faithful to
-// target 0x5e23b0 (6 stmts, 0 named locals - the `item` reference elides). Our
-// LTCG inlines new_item here (target keeps it out-of-line via `call`), so this
-// absorbs the ring-buffer logic and is unpaired against the target's call-shape.
-// Inline-vs-call wall, not source-steerable from this unit.
 void player::serialize_current_state( const u32 current_time_in_ms )
 {
 	client_player_history_item& item = m_history.new_item( );
