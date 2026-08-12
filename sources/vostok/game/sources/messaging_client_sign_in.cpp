@@ -23,6 +23,7 @@ void messaging_client::sign_in_on_packet_received( network_core::packet_reader& 
 
 	reader.r_string			( m_local_name );
 
+	m_connection_info.connection_error_count	= 0;
 	m_connection_state		= messaging::client_connected;
 	m_network_client.set_on_packet_received	( boost::bind( &messaging_client::on_packet_received, this, _1 ) );
 
