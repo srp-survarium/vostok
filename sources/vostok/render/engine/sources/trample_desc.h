@@ -7,13 +7,6 @@ namespace vostok {
 namespace render {
 
 struct trample_desc {
-	trample_desc( ) :
-		position	( 0.0f, 0.0f, 0.0f ),
-		radius		( 0.0f ),
-		multiplier	( 0.0f )
-	{
-	}
-
 	float3	position;
 	float	radius;
 	float	multiplier;

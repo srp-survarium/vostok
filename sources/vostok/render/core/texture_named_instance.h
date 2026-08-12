@@ -9,8 +9,6 @@ namespace render {
 class res_texture;
 
 struct texture_named_instance {
-	texture_named_instance( ) : texture( 0 ) { }
-
 	res_texture* texture;
 	fixed_string<260> path;
 };

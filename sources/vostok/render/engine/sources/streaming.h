@@ -31,13 +31,6 @@ struct streaming_ready_texture {
 STATIC_SIZE_ASSERT( streaming_ready_texture, 0x120 );
 
 struct streaming_texture_instance {
-	streaming_texture_instance( ) :
-		object_sphere( ),
-		texel_factor( 0.f ),
-		surface_instance( 0 )
-	{
-	}
-
 	math::sphere object_sphere;
 	float texel_factor;
 	render_surface_instance* surface_instance;

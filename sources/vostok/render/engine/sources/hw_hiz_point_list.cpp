@@ -9,8 +9,6 @@ namespace vostok {
 namespace render {
 
 struct vertex_struct {
-	vertex_struct( ) { }
-
 	float4 bound;
 	float2 pixel;
 };
