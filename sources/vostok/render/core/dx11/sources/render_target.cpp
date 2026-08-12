@@ -29,8 +29,6 @@ void render_target::create( pcstr name, u32 width, u32 height, DXGI_FORMAT forma
 	if( m_surface)
 		return;
 
-	R_ASSERT( device::ref().d3d_context() && name && name[0] && width && height);
-
 	m_width		= width;
 	m_height	= height;
 	m_format	= format;
