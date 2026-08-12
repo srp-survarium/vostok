@@ -39,8 +39,6 @@ u32 custom_config::get_need_buffer_size(
 	return num_bytes_for_data;
 }
 
-namespace {
-
 template < typename value_type >
 u16 convert_type( u16 )
 {
@@ -428,8 +426,6 @@ custom_config_ptr create_custom_config_impl(
 
 	return config;
 }
-
-} // namespace
 
 custom_config_ptr create_custom_config(
 	effect_options_descriptor const& value,
