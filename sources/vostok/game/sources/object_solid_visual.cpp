@@ -59,7 +59,7 @@ void object_particle_visual::load(
 
 void object_particle_visual::on_visual_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
-	m_particle_system_instance_ptr = data[0].get_unmanaged_resource();
+	m_particle_system_instance_ptr = static_cast_resource_ptr< particle::particle_system_instance_ptr >( data[0].get_unmanaged_resource() );
 
 	cb( *this );
 }
