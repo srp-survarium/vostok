@@ -3,6 +3,8 @@
 
 #include <cstring>
 #include <functional>
+#include <boost/type_traits/is_pointer.hpp>
+#include <boost/utility/enable_if.hpp>
 #include <fastdelegate/fastdelegate.h>
 #include <vostok/configs_binary_config.h>
 #include <vostok/fixed_string.h>
@@ -161,8 +163,8 @@ public:
 	template < typename resource_type >
 	struct compare_member_predicate {
 		bool operator()(
-			resource_type* const left,
-			resource_type* const right
+			resource_type const* const left,
+			resource_type const* const right
 		) const
 		{
 			// FUNCTION BODY[0x126b70] for res_geometry
@@ -170,7 +172,7 @@ public:
 		}
 
 		template < typename descriptor_type >
-		bool operator()(
+		typename boost::disable_if< boost::is_pointer< descriptor_type >, bool >::type operator()(
 			descriptor_type const& left,
 			resource_type const* const right
 		) const
@@ -179,7 +181,7 @@ public:
 		}
 
 		template < typename descriptor_type >
-		bool operator()(
+		typename boost::disable_if< boost::is_pointer< descriptor_type >, bool >::type operator()(
 			resource_type const* const left,
 			descriptor_type const& right
 		) const
