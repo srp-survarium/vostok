@@ -76,8 +76,9 @@ but does not retain source parameter names for declaration-only methods. Paramet
 name comparison is therefore not claimed. Malformed/unrenderable type records are
 kept as `<unresolved-type>` rather than aborting the sweep, and the summary counts
 those declarations. Duplicate complete definitions are deduplicated by semantic
-content; when several variants remain, the richest/latest record is compared and
-the variant count is shown so stale merged-PDB records are never silent.
+content. When several variants remain, the richest target record is compared
+with the closest base variant; the variant count remains visible so stale
+merged-PDB records are never silent or mistaken for current source shape.
 
 The output is divided by evidentiary strength:
 

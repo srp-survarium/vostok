@@ -31,7 +31,7 @@ public:
 
 	bool is_effects_ready( ) const;
 
-private:
+public:
 	res_effect_ptr			m_debug_environment_probe_preview_effect;
 	sphere_geometry			m_sphere_geometry;
 	shader_constant_host*	m_preview_mip_index_parameter;
