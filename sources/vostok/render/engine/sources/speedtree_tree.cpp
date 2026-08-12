@@ -17,10 +17,10 @@ using namespace SpeedTree;
 // part of the canonical header - kept file-local (mirrors speedtree_forest.cpp).
 static float const scale_speedtree_to_vostok = 1.0f;//0.3048f;
 
-speedtree_tree_component::speedtree_tree_component( speedtree_tree& parent ) :
-	m_parent( &parent )
+speedtree_tree_component::speedtree_tree_component( speedtree_tree& parent )
 {
 	// FUNCTION BODY[0x63cb10]
+	m_parent = &parent;
 }
 
 speedtree_tree_component::~speedtree_tree_component( )
@@ -32,6 +32,9 @@ speedtree_tree_component::~speedtree_tree_component( )
 material_effects& speedtree_tree_component::get_material_effects( )
 {
 	// FUNCTION BODY[0x63c740]
+	if ( !m_materail_effects_instance.c_ptr( ) )
+		return material::nomaterial_material( get_vertex_input_type( ) );
+
 	return m_materail_effects_instance->get_material_effects( );
 }
 
