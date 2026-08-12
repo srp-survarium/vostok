@@ -4,6 +4,7 @@
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/engine/model_format.h>
 #include "skeleton_mesh_gpu_skinning_3weights.h"
+#include "streaming.h"
 
 namespace vostok {
 namespace render {
@@ -71,6 +72,14 @@ void skeleton_mesh_gpu_skinning_3weights::load(
 		);
 
 	m_render_geometry.geom	= resource_manager::ref().create_geometry( &*declaration, stride, *m_vertex_buffer, *ib);
+	m_streaming_texture_factor = calculate_streaming_texture_factor(
+		&prepared_vertices->P,
+		&prepared_vertices->uv,
+		m_render_geometry.vertex_count,
+		stride,
+		reinterpret_cast<u16 const*>( indices_reader.pointer() ),
+		m_render_geometry.index_count
+	);
 }
 
 void skeleton_mesh_gpu_skinning_3weights::update( vector< float4x4 > const& bones )
