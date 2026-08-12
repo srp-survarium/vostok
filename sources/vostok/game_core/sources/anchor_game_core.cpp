@@ -344,19 +344,6 @@ namespace vostok
 		inventory.remove( );
 		inventory.set_victory_item( NULL );
 
-		// inventory.h trivial accessors: a plain anchor call is inlined by /GL, so
-		// take their addresses instead - an address-taken member keeps a standard
-		// out-of-line COMDAT (target keeps LTCG custom-convention copies).
-		survarium::profile_slot_enum ( survarium::inventory::*get_active_slot_fn )( ) const
-			= &survarium::inventory::get_active_slot;
-		survarium::inventory_holder& ( survarium::inventory::*holder_fn )( )
-			= &survarium::inventory::holder;
-		survarium::inventory_item_ptr& ( survarium::inventory::*item_in_slot_fn )( survarium::profile_slot_enum )
-			= &survarium::inventory::item_in_slot;
-		example_callback( reinterpret_cast< pcstr >( &get_active_slot_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &holder_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &item_in_slot_fn ) );
-
 		// weapon_user_animations_selector::set_animations: same device; its target
 		// copy keeps the plain /Od thiscall shape, so the emitted COMDAT can match.
 		void ( survarium::weapon_user_animations_selector::*set_animations_fn )( survarium::weapon_user_animations_container_ptr const& )

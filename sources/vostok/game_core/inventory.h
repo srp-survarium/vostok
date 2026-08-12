@@ -25,22 +25,17 @@ public:
 
 			void								set_holder					( inventory_holder* holder );
 			void								unset_holder				( );
-	// claude@NOTE: holder/item_in_slot/get_active_slot carry the correct one-line bodies
-	// but pair only as the optimized-COMDAT convention wall - the target keeps /Ox copies
-	// (this in eax/ecx, no frame, args from [esp+N]); our /Od base emits the standard
-	// thiscall ebp-frame COMDAT (right unit, structure matches, bytes differ by frame).
-	// Not source-steerable.
-			inventory_holder&					holder						( ) { return *m_holder; }
+	inline	inventory_holder&					holder						( ) { return *m_holder; }
 
-			inventory_item_ptr&					item_in_slot				( profile_slot_enum slot ) { return m_slots[slot].item; }
-	inline	inventory_item_ptr const&			item_in_slot				( profile_slot_enum slot ) const { return m_slots[slot].item; }
+	inline	inventory_item_ptr const&			item_in_slot				( const profile_slot_enum slot ) const { return m_slots[slot].item; }
+	inline	inventory_item_ptr&					item_in_slot				( const profile_slot_enum slot ) { return m_slots[slot].item; }
 
 			void								set_victory_item			( victory_item_core* item );
 	inline	victory_item_core*					get_victory_item			( ) { return m_victory_item; }
 
 			bool								action						( const profile_slot_enum slot_id, bool key_down );
 
-			profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
+	inline	profile_slot_enum					get_active_slot				( ) const { return m_active_slot; }
 
 			void								setup_from_profile			( player_profile& profile, items_dictionary const& dict );
 			void								setup_demo_profile			( );
