@@ -52,8 +52,8 @@ void animated_model_instance_cook::on_config_loaded( resources::queries_result& 
 
 	pcstr render_model_path								= attributes["render_model"];
 	fs_new::virtual_path_string							skeleton_config_path;
-	fs_new::virtual_path_string							model_config_path;
 	skeleton_config_path.assignf						( "resources/models/%s.skinned_model/skeleton", render_model_path );
+	fs_new::virtual_path_string							model_config_path;
 	model_config_path.assignf							( "resources/models/%s.skinned_model/settings", render_model_path );
 
 	resources::request requests[] =
@@ -88,8 +88,7 @@ void animated_model_instance_cook::on_skeleton_config_loaded(
 	configs::binary_config_ptr skeleton_config			= static_cast_resource_ptr<configs::binary_config_ptr>( data[0].get_unmanaged_resource() );
 	configs::binary_config_ptr model_config				= static_cast_resource_ptr<configs::binary_config_ptr>( data[1].get_unmanaged_resource() );
 	configs::binary_config_value const& skeleton_value	= skeleton_config->get_root();
-	configs::binary_config_value const& config_value	= config->get_root();
-	configs::binary_config_value const& attributes		= config_value["attributes"];
+	configs::binary_config_value const& attributes		= config->get_root()["attributes"];
 
 	R_ASSERT											( skeleton_value.value_exists( "skeleton" ) );
 	pcstr skeleton_path									= skeleton_value["skeleton"];
