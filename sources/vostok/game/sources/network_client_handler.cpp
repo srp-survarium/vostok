@@ -29,8 +29,10 @@ void network_client::on_match_packet_received( const u8 message_type, network_co
 		case 0x82:
 		{
 			const u32 time_in_ms = packet.r< u32 >( );
-			while ( !packet.eof( ) )
+
+			do
 				process_player_action( packet, time_in_ms );
+			while ( !packet.eof( ) );
 			break;
 		}
 		case 0x83:	process_player_kill					( packet );	break;
