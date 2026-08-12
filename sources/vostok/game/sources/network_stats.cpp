@@ -120,6 +120,8 @@ void stats_row::create(
 	math::color const&		color
 )
 {
+	text_manager	= &text_manager_in;
+
 	packets.create	( text_manager_in, 325.f, start_height, column0_width, column1_width, column2_width, color );
 	messages.create	( text_manager_in, 665.f, start_height, column0_width, column1_width, column2_width, color );
 
