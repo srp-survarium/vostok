@@ -255,8 +255,7 @@ void stage_forward::render_opaque_models( )
 		if ( options::ref( ).current.m_use_hiz_occlusion_culling && ( *opaque_it_d )->m_occluded )
 			continue;
 
-		render_surface_instance& instance = **opaque_it_d;
-		material_effects& effects = instance.m_render_surface->get_material_effects( );
+		render_surface_instance& instance = **opaque_it_d; material_effects& effects = instance.m_render_surface->get_material_effects( );
 		render_geometry& geometry = instance.m_render_surface->m_render_geometry;
 
 		if ( !effects.is_emissive || !effects.m_effects[gbuffer_render_stage].c_ptr( ) )
