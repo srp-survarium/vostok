@@ -808,7 +808,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 {
 	n_ary_tree_time_scale_node&	time_scale_to	= static_cast< n_ary_tree_time_scale_node& >( to );
 	if ( time_scale_to.interpolator( ).transition_time( ) == 0.f )
-		return				m_cloner.clone( to, 0.f, animation_time );
+		return				m_cloner.clone( to, 1.f, animation_time );
 
 	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
 	m_buffer				+= sizeof( n_ary_tree_time_scale_transition_node );
