@@ -31,7 +31,37 @@ class IndexByMangledTests(unittest.TestCase):
 
         self.assertEqual(len(indexed), 2)
         self.assertIs(indexed[first["mangled"]], first)
-        self.assertIs(indexed[f"{first['mangled']}@@pdb-overload:1020"], second)
+        self.assertIs(
+            indexed[MATCH_DB.overload_key(first["mangled"], second["name"])], second
+        )
+
+    def test_uses_target_primary_signature_when_rva_order_differs(self):
+        target_first = self.record("fill_surface(target*, context*)", 0x1000)
+        target_second = self.record("fill_surface(target*, context*, bool)", 0x1020)
+        base_second = self.record(target_second["name"], 0x2000)
+        base_first = self.record(target_first["name"], 0x2020)
+
+        indexed = MATCH_DB.index_by_mangled(
+            [base_second, base_first],
+            preferred_signatures={target_first["mangled"]: target_first["name"]},
+        )
+
+        self.assertIs(indexed[target_first["mangled"]], base_first)
+        self.assertIs(
+            indexed[MATCH_DB.overload_key(target_first["mangled"], target_second["name"])],
+            base_second,
+        )
+
+    def test_maps_legacy_rva_key_to_signature_key(self):
+        first = self.record("fill_surface(target*, context*)", 0x1000)
+        second = self.record("fill_surface(target*, context*, bool)", 0x1020)
+
+        aliases = MATCH_DB.legacy_overload_keys([first, second])
+
+        self.assertEqual(
+            aliases[f"{first['mangled']}@@pdb-overload:1020"],
+            MATCH_DB.overload_key(first["mangled"], second["name"]),
+        )
 
     def test_still_collapses_distinct_same_rva_aliases(self):
         first = self.record("first alias()", 0x1000)
