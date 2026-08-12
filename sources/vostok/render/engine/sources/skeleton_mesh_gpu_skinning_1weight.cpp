@@ -5,9 +5,6 @@
 #include <vostok/render/engine/model_format.h>
 #include "skeleton_mesh_gpu_skinning_1weight.h"
 
-// claude@NOTE: seeded from the 4weights legacy ancestor (the only shipped-era source);
-// layout offsets derived from hardware_1weights_skinning_vertex in model_format.h.
-
 namespace vostok {
 namespace render {
 
@@ -24,7 +21,6 @@ static D3D_INPUT_ELEMENT_DESC hardware_1weight_skinning_vertex_layout[] =
 skeleton_mesh_gpu_skinning_1weight::skeleton_mesh_gpu_skinning_1weight( )
 {
 	// FUNCTION BODY[0x5f33f0]
-	m_vertex_input_type	= skeletal_1_bones_mesh_vertex_input_type;
 }
 
 skeleton_mesh_gpu_skinning_1weight::~skeleton_mesh_gpu_skinning_1weight( )
