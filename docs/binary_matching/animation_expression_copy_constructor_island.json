@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the implicit mixing::expression copy constructor from a source-current disposable animation-before-game_core LTCG link. The retail and candidate bodies have the same 24-byte normalized instruction stream while the canonical link folds the base symbol away.",
+  "link_perturbation": "game_core moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "135741f71d09815bd8ce36c44d297e23626a9024c68349cae860b8266eb74fc1",
+  "base_index_sha256": "a169dc6ec13bac70b3927c8222a06fb3bc1d89be5650dac20b3985609f8e72f2",
+  "candidate_exe_sha256": "1119dfd8ac19e2d0dc8a7c5d81c8002b39cd5b5ecde8b38f72449e68d78aa287",
+  "candidate_pdb_sha256": "51408365f7a7ec5b688cd4201f05fdc578ea1885239088b62a1ec8ab417c2be5",
+  "functions": [
+    {
+      "mangled": "??0expression@mixing@animation@vostok@@QAE@ABV0123@@Z",
+      "module": "animation",
+      "expected_hash": "f47e94ba1b56.eb60e941bc38e87b",
+      "expected_fuzzy_pct": 100.0,
+      "review": "The compiler-generated copy constructor zeroes and retains m_node, copies m_lexeme, and returns in the same 24-byte sequence as retail. Three addition-expression overloads and two gameplay look-expression functions are real target callers; the candidate is retained solely by the reviewed link-order context."
+    }
+  ]
+}
