@@ -10,13 +10,13 @@
 
 namespace survarium {
 
-// claude@NOTE: residual is `this`-constant-folding. The target's only emitted
-// ctor instance is the one specialized for the single function-local-static
-// cook object (this == &s_victory_item_cook, game_world arg read off the stack);
-// our anchor builds a generic-`this` ctor. register_cooks() does NOT construct
-// it (verified: no victory_item_cook ctor in its callees), so the real
-// static-init site lives in some other game TU not yet wired. Structure is
-// faithful; restore the % once that construction site is found.
+// claude@NOTE: target const-folds `this` for game::register_cooks' function-local
+// static cook. The generic construction in anchor_game_victory_item.cpp keeps
+// this form generic, but retiring that anchor changes global COMDAT ownership
+// and loses exact functions outside this TU. The ctor structure is faithful;
+// keep the anchor until the real call graph preserves the complete exact set,
+// then remeasure this ctor's constant-folded form. This is an LTCG ownership
+// boundary, not a reason to manufacture a second constructor specialization.
 victory_item_cook::victory_item_cook( game_world& game_world ) :
 	m_game_world( game_world )
 {
@@ -36,9 +36,9 @@ void victory_item_cook::on_config_loaded( resources::queries_result& data )
 	victory_item* object_to_cook = static_cast< victory_item* >( create_resource( ) );
 	object_to_cook->load( cfg->get_root( ) );
 
-	resources::request requests[1] = {
-		{ (pcstr)cfg->get_root( )["model"], resources::static_model_instance_class },
-	};
+	resources::request requests[1];
+	requests[0].id = resources::static_model_instance_class;
+	requests[0].path = (pcstr)cfg->get_root( )["model"];
 
 	resources::query_resources(
 		requests,
