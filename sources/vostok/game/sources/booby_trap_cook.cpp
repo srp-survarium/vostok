@@ -5,6 +5,8 @@
 #include "pch.h"
 #include "booby_trap_cook.h"
 #include "booby_trap.h"
+#include <vostok/particle/world.h>
+#include <vostok/sound/sound_emitter.h>
 
 namespace survarium {
 
@@ -43,14 +45,15 @@ void booby_trap_cook::query_for_derived_resources(
 
 void booby_trap_cook::on_models_ready( resources::queries_result& data, booby_trap* game_resource )
 {
-	game_resource->m_models[0]		= NULL;
+	game_resource->m_models[0]		=
+		NULL;
 	game_resource->m_models[1]		= static_cast_resource_ptr< render::static_model_ptr >( data[0].get_unmanaged_resource( ) );
 	game_resource->m_models[2]		= static_cast_resource_ptr< render::static_model_ptr >( data[1].get_unmanaged_resource( ) );
 	game_resource->m_models[3]		= static_cast_resource_ptr< render::static_model_ptr >( data[2].get_unmanaged_resource( ) );
 
-	game_resource->m_particle_fired	= data[3].get_unmanaged_resource( );
+	game_resource->m_particle_fired	= static_cast_resource_ptr< particle::particle_system_instance_ptr >( data[3].get_unmanaged_resource( ) );
 
-	game_resource->m_sound_fired	= data[4].get_unmanaged_resource( );
+	game_resource->m_sound_fired	= static_cast_resource_ptr< sound::sound_emitter_ptr >( data[4].get_unmanaged_resource( ) ).c_ptr( );
 
 	finish_query( data.get_parent_query( ), game_resource );
 }
