@@ -854,8 +854,8 @@ void n_ary_tree_comparer::merge_weight_asynchronous_groups(
 )
 {
 	n_ary_tree_animation_node* i	= from_begin;
-	n_ary_tree_animation_node* j	= to_begin;
-	n_ary_tree_node_comparer comparer;
+	// claude@MATCH: target attributes both constructions to one source line.
+	n_ary_tree_animation_node* j	= to_begin; n_ary_tree_node_comparer comparer;
 	while ( i && j ) {
 		switch ( comparer.compare( *i, *j ) ) {
 			case vostok::animation::equal :
