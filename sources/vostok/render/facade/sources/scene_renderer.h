@@ -131,10 +131,20 @@ public:
 	inline void remove_unused_environment_cubemaps( base_scene_ptr const& scene );
 
 	void add_vegetation_trample( base_scene_ptr const& scene, trample_desc const& desc );
-	void add_speedtree_instance( base_scene_ptr const&, speedtree_instance_ptr const&, float4x4 const&, bool ) { /* no source */ }
-	void remove_speedtree_instance( base_scene_ptr const&, speedtree_instance_ptr const&, bool ) { /* no source */ }
-	void update_speedtree_instance( base_scene_ptr const&, speedtree_instance_ptr const&, float4x4 const&, bool ) { /* no source */ }
-	void populate_speedtree_forest( base_scene_ptr const& ) { /* no source */ }
+	inline void add_speedtree_instance(
+		base_scene_ptr const&,
+		speedtree_instance_ptr const&,
+		float4x4 const&,
+		bool
+	);
+	inline void remove_speedtree_instance( base_scene_ptr const&, speedtree_instance_ptr const&, bool );
+	inline void update_speedtree_instance(
+		base_scene_ptr const&,
+		speedtree_instance_ptr const&,
+		float4x4 const&,
+		bool
+	);
+	inline void populate_speedtree_forest( base_scene_ptr const& );
 
 	void play_particle_system(
 		base_scene_ptr const& scene,
