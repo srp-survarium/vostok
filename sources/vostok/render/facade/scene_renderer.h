@@ -114,6 +114,86 @@ inline void scene_renderer::remove_unused_environment_cubemaps( base_scene_ptr c
 	);
 }
 
+inline void scene_renderer::add_speedtree_instance(
+	base_scene_ptr const&			scene,
+	speedtree_instance_ptr const&	instance,
+	float4x4 const&				transform,
+	bool						populate_forest
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::add_speedtree_instance,
+				&m_render_engine_world,
+				scene,
+				instance,
+				_1,
+				populate_forest
+			),
+			transform
+		)
+	);
+}
+
+inline void scene_renderer::remove_speedtree_instance(
+	base_scene_ptr const&			scene,
+	speedtree_instance_ptr const&	instance,
+	bool						populate_forest
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::remove_speedtree_instance,
+				&m_render_engine_world,
+				scene,
+				instance,
+				populate_forest
+			)
+		)
+	);
+}
+
+inline void scene_renderer::update_speedtree_instance(
+	base_scene_ptr const&			scene,
+	speedtree_instance_ptr const&	instance,
+	float4x4 const&				transform,
+	bool						populate_forest
+)
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_with_big_buffer_to_copy_command< float4x4 > ) (
+			boost::bind(
+				&vostok::render::engine::world::update_speedtree_instance,
+				&m_render_engine_world,
+				scene,
+				instance,
+				_1,
+				populate_forest
+			),
+			transform
+		)
+	);
+}
+
+inline void scene_renderer::populate_speedtree_forest( base_scene_ptr const& scene )
+{
+	R_ASSERT	( scene );
+	m_channel.owner_push_back	(
+		VOSTOK_NEW_IMPL( m_allocator, functor_command ) (
+			boost::bind(
+				&vostok::render::engine::world::populate_speedtree_forest,
+				&m_render_engine_world,
+				scene
+			)
+		)
+	);
+}
+
 inline void scene_renderer::add_volume_fog(
 	base_scene_ptr const&			scene,
 	u32							id,
