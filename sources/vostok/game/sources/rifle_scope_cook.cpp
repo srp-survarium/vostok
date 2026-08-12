@@ -55,35 +55,27 @@ void rifle_scope_cook::on_config_loaded( resources::queries_result& data )
 	);
 }
 
-// claude@NOTE: parked at structure level. Target has 5 statements / 2 locals (the
-// params only): line 64 (4-byte trivial), line 76 (the whole `new rifle_scope(...)`
-// construction reading the two models + 4 config fields), then set_unmanaged_resource
-// at line 78 and finish_query at line 79 as SEPARATE statements with NO extra named
-// local for the rifle_scope* or the parent. The asm reads the ["data"] node once and
-// reuses it, fetches results.get_parent_query() once (held in edi across set+finish),
-// and the new pointer flows through eax with no slot. The exact source line-split that
-// yields the new (76) separate from the set call (78) while keeping 0 extra locals
-// isn't reproduced by the inline form below. NEXT: find the construct (likely a single
-// multi-line set_unmanaged_resource( new ... ) whose PDB line table breaks at 76/78)
-// that emits the 5-statement shape without a named rifle_scope*/parent local.
 void rifle_scope_cook::on_subresources_loaded( resources::queries_result& results, configs::binary_config_ptr const& config )
 {
+	render::static_model_ptr idle_scope = static_cast_resource_ptr< render::static_model_ptr >( results[0].get_unmanaged_resource( ) );
+	render::static_model_ptr aimed_scope = static_cast_resource_ptr< render::static_model_ptr >( results[1].get_unmanaged_resource( ) );
 	configs::binary_config_value const& data = config->get_root( )["data"];
 
-	results.get_parent_query( )->set_unmanaged_resource(
-		VOSTOK_NEW_IMPL( g_allocator, rifle_scope )(
-			static_cast_resource_ptr< render::static_model_ptr >( results[0].get_unmanaged_resource( ) ),
-			static_cast_resource_ptr< render::static_model_ptr >( results[1].get_unmanaged_resource( ) ),
-			(float)data["change_scope_factor"],
-			(bool)data["hide_weapon_on_aim"],
-			(float)data["fov_factor"],
-			(float)data["near_plane_factor"]
-		),
-		resources::nocache_memory,
-		sizeof( rifle_scope )
+	rifle_scope* scope = VOSTOK_NEW_IMPL( g_allocator, rifle_scope )(
+		idle_scope,
+		aimed_scope,
+		(float)data["change_scope_factor"],
+		(bool)data["hide_weapon_on_aim"],
+		(float)data["fov_factor"],
+		(float)data["near_plane_factor"]
 	);
 
-	results.get_parent_query( )->finish_query( result_success );
+	resources::query_result_for_cook* parent = results.get_parent_query( );
+	parent->set_unmanaged_resource(
+		scope,
+		resources::memory_usage_type( resources::nocache_memory, sizeof( rifle_scope ) )
+	);
+	parent->finish_query( result_success );
 }
 
 } // namespace survarium
