@@ -256,9 +256,9 @@ skeleton_combined_render_model_instance_cook::skeleton_combined_render_model_ins
 
 
 void skeleton_combined_render_model_instance_cook::translate_query( resources::query_result_for_cook& parent )
-{ skeleton_combined_cook_data* cook_data = 0; if ( parent.user_data( ) )
-
-
+{
+	skeleton_combined_cook_data* cook_data = 0;
+	if ( parent.user_data( ) )
 		parent.user_data( )->try_get( cook_data );
 	// 3 target lines are likely retail-compiled-out source.
 	fs_new::virtual_path_string render_path( parent.get_requested_path( ) );
