@@ -60,7 +60,6 @@ public:
 
 	inline	bool	valid		( ) const;
 
-private:
 	inline			aabb		( );
 
 private:

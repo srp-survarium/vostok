@@ -67,7 +67,7 @@ STATIC_SIZE_ASSERT( base_basis, 0x3 );
 #pragma pack( push, 1 )
 
 struct model_header {
-	model_header( ) : bb( math::create_zero_aabb( ) ) { }
+	model_header( ) { }
 
 	u8			platform_id;
 	u8			type;
