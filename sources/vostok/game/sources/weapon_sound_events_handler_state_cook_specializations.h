@@ -20,10 +20,10 @@ inline weapon_sound_events_handler_state< weapon_core_show_state >* weapon_sound
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 4 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< weapon_core_show_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< weapon_core_show_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 template < >
@@ -39,10 +39,10 @@ inline weapon_sound_events_handler_state< weapon_core_hide_state >* weapon_sound
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 4 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< weapon_core_hide_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< weapon_core_hide_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 template < >
@@ -58,10 +58,10 @@ inline weapon_sound_events_handler_state< pistol_weapon_core_show_state >* weapo
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 8 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< pistol_weapon_core_show_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< pistol_weapon_core_show_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 template < >
@@ -77,10 +77,10 @@ inline weapon_sound_events_handler_state< pistol_weapon_core_hide_state >* weapo
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 8 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< pistol_weapon_core_hide_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< pistol_weapon_core_hide_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 template < >
@@ -96,10 +96,10 @@ inline weapon_sound_events_handler_state< double_barreled_weapon_core_show_state
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 12 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< double_barreled_weapon_core_show_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< double_barreled_weapon_core_show_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 template < >
@@ -115,10 +115,10 @@ inline weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state
 {
 	float weapon_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 0 ] )->length_in_frames( );
 	float user_anim_length = animation::cubic_spline_skeleton_animation_pinned( animations[ 12 ] )->length_in_frames( );
-	return sounds ? new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state >(
+	return new ( buffer.c_ptr( ) ) weapon_sound_events_handler_state< double_barreled_weapon_core_hide_state >(
 		static_cast< weapon& >( params->weapon ), weapon_anim_length / user_anim_length, animations, animations_count, sounds, sounds_count,
 		config_parameters.stop_sounds_on_state_finalize, config_parameters.simultaneous_sounds_queue_size, params->shown
-	) : NULL;
+	);
 }
 
 } // namespace survarium

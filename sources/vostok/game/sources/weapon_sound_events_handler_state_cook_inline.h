@@ -127,9 +127,9 @@ inline void weapon_sound_events_handler_state_cook< T >::on_subresources_ready(
 		traits_type::animations_count
 	);
 	for ( u32 i = 0; i != traits_type::animations_count; ++i )
-		animations.push_back( static_cast_resource_ptr< resources::managed_resource_ptr >( data[ i ].get_managed_resource( ) ) );
+		animations.push_back( data[ i ].get_managed_resource( ) );
 
-	u32 const total_sounds_count = data.size( ) - animations.size( );
+	u32 const total_sounds_count = data.size( ) - traits_type::animations_count;
 	sound::sound_emitter_ptr* const buffer_for_sounds = total_sounds_count ?
 		(sound::sound_emitter_ptr*)VOSTOK_MALLOC_IMPL(
 			*g_allocator,
@@ -139,7 +139,7 @@ inline void weapon_sound_events_handler_state_cook< T >::on_subresources_ready(
 
 	if ( total_sounds_count )
 	{
-		for ( u32 i = animations.size( ); i != data.size( ); ++i ) new ( buffer_for_sounds + i - animations.size( ) ) sound::sound_emitter_ptr( static_cast_resource_ptr< sound::sound_emitter_ptr >( data[ i ].get_unmanaged_resource( ) ) );
+		for ( u32 i = 0; i != total_sounds_count; ++i ) new ( buffer_for_sounds + i ) sound::sound_emitter_ptr( static_cast_resource_ptr< sound::sound_emitter_ptr >( data[ i + traits_type::animations_count ].get_unmanaged_resource( ) ) );
 	}
 
 	T* const object_to_cook = new_state(
@@ -177,8 +177,7 @@ inline T* weapon_sound_events_handler_state_cook< T >::new_state(
 	config_params const&	config_parameters
 )
 {
-	return sounds ?
-		new ( buffer.c_ptr( ) ) T(
+	return new ( buffer.c_ptr( ) ) T(
 			static_cast< weapon& >( params->weapon ),
 			weapon_sound_events_handler_state_cook_traits< T >::animation_time_scale_calculator( animations[ 0 ], *params ),
 			animations,
@@ -187,7 +186,7 @@ inline T* weapon_sound_events_handler_state_cook< T >::new_state(
 			sounds_count,
 			config_parameters.stop_sounds_on_state_finalize,
 			config_parameters.simultaneous_sounds_queue_size
-		) : NULL;
+		);
 }
 
 } // namespace survarium
