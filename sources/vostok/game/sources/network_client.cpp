@@ -124,7 +124,6 @@ void network_client::on_connected_to_match(
 
 					m_player_inputs.clear( );
 					m_match_client.enqueue( m_match_client.new_packet( ( match_client_message_types_enum )0x41 ) );
-					m_match_client.m_are_there_any_packets_to_send = true;
 					break;
 
 				case invalid_session_id:
@@ -318,8 +317,7 @@ void network_client::on_http_result_ready( pcstr content, u8 type )
 {
 	server_connection_info connection_info;
 	connection_info.session_id = login_client( ).session_id( );
-
-
+	connection_info.need_resolve = false;
 	strcpy_s( connection_info.password, login_client( ).account_password( ) );
 	bool const is_connection_info_valid = network_core::get_connection_info_from_string( content, connection_info.host, connection_info.port );
 
