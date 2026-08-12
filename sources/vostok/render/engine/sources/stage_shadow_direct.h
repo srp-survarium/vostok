@@ -70,6 +70,8 @@ public:
 		u32 const		shadow_map_size,
 		float3 const&	view_position
 	);
+
+private:
 	float3 compute_aligment(
 		float3 const&		light_xz_shift,
 		float4x4 const&		light_space_transform,
@@ -105,7 +107,6 @@ public:
 
 	bool is_effects_ready( ) const;
 
-private:
 	shader_constant_host*	m_c_light_direction;
 	shader_constant_host*	m_c_light_position;
 	shader_constant_host*	m_c_light_attenuation_power;

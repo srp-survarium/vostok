@@ -28,9 +28,9 @@ public:
 
 	void execute( res_texture_ptr image );
 
+private:
 	bool is_effects_ready( ) const;
 
-private:
 	res_effect_ptr		m_present_effect;
 	res_declaration_ptr	m_decl_ptr;
 	res_texture_list	m_textures;
