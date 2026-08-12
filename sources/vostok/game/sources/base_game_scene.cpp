@@ -128,18 +128,11 @@ scheduler& base_game_scene::scheduler( )
 	return m_game.scheduler( );
 }
 
-// claude@NOTE: structure matches (3 stmts). Residual: the target re-reads m_active_camera
-// for the call (`cmp [+84],0` / reload), my base CSEs it through one local because the
-// const_cast caches the get_active_camera() result. The target calls a NON-const
-// game_camera::tick() on the active camera, but camera_director only exposes a const
-// get_active_camera() (returns game_camera const*) - so the shipped source had a non-const
-// get_active_camera() overload (camera_director.h, another worker's file). const_cast here
-// is the buildable stand-in; -7 byte residual is that CSE.
 void base_game_scene::tick( const u32 __formal, const u32 current_time_in_ms, const bool is_game_paused )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
 
-	if ( m_camera_director->get_active_camera( ) ) const_cast< game_camera* >( m_camera_director->get_active_camera( ) )->tick( );
+	m_camera_director->tick( );
 
 	if ( !is_game_paused && m_physics_world )
 		m_physics_world->tick( current_time_in_ms );
