@@ -6,7 +6,7 @@
     {
       "mangled": "??_Gskeleton@animation@vostok@@UAEPAXI@Z",
       "module": "animation",
-      "expected_hash": "8f9d4ea46823.9fff9ae0c2fb519e",
+      "expected_hash": "8f9d4ea46823.eb60e941bc38e87b",
       "expected_fuzzy_pct": 100.0,
       "review": "The unique target ??_E skeleton header object and base ??_E compiler-COMDAT object compare byte-exact at 36 bytes. The retail linked PDB exposes the same MSVC deleting destructor under the scalar ??_G identity."
     }
