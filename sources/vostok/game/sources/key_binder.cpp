@@ -249,7 +249,7 @@ key_binder::key_binder( game& g )
 
 void key_binder::set_default_controls( )
 {
-	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
+	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
 		if ( actions[idx].default_key ) {
 			pcstr arg	= NULL;
 			STR_JOINA	( arg, actions[idx].action_name, " ", actions[idx].default_key );
@@ -270,18 +270,10 @@ void key_binder::remap_keys( )
 	}
 }
 
-// claude@NOTE: this TU's small key_binder accessors (id_to_action_name,
-// dik_to_keyname, dik_to_ptr, keyname_to_ptr, get_binding_group, get_binded_action,
-// set_default_controls) are structurally faithful but capped below 100% by the
-// shipped LTCG custom calling convention: the target passes args - and sometimes
-// `this` itself - in registers and cleans the stack (`ret`/`ret 4` vs base
-// `ret 4`/`ret 8`), so each carries a register-vs-slot / ret-imm byte residual at
-// the call boundary. id_to_action_name / keyname_to_ptr additionally diverge only
-// in the inlined-LOG_INFO layout. Not source-steerable - argument-passing LTCG.
 pcstr key_binder::id_to_action_name( game_action_id _id ) const
 {
-	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
-		if ( actions[idx].id == _id )
+	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
+		if ( _id == actions[idx].id )
 			return actions[idx].action_name;
 	}
 	LOG_INFO	( "can't find corresponding [action_name] for id" );
@@ -300,15 +292,15 @@ game_action_id key_binder::action_name_to_id( pcstr _name )
 
 game_action_descr* key_binder::action_name_to_ptr( pcstr _name )
 {
-	for ( s32 idx = 0; idx < bindings_count; ++idx ) {
+	for ( u32 idx = 0; idx < bindings_count; ++idx ) {
 		if ( !_stricmp( _name, actions[idx].action_name ) )
 			return &actions[idx];
 	}
+
 	LOG_INFO	( "! cant find corresponding [id] for action_name", _name );
 
 	return NULL;
 }
-
 pcstr key_binder::dik_to_keyname( s32 _dik )
 {
 	keyboard_key_descr* kb = key_binder::dik_to_ptr( _dik, true );
@@ -331,10 +323,20 @@ keyboard_key_descr* key_binder::dik_to_ptr( s32 _dik, bool bSafe )
 	return NULL;
 }
 
+
+
+
+
+
+
+
+
 keyboard_key_descr* key_binder::keyname_to_ptr( pcstr _name )
 {
 	s32 idx = 0;
-	while ( keyboards[idx].key_name ) {
+	while ( keyboards[idx].key_name )
+	{
+
 		if ( !_stricmp( _name, keyboards[idx].key_name ) )
 			return &keyboards[idx];
 		++idx;
