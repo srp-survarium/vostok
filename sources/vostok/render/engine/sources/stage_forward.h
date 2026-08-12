@@ -50,7 +50,7 @@ public:
 		u32 const pass_index
 	);
 
-private:
+public:
 	res_effect_ptr			m_debug_tracer_effect;
 	res_effect_ptr			m_opaque_geometry_mask_effect;
 	res_effect_ptr			m_gbuffer_depth_effect[15];
