@@ -32,7 +32,6 @@ struct material_cook : public resources::translate_query_cook {
 
 	void on_material_config_loaded( resources::queries_result& result );
 
-private:
 	void on_material_binary_config_loaded(
 		resources::query_result_for_cook*	parent,
 		configs::binary_config*			config
