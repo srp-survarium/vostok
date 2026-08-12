@@ -951,10 +951,10 @@ void scene::add_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 void scene::update_volume_fog( u32 id, volume_fog_parameters const& in_parameters )
 {
 	associative_vector< u32, volume_fog_parameters, vector, std::less< u32 > >::iterator	i = m_volume_fogs.find( id );
-	if ( i == m_volume_fogs.end( ) )
-		m_volume_fogs.insert			( std::pair< u32, volume_fog_parameters >( id, in_parameters ) );
-	else
+	if ( i != m_volume_fogs.end( ) )
 		i->second						= in_parameters;
+	else
+		m_volume_fogs.insert			( std::pair< u32, volume_fog_parameters >( id, in_parameters ) );
 }
 
 void scene::remove_volume_fog( u32 id )
