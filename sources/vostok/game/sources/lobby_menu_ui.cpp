@@ -181,7 +181,7 @@ void lobby_menu_external_handler::callback(
 	else if ( strings::equal( methodName, "buy_ok_clicked" ) )
 	{
 		u16 item_dict_id	= ( u16 )args[ 0 ].GetUInt( );
-		u32 count			= args[ 1 ].GetUInt( );
+		u32 const items_count	= args[ 1 ].GetUInt( );
 
 		u8 faction_id = ( u8 )args[ 2 ].GetUInt( );
 
@@ -204,7 +204,7 @@ void lobby_menu_external_handler::callback(
 			}
 		}
 
-		m_game.network_client( ).lobby_client( ).buy_item( item_dict_id, count, faction_id, false );
+		m_game.network_client( ).lobby_client( ).buy_item( item_dict_id, items_count, faction_id, false );
 	}
 	else if ( strings::equal( methodName, "unlock_perks" ) )
 	{
