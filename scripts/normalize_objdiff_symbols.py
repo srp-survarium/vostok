@@ -18,10 +18,12 @@ left untouched.
 from __future__ import annotations
 
 import argparse
+import json
 import re
 import shutil
 import subprocess
 import sys
+from collections import defaultdict
 from pathlib import Path
 
 
@@ -165,15 +167,83 @@ def object_symbols(nm: str, obj: Path) -> set[str]:
     return names
 
 
-def normalize_tree(root: Path, *, nm: str, objcopy: str) -> tuple[int, int]:
+def rich_pdb_aliases(
+    target_index: Path,
+    base_index: Path,
+    *,
+    source_prefix: str | None = None,
+) -> dict[str, str]:
+    """Derive unambiguous retail-placeholder -> compiler symbol aliases.
+
+    Retail PDBs sometimes expose a readable template name as the COFF symbol,
+    while the candidate PDB exposes the actual MSVC decoration.  A complete
+    demangled signature plus the same source owner is an exact identity.  Only
+    map a readable target spelling to one decorated base spelling when that
+    identity and both spellings are unique on their respective sides.
+    """
+
+    def records_by_identity(path: Path) -> dict[tuple[str, str], set[str]]:
+        records: dict[tuple[str, str], set[str]] = defaultdict(set)
+        with path.open(encoding="utf-8") as source:
+            for line in source:
+                record = json.loads(line)
+                file = record.get("file")
+                name = record.get("name")
+                mangled = record.get("mangled")
+                if file and name and mangled:
+                    records[(file, name)].add(mangled)
+        return records
+
+    target = records_by_identity(target_index)
+    base = records_by_identity(base_index)
+    candidates: dict[str, set[str]] = defaultdict(set)
+    for identity in target.keys() & base.keys():
+        if source_prefix and not identity[0].startswith(source_prefix):
+            continue
+        target_names = target[identity]
+        base_names = base[identity]
+        if len(target_names) != 1 or len(base_names) != 1:
+            continue
+        target_name = next(iter(target_names))
+        base_name = next(iter(base_names))
+        if (
+            target_name != base_name
+            and not target_name.startswith("?")
+            and base_name.startswith("?")
+        ):
+            candidates[target_name].add(base_name)
+
+    unique = {
+        target_name: next(iter(base_names))
+        for target_name, base_names in candidates.items()
+        if len(base_names) == 1
+    }
+    target_names_by_base: dict[str, set[str]] = defaultdict(set)
+    for target_name, base_name in unique.items():
+        target_names_by_base[base_name].add(target_name)
+    return {
+        target_name: base_name
+        for target_name, base_name in unique.items()
+        if len(target_names_by_base[base_name]) == 1
+    }
+
+
+def normalize_tree(
+    root: Path,
+    *,
+    nm: str,
+    objcopy: str,
+    aliases: dict[str, str] | None = None,
+) -> tuple[int, int]:
     """Normalize target objects atomically; return (objects, renamed symbols)."""
+    aliases = aliases or {}
     mappings: dict[str, str] = {}
     symbols_by_object: dict[Path, set[str]] = {}
     for obj in sorted(root.rglob("*.obj")):
         names = object_symbols(nm, obj)
         symbols_by_object[obj] = names
         for name in names:
-            replacement = compiler_name(name)
+            replacement = aliases.get(name) or compiler_name(name)
             if replacement:
                 previous = mappings.setdefault(name, replacement)
                 if previous != replacement:

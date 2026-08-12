@@ -41,6 +41,7 @@ SCRIPT_DIR  = Path(__file__).resolve().parent
 VOSTOK_DIR  = SCRIPT_DIR.parent
 OBJDIFF_DIR = VOSTOK_DIR / "binaries" / "objdiff"
 WIN32_DIR   = VOSTOK_DIR / "binaries" / "Win32"
+RICH_DIR    = VOSTOK_DIR / "binaries" / "rich"
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
@@ -124,6 +125,18 @@ def _wine_path(p: Path) -> str:
 
 def _nonempty_dir(p: Path) -> bool:
     return p.is_dir() and any(p.iterdir())
+
+
+def _rich_pdb_aliases() -> dict[str, str]:
+    target_index = RICH_DIR / "target" / "index.jsonl"
+    base_index = RICH_DIR / "base" / "index.jsonl"
+    if not target_index.is_file() or not base_index.is_file():
+        return {}
+    return normalize_objdiff_symbols.rich_pdb_aliases(
+        target_index,
+        base_index,
+        source_prefix="vostok/render/",
+    )
 
 
 def _generate_report() -> None:
@@ -347,12 +360,13 @@ def generate(side: str) -> None:
                 "llvm-nm and llvm-objcopy are required to normalize retail "
                 "static-init thunk names"
             )
+        aliases = _rich_pdb_aliases()
         objects, symbols = normalize_objdiff_symbols.normalize_tree(
-            out, nm=nm, objcopy=objcopy
+            out, nm=nm, objcopy=objcopy, aliases=aliases
         )
         log(
             f"Normalized {symbols} project-specific static-init symbols "
-            f"in {objects} target objects"
+            f"in {objects} target objects ({len(aliases)} unique rich-PDB aliases)"
         )
     elif (OBJDIFF_DIR / "target").is_dir():
         # The target tree is persistent, but normalization rules can improve.
@@ -365,12 +379,14 @@ def generate(side: str) -> None:
                 "llvm-nm and llvm-objcopy are required to normalize retail "
                 "static-init thunk names"
             )
+        aliases = _rich_pdb_aliases()
         objects, symbols = normalize_objdiff_symbols.normalize_tree(
-            OBJDIFF_DIR / "target", nm=nm, objcopy=objcopy
+            OBJDIFF_DIR / "target", nm=nm, objcopy=objcopy, aliases=aliases
         )
         log(
             f"Updated {symbols} project-specific static-init symbols "
-            f"in {objects} persistent target objects"
+            f"in {objects} persistent target objects "
+            f"({len(aliases)} unique rich-PDB aliases)"
         )
 
     log("Refreshing objdiff config ...")
