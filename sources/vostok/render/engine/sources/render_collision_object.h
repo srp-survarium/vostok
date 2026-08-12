@@ -92,10 +92,6 @@ public:
 		return m_owner;
 	}
 
-	virtual ~render_collision_object( )
-	{
-	}
-
 private:
 	T* m_owner;
 };
