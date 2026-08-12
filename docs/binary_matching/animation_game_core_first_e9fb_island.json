@@ -1,0 +1,227 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source game_core-before-animation LTCG observation on xray 95b9f8142. Every listed function has the same function-source hash and candidate score as its earlier individually reviewed manifest; only compiler-context/dependency hashes changed. This manifest consolidates those prior reviews and pins the current regenerated artifacts. Changed-source or score-shifted candidates are excluded.",
+  "link_perturbation": "game_core immediately before animation at the early animation link position; all other libraries and link flags preserved",
+  "report_sha256": "a9bb739cb89a10e8f92ee66ac7541cb5a9c3996d2800a721bb52ece6481ac135",
+  "base_index_sha256": "7f695581fdf329ea692d242f7ed09635e14d974b1ed6e7ef0c92575646f219a3",
+  "candidate_exe_sha256": "f633dd39a170e637d2ebd05f717f9c99018d2ef6a6ba8160e44b218afb87485f",
+  "candidate_pdb_sha256": "8859239d2d922f489f3bedfbfaa3baed32b78380f282ae27f49e9e23e188bdcc",
+  "functions": [
+    {
+      "mangled": "??$?0Vexpression@mixing@animation@vostok@@Vanimation_lexeme@123@@addition_lexeme@mixing@animation@vostok@@QAE@AAVexpression@123@AAVanimation_lexeme@123@@Z",
+      "module": "animation",
+      "expected_hash": "aa0e8e37bf6f.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 31.39394
+    },
+    {
+      "mangled": "??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDPBVanimation_interval@123@2QAVanimation_lexeme@123@3@Z",
+      "module": "animation",
+      "expected_hash": "675640d9efd6.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 90.82758
+    },
+    {
+      "mangled": "??0animation_state@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IGIIMMMAAPAUsubscribed_channel@23@_N@Z",
+      "module": "animation",
+      "expected_hash": "bddf781cd7ad.e9fb1e46fa321f3a.3c636fef6d6ac983",
+      "expected_fuzzy_pct": 66.354164
+    },
+    {
+      "mangled": "??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z",
+      "module": "animation",
+      "expected_hash": "54b5b635c5bc.e9fb1e46fa321f3a.86c0f19a3cbf556c",
+      "expected_fuzzy_pct": 84.293106
+    },
+    {
+      "mangled": "??Mmixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z",
+      "module": "animation",
+      "expected_hash": "9a15ce18fe85.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 80.07462
+    },
+    {
+      "mangled": "??Omixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z",
+      "module": "animation",
+      "expected_hash": "c1c67f20bcb2.e9fb1e46fa321f3a",
+      "expected_fuzzy_pct": 79.77273
+    },
+    {
+      "mangled": "??Ranimation_comparer_predicate@mixing@animation@vostok@@QBE?AW4comparison_result_enum@23@ABVn_ary_tree_animation_node@123@0@Z",
+      "module": "animation",
+      "expected_hash": "ae6d23e50624.e9fb1e46fa321f3a.02f43436c2586d7e",
+      "expected_fuzzy_pct": 85.539215
+    },
+    {
+      "mangled": "??Ranimation_less_predicate@@QBE_NABVbinary_tree_animation_node@mixing@animation@vostok@@0@Z",
+      "module": "animation",
+      "expected_hash": "dbf13ae6f0f2.e9fb1e46fa321f3a.4bd86037235bedb8",
+      "expected_fuzzy_pct": 97.06143
+    },
+    {
+      "mangled": "?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z",
+      "module": "animation",
+      "expected_hash": "dc4971413022.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 69.64286
+    },
+    {
+      "mangled": "?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z",
+      "module": "animation",
+      "expected_hash": "8f7dd8dca87a.e9fb1e46fa321f3a.0786bb184490c6d6",
+      "expected_fuzzy_pct": 81.206894
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree@mixing@animation@vostok@@ABEMAAVn_ary_tree_animation_node@234@MIIIM@Z",
+      "module": "animation",
+      "expected_hash": "756099a89e66.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 94.75
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEMMIIIM@Z",
+      "module": "animation",
+      "expected_hash": "d922abbbe17a.e9fb1e46fa321f3a.86c0f19a3cbf556c",
+      "expected_fuzzy_pct": 95.333336
+    },
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.e9fb1e46fa321f3a.4bd86037235bedb8",
+      "expected_fuzzy_pct": 79.89428
+    },
+    {
+      "mangled": "?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z",
+      "module": "animation",
+      "expected_hash": "55687383a4fa.e9fb1e46fa321f3a.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 54.322582
+    },
+    {
+      "mangled": "?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z",
+      "module": "animation",
+      "expected_hash": "c8e10eaf4e1a.e9fb1e46fa321f3a.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 51.41398
+    },
+    {
+      "mangled": "?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z",
+      "module": "animation",
+      "expected_hash": "1d5d9b3c77b1.e9fb1e46fa321f3a.86c0f19a3cbf556c",
+      "expected_fuzzy_pct": 84.46154
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 83.083336
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "d540e7d02d51.e9fb1e46fa321f3a.02f43436c2586d7e",
+      "expected_fuzzy_pct": 93.86806
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "f9b3ddbc4e28.e9fb1e46fa321f3a.62b9e1b5c9c38851",
+      "expected_fuzzy_pct": 94.11184
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@AAI1@Z",
+      "module": "animation",
+      "expected_hash": "420813532388.e9fb1e46fa321f3a.02f43436c2586d7e",
+      "expected_fuzzy_pct": 95.31111
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z",
+      "module": "animation",
+      "expected_hash": "67e6926f66d5.e9fb1e46fa321f3a.62b9e1b5c9c38851",
+      "expected_fuzzy_pct": 87.07071
+    },
+    {
+      "mangled": "?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z",
+      "module": "animation",
+      "expected_hash": "1a93a7fb62cc.e9fb1e46fa321f3a.62b9e1b5c9c38851",
+      "expected_fuzzy_pct": 81.60807
+    },
+    {
+      "mangled": "?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z",
+      "module": "animation",
+      "expected_hash": "9883ac304316.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 72.91892
+    },
+    {
+      "mangled": "?remove_transition@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "9dc58d297d58.e9fb1e46fa321f3a.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 75.944954
+    },
+    {
+      "mangled": "?type@single_animation@animation@vostok@@UBE?AW4animation_types_enum@23@XZ",
+      "module": "animation",
+      "expected_hash": "01ffe004f93f.e9fb1e46fa321f3a.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 36.96154
+    },
+    {
+      "mangled": "?update_animation_state@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "f31c8a06041b.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 91.01471
+    },
+    {
+      "mangled": "?update_animation_time@n_ary_tree@mixing@animation@vostok@@CAXAAUanimation_state@234@@Z",
+      "module": "animation",
+      "expected_hash": "e69fbde4421a.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 62.050846
+    },
+    {
+      "mangled": "?update_event_iterators@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "e69c8a51fb19.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 95.54794
+    },
+    {
+      "mangled": "?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "e560232013d7.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 77.99083
+    },
+    {
+      "mangled": "?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "a906943057d2.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 82.59375
+    },
+    {
+      "mangled": "?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "427ce530c0b8.e9fb1e46fa321f3a.f026c887fe65e906",
+      "expected_fuzzy_pct": 99.04762
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "c44baa290ed5.e9fb1e46fa321f3a.86c0f19a3cbf556c",
+      "expected_fuzzy_pct": 96.8125
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "35c0212a8d6e.e9fb1e46fa321f3a.86c0f19a3cbf556c",
+      "expected_fuzzy_pct": 76.49624
+    },
+    {
+      "mangled": "?visit@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "2894dc251bf1.e9fb1e46fa321f3a.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 91.89474
+    },
+    {
+      "mangled": "add_bone",
+      "module": "animation",
+      "expected_hash": "0e3b1cfb98d2.e9fb1e46fa321f3a.13870000b72eafa4",
+      "expected_fuzzy_pct": 92.99333
+    },
+    {
+      "mangled": "get_bones_count",
+      "module": "animation",
+      "expected_hash": "48e414fa3c43.e9fb1e46fa321f3a.13870000b72eafa4",
+      "expected_fuzzy_pct": 80.95744
+    }
+  ]
+}
