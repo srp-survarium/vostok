@@ -1,0 +1,83 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source animation-before-game LTCG observation on animation tip 9e2f8f752. Every listed function reproduces the same candidate score and function-source hash as its prior per-function structural review; only the current compiler/dependency context hash changed. These are partial MAX observations, not exact claims.",
+  "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "a59686d1502c285dcefbac9ca8d5a1df3eba438454ee08bf373d0c5d31054345",
+  "base_index_sha256": "acd7a124d56df7cb201a288a7964c678e093494f47b5df4de51f52b0c12e8e9f",
+  "candidate_exe_sha256": "10cf793772e4cca1426d80e72aaf01371b539d61ef5f64f2f9c7d09f09111268",
+  "candidate_pdb_sha256": "968b607031dfae1c230f8eb4d65d570f2f48984c0e9badea1606dd6398af390c",
+  "functions": [
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "f9b3ddbc4e28.e9fb1e46fa321f3a.a3cc734da036575e",
+      "expected_fuzzy_pct": 94.11184
+    },
+    {
+      "mangled": "?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z",
+      "module": "animation",
+      "expected_hash": "aa807bd1b828.e9fb1e46fa321f3a.a3cc734da036575e",
+      "expected_fuzzy_pct": 89.0267
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEMMIIIM@Z",
+      "module": "animation",
+      "expected_hash": "d922abbbe17a.e9fb1e46fa321f3a.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 95.333336
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "c44baa290ed5.e9fb1e46fa321f3a.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 96.8125
+    },
+    {
+      "mangled": "??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z",
+      "module": "animation",
+      "expected_hash": "54b5b635c5bc.e9fb1e46fa321f3a.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 84.293106
+    },
+    {
+      "mangled": "?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z",
+      "module": "animation",
+      "expected_hash": "1d5d9b3c77b1.e9fb1e46fa321f3a.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 84.46154
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z",
+      "module": "animation",
+      "expected_hash": "67e6926f66d5.e9fb1e46fa321f3a.a3cc734da036575e",
+      "expected_fuzzy_pct": 87.07071
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "d540e7d02d51.e9fb1e46fa321f3a.94f4b854ec7b1479",
+      "expected_fuzzy_pct": 93.86806
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "35c0212a8d6e.e9fb1e46fa321f3a.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 76.49624
+    },
+    {
+      "mangled": "?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z",
+      "module": "animation",
+      "expected_hash": "1a93a7fb62cc.e9fb1e46fa321f3a.a3cc734da036575e",
+      "expected_fuzzy_pct": 81.60807
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@AAI1@Z",
+      "module": "animation",
+      "expected_hash": "420813532388.e9fb1e46fa321f3a.94f4b854ec7b1479",
+      "expected_fuzzy_pct": 95.31111
+    },
+    {
+      "mangled": "??Ranimation_comparer_predicate@mixing@animation@vostok@@QBE?AW4comparison_result_enum@23@ABVn_ary_tree_animation_node@123@0@Z",
+      "module": "animation",
+      "expected_hash": "ae6d23e50624.e9fb1e46fa321f3a.94f4b854ec7b1479",
+      "expected_fuzzy_pct": 85.539215
+    }
+  ]
+}
