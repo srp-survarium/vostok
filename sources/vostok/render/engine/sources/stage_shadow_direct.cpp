@@ -563,6 +563,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	options::ref( ).current.m_update_shadows_every_frame = do_it;
 	// 12 target lines are likely retail-compiled-out source.
 	u32 const pass_index = m_context->scene_view( )->get_render_frame_index( ) % refresh_rate[cascade_index];
+	bool const first_pass = pass_index == 0;
 	vector<render_surface_instance*> m_caster_model;
 
 	light* sun = &*m_context->scene( )->lights( ).get_sun( ).c_ptr( );
@@ -575,7 +576,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	if ( size < math::epsilon_7 )
 		return;
 	// 10 target lines are likely retail-compiled-out source.
-	float current_cascade_align_mult = 1.f / powf( 2048.f / float(shadow_map_size), 2.f ) * cascade_align_mults[cascade_index];
+	float current_cascade_align_mult = 1.f / math::pow( 2048.f / float(shadow_map_size), 2.f ) * cascade_align_mults[cascade_index];
 	// 4 target lines are likely retail-compiled-out source.
 	float current_cascade_offset = cascade_offsets[cascade_index];
 	if ( options::ref( ).current.m_update_shadows_every_frame )
@@ -667,7 +668,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 	// 3 target lines are likely retail-compiled-out source.
 	bool const need_refresh = options::ref( ).current.m_update_shadows_every_frame || m_invalid_shadow || !math::is_similar( adjastment.x, m_previous_adjastment[cascade_index].x, 0.01f ) || !math::is_similar( adjastment.y, m_previous_adjastment[cascade_index].y, 0.01f );
 
-	if ( pass_index == 0 )
+	if ( first_pass )
 	{
 		m_previous_view_matrix[cascade_index] = light_view_transform;
 		m_previous_projection_matrix[cascade_index] = light_projection_transform;
@@ -680,7 +681,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		m_context->push_set_v( light_view_transform );
 		m_context->push_set_p( light_projection_transform );
 
-		if ( pass_index == 0 )
+		if ( first_pass )
 			prepare_models( m_caster_model, orig_view_projection, cascade_index, shadow_map_size, view_pos );
 
 		render_models( m_caster_model, orig_view_projection, cascade_index, shadow_map_size, view_pos, pass_index, refresh_rate[cascade_index] );
@@ -692,7 +693,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 		// 11 target lines are likely retail-compiled-out source.
 		float4x4 texture_space( float4( 0.5f, 0.f, 0.f, 0.f ), float4( 0.f, -0.5f, 0.f, 0.f ), float4( 0.f, 0.f, 1.f, 0.f ), float4( 0.5f, 0.5f, -m_context->m_sun_cascades[cascade_id].bias, 1.f ) );
 		// 2 target lines are likely retail-compiled-out source.
-		if ( pass_index == 0 )
+		if ( first_pass )
 		{
 			m_prev_view_to_shadow[cascade_index] = m_view_to_shadow[cascade_index];
 			m_view_to_shadow[cascade_index] = shadow_trans * texture_space;
