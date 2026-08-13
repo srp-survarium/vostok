@@ -284,12 +284,10 @@ void lobby_menu_external_handler::callback(
 	}
 }
 
-// claude@NOTE: flash glue now inlines at /Ox (scaleform Master Gold /GL), so the
-// inline-vs-call wall is lifted; residual is LTCG statement scheduling around the
-// inlined flash_value ctor/dtor (base merges a few of the dtor cleanups the target
-// keeps as separate statements). The 7-entry label name/key table and the localized
-// wide placeholder strings (set_current_time / set_place / set_status) are
-// reconstructed approximately.
+// claude@NOTE: source structure and constants are exhausted. The target keeps calls
+// to flash_value::SetString/SetStringW because its wrappers inline GFx::Value::operator=;
+// the base wrappers call operator= and are then inlined here. Reopen only with the
+// exact Scaleform 4.2.21 inline-header/compiler partition.
 void lobby_menu::show_match_making( bool b_show )
 {
 	if ( m_is_in_match_making != b_show )
@@ -305,13 +303,13 @@ void lobby_menu::show_match_making( bool b_show )
 
 			static const struct { pcstr name; pcstr translate_id; } c_labels[] =
 			{
-				{ "average_time",	"st_average_search_time" },
-				{ "current_time",	"st_current_search_time" },
-				{ "players_count",	"st_players_in_queue" },
-				{ "place",			"st_place_in_queue" },
-				{ "status",			"st_search_status" },
-				{ "min_players",	"st_min_players" },
-				{ "max_players",	"st_max_players" },
+				{ "label_status",			"st_label_status" },
+				{ "label_quenue",			"st_label_quenue" },
+				{ "label_time_current",		"st_time_current" },
+				{ "label_time_average",		"st_label_time_average" },
+				{ "label_teamA",			"st_label_teamA" },
+				{ "label_teamB",			"st_label_teamB" },
+				{ "btnLeave",				"st_label_leave_queue_btn" },
 			};
 
 			for ( u32 i = 0; i < 7; ++i )
@@ -334,16 +332,16 @@ void lobby_menu::show_match_making( bool b_show )
 			m_match_making_ui->movie->Invoke	( "root.set_labels", NULL, &labels_array, 1 );
 
 			flash_value text;
-			text.SetStringW						( L"0 / 5:" );
+			text.SetStringW						( L"0 \x0441\x0435\x043a" );
 			m_match_making_ui->movie->Invoke	( "root.set_current_time", NULL, &text, 1 );
 
-			text.SetStringW						( L"" );
+			text.SetStringW						( L"0 \x0441\x0435\x043a" );
 			m_match_making_ui->movie->Invoke	( "root.set_average_time", NULL, &text, 1 );
 
-			text.SetStringW						( L"-" );
+			text.SetStringW						( L"" );
 			m_match_making_ui->movie->Invoke	( "root.set_place", NULL, &text, 1 );
 
-			text.SetStringW						( L"..." );
+			text.SetStringW						( L"\x041e\x0436\x0438\x0434\x0430\x043d\x0438\x0435 \x043c\x0430\x0442\x0447\x0430!" );
 			m_match_making_ui->movie->Invoke	( "root.set_status", NULL, &text, 1 );
 
 			show_movie							( m_match_making_ui );
