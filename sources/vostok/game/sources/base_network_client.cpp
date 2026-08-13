@@ -77,8 +77,8 @@ void base_network_client::fill_current_player_stats( boost::function< void( u32,
 }
 
 // claude@NOTE: attach_to_player_cc / attach_to_player / detach_from_player statement
-// structure matches the target. The remaining byte residual includes player.h's inline
-// c_ptr()/bool-conversion devirtualisation and the resource_ptr copy paths.
+// structure matches the target. The remaining byte residual includes the resource_ptr
+// copy paths.
 void base_network_client::attach_to_player_cc( pcstr const arguments )
 {
 	u8 player_id;
@@ -95,7 +95,7 @@ void base_network_client::attach_to_player_cc( pcstr const arguments )
 
 void base_network_client::attach_to_player( player_ptr player )
 {
-	if ( m_current_player && m_current_player->game_ui( ) )
+	if ( m_current_player )
 		m_current_player->detach_controller( );
 
 	m_current_player = player;
@@ -110,14 +110,18 @@ void base_network_client::attach_to_player( player_ptr player )
 	);
 }
 
+// claude@NOTE: source shape is exhausted. The target's inlined
+// on_detached_from_player passes the second false on the stack while the base uses AL,
+// matching the out-of-line callee's LTCG convention gap. Reopen only with a real
+// compiler-context/call-convention lever.
 void base_network_client::detach_from_player( )
 {
-	if ( m_current_player && m_current_player->game_ui( ) )
+	if ( m_current_player )
 		m_current_player->detach_controller( );
 
 	m_current_player = NULL;
 
-	m_game.get_game_world( ).game_ui.show_ammo_indicator( false ); m_game.get_game_world( ).game_ui.show_quick_slots( false );
+	m_game.get_game_world( ).game_ui.on_detached_from_player( );
 }
 
 // claude@NOTE: statement structure matches the target. Residual: the compiler hoists the two
