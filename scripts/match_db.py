@@ -108,6 +108,20 @@ CREATE TABLE source_maxima(
   module TEXT,
   source_file TEXT, source_lo INTEGER, source_hi INTEGER,
   origin TEXT NOT NULL, evidence TEXT);
+-- Valuable observations from inactive source/compiler epochs.  The active
+-- source_maxima row remains the only row consumed by score queries; refresh
+-- resurrects an archived row only when its effective hash becomes current
+-- again.
+CREATE TABLE source_maxima_epochs(
+  mangled TEXT,
+  effective_hash TEXT,
+  max_fuzzy_pct REAL NOT NULL,
+  exact_proven INTEGER NOT NULL,
+  state_id TEXT,
+  module TEXT,
+  source_file TEXT, source_lo INTEGER, source_hi INTEGER,
+  origin TEXT NOT NULL, evidence TEXT,
+  PRIMARY KEY(mangled, effective_hash)) WITHOUT ROWID;
 CREATE TABLE flags(
   mangled TEXT, flag TEXT, cause TEXT, set_at TEXT,
   PRIMARY KEY(mangled, flag));
@@ -752,6 +766,50 @@ def retained_max_effective_hash(previous, rec):
     return effective_source_hash(rec, module or module_of(source_file))
 
 
+def merge_maximum_epoch(previous, candidate):
+    """Merge two observations for one mangled/effective-hash epoch."""
+    if previous is None:
+        return candidate
+    if candidate is None:
+        return previous
+    if previous[:2] != candidate[:2]:
+        raise ValueError("cannot merge different source MAX epochs")
+
+    preferred = max((previous, candidate), key=lambda row: (row[3], row[2]))
+    return (
+        preferred[0],
+        preferred[1],
+        max(previous[2], candidate[2]),
+        int(bool(previous[3]) or bool(candidate[3])),
+        *preferred[4:],
+    )
+
+
+def maximum_needs_epoch_archive(row, current_fuzzy):
+    """Keep only evidence that a rebuild cannot trivially reproduce.
+
+    Plain rebuild observations equal to the build that created the database do
+    not need an inactive-epoch copy.  Island/cross-unit evidence, temporarily
+    absent functions, and maxima above that build do.
+    """
+    if row[9] != "rebuild" or row[10]:
+        return True
+    if current_fuzzy is None:
+        return True
+    return row[2] > current_fuzzy + 0.0001 or (
+        bool(row[3]) and current_fuzzy < 99.995
+    )
+
+
+def maximum_for_effective_hash(mangled, effective_hash, active, epochs):
+    """Select only proof belonging to the source/compiler hash now active."""
+    previous = epochs.get((mangled, effective_hash))
+    active_previous = active.get(mangled)
+    if active_previous is not None and active_previous[1] == effective_hash:
+        previous = merge_maximum_epoch(previous, active_previous)
+    return previous
+
+
 def compiled_state_id(rec):
     """Identity for the observed candidate state (size + ordered instructions)."""
     if rec is None:
@@ -981,7 +1039,7 @@ def file_mtime_iso(path):
     )
 
 
-SCHEMA_VERSION = "4"
+SCHEMA_VERSION = "5"
 
 
 def _git(*args):
@@ -1505,7 +1563,8 @@ def regen():
         log("no declarations.jsonl - BASE_ONLY legitimacy check degraded (parser dump pending)")
 
     # carry persistent tables forward from the existing DB
-    old_history, old_maxima, old_flags, old_attempts = {}, {}, [], []
+    old_history, old_maxima, old_maxima_epochs = {}, {}, {}
+    old_flags, old_attempts = [], []
     if DB_PATH.is_file():
         old = open_db()
         old_history = {r["mangled"]: tuple(r) for r in old.execute("SELECT * FROM history")}
@@ -1516,6 +1575,26 @@ def regen():
             }
         except sqlite3.OperationalError:
             old_maxima = {}  # schema 3: start MAX from current observations
+        try:
+            old_maxima_epochs = {
+                (r["mangled"], r["effective_hash"]): tuple(r)
+                for r in old.execute("SELECT * FROM source_maxima_epochs")
+            }
+        except sqlite3.OperationalError:
+            old_maxima_epochs = {}  # schema 4: seed from valuable active rows
+        old_current_fuzzy = {
+            r["mangled"]: r["fuzzy_pct"]
+            for r in old.execute("SELECT mangled, fuzzy_pct FROM paired")
+        }
+        for mangled, row in old_maxima.items():
+            if not maximum_needs_epoch_archive(
+                row, old_current_fuzzy.get(mangled)
+            ):
+                continue
+            key = (mangled, row[1])
+            old_maxima_epochs[key] = merge_maximum_epoch(
+                old_maxima_epochs.get(key), row
+            )
         old_flags = [tuple(r) for r in old.execute("SELECT * FROM flags ORDER BY mangled, flag")]
         try:
             old_attempts = [
@@ -1536,6 +1615,15 @@ def regen():
         legacy_aliases.get(key, key): (legacy_aliases.get(key, key), *row[1:])
         for key, row in old_maxima.items()
     }
+    remapped_maxima_epochs = {}
+    for (key, effective_hash), row in old_maxima_epochs.items():
+        mapped = legacy_aliases.get(key, key)
+        candidate = (mapped, *row[1:])
+        epoch_key = (mapped, effective_hash)
+        remapped_maxima_epochs[epoch_key] = merge_maximum_epoch(
+            remapped_maxima_epochs.get(epoch_key), candidate
+        )
+    old_maxima_epochs = remapped_maxima_epochs
     old_flags = [
         (legacy_aliases.get(row[0], row[0]), *row[1:]) for row in old_flags
     ]
@@ -1587,8 +1675,10 @@ def regen():
 
     # Correctness-facing MAX is separate from ordinary `history`: only
     # observations in the same effective-source epoch accumulate. A first
-    # schema-4 refresh seeds it from the current build, never from best-seen.
+    # A first schema refresh seeds it from the current build, never from best-seen.
     maxima_rows = {}
+    current_fuzzy_by_mangled = {}
+    old_epoch_symbols = {key[0] for key in old_maxima_epochs}
     maxima_reset = maxima_raised = 0
     for row in pair_rows:
         mangled = sym_by_id[row[0]]
@@ -1609,7 +1699,11 @@ def regen():
         effective_hash = effective_source_hash(brec, module)
         state_id = compiled_state_id(brec)
         current_exact = int(fuzzy >= 99.995)
-        previous = old_maxima.get(mangled)
+        current_fuzzy_by_mangled[mangled] = fuzzy
+        active_previous = old_maxima.get(mangled)
+        previous = maximum_for_effective_hash(
+            mangled, effective_hash, old_maxima, old_maxima_epochs
+        )
 
         maximum = fuzzy
         exact_proven = current_exact
@@ -1622,7 +1716,7 @@ def regen():
                 state_id, origin, evidence = previous[4], previous[9], previous[10]
             if current_improves:
                 maxima_raised += 1
-        elif previous is not None:
+        elif active_previous is not None or mangled in old_epoch_symbols:
             maxima_reset += 1
 
         maxima_rows[mangled] = (
@@ -1633,17 +1727,32 @@ def regen():
     # A same-hash maximum remains valid when LTCG/ICF makes the function
     # temporarily disappear. Re-hash the retained source locator before keeping
     # it; edits or context changes retire the old epoch.
-    for mangled, previous in old_maxima.items():
+    retained_candidates = list(old_maxima.values()) + list(old_maxima_epochs.values())
+    for previous in retained_candidates:
+        mangled = previous[0]
         if mangled in maxima_rows:
             continue
         brec = base.get(mangled)
         module, source_file, lo, hi = previous[5:9]
         effective_hash = retained_max_effective_hash(previous, brec)
         if effective_hash == previous[1]:
-            maxima_rows[mangled] = (
+            candidate = (
                 *previous[:5], module, source_file, lo, hi, previous[9], previous[10]
             )
+            maxima_rows[mangled] = merge_maximum_epoch(
+                maxima_rows.get(mangled), candidate
+            )
     maxima_rows = sorted(maxima_rows.values())
+    for row in maxima_rows:
+        if not maximum_needs_epoch_archive(
+            row, current_fuzzy_by_mangled.get(row[0])
+        ):
+            continue
+        key = (row[0], row[1])
+        old_maxima_epochs[key] = merge_maximum_epoch(
+            old_maxima_epochs.get(key), row
+        )
+    maxima_epoch_rows = sorted(old_maxima_epochs.values())
     if maxima_reset or maxima_raised:
         log(f"source MAX: {maxima_raised} raised, {maxima_reset} source epochs reset")
 
@@ -1749,6 +1858,10 @@ def regen():
     con.executemany("INSERT INTO base_only_status VALUES (?,?,?)", bos_rows)
     con.executemany("INSERT INTO history VALUES (?,?,?,?,?,?)", history_rows)
     con.executemany("INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)", maxima_rows)
+    con.executemany(
+        "INSERT INTO source_maxima_epochs VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+        maxima_epoch_rows,
+    )
     con.executemany("INSERT INTO flags VALUES (?,?,?,?)", old_flags)
     con.executemany("INSERT INTO attempts VALUES (?,?,?,?)", old_attempts)
     # deterministic meta only (artifact mtimes, not wall clock)
