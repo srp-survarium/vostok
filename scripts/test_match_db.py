@@ -773,6 +773,38 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             [],
         )
 
+    def test_report_alias_accepts_same_source_with_different_body(self):
+        target = self.record(text="ret   4", rva=0x1000)
+        base = self.record(text="ret   8", rva=0x2000)
+        aliases = {target["name"]: {base["rva"]: base}}
+
+        self.assertEqual(
+            MATCH_DB.report_source_alias_candidates(target, aliases, set()),
+            [base],
+        )
+
+    def test_report_alias_rejects_used_or_unrelated_owner(self):
+        target = self.record(file="first.cpp", rva=0x1000)
+        used = self.record(file="first.cpp", rva=0x2000)
+        unrelated = self.record(file="second.cpp", rva=0x3000)
+        aliases = {
+            target["name"]: {
+                used["rva"]: used,
+                unrelated["rva"]: unrelated,
+            }
+        }
+
+        self.assertEqual(
+            MATCH_DB.report_source_alias_candidates(
+                target,
+                aliases,
+                {used["rva"]},
+                target_alias_names_by_rva={target["rva"]: {target["name"]}},
+                base_alias_names_by_rva={unrelated["rva"]: {target["name"]}},
+            ),
+            [],
+        )
+
     def test_finds_exact_alias_already_represented_by_paired_rva(self):
         base = self.record(rva=0x2000)
         target = self.record(rva=0x1000)
