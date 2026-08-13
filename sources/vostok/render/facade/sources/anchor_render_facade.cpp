@@ -74,6 +74,10 @@ void anchor_render_facade( )
 																								= &engine::world::remove_grass_layer;
 	void ( engine::world::* const m_toggle_render_stage )( enum_render_stage_type, bool )
 																								= &engine::world::toggle_render_stage;
+	void ( engine::world::* const m_set_slomo )( base_scene_ptr const&, float )
+																								= &engine::world::set_slomo;
+	void ( engine::world::* const m_test_action_portal_system )( base_scene_ptr const& )
+																								= &engine::world::test_action_portal_system;
 	void ( debug::renderer::* const m_draw_ellipsoid )( base_scene_ptr const&, float4x4 const&, float3 const&, math::color const&, bool )
 																								= &debug::renderer::draw_ellipsoid;
 
@@ -100,6 +104,8 @@ void anchor_render_facade( )
 	s_sink	= *( pcvoid const* )&m_update_grass_layer;
 	s_sink	= *( pcvoid const* )&m_remove_grass_layer;
 	s_sink	= *( pcvoid const* )&m_toggle_render_stage;
+	s_sink	= *( pcvoid const* )&m_set_slomo;
+	s_sink	= *( pcvoid const* )&m_test_action_portal_system;
 	s_sink	= *( pcvoid const* )&m_draw_ellipsoid;
 }
 

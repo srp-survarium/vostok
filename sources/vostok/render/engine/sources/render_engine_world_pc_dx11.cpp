@@ -1828,10 +1828,6 @@ void engine::destroy( engine::world*& engine_world )
 
 void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplier )
 {
-	// <0>
-	// <0x654160>|0x000|+0x014:'1933'
-	// ******
-
 	render::scene* const scene_ptr	= static_cast_checked< render::scene* >( scene.c_ptr() );
 	scene_ptr->set_slomo			( time_multiplier );
 }

@@ -982,10 +982,6 @@ void scene::select_volume_fog_instances( float4x4 const& vp, vector< volume_fog_
 void scene::set_slomo( float time_multiplier )
 {
 	m_scene_slomo = time_multiplier;
-
-	// FUNCTION BODY[0x63cee0]: 1
-	// <0x63cee0>|0x000|+0x008:'1010'
-	// ******
 }
 
 void scene::update_lines( const u32 add_count )
