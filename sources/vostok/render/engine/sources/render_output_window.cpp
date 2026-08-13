@@ -64,17 +64,15 @@ void render_output_window::set_size(
 	if ( !width || !height )
 		return;
 
-	bool const windowed = !fullscreen;
 	if (
 		!force_resize &&
 		width == m_current_size.x &&
 		height == m_current_size.y &&
-		windowed == m_windowed
+		!fullscreen == m_windowed
 	)
 		return;
 
-	m_current_size	= math::uint2( width, height );
-	m_windowed		= windowed;
+	m_current_size = math::uint2( width, height ); m_windowed = !fullscreen;
 	m_targets.resize( m_current_size, force_resize );
 	m_output->set_size( width, height, fullscreen, force_resize );
 
