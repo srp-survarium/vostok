@@ -31,7 +31,7 @@ void rifle_scope_cook::translate_query( resources::query_result_for_cook& parent
 
 void rifle_scope_cook::on_config_loaded( resources::queries_result& data )
 {
-	if ( data.size( ) != 1 )
+	if ( !data.is_successful( ) )
 	{
 		data.get_parent_query( )->finish_query( result_error );
 		return;
