@@ -1,0 +1,17 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the animation_collection_cook::request_items resource-root caller in the current-source game_core-before-animation link state. Target and candidate retain the same 28 PDB body statements in order and the same 13 named locals. The candidate is 0x454 bytes versus the target's 0x463; the remaining difference is confined to retained template calls, temporary destruction, and register scheduling in query_resource_params construction, so this is partial MAX evidence rather than an exact claim.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "95b6a06ad8d0.a85b004293c06dd1.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 95.75802
+    }
+  ]
+}
