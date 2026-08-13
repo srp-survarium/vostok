@@ -12,7 +12,6 @@ void depth_accumulate_material_effect::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7c06a0]
 	bool is_static_mesh = false;
 	if (config.value_exists("vertex_input_type")) {
 		is_static_mesh = (enum_vertex_input_type)config["vertex_input_type"] != grassmesh_vertex_input_type;
