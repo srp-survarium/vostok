@@ -577,7 +577,8 @@ void n_ary_tree_transition_tree_constructor::remove_weight_synchronization_group
 
 n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation( n_ary_tree_animation_node& animation, n_ary_tree_animation_node* const weight_driving_animation )
 {
-	base_interpolator const& interpolator	= ( weight_driving_animation ? *weight_driving_animation : animation ).weight_interpolator( );
+	base_interpolator const& interpolator	= weight_driving_animation ?
+		weight_driving_animation->weight_interpolator( ) : animation.weight_interpolator( );
 	n_ary_tree_base_node** const operands_begin	= animation.operands( sizeof( n_ary_tree_animation_node ) );
 
 	u32 const to_operands_count		= animation.operands_count( ) - ( animation.operands_count( ) && (*operands_begin)->is_time_scale( ) ? 1 : 0 );
@@ -600,7 +601,7 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 		true
 	);
 
-	bool has_weight_transition_been_added	= weight_driving_animation == 0
+	bool has_weight_transition_been_added	= time_scale_operands_count == 0
 		&& animation.operands_count( ) && (*operands_begin)->is_time_scale( );
 
 	n_ary_tree_base_node** new_operands	= static_cast< n_ary_tree_base_node** >( m_buffer.c_ptr( ) );
