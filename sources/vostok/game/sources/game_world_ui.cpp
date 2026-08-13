@@ -286,10 +286,10 @@ void game_world_ui::set_player_kills_deaths( u8 player_id, u32 kills, u32 deaths
 	get_ui( )->movie->Invoke( "root.list_update_player", NULL, &out_event, 1 );
 }
 
-// claude@NOTE: the two Advance() statements (HUD + chat movie) DCE away here because
-// flash_movie::Advance is an empty stub in movie.cpp (a different TU we must not edit);
-// the target inlines the real GFx::Movie::Advance there, so the frame_delta fild/fmul +
-// virtual call are TRGT_ONLY. Cross-unit /Od wall - the rest of update_ui structure-matches.
+// claude@NOTE: PDB locals and CFG match. Retail LTCG passes this in edi and
+// frame_delta_ms in ecx, drops __formal, and devirtualizes the byte-exact
+// network_client::is_player_local; base keeps thiscall arguments and the vcall.
+// Reopen after game_world::tick/network_client compiler-context changes.
 void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( __formal );
@@ -301,8 +301,7 @@ void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 		base_network_client* const client = m_game_world.get_game( ).get_network_client( );
 		for ( u8 i = 0; i < client->match_options( ).players_count; ++i )
 		{
-			player_ptr player = client->get_player( i );
-			if ( player )
+			if ( client->get_player( i ) )
 				set_player_online_status( i, client->is_player_local( i ) );
 		}
 	}
@@ -317,10 +316,13 @@ void game_world_ui::update_ui( const u32 frame_delta_ms, const u32 __formal )
 	if ( m_game_world.get_game( ).get_network_client( )->has_bandwidth( ) )
 		update_minimap_players( );
 
-	vector< profile_slot_enum >::iterator it	= m_slots_to_update.begin( );
-	vector< profile_slot_enum >::iterator end	= m_slots_to_update.end( );
-	for ( ; it != end; ++it )
-		update_quick_slot( *it );
+	if ( m_slots_to_update.size( ) )
+	{
+		vector< profile_slot_enum >::iterator it	= m_slots_to_update.begin( );
+		vector< profile_slot_enum >::iterator end	= m_slots_to_update.end( );
+		for ( ; it != end; ++it )
+			update_quick_slot( *it );
+	}
 }
 
 void game_world_ui::on_unload( )
