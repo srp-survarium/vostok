@@ -534,21 +534,21 @@ void network_client::send_player_inputs( )
 	m_player_inputs.clear( );
 }
 
-// claude@NOTE: PARKED at structure match. Full per-frame client pump - lobby/messaging reconnect
-// throttles, match-client disconnect/connect/send-queued/sync cadences, the per-player tick walk
-// + the current-player camera update. Both halves are now LIVE: bodying the three game-layer
-// match_client accessors (is_connected/is_disconnected/last_receive_time_in_ms, which delegate to
-// the network-layer match_client) stopped the compiler constant-folding them, so the back half no
-// longer /Od-eliminates (base lifted 21 -> 41 stmts, 4 locals matching target). Structure matches
-// target's 51-stmt shape (the residual stmt-count delta is MSVC statement-boundary splitting of
-// the LOG_WARNING block + the player-loop resource_ptr scope, not missing source).
-// Remaining byte residual is the whole-program-inline wall, banked: login/lobby/match/messaging
-// accessors inline via vtable dispatch ([this] indirect), the game-layer send_queued_packets
-// wrapper writes m_last_send_queed_packets_time_in_ms / m_are_there_any_packets_to_send at the call
-// site then tail-calls the network send, player::has_been_inserted() / resource_ptr c_ptr loads,
-// the two m_current_player->update_camera() calls tail-merge, plus the LOG_WARNING machinery.
-// set_broken_connection_message's arg is VOSTOK_UNREFERENCED (load compiled out) so the string
-// does not affect bytes.
+// PARKED: full per-frame client pump, including lobby/messaging reconnect throttles, match-client
+// disconnect/connect/send/sync cadences, the per-player walk, and both camera-update paths.
+// Target control flow continues after switch_to_login; there is no early return in that arm.
+// The loop-local player guard uses c_ptr() because target tests only the stored pointer before
+// has_been_inserted(), unlike the intrusive pointer safe-bool sequence emitted for member guards.
+// The first remaining flow divergence is the loop-local resource_ptr destruction: target calls
+// resource_ptr<player>::~resource_ptr out of line, while this compiler context expands its
+// reference-count/destroy path in place. Both paths reconverge at the loop increment.
+// Other residuals are whole-program context: login/lobby/match/messaging accessors, the game-layer
+// send_queued_packets wrapper stores, player accessors, camera-update tail merging, and logging.
+// Reopen only when resource_ptr destructor ownership or one of those callee contexts changes.
+// The four PDB locals are current_time_in_ms, is_game_paused, id, and player.
+// set_broken_connection_message's argument is VOSTOK_UNREFERENCED, so its literal is eliminated.
+// Preserve this comment line count: LOG_WARNING below embeds the physical source line.
+// This pass stops at that demonstrated compiler-context boundary.
 void network_client::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	static u32			lobby_resolve_time		= 0;
@@ -567,7 +567,6 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 				lobby_client( ).connection_info( ).connection_error_count = 0;
 				login_client( ).sign_out( boost::function< void ( connection_error_types_enum, handshaking_error_types_enum, socket_error_types_enum, login_server_message_types_enum ) >( ) );
 				m_game.switch_to_login( login_menu_status_error_connection );
-				return;
 			}
 			else if ( current_time_in_ms - lobby_resolve_time > 5000 )
 			{
@@ -635,7 +634,7 @@ void network_client::tick( const u32 current_time_in_ms, const bool is_game_paus
 	for ( u8 id = 0; id < 20; ++id )
 	{
 		player_ptr player = get_player( id );
-		if ( player && player->has_been_inserted( ) )
+		if ( player.c_ptr( ) && player->has_been_inserted( ) )
 		{
 			if ( !m_is_player_ticked && player->is_local )
 			{
