@@ -220,7 +220,6 @@ void shader_macros::fill_shader_macro_list(
 	shader_configuration shader_config
 )
 {
-	// FUNCTION BODY[0x73af60]
 	macros.clear();
 
 	fill_global_macros( macros);
@@ -232,7 +231,6 @@ void shader_macros::fill_shader_configuration_macros(
 	shader_configuration shader_config
 )
 {
-	// FUNCTION BODY[0x73a960]
 	add_bool_macro  ( macros, str_global_master_gold,					true);
 
 	add_bool_macro 	(macros, str_cfg_use_diffuse,						shader_config.use_diffuse_texture);
@@ -305,7 +303,6 @@ void shader_macros::fill_shader_configuration_macros(
 
 void shader_macros::fill_global_macros( shader_defines_list& defines )
 {
-	// FUNCTION BODY[0x73a950]
 	vostok::render::options::ref().fill_global_macros(defines);
 }
 
