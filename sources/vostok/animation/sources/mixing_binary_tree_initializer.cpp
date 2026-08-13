@@ -46,8 +46,7 @@ void binary_tree_initializer::visit( binary_tree_weight_node& node )
 
 void binary_tree_initializer::visit( binary_tree_addition_node& node )
 {
-	node.left().accept( *this );
-	node.right().accept( *this );
+	node.left().accept( *this ); node.right().accept( *this );
 
 	node.m_next_weight				= 0;
 	node.m_same_weight				= 0;
@@ -56,8 +55,7 @@ void binary_tree_initializer::visit( binary_tree_addition_node& node )
 
 void binary_tree_initializer::visit( binary_tree_subtraction_node& node )
 {
-	node.left().accept( *this );
-	node.right().accept( *this );
+	node.left().accept( *this ); node.right().accept( *this );
 
 	node.m_next_weight				= 0;
 	node.m_same_weight				= 0;
@@ -66,8 +64,7 @@ void binary_tree_initializer::visit( binary_tree_subtraction_node& node )
 
 void binary_tree_initializer::visit( binary_tree_multiplication_node& node )
 {
-	node.left().accept( *this );
-	node.right().accept( *this );
+	node.left().accept( *this ); node.right().accept( *this );
 
 	node.m_next_weight				= 0;
 	node.m_same_weight				= 0;
