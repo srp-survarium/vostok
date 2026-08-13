@@ -917,6 +917,9 @@ void game_world_ui::create_slot_value(
 	slot_descr_value.SetMember( "hotkey", slot_descr_valuec_property );
 }
 
+// claude@NOTE: PDB locals/statements and the byte-exact caller agree. Retail
+// reuses the two dictionary_item stack lifetimes and counts the six-slot loop
+// down; base keeps separate slots and compares the running inventory offset.
 void game_world_ui::fill_quick_slots( )
 {
 	flash_value slots_array;
