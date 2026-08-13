@@ -2,17 +2,17 @@
   "kind": "compiler-state-island",
   "description": "Reviewed n_ary_tree::process_event from the disposable game_core-before-animation LTCG link. The complete reconstructed event-processing body is recorded as partial MAX evidence; extensive accessor and pinned-resource boundary differences remain.",
   "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
-  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
-  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
-  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
-  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
   "functions": [
     {
       "mangled": "?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z",
       "module": "animation",
-      "expected_hash": "9883ac304316.9fff9ae0c2fb519e.f026c887fe65e906",
+      "expected_hash": "cd4edbc40efe.a85b004293c06dd1.fbf81521fe1db953",
       "expected_fuzzy_pct": 72.91892,
-      "review": "Target and candidate retain 85 attributed body statements and all lexeme, interval, weight-transition, frame-evaluation, time-update, and iterator-advance phases. The 0xace-byte target versus 0xa8d-byte candidate still contains many target/base-only regions from animation_interval, pinned-resource, and intrusive-pointer boundary selection, so this is partial MAX evidence only."
+      "review": "Target and candidate retain all lexeme, interval, weight-transition, frame-evaluation, time-update, and iterator-advance phases. Current target/candidate structure is 87/91 statements and 15/12 named-local records; the 0xace-byte target versus 0xa8d-byte candidate still differs at animation_interval, pinned-resource, and intrusive-pointer boundaries, so this is partial MAX evidence only."
     }
   ]
 }
