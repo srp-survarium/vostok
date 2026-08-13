@@ -40,11 +40,11 @@ class point_light_effect : public effect_descriptor {
 				compiler.set_stencil		( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_INVERT);
 				compiler.set_cull_mode		( D3D_CULL_BACK);
 
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -63,12 +63,12 @@ class point_light_effect : public effect_descriptor {
 				}
 
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_emissive",    r2_rt_emissive, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_emissive",    r2_rt_emissive, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -98,11 +98,11 @@ class point_light_effect : public effect_descriptor {
 			compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 			compiler.set_stencil		( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_INVERT);
 			compiler.set_cull_mode		( D3D_CULL_BACK);
-			compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-			compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-			compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-			compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-			compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+			compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+			compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+			compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+			compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+			compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -113,11 +113,11 @@ class point_light_effect : public effect_descriptor {
 				compiler.set_stencil		( true, 0xff, check_all_geometry_type, 0xff, D3D_COMPARISON_EQUAL, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_INVERT, D3D_STENCIL_OP_KEEP);
 				compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -128,11 +128,11 @@ class point_light_effect : public effect_descriptor {
 				compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP);
 				compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -142,11 +142,11 @@ class point_light_effect : public effect_descriptor {
 				compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP);
 				compiler.set_alpha_blend	( true, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 
@@ -156,11 +156,11 @@ class point_light_effect : public effect_descriptor {
 				compiler.set_stencil		( true, all_geometry_type, 0xff, 0xff, D3D_COMPARISON_LESS, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP, D3D_STENCIL_OP_KEEP);
 				compiler.set_alpha_blend	( false, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD, D3D_BLEND_ONE, D3D_BLEND_ONE, D3D_BLEND_OP_ADD);
 				compiler.set_cull_mode		( D3D_CULL_FRONT);
-				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, 0);
-				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, 0);
-				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, 0);
-				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, 0);
-				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, 0);
+				compiler.set_texture		( "t_position",    r2_rt_p, 0, false, -1);
+				compiler.set_texture		( "t_normal",      r2_rt_n, 0, false, -1);
+				compiler.set_texture		( "t_diffuse",     r2_rt_albedo, 0, false, -1);
+				compiler.set_texture		( "t_decals_diffuse", r2_rt_decals_diffuse, 0, false, -1);
+				compiler.set_texture		( "t_decals_normal", r2_rt_decals_normal, 0, false, -1);
 			compiler.end_pass();
 		compiler.end_technique();
 	}
