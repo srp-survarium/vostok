@@ -450,10 +450,15 @@ void stage_visibility::get_results_and_prepare_bounds_portals(
 		return;
 
 	if ( m_portals_offset_to_results ) {
-		pcbyte const results = m_static_results_array + m_portals_offset_to_results;
-		render_scene->update_portals_occlusion_culling( results );
+		render_scene->update_portals_occlusion_culling(
+			m_static_results_array + m_portals_offset_to_results
+		);
 		statistics::ref( ).visibility_stat_group.num_occlusion_culled_portals.value =
-			std::count( results, results + portals_count, u8( 0 ) );
+			std::count(
+				m_static_results_array + m_portals_offset_to_results,
+				m_static_results_array + m_portals_offset_to_results + portals_count,
+				u8( 0 )
+			);
 	}
 
 	m_portals_offset_to_results = out_counter;
