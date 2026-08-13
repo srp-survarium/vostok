@@ -51,9 +51,9 @@ using namespace vostok;
 
 // file-scope debug console commands (global namespace - mangled @@3IA / @@3_NA);
 // s_max_tracers_count caps the per-frame bullet-tracer request fan-out in load()
-static u32	s_max_tracers_count		= 8;
-static bool	s_draw_respawn_debug	= false;
-static bool	s_draw_game_match_stats	= false;
+u32	s_max_tracers_count		= 8;
+bool	s_draw_respawn_debug	= false;
+bool	s_draw_game_match_stats	= false;
 
 static console_commands::cc_u32		bullet_tracers_max_count_cc(
 	"bullet_tracers_max_count", s_max_tracers_count, 2, 0x80, true, console_commands::command_type_engine_internal );
@@ -295,7 +295,11 @@ void game_world::load(
 		render::scene_configuration scene_configuration;
 		scene_configuration.m_create_terrain			= false;
 		scene_configuration.m_create_particle_world		= true;
+		scene_configuration.m_has_clouds			= false;
 		scene_configuration.m_create_speedtree_world	= false;
+		scene_configuration.m_create_grass_world		= false;
+		scene_configuration.m_sky_enabled			= true;
+		scene_configuration.m_use_occlusion_culling	= true;
 
 		sound::sound_scene_creation_params sound_configuration;
 		sound_configuration.proxies_count		= 0x80;
@@ -369,7 +373,8 @@ void game_world::load(
 	resources::query_resources(
 		requests.begin( ),
 		requests.size( ),
-		boost::bind( &game_world::on_project_loaded, this, _1, requests_count, callback ),
+		boost::function< void( resources::queries_result& ) >(
+			boost::bind( &game_world::on_project_loaded, this, _1, requests_count, callback ) ),
 		g_allocator,
 		user_data_ptrs.begin( ) );
 }
