@@ -32,11 +32,6 @@ n_ary_tree_time_scale_transition_node::~n_ary_tree_time_scale_transition_node( )
 {
 }
 
-void n_ary_tree_time_scale_transition_node::check_consistency( )
-{
-	time_scale_transition_debug		( *this );
-}
-
 void n_ary_tree_time_scale_transition_node::accept	( n_ary_tree_visitor& visitor )
 {
 	visitor.visit		( *this );
@@ -85,4 +80,9 @@ void n_ary_tree_time_scale_transition_node::visit	( n_ary_tree_double_dispatcher
 void n_ary_tree_time_scale_transition_node::visit	( n_ary_tree_double_dispatcher& dispatcher, n_ary_tree_time_scale_transition_node& node )
 {
 	dispatcher.dispatch	( node, *this );
+}
+
+void n_ary_tree_time_scale_transition_node::check_consistency( )
+{
+	time_scale_transition_debug		( *this );
 }
