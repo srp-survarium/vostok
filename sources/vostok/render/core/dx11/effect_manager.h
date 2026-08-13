@@ -213,7 +213,7 @@ private:
 			resource_type const* const right
 		) const
 		{
-			return left < right;
+			return compare( *left, *right ) < 0;
 		}
 	};
 

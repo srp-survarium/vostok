@@ -283,13 +283,13 @@ res_shader_technique* effect_manager::create_effect_technique(
 	res_shader_technique const& element
 )
 {
-	if( element.m_passes.empty())
+	if ( element.m_passes.empty( ) )
 		return 0;
 
 	// Search equal in shaders array
 	set<res_shader_technique*, compare_predicate<res_shader_technique> >::iterator const found =
 		m_techniques.find( &element );
-	if( found != m_techniques.end())
+	if ( found != m_techniques.end( ) )
 		return *found;
 
 	// Create _new_ entry
