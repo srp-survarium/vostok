@@ -1110,8 +1110,7 @@ u32 n_ary_tree::nearest_event_time_in_ms( ) const
 void n_ary_tree::adjust_animation_events_times( n_ary_tree const& other )
 {
 	animation_state* source			= m_animation_states;
-	animation_state* const end		= other.m_animation_states + other.m_animations_count;
-	for ( animation_state* i = other.m_animation_states; i != end; ++i, ++source ) {
+	animation_state* const e		= other.m_animation_states + other.m_animations_count; for ( animation_state* i = other.m_animation_states; i != e; ++i, ++source ) {
 		n_ary_tree_animation_node* const animation	= i->event_iterator.m_animation_node;
 		subscribed_channel** const channels_head	=
 			i->event_iterator.m_animation_event_iterator.m_channels_head;

@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source game-before-animation LTCG observation after restoring target statement ownership in the n_ary_tree TU. The listed row is a source-hash-current measured partial MAX gain.",
+  "link_perturbation": "game immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "a0febc65d12b8be30e032f08402bd35e37dca4b5e03a515d07c0659a80fc4d99",
+  "base_index_sha256": "67e4d741b42cdfc0b73adcc44e179d7ab398d500cad1d1c80bc14e2d9f83a310",
+  "candidate_exe_sha256": "e138bb2777863be2eda4602936bea63abfc7a7cc8a046398595967bff8636cf3",
+  "candidate_pdb_sha256": "d7abf70f65ac5f8f485757a98c1ec07a03c9d8964c2516a056e8f3f9acce4ce7",
+  "functions": [
+    {
+      "mangled": "?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z",
+      "module": "animation",
+      "expected_hash": "0e3174dc91db.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 76.8686,
+      "review": "Fresh unchanged-body isolated link restores the reviewed game-before compiler-context maximum under the current n_ary_tree TU hash. Existing source-faithfulness and structure flags remain authoritative."
+    }
+  ]
+}

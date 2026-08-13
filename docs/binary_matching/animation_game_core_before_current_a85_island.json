@@ -1,0 +1,53 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source n_ary_tree caller-cone observations from the disposable game_core-before-animation LTCG link after restoring target statement ownership in adjust_animation_events_times. These are partial MAX states; no row is claimed exact.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "49b379e864732c910f90323edc2e42efe2744302d33132dbad58439b26771ac0",
+  "base_index_sha256": "d57d76d335a9b10e5771787d6c524fc482decc75638c8d61054704891136654b",
+  "candidate_exe_sha256": "24a8e8f183f6de315feb0b7d091b5c222882de31e96d3a00227584fdd580bfff",
+  "candidate_pdb_sha256": "8f1143680f248a32ca6a7c35f3350109806b115b96eece795699bf4abcfe3321",
+  "functions": [
+    {
+      "mangled": "?computed_animation_time@n_ary_tree@mixing@animation@vostok@@ABEMAAVn_ary_tree_animation_node@234@MIIIM@Z",
+      "module": "animation",
+      "expected_hash": "756099a89e66.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 94.75,
+      "review": "Target and candidate have statement STRUCTURE MATCH at three attributed body statements and the same 0x73-byte size. Each retains two PDB locals, with the known optimized-local projection difference; the residual is indirect callback argument and x87 scheduling."
+    },
+    {
+      "mangled": "?update_animation_state@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "f31c8a06041b.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 91.01471,
+      "review": "Target and candidate retain the same thirteen attributed body statements and complete weight/time-calculator/update-time sequence. Three statement-size deltas remain around real call boundaries."
+    },
+    {
+      "mangled": "?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "a906943057d2.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 82.59375,
+      "review": "The natural integration body, target named locals, sole caller, computed_animation_time call, and accumulate_object_movement calls are verified. The remaining statement-count and optimized-local differences keep this a QUANTITY repair target."
+    },
+    {
+      "mangled": "?update_event_iterators@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "e69c8a51fb19.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 95.54794,
+      "review": "The reviewed event-iterator body regains its specialized game_core-before compiler-context maximum under the current n_ary_tree TU hash."
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 83.083336,
+      "review": "The reviewed lexeme-end event generator regains its game_core-before compiler-context maximum under the current n_ary_tree TU hash."
+    },
+    {
+      "mangled": "?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "427ce530c0b8.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 99.04762,
+      "review": "Target and candidate retain the same fifteen attributed body statements and both update paths. The one-byte residual is the proven animation_node call-boundary convention into the integration callee."
+    }
+  ]
+}
