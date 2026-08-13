@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source game-before-animation LTCG observation on animation-to-100 40b6f4ff5. The listed row is a source-hash-current measured fuzzy MAX gain; source, structure flags, and canonical pairings are unchanged.",
+  "link_perturbation": "game immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "a0febc65d12b8be30e032f08402bd35e37dca4b5e03a515d07c0659a80fc4d99",
+  "base_index_sha256": "64189c1c45287d368a8eca839cacbb28caf9a41ff9581042bfcd5ca266b413f2",
+  "candidate_exe_sha256": "56f075fe36f028800c1593d7de69788fe1c5e19597b565a7e7dba496a12d31a2",
+  "candidate_pdb_sha256": "883f23646b9056619a11b9e32111b8239bd8dbdd7fc6b5b280b638ee44a1005c",
+  "functions": [
+    {
+      "mangled": "?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z",
+      "module": "animation",
+      "expected_hash": "0e3174dc91db.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 76.8686,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 75.356346 to 76.8686. Existing source-faithfulness and structure flags remain authoritative; this is compiler-context evidence only."
+    }
+  ]
+}
