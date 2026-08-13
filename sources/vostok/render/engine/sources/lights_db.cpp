@@ -6,6 +6,7 @@
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/console_command.h>
+#include <vostok/render/core/resource_manager.h>
 
 namespace vostok {
 namespace render {
@@ -173,6 +174,13 @@ static void fill_light( light& light, light_props* props )
 	light.shadow_map_size			= props->shadow_map_size;
 	light.shadow_map_size_index		= props->shadow_map_size_index;
 	light.shadow_transparency		= props->shadow_transparency;
+	light.m_enabled					= props->enabled;
+	light.static_shadows				= props->static_shadows;
+	light.need_refresh_static_shadows	= true;
+	light.m_is_light_animated		= props->is_light_animated;
+	light.m_light_animation_length	= props->light_animation_length;
+	if ( light.m_is_light_animated )
+		light.m_color_curve			= props->m_color_curve;
 
 	vostok::memory::copy(
 		&light.shadow_distribution_sides[0],
@@ -180,6 +188,22 @@ static void fill_light( light& light, light_props* props )
 		&props->shadow_distribution_sides[0],
 		sizeof(light.shadow_distribution_sides)
 	);
+
+	if ( props->type != light_type_parallel && props->static_shadows ) {
+		light.m_shadow_depth_stencil = resource_manager::ref( ).create_render_target(
+			NULL,
+			256,
+			256,
+			DXGI_FORMAT_R16_TYPELESS,
+			enum_rt_usage_depth_stencil,
+			res_texture_ptr( ),
+			0,
+			D3D11_USAGE_DEFAULT,
+			1,
+			0
+		);
+		light.m_shadow_depth_stencil_texture = light.m_shadow_depth_stencil->get_texture( );
+	}
 
 	switch ( props->type ) {
 		case light_type_parallel : {
