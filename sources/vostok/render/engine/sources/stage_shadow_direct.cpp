@@ -652,7 +652,7 @@ void stage_shadow_direct::execute_cascade( u32 cascade_id, u32 cascade_index, u3
 
 		cascade_volume.light_cuboid_polys[plane].points[point] = facetable[plane][point];
 
-	cascade_volume.compute_caster_model_fixed( cull_planes, light_shift_xz, size, false );
+	cascade_volume.compute_caster_model_fixed( cull_planes, light_shift_xz, size, true );
 	// 8 target lines are likely retail-compiled-out source.
 	float3 gran;
 
