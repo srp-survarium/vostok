@@ -66,22 +66,20 @@ void profile_player_character::clear_resources( )
 	m_player = NULL;
 }
 
-// claude@NOTE: faithful one-line forward; /OPT:REF-collapses to `ret` (unpaired) because the
-// callee query_profile_contents is itself a /OPT:REF-stripped stub (parked below). Pairs once
-// query_profile_contents gets a real body.
+// Faithful one-line forward. The empty query_profile_contents reconstruction is stripped by
+// LTCG, leaving this body as a return. Reopen with the query_profile_contents caller cone.
 void profile_player_character::profile_changed( player_profile const* profile )
 {
 	query_profile_contents( profile );
 }
 
 // STATE[STUB]
-// claude@NOTE: PARKED. Body deep-copies the player_profile (doug_lea malloc 0x1B8 +
+// PARKED: body deep-copies the player_profile (doug_lea malloc 0x1B8 +
 // player_profile ctor + memcpy) into a player_initial_info, then resources::query_resources
 // with an on_player_ready boost::bind callback (the bind_t/mf2/list3 vtable assign_to is
 // the heavy part). Walled by the boost::bind callback-object construction sequence.
 // NEXT: model the query_resources<player_initial_info> + bind on_player_ready idiom.
-// Named LOCALS (structure): player_initial_info info; variant<32> ud. player_initial_info
-// is not declared in our tree - that type wall blocks the deep-copy + query_resources here.
+// Named locals: player_initial_info info; variant<32> ud.
 void profile_player_character::query_profile_contents( player_profile const* profile )
 {
 }
