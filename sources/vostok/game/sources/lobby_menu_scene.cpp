@@ -8,6 +8,9 @@
 #include "profile_player_character.h"
 #include "profile_character.h"
 #include "player.h" // complete type for player_ptr (intrusive_ptr<player>) dtor
+#include <vostok/animation/mixing_addition_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme.h>
+#include <vostok/animation/mixing_animation_lexeme_parameters.h>
 #include <vostok/resources_queries_result.h>	// queries_result [] / size / is_successful
 #include <vostok/resources_query_result.h>		// query_result_for_user accessors
 
@@ -90,6 +93,39 @@ void profile_player_character::query_profile_contents( player_profile const* pro
 // path and queries_result accessors. NEXT: pair with query_profile_contents (shared bind type).
 void profile_player_character::on_player_ready( resources::queries_result& data, player_profile* profile_to_cook )
 {
+}
+
+void profile_character::update( const u32 current_time_in_ms )
+{
+	mutable_buffer					buffer(
+		ALLOCA( animation::animation_player::stack_buffer_size ),
+		animation::animation_player::stack_buffer_size
+	);
+
+	animation::mixing::animation_lexeme	character_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			NULL,
+			m_character_animation[ 0 ],
+			NULL,
+			NULL
+		).animated_object( this )
+	);
+
+	animation::mixing::animation_lexeme	weapon_lexeme(
+		animation::mixing::animation_lexeme_parameters(
+			buffer,
+			NULL,
+			m_character_animation[ 1 ],
+			NULL,
+			NULL
+		).animated_object( this )
+	);
+
+	animation::mixing::expression		animation_expression( character_lexeme );
+	animation_expression				= animation_expression + weapon_lexeme;
+
+	VOSTOK_UNREFERENCED_PARAMETER		( current_time_in_ms );
 }
 
 // STATE[STUB]
