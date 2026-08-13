@@ -19,12 +19,6 @@ using vostok::animation::mixing::n_ary_tree_animation_node;
 using vostok::animation::mixing::channel_event_callback_base;
 using vostok::animation::subscribed_channel;
 
-void n_ary_tree_animation_event_iterator::invert_times( u32 const time_in_ms )
-{
-	if ( m_value.event_type )
-		m_value.event_time_in_ms	= time_in_ms - m_value.event_time_in_ms;
-}
-
 n_ary_tree_animation_event_iterator::n_ary_tree_animation_event_iterator	(
 		animation_state&				animation_state,
 		n_ary_tree_animation_node&		animation_node,
@@ -310,4 +304,10 @@ n_ary_tree_animation_event_iterator& n_ary_tree_animation_event_iterator::operat
 {
 	advance								( 0 );
 	return								*this;
+}
+
+void n_ary_tree_animation_event_iterator::invert_times( u32 const time_in_ms )
+{
+	if ( m_value.event_type )
+		m_value.event_time_in_ms	= time_in_ms - m_value.event_time_in_ms;
 }
