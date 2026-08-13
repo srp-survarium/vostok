@@ -992,6 +992,9 @@ void game_world_ui::update_quick_slot( profile_slot_enum slot )
 	}
 }
 
+// claude@NOTE: Source locals and operations match. Retail callers push this
+// and pass message_id in edx, separating the inlined flash_value constructor;
+// base caller context keeps this in esi. Reopen after player/weapon callers.
 void game_world_ui::show_screen_message( pcstr message_id )
 {
 	wchar_t message[512];
