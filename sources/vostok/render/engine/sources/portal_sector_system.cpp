@@ -325,7 +325,7 @@ void portal_sector_system::select_models(
 )
 {
 	m_preventer->clear( );
-	selection.clear( );
+	selection.erase( selection.begin( ), selection.end( ) );
 	m_quads.clear( );
 
 
@@ -341,10 +341,11 @@ void portal_sector_system::select_models(
 	else
 	{
 		float4x4 inverted_vp;
-		if ( math::try_invert4x4(
+		bool const inverted = math::try_invert4x4(
 			mat_vp,
 			inverted_vp
-		) )
+		);
+		if ( inverted )
 		{
 			aab_rects_buffer_type portal_rects( ALLOCA( sizeof( aab_rect ) * m_structure->get_portals( ).size( ) ), m_structure->get_portals( ).size( ) );
 			float const min_z = mat_vp.transform_position( view_pos + f.planes( )[4].plane.normal * .01f ).z * 2.f;
@@ -671,7 +672,7 @@ void portal_sector_system::make_frustum_images( float3 const& view_dir )
 	float3* output = furthest_vertices;
 	for ( sectors_type::const_iterator i = m_structure->get_sectors( ).begin( ); i != sectors_end; ++i, ++output )
 	{
-		new ( output ) float3( i->get_aabb( ).vertex( furthest_vertex_id ) );
+		float3 const& furthest_vertex = i->get_aabb( ).vertex( furthest_vertex_id ); new ( output ) float3( furthest_vertex );
 	}
 	m_preventer->make_frustum_images( furthest_vertices );
 }
