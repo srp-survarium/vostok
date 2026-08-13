@@ -94,10 +94,11 @@ public:
 
 	virtual	void						close_current_match					( bool arg_0 ) = 0;
 
-			void						attach_to_player_cc					( pcstr const arg_0 );
+			void						attach_to_player_cc					( pcstr const arguments );
 			void						attach_to_player					( player_ptr player );
 			void						detach_from_player					( );
 
+private:
 	virtual	void						apply_use_physics_controller_for_current( ) = 0;
 
 protected:
