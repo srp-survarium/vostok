@@ -12,15 +12,13 @@ void effect_fstage_fire_fresnel_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bab10]
 	shader_configuration configuration;
 	// 4 target lines are likely retail-compiled-out source.
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
 	configuration.use_transparency_texture  = bool(config["use_ttransparency"]);
 
 	compile_begin("vertex_base", "forward_base_fire_subuv", compiler, &configuration, config);
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		compiler.set_texture("t_position", "$user$position", 0, false, u32(-1));
 		compiler.set_texture("t_particle_lighting", "$user$particle_lighting", 0, false, u32(-1));
 
@@ -44,8 +42,7 @@ void effect_fstage_fire_fresnel_materials::compile(
 
 		compiler.set_constant("solid_transparency",   solid_transparency);
 		compiler.set_constant("solid_color_specular", solid_color_specular);
-
-
+		// 2 target lines are likely retail-compiled-out source.
 		compiler.set_cull_mode(D3D_CULL_NONE);
 	compile_end(compiler);
 }

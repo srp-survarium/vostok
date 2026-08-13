@@ -19,7 +19,6 @@ effect_cook::effect_cook( )
 		use_current_thread_id
 	)
 {
-	// FUNCTION BODY[0x758e30]
 }
 
 void effect_cook::on_binary_shaders(
@@ -81,8 +80,6 @@ void effect_cook::create_resource(
 	mutable_buffer in_out_unmanaged_resource_buffer
 )
 {
-	// FUNCTION BODY[0x759260]
-
 	VOSTOK_UNREFERENCED_PARAMETER				(raw_file_data);
 	
 	effect_compile_data* compile_data		= 0;
@@ -233,7 +230,6 @@ void effect_cook::create_resource(
 
 void effect_cook::destroy_resource( resources::unmanaged_resource* resource_to_destroy )
 {
-	// FUNCTION BODY[0x758eb0]
 	effect_manager::ref().remove_effect		(static_cast<res_effect*>(resource_to_destroy));
 	resource_to_destroy->~unmanaged_resource();
 }
@@ -244,14 +240,12 @@ mutable_buffer effect_cook::allocate_resource(
 	bool file_exist
 )
 {
-	// FUNCTION BODY[0x758ee0]
  	VOSTOK_UNREFERENCED_PARAMETERS			 (&file_exist, &raw_file_data, &in_query);
 	return									 mutable_buffer((pvoid)MALLOC(sizeof(res_effect),"res_effect"), sizeof(res_effect));
 }
 
 void effect_cook::deallocate_resource( void* buffer )
 {
-	// FUNCTION BODY[0x758e90]
 	FREE									 (buffer);
 }
 
