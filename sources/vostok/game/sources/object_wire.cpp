@@ -66,14 +66,9 @@ static void create_wire_visual_source(
 	writer.close_chunk		( );
 }
 
-// claude@NOTE: load is a 22-statement STRUCTURE MATCH; the byte-residual is a cascade
-// of inline-vs-outline divergences on SHARED library types that shift every downstream
-// offset (target frame 0x1BC vs base 0xAC): the target inlines binary_config_value::
-// operator float (m_wire_width = t["wire_width"]) to cmp-type-tag + movss/cvtsi2ss while
-// our base calls it out-of-line; likewise it inlines the memory::writer ctor
-// (vectora_allocator) and the fixed_string<32> default-ctor that our base out-lines.
-// These are compiler inline-budget decisions on configs/memory/fixed_string headers -
-// not steerable from object_wire.cpp without editing those shared headers.
+// claude@NOTE: The 22-statement source shape matches. The residual is a shared-template
+// /GL cut around creation_request and the Boost callback exception tail; reopen only
+// after the compiler context or function-scoped MAX attribution changes.
 void object_wire::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -138,12 +133,9 @@ void object_wire::remove( )
 		get_game_scene().renderer().scene().remove_model( get_game_scene().render_scene(), m_visual );
 }
 
-// claude@NOTE: resources_ready byte-residual is two shared-header divergences: (1) our
-// base's query_result layout reads m_creation_data_from_user 8 bytes high (0x128 vs the
-// target's 0x120) - a resources_query_result.h struct-offset gap; (2) DELETE/const_buffer
-// c_ptr() expand to the heavier platform_pointer_selector + call_destructor_predicate
-// path in our base vs a direct mspace_free in the target. m_visual's assignment (0x12C)
-// matches. Not steerable from this TU.
+// claude@NOTE: DELETE(pbyte) remains out-of-line through get_top_pointer/destructor
+// helpers in base but reduces to the target's direct mspace_free. The following resource
+// pointer assignment aligns; reopen after the shared memory-helper inline context changes.
 void object_wire::resources_ready( resources::queries_result& data, boost::function< void( game_object_& ) >& cb )
 {
 	const_buffer user_data_to_create	= data[0].creation_data_from_user();
