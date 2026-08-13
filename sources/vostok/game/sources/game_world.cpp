@@ -24,6 +24,7 @@
 #include <vostok/ai_navigation/world.h>	// ai::navigation::world::clear_resources (clear_resources)
 #include <vostok/physics/world.h>	// physics::world::tick (tick)
 #include "flash_text_manager.h"		// DrawTextManager::Capture (tick)
+#include <vostok/scaleform/sources/flash_movie.h>	// Movie::ForceCollectGarbage (on_deactivate)
 #include "GFx/GFx_DrawText.h"		// Scaleform::GFx::DrawTextManager::Capture (tick)
 #include "step_manager.h"			// NEW step_manager (ctor)
 #include <vostok/console_command.h>	// console_commands::cc_delegate (ctor)
@@ -414,7 +415,7 @@ void game_world::on_deactivate( )
 
 	get_game( ).deactivate_main_menu( );
 
-	game_ui.show_quick_slots( false );
+	game_ui.get_ui( )->movie->ForceCollectGarbage( );
 }
 
 void game_world::show_ui( bool b_show )

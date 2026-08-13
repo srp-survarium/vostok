@@ -870,7 +870,8 @@ void game_world_ui::show_quick_slots( bool b_show )
 {
 	flash_value b_val;
 	b_val.SetBoolean( b_show );	get_ui( )->movie->Invoke( "root.show_slots", NULL, &b_val, 1 );
-	m_slots_to_update.clear( );
+	if ( !b_show )
+		m_slots_to_update.clear( );
 }
 
 // claude@NOTE: flash /Od wall - the SetMember/CreateObject glue and the hotkey
