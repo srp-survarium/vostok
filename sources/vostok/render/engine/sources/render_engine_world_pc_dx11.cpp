@@ -26,6 +26,7 @@
 #include "material_manager.h"
 #include "stage_particles.h"
 #include "decal_instance.h"
+#include "decal_shader_constants_and_geometry.h"
 #include "renderer.h"
 #include "register_samplers.h"
 #include "scene.h"

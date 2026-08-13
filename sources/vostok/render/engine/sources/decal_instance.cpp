@@ -1,5 +1,6 @@
 #include "pch.h"
 #include "decal_instance.h"
+#include "decal_shader_constants_and_geometry.h"
 #include <vostok/collision/api.h>
 #include <vostok/collision/space_partitioning_tree.h>
 #include <vostok/geometry_primitives.h>
