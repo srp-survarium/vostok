@@ -374,21 +374,20 @@ void n_ary_tree_converter::sort_animations			( vostok::mutable_buffer& buffer )
 	for ( binary_tree_animation_node_ptr i=m_animations_root; i; i=i->m_next_weight_animation ) {
 		if ( i->weight_driving_animation() ) {
 			binary_tree_animation_node* k = i.c_ptr( );
-			while ( k->weight_driving_animation() )
+			while ( k->weight_driving_animation() ) {
 				k					= k->weight_driving_animation().c_ptr();
+			}
 
 			i->m_weight_driving_animation	= k;
 		}
 
 		if ( i->time_driving_animation() ) {
 			binary_tree_animation_node* k = i.c_ptr( );
-			while ( k->time_driving_animation() )
+			while ( k->time_driving_animation() ) {
 				k					= k->time_driving_animation().c_ptr();
+			}
 
-			i->m_time_driving_animation	= k;
-		}
-
-		*j++					= i.c_ptr();
+			i->m_time_driving_animation	= k; } *j++ = i.c_ptr();
 	}
 
 	std::sort					( animations, animations + animations_count, animation_less_predicate() );
