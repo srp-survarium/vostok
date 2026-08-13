@@ -166,7 +166,7 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 	command_type_engine_internal,
 	console_commands::execution_filter_general
 );
-
+// claude@NOTE: exact statement/local structure; residual is LTCG register and call convention scheduling.
  game::game(
 	engine_user::engine&	engine,
 	render::world&			render_world,
@@ -224,7 +224,7 @@ static max_angular_velocity_command s_max_angular_velocity_command(
 	static fixed_string< 512 > s_current_render_configuration;
 	static console_commands::cc_string s_current_render_configuration_cc(
 		"r_current_render_configuration",
-		s_current_render_configuration.c_str( ),
+		s_current_render_configuration.get_buffer( ),
 		256,
 		true,
 		command_type_user_specific
@@ -372,7 +372,7 @@ void game::on_render_output_window_created( resources::queries_result& data )
 		assert_on_fail_true
 	);
 }
-
+// claude@NOTE: target keeps key::is_set_as_string out of line and passes create_and_assign_network_client this on the stack.
 void game::on_base_resources_created( resources::queries_result& data )
 {
 	m_items_dictionary = static_cast_resource_ptr< items_dictionary_ptr >( data[0].get_unmanaged_resource( ) );
@@ -884,17 +884,17 @@ void game::switch_to_login( login_menu_status_enum status )
 	switch_to_scene					( m_login_menu );
 }
 
-// claude@NOTE: cook inventory + order verified EXACT against the target disasm
-// (0x5e5940): the 7 statics and the 3 explicit register_cook calls all appear in
-// target order - this is NOT a content/order divergence. The residual is all
-// non-steerable codegen: (1) `mov esi,eax` this-in-eax convention - the fn is
-// reached only via the member-fn-ptr anchor in anchor_game_world.cpp (address-take,
-// not a direct call); (2) animated_model_instance_cook ctor inline-vs-call (base
-// inlines its body, target out-of-lines it - cross-module knob); (3) the free
-// resources::register_cook(cook) is inlined into resources_manager::register_cook
-// in the target but CALLed in our base x3 (cross-module inline knob); (4) the
-// s_victory_item_cook ctor is this-const-folded in the target (see
-// victory_item_cooker.cpp note). None steerable from this TU.
+// claude@NOTE: target receives this in EAX and drops project_cooker_simple's constant this argument.
+// The first static's base PDB line attribution returns when the caller's LTCG convention matches.
+
+
+
+
+
+
+
+
+
 void game::register_cooks( )
 {
 	static animated_model_instance_cook				s_animated_model_instance_cook;
