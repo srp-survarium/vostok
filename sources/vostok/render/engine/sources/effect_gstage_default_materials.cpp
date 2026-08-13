@@ -201,10 +201,10 @@ void effect_gstage_default_materials::compile(
 		if (configuration.alphablended_diffuse)
 		{
 			if (custom_config.value_exists("texture_alphablended_diffuse"))
-				compiler.set_texture("t_alphablended_diffuse", pcstr(custom_config["texture_alphablended_diffuse"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_alphablended_diffuse", shared_string(pcstr(custom_config["texture_alphablended_diffuse"])), is_static_mesh, debug_last_mips);
 
 			if (configuration.alphablended_normal && custom_config.value_exists("texture_alphablended_normal"))
-				compiler.set_texture("t_alphablended_normal", pcstr(custom_config["texture_alphablended_normal"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_alphablended_normal", shared_string(pcstr(custom_config["texture_alphablended_normal"])), is_static_mesh, debug_last_mips);
 		}
 
 		if (bool(custom_config["use_reflection"]))
@@ -241,7 +241,7 @@ void effect_gstage_default_materials::compile(
 		if (configuration.use_vertex_blended_mask)
 		{
 			if (custom_config.value_exists("texture_vertex_blended_mask"))
-				compiler.set_texture("t_vertex_blended_mask", pcstr(custom_config["texture_vertex_blended_mask"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_vertex_blended_mask", shared_string(pcstr(custom_config["texture_vertex_blended_mask"])), is_static_mesh, debug_last_mips);
 		}
 
 		if (configuration.use_vertex_blended_diffuse || configuration.use_vertex_blended_normal)
@@ -262,13 +262,13 @@ void effect_gstage_default_materials::compile(
 		if (configuration.use_vertex_blended_diffuse)
 		{
 			if (custom_config.value_exists("texture_vertex_blended_diffuse"))
-				compiler.set_texture("t_vertex_blended_diffuse", pcstr(custom_config["texture_vertex_blended_diffuse"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_vertex_blended_diffuse", shared_string(pcstr(custom_config["texture_vertex_blended_diffuse"])), is_static_mesh, debug_last_mips);
 		}
 		// 6 target lines are likely retail-compiled-out source.
 		if (configuration.use_vertex_blended_normal)
 		{
 			if (custom_config.value_exists("texture_vertex_blended_normal"))
-				compiler.set_texture("t_vertex_blended_normal", pcstr(custom_config["texture_vertex_blended_normal"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_vertex_blended_normal", shared_string(pcstr(custom_config["texture_vertex_blended_normal"])), is_static_mesh, debug_last_mips);
 		}
 
 		float4 solid_color_specular = float4(custom_config["constant_diffuse"]);
@@ -306,7 +306,7 @@ void effect_gstage_default_materials::compile(
 		}
 
 		if (configuration.use_normal_texture)
-			compiler.set_texture("t_normal", pcstr(custom_config["texture_normal"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_normal", shared_string(pcstr(custom_config["texture_normal"])), is_static_mesh, debug_last_mips);
 
 		if (configuration.use_sequence)
 		{
@@ -325,7 +325,7 @@ void effect_gstage_default_materials::compile(
 			float4 detail_normal_parameters(1.0f, 1.0f, 1.0f, 1.0f);
 
 			if (custom_config.value_exists("texture_detail_normal"))
-				compiler.set_texture("t_detail_normal", pcstr(custom_config["texture_detail_normal"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_detail_normal", shared_string(pcstr(custom_config["texture_detail_normal"])), is_static_mesh, debug_last_mips);
 
 			if (custom_config.value_exists("scale_detail_normal"))
 			{
@@ -346,7 +346,7 @@ void effect_gstage_default_materials::compile(
 		if (configuration.use_detail_texture)
 		{
 			if (custom_config.value_exists("texture_ditail_diffuse"))
-				compiler.set_texture("t_detail", pcstr(custom_config["texture_ditail_diffuse"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_detail", shared_string(pcstr(custom_config["texture_ditail_diffuse"])), is_static_mesh, debug_last_mips);
 
 			if (custom_config.value_exists("constant_ditail_texture_tile"))
 				compiler.set_constant("ditail_texture_tile", float(custom_config["constant_ditail_texture_tile"]));
@@ -357,14 +357,14 @@ void effect_gstage_default_materials::compile(
 			if (custom_config.value_exists("constant_parallax_scale"))
 				compiler.set_constant("constant_parallax_scale", float(custom_config["constant_parallax_scale"]));
 
-			compiler.set_texture("t_height_map", pcstr(custom_config["texture_bump"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_height_map", shared_string(pcstr(custom_config["texture_bump"])), is_static_mesh, debug_last_mips);
 		}
 		// 14 target lines are likely retail-compiled-out source.
 		float4 specular_intensity_ranges(0.0f, 1.0f, 0.0f, 0.0f);
 
 		if (configuration.use_specular_intensity_texture)
 		{
-			compiler.set_texture("t_specular_intensity", pcstr(custom_config["texture_specular_intensity"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_specular_intensity", shared_string(pcstr(custom_config["texture_specular_intensity"])), is_static_mesh, debug_last_mips);
 
 			if (custom_config.value_exists("constant_specular_intensity_min"))
 			{
@@ -387,7 +387,7 @@ void effect_gstage_default_materials::compile(
 
 		if (configuration.use_roughness_texture)
 		{
-			compiler.set_texture("t_roughness", pcstr(custom_config["texture_roughness"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_roughness", shared_string(pcstr(custom_config["texture_roughness"])), is_static_mesh, debug_last_mips);
 			if (custom_config.value_exists("constant_roughness_min"))
 			{
 				specular_fresnel_roughness_parameters.z = float(custom_config["constant_roughness_min"]);
@@ -399,7 +399,7 @@ void effect_gstage_default_materials::compile(
 
 		if (configuration.use_fresnel_texture)
 		{
-			compiler.set_texture("t_fresnel", pcstr(custom_config["texture_fresnel"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_fresnel", shared_string(pcstr(custom_config["texture_fresnel"])), is_static_mesh, debug_last_mips);
 			if (custom_config.value_exists("constant_fresnel_min"))
 			{
 				specular_fresnel_roughness_parameters.x = float(custom_config["constant_fresnel_min"]);
@@ -415,7 +415,7 @@ void effect_gstage_default_materials::compile(
 		// 3 target lines are likely retail-compiled-out source.
 		if (configuration.use_translucency_texture)
 		{
-			compiler.set_texture("t_translucency", pcstr(custom_config["texture_translucency"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_translucency", shared_string(pcstr(custom_config["texture_translucency"])), is_static_mesh, debug_last_mips);
 			solid_material_params.z = float(custom_config["constant_translucency"]);
 		}
 
@@ -436,7 +436,7 @@ void effect_gstage_default_materials::compile(
 				compiler.set_constant("variation_color", float4(custom_config["constant_variation_color"]));
 
 			if (custom_config.value_exists("texture_variation_mask"))
-				compiler.set_texture("t_variation_mask", pcstr(custom_config["texture_variation_mask"]), 0, is_static_mesh, debug_last_mips);
+				compiler.set_texture("t_variation_mask", shared_string(pcstr(custom_config["texture_variation_mask"])), is_static_mesh, debug_last_mips);
 			else
 				compiler.set_texture("t_variation_mask", "", 0, false, u32(-1));
 		}
@@ -460,7 +460,7 @@ void effect_gstage_default_materials::compile(
 	// fill rsm backend
 	{
 		shader_configuration local_configuration;
-		compile_begin("vertex_base_lpv", "fill_reflective_shadow_map_backend", compiler, &local_configuration, custom_config);
+		compile_begin("vertex_base_lpv", "fill_reflective_shadow_map_backed", compiler, &local_configuration, custom_config);
 		compile_end(compiler);
 	}
 
@@ -475,7 +475,7 @@ void effect_gstage_default_materials::compile(
 		compiler.set_stencil(false);
 
 		if (local_configuration.use_diffuse_texture)
-			compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_base", shared_string(pcstr(custom_config["texture_diffuse"])), is_static_mesh, debug_last_mips);
 
 		if (custom_config.value_exists("constant_diffuse"))
 			compiler.set_constant("diffuse_color_parameter", float4(custom_config["constant_diffuse"]).xyz());
@@ -493,7 +493,7 @@ void effect_gstage_default_materials::compile(
 		compile_begin("vertex_base", "fill_reflective_shadow_map", compiler, &local_configuration, custom_config);
 
 		if (local_configuration.use_diffuse_texture)
-			compiler.set_texture("t_base", pcstr(custom_config["texture_diffuse"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_base", shared_string(pcstr(custom_config["texture_diffuse"])), is_static_mesh, debug_last_mips);
 
 		if (custom_config.value_exists("constant_diffuse"))
 			compiler.set_constant("diffuse_color_parameter", float4(custom_config["constant_diffuse"]).xyz());
@@ -527,7 +527,7 @@ void effect_gstage_default_materials::compile(
 		compiler.set_alpha_blend(true, D3D_BLEND_ONE, D3D_BLEND_ONE);
 
 		if (local_configuration.use_emissive == 2)
-			compiler.set_texture("t_emission", pcstr(custom_config["texture_emissive"]), 0, is_static_mesh, debug_last_mips);
+			compiler.set_texture("t_emission", shared_string(pcstr(custom_config["texture_emissive"])), is_static_mesh, debug_last_mips);
 
 		compile_end(compiler);
 	}
