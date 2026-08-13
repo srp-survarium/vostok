@@ -32,8 +32,8 @@ public:
 	virtual	base_player*						cast_to_base_player		( ) = 0;
 	virtual	physics::world*						get_physics_world		( ) = 0;
 
-	inline	survarium::inventory const&			inventory				( ) const { return *m_inventory; }
 	inline	survarium::inventory&				inventory				( ) { return *m_inventory; }
+	inline	survarium::inventory const&			inventory				( ) const { return *m_inventory; }
 
 			scheduler&							scheduler				( ) { return m_scheduler; }
 
@@ -44,6 +44,8 @@ public:
 private:
 	/* 0x0004 */	/* boost::noncopyable */
 	/* 0x0004 */	survarium::scheduler&		m_scheduler;
+
+protected:
 	/* 0x0008 */	inventory_ptr				m_inventory;
 }; // class inventory_holder
 
