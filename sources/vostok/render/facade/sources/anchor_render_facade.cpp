@@ -24,6 +24,7 @@
 #include <vostok/render/facade/sources/debug_renderer.h>
 #include <vostok/render/facade/environment_probe_properties.h>
 #include <vostok/render/facade/sky_ambient_occlusion_properties.h>
+#include <vostok/render/engine/world.h>
 #include <vostok/render/engine/sources/trample_desc.h>
 
 namespace vostok {
@@ -61,6 +62,8 @@ void anchor_render_facade( )
 																								= &scene_renderer::set_grass;
 	void ( scene_renderer::* const m_reset_grass )( resources::unmanaged_resource_ptr, base_scene_ptr const& )
 																								= &scene_renderer::reset_grass;
+	void ( engine::world::* const m_remove_grass_layer )( u8, base_scene_ptr const& )
+																								= &engine::world::remove_grass_layer;
 	void ( debug::renderer::* const m_draw_ellipsoid )( base_scene_ptr const&, float4x4 const&, float3 const&, math::color const&, bool )
 																								= &debug::renderer::draw_ellipsoid;
 
@@ -81,6 +84,7 @@ void anchor_render_facade( )
 	s_sink	= *( pcvoid const* )&m_set_portal_system;
 	s_sink	= *( pcvoid const* )&m_set_grass;
 	s_sink	= *( pcvoid const* )&m_reset_grass;
+	s_sink	= *( pcvoid const* )&m_remove_grass_layer;
 	s_sink	= *( pcvoid const* )&m_draw_ellipsoid;
 }
 

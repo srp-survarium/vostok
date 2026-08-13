@@ -581,9 +581,10 @@ void grass_world::clear( )
 
 void grass_world::remove_grass_layer( u8 id, bool )
 {
-	vector<u32> instances_to_remove;
 	grass_templates_type::iterator it = m_templates.begin( );
 	grass_templates_type::iterator end = m_templates.end( );
+
+	vector<u32> instances_to_remove;
 	for ( ; it != end; ++it )
 	{
 		grass_template* templ = *it;
