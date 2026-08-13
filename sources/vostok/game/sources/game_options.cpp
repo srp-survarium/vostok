@@ -354,11 +354,38 @@ void game_options::fill_settings_data( )
 			options_item_member.SetStringW( label_txt );
 			options_item.SetMember( "label", options_item_member );
 
-			options_args[1].PushBack( options_item );
+			if ( m_options[i] )
+			{
+				options_item_base* option = m_options[i]->option_by_id( j );
+				bool has_data_provider = true;
+
+				m_options_ui->movie->CreateFunction( &options_item_member, option );
+				options_item.SetMember( "setter", options_item_member );
+
+				if ( option->option_type( ) == string_selector )
+					m_options_ui->movie->CreateArray( &options_item_member );
+				else if ( option->option_type( ) == slider_selector )
+					m_options_ui->movie->CreateObject( &options_item_member );
+				else
+					has_data_provider = false;
+
+				if ( has_data_provider )
+				{
+					option->fill_data( options_item_member );
+					options_item.SetMember( "dataProvider", options_item_member );
+				}
+			}
+
+			options_args[1].SetElement( j, options_item );
 		}
 
-		m_options_ui->movie->Invoke( "root.set_options_data", NULL, options_args, 2 );
+		m_options_ui->movie->Invoke( "root.set_settings", NULL, options_args, 2 );
 	}
+
+	DELETE_ARRAY( gameplay_options_labels );
+	DELETE_ARRAY( video_options_labels );
+	DELETE_ARRAY( sound_options_labels );
+	DELETE_ARRAY( controllers_options_labels );
 }
 
 void game_options::activate( base_game_scene* parent_scene )
