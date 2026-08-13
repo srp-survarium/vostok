@@ -62,8 +62,9 @@ n_ary_tree_animation_node* n_ary_tree_transition_tree_constructor::add_animation
 	if ( is_new_animation )
 		initial_event_types				= time_event_animation_lexeme_started
 			| time_event_weight_transitions_started;
-	else if ( previous_animation_state && !previous_animation_state->are_there_any_weight_transitions )
-		initial_event_types				= time_event_weight_transitions_started;
+	else if ( previous_animation_state )
+		if ( !previous_animation_state->are_there_any_weight_transitions )
+			initial_event_types			= time_event_weight_transitions_started;
 
 	n_ary_tree_weight_calculator weight_calculator( m_current_time_in_ms, 0 );
 	weight_calculator.visit				( new_animation );
