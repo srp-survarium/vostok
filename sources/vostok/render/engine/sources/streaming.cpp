@@ -83,12 +83,12 @@ s32 calculate_needed_texture_mip_levels(
 	float const screen_space_size =
 		math::max( screen_space_size_x, screen_space_size_y ) /
 		( object_sphere.radius * 2.f ) * math::max( factor, .0001f );
-	s32 const num_mips = math::ceil(
+	u32 const num_mips = math::ceil(
 		math::log( math::min( screen_space_size, float( max_texture_size ) ) ) /
 		math::log( 2.f )
 	) + 1;
 
-	return math::clamp_r( num_mips, s32( min_streamed_in_mips ), s32( max_streamed_in_mips ) ) - quality_index;
+	return math::clamp_r( num_mips, min_streamed_in_mips, max_streamed_in_mips ) - quality_index;
 }
 
 } // namespace render
