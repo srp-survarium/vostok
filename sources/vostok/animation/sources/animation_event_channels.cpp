@@ -11,45 +11,6 @@
 namespace vostok {
 namespace animation {
 
-u32 animation_event_channels::count_internal_memory_size(
-	bi_spline_event_channel_baked const* channels,
-	u32 channels_count
-)
-{
-	u32 size = u32( channels_self_memory_size( channels_count ) );
-
-	for ( u32 i = 0; i != channels_count; ++i )
-		size += event_channel::count_internal_memory_size( channels[i] );
-
-	return size;
-}
-
-void animation_event_channels::create_in_place_internals(
-	bi_spline_event_channel_baked const* channels,
-	u32 channels_count,
-	void* memory_buffer
-)
-{
-	m_channels_count = channels_count;
-	m_internal_memory_position = u32( bytes_dist( memory_buffer, this ) );
-
-	for ( u32 i = 0; i < m_channels_count; ++i )
-		new ( &channel( i ) ) event_channel;
-
-	memory_buffer = get_shift_ptr(
-		memory_buffer,
-		u32( channels_self_memory_size( m_channels_count ) )
-	);
-
-	for ( u32 i = 0; i < m_channels_count; ++i ) {
-		channel( i ).create_in_place_internals( channels[i], memory_buffer );
-		memory_buffer = get_shift_ptr(
-			memory_buffer,
-			event_channel::count_internal_memory_size( channels[i] )
-		);
-	}
-}
-
 event_channel			&animation_event_channels::channel( u32 id )
 {
 	ASSERT( m_channels_count != 0 );
@@ -113,6 +74,45 @@ animation_event_channels::~animation_event_channels()
 	ASSERT( m_internal_memory_position != size_t(-1) );
 	for ( u32 i = 0; i < m_channels_count; ++i )
 		channel( i ).~event_channel();
+}
+
+void animation_event_channels::create_in_place_internals(
+	bi_spline_event_channel_baked const* channels,
+	u32 channels_count,
+	void* memory_buffer
+)
+{
+	m_channels_count = channels_count;
+	m_internal_memory_position = u32( bytes_dist( memory_buffer, this ) );
+
+	for ( u32 i = 0; i < m_channels_count; ++i )
+		new ( &channel( i ) ) event_channel;
+
+	memory_buffer = get_shift_ptr(
+		memory_buffer,
+		u32( channels_self_memory_size( m_channels_count ) )
+	);
+
+	for ( u32 i = 0; i < m_channels_count; ++i ) {
+		channel( i ).create_in_place_internals( channels[i], memory_buffer );
+		memory_buffer = get_shift_ptr(
+			memory_buffer,
+			event_channel::count_internal_memory_size( channels[i] )
+		);
+	}
+}
+
+u32 animation_event_channels::count_internal_memory_size(
+	bi_spline_event_channel_baked const* channels,
+	u32 channels_count
+)
+{
+	u32 size = u32( channels_self_memory_size( channels_count ) );
+
+	for ( u32 i = 0; i != channels_count; ++i )
+		size += event_channel::count_internal_memory_size( channels[i] );
+
+	return size;
 }
 
 } // namespace animation
