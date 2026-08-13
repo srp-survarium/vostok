@@ -829,12 +829,15 @@ void game_world_ui::update_minimap_players( )
 	get_ui( )->movie->Invoke( "root.update_players", NULL, &players_array, 1 );
 }
 
+// claude@NOTE: PDB locals and predicates match. Retail LTCG inlines the
+// implicit player_ptr destructor; base calls its byte-exact COMDAT body.
+// Reopen after resource_ptr/player compiler-context changes.
 void game_world_ui::update_minimap_local_player( )
 {
 	player_ptr current_player = m_game_world.get_game( ).get_network_client( )->get_current_player( );
 	if ( !current_player )
 		return;
-	if ( !current_player->is_alive( ) )
+	if ( !current_player->has_been_inserted( ) )
 		return;
 
 	float4x4 const current_player_transform = current_player->get_current( ).transform;
