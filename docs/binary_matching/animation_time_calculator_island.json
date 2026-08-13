@@ -1,46 +1,46 @@
 {
   "kind": "compiler-state-island",
-  "description": "Reviewed mixing_n_ary_tree_animation_time_calculator.cpp observations from the disposable game_core-before-animation LTCG link. The full improved TU family is recorded as partial MAX evidence; none of these rows is an exact claim.",
+  "description": "Reviewed current-source mixing_n_ary_tree_animation_time_calculator.cpp observations from the disposable game_core-before-animation LTCG link. The full improved TU family is recorded as partial MAX evidence; none of these rows is an exact claim.",
   "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
-  "report_sha256": "8c76ac92eaba8fe7919b9f09e7ea84f2da71fa0e0126ba4263cdfed54e08c7c9",
-  "base_index_sha256": "54d00c34d6d5d2f287afca10361ba40f177b25b2854fd9e6373403fa575a5e47",
-  "candidate_exe_sha256": "e8c870e0816c48a7e0bedfd4fef348d261d42ed116f3729ee6fdbee35a1e19d2",
-  "candidate_pdb_sha256": "5ae81e415b5d31282b522be65f2bd202b87e00ef1cbe524b3cdd35d066beb12e",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
   "functions": [
     {
       "mangled": "?computed_animation_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEMMIIIM@Z",
       "module": "animation",
-      "expected_hash": "d922abbbe17a.9fff9ae0c2fb519e.86c0f19a3cbf556c",
+      "expected_hash": "d922abbbe17a.a85b004293c06dd1.b8a537232eb1bec3",
       "expected_fuzzy_pct": 95.333336,
-      "review": "Target and candidate have STRUCTURE MATCH at four attributed body statements and the same 0x7d-byte size. The residual is FastDelegate register convention and call scheduling."
+      "review": "Target and candidate have the same 0x7d-byte size and six attributed statements. Target retains target_time_in_ms while candidate retains current_time_in_ms; the residual is FastDelegate register convention and call scheduling."
     },
     {
       "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_node@234@@Z",
       "module": "animation",
-      "expected_hash": "c44baa290ed5.9fff9ae0c2fb519e.86c0f19a3cbf556c",
+      "expected_hash": "c44baa290ed5.a85b004293c06dd1.b8a537232eb1bec3",
       "expected_fuzzy_pct": 96.8125,
-      "review": "The computed-time call and clamp remain present with the audited five-block flow; target has two versus candidate three attributed statements and 0x5b versus 0x5d bytes from argument/clamp scheduling."
+      "review": "The computed-time call and clamp remain present with the audited five-block flow; current target/candidate structure is 4/5 statements and 0x5b/0x5d bytes from argument/clamp scheduling."
     },
     {
       "mangled": "??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z",
       "module": "animation",
-      "expected_hash": "54b5b635c5bc.9fff9ae0c2fb519e.86c0f19a3cbf556c",
+      "expected_hash": "54b5b635c5bc.a85b004293c06dd1.b8a537232eb1bec3",
       "expected_fuzzy_pct": 84.293106,
-      "review": "The target false m_is_read_only initializer, operand time-scale dispatch, fill_time fallback, and bounds checks remain present. Target has five versus candidate four attributed statements; the target-only split and custom LTCG convention remain."
+      "review": "The target false m_is_read_only initializer, operand time-scale dispatch, fill_time fallback, and bounds checks remain present. Current target/candidate structure is 7/6 statements; target additionally retains start_animation_time, and the target-only split/custom LTCG convention remain."
     },
     {
       "mangled": "?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z",
       "module": "animation",
-      "expected_hash": "1d5d9b3c77b1.9fff9ae0c2fb519e.86c0f19a3cbf556c",
+      "expected_hash": "1d5d9b3c77b1.a85b004293c06dd1.b8a537232eb1bec3",
       "expected_fuzzy_pct": 84.46154,
-      "review": "The computed-time call and min/max clamp retain the audited five-block flow. Target has four versus candidate three attributed statements and a target-only clamp line-table split."
+      "review": "The computed-time call and min/max clamp retain the audited five-block flow. Current target/candidate structure is 6/5 statements with the same time_scale_start_time_in_ms local and a target-only clamp line-table split."
     },
     {
       "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
       "module": "animation",
-      "expected_hash": "35c0212a8d6e.9fff9ae0c2fb519e.86c0f19a3cbf556c",
+      "expected_hash": "35c0212a8d6e.a85b004293c06dd1.b8a537232eb1bec3",
       "expected_fuzzy_pct": 76.49624,
-      "review": "The integration loop, captured operands count, nullable time-scale node, calculator result selection, computed-time call, clamp, and bounds checks remain present with the audited 30-block/19-branch flow. Target has twelve versus candidate eleven attributed statements and substantial LTCG statement grouping differences."
+      "review": "The integration loop, captured operands count, nullable time-scale node, calculator result selection, computed-time call, clamp, and bounds checks remain present with the audited 30-block/19-branch flow. Current target/candidate structure is 14/13 statements; target retains time_scale_node while candidate retains operands_count, with substantial LTCG statement grouping differences."
     }
   ]
 }
