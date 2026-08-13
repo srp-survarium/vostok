@@ -1,7 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Created 	: 02.06.2026
-////////////////////////////////////////////////////////////////////////////
-
 #include "pch.h"
 #include "free_fly_camera.h"
 #include "base_game_scene.h"
@@ -13,18 +9,12 @@
 #include <vostok/input/keyboard.h>
 #include <vostok/input/mouse.h>
 #include <vostok/input/world.h>
-
 namespace vostok {
 namespace console_commands {
-	// declared in console_command_processor.h; forward-declared here to avoid its
-	// incomplete `enum execution_filter;` (which collides in the structure dump
-	// with the full definition this TU pulls in via console_command.h)
 	VOSTOK_CORE_API void execute( pcstr str, execution_filter filter );
 } // namespace console_commands
 } // namespace vostok
-
 namespace survarium {
-
 free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
 	game_camera			( w ),
 	m_camera_director	( cd ),
@@ -33,7 +23,6 @@ free_fly_camera::free_fly_camera( base_game_scene& w, camera_director& cd ) :
 	m_mouse_move		( 0, 0, 0 )
 {
 }
-
 bool free_fly_camera::on_keyboard_action(
 	input::world*					input_world,
 	input::enum_keyboard			key,
@@ -41,12 +30,10 @@ bool free_fly_camera::on_keyboard_action(
 )
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
-
 	game&				current_game = get_game_scene().get_game();
 	toggle_action_enum	actions_mask_type;
 	game_action_id const action_id	= current_game.get_key_binder().get_binded_action(
 		key, actions_mask_type, 1 );
-
 	if ( action == input::kb_key_down )
 	{
 		switch ( action_id )
@@ -61,7 +48,6 @@ bool free_fly_camera::on_keyboard_action(
 			vostok::console_commands::execute	( "deserialize_player_state", vostok::console_commands::execution_filter_all );
 			break;
 		}
-
 		if ( actions_mask_type == toggle_action )
 			m_keyb_events.push_back	( key );
 	}
@@ -114,26 +100,20 @@ bool free_fly_camera::on_mouse_move(
 {
 	VOSTOK_UNREFERENCED_PARAMETERS	( input_world );
 
-	// claude@NOTE: this is math::deg2rad( float(x) ) inlined - deg2rad does not
-	// inline in this TU (emits an out-of-line x87 call, wrong asm); the inline
-	// deg2rad-body form reproduces the target's SSE mul-add shape. Residual: our
-	// build folds (1/180)*pi into one constant, the target keeps them separate.
-	m_mouse_move.x += float( x ) / 180.0f * math::pi;
-	m_mouse_move.y += float( y ) / 180.0f * math::pi;
-	m_mouse_move.z += float( z ) / 180.0f * math::pi;
+	m_mouse_move.x += math::deg2rad( float( x ) );
+	m_mouse_move.y += math::deg2rad( float( y ) );
+	m_mouse_move.z += math::deg2rad( float( z ) );
+
 	return false;
 }
-
 bool free_fly_camera::keyb_event_present( s32 e )
 {
 	return std::find( m_keyb_events.begin(), m_keyb_events.end(), e ) != m_keyb_events.end();
 }
-
 bool free_fly_camera::mouse_event_present( s32 e )
 {
 	return std::find( m_mouse_events.begin(), m_mouse_events.end(), e ) != m_mouse_events.end();
 }
-
 void free_fly_camera::build_view_matrix(
 	float2 const&		raw_angles,
 	const float			shift_forward,
@@ -143,21 +123,14 @@ void free_fly_camera::build_view_matrix(
 {
 	float4x4 const view_inverted	= m_camera_director.get_inverted_view_matrix( );
 	float3 const angles_zxy			= view_inverted.get_angles( math::rotation_zxy );
-
-	// sushi@TODO: z-factor is a float .rdata constant the delinker labels `offset`
-	// (unresolved value); 0.75f is a guess - the only residual byte vs target.
 	float3 new_angles_zxy			= float3( angles_zxy.x - raw_angles.x, angles_zxy.y - raw_angles.y, angles_zxy.z * 0.75f );
 	new_angles_zxy.x				= math::clamp_r( new_angles_zxy.x, -math::pi_d2, math::pi_d2 );
-
 	float4x4 rotation				= math::create_rotation( new_angles_zxy, math::rotation_zxy );
-
 	float3 const position			=	view_inverted.c.xyz( ) +
 										view_inverted.i.xyz( ) * shift_right +
 										view_inverted.j.xyz( ) * shift_up +
 										view_inverted.k.xyz( ) * shift_forward;
-
 	float4x4 const translation		= math::create_translation( position );
-
 	m_inverted_view_matrix			= rotation * translation;
 }
 
@@ -180,19 +153,16 @@ void free_fly_camera::on_activate( camera_director* cd )
 	m_prev_delta_sec			= -1.0f;
 	m_inverted_view_matrix		= cd->get_inverted_view_matrix( );
 
-	// re-orthogonalise: force the up row level (world-up) and rebuild the right
-	// row from cross( up, forward ), removing any roll from cd's view basis.
-	// claude@NOTE: residual is non-steerable - the base materialises the
-	// float3( 0,1,0 ) temp on the stack then copies it into j; the target writes
-	// the 3 components straight to the matrix (constructor temp scheduling). The
-	// cross row matches but for xmm register-allocation order. Structure matches.
-	m_inverted_view_matrix.j.xyz( )	= float3( 0.f, 1.f, 0.f );
+	m_inverted_view_matrix.j.xyz( )	= float3( 0.f, 1.f, 0.f ); // claude@NOTE: target writes xyz directly; base materializes the faithful float3 temporary.
 	m_inverted_view_matrix.i.xyz( )	= math::cross_product( m_inverted_view_matrix.j.xyz( ), m_inverted_view_matrix.k.xyz( ) );
 }
 
 void free_fly_camera::tick( )
 {
-	u32 const current_time_ms		= get_game_scene().get_game().game_permanent_time_ms( );
+
+	u32 const current_time_ms		= get_game_scene().
+		get_game().
+		game_permanent_time_ms( );
 	float const current_time_delta	= float( current_time_ms - m_prev_time_ms );
 
 	if ( m_prev_delta_sec < 0.0f )
@@ -208,7 +178,6 @@ void free_fly_camera::tick( )
 	static u32 counter = 0;
 	if ( keyb_event_present( input::key_q ) )
 		LOG_INFO( "timedelta: [%d] %f", counter++, current_time_delta );
-
 	if ( m_keyb_events.empty() &&
 		m_mouse_events.empty() &&
 		math::is_zero( m_mouse_move.x ) && math::is_zero( m_mouse_move.y ) && math::is_zero( m_mouse_move.z ) )
@@ -246,15 +215,12 @@ void free_fly_camera::tick( )
 		up					-= factor * .1f;
 
 	build_view_matrix			(
-									float2(
-										angle_factor * math::deg2rad( m_mouse_move.y ),
-										angle_factor * math::deg2rad( m_mouse_move.x ) * 0.75f
-									),
-									forward, right, up
-								);
+		float2( angle_factor * m_mouse_move.y, angle_factor * m_mouse_move.x * 0.75f ),
+		forward, right, up );
 
 	m_keyb_events.clear();
 	m_mouse_events.clear();
+
 	m_mouse_move.x = 0.0f;
 	m_mouse_move.y = 0.0f;
 	m_mouse_move.z = 0.0f;
