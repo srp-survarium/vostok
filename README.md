@@ -13,17 +13,17 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 8,432 / 12,932 functions exact (65.20%) &middot; 8,479 / 12,932 functions exact-max (65.57%) &middot; 85.31% fuzzy &middot; 85.55% fuzzy-max.**
+**Overall: 8,429 / 12,932 functions exact (65.18%) &middot; 8,479 / 12,932 functions exact-max (65.57%) &middot; 85.30% fuzzy &middot; 85.55% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
 | `render`        |   351 | 1,405 / 2,653 (53.0%) | 1,406 / 2,653 (53.0%) |  82.7% |     82.7% |
-| `game`          |   141 |   729 / 1,528 (47.7%) |   730 / 1,528 (47.8%) |  67.6% |     67.6% |
+| `game`          |   141 |   727 / 1,528 (47.6%) |   730 / 1,528 (47.8%) |  67.5% |     67.6% |
 | `core`          |   136 |   955 / 1,325 (72.1%) |   955 / 1,325 (72.1%) |  87.3% |     87.4% |
-| `vostok`        |   112 |   792 / 1,252 (63.3%) |   798 / 1,252 (63.7%) |  83.3% |     83.8% |
-| `game_core`     |   189 |   713 / 1,181 (60.4%) |   714 / 1,181 (60.5%) |  91.7% |     91.7% |
+| `vostok`        |   112 |   790 / 1,252 (63.1%) |   798 / 1,252 (63.7%) |  83.2% |     83.8% |
+| `game_core`     |   189 |   714 / 1,181 (60.5%) |   714 / 1,181 (60.5%) |  91.7% |     91.7% |
 | `animation`     |   102 |     533 / 725 (73.5%) |     570 / 725 (78.6%) |  83.8% |     89.4% |
 | `ai`            |   124 |     504 / 691 (72.9%) |     505 / 691 (73.1%) |  92.8% |     92.9% |
 | `sound`         |    69 |     490 / 510 (96.1%) |     490 / 510 (96.1%) |  99.9% |     99.9% |
