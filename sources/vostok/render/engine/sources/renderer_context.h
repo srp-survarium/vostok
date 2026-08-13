@@ -201,9 +201,6 @@ private:
 	shader_constant_host const*			m_c_solid_emission_color;
 	shader_constant_host const*			m_c_scene_time;
 	u32								m_frame_index;
-
-public:
-	~renderer_context( ) { }
 };
 
 STATIC_SIZE_ASSERT( renderer_context, 0x4284 );
