@@ -66,14 +66,6 @@ void network_client::process_match_info( network_core::packet_reader& reader )
 	match_client( ).get_match_options( ).received_players_count = 0;
 }
 
-// claude@NOTE: on_players_ready / query_players are STRUCTURE matches; the byte residual
-// is the resources inlining wall this single-TU base cannot reproduce - the variant<32>
-// machinery, buffer_vector::push_back, the resource_ptr refcount blocks and boost::bind
-// are out-of-line here but whole-program-inlined in the target. query_players' tail also
-// emits one extra target instruction (m_game.m_lpv_geometry_builded = false, a private
-// game member that needs friendship not yet in game.h) that is not reproduced. The two
-// on_players_ready LOG_INFO format strings are guessed (the exact text lives only in the
-// shipped rdata; it does not change the instruction bytes).
 void network_client::on_players_ready( resources::queries_result& data, const u32 players_count )
 {
 	LOG_INFO( "network_client::on_players_ready" );
@@ -97,7 +89,10 @@ void network_client::on_players_ready( resources::queries_result& data, const u3
 
 void network_client::query_players( )
 {
-	const u32 players_count = match_client( ).get_match_options( ).players_count;
+	struct match_options& options = match_client( ).get_match_options( );
+
+
+	const u32 players_count = options.players_count;
 
 	buffer_vector< resources::request >		requests		( ALLOCA( players_count * sizeof( resources::request ) ), players_count );
 	buffer_vector< variant< 32 > >			user_datas		( ALLOCA( players_count * sizeof( variant< 32 > ) ), players_count );
@@ -106,13 +101,14 @@ void network_client::query_players( )
 	for ( u8 i = 0; i < players_count; ++i )
 	{
 		player_initial_info info;
-		info.profile		= &match_client( ).get_match_options( ).player_profiles[ i ];
 		info.id				= i;
-		info.game_scene		= &m_game.get_game_world( );
+		info.profile		= &match_client( ).get_match_options( ).player_profiles[ i ];
 		info.is_demo_player	= false;
+		info.game_scene		= &m_game.get_game_world( );
 
-		user_datas.push_back( variant< 32 >( ) );
-		user_datas.back( ).set( info );
+		variant< 32 > ud;
+		ud.set( info );
+		user_datas.push_back( ud );
 		user_data_ptrs.push_back( &user_datas.back( ) );
 		requests.push_back( resources::create_request( "gameplay/players/default.player", resources::player_class ) );
 
@@ -120,8 +116,8 @@ void network_client::query_players( )
 		m_net_players[ i ].is_connected = false;
 	}
 
-	m_game.get_game_world( ).load(
-		m_game.project_resource_name( ),
+	m_game.load(
+		match_client( ).get_match_options( ).map_name,
 		requests.begin( ), requests.end( ),
 		user_data_ptrs.begin( ),
 		boost::bind( &network_client::on_players_ready, this, _1, players_count ) );
