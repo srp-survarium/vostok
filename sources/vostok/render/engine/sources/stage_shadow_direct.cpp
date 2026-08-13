@@ -490,9 +490,9 @@ void stage_shadow_direct::render_models(
 		render_surface* surface = instance.m_render_surface;
 		material_effects& effects = surface->get_material_effects( );
 		// 5 target lines are likely retail-compiled-out source.
-		if ( effects.m_effects[forward_render_stage].c_ptr( ) ) continue;
+		if ( effects.m_effects[forward_render_stage] ) continue;
 
-		if ( !effects.m_effects[gbuffer_render_stage].c_ptr( ) && effects.m_effects[lighting_render_stage].c_ptr( ) ) continue;
+		if ( !effects.m_effects[gbuffer_render_stage] && effects.m_effects[lighting_render_stage] ) continue;
 		// 2 target lines are likely retail-compiled-out source.
 		if ( !effects.is_cast_shadow ) continue;
 		render_geometry& geometry = surface->m_render_geometry;
