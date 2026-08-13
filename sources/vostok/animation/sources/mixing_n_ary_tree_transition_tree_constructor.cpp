@@ -739,7 +739,7 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 								to_animation.override_existing_animation( ) ? to_animation.animation_state( ).animation_interval_time : from_animation.animation_state( ).animation_interval_time
 							);
 
-	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
+	n_ary_tree_time_scale_transition_node* const result	= (n_ary_tree_time_scale_transition_node*)m_buffer.c_ptr( );
 	m_buffer				+= sizeof( n_ary_tree_time_scale_transition_node );
 
 	n_ary_tree_base_node* const time_scale_from	= m_cloner.clone( from, 1.f );
