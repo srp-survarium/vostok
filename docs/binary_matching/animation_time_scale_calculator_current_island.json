@@ -1,0 +1,23 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the two nontrivial transition bodies in mixing_n_ary_tree_time_scale_calculator.cpp from the current-source game_core-before-animation link. remove_transition retains all 16 target body statements and the exact node/const animation_interval_length local set; its remaining difference is std::copy lowering and surrounding scheduling. The transition visitor retains all 18 body statements, the same twelve-block flow, and the exact const interpolated_value local; its residual is scheduling plus the real remove_transition call boundary. Both rows are partial MAX evidence only.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "?remove_transition@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "9dc58d297d58.a85b004293c06dd1.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 75.944954
+    },
+    {
+      "mangled": "?visit@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "2894dc251bf1.a85b004293c06dd1.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 91.89474
+    }
+  ]
+}
