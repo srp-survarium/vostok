@@ -1009,6 +1009,36 @@ def strict_source_alias_candidates(
     return candidates
 
 
+def report_source_alias_candidates(
+    target_rec,
+    base_aliases_by_name,
+    used_base_rvas,
+    target_alias_names_by_rva=None,
+    base_alias_names_by_rva=None,
+):
+    """Find a unique owner-compatible alias for an objdiff-measured symbol.
+
+    The report score already proves which target symbol was compared.  Unlike
+    an unmeasured rich-only alias, its source statements and instructions may
+    legitimately differ; requiring either to be exact would hide the mismatch
+    that the report is meant to expose.
+    """
+    return [
+        rec
+        for rva, rec in base_aliases_by_name.get(target_rec["name"], {}).items()
+        if rva not in used_base_rvas
+        and (
+            rec["file"] == target_rec["file"]
+            or shared_icf_alias_owner_compatible(
+                target_rec,
+                rec,
+                target_alias_names_by_rva,
+                base_alias_names_by_rva,
+            )
+        )
+    ]
+
+
 def exact_paired_source_alias(
     source_rec,
     candidate_aliases_by_name,
@@ -1333,7 +1363,7 @@ def regen():
     # Cross-name pairing first recovers PDB aliases whose base rich-index record
     # carries another folded symbol's mangled name.  The delink report proves
     # that the target name was emitted and compared; additionally require one
-    # free base RVA, an exact demangled signature, and identical statement shape.
+    # free base RVA, an exact demangled signature, and compatible source ownership.
     paired_primary = set(target) & set(base)
     cross_paired_mangled = set()  # base AND target names paired across a name gap
     used_target_rvas = {row[1] for row in pair_rows}
@@ -1383,11 +1413,13 @@ def regen():
         if tm not in fuzzy_by_mangled:
             continue
         trec = target[tm]
-        candidates = [
-            rec
-            for rva, rec in base_aliases_by_name.get(trec["name"], {}).items()
-            if rva not in used_base_rvas and stmt_seq(trec) == stmt_seq(rec)
-        ]
+        candidates = report_source_alias_candidates(
+            trec,
+            base_aliases_by_name,
+            used_base_rvas,
+            target_alias_names_by_rva=target_alias_names_by_rva,
+            base_alias_names_by_rva=base_alias_names_by_rva,
+        )
         if trec["rva"] in used_target_rvas or len(candidates) != 1:
             continue
         brec = candidates[0]
