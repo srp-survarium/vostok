@@ -304,7 +304,7 @@ void shader_constant_table::clear()
 
 s32 shader_constant_table::compare( shader_constant_table const& other ) const
 {
-	u32 const size = std::min( m_table.size( ), other.m_table.size( ) );
+	u32 size = std::min( m_table.size( ), other.m_table.size( ) );
 	for ( u32 it = 0; it < size; ++it )
 	{
 		s32 const result = render::compare( m_table[it], other.m_table[it] );
