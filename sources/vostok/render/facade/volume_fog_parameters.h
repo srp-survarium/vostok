@@ -35,15 +35,15 @@ inline volume_fog_parameters::volume_fog_parameters( )
 {
 	transform					= vostok::math::float4x4().identity();
 	fog_color					= float3( clear_value, clear_value, clear_value );
-	direction					= float2( clear_value, 0.0f );
 	density						= clear_value;
 	speed						= clear_value;
 	noise_scale					= clear_value;
 	wave_length					= clear_value;
-	transparency_multiplier		= clear_value;
-	height_falloff_offset		= 0.0f;
 	near_density				= 0.0f;
 	density_offset				= 0.0f;
+	height_falloff_offset		= 0.0f;
+	transparency_multiplier		= clear_value;
+	direction					= float2( clear_value, 0.0f );
 }
 
 } // namespace render
