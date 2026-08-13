@@ -78,6 +78,12 @@ void anchor_render_facade( )
 																								= &engine::world::set_slomo;
 	void ( engine::world::* const m_test_action_portal_system )( base_scene_ptr const& )
 																								= &engine::world::test_action_portal_system;
+	void ( engine::world::* const m_set_view_mode )( base_scene_view_ptr, scene_view_mode )
+																								= &engine::world::set_view_mode;
+	void ( engine::world::* const m_set_particles_render_mode )( base_scene_view_ptr, particle::enum_particle_render_mode )
+																								= &engine::world::set_particles_render_mode;
+	void ( engine::world::* const m_enable_post_process )( base_scene_view_ptr, bool )
+																								= &engine::world::enable_post_process;
 	void ( debug::renderer::* const m_draw_ellipsoid )( base_scene_ptr const&, float4x4 const&, float3 const&, math::color const&, bool )
 																								= &debug::renderer::draw_ellipsoid;
 
@@ -106,6 +112,9 @@ void anchor_render_facade( )
 	s_sink	= *( pcvoid const* )&m_toggle_render_stage;
 	s_sink	= *( pcvoid const* )&m_set_slomo;
 	s_sink	= *( pcvoid const* )&m_test_action_portal_system;
+	s_sink	= *( pcvoid const* )&m_set_view_mode;
+	s_sink	= *( pcvoid const* )&m_set_particles_render_mode;
+	s_sink	= *( pcvoid const* )&m_enable_post_process;
 	s_sink	= *( pcvoid const* )&m_draw_ellipsoid;
 }
 
