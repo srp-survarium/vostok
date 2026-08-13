@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the complete single_animation::type body from the current-source game_core-before-animation link. Target and candidate retain the same single attributed return statement. The candidate is 0x5e bytes versus the target's 0x5c because managed-resource pinning/refcount work is scheduled and inlined differently, so this is partial MAX evidence only.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "?type@single_animation@animation@vostok@@UBE?AW4animation_types_enum@23@XZ",
+      "module": "animation",
+      "expected_hash": "01ffe004f93f.a85b004293c06dd1.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 36.96154,
+      "review": "The one-statement accessor and its pinned animation/type call chain are source-complete. The remaining difference is resource-pin/refcount call and instruction scheduling, not an omitted statement or local."
+    }
+  ]
+}
