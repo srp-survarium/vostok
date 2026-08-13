@@ -23,7 +23,6 @@ public:
 	virtual	void		insert					( ) override;
 	virtual	void		remove					( ) override;
 
-private:
 	/* 0x0000 */	/* game_object_static */
 	/* 0x0150 */	u32			m_id;
 	/* 0x0154 */	float		m_ambient_multiplier;

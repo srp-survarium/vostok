@@ -46,7 +46,7 @@ void object_ambient_volume::load(
 	m_enabled				= t["enabled"];
 	m_ambient_multiplier	= t["ambient_multiplier"];
 
-	if ( !m_enabled || m_ambient_multiplier != clear_value )
+	if ( !m_enabled || m_ambient_multiplier == clear_value )
 		m_valid = false;
 
 	cb( *this );
