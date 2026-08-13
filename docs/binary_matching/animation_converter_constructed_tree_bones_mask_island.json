@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source constructed_n_ary_tree observation after correcting animation_less_predicate in the same translation unit. The animation-before-game relink reproduces the previously reviewed constructor island under the new translation-unit hash.",
+  "link_perturbation": "game moved immediately after animation at animation's existing early link position; all other libraries and link flags preserved",
+  "report_sha256": "bcd785d74e9c2f7a046479dc81004f09b22d77d0d4398285f663efb47ecf8d54",
+  "base_index_sha256": "b85ab46732c2e5ad9934a92384fa4141d0dc6b15e26d4e50d8e8ffb17e8a900c",
+  "candidate_exe_sha256": "0b129d3a658fd93fcaa5be3b45609e40a167e5a648919debac69d1714c5c4d41",
+  "candidate_pdb_sha256": "62fc3b222cee1c82f85225cab554b2fe2e1c1977cd8900ad4c71da9eb18072e0",
+  "functions": [
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.a85b004293c06dd1.3f202e4d3b025b00",
+      "expected_fuzzy_pct": 79.89428,
+      "review": "Fresh target/candidate structure remains 81:71 statements with every reviewed allocation, cloning, node-construction, weighting, time-driving, sorting, and final initialization phase present. The residual is the same intrusive-pointer/accessor inlining and constructor-convention QUANTITY wall as the prior current-source island."
+    }
+  ]
+}
