@@ -704,8 +704,7 @@ inline bool remove_model_skeletal_filter_predicate::operator()( render_surface_i
 	if ( !effects.m_effects[gbuffer_render_stage] )
 		return true;
 
-	bool result =
-		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type ||
+	bool result = in_model->m_render_surface->get_vertex_input_type( ) == skeletal_4_bones_mesh_vertex_input_type ||
 		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_3_bones_mesh_vertex_input_type ||
 		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_2_bones_mesh_vertex_input_type ||
 		in_model->m_render_surface->get_vertex_input_type( ) == skeletal_1_bones_mesh_vertex_input_type;
