@@ -1,0 +1,25 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the bounded n_ary_tree_converter cone from the current-source game_core-before-animation link. animation_less_predicate preserves the complete ordered comparison chain and interval loop but has 50 versus 51 target body statements. constructed_n_ary_tree preserves every allocation, cloning, node-construction, weighting, time-driving, sorting, and final initialization phase but has 71 versus 81 target body statements. Both observations are partial MAX evidence only; their QUANTITY residuals remain open.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "??Ranimation_less_predicate@@QBE_NABVbinary_tree_animation_node@mixing@animation@vostok@@0@Z",
+      "module": "animation",
+      "expected_hash": "dbf13ae6f0f2.a85b004293c06dd1.4bd86037235bedb8",
+      "expected_fuzzy_pct": 97.06143,
+      "review": "Target and candidate retain the ordered property comparisons, interval loop, start-interval comparison, and all true/false exits. Target retains one additional attributed body row and separate return/destructor epilogs."
+    },
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.a85b004293c06dd1.4bd86037235bedb8",
+      "expected_fuzzy_pct": 79.89428,
+      "review": "The real caller-owned construction phases and source locals are present. Target/candidate differ in intrusive-pointer and accessor inlining plus custom constructor convention selection, leaving a genuine QUANTITY residual."
+    }
+  ]
+}
