@@ -211,15 +211,14 @@ void render_particle_emitter_instance::update_render_buffers(
 	u32 beamtrail_parameters_num_sheets
 )
 {
-	// FUNCTION BODY[0x5fe4a0]
 	m_particle_sprite_geometry = 0;
 	m_subuv_particle_sprite_geometry = 0;
 	m_particle_beamtrail_geometry = 0;
 	m_num_vertices = 0;
 	m_num_indices = 0;
 
-	m_max_particles = math::max<u32>( m_max_particles, in_num_max_particles );
-	m_max_particles = math::min<u32>( m_max_particles, 2000 );
+	m_max_particles = math::max( m_max_particles, in_num_max_particles );
+	m_max_particles = math::min( m_max_particles, 2000u );
 
 	switch ( datatype ) {
 	case particle::particle_data_type_billboard: {
@@ -274,8 +273,8 @@ void render_particle_emitter_instance::update_render_buffers(
 		else
 			m_vertex_type = particle::particle_vertex_type_beam;
 
-		u32 num_sheets = math::max<u32>( beamtrail_parameters_num_sheets, 1 );
-		num_sheets = math::min<u32>( num_sheets, 10000 );
+		u32 num_sheets = math::max( beamtrail_parameters_num_sheets, 1u );
+		num_sheets = math::min( num_sheets, 10000u );
 
 		m_num_vertices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 2 * num_sheets;
 		m_num_indices = sizeof( subuv_particle_sprite_vertex ) * m_max_particles * 6 * num_sheets;
@@ -325,8 +324,6 @@ u32 render_particle_emitter_instance::get_num_particles( ) const
 void render_particle_emitter_instance::render_sprites( )
 {
 	// FUNCTION BODY[0x5fdd10]
-	// claude@NOTE: canonical particle_sprite_vertex::set gained the gravity component
-	// (P->gravity passed); the legacy ancestor predates it.
 	u32 num_particles = get_num_particles();
 
 	if (!num_particles)
@@ -390,9 +387,6 @@ static float frac( float f )
 
 void render_particle_emitter_instance::render_subuv_sprites( )
 {
-	// FUNCTION BODY[0x5fd360]
-	// claude@NOTE: canonical subuv_particle_sprite_vertex::set gained the gravity
-	// component (P->gravity passed); the legacy ancestor predates it.
 	u32 num_particles = get_num_particles();
 
 	if (!num_particles)

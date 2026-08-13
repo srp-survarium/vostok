@@ -13,7 +13,6 @@ void effect_fstage_default_materials::compile(
 	custom_config_value const&	config
 )
 {
-	// FUNCTION BODY[0x7bb070]
 	shader_configuration configuration;
 	// 3 target lines are likely retail-compiled-out source.
 	configuration.use_emissive				= bool(config["use_temissive"]) ? 2 : 1;
@@ -25,11 +24,10 @@ void effect_fstage_default_materials::compile(
 		compiler.set_texture("t_position", "$user$position", 0, false, u32(-1));
 		compiler.set_texture("t_particle_lighting", "$user$particle_lighting", 0, false, u32(-1));
 
-		float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
-		float   solid_transparency   = 1.0f;
-
-
-		if( configuration.use_emissive==2)
+	float4	solid_color_specular (0.f, 0.f, 0.f, 0.f);
+	float   solid_transparency   = 1.0f;
+	// 2 target lines are likely retail-compiled-out source.
+	if( configuration.use_emissive==2)
 		{
 			compiler.set_texture("t_base", pcstr(config["texture_emissive"]), 0, false, u32(-1));
 		}
