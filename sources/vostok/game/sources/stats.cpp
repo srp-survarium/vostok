@@ -190,9 +190,9 @@ void stats::create( )
 	m_weapon_logic_state->set_color		( m_odd_row_color );
 	m_main_window->add_child			( m_weapon_logic_state->w(), true );
 
+	float2 const& weapon_pos			= m_weapon_logic_state->w()->get_position();
 	m_dispersion_components				= m_ui_world.create_text();
 	m_dispersion_components->w()->set_visible( true );
-	float2 const& weapon_pos			= m_weapon_logic_state->w()->get_position();
 	m_dispersion_components->w()->set_position( float2( weapon_pos.x, weapon_pos.y + 20.f ) );
 	m_dispersion_components->w()->set_size( float2( 50.f, 20.f ) );
 	m_dispersion_components->set_font	( vostok::ui::fnt_arial );
