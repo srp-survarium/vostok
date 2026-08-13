@@ -838,7 +838,7 @@ void game::load(
 {
 	m_project_resource_name			= project_resource_name;
 
-	m_game_world.load				( project_resource_name, requests_begin, requests_end, user_datas_begin, callback );
+	m_game_world.load				( m_project_resource_name.c_str( ), requests_begin, requests_end, user_datas_begin, callback );
 
 	m_lpv_geometry_builded			= false;
 }
