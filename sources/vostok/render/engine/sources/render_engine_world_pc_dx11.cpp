@@ -1838,11 +1838,6 @@ void engine::world::set_slomo( base_scene_ptr const& scene, float time_multiplie
 
 void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool toggle )
 {
-	// <0>
-	// <0x654130>|0x000|+0x006:'1939'
-	// <0x654136>|0x006|+0x01c:'1940'
-	// ******
-
 	if (m_renderer)
 		m_renderer->toggle_render_stage(stage_type, toggle);
 }
