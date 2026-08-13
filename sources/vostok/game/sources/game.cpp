@@ -728,7 +728,7 @@ void game::tick( const u32 current_frame_id )
 		m_active_scene->render_scene_view( ),
 		render_output_window( ),
 		viewport( ),
-		m_ui_world->default_font( )
+		ui_world( ).default_font( )
 	);
 
 	m_renderer.end_frame					( );
