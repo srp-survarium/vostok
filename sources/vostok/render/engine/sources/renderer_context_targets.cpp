@@ -88,10 +88,10 @@ pcstr rt_index_to_name( enum_render_target_index index )
 	}
 }
 
-renderer_context_targets::renderer_context_targets( math::uint2 size ) :
-	m_size			( 0, 0 ),
-	m_memory_usage	( 0 )
+renderer_context_targets::renderer_context_targets( math::uint2 size )
 {
+	m_size = math::uint2( 0, 0 );
+	m_memory_usage = 0;
 	create_targets( size, true );
 }
 
@@ -129,9 +129,7 @@ void renderer_context_targets::new_rt(
 		return;
 
 	render_target_instance& instance = m_family[index];
-	pcstr const original_name = rt_index_to_name( index );
-	if ( instance.orig_name.get_buffer( ) != original_name )
-		instance.orig_name = original_name;
+	instance.orig_name = rt_index_to_name( index );
 
 	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
 	instance.target = resource_manager::ref().create_render_target(
@@ -157,9 +155,7 @@ void renderer_context_targets::new_lt(
 )
 {
 	render_target_instance& instance = m_family[index];
-	pcstr const original_name = rt_index_to_name( index );
-	if ( instance.orig_name.get_buffer( ) != original_name )
-		instance.orig_name = original_name;
+	instance.orig_name = rt_index_to_name( index );
 
 	instance.name.assignf( "%s_%d", instance.orig_name.get_buffer(), m_id );
 	instance.target = 0;
@@ -285,10 +281,13 @@ void renderer_context_targets::create_targets( math::uint2 size, bool force_resi
 	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
 	backend::ref().set_render_targets( &*m_family[rt_frame_luminance_current].target, 0, 0, 0 );
 	backend::ref().clear_render_targets( .25f, .25f, .25f, .25f );
-	backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_full_x].target, 0, 0, 0 );
-	backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
-	backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_z].target, 0, 0, 0 );
-	backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
+	if ( m_family[rt_ssao_prev_accumulator_full_x].target.c_ptr() )
+	{
+		backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_full_x].target, 0, 0, 0 );
+		backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
+		backend::ref().set_render_targets( &*m_family[rt_ssao_prev_accumulator_z].target, 0, 0, 0 );
+		backend::ref().clear_render_targets( 0.f, 0.f, 0.f, 0.f );
+	}
 }
 
 void renderer_context_targets::resize( math::uint2 size, bool force_resize )
