@@ -1,0 +1,39 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed the four remaining n_ary_tree observations from the current-source game_core-before-animation link as one owning-tree residual cone. set_object_transform and accumulate_object_movement retain the same 16 and 15 target body statements respectively. update_animation_time retains the complete source but candidate has 5 versus 6 target body statements. generate_animation_lexeme_end_events retains the nested animation, channel, and callback loops but candidate has 24 versus 22 target body statements. Every row is partial MAX evidence only.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "?set_object_transform@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "070825d626a1.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 81.50331,
+      "review": "Target and candidate retain the same 16 body statements and complete pinned-frame plus previous/accumulated movement initialization. Candidate is 0x292 bytes versus target 0x293; residual is instruction sizing and scheduling."
+    },
+    {
+      "mangled": "?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z",
+      "module": "animation",
+      "expected_hash": "dc4971413022.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 69.64286,
+      "review": "Target and candidate retain the same 15 body statements and the complete weight, pinned-frame, quaternion, and movement-accumulation sequence. Residual is register allocation, wrapper inlining, and straight-line quaternion scheduling."
+    },
+    {
+      "mangled": "?update_animation_time@n_ary_tree@mixing@animation@vostok@@CAXAAUanimation_state@234@@Z",
+      "module": "animation",
+      "expected_hash": "e69fbde4421a.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 62.050846,
+      "review": "The interval, temporary pinned animation, length, threshold, and clamped assignment source is complete. Target has one additional wrapper-lifetime tail row, leaving QUANTITY open."
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 83.083336,
+      "review": "The target-era nested animation/channel/callback loops and real comparer call are present. Target/candidate differ in statement grouping and managed-resource callback construction; candidate has 24 body rows versus target 22."
+    }
+  ]
+}
