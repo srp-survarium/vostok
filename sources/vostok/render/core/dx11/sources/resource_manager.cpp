@@ -1738,7 +1738,7 @@ bool operator == ( shader const* sh, binder const& bn )
 res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& binder )
 {
 	// FUNCTION BODY[0x5635f0]
-	set<res_xs<vs_data>*, compare_shader_predicate<vs_data> >::iterator it = std::find( m_v_shaders.begin(), m_v_shaders.end(), binder);
+	set<res_xs<vs_data>*, compare_shader_predicate<vs_data> >::iterator it = m_v_shaders.find( binder);
 
 	if( it != m_v_shaders.end())
 	{
@@ -1748,7 +1748,12 @@ res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& bind
 	{
 		res_vs * vs = NEW(res_vs)( binder);
 		vs->mark_registered();
-		m_v_shaders.insert( vs);
+		std::pair<set<res_xs<vs_data>*, compare_shader_predicate<vs_data> >::iterator, bool> result = m_v_shaders.insert( vs);
+		if( !result.second)
+		{
+			DELETE( vs, resource_manager_call_destructor_predicate());
+			vs = *result.first;
+		}
 		return vs;
 	}
 }
@@ -1771,7 +1776,7 @@ void resource_manager::release( res_xs<vs_data> const* vs )
 res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& binder )
 {
 	// FUNCTION BODY[0x563450]
-	set<res_xs<gs_data>*, compare_shader_predicate<gs_data> >::iterator it = std::find( m_g_shaders.begin(), m_g_shaders.end(), binder);
+	set<res_xs<gs_data>*, compare_shader_predicate<gs_data> >::iterator it = m_g_shaders.find( binder);
 
 	if( it != m_g_shaders.end())
 	{
@@ -1781,7 +1786,12 @@ res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& bind
 	{
 		res_gs * gs = NEW(res_gs)( binder);
 		gs->mark_registered();
-		m_g_shaders.insert( gs);
+		std::pair<set<res_xs<gs_data>*, compare_shader_predicate<gs_data> >::iterator, bool> result = m_g_shaders.insert( gs);
+		if( !result.second)
+		{
+			DELETE( gs, resource_manager_call_destructor_predicate());
+			gs = *result.first;
+		}
 		return gs;
 	}
 }
@@ -1804,7 +1814,7 @@ void resource_manager::release( res_xs<gs_data> const* gs )
 res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& binder )
 {
 	// FUNCTION BODY[0x5632b0]
-	set<res_xs<ps_data>*, compare_shader_predicate<ps_data> >::iterator it = std::find( m_p_shaders.begin(), m_p_shaders.end(), binder);
+	set<res_xs<ps_data>*, compare_shader_predicate<ps_data> >::iterator it = m_p_shaders.find( binder);
 
 	if( it != m_p_shaders.end())
 	{
@@ -1814,8 +1824,12 @@ res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& bind
 	{
 		res_ps * ps = NEW(res_ps)( binder);
 		ps->mark_registered();
-		m_p_shaders.insert( ps);
-
+		std::pair<set<res_xs<ps_data>*, compare_shader_predicate<ps_data> >::iterator, bool> result = m_p_shaders.insert( ps);
+		if( !result.second)
+		{
+			DELETE( ps, resource_manager_call_destructor_predicate());
+			ps = *result.first;
+		}
 		return ps;
 	}
 }
