@@ -1428,16 +1428,13 @@ res_declaration* resource_manager::create_declaration(
 	u32 count
 )
 {
-	// FUNCTION BODY[0x563790]
-	// Search equal code
-	for ( set<res_declaration*, compare_predicate<res_declaration> >::iterator it = m_declarations.begin(); it != m_declarations.end(); ++it)
 	{
-		res_declaration* decl = *it;
-		if( identity(decl->equal( dcl, count) && g_enable_resource_sharing))
-			return decl;
+		res_declaration descriptor( dcl, count );
+		declarations_type::iterator const found = m_declarations.find( &descriptor );
+		if( found != m_declarations.end( ) )
+			return *found;
 	}
 
-	// Create _new
 	res_declaration* new_decl = NEW( res_declaration)( dcl, count);
 	new_decl->mark_registered();
 	m_declarations.insert( new_decl);
