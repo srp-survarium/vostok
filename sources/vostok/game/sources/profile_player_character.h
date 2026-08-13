@@ -16,7 +16,7 @@ namespace resources {
 namespace survarium {
 
 class lobby_menu;
-class player_profile;
+struct player_profile;
 
 class player;
 typedef resources::resource_ptr<
@@ -35,11 +35,11 @@ public:
 
 			void		profile_changed				( player_profile const* profile );
 
+private:
 			void		query_profile_contents		( player_profile const* profile );
 
 			void		on_player_ready				( resources::queries_result& data, player_profile* profile_to_cook );
 
-private:
 	/* 0x0000 */	/* boost::noncopyable */
 	/* 0x0000 */	player_ptr		m_player;
 	/* 0x0004 */	lobby_menu&		m_lobby_menu;
