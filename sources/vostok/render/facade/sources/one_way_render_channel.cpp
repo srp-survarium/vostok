@@ -26,7 +26,6 @@ public:
 
 void one_way_render_channel::process_next_frame_commands( )
 {
-	// FUNCTION BODY[0x757510]
 	R_ASSERT								( m_process_next_frame_commands );
 	m_process_next_frame_commands			= false;
 

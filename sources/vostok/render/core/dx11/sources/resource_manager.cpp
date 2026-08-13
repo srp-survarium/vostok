@@ -577,7 +577,6 @@ res_texture_ptr resource_manager::get_color_grading_base_lut( )
 
 void resource_manager::reload_modified_textures( )
 {
-	// FUNCTION BODY[0x564640]
 	vector<fs_new::virtual_path_string> textures_to_reload = m_textures_to_reload;
 
 	for (vector<fs_new::virtual_path_string>::iterator it = textures_to_reload.begin(); it != textures_to_reload.end(); ++it)
@@ -1410,7 +1409,6 @@ res_state* resource_manager::create_state( state_descriptor& descriptor )
 
 void resource_manager::release( res_state const* state )
 {
-	// FUNCTION BODY[0x5615a0]
 	if( !state->is_registered())
 		return;
 
@@ -1906,7 +1904,6 @@ res_render_output* resource_manager::create_render_output( HWND__* window, bool 
 
 void resource_manager::release( res_render_output const* render_output )
 {
-	// FUNCTION BODY[0x560ee0]
 	if( !render_output->is_registered())
 		return;
 
