@@ -342,8 +342,9 @@ void game_world_ui::set_health( u8 health_in_percentage )
 	get_ui( )->movie->Invoke( "root.set_player_hp", NULL, &value, 1 );
 }
 
-// claude@NOTE: flash /Od wall - the trailing flash_value[2] SetNumber/Invoke glue
-// and the angle-conversion constant are /Od-shaped (structure faithful, bytes parked).
+// claude@NOTE: Body and PDB structure match. Retail's sole
+// player::apply_hit_directly caller stack-passes this; base has no real caller
+// while that player function remains stubbed. Reopen with that caller.
 void game_world_ui::on_hit_from_pos( float3 position )
 {
 	float4x4 const actor_camera_matrix = m_game_world.get_camera_director( ).get_inverted_view_matrix( );
@@ -356,8 +357,8 @@ void game_world_ui::on_hit_from_pos( float3 position )
 	float const angle = initiator_matrix.get_angles( math::rotation_zxy ).y - actor_camera_matrix.get_angles( math::rotation_zxy ).y;
 
 	flash_value args[2];
-	args[0].SetNumber( angle );
-	args[1].SetNumber( -angle - math::pi_d2 );
+	args[0].SetNumber( -angle - math::pi_d2 );
+	args[1].SetNumber( 50.f );
 	get_ui( )->movie->Invoke( "root.hit_player", NULL, args, 2 );
 }
 
