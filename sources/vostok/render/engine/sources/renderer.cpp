@@ -388,9 +388,9 @@ void effect_pick_light_luminance::compile( effect_compiler& compiler, custom_con
 	compiler.set_depth( false, false );
 	compiler.set_cull_mode( D3D_CULL_NONE );
 	compiler.set_alpha_blend( false );
-	compiler.set_texture( "t_accumulator_dif", r2_rt_accum_diffuse, 0, false, 0 );
-	compiler.set_texture( "t_accumulator_spec", r2_rt_accum_specular, 0, false, 0 );
-	compiler.set_texture( "t_frame_color", r2_rt_generic0, 0, false, 0 );
+	compiler.set_texture( "t_accumulator_dif", r2_rt_accum_diffuse, 0, false, u32(-1) );
+	compiler.set_texture( "t_accumulator_spec", r2_rt_accum_specular, 0, false, u32(-1) );
+	compiler.set_texture( "t_frame_color", r2_rt_generic0, 0, false, u32(-1) );
 	compiler.end_pass( );
 	compiler.end_technique( );
 }
@@ -656,19 +656,13 @@ inline bool sort_by_distance_predicate::operator()( render_surface_instance cons
 
 inline bool sort_by_texture_predicate::operator()( render_surface_instance const* left, render_surface_instance const* right ) const
 {
-	material_effects const& left_material_effects =
-		left->m_render_surface->get_material_effects( );
-	material_effects const& right_material_effects =
-		right->m_render_surface->get_material_effects( );
+	material_effects const& left_material_effects = left->m_render_surface->get_material_effects( );
+	material_effects const& right_material_effects = right->m_render_surface->get_material_effects( );
 
-	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]
-		->get_technique( m_tech_index )->get_pass( 0 );
-	res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]
-		->get_technique( m_tech_index )->get_pass( 0 );
+	res_pass const* const left_pass = left_material_effects.m_effects[m_stage_type]->get_technique( m_tech_index )->get_pass( 0 );
+	res_pass const* const right_pass = right_material_effects.m_effects[m_stage_type]->get_technique( m_tech_index )->get_pass( 0 );
 
-	return left_pass->get_ps( )->m_textures->compare(
-		*right_pass->get_ps( )->m_textures
-	) < 0;
+	return left_pass->get_ps( )->m_textures->compare( *right_pass->get_ps( )->m_textures ) < 0;
 }
 
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
