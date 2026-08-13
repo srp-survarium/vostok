@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Reviewed event-iterator update/dispatch caller-cone observations from the current-source disposable game_core-before-animation LTCG link. These are partial MAX states; no row is claimed exact or structurally closed.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "f47e1212bc688aa3cdcf5ab34341ddd79f93d724c59b7aa63bf55710e1a8a969",
+  "base_index_sha256": "4e0782d5c4b881404244d59fc07ae7a3e42e50e57b70a6faabd5c294d89fb9eb",
+  "candidate_exe_sha256": "69c530532b124e71634d34617c9966e35ecde2876d60891e94bc832860d49c35",
+  "candidate_pdb_sha256": "8ca572ffad721dfc50be7b9c385c3300ac3bf3a63ce5f0efb77f77f1cac7a3ec",
+  "functions": [
+    {
+      "mangled": "?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z",
+      "module": "animation",
+      "expected_hash": "8f7dd8dca87a.a85b004293c06dd1.0786bb184490c6d6",
+      "expected_fuzzy_pct": 81.206894,
+      "review": "Both reset conditions, time-scale paths, and nearest-event calls are present with the target PDB local family. Target has 65 versus candidate 68 attributed body statements and retains two optimized new_event_time local records that the candidate does not. Early-guard grouping, reset-tail sharing, and call scheduling remain QUANTITY/LOCALS repair work."
+    },
+    {
+      "mangled": "?update_event_iterators@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "e69c8a51fb19.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 95.54794,
+      "review": "Target and candidate have the same five attributed body statements, no named locals, and identical ten-block flow. The 0xde-byte target versus 0xe3-byte candidate residual is confined to the iterator this-register convention into select_state."
+    },
+    {
+      "mangled": "?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "e560232013d7.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 77.99083,
+      "review": "The callback construction, remove/update/dispatch ordering, destructor loop, and identical nineteen-block current CFG are verified. The island has target 24 versus candidate 23 attributed body statements; target retains event_type as a named local while candidate retains the other three target locals. Constructor-argument accessor retention and later-phase LTCG grouping remain SPLIT/LOCALS repair work."
+    }
+  ]
+}
