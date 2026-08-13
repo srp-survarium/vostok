@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source AI-before-animation LTCG observation on animation-to-100 a536a4034. The three listed rows are source-hash-current measured MAX gains; both byte-exact observations have matching target/candidate statement partitions. Source and canonical pairings are unchanged.",
+  "link_perturbation": "AI immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "56e385923bc8c9794ab5a04f527039be5fe2984449eb97dd78c3146a60bc52c3",
+  "base_index_sha256": "2ad34c984c34da2ee664809b94721b5f91709db16034a72f7bdc245d51d9d56c",
+  "candidate_exe_sha256": "506e6975e53bc875705fc1b0603571a2d636112c34c7c5696bca585a82f540c7",
+  "candidate_pdb_sha256": "cb8be83f2c508c2025c9f0ff1187365b14ab3f3324abd184540ad7a0ccc1697e",
+  "functions": [
+    {
+      "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "f2a4cadb8ef8.a85b004293c06dd1.4bd86037235bedb8",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import."
+    },
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.a85b004293c06dd1.fbf81521fe1db953",
+      "expected_fuzzy_pct": 96.81396,
+      "review": "Fresh unchanged-source isolated link improves fuzzy MAX from 82.06977 to 96.81396; existing source and structure flags remain authoritative."
+    },
+    {
+      "mangled": "?translate_query@skeleton_animation_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "6798fb401816.a85b004293c06dd1.52ab106758f85ff0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import."
+    }
+  ]
+}
