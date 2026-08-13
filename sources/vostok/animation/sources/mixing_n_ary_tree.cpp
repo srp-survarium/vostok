@@ -613,11 +613,14 @@ void n_ary_tree::process_event( n_ary_tree_animation_node& current_animation_nod
 				current_animation_node.animation_intervals( )[ state.animation_interval_id ];
 			float const animation_length	=
 				cubic_spline_skeleton_animation_pinned( interval.animation( ) )->length_in_frames( ) / default_fps;
-			state.animation_time_threshold	=
-				animation_length < interval.start_time( ) + interval.length( ) &&
-				animation_length < interval.start_time( ) + state.animation_interval_time
-					? animation_length
-					: 0.f;
+			if ( interval.start_time( ) + interval.length( ) > animation_length ) {
+				if ( interval.start_time( ) + state.animation_interval_time > animation_length )
+					state.animation_time_threshold	= animation_length;
+				else
+					state.animation_time_threshold	= 0.f;
+			}
+			else
+				state.animation_time_threshold	= 0.f;
 			update_animation_time	( state );
 		}
 
