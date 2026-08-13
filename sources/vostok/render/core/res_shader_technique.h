@@ -34,6 +34,15 @@ public:
 	bool equal( res_shader_technique const* other ) const { return equal( *other ); }
 	res_pass const* get_pass( u32 index ) const { return m_passes[index].c_ptr( ); }
 
+private:
+	friend class effect_compiler;
+	friend class effect_manager;
+	friend class res_effect;
+	friend s32 compare(
+		res_shader_technique const& left,
+		res_shader_technique const& right
+	);
+
 	sflags m_flags;
 	vector<res_pass_ptr> m_passes;
 	bool m_registered;
