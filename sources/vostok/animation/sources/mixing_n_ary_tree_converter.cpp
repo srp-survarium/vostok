@@ -291,10 +291,10 @@ struct animation_less_predicate {
 		if ( right.animated_object() < left.animated_object() )
 			return			false;
 
-		if ( left.additivity_priority() < right.additivity_priority() )
+		if ( left.bones_mask() < right.bones_mask() )
 			return			true;
 
-		if ( right.additivity_priority() < left.additivity_priority() )
+		if ( right.bones_mask() < left.bones_mask() )
 			return			false;
 
 		if ( left.playback_type() < right.playback_type() )
