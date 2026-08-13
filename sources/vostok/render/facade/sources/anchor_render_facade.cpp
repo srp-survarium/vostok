@@ -62,6 +62,14 @@ void anchor_render_facade( )
 																								= &scene_renderer::set_grass;
 	void ( scene_renderer::* const m_reset_grass )( resources::unmanaged_resource_ptr, base_scene_ptr const& )
 																								= &scene_renderer::reset_grass;
+	void ( engine::world::* const m_clear_grass )( base_scene_ptr const& )
+																								= &engine::world::clear_grass;
+	void ( engine::world::* const m_populate_grass )( base_scene_ptr const& )
+																								= &engine::world::populate_grass;
+	void ( engine::world::* const m_add_grass_layer )( grass_layer_desc*, grass_layer_data*, base_scene_ptr const& )
+																								= &engine::world::add_grass_layer;
+	void ( engine::world::* const m_update_grass_layer )( grass_layer_desc*, grass_layer_data*, base_scene_ptr const&, bool )
+																								= &engine::world::update_grass_layer;
 	void ( engine::world::* const m_remove_grass_layer )( u8, base_scene_ptr const& )
 																								= &engine::world::remove_grass_layer;
 	void ( debug::renderer::* const m_draw_ellipsoid )( base_scene_ptr const&, float4x4 const&, float3 const&, math::color const&, bool )
@@ -84,6 +92,10 @@ void anchor_render_facade( )
 	s_sink	= *( pcvoid const* )&m_set_portal_system;
 	s_sink	= *( pcvoid const* )&m_set_grass;
 	s_sink	= *( pcvoid const* )&m_reset_grass;
+	s_sink	= *( pcvoid const* )&m_clear_grass;
+	s_sink	= *( pcvoid const* )&m_populate_grass;
+	s_sink	= *( pcvoid const* )&m_add_grass_layer;
+	s_sink	= *( pcvoid const* )&m_update_grass_layer;
 	s_sink	= *( pcvoid const* )&m_remove_grass_layer;
 	s_sink	= *( pcvoid const* )&m_draw_ellipsoid;
 }
