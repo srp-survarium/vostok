@@ -71,9 +71,11 @@ void anchor_render_facade( )
 	void ( engine::world::* const m_update_grass_layer )( grass_layer_desc*, grass_layer_data*, base_scene_ptr const&, bool )
 																								= &engine::world::update_grass_layer;
 	void ( engine::world::* const m_remove_grass_layer )( u8, base_scene_ptr const& )
-																								= &engine::world::remove_grass_layer;
+																	= &engine::world::remove_grass_layer;
+	void ( engine::world::* const m_resize_render_output_window )( base_output_window_ptr const&, u32, u32, bool )
+																	= &engine::world::resize_render_output_window;
 	void ( engine::world::* const m_toggle_render_stage )( enum_render_stage_type, bool )
-																								= &engine::world::toggle_render_stage;
+																	= &engine::world::toggle_render_stage;
 	void ( engine::world::* const m_set_slomo )( base_scene_ptr const&, float )
 																								= &engine::world::set_slomo;
 	void ( engine::world::* const m_test_action_portal_system )( base_scene_ptr const& )
@@ -109,6 +111,7 @@ void anchor_render_facade( )
 	s_sink	= *( pcvoid const* )&m_add_grass_layer;
 	s_sink	= *( pcvoid const* )&m_update_grass_layer;
 	s_sink	= *( pcvoid const* )&m_remove_grass_layer;
+	s_sink	= *( pcvoid const* )&m_resize_render_output_window;
 	s_sink	= *( pcvoid const* )&m_toggle_render_stage;
 	s_sink	= *( pcvoid const* )&m_set_slomo;
 	s_sink	= *( pcvoid const* )&m_test_action_portal_system;
