@@ -27,6 +27,9 @@ object_sound::~object_sound( )
 {
 }
 
+// claude@NOTE: Source structure and locals match after passing a create_request temporary.
+// The residual is the shared binary_config_value::operator int inline cut; reopen after
+// that compiler context or function-scoped MAX attribution changes.
 void object_sound::load(
 	configs::binary_config_value const&		t,
 	pcstr									__formal,
@@ -38,13 +41,8 @@ void object_sound::load(
 	m_sound_emitter_type	= t["sound_type"];
 	resources::class_id_enum resource_id = resources::class_id_enum( s32( t["resource_id"] ) );
 
-	resources::request r[] =
-	{
-		{ m_sound_name, resource_id },
-	};
-
 	resources::query_resources(
-		r,
+		&resources::create_request( m_sound_name, resource_id ),
 		1,
 		boost::bind( &object_sound::on_sound_resources_ready, this, _1, cb ),
 		g_allocator
