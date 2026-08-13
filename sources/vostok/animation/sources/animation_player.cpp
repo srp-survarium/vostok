@@ -463,8 +463,7 @@ void animation_player::subscribe(
 	pcvoid const					animated_object
 )
 {
-	char channel_id_string[] = { u8(channel_id), 0 };
-	subscribe( channel_id_string, callback, callback_uid, animation, 0xFF, animated_object );
+	char channel_id_string[] = { u8(channel_id), 0 }; subscribe( channel_id_string, callback, callback_uid, animation, 0xFF, animated_object );
 }
 
 void animation_player::destroy_subscriptions( subscribed_channel const* const channels_head )

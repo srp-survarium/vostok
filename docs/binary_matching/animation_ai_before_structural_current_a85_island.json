@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-source AI-before-animation LTCG observation after restoring target statement ownership in the n_ary_tree TU. The listed row is a source-hash-current measured partial MAX gain.",
+  "link_perturbation": "AI immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "56e385923bc8c9794ab5a04f527039be5fe2984449eb97dd78c3146a60bc52c3",
+  "base_index_sha256": "c17d75ae660ecd1fc9c1e15302e8a6a1bb337063fb971f3d94ac519a6ee6ca86",
+  "candidate_exe_sha256": "e0ed58b01dc616c2b4321b577c8f8e817f4bec41fdf038e98ac445c47d5c845f",
+  "candidate_pdb_sha256": "2da84ca7e98957dea61199484e7d5af8c8954f0144ec0e473cebca6a941a7dc5",
+  "functions": [
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.a85b004293c06dd1.4dbfafa39970bb7f",
+      "expected_fuzzy_pct": 96.81396,
+      "review": "Fresh unchanged-body isolated link restores the reviewed AI-before compiler-context maximum under the current n_ary_tree TU hash; existing source and structure flags remain authoritative."
+    }
+  ]
+}
