@@ -303,8 +303,8 @@ void bone_matrices_computer::compute_skeleton_branch_local(
 	*result	= computed_local_bone_matrix( bone, bone_mask ? *bone_mask : bone.mask() );
 
 
-	skeleton_bone const* const e	= bone.children_end();
-	for ( skeleton_bone const* i = bone.children_begin(); i != e; ++i )
+	skeleton_bone const* const e	= bone.children_end(), * i = bone.children_begin();
+	for ( ; i != e; ++i )
 		compute_skeleton_branch_local(
 			*i,
 			result + ( i - &bone ),
