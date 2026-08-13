@@ -68,6 +68,9 @@ history(mangled PRIMARY KEY,
 source_maxima(mangled PRIMARY KEY,
         effective_hash, max_fuzzy_pct, exact_proven, state_id, module,
         source_file, source_lo, source_hi, origin, evidence)
+source_maxima_epochs(mangled, effective_hash, max_fuzzy_pct, exact_proven,
+        state_id, module, source_file, source_lo, source_hi, origin, evidence,
+        PRIMARY KEY(mangled, effective_hash))
 flags(mangled, flag, cause, set_at)   -- manual overrides only (requeue etc.)
 meta(key, value)
 ```
@@ -178,6 +181,10 @@ remains independent, so exact bytes do not suppress a `QUANTITY` warning.
 
 - The same effective hash retains `max(old, current)`.
 - A changed effective hash starts a new epoch at the current observation.
+- Valuable inactive epochs are archived by `(mangled, effective_hash)`. If an
+  identical source/compiler hash becomes current again, refresh restores that
+  proof into the single active `source_maxima` row. Plain rebuild observations
+  equal to their build are not archived, which keeps the database bounded.
 - Ordinary `history` maxima are never imported.
 - A same-hash maximum may survive temporary LTCG/ICF disappearance only while
   its retained source locator and context re-hash identically.

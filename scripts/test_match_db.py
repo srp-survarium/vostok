@@ -276,6 +276,86 @@ class RankIslandDeltaTests(unittest.TestCase):
         )
 
 
+class MaximumEpochArchiveTests(unittest.TestCase):
+    @staticmethod
+    def row(fuzzy, exact=0, origin="rebuild", evidence=None):
+        return (
+            "?function@@",
+            "effective-hash",
+            fuzzy,
+            exact,
+            "state-id",
+            "animation",
+            "vostok/animation/example.cpp",
+            10,
+            12,
+            origin,
+            evidence,
+        )
+
+    def test_plain_current_rebuild_does_not_grow_epoch_archive(self):
+        self.assertFalse(
+            MATCH_DB.maximum_needs_epoch_archive(self.row(75.0), 75.0)
+        )
+
+    def test_island_and_raised_rebuild_are_archived(self):
+        self.assertTrue(
+            MATCH_DB.maximum_needs_epoch_archive(
+                self.row(100.0, exact=1, origin="island", evidence="island.json"),
+                75.0,
+            )
+        )
+        self.assertTrue(
+            MATCH_DB.maximum_needs_epoch_archive(self.row(80.0), 75.0)
+        )
+
+    def test_epoch_merge_retains_strongest_proof(self):
+        weaker = self.row(80.0)
+        exact = self.row(100.0, exact=1, origin="island", evidence="island.json")
+
+        merged = MATCH_DB.merge_maximum_epoch(weaker, exact)
+
+        self.assertEqual(merged[2], 100.0)
+        self.assertEqual(merged[3], 1)
+        self.assertEqual(merged[9], "island")
+        self.assertEqual(merged[10], "island.json")
+
+    def test_epoch_merge_rejects_different_hash(self):
+        other = list(self.row(80.0))
+        other[1] = "other-hash"
+
+        with self.assertRaisesRegex(ValueError, "different source MAX epochs"):
+            MATCH_DB.merge_maximum_epoch(self.row(75.0), tuple(other))
+
+    def test_matching_archived_hash_reactivates_after_newer_epoch(self):
+        archived = self.row(
+            100.0, exact=1, origin="island", evidence="island.json"
+        )
+        newer = list(self.row(60.0))
+        newer[1] = "newer-hash"
+
+        selected = MATCH_DB.maximum_for_effective_hash(
+            "?function@@",
+            "effective-hash",
+            {"?function@@": tuple(newer)},
+            {("?function@@", "effective-hash"): archived},
+        )
+
+        self.assertEqual(selected, archived)
+
+    def test_different_archived_hash_is_not_credited(self):
+        archived = self.row(100.0, exact=1, origin="island")
+
+        selected = MATCH_DB.maximum_for_effective_hash(
+            "?function@@",
+            "unseen-hash",
+            {},
+            {("?function@@", "effective-hash"): archived},
+        )
+
+        self.assertIsNone(selected)
+
+
 class EffectiveSourceHashTests(unittest.TestCase):
     def test_cpp_epoch_changes_when_another_function_in_the_tu_changes(self):
         with tempfile.TemporaryDirectory() as temporary_directory:
