@@ -807,7 +807,8 @@ n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_tra
 n_ary_tree_base_node* n_ary_tree_transition_tree_constructor::new_time_scale_transition( const float animation_time, float from, n_ary_tree_base_node& to )
 {
 	n_ary_tree_time_scale_node&	time_scale_to	= static_cast< n_ary_tree_time_scale_node& >( to );
-	if ( time_scale_to.interpolator( ).transition_time( ) == 0.f )
+	base_interpolator const&		to_interpolator	= time_scale_to.interpolator( );
+	if ( to_interpolator.transition_time( ) == 0.f )
 		return				m_cloner.clone( to, 1.f, animation_time );
 
 	n_ary_tree_base_node* const result	= (n_ary_tree_base_node*)m_buffer.c_ptr( );
@@ -1325,21 +1326,22 @@ void n_ary_tree_transition_tree_constructor::merge_weight_synchronization_groups
 )
 {
 	u32 animations_count			= 0;
-	for ( n_ary_tree_animation_node* i = from_begin; i != from_end; i = i->m_next_weight_animation )
+	for ( n_ary_tree_animation_node* j = from_begin; j != from_end; j = j->m_next_weight_animation )
 		++animations_count;
 
+	animation_comparer_equal_predicate equal_predicate( false, true );
+	bool new_driving_animation_in_old_target_found	= false;
 	n_ary_tree_animation_node** const animations	=
 		static_cast< n_ary_tree_animation_node** >(
 			ALLOCA( animations_count * sizeof( n_ary_tree_animation_node* ) )
 		);
 	n_ary_tree_animation_node** i	= animations;
-	bool new_driving_animation_in_old_target_found	= false;
-	animation_comparer_equal_predicate equal_predicate( false, true );
-	for ( n_ary_tree_animation_node* animation = from_begin; animation != from_end; animation = animation->m_next_weight_animation )
-		if ( !equal_predicate( *animation, new_weight_driving_animation ) )
-			*i++					= animation;
+	for ( n_ary_tree_animation_node* j = from_begin; j != from_end; j = j->m_next_weight_animation ) {
+		if ( !equal_predicate( *j, new_weight_driving_animation ) )
+			*i++					= j;
 		else
 			new_driving_animation_in_old_target_found	= true;
+	}
 
 	if ( new_driving_animation_in_old_target_found )
 		--animations_count;
