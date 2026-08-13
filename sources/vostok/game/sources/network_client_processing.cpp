@@ -76,7 +76,7 @@ void network_client::on_players_ready( resources::queries_result& data, const u3
 
 		m_net_players[ player->id ].player = static_cast_resource_ptr< resources::unmanaged_resource_ptr >( player );
 
-		LOG_INFO( "network_client::on_players_ready %s player created %d", player->is_local ? "local" : "remote", player->id );
+		LOG_INFO( "network_client::on_players_ready : %d => %s", player->id, player->is_local ? "local" : "remote" );
 
 		if ( player->is_local )
 			m_local_player = player;
