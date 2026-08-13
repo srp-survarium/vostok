@@ -558,10 +558,10 @@ void n_ary_tree_comparer::add_operands(
 )
 {
 	n_ary_tree_node_comparer			comparer;
-	n_ary_tree_base_node* const* const	i_e	= from.operands( sizeof( n_ary_tree_animation_node ) ) + from.operands_count( );
 	n_ary_tree_base_node**				i	= from.operands( sizeof( n_ary_tree_animation_node ) );
-	n_ary_tree_base_node* const* const	j_e	= to.operands( sizeof( n_ary_tree_animation_node ) ) + to.operands_count( );
+	n_ary_tree_base_node* const* const	i_e	= i + from.operands_count( );
 	n_ary_tree_base_node**				j	= to.operands( sizeof( n_ary_tree_animation_node ) );
+	n_ary_tree_base_node* const* const	j_e	= j + to.operands_count( );
 
 	if ( from.operands_count( ) && (*i)->is_time_scale( ) ) {
 		if ( to.operands_count( ) && (*j)->is_time_scale( ) ) {
@@ -585,9 +585,7 @@ void n_ary_tree_comparer::add_operands(
 	}
 
 	n_ary_tree_interpolator_selector	interpolator_selector;
-	for ( ; i != i_e; ) {
-		if ( j == j_e )
-			break;
+	for ( ; i != i_e; ) { if ( j == j_e ) break;
 
 		if ( comparer.compare( **i, **j ) == vostok::animation::equal ) {
 			increase_buffer_size				( **i );
@@ -615,9 +613,7 @@ void n_ary_tree_comparer::add_operands(
 				break;
 			default : NODEFAULT( );
 		}
-	}
-
-	for ( ; i != i_e; ++i )
+	} for ( ; i != i_e; ++i )
 		new_weight_transition				( from.weight_interpolator( ), **i, 0.f );
 
 	for ( ; j != j_e; )
