@@ -1840,20 +1840,12 @@ void engine::world::toggle_render_stage( enum_render_stage_type stage_type, bool
 
 void engine::world::set_view_mode( base_scene_view_ptr view_ptr, scene_view_mode view_mode )
 {
-	// <0>
-	// <0x655100>|0x000|+0x00e:'1946'
-	// ******
-
 	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
 	view->set_view_mode(view_mode);
 }
 
 void engine::world::set_particles_render_mode( base_scene_view_ptr view_ptr, particle::enum_particle_render_mode render_mode )
 {
-	// <0>
-	// <0x6550c0>|0x000|+0x00e:'1953'
-	// ******
-
 	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
 	view->set_particles_render_mode(render_mode);
 }
@@ -1866,14 +1858,6 @@ void engine::world::set_sky_material( base_scene_ptr const& in_scene, resources:
 
 void engine::world::enable_post_process( base_scene_view_ptr view_ptr, bool enable )
 {
-	// <0>
-	// <0x655080>|0x000|+0x00e:'2065'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// ******
-
 	scene_view* view = static_cast_checked<scene_view*>(view_ptr.c_ptr());
 	view->set_use_post_process(enable);
 }
