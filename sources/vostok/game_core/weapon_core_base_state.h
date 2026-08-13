@@ -37,7 +37,7 @@ public:
 public:
 	virtual	void		initialize					( ) override {}
 	virtual	void		finalize					( ) override;
-	virtual	void		execute						( ) override;
+	virtual	void		execute						( ) override { m_animation_playback_state.reset( ); }
 	virtual	bool		is_ready_for_transition		( ) const override { return true; }
 
 	virtual	void		serialize					( network_core::udp_match_packet& packet ) const;
@@ -75,6 +75,8 @@ protected:
 STATIC_SIZE_ASSERT(weapon_core_base_state, 0x138);
 
 typedef resources::resource_ptr< weapon_core_base_state, resources::unmanaged_intrusive_base > weapon_core_base_state_ptr;
+
+inline void weapon_core_base_state::finalize( ) { m_animation_playback_state.reset( ); }
 
 } // namespace survarium
 

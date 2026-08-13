@@ -21,16 +21,6 @@ weapon_core_base_state::weapon_core_base_state( weapon_core& weapon, bool serial
 {
 }
 
-void weapon_core_base_state::finalize( )
-{
-	m_animation_playback_state.reset( );
-}
-
-void weapon_core_base_state::execute( )
-{
-	m_animation_playback_state.reset( );
-}
-
 bool weapon_core_base_state::deserializing( ) const
 {
 	return m_weapon.deserializing( );
