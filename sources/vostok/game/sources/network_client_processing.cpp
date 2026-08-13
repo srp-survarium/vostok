@@ -163,19 +163,13 @@ void on_signed_out(
 {
 }
 
-// claude@NOTE: lines 200 (a network_client virtual via vtable slot 8 + m_game_status=0)
-// and 202 (resetting m_match_client's boost::function<void(pcstr)> callback at +0xC8 via
-// operator=) are not pinned to named members yet - the body below stands in structurally
-// (if-guard + match_client.disconnect under it, then lobby/messaging/login). The byte
-// residual is dominated by the boost::function operator= / sign_out callback-vtable
-// machinery this single-TU base cannot reproduce verbatim.
 void network_client::disconnect( )
 {
 	if ( m_game_status )
 	{
-		apply_use_physics_controller_for_current( );
 		m_game_status = game_status_inactive;
-		m_match_client.set_on_packet_received( boost::function< void( u8, network_core::packet_reader& ) >( ) );
+		unload( );
+		m_match_client.set_on_disconnect( boost::function< void( network_core::disconnect_event_types_enum ) >( ) );
 		m_match_client.disconnect( );
 	}
 
