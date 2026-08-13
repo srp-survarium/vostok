@@ -44,10 +44,11 @@ public:
 	inline	void		set_player_logic_state		( pcstr arg_0 ) { /* no source */ }
 	inline	void		set_weapon_logic_state		( pcstr arg_0 ) { /* no source */ }
 
+private:
 			void		create						( );
 
-private:
 	/* 0x0000 */	/* boost::noncopyable */
+protected:
 	/* 0x0000 */	ui::world&		m_ui_world;
 	/* 0x0004 */	ui::window*		m_main_window;
 	/* 0x0008 */	ui::text*		m_fps;
