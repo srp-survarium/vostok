@@ -772,6 +772,10 @@ void game_world_ui::initialize_minimap( )
 	reset_map_rotatable( );
 }
 
+// claude@NOTE: PDB structure, locals, predicate fields, and call order match. Retail LTCG
+// hoists the later victory-item read above both Flash CreateObject calls; base preserves
+// source order, changing register allocation downstream. Reopen if that shared compiler
+// context changes; moving the read earlier in source would contradict the target line records.
 void game_world_ui::update_minimap_players( )
 {
 	base_network_client* client = m_game_world.get_game( ).get_network_client( );
@@ -786,11 +790,11 @@ void game_world_ui::update_minimap_players( )
 	for ( u8 i = 0; i < 20; ++i )
 	{
 		player_ptr current_player = client->get_player( i );
-		if ( !current_player )
+		if ( !current_player || !current_player->has_been_inserted( ) || current_player->team( ) != local_player->team( ) )
 			continue;
 
-		float const position_x = current_player->get_current( ).transform.c.x;
-		float const position_y = -current_player->get_current( ).transform.c.z;
+		float position_x = current_player->get_current( ).transform.c.x;
+		float position_y = -current_player->get_current( ).transform.c.z;
 
 		flash_value player_descr_value;
 		get_ui( )->movie->CreateObject( &player_descr_value );
@@ -812,7 +816,7 @@ void game_world_ui::update_minimap_players( )
 		player_descr_value_property.SetUInt( current_player->team( ) );
 		player_descr_value.SetMember( "team", player_descr_value_property );
 
-		bool const is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
+		bool is_carrying_item = current_player->inventory( ).get_victory_item( ) != NULL;
 		player_descr_value_property.SetBoolean( is_carrying_item );
 		player_descr_value.SetMember( "is_carrying_item", player_descr_value_property );
 
