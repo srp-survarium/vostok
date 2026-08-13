@@ -13,7 +13,6 @@ void effect_lighting_stage_skin_base_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x5eca00]
 	{
 		shader_configuration configuration;
 

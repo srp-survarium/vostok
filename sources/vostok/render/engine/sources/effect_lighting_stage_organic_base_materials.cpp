@@ -13,7 +13,6 @@ void effect_lighting_stage_organic_base_materials::compile(
 	custom_config_value const&	custom_config
 )
 {
-	// FUNCTION BODY[0x5e8f90]
 	{
 		shader_configuration configuration;
 

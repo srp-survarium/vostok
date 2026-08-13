@@ -11,7 +11,6 @@ void effect_fstage_default_view_angle_dependent_materials::compile(
 	custom_config_value const& config
 )
 {
-	// FUNCTION BODY[0x7b7340]
 	shader_configuration configuration;
 	configuration.use_emissive = config.value_exists("use_temissive") ? bool(config["use_temissive"]) + 1 : 0;
 	configuration.use_transparency_texture = config.value_exists("use_ttransparency") ? bool(config["use_ttransparency"]) : false;
