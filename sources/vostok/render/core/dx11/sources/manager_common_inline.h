@@ -4,38 +4,35 @@
 namespace vostok {
 namespace render {
 
+#line 13
 template < typename resource_type >
-inline bool reclaim( vector< resource_type* >& resources, resource_type const* resource )
+inline bool reclaim( vector< resource_type* >& vec, resource_type const* ptr )
 {
-	typename vector< resource_type* >::iterator const found =
-		std::find( resources.begin( ), resources.end( ), resource );
+	typename vector< resource_type* >::iterator it = vec.begin( ),
+		end = vec.end( );
 
-	if ( found == resources.end( ) )
-		return false;
+	for ( ; it != end; ++it )
+	{
+		if ( *it == ptr )
+		{
+			vec.erase( it );
+			return true;
+		}
+	}
 
-	resources.erase( found );
-	return true;
-
-	// FUNCTION BODY[0x1266f0] for res_state
+	return false;
 }
 
 template < typename resource_type, typename predicate_type >
-inline bool reclaim(
-	set< resource_type*, predicate_type >& resources,
-	resource_type const* resource
-)
+inline bool reclaim( set< resource_type*, predicate_type >& container, resource_type const* ptr )
 {
-	typename set< resource_type*, predicate_type >::iterator const found =
-		resources.find( const_cast< resource_type* >( resource ) );
+	typename set< resource_type*, predicate_type >::iterator const found = container.find( ptr );
+	if ( found != container.end( ) ) {
+		container.erase( found );
+		return true;
+	}
 
-	if ( found == resources.end( ) )
-		return false;
-
-	resources.erase( found );
-	return true;
-
-	// FUNCTION BODY[0x1265e0] for shader_constant_table/resource_manager::constant_table_predicate
-	// FUNCTION BODY[0x12a540] for res_pass/effect_manager::compare_predicate<res_pass>
+	return false;
 }
 
 template<typename T>

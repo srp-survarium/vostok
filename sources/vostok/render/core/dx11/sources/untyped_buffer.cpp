@@ -12,8 +12,6 @@ untyped_buffer::~untyped_buffer	( )
 	safe_release			( m_hardware_buffer );
 }
 
-// claude@NOTE: retail keeps the buffer in EDI and passes only the manager on the stack;
-// the current release overload still requires both stack arguments.
 void untyped_buffer::destroy_impl() const
 {
 	resource_manager::ref().release( this );
