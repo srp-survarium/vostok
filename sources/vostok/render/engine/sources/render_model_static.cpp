@@ -45,7 +45,8 @@ static bool read_diffuse_colors(
 	if (!m_materail_effects_instance)
 		return false;
 
-	if (!m_materail_effects_instance->get_material_effects().m_effects[gbuffer_render_stage])
+	res_effect_ptr& effect = m_materail_effects_instance->get_material_effects().m_effects[gbuffer_render_stage];
+	if (!effect)
 		return false;
 
 	render_target_ptr rt = resource_manager::ref().create_render_target(
@@ -71,7 +72,7 @@ static bool read_diffuse_colors(
 		u32(-1)
 	);
 
-	m_materail_effects_instance->get_material_effects().m_effects[gbuffer_render_stage]->apply(3, 0);
+	effect->apply(3, 0);
 	system_renderer::ref().fill_surface(
 		rt,
 		render_target_ptr(),
@@ -213,12 +214,13 @@ static void fill_static_lpv_vertex_color(
 )
 {
 	math::color color_grid[64][64];
-	if ( !read_diffuse_colors( in_materail_effects_instance, color_grid ) )
+	bool const diffuse_colors_read = read_diffuse_colors( in_materail_effects_instance, color_grid );
+	if ( !diffuse_colors_read )
 		return;
 
 	untyped_buffer_ptr vb = in_render_geometry.geom->m_vb;
 	u32 const num_vertices = vb->size( ) / in_render_geometry.geom->m_vb_stride;
-	StaticVertex* temp_data = ALLOC( StaticVertex, num_vertices );
+	StaticVertex* temp_data = static_cast<StaticVertex*>( MALLOC( vb->size( ), "" ) );
 	lpv_vertex* lpv_temp_data = ALLOC( lpv_vertex, num_vertices );
 	batched_vertex_source* static_temp_data = ALLOC( batched_vertex_source, num_vertices );
 
@@ -236,9 +238,10 @@ static void fill_static_lpv_vertex_color(
 	device::ref( ).d3d_context( )->Flush( );
 	StaticVertex const* data = static_cast<StaticVertex const*>( temp_vb->map( D3D11_MAP_READ ) );
 
+	math::color value;
 	for ( u32 i = 0; i < num_vertices; ++i ) {
 		temp_data[i] = data[i];
-		math::color value = interpolated_color( color_grid, temp_data[i].uv );
+		value = interpolated_color( color_grid, temp_data[i].uv );
 		value.a = temp_data[i].tangent.a;
 
 		lpv_temp_data[i].clr = value;
@@ -255,11 +258,10 @@ static void fill_static_lpv_vertex_color(
 
 	temp_vb->unmap( );
 
-	vb = in_render_geometry.geom->m_ib;
-	u32 const num_indices = vb->size( ) / sizeof( u16 );
-	u16* indices_temp_data = ALLOC( u16, num_indices );
+	u32 const num_indices = in_render_geometry.geom->m_ib->size( ) / sizeof( u16 );
+	u16* indices_temp_data = static_cast<u16*>( MALLOC( in_render_geometry.geom->m_ib->size( ), "" ) );
 	untyped_buffer_ptr temp_ib = resource_manager::ref( ).create_buffer(
-		vb->size( ),
+		in_render_geometry.geom->m_ib->size( ),
 		indices_temp_data,
 		enum_buffer_type_index,
 		false,
@@ -267,14 +269,14 @@ static void fill_static_lpv_vertex_color(
 	);
 	device::ref( ).d3d_context( )->CopyResource(
 		temp_ib->hardware_buffer( ),
-		vb->hardware_buffer( )
+		in_render_geometry.geom->m_ib->hardware_buffer( )
 	);
 	device::ref( ).d3d_context( )->Flush( );
 	memory::copy(
 		indices_temp_data,
 		num_indices * sizeof( u16 ),
 		temp_ib->map( D3D11_MAP_READ ),
-		vb->size( )
+		in_render_geometry.geom->m_ib->size( )
 	);
 	temp_ib->unmap( );
 
@@ -302,6 +304,7 @@ static void fill_static_lpv_vertex_color(
 		{ "TEXCOORD", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 }
 	};
 
+	untyped_buffer_ptr ib = in_render_geometry.geom->m_ib;
 	res_declaration_ptr decl = resource_manager::ref( ).create_declaration(
 		lpv_layout,
 		array_size( lpv_layout )
@@ -310,7 +313,7 @@ static void fill_static_lpv_vertex_color(
 		decl.c_ptr( ),
 		sizeof( lpv_vertex ),
 		*lpv_vb,
-		*in_render_geometry.geom->m_ib
+		*ib
 	);
 
 	FREE( temp_data );
