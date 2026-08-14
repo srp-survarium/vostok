@@ -2,17 +2,17 @@
   "kind": "compiler-state-island",
   "description": "Reviewed COFF symbol-normalization probe for bi_spline_skeleton_animation_baked_cook::create_resource_inplace. The target object emits two 178-byte bodies under the virtual create_resource spelling, while the base emits a 29-byte wrapper under that spelling and the real 177-byte helper under its private name. Renaming only the base symbol-table identities exposes the real body comparison.",
   "link_perturbation": "no link or code perturbation; base COFF create_resource renamed out of the way and create_resource_inplace renamed to the duplicated target create_resource identity",
-  "report_sha256": "d36aa742b56e13d33434b1bd318ff1b1b8888ddb492162910c5d0ce4115ce740",
-  "base_index_sha256": "6641b42f987ff2b70f3470f0b5b948c367683ba150d0fab1db1ac63743c1ddc2",
+  "report_sha256": "3507e18dce42f8d58de9e63370f6896b47348b3144636d62505c4c04ba17d18e",
+  "base_index_sha256": "17320049fa37671c931a8bcda37330fea2b6d00ea4874fe220f32194fe79dc3a",
   "target_object_sha256": "5d4c6a5ab91b88888410cc478aa5e310e8f18e3bbfdfba79a13a275dba7b6d72",
-  "base_object_sha256": "86867fc01a5845246de100e8d1788b42db8917bf92854231a6689e22ac2d8a7a",
-  "normalized_base_object_sha256": "24606bcb795336833ddac30d0662163fa235adf96496f8391ac25ccde39b381a",
+  "base_object_sha256": "f605f6a35905a0a70f619dba3bb87e2b202af951ba8fbb5677d77d175cff696c",
+  "normalized_base_object_sha256": "787feaac54e8462552594ee79b11bebd2e3c874645801f9e0e543f89e80899c5",
   "functions": [
     {
       "mangled": "?create_resource_inplace@bi_spline_skeleton_animation_baked_cook@animation@vostok@@AAEXAAVquery_result_for_cook@resources@3@Vmutable_buffer@3@@Z",
       "report_mangled": "?create_resource@bi_spline_skeleton_animation_baked_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@Vmutable_buffer@3@@Z",
       "module": "animation",
-      "expected_hash": "57d08f1294e5.e9fb1e46fa321f3a.1440b075f4a0667f",
+      "expected_hash": "57d08f1294e5.a85b004293c06dd1.1440b075f4a0667f",
       "expected_fuzzy_pct": 92.88461,
       "review": "Target and base helper bodies retain the same six PDB statement phases: raw-size selection, baked pointer fixup, placement construction, unmanaged-resource assignment, and finish_query. The 178/177-byte residual is the reviewed create_baked_animation_in_place custom call boundary and mutable_buffer size accessor inlining, not the unrelated 29-byte virtual forwarding wrapper."
     }
