@@ -134,6 +134,35 @@ class InstructionStreamExactTests(unittest.TestCase):
         base = self.record(text="call  ??3@YAXPAX@Z")
         self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
 
+    def test_accepts_equivalent_template_closing_whitespace(self):
+        target = self.record(text="call  pinned_ptr<animation const >::operator=")
+        base = self.record(text="call  pinned_ptr<animation const>::operator=")
+        self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
+
+    def test_island_exact_stream_overrides_stale_report_pair(self):
+        mangled = "??4bone_matrices_computer_data@@"
+        target = self.record(text="movq  xmm0, [eax]")
+        candidate = self.record(text="movq  xmm0, [eax]")
+
+        self.assertEqual(
+            MATCH_DB.island_candidate_score(
+                {}, mangled, {mangled: 59.464287}, target, candidate
+            ),
+            100.0,
+        )
+
+    def test_island_nonexact_stream_keeps_report_score(self):
+        mangled = "??4bone_matrices_computer_data@@"
+        target = self.record(text="movq  xmm0, [eax]")
+        candidate = self.record(text="movq  xmm1, [eax]")
+
+        self.assertEqual(
+            MATCH_DB.island_candidate_score(
+                {}, mangled, {mangled: 59.464287}, target, candidate
+            ),
+            59.464287,
+        )
+
 
 class ReportFuzzyScoreTests(unittest.TestCase):
     def test_keeps_best_duplicate_score_and_sorted_units(self):
