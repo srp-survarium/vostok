@@ -623,9 +623,10 @@ shader_constant_table* resource_manager::create_const_table(
 	return created_table;
 }
 
+// Retail source gaps reflect blocks excluded from the Master Gold configuration.
+#line 1557
 void resource_manager::release( shader_constant_table const* const_table )
 {
-	// FUNCTION BODY[0x5621c0]
 	if( !const_table->is_registered())
 		return;
 
@@ -638,6 +639,7 @@ void resource_manager::release( shader_constant_table const* const_table )
 	LOG_ERROR( "!ERROR: Failed to find compiled shader_constant-table");
 }
 
+#line 641
 shader_constant_host const* resource_manager::register_constant_binding(
 	shader_constant_binding const& binding
 )
@@ -1407,6 +1409,7 @@ res_state* resource_manager::create_state( state_descriptor& descriptor )
 	return new_state;
 }
 
+#line 2842
 void resource_manager::release( res_state const* state )
 {
 	if( !state->is_registered())
@@ -1421,6 +1424,7 @@ void resource_manager::release( res_state const* state )
 	LOG_ERROR( "!ERROR: Failed to find compiled stateblock");
 }
 
+#line 1424
 res_declaration* resource_manager::create_declaration(
 	D3D11_INPUT_ELEMENT_DESC const* dcl,
 	u32 count
@@ -1440,9 +1444,9 @@ res_declaration* resource_manager::create_declaration(
 	return new_decl;
 }
 
+#line 2888
 void resource_manager::release( res_declaration const* dcl )
 {
-	// FUNCTION BODY[0x563690]
 	if( !dcl->is_registered())
 		return;
 
@@ -1455,6 +1459,7 @@ void resource_manager::release( res_declaration const* dcl )
 	LOG_ERROR( "! ERROR: Failed to find compiled vertex-declarator");
 }
 
+#line 1458
 res_signature* resource_manager::create_signature( ID3D10Blob* signature )
 {
 	// FUNCTION BODY[0x5614e0]
@@ -1472,9 +1477,9 @@ res_signature* resource_manager::create_signature( ID3D10Blob* signature )
 	return new_signature;
 }
 
+#line 2931
 void resource_manager::release( res_signature const* signature )
 {
-	// FUNCTION BODY[0x5613e0]
 	if( !signature->is_registered())
 		return;
 
@@ -1487,6 +1492,7 @@ void resource_manager::release( res_signature const* signature )
 	LOG_ERROR( "! ERROR: Failed to find created signature.");
 }
 
+#line 1490
 res_input_layout* resource_manager::create_input_layout(
 	res_declaration const* decl,
 	res_signature const* signature
@@ -1509,9 +1515,9 @@ res_input_layout* resource_manager::create_input_layout(
 	return new_layout;
 }
 
+#line 2975
 void resource_manager::release( res_input_layout const* layout )
 {
-	// FUNCTION BODY[0x562020]
 	if( !layout->is_registered())
 		return;
 
@@ -1524,6 +1530,7 @@ void resource_manager::release( res_input_layout const* layout )
 	LOG_ERROR( "! ERROR: Failed to find created layout");
 }
 
+#line 1527
 render_target* resource_manager::create_volume_render_target(
 	pcstr name,
 	u32 w,
@@ -1639,9 +1646,9 @@ shader_constant_buffer* resource_manager::create_constant_buffer(
 	return cbuffer;
 }
 
+#line 3085
 void resource_manager::release( shader_constant_buffer const* cbuffer )
 {
-	// FUNCTION BODY[0x5612e0]
 	if( !cbuffer->is_registered())
 		return;
 
@@ -1654,6 +1661,7 @@ void resource_manager::release( shader_constant_buffer const* cbuffer )
 	LOG_ERROR( "!ERROR: Failed to find shader_constant buffer");
 }
 
+#line 1657
 ID3D11SamplerState* resource_manager::create_sampler_state(
 	sampler_state_descriptor const& sampler_props
 )
@@ -1679,9 +1687,9 @@ res_texture_list* resource_manager::create_texture_list(
 	return lst;
 }
 
+#line 3133
 void resource_manager::release( res_texture_list const* tex_list )
 {
-	// FUNCTION BODY[0x561150]
 	if( !tex_list->is_registered())
 		return;
 
@@ -1694,6 +1702,7 @@ void resource_manager::release( res_texture_list const* tex_list )
 	LOG_ERROR( "!ERROR: Failed to find compiled list of textures");
 }
 
+#line 1697
 res_sampler_list* resource_manager::create_sampler_list(
 	fixed_vector<sampler_slot, 16> const& smp_list
 )
@@ -1709,9 +1718,9 @@ res_sampler_list* resource_manager::create_sampler_list(
 	return lst;
 }
 
+#line 3187
 void resource_manager::release( res_sampler_list const* smp_list )
 {
-	// FUNCTION BODY[0x560fe0]
 	if( !smp_list->is_registered())
 		return;
 
@@ -1724,6 +1733,7 @@ void resource_manager::release( res_sampler_list const* smp_list )
 	LOG_ERROR( "!ERROR: Failed to find compiled list of samplers");
 }
 
+#line 1727
 template <class shader, class binder>
 bool operator == ( shader const* sh, binder const& bn )
 {
@@ -1879,9 +1889,9 @@ res_geometry* resource_manager::create_geometry(
 	return	geom;
 }
 
+#line 3380
 void resource_manager::release( res_geometry const* geom )
 {
-	// FUNCTION BODY[0x564400]
 	if( !geom->is_registered())
 		return;
 
@@ -1893,6 +1903,7 @@ void resource_manager::release( res_geometry const* geom )
 	LOG_ERROR( "!ERROR: Failed to find the geometry.");
 }
 
+#line 1896
 res_render_output* resource_manager::create_render_output( HWND__* window, bool windowed )
 {
 	res_render_output * r_output = NEW(res_render_output)( window, windowed);
@@ -1902,6 +1913,7 @@ res_render_output* resource_manager::create_render_output( HWND__* window, bool 
 	return r_output;
 }
 
+#line 3408
 void resource_manager::release( res_render_output const* render_output )
 {
 	if( !render_output->is_registered())
@@ -1915,6 +1927,7 @@ void resource_manager::release( res_render_output const* render_output )
 	LOG_ERROR( "!ERROR: Failed to render output in registry.");
 }
 
+#line 1918
 void resource_manager::copy( untyped_buffer* dest, untyped_buffer* source )
 {
 	// FUNCTION BODY[0x5608f0]
