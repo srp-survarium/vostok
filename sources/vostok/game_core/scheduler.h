@@ -43,7 +43,7 @@ public:
 private:
 	inline	void						change_status		( scheduler::identifier* identifier, scheduler::records_type& dest, scheduler::records_type& src );
 	inline	scheduler::records_type&	objects				( scheduler::identifier* identifier ) { return *m_objects[identifier->m_active]; }
-			scheduler::record&			register_object		( scheduler::identifier* identifier, scheduler::callback const& callback, bool active );
+			scheduler::record&			register_object		( scheduler::identifier* identifier, scheduler::callback const& callback, const bool active );
 
 public:
 			void						on_frame			( const u32 frame_delta, const u32 current_time );
@@ -54,14 +54,14 @@ public:
 	inline explicit						scheduler			( vostok::memory::base_allocator* allocator );
 										~scheduler			( );
 
-			void						register_on_frame	( scheduler::identifier* identifier, scheduler::callback const& callback, bool active );
+			void						register_on_frame	( scheduler::identifier* identifier, scheduler::callback const& callback, const bool active );
 			void						register_for_update	(
 											scheduler::identifier*		identifier,
 											scheduler::callback const&	callback,
-											bool						active,
-											u32							update_delta,
-											u32							max_update_count,
-											u32							time_start_from
+											const bool					active,
+											const u32					update_delta,
+											const u32					max_update_count,
+											const u32					time_start_from
 										);
 			void						unregister			( scheduler::identifier* identifier );
 
