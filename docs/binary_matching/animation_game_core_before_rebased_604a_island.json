@@ -1,0 +1,333 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh newest-xray animation observations from a disposable game_core-before-animation LTCG link at animation-to-100 604a9b1bd. Every row is effective-source/compiler-context-hash scoped; exact rows also have compatible target/candidate statement partitions.",
+  "link_perturbation": "game_core immediately before animation at animations canonical early link position; all other libraries and link flags preserved",
+  "report_sha256": "600ad187471c5e9acc82a810719ce06a24afd53bb575cdefa803293671409dd6",
+  "base_index_sha256": "a00bdd0630d6e098a27274ae17e6a91a98384197ed010b6e858bb975ad9ccc01",
+  "candidate_exe_sha256": "f7781d6e15c1d58ea4651c2440bc3630495a9f461c1112f6811a39d65d8008e8",
+  "candidate_pdb_sha256": "c9c9f04a29458c9de531980ec43633abc03dacd9f051e11b471fb462d2e6e857",
+  "functions": [
+    {
+      "mangled": "?time_driving_animation@animation_lexeme_parameters@mixing@animation@vostok@@QBEQAVanimation_lexeme@234@XZ",
+      "module": "animation",
+      "expected_hash": "b01d3f1b6060.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?length@animation_interval@mixing@animation@vostok@@QBEMXZ",
+      "module": "animation",
+      "expected_hash": "71674c3c0e7b.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?start_time@animation_interval@mixing@animation@vostok@@QBEMXZ",
+      "module": "animation",
+      "expected_hash": "d709d3e65f6c.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?animation_type@cubic_spline_skeleton_animation@animation@vostok@@QBE?AW4animation_types_enum@23@XZ",
+      "module": "animation",
+      "expected_hash": "0554d3c183a4.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "??0animation_interval@mixing@animation@vostok@@QAE@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@MM@Z",
+      "module": "animation",
+      "expected_hash": "97839996c9c3.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "3e40f3ddcd6f.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 97.00658,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?clone@binary_tree_animation_node@mixing@animation@vostok@@CAPBVanimation_interval@234@AAVmutable_buffer@4@PBV5234@1@Z",
+      "module": "animation",
+      "expected_hash": "a2427edcb90e.a85b004293c06dd1.442670b4259c55c6",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z",
+      "module": "animation",
+      "expected_hash": "aa807bd1b828.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 89.0267,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??Mmixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z",
+      "module": "animation",
+      "expected_hash": "9a15ce18fe85.a85b004293c06dd1",
+      "expected_fuzzy_pct": 80.07462,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??Omixing@animation@vostok@@YA_NABVanimation_interval@012@0@Z",
+      "module": "animation",
+      "expected_hash": "c1c67f20bcb2.a85b004293c06dd1",
+      "expected_fuzzy_pct": 79.77273,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree@mixing@animation@vostok@@ABEMAAVn_ary_tree_animation_node@234@MIIIM@Z",
+      "module": "animation",
+      "expected_hash": "0b820d5bfcfe.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 94.75,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEMMIIIM@Z",
+      "module": "animation",
+      "expected_hash": "d922abbbe17a.a85b004293c06dd1.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 95.333336,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z",
+      "module": "animation",
+      "expected_hash": "7a3058457dc5.a85b004293c06dd1.824520cc0b5f74e0",
+      "expected_fuzzy_pct": 77.77288,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "c44baa290ed5.a85b004293c06dd1.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 96.8125,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??0n_ary_tree_animation_time_calculator@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IMI_N@Z",
+      "module": "animation",
+      "expected_hash": "54b5b635c5bc.a85b004293c06dd1.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 84.293106,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?update_animation_state@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "f31c8a06041b.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 91.01471,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "95b6a06ad8d0.a85b004293c06dd1.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 95.75802,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?create_animation_intervals@animation_lexeme_parameters@mixing@animation@vostok@@AAEXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z",
+      "module": "animation",
+      "expected_hash": "c8e10eaf4e1a.a85b004293c06dd1.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 51.41398,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??0binary_tree_animation_node@mixing@animation@vostok@@QAE@ABVanimation_lexeme_parameters@123@@Z",
+      "module": "animation",
+      "expected_hash": "9ff0009b70d1.a85b004293c06dd1.442670b4259c55c6",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "??0animation_lexeme@mixing@animation@vostok@@QAE@ABVanimation_lexeme_parameters@123@@Z",
+      "module": "animation",
+      "expected_hash": "d0e2b5a77d61.a85b004293c06dd1.e00a7223f4e0b5d0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?fill_time@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@AAEXMMI@Z",
+      "module": "animation",
+      "expected_hash": "1d5d9b3c77b1.a85b004293c06dd1.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 84.46154,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "add_bone",
+      "module": "animation",
+      "expected_hash": "0e3b1cfb98d2.a85b004293c06dd1.13870000b72eafa4",
+      "expected_fuzzy_pct": 92.99333,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "a906943057d2.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 82.59375,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDPBVanimation_interval@123@2QAVanimation_lexeme@123@3@Z",
+      "module": "animation",
+      "expected_hash": "675640d9efd6.a85b004293c06dd1",
+      "expected_fuzzy_pct": 90.82758,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z",
+      "module": "animation",
+      "expected_hash": "8f7dd8dca87a.a85b004293c06dd1.824520cc0b5f74e0",
+      "expected_fuzzy_pct": 81.206894,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z",
+      "module": "animation",
+      "expected_hash": "67e6926f66d5.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 87.07071,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "get_bones_count",
+      "module": "animation",
+      "expected_hash": "48e414fa3c43.a85b004293c06dd1.13870000b72eafa4",
+      "expected_fuzzy_pct": 80.95744,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "??Ranimation_less_predicate@@QBE_NABVbinary_tree_animation_node@mixing@animation@vostok@@0@Z",
+      "module": "animation",
+      "expected_hash": "b224e7e4d77f.a85b004293c06dd1.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 97.06826,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "d540e7d02d51.a85b004293c06dd1.277dc682803cc07e",
+      "expected_fuzzy_pct": 93.86806,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?update_event_iterators@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "e69c8a51fb19.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 95.54794,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?remove_transition@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "9dc58d297d58.a85b004293c06dd1.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 75.944954,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z",
+      "module": "animation",
+      "expected_hash": "cd4edbc40efe.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 72.91892,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?visit@n_ary_tree_animation_time_calculator@mixing@animation@vostok@@EAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "35c0212a8d6e.a85b004293c06dd1.b8a537232eb1bec3",
+      "expected_fuzzy_pct": 76.49624,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "e560232013d7.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 77.99083,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z",
+      "module": "animation",
+      "expected_hash": "1a93a7fb62cc.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 81.60807,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?compare_animation_intervals@mixing@animation@vostok@@YA?AW4comparison_result_enum@23@ABVn_ary_tree_animation_node@123@0@Z",
+      "module": "animation",
+      "expected_hash": "a3996ce06fa5.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@AAI1@Z",
+      "module": "animation",
+      "expected_hash": "420813532388.a85b004293c06dd1.277dc682803cc07e",
+      "expected_fuzzy_pct": 95.31111,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 83.083336,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?update_animation_time@n_ary_tree@mixing@animation@vostok@@CAXAAUanimation_state@234@@Z",
+      "module": "animation",
+      "expected_hash": "e69fbde4421a.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 62.050846,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?collection_config_loaded@animation_collection_cook@animation@vostok@@AAEXAAVqueries_result@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "522b8b45ad26.a85b004293c06dd1.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Newest-source isolated link is byte-exact with compatible target/candidate statement partitions. Existing source audits and flags remain authoritative; this row records the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "427ce530c0b8.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 99.04762,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z",
+      "module": "animation",
+      "expected_hash": "dc4971413022.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 69.64286,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ",
+      "module": "animation",
+      "expected_hash": "791e5a4ba60d.a85b004293c06dd1.c952231a1748aa2b",
+      "expected_fuzzy_pct": 79.77991,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.a85b004293c06dd1.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 79.89428,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?visit@n_ary_tree_time_scale_calculator@mixing@animation@vostok@@UAEXAAVn_ary_tree_time_scale_transition_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "2894dc251bf1.a85b004293c06dd1.b0787ca8cc7196d3",
+      "expected_fuzzy_pct": 91.89474,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    },
+    {
+      "mangled": "?set_object_transform@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "070825d626a1.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 81.50331,
+      "review": "Newest-source isolated link improves the measured fuzzy MAX. Existing source audits and flags remain authoritative; this row records compiler-context evidence without claiming structural closure."
+    }
+  ]
+}
