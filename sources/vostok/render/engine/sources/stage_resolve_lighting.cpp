@@ -29,6 +29,7 @@ stage_resolve_lighting::stage_resolve_lighting(
 	m_wind_info_parameters = backend::ref( ).register_constant_host( "wind_info_parameters", rc_float );
 	m_sun_light_parameters = backend::ref( ).register_constant_host( "sun_light_parameters", rc_float );
 	m_eye_ray_corner_parameter = backend::ref( ).register_constant_host( "s_eye_ray_corner", rc_float );
+	m_enabled = true;
 }
 
 bool stage_resolve_lighting::is_effects_ready( ) const
@@ -91,14 +92,16 @@ void stage_resolve_lighting::execute( )
 		return;
 	}
 	// 5 target lines are likely retail-compiled-out source.
+	float3 const* const eye_rays = m_context->get_eye_rays( );
 	m_resolve_lighting_effect->apply( 0, 0 );
-	backend::ref( ).set_ps_constant( m_eye_ray_corner_parameter, m_context->get_eye_rays( )[0].x );
+	backend::ref( ).set_ps_constant( m_eye_ray_corner_parameter, eye_rays[0].x );
 	system_renderer::ref( ).fill_surface( m_context->get_rt( rt_generic_0 ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), render_target_ptr( ), true, 0, 0.f, 0.f, 1.f, 1.f );
 	// 6 target lines are likely retail-compiled-out source.
+	vector<render_surface_instance*> visible_models;
 	backend::ref( ).set_render_targets( &*m_context->get_rt( rt_generic_0 ), 0, 0, 0 );
 	backend::ref( ).reset_depth_stencil_target( );
 
-	vector<render_surface_instance*> visible_models = m_context->get_scene_view( )->get_visible_opaque_models( );
+	visible_models = m_context->get_scene_view( )->get_visible_opaque_models( );
 	u32 num_rendered = 0;
 	render_models( visible_models, num_rendered );
 
