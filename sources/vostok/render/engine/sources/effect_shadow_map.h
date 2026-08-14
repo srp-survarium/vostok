@@ -10,6 +10,11 @@ class custom_config_value;
 class effect_compiler;
 
 class effect_shadow_map : public effect_descriptor {
+	enum {
+		local_object,
+		batched_object
+	};
+
 public:
 	virtual void compile(
 		effect_compiler&			compiler,

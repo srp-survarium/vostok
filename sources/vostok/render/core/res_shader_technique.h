@@ -35,6 +35,8 @@ public:
 	res_pass const* get_pass( u32 index ) const { return m_passes[index].c_ptr( ); }
 
 private:
+	typedef vector<res_pass_ptr> passes_array_type;
+
 	friend class effect_compiler;
 	friend class effect_manager;
 	friend class res_effect;
@@ -44,7 +46,7 @@ private:
 	);
 
 	sflags m_flags;
-	vector<res_pass_ptr> m_passes;
+	passes_array_type m_passes;
 	bool m_registered;
 };
 

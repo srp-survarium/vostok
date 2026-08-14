@@ -27,7 +27,7 @@ public:
 	void destroy_impl( ) const;
 	void apply( ) const;
 
-	u32 stencil_ref( ) const
+	u32 stencil_ref( )
 	{
 		return m_stencil_ref;
 	}

@@ -18,6 +18,7 @@ struct event_query : public core::noncopyable {
 	void init_query( );
 	void release_query( );
 
+private:
 	ID3D11Query* m_query;
 };
 

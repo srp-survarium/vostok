@@ -41,9 +41,9 @@ public:
 
 	virtual void load_properties( configs::binary_config_value const& properties );
 	virtual void set_children( render_surface** children_in, u8 count, model_lods_descriptor* lods );
-	virtual bool get_locator( pcstr locator_name, model_locator_item& result ) const;
 
 	math::aabb				m_aabbox;
+	virtual bool get_locator( pcstr locator_name, model_locator_item& result ) const;
 
 protected:
 	model_locator_item*		m_locators;

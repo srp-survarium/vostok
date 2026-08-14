@@ -112,6 +112,8 @@ public:
 STATIC_SIZE_ASSERT( skeleton_render_model_instance_cook, 0x20 );
 
 struct render_model_cook : public resources::translate_query_cook {
+	typedef resources::translate_query_cook super;
+
 	explicit render_model_cook( resources::class_id_enum model_type );
 
 	virtual void translate_query( resources::query_result_for_cook& parent );
@@ -132,9 +134,6 @@ protected:
 	{
 		return 0;
 	}
-
-public:
-	virtual ~render_model_cook( ) { }
 };
 
 STATIC_SIZE_ASSERT( render_model_cook, 0x20 );

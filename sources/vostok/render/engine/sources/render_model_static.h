@@ -36,6 +36,8 @@ public:
 STATIC_SIZE_ASSERT( static_render_surface, 0x9C );
 
 class static_render_model : public render_model {
+	typedef render_model super;
+
 public:
 	static_render_model( ) { }
 };

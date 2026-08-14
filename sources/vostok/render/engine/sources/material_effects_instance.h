@@ -9,6 +9,9 @@
 namespace vostok {
 namespace render {
 
+struct material_cook;
+class material_effects_instance_cook;
+
 struct material_effects_instance : public resources::unmanaged_resource {
 public:
 	material_effects& get_material_effects( )
@@ -25,6 +28,10 @@ public:
 	{
 		return m_material_name;
 	}
+
+private:
+	friend struct material_cook;
+	friend class material_effects_instance_cook;
 
 	material_effects			m_material_effects;
 	fs_new::virtual_path_string	m_material_name;

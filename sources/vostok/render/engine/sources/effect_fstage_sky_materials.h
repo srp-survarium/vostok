@@ -10,6 +10,11 @@ class custom_config_value;
 class effect_compiler;
 
 class effect_fstage_sky_materials : public effect_material_base {
+	enum {
+		atmosphere_fog,
+		sky_multiply
+	};
+
 public:
 	virtual void compile(
 		effect_compiler&			compiler,

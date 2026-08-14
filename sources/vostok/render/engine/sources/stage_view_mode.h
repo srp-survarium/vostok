@@ -129,6 +129,8 @@ public:
 	{
 		// STATE[STUB]
 	}
+
+private:
 	bool is_effects_ready( ) const
 	{
 		for (u32 i = 0; i < num_vertex_input_types; i++)
