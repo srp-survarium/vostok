@@ -9,13 +9,13 @@ namespace render {
 
 untyped_buffer::~untyped_buffer	( )
 {
-	// FUNCTION BODY[0x55c170]
 	safe_release			( m_hardware_buffer );
 }
 
+// claude@NOTE: retail keeps the buffer in EDI and passes only the manager on the stack;
+// the current release overload still requires both stack arguments.
 void untyped_buffer::destroy_impl() const
 {
-	// FUNCTION BODY[0x55c190]
 	resource_manager::ref().release( this );
 }
 
@@ -23,7 +23,8 @@ untyped_buffer::untyped_buffer	( u32 const size, pcvoid const data, enum_buffer_
 	m_size					( size ),
 	m_type					( type )
 {
-	// FUNCTION BODY[0x55c1a0]
+	// Retail line records begin eight lines earlier in the stripped Master Gold source.
+#line 19
 	D3D_BUFFER_DESC			desc;
 	desc.ByteWidth			= size;
 	//desc.Usage			= bImmutable ? D3D_USAGE_IMMUTABLE : D3D_USAGE_DEFAULT;
