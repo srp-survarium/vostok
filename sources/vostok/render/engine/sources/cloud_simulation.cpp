@@ -168,9 +168,9 @@ void cloud_simulation::compute_direct_light(
 	// 65 target lines are likely retail-compiled-out source.
 	for ( u32 z = 0; z < m_clouds_size_z; ++z )
 	{
-		for ( u32 y = 0; y < m_clouds_size_y; ++y )
+		for ( u32 x = 0; x < m_clouds_size_x; ++x )
 		{
-			for ( u32 x = 0; x < m_clouds_size_x; ++x )
+			for ( u32 y = 0; y < m_clouds_size_y; ++y )
 			{
 				voxel v = get_voxel( x, y, z );
 				v.z = static_cast<u8>( math::clamp_r( math::pow( math::pow( v.y / 255.0f, 16.0f ), init_key.extinction ) * 4.0f, 0.0f, 1.0f ) * 255.0f );
@@ -342,7 +342,7 @@ void cloud_simulation::generate(
 		}
 	}
 
-	if ( !options::ref( ).current.m_use_shader_lods )
+	if ( !options::ref( ).current.m_clouds_debug_mode )
 	{
 		compute_cloud_density( );
 		compute_indirect_light( to_sun_direction, init_key );
