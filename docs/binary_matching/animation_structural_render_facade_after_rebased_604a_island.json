@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid replay of the recorded structural animation-before-render_facade observation after rebasing onto xray 604a9b1bd. Changed effective hashes and non-gaining rows are excluded.",
+  "link_perturbation": "animation immediately before render_facade at render_facade's canonical slot; all other libraries and link flags preserved",
+  "report_sha256": "976cea51361f41b29706004b4ea2b4e8d45d72e23d4553282055e7561fba207f",
+  "base_index_sha256": "97a6af50c2c8fb5a3c45ff9f14979bb15b5c86578fd2ea74ca29407d39790e19",
+  "candidate_exe_sha256": "017b561a83ed14eb36dda813cd69313f1324d8bb64f3f97c0a51e499c3b8621c",
+  "candidate_pdb_sha256": "a8b8fdeaf3ee722ccc591c5c4e573204b4230de21ac9f7d68fede4b55e286643",
+  "functions": [
+    {
+      "mangled": "?subscribe@animation_player@animation@vostok@@QAEXPBDABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@EQBX@Z",
+      "module": "animation",
+      "expected_hash": "f37b04536cc3.a85b004293c06dd1.74bcbfff2a9223b8",
+      "expected_fuzzy_pct": 93.97619,
+      "review": "Unchanged forwarding implementation restores the previously reviewed render-facade compiler-context maximum under the new animation_player TU hash."
+    },
+    {
+      "mangled": "?compact_callbacks@animation_player@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "17c3aa21b1de.a85b004293c06dd1.74bcbfff2a9223b8",
+      "expected_fuzzy_pct": 94.19081,
+      "review": "Unchanged reviewed source restores its render-facade compiler-context maximum under the new animation_player TU hash."
+    },
+    {
+      "mangled": "?subscribe@animation_player@animation@vostok@@QAEXW4reserved_channel_ids_enum@23@ABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@QBX@Z",
+      "module": "animation",
+      "expected_hash": "6ed50a3751a1.a85b004293c06dd1.74bcbfff2a9223b8",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are byte-exact with one 0x2d statement record and identical target/base named-local projections after placing the declaration and forwarding call on their target source line."
+    }
+  ]
+}

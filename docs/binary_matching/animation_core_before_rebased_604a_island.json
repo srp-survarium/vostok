@@ -1,0 +1,46 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid replay of the recorded core-before-animation observation after rebasing onto xray 604a9b1bd. Changed effective hashes and non-gaining rows are excluded.",
+  "link_perturbation": "core immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "3c877f870ca867a0bccf8da0608cbc9f87cbf2ece5fcc24b972151cb44c6045e",
+  "base_index_sha256": "8da0148b2430c16f1fdbd7d197870a7b62f47e0612ec2a79875b4da17b065eb2",
+  "candidate_exe_sha256": "184c6a2c439528468fbb1273022343e91634f6920d6557c3cc136e95adc29220",
+  "candidate_pdb_sha256": "9c81fa468f8db28268a04cf476398303909f66330a917798d86e4496303ac992",
+  "functions": [
+    {
+      "mangled": "??1animation_lexeme@mixing@animation@vostok@@UAE@XZ",
+      "module": "animation",
+      "expected_hash": "a1e4109a0ffa.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import. This row records compiler-context MAX only."
+    },
+    {
+      "mangled": "?destroy_animation_intervals@binary_tree_animation_node@mixing@animation@vostok@@IAEXXZ",
+      "module": "animation",
+      "expected_hash": "cdcfe4747055.a85b004293c06dd1.442670b4259c55c6",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import. This row records compiler-context MAX only."
+    },
+    {
+      "mangled": "?visit@n_ary_tree_destroyer@mixing@animation@vostok@@EAEXAAVn_ary_tree_animation_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "564c2832fd8f.a85b004293c06dd1.7c45577a28b987b4",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import. This row records compiler-context MAX only."
+    },
+    {
+      "mangled": "??_Ganimation_lexeme@mixing@animation@vostok@@UAEPAXI@Z",
+      "module": "animation",
+      "expected_hash": "bb2c0b0e1129.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import. This row records compiler-context MAX only."
+    },
+    {
+      "mangled": "?on_resources_ready@bi_spline_skeleton_animation_impl_cook@animation@vostok@@CAXAAVqueries_result@resources@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "de6844e88210.a85b004293c06dd1.55facc35c5af01b5",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import. This row records compiler-context MAX only."
+    }
+  ]
+}
