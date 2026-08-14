@@ -361,7 +361,7 @@ static void fill_source_vertices_impl(
 {
 	untyped_buffer_ptr vb = in_render_geometry.geom->m_vb;
 	u32 const num_vertices = vb->size( ) / in_render_geometry.geom->m_vb_stride;
-	StaticVertex* temp_data = ALLOC( StaticVertex, num_vertices );
+	StaticVertex* temp_data = static_cast<StaticVertex*>( MALLOC( vb->size( ), "" ) );
 
 	out_vertices.reserve( num_vertices );
 	out_vertices.resize( num_vertices );
@@ -392,31 +392,30 @@ static void fill_source_vertices_impl(
 
 	temp_vb->unmap( );
 
-	vb = in_render_geometry.geom->m_ib;
-	u32 const num_indices = vb->size( ) / sizeof( u16 );
-	u16* indices_temp_data = ALLOC( u16, num_indices );
+	u32 const num_indices = in_render_geometry.geom->m_ib->size( ) / sizeof( u16 );
+	u16* indices_temp_data = static_cast<u16*>( MALLOC( in_render_geometry.geom->m_ib->size( ), "" ) );
 	out_indices.reserve( num_indices );
 	out_indices.resize( num_indices );
 
-	temp_vb = resource_manager::ref( ).create_buffer(
-		vb->size( ),
+	untyped_buffer_ptr temp_ib = resource_manager::ref( ).create_buffer(
+		in_render_geometry.geom->m_ib->size( ),
 		indices_temp_data,
 		enum_buffer_type_index,
 		false,
 		true
 	);
 	device::ref( ).d3d_context( )->CopyResource(
-		temp_vb->hardware_buffer( ),
-		vb->hardware_buffer( )
+		temp_ib->hardware_buffer( ),
+		in_render_geometry.geom->m_ib->hardware_buffer( )
 	);
 	device::ref( ).d3d_context( )->Flush( );
 	memory::copy(
 		out_indices.begin( ),
 		out_indices.size( ) * sizeof( u16 ),
-		temp_vb->map( D3D11_MAP_READ ),
-		vb->size( )
+		temp_ib->map( D3D11_MAP_READ ),
+		in_render_geometry.geom->m_ib->size( )
 	);
-	temp_vb->unmap( );
+	temp_ib->unmap( );
 
 	FREE( temp_data );
 	FREE( indices_temp_data );
