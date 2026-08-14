@@ -657,8 +657,7 @@ void static_render_model_instance::assign_original( static_render_model_ptr v )
 		info.m_parent				= this;
 		info.m_render_surface		= m_original->m_childs[i];
 		info.m_transform			= &m_transform;
-		// claude@NOTE: legacy set info.m_visible = true; canonical replaced the bool with m_flags.
-		info.m_flags				= visible_flag;
+		info.m_flags				= visible_flag | cast_shadow_flag;
 	}
 
 	// FUNCTION BODY[0x631200]: 12
