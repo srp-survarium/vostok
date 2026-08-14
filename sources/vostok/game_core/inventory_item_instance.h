@@ -19,7 +19,12 @@ namespace survarium {
 
 struct inventory_item_instance {
 public:
-	inline	explicit	inventory_item_instance	( ) { /* no source */ }
+	inline	explicit	inventory_item_instance	( ) :
+		condition_or_stack	( 0 ),
+		amount_in_inventory	( 0 ),
+		id					( 0 ),
+		dict_id				( 0 )
+	{}
 
 	// process_shop_action does std::find( begin, end, new_item.id ); the target's
 	// inlined loop compares item.id == value (asm cmp [esi+8],ebx), mirroring
