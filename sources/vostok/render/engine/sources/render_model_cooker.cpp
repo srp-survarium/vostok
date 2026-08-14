@@ -596,6 +596,7 @@ static fs_new::virtual_path_string get_material_effects_instance_request_path(
 
 void render_model_cook::query_materail_effects( cook_intermediate_data* cook_data )
 {
+	#line 597
 	resources::query_result_for_cook* parent_query = cook_data->parent_query;
 	if (cook_data->status_failed)
 	{
@@ -607,7 +608,8 @@ void render_model_cook::query_materail_effects( cook_intermediate_data* cook_dat
 		DELETE						(cook_data);
 		return;
 	}
-	// 3 target lines are likely retail-compiled-out source.
+	// Three retail-only source lines precede the request construction.
+	#line 610
 	using namespace resources;
 	u32 const num_requests								= cook_data->m_num_render_models;
 	fs_new::virtual_path_string* pathes					= (fs_new::virtual_path_string*)	MALLOC(sizeof(fs_new::virtual_path_string) * num_requests, "");
@@ -663,112 +665,138 @@ void arrange_surfaces_by_lod(
 	model_lods_descriptor*&	lods_descriptor
 )
 {
+	#line 669
 	u8 result_lod_surfaces_count[3] = { 0 };
+	#line 675
 	pbyte result_lod_surfaces[3] = { 0 };
 
-
-	if ( !cook_data->model_settings_config )
-	{
-		// 3 target lines are likely retail-compiled-out source.
+	if ( !cook_data->model_settings_config ) {
 		lods_descriptor = NEW( model_lods_descriptor );
-		for ( u8 i = 0; i < 3; ++i )
+		#line 679
+		for ( u8 lod_index = 0; lod_index < 3; ++lod_index )
 		{
-			lods_descriptor->m_lod_surfaces_count[i] = 0;
-			lods_descriptor->m_lod_surfaces[i] = 0;
+			lods_descriptor->m_lod_surfaces_count[lod_index] = 0;
+			lods_descriptor->m_lod_surfaces[lod_index] = 0;
 		}
-
+	#line 681
 		LOG_ERROR(
 			"Incorrect model settings for %s",
-			cook_data->root_model_path.c_str( )
+			cook_data->parent_query->get_requested_path( )
 		);
 		return;
 	}
 
+	#line 689
 	configs::binary_config_value t_root = cook_data->model_settings_config->get_root( );
+	#line 690
 	pcstr lods[3] = { "LOD0", "LOD1", "LOD2" };
+	#line 690
 	if ( !t_root.value_exists( "lod_hierrarchy" ) )
 		return;
-
+	#line 693
 	configs::binary_config_value t_lods = t_root["lod_hierrarchy"];
-	for ( u8 i = 0; i < 3; ++i )
+	#line 695
+	for ( u8 lod_index = 0; lod_index < 3; ++lod_index )
 	{
-		if ( !t_lods.value_exists( lods[i] ) ||
-			 !t_lods[lods[i]].value_exists( "surfaces" ) )
+		#line 698
+		if ( !t_lods.value_exists( lods[lod_index] )
+			 #line 699
+			 || !t_lods[lods[lod_index]].value_exists( "surfaces" ) )
 			continue;
 
-		configs::binary_config_value t_surfaces = t_lods[lods[i]]["surfaces"];
-		u8 surfaces_count = (u8)t_surfaces.size( );
-		result_lod_surfaces[i] = NEW_ARRAY( u8, surfaces_count );
-		u8 surface_idx = 0;
-
+		#line 702
+		configs::binary_config_value t_surfaces = t_lods[lods[lod_index]]["surfaces"];
+		#line 705
 		configs::binary_config_value const* it = t_surfaces.begin( );
 		configs::binary_config_value const* it_e = t_surfaces.end( );
+		u8 surfaces_count = (u8)t_surfaces.size( );
+		#line 710
+		result_lod_surfaces[lod_index] = NEW_ARRAY( u8, surfaces_count );
+		#line 712
+		u8 i = 0;
+		#line 714
 		for ( ; it != it_e; ++it )
 		{
-			s32 index = cook_data->find_surface_index( (pcstr)*it );
+			#line 716
+			pcstr surface_name = t_surfaces.type == configs::t_table_indexed ? (pcstr)*it : it->key( );
+			#line 718
+			s32 index = cook_data->find_surface_index( surface_name );
+			#line 719
 			if ( index == -1 )
 			{
+				#line 722
 				--surfaces_count;
+				#line 719
 				LOG_ERROR(
 					"Incorrect model LOD settings for %s",
-					cook_data->root_model_path.c_str( )
+					cook_data->parent_query->get_requested_path( )
 				);
 			}
+			#line 723
 			else
-				result_lod_surfaces[i][surface_idx++] = (u8)index;
+				#line 725
+				result_lod_surfaces[lod_index][i++] = (u8)index;
+			#line 726
 		}
 
+		#line 729
 		if ( surfaces_count )
-			result_lod_surfaces_count[i] = surfaces_count;
+			#line 732
+			result_lod_surfaces_count[lod_index] = surfaces_count;
 	}
 
-	lods_descriptor = new(
-		MALLOC(
-			sizeof( model_lods_descriptor ) +
-			result_lod_surfaces_count[0] +
-			result_lod_surfaces_count[1] +
-			result_lod_surfaces_count[2],
-			""
-		)
-	) model_lods_descriptor;
+	#line 740
+	lods_descriptor = (model_lods_descriptor*)MALLOC( sizeof( model_lods_descriptor ) + result_lod_surfaces_count[0] + result_lod_surfaces_count[1] + result_lod_surfaces_count[2], "" );
+	#line 741
+	new ( lods_descriptor ) model_lods_descriptor;
 
+	#line 743
 	if ( t_root.value_exists( "lod_switching" ) )
 	{
-		lods_descriptor->m_lod_calc_type =
-			(u8)t_root["lod_switching"]["type"];
-		lods_descriptor->m_lod_params_default =
-			(bool)t_root["lod_switching"]["default_params"];
+		#line 745
+		configs::binary_config_value t_lod_switching = t_root["lod_switching"];
+		#line 746
+		lods_descriptor->m_lod_calc_type = (u8)t_root["lod_switching"]["type"];
+		#line 747
+		lods_descriptor->m_lod_params_default = (bool)t_root["lod_switching"]["default_params"];
 
+		#line 748
 		if ( !lods_descriptor->m_lod_params_default )
 		{
-			lods_descriptor->m_lod_custom_params[0] =
-				(float)t_root["lod_switching"]["param0"];
-			lods_descriptor->m_lod_custom_params[1] =
-				(float)t_root["lod_switching"]["param1"];
+			#line 750
+			lods_descriptor->m_lod_custom_params[0] = (float)t_root["lod_switching"]["param0"];
+			#line 751
+			lods_descriptor->m_lod_custom_params[1] = (float)t_root["lod_switching"]["param1"];
 
+			#line 752
 			if ( t_root["lod_switching"].value_exists( "param2" ) )
-				lods_descriptor->m_lod_custom_params[2] =
-					(float)t_root["lod_switching"]["param2"];
+				#line 753
+				lods_descriptor->m_lod_custom_params[2] = (float)t_root["lod_switching"]["param2"];
 			else
-				lods_descriptor->m_lod_custom_params[2] =
-					lods_descriptor->m_lod_calc_type == 0 ? 240.f : math::epsilon_3;
+				#line 755
+				lods_descriptor->m_lod_custom_params[2] = lods_descriptor->m_lod_calc_type == 0 ? 240.f : math::epsilon_3;
 		}
 	}
 
+	#line 760
 	u32 surfaces_shift = 0;
-	for ( u8 i = 0; i < 3; ++i )
+	for ( u8 lod_index = 0; lod_index < 3; ++lod_index )
 	{
-		lods_descriptor->m_lod_surfaces_count[i] = result_lod_surfaces_count[i];
-		lods_descriptor->m_lod_surfaces[i] =
+		#line 763
+		lods_descriptor->m_lod_surfaces_count[lod_index] = result_lod_surfaces_count[lod_index];
+		lods_descriptor->m_lod_surfaces[lod_index] =
 			(pbyte)lods_descriptor + sizeof( model_lods_descriptor ) + surfaces_shift;
+		#line 769
 		memory::copy(
-			lods_descriptor->m_lod_surfaces[i],
-			result_lod_surfaces_count[i],
-			result_lod_surfaces[i],
-			result_lod_surfaces_count[i]
+			lods_descriptor->m_lod_surfaces[lod_index],
+			result_lod_surfaces_count[lod_index],
+			result_lod_surfaces[lod_index],
+			result_lod_surfaces_count[lod_index]
 		);
-		surfaces_shift += result_lod_surfaces_count[i];
-		DELETE_ARRAY( result_lod_surfaces[i] );
+		#line 771
+		surfaces_shift += result_lod_surfaces_count[lod_index];
+		#line 772
+		DELETE_ARRAY( result_lod_surfaces[lod_index] );
 	}
 }
 
