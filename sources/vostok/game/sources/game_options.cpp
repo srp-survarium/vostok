@@ -212,18 +212,18 @@ void game_options::fill_labels( )
 		m_options_ui->movie->CreateObject( &label );
 
 		flash_value label_member;
+
 		label_member.SetString( names_to_label[i].name.c_str( ) );
 		label.SetMember( "name", label_member );
 
 		wchar_t label_txt[512];
 		m_game.text_translator( ).translate_text( names_to_label[i].label.c_str( ), label_txt );
-
 		label_member.SetStringW( label_txt );
+
 		label.SetMember( "label", label_member );
 
 		labels_array.PushBack( label );
 	}
-
 	m_options_ui->movie->Invoke( "root.set_labels", NULL, &labels_array, 1 );
 }
 
@@ -236,6 +236,7 @@ void game_options::fill_menu_buttons( bool in_game_world )
 		{ "st_mm_button_exit_to_os",	"exit_to_os"	},
 	};
 
+
 	main_menu_button_name_to_action name_to_action_in_lobby_menu[] = {
 		{ "st_mm_button_back",			"back"			},
 		{ "st_mm_button_settings",		"settings"		},
@@ -247,6 +248,7 @@ void game_options::fill_menu_buttons( bool in_game_world )
 
 	main_menu_button_name_to_action* name_to_action;
 	u32 buttons_count;
+
 	if ( in_game_world )
 	{
 		name_to_action = name_to_action_in_game_world;
@@ -264,18 +266,18 @@ void game_options::fill_menu_buttons( bool in_game_world )
 		m_options_ui->movie->CreateObject( &button );
 
 		flash_value button_member;
+
 		button_member.SetString( name_to_action[i].action.c_str( ) );
 		button.SetMember( "action", button_member );
 
 		wchar_t button_txt[512];
 		m_game.text_translator( ).translate_text( name_to_action[i].name.c_str( ), button_txt );
-
 		button_member.SetStringW( button_txt );
+
 		button.SetMember( "label", button_member );
 
 		buttons_array.PushBack( button );
 	}
-
 	m_options_ui->movie->Invoke( "root.set_options", NULL, &buttons_array, 1 );
 }
 
