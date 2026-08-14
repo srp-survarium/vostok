@@ -51,7 +51,8 @@ GEN_STRUCTURE = VOSTOK / "scripts" / "generate_structure.py"
 # excluded is third-party built verbatim from source (exact by construction).
 IN_SCOPE = [
     "ui", "fs", "input", "logging", "vfs", "debug", "collision",
-    "particle", "engine", "sound", "ai", "ai_navigation", "survarium", "vostok",
+    "particle", "engine", "sound", "ai", "ai_navigation", "animation",
+    "survarium", "vostok",
 ]
 
 
