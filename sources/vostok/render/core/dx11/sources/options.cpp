@@ -10,11 +10,9 @@ render_cc::render_cc(
 	pcstr define_name,
 	enum_options_changes_result changed_result
 )
-	: render_next( 0 ),
-	  m_define_name( define_name ),
+	: m_define_name( define_name ),
 	  m_changes_result( changed_result )
 {
-	// FUNCTION BODY[0x55cdc0]
 	render_next		= options::ref().first_render_command;
 	options::ref().first_render_command = this;
 }
@@ -37,7 +35,6 @@ render_cc_bool::render_cc_bool(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// FUNCTION BODY[0x12b550]
 }
 
 void render_cc_bool::execute( pcstr args )
@@ -48,12 +45,11 @@ void render_cc_bool::execute( pcstr args )
 
 bool render_cc_bool::is_changed( ) const
 {
-	return cc_bool::m_value != m_prev_value;
+	return m_prev_value != cc_bool::m_value;
 }
 
 bool render_cc_bool::fill_macro( shader_macro& out_macro ) const
 {
-	// FUNCTION BODY[0x12b5d0]
 	if (define_name())
 	{
 		out_macro.definition = cc_bool::m_value ? "1" : "0";
@@ -86,7 +82,6 @@ render_cc_float::render_cc_float(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// FUNCTION BODY[0x12b630]
 }
 
 void render_cc_float::execute( pcstr args )
@@ -97,12 +92,11 @@ void render_cc_float::execute( pcstr args )
 
 bool render_cc_float::is_changed( ) const
 {
-	return cc_float::m_value != m_prev_value;
+	return m_prev_value != cc_float::m_value;
 }
 
 bool render_cc_float::fill_macro( shader_macro& out_macro ) const
 {
-	// FUNCTION BODY[0x12b6c0]
 	if (define_name())
 	{
 		out_macro.definition.assignf("%f", cc_float::m_value);
@@ -135,7 +129,6 @@ render_cc_u32::render_cc_u32(
 	  ),
 	  m_prev_value( prev_value )
 {
-	// FUNCTION BODY[0x12b720]
 }
 
 void render_cc_u32::execute( pcstr args )
@@ -146,15 +139,18 @@ void render_cc_u32::execute( pcstr args )
 
 bool render_cc_u32::is_changed( ) const
 {
-	return cc_u32::m_value != m_prev_value;
+	return m_prev_value != cc_u32::m_value;
 }
 
 bool render_cc_u32::fill_macro( shader_macro& out_macro ) const
 {
-	// FUNCTION BODY[0x12b7a0]
 	if (define_name())
 	{
-		out_macro.definition.assignf("%d", ((strings::equal(define_name(), "GLOBAL_SHADOWMAP_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_LIGHTING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_SHADING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_POST_PROCESS_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3)) ? 3 : cc_u32::m_value);
+		// Three retail source lines at this point were compiled out.
+		if ((strings::equal(define_name(), "GLOBAL_SHADOWMAP_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_LIGHTING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_SHADING_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3) || (strings::equal(define_name(), "GLOBAL_POST_PROCESS_QUALITY") && cc_u32::m_value != 0 && cc_u32::m_value != 3))
+			out_macro.definition.assignf("%d", 3);
+		else
+			out_macro.definition.assignf("%d", cc_u32::m_value);
 		out_macro.name		 = define_name();
 		return true;
 	}
@@ -167,14 +163,12 @@ options::options( )
 	  first_command( 0 ),
 	  last_command( 0 )
 {
-	// FUNCTION BODY[0x55f0a0]
 	register_console_commands();
 	set_default_values();
 }
 
 void options::set_default_values( )
 {
-	// FUNCTION BODY[0x55c9d0]
 	current.m_radiance_volume_scale = 10.0f;
 	current.m_lpv_flux_amplifier = 0.17f;
 	current.m_lpv_interreflection_contribution = 0.4f;
@@ -335,7 +329,6 @@ string16 s_r_resolution_value = "1280x720";
 
 void options::register_console_commands( )
 {
-	// FUNCTION BODY[0x55cfa0]
 	using namespace console_commands;
 
 	static render_cc_bool	enabled_g_stage_cc					("r_enabled_g_stage",					ocr_need_reset_renderer, 0, current.m_enabled_g_stage,					previous.m_enabled_g_stage,					true, command_type_engine_internal);
@@ -586,7 +579,6 @@ void options::save( pcstr file_name )
 
 void options::on_config_loaded( resources::queries_result& data )
 {
-	// FUNCTION BODY[0x55f350]
 	if( !data.is_successful( ) )
 		return;
 
@@ -597,13 +589,11 @@ void options::on_config_loaded( resources::queries_result& data )
 
 static bool is_line_term( char a )
 {
-	// FUNCTION BODY[0x55c9b0]
 	return (a==13)||(a==10);
 }
 
 static u32 advance_term_string( memory::reader& F )
 {
-	// FUNCTION BODY[0x55cd60]
 	u32 sz		= 0;
 	while (!F.eof())
 	{
@@ -621,7 +611,6 @@ static u32 advance_term_string( memory::reader& F )
 
 static void r_string( memory::reader& F, char (&dest)[4096] )
 {
-	// FUNCTION BODY[0x55cde0]
 	char *src 	= (char *) F.pointer();
 	u32 sz 		= advance_term_string(F);
 	vostok::strings::copy_n	(dest, sizeof(dest), src, sz);
@@ -629,7 +618,6 @@ static void r_string( memory::reader& F, char (&dest)[4096] )
 
 void options::load_impl( memory::reader& F )
 {
-	// FUNCTION BODY[0x55f300]
 	string4096				str;
 	while (!F.eof())
 	{
@@ -650,7 +638,6 @@ void options::load( pcstr file_name )
 
 void options::fill_global_macros( shader_defines_list& out_defines )
 {
-	// FUNCTION BODY[0x55f0d0]
 	render_cc* current = first_render_command;
 
 	while (current)
@@ -666,7 +653,6 @@ void options::fill_global_macros( shader_defines_list& out_defines )
 
 void options::load_from_config( configs::binary_config_value const& config )
 {
-	// FUNCTION BODY[0x55ce80]
  	vostok::console_commands::console_command* command = first_command;
  	while (command)
  	{
