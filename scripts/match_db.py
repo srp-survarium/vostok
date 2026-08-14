@@ -895,6 +895,7 @@ def instruction_stream_exact(target_rec, base_rec):
             operand = {
                 "operator delete": "??3@YAXPAX@Z",
             }.get(parts[1], parts[1])
+            operand = re.sub(r"\s+>", ">", operand)
             return f"{parts[0]} {operand}"
         return text
 
@@ -905,6 +906,13 @@ def instruction_stream_exact(target_rec, base_rec):
         ]
 
     return identity(target_instructions) == identity(base_instructions)
+
+
+def island_candidate_score(expected, mangled, scores, target_rec, candidate_rec):
+    """Prefer strict function-scoped rich exactness over a stale report pair."""
+    if instruction_stream_exact(target_rec, candidate_rec):
+        return 100.0
+    return island_report_score(expected, mangled, scores)
 
 
 def load_exact_fold_aliases(path=EXACT_FOLD_ALIASES):
@@ -2085,9 +2093,9 @@ def cmd_rank_island(args):
         candidate_rec = candidate.get(mangled)
         if target_rec is None or candidate_rec is None:
             continue
-        fuzzy = report_score_for_target(mangled, scores)
-        if fuzzy is None and instruction_stream_exact(target_rec, candidate_rec):
-            fuzzy = 100.0
+        fuzzy = island_candidate_score(
+            {}, mangled, scores, target_rec, candidate_rec
+        )
         if fuzzy is None:
             continue
         measured += 1
@@ -2363,9 +2371,9 @@ def cmd_import_island(args):
             con.close()
             sys.exit(f"[match_db] island symbol absent from target/base rich index: {mangled}")
 
-        fuzzy = island_report_score(expected, mangled, scores)
-        if fuzzy is None and instruction_stream_exact(target_rec, candidate_rec):
-            fuzzy = 100.0
+        fuzzy = island_candidate_score(
+            expected, mangled, scores, target_rec, candidate_rec
+        )
         if fuzzy is None:
             con.close()
             sys.exit(f"[match_db] island report has no measured score for: {mangled}")

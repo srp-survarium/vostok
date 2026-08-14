@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-target rich-index exact attribution for an animation assignment operator exposed by the newest-xray render_facade-before-animation state.",
+  "link_perturbation": "render_facade immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "7ba763fb36295d57dff573f6e9791478c8258eb306c93a8f7ace95ad80095d86",
+  "base_index_sha256": "06712bc8eb0830f174b0ae9deecf81cc088c30f2784a1f55dd568864b3189f6f",
+  "candidate_exe_sha256": "92853dbc692869cb2ffa9a4fc51d3533a1ce2c57d050db386757fb371973a982",
+  "candidate_pdb_sha256": "c74c4c261703cc91294cd85918c179ab2630d2d3fd7aa89f4f6d04f25c3aecbe",
+  "functions": [
+    {
+      "mangled": "??4bone_matrices_computer_data@mixing@animation@vostok@@QAEAAU0123@ABU0123@@Z",
+      "module": "animation",
+      "expected_hash": "948383ef6d13.f5589a1034e15a74",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh-target review: target and isolated candidate are both 115 bytes with one line-zero statement, the same __that local, and identical normalized instruction streams. The only rich-text difference is non-semantic whitespace before a template-closing bracket in the pinned_ptr assignment call."
+    }
+  ]
+}
