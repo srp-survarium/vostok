@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source bone-matrix transform observation from the disposable animation-before-game LTCG link. This is a partial fuzzy MAX observation, not an exactness claim.",
+  "link_perturbation": "animation immediately before game at game's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "fa1e4399b7d3dbbce0c61220555ccaa98a5a729216623462b917bad27bf1f742",
+  "base_index_sha256": "d2d1d50bb11b8ae6c07911b94e2563268cb2dcea567ad31230667c3b746fa03b",
+  "candidate_exe_sha256": "636056ff928e80c7f85e7f451612251221023b68c51b2ef6286ccfe00d563568",
+  "candidate_pdb_sha256": "dcc37d6d58314c476a12cd4311aa0baee00af85614ad75cca55943ba8693d139",
+  "functions": [
+    {
+      "mangled": "?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ",
+      "module": "animation",
+      "expected_hash": "791e5a4ba60d.a85b004293c06dd1.c952231a1748aa2b",
+      "expected_fuzzy_pct": 84.339714,
+      "review": "The reviewed object-transform composition source is unchanged; this link state improves only compiler scheduling and register allocation."
+    }
+  ]
+}

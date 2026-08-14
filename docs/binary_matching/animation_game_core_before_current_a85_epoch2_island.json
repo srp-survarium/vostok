@@ -1,0 +1,116 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source animation observations from the disposable game_core-before-animation LTCG link used while repairing transition-tree group changes. Every row is a partial fuzzy MAX observation; no row is claimed byte-exact or structurally closed.",
+  "link_perturbation": "game_core immediately before animation at animation's early link position; all other libraries and link flags preserved",
+  "report_sha256": "b60038cc652f8150b78cd8d5ac5d88235168c69fcd46ece3174802f296c22024",
+  "base_index_sha256": "51b86dea948e0db6acedfaa6307f5e6c40d041be6d71ea9da47488a1edcb0729",
+  "candidate_exe_sha256": "1bbd36326030ac130e7e803eda1bdae98b59dcb5a94b78975cc0e968a1696542",
+  "candidate_pdb_sha256": "ab25a1fbd0d95b331c7f6ff9c1d2d164287dc8643bc95350b8d3ad6224eaca1c",
+  "functions": [
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "3e40f3ddcd6f.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 97.00658,
+      "review": "Target and candidate retain the complete count, filter, sort, compare, change/add/remove, and tail-loop phases and the same five named locals. The 27/29 PDB-row residual is sort and line-attribution compiler state."
+    },
+    {
+      "mangled": "?merge_trees@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEXABVn_ary_tree@234@0@Z",
+      "module": "animation",
+      "expected_hash": "aa807bd1b828.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 89.0267,
+      "review": "The full group merge, time-driver repair, ordering, state reconstruction, and cleanup phases remain present. Target/candidate retain 60/61 PDB rows; interval-length inlining and optimized-local projection remain open."
+    },
+    {
+      "mangled": "?computed_animation_time@n_ary_tree@mixing@animation@vostok@@ABEMAAVn_ary_tree_animation_node@234@MIIIM@Z",
+      "module": "animation",
+      "expected_hash": "0b820d5bfcfe.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 94.75,
+      "review": "The reviewed three-statement calculation and target-sized body are preserved; residual differences are callback argument and x87 scheduling."
+    },
+    {
+      "mangled": "?get_nearest_animation_interval_event_time@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEMABVanimation_interval@234@MMAAGAAE2_N@Z",
+      "module": "animation",
+      "expected_hash": "7a3058457dc5.a85b004293c06dd1.824520cc0b5f74e0",
+      "expected_fuzzy_pct": 77.77288,
+      "review": "The reviewed interval-event scan and wrap selection remain intact; this observation records only the better LTCG layout."
+    },
+    {
+      "mangled": "?update_animation_state@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "f31c8a06041b.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 91.01471,
+      "review": "Target and candidate retain the complete weight/time-calculator and update-time sequence; residual statement sizes are at real call boundaries."
+    },
+    {
+      "mangled": "?advance@n_ary_tree_animation_event_iterator@mixing@animation@vostok@@AAEXG@Z",
+      "module": "animation",
+      "expected_hash": "8f7dd8dca87a.a85b004293c06dd1.824520cc0b5f74e0",
+      "expected_fuzzy_pct": 81.206894,
+      "review": "The reviewed event-advance phases and state updates are unchanged; this is a compiler-context maximum only."
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAVn_ary_tree_animation_node@234@AAV5234@0PAV5234@IAAI22AAM_N4@Z",
+      "module": "animation",
+      "expected_hash": "67e6926f66d5.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 87.07071,
+      "review": "Target and candidate retain all interval cloning, node construction, linking, time-driver, and animated-object phases. Interval and intrusive-pointer inlining remain open."
+    },
+    {
+      "mangled": "?update_synchronization_group_using_integration@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "a906943057d2.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 82.59375,
+      "review": "The natural integration body, target locals, computed-animation-time call, and movement accumulation calls are preserved; remaining QUANTITY work is not claimed closed."
+    },
+    {
+      "mangled": "??Ranimation_less_predicate@@QBE_NABVbinary_tree_animation_node@mixing@animation@vostok@@0@Z",
+      "module": "animation",
+      "expected_hash": "b224e7e4d77f.a85b004293c06dd1.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 97.06826,
+      "review": "The reviewed predicate source is unchanged; the island records its better register and branch layout without an exactness claim."
+    },
+    {
+      "mangled": "?merge_weight_synchronization_groups@n_ary_tree_comparer@mixing@animation@vostok@@AAEXPAVn_ary_tree_animation_node@234@000AAV5234@_N@Z",
+      "module": "animation",
+      "expected_hash": "d540e7d02d51.a85b004293c06dd1.277dc682803cc07e",
+      "expected_fuzzy_pct": 93.86806,
+      "review": "The comparer merge retains its reviewed filter, sort, three-way merge, and tail loops; this is partial compiler-context evidence."
+    },
+    {
+      "mangled": "?update_event_iterators@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "e69c8a51fb19.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 95.54794,
+      "review": "The reviewed iterator-update body is unchanged and regains its specialized game_core-before maximum."
+    },
+    {
+      "mangled": "?new_time_scale@n_ary_tree_transition_tree_constructor@mixing@animation@vostok@@AAEPAUn_ary_tree_base_node@234@AAVn_ary_tree_animation_node@234@AAIAAM@Z",
+      "module": "animation",
+      "expected_hash": "1a93a7fb62cc.a85b004293c06dd1.3fac278242027d26",
+      "expected_fuzzy_pct": 81.60807,
+      "review": "All time-driver search, interval-ratio, calculator, transition construction, and return phases remain present; branch layout and retained calls remain open."
+    },
+    {
+      "mangled": "?new_animation@n_ary_tree_comparer@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@AAI1@Z",
+      "module": "animation",
+      "expected_hash": "420813532388.a85b004293c06dd1.277dc682803cc07e",
+      "expected_fuzzy_pct": 95.31111,
+      "review": "The reviewed comparer animation-construction path is unchanged; the observation records its better LTCG state only."
+    },
+    {
+      "mangled": "?generate_animation_lexeme_end_events@n_ary_tree@mixing@animation@vostok@@CAPAVcallback_generator_info@234@ABV1234@0PAV5234@1PAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "0c7c8f3a6f2b.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 83.083336,
+      "review": "The reviewed lexeme-end event generator is unchanged and regains its game_core-before maximum."
+    },
+    {
+      "mangled": "?update_time_synchronization_group@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@II@Z",
+      "module": "animation",
+      "expected_hash": "427ce530c0b8.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 99.04762,
+      "review": "Target and candidate retain the same fifteen attributed statements and both update paths; the one-byte residual remains at the integration call boundary."
+    }
+  ]
+}

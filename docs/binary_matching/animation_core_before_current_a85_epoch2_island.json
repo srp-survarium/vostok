@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Current-source mix_rotations observation from the disposable core-before-animation LTCG link. This is a partial fuzzy MAX observation, not an exactness claim.",
+  "link_perturbation": "core immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "ef89930e7b7ce0c948b69c41e093d7904eac09bbc766fd0771a3a6ed3a8d0cc1",
+  "base_index_sha256": "d618a48d5f2cd2bc13cf580552245bec919cbae9543ec9970b27b2b4fb5152b0",
+  "candidate_exe_sha256": "e00fcb3708273e8f4d8c43d836fbc06ef5b8ad3c7ae33e0bf64eed4bf288b2ef",
+  "candidate_pdb_sha256": "a2e47371b14e53199e9715a0a593c0d8a359dc247bab1c22cb35a0aed43f4949",
+  "functions": [
+    {
+      "mangled": "mix_rotations",
+      "module": "animation",
+      "expected_hash": "2e18988e2710.a85b004293c06dd1.c952231a1748aa2b",
+      "expected_fuzzy_pct": 96.72514,
+      "review": "The reviewed rotation-mixing source is unchanged; the isolated link improves the measured fuzzy MAX from 94.24561 without altering structure claims."
+    }
+  ]
+}
