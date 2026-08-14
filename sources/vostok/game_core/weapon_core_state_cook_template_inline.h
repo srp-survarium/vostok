@@ -80,7 +80,8 @@ inline void weapon_core_state_cook_template<T>::on_subresources_ready( resources
 template < typename T >
 inline void weapon_core_state_cook_template<T>::destroy_resource( resources::unmanaged_resource* resource )
 {
-	static_cast< T* >( resource )->~T( );
+	T* state = static_cast< T* >( resource );
+	state->~T( );
 }
 
 } // namespace survarium
