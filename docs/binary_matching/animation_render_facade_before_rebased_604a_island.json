@@ -1,0 +1,102 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid replay of the recorded render_facade-before-animation observation after rebasing animation-to-100 onto xray 604a9b1bd. Only unchanged effective-source/compiler-context hashes are retained; changed animation TUs are deliberately excluded.",
+  "link_perturbation": "render_facade immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "b4ae8429b896695ee644f49c82fbc7b942659782ee9949ced3a3933196ec9ec9",
+  "base_index_sha256": "558ad2b511d8b5793cb331e5eae7c9c16735c889f0198aa39573d9b97d051ce7",
+  "candidate_exe_sha256": "b6736f0d3e5bbb1884cb1243cc67580874717712a731de1038a190b68abd896d",
+  "candidate_pdb_sha256": "d7102a73e816f05e4d53cd1ce5771bcf170ccbc065d799182f96dfa7ac6c9b73",
+  "functions": [
+    {
+      "mangled": "??0single_animation@animation@vostok@@QAE@V?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@2@PAUbase_interpolator@12@@Z",
+      "module": "animation",
+      "expected_hash": "6d6a388112e1.a85b004293c06dd1.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?on_cubic_spline_animation_cooked@skeleton_animation_cook@animation@vostok@@CAXAAVqueries_result@resources@3@V?$resource_ptr@Vbi_spline_skeleton_animation_baked@animation@vostok@@Vunmanaged_intrusive_base@resources@3@@53@@Z",
+      "module": "animation",
+      "expected_hash": "4199d135f968.a85b004293c06dd1.52ab106758f85ff0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    },
+    {
+      "mangled": "??0callback_generator_info@mixing@animation@vostok@@QAE@QBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@MGEIE@Z",
+      "module": "animation",
+      "expected_hash": "9a34355f0ff1.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    },
+    {
+      "mangled": "?type@single_animation@animation@vostok@@UBE?AW4animation_types_enum@23@XZ",
+      "module": "animation",
+      "expected_hash": "01ffe004f93f.a85b004293c06dd1.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 86.15385,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 36.96154 to 86.15385. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?create_resource@cubic_spline_skeleton_animation_cook@animation@vostok@@UAEXAAVquery_result_for_cook@resources@3@Vconst_buffer@3@V?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@53@@Z",
+      "module": "animation",
+      "expected_hash": "a5134b969ae3.a85b004293c06dd1.fd2d9689bff15b41",
+      "expected_fuzzy_pct": 90.757576,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 44.363636 to 90.757576. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?animation_intervals_count@animation_lexeme_parameters@mixing@animation@vostok@@SAIABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@@Z",
+      "module": "animation",
+      "expected_hash": "64d679386cbe.a85b004293c06dd1.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    },
+    {
+      "mangled": "??0animation_lexeme_parameters@mixing@animation@vostok@@QAE@AAVmutable_buffer@3@PBDABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@QAVanimation_lexeme@123@3@Z",
+      "module": "animation",
+      "expected_hash": "bccabcf1f556.a85b004293c06dd1",
+      "expected_fuzzy_pct": 98.52941,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 71.588234 to 98.52941. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?create_animation_interval@animation_lexeme_parameters@mixing@animation@vostok@@SA?AVanimation_interval@234@ABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@4@I@Z",
+      "module": "animation",
+      "expected_hash": "55687383a4fa.a85b004293c06dd1.5825ecb4b581e57d",
+      "expected_fuzzy_pct": 71.09677,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 54.322582 to 71.09677. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?on_sub_resources_loaded@single_animation_cook@animation@vostok@@AAEXAAVqueries_result@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "80a66f90fcfc.a85b004293c06dd1.35840df56a33af4d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    },
+    {
+      "mangled": "??0animation_state@mixing@animation@vostok@@QAE@AAVn_ary_tree_animation_node@123@IGIIMMMAAPAUsubscribed_channel@23@_N@Z",
+      "module": "animation",
+      "expected_hash": "bddf781cd7ad.a85b004293c06dd1.3c636fef6d6ac983",
+      "expected_fuzzy_pct": 76.9375,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 66.291664 to 76.9375. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AAVanimation_lexeme@523@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "f8301ff2c17e.a85b004293c06dd1.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 79.74545,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 71.10909 to 79.74545. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "?emit@single_animation@animation@vostok@@UBE?AVexpression@mixing@23@AAVmutable_buffer@3@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "b372afcb440c.a85b004293c06dd1.0a84d1ee199a9c44",
+      "expected_fuzzy_pct": 84.21176,
+      "review": "Fresh unchanged-source isolated link improves the measured fuzzy MAX from 75.64706 to 84.21176. Existing source and structure flags are unchanged; this is compiler-context evidence, not a new structure verdict."
+    },
+    {
+      "mangled": "??4animation_state@mixing@animation@vostok@@QAEAAU0123@ABU0123@@Z",
+      "module": "animation",
+      "expected_hash": "948383ef6d13.a85b004293c06dd1",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact. The existing campaign audit and parked cause remain authoritative for source structure; this row records only the measured compiler-context MAX."
+    }
+  ]
+}
