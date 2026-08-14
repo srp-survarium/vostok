@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh newest-source particle-before-animation LTCG observation after xray integration point 604a9b1bd. The listed function is byte-exact with matching target/candidate statement structure; source and canonical link order are unchanged.",
+  "link_perturbation": "particle moved immediately before animation at animations canonical link position; all other libraries, object inputs, and link flags preserved",
+  "report_sha256": "bfdf51fb3290ca063735273be36a1a87ad87bd9c2cdca5db691b0d03061c5a8e",
+  "base_index_sha256": "9cc4b27a364d24344ca3864b50fd8853f47e70ea6b4eb0f0ebc70d0ba6fdbade",
+  "candidate_exe_sha256": "0f00ee9006096eda8be8d84e44d229ddfd26cbfc9e782fc58e7eff7a74c9f7f5",
+  "candidate_pdb_sha256": "0f88c038076080cb787675918c00ef4f222055f008dc1a13bce4f7fb7a8bb6f7",
+  "functions": [
+    {
+      "mangled": "?delete_resource@single_animation_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "05ebb7be02dd.a85b004293c06dd1.35840df56a33af4d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 33 bytes with identical 11-instruction destructor and UNMANAGED_DELETE sequences and a one-statement PDB partition. The current two-operation source body is unchanged and target-faithful."
+    }
+  ]
+}
