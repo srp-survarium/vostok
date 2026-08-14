@@ -2,15 +2,8 @@
 //	Created 	: 02.06.2026
 ////////////////////////////////////////////////////////////////////////////
 
-// Game-module /OPT:REF reachability anchor for the survarium options-menu item
-// widgets carcass (options_item_base + options_item_int/float/bool + the
-// gamma/resolution/monitor-index/graphics-quality selectors + options_tab).
-// These live in the game module and are not yet reached by the real game call
-// graph (game_options owns/constructs the tabs and items), so the linker would
-// /OPT:REF-strip every out-of-line symbol and the delinker would have nothing to
-// score. use_game_options_items() references each symbol behind a never-true
-// guard so the compiler emits the references (keeping the objects in the base
-// EXE) without running the heavy ctors.
+// Game-module /OPT:REF reachability anchor for options-menu item symbols that
+// are not yet retained by the reconstructed game call graph.
 //
 // Retire once game_options (the matched owner) reaches these for itself.
 
@@ -19,7 +12,6 @@
 #include <vostok/scaleform/sources/flash_value.h>
 #include <vostok/scaleform/sources/flash_function_handler_params.h>
 
-#include "options_gamma_selector.h"
 #include "options_graphics_quality_selector.h"
 #include "options_item_bool.h"
 #include "options_item_float.h"
@@ -80,10 +72,6 @@ void use_game_options_items( )
 	bool_item.call( params );
 
 	// the concrete selectors (each derives an item type)
-	options_gamma_selector gamma( tab );
-	gamma.call( params );
-	gamma.revert( );
-
 	options_resolution_selector resolution( tab );
 	resolution.initialize( );
 	resolution.apply( );

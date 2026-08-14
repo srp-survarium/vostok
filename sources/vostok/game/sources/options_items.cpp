@@ -28,6 +28,15 @@
 #include <vostok/scaleform/sources/flash_movie.h>
 #include <vostok/scaleform/sources/flash_function_handler_params.h>
 
+#undef NEW
+#undef NEW_ARRAY
+#undef DELETE
+#undef DELETE_ARRAY
+#define NEW( type ) VOSTOK_NEW_IMPL( ::survarium::g_allocator, type )
+#define NEW_ARRAY( type, count ) VOSTOK_NEW_ARRAY_IMPL( ::survarium::g_allocator, type, count )
+#define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
+#define DELETE_ARRAY( pointer ) VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, pointer )
+
 namespace survarium {
 
 // the per-quality-preset table (presets x 10 options). String/data bytes live in
@@ -426,6 +435,8 @@ static pcstr ambient_occlusion_data[ 4 ]		= { "off", "low", "medium", "high" };
 static pcstr particles_quality_data[ 3 ]		= { "low", "medium", "high" };
 static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" };
 
+// claude@NOTE: compiler-context wall: target retains strip_pointer( g_allocator )
+// at all four NEW_ARRAY sites; base inlines the same template calls.
  options_tab::options_tab( game& g, flash_movie_resource_ptr& movie, options_enum type )
 	: m_type( type )
 	, m_game( g )
@@ -435,6 +446,7 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 	{
 		case gameplay_options_type:
 		{
+
 			m_options_count = 9;	m_options = NEW_ARRAY( options_item_base*, 9 );
 
 			m_options[ 0 ] = NEW( options_item_bool )( *this, "g_invite_from_friends", 0 );
@@ -481,6 +493,8 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 			m_options[ 1 ]	= NEW( options_item_float )( *this, "sensitivity", 1, 0.05f );
 			break;
 		}
+
+
 		case sound_options_type:
 		{
 			m_options_count = 7;	m_options = NEW_ARRAY( options_item_base*, 7 );
@@ -490,19 +504,21 @@ static pcstr motion_blur_quality_data[ 4 ]		= { "off", "low", "medium", "high" }
 			m_options[ 2 ]	= NEW( options_item_float )( *this, "s_music_volume", 2, 1.0f );
 			m_options[ 3 ]	= NEW( options_item_float )( *this, "s_chat_volume", 3, 1.0f );
 			m_options[ 4 ]	= NEW( options_item_bool )( *this, "s_use_microphone", 4 );
-			m_options[ 5 ]	= NEW( options_item_float )( *this, "s_mic_sens", 5, 0.05f );
+			m_options[ 5 ]	= NEW( options_item_float )( *this, "s_mic_sens", 5, 1.0f );
 			m_options[ 6 ]	= NEW( options_item_bool )( *this, "s_ptt_button", 6 );
 			break;
 		}
 	}
 }
 
+// claude@NOTE: compiler-context wall: target retains strip_pointer( g_allocator )
+// at DELETE_ARRAY; base inlines the same template call.
  options_tab::~options_tab( )
 {
 	for ( u8 i = 0; i < m_options_count; ++i )
 		DELETE( m_options[ i ] );
 
-	DELETE( m_options );
+	DELETE_ARRAY( m_options );
 }
 
 void options_tab::apply( flash_movie_resource_ptr& movie )
