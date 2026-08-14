@@ -63,6 +63,8 @@ _SOUND_COOK_LOCALS = {
 }
 
 _PDB_ALIAS_TO_COMPILER_NAME = {
+    "??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_multiplication_node@123@@Z":
+        "??$propagate@Vn_ary_tree_addition_node@mixing@animation@vostok@@@n_ary_tree_size_calculator@mixing@animation@vostok@@AAEXAAVn_ary_tree_addition_node@123@@Z",
     "load_function<void __stdcall(enum BUGTRAP_ACTIVITY_tag)>":
         "load_function<void __stdcall(BUGTRAP_ACTIVITY_tag)>",
     "load_function<void __stdcall(enum BUGTRAP_DIALOGMESSAGE_tag,char const *)>":
