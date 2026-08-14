@@ -172,6 +172,23 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             MATCH_DB.report_score_for_target(scalar, {vector: 88.5}), 88.5
         )
 
+    def test_maps_folded_size_calculator_template_to_report_name(self):
+        pdb_name = (
+            "??$propagate@Vn_ary_tree_multiplication_node@mixing@animation@vostok@@"
+            "@n_ary_tree_size_calculator@mixing@animation@vostok@@"
+            "AAEXAAVn_ary_tree_multiplication_node@123@@Z"
+        )
+        report_name = (
+            "??$propagate@Vn_ary_tree_addition_node@mixing@animation@vostok@@"
+            "@n_ary_tree_size_calculator@mixing@animation@vostok@@"
+            "AAEXAAVn_ary_tree_addition_node@123@@Z"
+        )
+
+        self.assertEqual(
+            MATCH_DB.report_score_for_target(pdb_name, {report_name: 90.13513}),
+            90.13513,
+        )
+
     def test_uses_fuzzy_match_percent_not_unrelated_match_percent(self):
         report = {
             "units": [
