@@ -33,6 +33,9 @@ class polymorph_vector_base;
 
 class system_renderer : public quasi_singleton< system_renderer > {
 public:
+	typedef vector< vertex_colored > colored_vertices_type;
+	typedef vector< u16 > colored_indices_type;
+
 	explicit system_renderer( renderer_context* renderer_context );
 	~system_renderer( );
 
@@ -138,8 +141,9 @@ private:
 private:
 	material_effects_instance_cook_data* m_cook_data_to_delete;
 	untyped_buffer_ptr m_screen_vertex_ib;
+	typedef map< render_model_instance*, material_effects > render_model_to_material_type;
 	res_geometry_ptr m_screen_vertex_geometry;
-	map< render_model_instance*, material_effects > m_render_model_to_material;
+	render_model_to_material_type m_render_model_to_material;
 	float4 m_selection_color;
 	float m_selection_rate;
 	float4 m_current_selection_color;

@@ -30,6 +30,8 @@ public:
 	{
 	}
 
+	render_collision_object< render_model_instance_impl >	m_collision_object;
+
 	virtual void set_transform( float4x4 const& transform )
 	{
 		m_transform = transform;
@@ -39,8 +41,6 @@ public:
 	{
 		return m_transform;
 	}
-
-	render_collision_object< render_model_instance_impl >	m_collision_object;
 
 protected:
 	float4x4	m_transform;

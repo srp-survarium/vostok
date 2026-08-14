@@ -32,14 +32,14 @@ typedef resources::resource_ptr<
 > base_scene_view_ptr;
 
 struct base_scene : public resources::unmanaged_resource {
-	typedef base_scene_ptr scene_ptr;
-
 	inline	base_scene	( ) :
 		first_command	( 0 ),
 		last_command	( 0 ),
 		fixed_lod_value	( -1 )
 	{
 	}
+
+	typedef base_scene_ptr scene_ptr;
 
 	/* 0x0108 */	base_command*		first_command;
 	/* 0x010c */	base_command*		last_command;
@@ -52,14 +52,14 @@ STATIC_SIZE_ASSERT( base_scene, 0x118 );
 typedef base_scene* base_scene_pointer;
 
 struct base_scene_view : public resources::unmanaged_resource {
-	typedef base_scene_view_ptr scene_view_ptr;
-
 	inline	base_scene_view	( ) :
 		first_command		( 0 ),
 		last_command		( 0 ),
 		editor_debug_mode	( 0 )
 	{
 	}
+
+	typedef base_scene_view_ptr scene_view_ptr;
 
 	/* 0x0108 */	base_command*			first_command;
 	/* 0x010c */	base_command*			last_command;

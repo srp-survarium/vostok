@@ -150,13 +150,18 @@ private:
 	friend class effect_compiler;
 	friend class effect_cook;
 	friend class effect_manager;
+	virtual ~res_effect( );
+	void destroy_impl( ) const { }
 
 public:
+	vector<texture_named_instance> m_used_textures;
+
+	void push_texture_unique( res_texture* texture, pcstr path );
+
 	res_effect( ) : m_cur_technique( 0 ), m_registered( false )
 	{
 	}
 
-	void push_texture_unique( res_texture* texture, pcstr path );
 	void get_max_used_texture_dimension( u32& width, u32& height )
 	{
 		width = 0;
@@ -192,18 +197,16 @@ public:
 		return m_techniques[index].c_ptr( );
 	}
 
-	vector<texture_named_instance> m_used_textures;
-
 private:
+	typedef vector<res_shader_technique_ptr> techniques_array_type;
+
 	u32 m_cur_technique;
 
 public:
-	vector<res_shader_technique_ptr> m_techniques;
+	techniques_array_type m_techniques;
 
 private:
 	bool m_registered;
-	virtual ~res_effect( );
-	void destroy_impl( ) const { }
 };
 
 typedef resources::resource_ptr<

@@ -32,7 +32,11 @@ public:
 STATIC_SIZE_ASSERT( skeleton_render_surface, 0x9C );
 
 class skeleton_render_model : public render_model {
+	typedef render_model super;
+
 public:
+	typedef skeleton_render_surface* children;
+
 	skeleton_render_model( );
 
 	void load_bones( memory::reader& bones_chunk );
@@ -44,6 +48,7 @@ private:
 	friend class skeleton_model_instance_cook;
 	friend class skeleton_render_model_instance;
 
+public:
 	shader_constant_host*	m_bones_matrices_shader_constant;
 	shader_constant_host*	m_prev_bones_matrices_shader_constant;
 	vector< float4x4 >		m_inverted_bones_matrices_in_bind_pose;
@@ -57,9 +62,9 @@ typedef resources::resource_ptr<
 > skeleton_render_model_ptr;
 
 class skeleton_render_model_instance : public render_model_instance_impl {
-public:
 	typedef render_model_instance_impl super;
 
+public:
 	skeleton_render_model_instance( );
 	virtual ~skeleton_render_model_instance( );
 
