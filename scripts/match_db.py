@@ -3345,6 +3345,72 @@ def cmd_flag(args):
     con.commit()
 
 
+def merge_persistent_maxima(con, other):
+    """Union active and archived hash-scoped MAX observations.
+
+    The receiving database keeps its active row when the incoming row belongs
+    to another source epoch; that incoming proof is archived so the next
+    refresh can reactivate it if its effective hash is current.
+    """
+    try:
+        con.execute("SELECT 1 FROM source_maxima_epochs LIMIT 1")
+        other.execute("SELECT 1 FROM source_maxima LIMIT 1")
+    except sqlite3.OperationalError:
+        return 0
+
+    merged_count = 0
+
+    def merge_epoch(incoming):
+        nonlocal merged_count
+        key = incoming[0], incoming[1]
+        current = con.execute(
+            "SELECT * FROM source_maxima_epochs "
+            "WHERE mangled = ? AND effective_hash = ?",
+            key,
+        ).fetchone()
+        merged = merge_maximum_epoch(tuple(current) if current else None, incoming)
+        if current is None or tuple(current) != merged:
+            con.execute(
+                "INSERT OR REPLACE INTO source_maxima_epochs VALUES "
+                "(?,?,?,?,?,?,?,?,?,?,?)",
+                merged,
+            )
+            merged_count += 1
+
+    try:
+        incoming_epochs = other.execute("SELECT * FROM source_maxima_epochs")
+        for row in incoming_epochs:
+            merge_epoch(tuple(row))
+    except sqlite3.OperationalError:
+        pass  # schema 4: active rows below carry its only MAX evidence
+
+    for row in other.execute("SELECT * FROM source_maxima"):
+        incoming = tuple(row)
+        current = con.execute(
+            "SELECT * FROM source_maxima WHERE mangled = ?",
+            (row["mangled"],),
+        ).fetchone()
+        if current is None:
+            con.execute(
+                "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                incoming,
+            )
+            merged_count += 1
+        elif current["effective_hash"] == row["effective_hash"]:
+            merged = merge_maximum_epoch(tuple(current), incoming)
+            if tuple(current) != merged:
+                con.execute(
+                    "INSERT OR REPLACE INTO source_maxima VALUES "
+                    "(?,?,?,?,?,?,?,?,?,?,?)",
+                    merged,
+                )
+                merged_count += 1
+        else:
+            merge_epoch(incoming)
+
+    return merged_count
+
+
 def cmd_merge_flags(args):
     con = open_db()
     other = sqlite3.connect(f"file:{args.other}?mode=ro", uri=True)
@@ -3386,8 +3452,12 @@ def cmd_merge_flags(args):
             ).rowcount
     except sqlite3.OperationalError:
         pass  # other DB predates attempts
+    nm = merge_persistent_maxima(con, other)
     con.commit()
-    log(f"merged from {args.other}: {nf} flags, {nh} history rows, {na} attempts")
+    log(
+        f"merged from {args.other}: {nf} flags, {nh} history rows, "
+        f"{na} attempts, {nm} MAX rows"
+    )
 
 
 def audit_log():
