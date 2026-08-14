@@ -17,6 +17,8 @@ public:
 		item.deserialize( reader, mode );
 	}
 
+	inline	explicit	profile_slot	( ) {}
+
 public:
 	/* 0x0000 */	inventory_item_instance		item;
 }; // struct profile_slot

@@ -32,11 +32,6 @@ void `dynamic initializer for 'player_templates_count''( )
 }
 */
 
-/* sushi@TODO: Those are in their own corresponding headers (move?)
-player_profile::player_profile( )
-skill_booster::skill_booster( )
-*/
-
 // per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
 // (one copy per includer, like player_templates_count's dynamic initializer).
 // claude@NOTE: the per-slot mode VALUES below are a semantic guess (armor/weapon =
@@ -65,13 +60,6 @@ static slot_serialize_mode_enum const slot_serialize_mode[ max_slots_count ] =
 	serialize_both_values,					// quick_slot6
 };
 
-// claude@NOTE: structure matches the target (10 statements, field reads in order:
-// team, is_local, profile_name, booster mask + 11-entry conditional loop, then a
-// while(!eof) slot loop with the inlined profile_slot/inventory_item_instance
-// deserialize). The byte residual is the packet_reader r<T> inline wall documented in
-// packet_reader_inline.h: the target whole-program-inlines every r<u8>/r<u16>/r<u32>/
-// r<float>/r_string to a direct buffer load, while this single-TU base emits out-of-line
-// r<T> COMDAT calls. Lifts when that inlining is reproduced.
 inline void player_profile::deserialize( network_core::packet_reader& reader )
 {
 	team		= (game_team_id)reader.r< u8 >( );
@@ -125,7 +113,21 @@ STATIC_SIZE_ASSERT(relocate_item_descr, 0x18);
 
 
 struct match_options {
-			explicit	match_options	( ) {}
+			explicit	match_options	( ) :
+				match_id				( u32( -1 ) ),
+				match_mode_			( invalid_game_mode ),
+				players_count			( u8( -1 ) ),
+				respawn_time			( 0 ),
+				match_time				( 0 ),
+				wait_player_percent		( 0.f ),
+				wait1_time				( 0 ),
+				wait2_time				( 0 ),
+				countdown_time			( 0 ),
+				victory_items_count		( 0 ),
+				received_players_count	( u8( -1 ) )
+			{
+				map_name[ 0 ] = 0;
+			}
 
 	inline	void		serialize		( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 			void		deserialize		( network_core::packet_reader& reader )
@@ -135,8 +137,7 @@ struct match_options {
 				match_mode_			= (game_mode_type)reader.r< u8 >( );
 				players_count		= reader.r< u8 >( );
 				victory_items_count	= reader.r< u8 >( );
-				respawn_time		= reader.r< u8 >( );
-				match_time			= reader.r< u16 >( );
+				respawn_time		= reader.r< u8 >( ); match_time = reader.r< u16 >( );
 
 				match_id			= 0xFFFFFFFF;
 				received_players_count	= 0xFF;
