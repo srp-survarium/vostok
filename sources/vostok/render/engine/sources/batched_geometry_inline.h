@@ -27,6 +27,7 @@ inline batched_geometry< Vertex >::batched_geometry(
 template < typename Vertex >
 inline batched_geometry< Vertex >::~batched_geometry( )
 {
+	invalidate( );
 }
 
 template < typename Vertex >
