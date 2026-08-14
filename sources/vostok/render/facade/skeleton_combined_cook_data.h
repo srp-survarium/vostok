@@ -11,9 +11,9 @@ namespace vostok {
 namespace render {
 
 struct skeleton_combined_cook_data {
-	explicit skeleton_combined_cook_data( bool owner_cook )
+	explicit skeleton_combined_cook_data( bool owner_cook ) :
+		owner_is_cook( owner_cook )
 	{
-		owner_is_cook = owner_cook;
 	}
 
 	fs_new::virtual_path_string		skeleton_name;
