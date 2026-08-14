@@ -197,6 +197,8 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 {
 	VOSTOK_UNREFERENCED_PARAMETER( srgb );
 	VOSTOK_UNREFERENCED_PARAMETER( depth_stencil );
+	// Retail line records include source stripped by the Master Gold configuration.
+#line 144
 	if (surface)
 		surface->AddRef();
 
@@ -260,6 +262,8 @@ void res_texture::set_hw_texture(ID3D11Resource* surface, u32 mip_level_cut, boo
 
 			view_desc.Format = m_desc.Format;
 
+			// Five additional retail source lines were preprocessed out here.
+#line 212
 			switch(m_desc.Format)
 			{
 			case DXGI_FORMAT_R24G8_TYPELESS:
