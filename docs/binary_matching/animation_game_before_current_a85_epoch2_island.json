@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh newest-source n_ary_tree::dispatch_callbacks observation from the game-before-animation LTCG state on animation-to-100. The candidate improves the prior current-effective-hash MAX from 75.356346% to 76.8686%; the complete callback source and visible-local review remains unchanged.",
+  "link_perturbation": "game immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "51b30e79f9bb343fdb1129fef19fccfc0ecf87e2030db3184427a770653bbe89",
+  "base_index_sha256": "7f87382155aec2e136cbcb9f1af954dda9c2f8395f54b077a327cfdf2feb5602",
+  "candidate_exe_sha256": "d5aa012b80384d32208d69a70d16b5ff32774ff5700b4c5bf55c6d5ed4f93022",
+  "candidate_pdb_sha256": "4eb813a334da82bbb5993b583f79dc8452fc354e037a768454103bf37270b1cb",
+  "functions": [
+    {
+      "mangled": "?dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@CA_NPBVcallback_generator_info@234@AAPAUsubscribed_channel@34@IAA_N@Z",
+      "module": "animation",
+      "expected_hash": "0e3174dc91db.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 76.8686,
+      "review": "Target and candidate retain the same 102-block optimized CFG, both event-match cascades, callback filtering and invocation, channel lookup, knot wrapping, and eight visible locals. The 58:56 statement residual is the previously verified whole-program boundary selection: target retains three intrusive_ptr destructors and stack-passes callback_generators_head while this candidate expands different refcount and argument-passing paths."
+    }
+  ]
+}
