@@ -1413,10 +1413,10 @@ void n_ary_tree_transition_tree_constructor::merge_weight_asynchronous_groups(
 }
 
 void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group(
-	n_ary_tree_animation_node*		from_begin,
-	n_ary_tree_animation_node*		from_end,
-	n_ary_tree_animation_node*		to_begin,
-	n_ary_tree_animation_node*		to_end
+	n_ary_tree_animation_node* const	from_begin,
+	n_ary_tree_animation_node* const	from_end,
+	n_ary_tree_animation_node* const	to_begin,
+	n_ary_tree_animation_node* const	to_end
 )
 {
 	if ( to_begin->weight_synchronization_group_id( ) == u32( -1 ) ) {
@@ -1426,8 +1426,6 @@ void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group
 
 	n_ary_tree_animation_node* const previous_weight_driving_animation	=
 		find_animation( from_begin, from_end, *to_begin );
-	bool const is_new_driving_animation	= !previous_weight_driving_animation
-		|| previous_weight_driving_animation->is_transitting_to_zero( );
 	n_ary_tree_animation_node* const new_weight_driving_animation_node	=
 		previous_weight_driving_animation
 			? new_weight_driving_animation( *to_begin, *previous_weight_driving_animation )
@@ -1439,7 +1437,8 @@ void n_ary_tree_transition_tree_constructor::change_weight_synchronization_group
 		to_begin,
 		to_end,
 		*new_weight_driving_animation_node,
-		is_new_driving_animation
+		!previous_weight_driving_animation
+			|| previous_weight_driving_animation->is_transitting_to_zero( )
 	);
 
 }
