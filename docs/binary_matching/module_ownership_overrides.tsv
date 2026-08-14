@@ -14,3 +14,4 @@
 ??_Gskeleton_render_model_instance@render@vostok@@UAEPAXI@Z	render	vostok/render/engine/sources/render_model_skeleton.h
 ??0interactive_object@survarium@@QAE@XZ	game_core	vostok/game_core/interactive_object.h
 ??1interactive_object@survarium@@UAE@XZ	game_core	vostok/game_core/interactive_object.h
+??_Gsingle_position_animation_controller@survarium@@UAEPAXI@Z	game	vostok/game/sources/single_position_animation_controller.h
