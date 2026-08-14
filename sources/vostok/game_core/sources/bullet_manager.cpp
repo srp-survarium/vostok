@@ -14,7 +14,7 @@ namespace survarium {
 
 static float s_bm_current_air_resistance = 1.0f; // sushi@TODO: Move somewhere?
 float s_bm_bullet_time_factor			 = 1.0f; // sushi@TODO: Move somewhere?
-
+// claude@NOTE: target retains enum_flags construction here; base folds it into the caller frame.
 bullet_manager::bullet_manager(
 	game_material_manager*	material_manager,
 	physics::world*			physics_world,
