@@ -33,6 +33,7 @@ static vostok::console_commands::cc_float s_cc_shadow_map_z_bias(
 namespace vostok {
 namespace render {
 
+// claude@NOTE: The first target-reset loop inlines texture destruction; the base keeps destroy_impl out of line.
 renderer_context::renderer_context( ) :
 	m_targets				( NULL ),
 	m_t_null				( NULL ),
@@ -77,90 +78,6 @@ renderer_context::renderer_context( ) :
 	m_solid_color_specular		( 0.f, 0.f, 0.f, 0.f ),
 	m_solid_material_parameters	( 10.f, 1.f, 0.f, 0.f )
 {
-	// LOCALS
-	// sun_cascade[4] 					cascades
-	// u32 								i
-	// ******
-
-	// FUNCTION BODY[0x6433c0]: 75
-	// <0>
-	// <1>
-	// <0x643743>|0x383|+0x01c:'75'
-	// <0x64375f>|0x39f|+0x05f:'76'
-	// <0>
-	// <1>
-	// <0x6437be>|0x3fe|+0x00e:'79'
-	// <0>
-	// <0x6437cc>|0x40c|+0x054:'81'
-	// <0>
-	// <0x643820>|0x460|+0x012:'83'
-	// <0x643832>|0x472|+0x005:'84'
-	// <0>
-	// <1>
-	// <2>
-	// <0x643837>|0x477|+0x011:'88'
-	// <0x643848>|0x488|+0x011:'89'
-	// <0>
-	// <0x643859>|0x499|+0x011:'91'
-	// <0x64386a>|0x4aa|+0x021:'92'
-	// <0>
-	// <0x64388b>|0x4cb|+0x01a:'94'
-	// <0x6438a5>|0x4e5|+0x02d:'95'
-	// <0>
-	// <0x6438d2>|0x512|+0x023:'97'
-	// <0x6438f5>|0x535|+0x04b:'98'
-	// <0>
-	// <1>
-	// <0x643940>|0x580|+0x026:'101'
-	// <0>
-	// <0x643966>|0x5a6|+0x00f:'103'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <4>
-	// <5>
-	// <0x643975>|0x5b5|+0x030:'110'
-	// <0>
-	// <1>
-	// <2>
-	// <3>
-	// <0x6439a5>|0x5e5|+0x037:'115'
-	// <0>
-	// <0x6439dc>|0x61c|+0x00f:'117'
-	// <0>
-	// <0x6439eb>|0x62b|+0x13c:'119'
-	// <0x643b27>|0x767|+0x13c:'120'
-	// <0x643c63>|0x8a3|+0x0a8:'121'
-	// <0x643d0b>|0x94b|+0x0a3:'122'
-	// <0x643dae>|0x9ee|+0x0a2:'123'
-	// <0x643e50>|0xa90|+0x0a3:'124'
-	// <0x643ef3>|0xb33|+0x0a3:'125'
-	// <0x643f96>|0xbd6|+0x0a3:'126'
-	// <0x644039>|0xc79|+0x0a3:'127'
-	// <0>
-	// <0x6440dc>|0xd1c|+0x09f:'129'
-	// <0x64417b>|0xdbb|+0x09d:'130'
-	// <0x644218>|0xe58|+0x09d:'131'
-	// <0x6442b5>|0xef5|+0x09d:'132'
-	// <0x644352>|0xf92|+0x09d:'133'
-	// <0>
-	// <0x6443ef>|0x102f|+0x09d:'135'
-	// <0x64448c>|0x10cc|+0x09d:'136'
-	// <0x644529>|0x1169|+0x082:'137'
-	// <0>
-	// <0x6445ab>|0x11eb|+0x082:'139'
-	// <0>
-	// <0x64462d>|0x126d|+0x048:'141'
-	// <0x644675>|0x12b5|-0x03c:'141'
-	// <0>
-	// <0x644639>|0x1279|+0x009:'143'
-	// <0x644642>|0x1282|+0x047:'144'
-	// <0>
-	// <1>
-	// <0x644689>|0x12c9|+0x03f:'147'
-	// ******
-
 	for ( u32 i = 0; i < rt_num_render_targets; ++i )
 	{
 		m_family[i].target	= NULL;
@@ -223,8 +140,7 @@ renderer_context::renderer_context( ) :
 	for ( u32 i = 0; i < rt_num_render_targets; ++i )
 	{
 		pcstr const name	= rt_index_to_name( enum_render_target_index( i ) );
-		if ( name )
-			m_family[i].texture	= resource_manager::ref( ).create_texture( name, 0, 0, false, true, true, 0 );
+		if ( name ) m_family[i].texture = resource_manager::ref( ).create_texture( name, 0, 0, false, true, true, 0 );
 	}
 
 	m_t_null				= resource_manager::ref( ).create_texture( "$user$null", 0, 0, false, true, true, 0 );
@@ -379,30 +295,9 @@ float4x4 const& renderer_context::get_view2shadow( u32 index ) const
 	return m_v2shadow0;
 }
 
+// claude@NOTE: The target receives this in esi through an LTCG-selected convention; the base preserves esi locally.
 void renderer_context::set_target_context( renderer_context_targets const* targets_context, bool force_set )
 {
-	// FUNCTION BODY[0x642ac0]: 18
-	// <0x642ac3>|0x003|+0x02e:'233'
-	// <0>
-	// <1>
-	// <0x642af1>|0x031|+0x002:'236'
-	// <0x642af3>|0x033|+0x018:'237'
-	// <0>
-	// <0x642b0b>|0x04b|+0x004:'239'
-	// <0>
-	// <0x642b0f>|0x04f|+0x011:'241'
-	// <0x642b20>|0x060|+0x021:'242'
-	// <0x642b41>|0x081|+0x016:'243'
-	// <0>
-	// <1>
-	// <0x642b57>|0x097|+0x054:'246'
-	// <0>
-	// <1>
-	// <0x642bab>|0x0eb|+0x01c:'249'
-	// <0x642bc7>|0x107|-0x08f:'250'
-	// <0x642b38>|0x078|+0x0ad:'251'
-	// ******
-
 	if (
 		!force_set &&
 		m_targets == targets_context &&
