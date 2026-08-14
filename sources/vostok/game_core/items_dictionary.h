@@ -13,7 +13,10 @@ class items_dictionary_cook;
 
 class items_dictionary : public resources::unmanaged_resource , public boost::noncopyable {
 public:
-	inline	dictionary_item const&				item_by_id					( u32 id ) const				{ return m_items_dict.find( id )->second; }
+	inline	dictionary_item const&				item_by_id					( u32 item_dictionary_id ) const
+	{
+		return m_items_dict.find( item_dictionary_id )->second;
+	}
 
 	inline	void								add_item_desc				( dictionary_item const& item ) { m_items_dict[item.item_id] = item; }
 	inline	map< u32, dictionary_item > const&	get_dictionary				( ) const						{ return m_items_dict; }
