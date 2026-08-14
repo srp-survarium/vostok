@@ -1,8 +1,7 @@
 #include "pch.h"
 
 // Game-module /OPT:REF reachability anchor for the WEAPONS/COOKS cluster:
-//   weapon, weapon_cook, object_weapon, sound_player_cook, project_cooker_simple,
-//   key_binder.
+//   weapon, weapon_cook, object_weapon, sound_player_cook, key_binder.
 //
 // These carcass TUs compile into game.lib but no reachable engine call graph
 // touches them, so /OPT:REF strips them from the EXE (objdiff then reports their
@@ -21,7 +20,6 @@
 #include "shotgun_weapon_reload_state_cook.h"
 #include "object_weapon.h"
 #include "sound_player_cook.h"
-#include "project_cooker_simple.h"
 #include "key_binder.h"
 #include "weapon_sound_effect.h"
 #include "weapon_sound_events_handler_state_cook.h"
@@ -34,8 +32,6 @@
 #include <vostok/resources_query_result.h>
 
 namespace survarium {
-	class game_object_;
-	class simple_game_project;
 	struct base_player;
 	// file-local free helpers in weapon.cpp (no public header)
 	bool is_dead( base_player*& user );
@@ -66,7 +62,6 @@ namespace vostok
 			static sound::world* volatile				s_snd	= 0;
 			survarium::weapon					wpn( 0u, 0u, 0u );
 			survarium::sound_player_cook		scook( s_snd, resources::class_id_enum( 0 ) );
-			survarium::project_cooker_simple	pcook( false );
 
 			// play_weapon_shell_pfx / play_weapon_fire_pfx receive `this` in esi
 			// under LTCG (no push/pop of the this-reg); a guarded DIRECT CALL
@@ -182,18 +177,6 @@ namespace vostok
 		typedef survarium::sound_player_cook spc;
 		keep( &spc::translate_query );
 		keep( &spc::delete_resource );
-
-		// ---- project_cooker_simple ------------------------------------------
-		// on_game_project_loaded / create_game_objects / on_damage_zones_loaded /
-		// on_ladders_loaded / on_collision_and_visuals_loaded are private (AAE);
-		// reached transitively from the public translate_query bind chain, so
-		// /OPT:REF keeps them. on_object_loaded has a matched body but its sole
-		// bind site is in the still-stubbed create_game_objects, so address-take it
-		// directly (use_game_weapons is a friend of project_cooker_simple).
-		typedef survarium::project_cooker_simple pcs;
-		keep( &pcs::translate_query );
-		keep( &pcs::delete_resource );
-		keep( &pcs::on_object_loaded );
 
 		// ---- key_binder ------------------------------------------------------
 		typedef survarium::key_binder kb;

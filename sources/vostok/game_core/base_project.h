@@ -37,6 +37,9 @@ private:
 	// simple_game_project::insert/remove walk m_static_collision_objects directly;
 	// PDB does not record friendship, codegen-neutral
 	friend class simple_game_project;
+	// project_cooker_simple constructs the static-collision array from the project config;
+	// PDB does not record friendship, codegen-neutral
+	friend class project_cooker_simple;
 
 	typedef map< fixed_string<260>, base_game_object* > objects_registry_type;
 

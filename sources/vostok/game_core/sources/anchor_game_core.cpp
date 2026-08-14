@@ -2239,12 +2239,7 @@ namespace vostok
 		example_callback( reinterpret_cast< pcstr >( &p22 ) );
 	}
 
-	// base_project: register_named_object / register_object_to_resolve are public
-	// non-virtual header-inline registrars. A plain call is inlined by /GL, so take
-	// their addresses instead - an address-taken member keeps the standalone
-	// out-of-line COMDAT the target also emits. base_project has a pure-ish vtable
-	// (get_object_by_name/resolve_links are non-pure); a constructed local keeps the
-	// ctor/vtable.
+	// A concrete local retains the base_project constructor and vtable.
 	struct concrete_base_project : survarium::base_project
 	{
 	};
@@ -2253,13 +2248,6 @@ namespace vostok
 	{
 		concrete_base_project	p;
 		example_callback( reinterpret_cast< pcstr >( &p ) );
-
-		void ( survarium::base_project::*register_named_object_fn )( pcstr, survarium::base_game_object* )
-			= &survarium::base_project::register_named_object;
-		void ( survarium::base_project::*register_object_to_resolve_fn )( survarium::link_resolver*, configs::binary_config_value )
-			= &survarium::base_project::register_object_to_resolve;
-		example_callback( reinterpret_cast< pcstr >( &register_named_object_fn ) );
-		example_callback( reinterpret_cast< pcstr >( &register_object_to_resolve_fn ) );
 
 		// static_collision insert/remove are public non-virtual leaves on a null ref.
 		survarium::static_collision&	sc	= *reinterpret_cast< survarium::static_collision* >( NULL );
