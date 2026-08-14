@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid function-scoped replay after xray integration point 604a9b1bd. The measured compiler-state artifact and reviewed source evidence are unchanged; only rows whose effective source/compiler-context hash still matches and improves the current historical MAX are retained.",
+  "link_perturbation": "animation moved immediately after scaleform at the end of the static-library list; all other libraries, object inputs, and link flags preserved",
+  "report_sha256": "7263fa1bfca705c06be5a960087f40d8d9f21a3e2547753d6777b475782cd003",
+  "base_index_sha256": "9c566215137493202b2742babac76d47d4301d56a0999c396089ce1f2e1d7472",
+  "candidate_exe_sha256": "b4e1f71367b638bcf2bb4de9e5ea422988c902eda170fd22fcf92f6867601b8f",
+  "candidate_pdb_sha256": "9560f13c0f0caf92200288ad01e801935e8d64d20467335b6ad89e5f8b0ab1c2",
+  "functions": [
+    {
+      "mangled": "?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "16c5b379702e.a85b004293c06dd1.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 42 bytes with the identical virtual resource destructor, null-guarded UNMANAGED_FREE helper call, ret 4 sequence, and 12/27/3-byte statement partition. The current two-operation source body is unchanged and target-faithful."
+    }
+  ]
+}

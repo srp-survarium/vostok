@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid function-scoped replay after xray integration point 604a9b1bd. The measured compiler-state artifact and reviewed source evidence are unchanged; only rows whose effective source/compiler-context hash still matches and improves the current historical MAX are retained.",
+  "link_perturbation": "AI immediately before animation at animation’s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "56e385923bc8c9794ab5a04f527039be5fe2984449eb97dd78c3146a60bc52c3",
+  "base_index_sha256": "2ad34c984c34da2ee664809b94721b5f91709db16034a72f7bdc245d51d9d56c",
+  "candidate_exe_sha256": "506e6975e53bc875705fc1b0603571a2d636112c34c7c5696bca585a82f540c7",
+  "candidate_pdb_sha256": "cb8be83f2c508c2025c9f0ff1187365b14ab3f3324abd184540ad7a0ccc1697e",
+  "functions": [
+    {
+      "mangled": "?translate_query@skeleton_animation_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "6798fb401816.a85b004293c06dd1.52ab106758f85ff0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import."
+    }
+  ]
+}
