@@ -16,21 +16,21 @@ collision_geometry::collision_geometry( ) :
 	m_mask				( 0 )
 {
 }
-
+// claude@NOTE: frame-reservation wall; structure, locals, instructions, and size match.
 collision_geometry::~collision_geometry( )
 {
 	ASSERT( UNKNOWN_EXPRESSION );
 	ASSERT( UNKNOWN_EXPRESSION_T( m_ghost_object ) );
 	destroy_ghost_object( );
 }
-
+// claude@NOTE: target passes the physics helper argument in EAX; base uses the stack.
 void collision_geometry::destroy_ghost_object( )
 {
 	physics::destroy_ghost_object( m_ghost_object );
 }
 
-
-
+// claude@NOTE: inline-context wall: target keeps fixed_string's config assignment
+// and the collision-shape resource_ptr constructor out of line; base inlines both.
 
 void collision_geometry::load( configs::binary_config_value const& cfg_val )
 {
