@@ -1,5 +1,6 @@
 import importlib.util
 import json
+import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -505,6 +506,66 @@ class MaximumEpochArchiveTests(unittest.TestCase):
         )
 
         self.assertIsNone(selected)
+
+
+class MergePersistentMaximaTests(unittest.TestCase):
+    @staticmethod
+    def row(mangled, effective_hash, fuzzy, exact=0):
+        return (
+            mangled,
+            effective_hash,
+            fuzzy,
+            exact,
+            "state-id",
+            "render",
+            "vostok/render/example.cpp",
+            10,
+            12,
+            "rebuild",
+            None,
+        )
+
+    def test_merges_same_hash_and_archives_different_hash(self):
+        current = sqlite3.connect(":memory:")
+        incoming = sqlite3.connect(":memory:")
+        current.row_factory = incoming.row_factory = sqlite3.Row
+        current.executescript(MATCH_DB.SCHEMA)
+        incoming.executescript(MATCH_DB.SCHEMA)
+
+        current.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            self.row("?same@@", "same-hash", 80.0),
+        )
+        incoming.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            self.row("?same@@", "same-hash", 100.0, exact=1),
+        )
+        current.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            self.row("?changed@@", "old-hash", 75.0),
+        )
+        incoming.execute(
+            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+            self.row("?changed@@", "new-hash", 100.0, exact=1),
+        )
+
+        self.assertEqual(MATCH_DB.merge_persistent_maxima(current, incoming), 2)
+        self.assertEqual(
+            tuple(
+                current.execute(
+                    "SELECT max_fuzzy_pct, exact_proven FROM source_maxima "
+                    "WHERE mangled = '?same@@'"
+                ).fetchone()
+            ),
+            (100.0, 1),
+        )
+        self.assertEqual(
+            current.execute(
+                "SELECT max_fuzzy_pct FROM source_maxima_epochs "
+                "WHERE mangled = '?changed@@' AND effective_hash = 'new-hash'"
+            ).fetchone()[0],
+            100.0,
+        )
 
 
 class EffectiveSourceHashTests(unittest.TestCase):
