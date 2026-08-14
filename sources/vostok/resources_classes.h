@@ -211,7 +211,7 @@ enum class_id_enum
 	// from the shipped target's class_id_enum, but our tree still has resource cooks
 	// that reference them (config_class -> configs_binary_config_cook.cpp; spl_class ->
 	// spl_cook.cpp; sound_stream_class -> sound_*_cook*.cpp; animation_controller_class ->
-	// rtp/editor; game_project_simple_class -> project_cooker_simple.cpp). Removing them
+	// rtp/editor). Removing them
 	// to match the target requires parking/removing those cooks (several in skipped
 	// sound/editor modules) - out of scope for the enum-only pass. Kept at the end so
 	// they don't shift the matched ids above. Parked. Anchored at 0x20a (past the
@@ -222,12 +222,14 @@ enum class_id_enum
 	animation_controller_class,                    // [-]
 	sound_stream_class,                            // [-]
 	game_project_class,                            // [-]
-	game_project_simple_class,                     // [-]
-	game_cell_class,                               // [-]
+	game_cell_class = 0x210,                       // [-]
 	game_object_class,                             // [-]
 	game_object_scene_class,                       // [-]
 	sound_player_logic_class,                      // [-]
 	sound_player_editor_class,                     // [-]
+
+	// The retail simple-project cook registers the client-project id (0x4d).
+	game_project_simple_class = client_game_project_class,
 };
 
 

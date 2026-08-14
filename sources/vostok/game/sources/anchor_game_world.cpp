@@ -28,7 +28,7 @@ namespace survarium {
 	// simple_game_project is concrete (no pure virtuals), so constructing one keeps
 	// its ctor/dtor/vtable; the public methods are then called. Args are sourced
 	// through volatile sinks so LTCG cannot prove the constant null this anchor is
-	// the sole caller with. The real caller is project_cooker_simple (still a stub).
+	// the sole caller with. The real caller is project_cooker_simple.
 	void use_game_project( )
 	{
 		static volatile bool s_run = false;

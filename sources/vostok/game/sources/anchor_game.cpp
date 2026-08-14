@@ -205,10 +205,6 @@ namespace vostok
 		survarium::stats				stats_obj( *( ui::world* )NULL );
 		survarium::stats_graph			graph( 0.f, 0.f, 0.f, 0.f, 0u );
 		survarium::damage_model_stats	dm_stats( *( ui::world* )NULL );
-		// project_cooker_simple is intentionally NOT constructed: its delete_resource
-		// override has no body in our sources, so emitting its vtable would not link
-		// (LNK2001). Its ~4 fns are a tiny residual the cook-matching phase recovers.
-
 		// call the public non-virtual methods too (construction alone keeps only the
 		// ctor/dtor/vtable - the target carries these out-of-line, so reference them).
 		render::ui::renderer&			ui_renderer	= *( render::ui::renderer* )NULL;
