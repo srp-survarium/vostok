@@ -11,7 +11,6 @@ ambient_volume::ambient_volume(
 	ambient_volume_properties const&	properties,
 	u32 const							id
 ) :
-	m_properties				( ),
 	m_aabb						( math::create_identity_aabb( ) ),
 	m_id						( id ),
 	m_occlusion_info_index		( u32(-1) ),
