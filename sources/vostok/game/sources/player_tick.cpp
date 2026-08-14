@@ -173,12 +173,9 @@ void player::update_history_item(
 		item.time_in_ms = server_action_time_in_ms;
 }
 
-// claude@NOTE: byte residual is the inlined quaternion-product schedule (the two
-// math::operator*(quaternion,quaternion) chains) + the physics get_transform/from_bullet
-// tail (cross-module COMDAT). Structure is faithful: target_rotation = product of three
-// get_angles_xyz quaternions, create_matrix into m_target.transform with the
-// translation-preserving c.xyz() blend, look_pitch copy, walk-vector push, then the
-// physics controller update_action + get_transform roundtrip back into the item/transform.
+// claude@NOTE: target and base share the three-block flow. The remaining line
+// attribution and byte differences are the two inlined quaternion products plus
+// the physics get_transform/from_bullet tail; the full transform update is present.
 void player::update_history_item_from_previous(
 	client_player_history_item const&		previous_item,
 	client_player_history_item&				item_to_update,
@@ -224,14 +221,9 @@ void player::replay_history( const u32 from_index, float4x4& previous_transform 
 	m_target.animation_player.set_object_transform( m_history[ m_history.previous( m_history.head( ) ) ].action.state.transform, this );
 }
 
-// claude@NOTE: Reconstructed and PAIRED (~72%), capped below a full structure match by
-// replay_history's inner update_history_item_from_previous / set_object_transform calls
-// dropping (those callees are still empty STUBs, so they inline to nothing - see
-// replay_history note). The tick/restore/clamp/min/lower-bound/replay control flow and the
-// transform-translation-preserving tail all match (process_quick_slots_for_proxy_player is
-// now bodied, so the proxy path no longer DCE-collapses). Residual also includes the
-// dropped unused bool& __formal arg to update_history_item (LTCG arg-drop). Next step:
-// body update_history_item_from_previous (parked on the quaternion-product wall).
+// claude@NOTE: target and base share all fourteen CFG blocks and the complete
+// clamp/lower-bound/update/replay path. Residual statement splits come from ring-index
+// register selection, replay_history's call schedule, and the physics transform tail.
 void player::time_warp( server_player_update const& action, u32 time_in_ms )
 {
 	if( m_last_server_correction_time && time_in_ms < m_last_server_correction_time )
@@ -410,6 +402,9 @@ void player::smooth( const float time_delta )
 	}
 }
 
+// claude@NOTE: std::max reproduces the target CFG through B63. The first remaining
+// skeleton divergence is animation-owned animation_player::tick: target inlines
+// skip_time_if_needed/n_ary_tree::tick/callback compaction, while base calls it.
 void player::tick( const u32 current_time_in_ms )
 {
 	if( m_is_first_tick )
@@ -419,7 +414,7 @@ void player::tick( const u32 current_time_in_ms )
 	}
 
 	const u32 previous_time_in_ms = is_local ? m_current_time_in_ms
-		: ( m_history.empty( ) ? m_current_time_in_ms : math::max( m_current_time_in_ms, m_history.newest( ).time_in_ms ) );
+		: ( m_history.empty( ) ? m_current_time_in_ms : std::max( m_current_time_in_ms, m_history.newest( ).time_in_ms ) );
 	m_current_time_in_ms = current_time_in_ms;
 	const u32 time_delta_in_ms = current_time_in_ms > previous_time_in_ms ? current_time_in_ms - previous_time_in_ms : 0;
 
