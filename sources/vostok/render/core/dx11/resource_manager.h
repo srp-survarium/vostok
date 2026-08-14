@@ -19,6 +19,7 @@
 #include <vostok/render/core/res_sampler_list.h>
 #include <vostok/render/core/res_texture_list.h>
 #include <vostok/render/core/shader_configuration.h>
+#include <vostok/render/core/shader_constant_table.h>
 #include <vostok/render/core/shader_constant_bindings.h>
 #include <vostok/render/core/shader_defines.h>
 #include <vostok/render/core/state_cache.h>
@@ -558,7 +559,7 @@ private:
 			shader_constant_table const* const right
 		) const
 		{
-			return left < right;
+			return left->compare( *right ) < 0;
 		}
 	};
 
