@@ -274,6 +274,27 @@ void n_ary_tree::accumulate_object_movement(
 	previous_object_movement.scale			= frame_transform.scale;
 }
 
+float n_ary_tree::computed_animation_time(
+	n_ary_tree_animation_node&	animation,
+	const float					animation_time_before_scale_starts,
+	const u32					time_scale_start_time_in_ms,
+	const u32					current_time_in_ms,
+	const u32					target_time_in_ms,
+	const float					time_scale
+) const
+{
+	if ( !animation.time_calculator() ) return	animation_time_before_scale_starts + (current_time_in_ms - time_scale_start_time_in_ms)*time_scale/1000.f;
+
+	return						animation.time_calculator()(
+										animation_time_before_scale_starts,
+										animation.animation_intervals()->length(),
+										time_scale_start_time_in_ms,
+										current_time_in_ms,
+										target_time_in_ms,
+										time_scale
+									);
+}
+
 void n_ary_tree::update_synchronization_group_using_integration(
 	n_ary_tree_animation_node&		animation_node,
 	const u32						start_time_in_ms,
@@ -369,28 +390,6 @@ void n_ary_tree::update_animation_time( animation_state& animation_state )
 		math::max( animation_time - animation_state.animation_time_threshold, 0.f ),
 		animation_length
 	);
-}
-
-float n_ary_tree::computed_animation_time(
-	n_ary_tree_animation_node&	animation,
-	const float					animation_time_before_scale_starts,
-	const u32					time_scale_start_time_in_ms,
-	const u32					current_time_in_ms,
-	const u32					target_time_in_ms,
-	const float					time_scale
-) const
-{
-	if ( !animation.time_calculator() )
-		return						animation_time_before_scale_starts + (current_time_in_ms - time_scale_start_time_in_ms)*time_scale/1000.f;
-
-	return						animation.time_calculator()(
-										animation_time_before_scale_starts,
-										animation.animation_intervals()->length(),
-										time_scale_start_time_in_ms,
-										current_time_in_ms,
-										target_time_in_ms,
-										time_scale
-									);
 }
 
 void n_ary_tree::update_animation_state(
