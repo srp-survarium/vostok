@@ -10,6 +10,7 @@
 #include "base_network_client.h"		// network_client().is_player_current
 #include "flash_text_manager.h"			// text_manager().destroy_text( m_text ) in remove
 #include <vostok/game_core/game_net_defines.h>		// match_options::player_profiles[] in remove
+#include <vostok/game_core/player_profile.h>
 #include "game_world.h"					// kill() casts m_game_scene to game_world for switch_camera_mode
 #include "game_world_ui.h"				// m_game_ui->fill_quick_slots
 #include "player_input_handler.h"		// m_local_input_controller->set_near_plane
@@ -115,37 +116,60 @@ void `dynamic initializer for 's_show_client_player_command''( )
 }
 */
 
-// STATE[STUB]
-// init-list sources off params.game_scene (it supplies game + scheduler);
-// buildability shapes - a matcher confirms the real sources.
+// claude@NOTE: the complete target control flow is present. The remaining
+// entry-line store is animation_player::enable_logging, whose animation-owned
+// inline body is empty in this compiler context.
  player::player( player_creation_params const& params ) :
 	base_player( params, params.game_scene->scheduler( ) ),
-	m_history( *g_allocator, 0 ),				// buildability: allocator + capacity
+	m_history( *g_allocator, 64 ),
+	m_stamina( params.initial_stamina ),
+	m_stealth( params.initial_stealth ),
+	m_last_frame_position( 0.0f, 0.0f, 0.0f ),
+	m_damage_collision( params.damage_collision ),
+	m_local_input_controller( NULL ),
+	m_linear_speed_graph( NULL ),
+	m_angular_speed_graph( NULL ),
 	m_game_scene( *params.game_scene ),
-	m_game( params.game_scene->get_game( ) )
+	m_game( params.game_scene->get_game( ) ),
+	m_empty_hands( params.empty_hands ),
+	m_current_time_in_ms( 0 ),
+	m_last_frame_rotation( 0.0f ),
+	m_last_server_correction_time( 0 ),
+	m_target_fov_factor( 1.0f ),
+	m_start_fov_factor( 1.0f ),
+	m_current_fov_factor( 1.0f ),
+	m_start_fov_factor_change_time_in_ms( 0 ),
+	foot_3rd_view_game_material_id( params.foot_3rd_view_game_material_id ),
+	foot_1st_view_game_material_id( params.foot_1st_view_game_material_id ),
+	m_show_server_player( false ),
+	m_show_client_player( true ),
+	m_is_visible( false ),
+	m_is_first_born( true ),
+	m_use_physics_controller_for_current( true ),
+	m_player_head_visible( true ),
+	m_game_ui( NULL ),
+	m_is_demo_player( params.initial_info.is_demo_player ),
+	m_force_bones_recompute( false )
 {
-	// FUNCTION BODY[0x5e44b0]: 20
-	// <0x5e468c>|0x1dc|+0x050:'125'
-	// <0>
-	// <0x5e46dc>|0x22c|+0x01f:'127'
-	// <0x5e46fb>|0x24b|+0x00e:'128'
-	// <0x5e4709>|0x259|+0x047:'129'
-	// <0x5e4750>|0x2a0|+0x044:'130'
-	// <0>
-	// <0x5e4794>|0x2e4|+0x009:'132'
-	// <0>
-	// <1>
-	// <0x5e479d>|0x2ed|+0x032:'135'
-	// <0x5e47cf>|0x31f|+0x00c:'136'
-	// <0>
-	// <0x5e47db>|0x32b|+0x032:'138'
-	// <0x5e480d>|0x35d|+0x00c:'139'
-	// <0>
-	// <1>
-	// <0x5e4819>|0x369|+0x00f:'142'
-	// <0>
-	// <0x5e4828>|0x378|+0x00c:'144'
-	// ******
+	m_current.animation_player.enable_logging( is_local );
+
+	size_t converted_chars_count = 0;
+	mbstowcs_s( &converted_chars_count, profile_name, array_size( profile_name ), params.initial_info.profile->profile_name, _TRUNCATE );
+	m_team_id = params.initial_info.profile->team;
+	m_current.model = params.character_model;
+	m_target.model = params.server_character_model;
+
+	inventory( ).set_holder( this );
+
+	m_current.physics_controller = physics::create_character_controller( *g_allocator, m_game_scene.get_physics_world( ) );
+	m_current.physics_controller->initialize( );
+
+	m_target.physics_controller = physics::create_character_controller( *g_allocator, m_game_scene.get_physics_world( ) );
+	m_target.physics_controller->initialize( );
+
+	m_damage_collision->set_owner( static_cast< hit_receiver* >( this ) );
+
+	params.player_parameters->apply( this );
 }
 
 player::~player( )
@@ -156,9 +180,9 @@ player::~player( )
 	DELETE( m_current.physics_controller );
 }
 
-// claude@NOTE: scene_renderer() cap - base_game_scene::scene_renderer() is a
-// stub returning NULL (sibling unit), so our base emits a call where the target
-// inlines m_game.renderer().scene(). Re-score once scene_renderer() has its body.
+// claude@NOTE: target and base share five statements and a ten-block CFG. The
+// target hoists the inlined scene-renderer pointer before the visibility guards;
+// base reloads it inside each guarded add_model call.
 void player::add_models_to_scene( )
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
@@ -169,8 +193,9 @@ void player::add_models_to_scene( )
 		m_game_scene.scene_renderer( ).add_model( scene, m_target.model->m_render_model, m_target.transform );
 }
 
-// claude@NOTE: scene_renderer() cap - base_game_scene::scene_renderer() is a
-// stub returning NULL (sibling unit); see add_models_to_scene.
+// claude@NOTE: target and base share five statements and a ten-block CFG. The
+// target hoists the inlined scene-renderer pointer before the visibility guards;
+// base reloads it inside each guarded remove_model call.
 void player::remove_models_from_scene( )
 {
 	render::scene_ptr scene = m_game_scene.render_scene( );
@@ -1060,6 +1085,9 @@ void player::end_jump( )
 		m_current.physics_controller->end_jump( );
 }
 
+// claude@NOTE: both functions have the target three-statement source shape.
+// The target inlines bt_character_controller::set_crouch through the Bullet
+// crouch-state/list cleanup; base keeps the physics-owned wrapper call.
 void player::crouch( )
 {
 	m_target.physics_controller->set_crouch( true );
@@ -1344,10 +1372,9 @@ void `dynamic atexit destructor for 's_player_show_animations_command''( )
 }
 */
 
-// claude@NOTE: structure + the camera/UI gate (is_player_current) match. Byte residuals:
-//  - set_yaw_pitch_distance args are LTCG const-propagated to the s_death_camera_* globals
-//    inside the standalone callee (arg-passing residual);
-//  - set_input_mode third_person inline schedule.
+// claude@NOTE: target and base share the twelve-block camera/UI sequence. The
+// target retains the inlined is_player_current entry statement while base folds
+// it into the prologue; the final select_animations differs by LTCG tail-calling.
 void player::kill( const u32 current_time_in_ms )
 {
 	const bool is_local_player = m_game.network_client( ).is_player_current( id );
@@ -1449,12 +1476,9 @@ animation::callback_return_type_enum empty_callback( animation::animation_callba
 	return animation::callback_return_type_call_me_again;
 }
 
-// claude@NOTE: structure correct (2 stmts: m_current subscribe with the passed
-// callback, m_target subscribe with empty_callback). Capped because
-// animation::animation_player::subscribe is itself a STUB in the animation module -
-// the empty body DCE-collapses the call, leaving only the empty_callback boost::function
-// construct/destruct. Pairs once animation_player::subscribe is bodied (like
-// unsubscribe_animation_player's note).
+// claude@NOTE: both overloads have the target two statements and ten-block CFG.
+// Their three-byte size residual is argument/register scheduling around the two
+// subscribe calls and the temporary empty_callback boost::function.
 void player::subscribe_animation_player(
 	pcstr			channel_id,
 	boost::function< enum animation::callback_return_type_enum( animation::animation_callback_params& ) > const&	callback,
@@ -1480,9 +1504,6 @@ void player::subscribe_animation_player(
 	m_target.animation_player.subscribe( channel_id, empty_callback, callback_uid, animation, animated_object );
 }
 
-// claude@NOTE: capped on animation::animation_player::unsubscribe being a stub
-// (carcass, no body) in the animation module - both calls inline to nothing in
-// our base (0 stmts). Re-score once animation_player::unsubscribe has its body.
 void player::unsubscribe_animation_player( pcstr channel_id, pcvoid callback_uid )
 {
 	m_current.animation_player.unsubscribe( channel_id, callback_uid );
