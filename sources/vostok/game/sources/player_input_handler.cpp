@@ -35,6 +35,9 @@ extern bool		g_mouse_invert;
 {
 }
 
+// claude@NOTE: target inlines all three fixed_vector<pair<...>>::push_back sites and
+// shares their null-end tail; base inlines two and calls the third. Explicit pair
+// construction emits the same base CFG, so revisit only after compiler context changes.
 bool player_input_handler::on_keyboard_action(
 	input::world* const				input_world,
 	input::enum_keyboard			key,
