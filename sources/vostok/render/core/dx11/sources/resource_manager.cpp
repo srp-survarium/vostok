@@ -607,18 +607,17 @@ shader_constant_table* resource_manager::create_const_table(
 	shader_constant_table const& proto
 )
 {
-	// FUNCTION BODY[0x5622c0]
 	shader_constant_table new_table( proto);
 
 	new_table.apply_bindings( m_const_bindings);
 
-	for ( set<shader_constant_table*, constant_table_predicate>::iterator it = m_const_tables.begin(); it != m_const_tables.end(); ++it)
-		if( identity((*it)->equal( new_table) && g_enable_resource_sharing))
-			return *it;
+	const_tables_type::iterator const found = m_const_tables.find( &new_table );
+	if( found != m_const_tables.end( ) )
+		return *found;
 
 	shader_constant_table* const created_table = NEW( shader_constant_table)( new_table);
-	created_table->mark_registered();
 	m_const_tables.insert( created_table);
+	created_table->mark_registered();
 
 	return created_table;
 }
@@ -685,14 +684,13 @@ res_texture* resource_manager::create_texture(
 		return load_texture( physical_name, parent, mip_level_cut, use_pool, load_async, use_converter, num_last_mips_used);
 }
 
-static pcstr resources_textures_converted_string	=	"resources.converted/textures/";
+static pcstr resources_textures_sources_string		=	"resources.sources/textures/";
 static pcstr resources_textures						=	"resources/textures/";
 
 static void fix_texture_name( fs_new::virtual_path_string& str )
 {
-	// FUNCTION BODY[0x560e90]
+	change_substring(&str, resources_textures_sources_string, "");
 	change_substring(&str, resources_textures, "");
-	change_substring(&str, resources_textures_converted_string, "");
 	fs_new::virtual_path_string::size_type pos = str.rfind('.');
 	if (pos!=fs_new::virtual_path_string::npos)
 		str.set_length(pos);
@@ -1462,14 +1460,13 @@ void resource_manager::release( res_declaration const* dcl )
 #line 1458
 res_signature* resource_manager::create_signature( ID3D10Blob* signature )
 {
-	// FUNCTION BODY[0x5614e0]
-	for ( set<res_signature*, compare_predicate<res_signature> >::iterator it = m_signatures.begin(); it != m_signatures.end(); ++it)
 	{
-		if( identity((*it)->equal( signature) && g_enable_resource_sharing))
-			return *it;
+		res_signature descriptor( signature );
+		signatures_type::iterator const found = m_signatures.find( &descriptor );
+		if( found != m_signatures.end( ) )
+			return *found;
 	}
 
-	// Create _new
 	res_signature* new_signature = NEW( res_signature)( signature);
 	new_signature->mark_registered();
 	m_signatures.insert( new_signature);
@@ -1498,16 +1495,13 @@ res_input_layout* resource_manager::create_input_layout(
 	res_signature const* signature
 )
 {
-	// FUNCTION BODY[0x562120]
-	// Search equal code
-	for ( set<res_input_layout*, compare_predicate<res_input_layout> >::iterator it = m_input_layouts.begin(); it != m_input_layouts.end(); ++it)
 	{
-		res_input_layout* layout = *it;
-		if( identity(layout->equal( decl, signature) && g_enable_resource_sharing))
-			return layout;
+		res_input_layout descriptor( decl, signature );
+		input_layouts_type::iterator const found = m_input_layouts.find( &descriptor );
+		if( found != m_input_layouts.end( ) )
+			return *found;
 	}
 
-	// Create _new
 	res_input_layout* new_layout = NEW( res_input_layout)( decl, signature);
 	new_layout->mark_registered();
 	m_input_layouts.insert( new_layout);
@@ -1615,10 +1609,7 @@ void resource_manager::release( render_target const* rt )
 	{
 		m_rt_registry.erase( it);
 		DELETE( rt, resource_manager_call_destructor_predicate());
-		return;
 	}
-
-	LOG_ERROR( "! ERROR: Failed to find render-target '%s'", rt->name().c_str());
 }
 
 shader_constant_buffer* resource_manager::create_constant_buffer(
@@ -1628,17 +1619,12 @@ shader_constant_buffer* resource_manager::create_constant_buffer(
 	u32 size
 )
 {
-	// FUNCTION BODY[0x561d90]
-	for ( set<shader_constant_buffer*, constant_buffer_predicate>::iterator it = m_const_buffers.begin(); it != m_const_buffers.end(); ++it)
-	{
-		shader_constant_buffer*	buf		= *it;
-		if( buf->type()		== type
-			&& buf->size()		== size
-			&& buf->dest()		== dest
-			&& buf->name()		== name
-			&& g_enable_resource_sharing)
-				return buf;
-	}
+	shader_constant_buffer new_buffer( name, dest, type, size );
+	const_buffers_type::iterator const found = m_const_buffers.find( &new_buffer );
+	if( found != m_const_buffers.end( ) )
+		return *found;
+
+	++cb_created;
 	shader_constant_buffer* cbuffer = NEW( shader_constant_buffer)( name, dest, type, size);
 
 	cbuffer->mark_registered();
