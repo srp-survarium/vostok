@@ -46,7 +46,10 @@ protected:
 			void		transfer_artefact			( inventory_holder* holder );
 			void		artefact_spawned			( resources::queries_result& data );
 
-private:
+public:
+	virtual				~artefact_container_core	( ) { }
+
+protected:
 	/* 0x0000 */	/* usable_object */
 	/* 0x0020 */	artefact_base_ptr			m_artefact;
 	/* 0x0024 */	u32							m_artefact_search_time_ms;

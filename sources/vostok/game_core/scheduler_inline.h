@@ -36,7 +36,7 @@ inline void	scheduler::change_status( scheduler::identifier* identifier, schedul
 //   back()@65, m_id+m_callback+return@67). /Od source reproduces the readable
 //   statement structure but not the optimizer's collapsed line table or idiv->magic
 //   codegen; byte residual is the /Od-vs-optimized leaf ceiling, not source-steerable.
-inline scheduler::record& scheduler::register_object( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
+inline scheduler::record& scheduler::register_object( scheduler::identifier* identifier, scheduler::callback const& callback, const bool active )
 {
 	identifier->m_active = active;
 	scheduler::records_type& records = objects( identifier );
@@ -50,10 +50,10 @@ inline scheduler::record& scheduler::register_object( scheduler::identifier* ide
 	return record;
 }
 
-inline void scheduler::register_on_frame( scheduler::identifier* identifier, scheduler::callback const& callback, bool active )
+inline void scheduler::register_on_frame( scheduler::identifier* const identifier, scheduler::callback const& callback, const bool active )
 {
 	scheduler::record& record = register_object( identifier, callback, active );
-	record.m_type			  = 0;
+	record.m_update_delta	  = u32(-1);
 	record.m_max_update_count = 0;
 	record.m_last_update_time = 0;
 }
@@ -61,10 +61,10 @@ inline void scheduler::register_on_frame( scheduler::identifier* identifier, sch
 inline void scheduler::register_for_update(
 	scheduler::identifier*		identifier,
 	scheduler::callback const&	callback,
-	bool						active,
-	u32							update_delta,
-	u32							max_update_count,
-	u32							time_start_from
+	const bool					active,
+	const u32					update_delta,
+	const u32					max_update_count,
+	const u32					time_start_from
 )
 {
 	scheduler::record& record  = register_object( identifier, callback, active );
