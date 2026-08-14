@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Remeasured reviewed animation-before-game LTCG observation on newest xray with current target artifacts; retained only when it improves current hash-scoped MAX.",
+  "link_perturbation": "animation immediately before game at game's canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "7b6942b03e09078ab6cd42f157ebaa9d5c8217cbb1efa5b67e68c2328f2b6c16",
+  "base_index_sha256": "8ca4732eafebff127a0f3a9a31eeda30921dab49aa003b8dcd14b6de543ab897",
+  "candidate_exe_sha256": "6447c6362c11c961fbb88585f140f8d7e9ad39acd95c1eaae20a57260624f210",
+  "candidate_pdb_sha256": "85d516d046f2b5ef4fe894859c10436fa14ca52cddb163826d0b0545c9bf53cb",
+  "functions": [
+    {
+      "mangled": "?get_object_transform@bone_matrices_computer@animation@vostok@@QBE?AVfloat4x4@math@3@XZ",
+      "module": "animation",
+      "expected_hash": "791e5a4ba60d.f5589a1034e15a74.c952231a1748aa2b",
+      "expected_fuzzy_pct": 84.339714,
+      "review": "The reviewed object-transform composition source is unchanged; this link state improves only compiler scheduling and register allocation."
+    }
+  ]
+}

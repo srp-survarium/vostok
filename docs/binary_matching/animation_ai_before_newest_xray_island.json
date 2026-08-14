@@ -1,0 +1,32 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Remeasured reviewed AI-before-animation LTCG observations on newest xray with current target artifacts. Rows combine prior reviewed manifests and retain only fresh MAX improvements.",
+  "link_perturbation": "AI immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "candidate_exe_sha256": "3974bedf3993951d6d5365d790066b94fa0f329f35571ca6484e3c17c21e3090",
+  "candidate_pdb_sha256": "1c08dd3b190ca7fdfd1142dcf430fef730500df4a3861eef397374baf9fecf2a",
+  "report_sha256": "5d94c69317b5900e07e8379f8da6d0c6acbce104b7acd12d0a7f6b93e1f6f1de",
+  "base_index_sha256": "973b36c3c2fb614f062f5bcab29f30d18e0792e2e12e38a51145ba715662a885",
+  "functions": [
+    {
+      "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "f2a4cadb8ef8.f5589a1034e15a74.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are byte-exact with STRUCTURE MATCH at 28 statements and the same two named locals."
+    },
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.f5589a1034e15a74.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 96.81396,
+      "review": "Unchanged reviewed source restores the AI-before-animation compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "?translate_query@skeleton_animation_cook@animation@vostok@@EAEXAAVquery_result_for_cook@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "6798fb401816.f5589a1034e15a74.52ab106758f85ff0",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Fresh unchanged-source isolated link is byte-exact; statement structure is audited separately before import."
+    }
+  ]
+}

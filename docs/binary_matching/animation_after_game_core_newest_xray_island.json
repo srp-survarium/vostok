@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Remeasured reviewed animation-immediately-after-game_core LTCG observations on newest xray with current target artifacts; retained only when they improve current hash-scoped MAX.",
+  "link_perturbation": "animation moved to the original late game_core slot, immediately after game_core; all other libraries and link flags preserved",
+  "report_sha256": "0dc35834c23f0c2d697bcda9faa16b6f6dbc2bc8d9f365debfb0daca1b353a35",
+  "base_index_sha256": "4065f312b9fd6fd358ceb47f0fef123b6ffc4ba0638cb1920a2990f4b17b61bc",
+  "candidate_exe_sha256": "478a3a8771cea4992936d4439b74add266190630bf6d8d92e7387e1da8e1cdef",
+  "candidate_pdb_sha256": "decfedaf9770090f753271f212c047f11c8218ad537ca133d7a77ddd308cf8de",
+  "functions": [
+    {
+      "mangled": "?request_items@animation_collection_cook@animation@vostok@@AAEXV?$resource_ptr@Vbinary_config@configs@vostok@@Vunmanaged_intrusive_base@resources@3@@resources@3@ABVbinary_config_value@configs@3@QAVquery_result_for_cook@53@@Z",
+      "module": "animation",
+      "expected_hash": "95b6a06ad8d0.f5589a1034e15a74.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 91.556854,
+      "review": "Target and candidate retain the same 28-statement structure; the sole measured region drift is five bytes in the final request construction."
+    }
+  ]
+}

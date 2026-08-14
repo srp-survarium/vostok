@@ -1,0 +1,25 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Fresh current-target review of two additional partial animation maxima exposed by the newest-xray render_facade-before-animation state. Both preserve target statement quantity and named-local structure.",
+  "link_perturbation": "render_facade immediately before animation at animation\u2019s canonical link position; all other libraries and link flags preserved",
+  "report_sha256": "7ba763fb36295d57dff573f6e9791478c8258eb306c93a8f7ace95ad80095d86",
+  "base_index_sha256": "06712bc8eb0830f174b0ae9deecf81cc088c30f2784a1f55dd568864b3189f6f",
+  "candidate_exe_sha256": "92853dbc692869cb2ffa9a4fc51d3533a1ce2c57d050db386757fb371973a982",
+  "candidate_pdb_sha256": "c74c4c261703cc91294cd85918c179ab2630d2d3fd7aa89f4f6d04f25c3aecbe",
+  "functions": [
+    {
+      "mangled": "?compact_callbacks@animation_player@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "17c3aa21b1de.f5589a1034e15a74.74bcbfff2a9223b8",
+      "expected_fuzzy_pct": 94.19081,
+      "review": "Fresh-target review: target and candidate are both 873 bytes with equal statement counts and the same named-local multiset; residual is instruction scheduling/selection, so this is partial MAX evidence."
+    },
+    {
+      "mangled": "?subscribe@animation_player@animation@vostok@@QAEXPBDABV?$function@$$A6A?AW4callback_return_type_enum@animation@vostok@@AAUanimation_callback_params@23@@Z@boost@@PBXABV?$resource_ptr@Vmanaged_resource@resources@vostok@@Vmanaged_intrusive_base@23@@resources@3@EQBX@Z",
+      "module": "animation",
+      "expected_hash": "f37b04536cc3.f5589a1034e15a74.74bcbfff2a9223b8",
+      "expected_fuzzy_pct": 93.97619,
+      "review": "Fresh-target review: target and candidate retain equal statement counts and no named locals; candidate is 529 bytes versus target 527, so this is partial MAX evidence for the complete reconstructed body."
+    }
+  ]
+}

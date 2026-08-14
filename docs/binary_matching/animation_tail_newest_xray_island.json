@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Remeasured reviewed animation-at-tail LTCG observation on newest xray with current target artifacts; retained only when it improves the current hash-scoped MAX.",
+  "link_perturbation": "animation moved immediately after scaleform at the end of the static-library list; all other libraries, object inputs, and link flags preserved",
+  "report_sha256": "357424d640380c3fa08cbaf257bfe20237d0d657e8455d47daa252c91df22ea3",
+  "base_index_sha256": "53cf31aea7a6a894744a8b94ac93dc932da9fb328f6eb69b45f26977cbaa8b53",
+  "candidate_exe_sha256": "b0e7461ce0b9bbfd5857793c5adbbd074c977a621c25136f1dd59079ea0c8f3c",
+  "candidate_pdb_sha256": "62dcf0fdb2b461a1f5b191acaafa05d4f1b3207f8953a1b8a8a733d01bbcde36",
+  "functions": [
+    {
+      "mangled": "?delete_resource@animation_collection_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "16c5b379702e.f5589a1034e15a74.af53cad05cbcfedc",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 42 bytes with the identical virtual resource destructor, null-guarded UNMANAGED_FREE helper call, ret 4 sequence, and 12/27/3-byte statement partition. The current two-operation source body is unchanged and target-faithful."
+    }
+  ]
+}

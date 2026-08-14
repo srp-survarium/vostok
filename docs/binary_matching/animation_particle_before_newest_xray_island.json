@@ -1,0 +1,18 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Remeasured reviewed particle-before-animation LTCG observation on newest xray with current target artifacts; retained only when it improves the current hash-scoped MAX.",
+  "link_perturbation": "particle moved immediately before animation at animations canonical link position; all other libraries, object inputs, and link flags preserved",
+  "report_sha256": "d352ce9fc81dac51300e987f64d5e6479e0ac258363f3cc74a6e15f41864acad",
+  "base_index_sha256": "5b3ea62552b619fc142d793cccf503a399d8735d9ec9a1a566f12302adbbbd31",
+  "candidate_exe_sha256": "d1d23cc9540e423efd03a1d82d480cc68930a149bd7dc3bbccfbd250d0258432",
+  "candidate_pdb_sha256": "057241bbd334ef285a89471028627ee3c7ad8f4d1e2a35a26813f0c9e69375a8",
+  "functions": [
+    {
+      "mangled": "?delete_resource@single_animation_cook@animation@vostok@@UAEXPAVresource_base@resources@3@@Z",
+      "module": "animation",
+      "expected_hash": "05ebb7be02dd.f5589a1034e15a74.35840df56a33af4d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are both 33 bytes with identical 11-instruction destructor and UNMANAGED_DELETE sequences and a one-statement PDB partition. The current two-operation source body is unchanged and target-faithful."
+    }
+  ]
+}
