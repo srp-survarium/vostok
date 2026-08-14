@@ -22,7 +22,7 @@ stage_debug::stage_debug( renderer* in_renderer, renderer_context* context ) :
 	m_sphere_geometry( 32, 32 )
 {
 	effect_manager::ref( ).create_effect<effect_debug_environment_probe_preview>( &m_debug_environment_probe_preview_effect );
-	m_preview_mip_index_parameter = backend::ref( ).register_constant_host( "preview_mip_index", rc_float );
+	m_preview_mip_index_parameter = backend::ref( ).register_constant_host( "preview_mip_index", rc_int );
 }
 
 stage_debug::~stage_debug( )
