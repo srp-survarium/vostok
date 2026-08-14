@@ -459,10 +459,12 @@ void render_model_cook::on_model_settings_loaded(
 }
 
 // verts+indices
+// Retail line records preserve source excluded from the Master Gold configuration.
 void render_model_cook::on_subresources_loaded(
 	resources::queries_result& data,
 	cook_intermediate_data* cook_data
 )
+#line 465
 {
 	if (!data.is_successful())
 	{
@@ -493,6 +495,7 @@ void render_model_cook::on_subresources_loaded(
 
 	for(u32 model_index=0; model_index<num_models; model_index++)
 	{
+#line 497
 		cook_data->assets[model_index].converted_model_buffer = data[request_index].get_managed_resource( );
 		++request_index;
 
@@ -505,19 +508,19 @@ void render_model_cook::on_subresources_loaded(
 		resources::pinned_ptr_const<u8> bind_pose_ptr(data[request_index].get_managed_resource( ));
 		memory::reader bones_reader		( bind_pose_ptr.c_ptr(), bind_pose_ptr.size() );
 
+#line 509
 		skeleton_render_model* skeleton_model = static_cast_checked<skeleton_render_model*>(model);
 		skeleton_model->load_bones		( bones_reader );
 	}
 
+#line 515
 	cook_data->render_model_data_ready = true;
-
 	if (cook_data->material_data_ready)
-	{
 		query_materail_effects			( cook_data );
-	}
 
+#line 520
 	fs_new::virtual_path_string material_settings_path;
-	material_settings_path.assignf("%s/settings", cook_data->root_model_path.c_str() );
+	material_settings_path.assignf("resources/models/%s/settings", cook_data->root_model_path.c_str() );
 
 	resources::query_resource(
 		material_settings_path.c_str(),
@@ -530,6 +533,7 @@ void render_model_cook::on_subresources_loaded(
 
 }
 
+#line 533
 void render_model_cook::on_materials_loaded(
 	resources::queries_result& data,
 	cook_intermediate_data* cook_data
