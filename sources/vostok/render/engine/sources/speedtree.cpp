@@ -98,6 +98,8 @@ void finalize_speedtree( )
 void print_speedtree_errors( )
 {
 	// FUNCTION BODY[0x75a910]
+	// Retail line records include four source lines stripped by the Master Gold configuration.
+#line 105
 	const char* pError = SpeedTree::CCore::GetError( );
 	while ( pError )
 	{
