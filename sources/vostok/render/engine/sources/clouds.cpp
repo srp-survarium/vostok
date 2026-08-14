@@ -27,7 +27,7 @@ clouds::clouds( ) :
 
 void clouds::generate_cloud_right( u32 key_index )
 {
-	m_cloud_simulation_2->generate( get_next_key_of( key_index ), -m_sun_direction );
+	m_cloud_simulation_2->generate( m_keys[get_next_index_of( key_index )], -m_sun_direction );
 }
 // 10 target lines are likely retail-compiled-out source.
 void clouds::set_editor_mode( bool value )
@@ -174,7 +174,7 @@ void clouds::set_time( float time )
 			{
 				m_cloud_simulation_0->generate( m_keys[m_current_key_0], -m_sun_direction );
 				m_cloud_simulation_1->generate( m_keys[m_current_key_1], -m_sun_direction );
-				m_cloud_simulation_2->generate( get_next_key_of( m_current_key_1 ), -m_sun_direction );
+				m_cloud_simulation_2->generate( m_keys[get_next_index_of( m_current_key_1 )], -m_sun_direction );
 			}
 
 			m_is_updated = true;
