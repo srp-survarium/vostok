@@ -27,11 +27,13 @@
 namespace survarium {
 
  human_npc_cook::human_npc_cook( game_world& world ) :
-	translate_query_cook( resources::human_npc_class, reuse_true, use_any_thread_id ),
+	translate_query_cook( resources::human_npc_class, reuse_true, use_current_thread_id ),
 	m_game_world( world )
 {
 }
 
+// claude@NOTE: Target keeps creation_data_from_user().c_ptr() out-of-line; base inlines it.
+// The remaining query construction difference is LTCG argument scheduling.
 void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	configs::binary_config_value* t_object	= ( configs::binary_config_value* )( parent.creation_data_from_user().c_ptr() );
@@ -60,6 +62,8 @@ void human_npc_cook::translate_query( resources::query_result_for_cook& parent )
 	);
 }
 
+// claude@NOTE: Target keeps strip_pointer( g_allocator ) out-of-line on this delete path;
+// base inlines it through VOSTOK_DELETE_IMPL.
 void human_npc_cook::delete_resource( resources::resource_base* resource )
 {
 	VOSTOK_DELETE_IMPL					( g_allocator, resource );
@@ -80,15 +84,8 @@ void human_npc_cook::on_queried_data_received( resources::queries_result& data )
 	on_npc_options_received								( config->get_root(), *parent );
 }
 
-// claude@NOTE: STRUCTURE reconstruction (target 15 stmts / base 14, near-match). Statement
-// order + types follow the recorded source lines (70-119). Two residual gaps vs target: the
-// L99 model-request slot and the L119 temporary-teardown tail show as TRGT_ONLY (the variant /
-// request-array temporaries are destroyed differently under /Od vs the gold inline), and the
-// sound statement (L85) is reconstructed as get_logic_world_user().register_receiver - the
-// exact world_user/sound_scene spelling is inferred from human_npc::enable, not yet confirmed.
-// Residual otherwise is the inline-vs-call wall (variant<32>::set / boost::bind / query_resources
-// inlined gold-side) + the variant-storage alignment (and esp).
-// sushi@TODO: confirm the L85 sound statement spelling and the L99/L119 temporary teardown.
+// claude@NOTE: Target keeps the creation-data c_ptr and allocator strip_pointer helpers
+// out-of-line. Base inlines them; the remaining callback CFG and request setup agree.
 void human_npc_cook::on_npc_options_received(
 	configs::binary_config_value const&		config_value,
 	resources::query_result_for_cook&		parent
@@ -106,9 +103,9 @@ void human_npc_cook::on_npc_options_received(
 
 	pcstr space_graph_path								= attributes["animation_space_graph"];
 
-	m_game_world.get_game().get_sound_world().get_logic_world_user().register_receiver( m_game_world.get_sound_scene(), *human );
-
 	ai::brain_unit_cook_params cook_brain_unit_params;
+	cook_brain_unit_params.sound_world_user				= &m_game_world.get_game().get_sound_world().get_logic_world_user();
+	cook_brain_unit_params.sound_scene					= m_game_world.get_sound_scene();
 	cook_brain_unit_params.npc							= human;
 
 	resources::user_data_variant brain_unit_params;
@@ -142,20 +139,14 @@ void human_npc_cook::on_npc_options_received(
 	);
 }
 
-// claude@NOTE: STRUCTURE reconstruction (target 17 stmts / base 15, near-match). The data[i]
-// extraction order + set_* calls follow the structure view (resource indices from the
-// queries_result member offsets in the asm). Residual structural gaps: target has 2 extra
-// statements after the is_successful guard (L127/L129) and the resource set_* / set_unmanaged
-// grouping diverges (BASE_ONLY set_model/set_brain_unit/set_unmanaged) - the gold inline fuses
-// the intrusive_ptr<>::set + refcount xadd into the data-extraction statements where our /Od
-// emits them as separate calls. Otherwise the inline-vs-call wall + the config-copy alignment.
-// sushi@TODO: recover the 2 L127/L129 statements + the exact resource set_* statement grouping.
+// claude@NOTE: PDB locals and line-record counts agree. The remaining CFG difference is
+// the target/base resource_ptr cast temporary RVO choice, plus the c_ptr inline boundary.
 void human_npc_cook::on_subresources_loaded( resources::queries_result& data, human_npc* const human )
 {
-	configs::binary_config_value human_attributes_config	=
-		( *( configs::binary_config_value* )( data.get_parent_query()->creation_data_from_user().c_ptr() ) )["attributes"];
-
 	resources::query_result_for_cook* const parent		= data.get_parent_query();
+
+	configs::binary_config_value* const project_config	= ( configs::binary_config_value* )( parent->creation_data_from_user().c_ptr() );
+	configs::binary_config_value human_attributes_config	= ( *project_config )["attributes"];
 
 	if ( !data.is_successful() )
 	{
@@ -163,7 +154,9 @@ void human_npc_cook::on_subresources_loaded( resources::queries_result& data, hu
 		return;
 	}
 
-	resources::unmanaged_resource_ptr brain_unit_ptr	= data[1].get_unmanaged_resource();
+	resources::unmanaged_resource_ptr brain_unit_ptr	= static_cast_resource_ptr< resources::unmanaged_resource_ptr >( data[0].get_unmanaged_resource() );
+
+	human->set_brain_unit								( brain_unit_ptr );
 
 	animated_model_instance_ptr model_ptr				= static_cast_resource_ptr< animated_model_instance_ptr >( data[1].get_unmanaged_resource() );
 
@@ -177,9 +170,10 @@ void human_npc_cook::on_subresources_loaded( resources::queries_result& data, hu
 
 	human->set_animation_space_graph					( new_graph );
 
-	human->set_brain_unit								( brain_unit_ptr );
-
-	parent->set_unmanaged_resource						( human, resources::nocache_memory, 0x2E0 );
+	parent->set_unmanaged_resource						(
+		resources::unmanaged_resource_ptr( human ),
+		resources::memory_usage_type( resources::nocache_memory, sizeof( human_npc ) )
+	);
 
 	parent->finish_query								( result_success );
 
