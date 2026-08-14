@@ -158,11 +158,6 @@ void human_npc::enable( )
 
 	m_physics_world.add					( m_model_instance->m_damage_collision->get_rigid_body(), 0x40, 0xffff );
 	m_renderer.scene( ).add_model		( m_scene, m_model_instance->m_render_model->m_model, m_transform );
-	// claude@NOTE: this statement (target line 159, 0x19 bytes) is dropped from our object:
-	// animation_player::set_object_transform inlines its body, whose mixing::n_ary_tree::
-	// set_object_transform( pcvoid, float4x4 const& ) is an empty STUB in our tree, so the
-	// call inlines to nothing. Reappears (and enable pairs higher) once that animation-module
-	// function gets its real body. Same wall caps set_transform.
 	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
 
 	m_feet_target						= get_position();
@@ -295,13 +290,8 @@ void human_npc::set_transform( float4x4 const& transform )
 	m_model_instance->m_animation_player->set_object_transform	( m_transform, 0 );
 }
 
-// claude@NOTE: structure recovered from target (9 stmts: clamp dt, if(!paused){move/
-// set_position/damage tick/anim tick}, if(debug_draw_allowed) draw, store last tick).
-// time_delta is a named local here but the target records only the 2 params (locals
-// are structure) - the clamp is an inline temp/hoist in the original. Inline it once a
-// build is possible (the branch can't relink the EXE: pre-existing animation-module
-// STUB n_ary_tree_transition_tree_constructor::computed_tree returns no value ->
-// C4716/LNK1257, so no base side to diff against on this worktree).
+// Matching wall: target LTCG eliminates the position temporary and specializes draw's
+// two member arguments away; target and base otherwise have the same statements and flow.
 void human_npc::tick( const u32 current_time_in_ms, const bool is_game_paused )
 {
 	const u32 time_delta		= current_time_in_ms > m_last_tick_time_in_ms ? current_time_in_ms - m_last_tick_time_in_ms : 0;
@@ -320,13 +310,15 @@ void human_npc::tick( const u32 current_time_in_ms, const bool is_game_paused )
 	m_last_tick_time_in_ms		= current_time_in_ms;
 }
 
+// Matching wall: target update_skeleton uses a render-LTCG register convention.
 void human_npc::render_model( )
 {
 	animation::animation_player* animation_player	= m_model_instance->m_animation_player;
+	animation::skeleton_ptr skeleton					= m_model_instance->m_physics_model->m_skeleton;
 
-	u32 const bone_matrices_count	= m_model_instance->m_physics_model->m_skeleton->get_non_root_bones_count();
+	u32 const bone_matrices_count	= skeleton->get_non_root_bones_count();
 	float4x4* const bone_matrices	= static_cast< float4x4* >( ALLOCA( bone_matrices_count * sizeof( float4x4 ) ) );
-	animation_player->compute_bones_matrices	( *m_model_instance->m_physics_model->m_skeleton, bone_matrices, bone_matrices + bone_matrices_count, 0, NULL );
+	animation_player->compute_bones_matrices	( *skeleton, bone_matrices, bone_matrices + bone_matrices_count, 0, NULL );
 
 	m_renderer.scene( ).update_model	( m_scene, m_model_instance->m_render_model->m_model, m_transform );
 	m_renderer.scene( ).update_skeleton	( m_model_instance->m_render_model->m_model, bone_matrices, bone_matrices_count );
@@ -473,15 +465,12 @@ void human_npc::move_to_position( ai::movement_target const* const target )
 	m_animations_selector->set_target	( *m_current_movement_target );
 }
 
-// claude@NOTE: structure + body correct; residual is the LOG-callback ctor inline-vs-call
-// wall (log-callback-ctor-schedule.md): target inlines the boost::function ctor at block
-// entry, our inline-budget here out-of-lines it (call boost::function::function), same as
-// on_movement_end. Also the pushed __LINE__ immediate differs (source layout). Non-steerable.
+// Retail passes the path object itself through LOG_INFO; only the embedded source line differs.
 void human_npc::on_animation_end( )
 {
 	if ( m_current_animation )
 	{
-		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name.c_str() );
+		LOG_INFO						( "%s: stop playing animation %s", get_name(), m_current_animation->name );
 		m_ai_world.on_animation_finish	( m_current_animation, m_brain_unit );
 		m_current_animation				= 0;	m_ai_world.select_new_goal( m_brain_unit );
 	}
@@ -527,9 +516,7 @@ void human_npc::hit(
 	);
 }
 
-// claude@NOTE: structure + body correct (3 stmts match); residual is the LOG-callback ctor
-// inline-vs-call wall (log-callback-ctor-schedule.md) + the pushed __LINE__ immediate.
-// Non-steerable LTCG inline-budget; same wall as on_animation_end.
+// Matching wall: only LOG_INFO's embedded original source line differs.
 void human_npc::on_movement_end( )
 {
 	if ( m_current_movement_target )
@@ -544,15 +531,13 @@ void human_npc::on_movement_end( )
 	}
 }
 
-// claude@NOTE: structure matches (m_current_animation=target; animation_emitter built;
-// set_target; LOG). The LOG's 2nd %s arg (animation name) is a guess pending the asm
-// diff - the emitter local is built but only the name string is logged.
+// Retail passes the path object by value; set_target retains an animation-LTCG register-argument wall.
 void human_npc::play_animation( ai::animation_item const* const target )
 {
 	m_current_animation					= target;
 	animation::animation_expression_emitter_ptr animation_emitter	= static_cast_resource_ptr< animation::animation_expression_emitter_ptr >( target->animation );
 	m_animations_selector->set_target	( *m_current_animation );
-	LOG_INFO							( "%s: playing animation %s", get_name(), m_current_animation->name.c_str() );
+	LOG_INFO							( "%s: playing animation %s", get_name(), m_current_animation->name );
 }
 
 void human_npc::tick_animation_player( const u32 current_time_in_ms )
@@ -563,30 +548,22 @@ void human_npc::tick_animation_player( const u32 current_time_in_ms )
 	render_model				( );
 }
 
-// claude@NOTE: structure recovered (ray_test down, if(hit) set feet_target, if(feet!=pos)
-// lerp toward feet by last_frame_time*speed/dist clamped to 1 -> set_translation). Target
-// records only `result` as a named local; `offset`/`factor` here are phantom locals to
-// inline once buildable. Ray length (2.f) and y-offset (+1.f) are immediate-value guesses
-// (asm folds them into a shared rdata constant pool, value not resolvable via pdb_fetch);
-// confirm against the diff. Blocked on the EXE-relink wall (see tick note).
 void human_npc::up_to_terrain( )
 {
-	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test(
-		float3( get_position().x, get_position().y + 1.f, get_position().z ),
-		float3( 0.f, -1.f, 0.f ),
-		2.f,
-		0x20,
-		2
-	);
+	// Matching wall: target scalar-replaces position and result; faithful value/reference
+	// forms either retain aggregate stack slots or lose the target's position statement.
+	float3 const position			= m_transform.c.xyz( );
+
+	physics::closest_ray_result result	= m_game_world.get_physics_world( )->ray_test( float3( position.x, position.y + 1.f, position.z ), float3( 0.f, -1.f, 0.f ), 2.f, 0x20, 2 );
 
 	if ( result.object )
 		m_feet_target			= result.hit_point_world;
 
-	if ( m_feet_target != get_position() )
+	if ( m_feet_target != position )
 	{
-		float3 const offset		= m_feet_target - get_position();
-		float const factor		= math::min( m_game_world.get_game().last_frame_time() * m_feet_adjustment_speed / length( offset ), 1.f );
-		set_translation			( create_translation( get_position() + offset * factor ) );
+		float3 const offset		= m_feet_target - position;
+		float const factor		= math::min( m_game_world.get_game().last_frame_time() / ( length( offset ) / m_feet_adjustment_speed ), 1.f );
+		set_translation			( create_translation( position + offset * factor ) );
 	}
 }
 
