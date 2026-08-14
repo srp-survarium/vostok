@@ -13,6 +13,8 @@
 
 namespace survarium {
 
+extern float	g_mouse_sensitivity;
+
  lobby_camera::lobby_camera( base_game_scene& w ) :
 	game_camera( w ),
 	m_target_point( 0.0f, 1.5f, 0.0f ),
@@ -66,16 +68,9 @@ bool lobby_camera::on_mouse_key_action(
 	return false;
 }
 
-// claude@NOTE: PARKED on a cross-module wall. The body reads the namespace-scope
-// global survarium::g_mouse_sensitivity (?g_mouse_sensitivity@survarium@@3MA), whose
-// definition is owned by key_binder.cpp (still a stub TU); referencing it here would
-// leave it undefined at link, same wall as player_input_handler::on_mouse_move.
-// Recovered shape (10 stmts): if (!get_game_scene().is_mouse_over_ui()) m_z_mouse_axis
-// -= z * <epsilon>; if (!m_capture_move) return false; float2 render_window_size =
-// get_game_scene().get_game().engine().get_render_window_size(); then update m_yaw via
-// x*g_mouse_sensitivity*pi*<k> and m_pitch via (y/window)*... and (-z)*... ; return true.
-// Next step: match key_binder.cpp (defines g_mouse_sensitivity), then reconstruct.
-// STATE[STUB]
+// claude@NOTE: target and base share the five-block CFG and sole named local.
+// The target retains the horizontal-sensitivity statement and an 8-byte frame;
+// equivalent const/non-const declarations collapse into the later expressions here.
 bool lobby_camera::on_mouse_move(
 	input::world*		input_world,
 	s32					x,
@@ -83,7 +78,21 @@ bool lobby_camera::on_mouse_move(
 	s32					z
 )
 {
-	return false;
+	if ( !get_game_scene( ).is_mouse_over_ui( ) )
+		m_z_mouse_axis	-= float( z ) * math::epsilon_3;
+
+	if ( !m_capture_move )
+		return false;
+
+	float2 render_window_size = get_game_scene( ).get_game( ).engine( ).get_render_window_size( );
+
+	const float horizontal_sensitivity	= g_mouse_sensitivity * 0.1f;
+	float vertical_sensitivity			= ( render_window_size.y / render_window_size.x ) * horizontal_sensitivity * 0.95492965f;
+
+	m_rotation_delta.x	-= ( ( float( x ) / 180.0f ) * math::pi ) * horizontal_sensitivity;
+	m_rotation_delta.y	-= ( ( float( y ) / 180.0f ) * math::pi ) * vertical_sensitivity;
+
+	return true;
 }
 
 void lobby_camera::on_before_processing( input::world* input_world, const u32 current_time_in_ms )
@@ -109,10 +118,9 @@ void lobby_camera::on_deactivate( )
 {
 }
 
-// claude@NOTE: 14/14 statement STRUCTURE MATCH. Residual is a 0x10 frame-size delta:
-// the target folds the inline float3(m_pitch,0,0) temp into the freed mul4x3 output
-// area, shifting every later [esp+N] offset (and an edx/eax choice in the position
-// store) - an LTCG scheduling artifact, not source-steerable.
+// claude@NOTE: target and base share the 14-statement, nine-block structure.
+// The target reuses the first matrix-product area for the pitch rotation; base
+// reserves another 0x10-byte temporary area.
 void lobby_camera::tick( )
 {
 	m_yaw	+= m_rotation_delta.x;
