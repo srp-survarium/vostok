@@ -1,0 +1,25 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid replay of the recorded post-definition-order AI-before-animation observation after rebasing onto xray 604a9b1bd. Changed effective hashes and non-gaining rows are excluded.",
+  "link_perturbation": "AI immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "candidate_exe_sha256": "418bd660abb6a1e4952f93c81f0a21833dc2ea0c9d36e0f43f2e97caf6e27d8f",
+  "candidate_pdb_sha256": "9976652ae92ed53991419bad745cadb97d31f7aad7c3dde8adc2c0e542e6a7f5",
+  "report_sha256": "67b06264f77fd562af488b323699d4de04108c396cd15316a0b49a7bb183f029",
+  "base_index_sha256": "922e6e438f499ecbfc52746377c8793c6bb8cde9c87288ad2c43de28507b6f29",
+  "functions": [
+    {
+      "mangled": "?compute_buffer_size@n_ary_tree_converter@mixing@animation@vostok@@AAEXXZ",
+      "module": "animation",
+      "expected_hash": "f2a4cadb8ef8.a85b004293c06dd1.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are byte-exact with STRUCTURE MATCH at 28 statements and the same two named locals."
+    },
+    {
+      "mangled": "?remove_animations@n_ary_tree@mixing@animation@vostok@@AAEXI@Z",
+      "module": "animation",
+      "expected_hash": "91d3b5d2315a.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 96.81396,
+      "review": "Unchanged reviewed source restores the AI-before-animation compiler-context maximum under the current n-ary-tree TU hash."
+    }
+  ]
+}

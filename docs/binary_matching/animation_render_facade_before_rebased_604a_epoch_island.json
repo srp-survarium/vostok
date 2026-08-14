@@ -1,0 +1,74 @@
+{
+  "kind": "compiler-state-island",
+  "description": "Hash-valid replay of the recorded post-definition-order render_facade-before-animation observation after rebasing onto xray 604a9b1bd. Changed effective hashes and non-gaining rows are excluded.",
+  "link_perturbation": "render_facade immediately before animation at animation's canonical link position; all other libraries and link flags preserved",
+  "candidate_exe_sha256": "55294b998a6f3b14ea21420b48d7b5cdaf24d1e91b4edb92f593c7c14f5c63b2",
+  "candidate_pdb_sha256": "2a9ce6ea2042ae7cdc4727c0bd6a8b04f932f1231832401870dfd0443fa6adbc",
+  "report_sha256": "d9410863369a46cea8541b64e3a8564231b409bdfb92e148b6b3fae8ce4c4b6a",
+  "base_index_sha256": "6795a240bd56b96a4bfe3ecf965d87aa7078871e922f253b8f8a712923225ebb",
+  "functions": [
+    {
+      "mangled": "?update_animation_time@n_ary_tree@mixing@animation@vostok@@CAXAAUanimation_state@234@@Z",
+      "module": "animation",
+      "expected_hash": "e69fbde4421a.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 84.66102,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "?accumulate_object_movement@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@MI@Z",
+      "module": "animation",
+      "expected_hash": "dc4971413022.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 90.13095,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "??1bone_matrices_computer@animation@vostok@@QAE@XZ",
+      "module": "animation",
+      "expected_hash": "65629376fbd1.a85b004293c06dd1.c952231a1748aa2b",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are byte-exact with STRUCTURE MATCH at two statements."
+    },
+    {
+      "mangled": "?process_event@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@I@Z",
+      "module": "animation",
+      "expected_hash": "cd4edbc40efe.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 81.93456,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "?update_event_iterators_and_dispatch_callbacks@n_ary_tree@mixing@animation@vostok@@AAE_NIAAPAUsubscribed_channel@34@AA_N@Z",
+      "module": "animation",
+      "expected_hash": "e560232013d7.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 86.11009,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "?set_object_transform@n_ary_tree@mixing@animation@vostok@@AAEXAAVn_ary_tree_animation_node@234@@Z",
+      "module": "animation",
+      "expected_hash": "070825d626a1.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 93.543045,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current n-ary-tree TU hash."
+    },
+    {
+      "mangled": "?constructed_n_ary_tree@n_ary_tree_converter@mixing@animation@vostok@@QAE?AVn_ary_tree@234@AAVmutable_buffer@4@_NIAAPAUsubscribed_channel@34@@Z",
+      "module": "animation",
+      "expected_hash": "4ccf6126ff46.a85b004293c06dd1.9db4e18e7388ad8d",
+      "expected_fuzzy_pct": 81.508705,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current converter TU hash."
+    },
+    {
+      "mangled": "?adjust_animation_events_times@n_ary_tree@mixing@animation@vostok@@AAEXABV1234@@Z",
+      "module": "animation",
+      "expected_hash": "a3d9e4a7d2cb.a85b004293c06dd1.cafe97bffba09bcd",
+      "expected_fuzzy_pct": 100.0,
+      "review": "Target and candidate are byte-exact with STRUCTURE MATCH at nine statements and the same four named locals."
+    },
+    {
+      "mangled": "??0bone_matrices_computer@animation@vostok@@QAE@QBXPBVskeleton@12@PAUanimation_state@mixing@12@I@Z",
+      "module": "animation",
+      "expected_hash": "b56d404de444.a85b004293c06dd1.c952231a1748aa2b",
+      "expected_fuzzy_pct": 67.04951,
+      "review": "Unchanged reviewed source restores the render-facade compiler-context maximum under the current bone-matrices TU hash."
+    }
+  ]
+}
