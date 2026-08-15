@@ -242,8 +242,8 @@ def main() -> None:
         # build keeps both current in one shot. Separately guarded: a score-write
         # failure warns but never fails the build (the report.json is already good).
         try:
-            import match_score
-            match_score.regen_readme()
+            from vostok.ledger import readme
+            readme.regen_readme()
             log("README score block refreshed.")
         except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the README
             log(f"WARNING: README score block NOT refreshed ({e}); "
