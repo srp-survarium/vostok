@@ -3,6 +3,7 @@
 #include <d3dx11tex.h>
 
 #pragma comment( lib, "d3dx11.lib" )
+#include <vostok/console_command.h>
 #include <vostok/render/core/resource_manager.h>
 #include <vostok/render/core/shader_binary_source_cook.h>
 #include "texture_storage.h"
@@ -45,6 +46,13 @@ namespace render {
 
 bool g_enable_resource_sharing = true;
 static bool s_debug_clip_texture_quality = true;
+static console_commands::cc_bool s_debug_clip_texture_quality_cc( "r_debug_clip_texture_quality", s_debug_clip_texture_quality, false, console_commands::command_type_engine_internal );
+
+static u32 s_debug_start_num_mips_to_change = 0;
+static console_commands::cc_u32 s_debug_start_num_mips_to_change_cc( "r_debug_start_num_mips_to_change", s_debug_start_num_mips_to_change, 0, 14, true, console_commands::command_type_engine_internal );
+
+static u32 s_debug_minus_mip = 0;
+static console_commands::cc_u32 s_debug_minus_mip_cc( "r_debug_minus_mip", s_debug_minus_mip, 0, 14, true, console_commands::command_type_engine_internal );
 
 struct resource_manager_call_destructor_predicate {
 	template <typename T>
@@ -1094,10 +1102,8 @@ void resource_manager::on_texture_loaded_staging(
 	// compile out of the Master Gold build (staging texture pool disabled).
 }
 
-// claude@NOTE: recovered from reload_all_textures' trailing `mov byte [s_reload_all_textures], 0`;
-// the console command that sets it (s_reload_all_textures_cc, a dynamic initializer in the target)
-// is not reconstructed here.
 static bool s_reload_all_textures = false;
+static console_commands::cc_bool s_reload_all_textures_cc( "r_reload_all_textures", s_reload_all_textures, false, console_commands::command_type_engine_internal );
 
 void resource_manager::reload_all_textures( )
 {

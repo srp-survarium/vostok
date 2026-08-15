@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "stage_volume_fog.h"
 
+#include <vostok/console_command.h>
 #include <vostok/math_aabb.h>
 #include <vostok/math_functions.h>
 #include <vostok/render/core/backend.h>
@@ -15,6 +16,12 @@
 
 namespace vostok {
 namespace render {
+
+static bool s_fog_back_pass_value = true;
+static console_commands::cc_bool s_fog_back_pass_cc( "fog_back_pass", s_fog_back_pass_value, false, console_commands::command_type_engine_internal );
+
+static bool s_fog_forward_pass_value = true;
+static console_commands::cc_bool s_fog_forward_pass_cc( "fog_forward_pass", s_fog_forward_pass_value, false, console_commands::command_type_engine_internal );
 
 void effect_simple_fog::compile(
 	effect_compiler& compiler,

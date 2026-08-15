@@ -1,6 +1,7 @@
 #include "pch.h"
 #include <vostok/math_int2.h>
 #include <vostok/render/core/options.h>
+#include <vostok/console_command.h>
 #include <vostok/console_command_processor.h>
 
 namespace vostok {
@@ -326,6 +327,10 @@ static math::uint2 parse_resolution( pcstr in_str )
 
 string256 s_current_render_configuration = "default";
 string16 s_r_resolution_value = "1280x720";
+static console_commands::cc_string s_r_resolution_cc( "r_resolution", s_r_resolution_value, sizeof( s_r_resolution_value ), true, console_commands::command_type_engine_internal );
+
+static float s_uro_fov_value = 0.f;
+static console_commands::cc_float s_uro_fov_cc( "uro_fov", s_uro_fov_value, 0.0f, 100.0f, true, console_commands::command_type_engine_internal );
 
 void options::register_console_commands( )
 {
