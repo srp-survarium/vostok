@@ -65,4 +65,24 @@ typedef resources::resource_ptr<
 } // namespace render
 } // namespace vostok
 
+#include "render_surface.h"
+#include "render_model_instance_impl.h"
+
+namespace vostok {
+namespace render {
+
+inline render_surface::render_surface( ) :
+	m_aabbox( math::create_zero_aabb( ) ),
+	m_streaming_texture_factor( 10000.0f )
+{
+}
+
+inline void render_model_instance_impl::set_transform( float4x4 const& transform )
+{
+	m_transform = transform;
+}
+
+} // namespace render
+} // namespace vostok
+
 #endif // #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_H_INCLUDED
