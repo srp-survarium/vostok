@@ -35,7 +35,6 @@ import sqlite3
 import sys
 from pathlib import Path
 
-import match_state
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
 from vostok.core.paths import (BASE_IDX, BINARIES, CROSS_UNIT_REPORT,
@@ -45,6 +44,7 @@ from vostok.core.paths import (BASE_IDX, BINARIES, CROSS_UNIT_REPORT,
 from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import MATCH_DB_LOG
 from vostok.core.paths import REPO as VOSTOK
+from vostok.ledger import store as match_state
 
 SCHEMA = """
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
