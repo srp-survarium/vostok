@@ -851,3 +851,20 @@ reclaim<T> release chains (keyword removal measured codegen-neutral);
 memory::copy intrinsic widths; attribution shuffles with equal byte totals.
 These are whole-program LTCG state and should re-measure after broad
 convergence.
+
+## Structural queue closed (2026-08-15)
+
+The 78-function QUANTITY/SPLIT queue (54,934 target bytes) is fully triaged:
+every row is recovered, exactly structure-matched, or SKIP-parked with a
+verified cause in `match.db`. Byte-exact wins: `get_num_digits` (clause
+order). Struct-exact: `res_sampler_list::compare`, `~grass_patch`,
+`stage_pre_rain::execute` (27:27), `res_texture_list::compare` (10:10).
+Measured fuzzy gains: dump_scene_statistics +31.2, translate_query +6.1,
+get_visible_tree_components +5.8, set_texture +1.3, merge_instances +0.2.
+
+The parked remainder decomposes into named LTCG families (list-getter /
+modify / string-operator / reclaim inlining, set_name-assign expansion,
+record-boundary attribution, hot/cold layout) - each re-testable after
+broad program convergence lifts the whole-image inline state. Render:
+85.37% weighted, 1572 byte-exact, 1684 struct-match, 91 target-only.
+Next fronts: the 91 target-only pairings and the documented walls.
