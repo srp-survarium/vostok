@@ -67,8 +67,8 @@ from pathlib import Path
 from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import STRUCTURE_MISMATCH_QUEUE as QUEUE_FILE
 
-# Reuse match_db's short-name renderer so rows read like its `report` output.
-from match_db import fn_from_mangled  # noqa: E402  (flat until derive/ lands)
+# Reuse the derive layer's short-name renderer so rows read like its report.
+from vostok.derive.names import fn_from_mangled
 
 # The 20 in-scope NON-RENDER engine modules (render matched last; game / game_core
 # are tracked only as the pre-seeded /Od BLOCKED block below).

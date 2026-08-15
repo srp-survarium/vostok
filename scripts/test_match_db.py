@@ -1,4 +1,3 @@
-import importlib.util
 import json
 import sqlite3
 import tempfile
@@ -7,12 +6,30 @@ from pathlib import Path
 from unittest import mock
 
 from vostok.core import symbols as NORMALIZE
-
-SPEC = importlib.util.spec_from_file_location(
-    "vostok_match_db", Path(__file__).with_name("match_db.py")
-)
-MATCH_DB = importlib.util.module_from_spec(SPEC)
-SPEC.loader.exec_module(MATCH_DB)
+from vostok.derive import maxima
+from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
+                                   dyn_owner_compatible, dynamic_pair_score,
+                                   exact_paired_source_alias,
+                                   instruction_stream_exact,
+                                   island_candidate_score,
+                                   report_source_alias_candidates,
+                                   strict_source_alias_candidates)
+from vostok.derive.classify import classify
+from vostok.derive.db import SCHEMA
+from vostok.derive.index import (authoritative_demangled_names,
+                                 index_by_mangled, legacy_overload_keys,
+                                 overload_key)
+from vostok.derive.maxima import (effective_source_hash,
+                                  maximum_for_effective_hash,
+                                  maximum_needs_epoch_archive,
+                                  merge_maximum_epoch, merge_persistent_maxima,
+                                  retained_max_effective_hash)
+from vostok.derive.modules import (dynamic_local_owner_modules,
+                                   load_module_ownership_overrides,
+                                   logical_module)
+from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
+                                  rank_island_delta, report_fuzzy_scores,
+                                  report_score_for_target)
 
 
 class CompilerNameTests(unittest.TestCase):
@@ -126,12 +143,12 @@ class IndexByMangledTests(unittest.TestCase):
         )
         second = self.record("fill_x3daudio_vector(vector&, float3 const&)", 0x1020)
 
-        indexed = MATCH_DB.index_by_mangled([first, second])
+        indexed = index_by_mangled([first, second])
 
         self.assertEqual(len(indexed), 2)
         self.assertIs(indexed[first["mangled"]], first)
         self.assertIs(
-            indexed[MATCH_DB.overload_key(first["mangled"], second["name"])], second
+            indexed[overload_key(first["mangled"], second["name"])], second
         )
 
     def test_uses_target_primary_signature_when_rva_order_differs(self):
@@ -140,14 +157,14 @@ class IndexByMangledTests(unittest.TestCase):
         base_second = self.record(target_second["name"], 0x2000)
         base_first = self.record(target_first["name"], 0x2020)
 
-        indexed = MATCH_DB.index_by_mangled(
+        indexed = index_by_mangled(
             [base_second, base_first],
             preferred_signatures={target_first["mangled"]: target_first["name"]},
         )
 
         self.assertIs(indexed[target_first["mangled"]], base_first)
         self.assertIs(
-            indexed[MATCH_DB.overload_key(target_first["mangled"], target_second["name"])],
+            indexed[overload_key(target_first["mangled"], target_second["name"])],
             base_second,
         )
 
@@ -155,18 +172,18 @@ class IndexByMangledTests(unittest.TestCase):
         first = self.record("fill_surface(target*, context*)", 0x1000)
         second = self.record("fill_surface(target*, context*, bool)", 0x1020)
 
-        aliases = MATCH_DB.legacy_overload_keys([first, second])
+        aliases = legacy_overload_keys([first, second])
 
         self.assertEqual(
             aliases[f"{first['mangled']}@@pdb-overload:1020"],
-            MATCH_DB.overload_key(first["mangled"], second["name"]),
+            overload_key(first["mangled"], second["name"]),
         )
 
     def test_still_collapses_distinct_same_rva_aliases(self):
         first = self.record("first alias()", 0x1000)
         second = self.record("second alias()", 0x1000)
 
-        indexed = MATCH_DB.index_by_mangled([first, second])
+        indexed = index_by_mangled([first, second])
 
         self.assertEqual(indexed, {first["mangled"]: first})
 
@@ -174,7 +191,7 @@ class IndexByMangledTests(unittest.TestCase):
         first = self.record("static helper()", 0x1000, "first.cpp")
         preferred = self.record("static helper()", 0x2000, "preferred.cpp")
 
-        indexed = MATCH_DB.index_by_mangled(
+        indexed = index_by_mangled(
             [first, preferred], {first["mangled"]: "preferred.cpp"}
         )
 
@@ -188,7 +205,7 @@ class AuthoritativeDemangledNamesTests(unittest.TestCase):
         base = {mangled: {"name": "collision_geometry::cast_to_collision_geometry()"}}
 
         self.assertEqual(
-            MATCH_DB.authoritative_demangled_names(target, base)[mangled],
+            authoritative_demangled_names(target, base)[mangled],
             target[mangled]["name"],
         )
 
@@ -197,7 +214,7 @@ class AuthoritativeDemangledNamesTests(unittest.TestCase):
         base = {mangled: {"name": "base_only()"}}
 
         self.assertEqual(
-            MATCH_DB.authoritative_demangled_names({}, base)[mangled],
+            authoritative_demangled_names({}, base)[mangled],
             base[mangled]["name"],
         )
 
@@ -211,32 +228,32 @@ class InstructionStreamExactTests(unittest.TestCase):
 
     def test_accepts_identical_symbolic_instruction_stream(self):
         self.assertTrue(
-            MATCH_DB.instruction_stream_exact(self.record(), self.record())
+            instruction_stream_exact(self.record(), self.record())
         )
 
     def test_rejects_different_instruction_or_size(self):
         self.assertFalse(
-            MATCH_DB.instruction_stream_exact(
+            instruction_stream_exact(
                 self.record(), self.record(text="call  Scaleform::Render::HAL::BeginFrame")
             )
         )
         self.assertFalse(
-            MATCH_DB.instruction_stream_exact(self.record(), self.record(size=5))
+            instruction_stream_exact(self.record(), self.record(size=5))
         )
 
     def test_rejects_missing_instruction_evidence(self):
         empty = {"size": 0, "instructions": []}
-        self.assertFalse(MATCH_DB.instruction_stream_exact(empty, empty))
+        self.assertFalse(instruction_stream_exact(empty, empty))
 
     def test_accepts_equivalent_operator_delete_pdb_spellings(self):
         target = self.record(text="call  operator delete")
         base = self.record(text="call  ??3@YAXPAX@Z")
-        self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
+        self.assertTrue(instruction_stream_exact(target, base))
 
     def test_accepts_equivalent_template_closing_whitespace(self):
         target = self.record(text="call  pinned_ptr<animation const >::operator=")
         base = self.record(text="call  pinned_ptr<animation const>::operator=")
-        self.assertTrue(MATCH_DB.instruction_stream_exact(target, base))
+        self.assertTrue(instruction_stream_exact(target, base))
 
     def test_island_exact_stream_overrides_stale_report_pair(self):
         mangled = "??4bone_matrices_computer_data@@"
@@ -244,7 +261,7 @@ class InstructionStreamExactTests(unittest.TestCase):
         candidate = self.record(text="movq  xmm0, [eax]")
 
         self.assertEqual(
-            MATCH_DB.island_candidate_score(
+            island_candidate_score(
                 {}, mangled, {mangled: 59.464287}, target, candidate
             ),
             100.0,
@@ -256,7 +273,7 @@ class InstructionStreamExactTests(unittest.TestCase):
         candidate = self.record(text="movq  xmm1, [eax]")
 
         self.assertEqual(
-            MATCH_DB.island_candidate_score(
+            island_candidate_score(
                 {}, mangled, {mangled: 59.464287}, target, candidate
             ),
             59.464287,
@@ -283,7 +300,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             ]
         }
 
-        scores, units = MATCH_DB.report_fuzzy_scores(report)
+        scores, units = report_fuzzy_scores(report)
 
         self.assertEqual(scores, {"?fn@@": 100.0})
         self.assertEqual(
@@ -297,7 +314,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         vector = "??_Eexample@@UAEPAXI@Z"
 
         self.assertEqual(
-            MATCH_DB.report_score_for_target(scalar, {vector: 88.5}), 88.5
+            report_score_for_target(scalar, {vector: 88.5}), 88.5
         )
 
     def test_maps_folded_size_calculator_template_to_report_name(self):
@@ -313,7 +330,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            MATCH_DB.report_score_for_target(pdb_name, {report_name: 90.13513}),
+            report_score_for_target(pdb_name, {report_name: 90.13513}),
             90.13513,
         )
 
@@ -333,7 +350,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             ]
         }
 
-        scores, _units = MATCH_DB.report_fuzzy_scores(report)
+        scores, _units = report_fuzzy_scores(report)
 
         self.assertEqual(scores, {"?fn@@": 42.5})
 
@@ -342,7 +359,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         vector = "??_Eskeleton@animation@vostok@@UAEPAXI@Z"
 
         self.assertEqual(
-            MATCH_DB.cross_unit_exact_score(scalar, {vector: 100.0}),
+            cross_unit_exact_score(scalar, {vector: 100.0}),
             100.0,
         )
 
@@ -350,11 +367,11 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         mangled = "??0expression@mixing@animation@vostok@@QAE@ABV0123@@Z"
 
         self.assertEqual(
-            MATCH_DB.cross_unit_exact_score(mangled, {mangled: 100.0}),
+            cross_unit_exact_score(mangled, {mangled: 100.0}),
             100.0,
         )
         self.assertIsNone(
-            MATCH_DB.cross_unit_exact_score(mangled, {mangled: 99.0})
+            cross_unit_exact_score(mangled, {mangled: 99.0})
         )
 
     def test_island_report_score_accepts_explicit_reviewed_alias(self):
@@ -362,7 +379,7 @@ class ReportFuzzyScoreTests(unittest.TestCase):
         report_name = "?create_resource@@"
 
         self.assertEqual(
-            MATCH_DB.island_report_score(
+            island_report_score(
                 {"report_mangled": report_name},
                 target,
                 {report_name: 92.88461},
@@ -370,14 +387,14 @@ class ReportFuzzyScoreTests(unittest.TestCase):
             92.88461,
         )
         self.assertEqual(
-            MATCH_DB.island_report_score({}, target, {target: 75.0}),
+            island_report_score({}, target, {target: 75.0}),
             75.0,
         )
 
 
 class RankIslandDeltaTests(unittest.TestCase):
     def test_discovers_target_only_candidate_from_zero_floor(self):
-        delta = MATCH_DB.rank_island_delta(
+        delta = rank_island_delta(
             87.5,
             "source-hash",
             previous=None,
@@ -397,7 +414,7 @@ class RankIslandDeltaTests(unittest.TestCase):
         }
 
         with self.assertRaisesRegex(ValueError, "source epoch disagrees"):
-            MATCH_DB.rank_island_delta(
+            rank_island_delta(
                 75.0,
                 "stale-hash",
                 previous=previous,
@@ -412,7 +429,7 @@ class RankIslandDeltaTests(unittest.TestCase):
         }
 
         self.assertIsNone(
-            MATCH_DB.rank_island_delta(
+            rank_island_delta(
                 60.0,
                 "stale-hash",
                 previous=previous,
@@ -440,25 +457,25 @@ class MaximumEpochArchiveTests(unittest.TestCase):
 
     def test_plain_current_rebuild_does_not_grow_epoch_archive(self):
         self.assertFalse(
-            MATCH_DB.maximum_needs_epoch_archive(self.row(75.0), 75.0)
+            maximum_needs_epoch_archive(self.row(75.0), 75.0)
         )
 
     def test_island_and_raised_rebuild_are_archived(self):
         self.assertTrue(
-            MATCH_DB.maximum_needs_epoch_archive(
+            maximum_needs_epoch_archive(
                 self.row(100.0, exact=1, origin="island", evidence="island.json"),
                 75.0,
             )
         )
         self.assertTrue(
-            MATCH_DB.maximum_needs_epoch_archive(self.row(80.0), 75.0)
+            maximum_needs_epoch_archive(self.row(80.0), 75.0)
         )
 
     def test_epoch_merge_retains_strongest_proof(self):
         weaker = self.row(80.0)
         exact = self.row(100.0, exact=1, origin="island", evidence="island.json")
 
-        merged = MATCH_DB.merge_maximum_epoch(weaker, exact)
+        merged = merge_maximum_epoch(weaker, exact)
 
         self.assertEqual(merged[2], 100.0)
         self.assertEqual(merged[3], 1)
@@ -470,7 +487,7 @@ class MaximumEpochArchiveTests(unittest.TestCase):
         other[1] = "other-hash"
 
         with self.assertRaisesRegex(ValueError, "different source MAX epochs"):
-            MATCH_DB.merge_maximum_epoch(self.row(75.0), tuple(other))
+            merge_maximum_epoch(self.row(75.0), tuple(other))
 
     def test_matching_archived_hash_reactivates_after_newer_epoch(self):
         archived = self.row(
@@ -479,7 +496,7 @@ class MaximumEpochArchiveTests(unittest.TestCase):
         newer = list(self.row(60.0))
         newer[1] = "newer-hash"
 
-        selected = MATCH_DB.maximum_for_effective_hash(
+        selected = maximum_for_effective_hash(
             "?function@@",
             "effective-hash",
             {"?function@@": tuple(newer)},
@@ -491,7 +508,7 @@ class MaximumEpochArchiveTests(unittest.TestCase):
     def test_different_archived_hash_is_not_credited(self):
         archived = self.row(100.0, exact=1, origin="island")
 
-        selected = MATCH_DB.maximum_for_effective_hash(
+        selected = maximum_for_effective_hash(
             "?function@@",
             "unseen-hash",
             {},
@@ -522,8 +539,8 @@ class MergePersistentMaximaTests(unittest.TestCase):
         current = sqlite3.connect(":memory:")
         incoming = sqlite3.connect(":memory:")
         current.row_factory = incoming.row_factory = sqlite3.Row
-        current.executescript(MATCH_DB.SCHEMA)
-        incoming.executescript(MATCH_DB.SCHEMA)
+        current.executescript(SCHEMA)
+        incoming.executescript(SCHEMA)
 
         current.execute(
             "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
@@ -542,7 +559,7 @@ class MergePersistentMaximaTests(unittest.TestCase):
             self.row("?changed@@", "new-hash", 100.0, exact=1),
         )
 
-        self.assertEqual(MATCH_DB.merge_persistent_maxima(current, incoming), 2)
+        self.assertEqual(merge_persistent_maxima(current, incoming), 2)
         self.assertEqual(
             tuple(
                 current.execute(
@@ -581,12 +598,12 @@ class EffectiveSourceHashTests(unittest.TestCase):
                 "statements": [{"line": 1}],
             }
 
-            with mock.patch.object(MATCH_DB, "SOURCES", root / "sources"):
-                first = MATCH_DB.effective_source_hash(record, "animation")
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                first = effective_source_hash(record, "animation")
                 source.write_text(
                     "body line\nother function v2\n", encoding="latin-1"
                 )
-                second = MATCH_DB.effective_source_hash(record, "animation")
+                second = effective_source_hash(record, "animation")
 
             self.assertEqual(first, second)
 
@@ -601,12 +618,12 @@ class EffectiveSourceHashTests(unittest.TestCase):
                 "statements": [{"line": 1}],
             }
 
-            with mock.patch.object(MATCH_DB, "SOURCES", root / "sources"):
-                first = MATCH_DB.effective_source_hash(record, "animation")
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                first = effective_source_hash(record, "animation")
                 source.write_text(
                     "body line EDITED\nother function\n", encoding="latin-1"
                 )
-                second = MATCH_DB.effective_source_hash(record, "animation")
+                second = effective_source_hash(record, "animation")
 
             self.assertNotEqual(first, second)
 
@@ -627,13 +644,13 @@ class EffectiveSourceHashTests(unittest.TestCase):
         folded_alias = {"file": "boost/bind/bind.hpp", "statements": []}
 
         with mock.patch.object(
-            MATCH_DB,
+            maxima,
             "effective_source_hash_at",
             return_value="expected-hash",
         ) as hash_at, mock.patch.object(
-            MATCH_DB, "effective_source_hash"
+            maxima, "effective_source_hash"
         ) as hash_record:
-            result = MATCH_DB.retained_max_effective_hash(previous, folded_alias)
+            result = retained_max_effective_hash(previous, folded_alias)
 
         self.assertEqual(result, "expected-hash")
         hash_at.assert_called_once_with(
@@ -661,13 +678,13 @@ class EffectiveSourceHashTests(unittest.TestCase):
         }
 
         with mock.patch.object(
-            MATCH_DB, "_source_extent", return_value=(current["file"], 87, 87, "body")
+            maxima, "_source_extent", return_value=(current["file"], 87, 87, "body")
         ), mock.patch.object(
-            MATCH_DB, "effective_source_hash", return_value="current-hash"
+            maxima, "effective_source_hash", return_value="current-hash"
         ) as hash_record, mock.patch.object(
-            MATCH_DB, "effective_source_hash_at"
+            maxima, "effective_source_hash_at"
         ) as hash_at:
-            result = MATCH_DB.retained_max_effective_hash(previous, current)
+            result = retained_max_effective_hash(previous, current)
 
         self.assertEqual(result, "current-hash")
         hash_record.assert_called_once_with(current, "animation")
@@ -688,7 +705,7 @@ class StructureClassificationTests(unittest.TestCase):
         base = self.record([1, 1, 2], [30, 31, 32])
 
         self.assertEqual(
-            MATCH_DB.classify(target, base),
+            classify(target, base),
             ("SIZE", 3, 3, 2, 0, 0),
         )
 
@@ -696,7 +713,7 @@ class StructureClassificationTests(unittest.TestCase):
         target = self.record([1, 2, 1], [10, 11, 12])
         base = self.record([1, 1, 2], [30, 32, 33])
 
-        classification = MATCH_DB.classify(target, base)
+        classification = classify(target, base)
 
         self.assertEqual(classification[0], "SPLIT")
         self.assertGreater(classification[4], 0)
@@ -726,7 +743,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         base = self.record()
         aliases = {target["name"]: {0x1234: base}}
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(target, aliases, set()), [base]
+            strict_source_alias_candidates(target, aliases, set()), [base]
         )
 
     def test_rejects_used_different_source_or_different_body(self):
@@ -742,7 +759,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             }
         }
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(target, aliases, {0x1000}), []
+            strict_source_alias_candidates(target, aliases, {0x1000}), []
         )
 
     def test_accepts_exact_used_rva_when_shared_aliases_are_allowed(self):
@@ -750,7 +767,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         base = self.record()
         aliases = {target["name"]: {0x1234: base}}
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target, aliases, {0x1234}, allow_used=True
             ),
             [base],
@@ -768,7 +785,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         }
 
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target,
                 aliases,
                 set(),
@@ -784,7 +801,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         aliases = {target["name"]: {base["rva"]: base}}
 
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target,
                 aliases,
                 set(),
@@ -801,7 +818,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         shared = "vostok::resources::resource_ptr<T>::~resource_ptr<T>()"
 
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target,
                 aliases,
                 set(),
@@ -829,7 +846,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
             rva=0x2000,
         )
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target,
                 {},
                 set(),
@@ -843,7 +860,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         target = self.record(mangled="?target@@", rva=0x1000)
         base = self.record(mangled="?base@@", rva=0x2000, text="ret   8")
         self.assertEqual(
-            MATCH_DB.strict_source_alias_candidates(
+            strict_source_alias_candidates(
                 target,
                 {},
                 set(),
@@ -859,7 +876,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         aliases = {target["name"]: {base["rva"]: base}}
 
         self.assertEqual(
-            MATCH_DB.report_source_alias_candidates(target, aliases, set()),
+            report_source_alias_candidates(target, aliases, set()),
             [base],
         )
 
@@ -875,7 +892,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         }
 
         self.assertEqual(
-            MATCH_DB.report_source_alias_candidates(
+            report_source_alias_candidates(
                 target,
                 aliases,
                 {used["rva"]},
@@ -891,7 +908,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         aliases = {base["name"]: {target["rva"]: target}}
 
         self.assertEqual(
-            MATCH_DB.exact_paired_source_alias(base, aliases, {target["rva"]}),
+            exact_paired_source_alias(base, aliases, {target["rva"]}),
             target,
         )
 
@@ -900,7 +917,7 @@ class StrictSourceAliasCandidateTests(unittest.TestCase):
         target = self.record(rva=0x1000)
         aliases = {base["name"]: {target["rva"]: target}}
 
-        self.assertIsNone(MATCH_DB.exact_paired_source_alias(base, aliases, set()))
+        self.assertIsNone(exact_paired_source_alias(base, aliases, set()))
 
 
 class DynamicThunkAliasTests(unittest.TestCase):
@@ -919,8 +936,8 @@ class DynamicThunkAliasTests(unittest.TestCase):
             "`survarium::weapon_cook::register_cooks_for_logic_states'::`2'::"
             "s_fire_cook",
         )
-        self.assertEqual(MATCH_DB.dyn_canon_rich(target), expected)
-        self.assertEqual(MATCH_DB.dyn_canon_base(base), expected)
+        self.assertEqual(dyn_canon_rich(target), expected)
+        self.assertEqual(dyn_canon_base(base), expected)
 
     def test_allows_missing_synthetic_owner_but_rejects_known_mismatch(self):
         target = {"file": "vostok/animation/anim_track_common.h"}
@@ -931,16 +948,16 @@ class DynamicThunkAliasTests(unittest.TestCase):
             "s_fire_cook",
         )
         self.assertTrue(
-            MATCH_DB.dyn_owner_compatible(target, {"file": None}, global_canon)
+            dyn_owner_compatible(target, {"file": None}, global_canon)
         )
-        self.assertTrue(MATCH_DB.dyn_owner_compatible(target, dict(target), global_canon))
+        self.assertTrue(dyn_owner_compatible(target, dict(target), global_canon))
         self.assertTrue(
-            MATCH_DB.dyn_owner_compatible(
+            dyn_owner_compatible(
                 target, {"file": "vostok/game/sources/weapon_cook.cpp"}, local_canon
             )
         )
         self.assertFalse(
-            MATCH_DB.dyn_owner_compatible(
+            dyn_owner_compatible(
                 target,
                 {"file": "vostok/game/sources/weapon_cook.cpp"},
                 global_canon,
@@ -965,10 +982,10 @@ class DynamicThunkAliasTests(unittest.TestCase):
             },
         ]
 
-        owners = MATCH_DB.dynamic_local_owner_modules(records)
+        owners = dynamic_local_owner_modules(records)
 
         self.assertEqual(
-            owners[MATCH_DB.dyn_canon_rich(thunk)],
+            owners[dyn_canon_rich(thunk)],
             "game",
         )
 
@@ -976,11 +993,11 @@ class DynamicThunkAliasTests(unittest.TestCase):
         target = {"size": 1, "instructions": [{"off": 0, "len": 1, "text": "ret"}]}
         base = dict(target)
         self.assertEqual(
-            MATCH_DB.dynamic_pair_score("target", "base", target, base, {}),
+            dynamic_pair_score("target", "base", target, base, {}),
             100.0,
         )
         self.assertEqual(
-            MATCH_DB.dynamic_pair_score(
+            dynamic_pair_score(
                 "target", "base", target, base, {"target": 75.0}
             ),
             75.0,
@@ -990,7 +1007,7 @@ class DynamicThunkAliasTests(unittest.TestCase):
             "instructions": [{"off": 0, "len": 1, "text": "int 3"}],
         }
         self.assertIsNone(
-            MATCH_DB.dynamic_pair_score("target", "base", target, different, {})
+            dynamic_pair_score("target", "base", target, different, {})
         )
 
 
@@ -1003,7 +1020,7 @@ class ModuleOwnershipOverrideTests(unittest.TestCase):
                 encoding="utf-8",
             )
             self.assertEqual(
-                MATCH_DB.load_module_ownership_overrides(path),
+                load_module_ownership_overrides(path),
                 {"?symbol@@": "game_core"},
             )
             path.write_text(
@@ -1011,12 +1028,12 @@ class ModuleOwnershipOverrideTests(unittest.TestCase):
                 encoding="utf-8",
             )
             with self.assertRaisesRegex(ValueError, "inconsistent module ownership"):
-                MATCH_DB.load_module_ownership_overrides(path)
+                load_module_ownership_overrides(path)
 
     def test_logical_module_prefers_reviewed_owner_over_folded_unit(self):
         record = {"file": "vostok/animation/folded_inline.h"}
         self.assertEqual(
-            MATCH_DB.logical_module(
+            logical_module(
                 "?symbol@@",
                 record,
                 [record["file"]],

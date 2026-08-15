@@ -229,8 +229,8 @@ def main() -> None:
         # failure is logged but does NOT fail the build - the diff inputs are
         # already good; the DB can be re-derived later with `match_db.py refresh`.
         try:
-            import match_db
-            match_db.regen()
+            from vostok.derive import roster
+            roster.regen()
             log("match.db regenerated.")
         # catch SystemExit too (regen's missing-artifact guard calls sys.exit) so
         # a DB hiccup never aborts a build whose diff inputs are already good.
