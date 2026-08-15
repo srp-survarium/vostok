@@ -10,15 +10,10 @@
 namespace survarium {
 
 struct player_desc {
-	// STATE[STUB]
-	// addressed carcass from the network_client.h dump (the type's original
-	// home, defined just above class network_client)
-	inline		player_desc	( )
+	inline		player_desc	( ) :
+		player			( ),
+		is_connected	( false )
 	{
-		// FUNCTION BODY[0x92180]: 0
-		// <0x92180>|0x000|+0x00c:'39'	{
-		// <0x9218c>|0x00c|      :'40'	}
-		// ******
 	}
 	inline		~player_desc( ) { /* no source */ }
 
