@@ -58,12 +58,10 @@ import shutil
 import sqlite3
 import subprocess
 import sys
-from pathlib import Path
 
-VOSTOK = Path(__file__).resolve().parent.parent
-RICH = VOSTOK / "binaries" / "rich"
-DB_PATH = VOSTOK / "binaries" / "match.db"
-OBJDIFF = VOSTOK / "binaries" / "objdiff"
+from vostok.core.paths import MATCH_DB as DB_PATH
+from vostok.core.paths import REPO as VOSTOK
+from vostok.core.paths import RICH_DIR as RICH
 
 RE_CALL = re.compile(r"^call\s+(.+?)\s*$", re.IGNORECASE)
 RE_LITERAL = re.compile(r"\?\?_C@[^\s,\]\)]+")

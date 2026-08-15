@@ -30,11 +30,8 @@ import sys
 from pathlib import Path
 
 
-SCRIPT_DIR    = Path(__file__).resolve().parent
-VOSTOK_DIR    = SCRIPT_DIR.parent
-ENGINE_DIR    = VOSTOK_DIR / "sources" / "vostok"
-STRUCTURE_DIR = VOSTOK_DIR / "binaries" / "structure"
-BASE_PDB      = VOSTOK_DIR / "binaries" / "Win32" / "survarium-dx11-win32-gold.pdb"
+from vostok.core.paths import BASE_PDB, STRUCTURE_DIR, survarium_bin
+from vostok.core.paths import ENGINE as ENGINE_DIR
 
 
 def log(msg: str) -> None:
@@ -77,15 +74,13 @@ def generate(side: str) -> None:
                 "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
             )
     elif side == "target":
-        survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
-        )
-        pdb = survarium_bin / "survarium.pdb"
+        survarium = survarium_bin()
+        pdb = survarium / "survarium.pdb"
         engine = "c:/survarium/sources"
         extra = []
         if not pdb.is_file():
             raise RuntimeError(
-                f"original survarium.pdb not found at {survarium_bin} - set "
+                f"original survarium.pdb not found at {survarium} - set "
                 "SURVARIUM_BIN or run inside `nix develop` (provides survarium-game)"
             )
     else:  # pragma: no cover - argparse restricts choices

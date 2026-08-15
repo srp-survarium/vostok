@@ -9,9 +9,7 @@ import struct
 from pathlib import Path
 
 
-SCRIPT_DIR  = Path(__file__).resolve().parent
-VOSTOK_DIR  = SCRIPT_DIR.parent
-OBJDIFF_DIR = VOSTOK_DIR / "binaries" / "objdiff"
+from vostok.core.paths import OBJDIFF_DIR
 
 
 VOSTOK_PRESET = [

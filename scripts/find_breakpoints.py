@@ -4,11 +4,8 @@ find_breakpoints.py
 
 import argparse
 import subprocess
-from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-BREAKPOINTS_DIR = VOSTOK_DIR / "binaries" / "structure" / "target" / "sources"
+from vostok.core.paths import TARGET_SOURCES as BREAKPOINTS_DIR
 
 
 def main():

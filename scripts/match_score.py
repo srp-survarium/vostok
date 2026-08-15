@@ -35,12 +35,8 @@ import argparse
 import datetime
 import json
 import sqlite3
-from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
-REPORT = REPO / "binaries" / "objdiff" / "report.json"
-README = REPO / "README.md"
-MATCH_DB = REPO / "binaries" / "match.db"
+from vostok.core.paths import FLAKE_LOCK, MATCH_DB, README, REPORT
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"
@@ -377,7 +373,7 @@ def render_code_max(rows: list[tuple]) -> str:
 
 def _delinker_rev() -> str:
     try:
-        lock = json.loads((REPO / "flake.lock").read_text())
+        lock = json.loads(FLAKE_LOCK.read_text())
         rev = lock["nodes"]["vostok-delinker-src"]["locked"]["rev"]
         return rev[:7]
     except Exception:

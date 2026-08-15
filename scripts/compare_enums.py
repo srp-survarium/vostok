@@ -54,10 +54,7 @@ import re
 import sys
 from pathlib import Path
 
-
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-STRUCTURE_DIR = VOSTOK_DIR / "binaries" / "structure"
+from vostok.core.paths import STRUCTURE_DIR
 
 # `enum NS::foo` or `enum NS::cls::foo` opening a definition. A trailing `;`
 # means a forward declaration (no body) - excluded by the regex.

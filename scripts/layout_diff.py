@@ -55,9 +55,9 @@ import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-TARGET_HEADERS = REPO_ROOT / "binaries" / "structure" / "target" / "headers"
-BASE_HEADERS = REPO_ROOT / "sources" / "vostok"
+from vostok.core.paths import ENGINE as BASE_HEADERS
+from vostok.core.paths import REPO as REPO_ROOT
+from vostok.core.paths import TARGET_HEADERS
 
 # Namespaces we care about; everything else (boost, stlport, std, ...) is skipped.
 WANTED_ROOTS = ("vostok", "survarium")

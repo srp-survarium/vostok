@@ -31,9 +31,11 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from vostok.core.paths import REPO
+
 # VOSTOK_DIR is set by the nix-shell shellHook to $PWD (the repo root).
 # Fallback for manual invocations where the script is run from its own directory.
-VOSTOK_DIR = Path(os.environ.get("VOSTOK_DIR", str(Path(__file__).resolve().parent.parent)))
+VOSTOK_DIR = Path(os.environ.get("VOSTOK_DIR", str(REPO)))
 
 # Fixed mtime stamped on every tar entry for reproducible packaging.
 # Survarium v0.100b release date: 2013-05-09 12:00:00 UTC.

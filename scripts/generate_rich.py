@@ -32,13 +32,9 @@ import sys
 from pathlib import Path
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-ENGINE_DIR = VOSTOK_DIR / "sources" / "vostok"
-RICH_DIR   = VOSTOK_DIR / "binaries" / "rich"
-WIN32_DIR  = VOSTOK_DIR / "binaries" / "Win32"
-BASE_PDB   = WIN32_DIR / "survarium-dx11-win32-gold.pdb"
-BASE_EXE   = WIN32_DIR / "survarium-dx11-win32-gold.exe"
+from vostok.core.paths import (BASE_EXE, BASE_PDB, RICH_DIR, WIN32_DIR,
+                               survarium_bin)
+from vostok.core.paths import ENGINE as ENGINE_DIR
 
 
 def log(msg: str) -> None:
@@ -80,16 +76,14 @@ def generate(side: str) -> None:
                 "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
             )
     elif side == "target":
-        survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
-        )
-        pdb = survarium_bin / "survarium.pdb"
-        exe = survarium_bin / "survarium.exe"
+        survarium = survarium_bin()
+        pdb = survarium / "survarium.pdb"
+        exe = survarium / "survarium.exe"
         engine = "c:/survarium/sources"  # pdb_rich_context normalizes to c:\...\
         extra = []  # target has no local sources; statements carry line placeholders
         if not pdb.is_file() or not exe.is_file():
             raise RuntimeError(
-                f"original survarium.{{pdb,exe}} not found at {survarium_bin} - set "
+                f"original survarium.{{pdb,exe}} not found at {survarium} - set "
                 "SURVARIUM_BIN or run inside `nix develop` (provides survarium-game)"
             )
     else:  # pragma: no cover - argparse restricts choices

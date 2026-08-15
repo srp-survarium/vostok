@@ -34,7 +34,6 @@ import subprocess
 import sys
 import time
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
 
 import generate_delink
 import generate_rich
@@ -42,9 +41,9 @@ import generate_structure
 import regen_ninja
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-LOG_PATH   = VOSTOK_DIR / "binaries" / "rebuild.log"
+from vostok.core.paths import REBUILD_LOG as LOG_PATH
+from vostok.core.paths import REPO as VOSTOK_DIR
+from vostok.core.paths import REPORT_HEAD, SCRIPTS as SCRIPT_DIR
 
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
@@ -172,7 +171,7 @@ def _write_build_head() -> None:
             capture_output=True, text=True, timeout=10,
         ).stdout.strip()
         if head:
-            marker = VOSTOK_DIR / "binaries" / "objdiff" / "report.head"
+            marker = REPORT_HEAD
             marker.write_text(head + ("+dirty" if dirty else "") + "\n")
     except Exception as e:  # noqa: BLE001 - never fail the build over bookkeeping
         log(f"report.head not written: {e}")

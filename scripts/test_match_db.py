@@ -6,20 +6,13 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
+from vostok.core import symbols as NORMALIZE
 
 SPEC = importlib.util.spec_from_file_location(
     "vostok_match_db", Path(__file__).with_name("match_db.py")
 )
 MATCH_DB = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MATCH_DB)
-
-
-NORMALIZE_SPEC = importlib.util.spec_from_file_location(
-    "vostok_normalize_objdiff_symbols",
-    Path(__file__).with_name("normalize_objdiff_symbols.py"),
-)
-NORMALIZE = importlib.util.module_from_spec(NORMALIZE_SPEC)
-NORMALIZE_SPEC.loader.exec_module(NORMALIZE)
 
 
 class CompilerNameTests(unittest.TestCase):
@@ -588,7 +581,7 @@ class EffectiveSourceHashTests(unittest.TestCase):
                 "statements": [{"line": 1}],
             }
 
-            with mock.patch.object(MATCH_DB, "VOSTOK", root):
+            with mock.patch.object(MATCH_DB, "SOURCES", root / "sources"):
                 first = MATCH_DB.effective_source_hash(record, "animation")
                 source.write_text(
                     "body line\nother function v2\n", encoding="latin-1"
@@ -608,7 +601,7 @@ class EffectiveSourceHashTests(unittest.TestCase):
                 "statements": [{"line": 1}],
             }
 
-            with mock.patch.object(MATCH_DB, "VOSTOK", root):
+            with mock.patch.object(MATCH_DB, "SOURCES", root / "sources"):
                 first = MATCH_DB.effective_source_hash(record, "animation")
                 source.write_text(
                     "body line EDITED\nother function\n", encoding="latin-1"

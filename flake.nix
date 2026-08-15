@@ -375,6 +375,11 @@
 
         shellHook = ''
           export VOSTOK_DIR="$PWD"
+          # scripts/ is THE package root: on PYTHONPATH so `python3 -m vostok.<pkg>`
+          # works from anywhere in the tree. The scripts/*.py shims do not need it
+          # (python puts a script's own dir first), so a stale PYTHONPATH can never
+          # make one worktree's shim import another's package.
+          export PYTHONPATH="$VOSTOK_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
           export WINEPREFIX="$VOSTOK_DIR/binaries/.wineprefix"
           export WINEDLLOVERRIDES="mscoree,mshtml="
           # Silence Wine's unactionable debug spam during builds: all fixme

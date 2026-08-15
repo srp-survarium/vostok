@@ -34,24 +34,17 @@ import sys
 from pathlib import Path
 
 import generate_objdiff_cross_unit
-import normalize_objdiff_symbols
-
-
-SCRIPT_DIR  = Path(__file__).resolve().parent
-VOSTOK_DIR  = SCRIPT_DIR.parent
-OBJDIFF_DIR = VOSTOK_DIR / "binaries" / "objdiff"
-WIN32_DIR   = VOSTOK_DIR / "binaries" / "Win32"
-RICH_DIR    = VOSTOK_DIR / "binaries" / "rich"
+from vostok.core import symbols as normalize_objdiff_symbols
+from vostok.core import tsv
+from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, OBJDIFF_DIR, RICH_DIR,
+                               SCRIPTS as SCRIPT_DIR, SOURCES, SYMBOL_MAP,
+                               SYMBOL_MAP_OVERRIDES, WIN32_DIR, survarium_bin)
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
 # names for the same body, which breaks objdiff matching. The target delink
-# records its choice per folded group here; the base delink reads it back and
-# reproduces target's names where it can. Lives at the objdiff root so it
-# survives the per-side rmtree and is shared across base rebuilds.
-SYMBOL_MAP  = OBJDIFF_DIR / "target-symbol-map.tsv"
-SYMBOL_MAP_OVERRIDES = VOSTOK_DIR / "docs" / "binary_matching" / "folded_symbol_overrides.tsv"
-EFFECTIVE_SYMBOL_MAP = OBJDIFF_DIR / "effective-target-symbol-map.tsv"
+# records its choice per folded group here (SYMBOL_MAP); the base delink reads
+# it back and reproduces target's names where it can.
 
 
 def _effective_symbol_map() -> Path:
@@ -68,11 +61,7 @@ def _effective_symbol_map() -> Path:
     for path in (SYMBOL_MAP, SYMBOL_MAP_OVERRIDES):
         if not path.is_file():
             continue
-        for line_number, raw_line in enumerate(path.read_text().splitlines(), 1):
-            line = raw_line.strip()
-            if not line or line.startswith("#"):
-                continue
-            fields = line.split("\t")
+        for line_number, fields in tsv.read(path):
             if len(fields) != 2 or not all(fields):
                 raise RuntimeError(
                     f"{path}:{line_number}: expected <alias>\\t<target choice>"
@@ -297,17 +286,15 @@ def generate(side: str) -> None:
         # Pass the Wine form of <repo>/sources with a trailing separator (the
         # delinker strips this prefix off each recorded path), mirroring target's
         # bare `c:/survarium/sources`.
-        engine = ["--engine-path", _wine_path(VOSTOK_DIR / "sources") + "\\"]
+        engine = ["--engine-path", _wine_path(SOURCES) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
         symbol_map = ["--read-symbol-map", str(_effective_symbol_map())]
         hint = "build first (python3 scripts/rebuild.py)"
     elif side == "target":
-        survarium_bin = Path(
-            os.environ.get("SURVARIUM_BIN", VOSTOK_DIR / "binaries" / "nix-store" / "survarium-game")
-        )
-        exe = survarium_bin / "survarium.exe"
-        pdb = survarium_bin / "survarium.pdb"
+        survarium = survarium_bin()
+        exe = survarium / "survarium.exe"
+        pdb = survarium / "survarium.pdb"
         engine = ["--engine-path", "c:/survarium/sources"]
         # Record target's choice for each folded symbol group so the base delink
         # can reproduce it.
