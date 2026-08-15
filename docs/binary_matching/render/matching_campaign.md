@@ -899,3 +899,24 @@ resurrect what codegen never emitted. The original program must have held
 references (or a different LTCG state) that kept these alive. Do not retry
 the link-flag route; the kept-COMDAT gap is cross-module convergence state
 like the inline walls. Flags reverted to REF/ICF as found.
+
+## Convergence landscape correction (2026-08-15, late session)
+
+Auditing the walls' "program convergence" gate against the live per-module
+table corrects three beliefs:
+
+1. sound is at 99.92 and particle at 97.16 weighted - the stale sound-carcass
+   picture no longer holds, and their out-of-line intrusive_list calls MATCH
+   the target (those sites are original). The earlier 387-vs-27 reference
+   count was skewed by fold-representative naming in the target index (the
+   target's getters fold and its call operands symbolize to representatives);
+   the render-local inline-vs-call walls stand on their direct disasm
+   evidence, but the program-wide asymmetry is smaller than counted.
+2. The actual remaining divergence pools, by weighted %: game 70.93 (1,528
+   fns), vostok 84.92, animation 84.44, render 85.47, fs 86.70, core 87.56,
+   network_core 88.44, vfs 88.91. The render walls' convergence gate is
+   concretely "game + the mid-tier tails", not sound/particle.
+3. zlib is broken at 0.94: the deflate TUs pair with null objdiff scores and
+   the entire inflate side is target-only - third-party should be
+   exact-by-construction, so this is a build/link defect worth its own
+   ticket, out of render scope.
