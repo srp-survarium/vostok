@@ -886,3 +886,16 @@ keeps standalone copies of everywhere-inlined functions ours drops:
 render_surface ctor, render_to_sky_rms, the make_copy_with_srgb_format
 helper chain) plus callback-registration reachability - link-level state,
 re-check after broader convergence.
+
+## /OPT:NOREF,NOICF experiment: FALSIFIED (2026-08-15)
+
+Flipping the Master Gold link to OptimizeReferences=1 / EnableCOMDATFolding=1
+changed NOTHING (0 improved, 0 regressed, +10 trivial base survivors; render
+target-only stayed 75). The shipped image's kept-COMDATs (render_to_sky_rms,
+render_surface ctor, the effect callbacks, screen_factor, the frac copies)
+are therefore emitted by the TARGET's LTCG codegen pass itself - under /GL,
+unreferenced-function elimination happens in codegen, and linker /OPT cannot
+resurrect what codegen never emitted. The original program must have held
+references (or a different LTCG state) that kept these alive. Do not retry
+the link-flag route; the kept-COMDAT gap is cross-module convergence state
+like the inline walls. Flags reverted to REF/ICF as found.
