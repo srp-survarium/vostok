@@ -138,13 +138,87 @@ void animation_space_graph_cook::generate_graph_edges( animation_space_graph* gr
 {
 }
 
-// STATE[STUB]
-// claude@NOTE: parses the loaded animation config, placement-news the vertex / mix /
-// edge arrays behind the graph object (animation_space_vertex ctor per animation), then
-// calls generate_graph_edges. Needs the graph-layout placement allocation + vertex ctor +
-// generate_graph_edges (lexeme wall).
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
 {
+	resources::query_result_for_cook* const parent = data.get_parent_query( );
+
+	if ( !data.is_successful( ) )
+	{
+		parent->finish_query( result_error );
+		return;
+	}
+
+	configs::binary_config_value const& groups =
+		(*config)["animation_space_graph"]["groups"];
+
+	std::pair< u32, u32 > mixes_count = get_animation_mixes_count( groups );
+
+	u32 const animations_count = data.size( );
+
+	// sushi@TODO: the target ctor reads a file-scope `agent_radius` float the sources
+	// never declare; LTCG drops the argument at this call site. Passing 0.f until the
+	// static's home and value are recovered.
+	animation_space_graph* graph = new ( MALLOC(
+		sizeof( animation_space_graph ) +
+		animations_count * sizeof( animation_space_vertex ) +
+		mixes_count.first * sizeof( std::pair< animation_space_vertex const*, animation_space_vertex const* > ) +
+		mixes_count.second * sizeof( animation_space_edge ),
+		"animation space graph"
+	) ) animation_space_graph( m_navigation_world, 0.f, animations_count, mixes_count.first, mixes_count.second );
+
+	animation_space_vertex* it_animations = const_cast< animation_space_vertex* >( graph->get_animations( ) );
+	for ( u32 i = 0; i < animations_count; ++i, ++it_animations )
+	{
+		resources::query_result_for_user const& query = data[i];
+		new ( it_animations ) animation_space_vertex( query.get_managed_resource( ), query.get_requested_path( ) );
+	}
+
+	std::pair< animation_space_vertex const*, animation_space_vertex const* >* it_edges =
+		const_cast< std::pair< animation_space_vertex const*, animation_space_vertex const* >* >( graph->get_mixes( ) );
+
+	configs::binary_config_value const* it_groups = groups.begin( );
+	configs::binary_config_value const* it_end_groups = groups.end( );
+	for ( ; it_groups != it_end_groups; ++it_groups )
+	{
+		u32 const group_id = (*it_groups)["group_id"];
+		u32 const intervals_count = (*it_groups)["intervals_count"];
+
+		configs::binary_config_value const& vertices = (*it_groups)["vertices"];
+
+		configs::binary_config_value const* it_vertices = vertices.begin( );
+		configs::binary_config_value const* it_end_vertices = vertices.end( );
+		for ( ; it_vertices != it_end_vertices; ++it_vertices )
+		{
+			animation_space_vertex* vertex = const_cast< animation_space_vertex* >( graph->get_animation_by_path( *it_vertices ) );
+			vertex->group_id = group_id;
+			vertex->intervals_count = intervals_count;
+		}
+
+		if ( (*it_groups).value_exists( "mixable" ) )
+		{
+			configs::binary_config_value const& mixable = (*it_groups)["mixable"];
+
+			configs::binary_config_value const* it_mix = mixable.begin( );
+			configs::binary_config_value const* it_end_mix = mixable.end( );
+			for ( ; it_mix != it_end_mix; ++it_mix )
+			{
+				pcstr const second_path = vertices[ u32( (*it_mix)["second"] ) ];
+				animation_space_vertex const* const first_mixable = graph->get_animation_by_path( vertices[ u32( (*it_mix)["first"] ) ] );
+
+				std::pair< animation_space_vertex const*, animation_space_vertex const* >* const edge = it_edges++;
+				if ( edge )
+				{
+					edge->first = first_mixable;
+					edge->second = graph->get_animation_by_path( second_path );
+				}
+			}
+		}
+	}
+
+	generate_graph_edges( graph );
+
+	parent->set_unmanaged_resource( graph, resources::nocache_memory, sizeof( animation_space_graph ) );
+	parent->finish_query( result_success );
 }
 
 } // namespace survarium
