@@ -350,7 +350,7 @@ static math::color transform_packed_normal(
 
 void grass_patch::merge_instances( )
 {
-	if ( !m_instances.size( ) )
+	if ( m_instances.empty( ) )
 		return;
 
 	m_num_avaliable_lods				=	0;
