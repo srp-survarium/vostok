@@ -37,8 +37,7 @@ void res_sampler_list::destroy_impl( ) const
 
 s32 res_sampler_list::compare( res_sampler_list const& base ) const
 {
-	u32 const size = std::min( m_samplers.size( ), base.m_samplers.size( ) );
-	for ( u32 cmp = 0; cmp < size; ++cmp )
+	for ( u32 size = std::min( m_samplers.size( ), base.m_samplers.size( ) ), cmp = 0; cmp < size; ++cmp )
 	{
 		if ( m_samplers[cmp] < base.m_samplers[cmp] )
 			return -1;

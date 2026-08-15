@@ -18,7 +18,8 @@ public:
 		m_buffer = ALLOC( u16, count );
 		m_buffer_end = m_buffer + count;
 		u16* destination = m_buffer;
-		configs::binary_config_value const* it = config.begin( ); configs::binary_config_value const* it_e = config.end( );
+		configs::binary_config_value const* it = config.begin( );
+		configs::binary_config_value const* it_e = config.end( );
 		for ( ; it != it_e; ++it, ++destination )
 		{
 			*destination = (u16)*it;
