@@ -134,7 +134,6 @@ bool resource_manager::constant_buffer_predicate::operator()(
 
 bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
 {
-	// FUNCTION BODY[0x5607b0]
 	if (left == right)
 		return true;
 
@@ -159,7 +158,6 @@ bool is_equal_formats( DXGI_FORMAT left, DXGI_FORMAT right )
 
 static bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
 {
-	// FUNCTION BODY[0x560990]
 	bool is_srgb_option			= false;
 	vostok::memory::copy			(
 		&is_srgb_option,
@@ -172,7 +170,6 @@ static bool read_srgb_flag( pcbyte dds_ptr, u32 dds_size )
 
 DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 {
-	// FUNCTION BODY[0x560710]
 	switch (format)
 	{
 		case DXGI_FORMAT_BC1_UNORM: return DXGI_FORMAT_BC1_TYPELESS;
@@ -185,13 +182,11 @@ DXGI_FORMAT get_typeless_format( DXGI_FORMAT format )
 
 void begin_command_list( D3D11_QUERY_DESC& query_desc, ID3D11Query*& out_empty_query_ptr )
 {
-	// FUNCTION BODY[0x560970]
 	vostok::render::device::ref().d3d_device()->CreateQuery(&query_desc, &out_empty_query_ptr);
 }
 
 void end_command_list( ID3D11Query*& out_empty_query_ptr )
 {
-	// FUNCTION BODY[0x560920]
 	vostok::render::device::ref().d3d_context()->End(out_empty_query_ptr);
 	while( S_OK != vostok::render::device::ref().d3d_context()->GetData(out_empty_query_ptr, 0, 0, 0) );
 	out_empty_query_ptr->Release();
@@ -199,7 +194,6 @@ void end_command_list( ID3D11Query*& out_empty_query_ptr )
 
 ID3D11Resource* make_copy_with_srgb_format( ID3D11Resource* in_texture )
 {
-	// FUNCTION BODY[0x561bd0]
 	// Make copy.
 	// http://www.gamedev.net/topic/605930-id3dx10font-and-srgb/
 	// http://timothylottes.blogspot.com/2011/02/aliasing-srgb-and-non-srgb-on-all-apis.html
@@ -430,13 +424,11 @@ void resource_manager::release( res_xs_hw<ps_data> const* ps )
 
 pcstr resource_manager::get_converted_shader_path( ) const
 {
-	// FUNCTION BODY[0x560700]
 	return "resources.converted/shaders/sm_4_0";
 }
 
 pcstr get_textures_path2( )
 {
-	// FUNCTION BODY[0x5606f0]
 	return "resources/textures";
 }
 
@@ -502,7 +494,6 @@ resource_manager::~resource_manager( )
 
 static void change_substring( fs_new::virtual_path_string* src_and_dest, pcstr what, pcstr to )
 {
-	// FUNCTION BODY[0x560c30]
 	vostok::fs_new::virtual_path_string result;
 	vostok::fs_new::virtual_path_string::size_type pos = src_and_dest->find(what);
 
@@ -518,7 +509,6 @@ static void change_substring( fs_new::virtual_path_string* src_and_dest, pcstr w
 
 static res_texture_ptr create_color_grading_base_lut( u32 const size )
 {
-	// FUNCTION BODY[0x561b20]
 	struct pixel
 	{
 #	pragma warning(push)
@@ -574,7 +564,6 @@ static res_texture_ptr create_color_grading_base_lut( u32 const size )
 
 res_texture_ptr resource_manager::get_color_grading_base_lut( )
 {
-	// FUNCTION BODY[0x561fa0]
 	if (!m_color_grading_base_lut)
 	{
 		m_color_grading_base_lut = create_color_grading_base_lut(16);
@@ -651,7 +640,6 @@ shader_constant_host const* resource_manager::register_constant_binding(
 	shader_constant_binding const& binding
 )
 {
-	// FUNCTION BODY[0x563890]
 	m_const_bindings.add( binding);
 
 	shader_constant_host * host =  backend::ref().register_constant_host( binding.name(), binding.type() );
@@ -662,7 +650,6 @@ shader_constant_host const* resource_manager::register_constant_binding(
 
 res_texture* resource_manager::find_texture( pcstr name )
 {
-	// FUNCTION BODY[0x560c00]
 	map_texture::iterator it = m_texture_registry.find( name);
 
 	if( it!=m_texture_registry.end())
@@ -681,7 +668,6 @@ res_texture* resource_manager::create_texture(
 	u32 num_last_mips_used
 )
 {
-	// FUNCTION BODY[0x564d20]
 	if( physical_name && 0 == strcmp( physical_name,"null"))
 		return 0;
 
@@ -1254,7 +1240,6 @@ res_texture* resource_manager::create_texture2d_impl(
 
 void resource_manager::release_impl( res_texture const* texture )
 {
-	// FUNCTION BODY[0x560a70]
 	DELETE( texture, resource_manager_call_destructor_predicate());
 }
 
@@ -1352,7 +1337,6 @@ res_texture* resource_manager::create_texture3d(
 
 void resource_manager::release( res_texture const* texture )
 {
-	// FUNCTION BODY[0x560bc0]
 	if( !texture->is_registered())
 		return;
 
@@ -1397,7 +1381,6 @@ void resource_manager::release( untyped_buffer const* buffer )
 
 res_state* resource_manager::create_state( state_descriptor& descriptor )
 {
-	// FUNCTION BODY[0x561690]
 	ID3D11RasterizerState*	rasterizer_state	=	m_rs_cache.get_state ( descriptor.m_rasterizer_desc);
 	ID3D11DepthStencilState* depth_stencil_state =	m_dss_cache.get_state( descriptor.m_depth_stencil_desc);
 	ID3D11BlendState*		blend_state			=	m_bs_cache.get_state( descriptor.m_effect_desc);
@@ -1573,7 +1556,6 @@ render_target* resource_manager::create_render_target(
 	u32 mip_level_slice
 )
 {
-	// FUNCTION BODY[0x564e30]
 	// ***** first pass - search already created RT
 	map_rt::iterator it = m_rt_registry.find( name);
 
@@ -1603,7 +1585,6 @@ render_target* resource_manager::create_render_target(
 
 void resource_manager::release( render_target const* rt )
 {
-	// FUNCTION BODY[0x562360]
 	if( !rt->is_registered())
 		return;
 
@@ -1657,7 +1638,6 @@ ID3D11SamplerState* resource_manager::create_sampler_state(
 	sampler_state_descriptor const& sampler_props
 )
 {
-	// FUNCTION BODY[0x5612c0]
 	return m_sampler_cache.get_state( sampler_props.m_desc);
 }
 
@@ -1733,7 +1713,6 @@ bool operator == ( shader const* sh, binder const& bn )
 
 res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& binder )
 {
-	// FUNCTION BODY[0x5635f0]
 	set<res_xs<vs_data>*, compare_shader_predicate<vs_data> >::iterator it = m_v_shaders.find( binder);
 
 	if( it != m_v_shaders.end())
@@ -1756,7 +1735,6 @@ res_xs<vs_data>* resource_manager::create_vs( xs_descriptor<vs_data> const& bind
 
 void resource_manager::release( res_xs<vs_data> const* vs )
 {
-	// FUNCTION BODY[0x5634f0]
 	if( !vs->is_registered())
 		return;
 
@@ -1771,7 +1749,6 @@ void resource_manager::release( res_xs<vs_data> const* vs )
 
 res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& binder )
 {
-	// FUNCTION BODY[0x563450]
 	set<res_xs<gs_data>*, compare_shader_predicate<gs_data> >::iterator it = m_g_shaders.find( binder);
 
 	if( it != m_g_shaders.end())
@@ -1794,7 +1771,6 @@ res_xs<gs_data>* resource_manager::create_gs( xs_descriptor<gs_data> const& bind
 
 void resource_manager::release( res_xs<gs_data> const* gs )
 {
-	// FUNCTION BODY[0x563350]
 	if( !gs->is_registered())
 		return;
 
@@ -1809,7 +1785,6 @@ void resource_manager::release( res_xs<gs_data> const* gs )
 
 res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& binder )
 {
-	// FUNCTION BODY[0x5632b0]
 	set<res_xs<ps_data>*, compare_shader_predicate<ps_data> >::iterator it = m_p_shaders.find( binder);
 
 	if( it != m_p_shaders.end())
@@ -1832,7 +1807,6 @@ res_xs<ps_data>* resource_manager::create_ps( xs_descriptor<ps_data> const& bind
 
 void resource_manager::release( res_xs<ps_data> const* ps )
 {
-	// FUNCTION BODY[0x5631b0]
 	if( !ps->is_registered())
 		return;
 
@@ -1921,7 +1895,6 @@ void resource_manager::release( res_render_output const* render_output )
 #line 1918
 void resource_manager::copy( untyped_buffer* dest, untyped_buffer* source )
 {
-	// FUNCTION BODY[0x5608f0]
 	device::ref().d3d_context()->CopyResource( dest->hardware_buffer(), source->hardware_buffer());
 }
 
@@ -1938,7 +1911,6 @@ void resource_manager::copy2D(
 	u32 src_mip
 )
 {
-	// FUNCTION BODY[0x560890]
 	ASSERT( src_x + size_x <= dest->width() && src_y + size_y <= dest->height() );
 
 	D3D11_BOX box;
@@ -1961,7 +1933,6 @@ void resource_manager::copy2D(
 
 void resource_manager::register_sampler( pcstr name, ID3D11SamplerState* sampler )
 {
-	// FUNCTION BODY[0x560ab0]
 	m_samplers_registry.push_back( mk_pair( fixed_string<64>(name), sampler) );
 }
 

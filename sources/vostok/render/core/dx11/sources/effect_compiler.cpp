@@ -43,7 +43,6 @@ effect_compiler& effect_compiler::set_depth(
 	D3D11_COMPARISON_FUNC cmp_func
 )
 {
-	// FUNCTION BODY[0x7a6020]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -63,7 +62,6 @@ effect_compiler& effect_compiler::set_stencil(
 	D3D11_STENCIL_OP zfail
 )
 {
-	// FUNCTION BODY[0x7a5f80]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -84,7 +82,6 @@ effect_compiler& effect_compiler::set_alpha_blend(
 	D3D11_BLEND_OP blend_alpha_op
 )
 {
-	// FUNCTION BODY[0x7a5f10]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -212,7 +209,6 @@ effect_compiler& effect_compiler::set_texture(
 
 effect_compiler& effect_compiler::set_cull_mode( D3D11_CULL_MODE mode )
 {
-	// FUNCTION BODY[0x7a5e10]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -222,7 +218,6 @@ effect_compiler& effect_compiler::set_cull_mode( D3D11_CULL_MODE mode )
 
 effect_compiler& effect_compiler::color_write_enable( D3D11_COLOR_WRITE_ENABLE mode )
 {
-	// FUNCTION BODY[0x7a5dc0]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -232,7 +227,6 @@ effect_compiler& effect_compiler::color_write_enable( D3D11_COLOR_WRITE_ENABLE m
 
 effect_compiler& effect_compiler::set_fill_mode( D3D11_FILL_MODE fill_mode )
 {
-	// FUNCTION BODY[0x7a5d70]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -242,7 +236,6 @@ effect_compiler& effect_compiler::set_fill_mode( D3D11_FILL_MODE fill_mode )
 
 effect_compiler& effect_compiler::bind_constant( shader_constant_binding const& binding )
 {
-	// FUNCTION BODY[0x7a6090]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -258,7 +251,6 @@ effect_compiler& effect_compiler::begin_pass(
 	shader_include_getter* include_getter
 )
 {
-	// FUNCTION BODY[0x7a6100]
 	if (m_shaders_cache_mode || s_no_effect_result)
 	{
 		shader_cache_info				info;
@@ -301,7 +293,6 @@ effect_compiler& effect_compiler::begin_pass(
 
 effect_compiler& effect_compiler::end_pass( )
 {
-	// FUNCTION BODY[0x7a68f0]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return *this;
 
@@ -338,7 +329,6 @@ effect_compiler& effect_compiler::end_pass( )
 
 effect_compiler& effect_compiler::begin_technique( )
 {
-	// FUNCTION BODY[0x7a66c0]
 	if (m_shaders_cache_mode)
 		return *this;
 
@@ -350,7 +340,6 @@ effect_compiler& effect_compiler::begin_technique( )
 
 void effect_compiler::end_technique( )
 {
-	// FUNCTION BODY[0x7a6b70]
 	if (m_shaders_cache_mode || s_no_effect_result)
 		return;
 

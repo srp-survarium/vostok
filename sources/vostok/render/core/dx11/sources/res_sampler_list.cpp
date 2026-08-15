@@ -9,7 +9,6 @@ namespace render {
 res_sampler_list::res_sampler_list( fixed_vector<sampler_slot, 16> const& slots ) :
 	m_is_registered( false )
 {
-	// FUNCTION BODY[0x739a40]
 	u32 const slots_size = slots.size();
 	for (u32 i = 0; i < slots_size; ++i)
 	{
@@ -31,7 +30,6 @@ void res_sampler_list::rebind( )
 
 void res_sampler_list::destroy_impl( ) const
 {
-	// FUNCTION BODY[0x739b70]
 	resource_manager::ref().release( this );
 }
 

@@ -131,7 +131,6 @@ u32 grass_world::add_instance(
 
 void grass_world::remove_instance( u32 const in_id )
 {
-	// FUNCTION BODY[0x635d90]
 	grass_templates_type::const_iterator	it		=	m_templates.begin();
 	grass_templates_type::const_iterator	end		=	m_templates.end();
 
@@ -158,7 +157,6 @@ void grass_world::remove_instance( u32 const in_id )
 
 grass_template* grass_world::id_to_template( u32 const id ) const
 {
-	// FUNCTION BODY[0x635a70]
 	grass_template* result							=	NULL;
 	grass_templates_type::const_iterator	it		=	m_templates.begin();
 	grass_templates_type::const_iterator	end		=	m_templates.end();
@@ -191,7 +189,6 @@ grass_template* grass_world::find_template( grass_render_model_ptr const& model 
 
 grass_patch* grass_world::find_patch( float3 const& point )
 {
-	// FUNCTION BODY[0x6359c0]
 	grass_patches_type::const_iterator it			=	m_patches.begin();
 	grass_patches_type::const_iterator end			=	m_patches.end();
 
@@ -449,7 +446,6 @@ void grass_world::render(
 	u32 const				cascade_index
 )
 {
-	// FUNCTION BODY[0x638150]
 	if ( !options::ref( ).current.m_draw_grass )
 		return;
 
@@ -498,7 +494,6 @@ void grass_world::add_grass_layer(
 	bool from_cook
 )
 {
-	// FUNCTION BODY[0x637b70]
 	update_grass_layer( desc, layer_data, true, populate, from_cook );
 }
 

@@ -26,7 +26,6 @@ static float const scale_speedtree_to_vostok = 1.0f;//0.3048f;
 speedtree_forest::speedtree_forest( ) :
 	m_forest( 0 )
 {
-	// FUNCTION BODY[0x6024b0]
 	m_forest = st_new(CForest, "CForest");
 
 	m_forest->EnableWind			(true);
@@ -38,25 +37,21 @@ speedtree_forest::speedtree_forest( ) :
 
 speedtree_forest::~speedtree_forest( )
 {
-	// FUNCTION BODY[0x6023c0]
 	st_delete(m_forest);
 }
 
 void speedtree_forest::set_wind_direction( float3 const& wind_direction )
 {
-	// FUNCTION BODY[0x601590]
 	m_wind_leader.SetDirection( vostok_to_speedtree(wind_direction) );
 }
 
 void speedtree_forest::set_wind_strength( float wind_strength )
 {
-	// FUNCTION BODY[0x601570]
 	m_wind_leader.SetStrength( wind_strength );
 }
 
 void speedtree_forest::tick( renderer_context* context )
 {
-	// FUNCTION BODY[0x601650]
 	set_wind_direction				(context->get_scene_view()->post_process_parameters().wind_direction);
 	set_wind_strength				(context->get_scene_view()->post_process_parameters().wind_strength);
 	m_forest->SetGlobalTime			(context->get_current_time());
@@ -66,7 +61,6 @@ void speedtree_forest::tick( renderer_context* context )
 
 float4x4 speedtree_forest::get_instance_transform( SpeedTree::CInstance const& in_instance )
 {
-	// FUNCTION BODY[0x6015d0]
 	for (tree_instances_type::const_iterator st_instance_it = m_tree_instances.begin(); st_instance_it != m_tree_instances.end(); ++st_instance_it)
 	{
 		speedtree_instance_impl* impl = static_cast_checked<speedtree_instance_impl*>((*st_instance_it).c_ptr());
@@ -84,7 +78,6 @@ void speedtree_forest::get_visible_tree_components(
 	tree_render_info_array_type& out_tree_render_info_array
 )
 {
-	// FUNCTION BODY[0x601ad0]
 	BEGIN_TIMER(statistics::ref().speedtree_stat_group.culling_time);
 	cull_and_compute_lod			(context, lod_reference_point, sort_result);
 	END_TIMER;
@@ -253,7 +246,6 @@ void speedtree_forest::get_visible_tree_components( renderer_context* context, v
 
 void speedtree_forest::populate_forest( )
 {
-	// FUNCTION BODY[0x602630]
 	m_forest->ClearInstances			();
 
 	CArray<CTree*>						base_trees;
@@ -355,7 +347,6 @@ static float4x4 fix_view_matrix( float4x4 const& in_view_matrix )
 
 void speedtree_forest::cull_and_compute_lod( renderer_context* context, float3 const& lod_reference_point, bool sort_result )
 {
-	// FUNCTION BODY[0x6019a0]
 	// Fix view direction for speedtree to avoid math error.
 	m_view.Set					(
 		vostok_to_speedtree		(context->get_culling_v_inverted().c.xyz()),
@@ -371,7 +362,6 @@ void speedtree_forest::cull_and_compute_lod( renderer_context* context, float3 c
 
 void speedtree_forest::add_instance( speedtree_instance_ptr st_instance_ptr, float4x4 const& transform )
 {
-	// FUNCTION BODY[0x602230]
 	speedtree_tree*				tree			= static_cast_checked<speedtree_tree*>(st_instance_ptr->m_speedtree_tree_ptr.c_ptr());
 	SpeedTree::CTree*			base_tree		= static_cast_checked<SpeedTree::CTree*>(tree);
 
@@ -393,7 +383,6 @@ void speedtree_forest::add_instance( speedtree_instance_ptr st_instance_ptr, flo
 
 void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 {
-	// FUNCTION BODY[0x601fe0]
 	// Retail line records include source stripped by the Master Gold configuration.
 #line 444
 	speedtree_instance_impl*	instance_impl			= static_cast_checked<speedtree_instance_impl*>(st_instance_ptr.c_ptr());
@@ -441,7 +430,6 @@ void speedtree_forest::remove_instance( speedtree_instance_ptr st_instance_ptr )
 
 void speedtree_forest::set_transform( speedtree_instance_ptr st_instance_ptr, float4x4 const& transform )
 {
-	// FUNCTION BODY[0x601ef0]
 	speedtree_instance_impl*	instance_impl			= static_cast_checked<speedtree_instance_impl*>(st_instance_ptr.c_ptr());
 	speedtree_tree*				tree					= static_cast_checked<speedtree_tree*>(instance_impl->m_speedtree_tree_ptr.c_ptr());
 	SpeedTree::CTree*			base_tree				= static_cast_checked<SpeedTree::CTree*>(tree);
