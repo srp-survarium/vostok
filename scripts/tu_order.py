@@ -70,7 +70,7 @@ import sys
 from pathlib import Path
 
 VOSTOK = Path(__file__).resolve().parent.parent
-DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
+DB_PATH = VOSTOK / "binaries" / "match.db"
 
 
 def open_db(path=DB_PATH):
