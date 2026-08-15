@@ -134,7 +134,6 @@ void particle_sprite_vertex::set(
 	float3	old_position_value
 )
 {
-	// FUNCTION BODY[0x88620]
 	position = position_value;
 	color = color_value;
 	uv = uv_value;
@@ -179,12 +178,10 @@ render_particle_emitter_instance::render_particle_emitter_instance(
 	m_occlusion_info_index( 0 ),
 	m_occluded( false )
 {
-	// FUNCTION BODY[0x5fe370]
 }
 
 render_particle_emitter_instance::~render_particle_emitter_instance( )
 {
-	// FUNCTION BODY[0x5fe260]
 	if ( m_vertices.initialized() )
 		VOSTOK_DESTROY_REFERENCE( m_vertices );
 
@@ -194,13 +191,11 @@ render_particle_emitter_instance::~render_particle_emitter_instance( )
 
 bool render_particle_emitter_instance::is_occluded( ) const
 {
-	// FUNCTION BODY[0x5fc780]
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 
 math::aabb const& render_particle_emitter_instance::get_aabb( ) const
 {
-	// FUNCTION BODY[0x5fc680]
 	return m_bbox;
 }
 
@@ -311,7 +306,6 @@ void render_particle_emitter_instance::update_render_buffers(
 
 u32 render_particle_emitter_instance::get_num_particles( ) const
 {
-	// FUNCTION BODY[0x5fc660]
 	u32 result = 0;
 	particle::base_particle* current = m_particle_list.front( );
 	while ( current ) {
@@ -323,7 +317,6 @@ u32 render_particle_emitter_instance::get_num_particles( ) const
 
 void render_particle_emitter_instance::render_sprites( )
 {
-	// FUNCTION BODY[0x5fdd10]
 	u32 num_particles = get_num_particles();
 
 	if (!num_particles)
@@ -480,7 +473,6 @@ void render_particle_emitter_instance::render_subuv_sprites( )
 
 void render_particle_emitter_instance::render( float3 const& view_location, u32 const num_particles )
 {
-	// FUNCTION BODY[0x5fe1f0]
 	switch (m_vertex_type)
 	{
 		case particle::particle_vertex_type_billboard:
@@ -519,7 +511,6 @@ void render_particle_emitter_instance::render( float3 const& view_location, u32 
 
 void render_particle_emitter_instance::render_beams( float3 const& view_location, u32 num_particles )
 {
-	// FUNCTION BODY[0x5fd300]
 	u32 const num_particle_per_beam = num_particles / m_beamtrail_parameters->num_beams;
 
 	for (u32 beam_index=0; beam_index<m_beamtrail_parameters->num_beams; beam_index++)
@@ -544,9 +535,10 @@ void render_particle_emitter_instance::render_trails(
 	u32 num_particles
 )
 {
-	// FUNCTION BODY[0x5fc820]
 	if (!m_beamtrail_parameters)
 		return;
+
+	// 2 target lines are likely retail-compiled-out source.
 
 	if (!num_particles)
 		return;
@@ -575,17 +567,17 @@ void render_particle_emitter_instance::render_trails(
 		{
 			//s = (1.0f - nextP->lifetime);
 		}
-		distance_from_first_to_last += s * float3(nextP->position-P->position).squared_length();
-		P = m_particle_list.get_next_of_object(P);
+		distance_from_first_to_last +=
+			s * float3(nextP->position-P->position).squared_length();
+		P = nextP;
 	}
-
-
 	float current_angle = 0.0f;
 	float const angle_incrase = math::pi / float(num_sheets);
-
 	for (u32 s=0; s<num_sheets; s++)
 	{
 		float current_uv_start = 0.0f;
+
+
 
 		vostok::particle::base_particle* P = start_particle;
 		vostok::particle::base_particle* prevP = 0;
@@ -594,19 +586,19 @@ void render_particle_emitter_instance::render_trails(
 		for (u32 p=0; p<num_quads; p++)
 		{
 			vostok::particle::base_particle* nextP = m_particle_list.get_next_of_object(P);
-
 			float s = 1.0f;
 
 			if (p==num_quads-1)
 			{
 				//s = (1.0f - nextP->lifetime);
 			}
+
 			float const distance_from_current_to_next = s * float3(nextP->position-P->position).squared_length();
-
 			float const scaleUV		= distance_from_current_to_next / distance_from_first_to_last;
-
 			float3 view_dir  	 	= math::normalize_safe(view_location - P->position);
-			float3 particle_dir 	= math::normalize_safe(nextP->position - P->position);
+
+			float3 particle_dir 	= math::normalize_safe(
+				nextP->position - P->position);
 
 			if (p!=0)
 			{
@@ -642,7 +634,7 @@ void render_particle_emitter_instance::render_trails(
 			current_uv_start += scaleUV;
 			prev_particle_dir = particle_dir;
 			prevP = P;
-			P = m_particle_list.get_next_of_object(P);
+			P = nextP;
 		}
 		current_angle += angle_incrase;
 	}
@@ -673,7 +665,6 @@ void render_particle_emitter_instance::render_trails(
 
 enum_vertex_input_type render_particle_emitter_instance::get_vertex_input_type( )
 {
-	// FUNCTION BODY[0x5fc620]
 	switch ( m_vertex_type ) {
 	case particle::particle_vertex_type_billboard:
 		return particle_vertex_input_type;
@@ -689,7 +680,6 @@ enum_vertex_input_type render_particle_emitter_instance::get_vertex_input_type( 
 
 material_effects& render_particle_emitter_instance::get_material_effects( )
 {
-	// FUNCTION BODY[0x5fc690]
 	// TODO: fix it!!!
 	if (!m_material_effects_ptr.c_ptr())
 	{
@@ -705,20 +695,17 @@ void render_particle_emitter_instance::change_material(
 	resources::unmanaged_resource_ptr const& material
 )
 {
-	// FUNCTION BODY[0x5fc7a0]
 	// TODO: particle decal!
 	m_material_effects_ptr	= vostok::static_cast_resource_ptr<material_effects_instance_ptr>(material);
 }
 
 void render_particle_emitter_instance::set_transform( float4x4 const& transform )
 {
-	// FUNCTION BODY[0x5fc600]
 	m_transform = transform;
 }
 
 void render_particle_emitter_instance::set_aabb( math::aabb const& bbox )
 {
-	// FUNCTION BODY[0x5fc5d0]
 	m_bbox = bbox;
 }
 
@@ -727,7 +714,6 @@ void render_particle_emitter_instance::draw_debug(
 	particle::enum_particle_render_mode debug_mode
 )
 {
-	// FUNCTION BODY[0x5fe890]
 	vostok::math::float4x4 camera_to_world;
 	camera_to_world.try_invert(view_matrix);
 
