@@ -137,10 +137,10 @@ void render_surface::load( configs::binary_config_value const& properties, memor
 	m_aabbox.min			= vostok::math::float3(properties["bounding_box"]["min"]);
 
 	float3 sphere_origin = (m_aabbox.max + m_aabbox.min) * .5f;
+	float const sphere_radius =
+		(sphere_origin - m_aabbox.min).length();
 
-	m_bounding_sphere = math::sphere(
-		sphere_origin,
-		(sphere_origin - m_aabbox.min).length());
+	m_bounding_sphere = math::sphere( sphere_origin, sphere_radius );
 	// 4 target lines are likely retail-compiled-out source.
 	mesh_type_enum type = (mesh_type_enum)(u16)properties["type"];
 

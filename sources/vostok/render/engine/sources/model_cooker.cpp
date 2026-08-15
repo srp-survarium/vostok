@@ -39,7 +39,12 @@ void static_model_instance_cook::translate_query( resources::query_result_for_co
 	// 5 target lines are likely retail-compiled-out source.
 	resources::user_data_variant sectors_environment_data;
 	resources::user_data_variant sound_environment_data;
-	if ( parent.user_data( ) ) { static_model_instance_user_data model_user_data;
+	if ( parent.user_data( ) )
+	{
+		static_model_instance_user_data model_user_data;
+		// 3 target lines are likely retail-compiled-out source.
+
+
 		parent.user_data( )->try_get( model_user_data );
 		if ( model_user_data.config->value_exists( "sectors" ) )
 		{
