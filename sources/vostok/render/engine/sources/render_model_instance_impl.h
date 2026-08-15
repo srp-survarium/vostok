@@ -32,10 +32,7 @@ public:
 
 	render_collision_object< render_model_instance_impl >	m_collision_object;
 
-	virtual void set_transform( float4x4 const& transform )
-	{
-		m_transform = transform;
-	}
+	virtual void set_transform( float4x4 const& transform );
 
 	float4x4 const& transform( ) const
 	{
@@ -55,5 +52,7 @@ typedef resources::resource_ptr<
 
 } // namespace render
 } // namespace vostok
+
+#include "render_model.h"
 
 #endif // #ifndef VOSTOK_RENDER_ENGINE_RENDER_MODEL_INSTANCE_IMPL_H_INCLUDED

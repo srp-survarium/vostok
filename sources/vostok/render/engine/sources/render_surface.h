@@ -28,12 +28,7 @@ struct material_effects;
 
 class render_surface : boost::noncopyable {
 public:
-	render_surface( ) :
-		m_aabbox( math::create_zero_aabb( ) ),
-		m_streaming_texture_factor( 10000.0f )
-	{
-		// FUNCTION BODY[0x6f360]
-	}
+	render_surface( );
 	virtual ~render_surface( );
 
 	enum_vertex_input_type get_vertex_input_type( ) { return m_vertex_input_type; }
@@ -60,5 +55,7 @@ STATIC_SIZE_ASSERT( render_surface, 0x9C );
 
 } // namespace render
 } // namespace vostok
+
+#include "render_model.h"
 
 #endif // #ifndef VOSTOK_RENDER_ENGINE_RENDER_SURFACE_H_INCLUDED
