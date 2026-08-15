@@ -868,3 +868,21 @@ record-boundary attribution, hot/cold layout) - each re-testable after
 broad program convergence lifts the whole-image inline state. Render:
 85.37% weighted, 1572 byte-exact, 1684 struct-match, 91 target-only.
 Next fronts: the 91 target-only pairings and the documented walls.
+
+## Target-only front opened (2026-08-15, same session)
+
+Reconstructing the seven missing console commands (decoded from target
+dynamic initializers: names from exe .data, types from vtable stores,
+ranges/serializable from ctor-field stores) and filing the render_surface
+inlines under render_model.h paired 16 functions in one pass: target-only
+91 -> 75, byte-exact 1572 -> 1583, weighted 85.33 -> 85.47.
+`set_transform` pairs at 100 via pure file relocation - PDB file
+attribution follows the inline definition's location, and out-of-class
+inline definitions in the target-attributed header with guard-safe
+bottom-includes reproduce it without moving classes.
+
+The remaining 75 target-only are dominated by kept-COMDATs (target's link
+keeps standalone copies of everywhere-inlined functions ours drops:
+render_surface ctor, render_to_sky_rms, the make_copy_with_srgb_format
+helper chain) plus callback-registration reachability - link-level state,
+re-check after broader convergence.
