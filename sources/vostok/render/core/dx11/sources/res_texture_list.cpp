@@ -9,7 +9,6 @@ namespace render {
 res_texture_list::res_texture_list	( fixed_vector<texture_slot, 128> const & slots) :
 	m_is_registered	( false )
 {
-	// FUNCTION BODY[0x6e81e0]
 	u32 const size = slots.size();
 	for (u32 i = 0; i < size; ++i)
 	{
@@ -23,7 +22,6 @@ res_texture_list::res_texture_list	( fixed_vector<texture_slot, 128> const & slo
 
 void res_texture_list::destroy_impl	() const
 {
-	// FUNCTION BODY[0x6e82a0]
 	resource_manager::ref().release( this );
 }
 

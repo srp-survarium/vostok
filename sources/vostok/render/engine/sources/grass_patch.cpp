@@ -59,13 +59,11 @@ static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 c
 
 static bool has_surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
 {
-	// FUNCTION BODY[0x5f43e0]
 	return surface_by_lod( model, lod_index ) != 0;
 }
 
 static grass_render_surface* surface_by_lod( grass_render_model_ptr model, u32 const lod_index )
 {
-	// FUNCTION BODY[0x5f4310]
 	if ( !model )
 		return 0;
 
@@ -516,7 +514,6 @@ void grass_patch::merge_instances( )
 
 bool grass_patch::is_occluded( ) const
 {
-	// FUNCTION BODY[0x5f3af0]
 	return options::ref( ).current.m_use_hiz_occlusion_culling && m_occluded;
 }
 

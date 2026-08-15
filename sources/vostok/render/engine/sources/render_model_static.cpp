@@ -604,7 +604,6 @@ static_render_model_instance::static_render_model_instance( )
 	  m_instances_count	( 0 ),
 	  m_surface_instances	( NULL )
 {
-	// FUNCTION BODY[0x6311a0]
 	// ******
 }
 
