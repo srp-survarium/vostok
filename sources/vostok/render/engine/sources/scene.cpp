@@ -1255,6 +1255,11 @@ void scene::dump_scene_statistics( ) const
 	)
 	{
 		fixed_string< 128 > model_name( "<unknown>" );
+		// 3 target lines are likely retail-compiled-out source (the model name lookup).
+
+
+		if ( model_name.length( ) > 17 )
+			model_name = model_name.substr( 17 );
 		LOG_INFO(
 			"%d: surfaces: %d, model: %s",
 			index,

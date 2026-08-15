@@ -11,7 +11,7 @@ struct lod_render_info {
 
 	bool has_geometry( u32 lod_index ) const
 	{
-		return lods && lod_index < num_lods && lods[lod_index].num_indices != 0;
+		return lods[lod_index].num_indices != 0;
 	}
 
 	lod_entry const* is_active( u32 lod_index ) const
