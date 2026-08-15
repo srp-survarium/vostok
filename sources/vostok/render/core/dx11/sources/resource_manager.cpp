@@ -1535,7 +1535,6 @@ render_target* resource_manager::create_volume_render_target(
 	D3D11_USAGE memory_usage
 )
 {
-	// FUNCTION BODY[0x564fe0]
 	map_rt::iterator it = m_rt_registry.find( name);
 
 	if( name && it != m_rt_registry.end())
