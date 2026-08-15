@@ -151,7 +151,7 @@ static u32 get_num_digits( u32 v )
 	math::clamp( v, u32( 0 ), u32( 10000000 ) );
 
 	u32 result = 0;
-	for ( u32 divider = 1; divider < 1000000 && v / divider; divider *= 10 )
+	for ( u32 divider = 1; v / divider && divider < 1000000; divider *= 10 )
 		++result;
 
 	return result;
