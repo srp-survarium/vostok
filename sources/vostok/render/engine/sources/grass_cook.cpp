@@ -22,7 +22,10 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 
 	grass_world* result = NEW( grass_world );
 
-	u8 const layers_count = (u8)(*loading_data->t_current)["layers"].size( );
+
+	configs::binary_config_value const& config = *loading_data->t_current;
+	u8 const layers_count = (u8)config["layers"].size( );
+
 	grass_cook_data* cook_data = NEW( grass_cook_data );
 	cook_data->desc = NEW_ARRAY( grass_layer_desc*, layers_count );
 	cook_data->data = NEW_ARRAY( grass_layer_data*, layers_count );
@@ -38,7 +41,8 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 
 		grass_layer_desc* layer_desc = cook_data->desc[i];
 		grass_layer_data* layer_data = cook_data->data[i];
-		configs::binary_config_value const& t = (*loading_data->t_current)["layers"][i];
+
+		configs::binary_config_value const& t = config["layers"][i];
 		requests[i].id = resources::raw_data_class;
 
 		if ( t.value_exists( "intermediate_filename" ) )
@@ -48,6 +52,7 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 		}
 		else
 		{
+
 			fs_new::virtual_path_string filename;
 			filename.assignf( "%s/%s", loading_data->project_resources_path.c_str( ), pcstr( t["filename"] ) );
 			STR_JOINA( requests[i].path, filename.c_str( ) );
@@ -66,7 +71,10 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 		{
 			u8 const models_count = (u8)t["models"].size( );
 			layer_desc->models_list.resize( models_count );
-			for ( u8 model_index = 0; model_index < models_count; ++model_index )
+
+			for ( u8 model_index = 0;
+				  model_index < models_count;
+				  ++model_index )
 			{
 				layer_desc->models_list[model_index].name = pcstr( t["models"][model_index] );
 				layer_desc->models_list[model_index].probability_ = 1.f / u32( models_count );
@@ -77,15 +85,22 @@ void grass_cook::translate_query( resources::query_result_for_cook& parent )
 		{
 			u8 const models_count = (u8)t["model_def"].size( );
 			layer_desc->models_list.resize( models_count );
-			for ( u8 model_index = 0; model_index < models_count; ++model_index )
+
+			for ( u8 model_index = 0;
+				  model_index < models_count;
+				  ++model_index )
 			{
 				layer_desc->models_list[model_index].name = pcstr( t["model_def"][model_index]["name"] );
 				layer_desc->models_list[model_index].probability_ = t["model_def"][model_index]["probability"];
-				layer_desc->models_list[model_index].scale = t["model_def"][model_index].value_exists( "scale" ) ?
-					float( t["model_def"][model_index]["scale"] ) : 1.f;
+
+				if ( t["model_def"][model_index].value_exists( "scale" ) )
+					layer_desc->models_list[model_index].scale = float( t["model_def"][model_index]["scale"] );
+				else
+					layer_desc->models_list[model_index].scale = 1.f;
 			}
 		}
 	}
+
 
 	resources::query_resources(
 		requests.begin( ),
