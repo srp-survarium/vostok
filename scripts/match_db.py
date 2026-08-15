@@ -35,10 +35,13 @@ import sqlite3
 import sys
 from pathlib import Path
 
+import match_state
 import normalize_objdiff_symbols
 
 VOSTOK = Path(__file__).resolve().parent.parent
-DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
+# The committed ledger is docs/binary_matching/match_state.tsv (match_state.py);
+# this DB is a regenerable cache and is gitignored.
+DB_PATH = VOSTOK / "binaries" / "match.db"
 REPORT = VOSTOK / "binaries" / "objdiff" / "report.json"
 CROSS_UNIT_REPORT = VOSTOK / "binaries" / "objdiff" / "report-cross-unit.json"
 TARGET_IDX = VOSTOK / "binaries" / "rich" / "target" / "index.jsonl"
@@ -720,14 +723,8 @@ def effective_source_hash(rec, module=None):
     extent = _source_extent(rec)
     if extent is None:
         return None
-    source_file, _lo, _hi, text = extent
-    owner = module or module_of(source_file)
-    body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
-    context = _max_context_hash(owner)
-    unit_context = _translation_unit_context_hash(source_file)
-    if unit_context:
-        context = f"{context}.{unit_context}"
-    return f"{body}.{context}"
+    _source_file, _lo, _hi, text = extent
+    return hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
 
 
 def effective_source_hash_at(source_file, lo, hi, module):
@@ -740,12 +737,7 @@ def effective_source_hash_at(source_file, lo, hi, module):
             text = "".join(f.readlines()[lo - 1 : hi])
     except OSError:
         return None
-    body = hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
-    context = _max_context_hash(module or module_of(source_file))
-    unit_context = _translation_unit_context_hash(source_file)
-    if unit_context:
-        context = f"{context}.{unit_context}"
-    return f"{body}.{context}"
+    return hashlib.sha1(text.encode("latin-1")).hexdigest()[:12]
 
 
 def retained_max_effective_hash(previous, rec):
@@ -1622,6 +1614,17 @@ def regen():
     # carry persistent tables forward from the existing DB
     old_history, old_maxima, old_maxima_epochs = {}, {}, {}
     old_flags, old_attempts = [], []
+    if not DB_PATH.is_file() and Path(match_state.STATE_PATH).is_file():
+        # no cache (fresh clone / wiped binaries): the committed ledger holds
+        # the only copy of the campaign's memory, so start from it
+        old_history, old_maxima, old_attempts_t, old_flags_t = (
+            match_state.seed_db_tables()
+        )
+        old_attempts = list(old_attempts_t)
+        old_flags = list(old_flags_t)
+        log(f"seeded persistent state from {Path(match_state.STATE_PATH).name}: "
+            f"{len(old_history)} history / {len(old_maxima)} maxima / "
+            f"{len(old_flags)} flags")
     if DB_PATH.is_file():
         old = open_db()
         old_history = {r["mangled"]: tuple(r) for r in old.execute("SELECT * FROM history")}
@@ -1944,6 +1947,9 @@ def regen():
         f"{len(target)} target / {len(base)} base / {len(pair_rows)} paired / "
         f"{len(bos_rows)} base-only classified"
     )
+
+    written = match_state.export_from_db(DB_PATH)
+    log(f"ledger {Path(match_state.STATE_PATH).name}: {written} rows")
 
 
 def parse_size(text):

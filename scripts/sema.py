@@ -62,7 +62,7 @@ from pathlib import Path
 
 VOSTOK = Path(__file__).resolve().parent.parent
 RICH = VOSTOK / "binaries" / "rich"
-DB_PATH = VOSTOK / "docs" / "binary_matching" / "match.db"
+DB_PATH = VOSTOK / "binaries" / "match.db"
 OBJDIFF = VOSTOK / "binaries" / "objdiff"
 
 RE_CALL = re.compile(r"^call\s+(.+?)\s*$", re.IGNORECASE)

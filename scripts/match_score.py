@@ -40,7 +40,7 @@ from pathlib import Path
 REPO = Path(__file__).resolve().parent.parent
 REPORT = REPO / "binaries" / "objdiff" / "report.json"
 README = REPO / "README.md"
-MATCH_DB = REPO / "docs" / "binary_matching" / "match.db"
+MATCH_DB = REPO / "binaries" / "match.db"
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"

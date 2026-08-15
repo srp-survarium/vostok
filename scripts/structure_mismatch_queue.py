@@ -70,7 +70,7 @@ from match_db import fn_from_mangled  # noqa: E402
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 VOSTOK_DIR = SCRIPT_DIR.parent
-DB_PATH = VOSTOK_DIR / "docs" / "binary_matching" / "match.db"
+DB_PATH = VOSTOK_DIR / "binaries" / "match.db"
 QUEUE_FILE = VOSTOK_DIR / "docs" / "binary_matching" / "structure_mismatch_queue.md"
 
 # The 20 in-scope NON-RENDER engine modules (render matched last; game / game_core

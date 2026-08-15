@@ -569,7 +569,15 @@ class MergePersistentMaximaTests(unittest.TestCase):
 
 
 class EffectiveSourceHashTests(unittest.TestCase):
-    def test_cpp_epoch_changes_when_another_function_in_the_tu_changes(self):
+    def test_hash_ignores_other_functions_in_the_same_tu(self):
+        """A sibling edit must NOT reset this function's banked max.
+
+        The hash used to fold in the owning module's headers and the whole
+        owning .cpp, so any sibling edit reset max for every function in the TU
+        (137 of them in render_engine_world_pc_dx11.cpp). That left 16,659 of
+        16,661 rows with max == cur. The gate is the function body alone;
+        context is diagnosis, not an eraser.
+        """
         with tempfile.TemporaryDirectory() as temporary_directory:
             root = Path(temporary_directory)
             source = root / "sources/vostok/animation/sources/example.cpp"
@@ -581,12 +589,30 @@ class EffectiveSourceHashTests(unittest.TestCase):
             }
 
             with mock.patch.object(MATCH_DB, "VOSTOK", root):
-                MATCH_DB._MAX_CONTEXT_CACHE.clear()
                 first = MATCH_DB.effective_source_hash(record, "animation")
                 source.write_text(
                     "body line\nother function v2\n", encoding="latin-1"
                 )
-                MATCH_DB._MAX_CONTEXT_CACHE.clear()
+                second = MATCH_DB.effective_source_hash(record, "animation")
+
+            self.assertEqual(first, second)
+
+    def test_hash_changes_when_the_function_body_changes(self):
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text("body line\nother function\n", encoding="latin-1")
+            record = {
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 1}],
+            }
+
+            with mock.patch.object(MATCH_DB, "VOSTOK", root):
+                first = MATCH_DB.effective_source_hash(record, "animation")
+                source.write_text(
+                    "body line EDITED\nother function\n", encoding="latin-1"
+                )
                 second = MATCH_DB.effective_source_hash(record, "animation")
 
             self.assertNotEqual(first, second)
