@@ -125,13 +125,12 @@ effect_compiler& effect_compiler::set_texture(
 	if ( !options::ref().current.m_use_texture_streaming)
 		num_last_mips_used	= u32(-1);
 
-	fs_new::virtual_path_string	physical_name_lower_case( physical_name);
-	physical_name_lower_case.make_lowercase();
+	s.make_lowercase();
 
 	if (m_shaders_cache_mode || s_no_effect_result)
 	{
 		texture_query_desc	desc;
-		desc.m_query_physicaly_path		= physical_name_lower_case.c_str();
+		desc.m_query_physicaly_path		= s.c_str();
 		desc.m_num_last_mips_used		= num_last_mips_used;
 
 		m_textures_for_query.push_back	( desc);
@@ -159,7 +158,7 @@ effect_compiler& effect_compiler::set_texture(
 		return *this;
 
 	res_texture*	texture	= resource_manager::ref().create_texture(
-		physical_name_lower_case.c_str(),
+		s.c_str(),
 		0,
 		0,
 		false,

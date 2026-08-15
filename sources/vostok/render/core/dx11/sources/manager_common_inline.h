@@ -6,7 +6,7 @@ namespace render {
 
 #line 13
 template < typename resource_type >
-inline bool reclaim( vector< resource_type* >& vec, resource_type const* ptr )
+bool reclaim( vector< resource_type* >& vec, resource_type const* ptr )
 {
 	typename vector< resource_type* >::iterator it = vec.begin( ),
 		end = vec.end( );
@@ -24,7 +24,7 @@ inline bool reclaim( vector< resource_type* >& vec, resource_type const* ptr )
 }
 
 template < typename resource_type, typename predicate_type >
-inline bool reclaim( set< resource_type*, predicate_type >& container, resource_type const* ptr )
+bool reclaim( set< resource_type*, predicate_type >& container, resource_type const* ptr )
 {
 	typename set< resource_type*, predicate_type >::iterator const found = container.find( ptr );
 	if ( found != container.end( ) ) {
