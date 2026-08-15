@@ -817,3 +817,37 @@ module instantiates them; anchors don't reference base_particle). This is
 whole-program LTCG inliner state - expected to converge as stubs/carcass code
 retire. A `__forceinline` lever would need sushi's authorization per the
 packet_reader precedent; not applied.
+
+## Percent-harvest arc (2026-08-15, sushi directive: raise %)
+
+The one-sided byte-delta sieve over the QUANTITY/SPLIT queue (|t_size -
+b_size| > 40 with unequal totals) is the reliable finder for genuine source
+gaps; equal-total rows are attribution/fragmentation and park cleanly.
+
+Recovered (measured):
+- `scene::dump_scene_statistics` 67.4 -> **98.6**: the target keeps a
+  dead-at-runtime `substr(17)` "resources/models/" prefix strip over a
+  compiled-out name lookup; `fixed_string::substr` by value reproduces the
+  temp+memcpy shape exactly.
+- `grass_cook::translate_query` 81.0 -> **87.1**: binary-config deref local,
+  model scale ternary rewritten as if/else re-evaluating the chain, for-head
+  line split. A second `layers` extraction measured worse and was reverted.
+- `speedtree_forest::get_visible_tree_components` 81.3 -> **87.1**:
+  `lod_render_info::has_geometry` is the target's single `num_indices` clause
+  (no lods/bounds guards) - every inlined `is_active` site shrinks.
+- `effect_compiler::set_texture(pcstr,pcstr)` 67.6 -> 68.8: the dead
+  `fixed_string s` is the lowercase path source; the separate
+  `virtual_path_string` ctor was ours.
+
+Rejected by measurement (do not retry): cloud_simulation floor-locals
+(61.5->58.8) and sample_y wrap (76.0->39.1); transform_packed_normal
+statement split (65.3->63.7); grass layers-local; remove_patches while-form
+(neutral).
+
+Wall taxonomy consolidated (all parked with counted evidence): intrusive_list
+front/get_next (387 base refs vs 27 target) blocking the render_trails
+unroll; aabb::modify inline (70 vs 49) at init_collision/speedtree ctors;
+reclaim<T> release chains (keyword removal measured codegen-neutral);
+memory::copy intrinsic widths; attribution shuffles with equal byte totals.
+These are whole-program LTCG state and should re-measure after broad
+convergence.

@@ -176,7 +176,8 @@ void grass_patch::try_accumulate_trample(
 grass_patch::~grass_patch( )
 {
 	for ( u32 i = 0; i < num_lods; ++i ) {
-		FREE( m_merged_indices[i] ); FREE( m_sort_info[i] );
+		FREE( m_merged_indices[i] );
+		FREE( m_sort_info[i] );
 	}
 
 	if (m_collision_tree && m_collision_object)
