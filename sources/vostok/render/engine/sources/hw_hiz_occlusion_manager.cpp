@@ -186,11 +186,15 @@ void hw_hiz_occlusion_manager::render_occluders( renderer_context* in_context )
 
 	backend::ref( ).set_viewport( view_port );
 	// 3 target lines are likely retail-compiled-out source.
+
+
 	backend::ref( ).set_render_targets( m_rt_depth_mips[0].c_ptr( ), 0, 0, 0 );
 	backend::ref( ).set_depth_stencil_target( m_ds_occlusion_depth.c_ptr( ) );
 	backend::ref( ).clear_render_targets( 1.f, 1.f, 1.f, clear_value );
 	backend::ref( ).clear_depth_stencil( D3D_CLEAR_DEPTH | D3D_CLEAR_STENCIL, clear_value, 0 );
 	// 3 target lines are likely retail-compiled-out source.
+
+
 	in_context->set_w( math::create_scale( float3( 3.f, 3.f, 3.f ) ) );
 	m_hiz_occlusion_effect->apply( effect_hiz_occlusion::hiz_occluders_depth_pass, 0 );
 	m_sphere_occluder_geometry.render( );

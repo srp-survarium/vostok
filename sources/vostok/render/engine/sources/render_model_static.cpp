@@ -46,6 +46,7 @@ static bool read_diffuse_colors(
 		return false;
 
 	res_effect_ptr& effect = m_materail_effects_instance->get_material_effects().m_effects[gbuffer_render_stage];
+
 	if (!effect)
 		return false;
 
@@ -55,37 +56,12 @@ static bool read_diffuse_colors(
 		Size,
 		DXGI_FORMAT_R8G8B8A8_UNORM,
 		enum_rt_usage_render_target,
-		res_texture_ptr(),
-		0,
-		D3D11_USAGE_DEFAULT,
-		1,
-		0
+		res_texture_ptr(), 0, D3D11_USAGE_DEFAULT, 1, 0
 	);
-
-	res_texture_ptr tex = resource_manager::ref().create_texture(
-		"$user$diffuse_color",
-		NULL,
-		0,
-		false,
-		true,
-		true,
-		u32(-1)
-	);
+	res_texture_ptr tex = resource_manager::ref().create_texture( "$user$diffuse_color", NULL, 0, false, true, true, u32(-1) );
 
 	effect->apply(3, 0);
-	system_renderer::ref().fill_surface(
-		rt,
-		render_target_ptr(),
-		render_target_ptr(),
-		render_target_ptr(),
-		render_target_ptr(),
-		false,
-		NULL,
-		0.f,
-		0.f,
-		1.f,
-		1.f
-	);
+	system_renderer::ref().fill_surface( rt, render_target_ptr(), render_target_ptr(), render_target_ptr(), render_target_ptr(), false, NULL, 0.f, 0.f, 1.f, 1.f );
 
 	device::ref().d3d_context()->Flush();
 	backend::ref().flush();
@@ -104,15 +80,9 @@ static bool read_diffuse_colors(
 
 	resource_manager::ref().copy2D(
 		lockable_texture.c_ptr(),
-		0,
-		0,
-		tex.c_ptr(),
-		0,
-		0,
-		Size,
-		Size,
-		0,
-		0
+		0, 0,
+		tex.c_ptr(), 0, 0,
+		Size, Size, 0, 0
 	);
 
 	device::ref().d3d_context()->Flush();
@@ -122,11 +92,14 @@ static bool read_diffuse_colors(
 	math::color const* data = static_cast<math::color const*>(
 		lockable_texture->map2D(D3D11_MAP_READ, 0, row_pitch)
 	);
+
 	if (!data)
 		return false;
 
 	for (u32 row = 0; row < Size; ++row)
 	{
+
+
 		for (u32 column = 0; column < Size; ++column)
 			results[column][row] = data[column];
 
@@ -134,6 +107,7 @@ static bool read_diffuse_colors(
 	}
 
 	lockable_texture->unmap2D(0);
+
 	return true;
 }
 
@@ -777,59 +751,73 @@ void static_render_model_instance::get_surfaces(
 )
 {
 	if (lod_id == u8(-1))
+
+
 		lod_id = select_lod(*mat_vp, *view_pos);
+
+
 
 	if (lod_id != 0xaa)
 	{
-		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id])
-		{
+		while (!m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id]) {
 			if (!lod_id)
 				break;
 			--lod_id;
 		}
 	}
-
 	if (lod_id == 0xaa)
 	{
 		m_current_lod_index = 0;
-		list.reserve(list.size() + m_instances_count);
 
-		for (u8 i = 0; i < m_instances_count; ++i)
-		{
+		list.reserve(
+			list.size() + m_instances_count);
+
+		for (u8 i = 0; i < m_instances_count; ++i) {
 			render_surface_instance* inst = m_surface_instances + i;
-			if (!visible_only || inst->m_flags & surface_flags)
-				list.push_back(inst);
+			if (!visible_only || inst->m_flags & surface_flags) list.push_back(inst);
 		}
 
 		return;
 	}
-
 	if (lod_id == 3)
 		return;
+	// 10 target lines are likely retail-compiled-out source.
+
+
+
+
+
+
+
+
 
 	u8 lod_surfaces_count = m_original->m_lods_descriptor->m_lod_surfaces_count[lod_id];
 	if (!lod_surfaces_count)
 		return;
 
 	list.reserve(list.size() + lod_surfaces_count);
+
 	pbyte lod_surfaces = m_original->m_lods_descriptor->m_lod_surfaces[lod_id];
 
 	bool need_reset_occlusion = false;
+
 	if (m_current_lod_index != lod_id)
+
 		need_reset_occlusion = true;
 	m_current_lod_index = lod_id;
 
-	for (; lod_surfaces_count; ++lod_surfaces, --lod_surfaces_count)
-	{
+	for (; lod_surfaces_count; ++lod_surfaces, --lod_surfaces_count) {
 		render_surface_instance* inst = m_surface_instances + *lod_surfaces;
-		if (!visible_only || inst->m_flags & visible_flag)
+
+		if (!visible_only ||
+			inst->m_flags
+			& visible_flag)
 		{
 			if (need_reset_occlusion)
 			{
 				inst->m_occlusion_info_index = u32(-1);
 				inst->m_occluded = false;
 			}
-
 			list.push_back(inst);
 		}
 	}
