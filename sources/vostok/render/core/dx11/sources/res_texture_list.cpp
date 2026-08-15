@@ -34,8 +34,7 @@ void res_texture_list::destroy_impl	() const
 // `sema sweep` files these as TOPOLOGY: contracting it makes the two CFGs isomorphic.
 s32 res_texture_list::compare( res_texture_list const& base ) const
 {
-	u32 const size = std::min( m_container.size( ), base.m_container.size( ) );
-	for ( u32 cmp = 0; cmp < size; ++cmp )
+	for ( u32 size = std::min( m_container.size( ), base.m_container.size( ) ), cmp = 0; cmp < size; ++cmp )
 	{
 		if ( m_container[cmp] < base.m_container[cmp] )
 			return -1;
@@ -54,8 +53,7 @@ s32 res_texture_list::compare(
 	fixed_vector<texture_slot, 128> const& base
 ) const
 {
-	u32 const size = std::min( m_container.size( ), base.size( ) );
-	for ( u32 i = 0; i < size; ++i )
+	for ( u32 size = std::min( m_container.size( ), base.size( ) ), i = 0; i < size; ++i )
 	{
 		if ( m_container[i] < base[i].texture )
 			return -1;
