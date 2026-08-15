@@ -1,4 +1,4 @@
-# vostok - Claude working notes
+# vostok - Claude working notes (Read AGENTS.md too).
 
 This repo binary-matches the Vostok Engine (Survarium v0.100b): we write C++
 that, compiled with the original toolchain (MSVC 8.0 / VS2008), produces
@@ -31,13 +31,6 @@ in the same commit that touches that PR:
 Grep `sushi@TODO:` for the live set; `review_todos.md` is the curated index. Tick a
 row to `done` (and drop the marker) only when the matching question is actually
 resolved.
-
-## Python scripts
-
-After editing anything under `scripts/`, lint it with ruff (provided by the
-devShell):
-
-    ruff check scripts/         # add --fix for the safe auto-fixes
 
 ## Tools and assets come from Nix, not sibling repos
 
@@ -74,16 +67,58 @@ game PDB instead uses `c:/survarium/sources`.
                                  # + ninja, and generates the target side once
     python3 scripts/rebuild.py   # ninja build under Wine, then regenerate
                                  # binaries/structure/base + binaries/objdiff/base,
-                                 # then regenerate docs/binary_matching/match.db
+                                 # then refresh the matching ledger
 
 A full engine build under Wine takes ~10 minutes; run it in the background (it is no
 longer the loop bottleneck - agent token cost is). The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 `objdiff-cli report generate -p binaries/objdiff`. Every base delink regenerates
 `binaries/objdiff/report.json` (and `report-changes.json`); `rebuild.py` then
-regenerates `match.db` from that report at the end of its run. `match_db.py
-refresh` is the regen-only path (re-derive the DB from an already-built report;
+refreshes the ledger from that report at the end of its run. `match_db.py
+refresh` is the regen-only path (re-derive from an already-built report;
 run `rebuild.py` first if sources moved) - it does NOT rebuild.
+
+## The matching ledger (`match.py`)
+
+`docs/binary_matching/match_state.tsv` is the committed record of the campaign:
+one text row per target function. Query and update it with `scripts/match.py` -
+it reads the file directly, so it needs no database and no build.
+
+    python3 scripts/match.py report --module render      # byte-weighted rollup
+    python3 scripts/match.py report --per-unit --module render
+    python3 scripts/match.py queue --module render       # one batch per TU, worst first
+    python3 scripts/match.py list --module render --class QUANTITY,SPLIT
+    python3 scripts/match.py list --headroom             # hist > max: we had it better once
+    python3 scripts/match.py tried <mangled> --note "what was attempted"
+    python3 scripts/match.py park <mangled> --cause "why it stops here"
+    python3 scripts/match.py open <mangled>              # undo a park
+
+Each row carries three percentages, and the difference between them is the whole
+point:
+
+- **`cur`** - this build. Noisy: under LTCG/ICF a function moves without its
+  source moving.
+- **`max`** - the peak proven for *this exact source body* (`hash`). It resets
+  only when that body changes, because new source must prove itself.
+  **Driving every `max` to 100 is the campaign goal**; a final pass then lands
+  them together.
+- **`hist`** - the all-time peak. Never resets.
+
+### `(held)` means do not chase it
+
+When a build reports a function lower than its `max`, `match.py` prints
+**`(held <max>)`** next to it. That is not a regression: the peak is still
+proven for this exact source, and the dip is compiler noise - a fold
+representative changed, or an inline decision flipped in a sibling TU. **Do not
+try to "fix" a held row.** `report` counts them in the `held` column.
+
+A real regression is a row whose `max` fell, which only happens when the source
+body changed. `hist > max` (the `head` column, `list --headroom`) means an
+earlier implementation scored better and we lost it - that IS worth working.
+
+`status` is `done` (max >= 100) / `inprogress` / `blocked` (something missing,
+including target-only) / `parked` (worked, could not raise it - `note` says why).
+Keep `note` short; it is what stops the next matcher re-deriving a dead end.
 
 ## Match score (README regression tracker)
 
@@ -93,13 +128,17 @@ top of README.md. **`rebuild.py` refreshes that block at the end of every build*
 (alongside the `match.db` regen), so it stays current with `report.json` on its
 own - you do not run `match_score.py` by hand. The numbers come straight from
 objdiff's measures (the source carries no status markers; per-function
-status/queues live in `docs/binary_matching/match.db` via `scripts/match_db.py`
-- refresh / list / report / queue / flag; design in
-`docs/binary_matching/match_db_design.md`), so the README is an honest, no-run
+status lives in the ledger - see above), so the README is an honest, no-run
 regression tracker - diff the block across commits. If the block ever conflicts on
 a merge/cherry-pick, don't hand-resolve it: take either side and rerun `rebuild.py`
 (or, if the artifacts are already built, `match_score.py --write-readme`) to
-reconcile it deterministically - same as `match.db`.
+reconcile it deterministically - same as the ledger.
+
+Both the ledger and the README block are **text**, so a conflict is a normal
+text conflict and `git diff` shows exactly which functions moved. That is why
+the old committed `match.db` is gone: SQLite could not be diffed or merged, and
+re-serialised its pages on every write, so each commit stored a fresh ~4 MB blob
+(~3.5 GB of history). `binaries/match.db` remains only as a regenerable cache.
 
 ### Header edits trigger rebuilds (vcproj2ninja tracks `#include`s)
 

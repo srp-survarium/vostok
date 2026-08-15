@@ -41,6 +41,7 @@ STATE_PATH = os.path.join(VOSTOK, "docs", "binary_matching", "match_state.tsv")
 # Column order is the file format; keep it stable so diffs stay readable.
 COLUMNS = [
     "mangled",   # identity (the demangled form is derived, never stored)
+    "unit",      # owning TU id into the [units] legend; a matcher owns a whole TU
     "module",    # logical owner, resolved through unit->module overrides
     "status",    # done | inprogress | blocked | parked
     "cls",       # MATCH | SIZE | QUANTITY | SPLIT  (structure verdict)
@@ -48,6 +49,8 @@ COLUMNS = [
     "max",       # peak for this `hash`
     "hist",      # all-time peak, never resets
     "tries",     # times the source body changed under us
+    "size",      # target byte size - the report headline is byte-weighted
+    "flags",     # 'f' = frameless (LTCG-customised leaf; queue skips these)
     "hash",      # 12 hex chars of the function's own source body
     "note",      # what was attempted / why parked or blocked - keep it short
 ]
@@ -90,21 +93,37 @@ def _num(text):
         return None
 
 
+UNIT_LEGEND = "# [units] "
+
+
 def load(path=STATE_PATH):
-    """Read the ledger into {mangled: row-dict}. Numeric columns become floats."""
+    """Read the ledger into {mangled: row-dict}.
+
+    `unit` is stored as an id into the `# [units]` legend to keep the 45-char
+    TU paths out of all 19k rows; it is resolved back to the path here, so
+    callers never see the encoding.
+    """
     rows = {}
     if not os.path.exists(path):
         return rows
+    units = {}
     with open(path, encoding="utf-8", newline="") as fh:
-        for rec in csv.DictReader(
-            (line for line in fh if not line.startswith("#")), delimiter="\t"
-        ):
+        body = []
+        for line in fh:
+            if line.startswith(UNIT_LEGEND):
+                ident, _, name = line[len(UNIT_LEGEND):].strip().partition("\t")
+                units[ident] = name
+            elif not line.startswith("#"):
+                body.append(line)
+        for rec in csv.DictReader(body, delimiter="\t"):
             mangled = rec.get("mangled")
             if not mangled:
                 continue
             for key in ("cur", "max", "hist"):
                 rec[key] = _num(rec.get(key))
             rec["tries"] = int(rec["tries"]) if rec.get("tries") else 0
+            rec["size"] = int(rec["size"]) if rec.get("size") else 0
+            rec["unit"] = units.get(rec.get("unit", ""), "")
             rows[mangled] = rec
     return rows
 
@@ -112,13 +131,21 @@ def load(path=STATE_PATH):
 def save(rows, path=STATE_PATH):
     """Write the ledger deterministically: sorted, LF endings, stable columns."""
     ordered = sorted(rows.values(), key=lambda r: r["mangled"])
+    names = sorted({r.get("unit") or "" for r in ordered} - {""})
+    ids = {name: str(i) for i, name in enumerate(names)}
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8", newline="") as fh:
         fh.write(HEADER)
+        for name in names:
+            fh.write(f"{UNIT_LEGEND}{ids[name]}\t{name}\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(COLUMNS)
         for row in ordered:
-            writer.writerow([_fmt(row.get(col)) for col in COLUMNS])
+            cells = []
+            for col in COLUMNS:
+                value = ids.get(row.get("unit"), "") if col == "unit" else row.get(col)
+                cells.append(_fmt(value))
+            writer.writerow(cells)
     os.replace(tmp, path)
     return len(ordered)
 
@@ -281,13 +308,17 @@ def export_from_db(db_path, path=STATE_PATH):
     rows = {}
 
     for rec in con.execute(
-        """SELECT s.mangled, t.module, p.fuzzy_pct AS cur, p.struct_class AS cls
+        """SELECT s.mangled, t.module, t.size, t.frameless, u.name AS unit,
+                  p.fuzzy_pct AS cur, p.struct_class AS cls
            FROM target_functions t
            JOIN symbols s ON s.id = t.sym
+           LEFT JOIN units u ON u.id = t.unit
            LEFT JOIN pairs p ON p.target_rva = t.rva"""
     ):
         rows[rec["mangled"]] = {
             "mangled": rec["mangled"], "module": rec["module"] or "",
+            "unit": rec["unit"] or "", "size": rec["size"] or 0,
+            "flags": "f" if rec["frameless"] else "",
             "cls": rec["cls"] or "", "cur": rec["cur"], "max": None,
             "tries": 0, "hash": "", "note": "",
             "_paired": rec["cur"] is not None, "_flagged": False,
@@ -295,7 +326,8 @@ def export_from_db(db_path, path=STATE_PATH):
 
     def touch(mangled):
         return rows.setdefault(mangled, {
-            "mangled": mangled, "module": "", "cls": "", "cur": None,
+            "mangled": mangled, "module": "", "unit": "", "size": 0,
+            "flags": "", "cls": "", "cur": None,
             "max": None, "tries": 0, "hash": "", "note": "",
             "_paired": False, "_flagged": False,
         })
