@@ -794,3 +794,26 @@ bodied *and* our LTCG also declines to inline it.
    two class declarations into a `render_model.h` pairs them.
 4. `fix_view_matrix` (62.8) and `register_cooks` (38.0) are the two biggest
    freshly-paired rows with real shape gaps.
+
+## Particle emitter instance TU: the intrusive_list inline wall (2026-08-15)
+
+Line topology for all five open functions now reproduces the target PDB line
+table exactly (verified delta-by-delta; `P = nextP;` recovered from the target's
+4-byte register-mov record). The remaining byte residuals across the whole TU
+share ONE cause: the target inlines `intrusive_list<base_particle,...>::front /
+get_next_of_object` everywhere (27 references in the target index), while our
+base keeps them as out-of-line calls at ~230 sites program-wide (387 references)
+- even inside `intrusive_list_inline.h`'s own methods. Downstream effects:
+
+- `render_trails` loop1: target's pure-load body gets x2-unrolled with aligned
+  loop tops; base's call-bearing body is not unrollable.
+- `render_sprites`: rotated loop entry + record fragmentation (37:25 stmts over
+  a verified-faithful source line map).
+- `render()`: custom convention flip (target `ret 4`/stack arg vs base
+  register), negotiated by its 6 stage-TU callers.
+
+No source-side cause exists (the getters are trivial in-class statics; no /Od
+module instantiates them; anchors don't reference base_particle). This is
+whole-program LTCG inliner state - expected to converge as stubs/carcass code
+retire. A `__forceinline` lever would need sushi's authorization per the
+packet_reader precedent; not applied.
