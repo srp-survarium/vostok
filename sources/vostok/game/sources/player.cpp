@@ -1447,24 +1447,21 @@ void player::detach_controller( )
 	m_force_animation_selection = true;
 }
 
-// claude@NOTE: PARKED on a missing render-module overload. 9 stmts (target 0x5e4840):
-//   if ( m_player_head_visible != is_visible ) {                         // [esi+10F78h]
-//     m_player_head_visible = is_visible;
-//     const u32 mode = is_visible ? 2 : 3;                               // visible:2 hidden:3
-//     m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 0, mode );
-//     ... ( body parts 6, 7, 5 )
-//   }
-// The four calls use scene_renderer::set_model_visible( render_model_instance_ptr
-// const&, u32 body_part_index, u32 visibility_mode ) - a REAL target symbol
-// (render scene_renderer, 0x6e0950) but NOT declared in scene_renderer.h (only the
-// (model, subsurface_name, bool) overload exists). Declaring + bodying that overload
-// is a render-module change (render matches last); cannot link without its body.
-// Next step: add the (model,u32,u32) overload + body in the render scene_renderer
-// PR, then this pairs.
-// STATE[STUB]
 void player::set_head_visibility( bool is_visible )
 {
-	VOSTOK_UNREFERENCED_PARAMETER( is_visible );
+	if ( m_player_head_visible == is_visible )
+		return;
+
+	m_player_head_visible = is_visible;
+
+	u32 mode = 2;
+	if ( is_visible )
+		mode = 3;
+
+	m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 0, mode );
+	m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 6, mode );
+	m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 7, mode );
+	m_game_scene.scene_renderer( ).set_model_visible( m_current.model->m_render_model, 5, mode );
 }
 
 // claude@NOTE: file-static default callback; target is `xor eax,eax; ret`
