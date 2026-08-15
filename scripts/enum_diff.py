@@ -72,11 +72,10 @@ import sys
 import tempfile
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-STRUCTURE_TARGET = VOSTOK_DIR / "binaries" / "structure" / "target" / "headers"
-BASE_SOURCES = VOSTOK_DIR / "sources" / "vostok"
-QUEUE_FILE = VOSTOK_DIR / "docs" / "binary_matching" / "enum_queue.md"
+from vostok.core.paths import ENGINE as BASE_SOURCES
+from vostok.core.paths import ENUM_QUEUE as QUEUE_FILE
+from vostok.core.paths import SCRIPTS as SCRIPT_DIR
+from vostok.core.paths import TARGET_HEADERS as STRUCTURE_TARGET
 
 # Engine namespaces we own and match (third-party lands under other namespaces,
 # emitted into the `others/` subtree - out of scope).

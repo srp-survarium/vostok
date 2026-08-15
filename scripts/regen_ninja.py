@@ -28,10 +28,9 @@ import tempfile
 from pathlib import Path
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
-SLN_PATH   = VOSTOK_DIR / "sources" / "vostok v2.0.sln"
+from vostok.core.paths import NINJA_DIR as BUILD_DIR
+from vostok.core.paths import REPO as VOSTOK_DIR
+from vostok.core.paths import SLN as SLN_PATH
 
 # clangd inputs at the repo root (gitignored, so absent on fresh clones and
 # worktrees). They only depend on flags and file sets, never on #includes.

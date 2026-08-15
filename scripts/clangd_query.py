@@ -31,7 +31,7 @@ import sys
 import time
 from pathlib import Path
 
-VOSTOK_DIR = Path(__file__).resolve().parent.parent
+from vostok.core.paths import REPO as VOSTOK_DIR
 
 
 class Clangd:

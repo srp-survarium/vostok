@@ -16,17 +16,16 @@ import os
 import shutil
 from pathlib import Path
 
-EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
+from vostok.core.paths import PREBUILT, REPO
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
+EXTS = {'.pdb', '.exe', '.dll', '.a', '.lib'}
 
 # Lib source defaults to the vostok-libs Nix package (VOSTOK_LIBS_DIR inside
 # `nix develop`), falling back to a sibling checkout for standalone use.
-LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(VOSTOK_DIR.parent / "vostok-libs")))
+LIBS_DIR    = Path(os.environ.get("VOSTOK_LIBS_DIR", str(REPO.parent / "vostok-libs")))
 
 SRC         = LIBS_DIR   / "sources"
-DEST        = VOSTOK_DIR / "binaries.prebuilt"
+DEST        = PREBUILT
 
 # `COPYING.LIB` is LGPL license TEXT (cell SDK), not a binary blob - the `*.lib`
 # ext glob catches it. It is committed as normal source under sources/, so we

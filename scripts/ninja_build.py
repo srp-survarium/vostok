@@ -57,14 +57,12 @@ import time
 from pathlib import Path
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
+from vostok.core.paths import NINJA_DIR as BUILD_DIR
+from vostok.core.paths import WIN32_DIR
 
 DEFAULT_TARGET = "survarium_-_PC_-_DirectX_11"
 
 # Outputs the final link writes; the watchdog waits for both to be refreshed.
-WIN32_DIR = VOSTOK_DIR / "binaries" / "Win32"
 LINK_OUTPUTS = (
     WIN32_DIR / "survarium-dx11-win32-gold.exe",
     WIN32_DIR / "survarium-dx11-win32-gold.pdb",

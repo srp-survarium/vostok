@@ -9,9 +9,7 @@ import argparse
 import os
 import sys
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-SRC        = VOSTOK_DIR / "sources"
+from vostok.core.paths import SOURCES as SRC
 
 
 ####################

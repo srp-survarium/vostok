@@ -67,10 +67,8 @@ import difflib
 import re
 import sqlite3
 import sys
-from pathlib import Path
 
-VOSTOK = Path(__file__).resolve().parent.parent
-DB_PATH = VOSTOK / "binaries" / "match.db"
+from vostok.core.paths import MATCH_DB as DB_PATH
 
 
 def open_db(path=DB_PATH):

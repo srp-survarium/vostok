@@ -36,23 +36,15 @@ import sys
 from pathlib import Path
 
 import match_state
-import normalize_objdiff_symbols
-
-VOSTOK = Path(__file__).resolve().parent.parent
-# The committed ledger is docs/binary_matching/match_state.tsv (match_state.py);
-# this DB is a regenerable cache and is gitignored.
-DB_PATH = VOSTOK / "binaries" / "match.db"
-REPORT = VOSTOK / "binaries" / "objdiff" / "report.json"
-CROSS_UNIT_REPORT = VOSTOK / "binaries" / "objdiff" / "report-cross-unit.json"
-TARGET_IDX = VOSTOK / "binaries" / "rich" / "target" / "index.jsonl"
-BASE_IDX = VOSTOK / "binaries" / "rich" / "base" / "index.jsonl"
-DECLARATIONS = VOSTOK / "binaries" / "rich" / "target" / "declarations.jsonl"
-EXACT_FOLD_ALIASES = (
-    VOSTOK / "docs" / "binary_matching" / "exact_fold_aliases.tsv"
-)
-MODULE_OWNERSHIP_OVERRIDES = (
-    VOSTOK / "docs" / "binary_matching" / "module_ownership_overrides.tsv"
-)
+from vostok.core import symbols as normalize_objdiff_symbols
+from vostok.core import tsv
+from vostok.core.paths import (BASE_IDX, BINARIES, CROSS_UNIT_REPORT,
+                               DECLARATIONS, EXACT_FOLD_ALIASES,
+                               MODULE_OWNERSHIP_OVERRIDES, REPORT, SOURCES,
+                               TARGET_IDX)
+from vostok.core.paths import MATCH_DB as DB_PATH
+from vostok.core.paths import MATCH_DB_LOG
+from vostok.core.paths import REPO as VOSTOK
 
 SCHEMA = """
 CREATE TABLE meta(key TEXT PRIMARY KEY, value TEXT);
@@ -541,10 +533,7 @@ def load_module_ownership_overrides(path=MODULE_OWNERSHIP_OVERRIDES):
     if not path.is_file():
         return {}
     overrides = {}
-    for number, raw in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not raw or raw.startswith("#"):
-            continue
-        fields = raw.split("\t")
+    for number, fields in tsv.read(path, strip=False):
         if len(fields) != 3:
             raise ValueError(f"{path}:{number}: expected symbol, module, source file")
         mangled, module, source_file = fields
@@ -595,7 +584,7 @@ def _source_extent(rec):
     """Return ``(relative path, first line, last line, source text)``."""
     if rec is None:
         return None
-    path = VOSTOK / "sources" / rec["file"]
+    path = SOURCES / rec["file"]
     lines = [s["line"] for s in rec["statements"] if s.get("line")]
     if not path.is_file():
         return None
@@ -620,7 +609,7 @@ def _whole_source_extent(rec):
     """Return a conservative whole-file extent for object-only evidence."""
     if rec is None or not rec.get("file"):
         return None
-    path = VOSTOK / "sources" / rec["file"]
+    path = SOURCES / rec["file"]
     if not path.is_file():
         return None
     try:
@@ -674,7 +663,7 @@ def effective_source_hash(rec, module=None):
 
 def effective_source_hash_at(source_file, lo, hi, module):
     """Re-hash a retained source locator when its symbol is not in this build."""
-    path = VOSTOK / "sources" / source_file
+    path = SOURCES / source_file
     if not path.is_file() or not lo or not hi:
         return None
     try:
@@ -857,11 +846,7 @@ def load_exact_fold_aliases(path=EXACT_FOLD_ALIASES):
     aliases = {}
     if not Path(path).is_file():
         return aliases
-    for line_number, raw_line in enumerate(Path(path).read_text().splitlines(), 1):
-        line = raw_line.strip()
-        if not line or line.startswith("#"):
-            continue
-        fields = line.split("\t")
+    for line_number, fields in tsv.read(path):
         if len(fields) != 2 or not all(fields):
             raise RuntimeError(
                 f"{path}:{line_number}: expected <target>\\t<base alias>"
@@ -2655,7 +2640,7 @@ def cmd_queue(args):
         'write it' from 'it exists - check the anchor / mangling first'."""
         if row["presence"] == "PAIRED" or not row["def_file"]:
             return None
-        path = VOSTOK / "sources" / row["def_file"]
+        path = SOURCES / row["def_file"]
         if path not in src_cache:
             try:
                 src_cache[path] = path.read_text(encoding="latin-1")
@@ -2881,7 +2866,7 @@ def audit_log():
     pdb_fetch.log: [timestamp][branch]: command) so a run's command history
     is reconstructable. Never breaks the tool; skipped when binaries/ is absent."""
     try:
-        log_dir = VOSTOK / "binaries"
+        log_dir = BINARIES
         if not log_dir.is_dir():
             return
         import datetime
@@ -2900,7 +2885,7 @@ def audit_log():
             )
         except Exception:
             branch = "?"
-        with open(log_dir / "match_db.log", "a", encoding="utf-8") as f:
+        with open(MATCH_DB_LOG, "a", encoding="utf-8") as f:
             f.write(f"[{ts}][{branch}]: match_db.py {' '.join(sys.argv[1:])}\n")
     except OSError:
         pass

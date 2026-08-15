@@ -58,11 +58,13 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from gfx_mspdbsrv import kill_mspdbsrv, wine_cl  # noqa: E402
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
+from vostok.core.paths import PREBUILT, WIN32_DIR
+from vostok.core.paths import REPO as VOSTOK_DIR
+from vostok.core.paths import SCRIPTS as SCRIPT_DIR
+
 SDK = Path(os.environ.get("SCALEFORM_SDK", "/home/sheep/Projects/scaleform_sdk")).resolve()
-SHIP = VOSTOK_DIR / "binaries.prebuilt/Win32/libraries/shipping"
-OBJ_ROOT = VOSTOK_DIR / "binaries/Win32/intermediates/gfx"
+SHIP = PREBUILT / "Win32/libraries/shipping"
+OBJ_ROOT = WIN32_DIR / "intermediates/gfx"
 
 # Shared C++ flags (from the libgfx/as2/as3 PDB cmd; -Fo/-Fd are per-lib).
 CPP_FLAGS = (

@@ -64,14 +64,11 @@ import sqlite3
 import sys
 from pathlib import Path
 
-# Reuse match_db's short-name renderer so rows read like its `report` output.
-sys.path.insert(0, str(Path(__file__).resolve().parent))
-from match_db import fn_from_mangled  # noqa: E402
+from vostok.core.paths import MATCH_DB as DB_PATH
+from vostok.core.paths import STRUCTURE_MISMATCH_QUEUE as QUEUE_FILE
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
-DB_PATH = VOSTOK_DIR / "binaries" / "match.db"
-QUEUE_FILE = VOSTOK_DIR / "docs" / "binary_matching" / "structure_mismatch_queue.md"
+# Reuse match_db's short-name renderer so rows read like its `report` output.
+from match_db import fn_from_mangled
 
 # The 20 in-scope NON-RENDER engine modules (render matched last; game / game_core
 # are tracked only as the pre-seeded /Od BLOCKED block below).

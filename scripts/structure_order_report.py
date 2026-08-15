@@ -42,9 +42,9 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-VOSTOK = Path(__file__).resolve().parent.parent
-STRUCTURE = VOSTOK / "binaries" / "structure"
-GEN_STRUCTURE = VOSTOK / "scripts" / "generate_structure.py"
+from vostok.core.paths import SCRIPTS, STRUCTURE_DIR as STRUCTURE
+
+GEN_STRUCTURE = SCRIPTS / "generate_structure.py"
 
 # Modules we actively match and care about here. render is matched LAST and is the
 # most optimized, so its structure noise would swamp the signal; everything else

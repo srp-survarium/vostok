@@ -46,12 +46,13 @@ from pathlib import Path
 import regen_ninja
 
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-VOSTOK_DIR = SCRIPT_DIR.parent
+from vostok.core.paths import REPO as VOSTOK_DIR
+from vostok.core.paths import SCRIPTS as SCRIPT_DIR
 
-SLN_PATH   = VOSTOK_DIR / "sources" / "vostok v2.0.sln"
-BUILD_DIR  = VOSTOK_DIR / "binaries" / "ninja"
-SETUP_STAMP = VOSTOK_DIR / "binaries" / ".setup-stamp"
+from vostok.core.paths import (OBJDIFF_DIR, PREBUILT, RICH_DIR, SETUP_STAMP,
+                               STRUCTURE_DIR, WINEPREFIX)
+from vostok.core.paths import NINJA_DIR as BUILD_DIR
+from vostok.core.paths import SLN as SLN_PATH
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
 # the fingerprint says setup is already complete.
@@ -176,9 +177,9 @@ def ensure_target_side(force: bool = False) -> None:
     import generate_rich
     import generate_structure
 
-    objdiff_target   = VOSTOK_DIR / "binaries" / "objdiff" / "target"
-    structure_target = VOSTOK_DIR / "binaries" / "structure" / "target"
-    rich_target      = VOSTOK_DIR / "binaries" / "rich" / "target"
+    objdiff_target   = OBJDIFF_DIR / "target"
+    structure_target = STRUCTURE_DIR / "target"
+    rich_target      = RICH_DIR / "target"
     if (
         not force
         and _nonempty_dir(objdiff_target)
@@ -204,7 +205,7 @@ def copy_libs(libs_dir: Path) -> None:
     log("Staging vostok-libs -> binaries.prebuilt/ ...")
     subprocess.check_call([
         sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
-        str(libs_dir / "sources"), str(VOSTOK_DIR / "binaries.prebuilt"),
+        str(libs_dir / "sources"), str(PREBUILT),
     ])
     log("Library files staged.")
 
@@ -278,7 +279,7 @@ def main() -> None:
     ))
 
     wineprefix = Path(os.environ.get(
-        "WINEPREFIX", str(VOSTOK_DIR / "binaries" / ".wineprefix"),
+        "WINEPREFIX", str(WINEPREFIX),
     ))
     os.environ["WINEPREFIX"] = str(wineprefix)
     # Silence unactionable Wine debug spam (fixme stubs + kerberos err) while

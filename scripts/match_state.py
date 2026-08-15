@@ -35,8 +35,10 @@ import csv
 import os
 import sys
 
-VOSTOK = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-STATE_PATH = os.path.join(VOSTOK, "docs", "binary_matching", "match_state.tsv")
+from vostok.core import paths
+
+VOSTOK = str(paths.REPO)
+STATE_PATH = str(paths.MATCH_STATE)
 
 # Column order is the file format; keep it stable so diffs stay readable.
 COLUMNS = [
@@ -406,14 +408,14 @@ def seed_db_tables(path=STATE_PATH):
 
 def main(argv):
     if len(argv) > 1 and argv[1] == "export":
-        db = os.path.join(VOSTOK, "binaries", "match.db")
+        db = str(paths.MATCH_DB)
         if len(argv) > 2:
             db = argv[2]
         n = export_from_db(db)
         print(f"[match_state] wrote {n} rows -> {STATE_PATH}")
         return 0
     if len(argv) > 1 and argv[1] == "migrate":
-        db = os.path.join(VOSTOK, "docs", "binary_matching", "match.db")
+        db = str(paths.DOCS_MATCHING / "match.db")
         if len(argv) > 2:
             db = argv[2]
         n, rows = migrate_from_db(db)
