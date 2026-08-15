@@ -137,8 +137,8 @@ float4x4 stage_pre_rain::render_rain_shadow_map( )
 		0.1f,
 		float( m_shadow_map_size ) * 1.41421f + 200.0f
 	);
-	// PDB: one line record covers both statements - the original had them on one line.
-	float4x4 shadow_full_transform = math::mul4x3( shadow_view_transform, shadow_projection_transform ); float3 adjastment = compute_aligment( float3( 0.0f, 0.0f, 0.0f ), shadow_full_transform, float( m_shadow_map_size ) );
+	float4x4 shadow_full_transform = math::mul4x3( shadow_view_transform, shadow_projection_transform );
+	float3 adjastment = compute_aligment( float3( 0.0f, 0.0f, 0.0f ), shadow_full_transform, float( m_shadow_map_size ) );
 	shadow_view_transform = math::create_camera_direction(
 		position + adjastment, direction, float3( 1.0f, 0.0f, 0.0f ) );
 
