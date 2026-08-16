@@ -147,7 +147,10 @@ def _side_record(args):
     side = "base" if getattr(args, "base", False) else "target"
     rec = base if side == "base" else target
     if rec is None:
-        die(f"'{args.fn}' has no {side} function")
+        if target is None and base is None:
+            die(f"no function matches '{args.fn}'")
+        die(f"'{args.fn}' has no {side} function (it exists only on the "
+            f"{'target' if target else 'base'} side)")
     return side, rec
 
 

@@ -312,6 +312,13 @@ def branch_rows(graph):
 
 def graphs_for(sel, need_both=True):
     tgt, base = resolve(sel)
+    if not tgt and not base:
+        # NOT a one-sided function: the selector matched nothing at all. Saying
+        # "BASE_ONLY - not in the original" here is a claim about the binary, and
+        # the commonest way to get here is a typo in a mangled name.
+        die(f"no function matches '{sel}' - check the spelling, or list candidates "
+            f"with `pdb_rich_query --index binaries/rich/target/index.jsonl --list "
+            f"--function <substring>`")
     if need_both and not (tgt and base):
         missing = "base" if tgt else "target"
         die(f"'{sel}' has no {missing} side "
