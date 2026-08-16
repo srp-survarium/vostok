@@ -40,7 +40,6 @@ from vostok.build import generate_rich
 from vostok.build import generate_structure
 from vostok.build import ninja_regen
 
-
 from vostok.core.paths import REBUILD_LOG as LOG_PATH
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import REPORT_HEAD, SCRIPTS as SCRIPT_DIR

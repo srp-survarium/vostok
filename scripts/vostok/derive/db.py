@@ -19,7 +19,6 @@ from pathlib import Path
 from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import REPO as VOSTOK
 from vostok.core.paths import REPORT
-
 from vostok.derive import log
 
 

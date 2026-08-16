@@ -13,7 +13,6 @@ import sys
 
 from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import REPO as VOSTOK
-
 from vostok.derive.names import fn_from_mangled, shorten_fn
 from vostok.derive.query import emit
 

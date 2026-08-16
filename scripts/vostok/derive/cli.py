@@ -29,7 +29,6 @@ import sys
 
 from vostok.core.paths import BINARIES, MATCH_DB_LOG
 from vostok.core.paths import REPO as VOSTOK
-
 from vostok.derive.attempts import cmd_flag, cmd_tried
 from vostok.derive.diff import cmd_diff
 from vostok.derive.query import cmd_list, cmd_max, cmd_sql, parse_size

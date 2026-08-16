@@ -56,7 +56,6 @@ import sys
 import time
 from pathlib import Path
 
-
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import WIN32_DIR
 

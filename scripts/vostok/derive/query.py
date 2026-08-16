@@ -11,7 +11,6 @@ import sqlite3
 import sys
 
 from vostok.core.paths import MATCH_DB as DB_PATH
-
 from vostok.derive.db import open_db, staleness_check
 
 

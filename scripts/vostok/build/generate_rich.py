@@ -31,7 +31,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 from vostok.core.paths import (BASE_EXE, BASE_PDB, RICH_DIR, WIN32_DIR,
                                survarium_bin)
 from vostok.core.paths import ENGINE as ENGINE_DIR

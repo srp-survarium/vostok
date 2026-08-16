@@ -29,7 +29,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-
 from vostok.core.paths import BASE_PDB, STRUCTURE_DIR, survarium_bin
 from vostok.core.paths import ENGINE as ENGINE_DIR
 

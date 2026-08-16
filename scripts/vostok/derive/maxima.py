@@ -17,7 +17,6 @@ import sqlite3
 
 from vostok.core.paths import REPO as VOSTOK
 from vostok.core.paths import SOURCES
-
 from vostok.derive.modules import module_of
 
 

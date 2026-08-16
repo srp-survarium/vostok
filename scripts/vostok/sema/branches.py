@@ -9,9 +9,9 @@ positional pairing is evidence, not a defect count.
 
 from __future__ import annotations
 
-
 from vostok.sema import die
-from vostok.sema.cfg import (INVERSE, SIGNED_TWIN, _contract_note, branch_rows, graphs_for, iso_map)
+from vostok.sema.cfg import (INVERSE, SIGNED_TWIN, _contract_note, branch_rows,
+                             graphs_for, iso_map)
 from vostok.sema.index import hint
 
 
