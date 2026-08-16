@@ -414,7 +414,14 @@ Take the flow verdict from the printed `flow SAME | DIFFERS` line, not from rc.
 * **Block alignment is content-based** (`difflib` over whole-block text). When
   both sides are heavily rewritten the pairing is a guess; the `flow` verdict
   and the first-skeleton-divergence line stay meaningful, the per-block bodies
-  become advisory.
+  become advisory. It also degenerates on a function built from REPEATED
+  near-identical groups, where difflib emits one long `replace` opcode and the
+  rows inside it are paired index-wise. `device::on_device_removed` (base 67
+  blocks, target 66, six near-identical guard groups offset by one) prints ~50
+  consecutive `!!` rows; only the header lines are evidence -
+  `[skeleton diverges at B9: base [jcc B66 | fall B10] vs target [jmp B60]]`
+  and `[first true skeleton divergence at B9]` are correct, the rows under them
+  are not a defect list.
 * **Contraction merges into the successor, so a back-edge into a contracted
   block's successor now points one block earlier** in the listing. The edge set
   is unchanged and both sides contract by the same rule, so no verdict depends
