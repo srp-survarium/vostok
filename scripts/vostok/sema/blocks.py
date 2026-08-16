@@ -14,7 +14,7 @@ import re
 
 from vostok.sema import die
 from vostok.sema.branches import branch_diff
-from vostok.sema.cfg import _contract_note, align, graphs_for, iso_map, kind
+from vostok.sema.cfg import align, graphs_for, iso_map, kind, notes, starved
 from vostok.sema.index import hint
 
 
@@ -134,13 +134,13 @@ def cmd_blocks(args):
         print(f"[{tgt['name']}]")
         print(f"[base {base['file']} @ {base['rva']:#x} ({base['size']}B)  vs  "
               f"target {tgt['file']} @ {tgt['rva']:#x} ({tgt['size']}B)]")
-        note = _contract_note(cut)
-        if note:
+        for note in notes(cut):
             print(note)
         print(text, end="")
         # the hint is about SHAPE, so it fires whenever the flow matches - a
         # byte-dirty diff over a matching CFG is exactly the case worth naming
-        if [x[2] for x in g["base"]] == [x[2] for x in g["target"]]:
+        if not starved(cut) and \
+                [x[2] for x in g["base"]] == [x[2] for x in g["target"]]:
             _, brc = branch_diff(g["base"], g["target"])
             hint(tgt["mangled"], True, brc == 0)
         return rc
@@ -150,5 +150,7 @@ def cmd_blocks(args):
         die(f"no {side} side for '{args.fn}'")
     print(f"[basic blocks: {side.upper()} - {rec['name']}]")
     print(f"[{rec['file']} @ {rec['rva']:#x} ({rec['size']}B)]")
+    for note in notes({side: cut[side]}):
+        print(note)
     print(show_blocks(g[side], args.lite), end="")
     return 0

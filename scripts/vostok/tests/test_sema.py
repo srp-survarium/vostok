@@ -1,6 +1,6 @@
 import unittest
 
-from vostok.sema.cfg import contract, seal
+from vostok.sema.cfg import contract, notes, seal, starved
 from vostok.sema.index import _fold_aliases
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
@@ -52,6 +52,23 @@ class SealTests(unittest.TestCase):
         out, n = contract(seal(blocks))
         self.assertEqual(n, 1)
         self.assertEqual([b[2] for b in out], ["jcc <ext> | fall B1", "ret"])
+
+
+class TrimNoteTests(unittest.TestCase):
+    def test_a_starved_graph_is_flagged(self):
+        cut = {"base": {"kept": 1, "trimmed": 73}, "target": {"kept": 1, "trimmed": 73}}
+        self.assertTrue(starved(cut))
+        self.assertTrue(any("do NOT read it" in n for n in notes(cut)))
+
+    def test_an_ordinary_trim_is_reported_but_not_flagged(self):
+        cut = {"base": {"kept": 14, "trimmed": 3}, "target": {"kept": 14, "trimmed": 4}}
+        self.assertFalse(starved(cut))
+        self.assertTrue(any("trimmed 3 base / 4 target" in n for n in notes(cut)))
+
+    def test_an_untrimmed_graph_says_nothing(self):
+        cut = {"base": {"kept": 48, "trimmed": 0, "contracted": 0},
+               "target": {"kept": 48, "trimmed": 0, "contracted": 0}}
+        self.assertEqual(notes(cut), [])
 
 
 class SemaNavigationTests(unittest.TestCase):

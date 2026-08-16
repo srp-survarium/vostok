@@ -10,8 +10,8 @@ positional pairing is evidence, not a defect count.
 from __future__ import annotations
 
 from vostok.sema import die
-from vostok.sema.cfg import (INVERSE, SIGNED_TWIN, _contract_note, branch_rows,
-                             graphs_for, iso_map)
+from vostok.sema.cfg import (INVERSE, SIGNED_TWIN, branch_rows, graphs_for,
+                             iso_map, notes, starved)
 from vostok.sema.index import hint
 
 
@@ -97,12 +97,11 @@ def cmd_branches(args):
     tgt, base, g, cut = graphs_for(args.fn, need_both=args.diff)
     if args.diff:
         print(f"[{tgt['name']}]")
-        note = _contract_note(cut)
-        if note:
+        for note in notes(cut):
             print(note)
         text, rc = branch_diff(g["base"], g["target"])
         print(text, end="")
-        if rc == 0:
+        if rc == 0 and not starved(cut):
             flow = [x[2] for x in g["base"]] == [x[2] for x in g["target"]]
             hint(tgt["mangled"], flow, True)
         return rc
@@ -110,5 +109,7 @@ def cmd_branches(args):
     rec = base if args.base else tgt
     if side not in g:
         die(f"no {side} side for '{args.fn}'")
+    for note in notes({side: cut[side]}):
+        print(note)
     print(show_branches(g[side], f"{side.upper()} - {rec['name']}"), end="")
     return 0
