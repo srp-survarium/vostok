@@ -38,7 +38,10 @@ retargeted branches. See `contract`.
     python3 -m vostok sema blocks   <fn> [--base]   # one side's CFG
     python3 -m vostok sema branches <fn> --diff     # read a difference branch by branch
     python3 -m vostok sema dot      <fn> [--diff]   # graphviz
-    python3 -m vostok sema sweep --module render [--unit U] [--max N]
+    python3 -m vostok sema sweep --module render [--unit U] [--min-pct P] [--max N]
+
+Only `blocks` takes `--lite`. `--base` selects the side for a one-sided view and
+is ignored by `--diff`, which always shows both.
 
 `blocks` aligns by CONTENT and is what a verdict comes from; `branches` pairs
 POSITIONALLY, so it is for reading a difference `blocks` already established.
@@ -84,18 +87,27 @@ def main():
     p.add_argument("--find", metavar="TEXT", help="list functions referencing a literal")
     p.add_argument("--base", action="store_true", help="read the base side")
     p.set_defaults(func=cmd_strings)
-    for name, fn in (("blocks", cmd_blocks), ("branches", cmd_branches), ("dot", cmd_dot)):
-        p = sub.add_parser(name)
+    views = (
+        ("blocks", cmd_blocks, "basic-block CFG, or THE verdict view with --diff"),
+        ("branches", cmd_branches, "ordered branch sequence; read a difference blocks found"),
+        ("dot", cmd_dot, "the CFG as graphviz on stdout (notes go to stderr)"),
+    )
+    for name, fn, blurb in views:
+        p = sub.add_parser(name, help=blurb)
         p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
-        p.add_argument("--base", action="store_true", help="show the base side (default: target)")
+        p.add_argument("--base", action="store_true",
+                       help="show the base side (default: target); ignored with --diff, "
+                            "which always shows both")
         p.add_argument("--diff", action="store_true", help="compare base against target")
-        p.add_argument("--lite", action="store_true", help="skeleton only, no bodies")
-        p.set_defaults(func=fn)
-    p = sub.add_parser("sweep")
-    p.add_argument("--module")
-    p.add_argument("--unit")
-    p.add_argument("--min-pct", type=float)
-    p.add_argument("--max", type=int)
+        if name == "blocks":
+            p.add_argument("--lite", action="store_true",
+                           help="one line per block, no instruction bodies")
+        p.set_defaults(func=fn, lite=False)
+    p = sub.add_parser("sweep", help="classify a whole module/TU by flow verdict")
+    p.add_argument("--module", help="module name, e.g. render (default: every module)")
+    p.add_argument("--unit", help="substring of the TU path")
+    p.add_argument("--min-pct", type=float, help="skip functions below this fuzzy %%")
+    p.add_argument("--max", type=int, help="stop after N functions (highest fuzzy %% first)")
     p.set_defaults(func=cmd_sweep)
     args = ap.parse_args()
     sys.exit(args.func(args))
