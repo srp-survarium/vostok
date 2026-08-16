@@ -18,101 +18,42 @@
 #include <vostok/game_core/weapon_core.h>
 #include <vostok/game_core/damage_model.h>
 #include <vostok/physics/character_controller.h>
+#include <vostok/console_command.h>
+
+static float s_net_max_position_discrepancy = 0.1f;
+static vostok::console_commands::cc_float s_net_max_position_discrepancy_command( "net_max_position_discrepancy", s_net_max_position_discrepancy, 1e-7f, 0.1f, true, vostok::console_commands::command_type_engine_internal );
+
+static bool s_is_test_players_random_input_enabled;
+static vostok::console_commands::cc_bool s_test_players_random_input_cc( "test_players_random_input", s_is_test_players_random_input_enabled, false, vostok::console_commands::command_type_user_specific );
+
+static bool s_is_local_player_random_input_enabled;
+static vostok::console_commands::cc_bool s_local_player_random_input_cc( "local_player_random_input", s_is_local_player_random_input_enabled, false, vostok::console_commands::command_type_user_specific );
+
+static bool s_print_animations_value;
+static vostok::console_commands::cc_bool s_print_animations_cc( "print_animations", s_print_animations_value, true, vostok::console_commands::command_type_user_specific );
+
+static bool s_sf_animation_states_value;
+static vostok::console_commands::cc_bool s_sf_animation_states_cc( "sf_animation_states", s_sf_animation_states_value, true, vostok::console_commands::command_type_user_specific );
+
+static float s_smooth_linear_speed = 3.f;
+static vostok::console_commands::cc_float s_smooth_linear_speed_command( "smooth_linear_speed", s_smooth_linear_speed, 0.f, 10.f, true, vostok::console_commands::command_type_engine_internal );
+
+static float s_smooth_angular_speed = 180.f;
+static vostok::console_commands::cc_float s_smooth_angular_speed_command( "smooth_angular_speed", s_smooth_angular_speed, 0.f, 720.f, true, vostok::console_commands::command_type_engine_internal );
+
+static float s_smooth_pitch_speed = 11.25f;
+static vostok::console_commands::cc_float s_smooth_pitch_speed_command( "smooth_pitch_speed", s_smooth_pitch_speed, 0.f, 720.f, true, vostok::console_commands::command_type_engine_internal );
+
+static float s_player_name_min_font_size = 12.f;
+static vostok::console_commands::cc_float cc_player_name_min_font_size( "player_name_min_font_size", s_player_name_min_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+
+static float s_player_name_max_font_size = 32.f;
+static vostok::console_commands::cc_float cc_player_name_max_font_size( "player_name_max_font_size", s_player_name_max_font_size, 1.f, 100.f, true, vostok::console_commands::command_type_engine_internal );
+
+static float s_player_name_decrease_koef = 0.3f;
+static vostok::console_commands::cc_float cc_player_name_decrease_koef( "player_name_decrease_koef", s_player_name_decrease_koef, 0.f, 1.f, true, vostok::console_commands::command_type_engine_internal );
 
 namespace survarium {
-
-// claude@NOTE: backing storage for the smooth() config commands. The cc_float
-// command objects themselves (and the dynamic init / atexit pairing of the first
-// TU-statics block) are PARKED: the dynamic-init asm stores the s_console_command_root
-// link, the backing-var pointer, default/min/max and the vtable, but NEVER a
-// command-NAME string pointer, so the pcstr name arg to each cc_float/cc_bool ctor is
-// not recoverable - declaring the objects would fabricate a .data string (forbidden), so
-// they stay unpaired (same convention as game.cpp's s_draw_snd_stats/s_show_profiler).
-// Recovered values: smooth_linear_speed min 0 max 10.f serializable engine_internal;
-// smooth_angular_speed/smooth_pitch_speed min 0 max 720.f.
-static float s_smooth_linear_speed;
-static float s_smooth_angular_speed;
-static float s_smooth_pitch_speed;
-
-// claude@NOTE: backing storage for tick's cc_bool / cc_float config commands - PARKED for
-// the same unrecoverable-name reason as the s_smooth_* block above. Recovered: the random
-// input cc_bools default false, serializable true; the player_name font cc_floats feed the
-// camera-name distance/font clamp in tick().
-static bool s_is_local_player_random_input_enabled;
-static bool s_is_test_players_random_input_enabled;
-static float s_player_name_min_font_size;
-static float s_player_name_max_font_size;
-static float s_player_name_decrease_koef;
-
-// TU statics (compiler-generated dynamic initializers / atexit destructors). PARKED: the
-// command-NAME string each cc_* ctor takes is absent from the dynamic-init asm (only the
-// root link / backing-var ptr / default / vtable are stored), so they cannot be declared
-// without fabricating a .data string.
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_net_max_position_discrepancy_command''( )
-{
-	// FUNCTION BODY[0x7d8620]
-	// <0x7d8620>|0x000|      :'31'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_test_players_random_input_cc''( )
-{
-	// FUNCTION BODY[0x7d8690]
-	// <0x7d8690>|0x000|      :'35'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_local_player_random_input_cc''( )
-{
-	// FUNCTION BODY[0x7d86e0]
-	// <0x7d86e0>|0x000|      :'38'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_print_animations_cc''( )
-{
-	// FUNCTION BODY[0x7d8730]
-	// <0x7d8730>|0x000|      :'42'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_sf_animation_states_cc''( )
-{
-	// FUNCTION BODY[0x7d8780]
-	// <0x7d8780>|0x000|      :'45'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_smooth_linear_speed_command''( )
-{
-	// FUNCTION BODY[0x7d87d0]
-	// <0x7d87d0>|0x000|      :'48'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_smooth_angular_speed_command''( )
-{
-	// FUNCTION BODY[0x7d8830]
-	// <0x7d8830>|0x000|      :'51'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_smooth_pitch_speed_command''( )
-{
-	// FUNCTION BODY[0x7d8890]
-	// <0x7d8890>|0x000|      :'54'	{
-	// ******
-}
-*/
 
 u32 player::history_lower_bound_index( const u32 time_in_ms ) const
 {
@@ -343,34 +284,6 @@ void player::apply_input_before_new_transform(
 		player_state.animation_player.set_object_transform( new_transform, this );
 	}
 }
-
-// TU statics (compiler-generated dynamic initializers / atexit
-// destructors); a matcher recovers their types/initializers from the asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'cc_player_name_min_font_size''( )
-{
-	// FUNCTION BODY[0x7d88f0]
-	// <0x7d88f0>|0x000|      :'538'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 'cc_player_name_max_font_size''( )
-{
-	// FUNCTION BODY[0x7d8960]
-	// <0x7d8960>|0x000|      :'539'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 's_net_max_position_discrepancy_command''( )
-{
-	// FUNCTION BODY[0x7f0330]
-	// <0x7d89d0>|0x000|      :'540'	{
-	// ******
-}
-*/
 
 void player::smooth( const float time_delta )
 {

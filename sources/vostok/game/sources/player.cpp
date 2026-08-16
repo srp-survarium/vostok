@@ -28,93 +28,30 @@
 #include "stats.h"						// m_game.get_stats().set_player_*_speed (update_speed_info)
 #include "stats_graph.h"				// m_*_speed_graph->add_value / average_value (update_speed_info)
 #include <vostok/network_core/packet_reader.h>		// reader.r<T>() in deserialize
+#include <vostok/console_command.h>					// the TU's cc_bool / cc_float registrations
 
 namespace survarium {
 
-// claude@NOTE: backing storage for the death-camera cc_float config commands
-// (kill() reads these). The cc_float command objects + their dynamic init/atexit
-// pairing are a separate config-machinery unit (mirror of player_tick's s_smooth_*
-// block); recovered defaults are yaw -pi (min -pi, max pi), pitch, distance.
-static float s_death_camera_yaw;
-static float s_death_camera_pitch;
-static float s_death_camera_distance;
-static bool s_first_person_animations_only;
+static bool		s_show_animations					= true;
+static float	s_ik_translation_time_value			= 0.1f;
+static float	s_crosshair_size_value				= 0.1f;
+static float	s_crosshair_line_length_value		= 0.025f;
+static bool		s_first_person_animations_only;
+static float	s_usable_objects_detection_distance	= 1.0f;
+static bool		s_draw_linear_speed_graph_value;
+static bool		s_show_server_player;
+static bool		s_show_client_player				= true;
 
-// TU statics (compiler-generated dynamic initializers / atexit
-// destructors); a matcher recovers their types/initializers from the asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 's_player_show_animations_command''( )
-{
-	// FUNCTION BODY[0x7d7df0]
-	// <0x7d7df0>|0x000|      :'74'	{
-	// ******
-}
+static console_commands::cc_bool	s_player_show_animations_command			( "show_animations",						s_show_animations,						true,	console_commands::command_type_user_specific );
+static console_commands::cc_float	s_ik_translation_time_command				( "ik_translation_time",					s_ik_translation_time_value,			0.0f,	5.0f,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_float	s_crosshair_size_command					( "crosshair_size",							s_crosshair_size_value,					0.0f,	1.0f,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_float	s_crosshair_line_length_command				( "crosshair_line_length",					s_crosshair_line_length_value,			0.0f,	1.0f,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_bool	s_first_person_animations_command			( "first_person_animations",				s_first_person_animations_only,			false,	console_commands::command_type_engine_internal );
 
-// STATE[STUB]
-void `dynamic initializer for 's_ik_translation_time_command''( )
-{
-	// FUNCTION BODY[0x7d7e40]
-	// <0x7d7e40>|0x000|      :'75'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_crosshair_size_command''( )
-{
-	// FUNCTION BODY[0x7d7ea0]
-	// <0x7d7ea0>|0x000|      :'76'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_crosshair_line_length_command''( )
-{
-	// FUNCTION BODY[0x7d7f00]
-	// <0x7d7f00>|0x000|      :'77'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_first_person_animations_command''( )
-{
-	// FUNCTION BODY[0x7d7f60]
-	// <0x7d7f60>|0x000|      :'78'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_usable_objects_detection_distance_command''( )
-{
-	// FUNCTION BODY[0x7d7fb0]
-	// <0x7d7fb0>|0x000|      :'80'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_draw_linear_speed_graph_cc''( )
-{
-	// FUNCTION BODY[0x7d8020]
-	// <0x7d8020>|0x000|      :'81'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_show_server_player_command''( )
-{
-	// FUNCTION BODY[0x7d8070]
-	// <0x7d8070>|0x000|      :'82'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic initializer for 's_show_client_player_command''( )
-{
-	// FUNCTION BODY[0x7d80c0]
-	// <0x7d80c0>|0x000|      :'83'	{
-	// ******
-}
-*/
+static console_commands::cc_float	s_usable_objects_detection_distance_command	( "usable_objects_detection_distance",		s_usable_objects_detection_distance,	0.1f,	5.0f,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_bool	s_draw_linear_speed_graph_cc				( "draw_linear_speed_graph",				s_draw_linear_speed_graph_value,		false,	console_commands::command_type_user_specific );
+static console_commands::cc_bool	s_show_server_player_command				( "show_server_player",						s_show_server_player,					false,	console_commands::command_type_user_specific );
+static console_commands::cc_bool	s_show_client_player_command				( "show_client_player",						s_show_client_player,					true,	console_commands::command_type_user_specific );
 
 // claude@NOTE: the complete target control flow is present. The remaining
 // entry-line store is animation_player::enable_logging, whose animation-owned
@@ -952,19 +889,9 @@ player_input player::remote_input( ) const
 	return m_history.empty( ) ? player_input( ) : m_history.newest( ).action.input;
 }
 
-// claude@NOTE: 3 stmts, 0 locals. Virtual dispatched via a +0x30 base subobject so
-// `this`=player+0x30; `[ecx+10EC0h]` resolves to m_damage_collision (0x10EF0). Reads
-// m_damage_collision's geometry data (offset 0/0x18) and two bone transforms' x/z
-// positions to compute abs(dx); if abs(dx) <= math::epsilon_5 returns 0, else
-// (z1-z0)/dx. WALLED: the exact accessor over collision::animated_object's
-// m_geometries_data (buffer_vector<bone_collision_data>) internals is not yet a named
-// expression - needs the animated_object speed/displacement accessor identified.
-// STATE[STUB]
 float player::get_speed( ) const
 {
-	return 0.0f;
-
-	// FUNCTION BODY[0x5e26b0]: 3 stmts (lines 1076-1077) - see note above
+	return m_linear_speed_graph->average_value( );
 }
 
 void player::hide( )
@@ -1344,33 +1271,13 @@ void player::select_animations( const u32 current_time_in_ms )
 	m_current.animation_player.set_target_and_tick( expression, current_time_in_ms, boost::bind( &player::get_transform_for_animation_player, this, _1, boost::cref( m_current.transform ) ) );
 }
 
-// TU statics (compiler-generated dynamic initializers / atexit
-// destructors); a matcher recovers their types/initializers from the asm.
-/*
-// STATE[STUB]
-void `dynamic initializer for 'cc_death_camera_yaw''( )
-{
-	// FUNCTION BODY[0x7d8110]
-	// <0x7d8110>|0x000|      :'1460'	{
-	// ******
-}
+static float s_death_camera_yaw			= 0.6f;
+static float s_death_camera_pitch		= -1.2f;
+static float s_death_camera_distance	= 1.0f;
 
-// STATE[STUB]
-void `dynamic initializer for 'cc_death_camera_pitch''( )
-{
-	// FUNCTION BODY[0x7d8180]
-	// <0x7d8180>|0x000|      :'1461'	{
-	// ******
-}
-
-// STATE[STUB]
-void `dynamic atexit destructor for 's_player_show_animations_command''( )
-{
-	// FUNCTION BODY[0x7efd00]
-	// <0x7d81f0>|0x000|      :'1462'	{
-	// ******
-}
-*/
+static console_commands::cc_float cc_death_camera_yaw		( "death_camera_yaw",		s_death_camera_yaw,			-math::pi,	math::pi,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_float cc_death_camera_pitch		( "death_camera_pitch",		s_death_camera_pitch,		-math::pi,	math::pi,	true,	console_commands::command_type_engine_internal );
+static console_commands::cc_float cc_death_camera_distance	( "death_camera_distance",	s_death_camera_distance,	0.0f,		1000.0f,	true,	console_commands::command_type_engine_internal );
 
 // claude@NOTE: target and base share the twelve-block camera/UI sequence. The
 // target retains the inlined is_player_current entry statement while base folds

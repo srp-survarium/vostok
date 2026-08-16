@@ -66,18 +66,14 @@ using vostok::console_commands::command_type_engine_internal;
 // line numbers): draw_snd_stats(58), draw_stats(70), show_profiler(74), cfg_save pair
 // (126/127), particle commands (138/141).
 
-// claude@NOTE: PARKED - 's_draw_snd_stats' (sound-debug cc_bool): its command-name
-// string + command_type are not recoverable from the init asm (the name string lives
-// in the data section, not the init function). A guessed name would fabricate
-// data-section bytes. Recover once the data-section string is read. Its backing value
-// bool s_draw_snd_stats_value is referenced by update_stats's PARKED sound-debug tail
-// (see the note there); restore the static alongside that tail.
+static bool s_draw_snd_stats_value;
+static cc_bool s_draw_snd_stats( "draw_sound_stats", s_draw_snd_stats_value, true, command_type_user_specific );
 
 static bool s_draw_stats_value = true;
 static cc_bool s_draw_stats( "draw_stats", s_draw_stats_value, true, command_type_user_specific );
 
-// claude@NOTE: PARKED - 's_show_profiler_command' (profiler cc_bool): command-name
-// string + command_type unrecoverable (data-section string), same as s_draw_snd_stats.
+static bool s_show_profiler;
+static cc_bool s_show_profiler_command( "show_profiler", s_show_profiler, false, command_type_user_specific );
 
 void cfg_save_user( )
 {
@@ -97,6 +93,9 @@ static cc_u32 s_max_particles( "max_particles", s_max_particles_value, 0, 1000, 
 
 static u32 s_particle_lod_value = 0;
 static cc_u32 s_particle_lod( "particle_lod", s_particle_lod_value, 0, 10, true, command_type_engine_internal );
+
+static bool s_show_detailed_statistics_value;
+static cc_bool show_detailed_statistics( "r_show_detailed_statistics", s_show_detailed_statistics_value, true, command_type_user_specific );
 
 vostok::command_line::key s_net_login_client( "client", "", "", "connect to server" );
 static vostok::command_line::key s_is_spectator( "spectator", "", "", "connect as spectator" );
