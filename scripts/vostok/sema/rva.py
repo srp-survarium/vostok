@@ -19,27 +19,15 @@ by pasting one where the other was wanted.
 
 from __future__ import annotations
 
+from vostok.derive.index import body_statements
 from vostok.sema import die
 from vostok.sema.index import resolve, va_of
 from vostok.sema.pairing import ledger_row
 
 
-def body_statements(rec):
-    """How many REAL statements a rich record holds.
-
-    The first and last entries are the synthetic frame braces (`{` and `}`),
-    not source statements. pdb_fetch, gen_sources and the structure-diff all
-    count `len - 2`; counting the raw list here made sema report two more
-    statements than every other tool for the same function - and statement
-    COUNT is the whole basis of the QUANTITY class, so the phantom pair read
-    as a real structural difference.
-    """
-    return max(0, len(rec.get("statements", [])) - 2)
-
-
 def _print_record(side, rec):
     print(f"{side:6}  rva={rec['rva']:#x}  va={va_of(rec):#x}  "
-          f"size={rec.get('size', 0):#x}  stmts={body_statements(rec)}")
+          f"size={rec.get('size', 0):#x}  stmts={len(body_statements(rec))}")
     print(f"        {rec.get('file', '(unknown file)')}")
     print(f"        {rec['name']}")
     print(f"        {rec['mangled']}")
@@ -60,8 +48,8 @@ def cmd_rva(args):
     row = ledger_row(target) if target else None
     if row is None:
         return 0
-    t_stmts = body_statements(target)
-    b_stmts = body_statements(base) if base else None
+    t_stmts = len(body_statements(target))
+    b_stmts = len(body_statements(base)) if base else None
     print(f"match   module={row['module'] or '-'}  unit={row['unit'] or '-'}")
     print(f"        current={_pct(row['cur'])}  max={_pct(row['max'])}  "
           f"class={row['cls'] or '-'}  "
