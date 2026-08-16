@@ -111,8 +111,13 @@ class Artifacts:
         return bool(self.declared_methods or self.declared_free)
 
 
-def load():
-    """Read every input, warn about staleness, and cross-reference the two sides."""
+def load(declarations=True):
+    """Read every input, warn about staleness, and cross-reference the two sides.
+
+    `declarations=False` skips the 85 MB declaration dump, which answers exactly
+    one question (is a base-only symbol legitimate) - so only that consumer pays
+    the ~10 s it costs.
+    """
     _require_present()
     _warn_if_stale()
 
@@ -153,7 +158,8 @@ def load():
         rich_pdb_aliases=rich_pdb_aliases,
     )
     _load_report(artifacts)
-    _load_declarations(artifacts)
+    if declarations:
+        _load_declarations(artifacts)
     return artifacts
 
 
