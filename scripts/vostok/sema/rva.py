@@ -1,23 +1,27 @@
 """vostok.sema.rva - the address/source/match dossier for one function.
 
 The first command of an investigation: where each side lives, how big it is,
-how many statements it carries, and what the match cache knows about it
-(current %, hash-scoped max, structure class, attempts, flags).
+how many statements it carries, and what the campaign knows about it (current
+%, hash-scoped max, structure class, attempts, status).
 
-Both address forms are printed. RVA is what the indexes and every `--rva` flag
-hold; VA is what IDA shows and what carcass comments carry. They differ by the
-0x10000 image base, which is exactly the size of the mistake made by pasting one
-where the other was wanted.
+Two sources, and the split is the point. The two rich indexes own the BUILD
+facts - address, size, statements, owning file, both spellings of the name. The
+committed ledger (`docs/binary_matching/match_state.tsv`) owns the CAMPAIGN's
+memory - the percentages, the structure verdict, how many matchers have tried,
+and why it is parked. Neither is `match.db`, so this answers on a tree that has
+never run a derivation.
+
+Both address forms are printed. RVA is what the indexes, the ledger and every
+`--rva` flag hold; VA is what IDA shows and what carcass comments carry. They
+differ by the 0x10000 image base, which is exactly the size of the mistake made
+by pasting one where the other was wanted.
 """
 
 from __future__ import annotations
 
-import sqlite3
-
-from vostok.core.paths import MATCH_DB as DB_PATH
-
 from vostok.sema import die
 from vostok.sema.index import resolve, va_of
+from vostok.sema.pairing import ledger_row
 
 
 def _print_record(side, rec):
@@ -28,6 +32,10 @@ def _print_record(side, rec):
     print(f"        {rec['mangled']}")
 
 
+def _pct(value):
+    return "-" if value is None else f"{value:.2f}%"
+
+
 def cmd_rva(args):
     target, base = resolve(args.fn)
     if target is None and base is None:
@@ -36,39 +44,16 @@ def cmd_rva(args):
         _print_record("target", target)
     if base:
         _print_record("base", base)
-    if not DB_PATH.is_file():
+    row = ledger_row(target) if target else None
+    if row is None:
         return 0
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-    con.row_factory = sqlite3.Row
-    rows = con.execute(
-        """
-        SELECT t.module, u.name AS unit, f.path AS file, p.fuzzy_pct,
-               p.struct_class, p.t_stmts, p.b_stmts,
-               (SELECT group_concat(flag || coalesce(':' || cause, ''), '; ')
-                  FROM flags WHERE mangled = s.mangled) AS flags,
-               a.n AS attempts, m.max_fuzzy_pct, m.exact_proven
-          FROM target_functions t
-          JOIN symbols s ON s.id = t.sym
-          LEFT JOIN units u ON u.id = t.unit
-          LEFT JOIN files f ON f.id = t.file
-          LEFT JOIN pairs p ON p.target_rva = t.rva
-          LEFT JOIN attempts a ON a.mangled = s.mangled
-          LEFT JOIN source_maxima m ON m.mangled = s.mangled
-         WHERE t.rva = ? OR p.base_rva = ? ORDER BY t.rva
-        """,
-        (
-            target["rva"] if target else -1,
-            base["rva"] if base else -1,
-        ),
-    ).fetchall()
-    con.close()
-    for row in rows:
-        pct = "-" if row["fuzzy_pct"] is None else f"{row['fuzzy_pct']:.2f}%"
-        maximum = "-" if row["max_fuzzy_pct"] is None else f"{row['max_fuzzy_pct']:.2f}%"
-        print(f"match   module={row['module']}  unit={row['unit'] or '-'}")
-        print(f"        current={pct}  max={maximum}  class={row['struct_class'] or '-'}  "
-              f"statements={row['t_stmts'] or '-'}:{row['b_stmts'] or '-'}  "
-              f"attempts={row['attempts'] or 0}")
-        if row["flags"]:
-            print(f"        flags={row['flags']}")
+    t_stmts = len(target.get("statements", []))
+    b_stmts = len(base.get("statements", [])) if base else None
+    print(f"match   module={row['module'] or '-'}  unit={row['unit'] or '-'}")
+    print(f"        current={_pct(row['cur'])}  max={_pct(row['max'])}  "
+          f"class={row['cls'] or '-'}  "
+          f"statements={t_stmts or '-'}:{b_stmts if b_stmts else '-'}  "
+          f"attempts={row['tries'] or 0}  status={row['status'] or '-'}")
+    if row.get("note"):
+        print(f"        note={row['note']}")
     return 0

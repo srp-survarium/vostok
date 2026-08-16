@@ -158,9 +158,10 @@ Flags, exactly:
 * `xref --callees` lists indirect calls under their register operand (`eax x8`).
   Those are call sites, not a function named `eax`; `pdb_fetch --view callees`
   omits them, which is why its count is lower.
-* `rva` prints a `match` block only for a function `match.db` knows as a TARGET
-  function. A `BASE_ONLY` symbol gets its `base` record and nothing else - the
-  absence of the block is the only signal that it is base-only.
+* `rva` prints a `match` block only for a function the committed ledger carries,
+  which is exactly the TARGET functions. A `BASE_ONLY` symbol gets its `base`
+  record and nothing else - the absence of the block is the only signal that it
+  is base-only.
 * An empty result is an empty result: `xref` with no callers, `strings` with no
   literals and `strings --find` with no hits print their header and stop, with
   rc 0.
@@ -382,7 +383,7 @@ faithful than what is already written.
 
 ## The hint
 
-Whenever a `--diff` view comes out **clean** and `match.db` says the function is
+Whenever a `--diff` view comes out **clean** and the ledger says the function is
 **below 100%**, `sema` prints where the remaining signal is instead of leaving
 the reader to conclude "regalloc, probably". This is the one behaviour worth
 copying wholesale from the tool this is modelled on: the clean-view case is
@@ -540,18 +541,33 @@ built in:
 * **It says nothing about statements or locals.** Structure verdicts stay
   `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
   statement level.
-* **`match.db` is read-only, and supplies more than percentages.** It is opened
-  `mode=ro` and never written, but four things come from it: the `< 100%` hint
-  (`paired.fuzzy_pct`), `sweep`'s candidate list AND the RVA pair it
-  disassembles, the base<->target pairing `resolve` uses to find a hex
-  selector's twin, and everything `rva` prints under `match` (module, unit,
-  current/max %, struct class, statement counts, attempts, flags). Every CFG
-  verdict still comes from `binaries/rich`, so a DB from a different build
-  changes which functions `sweep` lists and what `rva` reports, never a
-  block/branch verdict.
+* **`sema` does not read `binaries/match.db`.** It never did anything the two
+  rich indexes and the committed ledger cannot answer, and reading a derived
+  cache meant `sema` could not answer at all on a tree that had never run a
+  derivation. The split now is: `binaries/rich/{target,base}/index.jsonl` owns
+  every BUILD fact (address, size, statements, owning file, both spellings of
+  the name, and - through `vostok.sema.pairing` - which base function a target
+  function IS); `docs/binary_matching/match_state.tsv` owns the CAMPAIGN's
+  memory (`cur`/`max`, structure class, attempts, status, park note, module and
+  TU ownership). `sweep` takes its scope and percentages from the ledger and its
+  RVA pair from the pairing; `rva` reads both; every CFG verdict comes from
+  `binaries/rich` as before.
+* **The pairing is recomputed, not cached.** `vostok.sema.pairing` runs the same
+  passes as `vostok.derive.roster` over the same helpers and reproduces all
+  18,791 pairs at the same two RVAs (measured 2026-08-16: 0 disagreements, 0
+  missing, 0 extra). ~600 of them exist only because a spelling gap is
+  reconciled - the retail PDB writes `vostok::render::`dynamic initializer for
+  's_cc''` where ours writes `` `dynamic initializer for 'vostok::render::s_cc'' ``
+  - which is why naming one of those by its mangled name used to need the cache.
+  It costs one pass over each index (~3 s) and is LAZY: `rva`, `blocks`,
+  `branches` and `dot` resolve by name and never build it; `sweep` and
+  `diff tu-order` always do.
+* **The ledger stores four decimals.** `sweep` prints three, so a percentage can
+  land 0.001 away from the raw `report.json` figure (175 of 18,791 rows). No row
+  ever crosses the `< 100` line, so the candidate list is unaffected.
 * **`rva`'s `stmts=` is not `pdb_fetch --view structure`'s count.** `rva`
-  prints `len(record.statements)` from the rich index (and `statements=t:b`
-  from `match.db`, which agrees with it); `pdb_fetch` counts BODY statements
+  prints `len(record.statements)` from the rich index (and the same number under
+  `statements=t:b`); `pdb_fetch` counts BODY statements
   and drops the opening and closing brace records, so it reports two fewer.
   `stage_postprocess::execute` is `stmts=201` / `statements=201:200` in sema
   and `199 statements` / `198` in `pdb_fetch`. Neither is wrong; they count

@@ -9,13 +9,40 @@ shape work at all.
 
 from __future__ import annotations
 
-import sqlite3
-
-from vostok.core.paths import MATCH_DB as DB_PATH
-
-from vostok.sema import die
 from vostok.sema.cfg import branch_rows, cfg, iso_map
 from vostok.sema.disasm import disasm, parse
+from vostok.sema.pairing import ledger, pairing
+
+
+def _candidates(args):
+    """(rows, unscored) for the scope: `rows` is [(demangled, %, t_rva, b_rva)].
+
+    Module and TU ownership and the percentage come from the committed ledger;
+    the two RVAs come from the index-derived pairing. A ledger row with no pair
+    is target-only (or banked from a build that no longer emits it) and is not a
+    candidate - `sweep` has nothing to disassemble on the base side."""
+    pairs = pairing().pairs
+    unit = args.unit.lower() if args.unit else None
+    rows, unscored = [], 0
+    for key, row in ledger().items():
+        if args.module and row["module"] != args.module:
+            continue
+        if unit and unit not in (row["unit"] or "").lower():
+            continue
+        pair = pairs.get(key)
+        if pair is None:
+            continue
+        pct = row["cur"]
+        # Rows objdiff paired but could not score are NOT in the candidate set.
+        # They used to vanish without a word; the footer counts them.
+        if pct is None:
+            unscored += 1
+        elif pct < 100 and (args.min_pct is None or pct >= args.min_pct):
+            rows.append((pairing().demangled(key), pct, *pair))
+    # worst last, and ties broken by name so two runs agree (the SQL ORDER BY
+    # left ties to the query plan).
+    rows.sort(key=lambda r: (-r[1], r[0]))
+    return rows, unscored
 
 
 def cmd_sweep(args):
@@ -23,36 +50,13 @@ def cmd_sweep(args):
     residual a FLOW divergence or not? That is the question `report.json` cannot
     answer and the one that decides whether a function is steerable structure
     work or a regalloc/operand residual."""
-    if not DB_PATH.is_file():
-        die(f"{DB_PATH} missing")
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-    where, p = [], []
-    if args.module:
-        where.append("module = ?")
-        p.append(args.module)
-    if args.unit:
-        where.append("unit LIKE ?")
-        p.append(f"%{args.unit}%")
-    scope = (" WHERE " + " AND ".join(where)) if where else ""
-    # Rows objdiff paired but could not score are NOT in the candidate set. They
-    # used to vanish without a word; the footer counts them.
-    unscored = con.execute(
-        f"SELECT COUNT(*) FROM paired{scope}{' AND' if scope else ' WHERE'} "
-        "fuzzy_pct IS NULL", p).fetchone()[0]
-    q = ("SELECT mangled, demangled, unit, fuzzy_pct, struct_class, target_rva, base_rva "
-         f"FROM paired{scope}{' AND' if scope else ' WHERE'} fuzzy_pct < 100")
-    if args.min_pct is not None:
-        q += " AND fuzzy_pct >= ?"
-        p = [*p, args.min_pct]
-    q += " ORDER BY fuzzy_pct DESC"
-    rows = con.execute(q, p).fetchall()
-    con.close()
+    rows, unscored = _candidates(args)
     if args.max:
         rows = rows[:args.max]
     print(f"{'fuzzy':>7} {'blocks b/t':>11} {'branches b/t':>13}  {'verdict':<14} function")
     tally = {}
     undisassembled = 0
-    for mangled, dem, unit, pct, sclass, t_rva, b_rva in rows:
+    for dem, pct, t_rva, b_rva in rows:
         ts, bs = {}, {}
         try:
             tg = cfg(*parse(disasm("target", t_rva))[:2], stats=ts)
