@@ -131,8 +131,7 @@ unmeasured render count fell 247 -> 208.
 **Detection recipe (no build required):** `grep dummy.obj
 binaries/objdiff/objdiff.json` lists target units with no base counterpart;
 any `*_inline.h` there is a header group we have not split. Cross-check with
-`sqlite3 docs/binary_matching/match.db "SELECT unit, COUNT(*) FROM paired
-WHERE fuzzy_pct IS NULL GROUP BY unit ORDER BY 2 DESC"`.
+`python3 -m vostok ledger list --status blocked --json` grouped by unit.
 
 Pattern file: `patterns/inline-header-split-pairing.md`.
 
@@ -215,6 +214,6 @@ applies: keep it even if some current %s dip.
 ## Handling
 
 Run these as ONE deliberate core-structure pass with a full before/after
-`vostok derive diff` across ALL modules (not just render), once the render root
+`git diff` of the ledger across ALL modules (not just render), once the render root
 lanes have drained the work that does not depend on them. Both tickets were
 raised from render but neither is render-owned.

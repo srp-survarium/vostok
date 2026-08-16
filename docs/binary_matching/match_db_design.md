@@ -1,18 +1,25 @@
-# match_db - the queue/report database (design, agreed pre-implementation)
+# The matching record - design
 
-A sqlite database + CLI (`scripts/vostok/derive/`, run as `python3 -m vostok
-derive` or `python3 -m vostok.derive`) that answers the bulk questions
-the matching loop needs - build queues, roll up per-TU/module reports, find
-unpaired functions - and replaces `status.jsonl` as the machine-readable status
-store. It does NOT replace `pdb_fetch`: the parser stays the authoritative
-per-function view (structure-diff, rich asm, statement slices); the DB exists
-for queries across thousands of functions at once.
+> **The sqlite database this document was written for is gone.** The record is
+> now `docs/binary_matching/match_state.tsv`, one text row per target function,
+> and there is no cache behind it. Sections describing tables, interning, `sql`
+> and blob-merge strategy are kept as HISTORY, clearly marked; the live design
+> is what follows here. See CLAUDE.md for the day-to-day commands.
 
-The derived tables are regenerated from the already-built diff artifacts by
-`vostok build` at the end of every build (it is the canonical build step and owns
-the DB regen); `vostok derive refresh` is the regen-only path that re-derives the
-DB from an artifact set already on disk (run `vostok build` first if sources
-moved). "refresh" below means that regen step regardless of which trigger ran it.
+The derivation (`scripts/vostok/derive/`, run as `python3 -m vostok derive
+refresh`) answers the bulk questions the matching loop needs - build queues,
+per-TU/module rollups, unpaired functions - by writing the committed ledger
+straight from the built artifacts. It does NOT replace `pdb_fetch`: the parser
+stays the authoritative per-function view (structure-diff, rich asm, statement
+slices); the ledger exists for questions spanning thousands of functions.
+
+Queries live in `vostok ledger` and read the committed file directly, so they
+need neither a build nor a database - a fresh clone can answer them.
+
+`vostok build` re-derives the ledger at the end of every build (it is the
+canonical build step and owns the regen); `vostok derive refresh` is the
+regen-only path over an artifact set already on disk (run `vostok build` first
+if sources moved). "refresh" below means that regen step regardless of trigger.
 
 ## Data sources
 
@@ -29,19 +36,23 @@ vcproj <-> module is 1:1, so vcproject queries are module queries.
 
 ## Storage
 
-`docs/binary_matching/match.db` - sqlite, **committed to git**.
-- **Deterministic writes:** fixed page size, stable row ordering (sorted by
-  rva/mangled), `VACUUM` before close - the same delink state always produces
-  byte-identical files; a no-op refresh produces no git diff.
-- **Merge strategy:** derived tables are recomputable, so a binary conflict is
-  resolved by taking either side and re-running `refresh`; the persistent
-  tables (`history`, `flags`) are merged with `vostok derive merge-flags
-  <other.db>` (union, newest wins).
-- **Commit cadence:** at the same points as the README score block (run start,
-  before handing a stack back, after delinker/toolchain bumps) - not on every
-  rebuild.
-- `refresh` records delink timestamps + tool versions in `meta` and WARNS when
-  the target side is older than the tools (the stale-target smear guard).
+`docs/binary_matching/match_state.tsv` - tab-separated text, **committed to git**.
+- **Deterministic writes:** fixed column order, sorted by mangled name, LF
+  endings - the same delink state always produces a byte-identical file, so a
+  no-op refresh produces no git diff.
+- **Merge strategy:** it is text, so a conflict is a normal text conflict and
+  `git diff` names the functions that moved. Resolve by taking either side and
+  re-running the refresh; nothing needs a special merge tool.
+- **Commit cadence:** with the work it measures - every build advances it, and
+  the README score block moves with it.
+- **Why not sqlite (HISTORY):** the original design committed a ~50 MB database.
+  SQLite re-serialises its pages on every write, so git could not delta it and
+  each commit stored a fresh multi-MB blob - ~3.5 GB of history, none of it
+  diffable or mergeable. Measured on the same 60-row change, the text ledger
+  grows ~200x slower. Roughly half the database was derived data that never
+  belonged in git at all, and `source_maxima` was 99.99% degenerate because its
+  MAX gate keyed on a composite hash that reset whenever any sibling in the same
+  TU changed.
 
 ## Schema
 
@@ -198,7 +209,7 @@ only the source-scoped maximum, state identity, origin, and evidence reference
 belong in the database. README `exact-max` and `fuzzy-max` use this table and
 take current measurements as a floor, so MAX can never display below current.
 
-`vostok derive max [--module <m>] [--below 100]` lists the ledger. An island
+`vostok ledger list [--module <m>]` shows each row's `max`. An island
 runner must first refresh from the real candidate artifacts, restore the source,
 and then use `record-max <mangled> --evidence <path> --expected-hash <hash>`.
 `record-max` accepts no score: it can annotate only the hash, score, exact bit,
@@ -235,29 +246,28 @@ everything we match is a class method.
 ## CLI
 
 ```
-vostok derive refresh                       # regen-only: ingest the already-built
-                                            #   report.json + indexes, reconcile
-                                            #   history (vostok build first if sources
-                                            #   moved - it regenerates the DB itself)
-vostok derive list   --module <m> [--unit <tu>] [--max-size 0x80]
-                     [--class QUANTITY,SIZE] [--presence TARGET_ONLY]
-                     [--queue-eligible] [--json]
-vostok derive report --module <m> [--per-unit]   # totals / paired / 100% /
-                                                 # struct-MATCH / out-of-scope /
-                                                 # remaining + the BASE_ONLY lint
-vostok derive queue  --module <m> [--limit N]
-                     # ONE batch per TU - all its open functions, smallest TU
-                     # first - skipping out-of-scope/MATCHED_BEFORE/SKIP; per-TU
-                     # matching keeps small helpers in their callers' LTCG
-                     # environment (no cross-TU small-function churn)
-vostok derive sql "<query>"                 # escape hatch, read-only
-vostok derive flag <mangled> --requeue|--out-of-scope --cause "..."
-vostok derive merge-flags <other.db>
+vostok derive refresh                    # regen-only: ingest the already-built
+                                         #   report.json + indexes and rewrite the
+                                         #   ledger (vostok build first if sources
+                                         #   moved - it re-derives on its own)
+
+vostok ledger report --module <m> [--per-unit]    # byte-weighted rollup:
+                                                  #   done/open/park/blkd, held,
+                                                  #   head, cur%, max%
+vostok ledger list   [--module <m>] [--unit <tu>] [--class QUANTITY,SPLIT]
+                     [--status parked] [--max-size 0x80] [--headroom] [--json]
+vostok ledger queue  --module <m> [--limit N]
+                     # ONE batch per TU - all its open functions, worst first;
+                     # per-TU matching keeps small helpers in their callers'
+                     # LTCG environment (no cross-TU small-function churn)
+vostok ledger tried  <mangled>... [--note "..."]   # record a dispatch
+vostok ledger park   <mangled> --cause "..."       # stop working it, with a reason
+vostok ledger open   <mangled>                     # undo a park
 ```
 
-Every query takes `--json` for agents. Causes live in `flags.cause` and as
-`claude@NOTE:` at the function - never in commit messages (narrative there is
-fine, but it is not a system of record).
+Every query takes `--json` for agents. Causes live in the ledger's `note`
+column and as `claude@NOTE:` at the function - never in commit messages
+(narrative there is fine, but it is not a system of record).
 
 ## Parser dependency
 
@@ -286,12 +296,12 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
   2026-06-12 - 620 causes imported as `[STATUS pct%] cause` flags (SKIP for
   BLOCKED/SKIPPED/INPROGRESS, NOTE otherwise); 48 rows referenced symbols
   absent from the current delink and live on in git history only.
-- **Single writer:** the ORCHESTRATOR runs refresh/flag and commits the DB at
-  run milestones; dispatched matchers/verifiers never edit `match.db` - they
-  report parking causes in their result lines.
-- **Interned names:** symbols/units/files tables keep the committed DB at
-  ~19MB; ids are sorted-dense and NOT stable across refreshes (persistent
-  tables key on mangled TEXT).
+- **Single writer:** the ORCHESTRATOR runs refresh/park and commits the ledger
+  at run milestones; dispatched matchers/verifiers never edit it - they report
+  parking causes in their result lines.
+- **Interned names (HISTORY):** the database interned symbols/units/files to
+  stay near ~19 MB. The ledger simply repeats the mangled name per row - it is
+  66% of the file and irreducible, and at 19,645 rows that is ~5 MB of text.
 - **Frameless = custom-conv, out of scope (2026-06-12, from the first
   orchestrator run):** a target function without the /Od `push ebp; mov ebp,
   esp` prologue is an LTCG-customized leaf (custom calling convention,
@@ -310,7 +320,11 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
   differs - after pulling a tool update, run `refresh` first (single-writer:
   the orchestrator).
 
-## Implementation steps (one commit each, single PR)
+## Implementation steps (HISTORY - the original sqlite build-out, all landed)
+
+Kept as the record of how the database was built, and of what each verb below
+was for. Every one of these verbs is now retired: the queries live in
+`vostok ledger`, and `refresh` is derive's only verb.
 
 1. this design doc
 2. schema + `refresh` ingest of report.json + both rich indexes; `pairs` with

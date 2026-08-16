@@ -8,7 +8,7 @@ across the 20 NON-RENDER engine modules (render is matched last - EXCLUDED):
 logging, network_core, network, particle, physics, scaleform, sound, survarium,
 ui, vfs, vostok`.
 
-Source of truth: `binaries/match.db` (`scripts/vostok/derive/`,
+Source of truth: `docs/binary_matching/match_state.tsv` (`scripts/vostok/derive/`,
 match_db_design.md), which classifies each paired function's `struct_class` from
 the two statement tables. This queue PROJECTS that classification - the
 authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
@@ -28,7 +28,7 @@ authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
    structure that exists in the target but not yet in base. Frameless unpaired
    leaves (custom-conv, pair only inlined into callers) are excluded.
 
-LOCALS note: "locals are structure" (sushi), but match.db's classifier aligns on
+LOCALS note: "locals are structure" (sushi), but the classifier aligns on
 statement SIZES only and does not independently surface named-local divergence, so
 there is no standalone LOCALS section - that work rides inside the QUANTITY / SPLIT
 / SIZE rows and is checked per function with `pdb_fetch --view structure-diff`.
@@ -36,13 +36,13 @@ there is no standalone LOCALS section - that work rides inside the QUANTITY / SP
 vostok diff layout caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
 size mismatches" were source-parse false positives). This queue therefore trusts
-match.db's struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
+the ledger's `cls` + `pdb_fetch --view structure-diff`, not layout_diff.
 
 ## Persistence / BLOCKED semantics (like enum_queue)
 
 * A row DROPS when its `struct_class` becomes `MATCH` (handled) - re-run
   `--write-queue` and it falls out.
-* A row carrying a match.db `OUT_OF_SCOPE` / `SKIP` flag is rendered
+* A row the ledger marks `parked` is rendered
   `BLOCKED:<flag>` with that flag's cause (regenerated from the DB each run).
 * A human-authored `BLOCKED:...` row in this file PERSISTS across regen even if it
   would otherwise drop (keyed by the hidden `<!-- m:MANGLED -->` marker), carrying

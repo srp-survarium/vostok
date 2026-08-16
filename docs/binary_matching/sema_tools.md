@@ -171,9 +171,9 @@ Other sema-family capabilities already have stronger Vostok-native owners:
 | HoMM2/Gruntz view | Vostok owner |
 |---|---|
 | `disasm` / rich source lines | `pdb_fetch --view target|base|diff|structure|structure-diff` |
-| `match` | `vostok derive report --function`, `--unit --per-function`, or `--module --per-unit` |
+| `match` | `vostok ledger report --unit <tu>` or `--module <m> --per-unit` |
 | `symbol`, `def`, `refs`, `hover` | `vostok tool clangd` with the same operation name |
-| symbol/function map | `pdb_rich_query --list` and `vostok derive list` |
+| symbol/function map | `pdb_rich_query --list` and `vostok ledger list` |
 | class hierarchy and layout | generated `binaries/structure/target/headers` |
 | vtable order and slot use | target structure headers plus `pdb_fetch --view target` at a real vcall |
 
