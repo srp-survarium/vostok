@@ -553,7 +553,7 @@ built in:
   RVA pair from the pairing; `rva` reads both; every CFG verdict comes from
   `binaries/rich` as before.
 * **The pairing is recomputed, not cached.** `vostok.sema.pairing` runs the same
-  passes as `vostok.derive.roster` over the same helpers and reproduces all
+  passes as `vostok.derive.pairing` over the same helpers and reproduces all
   18,791 pairs at the same two RVAs (measured 2026-08-16: 0 disagreements, 0
   missing, 0 extra). ~600 of them exist only because a spelling gap is
   reconciled - the retail PDB writes `vostok::render::`dynamic initializer for
@@ -561,7 +561,10 @@ built in:
   - which is why naming one of those by its mangled name used to need the cache.
   It costs one pass over each index (~3 s) and is LAZY: `rva`, `blocks`,
   `branches` and `dot` resolve by name and never build it; `sweep` and
-  `diff tu-order` always do.
+  `diff tu-order` always do. The two implementations differ only in where the
+  "objdiff scored this" evidence comes from - `report.json` in `derive`, the
+  ledger here - and are meant to converge on one, called with that evidence as
+  an argument. Until they do, a change to a pass belongs in both.
 * **The ledger stores four decimals.** `sweep` prints three, so a percentage can
   land 0.001 away from the raw `report.json` figure (175 of 18,791 rows). No row
   ever crosses the `< 100` line, so the candidate list is unaffected.
