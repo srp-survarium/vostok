@@ -46,9 +46,16 @@ is ignored by `--diff`, which always shows both.
 `blocks` aligns by CONTENT and is what a verdict comes from; `branches` pairs
 POSITIONALLY, so it is for reading a difference `blocks` already established.
 
-<fn> is a mangled name, a demangled substring, or a hex RVA/VA on either side.
+<fn> is a mangled name, a demangled substring, or a hex RVA/VA on either side. A
+bare hex is a target/base RVA and a target/base VA at once; every reading that
+hits is listed and the command stops rather than picking one.
 
-rc: 0 = answered YES/clean, 1 = answered NO (flow or branches differ), 2 = error.
+rc: 0 = answered YES, 1 = answered NO, 2 = error. WHAT the answer is about is
+per verb: `blocks --diff` answers "same flow AND every aligned block identical",
+so it returns 1 for nearly every function below 100% - including ones it just
+printed `flow SAME` for. `branches --diff` answers "branch counts, mnemonics and
+destination blocks agree". The other verbs always return 0. Take the flow
+verdict from the printed `flow SAME | DIFFERS` line, never from rc.
 """
 
 import argparse
