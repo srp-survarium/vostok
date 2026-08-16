@@ -17,6 +17,12 @@ def module_of(unit_or_file):
     parts = unit_or_file.split("/")
     if parts[0] == "vostok" and len(parts) > 2:
         return parts[1]
+    # The Scaleform GFx SDK is stripped against its own --engine-path, so its
+    # paths start at the SDK's own `Src/` and would otherwise name the module
+    # "src". It is unambiguous: the in-repo copy lands under `scaleform/src/...`
+    # because that one is stripped against the ENGINE prefix.
+    if parts[0] == "src":
+        return "gfx"
     return parts[0]  # third-party root, or a shared vostok/*.h -> "vostok"
 
 
