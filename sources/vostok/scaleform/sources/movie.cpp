@@ -127,15 +127,8 @@ void flash_text::set_font_size( const float font_size )
 void flash_text::set_position( const float screen_position_x, const float screen_position_y )
 {
 	Scaleform::Render::RectF	rect	= text_impl->GetRect( );
-
-	rect = Scaleform::Render::RectF(
-		screen_position_x,
-		screen_position_y,
-		screen_position_x + rect.Width( ),
-		screen_position_y + rect.Height( )
-	);
+	rect	= Scaleform::Render::RectF( screen_position_x, screen_position_y, screen_position_x + rect.Width( ), screen_position_y + rect.Height( ) );
 	text_impl->SetRect( rect );
-
 	owner->need_capture	= true;
 }
 

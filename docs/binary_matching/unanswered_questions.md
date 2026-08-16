@@ -75,3 +75,38 @@ all; every other of the 1,187 compilands is emitted. Found 2026-06-12 during
 the game carcass rebuild (the flash/scaleform types were initially mistaken
 for all-inlined because of this). Parser-side question: an exclusion list, a
 path-classification bug, or something about that lib's debug info?
+
+## Which GFx library should scaleform link, and should we compile Render_BufferGeneric.cpp?
+
+Both builds link a prebuilt GFx, but not the same one. `survarium.pdb` names the
+vendor's `C:\w\42216f4658640829\Scaleform\Releases\GFx_4.2.21\Obj\Win32\Msvc90\
+Shipping\GFx\*.obj` (Render_HAL, Render_BufferGeneric, Render_Matrix4x4, ...);
+we link `binaries.prebuilt/Win32/libraries/shipping/libgfx*.lib`, a gitignored
+~197 MB out-of-tree build of the **4.2.22** sources whose members are named
+`Z:\...\surv\vostok_4\binaries\Win32\intermediates\gfx\libgfx\*.obj`. Two
+consequences, both measured 2026-08-16 (see
+`patterns/prebuilt-lib-supplies-comdat.md`):
+
+1. Our libgfx contributes **no line info** to the base PDB, so anything it
+   supplies has no base symbol for the delinker and cannot pair at all -
+   `MatrixState::MatrixState()` and `MatrixState(HAL*)` alone are 1564 target
+   bytes stuck at 0%, about half of scaleform's whole remaining byte gap. The
+   target side delinks fine. Rebuilding libgfx with `/Zi` under this tree's
+   engine path would make those rows scorable; matching the shipped build's
+   switches (ours emits x87 `fld1`/`fldz`, the target SSE `xorps`/`movss`) would
+   make them matchable.
+
+2. `sources/vostok/scaleform/sources/scaleform.vcproj` lists
+   `..\..\..\scaleform\Src\Render\Render_BufferGeneric.cpp` as built in
+   `Master Gold|Win32`, and we do compile it - it is the only GFx implementation
+   `.cpp` we build. The shipped build apparently did **not**: `survarium.pdb`
+   carries `c:\survarium\sources\scaleform\src\render\render_buffergeneric.h`
+   but no `...\render_buffergeneric.cpp` compiland, the target index has zero
+   `RBGenericImpl` symbols, and the vendor `Render_BufferGeneric.obj` is in the
+   link. Our copy therefore wins the COMDAT and produces ~15 base-only symbols
+   the target has nowhere. Excluding the file would align the build inputs (and
+   would turn `InitHAL`'s `RenderBufferManagerGeneric(true)` allocation into the
+   stock-convention call the target has, worth a handful of bytes), but the
+   recovered `.vcproj` is itself target evidence and says the opposite, so the
+   two sources of evidence conflict. Deliberately NOT changed; needs a decision
+   plus a full-build measurement, since libgfx is linked by render too.
