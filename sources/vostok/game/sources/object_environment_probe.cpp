@@ -9,6 +9,9 @@
 #include "game.h"
 #include <vostok/math_float4x4.h>
 #include <vostok/configs_binary_config_value.h>
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
+#include <vostok/render/facade/environment_probe_properties.h>
 
 namespace survarium {
 
@@ -52,20 +55,29 @@ void object_environment_probe::load(
 	cb( *this );
 }
 
-// claude@NOTE: insert/remove need render::environment_probe_properties and call
-// render::scene_renderer::update_environment_probe / remove_environment_probe,
-// none of which are declared in our render-facade headers (they live in the
-// vostok/render/facade unit - scene_renderer.cpp). Blocked until that facade cook
-// lands in its own PR; left STUB.
-
-// STATE[STUB]
 void object_environment_probe::insert( )
 {
+	render::environment_probe_properties properties;
+	properties.transform			= m_transform;
+	properties.location				= m_transform.c.xyz( );
+	properties.texture_name			= m_texture_name;
+	properties.texture_invalidated	= true;
+	properties.radius				= m_radius;
+	properties.diffuse_multiplier	= m_diffuse_multiplier;
+	properties.specular_multiplier	= m_specular_multiplier;
+	properties.enabled				= m_enabled;
+	properties.cubemap_resolution	= m_cubemap_resolution;
+	properties.clip_by_normal		= m_clip_by_normal;
+	properties.with_shadows			= m_with_shadows;
+	properties.geometry				= m_geometry;
+	properties.preview_mip			= 0;
+
+	get_game_scene( ).renderer( ).scene( ).update_environment_probe( get_game_scene( ).render_scene( ), m_probe_id, properties );
 }
 
-// STATE[STUB]
 void object_environment_probe::remove( )
 {
+	get_game_scene( ).renderer( ).scene( ).remove_environment_probe( get_game_scene( ).render_scene( ), m_probe_id );
 }
 
 } // namespace survarium

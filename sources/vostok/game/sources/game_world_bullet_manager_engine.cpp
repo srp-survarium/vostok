@@ -15,43 +15,40 @@
 
 namespace survarium {
 
-// STATE[STUB]
-// claude@NOTE: parked - render-facade tracer wall. Recovered body picks a tracer
-// slot (s_tracer_idx % m_bullet_tracers.size()), stores the bullet there, stamps
-// bullet->m_tracer_idx, and registers a tracer with the renderer via
-// scene_renderer().add_tracer( render_scene(), slot.tracer, initial_tracer_matrix )
-// where initial_tracer_matrix is a function-local static float4x4().identity().
-// scene_renderer::add_tracer is declared/implemented only in the shipped binary's
-// vostok/render/facade/sources/scene_renderer.cpp - our reconstruction of that
-// compiland lacks the tracer methods (LNK2001). Unblock once the render-facade
-// add_tracer/remove_tracer/update_tracer are reconstructed.
+static u16 s_tracer_idx;
+
 bool game_world::attach_tracer( ::survarium::bullet* bullet )
 {
-	return false;
+	static float4x4 initial_tracer_matrix = float4x4( ).identity( );
+
+	const u16 index = u16( s_tracer_idx % m_bullet_tracers.size( ) );
+
+	bullet_tracer& tracer = m_bullet_tracers[ index ];
+
+	bullet->m_tracer_idx = index;
+	tracer.bullet = bullet;
+	scene_renderer( ).add_tracer( render_scene( ), tracer.tracer, initial_tracer_matrix );
+	++s_tracer_idx;
+
+	return true;
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - render-facade tracer wall (same as attach_tracer).
-// Recovered body indexes m_bullet_tracers[ bullet->m_tracer_idx ], and if its
-// .bullet matches, calls scene_renderer().remove_tracer( render_scene(),
-// slot.tracer ) + clears the slot, else LOG_ERROR( "case when
-// bullet_tracer.bullet != bullet" ); finally stamps bullet->m_tracer_idx=0xFFFF.
-// scene_renderer::remove_tracer lives only in the shipped render-facade
-// scene_renderer.cpp (not reconstructed; LNK2001). Unblock with the render facade.
 bool game_world::detach_tracer( ::survarium::bullet* bullet )
 {
-	return false;
+	bullet_tracer& tracer = m_bullet_tracers[ bullet->m_tracer_idx ];
+	if ( tracer.bullet == bullet )
+	{
+		scene_renderer( ).remove_tracer( render_scene( ), tracer.tracer );
+		tracer.bullet = NULL;
+	}
+	else
+		LOG_ERROR( "case when bullet_tracer.bullet != bullet not implemented" );
+
+	bullet->m_tracer_idx = 0xFFFF;
+
+	return true;
 }
 
-// STATE[STUB]
-// claude@NOTE: parked - render-facade tracer wall (same as attach/detach_tracer).
-// Recovered structure (6 stmts, local float4x4 m): builds m from
-// create_translation(position) + a direction-derived orthonormal rotation (the
-// 0x26-0xd1 cross-product block) + m.set_scale( float3( length, .. ) ), then calls
-// scene_renderer().update_tracer( render_scene(), m_bullet_tracers[tracer_idx].tracer,
-// m ). scene_renderer::update_tracer is declared/implemented only in the shipped
-// render-facade scene_renderer.cpp (not reconstructed here; LNK2001 if called).
-// Unblock with the render-facade add/update/remove_tracer reconstruction.
 void game_world::update_tracer(
 	const u16			tracer_idx,
 	float3 const&		position,
@@ -59,6 +56,13 @@ void game_world::update_tracer(
 	const float			length
 )
 {
+	float4x4 m		= create_translation( position );
+	m.k.xyz( )		= direction;
+
+	m.i.xyz( )		= cross_product( float3( 0.f, 1.f, 0.f ), direction );
+	m.j.xyz( )		= cross_product( direction, m.i.xyz( ) );
+	m.set_scale		( float3( 1.f, 1.f, length ) );
+	scene_renderer( ).update_tracer( render_scene( ), m_bullet_tracers[ tracer_idx ].tracer, m );
 }
 
 // claude@NOTE: faithful sound-facade reconstruction (paired). Two byte residuals are
