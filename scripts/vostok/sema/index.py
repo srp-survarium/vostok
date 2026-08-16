@@ -91,23 +91,57 @@ def _paired_rva(side, rva):
 
 
 def _record_at_rva(side, rva):
-    hits = _scan_index(
-        side,
-        lambda line: (
-            json.loads(line) if f'"rva":{rva}' in line else None
-        ),
-    )
-    return hits[0] if len(hits) == 1 else None
+    """The one record at an exact RVA, or None.
+
+    The `"rva":N` substring is only a prefilter: N is a decimal prefix of every
+    longer RVA (`"rva":123` is in `"rva":1234`), so the loaded record is checked
+    for equality. Several records at one RVA are ICF aliases of one function, so
+    the first is as good as any."""
+    needle = f'"rva":{rva}'
+
+    def want(line):
+        if needle not in line:
+            return None
+        rec = json.loads(line)
+        return rec if rec["rva"] == rva else None
+
+    hits = _scan_index(side, want)
+    return hits[0] if hits else None
+
+
+def _fold_aliases(side, hits, sel):
+    """Collapse hits that share an RVA: they are ONE function under several names.
+
+    The delinker emits one index record per symbol and the linker's ICF folds
+    identical bodies onto one address - 1042 target RVAs carry 2..8 records. Those
+    are not competing candidates, they are aliases of the same code, so treating
+    them as an ambiguity made 912 paired functions unreachable by ANY selector:
+    the error told the reader to 'pass a mangled name or RVA' when both were
+    already exact and both produced that same error."""
+    by_rva, counts = {}, {}
+    for rec in hits:
+        rva = rec["rva"]
+        counts[rva] = counts.get(rva, 0) + 1
+        keep = by_rva.get(rva)
+        if keep is None or (keep["mangled"] != sel and rec["mangled"] == sel):
+            by_rva[rva] = rec
+    for rva in sorted(by_rva):
+        if counts[rva] > 1:
+            sys.stderr.write(
+                f"[{counts[rva]} symbols share {side} rva {rva:#x} (ICF fold) - "
+                f"reading it as {by_rva[rva]['mangled']}]\n")
+    return [by_rva[k] for k in sorted(by_rva)]
 
 
 def resolve(sel):
     """(target_record | None, base_record | None) for one selector.
 
     Ambiguity is resolved by preferring an EXACT mangled hit; anything still
-    ambiguous is reported rather than guessed at."""
+    ambiguous is reported rather than guessed at. Hits that share an RVA are ONE
+    function under several names (ICF), not an ambiguity - see `_fold_aliases`."""
     want = _matcher(sel)
-    tgt = _scan_index("target", want)
-    base = _scan_index("base", want)
+    tgt = _fold_aliases("target", _scan_index("target", want), sel)
+    base = _fold_aliases("base", _scan_index("base", want), sel)
     if len(tgt) == 1:
         paired = _paired_rva("target", tgt[0]["rva"])
         if paired is not None:
