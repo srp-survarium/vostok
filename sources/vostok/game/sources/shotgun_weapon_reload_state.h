@@ -17,24 +17,18 @@ typedef resources::resource_ptr<
 
 class shotgun_weapon_reload_state : public weapon_core_shotgun_reload_state {
 public:
-	// STATE[STUB]
 	inline		shotgun_weapon_reload_state	(
 					weapon_core&	weapon,
 					weapon_core_shotgun_reload_base_substate_ptr const&	start_substate,
 					weapon_core_shotgun_reload_base_substate_ptr const&	reload_one_substate,
 					weapon_core_shotgun_reload_base_substate_ptr const&	finish_substate
 				)
-		// buildability init: the base takes the raw substate pointers
 		:	weapon_core_shotgun_reload_state( weapon, start_substate.c_ptr( ), reload_one_substate.c_ptr( ), finish_substate.c_ptr( ) ),
 			m_start_substate		( start_substate ),
 			m_reload_one_substate	( reload_one_substate ),
 			m_finish_substate		( finish_substate )
 	{
-		// FUNCTION BODY[0xac550]: 1
-		// <0xac550>|0x000|+0x06f:'26'	{
-		// <0>
-		// <0xac5bf>|0x06f|      :'28'	}
-		// ******
+		set_delete_substates_on_destruction	( false );
 	}
 	virtual		~shotgun_weapon_reload_state( ) { /* no source */ }
 

@@ -24,13 +24,7 @@ public:
 
 private:
 	// PDB mangles these overrides E* (private virtual), unlike the public ctor/dtor.
-	// STATE[STUB]
-	virtual	void	initialize					( ) override
-	{
-		// FUNCTION BODY[0x4f210]
-		// <0x4f210>|0x000|      :'39'	{
-		// ******
-	}
+	virtual	void	initialize					( ) override { }
 	virtual	void	finalize					( ) override { /* no source */ }
 
 	virtual	void	execute						( ) override { /* no source */ }

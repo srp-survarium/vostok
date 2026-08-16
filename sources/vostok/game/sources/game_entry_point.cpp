@@ -86,7 +86,6 @@ void game_module::destroy_world						( vostok::engine_user::world*& world )
 	world									= NULL;
 }
 
-// STATE[STUB]
 void game_module::register_memory_allocators		( )
 {
 	VOSTOK_CONSTRUCT_REFERENCE				( s_input_allocator, vostok::memory::doug_lea_allocator_type );

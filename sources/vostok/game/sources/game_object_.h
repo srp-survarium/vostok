@@ -30,13 +30,7 @@ public:
 									boost::function< void( game_object_& ) >&	arg_2
 								) = 0;
 
-	// STATE[STUB]
-	virtual	void				insert			( )
-	{
-		// FUNCTION BODY[0x4f210]
-		// <0x4f210>|0x000|      :'28'	{
-		// ******
-	}
+	virtual	void				insert			( ) { }
 
 	virtual	void				remove			( ) { /* no source */ }
 
