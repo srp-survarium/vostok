@@ -58,7 +58,7 @@ from pathlib import Path
 from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
 from vostok.core.paths import PREBUILT, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
-from vostok.core.paths import SCRIPTS as SCRIPT_DIR
+from vostok.core.paths import GFX_TU_LISTS
 
 SDK = Path(os.environ.get("SCALEFORM_SDK", "/home/sheep/Projects/scaleform_sdk")).resolve()
 SHIP = PREBUILT / "Win32/libraries/shipping"
@@ -123,7 +123,7 @@ def lib_config(name):
 
 
 def tus(name):
-    f = SCRIPT_DIR / f"{name}_tus.txt"
+    f = GFX_TU_LISTS / f"{name}_tus.txt"
     return [ln.strip() for ln in f.read_text().splitlines() if ln.strip()]
 
 
