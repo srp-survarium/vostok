@@ -91,6 +91,9 @@ DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
 #: and gitignored (SQLite could not be diffed or merged - see ledger.store).
 MATCH_DB = BINARIES / "match.db"
 
+# TU lists for the GFx-from-source build (vostok.build.gfx reads these)
+GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
+
 REBUILD_LOG = BINARIES / "rebuild.log"
 MATCH_DB_LOG = BINARIES / "match_db.log"
 
