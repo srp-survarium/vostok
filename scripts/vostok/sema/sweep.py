@@ -16,7 +16,6 @@ from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.sema import die
 from vostok.sema.cfg import branch_rows, cfg, iso_map
 from vostok.sema.disasm import disasm, parse
-from vostok.sema.index import _load_side
 
 
 def cmd_sweep(args):
@@ -27,34 +26,38 @@ def cmd_sweep(args):
     if not DB_PATH.is_file():
         die(f"{DB_PATH} missing")
     con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-    q = ("SELECT mangled, demangled, unit, fuzzy_pct, struct_class FROM paired "
-         "WHERE fuzzy_pct < 100")
-    p = []
+    where, p = [], []
     if args.module:
-        q += " AND module = ?"
+        where.append("module = ?")
         p.append(args.module)
     if args.unit:
-        q += " AND unit LIKE ?"
+        where.append("unit LIKE ?")
         p.append(f"%{args.unit}%")
+    scope = (" WHERE " + " AND ".join(where)) if where else ""
+    # Rows objdiff paired but could not score are NOT in the candidate set. They
+    # used to vanish without a word; the footer counts them.
+    unscored = con.execute(
+        f"SELECT COUNT(*) FROM paired{scope}{' AND' if scope else ' WHERE'} "
+        "fuzzy_pct IS NULL", p).fetchone()[0]
+    q = ("SELECT mangled, demangled, unit, fuzzy_pct, struct_class, target_rva, base_rva "
+         f"FROM paired{scope}{' AND' if scope else ' WHERE'} fuzzy_pct < 100")
     if args.min_pct is not None:
         q += " AND fuzzy_pct >= ?"
-        p.append(args.min_pct)
+        p = [*p, args.min_pct]
     q += " ORDER BY fuzzy_pct DESC"
     rows = con.execute(q, p).fetchall()
     con.close()
     if args.max:
         rows = rows[:args.max]
-    tgt_all, base_all = _load_side("target"), _load_side("base")
     print(f"{'fuzzy':>7} {'blocks b/t':>11} {'branches b/t':>13}  {'verdict':<14} function")
     tally = {}
-    for mangled, dem, unit, pct, sclass in rows:
-        t, b = tgt_all.get(mangled), base_all.get(mangled)
-        if not t or not b:
-            continue
+    undisassembled = 0
+    for mangled, dem, unit, pct, sclass, t_rva, b_rva in rows:
         try:
-            tg = cfg(*parse(disasm("target", t["rva"]))[:2])
-            bg = cfg(*parse(disasm("base", b["rva"]))[:2])
+            tg = cfg(*parse(disasm("target", t_rva))[:2])
+            bg = cfg(*parse(disasm("base", b_rva))[:2])
         except SystemExit:
+            undisassembled += 1
             continue
         tb, bb = branch_rows(tg), branch_rows(bg)
         flow_same = [x[2] for x in bg] == [x[2] for x in tg]
@@ -78,9 +81,15 @@ def cmd_sweep(args):
         else:
             verdict = "BLOCK-SPLIT"
         tally[verdict] = tally.get(verdict, 0) + 1
-        print(f"{pct:7.2f} {len(bg):>5}/{len(tg):<5} {len(bb):>6}/{len(tb):<6}  "
+        # 3 decimals: every row here is BELOW 100 by construction, and %.2f
+        # printed 99.997 as "100.00" in a list defined as "not 100".
+        print(f"{pct:7.3f} {len(bg):>5}/{len(tg):<5} {len(bb):>6}/{len(tb):<6}  "
               f"{verdict:<14} {dem[:96]}")
-    print("\n[verdicts] " + "  ".join(f"{k}={v}" for k, v in sorted(tally.items())))
+    print(f"\n[{sum(tally.values())} of {len(rows)} candidate(s) classified"
+          + (f"; {undisassembled} could not be disassembled" if undisassembled else "")
+          + (f"; {unscored} more paired function(s) in scope carry no fuzzy score and are "
+             "not candidates" if unscored else "") + "]")
+    print("[verdicts] " + "  ".join(f"{k}={v}" for k, v in sorted(tally.items())))
     print("[FLOW-SAME/IDENTICAL = not control flow: operands, regalloc, scheduling.]")
     print("[ORDER-ONLY = isomorphic CFG, different block LAYOUT - one merged exit placed "
           "elsewhere; usually downstream, not a per-branch bug.]")
