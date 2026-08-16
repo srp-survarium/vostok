@@ -116,8 +116,9 @@ edges to one block. The fall-through requirement preserves real structure: an
 because only branch-free blocks are ever removed, contraction cannot change the
 branch COUNT - it can never hide a missing guard. The elided instructions are
 prepended to the successor, where they physically sit, so the block listing
-stays a correct linear disassembly. Every `--diff` reports how many blocks it
-contracted per side.
+stays a correct linear disassembly. Every view reports how many blocks it
+contracted per side - on stdout, except `dot`, which writes its notes to stderr
+so the graphviz stream stays pipeable.
 
 ## Command surface
 
@@ -145,6 +146,19 @@ symbols are taken from the same symbolized instruction records used by the CFG
 view. MSVC literal names expose a readable prefix; long literals remain
 compiler-truncated, so the command prints both the decoded hint and raw symbol.
 
+Flags, exactly:
+
+* `--base` picks the side for a one-sided view (`rva` has none - it always shows
+  both). `blocks`/`branches`/`dot` ignore it under `--diff`, which shows both.
+* `--lite` exists on `blocks` only. It used to be accepted and ignored by
+  `branches` and `dot`; they now reject it.
+* `xref --raw` prints one row per call site instead of one per callee/caller,
+  in address order. Without it, callees are grouped by name with `xN` counts,
+  so the offset column is the FIRST call site, not a sorted address list.
+* `xref --callees` lists indirect calls under their register operand (`eax x8`).
+  Those are call sites, not a function named `eax`; `pdb_fetch --view callees`
+  omits them, which is why its count is lower.
+
 Other sema-family capabilities already have stronger Vostok-native owners:
 
 | HoMM2/Gruntz view | Vostok owner |
@@ -166,9 +180,22 @@ PDB and match-database logic.
 `<fn>` is a mangled name, a demangled substring, or a hex RVA/VA on either side.
 Ambiguous substrings are listed, never guessed at.
 
+A bare hex is FOUR questions - target RVA, target VA, base RVA, base VA - and
+sema has no side flag for an address. Every reading that hits a real function is
+listed and the command stops; pick one by its mangled name, or ask `pdb_fetch`,
+which takes `--target-index`/`--base-index` with `--rva`/`--va` and so has no
+tie. About 3,000 of the ~42,000 addresses in the two indexes are ties.
+
+Several index records at ONE address are an **ICF fold group**, not an ambiguity
+(1042 target RVAs carry 2..8 names). They collapse to one function, with a
+stderr line naming the fold and the symbol being read.
+
 `--diff` output, in order:
 
 * a header naming both sides' file, RVA and byte size;
+* what the graph LOST before comparison: blocks contracted (shape-preserving)
+  and trailing blocks trimmed (**not** shape-preserving - see the `trim_tail`
+  limit below), with a `!!` line when the trim dropped more than it kept;
 * `flow SAME | DIFFERS` plus block counts;
 * on DIFFERS, the **first skeleton divergence** - the first block whose branch
   KIND+direction disagrees, computed without absolute indices so one inserted
@@ -311,11 +338,34 @@ exactly the case a human under-investigates.
 
 ## rc convention
 
-    0   answered YES  (flow same / branches agree)
-    1   answered NO   (flow or branch destinations differ)
-    2   error         (no such function, only one side present, pdb_fetch missing)
+    0   answered YES
+    1   answered NO
+    2   error         (no such function, an ambiguous selector, only one side
+                       present, pdb_fetch missing)
 
 `1` is an ANSWER, not a failure - do not treat a non-zero rc as a broken run.
+**What the answer is about differs per verb, so do not read rc 1 as "the flow
+differs":**
+
+| verb | rc 0 | rc 1 |
+|---|---|---|
+| `blocks --diff [--lite]` | same flow AND every aligned block byte-identical | flow differs **or any aligned block body differs** |
+| `branches --diff` | branch counts, mnemonics and destination blocks all agree | any of those differ |
+| `rva`, `xref`, `strings`, `dot`, `sweep` | always 0 | never |
+
+`blocks --diff` therefore returns 1 for essentially every function below 100%,
+including ones it has just printed `flow SAME` for:
+
+    $ python3 -m vostok sema blocks '?create_d3d@device@render@vostok@@AAEXXZ' --diff --lite
+    [block diff: base 48 blocks vs target 48 blocks; flow SAME]
+    ...
+    [this function is 99.02%, not 100, yet base and target have the SAME
+     control-flow graph and the SAME branch destinations...]
+    $ echo $?
+    1
+
+Take the flow verdict from the printed `flow SAME | DIFFERS` line, not from rc.
+`branches --diff` on that same function returns 0.
 
 ## Known limits
 
@@ -347,29 +397,38 @@ exactly the case a human under-investigates.
   not on the table itself.
 * **A switch's jump TABLE sits in `.text` right after the function** and is
   covered by the delinker's symbol size, so the disassembler decodes the table
-  bytes into plausible instructions (`mov dl,0CAh / jns ...`). `sema` drops
-  trailing blocks that are unreachable from the entry and do not branch back
-  into the kept prefix - which removes the phantom tail but keeps jump-table
-  arms, since those DO jump forward to the merge block. `register_samplers`
-  went from a bogus 17-vs-18-block verdict to a clean 13-vs-13 that isolates
-  the one real difference (we tail-`jmp` the last call, the target `call`s and
-  returns).
-* **Degenerate fall-through blocks are NOT contracted before the isomorphism
-  check** (found by batch B7). The "every post-branch instruction is a leader"
-  rule manufactures single-instruction blocks with one predecessor, one
-  successor and no terminator - a `nop`/`lea ecx,[ecx]` alignment pad, a
-  spill reload, a re-materialised zero. If such a block sits at a DIFFERENT
-  place on the two sides, the CFGs are still isomorphic after contracting
-  single-pred/single-succ fall-through chains, but `sema` reports
-  `flow DIFFERS`, points its first-skeleton-divergence line at the pad, and -
-  because destinations are named by block INDEX - reports every later branch as
-  retargeted. Three render/core rows were exactly this and cost real time:
-  `effect_options_descriptor::operator[]` (271 bytes and 23 blocks on BOTH
-  sides; the "missing early-out" at B2 is our base's B3, displaced by a 1-byte
-  `nop`), `resource_manager::create_texture` (a `jmp`+pad vs a fall-through+pad),
-  `res_texture_list::compare` x2 (a 1-instruction `mov edx,[esp+18h]` reload).
-  Until this is fixed: when the first divergence is a block with no branch,
-  contract it by hand before believing the verdict.
+  bytes into plausible instructions (`mov dl,0CAh / jns ...`). `trim_tail` pops
+  TRAILING blocks that are unreachable from the entry and do not branch BACKWARD
+  into the kept prefix. `register_samplers` goes from a bogus 18-vs-17-block
+  verdict to 14-vs-14 (13-vs-13 after contraction), isolating the one real
+  difference (we tail-`jmp` the last call, the target `call`s and returns).
+* **`trim_tail` can eat the whole function, and then the verdict is about a
+  prefix.** Its edge model gives a computed or tail `jmp` no successors, so any
+  such jump makes every later block unreachable and the pop runs back to the
+  entry block. `renderer::recreate_stage` - 2344 bytes, 98 statements, a 24-arm
+  stage dispatcher whose target disassembly holds 765 instructions, 25 branches
+  and 48 `ret`s - reduces to ONE block, and the diff prints
+  `base 1 blocks vs target 1 blocks; flow SAME`. `sema branches` agrees: "1
+  branch(es), 0 ret(s), 1 block(s)". Over the 792 paired non-100% render
+  functions, 22 lose blocks to the trim and 3 collapse a >4-block side to <=2
+  (`model_factory::create_render_surface` 30->1 / 23->1,
+  `speedtree_tree::set_material_effects` 22->1 / 19->1,
+  `mesh_type_to_vertex_input_type` 12->1 / 10->1); one more,
+  `stage_lights::render_speedtree_lighting`, loses base 81->1 against target
+  87->72 and so invents 71 TARGET-ONLY blocks. **Every view now says how many
+  trailing blocks it trimmed per side and flags the case where it dropped more
+  than it kept, and the `< 100%` hint is suppressed there** - but the underlying
+  edge model is still wrong. When you see that `!!` line, read the function with
+  `pdb_fetch --view target|base`, not with sema.
+
+  The candidate fix, measured on two functions only: seed reachability with the
+  disassembler's LABEL TARGETS as well as the entry block. Jump-table DATA
+  carries no label definition, so the phantom tail `trim_tail` exists for is
+  still trimmed. That gives `recreate_stage` 73 blocks on both sides (from 1)
+  and `register_samplers` 16-vs-16 (from 13-vs-13 - more blocks, still equal, so
+  the one real difference stays isolated). It needs a whole-module before/after
+  sweep before it goes in, because it moves the block count of every
+  switch-shaped function.
 * **`branches --diff` aligns branches POSITIONALLY.** One extra or missing
   branch shifts every later pair, so a single real difference prints as a run of
   `POLARITY` / `TOPOLOGY` rows. That is how `sweep`'s two render/core
@@ -379,6 +438,11 @@ exactly the case a human under-investigates.
   `~=` ("same kind/shifted target"), so **prefer `blocks --diff` over
   `branches --diff` for the verdict** and use `branches` only to read a
   confirmed difference.
+* **`sweep`'s candidate set is `paired AND fuzzy_pct < 100`.** Pairs objdiff
+  could not score (`fuzzy_pct IS NULL`) are not candidates - 560 globally, 134
+  in render - and are counted in the footer rather than being listed.
+* **`blocks --diff` non-`--lite` calls one-sided blocks out separately;
+  `--lite` shows them as a `-` row marked `!!`.**
 
 ## Cost of getting this wrong - the contraction bug (found by batch B7, fixed)
 
@@ -406,7 +470,19 @@ built in:
 * **It says nothing about statements or locals.** Structure verdicts stay
   `pdb_fetch --view structure-diff`; `sema` is strictly about shape below the
   statement level.
-* **`match.db` is read-only and only supplies percentages** - the `< 100%` hint
-  and `sweep`'s candidate list. Every CFG verdict comes from `binaries/rich`, so
-  a DB from a different build changes *which* functions `sweep` lists and the
-  `fuzzy` column, never the verdicts. `sema` never writes the DB.
+* **`match.db` is read-only, and supplies more than percentages.** It is opened
+  `mode=ro` and never written, but four things come from it: the `< 100%` hint
+  (`paired.fuzzy_pct`), `sweep`'s candidate list AND the RVA pair it
+  disassembles, the base<->target pairing `resolve` uses to find a hex
+  selector's twin, and everything `rva` prints under `match` (module, unit,
+  current/max %, struct class, statement counts, attempts, flags). Every CFG
+  verdict still comes from `binaries/rich`, so a DB from a different build
+  changes which functions `sweep` lists and what `rva` reports, never a
+  block/branch verdict.
+* **`rva`'s `stmts=` is not `pdb_fetch --view structure`'s count.** `rva`
+  prints `len(record.statements)` from the rich index (and `statements=t:b`
+  from `match.db`, which agrees with it); `pdb_fetch` counts BODY statements
+  and drops the opening and closing brace records, so it reports two fewer.
+  `stage_postprocess::execute` is `stmts=201` / `statements=201:200` in sema
+  and `199 statements` / `198` in `pdb_fetch`. Neither is wrong; they count
+  different things.

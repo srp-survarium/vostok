@@ -163,8 +163,17 @@ separate structure-verification and stale-comment audit before continuing.
   not useful LTCG evidence until its real caller cone exists.
 - These commands read generated indexes. If their result conflicts with changed
   source, the base side is stale; run a successful full `vostok build` before
-  trusting it. `vostok sema` return code 1 means the compared flows differ, not
-  that the tool failed.
+  trusting it. `vostok sema` return code 1 is an ANSWER, not a failure, but it
+  does not mean "the flows differ": `blocks --diff` answers "same flow AND every
+  aligned block identical", so it returns 1 for nearly every function below
+  100%, including ones it printed `flow SAME` for. Take the flow verdict from
+  the printed `flow SAME | DIFFERS` line. Return code 2 is the error code.
+- `sema` trims trailing blocks it cannot reach from the entry, and a computed or
+  tail `jmp` makes everything after it unreachable, so on some switch-shaped
+  functions the trim removes real code and the verdict then covers a prefix
+  only. The views print how many blocks they trimmed and flag the case where
+  more was dropped than kept; when that flag appears, read the function with
+  `pdb_fetch --view target|base` instead. See `sema_tools.md`, "Known limits".
 
 ## Source comments and state
 

@@ -2,10 +2,14 @@
 
 Everything else here takes a resolved record. One selector - a mangled name, a
 demangled substring, or a hex RVA/VA on either side - is answered by ONE pass
-over each side's `binaries/rich/<side>/index.jsonl` (~85 MB, ~0.05 s), then
-cross-checked against the pairing the match cache recorded, so naming a target
-function also finds its base twin (and the reverse) even when the two sides
-spell it differently. Ambiguity is reported, never guessed at.
+over each side's `binaries/rich/<side>/index.jsonl` (~85 MB), then completed
+from the pairing `match.db` recorded, which is how naming ONE side's address
+also finds the other side's twin (the two sides sit at different addresses).
+
+Ambiguity is reported, never guessed at - with two things that are NOT
+ambiguities: several records at one RVA are ICF aliases of one function
+(`_fold_aliases`), and a hex selector's four readings are enumerated rather than
+raced (`_hex_readings`).
 """
 
 from __future__ import annotations
