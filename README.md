@@ -95,8 +95,9 @@ regen touches nothing, so there are no spurious rebuilds), builds
 Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 `binaries/objdiff/objdiff.json`) and match `base` against `target`. The rebuild
 also writes an overall match summary to `binaries/objdiff/report.json`, logs
-the code / function match percentages, and regenerates the match DB
-(`docs/binary_matching/match.db`) from that fresh report at the end of the run.
+the code / function match percentages, and refreshes the matching ledger
+(`docs/binary_matching/match_state.tsv`, via the regenerable
+`binaries/match.db` cache) from that fresh report at the end of the run.
 
 Useful individual scripts (all run inside `nix develop`):
 
@@ -105,6 +106,34 @@ python3 scripts/ninja_build.py [target]              # build only (verbose, keep
 python3 scripts/generate_delink.py {base|target}     # COFF split for one side
 python3 scripts/generate_structure.py {base|target}  # pdb-parser stubs for one side
 ```
+
+### Where the tooling lives
+
+The code is a Python package at `scripts/vostok/`:
+
+| package    | what it owns                                                         |
+| :--------- | :------------------------------------------------------------------- |
+| `core/`    | every repo path (`paths.py`), the tracked-table shape, symbol names   |
+| `ledger/`  | the committed campaign record and the README score block              |
+| `derive/`  | `report.json` + the rich indexes -> `binaries/match.db`               |
+| `sema/`    | control-flow views over one base<->target function pair               |
+| `build/`   | the ninja graph, the delink/structure/rich generators, `rebuild`      |
+| `diff/`    | target-vs-base source shape: layouts, declaration order, enums        |
+| `tool/`    | clangd, the toolchain setup/release, prebuilt libs                    |
+
+Every `scripts/*.py` path in this README is a thin shim that delegates into it,
+so all of these commands keep working unchanged. `scripts/` is the package root
+and the dev shell exports it on `PYTHONPATH`, so the module form works too:
+
+```sh
+python3 -m vostok                                    # a map of the whole surface
+python3 -m vostok.ledger report --module render
+python3 -m vostok.sema blocks <fn> --diff --lite
+```
+
+New repo paths go in `scripts/vostok/core/paths.py` - it is the only module
+that spells one. After editing anything under `scripts/`, run `ruff check
+scripts/` and `python3 scripts/test_match_db.py`.
 
 ### Source navigation (clangd)
 

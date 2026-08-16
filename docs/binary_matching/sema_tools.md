@@ -1,6 +1,7 @@
 # `sema` - control-flow views over the base<->target pair
 
-**STATUS: IMPLEMENTED (`scripts/sema.py`, 2026-08-01).**
+**STATUS: IMPLEMENTED (`scripts/vostok/sema/`, 2026-08-01; run it as
+`scripts/sema.py` or `python3 -m vostok.sema`).**
 
 `sema` is the layer vostok did not have: a **basic-block / branch** comparison of
 our compiled function against the original one. It sits below `pdb_fetch --view

@@ -1,6 +1,7 @@
 # match_db - the queue/report database (design, agreed pre-implementation)
 
-A sqlite database + CLI (`scripts/match_db.py`) that answers the bulk questions
+A sqlite database + CLI (`scripts/vostok/derive/`, run as `scripts/match_db.py`
+or `python3 -m vostok.derive`) that answers the bulk questions
 the matching loop needs - build queues, roll up per-TU/module reports, find
 unpaired functions - and replaces `status.jsonl` as the machine-readable status
 store. It does NOT replace `pdb_fetch`: the parser stays the authoritative

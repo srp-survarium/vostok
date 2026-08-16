@@ -297,7 +297,7 @@ across the 20 NON-RENDER engine modules (render is matched last - EXCLUDED):
 logging, network_core, network, particle, physics, scaleform, sound, survarium,
 ui, vfs, vostok`.
 
-Source of truth: `docs/binary_matching/match.db` (scripts/match_db.py,
+Source of truth: `binaries/match.db` (`scripts/vostok/derive/`,
 match_db_design.md), which classifies each paired function's `struct_class` from
 the two statement tables. This queue PROJECTS that classification - the
 authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
