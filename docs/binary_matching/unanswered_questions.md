@@ -127,6 +127,30 @@ DUPLICATE definition by appending a counter. There are two zlibs in the link:
 `_deflate0`, so every function in the unit scores 0.0 - hence the suspiciously
 exact zeros across all nine zlib units. **Tooling, not source.**
 
+**1b. ROOT CAUSE (2026-08-16): we link TWO zlibs; retail linked one.**
+Banner counts settle it - retail has the 1.2.3 copyright twice and the 1.2.7
+copyright ZERO times; ours has each once:
+
+    retail   deflate 1.2.3 (1995-2005) + inflate 1.2.3 (1995-2005)
+    ours     deflate 1.2.3 (1995-2005) + inflate 1.2.7 (1995-2012)
+
+The GFx SDK bundles its own zlib (`scaleform_sdk/3rdParty/zlib-1.2.7/`), and
+`engine_scaleform_initialize.cpp:13` does
+`#pragma comment( lib, "libgfx_zlib.lib" )`, so that archive joins the link and
+satisfies `_inflate` before our `sources/zlib` (1.2.3) is reached. Our own
+inflate.c is then never pulled in - which is exactly fault 3 - and the duplicate
+`_deflate` definition is what makes the delinker emit `_deflate0`, which is
+fault 1. One cause, three symptoms.
+
+Retail's PDB DOES reference `3rdParty\zlib-1.2.7` headers, so retail compiled
+GFx against 1.2.7 - it just did not link 1.2.7's code. Its GFx zlib calls
+resolved against the engine's 1.2.3.
+
+NEXT: drop the libgfx_zlib.lib pragma (and the identical one in
+maya_library_linkage.cpp:30) so GFx resolves against the engine zlib as retail
+did, rebuild, and check the banner counts match retail's 2/0. Reversible; it
+changes link composition, so measure paired-count before/after.
+
 **2. Our `_deflate` is nearly twice the target's.**
     target  _deflate  rva=0x534b10  size=0x7d9  (2,009 B)
     base    _deflate  rva=0x52fea0  size=0xe50  (3,664 B)
