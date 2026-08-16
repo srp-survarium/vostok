@@ -50,6 +50,25 @@ POSITIONALLY, so it is for reading a difference `blocks` already established.
 bare hex is a target/base RVA and a target/base VA at once; every reading that
 hits is listed and the command stops rather than picking one.
 
+ADDRESSES. THE RULE, and it holds across the whole toolchain: every absolute
+address that gets PRINTED says which space it is in. Two are in play and they
+differ by the 0x10000 image base, so an unlabelled number is a 64 KB error
+waiting to happen - paste an RVA where a VA belongs and you land inside a
+DIFFERENT function, with nothing to complain about it:
+
+    rva=      what the rich indexes and the ledger STORE; pdb_fetch's `--rva`
+    va=       rva + image_base (0x10000) - what IDA shows and what carcass
+              comments and bug reports quote; pdb_fetch's `--va`
+    +0xNN     a function-RELATIVE offset (xref call sites, block starts). Never
+              an address, and never image-based.
+
+`sema rva` prints BOTH forms of each side's address so the reader never has to
+do the arithmetic; pdb_fetch labels its own headers the same way and names its
+structure-diff columns `t.va`/`b.va`. Its FLAGS (`--rva`, `--va`, `--address`,
+`--offset`) say which kind they take and are unchanged by any of this. A stale
+`nix develop` shell can still hold a pdb_fetch that prints bare addresses - the
+NUMBERS are the same either way, so a value comparison against it stays valid.
+
 rc: 0 = answered YES, 1 = answered NO, 2 = error. WHAT the answer is about is
 per verb: `blocks --diff` answers "same flow AND every aligned block identical",
 so it returns 1 for nearly every function below 100% - including ones it just
@@ -60,6 +79,14 @@ verdict from the printed `flow SAME | DIFFERS` line, never from rc.
 
 import argparse
 import sys
+
+
+#: what every verb accepts as <fn>. Spelled out because the one thing a reader
+#: must not have to guess is which KIND of address a bare hex means.
+_FN_HELP = ("mangled name, demangled substring, or a hex address; a bare hex is "
+            "read as a target/base RVA AND a target/base VA (they differ by the "
+            "0x10000 image base), so every reading that hits is listed instead of "
+            "one being picked")
 
 
 def die(msg):
@@ -81,16 +108,16 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter, epilog=__doc__)
     sub = ap.add_subparsers(dest="cmd", required=True)
     p = sub.add_parser("rva", help="address, source, and match dossier")
-    p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
+    p.add_argument("fn", help=_FN_HELP)
     p.set_defaults(func=cmd_rva)
     p = sub.add_parser("xref", help="direct target/base caller-callee graph")
-    p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
+    p.add_argument("fn", help=_FN_HELP)
     p.add_argument("--callees", action="store_true", help="show outgoing calls")
     p.add_argument("--base", action="store_true", help="read the base side")
     p.add_argument("--raw", action="store_true", help="show every call site")
     p.set_defaults(func=cmd_xref)
     p = sub.add_parser("strings", help="per-function literals or reverse lookup")
-    p.add_argument("fn", nargs="?", help="mangled name, demangled substring, or hex RVA/VA")
+    p.add_argument("fn", nargs="?", help=_FN_HELP)
     p.add_argument("--find", metavar="TEXT", help="list functions referencing a literal")
     p.add_argument("--base", action="store_true", help="read the base side")
     p.set_defaults(func=cmd_strings)
@@ -101,7 +128,7 @@ def main():
     )
     for name, fn, blurb in views:
         p = sub.add_parser(name, help=blurb)
-        p.add_argument("fn", help="mangled name, demangled substring, or hex RVA/VA")
+        p.add_argument("fn", help=_FN_HELP)
         p.add_argument("--base", action="store_true",
                        help="show the base side (default: target); ignored with --diff, "
                             "which always shows both")

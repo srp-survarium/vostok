@@ -196,6 +196,41 @@ Several index records at ONE address are an **ICF fold group**, not an ambiguity
 (1042 target RVAs carry 2..8 names). They collapse to one function, with a
 stderr line naming the fold and the symbol being read.
 
+### Addresses: always labelled
+
+Two address spaces are in play and they differ by the 0x10000 image base. Paste
+an RVA where a VA belongs and you land 64 KB early, inside a different function,
+with nothing to complain about it - so every absolute address printed anywhere in
+the toolchain says which space it is in:
+
+    rva=      what the rich indexes and the ledger STORE; `pdb_fetch --rva`
+    va=       rva + image_base - what IDA shows and what carcass comments quote;
+              `pdb_fetch --va`
+    +0xNN     a function-RELATIVE offset (xref call sites, block starts, the
+              `@1f` in a block header). Never an address.
+
+`sema rva` prints BOTH forms of each side's address, so nothing has to be worked
+out by hand:
+
+    target  rva=0x6243e0  va=0x6343e0  size=0x80  stmts=11
+
+`pdb_fetch` labels its own headers the same way and names its structure-diff
+columns `t.va`/`b.va`; its flags (`--rva`, `--va`, `--address`, `--offset`) each
+say which kind they take. A stale `nix develop` shell can still hold a
+`pdb_fetch` that prints bare addresses - the numbers are the same either way.
+
+The hex-ambiguity listing prints both forms too, because the READING that hit
+(`as rva` / `as va`) is not the number the record sits at - it used to print the
+RVA under an `va` label, which is the exact confusion the listing exists to
+prevent:
+
+    $ python3 -m vostok sema rva 0x6243e0
+      target as rva: rva=0x6243e0 va=0x6343e0  vostok::render::get_format_block_size
+          unsigned int vostok::render::get_format_block_size(DXGI_FORMAT)
+      base as va: rva=0x6143e0 va=0x6243e0  ??0vfs_iterator@vfs@vostok@@QAE@ABV012@@Z
+          vostok::vfs::vfs_iterator::vfs_iterator(vostok::vfs::vfs_iterator const&)
+    sema: '0x6243e0' reads as 2 different functions (listed above): ...
+
 `--diff` output, in order:
 
 * a header naming both sides' file, RVA and byte size;

@@ -10,6 +10,9 @@ Ambiguity is reported, never guessed at - with two things that are NOT
 ambiguities: several records at one RVA are ICF aliases of one function
 (`_fold_aliases`), and a hex selector's four readings are enumerated rather than
 raced (`_hex_readings`).
+
+Addresses here are RVAs, and every one printed says so; `image_base` on the
+record turns it into the VA that IDA shows. See the convention in `sema`.
 """
 
 from __future__ import annotations
@@ -23,6 +26,11 @@ from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import RICH_DIR as RICH
 
 from vostok.sema import die
+
+
+def va_of(rec):
+    """The virtual address IDA shows: the record's RVA plus its image base."""
+    return rec["rva"] + rec.get("image_base", 0)
 
 
 def _index_path(side):
@@ -161,7 +169,7 @@ def _fold_aliases(side, hits, sel):
     for rva in sorted(by_rva):
         if counts[rva] > 1:
             sys.stderr.write(
-                f"[{counts[rva]} symbols share {side} rva {rva:#x} (ICF fold) - "
+                f"[{counts[rva]} symbols share {side} rva={rva:#x} (ICF fold) - "
                 f"reading it as {by_rva[rva]['mangled']}]\n")
     return [by_rva[k] for k in sorted(by_rva)]
 
@@ -186,8 +194,13 @@ def _resolve_hex(sel):
     readings = _hex_readings(sel)
     if len(readings) > 1:
         for side, how, rec in readings:
-            sys.stderr.write(f"  {side} {how} {rec['rva']:#x}  {rec['mangled']}\n"
-                             f"      {rec['name']}\n")
+            # `how` is which READING hit, so it must not label the number: a VA
+            # reading still sits at the record's RVA, and printing that RVA
+            # under "va" is exactly the 0x10000 confusion this listing exists
+            # to prevent. Both forms, both labelled.
+            sys.stderr.write(
+                f"  {side} as {how}: rva={rec['rva']:#x} va={va_of(rec):#x}  "
+                f"{rec['mangled']}\n      {rec['name']}\n")
         die(f"'{sel}' reads as {len(readings)} different functions (listed above): a bare "
             f"hex is a target/base RVA and a target/base VA at once, and sema has no side "
             f"flag for it. Pass the mangled name printed above, or ask pdb_fetch, which "

@@ -74,13 +74,13 @@ def cmd_strings(args):
         print(f"{side} functions referencing string '{args.find}'")
         for rec, literals in hits:
             hints = ", ".join(repr(_decode_literal(s)) for s in literals)
-            print(f"  {rec['rva']:#010x}  {rec['file']}  {rec['name']}  [{hints}]")
+            print(f"  rva={rec['rva']:#010x}  {rec['file']}  {rec['name']}  [{hints}]")
         return 0
     if not args.fn:
         die("strings requires <fn> or --find <text>")
     _, rec = _side_record(args)
     literals = sorted(set(_literal_symbols(rec)))
-    print(f"{side} strings of {rec['name']} ({rec['rva']:#x})")
+    print(f"{side} strings of {rec['name']} (rva={rec['rva']:#x})")
     for symbol in literals:
         print(f"  {repr(_decode_literal(symbol)):<38}  {symbol}")
     return 0
