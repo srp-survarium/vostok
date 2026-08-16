@@ -12,7 +12,7 @@ each caller owns its own arity check and error wording, because a malformed
 override table must name the tool that will misbehave.
 
 The matching ledger (`ledger.store`) is deliberately NOT read through here: it
-carries a `# [units]` legend and a header row, and its format is settled.
+carries a header row and typed columns, and its format is settled.
 """
 
 from __future__ import annotations

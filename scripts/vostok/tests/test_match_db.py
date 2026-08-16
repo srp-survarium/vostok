@@ -1,3 +1,4 @@
+import os
 import json
 import tempfile
 import unittest
@@ -1090,6 +1091,54 @@ class LedgerProjectionTests(unittest.TestCase):
         row = rows[self.MANGLED]
         self.assertEqual((row["max"], row["hist"]), (87.5, 87.5))
         self.assertEqual(row["status"], "inprogress")
+
+
+class LedgerUnitEncodingTests(unittest.TestCase):
+    """`unit` holds the TU path, and a new unit must not disturb other rows."""
+
+    @staticmethod
+    def _rows(*pairs):
+        return {m: {"mangled": m, "unit": u, "module": "game", "status": "done",
+                    "cls": "MATCH", "cur": 100.0, "max": 100.0, "hist": 100.0,
+                    "tries": 0, "size": 8, "flags": "", "hash": "abc", "note": ""}
+                for m, u in pairs}
+
+    def test_round_trips_the_path(self):
+        from vostok.ledger import store
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "l.tsv")
+            store.save(self._rows(("?a@@YAXXZ", "vostok/game/sources/player.cpp")), p)
+            self.assertEqual(store.load(p)["?a@@YAXXZ"]["unit"],
+                             "vostok/game/sources/player.cpp")
+
+    def test_a_new_early_sorting_unit_touches_only_its_own_row(self):
+        from vostok.ledger import store
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "l.tsv")
+            rows = self._rows(("?a@@YAXXZ", "vostok/z.cpp"),
+                              ("?b@@YAXXZ", "vostok/y.cpp"))
+            store.save(rows, p)
+            before = open(p).read().splitlines()
+            # a unit that sorts BEFORE every existing one: the case that used to
+            # renumber the whole legend and rewrite all 19k rows
+            rows["?a@@YAXXZ"]["unit"] = "aaa/brand_new.cpp"
+            store.save(rows, p)
+            after = open(p).read().splitlines()
+            changed = sum(1 for x, y in zip(before, after) if x != y)
+            self.assertEqual(len(before), len(after))
+            self.assertEqual(changed, 1)
+
+    def test_the_retired_legend_encoding_still_loads(self):
+        from vostok.ledger import store
+        with tempfile.TemporaryDirectory() as d:
+            p = os.path.join(d, "old.tsv")
+            with open(p, "w") as fh:
+                fh.write(store.HEADER)
+                fh.write("# [units] 0\tvostok/game/sources/player.cpp\n")
+                fh.write("\t".join(store.COLUMNS) + "\n")
+                fh.write("?a@@YAXXZ\t0\tgame\tdone\tMATCH\t100\t100\t100\t0\t8\t\tabc\t\n")
+            self.assertEqual(store.load(p)["?a@@YAXXZ"]["unit"],
+                             "vostok/game/sources/player.cpp")
 
 
 if __name__ == "__main__":

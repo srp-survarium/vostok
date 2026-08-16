@@ -44,7 +44,7 @@ STATE_PATH = str(paths.MATCH_STATE)
 # Column order is the file format; keep it stable so diffs stay readable.
 COLUMNS = [
     "mangled",   # identity (the demangled form is derived, never stored)
-    "unit",      # owning TU id into the [units] legend; a matcher owns a whole TU
+    "unit",      # owning TU path, spelled out; a matcher owns a whole TU
     "module",    # logical owner, resolved through unit->module overrides
     "status",    # done | inprogress | blocked | parked
     "cls",       # MATCH | SIZE | QUANTITY | SPLIT  (structure verdict)
@@ -98,15 +98,17 @@ def _num(text):
         return None
 
 
+# Only ever READ now: revisions before 2026-08-16 interned unit paths through
+# this legend. `save` no longer writes one - see why there.
 UNIT_LEGEND = "# [units] "
 
 
 def load(path=STATE_PATH):
     """Read the ledger into {mangled: row-dict}.
 
-    `unit` is stored as an id into the `# [units]` legend to keep the 45-char
-    TU paths out of all 19k rows; it is resolved back to the path here, so
-    callers never see the encoding.
+    Revisions written before 2026-08-16 encode `unit` as an id into a
+    `# [units]` legend; they still load, resolved through it. See `save` for
+    why new writes spell the path out.
     """
     rows = {}
     if not os.path.exists(path):
@@ -128,29 +130,43 @@ def load(path=STATE_PATH):
                 rec[key] = _num(rec.get(key))
             rec["tries"] = int(rec["tries"]) if rec.get("tries") else 0
             rec["size"] = int(rec["size"]) if rec.get("size") else 0
-            rec["unit"] = units.get(rec.get("unit", ""), "")
+            unit = rec.get("unit") or ""
+            rec["unit"] = units.get(unit, unit) if units else unit
             rows[mangled] = rec
     return rows
 
 
 def save(rows, path=STATE_PATH):
-    """Write the ledger deterministically: sorted, LF endings, stable columns."""
+    """Write the ledger deterministically: sorted, LF endings, stable columns.
+
+    `unit` holds the TU PATH, not an id. An earlier version interned paths
+    through a `# [units]` legend to keep 45 chars out of 19k rows, and that
+    interning was a mistake for two reasons:
+
+    * The ids were positions in a sorted list, recomputed on every write, so
+      introducing ONE unit that sorts early renumbered every id after it and
+      rewrote all 19k rows. A 1,765-row change produced a 21,384-line diff -
+      the opposite of the small-diff property this file exists to have.
+    * Assigning ids from the file's own history instead would be worse: two
+      branches would independently hand the same id to different TUs, and a
+      textual merge would take one legend line and silently repoint every row
+      that used it. A ledger row must not depend on a cross-reference that a
+      merge can resolve wrongly.
+
+    Spelling the path out costs 0.61 MB (5.80 -> 6.41) and buys back both: a row
+    is self-contained (so merges are line-local and can't mean the wrong TU),
+    and `git diff` names the TU on the changed line instead of an id the
+    reader has to resolve against a legend elsewhere in the file. Per-commit
+    cost is ~40 bytes on each CHANGED line, which is what actually matters.
+    """
     ordered = sorted(rows.values(), key=lambda r: r["mangled"])
-    names = sorted({r.get("unit") or "" for r in ordered} - {""})
-    ids = {name: str(i) for i, name in enumerate(names)}
     tmp = path + ".tmp"
     with open(tmp, "w", encoding="utf-8", newline="") as fh:
         fh.write(HEADER)
-        for name in names:
-            fh.write(f"{UNIT_LEGEND}{ids[name]}\t{name}\n")
         writer = csv.writer(fh, delimiter="\t", lineterminator="\n")
         writer.writerow(COLUMNS)
         for row in ordered:
-            cells = []
-            for col in COLUMNS:
-                value = ids.get(row.get("unit"), "") if col == "unit" else row.get(col)
-                cells.append(_fmt(value))
-            writer.writerow(cells)
+            writer.writerow([_fmt(row.get(col)) for col in COLUMNS])
     os.replace(tmp, path)
     return len(ordered)
 
