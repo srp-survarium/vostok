@@ -158,6 +158,12 @@ Flags, exactly:
 * `xref --callees` lists indirect calls under their register operand (`eax x8`).
   Those are call sites, not a function named `eax`; `pdb_fetch --view callees`
   omits them, which is why its count is lower.
+* `rva` prints a `match` block only for a function `match.db` knows as a TARGET
+  function. A `BASE_ONLY` symbol gets its `base` record and nothing else - the
+  absence of the block is the only signal that it is base-only.
+* An empty result is an empty result: `xref` with no callers, `strings` with no
+  literals and `strings --find` with no hits print their header and stop, with
+  rc 0.
 
 Other sema-family capabilities already have stronger Vostok-native owners:
 
@@ -204,6 +210,16 @@ stderr line naming the fold and the symbol being read.
   divergent block tagged with the source statement it came from;
 * `BASE-ONLY` / `TARGET-ONLY` blocks called out separately from `DIFFERS`;
 * `ORDER-ONLY` when the two CFGs turn out to be isomorphic (see below).
+
+Markers in a block listing (`blocks <fn>`, with or without `--lite`):
+
+    B7  @1ae   2i  [jcc B3^ | fall B8]   LOOP        (test..)
+    B14 @455   7i  [ret]                 <== tail    (mov..)
+
+`^` on a destination means a BACK edge (the destination's index is <= this
+block's), and `LOOP` restates that for the line. `<== tail` marks a `ret` block
+that several terminators name - the merged exit. Both are reading aids; no
+verdict depends on either.
 
 `branches --diff` adds the per-branch classification: `TOPOLOGY` (same mnemonic,
 different destination block), `POLARITY` (inverted condition), `SIGNEDNESS` (a
