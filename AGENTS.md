@@ -96,7 +96,13 @@ separate structure-verification and stale-comment audit before continuing.
   structure-verification changes because line movement and LTCG can alter code.
 - Inspect the small `binaries/objdiff/report-changes.json` for regressions.
   Slice the large `report.json` with `jq`; never print or load it wholesale.
-- After editing `scripts/`, run `ruff check scripts/`.
+- After editing `scripts/`, run `ruff check scripts/` and
+  `python3 scripts/test_match_db.py`.
+- The tooling is the `scripts/vostok/` package (`core/ ledger/ derive/ sema/
+  build/ diff/ tool/ tests/`); the `scripts/*.py` paths every command in these
+  docs uses are thin shims and keep working. Read or change the code in the
+  package, and put any new repo path in `vostok/core/paths.py`, which is the
+  only module allowed to spell one. See CLAUDE.md, "Where the tooling lives".
 - Treat `history.best_fuzzy_pct` as scheduling/ICF history only. Correctness-facing
   MAX comes from `source_maxima`, is scoped to an effective source/compiler-context
   hash, and must never be backfilled from ordinary best-seen history.

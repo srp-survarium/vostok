@@ -60,7 +60,7 @@ carries no control flow, but if destinations are named by block INDEX and one si
 **every later name shifts** and the comparison prints a cascade of "retargeted branches".
 `effect_options_descriptor::operator[]` was exactly this - a one-byte `nop` - and it read
 as six retargets. `sema` now contracts such blocks first (`contract()` in
-`scripts/sema.py`): the render/core `TOPOLOGY` class fell from 12 rows to 1, eight of them
+`scripts/vostok/sema/cfg.py`): the render/core `TOPOLOGY` class fell from 12 rows to 1, eight of them
 becoming `FLOW-SAME`. **If a first-skeleton-divergence points at a block with no branch,
 suspect the tool, not the source.**
 

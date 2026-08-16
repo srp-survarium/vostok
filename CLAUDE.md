@@ -57,9 +57,41 @@ The base build runs MSVC under Wine, so `survarium-dx11-win32-gold.pdb` records
 source paths on the Z: drive (Wine maps `/` to `Z:`), lowercased and
 backslash-separated, e.g. `z:\home\you\proj\vostok\sources\vostok\...`.
 pdb-parser and the delinker strip an engine-path prefix off these paths; pass
-the Wine-rendered prefix (see `_wine_path()` in `scripts/generate_structure.py`
-and `scripts/generate_delink.py`), not the native `/home/...` path. The original
-game PDB instead uses `c:/survarium/sources`.
+the Wine-rendered prefix (see `_wine_path()` in
+`scripts/vostok/build/generate_structure.py` and `.../generate_delink.py`), not
+the native `/home/...` path. The original game PDB instead uses
+`c:/survarium/sources`.
+
+## Where the tooling lives (`scripts/vostok/`)
+
+The Python tooling is a package. Every command below still works exactly as
+written - `scripts/*.py` are thin shims that delegate - but when you need to
+READ or CHANGE the code, it is here:
+
+    core/     paths.py (EVERY repo path, once), tsv.py (the tracked-table
+              shape), symbols.py (objdiff symbol normalization)
+    ledger/   store.py (the committed record + the cur/max/hist policy),
+              cli.py (match.py), readme.py (the README block), queue.py
+    derive/   report.json + the rich indexes -> binaries/match.db: aliases.py,
+              modules.py, classify.py, maxima.py, roster.py, and the verbs
+    sema/     one module per view: rva, xref, strings, blocks, branches, dot,
+              sweep (plus index/disasm/cfg underneath)
+    build/    ninja_regen, ninja, generate_{delink,structure,rich}, rebuild
+    diff/     layout, order, tu_order, enums
+    tool/     clangd, toolchain, libs, sizes, breakpoints
+    tests/    the tooling's own unit tests
+
+**Add a new repo path to `core/paths.py`, never to the module that uses it.**
+Nine scripts used to re-derive the repo root and eight hard-coded artifact
+locations; moving `match.db` then meant editing four copies, one was missed,
+and the miss silently produced an empty database that corrupted the README
+score block.
+
+`scripts/` is the package root and the dev shell puts it on `PYTHONPATH`, so
+`python3 -m vostok` (a map of the whole surface), `python3 -m vostok.ledger
+report --module render`, `python3 -m vostok.sema blocks <fn> --diff` and so on
+work from anywhere in the tree. After editing anything under `scripts/`, run
+`ruff check scripts/` and `python3 scripts/test_match_db.py`.
 
 ## Build / diff loop
 
