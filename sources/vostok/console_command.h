@@ -121,20 +121,6 @@ protected:
 	u32					m_size;
 };// cc_string
 
-class VOSTOK_CORE_API cc_bool :public console_command {
-	typedef console_command		super;
-
-public:
-						cc_bool					( pcstr name, bool& value, bool serializable, command_type const command_type, execution_filter const execution_filter = execution_filter_general );
-	virtual void		execute					( pcstr args );
-	virtual void		status					( status_str& dest )	const;
-	virtual void		info					( info_str& dest )		const;
-	virtual void		syntax					( syntax_str& dest )	const;
-	virtual void		fill_command_args_list	( vectora<pcstr>& dest ) const;
-protected:
-	bool&				m_value;
-};// cc_bool
-
 template<class T>
 class VOSTOK_CORE_API cc_value : public console_command
 {
@@ -151,6 +137,18 @@ protected:
 			T		m_max;
 };//cc_value
 #pragma warning(pop)
+
+class VOSTOK_CORE_API cc_bool :public cc_value<bool> {
+	typedef cc_value<bool>		super;
+
+public:
+						cc_bool					( pcstr name, bool& value, bool serializable, command_type const command_type, execution_filter const execution_filter = execution_filter_general );
+	virtual void		execute					( pcstr args );
+	virtual void		status					( status_str& dest )	const;
+	virtual void		info					( info_str& dest )		const;
+	virtual void		syntax					( syntax_str& dest )	const;
+	virtual void		fill_command_args_list	( vectora<pcstr>& dest ) const;
+};// cc_bool
 
 class VOSTOK_CORE_API cc_float :public cc_value<float>
 {

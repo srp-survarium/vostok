@@ -123,8 +123,7 @@ void cc_string::info( info_str& dest ) const
 
 //--bool
 cc_bool::cc_bool( pcstr name, bool& value, bool serializable, command_type const command_type, execution_filter const execution_filter )
-:super		( name, serializable, command_type, execution_filter ),
-m_value		( value )
+:super		( name, value, false, true, serializable, command_type, execution_filter )
 {
 	m_need_args		= true;
 }
