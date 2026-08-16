@@ -42,8 +42,11 @@ def _run(module: str, argv: list[str], prog: str) -> int:
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
     if not argv or argv[0] in ("-h", "--help", "help"):
+        # `python3 -m vostok` with no verb is documented (CLAUDE.md, README) as
+        # "a map of the whole surface", so it is a successful informational run,
+        # not a usage error - same output and same rc as `--help`.
         print(__doc__.strip())
-        return 0 if argv else 2
+        return 0
     cmd, rest = argv[0], argv[1:]
     if cmd == "build":
         return _run("vostok.build.rebuild", rest, "vostok build")

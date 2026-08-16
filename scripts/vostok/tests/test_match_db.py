@@ -1044,5 +1044,120 @@ class ModuleOwnershipOverrideTests(unittest.TestCase):
         )
 
 
+class ReadmeScoreProvenanceTests(unittest.TestCase):
+    """The score block must never print numbers off a roster it does not name.
+
+    A wrong MATCH_DB path once produced an empty database and a block reading
+    "17,585 / 25,372 functions" (report.json's COMDAT roster) while its own first
+    line still said the figures came from match.db. There is no fallback now.
+    """
+
+    def _stats(self, path):
+        from vostok.ledger import readme
+        with mock.patch.object(readme, "MATCH_DB", Path(path)):
+            return readme.db_module_stats()
+
+    def test_missing_database_raises_and_creates_nothing(self):
+        from vostok.ledger import readme
+        with tempfile.TemporaryDirectory() as d:
+            missing = Path(d) / "not-a-db.sqlite"
+            with self.assertRaises(readme.DatabaseUnavailable):
+                self._stats(missing)
+            self.assertFalse(missing.exists(),
+                             "must not create a phantom empty cache")
+
+    def test_empty_database_raises(self):
+        from vostok.ledger import readme
+        with tempfile.TemporaryDirectory() as d:
+            empty = Path(d) / "empty.db"
+            sqlite3.connect(empty).close()
+            with self.assertRaises(readme.DatabaseUnavailable):
+                self._stats(empty)
+
+    def test_schema_present_but_no_rows_raises(self):
+        from vostok.ledger import readme
+        with tempfile.TemporaryDirectory() as d:
+            db = Path(d) / "schema-only.db"
+            con = sqlite3.connect(db)
+            con.executescript(SCHEMA)
+            con.commit()
+            con.close()
+            with self.assertRaises(readme.DatabaseUnavailable):
+                self._stats(db)
+
+
+class LedgerTriesSemanticsTests(unittest.TestCase):
+    """`tries` is dispatch count, not "times the body changed".
+
+    The ledger header used to claim the latter; a build that rewrote a function
+    body left tries untouched, because export_from_db takes it from the cache's
+    attempts table.
+    """
+
+    def test_export_takes_tries_from_the_cache_not_from_body_changes(self):
+        from vostok.ledger import store
+        with tempfile.TemporaryDirectory() as d:
+            db, ledger = Path(d) / "match.db", Path(d) / "state.tsv"
+            con = sqlite3.connect(db)
+            con.executescript(SCHEMA)
+            con.execute("INSERT INTO symbols VALUES (1, '?f@@YAXXZ', 'void f()')")
+            con.execute("INSERT INTO units VALUES (1, 'vostok/x/f.cpp', 'x')")
+            con.execute("INSERT INTO target_functions VALUES "
+                        "(100, 1, 1, NULL, 'x', 1, 32, 1, 0)")
+            con.execute("INSERT INTO base_functions VALUES "
+                        "(200, 1, 1, NULL, 'x', 1, 32, 1, 0)")
+            con.execute("INSERT INTO pairs VALUES (1, 100, 200, 75.0, 'SIZE', 1, 1, 0, 0, 0)")
+            con.execute("INSERT INTO source_maxima VALUES "
+                        "('?f@@YAXXZ', 'newhash', 75.0, 0, NULL, 'x', 'f.cpp', 1, 9,"
+                        " 'rebuild', NULL)")
+            con.execute("INSERT INTO attempts VALUES ('?f@@YAXXZ', 3, '2026-01-01', NULL)")
+            con.commit()
+            con.close()
+
+            store.save({"?f@@YAXXZ": {
+                "mangled": "?f@@YAXXZ", "unit": "vostok/x/f.cpp", "module": "x",
+                "status": "done", "cls": "MATCH", "cur": 100.0, "max": 100.0,
+                "hist": 100.0, "tries": 3, "size": 32, "flags": "",
+                "hash": "oldhash", "note": "",
+            }}, str(ledger))
+
+            store.export_from_db(str(db), str(ledger))
+            row = store.load(str(ledger))["?f@@YAXXZ"]
+            self.assertEqual(row["tries"], 3, "a changed body must NOT bump tries")
+            self.assertEqual(row["max"], 75.0, "a new hash resets max to cur")
+            self.assertEqual(row["hist"], 100.0, "hist never falls")
+            self.assertEqual(row["status"], "inprogress")
+
+    def test_export_overwrites_a_hand_park_the_cache_does_not_carry(self):
+        """Documented behaviour, so it stops surprising people: `ledger park`
+        edits the file, and the next build re-derives it from the cache."""
+        from vostok.ledger import store
+        with tempfile.TemporaryDirectory() as d:
+            db, ledger = Path(d) / "match.db", Path(d) / "state.tsv"
+            con = sqlite3.connect(db)
+            con.executescript(SCHEMA)
+            con.execute("INSERT INTO symbols VALUES (1, '?f@@YAXXZ', 'void f()')")
+            con.execute("INSERT INTO units VALUES (1, 'vostok/x/f.cpp', 'x')")
+            con.execute("INSERT INTO target_functions VALUES "
+                        "(100, 1, 1, NULL, 'x', 1, 32, 1, 0)")
+            con.execute("INSERT INTO base_functions VALUES "
+                        "(200, 1, 1, NULL, 'x', 1, 32, 1, 0)")
+            con.execute("INSERT INTO pairs VALUES (1, 100, 200, 75.0, 'SIZE', 1, 1, 0, 0, 0)")
+            con.commit()
+            con.close()
+
+            store.save({"?f@@YAXXZ": {
+                "mangled": "?f@@YAXXZ", "unit": "vostok/x/f.cpp", "module": "x",
+                "status": "parked", "cls": "SIZE", "cur": 75.0, "max": 75.0,
+                "hist": 75.0, "tries": 4, "size": 32, "flags": "",
+                "hash": "h", "note": "parked by hand",
+            }}, str(ledger))
+
+            store.export_from_db(str(db), str(ledger))
+            row = store.load(str(ledger))["?f@@YAXXZ"]
+            self.assertEqual(row["status"], "inprogress")
+            self.assertEqual(row["tries"], 0)
+
+
 if __name__ == "__main__":
     unittest.main()

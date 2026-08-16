@@ -9,13 +9,25 @@ millisecond, so nothing here needs a database.
 It also needs no build. vostok derive's commands read binaries/match.db, which a
 fresh clone does not have; these read the committed ledger directly.
 
-  match.py report  [--module M] [--per-unit]   rollup, byte-weighted
-  match.py list    [--module M] [--unit U] [--class C] [--status S]
-                   [--max-size N] [--headroom] [--json]
-  match.py queue   --module M [--limit N]      one batch per TU, worst first
-  match.py tried   <mangled>... [--note ...]   record a dispatch attempt
-  match.py park    <mangled> --cause "..."     stop working it, with a reason
-  match.py open    <mangled>                   undo a park
+  vostok ledger report  [--module M] [--per-unit]   rollup, byte-weighted
+  vostok ledger list    [--module M] [--unit U] [--class C] [--status S]
+                        [--max-size N] [--headroom] [--json]
+  vostok ledger queue   --module M [--limit N]      one batch per TU, worst first
+  vostok ledger tried   <mangled>... [--note ...]   record a dispatch attempt
+  vostok ledger park    <mangled> --cause "..."     stop working it, with a reason
+  vostok ledger open    <mangled>                   undo a park
+
+Two more verbs live beside these and are dispatched by `vostok.ledger.__init__`,
+so argparse below does not list them:
+
+  vostok ledger readme         [--write-readme] [--max-code]   the README block
+  vostok ledger mismatch-queue [--write-queue]                 the structure queue
+
+CAVEAT - tried/park/open are NOT durable on their own. They edit this file, but
+the next `vostok build` re-projects status/tries/note out of binaries/match.db
+(ledger.store.export_from_db), so a mark that the cache does not also carry is
+lost. The durable spellings write the cache: `vostok derive tried <mangled>` and
+`vostok derive flag <mangled> --flag SKIP --cause "..."`.
 
 Dropped from the old tool, deliberately:
   max     `max` is a column now; `list --headroom` covers the interesting case
@@ -180,6 +192,11 @@ def _update(mangleds, mutate):
         touched += 1
     if touched:
         store.save(rows)
+        # Say so, because "updated" reads as durable and is not: the next
+        # `vostok build` re-projects status/tries/note out of binaries/match.db.
+        print("[match] note: the next `vostok build` re-derives status/tries/note "
+              "from binaries/match.db - mirror this with `vostok derive tried` / "
+              "`vostok derive flag` to make it stick", file=sys.stderr)
     print(f"[match] updated {touched} function(s)")
 
 

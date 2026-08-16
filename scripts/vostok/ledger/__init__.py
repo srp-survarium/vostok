@@ -8,11 +8,15 @@ SQLite `match.db` re-serialised its pages on every write, so every matching
 commit stored a fresh ~4 MB blob; `binaries/match.db` survives only as a
 gitignored derivation cache.)
 
-    store    the file format and the cur/max/hist policy - the ONLY place that
-             decides when a banked peak resets. Everything else reads it.
+    store    the file format, and `hist` - the all-time peak it ratchets so a
+             peak can never be lost. `max` is NOT decided here: the hash-scoped
+             reset lives in `vostok.derive.maxima`/`roster`, and `export_from_db`
+             projects it (plus cls/tries/note/status) out of the cache.
     cli      query and mutate: report / list / queue / tried / park / open.
-             Needs no build: it reads the committed ledger directly.
-    readme   the README score block, rendered from the same numbers
+             Needs no build: it reads the committed ledger directly. Its three
+             mutating verbs are re-derived from the cache by the next build - see
+             the CAVEAT in `cli`.
+    readme   the README score block, rendered from match.db
     queue    the structure-mismatch worklist, projected into a markdown queue
 
     python3 -m vostok.ledger report --module render

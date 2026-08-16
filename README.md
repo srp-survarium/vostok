@@ -11,7 +11,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `docs/binary_matching/match.db` - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+_Auto-generated from `binaries/match.db` (the regenerable cache; the committed record is `docs/binary_matching/match_state.tsv`) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
 **Overall: 8,773 / 12,932 functions exact (67.84%) &middot; 8,775 / 12,932 functions exact-max (67.85%) &middot; 86.96% fuzzy &middot; 86.96% fuzzy-max.**
 
