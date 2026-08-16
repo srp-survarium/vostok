@@ -313,12 +313,13 @@ void options_gamma_selector::revert( )
 }
 
 // STATE[STUB]
-// claude@NOTE: BLOCKED on vostok::render globals g_monitor_resolutions
-// (render@vostok@@3PAY0CAA@Vint2@math) - the per-monitor display-mode table the
-// body enumerates (and g_num_monitors). Neither is declared/defined anywhere in
-// our source tree (render module does not expose them yet) - referencing them
-// would LNK2001. Cross-module render cap; unblock once render exposes the monitor
-// resolution table.
+// claude@NOTE: the "render does not expose the monitor table" cause is stale -
+// g_monitor_resolutions / g_num_monitors are declared at render/core/dx11/device.h:65-66
+// and filled in device.cpp:103-105. Declare them locally as the ctor above does (that
+// header cannot be included from a game TU: it drags d3d11/windows in and the winsdk
+// ole2.h/ocidl.h then fail on MSG). What is left is the 27-statement body itself
+// (locals: fixed_string<32> old_resolution, u32 old_resolution_index,
+// flash_value new_resolution_data[4]) - not yet reconstructed.
 void options_resolution_selector::fill_resolutions( u8 monitor_number )
 {
 	VOSTOK_UNREFERENCED_PARAMETER( monitor_number );

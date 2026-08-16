@@ -132,8 +132,10 @@ void animation_space_graph_cook::on_options_received( resources::queries_result&
 
 // STATE[STUB]
 // claude@NOTE: walks the mixable pairs building animation_space_edge entries via an
-// animation_player + animation_space_graph::get_movement() per pair (lexeme wall) over a
-// buffer_vector<u32> offsets table. Depends on get_movement; parked behind the lexeme wall.
+// animation_player + animation_space_graph::get_movement() per pair, over a
+// buffer_vector<u32> offsets table. The old "lexeme wall" cause is stale: get_movement is
+// declared in animation_space_graph.h:54 and defined in animation_space_graph.cpp:69.
+// What is left is the body itself - not yet reconstructed.
 void animation_space_graph_cook::generate_graph_edges( animation_space_graph* graph )
 {
 }
