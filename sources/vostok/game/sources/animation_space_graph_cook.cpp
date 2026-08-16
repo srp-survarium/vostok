@@ -6,6 +6,7 @@
 #include "animation_space_graph_cook.h"
 #include "animation_space_graph.h"
 #include "animation_space_vertex.h"
+#include <vostok/animation/animation_player.h>
 #include <vostok/resources.h>
 #include <vostok/resources_query_result.h>
 #include <vostok/configs_binary_config.h>
@@ -130,14 +131,46 @@ void animation_space_graph_cook::on_options_received( resources::queries_result&
 	);
 }
 
-// STATE[STUB]
-// claude@NOTE: walks the mixable pairs building animation_space_edge entries via an
-// animation_player + animation_space_graph::get_movement() per pair, over a
-// buffer_vector<u32> offsets table. The old "lexeme wall" cause is stale: get_movement is
-// declared in animation_space_graph.h:54 and defined in animation_space_graph.cpp:69.
-// What is left is the body itself - not yet reconstructed.
 void animation_space_graph_cook::generate_graph_edges( animation_space_graph* graph )
 {
+	u32 const mixes_count = graph->get_mixes_count( );
+	buffer_vector< u32 > offsets( ALLOCA( mixes_count * sizeof( u32 ) ), mixes_count );
+
+	std::pair< animation_space_vertex const*, animation_space_vertex const* > const* it_begin = graph->get_mixes( );
+	std::pair< animation_space_vertex const*, animation_space_vertex const* > const* const it_end = it_begin + mixes_count;
+	u32 current_offset = 0;
+
+	for ( ; it_begin != it_end; ++it_begin )
+	{
+		offsets.push_back( current_offset );
+		current_offset += it_begin->first->intervals_count + 1;
+	}
+
+	animation_space_edge* it_edges = const_cast< animation_space_edge* >( graph->get_edges( ) );
+	animation::animation_player player;
+	for ( u32 i = 0; i < current_offset; ++i )
+	{
+		u32 const* it = std::lower_bound( offsets.begin( ), offsets.end( ), i );
+		u32 offset;
+		if ( *it == i )
+			offset = i;
+		else if ( it == offsets.begin( ) )
+			offset = 0;
+		else
+			offset = *--it;
+
+		std::pair< animation_space_vertex const*, animation_space_vertex const* > const& mix = graph->get_mixes( )[ it - offsets.begin( ) ];
+
+		float const left_weight = ( i - offset ) /
+			(float)mix.first->intervals_count;
+
+		new ( it_edges++ ) animation_space_edge(
+			animation_space_graph::get_movement( player, mix.first, mix.second, left_weight ),
+			&mix,
+			left_weight,
+			( mix.second->length * ( 1.f - left_weight ) + mix.first->length * left_weight ) / mix.first->length
+		);
+	}
 }
 
 void animation_space_graph_cook::on_animations_loaded( resources::queries_result& data, configs::binary_config_ptr config )
