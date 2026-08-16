@@ -1,10 +1,12 @@
+import json
 import unittest
 
 from vostok.derive import set_quiet
 from vostok.derive.index import index_by_mangled, overload_key
 from vostok.derive.pairing import pair as derive_pair
 from vostok.sema.cfg import contract, notes, seal, starved
-from vostok.sema.index import _fold_aliases, va_of
+from vostok.derive.inventory import unit_of
+from vostok.sema.index import _fold_aliases, _matcher, va_of
 from vostok.sema.pairing import _Inputs, ledger_row
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
@@ -159,6 +161,57 @@ class PairingTests(unittest.TestCase):
         b = [dict(_full(0x2000, "?g@@YAXXZ", name="void f()", file="vostok/y.cpp"),
                   size=8)]
         self.assertEqual(self._pair_of(t, b), {})
+
+
+class DynamicInitializerNameTests(unittest.TestCase):
+    """Either spelling of a dynamic initializer must find the same function.
+
+    The retail PDB has no mangled name for these and stores the display form;
+    report.json and our base PDB use `??__E...`. Neither contains the other, so
+    a name copied out of one used to find nothing in the other - the tool said
+    "no function matches" for a function it held.
+    """
+
+    RICH = "survarium::`dynamic initializer for 's_cc''"
+    MSVC = "??__Es_cc@survarium@@YAXXZ"
+
+    def test_the_msvc_spelling_matches_the_rich_record(self):
+        want = _matcher(self.MSVC)
+        rec = want(json.dumps(_full(0x1000, self.RICH)))
+        self.assertIsNotNone(rec)
+        self.assertEqual(rec["mangled"], self.RICH)
+
+    def test_the_rich_spelling_matches_the_msvc_record(self):
+        want = _matcher(self.RICH)
+        rec = want(json.dumps(_full(0x2000, self.MSVC)))
+        self.assertIsNotNone(rec)
+
+    def test_an_atexit_thunk_does_not_match_an_initializer(self):
+        want = _matcher("??__Fs_cc@survarium@@YAXXZ")
+        self.assertIsNone(want(json.dumps(_full(0x1000, self.RICH))))
+
+    def test_an_unrelated_name_is_still_no_match(self):
+        want = _matcher(self.MSVC)
+        self.assertIsNone(want(json.dumps(_full(0x3000, "?f@@YAXXZ"))))
+
+
+class UnitFallbackTests(unittest.TestCase):
+    """A record whose mangled spelling report.json does not share still gets
+    filed under the file the PDB attributes it to - 1,765 functions, 799 of them
+    dynamic initializers, were filed under no unit at all and `--unit` could not
+    see them."""
+
+    def test_report_unit_wins_when_it_knows_the_symbol(self):
+        rec = {"file": "vostok/game/sources/player.cpp"}
+        self.assertEqual(unit_of(rec, ["vostok/game/sources/player.cpp"]),
+                         "vostok/game/sources/player.cpp")
+
+    def test_falls_back_to_the_records_own_file(self):
+        rec = {"file": "vostok/game/sources/player.cpp"}
+        self.assertEqual(unit_of(rec, None), "vostok/game/sources/player.cpp")
+
+    def test_no_file_and_no_unit_is_still_none(self):
+        self.assertIsNone(unit_of({}, None))
 
 
 class LedgerRowTests(unittest.TestCase):
