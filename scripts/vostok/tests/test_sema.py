@@ -1,13 +1,23 @@
 import unittest
 
+from vostok.derive.index import index_by_mangled, overload_key
 from vostok.sema.cfg import contract, notes, seal, starved
 from vostok.sema.index import _fold_aliases, va_of
+from vostok.sema.pairing import _pair, ledger_row
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
 
 
 def _rec(rva, mangled):
     return {"rva": rva, "mangled": mangled, "name": mangled}
+
+
+def _full(rva, mangled, name=None, file="vostok/x.cpp"):
+    """A rich-index record with everything the pairing passes look at."""
+    return {"rva": rva, "mangled": mangled, "name": name or mangled,
+            "file": file, "image_base": 0x10000, "size": 4,
+            "statements": [{"off": 0, "size": 4, "line": 7}],
+            "instructions": [{"off": 0, "len": 4, "text": "ret"}]}
 
 
 class FoldAliasTests(unittest.TestCase):
@@ -102,6 +112,60 @@ class AddressSpaceTests(unittest.TestCase):
 
     def test_a_record_without_an_image_base_reads_as_its_own_va(self):
         self.assertEqual(va_of({"rva": 0x1000}), 0x1000)
+
+
+class PairingTests(unittest.TestCase):
+    """The pairing that replaced match.db's `pairs` table."""
+
+    def _pair_of(self, target_records, base_records, scored=()):
+        target = index_by_mangled(target_records)
+        base = index_by_mangled(base_records)
+        return _pair(target_records, target, base_records, base, set(scored))
+
+    def test_identical_mangled_names_pair(self):
+        t = [_full(0x1000, "?f@@YAXXZ")]
+        b = [_full(0x2000, "?f@@YAXXZ")]
+        self.assertEqual(self._pair_of(t, b), {"?f@@YAXXZ": (0x1000, 0x2000)})
+
+    def test_a_dynamic_initializer_pairs_across_the_namespace_gap(self):
+        # the retail PDB puts the namespace OUTSIDE the quotes and ours puts it
+        # inside; ~589 pairs exist only because this is reconciled, and they are
+        # what used to make the match.db lookup unavoidable.
+        t = [_full(0x1000, "vostok::render::`dynamic initializer for 's_cc''")]
+        b = [_full(0x2000, "`dynamic initializer for 'vostok::render::s_cc''")]
+        self.assertEqual(
+            self._pair_of(t, b),
+            {"vostok::render::`dynamic initializer for 's_cc''": (0x1000, 0x2000)})
+
+    def test_an_ambiguous_canonical_owner_is_left_unpaired(self):
+        # two target spellings claim the same canonical owner, so neither is
+        # proven to be the base's `??__Es@a@@YAXXZ` - refuse rather than guess
+        t = [_full(0x1000, "a::`dynamic initializer for 's''"),
+             _full(0x1100, "`dynamic initializer for 'a::s''", file="vostok/y.cpp")]
+        b = [_full(0x2000, "??__Es@a@@YAXXZ")]
+        self.assertEqual(self._pair_of(t, b), {})
+
+    def test_an_unscored_icf_alias_needs_an_identical_body(self):
+        # same signature, different owner and a different body: not a pair
+        t = [_full(0x1000, "?f@@YAXXZ", name="void f()")]
+        b = [dict(_full(0x2000, "?g@@YAXXZ", name="void f()", file="vostok/y.cpp"),
+                  size=8)]
+        self.assertEqual(self._pair_of(t, b), {})
+
+
+class LedgerRowTests(unittest.TestCase):
+    """A PDB placeholder overload owns a signature-keyed row, not the plain one."""
+
+    def test_the_signature_key_wins_when_the_ledger_has_it(self):
+        rec = _full(0x1000, "process", name="void a::process()")
+        key = overload_key("process", "void a::process()")
+        rows = {"process": {"cur": 1.0}, key: {"cur": 2.0}}
+        self.assertEqual(ledger_row(rec, rows), {"cur": 2.0})
+
+    def test_the_plain_mangled_row_is_the_fallback(self):
+        rec = _full(0x1000, "process", name="void a::process()")
+        rows = {"process": {"cur": 1.0}}
+        self.assertEqual(ledger_row(rec, rows), {"cur": 1.0})
 
 
 if __name__ == "__main__":

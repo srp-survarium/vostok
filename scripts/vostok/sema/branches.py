@@ -103,7 +103,7 @@ def cmd_branches(args):
         print(text, end="")
         if rc == 0 and not starved(cut):
             flow = [x[2] for x in g["base"]] == [x[2] for x in g["target"]]
-            hint(tgt["mangled"], flow, True)
+            hint(tgt, flow, True)
         return rc
     side = "base" if args.base else "target"
     rec = base if args.base else tgt

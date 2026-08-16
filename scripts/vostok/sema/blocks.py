@@ -142,7 +142,7 @@ def cmd_blocks(args):
         if not starved(cut) and \
                 [x[2] for x in g["base"]] == [x[2] for x in g["target"]]:
             _, brc = branch_diff(g["base"], g["target"])
-            hint(tgt["mangled"], True, brc == 0)
+            hint(tgt, True, brc == 0)
         return rc
     side = "base" if args.base else "target"
     rec = base if args.base else tgt
