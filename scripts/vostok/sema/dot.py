@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import difflib
 import re
+import sys
 
 from vostok.sema import die
-from vostok.sema.cfg import graphs_for
+from vostok.sema.cfg import graphs_for, notes
 
 
 def dot(graph, title, diff_idx=None):
@@ -47,7 +48,12 @@ def dot(graph, title, diff_idx=None):
 
 
 def cmd_dot(args):
-    tgt, base, g, _ = graphs_for(args.fn, need_both=args.diff)
+    tgt, base, g, cut = graphs_for(args.fn, need_both=args.diff)
+    # stdout is a graphviz stream, so the contraction/trim notes go to stderr
+    # rather than corrupting a `| dot -Tpng` pipe.
+    for note in notes(cut if args.diff else {k: v for k, v in cut.items()
+                                             if k == ("base" if args.base else "target")}):
+        sys.stderr.write(note + "\n")
     if args.diff:
         bs = ["\n".join(x[1] + [x[2] or ""]) for x in g["base"]]
         ts = ["\n".join(x[1] + [x[2] or ""]) for x in g["target"]]

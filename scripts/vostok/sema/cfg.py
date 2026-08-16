@@ -364,16 +364,59 @@ def graphs_for(sel, need_both=True):
             insns, labels, stmts = parse(disasm(side, rec["rva"]))
             st = {}
             g[side] = cfg(insns, labels, stmts, st)
-            cut[side] = st.get("contracted", 0)
+            st["kept"] = len(g[side])
+            cut[side] = st
     return tgt, base, g, cut
 
 
 def _contract_note(cut):
-    if not any(cut.values()):
+    n = {s: st.get("contracted", 0) for s, st in cut.items()}
+    if not any(n.values()):
         return None
     return ("[contracted %s flow-free block(s) (alignment pad / spill reload / "
             "re-materialised zero) - see `contract` in vostok/sema/cfg.py]"
-            % " / ".join(f"{n} {s}" for s, n in sorted(cut.items()) if n))
+            % " / ".join(f"{v} {s}" for s, v in sorted(n.items()) if v))
+
+
+def starved(cut):
+    """True when the trailing trim removed more blocks than it kept on a side.
+
+    The graph is then a prefix of the function, not the function, so nothing
+    downstream may present a verdict about it."""
+    return any(st.get("trimmed", 0) > st.get("kept", 0) for st in cut.values())
+
+
+def notes(cut):
+    """The lines a view must print before its verdict: what the graph LOST.
+
+    Contraction is shape-preserving, so its line is informational. The trailing
+    trim is not: `trim_tail` walks back from the last block dropping whatever is
+    unreachable from the entry, and a computed `jmp` (a switch dispatch) or a
+    tail `jmp` makes EVERYTHING after it unreachable under this edge model. When
+    that happens the trim eats real code - `renderer::recreate_stage` goes from
+    74 blocks to 1, and the diff then reports `flow SAME` over one block of a
+    2344-byte function. Say loudly when more was dropped than kept."""
+    out = []
+    note = _contract_note(cut)
+    if note:
+        out.append(note)
+    trimmed = {s: st.get("trimmed", 0) for s, st in cut.items()}
+    if any(trimmed.values()):
+        out.append("[trimmed %s trailing block(s) unreachable from the entry (a switch's "
+                   "decoded jump table, alignment padding) - see `trim_tail`]"
+                   % " / ".join(f"{v} {s}" for s, v in sorted(trimmed.items()) if v))
+        starved = [s for s, v in trimmed.items() if v > cut[s].get("kept", 0)]
+        if starved:
+            out.append("[!! the trim dropped MORE blocks than it kept on %s (%s). An "
+                       "unresolved `jmp <ext>` - a switch dispatch or a tail call - makes "
+                       "every later block unreachable under this edge model, so real code "
+                       "was thrown away. The verdict below covers only the kept prefix: do "
+                       "NOT read it as a control-flow answer.]"
+                       % (" and ".join(sorted(starved)),
+                          ", ".join(f"{s}: kept {cut[s].get('kept', 0)} of "
+                                    f"{cut[s].get('kept', 0) + trimmed[s]}"
+                                    for s in sorted(starved))))
+    return out
 
 
 INVERSE.update({v: k for k, v in list(INVERSE.items())})
