@@ -28,6 +28,7 @@ Any extra args are forwarded to vostok.build.ninja:
 """
 
 import datetime
+import fcntl
 import os
 import re
 import select
@@ -178,6 +179,34 @@ def _write_build_head() -> None:
         log(f"report.head not written: {e}")
 
 
+def _acquire_build_lock():
+    """Serialise builds sharing this worktree. Returns the held lock file.
+
+    A worktree has ONE ninja output tree, one `binaries/objdiff/base`, one
+    report.json - and, worst of all, one WINEPREFIX. `vostok.build.ninja` kills
+    that prefix's `mspdbsrv.exe` after every ninja run, and the kill is
+    prefix-scoped, not build-scoped: a second build compiling at that moment
+    loses the PDB writer out from under `cl.exe`, which is a C1090 at best and
+    a truncated PDB at worst. Two agents matching in one worktree is now normal,
+    so waiting is the only safe answer - and it costs nothing that racing did
+    not already cost, since the two builds could not have run in parallel
+    correctly anyway.
+    """
+    # flock, deliberately: the kernel holds it against the file descriptor and
+    # drops it when the process does - crash, SIGKILL, an agent stopped mid-build.
+    # A stale lock is therefore not possible, which a PID file or a timestamp
+    # lockfile could not promise. The file itself is never cleaned up and does
+    # not need to be; it carries no state.
+    lock = open(paths.BINARIES / ".build.lock", "w")
+    try:
+        fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError:
+        log("another build holds this worktree - waiting for it to finish ...")
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        log("lock acquired; starting.")
+    return lock
+
+
 def main() -> None:
     # `vostok build --help` must NOT reach ninja. Everything else here is
     # forwarded verbatim, and ninja's own `--help` exits 1 - which used to
@@ -188,6 +217,7 @@ def main() -> None:
         print(__doc__.strip())
         return
 
+    lock = _acquire_build_lock()
     start = time.monotonic()
     modules: set[str] = set()
     try:
@@ -262,6 +292,7 @@ def main() -> None:
         log("All done - base diff inputs refreshed.")
     finally:
         _append_log(time.monotonic() - start, modules)
+        lock.close()          # releases the flock; the kernel would anyway
 
 
 if __name__ == "__main__":
