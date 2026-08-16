@@ -17,7 +17,10 @@ import sqlite3
 
 from vostok.core.paths import REPO as VOSTOK
 from vostok.core.paths import SOURCES
-from vostok.derive.modules import module_of
+from vostok.derive import log
+from vostok.derive.modules import logical_module, module_of
+
+EXACT = 99.995  # objdiff reports byte-exact as >= this
 
 
 def _source_extent(rec):
@@ -193,6 +196,88 @@ def compiled_state_id(rec):
     }
     encoded = json.dumps(state, ensure_ascii=True, separators=(",", ":"))
     return hashlib.sha256(encoded.encode("utf-8")).hexdigest()[:24]
+
+
+def fold(pairing, artifacts, active, epochs):
+    """Fold this build's observations into the hash-scoped MAX evidence.
+
+    One row per source-backed pairing: the observed score accumulates while its
+    effective source hash holds and restarts when the hash changes, because a
+    rewritten body has to prove itself again. A row whose function LTCG/ICF made
+    disappear is retained on its pinned source locator, and a valuable
+    observation from a hash that is no longer current is archived rather than
+    dropped, so reverting a body resurrects its proof.
+
+    Returns ``(rows, epoch_rows, raised, reset)``.
+    """
+    rows = {}
+    current_fuzzy = {}
+    epoch_symbols = {key[0] for key in epochs}
+    raised = reset = 0
+    for mangled, pair in pairing.pairs.items():
+        if pair.fuzzy is None:
+            continue
+        brec = pairing.base_record(mangled, artifacts)
+        extent = _source_extent(brec)
+        if extent is None:
+            continue
+        source_file, lo, hi, _text = extent
+        units = artifacts.units_by_mangled.get(mangled)
+        if not units and brec is not None:
+            units = artifacts.units_by_mangled.get(brec["mangled"])
+        module = logical_module(
+            mangled, brec, units, artifacts.dynamic_owners, artifacts.module_overrides
+        )
+        effective_hash = effective_source_hash(brec, module)
+        state_id = compiled_state_id(brec)
+        current_exact = int(pair.fuzzy >= EXACT)
+        current_fuzzy[mangled] = pair.fuzzy
+        active_previous = active.get(mangled)
+        previous = maximum_for_effective_hash(mangled, effective_hash, active, epochs)
+
+        maximum = pair.fuzzy
+        exact_proven = current_exact
+        origin, evidence = "rebuild", None
+        if previous is not None and previous[1] == effective_hash:
+            maximum = max(previous[2], pair.fuzzy)
+            exact_proven = int(bool(previous[3]) or current_exact)
+            if maximum > previous[2] or exact_proven > previous[3]:
+                raised += 1
+            else:
+                state_id, origin, evidence = previous[4], previous[9], previous[10]
+        elif active_previous is not None or mangled in epoch_symbols:
+            reset += 1
+
+        rows[mangled] = (
+            mangled, effective_hash, maximum, exact_proven, state_id, module,
+            source_file, lo, hi, origin, evidence,
+        )
+
+    # A same-hash maximum stays valid when LTCG/ICF makes the function
+    # temporarily disappear. Re-hash the retained source locator before keeping
+    # it; edits or context changes retire the old epoch.
+    for previous in list(active.values()) + list(epochs.values()):
+        mangled = previous[0]
+        if mangled in rows:
+            continue
+        brec = artifacts.base.get(mangled)
+        module, source_file, lo, hi = previous[5:9]
+        if retained_max_effective_hash(previous, brec) != previous[1]:
+            continue
+        candidate = (
+            *previous[:5], module, source_file, lo, hi, previous[9], previous[10]
+        )
+        rows[mangled] = merge_maximum_epoch(rows.get(mangled), candidate)
+
+    ordered = sorted(rows.values())
+    for row in ordered:
+        if not maximum_needs_epoch_archive(row, current_fuzzy.get(row[0])):
+            continue
+        key = (row[0], row[1])
+        epochs[key] = merge_maximum_epoch(epochs.get(key), row)
+    if reset or raised:
+        log(f"source MAX: {raised} raised, {reset} source epochs reset")
+    return ordered, sorted(epochs.values()), raised, reset
 
 
 def merge_persistent_maxima(con, other):

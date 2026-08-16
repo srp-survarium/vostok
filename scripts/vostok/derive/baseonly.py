@@ -1,0 +1,112 @@
+"""vostok.derive.baseonly - why does OUR build emit a function the target does not.
+
+Every base symbol with no target partner gets one verdict. The taxonomy is
+declaration-grounded: the retail PDB's declaration dump says whether the retail
+compiler ever SAW this function, which separates "the target inlined it away"
+from "we invented it".
+
+    COMPILER           thunks, backtick names, dynamic init/atexit, anon-ns -
+                       machinery, not source we wrote
+    ANCHOR             our own reachability scaffolding (temp_include_all.cpp)
+    NEAR_MISS          a target-only symbol shares this qualified name: the body
+                       exists, the mangling does not (access / const / calling
+                       convention) - a header fix, and the highest-value verdict
+    JITTER             an exact ICF alias of an already-paired body, or a symbol
+                       this campaign has paired before
+    INLINED_IN_TARGET  declared in the retail PDB, never emitted there
+    TEMPLATE           an instantiation of a declared template (the dump and the
+                       demangler render template arguments differently, so the
+                       stem is the signal)
+    UNEXPLAINED        nothing explains it - the fabricated-symbol lint
+
+This is a diagnostic about OUR output, not campaign memory, so it does NOT go in
+the committed ledger; it is written to `binaries/` beside the other regenerable
+artifacts.
+"""
+
+from dataclasses import dataclass
+
+from vostok.derive import log
+from vostok.derive.aliases import exact_paired_source_alias
+from vostok.derive.names import mangled_name_part, norm_name, qualified_name
+
+
+@dataclass(frozen=True)
+class BaseOnly:
+    mangled: str
+    status: str
+    detail: str | None
+    module: str
+    file: str
+
+
+def classify(artifacts, pairing, inventory, seen):
+    """One verdict per unpaired base symbol.
+
+    `inventory` is the base-side {mangled: Function} (for the module column);
+    `seen` is every symbol the campaign has a record of, which is what makes an
+    unpaired-today symbol JITTER rather than UNEXPLAINED.
+    """
+    log("classifying base-only symbols ...")
+    target_only_parts = {}
+    for mangled in artifacts.target:
+        if mangled not in pairing.paired:
+            target_only_parts.setdefault(mangled_name_part(mangled), mangled)
+    declared_stems = {
+        (cls.split("<", 1)[0], name.split("<", 1)[0])
+        for cls, name in artifacts.declared_methods
+    }
+
+    rows, counts = [], {}
+    for mangled in sorted(set(artifacts.base) - pairing.paired):
+        rec = artifacts.base[mangled]
+        status, detail = _verdict(
+            mangled, rec, artifacts, pairing, target_only_parts, declared_stems, seen
+        )
+        function = inventory.get(mangled)
+        rows.append(BaseOnly(
+            mangled=mangled, status=status, detail=detail,
+            module=function.module if function else "",
+            file=rec["file"],
+        ))
+        counts[status] = counts.get(status, 0) + 1
+    log(f"  base-only: {counts}")
+    return rows
+
+
+def _verdict(mangled, rec, artifacts, pairing, target_only_parts, declared_stems, seen):
+    near = target_only_parts.get(mangled_name_part(mangled))
+    qualified = qualified_name(rec["name"])
+    folded_target = exact_paired_source_alias(
+        rec,
+        pairing.target_aliases_by_name,
+        pairing.used_target_rvas,
+        source_alias_names_by_rva=pairing.base_alias_names_by_rva,
+        candidate_alias_names_by_rva=pairing.target_alias_names_by_rva,
+    )
+    if qualified is None or mangled.startswith("??__") or "?A0x" in mangled:
+        return "COMPILER", None
+    if rec["file"].endswith("temp_include_all.cpp"):
+        return "ANCHOR", None
+    if near is not None:
+        return "NEAR_MISS", near
+    if folded_target is not None:
+        return "JITTER", (
+            f"exact ICF alias of {folded_target['mangled']} "
+            f"at target RVA 0x{folded_target['rva']:x}"
+        )
+    if mangled in seen:
+        return "JITTER", None
+    if not artifacts.has_declarations:
+        return "UNEXPLAINED", None  # no declarations dump to consult
+    cls, name = qualified
+    cls_n, name_n = norm_name(cls), norm_name(name)
+    if (cls and (cls_n, name_n) in artifacts.declared_methods) or (
+        not cls and name_n in artifacts.declared_free
+    ):
+        return "INLINED_IN_TARGET", None
+    if cls and (cls_n.split("<", 1)[0], name_n.split("<", 1)[0]) in declared_stems:
+        return "TEMPLATE", None
+    return "UNEXPLAINED", None
+
+
