@@ -1047,43 +1047,41 @@ class ModuleOwnershipOverrideTests(unittest.TestCase):
 class ReadmeScoreProvenanceTests(unittest.TestCase):
     """The score block must never print numbers off a roster it does not name.
 
-    A wrong MATCH_DB path once produced an empty database and a block reading
-    "17,585 / 25,372 functions" (report.json's COMDAT roster) while its own first
-    line still said the figures came from match.db. There is no fallback now.
+    A wrong path once produced an empty roster and a block reading "17,585 /
+    25,372 functions" (report.json's COMDAT roster) while its own first line
+    still said the figures came from the matching record. There is no fallback
+    now: an unreadable ledger raises and `vostok build` keeps the last true block.
     """
 
     def _stats(self, path):
         from vostok.ledger import readme
-        with mock.patch.object(readme, "MATCH_DB", Path(path)):
-            return readme.db_module_stats()
+        with mock.patch.object(readme, "MATCH_STATE", Path(path)):
+            return readme.module_stats()
 
-    def test_missing_database_raises_and_creates_nothing(self):
+    def test_missing_ledger_raises_and_creates_nothing(self):
         from vostok.ledger import readme
         with tempfile.TemporaryDirectory() as d:
-            missing = Path(d) / "not-a-db.sqlite"
-            with self.assertRaises(readme.DatabaseUnavailable):
+            missing = Path(d) / "not-a-ledger.tsv"
+            with self.assertRaises(readme.ScoreDataUnavailable):
                 self._stats(missing)
             self.assertFalse(missing.exists(),
-                             "must not create a phantom empty cache")
+                             "must not create a phantom empty ledger")
 
-    def test_empty_database_raises(self):
+    def test_empty_ledger_raises(self):
         from vostok.ledger import readme
         with tempfile.TemporaryDirectory() as d:
-            empty = Path(d) / "empty.db"
-            sqlite3.connect(empty).close()
-            with self.assertRaises(readme.DatabaseUnavailable):
+            empty = Path(d) / "empty.tsv"
+            empty.write_text("")
+            with self.assertRaises(readme.ScoreDataUnavailable):
                 self._stats(empty)
 
-    def test_schema_present_but_no_rows_raises(self):
-        from vostok.ledger import readme
+    def test_header_only_ledger_raises(self):
+        from vostok.ledger import readme, store
         with tempfile.TemporaryDirectory() as d:
-            db = Path(d) / "schema-only.db"
-            con = sqlite3.connect(db)
-            con.executescript(SCHEMA)
-            con.commit()
-            con.close()
-            with self.assertRaises(readme.DatabaseUnavailable):
-                self._stats(db)
+            ledger = Path(d) / "state.tsv"
+            store.save({}, str(ledger))
+            with self.assertRaises(readme.ScoreDataUnavailable):
+                self._stats(ledger)
 
 
 class LedgerTriesSemanticsTests(unittest.TestCase):
