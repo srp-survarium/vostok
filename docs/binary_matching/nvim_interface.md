@@ -40,8 +40,10 @@ cursor line (`--view structure`). `target stmt` maps through the
 structure-diff pairing; unpaired rows report instead of guessing.
 
 Address side disambiguation: inside plugin views the rendering column decides
-(`b.addr` is base, `t.addr` is target). In source buffers, bare `0x...` in
-carcass comments (`<0x672482>|...`) are target VAs by repo convention.
+(`b.va` is base, `t.va` is target). Both are VAs - pdb_fetch names its columns
+for the space they are in, and its `; ` headers print `va=` and `rva=` side by
+side. In source buffers, bare `0x...` in carcass comments (`<0x672482>|...`)
+are target VAs by repo convention.
 
 ## Addresses are links
 

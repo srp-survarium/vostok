@@ -66,11 +66,11 @@ Output: per-side stats (`; target 0x<va>  N stmts  0xNN bytes` / `; base ...`), 
 signature, and a braced body holding a table of ONLY the diverging statements (equal
 statements and blank-line gaps are dropped - so a clean match shows no rows). A clean
 match instead leads with `; STRUCTURE MATCH`. Each table row:
-`b.diff | t.addr | b.addr | t.sz | b.sz | b.line | b.code` - the `b.diff` column tags the
+`b.diff | t.va | b.va | t.sz | b.sz | b.line | b.code` - the `b.diff` column tags the
 divergence: `SIZE +0xN` / `SIZE -0xN` (the byte delta `b.sz - t.sz`: positive = base is
 LARGER and must shrink, negative = base is smaller and must grow), `BASE_ONLY` (base has
 an extra statement target lacks - a QUANTITY divergence), or `TRGT_ONLY` (base is MISSING
-a target statement). The row is base-anchored (`b.addr`/`b.line`/`b.code` are the editable
+a target statement). The row is base-anchored (`b.va`/`b.line`/`b.code` are the editable
 side); both VAs are shown so you can `--address` into either side; a `TRGT_ONLY` row's
 base columns are `--` (no base statement there). N stmts on the two `;` lines count only
 REAL statements, so a quantity mismatch shows as `target N / base M`.
@@ -201,7 +201,7 @@ A clean 100% DONE records nothing in source either way; if you find a stale
 convention, STRIP it.
 
 Caveats when reading the diff (do not misread these as divergences):
-- `t.addr` / `b.addr` are real per-build VAs and differ between the two builds; compare
+- `t.va` / `b.va` are real per-build VAs and differ between the two builds; compare
   the SHAPE (the `b.diff` tags, sizes, lines), never the absolute addresses across sides.
 - A multi-line statement (wrapped call, multi-line `if`, member-init list) anchors on its
   LAST line, so `b.code` may show just a `);` / `: member` tail - read the full statement

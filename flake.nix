@@ -12,21 +12,27 @@
     # Sibling repos fetched from GitHub (path inputs don't get narHash in Nix 2.x,
     # so they can't be used as derivation sources in sandboxed builds).
     vostok-pdb-parser-src = {
-      # Pinned to the pdb_divergence-deps commit on top of the access-specifier
-      # emit (c5a4d0f), on top of the static-init-thunk canonicalization, on top
-      # of the structure-builder (extract-all-enums-and-unions,
-      # vostok-pdb-parser#28). 7460355 lands the two deps of the `pdb_divergence`
-      # bin (the base-vs-target structure-divergence verifier): `pub mod
-      # divergence;` + the `gen_sources::for_each_function` compiland walker, so
-      # the bin builds on a clean checkout. d757820 is the divergence tool
-      # itself. c5a4d0f emits C++ `private:`/`protected:`/`public:` section
-      # labels for class/struct members (CV_access_t), narrowing the
-      # `/* no source */` triage. Parent 89d3a1e demangles `??__E`/`??__F`
-      # thunks to the target PDB's `` `dynamic initializer for 'X'' `` form so
-      # objdiff pairs them; b6159cc also emits the engine's own
-      # vostok/scaleform/sources compilands. Re-track master once these land.
-      # Output is gitignored/reference-only.
-      url = "github:srp-survarium/vostok-pdb-parser/01020c6cab56524d8ec2560a22847fd2f02f7931";
+      # Pinned to the branch tip, newest first. Re-track master once these land.
+      # Output is gitignored/reference-only, so a bump can never move the bytes.
+      #
+      #   d0eb201  gitignores that checkout's own nix gcroots.
+      #   c9ad86c  every printed address says whether it is a VA or an RVA
+      #            (headers carry both; columns are `va`/`t.va`/`b.va`). The
+      #            rich indexes and the ledger speak RVA and this tool spoke
+      #            VA, differing by the image base with nothing to say which -
+      #            paste one for the other and you land 64 KB off, silently.
+      #   01020c6  pdb_divergence joins source functions by mangled symbol.
+      #   7460355  `pub mod divergence;` + the `gen_sources::for_each_function`
+      #            compiland walker, so `pdb_divergence` (the base-vs-target
+      #            structure-divergence verifier) builds on a clean checkout.
+      #   d757820  pdb_divergence itself.
+      #   c5a4d0f  C++ `private:`/`protected:`/`public:` section labels for
+      #            class members (CV_access_t), narrowing `/* no source */`.
+      #   89d3a1e  demangles `??__E`/`??__F` thunks to the target PDB's
+      #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
+      #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
+      #   #28      the structure-builder (extract-all-enums-and-unions).
+      url = "github:srp-survarium/vostok-pdb-parser/d0eb2014efeca01c390440224c77a18c7a6d5e87";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -429,9 +435,18 @@
           # flake-pinned plugin so `nix flake update pdb-fetch-nvim-src` ships new
           # versions on the next `nix develop`.
           if [ -z "''${VOSTOK_NVIM_WRAPPED:-}" ] && command -v nvim >/dev/null 2>&1; then
-            _vnv_real="$(command -v nvim)"
             _vnv_bin="$VOSTOK_DIR/binaries/nvim-shim"
             mkdir -p "$_vnv_bin"
+            # Resolve the REAL nvim with the shim dir off PATH. VOSTOK_NVIM_WRAPPED
+            # alone is not enough: lose the variable but keep the PATH (env -u, a
+            # shell that drops it, a reattached multiplexer) and `command -v nvim`
+            # finds the shim, which then execs itself forever.
+            _vnv_real="$(PATH="$(printf %s "$PATH" | tr ':' '\n' \
+              | grep -vxF "$_vnv_bin" | paste -sd:)" command -v nvim)"
+          fi
+          # Empty means the only nvim on PATH was the shim: wrap nothing rather
+          # than write a shim that execs "".
+          if [ -n "''${_vnv_real:-}" ]; then
             printf '#!/bin/sh\nexec "%s" --cmd "set rtp^=%s" "$@"\n' \
               "$_vnv_real" "${pdb-fetch-nvim-src}" > "$_vnv_bin/nvim"
             chmod +x "$_vnv_bin/nvim"
