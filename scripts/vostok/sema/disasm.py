@@ -43,7 +43,7 @@ def disasm(side, rva):
     if res.returncode != 0:
         die(f"pdb_fetch failed: {res.stderr.strip()}")
     if "no function matched" in res.stdout:
-        die(f"pdb_fetch found no {side} function at {rva:#x}")
+        die(f"pdb_fetch found no {side} function at rva={rva:#x}")
     return res.stdout
 
 

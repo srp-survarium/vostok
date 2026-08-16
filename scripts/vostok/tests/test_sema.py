@@ -1,7 +1,7 @@
 import unittest
 
 from vostok.sema.cfg import contract, notes, seal, starved
-from vostok.sema.index import _fold_aliases
+from vostok.sema.index import _fold_aliases, va_of
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
 
@@ -92,6 +92,16 @@ class SemaNavigationTests(unittest.TestCase):
         self.assertEqual(_call_operand("call  vostok::logging::append"),
                          "vostok::logging::append")
         self.assertIsNone(_call_operand("jmp short .1"))
+
+
+class AddressSpaceTests(unittest.TestCase):
+    """RVA and VA differ by the image base, and sema must never conflate them."""
+
+    def test_va_is_rva_plus_image_base(self):
+        self.assertEqual(va_of({"rva": 0x6243E0, "image_base": 0x10000}), 0x6343E0)
+
+    def test_a_record_without_an_image_base_reads_as_its_own_va(self):
+        self.assertEqual(va_of({"rva": 0x1000}), 0x1000)
 
 
 if __name__ == "__main__":

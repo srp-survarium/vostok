@@ -132,8 +132,8 @@ def cmd_blocks(args):
     if args.diff:
         text, rc = blocks_diff(g["base"], g["target"], args.lite)
         print(f"[{tgt['name']}]")
-        print(f"[base {base['file']} @ {base['rva']:#x} ({base['size']}B)  vs  "
-              f"target {tgt['file']} @ {tgt['rva']:#x} ({tgt['size']}B)]")
+        print(f"[base {base['file']} @ rva={base['rva']:#x} ({base['size']}B)  vs  "
+              f"target {tgt['file']} @ rva={tgt['rva']:#x} ({tgt['size']}B)]")
         for note in notes(cut):
             print(note)
         print(text, end="")
@@ -149,7 +149,7 @@ def cmd_blocks(args):
     if side not in g:
         die(f"no {side} side for '{args.fn}'")
     print(f"[basic blocks: {side.upper()} - {rec['name']}]")
-    print(f"[{rec['file']} @ {rec['rva']:#x} ({rec['size']}B)]")
+    print(f"[{rec['file']} @ rva={rec['rva']:#x} ({rec['size']}B)]")
     for note in notes({side: cut[side]}):
         print(note)
     print(show_blocks(g[side], args.lite), end="")

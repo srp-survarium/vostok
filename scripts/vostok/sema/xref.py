@@ -57,7 +57,7 @@ def cmd_xref(args):
             rows = [(first[name], name, counts[name]) for name in sorted(counts)]
         else:
             rows = [(off, name, 1) for off, name in rows]
-        print(f"{side} callees of {selected['name']} ({selected['rva']:#x})")
+        print(f"{side} callees of {selected['name']} (rva={selected['rva']:#x})")
         for off, operand, count in rows:
             suffix = f" x{count}" if count > 1 else ""
             print(f"  +0x{off:04x}  {operand}{suffix}")
@@ -69,11 +69,11 @@ def cmd_xref(args):
                  if _matches_operand(selected, operand)]
         if sites:
             hits.append((rec, sites))
-    print(f"{side} callers of {selected['name']} ({selected['rva']:#x})")
+    print(f"{side} callers of {selected['name']} (rva={selected['rva']:#x})")
     for rec, sites in hits:
         if args.raw:
             for off, _ in sites:
-                print(f"  {rec['rva']:#010x}+0x{off:04x}  {rec['file']}  {rec['name']}")
+                print(f"  rva={rec['rva']:#010x}+0x{off:04x}  {rec['file']}  {rec['name']}")
         else:
-            print(f"  {rec['rva']:#010x}  calls={len(sites):<3}  {rec['file']}  {rec['name']}")
+            print(f"  rva={rec['rva']:#010x}  calls={len(sites):<3}  {rec['file']}  {rec['name']}")
     return 0

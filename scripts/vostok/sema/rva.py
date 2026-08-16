@@ -3,6 +3,11 @@
 The first command of an investigation: where each side lives, how big it is,
 how many statements it carries, and what the match cache knows about it
 (current %, hash-scoped max, structure class, attempts, flags).
+
+Both address forms are printed. RVA is what the indexes and every `--rva` flag
+hold; VA is what IDA shows and what carcass comments carry. They differ by the
+0x10000 image base, which is exactly the size of the mistake made by pasting one
+where the other was wanted.
 """
 
 from __future__ import annotations
@@ -12,12 +17,12 @@ import sqlite3
 from vostok.core.paths import MATCH_DB as DB_PATH
 
 from vostok.sema import die
-from vostok.sema.index import resolve
+from vostok.sema.index import resolve, va_of
 
 
 def _print_record(side, rec):
-    print(f"{side:6}  rva={rec['rva']:#x}  size={rec.get('size', 0):#x}  "
-          f"stmts={len(rec.get('statements', []))}")
+    print(f"{side:6}  rva={rec['rva']:#x}  va={va_of(rec):#x}  "
+          f"size={rec.get('size', 0):#x}  stmts={len(rec.get('statements', []))}")
     print(f"        {rec.get('file', '(unknown file)')}")
     print(f"        {rec['name']}")
     print(f"        {rec['mangled']}")
