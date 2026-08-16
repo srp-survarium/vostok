@@ -19,7 +19,6 @@ from pathlib import Path
 
 from vostok.core import tsv
 from vostok.core.paths import EXACT_FOLD_ALIASES
-
 from vostok.derive.scores import island_report_score
 
 

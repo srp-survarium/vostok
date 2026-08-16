@@ -45,7 +45,6 @@ from pathlib import Path
 
 from vostok.build import ninja_regen
 
-
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SCRIPTS as SCRIPT_DIR
 

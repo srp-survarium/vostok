@@ -10,7 +10,6 @@ demoted rather than dropped, so a hard TU comes back after everything else.
 import json
 
 from vostok.core.paths import SOURCES
-
 from vostok.derive.db import open_db, staleness_check
 from vostok.derive.names import norm_name, qualified_name
 

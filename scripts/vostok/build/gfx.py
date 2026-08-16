@@ -56,7 +56,6 @@ import sys
 from pathlib import Path
 
 from vostok.build.gfx_mspdbsrv import kill_mspdbsrv, wine_cl
-
 from vostok.core.paths import PREBUILT, WIN32_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SCRIPTS as SCRIPT_DIR

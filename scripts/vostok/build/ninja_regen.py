@@ -27,7 +27,6 @@ import sys
 import tempfile
 from pathlib import Path
 
-
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
 from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH

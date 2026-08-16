@@ -8,7 +8,6 @@ import struct
 
 from pathlib import Path
 
-
 from vostok.core.paths import OBJDIFF_DIR
 
 

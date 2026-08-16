@@ -24,12 +24,28 @@ from vostok.core.paths import (BASE_IDX, CROSS_UNIT_REPORT, DECLARATIONS,
 from vostok.core.paths import REPO as VOSTOK
 
 from vostok.derive import log
-from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich, dyn_owner_compatible, dynamic_pair_score, exact_paired_source_alias, instruction_stream_exact, load_exact_fold_aliases, report_source_alias_candidates, strict_source_alias_candidates)
+from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
+                                   dyn_owner_compatible, dynamic_pair_score,
+                                   exact_paired_source_alias,
+                                   instruction_stream_exact,
+                                   load_exact_fold_aliases,
+                                   report_source_alias_candidates,
+                                   strict_source_alias_candidates)
 from vostok.derive.classify import classify
-from vostok.derive.db import (Interner, SCHEMA, SCHEMA_VERSION, _git, file_mtime_iso, git_head, open_db)
-from vostok.derive.index import (authoritative_demangled_names, index_by_mangled, is_framed, legacy_overload_keys, load_index_records)
-from vostok.derive.maxima import (_source_extent, compiled_state_id, effective_source_hash, maximum_for_effective_hash, maximum_needs_epoch_archive, merge_maximum_epoch, retained_max_effective_hash, src_fingerprint)
-from vostok.derive.modules import (dynamic_local_owner_modules, load_module_ownership_overrides, logical_module, module_of)
+from vostok.derive.db import (Interner, SCHEMA, SCHEMA_VERSION, _git,
+                              file_mtime_iso, git_head, open_db)
+from vostok.derive.index import (authoritative_demangled_names,
+                                 index_by_mangled, is_framed,
+                                 legacy_overload_keys, load_index_records)
+from vostok.derive.maxima import (_source_extent, compiled_state_id,
+                                  effective_source_hash,
+                                  maximum_for_effective_hash,
+                                  maximum_needs_epoch_archive,
+                                  merge_maximum_epoch,
+                                  retained_max_effective_hash, src_fingerprint)
+from vostok.derive.modules import (dynamic_local_owner_modules,
+                                   load_module_ownership_overrides,
+                                   logical_module, module_of)
 from vostok.derive.names import mangled_name_part, norm_name, qualified_name
 from vostok.derive.scores import report_fuzzy_scores, report_score_for_target
 

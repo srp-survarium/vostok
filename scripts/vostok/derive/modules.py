@@ -9,8 +9,8 @@ initializer's real owner, then the unit/file the record names.
 
 from vostok.core import tsv
 from vostok.core.paths import MODULE_OWNERSHIP_OVERRIDES
-
-from vostok.derive.aliases import (_LOCAL_FUNCTION_SCOPE_RE, dyn_canon_base, dyn_canon_rich)
+from vostok.derive.aliases import (_LOCAL_FUNCTION_SCOPE_RE, dyn_canon_base,
+                                   dyn_canon_rich)
 
 
 def module_of(unit_or_file):
