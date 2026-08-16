@@ -6,8 +6,9 @@
     vostok ledger <verb>           the committed campaign record: report / list
                                    / queue / tried / park / open, plus `readme`
                                    and `mismatch-queue`
-    vostok derive <verb>           the regenerable cache over report.json:
-                                   refresh / list / max / report / queue / diff
+    vostok derive refresh          re-derive the ledger from an already-built
+                                   report; the one verb, since the derivation
+                                   now writes the record rather than a cache
     vostok sema <view>             read-only control-flow views over one
                                    base<->target function pair
     vostok diff <view>             target-vs-base source shape: layout / order
