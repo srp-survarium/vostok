@@ -6,6 +6,8 @@ One line per pattern: `- [title](file.md) — cN — tags — symptoms` (cN = co
 Authoring: new pattern = new file (schema in `../assembly_patterns.md`) + one
 line here, same commit.
 
+- [A `??__E<cc_static>` initializer looks argument-less: read the args out of the shipped `.data`](cc-static-args-from-data-section.md) — c9 — cpp:static cpp:ctor cpp:console-command | asm:mov asm:movss asm:call | topic:data-section topic:dynamic-initializer topic:recovery-technique — unpaired `dynamic initializer for '<cc_*>'`, note claims the command-NAME string is unrecoverable; m_name/m_command_type/m_serializable are constant-folded into .data, read them at obj+0x10/0x14/0x1D in survarium.exe (image base 0x10000); target cc_bool derives from cc_value<bool> and re-sets m_need_args in its own body
+
 - [Rich-index exact evidence fills an objdiff score gap](rich-index-exact-fills-objdiff-gap.md) — c9 — cpp:comdat cpp:inline | topic:measurement topic:pairing topic:scoring-artifact — same mangled function and equal size with an identical non-empty normalized rich-index instruction stream proves exactness when objdiff omits the fuzzy score
 
 - [A whole objdiff unit that is 100% unpaired is a FILE-PLACEMENT bug, not a matching gap](inline-header-split-pairing.md) — c10 — cpp:header cpp:inline cpp:template | asm:none | topic:pairing topic:objdiff-units topic:file-layout — whole header unit unpaired, base_path ./dummy.obj, base emits same mangled symbols from <x>.h while target files them under <x>_inline.h; move the inline bodies, pure relocation
