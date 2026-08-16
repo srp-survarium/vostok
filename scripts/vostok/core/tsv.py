@@ -3,7 +3,7 @@
 A tracked table is a tab-separated text file under `docs/binary_matching/`:
 `#`-prefixed comment lines, blank lines ignored, one record per line, fields
 never containing a tab. It is committed, so it must diff and merge line by line
-- that is the whole reason these are text and `match.db` is not.
+- that is the whole reason these are text and the retired `match.db` was not.
 
 The reviewed override tables (`exact_fold_aliases.tsv`,
 `module_ownership_overrides.tsv`, `folded_symbol_overrides.tsv`) and the

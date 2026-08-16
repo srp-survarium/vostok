@@ -1,13 +1,13 @@
 """match - query and update the matching ledger.
 
-Replaces vostok derive's query surface. That tool answered every question with
+Replaced vostok derive's query surface. That tool answered every question with
 SQL over an interned schema - `list` alone joined symbols/units/pairs/history
 to rebuild what is now one row of docs/binary_matching/match_state.tsv. The
 ledger is 19,645 rows: loading it costs ~100 ms and answering costs under a
 millisecond, so nothing here needs a database.
 
-It also needs no build. vostok derive's commands read binaries/match.db, which a
-fresh clone does not have; these read the committed ledger directly.
+It also needs no build: the ledger is committed, so a fresh clone can answer
+every question below before it has compiled anything.
 
   vostok ledger report  [--module M] [--per-unit]   rollup, byte-weighted
   vostok ledger list    [--module M] [--unit U] [--class C] [--status S]
@@ -23,11 +23,10 @@ so argparse below does not list them:
   vostok ledger readme         [--write-readme] [--max-code]   the README block
   vostok ledger mismatch-queue [--write-queue]                 the structure queue
 
-CAVEAT - tried/park/open are NOT durable on their own. They edit this file, but
-the next `vostok build` re-projects status/tries/note out of binaries/match.db
-(ledger.store.export_from_db), so a mark that the cache does not also carry is
-lost. The durable spellings write the cache: `vostok derive tried <mangled>` and
-`vostok derive flag <mangled> --flag SKIP --cause "..."`.
+tried/park/open are durable: they edit the committed record, and the next
+`vostok build` folds its measurements ONTO that record (`ledger.store.project`)
+rather than re-projecting it out of a cache, so a mark stays until someone
+removes it.
 
 Dropped from the old tool, deliberately:
   max     `max` is a column now; `list --headroom` covers the interesting case
@@ -192,51 +191,7 @@ def _update(mangleds, mutate):
         touched += 1
     if touched:
         store.save(rows)
-        mirrored = _mirror_to_cache(rows, mangleds)
-        if mirrored is False:
-            # No cache to mirror into: the ledger IS the record, and the next
-            # build seeds the cache from it. Nothing to warn about.
-            pass
     print(f"[match] updated {touched} function(s)")
-
-
-def _mirror_to_cache(rows, mangleds):
-    """Write park/attempt marks through to binaries/match.db.
-
-    The ledger is the committed record, but `vostok build` re-projects
-    status/tries/note out of the cache - so a mark that lives only here is
-    silently reverted by the next build. Mirroring keeps the two agreeing
-    until the cache is retired altogether.
-    """
-    from vostok.core.paths import MATCH_DB
-
-    if not MATCH_DB.is_file():
-        return False
-    import sqlite3
-
-    con = sqlite3.connect(MATCH_DB)
-    try:
-        for mangled in mangleds:
-            row = rows.get(mangled)
-            if row is None:
-                continue
-            con.execute("DELETE FROM flags WHERE mangled = ?", (mangled,))
-            if row["status"] == "parked":
-                con.execute(
-                    "INSERT INTO flags (mangled, flag, cause, set_at)"
-                    " VALUES (?, 'SKIP', ?, '')", (mangled, row.get("note") or ""),
-                )
-            con.execute(
-                "INSERT INTO attempts (mangled, n, last_at, note)"
-                " VALUES (?,?,'',?)"
-                " ON CONFLICT(mangled) DO UPDATE SET n = excluded.n,"
-                " note = excluded.note",
-                (mangled, row.get("tries") or 0, row.get("note") or None),
-            )
-        con.commit()
-    finally:
-        con.close()
-    return True
 
 
 def cmd_tried(args):

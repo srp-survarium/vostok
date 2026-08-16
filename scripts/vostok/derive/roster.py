@@ -1,15 +1,20 @@
 """vostok.derive.roster - the derivation, end to end.
 
-Six steps, one per module, and the order between them is the whole design:
+Five steps, one per module, and the order between them is the whole design:
 
     artifacts   load report.json + the two rich indexes, and say so when they
                 are stale
     inventory   one record per function on each side: unit, module, size, frame
     pairing     which base function IS this target function, through every alias
                 the two linkers spell differently
-    cache       the previous state a rebuild cannot recompute
-    maxima      fold this build's scores into the hash-scoped MAX evidence
+    maxima      fold this build's scores into the hash-scoped MAX evidence,
+                on top of the peaks the committed ledger banked
     baseonly    and explain everything WE emit that the target does not
+
+The result goes straight into `docs/binary_matching/match_state.tsv` through
+`ledger.store.project`. There is no database in between: everything above is a
+pure function of the artifacts, and everything a build must not destroy - hist,
+notes, dispatch counts, banked peaks - already lives in the committed ledger.
 
 Nothing here compiles anything: `vostok build` is the canonical build and calls
 `regen()` at the end of it; `refresh` is the regen-only path for a report that
@@ -19,10 +24,8 @@ is already on disk.
 from dataclasses import dataclass
 from pathlib import Path
 
-from vostok.core.paths import MATCH_DB as DB_PATH
-from vostok.core.paths import REPO as VOSTOK
 from vostok.derive import artifacts as artifacts_module
-from vostok.derive import baseonly, cache, inventory, log, maxima, pairing
+from vostok.derive import baseonly, inventory, log, maxima, pairing
 from vostok.ledger import store as match_state
 
 
@@ -55,6 +58,28 @@ def derive(declarations=True):
     return Roster(artifacts, target, base, pairing.pair(artifacts))
 
 
+def observations(roster, maxima_rows):
+    """One ledger observation per TARGET function: what this build measured.
+
+    The target roster is the ledger's roster - a base-only symbol is a defect
+    (see `baseonly`), not a row of the campaign's worklist.
+    """
+    for mangled, function in roster.target.items():
+        pair = roster.pairing.pairs.get(mangled)
+        banked = maxima_rows.get(mangled)
+        yield {
+            "mangled": mangled,
+            "unit": function.unit,
+            "module": function.module,
+            "size": function.size,
+            "frameless": function.frameless,
+            "cls": pair.cls if pair else None,
+            "cur": pair.fuzzy if pair else None,
+            "hash": banked[0] if banked else "",
+            "max": banked[1] if banked else None,
+        }
+
+
 def regen():
     """Re-derive everything from the already-built diff artifacts.
 
@@ -64,24 +89,23 @@ def regen():
     `vostok build` first if sources moved).
     """
     roster = derive()
-    artifacts, target, base = roster.artifacts, roster.target, roster.base
-    pairs = roster.pairing
+    previous = match_state.load()
+    banked = {
+        mangled: (row["hash"], row["max"])
+        for mangled, row in previous.items()
+        if row["hash"] and row["max"] is not None
+    }
+    maxima_rows = maxima.fold(roster.pairing, roster.artifacts, banked)
 
-    previous = cache.carry_forward(artifacts)
-    history = cache.reconcile_history(previous.history, pairs, artifacts)
-    maxima_rows, epoch_rows, _raised, _reset = maxima.fold(
-        pairs, artifacts, previous.maxima, previous.epochs
+    base_only = baseonly.classify(
+        roster.artifacts, roster.pairing, roster.base, seen=set(previous)
     )
-    base_only = baseonly.classify(artifacts, pairs, base, history)
-    baseonly.write_report(base_only)
+    n = baseonly.write_report(base_only)
+    log(f"base-only report: {n} rows")
 
-    cache.write(artifacts, target, base, pairs, history, maxima_rows, epoch_rows,
-                base_only, previous)
+    written = match_state.project(observations(roster, maxima_rows))
     log(
-        f"refreshed {DB_PATH.relative_to(VOSTOK)}: "
-        f"{len(target)} target / {len(base)} base / {len(pairs.pairs)} paired / "
-        f"{len(base_only)} base-only classified"
+        f"ledger {Path(match_state.STATE_PATH).name}: {written} rows "
+        f"({len(roster.target)} target / {len(roster.base)} base / "
+        f"{len(roster.pairing.pairs)} paired)"
     )
-
-    written = match_state.export_from_db(DB_PATH)
-    log(f"ledger {Path(match_state.STATE_PATH).name}: {written} rows")
