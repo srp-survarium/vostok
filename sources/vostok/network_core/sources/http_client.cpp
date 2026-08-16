@@ -19,7 +19,7 @@ namespace network_core {
 // scope for this TU. ASSERT_U( prefix ) overshoots (pushes prefix AND assert_untyped).
 void read_lines_from_stream( pcstr prefix, boost::asio::streambuf& buff )
 {
-	ASSERT( prefix );
+	VOSTOK_UNREFERENCED_PARAMETERS( prefix );
 	std::istream response_stream( &buff );
 	std::string str;
 

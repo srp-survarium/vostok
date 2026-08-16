@@ -202,8 +202,8 @@ private:
 		// claude@NOTE: target emits this through the real new helper; base inlines it.
 				void*			malloc_impl					( u32 size )
 		{
-			VOSTOK_UNREFERENCED_PARAMETER( size );
-			return m_bullet_functors.try_pop( );
+			ASSERT_CMP_U			( size, <=, sizeof( bullet_functor ) );
+			return					m_bullet_functors.try_pop( );
 		}
 
 		inline	void			free_impl					( void* pointer )

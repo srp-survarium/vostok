@@ -39,9 +39,8 @@ protected:
 private:
 	// claude@NOTE: activate/deactivate/transform/selected_animations are empty/unreachable
 	// virtuals that ICF-fold (no distinct symbol in either index) - unpairable standalones,
-	// faithful idioms below. update_bones_matrices folds to the artefact_lifebone_core copy
-	// at rva 0xbc810 (a 101-byte ASSERT-guarded forward); see that header's note - left
-	// empty until the folded forward-callee is named.
+	// faithful idioms below. update_bones_matrices ICF-folds with the medkit and
+	// artefact_lifebone_core copies at rva 0xbc810.
 	virtual	void								activate					( base_player& user, engine& engine ) override { }
 	virtual	void								deactivate					( ) override { }
 	virtual	float4x4							transform					( ) const override { VOSTOK_UNREACHABLE_CODE( ); }
@@ -61,7 +60,17 @@ private:
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
-												) override { /* <0xcc810> */ }
+												) override {
+													VOSTOK_UNREFERENCED_PARAMETERS(
+														user_skeleton,
+														user_matrices,
+														user_matrices_count,
+														current_time_in_ms,
+														character_head_transform,
+														character_transform,
+														& animation_player
+													);
+												}
 	virtual	void								serialize					( network_core::udp_match_packet& packet, u32 client_offset ) const override { inventory_item::serialize( packet, client_offset ); }
 	virtual	void								deserialize					( network_core::packet_reader& reader ) override { inventory_item::deserialize( reader ); }
 
