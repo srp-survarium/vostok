@@ -112,13 +112,7 @@ private:
 	virtual	void				instant_aim_start					( ) override;
 	virtual	void				instant_aim_end						( ) override;
 
-	// STATE[STUB]
-	virtual	void				assign_game_ui						( game_world_ui* ui ) override
-	{
-		// FUNCTION BODY[0xab370]
-		// <0xab370>|0x000|      :'86'	{
-		// ******
-	}
+	virtual	void				assign_game_ui						( game_world_ui* ui ) override		{ m_game_ui = ui; }
 
 	virtual	void				on_skeleton_matrices_changed		(
 									const u32					current_time_in_ms,

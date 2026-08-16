@@ -92,25 +92,9 @@ public:
 
 	virtual	void								clear_resources					( ) override;
 
-	// STATE[STUB]
-	virtual	ui::world&							ui_world						( ) override
-	{
-		return *m_ui_world;	// buildability return
+	virtual	ui::world&							ui_world						( ) override		{ return *m_ui_world; }
 
-		// FUNCTION BODY[0x8d920]
-		// <0x8d920>|0x000|      :'111'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	input::world&						input_world						( ) override
-	{
-		return *m_input_world;	// buildability return
-
-		// FUNCTION BODY[0x8d930]
-		// <0x8d930>|0x000|      :'112'	{
-		// ******
-	}
+	virtual	input::world&						input_world						( ) override		{ return *m_input_world; }
 
 	virtual	void								execute_scaleform_command		( scaleform_render_command command ) override;
 

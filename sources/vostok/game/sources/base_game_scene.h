@@ -47,23 +47,8 @@ public:
 	virtual	void									on_activate			( ) override;
 	virtual	void									on_deactivate		( ) override;
 
-	// STATE[STUB]
-	virtual	void									show_ui				( bool __formal )
-	{
-		// FUNCTION BODY[0x22c50]
-		// <0x22c50>|0x000|      :'52'	{
-		// ******
-	}
-
-	// STATE[STUB]
-	virtual	bool									is_mouse_over_ui	( )
-	{
-		return false;
-
-		// FUNCTION BODY[0xb2740]
-		// <0xb2740>|0x000|      :'53'	{
-		// ******
-	}
+	virtual	void									show_ui				( bool __formal )		{ }
+	virtual	bool									is_mouse_over_ui	( )						{ return false; }
 
 	virtual	void									tick				( const u32 __formal, const u32 current_time_in_ms, const bool is_game_paused ) override;
 
