@@ -4,17 +4,15 @@
 
 #include "pch.h"
 #include "object_vegetation.h"
+#include "base_game_scene.h"
+#include "game.h"
+#include <vostok/render/facade/game_renderer.h>
+#include <vostok/render/facade/scene_renderer.h>
 
 namespace survarium {
 
-// claude@NOTE: load / insert / remove / on_grass_loaded are walled by render-facade
-// infra absent from our source tree: load needs render::grass_loading_data +
-// resources::query_resources; insert/remove call render::scene_renderer::set_grass /
-// reset_grass; on_grass_loaded builds an intrusive_ptr from a render::grass_loading_data
-// member of queries_result. None of grass_loading_data / set_grass / reset_grass /
-// query_resources are declared in our render facade (vostok/render/facade) - they
-// belong to the still-unported grass cook. Those four stay STUB until that lands.
-// The ctor is facade-free and recovered/anchored below.
+// claude@NOTE: load / on_grass_loaded still need render::grass_loading_data and
+// resources::query_resources, neither of which our tree declares.
 object_vegetation::object_vegetation( base_game_scene& s ) :
 	game_object_( s )
 {
@@ -39,18 +37,14 @@ void object_vegetation::load(
 {
 }
 
-// STATE[STUB]
-// target: 1 stmt - m_game_scene...get_scene_renderer().set_grass( m_grass );
-// Walled by render::scene_renderer::set_grass.
 void object_vegetation::insert( )
 {
+	get_game_scene( ).renderer( ).scene( ).set_grass( m_grass, get_game_scene( ).render_scene( ) );
 }
 
-// STATE[STUB]
-// target: 1 stmt - m_game_scene...get_scene_renderer().reset_grass( m_grass );
-// Walled by render::scene_renderer::reset_grass.
 void object_vegetation::remove( )
 {
+	get_game_scene( ).renderer( ).scene( ).reset_grass( m_grass, get_game_scene( ).render_scene( ) );
 }
 
 } // namespace survarium

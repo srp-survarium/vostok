@@ -37,6 +37,15 @@
 #define DELETE( pointer ) VOSTOK_DELETE_IMPL( ::survarium::g_allocator, pointer )
 #define DELETE_ARRAY( pointer ) VOSTOK_DELETE_ARRAY_IMPL( ::survarium::g_allocator, pointer )
 
+// claude@NOTE: g_num_monitors is defined by render/core/dx11 (device.h names this file as
+// its reader), but including that header drags d3d11/windows into a game TU and the winsdk
+// ole2.h/ocidl.h then fail on MSG (C2061). Declared here instead.
+namespace vostok {
+namespace render {
+	extern int g_num_monitors;
+} // namespace render
+} // namespace vostok
+
 namespace survarium {
 
 // the per-quality-preset table (presets x 10 options). String/data bytes live in
@@ -281,22 +290,16 @@ void options_item_bool::call( flash_function_handler_params& params )
 	params.pRetVal->SetBoolean( m_current_value = params.pArgs[ 0 ].GetBool( ) );
 }
 
-// claude@NOTE: STATE[STUB]. Body reads params.pArgs[0].GetNumber() into
-// m_current_value then calls the same render gamma chain as revert - blocked by the
-// same missing render::scene_renderer::set_gamma_correction_factor (cross-module
-// render cap).
 void options_gamma_selector::call( flash_function_handler_params& params )
 {
+	params.pRetVal->SetNumber( m_current_value = (float)params.pArgs[ 0 ].GetNumber( ) );
+	m_parent_tab.get_game( ).active_scene( )->scene_renderer( ).set_gamma_correction_factor( m_current_value );
 }
 
-// claude@NOTE: STATE[STUB]. Body is options_item_float::revert() then
-// m_parent_tab.get_game().renderer().scene().set_gamma_correction_factor(m_current_value),
-// but render::scene_renderer::set_gamma_correction_factor(const float) is in the
-// canonical render structure yet NOT declared/defined in our render module
-// (render/facade scene_renderer.h+.cpp) - calling it would LNK2001. Cross-module
-// render cap: blocked until the render module exposes set_gamma_correction_factor.
 void options_gamma_selector::revert( )
 {
+	options_item_float::revert( );
+	m_parent_tab.get_game( ).active_scene( )->scene_renderer( ).set_gamma_correction_factor( m_current_value );
 }
 
 // claude@NOTE: base-init (r_resolution, id 1) matches; the find + fill_resolutions
@@ -342,17 +345,17 @@ void options_resolution_selector::apply( )
 	m_console_command->execute( m_values[ m_current_value ] );
 }
 
-// STATE[STUB]
-// claude@NOTE: BLOCKED on vostok::render global g_num_monitors
-// (?g_num_monitors@render@vostok@@3HA) - the ctor allocates a u32[g_num_monitors]
-// array and fills m_cached_monitors_names from it. g_num_monitors is not
-// declared/defined in our source tree (render module does not expose it yet) -
-// referencing it would LNK2001. Cross-module render cap; unblock once render
-// exposes the monitor count.
  options_monitor_index_selector::options_monitor_index_selector( options_tab& parent_tab )
-	// buildability: base has no default ctor; matcher supplies real args
 	: options_item_int( parent_tab, "r_monitor_index", 0, NULL, 0 )
 {
+	for ( u8 i = 0; i < array_size( m_cached_monitors_names ); ++i )
+		m_cached_monitors_names[ i ].assignf( "%d", i );
+
+	m_values		= NEW_ARRAY( pcstr, render::g_num_monitors );
+	m_values_count	= ( u8 )render::g_num_monitors;
+
+	for ( u8 i = 0; i < m_values_count; ++i )
+		m_values[ i ] = m_cached_monitors_names[ i ].c_str( );
 }
 
 void options_monitor_index_selector::call( flash_function_handler_params& params )
