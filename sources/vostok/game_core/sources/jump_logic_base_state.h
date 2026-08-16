@@ -25,7 +25,6 @@ class jump_logic_base_state : public ai::fsm_state {
 public:
 	virtual				~jump_logic_base_state	( ) { /* no source */ }
 
-	// STATE[STUB]
 	virtual	void		set_user				( base_player& user ) { m_user = &user; }
 
 

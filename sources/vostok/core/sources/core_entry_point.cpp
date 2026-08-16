@@ -269,17 +269,7 @@ void vostok::core::core_engine_flush( )
 		s_engine->on_crash		( );
 }
 
-#if 0 // sushi@NOTE: Moved from `core_entry_point_win.cpp`. This should be handled when `core` is matched. Still don't understand why windows related stuff was just moved
-// STATE[STUB]
 pcstr vostok::core::user_data_directory( )
 {
-	// CALL SITE INFO
-	// <0x67050b> -> pcstr <unknown>() const
-	// ******
-
-	return NULL;
-	// FUNCTION BODY
-	// <1>
-	// ******
+	return									s_engine->get_user_data_directory( );
 }
-#endif

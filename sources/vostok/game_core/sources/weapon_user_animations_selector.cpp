@@ -18,8 +18,6 @@
 //                                           inline-vs-call + temp element type.
 //   set_sprint_callbacks / look_time_factor SIZE-only: static_cast_checked instantiation /
 //                                           float-op scheduling+regalloc (LTCG), not source-shape.
-//   look_time_factor_calculator ........... parked: LOG_INFO byte shape blocked on ungolded
-//                                           base logging (gold ICF-folds has_passed_filters/append).
 // None of the residuals is steerable from this TU; see the claude@NOTE blocks below.
 
 #include "pch.h"
@@ -294,13 +292,13 @@ float weapon_user_animations_selector::look_time_factor_calculator(
 	const float		time_scale
 ) const
 {
-	// claude@NOTE: target L313 is a surviving LOG_* of these 5 params: in gold both
-	// has_passed_filters and append ICF-fold onto the empty stub (finalize_impl), so the
-	// site keeps only the 5 arg pushes. Base logging is NOT stubbed here (real
-	// has_passed_filters/append bodies + format/__FILE__/__LINE__ pushes), so the byte
-	// shape can't match until the logging module is gold-stubbed; structure (2 stmts) is
-	// right. Format/verbosity unverifiable without a stubbed base.
-	LOG_INFO( "%f %d %d %d %f", animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms, target_time_in_ms, time_scale );
+	VOSTOK_UNREFERENCED_PARAMETERS(
+		animation_time_before_time_scale_starts,
+		time_scale_start_time_in_ms,
+		current_time_in_ms,
+		target_time_in_ms,
+		time_scale
+	);
 	return look_time_factor( ) * animation_length;
 }
 
