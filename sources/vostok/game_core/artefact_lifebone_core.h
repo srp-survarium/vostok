@@ -45,13 +45,10 @@ private:
 	virtual	void								on_player_model_added		( ) override { /* no source */ }
 	virtual	void								on_player_model_removed		( ) override { /* no source */ }
 
-	// claude@NOTE: target body is a 101-byte ASSERT-guarded forward (rva 0xbc810, folds
-	// across oxygen_tank+medkit): assert; copy the two float4x4 by value; call
-	// <folded helper>( user_skeleton.get(), user_matrices, user_matrices_count,
-	// current_time_in_ms, head_transform, transform, &animation_player ). PDB records
-	// 0 statements (optimized); the forward callee folds to finalize_impl so the exact
-	// body can't be reconstructed/verified yet. Access (private @@EAE) now matches the
-	// target; body left empty -> pairs at size-residual until the helper is named.
+	// claude@NOTE: rva 0xbc810, ICF-folded across oxygen_tank+medkit. animation_player has
+	// no accessible copy ctor, so it is the one argument the target passes by address;
+	// user_skeleton is a 4-byte resource_ptr copied bitwise through the ellipsis and the
+	// two float4x4 go by value (0x40 each) - 0x94 pushed in total.
 	virtual	void								update_bones_matrices		(
 													animation::skeleton_ptr const&		user_skeleton,
 													float4x4* const						user_matrices,
@@ -60,7 +57,17 @@ private:
 													float4x4&							character_head_transform,
 													float4x4&							character_transform,
 													animation::animation_player const&	animation_player
-												) override { /* <0xcc810> */ }
+												) override {
+													VOSTOK_UNREFERENCED_PARAMETERS(
+														user_skeleton,
+														user_matrices,
+														user_matrices_count,
+														current_time_in_ms,
+														character_head_transform,
+														character_transform,
+														& animation_player
+													);
+												}
 
 	virtual	void								serialize					( network_core::udp_match_packet& arg_0 ) const { /* no source */ }
 	virtual	void								deserialize					( network_core::packet_reader& arg_0 ) override { /* no source */ }
