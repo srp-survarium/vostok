@@ -228,6 +228,7 @@ signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 | `COND-FLIP` | equal blocks AND branches, a mnemonic differs | inverted condition or signed/unsigned twin - a real source bug |
 | `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BLOCK-SPLIT` | same branch sequence, different block count | usually an unreachable/padding artifact |
+| `TRIMMED` | the trailing trim dropped more blocks than it kept, so the graph is a PREFIX | **not a flow verdict** - read the function with `pdb_fetch --view target|base`; see the `trim_tail` limit |
 
 ### Which classes are worth a matcher's time (measured, batches B7 + B8)
 
