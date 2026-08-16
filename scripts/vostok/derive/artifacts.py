@@ -53,7 +53,7 @@ def git_head():
 def _require_present():
     for required in (REPORT, TARGET_IDX, BASE_IDX):
         if not required.is_file():
-            sys.exit(f"[match_db] missing {required} - run `vostok build` / the delink first")
+            sys.exit(f"[derive] missing {required} - run `vostok build` / the delink first")
 
 
 def _warn_if_stale():

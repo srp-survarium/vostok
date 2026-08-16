@@ -34,6 +34,21 @@ authoritative per-function view.
 
 import sys
 
+_QUIET = False
+
+
+def set_quiet(quiet=True):
+    """Silence the progress commentary.
+
+    `sema` and `diff tu-order` borrow the passes below to answer ONE question
+    about ONE function. The derivation's running tally is noise there, and
+    worse than noise: a pass count nobody asked for reads as though a rebuild
+    just happened.
+    """
+    global _QUIET
+    _QUIET = quiet
+
 
 def log(msg):
-    print(f"[match_db] {msg}", file=sys.stderr)
+    if not _QUIET:
+        print(f"[derive] {msg}", file=sys.stderr)
