@@ -6,9 +6,8 @@ the two files sema reads for disassembly - `binaries/rich/{target,base}/
 index.jsonl`. The cache only held a derived copy, so a sema that needed it could
 not answer on a tree that had never run `vostok derive`.
 
-The passes below are the same ones `vostok.derive.pairing` runs, in the same
-order, over the same helpers - deliberately, because two pairings that disagree
-are worse than one that is slow:
+The passes are `vostok.derive.pairing`'s, run here over sema's inputs, because
+two pairings that disagree are worse than one that is slow:
 
   1. same mangled spelling                            17,969
   2. an exact compiler-side name (`??__E`/`??__F`, audited aliases)   8
@@ -29,19 +28,20 @@ from `report.json`; here it comes from the committed ledger, where a row with a
 `cur` percentage IS a symbol the report scored. So the whole pairing needs no
 build artifact beyond the indexes themselves.
 
-`derive` also seeds pass 2 from `symbols.rich_pdb_aliases`, which re-reads both
-indexes (1.7 s) to derive 22 render template spellings. It is omitted here
-because pass 3 recovers exactly those 22 anyway - the pair count is identical
-with and without it.
+`derive` also seeds its `compiler_alias` from `symbols.rich_pdb_aliases`, which
+re-reads both indexes (1.7 s) to derive 22 render template spellings. The
+adapter below leaves that map empty and falls back to the plain MSVC name:
+pass 3 recovers exactly those 22 anyway, and the pair set is identical with and
+without it.
 
-TWO IMPLEMENTATIONS OF ONE THING, and that is not meant to last.
-`vostok.derive.pairing.pair()` runs these passes for the derivation; this module
-runs them for `sema` and `diff tu-order`. They were written at the same time in
-one worktree and neither could import the other yet. The difference is only
-where the "objdiff scored this" evidence comes from - `report.json` there, the
-ledger here - so the merge is to give `derive.pairing.pair()` that evidence as
-an argument and call it from here. Until then, a change to one pass belongs in
-both.
+ONE implementation, in `vostok.derive.pairing`. This module owned a second copy
+for exactly as long as the two were written in parallel; it now supplies the
+inputs and lets `derive.pairing.pair()` run the passes, so a change to a pass
+cannot land in one pairing and miss the other.
+
+The only thing that ever really differed is where the "objdiff scored this"
+evidence comes from - `report.json` for the derivation, the ledger here - and
+that is now an argument rather than a fork.
 
 Loading is lazy and cached: nothing here runs until a caller actually needs the
 pairing (`sema rva` and the block/branch views resolve by name and never do).
@@ -51,20 +51,40 @@ is what keeps the module-level dependency one-directional.
 
 from __future__ import annotations
 
-import collections
+from dataclasses import dataclass, field
 
-from vostok.core import symbols as msvc_names
+from vostok.core import symbols as normalize_objdiff_symbols
 
-from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
-                                   dyn_owner_compatible,
-                                   load_exact_fold_aliases,
-                                   report_source_alias_candidates,
-                                   strict_source_alias_candidates)
+from vostok.derive import set_quiet
 from vostok.derive.index import index_by_mangled, load_index_records, overload_key
+from vostok.derive.pairing import pair as derive_pair
 
 from vostok.ledger import store
 
 from vostok.sema.index import _index_path
+
+
+@dataclass
+class _Inputs:
+    """The six things `derive.pairing.pair()` reads, sourced without a build.
+
+    `derive` hands it an `Artifacts` built from report.json; sema has no
+    report.json to offer, and needs none - `fuzzy` is the only field that ever
+    came from there, and the ledger records the same measurement.
+    """
+
+    target: dict
+    base: dict
+    target_records: list
+    base_records: list
+    fuzzy: dict
+    rich_pdb_aliases: dict = field(default_factory=dict)
+
+    def compiler_alias(self, mangled):
+        return (
+            self.rich_pdb_aliases.get(mangled)
+            or normalize_objdiff_symbols.compiler_name(mangled)
+        )
 
 
 class Pairing:
@@ -93,8 +113,15 @@ class Pairing:
         # A ledger row carries a `cur` percentage exactly when objdiff scored
         # that symbol in the build the ledger was written from - the evidence
         # pass 3 needs, and the only input here that is not an index.
-        scored = {m for m, row in ledger().items() if row["cur"] is not None}
-        self.pairs = _pair(target_records, target, base_records, base, scored)
+        fuzzy = {m: row["cur"] for m, row in ledger().items()
+                 if row["cur"] is not None}
+        set_quiet()  # answering one question, not narrating a derivation
+        self.pairs = {
+            key: (p.target_rva, p.base_rva)
+            for key, p in derive_pair(
+                _Inputs(target, base, target_records, base_records, fuzzy)
+            ).pairs.items()
+        }
 
         self.base_rva_by_target_rva = {}
         self.target_rva_by_base_rva = {}
@@ -170,114 +197,3 @@ def ledger_row(rec, rows=None):
     rows = ledger() if rows is None else rows
     signature = overload_key(rec["mangled"], rec["name"])
     return rows.get(signature) or rows.get(rec["mangled"])
-
-
-def _pair(target_records, target, base_records, base, scored):
-    """Run the passes in order. Returns {key: (target_rva, base_rva)}.
-
-    `scored` is the set of keys objdiff measured - the evidence the ICF-alias
-    pass needs, and the caller's to supply so this stays a pure function of its
-    arguments."""
-    pairs = {key: (target[key]["rva"], base[key]["rva"])
-             for key in target.keys() & base.keys()}
-    primary = set(pairs)
-    claimed_target = {t for t, _ in pairs.values()}
-    claimed_base = {b for _, b in pairs.values()}
-    cross = set()
-
-    def claim(key, t_rec, b_rec, *, share_base=False):
-        pairs[key] = (t_rec["rva"], b_rec["rva"])
-        claimed_target.add(t_rec["rva"])
-        if not share_base:
-            claimed_base.add(b_rec["rva"])
-        cross.update((key, b_rec["mangled"]))
-
-    by_name = collections.defaultdict(dict)
-    by_mangled = collections.defaultdict(dict)
-    base_alias_names = collections.defaultdict(set)
-    target_alias_names = collections.defaultdict(set)
-    for rec in base_records:
-        by_name[rec["name"]][rec["rva"]] = rec
-        by_mangled[rec["mangled"]][rec["rva"]] = rec
-        base_alias_names[rec["rva"]].add(rec["name"])
-    for rec in target_records:
-        target_alias_names[rec["rva"]].add(rec["name"])
-    fold_aliases = load_exact_fold_aliases()
-
-    # 2. the retail PDB's readable spelling of a name MSVC 8 decorates
-    for key in sorted(set(target) - primary):
-        alias = msvc_names.compiler_name(key)
-        if alias not in base or key not in scored:
-            continue
-        if target[key]["rva"] in claimed_target or base[alias]["rva"] in claimed_base:
-            continue
-        claim(key, target[key], base[alias])
-
-    # 3. a scored symbol whose base body wears another ICF alias's name. The
-    #    report already proved WHICH target symbol was compared, so - unlike
-    #    pass 4 - the bodies are allowed to differ; requiring them to be equal
-    #    would hide the very mismatch the score is reporting.
-    for key in sorted(set(target) - primary):
-        if key not in scored or target[key]["rva"] in claimed_target:
-            continue
-        candidates = report_source_alias_candidates(
-            target[key], by_name, claimed_base,
-            target_alias_names_by_rva=target_alias_names,
-            base_alias_names_by_rva=base_alias_names)
-        if len(candidates) == 1:
-            claim(key, target[key], candidates[0])
-
-    # 4/5. an unscored fold: admitted only on a byte-identical instruction
-    #      stream, first onto a free base RVA and then onto a claimed one (one
-    #      folded body legitimately owns several PDB aliases).
-    for share_base in (False, True):
-        for key in sorted(set(target) - primary - cross):
-            if target[key]["rva"] in claimed_target:
-                continue
-            candidates = strict_source_alias_candidates(
-                target[key], by_name, claimed_base, allow_used=share_base,
-                target_alias_names_by_rva=target_alias_names,
-                base_alias_names_by_rva=base_alias_names,
-                exact_fold_aliases=fold_aliases,
-                base_aliases_by_mangled=by_mangled)
-            if len(candidates) != 1:
-                continue
-            if share_base and candidates[0]["rva"] not in claimed_base:
-                continue
-            claim(key, target[key], candidates[0], share_base=share_base)
-
-    # 6. `vostok::x::`dynamic initializer for 'y''` on one side is
-    #    ``dynamic initializer for 'vostok::x::y''` on the other. Same owner,
-    #    different place to put the namespace.
-    canon_target, canon_base = collections.defaultdict(list), collections.defaultdict(list)
-    for key in set(target) - primary:
-        canon = dyn_canon_rich(key)
-        if canon:
-            canon_target[canon].append(key)
-    for key in set(base) - primary:
-        canon = dyn_canon_base(key)
-        if canon:
-            canon_base[canon].append(key)
-    for canon in sorted(canon_target.keys() & canon_base.keys()):
-        keys, base_keys = canon_target[canon], canon_base[canon]
-        if len(keys) != 1 or len(base_keys) != 1:
-            continue  # ambiguous: two same-named statics, no proof of identity
-        key, base_key = keys[0], base_keys[0]
-        if target[key]["rva"] in claimed_target or base[base_key]["rva"] in claimed_base:
-            continue
-        if not dyn_owner_compatible(target[key], base[base_key], canon):
-            continue
-        claim(key, target[key], base[base_key])
-
-    # 7. an audited template spelling the two PDBs render differently. Zero
-    #    rows today (pass 3 gets there first) - kept so the pass list is the
-    #    roster's, not a subset that silently drifts from it.
-    for key in sorted(set(target) - primary - cross):
-        alias = msvc_names.pdb_alias_name(key)
-        if not alias or alias not in base or alias in primary or alias in cross:
-            continue
-        if target[key]["file"] != base[alias]["file"]:
-            continue
-        claim(key, target[key], base[alias])
-
-    return pairs

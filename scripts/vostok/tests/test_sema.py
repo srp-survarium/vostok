@@ -1,9 +1,11 @@
 import unittest
 
+from vostok.derive import set_quiet
 from vostok.derive.index import index_by_mangled, overload_key
+from vostok.derive.pairing import pair as derive_pair
 from vostok.sema.cfg import contract, notes, seal, starved
 from vostok.sema.index import _fold_aliases, va_of
-from vostok.sema.pairing import _pair, ledger_row
+from vostok.sema.pairing import _Inputs, ledger_row
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
 
@@ -118,9 +120,15 @@ class PairingTests(unittest.TestCase):
     """The pairing that replaced match.db's `pairs` table."""
 
     def _pair_of(self, target_records, base_records, scored=()):
+        """Pair through the same call sema makes, adapter included."""
+        set_quiet()
         target = index_by_mangled(target_records)
         base = index_by_mangled(base_records)
-        return _pair(target_records, target, base_records, base, set(scored))
+        pairing = derive_pair(_Inputs(
+            target, base, target_records, base_records,
+            {mangled: 100.0 for mangled in scored},
+        ))
+        return {key: (p.target_rva, p.base_rva) for key, p in pairing.pairs.items()}
 
     def test_identical_mangled_names_pair(self):
         t = [_full(0x1000, "?f@@YAXXZ")]
