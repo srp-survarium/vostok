@@ -93,6 +93,16 @@ DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
 BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
+# The Scaleform GFx SDK is compiled into the game but lives OUTSIDE sources/,
+# so both the delinker and pdb_rich_context need a second --engine-path to keep
+# its ~1,300 compilands (a single prefix dropped them on BOTH sides and their
+# functions could never pair). Give each side the prefix that leaves the SAME
+# relative path, so target and base key identically: both reduce to `Src\...`.
+GFX_TARGET_PREFIX = r"c:\w\42216f4658640829\scaleform\releases\gfx_4.2.21"
+SCALEFORM_SDK = Path(
+    os.environ.get("SCALEFORM_SDK", str(Path.home() / "Projects/survarium/scaleform_sdk"))
+)
+
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
 
 REBUILD_LOG = BINARIES / "rebuild.log"

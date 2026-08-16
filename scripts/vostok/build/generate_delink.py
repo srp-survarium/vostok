@@ -37,7 +37,8 @@ from vostok.build import generate_objdiff_cross_unit
 from vostok.core import paths
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
-from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, OBJDIFF_DIR, RICH_DIR,
+from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, GFX_TARGET_PREFIX,
+                               OBJDIFF_DIR, RICH_DIR, SCALEFORM_SDK,
                                SOURCES, SYMBOL_MAP, SYMBOL_MAP_OVERRIDES,
                                WIN32_DIR, survarium_bin)
 
@@ -366,6 +367,8 @@ def generate(side: str) -> None:
         # delinker strips this prefix off each recorded path), mirroring target's
         # bare `c:/survarium/sources`.
         engine = ["--engine-path", _wine_path(SOURCES) + "\\"]
+        # ...plus the GFx SDK, which is compiled in but lives outside sources/.
+        engine += ["--engine-path", _wine_path(SCALEFORM_SDK) + "\\"]
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
         symbol_map = ["--read-symbol-map", str(_effective_symbol_map())]
@@ -374,7 +377,8 @@ def generate(side: str) -> None:
         survarium = survarium_bin()
         exe = survarium / "survarium.exe"
         pdb = survarium / "survarium.pdb"
-        engine = ["--engine-path", "c:/survarium/sources"]
+        engine = ["--engine-path", "c:/survarium/sources",
+                  "--engine-path", GFX_TARGET_PREFIX + "\\"]
         # Record target's choice for each folded symbol group so the base delink
         # can reproduce it.
         symbol_map = ["--write-symbol-map", str(SYMBOL_MAP)]

@@ -31,8 +31,15 @@ import subprocess
 import sys
 from pathlib import Path
 
-from vostok.core.paths import (BASE_EXE, BASE_PDB, RICH_DIR, WIN32_DIR,
-                               survarium_bin)
+from vostok.core.paths import (
+    BASE_EXE,
+    BASE_PDB,
+    GFX_TARGET_PREFIX,
+    RICH_DIR,
+    SCALEFORM_SDK,
+    WIN32_DIR,
+    survarium_bin,
+)
 from vostok.core.paths import ENGINE as ENGINE_DIR
 
 
@@ -66,7 +73,8 @@ def generate(side: str) -> None:
         # under Wine, so recorded paths are z:\...\vostok\sources\vostok\<module>.
         # Strip the Wine form of <repo>/sources (trailing sep) so file paths in the
         # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
-        engine = _wine_path(ENGINE_DIR.parent) + "\\"
+        engine = [_wine_path(ENGINE_DIR.parent) + "\\",
+                  _wine_path(SCALEFORM_SDK) + "\\"]
         # base mode reads the real source line for each statement from here.
         extra = ["--source-root", str(ENGINE_DIR.parent)]
         if not pdb.is_file() or not exe.is_file():
@@ -78,7 +86,8 @@ def generate(side: str) -> None:
         survarium = survarium_bin()
         pdb = survarium / "survarium.pdb"
         exe = survarium / "survarium.exe"
-        engine = "c:/survarium/sources"  # pdb_rich_context normalizes to c:\...\
+        engine = ["c:/survarium/sources",          # normalized to c:\...\
+                  GFX_TARGET_PREFIX + "\\"]
         extra = []  # target has no local sources; statements carry line placeholders
         if not pdb.is_file() or not exe.is_file():
             raise RuntimeError(
@@ -96,7 +105,7 @@ def generate(side: str) -> None:
                 _pdb_rich(),
                 "--pdb",         str(pdb),
                 "--exe",         str(exe),
-                "--engine-path", engine,
+                *[a for path in engine for a in ("--engine-path", path)],
                 "--mode",        side,
                 "--out",         str(out),
                 *extra,
