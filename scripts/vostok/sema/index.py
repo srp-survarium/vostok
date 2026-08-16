@@ -3,8 +3,8 @@
 Everything else here takes a resolved record. One selector - a mangled name, a
 demangled substring, or a hex RVA/VA on either side - is answered by ONE pass
 over each side's `binaries/rich/<side>/index.jsonl` (~85 MB), then completed
-from the pairing `match.db` recorded, which is how naming ONE side's address
-also finds the other side's twin (the two sides sit at different addresses).
+from `sema.pairing`, which is how naming ONE side's address also finds the
+other side's twin (the two sides sit at different addresses).
 
 Ambiguity is reported, never guessed at - with two things that are NOT
 ambiguities: several records at one RVA are ICF aliases of one function
@@ -19,10 +19,8 @@ from __future__ import annotations
 
 import json
 import re
-import sqlite3
 import sys
 
-from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import RICH_DIR as RICH
 
 from vostok.sema import die
@@ -114,21 +112,16 @@ def _hex_readings(sel):
 
 
 def _paired_rva(side, rva):
-    """Return the opposite-side RVA recorded by match.db, if paired."""
-    if not DB_PATH.is_file():
-        return None
-    column, opposite = (
-        ("target_rva", "base_rva") if side == "target" else ("base_rva", "target_rva")
-    )
-    try:
-        con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-        row = con.execute(
-            f"SELECT {opposite} FROM pairs WHERE {column} = ?", (rva,)
-        ).fetchone()
-        con.close()
-        return row[0] if row else None
-    except sqlite3.Error:
-        return None
+    """The opposite side's RVA for a function, or None if it is unpaired.
+
+    Derived from the two indexes (`sema.pairing`), not from a cache. It is only
+    ever reached when the name scan found ONE side, which costs ~3 s of index
+    parsing - so a selector both sides answer, i.e. almost every selector, never
+    pays for it. Import is deliberately local: `pairing` imports this module.
+    """
+    from vostok.sema.pairing import pairing
+
+    return pairing().partner_rva(side, rva)
 
 
 def _record_at_rva(side, rva):
@@ -285,28 +278,24 @@ def _side_record(args):
     return side, rec
 
 
-def fuzzy_of(mangled):
-    """match.db's fuzzy % for a mangled name (max across units), or None.
-    Read-only, and only consulted for the < 100 hint."""
-    if not DB_PATH.is_file():
-        return None
-    try:
-        con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-        row = con.execute(
-            "SELECT MAX(fuzzy_pct) FROM paired WHERE mangled = ?", (mangled,)
-        ).fetchone()
-        con.close()
-        return row[0] if row else None
-    except sqlite3.Error:
-        return None
+def fuzzy_of(rec):
+    """This build's fuzzy % for a function, from the ledger, or None.
+
+    The ledger's `cur` IS `report.json`'s score for the build that wrote it, so
+    this is the same number `match.db` used to answer with - and it is committed,
+    so the hint still fires on a tree that has never run a derivation."""
+    from vostok.sema.pairing import ledger_row
+
+    row = ledger_row(rec)
+    return row["cur"] if row else None
 
 
-def hint(mangled, clean_flow, clean_branches):
+def hint(rec, clean_flow, clean_branches):
     """When a view comes out clean but the function is NOT matched, SAY where the
     remaining signal is. The failure mode this guards against: a matcher runs the
     first-look command, sees nothing, and concludes 'regalloc only' - which is a
     verdict, not an observation."""
-    pct = fuzzy_of(mangled)
+    pct = fuzzy_of(rec)
     if pct is None or pct >= 100.0:
         return
     if clean_flow and clean_branches:
@@ -323,13 +312,3 @@ def hint(mangled, clean_flow, clean_branches):
         print(f"[this function is {pct:.2f}%, not 100 - and the control flow itself "
               "differs. Fix the SHAPE first: an instruction-level diff of two "
               "differently-shaped functions is noise.]")
-
-
-def _load_side(side):
-    """{mangled: record} for one whole side (one 85 MB pass)."""
-    out = {}
-    with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
-        for line in fh:
-            rec = json.loads(line)
-            out.setdefault(rec["mangled"], rec)
-    return out
