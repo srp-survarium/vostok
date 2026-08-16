@@ -110,3 +110,40 @@ consequences, both measured 2026-08-16 (see
    recovered `.vcproj` is itself target evidence and says the opposite, so the
    two sources of evidence conflict. Deliberately NOT changed; needs a decision
    plus a full-build measurement, since libgfx is linked by render too.
+
+## zlib reads 0.99% - three causes, none of them "unmatched source" (2026-08-16)
+
+We do not MATCH vendor deps; built from the same source with the same toolchain
+they should be exact by construction. zlib scoring ~0 therefore means our BUILD
+differs from theirs. Investigated; it decomposes into three independent faults.
+
+**1. `_deflate0` is a delinker artifact, and it costs deflate.c its whole score.**
+The base PDB contains **no** `_deflate0` (0 occurrences) - the rich index has a
+normal `_deflate`. The name appears only in the delinked
+`binaries/objdiff/base/zlib/deflate.c.obj`, where the delinker disambiguated a
+DUPLICATE definition by appending a counter. There are two zlibs in the link:
+`sources/zlib` and GFx's bundled `libgfx_zlib.lib`, which also defines
+`_deflate`/`_inflate`. objdiff then cannot match target `_deflate` against base
+`_deflate0`, so every function in the unit scores 0.0 - hence the suspiciously
+exact zeros across all nine zlib units. **Tooling, not source.**
+
+**2. Our `_deflate` is nearly twice the target's.**
+    target  _deflate  rva=0x534b10  size=0x7d9  (2,009 B)
+    base    _deflate  rva=0x52fea0  size=0xe50  (3,664 B)
+Same function, 1.8x the code. Different flags or a different zlib build. Our
+tree is ZLIB_VERSION 1.2.3. Not explained yet - this is the real question.
+
+**3. The entire inflate side is absent from our build.**
+Target delinks nine zlib TUs; we emit three (compress.c, deflate.c, trees.c).
+No base object exists for adler32.c, crc32.c, inflate.c, inffast.c, inftrees.c
+or zutil.c, and the base index has no `_inflate` at all (target: 0x1510 bytes).
+Either those TUs are not in the vcproj, or nothing reachable calls them and
+/OPT:REF strips them - the same reachability question the anchors exist for.
+
+Order to attack: (1) is mechanical and unblocks measurement of (2); (3) is a
+build-graph question answerable without touching source. NONE of this is
+matching work.
+
+Note the same class of question applies to `gfx` (96.55%, 90 KB unmatched) and
+`boost`/`stlport`: for a vendor dep, a residual is a build-input discrepancy to
+explain, not a queue to work.
