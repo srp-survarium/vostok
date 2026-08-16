@@ -129,6 +129,34 @@ def _rich_pdb_aliases() -> dict[str, str]:
     )
 
 
+# Archived reports are ~14 MB each and one is written per build. Unbounded, that
+# reached 824 files / 11 GB in a fortnight - the bulk of `binaries/`, and larger
+# than everything the build actually needs. Only the immediately-previous report
+# is ever read (`_report_changes`); the rest are there so a human can diff across
+# a few builds. Keep a small ring and let the kernel have the disk back.
+KEEP_REPORTS = int(os.environ.get("VOSTOK_KEEP_REPORTS", "10"))
+
+
+def _prune_reports(archive_dir: Path) -> None:
+    """Keep only the newest KEEP_REPORTS archived reports (0 = keep all)."""
+    if KEEP_REPORTS <= 0:
+        return
+    # Names are report-YYYYmmdd-HHMMSS.json, so lexical order IS chronological.
+    archived = sorted(archive_dir.glob("report-*.json"))
+    stale = archived[:-KEEP_REPORTS]
+    if not stale:
+        return
+    freed = 0
+    for path in stale:
+        try:
+            freed += path.stat().st_size
+            path.unlink()
+        except OSError as e:  # noqa: PERF203 - a prune failure must never fail a build
+            log(f"could not prune {path.name}: {e}")
+    log(f"Pruned {len(stale)} archived report(s), {freed / 1e9:.2f} GB freed "
+        f"(keeping {KEEP_REPORTS}; set VOSTOK_KEEP_REPORTS=0 to keep all)")
+
+
 def _generate_report() -> None:
     """Write the objdiff match report (base vs target) to binaries/objdiff/report.json.
 
@@ -157,6 +185,7 @@ def _generate_report() -> None:
         ts = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
         previous = archive_dir / f"report-{ts}.json"
         report.rename(previous)
+        _prune_reports(archive_dir)
 
     log("Generating objdiff report ...")
     subprocess.run(

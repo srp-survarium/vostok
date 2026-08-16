@@ -1,4 +1,5 @@
 import os
+import pathlib
 import json
 import tempfile
 import unittest
@@ -1139,6 +1140,51 @@ class LedgerUnitEncodingTests(unittest.TestCase):
                 fh.write("?a@@YAXXZ\t0\tgame\tdone\tMATCH\t100\t100\t100\t0\t8\t\tabc\t\n")
             self.assertEqual(store.load(p)["?a@@YAXXZ"]["unit"],
                              "vostok/game/sources/player.cpp")
+
+
+class ReportArchivePruneTests(unittest.TestCase):
+    """The archive is a ring: ~14 MB per build reached 11 GB unbounded."""
+
+    @staticmethod
+    def _archive(d, n):
+        for i in range(n):
+            (pathlib.Path(d) / f"report-202608{i//24+1:02d}-{i%24:02d}0000.json").write_text("{}")
+        return pathlib.Path(d)
+
+    def test_keeps_only_the_newest_n(self):
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as d:
+            a = self._archive(d, 50)
+            with mock.patch.object(G, "KEEP_REPORTS", 10):
+                G._prune_reports(a)
+            self.assertEqual(len(list(a.glob("report-*.json"))), 10)
+
+    def test_the_newest_survives(self):
+        """_report_changes diffs against it - pruning it would break the build."""
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as d:
+            a = self._archive(d, 50)
+            newest = sorted(p.name for p in a.glob("report-*.json"))[-1]
+            with mock.patch.object(G, "KEEP_REPORTS", 3):
+                G._prune_reports(a)
+            self.assertTrue((a / newest).exists())
+
+    def test_zero_keeps_everything(self):
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as d:
+            a = self._archive(d, 20)
+            with mock.patch.object(G, "KEEP_REPORTS", 0):
+                G._prune_reports(a)
+            self.assertEqual(len(list(a.glob("report-*.json"))), 20)
+
+    def test_fewer_than_the_cap_is_a_no_op(self):
+        from vostok.build import generate_delink as G
+        with tempfile.TemporaryDirectory() as d:
+            a = self._archive(d, 4)
+            with mock.patch.object(G, "KEEP_REPORTS", 10):
+                G._prune_reports(a)
+            self.assertEqual(len(list(a.glob("report-*.json"))), 4)
+
 
 
 if __name__ == "__main__":
