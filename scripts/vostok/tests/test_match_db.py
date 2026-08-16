@@ -562,9 +562,19 @@ class EffectiveSourceHashTests(unittest.TestCase):
 class StructureClassificationTests(unittest.TestCase):
     @staticmethod
     def record(sizes, lines):
+        """Build a record whose BODY is the given statements.
+
+        Wrapped in the synthetic frame braces every real rich record carries,
+        so the fixtures exercise what classify() actually reads. Their sizes
+        differ deliberately: a prologue that merely differs in size must not
+        register as a statement difference.
+        """
+        body = [{"size": size, "line": line} for size, line in zip(sizes, lines)]
         return {
             "statements": [
-                {"size": size, "line": line} for size, line in zip(sizes, lines)
+                {"size": 9, "line": lines[0] - 1},
+                *body,
+                {"size": 3, "line": lines[-1] + 1},
             ]
         }
 
@@ -575,6 +585,27 @@ class StructureClassificationTests(unittest.TestCase):
         self.assertEqual(
             classify(target, base),
             ("SIZE", 3, 3, 2, 0, 0),
+        )
+
+    def test_frame_braces_are_not_source_statements(self):
+        """Identical bodies stay MATCH however the frame differs.
+
+        Counting the raw record made a differing prologue read as SIZE, and a
+        side that emits one brace against a side that emits two read as
+        QUANTITY - 700 verdicts across the tree, 170 of them landing in the
+        actionable queue as structural work that does not exist.
+        """
+        body = [{"size": 5, "line": 11}, {"size": 7, "line": 12}]
+        target = {"statements": [{"size": 9, "line": 10}, *body, {"size": 3, "line": 13}]}
+        base = {"statements": [{"size": 21, "line": 40}, *body, {"size": 17, "line": 43}]}
+
+        self.assertEqual(classify(target, base), ("MATCH", 2, 2, 0, 0, 0))
+
+        # A body-less function carries only braces - sometimes a single one.
+        self.assertEqual(
+            classify({"statements": [{"size": 9, "line": 1}, {"size": 3, "line": 2}]},
+                     {"statements": [{"size": 4, "line": 8}]})[0],
+            "MATCH",
         )
 
     def test_different_relative_lines_keep_size_alignment_fallback(self):

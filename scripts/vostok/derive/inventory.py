@@ -12,7 +12,7 @@ header instead of being filed under whichever .cpp happened to win the fold.
 
 from dataclasses import dataclass
 
-from vostok.derive.index import is_framed
+from vostok.derive.index import body_statements, is_framed
 from vostok.derive.modules import logical_module
 
 
@@ -26,7 +26,7 @@ class Function:
     rva: int
     line: int | None      # first statement line, None for line-less compiler bodies
     size: int
-    n_stmts: int
+    n_stmts: int          # REAL statements: the frame braces are not source
     frameless: bool       # no push ebp/mov ebp,esp: an LTCG-customized leaf
 
 
@@ -50,9 +50,11 @@ def describe(mangled, rec, artifacts):
             mangled, rec, units, artifacts.dynamic_owners, artifacts.module_overrides
         ),
         rva=rec["rva"],
+        # `line` stays over the FULL record: the opening frame brace is where
+        # the function starts in source, which is where a matcher wants to land.
         line=min((s["line"] for s in statements if s.get("line")), default=None),
         size=rec["size"],
-        n_stmts=len(statements),
+        n_stmts=len(body_statements(rec)),
         frameless=not is_framed(rec),
     )
 

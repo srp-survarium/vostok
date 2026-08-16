@@ -108,6 +108,21 @@ def is_framed(rec):
     )
 
 
+def body_statements(rec):
+    """The record's REAL source statements, without the synthetic frame braces.
+
+    A rich record's first and last entries are the `{` and `}` the compiler
+    emits for the frame itself, not source. pdb_fetch, gen_sources and the
+    structure-diff all read `statements[1:-1]`; counting the raw list instead
+    says a function has two more statements than it does, and since statement
+    COUNT is the whole basis of the QUANTITY verdict, that phantom pair reads
+    as a real structural divergence. A body-less function carries only the
+    braces (sometimes just one), so the floor is an empty body, never negative.
+    """
+    statements = rec.get("statements") or []
+    return statements[1:-1] if len(statements) > 2 else []
+
+
 def authoritative_demangled_names(target, base):
     """Return one display name per mangled symbol, preferring retail PDB data.
 

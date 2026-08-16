@@ -8,14 +8,20 @@ decides whether a residual is steerable work at all:
     SIZE      same count and geometry, some statement's bytes differ
     QUANTITY  the statement COUNTS differ - real missing/extra source
     SPLIT     equal counts, but alignment left rows unpairable
+
+Counted over BODY statements only. The frame braces are codegen, not source:
+including them let a prologue that merely differs in size register as a
+statement difference, which is the opposite of what this asks.
 """
 
 import difflib
 
+from vostok.derive.index import body_statements
+
 
 def stmt_seq(rec):
     """Primary alignment alphabet: statement sizes."""
-    return [s["size"] for s in rec["statements"]]
+    return [s["size"] for s in body_statements(rec)]
 
 
 def normalized_stmt_lines(rec):
@@ -25,7 +31,7 @@ def normalized_stmt_lines(rec):
     line geometry, however, is strong evidence that equal-count rows correspond
     in source order even when repeated statement sizes confuse SequenceMatcher.
     """
-    lines = [s.get("line") for s in rec["statements"]]
+    lines = [s.get("line") for s in body_statements(rec)]
     if not lines or any(not isinstance(line, int) for line in lines):
         return None
     first = lines[0]
