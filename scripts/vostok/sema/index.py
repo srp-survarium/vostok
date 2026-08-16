@@ -166,6 +166,21 @@ def _fold_aliases(side, hits, sel):
     return [by_rva[k] for k in sorted(by_rva)]
 
 
+def _same_function(a, b):
+    """Same symbol on the two sides.
+
+    The mangled name is the primary key, but the two indexes do not always carry
+    the same spelling: where the PDB records no mangled name, pdb_parser falls
+    back to the demangled one, so the target can say
+    `vostok::render::copy_destroyer<binary_config_value, custom_config_value>`
+    where the base says `??$copy_destroyer@Vbinary_config_value@configs@...`.
+    Both still render the same demangled signature, so accept that too - 820 of
+    the 18,788 paired functions are named by only one of the two indexes, and
+    dropping the partner made every one of them answer `--diff` with a false
+    "TARGET_ONLY - nothing compiled yet"."""
+    return a["mangled"] == b["mangled"] or a["name"] == b["name"]
+
+
 def _resolve_hex(sel):
     """(target_record | None, base_record | None) for a hex address selector."""
     readings = _hex_readings(sel)
@@ -205,14 +220,16 @@ def resolve(sel):
     # custom_config_value>` is the target's `mangled` and `??$copy_destroyer@V...`
     # is the base's. Filtering the partner by name dropped it and the view then
     # announced "TARGET_ONLY - nothing compiled yet" for a 100% matched pair.
+    # ...and it is only consulted when the name scan did NOT find that side, so a
+    # stale RVA in the cache can never displace a record the indexes agree on.
     from_pairing = False
-    if len(tgt) == 1:
+    if not base and len(tgt) == 1:
         paired = _paired_rva("target", tgt[0]["rva"])
         if paired is not None:
             partner = _record_at_rva("base", paired)
             if partner is not None:
                 base, from_pairing = [partner], True
-    elif len(base) == 1:
+    elif not tgt and len(base) == 1:
         paired = _paired_rva("base", base[0]["rva"])
         if paired is not None:
             partner = _record_at_rva("target", paired)
@@ -221,9 +238,8 @@ def resolve(sel):
     exact = [r for r in tgt if r["mangled"] == sel] or \
             [r for r in base if r["mangled"] == sel]
     if exact and not from_pairing:
-        m = exact[0]["mangled"]
-        tgt = [r for r in tgt if r["mangled"] == m]
-        base = [r for r in base if r["mangled"] == m]
+        tgt = [r for r in tgt if _same_function(r, exact[0])]
+        base = [r for r in base if _same_function(r, exact[0])]
     if len(tgt) > 1 or (not tgt and len(base) > 1):
         hits = tgt or base
         for r in hits[:_AMBIGUITY_LIST]:
@@ -234,8 +250,7 @@ def resolve(sel):
             f"substring (`vostok derive list --module M` and `pdb_rich_query --list "
             f"--function <substring>` enumerate candidates)")
     if tgt and base and not from_pairing:
-        # both sides came from the name scan, so pair strictly by mangled name
-        base = [r for r in base if r["mangled"] == tgt[0]["mangled"]]
+        base = [r for r in base if _same_function(r, tgt[0])]
     return (tgt[0] if tgt else None), (base[0] if base else None)
 
 
