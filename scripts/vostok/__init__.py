@@ -4,15 +4,17 @@ One direction of data flow:
 
     sources/ --build--> binaries/Win32/*.{exe,pdb}
                     --delink--> binaries/objdiff/{base,target} + report.json
-                            --derive--> binaries/match.db (regenerable cache)
-                                    --project--> docs/binary_matching/match_state.tsv
-                                             --render--> README.md score block
+                            --derive--> docs/binary_matching/match_state.tsv
+                                    --render--> README.md score block
+
+Nothing is cached in between. The derivation writes the committed record
+directly, so there is no second copy that can disagree with it.
 
 Layers (imports point strictly downward):
 
     core/     repo paths, tracked-table I/O, symbol-name normalization. Knows
               formats and locations, never what a match means.
-    derive/   report.json + the rich indexes -> the match.db roster (the only
+    derive/   report.json + the rich indexes -> the ledger's roster (the only
               place pairing, structure classification and MAX policy live).
     ledger/   the committed campaign record: query, mutate, and render it.
     sema/     read-only control-flow views over one base<->target function pair.
