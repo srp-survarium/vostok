@@ -24,13 +24,12 @@ namespace network_core {
 
 namespace survarium {
 
-/*
-// STATE[STUB]
-// void survarium::`dynamic initializer for 'player_templates_count''()
-void `dynamic initializer for 'player_templates_count''( )
-{
-}
-*/
+// STATE[STUB]: `static u32 const player_templates_count = array_size( player_templates );`
+// The target's initializer is 15 bytes - `call array_size<unsigned short const [13],11>;
+// mov [player_templates_count], eax` - which pins player_templates as `u16 const [11][13]`
+// (one dynamic-initializer copy per includer, ~90 of them, all ICF-folded). BLOCKED on the
+// table CONTENT: it lives in .rdata and no index we have carries data, so writing the
+// declaration would mean fabricating 143 values.
 
 // per-slot wire encoding selector consulted by profile_slot::deserialize; file-static
 // (one copy per includer, like player_templates_count's dynamic initializer).

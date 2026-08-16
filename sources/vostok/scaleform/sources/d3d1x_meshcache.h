@@ -5,6 +5,11 @@
 #ifndef D3D1X_MESHCACHE_H_INCLUDED
 #define D3D1X_MESHCACHE_H_INCLUDED
 
+// claude@NOTE: nothing #includes this header - it is a PDB-derived reference skeleton,
+// listed in scaleform.vcproj but never compiled. Every symbol it describes is emitted
+// (and already byte-exact) from the vendored SDK header it mirrors under
+// scaleform/src/render/d3d1x/, so its STATE[STUB] bodies are documentation, not a
+// matching gap - check the vendored header before treating one as work.
 // survarium's fork of the Scaleform 4.x D3D1x_MeshCache.h - the shipped
 // binary tracks a NEWER SDK than the vendored 4.0.15 (RenderSync member,
 // Render::MeshBase in Evict, ...); skeleton rebuilt from the canonical PDB
