@@ -32,7 +32,7 @@
       #            `` `dynamic initializer for 'X'' `` form so objdiff pairs them.
       #   b6159cc  emits the engine's own vostok/scaleform/sources compilands.
       #   #28      the structure-builder (extract-all-enums-and-unions).
-      url = "github:srp-survarium/vostok-pdb-parser/d0eb2014efeca01c390440224c77a18c7a6d5e87";
+      url = "github:srp-survarium/vostok-pdb-parser/d13079f741379d599089aed2e3eedd04e3345a9c";
       flake = false;
     };
     vcproj2ninja-src = {
@@ -42,7 +42,13 @@
     vostok-delinker-src = {
       # Keep the measured delinker revision explicit: changes to relocation and
       # symbol recovery can re-pair functions without any source change.
-      url = "github:srp-survarium/vostok-delinker/83bc6fc0835e80e6cf15ab68f98c0bde02020bbc";
+      #
+      # d7e9292 is the previous pin plus ONE cherry-picked commit: --engine-path
+      # became repeatable, so the GFx SDK (compiled in, but outside sources/) is
+      # no longer discarded by both sides. It is deliberately NOT the branch tip
+      # - that also carries `emit reviewed candidate data sections`, which can
+      # move pairings on its own and would confound attribution here.
+      url = "github:srp-survarium/vostok-delinker/d7e9292c5d6ddc07bd62894b2bc49334ed1c7321";
       flake = false;
     };
     vostok-resources-db-src = {
