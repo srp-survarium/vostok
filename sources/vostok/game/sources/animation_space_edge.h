@@ -13,11 +13,16 @@ struct animation_space_vertex;
 
 struct animation_space_edge {
 	inline		animation_space_edge(
-					animation_space_vertex_id const&	arg_0,
-					std::pair< animation_space_vertex const*, animation_space_vertex const* > const*	arg_1,
-					const float							arg_2,
-					const float							arg_3
-				) { /* no source */ }
+					animation_space_vertex_id const&	movement,
+					std::pair< animation_space_vertex const*, animation_space_vertex const* > const*	mixable_pair,
+					const float							first_animation_weight,
+					const float							animation_length
+				) :
+					movement				( movement ),
+					mixable_pair			( mixable_pair ),
+					first_animation_weight	( first_animation_weight ),
+					animation_length		( animation_length )
+				{}
 
 public:
 	/* 0x0000 */	animation_space_vertex_id		movement;
