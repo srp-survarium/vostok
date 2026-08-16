@@ -192,12 +192,51 @@ def _update(mangleds, mutate):
         touched += 1
     if touched:
         store.save(rows)
-        # Say so, because "updated" reads as durable and is not: the next
-        # `vostok build` re-projects status/tries/note out of binaries/match.db.
-        print("[match] note: the next `vostok build` re-derives status/tries/note "
-              "from binaries/match.db - mirror this with `vostok derive tried` / "
-              "`vostok derive flag` to make it stick", file=sys.stderr)
+        mirrored = _mirror_to_cache(rows, mangleds)
+        if mirrored is False:
+            # No cache to mirror into: the ledger IS the record, and the next
+            # build seeds the cache from it. Nothing to warn about.
+            pass
     print(f"[match] updated {touched} function(s)")
+
+
+def _mirror_to_cache(rows, mangleds):
+    """Write park/attempt marks through to binaries/match.db.
+
+    The ledger is the committed record, but `vostok build` re-projects
+    status/tries/note out of the cache - so a mark that lives only here is
+    silently reverted by the next build. Mirroring keeps the two agreeing
+    until the cache is retired altogether.
+    """
+    from vostok.core.paths import MATCH_DB
+
+    if not MATCH_DB.is_file():
+        return False
+    import sqlite3
+
+    con = sqlite3.connect(MATCH_DB)
+    try:
+        for mangled in mangleds:
+            row = rows.get(mangled)
+            if row is None:
+                continue
+            con.execute("DELETE FROM flags WHERE mangled = ?", (mangled,))
+            if row["status"] == "parked":
+                con.execute(
+                    "INSERT INTO flags (mangled, flag, cause, set_at)"
+                    " VALUES (?, 'SKIP', ?, '')", (mangled, row.get("note") or ""),
+                )
+            con.execute(
+                "INSERT INTO attempts (mangled, n, last_at, note)"
+                " VALUES (?,?,'',?)"
+                " ON CONFLICT(mangled) DO UPDATE SET n = excluded.n,"
+                " note = excluded.note",
+                (mangled, row.get("tries") or 0, row.get("note") or None),
+            )
+        con.commit()
+    finally:
+        con.close()
+    return True
 
 
 def cmd_tried(args):
