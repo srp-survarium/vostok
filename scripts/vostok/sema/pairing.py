@@ -6,7 +6,7 @@ the two files sema reads for disassembly - `binaries/rich/{target,base}/
 index.jsonl`. The cache only held a derived copy, so a sema that needed it could
 not answer on a tree that had never run `vostok derive`.
 
-The passes below are the same ones `vostok.derive.roster` runs, in the same
+The passes below are the same ones `vostok.derive.pairing` runs, in the same
 order, over the same helpers - deliberately, because two pairings that disagree
 are worse than one that is slow:
 
@@ -24,15 +24,24 @@ extra. Measured against the cache on 2026-08-16: agree 18,791, disagree 0,
 missing 0, extra 0.
 
 Pass 3 is the one that needs evidence from outside the indexes: an ICF alias
-earns a pair only because objdiff scored that target symbol. `roster` reads
-that from `report.json`; here it comes from the committed ledger, where a row
-with a `cur` percentage IS a symbol the report scored. So the whole pairing
-needs no build artifact beyond the indexes themselves.
+earns a pair only because objdiff scored that target symbol. `derive` reads that
+from `report.json`; here it comes from the committed ledger, where a row with a
+`cur` percentage IS a symbol the report scored. So the whole pairing needs no
+build artifact beyond the indexes themselves.
 
-`roster` also seeds pass 2 from `symbols.rich_pdb_aliases`, which re-reads both
+`derive` also seeds pass 2 from `symbols.rich_pdb_aliases`, which re-reads both
 indexes (1.7 s) to derive 22 render template spellings. It is omitted here
 because pass 3 recovers exactly those 22 anyway - the pair count is identical
 with and without it.
+
+TWO IMPLEMENTATIONS OF ONE THING, and that is not meant to last.
+`vostok.derive.pairing.pair()` runs these passes for the derivation; this module
+runs them for `sema` and `diff tu-order`. They were written at the same time in
+one worktree and neither could import the other yet. The difference is only
+where the "objdiff scored this" evidence comes from - `report.json` there, the
+ledger here - so the merge is to give `derive.pairing.pair()` that evidence as
+an argument and call it from here. Until then, a change to one pass belongs in
+both.
 
 Loading is lazy and cached: nothing here runs until a caller actually needs the
 pairing (`sema rva` and the block/branch views resolve by name and never do).
