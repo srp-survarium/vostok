@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_structure.py - run pdb-parser to (re)generate the annotated C++ "structure"
+vostok.build.generate_structure - run pdb-parser to (re)generate the annotated C++ "structure"
 stubs used for objdiff/IDA comparison, for one side:
 
   base    from the freshly compiled PDB
@@ -15,8 +15,8 @@ Both sides live under binaries/structure/, mirroring the COFF layout in
 binaries/objdiff/{base,target}.
 
 Usage:
-  python3 scripts/generate_structure.py base
-  python3 scripts/generate_structure.py target
+  python3 -m vostok.build.generate_structure base
+  python3 -m vostok.build.generate_structure target
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN - directory containing the original survarium.pdb (target side)
@@ -53,7 +53,7 @@ def generate(side: str) -> None:
     """Regenerate binaries/structure/<side> from the matching PDB.
 
     Raises RuntimeError if the source PDB is missing and CalledProcessError if
-    pdb-parser fails - callers (e.g. rebuild.py) handle/report these.
+    pdb-parser fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
     out = STRUCTURE_DIR / side
 
@@ -70,7 +70,7 @@ def generate(side: str) -> None:
         if not pdb.is_file():
             raise RuntimeError(
                 f"compiled PDB not found: {pdb} - build first "
-                "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
+                "(python3 -m vostok build, or -m vostok.build.ninja)"
             )
     elif side == "target":
         survarium = survarium_bin()

@@ -11,11 +11,11 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `docs/binary_matching/match.db` - refreshed by `rebuild.py` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+_Auto-generated from `docs/binary_matching/match.db` - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
 **Overall: 8,732 / 12,932 functions exact (67.52%) &middot; 8,732 / 12,932 functions exact-max (67.52%) &middot; 86.93% fuzzy &middot; 86.93% fuzzy-max.**
 
-_All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `scripts/match_score.py --max-code`._
+_All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |

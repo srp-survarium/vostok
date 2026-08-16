@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 """
-rebuild.py - full base-side refresh after editing sources.
+vostok.build.rebuild - full base-side refresh after editing sources.
 
-  1. Build survarium via ninja under Wine (scripts/ninja_build.py).
+  1. Build survarium via ninja under Wine (vostok.build.ninja).
   2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
      normalizer consumes the completed rich index, so those two steps must be
      ordered. binaries/structure/base remains disjoint and runs in parallel.
   3. Regenerate docs/binary_matching/match.db from the fresh report.json
-     (match_db.regen()). rebuild.py is the canonical build step and owns the DB
-     regen; `match_db.py refresh` is the regen-only path for an already-built
+     (match_db.regen()). `vostok build` is the canonical build step and owns the DB
+     regen; `vostok derive refresh` is the regen-only path for an already-built
      report. A regen failure warns but does not fail the build.
 
 The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
-recompiles; it is generated once on first `nix develop` (see setup-toolchain.py).
+recompiles; it is generated once on first `nix develop` (see vostok.tool.toolchain).
 
 Each run appends one audit line to binaries/rebuild.log (git-ignored, mirrors
 binaries/pdb_fetch.log):
@@ -21,9 +21,9 @@ binaries/pdb_fetch.log):
 where <summary> reports the wall-clock and the set of engine modules whose TUs
 ninja actually recompiled this run (a no-op rebuild = 0 modules).
 
-Any extra args are forwarded to ninja_build.py:
-  python3 scripts/rebuild.py            # build the game, then refresh base diff inputs
-  python3 scripts/rebuild.py logging    # build just one project first
+Any extra args are forwarded to vostok.build.ninja:
+  python3 -m vostok build            # build the game, then refresh base diff inputs
+  python3 -m vostok build logging    # build just one project first
 """
 
 import datetime
@@ -40,9 +40,10 @@ from vostok.build import generate_rich
 from vostok.build import generate_structure
 from vostok.build import ninja_regen
 
+from vostok.core import paths
 from vostok.core.paths import REBUILD_LOG as LOG_PATH
 from vostok.core.paths import REPO as VOSTOK_DIR
-from vostok.core.paths import REPORT_HEAD, SCRIPTS as SCRIPT_DIR
+from vostok.core.paths import REPORT_HEAD
 
 # A compiled TU shows up in ninja's verbose (-v) output as a cl command line that
 # cd's into the module's source dir, e.g.
@@ -101,11 +102,11 @@ def _append_log(elapsed: float, modules: set[str]) -> None:
         log(f"(audit log skipped: {e})")
 
 
-# After ninja_build.py exits, a blocking read of its output pipe may STILL not
+# After vostok.build.ninja exits, a blocking read of its output pipe may STILL not
 # see EOF: wine children leaked by the build inherit the write end and hold it
 # open. The worst offender was mspdbsrv.exe (link.exe's PDB-writer daemon),
 # which idles for ~10 minutes before exiting on its own - that one stalled
-# every fresh-worktree rebuild by a constant ~600s until ninja_build.py
+# every fresh-worktree rebuild by a constant ~600s until vostok.build.ninja
 # learned to kill it. Belt and braces here: read via select() with a timeout,
 # and once the child has exited and the pipe has stayed silent this long,
 # stop reading - nothing real is coming.
@@ -113,12 +114,12 @@ DRAIN_GRACE_SECONDS = 2.0
 
 
 def run_ninja() -> set[str]:
-    """Run ninja_build.py, streaming its output, and return the set of modules
+    """Run vostok.build.ninja, streaming its output, and return the set of modules
     whose TUs were recompiled (parsed from the verbose cl command lines)."""
     modules: set[str] = set()
     proc = subprocess.Popen(
-        [sys.executable, "-u", str(SCRIPT_DIR / "ninja_build.py"), *sys.argv[1:]],
-        stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+        [sys.executable, "-u", "-m", "vostok.build.ninja", *sys.argv[1:]],
+        stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=paths.child_env(),
     )
     fd = proc.stdout.fileno()
     tail = b""
@@ -149,15 +150,15 @@ def run_ninja() -> set[str]:
     scan(tail)
     rc = proc.wait()
     if rc != 0:
-        # mirror ninja_build.py's exit code so callers/watchdog see the failure,
+        # mirror vostok.build.ninja's exit code so callers/watchdog see the failure,
         # but the audit line is still written by main()'s finally guard.
-        raise subprocess.CalledProcessError(rc, "ninja_build.py")
+        raise subprocess.CalledProcessError(rc, "vostok.build.ninja")
     return modules
 
 
 def _write_build_head() -> None:
     """Record WHICH source state this report.json was built from
-    (binaries/objdiff/report.head: "<HEAD sha>[+dirty]"). match_db.py's
+    (binaries/objdiff/report.head: "<HEAD sha>[+dirty]"). vostok derive's
     staleness guard compares it against the current HEAD - freshness is
     created here, not at DB refresh time."""
     try:
@@ -222,11 +223,11 @@ def main() -> None:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
         _write_build_head()
 
-        # rebuild.py is the canonical build step, so it also regenerates the
+        # `vostok build` is the canonical build step, so it also regenerates the
         # match.db from the report.json it just produced (the inverse of the old
-        # model where match_db.py refresh shelled out to rebuild.py). A regen
+        # model where vostok derive refresh shelled out to `vostok build`). A regen
         # failure is logged but does NOT fail the build - the diff inputs are
-        # already good; the DB can be re-derived later with `match_db.py refresh`.
+        # already good; the DB can be re-derived later with `vostok derive refresh`.
         try:
             from vostok.derive import roster
             roster.regen()
@@ -235,7 +236,7 @@ def main() -> None:
         # a DB hiccup never aborts a build whose diff inputs are already good.
         except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the DB
             log(f"WARNING: match.db NOT regenerated ({e}); "
-                "re-derive it with `python3 scripts/match_db.py refresh`")
+                "re-derive it with `python3 -m vostok derive refresh`")
 
         # ...and the README score block, the other report.json-derived artifact, so a
         # build keeps both current in one shot. Separately guarded: a score-write
@@ -246,7 +247,7 @@ def main() -> None:
             log("README score block refreshed.")
         except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the README
             log(f"WARNING: README score block NOT refreshed ({e}); "
-                "re-derive it with `python3 scripts/match_score.py --write-readme`")
+                "re-derive it with `python3 -m vostok ledger readme --write-readme`")
 
         log("All done - base diff inputs refreshed.")
     finally:

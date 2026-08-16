@@ -33,11 +33,11 @@ _MARKERS = ("flake.nix", "sources")
 def _find_repo() -> Path:
     """The worktree this package belongs to.
 
-    `__file__` comes first: `python3 scripts/<shim>.py` puts that worktree's
-    `scripts/` at the head of sys.path, so the package a shim imports is always
-    its own worktree's - resolving anywhere else would silently mix two
-    worktrees' artifacts. CWD is the fallback for an odd sys.path (a stale
-    PYTHONPATH pointing at another checkout's scripts/).
+    `__file__` comes first: whichever `scripts/` on sys.path won the import is
+    the worktree this code IS, so its artifacts are the ones we mean -
+    resolving anywhere else would silently mix two worktrees'. CWD is the
+    fallback for an odd sys.path (a stale PYTHONPATH pointing at another
+    checkout's scripts/).
     """
     for base in (Path(__file__).resolve().parent, Path.cwd().resolve()):
         for candidate in (base, *base.parents):
@@ -107,3 +107,19 @@ STRUCTURE_MISMATCH_QUEUE = DOCS_MATCHING / "structure_mismatch_queue.md"
 def survarium_bin() -> Path:
     """The shipped game (exe + pdb): $SURVARIUM_BIN, else the pinned gcroot."""
     return Path(os.environ.get("SURVARIUM_BIN", NIX_STORE / "survarium-game"))
+
+
+def child_env(env: dict[str, str] | None = None) -> dict[str, str]:
+    """Environment for a `sys.executable -m vostok.*` subprocess.
+
+    A child python does not inherit our sys.path, and the package is only
+    reachable through PYTHONPATH now that no flat scripts remain. Prepending
+    THIS worktree's `scripts/` also keeps a child out of a sibling checkout
+    that an inherited PYTHONPATH happens to name first.
+    """
+    env = dict(os.environ if env is None else env)
+    parts = [p for p in (env.get("PYTHONPATH") or "").split(os.pathsep) if p]
+    if str(SCRIPTS) in parts:
+        parts.remove(str(SCRIPTS))
+    env["PYTHONPATH"] = os.pathsep.join([str(SCRIPTS), *parts])
+    return env

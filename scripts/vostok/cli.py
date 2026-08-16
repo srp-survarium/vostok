@@ -14,9 +14,10 @@
                                    / tu-order / enums
     vostok tool <name>             one external tool: clangd / toolchain / libs
 
-Every module is also a direct entry (`python3 -m vostok.sema xref ...`), and
-every pre-package path still works (`python3 scripts/sema.py xref ...`) through
-the thin shims in scripts/.
+Every module is also a direct entry (`python3 -m vostok.sema xref ...`), which
+is the only spelling for the ones this umbrella does not name: the build steps
+(`vostok.build.ninja`, `.ninja_regen`, `.generate_{delink,structure,rich}`,
+`.gfx`), `vostok.ledger.store` and `vostok.core.symbols`.
 """
 
 from __future__ import annotations

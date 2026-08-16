@@ -330,7 +330,7 @@ def _contract_note(cut):
     if not any(cut.values()):
         return None
     return ("[contracted %s flow-free block(s) (alignment pad / spill reload / "
-            "re-materialised zero) - see `contract` in scripts/sema.py]"
+            "re-materialised zero) - see `contract` in vostok/sema/cfg.py]"
             % " / ".join(f"{n} {s}" for s, n in sorted(cut.items()) if n))
 
 

@@ -201,7 +201,7 @@
       # is stripped on unpack so $out exposes `sources/...` directly.
       # Uploaded to: gh release upload v0.100b vostok-libs-v0.100b-gfx422.zip --repo srp-survarium/vostok-build-env
       # gfx422: foreign 4.0.15 GFx libs replaced by our from-source 4.2.22 suite
-      # (built per the shipped PDB recipe; see docs + scripts/build_gfx_suite.py).
+      # (built per the shipped PDB recipe; see docs + vostok/build/gfx.py).
       # ---------------------------------------------------------------------------
       vostok-libs = pkgs.runCommand "vostok-libs" {
         src = pkgs.fetchurl {
@@ -375,10 +375,11 @@
 
         shellHook = ''
           export VOSTOK_DIR="$PWD"
-          # scripts/ is THE package root: on PYTHONPATH so `python3 -m vostok.<pkg>`
-          # works from anywhere in the tree. The scripts/*.py shims do not need it
-          # (python puts a script's own dir first), so a stale PYTHONPATH can never
-          # make one worktree's shim import another's package.
+          # scripts/ is THE package root: on PYTHONPATH so `python3 -m vostok`
+          # and every `python3 -m vostok.<pkg>` work from anywhere in the tree.
+          # There are no flat scripts left, so this is the ONLY way the package
+          # is found - a shell entered in one worktree keeps resolving `vostok`
+          # to THAT worktree even after cd'ing into another.
           export PYTHONPATH="$VOSTOK_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
           export WINEPREFIX="$VOSTOK_DIR/binaries/.wineprefix"
           export WINEDLLOVERRIDES="mscoree,mshtml="
@@ -419,7 +420,7 @@
               --indirect >/dev/null
           done
 
-          python3 "$VOSTOK_DIR/scripts/setup-toolchain.py"
+          python3 -m vostok.tool.toolchain
 
           # Wrap nvim to auto-load pdb_fetch.nvim (:Vostok match views), leaving the
           # user's own config intact. A wrapper SCRIPT on PATH (not a shell function)

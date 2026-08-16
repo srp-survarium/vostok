@@ -3,11 +3,11 @@
 navigation for humans and agents without an editor: where is this defined,
 who references it, what is its type.
 
-  python3 scripts/clangd_query.py symbol <fuzzy-name>           # workspace symbols
-  python3 scripts/clangd_query.py def  <file> <line> [<col>]    # definition
-  python3 scripts/clangd_query.py refs <file> <line> [<col>]    # references
-  python3 scripts/clangd_query.py hover <file> <line> [<col>]   # type/doc at point
-  python3 scripts/clangd_query.py index                         # build the background
+  python3 -m vostok tool clangd symbol <fuzzy-name>           # workspace symbols
+  python3 -m vostok tool clangd def  <file> <line> [<col>]    # definition
+  python3 -m vostok tool clangd refs <file> <line> [<col>]    # references
+  python3 -m vostok tool clangd hover <file> <line> [<col>]   # type/doc at point
+  python3 -m vostok tool clangd index                         # build the background
                                                                 # index, wait until done
 
 Lines/columns are 1-based (as printed by grep/editors). When <col> is omitted,
@@ -181,7 +181,8 @@ def main() -> None:
     # falls back to a generic command and every query silently degrades.
     if not (VOSTOK_DIR / "compile_commands.json").is_file():
         sys.exit("[clangd-query] compile_commands.json not found - run "
-                 "scripts/regen_ninja.py --compdb (or scripts/setup-toolchain.py)")
+                 "python3 -m vostok.build.ninja_regen --compdb "
+                 "(or -m vostok tool toolchain)")
 
     lsp = Clangd()
     try:

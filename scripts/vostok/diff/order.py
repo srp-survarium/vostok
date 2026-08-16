@@ -7,7 +7,7 @@ and getting them wrong is what drives downstream inline/codegen divergence. This
 script rolls up, per non-render module, every place TARGET and BASE diverge on a
 *class definition*.
 
-SOURCE: the Rust pdb_parser tool (wrapped by scripts/generate_structure.py) renders
+SOURCE: the Rust pdb_parser tool (wrapped by vostok.build.generate_structure) renders
 each PDB's classes as annotated C++ under binaries/structure/{base,target}/headers/
 vostok. We re-use that output for BOTH PDBs and diff, per class present on both
 sides:
@@ -35,16 +35,14 @@ from __future__ import annotations
 
 import argparse
 import json
-import os
 import re
 import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from vostok.core.paths import SCRIPTS, STRUCTURE_DIR as STRUCTURE
-
-GEN_STRUCTURE = SCRIPTS / "generate_structure.py"
+from vostok.core import paths
+from vostok.core.paths import STRUCTURE_DIR as STRUCTURE
 
 # Modules we actively match and care about here. render is matched LAST and is the
 # most optimized, so its structure noise would swamp the signal; everything else
@@ -346,8 +344,8 @@ def class_diff_report() -> dict[str, list[ClassDiff]]:
     if not t_cls or not b_cls:
         sys.exit(
             f"structure stubs missing under {STRUCTURE} - run "
-            "`structure_order_report.py --regen` (inside nix develop), or "
-            "scripts/generate_structure.py {base,target}"
+            "`python3 -m vostok diff order --regen` (inside nix develop), "
+            "or `python3 -m vostok.build.generate_structure {base,target}`"
         )
     out: dict[str, list[ClassDiff]] = {m: [] for m in IN_SCOPE}
     for header in set(t_cls) & set(b_cls):
@@ -431,7 +429,8 @@ def _regen() -> None:
     for side in ("target", "base"):
         print(f"[regen] generating {side} structure stubs via pdb_parser ...",
               file=sys.stderr)
-        subprocess.run([py, str(GEN_STRUCTURE), side], check=True, env={**os.environ})
+        subprocess.run([py, "-m", "vostok.build.generate_structure", side],
+                       check=True, env=paths.child_env())
 
 
 def main() -> None:

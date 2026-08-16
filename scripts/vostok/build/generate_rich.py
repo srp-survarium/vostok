@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_rich.py - run pdb_rich_context to (re)build the "rich" function index
+vostok.build.generate_rich - run pdb_rich_context to (re)build the "rich" function index
 (disassembly paired with source-level statements) used by `pdb_fetch`, per side:
 
   base    from the freshly compiled PDB+EXE
@@ -16,9 +16,9 @@ and binaries/structure/{base,target}. `pdb_fetch` joins base<->target by
 signature name; the objdiff backend additionally reads binaries/objdiff/.
 
 Usage:
-  python3 scripts/generate_rich.py base
-  python3 scripts/generate_rich.py target
-  python3 scripts/generate_rich.py all     # both sides (e.g. after a parser bump)
+  python3 -m vostok.build.generate_rich base
+  python3 -m vostok.build.generate_rich target
+  python3 -m vostok.build.generate_rich all     # both sides (e.g. after a parser bump)
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN - directory containing the original survarium.{pdb,exe} (target)
@@ -56,13 +56,13 @@ def generate(side: str) -> None:
     """Regenerate binaries/rich/<side> from the matching PDB+EXE.
 
     Raises RuntimeError if an input is missing and CalledProcessError if
-    pdb_rich_context fails - callers (e.g. rebuild.py) handle/report these.
+    pdb_rich_context fails - callers (e.g. vostok.build.rebuild) handle/report these.
     """
     out = RICH_DIR / side
 
     if side == "base":
         pdb, exe = BASE_PDB, BASE_EXE
-        # Same prefix logic as generate_structure.py: the base PDB is MSVC-built
+        # Same prefix logic as generate_structure: the base PDB is MSVC-built
         # under Wine, so recorded paths are z:\...\vostok\sources\vostok\<module>.
         # Strip the Wine form of <repo>/sources (trailing sep) so file paths in the
         # index are rooted at vostok\..., matching the binaries/objdiff/*.obj tree.
@@ -72,7 +72,7 @@ def generate(side: str) -> None:
         if not pdb.is_file() or not exe.is_file():
             raise RuntimeError(
                 f"compiled PDB/EXE not found in {WIN32_DIR} - build first "
-                "(python3 scripts/rebuild.py, or scripts/ninja_build.py)"
+                "(python3 -m vostok build, or -m vostok.build.ninja)"
             )
     elif side == "target":
         survarium = survarium_bin()
@@ -118,7 +118,7 @@ def main() -> None:
     # `all` regenerates BOTH sides - use it after bumping vostok-pdb-parser, when
     # the one-time target index needs to pick up new extraction (e.g. local scope).
     # A normal build only refreshes `base` (the target retail binary never changes
-    # between recompiles, so rebuild.py reuses it); `all`/`target` is the manual
+    # between recompiles, so rebuild reuses it); `all`/`target` is the manual
     # path to refresh it on a parser change.
     ap.add_argument("side", choices=["base", "target", "all"])
     try:

@@ -3,8 +3,8 @@
 Design: docs/binary_matching/match_db_design.md. The DB answers BULK questions
 (queues, per-TU reports, unpaired functions); pdb_fetch stays the authoritative
 per-function view. Derived tables are regenerated from the already-built diff
-artifacts by `rebuild.py` (at the end of every build) or, regen-only, by
-`refresh` (run rebuild.py first if sources moved):
+artifacts by `vostok build` (at the end of every build) or, regen-only, by
+`refresh` (run `vostok build` first if sources moved):
 
   binaries/objdiff/report.json          per-TU roster + fuzzy %s
   binaries/rich/target/index.jsonl      exe-level target inventory + statements
@@ -17,11 +17,11 @@ persistent tables (history, flags) are keyed by mangled TEXT - ids are NOT
 stable across refreshes, mangled names are.
 
 Usage:
-  python3 scripts/match_db.py refresh    # regen-only (rebuild.py first if sources moved)
-  python3 scripts/match_db.py list --module game_core --max-size 0x80 [--json]
-  python3 scripts/match_db.py list --module network_core --presence TARGET_ONLY
-  python3 scripts/match_db.py report [--module game_core] [--per-unit]
-  python3 scripts/match_db.py sql "SELECT ... "          # read-only
+  python3 -m vostok derive refresh    # regen-only (`vostok build` first if sources moved)
+  python3 -m vostok derive list --module game_core --max-size 0x80 [--json]
+  python3 -m vostok derive list --module network_core --presence TARGET_ONLY
+  python3 -m vostok derive report [--module game_core] [--per-unit]
+  python3 -m vostok derive sql "SELECT ... "          # read-only
 """
 
 import argparse
@@ -62,7 +62,7 @@ def audit_log():
         except Exception:
             branch = "?"
         with open(MATCH_DB_LOG, "a", encoding="utf-8") as f:
-            f.write(f"[{ts}][{branch}]: match_db.py {' '.join(sys.argv[1:])}\n")
+            f.write(f"[{ts}][{branch}]: vostok derive {' '.join(sys.argv[1:])}\n")
     except OSError:
         pass
 
@@ -76,7 +76,7 @@ def main():
     p = sub.add_parser(
         "refresh",
         help="regen-only: rebuild derived tables from the already-built report.json "
-        "(rebuild.py is the canonical build and regenerates the DB itself; run it "
+        "(`vostok build` is the canonical build and regenerates the DB itself; run it "
         "first if sources moved)",
     )
 

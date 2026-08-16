@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-build_gfx_suite.py - Build the shipped Scaleform GFx static-lib suite from the
+vostok.build.gfx - build the shipped Scaleform GFx static-lib suite from the
 PRISTINE 4.2.22 SDK source, with the EXACT cl flags the shipped PDB records.
 
 The shipped survarium.exe statically links a GFx lib suite Survarium built from
@@ -37,18 +37,18 @@ Flags (verified per-lib via pdb_build_info; libgfx/as2/as3 share one config):
     archives pull). /O2 /MT, -TC, with the SDK projects' release defines.
 
 System includes (VC / WinSDK / DXSDK) come from Wine's %INCLUDE% (set in the Wine
-registry by setup-toolchain.py), so the rsp lists only the GFx-specific -I dirs;
+registry by vostok.tool.toolchain), so the rsp lists only the GFx-specific -I dirs;
 the PDB's explicit -X + system -I list is equivalent (same headers found).
 
 Output: binaries.prebuilt/Win32/libraries/shipping/<name>.lib - exactly where the
 exe's `#pragma comment(lib,"<name>.lib")` resolves it. The exe links these as
-plain prebuilts (un-wired from the sln); copy_lib_files.py skips the foreign 4.0.15
+plain prebuilts (un-wired from the sln); vostok.tool.libs skips the foreign 4.0.15
 distribution libs so a setup pass never clobbers them.
 
 Run inside `nix develop`. Idempotent: re-run to resume (skips objs already built).
 
-    python3 scripts/build_gfx_suite.py            # all 8 (small first)
-    python3 scripts/build_gfx_suite.py libgfx     # one
+    python3 -m vostok.build.gfx            # all 8 (small first)
+    python3 -m vostok.build.gfx libgfx     # one
 """
 import os
 import subprocess

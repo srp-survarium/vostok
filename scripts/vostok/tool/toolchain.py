@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-setup-toolchain.py
+vostok.tool.toolchain
 
 Installs the Vostok build environment so that later `wine ninja.exe` invocations
 in binaries/ninja/ can build the project. Steps:
@@ -24,8 +24,8 @@ re-runs the named stage(s) regardless of the fingerprint.
 Run from inside `nix develop` after all Nix packages are built:
   nix build .#vostok-toolchain --out-link binaries/nix-store/vostok-toolchain
   nix build .#vostok-libs      --out-link binaries/nix-store/vostok-libs
-  python3 scripts/setup-toolchain.py
-  python3 scripts/setup-toolchain.py --force ninja   # after editing a .vcproj
+  python3 -m vostok tool toolchain
+  python3 -m vostok tool toolchain --force ninja   # after editing a .vcproj
 
 Required env vars (set automatically by flake.nix devShell):
   MSVC_DIR         - VC compiler directory (has VC/bin/cl.exe)
@@ -44,13 +44,11 @@ import sys
 from pathlib import Path
 
 from vostok.build import ninja_regen
-
-from vostok.core.paths import REPO as VOSTOK_DIR
-from vostok.core.paths import SCRIPTS as SCRIPT_DIR
-
+from vostok.core import paths
 from vostok.core.paths import (OBJDIFF_DIR, PREBUILT, RICH_DIR, SETUP_STAMP,
                                STRUCTURE_DIR, WINEPREFIX)
 from vostok.core.paths import NINJA_DIR as BUILD_DIR
+from vostok.core.paths import REPO as VOSTOK_DIR
 from vostok.core.paths import SLN as SLN_PATH
 
 # Setup stages, in run order. Each can be forced via `--force <stage>` even when
@@ -172,9 +170,7 @@ def ensure_target_side(force: bool = False) -> None:
     cheap to call on every `nix develop`. Fatal: a failure here aborts setup so it
     doesn't go unnoticed.
     """
-    import generate_delink
-    import generate_rich
-    import generate_structure
+    from vostok.build import generate_delink, generate_rich, generate_structure
 
     objdiff_target   = OBJDIFF_DIR / "target"
     structure_target = STRUCTURE_DIR / "target"
@@ -203,9 +199,9 @@ def ensure_target_side(force: bool = False) -> None:
 def copy_libs(libs_dir: Path) -> None:
     log("Staging vostok-libs -> binaries.prebuilt/ ...")
     subprocess.check_call([
-        sys.executable, str(SCRIPT_DIR / "copy_lib_files.py"),
+        sys.executable, "-m", "vostok.tool.libs",
         str(libs_dir / "sources"), str(PREBUILT),
-    ])
+    ], env=paths.child_env())
     log("Library files staged.")
 
 
@@ -243,7 +239,7 @@ def generate_ninja(vcproj_exe: Path) -> None:
 def ensure_compdb(force: bool = False) -> None:
     """clangd inputs at the repo root (gitignored, so absent on fresh clones
     and worktrees). Generated here so editors/clangd_query work before the
-    first rebuild; rebuild.py keeps them fresh afterwards."""
+    first rebuild; `vostok build` keeps them fresh afterwards."""
     if not force and all(
         (VOSTOK_DIR / n).is_file() for n in ninja_regen.COMPDB_FILES
     ):

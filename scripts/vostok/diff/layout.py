@@ -30,17 +30,17 @@ namespaces and are skipped). The RENDER module is excluded entirely - the
 (rendering is not matched yet, so a lot of layout churn is expected there).
 
 Usage:
-    python3 scripts/layout_diff.py                 # full ranked report, all
+    python3 -m vostok diff layout                 # full ranked report, all
                                                    #   non-render modules
-    python3 scripts/layout_diff.py --module resources
+    python3 -m vostok diff layout --module resources
                                                    # one target module (the
                                                    #   first namespace segment
                                                    #   under vostok/ or the
                                                    #   'survarium' bucket)
-    python3 scripts/layout_diff.py --type vostok::resources::queries_result
+    python3 -m vostok diff layout --type vostok::resources::queries_result
                                                    # one fully-qualified type
-    python3 scripts/layout_diff.py --json out.json # machine-readable dump
-    python3 scripts/layout_diff.py --only size     # one defect class:
+    python3 -m vostok diff layout --json out.json # machine-readable dump
+    python3 -m vostok diff layout --only size     # one defect class:
                                                    #   size|fields|methods|types
 
 Run from the repo root (or anywhere - paths are resolved relative to this file).
@@ -871,7 +871,8 @@ def render_report(defects: list[Defects], target: dict[str, TypeInfo], only: str
 # ----------------------------------------------------------------------------
 
 
-def main(argv: list[str]) -> int:
+def main(argv: list[str] | None = None) -> int:
+    # `vostok diff layout` calls main() with no args after rewriting sys.argv.
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--module", help="restrict to one module (first ns segment, or 'survarium')")
     ap.add_argument("--type", help="restrict to one fully-qualified type name")
