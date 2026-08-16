@@ -198,21 +198,29 @@ def resolve(sel):
     want = _matcher(sel)
     tgt = _fold_aliases("target", _scan_index("target", want), sel)
     base = _fold_aliases("base", _scan_index("base", want), sel)
+    # A partner found through the match.db pairing is authoritative and is NOT
+    # re-checked by name below. The two indexes really do spell some symbols
+    # differently: where the PDB carries no mangled name, pdb_parser falls back
+    # to the demangled one, so `copy_destroyer<binary_config_value,
+    # custom_config_value>` is the target's `mangled` and `??$copy_destroyer@V...`
+    # is the base's. Filtering the partner by name dropped it and the view then
+    # announced "TARGET_ONLY - nothing compiled yet" for a 100% matched pair.
+    from_pairing = False
     if len(tgt) == 1:
         paired = _paired_rva("target", tgt[0]["rva"])
         if paired is not None:
             partner = _record_at_rva("base", paired)
             if partner is not None:
-                base = [partner]
+                base, from_pairing = [partner], True
     elif len(base) == 1:
         paired = _paired_rva("base", base[0]["rva"])
         if paired is not None:
             partner = _record_at_rva("target", paired)
             if partner is not None:
-                tgt = [partner]
+                tgt, from_pairing = [partner], True
     exact = [r for r in tgt if r["mangled"] == sel] or \
             [r for r in base if r["mangled"] == sel]
-    if exact:
+    if exact and not from_pairing:
         m = exact[0]["mangled"]
         tgt = [r for r in tgt if r["mangled"] == m]
         base = [r for r in base if r["mangled"] == m]
@@ -225,8 +233,8 @@ def resolve(sel):
         die(f"'{sel}' is ambiguous ({len(hits)} hits) - pass a mangled name, or narrow the "
             f"substring (`vostok derive list --module M` and `pdb_rich_query --list "
             f"--function <substring>` enumerate candidates)")
-    if tgt and base:
-        # pair strictly by mangled name
+    if tgt and base and not from_pairing:
+        # both sides came from the name scan, so pair strictly by mangled name
         base = [r for r in base if r["mangled"] == tgt[0]["mangled"]]
     return (tgt[0] if tgt else None), (base[0] if base else None)
 
