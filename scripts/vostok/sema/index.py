@@ -49,6 +49,10 @@ def _scan_index(side, want):
 HEX = re.compile(r"0[xX][0-9a-fA-F]+\Z")
 
 
+# `sema rva render` matches 4,673 symbols; dumping two lines each is not a help.
+_AMBIGUITY_LIST = 20
+
+
 def _matcher(sel):
     """Build the line predicate for a NAME selector: exact mangled > mangled
     substring > demangled substring. Hex goes through `_hex_readings`."""
@@ -213,9 +217,14 @@ def resolve(sel):
         tgt = [r for r in tgt if r["mangled"] == m]
         base = [r for r in base if r["mangled"] == m]
     if len(tgt) > 1 or (not tgt and len(base) > 1):
-        for r in (tgt or base):
+        hits = tgt or base
+        for r in hits[:_AMBIGUITY_LIST]:
             sys.stderr.write(f"  {r['mangled']}\n      {r['name']}\n")
-        die(f"'{sel}' is ambiguous ({len(tgt or base)} hits) - pass a mangled name or RVA")
+        if len(hits) > _AMBIGUITY_LIST:
+            sys.stderr.write(f"  ... and {len(hits) - _AMBIGUITY_LIST} more\n")
+        die(f"'{sel}' is ambiguous ({len(hits)} hits) - pass a mangled name, or narrow the "
+            f"substring (`vostok derive list --module M` and `pdb_rich_query --list "
+            f"--function <substring>` enumerate candidates)")
     if tgt and base:
         # pair strictly by mangled name
         base = [r for r in base if r["mangled"] == tgt[0]["mangled"]]
