@@ -11,11 +11,11 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 <!-- match-score:start -->
 ## Match status
 
-_Auto-generated from `binaries/match.db` (the regenerable cache; the committed record is `docs/binary_matching/match_state.tsv`) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
+_Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
 **Overall: 8,773 / 12,932 functions exact (67.84%) &middot; 8,775 / 12,932 functions exact-max (67.85%) &middot; 86.96% fuzzy &middot; 86.96% fuzzy-max.**
 
-_All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
+_All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |

@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
-"""Roll up match.db into README.md's human-readable score block.
+"""Roll up the committed ledger into README.md's human-readable score block.
 
-Reads ``binaries/match.db`` - and ONLY that. It is regenerated from
-``report.json`` by ``vostok build`` immediately before this runs, so the block and
-the DB always describe the same build, and there is exactly one roster behind
-every number. Nothing here consults report.json: its ``total_functions`` counts
-every COMDAT objdiff sees (~25,372), not the DB's target-function roster
-(~12,932), and mixing the two is how a wrong number once reached the README.
-When the DB cannot answer, this RAISES (``DatabaseUnavailable``) instead of
-substituting; ``vostok build`` warns and leaves the previous block alone.
+Reads ``docs/binary_matching/match_state.tsv`` - the committed record - for
+every number. ``vostok build`` re-derives that ledger from ``report.json``
+immediately before this runs, so the block and the ledger always describe the
+same build, and there is exactly one roster behind every figure. report.json is
+consulted for one thing only, the NAMES of the units it compared (the `Units`
+column): its function roster counts every COMDAT objdiff sees (~25,372) rather
+than the ledger's target-function roster (~12,932), and mixing the two is how a
+wrong number once reached the README. When either input cannot answer, this
+RAISES (``ScoreDataUnavailable``) instead of substituting; ``vostok build``
+warns and leaves the previous block alone.
 
 Per module the block shows, over every target function (paired plus
-inlined/folded ``target_only``, which count as 0%-matched weight):
-  - functions exact / exact-max : byte-perfect now, and byte-perfect proven for
-    the CURRENT source epoch (``source_maxima``; ordinary
-    ``history.best_fuzzy_pct`` is never promoted into it).
+inlined/folded target-only, which count as 0%-matched weight):
+  - functions exact / exact-max : byte-perfect now (``cur``), and byte-perfect
+    proven for the source body checked out now (``max``, scoped to ``hash``).
   - fuzzy / fuzzy-max          : the same two rulers, byte-weighted.
 
 ``--max-code`` is the same data on the byte ruler instead of the function ruler.
@@ -31,36 +32,13 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
-import sqlite3
 
-from vostok.core.paths import FLAKE_LOCK, MATCH_DB, README
+from vostok.core.paths import FLAKE_LOCK, MATCH_STATE, README, REPORT
+from vostok.derive.modules import module_of
+from vostok.ledger import store
 
 START = "<!-- match-score:start -->"
 END = "<!-- match-score:end -->"
-
-
-def _module_of(unit_name: str) -> str | None:
-    """Engine module a unit belongs to, or None for non-``vostok/`` units.
-
-    Unit names look like ``vostok/<module>/<file>``; the module is the second
-    path segment (so ``vostok/network_core/x`` is ``network_core``, distinct
-    from ``vostok/network/y``).
-
-    Root-level headers are ``vostok/<file>`` (two segments, no module dir) - the
-    shared library headers (math, containers, strings, configs, memory) that are
-    compiled into many modules. They have no owning module, so bucket them under
-    ``shared`` rather than dropping them from every per-module tally (which would
-    silently hide header-inlined matches, e.g. ``math::get_relative_matrix`` in
-    ``vostok/math_float4x4_inline.h``).
-    """
-    parts = unit_name.split("/")
-    if parts[0] != "vostok":
-        return None
-    if len(parts) >= 3:
-        return parts[1]
-    if len(parts) == 2:
-        return "shared"
-    return None
 
 
 def _pct(num: int, den: int) -> float:
@@ -99,79 +77,86 @@ _NON_ENGINE = frozenset({
 })
 
 
-class DatabaseUnavailable(RuntimeError):
-    """The score block cannot be rendered because match.db cannot answer.
+class ScoreDataUnavailable(RuntimeError):
+    """The score block cannot be rendered from the committed record.
 
     Deliberately fatal rather than a fallback. report.json counts a different,
     much larger roster (every COMDAT objdiff sees, ~25,372 functions) than the
-    DB's target-function roster (~12,932), so quietly substituting it produces a
-    block that is off by ~12k functions while still claiming, in its own first
-    line, to come from match.db. That exact substitution is what once shipped
-    "25,372 functions" into README.md. `vostok build` catches this and warns,
-    leaving the previous (true) block in place.
+    ledger's target-function roster (~12,932), so quietly substituting it
+    produces a block that is off by ~12k functions while still claiming, in its
+    own first line, to come from the ledger. That exact substitution is what once
+    shipped "25,372 functions" into README.md. `vostok build` catches this and
+    warns, leaving the previous (true) block in place.
     """
 
 
-def db_module_stats() -> dict[str, dict]:
-    """Per-module stats computed ENTIRELY from match.db (report.json NOT consulted):
-    total target functions, TU count, current + source-hash-scoped exact-max
-    counts, and byte-weighted current + fuzzy-max %. The MAX figures use
-    source_maxima and never inherit ordinary history.best_fuzzy_pct. Third-party /
-    catch-all modules (`_NON_ENGINE`) are excluded. Returns module -> dict plus an
-    'OVERALL' aggregate. Raises DatabaseUnavailable if the DB cannot answer."""
-    if not MATCH_DB.is_file():
-        raise DatabaseUnavailable(
-            f"no match.db at {MATCH_DB} - run `python3 -m vostok build` (or "
+def _proven(row: dict) -> float:
+    """The peak PROVEN for the source body that is checked out now.
+
+    `max` is scoped to `hash`, the function's own source body, and resets when
+    that body changes. A banked peak carrying no hash describes a body we can no
+    longer identify - that is history (`hist`), not proof, so the MAX columns do
+    not credit it. This is exactly what the retired `source_maxima` table meant
+    by "same effective-source epoch": every row in it carried a hash.
+    """
+    return (row["max"] or 0.0) if row["hash"] else 0.0
+
+
+def _unit_counts() -> dict[str, int]:
+    """TUs per module, from report.json's unit roster.
+
+    Only the unit NAMES are read - never a count of functions, see the module
+    docstring. A unit objdiff compared with no functions in it is not a TU of
+    the campaign and does not count.
+    """
+    if not REPORT.is_file():
+        raise ScoreDataUnavailable(
+            f"no report.json at {REPORT} - the score block's unit counts come "
+            "from the units objdiff compared; run `python3 -m vostok build`"
+        )
+    units: dict[str, int] = {}
+    for unit in json.loads(REPORT.read_text())["units"]:
+        if unit["functions"]:
+            module = module_of(unit["name"])
+            units[module] = units.get(module, 0) + 1
+    return units
+
+
+def module_stats() -> dict[str, dict]:
+    """Per-module stats computed from the committed ledger: total target
+    functions, TU count, current + source-hash-scoped exact-max counts, and
+    byte-weighted current + fuzzy-max %. Third-party / catch-all modules
+    (`_NON_ENGINE`) are excluded. Returns module -> dict plus an 'OVERALL'
+    aggregate. Raises ScoreDataUnavailable when the ledger cannot answer."""
+    if not MATCH_STATE.is_file():
+        raise ScoreDataUnavailable(
+            f"no ledger at {MATCH_STATE} - run `python3 -m vostok build` (or "
             "`python3 -m vostok derive refresh` if the report is already built)"
         )
-    try:
-        # mode=ro: a plain connect() CREATES an empty database at a wrong path,
-        # which then looks like a real (but empty) cache to every later command.
-        con = sqlite3.connect(f"file:{MATCH_DB}?mode=ro", uri=True)
-    except sqlite3.Error as e:
-        raise DatabaseUnavailable(f"cannot open {MATCH_DB}: {e}") from e
     # module -> [n_funcs, exact_cur, exact_max, code, fuzzy_cur_num, fuzzy_max_num]
     agg: dict[str, list[float]] = {}
 
-    def acc(mod: str, size: float, cur: float, maximum: float, exact_max: bool) -> None:
-        if mod in _NON_ENGINE:
+    def acc(mod: str, size: float, cur: float, maximum: float) -> None:
+        # A row with no module is banked from a build whose target spelling is
+        # gone; it belongs to no module's tally and carries no weight.
+        if not mod or mod in _NON_ENGINE:
             return
         a = agg.setdefault(mod, [0, 0, 0, 0.0, 0.0, 0.0])
         a[0] += 1
         a[1] += 1 if cur >= _EXACT else 0
-        a[2] += 1 if exact_max else 0
+        a[2] += 1 if maximum >= _EXACT else 0
         a[3] += size
         a[4] += cur * size
         a[5] += maximum * size
 
-    try:
-        for mod, size, fz, maximum, exact_max in con.execute(
-            "SELECT p.module, p.target_size, p.fuzzy_pct, "
-            "m.max_fuzzy_pct, m.exact_proven "
-            "FROM paired p LEFT JOIN source_maxima m ON m.mangled = p.mangled"
-        ):
-            fp = fz or 0.0
-            acc(
-                mod, size or 0, fp, max(fp, maximum or 0.0),
-                bool(exact_max) or fp >= _EXACT,
-            )
-        # target_only (unpaired): 0% now, full size as weight; MAX credits only
-        # retained evidence from the same effective-source epoch.
-        for mod, size, maximum, exact_max in con.execute(
-            "SELECT t.module, t.size, m.max_fuzzy_pct, m.exact_proven "
-            "FROM target_only t LEFT JOIN source_maxima m ON m.mangled = t.mangled"
-        ):
-            acc(mod, size or 0, 0.0, maximum or 0.0, bool(exact_max))
-        units = {m: u for m, u in con.execute(
-            "SELECT module, COUNT(*) FROM units GROUP BY module")
-            if m not in _NON_ENGINE}
-    except sqlite3.Error as e:
-        raise DatabaseUnavailable(f"{MATCH_DB} cannot be queried: {e}") from e
-    finally:
-        con.close()
-
+    # Unpaired (inlined/folded target-only) rows carry cur = None: 0% now, full
+    # size as weight, and MAX credit only from a hash-scoped peak.
+    for row in store.load(str(MATCH_STATE)).values():
+        cur = row["cur"] or 0.0
+        acc(row["module"], row["size"] or 0, cur, max(cur, _proven(row)))
     if not agg:
-        raise DatabaseUnavailable(f"{MATCH_DB} has no paired/target rows")
+        raise ScoreDataUnavailable(f"{MATCH_STATE} has no function rows")
+    units = {m: n for m, n in _unit_counts().items() if m not in _NON_ENGINE}
 
     out: dict[str, dict] = {}
     tot = [0, 0, 0, 0.0, 0.0, 0.0]
@@ -195,10 +180,11 @@ def db_module_stats() -> dict[str, dict]:
 def render(delinker_rev: str) -> str:
     today = datetime.date.today().isoformat()
 
-    # Everything in the block is derived from match.db (sushi: "calculated through
-    # our database entirely, not by using anything from report"). There is NO
-    # report.json fallback on purpose - see DatabaseUnavailable.
-    db = db_module_stats()
+    # Every FIGURE in the block comes from the committed ledger (sushi:
+    # "calculated through our database entirely, not by using anything from
+    # report"). There is NO report.json fallback on purpose - see
+    # ScoreDataUnavailable; only the unit NAMES come from it.
+    db = module_stats()
 
     ov = db["OVERALL"]
     funcs, tfuncs = ov["exact_cur"], ov["total_funcs"]
@@ -228,10 +214,9 @@ def render(delinker_rev: str) -> str:
         START,
         "## Match status",
         "",
-        "_Auto-generated from `binaries/match.db` (the regenerable cache; the "
-        "committed record is `docs/binary_matching/match_state.tsv`) - refreshed by "
-        "`vostok build` at the end of every build; do not hand-edit. Diff this block "
-        "across commits to spot regressions._",
+        "_Auto-generated from `docs/binary_matching/match_state.tsv` (the committed "
+        "matching ledger) - refreshed by `vostok build` at the end of every build; "
+        "do not hand-edit. Diff this block across commits to spot regressions._",
         "",
         f"**Overall: {funcs:,} / {tfuncs:,} functions exact "
         f"({_pct(funcs, tfuncs):.2f}%) &middot; "
@@ -240,13 +225,13 @@ def render(delinker_rev: str) -> str:
         f"{ov['fuzzy_cur']:.2f}% fuzzy &middot; "
         f"{ov['fuzzy_max']:.2f}% fuzzy-max.**",
         "",
-        "_All figures come from `match.db` over every target function (paired plus "
-        "inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe "
-        "the current build. **Exact-max** and **Fuzzy-max** retain only observations "
-        "from the same effective-source/compiler-context hash in `source_maxima`; "
-        "ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. "
-        "Exact-max requires a byte-exact observation in the current source epoch. "
-        "Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._",
+        "_All figures come from the ledger over every target function (paired plus "
+        "inlined/folded target-only). **Functions exact** and **Fuzzy** describe the "
+        "current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak "
+        "proven for the function's own source body (`hash`), which resets when that "
+        "body changes; the all-time `hist` peak is never promoted into it, and a "
+        "banked peak carrying no `hash` is not credited. Byte-weighted code view: "
+        "`python3 -m vostok ledger readme --max-code`._",
         "",
         *table,
     ]
@@ -260,61 +245,41 @@ def render(delinker_rev: str) -> str:
 
 
 # a function is byte-exact when objdiff scores it at 100%; allow float slop
-_EXACT = 99.995
+_EXACT = store.EXACT
 
 
 def code_max(module: str | None = None) -> list[tuple]:
     """Per-module code match on BOTH rulers, each current vs source-scoped MAX.
 
     Code-weighted over ALL target code: each target function contributes its
-    target_size to the denominator, so a TRGT_ONLY/unpaired function is 0%-matched
-    dead weight (exactly like objdiff's total_code). Two rulers:
+    target size to the denominator, so a TRGT_ONLY/unpaired function is
+    0%-matched dead weight (exactly like objdiff's total_code). Two rulers:
       - fuzzy  : partial credit - a function adds (fuzzy% * size). The "how close"
                  number (~82% for game_core; objdiff's weighted match).
       - exact  : byte-perfect only - a function adds its full size iff fuzzy==100,
                  else 0. The README's "Code matched" (~26%).
-    The max columns use source_maxima. They survive compiler-state churn within
-    one effective-source epoch and reset when that epoch changes.
+    The max columns use the ledger's `max`: it survives compiler-state churn
+    within one source body and resets when that body changes.
 
-    Everything is already in match.db (paired.target_size + target_only.size +
-    source_maxima). Returns rows of
-    (module, total_code, fuzzy_cur, fuzzy_max, exact_cur, exact_max) sorted by
-    code size, with a trailing OVERALL row.
+    Returns rows of (module, total_code, fuzzy_cur, fuzzy_max, exact_cur,
+    exact_max) sorted by code size, with a trailing OVERALL row.
     """
-    con = sqlite3.connect(MATCH_DB)
     # module -> [total, fuzzy_cur_num, fuzzy_max_num, exact_cur, exact_max]
     agg: dict[str, list[float]] = {}
 
-    def add(
-        mod: str | None, size: int, cur_fz: float, max_fz: float, exact_max: bool
-    ) -> None:
-        if mod is None:
+    def add(mod: str | None, size: int, cur_fz: float, max_fz: float) -> None:
+        if not mod:
             return
         a = agg.setdefault(mod, [0.0, 0.0, 0.0, 0.0, 0.0])
         a[0] += size
         a[1] += cur_fz * size
         a[2] += max_fz * size
         a[3] += size if cur_fz >= _EXACT else 0
-        a[4] += size if exact_max else 0
+        a[4] += size if max_fz >= _EXACT else 0
 
-    for mod, size, fuzzy, maximum, exact_max in con.execute(
-        "SELECT p.module, p.target_size, p.fuzzy_pct, "
-        "m.max_fuzzy_pct, m.exact_proven "
-        "FROM paired p LEFT JOIN source_maxima m ON m.mangled = p.mangled"
-    ):
-        fp = fuzzy or 0.0
-        add(
-            mod, size or 0, fp, max(fp, maximum or 0.0),
-            bool(exact_max) or fp >= _EXACT,
-        )
-    # target-only (no base symbol): 0% now, full size as weight; MAX credits
-    # retained same-epoch evidence only.
-    for mod, size, maximum, exact_max in con.execute(
-        "SELECT t.module, t.size, m.max_fuzzy_pct, m.exact_proven "
-        "FROM target_only t LEFT JOIN source_maxima m ON m.mangled = t.mangled"
-    ):
-        add(mod, size or 0, 0.0, maximum or 0.0, bool(exact_max))
-    con.close()
+    for row in store.load().values():
+        cur = row["cur"] or 0.0
+        add(row["module"], row["size"] or 0, cur, max(cur, _proven(row)))
 
     if module:
         agg = {m: v for m, v in agg.items() if m == module}
@@ -333,8 +298,8 @@ def code_max(module: str | None = None) -> list[tuple]:
 
 def render_code_max(rows: list[tuple]) -> str:
     lines = [
-        "Code match  (match.db, code-weighted over ALL target code incl. "
-        "TRGT_ONLY@0%; max = effective-source-hash scoped)",
+        "Code match  (ledger, code-weighted over ALL target code incl. "
+        "TRGT_ONLY@0%; max = scoped to the function's own source body)",
         "  fuzzy = partial credit (how close) | exact = byte-perfect "
         "(README 'Code matched')",
         f"{'module':<14}{'code bytes':>12}{'fuzzy':>9}{'fuzzy-max':>11}"
@@ -370,11 +335,12 @@ def write_readme(block: str) -> None:
 
 
 def regen_readme() -> str:
-    """Refresh README.md's score block from the current match.db and return the
+    """Refresh README.md's score block from the committed ledger and return the
     rendered block (callable with no args). `vostok build` calls this at the end of
-    every build, right after the DB regen it reads, so the README regression tracker
-    stays current; `--write-readme` is the same path from the CLI. Raises
-    DatabaseUnavailable rather than writing numbers off a different roster."""
+    every build, right after the regen that rewrote the ledger it reads, so the
+    README regression tracker stays current; `--write-readme` is the same path from
+    the CLI. Raises ScoreDataUnavailable rather than writing numbers off a
+    different roster."""
     block = render(_delinker_rev())
     write_readme(block)
     return block
@@ -386,7 +352,7 @@ def main() -> None:
                     help="refresh the score block in README.md")
     ap.add_argument("--max-code", action="store_true",
                     help="print per-module 'code matched' vs 'max code matched' "
-                         "(best-ever, churn-immune) from match.db")
+                         "(source-body-scoped, churn-immune) from the ledger")
     ap.add_argument("--module", help="restrict --max-code to one module")
     args = ap.parse_args()
 
