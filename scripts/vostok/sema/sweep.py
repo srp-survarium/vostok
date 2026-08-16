@@ -53,15 +53,22 @@ def cmd_sweep(args):
     tally = {}
     undisassembled = 0
     for mangled, dem, unit, pct, sclass, t_rva, b_rva in rows:
+        ts, bs = {}, {}
         try:
-            tg = cfg(*parse(disasm("target", t_rva))[:2])
-            bg = cfg(*parse(disasm("base", b_rva))[:2])
+            tg = cfg(*parse(disasm("target", t_rva))[:2], stats=ts)
+            bg = cfg(*parse(disasm("base", b_rva))[:2], stats=bs)
         except SystemExit:
             undisassembled += 1
             continue
         tb, bb = branch_rows(tg), branch_rows(bg)
         flow_same = [x[2] for x in bg] == [x[2] for x in tg]
-        if flow_same:
+        if ts["trimmed"] > len(tg) or bs["trimmed"] > len(bg):
+            # the trailing trim ate the function (see `trim_tail`); the graph is
+            # a prefix, so NO verdict about it is honest - not even IDENTICAL,
+            # which is what `model_factory::create_render_surface` used to get
+            # after collapsing 30-vs-23 blocks to 1-vs-1.
+            verdict = "TRIMMED"
+        elif flow_same:
             bodies = ["\n".join(x[1]) for x in bg] == ["\n".join(x[1]) for x in tg]
             verdict = "IDENTICAL" if bodies else "FLOW-SAME"
         elif iso_map(bg, tg) is not None:
@@ -90,6 +97,10 @@ def cmd_sweep(args):
           + (f"; {unscored} more paired function(s) in scope carry no fuzzy score and are "
              "not candidates" if unscored else "") + "]")
     print("[verdicts] " + "  ".join(f"{k}={v}" for k, v in sorted(tally.items())))
+    if tally.get("TRIMMED"):
+        print("[TRIMMED = the trailing trim dropped more blocks than it kept, so the graph "
+              "is a PREFIX of the function and no flow verdict about it is honest. Read "
+              "those with `pdb_fetch --view target|base` - see sema_tools.md.]")
     print("[FLOW-SAME/IDENTICAL = not control flow: operands, regalloc, scheduling.]")
     print("[ORDER-ONLY = isomorphic CFG, different block LAYOUT - one merged exit placed "
           "elsewhere; usually downstream, not a per-branch bug.]")
