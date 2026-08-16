@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""vostok.ledger.queue - project match.db's per-function structure
+"""vostok.ledger.queue - project the derivation's per-function structure
 classification into docs/binary_matching/structure_mismatch_queue.md, a
 PERSISTENT work queue of every structurally-mismatched paired function across the
 NON-RENDER engine modules (render is matched last; excluded).
 
 Modeled on vostok.diff.enums + docs/binary_matching/enum_queue.md: it
-re-derives the live defect set from the source of truth (match.db) on every run,
-DROPS rows now handled, and PRESERVES human-authored BLOCKED status + cause across
-regen. Idempotent (running twice produces the same file).
+re-derives the live defect set from the artifacts on every run, DROPS rows now
+handled, and PRESERVES human-authored BLOCKED status + cause across regen.
+Idempotent (running twice produces the same file).
 
-SOURCE OF TRUTH: match.db (vostok.derive; design in match_db_design.md). It
-classifies every paired function's `struct_class` from the two statement tables:
+SOURCE OF TRUTH: `vostok.derive` itself, run live (~40 s over report.json and
+the two rich indexes) - there is no database to query, so this projection cannot
+drift from a stale one. It classifies every paired function's `struct_class`
+from the two statement tables:
 
   QUANTITY  statement COUNTS differ - real missing/extra source statements
   SPLIT     equal counts + total bytes, alignment left unpairable rows
@@ -25,12 +27,12 @@ re-test-after-core-fix backlog (wrong core sizes/layouts/types change inline +
 codegen decisions downstream; see the [ltcg-walls-may-be-core-structure-
 downstream] memory), so it is tracked but NOT mixed with QUANTITY.
 
-LOCALS: match.db's classifier primarily aligns on statement sizes, with an exact
+LOCALS: the classifier primarily aligns on statement sizes, with an exact
 normalized-PDB-line fallback for equal-count rows. It does NOT independently surface
 named-local divergence. "Locals are structure" (sushi); that work shows up inside
 QUANTITY/SPLIT/SIZE rows and the authoritative per-function local check stays
 `pdb_fetch --view structure-diff`. There is no separate LOCALS section because the
-DB carries no LOCALS class - see the doc's note.
+derivation carries no LOCALS class - see the doc's note.
 
 TARGET_ONLY: unpaired real bodies (framed, >=1 statement) - genuine MISSING
 structure - get their own section.
@@ -38,13 +40,13 @@ structure - get their own section.
 vostok diff layout CAVEAT: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases; Phase A proved 4 of 5 "resources size
 mismatches" were source-parse false positives). This queue therefore reads
-match.db's struct_class + (per function) `pdb_fetch --view structure-diff`, the
+`struct_class` + (per function) `pdb_fetch --view structure-diff`, the
 authoritative oracles, NOT layout_diff.
 
 BLOCKED semantics (persistent, like enum_queue):
   * A row's struct_class flips to MATCH -> the row DROPS on the next regen.
-  * A row carrying a match.db OUT_OF_SCOPE / SKIP flag is rendered BLOCKED with
-    that flag's cause (regenerated from the DB each run - authoritative).
+  * A row the ledger says is `parked` is rendered `BLOCKED:parked` with the
+    ledger's note as its cause (re-read each run - authoritative).
   * A human-authored BLOCKED row in the queue file (Status starting `BLOCKED`)
     PERSISTS across regen even if it would otherwise drop, carrying its cause -
     we iterate until the live set is empty.
@@ -60,15 +62,14 @@ Re-derive the live set anytime:
 
 import argparse
 import re
-import sqlite3
 import sys
 from pathlib import Path
 
-from vostok.core.paths import MATCH_DB as DB_PATH
 from vostok.core.paths import STRUCTURE_MISMATCH_QUEUE as QUEUE_FILE
-
-# Reuse the derive layer's short-name renderer so rows read like its report.
+# Reuse the derive layer's short-name renderer so rows read like its reports.
 from vostok.derive.names import fn_from_mangled
+from vostok.derive.roster import derive
+from vostok.ledger import store
 
 # The 20 in-scope NON-RENDER engine modules (render matched last; game / game_core
 # are tracked only as the pre-seeded /Od BLOCKED block below).
@@ -109,86 +110,95 @@ OD_FRAME_WALL = [
 ]
 
 # ---------------------------------------------------------------------------
-# Query match.db for the live structure-mismatch set
+# Re-derive the live structure-mismatch set
 # ---------------------------------------------------------------------------
 
-def _open_db():
-    if not DB_PATH.is_file():
-        sys.exit(f"[structure_mismatch_queue] no match.db at {DB_PATH} - run "
-                 "`vostok build` / `vostok derive refresh` first")
-    con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
-    con.row_factory = sqlite3.Row
-    return con
+def live_set(declarations=False):
+    """(primary, size, target_only) rows, re-derived from the artifacts.
+
+    There is no cache to query: the structure classification comes from the
+    derivation itself (report.json + the two rich indexes, ~40 s) and the park
+    state from the committed ledger. That is the point - a projection cannot
+    drift from a source of truth it recomputes.
+    """
+    roster = derive(declarations=declarations)
+    parked = _parked(store.load())
+    return (
+        _mismatches(roster, parked, PRIMARY_CLASSES),
+        _mismatches(roster, parked, (SIZE_CLASS,)),
+        _target_only(roster, parked),
+    )
 
 
-def _scope_placeholders():
-    return ",".join("?" * len(IN_SCOPE_MODULES))
+def _parked(ledger):
+    """{mangled: cause} for every function the ledger says is parked.
+
+    The ledger has one park state where the cache had two flags (OUT_OF_SCOPE
+    and SKIP), so rows render `BLOCKED:parked` rather than naming a flag; the
+    cause - the ledger's `note` - is what actually says why.
+    """
+    return {
+        mangled: row.get("note") or ""
+        for mangled, row in ledger.items()
+        if row.get("status") == "parked"
+    }
+
+
+def _order(row):
+    """module / file / line / mangled, with line-less rows first (as SQL sorted
+    NULLs) so a header's inline bodies stay grouped."""
+    return (row["module"], row["file"] or "", row["line"] or -1, row["mangled"])
 
 
 def _short_loc(file_path):
-    """Strip the leading 'vostok/' so file paths read short, like match_db."""
+    """Strip the leading 'vostok/' so file paths read short, like the reports."""
     if file_path and file_path.startswith("vostok/"):
         return file_path[len("vostok/"):]
     return file_path or "(no file)"
 
 
-def query_mismatches(con, classes):
-    """Paired functions in the in-scope modules whose struct_class is in `classes`.
-    Joins the flags table so an OUT_OF_SCOPE / SKIP verdict (with its cause) rides
-    along as the BLOCKED signal. One row per function (lowest target rva wins; the
-    DB already keys pairs by mangled)."""
-    ph = _scope_placeholders()
-    cls_ph = ",".join("?" * len(classes))
-    q = f"""
-      SELECT s.mangled                                       AS mangled,
-             s.demangled                                     AS demangled,
-             t.module                                        AS module,
-             fl.path                                         AS file,
-             t.line                                          AS line,
-             p.struct_class                                  AS struct_class,
-             p.fuzzy_pct                                     AS fuzzy_pct,
-             p.t_stmts                                       AS t_stmts,
-             p.b_stmts                                       AS b_stmts,
-             (SELECT group_concat(flag, '+') FROM flags
-              WHERE mangled = s.mangled
-                AND flag IN ('OUT_OF_SCOPE', 'SKIP'))        AS flag,
-             (SELECT cause FROM flags
-              WHERE mangled = s.mangled
-                AND flag IN ('OUT_OF_SCOPE', 'SKIP')
-              ORDER BY flag LIMIT 1)                         AS flag_cause
-      FROM pairs p
-      JOIN symbols s ON s.id = p.sym
-      JOIN target_functions t ON t.rva = p.target_rva
-      LEFT JOIN files fl ON fl.id = t.file
-      WHERE t.module IN ({ph}) AND p.struct_class IN ({cls_ph})
-      ORDER BY t.module, fl.path, t.line, s.mangled
-    """
-    return [dict(r) for r in con.execute(q, (*IN_SCOPE_MODULES, *classes))]
+def _mismatches(roster, parked, classes):
+    """Paired functions in the in-scope modules whose struct_class is in
+    `classes`, carrying the ledger's park verdict as the BLOCKED signal."""
+    rows = []
+    for mangled, function in roster.target.items():
+        pair = roster.pairing.pairs.get(mangled)
+        if pair is None or pair.cls not in classes:
+            continue
+        if function.module not in IN_SCOPE_MODULES:
+            continue
+        rows.append({
+            "mangled": mangled, "demangled": function.demangled,
+            "module": function.module, "file": function.file, "line": function.line,
+            "struct_class": pair.cls, "fuzzy_pct": pair.fuzzy,
+            "t_stmts": pair.t_stmts, "b_stmts": pair.b_stmts,
+            "flag": "parked" if mangled in parked else None,
+            "flag_cause": parked.get(mangled),
+        })
+    rows.sort(key=_order)
+    return rows
 
 
-def query_target_only(con):
+def _target_only(roster, parked):
     """Unpaired REAL bodies (framed prologue, >=1 statement) in the in-scope
     modules - genuine missing structure. Frameless unpaired symbols are
     custom-conv leaves that only pair inlined into callers (out of scope as a
     standalone match), so they are excluded."""
-    ph = _scope_placeholders()
-    q = f"""
-      SELECT s.mangled         AS mangled,
-             s.demangled       AS demangled,
-             t.module          AS module,
-             fl.path           AS file,
-             t.line            AS line,
-             t.size            AS size,
-             t.n_stmts         AS n_stmts
-      FROM target_functions t
-      JOIN symbols s ON s.id = t.sym
-      LEFT JOIN files fl ON fl.id = t.file
-      LEFT JOIN pairs p ON p.sym = t.sym
-      WHERE p.sym IS NULL AND t.frameless = 0 AND t.n_stmts > 0
-        AND t.module IN ({ph})
-      ORDER BY t.module, fl.path, t.line, s.mangled
-    """
-    return [dict(r) for r in con.execute(q, IN_SCOPE_MODULES)]
+    rows = []
+    for mangled, function in roster.target.items():
+        if mangled in roster.pairing.pairs or function.frameless or not function.n_stmts:
+            continue
+        if function.module not in IN_SCOPE_MODULES:
+            continue
+        rows.append({
+            "mangled": mangled, "demangled": function.demangled,
+            "module": function.module, "file": function.file, "line": function.line,
+            "size": function.size, "n_stmts": function.n_stmts,
+            "flag": "parked" if mangled in parked else None,
+            "flag_cause": parked.get(mangled),
+        })
+    rows.sort(key=_order)
+    return rows
 
 
 # ---------------------------------------------------------------------------
@@ -244,8 +254,8 @@ def _loc_cell(row):
 
 
 def _status_and_cause(row, existing_blocked):
-    """Resolve a row's Status + cause, honouring (1) a live match.db OUT_OF_SCOPE /
-    SKIP flag, then (2) a human-authored BLOCKED row preserved from the file."""
+    """Resolve a row's Status + cause, honouring (1) the ledger's live park
+    verdict, then (2) a human-authored BLOCKED row preserved from the file."""
     flag = row.get("flag")
     if flag:
         return f"BLOCKED:{flag}", _esc(row.get("flag_cause") or "")
@@ -297,10 +307,11 @@ across the 20 NON-RENDER engine modules (render is matched last - EXCLUDED):
 logging, network_core, network, particle, physics, scaleform, sound, survarium,
 ui, vfs, vostok`.
 
-Source of truth: `binaries/match.db` (`scripts/vostok/derive/`,
-match_db_design.md), which classifies each paired function's `struct_class` from
-the two statement tables. This queue PROJECTS that classification - the
-authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
+Source of truth: the derivation itself (`scripts/vostok/derive/`,
+match_db_design.md), re-run live over report.json and the rich indexes, which
+classifies each paired function's `struct_class` from the two statement tables.
+This queue PROJECTS that classification - the authoritative per-function verdict
+stays `pdb_fetch --view structure-diff`.
 
 ## Sections
 
@@ -317,7 +328,7 @@ authoritative per-function verdict stays `pdb_fetch --view structure-diff`.
    structure that exists in the target but not yet in base. Frameless unpaired
    leaves (custom-conv, pair only inlined into callers) are excluded.
 
-LOCALS note: "locals are structure" (sushi), but match.db's classifier aligns on
+LOCALS note: "locals are structure" (sushi), but the classifier aligns on
 statement sizes/PDB line geometry and does not independently surface named-local
 divergence, so there is no standalone LOCALS section - that work rides inside the
 QUANTITY / SPLIT / SIZE rows and is checked per function with
@@ -326,14 +337,14 @@ QUANTITY / SPLIT / SIZE rows and is checked per function with
 vostok diff layout caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
 size mismatches" were source-parse false positives). This queue therefore trusts
-match.db's struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
+the derived struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
 
 ## Persistence / BLOCKED semantics (like enum_queue)
 
 * A row DROPS when its `struct_class` becomes `MATCH` (handled) - re-run
   `--write-queue` and it falls out.
-* A row carrying a match.db `OUT_OF_SCOPE` / `SKIP` flag is rendered
-  `BLOCKED:<flag>` with that flag's cause (regenerated from the DB each run).
+* A row the committed ledger marks `parked` is rendered `BLOCKED:parked` with
+  the ledger's note as its cause (re-read each run).
 * A human-authored `BLOCKED:...` row in this file PERSISTS across regen even if it
   would otherwise drop (keyed by the hidden `<!-- m:MANGLED -->` marker), carrying
   its cause. Add a real block by setting Status to `BLOCKED:<cause>`.
@@ -366,11 +377,7 @@ def _od_block_rows(existing_blocked):
 
 def write_queue(path):
     existing_blocked = read_existing_blocked(path)
-    con = _open_db()
-    primary = query_mismatches(con, PRIMARY_CLASSES)
-    size = query_mismatches(con, (SIZE_CLASS,))
-    target_only = query_target_only(con)
-    con.close()
+    primary, size, target_only = live_set()
 
     # carry forward any human BLOCKED row whose function is no longer in the live
     # set (its struct_class flipped, but the human pinned it) - keep it visible.
@@ -429,11 +436,9 @@ def write_queue(path):
 
 # ---------------------------------------------------------------------------
 
-def _summary(con):
-    primary = query_mismatches(con, PRIMARY_CLASSES)
-    size = query_mismatches(con, (SIZE_CLASS,))
-    target_only = query_target_only(con)
-    print("structure-mismatch queue - match.db projection (non-render modules)")
+def _summary():
+    primary, size, target_only = live_set()
+    print("structure-mismatch queue - derived live (non-render modules)")
     print(f"  QUANTITY+SPLIT (primary): {len(primary)}")
     print(f"  SIZE (re-test backlog):   {len(size)}")
     print(f"  TARGET_ONLY (missing):    {len(target_only)}")
@@ -461,9 +466,7 @@ def main():
               f"TARGET_ONLY; {n_b} BLOCKED)")
         return 0
 
-    con = _open_db()
-    _summary(con)
-    con.close()
+    _summary()
     return 0
 
 
