@@ -50,7 +50,7 @@ COLUMNS = [
     "cur",       # this build
     "max",       # peak for this `hash`
     "hist",      # all-time peak, never resets
-    "tries",     # times the source body changed under us
+    "tries",     # matcher dispatches (attempts.n); a build never bumps it
     "size",      # target byte size - the report headline is byte-weighted
     "flags",     # 'f' = frameless (LTCG-customised leaf; queue skips these)
     "hash",      # 12 hex chars of the function's own source body
@@ -67,7 +67,10 @@ HEADER = """\
 #   max    peak for THIS source body (`hash`); resets only when `hash` changes.
 #          Campaign goal: drive every max to 100.
 #   hist   all-time peak; NEVER resets. hist > max = we had it better once.
-#   tries  times the source body changed under us (high = hard to match)
+#   tries  matcher dispatches that included this function (high = hard to match).
+#          It is `attempts.n` in binaries/match.db and moves ONLY when someone
+#          runs `vostok derive tried` / `vostok ledger tried` - a build that
+#          changes the body does NOT bump it.
 #   hash   12 hex chars of the function's own source body. Module/TU context is
 #          deliberately excluded - it is diagnosis, not a gate.
 #   cls    MATCH (statements identical) | SIZE (same count+geometry, bytes
@@ -166,6 +169,11 @@ def status_for(row, flagged=False, paired=True):
 def advance(previous, mangled, *, module, cur, cls, body_hash, paired=True,
             flagged=False, note=None):
     """Fold one build observation into a ledger row.
+
+    NOT ON THE BUILD PATH - `export_from_db` is. This is the direct-observation
+    form (no cache), kept for a report-only writer; note that it bumps `tries` on
+    a body change, which `export_from_db` does not (there `tries` is the cache's
+    `attempts.n`). Do not read it as the live cur/max/hist policy.
 
     `max` accumulates while `body_hash` holds and restarts when it changes;
     `hist` only ever rises. A row whose function is absent from this build keeps

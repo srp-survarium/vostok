@@ -64,8 +64,10 @@ the native `/home/...` path. The original game PDB instead uses
 
 ## Where the tooling lives (`scripts/vostok/`)
 
-The Python tooling is a package; `scripts/` holds nothing else. Every command
-in these docs runs it as `python3 -m vostok ...`, and the code is here:
+All the Python tooling is one package - there are no loose `scripts/*.py` any
+more (what else lives in `scripts/` is non-Python: `ida/`, `vs/`, `samples/`,
+the `*_tus.txt` lists, `create-toolchain-release.nix`). Every command in these
+docs runs it as `python3 -m vostok ...`, and the code is here:
 
     core/     paths.py (EVERY repo path, once), tsv.py (the tracked-table
               shape), symbols.py (objdiff symbol normalization)
@@ -137,7 +139,7 @@ point:
 
 ### `(held)` means do not chase it
 
-When a build reports a function lower than its `max`, `match.py` prints
+When a build reports a function lower than its `max`, `vostok ledger` prints
 **`(held <max>)`** next to it. That is not a regression: the peak is still
 proven for this exact source, and the dip is compiler noise - a fold
 representative changed, or an inline decision flipped in a sibling TU. **Do not
@@ -153,12 +155,12 @@ Keep `note` short; it is what stops the next matcher re-deriving a dead end.
 
 ## Match score (README regression tracker)
 
-`vostok ledger readme` rolls `report.json` up into the overall fuzzy % plus a
-per-module functions/code-matched table in the `<!-- match-score -->` block at the
+`vostok ledger readme` rolls `binaries/match.db` up into the overall exact/fuzzy
+figures plus a per-module table, in the `<!-- match-score:start -->` block at the
 top of README.md. **`vostok build` refreshes that block at the end of every build**
-(alongside the `match.db` regen), so it stays current with `report.json` on its
-own - you do not run `vostok ledger readme` by hand. The numbers come straight from
-objdiff's measures (the source carries no status markers; per-function
+(right after the `match.db` regen it reads), so it stays current on its own - you
+do not run `vostok ledger readme` by hand. The numbers are the DB's own roster
+over every target function (the source carries no status markers; per-function
 status lives in the ledger - see above), so the README is an honest, no-run
 regression tracker - diff the block across commits. If the block ever conflicts on
 a merge/cherry-pick, don't hand-resolve it: take either side and rerun `vostok build`

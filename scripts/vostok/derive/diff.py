@@ -35,8 +35,15 @@ def _db_blob_at(rev):
         )
     if r.returncode != 0:
         os.unlink(tmp)
-        sys.exit(f"[match_db] cannot read {rel} at '{rev}': "
-                 f"{r.stderr.decode(errors='replace').strip()}")
+        sys.exit(
+            f"[match_db] cannot read {rel} at '{rev}': "
+            f"{r.stderr.decode(errors='replace').strip()}\n"
+            "[match_db] match.db is no longer committed (binaries/match.db is a\n"
+            "[match_db] gitignored cache), so this command only works against a\n"
+            "[match_db] revision old enough to still carry the blob. For the\n"
+            "[match_db] current campaign use the committed text ledger instead:\n"
+            "[match_db]   git diff <rev> -- docs/binary_matching/match_state.tsv"
+        )
     return tmp, tmp
 
 

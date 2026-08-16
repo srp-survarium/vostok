@@ -6,10 +6,12 @@ vostok.build.rebuild - full base-side refresh after editing sources.
   2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
      normalizer consumes the completed rich index, so those two steps must be
      ordered. binaries/structure/base remains disjoint and runs in parallel.
-  3. Regenerate docs/binary_matching/match.db from the fresh report.json
-     (match_db.regen()). `vostok build` is the canonical build step and owns the DB
-     regen; `vostok derive refresh` is the regen-only path for an already-built
-     report. A regen failure warns but does not fail the build.
+  3. Regenerate binaries/match.db from the fresh report.json
+     (vostok.derive.roster.regen()), which then projects the committed ledger
+     docs/binary_matching/match_state.tsv out of it. `vostok build` is the
+     canonical build step and owns the DB regen; `vostok derive refresh` is the
+     regen-only path for an already-built report. A regen failure warns but does
+     not fail the build.
 
 The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
@@ -178,6 +180,15 @@ def _write_build_head() -> None:
 
 
 def main() -> None:
+    # `vostok build --help` must NOT reach ninja. Everything else here is
+    # forwarded verbatim, and ninja's own `--help` exits 1 - which used to
+    # print a bogus "ninja build failed" AND, worse, still ran ninja.main()'s
+    # trailing prefix-scoped mspdbsrv kill, breaking a build running
+    # concurrently in the same WINEPREFIX.
+    if any(a in ("-h", "--help") for a in sys.argv[1:]):
+        print(__doc__.strip())
+        return
+
     start = time.monotonic()
     modules: set[str] = set()
     try:

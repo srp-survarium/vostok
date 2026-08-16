@@ -44,9 +44,13 @@ from pathlib import Path
 from vostok.core import paths
 from vostok.core.paths import STRUCTURE_DIR as STRUCTURE
 
-# Modules we actively match and care about here. render is matched LAST and is the
-# most optimized, so its structure noise would swamp the signal; everything else
-# excluded is third-party built verbatim from source (exact by construction).
+# NAMESPACE buckets, not build modules - classes are keyed by the head of their
+# qualified name (see _module_of below), so every survarium:: type (all of `game`
+# and `game_core`) lands in 'survarium'. render is out because it is matched LAST
+# and its structure noise would swamp the signal; the third-party libraries are
+# out because they are built verbatim from source (exact by construction). The
+# vostok:: sub-namespaces NOT listed here (core, network, network_core, physics,
+# scaleform) are simply not covered yet - add the bucket to cover them.
 IN_SCOPE = [
     "ui", "fs", "input", "logging", "vfs", "debug", "collision",
     "particle", "engine", "sound", "ai", "ai_navigation", "animation",
@@ -437,7 +441,9 @@ def main() -> None:
     ap = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
     )
-    ap.add_argument("--module", help="restrict the report to one in-scope module")
+    ap.add_argument("--module",
+                    help="restrict the report to one in-scope NAMESPACE bucket "
+                         "(not the build module the rest of the CLI takes)")
     ap.add_argument("--json", action="store_true", help="emit JSON instead of text")
     ap.add_argument("--regen", action="store_true",
                     help="re-run pdb_parser for both PDBs first (slow; not while building)")
@@ -449,7 +455,14 @@ def main() -> None:
     modules = IN_SCOPE
     if args.module:
         if args.module not in IN_SCOPE:
-            sys.exit(f"--module {args.module!r} not in scope {IN_SCOPE}")
+            sys.exit(
+                f"--module {args.module!r} not in scope {IN_SCOPE}\n"
+                "note: unlike `vostok derive`/`vostok ledger`, this --module is a "
+                "NAMESPACE bucket, not a build module.\nClasses are bucketed by the "
+                "head of their qualified name, so survarium:: types (game, game_core) "
+                "live under 'survarium'\nand vostok::<x>:: types live under '<x>'. "
+                "render is excluded on purpose (matched last)."
+            )
         modules = [args.module]
 
     report = class_diff_report()
