@@ -42,23 +42,15 @@ def _scan_index(side, want):
     return hits
 
 
+HEX = re.compile(r"0[xX][0-9a-fA-F]+\Z")
+
+
 def _matcher(sel):
-    """Build the line predicate for a selector: exact mangled > mangled
-    substring > demangled substring > hex RVA/VA."""
-    hexval = None
-    if re.fullmatch(r"0[xX][0-9a-fA-F]+", sel):
-        hexval = int(sel, 16)
+    """Build the line predicate for a NAME selector: exact mangled > mangled
+    substring > demangled substring. Hex goes through `_hex_readings`."""
     low = sel.lower()
 
     def want(line):
-        if hexval is not None:
-            # cheap pre-filter before json.loads
-            if f'"rva":{hexval}' not in line and f'"rva":{hexval - 0x10000}' not in line:
-                return None
-            rec = json.loads(line)
-            if rec["rva"] in (hexval, hexval - rec.get("image_base", 0)):
-                return rec
-            return None
         if sel in line:
             rec = json.loads(line)
             if rec["mangled"] == sel or sel in rec["mangled"]:
@@ -70,6 +62,39 @@ def _matcher(sel):
         return None
 
     return want
+
+
+def _hex_readings(sel):
+    """Every function a bare hex number can mean: [(side, "rva"|"va", record)].
+
+    A hex selector is FOUR questions - target RVA, target VA, base RVA, base VA -
+    and the old code answered whichever it found first, target side before base
+    and with no note that it had chosen. 1,391 base RVAs are also (base RVA -
+    image_base) of a real target function, so asking about a base address
+    silently returned an unrelated target one:
+
+        $ python3 -m vostok.sema rva 0xe9fa0     # base: PrimitiveFillData::RequiresBlend
+        target  rva=0xd9fa0 ... functor_manager_common<...>::manage_small
+
+    Every reading is collected here and the caller reports a tie instead."""
+    h = int(sel, 16)
+    out = []
+    for side in ("target", "base"):
+        hits = {}
+        with open(_index_path(side), encoding="utf-8", errors="replace") as fh:
+            for line in fh:
+                if f'"rva":{h}' not in line and f'"rva":{h - 0x10000}' not in line:
+                    continue                       # cheap prefilter before parsing
+                rec = json.loads(line)
+                base_addr = rec.get("image_base", 0)
+                if rec["rva"] == h:
+                    hits.setdefault("rva", []).append(rec)
+                elif base_addr and rec["rva"] == h - base_addr:
+                    hits.setdefault("va", []).append(rec)
+        for how, recs in hits.items():
+            for rec in _fold_aliases(side, recs, sel):
+                out.append((side, how, rec))
+    return out
 
 
 def _paired_rva(side, rva):
@@ -133,12 +158,35 @@ def _fold_aliases(side, hits, sel):
     return [by_rva[k] for k in sorted(by_rva)]
 
 
+def _resolve_hex(sel):
+    """(target_record | None, base_record | None) for a hex address selector."""
+    readings = _hex_readings(sel)
+    if len(readings) > 1:
+        for side, how, rec in readings:
+            sys.stderr.write(f"  {side} {how} {rec['rva']:#x}  {rec['mangled']}\n"
+                             f"      {rec['name']}\n")
+        die(f"'{sel}' reads as {len(readings)} different functions (listed above): a bare "
+            f"hex is a target/base RVA and a target/base VA at once, and sema has no side "
+            f"flag for it. Pass the mangled name printed above, or ask pdb_fetch, which "
+            f"takes the side and the kind explicitly (--target-index/--base-index with "
+            f"--rva/--va)")
+    if not readings:
+        return None, None
+    side, _, rec = readings[0]
+    other = _paired_rva(side, rec["rva"])
+    partner = _record_at_rva("base" if side == "target" else "target", other) \
+        if other is not None else None
+    return (rec, partner) if side == "target" else (partner, rec)
+
+
 def resolve(sel):
     """(target_record | None, base_record | None) for one selector.
 
     Ambiguity is resolved by preferring an EXACT mangled hit; anything still
     ambiguous is reported rather than guessed at. Hits that share an RVA are ONE
     function under several names (ICF), not an ambiguity - see `_fold_aliases`."""
+    if HEX.match(sel):
+        return _resolve_hex(sel)
     want = _matcher(sel)
     tgt = _fold_aliases("target", _scan_index("target", want), sel)
     base = _fold_aliases("base", _scan_index("base", want), sel)
