@@ -58,25 +58,5 @@ pcstr   user_name ( )
 	return									s_user;
 }
 
-pcstr user_data_directory	( )
-{
-	static fs_new::native_path_string		s_user_data_directory;
-	static bool		s_initialized		=	false;
-
-	if ( !s_initialized )
-	{
-		s_user_data_directory			=	fs_new::get_current_directory();
-		bool const append_result		=	fs_new::append_relative_path	(
-												& s_user_data_directory, 
-												fs_new::native_path_string::convert("../../user_data")
-											);
-
-		VOSTOK_UNREFERENCED_PARAMETER			(append_result);
-		s_initialized					=	true;
-	}
-
-	return									s_user_data_directory.c_str();
-}
-
 } // namespace core
 } // namespace vostok

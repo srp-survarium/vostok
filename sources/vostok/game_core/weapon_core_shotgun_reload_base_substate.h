@@ -42,8 +42,7 @@ protected:
 						);
 
 public:
-	// STATE[STUB]
-	virtual	void		initialize						( ) override { /* <0x2a800> */ }
+	virtual	void		initialize						( ) override { }
 	virtual	void		execute							( ) override { m_animation_playback_state->reset( ); }
 	virtual	void		finalize						( ) override {
 		ASSERT( UNKNOWN_EXPRESSION ); m_animation_playback_state->reset( );

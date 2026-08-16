@@ -16,11 +16,8 @@ inline scheduler::scheduler( vostok::memory::base_allocator* allocator ) :
     m_objects[1] = &m_active_objects;
 }
 
-// STATE[STUB]
 inline scheduler::~scheduler( )
 {
-	// <1>
-	// <2>
 }
 
 inline void	scheduler::change_status( scheduler::identifier* identifier, scheduler::records_type& dest, scheduler::records_type& src )

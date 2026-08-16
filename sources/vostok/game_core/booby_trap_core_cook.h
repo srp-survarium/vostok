@@ -15,7 +15,6 @@ public:
 			explicit			booby_trap_core_cook		( );
 
 	virtual	void				translate_query				( resources::query_result_for_cook& parent ) override;
-	// STATE[STUB]
 	virtual	void				delete_resource				( resources::resource_base* resource ) override {
 		VOSTOK_DELETE_IMPL( g_allocator, resource );
 	}

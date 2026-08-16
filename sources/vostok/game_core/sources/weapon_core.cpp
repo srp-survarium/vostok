@@ -956,11 +956,6 @@ bool weapon_core::is_sprinting( ) const
 	return m_user_animations_selector.is_sprinting( );
 }
 
-// STATE[STUB]
-// claude@NOTE: PARK. Single-statement body = `if (<flag>) <debug-draw>( ...all the matrices by
-// value... )`. The flag-read folds to an empty accessor (mov byte[ebp-1],0;lea;call finalize_impl;
-// movzx;test;je) and the draw call folds to finalize_impl (universal empty-fn). Neither the flag
-// nor the draw helper is nameable from this TU, so the whole body is the debug-machinery wall.
 void weapon_core::on_skeleton_matrices_changed(
 	const u32						current_time_in_ms,
 	float4x4 const&			weapon_transform,
@@ -972,14 +967,21 @@ void weapon_core::on_skeleton_matrices_changed(
 	float4x4 const&			user_weapon_transform
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS(
+		current_time_in_ms,
+		weapon_transform,
+		weapon_matrices_begin,
+		weapon_matrices_end,
+		user_transform,
+		user_matrices_begin,
+		user_matrices_end,
+		user_weapon_transform
+	);
 }
 
-// STATE[STUB]
-// claude@NOTE: PARK. Single-statement body = `if (<flag>) <debug-draw>( current_time_in_ms,
-// user_matrices )`. Same debug-machinery wall as on_skeleton_matrices_changed (folded flag-read +
-// folded draw call, neither nameable here).
 void weapon_core::process_finger_correction( const u32 current_time_in_ms, float4x4* const user_matrices )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( current_time_in_ms, user_matrices );
 }
 
 void weapon_core::serialize( network_core::udp_match_packet& packet, u32 client_offset ) const
@@ -1096,11 +1098,9 @@ bool weapon_core::could_be_aimed( base_player const& user ) const
 	return broken_hands_count != 2;
 }
 
-// claude@NOTE: stmts 2-4 pair (update_recoil/update_breath_vibration/return). Stmt 1 is a
-// debug `if(<flag>) <call>( animation_time_before, current_time_in_ms, target_time_in_ms )`
-// whose flag-read folds to an empty accessor (mov byte[ebp-1],0;lea;call finalize_impl;movzx;
-// test;je) and whose body call folds to finalize_impl (universal empty-fn) - the exact source
-// spelling of the flag/call is not nameable, so stmt 1's bytes are the debug-machinery wall.
+// claude@NOTE: the target keeps the `player_input const&` binding unnamed (0 recorded locals)
+// yet calls m_user->input() once - the single-call shape needs the reference, so it stays a
+// named local here and the extra PDB local is the residual.
 float weapon_core::computed_backward_recoil_time(
 	const float		animation_length,
 	const float		animation_time_before_time_scale_starts,
@@ -1110,6 +1110,7 @@ float weapon_core::computed_backward_recoil_time(
 	const float		time_scale
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
 
 	player_input const& input = m_user->input( );
@@ -1127,6 +1128,7 @@ float weapon_core::computed_horizontal_recoil_time(
 	const float		time_scale
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
 
 	player_input const& input = m_user->input( );
@@ -1144,6 +1146,7 @@ float weapon_core::computed_vertical_recoil_time(
 	const float		time_scale
 )
 {
+	VOSTOK_UNREFERENCED_PARAMETERS( animation_time_before_time_scale_starts, time_scale_start_time_in_ms, current_time_in_ms );
 	update_recoil( target_time_in_ms, time_scale );
 
 	player_input const& input = m_user->input( );
