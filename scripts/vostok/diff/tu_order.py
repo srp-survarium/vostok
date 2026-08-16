@@ -26,11 +26,23 @@ Diffing the two blocks reveals:
       a reordering is a directly actionable source fix: move the definition in the
       .cpp to the target's order.
 
-Data source: docs/binary_matching/match.db (the committed delink/diff DB). A TU
-is the report.json object roster (the `units` table), which is exactly the set of
-functions emitted into that one .obj - i.e. the COMDAT membership. Pairing
-(present in both sides) comes from the `pairs` table; a target function whose RVA
-is not a `pairs.target_rva` is TARGET_ONLY, and likewise for BASE_ONLY.
+DATA SOURCES, and each answers exactly one question:
+
+  binaries/objdiff/report.json     WHICH TU. A unit is an object roster entry -
+                                   exactly the functions emitted into that one
+                                   .obj, i.e. the COMDAT membership. Nothing
+                                   else knows this; the rich index records a
+                                   function's SOURCE FILE, which is a different
+                                   question (a header-inlined method's file is
+                                   the header, not the .obj).
+  binaries/rich/{target,base}/     WHICH FUNCTIONS, at which RVA, defined at
+    index.jsonl                    which source line, under which signature.
+  vostok.sema.pairing              WHETHER IT IS PAIRED. A target function whose
+                                   RVA is nobody's pair is TARGET_ONLY, and
+                                   likewise BASE_ONLY.
+
+This used to read all three out of `binaries/match.db`, which held a derived
+copy of each and could therefore be stale against them in ways nothing checked.
 
 USAGE
   # list the TUs the DB knows (optionally filter by module / substring)
@@ -64,34 +76,50 @@ noise, not source moves.
 
 import argparse
 import difflib
+import json
 import re
-import sqlite3
 import sys
 
-from vostok.core.paths import MATCH_DB as DB_PATH
+from vostok.core.paths import REPORT
+
+from vostok.derive.modules import module_of
+from vostok.derive.scores import report_fuzzy_scores
+
+from vostok.sema.pairing import pairing
 
 
-def open_db(path=DB_PATH):
-    if not path.is_file():
-        sys.exit(f"[tu_order] no database at {path} - run `python3 -m vostok build` first")
-    con = sqlite3.connect(path)
-    con.row_factory = sqlite3.Row
-    return con
+class Roster:
+    """report.json's object roster: which TU each emitted function belongs to."""
+
+    def __init__(self):
+        if not REPORT.is_file():
+            sys.exit(f"[tu_order] no {REPORT} - run `python3 -m vostok build` first")
+        report = json.loads(REPORT.read_text())
+        self.units = sorted({unit["name"] for unit in report["units"]})
+        _, self.units_by_mangled = report_fuzzy_scores(report)
+
+    def unit_of(self, key, rec):
+        """The TU a function is filed under.
+
+        The record's OWN file wins when objdiff compared the symbol there, so a
+        header-inlined method stays in its header instead of being filed under
+        whichever .cpp won the fold; otherwise the first unit that compared it.
+        """
+        units = self.units_by_mangled.get(key)
+        if units and rec["file"] in units:
+            return rec["file"]
+        return units[0] if units else None
 
 
-def resolve_unit(con, tu):
+def resolve_unit(roster, tu):
     """Map a user-supplied TU (full path or unique trailing substring) to the
-    canonical `units.name`. Exits with the candidate list if ambiguous/missing."""
-    row = con.execute("SELECT name FROM units WHERE name = ?", (tu,)).fetchone()
-    if row:
-        return row["name"]
-    like = f"%{tu}"
-    hits = [r["name"] for r in con.execute(
-        "SELECT name FROM units WHERE name LIKE ? ORDER BY name", (like,))]
+    canonical unit name. Exits with the candidate list if ambiguous/missing."""
+    if tu in roster.units:
+        return tu
+    hits = [name for name in roster.units if name.endswith(tu)]
     # also try a loose contains-match if the trailing-substring match found nothing
     if not hits:
-        hits = [r["name"] for r in con.execute(
-            "SELECT name FROM units WHERE name LIKE ? ORDER BY name", (f"%{tu}%",))]
+        hits = [name for name in roster.units if tu in name]
     if len(hits) == 1:
         return hits[0]
     if not hits:
@@ -154,7 +182,7 @@ def shorten(sig):
     return s
 
 
-def fetch_side(con, unit, side):
+def fetch_side(roster, unit, side):
     """Ordered (rva, sym, line, demangled, paired) rows for one side of a TU.
 
     Ordered by the PDB SOURCE LINE the function is defined at (the line-table
@@ -164,23 +192,25 @@ def fetch_side(con, unit, side):
     dynamic initializer/atexit records) sort last, since they have no source
     position to be "out of order".
 
-    `paired` is True when this function is matched to a function on the other
-    side (its rva appears in pairs as this side's rva)."""
-    rva_col = "target_rva" if side == "target" else "base_rva"
-    table = f"{side}_functions"
-    rows = con.execute(f"""
-        SELECT fn.rva   AS rva,
-               fn.sym   AS sym,
-               fn.line  AS line,
-               s.demangled AS demangled,
-               (p.{rva_col} IS NOT NULL) AS paired
-        FROM {table} fn
-        JOIN units   u ON fn.unit = u.id
-        JOIN symbols s ON fn.sym  = s.id
-        LEFT JOIN pairs p ON p.{rva_col} = fn.rva
-        WHERE u.name = ?
-        ORDER BY (fn.line IS NULL OR fn.line = 0), fn.line, fn.rva
-    """, (unit,)).fetchall()
+    `paired` is per-RVA, not per-name: ICF can fold two symbols onto one body, and
+    the body is what got matched."""
+    pair = pairing()
+    inventory = pair.target if side == "target" else pair.base
+    partnered = (pair.base_rva_by_target_rva if side == "target"
+                 else pair.target_rva_by_base_rva)
+    rows = []
+    for key, rec in inventory.items():
+        if roster.unit_of(key, rec) != unit:
+            continue
+        rows.append({
+            "rva": rec["rva"],
+            "sym": key,
+            "line": min((s["line"] for s in rec["statements"] if s.get("line")),
+                        default=None),
+            "demangled": pair.demangled(key),
+            "paired": rec["rva"] in partnered,
+        })
+    rows.sort(key=lambda r: (r["line"] is None, r["line"] or 0, r["rva"]))
     return rows
 
 
@@ -220,26 +250,20 @@ def reorder_report(target_rows, base_rows):
     return [(s, sym_name.get(s, f"sym#{s}"), t_pos[s], b_pos[s]) for s in moved]
 
 
-def cmd_list(con, args):
-    q = "SELECT name, module FROM units"
-    conds, params = [], []
+def cmd_list(roster, args):
+    rows = [(module_of(name), name) for name in roster.units]
     if args.module:
-        conds.append("module = ?")
-        params.append(args.module)
+        rows = [r for r in rows if r[0] == args.module]
     if args.pattern:
-        conds.append("name LIKE ?")
-        params.append(f"%{args.pattern}%")
-    if conds:
-        q += " WHERE " + " AND ".join(conds)
-    q += " ORDER BY module, name"
-    for r in con.execute(q, params):
-        print(f"{r['module']:<14} {r['name']}")
+        rows = [r for r in rows if args.pattern in r[1]]
+    for module, name in sorted(rows):
+        print(f"{module:<14} {name}")
 
 
-def cmd_show(con, args):
-    unit = resolve_unit(con, args.tu)
-    t_rows = fetch_side(con, unit, "target")
-    b_rows = fetch_side(con, unit, "base")
+def cmd_show(roster, args):
+    unit = resolve_unit(roster, args.tu)
+    t_rows = fetch_side(roster, unit, "target")
+    b_rows = fetch_side(roster, unit, "base")
     if not t_rows and not b_rows:
         sys.exit(f"[tu_order] unit {unit!r} has no functions on either side")
 
@@ -311,16 +335,16 @@ def main():
                     help="print only presence + reordering verdict")
     args = ap.parse_args()
 
-    con = open_db()
+    roster = Roster()
     if args.list:
         # when --list is given, a positional tu acts as the substring filter
         if args.tu and not args.pattern:
             args.pattern = args.tu
-        cmd_list(con, args)
+        cmd_list(roster, args)
         return
     if not args.tu:
         ap.error("a TU is required (or pass --list)")
-    sys.exit(cmd_show(con, args))
+    sys.exit(cmd_show(roster, args))
 
 
 if __name__ == "__main__":
