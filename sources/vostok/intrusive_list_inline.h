@@ -53,8 +53,8 @@ inline void INTRUSIVE_LIST::push_back	(PointerType const object, bool * out_push
 
 	typename ThreadingPolicy::mutex_raii	raii(*this);
 
-	R_ASSERT								(!debug_enabled || !contains_object_thread_unsafe(object));
-
+	// no assert here - the target emits nothing on this line, and every later
+	// statement of push_back sits on OUR line number (58, 60, 61, 63, 65 ...).
 	SizePolicy::increment_size				();
 
 	if ( out_pushed_first )

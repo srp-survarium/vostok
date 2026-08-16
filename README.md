@@ -13,7 +13,7 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match.db` - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 8,732 / 12,932 functions exact (67.52%) &middot; 8,732 / 12,932 functions exact-max (67.52%) &middot; 86.93% fuzzy &middot; 86.93% fuzzy-max.**
+**Overall: 8,773 / 12,932 functions exact (67.84%) &middot; 8,775 / 12,932 functions exact-max (67.85%) &middot; 86.96% fuzzy &middot; 86.96% fuzzy-max.**
 
 _All figures come from `match.db` over every target function (paired plus inlined/folded `target_only`). **Functions exact** and **Fuzzy** describe the current build. **Exact-max** and **Fuzzy-max** retain only observations from the same effective-source/compiler-context hash in `source_maxima`; ordinary `history.best_fuzzy_pct` observations are not promoted to MAX. Exact-max requires a byte-exact observation in the current source epoch. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
@@ -22,14 +22,14 @@ _All figures come from `match.db` over every target function (paired plus inline
 | `render`        |   351 | 1,584 / 2,653 (59.7%) | 1,584 / 2,653 (59.7%) |  85.5% |     85.5% |
 | `game`          |   141 |   754 / 1,528 (49.3%) |   754 / 1,528 (49.3%) |  71.1% |     71.1% |
 | `core`          |   136 |   956 / 1,325 (72.2%) |   956 / 1,325 (72.2%) |  87.6% |     87.6% |
-| `vostok`        |   112 |   826 / 1,252 (66.0%) |   826 / 1,252 (66.0%) |  85.0% |     85.0% |
-| `game_core`     |   189 |   733 / 1,181 (62.1%) |   733 / 1,181 (62.1%) |  92.4% |     92.4% |
+| `vostok`        |   112 |   848 / 1,252 (67.7%) |   848 / 1,252 (67.7%) |  85.5% |     85.5% |
+| `game_core`     |   189 |   737 / 1,181 (62.4%) |   737 / 1,181 (62.4%) |  92.5% |     92.5% |
 | `animation`     |   102 |     542 / 725 (74.8%) |     542 / 725 (74.8%) |  84.4% |     84.4% |
-| `ai`            |   124 |     502 / 691 (72.6%) |     502 / 691 (72.6%) |  92.8% |     92.8% |
-| `sound`         |    69 |     490 / 510 (96.1%) |     490 / 510 (96.1%) |  99.9% |     99.9% |
+| `ai`            |   124 |     512 / 691 (74.1%) |     514 / 691 (74.4%) |  92.7% |     92.8% |
+| `sound`         |    69 |     492 / 510 (96.5%) |     492 / 510 (96.5%) |  99.9% |     99.9% |
 | `collision`     |    52 |     434 / 503 (86.3%) |     434 / 503 (86.3%) |  93.9% |     93.9% |
 | `scaleform`     |    47 |     421 / 453 (92.9%) |     421 / 453 (92.9%) |  96.6% |     96.6% |
-| `particle`      |    25 |     361 / 400 (90.2%) |     361 / 400 (90.2%) |  97.2% |     97.2% |
+| `particle`      |    25 |     364 / 400 (91.0%) |     364 / 400 (91.0%) |  97.2% |     97.2% |
 | `vfs`           |    71 |     190 / 390 (48.7%) |     190 / 390 (48.7%) |  88.9% |     88.9% |
 | `ui`            |    27 |     210 / 227 (92.5%) |     210 / 227 (92.5%) |  97.3% |     97.3% |
 | `physics`       |    14 |     142 / 198 (71.7%) |     142 / 198 (71.7%) |  89.3% |     89.3% |
@@ -193,7 +193,8 @@ for one translation unit.
 A campaign prepares clean, warm sibling worktrees from the current integration
 tip and dispatches disjoint translation units in parallel. Finished work is
 integrated one commit at a time into a single advancing stack. Every commit is
-fully rebuilt and carries the corresponding `README.md` and `match.db`; parallel
+fully rebuilt and carries the corresponding `README.md` and
+`docs/binary_matching/match_state.tsv`; parallel
 branches are never merged into a fan and the approved stack is never squashed.
 After roughly 10-15 units, the batch receives a structure audit before review and
 landing.
@@ -205,8 +206,10 @@ and [the orchestration skill](.agents/skills/vostok-orchestrate-matching/SKILL.m
 
 ## Reviewing match % (no rebuild needed)
 
-These read the **last build** - the committed `binaries/objdiff/report.json` and
-`docs/binary_matching/match.db`. For *current* numbers after edits, run
+These read the **last build** - the generated (gitignored)
+`binaries/objdiff/report.json` and `binaries/match.db`. Only
+`docs/binary_matching/match_state.tsv` and this README's score block are
+committed. For *current* numbers after edits, run
 `python3 -m vostok build` first (it regenerates `match.db` at the end of the
 build); `python3 -m vostok derive refresh` only re-derives the DB from an
 already-built `report.json` (it does NOT rebuild - run `vostok build` if sources moved).
@@ -245,8 +248,9 @@ python3 -m vostok derive report --function 'medkit::'
 # list EVERY function in a module/unit + its raw diff columns (fuzzy_pct, struct_class,
 # t_stmts/b_stmts, sizes, target VA hint). The most direct per-function dump; filter by
 # --class to pull just the steerable QUANTITY traps, or --presence for the unpaired set.
-# Needs a FRESH DB - `list` bails on a stale report.json (run vostok build/refresh first),
-# unlike report/sql which warn-and-proceed. --json gives full names; pipe wide output to `less -S`.
+# Needs a FRESH DB. Only `queue` BAILS on a stale report.json (--stale-ok overrides);
+# list/report/max print the `[match_db] STALE:` warnings and proceed, and `sql` does not
+# check at all. --json gives full names; pipe wide output to `less -S`.
 python3 -m vostok derive list --module game_core                  # all game_core functions
 python3 -m vostok derive list --module game_core --class QUANTITY  # just the wrong-stmt-count traps
 python3 -m vostok derive list --unit vostok/game_core/sources/weapon_core.cpp
@@ -264,7 +268,10 @@ python3 -m vostok derive sql "SELECT substr(u.name,25) unit, s.demangled, f.caus
   FROM flags f JOIN symbols s ON s.mangled=f.mangled JOIN target_functions tf ON tf.sym=s.id \
   JOIN units u ON u.id=tf.unit WHERE f.flag='OUT_OF_SCOPE' AND u.module='game_core'"
 
-# function-level DIFF of the committed match.db across revisions (a regression tracker):
+# LEGACY - function-level DIFF of a COMMITTED match.db across revisions. match.db is no
+# longer committed, so this only reaches revisions old enough to still carry the blob; on
+# this branch it has none, and the regression tracker is the text ledger instead:
+#   git diff <hash> -- docs/binary_matching/match_state.tsv
 #   <hash>          compares that commit vs the working tree
 #   <hash>..<hash>  compares two commits
 # groups every function: regress / lost / new / improve / TOUCHED (retries up, % unchanged -
