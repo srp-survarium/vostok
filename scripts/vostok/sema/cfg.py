@@ -87,11 +87,15 @@ def cfg(insns, labels, stmts=None, stats=None):
         else:
             b[2] = "end"
     out = [tuple(b) for b in blocks]
+    raw = len(out)
     while out and all(x.startswith(("nop", "int3")) for x in out[-1][1]):
         out.pop()                                       # alignment padding
-    out, n = contract(trim_tail(out))
+    out = seal(trim_tail(out))
+    trimmed = raw - len(out)
+    out, n = contract(out)
     if stats is not None:
         stats["contracted"] = n
+        stats["trimmed"] = trimmed
     return out
 
 
@@ -194,6 +198,37 @@ def trim_tail(blocks):
             break
         blocks.pop()
     return blocks
+
+
+def seal(blocks):
+    """Rewrite terminators that name a block the trailing trims removed.
+
+    `cfg` drops trailing alignment padding and `trim_tail` drops the decoded
+    jump TABLE, neither of which renumbers - so a kept block can still say
+    `jmp B76` when only 72 blocks remain. That printed as a destination the
+    listing does not contain, and it crashed `contract`, whose renumber map is
+    built over the surviving blocks:
+
+        KeyError: 72   vostok/sema/cfg.py:166 in _renumber
+
+    A destination outside the kept graph is exactly what `<ext>` already means
+    (a tail call, a computed jump), so say that instead. Both sides seal by the
+    same rule, so no comparison depends on which side had the dangling edge."""
+    n = len(blocks)
+
+    def repl(m):
+        gone = int(m.group(2)) >= n
+        if not gone:
+            return m.group(0)
+        return "end" if m.group(1) == "fall" else m.group(1) + " <ext>"
+
+    out = []
+    for off, body, term, src in blocks:
+        if term and any(int(x) >= n for x in re.findall(r"B(\d+)", term)):
+            term = re.sub(r"(jcc|jmp|fall) B(\d+)\^?", repl, term)
+            term = term.replace("jcc <ext> | end", "jcc <ext>")
+        out.append((off, body, term, src))
+    return out
 
 
 def kind(term, at):
