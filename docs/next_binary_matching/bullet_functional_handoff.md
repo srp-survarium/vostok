@@ -134,20 +134,20 @@ sub-100 entries are these — it has no real work left).
      --view structure-diff` (also `--view target` for the target asm/body,
   `--view diff` with `--objdiff-target-dir/-base-dir binaries/objdiff/{target,base}`
   for the operand-aware byte %).
-- **Build + rescore:** `nix develop --command python3 scripts/rebuild.py`
+- **Build + rescore:** `nix develop --command python3 -m vostok build`
   (~10 min Wine build, then regen delink/structure/rich + match.db + README).
 - **objdiff report:** `binaries/objdiff/report.json` (per-function
   `fuzzy_match_percent`).
 
 ### Two environment traps that already bit this work
-1. **Stale target ⇒ phantom score crash.** If `rebuild.py` prints
+1. **Stale target ⇒ phantom score crash.** If `vostok build` prints
    `WARNING: target index is >7 days older than base` or the base delink logs
    `no target symbol map … yet; emitting local defaults`, the score will smear
    DOWN across EVERY module (a phantom ~-1% / -800 exact) — NOT a regression.
    Fix before believing any drop:
-   `cd scripts && python3 generate_delink.py target && python3 generate_rich.py target \
-    && python3 generate_structure.py target && python3 generate_delink.py base \
-    && python3 match_db.py refresh && python3 match_score.py --write-readme`.
+   `cd scripts && python3 vostok.build.generate_delink target && python3 vostok.build.generate_rich target \
+    && python3 vostok.build.generate_structure target && python3 vostok.build.generate_delink base \
+    && python3 vostok derive refresh && python3 vostok ledger readme --write-readme`.
    See memory `per-worktree-target-staleness`.
 2. **Don't bank build-artifact churn.** Everything under `binaries/` is gitignored;
    only `README.md` + `docs/binary_matching/match.db` are tracked. Commit source

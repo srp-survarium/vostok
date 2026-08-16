@@ -29,15 +29,15 @@ human always sees where you are.
 
 Build a STACK and always sit on its TOP, in one worktree. Each finishing matcher's TU is
 REBASED onto the current tip and gets its own committed `match.db` snapshot - so
-`match_db.py diff <tip-A>..<tip-B> --module <m>` reports exactly the work between any two
-stack points. `rebuild.py` is your build+DB step in one - it rebuilds the worktree
-incrementally AND regenerates `match.db` at the end of its run, so you run `rebuild.py`
-(not a bare `refresh`) to advance the DB; `match_db.py refresh` is regen-only (re-derive
+`vostok derive diff <tip-A>..<tip-B> --module <m>` reports exactly the work between any two
+stack points. `vostok build` is your build+DB step in one - it rebuilds the worktree
+incrementally AND regenerates `match.db` at the end of its run, so you run `vostok build`
+(not a bare `refresh`) to advance the DB; `vostok derive refresh` is regen-only (re-derive
 the DB from an already-built `report.json`, no build). NEVER build the integration branch
 (it lacks the matches -> full rebuild).
 
 1. **Sit on the top + rebuild** - checkout the CURRENT stack tip, then ALWAYS run
-   `python3 scripts/rebuild.py` (builds incrementally AND regenerates the DB, catching any
+   `python3 -m vostok build` (builds incrementally AND regenerates the DB, catching any
    staleness before you spawn).
 2. **Spawn matcher(s) off the top** - ONE TU each, ALL branched off the CURRENT tip
    (parallel in sibling worktrees is fine; bundle a few TINY TUs into one matcher so the
@@ -46,12 +46,12 @@ the DB from an already-built `report.json`, no build). NEVER build the integrati
    commit onto the tip (a parallel sibling may have landed first, so it branched off an
    OLDER tip - never merge-in). Resolve the stack conflicts in `temp_include_all.cpp` /
    module `.vcproj`. That commit is the NEW top.
-4. **Rebuild + snapshot the DB** - `python3 scripts/rebuild.py` (builds the new top
+4. **Rebuild + snapshot the DB** - `python3 -m vostok build` (builds the new top
    incrementally + regenerates the DB at the end), then COMMIT the updated `match.db` onto
    the tip. EVERY stack commit must carry a measured DB snapshot - that is what makes the
    per-step `diff` work, and it is why you **build BEFORE opening the unit's PR**: every PR
    must carry an up-to-date, measured DB. Rebuild BEFORE you mark AND before you open the PR.
-5. **Mark functions** - from the regenerated DB: `match_db.py tried --unit <tu>` (marks the
+5. **Mark functions** - from the regenerated DB: `vostok derive tried --unit <tu>` (marks the
    WHOLE TU, even ones already at 100%, so the diff shows the whole TU was touched); flag
    parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP); upgrade
    any banked LTCG residual the rebuild lifted to 100%.
@@ -67,7 +67,7 @@ is reference detail for these six steps.
 Step 4 commits a MEASURED `match.db` on every stack commit, so any two stack points are
 comparable with the `diff` subcommand (the reason the loop is shaped this way):
 
-    python3 scripts/match_db.py diff <tip-A>..<tip-B> --module <m>   # also --verbose / --json
+    python3 -m vostok derive diff <tip-A>..<tip-B> --module <m>   # also --verbose / --json
 
 It groups the function-level work between A and B: regress / lost / new / improve /
 TOUCHED (retries rose but % + structure held - i.e. a worked TU's already-100% fns) /
@@ -105,7 +105,7 @@ the matching. So size the work to that cost - never iterate one tiny TU at a tim
 
 Constraints: pick NON-OVERLAPPING TUs (never two live matchers on the same file/TU -
 serialize same-file work); for PARALLEL matchers set `WINEPREFIX=<worktree>/binaries/
-.wineprefix` per worktree or they collide on one `mspdbsrv`. `match_db.py queue` already
+.wineprefix` per worktree or they collide on one `mspdbsrv`. `vostok derive queue` already
 hands you per-TU batches smallest-first, with the effectively-done near-ceiling fns dropped.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
@@ -120,15 +120,15 @@ yours; do not load them.
 
 ## Work outside the main repo - one worktree per worker
 The main checkout is **read-only sequencing + final landing only** - never edit sources,
-run `rebuild.py`, enable a TU, or run a matcher in it. Every worker runs entirely inside a
+run `vostok build`, enable a TU, or run a matcher in it. Every worker runs entirely inside a
 **sibling worktree** `/home/sheep/Projects/surv/vostok_<N>` - each a full checkout with its
 OWN `binaries/` and `$PWD`-derived `WINEPREFIX`, so parallel Wine builds and `report.json`s
 never collide. In every worker prompt say: "work entirely inside `vostok_<N>`; start EVERY
 bash command with `cd /home/sheep/Projects/surv/vostok_<N> && ...`; never touch the main repo
 or another worktree." Confirm the chosen worktree is clean and warm before dispatch
-(`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). `rebuild.py` regenerates the
+(`git -C <wt> status --short`; `binaries/rich/target` + `binaries/objdiff` present). `vostok build` regenerates the
 ninja graph itself on every run (write-if-changed), so resets/un-excluded TUs are picked up
-automatically - no manual `regen_ninja.py` step.
+automatically - no manual `vostok.build.ninja_regen` step.
 
 ## Concurrency - up to N parallel workers (the run's cap), one per worktree
 Hold at most **N concurrent workers** - the run's parallel-worker cap (default 3) - one per
@@ -144,16 +144,16 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 
 ## Run
 1. **Build the queue** for the target module with the match DB (you are its
-   SINGLE WRITER - workers never touch it: `rebuild.py` regenerates the DB at the
+   SINGLE WRITER - workers never touch it: `vostok build` regenerates the DB at the
    end of every build (or `refresh` re-derives it regen-only), you record EVERY
    dispatch with `tried`, set/clear `flag`s from worker result lines, and commit
    `docs/binary_matching/match.db` at run milestones. Booktrack EVERY worker as
    you go - see "Booktrack the match DB every step" below; never leave it to an
    end-of-run sweep or only in chat):
    ```
-   python3 scripts/rebuild.py             # canonical build; regenerates match.db at the end
-   python3 scripts/match_db.py report --module <m> --per-unit
-   python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
+   python3 -m vostok build             # canonical build; regenerates match.db at the end
+   python3 -m vostok derive report --module <m> --per-unit
+   python3 -m vostok derive queue  --module <m> [--limit N] [--json]
    ```
    `queue` emits ONE batch per TU - ALL of the TU's open functions together,
    smallest TU first - and skips done/out-of-scope/`SKIP`-flagged functions.
@@ -162,13 +162,13 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    steerable from source, so re-offering it wastes a worker - the near-ceiling
    exclusion keeps it out (kept ONLY when `struct_class == QUANTITY`, the real
    structural trap, since that is genuine work regardless of %). To bank the
-   already-done set out of the queue once, `match_db.py tried --done` stamps every
+   already-done set out of the queue once, `vostok derive tried --done` stamps every
    fn that ever reached 100% with `tries=1` (it then sorts behind everything
    untried). What stays in the queue is real work: low-`max` fns and high-% QUANTITY.
    We match PER TU (sushi, 2026-06-12): cherry-picking small functions across
    TUs causes churn; matched in their real TU, small helpers sit in the same
    inlining/LTCG environment as their callers and pair the way the target did.
-   To retry a parked function: `match_db.py flag <mangled> --requeue`.
+   To retry a parked function: `vostok derive flag <mangled> --requeue`.
    `list --presence TARGET_ONLY|BASE_ONLY` and the report's `suspicious` column
    surface unpaired symbols and NEAR_MISS mangling mismatches worth queuing.
 
@@ -181,7 +181,7 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    cross-module cuboid-ctor reg-conv + FPO walls, zero gain). Build the queue from the
    genuine structural mismatches only:
    ```
-   python3 scripts/match_db.py list --module <m> --class QUANTITY,SPLIT   # real structural work
+   python3 -m vostok derive list --module <m> --class QUANTITY,SPLIT   # real structural work
    ```
    plus real-body `--presence TARGET_ONLY` (skip dummy/d3d1x measurement artifacts) and
    hand-picked **low-% `SIZE`** (≲60%, where a low fuzzy usually hides a real per-statement
@@ -229,18 +229,18 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    - **Prepare the worktree FIRST (you own the env, not the worker)** - this keeps the
      matcher's context lean (it never reasons about branches/tips/stacking): in a free
      `vostok_<N>`, `git reset --hard <tip>` + `git clean -fdq`, and create the
-     unit's branch `git checkout -b match/<module>-<unit>` (rebuild.py auto-regens the graph).
+     unit's branch `git checkout -b match/<module>-<unit>` (vostok build auto-regens the graph).
      The worker now inherits all prior matches and just works in place.
    - Dispatch a `matcher` worker, **`run_in_background: true`**:
      `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
-   - **Booktrack the dispatch immediately:** `match_db.py tried <mangled>` for every
+   - **Booktrack the dispatch immediately:** `vostok derive tried <mangled>` for every
      function in the batch, so the next wave's `queue` does not re-offer in-flight work.
    - **One TU per dispatch - the worker owns the WHOLE TU** (sushi, 2026-06-12;
      supersedes the old N-small-functions batching). The TU is the natural unit:
      the worker pays the fixed setup (shared docs, class decl, member offsets,
      anchor, context) once for code that genuinely shares it, and small helpers
      get matched in their real place, in the same inlining/LTCG environment as
-     their callers. `match_db.py queue` hands you the per-TU batches smallest
+     their callers. `vostok derive queue` hands you the per-TU batches smallest
      first (header pseudo-units already folded into their host .cpp;
      LTCG-customized frameless leaves already skipped). Two adjustments at the
      extremes: BUNDLE a few TINY batches (1-2 functions) into
@@ -263,11 +263,11 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       in, never force-push its in-flight branch), **resolving the same-top sibling conflicts**
       in the append-only shared files (`temp_include_all.cpp` anchors deduped by name +
       braces balanced; the module `.vcproj`).
-   b. **Build, THEN snapshot the DB - BEFORE the PR.** `python3 scripts/rebuild.py` (builds
+   b. **Build, THEN snapshot the DB - BEFORE the PR.** `python3 -m vostok build` (builds
       the new top incrementally + regenerates `match.db` from a fresh `report.json`), then
       booktrack and COMMIT `docs/binary_matching/match.db` (+ refreshed README) onto the
       unit's branch. **Building before the PR is the rule: every PR must carry an
-      up-to-date, measured DB** so `match_db.py diff` works on the chain and the human reads
+      up-to-date, measured DB** so `vostok derive diff` works on the chain and the human reads
       real per-PR numbers. This regen also captures any LTCG/LTO wall this match LIFTED in
       OTHER units (whole-program optimization can flip the inlining budget so a banked "95%
       residual" in unit B now compiles to 100%) - re-check previously-banked residuals and
@@ -291,13 +291,13 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
 The DB is the durable record of the run - keep it current AS YOU GO, never in a
 single end-of-run sweep and never only in chat/PR bodies. It outlives your context
 and every PR branch: a fact that lives only in your ledger or a PR description is
-lost to the next session. The DB regen (rebuild.py at the end of its run, or a
+lost to the next session. The DB regen (vostok build at the end of its run, or a
 regen-only `refresh`) PRESERVES the `attempts` + `flags` tables, so booktracking
 survives rebuilds.
 
 **DONE and PARKED are mutually exclusive, and DONE is COMPILE-ESTABLISHED - never
 hand-written.** You cannot know a function matched without building it; a worker's
-(or SV's) reported % is a CLAIM until your post-build DB regen (`rebuild.py` at the
+(or SV's) reported % is a CLAIM until your post-build DB regen (`vostok build` at the
 end of its run) records it in the DERIVED tables (`pairs.struct_class` / `fuzzy_pct`).
 So the only stop-status you ever hand-write is PARKED (a `flag` + cause = "not done,
 here is the blocker"); DONE is READ BACK from the regenerated DB, never flagged.
@@ -308,11 +308,11 @@ residual" as done - it is NOT done, it stays OPEN so the next rebuild can lift i
 genuinely BLOCKED (won't compile/link/reachable until another unit's symbol lands).
 
 Per worker:
-- **On dispatch:** `match_db.py tried <mangled> [--note "..."]` for every function in
+- **On dispatch:** `vostok derive tried <mangled> [--note "..."]` for every function in
   the batch. `queue` demotes tried work, so this stops the next wave re-offering
   what is in flight. (`sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit
   you worked means you forgot this step.)
-- **Rebuild after EVERY worker** (step 4e) - `rebuild.py` regenerates the DB at the end
+- **Rebuild after EVERY worker** (step 4e) - `vostok build` regenerates the DB at the end
   of its run, so a rebuild both scores this unit AND can LIFT LTCG/LTO walls in OTHER
   units (a banked 95% residual flips to 100% once this unit changes the whole-program
   inlining budget). Re-check banked residuals each rebuild; upgrade the ones that lifted.
@@ -324,22 +324,22 @@ Per worker:
     step>"` so the blocker is QUERYABLE from the DB, not only in a PR body. Do NOT `SKIP`
     a park you want re-offered once its dependency lands.
   - otherwise leave the function OPEN: do NOT flag it "done". Its compile-measured status
-    is recorded by the post-build DB regen (`rebuild.py`; derived `struct_class`/`fuzzy_pct`);
+    is recorded by the post-build DB regen (`vostok build`; derived `struct_class`/`fuzzy_pct`);
     the `tried` note carries only the ATTEMPT (and, for a park, the cause) - never a done claim.
 - **Derived vs hand-written (the one caveat):** `tried`/`flags` are NOT merge-gated -
   booktrack them immediately, anywhere. The derived %s (`pairs.fuzzy_pct`, `history`)
   only reflect a unit's matches once the base is rebuilt WITH them - so the DB regen for
-  real %s/lifted-walls happens in the TOP-OF-STACK WORKTREE (`rebuild.py` regenerates
+  real %s/lifted-walls happens in the TOP-OF-STACK WORKTREE (`vostok build` regenerates
   it at the end of the worker's build; a regen-only `refresh` re-derives it from that
   fresh report), never the main repo, which never compiled the worktree edits.
 - **Commit `docs/binary_matching/match.db`** at run milestones (per-unit or per-wave),
   as its own housekeeping commit/PR - not folded into a match PR's one-commit shape.
-- **Audit with `match_db.py sql "<SELECT ...>"`** (read-only escape hatch) before you
+- **Audit with `vostok derive sql "<SELECT ...>"`** (read-only escape hatch) before you
   hand back - confirm every worked function has a `tried` row and every park a flag.
 
 ## Keep your context small (this is the whole point)
 - You hold only the ledger: one line per function. No asm, no diffs, no source.
-- Do not edit sources or run `rebuild.py` - that is the worker's job. You DO open and
+- Do not edit sources or run `vostok build` - that is the worker's job. You DO open and
   maintain the PRs (it's meta - your job) and resolve same-top sibling conflicts, but
   never pull a worker's asm, diffs, or source into your context - only its result line.
 - The ledger is yours alone (held in your context); the worker records its result in
@@ -362,38 +362,38 @@ and delete their branches.
 - The integration branch advances ONLY by this fast-forward (or by merging an approved PR),
   never by a direct commit; guideline/doc updates also go through a PR.
 - **Preserve the per-step `match.db` commits** the chain carries - they keep
-  `match_db.py diff <base>..<tip>` working on the integration branch after landing. If a
+  `vostok derive diff <base>..<tip>` working on the integration branch after landing. If a
   `match.db` blob ever conflicts during integration, resolve by taking the unit's side and
-  re-running `match_db.py refresh` (regen-only) against its built `report.json` - the DB is
+  re-running `vostok derive refresh` (regen-only) against its built `report.json` - the DB is
   deterministic, so a regen reconciles it; never resolve by dropping the DB change.
 
 ## Keep the README match score current (the human's no-run regression tracker)
 README.md carries an auto-generated score block (`<!-- match-score:start/end -->`):
 the overall fuzzy % plus a per-module **functions-exact / code-matched** table,
-derived from `binaries/objdiff/report.json`. **`rebuild.py` refreshes it at the end of
+derived from `binaries/objdiff/report.json`. **`vostok build` refreshes it at the end of
 every build** (next to the `match.db` regen), so it tracks `report.json` on its own -
-you never run `match_score.py` by hand. It is **report-derived** (the source carries no
+you never run `vostok ledger readme` by hand. It is **report-derived** (the source carries no
 status markers; per-function status lives in the match DB) - this is how the human
 tracks progress and spots regressions *without running anything*, by diffing the block
-across commits. The block and `match.db` move together: every `rebuild.py` advances both.
+across commits. The block and `match.db` move together: every `vostok build` advances both.
 - **Rule (sushi 2026-06-21): update the DB + README on EVERY matcher commit - do NOT batch.**
-  After you cherry-pick a finished matcher onto the tip, `rebuild.py`, then **fold the
+  After you cherry-pick a finished matcher onto the tip, `vostok build`, then **fold the
   regenerated `docs/binary_matching/match.db` + `README.md` INTO that matcher's commit**
   (`git add docs/binary_matching/match.db README.md && git commit --amend --no-edit`). So
   EVERY matcher integration commit carries its own measured DB snapshot AND its README score
   delta - `git diff <prev>..<this>` shows the README block moving for that single matcher.
   Never defer the DB/README to a later batched "snapshot" commit across several matchers (it
-  hides which matcher moved the score and breaks the per-step `match_db.py diff`).
+  hides which matcher moved the score and breaks the per-step `vostok derive diff`).
   - **NO "comment-only" skip (sushi 2026-06-21).** Rebuild+amend EVERY integrated commit,
     including structure-verification / note-only / park commits. A "comment-only" change is NOT
     guaranteed byte-neutral: adding/removing source LINES shifts `__LINE__` in every
     `LOG_INFO`/`ASSERT`/`__FILE__`/`__LINE__` site below it, which moves bytes - so its README
     *can* change, and skipping the rebuild leaves a stale DB at that commit AND a commit with no
-    README diff (the thing this rule exists to provide). One `rebuild.py` per integrated commit,
+    README diff (the thing this rule exists to provide). One `vostok build` per integrated commit,
     serialized through the main worktree (see [[serialize-integration-rebuilds-one-worktree]]) -
     no exceptions, even for zero-`%` verification commits.
 - If the README/`match.db` blob conflicts on a cherry-pick, do NOT hand-resolve: take either
-  side and rerun `rebuild.py` (it regenerates both deterministically), same as `match.db`.
+  side and rerun `vostok build` (it regenerates both deterministically), same as `match.db`.
 
 ## Audit a batch with the structure-verifier (after 10-15 matchers, NOT per unit)
 Run the `structure-verifier` periodically - **only after every 10-15 matchers have landed
@@ -419,7 +419,7 @@ whole-program inline). The full loop: **fan matchers -> integrate each into the 
 any punted finding -> done.**
 
 ## Dispatch hygiene
-- Hand each worker its TU plus the open-function list FROM `match_db.py queue` with a
+- Hand each worker its TU plus the open-function list FROM `vostok derive queue` with a
   locating hint (`file:line` or `rva`) for each - and ONLY that list. The queue already
   drops the effectively-done functions: anything `>=95%` whose structure matches
   (`MATCH`/`SIZE`/`SPLIT`) - the residual there is non-steerable LTCG, so a matcher would

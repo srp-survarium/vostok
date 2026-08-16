@@ -2,7 +2,7 @@
 
 Authoritative structure verification compares our **base** gold PDB against the
 **target** `survarium.pdb` straight off both type streams — self-comparison is 0
-divergences (no false positives), unlike `layout_diff.py` which both over- and
+divergences (no false positives), unlike `vostok diff layout` which both over- and
 under-reported. This is the worklist; re-running the tool is the scoreboard.
 
 Tool: `pdb_divergence` (vostok-pdb-parser, branch `structure-builder-all-enums+scaleform`,

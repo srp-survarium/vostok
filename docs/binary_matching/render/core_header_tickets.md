@@ -215,6 +215,6 @@ applies: keep it even if some current %s dip.
 ## Handling
 
 Run these as ONE deliberate core-structure pass with a full before/after
-`match_db.py diff` across ALL modules (not just render), once the render root
+`vostok derive diff` across ALL modules (not just render), once the render root
 lanes have drained the work that does not depend on them. Both tickets were
 raised from render but neither is render-owned.

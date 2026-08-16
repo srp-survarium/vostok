@@ -65,11 +65,11 @@ its single writer).
   (`--view callees`/`info` for callee names + PDB-recorded locals; `--rva 0x<target>` to
   pin an overload.)
 - **Navigate SOURCE with clangd, not grep**, when you need where-is-it/who-uses-it
-  across the 2k-file tree (`scripts/clangd_query.py`):
+  across the 2k-file tree (`vostok tool clangd`):
   ```
-  python3 scripts/clangd_query.py symbol <fuzzy-name>        # find decls/defs by name
-  python3 scripts/clangd_query.py refs  <file> <line>        # all call/use sites
-  python3 scripts/clangd_query.py hover <file> <line> [col]  # resolved type at point
+  python3 -m vostok tool clangd symbol <fuzzy-name>        # find decls/defs by name
+  python3 -m vostok tool clangd refs  <file> <line>        # all call/use sites
+  python3 -m vostok tool clangd hover <file> <line> [col]  # resolved type at point
   ```
   pdb_fetch answers the BINARY side; clangd answers the source graph.
 - **Write** a first approximation in the `.cpp` per MATCHING.md.
@@ -88,7 +88,7 @@ its single writer).
   - **Locals:** declare AND use every `// LOCALS` entry (under `/Od` each gets a slot - a dropped local is a dropped statement).
   - **Switch braces / default:** read the carcass - a `+0x002` step (2-byte `jmp short` = a `}`) marks a braced `case`; a jump table with no `cmp max; ja default` means full contiguous cases + `default: NODEFAULT();`. Match it.
 - **Reachability:** reference the function from `temp_include_all.cpp` (unless an already-anchored function calls it).
-- **Build + score:** `python3 scripts/rebuild.py` with **NO module arg** (a bare
+- **Build + score:** `python3 -m vostok build` with **NO module arg** (a bare
   module name builds only the `.lib`, does NOT relink the EXE, so the score stays
   STALE - `report-changes.json` reads `+0.00`). Take `fuzzy_match_percent` from
   `report.json` (the only live number); check `report-changes.json` for regressions.

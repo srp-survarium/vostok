@@ -55,7 +55,7 @@ For a shared namespace or a legacy-body harvest, also read:
 3. Regenerate canonical target structure:
 
    ```text
-   python3 scripts/generate_structure.py target
+   python3 -m vostok.build.generate_structure target
    ```
 
 4. Copy the module's generated `headers/` and `sources/` material from
@@ -165,11 +165,11 @@ For each real header:
 6. Delete entries from either queue only when the corresponding real header or
    method is present and compile-validated, or its disposition is recorded.
 7. During render reconstruction, compile only the three retail render libraries:
-   `python3 scripts/ninja_build.py render_facade render_core_pc_dx11
+   `python3 -m vostok.build.ninja render_facade render_core_pc_dx11
    render_engine_pc_dx11`. Fix compiler errors until all three libraries build
    cleanly. Do not link or regenerate reports during this structural loop.
 8. Commit small green batches. Every commit requires a successful full
-   `python3 scripts/rebuild.py` and its generated `README.md` and `match.db`.
+   `python3 -m vostok build` and its generated `README.md` and `match.db`.
 
 ## Drain the legacy implementation queue
 

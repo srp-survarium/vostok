@@ -94,7 +94,7 @@ lvalue prefers the non-template. The target confirms both -
 
 ## Payoff
 
-One overload, measured repo-wide (`match_db.py diff`), 36 improvements against
+One overload, measured repo-wide (`vostok derive diff`), 36 improvements against
 11 regressions, eight functions moved to byte-exact:
 `core_debug_engine::create_folder_r` 58.4 -> 100,
 `engine_world::get_user_data_directory` 48.8 -> 100,

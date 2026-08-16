@@ -4,7 +4,7 @@ Working agreement for the queue grind (`temp/structure_queue/`). One agent per
 batch, SERIAL (every batch touches `game.vcproj` + `temp_include_all.cpp`).
 Per batch: reproduce each file (headers + same-stem `*_inline.h`), wire headers
 into `temp_include_all.cpp` + a vcproj `<File>` entry, `git rm` from the queue,
-`rebuild.py game` green, ONE commit. Queue `.cpp` compilands are reproduced
+`vostok build game` green, ONE commit. Queue `.cpp` compilands are reproduced
 with their subsystem but added to the vcproj `ExcludedFromBuild="true"` for
 every configuration - TU enablement is a separate leaf-first pass at the end
 (an enabled-but-uncompilable TU breaks the build for everyone).
@@ -38,7 +38,7 @@ whole. Update the Status column (+ commit SHA) when a batch lands.
 Both acceptance gates met: `temp/structure_queue/` is EMPTY (every canonical
 class/struct/enum/carcass reproduced or triaged) and no addressless `FUNCTION
 BODY` remains in `sources/vostok/game/sources/`. The game module's entire type
-skeleton is real, compilable C++; `python3 scripts/rebuild.py` is green; the
+skeleton is real, compilable C++; `python3 -m vostok build` is green; the
 new `vostok/scaleform` module is scaffolded. ~144 game compilands (+10
 scaleform) sit `ExcludedFromBuild` as addressed stub carcasses, ready for the
 matcher loop (batch 14). `game_entry_point.cpp` keeps its interim form (returns

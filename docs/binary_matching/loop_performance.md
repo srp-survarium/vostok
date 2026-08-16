@@ -17,7 +17,7 @@ actionable.
 ## What a rebuild does
 
 - The dominant cost is now **token consumption** (agent context re-read on each
-  iteration), NOT the rebuild. A full `rebuild.py` (recompile the changed module
+  iteration), NOT the rebuild. A full `vostok build` (recompile the changed module
   under Wine + rerun the delinker over the EXE to regenerate `binaries/objdiff/base`
   + `binaries/rich/base`) is ~10 min and runs in the **background** — it is not the
   thing to obsess over minimizing.
@@ -26,11 +26,11 @@ actionable.
   target asm, writing the body, diffing are all cheap; a wasted *iteration* is the
   expensive part. (The tips below still apply: they were written as "saves a rebuild"
   but the real win is saving an iteration.)
-- **`rebuild.py` is the dominant cost, and it is ~fixed per call** regardless of
+- **`vostok build` is the dominant cost, and it is ~fixed per call** regardless of
   how small the function is. One invocation recompiles the whole changed module
   under Wine *and* reruns the delinker over the entire EXE to regenerate
   `binaries/objdiff/base` + `binaries/rich/base`.
-- Still worth **minimizing wasted `rebuild.py` calls** — a cycle spent on a
+- Still worth **minimizing wasted `vostok build` calls** — a cycle spent on a
   reachability or compile bug teaches nothing. Everything else (reading target asm,
   writing the body, diffing) is cheap by comparison.
 
@@ -42,7 +42,7 @@ actionable.
   produces a diffable base object. A wasted first build (function stripped because
   it was unreachable) is a whole rebuild cycle lost.
 - **The `--view diff` inspection step does NOT need a rebuild.** It reads the
-  existing `binaries/rich/base` vs `target`. Only re-run `rebuild.py` after you
+  existing `binaries/rich/base` vs `target`. Only re-run `vostok build` after you
   have actually *changed source*; never rebuild just to "look again".
 - **Batch source edits between rebuilds.** If the diff shows two independent fixes,
   apply both, then rebuild once.
@@ -78,17 +78,17 @@ _(Append new findings below this line.)_
   callers are matched. Write the (correct) body once, anchor it once to confirm
   the symbol survives + the score, then STOP - don't iterate the anchor.
   Cost me 2 wasted rebuilds chasing it on `weapon_recoil_params::weapon_recoil_params()`.
-- **`rebuild.py <module>` does NOT relink the EXE - it only builds that ninja
-  sub-target (the module's `.lib`).** `rebuild.py` forwards its args to
-  `ninja_build.py`, which passes them through as ninja *targets*; with no arg it
+- **`vostok build <module>` does NOT relink the EXE - it only builds that ninja
+  sub-target (the module's `.lib`).** `vostok build` forwards its args to
+  `vostok.build.ninja`, which passes them through as ninja *targets*; with no arg it
   builds the full game (`survarium_-_PC_-_DirectX_11`) and relinks the EXE. The
   delinker/rich index read the linked **EXE**, so if you pass a module name the
   EXE is stale and your source change does not show up in `--view diff` or the
   score (build finishes in ~1 min instead of ~10, and `report-changes.json` shows
   score (the build finishes fast but does NOT relink, and `report-changes.json` shows
-  `+0.00 / 0 changed` - the tell). Run **`python3 scripts/rebuild.py`** with no
+  `+0.00 / 0 changed` - the tell). Run **`python3 -m vostok build`** with no
   module arg so the EXE actually relinks. Cost me one wasted rebuild on
-  `scheduler::on_frame`. (Note: the per-function loop doc's `rebuild.py <module>`
+  `scheduler::on_frame`. (Note: the per-function loop doc's `vostok build <module>`
   is misleading on this point.)
 - **MSVC LTCG objects are ANONYMOUS OBJECTs (IL, not machine code).** `dumpbin
   /DISASM` on `binaries/Win32/intermediates/.../*.obj` prints nothing useful -
@@ -418,10 +418,10 @@ TARGET obj symbols + asm, with zero re-rebuilds:
 
 ## The "rebuild stuck for minutes with nothing happening" is a Wine zombie, not real work
 A full relink's real cost is ~1.5 min (≈37s whole-module recompile + ≈55s LTCG link + ≈5s delink),
-measured. But intermittently `rebuild.py` appears to hang for 10+ minutes at 0% CPU: Wine leaves a
+measured. But intermittently `vostok build` appears to hang for 10+ minutes at 0% CPU: Wine leaves a
 finished `cl.exe`/`link.exe` child that already wrote its output and SUCCEEDED but never exits, so
 ninja blocks on it (you'll see dozens of stale `cl` procs parented to `wineserver` in htop). That dead
-wait, not compute, is what made rebuilds feel like ~12-20 min. `scripts/ninja_build.py` now carries a
+wait, not compute, is what made rebuilds feel like ~12-20 min. `vostok.build.ninja` now carries a
 **watchdog** for the full-game build: it runs `wine ninja` as a child and, once the EXE+PDB mtimes have
 advanced past build-start AND the whole wine compiler/linker tree has been idle (<0.15 cores) for 60s
 while ninja still hasn't returned, it concludes the link is done-but-zombied, reaps the wine children,
@@ -437,12 +437,12 @@ still took 11-15 min wall-clock while `.ninja_log` showed only ~100-325s of edge
 written on time. mtime forensics pinned the gap: a constant ~604s between the link finishing and the
 delink/structure/rich steps starting. Cause: `cl.exe`/`link.exe` spawn `mspdbsrv.exe` (the PDB-writer
 daemon), which idles for **~10 minutes** before exiting on its own and inherits the build's stdout fd.
-Anything reading the build through a pipe - `rebuild.py`'s module-counting reader, an agent's shell
+Anything reading the build through a pipe - `vostok build`'s module-counting reader, an agent's shell
 capture - gets EOF only when mspdbsrv dies, long after everything has exited. The main repo dodged it
 by luck (its long-lived mspdbsrv predated the pipe), which is why only fresh worktrees seemed slow.
-Two fixes, both in place: `ninja_build.py` kills its prefix's `mspdbsrv.exe` after every build
+Two fixes, both in place: `vostok.build.ninja` kills its prefix's `mspdbsrv.exe` after every build
 (prefix-scoped by matching WINEPREFIX in `/proc/<pid>/environ` - a global pkill could corrupt a
-sibling worktree's in-flight link), and `rebuild.py` reads the pipe via `select()`, letting go once
+sibling worktree's in-flight link), and `vostok build` reads the pipe via `select()`, letting go once
 the child has exited and the pipe stays silent for 2s - so any future leaked fd-holder costs at most
 2s, not 10 min. Measured steady state after the fix (2-module recompile + relink): ~2 min wall-clock,
 of which ~60s is the LTCG link and ~5s the parallel structure/COFF/rich regeneration. If rebuilds
@@ -452,7 +452,7 @@ rebuild.log wall-clock and look for a new pipe-holder via `/proc/<pid>/environ` 
 ## The exe LINK rsp goes stale in worktrees: regen_ninja never compares it (OpenSSL LNK2001 trap)
 A fresh worktree branched after a `.vcproj` LINKER change (e.g. PR-stack commit be4e9a5e adding
 `libeay32/ssleay32` + the openssl LIBPATH to the exe's VCLinkerTool) can fail its first rebuild with
-38 unresolved `_SSL_*`/`_BIO_*` externals even though `regen_ninja.py` reports "ninja graph already
+38 unresolved `_SSL_*`/`_BIO_*` externals even though `vostok.build.ninja_regen` reports "ninja graph already
 matches the .vcprojs". Cause: regen compares only each module's *compile-source union*
 (`<module>_cl_*.rsp`) and exact-compares the top-level `.ninja` files - the link flags live in
 `rsp/<exe>_link.rsp`, which is NEVER diffed, so a stale link rsp survives regen. Fix: diff the

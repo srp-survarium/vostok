@@ -1,6 +1,6 @@
-# clangd over the generated compile_commands.json (regen_ninja.py emits it on
-# every rebuild). Navigation only: clang is a READER of this MSVC8-dialect
-# code; the Wine build is the sole verdict on correctness.
+# clangd over the generated compile_commands.json (vostok.build.ninja_regen
+# emits it on every rebuild). Navigation only: clang is a READER of this
+# MSVC8-dialect code; the Wine build is the sole verdict on correctness.
 CompileFlags:
   CompilationDatabase: .
   # The dialect errors clang cannot be talked out of (plus their knock-on

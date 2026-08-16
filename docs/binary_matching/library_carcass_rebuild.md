@@ -165,7 +165,7 @@ symbol disagree, the symbol wins** (`binaries/rich/target/index.jsonl`, `mangled
 field; access letter `Q/R`=public, `I/J`=protected, `A/B`=private, virtual variants
 `E/F/M/N/U/V`).
 
-Regen with `python3 scripts/generate_structure.py target` (gitignored). It is
+Regen with `python3 -m vostok.build.generate_structure target` (gitignored). It is
 deterministic from the shipped PDB, so a present tree is reusable; only refresh if the
 carcasses are old-format (addressless `// FUNCTION BODY`).
 
@@ -245,8 +245,8 @@ carcasses are old-format (addressless `// FUNCTION BODY`).
    `#include`d here too, so the compiler actually validates it (the rule: every header
    compiles even if its bodies are empty). Forward-declare sources/-local free functions
    in the anchor (those headers are off the public include path).
-4. `python3 scripts/rebuild.py <module>` (~30s, no relink) per TU - it regenerates the
-   ninja graph itself (write-if-changed), so the .vcproj edit is picked up automatically. Only when the module compiles clean, run the full `python3 scripts/rebuild.py`.
+4. `python3 -m vostok build <module>` (~30s, no relink) per TU - it regenerates the
+   ninja graph itself (write-if-changed), so the .vcproj edit is picked up automatically. Only when the module compiles clean, run the full `python3 -m vostok build`.
 5. **Commit after EACH green TU** (a stray `git reset` once wiped uncommitted work).
 6. If a header cascade is too deep to compile cheaply, RE-EXCLUDE the TU and keep the
    build green - an enabled-but-uncompilable TU breaks the whole base build for everyone.
@@ -278,6 +278,6 @@ See `game/legacy_harvest.md` for the worked protocol.
   log.
 - `grep -rn 'FUNCTION BODY$' sources/vostok/<module>` returns nothing (no addressless
   carcass) and no file carries the old generation's `Created` date.
-- `python3 scripts/rebuild.py` GREEN; `report-changes.json` only ICF-folding noise
+- `python3 -m vostok build` GREEN; `report-changes.json` only ICF-folding noise
   (`empty_stub`, `[thunk] vcall`, `boost::_bi::storageN`, `float3::float3()` flipping
   `100%->0%` as the winning COMDAT moves obj) - NOT a real regression.

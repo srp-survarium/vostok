@@ -64,14 +64,13 @@ the native `/home/...` path. The original game PDB instead uses
 
 ## Where the tooling lives (`scripts/vostok/`)
 
-The Python tooling is a package. Every command below still works exactly as
-written - `scripts/*.py` are thin shims that delegate - but when you need to
-READ or CHANGE the code, it is here:
+The Python tooling is a package; `scripts/` holds nothing else. Every command
+in these docs runs it as `python3 -m vostok ...`, and the code is here:
 
     core/     paths.py (EVERY repo path, once), tsv.py (the tracked-table
               shape), symbols.py (objdiff symbol normalization)
     ledger/   store.py (the committed record + the cur/max/hist policy),
-              cli.py (match.py), readme.py (the README block), queue.py
+              cli.py (the verbs), readme.py (the README block), queue.py
     derive/   report.json + the rich indexes -> binaries/match.db: aliases.py,
               modules.py, classify.py, maxima.py, roster.py, and the verbs
     sema/     one module per view: rva, xref, strings, blocks, branches, dot,
@@ -91,13 +90,13 @@ score block.
 `python3 -m vostok` (a map of the whole surface), `python3 -m vostok.ledger
 report --module render`, `python3 -m vostok.sema blocks <fn> --diff` and so on
 work from anywhere in the tree. After editing anything under `scripts/`, run
-`ruff check scripts/` and `python3 scripts/test_match_db.py`.
+`ruff check scripts/` and `python3 -m vostok.tests.test_match_db`.
 
 ## Build / diff loop
 
     nix develop                  # first entry builds the toolchain, sets up Wine
                                  # + ninja, and generates the target side once
-    python3 scripts/rebuild.py   # ninja build under Wine, then regenerate
+    python3 -m vostok build      # ninja build under Wine, then regenerate
                                  # binaries/structure/base + binaries/objdiff/base,
                                  # then refresh the matching ledger
 
@@ -105,25 +104,25 @@ A full engine build under Wine takes ~10 minutes; run it in the background (it i
 longer the loop bottleneck - agent token cost is). The
 objdiff config is `binaries/objdiff/objdiff.json`; a match report is
 `objdiff-cli report generate -p binaries/objdiff`. Every base delink regenerates
-`binaries/objdiff/report.json` (and `report-changes.json`); `rebuild.py` then
-refreshes the ledger from that report at the end of its run. `match_db.py
+`binaries/objdiff/report.json` (and `report-changes.json`); `vostok build` then
+refreshes the ledger from that report at the end of its run. `vostok derive
 refresh` is the regen-only path (re-derive from an already-built report;
-run `rebuild.py` first if sources moved) - it does NOT rebuild.
+run `vostok build` first if sources moved) - it does NOT rebuild.
 
-## The matching ledger (`match.py`)
+## The matching ledger (`vostok ledger`)
 
 `docs/binary_matching/match_state.tsv` is the committed record of the campaign:
-one text row per target function. Query and update it with `scripts/match.py` -
+one text row per target function. Query and update it with `vostok ledger` -
 it reads the file directly, so it needs no database and no build.
 
-    python3 scripts/match.py report --module render      # byte-weighted rollup
-    python3 scripts/match.py report --per-unit --module render
-    python3 scripts/match.py queue --module render       # one batch per TU, worst first
-    python3 scripts/match.py list --module render --class QUANTITY,SPLIT
-    python3 scripts/match.py list --headroom             # hist > max: we had it better once
-    python3 scripts/match.py tried <mangled> --note "what was attempted"
-    python3 scripts/match.py park <mangled> --cause "why it stops here"
-    python3 scripts/match.py open <mangled>              # undo a park
+    python3 -m vostok ledger report --module render      # byte-weighted rollup
+    python3 -m vostok ledger report --per-unit --module render
+    python3 -m vostok ledger queue --module render       # one batch per TU, worst first
+    python3 -m vostok ledger list --module render --class QUANTITY,SPLIT
+    python3 -m vostok ledger list --headroom             # hist > max: we had it better once
+    python3 -m vostok ledger tried <mangled> --note "what was attempted"
+    python3 -m vostok ledger park <mangled> --cause "why it stops here"
+    python3 -m vostok ledger open <mangled>              # undo a park
 
 Each row carries three percentages, and the difference between them is the whole
 point:
@@ -154,16 +153,16 @@ Keep `note` short; it is what stops the next matcher re-deriving a dead end.
 
 ## Match score (README regression tracker)
 
-`scripts/match_score.py` rolls `report.json` up into the overall fuzzy % plus a
+`vostok ledger readme` rolls `report.json` up into the overall fuzzy % plus a
 per-module functions/code-matched table in the `<!-- match-score -->` block at the
-top of README.md. **`rebuild.py` refreshes that block at the end of every build**
+top of README.md. **`vostok build` refreshes that block at the end of every build**
 (alongside the `match.db` regen), so it stays current with `report.json` on its
-own - you do not run `match_score.py` by hand. The numbers come straight from
+own - you do not run `vostok ledger readme` by hand. The numbers come straight from
 objdiff's measures (the source carries no status markers; per-function
 status lives in the ledger - see above), so the README is an honest, no-run
 regression tracker - diff the block across commits. If the block ever conflicts on
-a merge/cherry-pick, don't hand-resolve it: take either side and rerun `rebuild.py`
-(or, if the artifacts are already built, `match_score.py --write-readme`) to
+a merge/cherry-pick, don't hand-resolve it: take either side and rerun `vostok build`
+(or, if the artifacts are already built, `vostok ledger readme --write-readme`) to
 reconcile it deterministically - same as the ledger.
 
 Both the ledger and the README block are **text**, so a conflict is a normal
@@ -183,9 +182,9 @@ vcproj2ninja resolves includes through the project's `/I` dirs (it evaluates
 Only project headers are tracked; system/CRT headers from `%INCLUDE%` are
 intentionally not (they don't change).
 
-`rebuild.py` also regenerates the graph itself on every run (write-if-changed,
+`vostok build` also regenerates the graph itself on every run (write-if-changed,
 no mtime churn on no-ops), so NEW `#include`s, un-excluded TUs, and .vcproj
-edits are picked up without any manual `regen_ninja.py` step.
+edits are picked up without any manual `vostok.build.ninja_regen` step.
 
 ## Keep the README current
 

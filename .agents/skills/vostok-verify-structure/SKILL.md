@@ -25,7 +25,7 @@ description: Verify and fix whether reconstructed Vostok C++ has the target PDB 
    symbols, reorder for neatness, or modify a different unit to change inlining.
 7. Remove stale carcasses, derived verdicts, percentages, and comments describing
    an obsolete removed/stub state. Preserve live blockers and `sushi@TODO` items.
-8. Run a full `python3 scripts/rebuild.py`, re-run `structure-diff`, and inspect
+8. Run a full `python3 -m vostok build`, re-run `structure-diff`, and inspect
    regressions. Iterate after every final source adjustment.
 9. Commit the verified source together with that build's generated `README.md`
    and `docs/binary_matching/match.db`. Do not amend an unrelated historical

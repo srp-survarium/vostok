@@ -72,7 +72,7 @@ its owner exists measures noise. Order:
 3. Cut the ported function from its `temp/render_legacy/` file; delete the
    file when empty. What remains in the tree IS the queue.
 4. Batch = one subsystem; module compiles after every batch
-   (`python3 scripts/rebuild.py render_*` per module, full `rebuild.py`
+   (`python3 -m vostok build render_*` per module, full `vostok build`
    before commit). Every commit carries the regenerated `match.db` + README
    block: track render exact / exact-max / fuzzy / fuzzy-max per checkpoint.
 5. Legacy files that were ALREADY copied wholesale into the new tree:

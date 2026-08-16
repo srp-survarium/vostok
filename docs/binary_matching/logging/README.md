@@ -13,7 +13,7 @@
 * Also those macro are not compiled into the same assembly. This needs to be investigated further.
 * Devs forgot to remove `static vostok::logging::log_callback_boost	s_log_callback` in `logger.cpp`. It doesn't seem to be used by anything according to IDA, but it did generate a dynamic constructor function, which is not generated in my case. Why? Maybe I should initialize it to something?
   * claude (2026-06): the base emits both helpers. Their PDBs use different demangled spellings;
-    `match_db.py` safely canonicalizes plain fully-qualified static names before pairing. The six
+    `vostok derive` safely canonicalizes plain fully-qualified static names before pairing. The six
     `format_*` atexit helpers remain a compiler-context wall: the target calls the folded empty
     destructor while the base elides it. Explicitly declaring the empty destructor leaves the base
     thunks unchanged.

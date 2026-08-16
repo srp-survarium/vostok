@@ -1,7 +1,7 @@
 # match_db - the queue/report database (design, agreed pre-implementation)
 
-A sqlite database + CLI (`scripts/vostok/derive/`, run as `scripts/match_db.py`
-or `python3 -m vostok.derive`) that answers the bulk questions
+A sqlite database + CLI (`scripts/vostok/derive/`, run as `python3 -m vostok
+derive` or `python3 -m vostok.derive`) that answers the bulk questions
 the matching loop needs - build queues, roll up per-TU/module reports, find
 unpaired functions - and replaces `status.jsonl` as the machine-readable status
 store. It does NOT replace `pdb_fetch`: the parser stays the authoritative
@@ -9,9 +9,9 @@ per-function view (structure-diff, rich asm, statement slices); the DB exists
 for queries across thousands of functions at once.
 
 The derived tables are regenerated from the already-built diff artifacts by
-`rebuild.py` at the end of every build (it is the canonical build step and owns
-the DB regen); `match_db.py refresh` is the regen-only path that re-derives the
-DB from an artifact set already on disk (run `rebuild.py` first if sources
+`vostok build` at the end of every build (it is the canonical build step and owns
+the DB regen); `vostok derive refresh` is the regen-only path that re-derives the
+DB from an artifact set already on disk (run `vostok build` first if sources
 moved). "refresh" below means that regen step regardless of which trigger ran it.
 
 ## Data sources
@@ -20,7 +20,7 @@ moved). "refresh" below means that regen step regardless of which trigger ran it
 |---|---|
 | `binaries/objdiff/report.json` | TU roster (unit name = `vostok/<module>/sources/<file>.cpp`), per-function mangled name, size, `fuzzy_match_percent` |
 | `binaries/rich/target/index.jsonl` | exe-level target inventory: rva, size, file, statement table (off/size/line), locals |
-| `binaries/rich/base/index.jsonl` | same for our build; refreshed by every `rebuild.py` |
+| `binaries/rich/base/index.jsonl` | same for our build; refreshed by every `vostok build` |
 | target PDB **declaration records** (new parser dump, JSONL) | every function the ORIGINAL SOURCE declared - including methods the target binary inlined everywhere and emits no symbol for; class methods carry the true access/virtual/const |
 | sources tree | the function's source extent for the "touched" fingerprint |
 
@@ -35,7 +35,7 @@ vcproj <-> module is 1:1, so vcproject queries are module queries.
   byte-identical files; a no-op refresh produces no git diff.
 - **Merge strategy:** derived tables are recomputable, so a binary conflict is
   resolved by taking either side and re-running `refresh`; the persistent
-  tables (`history`, `flags`) are merged with `match_db.py merge-flags
+  tables (`history`, `flags`) are merged with `vostok derive merge-flags
   <other.db>` (union, newest wins).
 - **Commit cadence:** at the same points as the README score block (run start,
   before handing a stack back, after delinker/toolchain bumps) - not on every
@@ -198,7 +198,7 @@ only the source-scoped maximum, state identity, origin, and evidence reference
 belong in the database. README `exact-max` and `fuzzy-max` use this table and
 take current measurements as a floor, so MAX can never display below current.
 
-`match_db.py max [--module <m>] [--below 100]` lists the ledger. An island
+`vostok derive max [--module <m>] [--below 100]` lists the ledger. An island
 runner must first refresh from the real candidate artifacts, restore the source,
 and then use `record-max <mangled> --evidence <path> --expected-hash <hash>`.
 `record-max` accepts no score: it can annotate only the hash, score, exact bit,
@@ -235,24 +235,24 @@ everything we match is a class method.
 ## CLI
 
 ```
-match_db.py refresh                       # regen-only: ingest the already-built
-                                          #   report.json + indexes, reconcile
-                                          #   history (rebuild.py first if sources
-                                          #   moved - it regenerates the DB itself)
-match_db.py list   --module <m> [--unit <tu>] [--max-size 0x80]
-                   [--class QUANTITY,SIZE] [--presence TARGET_ONLY]
-                   [--queue-eligible] [--json]
-match_db.py report --module <m> [--per-unit]   # totals / paired / 100% /
-                                               # struct-MATCH / out-of-scope /
-                                               # remaining + the BASE_ONLY lint
-match_db.py queue  --module <m> [--limit N]
-                   # ONE batch per TU - all its open functions, smallest TU
-                   # first - skipping out-of-scope/MATCHED_BEFORE/SKIP; per-TU
-                   # matching keeps small helpers in their callers' LTCG
-                   # environment (no cross-TU small-function churn)
-match_db.py sql "<query>"                 # escape hatch, read-only
-match_db.py flag <mangled> --requeue|--out-of-scope --cause "..."
-match_db.py merge-flags <other.db>
+vostok derive refresh                       # regen-only: ingest the already-built
+                                            #   report.json + indexes, reconcile
+                                            #   history (vostok build first if sources
+                                            #   moved - it regenerates the DB itself)
+vostok derive list   --module <m> [--unit <tu>] [--max-size 0x80]
+                     [--class QUANTITY,SIZE] [--presence TARGET_ONLY]
+                     [--queue-eligible] [--json]
+vostok derive report --module <m> [--per-unit]   # totals / paired / 100% /
+                                                 # struct-MATCH / out-of-scope /
+                                                 # remaining + the BASE_ONLY lint
+vostok derive queue  --module <m> [--limit N]
+                     # ONE batch per TU - all its open functions, smallest TU
+                     # first - skipping out-of-scope/MATCHED_BEFORE/SKIP; per-TU
+                     # matching keeps small helpers in their callers' LTCG
+                     # environment (no cross-TU small-function churn)
+vostok derive sql "<query>"                 # escape hatch, read-only
+vostok derive flag <mangled> --requeue|--out-of-scope --cause "..."
+vostok derive merge-flags <other.db>
 ```
 
 Every query takes `--json` for agents. Causes live in `flags.cause` and as
@@ -322,4 +322,4 @@ the BASE_ONLY taxonomy falls back to "unexplained" for everything unpaired.
    (lands when the parser dump is available; graceful fallback before)
 7. migration: import status.jsonl causes that justify flags, DELETE all
    status.jsonl, update MATCHING.md / agentic_loop.md / agent defs to point at
-   match_db.py
+   vostok derive

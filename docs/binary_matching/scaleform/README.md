@@ -76,7 +76,7 @@ defines were already identical to render engine's (no change needed there).
   `ProjectDependencies` edge on it in `sources/vostok v2.0.sln` (mirroring its
   existing edge on `network_core`). Registering the project alone is NOT enough:
   vcproj2ninja only emits a `.ninja` for projects in the exe's dependency cone,
-  so without that edge `rebuild.py scaleform` reports `unknown target`.
+  so without that edge `vostok build scaleform` reports `unknown target`.
 - `scaleform_memory.h` reuses game's `survarium::g_allocator` (same namespace,
   storage in `game_entry_point.cpp`) - the PDB shows no module-own allocator;
   Scaleform heap traffic flows through the malloc/free hooks handed to
@@ -84,7 +84,7 @@ defines were already identical to render engine's (no change needed there).
 
 ## TU enablement status (2026-06-13)
 
-`nix develop --command python3 scripts/rebuild.py scaleform` -> **Build OK**;
+`nix develop --command python3 -m vostok build scaleform` -> **Build OK**;
 `vostok_scaleform-static-gold.lib` links and the full `survarium.exe` links green
 (`report-changes.json`: 0 regressed / 0 improved / 0 removed / 0 added - no
 render unit moved).
@@ -282,17 +282,17 @@ absent), which is also why the render engine's `render_engine_pc_dx11.vcproj`
 carries `SF_BUILD_SHIPPING` (its D3D1x HAL consumes GFx headers; the `Render::
 Texture::Copy` / AMP references the foreign 4.0.15 lib used to mask are gone).
 
-**The build (`scripts/build_gfx_suite.py`):** authors a per-lib `cl` response file
+**The build (`vostok.build.gfx`):** authors a per-lib `cl` response file
 straight from this recipe and compiles each TU directly under Wine
 (`wine cmd /c cl @rsp`), then `lib`s the objects - **NO vcproj2ninja / sln /
 ninja**. `ninja.exe` under Wine deadlocks after ~70-80 `cl` spawns, and a direct
 machine-code build has no in-graph step anyway. System includes (VC / WinSDK /
 DXSDK) come from Wine's `%INCLUDE%` (set in the Wine registry by
-`setup-toolchain.py`), so the rsp lists only the GFx `-I` dirs. The per-TU
-mspdbsrv pipe-EOF reaper (`scripts/gfx_mspdbsrv.py`, PR #280 ported to the direct
+`vostok tool toolchain`), so the rsp lists only the GFx `-I` dirs. The per-TU
+mspdbsrv pipe-EOF reaper (`vostok.build.gfx_mspdbsrv`, PR #280 ported to the direct
 driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
 
-    nix develop --command python3 scripts/build_gfx_suite.py
+    nix develop --command python3 -m vostok.build.gfx
 
   Source is the PRISTINE external SDK (`/home/sheep/Projects/scaleform_sdk`,
   4.2.22; `$SCALEFORM_SDK` overrides). No `scaleform_build/` overlay (deleted -
@@ -301,9 +301,9 @@ driver) is kept - `/Z7` + `/FD` + `/Fd` still touches `mspdbsrv.exe`. Build it:
 **Staging.** Output is `binaries.prebuilt/Win32/libraries/shipping/<name>.lib`,
 where the exe's `#pragma comment(lib,"<name>.lib")` resolves it. The libs are
 plain prebuilts: un-wired from the sln, `game_core` takes no dependency edge, and
-`copy_lib_files.py` skips the foreign 4.0.15 distribution `libgfx*.lib` under
-`scaleform/Lib/.../Release/` so a `setup-toolchain.py` pass never clobbers them.
-Do NOT run `setup-toolchain.py --force libs` after building.
+`vostok tool libs` skips the foreign 4.0.15 distribution `libgfx*.lib` under
+`scaleform/Lib/.../Release/` so a `vostok tool toolchain` pass never clobbers them.
+Do NOT run `vostok tool toolchain --force libs` after building.
 
 ### PDB source-checksum confirms 4.2.22 == shipped 4.2.21 (no drift)
 
