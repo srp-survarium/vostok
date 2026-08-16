@@ -20,8 +20,8 @@ gitignored derivation cache.)
     python3 -m vostok.ledger readme [--write-readme]
     python3 -m vostok.ledger mismatch-queue [--write-queue]
 
-Old entry points (`scripts/match.py`, `match_score.py`,
-`structure_mismatch_queue.py`, `match_state.py`) still work - they are shims.
+`vostok ledger <verb>` on the umbrella CLI is the same dispatch; `store` has no
+verb of its own and runs as `python3 -m vostok.ledger.store`.
 """
 
 from __future__ import annotations

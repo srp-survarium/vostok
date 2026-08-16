@@ -174,18 +174,18 @@ def git_head():
 
 def staleness_check(con, strict=False):
     """Freshness has TWO legs: report.json must be BUILT from the current
-    sources (rebuild.py records the HEAD it built at in report.head), and the
-    DB must have ingested that report (rebuild.py regenerates it at the end of
+    sources (`vostok build` records the HEAD it built at in report.head), and the
+    DB must have ingested that report (`vostok build` regenerates it at the end of
     every build; `refresh` re-derives it regen-only). Under lowest-match-first
     ordering, stale rows for freshly-landed work look like 0% and get
     dispatched FIRST - so queue refuses on either stale leg (--stale-ok
-    overrides); other commands warn. Cadence: land -> rebuild.py (regenerates
+    overrides); other commands warn. Cadence: land -> `vostok build` (regenerates
     the DB); run `refresh` by hand only to re-ingest an already-built report."""
     hard, soft = [], []
     row = con.execute("SELECT value FROM meta WHERE key='build_head'").fetchone()
     build_head = row[0] if row else None
     if not build_head or build_head.startswith("?"):
-        hard.append("DB predates the staleness guard - rebuild.py + refresh first")
+        hard.append("DB predates the staleness guard - `vostok build` + refresh first")
     else:
         if build_head.endswith("+dirty"):
             build_head = build_head[: -len("+dirty")]
@@ -196,7 +196,7 @@ def staleness_check(con, strict=False):
                 _, last = _git("log", "-1", "--format=%h %s", "--", "sources/")
                 hard.append(
                     f"sources/ changed since report.json was BUILT ({build_head[:8]}..HEAD,"
-                    f" last: {last}) - rebuild.py + refresh first"
+                    f" last: {last}) - `vostok build` + refresh first"
                 )
     if REPORT.is_file():
         row = con.execute("SELECT value FROM meta WHERE key='report_mtime'").fetchone()
@@ -213,7 +213,8 @@ def staleness_check(con, strict=False):
 
 def open_db(path=DB_PATH, must_exist=True, check_schema=False):
     if must_exist and not Path(path).is_file():
-        sys.exit(f"[match_db] no database at {path} - run `match_db.py refresh` first")
+        sys.exit(f"[match_db] no database at {path} - run "
+                 "`python3 -m vostok derive refresh` first")
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     if check_schema:
@@ -224,7 +225,7 @@ def open_db(path=DB_PATH, must_exist=True, check_schema=False):
         if v is None or v[0] != SCHEMA_VERSION:
             sys.exit(
                 f"[match_db] DB schema {v[0] if v else '?'} != {SCHEMA_VERSION} - "
-                "run `match_db.py refresh` first"
+                "run `python3 -m vostok derive refresh` first"
             )
     return con
 

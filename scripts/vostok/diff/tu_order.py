@@ -34,16 +34,16 @@ is not a `pairs.target_rva` is TARGET_ONLY, and likewise for BASE_ONLY.
 
 USAGE
   # list the TUs the DB knows (optionally filter by module / substring)
-  python3 scripts/tu_order.py --list [--module game] [PATTERN]
+  python3 -m vostok diff tu-order --list [--module game] [PATTERN]
 
   # dump the two ordered blocks + unified diff for one TU
-  python3 scripts/tu_order.py vostok/game/sources/network_client_processing.cpp
+  python3 -m vostok diff tu-order vostok/game/sources/network_client_processing.cpp
 
   # short signatures (drop leading return type + vostok::/survarium:: noise)
-  python3 scripts/tu_order.py --short vostok/game/sources/object.cpp
+  python3 -m vostok diff tu-order --short vostok/game/sources/object.cpp
 
   # only the reordering verdict (skip the full blocks)
-  python3 scripts/tu_order.py --reorder-only vostok/game/sources/human_npc.cpp
+  python3 -m vostok diff tu-order --reorder-only vostok/game/sources/human_npc.cpp
 
 A TU argument may be a full unit path or a unique trailing substring (e.g. just
 `network_client_processing.cpp`); ambiguous substrings list the candidates. Unit
@@ -54,7 +54,7 @@ functions that must move to make the source-line orders agree, annotated
 `[t<target_pos> b<base_pos>]` (positions among the shared, line-ordered functions)
 so the direction of the move is explicit. tu_order EXITS 1 when a TU has any
 reordering (0 otherwise), so it can gate a structure-pass loop. Refresh the DB
-(scripts/rebuild.py) before trusting it after source moves.
+(`python3 -m vostok build`) before trusting it after source moves.
 
 Scope note: across all 1995 TUs the line-order signal flags ~9 genuine reorders
 in vostok-own .cpp (mostly the not-yet-matched render module + one animation TU);
@@ -73,7 +73,7 @@ from vostok.core.paths import MATCH_DB as DB_PATH
 
 def open_db(path=DB_PATH):
     if not path.is_file():
-        sys.exit(f"[tu_order] no database at {path} - run scripts/rebuild.py first")
+        sys.exit(f"[tu_order] no database at {path} - run `python3 -m vostok build` first")
     con = sqlite3.connect(path)
     con.row_factory = sqlite3.Row
     return con

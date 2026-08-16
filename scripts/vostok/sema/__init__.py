@@ -28,17 +28,17 @@ CONTRACTED before anything compares the two graphs - without that, one byte of
 padding on one side renames every later block and prints as a cascade of
 retargeted branches. See `contract`.
 
-    python3 scripts/sema.py rva      <fn>                  # address/source/match dossier
-    python3 scripts/sema.py xref     <fn> --callees        # root -> direct callees
-    python3 scripts/sema.py xref     <fn>                  # direct callers
-    python3 scripts/sema.py strings  <fn>                  # referenced string literals
-    python3 scripts/sema.py strings  --find <text>         # reverse literal lookup
-    python3 scripts/sema.py blocks   <fn> --diff --lite    # THE VERDICT VIEW
-    python3 scripts/sema.py blocks   <fn> --diff     # same, with per-block bodies
-    python3 scripts/sema.py blocks   <fn> [--base]   # one side's CFG
-    python3 scripts/sema.py branches <fn> --diff     # read a difference branch by branch
-    python3 scripts/sema.py dot      <fn> [--diff]   # graphviz
-    python3 scripts/sema.py sweep --module render [--unit U] [--max N]
+    python3 -m vostok sema rva      <fn>                  # address/source/match dossier
+    python3 -m vostok sema xref     <fn> --callees        # root -> direct callees
+    python3 -m vostok sema xref     <fn>                  # direct callers
+    python3 -m vostok sema strings  <fn>                  # referenced string literals
+    python3 -m vostok sema strings  --find <text>         # reverse literal lookup
+    python3 -m vostok sema blocks   <fn> --diff --lite    # THE VERDICT VIEW
+    python3 -m vostok sema blocks   <fn> --diff     # same, with per-block bodies
+    python3 -m vostok sema blocks   <fn> [--base]   # one side's CFG
+    python3 -m vostok sema branches <fn> --diff     # read a difference branch by branch
+    python3 -m vostok sema dot      <fn> [--diff]   # graphviz
+    python3 -m vostok sema sweep --module render [--unit U] [--max N]
 
 `blocks` aligns by CONTENT and is what a verdict comes from; `branches` pairs
 POSITIONALLY, so it is for reading a difference `blocks` already established.

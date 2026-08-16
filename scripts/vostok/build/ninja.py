@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-ninja_build.py - Run ninja.exe under Wine to build a Vostok target.
+vostok.build.ninja - run ninja.exe under Wine to build a Vostok target.
 
 Default target is the game project: survarium_-_PC_-_DirectX_11
 Runs with -v (verbose: full command lines) and -k 0 (keep going: report
@@ -8,14 +8,14 @@ every failure, don't stop at the first). Override either by passing your
 own -k/-j (the last occurrence wins).
 
 Usage:
-  python3 scripts/ninja_build.py                  # build the game (verbose, keep-going)
-  python3 scripts/ninja_build.py logging          # build just the logging project
-  python3 scripts/ninja_build.py -t clean         # ninja flag (clean tool)
-  python3 scripts/ninja_build.py -k 1             # stop at first failure
+  python3 -m vostok.build.ninja                  # build the game (verbose, keep-going)
+  python3 -m vostok.build.ninja logging          # build just the logging project
+  python3 -m vostok.build.ninja -t clean         # ninja flag (clean tool)
+  python3 -m vostok.build.ninja -k 1             # stop at first failure
 
 Required env vars (set by flake.nix devShell):
   NINJA_DIR  - directory containing ninja.exe
-  WINEPREFIX - wine prefix initialised by setup-toolchain.py
+  WINEPREFIX - wine prefix initialised by vostok.tool.toolchain
 
 ## Stall watchdog (full-game build only)
 
@@ -42,7 +42,7 @@ as idle. Module-only builds (which don't relink the EXE) skip the watchdog.
 
 cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which idles for
 ~10 minutes after the last build before exiting on its own. It inherits the
-build's stdout/stderr, so a caller that reads us through a pipe (rebuild.py,
+build's stdout/stderr, so a caller that reads us through a pipe (`vostok build`,
 an agent's shell) waits the full 10 minutes for EOF even though everything
 exited long ago - that was a constant ~600s tax on every fresh-worktree
 rebuild. We kill our prefix's mspdbsrv after every build; see
@@ -257,7 +257,7 @@ def main() -> None:
     if not (BUILD_DIR / "build.ninja").is_file():
         die(
             f"{BUILD_DIR}/build.ninja missing",
-            "Run: python3 scripts/setup-toolchain.py",
+            "Run: python3 -m vostok tool toolchain",
         )
 
     # Silence unactionable Wine debug spam (fixme stubs + kerberos err) from
@@ -275,7 +275,7 @@ def main() -> None:
 
     # The stall watchdog only makes sense for the full-game build (the one that
     # relinks the EXE+PDB and so can hit the post-link zombie wait). A module-only
-    # build (`ninja_build.py game_core`) doesn't relink and finishes fast, so run
+    # build (`vostok.build.ninja game_core`) doesn't relink and finishes fast, so run
     # it plainly.
     full_build = (not sys.argv[1:]) or (DEFAULT_TARGET in args)
     if full_build:
@@ -288,7 +288,7 @@ def main() -> None:
 
     # cl.exe/link.exe spawn mspdbsrv.exe (the PDB-writer daemon), which then
     # idles for ~10 minutes before exiting on its own. It inherits the build's
-    # stdout/stderr fds, so any caller reading us through a pipe (rebuild.py,
+    # stdout/stderr fds, so any caller reading us through a pipe (`vostok build`,
     # an agent's shell) only sees EOF when mspdbsrv dies - a constant ~600s
     # stall per rebuild. The PDB is fully written once ninja returns, so
     # killing it here is safe; respawning next build costs ~a second.

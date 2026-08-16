@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-enum_diff.py - diff the TARGET enum set (the original game, ground truth) against
+vostok.diff.enums - diff the TARGET enum set (the original game, ground truth) against
 our BASE enum set, and maintain docs/binary_matching/enum_queue.md as a PERSISTENT
 work queue of every enum we still owe.
 
@@ -24,7 +24,7 @@ Two sides, two very different shapes:
           The qualified name comes from the open `namespace X {` lines plus the
           name on the `enum ...` line (which itself may carry `cls::` for a
           class-nested enum). This tree is gitignored/regenerable; regenerate it
-          with `python3 scripts/generate_structure.py target` before trusting a
+          with `python3 -m vostok.build.generate_structure target` before trusting a
           diff (this script can do it for you with --regen-target).
 
   BASE    sources/vostok/**/*.h - hand-written C++. Enums are lexically nested in
@@ -56,12 +56,12 @@ QUEUE SEMANTICS (also documented at the top of enum_queue.md):
     "intended base location" columns of rows that are still defective.
 
 Usage:
-  python3 scripts/enum_diff.py                      # print the diff (in-scope)
-  python3 scripts/enum_diff.py --include-render      # include the deferred render bucket
-  python3 scripts/enum_diff.py --check-export        # + export-completeness check
-  python3 scripts/enum_diff.py --write-queue         # reconcile/refresh enum_queue.md
-  python3 scripts/enum_diff.py --regen-target        # regen target dump first, then diff
-  python3 scripts/enum_diff.py --target DIR --base-src DIR
+  python3 -m vostok diff enums                      # print the diff (in-scope)
+  python3 -m vostok diff enums --include-render      # include the deferred render bucket
+  python3 -m vostok diff enums --check-export        # + export-completeness check
+  python3 -m vostok diff enums --write-queue         # reconcile/refresh enum_queue.md
+  python3 -m vostok diff enums --regen-target        # regen target dump first, then diff
+  python3 -m vostok diff enums --target DIR --base-src DIR
 """
 
 import argparse
@@ -72,9 +72,9 @@ import sys
 import tempfile
 from pathlib import Path
 
+from vostok.core import paths
 from vostok.core.paths import ENGINE as BASE_SOURCES
 from vostok.core.paths import ENUM_QUEUE as QUEUE_FILE
-from vostok.core.paths import SCRIPTS as SCRIPT_DIR
 from vostok.core.paths import TARGET_HEADERS as STRUCTURE_TARGET
 
 # Engine namespaces we own and match (third-party lands under other namespaces,
@@ -558,7 +558,7 @@ def check_export(target_dir: Path) -> tuple[list[str], list[str]]:
 
 _QUEUE_HEADER = """# Enum work queue (target vs base)
 
-Generated/reconciled by `python3 scripts/enum_diff.py --write-queue`.
+Generated/reconciled by `python3 -m vostok diff enums --write-queue`.
 
 This is a PERSISTENT queue of every engine enum (`survarium::` / `vostok::`,
 **excluding** `vostok::render::` - render is matched last; see the deferred
@@ -582,8 +582,8 @@ original game (the TARGET pdb-parser dump under
 
 Re-derive the live set anytime:
 
-    python3 scripts/enum_diff.py                 # human-readable diff
-    python3 scripts/enum_diff.py --write-queue   # reconcile this file
+    python3 -m vostok diff enums                 # human-readable diff
+    python3 -m vostok diff enums --write-queue   # reconcile this file
 
 """
 
@@ -712,19 +712,19 @@ def main() -> int:
                     help="reconcile docs/binary_matching/enum_queue.md")
     ap.add_argument("--regen-target", action="store_true",
                     help="regenerate the target structure dump first "
-                         "(scripts/generate_structure.py target)")
+                         "(python3 -m vostok.build.generate_structure target)")
     ap.add_argument("--queue-file", type=Path, default=QUEUE_FILE)
     args = ap.parse_args()
 
     if args.regen_target:
         subprocess.run(
-            [sys.executable, str(SCRIPT_DIR / "generate_structure.py"), "target"],
-            check=True,
+            [sys.executable, "-m", "vostok.build.generate_structure", "target"],
+            check=True, env=paths.child_env(),
         )
 
     if not args.target.is_dir():
         print(f"ERROR: target headers dir not found: {args.target}\n"
-              "  run: python3 scripts/generate_structure.py target", file=sys.stderr)
+              "  run: python3 -m vostok.build.generate_structure target", file=sys.stderr)
         return 1
     if not args.base_src.is_dir():
         print(f"ERROR: base sources dir not found: {args.base_src}", file=sys.stderr)

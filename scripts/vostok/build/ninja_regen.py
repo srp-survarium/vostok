@@ -7,7 +7,7 @@ compare is exact: a no-op regen writes nothing and bumps no mtimes (rsp files
 are implicit inputs of their edges - a gratuitous rewrite would dirty every TU
 in the module), while a real change (source added/excluded, flags, a new
 #include discovered by the header scan) rewrites just the affected files and
-ninja rebuilds exactly those edges. rebuild.py runs this before every build.
+ninja rebuilds exactly those edges. `vostok build` runs this before every build.
 
 The tool clears its output dir on each run - writing in place would bump every
 mtime - so it emits into a temp dir, whose path lands inside the generated
@@ -15,9 +15,9 @@ text (rsp @-references and rsp implicit-input lines). Those are rewritten to
 the binaries/ninja form before comparing.
 
 Usage:
-  python3 scripts/regen_ninja.py            # regen + merge (minimal rebuild)
-  python3 scripts/regen_ninja.py --dry-run  # report the delta, write nothing
-  python3 scripts/regen_ninja.py --compdb   # also force the clangd inputs
+  python3 -m vostok.build.ninja_regen            # regen + merge (minimal rebuild)
+  python3 -m vostok.build.ninja_regen --dry-run  # report the delta, write nothing
+  python3 -m vostok.build.ninja_regen --compdb   # also force the clangd inputs
 """
 
 import argparse
@@ -53,7 +53,7 @@ def gen_fresh(out_dir: Path, target: str = "ninja") -> None:
         sys.exit(f"[regen-ninja] solution not found: {SLN_PATH}")
     out_dir.mkdir(parents=True, exist_ok=True)
     # vcproj2ninja sometimes exits non-zero under wine even on success; trust the
-    # produced output over the return code (same as setup-toolchain.py).
+    # produced output over the return code (same as vostok.tool.toolchain).
     subprocess.run(
         ["wine", exe, "--wine", "--target", target, "--sln-path", str(SLN_PATH),
          "--configuration-platform", "Master Gold|Win32",

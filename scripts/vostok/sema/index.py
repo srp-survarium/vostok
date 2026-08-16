@@ -24,7 +24,7 @@ from vostok.sema import die
 def _index_path(side):
     p = RICH / side / "index.jsonl"
     if not p.is_file():
-        die(f"{p} missing - run scripts/rebuild.py first")
+        die(f"{p} missing - run `python3 -m vostok build` first")
     return p
 
 

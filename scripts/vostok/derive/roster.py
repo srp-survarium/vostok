@@ -7,7 +7,7 @@ target/base inventories and their statements. It pairs the two sides (through
 logical module ownership, folds the observation into the hash-scoped maxima, and
 finally projects the result into the committed ledger.
 
-It does NOT compile anything: rebuild.py is the canonical build and calls this
+It does NOT compile anything: `vostok build` is the canonical build and calls this
 at the end; `refresh` is the regen-only path for an already-built report.
 """
 
@@ -56,13 +56,13 @@ def cmd_refresh(args):
 
 def regen():
     """Regenerate match.db from the already-built diff artifacts (report.json +
-    rich indexes). This is REGEN-ONLY: it does NOT run rebuild.py. rebuild.py is
+    rich indexes). This is REGEN-ONLY: it does NOT build. `vostok build` is
     the canonical build step and calls this at the end of its run; invoke
-    `match_db.py refresh` by hand only to re-derive the DB from an artifact set
-    that is already on disk (run rebuild.py first if sources moved)."""
+    `vostok derive refresh` by hand only to re-derive the DB from an artifact set
+    that is already on disk (run `vostok build` first if sources moved)."""
     for required in (REPORT, TARGET_IDX, BASE_IDX):
         if not required.is_file():
-            sys.exit(f"[match_db] missing {required} - run rebuild.py / the delink first")
+            sys.exit(f"[match_db] missing {required} - run `vostok build` / the delink first")
 
     # stale-target guard: the target index should not predate the base one by ages
     t_mtime, b_mtime = os.stat(TARGET_IDX).st_mtime, os.stat(BASE_IDX).st_mtime
@@ -70,7 +70,7 @@ def regen():
         log(
             "WARNING: target index is >7 days older than base - a stale target "
             "side smears scores across modules; consider "
-            "`generate_delink.py target` (see per-worktree staleness notes)"
+            "`vostok.build.generate_delink target` (see per-worktree staleness notes)"
         )
 
     # soft staleness note: refresh is a deliberate regen-only step, so it proceeds
@@ -85,7 +85,7 @@ def regen():
             rc, _ = _git("diff", "--quiet", bh, "HEAD", "--", "sources/")
             if rc != 0:
                 log("STALE: report.json is stale (sources/ moved since it was "
-                    "built) - run rebuild.py first; refreshing anyway")
+                    "built) - run `vostok build` first; refreshing anyway")
 
     log("loading rich indexes ...")
     target_records = load_index_records(TARGET_IDX)
@@ -748,8 +748,8 @@ def regen():
         counts[status] = counts.get(status, 0) + 1
     log(f"  base-only: {counts}")
 
-    # which source state was report.json BUILT from? rebuild.py records it in
-    # report.head. Without the marker (older rebuild.py): CARRY FORWARD the
+    # which source state was report.json BUILT from? `vostok build` records it in
+    # report.head. Without the marker (an older build): CARRY FORWARD the
     # previous DB's build_head - re-assuming the current HEAD on every refresh
     # would let refresh-without-rebuild launder staleness. Only a virgin DB
     # gets the one-time current-HEAD assumption.
@@ -771,7 +771,7 @@ def regen():
             log("no report.head marker - carrying forward the previous build_head")
         else:
             build_head = git_head()
-            log("no report.head marker (older rebuild.py) - assuming report was built at current HEAD")
+            log("no report.head marker (older build) - assuming report was built at current HEAD")
 
     # build fresh in a temp file, then atomically replace (deterministic bytes)
     tmp = DB_PATH.with_suffix(".db.tmp")

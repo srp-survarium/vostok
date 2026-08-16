@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-create-toolchain-release.py
+vostok.tool.toolchain_release
 
 Produces a self-contained vostok-toolchain tarball with VS2008 SP1 correctly
 applied, ready to publish as a GitHub release. Once published, update

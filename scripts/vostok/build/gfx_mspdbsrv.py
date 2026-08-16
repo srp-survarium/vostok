@@ -1,5 +1,5 @@
 """
-gfx_mspdbsrv.py - mspdbsrv-stall-free `wine cmd /c cl @rsp` for the direct GFx drivers.
+vostok.build.gfx_mspdbsrv - mspdbsrv-stall-free `wine cmd /c cl @rsp` for the direct GFx drivers.
 
 The direct GFx build drivers (build_libgfx_direct.py / build_gfx_lib_direct.py)
 compile one TU per `wine cmd /c cl @rsp` and read its result through a captured
@@ -10,15 +10,15 @@ fds, so a parent that captures output (subprocess.run(capture_output=True)) only
 sees pipe EOF when mspdbsrv finally dies - so EVERY fresh TU "compiles in seconds,
 then hangs ~10 min". That made the 8-lib direct build effectively never finish.
 
-ninja_build.py already solved this for the in-graph build (PR #280): kill the
+vostok.build.ninja already solved this for the in-graph build (PR #280): kill the
 worktree-prefix's mspdbsrv.exe after the build so the pipe EOFs. The direct
-drivers bypass ninja_build.py, so we port the same prefix-scoped reap here, but
+drivers bypass vostok.build.ninja, so we port the same prefix-scoped reap here, but
 per-TU: spawn the compile in its own session writing output to a FILE (no
 inherited pipe to block the parent), poll for the expected .obj, and once the obj
 is written (or the process exits) kill the prefix's mspdbsrv.exe + reap the wine
 children so the wait returns immediately. A fresh TU now finishes in seconds.
 
-The kill is scoped to THIS worktree's WINEPREFIX (same reasoning as ninja_build.py:
+The kill is scoped to THIS worktree's WINEPREFIX (same reasoning as vostok.build.ninja:
 a sibling worktree may have a healthy build in flight in its own prefix).
 """
 
@@ -51,7 +51,7 @@ def _in_our_prefix(entry: Path) -> bool:
 def _kill_prefix_processes(comms):
     """SIGKILL wine processes by comm name, scoped to THIS worktree's WINEPREFIX.
 
-    Mirrors ninja_build.py: a global pkill could hit a healthy cl/link in a
+    Mirrors vostok.build.ninja: a global pkill could hit a healthy cl/link in a
     sibling worktree's prefix, so match each candidate's environ against ours.
     Best-effort - the point is to stop BLOCKING on the process, not that it dies.
     """

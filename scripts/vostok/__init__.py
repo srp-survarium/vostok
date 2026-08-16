@@ -20,8 +20,8 @@ Layers (imports point strictly downward):
     diff/     target-vs-base source-shape reports (layouts, enums, TU order).
     tool/     one module per external tool or one-off operational helper.
 
-`scripts/` is the package root, so every module is reachable two ways: as
-`python3 -m vostok.<pkg> ...` (needs scripts/ on PYTHONPATH - the dev shell
-exports it) and through the thin `scripts/<old-name>.py` shims, which exist so
-existing docs, muscle memory and rebuild.py keep working unchanged.
+`scripts/` is the package root and the dev shell puts it on PYTHONPATH, so
+every module runs as `python3 -m vostok.<pkg> ...` from anywhere in the tree.
+`python3 -m vostok` prints the umbrella map: `vostok build`, `vostok ledger`,
+`vostok derive`, `vostok sema`, `vostok diff`, `vostok tool`.
 """

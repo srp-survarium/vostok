@@ -1,12 +1,12 @@
 """match - query and update the matching ledger.
 
-Replaces match_db.py's query surface. That tool answered every question with
+Replaces vostok derive's query surface. That tool answered every question with
 SQL over an interned schema - `list` alone joined symbols/units/pairs/history
 to rebuild what is now one row of docs/binary_matching/match_state.tsv. The
 ledger is 19,645 rows: loading it costs ~100 ms and answering costs under a
 millisecond, so nothing here needs a database.
 
-It also needs no build. match_db.py's commands read binaries/match.db, which a
+It also needs no build. vostok derive's commands read binaries/match.db, which a
 fresh clone does not have; these read the committed ledger directly.
 
   match.py report  [--module M] [--per-unit]   rollup, byte-weighted

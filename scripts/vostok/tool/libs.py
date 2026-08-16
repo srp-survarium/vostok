@@ -1,5 +1,5 @@
 """
-copy_lib_files.py - Stage prebuilt 3rd party libraries ('.dll's, '.lib's, ...)
+vostok.tool.libs - stage prebuilt 3rd party libraries ('.dll's, '.lib's, ...)
 into the repo.
 
 These are binary blobs, not source, so they land in a top-level
@@ -33,7 +33,7 @@ DEST        = PREBUILT
 LICENSE_NAMES  = {"COPYING.LIB"}
 
 # Our from-source 4.2.22 GFx suite (built per the shipped PDB's recipe - non-/GL,
-# /Ox, pristine SDK; see build_gfx_suite.py) ships inside vostok-libs at the shipped
+# /Ox, pristine SDK; see vostok.build.gfx) ships inside vostok-libs at the shipped
 # Win32 Shipping config path. Remap it onto the game's binaries.prebuilt layout
 # (`Win32/libraries/shipping/`), where the exe's `#pragma comment(lib,"libgfx.lib")`
 # resolves it. The foreign 4.0.15 GFx libs were removed from vostok-libs and replaced

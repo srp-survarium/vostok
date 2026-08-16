@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
-"""structure_mismatch_queue.py - project match.db's per-function structure
+"""vostok.ledger.queue - project match.db's per-function structure
 classification into docs/binary_matching/structure_mismatch_queue.md, a
 PERSISTENT work queue of every structurally-mismatched paired function across the
 NON-RENDER engine modules (render is matched last; excluded).
 
-Modeled on scripts/enum_diff.py + docs/binary_matching/enum_queue.md: it
+Modeled on vostok.diff.enums + docs/binary_matching/enum_queue.md: it
 re-derives the live defect set from the source of truth (match.db) on every run,
 DROPS rows now handled, and PRESERVES human-authored BLOCKED status + cause across
 regen. Idempotent (running twice produces the same file).
 
-SOURCE OF TRUTH: match.db (scripts/match_db.py; design in match_db_design.md). It
+SOURCE OF TRUTH: match.db (vostok.derive; design in match_db_design.md). It
 classifies every paired function's `struct_class` from the two statement tables:
 
   QUANTITY  statement COUNTS differ - real missing/extra source statements
@@ -35,7 +35,7 @@ DB carries no LOCALS class - see the doc's note.
 TARGET_ONLY: unpaired real bodies (framed, >=1 statement) - genuine MISSING
 structure - get their own section.
 
-layout_diff.py CAVEAT: it OVER-reports size/field mismatches (blind to
+vostok diff layout CAVEAT: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases; Phase A proved 4 of 5 "resources size
 mismatches" were source-parse false positives). This queue therefore reads
 match.db's struct_class + (per function) `pdb_fetch --view structure-diff`, the
@@ -54,8 +54,8 @@ BLOCKED semantics (persistent, like enum_queue):
 
 Re-derive the live set anytime:
 
-    python3 scripts/structure_mismatch_queue.py                # human-readable summary
-    python3 scripts/structure_mismatch_queue.py --write-queue  # reconcile the queue file
+    python3 -m vostok ledger mismatch-queue                # human-readable summary
+    python3 -m vostok ledger mismatch-queue --write-queue  # reconcile the queue file
 """
 
 import argparse
@@ -115,7 +115,7 @@ OD_FRAME_WALL = [
 def _open_db():
     if not DB_PATH.is_file():
         sys.exit(f"[structure_mismatch_queue] no match.db at {DB_PATH} - run "
-                 "rebuild.py / `match_db.py refresh` first")
+                 "`vostok build` / `vostok derive refresh` first")
     con = sqlite3.connect(f"file:{DB_PATH}?mode=ro", uri=True)
     con.row_factory = sqlite3.Row
     return con
@@ -289,7 +289,7 @@ def _table(rows):
 
 _HEADER = """# Structure-mismatch work queue (target vs base)
 
-Generated/reconciled by `python3 scripts/structure_mismatch_queue.py --write-queue`.
+Generated/reconciled by `python3 -m vostok ledger mismatch-queue --write-queue`.
 
 A PERSISTENT, idempotent queue of every STRUCTURALLY MISMATCHED paired function
 across the 20 NON-RENDER engine modules (render is matched last - EXCLUDED):
@@ -323,7 +323,7 @@ divergence, so there is no standalone LOCALS section - that work rides inside th
 QUANTITY / SPLIT / SIZE rows and is checked per function with
 `pdb_fetch --view structure-diff`.
 
-layout_diff.py caveat: it OVER-reports size/field mismatches (blind to
+vostok diff layout caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
 size mismatches" were source-parse false positives). This queue therefore trusts
 match.db's struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
@@ -344,8 +344,8 @@ it on the row when editing a Status.
 
 Re-derive the live set anytime:
 
-    python3 scripts/structure_mismatch_queue.py                # human-readable summary
-    python3 scripts/structure_mismatch_queue.py --write-queue  # reconcile this file
+    python3 -m vostok ledger mismatch-queue                # human-readable summary
+    python3 -m vostok ledger mismatch-queue --write-queue  # reconcile this file
 """
 
 

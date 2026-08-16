@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-generate_delink.py - run vostok-delinker to split an EXE into per-unit COFF .obj files
+vostok.build.generate_delink - run vostok-delinker to split an EXE into per-unit COFF .obj files
 for objdiff comparison, for one side:
 
   base    the freshly compiled game
@@ -12,12 +12,12 @@ for objdiff comparison, for one side:
           -> binaries/objdiff/target
 
 After delinking it refreshes binaries/objdiff/objdiff.json via
-generate_objdiff_config.py. This mirrors vostok-delinker/build_{base,target}.sh
+vostok.build.generate_objdiff_config. This mirrors vostok-delinker/build_{base,target}.sh
 but is driven from Python so the whole build/diff loop stays in this repo.
 
 Usage:
-  python3 scripts/generate_delink.py base
-  python3 scripts/generate_delink.py target
+  python3 -m vostok.build.generate_delink base
+  python3 -m vostok.build.generate_delink target
 
 Env vars (set automatically by flake.nix devShell):
   SURVARIUM_BIN   - directory with the original survarium.{exe,pdb} (target side)
@@ -34,11 +34,12 @@ import sys
 from pathlib import Path
 
 from vostok.build import generate_objdiff_cross_unit
+from vostok.core import paths
 from vostok.core import symbols as normalize_objdiff_symbols
 from vostok.core import tsv
 from vostok.core.paths import (EFFECTIVE_SYMBOL_MAP, OBJDIFF_DIR, RICH_DIR,
-                               SCRIPTS as SCRIPT_DIR, SOURCES, SYMBOL_MAP,
-                               SYMBOL_MAP_OVERRIDES, WIN32_DIR, survarium_bin)
+                               SOURCES, SYMBOL_MAP, SYMBOL_MAP_OVERRIDES,
+                               WIN32_DIR, survarium_bin)
 
 # The MSVC linker folds identical functions/data to one location, so a single
 # address can carry several mangled names. target and base may pick different
@@ -290,7 +291,7 @@ def generate(side: str) -> None:
         # Reproduce target's folded-symbol name choices (tolerant if target has
         # not been delinked yet, i.e. the map is missing).
         symbol_map = ["--read-symbol-map", str(_effective_symbol_map())]
-        hint = "build first (python3 scripts/rebuild.py)"
+        hint = "build first (python3 -m vostok build)"
     elif side == "target":
         survarium = survarium_bin()
         exe = survarium / "survarium.exe"
@@ -378,8 +379,8 @@ def generate(side: str) -> None:
 
     log("Refreshing objdiff config ...")
     subprocess.run(
-        [sys.executable, str(SCRIPT_DIR / "generate_objdiff_config.py")],
-        check=True,
+        [sys.executable, "-m", "vostok.build.generate_objdiff_config"],
+        check=True, env=paths.child_env(),
     )
     log(f"Done: {out}")
     _generate_report()

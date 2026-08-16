@@ -1,5 +1,5 @@
 """
-find_breakpoints.py
+vostok.tool.breakpoints
 """
 
 import argparse

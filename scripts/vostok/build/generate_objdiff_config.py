@@ -1,5 +1,5 @@
 """
-generate_objdiff_config.py - Generate config consumed by `objdiff` for binary matching.
+vostok.build.generate_objdiff_config - generate the config `objdiff` consumes.
 """
 
 import argparse
@@ -129,7 +129,7 @@ def main(
 
 
 def cli():
-    """`generate_objdiff_config.py [--use-preset-config] [--objdiff-dir DIR]`."""
+    """`-m vostok.build.generate_objdiff_config [--use-preset-config] [--objdiff-dir DIR]`."""
     parser = argparse.ArgumentParser()
     parser.add_argument("--use-preset-config", action="store_true", default=False)
     parser.add_argument("--objdiff-dir", default=OBJDIFF_DIR, type=Path)

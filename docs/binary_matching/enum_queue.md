@@ -1,6 +1,6 @@
 # Enum work queue (target vs base)
 
-Generated/reconciled by `python3 scripts/enum_diff.py --write-queue`.
+Generated/reconciled by `python3 -m vostok diff enums --write-queue`.
 
 This is a PERSISTENT queue of every engine enum (`survarium::` / `vostok::`,
 **excluding** `vostok::render::` - render is matched last; see the deferred
@@ -24,8 +24,8 @@ original game (the TARGET pdb-parser dump under
 
 Re-derive the live set anytime:
 
-    python3 scripts/enum_diff.py                 # human-readable diff
-    python3 scripts/enum_diff.py --write-queue   # reconcile this file
+    python3 -m vostok diff enums                 # human-readable diff
+    python3 -m vostok diff enums --write-queue   # reconcile this file
 
 
 _Live rows: 22 (18 MISSING + 4 FIELD-MISMATCH). Deferred render enums: 15._

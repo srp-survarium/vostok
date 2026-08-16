@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-compare_enums.py - compare enum definitions between the BASE and TARGET
+vostok.diff.enums_compare - compare enum definitions between the BASE and TARGET
 pdb-parser structure dumps.
 
-The pdb-parser (see scripts/generate_structure.py) emits, for each enum, a block
+The pdb-parser (see vostok.build.generate_structure) emits, for each enum, a block
 of the form
 
     enum survarium::affect_event_type_enum
@@ -43,10 +43,10 @@ collapses to the MOST-POPULATED body per qualified name before comparing, so the
 empty/stale forms do not produce bogus mismatches.
 
 Usage:
-  python3 scripts/compare_enums.py
-  python3 scripts/compare_enums.py --prefix vostok::network_core:: --prefix vostok::network::
-  python3 scripts/compare_enums.py --network
-  python3 scripts/compare_enums.py --base DIR --target DIR
+  python3 -m vostok diff enums-compare
+  python3 -m vostok diff enums-compare --prefix vostok::network_core:: --prefix vostok::network::
+  python3 -m vostok diff enums-compare --network
+  python3 -m vostok diff enums-compare --base DIR --target DIR
 """
 
 import argparse
@@ -220,7 +220,7 @@ def main() -> int:
         if not d.is_dir():
             print(
                 f"ERROR: {side} headers dir not found: {d}\n"
-                f"  run: python3 scripts/generate_structure.py {side}",
+                f"  run: python3 -m vostok.build.generate_structure {side}",
                 file=sys.stderr,
             )
             return 1

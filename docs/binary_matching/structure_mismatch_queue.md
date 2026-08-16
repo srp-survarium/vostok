@@ -1,6 +1,6 @@
 # Structure-mismatch work queue (target vs base)
 
-Generated/reconciled by `python3 scripts/structure_mismatch_queue.py --write-queue`.
+Generated/reconciled by `python3 -m vostok ledger mismatch-queue --write-queue`.
 
 A PERSISTENT, idempotent queue of every STRUCTURALLY MISMATCHED paired function
 across the 20 NON-RENDER engine modules (render is matched last - EXCLUDED):
@@ -33,7 +33,7 @@ statement SIZES only and does not independently surface named-local divergence, 
 there is no standalone LOCALS section - that work rides inside the QUANTITY / SPLIT
 / SIZE rows and is checked per function with `pdb_fetch --view structure-diff`.
 
-layout_diff.py caveat: it OVER-reports size/field mismatches (blind to
+vostok diff layout caveat: it OVER-reports size/field mismatches (blind to
 MASTER_GOLD-guarded members + union aliases - Phase A proved 4 of 5 "resources
 size mismatches" were source-parse false positives). This queue therefore trusts
 match.db's struct_class + `pdb_fetch --view structure-diff`, not layout_diff.
@@ -54,8 +54,8 @@ it on the row when editing a Status.
 
 Re-derive the live set anytime:
 
-    python3 scripts/structure_mismatch_queue.py                # human-readable summary
-    python3 scripts/structure_mismatch_queue.py --write-queue  # reconcile this file
+    python3 -m vostok ledger mismatch-queue                # human-readable summary
+    python3 -m vostok ledger mismatch-queue --write-queue  # reconcile this file
 
 
 _Live rows: 636 QUANTITY+SPLIT (primary), 1221 SIZE (re-test backlog), 334 TARGET_ONLY (missing). 333 flagged BLOCKED._

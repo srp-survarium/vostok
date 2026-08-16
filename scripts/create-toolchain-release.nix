@@ -1,7 +1,7 @@
 # Entry point for building the vostok-toolchain release tarball.
 #
 # Fetches all required source ISOs into the Nix store, sets up Wine + tools,
-# and runs create-toolchain-release.py automatically.
+# and runs vostok.tool.toolchain_release automatically.
 #
 # Usage (from the vostok/ repo root):
 #   nix-shell scripts/create-toolchain-release.nix
@@ -54,6 +54,8 @@ in pkgs.mkShell {
     export DXSDK_EXE="${dxsdk-exe}"
     export NINJA_WIN_ZIP="${ninja-zip}"
     export VOSTOK_DIR="$PWD"
-    exec python3 ${./create-toolchain-release.py}
+    # Run from the repo root (see Usage): scripts/ is the package root.
+    export PYTHONPATH="$VOSTOK_DIR/scripts''${PYTHONPATH:+:$PYTHONPATH}"
+    exec python3 -m vostok.tool.toolchain_release
   '';
 }
