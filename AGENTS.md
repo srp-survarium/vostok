@@ -55,7 +55,7 @@ Work the optimized call graph from owning roots toward leaves:
    location and `*_inline.h` ownership, access/CV/struct mangling, declaration
    and vtable order, layouts, globals, and shared-header fixes. Batch shared
    header changes so compiler-context hashes reset once, not piecemeal.
-6. Audit residuals with `structure-diff`, named locals, `sema.py`, and real
+6. Audit residuals with `structure-diff`, named locals, `vostok sema`, and real
    call-site assembly. Work `QUANTITY`, `SPLIT`, `LOCALS`, target-only bodies,
    and verified low-score shape mismatches. Park ordinary `SIZE`, frameless
    convention, ICF, or LTCG claims only after proving the exact non-steerable
@@ -68,7 +68,7 @@ Work the optimized call graph from owning roots toward leaves:
 The campaign ledger is the linear Git history plus the per-commit database.
 For every complete TU or bounded caller cone: inspect target structure and
 assembly, record each worked function exactly once in `attempts`, run the full
-`python3 scripts/rebuild.py -j6`, inspect `report-changes.json`, and commit the
+`python3 -m vostok build -j6`, inspect `report-changes.json`, and commit the
 source together with the regenerated README and `match.db`. Then run a
 clean-HEAD no-op rebuild and amend its provenance metadata into that same
 commit. Never borrow a later database snapshot. After each 10-15 TUs, perform a
@@ -77,32 +77,32 @@ separate structure-verification and stale-comment audit before continuing.
 ## Build and measurement
 
 - Enter the Nix development environment; do not use sibling tool checkouts.
-- Use `python3 scripts/rebuild.py` with no module argument for the authoritative
+- Use `python3 -m vostok build` with no module argument for the authoritative
   build, relink, delink, report, README score, and `match.db` refresh.
 - During render clean-room reconstruction, compile only the three retail render
-  libraries with `python3 scripts/ninja_build.py render_facade
+  libraries with `python3 -m vostok.build.ninja render_facade
   render_core_pc_dx11 render_engine_pc_dx11`. Fix compiler errors until all
   three libraries build; do not link or regenerate reports during this loop.
 - A module-only build does not relink the executable and cannot establish a
   current match score.
-- `python3 scripts/match_db.py refresh` only re-derives the database from the
+- `python3 -m vostok derive refresh` only re-derives the database from the
   existing report. It does not compile changed source.
 - Never hand-edit the generated match-score block in `README.md` or derived
   rows in `docs/binary_matching/match.db`.
 - Every commit must represent a measured source state. Before creating or
-  amending a commit, run a successful full `rebuild.py` and include the
+  amending a commit, run a successful full `vostok build` and include the
   resulting `README.md` and `docs/binary_matching/match.db` changes in that
   same commit. This applies to source, comments, documentation, tooling, and
   structure-verification changes because line movement and LTCG can alter code.
 - Inspect the small `binaries/objdiff/report-changes.json` for regressions.
   Slice the large `report.json` with `jq`; never print or load it wholesale.
 - After editing `scripts/`, run `ruff check scripts/` and
-  `python3 scripts/test_match_db.py`.
+  `python3 -m vostok.tests.test_match_db`.
 - The tooling is the `scripts/vostok/` package (`core/ ledger/ derive/ sema/
-  build/ diff/ tool/ tests/`); the `scripts/*.py` paths every command in these
-  docs uses are thin shims and keep working. Read or change the code in the
-  package, and put any new repo path in `vostok/core/paths.py`, which is the
-  only module allowed to spell one. See CLAUDE.md, "Where the tooling lives".
+  build/ diff/ tool/ tests/`); every command in these docs runs it as
+  `python3 -m vostok ...` (the dev shell puts `scripts/` on `PYTHONPATH`).
+  Put any new repo path in `vostok/core/paths.py`, which is the only module
+  allowed to spell one. See CLAUDE.md, "Where the tooling lives".
 - Treat `history.best_fuzzy_pct` as scheduling/ICF history only. Correctness-facing
   MAX comes from `source_maxima`, is scoped to an effective source/compiler-context
   hash, and must never be backfilled from ordinary best-seen history.
@@ -134,11 +134,11 @@ separate structure-verification and stale-comment audit before continuing.
 
 ## Semantic evidence tools
 
-- Start an optimized-function dossier with `python3 scripts/sema.py rva <fn>`,
+- Start an optimized-function dossier with `python3 -m vostok sema rva <fn>`,
   `xref <fn> --callees`, and `strings <fn>`. Use `strings --find <text>` for
   reverse literal lookup and plain `xref <fn>` to find direct callers. Select
   `--base` only when investigating what the current build actually emitted.
-- Diagnose control flow with `sema.py blocks <fn> --diff --lite` first, then
+- Diagnose control flow with `vostok sema blocks <fn> --diff --lite` first, then
   `blocks --diff` for instruction bodies and `branches --diff` only after the
   block view establishes a real divergence. Use `dot` for graph output and
   `sweep --module <m> [--unit <u>]` for a module queue. `BRANCH-COUNT` is the
@@ -147,13 +147,13 @@ separate structure-verification and stale-comment audit before continuing.
   to the strongest Vostok evidence owner rather than being duplicated:
   `pdb_fetch --view target|base|diff|structure|structure-diff|callees|info`
   owns disassembly and PDB statement/local evidence; `pdb_rich_query --list`
-  owns symbol and RVA listing; `clangd_query.py symbol|def|refs|hover` owns
-  source-semantic navigation; and `match_db.py report|list|queue|max` owns
+  owns symbol and RVA listing; `vostok tool clangd symbol|def|refs|hover` owns
+  source-semantic navigation; and `vostok derive report|list|queue|max` owns
   function/unit status, queues, attempts, flags, and hash-scoped MAX state.
 - Gruntz's `map`, `class`, and `vtable` commands compensate for a stripped
   binary. Vostok has the retail PDB: use `binaries/structure/target/headers` for
   class layout, inheritance, and virtual declaration order, target
-  `pdb_rich_query --list`/`match_db.py list` for the emitted function map, and
+  `pdb_rich_query --list`/`vostok derive list` for the emitted function map, and
   `pdb_fetch --view target` at real virtual call sites for slot offsets. These
   are authoritative; do not port stripped-binary hierarchy or ownership guesses
   over the PDB evidence.
@@ -162,9 +162,9 @@ separate structure-verification and stale-comment audit before continuing.
   incorrectly; remeasure the root after bodying a callee. An isolated leaf is
   not useful LTCG evidence until its real caller cone exists.
 - These commands read generated indexes. If their result conflicts with changed
-  source, the base side is stale; run a successful full `rebuild.py` before
-  trusting it. `sema.py` return code 1 means the compared flows differ, not that
-  the tool failed.
+  source, the base side is stale; run a successful full `vostok build` before
+  trusting it. `vostok sema` return code 1 means the compared flows differ, not
+  that the tool failed.
 
 ## Source comments and state
 

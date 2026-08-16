@@ -50,7 +50,8 @@ Decompilation of the Vostok Engine used by Survarium (version v0.100b).
     * Download proprietary libraries and unpack them at the root level: https://drive.google.com/file/d/1ShmDiJArDcOiuPA0DyswEzhXHeRa0Psx/view?usp=sharing
     * Then install them by running this command:
         ```terminal
-        python ./scripts/copy_lib_files.py
+        set PYTHONPATH=%CD%\scripts
+        python -m vostok.tool.libs
         ```
 
 6. Game builds

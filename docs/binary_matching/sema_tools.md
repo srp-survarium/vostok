@@ -1,7 +1,7 @@
 # `sema` - control-flow views over the base<->target pair
 
 **STATUS: IMPLEMENTED (`scripts/vostok/sema/`, 2026-08-01; run it as
-`scripts/sema.py` or `python3 -m vostok.sema`).**
+`python3 -m vostok sema` or `python3 -m vostok.sema`).**
 
 `sema` is the layer vostok did not have: a **basic-block / branch** comparison of
 our compiled function against the original one. It sits below `pdb_fetch --view
@@ -124,20 +124,20 @@ contracted per side.
 The navigation front of the HoMM2/Gruntz sema family is available against
 Vostok's PDB-rich indexes as well as the CFG views:
 
-    python3 scripts/sema.py rva      <fn>             # address/source/match dossier
-    python3 scripts/sema.py xref     <fn> --callees   # direct callees (root-first work)
-    python3 scripts/sema.py xref     <fn>             # direct callers
-    python3 scripts/sema.py strings  <fn>             # referenced MSVC literals
-    python3 scripts/sema.py strings  --find <text>    # reverse literal lookup
-    python3 scripts/sema.py blocks   <fn>                 # target-side CFG, with bodies
-    python3 scripts/sema.py blocks   <fn> --base          # base-side CFG
-    python3 scripts/sema.py blocks   <fn> --lite          # one line per block
-    python3 scripts/sema.py blocks   <fn> --diff          # THE MAIN VIEW
-    python3 scripts/sema.py blocks   <fn> --diff --lite   # skeleton table only
-    python3 scripts/sema.py branches <fn> [--base]        # ordered branch sequence
-    python3 scripts/sema.py branches <fn> --diff          # branch sequence, diffed
-    python3 scripts/sema.py dot      <fn> [--base|--diff] # graphviz
-    python3 scripts/sema.py sweep --module render [--unit U] [--min-pct P] [--max N]
+    python3 -m vostok sema rva      <fn>             # address/source/match dossier
+    python3 -m vostok sema xref     <fn> --callees   # direct callees (root-first work)
+    python3 -m vostok sema xref     <fn>             # direct callers
+    python3 -m vostok sema strings  <fn>             # referenced MSVC literals
+    python3 -m vostok sema strings  --find <text>    # reverse literal lookup
+    python3 -m vostok sema blocks   <fn>                 # target-side CFG, with bodies
+    python3 -m vostok sema blocks   <fn> --base          # base-side CFG
+    python3 -m vostok sema blocks   <fn> --lite          # one line per block
+    python3 -m vostok sema blocks   <fn> --diff          # THE MAIN VIEW
+    python3 -m vostok sema blocks   <fn> --diff --lite   # skeleton table only
+    python3 -m vostok sema branches <fn> [--base]        # ordered branch sequence
+    python3 -m vostok sema branches <fn> --diff          # branch sequence, diffed
+    python3 -m vostok sema dot      <fn> [--base|--diff] # graphviz
+    python3 -m vostok sema sweep --module render [--unit U] [--min-pct P] [--max N]
 
 `rva`, `xref`, and `strings` were ported as native rich-index readers rather
 than copying either project's PE/COFF assumptions. Direct calls and literal
@@ -150,9 +150,9 @@ Other sema-family capabilities already have stronger Vostok-native owners:
 | HoMM2/Gruntz view | Vostok owner |
 |---|---|
 | `disasm` / rich source lines | `pdb_fetch --view target|base|diff|structure|structure-diff` |
-| `match` | `match_db.py report --function`, `--unit --per-function`, or `--module --per-unit` |
-| `symbol`, `def`, `refs`, `hover` | `clangd_query.py` with the same operation name |
-| symbol/function map | `pdb_rich_query --list` and `match_db.py list` |
+| `match` | `vostok derive report --function`, `--unit --per-function`, or `--module --per-unit` |
+| `symbol`, `def`, `refs`, `hover` | `vostok tool clangd` with the same operation name |
+| symbol/function map | `pdb_rich_query --list` and `vostok derive list` |
 | class hierarchy and layout | generated `binaries/structure/target/headers` |
 | vtable order and slot use | target structure headers plus `pdb_fetch --view target` at a real vcall |
 
@@ -322,7 +322,7 @@ exactly the case a human under-investigates.
 * **One side only.** A `TARGET_ONLY` (nothing compiled yet) or `BASE_ONLY`
   function has nothing to diff; `blocks <fn>` still shows the side that exists.
 * **Stale artifacts read as divergence.** `sema` reads
-  `binaries/rich/{base,target}/index.jsonl`, which `rebuild.py` regenerates.
+  `binaries/rich/{base,target}/index.jsonl`, which `vostok build` regenerates.
   A base index older than your source is the single most likely cause of a
   surprising verdict - `ls -la binaries/rich/base/index.jsonl` before believing
   one.

@@ -14,13 +14,13 @@ processes the WHOLE queue regardless.
 
 Full rules: `.claude/agents/orchestrator.md`. In short:
 1. **Build the queue:** `rg -n "STATE\[STUB\]" sources/vostok/$1/sources` (+ any
-   `PARTIAL`/`SKIPPED` to retry). Order leaf/small-first. (`rebuild.py` keeps the README
+   `PARTIAL`/`SKIPPED` to retry). Order leaf/small-first. (`vostok build` keeps the README
    score block current on its own - no manual refresh step.)
 2. **Stacked PRs:** track the **stack tip** (the latest match branch, or
    `feature/agentic-matching-loop-2` to root a fresh stack). Matchers branch off the TOP so
    percentages compound; you review the stack BOTTOM-UP and merge one PR at a time.
 3. **Dispatch up to $2 matchers in PARALLEL** (`run_in_background: true`), each in a sibling
-   `vostok_<N>` worktree YOU prepared (`git reset --hard <tip>`, `regen_ninja.py`,
+   `vostok_<N>` worktree YOU prepared (`git reset --hard <tip>`, `vostok.build.ninja_regen`,
    `git checkout -b match/$1-<unit>`) - isolated `binaries/`/`WINEPREFIX`, so builds don't
    race. Batch per unit (the worker pays setup once): **6-9 small multi-line fns**, **up to
    ~12 one-liners**, **fewer when hard**; a related cluster; pick NON-OVERLAPPING units

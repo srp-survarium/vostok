@@ -54,7 +54,7 @@ regression.
 | B7 | **first sema-driven batch** - 6 condition/predicate shape fixes | 507 (19.2%) | 33.2% | - |
 | A9 | the two big debug renderers + static-linkage sweep | 549 (20.7%) | 34.9% | 45.96% |
 
-Health at A2 (`match_db.py diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
+Health at A2 (`vostok derive diff 37eb3fbf6..HEAD --module render`): 167 IMPROVE,
 73 NEW, 298 TOUCHED, 16 REGRESS, 3 LOST. Thirteen of the sixteen regressions
 carry a HELD `max` (LTO wobble - correctly left alone per the standing rule);
 the other three are small max resets from faithful structure re-work
@@ -131,7 +131,7 @@ whose base counterpart is still an in-class body.
 
 **Two traps this batch hit, both worth remembering.**
 
-1. `rebuild.py <module>` builds only that module's `.lib` and does NOT relink the
+1. `vostok build <module>` builds only that module's `.lib` and does NOT relink the
    EXE - the delink then re-measures the OLD binary and reports `+0.00` with
    `0 regressed, 0 improved`. Always rebuild with NO module argument when you
    want a score.
@@ -153,7 +153,10 @@ whose base counterpart is still an in-class body.
   clobber its artifacts (this happened once in batch A2 - no sources were
   modified, but `binaries/`, `match.db` and `README.md` of the sibling were
   regenerated). Use
-  `nix develop /abs/worktree --command bash -c 'cd /abs/worktree && python3 /abs/worktree/scripts/rebuild.py <module>'`.
+  `nix develop /abs/worktree --command bash -c 'cd /abs/worktree &&
+  PYTHONPATH=/abs/worktree/scripts python3 -m vostok build <module>'`. Spell
+  PYTHONPATH out: an inherited one names the worktree the shell was ENTERED
+  from, and `-m vostok` would then build that one instead.
 - Structure before %; named locals ARE structure; keep faithful even if % falls;
   no cross-unit out-lining; R_ASSERT guards verbatim; `STATE[STUB]` removed only
   on a real port.
@@ -208,11 +211,11 @@ overload (`QBD` = top-level pointer const). Pattern:
 
 ## Harness defect worth knowing (cost B8 three 600s timeouts)
 
-`until ! pgrep -f rebuild.py; do sleep N; done` is **self-matching** - the
-waiting shell's own command line contains `rebuild.py`, so the loop never exits.
+`until ! pgrep -f 'vostok[. ]build'; do sleep N; done` is **self-matching** - the
+waiting shell's own command line contains that pattern, so the loop never exits.
 Wait on a MARKER FILE instead (`echo $? > b.done`; `until [ -f b.done ]`). The
 same self-match trap made an orchestrator `pkill -f mspdbsrv` kill its own
-launcher. **Never `pkill -f rebuild.py`** on this box - it kills the
+launcher. **Never `pkill -f 'vostok[. ]build'`** on this box - it kills the
 orchestrator's integration build.
 
 ## Build hygiene for the ORCHESTRATOR (learned the hard way at batch B4)
@@ -220,10 +223,10 @@ orchestrator's integration build.
 One integration cost four rebuild cycles through a chain of self-inflicted
 failures. Each fix was too narrow and caused the next one:
 
-1. **Two `rebuild.py` runs at once in the same worktree -> C2471 "cannot update
+1. **Two `vostok build` runs at once in the same worktree -> C2471 "cannot update
    program database" across every TU.** The rule was already known
    (serialize integration rebuilds) but not *checked*. **Always
-   `pgrep -f scripts/rebuild.py` before starting one**, and confirm the log file
+   `pgrep -f 'vostok[. ]build'` before starting one**, and confirm the log file
    exists a few seconds after launching - a detached launch that silently failed
    looks exactly like one that is running.
 2. **`pkill -f mspdbsrv` -> C1090 "PDB API call failed, error code 23".** Killing
@@ -240,8 +243,8 @@ failures. Each fix was too narrow and caused the next one:
    build (the first seven batches were fine) but NOT a from-scratch rebuild -
    and it concentrates in the largest module (`scaleform`). Retrying at the same
    parallelism does not converge: the error count went 522 -> 112 -> 105 and
-   stalled. **`python3 scripts/rebuild.py -j6` built green, 0 errors.**
-   `rebuild.py` forwards unknown flags straight to ninja.
+   stalled. **`python3 -m vostok build -j6` built green, 0 errors.**
+   `vostok build` forwards unknown flags straight to ninja.
 
 **The correct recovery, if PDB state is ever suspect:** stop all builds, then
 `find binaries/Win32/intermediates \( -name '*.pch' -o -name '*.pdb' -o -name
@@ -252,7 +255,7 @@ worse than clearing nothing.
 concurrent rebuilds) was cheap. Every "fix" after it was a guess applied
 destructively - killing the PDB server mid-write, clearing half a matched pair,
 then re-running an unchanged command three times. Checking what the build was
-actually doing (`rebuild.py --help` -> ninja's job count) would have found it in
+actually doing (`vostok build --help` -> ninja's job count) would have found it in
 one step.
 
 **Never `git commit --amend` a DB snapshot after a failed build.** Doing so
@@ -337,9 +340,9 @@ amending.
 
 ## Build gotcha (cost batch A5 three cycles)
 
-`rebuild.py <module>` builds only that `.lib` - **it does not relink the EXE**, so
+`vostok build <module>` builds only that `.lib` - **it does not relink the EXE**, so
 `report.json` stays at the previous epoch's numbers and `--view structure-diff` reads a
-stale base. Always run `rebuild.py` with **no** module argument. Second trap: entering
+stale base. Always run `vostok build` with **no** module argument. Second trap: entering
 `nix develop` again while a build runs kills that build's `mspdbsrv` (exit 144 / LNK1318);
 never run a `pdb_fetch` in parallel with a rebuild in the same worktree.
 
@@ -387,7 +390,7 @@ it is minutes of work per module.
 
 ## Batch B7 notes (render/core, first sema-driven batch)
 
-The queue came from `python3 scripts/sema.py sweep --unit render/core/ --min-pct 30`
+The queue came from `python3 -m vostok sema sweep --unit render/core/ --min-pct 30`
 (254 rows): `BRANCH-COUNT` 63, `TOPOLOGY` 15, `COND-FLIP` 2, `ORDER-ONLY` 1,
 `FLOW-SAME` 168. Render fuzzy 33.1% -> 33.2%, render exact 498 -> 507.
 

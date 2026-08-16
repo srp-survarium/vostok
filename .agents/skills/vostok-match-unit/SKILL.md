@@ -14,7 +14,7 @@ description: Binary-match one complete Vostok translation unit, or a small relat
    - disambiguate with `pdb_rich_query --list`;
    - fetch target `structure`, `target`, `callees`, and `info` views;
    - slice dense statements by address.
-4. Navigate source with `scripts/clangd_query.py`. Reconstruct the normal C++
+4. Navigate source with `vostok tool clangd`. Reconstruct the normal C++
    form implied by target statements, locals, calls, layout, and mangling.
 5. Descend into stub callees when required, except into `render`. Own and report
    the entire callee subtree. Do not fabricate a helper or edit another unit to
@@ -22,7 +22,7 @@ description: Binary-match one complete Vostok translation unit, or a small relat
 6. Delete implemented carcasses and obsolete historical comments. Remove
    `STATE[STUB]` only after reconstruction. Keep live blockers and required
    `sushi@TODO` entries synchronized with `review_todos.md`.
-7. Run the full `python3 scripts/rebuild.py` without a module argument. Inspect
+7. Run the full `python3 -m vostok build` without a module argument. Inspect
    `report-changes.json` and query only the relevant slices of `report.json`.
 8. Compare `structure-diff` before assembly `diff`. Fix source shape before
    chasing bytes. Repeat until structure matches or a concrete blocker remains.

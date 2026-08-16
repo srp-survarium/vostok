@@ -79,7 +79,7 @@ Keep digging until the ONLY remaining difference is argument passing; only then 
 the function done (the match DB notes the residual: a `NOTE` flag with cause, e.g.
 `LTCG arg passing`). If you cannot finish, park it: a terse `claude@NOTE:` above the
 function plus a `SKIP` flag whose cause is the concrete next step (flags are recorded
-via `scripts/match_db.py flag` - by the orchestrator for dispatched matchers) - do
+via `vostok derive flag` - by the orchestrator for dispatched matchers) - do
 **not** bank it as matched and call the residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
 recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
@@ -199,27 +199,27 @@ are NOT written anymore. The source carries exactly two things:
 
 Everything else is DERIVED and lives outside the source
 (design: `match_db_design.md`):
-- **current %s**: `report.json` / `match_score.py` - the only live numbers.
+- **current %s**: `report.json` / `vostok ledger readme` - the only live numbers.
 - **bulk status, queues, reports**: `docs/binary_matching/match.db`, regenerated
-  from report.json + the rich indexes + the PDB declaration dump by `rebuild.py`
-  at the end of every build (or, regen-only, by `python3 scripts/match_db.py
+  from report.json + the rich indexes + the PDB declaration dump by `vostok build`
+  at the end of every build (or, regen-only, by `python3 -m vostok derive
   refresh`). Per paired function it derives the structure class
   (`MATCH | SIZE | SPLIT | QUANTITY`), tracks pairing history ("matched at NN%
   before; vanished/regressed without a source touch -> out of scope"), and
   classifies base-only symbols (`NEAR_MISS` mangling mismatches, declared-but-
   inlined-in-target, the fabricated-symbol lint). Query it with
-  `match_db.py list / report / queue / sql`.
+  `vostok derive list / report / queue / sql`.
 - **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
   embedded in source.
 
-The only hand-written records are match-DB FLAGS (`match_db.py flag <mangled>`):
+The only hand-written records are match-DB FLAGS (`vostok derive flag <mangled>`):
 - `SKIP` - parked; the cause is the concrete next step (covers the old
   SKIPPED/BLOCKED: name the blocker in the cause).
 - `NOTE` - informational cause that queues ignore (a DONE-with-residual
   explanation, inline-site evidence for a target-inlined body, ...).
 - `--requeue` - forget history+flags so queues offer the function again.
 The DB is committed; the ORCHESTRATOR is its single writer (regenerate via
-rebuild.py / regen-only refresh + flag + commit at run milestones) - dispatched
+vostok build / regen-only refresh + flag + commit at run milestones) - dispatched
 matchers/verifiers never edit it, they report parking/causes in their result
 lines instead.
 

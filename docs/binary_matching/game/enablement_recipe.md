@@ -6,7 +6,7 @@ loop. Here we only clear compile/link errors with the minimal, canonical-shaped
 change, preserving the addressed `// FUNCTION BODY[0xVA]` carcasses verbatim.
 
 All game TUs are now un-`ExcludedFromBuild` for `Master Gold|Win32`. Build with
-`nix develop --command python3 scripts/ninja_build.py game` (keep-going `-k 0` —
+`nix develop --command python3 -m vostok.build.ninja game` (keep-going `-k 0` —
 shows every TU's errors). Your TUs must produce their `.obj` with no `error C`.
 Ignore errors in TUs outside your assigned set (other waves own them).
 

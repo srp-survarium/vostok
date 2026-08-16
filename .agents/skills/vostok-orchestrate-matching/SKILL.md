@@ -17,9 +17,9 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
 5. Parallelize investigation, not history. Integrate each finished worker one
    at a time by cherry-picking onto the current tip. Never merge sibling
    branches or create a PR fan.
-6. After each integration, run the full `python3 scripts/rebuild.py` and inspect
+6. After each integration, run the full `python3 -m vostok build` and inspect
    regressions. Before committing, mark every function actually worked exactly
-   once in `attempts` (use `match_db.py tried --unit <tu>` when the whole TU was
+   once in `attempts` (use `vostok derive tried --unit <tu>` when the whole TU was
    worked), apply flags, then fold the generated README and `match.db` into that
    same source commit. A diff with no attempt increment for worked code is a
    bookkeeping defect. No commit may borrow a later database snapshot.
@@ -30,7 +30,7 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
    new stack commit.
 9. Continue until work is compiled-done or parked with a queryable cause and
    next action. Use `source_maxima`, not ordinary `history.best_fuzzy_pct`, for
-   MAX progress (`match_db.py max --module <m> --below 100`). Never carry MAX
+   MAX progress (`vostok derive max --module <m> --below 100`). Never carry MAX
    across an effective-source hash change. Island evidence must be measured by
    the normal report/index refresh before `record-max` annotates it; never type
    a score into the ledger. Audit attempts and flags before handoff.

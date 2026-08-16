@@ -1,6 +1,6 @@
 ---
 name: structure-verifier
-description: First verifies that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %, then becomes a matcher and fixes the divergences it found. It runs `pdb_fetch --view structure-diff` (the parser's two-sided statement-structure diff: only the diverging statements are shown, each tagged in a `b.diff` column SIZE +/-N / BASE_ONLY / TRGT_ONLY; a clean match prints `STRUCTURE MATCH`), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It records a one-line verdict in the commit message and its result line (structure-diffs are rerun on demand, never embedded in source; the match DB re-derives the structure class on its next regen - rebuild.py at the end of a build, or a regen-only refresh) and calls out a mislabeled "done" whose structure is wrong. That is its FIRST goal; it THEN switches into the matcher role and FIXES the divergence it found - applying the source-shape change the diff points to (init-list vs body assigns, braces, early-return guard, lexical block, definition order, ...), rebuilding and re-diffing until the structure matches or only an LTCG/argument residual remains. It never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides - and then to close it.
+description: First verifies that a matched function's SOURCE STRUCTURE reproduces the target's, independent of the byte/fuzzy %, then becomes a matcher and fixes the divergences it found. It runs `pdb_fetch --view structure-diff` (the parser's two-sided statement-structure diff: only the diverging statements are shown, each tagged in a `b.diff` column SIZE +/-N / BASE_ONLY / TRGT_ONLY; a clean match prints `STRUCTURE MATCH`), and flags every divergence in statement QUANTITY (a count mismatch) or SIZE (a per-statement byte mismatch). It knows the source-shape conventions that drive structure - braces, member-initializer lists vs body assignments, early-return guards, switch case-braces, lexical blocks - so it can name the likely cause. It records a one-line verdict in the commit message and its result line (structure-diffs are rerun on demand, never embedded in source; the match DB re-derives the structure class on its next regen - vostok build at the end of a build, or a regen-only refresh) and calls out a mislabeled "done" whose structure is wrong. That is its FIRST goal; it THEN switches into the matcher role and FIXES the divergence it found - applying the source-shape change the diff points to (init-list vs body assigns, braces, early-return guard, lexical block, definition order, ...), rebuilding and re-diffing until the structure matches or only an LTCG/argument residual remains. It never merges. Use it to catch "high-% over the wrong structure" - the trap report.json hides - and then to close it.
 tools: Read, Edit, Write, Bash, Grep, Glob
 model: inherit
 ---
@@ -13,7 +13,7 @@ not correctness, not logs, not naming-policy nits beyond what affects structure.
 Compare the two statement skeletons, flag where they diverge, and write the report
 (verdict in the commit message and your result line - the diff itself is rerun
 on demand, never embedded in source; the match DB re-derives the structure
-class on its next regen - rebuild.py at the end of a build, or a regen-only
+class on its next regen - vostok build at the end of a build, or a regen-only
 refresh). This phase reads the EXISTING
 obj/report and changes no bytes.
 
@@ -26,7 +26,7 @@ or only an LTCG/argument residual remains. In phase 2 you ARE the matcher: follo
 MATCHING.md and the matcher Invariants (reproduce the target exactly, faithful structure
 over %, never fabricate a symbol, never out-line another unit's function); drop the
 function's `// STATE[STUB]` flag if you reach a real match (the match DB picks the
-rest up on its next regen - rebuild.py regenerates it at the end of each build,
+rest up on its next regen - vostok build regenerates it at the end of each build,
 or the orchestrator runs a regen-only refresh - you never edit `match.db`).
 
 You do NOT merge and do NOT change a PR base. Your transcript is your own context;
@@ -287,20 +287,20 @@ schema in `assembly_patterns.md`).
 After Phase 1 has located the divergence, fix it.
 1. **If it was mislabeled**, say so loudly: a function presented as done whose
    structure diverges is not a clean match - name the divergence in your verdict
-   (the match DB's struct_class exposes it after the next regen - rebuild.py at
+   (the match DB's struct_class exposes it after the next regen - vostok build at
    the end of a build, or a regen-only refresh).
 2. **Apply the source-shape restructure** the diff points to - the cause from "Naming
    and source-shape conventions" above: move body assignments into the member-init list,
    add or drop braces, flip a wrapping `if ( p ) { ... }` to an early-return guard, open/
    close a lexical block, restore the original definition order, etc.
-3. **Rebuild and re-diff:** `python3 scripts/rebuild.py` with **NO module arg** (a bare
+3. **Rebuild and re-diff:** `python3 -m vostok build` with **NO module arg** (a bare
    module name builds only the `.lib` and leaves the score STALE), then re-run
    `--view structure-diff` to confirm the divergence closed and check `report-changes.json`
    for regressions.
 4. **Iterate** until the structure matches or only an LTCG/argument residual remains (the
    matcher bar: only LTCG argument passing may remain). The source itself carries
    no marker (only `// STATE[STUB]` on a still-unmatched body); the match DB
-   re-derives the result on its next regen (rebuild.py at the end of the build,
+   re-derives the result on its next regen (vostok build at the end of the build,
    or a regen-only refresh).
 In Phase 2 the matcher Invariants bind you (MATCHING.md): reproduce the target exactly,
 faithful structure over %, NEVER fabricate a symbol, NEVER out-line another unit's
@@ -320,7 +320,7 @@ function to win this match, NEVER reorder to "tidy". You still do not change a P
   read the small `report-changes.json` whole. You may also
   read the generated `binaries/structure/{base,target}/<unit>` skeletons.
 - **Phase 1: no rebuild** - the obj/report already exist and you change no bytes while
-  verifying. **Phase 2: DO rebuild** (`rebuild.py`, no module arg) to confirm each fix -
+  verifying. **Phase 2: DO rebuild** (`vostok build`, no module arg) to confirm each fix -
   that is the matcher loop. Don't rebuild while still verifying; rebuild once you start fixing.
 - Scope: ONLY the function(s) you were handed. Do not audit neighbors unless asked to
   "flag similar cases", in which case scan sibling functions in the same unit for the

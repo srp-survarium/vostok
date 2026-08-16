@@ -42,7 +42,7 @@ Run the loop as two tiers so context stays clean:
   diff` dumps, the iteration history - lives and dies inside the worker, so it
   pollutes neither the orchestrator nor the next worker.
 
-Within one build tree dispatch is **sequential** (each `rebuild.py` rewrites
+Within one build tree dispatch is **sequential** (each `vostok build` rewrites
 the shared base side - `binaries/rich/base`, `report.json`); the orchestrator
 parallelizes across SIBLING WORKTREES instead (own `binaries/`, own Wine
 prefix), up to its worker cap - see `.claude/agents/orchestrator.md`.
@@ -64,20 +64,20 @@ The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
 owns queue building:
 
 ```
-python3 scripts/rebuild.py            # canonical build; regenerates match.db at the end
-python3 scripts/match_db.py report --module <m> [--per-unit]
-python3 scripts/match_db.py queue  --module <m> [--limit N] [--json]
+python3 -m vostok build            # canonical build; regenerates match.db at the end
+python3 -m vostok derive report --module <m> [--per-unit]
+python3 -m vostok derive queue  --module <m> [--limit N] [--json]
 ```
 
 `queue` emits ONE batch per TU - all of the TU's open functions together,
 smallest TU first - automatically skipping done functions (100% + struct
 MATCH), out-of-scope ones (paired once, vanished/regressed without a source
-touch - external inlining), and `SKIP` flags. `match_db.py list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
+touch - external inlining), and `SKIP` flags. `vostok derive list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
 sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
 view. Work the batches until `report` shows every function done or parked
 (a `SKIP` flag with a written cause).
 
-The orchestrator is the match DB's SINGLE WRITER: `rebuild.py` regenerates the
+The orchestrator is the match DB's SINGLE WRITER: `vostok build` regenerates the
 DB at the end of every build (or `refresh` re-derives it regen-only), it records
 `flag`s (from worker result lines), and commits the DB at run milestones -
 workers never edit it.
@@ -91,7 +91,7 @@ function the worker does the rest:
 2. **Write a first approximation** of the body in its `.cpp`, following
    `MATCHING.md`. Reference it from `temp_include_all.cpp` so the linker keeps it
    (section 3). Pull in any missing types (section 4).
-3. **`python3 scripts/rebuild.py`** - builds under Wine, then logs
+3. **`python3 -m vostok build`** - builds under Wine, then logs
    `Match: code X% / functions Y%`, refreshes the diff inputs, and regenerates
    `match.db` from the fresh `report.json`. Read the new per-function number from
    `binaries/objdiff/report.json` and any regressions/improvements from
@@ -148,7 +148,7 @@ match those first), `info` (PDB-recorded locals). The same `--address`/`--offset
 code builds.
 
 `binaries/rich/target` is built once at setup and never changes;
-`binaries/rich/base` is refreshed by every `rebuild.py`, so you always have a fresh
+`binaries/rich/base` is refreshed by every `vostok build`, so you always have a fresh
 base-vs-target pair (section 2a).
 
 ## 2a. The base-vs-target instruction diff

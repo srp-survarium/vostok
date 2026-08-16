@@ -38,7 +38,7 @@ pdb_fetch --target-index ... --base-index ... --function <fn> --view diff --rva 
 ```
 The two-sided diff identifies each overload independently even though objdiff's report
 cannot. Exact complete rich instruction streams are correctness-facing evidence and are
-recorded by `match_db.py`; a non-exact overload remains without a fuzzy score rather than
+recorded by `vostok derive`; a non-exact overload remains without a fuzzy score rather than
 borrowing the ambiguous bare-name score.
 
 Evidence: sound_scene.cpp `fill_x3daudio_vector` x2 (both 100% via RVA diff) +

@@ -31,8 +31,8 @@ Neither direction is legible, because the rendered operand is an address, not a 
 ## Fix - ask the CFG, not the bytes
 
 ```sh
-python3 scripts/sema.py blocks   <fn> --diff --lite   # THE VERDICT: flow SAME/DIFFERS + where
-python3 scripts/sema.py branches <fn> --diff          # then read the difference branch by branch
+python3 -m vostok sema blocks   <fn> --diff --lite   # THE VERDICT: flow SAME/DIFFERS + where
+python3 -m vostok sema branches <fn> --diff          # then read the difference branch by branch
 ```
 
 Naming destinations by block index makes a uniform displacement shift compare EQUAL and a
