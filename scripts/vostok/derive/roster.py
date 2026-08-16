@@ -73,6 +73,7 @@ def regen():
         pairs, artifacts, previous.maxima, previous.epochs
     )
     base_only = baseonly.classify(artifacts, pairs, base, history)
+    baseonly.write_report(base_only)
 
     cache.write(artifacts, target, base, pairs, history, maxima_rows, epoch_rows,
                 base_only, previous)
