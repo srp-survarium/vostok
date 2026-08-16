@@ -1,5 +1,6 @@
 import unittest
 
+from vostok.sema.cfg import contract, seal
 from vostok.sema.index import _fold_aliases
 from vostok.sema.strings import _decode_literal
 from vostok.sema.xref import _call_operand, _qualified_name
@@ -25,6 +26,32 @@ class FoldAliasTests(unittest.TestCase):
     def test_distinct_rvas_stay_ambiguous(self):
         hits = [_rec(0x1000, "?a@@YAXXZ"), _rec(0x2000, "?b@@YAXXZ")]
         self.assertEqual(len(_fold_aliases("target", hits, "")), 2)
+
+
+class SealTests(unittest.TestCase):
+    """A trailing trim can leave a terminator naming a block that is gone."""
+
+    def test_dangling_destination_becomes_ext(self):
+        blocks = [(0, ["cmp eax, 1"], "jcc B7 | fall B1", ""),
+                  (4, ["ret"], "ret", "")]
+        self.assertEqual([b[2] for b in seal(blocks)],
+                         ["jcc <ext> | fall B1", "ret"])
+
+    def test_live_destination_and_back_edge_marker_survive(self):
+        blocks = [(0, ["nop"], "fall B1", ""),
+                  (1, ["cmp eax, 1"], "jcc B0^ | fall B2", ""),
+                  (5, ["jmp"], "jmp B9", "")]
+        self.assertEqual([b[2] for b in seal(blocks)],
+                         ["fall B1", "jcc B0^ | fall B2", "jmp <ext>"])
+
+    def test_contract_survives_a_sealed_graph(self):
+        # unsealed, this raised KeyError in _renumber's remap
+        blocks = [(0, ["cmp eax, 1"], "jcc B9 | fall B1", ""),
+                  (4, ["mov eax, 0"], "fall B2", ""),
+                  (8, ["ret"], "ret", "")]
+        out, n = contract(seal(blocks))
+        self.assertEqual(n, 1)
+        self.assertEqual([b[2] for b in out], ["jcc <ext> | fall B1", "ret"])
 
 
 class SemaNavigationTests(unittest.TestCase):
