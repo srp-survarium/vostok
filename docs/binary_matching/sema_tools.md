@@ -241,7 +241,7 @@ signed/unsigned twin - nearly always a real source type bug), `OTHER`.
 | `ORDER-ONLY` | CFGs isomorphic, different block LAYOUT | one merged exit placed elsewhere - ONE fact, see below |
 | `BRANCH-COUNT` | different number of branches | a guard we are missing, or an `if` one side folded |
 | `BLOCK-COUNT` | equal branches, unequal blocks | an extra block contraction could not remove; positional branch pairing is meaningless here |
-| `COND-FLIP` | equal blocks AND branches, a mnemonic differs | inverted condition or signed/unsigned twin - a real source bug |
+| `COND-FLIP` | equal blocks AND branches, a mnemonic differs | possibly an inverted condition or signed/unsigned twin - but the mnemonic lists are compared BY POSITION, so confirm with `blocks --diff --lite` before believing it (see below) |
 | `TOPOLOGY` | same mnemonics, different destination block | the shape an instruction diff cannot show |
 | `BLOCK-SPLIT` | same branch sequence, different block count | usually an unreachable/padding artifact |
 | `TRIMMED` | the trailing trim dropped more blocks than it kept, so the graph is a PREFIX | **not a flow verdict** - read the function with `pdb_fetch --view target|base`; see the `trim_tail` limit |
@@ -399,7 +399,18 @@ Take the flow verdict from the printed `flow SAME | DIFFERS` line, not from rc.
   per-row interpretation, but the rows are still shifted evidence, not a defect
   count. This is what produced batch B7's two phantom `COND-FLIP` rows
   (`create_texture`, `create_texture3d`): the mnemonics agree, the pairing did
-  not. Those two now classify as `BLOCK-COUNT`.
+  not. (Re-measured 2026-08-16: both have since been reworked and now classify
+  as `BRANCH-COUNT`, and the 2d one is spelled `create_texture2d`.)
+* **`sweep`'s `COND-FLIP` is computed positionally too**, from
+  `[mnemonics of base branches] != [mnemonics of target branches]` - the same
+  index-wise pairing this file warns about for `branches --diff`. Equal branch
+  TOTALS do not mean the branches correspond: `stage_lights::stage_lights` is
+  193-vs-193 blocks and 123-vs-123 branches and classifies `COND-FLIP`, but
+  `blocks --diff --lite` shows the real fact - base B81 is `fall B82` where the
+  target is `jcc B83 | fall B82`, i.e. a guard in a different place, not an
+  inverted condition. Confirm every `COND-FLIP` with `blocks --diff --lite`
+  before reading it as a source bug; the measured hit rate for the class is
+  0 of 2.
 * **Block alignment is content-based** (`difflib` over whole-block text). When
   both sides are heavily rewritten the pairing is a guess; the `flow` verdict
   and the first-skeleton-divergence line stay meaningful, the per-block bodies
