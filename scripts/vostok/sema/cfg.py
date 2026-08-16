@@ -86,11 +86,12 @@ def cfg(insns, labels, stmts=None, stats=None):
             b[2] = f"fall B{blk_of(nxt)}"
         else:
             b[2] = "end"
+    label_blocks = {blk_of(off) for off in labels.values()}
     out = [tuple(b) for b in blocks]
     raw = len(out)
     while out and all(x.startswith(("nop", "int3")) for x in out[-1][1]):
         out.pop()                                       # alignment padding
-    out = seal(trim_tail(out))
+    out = seal(trim_tail(out, label_blocks))
     trimmed = raw - len(out)
     out, n = contract(out)
     if stats is not None:
@@ -172,7 +173,7 @@ def _renumber(term, remap, own):
     return re.sub(r"B(\d+)\^?", repl, term or "")
 
 
-def trim_tail(blocks):
+def trim_tail(blocks, seeds=()):
     """Drop the trailing blocks that are DATA, not code.
 
     A switch's jump TABLE lives in `.text` immediately after the function, and
@@ -181,11 +182,16 @@ def trim_tail(blocks):
     Left in, that phantom tail differs on every switch function and reads as a
     control-flow divergence that is not one.
 
-    Only a TRAILING block is ever dropped, and only when it is unreachable from
-    the entry AND does not branch back into the kept prefix. A jump-table ARM is
-    also unreachable under this edge model (its dispatch is a computed `jmp`),
-    but it jumps forward to the merge block, which the second condition keeps."""
-    reach, stack = set(), [0]
+    Reachability is seeded from the entry AND from every LABEL target, because a
+    computed `jmp` (a switch dispatch, a tail call through a table) yields no
+    successors at all: walking edges alone leaves every jump-table arm - and the
+    merge block after them - looking unreachable, and the trailing pop then
+    cascades through the whole function. A label is the disassembler's own
+    evidence that something jumps there; the misdecoded table bytes carry none.
+
+    Only a TRAILING block is ever dropped, and only when it is unreachable AND
+    does not branch into the kept prefix."""
+    reach, stack = set(), [0, *seeds]
     while stack:
         i = stack.pop()
         if i in reach or i >= len(blocks):
