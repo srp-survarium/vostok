@@ -44,6 +44,29 @@ from vostok.ledger import store
 EXACT = store.EXACT
 
 
+# Printed under every row listing. `(held)` in particular has to be spelled out
+# where it is SEEN: a reader who meets it for the first time in a queue reads a
+# number below `max` as a regression and goes to fix it, which is exactly the
+# afternoon this marker exists to save.
+LEGEND = (
+    "\nlegend: cur% = this build (noisy under LTCG/ICF)  ·  max% = peak proven for "
+    "THIS source body\n"
+    "        (held N) = cur dipped below max WITHOUT the source changing. Compiler "
+    "noise, NOT a\n"
+    "        regression - the peak is still proven. Do not try to fix a held row.\n"
+    "        Driving every max to 100 is the campaign; hist% (--headroom) is the "
+    "all-time peak."
+)
+
+
+def _legend():
+    """Legend on stderr, so `| jq` and friends never swallow it - but flush the
+    table first, or the unbuffered stderr overtakes it and explains a listing the
+    reader has not seen yet."""
+    sys.stdout.flush()
+    print(LEGEND, file=sys.stderr)
+
+
 def held(row):
     """'(held)' when this build dipped below the banked peak for the SAME body.
 
@@ -125,6 +148,8 @@ def cmd_report(args):
         print(f"{r['scope'][:52]:52s} {r['fns']:6d} {r['done']:6d} {r['open']:6d} "
               f"{r['parked']:5d} {r['blocked']:5d} {r['held']:5d} {r['headroom']:5d} "
               f"{r['weighted_pct']:7.2f} {r['max_pct']:7.2f}")
+    # this table has a `held` COLUMN, so it needs the explanation most of all
+    _legend()
 
 
 def cmd_list(args):
@@ -137,11 +162,23 @@ def cmd_list(args):
     if not rows:
         print("(no rows)", file=sys.stderr)
         return
+    # `--headroom` selects rows on hist > max, so printing them WITHOUT hist
+    # showed cur == max and no visible reason for the row being listed at all.
+    show_hist = getattr(args, "headroom", False)
+    head = (f"{'size':>6s} {'cur%':>6s} {'max%':>6s}"
+            + (f" {'hist%':>6s}" if show_hist else "")
+            + f" {'cls':9s} {'status':10s} mangled")
+    print(head)
+    print("-" * min(len(head), 120))
     for r in rows:
         cur = f"{r['cur']:.1f}" if r["cur"] is not None else "-"
         mx = f"{r['max']:.1f}" if r["max"] is not None else "-"
-        print(f"{r['size'] or 0:6d} {cur:>6s} {mx:>6s} {r['cls'] or '':9s} "
+        hist = ""
+        if show_hist:
+            hist = f" {r['hist']:6.1f}" if r["hist"] is not None else f" {'-':>6s}"
+        print(f"{r['size'] or 0:6d} {cur:>6s} {mx:>6s}{hist} {r['cls'] or '':9s} "
               f"{r['status']:10s} {r['mangled'][:88]}{held(r)}")
+    _legend()
 
 
 def cmd_queue(args):
@@ -166,17 +203,21 @@ def cmd_queue(args):
         weighted = sum((r["cur"] or 0) * (r["size"] or 0) for r in group) / size
         return (weighted, -size)
 
-    for unit, group in sorted(tus.items(), key=rank)[: args.limit or None]:
+    batches = sorted(tus.items(), key=rank)[: args.limit or None]
+    for unit, group in batches:
         size = sum(r["size"] or 0 for r in group)
         pct = (sum((r["cur"] or 0) * (r["size"] or 0) for r in group) / size
                if size else 0.0)
         print(f"=== {unit}: {len(group)} functions, 0x{size:x} bytes, "
               f"{pct:.1f}% matched")
+        print(f"  {'size':>6s} {'cur%':>6s}  {'cls':11s} mangled")
         for r in sorted(group, key=lambda r: -(r["size"] or 0)):
             cur = f"{r['cur']:.1f}" if r["cur"] is not None else "-"
             tried = f"  tried:{r['tries']}" if r["tries"] else ""
             print(f"  {r['size'] or 0:6d} {cur:>6s}  {r['cls'] or 'TARGET_ONLY':11s} "
                   f"{r['mangled'][:80]}{tried}{held(r)}")
+    if batches:
+        _legend()
 
 
 def _update(mangleds, mutate):

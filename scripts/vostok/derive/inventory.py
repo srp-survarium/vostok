@@ -32,10 +32,19 @@ class Function:
 
 def unit_of(rec, units):
     """The TU to file a record under: its own file when report.json compared it
-    there, else the first unit that did, else nothing."""
+    there, else the first unit that did, else the file the PDB attributes it to.
+
+    That last fallback is not a guess. report.json is keyed by MANGLED name, and
+    the retail PDB carries no mangled name for a dynamic initializer - it stores
+    the display form, ``survarium::`dynamic initializer for 's_cc''``, where the
+    report says `??__Es_cc@survarium@@YAXXZ`. The lookup misses on spelling
+    alone, and the record knew its own file all along. Returning None there
+    filed 1,765 real functions under no unit at all - 799 of them dynamic
+    initializers - so `--unit` could not see them.
+    """
     if units and rec["file"] in units:
         return rec["file"]
-    return units[0] if units else None
+    return units[0] if units else rec.get("file")
 
 
 def describe(mangled, rec, artifacts):

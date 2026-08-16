@@ -193,6 +193,11 @@ def _report_changes(previous: Path, current: Path) -> None:
     matches functions by name across the whole archive and adds a lot of noise
     (phantom entries, same-name/different-size mismatches). A clean per-function
     list is written to binaries/objdiff/report-changes.json.
+
+    A symbol emitted into several TUs and folded by the linker is scored 100 in
+    one unit and 0 in the others, and the winner moves between builds on its own.
+    Those are bucketed into `fold_churn` rather than `regressed`, so the headline
+    counts work someone actually broke.
     """
     try:
         prev = json.loads(previous.read_text())
@@ -201,20 +206,59 @@ def _report_changes(previous: Path, current: Path) -> None:
         return
 
     def fuzzy_by_function(report):
+        """Best score per (unit, symbol).
+
+        BEST, not last-wins. A symbol the linker folded appears SEVERAL times in
+        one unit's function list - scored 100 for the copy objdiff picked as the
+        representative and 0 for the rest - and the order they arrive in is not
+        stable between builds. Overwriting on each hit therefore recorded 100 or
+        0 depending on which copy happened to come last, and the value flipped
+        with no source change: 1,207 keys are duplicated today and 159 of those
+        have copies that disagree, which is where the phantom regressions came
+        from. Taking the maximum is both stable and the true answer - the symbol
+        IS matched, once, under its representative.
+        """
         out = {}
         for unit in report.get("units", []):
             for fn in unit.get("functions", []):
                 name = fn.get("metadata", {}).get("demangled_name") or fn.get("name", "?")
-                out[(unit.get("name"), fn.get("name"))] = (fn.get("fuzzy_match_percent", 0.0), name)
+                key = (unit.get("name"), fn.get("name"))
+                pct = fn.get("fuzzy_match_percent", 0.0)
+                if key not in out or pct > out[key][0]:
+                    out[key] = (pct, name)
         return out
 
     before, after = fuzzy_by_function(prev), fuzzy_by_function(cur)
-    regressed, improved = [], []
+
+    def best_by_symbol(by_function):
+        """The best score each SYMBOL reaches over every unit that emitted it."""
+        best = {}
+        for (_unit, sym), (pct, _name) in by_function.items():
+            if pct > best.get(sym, -1.0):
+                best[sym] = pct
+        return best
+
+    best_before, best_after = best_by_symbol(before), best_by_symbol(after)
+
+    regressed, improved, fold_churn = [], [], []
     for key in before.keys() & after.keys():
         was, name = before[key]
         now, _ = after[key]
         if now < was - 1e-6:
-            regressed.append((was, now, name))
+            # The linker folds identical COMDATs emitted into several TUs, and
+            # objdiff scores ONE unit's copy at 100 with the rest at 0. Which
+            # copy wins is arbitrary and moves between builds with no source
+            # change, so a swap reads as a regression here AND an improvement
+            # two lines down. If the symbol's BEST score across its units did
+            # not drop, nothing regressed - the representative merely moved.
+            # 101 symbols sit in that state today (??_G/??1 dtors, boost asio
+            # ops, btHashMap), and a reader who trusts the headline concludes
+            # they broke every one of them.
+            sym = key[1]
+            if best_after.get(sym, 0.0) >= best_before.get(sym, 0.0) - 1e-6:
+                fold_churn.append((was, now, name))
+            else:
+                regressed.append((was, now, name))
         elif now > was + 1e-6:
             improved.append((was, now, name))
 
@@ -241,8 +285,10 @@ def _report_changes(previous: Path, current: Path) -> None:
 
     regressed.sort(key=lambda r: r[1] - r[0])  # worst (most negative) first
     improved.sort(key=lambda r: r[0] - r[1])   # biggest gain first
-    log("  {} regressed, {} improved, {} removed, {} added".format(
-        len(regressed), len(improved), len(removed), len(added)))
+    fold_churn.sort(key=lambda r: r[1] - r[0])
+    log("  {} regressed, {} improved, {} removed, {} added{}".format(
+        len(regressed), len(improved), len(removed), len(added),
+        f", {len(fold_churn)} fold-churn (not regressions)" if fold_churn else ""))
     limit = 10
     for was, now, name in regressed[:limit]:
         log(f"  regressed {was:6.2f}% -> {now:6.2f}%  {name}")
@@ -267,6 +313,9 @@ def _report_changes(previous: Path, current: Path) -> None:
         "improved": [{"function": n, "from": a, "to": b} for a, b, n in improved],
         "removed": [{"function": n, "from": p} for p, n in removed],
         "added": [{"function": n, "to": p} for p, n in added],
+        # Bucketed OUT of `regressed` on purpose: same symbol, several units,
+        # linker-folded, and its best score across them is unchanged.
+        "fold_churn": [{"function": n, "from": a, "to": b} for a, b, n in fold_churn],
     }, indent=2) + "\n")
     log(f"Changes: {changes} (previous report kept at {previous})")
 

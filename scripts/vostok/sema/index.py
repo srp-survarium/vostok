@@ -22,6 +22,7 @@ import re
 import sys
 
 from vostok.core.paths import RICH_DIR as RICH
+from vostok.derive.aliases import dyn_canon_base
 
 from vostok.sema import die
 
@@ -61,8 +62,10 @@ _AMBIGUITY_LIST = 20
 
 def _matcher(sel):
     """Build the line predicate for a NAME selector: exact mangled > mangled
-    substring > demangled substring. Hex goes through `_hex_readings`."""
+    substring > demangled substring > dynamic-init canonical form. Hex goes
+    through `_hex_readings`."""
     low = sel.lower()
+    canon = dyn_canon_base(sel)
 
     def want(line):
         if sel in line:
@@ -72,6 +75,18 @@ def _matcher(sel):
         if low in line.lower():
             rec = json.loads(line)
             if low in rec["name"].lower():
+                return rec
+        # The two sides spell a dynamic initializer differently, and neither
+        # spelling contains the other: report.json and our base PDB say
+        # `??__Es_cc@survarium@@YAXXZ`, the retail PDB has no mangled name at all
+        # and stores ``survarium::`dynamic initializer for 's_cc'''``. So the
+        # name you copy out of report.json never found the target record - the
+        # tool answered "no function matches" for a function it holds. Compare
+        # the canonical identity instead. The cheap guard keeps the common path
+        # off json.loads.
+        if canon and ("dynamic " in line or "??__" in line):
+            rec = json.loads(line)
+            if dyn_canon_base(rec["mangled"]) == canon:
                 return rec
         return None
 
@@ -252,9 +267,9 @@ def resolve(sel):
             sys.stderr.write(f"  {r['mangled']}\n      {r['name']}\n")
         if len(hits) > _AMBIGUITY_LIST:
             sys.stderr.write(f"  ... and {len(hits) - _AMBIGUITY_LIST} more\n")
-        die(f"'{sel}' is ambiguous ({len(hits)} hits) - pass a mangled name, or narrow the "
-            f"substring (`vostok derive list --module M` and `pdb_rich_query --list "
-            f"--function <substring>` enumerate candidates)")
+        die(f"'{sel}' is ambiguous ({len(hits)} hits) - copy one of the spellings above, "
+            f"or narrow the substring (`vostok ledger list --unit <tu>` and "
+            f"`pdb_rich_query --list --function <substring>` enumerate candidates)")
     if tgt and base and not from_pairing:
         base = [r for r in base if _same_function(r, tgt[0])]
     return (tgt[0] if tgt else None), (base[0] if base else None)
