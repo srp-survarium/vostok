@@ -6,8 +6,7 @@
 #          Campaign goal: drive every max to 100.
 #   hist   all-time peak; NEVER resets. hist > max = we had it better once.
 #   tries  matcher dispatches that included this function (high = hard to match).
-#          It is `attempts.n` in binaries/match.db and moves ONLY when someone
-#          runs `vostok derive tried` / `vostok ledger tried` - a build that
+#          It moves ONLY when someone runs `vostok ledger tried` - a build that
 #          changes the body does NOT bump it.
 #   hash   12 hex chars of the function's own source body. Module/TU context is
 #          deliberately excluded - it is diagnosis, not a gate.

@@ -6,12 +6,11 @@ vostok.build.rebuild - full base-side refresh after editing sources.
   2. Regenerate binaries/rich/base, then binaries/objdiff/base. The COFF symbol
      normalizer consumes the completed rich index, so those two steps must be
      ordered. binaries/structure/base remains disjoint and runs in parallel.
-  3. Regenerate binaries/match.db from the fresh report.json
-     (vostok.derive.roster.regen()), which then projects the committed ledger
-     docs/binary_matching/match_state.tsv out of it. `vostok build` is the
-     canonical build step and owns the DB regen; `vostok derive refresh` is the
-     regen-only path for an already-built report. A regen failure warns but does
-     not fail the build.
+  3. Re-derive the committed ledger docs/binary_matching/match_state.tsv from
+     the fresh report.json (vostok.derive.roster.regen()), and refresh README's
+     score block from it. `vostok build` is the canonical build step and owns
+     the regen; `vostok derive refresh` is the regen-only path for an
+     already-built report. A regen failure warns but does not fail the build.
 
 The target side (binaries/structure/target, binaries/objdiff/target,
 binaries/rich/target) is the original game and does not change between
@@ -234,19 +233,19 @@ def main() -> None:
             die(f"{len(failures)} step(s) failed: {', '.join(failures)}")
         _write_build_head()
 
-        # `vostok build` is the canonical build step, so it also regenerates the
-        # match.db from the report.json it just produced (the inverse of the old
-        # model where vostok derive refresh shelled out to `vostok build`). A regen
-        # failure is logged but does NOT fail the build - the diff inputs are
-        # already good; the DB can be re-derived later with `vostok derive refresh`.
+        # `vostok build` is the canonical build step, so it also re-derives the
+        # committed ledger from the report.json it just produced (the inverse of
+        # the old model where vostok derive refresh shelled out to `vostok build`).
+        # A regen failure is logged but does NOT fail the build - the diff inputs
+        # are already good, and `vostok derive refresh` can re-derive later.
         try:
             from vostok.derive import roster
             roster.regen()
-            log("match.db regenerated.")
+            log("matching ledger re-derived.")
         # catch SystemExit too (regen's missing-artifact guard calls sys.exit) so
-        # a DB hiccup never aborts a build whose diff inputs are already good.
-        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the DB
-            log(f"WARNING: match.db NOT regenerated ({e}); "
+        # a derivation hiccup never aborts a build whose diff inputs are good.
+        except (Exception, SystemExit) as e:  # noqa: BLE001 - never fail the build over the ledger
+            log(f"WARNING: matching ledger NOT re-derived ({e}); "
                 "re-derive it with `python3 -m vostok derive refresh`")
 
         # ...and the README score block, the other report.json-derived artifact, so a

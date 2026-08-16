@@ -5,18 +5,17 @@ is the campaign's memory: what has been proven, what was attempted, what is
 parked and why. It is TEXT because it is committed - a conflict is an ordinary
 text conflict and `git diff` names exactly which functions moved. (The old
 SQLite `match.db` re-serialised its pages on every write, so every matching
-commit stored a fresh ~4 MB blob; `binaries/match.db` survives only as a
-gitignored derivation cache.)
+commit stored a fresh ~4 MB blob; it then survived a while as a gitignored
+derivation cache, and is now gone entirely - the derivation writes here.)
 
-    store    the file format, and `hist` - the all-time peak it ratchets so a
-             peak can never be lost. `max` is NOT decided here: the hash-scoped
-             reset lives in `vostok.derive.maxima`/`roster`, and `export_from_db`
-             projects it (plus cls/tries/note/status) out of the cache.
+    store    the file format, `project` - the build path that folds a fresh
+             derivation onto this record - and `hist`, the all-time peak it
+             ratchets so a peak can never be lost. `max` is NOT decided here:
+             the hash-scoped reset lives in `vostok.derive.maxima`.
     cli      query and mutate: report / list / queue / tried / park / open.
-             Needs no build: it reads the committed ledger directly. Its three
-             mutating verbs are re-derived from the cache by the next build - see
-             the CAVEAT in `cli`.
-    readme   the README score block, rendered from match.db
+             Needs no build: it reads the committed ledger directly, and its
+             mutating verbs are durable because nothing re-projects over them.
+    readme   the README score block, rolled up from this record
     queue    the structure-mismatch worklist, projected into a markdown queue
 
     python3 -m vostok.ledger report --module render

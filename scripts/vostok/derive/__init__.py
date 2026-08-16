@@ -13,20 +13,23 @@ the reviewed override tables - this decides, for every target function:
                                         survives compiler churn and resets when
                                         the source it describes changes)
 
-and writes the answer to `binaries/match.db`, a gitignored cache, then projects
-it into the committed ledger (`vostok.ledger`). Nothing here compiles anything:
-`vostok build` is the canonical build and calls `roster.regen()` at the end of
-it; `refresh` is the regen-only path for an already-built report.
+and writes the answer straight into the committed ledger
+(`docs/binary_matching/match_state.tsv`, owned by `vostok.ledger`), plus one
+regenerable diagnostic - `binaries/base_only.tsv`, for the symbols only WE emit.
+Nothing is cached in between: `roster.derive()` is a pure function of the
+artifacts, so anything wanting the per-function verdict re-runs it (~7 s)
+instead of querying a copy that can go stale.
 
-    python3 -m vostok.derive report --module render
-    python3 -m vostok.derive list --module game_core --max-size 0x80
-    python3 -m vostok.derive queue --module render --limit 3
-    python3 -m vostok.derive refresh
+Nothing here compiles anything: `vostok build` is the canonical build and calls
+`roster.regen()` at the end of it; `refresh` is the regen-only path for an
+already-built report.
 
-Design: docs/binary_matching/match_db_design.md. `vostok derive <verb>` on the
-umbrella CLI is the same dispatch. The DB answers BULK questions (queues,
-per-TU reports, unpaired functions); `pdb_fetch` stays the authoritative
-per-function view.
+    python3 -m vostok derive refresh          # re-derive from the built report
+    python3 -m vostok ledger report --module render     # ask the record
+
+Design: docs/binary_matching/match_db_design.md. The ledger answers BULK
+questions (queues, per-TU reports, unpaired functions); `pdb_fetch` stays the
+authoritative per-function view.
 """
 
 import sys

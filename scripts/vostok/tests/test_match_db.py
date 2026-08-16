@@ -1,5 +1,4 @@
 import json
-import sqlite3
 import tempfile
 import unittest
 from pathlib import Path
@@ -15,21 +14,18 @@ from vostok.derive.aliases import (dyn_canon_base, dyn_canon_rich,
                                    report_source_alias_candidates,
                                    strict_source_alias_candidates)
 from vostok.derive.classify import classify
-from vostok.derive.db import SCHEMA
 from vostok.derive.index import (authoritative_demangled_names,
                                  index_by_mangled, legacy_overload_keys,
                                  overload_key)
-from vostok.derive.maxima import (effective_source_hash,
-                                  maximum_for_effective_hash,
-                                  maximum_needs_epoch_archive,
-                                  merge_maximum_epoch, merge_persistent_maxima,
-                                  retained_max_effective_hash)
+from vostok.derive.maxima import effective_source_hash
 from vostok.derive.modules import (dynamic_local_owner_modules,
                                    load_module_ownership_overrides,
                                    logical_module)
+from vostok.derive.pairing import Pair, Pairing
 from vostok.derive.scores import (cross_unit_exact_score, island_report_score,
                                   rank_island_delta, report_fuzzy_scores,
                                   report_score_for_target)
+from vostok.ledger import store
 
 
 class CompilerNameTests(unittest.TestCase):
@@ -438,144 +434,79 @@ class RankIslandDeltaTests(unittest.TestCase):
         )
 
 
-class MaximumEpochArchiveTests(unittest.TestCase):
-    @staticmethod
-    def row(fuzzy, exact=0, origin="rebuild", evidence=None):
-        return (
-            "?function@@",
-            "effective-hash",
-            fuzzy,
-            exact,
-            "state-id",
-            "animation",
-            "vostok/animation/example.cpp",
-            10,
-            12,
-            origin,
-            evidence,
-        )
+class MaximaFoldTests(unittest.TestCase):
+    """MAX accumulates while the source body holds, and restarts when it moves."""
 
-    def test_plain_current_rebuild_does_not_grow_epoch_archive(self):
-        self.assertFalse(
-            maximum_needs_epoch_archive(self.row(75.0), 75.0)
-        )
+    MANGLED = "?function@@YAXXZ"
 
-    def test_island_and_raised_rebuild_are_archived(self):
-        self.assertTrue(
-            maximum_needs_epoch_archive(
-                self.row(100.0, exact=1, origin="island", evidence="island.json"),
-                75.0,
+    def fold(self, banked, fuzzy, body):
+        """Fold one observation of one function whose source is `body`."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text(body, encoding="latin-1")
+            record = {
+                "mangled": self.MANGLED,
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 1}],
+            }
+            pairing = Pairing(
+                pairs={self.MANGLED: Pair(
+                    self.MANGLED, 0x1000, 0x2000, fuzzy, "SIZE", 1, 1, 0, 0, 0
+                )},
             )
-        )
-        self.assertTrue(
-            maximum_needs_epoch_archive(self.row(80.0), 75.0)
-        )
+            artifacts = mock.Mock(base={self.MANGLED: record})
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                return maxima.fold(pairing, artifacts, banked)[self.MANGLED]
 
-    def test_epoch_merge_retains_strongest_proof(self):
-        weaker = self.row(80.0)
-        exact = self.row(100.0, exact=1, origin="island", evidence="island.json")
+    def test_same_body_keeps_the_banked_peak_when_this_build_scores_lower(self):
+        body = "one body\n"
+        banked_hash = self.fold({}, 100.0, body)[0]
 
-        merged = merge_maximum_epoch(weaker, exact)
-
-        self.assertEqual(merged[2], 100.0)
-        self.assertEqual(merged[3], 1)
-        self.assertEqual(merged[9], "island")
-        self.assertEqual(merged[10], "island.json")
-
-    def test_epoch_merge_rejects_different_hash(self):
-        other = list(self.row(80.0))
-        other[1] = "other-hash"
-
-        with self.assertRaisesRegex(ValueError, "different source MAX epochs"):
-            merge_maximum_epoch(self.row(75.0), tuple(other))
-
-    def test_matching_archived_hash_reactivates_after_newer_epoch(self):
-        archived = self.row(
-            100.0, exact=1, origin="island", evidence="island.json"
-        )
-        newer = list(self.row(60.0))
-        newer[1] = "newer-hash"
-
-        selected = maximum_for_effective_hash(
-            "?function@@",
-            "effective-hash",
-            {"?function@@": tuple(newer)},
-            {("?function@@", "effective-hash"): archived},
-        )
-
-        self.assertEqual(selected, archived)
-
-    def test_different_archived_hash_is_not_credited(self):
-        archived = self.row(100.0, exact=1, origin="island")
-
-        selected = maximum_for_effective_hash(
-            "?function@@",
-            "unseen-hash",
-            {},
-            {("?function@@", "effective-hash"): archived},
-        )
-
-        self.assertIsNone(selected)
-
-
-class MergePersistentMaximaTests(unittest.TestCase):
-    @staticmethod
-    def row(mangled, effective_hash, fuzzy, exact=0):
-        return (
-            mangled,
-            effective_hash,
-            fuzzy,
-            exact,
-            "state-id",
-            "render",
-            "vostok/render/example.cpp",
-            10,
-            12,
-            "rebuild",
-            None,
-        )
-
-    def test_merges_same_hash_and_archives_different_hash(self):
-        current = sqlite3.connect(":memory:")
-        incoming = sqlite3.connect(":memory:")
-        current.row_factory = incoming.row_factory = sqlite3.Row
-        current.executescript(SCHEMA)
-        incoming.executescript(SCHEMA)
-
-        current.execute(
-            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            self.row("?same@@", "same-hash", 80.0),
-        )
-        incoming.execute(
-            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            self.row("?same@@", "same-hash", 100.0, exact=1),
-        )
-        current.execute(
-            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            self.row("?changed@@", "old-hash", 75.0),
-        )
-        incoming.execute(
-            "INSERT INTO source_maxima VALUES (?,?,?,?,?,?,?,?,?,?,?)",
-            self.row("?changed@@", "new-hash", 100.0, exact=1),
-        )
-
-        self.assertEqual(merge_persistent_maxima(current, incoming), 2)
         self.assertEqual(
-            tuple(
-                current.execute(
-                    "SELECT max_fuzzy_pct, exact_proven FROM source_maxima "
-                    "WHERE mangled = '?same@@'"
-                ).fetchone()
-            ),
-            (100.0, 1),
+            self.fold({self.MANGLED: (banked_hash, 100.0)}, 62.5, body),
+            (banked_hash, 100.0),
         )
+
+    def test_same_body_raises_the_peak_when_this_build_scores_higher(self):
+        body = "one body\n"
+        banked_hash = self.fold({}, 50.0, body)[0]
+
         self.assertEqual(
-            current.execute(
-                "SELECT max_fuzzy_pct FROM source_maxima_epochs "
-                "WHERE mangled = '?changed@@' AND effective_hash = 'new-hash'"
-            ).fetchone()[0],
-            100.0,
+            self.fold({self.MANGLED: (banked_hash, 50.0)}, 87.5, body),
+            (banked_hash, 87.5),
         )
+
+    def test_a_changed_body_restarts_at_what_this_build_measured(self):
+        stale_hash = self.fold({}, 100.0, "old body\n")[0]
+        new_hash, maximum = self.fold(
+            {self.MANGLED: (stale_hash, 100.0)}, 62.5, "new body\n"
+        )
+
+        self.assertNotEqual(new_hash, stale_hash)
+        self.assertEqual(maximum, 62.5, "a rewritten body must prove itself again")
+
+    def test_an_unscored_pair_makes_no_observation_at_all(self):
+        """No row, rather than a zero: `project` then keeps the banked pair."""
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            source = root / "sources/vostok/animation/sources/example.cpp"
+            source.parent.mkdir(parents=True)
+            source.write_text("body\n", encoding="latin-1")
+            record = {
+                "mangled": self.MANGLED,
+                "file": "vostok/animation/sources/example.cpp",
+                "statements": [{"line": 1}],
+            }
+            pairing = Pairing(
+                pairs={self.MANGLED: Pair(
+                    self.MANGLED, 0x1000, 0x2000, None, "SIZE", 1, 1, 0, 0, 0
+                )},
+            )
+            artifacts = mock.Mock(base={self.MANGLED: record})
+            with mock.patch.object(maxima, "SOURCES", root / "sources"):
+                self.assertEqual(maxima.fold(pairing, artifacts, {}), {})
 
 
 class EffectiveSourceHashTests(unittest.TestCase):
@@ -599,11 +530,11 @@ class EffectiveSourceHashTests(unittest.TestCase):
             }
 
             with mock.patch.object(maxima, "SOURCES", root / "sources"):
-                first = effective_source_hash(record, "animation")
+                first = effective_source_hash(record)
                 source.write_text(
                     "body line\nother function v2\n", encoding="latin-1"
                 )
-                second = effective_source_hash(record, "animation")
+                second = effective_source_hash(record)
 
             self.assertEqual(first, second)
 
@@ -619,76 +550,13 @@ class EffectiveSourceHashTests(unittest.TestCase):
             }
 
             with mock.patch.object(maxima, "SOURCES", root / "sources"):
-                first = effective_source_hash(record, "animation")
+                first = effective_source_hash(record)
                 source.write_text(
                     "body line EDITED\nother function\n", encoding="latin-1"
                 )
-                second = effective_source_hash(record, "animation")
+                second = effective_source_hash(record)
 
             self.assertNotEqual(first, second)
-
-    def test_retained_max_uses_pinned_locator_for_different_folded_owner(self):
-        previous = (
-            "?accessor@@",
-            "expected-hash",
-            100.0,
-            1,
-            "state-id",
-            "animation",
-            "vostok/animation/accessor.h",
-            86,
-            86,
-            "island",
-            "evidence.json",
-        )
-        folded_alias = {"file": "boost/bind/bind.hpp", "statements": []}
-
-        with mock.patch.object(
-            maxima,
-            "effective_source_hash_at",
-            return_value="expected-hash",
-        ) as hash_at, mock.patch.object(
-            maxima, "effective_source_hash"
-        ) as hash_record:
-            result = retained_max_effective_hash(previous, folded_alias)
-
-        self.assertEqual(result, "expected-hash")
-        hash_at.assert_called_once_with(
-            "vostok/animation/accessor.h", 86, 86, "animation"
-        )
-        hash_record.assert_not_called()
-
-    def test_retained_max_uses_current_extent_for_same_owner(self):
-        previous = (
-            "?accessor@@",
-            "expected-hash",
-            100.0,
-            1,
-            "state-id",
-            "animation",
-            "vostok/animation/accessor.h",
-            86,
-            86,
-            "island",
-            "evidence.json",
-        )
-        current = {
-            "file": "vostok/animation/accessor.h",
-            "statements": [{"line": 87}],
-        }
-
-        with mock.patch.object(
-            maxima, "_source_extent", return_value=(current["file"], 87, 87, "body")
-        ), mock.patch.object(
-            maxima, "effective_source_hash", return_value="current-hash"
-        ) as hash_record, mock.patch.object(
-            maxima, "effective_source_hash_at"
-        ) as hash_at:
-            result = retained_max_effective_hash(previous, current)
-
-        self.assertEqual(result, "current-hash")
-        hash_record.assert_called_once_with(current, "animation")
-        hash_at.assert_not_called()
 
 
 class StructureClassificationTests(unittest.TestCase):
@@ -1084,77 +952,113 @@ class ReadmeScoreProvenanceTests(unittest.TestCase):
                 self._stats(ledger)
 
 
-class LedgerTriesSemanticsTests(unittest.TestCase):
-    """`tries` is dispatch count, not "times the body changed".
+class LedgerProjectionTests(unittest.TestCase):
+    """`store.project` is the build path: a fresh derivation folded ONTO the
+    committed record. What the derivation measures, it owns; what the campaign
+    proved, it must not be able to destroy."""
 
-    The ledger header used to claim the latter; a build that rewrote a function
-    body left tries untouched, because export_from_db takes it from the cache's
-    attempts table.
-    """
+    MANGLED = "?f@@YAXXZ"
 
-    def test_export_takes_tries_from_the_cache_not_from_body_changes(self):
-        from vostok.ledger import store
+    @staticmethod
+    def observation(**overrides):
+        row = {
+            "mangled": LedgerProjectionTests.MANGLED, "unit": "vostok/x/f.cpp",
+            "module": "x", "size": 32, "frameless": False, "cls": "SIZE",
+            "cur": None, "max": None, "hash": "",
+        }
+        row.update(overrides)
+        return row
+
+    @staticmethod
+    def banked(**overrides):
+        row = {
+            "mangled": LedgerProjectionTests.MANGLED, "unit": "vostok/x/f.cpp",
+            "module": "x", "status": "inprogress", "cls": "SIZE", "cur": 75.0,
+            "max": 75.0, "hist": 75.0, "tries": 0, "size": 32, "flags": "",
+            "hash": "h", "note": "",
+        }
+        row.update(overrides)
+        return row
+
+    def project(self, observations, previous=None):
+        """Write `previous`, project `observations` onto it, read the result."""
         with tempfile.TemporaryDirectory() as d:
-            db, ledger = Path(d) / "match.db", Path(d) / "state.tsv"
-            con = sqlite3.connect(db)
-            con.executescript(SCHEMA)
-            con.execute("INSERT INTO symbols VALUES (1, '?f@@YAXXZ', 'void f()')")
-            con.execute("INSERT INTO units VALUES (1, 'vostok/x/f.cpp', 'x')")
-            con.execute("INSERT INTO target_functions VALUES "
-                        "(100, 1, 1, NULL, 'x', 1, 32, 1, 0)")
-            con.execute("INSERT INTO base_functions VALUES "
-                        "(200, 1, 1, NULL, 'x', 1, 32, 1, 0)")
-            con.execute("INSERT INTO pairs VALUES (1, 100, 200, 75.0, 'SIZE', 1, 1, 0, 0, 0)")
-            con.execute("INSERT INTO source_maxima VALUES "
-                        "('?f@@YAXXZ', 'newhash', 75.0, 0, NULL, 'x', 'f.cpp', 1, 9,"
-                        " 'rebuild', NULL)")
-            con.execute("INSERT INTO attempts VALUES ('?f@@YAXXZ', 3, '2026-01-01', NULL)")
-            con.commit()
-            con.close()
+            ledger = str(Path(d) / "state.tsv")
+            if previous is not None:
+                store.save({r["mangled"]: r for r in previous}, ledger)
+            store.project(observations, ledger)
+            return store.load(ledger)
 
-            store.save({"?f@@YAXXZ": {
-                "mangled": "?f@@YAXXZ", "unit": "vostok/x/f.cpp", "module": "x",
-                "status": "done", "cls": "MATCH", "cur": 100.0, "max": 100.0,
-                "hist": 100.0, "tries": 3, "size": 32, "flags": "",
-                "hash": "oldhash", "note": "",
-            }}, str(ledger))
+    def test_a_changed_body_resets_max_but_never_tries_or_hist(self):
+        rows = self.project(
+            [self.observation(cur=75.0, max=75.0, hash="newhash")],
+            [self.banked(cur=100.0, max=100.0, hist=100.0, tries=3, status="done")],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["max"], 75.0, "a new hash resets max to what we measured")
+        self.assertEqual(row["tries"], 3, "a changed body must NOT bump tries")
+        self.assertEqual(row["hist"], 100.0, "hist never falls")
+        self.assertEqual(row["status"], "inprogress")
 
-            store.export_from_db(str(db), str(ledger))
-            row = store.load(str(ledger))["?f@@YAXXZ"]
-            self.assertEqual(row["tries"], 3, "a changed body must NOT bump tries")
-            self.assertEqual(row["max"], 75.0, "a new hash resets max to cur")
-            self.assertEqual(row["hist"], 100.0, "hist never falls")
-            self.assertEqual(row["status"], "inprogress")
+    def test_same_body_keeps_the_proven_peak_over_a_lower_observation(self):
+        rows = self.project(
+            [self.observation(cur=62.5, max=62.5, hash="h")],
+            [self.banked(max=100.0, hist=100.0, status="done")],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["max"], 100.0, "the ledger owns the peak for this body")
+        self.assertEqual(row["cur"], 62.5)
+        self.assertEqual(row["status"], "done")
 
-    def test_export_overwrites_a_hand_park_the_cache_does_not_carry(self):
-        """Documented behaviour, so it stops surprising people: `ledger park`
-        edits the file, and the next build re-derives it from the cache."""
-        from vostok.ledger import store
-        with tempfile.TemporaryDirectory() as d:
-            db, ledger = Path(d) / "match.db", Path(d) / "state.tsv"
-            con = sqlite3.connect(db)
-            con.executescript(SCHEMA)
-            con.execute("INSERT INTO symbols VALUES (1, '?f@@YAXXZ', 'void f()')")
-            con.execute("INSERT INTO units VALUES (1, 'vostok/x/f.cpp', 'x')")
-            con.execute("INSERT INTO target_functions VALUES "
-                        "(100, 1, 1, NULL, 'x', 1, 32, 1, 0)")
-            con.execute("INSERT INTO base_functions VALUES "
-                        "(200, 1, 1, NULL, 'x', 1, 32, 1, 0)")
-            con.execute("INSERT INTO pairs VALUES (1, 100, 200, 75.0, 'SIZE', 1, 1, 0, 0, 0)")
-            con.commit()
-            con.close()
+    def test_an_unobserved_function_keeps_its_peak_and_the_body_it_proved_it_on(self):
+        """max and hash only mean anything together, so they travel together."""
+        rows = self.project(
+            [self.observation(cur=None, cls=None)],
+            [self.banked(cur=None, max=100.0, hist=100.0, hash="proven")],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual((row["max"], row["hash"]), (100.0, "proven"))
+        self.assertEqual(row["status"], "done")
 
-            store.save({"?f@@YAXXZ": {
-                "mangled": "?f@@YAXXZ", "unit": "vostok/x/f.cpp", "module": "x",
-                "status": "parked", "cls": "SIZE", "cur": 75.0, "max": 75.0,
-                "hist": 75.0, "tries": 4, "size": 32, "flags": "",
-                "hash": "h", "note": "parked by hand",
-            }}, str(ledger))
+    def test_a_row_this_build_never_saw_survives_intact(self):
+        rows = self.project([], [self.banked(max=100.0, hist=100.0, note="banked")])
+        self.assertEqual(set(rows), {self.MANGLED})
+        self.assertEqual(rows[self.MANGLED]["note"], "banked")
+        self.assertEqual(rows[self.MANGLED]["max"], 100.0)
 
-            store.export_from_db(str(db), str(ledger))
-            row = store.load(str(ledger))["?f@@YAXXZ"]
-            self.assertEqual(row["status"], "inprogress")
-            self.assertEqual(row["tries"], 0)
+    def test_a_hand_park_survives_the_next_build(self):
+        """The regression that used to need a write-through to the cache: `ledger
+        park` edited the record, and the build then re-derived the row without it."""
+        rows = self.project(
+            [self.observation(cur=75.0, max=75.0, hash="h")],
+            [self.banked(status="parked", tries=4, note="parked by hand")],
+        )
+        row = rows[self.MANGLED]
+        self.assertEqual(row["status"], "parked")
+        self.assertEqual(row["note"], "parked by hand")
+        self.assertEqual(row["tries"], 4)
+
+    def test_a_park_that_reaches_100_reads_done(self):
+        rows = self.project(
+            [self.observation(cur=100.0, max=100.0, hash="h")],
+            [self.banked(status="parked", note="LTCG wall")],
+        )
+        self.assertEqual(rows[self.MANGLED]["status"], "done")
+
+    def test_an_unpaired_function_is_blocked_and_carries_the_roster_columns(self):
+        rows = self.project([self.observation(cur=None, cls=None, frameless=True)])
+        row = rows[self.MANGLED]
+        self.assertEqual(row["status"], "blocked")
+        self.assertEqual(row["flags"], "f")
+        self.assertEqual(row["unit"], "vostok/x/f.cpp")
+        self.assertEqual(row["size"], 32)
+        self.assertIsNone(row["cur"])
+
+    def test_a_first_observation_seeds_max_and_hist_from_cur(self):
+        rows = self.project([self.observation(cur=87.5, max=87.5, hash="h")])
+        row = rows[self.MANGLED]
+        self.assertEqual((row["max"], row["hist"]), (87.5, 87.5))
+        self.assertEqual(row["status"], "inprogress")
 
 
 if __name__ == "__main__":

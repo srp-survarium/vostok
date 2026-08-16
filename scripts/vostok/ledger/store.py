@@ -1,16 +1,17 @@
 """match_state - the committed matching ledger, one text row per function.
 
-Replaces the committed `match.db` blob. SQLite re-serialises pages on write, so
-git cannot delta it: every matching commit stored a fresh ~4 MB blob (1,333 of
-them, ~3.5 GB of history). A flat TSV deltas per line - ~20 KB per commit.
+Replaced the committed `match.db` blob, and then the cache behind it. SQLite
+re-serialises pages on write, so git cannot delta it: every matching commit
+stored a fresh ~4 MB blob (1,333 of them, ~3.5 GB of history). A flat TSV deltas
+per line - ~20 KB per commit - and `git diff` names the functions that moved.
 
-  docs/binary_matching/match_state.tsv    committed truth (this module)
-  binaries/match.db                       gitignored query/derivation cache
+  docs/binary_matching/match_state.tsv    the record; there is no other copy
 
-The derived roster (symbols, pairs, per-statement classification, cross-name
-aliases) is a pure function of `report.json` + the rich indexes and is rebuilt
-by `match_db.regen()` on every build. Only the columns below survive a rebuild
-and cannot be recomputed - they are the matching campaign's memory.
+The derived roster (pairs, per-statement classification, cross-name aliases) is
+a pure function of `report.json` + the rich indexes and is rebuilt by
+`vostok.derive.roster.regen()` on every build, which hands it to `project`
+below. Only the columns that survive a rebuild and cannot be recomputed - hist,
+note, tries, and a banked max - are the matching campaign's memory.
 
 Percentage semantics (gruntz naming; see docs in ~/Projects/surv/):
 
@@ -50,7 +51,7 @@ COLUMNS = [
     "cur",       # this build
     "max",       # peak for this `hash`
     "hist",      # all-time peak, never resets
-    "tries",     # matcher dispatches (attempts.n); a build never bumps it
+    "tries",     # matcher dispatches; a build never bumps it
     "size",      # target byte size - the report headline is byte-weighted
     "flags",     # 'f' = frameless (LTCG-customised leaf; queue skips these)
     "hash",      # 12 hex chars of the function's own source body
@@ -68,8 +69,7 @@ HEADER = """\
 #          Campaign goal: drive every max to 100.
 #   hist   all-time peak; NEVER resets. hist > max = we had it better once.
 #   tries  matcher dispatches that included this function (high = hard to match).
-#          It is `attempts.n` in binaries/match.db and moves ONLY when someone
-#          runs `vostok derive tried` / `vostok ledger tried` - a build that
+#          It moves ONLY when someone runs `vostok ledger tried` - a build that
 #          changes the body does NOT bump it.
 #   hash   12 hex chars of the function's own source body. Module/TU context is
 #          deliberately excluded - it is diagnosis, not a gate.
@@ -166,14 +166,80 @@ def status_for(row, flagged=False, paired=True):
     return "inprogress"
 
 
+def project(observations, path=STATE_PATH):
+    """Fold this build's observations into the committed ledger. THE build path.
+
+    `vostok.derive` owns the roster columns (unit / module / size / flags), `cur`,
+    `cls`, and the hash-scoped `max`; it recomputes all of them from report.json
+    and the rich indexes on every build. This function owns everything a build
+    must NOT be able to destroy:
+
+      hist    ratcheted here, so a peak survives an ICF fold, a max reset, and a
+              build in which the function fails to appear at all
+      max     when this build made no hash-scoped observation, the banked peak
+              stays - together with the `hash` it belongs to, since a peak and
+              the body it was proven on only mean anything as a pair
+      note    what was attempted, or why the row is parked
+      tries   matcher dispatches; a build never bumps it
+      status  done > parked > blocked > inprogress
+
+    An observation is a dict: mangled, unit, module, size, frameless, cls, cur,
+    max, hash - `max`/`hash` absent (None/"") when the function has no
+    source-backed observation this build.
+    """
+    previous = load(path)
+    rows = {}
+    for observation in observations:
+        mangled = observation["mangled"]
+        old = previous.get(mangled, {})
+        rows[mangled] = {
+            "mangled": mangled,
+            "module": observation["module"] or "",
+            "unit": observation["unit"] or "",
+            "size": observation["size"] or 0,
+            "flags": "f" if observation["frameless"] else "",
+            "cls": observation["cls"] or "",
+            "cur": observation["cur"],
+            "max": observation["max"],
+            "hash": observation["hash"] or "",
+            "tries": old.get("tries") or 0,
+            "note": old.get("note", ""),
+            "_paired": observation["cur"] is not None,
+            "_flagged": old.get("status") == "parked",
+        }
+
+    # rows banked in the ledger but absent from this build keep everything they
+    # had; their proven work outlives the build that stopped emitting them.
+    for mangled, old in previous.items():
+        if mangled not in rows:
+            rows[mangled] = dict(old, _paired=False,
+                                 _flagged=old.get("status") == "parked")
+
+    for mangled, row in rows.items():
+        old = previous.get(mangled, {})
+        if row["max"] is None:
+            row["max"] = old.get("max") if old.get("max") is not None else row["cur"]
+            row["hash"] = row["hash"] or old.get("hash") or ""
+        elif old.get("max") is not None and old.get("hash") == row["hash"]:
+            # same body: the ledger owns the peak, so a build that scores lower
+            # (ICF fold, sibling inline decision) cannot cost us proven work
+            row["max"] = max(row["max"], old["max"])
+        row["hist"] = max(
+            v for v in (old.get("hist"), row["max"], row["cur"], 0) if v is not None
+        )
+        row["status"] = status_for(row, flagged=row.pop("_flagged"),
+                                   paired=row.pop("_paired"))
+    return save(rows, path)
+
+
 def advance(previous, mangled, *, module, cur, cls, body_hash, paired=True,
             flagged=False, note=None):
     """Fold one build observation into a ledger row.
 
-    NOT ON THE BUILD PATH - `export_from_db` is. This is the direct-observation
-    form (no cache), kept for a report-only writer; note that it bumps `tries` on
-    a body change, which `export_from_db` does not (there `tries` is the cache's
-    `attempts.n`). Do not read it as the live cur/max/hist policy.
+    NOT ON THE BUILD PATH - `project` is. This is the single-row form, kept for a
+    report-only writer; note that it bumps `tries` on a body change, which
+    `project` does not (there `tries` is a dispatch count nothing derives). Do
+    not read it as the live cur/max/hist policy.
 
     `max` accumulates while `body_hash` holds and restarts when it changes;
     `hist` only ever rises. A row whose function is absent from this build keeps
@@ -208,234 +274,11 @@ def advance(previous, mangled, *, module, cur, cls, body_hash, paired=True,
     return row
 
 
-# --------------------------------------------------------------------------
-# one-time migration out of match.db
-# --------------------------------------------------------------------------
-
-def migrate_from_db(db_path, path=STATE_PATH):
-    """Build the ledger from the legacy match.db. Lossless for live state.
-
-    `hist` is seeded from every peak the old schema recorded - the current
-    maximum, the weaker-gated `history.best_fuzzy_pct`, and every banked epoch -
-    which recovers the ~917 rows whose real peaks the over-wide gate erased.
-    """
-    import sqlite3
-
-    con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    con.row_factory = sqlite3.Row
-    rows = {}
-
-    for rec in con.execute(
-        """SELECT s.mangled, t.module, p.fuzzy_pct AS cur, p.struct_class AS cls
-           FROM target_functions t
-           JOIN symbols s ON s.id = t.sym
-           LEFT JOIN pairs p ON p.target_rva = t.rva"""
-    ):
-        rows[rec["mangled"]] = {
-            "mangled": rec["mangled"],
-            "module": rec["module"] or "",
-            "cls": rec["cls"] or "",
-            "cur": rec["cur"],
-            "max": None,
-            "hist": None,
-            "tries": 0,
-            "hash": "",
-            "note": "",
-            "_paired": rec["cur"] is not None,
-            "_flagged": False,
-        }
-
-    def touch(mangled):
-        return rows.setdefault(mangled, {
-            "mangled": mangled, "module": "", "cls": "", "cur": None,
-            "max": None, "hist": None, "tries": 0, "hash": "", "note": "",
-            "_paired": False, "_flagged": False,
-        })
-
-    for rec in con.execute(
-        "SELECT mangled, max_fuzzy_pct, substr(effective_hash, 1, 12) AS body"
-        " FROM source_maxima"
-    ):
-        row = touch(rec["mangled"])
-        row["max"] = rec["max_fuzzy_pct"]
-        row["hash"] = rec["body"] or ""
-
-    # hist: the union of every peak the old schema knew about
-    for rec in con.execute("SELECT mangled, best_fuzzy_pct FROM history"):
-        row = touch(rec["mangled"])
-        row["hist"] = max(v for v in (row["hist"], rec["best_fuzzy_pct"], 0)
-                          if v is not None)
-    for rec in con.execute(
-        "SELECT mangled, MAX(max_fuzzy_pct) AS peak FROM source_maxima_epochs"
-        " GROUP BY mangled"
-    ):
-        row = touch(rec["mangled"])
-        row["hist"] = max(v for v in (row["hist"], rec["peak"], 0)
-                          if v is not None)
-
-    for rec in con.execute("SELECT mangled, n, note FROM attempts"):
-        row = touch(rec["mangled"])
-        row["tries"] = rec["n"] or 0
-        if rec["note"]:
-            row["note"] = rec["note"]
-
-    # a flag's cause is the park/block reasoning - it outranks an attempt note
-    for rec in con.execute(
-        "SELECT mangled, GROUP_CONCAT(cause, ' | ') AS cause FROM flags"
-        " GROUP BY mangled"
-    ):
-        row = touch(rec["mangled"])
-        row["_flagged"] = True
-        if rec["cause"]:
-            row["note"] = rec["cause"]
-    con.close()
-
-    for row in rows.values():
-        for key in ("max", "hist"):
-            if row[key] is None and row["cur"] is not None:
-                row[key] = row["cur"]
-        if row["hist"] is not None and row["max"] is not None:
-            row["hist"] = max(row["hist"], row["max"])
-        row["status"] = status_for(row, flagged=row.pop("_flagged"),
-                                   paired=row.pop("_paired"))
-
-    return save(rows, path), rows
-
-
-def export_from_db(db_path, path=STATE_PATH):
-    """Project the freshly-regenerated cache into the committed ledger.
-
-    The cache owns the roster, `cur`, `cls`, `max` and the park/attempt notes;
-    this function owns `hist`, which it ratchets against the previous ledger so
-    a peak can never be lost - not by an ICF fold, not by a reset, not by a
-    build in which the function fails to appear at all.
-    """
-    import sqlite3
-
-    previous = load(path)
-    con = sqlite3.connect(f"file:{db_path}?mode=ro", uri=True)
-    con.row_factory = sqlite3.Row
-    rows = {}
-
-    for rec in con.execute(
-        """SELECT s.mangled, t.module, t.size, t.frameless, u.name AS unit,
-                  p.fuzzy_pct AS cur, p.struct_class AS cls
-           FROM target_functions t
-           JOIN symbols s ON s.id = t.sym
-           LEFT JOIN units u ON u.id = t.unit
-           LEFT JOIN pairs p ON p.target_rva = t.rva"""
-    ):
-        rows[rec["mangled"]] = {
-            "mangled": rec["mangled"], "module": rec["module"] or "",
-            "unit": rec["unit"] or "", "size": rec["size"] or 0,
-            "flags": "f" if rec["frameless"] else "",
-            "cls": rec["cls"] or "", "cur": rec["cur"], "max": None,
-            "tries": 0, "hash": "", "note": "",
-            "_paired": rec["cur"] is not None, "_flagged": False,
-        }
-
-    def touch(mangled):
-        return rows.setdefault(mangled, {
-            "mangled": mangled, "module": "", "unit": "", "size": 0,
-            "flags": "", "cls": "", "cur": None,
-            "max": None, "tries": 0, "hash": "", "note": "",
-            "_paired": False, "_flagged": False,
-        })
-
-    for rec in con.execute(
-        "SELECT mangled, max_fuzzy_pct, effective_hash FROM source_maxima"
-    ):
-        row = touch(rec["mangled"])
-        row["max"] = rec["max_fuzzy_pct"]
-        row["hash"] = (rec["effective_hash"] or "").split(".")[0]
-    for rec in con.execute("SELECT mangled, n, note FROM attempts"):
-        row = touch(rec["mangled"])
-        row["tries"] = rec["n"] or 0
-        if rec["note"]:
-            row["note"] = rec["note"]
-    for rec in con.execute(
-        "SELECT mangled, GROUP_CONCAT(cause, ' | ') AS cause FROM flags"
-        " GROUP BY mangled"
-    ):
-        row = touch(rec["mangled"])
-        row["_flagged"] = True
-        if rec["cause"]:
-            row["note"] = rec["cause"]
-    con.close()
-
-    # rows banked in the ledger but absent from this build keep everything they
-    # had; their proven work outlives the build that stopped emitting them.
-    for mangled, old in previous.items():
-        if mangled not in rows:
-            rows[mangled] = dict(old, _paired=False,
-                                 _flagged=old.get("status") == "parked")
-
-    for mangled, row in rows.items():
-        old = previous.get(mangled, {})
-        if row["max"] is None:
-            row["max"] = old.get("max") if old.get("max") is not None else row["cur"]
-        elif old.get("max") is not None and old.get("hash") == row["hash"]:
-            # same body: the ledger owns the peak, so a wiped or reset cache
-            # cannot cost us proven work
-            row["max"] = max(row["max"], old["max"])
-        if not row["note"]:
-            row["note"] = old.get("note", "")
-        row["hist"] = max(
-            v for v in (old.get("hist"), row["max"], row["cur"], 0)
-            if v is not None
-        )
-        row["status"] = status_for(row, flagged=row.pop("_flagged"),
-                                   paired=row.pop("_paired"))
-    return save(rows, path)
-
-
-def seed_db_tables(path=STATE_PATH):
-    """Reconstruct the cache's persistent tables from the ledger.
-
-    Used when `binaries/match.db` is absent (a fresh clone, or a wiped build
-    tree): the committed ledger is the only copy of the campaign's memory, so
-    the regen must start from it rather than from nothing.
-    """
-    rows = load(path)
-    history, maxima, attempts, flags = {}, {}, [], []
-    for mangled, row in rows.items():
-        history[mangled] = (mangled, "", row.get("hist"), row.get("cur"),
-                            row.get("cls") or None, "")
-        if row.get("max") is not None:
-            maxima[mangled] = (
-                mangled, row.get("hash") or "", row["max"],
-                int(row["max"] >= EXACT), None, row.get("module") or None,
-                None, None, None, "ledger", None,
-            )
-        if row.get("tries"):
-            attempts.append((mangled, row["tries"], "", row.get("note") or None))
-        if row.get("status") == "parked":
-            flags.append((mangled, "SKIP", row.get("note") or "", ""))
-    return history, maxima, attempts, flags
-
-
 def main(argv):
-    if len(argv) > 1 and argv[1] == "export":
-        db = str(paths.MATCH_DB)
-        if len(argv) > 2:
-            db = argv[2]
-        n = export_from_db(db)
-        print(f"[match_state] wrote {n} rows -> {STATE_PATH}")
-        return 0
-    if len(argv) > 1 and argv[1] == "migrate":
-        db = str(paths.DOCS_MATCHING / "match.db")
-        if len(argv) > 2:
-            db = argv[2]
-        n, rows = migrate_from_db(db)
-        recovered = sum(1 for r in rows.values()
-                        if r["hist"] and r["max"] and r["hist"] > r["max"] + 0.01)
-        done = sum(1 for r in rows.values() if r["status"] == "done")
-        print(f"[match_state] wrote {n} rows -> {STATE_PATH}")
-        print(f"[match_state]   {done} done, {recovered} rows recovered a peak "
-              f"the old gate had erased")
-        return 0
+    """No verbs: the ledger is written by `vostok build` (through `project`) and
+    queried with `vostok ledger`. This entry point only explains the format."""
     print(__doc__)
-    return 1
+    return 0 if len(argv) > 1 and argv[1] in ("-h", "--help") else 1
 
 
 if __name__ == "__main__":

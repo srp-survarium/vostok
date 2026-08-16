@@ -2,9 +2,9 @@
 
 THE RULE: no module outside this one spells a repo-relative path. Nine scripts
 used to re-derive the repo root and eight hard-coded artifact locations; moving
-`match.db` then meant editing four copies, one was missed, and the miss silently
-created an empty database that corrupted the README score block. A path that
-lives here can only be wrong once.
+the match database then meant editing four copies, one was missed, and the miss
+silently created an empty database that corrupted the README score block. A path
+that lives here can only be wrong once.
 
 Layout, mirrored by the constants below:
 
@@ -14,7 +14,6 @@ Layout, mirrored by the constants below:
       objdiff/{base,target}/      delinked COFF, plus report.json
       structure/{base,target}/    pdb-parser's rendered headers/statements
       rich/{base,target}/         pdb_rich_context index for pdb_fetch
-      match.db                    regenerable derivation cache
       base_only.tsv               why we emit what the target does not
     docs/binary_matching/       committed matching state (the ledger, queues,
                                 reviewed override tables)
@@ -87,10 +86,6 @@ RICH_DIR = BINARIES / "rich"
 TARGET_IDX = RICH_DIR / "target" / "index.jsonl"
 BASE_IDX = RICH_DIR / "base" / "index.jsonl"
 DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
-
-#: the derivation cache. Committed truth is MATCH_STATE; this is regenerable
-#: and gitignored (SQLite could not be diffed or merged - see ledger.store).
-MATCH_DB = BINARIES / "match.db"
 
 #: the base-only taxonomy: one verdict per function OUR build emits and the
 #: target does not. A diagnostic about our own output, not campaign memory, so
