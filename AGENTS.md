@@ -27,7 +27,7 @@ worktree's generated artifacts.
 
 The starting snapshot is 35.49% target-byte-weighted: 2,647 target functions,
 1,478 paired, 271 byte-exact, and 1,169 target-only. These are campaign-start
-figures only; `match.db` and `report.json` remain authoritative. The goal is
+figures only; the ledger and `report.json` remain authoritative. The goal is
 100% hash-scoped source MAX for every recoverable render function, with every
 irreducible remainder proved and queryably parked. Current fuzzy percentage or
 ordinary best-seen history is not MAX evidence.
@@ -56,7 +56,7 @@ Work the optimized call graph from owning roots toward leaves:
    and vtable order, layouts, globals, and shared-header fixes. Batch shared
    header changes so compiler-context hashes reset once, not piecemeal.
 6. Audit residuals with `structure-diff`, named locals, `vostok sema`, and real
-   call-site assembly. Work `QUANTITY`, `SPLIT`, `LOCALS`, target-only bodies,
+   call-site assembly. Work `QUANTITY`, `SPLIT`, wrong named locals, target-only bodies,
    and verified low-score shape mismatches. Park ordinary `SIZE`, frameless
    convention, ICF, or LTCG claims only after proving the exact non-steerable
    boundary.
@@ -69,7 +69,7 @@ The campaign ledger is the linear Git history plus the per-commit database.
 For every complete TU or bounded caller cone: inspect target structure and
 assembly, record each worked function exactly once in `attempts`, run the full
 `python3 -m vostok build -j6`, inspect `report-changes.json`, and commit the
-source together with the regenerated README and `match.db`. Then run a
+source together with the regenerated README and ledger. Then run a
 clean-HEAD no-op rebuild and amend its provenance metadata into that same
 commit. Never borrow a later database snapshot. After each 10-15 TUs, perform a
 separate structure-verification and stale-comment audit before continuing.
@@ -78,7 +78,7 @@ separate structure-verification and stale-comment audit before continuing.
 
 - Enter the Nix development environment; do not use sibling tool checkouts.
 - Use `python3 -m vostok build` with no module argument for the authoritative
-  build, relink, delink, report, README score, and `match.db` refresh.
+  build, relink, delink, report, README score, and ledger refresh.
 - During render clean-room reconstruction, compile only the three retail render
   libraries with `python3 -m vostok.build.ninja render_facade
   render_core_pc_dx11 render_engine_pc_dx11`. Fix compiler errors until all
@@ -88,10 +88,10 @@ separate structure-verification and stale-comment audit before continuing.
 - `python3 -m vostok derive refresh` only re-derives the database from the
   existing report. It does not compile changed source.
 - Never hand-edit the generated match-score block in `README.md` or derived
-  rows in `docs/binary_matching/match.db`.
+  rows in `docs/binary_matching/match_state.tsv`.
 - Every commit must represent a measured source state. Before creating or
   amending a commit, run a successful full `vostok build` and include the
-  resulting `README.md` and `docs/binary_matching/match.db` changes in that
+  resulting `README.md` and `docs/binary_matching/match_state.tsv` changes in that
   same commit. This applies to source, comments, documentation, tooling, and
   structure-verification changes because line movement and LTCG can alter code.
 - Inspect the small `binaries/objdiff/report-changes.json` for regressions.
@@ -148,12 +148,12 @@ separate structure-verification and stale-comment audit before continuing.
   `pdb_fetch --view target|base|diff|structure|structure-diff|callees|info`
   owns disassembly and PDB statement/local evidence; `pdb_rich_query --list`
   owns symbol and RVA listing; `vostok tool clangd symbol|def|refs|hover` owns
-  source-semantic navigation; and `vostok derive report|list|queue|max` owns
+  source-semantic navigation; and `vostok ledger report|list|queue` owns
   function/unit status, queues, attempts, flags, and hash-scoped MAX state.
 - Gruntz's `map`, `class`, and `vtable` commands compensate for a stripped
   binary. Vostok has the retail PDB: use `binaries/structure/target/headers` for
   class layout, inheritance, and virtual declaration order, target
-  `pdb_rich_query --list`/`vostok derive list` for the emitted function map, and
+  `pdb_rich_query --list`/`vostok ledger list` for the emitted function map, and
   `pdb_fetch --view target` at real virtual call sites for slot offsets. These
   are authoritative; do not port stripped-binary hierarchy or ownership guesses
   over the PDB evidence.
@@ -186,7 +186,7 @@ separate structure-verification and stale-comment audit before continuing.
   `STATE[STUB|INLINED|UNMATCHABLE]`, `sushi@TODO`, grounded matching-wall notes,
   and required evidence until their condition is resolved.
 - Do not put percentages, structure-diff dumps, verdicts, or other derived
-  status in source. They become stale; reports and `match.db` own that state.
+  status in source. They become stale; reports and the ledger own that state.
 - Strip logs, traces, commented debug code, and diagnostics that the target
   does not emit.
 - When review raises an unresolved matching question, add a lean
@@ -215,7 +215,7 @@ separate structure-verification and stale-comment audit before continuing.
 
 - Review target faithfulness and source structure, not conventional refactoring
   preferences.
-- Treat a high score over a `QUANTITY`, `LOCALS`, or ordering divergence as a
+- Treat a high score over a `QUANTITY`, a wrong local set, or an ordering divergence as a
   correctness problem.
 - Flag fabricated symbols, stale state comments, leftover carcasses, ungrounded
   constants, accidental logs, cross-unit inlining hacks, and generated

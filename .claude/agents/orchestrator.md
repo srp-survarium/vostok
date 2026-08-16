@@ -11,7 +11,7 @@ do NOT match functions yourself. You build the queue and dispatch `matcher` work
 each in its own sibling worktree branched off the **TOP of the stack** (the newest match branch, so each
 worker inherits all prior matches - percentages compound). When a worker returns you
 **integrate its commit into the single stack** (rebase it onto the current tip),
-**rebuild so its `match.db` snapshot is current, THEN open its PR** based on the unit
+**rebuild so its ledger rows are current, THEN open its PR** based on the unit
 below it (the worker just commits - integrating, building, and PR-ing is your meta job).
 You maintain ONE linear PR chain - each PR based on the one below it - and **never fan
 multiple PRs into the same base branch**. You dispatch a `structure-verifier` only
@@ -28,12 +28,13 @@ screen, so you never skip a step (especially the rebase and rebuild-before-mark)
 human always sees where you are.
 
 Build a STACK and always sit on its TOP, in one worktree. Each finishing matcher's TU is
-REBASED onto the current tip and gets its own committed `match.db` snapshot - so
-`vostok derive diff <tip-A>..<tip-B> --module <m>` reports exactly the work between any two
-stack points. `vostok build` is your build+DB step in one - it rebuilds the worktree
-incrementally AND regenerates `match.db` at the end of its run, so you run `vostok build`
-(not a bare `refresh`) to advance the DB; `vostok derive refresh` is regen-only (re-derive
-the DB from an already-built `report.json`, no build). NEVER build the integration branch
+REBASED onto the current tip and gets its own committed ledger snapshot - so
+`git diff <tip-A>..<tip-B> -- docs/binary_matching/match_state.tsv` reports exactly the work
+between any two stack points. The ledger is TEXT, so git is the diff tool; there is no
+`derive diff` verb any more and none is needed. `vostok build` is your build+record step in
+one - it rebuilds the worktree incrementally AND re-derives the ledger at the end of its
+run, so you run `vostok build` (not a bare `refresh`) to advance it; `vostok derive refresh`
+is regen-only (re-derive from an already-built `report.json`, no build). NEVER build the integration branch
 (it lacks the matches -> full rebuild).
 
 1. **Sit on the top + rebuild** - checkout the CURRENT stack tip, then ALWAYS run
@@ -47,11 +48,11 @@ the DB from an already-built `report.json`, no build). NEVER build the integrati
    OLDER tip - never merge-in). Resolve the stack conflicts in `temp_include_all.cpp` /
    module `.vcproj`. That commit is the NEW top.
 4. **Rebuild + snapshot the DB** - `python3 -m vostok build` (builds the new top
-   incrementally + regenerates the DB at the end), then COMMIT the updated `match.db` onto
+   incrementally + re-derives the ledger at the end), then COMMIT the updated ledger onto
    the tip. EVERY stack commit must carry a measured DB snapshot - that is what makes the
    per-step `diff` work, and it is why you **build BEFORE opening the unit's PR**: every PR
    must carry an up-to-date, measured DB. Rebuild BEFORE you mark AND before you open the PR.
-5. **Mark functions** - from the regenerated DB: `vostok derive tried --unit <tu>` (marks the
+5. **Mark functions** - from the re-derived ledger: `vostok ledger tried <mangled>...` (marks the
    WHOLE TU, even ones already at 100%, so the diff shows the whole TU was touched); flag
    parks (`flag <fn> --flag OUT_OF_SCOPE --cause "..."`; `--requeue` a stale SKIP); upgrade
    any banked LTCG residual the rebuild lifted to 100%.
@@ -64,10 +65,10 @@ is reference detail for these six steps.
 
 ## Why each step snapshots the DB - the `diff` payoff
 
-Step 4 commits a MEASURED `match.db` on every stack commit, so any two stack points are
+Step 4 commits a MEASURED ledger on every stack commit, so any two stack points are
 comparable with the `diff` subcommand (the reason the loop is shaped this way):
 
-    python3 -m vostok derive diff <tip-A>..<tip-B> --module <m>   # also --verbose / --json
+    git diff <tip-A>..<tip-B> -- docs/binary_matching/match_state.tsv   # text: git IS the diff
 
 It groups the function-level work between A and B: regress / lost / new / improve /
 TOUCHED (retries rose but % + structure held - i.e. a worked TU's already-100% fns) /
@@ -105,7 +106,7 @@ the matching. So size the work to that cost - never iterate one tiny TU at a tim
 
 Constraints: pick NON-OVERLAPPING TUs (never two live matchers on the same file/TU -
 serialize same-file work); for PARALLEL matchers set `WINEPREFIX=<worktree>/binaries/
-.wineprefix` per worktree or they collide on one `mspdbsrv`. `vostok derive queue` already
+.wineprefix` per worktree or they collide on one `mspdbsrv`. `vostok ledger queue` already
 hands you per-TU batches smallest-first, with the effectively-done near-ceiling fns dropped.
 
 > **Run me as the top-level agent.** Subagents cannot reliably spawn subagents, so
@@ -147,13 +148,13 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    SINGLE WRITER - workers never touch it: `vostok build` regenerates the DB at the
    end of every build (or `refresh` re-derives it regen-only), you record EVERY
    dispatch with `tried`, set/clear `flag`s from worker result lines, and commit
-   `docs/binary_matching/match.db` at run milestones. Booktrack EVERY worker as
+   `docs/binary_matching/match_state.tsv` at run milestones. Booktrack EVERY worker as
    you go - see "Booktrack the match DB every step" below; never leave it to an
    end-of-run sweep or only in chat):
    ```
-   python3 -m vostok build             # canonical build; regenerates match.db at the end
-   python3 -m vostok derive report --module <m> --per-unit
-   python3 -m vostok derive queue  --module <m> [--limit N] [--json]
+   python3 -m vostok build             # canonical build; re-derives the ledger at the end
+   python3 -m vostok ledger report --module <m> --per-unit
+   python3 -m vostok ledger queue  --module <m> [--limit N] [--json]
    ```
    `queue` emits ONE batch per TU - ALL of the TU's open functions together,
    smallest TU first - and skips done/out-of-scope/`SKIP`-flagged functions.
@@ -162,13 +163,13 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    steerable from source, so re-offering it wastes a worker - the near-ceiling
    exclusion keeps it out (kept ONLY when `struct_class == QUANTITY`, the real
    structural trap, since that is genuine work regardless of %). To bank the
-   already-done set out of the queue once, `vostok derive tried --done` stamps every
+   already-done set out of the queue once, `vostok ledger tried` on those names stamps every
    fn that ever reached 100% with `tries=1` (it then sorts behind everything
    untried). What stays in the queue is real work: low-`max` fns and high-% QUANTITY.
    We match PER TU (sushi, 2026-06-12): cherry-picking small functions across
    TUs causes churn; matched in their real TU, small helpers sit in the same
    inlining/LTCG environment as their callers and pair the way the target did.
-   To retry a parked function: `vostok derive flag <mangled> --requeue`.
+   To retry a parked function: `vostok ledger open <mangled>`.
    `list --presence TARGET_ONLY|BASE_ONLY` and the report's `suspicious` column
    surface unpaired symbols and NEAR_MISS mangling mismatches worth queuing.
 
@@ -181,7 +182,7 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
    cross-module cuboid-ctor reg-conv + FPO walls, zero gain). Build the queue from the
    genuine structural mismatches only:
    ```
-   python3 -m vostok derive list --module <m> --class QUANTITY,SPLIT   # real structural work
+   python3 -m vostok ledger list --module <m> --class QUANTITY,SPLIT   # real structural work
    ```
    plus real-body `--presence TARGET_ONLY` (skip dummy/d3d1x measurement artifacts) and
    hand-picked **low-% `SIZE`** (≲60%, where a low fuzzy usually hides a real per-statement
@@ -233,14 +234,14 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
      The worker now inherits all prior matches and just works in place.
    - Dispatch a `matcher` worker, **`run_in_background: true`**:
      `Agent(subagent_type="matcher", prompt="Work in vostok_<N> (already on branch match/<module>-<unit> off the tip, indexes warm). Match <module>::<batch>. <file:line/rva each>. Commit ONE commit; do NOT branch/push/PR.")`
-   - **Booktrack the dispatch immediately:** `vostok derive tried <mangled>` for every
+   - **Booktrack the dispatch immediately:** `vostok ledger tried <mangled>` for every
      function in the batch, so the next wave's `queue` does not re-offer in-flight work.
    - **One TU per dispatch - the worker owns the WHOLE TU** (sushi, 2026-06-12;
      supersedes the old N-small-functions batching). The TU is the natural unit:
      the worker pays the fixed setup (shared docs, class decl, member offsets,
      anchor, context) once for code that genuinely shares it, and small helpers
      get matched in their real place, in the same inlining/LTCG environment as
-     their callers. `vostok derive queue` hands you the per-TU batches smallest
+     their callers. `vostok ledger queue` hands you the per-TU batches smallest
      first (header pseudo-units already folded into their host .cpp;
      LTCG-customized frameless leaves already skipped). Two adjustments at the
      extremes: BUNDLE a few TINY batches (1-2 functions) into
@@ -264,10 +265,10 @@ TU depends on the `*_connection`/packet TUs - enable the lower one first or bund
       in the append-only shared files (`temp_include_all.cpp` anchors deduped by name +
       braces balanced; the module `.vcproj`).
    b. **Build, THEN snapshot the DB - BEFORE the PR.** `python3 -m vostok build` (builds
-      the new top incrementally + regenerates `match.db` from a fresh `report.json`), then
-      booktrack and COMMIT `docs/binary_matching/match.db` (+ refreshed README) onto the
+      the new top incrementally + re-derives the ledger from a fresh `report.json`), then
+      booktrack and COMMIT `docs/binary_matching/match_state.tsv` (+ refreshed README) onto the
       unit's branch. **Building before the PR is the rule: every PR must carry an
-      up-to-date, measured DB** so `vostok derive diff` works on the chain and the human reads
+      up-to-date, measured ledger** so `git diff` on it works across the chain and the human reads
       real per-PR numbers. This regen also captures any LTCG/LTO wall this match LIFTED in
       OTHER units (whole-program optimization can flip the inlining budget so a banked "95%
       residual" in unit B now compiles to 100%) - re-check previously-banked residuals and
@@ -308,7 +309,7 @@ residual" as done - it is NOT done, it stays OPEN so the next rebuild can lift i
 genuinely BLOCKED (won't compile/link/reachable until another unit's symbol lands).
 
 Per worker:
-- **On dispatch:** `vostok derive tried <mangled> [--note "..."]` for every function in
+- **On dispatch:** `vostok ledger tried <mangled> [--note "..."]` for every function in
   the batch. `queue` demotes tried work, so this stops the next wave re-offering
   what is in flight. (`sql "SELECT sum(n) FROM attempts ..."` returning 0 over a unit
   you worked means you forgot this step.)
@@ -332,9 +333,10 @@ Per worker:
   real %s/lifted-walls happens in the TOP-OF-STACK WORKTREE (`vostok build` regenerates
   it at the end of the worker's build; a regen-only `refresh` re-derives it from that
   fresh report), never the main repo, which never compiled the worktree edits.
-- **Commit `docs/binary_matching/match.db`** at run milestones (per-unit or per-wave),
+- **Commit `docs/binary_matching/match_state.tsv`** at run milestones (per-unit or per-wave),
   as its own housekeeping commit/PR - not folded into a match PR's one-commit shape.
-- **Audit with `vostok derive sql "<SELECT ...>"`** (read-only escape hatch) before you
+- **Audit with `vostok ledger list --json`** (pipe it to `jq`; the SQL escape hatch went
+  with the cache) before you
   hand back - confirm every worked function has a `tried` row and every park a flag.
 
 ## Keep your context small (this is the whole point)
@@ -361,9 +363,10 @@ and delete their branches.
   stack position. That rework is exactly what the one-linear-chain rule exists to prevent.
 - The integration branch advances ONLY by this fast-forward (or by merging an approved PR),
   never by a direct commit; guideline/doc updates also go through a PR.
-- **Preserve the per-step `match.db` commits** the chain carries - they keep
-  `vostok derive diff <base>..<tip>` working on the integration branch after landing. If a
-  `match.db` blob ever conflicts during integration, resolve by taking the unit's side and
+- **Preserve the per-step ledger commits** the chain carries - they keep
+  `git diff <base>..<tip> -- docs/binary_matching/match_state.tsv` working on the integration
+  branch after landing. If the ledger ever conflicts during integration, resolve by taking
+  either side and
   re-running `vostok derive refresh` (regen-only) against its built `report.json` - the DB is
   deterministic, so a regen reconciles it; never resolve by dropping the DB change.
 
@@ -371,19 +374,19 @@ and delete their branches.
 README.md carries an auto-generated score block (`<!-- match-score:start/end -->`):
 the overall fuzzy % plus a per-module **functions-exact / code-matched** table,
 derived from `binaries/objdiff/report.json`. **`vostok build` refreshes it at the end of
-every build** (next to the `match.db` regen), so it tracks `report.json` on its own -
+every build** (next to the ledger re-derive), so it tracks `report.json` on its own -
 you never run `vostok ledger readme` by hand. It is **report-derived** (the source carries no
 status markers; per-function status lives in the match DB) - this is how the human
 tracks progress and spots regressions *without running anything*, by diffing the block
-across commits. The block and `match.db` move together: every `vostok build` advances both.
+across commits. The block and the ledger move together: every `vostok build` advances both.
 - **Rule (sushi 2026-06-21): update the DB + README on EVERY matcher commit - do NOT batch.**
   After you cherry-pick a finished matcher onto the tip, `vostok build`, then **fold the
-  regenerated `docs/binary_matching/match.db` + `README.md` INTO that matcher's commit**
-  (`git add docs/binary_matching/match.db README.md && git commit --amend --no-edit`). So
+  regenerated `docs/binary_matching/match_state.tsv` + `README.md` INTO that matcher's commit**
+  (`git add docs/binary_matching/match_state.tsv README.md && git commit --amend --no-edit`). So
   EVERY matcher integration commit carries its own measured DB snapshot AND its README score
   delta - `git diff <prev>..<this>` shows the README block moving for that single matcher.
   Never defer the DB/README to a later batched "snapshot" commit across several matchers (it
-  hides which matcher moved the score and breaks the per-step `vostok derive diff`).
+  hides which matcher moved the score and breaks the per-step ledger diff).
   - **NO "comment-only" skip (sushi 2026-06-21).** Rebuild+amend EVERY integrated commit,
     including structure-verification / note-only / park commits. A "comment-only" change is NOT
     guaranteed byte-neutral: adding/removing source LINES shifts `__LINE__` in every
@@ -392,8 +395,8 @@ across commits. The block and `match.db` move together: every `vostok build` adv
     README diff (the thing this rule exists to provide). One `vostok build` per integrated commit,
     serialized through the main worktree (see [[serialize-integration-rebuilds-one-worktree]]) -
     no exceptions, even for zero-`%` verification commits.
-- If the README/`match.db` blob conflicts on a cherry-pick, do NOT hand-resolve: take either
-  side and rerun `vostok build` (it regenerates both deterministically), same as `match.db`.
+- If the README or the ledger conflicts on a cherry-pick, do NOT hand-resolve: take either
+  side and rerun `vostok build` (it regenerates both deterministically).
 
 ## Audit a batch with the structure-verifier (after 10-15 matchers, NOT per unit)
 Run the `structure-verifier` periodically - **only after every 10-15 matchers have landed
@@ -419,7 +422,7 @@ whole-program inline). The full loop: **fan matchers -> integrate each into the 
 any punted finding -> done.**
 
 ## Dispatch hygiene
-- Hand each worker its TU plus the open-function list FROM `vostok derive queue` with a
+- Hand each worker its TU plus the open-function list FROM `vostok ledger queue` with a
   locating hint (`file:line` or `rva`) for each - and ONLY that list. The queue already
   drops the effectively-done functions: anything `>=95%` whose structure matches
   (`MATCH`/`SIZE`/`SPLIT`) - the residual there is non-steerable LTCG, so a matcher would

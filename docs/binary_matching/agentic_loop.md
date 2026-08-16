@@ -60,19 +60,19 @@ run it as the top-level agent, since subagents cannot reliably spawn subagents.
 
 ## 0. Build the queue (orchestrator)
 
-The match DB (`docs/binary_matching/match.db`, design in `match_db_design.md`)
+The ledger (`docs/binary_matching/match_state.tsv`, design in `match_db_design.md`)
 owns queue building:
 
 ```
-python3 -m vostok build            # canonical build; regenerates match.db at the end
-python3 -m vostok derive report --module <m> [--per-unit]
-python3 -m vostok derive queue  --module <m> [--limit N] [--json]
+python3 -m vostok build            # canonical build; re-derives the ledger at the end
+python3 -m vostok ledger report --module <m> [--per-unit]
+python3 -m vostok ledger queue  --module <m> [--limit N] [--json]
 ```
 
 `queue` emits ONE batch per TU - all of the TU's open functions together,
 smallest TU first - automatically skipping done functions (100% + struct
 MATCH), out-of-scope ones (paired once, vanished/regressed without a source
-touch - external inlining), and `SKIP` flags. `vostok derive list --presence TARGET_ONLY/BASE_ONLY` finds the unpaired
+touch - external inlining), and parks. `vostok ledger list --status blocked` finds the unpaired
 sets; `rg "STATE\[STUB\]" sources/vostok/<module>` still works for an in-source
 view. Work the batches until `report` shows every function done or parked
 (a `SKIP` flag with a written cause).
@@ -93,7 +93,7 @@ function the worker does the rest:
    (section 3). Pull in any missing types (section 4).
 3. **`python3 -m vostok build`** - builds under Wine, then logs
    `Match: code X% / functions Y%`, refreshes the diff inputs, and regenerates
-   `match.db` from the fresh `report.json`. Read the new per-function number from
+   the ledger from the fresh `report.json`. Read the new per-function number from
    `binaries/objdiff/report.json` and any regressions/improvements from
    `binaries/objdiff/report-changes.json`.
 4. **Compare again and iterate.** The rebuild also refreshes the *base* rich

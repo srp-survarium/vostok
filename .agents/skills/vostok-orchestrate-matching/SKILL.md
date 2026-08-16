@@ -9,8 +9,10 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
    `docs/binary_matching/agentic_loop.md`. Maintain a visible ledger and plan.
 2. Start from a clean, rebuilt stack tip. Use a separate clean worktree and
    `WINEPREFIX` for each worker.
-3. Build a fresh queue from `match.db`. Dispatch genuine `QUANTITY`, `SPLIT`,
-   `LOCALS`, target-only body, and verified low-score structural work. Do not
+3. Build a fresh queue from the ledger. Dispatch genuine `QUANTITY`, `SPLIT`,
+   wrong-named-locals, target-only body, and verified low-score structural work.
+   (The ledger's four classes are MATCH / SIZE / QUANTITY / SPLIT; a wrong local
+   set has no class of its own - `pdb_fetch --view structure` is what shows it.) Do not
    waste workers on high-score `MATCH` or ordinary `SIZE` codegen walls.
 4. Assign one complete TU per `$vostok-match-unit` worker; bundle only tiny
    related units. Keep every live worker's root and callee file sets disjoint.
@@ -19,8 +21,8 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
    branches or create a PR fan.
 6. After each integration, run the full `python3 -m vostok build` and inspect
    regressions. Before committing, mark every function actually worked exactly
-   once in `attempts` (use `vostok derive tried --unit <tu>` when the whole TU was
-   worked), apply flags, then fold the generated README and `match.db` into that
+   once (`vostok ledger tried <mangled>...` for the TU's functions), apply parks,
+   then fold the generated README and ledger into that
    same source commit. A diff with no attempt increment for worked code is a
    bookkeeping defect. No commit may borrow a later database snapshot.
 7. Push/open a PR only after its commit is measured. Base each PR on the unit
@@ -30,7 +32,7 @@ description: Drive binary matching for a whole Vostok module by dispatching disj
    new stack commit.
 9. Continue until work is compiled-done or parked with a queryable cause and
    next action. Use `source_maxima`, not ordinary `history.best_fuzzy_pct`, for
-   MAX progress (`vostok derive max --module <m> --below 100`). Never carry MAX
+   MAX progress (`vostok ledger list --module <m>` reads `max` per row). Never carry MAX
    across an effective-source hash change. Island evidence must be measured by
    the normal report/index refresh before `record-max` annotates it; never type
    a score into the ledger. Audit attempts and flags before handoff.

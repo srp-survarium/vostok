@@ -135,7 +135,7 @@ sub-100 entries are these — it has no real work left).
   `--view diff` with `--objdiff-target-dir/-base-dir binaries/objdiff/{target,base}`
   for the operand-aware byte %).
 - **Build + rescore:** `nix develop --command python3 -m vostok build`
-  (~10 min Wine build, then regen delink/structure/rich + match.db + README).
+  (~10 min Wine build, then regen delink/structure/rich + ledger + README).
 - **objdiff report:** `binaries/objdiff/report.json` (per-function
   `fuzzy_match_percent`).
 
@@ -150,8 +150,8 @@ sub-100 entries are these — it has no real work left).
     && python3 vostok derive refresh && python3 vostok ledger readme --write-readme`.
    See memory `per-worktree-target-staleness`.
 2. **Don't bank build-artifact churn.** Everything under `binaries/` is gitignored;
-   only `README.md` + `docs/binary_matching/match.db` are tracked. Commit source
-   per-TU; let a clean rebuild own the README/match.db refresh.
+   only `README.md` + `docs/binary_matching/match_state.tsv` are tracked. Commit source
+   per-TU; let a clean rebuild own the README/ledger refresh.
 
 ### Tools that DON'T work here (don't waste time)
 - `pdb_diff --base-pdb` (the header-level base-vs-target checksum compare) is
@@ -173,7 +173,7 @@ sub-100 entries are these — it has no real work left).
   assignment, switch shape, inline-vs-call) is a source problem; a missing
   `ASSERT` emits `call empty_stub` (~0xc bytes) and must be recovered.
 - One commit per TU; record residuals as a `claude@NOTE:` above the function +
-  a match.db flag with the concrete next step. **Never merge** without an explicit
+  a ledger park with the concrete next step. **Never merge** without an explicit
   order naming the PR.
 - Suggested order: A (objectQuerySingle — unlocks the most) → B (allocator, tiny
   + high-value) → C/D → E/F → the 99% tails.

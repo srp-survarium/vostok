@@ -27,7 +27,7 @@ description: Review one Vostok matching commit, PR, batch, or linear stack for t
 6. Make focused corrections on a new review branch above the stack. Prefer one
    review commit. Do not rewrite the reviewed stack.
 7. Run a successful full `python3 -m vostok build` after the final edit.
-   Include its `README.md` and `match.db` in the review commit. If it cannot
+   Include its `README.md` and ledger in the review commit. If it cannot
    succeed, do not commit source changes.
 8. Report findings by severity with file/line evidence, changes and hashes,
    measured score/regression effects, unresolved risks, and a clear

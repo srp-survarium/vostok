@@ -73,10 +73,11 @@ docs runs it as `python3 -m vostok ...`, and the code is here:
               shape), symbols.py (objdiff symbol normalization)
     ledger/   store.py (the committed record + the cur/max/hist policy),
               cli.py (the verbs), readme.py (the README block), queue.py
-    derive/   report.json + the rich indexes -> binaries/match.db: aliases.py,
-              modules.py, classify.py, maxima.py, roster.py, and the verbs
+    derive/   report.json + the rich indexes -> the committed ledger:
+              artifacts.py, inventory.py, pairing.py, classify.py, maxima.py,
+              baseonly.py, roster.py, and the one verb (refresh)
     sema/     one module per view: rva, xref, strings, blocks, branches, dot,
-              sweep (plus index/disasm/cfg underneath)
+              sweep (plus index/disasm/cfg/pairing underneath)
     build/    ninja_regen, ninja, generate_{delink,structure,rich}, rebuild
     diff/     layout, order, tu_order, enums
     tool/     clangd, toolchain, libs, sizes, breakpoints
@@ -84,8 +85,8 @@ docs runs it as `python3 -m vostok ...`, and the code is here:
 
 **Add a new repo path to `core/paths.py`, never to the module that uses it.**
 Nine scripts used to re-derive the repo root and eight hard-coded artifact
-locations; moving `match.db` then meant editing four copies, one was missed,
-and the miss silently produced an empty database that corrupted the README
+locations; moving an artifact then meant editing four copies, one was missed,
+and the miss silently produced an empty result that corrupted the README
 score block.
 
 `scripts/` is the package root and the dev shell puts it on `PYTHONPATH`, so
@@ -155,11 +156,11 @@ Keep `note` short; it is what stops the next matcher re-deriving a dead end.
 
 ## Match score (README regression tracker)
 
-`vostok ledger readme` rolls `binaries/match.db` up into the overall exact/fuzzy
+`vostok ledger readme` rolls the committed ledger up into the overall exact/fuzzy
 figures plus a per-module table, in the `<!-- match-score:start -->` block at the
 top of README.md. **`vostok build` refreshes that block at the end of every build**
-(right after the `match.db` regen it reads), so it stays current on its own - you
-do not run `vostok ledger readme` by hand. The numbers are the DB's own roster
+(right after the re-derive it reads), so it stays current on its own - you
+do not run `vostok ledger readme` by hand. The numbers are the roster's own,
 over every target function (the source carries no status markers; per-function
 status lives in the ledger - see above), so the README is an honest, no-run
 regression tracker - diff the block across commits. If the block ever conflicts on
@@ -171,7 +172,10 @@ Both the ledger and the README block are **text**, so a conflict is a normal
 text conflict and `git diff` shows exactly which functions moved. That is why
 the old committed `match.db` is gone: SQLite could not be diffed or merged, and
 re-serialised its pages on every write, so each commit stored a fresh ~4 MB blob
-(~3.5 GB of history). `binaries/match.db` remains only as a regenerable cache.
+(~3.5 GB of history). There is now **no database at all** - not even a cache.
+`derive` writes the ledger directly, and anything wanting the per-function
+verdict re-runs the derivation (~10 s) rather than querying a copy that can
+go stale.
 
 ### Header edits trigger rebuilds (vcproj2ninja tracks `#include`s)
 

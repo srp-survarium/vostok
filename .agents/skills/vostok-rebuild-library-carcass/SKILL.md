@@ -169,7 +169,7 @@ For each real header:
    render_engine_pc_dx11`. Fix compiler errors until all three libraries build
    cleanly. Do not link or regenerate reports during this structural loop.
 8. Commit small green batches. Every commit requires a successful full
-   `python3 -m vostok build` and its generated `README.md` and `match.db`.
+   `python3 -m vostok build` and its generated `README.md` and ledger.
 
 ## Drain the legacy implementation queue
 

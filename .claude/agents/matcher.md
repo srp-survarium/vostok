@@ -37,7 +37,7 @@ is fine, but don't get stuck - finish the rest and park it: a terse `claude@NOTE
 above the function (why stuck, what you tried - FACTS only, NEVER a match % in
 a comment: numbers go stale, they live in report.json/the match DB) and the
 cause + concrete next step in your RESULT LINE - the orchestrator records it as
-a match-DB `SKIP` flag (you never edit `match.db` yourself; the orchestrator is
+a ledger PARK (you never edit the ledger yourself; the orchestrator is
 its single writer).
 
 ## Read first (source of truth - they win over this summary)
@@ -237,7 +237,7 @@ git commit -m "<module>: match <unit> (per-fn NN%)"   # name grouped/inlined mem
 ```
 **ONE commit** (squash WIP first: `git reset --soft <branch-point>` then one commit). Do
 NOT create branches, push, or open a PR - the orchestrator owns the branch/push/PR/stack
-(and `match.db` - never commit it). Return ONE line, nothing else:
+(and `docs/binary_matching/match_state.tsv` - never commit it). Return ONE line, nothing else:
 ```
 <module>::<unit> -> NN% per fn   (parked: none | <fn>: <cause/next step>; regressions: none | <unit/fn>)
 ```

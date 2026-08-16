@@ -27,7 +27,7 @@ MATCHING.md and the matcher Invariants (reproduce the target exactly, faithful s
 over %, never fabricate a symbol, never out-line another unit's function); drop the
 function's `// STATE[STUB]` flag if you reach a real match (the match DB picks the
 rest up on its next regen - vostok build regenerates it at the end of each build,
-or the orchestrator runs a regen-only refresh - you never edit `match.db`).
+or the orchestrator runs a regen-only refresh - you never edit the ledger).
 
 You do NOT merge and do NOT change a PR base. Your transcript is your own context;
 return a short verdict line. You were dispatched by the top-level session or an
@@ -83,9 +83,10 @@ records 1) means the matcher wrote an extra named local the source did not have 
 structural divergence ("locals don't lie", sushi). FIX it in your matcher phase: write the
 NORMAL form with 0 named locals, EVEN WHEN it drops the % (recoverable later; a wrong local
 set is not). Do NOT keep a load-bearing temp for the %, and do NOT accept a "QUANTITY fixed
-by collapsing decl+use onto one line" that keeps the local. `match_db` flags this as the
-`LOCALS` struct_class (a demoted would-be MATCH) and `diff` reports the MATCH->LOCALS flip
-as a REGRESS. **The 0-target-local is almost always an INLINE HELPER / inline temp** (the
+by collapsing decl+use onto one line" that keeps the local. There is no `LOCALS`
+structure class - the four are MATCH / SIZE / QUANTITY / SPLIT - so a wrong local set
+does NOT show up in the ledger's `cls` at all. `pdb_fetch --view structure` is the only
+thing that reports it, which is exactly why you check it by hand here. **The 0-target-local is almost always an INLINE HELPER / inline temp** (the
 local lives in an inlined callee): an array walk is `std::for_each(begin, end, fn)` - grep
 the sibling functions in the same .cpp, they often already use it; a constructed argument is
 the temp spelled inline (`T(NULL)`). Don't accept an ugly hack (raw loop, embedded
@@ -287,7 +288,7 @@ schema in `assembly_patterns.md`).
 After Phase 1 has located the divergence, fix it.
 1. **If it was mislabeled**, say so loudly: a function presented as done whose
    structure diverges is not a clean match - name the divergence in your verdict
-   (the match DB's struct_class exposes it after the next regen - vostok build at
+   (the ledger's `cls` exposes it after the next regen - vostok build at
    the end of a build, or a regen-only refresh).
 2. **Apply the source-shape restructure** the diff points to - the cause from "Naming
    and source-shape conventions" above: move body assignments into the member-init list,

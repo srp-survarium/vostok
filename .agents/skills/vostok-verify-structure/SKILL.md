@@ -28,7 +28,7 @@ description: Verify and fix whether reconstructed Vostok C++ has the target PDB 
 8. Run a full `python3 -m vostok build`, re-run `structure-diff`, and inspect
    regressions. Iterate after every final source adjustment.
 9. Commit the verified source together with that build's generated `README.md`
-   and `docs/binary_matching/match.db`. Do not amend an unrelated historical
+   and `docs/binary_matching/match_state.tsv`. Do not amend an unrelated historical
    commit or merge.
 10. Report before/after structure classes and counts, remaining concrete
     residuals, regressions, verification, and the commit hash.

@@ -97,7 +97,7 @@ Open the result in [objdiff](https://github.com/encounter/objdiff) (config at
 also writes an overall match summary to `binaries/objdiff/report.json`, logs
 the code / function match percentages, and refreshes the matching ledger
 (`docs/binary_matching/match_state.tsv`, via the regenerable
-`binaries/match.db` cache) from that fresh report at the end of the run.
+committed ledger) from that fresh report at the end of the run.
 
 Useful individual steps (all run inside `nix develop`):
 
@@ -115,7 +115,7 @@ The code is a Python package at `scripts/vostok/`:
 | :--------- | :------------------------------------------------------------------- |
 | `core/`    | every repo path (`paths.py`), the tracked-table shape, symbol names   |
 | `ledger/`  | the committed campaign record and the README score block              |
-| `derive/`  | `report.json` + the rich indexes -> `binaries/match.db`               |
+| `derive/`  | `report.json` + the rich indexes -> the committed ledger              |
 | `sema/`    | control-flow views over one base<->target function pair               |
 | `build/`   | the ninja graph, the delink/structure/rich generators, `rebuild`      |
 | `diff/`    | target-vs-base source shape: layouts, declaration order, enums        |
@@ -206,83 +206,61 @@ and [the orchestration skill](.agents/skills/vostok-orchestrate-matching/SKILL.m
 
 ## Reviewing match % (no rebuild needed)
 
-These read the **last build** - the generated (gitignored)
-`binaries/objdiff/report.json` and `binaries/match.db`. Only
-`docs/binary_matching/match_state.tsv` and this README's score block are
-committed. For *current* numbers after edits, run
-`python3 -m vostok build` first (it regenerates `match.db` at the end of the
-build); `python3 -m vostok derive refresh` only re-derives the DB from an
-already-built `report.json` (it does NOT rebuild - run `vostok build` if sources moved).
-A function is **DONE only when the compile says so** (`struct_class`/`fuzzy_pct`
-below); the only hand-set status is a **PARK** (an `out_of_scope` flag with a
-cause) - so a low % is "still open", never silently "done".
+`docs/binary_matching/match_state.tsv` is **committed**, so every query below
+answers on a fresh clone that has never compiled anything - no database, no
+build. For *current* numbers after edits, run `python3 -m vostok build` first
+(it re-derives the ledger at the end of the build);
+`python3 -m vostok derive refresh` only re-derives from an already-built
+`report.json` (it does NOT rebuild - run `vostok build` if sources moved).
+A function is **DONE only when the compile says so** (`cls`/`max` below); the
+only hand-set status is a **PARK** (with a cause) - so a low % is "still open",
+never silently "done".
 
 ```sh
 # headline + per-module table (overall fuzzy %, functions-exact) - READ-ONLY print;
 # the README score block itself is refreshed by vostok build at the end of every build.
 python3 -m vostok ledger readme
 
-# per-UNIT rollup for a module, sorted 100%->0% (a header inline shows its .h file,
-# not a '(no unit)' lump): weighted_pct (size-weighted) + avg_pct (plain per-function
-# mean), struct_match, out_of_scope (parked). --lite drops custom_conv/out_of_scope/suspicious.
-python3 -m vostok derive report --module game_core --per-unit --lite
+# per-UNIT rollup for a module, worst first. Columns: fns, done/open/park/blkd
+# counts, `held` (cur < max: compiler noise, NOT a regression - do not chase it),
+# `head` (hist > max: we had it better once, and that IS worth working), then the
+# byte-weighted cur% and max%.
+python3 -m vostok ledger report --module game_core --per-unit
 
-# ONE unit by name or substring (--module optional; lean view; refuses with
-# paste-ready full names if the substring is ambiguous, e.g. medkit.cpp vs medkit.h)
-python3 -m vostok derive report --unit medkit
+# ONE unit by path substring (works on report and list alike)
+python3 -m vostok ledger report --unit medkit
 
-# per-FUNCTION list for ONE unit, with a weighted%/avg% header. Columns: pct,
-# best (best-ever % - best=100 with pct<100 is a TRANSIENT/regressed match), tries
-# (matcher dispatches), cls, size, flag. Sorted 100%->0%; NULL pct = unpaired/open.
-python3 -m vostok derive report --unit medkit --per-function
+# every function in a module/unit: size, cur%, max%, cls, status, mangled name.
+# --json gives full untruncated names; pipe wide output to `less -S`.
+python3 -m vostok ledger list --module game_core
+python3 -m vostok ledger list --unit vostok/game_core/sources/weapon_core.cpp
+python3 -m vostok ledger list --module game_core --status blocked   # incl. target-only
 
-# any function by NAME substring, across files (e.g. all 'medkit::' members); same
-# columns + a file column (the .cpp TU, or the header for an inline fn) and a
-# count/weighted/avg header. --module optional.
-python3 -m vostok derive report --function 'medkit::'
+# TRAP FINDER: high % over the WRONG statement shape. QUANTITY/SPLIT are the
+# steerable structural classes; a 100%/QUANTITY is the classic false win. The `cls`
+# column is an APPROXIMATION - confirm each hit with the structure-diff below.
+python3 -m vostok ledger list --module game_core --class QUANTITY,SPLIT
 
-# (the fn column is the mangled-derived scope::name - no return type, template args, or
-#  parameter list, so even a boost/asio handler reads cleanly. --verbose shows the
-#  demangled signature instead; --json gives the full untruncated name. Works on diff too.)
+# every PARKED function + why (the blocker, in the committed record - not buried in a PR body)
+python3 -m vostok ledger list --module game_core --status parked
 
-# list EVERY function in a module/unit + its raw diff columns (fuzzy_pct, struct_class,
-# t_stmts/b_stmts, sizes, target VA hint). The most direct per-function dump; filter by
-# --class to pull just the steerable QUANTITY traps, or --presence for the unpaired set.
-# Needs a FRESH DB. Only `queue` BAILS on a stale report.json (--stale-ok overrides);
-# list/report/max print the `[match_db] STALE:` warnings and proceed, and `sql` does not
-# check at all. --json gives full names; pipe wide output to `less -S`.
-python3 -m vostok derive list --module game_core                  # all game_core functions
-python3 -m vostok derive list --module game_core --class QUANTITY  # just the wrong-stmt-count traps
-python3 -m vostok derive list --unit vostok/game_core/sources/weapon_core.cpp
-python3 -m vostok derive list --module game_core --presence TARGET_ONLY  # unpaired (no base symbol yet)
+# we had it better once: hist > max, i.e. an earlier implementation scored higher
+# and we lost it. The highest-value queue in the tree.
+python3 -m vostok ledger list --module game_core --headroom
 
-# TRAP FINDER: high % but NON-MATCH structure (QUANTITY/SPLIT = bytes lined up over the
-# WRONG statement shape). An APPROXIMATE screen - confirm each hit with the structure-
-# verifier (`pdb_fetch --view structure-diff`); a 100%/QUANTITY is the classic false win.
-python3 -m vostok derive sql "SELECT printf('%.1f',p.fuzzy_pct) pct, p.struct_class cls, substr(u.name,25) unit, s.demangled \
-  FROM pairs p JOIN symbols s ON s.id=p.sym JOIN target_functions t ON t.sym=p.sym JOIN units u ON u.id=t.unit \
-  WHERE t.module='game_core' AND p.fuzzy_pct>=80 AND p.struct_class IN ('QUANTITY','SPLIT') ORDER BY p.fuzzy_pct DESC"
+# one batch per TU, worst first - what an orchestrator hands a matcher
+python3 -m vostok ledger queue --module game_core [--limit N] [--json]
 
-# every PARKED function + why (the blocker, queryable - not buried in a PR body)
-python3 -m vostok derive sql "SELECT substr(u.name,25) unit, s.demangled, f.cause \
-  FROM flags f JOIN symbols s ON s.mangled=f.mangled JOIN target_functions tf ON tf.sym=s.id \
-  JOIN units u ON u.id=tf.unit WHERE f.flag='OUT_OF_SCOPE' AND u.module='game_core'"
-
-# LEGACY - function-level DIFF of a COMMITTED match.db across revisions. match.db is no
-# longer committed, so this only reaches revisions old enough to still carry the blob; on
-# this branch it has none, and the regression tracker is the text ledger instead:
-#   git diff <hash> -- docs/binary_matching/match_state.tsv
-#   <hash>          compares that commit vs the working tree
-#   <hash>..<hash>  compares two commits
-# groups every function: regress / lost / new / improve / TOUCHED (retries up, % unchanged -
-# i.e. a worked TU's 100% fns) / reclass. Columns include max (best-ever %) + tries (from->to).
-# max printed as `X->Y` means the fn's SOURCE changed and best reset to the new % (a real
-# re-work that lost ground) - vs a held max next to a dropped current %, which is just LTO.
-python3 -m vostok derive diff <hash>..<hash> --module game_core   # --json for machine-readable
-
-# bank the done set: stamp every fn that ever reached 100% with tries=1, so the queue
-# (which ranks/excludes by best-ever %, not current %) drops them until real work is gone.
-python3 -m vostok derive tried --done
+# REGRESSION TRACKING is `git diff`: the ledger is text, one row per function, so a
+# commit range shows exactly which functions moved and how. This is why the record is
+# a .tsv and not a database - a SQLite file re-serialises its pages on every write, so
+# it could neither be diffed nor merged.
+git diff <hash> -- docs/binary_matching/match_state.tsv          # commit vs working tree
+git diff <hash>..<hash> -- docs/binary_matching/match_state.tsv  # two commits
+# Reading a row's numbers: `cur` is THIS build and is noisy (under LTCG/ICF a function
+# moves without its source moving). `max` is the peak proven for this exact source body
+# and resets only when that body changes - driving every max to 100 is the campaign.
+# `hist` is the all-time peak and never resets.
 
 # AUTHORITATIVE per-function structure diff (the `cls` column above is only an approximation).
 # Prints each diverging statement tagged SIZE +/-N / BASE_ONLY / TRGT_ONLY, the target-vs-base

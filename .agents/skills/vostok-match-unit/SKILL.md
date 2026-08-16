@@ -27,7 +27,7 @@ description: Binary-match one complete Vostok translation unit, or a small relat
 8. Compare `structure-diff` before assembly `diff`. Fix source shape before
    chasing bytes. Repeat until structure matches or a concrete blocker remains.
 9. Run the final full rebuild after the last edit. Include the generated
-   `README.md` and `docs/binary_matching/match.db` with the source in one commit.
+   `README.md` and `docs/binary_matching/match_state.tsv` with the source in one commit.
    Never commit a source state whose database came from a different build.
 10. Report per-function results, regressions, blockers with next actions,
     verification, and the commit hash. Do not push or merge unless authorized.

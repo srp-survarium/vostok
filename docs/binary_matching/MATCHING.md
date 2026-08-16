@@ -79,7 +79,7 @@ Keep digging until the ONLY remaining difference is argument passing; only then 
 the function done (the match DB notes the residual: a `NOTE` flag with cause, e.g.
 `LTCG arg passing`). If you cannot finish, park it: a terse `claude@NOTE:` above the
 function plus a `SKIP` flag whose cause is the concrete next step (flags are recorded
-via `vostok derive flag` - by the orchestrator for dispatched matchers) - do
+via `vostok ledger park` - by the orchestrator for dispatched matchers) - do
 **not** bank it as matched and call the residual "LTCG". (History: `empty_stub` calls and a
 switch bounds check were both wrongly written off as "LTCG" and were in fact a
 recoverable ASSERT and a missing `default: NODEFAULT()`.) Trust the operand-aware
@@ -200,7 +200,7 @@ are NOT written anymore. The source carries exactly two things:
 Everything else is DERIVED and lives outside the source
 (design: `match_db_design.md`):
 - **current %s**: `report.json` / `vostok ledger readme` - the only live numbers.
-- **bulk status, queues, reports**: `docs/binary_matching/match.db`, regenerated
+- **bulk status, queues, reports**: `docs/binary_matching/match_state.tsv`, regenerated
   from report.json + the rich indexes + the PDB declaration dump by `vostok build`
   at the end of every build (or, regen-only, by `python3 -m vostok derive
   refresh`). Per paired function it derives the structure class
@@ -208,11 +208,11 @@ Everything else is DERIVED and lives outside the source
   before; vanished/regressed without a source touch -> out of scope"), and
   classifies base-only symbols (`NEAR_MISS` mangling mismatches, declared-but-
   inlined-in-target, the fabricated-symbol lint). Query it with
-  `vostok derive list / report / queue / sql`.
+  `vostok ledger list / report / queue`.
 - **structure-diffs**: run on demand (`pdb_fetch --view structure-diff`), never
   embedded in source.
 
-The only hand-written records are match-DB FLAGS (`vostok derive flag <mangled>`):
+The only hand-written records are ledger PARKS (`vostok ledger park <mangled> --cause`):
 - `SKIP` - parked; the cause is the concrete next step (covers the old
   SKIPPED/BLOCKED: name the blocker in the cause).
 - `NOTE` - informational cause that queues ignore (a DONE-with-residual
