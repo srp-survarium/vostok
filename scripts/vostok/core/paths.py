@@ -15,6 +15,7 @@ Layout, mirrored by the constants below:
       structure/{base,target}/    pdb-parser's rendered headers/statements
       rich/{base,target}/         pdb_rich_context index for pdb_fetch
       match.db                    regenerable derivation cache
+      base_only.tsv               why we emit what the target does not
     docs/binary_matching/       committed matching state (the ledger, queues,
                                 reviewed override tables)
 
@@ -90,6 +91,11 @@ DECLARATIONS = RICH_DIR / "target" / "declarations.jsonl"
 #: the derivation cache. Committed truth is MATCH_STATE; this is regenerable
 #: and gitignored (SQLite could not be diffed or merged - see ledger.store).
 MATCH_DB = BINARIES / "match.db"
+
+#: the base-only taxonomy: one verdict per function OUR build emits and the
+#: target does not. A diagnostic about our own output, not campaign memory, so
+#: it is a regenerable report here rather than a row in the committed ledger.
+BASE_ONLY_REPORT = BINARIES / "base_only.tsv"
 
 # TU lists for the GFx-from-source build (vostok.build.gfx reads these)
 GFX_TU_LISTS = SCRIPTS / "vostok" / "build" / "data"
