@@ -2,5 +2,6 @@
 
 float4 main( v2p_TL0uv vin) : SV_TARGET
 {
-	return vin.Color;
+	// Ship dims the vertex color: the blob multiplies by (0.7, 0.7, 0.7, 1).
+	return vin.Color*float4( 0.7f, 0.7f, 0.7f, 1.f );
 }

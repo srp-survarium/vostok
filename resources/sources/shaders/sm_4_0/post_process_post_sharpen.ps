@@ -1,0 +1,43 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gamma_correction.h"
+#include "log_luv_color_space.h"
+#include "luminance.h"
+
+Texture2D	t_frame_color;
+
+struct v2p_post_process_sharpen
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float3 sharpen_sample( float2 tc)
+{
+	return	t_frame_color.Sample( s_accumulator, tc).rgb;
+}
+
+float4 main( v2p_post_process_sharpen I ) : SV_TARGET
+{
+	float2	offset		= screen_res.zw;
+	float3	color		= sharpen_sample( I.tc);
+
+	float3	sharpened	= color*9.f;
+
+	sharpened			-= sharpen_sample( I.tc + float2(  offset.x,  offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2(       0.f,  offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2( -offset.x,  offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2( -offset.x,       0.f));
+	sharpened			-= sharpen_sample( I.tc + float2( -offset.x, -offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2(       0.f, -offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2(  offset.x, -offset.y));
+	sharpened			-= sharpen_sample( I.tc + float2(  offset.x,       0.f));
+
+	float3	result		= sharpened*0.02f + color*0.98f;
+
+	return	float4( convert_from_linear_space( result), 0.f);
+}

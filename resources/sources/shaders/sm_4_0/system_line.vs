@@ -37,7 +37,7 @@ v2p_TL0uv_SL main ( v_TL0uv_SL I)
 	
 	vout.Shift 		= I.Shift;
 	vout.Pattern 	= I.Pattern;
-	vout.Color 		= I.Color.bgra;
+	vout.Color 		= I.Color;
 
  	return vout;
 }

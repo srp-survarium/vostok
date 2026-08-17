@@ -1,0 +1,26 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gamma_correction.h"
+
+uniform float3	diffuse_color_parameter;
+
+struct v2p_fill_vertex_color
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_fill_vertex_color I ) : SV_TARGET
+{
+	float3	color	= convert_to_linear_space( diffuse_color_parameter );
+
+#if CONFIG_TDIFFUSE || CONFIG_TDETAIL
+	color			*= t_base.SampleLevel( s_base, I.tc, 0 ).xyz;
+#endif
+
+	return	float4( color, 1 );
+}

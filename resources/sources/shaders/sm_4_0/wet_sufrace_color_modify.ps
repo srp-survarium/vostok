@@ -1,0 +1,29 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	t_accum_diffuse;
+Texture2D	t_accum_specular;
+
+struct v2p_quad
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+struct ps_output
+{
+	float4	diffuse		: SV_Target0;
+	float4	specular	: SV_Target1;
+};
+
+ps_output main( v2p_quad I )
+{
+	ps_output	output;
+	output.diffuse	= t_accum_diffuse.Sample( s_accumulator, I.tc);
+	output.specular	= t_accum_specular.Sample( s_accumulator, I.tc);
+	return	output;
+}

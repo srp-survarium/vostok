@@ -1,0 +1,133 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/apply_indirect_lighting_diffuse.ps, plain permutation),
+//	using old/apply_indirect_lighting.ps as the pre-ship reading aid. It had
+//	drifted: the ship revision offsets the grid lookup along the normal
+//	(the aid's `#if 0` neighbour-tap idea, kept as a plain 1/64 nudge),
+//	halves both cascade radii, replaces the aid's pow(...,1) attenuation with
+//	1 - t*t and its pow(...,5) with a square, blends the outermost cascade
+//	into ambient_color, scales the inner cascades by 0.27, writes view depth
+//	into alpha, and reads SSAO through s_linear at *2.5 (the same
+//	accumulator packing skylight.ps uses).
+//	Byte-identity: python3 -m vostok.shaders roundtrip apply_indirect_lighting_diffuse.ps
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "spherical_harmonics_common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_Position;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture3D	t_radiance_r;
+Texture3D	t_radiance_g;
+Texture3D	t_radiance_b;
+
+int 		cascade_index;
+int 		num_cascades;
+
+float3 		s_eye_ray_corner;
+
+float		grid_cell_size;
+float		grid_size;
+float3		grid_origin;
+
+float		smaller_cascade_grid_cell_size;
+float		smaller_cascade_grid_size;
+float3		smaller_cascade_grid_origin;
+
+Texture2D	t_ssao_accumulator;
+
+float		interreflection_contribution;
+
+float is_inside_volume(float3 norm_pos)
+{
+	const float blend_region 	= 0.3f;
+
+	const float inside_x 		= min( min(blend_region, norm_pos.x), min(blend_region, 1.0f - norm_pos.x));
+	const float inside_y 		= min( min(blend_region, norm_pos.y), min(blend_region, 1.0f - norm_pos.y));
+	const float inside_z 		= min( min(blend_region, norm_pos.z), min(blend_region, 1.0f - norm_pos.z));
+	const float inside 			= clamp(min(inside_x, min(inside_y,inside_z)) / blend_region, 0.0f, 1.0f);
+
+	return inside;
+}
+
+void main(in vertex_output_struct 	input,
+		  out float4 out_diffuse 	: SV_Target0)
+{
+	const float pi 						= 	3.14159265f;
+
+	float2 screen_uv					= 	input.uv;
+
+	float3 normal						= 	0;
+	float2 temp_value 					= 	0;
+
+	gbuffer_read_rt_normal				(screen_uv, normal, temp_value.x, temp_value.y);
+	normal.z							=	-normal.z;
+
+	float3 world_space_normal			= 	normalize(mul(m_V2W, float4(normal, 0.0f)).xyz);
+
+	float3 eye_ray;
+	eye_ray.xy							= 	( 1 - screen_uv*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z							=	1;
+
+	float  depth						=	gbuffer_read_frame_depth( screen_uv);
+	float3 position						=	depth*eye_ray;
+
+	out_diffuse.a						=	depth;
+
+	float3 world_position				= 	mul(m_V2W, float4(position, 1.0f)).xyz;
+
+	float3 grid_position_normalized		= 	(world_position - grid_origin) / (grid_cell_size) / grid_size;
+
+	const float distance_to_pixel		= 	length(eye_position.xyz - world_position);
+
+	grid_position_normalized			+=	world_space_normal / 64.0f;
+
+	float4 sh_coefficients 				= 	low_order_sh_project_clampled_cosine_lobe( -world_space_normal );
+
+	float3 indirect_lighting;
+
+	indirect_lighting.r 				= 	max(dot(sh_coefficients, t_radiance_r.SampleLevel(s_material1, grid_position_normalized, 0)), 0.0f);
+	indirect_lighting.g 				= 	max(dot(sh_coefficients, t_radiance_g.SampleLevel(s_material1, grid_position_normalized, 0)), 0.0f);
+	indirect_lighting.b 				= 	max(dot(sh_coefficients, t_radiance_b.SampleLevel(s_material1, grid_position_normalized, 0)), 0.0f);
+
+	indirect_lighting					*=	2.0f * interreflection_contribution / pi;
+
+	float inside						=	is_inside_volume(grid_position_normalized);
+
+	const float volume_scale			=	grid_cell_size * grid_size;
+	const float smaller_volume_scale	=	smaller_cascade_grid_cell_size * smaller_cascade_grid_size;
+
+	const float outside					=	smoothstep( 0.0f, 1.0f, saturate(distance_to_pixel / (volume_scale * 0.5f)));
+	const float attenuation				=	1.0f - outside*outside;
+
+	const float smaller_inv_attenuation	=	pow(
+		smoothstep(
+			0.0f,
+			1.0f,
+			saturate(distance_to_pixel / (smaller_volume_scale * 0.5f))
+		),
+		2.0f
+	);
+
+	const float volume_attenuation		=	attenuation * inside;
+
+	out_diffuse.rgb						=	max(
+		  volume_attenuation
+		* indirect_lighting
+		* (cascade_index > 0.0f ? smaller_inv_attenuation : 0.5f), 0.0f);
+
+	if (cascade_index == num_cascades - 1)
+		out_diffuse.rgb					+=	ambient_color*(outside*outside);
+
+	if (cascade_index > 0)
+		out_diffuse.rgb					*=	0.27f;
+
+	const float ssao_result				= 	t_ssao_accumulator.SampleLevel(s_linear, screen_uv, 0).x;
+
+	out_diffuse.rgb						= 	ssao_result * 2.5f * out_diffuse.rgb;
+}

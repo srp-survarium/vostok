@@ -1,0 +1,47 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+// PARKED 2026-08-17 one mov-placement from byte-identity: ship emits the
+// o0.w write before the tinted/3 muls (its alpha register gets repacked);
+// five source shapes (out-param order, read-back, named tinted3 before/
+// after) all sink the w-write to the end. Algorithm is ship-proven.
+#include "common.h"
+
+uniform float4	sky_clouds_parameters0;	// rgb - tint, w - uv scale
+uniform float4	sky_clouds_parameters1;	// x - horizon fade power, y - fade band
+
+Texture2D		sky_clouds_texture;
+
+struct v2p_sky_clouds
+{
+	float4	hpos			: SV_Position;
+	float3	world_position	: TEXCOORD0;
+	float3	object_position	: TEXCOORD1;
+	float2	tc				: TEXCOORD2;
+};
+
+void main( v2p_sky_clouds I, out float4 result : SV_Target )
+{
+	if ( I.tc.y >= 0.5f)
+		discard;
+
+	float	fade		= min( pow( 1.0f - saturate( ( 1.0f - I.tc.y*2.0f)/sky_clouds_parameters1.y), sky_clouds_parameters1.x), 1.0f);
+
+	float2	uv			= float2( I.tc.x*sky_clouds_parameters0.w, I.tc.y*2.0f);
+
+	float4	mip2		= sky_clouds_texture.SampleLevel( s_linear, uv, 2);
+	float4	mip1		= sky_clouds_texture.SampleLevel( s_linear, uv, 1);
+	float4	mip0		= sky_clouds_texture.SampleLevel( s_linear, uv, 0);
+	float4	sum			= mip2 + mip1;
+	sum					= mip0 + sum;
+
+	float	alpha_avg	= sum.w/3.0f;
+	float3	tinted		= sum.xyz*sky_clouds_parameters0.xyz;
+	float	alpha		= lerp( alpha_avg, 0.0f, fade);
+	float	one_minus	= 1.0f - alpha;
+
+	result.w			= alpha;
+	result.xyz			= one_minus*( 1.0f - tinted/3.0f) + tinted/3.0f;
+}

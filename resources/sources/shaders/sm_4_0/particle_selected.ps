@@ -3,6 +3,21 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 18.08.2026
+//	Ground truth	: the three shipped permutations of
+//					  shaders/sm_4_0/particle_selected.ps, disassembled with
+//					  fxc /dumpbin /Fc.  The body is the drifted source's,
+//					  unchanged - the whole shader is two movs.  What was wrong
+//					  was the route to the input struct: the tree's
+//					  vertex_input.h still carries the pre-ship
+//					  CONFIG_VERTEX_INPUT_TYPE numbering (PARTICLE = 3), and at
+//					  ship 7/8 are the particle input and 9 the beamtrail one.
+//					  Dispatched here the way forward_lighting.ps does it.
+//	Acceptance		: python3 -m vostok.shaders roundtrip particle_selected.ps
+//	Axis status		: CONFIG_VERTEX_INPUT_TYPE 7/8/9 and CONFIG_USE_SUBUV 0/1
+//					  are the only combinations shipped, and all three are
+//					  byte-identical.
+////////////////////////////////////////////////////////////////////////////
 
 /*
 	$DEFINES$:
@@ -12,7 +27,17 @@
 
 #include "common.h"
 #include "material.h"
-#include "vertex_input.h"
+
+//	Ship's map, proven by every shipped dependency table that names a vertex
+//	input header: 7 particle, 8 particle with sub-uv, 9 particle beamtrail.
+//	Only those three ship for this name.
+#if CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+#	include "particle_vertex_input.h"
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+#	include "particle_beamtrail_vertex_input.h"
+#else // #if CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+#	include "vertex_input.h"
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
 
 uniform float4 selection_color;
 
@@ -20,6 +45,6 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 {
 	material_parameters parameters = get_material_parameters(input);
 	fill_material_parameters(parameters);
-	
+
 	return float4(selection_color.rgb, 0.3f);
 }

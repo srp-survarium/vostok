@@ -1,30 +1,198 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 11.01.2011
+//	Created		: 25.02.2010
 //	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 2026-08-17, against the 14 shipped permutations.
+//
+//	The shipped editor blobs were compiled against a vertex_input.h whose
+//	type dispatch (proven by every blob's dependency list) was:
+//		0 null, 1-2 static, 3-6 skeleton_{4,3,2,1}_bones, 7-8 particle,
+//		9 beamtrail, 10 decal, 11 grassmesh, 13 wires, 14 user.
+//	The tree's vertex_input.h dispatches differently today, so the ship
+//	mapping is reproduced below. Where the tree still carries the ship
+//	revision of a per-type header (particle, beamtrail, decal, wires -
+//	struct, globals and parameter math all byte-proven through these
+//	blobs) it is included; the drifted (null, static, grassmesh) and
+//	deleted (skeleton_*_bones, user) ones are inlined at their ship
+//	state. Field names in the inlined structs are educated guesses -
+//	only the semantics, masks, the view-space position field and the tc
+//	field are pinned by the blobs.
+////////////////////////////////////////////////////////////////////////////
+
 /*
 	$DEFINES$:
-		CONFIG_VERTEX_INPUT_TYPE,
+	CONFIG_VERTEX_INPUT_TYPE,
 */
 
 //uniform float3x4 m_V2W;
 
 #include "material.h"
-#include "vertex_input.h"
 
-float3 wireframe_color;
+#if CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+#	include "particle_vertex_input.h"
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+#	include "particle_beamtrail_vertex_input.h"
+#elif CONFIG_VERTEX_INPUT_TYPE==10
+#	include "decal_vertex_input.h"
+#elif CONFIG_VERTEX_INPUT_TYPE==13
+#	include "wires_vertex_input.h"
+#elif CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
 
-float4 main(in vertex_output_struct input) : SV_TARGET
+// ship static_mesh_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	tbn_x				: TEXCOORD1;
+	float3	tbn_y				: TEXCOORD2;
+	float3	tbn_z				: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE>=3 && CONFIG_VERTEX_INPUT_TYPE<=6
+
+// ship skeleton_{4,3,2,1}_bones_mesh_vertex_input.h (one shared output)
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	position			: TEXCOORD4;
+	float3	prev_position		: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==11
+
+// ship grassmesh_vertex_input.h
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	params				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+	parameters.color					= input.color;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==14
+
+// ship user_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+// ship null_mesh_vertex_input.h: no tc interpolator; tc is planar-mapped
+// from the world position (the blobs read position.xz)
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.position.xz;
+
+	return parameters;
+}
+
+#endif
+
+uniform float3 wireframe_color;
+
+struct ps_output
+{
+	float4	color	: SV_Target0;
+	float4	depth	: SV_Target1;
+};
+
+ps_output 	main(in vertex_output_struct input)
 {
 	material_parameters parameters = get_material_parameters(input);
 	fill_material_parameters(parameters);
-	
-	return float4(wireframe_color, parameters.world_view_position.z);
+
+	ps_output	output;
+	output.color	= float4( wireframe_color, 0.f);
+	output.depth	= parameters.world_view_position.z;
+	return output;
 }
-
-
-
-
-
-

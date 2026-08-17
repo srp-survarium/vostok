@@ -1,0 +1,33 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+struct v2p_ssao_downsample_depth_and_normals
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_ssao_downsample_depth_and_normals I ) : SV_TARGET
+{
+	float4	sum		= 0.f;
+
+	for (int x = -2; x <= 2; x++)
+	{
+		for (int y = -2; y <= 2; y++)
+		{
+			float2	tc		= screen_res.zw*float2( x, y) + I.tc;
+
+			sum.w			+= gbuffer_read_frame_depth( tc);
+
+			float3	normal	= gbuffer_read_frame_normal( tc);
+			sum.xyz			+= float3( normal.xy, -normal.z);
+		}
+	}
+
+	return	sum*0.04f;
+}

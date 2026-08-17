@@ -1,0 +1,44 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gamma_correction.h"
+#include "gbuffer.h"
+
+uniform float4	aberration_parameters;	// x - edge amount, y - center amount, z - falloff power
+
+Texture2D		t_frame_color;
+
+struct v2p_aberration
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_aberration I ) : SV_TARGET
+{
+	float2	centered	= I.tc - 0.5f;
+	float	falloff		= min( pow( dot( centered, centered), aberration_parameters.z), 1.f);
+	float	amount		= lerp( aberration_parameters.y, aberration_parameters.x, falloff);
+	float2	min_offset	= -amount*screen_res.zw;
+	float2	max_offset	= amount*screen_res.zw;
+
+	float3	color		= t_frame_color.SampleLevel( s_material1, I.tc, 0).xyz;
+	float	luminance	= pow( dot( color, color), 0.2f) + 0.5f;
+
+	float2	red_offset	= max( min_offset, luminance*screen_res.zw*float2( -1.f, 0.f));
+	float2	blue_offset	= min( max_offset, luminance*screen_res.zw*float2(  1.f, 0.f));
+
+	float2	direction	= normalize( 0.5f - I.tc)*(1.f/0.7f);
+
+	float2	red_tc		= I.tc - direction.x*red_offset;
+	float2	blue_tc		= I.tc - direction.y*blue_offset;
+
+	return	float4(
+		t_frame_color.SampleLevel( s_material1, red_tc, 0).x,
+		color.y,
+		t_frame_color.SampleLevel( s_material1, blue_tc, 0).z,
+		0.f);
+}

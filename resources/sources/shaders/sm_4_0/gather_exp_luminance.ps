@@ -1,34 +1,33 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 28.04.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
-
-/*
-	$DEFINES$:
-		GLOBAL_USE_LOOP_UNROLLING,
-*/
 
 #include "common.h"
 #include "gbuffer.h"
-#include "dof_functions.h"
-#include "luminance.h"
+#include "gamma_correction.h"
 
 Texture2D t_frame_color1;
 
-float4 main( v2p_TL vin) : SV_TARGET
+struct v2p_gather
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_gather vin) : SV_TARGET
 {
 	float average_result_luminance	= 0.0f;
 	float min_result_luminance 		= pow(2, 31);
 	float max_result_luminance		= -pow(2, 31);
-	
-    UNROLL for(int y=-1; y<1; y++)
-    UNROLL for(int x=-1; x<1; x++)
-    {
-		average_result_luminance 	+= t_frame_color1.Sample(s_position, vin.Tex0, int2(x,y)).r;
-		min_result_luminance  		=  min(min_result_luminance, t_frame_color1.Sample(s_position, vin.Tex0, int2(x,y)).g);
-		max_result_luminance  		=  max(max_result_luminance, t_frame_color1.Sample(s_position, vin.Tex0, int2(x,y)).b);
+
+	[unroll] for(int y=-1; y<1; y++)
+	[unroll] for(int x=-1; x<1; x++)
+	{
+		average_result_luminance 	+= t_frame_color1.Sample(s_position, vin.tc, int2(x,y)).r;
+		min_result_luminance  		=  min(min_result_luminance, t_frame_color1.Sample(s_position, vin.tc, int2(x,y)).g);
+		max_result_luminance  		=  max(max_result_luminance, t_frame_color1.Sample(s_position, vin.tc, int2(x,y)).b);
 	}
-    
-	return							float4( exp( average_result_luminance / num_luminance_pixels ), exp( min_result_luminance ), exp( max_result_luminance ), 0 );
+
+	return							float4( average_result_luminance/65536.0f, min_result_luminance, max_result_luminance, 0 );
 }

@@ -1,0 +1,111 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 03.11.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/god_rays_accumulate3.ps, one permutation) - absent from
+//	the recovered source drop.  Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip god_rays_accumulate3.ps
+//
+//	The cloud half of the god-ray mask, drawn with the clouds.vs transform
+//	(god_rays_accumulate3.vs is that same blob under this name).  For each
+//	point on the cloud slab it walks *to the sun* until it reaches the top
+//	of the slab - the horizontal displacement of a vertical shaft seen from
+//	the sun's direction - samples the cloud volume there, and writes white
+//	with the transmittance cubed as alpha.  What the accumulator then owns
+//	is a screen-space mask of where the sun is blocked, which god_rays.ps
+//	marches.
+//
+//	Three details are the shader, not the theory:
+//
+//	  * the sun is a *place*, not a direction: eye_position plus the sun
+//	    direction times 100,000, so the walk converges rather than being
+//	    parallel - and clouds_offset is added to both ends so the offset
+//	    cancels in the difference but not in the sample;
+//	  * the vertical weight 1-|y/top*2-1| peaks in the middle of the slab
+//	    and falls to zero at both faces, so a shaft does not switch on at
+//	    the slab boundary;
+//	  * the distance term is one minus saturate(view_z/50000), which fades
+//	    the whole mask out well before the clouds themselves fade.
+//
+//	==== $Globals is a shorter list than clouds.ps's =====================
+//
+//	This TU's $Globals ends at to_sun_direction_parameter, at offset 112.
+//	clouds.ps has light_multiplier_parameters at 112, to_sun_direction_
+//	parameter at 128 and a trailing inverted_view_projection_matrix - and
+//	fxc keeps trailing unused uniforms (clouds.ps's blob proves it), so the
+//	two TUs really do declare different lists.
+//
+//	This blob's dependency table names nothing but common.h and its own
+//	closure - no atmospheric_scattering_common.h, which clouds.ps,
+//	make_mie_rayleigh_texture.ps and
+//	atmospheric_scattering_on_geometry_add.ps all do name.  So at ship these
+//	cloud globals were declared in this file, exactly as they are here, and
+//	the shorter list is the file's own rather than a header revision.
+//
+//	==== residual notes ===================================================
+//
+//	Two statement placements are load-bearing, not style.  The depth and
+//	visibility pair is written *before* the projection even though the
+//	shipped schedule issues it after the discard - written after, fxc keeps
+//	the two projection dp4s ahead of it and every register below shifts.
+//	And the cube is spelled t*(t*t): left-to-right t*t*t emits its last
+//	multiply with the operands the other way round.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float4x4	sphere_to_sky_matrix;
+uniform float		slice_transparency;
+uniform float3		clouds_grid_size;
+uniform float3		clouds_offset;
+uniform float		layer_height;
+uniform float		interp_alpha;
+uniform float		cloud_base;
+uniform float3		to_sun_direction_parameter;
+
+Texture3D	t_clouds_0;
+Texture3D	t_clouds_1;
+
+struct vertex_output_struct
+{
+	float4 hposition			: SV_Position;
+	float3 world_position		: TEXCOORD0;
+	float3 object_position		: TEXCOORD1;
+	float2 uv					: TEXCOORD2;
+	float  interpolated_fog		: TEXCOORD3;
+};
+
+float4 main( in vertex_output_struct input ) : SV_Target
+{
+	float3	position		=	input.world_position + clouds_offset;
+	float3	sun_position	=	to_sun_direction_parameter*100000.0f + eye_position;
+
+	sun_position			+=	clouds_offset;
+
+	float3	to_sun			=	normalize( sun_position - position);
+
+	float	top				=	cloud_base*1.5f;
+	float	distance_to_top	=	top - min( max( position.y, 0.0f), top);
+
+	position.xz				+=	distance_to_top*to_sun.xz;
+
+	float	depth			=	mul( m_V, float4( input.world_position, 1.0f)).z;
+	float	visibility		=	1.0f - saturate( depth/50000.0f);
+
+	float4	projected		=	mul( sphere_to_sky_matrix, float4( position, 1.0f));
+
+	if (projected.y > 1.0f || projected.y < 0.0f)
+		discard;
+
+	float	density			=	lerp( t_clouds_0.Sample( s_base, projected.xyz).x, t_clouds_1.Sample( s_base, projected.xyz).x, interp_alpha);
+
+	float	vertical		=	max( 1.0f - abs( position.y/top*2.0f - 1.0f), 0.0f);
+	float	weight			=	visibility*vertical*0.25f;
+
+	float	transparency	=	1.0f - density;
+	float	cubed			=	transparency*(transparency*transparency);
+
+	return	float4( 1.0f, 1.0f, 1.0f, saturate( weight*cubed));
+}

@@ -1,0 +1,156 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/wet_sufrace_normal_modify.ps, plain permutation) -
+//	absent from the recovered source drop; the four proven wet_sufrace_*
+//	siblings gave the container conventions (the Lambert-azimuthal encode
+//	is wet_sufrace_normal_write.ps's, spelled -8z+8).
+//	Byte-identity: python3 -m vostok.shaders roundtrip wet_sufrace_normal_modify.ps
+//
+//	Rain wetness, written back into the normal target. The rain shadow map
+//	says whether the sky reaches this pixel (four SampleCmp taps, one of the
+//	four corners of the 3x3 missing as shipped); the wetness that survives
+//	tilts the normal toward straight up, drives two rain-stream-modulated
+//	flowing-normal taps (one for the x-facing walls, one for the z-facing)
+//	and two puddle-ring taps out of a 3D ring atlas, and lowers the packed
+//	smoothness parameter. The second rain_stream tap reads .y where the
+//	first reads .x, and the ring pair is weighted by the *slope* term rather
+//	than by the ripple strength - both are what the blob says, not what
+//	symmetry would suggest.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+uniform float3			s_eye_ray_corner;
+uniform float4x4		view_to_shadow;
+uniform float			rain_offset;
+uniform float			rain_density;
+
+uniform SamplerComparisonState	s_shmap;
+
+Texture2D	t_rain_shadow_map;
+Texture3D	t_puddle_rings;
+Texture2D	t_water_flowing_normals;
+Texture2D	t_rain_stream;
+
+struct v2p_quad
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_quad I ) : SV_TARGET
+{
+	float3	normal				= gbuffer_read_frame_normal( I.tc);
+	normal.z					= -normal.z;
+
+	float3	world_normal		= normalize( mul( m_V2W, float4( normal, 0.0f)).xyz);
+	float3	to_up				= float3( 0.0f, 1.0f, 0.0f) - world_normal;
+
+	float	facing				= saturate( world_normal.y);
+
+	float4	data				= t_normal.SampleLevel( s_accumulator, I.tc, 0);
+	uint	magnified			= (uint)( data.z*1023.0f);
+	uint	material			= (uint)( data.w*3.0f);
+	float	smoothness			= 1.0f - (float)( magnified & 127)/127.0f;
+
+	float	mask				= ( world_normal.y > 0.0f) + ( world_normal.y > 0.0f ? 0.0f : smoothness);
+
+	float3	eye_ray;
+	eye_ray.xy					= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z					= 1;
+
+	float	depth				= gbuffer_read_frame_depth( I.tc);
+
+	float3	shadow_from			= eye_ray*depth + normal;
+	float3	position			= depth*eye_ray;
+
+	float	near_fade			= saturate( 20.0f - position.z);
+
+	float4	shadow_position		= mul( view_to_shadow, float4( shadow_from, 1.0f));
+	float3	shadow_coord		= shadow_position.xyz/shadow_position.w;
+
+	float	shadow				= t_rain_shadow_map.SampleCmpLevelZero( s_shmap, shadow_coord.xy, shadow_coord.z + 0.001f);
+	shadow						+= t_rain_shadow_map.SampleCmpLevelZero( s_shmap, shadow_coord.xy + float2( -1.0f, -1.0f)/256.0f, shadow_coord.z + 0.001f);
+	shadow						+= t_rain_shadow_map.SampleCmpLevelZero( s_shmap, shadow_coord.xy + float2(  1.0f, -1.0f)/256.0f, shadow_coord.z + 0.001f);
+	shadow						+= t_rain_shadow_map.SampleCmpLevelZero( s_shmap, shadow_coord.xy + float2( -1.0f,  1.0f)/256.0f, shadow_coord.z + 0.001f);
+	shadow						= min( shadow*0.5f, 1.0f);
+
+	float	wetness				= saturate( shadow*rain_density*mask)*world_normal.y;
+
+	float	ripple_strength		= facing*pow( wetness, 4.0f)*0.25f;
+
+	world_normal				= ripple_strength*to_up + world_normal;
+
+	float	slope				= min( pow( max( world_normal.y, 0.0f), 2.0f), 1.0f);
+	float	stream_time			= ceil(( 1.0f - slope)*10.0f)*scene_time;
+
+	float3	world_position		= mul( m_V2W, float4( position, 1.0f)).xyz;
+
+	float	distance_fade		= saturate(( length( position) - 0.8f)*10.0f);
+
+	float	stream_height		= world_position.y*2.0f + stream_time*0.00625f;
+
+	float	stream0				= t_rain_stream.Sample( s_linear, float2( world_position.z, stream_height)*float2( 7.5f, 1.5f)).x;
+	float	stream1				= t_rain_stream.Sample( s_linear, float2( world_position.x, stream_height)*float2( 7.5f, 1.5f)).y;
+
+	float3	ring_uv;
+	ring_uv.xy					= float2( world_position.x, world_position.z)*1.15f + rain_offset;
+	ring_uv.z					= scene_time*2.0f;
+
+	float	flow_height0		= world_position.y*( 1.0f - stream0*0.05f)*0.5f + stream0*-0.25f + stream_time*0.0125f;
+	float4	flow0				= t_water_flowing_normals.Sample( s_linear, float2( world_position.z*0.5f, flow_height0));
+
+	float3	flow_vector0;
+	flow_vector0.yz				= float2( flow0.w, flow0.y)*2.0f - 1.0f;
+	flow_vector0.x				= sqrt( max( 1.0f - dot( flow_vector0.yz, flow_vector0.yz), 0.0f));
+
+	float3	perturbation		= normalize( flow_vector0*float3( 1.0f, 2.0f, -2.0f))*abs( world_normal.x);
+
+	float4	ring0				= t_puddle_rings.SampleBias( s_base, ring_uv, -3.0f);
+	float4	ring1				= t_puddle_rings.SampleBias( s_base, float3( ring_uv.xy*2.0f, ring_uv.z), -3.0f);
+
+	float2	rings				= (( float2( ring0.w, ring0.y) - 0.5f)*0.5f + ( float2( ring1.w, ring1.y) - 0.5f)*0.5f)*slope*10.0f;
+
+	perturbation				= perturbation*0.5f + float3( rings, 0.0f);
+
+	float	flow_height1		= world_position.y*( 1.0f - stream1*0.05f)*0.5f + stream1*-0.25f + stream_time*0.0125f;
+	float4	flow1				= t_water_flowing_normals.Sample( s_linear, float2( world_position.x*0.5f, flow_height1));
+
+	float3	flow_vector1;
+	flow_vector1.xy				= float2( flow1.y, flow1.w)*2.0f - 1.0f;
+	flow_vector1.z				= sqrt( max( 1.0f - dot( flow_vector1.xy, flow_vector1.xy), 0.0f));
+
+	perturbation				= normalize( flow_vector1*float3( -2.0f, 2.0f, 1.0f))*abs( world_normal.z)*0.5f + perturbation;
+
+	float3	scaled				= float3( perturbation.x, perturbation.y*0.5f, perturbation.z);
+
+	bool	inside				= shadow_position.x >= 0.0f && shadow_position.x <= 1.0f
+								&& shadow_position.y >= 0.0f && shadow_position.y <= 1.0f
+								&& shadow_position.z >= 0.0f && shadow_position.z <= 1.0f;
+
+	float	shadow_or_one		= inside ? shadow : 1.0f;
+
+	float	strength			= ( smoothstep( 0.0f, 1.0f, distance_fade)*0.3f + 0.7f)*rain_density*wetness;
+
+	float	wet_parameter		= 1.0f - saturate( smoothness*( wetness*3.0f + 1.0f) + shadow*0.2f);
+
+	strength					= near_fade*strength;
+	strength					= strength*shadow_or_one;
+
+	float3	final_normal		= world_normal + strength*scaled;
+	final_normal				= final_normal*rsqrt( dot( final_normal, final_normal));
+
+	float3	view_normal			= normalize( mul( (float3x3)m_V, final_normal));
+
+	float	f					= sqrt( view_normal.z*-8.0f + 8.0f);
+
+	uint	packed_material		= (uint)( min( (float)(( magnified >> 7) | ( material << 3))/31.0f, 1.0f)*31.0f);
+	uint	packed_parameter	= (uint)( wet_parameter*127.0f);
+
+	return	float4(
+		view_normal.xy/f + 0.5f,
+		(float)((( packed_material << 7) & 896) + packed_parameter)/1023.0f,
+		(float)( packed_material >> 3)/3.0f);
+}

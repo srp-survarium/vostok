@@ -1,0 +1,32 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 20.04.2011
+//	Author		: Dmitriy Iassenev
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		CONFIG_SHADOWED_LIGHT,
+*/
+#include "light_ps_helper.h"
+
+float4x4 						light_local_to_world;
+
+#include "plane_spot_light.h"
+
+uniform float3					s_eye_ray_corner;
+
+light_accumulator main			( pixel_shader_input input ) : SV_TARGET
+{
+	return
+		get_light_accumulator(
+			light_color,
+			plane_spot_light(
+				get_gbuffer_data(
+					input.texture_coordinates.xyw,
+					s_eye_ray_corner
+				),
+				input.texture_coordinates.xy / input.texture_coordinates.w
+			)
+		);
+}

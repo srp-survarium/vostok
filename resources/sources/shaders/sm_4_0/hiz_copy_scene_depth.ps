@@ -1,0 +1,28 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+struct v2p_hiz_copy
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_hiz_copy I ) : SV_TARGET
+{
+	float depth	= t_position.SampleLevel( s_position, I.tc + screen_res.zw, 0).x;
+
+	depth = max( depth, t_position.SampleLevel( s_position, I.tc, 0).x);
+	depth = max( depth, t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2(  1.0f,  0.0f), 0).x);
+	depth = max( t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2(  1.0f, -1.0f), 0).x, depth);
+	depth = max( depth, t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2(  0.0f,  1.0f), 0).x);
+	depth = max( t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2(  0.0f, -1.0f), 0).x, depth);
+	depth = max( depth, t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2( -1.0f,  1.0f), 0).x);
+	depth = max( t_position.SampleLevel( s_position, I.tc + screen_res.zw*float2( -1.0f,  0.0f), 0).x, depth);
+	depth = max( depth, t_position.SampleLevel( s_position, I.tc - screen_res.zw, 0).x);
+
+	return depth;
+}

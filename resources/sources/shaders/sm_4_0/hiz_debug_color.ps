@@ -1,0 +1,13 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float4	draw_color;
+
+float4 main( float4 hpos : SV_POSITION ) : SV_TARGET
+{
+	return	draw_color;
+}

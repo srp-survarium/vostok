@@ -1,0 +1,51 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "filters.h"
+
+uniform float3		s_eye_ray_corner;
+uniform float4x4	prev_view;
+
+uniform sampler		s_prev_z;
+
+Texture2D			t_ssao_prev_z;
+
+struct v2p_temporal_mask
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_temporal_mask I ) : SV_Target
+{
+	float	left			= gbuffer_read_frame_depth( I.tc + float2( -2.f,  0.f)/screen_res.xy);
+	float	right			= gbuffer_read_frame_depth( I.tc + float2(  2.f,  0.f)/screen_res.xy);
+	float	center			= gbuffer_read_frame_depth( I.tc);
+	float	horizontal		= center - ( abs( center - left) < abs( center - right) ? left : right);
+
+	float	up				= gbuffer_read_frame_depth( I.tc + float2(  0.f,  2.f)/screen_res.xy);
+	float	down			= gbuffer_read_frame_depth( I.tc + float2(  0.f, -2.f)/screen_res.xy);
+	float	vertical		= center - ( abs( center - up) < abs( center - down) ? up : down);
+
+	bool	edge			= abs( horizontal) > 0.3f || abs( vertical) > 0.3f;
+	bool	close			= center < 50.f;
+
+	float3	eye_ray;
+	eye_ray.xy				= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float3	position		= eye_ray*center;
+	float3	world_position	= mul( m_V2W, float4( position, 1.f));
+	float3	prev_position	= mul( prev_view, float4( world_position, 1.f)).xyz;
+	float4	projected		= mul( m_P, float4( prev_position, 1.f));
+	float2	prev_tc			= saturate( projected.xy/projected.w*float2( 0.5f, -0.5f) + 0.5f);
+	float	prev_z			= t_ssao_prev_z.SampleLevel( s_prev_z, prev_tc, 0).x;
+
+	bool	reprojected		= abs( prev_position.z - prev_z) < 0.09f;
+
+	return	float4( reprojected, close && edge, 0.f, 0.f);
+}

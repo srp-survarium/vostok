@@ -1,0 +1,62 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4	lens_flares_parameters;
+
+Texture2D		t_blurred_frame_bloom_only_color;
+Texture2D		t_lensdirt;
+
+struct v2p_lens_flares
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float bounds_mask( float2 uv )
+{
+	bool2 lo = uv >= 0.0f;
+	return ( lo.x && lo.y && 1.0f >= uv.x && 1.0f >= uv.y) ? 1.0f : 0.0f;
+}
+
+float4 main( v2p_lens_flares I ) : SV_TARGET
+{
+	float4	deltas		= (0.5f - I.tc).xyxy*float4( 0.005f, 0.005f, 0.05f, 0.05f);
+	float4	direction	= normalize( deltas.xy).xyxy;
+
+	float3	dirt		= t_lensdirt.Sample( s_linear, I.tc).xyz;
+
+	float4	base		= I.tc.xyxy + direction*0.45f;
+	float2	uv_r		= base.zw + direction.zw*2.655f;
+	float4	uv_gb		= base + direction*float4( 2.61f, 2.61f, 2.565f, 2.565f);
+
+	float3	flare;
+	flare.x				= bounds_mask( uv_r)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_r, 0).x;
+	flare.y				= bounds_mask( uv_gb.xy)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_gb.xy, 0).y;
+	flare.z				= bounds_mask( uv_gb.zw)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_gb.zw, 0).z;
+	flare				*= 1.00001f;
+
+	float3	sum			= flare;
+	for (int i = 0; i < 6; i++)
+	{
+		float2	offset	= deltas.zw*i;
+		float2	base_i	= I.tc + i*deltas.zw;
+		float4	uv_rg	= base_i.xyxy + offset.xyxy*float4( 5.9f, 5.9f, 5.8f, 5.8f);
+		float2	uv_b	= base_i + offset*5.7f;
+
+		float3	ghost;
+		ghost.x			= bounds_mask( uv_rg.xy)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_rg.xy, 0).x;
+		ghost.y			= bounds_mask( uv_rg.zw)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_rg.zw, 0).y;
+		ghost.z			= bounds_mask( uv_b)*t_blurred_frame_bloom_only_color.SampleLevel( s_material1, uv_b, 0).z;
+
+		sum				+= ghost;
+	}
+
+	float3	color		= sum*0.05f + dirt*sum*0.3335f;
+
+	return	float4( color*lens_flares_parameters.x, 1.0f);
+}

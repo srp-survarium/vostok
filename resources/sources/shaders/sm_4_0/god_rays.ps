@@ -1,0 +1,51 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float3	sun_direction_parameter;
+uniform float4	god_rays_parameters0;	// rgb - near color, w - intensity power
+uniform float4	god_rays_parameters1;	// rgb - far color, w - result scale
+uniform float4	god_rays_parameters2;	// x - falloff distance power
+
+Texture2D		t_light_scattering_mask;
+
+struct v2p_god_rays
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_god_rays I ) : SV_TARGET
+{
+	float3	sun_position	= eye_position - sun_direction_parameter*500.0f;
+	float4	projected		= mul( m_VP, float4( sun_position, 1.0f));
+	float2	sun_uv			= projected.xy/projected.w*float2( 0.5f, -0.5f) + 0.5f;
+
+	float	aspect			= screen_res.x/screen_res.y;
+	float2	scaled_sun		= float2( sun_uv.x*aspect, sun_uv.y);
+	float2	scaled_tc		= float2( I.tc.x*aspect, I.tc.y);
+	float2	delta			= I.tc - sun_uv;
+	float2	scaled_delta	= scaled_tc - scaled_sun;
+	float	sun_distance	= sqrt( dot( scaled_delta, scaled_delta));
+	float	falloff			= exp( -20.0f*pow( sun_distance, god_rays_parameters2.x));
+
+	float2	uv				= I.tc;
+	float	sum				= 0.0f;
+	for (int i = 0; i < 100; i++)
+	{
+		uv					-= delta*0.01f;
+		sum					+= t_light_scattering_mask.Sample( s_base, uv).x;
+	}
+
+	float	value			= max( falloff*sum*0.01f, 0.0f);
+	float	intensity		= min( pow( value, god_rays_parameters0.w), 1.0f);
+	float3	color			= lerp( god_rays_parameters0.xyz, god_rays_parameters1.xyz, intensity);
+
+	value					*= god_rays_parameters1.w;
+	color					= value*color;
+
+	return	float4( 1.f/rsqrt( saturate( color*0.625f)), 0.f);
+}

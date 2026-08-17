@@ -1,0 +1,265 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 17.08.2026
+//	Ground truth	: the 32 shipped permutations of
+//					  shaders/sm_4_0/environment_probe_lighting.ps,
+//					  disassembled with fxc /dumpbin /Fc.  No source for this
+//					  name arrived with the drop; forward_probe_lighting.ps
+//					  (300/300 byte-identical, same day) is its forward twin
+//					  and shares the probe cube read, the roughness-driven mip
+//					  pair and the exp( -2*d^8 ) range falloff.
+//	Acceptance		: python3 -m vostok.shaders roundtrip environment_probe_lighting.ps
+////////////////////////////////////////////////////////////////////////////
+//
+//	The deferred environment-probe pass: one probe, one draw, two accumulator
+//	targets (diffuse SV_Target0, specular SV_Target1) whose w carries the
+//	probe's own falloff.  Everything is read out of the g-buffer: linear depth
+//	off t_position, the Lambert-azimuthal normal off t_normal, the surface's
+//	gloss code out of the normal target's .z and its specular-intensity code
+//	out of the diffuse target's .w - both 7-bit fields over 127.
+//
+//	STATE: 0 of 32 permutations byte-identical.  All sixteen
+//	GLOBAL_LIGHTING_QUALITY=0 permutations - every combination of the three
+//	CONFIG_ENV_PROBE_* axes - compile to exactly 28 bytes less than their blob,
+//	and the missing 28 bytes are the SAME instruction in all sixteen: one
+//	`mul r, r, l(4.000000)`.  See PARKED, below.  The sixteen
+//	GLOBAL_LIGHTING_QUALITY=3 permutations are not written at all.
+//
+//	Axis status:
+//
+//	  GLOBAL_SHADING_QUALITY (0, 3)      DEAD.  Every pair of blobs that
+//	                                     differs only in it is byte-identical;
+//	                                     the define is not read.
+//	  GLOBAL_LIGHTING_QUALITY (0, 3)     0 reconstructed to the one parked
+//	                                     instruction; 3 NOT WRITTEN.  At 3 the
+//	                                     diffuse becomes a cone gather - eight
+//	                                     hardcoded 3x3 rotations of the world
+//	                                     normal, each row a cyclic shift of the
+//	                                     one above it (0.997250/-0.029667/
+//	                                     0.067912, then 0.948293/-0.029853/
+//	                                     -0.315989, 0.895642/-0.095603/0.434380,
+//	                                     0.824255/0.554177/0.116152, 0.786356/
+//	                                     -0.617759/0.004355, 0.771697/0.406877/
+//	                                     -0.488809, 0.752597/-0.345348/
+//	                                     -0.560654, 0.723047/0.283888/0.629771),
+//	                                     each renormalised, sampled at
+//	                                     num_mips-2 through s_material1, summed
+//	                                     and scaled by 0.111111 - eight taps
+//	                                     over nine, not a typo in this note -
+//	                                     and the specular runs the full
+//	                                     forward_probe_lighting Beckmann
+//	                                     (255*(1-r), 2/(n+2)-0.00778, pow 0.48,
+//	                                     1/(m^2*pi), the |VdotN*NdotL| divide)
+//	                                     instead of the closed form below.
+//	                                     274 slots against 145.
+//	  CONFIG_ENV_PROBE_GEOMETRY_TYPE     0 sphere, 1 box.  A box probe that
+//	                                     neither shadows nor clips drops the
+//	                                     dynamic_transforms and
+//	                                     positional_lights_constants cbuffers
+//	                                     entirely and uses world_to_probe.
+//	  CONFIG_ENV_PROBE_WITH_SHADOWS      1 adds t_probe_cubemap_depth, bound
+//	                                     between t_probe_cubemap and
+//	                                     t_ssao_accumulator, and brings the
+//	                                     probe centre back for a box probe.
+//	  CONFIG_ENV_PROBE_CLIP_BY_NORMAL    1 multiplies the falloff by
+//	                                     saturate( dot( to_probe, n ) + 0.75 ).
+//	  GLOBAL_USE_SCREENSPACE_REFLECTIONS_MASK, CONFIG_SHADOWED_LIGHT
+//	                                     ship only as 0; unconstrained.
+//
+//	Everything else in the LIGHTING_QUALITY=0 arm matches the shipped listings
+//	instruction for instruction: the eye-ray prologue, both g-buffer reads
+//	(depth through s_position, the Lambert-azimuthal normal through s_normal,
+//	the gloss code through s_accumulator and the specular-intensity code
+//	through s_diffuse), the Schlick fresnel, the diffuse output and its 1/rsqrt
+//	packing, the range falloff, the box falloff, the depth-cube shadow, the
+//	normal clip, the roughness-blended reflection direction and the whole
+//	specular tail.
+//
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_SHADING_QUALITY,
+		GLOBAL_LIGHTING_QUALITY,
+		GLOBAL_USE_SCREENSPACE_REFLECTIONS_MASK,
+		CONFIG_SHADOWED_LIGHT,
+		CONFIG_ENV_PROBE_CLIP_BY_NORMAL,
+		CONFIG_ENV_PROBE_WITH_SHADOWS,
+		CONFIG_ENV_PROBE_GEOMETRY_TYPE,
+*/
+
+#include "common_functions.h"
+#include "light_ps_helper.h"
+#include "point_light.h"
+
+uniform float3		s_eye_ray_corner;
+uniform int			num_mips;
+uniform float4		color_parameters;		// x - diffuse scale, y - specular scale
+uniform float4x4	world_to_probe;
+
+TextureCube			t_probe_cubemap;
+TextureCube			t_probe_cubemap_depth;
+Texture2D			t_ssao_accumulator;
+
+//	The probe cube stores colour pre-divided by its own alpha, in gamma space.
+float3 sample_probe( float3 direction, float mip_level )
+{
+	float4 value	= t_probe_cubemap.SampleLevel( s_base, direction, mip_level );
+	return	convert_to_linear_space( value.xyz/value.w );
+}
+
+float3 sample_probe_diffuse( float3 direction, float mip_level )
+{
+	float4 value	= t_probe_cubemap.SampleLevel( s_material1, direction, mip_level );
+	return	convert_to_linear_space( value.xyz/value.w );
+}
+
+//	light_ps_helper.h's accumulator packing, at the probe stage's scale.
+float3 pack_light_accumulator( float3 value )
+{
+	return	1.f/rsqrt( saturate( value*0.125f ) );
+}
+
+struct environment_probe_output
+{
+	float4	diffuse		: SV_Target0;
+	float4	specular	: SV_Target1;
+};
+
+environment_probe_output main( pixel_shader_input input )
+{
+	float2	tc					= input.texture_coordinates.xy/input.texture_coordinates.w;
+
+	float3	eye_ray;
+	eye_ray.xy					= s_eye_ray_corner.xy*( 1 - tc*2 )/s_eye_ray_corner.z;
+	eye_ray.z					= 1;
+
+	float3	position			= eye_ray*gbuffer_read_frame_depth( tc );
+	float3	world_position		= mul( m_V2W, float4( position, 1 ) );
+
+	float3	to_eye				= eye_position - world_position;
+#if !CONFIG_ENV_PROBE_GEOMETRY_TYPE || CONFIG_ENV_PROBE_WITH_SHADOWS || CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+	//	The probe centre is the object transform's translation column - the
+	//	blobs read m_W's .w lanes, never a position uniform.  A box probe that
+	//	neither shadows nor clips never needs it, and its blob drops the whole
+	//	dynamic_transforms cbuffer.
+	float3	probe_position		= float3( m_W[0][3], m_W[1][3], m_W[2][3] );
+	float3	to_probe			= probe_position - world_position;
+	float	distance_to_probe	= sqrt( dot( to_probe, to_probe ) );
+#endif
+
+	float3	view_direction		= normalize( to_eye );
+
+	float3	normal				= gbuffer_read_frame_normal( tc );
+	normal.z					= -normal.z;
+	float3	world_normal		= normalize( mul( (float3x3)m_V2W, normal ) );
+
+	float	view_dot_normal		= dot( view_direction, world_normal );
+	float3	reflection			= reflect( view_direction, world_normal );
+	float	gloss_attenuation	= pow( saturate( view_dot_normal ), 0.2f );
+	float	fresnel_power		= pow( 1.f - saturate( view_dot_normal ), 5.f );
+
+	float4	diffuse_target		= t_diffuse.SampleLevel( s_diffuse, tc, 0 );
+	float4	normal_target		= t_normal.SampleLevel( s_accumulator, tc, 0 );
+
+	float	gloss				= (float)( ( (uint)( normal_target.z*1023.f ) ) & 127 );
+	float	specular_intensity	= (float)( ( (uint)( diffuse_target.w*255.f ) ) & 127 );
+
+	float	fresnel_at_0_degree	= specular_intensity*0.007874f;
+	float	fresnel_factor		= fresnel_at_0_degree + (1.f - specular_intensity*0.007874f)*fresnel_power;
+
+	float	diffuse_gloss		= 1.f - gloss*0.007874f;
+	float	specular_gloss		= 1.f - gloss*0.007535f;
+	float	roughness_mip		= (1.f - sqrt( 2.f/(gloss*0.007874f + 2.f) ))*4.f;
+
+	float	diffuse_fresnel		= 1.f - fresnel_factor*diffuse_gloss;
+
+	float3	probe_diffuse		= sample_probe_diffuse( world_normal, (float)( num_mips - 2 ) );
+
+	float	occlusion			= t_ssao_accumulator.SampleLevel( s_linear, input.position.xy*screen_res.zw, 0 ).x*2.5f;
+
+	float3	diffuse_lighting	= probe_diffuse*(occlusion*color_parameters.x);
+	diffuse_lighting			= min( diffuse_lighting, 10.f );
+	diffuse_lighting			= diffuse_lighting*diffuse_fresnel;
+
+	//	The probe's own falloff, written into both targets' w.  Each of the
+	//	three arms below lands its permutation exactly 28 bytes - the one parked
+	//	mul - short of its blob, which is as close as anything in this file gets
+	//	until that mul is solved.
+#if CONFIG_ENV_PROBE_GEOMETRY_TYPE
+	//	Box probe: the falloff is a per-axis 1 - exp( -6*sqrt( 1 - |p| ) ) in
+	//	probe space, multiplied together and squared.  The sqrt is the same
+	//	1.f/rsqrt() the accumulator packing uses.
+	float3	probe_space			= mul( world_to_probe, float4( world_position, 1.f ) ).xyz;
+	float3	box_falloff			= 1.f - exp( -6.f*(1.f/rsqrt( 1.f - abs( probe_space ) )) );
+	float	attenuation			= box_falloff.x*box_falloff.y*box_falloff.z;
+	attenuation					= attenuation*attenuation;
+#else // #if CONFIG_ENV_PROBE_GEOMETRY_TYPE
+	float	attenuation			= exp( -2.f*square( square( square( distance_to_probe/(light_range*0.95f) ) ) ) );
+	attenuation					= square( square( attenuation ) );
+#endif // #if CONFIG_ENV_PROBE_GEOMETRY_TYPE
+
+#if CONFIG_ENV_PROBE_WITH_SHADOWS
+	//	The probe's own depth cube, packed as g*65025 + b*255 over 65535, read
+	//	along the direction from the probe to this pixel.
+	float4	probe_depth			= t_probe_cubemap_depth.SampleLevel( s_linear, -normalize( to_probe ), 0 );
+	float	stored_distance		= dot( probe_depth.yz, float2( 65025.f, 255.f ) )*0.000015f;
+	float	shadow				= distance_to_probe*0.003333f - stored_distance < 0.0005f ? 1.f : 0.f;
+	attenuation					= shadow*attenuation;
+#endif // #if CONFIG_ENV_PROBE_WITH_SHADOWS
+
+#if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+	attenuation					= attenuation*saturate( dot( normalize( to_probe ), world_normal ) + 0.75f );
+#endif // #if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+
+	float3	half_direction		= normalize( world_normal - reflection );
+	float3	direction			= lerp( half_direction, -reflection, pow( diffuse_gloss, 0.8f ) );
+
+	float	specular_factor		= fresnel_factor*min( (1.f/(specular_gloss*22.f))*fresnel_factor*5.f, 1.f );
+	if ( dot( direction, world_normal ) < 0.f )
+		specular_factor			= 1.f;
+
+	//	PARKED - the one instruction every permutation of this file is short of
+	//	byte-identity.  Ship keeps the *4 on `roughness_mip` above as its own
+	//	`mul r, r, l(4.000000)` and applies a separate *8 to the finished mip;
+	//	here fxc hoists the 4 through the gloss_attenuation product and emits a
+	//	single *32, one instruction fewer, in all sixteen LIGHTING_QUALITY=0
+	//	permutations.
+	//
+	//	Tried, none of them moving it: both operand orders on each of the three
+	//	products; the *4 written constant-first; a named intermediate; a helper
+	//	function returning it; `roughness_mip` computed early (right after the
+	//	gloss decode, which is where the LIGHTING_QUALITY=3 blobs schedule it)
+	//	and late; the *8 moved into and out of the trunc/frac arguments;
+	//	`mad( mip, 8.f, 1.f )` spelled by hand; `1.f + mip*8.f`; `/0.25f` for
+	//	the 4 and `/0.125f` for the 8; and saturate/abs/min/max/
+	//	asfloat(asuint()) barriers on both sides of the *4 (fxc proves every
+	//	clamp away - the sqrt makes the range provable - and still hoists).
+	//
+	//	Two facts bound the search.  fxc does NOT always hoist this shape: a
+	//	minimal shader with exactly these three products, the same integer gloss
+	//	decode, the same two cube samples and the same gloss-cubed fade keeps
+	//	the *4 and the *8 apart.  And neutralising any single downstream block
+	//	of this shader - the specular factor, the horizon clip, the direction
+	//	lerp, the range falloff, the diffuse output, the specular scale, the
+	//	gloss cube, the min-4 - does not bring it back either.  So the trigger
+	//	is a shape difference somewhere in this file that costs no instruction
+	//	of its own, and all 32 shipped blobs hold the split, so it is a property
+	//	of the source rather than of scheduling.
+	float	mip					= gloss_attenuation*roughness_mip;
+
+	float3	upper				= sample_probe( direction, trunc( mip*8.f + 1.f ) );
+	float3	lower				= sample_probe( direction, trunc( mip*8.f ) );
+
+	float3	specular_lighting	= lerp( specular_factor*lower, specular_factor*upper, frac( mip*8.f ) );
+	specular_lighting			= lerp( specular_lighting, 0.f, (gloss*0.007874f)*((gloss*0.007874f)*(gloss*0.007874f)) );
+
+	float	saturated_occlusion	= saturate( occlusion );
+	float	specular_scale		= saturated_occlusion*square( square( saturated_occlusion ) )*color_parameters.y;
+	specular_lighting			= specular_lighting*specular_scale;
+	specular_lighting			= min( specular_lighting, 4.f );
+
+	environment_probe_output	result;
+	result.diffuse				= float4( pack_light_accumulator( diffuse_lighting ), attenuation );
+	result.specular				= float4( pack_light_accumulator( specular_lighting ), attenuation );
+
+	return	result;
+}

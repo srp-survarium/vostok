@@ -1,0 +1,25 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4	tracer_debug_color;
+
+struct v2p_tracer
+{
+	float4	hpos			: SV_Position;
+	float3	position		: TEXCOORD0;
+	float3	tbn_x			: TEXCOORD1;
+	float3	tbn_y			: TEXCOORD2;
+	float3	tbn_z			: TEXCOORD3;
+	float3	view_position	: TEXCOORD4;
+	float2	tc				: TEXCOORD5;
+};
+
+float4 main( v2p_tracer I ) : SV_Target
+{
+	return	tracer_debug_color;
+}

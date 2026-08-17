@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	t_trample_template;
+
+uniform float	trample_parameters;
+
+struct v2p_trample
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_trample I ) : SV_TARGET
+{
+	return	t_trample_template.Sample( s_linear, I.tc )*trample_parameters;
+}

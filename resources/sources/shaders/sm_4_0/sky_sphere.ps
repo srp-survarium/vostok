@@ -1,0 +1,71 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/sky_sphere.ps, one permutation) - absent from the
+//	recovered source drop.  Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip sky_sphere.ps
+//
+//	The sky sphere proper, the pair of sky_sphere.vs.  One tap into the
+//	panorama texture, then two blends:
+//
+//	  * everything below the equator (tc.y > 0.5) is pulled halfway to flat
+//	    grey - the sphere's lower hemisphere is not authored, so it is faded
+//	    rather than drawn, and the tap is clamped to the upper half
+//	    (clamp(tc, 0, (1, 0.5)) * (1, 2)) so the last authored row smears
+//	    down instead of wrapping;
+//	  * a horizon fog ramp toward far_fog_color_and_distance, driven by the
+//	    texture coordinate rather than by depth - height = saturate((1-tc.y)
+//	    *2-1) is 0 at the equator and 1 at the zenith, and the ramp is
+//	    pow(saturate(1 - height/range), power) scaled by fog_alpha.
+//
+//	The same float4 is written to both targets: the second is the sky's copy
+//	for whatever reads the scene without the geometry pass.
+//
+//	==== what fixes the shape =============================================
+//
+//	forward_sky.ps computes the same ramp with the saturate on the division
+//	(div_sat) and a plain 1-x; this file's blob has a plain div and an
+//	add_sat, so the two spellings really are different revisions of the same
+//	idea and neither can be moved to a shared header without breaking one.
+//
+//	$Globals holds only fog_power_and_range, so nothing else this TU
+//	declares loosely is referenced; far_fog_color_and_distance (offset 96)
+//	and fog_alpha (offset 492) come from common_cbuffers.h's ship
+//	material_parameters, which is why that cbuffer binds at slot 1 while
+//	static_globals - untouched here - is dropped entirely.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float4	fog_power_and_range;
+
+Texture2D		t_sky_sphere;
+
+struct v2p_sky_sphere
+{
+	float4	hpos	: SV_Position;
+	float2	tc		: TEXCOORD0;
+};
+
+struct p_sky_sphere
+{
+	float4	color	: SV_Target0;
+	float4	copy	: SV_Target1;
+};
+
+void main( in v2p_sky_sphere I, out p_sky_sphere O )
+{
+	float	height		= saturate(( 1.0f - I.tc.y)*2.0f - 1.0f);
+	float	ramp		= min( pow( saturate( 1.0f - height/fog_power_and_range.y), fog_power_and_range.x), 1.0f);
+	float	fog			= saturate( ramp*fog_alpha);
+
+	float	lower		= 0.5f < I.tc.y;
+
+	float4	color		= t_sky_sphere.Sample( s_base, clamp( I.tc, 0.0f, float2( 1.0f, 0.5f))*float2( 1.0f, 2.0f));
+	color.w				= 1.0f;
+
+	color				= lerp( color, 0.5f, lower);
+	color.xyz			= saturate( lerp( color.xyz, far_fog_color_and_distance.xyz, fog));
+
+	O.color				= color;
+	O.copy				= color;
+}

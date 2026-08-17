@@ -22,10 +22,10 @@
 
 //#define RT_USE_PRESISION_TEST_TARGET					0
 
-cbuffer g_buffer_packing
-{
-	uniform float4 near_far_invn_invf;
-}
+// Loose at ship: no shipped RDEF contains a g_buffer_packing cbuffer, and
+// every TU that touches the g-buffer lists near_far_invn_invf in $Globals
+// at the first declaration slot.
+uniform float4 near_far_invn_invf;
 
 struct	g_struct
 {
@@ -163,9 +163,11 @@ void gbuffer_read_rt_position( float2 tc, float3 eye_ray, out float3 position, o
 	specular_power	= magnified/256.f;
 }
 
+// Ship stores linear view-space depth in x for this packing: skylight.ps's
+// blob multiplies the eye ray by exactly this sample's .x.
 float gbuffer_read_frame_depth( float2 tc)
 {
-	return t_position.SampleLevel( s_position, tc, 0).z;
+	return t_position.SampleLevel( s_position, tc, 0).x;
 }
 #endif
 
@@ -191,13 +193,19 @@ float gbuffer_read_frame_depth( float2 tc)
 //////////////////////////////////////////////////////////////////////////
 // Read normal
 #if GLOBAL_GBUFFER_NORMAL_PACKING == GBUFFER_NORMAL_PACKING_XYZ_MAT
+// Ship decode for this packing is a Lambert azimuthal unpack, byte-proven by
+// skylight.ps's blob (enc*4-2, g = sqrt(1-f/4), z = 1-f/2, then normalize).
 void gbuffer_read_rt_normal( float2 tc, out float3 normal, out float shparam, out float mat_id)
 {
-	float4 data = t_normal.SampleLevel ( s_normal, tc, 0);
-	normal.xyz	= data.xyz;
+	float4 data 	= t_normal.SampleLevel ( s_normal, tc, 0);
+
+	float2 unpacked	= data.xy*4.f - 2.f;
+	float f			= dot( unpacked, unpacked);
+	float g			= sqrt( 1.f - f/4.f);
+	normal			= normalize( float3( unpacked*g, 1.f - f/2.f));
+
 	mat_id		= data.w;
 	shparam		= 0.f;
-	//t_decals_diffuse
 }
 #endif
 

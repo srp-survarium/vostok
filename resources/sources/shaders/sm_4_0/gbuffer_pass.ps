@@ -1,0 +1,639 @@
+////////////////////////////////////////////////////////////////////////////
+//	gbuffer_pass.ps - reconstructed from the shipped blobs, 2026-08-17
+//
+//	No source for this shader survived; this file is written against the
+//	fxc /dumpbin listings of the 1,136 shipped permutations and judged by
+//	byte-identical recompilation (vostok.shaders roundtrip).
+//
+//	STATE: 1,072 of the 1,136 shipped permutations recompile byte-identical.
+//	The 64 that do not fall into four clusters, each described at the foot of
+//	this header with what was tried.
+//
+//	==== how to read this file ============================================
+//
+//	Statement ORDER is load-bearing.  fxc's scheduler is deterministic but not
+//	order-independent: moving a block past another changes register allocation
+//	and therefore bytes, even when the arithmetic is identical.  Three moves
+//	were each worth 50-150 permutations on their own:
+//	  * the translucency SOLID term is built before `diffuse_color *=
+//	    texture_diffuse_color`, but the translucency MAP that overrides it is
+//	    read after the normal block (that one move: 841 -> 964);
+//	  * CONFIG_USE_DIFFUSE_MASKED_COLOR runs after the alpha test, not before;
+//	  * the detail tap's coordinate is computed at the sample, not hoisted.
+//	Binary operand order is not free either.  fxc does not simply keep source
+//	order for a commutative `mul`; where a choice mattered, the form in the
+//	file is the one the blobs force and the alternative is not a refactor.
+//
+//	==== axis status ======================================================
+//
+//	31 defines appear in the shipped permutation strings.  Six never vary -
+//	GLOBAL_ALLOW_STEEPPARALLAX = 1, GLOBAL_USE_VEGETATION_TRAMPLE = 0,
+//	CONFIG_REFLECTION = 0, CONFIG_SEQUENCE = 0, CONFIG_TALPHABLENDED_NORMAL =
+//	0, CONFIG_VERTEX_BLENDED_MASK = 0 - so nothing here is written against
+//	their other values.  The other 25, as (permutations that set it) ->
+//	(of those, byte-identical):
+//
+//	  identical wherever they are set
+//	    CONFIG_TDETAIL                  36/36   CONFIG_TRANSLUCENCY  168/168
+//	    CONFIG_USE_BOUND_NORMALS        12/12   CONFIG_USE_SUBUV        6/6
+//	    CONFIG_USE_DIFFUSE_AS_SPECULAR  56/56   CONFIG_USE_UV_SCROLLING 24/24
+//	    CONFIG_USE_DIFFUSE_MASKED_COLOR 48/48
+//	    CONFIG_USE_DIFFUSE_MASKED_COLOR_BY_HUE 24/24
+//	    CONFIG_USE_UP_DIRECTIONAL_NORMALS 54/54 (a no-op in the pixel stage)
+//	  identical except where another axis in the same permutation is a
+//	  residual - none of these has a defect of its own
+//	    CONFIG_TFRESNEL      383/386   CONFIG_TSPECULAR_COLOR   190/194
+//	    CONFIG_USE_FUZZINESS 127/128   CONFIG_TDETAIL_NORMAL    165/173
+//	    CONFIG_TROUGHNESS    640/667   CONFIG_TNORMAL           578/612
+//	    CONFIG_TDIFFUSE     1000/1052  CONFIG_ALPHA_TEST        474/492
+//	    CONFIG_LOD_INDEX     393/417   CONFIG_WIND_MOTION       239/258
+//	    (WIND_MOTION changes nothing in the pixel stage at all; LOD_INDEX
+//	     changes only the static vertex_output_struct - see below)
+//	  DIFF in their own right
+//	    CONFIG_USE_OLTA                 0/36    cluster 1
+//	    CONFIG_USE_NORMAL_WAVES         0/12    cluster 2
+//	    CONFIG_PARALLAX                20/30    cluster 3
+//	    CONFIG_VERTEX_BLENDED_DIFFUSE 106/112   cluster 4
+//	    CONFIG_VERTEX_BLENDED_NORMAL   87/91    with cluster 4
+//	  CONFIG_VERTEX_INPUT_TYPE: 917 of the 972 non-null permutations.  All
+//	  fifteen families decode and every family has byte-identical members;
+//	  each failure under it belongs to one of the four clusters.
+//
+//	==== the four residual clusters =======================================
+//
+//	1. CONFIG_USE_OLTA (36).  Same instruction count, same opcodes, same
+//	   operands - only the schedule differs: ship emits `mov o2.x` and the
+//	   whole o0 packing before the diffuse pow chain, this file after.  The
+//	   head of the function matches ship exactly, including both `lt` operand
+//	   orders and both `and`s; the divergence starts at the packing.  Tried
+//	   and rejected: the block before the diffuse block, after the alpha test,
+//	   and at either end of main; out_emissive_render_target initialised at
+//	   the top of main, written inside the OLTA block, and written before
+//	   out_diffuse_render_target; both orders of each `&&`; naming the
+//	   scanline test, the partial-alpha test, or neither.
+//	2. CONFIG_USE_NORMAL_WAVES (12).  Same size, same instruction count.
+//	   Ship defers the third tap's coordinate scaling to just before its
+//	   sample, and both accumulating `mad`s until after the third decode;
+//	   this file emits the first `mad` earlier.  Tried: eager and lazy
+//	   coordinate scaling, three sum associations, per-tap temporaries.
+//	3. CONFIG_PARALLAX (10 of 30).  All ten are CONFIG_VERTEX_INPUT_TYPE 1,
+//	   where view_position is an interpolant rather than an m_V product: fxc
+//	   then proves `view_position.z < 12` inside the branch and weakens
+//	   smoothstep's saturate to a bare `min`, where ship keeps `mul_sat`.
+//	   Hoisting the fade out of the branch restores `mul_sat` but costs the
+//	   other 20; so does spelling the saturate by hand, or as min(max(..)).
+//	4. CONFIG_VERTEX_BLENDED_DIFFUSE (6).  Same size; a register-allocation
+//	   difference around the two-tap blend at CONFIG_VERTEX_INPUT_TYPE 1/2.
+//
+//	Everything else here is byte-proven by at least one shipped permutation,
+//	and most of it by hundreds.
+//
+//	==== what this pass writes (the store side of gbuffer.h) ==============
+//
+//	gbuffer.h's `gbuffer_store*` family is a DIFFERENT, older generation and
+//	is dead for this pass: it packs a material id and an SH parameter into
+//	the normal target, and packs diffuse/specular POWERS into the position
+//	target.  Ship's gbuffer_pass writes none of that, and writes it inline -
+//	no store helper is called at all.  The three targets are:
+//	  SV_Target0.xy   normal.xy / sqrt(-8*normal.z + 8) + 0.5   (a Lambert
+//	                  azimuthal encode - the exact inverse of the decode in
+//	                  gbuffer.h's GBUFFER_NORMAL_PACKING_XYZ_MAT read path,
+//	                  which is already ship-proven by skylight.ps)
+//	  SV_Target0.z    ((translucency_bits << 7 & 896) + smoothness_bits)/1023
+//	  SV_Target0.w    (translucency_bits >> 3) / 3
+//	                  - so smoothness is 7 bits and translucency is 5, split
+//	                    3 bits into .z's high end and 2 bits into .w
+//	  SV_Target1.xyz  pow(abs(diffuse_color), 1/2.2)
+//	  SV_Target1.w    fresnel_bits / 255, where fresnel_bits is 7 bits of
+//	                  saturate(fresnel) with bit 7 set iff CONFIG_TRANSLUCENCY
+//	  SV_Target2      float4(1,0,0,0), or the OLTA transparency in .x
+//	No SV_Target3 exists here: the RT_EXTENTION_TARGET arm of gbuffer.h's
+//	g_struct is not what this pass emits.
+//
+//	==== headers the ship had that this tree does not =====================
+//
+//	* the loose `near_far_invn_invf` and `constant_parallax_scale` are
+//	  declared HERE, before common_cbuffers.h, because $Globals binds at
+//	  cbuffer slot 0 in the parallax permutations - ahead of
+//	  material_parameters and static_globals.  gbuffer.h declares
+//	  near_far_invn_invf itself, so including it would work but would put
+//	  $Globals in the wrong place unless included first.
+//	* the vertex_output_struct dispatch is local.  The recovered
+//	  vertex_input.h and the per-type *_vertex_input.h headers map
+//	  CONFIG_VERTEX_INPUT_TYPE differently from ship, and ship's gbuffer_pass
+//	  differs from the (also ship-proven) forward_base.ps in two families:
+//	  static at LOD 0 puts the tangent basis at TEXCOORD0..2 and a view-space
+//	  position at TEXCOORD4, and wires (13) carry a real tangent basis.
+//	* psf_normal.h's psf_tnormal_detailed is NOT what ship called: it ends in
+//	  a normalize that the shipped detail-normal permutations do not have.
+//	* psf_parallax.h's calculate_steepparalax IS ship's algorithm, constant
+//	  for constant, but it is inlined here rather than included because the
+//	  header's non-steep arm references an undeclared `parallax` uniform.
+////////////////////////////////////////////////////////////////////////////
+
+// The loose globals come *before* the header's cbuffers: the parallax
+// permutations bind $Globals at cbuffer slot 0, ahead of material_parameters
+// and static_globals, and a cbuffer's slot is its declaration index among the
+// used ones.
+uniform float4 near_far_invn_invf;
+uniform float constant_parallax_scale;
+
+#include "common_cbuffers.h"
+
+uniform sampler s_linear;
+uniform sampler s_anisotropic;
+uniform sampler s_base;
+uniform sampler s_detail;
+
+// Declaration order is ship order, recovered by topological sort of the
+// resource-binding tables of all 1,136 shipped permutations: a slot is the
+// declaration index among the *used* resources, so any pair that co-occurs
+// pins its own order.  t_translucency/t_transparency/t_vertex_blended_normal
+// and t_normal_waves never co-occur with their neighbours, so their relative
+// places are unconstrained by the blobs.
+Texture2D t_base;
+Texture2D t_detail;
+Texture2D t_normal;
+Texture2D t_normal_waves;
+Texture2D t_roughness;
+Texture2D t_fresnel;
+Texture2D t_height_map;
+Texture2D t_detail_normal;
+Texture2D t_diffuse_color_mask;
+Texture2D t_translucency;
+Texture2D t_transparency;
+Texture2D t_vertex_blended_normal;
+Texture2D t_vertex_blended_diffuse;
+Texture2D t_specular_intensity;
+
+////////////////////////////////////////////////////////////////////////////
+// vertex input types (ship numbering).  Every struct below reproduces a
+// shipped input signature exactly - semantic spelling, index and mask - and
+// the 1,136 blobs carry only twelve distinct signatures, so this dispatch is
+// complete.  CONFIG_LOD_INDEX changes the static layout (and only the static
+// one): at LOD 0 the tangent basis leads and a second float3 follows the
+// world position, at LOD 1 the position leads and that float3 is gone.
+
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2
+
+#if CONFIG_LOD_INDEX
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	tbn_x				: TEXCOORD1;
+	float3	tbn_y				: TEXCOORD2;
+	float3	tbn_z				: TEXCOORD3;
+	float2	tc					: TEXCOORD4;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float	occlusion			: TEXCOORD5;
+#endif
+};
+
+#else // CONFIG_LOD_INDEX
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif
+};
+
+#endif // CONFIG_LOD_INDEX
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	position			: TEXCOORD4;
+	float3	normal				: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3	tangent				: TEXCOORD2;
+	float3	binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4	homogeneous_position: SV_Position;
+	float4	patch_color			: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 14
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10 || CONFIG_VERTEX_INPUT_TYPE == 12
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////
+
+float3 read_normal_map( Texture2D _t_normal, sampler _sampler, float2 tc)
+{
+	float3 normal;
+	normal.xy	= _t_normal.Sample( _sampler, tc).wy * 2.f - 1.f;
+	normal.z	= sqrt( max( 1.0f - dot(normal.xy, normal.xy), 0.0f));
+	normal.y	= -normal.y;
+	return normalize( normal);
+}
+
+void	main(in vertex_output_struct input,
+			 out float4 out_normals_render_target		: SV_Target0,
+			 out float4 out_diffuse_render_target		: SV_Target1,
+			 out float4 out_emissive_render_target		: SV_Target2,
+			 in bool is_front_face 						: SV_IsFrontFace)
+{
+#if CONFIG_USE_FUZZINESS || CONFIG_PARALLAX
+	// postprocess (12) never fills a view-space position, so its fuzziness edge
+	// term folds to a NaN in the shipped blob - reproduced here, not repaired.
+#if (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6) || CONFIG_VERTEX_INPUT_TYPE == 11 || ((CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2) && !CONFIG_LOD_INDEX)
+	float3 view_position		= input.view_position;
+#elif CONFIG_VERTEX_INPUT_TYPE == 12
+	float3 view_position		= float3(0.0f, 0.0f, 0.0f);
+#else
+	float3 view_position		= mul( m_V, float4( input.position, 1.0f));
+#endif
+
+#endif
+
+	float3x3 tbn_matrix;
+
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2 || (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6) || CONFIG_VERTEX_INPUT_TYPE == 11 || CONFIG_VERTEX_INPUT_TYPE == 13
+	tbn_matrix					= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+	tbn_matrix					= mul( (float3x3)m_V, transpose( float3x3( input.tangent, input.binormal, input.normal)));
+#else
+	tbn_matrix[0]				= float3(1.0f, 0.0f, 0.0f);
+	tbn_matrix[1]				= float3(0.0f, 1.0f, 0.0f);
+	tbn_matrix[2]				= float3(0.0f, 0.0f, 1.0f);
+#endif
+
+	// Where the base normal comes from is a per-family table, byte-forced and
+	// not derivable from the tangent basis alone: wires (13) carry a real basis
+	// but leave the normal at the cleared default, and static-at-LOD-1 (1/2)
+	// and grassmesh (11) renormalize the basis' third column where the other
+	// basis-bearing families take it as interpolated.
+#if ((CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2) && CONFIG_LOD_INDEX) || CONFIG_VERTEX_INPUT_TYPE == 11
+	float3 normal				= normalize( mul( tbn_matrix, float3(0.0f, 0.0f, 1.0f)));
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2 || (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 8)
+	float3 normal				= mul( tbn_matrix, float3(0.0f, 0.0f, 1.0f));
+#else
+	float3 normal				= float3(0.0f, 0.0f, 1.0f);
+#endif
+
+	// for two-sided lighting
+	[branch]
+	if (!is_front_face)
+	{
+		tbn_matrix[0][2]		*= -1.0f;
+		tbn_matrix[1][2]		*= -1.0f;
+		tbn_matrix[2][2]		*= -1.0f;
+		normal					= -normal;
+	}
+
+	// decal (10) and postprocess (12) carry no tc and sample at the origin;
+	// null (0) has none either and reads the world position's xz instead.
+#if (CONFIG_VERTEX_INPUT_TYPE >= 1 && CONFIG_VERTEX_INPUT_TYPE <= 9) || CONFIG_VERTEX_INPUT_TYPE == 11 || CONFIG_VERTEX_INPUT_TYPE == 13 || CONFIG_VERTEX_INPUT_TYPE == 14
+	float2 tc					= input.tc;
+#elif CONFIG_VERTEX_INPUT_TYPE == 10 || CONFIG_VERTEX_INPUT_TYPE == 12
+	float2 tc					= float2(0.0f, 0.0f);
+#else
+	float2 tc					= input.position.xz;
+#endif
+
+	// Two scroll rates: .zw moves every tap, and .xy moves the normal tap again
+	// on top of that - so a scrolling material's bump slides against its colour.
+	if (CONFIG_USE_UV_SCROLLING)
+		tc						+= scene_time * uv_scrolling_parameters.zw;
+
+	float2 normal_tc			= tc;
+	if (CONFIG_USE_UV_SCROLLING)
+		normal_tc				= tc + scene_time * uv_scrolling_parameters.xy;
+
+#if CONFIG_PARALLAX
+	// GLOBAL_ALLOW_STEEPPARALLAX is set in every shipped permutation, so only
+	// the stepped path exists: 25 unrolled taps of t_height_map along the
+	// tangent-space eye vector, a two-tap intersection solve, and a smoothstep
+	// fade between 8 and 12 units of view depth.  It moves `tc` only - the
+	// normal tap keeps the coordinate snapshotted above.
+	if (view_position.z < 12.0f)
+	{
+		float3 parallax_eye		= mul( transpose( tbn_matrix), -view_position);
+		parallax_eye			= normalize( parallax_eye);
+
+		float parallax_step_size = 1.0f / lerp( 25.0f, 5.0f, parallax_eye.z);
+		float2 parallax_delta	= parallax_eye.xy * -0.013f * 1.2f;
+		float2 parallax_tc_step	= parallax_step_size * parallax_delta;
+
+		float2 parallax_tc		= tc;
+		float parallax_height	= 0.0f;
+		float parallax_bound	= 1.0f;
+
+		[unroll(25)]
+		for ( ; parallax_height < parallax_bound; parallax_bound -= parallax_step_size)
+		{
+			parallax_tc			+= parallax_tc_step;
+			parallax_height		= t_height_map.Sample( s_base, parallax_tc).x * constant_parallax_scale;
+		}
+
+		parallax_tc				-= parallax_tc_step;
+		float parallax_previous	= t_height_map.Sample( s_base, parallax_tc).x * constant_parallax_scale;
+
+		float parallax_delta2	= (parallax_bound + parallax_step_size) - parallax_previous;
+		float parallax_delta1	= parallax_bound - parallax_height;
+		float parallax_amount	= (parallax_bound * parallax_delta2 - (parallax_bound + parallax_step_size) * parallax_delta1) / (parallax_delta2 - parallax_delta1);
+		float parallax_fade		= smoothstep( 12.0f, 8.0f, view_position.z);
+
+		tc						+= parallax_delta * ((1.0f - parallax_amount) * parallax_fade);
+	}
+#endif
+
+	// CONFIG_USE_OLTA: the emissive target's x carries a transparency instead of
+	// the constant 1, and half-transparent pixels are stippled away on even
+	// scanlines - a one-bit order-independent transparency, resolved elsewhere.
+	float olta_transparency		= 1.0f;
+	if (CONFIG_USE_OLTA)
+	{
+		bool olta_even_scanline	= ((uint)input.homogeneous_position.y & 1) == 0;
+		olta_transparency		= t_transparency.Sample( s_linear, tc).w;
+
+		if (olta_even_scanline && (0.025f < olta_transparency && olta_transparency < 0.975f))
+			discard;
+	}
+
+	float4 diffuse_color		= float4( pow( abs( solid_color_specular.xyz), 2.2f), 1.f);
+
+	float diffuse_as_specular	= 1.0f;
+	if (CONFIG_USE_DIFFUSE_AS_SPECULAR)
+		diffuse_as_specular		= t_base.Sample( s_anisotropic, tc).x;
+
+	// CONFIG_VERTEX_BLENDED_DIFFUSE adds a second colour tap - sampled with
+	// s_base, not s_anisotropic - and mixes it over t_base.
+	// The blend weight is 1 minus a scalar only the static families carry: the
+	// colored-static (2) TEXCOORD7 scalar, and - byte-forced, and very likely a
+	// slip in the original - plain static (1) reads tc.x in its place.  Every
+	// other family blends at weight 1, i.e. takes the blend map whole, which is
+	// why t_base drops out of their RDEF entirely.  Only rgb is blended; the
+	// alpha the alpha test sees is the blend map's.
+	float vertex_blend_weight	= 1.0f;
+
+	float4 texture_diffuse_color = float4(1.0f, 1.0f, 1.0f, 1.0f);
+	if (CONFIG_TDIFFUSE)
+	{
+#if CONFIG_VERTEX_BLENDED_DIFFUSE
+		float3 base_diffuse		= t_base.Sample( s_anisotropic, tc).xyz;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+		vertex_blend_weight		= 1.0f - input.occlusion;
+#elif CONFIG_VERTEX_INPUT_TYPE == 1
+		vertex_blend_weight		= 1.0f - input.tc.x;
+#else
+		vertex_blend_weight		= 1.0f;
+#endif
+		texture_diffuse_color	= t_vertex_blended_diffuse.Sample( s_base, tc);
+		texture_diffuse_color.xyz = lerp( base_diffuse, texture_diffuse_color.xyz, vertex_blend_weight);
+#else
+		texture_diffuse_color	= t_base.Sample( s_anisotropic, tc);
+#endif
+	}
+
+	// CONFIG_USE_DIFFUSE_AS_SPECULAR scales the *solid* translucency by t_base's
+	// red - and CONFIG_TRANSLUCENCY overrides it outright, proven by the 28
+	// permutations that set both: there the translucency map alone survives.
+	// Translucency travels in linear space, like the diffuse colour: the solid
+	// parameter is raised to 2.2 here and to 1/2.2 at the packing, and with
+	// neither texture set fxc collapses the pair back to abs() - which is why
+	// the no-define permutations show a bare |specular_color_parameter.x|.
+	// CONFIG_TSPECULAR_COLOR modulates *this*, not a specular colour: the
+	// t_specular_intensity tap lands on the translucency channel.
+	float translucency_linear	= pow( abs( specular_color_parameter.x), 2.2f) * diffuse_as_specular;
+	if (CONFIG_TSPECULAR_COLOR)
+		translucency_linear		*= specular_intensity_ranges.x + specular_intensity_ranges.y * t_specular_intensity.Sample( s_base, tc).x;
+
+	diffuse_color				*= texture_diffuse_color;
+
+	// X-Ray's 2x detail overlay: twice the red channel, on its own coordinate.
+	// That coordinate is *not* derived from `tc` for every family - null (0),
+	// decal (10), postprocess (12) and user (14) leave it cleared even where
+	// they do carry a tc, so a detail texture on those samples a single texel.
+	// Provable for 0/1/10/12/13/14; the rest follow the families that carry one.
+	if (CONFIG_TDETAIL)
+#if (CONFIG_VERTEX_INPUT_TYPE >= 1 && CONFIG_VERTEX_INPUT_TYPE <= 9) || CONFIG_VERTEX_INPUT_TYPE == 11 || CONFIG_VERTEX_INPUT_TYPE == 13
+		diffuse_color.xyz		*= t_detail.Sample( s_detail, tc * ditail_texture_tile).x * 2.f;
+#else
+		diffuse_color.xyz		*= t_detail.Sample( s_detail, float2(0.0f, 0.0f)).x * 2.f;
+#endif
+
+	if (CONFIG_ALPHA_TEST)
+		clip( texture_diffuse_color.a - alpha_ref_parameter);
+
+	if (CONFIG_USE_DIFFUSE_MASKED_COLOR)
+	{
+		// CONFIG_USE_DIFFUSE_MASKED_COLOR_BY_HUE swaps the flat tint for a 3x3
+		// colour matrix built from the three loose hue_matrix_component_* rows.
+#if CONFIG_USE_DIFFUSE_MASKED_COLOR_BY_HUE
+		float3 masked_color		= mul( diffuse_color.xyz, float3x3( hue_matrix_component_x, hue_matrix_component_y, hue_matrix_component_z));
+#else
+		float3 masked_color		= diffuse_color.xyz * constant_diffuse_mask_color;
+#endif
+		diffuse_color.xyz		= lerp( diffuse_color.xyz, masked_color, t_diffuse_color_mask.Sample( s_linear, tc).x);
+	}
+
+	float roughness				= specular_fresnel_roughness_parameters.z;
+	if (CONFIG_TROUGHNESS)
+		roughness				= specular_fresnel_roughness_parameters.z + specular_fresnel_roughness_parameters.w * t_roughness.Sample( s_base, tc).x;
+
+	float fresnel				= specular_fresnel_roughness_parameters.x;
+	if (CONFIG_TFRESNEL)
+		fresnel					= specular_fresnel_roughness_parameters.x + specular_fresnel_roughness_parameters.y * t_fresnel.Sample( s_base, tc).x;
+
+#if CONFIG_USE_NORMAL_WAVES
+	// Three scrolled taps of one wave normal map, summed, renormalized and
+	// scaled.  normal_waves_parameters.x is the scroll rate, .z the tiling, .y
+	// the slope gain; the 1.25 and 1.5 are extra per-tap tiling.  The first two
+	// taps share one float4 of coordinate arithmetic, which is what puts the
+	// four scroll constants in a single literal.
+	float  normal_waves_time	= normal_waves_parameters.x * scene_time;
+	float4 normal_waves_tc_ab	= (tc.xyxy + normal_waves_time * float4( 0.5f, 0.7f, -0.8f, -0.2f)) * normal_waves_parameters.z;
+	float2 normal_waves_tc_c	= (tc + normal_waves_time * float2( -0.1f, 0.1f)) * normal_waves_parameters.z * 1.5f;
+
+	float3 normal_waves			= read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.xy)
+								+ read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.zw * 1.25f)
+								+ read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_c);
+
+	normal						= mul( tbn_matrix, normalize( normal_waves) * normal_waves_parameters.y);
+
+#elif CONFIG_TDETAIL_NORMAL
+	// CONFIG_TDETAIL_NORMAL only ever ships with CONFIG_TNORMAL, and it drops
+	// the normalize that follows mul( tbn_matrix, ...) in the plain case - the
+	// detail slope is added to the already-normalized tangent-space normal and
+	// the sum is rotated as it stands.  Its strength is (1 - roughness) squared,
+	// sharing the `1 - roughness` that smoothness is built from.
+	float2 detail_normal_slope	= (t_detail_normal.Sample( s_linear, tc * detail_normal_parameters.zw).wy * 2.f - 1.f) * detail_normal_parameters.xy;
+	float detail_normal_power	= (1.0f - roughness) * (1.0f - roughness);
+	float3 detail_normal		= detail_normal_power * float3( detail_normal_slope.x, -detail_normal_slope.y, 0.0f);
+
+	normal						= read_normal_map( t_normal, s_anisotropic, normal_tc);
+	normal						+= detail_normal;
+	normal						= mul( tbn_matrix, normal);
+
+#else
+	if (CONFIG_TNORMAL)
+	{
+		normal					= read_normal_map( t_normal, s_anisotropic, normal_tc);
+		normal					= mul( tbn_matrix, normal);
+		normal					= normalize( normal);
+	}
+#endif
+
+	// CONFIG_VERTEX_BLENDED_NORMAL is a second, independent tap blended over
+	// whatever the normal is by then: the t_normal map where CONFIG_TNORMAL is
+	// set, the interpolated normal where it is not.  At weight 1 - every family
+	// except static - the first tap drops out of the blob entirely, which is
+	// why it looks like a plain texture swap there.
+	if (CONFIG_VERTEX_BLENDED_NORMAL)
+	{
+		float3 blended_normal	= read_normal_map( t_vertex_blended_normal, s_anisotropic, normal_tc);
+		blended_normal			= mul( tbn_matrix, blended_normal);
+		blended_normal			= normalize( blended_normal);
+
+		normal					= lerp( normal, blended_normal, vertex_blend_weight);
+	}
+
+	// The translucency map is read here, after the normal, and overrides
+	// everything the solid path built - including the t_specular_intensity
+	// modulation above.  Reading it any earlier moves its sample ahead of the
+	// normal block and changes the schedule of 120 shipped permutations.
+	if (CONFIG_TRANSLUCENCY)
+		translucency_linear		= t_translucency.Sample( s_linear, tc).x;
+
+	float smoothness			= (1.0f - roughness) * smoothness_multiplier;
+
+	out_normals_render_target.xy = normal.xy / sqrt( -8.f * normal.z + 8.f) + 0.5f;
+
+	// Scale and cast in one statement each, then mask in two more: that shape -
+	// and not `(uint)(x*127) & 127` in one line, nor scaling both before either
+	// cast - is what reproduces the ship schedule, which groups the two `and`s
+	// after both `ftou`s and pairs the `ftou`s wherever the register pressure
+	// lets it.  Same for the shifts: both before either cast back.
+	uint smoothness_bits_raw	= (uint)(smoothness * 127.0f);
+	uint translucency_bits_raw	= (uint)(pow( abs( translucency_linear), 1.f/2.2f) * 31.0f);
+	uint smoothness_bits		= smoothness_bits_raw & 127;
+	uint translucency_bits		= translucency_bits_raw & 31;
+
+	uint packed_low				= (translucency_bits << 7 & 896) + smoothness_bits;
+	uint packed_high			= translucency_bits >> 3;
+
+	out_normals_render_target.z	= (float)packed_low / 1023.0f;
+	out_normals_render_target.w	= (float)packed_high / 3.0f;
+
+	uint fresnel_bits			= (uint)(saturate(fresnel) * 127.0f);
+	if (CONFIG_TRANSLUCENCY)
+		fresnel_bits			= 128 + fresnel_bits;
+
+#if CONFIG_USE_FUZZINESS
+	// A view-facing "fuzz" tint: the diffuse is pulled toward 0.5 by
+	// fuzziness_parameters.x and scaled by .y, then mixed in by an edge term
+	// raised to .z.  When .z <= 1 a second, time-varying arm takes over - a sine
+	// on scene_time * 3 with cubed per-channel gains - which is why
+	// static_globals shows up in the RDEF of every fuzziness permutation.
+	float fuzziness_edge		= 1.0f - saturate( dot( normalize( -view_position), normal));
+	float fuzziness_amount		= pow( fuzziness_edge * smoothness, fuzziness_parameters.z);
+	float3 fuzziness_color		= lerp( diffuse_color.xyz, 0.5f, fuzziness_parameters.x) * fuzziness_parameters.y;
+
+	if (1.0f >= fuzziness_parameters.z)
+	{
+		float fuzziness_wave	= sin( scene_time * 3.0f) * 0.5f + 0.5f;
+		float fuzziness_biased	= fuzziness_amount * fuzziness_wave + 0.17f;
+		fuzziness_wave			= fuzziness_wave * fuzziness_wave;
+		fuzziness_color			*= float3(3.375f, 1.157625f, 0.421875f);
+		fuzziness_amount		= fuzziness_wave * fuzziness_biased;
+	}
+
+	diffuse_color.xyz			= lerp( diffuse_color.xyz, fuzziness_color, fuzziness_amount);
+#endif
+
+	out_diffuse_render_target	= float4(
+		pow( abs( diffuse_color.xyz), 1.f/2.2f),
+		(float)fresnel_bits / 255.0f
+	);
+
+	out_emissive_render_target	= float4( olta_transparency, 0.0f, 0.0f, 0.0f);
+}

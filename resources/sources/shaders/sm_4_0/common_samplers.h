@@ -8,7 +8,10 @@ uniform sampler 	s_nofilter;		//	Use D3DTADDRESS_CLAMP,	D3DTEXF_POINT,			D3DTEXF
 uniform sampler 	s_rtlinear;		//	Use D3DTADDRESS_CLAMP,	D3DTEXF_LINEAR,			D3DTEXF_NONE,	D3DTEXF_LINEAR 
 uniform sampler 	s_linear;		//	Use	D3DTADDRESS_WRAP,	D3DTEXF_LINEAR,			D3DTEXF_LINEAR,	D3DTEXF_LINEAR
 
-uniform sampler 	s_border;
+// Ship name, byte-proven independently by forward_lighting.ps (600 blobs)
+// and terrain_gbuffer_pass.ps (30): the sampler between s_linear and s_base
+// is s_anisotropic; nothing in the tree ever sampled through "s_border".
+uniform sampler 	s_anisotropic;
 
 uniform sampler 	s_base;
 uniform sampler 	s_base_hud;

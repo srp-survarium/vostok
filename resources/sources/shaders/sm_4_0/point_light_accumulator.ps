@@ -3,330 +3,280 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 18.08.2026
+//	Ground truth	: the four shipped permutations of
+//					  shaders/sm_4_0/point_light_accumulator.ps, disassembled
+//					  with fxc /dumpbin /Fc.  What arrived with the drop is a
+//					  thirty-line shell over light_ps_helper.h and
+//					  point_light.h (old/point_light_accumulator.ps); the shell
+//					  is right and every header under it has drifted.  The
+//					  shell is reproduced; the drifted halves are spelled out
+//					  here and listed below.
+//	Acceptance		: python3 -m vostok.shaders roundtrip point_light_accumulator.ps
+//
+//	STATE: 4 of 4 permutations byte-identical.
+//
+//	This file is the family's reference: spot, obb, plane_spot and capsule
+//	carry the same core verbatim and differ only in how they pick the light's
+//	position and what they do after the point term.
+//
+//	Axis status:
+//
+//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
+//	                                  geometric term - the same shape
+//	                                  forward_lighting.ps carries.
+//	  CONFIG_SHADOWED_LIGHT (0, 1)    both identical.  1 adds the 16-tap
+//	                                  Poisson-disc comparison filter over
+//	                                  shadowmap_texture.
+//
+//	The $Globals layout is the include order and nothing else, so the three
+//	headers above are still included for it: gbuffer.h's near_far_invn_invf at
+//	0, colored_light.h at 16, light_ps_helper.h's two influence factors at 32,
+//	brdf.h's lighting_model at 40, spot_shadow.h's block at 48..120,
+//	point_light.h's is_shadower at 124, this file's s_eye_ray_corner at 128.
+//	What each header gets wrong, proven by these four blobs and not fixed in
+//	the header (no shared header is edited by this reconstruction):
+//
+//	  * spot_shadow.h - the comparison sampler is named s_shmap_local at ship,
+//	    not s_shmap: every CONFIG_SHADOWED_LIGHT=1 blob of this family binds
+//	    that name at sampler slot 4.  The rest of the header is ship-exact and
+//	    is used from it - light_to_texture_space, poisson_disk, the /16 and
+//	    the saturate(+ shadow_transparency), which fxc fuses into one mad_sat.
+//	  * gbuffer.h - the position read is `eye_ray*data.x`, a linear depth
+//	    (gbuffer_read_frame_depth's arm), not gbuffer_read_rt_position's
+//	    `data.xyz`; and gbuffer_read_material_parameters at ship takes the
+//	    gloss code out of t_normal.z through s_accumulator and the fresnel
+//	    code out of t_diffuse.w through s_diffuse, both 7-bit fields over 127.
+//	    The divisor is spelled /127.f: the blobs hold 0x3C010204, and the
+//	    literal 0.007874f is 0x3C0101F3 - a different number, and the one
+//	    thing that kept the first compile of this file 4 bytes away.
+//	  * light_ps_helper.h - get_light_accumulator at ship shares a single
+//	    convert_to_linear_space(light_color)*light_intensity between the two
+//	    targets, writes a constant 0 into w (no length() term, no
+//	    `diffuse < 0` test) and packs each float4 as
+//	    1.f/rsqrt(saturate(v*0.125f)); get_gbuffer_data divides the eye ray by
+//	    eye_ray_corner.z and sets its z to 1, and negates the decoded normal's
+//	    z the way skylight.ps and environment_probe_lighting.ps do.
+//	  * brdf.h - ship's brdf() is the isotropic Beckmann with a Schlick
+//	    fresnel that forward_lighting.ps's forward_brdf already holds, not the
+//	    tree's anisotropic szirmay_kalos_brdf: no t_tangents sample, no
+//	    clamp(., 0, 4), the diffuse gated by (fresnel > 0.99 ? 1 : 1-fresnel),
+//	    and the overflow guard spelled min(ndf, 4e11/fresnel) inside the
+//	    normalised distribution rather than around the finished specular.
+//	  * point_light.h - ship's point_light() applies the shadow plainly,
+//	    `result.diffuse *= shadow_factor.x`.  The
+//	    `result.diffuse >= 0.f ? shadow_factor.x : 1.f` the header carries is
+//	    real in spot/obb/plane_spot - dropping it there costs two instructions
+//	    in each shadowed blob - and adding it here costs two, so this one
+//	    function lost the test before ship.
+////////////////////////////////////////////////////////////////////////////
 
-/*
-	$DEFINES$:
-		GLOBAL_USE_LOOP_UNROLLING,
+/*	$DEFINES$:
+		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,
 */
 
+#include "common_functions.h"
 #include "light_ps_helper.h"
 #include "point_light.h"
 
-uniform float3 s_eye_ray_corner;
+uniform float3					s_eye_ray_corner;
 
+SamplerComparisonState			s_shmap_local;
 
-//light_factors szirmay_kalos_brdf2(
-//		float3 light_direction,
-//		float3 view_direction,
-//		float3 surface_normal,
-//		float surface_roughness,
-//		float2 texture_coordinates
-//	)
-//{
-//	light_factors				result;
-//
-//	// yellow satin
-//	//float f0										= 0.207;
-//	//float anisotropic_roughness_surface_factor_x	= 0.129;
-//	//float anisotropic_roughness_surface_factor_y	= 1.084;
-//	//float alpha_model_parameter					= 0.197;
-//
-//	// red velvet
-//	//float f0										= 0.041;
-//	//float anisotropic_roughness_surface_factor_x	= 2.487;
-//	//float anisotropic_roughness_surface_factor_y	= 2.487;
-//	//float alpha_model_parameter					= 0.000;
-//
-//	// brushed aluminium
-//	//float f0										= 0.999;
-//	//float anisotropic_roughness_surface_factor_x	= 0.035;
-//	//float anisotropic_roughness_surface_factor_y	= 0.129;
-//	//float alpha_model_parameter					= 0.005;
-//
-//	float4 material_parameters						= gbuffer_read_material_parameters(texture_coordinates);//t_emissive.Sample( s_accumulator, texture_coordinates );
-//	float f0										= saturate( material_parameters.x );
-//	float alpha_model_parameter					 	= material_parameters.y;
-//
-//	float isotropic_roughness_surface_factor		= max( surface_roughness/255, 0.01);
-//	float anisotropic_roughness_surface_factor_x	= isotropic_roughness_surface_factor;
-//	float anisotropic_roughness_surface_factor_y	= isotropic_roughness_surface_factor;
-//	
-//	// we use Schlicks approximation formula
-//	// where f0 - is cumulative zero degree material fresnel factor
-//	float3 halfway_direction	= normalize(light_direction + view_direction);
-//	float view_dot_halfway		= dot( view_direction, halfway_direction );
-//	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
-//	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
-//	
-//	float light_dot_normal		= dot( light_direction, surface_normal );
-//	float light_dot_normal_plus	= pow( max( light_dot_normal, 0.f ), 3 );
-//
-//	// Half Lambert
-//	//result.diffuse			= (light_dot_normal/2 + 0.5) * max(1.f - fresnel_factor, 0);
-//	result.diffuse				= light_dot_normal_plus;// * ( 1.f - fresnel_factor );
-//
-//	// compute normalized distribution functions
-//	// Beckmann distribution function in case of isotropic materials
-//	float cosine_theta			= dot( surface_normal, halfway_direction );
-//	float square_cosine_theta	= square( cosine_theta );
-//	float square_sine_theta		= 1.f - square_cosine_theta;
-//	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
-//
-//	float2 packed_tangent		= 2*(material_parameters.ba - 0.5);
-//	float3 surface_tangent		=
-//		normalize(
-//			surface_normal.x != 0.f ?
-//			float3( -dot( packed_tangent.xy, surface_normal.yz )/surface_normal.x, packed_tangent.xy ) :
-//			(
-//				surface_normal.y != 0.f ?
-//				float3( packed_tangent.x, -dot( packed_tangent.xy, surface_normal.xz )/surface_normal.y, packed_tangent.y ) :
-//				float3( packed_tangent.xy, -dot( packed_tangent.xy, surface_normal.xy )/surface_normal.z )
-//			)
-//		);
-//	float3 surface_bitangent	= normalize( cross(surface_normal, surface_tangent) );
-//	float square_cosine_phi		= saturate( square( dot( normalize( surface_tangent*dot( surface_tangent, halfway_direction ) + surface_bitangent*dot( surface_bitangent, halfway_direction ) ), surface_bitangent ) ) );
-//	float square_sine_phi		= 1.f - square_cosine_phi;
-//
-//	float distribution_function	=
-//		exp(
-//			-square_tangent_theta
-//			*(
-//				square_cosine_phi / square( anisotropic_roughness_surface_factor_x )
-//				+
-//				square_sine_phi / square( anisotropic_roughness_surface_factor_y )
-//			)
-//		);
-////	float distribution_function	= exp( -square_tangent_theta / square( isotropic_roughness_surface_factor ) );
-//
-//	float normalized_distribution_function	=
-//		distribution_function/
-//		(
-//			anisotropic_roughness_surface_factor_x * anisotropic_roughness_surface_factor_y * square(square_cosine_theta)
-//		);
-//
-//	result.specular					=
-//		light_dot_normal > 0.f
-//		?
-//			fresnel_factor * normalized_distribution_function /
-//			(
-//				4.f * view_dot_halfway_plus *
-//				pow(
-//					ABS_TO_REMOVE_WARNING(
-//						light_dot_normal *
-//						dot(view_direction, surface_normal)
-//					),
-//					alpha_model_parameter
-//				)
-//			)
-//		:
-//			0.f;
-//
-//	return						result;
-//}
+float4 pack_light_accumulator	( float4 value )
+{
+	return	1.f/rsqrt( saturate( value*0.125f ) );
+}
 
-// pure Szirmay-Kalos BRDF
-// http://66.147.242.191/~westmand/siggraph/computer-graphics/Anisotropic_BRDF_Model_SIGGRAPH_Computer-Graphics_vol-44_num-1_2010.pdf
-light_factors szirmay_kalos_brdf2(
+light_accumulator make_light_accumulator	( float3 color, light_factors factors )
+{
+	light_accumulator	result;
+
+	float3 light			= convert_to_linear_space( color )*light_intensity;
+
+	result.diffuse			= pack_light_accumulator( float4( light*max( factors.diffuse, 0.f )*light_diffuse_influence_factor, 0.f ) );
+	result.specular			= pack_light_accumulator( float4( light*max( factors.specular, 0.f )*light_specular_influence_factor, 0.f ) );
+
+	return					result;
+}
+
+float4 sample_local_shadow_map	( float2 shadow_tc, float depth )
+{
+	float4 shadow_result	= float4( 0.0f, 0.0f, 0.0f, 0.0f );
+
+	[unroll]
+	for ( int i = 0; i < 16; i++ ) {
+		float2 tc			= shadow_tc.xy + poisson_disk[i]/shadow_map_size;
+		shadow_result		+= shadowmap_texture.SampleCmpLevelZero( s_shmap_local, tc.xy, depth ).rrrr;
+	}
+	shadow_result			/= 16.0f;
+
+	return					shadow_result;
+}
+
+float4 local_light_shadow_factor	( float3 view_space_position, float3x4 view_to_world_matrix )
+{
+#if CONFIG_SHADOWED_LIGHT
+	float4 world_space_position	= float4( mul( view_to_world_matrix, float4( view_space_position, 1.0f ) ), 1.0f );
+	float4 projection_position	= mul( view_to_light_matrix, world_space_position );
+	float4 shadow_tc			= light_to_texture_space( projection_position/projection_position.w, shadow_z_bias );
+
+	return					saturate( sample_local_shadow_map( shadow_tc, shadow_tc.z ) + shadow_transparency );
+#else // #if CONFIG_SHADOWED_LIGHT
+	return					float4( 1.0f, 1.0f, 1.0f, 1.0f );
+#endif // #if CONFIG_SHADOWED_LIGHT
+}
+
+////////////////////////////////////////////////////////////////////////////
+//	the deferred BRDF: isotropic Beckmann, Schlick fresnel - the same shapes
+//	forward_lighting.ps's forward_brdf holds, fed from the g-buffer instead of
+//	the material cbuffer.
+////////////////////////////////////////////////////////////////////////////
+
+light_factors accumulator_brdf	(
 		float3 light_direction,
 		float3 view_direction,
 		float3 surface_normal,
 		float2 surface_roughness,
-		float2 texture_coordinates,
-		float4 material_parameters
+		float fresnel_at_0_degree
 	)
 {
 	light_factors				result;
 
-	// yellow satin
-	//float f0										= 0.207;
-	//float anisotropic_roughness_surface_factor_x	= 0.129;
-	//float anisotropic_roughness_surface_factor_y	= 1.084;
-	//float alpha_model_parameter					= 0.197;
+	float f0					= fresnel_at_0_degree;
+	float specular_power		= 255.f*(1.f - surface_roughness.x);
+	float roughness				= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
 
-	// red velvet
-	//float f0										= 0.041;
-	//float anisotropic_roughness_surface_factor_x	= 2.487;
-	//float anisotropic_roughness_surface_factor_y	= 2.487;
-	//float alpha_model_parameter					= 0.000;
-
-	// brushed aluminium
-	//float f0										= 0.999;
-	//float anisotropic_roughness_surface_factor_x	= 0.035;
-	//float anisotropic_roughness_surface_factor_y	= 0.129;
-	//float alpha_model_parameter					= 0.005;
-
-	//float4 material_parameters					= t_emissive.Sample( s_accumulator, texture_coordinates );
-	float f0										= material_parameters.x;//saturate( 0.5 * pow(material_parameters.x, 2) );
-	float alpha_model_parameter					 	= material_parameters.y;
-	
-	float2 isotropic_roughness_surface_factor		= max(surface_roughness, (0.01f).xx);
-	float anisotropic_roughness_surface_factor_x	= isotropic_roughness_surface_factor.x;
-	float anisotropic_roughness_surface_factor_y	= isotropic_roughness_surface_factor.y;
-	
-	// we use Schlicks approximation formula
-	// where f0 - is cumulative zero degree material fresnel factor
-	float3 halfway_direction	= normalize(light_direction + view_direction);
+	float3 halfway_direction	= normalize( light_direction + view_direction );
 	float view_dot_halfway		= dot( view_direction, halfway_direction );
 	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
 	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
-	
-	float light_dot_normal		= dot( light_direction, surface_normal );
-	float light_dot_normal_plus	= pow( max( light_dot_normal, 0.f ), 1 );
-	
-	// Half Lambert
-	//result.diffuse			= (light_dot_normal/2 + 0.5) * max(1.f - fresnel_factor, 0);
-	result.diffuse				= light_dot_normal_plus * ( 1.f - fresnel_factor );
-	
-	// compute normalized distribution functions
-	// Beckmann distribution function in case of isotropic materials
+
+	float view_dot_normal		= dot( surface_normal, view_direction );
+	float light_dot_normal		= saturate( dot( light_direction, surface_normal ) );
+
+	result.diffuse				= light_dot_normal*(fresnel_factor > 0.99f ? 1.f : 1.f - fresnel_factor);
+
 	float cosine_theta			= dot( surface_normal, halfway_direction );
 	float square_cosine_theta	= square( cosine_theta );
 	float square_sine_theta		= 1.f - square_cosine_theta;
 	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
-	
-	float3 surface_tangent		= t_tangents.Sample(s_accumulator, texture_coordinates).xyz * 2.0f - 1.0f;
-	float3 half_projection		= normalize(halfway_direction - surface_normal * dot(surface_normal, halfway_direction));
-	float square_cosine_phi		= saturate(square( dot(half_projection, surface_tangent) ));
-	float square_sine_phi		= 1.0f - square_cosine_phi;
-	
-	float distribution_function	=
-		 exp(
-			 -square_tangent_theta
-			 *(
-				 square_cosine_phi / square( anisotropic_roughness_surface_factor_x )
-				 +
-				 square_sine_phi / square( anisotropic_roughness_surface_factor_y )
-			 )
-		 );
-	//float distribution_function	= exp( -square_tangent_theta / square( isotropic_roughness_surface_factor ) );
-	
+
+#if GLOBAL_SHADING_QUALITY >= 3
+	float view_attenuation		= 2.f*saturate( cosine_theta*view_dot_normal/view_dot_halfway );
+	float light_attenuation		= 2.f*saturate( cosine_theta*light_dot_normal/view_dot_halfway );
+	float geometric_attenuation	= min( min( view_attenuation, light_attenuation ), 1.f );
+#else // #if GLOBAL_SHADING_QUALITY >= 3
+	float geometric_attenuation	= 1.f;
+#endif // #if GLOBAL_SHADING_QUALITY >= 3
+
+	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
 	float normalized_distribution_function	=
-		distribution_function /
-		(
-			pi * anisotropic_roughness_surface_factor_x * anisotropic_roughness_surface_factor_y * square(square_cosine_theta)
+		min(
+			distribution_function/
+			(
+				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+			),
+			400000000000.f/fresnel_factor
 		);
-	
-	result.specular					=
+
+	result.specular				=
 		light_dot_normal > 0.f
 		?
-			light_dot_normal_plus * fresnel_factor * normalized_distribution_function /
-			(
-				4.f * view_dot_halfway_plus *
-				pow(
-					ABS_TO_REMOVE_WARNING(
-						light_dot_normal *
-						dot(view_direction, surface_normal)
-					),
-					alpha_model_parameter
-				)
-			)
+			light_dot_normal*fresnel_factor*geometric_attenuation*
+			normalized_distribution_function/
+			(4.f*max( view_dot_halfway, 0.00001f ))
 		:
 			0.f;
-	result.specular				= clamp(result.specular, 0.0f, 4.0f);
-	
+
+	result.diffuse				= max( result.diffuse, 0.f );
+
 	return						result;
 }
 
-light_factors brdf2				(
-		float3 light_direction,
-		float3 view_direction,
-		float3 surface_normal,
-		float2 specular_roughness,
-		float2 texture_coordinates,
-		float4 material_parameters
-	)
+////////////////////////////////////////////////////////////////////////////
+//	the g-buffer reads: linear depth off t_position, the Lambert-azimuthal
+//	normal off t_normal, the surface's gloss code out of the normal target's
+//	.z through s_accumulator and its specular-intensity code out of the
+//	diffuse target's .w through s_diffuse - both 7-bit fields over 127.
+////////////////////////////////////////////////////////////////////////////
+
+g_data accumulator_gbuffer_data	( float3 texture_coordinates, float3 eye_ray_corner )
 {
-	light_factors result;
+	float2 tc_proj				= texture_coordinates.xy/texture_coordinates.z;
 
-//	specular_power				= max( specular_power, .02f );
-	
-	//switch ( lighting_model ) {
-	//	case 0 : {
-	//		result				= phong_brdf( light_direction, view_direction, surface_normal, specular_power );
-	//		break;
-	//	}
-	//	case 1 : {
-	//		result				= blinn_phong_brdf( light_direction, view_direction, surface_normal, specular_power );
-	//		break;
-	//	}
-	//	case 2 : {
-	//		result				= hoffman_brdf( light_direction, view_direction, surface_normal, specular_power, texture_coordinates, material_parameters );
-	//		break;
-	//	}
-	//	case 3 : {
- //   		result				= szirmay_kalos_brdf2( light_direction, view_direction, surface_normal, specular_power, texture_coordinates );
- //   		break;
-	//	}
-	//}
+	float3 eye_ray;
+	eye_ray.xy					= eye_ray_corner.xy*( 1 - tc_proj.xy*2 )/eye_ray_corner.z;
+	eye_ray.z					= 1;
 
-  	result						= szirmay_kalos_brdf2( light_direction, view_direction, surface_normal, material_parameters.zw, texture_coordinates, material_parameters );
-	//result.diffuse				= abs( result.diffuse );
-	//result.specular				= abs( result.specular );
+	g_data						data;
 
-	return						result;
+	data.position				= eye_ray*gbuffer_read_frame_depth( tc_proj );
+	data.normal					= gbuffer_read_frame_normal( tc_proj );
+	data.normal.z				= -data.normal.z;
+
+	data.diffuse				= 0.f;
+	data.mat_id					= 0.f;
+	data.specular_intensity		= 0.f;
+	data.specular_power			= 0.f;
+	data.diffuse_power			= 0.f;
+	data.sh_param				= 0.f;
+
+	return						data;
 }
 
-light_factors point_light_impl2	(
+light_factors accumulator_point_light_impl	(
 		float3 surface_position,
 		float3 surface_normal,
 		float3 light_position,
-		float light_range,
 		float2 surface_roughness,
-		float translucency,
-		float diffuse_power,
-		float2 texture_coordinates,
-		float4 material_parameters
+		float fresnel_at_0_degree
 	)
 {
 	light_factors				result;
-	
+
 	float3 light_direction		= light_position - surface_position;
-	
-	// distance from surface to light
-	float square_distance		= squared_length( light_direction );
+	float square_distance		= dot( light_direction, light_direction );
 	float distance				= sqrt( square_distance );
 	light_direction				/= distance;
 
-	float3 eye_view_space		= mul(m_V, float4(eye_position.xyz, 1)).xyz;
-	float3 view_direction		= normalize( eye_view_space - surface_position );
-	
-	result						= brdf2( light_direction, view_direction, surface_normal, surface_roughness, texture_coordinates, material_parameters );
+	float3 view_direction		= normalize( -surface_position );
 
-	// physical attenuation
-	//float attenuation_helper	= square_distance + 1.f;//dot( float3(1.f, 0.f, 1.f), float3(square_distance, distance, 1.f ) );
-	//float attenuation			= attenuation_helper > 0.f ? 1.f/attenuation_helper : 1.f;
-	//attenuation				= (distance > light_range) ? 0.f : attenuation;
+	result						= accumulator_brdf( light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
 
-	// radial_attenuation
-	float attenuation			= pow( 1.f - saturate( square_distance/square(light_range) ), light_attenuation_power );
-	
+	float attenuation			= pow(
+		max( abs(1.f - saturate( square_distance/square(light_range) )), 0.001f ),
+		light_attenuation_power
+	);
+
 	result.diffuse				*= attenuation;
 	result.specular				*= attenuation;
 
 	return						result;
 }
 
-light_factors point_light2		( g_data surface, float2 texture_coordinates )
+light_factors accumulator_point_light	( g_data surface, float2 texture_coordinates )
 {
-	float4 material_parameters	= gbuffer_read_material_parameters(texture_coordinates);
+	float4 diffuse_target		= t_diffuse.SampleLevel( s_diffuse, texture_coordinates, 0 );
+	float4 normal_target		= t_normal.SampleLevel( s_accumulator, texture_coordinates, 0 );
 
-	light_factors result		= 
-		point_light_impl(
+	float gloss					= (float)( ( (uint)( normal_target.z*1023.f ) ) & 127 );
+	float specular_intensity	= (float)( ( (uint)( diffuse_target.w*255.f ) ) & 127 );
+
+	light_factors result		=
+		accumulator_point_light_impl(
 			surface.position,
 			surface.normal,
 			light_position,
-			light_range,
-			material_parameters.zw,
-			surface.sh_param,	// translucency
-			surface.diffuse_power,
-			texture_coordinates,
-			material_parameters
+			gloss/127.f,
+			specular_intensity/127.f
 		);
-	
-	float4 shadow_factor 		= get_pointlight_shadow_factor( surface.position.xyz, m_V2W );
-	result.diffuse 				*= shadow_factor.x;
-	result.specular 			*= shadow_factor.x;
+
+	float3 offset				= surface.normal*12.0f/shadow_map_size;
+	float4 shadow_factor		= local_light_shadow_factor( surface.position.xyz + offset, m_V2W );
+	result.diffuse				*= shadow_factor.x;
+	result.specular				*= shadow_factor.x;
 
 	return						result;
 }
@@ -334,147 +284,14 @@ light_factors point_light2		( g_data surface, float2 texture_coordinates )
 light_accumulator main			( pixel_shader_input input ) : SV_TARGET
 {
 	return
-		get_light_accumulator(
+		make_light_accumulator(
 			light_color,
-			point_light(
-				get_gbuffer_data(
+			accumulator_point_light(
+				accumulator_gbuffer_data(
 					input.texture_coordinates.xyw,
 					s_eye_ray_corner
 				),
-				input.texture_coordinates.xy / input.texture_coordinates.w
+				input.texture_coordinates.xy/input.texture_coordinates.w
 			)
 		);
-	
-#if 0
-#if CONFIG_SHADOWED_LIGHT
-	static const float shadow_map_size = 1024.0f;
-	static const float correct 		   = 2.0f / shadow_map_size;
-	static const float2 kernel_offset_4[4] = 
-	{
-		float2( 0.0f,  0.0f),
-		float2( 1.0f,  0.0f),
-		float2( 0.0f,  1.0f),
-		float2( 1.0f,  1.0f)
-	};
-	
-	float4 P4 		= float4(mul(m_V2W, float4(data.position.xyz, 1.0f)), 1.0f);
-	float4 shd_pos 	= mul(view_to_light_matrix, P4);
-	float4 shd_tc   = shd_pos / shd_pos.w;
-	shd_tc 			= light_to_texture_space(shd_tc, 0.0001f);
-	
-	float accum_shadow = 0.0;
-	
-	UNROLL
-	for (int i=0; i<4; i++)
-	{
-		float2 tc 		= shd_tc.xy + kernel_offset_4[i] / shadow_map_size;
-		tc 				= correct + tc * (1.0f - correct * 2.0f);
-		accum_shadow 	+= t_shmap.SampleCmpLevelZero(s_shmap, tc.xy, shd_tc.z).r;
-	}
-	accum_shadow /= 4.0f;
-	
-	output.diffuse  *= accum_shadow;
-	output.specular *= accum_shadow;
-#endif // #if CONFIG_SHADOWED_LIGHT
-	return output;
-#endif // #if 0
 }
-
-
-
-
-
-
-
-#if 0	
-	float3 n = -normalize(mul(m_V2W, data.normal));
-	
-	float3 l_pos = mul(m_V2W, float4(light_position, 1.0f));
-	
-	float3 to_light_vec 		 = (l_pos - mul(m_V2W, float4(data.position, 1.0f)));
-	
-	float4 in_shadow = 0;
-	
-	static const float3 random_vectors[8] = 
-	{
-		float3(-0.14, 1.0, -0.28),
-		float3(0.4, 0.1, -0.8),
-		float3(1.7, -0.5, 0.8),
-		float3(1.0, 0.0, 1.74),
-		float3(0.711, -1.0, -1.0),
-		float3(1.41, 0.5, 2.0),
-		float3(-0.9, -1.4, 0.86),	
-		float3(-0.71, 0.8, 0.20),
-	};
-	
-	UNROLL
-	for (int i=0; i<8; i++)
-	{
-		float3 t_light = to_light_vec + random_vectors[i] / 64.0f;
-		
-		float shadow_depth			 = shadow_cubemap_texture.Sample(s_base, -normalize(t_light)).r;
-		if (length(t_light) > shadow_depth+0.1)
-			in_shadow += 1.0f;
-	}
-	in_shadow /= 8.0f;
-	
-	output.diffuse	*= 1.0f - in_shadow;
-	output.specular	*= 1.0f - in_shadow;
-
-	static const float2 offset_vectors[8] = 
-	{
-		float2( 1.0f,  1.0f),
-		float2( 1.0f,  0.0f),
-		float2( 1.0f, -1.0f),
-		float2( 0.0f,  1.0f),
-		float2( 0.0f, -1.0f), 
-		float2(-1.0f,  1.0f),
-		float2(-1.0f,  0.0f),
-		float2(-1.0f, -1.0f)
-	};
-	static const float2 offset_4[4] = 
-	{
-		float2( 0.0f,  0.0f),
-		float2( 1.0f,  0.0f),
-		float2( 0.0f,  1.0f),
-		float2( 1.0f,  1.0f)
-	};	
-	static const float shd_map_size = 0.5*1024.0f;
-	
-	float dist = length(to_light_vec);
-	
-	float2 size = 1.0f / float2(shd_map_size, shd_map_size);
-	
-	float2 lookup_tc = lookup_vcm_texture.SampleLevel(s_material1, -normalize(to_light_vec) * 0.001f, 0).rg;
-	lookup_tc = clamp(lookup_tc, float2(0.0f, 0.0f), float2(0.99f, 0.99f));
-	
-	float2 sample_step = frac(lookup_tc * float2(shd_map_size, shd_map_size));
-	
-	
-	float shd = 0.1f*vcm_texture.SampleLevel(s_material1, lookup_tc, 0).r;
-	
-	float4 d2x2[4];
-	
-	UNROLL
-	for(int i=0; i<4; i++)	
-	{
-		d2x2[i] = vcm_texture.SampleLevel(s_material1, lookup_tc + offset_4[i] * size, 0).r;
-		d2x2[i] = d2x2[i] + 0.1f < dist ? 0.0f : 1.0f;
-	}
-	
-	float4 lerp1, lerp2;
-	lerp1.xy = lerp(d2x2[0].xy, d2x2[0].wz, sample_step.y);
-	lerp1.wz = lerp(d2x2[1].xy, d2x2[1].wz, sample_step.y);
-	lerp2.xy = lerp(d2x2[2].xy, d2x2[2].wz, sample_step.y);
-	lerp2.wz = lerp(d2x2[3].xy, d2x2[3].wz, sample_step.y);
-	
-	float4 lerp9;
-	lerp9.x = lerp(lerp1.x, lerp1.y, sample_step.x);
-	lerp9.y = lerp(lerp1.w, lerp1.z, sample_step.x);
-	lerp9.z = lerp(lerp2.x, lerp2.y, sample_step.x);
-	lerp9.w = lerp(lerp2.w, lerp2.z, sample_step.x);
-	float sh = dot(lerp9, 0.25f);
-	
-	output.diffuse	= float4(lookup_tc,0,0);
-	output.specular	*= 0*shd;
-#endif // if 0

@@ -1,0 +1,13 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	hiz_depth_texture;
+
+float4 main( float4 hpos : SV_POSITION, float2 tc : TEXCOORD0 ) : SV_TARGET
+{
+	return	hiz_depth_texture.Load( uint3( uint2( hpos.xy ), 0 ) );
+}

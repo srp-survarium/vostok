@@ -1,0 +1,269 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 25.02.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/fill_reflective_shadow_map_backed.ps, all 15
+//	permutations) - absent from the recovered source drop.
+//
+//	The reflective shadow map's *radiance* fill, the sibling of
+//	fill_reflective_shadow_map_position.ps (which writes only the world
+//	position, and which this file's struct dispatch agrees with family for
+//	family).  Three targets:
+//	  SV_Target0.xyz  convert_to_linear_space( light_color) * albedo *
+//	                  light_intensity - "backed" (baked) because the albedo
+//	                  is the interpolated vertex colour, never a texture:
+//	                  no sampler and no texture appears in any of the 15
+//	                  RDEFs, and only the LPV static input carries a colour
+//	                  at all, so every other family emits albedo 1
+//	  SV_Target1.xyz  normalize( normal)
+//	  SV_Target2.xyz  world position
+//	all three with .w = 0.
+//
+//	==== axis status ======================================================
+//
+//	CONFIG_VERTEX_INPUT_TYPE is the only live axis - 0,1,2,3,4,5,6,7,8,9,10,
+//	11,12,13,14 all ship (this is the one depth-family shader that does ship
+//	type 12), CONFIG_USE_SUBUV=1 only alongside type 8, and the other five
+//	defines in the permutation strings are 0 throughout.
+//	Byte-proven: 15 identical, 0 differ.
+//
+//	==== the per-family normal and albedo table ===========================
+//
+//	Byte-forced by which interpolants each blob reads:
+//	  static (1/2)     static_mesh_vertex_input_lpv.h - a THIRD static
+//	                   layout, distinct from the shadow one depth_accumulate
+//	                   uses and from the material one gbuffer_pass uses:
+//	                   position, normal and colour, and nothing else.  The
+//	                   only family with an albedo.
+//	  skeleton (3..6)  normal = float3( tbn_x.z, tbn_y.z, tbn_z.z), world
+//	                   position at TEXCOORD5 (not TEXCOORD4 - the recovered
+//	                   fill_reflective_shadow_map_position.ps has it at 4 and
+//	                   DIFFs on all four skeleton permutations because of it)
+//	  particle (7/8)   normal = mul( (float3x3)m_V, input.normal) - the only
+//	                   family that touches static_globals
+//	  grassmesh (11)   normal from the tangent basis' third column like the
+//	                   skeletons, world position at TEXCOORD6, and its COLOR
+//	                   interpolant is NOT an albedo - the blob never reads it
+//	  everything else  normal stays at clear_material_parameters' (0,0,1);
+//	                   wires (13) carry a real tangent basis and still do
+//	  postprocess (12) has no world position either, and writes zero
+//
+//	==== self-contained on purpose ========================================
+//
+//	The shipped dependency lists name material.h / vertex_input.h /
+//	static_mesh_vertex_input_lpv.h / light_ps_helper.h / gbuffer.h revisions
+//	this tree does not have, so the structs and the four loose-global blocks
+//	are declared here.  $Globals' member order is byte-proven by the offsets:
+//	the vertex input's own globals, then gbuffer.h's near_far_invn_invf
+//	(unused in every permutation and still present), then colored_light.h's
+//	light_color / light_intensity, then light_ps_helper.h's two influence
+//	factors.
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_SUBUV,
+*/
+
+#if CONFIG_VERTEX_INPUT_TYPE == 0		// null mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh, lpv
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: TEXCOORD1;
+	float3	color				: TEXCOORD2;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		(input).normal
+#define material_color(input)		(input).color
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh, 4/3/2/1 bones
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	prev_position		: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3((input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
+
+// particle_vertex_input.h's loose globals lead $Globals in these two.
+float3	up_view_vector;
+float3	right_view_vector;
+
+float	use_align_by_dir;
+float3	view_location;
+
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+
+float	locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		mul((float3x3)m_V, (input).normal)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10	// decal
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
+
+// grassmesh_vertex_input.h's one loose global, ahead of near_far_invn_invf.
+float4	patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	params				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3((input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 12	// post process
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	float3(0.f, 0.f, 0.f)
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_color(input)		float3(1.f, 1.f, 1.f)
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+// gbuffer.h, then colored_light.h, then light_ps_helper.h's own two - the
+// offsets in $Globals are the proof of this order, and all of them but
+// light_color and light_intensity are dead here.
+uniform float4	near_far_invn_invf;
+
+uniform float3	light_color;
+uniform float	light_intensity;
+
+uniform float	light_diffuse_influence_factor;
+uniform float	light_specular_influence_factor;
+
+// Ship static_globals layout (byte-proven repo-wide); only the particle
+// families reference it, and fxc drops an entirely unreferenced cbuffer.
+cbuffer	static_globals
+{
+	uniform float4x4	m_P;
+	uniform float4x4	m_VP;
+	uniform float3x4	m_V;
+	uniform float3x4	m_V2W;
+	uniform float4		fog_params;
+	uniform float3		eye_position;
+	uniform float3		eye_position_view_space;
+	uniform float3		eye_direction;
+	uniform float		scene_time;
+	uniform float4		screen_res;
+}
+
+static const float	gamma_value	= 2.2f;
+
+float3 convert_to_linear_space( in float3 color )
+{
+	return	pow( abs(color), gamma_value );
+}
+
+void	main(in vertex_output_struct input,
+			 out float4 out_light_render_target		: SV_Target0,
+			 out float4 out_normal_render_target	: SV_Target1,
+			 out float4 out_position_render_target	: SV_Target2)
+{
+	out_light_render_target		= float4( convert_to_linear_space( light_color) * material_color(input) * light_intensity, 0.f);
+	out_normal_render_target	= float4( normalize( material_normal(input)), 0.f);
+	out_position_render_target	= float4( material_position(input), 0.f);
+}

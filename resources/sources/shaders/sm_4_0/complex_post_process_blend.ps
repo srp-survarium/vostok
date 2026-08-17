@@ -3,19 +3,72 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstruction note (2026-08-17): rewritten from the 12 shipped blobs'
+//	disassembly. The tree revision this replaces was an older generation of
+//	the same shader: it ended on `GLOBAL_TEST_FLOAT * frame_color`, a define
+//	no shipped permutation sets (the file could not be compiled at all), and
+//	it knew nothing of GLOBAL_POST_PROCESS_QUALITY, CONFIG_USE_IMAGE_GRAIN or
+//	GLOBAL_USE_GOD_RAYS, which the shipped permutation strings do name. What
+//	ship does instead, read off the blobs:
+//
+//	* the Reinhard tone mapper is gone; ship runs a filmic ALU curve whose
+//	  five coefficients are packed into filmic_tonemap_packed_parameters_0/1
+//	  and whose exposure is pow(0.25f/clamp(avg_luminance,0.09f,0.4f),0.2f);
+//	* the frame is bloom + scene + lens flares, with the DOF blend, the
+//	  low-luminance desaturation, the grain, the colour-grading LUT and the
+//	  vignette all gated on GLOBAL_POST_PROCESS_QUALITY - at quality 0 the
+//	  shader neither reads the depth buffer nor grades, and all six of its
+//	  permutations compile to the same 26-instruction blob;
+//	* the DOF blend divides the *whole* weighted sum, and dof_height_lights
+//	  no longer tints the blurred sample (it is [unused] in every blob);
+//	* GLOBAL_USE_GOD_RAYS is 0 in all twelve shipped permutations, so the
+//	  scattered_color path the old revision carried is unconstrained by any
+//	  blob and is not reproduced here; god_rays_parameters0/1 are declared
+//	  because $Globals lists them at offsets 208 and 224.
+//
+//	The $Globals order is load-bearing and matches the shipped RDEF exactly:
+//	near_far_invn_invf(0) from gbuffer.h, the three dof_functions.h uniforms
+//	(16/32/48), light_ps_helper.h's four (64/76/80/84), then this file's own
+//	from 96 on. Include order follows the blob dependency table: common.h,
+//	gbuffer.h, gamma_correction.h, dof_functions.h, light_ps_helper.h,
+//	log_luv_color_space.h, luminance.h, debug.h.
+//
+//	HEADER FINDING - dof_functions.h has drifted, and this file cannot reach
+//	byte-identity on its six GLOBAL_POST_PROCESS_QUALITY=3 permutations until
+//	it is corrected. get_blurriness currently reads
+//
+//		min( (in_depth-focus_distance) >= 0.0f ? blur_amount_far : blur_amount_near,
+//		     pow( saturate(abs(in_depth-focus_distance) / focus_region), focus_power ) )
+//
+//	and ship needs
+//
+//		min( (in_depth-focus_distance) < 0.0f ? blur_amount_near : blur_amount_far,
+//		     saturate(abs(in_depth-focus_distance) / focus_region) )
+//
+//	- no pow, and the ternary written on `<` so fxc emits `lt`+`movc x,y`
+//	rather than `ge`+`movc y,x`. Two shipped names prove it independently:
+//	this one's perm
+//	_3_________0________________________00________________0___________________________
+//	("add r0.x, r0.x, -cb0[2].x / lt r0.y, r0.x, l(0) / div_sat r0.x, |r0.x|,
+//	cb0[2].y / movc r0.y, r0.y, cb0[3].x, cb0[3].y / min r0.x, r0.x, r0.y" -
+//	focus_power is never read), and gather_bloom.ps, whose only shipped blob
+//	spells the same five instructions. With that one header edit all twelve
+//	permutations here compile byte-identically; without it, six do.
 
 /*$DEFINES$:
+	GLOBAL_POST_PROCESS_QUALITY,
+	GLOBAL_USE_GOD_RAYS,
 	CONFIG_USE_BOKEH_DOF,
 	CONFIG_USE_BOKEH_IMAGE,
-	GLOBAL_TEST_FLOAT,
+	CONFIG_USE_IMAGE_GRAIN,
 */
 
 
 #include "common.h"
 #include "gbuffer.h"
+#include "gamma_correction.h"
 #include "dof_functions.h"
 #include "light_ps_helper.h"
-#include "gamma_correction.h"
 #include "log_luv_color_space.h"
 #include "luminance.h"
 #include "debug.h"
@@ -27,41 +80,24 @@ float4  	frame_fade;
 float		gamma_correction_factor;
 
 
+Texture2D 	t_grain_noise;
 Texture2D 	t_blurred_frame_color;
+Texture2D 	t_blurred_frame_bloom_only_color2;
 Texture2D 	t_frame_color;
 Texture2D 	t_frame_luminance;
 Texture2D 	t_frame_luminance_previous;
 Texture2D 	t_frame_luminance_histogram;
 
 Texture2D 	t_light_scattering;
-//Texture2D 	t_skin_position;
 Texture2D 	t_sphere_falloff;
 Texture2D 	t_bokeh_image;
+Texture2D 	t_lens_flares;
 
 Texture3D	t_color_grading_lut;
 
 
-//Texture2D 	t_skin_scattering_temp;
-//Texture2D 	t_skin_scattering;
-//Texture2D 	t_skin_scattering_blurred_0;
-//Texture2D 	t_skin_scattering_blurred_1;
-//Texture2D 	t_skin_scattering_blurred_2;
-//Texture2D 	t_skin_scattering_blurred_3;
-//Texture2D 	t_skin_scattering_blurred_4;
-
-
-//Texture2D 	t_bug;
-//Texture2D 	t_mlaa_edges;
-//Texture2D 	t_mlaa_blend;
-
 Texture2D 	t_lpv_rsm_albedo;
-//Texture2D 	t_lpv_rsm_normal;
-//Texture2D 	t_lpv_rsm_position;
-//Texture2D 	t_lpv_rsm_albedo_source;
-//Texture2D 	t_lpv_rsm_normal_source;
-//Texture2D 	t_lpv_rsm_position_source;
 
-uniform float4 screen_res;
 
 float4 		bokeh_dof_parameters;
 static const float bokeh_dof_radius  = bokeh_dof_parameters.x;
@@ -70,334 +106,155 @@ static const float bokeh_dof_density = bokeh_dof_parameters.y;
 float3 sun_direction_parameter;
 static const float3 sun_position 	= -sun_direction_parameter * 500.0f;
 
+float4 god_rays_parameters0;
+float4 god_rays_parameters1;
+
 // x - average frame luminance
 // y - min frame luminance
 // z - max frame luminance
 // w - middle gray
 float4 frame_luminance_parameter;
 
-float3 scattered_color(float3 frame_color, float2 screen_uv)
-{
-	float scattering_power			= 1.0f - saturate(get_luminance(frame_color));
-	
-	// TODO: optimize, do in lower resolution target
-	static const int num_samples 	= 100;
-	
-	float4 projected_sun_position 	= mul(m_VP, float4(sun_position, 1.0f));
-	projected_sun_position.xy 		/= projected_sun_position.w;
-	projected_sun_position.y		*= -1.0f;
-	projected_sun_position.xy		= projected_sun_position.xy * 0.5f + 0.5f + 0.0f * screen_uv * 0.2f;
-	
-	float2 to_sun_vector_delta		= (screen_uv - projected_sun_position.xy) / num_samples;
-	
-	float3 final_color				= 0.0f;
-	
-	float dist						= distance(screen_uv, projected_sun_position.xy);
-	//to_sun_vector_delta				*= 2.0f * (1.0f - dist);
-	
-	float2 current_uv = screen_uv;
-	for (int i = 0; i < num_samples; i++)
-	{
-		current_uv 				-= to_sun_vector_delta;
-		float3 occluder_color 	= t_light_scattering.Sample(s_base, current_uv).rgb;
-		final_color				+= occluder_color;
-	}
-	
-	return frame_color + (1.0f - dist) * scattering_power * final_color / num_samples;
-}
+// xy - noise scroll, z - amount, w - vignette power
+float4 image_grain_parameters;
+
+// 0: x - black point (x0.01), y - shoulder A, z - shoulder C, w - toe A
+// 1: x - toe B, y - toe C, w - desaturation luminance threshold
+float4 filmic_tonemap_packed_parameters_0;
+float4 filmic_tonemap_packed_parameters_1;
 
 float3 color_lookup_table(float3 color)
 {
 	return t_color_grading_lut.SampleLevel(s_material1, color.rgb * 15.0f / 16.0f + 0.5f / 16.0f, 0).rgb;
 }
 
-// TODO: remove texture reading, one constants
-#define USE_LUMINANCE_FROM_HISTOGRAM	1
-
-float get_min_frame_luminance		( )
+float get_frame_exposure( )
 {
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	return							frame_luminance_parameter.y;
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).g;
-	return							sum_of_logarithms;
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
+	float average_frame_luminance	= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).r;
+	return							pow( 0.25f / clamp( average_frame_luminance, 0.09f, 0.4f ), 0.2f );
 }
 
-float get_max_frame_luminance		( )
+float3 tone_mapped_color( float3 frame_color )
 {
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= frame_luminance_parameter.z;
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).b;
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
-	return							max( sum_of_logarithms, 1.0f );
+	float3 color					= max( get_frame_exposure( ) * frame_color - filmic_tonemap_packed_parameters_0.x * 0.01f, 0.0f );
+
+	return							(color * (filmic_tonemap_packed_parameters_0.y * color + filmic_tonemap_packed_parameters_0.z)) /
+									(color * (filmic_tonemap_packed_parameters_0.w * color + filmic_tonemap_packed_parameters_1.x) + filmic_tonemap_packed_parameters_1.y);
 }
 
-float get_average_frame_luminance	( )
+float3 desaturated_color( float3 frame_color )
 {
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).r;
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	return							frame_luminance_parameter.x;//clamp( frame_luminance_parameter.x, 0.1f, 1.0f );
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	return							clamp( sum_of_logarithms, 0.1f, 1.0f );
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
+	float luminance					= dot( float3(0.3f, 0.7f, 0.2f), frame_color );
+	float desaturation				= 1.0f - saturate( luminance / filmic_tonemap_packed_parameters_1.w );
+	float amount					= desaturation * desaturation;
+	float gray						= get_luminance( frame_color );
+	float3 desaturated				= lerp( frame_color, gray, amount );
+
+	return							luminance >= filmic_tonemap_packed_parameters_1.w ? frame_color : desaturated;
 }
 
-float get_frame_middle_gray_luminance( )
+float3 grained_color( float3 frame_color, float2 uv )
 {
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	return							frame_luminance_parameter.w;
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	return							0.5f;
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
+	float3 linear_color				= pow( frame_color, gamma_value );
+	float3 grain_amount				= pow( frame_color, 1.32f ) * image_grain_parameters.z;
+	float2 grain_uv					= (image_grain_parameters.xy * 2.0f + uv - 1.0f) * screen_res.xy / 64.0f;
+
+	return							convert_from_linear_space( saturate( t_grain_noise.SampleLevel( s_nofilter, grain_uv, 0).rgb * grain_amount + linear_color ) );
 }
 
-float3 tone_mapped_reinhard_modified( float3 frame_color )
+float3 vignetted_color( float3 frame_color, float2 uv )
 {
-	// tone mapping
-	float min_frame_luminance		= get_min_frame_luminance( );
-	float max_frame_luminance		= get_max_frame_luminance( );
-	float average_frame_luminance	= get_average_frame_luminance( );
-	float luminance					= max( get_luminance( frame_color ), min_frame_luminance );
-	float middle_gray				= get_frame_middle_gray_luminance();
-	float scaled_luminance			= middle_gray * max( luminance - min_frame_luminance, 0.f ) / average_frame_luminance;
-	float tone_mapper				= scaled_luminance*(1.f + scaled_luminance/( square(max_frame_luminance)) ) / (1.f + scaled_luminance);
-	
-	//float4 log_luv_pixel_color		= log_luv_encode( frame_color/luminance );
-	//log_luv_set_lightness			( log_luv_pixel_color, tone_mapper );
-	//frame_color						= log_luv_decode( log_luv_pixel_color );
-	frame_color						*= tone_mapper/luminance;
-	
-	return 							saturate( frame_color );
-}
+	if ( image_grain_parameters.w > 0.1f )
+	{
+		float2 to_center			= uv - 0.5f;
+		frame_color					= pow( 1.0f - dot( to_center, to_center ), image_grain_parameters.w + 1.0f ) * frame_color;
+	}
 
-static const float shoulder_strength	= 0.22f;
-static const float linear_strength		= 0.30f;
-static const float linear_angle			= 0.10f;
-static const float toe_strength			= 0.20f;
-static const float toe_numerator		= 0.01f;
-static const float toe_denominator		= 0.30f;
-static const float liner_white			= 11.2f;
-
-// Function used by the Uncharte2D tone mapping curve
-float3 filmic_func(float3 x)
-{
-    const float A = shoulder_strength;
-    const float B = linear_strength;
-    const float C = linear_angle;
-    const float D = toe_strength;
-    const float E = toe_numerator;
-    const float F = toe_denominator;
-	
-    return ((x*(A*x+C*B)+D*E)/(x*(A*x+B)+D*F)) - E/F;
-}
-
-// Determines the color based on exposure settings.
-float3 calc_exposed_color(float3 color, float avg_luminance, float threshold, out float exposure)
-{    
-    exposure 				= 0.0f;
-	avg_luminance 			= max(avg_luminance, 0.001f);
-	
-#if 0
-	float key_value 		= 0.25f;
-#else // #if 0
-	float key_value 		= 1.03f - (2.0f / (2.0f + log10(avg_luminance + 1.0f)));
-#endif // #if 0
-	
-	float linearExposure 	= (key_value / avg_luminance);
-	exposure 				= log2(max(linearExposure, 0.0001f));
-    exposure 				-= threshold;
-	
-    return exp2(exposure) * color;
-}
-
-float3 tone_mapped_filmic_alu( float3 frame_color )
-{
-	frame_color = max(0, frame_color - 0.004f);
-    frame_color = (frame_color * (6.2f * frame_color + 0.5f)) / (frame_color * (6.2f * frame_color + 1.7f)+ 0.06f);
-	
-    // result has 1/2.2 baked in
-    return pow(frame_color, 2.2f);
-}
-
-float3 tone_mapped_filmic_u2( float3 frame_color )
-{
-	return filmic_func( frame_color ) / filmic_func( liner_white );
-}
-
-// Exponential mapping
-float3 tone_mapped_exponential( float3 frame_color )
-{
-	const float white_level				= 5.0f;
-	const float luminance_saturation	= 1.0f;
-	const float pixel_luminance 		= get_luminance( frame_color );    
-    const float tone_mapped_luminance 	= 1.0f - exp(-pixel_luminance / white_level);
-	
-	return tone_mapped_luminance * pow(frame_color / pixel_luminance, luminance_saturation);
-}
-
-float3 tone_mapped_color			( float3 frame_color )
-{
-#if 1
-	return tone_mapped_reinhard_modified( frame_color );
-#else
-	float 		exposure				= 0.0f;
-	const float pixel_luminance 		= get_luminance(frame_color);
-	const float average_frame_luminance = clamp( t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).r, 0.1f, 1.0f );
-	const float threshold				= 0.0f;
-	
-	frame_color	= calc_exposed_color	( frame_color, average_frame_luminance, threshold, exposure);
-	
-#	if 1
-		return tone_mapped_filmic_u2( frame_color );
-		//return tone_mapped_exponential( frame_color );
-#	else
-		return tone_mapped_filmic_alu( frame_color );
-#	endif // #if 0
-	
-#endif // #if 0
-}
-
-float3 graded_color					( float3 frame_color )
-{
-#define USE_COLOR_GRADING_LUT 		1
-
-#if USE_COLOR_GRADING_LUT
-	frame_color						=
-		convert_to_linear_space(
-			color_lookup_table(
-				convert_from_linear_space(
-					frame_color,
-					gamma_correction_factor
-				)
-			)
-		);
-#else // #if USE_COLOR_GRADING_LUT
-	// TODO: do convert_to_linear_space(frame_fade.rgb) and convert_to_linear_space(frame_shadows) in c++
-	frame_color 					= pow( ABS_TO_REMOVE_WARNING(max(frame_color - convert_to_linear_space(frame_shadows), 0.0f) * frame_height_lights_and_desaturation.xyz), frame_mid_tones);
-	frame_color 					= lerp(frame_color, get_luminance(frame_color), frame_height_lights_and_desaturation.a);
-	//frame_color 				 	= lerp(frame_color, convert_to_linear_space(frame_fade.rgb), frame_fade.a);
-#endif // #if USE_COLOR_GRADING_LUT
-	
 	return							frame_color;
 }
-
-#define USE_RADIANCE_DOF 0
 
 float4 main( v2p_TL vin) : SV_TARGET
 {
 	float2 uv							= vin.Tex0;
-	
- float frame_depth 					= gbuffer_read_frame_depth(uv);
-	float3 frame_color 					= t_frame_color.Sample(s_base, uv, 0).rgb;
-	
-#if !CONFIG_USE_BOKEH_DOF
-	float inv_blurriness 				= saturate(1.0f - get_blurriness(frame_depth));
-	float4 frame_color_and_depth 		= float4(frame_color, frame_depth);
-	float4 blurred_color_and_depth  	= t_blurred_frame_color.Sample(s_base, uv);
-	blurred_color_and_depth.rgb     	*=dof_height_lights.rgb;
-	
-#	if USE_RADIANCE_DOF
-	float radiance_alpha				= saturate( pow( 2.0f * length( abs( uv - 0.5f ) ), 1.0f ) );
-	float falloff						= (1.0f - radiance_alpha) * pow(t_sphere_falloff.Sample(s_base, uv), 2.0f);
-	
-	float3 blurred_color				= frame_color_and_depth.rgb * inv_blurriness + /*(1.0f - inv_blurriness) * */blurred_color_and_depth.rgb / saturate(inv_blurriness + blurred_color_and_depth.a);
-	frame_color 						= lerp(frame_color, blurred_color, falloff);
-#	else // #if USE_RADIANCE_DOF
-	frame_color 						= frame_color_and_depth.rgb * inv_blurriness + /*(1.0f - inv_blurriness) * */blurred_color_and_depth.rgb / saturate(inv_blurriness + blurred_color_and_depth.a);
-	
-#	endif // #if USE_RADIANCE_DOF
 
-#else // #if !CONFIG_USE_BOKEH_DOF
+#if GLOBAL_POST_PROCESS_QUALITY
+	float3 bloom_color					= max(t_blurred_frame_bloom_only_color2.Sample(s_linear, uv).rgb, 0.0f);
+
+	float frame_depth 					= gbuffer_read_frame_depth(uv);
+	float3 frame_color 					= t_frame_color.SampleLevel(s_material1, uv, 0).rgb;
+
+#	if !CONFIG_USE_BOKEH_DOF
+	float inv_blurriness 				= saturate(1.0f - get_blurriness(frame_depth));
+	float4 blurred_color_and_depth  	= t_blurred_frame_color.Sample(s_linear, uv);
+
+	float3 blurred_color				= (frame_color * inv_blurriness + blurred_color_and_depth.rgb) / (inv_blurriness + blurred_color_and_depth.a);
+	frame_color 						= lerp(blurred_color, frame_color, inv_blurriness);
+	frame_color							+= bloom_color;
+
+#	else // #if !CONFIG_USE_BOKEH_DOF
 	static const int radius 			= min(bokeh_dof_radius, 24.0f);
 	float  current_radius 				= saturate(get_blurriness(frame_depth)) * radius + 0.5f;
 	float3 avg_blurred_color 			= float3(0.0f, 0.0f, 0.0f);
 	float  total_attenuation			= 0.0f;
-	
+
 	LOOP for(int y = -radius; y <= radius; y++)
 	{
 		LOOP for(int x = -radius; x <= radius; x++)
 		{
 			float image_template		= 1.0f;
-			
-#if CONFIG_USE_BOKEH_IMAGE		
-			image_template				= t_bokeh_image.Sample(s_base, 0.5f * float2(x, y) / radius + 0.5f).r;
+
+#if CONFIG_USE_BOKEH_IMAGE
+			image_template				= t_bokeh_image.Sample(s_linear, 0.5f * float2(x, y) / radius + 0.5f).r;
 #endif // CONFIG_USE_BOKEH_IMAGE
-			
+
 			float2 sample_uv 			= uv + bokeh_dof_density * float2(x, y) * screen_res.zw;
-			
+
 			float3 sample_frame_color	= t_frame_color.SampleLevel(s_material1, sample_uv, 0).rgb;
 			float  sample_depth			= gbuffer_read_frame_depth(sample_uv);
 			float  sample_radius 		= saturate(get_blurriness(sample_depth)) * radius + 0.5f;
-			
+
 			sample_radius 				= lerp(
-				sample_radius, 
-				current_radius, 
+				sample_radius,
+				current_radius,
 				sample_depth > frame_depth && current_radius < sample_radius
 				);
-			
+
 			float to_current_center 	= length( float2(x, y) );
 			float attenuation 			= image_template * saturate( sample_radius - to_current_center ) / pow(sample_radius, 2);
-			
+
 			total_attenuation			+= attenuation;
 			avg_blurred_color 			+= attenuation * sample_frame_color.rgb;
 		}
 	}
-	
+
 	frame_color							= avg_blurred_color.rgb / total_attenuation;
-	
-	//float inv_blurriness 				= saturate(1.0f - get_blurriness(frame_depth));
-	//float4 blurred_color_and_depth  	= t_blurred_frame_color.Sample(s_base, uv);
-	//frame_color 						= frame_color * inv_blurriness + blurred_color_and_depth.rgb / saturate(inv_blurriness + blurred_color_and_depth.a);
-	
-#endif // #if !CONFIG_USE_BOKEH_DOF
-	
-	//frame_color							= scattered_color(frame_color, uv);
-	
-	//return float4						(get_luminance(frame_color)>0.2f, 0, 0, 1);
-	
+	frame_color							+= bloom_color;
+
+#	endif // #if !CONFIG_USE_BOKEH_DOF
+
+	frame_color							= desaturated_color( frame_color );
+#else // #if GLOBAL_POST_PROCESS_QUALITY
+	float3 frame_color 					= max(t_blurred_frame_bloom_only_color2.Sample(s_linear, uv).rgb, 0.0f);
+	frame_color							+= t_frame_color.SampleLevel(s_material1, uv, 0).rgb;
+#endif // #if GLOBAL_POST_PROCESS_QUALITY
+
+	frame_color							+= t_lens_flares.SampleLevel(s_linear, uv, 0).rgb;
+
 	// tone mapping
 	frame_color							= tone_mapped_color( frame_color );
-	
+
+#if GLOBAL_POST_PROCESS_QUALITY
+#	if CONFIG_USE_IMAGE_GRAIN
+	frame_color							= grained_color( frame_color, uv );
+#	endif // #if CONFIG_USE_IMAGE_GRAIN
+
 	// color grading
-	frame_color							= graded_color( frame_color );
-	
-	//if (uv.x <= 0.5f && uv.y <= 0.5f)
-	//{
-	//	frame_color							*=0.0001f;
-	//	frame_color							+= t_skin_scattering_blurred_4.Sample(s_base, uv * 2.0f).rgb;
-	//	//frame_color							+= t_skin_scattering.Sample(s_accumulator, uv * 3.0f).rgb;
-	//}
-	
-	// gamma correction: conversion from linear space to pc gamma space
-	// in other shader (mlaa or copy_image)
-	//frame_color							= convert_from_linear_space( frame_color, gamma_correction_factor );
-	
-	//return								0.001f * frame_color.rgbr + float4(t_bug.Sample(s_nofilter, uv * screen_res.xy / 16.0f));
-	
-	//return 								0.001f * frame_color.rgbr + t_skin_scattering.Sample(s_nofilter, uv);
-	
-	//if (uv.x <= 0.25f && uv.y <= 0.25f)
-	//{
-	//	return float4(t_lpv_rsm_albedo.SampleLevel(s_accumulator, uv * 4.0f, 0));
-	//	//return max(float4(t_lpv_rsm_normal_source.Sample(s_accumulator, uv * 4.0f)),0);
-	//	//return float4(t_lpv_rsm_position_source.Sample(s_accumulator, uv * 4.0f));		
-	//}
-	
-	return								float4( GLOBAL_TEST_FLOAT * frame_color, 1.0f );
+	frame_color							= convert_to_linear_space( color_lookup_table( frame_color ) );
+
+	frame_color							= vignetted_color( frame_color, uv );
+#else // #if GLOBAL_POST_PROCESS_QUALITY
+	frame_color							= pow( frame_color, gamma_value );
+#endif // #if GLOBAL_POST_PROCESS_QUALITY
+
+	return								float4( frame_color, 0.0f );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

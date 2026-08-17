@@ -1,0 +1,20 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float4 blur_target_size;	// xy - size, zw - 1/size
+
+float4 main( v2p_TL I ) : SV_TARGET
+{
+	float4 color	= t_base.Sample(s_material1, I.Tex0);
+
+	color			+= t_base.Sample(s_material1, I.Tex0 - blur_target_size.zw*float2( 0.0f, -1.0f));
+	color			+= t_base.Sample(s_material1, I.Tex0 - blur_target_size.zw*float2( 0.0f,  1.0f));
+	color			+= t_base.Sample(s_material1, I.Tex0 - blur_target_size.zw*float2(-1.0f,  0.0f));
+	color			+= t_base.Sample(s_material1, I.Tex0 - blur_target_size.zw*float2( 1.0f,  0.0f));
+
+	return color*0.2f;
+}

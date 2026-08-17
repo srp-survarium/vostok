@@ -1,0 +1,109 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/resolve_lighting.ps, both permutations) - absent from
+//	the recovered source drop.  Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip resolve_lighting.ps
+//
+//	The deferred resolve: it reads the g-buffer, both light accumulators and
+//	(at the high lighting quality) the LPV, and combines them into the scene
+//	colour.  Everything it does is the *inverse* of a packing this tree has
+//	already proven from the other side:
+//	  * the accumulators are stored as 1/rsqrt( saturate( colour*0.125)) -
+//	    see skylight.ps - so decoding is saturate(x)*saturate(x)*8;
+//	  * the translucency is gbuffer_pass.ps's five bits, three of them in
+//	    the normal target's .z above bit 7 and two in its .w;
+//	  * the diffuse target's .w is seven bits of Fresnel with bit 7 set iff
+//	    the surface is translucent - and this pass reads both halves: the
+//	    high bit forces translucency to 1, and the low seven decide whether
+//	    the specular takes the surface's own hue or stays white.
+//
+//	==== axis status ======================================================
+//
+//	GLOBAL_LIGHTING_QUALITY is the only define in the permutation strings;
+//	0 and 3 ship.  At 3 the diffuse accumulation is topped up from
+//	t_lpv_accumulation, weighted by how far it is from saturating, and
+//	s_linear joins the sampler table ahead of s_position - which is why every
+//	sampler slot in that blob is one higher than in the other.
+//	Byte-proven: 2 identical, 0 differ.
+//
+//	Two spellings are load-bearing: the input's SV_POSITION is capitalised in
+//	both shipped signatures, and the two `1.f/rsqrt(...)` forms are rsq+div
+//	in the blobs where a sqrt() would have been a single sqrt.
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_LIGHTING_QUALITY,
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+uniform float3	s_eye_ray_corner;
+
+Texture2D		t_diffuse_accumulation;
+Texture2D		t_specular_accumulation;
+Texture2D		t_lpv_accumulation;
+
+struct	v2p_resolve_lighting
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 	main	( v2p_resolve_lighting I ) : SV_Target
+{
+	float3	eye_ray;
+	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 )/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float3	position		= eye_ray*gbuffer_read_frame_depth( I.tc );
+	float3	view_direction	= normalize( position );
+
+	float3	normal			= gbuffer_read_frame_normal( I.tc );
+	normal.z				= -normal.z;
+
+	float	fresnel			= pow( 1.f - saturate( dot( normal, -view_direction)), 5.f);
+
+	// gbuffer_pass.ps packs five bits of translucency: three above bit 7 of
+	// the normal target's .z, two in its .w.
+	uint	packed_low		= (uint)(t_normal.SampleLevel( s_accumulator, I.tc, 0).z*1023.f);
+	uint	packed_high		= (uint)(t_normal.SampleLevel( s_accumulator, I.tc, 0).w*3.f);
+	uint	translucency_bits = (packed_low >> 7) | (packed_high << 3);
+	float	translucency	= min( (float)translucency_bits*(1.f/31.f), 1.f);
+	translucency			= pow( translucency, gamma_value);
+
+	uint	fresnel_bits	= (uint)(t_diffuse.SampleLevel( s_diffuse, I.tc, 0).w*255.f);
+	uint	is_translucent	= fresnel_bits >> 7;
+	float	fresnel_value	= (float)(fresnel_bits & 127);
+	bool	has_specular	= 25.4f < fresnel_value;
+
+	if (is_translucent)
+		translucency		= 1.f;
+
+	float3	diffuse			= convert_to_linear_space( t_diffuse.SampleLevel( s_accumulator, I.tc, 0).xyz);
+
+	// The specular tint is the diffuse hue, renormalised in square space and
+	// square-rooted back - a metal keeps its colour in the highlight, a
+	// dielectric does not, and the seven Fresnel bits decide which.
+	float3	specular_tint	= diffuse*diffuse;
+	specular_tint			= specular_tint/max( length( specular_tint), 0.0001f);
+	specular_tint			= 1.f/rsqrt( specular_tint );
+	specular_tint			= has_specular ? specular_tint : float3( 1.f, 1.f, 1.f);
+
+	float3	specular_color	= lerp( specular_tint*translucency, translucency, fresnel);
+
+	float3	specular_accumulation	= saturate( t_specular_accumulation.SampleLevel( s_accumulator, I.tc, 0).xyz);
+	specular_accumulation	= specular_accumulation*specular_accumulation*8.f;
+
+	float3	specular_result	= specular_color*specular_accumulation;
+
+	float3	diffuse_accumulation	= saturate( t_diffuse_accumulation.SampleLevel( s_accumulator, I.tc, 0).xyz);
+	diffuse_accumulation	= diffuse_accumulation*diffuse_accumulation*8.f;
+
+#if GLOBAL_LIGHTING_QUALITY == 3
+	diffuse_accumulation	+= (1.f - min( length( diffuse_accumulation), 1.f))*t_lpv_accumulation.SampleLevel( s_linear, I.tc, 0).xyz;
+#endif // #if GLOBAL_LIGHTING_QUALITY == 3
+
+	return	float4( diffuse*diffuse_accumulation + specular_result, 0.f);
+}

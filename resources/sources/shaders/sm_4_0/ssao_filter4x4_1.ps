@@ -9,12 +9,18 @@
 #include "filters.h"
 
 Texture2D  t_ssao_accumulator;
-uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
 
-float4 main( v2p_post_process input) : SV_TARGET
+struct v2p_ssao_filter
 {
-	//return t_ssao_accumulator.Sample(s_material1, input.uv).x;
-	
+	float4 	hpos	: SV_POSITION;
+	float2 	uv		: TEXCOORD0;
+};
+
+float4 main( v2p_ssao_filter input) : SV_TARGET
+{
+	// Ship reduced the filter to the plain accumulator read (blob: sample + xxxx splat).
+	return t_ssao_accumulator.Sample(s_material1, input.uv).x;
+#if 0
 	static const float2 offsets[9] = 
 	{
 		float2( 1.0f,  1.0f),
@@ -47,4 +53,5 @@ float4 main( v2p_post_process input) : SV_TARGET
 		ao_sum 				  += sample_ao * depth_compares;
 	}
 	return ao_sum / total_weight;
+#endif
 }

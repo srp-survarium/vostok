@@ -14,7 +14,7 @@ v2p_TL main ( v_TL_positiont I )
 	O.HPos.w = 1;
 
 	O.Tex0 = I.Tex0;
-	O.Color = I.Color.bgra;
+	O.Color = I.Color;
 
  	return O;
 }

@@ -1,0 +1,128 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+//
+//	The additive half of atmospheric scattering on geometry: its `_mul`
+//	sibling darkens the frame by how much light the air ate, and this pass
+//	adds back what the air scattered into the eye.  It reconstructs the
+//	shaded point from the g-buffer depth and the eye-ray corner (the same
+//	preamble sky_ambient_occlusion.ps uses, spelled identically), takes the
+//	view direction and its distance, and reads two precomputed tables at
+//	(distance, view elevation): the rayleigh table through an atan-warped
+//	distance axis - atan(min(d,350)/500) inside 350 units, atan(d/100000)
+//	beyond - and the mie table through the far one.
+//
+//	Rayleigh is phase-weighted and mie is not: the rayleigh term is a
+//	Cornette-Shanks lobe at g = 0.75 blended against a flat 0.75 ambient by
+//	how low the sun is (1 - sun.y), so a high sun gets the lobe and a sunset
+//	gets the flat term; the mie term is the table times how far into the
+//	inscatter range the pixel is, and nothing else.
+//
+//	==== the constants, out of the DXBC not the listing ===================
+//
+//	g = 0.75 is folded: 1.5625 is g*g+1 and 1.5 is g*2, 0.21875 is
+//	(1-g*g)/2, and 12.56 is a hand-rounded 4*pi (0x4148F5C3, not
+//	12.566371).  The additive 0.039788 is 0x3D22F944 - the same
+//	hand-rounded 1/(8*pi) clouds.ps carries.  The rayleigh weight is
+//	0x3D535733; its shortest exact spelling is 0.05159683 and no closed
+//	form reproduces it, so it is written as the literal.
+//
+//	fxc's own atan is what the two long polynomial runs are (0.0208351,
+//	-0.0851330, 0.180141, -0.330299, 0.999866, the classic minimax set).
+//	The first call has no range reduction because fxc can prove
+//	min(d,350)*0.002 <= 0.7; the second, on d*0.00001, carries the full
+//	min/max/div reduction and the pi/2 - 2*atan(t) correction.
+//
+//	==== three spellings the blob pins, none of them cosmetic =============
+//
+//	  * the elevation is 0.5 - direction.y*0.5, not (1 - direction.y)*0.5.
+//	    The second form lets fxc re-fuse direction.y back into
+//	    mad(-to_point.y, rsq, 1) and then needs its own mul by 0.5 - two
+//	    instructions where the blob has one, and the knock-on register
+//	    shift splits the shared sqrt as well;
+//	  * the divisor is scattering.w + 1, which fxc re-fuses into
+//	    mad(amount, rayleigh.w, 1) rather than reusing the float4 multiply's
+//	    w lane.  Writing amount*rayleigh.w + 1 instead lets it fold
+//	    rayleigh.w to the literal 1 and emit a plain add;
+//	  * `direction *= rsqrt(square)` normalises in place, so the pre-
+//	    normalised vector dies and its square survives in the same
+//	    register's w - which is what lets sqrt(square) pair with the phase's
+//	    sqrt into one vector instruction.
+//
+//	==== header finding ===================================================
+//
+//	The shipped dependency table is common.h, then gbuffer.h (with
+//	gamma_correction.h and debug.h behind it), then
+//	atmospheric_scattering_common.h - a header the tree does not have.  The
+//	four uniforms below lived in it at ship, which is also why they follow
+//	gbuffer.h's near_far_invn_invf in $Globals rather than preceding it.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4x4	inverted_view_projection_matrix;
+uniform float4		to_sun_direction_parameter;
+uniform float4		inscatter_parameters;
+uniform float3		s_eye_ray_corner;
+
+Texture2D			t_rayleigh_scattering;
+Texture2D			t_mie_scattering;
+
+struct v2p_scattering
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_scattering I ) : SV_TARGET
+{
+	float2	tc				= I.hpos.xy*screen_res.zw;
+
+	float4	eye_ray;
+	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - tc*2);
+
+	float	depth			= gbuffer_read_frame_depth( tc);
+
+	eye_ray.xy				/= s_eye_ray_corner.z;
+	eye_ray.zw				= 1;
+
+	float4	position		= eye_ray;
+	position.xyz			= eye_ray.xyz*depth;
+
+	float	near_depth		= min( depth, inscatter_parameters.x);
+
+	float3	world_position	= mul( m_V2W, position);
+
+	float3	direction		= world_position - eye_position;
+	float	square			= dot( direction, direction);
+
+	direction				*= rsqrt( square);
+
+	float	cos_angle		= dot( direction, normalize( to_sun_direction_parameter.xyz));
+	float	elevation		= 0.5f - direction.y*0.5f;
+
+	float	denominator		= 1.5625f - cos_angle*1.5f;
+	float	common_term		= cos_angle*cos_angle + 1.0f;
+	float	phase_mie		= 0.21875f/( sqrt( denominator*denominator*denominator)*12.56f) + 0.0397885f;
+
+	float	view_distance	= sqrt( square);
+
+	float4	rayleigh		= t_rayleigh_scattering.SampleLevel( s_material1, float2( atan( min( view_distance, 350.0f)*0.002f), elevation), 0);
+	rayleigh.w				= 1.0f;
+
+	float	amount			= saturate( near_depth/inscatter_parameters.x);
+	float4	scattering		= amount*rayleigh;
+
+	float	phase			= ( common_term*0.05159683f + scattering.w*phase_mie)/( scattering.w + 1.0f);
+
+	float3	inscattered		= phase*scattering.xyz;
+	float3	ambient			= scattering.xyz*0.75f;
+
+	float3	rayleigh_term	= lerp( ambient, inscattered*3.0f, 1.0f - to_sun_direction_parameter.y);
+
+	float3	mie				= t_mie_scattering.SampleLevel( s_material1, float2( saturate( atan( view_distance*0.00001f)), elevation), 0).xyz;
+	float	mie_amount		= saturate( near_depth/( inscatter_parameters.x*0.5f));
+
+	return	float4( rayleigh_term + saturate( mie_amount*mie), 1.0f);
+}

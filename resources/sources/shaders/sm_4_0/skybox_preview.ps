@@ -1,0 +1,19 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+TextureCube	t_skybox;
+
+struct v2p_skybox_preview
+{
+	float4	hpos		: SV_Position;
+	float3	direction	: TEXCOORD0;
+};
+
+float4 main( v2p_skybox_preview I ) : SV_TARGET
+{
+	return	float4( t_skybox.Sample( s_base, normalize( I.direction)).xyz, 1.0f);
+}

@@ -1,0 +1,134 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/ssao_filter_upsample_temporal.ps, plain permutation) -
+//	the file was absent from the recovered source drop. Byte-identity
+//	against the blob is the acceptance test:
+//	python3 -m vostok.shaders roundtrip ssao_filter_upsample_temporal.ps
+//
+//	PARKED one instruction short, and it is the same residual as in
+//	ssao_filter_upsample.ps, whose header carries the tried-list: ship keeps
+//	`max r0.y, r0.z, l(0.0)` after the ao_sum/total_weight divide and this
+//	compile drops it, because fxc 9.29 can prove the ratio non-negative from
+//	the two saturates. Everything else is byte-identical, including the
+//	diagonal temporal-mask gather - whose OR chain really does fold the
+//	centre tap three times (initial value plus x == 0 in each of the two
+//	loops) while the AND chain folds its duplicates to one, exactly as the
+//	blob does.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "filters.h"
+
+uniform int			prev_ssao_valid;
+uniform float3		s_eye_ray_corner;
+uniform float4x4	prev_view;
+
+Texture2D	t_ssao_accumulator;
+Texture2D	t_ssao_prev_result;
+Texture2D	t_ssao_temporal_mask;
+
+struct v2p_ssao_filter_upsample_temporal
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+struct p_ssao_filter_upsample_temporal
+{
+	float2	result	: SV_Target0;
+	float	depth	: SV_Target1;
+};
+
+p_ssao_filter_upsample_temporal main( v2p_ssao_filter_upsample_temporal I )
+{
+	static const float2 offsets[9] =
+	{
+		float2(  1.0f,  1.0f),
+		float2(  1.0f,  0.0f),
+		float2(  1.0f, -1.0f),
+		float2(  0.0f,  1.0f),
+		float2(  0.0f, -1.0f),
+		float2( -1.0f,  1.0f),
+		float2( -1.0f,  0.0f),
+		float2( -1.0f, -1.0f),
+		float2(  0.0f,  0.0f)
+	};
+
+	float	center_depth	= gbuffer_read_frame_depth( I.tc);
+	float2	half_res		= screen_res.xy*0.5f;
+	float	total_weight	= 0.f;
+	float	ao_sum			= 0.f;
+
+	for (int i = 0; i < 9; i++)
+	{
+		float2	tc			= offsets[i]/half_res + I.tc;
+		float2	value		= t_ssao_accumulator.SampleLevel( s_linear, tc, 0).xy;
+		float	ao			= saturate( value.x);
+		float	depth		= value.y*0.01f;
+		float	weight		= 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f));
+
+		total_weight		+= weight;
+		ao_sum				+= ao*weight;
+	}
+
+	float	ambient_occlusion;
+	if (ao_sum == total_weight)
+		ambient_occlusion	= t_ssao_accumulator.SampleLevel( s_linear, I.tc, 0).x*0.5f;
+	else
+		ambient_occlusion	= max( ao_sum/total_weight, 0.f);
+
+	float3	eye_ray;
+	eye_ray.xy				= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float3	position		= eye_ray*center_depth;
+
+	float2	center_mask		= t_ssao_temporal_mask.Sample( s_material1, I.tc).xy;
+	bool	changed			= center_mask.y > 0.f;
+	bool	reprojected		= center_mask.x > 0.f;
+
+	int		x;
+	[unroll] for (x = -2; x <= 2; x++)
+	{
+		int		y			= x;
+		float2	mask		= t_ssao_temporal_mask.Sample( s_material1, float2( x, y)/screen_res.xy + I.tc).xy;
+
+		changed				= changed || mask.y > 0.f;
+		reprojected			= reprojected && mask.x > 0.f;
+	}
+
+	[unroll] for (x = -2; x <= 2; x++)
+	{
+		int		y			= -x;
+		float2	mask		= t_ssao_temporal_mask.Sample( s_material1, float2( x, y)/screen_res.xy + I.tc).xy;
+
+		changed				= changed || mask.y > 0.f;
+		reprojected			= reprojected && mask.x > 0.f;
+	}
+
+	float	count;
+	p_ssao_filter_upsample_temporal	output;
+
+	if (changed && reprojected)
+	{
+		float3	world_position	= mul( m_V2W, float4( position, 1.f));
+		float3	prev_position	= mul( prev_view, float4( world_position, 1.f)).xyz;
+		float4	projected		= mul( m_P, float4( prev_position, 1.f));
+		float2	prev_tc			= projected.xy/projected.w*float2( 0.5f, -0.5f) + 0.5f;
+		float2	previous		= t_ssao_prev_result.SampleLevel( s_linear, prev_tc, 0).xy;
+
+		output.result.x			= ( previous.y*8.f*previous.x + ambient_occlusion)/( previous.y*8.f + 1.f);
+		count					= min( previous.y*8.f + 1.f, 8.f);
+	}
+	else
+	{
+		count					= 1.f;
+		output.result.x			= ambient_occlusion;
+	}
+
+	output.result.y	= count*0.125f;
+	output.depth	= position.z;
+
+	return	output;
+}

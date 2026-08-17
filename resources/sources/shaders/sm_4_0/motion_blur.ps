@@ -1,0 +1,105 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/motion_blur.ps, GLOBAL_POST_PROCESS_QUALITY 0 and 3) -
+//	absent from the recovered source drop. Byte-identity is the acceptance
+//	test: python3 -m vostok.shaders roundtrip motion_blur.ps
+//
+//	Per-pixel velocity is the object motion-vector target where it is set and
+//	the camera reprojection (this frame's view position through last frame's
+//	view matrix) everywhere else; the streak is a fixed number of taps along
+//	it, each tap snapped back to the centre when it would drag a nearer
+//	surface over this one.
+//
+//	PARKED, both permutations, on ONE artefact: fxc packs the per-tap offset
+//	constants into a different component rotation than ship. Ship writes
+//	l(0.0135, -0.0675, -0.0405, -0.0135) and reads .yyzz/.wwxx; every source
+//	shape tried here emits l(-0.0675, -0.0405, -0.0135, 0.0135) read as
+//	.xxyy/.zzww - same taps, same order, same arithmetic. At quality 3 the
+//	same artefact also pairs ship's tap 2 with tap 5 (and costs two temps:
+//	dcl_temps 9 vs 7). Everything else is byte-identical: RDEF, ISGN, OSGN,
+//	both blob sizes, and at quality 0 the STAT chunk as well.
+//	Tried: loop from 0/1/-N2, offset as (i-N*0.5)*step, (i-0.5)*step,
+//	i*step-half, a running `offset +=` accumulator, offset as its own
+//	statement, (step*scale) folded before or after the index, [unroll] vs
+//	[unroll(N)], and moving the result/alpha declarations across the block.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+#if GLOBAL_POST_PROCESS_QUALITY == 0
+#	define	MOTION_BLUR_SAMPLES		5
+#	define	MOTION_BLUR_STEP		0.027f
+#else
+#	define	MOTION_BLUR_SAMPLES		9
+#	define	MOTION_BLUR_STEP		0.02f
+#endif
+
+uniform float4x4	prev_view_matrix_parameter;
+uniform float3		s_eye_ray_corner;
+uniform float		frame_delta_parameter;
+uniform float		motion_blur_scale_parameter;
+
+Texture2D			t_frame_color;
+Texture2D			t_object_motion_vectors;
+
+struct	v2p_motion_blur
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float2	project	( float4 projected )
+{
+	return	( projected.xy*float2( 1.f, -1.f) + projected.w)*0.5f/projected.w;
+}
+
+float4 	main	( v2p_motion_blur I ) : SV_TARGET
+{
+	float3	eye_ray;
+	eye_ray.xy					= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z					= 1;
+
+	float	depth				= gbuffer_read_frame_depth( I.tc);
+	float4	position			= float4( depth*eye_ray, 1.f);
+
+	float3	world_position		= mul( m_V2W, position);
+	float3	previous_position	= mul( prev_view_matrix_parameter, float4( world_position, 1.f)).xyz;
+
+	float2	previous_uv			= project( mul( m_P, float4( previous_position, 1.f)));
+	float2	current_uv			= project( mul( m_P, position));
+
+	float2	camera_velocity		= ( current_uv - previous_uv)*0.04f;
+
+	float4	object_motion		= t_object_motion_vectors.SampleLevel( s_accumulator, I.tc, 0);
+	bool	has_object			= dot( object_motion.xy, object_motion.xy) > 0.f;
+
+	float2	velocity			= object_motion.xy*0.04f + camera_velocity*( has_object ? 0.f : 1.f);
+
+	float	speed				= length( velocity);
+	float2	direction			= velocity/( speed + 0.000001f);
+
+	float2	scaled				= velocity/0.035f;
+	float	alpha				= min( dot( scaled, scaled)*1000.f, 1.f);
+
+	velocity					= min( speed, 0.01f)*direction;
+	velocity					= velocity/max( frame_delta_parameter, 0.00001f);
+
+	float3	result				= 0;
+
+	[unroll]
+	for ( int i = 0; i < MOTION_BLUR_SAMPLES; i++)
+	{
+		float2	tap			= ( ( i - MOTION_BLUR_SAMPLES*0.5f)*MOTION_BLUR_STEP*motion_blur_scale_parameter)*velocity + I.tc;
+		float	tap_depth	= t_position.SampleLevel( s_position, tap, 0).x;
+
+		float	inside		= ( tap_depth < position.w && has_object == false && tap_depth < position.z) ? 1.f : 0.f;
+
+		tap					= inside*( I.tc - tap) + tap;
+
+		result				+= t_frame_color.SampleLevel( s_accumulator, tap, 0).xyz;
+	}
+
+	return	float4( result/MOTION_BLUR_SAMPLES, alpha);
+}

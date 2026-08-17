@@ -1,23 +1,25 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 28.04.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
 #include "gbuffer.h"
-#include "dof_functions.h"
 #include "gamma_correction.h"
-#include "luminance.h"
 
 Texture2D t_frame_color0;
 
-float4 main( v2p_TL vin) : SV_TARGET
+struct v2p_gather
 {
-    float result_luminance = 0.0f;
-    
-	result_luminance	   = get_luminance( t_frame_color0.Sample(s_position, vin.Tex0).rgb );
-	result_luminance 	   = log( pixel_luminance_epsilon + result_luminance );
-	
-    return float4(result_luminance, result_luminance, result_luminance, 0.0f);
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_gather vin) : SV_TARGET
+{
+	float3 color = clamp( t_frame_color0.Sample( s_accumulator, vin.tc).xyz, 0.0f, 1000000.0f);
+
+	float luminance = dot( color, float3( 0.2125f, 0.7154f, 0.0721f));
+
+	return float4( ( luminance + 0.001f).xxx, 0.0f);
 }

@@ -1,0 +1,20 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/present.ps, plain permutation) - the file was absent
+//	from the recovered source drop. The blob's dependency list names only
+//	common_samplers.h, so the io struct is the shader's own. One
+//	SampleLevel of the accumulator into the back buffer.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common_samplers.h"
+
+struct p_present
+{
+	float2	Tex0	: TEXCOORD0;
+	float4	HPos	: SV_POSITION;	// Clip-space position 	(for rasterization)
+};
+
+float4 main( p_present vin ) : SV_Target
+{
+	return t_base.SampleLevel( s_accumulator, vin.Tex0, 0);
+}

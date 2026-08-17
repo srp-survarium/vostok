@@ -1,0 +1,62 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/olta_blend.ps, plain permutation) - absent from the
+//	recovered source drop. Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip olta_blend.ps
+//
+//	OLTA is a half-rate (every other scanline) accumulation: the mask says
+//	how much of a pixel was resolved this frame, and where it was not the
+//	frame colour is replaced by a nine-tap box over the neighbouring lines -
+//	rows two texels apart, hence the y offsets 2*j-1 in screen_res.zw units.
+//	The line above is tried first, the pixel's own line second.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+Texture2D	t_frame_color;
+Texture2D	t_olta;
+
+struct	v2p_olta_blend
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4	blur	( float2 tc )
+{
+	float4	result	= 0;
+
+	[unroll]
+	for ( int i = -1; i <= 1; i++)
+	{
+		[unroll]
+		for ( int j = -1; j <= 1; j++)
+			result	+= t_frame_color.SampleLevel( s_material1, tc + screen_res.zw*float2( i, 2*j - 1), 0);
+	}
+
+	return	result/9.f;
+}
+
+float4 	main	( v2p_olta_blend I ) : SV_Target
+{
+	float2	tc		= I.tc + screen_res.zw*float2( 0.f, 1.f);
+	float	olta	= t_olta.SampleLevel( s_accumulator, tc, 0).x;
+	float4	color	= t_frame_color.SampleLevel( s_accumulator, I.tc, 0);
+
+	if ( olta < 1.f)
+	{
+		float4	next	= t_frame_color.SampleLevel( s_accumulator, tc, 0);
+		return	blur( tc)*( 1.f - olta) + next*olta;
+	}
+	else
+	{
+		float	olta_center	= t_olta.SampleLevel( s_accumulator, I.tc, 0).x;
+
+		if ( olta_center < 1.f)
+			return	color*olta_center + blur( I.tc)*( 1.f - olta_center);
+	}
+
+	return	color;
+}

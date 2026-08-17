@@ -1,0 +1,43 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4	dof_height_lights;
+uniform float4	dof_parameters;
+uniform float4	blurriness_amount;
+uniform float2	pick_lighting_luminance_position;
+
+Texture2D		t_accumulator_dif;
+Texture2D		t_frame_color;
+
+struct v2p_pick
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+struct ps_output
+{
+	float4	luminance	: SV_Target0;
+	float4	frame		: SV_Target1;
+	float4	unused0		: SV_Target2;
+	float4	unused1		: SV_Target3;
+};
+
+ps_output main( v2p_pick I )
+{
+	ps_output	output;
+
+	float4	diffuse		= saturate( t_accumulator_dif.SampleLevel( s_accumulator, pick_lighting_luminance_position, 0));
+
+	output.luminance	= diffuse*diffuse*8.0f;
+	output.frame		= t_frame_color.SampleLevel( s_accumulator, pick_lighting_luminance_position, 0);
+	output.unused0		= float4( 0.f, 0.f, 0.f, 0.f);
+	output.unused1		= float4( 0.f, 0.f, 0.f, 0.f);
+
+	return	output;
+}

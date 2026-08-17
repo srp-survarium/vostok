@@ -1,0 +1,539 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 17.08.2026
+//	Ground truth	: the 300 shipped permutations of
+//					  shaders/sm_4_0/forward_probe_lighting.ps, disassembled
+//					  with fxc /dumpbin /Fc.  No source for this name arrived
+//					  with the drop; forward_lighting.ps and forward_base.ps
+//					  were read as aids for the shared material/vertex-input
+//					  half, and every line below is answerable to a listing.
+//	Acceptance		: python3 -m vostok.shaders roundtrip forward_probe_lighting.ps
+//	State			: 300 / 300 byte-identical.  No residual.
+////////////////////////////////////////////////////////////////////////////
+//
+//	The forward (alpha-blended) environment-probe pass: one probe, one draw,
+//	added into the frame.  Nothing is read from the g-buffer except the depth
+//	the soft-edge fade needs; the surface comes from the material system and
+//	the light comes from one cube map, sampled twice - once along the world
+//	normal for the diffuse term and once along the mirror direction, at two
+//	adjacent mip levels lerped by the fractional part, for the specular.
+//
+//	Axis status - every axis below is byte-proven over all 300 blobs:
+//
+//	  CONFIG_VERTEX_INPUT_TYPE   0..14, all fifteen ship, all identical
+//	  GLOBAL_SHADING_QUALITY     0 and 3 ship and are DEAD: all 150 pairs of
+//	                             blobs are byte-identical across it, so unlike
+//	                             forward_lighting.ps this shader never adds the
+//	                             Smith geometric term.  Do not add an arm.
+//	  CONFIG_TDIFFUSE            0 takes solid_color_specular through
+//	                             convert_to_linear_space; 1 REPLACES it with
+//	                             t_base (it does not modulate it - the 1 blobs
+//	                             list solid_color_specular as unused)
+//	  CONFIG_TNORMAL             1 routes psf_normal.h's tnormal through
+//	                             s_anisotropic; 0 takes parameters.normal
+//	  CONFIG_TROUGHNESS          1 adds .w*t_roughness through s_linear (not
+//	                             s_base, which is what forward_lighting.ps uses)
+//	  CONFIG_TTRANSPARENCY       1 multiplies solid_transparency by
+//	                             t_transparency.a through s_linear
+//	  CONFIG_USE_SOFT_EDGES      1 fades against the frame depth
+//	  CONFIG_USE_SUBUV           1 exactly when the input type is 8
+//	  CONFIG_ALPHA_TEST, CONFIG_TSPECULAR_COLOR, CONFIG_TFRESNEL,
+//	  CONFIG_USE_BOUND_NORMALS, CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+//	  CONFIG_LOD_INDEX, CONFIG_WIND_MOTION, GLOBAL_USE_VEGETATION_TRAMPLE
+//	                             ship only as 0; unconstrained.
+//
+//	Shapes that look arbitrary and are not, each load-bearing for byte-identity:
+//
+//	  * the surface normal is parameters.normal, NOT
+//	    normalize( mul( tangent_trans, float3(0,0,1) ) ) the way
+//	    forward_lighting.ps spells it.  The two differ per vertex input type and
+//	    the blobs separate them - see the HEADER FINDING below;
+//	  * the mirror direction is -reflect( view, normal ) and the blobs keep the
+//	    negate as its own mov, so the reflect is spelled unnegated first;
+//	  * with the halfway vector pinned on the normal, the Beckmann distribution
+//	    collapses to its own normalisation constant 1/(m^2*pi) - there is no
+//	    exp() in the specular at all;
+//	  * the "* 4 * max( vdh, 1e-5 )" denominator is named before the quotient:
+//	    the blobs fold the two maxes into one two-lane max and take the *4
+//	    straight after it, which an inline spelling loses;
+//	  * `mip` must be spelled ( roughness*saturate( VdotN ) )*scale - with the
+//	    scale on the right - or the +1 level's mad comes out with its operands
+//	    swapped;
+//	  * the specular is packed as attenuation-first and the diffuse folds its
+//	    attenuation into the final mad; the other order costs one instruction.
+//
+//	CONFIRMS the common_samplers.h finding forward_lighting.ps recorded and the
+//	header now carries: the sampler between s_linear and s_base is named
+//	s_anisotropic, not s_border.  Every CONFIG_TNORMAL permutation here binds
+//	s_linear = s0, s_anisotropic = s1, s_base = s2, and sampler slots follow
+//	declaration order, so the name has to sit there.
+//
+//	HEADER FINDING - gbuffer.h.  Ship's gbuffer.h includes gamma_correction.h
+//	(and through it debug.h): the shipped dependency tables of both probe
+//	shaders list gamma_correction.h and debug.h immediately after gbuffer.h's
+//	own common_samplers.h.  The recovered gbuffer.h includes only
+//	common_samplers.h, so this file includes gamma_correction.h itself.
+//
+//	HEADER FINDING - vertex_input.h.  Ship's shared get_material_parameters
+//	sets parameters.normal per input type, and the values it sets are not the
+//	ones forward_lighting.ps's local structs carry.  Proven by the
+//	CONFIG_TNORMAL=0 blobs of this file, one per type:
+//	    0, 9, 10, 12, 13, 14   left at clear_material_parameters' (0,0,1)
+//	                           - the blobs read m_V2W's third column
+//	    1, 2, 3, 4, 5, 6       the UNNORMALIZED third column of
+//	                           tangent_to_viewspace (the blobs read .z of the
+//	                           three tbn interpolants and go straight into
+//	                           m_V2W - no rsq in between)
+//	    11                     the same column, NORMALIZED (its blob has the
+//	                           extra dp3/rsq/mul)
+//	    7, 8                   mul( m_V, float4( input.normal, 0 ) ).xyz
+//	Type 13 is the sharp one: forward_lighting.ps's blobs read the tangent
+//	column for it, this file's read the identity - both are right, because
+//	forward_lighting.ps takes the normal from tangent_to_viewspace and this
+//	file takes it from parameters.normal, which the wires type never sets.
+//
+//	HEADER FINDING - vertex_input.h, skeleton types.  For CONFIG_VERTEX_INPUT_TYPE
+//	3..6 the world position is at TEXCOORD5, not TEXCOORD4: this file's blobs
+//	read register 6.  forward_lighting.ps names TEXCOORD4 `position` and
+//	TEXCOORD5 `normal` and reads neither, so its blobs cannot tell them apart.
+//
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_SHADING_QUALITY,
+		GLOBAL_USE_VEGETATION_TRAMPLE,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_TDIFFUSE,
+		CONFIG_TNORMAL,
+		CONFIG_ALPHA_TEST,
+		CONFIG_TSPECULAR_COLOR,
+		CONFIG_TFRESNEL,
+		CONFIG_TROUGHNESS,
+		CONFIG_USE_SUBUV,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_USE_BOUND_NORMALS,
+		CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+		CONFIG_LOD_INDEX,
+		CONFIG_USE_SOFT_EDGES,
+		CONFIG_WIND_MOTION,
+*/
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+#include "material.h"
+#include "psf_normal.h"
+
+#if CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+	parameters.normal 					= mul( parameters.tangent_to_viewspace, float3(0.0f, 0.0f, 1.0f));
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	parameters.color 					= float4(input.color, 1.0f);
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE>=3 && CONFIG_VERTEX_INPUT_TYPE<=6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	normal				: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+	parameters.normal 					= mul( parameters.tangent_to_viewspace, float3(0.0f, 0.0f, 1.0f));
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+
+float3   up_view_vector;
+float3   right_view_vector;
+
+float	 use_align_by_dir;
+float3   view_location;
+
+float	 use_fixed_axis;
+float3   rotation_fixed_axis;
+
+float locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.world_view_proj_position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	parameters.tc 						= input.tc;
+#if CONFIG_USE_SUBUV
+	parameters.sub_uv					= input.tc1;
+#endif // #if CONFIG_USE_SUBUV
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.normal 					= mul(m_V, float4(input.normal, 0.0f)).xyz;
+	parameters.tangent_to_viewspace 	= mul((float3x3)m_V, transpose(float3x3(input.tangent, input.binormal, input.normal)));
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==10
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==11
+
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	patch_color			: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+	parameters.normal 					= normalize( mul( parameters.tangent_to_viewspace, float3(0.0f, 0.0f, 1.0f)));
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters 		parameters;
+	clear_material_parameters	(parameters);
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==13
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==14
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc						= input.position.xz;
+
+	return parameters;
+}
+
+#endif
+
+#include "brdf.h"
+#include "psf_alpha_test.h"
+
+float4		m_probe_parameters0;		// xyz - probe centre in world space, w - probe range
+float4		m_probe_parameters1;		// x - diffuse scale, y - specular scale, z - mip count
+
+float 	  	solid_transparency;
+
+TextureCube	t_probe_cubemap;
+Texture2D	t_transparency;
+Texture2D	t_roughness;
+Texture2D	t_specular_intensity;
+
+//	psf_normal.h's psf_tnormal, sampled through s_anisotropic.
+float3 forward_tnormal( Texture2D _t_normal, float3x3 tangent_trans, float2 tc, float3 multiplier)
+{
+	float3 normal;
+	normal.xy = _t_normal.Sample( s_anisotropic, tc).wy * 2.f - 1.f;
+	normal.z  = sqrt( max( 1.0f - dot(normal.xy, normal.xy), 0.f));
+	normal.y  = -normal.y;
+	normal 	  = normalize(normal);
+	normal 	  = mul( tangent_trans, normal * multiplier);
+	return normalize( normal);
+}
+
+//	The probe cube stores colour pre-divided by its own alpha, in gamma space.
+float3 sample_probe( float3 direction, float mip_level )
+{
+	float4 value	= t_probe_cubemap.SampleLevel( s_base, direction, mip_level );
+	return	convert_to_linear_space( value.xyz/value.w );
+}
+
+float3 sample_probe_diffuse( float3 direction, float mip_level )
+{
+	float4 value	= t_probe_cubemap.SampleLevel( s_material1, direction, mip_level );
+	return	convert_to_linear_space( value.xyz/value.w );
+}
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+
+	float2 		tc				= 	parameters.tc;
+	float3x3	tangent_trans	= 	parameters.tangent_to_viewspace;
+
+	float3 view_normal;
+	if( CONFIG_TNORMAL)
+		view_normal				= 	forward_tnormal( t_normal, tangent_trans, tc, float3(1,1,1));
+	else
+		view_normal				= 	parameters.normal;
+
+	float3	normal				= normalize( mul( (float3x3)m_V2W, view_normal ) );
+	float3	view_direction		= normalize( eye_position - parameters.world_position );
+
+	float3	reflection			= -reflect( view_direction, normal );
+	float3	light_direction		= normalize( reflection );
+	float	light_dot_normal	= saturate( dot( light_direction, normal ) );
+	float	view_dot_normal		= dot( view_direction, normal );
+
+	float3	halfway_direction	= normalize( light_direction + view_direction );
+	float	view_dot_halfway	= dot( view_direction, halfway_direction );
+	float	view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+	//	Named here, not spelled inside the quotient: the blobs fold the two
+	//	maxes into one two-lane instruction and take the *4 straight after it.
+	float	specular_denominator	= 4.f*max( view_dot_halfway, 0.00001f );
+
+	float3 	diffuse_color;
+	if( CONFIG_TDIFFUSE)
+		diffuse_color			= 	t_base.Sample( s_base, tc).xyz;
+	else
+		diffuse_color			= 	convert_to_linear_space(solid_color_specular.xyz);
+
+	//	CONFIG_ALPHA_TEST ships only as 0, and diffuse_color has no alpha lane
+	//	here at all, so there is nothing for psf_alpha_test to clip against and
+	//	no blob to answer to.  The include stays because ship's dependency table
+	//	lists it; the call is deliberately absent rather than guessed.
+
+	float 	transparency 		=	solid_transparency;
+	if( CONFIG_TTRANSPARENCY)
+		transparency 			*= 	t_transparency.Sample( s_linear, tc ).a;
+
+	float 	smoothness			= 	specular_fresnel_roughness_parameters.z;
+	if( CONFIG_TROUGHNESS)
+		smoothness				+=	specular_fresnel_roughness_parameters.w*t_roughness.Sample( s_linear, tc ).x;
+
+	float 	surface_roughness	=	1.f - smoothness;
+	float 	fresnel_at_0_degree	=	specular_fresnel_roughness_parameters.x;
+
+	//	The mirror direction puts the halfway vector exactly on the normal, so
+	//	the Beckmann distribution collapses to its own normalisation constant.
+	float	specular_power		= 255.f*(1.f - surface_roughness);
+	float	roughness			= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
+	float	normalized_distribution_function	= 1.f/(square( roughness )*pi);
+
+	float	fresnel_factor		= fresnel_at_0_degree + (1.f - fresnel_at_0_degree)*pow( 1.f - view_dot_halfway_plus, 5.f );
+
+	float	specular			=
+		light_dot_normal > 0.f
+		?
+			normalized_distribution_function*(light_dot_normal*fresnel_factor)/
+			(
+				specular_denominator*ABS_TO_REMOVE_WARNING( view_dot_normal*light_dot_normal )
+			)
+		:
+			0.f;
+
+	float	specular_factor		= min( fresnel_factor*saturate( specular ), 100.f );
+	if ( dot( reflection, normal ) < 0.f )
+		specular_factor			= 1.f;
+
+	float	mip					= (surface_roughness*saturate( view_dot_normal ))*m_probe_parameters1.z;
+	float3	upper				= sample_probe( reflection, trunc( mip + 1.f ) );
+	float3	lower				= sample_probe( reflection, trunc( mip ) );
+
+	float3	specular_lighting	= lerp( lower*specular_factor, specular_factor*upper, frac( mip ) );
+	float	clamped_roughness	= saturate( surface_roughness );
+	specular_lighting			= lerp( specular_lighting, 0.f, clamped_roughness*(clamped_roughness*clamped_roughness) );
+	specular_lighting			= m_probe_parameters1.y*specular_lighting;
+	specular_lighting			= min( specular_lighting, 4.f );
+	specular_lighting			= specular_lighting*convert_to_linear_space( specular_color_parameter );
+
+	float3	to_probe			= m_probe_parameters0.xyz - parameters.world_position;
+	float	normalized_distance	= sqrt( dot( to_probe, to_probe ) )/(m_probe_parameters0.w*0.95f);
+	float	attenuation			= exp( -2.f*square( square( square( normalized_distance ) ) ) );
+	attenuation					= square( square( attenuation ) );
+
+	specular_lighting			= specular_lighting*attenuation;
+
+	float3	diffuse_lighting	= sample_probe_diffuse( normal, m_probe_parameters1.z - 2.f );
+	diffuse_lighting			= m_probe_parameters1.x*diffuse_lighting;
+	diffuse_lighting			= min( diffuse_lighting, 10.f );
+	diffuse_lighting			= diffuse_lighting*(1.f - fresnel_factor);
+	diffuse_lighting			= diffuse_lighting*diffuse_color;
+
+	float3	final_color			= diffuse_lighting*attenuation + specular_lighting;
+
+	float soft_edge				= 1.f;
+	if ( CONFIG_USE_SOFT_EDGES)
+	{
+		float pixel_depth		= parameters.world_view_position.z;
+		float frame_depth		= gbuffer_read_frame_depth( input.homogeneous_position.xy/screen_res.xy );
+		soft_edge				= saturate( (frame_depth - pixel_depth)*4.f );
+	}
+
+	return float4( final_color, soft_edge*saturate( parameters.color.a*transparency ) );
+}

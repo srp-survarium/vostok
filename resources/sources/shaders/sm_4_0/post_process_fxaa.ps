@@ -3,6 +3,17 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 to the shipped v0.100b revision
+//	(shaders/sm_4_0/post_process_fxaa.ps, plain permutation);
+//	byte-identical. The recovered snapshot was an older FXAA generation
+//	(fxaa_common.h, the FXAA 1 whitepaper port); the blob's dependency list
+//	names fxaa.h instead - NVIDIA FXAA 3.11, quality preset 39, see the
+//	reconstruction notes there. Ship drives the thresholds from a
+//	fxaa_parameters uniform rather than compile-time defines, takes
+//	rcpFrame from static_globals' screen_res.zw, and no longer runs the
+//	output through convert_from_linear_space (gamma_correction.h stays
+//	included but unused - it is in the blob's dependency list).
+////////////////////////////////////////////////////////////////////////////
 
 /*
 	$DEFINES$:
@@ -11,7 +22,12 @@
 */
 
 #include "common.h"
-#include "fxaa_common.h"
+
+#define FXAA_PC					1
+#define FXAA_HLSL_4				1
+#define FXAA_GREEN_AS_LUMA		1
+#define FXAA_QUALITY__PRESET	39
+#include "fxaa.h"
 #include "gamma_correction.h"
 
 struct vertex_output_struct
@@ -22,21 +38,12 @@ struct vertex_output_struct
 
 Texture2D 	t_frame_color;
 
-uniform float4 screen_res;
+uniform float4 fxaa_parameters;	// x - subpix, y - edge threshold, z - edge threshold min
+
 
 //http://developer.download.nvidia.com/assets/gamedev/files/sdk/11/FXAA_WhitePaper.pdf
 float4 main(vertex_output_struct input) : SV_TARGET
 {
 	FxaaTex tex = { s_base, t_frame_color };
-	return float4(convert_from_linear_space(FxaaPixelShader(input.uv, tex, screen_res.zw)), 1.0f);
+	return float4(FxaaPixelShader(input.uv, tex, screen_res.zw, fxaa_parameters.x, fxaa_parameters.y, fxaa_parameters.z).xyz, 1.0f);
 }
-
-
-
-
-
-
-
-
-
-

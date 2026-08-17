@@ -1,0 +1,249 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 29.03.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/depth_accumulate_batched.ps, all 69 permutations) -
+//	absent from the recovered source drop.
+//
+//	This is the *batched* sibling of depth_accumulate.ps, and the two are
+//	NOT the same shader: plain depth_accumulate returns zero (a depth-only
+//	pass that leans on the depth buffer), while this one writes the distance
+//	from the fragment to light_position into rgb and 1 into alpha - a cube
+//	shadow map's radial depth.  The recovered depth_accumulate.ps in git's
+//	initial commit is in fact this shader's body, one revision back: it
+//	returned `distance(world_position, light_position)` the same way, and
+//	the header of today's depth_accumulate.ps records that divergence.
+//
+//	Two things the ship compile does that the recovered revision does not:
+//	the diffuse tap is `Sample` with s_base (not SampleLevel), and the alpha
+//	reference is the literal 0.25 rather than parameters.color.a scaling or
+//	the material cbuffer's alpha_ref_parameter - so no material_parameters
+//	cbuffer appears in any of the 69 RDEFs.  See the header note below.
+//
+//	==== axis status ======================================================
+//
+//	Four defines vary across the shipped strings: CONFIG_VERTEX_INPUT_TYPE
+//	(0..14, all fifteen ship), CONFIG_ALPHA_TEST (0/1), CONFIG_WIND_MOTION
+//	(0..3, a vertex-stage axis - it changes nothing here and every value
+//	compiles to the same blob) and CONFIG_USE_SUBUV (1 only alongside type
+//	8).  GLOBAL_USE_VEGETATION_TRAMPLE, CONFIG_USE_BOUND_NORMALS,
+//	CONFIG_USE_UP_DIRECTIONAL_NORMALS and CONFIG_LOD_INDEX are 0 in all 69.
+//	Byte-proven: 69 identical, 0 differ.
+//
+//	==== where the view-space position comes from =========================
+//
+//	Byte-forced, per family, and the reason m_V is [unused] in some RDEFs:
+//	  skeleton (3..6)  an interpolant at TEXCOORD3
+//	  grassmesh (11)   an interpolant at TEXCOORD5
+//	  postprocess (12) never filled - it stays (0,0,0), so the pass measures
+//	                   the distance from the camera origin to the light
+//	  everything else  mul( m_V, float4( world position, 1))
+//	then world = mul( m_V2W, float4( that, 1)), a round trip through view
+//	space that is an identity on paper and is what the shipped code does.
+//
+//	==== self-contained on purpose ========================================
+//
+//	The shipped dependency lists name common.h / material.h / vertex_input.h /
+//	static_mesh_vertex_input_shadow_batched.h / psf_alpha_test.h revisions
+//	this tree does not have, so the structs, light_position, the particle and
+//	grassmesh loose-global blocks and the alpha test are declared here.  The
+//	input signatures are byte-identical to depth_accumulate.ps's family for
+//	family, so the struct shapes are shared with that file; only the names of
+//	interpolators this pass actually reads (the two view-space positions) are
+//	corrected against it.
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_ALPHA_TEST,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_WIND_MOTION,
+		CONFIG_USE_SUBUV,
+*/
+
+uniform sampler	s_base;
+Texture2D		t_base;
+
+#if CONFIG_VERTEX_INPUT_TYPE == 0		// null mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		(input).position.xz
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh, shadow batched
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh, 4/3/2/1 bones
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	position			: TEXCOORD4;
+	float3	prev_position		: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
+
+// particle_vertex_input.h's loose globals lead $Globals in these two, which
+// is what puts light_position at offset 64 there and at offset 0 elsewhere.
+float3	up_view_vector;
+float3	right_view_vector;
+
+float	use_align_by_dir;
+float3	view_location;
+
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+
+float	locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10	// decal
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
+
+// grassmesh_vertex_input.h's one loose global, ahead of light_position.
+float4	patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	misc0				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	misc1				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 12	// post process
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+#define material_tc(input)		(input).tc
+
+#else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_tc(input)		(input).tc
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+// Declared after the vertex input's own loose globals: light_position's
+// offset in $Globals is 0, 16 or 64 depending on the family, and that is the
+// only thing pinning this declaration's place.
+float3 light_position;
+
+// Ship static_globals layout (byte-proven repo-wide).
+cbuffer	static_globals
+{
+	uniform float4x4	m_P;
+	uniform float4x4	m_VP;
+	uniform float3x4	m_V;
+	uniform float3x4	m_V2W;
+	uniform float4		fog_params;
+	uniform float3		eye_position;
+	uniform float3		eye_position_view_space;
+	uniform float3		eye_direction;
+	uniform float		scene_time;
+	uniform float4		screen_res;
+}
+
+float4 	main			(in vertex_output_struct input): SV_Target0
+{
+#if (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6) || CONFIG_VERTEX_INPUT_TYPE == 11
+	const float3 world_view_position	= input.view_position;
+#elif CONFIG_VERTEX_INPUT_TYPE == 12
+	const float3 world_view_position	= float3(0.f, 0.f, 0.f);
+#else
+	const float3 world_view_position	= mul(m_V, float4(input.position, 1.f));
+#endif
+
+	float3 world_position			= mul(m_V2W, float4(world_view_position, 1.0f)).xyz;
+	float3 l_pos					= light_position;
+
+	if( CONFIG_ALPHA_TEST)
+	{
+		// psf_alpha_test.h, ship revision: the reference is 0.25, not the
+		// 0.8 the recovered header carries.
+		const float alpha		= t_base.Sample(s_base, material_tc(input)).a;
+		clip					(alpha - 0.25);
+	}
+
+	const float dist				= distance(world_position, light_position);
+
+	return float4(dist, dist, dist, 1.f);
+}

@@ -1,0 +1,57 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+//
+//	Target 0 is the probe face colour normalised so its brightest channel is
+//	at most 1 (t_probe_face_texture is sampled with a .zyx swizzle, i.e. the
+//	face is stored BGR); target 1 packs the probe-relative distance, scaled
+//	by 1/300 and clamped, into two bytes.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4	eye_ray_corner;
+uniform float4	probe_position;
+
+Texture2D		t_probe_face_texture;
+
+struct v2p_probe_face
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+struct ps_output
+{
+	float4	color		: SV_Target0;
+	float4	distance	: SV_Target1;
+};
+
+ps_output main( v2p_probe_face I )
+{
+	ps_output	output;
+
+	float4	face		= t_probe_face_texture.SampleLevel( s_linear, I.tc, 0).zyxw;
+	face.w				= 1.0f;
+
+	float	brightest	= max( max( face.x, 1.0f), max( face.y, face.z));
+	output.color		= face/brightest;
+
+	float3	eye_ray;
+	eye_ray.xy			= ( 1 - I.tc*2 )*eye_ray_corner.xy/eye_ray_corner.z;
+	eye_ray.z			= 1;
+
+	float3	view		= eye_ray*t_position.SampleLevel( s_position, I.tc, 0).x;
+	float3	world		= mul( m_V2W, float4( view, 1.0f));
+
+	float	dist		= min( length( probe_position.xyz - world)/300.0f, 1.0f);
+
+	int		packed		= (int)( dist*65535.0f);
+
+	output.distance.x	= (float)( packed & 255)/255.0f;
+	output.distance.y	= (float)( packed >> 8)/255.0f;
+	output.distance.zw	= float2( 0.0f, 0.0f);
+
+	return	output;
+}

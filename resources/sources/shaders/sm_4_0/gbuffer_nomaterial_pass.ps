@@ -1,0 +1,171 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs - absent from the
+//	recovered source drop. Self-contained (the ship include closure names
+//	header revisions the tree does not have).
+//	The "no material" g-buffer pass: target 0 stores the interpolated normal
+//	(third TBN row) through the ship encode with a fixed material/gloss
+//	packing; inputs without a TBN store a zero normal, which the encode
+//	turns into the NaN pair the blobs show. Target 1 is the default texture
+//	with a constant 0.04 specular intensity.
+//	Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+// PENDING (9 of 30 perms): the per-VIT interpolant layouts of THIS pass
+// differ from the depth-pass template reused below (particle puts tc at
+// TEXCOORD1/reg4, grassmesh carries eight TEXCOORDs, wires/user differ
+// again) - each arm needs its own struct read off its ISGN.
+uniform sampler	s_base;
+Texture2D		t_default_texture;
+
+#if CONFIG_VERTEX_INPUT_TYPE == 0		// null mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		(input).position.xz
+#define HAS_TBN					0
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+};
+#define material_tc(input)		(input).tc
+#define HAS_TBN					1
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh
+#define HAS_TBN					1
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD3;
+	float3	normal				: TEXCOORD4;
+	float3	prev_position		: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10	// decal
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	misc0				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	misc1				: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float3	normal				: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 12	// post process
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+#define material_tc(input)		(input).tc
+
+#else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_tc(input)		(input).tc
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+#ifndef HAS_TBN
+#define HAS_TBN					0
+#endif
+
+struct ps_output
+{
+	float4	normal_material	: SV_Target0;
+	float4	color_specular	: SV_Target1;
+};
+
+ps_output 	main			(in vertex_output_struct input)
+{
+	ps_output	output;
+
+#if HAS_TBN
+	float3	normal			= float3( input.tbn_x.z, input.tbn_y.z, input.tbn_z.z);
+#else
+	float3	normal			= (float3)0;
+#endif
+
+	output.normal_material	= float4( normal.xy/sqrt( normal.z*-8.f + 8.f) + 0.5f, 31.f/1023.f, 2.f/3.f);
+	output.color_specular	= float4( t_default_texture.Sample( s_base, material_tc(input)).xyz, 0.04f);
+
+	return	output;
+}

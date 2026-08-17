@@ -19,9 +19,13 @@ static const float	blur_amount_far 	= blurriness_amount.y;
 
 float get_blurriness(float in_depth)
 {
+	// Ship shape, byte-proven by complex_post_process_blend.ps (12 blobs) and
+	// corroborated by gather_bloom.ps: no pow - focus_power is never read -
+	// and the ternary is spelled on `<`, so the compare emits `lt` with the
+	// movc arms in this order.
 	return min(
-		(in_depth-focus_distance) >= 0.0f ? blur_amount_far : blur_amount_near,
-		pow( saturate(abs(in_depth-focus_distance) / focus_region), focus_power )
+		(in_depth-focus_distance) < 0.0f ? blur_amount_near : blur_amount_far,
+		saturate(abs(in_depth-focus_distance) / focus_region)
 	);
 }
 
