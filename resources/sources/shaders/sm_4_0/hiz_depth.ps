@@ -1,0 +1,14 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/hiz_depth.ps, plain permutation) - the file was absent
+//	from the recovered source drop. Pairs with hiz_depth.vs, which feeds
+//	view-space depth (m_WV row 2) through TEXCOORD0; the pixel stage
+//	broadcasts it to all four channels of the Hi-Z target.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+float4 main( float4 hpos : SV_Position, float depth : TEXCOORD0 ) : SV_TARGET
+{
+	return depth;
+}

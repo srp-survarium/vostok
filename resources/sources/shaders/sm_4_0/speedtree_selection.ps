@@ -1,24 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 30.05.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
 
-/*
-	$DEFINES$:
-	CONFIG_VERTEX_INPUT_TYPE,
-*/
-
 #include "common.h"
-#include "material.h"
-#include "vertex_input.h"
 
 uniform float4 selection_color;
 
-float4 	main			(in vertex_output_struct input): SV_TARGET0
+struct v2p_speedtree_selection
 {
-	material_parameters parameters = get_material_parameters(input);
-	fill_material_parameters(parameters);
-	
-	return float4(selection_color.rgb, 0.3f);
+	float4	hpos		: SV_Position;
+	float3	position	: TEXCOORD0;
+};
+
+float4 main( v2p_speedtree_selection I ) : SV_TARGET
+{
+	return	float4( selection_color.xyz, 0.3f);
 }

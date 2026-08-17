@@ -6,7 +6,6 @@
 
 #include "common.h"
 
-uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
 
 struct vertex_input_struct
 {

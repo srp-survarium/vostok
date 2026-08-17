@@ -1,0 +1,23 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform int		preview_mip_index;
+
+TextureCube		t_probe_cubemap;
+
+struct v2p_probe_preview
+{
+	float4	hpos		: SV_Position;
+	float3	reflection	: TEXCOORD0;
+};
+
+float4 main( v2p_probe_preview I ) : SV_Target
+{
+	float4	color	= t_probe_cubemap.SampleLevel( s_material1, normalize( I.reflection), preview_mip_index);
+
+	return	float4( color.xyz/color.w, 0.0f);
+}

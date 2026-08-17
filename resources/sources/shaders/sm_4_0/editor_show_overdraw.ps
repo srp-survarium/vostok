@@ -1,26 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 16.09.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
 
-float4 show_overdraw_color;
-float4 main(v2p_post_process input) : SV_TARGET
+uniform float4 show_overdraw_color;
+
+struct v2p_overdraw
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_overdraw input) : SV_TARGET
 {
 	return show_overdraw_color;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-

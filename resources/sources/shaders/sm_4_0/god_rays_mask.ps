@@ -1,0 +1,38 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float3	sun_direction_parameter;
+
+struct v2p_god_rays_mask
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_god_rays_mask I ) : SV_TARGET
+{
+	float3	sun_position	= eye_position - sun_direction_parameter*500.0f;
+	float4	projected		= mul( m_VP, float4( sun_position, 1.0f));
+	float2	sun_ndc			= projected.xy/projected.w;
+
+	float	depth			= t_position.SampleLevel( s_position, I.tc, 0).x;
+
+	bool	behind			= projected.w >= -0.6f && depth >= 400.0f;
+
+	float2	sun_uv			= sun_ndc*0.5f + 0.5f;
+	sun_uv.y				= 1.0f - sun_uv.y;
+
+	float	falloff			= max( 1.0f - sqrt( dot( I.tc - sun_uv, I.tc - sun_uv)), 0.0f);
+
+	float	sq				= falloff*falloff;
+
+	[flatten] if ( behind )
+		return	falloff*sq;
+
+	return	float4( 0.f, 0.f, 0.f, 0.f);
+}

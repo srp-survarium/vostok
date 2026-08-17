@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	t_particle_result;
+
+struct v2p_quad
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_quad I ) : SV_TARGET
+{
+	float4	result	= t_particle_result.SampleLevel( s_material1, I.tc, 0);
+
+	return	float4( result.xyz, saturate( result.w));
+}

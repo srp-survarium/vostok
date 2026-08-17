@@ -3,28 +3,255 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 18.08.2026
+//	Ground truth	: the two shipped permutations of
+//					  shaders/sm_4_0/capsule_light_accumulator.ps, disassembled
+//					  with fxc /dumpbin /Fc.
+//	Acceptance		: python3 -m vostok.shaders roundtrip capsule_light_accumulator.ps
+//
+//	STATE: 2 of 2 permutations byte-identical.
+//
+//	The point accumulator with the light's position pulled to the nearest
+//	point on a capsule, and no shadow at all.  The core below is
+//	point_light_accumulator.ps's verbatim, and the shared-header findings this
+//	family proves are listed in that file's header.  This file's own:
+//
+//	  * capsule_light.h's nearest_point_on_capsule is ship-exact and is used
+//	    from the header, including the two "optional" lines that push the
+//	    surface back out to light_capsule_radius + 0.001 - the blobs hold both
+//	    the rsq and the sqrt off the one dot product, which is that
+//	    normalize()/length() pair;
+//	  * capsule_light() never calls a shadow function, so the shadow helpers
+//	    below are carried only to keep this file the family's core plus a
+//	    delta; fxc drops them, and no blob binds shadowmap_texture or
+//	    s_shmap_local.
+//
+//	Axis status:
+//
+//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
+//	                                  geometric term.
+//	  CONFIG_SHADOWED_LIGHT            ships only as 0 for this name, and the
+//	                                  light has no shadow arm to reach, so the
+//	                                  define is dead here and unconstrained.
+////////////////////////////////////////////////////////////////////////////
 
 /*	$DEFINES$:
-	CONFIG_SHADOWED_LIGHT,
-	GLOBAL_SPOT_SHADOWMAP_SIZE,
+		GLOBAL_SHADING_QUALITY,
+		CONFIG_SHADOWED_LIGHT,
 */
 
+#include "common_functions.h"
 #include "light_ps_helper.h"
 #include "capsule_light.h"
 
 uniform float3					s_eye_ray_corner;
 
+SamplerComparisonState			s_shmap_local;
+
+float4 pack_light_accumulator	( float4 value )
+{
+	return	1.f/rsqrt( saturate( value*0.125f ) );
+}
+
+light_accumulator make_light_accumulator	( float3 color, light_factors factors )
+{
+	light_accumulator	result;
+
+	float3 light			= convert_to_linear_space( color )*light_intensity;
+
+	result.diffuse			= pack_light_accumulator( float4( light*max( factors.diffuse, 0.f )*light_diffuse_influence_factor, 0.f ) );
+	result.specular			= pack_light_accumulator( float4( light*max( factors.specular, 0.f )*light_specular_influence_factor, 0.f ) );
+
+	return					result;
+}
+
+float4 sample_local_shadow_map	( float2 shadow_tc, float depth )
+{
+	float4 shadow_result	= float4( 0.0f, 0.0f, 0.0f, 0.0f );
+
+	[unroll]
+	for ( int i = 0; i < 16; i++ ) {
+		float2 tc			= shadow_tc.xy + poisson_disk[i]/shadow_map_size;
+		shadow_result		+= shadowmap_texture.SampleCmpLevelZero( s_shmap_local, tc.xy, depth ).rrrr;
+	}
+	shadow_result			/= 16.0f;
+
+	return					shadow_result;
+}
+
+float4 local_light_shadow_factor	( float3 view_space_position, float3x4 view_to_world_matrix )
+{
+#if CONFIG_SHADOWED_LIGHT
+	float4 world_space_position	= float4( mul( view_to_world_matrix, float4( view_space_position, 1.0f ) ), 1.0f );
+	float4 projection_position	= mul( view_to_light_matrix, world_space_position );
+	float4 shadow_tc			= light_to_texture_space( projection_position/projection_position.w, shadow_z_bias );
+
+	return					saturate( sample_local_shadow_map( shadow_tc, shadow_tc.z ) + shadow_transparency );
+#else // #if CONFIG_SHADOWED_LIGHT
+	return					float4( 1.0f, 1.0f, 1.0f, 1.0f );
+#endif // #if CONFIG_SHADOWED_LIGHT
+}
+
+////////////////////////////////////////////////////////////////////////////
+//	the deferred BRDF: isotropic Beckmann, Schlick fresnel - the same shapes
+//	forward_lighting.ps's forward_brdf holds, fed from the g-buffer instead of
+//	the material cbuffer.
+////////////////////////////////////////////////////////////////////////////
+
+light_factors accumulator_brdf	(
+		float3 light_direction,
+		float3 view_direction,
+		float3 surface_normal,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	light_factors				result;
+
+	float f0					= fresnel_at_0_degree;
+	float specular_power		= 255.f*(1.f - surface_roughness.x);
+	float roughness				= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
+
+	float3 halfway_direction	= normalize( light_direction + view_direction );
+	float view_dot_halfway		= dot( view_direction, halfway_direction );
+	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+
+	float view_dot_normal		= dot( surface_normal, view_direction );
+	float light_dot_normal		= saturate( dot( light_direction, surface_normal ) );
+
+	result.diffuse				= light_dot_normal*(fresnel_factor > 0.99f ? 1.f : 1.f - fresnel_factor);
+
+	float cosine_theta			= dot( surface_normal, halfway_direction );
+	float square_cosine_theta	= square( cosine_theta );
+	float square_sine_theta		= 1.f - square_cosine_theta;
+	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
+
+#if GLOBAL_SHADING_QUALITY >= 3
+	float view_attenuation		= 2.f*saturate( cosine_theta*view_dot_normal/view_dot_halfway );
+	float light_attenuation		= 2.f*saturate( cosine_theta*light_dot_normal/view_dot_halfway );
+	float geometric_attenuation	= min( min( view_attenuation, light_attenuation ), 1.f );
+#else // #if GLOBAL_SHADING_QUALITY >= 3
+	float geometric_attenuation	= 1.f;
+#endif // #if GLOBAL_SHADING_QUALITY >= 3
+
+	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
+	float normalized_distribution_function	=
+		min(
+			distribution_function/
+			(
+				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+			),
+			400000000000.f/fresnel_factor
+		);
+
+	result.specular				=
+		light_dot_normal > 0.f
+		?
+			light_dot_normal*fresnel_factor*geometric_attenuation*
+			normalized_distribution_function/
+			(4.f*max( view_dot_halfway, 0.00001f ))
+		:
+			0.f;
+
+	result.diffuse				= max( result.diffuse, 0.f );
+
+	return						result;
+}
+
+////////////////////////////////////////////////////////////////////////////
+//	the g-buffer reads: linear depth off t_position, the Lambert-azimuthal
+//	normal off t_normal, the surface's gloss code out of the normal target's
+//	.z through s_accumulator and its specular-intensity code out of the
+//	diffuse target's .w through s_diffuse - both 7-bit fields over 127.
+////////////////////////////////////////////////////////////////////////////
+
+g_data accumulator_gbuffer_data	( float3 texture_coordinates, float3 eye_ray_corner )
+{
+	float2 tc_proj				= texture_coordinates.xy/texture_coordinates.z;
+
+	float3 eye_ray;
+	eye_ray.xy					= eye_ray_corner.xy*( 1 - tc_proj.xy*2 )/eye_ray_corner.z;
+	eye_ray.z					= 1;
+
+	g_data						data;
+
+	data.position				= eye_ray*gbuffer_read_frame_depth( tc_proj );
+	data.normal					= gbuffer_read_frame_normal( tc_proj );
+	data.normal.z				= -data.normal.z;
+
+	data.diffuse				= 0.f;
+	data.mat_id					= 0.f;
+	data.specular_intensity		= 0.f;
+	data.specular_power			= 0.f;
+	data.diffuse_power			= 0.f;
+	data.sh_param				= 0.f;
+
+	return						data;
+}
+
+light_factors accumulator_point_light_impl	(
+		float3 surface_position,
+		float3 surface_normal,
+		float3 light_position,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	light_factors				result;
+
+	float3 light_direction		= light_position - surface_position;
+	float square_distance		= dot( light_direction, light_direction );
+	float distance				= sqrt( square_distance );
+	light_direction				/= distance;
+
+	float3 view_direction		= normalize( -surface_position );
+
+	result						= accumulator_brdf( light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
+
+	float attenuation			= pow(
+		max( abs(1.f - saturate( square_distance/square(light_range) )), 0.001f ),
+		light_attenuation_power
+	);
+
+	result.diffuse				*= attenuation;
+	result.specular				*= attenuation;
+
+	return						result;
+}
+
+light_factors accumulator_capsule_light	( g_data surface, float2 texture_coordinates )
+{
+	float3 surface_position		= surface.position;
+	float3 light_position		= nearest_point_on_capsule( surface_position, light_direction );
+
+	float4 diffuse_target		= t_diffuse.SampleLevel( s_diffuse, texture_coordinates, 0 );
+	float4 normal_target		= t_normal.SampleLevel( s_accumulator, texture_coordinates, 0 );
+
+	float gloss					= (float)( ( (uint)( normal_target.z*1023.f ) ) & 127 );
+	float specular_intensity	= (float)( ( (uint)( diffuse_target.w*255.f ) ) & 127 );
+
+	return
+		accumulator_point_light_impl(
+			surface_position,
+			surface.normal,
+			light_position,
+			gloss/127.f,
+			specular_intensity/127.f
+		);
+}
+
 light_accumulator main			( pixel_shader_input input ) : SV_TARGET
 {
 	return
-		get_light_accumulator(
+		make_light_accumulator(
 			light_color,
-			capsule_light(
-				get_gbuffer_data(
+			accumulator_capsule_light(
+				accumulator_gbuffer_data(
 					input.texture_coordinates.xyw,
 					s_eye_ray_corner
 				),
-				input.texture_coordinates.xy / input.texture_coordinates.w
+				input.texture_coordinates.xy/input.texture_coordinates.w
 			)
 		);
 }

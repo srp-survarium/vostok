@@ -1,0 +1,23 @@
+#include "common.h"
+#include "gbuffer.h"
+#include "light.h"
+#include "directional_light.h"
+
+#define EPS	(0.9f/255.f)
+#define CLIP_THRESHOLD	(0.0f/255.f)
+
+float4 	main		( v2p_TL I )	: SV_TARGET
+{
+  // Sample the fat framebuffer:
+	//float4 	NH		= t_normal.Sample(s_normal,   I.Tex0); 
+	//float4 	NH		= gbuffer_read_rt_normal	( I.Tex0);
+	float3 normal;
+	float shparam, mat_id;
+	gbuffer_read_rt_normal( I.Tex0, normal, shparam, mat_id);
+	
+	float	L 		= /* NH.w * */ dot	(light_direction.xyz, normal.xyz) + EPS; // Use hemisphere as approximation of max light
+  
+	clip(-(L-CLIP_THRESHOLD) + shparam);
+  
+	return  		float4			(L,L,L,L);
+}

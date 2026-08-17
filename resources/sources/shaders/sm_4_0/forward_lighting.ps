@@ -3,27 +3,151 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 17.08.2026
+//	Ground truth	: the 600 shipped permutations of
+//					  shaders/sm_4_0/forward_lighting.ps, disassembled with
+//					  fxc /dumpbin /Fc.  The file that arrived with the drop was
+//					  a deeply drifted revision - it named dead defines
+//					  (CONFIG_TSPECULAR_POWER), routed lighting through header
+//					  functions the blobs do not contain, and handled seven
+//					  light types where ship handles three.  It was read as an
+//					  aid; every line below is answerable to a listing.
+//	Acceptance		: python3 -m vostok.shaders roundtrip forward_lighting.ps
+////////////////////////////////////////////////////////////////////////////
+//
+//	The forward (alpha-blended) lighting pass: one light, one draw, added into
+//	the frame.  Ship's axes and what each does:
+//
+//	  CONFIG_VERTEX_INPUT_TYPE   0..14, all fifteen ship
+//	  GLOBAL_SHADING_QUALITY     0 or 3 - 3 adds the Smith geometric term
+//	  GLOBAL_USE_POISSON_DISC_SHADOW_FILTER
+//	                             0 = four-tap PCF per cascade,
+//	                             1 = a rotated Poisson disc, 16/8/1/1 taps
+//	  CONFIG_TDIFFUSE, CONFIG_TNORMAL, CONFIG_TROUGHNESS,
+//	  CONFIG_TTRANSPARENCY, CONFIG_USE_SOFT_EDGES   ten combinations ship
+//	  CONFIG_USE_SUBUV           1 exactly when the input type is 8
+//
+//	Ten shapes in here look arbitrary and are not; each is load-bearing for
+//	byte-identity and commented where it sits:
+//
+//	  * light_type is a runtime int, and only 0 (point), 1 (spot) and 4
+//	    (parallel) have arms - the obb/capsule/sphere/plane-spot cases the
+//	    drifted source carried are gone.  It compiles as an if/else chain, not
+//	    a switch: the blobs hold if_z/ieq, not the switch opcode;
+//	  * only the parallel light is shadowed, by the cascade atlas, and the
+//	    shadow is applied to the two material colours, after the accumulator
+//	    packing, never to the light factors;
+//	  * the BRDF is an isotropic Beckmann with a Schlick fresnel, and the
+//	    roughness is 1 - specular_fresnel_roughness_parameters.z fed back
+//	    through 255*(1 - r) - the double negation survives because 1-(1-z) is
+//	    not z in floating point and fxc will not fold it;
+//	  * the specular is clamped as min(ndf, 4e11/fresnel), inside the ndf
+//	    expression, not around the finished specular;
+//	  * the diffuse's max(...,0) is a statement of its own after the specular
+//	    is assigned - the blobs schedule it there;
+//	  * the shadow-map tap builds tc*float3(.5,.5,1) once and lets fxc
+//	    reassociate the constant offsets back into per-tap mads; the z lane
+//	    then survives as the mad-by-1.0 the blobs show;
+//	  * the Poisson rotation angle is a hash of the *fourth* cascade's
+//	    projection: frac(pow(9.213,e.x)*pow(7.12345,e.y)) - 0.5 over
+//	    e = fmod(tc3.xy, 0.25) + 3;
+//	  * the alpha keeps a fresnel term at -1e-6 - too small to see, large
+//	    enough that the whole fresnel chain is emitted;
+//	  * CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
+//	    the world position at TEXCOORD3 - the opposite of forward_base.ps's
+//	    labelling, which its blobs cannot tell apart because it reads neither;
+//	  * every scalar-times-vector product in the final combine is written
+//	    shadow-first; the other order costs one operand swap per blob.
+//
+//	Unverified: CONFIG_ALPHA_TEST, CONFIG_TDETAIL, CONFIG_TSPECULAR_COLOR,
+//	CONFIG_PARALLAX and CONFIG_TFRESNEL ship only as 0, so their arms are
+//	carried from the drifted source and no blob constrains them.
+//
+//	PARKED - 563 of the 600 recompile byte-identically; 37 do not, and every
+//	one of them is the same compiler fact seen from a different side.  fxc
+//	decides, per compile, whether a value is provably non-negative, and that
+//	one decision moves three things at once: whether a max(x, 0) survives or
+//	is folded away, whether the attenuation's saturate lowers to div_sat or to
+//	div+min, and whether the vectoriser pairs two x*x products into a single
+//	instruction.  The shipped blobs disagree with *each other* the same way -
+//	input type 0 folds the distribution's lower clamp away, input type 1 keeps
+//	it, out of one source - so the residue is fxc's own heuristic reacting to
+//	register lifetimes, not a shape this file still has wrong.  Where they sit:
+//
+//	  * input types 1 and 2, CONFIG_TNORMAL = 0                  (4 blobs)
+//	  * input types 3..6, the Poisson filter, CONFIG_TNORMAL = 1 (28 blobs)
+//	  * input type 11 at GLOBAL_SHADING_QUALITY = 3              (3 blobs)
+//	  * input types 10 and 13 at GLOBAL_SHADING_QUALITY = 3      (2 blobs)
+//
+//	Tried, and did not move them: clamp() / min(max()) / max(min()) around the
+//	distribution and around the finished specular - clamp(., 0, .) fixes the
+//	last two families and breaks eight elsewhere, a net loss of six, so the
+//	plain min() is what is written; the diffuse's max early, late, and both;
+//	square() inlined as x*x at each of its sites; squared_length() against
+//	dot() against length()-then-square() for the light distance (dot() is what
+//	the eight blobs of input type 13 wanted, and is what is written); the
+//	attenuation with and without its abs(); the distribution behind a helper
+//	function of its own; naming the accumulator's two max() results, and
+//	packing them as a float2.
+//
+////////////////////////////////////////////////////////////////////////////
 
-/*	$DEFINES$:
+/*	$DEFINES$:	the twenty-one names shaders/masks records for this stage;
+	nine of them take more than one value across the 600 shipped blobs.
+
+		GLOBAL_SHADING_QUALITY,
+		GLOBAL_USE_VEGETATION_TRAMPLE,
+		GLOBAL_USE_POISSON_DISC_SHADOW_FILTER,
 		GLOBAL_ALLOW_STEEPPARALLAX,
-		GLOBAL_FP16_BLEND,
-		GLOBAL_GBUFFER_POS_PACKING,
-		GLOBAL_GBUFFER_NORMAL_PACKING,
-		GLOBAL_USE_BRANCHING,
-		
+
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_TDIFFUSE,
 		CONFIG_TNORMAL,
-		CONFIG_TTRANSPARENCY,
-		CONFIG_TSPECULAR_INTENSITY,
-		CONFIG_TSPECULAR_POWER,
-		CONFIG_TDIFFUSE_POWER,
-		CONFIG_TDETAIL,
 		CONFIG_ALPHA_TEST,
-		CONFIG_LIGHT_TYPE,
+		CONFIG_PARALLAX,
+		CONFIG_TSPECULAR_COLOR,
+		CONFIG_TFRESNEL,
+		CONFIG_TROUGHNESS,
+		CONFIG_TDETAIL,
+		CONFIG_USE_SUBUV,
+		CONFIG_TTRANSPARENCY,
+		CONFIG_SHADOWED_LIGHT,
+		CONFIG_USE_BOUND_NORMALS,
+		CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+		CONFIG_LOD_INDEX,
+		CONFIG_USE_SOFT_EDGES,
+		CONFIG_WIND_MOTION,
 */
 
+//	HEADER FINDING - common_samplers.h.  At ship the sampler between s_linear
+//	and s_base is named s_anisotropic; the recovered header names it s_border,
+//	which nothing in the tree ever samples through.  Every CONFIG_TNORMAL
+//	permutation binds s_linear = s0, s_anisotropic = s1, s_base = s2, and
+//	sampler slots follow declaration order, so the name has to appear *there*.
+//	This reconstruction may not edit shared headers, so it renames the slot
+//	through the preprocessor.  Declaring `sampler s_anisotropic : register(s1)`
+//	here instead produces the same slot but sets D3D_SIF_USERPACKED (0x1) in
+//	the RDEF binding record, which the shipped blobs do not have - that one
+//	flag word is the whole difference.  Delete these two lines once
+//	common_samplers.h carries s_anisotropic itself.
+
 #include "common.h"
+
+//	HEADER FINDING - shadow.h.  The shipped dependency table lists shadow.h
+//	right after common.h, and $Globals opens with m_shadow0..3 at offsets
+//	0/64/128/192.  The recovered shadow.h declares cascade_shadow_map_size
+//	before them and has no t_cascaded_shadow_map at all, so including it puts a
+//	float in slot 0 and loses the texture; ship's revision must declare the
+//	four matrices first and the cascade atlas beside them.  Until shadow.h
+//	carries that, the four matrices and the atlas live here.  s_shmap is not
+//	one of them: it comes from spot_shadow.h, via point_light.h, which is why
+//	it is the last sampler declared and the last slot bound.
+float4x4	m_shadow0;
+float4x4	m_shadow1;
+float4x4	m_shadow2;
+float4x4	m_shadow3;
+
+Texture2D	t_cascaded_shadow_map;
 
 #include "psf_alpha_test.h"
 #include "psf_detail.h"
@@ -49,22 +173,279 @@ float4x4  light_local_to_world;
 
 #include "gamma_correction.h"
 
-
 #include "gbuffer.h"
 #include "material.h"
-#include "vertex_input.h"
 
-Texture2D t_translucency;
-Texture2D t_specular_intensity;
-Texture2D t_specular_power;
-Texture2D t_diffuse_power;
-Texture2D t_emission;
-Texture2D t_height_map;
-Texture2D t_transparency;
-TextureCube t_cubemap;
+//	The vertex-input section is local, exactly as in forward_base.ps: the
+//	recovered vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently than ship
+//	(ship: 0=null, 1/2=static, 3..6=skeleton 4/3/2/1 bones, 7=particle,
+//	8=particle subuv, 9=beamtrail, 10=decal, 11=grassmesh, 12=postprocess,
+//	13=wires, 14=user) and several ship vertex-output structs differ from the
+//	recovered per-type headers. The structs below reproduce the shipped input
+//	signatures exactly, and the per-type uniforms land in $Globals right before
+//	solid_transparency, which is where ship puts them.
 
-float4 far_fog_color_and_distance;
-float near_fog_distance;
+#if CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.normal 					= normalize(input.tbn_z);
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	parameters.color 					= float4(input.color, 1.0f);
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE>=3 && CONFIG_VERTEX_INPUT_TYPE<=6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	position			: TEXCOORD4;
+	float3	normal				: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.normal 					= normalize(input.normal);
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+
+float3   up_view_vector;
+float3   right_view_vector;
+
+float	 use_align_by_dir;
+float3   view_location;
+
+float	 use_fixed_axis;
+float3   rotation_fixed_axis;
+
+float locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.world_view_proj_position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	parameters.tc 						= input.tc;
+#if CONFIG_USE_SUBUV
+	parameters.sub_uv					= input.tc1;
+#endif // #if CONFIG_USE_SUBUV
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.normal 					= mul(m_V, float4(input.normal, 0.0f)).xyz;
+	parameters.tangent_to_viewspace 	= mul((float3x3)m_V, transpose(float3x3(input.tangent, input.binormal, input.normal)));
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==10
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==11
+
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	patch_color			: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters 		parameters;
+	clear_material_parameters	(parameters);
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==13
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==14
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc						= input.position.xz;
+
+	return parameters;
+}
+
+#endif
 
 float 	  solid_transparency;
 
@@ -78,116 +459,372 @@ float 	  solid_transparency;
 
 int light_type;
 
-uniform float4	screen_res;
+Texture2D	t_roughness;
+Texture2D	t_transparency;
+Texture2D	t_specular_intensity;
 
-Texture2D t_roughness;
-// roughness.xy, min, max
-float2 roughness_uv_parameters;
+////////////////////////////////////////////////////////////////////////////
+//	cascaded sun shadow
+////////////////////////////////////////////////////////////////////////////
 
-float3 specular_color_parameter;
+//	0.6/1280, the texel step sample_hw_pcf uses; the cascades share one atlas,
+//	so a cascade's own step is half of it.
+static const float cascade_shadow_texel = 0.00046875f;
+
+//	One cascade of the four-quadrant atlas.  tap_count and kernel_scale are
+//	compile-time at every call site, so the loop unrolls and the /tap_count
+//	folds; the four calls below give the shipped 16/8/1/1 tap counts.
+float sample_cascade( float3 shadow_tc, float2 cascade_offset, float2 rotation_seed, int tap_count, float kernel_scale )
+{
+	//	The halving and the depth bias have to sit in one float3 statement:
+	//	fxc reassociates each tap's constant offset back into the halving mad,
+	//	which kills the shared .xy value and leaves the .z lane as the
+	//	mad-by-1.0 the blobs show.  Splitting them emits a bare add instead.
+	float3 tc		= shadow_tc*float3( 0.5f, 0.5f, 1.f );
+	tc.xy			+= cascade_offset;
+
+#if GLOBAL_USE_POISSON_DISC_SHADOW_FILTER
+	//	A world-stable per-pixel rotation: hash the coarsest cascade's own
+	//	projection of this point.  fmod(x, 0.25f) is the sign-preserving frac
+	//	the blobs spell as ge/frc/movc, and the two bases are exact - their
+	//	log2 in the blob rounds to 9.213 and 7.12345 and to nothing shorter.
+	float2 seed		= fmod( rotation_seed, 0.25f ) + 3.f;
+	float angle		= frac( pow( 9.213f, seed.x )*pow( 7.12345f, seed.y ) ) - 0.5f;
+	//	Transposed, and multiplied from the left, so the dp2s take the disc
+	//	constant first the way the blobs do.  sin(-angle) is a second sincos
+	//	at ship, not a negate.
+	float2x2 rotation	= float2x2( cos(angle), sin(-angle), sin(angle), cos(angle) );
+
+	float result	= 0.f;
+	[unroll]
+	for ( int i = 0; i < tap_count; ++i )
+		result		+= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + ((mul( poisson_disk[i], rotation )*kernel_scale + 1.f)*(cascade_shadow_texel*0.5f)), tc.z - 0.00001f ).x;
+
+	return			result/tap_count;
+#else
+	float s0		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + (float2( -1.f, -1.f )*cascade_shadow_texel), tc.z - 0.00001f ).x;
+	float s1		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + (float2( +1.f, -1.f )*cascade_shadow_texel), tc.z - 0.00001f ).x;
+	float s2		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + (float2( -1.f, +1.f )*cascade_shadow_texel), tc.z - 0.00001f ).x;
+	float s3		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + (float2( +1.f, +1.f )*cascade_shadow_texel), tc.z - 0.00001f ).x;
+
+	return			(s0 + s1 + s2 + s3)/4.f;
+#endif
+}
+
+bool inside_cascade( float3 tc )
+{
+	return	tc.x >= 0.002f && tc.x <= 0.998f && tc.y >= 0.002f && tc.y <= 0.998f && tc.z >= 0.f && tc.z <= 1.f;
+}
+
+float get_cascaded_shadow_factor( float3 position )
+{
+	float4 shadow_position	= float4( position, 1.f );
+	float4 tc0		= mul( m_shadow0, shadow_position );
+	float4 tc1		= mul( m_shadow1, shadow_position );
+	float4 tc2		= mul( m_shadow2, shadow_position );
+	float4 tc3		= mul( m_shadow3, shadow_position );
+
+	float2 rotation_seed	= tc3.xy;
+
+	float3 t0		= tc0.xyz/tc0.w;
+	float3 t1		= tc1.xyz/tc1.w;
+	float3 t2		= tc2.xyz/tc2.w;
+	float3 t3		= tc3.xyz/tc3.w;
+
+	//	Nearest cascade first, and each one is cheaper than the last: 16 taps
+	//	over a 2.5-texel disc, then 8 over 1.25, then a single tap.  The last
+	//	cascade's kernel is 0, which kills the rotation entirely - its blob has
+	//	no sincos at all.  Written as returns in an else-if chain: fxc's
+	//	returned-flag select is what the blobs' `mov r3.z, l(-1)` is.
+	if ( inside_cascade( t0 ) )
+		return		sample_cascade( t0, float2( 0.f, 0.f ), rotation_seed, 16, 2.5f );
+	else if ( inside_cascade( t1 ) )
+		return		sample_cascade( t1, float2( 0.5f, 0.f ), rotation_seed, 8, 1.25f );
+	else if ( inside_cascade( t2 ) )
+		return		sample_cascade( t2, float2( 0.f, 0.5f ), rotation_seed, 1, 0.625f );
+	else if ( inside_cascade( t3 ) )
+		return		sample_cascade( t3, float2( 0.5f, 0.5f ), rotation_seed, 1, 0.f );
+
+	return			position.z > 0.75f ? 1.f : 0.f;
+}
+
+////////////////////////////////////////////////////////////////////////////
+//	the forward BRDF: isotropic Beckmann, Schlick fresnel
+////////////////////////////////////////////////////////////////////////////
+
+light_factors forward_brdf	(
+		float3 light_direction,
+		float3 view_direction,
+		float3 surface_normal,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	light_factors result;
+
+	float f0					= fresnel_at_0_degree;
+	//	The caller hands us 1 - smoothness and we undo it: the blobs really do
+	//	compute 1-(1-z), because that is not z in floating point and fxc will
+	//	not fold it.  From there it is the Beckmann slope of a Phong exponent,
+	//	m = pow(2/(n+2) - 0.00778, 0.48).
+	float specular_power		= 255.f*(1.f - surface_roughness.x);
+	float roughness				= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
+
+	float3 halfway_direction	= normalize( light_direction + view_direction );
+	float view_dot_halfway		= dot( view_direction, halfway_direction );
+	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+
+	float view_dot_normal		= dot( surface_normal, view_direction );
+	float light_dot_normal		= saturate( dot( light_direction, surface_normal ) );
+
+	result.diffuse				= light_dot_normal*(fresnel_factor > 0.99f ? 1.f : 1.f - fresnel_factor);
+
+	float cosine_theta			= dot( surface_normal, halfway_direction );
+	float square_cosine_theta	= square( cosine_theta );
+	float square_sine_theta		= 1.f - square_cosine_theta;
+	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
+
+#if GLOBAL_SHADING_QUALITY >= 3
+	//	Cook-Torrance's geometric term.  The view half is named first and the
+	//	min takes it first; the other order costs two operand swaps.
+	float view_attenuation		= 2.f*saturate( cosine_theta*view_dot_normal/view_dot_halfway );
+	float light_attenuation		= 2.f*saturate( cosine_theta*light_dot_normal/view_dot_halfway );
+	float geometric_attenuation	= min( min( view_attenuation, light_attenuation ), 1.f );
+#else
+	float geometric_attenuation	= 1.f;
+#endif
+
+	//	The overflow guard is part of the normalised distribution, not a clamp
+	//	around the finished specular: the blobs divide 4e11 by the fresnel and
+	//	min it against the quotient, in that order and in that register.  A
+	//	lower half - clamp(., 0, .) - is what forty-two of the blobs look like,
+	//	but adding it costs more than it buys: it fixes eleven and breaks
+	//	nineteen, because fxc drops a max(x, 0) it can prove redundant and only
+	//	keeps it where the vectoriser paired it with the diffuse's own max
+	//	first.  See the PARKED note at the top.
+	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
+	float normalized_distribution_function	=
+		min(
+			distribution_function/
+			(
+				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+			),
+			400000000000.f/fresnel_factor
+		);
+
+	result.specular				=
+		light_dot_normal > 0.f
+		?
+			light_dot_normal*fresnel_factor*geometric_attenuation*
+			normalized_distribution_function/
+			(4.f*max( view_dot_halfway, 0.00001f ))
+		:
+			0.f;
+
+	//	A statement of its own, after the specular: the blobs schedule this max
+	//	twenty instructions past the multiply that feeds it, which is where
+	//	brdf()'s wrapper - not szirmay_kalos_brdf() - would have put it.
+	result.diffuse				= max( result.diffuse, 0.f );
+
+	return						result;
+}
+
+light_factors forward_point_light	(
+		float3 surface_position,
+		float3 surface_normal,
+		float3 light_position,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	light_factors result;
+
+	float3 light_direction		= light_position - surface_position;
+	//	dot() spelled out, not squared_length(): the helper is literally
+	//	`return dot(value, value)`, but routing the square through a call
+	//	loses fxc's "this is non-negative" fact about it, and the saturate in
+	//	the attenuation below then lowers to div_sat instead of the div/min
+	//	pair the blobs hold.  Same value, different eight bytes.
+	float square_distance		= dot( light_direction, light_direction );
+	float distance				= sqrt( square_distance );
+	light_direction				/= distance;
+
+	float3 view_direction		= normalize( -surface_position );
+
+	result						= forward_brdf( light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
+
+	float attenuation			= pow(
+		max( abs(1.f - saturate( square_distance/square(light_range) )), 0.001f ),
+		light_attenuation_power
+	);
+
+	result.diffuse				*= attenuation;
+	result.specular				*= attenuation;
+
+	return						result;
+}
+
+light_factors forward_spot_light	(
+		float3 surface_position,
+		float3 surface_normal,
+		float3 light_position,
+		float3 spot_direction,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	light_factors result		= forward_point_light( surface_position, surface_normal, light_position, surface_roughness, fresnel_at_0_degree );
+
+	float current_angle_cosine	= dot( normalize(surface_position - light_position), spot_direction );
+
+	float spot_scale_factor		=
+		current_angle_cosine >= light_spot_umbra_half_angle_cosine ?
+			1.f :
+			pow(
+					max( current_angle_cosine - light_spot_penumbra_half_angle_cosine, 0.f )
+					*
+					ABS_TO_REMOVE_WARNING( light_spot_inversed_umbra_half_angle_cosine_minus_penumbra_half_angle_cosine ),
+				light_spot_falloff
+			);
+
+	result.diffuse				*= spot_scale_factor;
+	result.specular				*= spot_scale_factor;
+
+	return						result;
+}
+
+light_factors forward_parallel_light	(
+		float3 surface_position,
+		float3 surface_normal,
+		float2 surface_roughness,
+		float fresnel_at_0_degree
+	)
+{
+	float3 view_direction		= normalize( eye_position_view_space - surface_position );
+	return						forward_brdf( -light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
+}
+
+//	light_ps_helper.h's accumulator packing, at the forward stage's scale: the
+//	blobs really do spell it 1/rsqrt, not sqrt - rsq then a divide by one.
+float3 pack_light_accumulator( float3 value )
+{
+	return	1.f/rsqrt( saturate( value*0.125f ) );
+}
+
+//	The same Schlick term the BRDF computes, recomputed in main against the
+//	light's own position - only the alpha uses it, and only at 1e-6.  The max
+//	is named before f0 so the (1-f0) lands between it and the (1-vdh).
+float get_fresnel_factor( float3 surface_position, float3 light_position, float fresnel_at_0_degree )
+{
+	float3 view_direction		= normalize( -surface_position );
+	float3 to_light				= normalize( light_position - surface_position );
+	float3 halfway_direction	= normalize( to_light + view_direction );
+	float view_dot_halfway_plus	= max( dot( view_direction, halfway_direction ), 0.f );
+	float f0					= fresnel_at_0_degree;
+	return	f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+}
+
+//	psf_normal.h's psf_tnormal, sampled through s_anisotropic - every normal
+//	sample in the blobs uses it.  Both normalizes are real: with the null input
+//	type's identity basis fxc folds them into one, with any other basis the
+//	blobs show two.
+float3 forward_tnormal( Texture2D _t_normal, float3x3 tangent_trans, float2 tc, float3 multiplier)
+{
+	float3 normal;
+	normal.xy = _t_normal.Sample( s_anisotropic, tc).wy * 2.f - 1.f;
+	normal.z  = sqrt( max( 1.0f - dot(normal.xy, normal.xy), 0.f));
+	normal.y  = -normal.y;
+	normal 	  = normalize(normal);
+	normal 	  = mul( tangent_trans, normal * multiplier);
+	return normalize( normal);
+}
 
 float4 	main			(in vertex_output_struct input): SV_TARGET0
 {
 	material_parameters parameters = get_material_parameters(input);
 	fill_material_parameters(parameters);
-	
-	float3 		position 		= 	parameters.world_view_position.xyz;
-	float3	 	normal 			= 	parameters.normal;
-	float2 		tc				= 	parameters.tc;
-	float2 		tcdetail		= 	0.f;
-	float3x3	tangent_trans	= 	0.f;
-	
 
-	tangent_trans 				= 	parameters.tangent_to_viewspace;
-	
-	float4	diffuse_color		= 	1;//float4 ( convert_to_linear_space(solid_color_specular.xyz), 1.f);
+	float3 		position 		= 	parameters.world_view_position.xyz;
+	float2 		tc				= 	parameters.tc;
+	float3x3	tangent_trans	= 	parameters.tangent_to_viewspace;
+
+	float4	diffuse_color		= 	float4( convert_to_linear_space(solid_color_specular.xyz), 1.f);
 	if( CONFIG_TDIFFUSE)
-		diffuse_color			= 	t_base.Sample	( s_base, tc);
-	
-	// Alpha test
+		diffuse_color			*= 	t_base.Sample	( s_base, tc);
+
 	if( CONFIG_ALPHA_TEST)
 		psf_alpha_test			( diffuse_color.a);
-	
-	// Diffise detail mapping
+
 	if( CONFIG_TDETAIL)
 		diffuse_color.rgb		= 	psf_tdetail( t_detail, diffuse_color.rgb, tc);
-	
+
+	float3 normal;
 	if( CONFIG_TNORMAL)
-		normal					= 	psf_tnormal( t_normal, tangent_trans, tc, float3(1,1,1));
+		normal					= 	forward_tnormal( t_normal, tangent_trans, tc, float3(1,1,1));
 	else
-		normal					= 	normalize( mul( parameters.tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
-	
-	 // Translucency
+		normal					= 	normalize( mul( tangent_trans, float3(0.0f,0.0f,1.0f)) );
+
 	float 	transparency 		=	solid_transparency;
 	if( CONFIG_TTRANSPARENCY)
 		transparency 			*= 	t_transparency.Sample( s_linear, tc ).a;
-	
-	float3 	specular_color 				= convert_to_linear_space(specular_color_parameter);
-	if( CONFIG_TSPECULAR_INTENSITY)
-		specular_color 					*= psf_tspecular_intensity(t_specular_intensity, tc);
-	
-	
-	float2 	roughness 		= 	roughness_uv_parameters.xy / 255.0f;
-	if (CONFIG_TSPECULAR_POWER) // TODO: error when packing values [0..1]
-		roughness 			= 	psf_tspecular_power(t_roughness, tc);
-	
-	float 	diffuse_power 		= 	solid_material_params.y;
-	if( CONFIG_TDIFFUSE_POWER)
-		diffuse_power 			= 	psf_tdiffuse_power( t_diffuse_power, tc);
-	
+
+	float3 	specular_color 		= 	convert_to_linear_space(specular_color_parameter);
+	if( CONFIG_TSPECULAR_COLOR)
+		specular_color 			*= 	psf_tspecular_intensity(t_specular_intensity, tc);
+
+	float 	smoothness			= 	specular_fresnel_roughness_parameters.z;
+	if( CONFIG_TROUGHNESS)
+		smoothness				+=	specular_fresnel_roughness_parameters.w*t_roughness.Sample( s_base, tc ).x;
+
+	//	Handed to the BRDF as 1 - smoothness, which the BRDF inverts again; see
+	//	the note there.  The .w term is the texture's contribution range.
+	float2 	roughness			=	(1.f - smoothness).xx;
+	float 	fresnel_at_0_degree	=	specular_fresnel_roughness_parameters.x;
+
 	float3 final_color 			= (0.0f).xxx;
-	
+
 	light_factors light = (light_factors)0;
-	
-	FORCECASE switch(light_type)
+	float shadow = 1.f;
+
+	//	An if/else chain, not a switch: the blobs hold if_z/ieq/if_nz, and a
+	//	switch - forced or not - emits the switch opcode instead.  Only these
+	//	three of the seven light types have arms at ship, and only the parallel
+	//	one is shadowed.
+	if ( light_type == LIGHT_TYPE_POINT)
+		light = forward_point_light( position, normal, light_position, roughness, fresnel_at_0_degree);
+	else if ( light_type == LIGHT_TYPE_SPOT)
+		light = forward_spot_light( position, normal, light_position, light_direction, roughness, fresnel_at_0_degree);
+	else if ( light_type == LIGHT_TYPE_PARALLEL)
 	{
-	case LIGHT_TYPE_POINT:
-		light = point_light_impl(position, normal, light_position, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_SPOT:
-		light = spot_light_impl(position, normal, light_position, light_direction, light_spot_falloff, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_OBB:
-		light = point_light_impl(position, normal, nearest_point_on_obb(position), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_CAPSULE:
-		light = point_light_impl(position, normal, nearest_point_on_capsule(position, light_direction), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_PARALLEL:
-		light = parallel_light_impl( position, normal, light_direction, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_SPHERE:
-		light = point_light_impl(position, normal, nearest_point_on_sphere(position), light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	case LIGHT_TYPE_PLANE_SPOT:
-		light = spot_light_impl(position, normal, nearest_point_on_plane(position), normalize( mul( float4( 0.f, -1.f, 0.f, 0.f), light_local_to_world).xyz ), light_spot_falloff, light_range, roughness, 0.0f, diffuse_power, input.homogeneous_position.xy*screen_res.zw, float4(fresnel_at_0_degree, alpha_model_parameter, 0.0f, 0.0f));
-		break;
-	default:
-		break;
+		light = forward_parallel_light( position, normal, roughness, fresnel_at_0_degree);
+		//	12/768 of a texel along the normal; shadow_map_size is unreferenced
+		//	in every blob, so the offset is a literal.
+		shadow = get_cascaded_shadow_factor( position + normal*0.015625f );
 	}
-	
-	light_accumulator accumulator = get_light_accumulator( light_color.rgb, light );
-	
-	// TODO: why 0.25f ???
-	final_color += diffuse_color.rgb * accumulator.diffuse;
-	final_color += 0.25f * specular_color * accumulator.specular;
-	
-	//float far_fog 		= 1.0f - saturate( exp( -(parameters.world_view_position.z - near_fog_distance) / far_fog_color_and_distance.a ) );
-	//final_color.rgb		= lerp(parameters.color.rgb * final_color.rgb, far_fog_color_and_distance.rgb, far_fog);
-	
-	return float4(final_color, parameters.color.a * saturate(transparency));
+
+	float3 light_color_linear	= convert_to_linear_space( light_color )*light_intensity;
+	float3 diffuse_influence	= light_diffuse_influence_factor*(light_color_linear*max( light.diffuse, 0.f ));
+	float3 specular_influence	= light_specular_influence_factor*(light_color_linear*max( light.specular, 0.f ));
+
+	float3 diffuse_accumulator	= pack_light_accumulator( diffuse_influence );
+	float3 specular_accumulator	= pack_light_accumulator( specular_influence );
+
+	//	The shadow multiplies the two material colours, after the packing - the
+	//	packing is non-linear, so this is not the same as shadowing the light.
+	//	Shadow-first in both lines: the other spelling costs an operand swap.
+	final_color += shadow*diffuse_color.rgb*diffuse_accumulator;
+	final_color += shadow*specular_color*specular_accumulator;
+
+	float fresnel				= get_fresnel_factor( position, light_position, fresnel_at_0_degree );
+
+	float soft_edge				= 1.f;
+	if ( CONFIG_USE_SOFT_EDGES)
+	{
+		float pixel_depth		= parameters.world_view_position.z;
+		float frame_depth		= gbuffer_read_frame_depth( input.homogeneous_position.xy*screen_res.zw );
+		soft_edge				= saturate( (frame_depth - pixel_depth)*4.f );
+	}
+
+	return float4( final_color, soft_edge*saturate( parameters.color.a*transparency - fresnel*0.000001f ) );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-

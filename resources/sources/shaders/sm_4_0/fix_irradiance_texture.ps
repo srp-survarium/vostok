@@ -4,6 +4,12 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18: the pre-ship revision in old/ was already the
+//	ship algorithm; only the dead LOOP macro needed spelling out as [loop].
+//	Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
 /*	$DEFINES$:
 	GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE,
 */
@@ -27,10 +33,10 @@ float4 main(vertex_output_struct input) : SV_TARGET
 		float res = 0.0f;
 		int num = 0;
 		
-		LOOP
+		[loop]
 		for (int i = -2; i <= 2; i++)
 		{
-			LOOP
+			[loop]
 			for (int j = -2; j <= 2; j++)
 			{
 				float2 uv = input.uv + 10.0f * float2(i, j) / GLOBAL_ORGANIC_IRRADIANCE_TEXTURE_SIZE;

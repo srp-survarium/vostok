@@ -1,0 +1,11 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+float4 main( v2p_TL I ) : SV_TARGET
+{
+	return	t_base.SampleLevel( s_material1, I.Tex0, 0 );
+}

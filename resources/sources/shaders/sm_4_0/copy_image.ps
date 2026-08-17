@@ -1,15 +1,16 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 06.12.2010
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2010
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
 #include "gamma_correction.h"
 
-float		gamma_correction_factor;
+uniform float gamma_correction_factor;
 
 float4 main( v2p_TL vin) : SV_TARGET
 {
-	return float4(convert_from_linear_space( t_base.Sample(s_base, vin.Tex0).rgb, gamma_correction_factor ), 1.0f);
+	float4 color = t_base.Sample( s_accumulator, vin.Tex0);
+
+	return float4( convert_from_linear_space( color.xyz, gamma_correction_factor), 1.0f);
 }

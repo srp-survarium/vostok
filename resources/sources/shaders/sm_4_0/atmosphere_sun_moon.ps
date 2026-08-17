@@ -1,0 +1,27 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+uniform float4	sun_moon_parameters;
+
+//	s_anisotropic comes from common_samplers.h (via common.h); declaring it
+//	again here was legal only while that header still called it s_border.
+Texture2D		sun_moon_texture;
+
+struct v2p_sun_moon
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_sun_moon I ) : SV_Target
+{
+	float4	color	= sun_moon_texture.Sample( s_anisotropic, I.tc);
+
+	clip( color.w - 0.75f);
+
+	return	float4( color.xyz*sun_moon_parameters.xyz, color.w);
+}

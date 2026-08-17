@@ -1,0 +1,115 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/rain.ps, one permutation) - absent from the recovered
+//	source drop.  Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip rain.ps
+//
+//	Falling rain, drawn as one scrolling texture on the volume rain.vs
+//	transforms, and then multiplied down by five independent weights before
+//	it is written: the rain shadow map (rain does not fall through roofs),
+//	the g-buffer depth (drops behind geometry fade over ~1.7 view units),
+//	the near clip (drops in the first unit of view depth fade quadratically,
+//	which is what stops the camera swimming in them), the volume's own
+//	vertical edge ((1-tc.y)*tc.y, squared, so both caps fade), and the
+//	density and radius the weather system drives.
+//
+//	The result is composited by hand rather than by the blend state: the
+//	colour target gets dot(frame,frame)/16 + 1 - a multiplier, so this pass
+//	brightens what is behind it in proportion to how bright that already is
+//	- and the alpha carries the drop's own length lit by t_diffuse_lighting,
+//	with the scene's brightness^0.6 as the gain.  A drop over a lit surface
+//	is bright; a drop over black is nearly invisible.
+//
+//	==== the spellings the blob pins ======================================
+//
+//	The scroll uv is one float2 expression, not two scalars: the blob pads
+//	lane x with a literal 1 and a literal 0 so the two lanes ride the same
+//	mul and mad, which is what
+//		rain_uv_scales*float2( 1, tc.y)*float2( tc.x, 2) - float2( 0, scroll)
+//	produces and what the obvious scalar spelling does not - written per
+//	component, fxc folds tc.y*scale.y*2 into a dp2 and the shader is two
+//	slots shorter.  The doubling of the radius is an add, not a mul by two.
+//
+//	Every commutative multiply here is spelled with the operands the
+//	opposite way round from the emitted instruction (fxc reverses them), so
+//	`gain*drop_length` is what produces `mul drop_length, gain`.
+//
+//	s_shmap is a SamplerComparisonState and is declared here, not in
+//	common_samplers.h - it lands at sampler slot 4, after the four ordinary
+//	samplers this shader uses, which is what fixes it as the last
+//	declaration.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float2		rain_uv_scales;
+uniform float		rain_radius;
+uniform float		rain_density;
+uniform float		rain_speed;
+uniform float4x4	view_to_shadow;
+
+SamplerComparisonState	s_shmap;
+
+Texture2D	t_scroll_rain;
+Texture2D	t_frame_color;
+Texture2D	t_rain_shadow_map;
+Texture2D	t_diffuse_lighting;
+
+struct v2p_rain
+{
+	float4	hpos			: SV_Position;
+	float3	world_position	: TEXCOORD0;
+	float3	view_position	: TEXCOORD1;
+	float2	tc				: TEXCOORD2;
+};
+
+float4 main( v2p_rain I ) : SV_Target
+{
+	float	scroll			= rain_speed*scene_time*0.25f/rain_radius;
+
+	float2	uv				= rain_uv_scales*float2( 1.0f, I.tc.y)*float2( I.tc.x, 2.0f) - float2( 0.0f, scroll);
+
+	uv						= ( rain_radius + rain_radius)*uv;
+
+	float4	rain			= t_scroll_rain.SampleLevel( s_linear, uv, 0);
+
+	float4	view_position	= float4( mul( m_V, float4( I.world_position, 1.0f)), 1.0f);
+	float4	shadow_position	= mul( view_to_shadow, view_position);
+
+	shadow_position.xyz		/= shadow_position.w;
+
+	float	weight			= t_rain_shadow_map.SampleCmpLevelZero( s_shmap, shadow_position.xy, shadow_position.z);
+
+	weight					*= rain_density;
+
+	float2	screen_uv		= I.hpos.xy*screen_res.zw;
+	float	frame_depth		= gbuffer_read_frame_depth( screen_uv);
+
+	weight					*= saturate(( frame_depth - I.view_position.z)*0.6f);
+	weight					*= rain_radius;
+	weight					*= 0.5f;
+
+	float	near			= saturate( I.view_position.z);
+
+	weight					*= near*near;
+
+	float	edge			= ( 1.0f - I.tc.y)*I.tc.y;
+
+	weight					*= edge*edge;
+
+	float3	drops			= rain.xyz*weight;
+
+	float	drop_length		= sqrt( dot( drops, drops));
+
+	float3	frame			= t_frame_color.SampleLevel( s_accumulator, screen_uv, 0).xyz;
+	float3	lighting		= t_diffuse_lighting.Sample( s_material1, screen_uv).xyz;
+
+	float	lighting_length	= sqrt( dot( lighting, lighting));
+	float	brightness		= dot( frame, frame);
+
+	float	gain			= pow( brightness, 0.6f) + 0.0625f;
+	float	value			= gain*drop_length;
+
+	return	float4( ( float3)( brightness*0.0625f + 1.0f), min( value*lighting_length*10.0f + value, 1.0f));
+}

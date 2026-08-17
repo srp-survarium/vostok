@@ -1,13 +1,10 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 07.12.2010
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2010
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision in old/ is one generation back - it returned a single combined
+//	target, where ship writes the blurred frame to target 0 and the bloom to
+//	target 1, and scales the bloom by bloom_parameters.x AND the
+//	bloom_parameters1 tint. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
-
-/*
-	$DEFINES$:
-		GLOBAL_USE_LOOP_UNROLLING,
-*/
 
 #include "common.h"
 #include "gbuffer.h"
@@ -21,77 +18,75 @@ Texture2D 	t_frame_luminance;
 
 uniform float4 kernel_offsets[NUM_SAMPLES];
 uniform float4 bloom_parameters;
+uniform float4 bloom_parameters1;
+uniform float4 frame_luminance_parameter;
 
-static const float bloom_scale  = bloom_parameters.r; // 0.75f;
-static const float max_to_bloom = bloom_parameters.g; // 0.80f;
+static const float bloom_scale  = bloom_parameters.x;
 
-// x - average frame luminance
-// y - min frame luminance
-// z - max frame luminance
-// w - middle gray
-float4 frame_luminance_parameter;
-
-#define USE_LUMINANCE_FROM_HISTOGRAM 	0
-
-float get_min_frame_luminance		( )
+float get_min_frame_luminance( )
 {
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	return							frame_luminance_parameter.y;
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).g;
-	return							sum_of_logarithms;
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
+	return t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).g;
 }
 
-float get_max_frame_luminance		( )
+float get_max_frame_luminance( )
 {
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= frame_luminance_parameter.z;
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).b;
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
-	return							max( sum_of_logarithms, 1.0f );
+	return max( t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).b, 1.0f);
 }
 
-float get_average_frame_luminance	( )
+float get_average_frame_luminance( )
 {
-	float sum_of_logarithms			= t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).r;
-#if USE_LUMINANCE_FROM_HISTOGRAM
-	return							frame_luminance_parameter.x;//clamp( frame_luminance_parameter.x, 0.1f, 1.0f );
-#else // #if USE_LUMINANCE_FROM_HISTOGRAM
-	return							clamp( sum_of_logarithms, 0.1f, 1.0f );
-#endif // #if USE_LUMINANCE_FROM_HISTOGRAM
+	return clamp( t_frame_luminance.Sample(s_accumulator, float2(0.5f, 0.5f)).r, 0.1f, 4.0f);
 }
 
-float4 main( v2p_TL vin) : SV_TARGET
+struct ps_output
 {
-	float3 out_bloom_color 			 		= 0; 
-	float4 out_frame_color_and_depth 		= 0;
-	
-	float base_blurriness 		  	 		= saturate(pow(get_blurriness(gbuffer_read_frame_depth(vin.Tex0)), 1.0f));
-	
-    UNROLL for(int i = 0; i < NUM_SAMPLES; i++)
-    {
-		float2 uv 							= vin.Tex0 + kernel_offsets[i].xy;
-		float4 frame_color_and_depth 		= float4(max(t_frame_color.Sample(s_material1, uv).rgb, 0.0f), gbuffer_read_frame_depth(uv));
-		
-		out_frame_color_and_depth 			+= frame_color_and_depth;
-		
-		float frame_luminance 				= get_luminance(frame_color_and_depth.rgb);
-		float min_frame_luminance 			= get_min_frame_luminance();
-		float difference					= get_max_frame_luminance() - min_frame_luminance;
-		float luminance_percents			= (frame_luminance - min_frame_luminance) / difference;
-		float average_luminance_percents	= (get_average_frame_luminance() - min_frame_luminance) / difference;
-		float bright_power 					= max(luminance_percents - average_luminance_percents, 0.0f);
-		
-        out_bloom_color 					+= saturate(bright_power) * frame_color_and_depth.rgb;
-    }
-	
-    out_bloom_color 		  = out_bloom_color * bloom_scale / NUM_SAMPLES;
-	out_frame_color_and_depth = out_frame_color_and_depth 	  / NUM_SAMPLES;
-	
-	float blurriness 		  = get_blurriness(out_frame_color_and_depth.a);
-	return float4(blurriness * out_frame_color_and_depth.rgb + 0.25 * out_bloom_color, blurriness);
+	float4	frame	: SV_Target0;
+	float4	bloom	: SV_Target1;
+};
+
+ps_output main( v2p_TL vin)
+{
+	ps_output	output;
+
+	float3	colors[NUM_SAMPLES];
+
+	// The centre tap seeds the average; the loop adds the eight kernel taps,
+	// and ship still divides by NUM_SAMPLES - nine taps over eight.
+	float4	out_frame_color_and_depth	= float4( t_frame_color.Sample(s_material1, vin.Tex0).rgb, gbuffer_read_frame_depth(vin.Tex0));
+
+	[unroll] for(int i = 0; i < NUM_SAMPLES; i++)
+	{
+		float2 uv					= vin.Tex0 + kernel_offsets[i].xy;
+
+		colors[i]					= t_frame_color.Sample(s_material1, uv).rgb;
+		out_frame_color_and_depth	+= float4( colors[i], gbuffer_read_frame_depth(uv));
+	}
+
+	out_frame_color_and_depth		= out_frame_color_and_depth/NUM_SAMPLES;
+
+	float	blurriness				= get_blurriness( out_frame_color_and_depth.a);
+
+	output.frame.w					= blurriness;
+	output.frame.xyz				= max( blurriness*out_frame_color_and_depth.rgb, 0.0f);
+
+	float	min_frame_luminance		= get_min_frame_luminance();
+	float	difference				= get_max_frame_luminance() - min_frame_luminance;
+	float	average_luminance_pct	= ( get_average_frame_luminance() - min_frame_luminance)/difference;
+
+	float3	out_bloom_color			= 0;
+
+	[unroll] for(int j = 0; j < NUM_SAMPLES; j++)
+	{
+		float	luminance_pct		= ( get_luminance( colors[j]) - min_frame_luminance)/difference;
+		float	bright_power		= max( luminance_pct - average_luminance_pct, 0.0f);
+
+		out_bloom_color				+= bright_power*colors[j];
+	}
+
+	out_bloom_color					= out_bloom_color*bloom_scale*bloom_parameters1.xyz/NUM_SAMPLES;
+
+	output.bloom.xyz				= max( out_bloom_color, 0.0f);
+	output.bloom.w					= 0.0f;
+
+	return	output;
 }
-
-

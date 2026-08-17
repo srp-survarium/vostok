@@ -1,0 +1,49 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float4	s_eye_ray_corner;
+
+Texture2D		t_final_frame_donwsampled;
+
+struct v2p_isr
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_isr I ) : SV_TARGET
+{
+	float3	sum		= 0;
+
+	[unroll] for (int x = -2; x <= 2; x++)
+	{
+		[unroll] for (int y = -2; y <= 2; y++)
+			sum		+= t_final_frame_donwsampled.SampleLevel( s_material1, I.tc, 0, int2( x, y)).xyz;
+	}
+
+	sum				*= 0.04f;
+
+	float3	normal	= gbuffer_read_frame_normal( I.tc );
+	normal			= normalize( float3( normal.xy, -normal.z));
+
+	float3	eye_ray;
+	eye_ray.xy		= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z		= 1;
+
+	float3	direction	= normalize( eye_ray*gbuffer_read_frame_depth( I.tc ));
+
+	float	fresnel		= 1.0f - saturate( dot( -direction, normal));
+	fresnel				= fresnel*fresnel;
+	fresnel				= fresnel*fresnel;
+	fresnel				= fresnel*fresnel;
+
+	float	material	= (float)( (uint)( t_normal.SampleLevel( s_accumulator, I.tc, 0).z*1023.0f) & 127);
+	float	mask		= min( ( 1.0f - material/127.0f)*5.0f, 1.0f);
+
+	return	float4( ( fresnel*mask)*sum, 0.0f);
+}

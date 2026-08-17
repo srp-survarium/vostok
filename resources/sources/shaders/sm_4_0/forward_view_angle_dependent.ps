@@ -1,0 +1,366 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 17.08.2026
+//	Ground truth	: the 15 shipped permutations of
+//					  shaders/sm_4_0/forward_view_angle_dependent.ps,
+//					  disassembled with fxc /dumpbin /Fc.  Absent from the
+//					  source drop; forward_base.ps (120/120) is the skeleton
+//					  this file is a sibling of, and vertex_base.vs (196/196)
+//					  is the authority for the interpolant layout.
+//	Acceptance		: python3 -m vostok.shaders roundtrip
+//					  forward_view_angle_dependent.ps
+////////////////////////////////////////////////////////////////////////////
+//
+//	The forward "view angle dependent" stage: an emissive-style solid colour
+//	whose *alpha* grows toward the silhouette.  One draw, alpha-blended,
+//	driven by effect_fstage_default_view_angle_dependent_materials.
+//
+//	The only axis that moves across the shipped blobs is
+//	CONFIG_VERTEX_INPUT_TYPE, all fifteen of which ship; every other define
+//	the mask records is 0 everywhere, so CONFIG_USE_SOFT_EDGES's arm is
+//	unconstrained (it is carried from forward_base.ps, which shares the whole
+//	skeleton) and is marked so below.
+//
+//	Status by axis:
+//	  CONFIG_VERTEX_INPUT_TYPE  0..14  - all fifteen byte-proven
+//	  CONFIG_USE_SOFT_EDGES     ships only as 0 - arm carried, unverified
+//	  GLOBAL_USE_VEGETATION_TRAMPLE, CONFIG_USE_SUBUV, CONFIG_LOD_INDEX,
+//	  CONFIG_USE_BOUND_NORMALS, CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+//	  CONFIG_WIND_MOTION        vertex-stage axes; ship only as 0 here
+//
+//	Three shapes are load-bearing for byte-identity:
+//
+//	  * the surface normal reaches world space as
+//	    mul(m_V2W, mul(tangent_to_viewspace, normal)) - for the input types
+//	    whose getter leaves the basis at identity the whole chain folds to
+//	    m_V2W's third column, which is exactly what those blobs hold;
+//	  * the alpha ramp is saturate(f > 0.045f ? f + 1.f : f) over
+//	    f = 1 - pow(saturate(dot(n,v)), attenuation_power).  The blobs
+//	    materialise 1-f and 2-f in one add and select between them, which is
+//	    what that spelling (and only that spelling) produces;
+//	  * input type 11's normal is normalized and no other type's is - the
+//	    grassmesh basis is the one the vertex stage bends.
+//
+//	CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
+//	the world position at TEXCOORD3, and 3..6 put the world position at
+//	TEXCOORD5 (TEXCOORD4 is the vertex stage's prev_position) - both follow
+//	vertex_base.vs, not forward_base.ps's labelling, which its own blobs
+//	cannot tell apart because it reads neither.
+//
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_VEGETATION_TRAMPLE,
+		CONFIG_USE_SUBUV,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_BOUND_NORMALS,
+		CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+		CONFIG_LOD_INDEX,
+		CONFIG_USE_SOFT_EDGES,
+		CONFIG_WIND_MOTION,
+*/
+
+#include "common.h"
+#include "material.h"
+
+#if CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	float3	color				: TEXCOORD6;
+	float	color_alpha			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	parameters.color 					= float4(input.color, 1.0f);
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE>=3 && CONFIG_VERTEX_INPUT_TYPE<=6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	prev_position		: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+
+float3   up_view_vector;
+float3   right_view_vector;
+
+float	 use_align_by_dir;
+float3   view_location;
+
+float	 use_fixed_axis;
+float3   rotation_fixed_axis;
+
+float locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.world_view_proj_position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	parameters.tc 						= input.tc;
+#if CONFIG_USE_SUBUV
+	parameters.sub_uv					= input.tc1;
+#endif // #if CONFIG_USE_SUBUV
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.tangent_to_viewspace 	= mul((float3x3)m_V, transpose(float3x3(input.tangent, input.binormal, input.normal)));
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==10
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==11
+
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	homogeneous_position_copy	: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.normal					= normalize( mul( float3x3( input.tbn_x, input.tbn_y, input.tbn_z), float3( 0.f, 0.f, 1.f)));
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters 		parameters;
+	clear_material_parameters	(parameters);
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==13
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==14
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc						= input.position.xz;
+
+	return parameters;
+}
+
+#endif
+
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+Texture2D t_transparency;
+float 	  solid_transparency;
+float	  attenuation_power;
+
+float4 	main			(in vertex_output_struct input): SV_TARGET0
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+
+	float3 view_direction		= normalize(eye_position - parameters.world_position);
+	float3 normal				= mul(m_V2W, float4(mul(parameters.tangent_to_viewspace, parameters.normal), 0.f));
+
+	float  attenuation			= 1.f - pow(saturate(dot(normal, view_direction)), attenuation_power);
+	attenuation					= saturate(attenuation > 0.045f ? attenuation + 1.f : attenuation);
+
+	parameters.tc				*= constant_tile_uv;
+
+	float4 final_color			= 0;
+	final_color.rgb				= convert_to_linear_space(solid_color_specular.rgb);
+	final_color.rgb				*= t_base.Sample( s_base, parameters.tc ).rgb;
+
+	final_color.a				= solid_transparency;
+	final_color.a 				*= t_transparency.Sample( s_linear, parameters.tc ).a;
+
+	final_color					*= parameters.color;
+
+	if (CONFIG_USE_SOFT_EDGES)
+	{
+		float pixel_depth 		= parameters.world_view_position.z;
+		float frame_depth		= gbuffer_read_frame_depth(input.homogeneous_position.xy * screen_res.zw);
+		final_color.a			*= saturate((frame_depth - pixel_depth) * 3.99f);
+	}
+
+	final_color.a				= saturate(final_color.a + attenuation);
+
+	return final_color;
+}

@@ -1,0 +1,60 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+uniform float4x4	prev_view_matrix_parameter;
+uniform float3		s_eye_ray_corner;
+uniform int			frame_index;
+
+Texture2D			t_current_frame_color;
+Texture2D			t_previous_frame_color;
+Texture2D			t_object_motion_vectors;
+
+struct v2p_temporal_antialiasing
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float2 project_to_screen( float3 view_position)
+{
+	float4	projected	= mul( m_P, float4( view_position, 1.f));
+
+	return	( projected.xy*float2( 1.f, -1.f) + projected.w)*0.5f/projected.w;
+}
+
+float4 main( v2p_temporal_antialiasing I ) : SV_TARGET
+{
+	float3	eye_ray;
+	eye_ray.xy				= ( 1 - I.tc*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float3	position		= gbuffer_read_frame_depth( I.tc)*eye_ray;
+	float3	world_position	= mul( m_V2W, float4( position, 1.f));
+	float3	prev_position	= mul( prev_view_matrix_parameter, float4( world_position, 1.f)).xyz;
+
+	float2	prev_tc			= project_to_screen( prev_position);
+	float2	motion			= prev_tc - project_to_screen( position);
+
+	float2	object_motion	= t_object_motion_vectors.SampleLevel( s_accumulator, I.tc, 0).xy;
+
+	motion					= lerp( motion, -object_motion, dot( object_motion, object_motion) > 0.f);
+
+	float	weight			= 1.f - min( length( motion)*100.f, 1.f);
+
+	float3	previous		= t_previous_frame_color.SampleLevel( s_material1, motion + I.tc, 0).xyz;
+
+	float4	inside			= float4( prev_tc > 0.f, prev_tc < 1.f);
+	float2	visible			= inside.xy*inside.zw;
+
+	weight					= (( visible.x*visible.y != 0.f) ? 0.5f : 0.f)*weight;
+
+	float3	current			= t_current_frame_color.SampleLevel( s_material1, I.tc, 0).xyz;
+
+	return	float4( lerp( current, previous, weight), 0.f);
+}

@@ -1,0 +1,213 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 25.02.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/geometry_depth_pass.ps, all 14 permutations) - absent
+//	from the recovered source drop.
+//
+//	==== axis status ======================================================
+//
+//	Seven defines appear in the shipped permutation strings; six are 0 in
+//	every one of them (GLOBAL_USE_VEGETATION_TRAMPLE, CONFIG_USE_BOUND_NORMALS,
+//	CONFIG_USE_UP_DIRECTIONAL_NORMALS, CONFIG_LOD_INDEX, CONFIG_WIND_MOTION,
+//	and CONFIG_USE_SUBUV except where it accompanies type 8), so nothing here
+//	is written against their other values.  The live axis is
+//	CONFIG_VERTEX_INPUT_TYPE: 0,1,2,3,4,5,6,7,8,9,10,11,13,14 ship - type 12
+//	(post process) does not.
+//
+//	==== what the pass writes =============================================
+//
+//	sqrt( view-space z * near_far_invn_invf.w) into SV_Target0.x, .yzw zero:
+//	the same square-root depth packing gbuffer.h's position target uses, so
+//	one shader's output and the g-buffer's agree bit for bit.
+//
+//	Where the view-space z comes from is a per-family table, byte-forced:
+//	static (1/2), skeleton (3..6) and grassmesh (11) carry an interpolated
+//	view-space position, and every other family multiplies the interpolated
+//	world position by row 2 of m_V - which is why static_globals appears in
+//	the RDEF of those eleven and not of the other three.
+//
+//	==== self-contained on purpose ========================================
+//
+//	The shipped blobs' dependency lists name common.h / material.h /
+//	vertex_input.h / static_mesh_vertex_input.h / wind.h / gbuffer.h
+//	revisions this tree does not have (the ship vertex_input.h dispatches
+//	CONFIG_VERTEX_INPUT_TYPE 0..14 as null / static / skeleton_{4,3,2,1}_bones
+//	/ particle / particle-subuv / beamtrail / decal / grassmesh / postprocess /
+//	wires / user, a different numbering from the recovered generation), so
+//	the structs, the two loose-global blocks the particle and grassmesh
+//	inputs contribute to $Globals, and near_far_invn_invf are declared here.
+//	Struct member semantics, indices and masks are ship-proven by the input
+//	signatures; names on interpolators this shader never reads are conjecture
+//	reconciled against depth_accumulate.ps, motion_vectors_accumulation.ps,
+//	fill_reflective_shadow_map_position.ps and gbuffer_pass.ps - between them
+//	the skeleton family's TEXCOORD3/4/5 are pinned as view position, previous
+//	position and world position respectively.
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_SUBUV,
+*/
+
+#if CONFIG_VERTEX_INPUT_TYPE == 0		// null mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh, 4/3/2/1 bones
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	prev_position		: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
+
+// particle_vertex_input.h's loose globals: they lead $Globals in the two
+// particle permutations, which is what puts near_far_invn_invf at offset 64
+// there and at offset 0 everywhere else.
+float3	up_view_vector;
+float3	right_view_vector;
+
+float	use_align_by_dir;
+float3	view_location;
+
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+
+float	locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
+
+// grassmesh_vertex_input.h's one loose global, ahead of near_far_invn_invf.
+float4	patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	params				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10 || CONFIG_VERTEX_INPUT_TYPE == 12	// decal / post process
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+// gbuffer.h's loose global, declared after the vertex input's own.
+uniform float4	near_far_invn_invf;
+
+// Ship static_globals layout (byte-proven repo-wide).  Referenced only by
+// the families that have to build their own view-space position; fxc drops
+// an entirely unreferenced cbuffer, which is why the other three blobs do
+// not carry it.
+cbuffer	static_globals
+{
+	uniform float4x4	m_P;
+	uniform float4x4	m_VP;
+	uniform float3x4	m_V;
+	uniform float3x4	m_V2W;
+	uniform float4		fog_params;
+	uniform float3		eye_position;
+	uniform float3		eye_position_view_space;
+	uniform float3		eye_direction;
+	uniform float		scene_time;
+	uniform float4		screen_res;
+}
+
+float4 	main			(in vertex_output_struct input): SV_Target0
+{
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2 || (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6) || CONFIG_VERTEX_INPUT_TYPE == 11
+	const float3 view_position	= input.view_position;
+#else
+	const float3 view_position	= mul(m_V, float4(input.position, 1.f));
+#endif
+
+	return float4(sqrt(view_position.z * near_far_invn_invf.w), 0.f, 0.f, 0.f);
+}

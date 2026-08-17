@@ -1,0 +1,23 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	t_unpacked_normal;
+
+struct v2p_quad
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_quad I ) : SV_TARGET
+{
+	float4	normal	= t_unpacked_normal.SampleLevel( s_accumulator, I.tc, 0);
+
+	float	f		= sqrt( normal.z*-8.0f + 8.0f);
+
+	return	float4( normal.xy/f + 0.5f, normal.w, 0.0f);
+}

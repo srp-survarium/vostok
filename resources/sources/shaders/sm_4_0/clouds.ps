@@ -1,31 +1,122 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 03.11.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/clouds.ps, plain permutation). The file this replaces
+//	was a drifted dev placeholder - a 692-byte-compile stub sampling a
+//	single Texture3D - not the shipped algorithm. Byte-identical to the
+//	shipped DXBC, proven by the acceptance test:
+//		python3 -m vostok.shaders roundtrip clouds.ps
+//
+//	The ship blob's dependency list names atmospheric_scattering_common.h
+//	(absent from the source drop) after common.h - the cloud globals and
+//	textures below presumably lived there. They are declared here instead;
+//	the roundtrip compares DXBC only, and shared headers stay untouched.
+//	The interpolants come from the ship clouds.vs (see its disasm): world
+//	position via m_W, object position, uv, and a TEXCOORD3 scalar the ship
+//	VS declares but never writes - the tree's clouds.vs is a different,
+//	drifted revision that feeds only TEXCOORD0.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
+
+uniform float4x4	sphere_to_sky_matrix;
+uniform float		slice_transparency;
+uniform float3		clouds_grid_size;
+uniform float3		clouds_offset;
+uniform float		layer_height;
+uniform float		interp_alpha;
+uniform float		cloud_base;
+uniform float4		light_multiplier_parameters;
+uniform float3		to_sun_direction_parameter;
+uniform float4x4	inverted_view_projection_matrix;
+
+Texture2D	t_noise;
+Texture3D	t_clouds_0;
+Texture3D	t_clouds_1;
+Texture2D	t_rayleigh_scattering;
 
 struct vertex_output_struct
 {
 	float4 hposition			: SV_Position;
 	float3 world_position		: TEXCOORD0;
+	float3 object_position		: TEXCOORD1;
+	float2 uv					: TEXCOORD2;
+	float  interpolated_fog		: TEXCOORD3;
 };
 
-Texture3D 	t_clouds;
-
-float4 main(in vertex_output_struct input): SV_TARGET0
+struct pixel_output_struct
 {
-	float3 color	=	t_clouds.SampleLevel(s_accumulator, input.world_position / 10.0f, 0).xyz;
-	return float4	(color, 0.5f);
+	float4 color				: SV_Target0;
+	float4 mask					: SV_Target1;
+};
+
+void main(in vertex_output_struct 	input,
+		  out pixel_output_struct 	output)
+{
+	float3 to_eye			=	eye_position - input.world_position;
+	float  eye_distance		=	length(to_eye);
+
+	// bend the layer down: the horizon for a layer at height h is 113000*sqrt(0.001*h)
+	float  horizon_distance	=	sqrt(cloud_base * 0.001f) * 113000.0f;
+	float  ratio			=	eye_distance / horizon_distance;
+	float  drop				=	ratio * ratio * cloud_base;
+
+	float4 sky_position		=	float4(float3(0.0f, drop, 0.0f) + input.world_position + clouds_offset, 1.0f);
+
+	float  base_height		=	3000.0f - eye_position.y;
+	float  horizontal2		=	dot(input.world_position.xz, input.world_position.xz);
+	float  horizontal		=	sqrt(horizontal2);
+	float  center_height	=	base_height - (horizontal * (1.0f / 60000.0f) + 0.5f) * 30000.0f;
+	float3 from_center		=	input.world_position - float3(0.0f, center_height, 0.0f);
+	float2 sphere_direction	=	normalize(from_center).xz;
+	float  projected		=	center_height * 30000.0f;
+	float  uv_distance		=	sqrt(projected * projected + horizontal2);
+	float2 uv				=	sphere_direction * uv_distance + clouds_offset.xz * 15000.0f;
+
+	float3 noise_0			=	t_noise.Sample(s_base, uv * (1.0f / 6000000000.0f)).xyz - 0.48f;
+	float3 noise_1			=	t_noise.Sample(s_base, uv * (1.0f / 3000000000.0f)).xyz - 0.48f;
+	float3 noise_2			=	t_noise.Sample(s_base, uv * (1.0f / 375000000.0f)).xyz - 0.48f;
+
+	float3 noise			=	noise_0 * 1.9998f + noise_1 * 3.9996f + noise_2 * 0.83325f;
+
+	float3 tc				=	noise * float3(0.0078125f, 0.125f, 0.0078125f) + mul(sphere_to_sky_matrix, sky_position).xyz;
+
+	if (tc.y > 1.0f || tc.y < 0.0f)
+		discard;
+
+	float  distance_fade	=	saturate((eye_distance / (cloud_base * 80.0f)) * 2.0f);
+
+	float3 clouds			=	lerp(t_clouds_0.Sample(s_base, tc).xyz, t_clouds_1.Sample(s_base, tc).xyz, interp_alpha);
+
+	float  coverage			=	saturate(clouds.x * 1.5f - 0.5f);
+	float  height2			=	tc.y * 2.0f;
+	float  vertical			=	min(height2 * height2, 1.0f) * light_multiplier_parameters.y;
+	float  thickness		=	min(pow(clouds.y, 0.75f), 1.0f);
+	float  density			=	saturate(clouds.z) * light_multiplier_parameters.x;
+
+	float3 view_direction	=	normalize(to_eye);
+	float  cos_theta		=	dot(view_direction, -normalize(to_sun_direction_parameter));
+
+	float  g				=	saturate(density * 0.9f);
+	float  phase_base		=	(g * g + 1.0f) - cos_theta * g * 2.0f;
+	float  numerator		=	(1.0f - g * g) * 0.5f;
+	float  phase			=	min(numerator / (sqrt(phase_base * phase_base * phase_base) * 12.566371f) + 0.0397885f, 1.0f);
+	float  sun_amount		=	phase * 3.0f + density;
+
+	float  visibility		=	1.0f - distance_fade;
+
+	float3 sun_color		=	lerp(float3(1.0f, 0.65f, 0.125f), 1.0f, pow(saturate(to_sun_direction_parameter.y), 0.25f));
+
+	float  depth			=	mul(m_V, float4(input.world_position, 1.0f)).z;
+	float  ray_u			=	min(max(depth * (1.0f / 150000.0f), 0.0f), 0.95f);
+	float  ray_v			=	(1.0f - view_direction.y) * 0.5f;
+	float3 rayleigh			=	t_rayleigh_scattering.Sample(s_base, float2(ray_u, ray_v)).xyz;
+
+	float  rayleigh_phase	=	(cos_theta * cos_theta + 1.0f) * 0.75f;
+	float3 rayleigh_color	=	rayleigh_phase * rayleigh;
+
+	float  ambient			=	vertical * thickness * 2.0f;
+	float3 color			=	rayleigh_color * 0.75f + (sun_color * sun_amount + ambient);
+
+	output.color			=	float4(color, visibility * coverage);
+	output.mask				=	(1.0f - coverage) < 0.5f;
 }
-
-
-
-
-
-
-
-
-
-

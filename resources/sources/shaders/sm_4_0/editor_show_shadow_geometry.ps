@@ -1,0 +1,25 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+uniform float3	light_color;
+uniform float	light_intensity;
+uniform float	light_diffuse_influence_factor;
+uniform float	light_specular_influence_factor;
+uniform float4	debug_color;
+
+struct v2p_shadow_geometry
+{
+	float4	hpos		: SV_Position;
+	float3	position	: TEXCOORD0;
+	float2	tc			: TEXCOORD1;
+};
+
+float4 main( v2p_shadow_geometry I ) : SV_Target
+{
+	return	float4( debug_color.xyz, 0.0f);
+}

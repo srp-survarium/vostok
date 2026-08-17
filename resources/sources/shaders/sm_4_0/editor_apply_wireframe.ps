@@ -14,15 +14,25 @@
 
 Texture2D t_wireframe_buffer;
 
-uniform float4 screen_res; // Screen resolution ( x-Width,y-Height, zw - 1/resolution)
+//	The shipped ISGN is two elements - SV_POSITION and TEXCOORD0 - so this pass
+//	does not take the shared v2p_post_process (which carries an eye_ray at
+//	TEXCOORD1 and spells the system value SV_Position; post_process0.vs proves
+//	that shape byte-for-byte). fxc never trims unused interpolants, so the
+//	missing TEXCOORD1 is proof of a local struct, not of dead-code removal.
+struct v2p_apply_wireframe
+{
+	float4	homogeneous_position	: SV_POSITION;
+	float2	uv						: TEXCOORD0;
+};
 
-float4 main(v2p_post_process input) : SV_TARGET
+
+float4 main(v2p_apply_wireframe input) : SV_TARGET
 {
 	float2 uv = input.uv;
 	float4 wireframe_color_and_depth = t_wireframe_buffer.Sample(s_position, uv);
 	
-	float frame_depth = wireframe_color_and_depth.a;
-	
+	float frame_depth = gbuffer_read_frame_depth(uv);
+
 	static const int num_offsets = 8;
 	static const float2 offsets[num_offsets] = 
 	{
@@ -44,15 +54,15 @@ float4 main(v2p_post_process input) : SV_TARGET
 		UNROLL
 		for (int i=0; i<num_offsets; i++)
 		{
-			float sample_depth = t_wireframe_buffer.Sample(s_position, uv + offsets[i] * screen_res.zw).a;
-			
+			float sample_depth = gbuffer_read_frame_depth(uv + offsets[i] * screen_res.zw);
+
 			if (sample_depth!=0.0f)
 			{
 				depth_difference -= 5.5f * (frame_depth - sample_depth);// * abs(1.0f - 5*depth_alpha);
 			}
 		}
 	}
-	return saturate(depth_difference) * wireframe_color_and_depth;
+	return saturate(depth_difference) * float4(wireframe_color_and_depth.rgb, frame_depth);
 }
 
 

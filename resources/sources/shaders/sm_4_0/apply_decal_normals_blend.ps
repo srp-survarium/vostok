@@ -1,0 +1,71 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/apply_decal_normals_blend.ps, plain permutation) - absent
+//	from the recovered source drop. Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip apply_decal_normals_blend.ps
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+Texture2D	t_decals_smoothness;
+
+struct	v2p_decal_blend
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 	main	( v2p_decal_blend I ) : SV_TARGET
+{
+	float4	normal_material	= t_normal.SampleLevel( s_material1, I.tc, 0);
+	float4	decal			= t_decals_normal.SampleLevel( s_material1, I.tc, 0);
+
+	if ( decal.a <= 0.01f)
+		return	normal_material;
+
+	float3	decal_normal	= decal.xyz*2.f - 1.f;
+
+	float4	smoothness		= t_decals_smoothness.SampleLevel( s_material, I.tc, 0);
+
+	float2	unpacked		= normal_material.xy*4.f - 2.f;
+	float	f				= dot( unpacked, unpacked);
+	float	g				= sqrt( 1.f - f/4.f);
+	float3	normal			= normalize( float3( g*unpacked, 1.f - f/2.f));
+
+	float4	result;
+
+	if ( smoothness.x > 0.001f || smoothness.y > 0.001f)
+	{
+		float4	data			= t_normal.SampleLevel( s_accumulator, I.tc, 0);
+
+		uint	magnified		= (uint)( data.z*1023.f);
+		uint	material		= (uint)( data.w*3.f);
+
+		float	parameter		= (float)( magnified & 127);
+		float	shparam			= min( (float)(( magnified >> 7) | ( material << 3))/31.f, 1.f);
+
+		parameter				= lerp( parameter/127.f, 1.f, smoothness.x);
+		parameter				= lerp( parameter, 0.f, smoothness.y);
+
+		uint	packed_shparam	= (uint)( shparam*31.f);
+		uint	packed_parameter = (uint)( parameter*127.f) & 127;
+
+		uint	packed_z		= (( packed_shparam << 7) & 896) + packed_parameter;
+		uint	packed_w		= packed_shparam >> 3;
+
+		result.z				= (float)packed_z/1023.f;
+		result.w				= (float)packed_w/3.f;
+	}
+	else
+	{
+		result.zw				= normal_material.zw;
+	}
+
+	float3	blended			= normalize( lerp( normal, normalize( decal_normal*float3( 1.f, 1.f, -1.f) + 0.0001f), saturate( decal.a)));
+
+	result.xy				= blended.xy/sqrt( blended.z*8.f + 8.f) + 0.5f;
+
+	return	result;
+}

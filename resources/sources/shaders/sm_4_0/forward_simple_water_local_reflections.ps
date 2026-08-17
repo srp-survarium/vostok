@@ -1,0 +1,395 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 05.12.2010
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2010
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 17.08.2026
+//	Ground truth	: the 15 shipped permutations of
+//					  shaders/sm_4_0/forward_simple_water_local_reflections.ps,
+//					  disassembled with fxc /dumpbin /Fc.  Absent from the
+//					  source drop.  vertex_base.vs (196/196) is the authority
+//					  for the interpolant layout; forward_base.ps (120/120)
+//					  for the forward-stage skeleton.
+//	Acceptance		: python3 -m vostok.shaders roundtrip
+//					  forward_simple_water_local_reflections.ps
+////////////////////////////////////////////////////////////////////////////
+//
+//	Pass 1 of the two-pass simple water effect (see
+//	effect_fstage_simpe_water_materials.cpp): a screen-space ray march along
+//	the reflected view vector against the packed position buffer, whose two
+//	outputs pass 0 reads back as t_local_reflections_result /
+//	t_local_reflections_result_params.
+//
+//	  SV_Target0  the ray-step scale, broadcast - sqrt of the saturated
+//	              distance to the far plane, ten times over
+//	  SV_Target1  xy = the hit's screen tc, z = 1 when the march hit,
+//	              w = the distance travelled
+//
+//	Status by axis:
+//	  CONFIG_VERTEX_INPUT_TYPE  0..14 - all fifteen byte-proven
+//	  every other define the mask records ships only as 0
+//
+//	Load-bearing shapes, each one earned against the blobs:
+//
+//	  * the march is a real loop, not an unrolled one - [loop] is what keeps
+//	    fxc from unrolling a literal 128 iterations at /O3;
+//	  * the reflection is written out rather than spelled reflect(v, n): the
+//	    blobs negate the *normal* inside the dp3 and leave the doubled scalar
+//	    positive in the mad, which is what "v + n * (2*dot(v,-n))" produces
+//	    and what reflect() does not (it negates the scalar instead);
+//	  * every step product is spelled ray_step * reflection, scalar first;
+//	  * the step scale is spelled 1.f/rsqrt(x), which emits rsq + div where
+//	    sqrt(x) would emit sqrt, and it is a float4 - the div is vectorised
+//	    in every shipped blob;
+//	  * the world normal is normalized *after* the m_V2W transform, which is
+//	    the opposite of forward_view_angle_dependent.ps's spelling;
+//	  * the loop's tc goes into a *local* float2 that the sample reads, and
+//	    only a copy escapes as result_tc; and the two SV_Target1 lanes are
+//	    assigned one at a time, not built with one float4(...).  That is what
+//	    decides the register packing: ship pairs the travelled ray with the
+//	    hit flag in one register and the tc with the loop counter in the
+//	    next, and every spelling that samples through the escaping tc, or
+//	    builds the output in one constructor, pairs the tc with the hit
+//	    instead and comes out two instructions shorter.
+//
+//	CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
+//	the world position at TEXCOORD3, and 3..6 put the world position at
+//	TEXCOORD5 - both follow vertex_base.vs.
+//
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		GLOBAL_USE_VEGETATION_TRAMPLE,
+		CONFIG_USE_SUBUV,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_BOUND_NORMALS,
+		CONFIG_USE_UP_DIRECTIONAL_NORMALS,
+		CONFIG_LOD_INDEX,
+		CONFIG_WIND_MOTION,
+*/
+
+#include "common.h"
+#include "material.h"
+
+#if CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	float3	color				: TEXCOORD6;
+	float	color_alpha			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+#if CONFIG_VERTEX_INPUT_TYPE==2
+	parameters.color 					= float4(input.color, 1.0f);
+#endif // #if CONFIG_VERTEX_INPUT_TYPE==2
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE>=3 && CONFIG_VERTEX_INPUT_TYPE<=6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	prev_position		: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==7 || CONFIG_VERTEX_INPUT_TYPE==8
+
+float3   up_view_vector;
+float3   right_view_vector;
+
+float	 use_align_by_dir;
+float3   view_location;
+
+float	 use_fixed_axis;
+float3   rotation_fixed_axis;
+
+float locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.world_view_proj_position = float4(0.0f, 0.0f, 0.0f, 1.0f);
+	parameters.tc 						= input.tc;
+#if CONFIG_USE_SUBUV
+	parameters.sub_uv					= input.tc1;
+#endif // #if CONFIG_USE_SUBUV
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.tangent_to_viewspace 	= mul((float3x3)m_V, transpose(float3x3(input.tangent, input.binormal, input.normal)));
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==9
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==10
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==11
+
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	homogeneous_position_copy	: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(input.view_position, 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.color 					= input.color;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters 		parameters;
+	clear_material_parameters	(parameters);
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==13
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+	parameters.tangent_to_viewspace 	= float3x3( input.tbn_x, input.tbn_y, input.tbn_z);
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==14
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc 						= input.tc;
+	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(vertex_output_struct input)
+{
+	material_parameters parameters;
+	clear_material_parameters(parameters);
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+	parameters.tc						= input.position.xz;
+
+	return parameters;
+}
+
+#endif
+
+#include "psf_normal.h"
+#include "gamma_correction.h"
+#include "gbuffer.h"
+
+float4x4	view_to_shadow;
+
+struct ps_output
+{
+	float4	result				: SV_Target0;
+	float4	result_parameters	: SV_Target1;
+};
+
+ps_output main(in vertex_output_struct input)
+{
+	material_parameters parameters = get_material_parameters(input);
+	fill_material_parameters(parameters);
+
+	float  pixel_depth		= parameters.world_view_position.z;
+
+	float3 normal			= normalize(mul(m_V2W, float4(mul(parameters.tangent_to_viewspace, parameters.normal), 0.f)));
+	float3 view_direction	= normalize(eye_position - parameters.world_position);
+	float3 reflection		= view_direction + normal * (2.f * dot( view_direction, -normal));
+
+	float4 result			= 1.f / rsqrt( saturate( pixel_depth * near_far_invn_invf.w * 10.f));
+	float  ray_step			= result.w * 0.3f + 0.1f;
+
+	reflection				= normalize(reflection);
+
+	float3 position			= parameters.world_position;
+	float3 ray				= 0.f;
+	float  hit				= 0.f;
+	float2 result_tc		= 0.f;
+
+	[loop]
+	for (int i = 0; i < 128; ++i)
+	{
+		position			-= ray_step * reflection;
+		ray					+= ray_step * reflection;
+
+		float  ray_depth	= mul(m_V, float4(position, 1.f)).z;
+		float4 projected	= mul(m_VP, float4(position, 1.f));
+
+		float2 tc			= (projected.xy * float2(1.f, -1.f) + projected.w) * 0.5f / projected.w;
+		result_tc			= tc;
+
+		float frame_depth	= t_position.SampleLevel( s_position, tc, 0).x;
+
+		if (frame_depth < ray_depth && abs(frame_depth - ray_depth) < 0.4f)
+		{
+			hit				= 1.f;
+			break;
+		}
+
+		hit					= 0.f;
+	}
+
+	ps_output output;
+	output.result				= result;
+	output.result_parameters.xy	= result_tc;
+	output.result_parameters.z	= hit;
+	output.result_parameters.w	= length(ray);
+	return output;
+}

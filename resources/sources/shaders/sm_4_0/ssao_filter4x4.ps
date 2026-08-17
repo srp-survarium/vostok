@@ -9,16 +9,21 @@
 #include "filters.h"
 
 Texture2D  t_ssao_accumulator;
-uniform float4 screen_res; // Screen resolution (x-Width,y-Height, zw - 1/resolution)
 
 
 
-float4 main( v2p_post_process input) : SV_TARGET
+struct v2p_ssao_filter
 {
-	//return t_ssao_accumulator.Sample(s_material1, input.uv).x;
-	return depth_based_diagonal_filter(input.uv, t_ssao_accumulator, s_material1, screen_res.xy);
+	float4 	hpos	: SV_POSITION;
+	float2 	uv		: TEXCOORD0;
+};
+
+float4 main( v2p_ssao_filter input) : SV_TARGET
+{
+	// Ship reduced the filter to the plain accumulator read (blob: sample + xxxx splat).
+	return t_ssao_accumulator.Sample(s_material1, input.uv).x;
 	
-#if 1
+#if 0
 	float2 uv = input.uv;
 	//return bilateral_filtering(uv);
 	

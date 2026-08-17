@@ -1,0 +1,29 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/present_2rt.ps, plain permutation) - the file was
+//	absent from the recovered source drop. Identical body to present.ps,
+//	but the output struct declares a second render target that is never
+//	written: the shipped OSGN carries SV_Target1 with no components used
+//	and the instruction stream writes o0 only.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common_samplers.h"
+
+struct p_present
+{
+	float2	Tex0	: TEXCOORD0;
+	float4	HPos	: SV_POSITION;	// Clip-space position 	(for rasterization)
+};
+
+struct present_2rt_output
+{
+	float4	target0	: SV_Target0;
+	float4	target1	: SV_Target1;
+};
+
+present_2rt_output main( p_present vin )
+{
+	present_2rt_output	result;
+	result.target0		= t_base.SampleLevel( s_accumulator, vin.Tex0, 0);
+	return result;
+}

@@ -1,0 +1,89 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob
+//	(shaders/sm_4_0/ssao_filter_upsample.ps, plain permutation) - the file
+//	was absent from the recovered source drop. Byte-identity against the
+//	blob is the acceptance test:
+//	python3 -m vostok.shaders roundtrip ssao_filter_upsample.ps
+//
+//	PARKED one instruction short: ship keeps `max r0.x, r0.y, l(0.0)` after
+//	the ao_sum/total_weight divide, this compile drops it. fxc 9.29 removes
+//	max(a/b, 0) once it can prove both a >= 0 and b >= 0, and here it can:
+//	saturate(value.x) bounds ao to [0,1] and 1 - saturate(...) bounds the
+//	weight to [0,1]. Removing either saturate keeps the max - but also
+//	loses the mov_sat/div_sat the blob shows, so the ship source blocked
+//	that proof some other way. Tried, all still dropped: statement order
+//	and `+=` vs `a = b + a` for both accumulators; ao spelled saturate(),
+//	clamp(x,0,1), min(max(x,0),1), in-place `value.x = saturate(value.x)`,
+//	and inline in the mad; the weight's saturate as clamp() and min(max());
+//	the max written max(0,x), `x < 0 ? 0 : x`, hoisted before the if, sunk
+//	after the endif, against a local and a `static const` zero, and with
+//	0, 0.f, 0.h; accumulators as float2 components, a struct, a float array
+//	(indexable temp - worse), half, and file-scope statics; the loop as
+//	while, with [loop], with the counter hoisted; the whole filter as a
+//	filters.h-style function taking Texture2D/sampler (different register
+//	allocation). saturate() on the ratio instead of max() lands on
+//	`min r0.x, r0.y, l(1.0)` - fxc proves >= 0 and not <= 1, exactly the
+//	opposite of the blob. Everything else - the icb offset table, the whole
+//	loop body, both branches, RDEF and signatures - is identical. The same
+//	residual is in ssao_filter_upsample_temporal.ps, which shares this loop.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "filters.h"
+
+Texture2D	t_ssao_accumulator;
+
+struct filter_sums
+{
+	float	total_weight;
+	float	ao_sum;
+};
+
+struct v2p_ssao_filter_upsample
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float2 main( v2p_ssao_filter_upsample I ) : SV_Target
+{
+	static const float2 offsets[9] =
+	{
+		float2(  1.0f,  1.0f),
+		float2(  1.0f,  0.0f),
+		float2(  1.0f, -1.0f),
+		float2(  0.0f,  1.0f),
+		float2(  0.0f, -1.0f),
+		float2( -1.0f,  1.0f),
+		float2( -1.0f,  0.0f),
+		float2( -1.0f, -1.0f),
+		float2(  0.0f,  0.0f)
+	};
+
+	float	center_depth	= gbuffer_read_frame_depth( I.tc);
+	float2	half_res		= screen_res.xy*0.5f;
+	filter_sums	sums;
+	sums.total_weight	= 0.f;
+	sums.ao_sum			= 0.f;
+
+	for (int i = 0; i < 9; i++)
+	{
+		float2	tc			= offsets[i]/half_res + I.tc;
+		float2	value		= t_ssao_accumulator.SampleLevel( s_linear, tc, 0).xy;
+		float	ao			= saturate( value.x);
+		float	depth		= value.y*0.01f;
+		float	weight		= 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f));
+
+		sums.total_weight	+= weight;
+		sums.ao_sum			+= ao*weight;
+	}
+
+	float	result;
+	if (sums.ao_sum == sums.total_weight)
+		result				= t_ssao_accumulator.SampleLevel( s_linear, I.tc, 0).x*0.5f;
+	else
+		result				= max( sums.ao_sum/sums.total_weight, 0.f);
+
+	return	float2( result, 0.f);
+}

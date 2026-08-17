@@ -1,0 +1,155 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/apply_indirect_lighting_specular.ps, plain permutation) -
+//	absent from the recovered source drop; old/apply_indirect_lighting.ps
+//	(the diffuse ancestor) was the reading aid.
+//	Byte-identity: python3 -m vostok.shaders roundtrip apply_indirect_lighting_specular.ps
+//
+//	The specular arm marches the reflected ray through the LPV cascade in
+//	nine half-metre steps from a quarter-metre normal offset, projects the
+//	radiance SH onto the reflection direction at every step and keeps the
+//	brightest, then shapes it - (0.9x)^2 * 0.25 - and packs the result the
+//	way every light accumulator does: 1/rsqrt(min(v,1)/8), which is sqrt
+//	spelled so fxc emits rsq+div rather than sqrt.
+//
+//	A grid position outside [0,1) is zeroed rather than clamped (the sample
+//	then lands on the volume's origin cell), which is what the two
+//	any()-guarded multiplies in clamp_to_grid reproduce.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "spherical_harmonics_common.h"
+
+struct vertex_output_struct
+{
+	float4 position	: SV_Position;
+	float2 uv		: TEXCOORD0;
+};
+
+Texture3D	t_radiance_r;
+Texture3D	t_radiance_g;
+Texture3D	t_radiance_b;
+
+int 		cascade_index;
+int 		num_cascades;
+
+float3 		s_eye_ray_corner;
+
+float		grid_cell_size;
+float		grid_size;
+float3		grid_origin;
+
+float		smaller_cascade_grid_cell_size;
+float		smaller_cascade_grid_size;
+float3		smaller_cascade_grid_origin;
+
+float		interreflection_contribution;
+
+float is_inside_volume(float3 norm_pos)
+{
+	const float blend_region 	= 0.3f;
+
+	const float inside_x 		= min( min(blend_region, norm_pos.x), min(blend_region, 1.0f - norm_pos.x));
+	const float inside_y 		= min( min(blend_region, norm_pos.y), min(blend_region, 1.0f - norm_pos.y));
+	const float inside_z 		= min( min(blend_region, norm_pos.z), min(blend_region, 1.0f - norm_pos.z));
+	const float inside 			= clamp(min(inside_x, min(inside_y,inside_z)) / blend_region, 0.0f, 1.0f);
+
+	return inside;
+}
+
+float3 clamp_to_grid(float3 grid_position)
+{
+	grid_position	*=	any(grid_position < 0.0f) ? 0.0f : 1.0f;
+	grid_position	*=	any(grid_position >= 1.0f) ? 0.0f : 1.0f;
+
+	return grid_position;
+}
+
+float3 world_to_grid(float3 world_position)
+{
+	return	clamp_to_grid((world_position - grid_origin) / (grid_cell_size) / grid_size);
+}
+
+void main(in vertex_output_struct 	input,
+		  out float4 out_specular 	: SV_Target0)
+{
+	const float pi 						= 	3.14159265f;
+
+	float2 screen_uv					= 	input.uv;
+
+	float3 normal						= 	0;
+	float2 temp_value 					= 	0;
+
+	gbuffer_read_rt_normal				(screen_uv, normal, temp_value.x, temp_value.y);
+	normal.z							=	-normal.z;
+
+	float3 world_space_normal			= 	normalize(mul(m_V2W, float4(normal, 0.0f)).xyz);
+
+	float3 eye_ray;
+	eye_ray.xy							= 	( 1 - screen_uv*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z							=	1;
+
+	float3 position						=	gbuffer_read_frame_depth( screen_uv)*eye_ray;
+	float3 world_position				= 	mul(m_V2W, float4(position, 1.0f)).xyz;
+
+	float3 view_direction				=	normalize(world_position - eye_position.xyz);
+	float3 reflection					=	reflect(view_direction, world_space_normal);
+
+	float3 ray_origin					=	world_space_normal*0.25f + world_position;
+
+	float4 sh_coefficients 				= 	low_order_sh_project_clampled_cosine_lobe( -reflection );
+
+	float3 indirect_specular			=	0;
+
+	[unroll]
+	for (int i = 0; i < 9; i++)
+	{
+		float3 grid_position			=	world_to_grid(reflection*((i + 1)*0.5f) + ray_origin);
+
+		float3 indirect_lighting;
+
+		indirect_lighting.r 			= 	dot(sh_coefficients, t_radiance_r.SampleLevel(s_material1, grid_position, 0));
+		indirect_lighting.g 			= 	dot(sh_coefficients, t_radiance_g.SampleLevel(s_material1, grid_position, 0));
+		indirect_lighting.b 			= 	dot(sh_coefficients, t_radiance_b.SampleLevel(s_material1, grid_position, 0));
+
+		indirect_lighting 				= 	max(indirect_lighting, 0.0f);
+		indirect_lighting				*=	2.0f * interreflection_contribution / pi;
+
+		indirect_specular				=	max(indirect_specular, indirect_lighting);
+	}
+
+	indirect_specular					=	pow(indirect_specular*0.9f, 2.0f)*0.25f;
+
+	float3 grid_position_normalized		= 	(world_position - grid_origin) / (grid_cell_size) / grid_size;
+
+	const float distance_to_pixel		= 	length(eye_position.xyz - world_position);
+
+	grid_position_normalized			+=	world_space_normal / 64.0f;
+	grid_position_normalized			=	clamp_to_grid(grid_position_normalized);
+
+	float inside						=	is_inside_volume(grid_position_normalized);
+
+	const float volume_scale			=	grid_cell_size * grid_size;
+	const float smaller_volume_scale	=	smaller_cascade_grid_cell_size * smaller_cascade_grid_size;
+
+	const float attenuation				=	smoothstep(0.0f, 1.0f, 1.0f - saturate(distance_to_pixel / volume_scale));
+
+	const float smaller_inv_attenuation	=	pow(
+		smoothstep(
+			0.0f,
+			1.0f,
+			saturate(distance_to_pixel / (smaller_volume_scale * 0.5f))
+		),
+		5.0f
+	);
+
+	out_specular						=	0.0f;
+
+	out_specular.rgb					=	1.0f/rsqrt(
+		min(
+			  attenuation
+			* inside
+			* indirect_specular
+			* (cascade_index > 0.0f ? smaller_inv_attenuation : 1.0f), 1.0f) / 8.0f);
+}

@@ -1,0 +1,108 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/volume_fog.ps, plain permutation) - absent from the
+//	recovered source drop. Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip volume_fog.ps
+//
+//	The box volume's analytic height fog. volume_fog.vs hands over the
+//	world- and object-space vectors from the eye to this fragment plus the
+//	object-space box corners; the slab test gives the entry/exit distances,
+//	the g-buffer depth clips the exit, and the exponential height falloff is
+//	integrated in closed form along the remaining segment (the |k|>0.001
+//	branch is the removable singularity as the segment goes horizontal).
+//	Three panning noise taps modulate it, and beyond 300 m the modulation is
+//	faded out.
+//
+//	Two literals are folded ship constants, kept as their exact float32
+//	values: the noise pan rates 0.0032265625 and 0.0024199219 (ratio 4:3).
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+uniform float3	s_eye_ray_corner;
+uniform float4	fog_parameters0;
+uniform float4	fog_parameters1;
+uniform float4	fog_parameters2;
+uniform float4	fog_parameters3;
+
+Texture2D		t_fog_noise;
+
+struct	v2p_volume_fog
+{
+	float4	hpos			: SV_Position;
+	float3	world_delta		: TEXCOORD0;
+	float3	object_delta	: TEXCOORD1;
+	float3	box_max			: TEXCOORD2;
+	float3	box_min			: TEXCOORD3;
+	bool	front_face		: SV_IsFrontFace;
+};
+
+float4 	main	( v2p_volume_fog I ) : SV_TARGET
+{
+	float2	uv				= I.hpos.xy*screen_res.zw;
+
+	float3	eye_ray;
+	eye_ray.xy				= ( 1 - uv*2 )*s_eye_ray_corner.xy/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float	depth			= gbuffer_read_frame_depth( uv);
+	float3	position		= eye_ray*depth;
+	float3	world_position	= mul( m_V2W, float4( position, 1.f));
+
+	float2	noise_uv		= ( fog_parameters2.y*0.00025f)*world_position.xz;
+	float	pan_time		= fog_parameters1.x*scene_time;
+	float2	pan				= ( fog_parameters1.zw + 1.f)*pan_time;
+
+	float	noise1			= t_fog_noise.Sample( s_base, noise_uv - pan*float2( 0.0032265625f, 0.f)).x;
+	float	noise2			= t_fog_noise.Sample( s_base, noise_uv - pan*float2( 0.f, 0.0032265625f)).x;
+	float	noise0			= t_fog_noise.Sample( s_base, noise_uv + pan*float2( 0.0024199219f, -0.0024199219f)).x;
+
+	float	noise			= abs( noise1*2.f - 1.f + noise2*2.f + noise0*2.f - 2.f)*fog_parameters2.x;
+
+	noise					= lerp( noise, 0.f, depth > 300.f) + 1.f;
+
+	float	inverted_length	= 1.f/length( I.object_delta);
+	float3	object_direction= I.object_delta*inverted_length;
+	float3	world_direction	= I.world_delta*inverted_length;
+
+	bool3	positive		= object_direction > 0;
+	float3	inverted		= 1.f/object_direction;
+
+	float3	maximums		= I.box_max*inverted;
+	float3	minimums		= I.box_min*inverted;
+
+	float3	near_bounds		= positive ? minimums : maximums;
+	float3	far_bounds		= positive ? maximums : minimums;
+
+	far_bounds				= max( min( far_bounds, 10000000.f), -10000000.f);
+	near_bounds				= max( min( near_bounds, 10000000.f), -10000000.f);
+
+	float2	distances;
+	distances.x				= max( near_bounds.x, max( near_bounds.y, near_bounds.z));
+	distances.y				= min( far_bounds.x, min( far_bounds.y, far_bounds.z));
+
+	distances				= max( distances, 0.f);
+
+
+	float	segment			= max( distances.x, min( max( depth, 0.f)/dot( world_direction, m_V[2].xyz), distances.y)) - distances.x;
+
+	float	height			= distances.x*world_direction.y + eye_position.y;
+	float3	segment_vector	= segment*world_direction;
+
+	float	falloff			= ( height - m_W[1].w)*fog_parameters3.x;
+	float	density			= exp( -falloff);
+
+	float	segment_falloff	= segment_vector.y*fog_parameters3.x;
+
+	density					= length( segment_vector)*density;
+
+	if ( abs( segment_falloff) > 0.001f)
+		density				= density*( ( 1.f - exp( -segment_falloff))/segment_falloff);
+
+	float	amount			= max( density - fog_parameters3.y, 0.f);
+	float	alpha			= 1.f - exp2( amount*-fog_parameters0.w);
+
+	return	float4( convert_to_linear_space( fog_parameters0.rgb), saturate( alpha*noise*fog_parameters3.z));
+}

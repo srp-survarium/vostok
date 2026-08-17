@@ -1,0 +1,225 @@
+////////////////////////////////////////////////////////////////////////////
+//	Created		: 29.03.2011
+//	Author		: Nikolay Partas
+//	Copyright (C) GSC Game World - 2011
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
+//	(shaders/sm_4_0/gbuffer_emissive_pass.ps (blob-identical to depth_accumulate.ps per permutation), all 69 permutations). The recovered
+//	revision (in git history) returned distance-to-light and multiplied the
+//	alpha by parameters.color.a; the ship compile samples t_base with
+//	s_linear, clips against alpha_ref_parameter from the material_parameters
+//	cbuffer, and returns zero. Byte-proven 2026-08-17:
+//	python3 -m vostok.shaders roundtrip gbuffer_emissive_pass.ps (blob-identical to depth_accumulate.ps per permutation)
+//	-> 69 identical, 0 differ, 0 skipped.
+//
+//	Self-contained on purpose: the shipped blobs' dependency lists name
+//	common.h / material.h / vertex_input.h revisions this tree does not
+//	have. Ship vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE 0..14 to
+//	null / static shadow (1 and 2, + wind.h) / skeleton_{4,3,2,1}_bones /
+//	particle / particle subuv / beamtrail / decal / grassmesh / postprocess /
+//	wires / user vertex inputs - a different numbering and different
+//	vertex_output_structs than the recovered generation - and ship
+//	common_cbuffers.h carries the full 38-member material_parameters cbuffer
+//	where the recovered header stops after solid_emission_color. Including
+//	the recovered headers would bind the wrong structs and collide with this
+//	cbuffer, so everything the shader needs is declared here. Struct member
+//	semantics and types are ship-proven by the input signatures; member
+//	names on interpolators the shader never reads are conjecture.
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_ALPHA_TEST,
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_WIND_MOTION,
+		CONFIG_USE_SUBUV,
+*/
+
+// PENDING (4 of 27 perms DIFF, each 96 bytes short): the VERTEX_INPUT_TYPE=2
+// permutations - ship routes this pass through the PLAIN static-mesh input
+// with wind uniforms, not the _shadow variant this depth-derived file carries.
+// Fix lands with the gbuffer_pass static+wind struct reconstruction.
+// Ship layout, byte-proven: the alpha-test permutations' RDEF records
+// exactly these members at these offsets (alpha_ref_parameter at 476).
+cbuffer	material_parameters
+{
+	uniform float4	solid_color_specular;
+	uniform float4	solid_material_params;
+	uniform float4	solid_emission_color;
+	uniform float4	specular_fresnel_roughness_parameters;
+	uniform float4	packed_variation_mask_parameters;
+	uniform float4	variation_color;
+	uniform float4	far_fog_color_and_distance;
+	uniform float4	environment_skylight_upper_color;
+	uniform float4	environment_skylight_lower_color;
+	uniform float4	environment_skylight_parameters;
+	uniform float4	detail_normal_parameters;
+	uniform float4	specular_intensity_ranges;
+	uniform float4	specular_color_multiplier;
+	uniform float4	vegetation_fresnel_parameters;
+	uniform float4	sequence_parameters;
+	uniform float4	uv_scrolling_parameters;
+	uniform float3	detailed_bending_parameters;
+	uniform float3	wind_info_parameters;
+	uniform float3	ambient_color;
+	uniform float3	hue_matrix_component_x;
+	uniform float3	hue_matrix_component_y;
+	uniform float3	hue_matrix_component_z;
+	uniform float3	fuzziness_parameters;
+	uniform float3	constant_diffuse_mask_color;
+	uniform float3	sun_direction;
+	uniform float3	sun_color;
+	uniform float3	specular_color_parameter;
+	uniform float3	vertex_blend_parameters;
+	uniform float3	normal_waves_parameters;
+	uniform float2	constant_tile_uv;
+	uniform float	ditail_texture_tile;
+	uniform float	alpha_ref_parameter;
+	uniform float	reflection_power;
+	uniform float	min_reflection_angle;
+	uniform float	near_fog_distance;
+	uniform float	fog_alpha;
+	uniform float	smoothness_multiplier;
+	uniform float	wind_scale;
+}
+
+uniform sampler	s_linear;
+uniform sampler	s_base;
+Texture2D		t_base;
+Texture2D		t_emission;
+
+#if CONFIG_VERTEX_INPUT_TYPE == 0		// null mesh
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		(input).position.xz
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh, shadow
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh, 4/3/2/1 bones
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD3;
+	float3	normal				: TEXCOORD4;
+	float3	prev_position		: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10	// decal
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	misc0				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	misc1				: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float3	normal				: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+#define material_tc(input)		(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 12	// post process
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_tc(input)		float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+#define material_tc(input)		(input).tc
+
+#else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_tc(input)		(input).tc
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+float4 	main			(in vertex_output_struct input): SV_Target0
+{
+#if CONFIG_ALPHA_TEST
+	const float alpha		= t_base.SampleLevel(s_linear, material_tc(input), 0).a;
+	clip					(alpha - alpha_ref_parameter);
+#endif // #if CONFIG_ALPHA_TEST
+
+#if CONFIG_EMISSIVE == 1
+	return float4( pow( abs( solid_emission_color.xyz ), 2.2f ), 0.f );
+#elif CONFIG_EMISSIVE == 2
+	return float4( t_emission.Sample( s_base, material_tc(input) ).xyz*solid_emission_color.xyz, 0.f );
+#else
+	return float4(0.f, 0.f, 0.f, 0.f);
+#endif
+}

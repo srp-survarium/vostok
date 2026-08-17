@@ -1,0 +1,28 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
+//	recovered source drop. The vertical companion of blur_vertically.ps, but
+//	it ACCUMULATES: the last tap's mad feeds the incoming target rather than
+//	starting from zero, so the first tap is the loop's seed.
+//	Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+/*
+	$DEFINES$:
+		CONFIG_POST_PROCESS_BLUR_KERNEL,
+*/
+
+#include "common.h"
+
+#define NUM_SAMPLES CONFIG_POST_PROCESS_BLUR_KERNEL
+
+uniform float4 offsets_weights[NUM_SAMPLES];
+
+float4 main( v2p_TL vin) : SV_TARGET
+{
+    float4 final_color = 0;
+
+	[unroll] for(int i=0; i<NUM_SAMPLES; i++)
+		final_color += t_base.SampleLevel(s_material1, vin.Tex0 + float2( 0.0f, offsets_weights[i].z), 0) * offsets_weights[i].w;
+
+	return final_color;
+}

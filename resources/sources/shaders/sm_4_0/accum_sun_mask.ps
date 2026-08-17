@@ -1,23 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
+//	revision is in old/. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
 #include "common.h"
 #include "gbuffer.h"
-#include "light.h"
-#include "directional_light.h"
 
-#define EPS	(0.9f/255.f)
-#define CLIP_THRESHOLD	(0.0f/255.f)
-
-float4 	main		( v2p_TL I )	: SV_TARGET
+struct v2p_accum_sun_mask
 {
-  // Sample the fat framebuffer:
-	//float4 	NH		= t_normal.Sample(s_normal,   I.Tex0); 
-	//float4 	NH		= gbuffer_read_rt_normal	( I.Tex0);
-	float3 normal;
-	float shparam, mat_id;
-	gbuffer_read_rt_normal( I.Tex0, normal, shparam, mat_id);
-	
-	float	L 		= /* NH.w * */ dot	(light_direction.xyz, normal.xyz) + EPS; // Use hemisphere as approximation of max light
-  
-	clip(-(L-CLIP_THRESHOLD) + shparam);
-  
-	return  		float4			(L,L,L,L);
+	float4	hpos		: SV_Position;
+	float2	tc			: TEXCOORD0;
+	float3	eye_ray		: TEXCOORD1;
+};
+
+float4 main( v2p_accum_sun_mask I ) : SV_Target
+{
+	// Ship writes an opaque mask unconditionally - the sun-mask test the
+	// pre-ship revision performed is gone.
+	return	float4( 1.0f, 1.0f, 1.0f, 1.0f);
 }

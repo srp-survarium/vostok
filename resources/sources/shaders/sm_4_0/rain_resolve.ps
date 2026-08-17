@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+
+Texture2D	t_rain;
+
+struct v2p_rain_resolve
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_rain_resolve I ) : SV_Target
+{
+	float4	rain	= t_rain.SampleLevel( s_material1, I.tc, 0);
+
+	return	float4( rain.xyz, min( sqrt( dot( rain.xyz, rain.xyz)), 1.0f));
+}

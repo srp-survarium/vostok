@@ -1,0 +1,25 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
+//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+
+Texture2D	t_depth_render_target;
+
+struct v2p_copy_depth
+{
+	float4	hpos		: SV_Position;
+	float2	tc			: TEXCOORD0;
+	float3	eye_ray		: TEXCOORD1;
+};
+
+float4 main( v2p_copy_depth I ) : SV_Target
+{
+	float	near	= near_far_invn_invf.x;
+	float	far		= near_far_invn_invf.y;
+	float	depth	= t_depth_render_target.SampleLevel( s_accumulator, I.tc, 0).x;
+
+	return	( (-far)*near/( far - near))/( depth - far/( far - near));
+}

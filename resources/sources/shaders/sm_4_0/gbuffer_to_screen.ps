@@ -1,7 +1,18 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 11.01.2011
-//	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2011
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/gbuffer_to_screen.ps, plain permutation), using
+//	old/gbuffer_to_screen.ps as the pre-ship reading aid. The aid had
+//	drifted hard: at ship the view selector is an *int* (ieq, not a pair of
+//	float bounds), the mode numbering moved, the luminance-histogram and
+//	frame_color1 views are gone, and an LPV view (22) arrived.
+//	Byte-identity: python3 -m vostok.shaders roundtrip gbuffer_to_screen.ps
+//
+//	Two shapes the blob insists on and this file therefore keeps:
+//	* gamma is applied per branch, not once around the whole thing - the
+//	  non-colour views (5..8, 18, and the magenta fallback) are written raw;
+//	* the last test carries a literal [branch]. Without it fxc flattens
+//	  `type == 25` and the fallback into one movc, which is three
+//	  instructions short of ship and shifts a register in the type == 5 arm.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
@@ -9,145 +20,184 @@
 #include "gamma_correction.h"
 #include "luminance.h"
 
-/*
-	enum scene_view_mode
-	{
-	
-	0-1	wireframe_view_mode			= 0,
-	1-2	wireframe_two_sided_view_mode,
-	
-*	2-3	unlit_view_mode,
-	3-4	lit_view_mode,
-	
-*	4-5	normals_view_mode,
-	
-*	5-6	specular_intencity_view_mode,
-*	6-7	specular_power_view_mode,
-*	7-8	miplevel_view_mode,
-	
-*	8-9	lighting_view_mode,
-	
-*	9-10    lighting_diffuse_view_mode,
-*	10-11   lighting_specular_view_mode,
-	
-	11-12   shader_complexity_view_mode,
-	12-13	texture_complexity_view_mode,
-	13-14	geometry_complexity_view_mode,
-	
-*	14-15	emissive_only_view_mode,
-*	15-16	distortion_only_view_mode,
-*	16-17	ambient_occlusion_only_view_mode,
-*	17-18   unlit_with_ao_view_mode,
-*	18-19	lit_with_histogram_view_mode,
-*	19-20	overdraw_view_mode,
-*	20-21	indirect_lighting_mode,
-	
-	}; // enum scene_view_mode
-*/
-
-float gbuffer_to_screen_type;
+int gbuffer_to_screen_type;
 
 Texture2D t_frame_color0;
-Texture2D t_frame_color1;
 Texture2D t_emissive;
 Texture2D t_distortion;
 Texture2D t_accumulator_dif;
 Texture2D t_accumulator_spec;
 Texture2D t_ssao_accumulator;
-Texture2D t_frame_luminance;
-Texture2D t_frame_luminance_histogram;
+Texture2D t_lpv_accumulation;
 
-//uniform float3x4	m_V2W;
-
-float4 main_impl(v2p_post_process input)
+struct vertex_output_struct
 {
-	float2 uv 				= input.uv;
-	float4 accum_diff   	= t_accumulator_dif.Sample(s_accumulator, uv);
-	float4 accum_spec   	= t_accumulator_spec.Sample(s_accumulator, uv);
-	static const float type = gbuffer_to_screen_type;
-	
-	if (type>2.0f && type<3.0f || type>17.0f && type<18.0f)
-	{
-		float3 diffuse_color = t_frame_color0.Sample(s_accumulator, uv).rgb;
-		return float4(diffuse_color, 0.0f);
-	}
-	else if (type>4.0f && type<5.0f)
-	{
-		float3 normal = gbuffer_read_frame_normal(uv);
-		return float4(mul(m_V2W, float4(normal, 0.f)).xyz, 0.0f);
-	}
-	else if (type>5.0f && type<6.0f)
-	{
-		float3 diffuse;
-		float specular_intensity;
-		gbuffer_read_rt_color( uv, diffuse, specular_intensity);
-		
-		return float4(specular_intensity,specular_intensity,specular_intensity,0);
-	}
-	else if (type>6.0f && type<7.0f)
-	{
-		float specular_power;
-		float diffuse_power;
-		float3 position;
-		
-		gbuffer_read_rt_position( uv, float3(1,1,1), position, diffuse_power, specular_power);
-		
-		specular_power /= 255.0f;
-		
-		return float4(specular_power,specular_power,specular_power,0);
-	}		
-	else if (type>8.0f && type<11.0f)
-	{
-		if (type>8.0f && type<9.0f)
-		{
-			return float4(accum_diff.rgb + accum_spec.rgb,0);
-		}
-		else if (type>9.0f && type<10.0f)
-		{
-			return float4(accum_diff.rgb, 0);
-		}
-		else
-		{
-			return float4(accum_spec.rgb, 0);
-		}
-	}
-	else if (type>14.0f && type<15.0f)
-	{
-		float4 gb_emissive 	= 1.0f * t_emissive.Sample( s_position, uv);
-		return float4(gb_emissive.rgb,0);
-	}
-	else if (type>15.0f && type<16.0f)
-	{
-		float2 distortions = 255.0f * (t_distortion.Sample( s_position, uv).xy);
-		return float4(distortions.xy, 0.0f, 0.0f);
-	}	
-	else if (type>16.0f && type<17.0f)
-	{
-		return float4(t_ssao_accumulator.Sample(s_position, uv).xxx, 0.0f);
-	}
-	else if (type>18.0f && type<19.0f)
-	{
-		float4 final_color 			= t_diffuse.Sample(s_position, uv);
-		
-		float2 scale 				= 1.0f;//0.5f * pow(exp(1.0f - uv.x), 0.5f);
-		float num_pixels_norm		= t_frame_luminance_histogram.Sample(s_position, uv * scale).r / num_luminance_pixels;
-		
-		if (uv.y > (1.0f - num_pixels_norm) )
-			return lerp(final_color, float4(num_pixels_norm, 1.0f - num_pixels_norm, 0.0f, 0.0f), 0.75f);
-		
-		return final_color;
-		
-		//return float4( get_luminance(final_color.rgb) > 0.9f, (0.0f).xxx);
-	}
-	else if (type>20.0f && type<21.0f)
-	{
-		return float4(1*accum_diff.rgb, 0.0f);
-	}
-	return float4(0.5f, 0.1f, 0.2f, 0.0f);
-}
+	float4 position	: SV_POSITION;
+	float2 uv		: TEXCOORD0;
+};
 
-float4 main(v2p_post_process input) : SV_TARGET
+static const float2 lpv_offsets[9] =
 {
-	float4 result	= main_impl( input );
-	return			float4( convert_from_linear_space( result.xyz ), result.w );
+	float2(  1.0f,  1.0f),
+	float2(  1.0f,  0.0f),
+	float2(  1.0f, -1.0f),
+	float2(  0.0f,  1.0f),
+	float2(  0.0f, -1.0f),
+	float2( -1.0f,  1.0f),
+	float2( -1.0f,  0.0f),
+	float2( -1.0f, -1.0f),
+	float2(  0.0f,  0.0f)
+};
+
+void main(in vertex_output_struct input, out float4 result : SV_TARGET)
+{
+	float2	uv					= input.uv;
+	int		type				= gbuffer_to_screen_type;
+
+	float3	accum_diff			= saturate(t_accumulator_dif.Sample(s_accumulator, uv).rgb);
+	accum_diff					= accum_diff*accum_diff*8.0f;
+
+	float3	accum_spec			= saturate(t_accumulator_spec.Sample(s_accumulator, uv).rgb);
+	accum_spec					= accum_spec*accum_spec*8.0f;
+
+
+	if (type == 2)
+	{
+		float3 diffuse_color	= t_frame_color0.Sample(s_accumulator, uv).rgb;
+		result					= float4(convert_from_linear_space(diffuse_color), 0.0f);
+	}
+	else if (type == 4)
+	{
+		float3 normal			= gbuffer_read_frame_normal(uv);
+		normal.z				= -normal.z;
+
+		result					= float4(convert_from_linear_space(saturate(mul(m_V2W, float4(normal, 0.0f)).xyz)), 0.0f);
+	}
+	else if (type == 5)
+	{
+		float3	diffuse;
+		float	specular_intensity;
+		gbuffer_read_rt_color(uv, diffuse, specular_intensity);
+
+		uint	material_id		= (uint)(specular_intensity*255.0f) >> 7;
+
+		float4	data			= t_normal.SampleLevel(s_accumulator, uv, 0);
+		uint	magnified		= (uint)(data.z*1023.0f);
+		uint	material		= (uint)(data.w*3.0f);
+		float	smoothness		= min((float)((magnified >> 7) | (material << 3))/31.0f, 1.0f);
+
+		result					= float4(material_id ? float3(1.0f, 1.0f, 1.0f) : smoothness.xxx, 0.0f);
+	}
+	else if (type == 6)
+	{
+		float3	diffuse;
+		float	specular_intensity;
+		gbuffer_read_rt_color(uv, diffuse, specular_intensity);
+
+		uint	material_id		= (uint)(specular_intensity*255.0f) >> 7;
+
+		float4	data			= t_normal.SampleLevel(s_accumulator, uv, 0);
+		uint	magnified		= (uint)(data.z*1023.0f);
+		uint	material		= (uint)(data.w*3.0f);
+		float	smoothness		= min((float)((magnified >> 7) | (material << 3))/31.0f, 1.0f);
+
+		result					= float4(material_id ? smoothness.xxx : float3(0.0f, 0.0f, 0.0f), 0.0f);
+	}
+	else if (type == 7)
+	{
+		float3	diffuse;
+		float	specular_intensity;
+		gbuffer_read_rt_color(uv, diffuse, specular_intensity);
+
+		float	parameter		= (float)((uint)(specular_intensity*255.0f) & 127)/127.0f;
+
+		result					= float4(parameter.xxx, 0.0f);
+	}
+	else if (type == 8)
+	{
+		float4	data			= t_normal.SampleLevel(s_accumulator, uv, 0);
+		float	parameter		= (float)((uint)(data.z*1023.0f) & 127)/127.0f;
+
+		result					= float4((1.0f - parameter).xxx, 0.0f);
+	}
+	else if (type == 10)
+	{
+		result					= float4(convert_from_linear_space(accum_diff + accum_spec), 0.0f);
+	}
+	else if (type == 11)
+	{
+		result					= float4(convert_from_linear_space(accum_diff), 0.0f);
+	}
+	else if (type == 12)
+	{
+		result					= float4(convert_from_linear_space(accum_spec), 0.0f);
+	}
+	else if (type == 13)
+	{
+		float3	diffuse;
+		float	specular_intensity;
+		gbuffer_read_rt_color(uv, diffuse, specular_intensity);
+
+		uint	material_id		= (uint)(specular_intensity*255.0f) >> 7;
+
+		float4	data			= t_normal.SampleLevel(s_accumulator, uv, 0);
+		uint	magnified		= (uint)(data.z*1023.0f);
+		uint	material		= (uint)(data.w*3.0f);
+		float	smoothness		= min((float)((magnified >> 7) | (material << 3))/31.0f, 1.0f);
+
+		result					= float4(convert_from_linear_space((material_id ? 1.0f : pow(smoothness, gamma_value))*accum_spec), 0.0f);
+	}
+	else if (type == 17)
+	{
+		float4 gb_emissive		= 1.0f * t_emissive.Sample(s_position, uv);
+		result					= float4(convert_from_linear_space(gb_emissive.rgb), 0.0f);
+	}
+	else if (type == 18)
+	{
+		float2 distortions		= t_distortion.Sample(s_position, uv).xy;
+		result					= float4((length(distortions)*600.0f)*distortions, 0.0f, 0.0f);
+	}
+	else if (type == 19)
+	{
+		result					= float4(convert_from_linear_space(t_ssao_accumulator.Sample(s_linear, uv).xxx), 0.0f);
+	}
+	else if (type == 20)
+	{
+		float	ambient_occlusion	= saturate(t_ssao_accumulator.Sample(s_position, uv).x*4.0f);
+		float3	diffuse_color		= t_frame_color0.Sample(s_accumulator, uv).rgb;
+
+		result					= float4(convert_from_linear_space(ambient_occlusion*diffuse_color), 0.0f);
+	}
+	else if (type == 22)
+	{
+		float	depth			= gbuffer_read_frame_depth(uv)*0.002f;
+
+		float3	color			= 0;
+		float	occlusion		= 0;
+
+		LOOP
+		for (int i = 0; i < 9; i++)
+		{
+			float2	tap			= lpv_offsets[i]/screen_res.xy + uv;
+			float4	sample		= t_lpv_accumulation.SampleLevel(s_linear, tap, 0);
+
+			occlusion			+= saturate(sample.w*0.002f - depth)/depth;
+			color				+= t_lpv_accumulation.Sample(s_linear, uv).rgb;
+		}
+
+		color					/= 9.0f;
+
+		float	shadow			= 1.0f - min(length(accum_diff), 1.0f);
+		float	ambient			= min(pow(1.0f - occlusion/9.0f, 2.0f), 1.0f);
+
+		result					= float4(convert_from_linear_space((shadow*ambient)*color), 0.0f);
+	}
+	else [branch] if (type == 25)
+	{
+		result					= float4(convert_from_linear_space(accum_diff + accum_spec), 0.0f);
+	}
+
+	else
+		result					= float4(0.5f, 0.1f, 0.2f, 0.0f);
+
 }

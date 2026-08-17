@@ -1,0 +1,67 @@
+////////////////////////////////////////////////////////////////////////////
+//	Reconstructed 2026-08-18 from the shipped v0.100b blob
+//	(shaders/sm_4_0/reflection_mask.ps, plain permutation) - absent from the
+//	recovered source drop. Byte-identity is the acceptance test:
+//	python3 -m vostok.shaders roundtrip reflection_mask.ps
+//
+//	Dev scratch as it shipped, reproduced rather than tidied:
+//	* both arms of the final test return white, so the whole reflection
+//	  computation is dead at run time - fxc keeps it because each arm ends in
+//	  its own `ret`;
+//	* the depth tap is a SampleBias whose *location* is ddx( tc) and whose
+//	  bias is ddy( tc).x - almost certainly a SampleGrad the author mistyped,
+//	  but it is what the blob's `deriv_rtx`/`deriv_rty`/`sample_b` triple says;
+//	* the perspective divide is a separate statement, after the depth tap:
+//	  folding it into the eye_ray line moves the `div` above the sample and
+//	  flips the `mul` that follows.
+//
+//	PARKED one counter short of byte-identity. RDEF, ISGN, OSGN and - the
+//	part that matters - the whole SHDR chunk are byte-for-byte the ship
+//	blob's, all 2,300 bytes accounted for except STAT's mov counter: ship 4,
+//	this 3. That counter is taken before the final peephole (shipped
+//	fix_irradiance_texture.ps records 21 movs for a listing that shows 5), so
+//	ship's source held one more mov than this one that fxc then folded away.
+//	Tried, all leaving the SHDR identical and the counter at 3: `float4
+//	result = 1.f` returned from both arms (declared at the top and beside the
+//	test), an `out float4` parameter with two `return;`s, if/else instead of
+//	fallthrough, float4(1,1,1,1) / 1.f.xxx spellings, a copy of I.tc, a copy
+//	of view_direction, `float3 eye_ray = 0`, float4 position with .w set
+//	first, explicit `.xyz` on the mul, splitting normalize/reflect apart, and
+//	naming the SampleBias result before taking .w.
+////////////////////////////////////////////////////////////////////////////
+
+#include "common.h"
+#include "gbuffer.h"
+#include "gamma_correction.h"
+
+uniform float4	s_eye_ray_corner;
+
+struct	v2p_reflection_mask
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 	main	( v2p_reflection_mask I ) : SV_TARGET
+{
+	float3	eye_ray;
+	eye_ray.xy				= ( 1 - I.tc*2 )*s_eye_ray_corner.xy;
+
+	float	depth			= t_position.SampleBias( s_linear, ddx( I.tc), ddy( I.tc)).w;
+
+	eye_ray.xy				/= s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float3	position		= eye_ray*depth;
+
+	float3	normal			= normalize( mul( (float3x3)m_V2W, t_position.SampleLevel( s_linear, I.tc + 0.001f, 0).xyz));
+
+	float3	world_position	= mul( m_V2W, float4( position, 1.f));
+	float3	view_direction	= normalize( eye_position - world_position);
+	float3	reflected		= normalize( reflect( view_direction, normal));
+
+	if ( dot( reflected, view_direction) <= 0.f)
+		return	1.f;
+
+	return	1.f;
+}
