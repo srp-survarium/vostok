@@ -24,3 +24,16 @@ and line numbers below it shift toward the target's `__LINE__` geometry. Then
 verify the standard way: out-of-line call-site counts on BOTH sides must agree
 with the target's before the change is kept (sushi 2026-08-17; see
 noinline-audit rule).
+
+Calibration data (math::color_rgba float x4, render 2026-08-17, REVERTED): at
+call sites whose args are ALL CONSTANTS the knob does not bite - 4x plain
+`ASSERT` (Master Gold discards the expression, leaving only
+`if(identity(false)){}`) moved nothing, and 4x `ASSERT_U` (range exprs kept in
+the dead branch) still failed to flip the 8 renderer.cpp inline sites to the
+target's calls while its dead branches PERTURBED the already-inlined constant
+expansions (draw_luminance_picker_info cur 67.0->49.8). The constant-args
+inline bonus dominates the pre-opt size estimate; use this pattern on sites
+with non-constant args, and prefer detection via the line-geometry signature
+first. Also note `ASSERT_U( valid(x) )` in a core header can break PCHs that
+reach math_color.h before math_functions.h - keep kept-expressions
+self-contained.

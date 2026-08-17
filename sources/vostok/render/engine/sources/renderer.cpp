@@ -665,14 +665,23 @@ inline bool sort_by_texture_predicate::operator()( render_surface_instance const
 	return left_pass->get_ps( )->m_textures->compare( *right_pass->get_ps( )->m_textures ) < 0;
 }
 
+// claude@MATCH: the nested two-arg max in the return binds the by-value max(float,float)
+// overload, which the inliner expands (the target has NO max<float> template instantiation
+// anywhere, while max<unsigned int> instantiations survive); a 3-arg max(x,y,z) spelling
+// binds the by-const-ref template chain that MSVC leaves out-of-line, splitting the return.
 static float screen_factor( float3 const& view_position, math::aabb bbox, float4x4 const& model_transform )
 {
 	bbox.modify					( model_transform );
 	float3 const center			= bbox.center( );
 	float3 const extents		= bbox.extents( );
-	return						( math::clamp_r( math::max( extents.x, extents.y, extents.z )/math::max( math::squared_length( view_position - center ), math::epsilon_6 ), 0.f, 1.f ) );
+	return						( math::clamp_r( math::max( extents.x, math::max( extents.y, extents.z ) )/math::max( math::squared_length( view_position - center ), math::epsilon_6 ), 0.f, 1.f ) );
 }
 
+// claude@NOTE: target inlines screen_factor's whole body here (0x11e in the `);` record,
+// aabb::modify called from inside the expansion) and calls memory::strip_pointer x4 in
+// the vector growth paths; base keeps the screen_factor call (even after screen_factor
+// went all-SSE/no-helper-calls) and inlines strip_pointer - inverse LTCG choices at the
+// same boundaries. Statement pairing is otherwise 1:1 with attribution-only deltas.
 void renderer::fill_opaque_models( )
 {
 	if ( !options::ref( ).current.m_use_shader_lods ) {
@@ -900,6 +909,13 @@ static void draw_text(
 	system_renderer::ref().draw_ui_vertices((vertex_formats::TL*)&out_vertices.front(), out_vertices.size(), 0, 0);
 }
 
+// claude@NOTE: target CALLS math::color_rgba for the shadow color (custom cc: b in xmm0,
+// r/g/a on stack) and keeps this body small enough that LTCG inlines it at every caller
+// site; our LTCG instead inlines color_rgba here (two floor calls + packing), fattening
+// the body so the callers keep out-of-line calls. Not fixable with noinline on color_rgba:
+// the target INLINES the same color_rgba in draw_stages_stats (floor bit-twiddle x5) and
+// promotes it into backend::clear_render_targets in renderer::render - the per-site mix
+// is whole-program LTCG state, not a declspec.
 static void draw_text_shadowed(
 	vostok::ui::font const*		in_font,
 	pcstr				str,
@@ -912,6 +928,13 @@ static void draw_text_shadowed(
 	draw_text(in_font, str, pos_x, pos_y, clr);
 }
 
+// claude@NOTE: the three TRGT_ONLY records are the is_effects_ready early-return's
+// flush( on_draw_scene, true, true ) kept as a separate cold block at function end in the
+// target (own record + own `}` epilogue record) where base tail-merges it with the
+// s_enable_rendering copy; the clear_render_targets statement also differs because
+// retail's LTCG promotes the math::color ctor floats into backend::clear_render_targets'
+// custom convention (3 stack floats + xmm0) while base packs the u32 via color_rgba here.
+// Both are optimizer placement/convention, not source shape.
 void renderer::render(
 	base_scene_ptr const&				in_scene,
 	base_scene_view_ptr const&			in_view,
@@ -1264,11 +1287,12 @@ void renderer::draw_debug(
 
 }
 
-// claude@NOTE: residual cause - the target inlines draw_text_shadowed (and math::color_rgba
-// with its four math::floor expansions) at every call site here and in
-// draw_luminance_picker_info, ~0x250 bytes per site; our LTCG emits a plain call, and it
-// also leaves fixed_string<32>::fixed_string<32> out-of-line where the target inlines it.
-// The statement shape below is complete - the gap is the inliner, not the source.
+// claude@NOTE: residual cause - the target inlines draw_text_shadowed at all four sites
+// (~0x250 bytes each, with floor bit-twiddle expanded) but CALLS math::color_rgba x5 for
+// the rgbl_colors init (one PDB record per element); our LTCG does the inverse - it folds
+// the color constants (coalescing the four init records into one) and keeps out-of-line
+// draw_text_shadowed calls at the first two sites. Statement shape and the four locals
+// match; the gap is the inliner, not the source.
 void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font )
 {
 	fixed_string< 64 > strings[8];
@@ -1302,6 +1326,12 @@ void renderer::draw_luminance_picker_info( vostok::ui::font const* default_font 
 		draw_text_shadowed	( default_font, strings[4 + i].get_buffer( ), 5, 82 + i * 12, rgbl_colors[i].m_value );
 }
 
+// claude@NOTE: the whole gap is draw_text_shadowed inline-vs-call: target inlines it at
+// all eight sites (draw_text x16 + inlined color_rgba/floor, ~0x260 bytes per statement),
+// base keeps eight calls because its draw_text_shadowed body carries an inlined color_rgba
+// (see the note there). Statement records pair 1:1 otherwise; the two base-only records
+// (fixed_string ctors, string_index init) are code the target scheduler sank into
+// neighboring records - target has no records for them at all.
 void renderer::draw_stages_stats( vostok::ui::font const* default_font )
 {
 	double total_gpu_time					= 0.;
@@ -1368,6 +1398,11 @@ void renderer::present(
 	m_present_stage->execute	( m_renderer_context->get_t( rt_present ) );
 }
 
+// claude@NOTE: 16 statement records on both sides; target CALLS math::color_rgba x2 for
+// the draw_screen_lines colors while base inlines it (floor x4) - same TU-wide
+// color_rgba inline inversion as draw_text_shadowed. The loop-body record splits
+// (TRGT_ONLY at the loop's closing brace) are scheduler line-attribution over the same
+// float3 math.
 void renderer::draw_frame_histogram( ) const
 {
 	if ( !backend::ref( ).m_render_output )
