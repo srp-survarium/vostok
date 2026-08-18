@@ -63,26 +63,63 @@
 //	CONFIG_PARALLAX and CONFIG_TFRESNEL ship only as 0, so their arms are
 //	carried from the drifted source and no blob constrains them.
 //
-//	PARKED - 563 of the 600 recompile byte-identically; 37 do not, and every
-//	one of them is the same compiler fact seen from a different side.  fxc
-//	decides, per compile, whether a value is provably non-negative, and that
-//	one decision moves three things at once: whether a max(x, 0) survives or
-//	is folded away, whether the attenuation's saturate lowers to div_sat or to
-//	div+min, and whether the vectoriser pairs two x*x products into a single
-//	instruction.  The shipped blobs disagree with *each other* the same way -
-//	input type 0 folds the distribution's lower clamp away, input type 1 keeps
-//	it, out of one source - so the residue is fxc's own heuristic reacting to
-//	register lifetimes, not a shape this file still has wrong.  Where they sit:
+//	PARKED - 563 of the 600 recompile byte-identically (measured 2026-08-18:
+//	`563 identical, 37 differ, 0 skipped`); 37 do not, and every one of them is
+//	the same compiler fact seen from a different side.  fxc decides, per
+//	compile, whether a value is provably non-negative, and that one decision
+//	moves three things at once: whether a max(x, 0) survives or is folded away,
+//	whether the attenuation's saturate lowers to div_sat or to div+min, and
+//	whether the vectoriser pairs two constant multiplies into one instruction.
+//	Where they sit:
 //
 //	  * input types 1 and 2, CONFIG_TNORMAL = 0                  (4 blobs)
 //	  * input types 3..6, the Poisson filter, CONFIG_TNORMAL = 1 (28 blobs)
 //	  * input type 11 at GLOBAL_SHADING_QUALITY = 3              (3 blobs)
 //	  * input types 10 and 13 at GLOBAL_SHADING_QUALITY = 3      (2 blobs)
 //
-//	Tried, and did not move them: clamp() / min(max()) / max(min()) around the
-//	distribution and around the finished specular - clamp(., 0, .) fixes the
-//	last two families and breaks eight elsewhere, a net loss of six, so the
-//	plain min() is what is written; the diffuse's max early, late, and both;
+//	WHAT THE 35 LOOK LIKE, exactly - established 2026-08-18 by diffing opcode
+//	sequences rather than listings.  The first three families above are
+//	*precisely* the 35 shipped listings that carry `max r, r, l(0.0)` between
+//	the `div l(399999991808)` and the `min` (grep the disasm tree for it); the
+//	fourth family does not carry it.  On the smallest of them the entire
+//	opcode-level difference is five instructions, all one decision:
+//	  ship  `max r2.w, r2.w, l(0.0)` / `min r2.w, r4.y, r2.w`   (3 sites)
+//	  ours  `min r2.w, r2.w, r4.y`
+//	  ship  `div_sat r0.w, r0.w, r3.z`                          (2 sites)
+//	  ours  `div` + `min r0.w, r0.w, l(1.0)`
+//	  ship  `mul l(1.442695)` / `exp` / `mul l(3.141593)`       (3 sites)
+//	  ours  `mul l(0,0,1.442695,3.141593)` / `exp`  - ours vectorises exp()'s
+//	        log2(e) multiply with the denominator's pi multiply, ship does not
+//	  ship  one `mov r4.xy, l(0,0,0,0)` in the light_type fallback, and one
+//	        vectorised `max r3.xz, r4.xxyx, l(0,0,0,0)` over both influences
+//	  ours  two scalar movs, and only the specular's max survives
+//	Ship is one temp register and one instruction larger everywhere, and every
+//	listed difference is downstream of that: fxc's range propagation is
+//	strictly *weaker* in ship's compile than in ours, in the same permutations.
+//
+//	Ruled out, with evidence:
+//	  * a different compiler configuration - the RDEF flags word is 0x8108 in
+//	    all 600 shipped blobs, failing and passing alike, so /O3 + ROW_MAJOR +
+//	    NO_PRESHADER is what produced both halves;
+//	  * a -0.0f literal hiding behind the disassembler's `l(0.000000)` - the
+//	    SHDR chunks of these blobs contain no 0x80000000 word at all.
+//
+//	Tried, and did not move them: writing the lower clamp as
+//	`min( max( q, 0.f ), cap )` - full 600 run, 563 -> 555: it fixes the two
+//	GLOBAL_SHADING_QUALITY=3 blobs of input types 10 and 13 and breaks ten
+//	poisson-filtered GLOBAL_SHADING_QUALITY=0 blobs of input types 1 and 3..6,
+//	and in the 35 that want the max fxc folds it away regardless.  Also tried,
+//	all byte-identical to the plain form (so all equally wrong): the
+//	distribution inlined into the min instead of named; the clamp as its own
+//	statement after the divide; `square(roughness)` hoisted into a named
+//	`square_roughness`; the denominator named after the exp.  Hoisting the
+//	denominator *above* the exp does change the schedule - group (a) moves 48
+//	bytes closer - but breaks all nine probe permutations, controls included.
+//	Swapping the min's own operands - `min( cap, q )` - breaks every probe
+//	permutation at the same size, so `min( q, cap )` is ship's spelling even
+//	though the emitted operand order varies by permutation.
+//	Earlier passes also tried: clamp() / max(min()) around the distribution and
+//	around the finished specular; the diffuse's max early, late, and both;
 //	square() inlined as x*x at each of its sites; squared_length() against
 //	dot() against length()-then-square() for the light distance (dot() is what
 //	the eight blobs of input type 13 wanted, and is what is written); the
@@ -597,21 +634,22 @@ light_factors forward_brdf	(
 
 	//	The overflow guard is part of the normalised distribution, not a clamp
 	//	around the finished specular: the blobs divide 4e11 by the fresnel and
-	//	min it against the quotient, in that order and in that register.  The
-	//	lower half is real and is written here: 35 of the 600 blobs emit
-	//	`max r, r, l(0.0)` between the 4e11 divide and the min, and fxc proves
-	//	it redundant in the other 565.  Written as min(max(q, 0), cap) - NOT as
-	//	clamp(), and not around the finished specular, both of which schedule
-	//	differently.
+	//	min it against the quotient, in that order and in that register.  A
+	//	lower half is what THIRTY-FIVE of the 600 blobs look like - exactly the
+	//	35 permutations this file still misses, see the PARKED note at the top -
+	//	but writing it costs more than it buys, measured on the full 600:
+	//	`min( max( q, 0.f ), cap )` takes 563 -> 555.  It fixes the two
+	//	GLOBAL_SHADING_QUALITY=3 blobs of input types 10 and 13 (which do NOT
+	//	show the max: there it only flips the min's operand order) and breaks
+	//	ten poisson-filtered GLOBAL_SHADING_QUALITY=0 blobs of input types
+	//	1 and 3..6 that have no max either.  In the 35 that want it, fxc folds
+	//	it away regardless of spelling.
 	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
 	float normalized_distribution_function	=
 		min(
-			max(
-				distribution_function/
-				(
-					square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
-				),
-				0.f
+			distribution_function/
+			(
+				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
 			),
 			400000000000.f/fresnel_factor
 		);
