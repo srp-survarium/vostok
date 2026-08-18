@@ -41,6 +41,56 @@
 //	changes the code, and this shader's 1,152-byte SHDR is already exact, so
 //	the extra mov must be one that folds into an existing instruction.
 //
+//	2026-08-18, FOURTH PASS - mined old/ and the whole tree for shaders that
+//	actually produce a phantom mov, rather than guessing at shapes.
+//
+//	Method: compile every shader in old/ and in the tree, and record
+//	(counter, movs shown in the listing, movc, and). 12 of the 48 old files
+//	that still compile have a gap; 49 in the tree do.
+//
+//	WHAT PRODUCES A PHANTOM MOV, confirmed:
+//	  * clip(). old/accum_sun_mask.ps and old/system_grid.ps are the clean
+//	    cases - gap 1, no `and`, no `movc` - and system_grid is just a
+//	    sample, a clip and a return. On a minimal probe clip( n.x) costs 2
+//	    counted movs and clip( color.w - 0.75f) in atmosphere_sun_moon.ps
+//	    costs 1, so the argument's form decides how many;
+//	  * an `out float4 result : SV_TARGET` parameter assigned once per branch.
+//	    gbuffer_to_screen.ps counts 36 against 21 shown - a gap of 15 across
+//	    its 16-way selector - because each branch's assignment is counted and
+//	    they merge into far fewer output writes;
+//	  * a *computed* value written to part of a vector, which is what the
+//	    distortion pair does (output.distortion.xy computed, .zw constant);
+//	  * each additional live return, +1 apiece.
+//
+//	WHY NONE OF THEM APPLIES HERE:
+//	  * ship's blob has no discard at all, and a clip whose argument fxc can
+//	    prove non-negative folds away *without being counted* - measured for
+//	    clip(1.f), clip(dot(n,n)), clip(dot(reflected,reflected)),
+//	    clip(length(reflected)) and clip(eye_ray.z), all leaving the counter
+//	    at 3 and the SHDR identical;
+//	  * constant writes always merge before the count. An output struct with
+//	    an SV_TARGET member, .xyz and .w assigned separately, in either arm or
+//	    both, is byte-identical and counts 3;
+//	  * splitting a computed vector write does reach 4 - `position.z` written
+//	    on its own line, before or after the .xy write, gives counter 4 - but
+//	    fxc then folds eye_ray.z*depth to depth and the blob is 12 bytes
+//	    short (2288). Every split that preserves the three-component multiply
+//	    (.x + .yz, .xz + .y, .yz + .x) keeps the counter at 3. Splitting
+//	    world_position, view_direction or reflected the same way is
+//	    code-neutral and does not count.
+//
+//	So the phantom is a *computed* partial write somewhere, since that is the
+//	only mechanism left that is invisible in the code - but every placement
+//	tried either folds an instruction away or is canonicalised. Ship's own
+//	gbuffer_read_rt_position (`half2 data` where only .x is used, plus a
+//	by-value eye_ray it mutates) reproduces this shader's opening exactly and
+//	still counts 3.
+//
+//	Byproduct worth keeping: ship's dependency table for this blob shows
+//	gbuffer.h including gamma_correction.h and then debug.h, neither of which
+//	our copy had. Restored - byte-neutral, and ship's own 816 gbuffer.h has
+//	since dropped the debug.h include.
+//
 //	2026-08-18, THIRD PASS - the counter is source-controllable, and the
 //	count says ship had THREE return statements.
 //
