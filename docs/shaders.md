@@ -203,6 +203,55 @@ away), `skylight.ps` (one mul), the distortion pair, the clouds-blend pair,
 `gbuffer_nomaterial_pass.ps` (per-VIT layouts), and the static-input
 permutations of `z_only.ps` and `gbuffer_emissive_pass.ps`.
 
+
+### Campaign state, 2026-08-18
+
+**Every one of the 261 shipped names now has a source.** `subsurface_scattering.ps`
+was the last blank file; it and `translucency.ps` closed together, 16/16. What
+remains is per-permutation residue, not missing files.
+
+Closed on this pass, all byte-identical and all confirmed by real roundtrip
+output rather than by report: the indirect-lighting family (9 — both
+`apply_indirect_lighting` shaders, `gbuffer_to_screen`, `volume_fog`,
+`hiz_fill_culling_results_buffer`, `olta_blend`, `apply_decal_normals_blend`,
+`wet_sufrace_normal_modify`, `fix_irradiance_texture`); `subsurface_scattering`
++ `translucency` (16); `decal_base` **0/30 → 30/30** with the atmosphere trio
+and the editor pair (35); and the `apply_distortion` pair (2).
+
+Still open, with what is known about each:
+
+| shader | state | note |
+| --- | --- | --- |
+| `forward_lighting.ps` | 563/600 | residual clusters recorded in its header |
+| `gbuffer_pass.ps` | 1,072/1,136 | same |
+| `environment_probe_lighting.ps` | 0/32 | **lacks a `CONFIG_VERTEX_INPUT_TYPE == 12` arm** — see below |
+| `fill_reflective_shadow_map.ps` | 0/30 | |
+| `forward_simple_water.ps` | 0/15 | newly surfaced by the census; uniform −292 bytes |
+| `distortion_base.ps` / `distortion_panner.ps` | 0/15 each | one three-line hunk, ~80 spellings tried |
+| `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
+| `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
+
+The last two are worth separating from the rest. `reflection_mask.ps` matches
+ship across RDEF, ISGN, OSGN and the whole 1,152-byte SHDR chunk — the only
+differing byte in 2,300 is the mov counter at `STAT[0x4C]`, ship 4 against our
+3. That counter is taken *before* fxc's final peephole (shipped
+`fix_irradiance_texture.ps` records 21 movs for a listing showing 5), so ship's
+source held one extra mov the optimiser folded and no reading of the listing can
+recover it. Treat those two as recovered in substance and permanently one byte
+short, rather than as open work.
+
+**A latent defect worth checking wherever the vertex-input dispatch is
+inlined.** `CONFIG_VERTEX_INPUT_TYPE == 12` (postprocess) must leave
+`parameters.tc` at **zero**; only type 0 planar-maps. The distortion family had
+type 12 falling into the null branch and inheriting its planar tc, and — this is
+the part that matters — **the wrong code cost exactly as many bytes as the right
+code**, so a size-only check could never have shown it. Most files that inline
+the dispatch already carry the correct arm (`gbuffer_pass`, `forward_base`,
+`forward_lighting`, `z_only`, `gbuffer_emissive_pass`, `gbuffer_nomaterial_pass`,
+`fill_reflective_shadow_map`, `depth_accumulate` all do; `subsurface_scattering.ps`
+is byte-proven across types 0–14 with its own type-12 branch). `decal_base.ps`
+and `environment_probe_lighting.ps` do not.
+
 ## fxc 9.29 fingerprints (earned per file, reusable)
 
 Byte-identity usually fails on *shape*, not semantics. The idioms below were
