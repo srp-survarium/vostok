@@ -225,32 +225,45 @@ Still open, with what is known about each:
 | `forward_lighting.ps` | 563/600 | residual clusters recorded in its header |
 | `gbuffer_pass.ps` | 1,072/1,136 | same |
 | `ssao_filter_upsample.ps` / `_temporal.ps` | 0/1 each | one `max r0.x, r0.y, l(0.0)` short — see below |
-| `distortion_base.ps` / `distortion_panner.ps` | 0/15 each | **at the shipped byte length**, one lane transposition — see below |
 | `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
 | `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
 
-**The distortion residual is fxc's output-store lane order.** Both files now
-compile to the shipped byte length with ship's exact instructions, literals and
-registers; the only difference across all 30 permutations is that fxc emits the
-two output multiplies in `x`-then-`y` order where ship has `y`-then-`x`. Two
-measured rules replaced the earlier "two competing mechanisms" reading: a masked
-`o0` write keeps its multiply a *vector* op — and so keeps either the literal
-`-1` or the un-merged `x` scale — only if it owns lane `w`, or its constant
-vector has two non-trivial lanes (a lane multiplied by `1.0f` folds away and the
-write collapses to a scalar). Lane `w` is the single contested resource, which is
-the real "five of four lanes". A **mixed cbuffer/literal scale vector** escapes
-that in one op, and is what both files carry now.
+**Operand kind decides the split of a mixed multiply; chain depth decides the
+order of two stores.** This one is recorded at length because three passes read
+it wrong and roughly 120 spellings were spent on the wrong model. The distortion
+pair's residual looked like "fxc emits the lanes of an `o0` store in `x,y,z,w`
+order and ship does not". It is not lane order at all:
 
-The remainder is not the `-1` — probes using `*3.0f` or a cbuffer scale
-reproduce the same transposition. Ship proves the order is reachable
-(`fill_sky_ao_map.ps` writes `o0.y, o0.z, o0.x, o0.w`), but only where the lanes
-carry multi-instruction chains the scheduler must order by chain rather than by
-lane; here each lane is a single mul and the tie breaks the other way. Ruled out
-and measured: permuted write masks (HLSL normalises them), both statement orders,
-the alpha write in three positions, an alpha-first output struct (this *does*
-hoist `mov o1`, so declaration order is a scheduling lever — just not between two
-lanes of one register), `out` parameters, a pre-assembled local `float4`, a
-helper function, swizzling the product out, and `precise`.
+* **a mixed cbuffer/literal vector multiply splits cbuffer-lane-first, by
+  operand *kind*, not by destination lane.** Inverting the constant vector makes
+  fxc emit the `y` store before the `x` store — the cb lane leads whichever
+  destination lane it feeds. So a mixed vector can never produce a
+  literal-lane-first order, no matter how the writes are arranged;
+* **chain depth beats lane index.** Giving one lane two extra multiplies moves
+  its store after the other's immediately.
+
+The fix was one line: applying the flip as its own `float2(1.0f, -1.0f)`
+*before* the scale, so its `x` lane is `1.0f` and folds away, leaving a one-lane
+immediate multiply that is a **separate DAG node** rather than a split lane. fxc
+reassociates it onto the tail of the `y` chain, making `y` two deep against
+`x`'s one, and the unfinished chain runs to completion first:
+
+```hlsl
+output.distortion.xy = (dist_vector * float2(1.0f, -1.0f)) * distortion_scale.xy;
+```
+
+Source order within that expression matters — applying the scale first fuses
+both lanes into one `mul o0.xy` and loses 20 bytes. `copy_image.vs` and
+`fill_sky_ao_map.ps` were the right existence proofs from the start; they were
+read as "multi-instruction chains" when what mattered was "*deeper* chain".
+
+**And the negative that explains the wasted effort: statement order is inert.**
+Eighteen disjoint mask assignments tested in both orders, every pair
+byte-identical. fxc rebuilds the IR canonically, so reordering writes cannot
+change anything — which is exactly why so many spellings collapsed to the same
+output and made the problem look unreachable. Note this does **not** contradict
+the placement rule above: moving a *statement that defines a value* changes when
+that value is ready, whereas permuting independent stores does not.
 
 **The ssao_filter_upsample residual is fxc's non-negativity prover, not a
 spelling of `max()`**, and that has been established rather than guessed:
