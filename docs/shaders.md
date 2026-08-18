@@ -224,7 +224,6 @@ Still open, with what is known about each:
 | --- | --- | --- |
 | `forward_lighting.ps` | 563/600 | residual clusters recorded in its header |
 | `gbuffer_pass.ps` | 1,072/1,136 | same |
-| `ssao_filter_upsample.ps` / `_temporal.ps` | 0/1 each | one `max r0.x, r0.y, l(0.0)` short — see below |
 | `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
 | `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
 
@@ -265,18 +264,46 @@ output and made the problem look unreachable. Note this does **not** contradict
 the placement rule above: moving a *statement that defines a value* changes when
 that value is ready, whereas permuting independent stores does not.
 
-**The ssao_filter_upsample residual is fxc's non-negativity prover, not a
-spelling of `max()`**, and that has been established rather than guessed:
-`precise` on the ratio visibly changes the optimiser yet the max is still
-folded, so precision is not the lever; `-min(-a/b, 0.f)` is folded by the same
-proof; dropping only `ao`'s saturate keeps the max and costs exactly the
-`mov_sat` (2104 = ship's 2124 − 20), so the proof runs through `ao`, and
-`saturate()`, `clamp(x,0,1)`, `min(max(x,0),1)` and `max(min(x,1),0)` all emit
-the same `mov_sat` and are all equally transparent to it; sinking the max below
-the `endif` does keep it — fxc cannot prove the centre-tap branch non-negative —
-but fuses it into the output write. What is needed is a construct that clamps
-to [0,1] for codegen while being opaque to the prover. About 30 shapes have been
-tried; both file headers carry the list.
+**`saturate(x)` and `clamp(x, 0.f, 1.f)` emit the same `_sat` and are NOT
+interchangeable.** This closed the `ssao_filter_upsample` pair after about 70
+spellings had failed, and it corrects what was recorded here earlier — that
+`saturate()`, `clamp(x,0,1)`, `min(max(x,0),1)` and `max(min(x,1),0)` were all
+equally transparent to fxc's non-negativity prover. They are not:
+
+* an outer **`saturate()` is a saturate *node***, so the prover reads `[0,1]`
+  off it and folds a downstream `max(a/b, 0.f)` away;
+* an outer **`clamp()` / `min(max(...))` is fused into the producing
+  instruction's `_sat` destination modifier** without ever becoming a node, and
+  the prover is blind to it.
+
+Position matters as much as spelling: the inner clamp must sit on the ratio
+(ship's `div_sat`) and the outer on `1.f - ratio`. The whole family — clamp or
+min/max outside, any of the three inside — is byte-identical; only an outer
+`saturate()` triggers the fold.
+
+The trap worth remembering is *where* the clamp was. Two cheap probes had
+pointed at `ao`: dropping only `ao`'s saturate keeps the `max` and costs exactly
+the `mov_sat` (2104 = ship's 2124 − 20). That looked like the proof running
+through `ao`, and it is not — the clamp that mattered was the **weight's**
+(`weight = clamp(1.f - saturate(range), 0.f, 1.f)`). Dropping only the weight's
+saturate keeps the `max` at ship's exact size with `div` where ship has
+`div_sat`, which is the probe that actually localises it.
+
+**Constant laundering is dead as a technique**: `asfloat(0u)`, an icb element,
+`-0.f`, `saturate(0.f)` and `saturate(1.f)` all fold before the prover runs, as
+do `asfloat(asuint(x))` bitcasts, inlined helpers, `out`/`inout` parameters and
+struct-returning helpers. None is opaque to it.
+
+**fxc emits independent statement *groups* in source order**, and a
+multiply/divide pair written as two statements lets the divide sink to its use.
+`sun.ps` needed `main` to compute the first cascade's *homogeneous* projection
+itself and pass it in, leaving the perspective divide inside the callee — the
+shape `forward_lighting.ps` already uses. With the whole projection inside the
+callee the four `dp4`s land after the light-colour block instead of before it.
+Two smaller ones from the same file: **a `float2` accumulator divided once emits
+one vectorised mul where two scalar accumulators divided separately emit two**,
+and a per-tap fetch pair wants named locals with both samples issued before
+either accumulate — `+=` directly on the sample interleaves them.
 
 The last two are worth separating from the rest. `reflection_mask.ps` matches
 ship across RDEF, ISGN, OSGN and the whole 1,152-byte SHDR chunk — the only
