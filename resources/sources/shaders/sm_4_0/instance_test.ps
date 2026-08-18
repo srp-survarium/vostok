@@ -3,6 +3,22 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2012
 ////////////////////////////////////////////////////////////////////////////
+//	Byte-identical across all four permutations 2026-08-18 (was 2680 against
+//	ship's 3536).  The recovered revision read the g-buffer through
+//	gbuffer_read(), which for this packing returns the position target's xyz
+//	verbatim; ship instead rebuilds view position from the eye ray and the
+//	linear depth in .x, exactly as skylight.ps does:
+//	  eye_ray.xy = s_eye_ray_corner.xy*(1 - uv*2)/s_eye_ray_corner.z, z = 1
+//	  position   = eye_ray*gbuffer_read_frame_depth(uv)
+//	and takes the normal from gbuffer_read_frame_normal() with .z negated -
+//	which is why the blob normalizes twice, the negation sitting between the
+//	decode's normalize and this file's own.  With gbuffer_read() gone nothing
+//	referenced s_eye_ray_corner, so fxc dropped $Globals entirely; ship's
+//	11-member $Globals is the tell that the eye ray is live.
+//	The last difference was placement: view_direction is defined AFTER
+//	reflected_light_direction, or its normalize schedules ahead of the
+//	reflect.
+////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
 #include "brdf.h"
@@ -28,45 +44,46 @@ void main(in vertex_output_struct input,
 			out float4 out_color1: SV_Target1)
 {
 	float2 screen_uv			=	input.position.xy * screen_res.zw;
-	
+
+	float3 normal				=	gbuffer_read_frame_normal( screen_uv );
+	normal.z					=	-normal.z;
+
 	// Compute eye_ray using screen texture coordinates
-	float3						eye_ray; 
-	eye_ray.xy					= 	s_eye_ray_corner.xy * (1 - screen_uv.xy * 2.0f);
-	eye_ray.z					= 	s_eye_ray_corner.z;
-	
-	g_data gb					=	gbuffer_read(screen_uv, eye_ray);
-	
-	light_factors				result;
-	
+	float3						eye_ray;
+	eye_ray.xy					= 	s_eye_ray_corner.xy * (1 - screen_uv.xy * 2.0f)/s_eye_ray_corner.z;
+	eye_ray.z					= 	1;
+
+	float3 position				=	eye_ray*gbuffer_read_frame_depth( screen_uv );
+
 	//mul(m_V, float4(0,20,0,1)).xyz
-	
+
 	float3 base_position		= 	mul(m_V, float4(input.base_position, 1.0f)).xyz;
-	
-	float3 light_direction		= 	base_position - gb.position;
-	
+
+	float3 light_direction		= 	base_position - position;
+
 	// distance from surface to light
 	float square_distance		= squared_length( light_direction );
 	float distance				= sqrt( square_distance );
 	light_direction				/= distance;
-	
+
+	//
+
+	// radial_attenuation
+	float attenuation			= pow(
+		max( abs(1.f - saturate( square_distance/square(input.range) )), 0.001f ),
+		2.0f
+	);
+
+	float3 diffuse				=	attenuation * input.color * saturate(dot(light_direction, normalize(normal)));
+
+	float3 reflected_light_direction	= reflect(-light_direction, normalize(normal));
+
 //	float3 eye_view_space		= mul(m_V, float4(eye_position.xyz, 1)).xyz;
 //	float3 view_direction		= normalize( eye_view_space - surface_position );
-	float3 view_direction		= normalize( -gb.position );
-	
-	//
-	
-	// radial_attenuation
-	float attenuation			= pow( 
-		max( abs(1.f - saturate( square_distance/square(input.range) )), 0.001f ), 
-		2.0f  
-	);
-	
-	float3 diffuse				=	attenuation * input.color * saturate(dot(light_direction, normalize(gb.normal)));
-	
-	float3 reflected_light_direction	= reflect(-light_direction, normalize(gb.normal));
-	
+	float3 view_direction		= normalize( -position );
+
 	const float spec_power		=	30.0f;
-	
+
 	float3 specular				= attenuation * input.color * pow(saturate(dot( reflected_light_direction, view_direction )), spec_power);
 	//	attenuation  * pow(
 	//		max( dot( reflected_light_direction, view_direction ), 0.f ),

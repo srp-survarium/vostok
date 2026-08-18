@@ -5,46 +5,54 @@
 //	blob is the acceptance test:
 //	python3 -m vostok.shaders roundtrip ssao_filter_upsample.ps
 //
-//	PARKED one instruction short: ship keeps `max r0.x, r0.y, l(0.0)` after
-//	the ao_sum/total_weight divide, this compile drops it. fxc 9.29 removes
-//	max(a/b, 0) once it can prove both a >= 0 and b >= 0, and here it can:
-//	saturate(value.x) bounds ao to [0,1] and 1 - saturate(...) bounds the
-//	weight to [0,1]. Removing either saturate keeps the max - but also
-//	loses the mov_sat/div_sat the blob shows, so the ship source blocked
-//	that proof some other way.
+//	CLOSED 2026-08-18, byte-identical (was 2096 against ship's 2124).  The
+//	residual was one `max r0.x, r0.y, l(0.0)` after the ao_sum/total_weight
+//	divide: fxc 9.29 removes max(a/b, 0) once it can prove a >= 0 and b >= 0,
+//	and with `weight = 1.f - saturate(...)` it can.  Roughly 70 spellings of
+//	max(), of the ratio, of the accumulators and of the branch were tried
+//	against that prover and every one of them folded.  The answer was not in
+//	the max at all - it is the WEIGHT's clamp:
 //
-//	2026-08-18, sharpened - the residual is fxc's NON-NEGATIVITY PROVER, not
-//	a spelling of max(), and three measurements pin that down:
-//	  * `precise` on the ratio does stop the optimiser elsewhere (the loop
-//	    loses both mads and gains two instructions, 2152 bytes) and the max
-//	    is folded away anyway - so precision is not the lever;
-//	  * `-min(-a/b, 0.f)` is folded by the same proof, into `div -r1.y` plus
-//	    a negating mov (2124 bytes - ship's size, wrong instructions);
-//	  * dropping ONLY ao's saturate keeps the max and costs the mov_sat:
-//	    2104 = ship 2124 - 20. So the proof runs through ao, and any clamp
-//	    that reaches [0,1] is equally transparent to it - saturate(),
-//	    clamp(x,0,1), min(max(x,0),1) and max(min(x,1),0) all compile to the
-//	    same mov_sat AND all let the max fold.
-//	Also tried and still dropped: statement order and `+=` vs `a = b + a`
-//	for both accumulators, and ao's statement moved below the weight's; the
-//	max written max(0,x), `x > 0 ? x : 0`, `x >= 0 ? x : 0`, `x < 0 ? 0 : x`,
-//	as its own statement on a named ratio, through asfloat(asuint()) and
-//	asfloat(asint()), against a local and a `static const` zero, and with
-//	0, 0.f, 0.h; ao as half and through explicit (float) casts; the sums as
-//	float2 components, a struct, `(filter_sums)0`, a float array (indexable
-//	temp - worse), half, and file-scope statics; the tap body hoisted into an
-//	`inout filter_sums` helper; the loop as while, with [loop], with the
-//	counter hoisted; `[branch]` on the if; the if's operands swapped; the
-//	whole filter as a filters.h-style function taking Texture2D/sampler
-//	(different register allocation). Sinking the max below the endif DOES
-//	keep it - fxc cannot prove the centre-tap branch non-negative - but then
-//	fxc fuses it into the output write as `max o0.x, r0.x, l(0)`, one
-//	instruction short of ship and in the wrong place (2104 bytes).
-//	saturate() on the ratio instead of max() lands on
-//	`min r0.x, r0.y, l(1.0)` - fxc proves >= 0 and not <= 1, exactly the
-//	opposite of the blob. Everything else - the icb offset table, the whole
-//	loop body, both branches, RDEF and signatures - is identical. The same
-//	residual is in ssao_filter_upsample_temporal.ps, which shares this loop.
+//	    weight = clamp( 1.f - saturate( range ), 0.f, 1.f)
+//
+//	**`saturate(x)` and `clamp(x, 0.f, 1.f)` emit the same `_sat` and are NOT
+//	interchangeable to fxc's non-negativity prover.**  Written as
+//	`saturate( 1.f - saturate( range))` the outer clamp is a saturate NODE,
+//	the prover reads [0,1] off it, and the max folds (2096).  Written as
+//	`clamp(...)` - or `min(max(...,0.f),1.f)` - the pair is fused straight
+//	into the producing instruction's `_sat` destination modifier without ever
+//	becoming a saturate node, the prover is blind to it, and the max survives.
+//	Every member of that family compiles byte-identically here:
+//	clamp/min-max on the outside over saturate/clamp/min-max on the inside;
+//	only an outer `saturate()` folds.  The position matters too: the INNER
+//	clamp has to sit on the ratio (that is ship's `div_sat`) and the OUTER one
+//	on `1.f - ratio` (that is what stays opaque).  Swap them - clamp the ratio
+//	only - and the max folds; drop the inner one and the `_sat` moves from the
+//	div to the add.
+//
+//	Measurements that framed it, kept because they are the cheap probes:
+//	dropping ONLY ao's saturate keeps the max and costs exactly the mov_sat
+//	(2104 = 2124 - 20); dropping ONLY the weight's saturate keeps the max at
+//	ship's exact size (2124) with `div` where ship has `div_sat`.  So the
+//	proof needs both operands, and a lever exists on either side; only the
+//	weight side has one that is free.
+//	Tried and folded, for the record: statement order and `+=` vs `a = b + a`
+//	for both accumulators; the max written max(0,x), `x > 0 ? x : 0`,
+//	`x >= 0 ? x : 0`, `x < 0 ? 0 : x`, on a named ratio, through
+//	asfloat(asuint()) and asfloat(asint()), against a local, a `static const`
+//	zero, `asfloat(0u)`, an icb element and -0.f; `precise` on the ratio, on
+//	ao, on the weight (2132) and on the sums (2152); the sums as float2
+//	components, a struct, `(filter_sums)0`, an initialiser list, a float
+//	array, half, file-scope statics, a by-value `add_tap` helper and an
+//	`inout` one, and a helper returning the whole struct; the resolve in a
+//	helper and behind an `out` parameter; the loop as while, with [loop],
+//	uint-counted, with the counter hoisted; `[branch]` on the if, the if's
+//	operands swapped, `!=` with the bodies swapped, the result initialised
+//	before the if; the offsets at file scope; `void main` with an `out`
+//	parameter.  Sinking the max below the endif does keep it - fxc cannot
+//	prove the centre-tap branch non-negative - but fuses it into the output
+//	write as `max o0.x, r0.x, l(0)` (2104).  The same fix closes
+//	ssao_filter_upsample_temporal.ps, which shares this loop.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
@@ -92,7 +100,7 @@ float2 main( v2p_ssao_filter_upsample I ) : SV_Target
 		float2	value		= t_ssao_accumulator.SampleLevel( s_linear, tc, 0).xy;
 		float	ao			= saturate( value.x);
 		float	depth		= value.y*0.01f;
-		float	weight		= 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f));
+		float	weight		= clamp( 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f)), 0.f, 1.f);
 
 		sums.total_weight	+= weight;
 		sums.ao_sum			+= ao*weight;

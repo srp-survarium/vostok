@@ -10,6 +10,37 @@
 		GLOBAL_USE_LOOP_UNROLLING
 */
 
+////////////////////////////////////////////////////////////////////////////
+//	Byte-identical both permutations 2026-08-18 (was 3708 against ship's
+//	6508 / 10840).  The whole finding is one line: ship shipped
+//	SSAO_METHOD 1, not 0.  Everything above the #elif - the rotation-matrix
+//	/ random_table hemisphere samplers - is dead code at ship, and the
+//	shipped blob is the crude depth-only "compareDepths / calAO" method that
+//	reads like a leftover.  It is the one that ran.
+//
+//	GLOBAL_POST_PROCESS_QUALITY picks the tap count inside method 1: 4 calAO
+//	calls per iteration (ao/16) at 0, all 8 (ao/32) at 3.  Ship's tuning of
+//	the method-1 constants against the recovered revision:
+//	  * readDepth drops its *0.125 - the tap is raw linear depth;
+//	  * diff is (d1-d2)/(d2*0.75), not (d1-d2)*5, so the bell is relative to
+//	    distance; gdisplace 0.2 -> 0.05, and the far-side garea 2.0 -> 100
+//	    (the movc picks garea*garea = 0.01 or 10000);
+//	  * compareDepths returns lerp(gauss, 0.4f, saturate((d1-d2)/(d2*1.2f)))
+//	    rather than the bare gauss - the range-reject the method-0 variants
+//	    spelled as range_is_invalid;
+//	  * calAO's screen offset is 2*ao_radius_scale*dw, not 15*dw/depth, and
+//	    the coordw/coordh in-bounds guard is gone;
+//	  * the jitter texture is sampled through s_linear at
+//	    screen_res.xy*uv/4, and the fetched value is offset by -0.5, not
+//	    scaled *2-1 (ship's literals are l(-0.5) then l(0.0007));
+//	  * pw is 1/(screen_res.x*0.5), not (1/screen_res.x)*0.5;
+//	  * the tail is
+//	    finalAO = clamp(1-ao/N, 0, 0.75) and
+//	    min(min(pow(2.5*finalAO, max(finalAO,0.4)*ao_saturation*2.5), 2.5)
+//	        *0.4, 0.5),
+//	    and .y of the result carries the centre depth for the filter passes.
+////////////////////////////////////////////////////////////////////////////
+
 #include "common.h"
 #include "gbuffer.h"
 
@@ -61,7 +92,7 @@ float4 ao_parameters;
 static const float ao_saturation   = ao_parameters.x; // 1.0f
 static const float ao_radius_scale = ao_parameters.y; // 1.0f
 
-#define SSAO_METHOD 0
+#define SSAO_METHOD 1
 
 uniform float3 s_eye_ray_corner;
 
@@ -785,93 +816,94 @@ Texture2D t_random_rotates;
 
 	
 float readDepth(float2 coord)
-{       
-	return gbuffer_read_frame_depth(coord) * 0.125f;
+{
+	return gbuffer_read_frame_depth(coord);
 }
 
-float compareDepths(in float depth1, in float depth2, inout int far)    
-{       
-	float diff = (depth1 - depth2)*5; //depth difference (0-100)     
-	float gdisplace = 0.2; //gauss bell center     
-	float garea = 2.0; //gauss bell width 2     
-	
-	//reduce left bell width to avoid self-shadowing     
+float compareDepths(in float depth1, in float depth2, inout int far)
+{
+	float diff = (depth1 - depth2)/(depth2*0.75f); //depth difference (0-100)
+	float gdisplace = 0.05; //gauss bell center
+	float garea = 100.0; //gauss bell width 2
+
+	//reduce left bell width to avoid self-shadowing
 	if (diff<gdisplace)
-	{        
-		garea = 0.1;     
+	{
+		garea = 0.1;
 	}
 	else
-	{        
-		far = 1;     
-	}     
-	float gauss = pow(2.7182,-2*(diff-gdisplace)*(diff-gdisplace)/(garea*garea));    
-	
-	return gauss;   
-}     
+	{
+		far = 1;
+	}
+	float gauss = pow(2.7182,-2*(diff-gdisplace)*(diff-gdisplace)/(garea*garea));
 
-float calAO(float2 uv, float depth,float dw, float dh)     
-{       
-	float temp = 0;    
-	float temp2 = 0;    
-	float coordw = uv.x  + 15*dw/depth;    
-	float coordh = uv.y  + 15*dh/depth;    
-	float coordw2 = uv.x - 15*dw/depth;     
-	float coordh2 = uv.y - 15*dh/depth;     
-	
-	if (coordw  < 1.0 && coordw  > 0.0 && coordh < 1.0 && coordh  > 0.0)
-	{     	
-		float2 coord = float2(coordw , coordh);        
-		float2 coord2 = float2(coordw2, coordh2);       
-		int far = 0;     	
-		temp = compareDepths(depth, readDepth(coord),far);        
-		 
-		//DEPTH EXTRAPOLATION:        
-		if (far > 0)
-		{          
-			temp2 = compareDepths(readDepth(coord2),depth,far);         
-			temp += (1.0-temp)*temp2;        
-		}     
-	}      
-	return temp;     
+	return lerp(gauss, 0.4f, saturate((depth1 - depth2)/(depth2*1.2f)));
+}
+
+float calAO(float2 uv, float depth,float dw, float dh)
+{
+	float temp = 0;
+	float temp2 = 0;
+	float coordw = uv.x  + 2.0f*ao_radius_scale*dw;
+	float coordh = uv.y  + 2.0f*ao_radius_scale*dh;
+	float coordw2 = uv.x - 2.0f*ao_radius_scale*dw;
+	float coordh2 = uv.y - 2.0f*ao_radius_scale*dh;
+
+	float2 coord = float2(coordw , coordh);
+	float2 coord2 = float2(coordw2, coordh2);
+	int far = 0;
+	temp = compareDepths(depth, readDepth(coord),far);
+
+	//DEPTH EXTRAPOLATION:
+	if (far > 0)
+	{
+		temp2 = compareDepths(readDepth(coord2),depth,far);
+		temp += (1.0-temp)*temp2;
+	}
+	return temp;
 }
 
 float4 main( v2p_post_process input) : SV_TARGET
 {
-	return float4(1.0f, 1.0f, 1.0f, 1.0f);
 	float2 uv = input.uv;
-	
-	float pw = 1.0f / screen_res.x * 0.5f;
-	float ph = 1.0f / screen_res.y * 0.5f;
-	
-	//randomization texture:    
-	float2 fres = float2(20,20);     
-	float3 random = t_random_rotates.Sample(s_base, 256*uv);    
-	random = random*2.0-1.0;     //initialize stuff:     
-	float depth = readDepth(uv);      
+
+	float pw = 1.0f / (screen_res.x * 0.5f);
+	float ph = 1.0f / (screen_res.y * 0.5f);
+
+	//randomization texture:
+	float3 random = t_random_rotates.Sample(s_linear, screen_res.xy * uv / 4.0f).xyz;
+	random = random-0.5;     //initialize stuff:
+	float depth = readDepth(uv);
 	float ao = 0.0;
-	for(int i=0; i<4; ++i)     
-	{        
-		//calculate color bleeding and ao:      
-		ao+=calAO(uv, depth,  pw, ph);        
-		ao+=calAO(uv, depth,  pw, -ph);        
-		ao+=calAO(uv, depth,  -pw, ph);        
-		ao+=calAO(uv, depth,  -pw, -ph);       
-		ao+=calAO(uv, depth,  pw*1.2, 0);        
-		ao+=calAO(uv, depth,  -pw*1.2, 0);        
-		ao+=calAO(uv, depth,  0, ph*1.2);         
-		ao+=calAO(uv, depth,  0, -ph*1.2);            
-		
-		//sample jittering:      
-		pw += random.x*0.0007;       
-		ph += random.y*0.0007;       
-		//increase sampling area:      
-		pw *= 1.7;         
-		ph *= 1.7;         
-	}              
-	
-	//final values, some adjusting:    
-	float finalAO = 1.0-(ao/32.0);
-	return pow(1.3*finalAO,2.0);
+	for(int i=0; i<4; ++i)
+	{
+		//calculate color bleeding and ao:
+		ao+=calAO(uv, depth,  pw, ph);
+		ao+=calAO(uv, depth,  pw, -ph);
+		ao+=calAO(uv, depth,  -pw, ph);
+		ao+=calAO(uv, depth,  -pw, -ph);
+#if GLOBAL_POST_PROCESS_QUALITY > 0
+		ao+=calAO(uv, depth,  pw*1.2, 0);
+		ao+=calAO(uv, depth,  -pw*1.2, 0);
+		ao+=calAO(uv, depth,  0, ph*1.2);
+		ao+=calAO(uv, depth,  0, -ph*1.2);
+#endif
+
+		//sample jittering:
+		pw += random.x*0.0007;
+		ph += random.y*0.0007;
+		//increase sampling area:
+		pw *= 1.7;
+		ph *= 1.7;
+	}
+
+	//final values, some adjusting:
+#if GLOBAL_POST_PROCESS_QUALITY > 0
+	float finalAO = clamp(1.0-(ao/32.0), 0.0f, 0.75f);
+#else
+	float finalAO = clamp(1.0-(ao/16.0), 0.0f, 0.75f);
+#endif
+	return float4( min( min( pow(2.5*finalAO, max(finalAO, 0.4f)*ao_saturation*2.5f), 2.5f)*0.4f, 0.5f), depth, 0.0f, 0.0f);
 }
 	
 #else
