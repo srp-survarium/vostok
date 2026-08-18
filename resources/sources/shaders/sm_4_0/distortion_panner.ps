@@ -158,6 +158,32 @@ material_parameters get_material_parameters(inout vertex_output_struct input)
 	return parameters;
 }
 
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+// ship: the same interpolants as the null input - SV_Position plus a float3
+// position at TEXCOORD0 - but the tc is NOT planar-mapped. The shipped VIT-12
+// blob pans from a zero tc (`mul r0.xy, cb0[2].xyxx, cb1[17].wwww`, with no
+// `+ v1.xz`) and leaves TEXCOORD0 unused, where the VIT-0 blob emits the mad;
+// so this type leaves parameters.tc at the clear_material_parameters zero.
+// (What it does with world_position / world_view_position is invisible to
+// these two shaders - both are unread here.)
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
+
+	return parameters;
+}
+
 #else // NULL_VERTEX_INPUT_TYPE
 
 // ship null_mesh_vertex_input.h: no tc interpolator; tc is planar-mapped
