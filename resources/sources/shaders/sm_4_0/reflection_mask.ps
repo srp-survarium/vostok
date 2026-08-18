@@ -41,6 +41,51 @@
 //	changes the code, and this shader's 1,152-byte SHDR is already exact, so
 //	the extra mov must be one that folds into an existing instruction.
 //
+//	2026-08-18, THIRD PASS - the counter is source-controllable, and the
+//	count says ship had THREE return statements.
+//
+//	Measured on this file, SHDR unchanged unless noted:
+//	  2 returns (this source)          -> counter 3
+//	  3 flat returns, second branch live -> counter 4  (SHDR +52, 2352)
+//	  3 returns, complementary tests     -> counter 4  (SHDR +80, 2380)
+//	  3 returns, nested in the taken arm -> counter 4  (SHDR +52)
+//	  4 returns (nested in else)         -> counter 5  (SHDR +56)
+//	So each additional *live* return adds exactly one to the counter, and
+//	ship's 4 against our 3 is one extra return. The remaining problem is
+//	precise: find the third return whose branch fxc eliminates *after* the
+//	statistics are taken. Every elimination tried happens before:
+//	  if ( false) / if ( 1.f < 0.f) / a contradictory compound test -> folded
+//	    at parse, counter stays 3, SHDR identical;
+//	  a duplicate return after another return, in or out of a block ->
+//	    dropped at parse, counter 3;
+//	  if/else where both arms return, with a trailing return -> the trailing
+//	    one is dropped, counter 3, SHDR +8;
+//	  [flatten] on the second test -> counter 4 but the branch survives.
+//
+//	Also ruled out as the source of the extra count, each SHDR-identical
+//	unless noted: a shared `float one = 1.f` feeding both the eye_ray.z and
+//	the float4 w; splitting the float4's w onto its own statement; an output
+//	struct with an SV_TARGET member; an `out float4` parameter; a named copy
+//	of any intermediate (normal, view_direction, reflected, eye_ray); a
+//	returned `float4 r = 1.f`; `[branch]`; a single-iteration [unroll] loop
+//	around the test (SHDR -8); and a ternary with identical arms.
+//
+//	Two general facts about the counter, established on a minimal probe and
+//	on the corpus, both worth reusing:
+//	  * dead code, self-copies, bitcasts, helper calls (by value, by out
+//	    parameter, struct-returning), static globals, one-element arrays,
+//	    single-iteration loops and if(true) blocks are ALL canonicalised
+//	    before the count - none of them moves it;
+//	  * a gap is produced by nested returns (a probe with an if/else whose
+//	    else holds a nested if, three returns total, gives counted 2 shown 1)
+//	    and by a bool->float select, which is emitted as a mov and rewritten
+//	    to `and 0x3f800000` - that is sky_sphere_preview.ps's +1. Neither
+//	    applies here: ship's blob has no `and` and no `movc` at all.
+//
+//	Compiling this file against ship's own gbuffer.h (recovered from the
+//	build-816 debug blobs) produces byte-identical output, counter included,
+//	so the divergence is not in that header.
+//
 //	2026-08-18, SECOND PASS: thirteen further shapes, same result (SHDR
 //	byte-identical, counter 3). The counter lives at STAT chunk dword 19,
 //	i.e. chunk+0x4c, ship 4 against our 3 - confirmed by a word-level diff of
