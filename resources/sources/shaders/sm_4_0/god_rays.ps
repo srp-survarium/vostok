@@ -1,51 +1,140 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
-//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
+//	Created		: 22.06.2012
+//	Author		: Nikolay Partas
+//	Copyright (C) Vostok Games - 2012
 ////////////////////////////////////////////////////////////////////////////
+//	Ship source, verbatim out of build 816's /Zi blob (the only seven blobs in
+//	the v0.1 line carrying an SDBG chunk), back-dated to 802 by the five edits
+//	marked "802:" below - this is the one file of the seven whose source really
+//	did move in those five days.  816 grew a second additive lobe, a 0.7
+//	horizontal squeeze and a clamped falloff, and dropped the 5x gain.
+//	See vostok/docs/shaders.md, "Ship source, verbatim".
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+*/
 
 #include "common.h"
 
-uniform float3	sun_direction_parameter;
-uniform float4	god_rays_parameters0;	// rgb - near color, w - intensity power
-uniform float4	god_rays_parameters1;	// rgb - far color, w - result scale
-uniform float4	god_rays_parameters2;	// x - falloff distance power
-
-Texture2D		t_light_scattering_mask;
-
-struct v2p_god_rays
+struct vertex_output_struct
 {
-	float4	hpos	: SV_POSITION;
-	float2	tc		: TEXCOORD0;
+	half4 hposition: SV_POSITION;
+	half2 uv		: TEXCOORD0;
 };
 
-float4 main( v2p_god_rays I ) : SV_TARGET
+
+Texture2D t_light_scattering_mask;
+
+float3 sun_direction_parameter;
+//static const float3 sun_position 	= -sun_direction_parameter * 500.0h;
+
+float4 god_rays_parameters0;
+float4 god_rays_parameters1;
+float4 god_rays_parameters2;
+
+static const float3 god_rays_color_0 			= 	god_rays_parameters0.xyz;
+static const float3 god_rays_color_1 			= 	god_rays_parameters1.xyz;
+static const float god_rays_color_blend_power 	= 	god_rays_parameters0.w;
+static const float god_rays_intensity 			= 	god_rays_parameters1.w;
+static const float god_rays_attenuation_power	= 	god_rays_parameters2.x;
+
+
+half3 scattered_color(half2 screen_uv)
 {
-	float3	sun_position	= eye_position - sun_direction_parameter*500.0f;
-	float4	projected		= mul( m_VP, float4( sun_position, 1.0f));
-	float2	sun_uv			= projected.xy/projected.w*float2( 0.5f, -0.5f) + 0.5f;
+	half scattering_power			= 1.0h;//1.0h - saturate(get_luminance(frame_color));
+	
+	// TODO: optimize, do in lower resolution target
+	static const int num_samples 	= 100;
+	
+	half4 projected_sun_position 	= mul(m_VP, half4(eye_position.xyz - sun_direction_parameter * 500.0h, 1.0h));
+	projected_sun_position.xy 		/= projected_sun_position.w;
+	projected_sun_position.y		*= -1.0h;
+	projected_sun_position.xy		= projected_sun_position.xy * 0.5h + 0.5h;
+	
+	half2 projected_sun_position_scaled	=	projected_sun_position.xy;
+	
+	half2 screen_uv_scaled			=	screen_uv;
+	half ratio						=	screen_res.x / screen_res.y;	//	802: no 0.7 factor
+	projected_sun_position_scaled.x	*=	ratio;
+	screen_uv_scaled.x				*=	ratio;
 
-	float	aspect			= screen_res.x/screen_res.y;
-	float2	scaled_sun		= float2( sun_uv.x*aspect, sun_uv.y);
-	float2	scaled_tc		= float2( I.tc.x*aspect, I.tc.y);
-	float2	delta			= I.tc - sun_uv;
-	float2	scaled_delta	= scaled_tc - scaled_sun;
-	float	sun_distance	= sqrt( dot( scaled_delta, scaled_delta));
-	float	falloff			= exp( -20.0f*pow( sun_distance, god_rays_parameters2.x));
+	
+	half2 to_sun_vector_delta		= (screen_uv - projected_sun_position.xy) / num_samples;
+	
+	half final_color				= 0.0h;
+	
+	half dist						= pow(distance(screen_uv_scaled, projected_sun_position_scaled.xy), god_rays_attenuation_power);
+	dist							= exp(-dist*20);	//	802: no saturate/pow wrapper
 
-	float2	uv				= I.tc;
-	float	sum				= 0.0f;
-	for (int i = 0; i < 100; i++)
+	//dist							= pow((1-pow(dist, 2)), 0.5);
+	//to_sun_vector_delta				*= 2.0h * (1.0h - dist);
+	
+	half2 current_uv = screen_uv;
+	for (int i = 0; i < num_samples; i++)
 	{
-		uv					-= delta*0.01f;
-		sum					+= t_light_scattering_mask.Sample( s_base, uv).x;
+		current_uv 				-= to_sun_vector_delta;
+		half occluder_color 	= t_light_scattering_mask.Sample(s_base, current_uv).r;
+		final_color				+= occluder_color;
 	}
+	
+	half alpha = max((dist) * scattering_power * final_color / num_samples, 0);
+	
+	half3 out_c = lerp(god_rays_color_0, god_rays_color_1, min(pow(alpha, god_rays_color_blend_power), 1.0h));
+	//	802: the blend factor is min(...,1) - the blob emits an explicit `min`,
+	//	not the `exp_sat` an outer saturate() would fuse - and there is no
+	//	second, alpha2-weighted term.  816 adds both.
 
-	float	value			= max( falloff*sum*0.01f, 0.0f);
-	float	intensity		= min( pow( value, god_rays_parameters0.w), 1.0f);
-	float3	color			= lerp( god_rays_parameters0.xyz, god_rays_parameters1.xyz, intensity);
-
-	value					*= god_rays_parameters1.w;
-	color					= value*color;
-
-	return	float4( 1.f/rsqrt( saturate( color*0.625f)), 0.f);
+	return god_rays_intensity * alpha * out_c;
 }
+
+half4 main(vertex_output_struct input) : SV_TARGET
+{
+	half2 screen_uv					=	input.uv;
+	
+	half3 final_color 					=	t_light_scattering_mask.Sample(s_position, screen_uv).rrr;
+	
+	//return half4(final_color / 1.0h, 0.0h);
+	/*
+	for (int x = -1; x <= 1; x++)
+	{
+		for (int y = -1; y <= 1; y++)
+		{
+			final_color					+=	(1.0h - length(half2(x, y) / 1.4h)) * t_light_scattering_mask.Sample(s_position, screen_uv, int2(x,y)).rrr;
+		}
+	}
+	*/
+	final_color							= scattered_color(screen_uv);
+	
+	//	802: the pack carries a 5x gain (the blob's mul_sat is l(0.625), which
+	//	is 5/8 against MAX_LIGHTING_COLOR = 8.0h).  816 drops it.
+	return half4( PACK_LIGHTING_COLOR( final_color * 5.0h ), 0.0h);
+	
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -359,7 +359,7 @@ float		rain_offset;
 float4		packed_water_parameters_0;	// rgb - water fog colour, w - wave fog density
 float		use_rain;
 
-SamplerComparisonState	s_shmap;
+//	s_shmap comes from common_samplers.h, which ship declares it in.
 
 Texture3D	t_puddle_rings;
 Texture2D	t_rain_shadow_map;

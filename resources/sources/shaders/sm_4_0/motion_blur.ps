@@ -22,6 +22,27 @@
 //	i*step-half, a running `offset +=` accumulator, offset as its own
 //	statement, (step*scale) folded before or after the index, [unroll] vs
 //	[unroll(N)], and moving the result/alpha declarations across the block.
+//
+//	2026-08-18.  The rotation is EXACTLY one lane: ship's vector is ours
+//	rotated right by one.  Ours packs the four vectorised taps in evaluation
+//	order (i0,i1,i2,i3 into x,y,z,w) and reads .xxyy/.zzww; ship packs
+//	(i3,i0,i1,i2) and reads .yyzz/.wwxx - the same pairs, the same execution
+//	order (the sample sequence in both listings is i0,i1,i2,i3 then the scalar
+//	i4 as `mul r0.w, cb0[6].x, l(0.040500)`), only the base lane differs.  So
+//	fxc's literal-vector lane cursor started at .y in ship's compile and wraps
+//	to .x for the fourth value; it is register/lane allocation, not arithmetic.
+//	Four further algebraic spellings of the tap offset were measured and every
+//	one packs (i0,i1,i2,i3) into x,y,z,w:
+//	  ((i*2.f - N)*(STEP*0.5f)*scale)*velocity + I.tc
+//	  ((i - N*0.5f)*(STEP*scale))*velocity + I.tc
+//	  (STEP*0.5f*(i*2.f - N)*scale)*velocity + I.tc
+//	  velocity*((i - N*0.5f)*STEP*scale) + I.tc
+//	and four statement-placement moves (result hoisted to the top of main,
+//	scaled/alpha sunk below the loop, object_motion/has_object hoisted above
+//	the eye ray, an extra named velocity copy) all leave both the packing and
+//	the SHDR size unchanged.  Since the campaign's rule is that allocation
+//	follows statement placement, the lever - if there is one - is upstream of
+//	the loop, and the four moves above are the obvious ones already spent.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"

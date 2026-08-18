@@ -1,5 +1,5 @@
-#ifndef	common_samplers_h_included
-#define	common_samplers_h_included
+#ifndef	COMMON_SAMPLERS_H_INCLUDED
+#define	COMMON_SAMPLERS_H_INCLUDED
 
 //////////////////////////////////////////////////////////////////////////////////////////
 // Geometry phase / deferring               	//
@@ -8,11 +8,9 @@ uniform sampler 	s_nofilter;		//	Use D3DTADDRESS_CLAMP,	D3DTEXF_POINT,			D3DTEXF
 uniform sampler 	s_rtlinear;		//	Use D3DTADDRESS_CLAMP,	D3DTEXF_LINEAR,			D3DTEXF_NONE,	D3DTEXF_LINEAR 
 uniform sampler 	s_linear;		//	Use	D3DTADDRESS_WRAP,	D3DTEXF_LINEAR,			D3DTEXF_LINEAR,	D3DTEXF_LINEAR
 
-// Ship name, byte-proven independently by forward_lighting.ps (600 blobs)
-// and terrain_gbuffer_pass.ps (30): the sampler between s_linear and s_base
-// is s_anisotropic; nothing in the tree ever sampled through "s_border".
-uniform sampler 	s_anisotropic;
+uniform sampler 	s_border;
 
+uniform sampler 	s_anisotropic;
 uniform sampler 	s_base;
 uniform sampler 	s_base_hud;
 uniform sampler 	s_detail;
@@ -22,6 +20,7 @@ uniform sampler 	s_diffuse;
 uniform sampler 	s_accumulator;
 uniform sampler 	s_material;
 uniform sampler 	s_material1;
+uniform sampler 	s_prev_z;
 
 uniform sampler 	s_jitter;
 
@@ -32,11 +31,14 @@ uniform sampler 	s_detailBump;
 uniform sampler 	s_detailBumpX;
 uniform sampler 	s_hemi;
 
+
+SamplerComparisonState		s_shmap;	//	Special comare sampler
+
 // Textures
 Texture2D 			t_base;
 
 #ifdef USE_MSAA
-Texture2DMS<float4, MSAA_SAMPLES>	
+Texture2DMS<half4, MSAA_SAMPLES>	
 					t_generic;				//	smp_generic
 #else
 Texture2D   		t_generic;
@@ -67,8 +69,8 @@ Texture2D 			t_dn_a;                	//
 
 //uniform sampler2D       s_depth;                //
 #ifdef USE_MSAA
-Texture2DMS<float4, MSAA_SAMPLES>	t_position;	
-Texture2DMS<float4, MSAA_SAMPLES>	t_normal;	
+Texture2DMS<half4, MSAA_SAMPLES>	t_position;	
+Texture2DMS<half4, MSAA_SAMPLES>	t_normal;	
 #else
 Texture2D	t_position;	
 Texture2D	t_normal;	
@@ -83,8 +85,8 @@ Texture2D	t_decals_normal;
 //////////////////////////////////////////////////////////////////////////////////////////
 // Combine phase                                //
 #ifdef USE_MSAA
-Texture2DMS<float4, MSAA_SAMPLES>	t_diffuse;	// rgb.a = diffuse.gloss
-Texture2DMS<float4, MSAA_SAMPLES>	t_accumulator;      	// rgb.a = diffuse.specular
+Texture2DMS<half4, MSAA_SAMPLES>	t_diffuse;	// rgb.a = diffuse.gloss
+Texture2DMS<half4, MSAA_SAMPLES>	t_accumulator;      	// rgb.a = diffuse.specular
 #else
 Texture2D	t_diffuse;	// rgb.a = diffuse.gloss
 Texture2D	t_accumulator;      	// rgb.a = diffuse.specular
@@ -95,4 +97,4 @@ Texture2D	t_image;	// used in various post-processing
 Texture2D	t_tonemap;	// actually MidleGray / exp(Lw + eps)
 
 
-#endif	//	#ifndef	common_samplers_h_included
+#endif	//	#ifndef	COMMON_SAMPLERS_H_INCLUDED
