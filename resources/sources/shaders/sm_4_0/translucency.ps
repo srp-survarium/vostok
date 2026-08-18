@@ -1,0 +1,141 @@
+////////////////////////////////////////////////////////////////////////////
+//	translucency.ps - reconstructed from the shipped blob, 2026-08-18
+//
+//	Ground truth	: shaders/sm_4_0/translucency.ps, its one shipped
+//					  (all-underscore) permutation, disassembled with
+//					  fxc /dumpbin /Fc.  Absent from the source drop; only
+//					  translucency.vs survived.
+//	Acceptance		: python3 -m vostok.shaders roundtrip translucency.ps
+//	STATE			: 1 of 1 shipped permutations byte-identical.
+//
+//	What it is: the deferred *sun through thin geometry* pass - one
+//	full-screen accumulator write that lights the side of a surface the sun
+//	does not reach, out of how far the light had to travel inside it.
+//
+//	  * reconstruct the view-space position from the eye-ray corner and the
+//	    g-buffer's linear depth, exactly as sun.ps and skylight.ps do;
+//	  * project it through the four cascade matrices and take the depth of
+//	    the FIRST cascade that contains it.  The containment test is a
+//	    [-0.01, 1.01] box for cascades 0..2 and, for cascade 3, only its x
+//	    and y - the coarsest cascade is never rejected on depth.  The
+//	    selection is arithmetic, not branching: `inside_n` is a bool, the
+//	    `outside_n` are ints, and the products fall out as and/imul/itof;
+//	  * subtract `t_sun_translucensy_help_data.y` - the sun-facing surface's
+//	    own depth, written by the same cascade - so the difference is the
+//	    thickness of material the light crossed;
+//	  * the material's translucency is a 5-bit field split across the
+//	    g-buffer normal target (3 bits from .z's 10-bit word, 2 from .w),
+//	    gamma-decoded, and gated on bit 7 of the diffuse target's alpha - the
+//	    "this material is translucent" flag gbuffer_pass.ps sets;
+//	  * attenuate with pow( 1 - saturate( thickness/(translucency*0.035) ),
+//	    10 ) - a thickness of 3.5 cm per unit of translucency puts it out;
+//	  * the colour is three terms: a flat ambient wrap (translucency*0.1), a
+//	    back-lit N.L term through the attenuated thickness, and a
+//	    forward-scatter lobe pow( saturate( -V.L ), 3 ) that lights the
+//	    silhouette when you look toward the sun;
+//	  * packed 1/rsqrt(saturate(c*0.125)) like every other accumulator write.
+//
+//	fxc notes earned here: `t3.z` survives the cascade-3 `div` even though
+//	only .xy are range-tested; the first `and` of each containment chain
+//	takes its operands in register order, not source order, so the two
+//	spellings the listing shows are one source; and the three `mul`s this
+//	file spells "backwards" (translucency*back_light, forward*(forward*
+//	forward), (scalar)*sun_color) are the only shapes that reach identity.
+////////////////////////////////////////////////////////////////////////////
+
+//	HEADER FINDING.  The shipped dependency table is common.h's closure plus
+//	gbuffer.h's, and nothing else - so m_shadow0..3, s_eye_ray_corner and
+//	t_sun_translucensy_help_data are declared in this TU.  $Globals puts
+//	gbuffer.h's near_far_invn_invf first, which pins gbuffer.h ahead of them.
+//	Ship's shadow.h carries the four matrices (sun.ps records the layout);
+//	the recovered one does not, so they live here as sun.ps's do.
+//
+//	The 5-bit translucency unpack below is byte-identical to the one in
+//	subsurface_scattering.ps and at ship almost certainly sat in a shared
+//	header - gbuffer.h, whose read-side this is.  It is duplicated rather
+//	than hoisted because moving it would need its own full-tree proof.
+
+#include "common.h"
+#include "gbuffer.h"
+
+float4x4	m_shadow0;
+float4x4	m_shadow1;
+float4x4	m_shadow2;
+float4x4	m_shadow3;
+float3		s_eye_ray_corner;
+
+Texture2D	t_sun_translucensy_help_data;
+
+bool inside_cascade( float3 tc )
+{
+	return	tc.x >= -0.01f && tc.x <= 1.01f && tc.y >= -0.01f && tc.y <= 1.01f && tc.z >= -0.01f && tc.z <= 1.01f;
+}
+
+float3 project_shadow( float4x4 shadow_matrix, float4 position )
+{
+	float4 tc		= mul( shadow_matrix, position );
+	return			tc.xyz/tc.w;
+}
+
+struct v2p_translucency
+{
+	float4	hpos	: SV_POSITION;
+	float2	tc		: TEXCOORD0;
+};
+
+float4 main( v2p_translucency I ) : SV_Target
+{
+	float3	eye_ray;
+	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 )/s_eye_ray_corner.z;
+	eye_ray.z				= 1;
+
+	float4	position		= float4( gbuffer_read_frame_depth( I.tc )*eye_ray, 1.f );
+
+	float3	t0				= project_shadow( m_shadow0, position );
+	float3	t1				= project_shadow( m_shadow1, position );
+	float3	t2				= project_shadow( m_shadow2, position );
+	float3	t3				= project_shadow( m_shadow3, position );
+
+	bool	inside0			= inside_cascade( t0 );
+	bool	inside1			= inside_cascade( t1 );
+	bool	inside2			= inside_cascade( t2 );
+	bool	inside3			= t3.x >= -0.01f && t3.x <= 1.01f && t3.y >= -0.01f && t3.y <= 1.01f;
+
+	int		outside0		= inside0 ? 0 : 1;
+	int		outside1		= inside1 ? 0 : 1;
+	int		outside2		= inside2 ? 0 : 1;
+
+	float	shadow_depth	=
+		inside0*t0.z +
+		inside1*outside0*t1.z +
+		inside2*outside0*outside1*t2.z +
+		inside3*outside0*outside1*outside2*t3.z;
+
+	float	depth_delta		= shadow_depth - t_sun_translucensy_help_data.SampleLevel( s_accumulator, I.tc, 0 ).y;
+
+	float4	packed			= t_normal.SampleLevel( s_accumulator, I.tc, 0 );
+	uint	low				= ((uint)(packed.z*1023.f)) >> 7;
+	uint	high			= ((uint)(packed.w*3.f)) << 3;
+	float	translucency	= pow( min( float( low | high )*(1.f/31.f), 1.f ), 2.2f );
+
+	uint	translucent		= ((uint)(t_diffuse.SampleLevel( s_diffuse, I.tc, 0 ).w*255.f)) >> 7;
+	translucency			= translucent ? translucency : 0.f;
+
+	float	attenuation		= pow( 1.f - saturate( depth_delta/(translucency*0.035f) ), 10.f );
+
+	float3	normal			= gbuffer_read_frame_normal( I.tc );
+	normal.z				= -normal.z;
+
+	float	back_light		= dot( normal, sun_direction );
+
+	float3	result			= translucency*0.1f
+							+ ((sun_color*back_light)*attenuation)*translucency*1.5f
+							+ (translucency*back_light*0.1f)*sun_color;
+
+	float3	view_direction	= normalize( position.xyz );
+	float	forward			= saturate( dot( -view_direction, sun_direction ) );
+
+	result					+= (sun_color*(forward*(forward*forward)))*(translucency*attenuation*2.f);
+
+	return					1.f/rsqrt( saturate( float4( result, 0.f )*0.125f ) );
+}
