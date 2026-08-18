@@ -3,61 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the 15 shipped permutations of
-//					  shaders/sm_4_0/forward_simple_water_local_reflections.ps,
-//					  disassembled with fxc /dumpbin /Fc.  Absent from the
-//					  source drop.  vertex_base.vs (196/196) is the authority
-//					  for the interpolant layout; forward_base.ps (120/120)
-//					  for the forward-stage skeleton.
-//	Acceptance		: python3 -m vostok.shaders roundtrip
-//					  forward_simple_water_local_reflections.ps
-////////////////////////////////////////////////////////////////////////////
-//
-//	Pass 1 of the two-pass simple water effect (see
-//	effect_fstage_simpe_water_materials.cpp): a screen-space ray march along
-//	the reflected view vector against the packed position buffer, whose two
-//	outputs pass 0 reads back as t_local_reflections_result /
-//	t_local_reflections_result_params.
-//
-//	  SV_Target0  the ray-step scale, broadcast - sqrt of the saturated
-//	              distance to the far plane, ten times over
-//	  SV_Target1  xy = the hit's screen tc, z = 1 when the march hit,
-//	              w = the distance travelled
-//
-//	Status by axis:
-//	  CONFIG_VERTEX_INPUT_TYPE  0..14 - all fifteen byte-proven
-//	  every other define the mask records ships only as 0
-//
-//	Load-bearing shapes, each one earned against the blobs:
-//
-//	  * the march is a real loop, not an unrolled one - [loop] is what keeps
-//	    fxc from unrolling a literal 128 iterations at /O3;
-//	  * the reflection is written out rather than spelled reflect(v, n): the
-//	    blobs negate the *normal* inside the dp3 and leave the doubled scalar
-//	    positive in the mad, which is what "v + n * (2*dot(v,-n))" produces
-//	    and what reflect() does not (it negates the scalar instead);
-//	  * every step product is spelled ray_step * reflection, scalar first;
-//	  * the step scale is spelled 1.f/rsqrt(x), which emits rsq + div where
-//	    sqrt(x) would emit sqrt, and it is a float4 - the div is vectorised
-//	    in every shipped blob;
-//	  * the world normal is normalized *after* the m_V2W transform, which is
-//	    the opposite of forward_view_angle_dependent.ps's spelling;
-//	  * the loop's tc goes into a *local* float2 that the sample reads, and
-//	    only a copy escapes as result_tc; and the two SV_Target1 lanes are
-//	    assigned one at a time, not built with one float4(...).  That is what
-//	    decides the register packing: ship pairs the travelled ray with the
-//	    hit flag in one register and the tc with the loop counter in the
-//	    next, and every spelling that samples through the escaping tc, or
-//	    builds the output in one constructor, pairs the tc with the hit
-//	    instead and comes out two instructions shorter.
-//
-//	CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
-//	the world position at TEXCOORD3, and 3..6 put the world position at
-//	TEXCOORD5 - both follow vertex_base.vs.
-//
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_USE_SUBUV,

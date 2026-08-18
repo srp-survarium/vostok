@@ -3,39 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstruction note (2026-08-17): rewritten from the 15 shipped blobs'
-//	disassembly. The tree revision this replaces named GLOBAL_USE_BRANCHING,
-//	declared far_fog_color_and_distance / near_fog_distance locally (both are
-//	material_parameters members at ship), and took its vertex-output struct
-//	from vertex_input.h, whose recovered CONFIG_VERTEX_INPUT_TYPE mapping is
-//	off by the ship one (ship: 0=null, 1/2=static, 3..6=skeleton 4/3/2/1
-//	bones, 7=particle, 8=particle subuv, 9=beamtrail, 10=decal, 11=grassmesh,
-//	12=postprocess, 13=wires, 14=user). Its arithmetic survived intact - the
-//	view-space eye vector, the cubed facing term, the subuv lerp - and is what
-//	the blobs spell out. The per-VIT block is forward_base.ps's (roundtrip
-//	120/120), shared verbatim with forward_base_subuv.ps; gbuffer.h comes
-//	BEFORE it so that near_far_invn_invf lands at $Globals offset 0, ahead of
-//	the VIT 7/8 particle uniforms, as the shipped RDEF records it.
-//
-//	This shader is the first that reads parameters.normal, so its blobs pin
-//	three things forward_base.ps could not see and still carries differently
-//	(they are unobservable there - it reads neither the normal nor TEXCOORD0..3
-//	for those types - so forward_base.ps stays 120/120 either way):
-//
-//	* the VIT 1/2 (static) struct leads with the TBN triple, not with
-//	  position: TEXCOORD0..2 are tbn_x/y/z and TEXCOORD3 is position. Perm
-//	  ___0_______________________2__01___1______00___0____________________0_____________
-//	  reads v1.z/v2.z/v3.z for the normal and leaves register 4 unread;
-//	  forward_base.ps's order would have put them at v2/v3/v4;
-//	* for VIT 1/2 and VIT 3..6 the normal is the TBN matrix's third *column*,
-//	  float3(tbn_x.z, tbn_y.z, tbn_z.z) - three movs, no normalize, and for
-//	  the skeleton types the TEXCOORD5 `normal` interpolant goes unread
-//	  (perm ...2__01___3...: "mov r1.x, v0.z / mov r1.y, v1.z / mov r1.z, v2.z
-//	  / dp3_sat r0.x, -r1.xyzx, r0.xyzx");
-//	* VIT 11 (grassmesh) takes the same column but normalizes it, and
-//	  forward_base.ps does not set the normal for that type at all (perm
-//	  ...2__01___11...: the three movs are followed by dp3/rsq/mul).
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_EMISSIVE,

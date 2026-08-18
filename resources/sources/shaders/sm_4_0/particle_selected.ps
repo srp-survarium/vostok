@@ -3,22 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 18.08.2026
-//	Ground truth	: the three shipped permutations of
-//					  shaders/sm_4_0/particle_selected.ps, disassembled with
-//					  fxc /dumpbin /Fc.  The body is the drifted source's,
-//					  unchanged - the whole shader is two movs.  What was wrong
-//					  was the route to the input struct: the tree's
-//					  vertex_input.h still carries the pre-ship
-//					  CONFIG_VERTEX_INPUT_TYPE numbering (PARTICLE = 3), and at
-//					  ship 7/8 are the particle input and 9 the beamtrail one.
-//					  Dispatched here the way forward_lighting.ps does it.
-//	Acceptance		: python3 -m vostok.shaders roundtrip particle_selected.ps
-//	Axis status		: CONFIG_VERTEX_INPUT_TYPE 7/8/9 and CONFIG_USE_SUBUV 0/1
-//					  are the only combinations shipped, and all three are
-//					  byte-identical.
-////////////////////////////////////////////////////////////////////////////
-
 /*
 	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,

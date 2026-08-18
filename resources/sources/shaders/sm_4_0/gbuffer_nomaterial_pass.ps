@@ -1,26 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs - absent from the
-//	recovered source drop. Self-contained (the ship include closure names
-//	header revisions the tree does not have).
-//	The "no material" g-buffer pass - what a visual with no material bound
-//	draws: target 0 stores the interpolated normal (third TBN row) through the
-//	ship Lambert-azimuthal encode with a fixed material id (31/1023) and gloss
-//	(2/3); target 1 is the default texture with a constant 0.04 specular
-//	intensity. Inputs with no tangent basis store the IDENTITY normal
-//	float3(0,0,1), whose encode divides 0 by sqrt(-8*1 + 8) - that is the NaN
-//	pair the blobs show, and it is a fold of 0/0, not a zero normal.
-//	Byte-proven 2026-08-18:
-//	python3 -m vostok.shaders roundtrip gbuffer_nomaterial_pass.ps
-//	-> 30 identical, 0 differ, 0 skipped.
-////////////////////////////////////////////////////////////////////////////
-
-// The per-type normal rule is ship's own get_material_parameters, read back
-// off these blobs: the identity normal float3(0,0,1) for the types with no
-// tangent basis (0, 9, 10, 12, 13, 14), the raw third column of the basis for
-// the static LOD-0 and skeleton types (1-6), that column NORMALIZED for
-// grassmesh (11) and for the static types at LOD 1, and the interpolated
-// vertex normal rotated into view space by m_V for the two particle types
-// (7, 8) - the only arms that reference a cbuffer at all.
 uniform sampler	s_base;
 Texture2D		t_default_texture;
 

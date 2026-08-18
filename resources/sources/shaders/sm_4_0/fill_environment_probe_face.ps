@@ -1,13 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
-//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
-//
-//	Target 0 is the probe face colour normalised so its brightest channel is
-//	at most 1 (t_probe_face_texture is sampled with a .zyx swizzle, i.e. the
-//	face is stored BGR); target 1 packs the probe-relative distance, scaled
-//	by 1/300 and clamped, into two bytes.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 

@@ -3,54 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/vertex_base_lpv.vs, all 15 permutations - one per
-//	CONFIG_VERTEX_INPUT_TYPE, every one at CONFIG_LOD_INDEX==0 and
-//	CONFIG_WIND_MOTION==0). Acceptance:
-//	python3 -m vostok.shaders roundtrip vertex_base_lpv.vs
-//
-//	Nine of the fifteen are byte-identical to the vertex_base.vs blob with
-//	the same defines, so this file is vertex_base.vs with two arms replaced:
-//
-//	* the static arm. The shipped closure names
-//	  static_mesh_vertex_input_lpv.h in place of
-//	  static_mesh_vertex_input.h, and it is a reflective-shadow-map layout:
-//	  position, D3DCOLOR-packed normal and a float4 at TEXCOORD0 whose xyz
-//	  leave as a float3 at TEXCOORD2. That third channel is a colour, not a
-//	  texture coordinate - editor_show_lpv_geometry.ps consumes exactly that
-//	  register and gamma-corrects it (pow(|x|, 1/2.2)) straight to
-//	  SV_Target. Same struct for CONFIG_VERTEX_INPUT_TYPE 1 and 2: their
-//	  blobs are the same blob, so no vertex-colour member is conditional
-//	  here. No wind: wind.h is absent from this name's shipped closure;
-//	* the skeleton arm, which drops the tangent-space transform (the three
-//	  TBN outputs are literal zero, and NORMAL/TANGENT/BINORMAL stay in the
-//	  input signature unused) and takes prev_position from the current
-//	  frame's skinned position, so skeleton_bones_prev is never referenced
-//	  and never reaches the RDEF. Those four skeleton blobs are shared
-//	  byte-for-byte with vertex_base_shadow.vs.
-//
-//	Every other vertex input type is vertex_base.vs's own arm, unmodified.
-//	The effects that compile this name are effect_fill_reflective_shadow_map,
-//	effect_gstage_default_materials / effect_gstage_terrain_materials
-//	(fill_reflective_shadow_map_backed / _backend) and
-//	effect_editor_show_batched_geometry (editor_show_lpv_geometry).
-//
-//	The recovered vertex_base.vs was a thin wrapper over vertex_input.h, but the
-//	per-type headers behind it are a later drift: the shipped
-//	CONFIG_VERTEX_INPUT_TYPE numbering is the engine's
-//	enum_vertex_input_type (sources/vostok/render/facade/
-//	vertex_input_type.h) - 0 null, 1 static, 2 static colored,
-//	3..6 skeletal with 4..1 bones, 7 particle, 8 particle subuv,
-//	9 beamtrail, 10 decal, 11 grassmesh, 12 post process, 13 wires,
-//	14 user - not the mapping in common_defines.h. The shipped structs,
-//	the LOD0 view-position path, the skeletal prev-frame bones, the
-//	0.00007125 static wind and the grassmesh sway exist in no recovered
-//	header, so this file is self-contained: it includes nothing and
-//	declares the ship cbuffer layouts itself (material_parameters here is
-//	the full 34-member ship layout, not the 3-member one in
-//	common_cbuffers.h).
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_WIND_MOTION,

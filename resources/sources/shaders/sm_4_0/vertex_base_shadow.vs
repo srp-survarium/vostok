@@ -3,54 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/vertex_base_shadow.vs, all 38 permutations, every one at
-//	CONFIG_LOD_INDEX==0). Acceptance:
-//	python3 -m vostok.shaders roundtrip vertex_base_shadow.vs
-//
-//	Twenty of the thirty-eight are byte-identical to the vertex_base.vs blob
-//	with the same defines, so this file is vertex_base.vs with two arms
-//	replaced - the depth-pass shape depth_accumulate.ps documents from the
-//	other side:
-//
-//	* the static arm. The shipped closure names
-//	  static_mesh_vertex_input_shadow.h in place of
-//	  static_mesh_vertex_input.h: position, tc, and a NORMAL that is
-//	  declared and never read (plus, for CONFIG_VERTEX_INPUT_TYPE==2, a
-//	  COLOR that is also never read - the type 1 and type 2 blobs differ by
-//	  exactly that one input-signature entry and nothing else). It emits
-//	  world position and tc only, and clips with m_VP rather than
-//	  m_P * m_V, so static_globals is bound but m_P is not;
-//	* the skeleton arm, which drops the tangent-space transform (TBN outputs
-//	  are literal zero) and takes prev_position from this frame's skinned
-//	  position, so skeleton_bones_prev never reaches the RDEF. Those four
-//	  blobs are shared byte-for-byte with vertex_base_lpv.vs.
-//
-//	The wind is vertex_base.vs's, with one proven difference: the phase is
-//	scene_time, not scene_time + scene_time - the shipped blob computes
-//	object_pos.x * 0.25f + scene_time in a single mad, where vertex_base.vs
-//	first doubles scene_time in its own add. Both names include wind.h in
-//	their shipped closure, so the doubling is the caller's, not the header's.
-//	CONFIG_WIND_MOTION 1 and 2 both sway (they share a blob); 0 and 3 do not.
-//
-//	Every other vertex input type is vertex_base.vs's own arm, unmodified.
-//
-//	The recovered vertex_base.vs was a thin wrapper over vertex_input.h, but the
-//	per-type headers behind it are a later drift: the shipped
-//	CONFIG_VERTEX_INPUT_TYPE numbering is the engine's
-//	enum_vertex_input_type (sources/vostok/render/facade/
-//	vertex_input_type.h) - 0 null, 1 static, 2 static colored,
-//	3..6 skeletal with 4..1 bones, 7 particle, 8 particle subuv,
-//	9 beamtrail, 10 decal, 11 grassmesh, 12 post process, 13 wires,
-//	14 user - not the mapping in common_defines.h. The shipped structs,
-//	the LOD0 view-position path, the skeletal prev-frame bones, the
-//	0.00007125 static wind and the grassmesh sway exist in no recovered
-//	header, so this file is self-contained: it includes nothing and
-//	declares the ship cbuffer layouts itself (material_parameters here is
-//	the full 34-member ship layout, not the 3-member one in
-//	common_cbuffers.h).
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_WIND_MOTION,

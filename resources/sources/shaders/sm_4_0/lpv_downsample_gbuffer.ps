@@ -3,21 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Byte-identical 2026-08-18 (was 2896 against ship's 3412).  Three drifts,
-//	all in the g-buffer read path and all the same ones instance_test.ps
-//	carried:
-//	  * the eye ray is s_eye_ray_corner.xy*(1-uv*2)/s_eye_ray_corner.z with
-//	    z = 1, not corner.xy*(1-uv*2) with z = corner.z - the shape
-//	    skylight.ps already byte-proved;
-//	  * view position is eye_ray*gbuffer_read_frame_depth(uv) (linear depth
-//	    in .x), not the recovered gbuffer_read_rt_position's data.xyz;
-//	  * read_screen_vs_normal negates .z, exactly as skylight.ps does.
-//	The last instruction to fall was placement, not spelling: ship emits the
-//	t_position fetch BETWEEN the corner multiply and the /corner.z divide, so
-//	the depth statement sits between the two halves of the eye ray.  Written
-//	either side of the whole eye-ray block it lands one slot off.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 */
 
@@ -160,7 +145,6 @@ void main(in vertex_output_struct input,
 	out_position 			= float4(result_position, 0.0f);
 	out_normal 				= float4(result_normal, 0.0f);
 }
-
 
 
 

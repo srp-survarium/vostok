@@ -1,21 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob
-//	(shaders/sm_4_0/skylight.ps, plain permutation) - the file was absent
-//	from the recovered source drop. Byte-proven 2026-08-18:
-//	python3 -m vostok.shaders roundtrip skylight.ps
-//	-> 1 identical, 0 differ, 0 skipped.
-//
-//	It had been parked one instruction-pair short: ship keeps the ssao *2.5
-//	as its own mul before multiplying with ramp, and every SPELLING tried
-//	(operand orders, parens, float4/vector forms, /0.4f, compound assigns,
-//	precise, dot(), mul(), asfloat(asuint())) was canonicalised by fxc to
-//	(ramp*ssao)*2.5. The constant was never the problem: it was where the
-//	sample statement SAT. Written below the ramp block, fxc folds the two
-//	scalar muls into one chain and sinks the constant to its end; written
-//	ABOVE the eye-ray/ramp block, as here, the scale stays on the sampled
-//	value and the schedule is ship's. Do not move it back.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 #include "gamma_correction.h"

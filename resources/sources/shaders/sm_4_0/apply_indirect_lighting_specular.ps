@@ -1,22 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob
-//	(shaders/sm_4_0/apply_indirect_lighting_specular.ps, plain permutation) -
-//	absent from the recovered source drop; old/apply_indirect_lighting.ps
-//	(the diffuse ancestor) was the reading aid.
-//	Byte-identity: python3 -m vostok.shaders roundtrip apply_indirect_lighting_specular.ps
-//
-//	The specular arm marches the reflected ray through the LPV cascade in
-//	nine half-metre steps from a quarter-metre normal offset, projects the
-//	radiance SH onto the reflection direction at every step and keeps the
-//	brightest, then shapes it - (0.9x)^2 * 0.25 - and packs the result the
-//	way every light accumulator does: 1/rsqrt(min(v,1)/8), which is sqrt
-//	spelled so fxc emits rsq+div rather than sqrt.
-//
-//	A grid position outside [0,1) is zeroed rather than clamped (the sample
-//	then lands on the volume's origin cell), which is what the two
-//	any()-guarded multiplies in clamp_to_grid reproduce.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 #include "spherical_harmonics_common.h"

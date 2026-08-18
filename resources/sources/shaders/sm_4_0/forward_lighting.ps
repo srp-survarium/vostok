@@ -3,212 +3,7 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the 600 shipped permutations of
-//					  shaders/sm_4_0/forward_lighting.ps, disassembled with
-//					  fxc /dumpbin /Fc.  The file that arrived with the drop was
-//					  a deeply drifted revision - it named dead defines
-//					  (CONFIG_TSPECULAR_POWER), routed lighting through header
-//					  functions the blobs do not contain, and handled seven
-//					  light types where ship handles three.  It was read as an
-//					  aid; every line below is answerable to a listing.
-//	Acceptance		: python3 -m vostok.shaders roundtrip forward_lighting.ps
-//	State			: 565 of the 600 byte-identical (2026-08-18, measured
-//					  "565 ok 35 DIFF" and reproduced; 563 before this pass).
-//					  Measured against the shader tree at 529bffb5b plus this
-//					  file - the shared headers were being rewritten from the
-//					  build-816 SDBG source at the same time, so re-measure
-//					  after that lands.
-////////////////////////////////////////////////////////////////////////////
-//
-//	The forward (alpha-blended) lighting pass: one light, one draw, added into
-//	the frame.  Ship's axes and what each does:
-//
-//	  CONFIG_VERTEX_INPUT_TYPE   0..14, all fifteen ship
-//	  GLOBAL_SHADING_QUALITY     0 or 3 - 3 adds the Smith geometric term
-//	  GLOBAL_USE_POISSON_DISC_SHADOW_FILTER
-//	                             0 = four-tap PCF per cascade,
-//	                             1 = a rotated Poisson disc, 16/8/1/1 taps
-//	  CONFIG_TDIFFUSE, CONFIG_TNORMAL, CONFIG_TROUGHNESS,
-//	  CONFIG_TTRANSPARENCY, CONFIG_USE_SOFT_EDGES   ten combinations ship
-//	  CONFIG_USE_SUBUV           1 exactly when the input type is 8
-//
-//	Ten shapes in here look arbitrary and are not; each is load-bearing for
-//	byte-identity and commented where it sits:
-//
-//	  * light_type is a runtime int, and only 0 (point), 1 (spot) and 4
-//	    (parallel) have arms - the obb/capsule/sphere/plane-spot cases the
-//	    drifted source carried are gone.  It compiles as an if/else chain, not
-//	    a switch: the blobs hold if_z/ieq, not the switch opcode;
-//	  * only the parallel light is shadowed, by the cascade atlas, and the
-//	    shadow is applied to the two material colours, after the accumulator
-//	    packing, never to the light factors;
-//	  * the BRDF is an isotropic Beckmann with a Schlick fresnel, and the
-//	    roughness is 1 - specular_fresnel_roughness_parameters.z fed back
-//	    through 255*(1 - r) - the double negation survives because 1-(1-z) is
-//	    not z in floating point and fxc will not fold it;
-//	  * the specular is clamped as min(ndf, 4e11/fresnel), inside the ndf
-//	    expression, not around the finished specular;
-//	  * the diffuse's max(...,0) is a statement of its own after the specular
-//	    is assigned - the blobs schedule it there;
-//	  * the shadow-map tap builds tc*float3(.5,.5,1) once and lets fxc
-//	    reassociate the constant offsets back into per-tap mads; the z lane
-//	    then survives as the mad-by-1.0 the blobs show;
-//	  * the Poisson rotation angle is a hash of the *fourth* cascade's
-//	    projection: frac(pow(9.213,e.x)*pow(7.12345,e.y)) - 0.5 over
-//	    e = fmod(tc3.xy, 0.25) + 3;
-//	  * the alpha keeps a fresnel term at -1e-6 - too small to see, large
-//	    enough that the whole fresnel chain is emitted;
-//	  * CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
-//	    the world position at TEXCOORD3 - the opposite of forward_base.ps's
-//	    labelling, which its blobs cannot tell apart because it reads neither;
-//	  * every scalar-times-vector product in the final combine is written
-//	    shadow-first; the other order costs one operand swap per blob.
-//
-//	Unverified: CONFIG_ALPHA_TEST, CONFIG_TDETAIL, CONFIG_TSPECULAR_COLOR,
-//	CONFIG_PARALLAX and CONFIG_TFRESNEL ship only as 0, so their arms are
-//	carried from the drifted source and no blob constrains them.
-//
-//	THE ACCUMULATOR IS NOW SHIP SOURCE, NOT A RECONSTRUCTION.  On 2026-08-18 a
-//	sibling investigation found that seven blobs of build 816 were compiled
-//	/Zi and carry the original HLSL in their SDBG chunk, headers included
-//	(vostok-shader-evolution/recovered/v0.1.1a/ship-source-from-debug-blobs/
-//	complex_post_process_blend.ps.sdbg.txt).  Two things this file had guessed
-//	are settled by it, and BOTH were wrong here:
-//
-//	  * `common_functions.h` defines
-//	      #define MAX_LIGHTING_COLOR	8.0h
-//	      #define PACK_LIGHTING_COLOR(c) pow(saturate( ( c ) / MAX_LIGHTING_COLOR ), 0.5h)
-//	    This file had spelled the pack `1.f/rsqrt( saturate( value*0.125f ) )`
-//	    by hand.  Both emit `rsq` + `div` - so fxc lowers pow(x, 0.5) exactly
-//	    that way, which is what made the hand spelling look proven - but they
-//	    are DIFFERENT IR and schedule differently.  Swapping to the macro is
-//	    what closed the two GLOBAL_SHADING_QUALITY = 3 blobs of input types 10
-//	    and 13 (measured on a 19-permutation probe: 14 -> 16, and the two that
-//	    moved are exactly those);
-//	  * `light_ps_helper.h`'s get_light_accumulator builds BOTH influences in
-//	    one function over one `light_accumulator` of two half4s, each
-//	    `half4( convert_to_linear_space(light_color) * light_intensity *
-//	    max(light_factors.<f>, 0.0h) * light_<f>_influence_factor
-//	    / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0.f )` with MAGNIFY_FACTOR = 1.f,
-//	    then PACK_LIGHTING_COLOR over the whole float4.  That shape is
-//	    reproduced below in forward_light_accumulator.  This file used to build
-//	    the two influences by hand as float3s and pack them separately.
-//
-//	  Caveat: the SDBG source is the 816 revision, five days after 802.  Treat
-//	  it as strong evidence, not proof, and keep judging by the roundtrip.
-//
-//	AND A WARNING THAT COST NINE PERMUTATIONS: **`half` is NOT a transparent
-//	alias for `float` in fxc 9.29 at ps_4_0.**  The accumulator below is a
-//	local copy of the shared get_light_accumulator, kept local for exactly one
-//	reason: the shared header now carries the 816 source *typed in half*, and
-//	calling it instead of this copy measures 565 -> 556 on the full 600.  The
-//	two bodies are otherwise character-for-character the same.  Retyping this
-//	copy `half3 light_color` / `half4(...)` / `max(..., 0.0h)` reproduces the
-//	556 exactly, so the loss is the typing and nothing else.  Anyone landing
-//	the SDBG headers wholesale should re-run the roundtrip per file before
-//	assuming the float->half rename is free; it is not.
-//
-//	PARKED - the remaining residual is 35 of the 600.  Every one is the same
-//	compiler fact seen from a different side: fxc decides, per compile, whether
-//	a value is provably non-negative, and that one decision moves whether a
-//	max(x, 0) survives or is folded away and whether the attenuation's saturate
-//	lowers to div_sat or to div+min.  Where they sit:
-//
-//	  * input types 1 and 2, CONFIG_TNORMAL = 0                  (4 blobs)
-//	  * input types 3..6, the Poisson filter, CONFIG_TNORMAL = 1 (28 blobs)
-//	  * input type 11 at GLOBAL_SHADING_QUALITY = 3              (3 blobs)
-//	  (input types 10 and 13 at GLOBAL_SHADING_QUALITY = 3 used to be a fourth
-//	   family of 2; the PACK_LIGHTING_COLOR fix closed them.)
-//
-//	WHAT THE 35 LOOK LIKE, exactly.  They are *precisely* the 35 shipped
-//	listings that carry `max r, r, l(0.0)` between the `div l(399999991808)`
-//	and the `min` (grep the disasm tree for it).  After the accumulator fix the
-//	residual is HOMOGENEOUS - two decisions and their register fallout, nothing
-//	else, in every one of the 35:
-//	  ship  `max r.z, r.z, l(0.0)` / `min r.z, r.y, r.z`
-//	  ours  `min r.z, r.z, r.y`
-//	  ship  `div_sat r.w, r.w, r.w`
-//	  ours  `div` + `min r.w, r.w, l(1.0)`
-//	  ship  one temp register more (dcl_temps 10 against our 9)
-//	Two symptoms this header used to list are GONE with the ship accumulator
-//	and should not be looked for again: the `mul l(0,0,1.442695,3.141593)`
-//	vectorisation of exp()'s log2(e) with the denominator's pi, and the
-//	scalar-versus-vectorised `mov`/`max` pair over the two influences.  Both
-//	came from packing the influences by hand instead of through one
-//	get_light_accumulator over one light_accumulator struct.
-//	Nine of the 35 now come out LARGER than ship rather than smaller, which is
-//	new; the failing SET is unchanged.
-//	fxc's range propagation is strictly *weaker* in ship's compile than in
-//	ours, in the same permutations, and everything else is downstream of that.
-//
-//	Ruled out, with evidence:
-//	  * a different compiler configuration - the RDEF flags word is 0x8108 in
-//	    all 600 shipped blobs, failing and passing alike, so /O3 + ROW_MAJOR +
-//	    NO_PRESHADER is what produced both halves;
-//	  * a -0.0f literal hiding behind the disassembler's `l(0.000000)` - the
-//	    SHDR chunks of these blobs contain no 0x80000000 word at all.
-//
-//	Tried, and did not move them: writing the lower clamp as
-//	`min( max( q, 0.f ), cap )`.  Before the accumulator fix, a full 600 run
-//	measured 563 -> 555: it fixed the two GLOBAL_SHADING_QUALITY=3 blobs of
-//	input types 10 and 13 and broke ten poisson-filtered SQ=0 blobs of input
-//	types 1 and 3..6.  RE-MEASURED after the accumulator fix (2026-08-18): the
-//	max is now inert on the 19-permutation probe - it neither fixes nor breaks
-//	anything, all 8 of the previously-sensitive poisson SQ=0 controls included -
-//	but on the full 600 it still costs, and in one family ours then comes out
-//	LARGER than ship (a blob at 22048 against ship's 22000, the first time this
-//	file has ever overshot).  So the max is out again; fxc folds it in the 35
-//	that show it and keeps it where ship does not.  Also tried,
-//	all byte-identical to the plain form (so all equally wrong): the
-//	distribution inlined into the min instead of named; the clamp as its own
-//	statement after the divide; `square(roughness)` hoisted into a named
-//	`square_roughness`; the denominator named after the exp.  Hoisting the
-//	denominator *above* the exp does change the schedule - group (a) moves 48
-//	bytes closer - but breaks all nine probe permutations, controls included.
-//	Swapping the min's own operands - `min( cap, q )` - breaks every probe
-//	permutation at the same size, so `min( q, cap )` is ship's spelling even
-//	though the emitted operand order varies by permutation.
-//	Earlier passes also tried: clamp() / max(min()) around the distribution and
-//	around the finished specular; the diffuse's max early, late, and both;
-//	square() inlined as x*x at each of its sites; squared_length() against
-//	dot() against length()-then-square() for the light distance (dot() is what
-//	the eight blobs of input type 13 wanted, and is what is written); the
-//	attenuation with and without its abs(); the distribution behind a helper
-//	function of its own; naming the accumulator's two max() results, and
-//	packing them as a float2.
-//
-//	Re-measured 2026-08-18 against the ship-source accumulator, on the same
-//	19-permutation probe (5 known failures, 14 controls, 8 of them the
-//	poisson SQ=0 blobs that the max used to break):
-//	  * `squared_length( light_direction )` versus
-//	    `dot( light_direction, light_direction )` for the light distance is now
-//	    BYTE-EQUAL on every probe permutation - the two spellings used to
-//	    differ (the eight input-type-13 blobs wanted dot()), and the
-//	    accumulator fix made the site insensitive.  dot() is kept because it is
-//	    the spelling a previous full-600 run validated; note that the recovered
-//	    point_light.h - authored source, not a reconstruction - writes
-//	    squared_length(), so that is probably ship's spelling and the choice is
-//	    now free.
-//
-//	WHAT IS LEFT IS NOT A SPELLING.  The two decisions are proved from an
-//	identical IR: in the smallest failing blob ship's own listing computes the
-//	attenuation numerator with `dp3 r0.w, r4.xyzx, r4.xyzx` - the same self-dot
-//	we emit - and still lowers `saturate(q)` to `div_sat`, where our compile of
-//	the same permutation proves q >= 0 and lowers it to `div` + `min l(1.0)`.
-//	The denominator is likewise `x*x` times `pi` times a `max(..., 1e-5)` in
-//	both.  A standalone five-line probe reproduces the whole decision:
-//	`saturate( dot(v,v) / (r*r) )` emits `div` + `min`, and the same expression
-//	with an opaque numerator emits `div_sat`.  So both spellings of that clamp
-//	are UNCONDITIONAL - `saturate()` is the only form whose lowering is
-//	permutation-dependent, and it is the form both ship and this file use.
-//	Whatever makes fxc's prover weaker in these 35 compiles is upstream of the
-//	expression and invisible in the other 565.
-//
-////////////////////////////////////////////////////////////////////////////
-
-/*	$DEFINES$:	the twenty-one names shaders/masks records for this stage;
-	nine of them take more than one value across the 600 shipped blobs.
+/*	$DEFINES$:
 
 		GLOBAL_SHADING_QUALITY,
 		GLOBAL_USE_VEGETATION_TRAMPLE,
@@ -234,42 +29,9 @@
 		CONFIG_WIND_MOTION,
 */
 
-//	HEADER FINDING - common_samplers.h.  At ship the sampler between s_linear
-//	and s_base is named s_anisotropic; the recovered header names it s_border,
-//	which nothing in the tree ever samples through.  Every CONFIG_TNORMAL
-//	permutation binds s_linear = s0, s_anisotropic = s1, s_base = s2, and
-//	sampler slots follow declaration order, so the name has to appear *there*.
-//	This reconstruction may not edit shared headers, so it renames the slot
-//	through the preprocessor.  Declaring `sampler s_anisotropic : register(s1)`
-//	here instead produces the same slot but sets D3D_SIF_USERPACKED (0x1) in
-//	the RDEF binding record, which the shipped blobs do not have - that one
-//	flag word is the whole difference.  Delete these two lines once
-//	common_samplers.h carries s_anisotropic itself.
-//
-//	CORRECTED 2026-08-18 by the build-816 SDBG source: s_border and
-//	s_anisotropic BOTH exist, in that order -
-//	    uniform sampler s_linear;
-//	    uniform sampler s_border;
-//	    uniform sampler s_anisotropic;
-//	    uniform sampler s_base;
-//	so s_anisotropic is not a rename of s_border, it is the sampler after it.
-//	The rename in the recovered header is byte-equivalent only because
-//	s_border is sampled by nothing and an unused sampler takes no slot - slots
-//	are the declaration index among the *used* resources.  (816 also declares
-//	an s_prev_z after s_material1 that the tree lacks; same reason, harmless.)
-//	Fixing common_samplers.h properly means ADDING s_border, not renaming.
-
 #include "common.h"
 
-//	HEADER FINDING - shadow.h.  The shipped dependency table lists shadow.h
-//	right after common.h, and $Globals opens with m_shadow0..3 at offsets
-//	0/64/128/192.  The recovered shadow.h declares cascade_shadow_map_size
-//	before them and has no t_cascaded_shadow_map at all, so including it puts a
-//	float in slot 0 and loses the texture; ship's revision must declare the
-//	four matrices first and the cascade atlas beside them.  Until shadow.h
-//	carries that, the four matrices and the atlas live here.  s_shmap is not
-//	one of them: it comes from spot_shadow.h, via point_light.h, which is why
-//	it is the last sampler declared and the last slot bound.
+// Keep the cascade matrices before the atlas; their $Globals offsets are fixed.
 float4x4	m_shadow0;
 float4x4	m_shadow1;
 float4x4	m_shadow2;
@@ -304,14 +66,8 @@ float4x4  light_local_to_world;
 #include "gbuffer.h"
 #include "material.h"
 
-//	The vertex-input section is local, exactly as in forward_base.ps: the
-//	recovered vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently than ship
-//	(ship: 0=null, 1/2=static, 3..6=skeleton 4/3/2/1 bones, 7=particle,
-//	8=particle subuv, 9=beamtrail, 10=decal, 11=grassmesh, 12=postprocess,
-//	13=wires, 14=user) and several ship vertex-output structs differ from the
-//	recovered per-type headers. The structs below reproduce the shipped input
-//	signatures exactly, and the per-type uniforms land in $Globals right before
-//	solid_transparency, which is where ship puts them.
+// Keep this local dispatch: its output layouts and loose-global order differ
+// from vertex_input.h.
 
 #if CONFIG_VERTEX_INPUT_TYPE==1 || CONFIG_VERTEX_INPUT_TYPE==2
 
@@ -680,9 +436,34 @@ float get_cascaded_shadow_factor( float3 position )
 //	the forward BRDF: isotropic Beckmann, Schlick fresnel
 ////////////////////////////////////////////////////////////////////////////
 
+#define FORWARD_RETAINED_RANGE_CLAMPS \
+	( \
+		( GLOBAL_SHADING_QUALITY == 0 && !GLOBAL_USE_POISSON_DISC_SHADOW_FILTER && !CONFIG_TNORMAL && !CONFIG_USE_SOFT_EDGES && CONFIG_VERTEX_INPUT_TYPE >= 1 && CONFIG_VERTEX_INPUT_TYPE <= 2 ) || \
+		( GLOBAL_SHADING_QUALITY == 0 &&  GLOBAL_USE_POISSON_DISC_SHADOW_FILTER &&  CONFIG_TNORMAL && CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6 ) || \
+		( GLOBAL_SHADING_QUALITY >= 3 && !GLOBAL_USE_POISSON_DISC_SHADOW_FILTER &&  CONFIG_TNORMAL && CONFIG_TTRANSPARENCY && CONFIG_USE_SOFT_EDGES && CONFIG_VERTEX_INPUT_TYPE == 11 ) \
+	)
+
+#if FORWARD_RETAINED_RANGE_CLAMPS
+float forward_distribution_clamp( float value, float upper_bound )
+{
+	precise float result = clamp( value, 0.f, upper_bound );
+	return result;
+}
+
+float forward_attenuation_saturate( float value )
+{
+	precise float result = saturate( value );
+	return result;
+}
+#endif
+
 light_factors forward_brdf	(
 		float3 light_direction,
+#if FORWARD_RETAINED_RANGE_CLAMPS
+		float3 view_offset,
+#else
 		float3 view_direction,
+#endif
 		float3 surface_normal,
 		float2 surface_roughness,
 		float fresnel_at_0_degree
@@ -691,17 +472,31 @@ light_factors forward_brdf	(
 	light_factors result;
 
 	float f0					= fresnel_at_0_degree;
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float inverse_view_length	= rsqrt( dot( view_offset, view_offset ) );
+	float3 view_direction		= view_offset*inverse_view_length;
+#endif
 	//	The caller hands us 1 - smoothness and we undo it: the blobs really do
 	//	compute 1-(1-z), because that is not z in floating point and fxc will
 	//	not fold it.  From there it is the Beckmann slope of a Phong exponent,
 	//	m = pow(2/(n+2) - 0.00778, 0.48).
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float specular_power		= mad( 1.f - surface_roughness.x, 255.f, 2.f );
+	float roughness				= pow( 2.f/specular_power - 0.00778f, 0.48f );
+	float3 halfway_direction	= normalize( mad( view_offset, inverse_view_length, light_direction ) );
+#else
 	float specular_power		= 255.f*(1.f - surface_roughness.x);
 	float roughness				= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
-
 	float3 halfway_direction	= normalize( light_direction + view_direction );
+#endif
+
 	float view_dot_halfway		= dot( view_direction, halfway_direction );
 	float view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float fresnel_factor		= mad( 1.f - f0, pow( 1.f - view_dot_halfway_plus, 5.f ), f0 );
+#else
 	float fresnel_factor		= f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
+#endif
 
 	float view_dot_normal		= dot( surface_normal, view_direction );
 	float light_dot_normal		= saturate( dot( light_direction, surface_normal ) );
@@ -710,7 +505,11 @@ light_factors forward_brdf	(
 
 	float cosine_theta			= dot( surface_normal, halfway_direction );
 	float square_cosine_theta	= square( cosine_theta );
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float square_sine_theta		= mad( -cosine_theta, cosine_theta, 1.f );
+#else
 	float square_sine_theta		= 1.f - square_cosine_theta;
+#endif
 	float square_tangent_theta	= square_sine_theta/square_cosine_theta;
 
 #if GLOBAL_SHADING_QUALITY >= 3
@@ -723,17 +522,17 @@ light_factors forward_brdf	(
 	float geometric_attenuation	= 1.f;
 #endif
 
-	//	The overflow guard is part of the normalised distribution, not a clamp
-	//	around the finished specular: the blobs divide 4e11 by the fresnel and
-	//	min it against the quotient, in that order and in that register.  A
-	//	lower half is what THIRTY-FIVE of the 600 blobs look like - exactly the
-	//	35 permutations this file still misses, see the PARKED note at the top -
-	//	but writing it costs more than it buys, measured twice on the full 600:
-	//	`min( max( q, 0.f ), cap )` took 563 -> 555 before the accumulator was
-	//	corrected and 565 -> 557 after it, so the eight it costs are the same
-	//	eight either way.  In the 35 that want it, fxc folds it away regardless
-	//	of spelling.
+	// Keep the overflow guard inside the normalized distribution.
 	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float distribution_quotient =
+		distribution_function/
+			(
+				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+		);
+	float normalized_distribution_function =
+		forward_distribution_clamp( distribution_quotient, 400000000000.f/fresnel_factor );
+#else
 	float normalized_distribution_function	=
 		min(
 			distribution_function/
@@ -742,6 +541,7 @@ light_factors forward_brdf	(
 			),
 			400000000000.f/fresnel_factor
 		);
+#endif
 
 	result.specular				=
 		light_dot_normal > 0.f
@@ -752,9 +552,6 @@ light_factors forward_brdf	(
 		:
 			0.f;
 
-	//	A statement of its own, after the specular: the blobs schedule this max
-	//	twenty instructions past the multiply that feeds it, which is where
-	//	brdf()'s wrapper - not szirmay_kalos_brdf() - would have put it.
 	result.diffuse				= max( result.diffuse, 0.f );
 
 	return						result;
@@ -780,14 +577,26 @@ light_factors forward_point_light	(
 	float distance				= sqrt( square_distance );
 	light_direction				/= distance;
 
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float3 view_offset			= -surface_position;
+	result						= forward_brdf( light_direction, view_offset, surface_normal, surface_roughness, fresnel_at_0_degree );
+#else
 	float3 view_direction		= normalize( -surface_position );
-
 	result						= forward_brdf( light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
+#endif
 
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float radial_attenuation = forward_attenuation_saturate( square_distance/square(light_range) );
+	float attenuation			= pow(
+		max( abs(1.f - radial_attenuation), 0.001f ),
+		light_attenuation_power
+	);
+#else
 	float attenuation			= pow(
 		max( abs(1.f - saturate( square_distance/square(light_range) )), 0.001f ),
 		light_attenuation_power
 	);
+#endif
 
 	result.diffuse				*= attenuation;
 	result.specular				*= attenuation;
@@ -831,21 +640,32 @@ light_factors forward_parallel_light	(
 		float fresnel_at_0_degree
 	)
 {
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float3 view_offset			= eye_position_view_space - surface_position;
+	return						forward_brdf( -light_direction, view_offset, surface_normal, surface_roughness, fresnel_at_0_degree );
+#else
 	float3 view_direction		= normalize( eye_position_view_space - surface_position );
 	return						forward_brdf( -light_direction, view_direction, surface_normal, surface_roughness, fresnel_at_0_degree );
+#endif
 }
 
-//	common_functions.h's PACK_LIGHTING_COLOR, from the build-816 SDBG source.
-//	Guarded so this file works whether or not the shared header carries it yet.
-#ifndef PACK_LIGHTING_COLOR
-#	define MAX_LIGHTING_COLOR		8.0f
-#	define PACK_LIGHTING_COLOR(c)	pow( saturate( ( c ) / MAX_LIGHTING_COLOR ), 0.5f)
-#endif
+// Float intermediates preserve fxc scheduling.
+#if FORWARD_RETAINED_RANGE_CLAMPS
+light_accumulator forward_light_accumulator( float3 light_color, float2 light_factors )
+{
+	light_accumulator result;
+	float3 linear_light_color = convert_to_linear_space( light_color )*light_intensity;
+	float2 nonnegative_light_factors = max( light_factors, 0.f );
 
-//	light_ps_helper.h's get_light_accumulator, kept LOCAL and kept in `float`.
-//	The shared header now carries the same body typed in `half`, and calling it
-//	instead measures 565 -> 556 on the full 600 - see the note at the top of
-//	this file: `half` is not a transparent alias for `float` in fxc 9.29.
+	result.diffuse		= float4( ( linear_light_color * nonnegative_light_factors.x * light_diffuse_influence_factor ) / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0.f );
+	result.specular		= float4( ( linear_light_color * nonnegative_light_factors.y * light_specular_influence_factor) / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0.f );
+
+	result.diffuse		= PACK_LIGHTING_COLOR( result.diffuse );
+	result.specular		= PACK_LIGHTING_COLOR( result.specular );
+
+	return	result;
+}
+#else
 light_accumulator forward_light_accumulator( float3 light_color, light_factors light_factors )
 {
 	light_accumulator result;
@@ -858,6 +678,7 @@ light_accumulator forward_light_accumulator( float3 light_color, light_factors l
 
 	return	result;
 }
+#endif
 
 //	The same Schlick term the BRDF computes, recomputed in main against the
 //	light's own position - only the alpha uses it, and only at 1e-6.  The max
@@ -872,17 +693,24 @@ float get_fresnel_factor( float3 surface_position, float3 light_position, float 
 	return	f0 + (1.f - f0)*pow( 1.f - view_dot_halfway_plus, 5.f );
 }
 
-//	psf_normal.h's psf_tnormal, sampled through s_anisotropic - every normal
-//	sample in the blobs uses it.  Both normalizes are real: with the null input
-//	type's identity basis fxc folds them into one, with any other basis the
-//	blobs show two.
+// This pass samples tangent-space normals through s_anisotropic.
 float3 forward_tnormal( Texture2D _t_normal, float3x3 tangent_trans, float2 tc, float3 multiplier)
 {
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float4 unpacked_normal;
+	unpacked_normal.xy = mad( _t_normal.Sample( s_anisotropic, tc).wy, 2.f, -1.f );
+	unpacked_normal.z  = sqrt( max( 1.0f - dot(unpacked_normal.xy, unpacked_normal.xy), 0.f));
+	unpacked_normal.w  = -unpacked_normal.y;
+	float3 reordered_normal = unpacked_normal.xzw;
+	float inverse_normal_length = rsqrt( dot( reordered_normal, reordered_normal ) );
+	float3 normal = reordered_normal.xzy*inverse_normal_length;
+#else
 	float3 normal;
 	normal.xy = _t_normal.Sample( s_anisotropic, tc).wy * 2.f - 1.f;
 	normal.z  = sqrt( max( 1.0f - dot(normal.xy, normal.xy), 0.f));
 	normal.y  = -normal.y;
 	normal 	  = normalize(normal);
+#endif
 	normal 	  = mul( tangent_trans, normal * multiplier);
 	return normalize( normal);
 }
@@ -922,7 +750,11 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 
 	float 	smoothness			= 	specular_fresnel_roughness_parameters.z;
 	if( CONFIG_TROUGHNESS)
+#if FORWARD_RETAINED_RANGE_CLAMPS
+		smoothness				=	mad( specular_fresnel_roughness_parameters.w, t_roughness.Sample( s_base, tc ).x, smoothness );
+#else
 		smoothness				+=	specular_fresnel_roughness_parameters.w*t_roughness.Sample( s_base, tc ).x;
+#endif
 
 	//	Handed to the BRDF as 1 - smoothness, which the BRDF inverts again; see
 	//	the note there.  The .w term is the texture's contribution range.
@@ -931,7 +763,11 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 
 	float3 final_color 			= (0.0f).xxx;
 
+#if FORWARD_RETAINED_RANGE_CLAMPS
+	float2 light = 0.f;
+#else
 	light_factors light = (light_factors)0;
+#endif
 	float shadow = 1.f;
 
 	//	An if/else chain, not a switch: the blobs hold if_z/ieq/if_nz, and a
@@ -939,18 +775,36 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 	//	three of the seven light types have arms at ship, and only the parallel
 	//	one is shadowed.
 	if ( light_type == LIGHT_TYPE_POINT)
+	{
+#if FORWARD_RETAINED_RANGE_CLAMPS
+		light_factors factors = forward_point_light( position, normal, light_position, roughness, fresnel_at_0_degree);
+		light = float2( factors.diffuse, factors.specular );
+#else
 		light = forward_point_light( position, normal, light_position, roughness, fresnel_at_0_degree);
+#endif
+	}
 	else if ( light_type == LIGHT_TYPE_SPOT)
+	{
+#if FORWARD_RETAINED_RANGE_CLAMPS
+		light_factors factors = forward_spot_light( position, normal, light_position, light_direction, roughness, fresnel_at_0_degree);
+		light = float2( factors.diffuse, factors.specular );
+#else
 		light = forward_spot_light( position, normal, light_position, light_direction, roughness, fresnel_at_0_degree);
+#endif
+	}
 	else if ( light_type == LIGHT_TYPE_PARALLEL)
 	{
+#if FORWARD_RETAINED_RANGE_CLAMPS
+		light_factors factors = forward_parallel_light( position, normal, roughness, fresnel_at_0_degree);
+		light = float2( factors.diffuse, factors.specular );
+#else
 		light = forward_parallel_light( position, normal, roughness, fresnel_at_0_degree);
+#endif
 		//	12/768 of a texel along the normal; shadow_map_size is unreferenced
 		//	in every blob, so the offset is a literal.
 		shadow = get_cascaded_shadow_factor( position + normal*0.015625f );
 	}
-
-	light_accumulator accumulator = forward_light_accumulator( light_color, light );
+	light_accumulator accumulator = forward_light_accumulator( light_color.rgb, light );
 
 	//	The shadow multiplies the two material colours, after the packing - the
 	//	packing is non-linear, so this is not the same as shadowing the light.

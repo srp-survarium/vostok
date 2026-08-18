@@ -1,12 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob
-//	(shaders/sm_4_0/present_2rt.ps, plain permutation) - the file was
-//	absent from the recovered source drop. Identical body to present.ps,
-//	but the output struct declares a second render target that is never
-//	written: the shipped OSGN carries SV_Target1 with no components used
-//	and the instruction stream writes o0 only.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common_samplers.h"
 
 struct p_present

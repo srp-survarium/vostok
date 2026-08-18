@@ -3,38 +3,6 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 18.08.2026
-//	Ground truth	: the two shipped permutations of
-//					  shaders/sm_4_0/capsule_light_accumulator.ps, disassembled
-//					  with fxc /dumpbin /Fc.
-//	Acceptance		: python3 -m vostok.shaders roundtrip capsule_light_accumulator.ps
-//
-//	STATE: 2 of 2 permutations byte-identical.
-//
-//	The point accumulator with the light's position pulled to the nearest
-//	point on a capsule, and no shadow at all.  The core below is
-//	point_light_accumulator.ps's verbatim, and the shared-header findings this
-//	family proves are listed in that file's header.  This file's own:
-//
-//	  * capsule_light.h's nearest_point_on_capsule is ship-exact and is used
-//	    from the header, including the two "optional" lines that push the
-//	    surface back out to light_capsule_radius + 0.001 - the blobs hold both
-//	    the rsq and the sqrt off the one dot product, which is that
-//	    normalize()/length() pair;
-//	  * capsule_light() never calls a shadow function, so the shadow helpers
-//	    below are carried only to keep this file the family's core plus a
-//	    delta; fxc drops them, and no blob binds shadowmap_texture or
-//	    s_shmap_local.
-//
-//	Axis status:
-//
-//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
-//	                                  geometric term.
-//	  CONFIG_SHADOWED_LIGHT            ships only as 0 for this name, and the
-//	                                  light has no shadow arm to reach, so the
-//	                                  define is dead here and unconstrained.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

@@ -3,13 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18.  The shipped blob is a bare fullscreen
-//	passthrough: its ISGN is POSITION/TEXCOORD only (no COLOR) and the
-//	position is copied unmodified, so the screen_res half-pixel fixup the
-//	recovered revision applied was gone by ship.  Same DXBC as the shipped
-//	rain_resolve.vs / post_process_fxaa.vs passthrough.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 
 struct vertex_input_struct

@@ -3,16 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstruction note (2026-08-17): rewritten from the 120 shipped blobs'
-//	disassembly. The material_parameters cbuffer comes from the ship
-//	common_cbuffers.h layout; the vertex-input section is local because the
-//	recovered vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently than
-//	ship (ship: 0=null, 1/2=static, 3..6=skeleton 4/3/2/1 bones, 7=particle,
-//	8=particle subuv, 9=beamtrail, 10=decal, 11=grassmesh, 12=postprocess,
-//	13=wires, 14=user) and several ship vertex-output structs (null, static,
-//	skeleton, grassmesh, user) differ from the recovered per-type headers.
-//	Structs below reproduce the shipped input signatures exactly.
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_EMISSIVE,

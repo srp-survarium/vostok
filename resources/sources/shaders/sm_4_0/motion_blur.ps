@@ -1,88 +1,11 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/motion_blur.ps, GLOBAL_POST_PROCESS_QUALITY 0 and 3) -
-//	absent from the recovered source drop. Byte-identity is the acceptance
-//	test: python3 -m vostok.shaders roundtrip motion_blur.ps
-//
-//	Per-pixel velocity is the object motion-vector target where it is set and
-//	the camera reprojection (this frame's view position through last frame's
-//	view matrix) everywhere else; the streak is a fixed number of taps along
-//	it, each tap snapped back to the centre when it would drag a nearer
-//	surface over this one.
-//
-//	PARKED, both permutations, on ONE artefact: fxc packs the per-tap offset
-//	constants into a different component rotation than ship. Ship writes
-//	l(0.0135, -0.0675, -0.0405, -0.0135) and reads .yyzz/.wwxx; every source
-//	shape tried here emits l(-0.0675, -0.0405, -0.0135, 0.0135) read as
-//	.xxyy/.zzww - same taps, same order, same arithmetic. At quality 3 the
-//	same artefact also pairs ship's tap 2 with tap 5 (and costs two temps:
-//	dcl_temps 9 vs 7). Everything else is byte-identical: RDEF, ISGN, OSGN,
-//	both blob sizes, and at quality 0 the STAT chunk as well.
-//	Tried: loop from 0/1/-N2, offset as (i-N*0.5)*step, (i-0.5)*step,
-//	i*step-half, a running `offset +=` accumulator, offset as its own
-//	statement, (step*scale) folded before or after the index, [unroll] vs
-//	[unroll(N)], and moving the result/alpha declarations across the block.
-//
-//	2026-08-18.  The rotation is EXACTLY one lane: ship's vector is ours
-//	rotated right by one.  Ours packs the four vectorised taps in evaluation
-//	order (i0,i1,i2,i3 into x,y,z,w) and reads .xxyy/.zzww; ship packs
-//	(i3,i0,i1,i2) and reads .yyzz/.wwxx - the same pairs, the same execution
-//	order (the sample sequence in both listings is i0,i1,i2,i3 then the scalar
-//	i4 as `mul r0.w, cb0[6].x, l(0.040500)`), only the base lane differs.  So
-//	fxc's literal-vector lane cursor started at .y in ship's compile and wraps
-//	to .x for the fourth value; it is register/lane allocation, not arithmetic.
-//	Four further algebraic spellings of the tap offset were measured and every
-//	one packs (i0,i1,i2,i3) into x,y,z,w:
-//	  ((i*2.f - N)*(STEP*0.5f)*scale)*velocity + I.tc
-//	  ((i - N*0.5f)*(STEP*scale))*velocity + I.tc
-//	  (STEP*0.5f*(i*2.f - N)*scale)*velocity + I.tc
-//	  velocity*((i - N*0.5f)*STEP*scale) + I.tc
-//	and four statement-placement moves (result hoisted to the top of main,
-//	scaled/alpha sunk below the loop, object_motion/has_object hoisted above
-//	the eye ray, an extra named velocity copy) all leave both the packing and
-//	the SHDR size unchanged.  Since the campaign's rule is that allocation
-//	follows statement placement, the lever - if there is one - is upstream of
-//	the loop, and the four moves above are the obvious ones already spent.
-//
-//	2026-08-18, SECOND PASS - the quality-3 blob explains the shape, and it
-//	is not arithmetic. Ship's Q3 taps are grouped
-//	   vector 1  l(0.010000, -0.090000, -0.070000, -0.050000) = (i5,i0,i1,i2)
-//	             .yyzz -> taps 0,1     .wwxx -> taps 2,5
-//	   vector 2  l(-0.030000, -0.010000, 0.030000, 0.050000)  = (i3,i4,i6,i7)
-//	             .xxyy -> taps 3,4     .zzww -> taps 6,7
-//	   scalar    0.070000 = i8
-//	so ship pairs tap 2 with tap 5 and carries i5 in the first vector, with
-//	dcl_temps 9 against our 7. Ours groups strictly sequentially,
-//	(0,1)(2,3)(4,5)(6,7). That is a *scheduling* difference driven by register
-//	pressure - ship holds two more values live - not a different expression.
-//
-//	At Q0 the pairs are the same as ours, (0,1) and (2,3), and only the lane
-//	rotation differs, so Q0 is pure immediate-lane allocation.
-//
-//	Measured this pass: a descending loop emits
-//	l(0.040500, 0.013500, -0.013500, -0.040500) read .xxyy/.zzww - i.e. the
-//	lanes fill in the loop's own execution order and the last tap becomes the
-//	scalar. So lane order tracks execution order, and ship's (i3,i0,i1,i2)
-//	against an execution order of i0,i1,i2,i3 cannot be produced that way:
-//	ship's cursor started at lane y and wrapped. Also tried, all leaving the
-//	packing and the slot count unchanged: a uint loop counter, a 1..N loop
-//	with the index shifted by one, and precomputing every tap coordinate into
-//	a float2 array in its own [unroll] loop ahead of the sampling loop (the
-//	shape that closed forward_simple_water.ps) - fxc canonicalises it away and
-//	still emits dcl_temps 7.
-//
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 #include "gamma_correction.h"
 
 #if GLOBAL_POST_PROCESS_QUALITY == 0
 #	define	MOTION_BLUR_SAMPLES		5
-#	define	MOTION_BLUR_STEP		0.027f
 #else
 #	define	MOTION_BLUR_SAMPLES		9
-#	define	MOTION_BLUR_STEP		0.02f
 #endif
 
 uniform float4x4	prev_view_matrix_parameter;
@@ -137,10 +60,34 @@ float4 	main	( v2p_motion_blur I ) : SV_TARGET
 
 	float3	result				= 0;
 
+	// Keep this lane order; an equivalent index formula changes fxc packing.
+#if GLOBAL_POST_PROCESS_QUALITY == 0
+	float4	tap_offsets0		= float4( 0.0135f, -0.0675f, -0.0405f, -0.0135f)*motion_blur_scale_parameter;
+#else
+	float4	tap_offsets0		= float4( 0.01f, -0.09f, -0.07f, -0.05f)*motion_blur_scale_parameter;
+	float4	tap_offsets1		= float4( -0.03f, -0.01f, 0.03f, 0.05f)*motion_blur_scale_parameter;
+#endif
+
 	[unroll]
 	for ( int i = 0; i < MOTION_BLUR_SAMPLES; i++)
 	{
-		float2	tap			= ( ( i - MOTION_BLUR_SAMPLES*0.5f)*MOTION_BLUR_STEP*motion_blur_scale_parameter)*velocity + I.tc;
+		float	tap_offset;
+#if GLOBAL_POST_PROCESS_QUALITY == 0
+		tap_offset			= i == 0 ? tap_offsets0.y :
+							  i == 1 ? tap_offsets0.z :
+							  i == 2 ? tap_offsets0.w :
+							  i == 3 ? tap_offsets0.x : 0.0405f*motion_blur_scale_parameter;
+#else
+		tap_offset			= i == 0 ? tap_offsets0.y :
+							  i == 1 ? tap_offsets0.z :
+							  i == 2 ? tap_offsets0.w :
+							  i == 3 ? tap_offsets1.x :
+							  i == 4 ? tap_offsets1.y :
+							  i == 5 ? tap_offsets0.x :
+							  i == 6 ? tap_offsets1.z :
+							  i == 7 ? tap_offsets1.w : 0.07f*motion_blur_scale_parameter;
+#endif
+		float2	tap			= tap_offset*velocity + I.tc;
 		float	tap_depth	= t_position.SampleLevel( s_position, tap, 0).x;
 
 		float	inside		= ( tap_depth < position.w && has_object == false && tap_depth < position.z) ? 1.f : 0.f;

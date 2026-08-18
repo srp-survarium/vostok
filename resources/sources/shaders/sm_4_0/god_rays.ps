@@ -3,14 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) Vostok Games - 2012
 ////////////////////////////////////////////////////////////////////////////
-//	Ship source, verbatim out of build 816's /Zi blob (the only seven blobs in
-//	the v0.1 line carrying an SDBG chunk), back-dated to 802 by the five edits
-//	marked "802:" below - this is the one file of the seven whose source really
-//	did move in those five days.  816 grew a second additive lobe, a 0.7
-//	horizontal squeeze and a clamped falloff, and dropped the 5x gain.
-//	See vostok/docs/shaders.md, "Ship source, verbatim".
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 */
 
@@ -110,7 +102,6 @@ half4 main(vertex_output_struct input) : SV_TARGET
 	return half4( PACK_LIGHTING_COLOR( final_color * 5.0h ), 0.0h);
 	
 }
-
 
 
 

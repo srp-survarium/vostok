@@ -1,36 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/resolve_lighting.ps, both permutations) - absent from
-//	the recovered source drop.  Byte-identity is the acceptance test:
-//	python3 -m vostok.shaders roundtrip resolve_lighting.ps
-//
-//	The deferred resolve: it reads the g-buffer, both light accumulators and
-//	(at the high lighting quality) the LPV, and combines them into the scene
-//	colour.  Everything it does is the *inverse* of a packing this tree has
-//	already proven from the other side:
-//	  * the accumulators are stored as 1/rsqrt( saturate( colour*0.125)) -
-//	    see skylight.ps - so decoding is saturate(x)*saturate(x)*8;
-//	  * the translucency is gbuffer_pass.ps's five bits, three of them in
-//	    the normal target's .z above bit 7 and two in its .w;
-//	  * the diffuse target's .w is seven bits of Fresnel with bit 7 set iff
-//	    the surface is translucent - and this pass reads both halves: the
-//	    high bit forces translucency to 1, and the low seven decide whether
-//	    the specular takes the surface's own hue or stays white.
-//
-//	==== axis status ======================================================
-//
-//	GLOBAL_LIGHTING_QUALITY is the only define in the permutation strings;
-//	0 and 3 ship.  At 3 the diffuse accumulation is topped up from
-//	t_lpv_accumulation, weighted by how far it is from saturating, and
-//	s_linear joins the sampler table ahead of s_position - which is why every
-//	sampler slot in that blob is one higher than in the other.
-//	Byte-proven: 2 identical, 0 differ.
-//
-//	Two spellings are load-bearing: the input's SV_POSITION is capitalised in
-//	both shipped signatures, and the two `1.f/rsqrt(...)` forms are rsq+div
-//	in the blobs where a sqrt() would have been a single sqrt.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_LIGHTING_QUALITY,
 */

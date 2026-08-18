@@ -3,38 +3,6 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 18.08.2026
-//	Ground truth	: the four shipped permutations of
-//					  shaders/sm_4_0/plane_spot_light_accumulator.ps, disassembled
-//					  with fxc /dumpbin /Fc.
-//	Acceptance		: python3 -m vostok.shaders roundtrip plane_spot_light_accumulator.ps
-//
-//	STATE: 4 of 4 permutations byte-identical.
-//
-//	The spot accumulator with the light's position pulled to the nearest point
-//	on an oriented rectangle - the obb clamp with the y segment collapsed to
-//	zero.  The core below is point_light_accumulator.ps's verbatim and the
-//	cone factor is spot_light_accumulator.ps's; the shared-header findings
-//	this family proves are listed in the former's header.  This file's own:
-//
-//	  * plane_spot_light.h's nearest_point_on_plane is ship-exact and is used
-//	    from the header;
-//	  * the cone axis is not the light_direction uniform - it is
-//	    normalize( mul( float4(0, -1, 0, 0), light_local_to_world ).xyz ), and
-//	    the blobs record light_direction at $Globals offset 208 as [unused],
-//	    which is what proves it;
-//	  * light_local_to_world is declared between the two includes, putting it
-//	    at $Globals offset 48 and pushing brdf.h's lighting_model to 112;
-//	  * the shadow is taken at surface.position with no normal offset, and
-//	    ship keeps the `result.diffuse >= 0.f ? shadow_factor.x : 1.f` test.
-//
-//	Axis status:
-//
-//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
-//	                                  geometric term.
-//	  CONFIG_SHADOWED_LIGHT (0, 1)    both identical.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

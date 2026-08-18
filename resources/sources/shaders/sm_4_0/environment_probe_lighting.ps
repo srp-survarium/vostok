@@ -1,94 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the 32 shipped permutations of
-//					  shaders/sm_4_0/environment_probe_lighting.ps,
-//					  disassembled with fxc /dumpbin /Fc.  No source for this
-//					  name arrived with the drop; forward_probe_lighting.ps
-//					  (300/300 byte-identical, same day) is its forward twin
-//					  and shares the probe cube read, the roughness-driven mip
-//					  pair and the exp( -2*d^8 ) range falloff.
-//	Acceptance		: python3 -m vostok.shaders roundtrip environment_probe_lighting.ps
-////////////////////////////////////////////////////////////////////////////
-//
-//	The deferred environment-probe pass: one probe, one draw, two accumulator
-//	targets (diffuse SV_Target0, specular SV_Target1) whose w carries the
-//	probe's own falloff.  Everything is read out of the g-buffer: linear depth
-//	off t_position, the Lambert-azimuthal normal off t_normal, the surface's
-//	gloss code out of the normal target's .z and its specular-intensity code
-//	out of the diffuse target's .w - both 7-bit fields over 127.
-//
-//	STATE: 32 of 32 permutations byte-identical (18.08.2026).
-//
-//	Axis status:
-//
-//	  GLOBAL_SHADING_QUALITY (0, 3)      DEAD.  Every pair of blobs that
-//	                                     differs only in it is byte-identical;
-//	                                     the define is not read.
-//	  GLOBAL_LIGHTING_QUALITY (0, 3)     the one live quality axis.  At 3 the
-//	                                     single diffuse tap becomes an eight-
-//	                                     direction cone gather and the closed-
-//	                                     form specular becomes the full
-//	                                     forward_probe_lighting Beckmann with a
-//	                                     Cook-Torrance geometry term on top.
-//	                                     273 slots against 144.
-//	  CONFIG_ENV_PROBE_GEOMETRY_TYPE     0 sphere, 1 box.  A box probe that
-//	                                     neither shadows nor clips drops the
-//	                                     dynamic_transforms and
-//	                                     positional_lights_constants cbuffers
-//	                                     entirely and uses world_to_probe.
-//	  CONFIG_ENV_PROBE_WITH_SHADOWS      1 adds t_probe_cubemap_depth, bound
-//	                                     between t_probe_cubemap and
-//	                                     t_ssao_accumulator, and brings the
-//	                                     probe centre back for a box probe.
-//	  CONFIG_ENV_PROBE_CLIP_BY_NORMAL    1 multiplies the falloff by
-//	                                     saturate( dot( to_probe, n ) + 0.75 ).
-//	  GLOBAL_USE_SCREENSPACE_REFLECTIONS_MASK, CONFIG_SHADOWED_LIGHT
-//	                                     ship only as 0; unconstrained.
-//
-//	==== the four things that were wrong, and how each was found ==========
-//
-//	1. THE ROUNDED CONSTANTS.  fxc's own listing prints every literal with
-//	   "%.6f", so `l(0.007874)` and `l(0.003333)` look settled and are not.
-//	   Five of this file's constants had to come out of the DXBC as raw float
-//	   bits (a word-level diff of ship against our compile, not a listing
-//	   diff, is the only thing that shows them):
-//	     0x3C010204  1.f/127.f         - NOT the literal 0.007874f
-//	     0x3BF6E7B0  1.f/(127.f*1.045f)- NOT 0.007535f.  The 1.045 keeps
-//	                                     specular_gloss off zero, which the
-//	                                     1/(specular_gloss*22) below divides by
-//	     0x37800080  1.f/65535.f       - NOT 0.000015f
-//	     0x3B5A740E  1.f/300.f         - NOT 0.003333f
-//	     0x3DE38E39  1.f/9.f           - the cone gather's average
-//	   `(1.f/127.f)*v` never reproduces the second one for any v; it has to be
-//	   spelled as a DIVISION, because fxc folds `A/B` and `A*(1/B)` to
-//	   different float32s.  point_light_accumulator.ps already recorded the
-//	   /127.f half of this.
-//
-//	2. THE MIP PRODUCT.  Given a named `gloss_attenuation` variable, fxc
-//	   reassociates `((1-m)*4)*gloss_attenuation*8` into a single `*32` and
-//	   drops one instruction.  Writing the view term INLINE into the product -
-//	   `roughness_mip*pow( saturate( view_dot_normal ), 0.2f )`, roughness
-//	   first, exactly forward_probe_lighting.ps's shape - stops the sinking and
-//	   restores ship's separate `mul r, r, l(4.000000)`.  See the comment at
-//	   the statement itself; nothing else moved it (barriers of every kind are
-//	   proved away, statement placement does not matter, and `precise` blocks
-//	   the fold only by poisoning half the shader).
-//
-//	3. THE FALLOFF ORDER.  The normal clip is applied BEFORE the depth-cube
-//	   shadow, and the two products take opposite operand orders.
-//
-//	4. THE LIGHTING_QUALITY=3 ARM, which had never been written.
-//
-//	Everything else matches the shipped listings instruction for instruction:
-//	the eye-ray prologue, both g-buffer reads (depth through s_position, the
-//	Lambert-azimuthal normal through s_normal, the gloss code through
-//	s_accumulator and the specular-intensity code through s_diffuse), the
-//	Schlick fresnel, the diffuse output and its 1/rsqrt packing, the range
-//	falloff, the box falloff, the depth-cube shadow, the normal clip, the
-//	roughness-blended reflection direction and the whole specular tail.
-//
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		GLOBAL_LIGHTING_QUALITY,
@@ -304,15 +213,8 @@ environment_probe_output main( pixel_shader_input input )
 	if ( dot( direction, world_normal ) < 0.f )
 		specular_factor			= 1.f;
 
-	//	The view term is spelled INLINE here, and roughness first - exactly the
-	//	shape forward_probe_lighting.ps carries ( `(surface_roughness*saturate(
-	//	view_dot_normal ))*scale` ).  It is load-bearing.  With a NAMED
-	//	`gloss_attenuation` variable instead, fxc reassociates
-	//	`((1-m)*4)*gloss_attenuation*8` into one `*32` and this file comes out
-	//	28 bytes - one `mul r, r, l(4.000000)` - short of every shipped blob.
-	//	Swapping the two factors costs byte-identity too:
-	//	`pow(...)*roughness_mip` emits `mul r1.y, r1.y, r1.w` where ship has
-	//	`mul r1.y, r1.w, r1.y`.
+	// Keep this expression inline and roughness-first; naming or swapping its
+	// factors changes fxc reassociation and operand order.
 	float	mip					= roughness_mip*pow( saturate( view_dot_normal ), 0.2f );
 
 	float3	upper				= sample_probe( direction, trunc( mip*8.f + 1.f ) );

@@ -3,58 +3,6 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the four shipped permutations of
-//					  shaders/sm_4_0/sun.ps, disassembled with
-//					  fxc /dumpbin /Fc.  Absent from the source drop.
-//					  forward_lighting.ps (563/600) is the crib for the BRDF
-//					  and the cascade atlas; skylight.ps for the deferred
-//					  eye-ray read and the accumulator packing.
-//	Acceptance		: python3 -m vostok.shaders roundtrip sun.ps
-////////////////////////////////////////////////////////////////////////////
-//
-//	The deferred sun: one full-screen pass, the scene's only shadowed
-//	directional light, writing three targets -
-//
-//	  SV_Target0  diffuse accumulator, packed 1/rsqrt(saturate(c*0.125))
-//	  SV_Target1  specular accumulator, same packing
-//	  SV_Target2  x = the cascade's own filtered depth, y = the shadow factor
-//
-//	Status by axis:
-//	  GLOBAL_SHADING_QUALITY                 0 and 3 ship
-//	  GLOBAL_USE_POISSON_DISC_SHADOW_FILTER  0 and 3 ship
-//
-//	Byte-identical across all four permutations 2026-08-18.  Everything that
-//	closed it was placement or grouping - not one operator changed meaning:
-//
-//	  * the depth fetch sits BETWEEN the eye ray's corner multiply and its
-//	    /s_eye_ray_corner.z divide.  Written either side of the whole eye-ray
-//	    block, fxc emits the divide before the sample and inverts the
-//	    position multiply's operands (lpv_downsample_gbuffer.ps needed the
-//	    same statement in the same place);
-//	  * main computes the FIRST cascade's homogeneous projection itself -
-//	    `float4 tc0 = mul( m_shadow0, ... )` - and passes it in; the divide
-//	    stays inside get_cascaded_shadow_factor.  fxc emits statement groups
-//	    in source order, so with the whole projection inside the callee the
-//	    four dp4s land after the light-colour block instead of before it, and
-//	    with project_shadow's divide in main the divide lands next to them
-//	    instead of after.  forward_lighting.ps spells its four cascades the
-//	    same way, mul then divide as separate statements;
-//	  * then height, then rotation_seed, then the light colour: those four
-//	    groups are independent and fxc emits them in exactly source order;
-//	  * the accumulator is two named colours before the two 1/rsqrt packings,
-//	    not two self-contained packing expressions - written the latter way
-//	    fxc finishes the diffuse pack before starting the specular multiply;
-//	  * `view_dot_normal` is declared in its own `#if` above normal_dot_light,
-//	    not inside the quality-3 attenuation block;
-//	  * the Poisson filter accumulates into two scalars and divides each by
-//	    tap_count separately - a float2 accumulator emits one vectorised mul
-//	    where ship has two scalar ones (exactly 32 bytes) - and each tap is
-//	    fetched into named locals with BOTH samples issued before either
-//	    accumulate, the comparison accumulated first.
-//
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		GLOBAL_USE_POISSON_DISC_SHADOW_FILTER,
@@ -68,17 +16,8 @@
 #include "light_ps_helper.h"
 #include "common_iostructs.h"
 
-//	HEADER FINDING - shadow.h.  The shipped dependency table lists shadow.h
-//	right after common_iostructs.h, and the members it contributes to $Globals
-//	are, in order: m_shadow0..3 at 64/128/192/256, world_to_cloud at 320,
-//	sun_fixed_matrix at 384, inverted_view_projection_matrix at 448,
-//	s_eye_ray_corner (a float3!) at 512, clouds_offset at 528 and
-//	cloud_interp_alpha at 540.  The recovered shadow.h has none of them - it
-//	declares cascade_shadow_map_size and a pile of t_shmap* textures instead -
-//	so including it puts a float where the first matrix belongs.  Until
-//	shadow.h carries ship's revision these live here; s_shmap and the atlas
-//	come with them.  (skylight.ps declares s_eye_ray_corner as a float4 for
-//	its own TU; here the blob says float3.)
+// Keep these globals local and in this order; shadow.h has a different layout.
+// s_eye_ray_corner is float3 in this stage.
 float4x4	m_shadow0;
 float4x4	m_shadow1;
 float4x4	m_shadow2;
@@ -91,7 +30,7 @@ float3		clouds_offset;
 float		cloud_interp_alpha;
 
 Texture2D				t_cascaded_shadow_map;
-//	s_shmap comes from common_samplers.h, which ship declares it in.
+// s_shmap comes from common_samplers.h.
 
 #include "gamma_correction.h"
 

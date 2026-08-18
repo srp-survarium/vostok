@@ -3,15 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 to the shipped v0.100b revision
-//	(shaders/sm_4_0/system_line.ps, plain permutation); byte-identical.
-//	Two drifts from the recovered snapshot: the local
-//	"uniform float2 screen_res" is gone at ship (the blob binds
-//	static_globals' float4 screen_res, cb0[18].xy), and the pattern loop is
-//	unrolled in the plain permutation, so ship wrote [unroll] directly
-//	rather than the GLOBAL_USE_LOOP_UNROLLING-gated UNROLL macro.
-////////////////////////////////////////////////////////////////////////////
-
 /*
 	$DEFINES$:
 		GLOBAL_USE_LOOP_UNROLLING,
@@ -64,7 +55,6 @@ float4 main( v2p_TL0uv_SL vin) : SV_TARGET
 	
 	return vin.Color;
 }
-
 
 
 

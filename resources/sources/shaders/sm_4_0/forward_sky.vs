@@ -3,34 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17: all 15 blobs shipped under this name are
-//	byte-identical to the vertex_base.vs blob carrying the same seven
-//	masked defines, so the source is vertex_base.vs under this name - the
-//	same relation aberration.vs has to post_process_fxaa.vs. It ships one
-//	permutation per CONFIG_VERTEX_INPUT_TYPE, every one at
-//	CONFIG_LOD_INDEX==0 and CONFIG_WIND_MOTION==0, which is why its shipped
-//	include closure is vertex_base.vs's minus
-//	static_mesh_vertex_input_lod_1.h - the only difference between the two.
-//	The effect that compiles it is effect_fstage_sky_materials, pairing it
-//	with forward_sky.ps.
-//	Acceptance: python3 -m vostok.shaders roundtrip forward_sky.vs
-//
-//	The recovered vertex_base.vs was a thin wrapper over vertex_input.h, but the
-//	per-type headers behind it are a later drift: the shipped
-//	CONFIG_VERTEX_INPUT_TYPE numbering is the engine's
-//	enum_vertex_input_type (sources/vostok/render/facade/
-//	vertex_input_type.h) - 0 null, 1 static, 2 static colored,
-//	3..6 skeletal with 4..1 bones, 7 particle, 8 particle subuv,
-//	9 beamtrail, 10 decal, 11 grassmesh, 12 post process, 13 wires,
-//	14 user - not the mapping in common_defines.h. The shipped structs,
-//	the LOD0 view-position path, the skeletal prev-frame bones, the
-//	0.00007125 static wind and the grassmesh sway exist in no recovered
-//	header, so this file is self-contained: it includes nothing and
-//	declares the ship cbuffer layouts itself (material_parameters here is
-//	the full 34-member ship layout, not the 3-member one in
-//	common_cbuffers.h).
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_WIND_MOTION,

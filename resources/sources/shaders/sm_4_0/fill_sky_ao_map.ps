@@ -3,46 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob
-//	(shaders/sm_4_0/fill_sky_ao_map.ps, one permutation) - absent from the
-//	recovered source drop.  Byte-identity is the acceptance test:
-//	python3 -m vostok.shaders roundtrip fill_sky_ao_map.ps
-//
-//	The write half of `object_sky_ambient_occlusion`.  The engine renders
-//	the level top-down into the g-buffer, then runs this fullscreen pass to
-//	turn that pass's linear depth into the 24-bit height map that
-//	sky_ambient_occlusion.ps marches: height = depth/512, biased by a
-//	millionth of whatever the map already held (t_sao_map_texture is the
-//	pass's own previous content, so successive fills accumulate a hair
-//	rather than clamping to a hard silhouette), saturated, scaled by
-//	255*255*255 and cut into three bytes.
-//
-//	Encode and decode disagree on their base, and that is ship truth, not a
-//	transcription error: this side splits the integer with >>8 / >>16
-//	(base 256) while sky_ambient_occlusion.ps recombines it with
-//	dot( rgb, float3( 255*255*255, 255*255, 255))/(255*255*255) (base 255).
-//
-//	==== constants recovered from the bytecode, not from the listing ======
-//
-//	The listing prints the bias as l(0.000001); out of the DXBC it is
-//	0x358637bd, the float nearest 1e-6, so it is the literal 0.000001f and
-//	not a reciprocal of anything.  1/512 is exact (0x3b000000) and so is the
-//	255*255*255 fold (0x4b7d02ff) and the 1/255 (0x3b808081).
-//
-//	The map's own texture is sampled through s_linear and the depth through
-//	s_position, which is what fixes the sampler slots at 0 and 1: slots
-//	follow common_samplers.h's declaration order over the USED samplers, and
-//	s_linear is declared ahead of s_position there.  t_position likewise
-//	precedes the locally declared t_sao_map_texture.
-//
-//	No cbuffer is bound: nothing in $Globals is referenced, and an entirely
-//	unreferenced cbuffer is the one thing fxc drops.  The shipped dependency
-//	table nevertheless names common.h and gbuffer.h (and, after gbuffer.h,
-//	gamma_correction.h and debug.h - see docs/shaders.md), so both are
-//	included here and the depth read goes through gbuffer.h's reader rather
-//	than a local tap.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 

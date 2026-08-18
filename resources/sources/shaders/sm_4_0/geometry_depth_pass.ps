@@ -3,50 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/geometry_depth_pass.ps, all 14 permutations) - absent
-//	from the recovered source drop.
-//
-//	==== axis status ======================================================
-//
-//	Seven defines appear in the shipped permutation strings; six are 0 in
-//	every one of them (GLOBAL_USE_VEGETATION_TRAMPLE, CONFIG_USE_BOUND_NORMALS,
-//	CONFIG_USE_UP_DIRECTIONAL_NORMALS, CONFIG_LOD_INDEX, CONFIG_WIND_MOTION,
-//	and CONFIG_USE_SUBUV except where it accompanies type 8), so nothing here
-//	is written against their other values.  The live axis is
-//	CONFIG_VERTEX_INPUT_TYPE: 0,1,2,3,4,5,6,7,8,9,10,11,13,14 ship - type 12
-//	(post process) does not.
-//
-//	==== what the pass writes =============================================
-//
-//	sqrt( view-space z * near_far_invn_invf.w) into SV_Target0.x, .yzw zero:
-//	the same square-root depth packing gbuffer.h's position target uses, so
-//	one shader's output and the g-buffer's agree bit for bit.
-//
-//	Where the view-space z comes from is a per-family table, byte-forced:
-//	static (1/2), skeleton (3..6) and grassmesh (11) carry an interpolated
-//	view-space position, and every other family multiplies the interpolated
-//	world position by row 2 of m_V - which is why static_globals appears in
-//	the RDEF of those eleven and not of the other three.
-//
-//	==== self-contained on purpose ========================================
-//
-//	The shipped blobs' dependency lists name common.h / material.h /
-//	vertex_input.h / static_mesh_vertex_input.h / wind.h / gbuffer.h
-//	revisions this tree does not have (the ship vertex_input.h dispatches
-//	CONFIG_VERTEX_INPUT_TYPE 0..14 as null / static / skeleton_{4,3,2,1}_bones
-//	/ particle / particle-subuv / beamtrail / decal / grassmesh / postprocess /
-//	wires / user, a different numbering from the recovered generation), so
-//	the structs, the two loose-global blocks the particle and grassmesh
-//	inputs contribute to $Globals, and near_far_invn_invf are declared here.
-//	Struct member semantics, indices and masks are ship-proven by the input
-//	signatures; names on interpolators this shader never reads are conjecture
-//	reconciled against depth_accumulate.ps, motion_vectors_accumulation.ps,
-//	fill_reflective_shadow_map_position.ps and gbuffer_pass.ps - between them
-//	the skeleton family's TEXCOORD3/4/5 are pinned as view position, previous
-//	position and world position respectively.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_USE_SUBUV,

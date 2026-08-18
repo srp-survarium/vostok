@@ -3,44 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/sky_ambient_occlusion.ps, both permutations) - absent
-//	from the recovered source drop.  Byte-identity is the acceptance test:
-//	python3 -m vostok.shaders roundtrip sky_ambient_occlusion.ps
-//
-//	The engine's `object_sky_ambient_occlusion` volume: a top-down height
-//	map of the level (t_sao_map_texture, 24 bits of height packed across
-//	rgb) is marched from the shaded point outwards along 16 fixed
-//	directions, four steps each, and every step that is not occluded adds
-//	one.  The 64 samples are averaged, raised to the fifth power, weighted
-//	by how far the surface faces up, and written through the light
-//	accumulator's 1/rsqrt(x*0.125) packing - the same packing skylight.ps
-//	writes and resolve_lighting.ps undoes.
-//
-//	==== axis status ======================================================
-//
-//	GLOBAL_SHADING_QUALITY 0 and 3 ship; CONFIG_SHADOWED_LIGHT is 0 in both.
-//	Neither reaches this stage - the two blobs are the same code.
-//	Byte-proven: 2 identical, 0 differ.
-//
-//	==== constants recovered from the bytecode, not from the listing ======
-//
-//	fxc's listing prints the height decode's scale as l(0.000000).  Pulled
-//	out of the DXBC it is 6.030862920169966e-08 - exactly 1/(255*255*255),
-//	the reciprocal of the dot product's own weights, so the map holds a
-//	24-bit fixed-point height in [0,1] and 150/512 world units is the range
-//	the comparison is normalised over.  The 16 directions are the same table
-//	ssao_accumulation.ps carries as random_tangle16, spelled identically.
-//
-//	Declared here rather than included: point_light.h and light_ps_helper.h
-//	at revisions this tree does not have contribute eleven dead globals
-//	ahead of this shader's own two, and fxc keeps every one of them, so the
-//	offsets (s_eye_ray_corner at 128, world_to_ao_map at 144) are what pins
-//	the order.  common.h and gbuffer.h ARE included - resolve_lighting.ps
-//	and skylight.ps prove that pair reproduces near_far_invn_invf at offset
-//	0 and the whole g-buffer read path byte for byte.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

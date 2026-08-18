@@ -3,15 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 against the shipped v0.100b blob
-//	(shaders/sm_4_0/lpv_inject_occluders_camera_view.vs, plain permutation).
-//	The recovered source had drifted: main accumulated a dead 4x4 loop of
-//	identical samples and divided by 16 (temps 6); the ship compile samples
-//	each downsampled g-buffer target once at screen_uv + screen_res.zw and
-//	uses the raw values (temps 2). Byte-identity is the acceptance test:
-//	python3 -m vostok.shaders roundtrip lpv_inject_occluders_camera_view.vs
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 

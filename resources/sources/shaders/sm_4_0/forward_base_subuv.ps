@@ -3,29 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstruction note (2026-08-17): rewritten from the 30 shipped blobs'
-//	disassembly. The tree revision this replaces was an older one - it named
-//	GLOBAL_USE_BRANCHING, declared far_fog_color_and_distance /
-//	near_fog_distance locally (both are material_parameters members at ship),
-//	and pulled its vertex-output struct from vertex_input.h, whose recovered
-//	CONFIG_VERTEX_INPUT_TYPE mapping is off by the ship one (ship: 0=null,
-//	1/2=static, 3..6=skeleton 4/3/2/1 bones, 7=particle, 8=particle subuv,
-//	9=beamtrail, 10=decal, 11=grassmesh, 12=postprocess, 13=wires, 14=user).
-//	The per-VIT block below is forward_base.ps's, which the roundtrip proves
-//	120/120, with the three corrections forward_base_fire_subuv.ps's blobs
-//	pin (see that file's header); this shader observes none of them - it
-//	never reads parameters.normal, and TEXCOORD0..3 are four float3s in
-//	either order - so all thirty permutations are byte-identical with or
-//	without them. They are shared verbatim because ship compiled both files
-//	against one vertex_input.h.
-//	gbuffer.h is included BEFORE the vertex-input section, not after it as in
-//	forward_base.ps: the shipped $Globals puts near_far_invn_invf at offset 0
-//	and the VIT 7/8 particle uniforms after it (perm
-//	___0_______________________2__10___8______00___0____________________0_____________).
-//	blend_subuv_sample is material.h's, unchanged: the VIT 8 blobs sample
-//	t_base twice, at v7.yz and v4.xy, and lerp by v7.x - exactly sub_uv.yz,
-//	tc and sub_uv.x for the particle-subuv struct.
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_EMISSIVE,

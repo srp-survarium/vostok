@@ -1,21 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob
-//	(shaders/sm_4_0/clouds.ps, plain permutation). The file this replaces
-//	was a drifted dev placeholder - a 692-byte-compile stub sampling a
-//	single Texture3D - not the shipped algorithm. Byte-identical to the
-//	shipped DXBC, proven by the acceptance test:
-//		python3 -m vostok.shaders roundtrip clouds.ps
-//
-//	The ship blob's dependency list names atmospheric_scattering_common.h
-//	(absent from the source drop) after common.h - the cloud globals and
-//	textures below presumably lived there. They are declared here instead;
-//	the roundtrip compares DXBC only, and shared headers stay untouched.
-//	The interpolants come from the ship clouds.vs (see its disasm): world
-//	position via m_W, object position, uv, and a TEXCOORD3 scalar the ship
-//	VS declares but never writes - the tree's clouds.vs is a different,
-//	drifted revision that feeds only TEXCOORD0.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 
 uniform float4x4	sphere_to_sky_matrix;

@@ -3,42 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/ambient_volume.ps, both permutations) - absent from the
-//	recovered source drop, though its vertex half was recovered.
-//
-//	The whole pass is one constant: an ambient volume is a box the artist
-//	draws to raise the ambient term inside it, and the accumulation target
-//	takes a flat multiplier over the volume's screen coverage.  Two
-//	instructions in both shipped blobs.
-//
-//	==== axis status ======================================================
-//
-//	GLOBAL_SHADING_QUALITY 0 and 3 ship; CONFIG_SHADOWED_LIGHT is 0 in both.
-//	Neither reaches the pixel stage - the two blobs are the same code - so
-//	nothing here is written against a quality level.
-//	Byte-proven: 2 identical, 0 differ.
-//
-//	==== the $Globals order is the whole reconstruction ===================
-//
-//	Twelve loose globals, eleven of them dead, and their offsets are what
-//	pins the include closure the ship compiled against.  In order:
-//	gbuffer.h's near_far_invn_invf, colored_light.h's light_color /
-//	light_intensity, light_ps_helper.h's two influence factors, brdf.h's
-//	lighting_model, spot_shadow.h's view_to_light_matrix / shadow_z_bias /
-//	shadow_transparency / shadow_map_size, point_light.h's is_shadower, and
-//	last this shader's own ambient_volume_multiplier at offset 128.  fxc
-//	keeps every one of them, so getting the order wrong moves the multiplier
-//	and the blob stops matching.
-//
-//	Declared here rather than included: point_light.h drags in brdf.h and
-//	positional_light.h at revisions this tree does not have, and the tree's
-//	spot_shadow.h has no is_shadower (it is point_light.h's, and the ship
-//	offsets put it immediately after shadow_map_size).  pixel_shader_input
-//	is light.h's, and its SV_POSITION is spelled in capitals in the shipped
-//	signature - that spelling is load-bearing.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

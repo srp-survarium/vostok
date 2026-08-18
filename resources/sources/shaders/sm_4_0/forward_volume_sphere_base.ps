@@ -3,20 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstruction note (2026-08-17): the arithmetic below is the tree's own
-//	and the 15 shipped blobs prove it verbatim; what had drifted was the
-//	vertex-input section. The file used to say `#include "vertex_input.h"`,
-//	whose recovered CONFIG_VERTEX_INPUT_TYPE mapping is off by the ship one
-//	(ship: 0=null, 1/2=static, 3..6=skeleton 4/3/2/1 bones, 7=particle,
-//	8=particle subuv, 9=beamtrail, 10=decal, 11=grassmesh, 12=postprocess,
-//	13=wires, 14=user), so every permutation compiled the wrong struct. The
-//	per-VIT block is now inline and identical to forward_base.ps's, corrected
-//	the way forward_base_fire_subuv.ps's blobs pin it. Declaration order is
-//	load-bearing: gbuffer.h before the block and the four volume uniforms
-//	after it is what puts near_far_invn_invf at $Globals offset 0, the VIT
-//	7/8 particle uniforms at 16..76 and volume_color at 80 (perm
-//	___0______________0___________10___8______00___0____________________0_____________).
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_TDIFFUSE,

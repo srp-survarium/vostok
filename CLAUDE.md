@@ -81,6 +81,9 @@ docs runs it as `python3 -m vostok ...`, and the code is here:
     build/    ninja_regen, ninja, generate_{delink,structure,rich}, rebuild
     diff/     layout, order, tu_order, enums
     tool/     clangd, toolchain, libs, sizes, breakpoints
+    shaders/  shipped shader blobs: coverage, dump, disasm (ship-truth asm
+              under binaries/shaders/disasm/), and the fxc roundtrip proof
+              (docs/shaders.md; needs .#with-resources)
     tests/    the tooling's own unit tests
 
 **Add a new repo path to `core/paths.py`, never to the module that uses it.**

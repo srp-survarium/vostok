@@ -3,36 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/vertex_base.vs, all 90 permutations). Byte-identity
-//	against every blob is the acceptance test:
-//	python3 -m vostok.shaders roundtrip vertex_base.vs
-//
-//	The recovered file was a thin wrapper over vertex_input.h, but the
-//	per-type headers behind it are a later drift: the shipped
-//	CONFIG_VERTEX_INPUT_TYPE numbering is the engine's
-//	enum_vertex_input_type (sources/vostok/render/facade/
-//	vertex_input_type.h) - 0 null, 1 static, 2 static colored,
-//	3..6 skeletal with 4..1 bones, 7 particle, 8 particle subuv,
-//	9 beamtrail, 10 decal, 11 grassmesh, 12 post process, 13 wires,
-//	14 user - not the mapping in common_defines.h. The shipped structs,
-//	the LOD0 view-position path, the skeletal prev-frame bones, the
-//	0.00007125 static wind and the grassmesh sway exist in no recovered
-//	header, so this file is self-contained: it includes nothing and
-//	declares the ship cbuffer layouts itself (material_parameters here is
-//	the full 38-member ship layout, not the 3-member one in
-//	common_cbuffers.h).
-//
-//	Four more shipped names are this file, or nearly:
-//	forward_sky.vs is byte-identical in all 15 permutations it ships;
-//	vertex_base_lpv.vs (15), vertex_base_shadow.vs (38) and
-//	vertex_base_shadow_batched.vs (38) each replace only the static arm -
-//	and lpv/shadow also the skeleton arm - and are byte-identical to this
-//	file everywhere else. Each carries its own reconstruction header; read
-//	them together, because they are what pins which parts of this file are
-//	shared and which are the g-stage pass's own.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_WIND_MOTION,
