@@ -9,41 +9,9 @@
 		CONFIG_VERTEX_INPUT_TYPE,
 */
 
-// Reconstructed 2026-08-18 from the shipped listings: this is distortion_base
-// with the sample panned, and it drifted much further than the base did. The
-// revision in the source drop returned a single float4, multiplied by
-// parameters.color, took a second sample for alpha and divided by 255; ship
-// writes the same two render targets as distortion_base (distortion +
-// an all-white alpha), reads t_base exactly once at the panned uv, ignores
-// vertex colour entirely, and stores z = 0 where the base stores z = 1.
-//
-//	mad r0.xy, cb0[2].xyxx, cb1[17].wwww, v1.xzxx	; tc + move * scene_time
-//
-// The pan is spelled `move_direction.xy * scene_time`, vector first: writing
-// the scalar first emits `mad cb1[17].wwww, cb0[2].xyxx, ...` instead.
-//
-// CLOSED 2026-08-18 (third pass): 15/15 byte-identical, with the same one-line
-// change as distortion_base.ps and for the same reason.
-//
-// The residual was the order of the two output multiplies:
-//
-//	mul r0.y, r0.y, cb0[1].y
-//	mul o0.y, r0.y, l(-1.000000)	; ship emits the flip first ...
-//	mul o0.x, r0.x, cb0[1].x	; ... the mixed scale vector emitted it second
-//
-// The earlier passes wrote the flip as a lane of a mixed cbuffer/literal scale
-// vector, and fxc splits such a vector cbuffer-lane-first regardless of
-// destination lane, so that spelling could never reach ship's order. Applying
-// the flip as its own `float2(1.0f, -1.0f)` BEFORE the scale leaves it a
-// one-lane immediate multiply at the tail of the y chain, which makes the y
-// store two deep against x's one and forces y out first. The full measurement,
-// the five rules and the tried-lists live in the header of distortion_base.ps
-// - read that before touching either file.
-//
-// Note this shader stores z = 0 where the base stores z = 1, so its zw write
-// is `float2(0.0f, 0.0f)`: folding z into the xy multiply as a `.xyz` write
-// costs an instruction here, because z = 0.0f * 1.0f then pairs with the y
-// lane as `mul o0.yz, ..., l(0, -1, 1, 0)`.
+// Keep the pan vector before scene_time to preserve the mad operand order.
+// Apply the y flip before distortion_scale so the y chain is emitted first.
+// Keep the zero z output separate from the xy multiply.
 #include "common.h"
 #include "gbuffer.h"
 #include "material.h"

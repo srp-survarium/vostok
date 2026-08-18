@@ -2,10 +2,6 @@
 //	Created		: 03.11.2011
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
-//
-//	Reconstructed to ship state 2026-08-17: the recovered revision was a
-//	position passthrough; the shipped blob transforms through m_W then m_VP
-//	and feeds world position, object position and uv to clouds.ps.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"

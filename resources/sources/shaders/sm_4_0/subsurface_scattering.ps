@@ -1,66 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	subsurface_scattering.ps - reconstructed from the shipped blobs,
-//	2026-08-18
-//
-//	Ground truth	: the fifteen shipped permutations of
-//					  shaders/sm_4_0/subsurface_scattering.ps, disassembled
-//					  with fxc /dumpbin /Fc.  No source survived and no
-//					  pre-ship ancestor exists in old/ - the skin/organic
-//					  family there is a different, multi-pass generation.
-//	Acceptance		: python3 -m vostok.shaders roundtrip
-//					  subsurface_scattering.ps
-//	STATE			: 15 of 15 shipped permutations byte-identical.
-//
-//	What it is: the screen-space skin/organic resolve.  It runs per material
-//	(hence the CONFIG_VERTEX_INPUT_TYPE family - it is drawn with the
-//	object's own geometry, not full-screen), blurs the diffuse light
-//	accumulator under the surface, and writes the shaded result.
-//
-//	  * 49 taps of t_diffuse_lighting: one at the centre plus 16 Poisson
-//	    directions at three radii.  The directions are the same 16-entry disc
-//	    sun.ps filters its cascades with, scaled by 2, and the three radii are
-//	    that base times 1, 0.4 and 0.1 - the blobs' constants are exactly the
-//	    products, so the table is scaled, not tripled;
-//	  * the radius is divided by max( view_z*0.333, 0.125 ) before it is
-//	    turned into texels by screen_res.zw, so the kernel shrinks with
-//	    distance and stops shrinking at 3 m;
-//	  * each tap is bilateral: it reads the g-buffer depth at the tap and,
-//	    if it differs from the centre by more than 0.01, collapses back onto
-//	    the centre uv.  Emitted lt/and 0x3f800000/mad - a bool multiplied
-//	    into a float2, never a branch;
-//	  * the three radii feed the three channels of one float3 accumulator -
-//	    widest radius to red - which is the usual "red scatters furthest"
-//	    dipole approximation, done with three taps instead of a profile;
-//	  * every tap decodes the accumulator as saturate(x)^2*8, the exact
-//	    inverse of the 1.f/rsqrt(saturate(c*0.125)) store skylight.ps, sun.ps
-//	    and translucency.ps write;
-//	  * the sum is averaged over 16 and mixed half-and-half with the
-//	    undiffused centre tap, so half the light stays sharp;
-//	  * a rim term follows: pow( 1 - saturate( -V.N_world ), 5 ) times
-//	    pow( saturate( -V.L ), 12 ), scaled by the sun-translucency help
-//	    target and by sun_light_parameters.w - the silhouette glow you see
-//	    on an ear held against the sun;
-//	  * where the scattered light is dim, the LPV indirect accumulator is
-//	    faded back in by 1 - min( length( scattered ), 1 );
-//	  * the tail reads the same 5-bit translucency field translucency.ps
-//	    does, but forces it to 1 (rather than 0) when the diffuse alpha's
-//	    bit 7 flag is set, uses it to scale the decoded specular accumulator,
-//	    and returns albedo_linear*scattered + specular*translucency with
-//	    alpha 0.
-//
-//	Two of the nine defines the permutations carry name features that are
-//	not in the shipped code because both are 0 in all fifteen:
-//	CONFIG_USE_THICKNESS_MAP and CONFIG_USE_SUBSURFACE_SCATTERING_MASK_MAP.
-//	CONFIG_LOD_INDEX is likewise 0 throughout, so only the LOD-0 static
-//	vertex layout appears below.
-//
-//	fxc notes earned here: `pow( x, 5.f )` and `pow( x, 12.f )` are NOT the
-//	same shape - 5 expands to x*x, x2*x2, x*x4 while 12 stays log/mul/exp;
-//	writing the three channel taps into a named float3 and adding that once
-//	per direction is what collapses the register pressure from 38 temps to
-//	ship's 8 (three separate `sum.x +=` statements do not coalesce).
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_USE_SUBUV,
@@ -94,7 +31,7 @@ Texture2D	t_lpv_accumulation;
 Texture2D	t_sun_translucensy_help_data;
 
 ////////////////////////////////////////////////////////////////////////////
-// vertex input types (ship numbering), as gbuffer_pass.ps recovered them.
+// Keep the shipped vertex-input numbering aligned with gbuffer_pass.ps.
 // CONFIG_LOD_INDEX is 0 in all fifteen shipped permutations, so only the
 // LOD-0 static layout appears here.
 ////////////////////////////////////////////////////////////////////////////

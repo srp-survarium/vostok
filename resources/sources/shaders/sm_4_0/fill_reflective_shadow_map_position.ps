@@ -3,23 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 2026-08-17, against the 14 shipped permutations.
-//
-//	The shipped editor blobs were compiled against a vertex_input.h whose
-//	type dispatch (proven by every blob's dependency list) was:
-//		0 null, 1-2 static, 3-6 skeleton_{4,3,2,1}_bones, 7-8 particle,
-//		9 beamtrail, 10 decal, 11 grassmesh, 13 wires, 14 user.
-//	The tree's vertex_input.h dispatches differently today, so the ship
-//	mapping is reproduced below. Where the tree still carries the ship
-//	revision of a per-type header (particle, beamtrail, decal, wires -
-//	struct, globals and parameter math all byte-proven through these
-//	blobs) it is included; the drifted (null, static, grassmesh) and
-//	deleted (skeleton_*_bones, user) ones are inlined at their ship
-//	state. Field names in the inlined structs are educated guesses -
-//	only the semantics, masks, the view-space position field and the tc
-//	field are pinned by the blobs.
-////////////////////////////////////////////////////////////////////////////
-
 /*
 	$DEFINES$:
 	CONFIG_VERTEX_INPUT_TYPE,

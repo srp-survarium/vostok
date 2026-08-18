@@ -1,11 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob; the pre-ship
-//	revision in old/ is one generation back - it returned a single combined
-//	target, where ship writes the blurred frame to target 0 and the bloom to
-//	target 1, and scales the bloom by bloom_parameters.x AND the
-//	bloom_parameters1 tint. Byte-identity: python3 -m vostok.shaders roundtrip
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 #include "dof_functions.h"

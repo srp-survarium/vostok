@@ -3,48 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 2026-08-18, against the 30 shipped v0.100b blobs.
-//	STATE: all 30 recompile byte-identical (vostok.shaders roundtrip).
-//
-//	The recovered file was a much earlier revision: two render targets, no
-//	decal-box clip, no projection stretch, a linear-space diffuse write and
-//	no material target at all.  Ship writes three targets and gamma-encodes
-//	the diffuse; the shape below is the one the blobs force.
-//
-//	Every shipped permutation has CONFIG_TDIFFUSE = 1, CONFIG_REFLECTION = 0,
-//	CONFIG_DECAL_TYPE = 0 (ACCUMULATED_WITH_NORMAL) and CONFIG_LOD_INDEX = 0;
-//	only CONFIG_TNORMAL (0/1) and CONFIG_VERTEX_INPUT_TYPE (0..14, type 8
-//	carrying CONFIG_USE_SUBUV) vary.  Nothing here is written against the
-//	other values of the frozen axes.
-//
-//	==== what this pass is, in rendering terms ============================
-//
-//	A deferred decal.  It is drawn as the decal's own projector box; for each
-//	covered pixel it reads the g-buffer back (depth through t_position,
-//	normal through t_normal), rebuilds the receiving surface's view-space
-//	position from the eye ray, lifts it to world space, and projects it into
-//	decal space with world_to_decal.  Pixels outside the box are clipped, and
-//	the surviving decal-space xy becomes the texture coordinate.  The tangent
-//	basis is built from the projector's own tangent crossed with the receiving
-//	surface's normal, so a decal on a curved wall bends with it;
-//	blend_with_geometry_normals picks between the real g-buffer normal and the
-//	projector's own.  Coverage (`scattered_alpha`) fades with the angle
-//	between the surface and the projector and cuts off hard past
-//	decal_angle_parameters.y, which is what keeps a bullet hole off the
-//	wall it is nearly parallel to.  Output is three accumulation targets that
-//	apply_decal_diffuse_write / apply_decal_normals_* later resolve into the
-//	g-buffer: gamma-space colour + alpha, coverage-weighted normal, and a
-//	smoothness pair split around 0.5.
-//
-//	==== three fxc shapes this file is pinned to =========================
-//
-//	* the box clip is clip(), not `if (...) discard;` - see the note there;
-//	* the clip-to-uv map keeps its bias inside the numerator, so that fxc
-//	  does not share one divide with the stretch's normalize;
-//	* the stretch is pow(x, 3.0f).  Spelt x*x*x fxc emits the second mul with
-//	  its operands the other way round.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_USE_BRANCHING
 
@@ -68,22 +26,8 @@
 #include "psf_reflection.h"
 #include "material.h"
 
-////////////////////////////////////////////////////////////////////////////
-//	ship's vertex_input.h, inlined.
-//
-//	The blobs' dependency tables spell the ship dispatch: 0 null, 1-2 static,
-//	3-6 skeleton_{4,3,2,1}_bones, 7-8 particle, 9 beamtrail, 10 decal,
-//	11 grassmesh, 12 postprocess, 13 wires, 14 user.  The tree's
-//	vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently and four of the
-//	per-type headers it names are missing entirely, so the dispatch is
-//	reproduced here rather than included - the same choice gbuffer_pass.ps
-//	made, and every struct below is byte-forced by a shipped input signature.
-//
-//	It sits between gbuffer.h and this file's own uniforms because that is
-//	where ship's `#include "vertex_input.h"` sat: $Globals opens with
-//	gbuffer.h's near_far_invn_invf, then the per-type uniforms (particle's
-//	seven, grassmesh's patch_parameters), then constant_diffuse onwards.
-////////////////////////////////////////////////////////////////////////////
+// Keep this local vertex-input dispatch between gbuffer.h and the shader
+// uniforms; its layouts and loose-global order differ from vertex_input.h.
 
 #if CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
 
@@ -236,11 +180,8 @@ float fresnel_multiplier;
 float smoothness_interpolation;
 float diffuse_alpha;
 
-//	Ship's normal-map decode is NOT psf_normal.h's psf_tnormal: it samples
-//	through s_anisotropic rather than s_normal, and clamps with max(...,0)
-//	where the header's saturate would have emitted add_sat.  Same divergence
-//	gbuffer_pass.ps records, so it is inlined here rather than repaired in a
-//	header other reconstructions are already leaning on.
+// Keep this decode local: it samples through s_anisotropic and uses max(...,0),
+// while psf_normal.h uses s_normal and saturate.
 float3 read_normal_map( Texture2D _t_normal, sampler _sampler, float2 tc)
 {
 	float3 normal;

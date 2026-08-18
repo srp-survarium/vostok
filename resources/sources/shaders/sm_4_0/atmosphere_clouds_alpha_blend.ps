@@ -1,14 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob - absent from the
-//	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
-////////////////////////////////////////////////////////////////////////////
-
-//	Closed 2026-08-18. The parked residual - ship writes o0.w before the
-//	tinted/3 muls, every source shape sank it to the end - was not about the
-//	alpha at all: it was the horizon cut. `if (...) discard;` lets fxc treat
-//	the discard as an early-out and re-order the rest of the shader around it;
-//	clip() of the same predicate emits the same discard_nz and leaves the
-//	schedule alone. Same fix landed decal_base.ps's 30 permutations.
 #include "common.h"
 
 uniform float4	sky_clouds_parameters0;	// rgb - tint, w - uv scale

@@ -1,9 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17: the shipped blob is byte-identical to the
-//	proven post_process_fxaa.vs passthrough (same DXBC), so the source is
-//	the same fullscreen passthrough under this name.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 
 struct vertex_input_struct

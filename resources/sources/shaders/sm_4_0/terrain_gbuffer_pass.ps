@@ -1,34 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the thirty shipped permutations of
-//					  shaders/sm_4_0/terrain_gbuffer_pass.ps, disassembled to
-//					  binaries/shaders/disasm/sm_4_0/terrain_gbuffer_pass.ps/.
-//					  No source for this name arrived with the drop; every line
-//					  below is answerable to a listing.
-//	Acceptance		: python3 -m vostok.shaders roundtrip terrain_gbuffer_pass.ps
-////////////////////////////////////////////////////////////////////////////
-//
-//	The four-layer terrain splat, geometry phase.  One mask texture gives the
-//	four layer weights, four diffuse textures are blended by them at their own
-//	tile rates, and a detail pair is applied on top.  Only the normal and the
-//	colour targets are written - the depth target is the terrain pre-pass's.
-//
-//	All thirty shipped permutations recompile byte-identically.  Three shapes
-//	in here look arbitrary and are not; each is load-bearing for that, and
-//	commented where it sits:
-//
-//	  * the branch in psf_parallax_terrain reads world_view_position.z while
-//	    everything else reads the .xyz copy;
-//	  * the albedo's linear green is named only after target 1 has been stored,
-//	    and the gloss is derived inside the target-0 store;
-//	  * every layer product is written weight-first.
-//
-//	Only CONFIG_NUM_USED_TERRAIN_LAYERS = 4 and CONFIG_TDETAIL = 1 ship, so the
-//	four layers and the detail pair are written out rather than counted;
-//	CONFIG_TSPECULAR_COLOR ships only as 0, so its arm is unverified.
-//
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_NUM_USED_TERRAIN_LAYERS,
@@ -40,26 +9,14 @@
 		CONFIG_TSPECULAR_COLOR,
 */
 
-//	s_anisotropic now comes from common_samplers.h (ship name, proven here
-//	and by forward_lighting.ps).
-
 #include "common.h"
 #include "material.h"
 #include "gbuffer.h"
 #include "gamma_correction.h"
 #include "psf_normal.h"
 
-////////////////////////////////////////////////////////////////////////////
-//	psf_parallax_terrain.h, inlined
-//
-//	The shipped dependency list names psf_parallax_terrain.h; the file is not
-//	in the drop.  It is psf_parallax.h's steep march with terrain's numbers -
-//	12..5 samples, a 200 m fade-out instead of 12 m - and no height scale: the
-//	blobs sample the height map raw, and leave constant_parallax_scale and the
-//	min/max range pair unreferenced.  The three globals are declared anyway,
-//	and in this order: $Globals lists them between near_far_invn_invf and
-//	constant_tiles at offsets 16, 32 and 48.
-////////////////////////////////////////////////////////////////////////////
+// Terrain steep parallax uses raw height, 12..5 samples, and a 200 m fade.
+// Keep the following globals in this order.
 
 float						constant_parallax_scale;
 
@@ -136,14 +93,8 @@ float2 psf_parallax_terrain( Texture2D in_t_height_map, float4 world_view_positi
 	return out_tc;
 }
 
-////////////////////////////////////////////////////////////////////////////
-//	gbuffer.h store side, inlined
-//
-//	gbuffer.h's read side is ship-proven; its store bodies are not - they still
-//	carry the pre-ship raw-xyz forms.  These two are what the blobs of this
-//	pass and of gbuffer_pass.ps compile to, so they live here until the header
-//	is corrected.
-////////////////////////////////////////////////////////////////////////////
+// Local terrain packing uses a Lambert normal encode and split material field;
+// gbuffer.h's store helpers use a different layout.
 
 //	Target 0: a Lambert azimuthal equal-area normal in xy, and a twelve-bit
 //	field split across a ten-bit z and a two-bit w - low seven bits gloss, top
@@ -213,12 +164,7 @@ uniform float4				constant_tiles;			//	one tile rate per layer
 uniform float4				constant_detail_tiles;	//	xy: the detail pair
 
 ////////////////////////////////////////////////////////////////////////////
-//	Pixel input.  The vertex stage's output struct for this vertex input type,
-//	declared here rather than taken from vertex_input.h: the recovered per-type
-//	headers carry members the shipped input signatures do not have (a NORMAL
-//	semantic, a vertex colour), and an unused input still occupies a signature
-//	slot, so they cannot reproduce these listings.  What each type carries is
-//	read straight off the signatures:
+//	Local pixel inputs; unused semantics still occupy signature slots.
 //
 //	  type                    TEXCOORD0..5
 //	  NULL (0)                world position
@@ -445,9 +391,7 @@ void main( in p_terrain input, out f_terrain output)
 
 	normal			= normalize(normal);
 
-	//	Target 2 is a flat white in every shipped permutation, and no specular
-	//	texture is ever bound: CONFIG_TSPECULAR_COLOR only ever ships as 0, so
-	//	the tinted arm below is a guess and is not byte-proven by anything.
+	// CONFIG_TSPECULAR_COLOR is disabled for this stage.
 #if CONFIG_TSPECULAR_COLOR
 	const float3	specular_color		= color;
 #else

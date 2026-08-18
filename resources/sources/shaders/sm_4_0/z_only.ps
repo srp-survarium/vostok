@@ -3,33 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/z_only.ps, all 50 permutations; per permutation the DXBC
-//	is blob-identical to depth_accumulate.ps). The recovered
-//	revision (in git history) returned distance-to-light and multiplied the
-//	alpha by parameters.color.a; the ship compile samples t_base with
-//	s_anisotropic, clips against alpha_ref_parameter from the
-//	material_parameters cbuffer, and returns zero. Byte-proven 2026-08-18,
-//	after the static-mesh (VIT 1/2) input struct was taken from ship's
-//	static_mesh_vertex_input.h shape:
-//	python3 -m vostok.shaders roundtrip z_only.ps
-//	-> 50 identical, 0 differ, 0 skipped.
-//
-//	Self-contained on purpose: the shipped blobs' dependency lists name
-//	common.h / material.h / vertex_input.h revisions this tree does not
-//	have. Ship vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE 0..14 to
-//	null / static shadow (1 and 2, + wind.h) / skeleton_{4,3,2,1}_bones /
-//	particle / particle subuv / beamtrail / decal / grassmesh / postprocess /
-//	wires / user vertex inputs - a different numbering and different
-//	vertex_output_structs than the recovered generation - and ship
-//	common_cbuffers.h carries the full 38-member material_parameters cbuffer
-//	where the recovered header stops after solid_emission_color. Including
-//	the recovered headers would bind the wrong structs and collide with this
-//	cbuffer, so everything the shader needs is declared here. Struct member
-//	semantics and types are ship-proven by the input signatures; member
-//	names on interpolators the shader never reads are conjecture.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_ALPHA_TEST,
 		CONFIG_VERTEX_INPUT_TYPE,

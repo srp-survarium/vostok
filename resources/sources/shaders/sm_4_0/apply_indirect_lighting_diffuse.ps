@@ -1,17 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob
-//	(shaders/sm_4_0/apply_indirect_lighting_diffuse.ps, plain permutation),
-//	using old/apply_indirect_lighting.ps as the pre-ship reading aid. It had
-//	drifted: the ship revision offsets the grid lookup along the normal
-//	(the aid's `#if 0` neighbour-tap idea, kept as a plain 1/64 nudge),
-//	halves both cascade radii, replaces the aid's pow(...,1) attenuation with
-//	1 - t*t and its pow(...,5) with a square, blends the outermost cascade
-//	into ambient_color, scales the inner cascades by 0.27, writes view depth
-//	into alpha, and reads SSAO through s_linear at *2.5 (the same
-//	accumulator packing skylight.ps uses).
-//	Byte-identity: python3 -m vostok.shaders roundtrip apply_indirect_lighting_diffuse.ps
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "gbuffer.h"
 #include "spherical_harmonics_common.h"

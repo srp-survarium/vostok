@@ -3,55 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 17.08.2026
-//	Ground truth	: the 15 shipped permutations of
-//					  shaders/sm_4_0/forward_view_angle_dependent.ps,
-//					  disassembled with fxc /dumpbin /Fc.  Absent from the
-//					  source drop; forward_base.ps (120/120) is the skeleton
-//					  this file is a sibling of, and vertex_base.vs (196/196)
-//					  is the authority for the interpolant layout.
-//	Acceptance		: python3 -m vostok.shaders roundtrip
-//					  forward_view_angle_dependent.ps
-////////////////////////////////////////////////////////////////////////////
-//
-//	The forward "view angle dependent" stage: an emissive-style solid colour
-//	whose *alpha* grows toward the silhouette.  One draw, alpha-blended,
-//	driven by effect_fstage_default_view_angle_dependent_materials.
-//
-//	The only axis that moves across the shipped blobs is
-//	CONFIG_VERTEX_INPUT_TYPE, all fifteen of which ship; every other define
-//	the mask records is 0 everywhere, so CONFIG_USE_SOFT_EDGES's arm is
-//	unconstrained (it is carried from forward_base.ps, which shares the whole
-//	skeleton) and is marked so below.
-//
-//	Status by axis:
-//	  CONFIG_VERTEX_INPUT_TYPE  0..14  - all fifteen byte-proven
-//	  CONFIG_USE_SOFT_EDGES     ships only as 0 - arm carried, unverified
-//	  GLOBAL_USE_VEGETATION_TRAMPLE, CONFIG_USE_SUBUV, CONFIG_LOD_INDEX,
-//	  CONFIG_USE_BOUND_NORMALS, CONFIG_USE_UP_DIRECTIONAL_NORMALS,
-//	  CONFIG_WIND_MOTION        vertex-stage axes; ship only as 0 here
-//
-//	Three shapes are load-bearing for byte-identity:
-//
-//	  * the surface normal reaches world space as
-//	    mul(m_V2W, mul(tangent_to_viewspace, normal)) - for the input types
-//	    whose getter leaves the basis at identity the whole chain folds to
-//	    m_V2W's third column, which is exactly what those blobs hold;
-//	  * the alpha ramp is saturate(f > 0.045f ? f + 1.f : f) over
-//	    f = 1 - pow(saturate(dot(n,v)), attenuation_power).  The blobs
-//	    materialise 1-f and 2-f in one add and select between them, which is
-//	    what that spelling (and only that spelling) produces;
-//	  * input type 11's normal is normalized and no other type's is - the
-//	    grassmesh basis is the one the vertex stage bends.
-//
-//	CONFIG_VERTEX_INPUT_TYPE 1/2 puts the tangent basis at TEXCOORD0..2 and
-//	the world position at TEXCOORD3, and 3..6 put the world position at
-//	TEXCOORD5 (TEXCOORD4 is the vertex stage's prev_position) - both follow
-//	vertex_base.vs, not forward_base.ps's labelling, which its own blobs
-//	cannot tell apart because it reads neither.
-//
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_USE_VEGETATION_TRAMPLE,
 		CONFIG_USE_SUBUV,

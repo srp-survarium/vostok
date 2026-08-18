@@ -208,6 +208,35 @@
       '';
 
       # ---------------------------------------------------------------------------
+      # dxsdk-shader-compiler - fxc.exe + D3DCompiler_43.dll from the June 2010
+      # DirectX SDK. The shipped shader blobs in resources.db carry the RDEF
+      # creator string "Microsoft (R) HLSL Shader Compiler 9.29.952.3111", which
+      # is exactly this SDK's compiler; the toolchain tarball carries only the
+      # SDK's Include/Lib. Run under Wine. Used by the shader roundtrip harness.
+      # ---------------------------------------------------------------------------
+      dxsdk-shader-compiler = pkgs.runCommand "dxsdk-shader-compiler" {
+        src = pkgs.fetchurl {
+          name = "DXSDK_Jun10.exe";
+          url = "https://download.microsoft.com/download/A/E/7/AE743F1F-632B-4809-87A9-AA1BB3458E31/DXSDK_Jun10.exe";
+          hash = "sha256-cFJx3IO/7lTZuU4ChCbiiNXwcHhLdEbRZPSOz7sqAss=";
+        };
+        nativeBuildInputs = [ pkgs.cabextract ];
+      } ''
+        set -euo pipefail
+        # The installer's payload is one embedded cabinet; cabextract scans for
+        # it. The compiler DLL sits in a nested redist cab whose member carries
+        # an FL_-mangled name.
+        cabextract -q -F 'DXSDK/Utilities/bin/x86/fxc.exe' -d extract "$src"
+        cabextract -q -F 'DXSDK/Redist/Jun2010_D3DCompiler_43_x86.cab' -d extract "$src"
+        cabextract -q -d cabout "extract/DXSDK/Redist/Jun2010_D3DCompiler_43_x86.cab"
+        dll=$(find cabout -iname '*D3DCompiler_43*' -type f | head -1)
+        test -n "$dll"
+        mkdir -p "$out/bin"
+        cp "extract/DXSDK/Utilities/bin/x86/fxc.exe" "$out/bin/fxc.exe"
+        cp "$dll" "$out/bin/D3DCompiler_43.dll"
+      '';
+
+      # ---------------------------------------------------------------------------
       # vostok-libs - proprietary third-party DLLs and import libraries.
       # Pre-packaged as a zip; the archive's top-level directory `vostok-libs/`
       # is stripped on unpack so $out exposes `sources/...` directly.
@@ -405,6 +434,9 @@
           export MSVC_DIR="${vostok-toolchain}/msvc"
           export WINSDK_DIR="${vostok-toolchain}/winsdk"
           export DXSDK_DIR="${vostok-toolchain}/dxsdk"
+          # fxc 9.29.952.3111 + native D3DCompiler_43.dll - the exact compiler
+          # behind the shipped shader blobs; vostok.shaders runs it under Wine.
+          export DXSDK_SHADER_COMPILER="${dxsdk-shader-compiler}/bin"
           export NINJA_DIR="${vostok-toolchain}/ninja"
           export VOSTOK_LIBS_DIR="${vostok-libs}"
           export VCPROJ2NINJA_EXE="${vcproj2ninja}/bin/vcproj2ninja.exe"
@@ -424,7 +456,8 @@
               "vostok-libs:${vostok-libs}" \
               "vcproj2ninja:${vcproj2ninja}" \
               "survarium-game:${survarium}" \
-              "survarium-keys:${survarium.keys}"; do
+              "survarium-keys:${survarium.keys}" \
+              "dxsdk-shader-compiler:${dxsdk-shader-compiler}"; do
             name="''${pair%%:*}"
             path="''${pair#*:}"
             nix-store -r "$path" \
@@ -500,7 +533,7 @@
       packages.${system} = {
         inherit vostok-pdb-parser vostok-delinker vostok-resources-db vcproj2ninja
           vostok-toolchain vostok-libs survarium
-          objdiff objdiff-cli;
+          objdiff objdiff-cli dxsdk-shader-compiler;
         # The heavy unpacked resource tree (~1.6 GiB) is kept buildable on demand
         # (`nix build .#survarium-resources-unpacked`), but the default devShell
         # does NOT realize it - see the `with-resources` shell below.

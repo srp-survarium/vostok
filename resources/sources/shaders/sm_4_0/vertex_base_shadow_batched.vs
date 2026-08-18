@@ -3,58 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/vertex_base_shadow_batched.vs, all 38 permutations,
-//	every one at CONFIG_LOD_INDEX==0). Acceptance:
-//	python3 -m vostok.shaders roundtrip vertex_base_shadow_batched.vs
-//
-//	Twenty-eight of the thirty-eight are byte-identical to the vertex_base.vs
-//	blob with the same defines - including all four skeleton types, which are
-//	vertex_base.vs's arm untouched, prev-frame bones and all. Only the static
-//	arm is this name's own (the shipped closure names
-//	static_mesh_vertex_input_shadow_batched.h in place of
-//	static_mesh_vertex_input.h), and it is a *batched* stream: the geometry
-//	arrives already baked into one buffer, so
-//
-//	* there is no per-object m_W to read an object position out of, and no
-//	  D3DCOLOR normal either. The stream is position, a float3 at TEXCOORD0,
-//	  and tc at TEXCOORD1 - one slot later than every other layout. Types 1
-//	  and 2 ship the same blob, so nothing is conditional on vertex colour;
-//	* that float3 at TEXCOORD0 is the pre-batching local position: it is the
-//	  vector the wind measures (length(v) * v.y), and it is read by no other
-//	  permutation, which is why it is present-but-unused in the 34 blobs
-//	  that do not sway;
-//	* the wind is its own function, not vertex_base.vs's - wind.h is absent
-//	  from this name's shipped closure. It scales by the material's
-//	  wind_scale, its amplitude constant is 0.07125f (bits 85eb913d, a
-//	  thousand times vertex_base.vs's 0.00007125f), and its phase is
-//	  2 * scene_time * wind_scale + 0.25f - one angle for both sin and cos,
-//	  where vertex_base.vs offsets each by a different object-position
-//	  component. And it displaces the *local* position before m_WVP, where
-//	  vertex_base.vs displaces the world position after m_W;
-//	* only CONFIG_WIND_MOTION==1 sways. 2 ships the same blob as 0 and 3,
-//	  where vertex_base.vs and vertex_base_shadow.vs sway for both 1 and 2.
-//
-//	effect_shadow_map and depth_accumulate_material_effect compile this name
-//	against depth_accumulate_batched; effect_editor_show_batched_geometry
-//	pairs it with editor_show_shadow_geometry.
-//
-//	The recovered vertex_base.vs was a thin wrapper over vertex_input.h, but the
-//	per-type headers behind it are a later drift: the shipped
-//	CONFIG_VERTEX_INPUT_TYPE numbering is the engine's
-//	enum_vertex_input_type (sources/vostok/render/facade/
-//	vertex_input_type.h) - 0 null, 1 static, 2 static colored,
-//	3..6 skeletal with 4..1 bones, 7 particle, 8 particle subuv,
-//	9 beamtrail, 10 decal, 11 grassmesh, 12 post process, 13 wires,
-//	14 user - not the mapping in common_defines.h. The shipped structs,
-//	the LOD0 view-position path, the skeletal prev-frame bones, the
-//	0.00007125 static wind and the grassmesh sway exist in no recovered
-//	header, so this file is self-contained: it includes nothing and
-//	declares the ship cbuffer layouts itself (material_parameters here is
-//	the full 34-member ship layout, not the 3-member one in
-//	common_cbuffers.h).
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_WIND_MOTION,

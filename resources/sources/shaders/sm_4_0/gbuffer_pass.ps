@@ -1,222 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	gbuffer_pass.ps - reconstructed from the shipped blobs, 2026-08-17
-//
-//	No source for this shader survived; this file is written against the
-//	fxc /dumpbin listings of the 1,136 shipped permutations and judged by
-//	byte-identical recompilation (vostok.shaders roundtrip).
-//
-//	STATE: ALL 1,136 shipped permutations recompile byte-identical
-//	(`vostok.shaders roundtrip gbuffer_pass.ps`, 2026-08-18: "1136 identical,
-//	0 differ, 0 skipped"; the figures before this pass were 1,072 and then
-//	1,131).  The last cluster - CONFIG_PARALLAX at vertex-input type 1 - closed
-//	on 2026-08-18; what it was is recorded below, because the mechanism is
-//	reusable.
-//
-//	==== how to read this file ============================================
-//
-//	Statement ORDER is load-bearing.  fxc's scheduler is deterministic but not
-//	order-independent: moving a block past another changes register allocation
-//	and therefore bytes, even when the arithmetic is identical.  Three moves
-//	were each worth 50-150 permutations on their own:
-//	  * the translucency SOLID term is built before `diffuse_color *=
-//	    texture_diffuse_color`, but the translucency MAP that overrides it is
-//	    read after the normal block (that one move: 841 -> 964);
-//	  * CONFIG_USE_DIFFUSE_MASKED_COLOR runs after the alpha test, not before;
-//	  * the detail tap's coordinate is computed at the sample, not hoisted -
-//	    and so is the third normal-waves tap's (worth its whole 12);
-//	  * the whole CONFIG_USE_OLTA block sits at the FOOT of main, beside the
-//	    emissive write it feeds (with clip(), worth its whole 36).
-//	Binary operand order is not free either.  fxc does not simply keep source
-//	order for a commutative `mul`; where a choice mattered, the form in the
-//	file is the one the blobs force and the alternative is not a refactor.
-//	But two of the residuals closed on 2026-08-18 were not schedule at all -
-//	they were SEMANTICS this file had wrong: the detail-normal coordinate and
-//	the vertex blend's alpha, both below.  When a residual is the same size as
-//	ship and confined to one axis, read the operands before rearranging
-//	statements.
-//
-//	==== axis status ======================================================
-//
-//	31 defines appear in the shipped permutation strings.  Six never vary -
-//	GLOBAL_ALLOW_STEEPPARALLAX = 1, GLOBAL_USE_VEGETATION_TRAMPLE = 0,
-//	CONFIG_REFLECTION = 0, CONFIG_SEQUENCE = 0, CONFIG_TALPHABLENDED_NORMAL =
-//	0, CONFIG_VERTEX_BLENDED_MASK = 0 - so nothing here is written against
-//	their other values.  The other 25, as (permutations that set it) ->
-//	(of those, byte-identical):
-//
-//	  identical wherever they are set
-//	    CONFIG_TDETAIL                  36/36   CONFIG_TRANSLUCENCY  168/168
-//	    CONFIG_USE_BOUND_NORMALS        12/12   CONFIG_USE_SUBUV        6/6
-//	    CONFIG_USE_DIFFUSE_AS_SPECULAR  56/56   CONFIG_USE_UV_SCROLLING 24/24
-//	    CONFIG_USE_DIFFUSE_MASKED_COLOR 48/48
-//	    CONFIG_USE_DIFFUSE_MASKED_COLOR_BY_HUE 24/24
-//	    CONFIG_USE_UP_DIRECTIONAL_NORMALS 54/54 (a no-op in the pixel stage)
-//	  identical except where another axis in the same permutation is a
-//	  residual - none of these has a defect of its own
-//	    CONFIG_TFRESNEL      385/386   CONFIG_TSPECULAR_COLOR   194/194
-//	    CONFIG_USE_FUZZINESS 127/128   CONFIG_TDETAIL_NORMAL    172/173
-//	    CONFIG_TROUGHNESS    663/667   CONFIG_TNORMAL           607/612
-//	    CONFIG_TDIFFUSE     1047/1052  CONFIG_ALPHA_TEST        492/492
-//	    CONFIG_LOD_INDEX     417/417   CONFIG_WIND_MOTION       256/258
-//	    CONFIG_USE_OLTA        36/36   CONFIG_USE_NORMAL_WAVES    12/12
-//	    CONFIG_VERTEX_BLENDED_DIFFUSE 112/112
-//	    CONFIG_VERTEX_BLENDED_NORMAL   91/91
-//	    (WIND_MOTION changes nothing in the pixel stage at all; LOD_INDEX
-//	     changes only the static vertex_output_struct - see below)
-//	    CONFIG_PARALLAX                30/30
-//	  CONFIG_VERTEX_INPUT_TYPE: all 972 non-null permutations.  All fifteen
-//	  families decode and every family is byte-identical throughout.
-//
-//	==== how the last cluster closed, and the rule it earned ==============
-//
-//	CONFIG_PARALLAX at CONFIG_VERTEX_INPUT_TYPE 1 (5 blobs) sat for two passes
-//	as "ship emits `mul_sat l(-0.25)` where we emit `mul l(-0.25)` + `min
-//	l(1.0)`" - exactly one instruction, 28 bytes, and nothing else differing.
-//	Type 1 is the family where view_position is an interpolant (`v5.z`) rather
-//	than an m_V product, and there fxc proved `view_position.z < 12` from the
-//	dominating branch, weakened smoothstep's saturate to a bare `min`, and so
-//	lost the fusion into the multiply's destination.
-//
-//	THE RULE (established on a five-line standalone shader, then applied here):
-//	fxc's range prover follows a *scalar* through a copy but NOT through a
-//	vector local.  Given `if (vp.z < 12) { ... smoothstep(12, 8, vp.z) ... }`:
-//	  * `smoothstep(..., vp.z)`                       -> prover folds, `min`
-//	  * `float d = vp.z;` before the if, use `d`      -> prover folds, `min`
-//	  * `float3 c = vp;` before the if, use `c.z`     -> PROVER BLIND, `mul_sat`
-//	  * the same `float3` declared INSIDE the if      -> prover folds, `min`
-//	  * `-(-vp.z)` written inline                     -> folds at parse, `min`
-//	So the blocker is a vector-typed local, defined in the block that DOMINATES
-//	the branch and read inside it, while the condition still names the original.
-//	A scalar copy is transparent; a vector one is opaque.  This is the third
-//	independent lever on fxc's range prover, after `saturate()`-as-node versus
-//	`clamp()`-as-`_sat` (ssao_filter_upsample) and a helper call
-//	(forward_lighting.ps's squared_length).
-//
-//	Applying it needed a second, separate move.  Ship's type-0 listing already
-//	held `mov r2.xyz, -r1.xyzx` - so ship's source really did name the negated
-//	view vector - but it emits that mov AFTER the `lt r0.w, r1.z, l(12.0)`.
-//	Declaring `parallax_view` above the `if` puts the mov first and breaks the
-//	types that were passing.  Naming the test in its own `bool` above the
-//	declaration restores ship's order, because fxc emits independent statement
-//	groups in source order.  Both moves are needed; either alone regresses.
-//	This is the same `bool`-before-the-block shape CONFIG_USE_OLTA needed.
-//
-//	Tried and rejected on the way, each measured on a five-permutation probe
-//	(three failing input-type-1 blobs, one passing type-13 parallax blob, one
-//	passing type-0 parallax blob):
-//	  * `[branch]` on the `if` - fxc refuses to compile it (the height-map taps
-//	    are gradient sampling inside divergent flow);
-//	  * the fade computed at the top of the branch, or one statement above the
-//	    second height tap - both break the input-type-13 parallax blob;
-//	  * the fade inlined into the `tc +=` expression - same, breaks type 13;
-//	  * the fade routed through a function of its own - fxc inlines it and
-//	    nothing changes (so a call boundary does NOT block the range proof
-//	    here, unlike the squared_length() case in forward_lighting.ps);
-//	  * a local `float parallax_depth = view_position.z;` copy - propagated
-//	    away, byte-identical to not having it;
-//	  * hoisting the fade out of the branch (restores `mul_sat`, costs the
-//	    other 25);
-//	  * smoothstep hand-expanded with min(max(..)) around the ratio - the max
-//	    is folded anyway, so this does NOT reproduce the ssao finding here; and
-//	    the hand-written cubic costs 4 bytes in every parallax permutation
-//	    unless it is spelled `-2.0f*t + 3.0f` as its OWN statement (a negative
-//	    literal, not a negated register: `3.0f - 2.0f*t` emits `mad -t, 2, 3`,
-//	    whose source modifier is an extra operand token).  That measurement is
-//	    kept because it dates the "4 bytes" cost to the cubic, not the divide.
-//
-//	Everything else here is byte-proven by at least one shipped permutation,
-//	and most of it by hundreds.
-//
-//	==== what closed the other 59, 2026-08-18 =============================
-//
-//	Of the four clusters this header used to carry, three closed outright and
-//	the parallax one halved.  Each fix is listed with what it took, because
-//	none of the four is the kind of thing the listing announces.
-//
-//	1. CONFIG_USE_OLTA (36) - three things at once, none of which works alone:
-//	   the block moved to the FOOT of main beside the emissive write it feeds;
-//	   `if (cond) discard;` replaced by `clip(cond ? -1.f : 1.f)`; and the
-//	   range test named in its own `bool` declared *before* the scanline test,
-//	   with the `&&` written range-first.  The transparency sample must also
-//	   come before the scanline test.  With the block early, fxc hoisted the
-//	   whole packing around the discard; with `clip` and the block late it
-//	   leaves the schedule alone and input type 1 keeps the discard at the tail
-//	   the way its blob does, while types 0/10/12/13/14 hoist it to the head
-//	   the way theirs do - one source, both schedules.
-//	2. CONFIG_USE_NORMAL_WAVES (12) - the third tap's `*normal_waves_
-//	   parameters.z * 1.5f` computed AT the sample rather than hoisted, the
-//	   first two taps' `*z` split into a statement of its own after the third
-//	   tap's coordinate, and the three taps read into named per-tap float3s
-//	   summed in one final statement.  The per-tap temporaries were tried
-//	   before and did nothing; they only work together with the deferred
-//	   scaling.
-//	3. CONFIG_PARALLAX (5 of the 10) - a real semantic bug, not a schedule:
-//	   the CONFIG_TDETAIL_NORMAL tap samples at `normal_tc`, the coordinate
-//	   snapshotted before the parallax block, not at the parallax-shifted
-//	   `tc`.  The six blobs that set both show `mul r1.xy, v1.xzxx, ...`
-//	   against our parallax-shifted register.  CONFIG_TDETAIL_NORMAL and
-//	   CONFIG_USE_UV_SCROLLING never ship together, so nothing distinguishes
-//	   normal_tc from the pre-parallax tc.
-//	4. CONFIG_VERTEX_BLENDED_DIFFUSE (6) - also semantic: the vertex blend is
-//	   over all FOUR channels, and the alpha test reads the *lerped* alpha.
-//	   Ship emits `add r5.xyzw, -r4.xyzw, r5.xyzw` / `mad r4.xyzw, ...` and
-//	   tests r4.w; blending only rgb leaves the alpha test on the blend map's
-//	   own alpha.  Only the six alpha-tested static blobs can tell.
-//
-//	==== what this pass writes (the store side of gbuffer.h) ==============
-//
-//	gbuffer.h's `gbuffer_store*` family is a DIFFERENT, older generation and
-//	is dead for this pass: it packs a material id and an SH parameter into
-//	the normal target, and packs diffuse/specular POWERS into the position
-//	target.  Ship's gbuffer_pass writes none of that, and writes it inline -
-//	no store helper is called at all.  The three targets are:
-//	  SV_Target0.xy   normal.xy / sqrt(-8*normal.z + 8) + 0.5   (a Lambert
-//	                  azimuthal encode - the exact inverse of the decode in
-//	                  gbuffer.h's GBUFFER_NORMAL_PACKING_XYZ_MAT read path,
-//	                  which is already ship-proven by skylight.ps)
-//	  SV_Target0.z    ((translucency_bits << 7 & 896) + smoothness_bits)/1023
-//	  SV_Target0.w    (translucency_bits >> 3) / 3
-//	                  - so smoothness is 7 bits and translucency is 5, split
-//	                    3 bits into .z's high end and 2 bits into .w
-//	  SV_Target1.xyz  pow(abs(diffuse_color), 1/2.2)
-//	  SV_Target1.w    fresnel_bits / 255, where fresnel_bits is 7 bits of
-//	                  saturate(fresnel) with bit 7 set iff CONFIG_TRANSLUCENCY
-//	  SV_Target2      float4(1,0,0,0), or the OLTA transparency in .x
-//	No SV_Target3 exists here: the RT_EXTENTION_TARGET arm of gbuffer.h's
-//	g_struct is not what this pass emits.
-//
-//	==== headers the ship had that this tree does not =====================
-//
-//	* the loose `near_far_invn_invf` and `constant_parallax_scale` are
-//	  declared HERE, before common_cbuffers.h.  The reason recorded earlier -
-//	  that $Globals would otherwise land at the wrong cbuffer slot - is WRONG,
-//	  and was disproved on 2026-08-18: moving both declarations below the
-//	  #include recompiles byte-identically on every permutation tried,
-//	  parallax ones included.  **$Globals always binds at cbuffer slot 0**,
-//	  ahead of material_parameters and static_globals, however late its
-//	  members are declared; the "a cbuffer's slot is its declaration index
-//	  among the used ones" rule governs the *named* cbuffers only.  The
-//	  placement is kept because it reads better, not because it is forced.
-//	  gbuffer.h declares near_far_invn_invf itself, so including it would work
-//	  as well.
-//	* the vertex_output_struct dispatch is local.  The recovered
-//	  vertex_input.h and the per-type *_vertex_input.h headers map
-//	  CONFIG_VERTEX_INPUT_TYPE differently from ship, and ship's gbuffer_pass
-//	  differs from the (also ship-proven) forward_base.ps in two families:
-//	  static at LOD 0 puts the tangent basis at TEXCOORD0..2 and a view-space
-//	  position at TEXCOORD4, and wires (13) carry a real tangent basis.
-//	* psf_normal.h's psf_tnormal_detailed is NOT what ship called: it ends in
-//	  a normalize that the shipped detail-normal permutations do not have.
-//	* psf_parallax.h's calculate_steepparalax IS ship's algorithm, constant
-//	  for constant, but it is inlined here rather than included because the
-//	  header's non-steep arm references an undeclared `parallax` uniform.
-////////////////////////////////////////////////////////////////////////////
-
-// The loose globals come before the header's cbuffers by convention only.
-// $Globals binds at cbuffer slot 0 wherever its members are declared - proven
-// by moving both lines below the #include and recompiling byte-identically -
-// so the "slot = declaration index among the used ones" rule applies to the
-// named cbuffers and not to $Globals.
 uniform float4 near_far_invn_invf;
 uniform float constant_parallax_scale;
 
@@ -227,12 +8,8 @@ uniform sampler s_anisotropic;
 uniform sampler s_base;
 uniform sampler s_detail;
 
-// Declaration order is ship order, recovered by topological sort of the
-// resource-binding tables of all 1,136 shipped permutations: a slot is the
-// declaration index among the *used* resources, so any pair that co-occurs
-// pins its own order.  t_translucency/t_transparency/t_vertex_blended_normal
-// and t_normal_waves never co-occur with their neighbours, so their relative
-// places are unconstrained by the blobs.
+// Resource slots follow declaration order among used resources. The relative
+// order of resources that never coexist is intentionally unconstrained.
 Texture2D t_base;
 Texture2D t_detail;
 Texture2D t_normal;
@@ -249,11 +26,8 @@ Texture2D t_vertex_blended_diffuse;
 Texture2D t_specular_intensity;
 
 ////////////////////////////////////////////////////////////////////////////
-// vertex input types (ship numbering).  Every struct below reproduces a
-// shipped input signature exactly - semantic spelling, index and mask - and
-// the 1,136 blobs carry only twelve distinct signatures, so this dispatch is
-// complete.  CONFIG_LOD_INDEX changes the static layout (and only the static
-// one): at LOD 0 the tangent basis leads and a second float3 follows the
+// Local vertex-input layouts. CONFIG_LOD_INDEX changes only the static layout:
+// at LOD 0 the tangent basis leads and a second float3 follows the
 // world position, at LOD 1 the position leads and that float3 is gone.
 
 #if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2
@@ -477,12 +251,8 @@ void	main(in vertex_output_struct input,
 	// fade between 8 and 12 units of view depth.  It moves `tc` only - the
 	// normal tap keeps the coordinate snapshotted above.
 	//
-	// These two declarations, in this order and above the `if`, are what makes
-	// the input-type-1 blobs byte-identical; see "how the last cluster closed"
-	// at the top.  `parallax_view` is a VECTOR local, which fxc's range prover
-	// will not follow into the branch, so the smoothstep below keeps ship's
-	// fused `mul_sat`; the `bool` puts the `lt` ahead of the negation's `mov`,
-	// which is the order every other input type's blob shows.
+	// Keep these declarations in this order above the branch. fxc does not track
+	// the vector local's range, preserving mul_sat, while the bool emits first.
 	bool parallax_near			= view_position.z < 12.0f;
 	float3 parallax_view		= -view_position;
 

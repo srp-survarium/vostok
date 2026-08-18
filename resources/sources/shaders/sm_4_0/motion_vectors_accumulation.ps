@@ -1,13 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blobs - absent from the
-//	recovered source drop. Self-contained like depth_accumulate.ps (the ship
-//	include closure names header revisions the tree does not have).
-//	Ship facts: only VERTEX_INPUT_TYPE 1 and 3..6 reproject (colored static
-//	type 2 writes zero like every other type); the alpha test runs only when
-//	a diffuse texture exists, with Sample (not SampleLevel).
-//	Byte-identity: python3 -m vostok.shaders roundtrip
-////////////////////////////////////////////////////////////////////////////
-
 uniform float4x4	prev_world_view_matrix_parameter;
 uniform float4x4	inverse_world_matrix_parameter;
 

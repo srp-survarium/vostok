@@ -3,23 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2012
 ////////////////////////////////////////////////////////////////////////////
-//	Byte-identical across all four permutations 2026-08-18 (was 2680 against
-//	ship's 3536).  The recovered revision read the g-buffer through
-//	gbuffer_read(), which for this packing returns the position target's xyz
-//	verbatim; ship instead rebuilds view position from the eye ray and the
-//	linear depth in .x, exactly as skylight.ps does:
-//	  eye_ray.xy = s_eye_ray_corner.xy*(1 - uv*2)/s_eye_ray_corner.z, z = 1
-//	  position   = eye_ray*gbuffer_read_frame_depth(uv)
-//	and takes the normal from gbuffer_read_frame_normal() with .z negated -
-//	which is why the blob normalizes twice, the negation sitting between the
-//	decode's normalize and this file's own.  With gbuffer_read() gone nothing
-//	referenced s_eye_ray_corner, so fxc dropped $Globals entirely; ship's
-//	11-member $Globals is the tell that the eye ray is live.
-//	The last difference was placement: view_direction is defined AFTER
-//	reflected_light_direction, or its normalize schedules ahead of the
-//	reflect.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 #include "brdf.h"
 #include "gbuffer.h"
@@ -93,7 +76,6 @@ void main(in vertex_output_struct input,
 	out_color0			=	float4(0.5f * diffuse, 1.0f);
 	out_color1			=	float4(0.5f * specular, 1.0f);
 }
-
 
 
 

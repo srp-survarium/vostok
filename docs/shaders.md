@@ -1,5 +1,8 @@
 # The shipped shaders, their recipe, and the roundtrip proof
 
+For the SDK material authoring workflow and the runtime path from a material
+stage to one of these shader permutations, see [materials.md](materials.md).
+
 Established 2026-08-17, for the map-porting first-class-citizens work (see
 `resource-porter/docs/roadmap.md`, Phase 1): before authoring any shader of
 our own, prove we can reproduce the ones the client already trusts.
@@ -63,6 +66,10 @@ the native DLL sits beside fxc.exe, so Wine's app-directory loading picks it.
     python3 -m vostok.shaders disasm                # ship-truth asm, one per name
     python3 -m vostok.shaders disasm gbuffer_pass.ps --all-perms
     python3 -m vostok.shaders roundtrip             # exits nonzero on any DIFF
+    python3 -m vostok.shaders.probe --jobs 12 --list NAME...   # same verdicts,
+                                                    # concurrent, and it prints
+                                                    # the permutation string of
+                                                    # every DIFF
 
 `disasm` writes era-exact listings (named cbuffers, bindings, signatures —
 DXBC keeps its reflection) under `binaries/shaders/disasm/`. That tree is the
@@ -73,6 +80,12 @@ lives with the artifacts, not in git.
 `roundtrip` compiles a recovered source with
 `fxc /Zpr /O3 /T <profile>_4_0 /E main` under Wine and byte-compares the DXBC
 against the shipped blob — container, checksum, and all.
+
+`probe` is the same `roundtrip_one` behind a thread pool. It takes the whole
+tree from about **38 minutes to 65 seconds**, which is the difference between
+measuring a shared-header change properly and guessing at it from a per-shader
+run. Use `roundtrip` when you want the canonical serial output; use `probe`
+while iterating, and `--perms FILE` to re-run only the permutations that failed.
 
 **What the sources are, and are not.** `resources/sources/shaders/` arrived
 with the repo's initial source drop, alongside the engine C++ — it is the
@@ -186,7 +199,10 @@ fix pays across the tree: the 38-member `material_parameters` cbuffer,
 `static_globals`, the g-buffer read *and* store packings, the ship
 `CONFIG_VERTEX_INPUT_TYPE` map, and `common_samplers.h`'s `s_anisotropic`
 (the recovered header called it `s_border`; two independent families proved
-the ship name, and applying it let both drop local workarounds).
+the ship name, and applying it let both drop local workarounds). **The
+`s_border` half of that reading was wrong** — ship's own header, recovered
+verbatim later that day, declares `s_border` *and* `s_anisotropic`, in that
+order, between `s_linear` and `s_base`. See "Ship source, verbatim" below.
 
 Also complete since: **`forward_probe_lighting.ps` 300/300**,
 `depth_accumulate_batched.ps` (69), `fill_reflective_shadow_map_backed.ps`
@@ -216,16 +232,17 @@ output rather than by report: the indirect-lighting family (9 — both
 `hiz_fill_culling_results_buffer`, `olta_blend`, `apply_decal_normals_blend`,
 `wet_sufrace_normal_modify`, `fix_irradiance_texture`); `subsurface_scattering`
 + `translucency` (16); `decal_base` **0/30 → 30/30** with the atmosphere trio
-and the editor pair (35); and the `apply_distortion` pair (2).
+and the editor pair (35); the `apply_distortion` pair (2);
+`motion_blur.ps` **0/2 → 2/2**; and `reflection_mask.ps` **0/1 → 1/1**.
 
-Still open, with what is known about each:
+Final closure:
 
 | shader | state | note |
 | --- | --- | --- |
-| `forward_lighting.ps` | 563/600 | residual clusters recorded in its header |
-| `gbuffer_pass.ps` | 1,072/1,136 | same |
-| `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
-| `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
+| `forward_lighting.ps` | 600/600 | every shipped permutation is byte-identical |
+
+The full-tree sweep is now **3,402/3,402**. Every shipped v0.100b shader
+permutation is byte-identical.
 
 **Operand kind decides the split of a mixed multiply; chain depth decides the
 order of two stores.** This one is recorded at length because three passes read
@@ -305,14 +322,12 @@ one vectorised mul where two scalar accumulators divided separately emit two**,
 and a per-tap fetch pair wants named locals with both samples issued before
 either accumulate — `+=` directly on the sample interleaves them.
 
-The last two are worth separating from the rest. `reflection_mask.ps` matches
-ship across RDEF, ISGN, OSGN and the whole 1,152-byte SHDR chunk — the only
-differing byte in 2,300 is the mov counter at `STAT[0x4C]`, ship 4 against our
-3. That counter is taken *before* fxc's final peephole (shipped
-`fix_irradiance_texture.ps` records 21 movs for a listing showing 5), so ship's
-source held one extra mov the optimiser folded and no reading of the listing can
-recover it. Treat those two as recovered in substance and permanently one byte
-short, rather than as open work.
+`reflection_mask.ps` closes the `STAT`-only class. Its inert
+`clip(rsqrt(dot(reflected, reflected)))` must sit after the live early return:
+fxc counts the implicit move, then proves the clip non-negative and removes it
+before SHDR. Moving the same clip above the branch leaves SHDR identical but
+changes `MovInstructionCount` back from 4 to 3, so source order is part of the
+evidence even when the emitted instructions are unchanged.
 
 **A latent defect worth checking wherever the vertex-input dispatch is
 inlined.** `CONFIG_VERTEX_INPUT_TYPE == 12` (postprocess) must leave
@@ -483,18 +498,19 @@ Earned on `translucency.ps` and `subsurface_scattering.ps`:
   ship truth recovered twice over rather than a guess made while reconstructing
   `sun.ps`.
 
-**Where the trail goes cold.** Two shaders are byte-identical except for a
-`STAT` counter, and that is a real limit rather than a near miss.
-`reflection_mask.ps` matches ship across RDEF, ISGN, OSGN and the entire
-1,152-byte SHDR chunk; the only differing byte in 2,300 is the mov counter at
-`STAT[0x4C]` — ship 4, ours 3. That counter is taken *before* fxc's final
-peephole (shipped `fix_irradiance_texture.ps` records 21 movs for a listing
-showing 5), so ship's source held one extra mov that the optimiser folded away
-and no amount of reading the listing will show which. `motion_blur.ps` is the
-same class: same sizes, same taps in the same order, but fxc packs the per-tap
-offsets into a different component rotation (ship `l(0.0135,-0.0675,-0.0405,
--0.0135)` read `.yyzz`/`.wwxx`; every source shape tried gives
-`l(-0.0675,-0.0405,-0.0135,0.0135)` read `.xxyy`/`.zzww`).
+**A removed `clip` can still determine `STAT`.** `reflection_mask.ps` closed
+when the final fallthrough gained
+`clip(rsqrt(dot(reflected, reflected)))`. The `rsqrt` is non-negative, so the
+clip and its discard path vanish before SHDR; its implicit move survives long
+enough to raise `MovInstructionCount` from 3 to ship's 4. The location matters:
+placing the identical statement before the live branch emits the same SHDR but
+leaves the counter at 3.
+
+`motion_blur.ps` closed by expressing the already-proven tap sequence as the
+literal vectors fxc emits: Q0 starts at `.y` and wraps through `.x`, while Q3
+groups taps 2 and 5 in one coordinate vector. This preserves the loop and tap
+order but prevents fxc from canonicalising the offsets into sequential lanes;
+both quality permutations now round-trip byte-identically.
 
 ## Shared-header truth recovered so far
 
@@ -504,9 +520,9 @@ ship, and each fix pays across every file that includes them. Applied:
 | header | was | ship (proven by) |
 | --- | --- | --- |
 | `common_cbuffers.h` | 3-member `material_parameters`; `static_globals` without `m_V2W`/`screen_res`; loose `fresnel_at_0_degree`/`m_V2W` | 38 members, `alpha_ref_parameter` at 476; `m_V2W` and live `screen_res` inside `static_globals`; no loose globals (`depth_accumulate.ps`, 73 static_globals RDEFs) |
-| `common_samplers.h` | `s_border` | **`s_anisotropic`** between `s_linear` and `s_base` (`forward_lighting.ps` 600 blobs, `terrain_gbuffer_pass.ps` 30, `forward_probe_lighting.ps` 300 — three independent families) |
+| `common_samplers.h` | `s_border` | `s_border` **and** `s_anisotropic`, in that order, between `s_linear` and `s_base`, plus `s_prev_z` and `s_shmap` (ship's own header — the earlier reading, that `s_border` was a drift *of* `s_anisotropic`, was wrong: they coexist) |
 | `gbuffer.h` | `near_far_invn_invf` inside a `g_buffer_packing` cbuffer; raw-xyz normal/depth readers | loose uniform; Lambert-azimuthal normal decode, linear `.x` depth (`skylight.ps`) |
-| `dof_functions.h` | `pow(saturate(...), focus_power)` and a `>=` ternary | no `pow` at all (`focus_power` unread) and the ternary on `<` (`complex_post_process_blend.ps` 12 blobs, `gather_bloom.ps`) |
+| `dof_functions.h` | `pow(saturate(...), focus_power)` and a `>=` ternary | the ternary is on `<` (`complex_post_process_blend.ps` 12 blobs, `gather_bloom.ps`). The `pow` **is** there in ship's source — what changed is `focus_power`, which ship defines as the literal `1.0h` with `dof_parameters.z` commented out beside it, so `pow(x, 1)` folds away. "No pow at all" described the bytecode, not the source |
 | `psf_alpha_test.h` | `clip(alpha - 0.8)` | `clip(alpha - 0.25)` (all 34 alpha-test perms of `depth_accumulate_batched.ps`) |
 
 Proven but **not** applied, because the affected reconstructions carry the
@@ -527,6 +543,226 @@ right shapes locally and a header edit would need its own verification pass:
   `static_mesh_vertex_input_{lpv,shadow,shadow_batched}.h`, plus `wind.h`,
   `sharpen_common.h`, `skeleton_{1..4}_bones_mesh_vertex_input.h`,
   `user_vertex_input.h`, `atmospheric_scattering_common.h`.
+
+## Ship source, verbatim: the build-816 debug blobs
+
+Everything above this line was **inferred from bytecode**. This section is not.
+
+Build 816 (v0.1.1a, five days after 802) shipped seven blobs compiled `/Zi` at
+the default optimisation level instead of `/O3` — somebody's debugging session
+went out with the build. They are the only seven in the whole v0.1 line with an
+`SDBG` chunk, and an `SDBG` chunk embeds **the source text fxc was handed**:
+comments, dead code, author names, commented-out experiments. The seven are
+`god_rays.ps` and the six `GLOBAL_POST_PROCESS_QUALITY = 3` permutations of
+`complex_post_process_blend.ps`.
+
+Split out one file per source, CRLF preserved, in
+`vostok-shader-evolution/recovered/ship-headers/` (`split_pool.py` beside them
+regenerates the whole directory from build 816's `resources.db`). Read the
+`SDBG` string pool as a **pool, not a concatenation**: each file's text is
+appended in turn preceded by its name, but only when that name does not already
+occur earlier in the pool — which it usually does, inside the `#include` line
+that pulled it in. So `gbuffer.h`'s text is followed directly by
+`gamma_correction.h`'s with no marker between them; the reliable cut is each
+file's own include-guard terminator.
+
+**Twelve headers came out, not fourteen.** `common.h` and `debug.h` are *not*
+in either pool — the only occurrences of those two names anywhere in the chunks
+are the `#include` lines that name them. Neither file contains a single
+declaration (`common.h` is nothing but `#include`s, `debug.h` nothing but the
+`ABS_TO_REMOVE_WARNING` macro), so neither contributes a symbol to the debug
+info and the file table drops both. The same rule explains why `god_rays.ps`'s
+pool omits `common_iostructs.h` while the blend's carries it: god rays declares
+its own `vertex_output_struct` and references none of the shared ones. Their
+contents remain unrecovered; the pool ordering does pin `common.h`'s include
+list to `common_iostructs.h`, `common_samplers.h`, `common_cbuffers.h`,
+`common_functions.h`, in that order.
+
+**Why this source is admissible evidence for 802.** 802 and 816 ship 261 names
+each, and only five of them differ in code: `gbuffer_pass.ps`,
+`terrain_gbuffer_pass.ps`, `environment_probe_lighting.ps`, `god_rays.ps` and
+`complex_post_process_blend.ps` (that last one only because six of its
+permutations got the `/Zi` treatment). 251 names byte-identical across the
+window is a strong bound on how far a shared header can have moved — and the
+roundtrip is the actual test, applied one header at a time.
+
+### What landed
+
+Eleven of the twelve went into `resources/sources/shaders/sm_4_0/` **verbatim**
+(LF instead of CRLF, nothing else), and the full-tree roundtrip was unchanged
+after each: `common_samplers.h`, `common_cbuffers.h`, `common_functions.h`,
+`common_iostructs.h`, `gamma_correction.h`, `dof_functions.h`,
+`light_ps_helper.h`, `light_accumulator.h`, `colored_light.h`,
+`log_luv_color_space.h`, `luminance.h`. **The 802↔816 delta across all eleven
+is nil** — every one of them compiles 802's blobs byte-for-byte as it stands in
+816. The tree's versions of them were the X-Ray-derived source drop with
+campaign patches on top; ship's are Vostok rewrites dated 2012, `half`-typed
+throughout, and they carry a good deal the tree never had:
+
+* `common_functions.h` gains `MAX_LIGHTING_COLOR = 8.0h` with
+  `PACK_LIGHTING_COLOR`/`UNPACK_LIGHTING_COLOR` and their LPV siblings
+  (`MAX_LPV_LIGHTING_COLOR = 4.0h`), `g_ssao_max_value = 2.5h` with
+  `pack_ssao`/`unpack_ssao`, `desaturate`, `hdr_color_to_rgba8`,
+  `IN_HDR_COLOR`/`OUT_HDR_COLOR` — and **loses** every X-Ray leftover the tree
+  was carrying (`p_hemi`, `v_hemi`, `calc_fogging`, `calc_model_hemi_r1`,
+  `gbuf_pack_normal`, `alpha_to_coverage`, the `USABLE_BIT_*` block). Not one
+  of those was referenced anywhere else in the tree;
+* `light_ps_helper.h` gains the real `get_light_accumulator`, quoted in full
+  below, and `common_cbuffers.h` loses the `MOVED_FROM_dynamic_transforms` and
+  `shader_params` cbuffers (nothing read `L_material` or `alpha_ref`);
+* `light_accumulator.h` gains `sun_light_accumulator`
+  (`half4 diffuse, half4 specular, half2 depth_and_shadow`).
+
+Three collisions had to be resolved, all of them our reconstructions
+compensating for what our headers lacked, none of them an 802↔816 difference,
+and none of them costing a byte:
+
+* `sun.ps` declared its own `sun_light_accumulator` as the render-target
+  struct. A pixel shader's return type needs `SV_Target` semantics so it cannot
+  *be* the header's struct; renamed to `sun_light_accumulator_targets`. Note
+  the header's three members are exactly what that pass writes, in order — its
+  `depth_and_shadow` is `sun.ps`'s `float2( shadow_depth, shadow )`;
+* `s_shmap` was declared locally in `shadow.h`, `spot_shadow.h`, `sun.ps`,
+  `rain.ps`, `forward_simple_water.ps` and `wet_sufrace_normal_modify.ps`, and
+  `s_prev_z` in `temporal_mask.ps`. Ship declares both in `common_samplers.h` —
+  `s_prev_z` between `s_material1` and `s_jitter`, `s_shmap` last of all, after
+  `s_hemi`. All seven local declarations deleted; every affected shader still
+  compiles byte-identically, so ship's slot order is the order they were
+  reconstructed against anyway (`rain.ps`'s file header had recorded "declared
+  here, not in common_samplers.h" as if it were a finding — it was not).
+
+`complex_post_process_blend.ps` itself landed **verbatim, 12/12
+byte-identical**: 679 lines of ship's own source, with the commented-out
+`scattered_color`, the `USE_LUMINANCE_FROM_HISTOGRAM` switch, the four unused
+tone mappers, the `in_rect` mip-viewer debug block and the dead
+`#if 0 // show tonemapping curve` tail. That is proof its source did not move
+between 802 and 816 — the six changed blobs are the `/Zi` compile and nothing
+else.
+
+### The one header that did not land: `gbuffer.h`
+
+Ship's `gbuffer.h` is a different header from ours, not a drifted one. Ours is
+the X-Ray original, switched by `GLOBAL_GBUFFER_POS_PACKING` /
+`GLOBAL_GBUFFER_NORMAL_PACKING`; ship's has no packing conditionals at all, a
+three-argument `gbuffer_read_rt_position`, a `gbuffer_read_rt_color` that
+*returns* a gamma-decoded `half3`, no `gbuffer_read_material_parameters`, a
+`g_data` carrying `fresnel`/`roughness` where ours carries `specular_power`,
+and a family we lack entirely: `pack_spec_trans_and_roughness`,
+`gbuffer_read_spec_trans_and_roughness`, `has_translucency_flag`,
+`gbuffer_read_fresnel`, `gbuffer_read_translucency`, `decode_n`, `decode_n2`,
+`make_view_mat`, `gbuffer_read_frame_depth_linear`. It also includes
+`gamma_correction.h`, exactly as the shipped dep tables said it should.
+
+Dropped in verbatim it costs **121 permutations across 24 names**, and the
+cause is localised to a single statement. Ship's `gbuffer_read_rt_normal`
+finishes `normalize(decode_n2(data.xy))` with
+
+```hlsl
+	normal.z			*=	-1.0f;
+```
+
+and ours does not. Adding that one line to *our* header — changing nothing else
+— reproduces 120 of the 121 (the remaining one is
+`lpv_inject_occluders_camera_view.vs`, which calls the five-argument
+`gbuffer_read_rt_position`). So the g-buffer normal's sign convention is
+opposite between ship's header and the ~24 reconstructions built on ours, and
+landing ship's header means re-deriving all of them. That is a structural
+divergence, not a back-datable constant, and it is left alone: ship's file
+stays in `recovered/ship-headers/gbuffer.h` for the next pass. The consumers
+that would have to move with it are `capsule_light.h`, `sphere_light.h`,
+`plane_spot_light.h`, `spot_light.h`, `obb_light.h`, `parallel_light.h` and
+`point_light.h` (all seven call `gbuffer_read_material_parameters`),
+`gbuffer_to_screen.ps` (three-argument `gbuffer_read_rt_color`),
+`ssao_accumulation.ps` and `lpv_inject_occluders_camera_view.vs` (five-argument
+`gbuffer_read_rt_position`, and `g_data.specular_power`).
+
+### `god_rays.ps`: a real change in five days
+
+`god_rays.ps` is the one file where ship's 816 source genuinely does not
+compile to 802's blob — 2,864 bytes against 802's 2,664. It went in anyway,
+with ship's structure, comments and dead code intact, and **four back-dating
+edits took it to byte-identical on the first attempt**. Each one is a 802→816
+change:
+
+| 802 | 816 |
+| --- | --- |
+| `half ratio = screen_res.x / screen_res.y;` | `0.7*screen_res.x / screen_res.y` |
+| `dist = exp(-dist*20);` | `dist = saturate(pow(exp(-dist*20), 1));` |
+| `min(pow(alpha, god_rays_color_blend_power), 1.0h)` as the lerp factor | `saturate(pow(alpha, god_rays_color_blend_power))` |
+| `return god_rays_intensity * alpha * out_c;` | `… * out_c*1 + god_rays_intensity * alpha2 * out_c*2`, with `alpha2 = pow(alpha, 5*pow(1-alpha, 1))` |
+| `PACK_LIGHTING_COLOR( final_color * 5.0h )` | `PACK_LIGHTING_COLOR( final_color )` |
+
+The `min` versus `saturate` row is the third independent confirmation of the
+rule recorded above: the 802 blob emits a standalone `min r0.y, r0.y,
+l(1.000000)` where an outer `saturate()` would have fused into the preceding
+`exp` as `exp_sat`. The `*5.0h` is a guess about spelling confirmed by byte
+identity — what is proven is the product, `mul_sat r0.xyz, r0.xyzx,
+l(0.625000)`, and 0.625 is 5/8 against ship's `MAX_LIGHTING_COLOR` of 8.
+
+Read as a rendering change: in five days god rays grew a second, sharply
+falling additive lobe (`pow(alpha, 5(1-alpha))` peaks where alpha is high),
+doubled that lobe's weight, dropped the single-lobe 5× gain, gained a 0.7
+horizontal squeeze on the radial-distance metric, and clamped the falloff.
+
+### `light_ps_helper.h`, quoted
+
+Nothing in the tree calls `get_light_accumulator` today — every accumulator
+shader inlines its own — so landing the header was byte-neutral. It is still
+the most valuable thing in the pool, because it is the ground truth for the
+open light-accumulator residuals:
+
+```hlsl
+#define LIGHT_ACCUMULATOR_MAGNIFY_FACTOR	1.f
+
+light_accumulator get_light_accumulator ( half3 light_color, light_factors light_factors )
+{
+	light_accumulator result;
+	result.diffuse  = half4( ( convert_to_linear_space(light_color) * light_intensity * max(light_factors.diffuse,  0.0h) * light_diffuse_influence_factor ) / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0.f );
+	result.specular = half4( ( convert_to_linear_space(light_color) * light_intensity * max(light_factors.specular, 0.0h) * light_specular_influence_factor) / LIGHT_ACCUMULATOR_MAGNIFY_FACTOR, 0.f );
+	result.diffuse  =	PACK_LIGHTING_COLOR( result.diffuse );
+	result.specular =	PACK_LIGHTING_COLOR( result.specular );
+	return result;
+}
+```
+
+Four things it settles that the campaign had been guessing at: the gamma decode
+is on `light_color` **alone**, not on the product; `light_intensity` multiplies
+*before* the factor, not after; the `max(…, 0.0h)` sits on the light factor
+before any multiply; and the pack is `PACK_LIGHTING_COLOR` over the whole
+`half4`, i.e. `pow(saturate(c/8.0h), 0.5h)`, which fxc lowers to `rsq`+`div` —
+the `1.f/rsqrt(saturate(c*0.125f))` spelling the reconstructions arrived at
+independently. The `result.diffuse.w = light_factors.diffuse < 0 ? length(…)`
+line the tree's version computed is **commented out** at ship, twice over.
+
+### `half` versus `float`, measured
+
+Ship writes `half` everywhere and the tree was written in `float`, so landing
+these headers retypes a great deal of shared code. Every measurement taken says
+that is free at `ps_4_0` with this compiler:
+
+* the `h` literal suffix does **not** round. `static const float k = 2.2h;`
+  and `= 2.2f;` both emit `l(2.200000)`; `= 2.19921875f;` (the IEEE-half
+  rounding of 2.2) emits `l(2.199219)` and breaks everything downstream. Same
+  for a `half3(0.2125h, …)` constant vector against `float3(0.2125f, …)`;
+* `pow(saturate(c/8.0h), 0.5h)` and `pow(saturate(c/8.0f), 0.5f)` both lower to
+  `mul_sat`/`rsq`/`div` — the `h` suffix does not block the square-root
+  special case;
+* `get_light_accumulator` called from ship's `half`-typed header, and a
+  character-identical `float`-typed local copy of the same body, compile to the
+  same 1,492 bytes — and so do both of those again with `light_accumulator.h`'s
+  structs retyped to `float`. Four configurations, one output;
+* the full tree is unchanged at 3,364/3,402 with all eleven headers `half`-typed.
+
+A report of `565 → 556` on `forward_lighting.ps` attributed to this typing could
+not be reproduced in any of the above, and does not show in the full-tree
+figure. Two things were poisoning measurements that afternoon and either would
+produce it: two workers writing shared headers and `forward_lighting.ps` during
+each other's runs, and — the trap worth naming — **a per-shader run is not a
+measurement of a shared-header change.** 257 of the 261 names include at least
+one of these headers. Take the full tree before and after, or the number means
+nothing. If the retype does turn out to cost slots from a quiet tree, it is a
+mechanical back-date of the types in `light_ps_helper.h`,
+`light_accumulator.h` and `colored_light.h`, and ship's structure survives it.
 
 ## Every shipped name now has a source
 

@@ -1,14 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob
-//	(shaders/sm_4_0/skylight.vs, plain permutation) - the file was absent
-//	from the recovered source drop. Byte-identical to the shipped DXBC:
-//	python3 -m vostok.shaders roundtrip skylight.vs
-//
-//	Builds the ambient-cube basis skylight.ps blends in: two horizontal
-//	unit vectors at the wrap light's azimuth (from skylight_parameters6)
-//	and a constant up.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 
 uniform float4	skylight_parameters6;	// xyz - wrap light direction

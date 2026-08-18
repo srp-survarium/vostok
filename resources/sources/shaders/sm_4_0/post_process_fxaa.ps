@@ -3,18 +3,6 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 to the shipped v0.100b revision
-//	(shaders/sm_4_0/post_process_fxaa.ps, plain permutation);
-//	byte-identical. The recovered snapshot was an older FXAA generation
-//	(fxaa_common.h, the FXAA 1 whitepaper port); the blob's dependency list
-//	names fxaa.h instead - NVIDIA FXAA 3.11, quality preset 39, see the
-//	reconstruction notes there. Ship drives the thresholds from a
-//	fxaa_parameters uniform rather than compile-time defines, takes
-//	rcpFrame from static_globals' screen_res.zw, and no longer runs the
-//	output through convert_from_linear_space (gamma_correction.h stays
-//	included but unused - it is in the blob's dependency list).
-////////////////////////////////////////////////////////////////////////////
-
 /*
 	$DEFINES$:
 		GLOBAL_USE_LOOP_UNROLLING,

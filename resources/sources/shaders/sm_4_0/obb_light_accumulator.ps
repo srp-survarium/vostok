@@ -3,40 +3,6 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 18.08.2026
-//	Ground truth	: the four shipped permutations of
-//					  shaders/sm_4_0/obb_light_accumulator.ps, disassembled
-//					  with fxc /dumpbin /Fc.
-//	Acceptance		: python3 -m vostok.shaders roundtrip obb_light_accumulator.ps
-//
-//	STATE: 4 of 4 permutations byte-identical.
-//
-//	The point accumulator with the light's position pulled to the nearest
-//	point on an oriented box.  The core below is
-//	point_light_accumulator.ps's verbatim, and the shared-header findings this
-//	family proves are listed in that file's header.  This file's own:
-//
-//	  * obb_light.h's nearest_point_on_obb is ship-exact and is used from the
-//	    header - the three squared_length dot products, the per-axis
-//	    min(max(., -1), 1), the transpose-side mul back into world space.  Its
-//	    inout surface_position is never written, so unlike the capsule and
-//	    sphere lights the surface stays where the g-buffer put it;
-//	  * light_local_to_world is declared between the two includes, which is
-//	    what puts it at $Globals offset 48 - ahead of brdf.h's lighting_model,
-//	    which moves to 112.  Declaring it after obb_light.h moves the whole
-//	    tail and no blob matches;
-//	  * the shadow is taken at surface.position with no normal offset (the
-//	    point and spot lights both offset by normal*12/shadow_map_size), and
-//	    ship keeps the `result.diffuse >= 0.f ? shadow_factor.x : 1.f` test -
-//	    dropping it costs two instructions in each shadowed blob.
-//
-//	Axis status:
-//
-//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
-//	                                  geometric term.
-//	  CONFIG_SHADOWED_LIGHT (0, 1)    both identical.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

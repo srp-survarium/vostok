@@ -1,11 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob - absent from the
-//	recovered source drop. The vertical companion of blur_vertically.ps, but
-//	it ACCUMULATES: the last tap's mad feeds the incoming target rather than
-//	starting from zero, so the first tap is the loop's seed.
-//	Byte-identity: python3 -m vostok.shaders roundtrip
-////////////////////////////////////////////////////////////////////////////
-
 /*
 	$DEFINES$:
 		CONFIG_POST_PROCESS_BLUR_KERNEL,

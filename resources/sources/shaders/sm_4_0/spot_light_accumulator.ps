@@ -3,36 +3,6 @@
 //	Author		: Dmitriy Iassenev
 //	Copyright (C) GSC Game World - 2010
 ////////////////////////////////////////////////////////////////////////////
-//	Reconstructed	: 18.08.2026
-//	Ground truth	: the four shipped permutations of
-//					  shaders/sm_4_0/spot_light_accumulator.ps, disassembled
-//					  with fxc /dumpbin /Fc.
-//	Acceptance		: python3 -m vostok.shaders roundtrip spot_light_accumulator.ps
-//
-//	STATE: 4 of 4 permutations byte-identical.
-//
-//	The point accumulator plus spot_light.h's cone factor.  The core below -
-//	the packing, the shadow filter, the BRDF, the g-buffer reads and the point
-//	term - is point_light_accumulator.ps's verbatim, and the shared-header
-//	findings this family proves are listed in that file's header.  Two facts
-//	are this file's own:
-//
-//	  * the cone factor is spot_light.h's spot_light_impl unchanged, including
-//	    ABS_TO_REMOVE_WARNING around the inversed umbra-minus-penumbra cosine.
-//	    The blobs hold that abs (`mul r1.x, r1.x, |cb0[9].y|`), so MASTER_GOLD
-//	    is NOT defined for this compile - the same conclusion
-//	    convert_to_linear_space's `log |cb0[1]|` reaches;
-//	  * unlike point_light.h, ship's spot_light() keeps the
-//	    `result.diffuse >= 0.f ? shadow_factor.x : 1.f` test.  Dropping it
-//	    costs two instructions in each of the two shadowed blobs.
-//
-//	Axis status:
-//
-//	  GLOBAL_SHADING_QUALITY (0, 3)   both identical.  3 adds Cook-Torrance's
-//	                                  geometric term.
-//	  CONFIG_SHADOWED_LIGHT (0, 1)    both identical.
-////////////////////////////////////////////////////////////////////////////
-
 /*	$DEFINES$:
 		GLOBAL_SHADING_QUALITY,
 		CONFIG_SHADOWED_LIGHT,

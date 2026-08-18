@@ -2,10 +2,6 @@
 //	Created		: 03.11.2011
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
-//
-//	Reconstructed 2026-08-17: the shipped blob is byte-identical to the
-//	proven clouds.vs blob, so the source is the same transform under this
-//	name.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"

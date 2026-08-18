@@ -25,6 +25,13 @@ inline T				sqr				( T const& left );
 
 template < typename T >
 inline T				min				( T const& left, T const& right );
+// claude@MATCH: the by-value float overloads must be DECLARED here, before
+// math_functions_inline.h pulls in math_float3.h, so float3_pod::min/max bind
+// them instead of the by-const-ref templates - retail's image has NO
+// vostok::math::min<float>/max<float> instantiation anywhere (only STLport's),
+// while our base emitted both, called from select_lod, when the declarations
+// were missing (see patterns/three-arg-max-template-vs-nested-byvalue.md).
+inline float			min				( const float left, const float right );
 
 template < typename T >
 inline T				min				( T const& value1, T const& value2, T const& value3 );
@@ -34,6 +41,7 @@ inline T				min				( T const& value1, T const& value2, T const& value3, T const&
 
 template < typename T >
 inline T				max				( T const& left, T const& right );
+inline float			max				( float left, float right );
 
 template < typename T >
 inline T				max				( T const& value1, T const& value2, T const& value3 );

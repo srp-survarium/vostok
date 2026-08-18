@@ -1,16 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-18 from the shipped v0.100b blob
-//	(shaders/sm_4_0/hiz_fill_culling_results_buffer.ps, plain permutation) -
-//	absent from the recovered source drop. Byte-identity is the acceptance
-//	test: python3 -m vostok.shaders roundtrip hiz_fill_culling_results_buffer.ps
-//
-//	One occluder test per rasterized cell: the VS hands the bounding sphere
-//	over in TEXCOORD0 (centre.xyz, radius.w), and this shader builds the
-//	sphere's screen-space square, picks the hi-z mip that covers it, and
-//	compares the four corner taps against the sphere's nearest view depth.
-//	White = visible, black = culled.
-////////////////////////////////////////////////////////////////////////////
-
 #include "common.h"
 
 uniform float4	rasterize_size;

@@ -1,27 +1,3 @@
-////////////////////////////////////////////////////////////////////////////
-//	Reconstructed 2026-08-17 from the shipped v0.100b blob
-//	(shaders/sm_4_0/post_process_fxaa.ps, plain permutation). The blob's
-//	dependency list names resources.sources/shaders/sm_4_0/fxaa.h
-//	(mtime 2013-05-03), absent from the recovered source drop - the drop
-//	carries only the older fxaa_common.h generation. Byte-identity of the
-//	one shader that includes this file is the acceptance test:
-//	python3 -m vostok.shaders roundtrip post_process_fxaa.ps
-//
-//	This is NVIDIA FXAA 3.11 (FXAA_PC / FXAA_HLSL_4 quality path), trimmed
-//	to what the blob proves was compiled: the console/360/PS3 paths and the
-//	unused preset tables are not reconstructable from the blob and are left
-//	out. Two provable local edits against stock 3.11:
-//	* FxaaLuma() computes a luminance dot product
-//	  dot(rgb, (0.299, 0.587, 0.114)) - the blob dp3's every neighbour
-//	  sample - instead of stock's "luma in alpha" / "green as luma" channel
-//	  read;
-//	* lumaM stays the stock GREEN_AS_LUMA define (rgbyM.y), so the centre
-//	  pixel's luma is its raw green channel while every neighbour gets the
-//	  dot product - the blob really does mix the two.
-//	Only FXAA_QUALITY__PRESET 39 is blob-proven (search steps
-//	1,1,1,1,1,1.5,2,2,2,2,4,8), so only its table is carried.
-////////////////////////////////////////////////////////////////////////////
-
 #ifndef SHADERS_SM_4_0_FXAA_H_INCLUDED
 #define SHADERS_SM_4_0_FXAA_H_INCLUDED
 
