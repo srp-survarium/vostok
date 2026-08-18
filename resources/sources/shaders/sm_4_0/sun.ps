@@ -24,6 +24,35 @@
 //	  GLOBAL_SHADING_QUALITY                 0 and 3 ship
 //	  GLOBAL_USE_POISSON_DISC_SHADOW_FILTER  0 and 3 ship
 //
+//	Byte-identical across all four permutations 2026-08-18.  Everything that
+//	closed it was placement or grouping - not one operator changed meaning:
+//
+//	  * the depth fetch sits BETWEEN the eye ray's corner multiply and its
+//	    /s_eye_ray_corner.z divide.  Written either side of the whole eye-ray
+//	    block, fxc emits the divide before the sample and inverts the
+//	    position multiply's operands (lpv_downsample_gbuffer.ps needed the
+//	    same statement in the same place);
+//	  * main computes the FIRST cascade's homogeneous projection itself -
+//	    `float4 tc0 = mul( m_shadow0, ... )` - and passes it in; the divide
+//	    stays inside get_cascaded_shadow_factor.  fxc emits statement groups
+//	    in source order, so with the whole projection inside the callee the
+//	    four dp4s land after the light-colour block instead of before it, and
+//	    with project_shadow's divide in main the divide lands next to them
+//	    instead of after.  forward_lighting.ps spells its four cascades the
+//	    same way, mul then divide as separate statements;
+//	  * then height, then rotation_seed, then the light colour: those four
+//	    groups are independent and fxc emits them in exactly source order;
+//	  * the accumulator is two named colours before the two 1/rsqrt packings,
+//	    not two self-contained packing expressions - written the latter way
+//	    fxc finishes the diffuse pack before starting the specular multiply;
+//	  * `view_dot_normal` is declared in its own `#if` above normal_dot_light,
+//	    not inside the quality-3 attenuation block;
+//	  * the Poisson filter accumulates into two scalars and divides each by
+//	    tap_count separately - a float2 accumulator emits one vectorised mul
+//	    where ship has two scalar ones (exactly 32 bytes) - and each tap is
+//	    fetched into named locals with BOTH samples issued before either
+//	    accumulate, the comparison accumulated first.
+//
 ////////////////////////////////////////////////////////////////////////////
 
 /*	$DEFINES$:
@@ -131,16 +160,22 @@ float2 sample_cascade( float3 shadow_tc, float2 cascade_offset, float2 rotation_
 	//	at ship, not a negate.
 	float2x2 rotation	= float2x2( cos(angle), sin(-angle), sin(angle), cos(angle) );
 
-	float2 result	= 0.f;
+	//	Two scalar accumulators, not one float2: ship divides each by tap_count
+	//	on its own, and a float2 result would emit ONE vectorised mul where the
+	//	blobs show two scalar ones - the same shape the four-tap arm below has.
+	float depth		= 0.f;
+	float shadow	= 0.f;
 	[unroll]
 	for ( int i = 0; i < tap_count; ++i )
 	{
 		float2 tap	= tc.xy + ((mul( poisson_disk[i], rotation )*kernel_scale + 1.f)*(cascade_shadow_texel*0.5f));
-		result.x	+= t_cascaded_shadow_map.SampleLevel( s_rtlinear, tap, 0 ).x;
-		result.y	+= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tap, tc.z - 0.00001f ).x;
+		float d		= t_cascaded_shadow_map.SampleLevel( s_rtlinear, tap, 0 ).x;
+		float s		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tap, tc.z - 0.00001f ).x;
+		shadow		+= s;
+		depth		+= d;
 	}
 
-	return			result/tap_count;
+	return			float2( depth/tap_count, shadow/tap_count );
 #else
 	float d0		= t_cascaded_shadow_map.SampleLevel( s_rtlinear, tc.xy + (float2( -1.f, -1.f )*cascade_shadow_texel), 0 ).x;
 	float s0		= t_cascaded_shadow_map.SampleCmpLevelZero( s_shmap, tc.xy + (float2( -1.f, -1.f )*cascade_shadow_texel), tc.z - 0.00001f ).x;
@@ -168,11 +203,11 @@ float3 project_shadow( float4x4 shadow_matrix, float3 position )
 
 //	The cascades take their own normal offset: 1, 1.5 and 2 texels of the
 //	world grid, which is what the blobs' 0.015625 / 0.0234375 / 0.03125 are.
-float get_cascaded_shadow_factor( float3 position, float3 offset, float height, float2 rotation_seed, out float shadow_depth )
+float get_cascaded_shadow_factor( float3 position, float3 offset, float4 tc0, float height, float2 rotation_seed, out float shadow_depth )
 {
 	shadow_depth	= 0.f;
 
-	float3 t0		= project_shadow( m_shadow0, position + offset*shadow_normal_offset );
+	float3 t0		= tc0.xyz/tc0.w;
 
 	if ( inside_cascade( t0 ) )
 	{
@@ -236,10 +271,14 @@ struct sun_light_accumulator
 sun_light_accumulator main( v2p_sun_light I )
 {
 	float3	eye_ray;
-	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 )/s_eye_ray_corner.z;
+	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 );
+
+	float	depth			= gbuffer_read_frame_depth( I.tc );
+
+	eye_ray.xy				/= s_eye_ray_corner.z;
 	eye_ray.z				= 1;
 
-	float3	position		= eye_ray*gbuffer_read_frame_depth( I.tc );
+	float3	position		= eye_ray*depth;
 
 	float3	normal			= gbuffer_read_frame_normal( I.tc );
 	normal.z				= -normal.z;
@@ -258,6 +297,10 @@ sun_light_accumulator main( v2p_sun_light I )
 	float	view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
 	float	fresnel_factor	= fresnel_at_0_degree + (1.f - fresnel_at_0_degree)*pow( 1.f - view_dot_halfway_plus, 5.f );
 
+#if GLOBAL_SHADING_QUALITY >= 3
+	float	view_dot_normal			= dot( normal, view_direction );
+#endif
+
 	float	normal_dot_light	= dot( light, normal );
 	float	light_dot_normal	= saturate( normal_dot_light );
 
@@ -269,7 +312,6 @@ sun_light_accumulator main( v2p_sun_light I )
 	float	square_tangent_theta	= square_sine_theta/square_cosine_theta;
 
 #if GLOBAL_SHADING_QUALITY >= 3
-	float	view_dot_normal			= dot( normal, view_direction );
 	float	view_attenuation		= 2.f*saturate( cosine_theta*view_dot_normal/view_dot_halfway );
 	float	light_attenuation		= 2.f*saturate( cosine_theta*light_dot_normal/view_dot_halfway );
 	float	geometric_attenuation	= min( min( view_attenuation, light_attenuation ), 1.f );
@@ -302,6 +344,7 @@ sun_light_accumulator main( v2p_sun_light I )
 	float	shadow_bias_scale	= max( position.z*0.02f, 0.25f );
 	float3	shadow_offset		= (shadow_bias_scale*(bias_factor*6.f + 2.f))*normal;
 
+	float4	tc0				= mul( m_shadow0, float4( position + shadow_offset*shadow_normal_offset, 1.f ) );
 	float	height			= mul( m_V2W, float4( position, 1.f ) ).y;
 
 	//	A world-stable rotation seed: the point's world *direction* projected
@@ -311,14 +354,17 @@ sun_light_accumulator main( v2p_sun_light I )
 	float4	fixed_position	= mul( sun_fixed_matrix, float4( mul( (float3x3)m_V2W, position ), 1.f ) );
 	float2	rotation_seed	= fixed_position.xy/fixed_position.w;
 
-	float	shadow_depth;
-	float	shadow			= saturate( get_cascaded_shadow_factor( position, shadow_offset, height, rotation_seed, shadow_depth ) );
-
 	float3	light_color_linear	= convert_to_linear_space( light_color )*light_intensity;
 
+	float3	diffuse_color	= light_color_linear*diffuse*light_diffuse_influence_factor;
+	float3	specular_color	= light_color_linear*specular*light_specular_influence_factor;
+
 	sun_light_accumulator result;
-	result.diffuse			= 1.f/rsqrt( saturate( float4( light_color_linear*diffuse*light_diffuse_influence_factor, 0.f )*0.125f ) );
-	result.specular			= 1.f/rsqrt( saturate( float4( light_color_linear*specular*light_specular_influence_factor, 0.f )*0.125f ) );
+	result.diffuse			= 1.f/rsqrt( saturate( float4( diffuse_color, 0.f )*0.125f ) );
+	result.specular			= 1.f/rsqrt( saturate( float4( specular_color, 0.f )*0.125f ) );
+
+	float	shadow_depth;
+	float	shadow			= saturate( get_cascaded_shadow_factor( position, shadow_offset, tc0, height, rotation_seed, shadow_depth ) );
 
 	result.diffuse.xyz		*= shadow + shadow_transparency;
 	result.specular.xyz		*= shadow;

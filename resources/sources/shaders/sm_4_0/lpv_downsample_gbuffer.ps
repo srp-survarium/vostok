@@ -3,6 +3,20 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
+//	Byte-identical 2026-08-18 (was 2896 against ship's 3412).  Three drifts,
+//	all in the g-buffer read path and all the same ones instance_test.ps
+//	carried:
+//	  * the eye ray is s_eye_ray_corner.xy*(1-uv*2)/s_eye_ray_corner.z with
+//	    z = 1, not corner.xy*(1-uv*2) with z = corner.z - the shape
+//	    skylight.ps already byte-proved;
+//	  * view position is eye_ray*gbuffer_read_frame_depth(uv) (linear depth
+//	    in .x), not the recovered gbuffer_read_rt_position's data.xyz;
+//	  * read_screen_vs_normal negates .z, exactly as skylight.ps does.
+//	The last instruction to fall was placement, not spelling: ship emits the
+//	t_position fetch BETWEEN the corner multiply and the /corner.z divide, so
+//	the depth statement sits between the two halves of the eye ray.  Written
+//	either side of the whole eye-ray block it lands one slot off.
+////////////////////////////////////////////////////////////////////////////
 
 /*	$DEFINES$:
 */
@@ -41,16 +55,15 @@ float calc_texel_lum(float3 color, float3 normal)
 
 float3 read_screen_vs_position(float2 uv)
 {
-	float2 temp_value 		= 	0;
-	float3 position			=	0;
-	
 	float3 eye_ray			=	0;
 	eye_ray.xy				= 	s_eye_ray_corner.xy * (1.0f - uv.xy * 2.0f);
-	eye_ray.z				= 	s_eye_ray_corner.z;
-	
-	gbuffer_read_rt_position(uv, eye_ray, position, temp_value.x, temp_value.y);	
-	
-	return position;
+
+	float depth				=	gbuffer_read_frame_depth(uv);
+
+	eye_ray.xy				/=	s_eye_ray_corner.z;
+	eye_ray.z				= 	1;
+
+	return eye_ray*depth;
 }
 
 float3 read_screen_normal(float3 pos, float2 uv)
@@ -72,22 +85,14 @@ float3 read_screen_vs_normal(float2 uv)
 	float2 temp_value 		= 	0;
 	
 	gbuffer_read_rt_normal	(uv, normal, temp_value.x, temp_value.y);
-	
+	normal.z				=	-normal.z;
+
 	return normal;
 }
 
 float3 read_screen_position(float2 uv)
 {
-	float2 temp_value 		= 	0;
-	float3 position			=	0;
-	
-	float3 eye_ray			=	0;
-	eye_ray.xy				= 	s_eye_ray_corner.xy * (1.0f - uv.xy * 2.0f);
-	eye_ray.z				= 	s_eye_ray_corner.z;
-	
-	gbuffer_read_rt_position(uv, eye_ray, position, temp_value.x, temp_value.y);	
-	
-	return mul(m_V2W, float4(position, 1.0f)).xyz;
+	return mul(m_V2W, float4(read_screen_vs_position(uv), 1.0f)).xyz;
 }
 
 

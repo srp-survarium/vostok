@@ -5,16 +5,21 @@
 //	against the blob is the acceptance test:
 //	python3 -m vostok.shaders roundtrip ssao_filter_upsample_temporal.ps
 //
-//	PARKED one instruction short, and it is the same residual as in
-//	ssao_filter_upsample.ps, whose header carries the tried-list: ship keeps
-//	`max r0.y, r0.z, l(0.0)` after the ao_sum/total_weight divide and this
-//	compile drops it, because fxc 9.29 can prove the ratio non-negative from
-//	the two saturates. That prover, and not the spelling of max(), is what
-//	the 2026-08-18 pass pinned down over there: `precise`, `-min(-x,0)` and
-//	every [0,1] clamp spelling are transparent to it, and dropping ao's
-//	saturate is the only thing that keeps the max - at the cost of the
-//	mov_sat the blob shows. Fix one file and this one falls with it.
-//	Everything else is byte-identical, including the
+//	CLOSED 2026-08-18, byte-identical (was 5032 against ship's 5060), by the
+//	one line that closed ssao_filter_upsample.ps - they share this loop:
+//
+//	    weight = clamp( 1.f - saturate( range ), 0.f, 1.f)
+//
+//	The residual was ship's `max r0.y, r0.z, l(0.0)` after the
+//	ao_sum/total_weight divide, which fxc folds away once it can prove the
+//	ratio non-negative.  `saturate(x)` and `clamp(x, 0.f, 1.f)` emit the same
+//	`_sat` but are NOT interchangeable to that prover: a clamp/min-max pair is
+//	fused straight into the producing instruction's `_sat` destination
+//	modifier and never becomes a saturate node, so the prover cannot read a
+//	range off it.  The full argument, the position rule (inner clamp on the
+//	ratio, outer on 1.f - ratio) and the tried-list are in
+//	ssao_filter_upsample.ps's header.
+//	Everything else was already byte-identical, including the
 //	diagonal temporal-mask gather - whose OR chain really does fold the
 //	centre tap three times (initial value plus x == 0 in each of the two
 //	loops) while the AND chain folds its duplicates to one, exactly as the
@@ -71,7 +76,7 @@ p_ssao_filter_upsample_temporal main( v2p_ssao_filter_upsample_temporal I )
 		float2	value		= t_ssao_accumulator.SampleLevel( s_linear, tc, 0).xy;
 		float	ao			= saturate( value.x);
 		float	depth		= value.y*0.01f;
-		float	weight		= 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f));
+		float	weight		= clamp( 1.f - saturate( ( center_depth*0.01f - depth)/( depth*0.01f)), 0.f, 1.f);
 
 		total_weight		+= weight;
 		ao_sum				+= ao*weight;
