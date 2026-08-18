@@ -43,6 +43,34 @@
 //	the SHDR size unchanged.  Since the campaign's rule is that allocation
 //	follows statement placement, the lever - if there is one - is upstream of
 //	the loop, and the four moves above are the obvious ones already spent.
+//
+//	2026-08-18, SECOND PASS - the quality-3 blob explains the shape, and it
+//	is not arithmetic. Ship's Q3 taps are grouped
+//	   vector 1  l(0.010000, -0.090000, -0.070000, -0.050000) = (i5,i0,i1,i2)
+//	             .yyzz -> taps 0,1     .wwxx -> taps 2,5
+//	   vector 2  l(-0.030000, -0.010000, 0.030000, 0.050000)  = (i3,i4,i6,i7)
+//	             .xxyy -> taps 3,4     .zzww -> taps 6,7
+//	   scalar    0.070000 = i8
+//	so ship pairs tap 2 with tap 5 and carries i5 in the first vector, with
+//	dcl_temps 9 against our 7. Ours groups strictly sequentially,
+//	(0,1)(2,3)(4,5)(6,7). That is a *scheduling* difference driven by register
+//	pressure - ship holds two more values live - not a different expression.
+//
+//	At Q0 the pairs are the same as ours, (0,1) and (2,3), and only the lane
+//	rotation differs, so Q0 is pure immediate-lane allocation.
+//
+//	Measured this pass: a descending loop emits
+//	l(0.040500, 0.013500, -0.013500, -0.040500) read .xxyy/.zzww - i.e. the
+//	lanes fill in the loop's own execution order and the last tap becomes the
+//	scalar. So lane order tracks execution order, and ship's (i3,i0,i1,i2)
+//	against an execution order of i0,i1,i2,i3 cannot be produced that way:
+//	ship's cursor started at lane y and wrapped. Also tried, all leaving the
+//	packing and the slot count unchanged: a uint loop counter, a 1..N loop
+//	with the index shifted by one, and precomputing every tap coordinate into
+//	a float2 array in its own [unroll] loop ahead of the sampling loop (the
+//	shape that closed forward_simple_water.ps) - fxc canonicalises it away and
+//	still emits dcl_temps 7.
+//
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
