@@ -1,44 +1,82 @@
-// PARKED 2026-08-18: one instruction-shape from byte-identity, 16 bytes in
-// every one of the 15 permutations. Ship emits the y flip as its own scalar
-// multiply by a literal -1.0, and keeps the two scale muls apart:
+// PARKED 2026-08-18 (second pass). Every one of the 15 permutations now
+// compiles to the shipped BYTE LENGTH, with the shipped instructions, and
+// differs from ship only by two adjacent instructions being transposed:
 //
 //	mul r0.y, r0.y, cb0[1].y	; dist.y * distortion_scale.y
-//	mul o0.y, r0.y, l(-1.000000)	; the flip, unfolded
-//	mul o0.x, r0.x, cb0[1].x	; dist.x * distortion_scale.x
+//	mul o0.y, r0.y, l(-1.000000)	; ship emits the flip here ...
+//	mul o0.x, r0.x, cb0[1].x	; ... and the x scale after it
 //
-// fxc 9.29 canonicalises every scalar `* -1.0f` into a neg modifier and then
-// vectorises the two scale muls, giving `mul r0.xy, r0.xyxx, cb0[1].xyxx` /
-// `mov o0.y, -r0.y` / `mov o0.x, r0.x`. `mul ..., l(-1.000000)` appears in no
-// other shipped blob - only here and in distortion_panner.ps.
+// We emit `mul o0.x` first and `mul o0.y` second. Nothing else differs, in any
+// permutation: same opcodes, same registers, same literals, same signatures,
+// same RDEF (spot-checked on VIT 0, 8, 11, 12; `roundtrip` reports "first
+// mismatch at +4" - the container checksum - for all 15, so the lengths agree).
+// `mul ..., l(-1.000000)` appears in no other shipped blob: only here and in
+// distortion_panner.ps.
 //
-// About 80 spellings were tried against the VIT-0 permutation. Two mechanisms
-// reproduce one half each, and they compete for the four output lanes:
+// What the second pass measured, all against the shipped blobs:
 //
-//   * the -1 survives only inside a constant-vector multiply that writes at
-//     least two output components directly. `output.distortion.yzw =
-//     float3(y, 1.0f, 0.0f) * float3(-1.0f, 1.0f, 1.0f)` emits ship's
-//     `mul o0.y, r0.y, l(-1.000000)` and lands on 1,044 of 1,056 bytes.
-//     Every scalar form folds instead: `* -1.0f`, `-1.0f *`, `-(x)`, `* -1`,
-//     `/ -1.0f`, `*= -1.0f`, `lerp(0,x,-1)`, `mad(x,-1,0)`, `x * -1 + 0`,
-//     `0 - x`, `mul(x,-1.0f)`, `mul(float1x1(-1),x)`, `* sign(-1.0f)`,
-//     `* -sqrt(1.0f)`, `* cos(pi)`, `* -exp2(0)`, `* -rsqrt(1)`, `* -abs(1)`,
-//     `* -floor(1.9)`, `* -normalize(1)`, `* asfloat(0xbf800000)`, a `float1`
-//     or `vector<float,1>` factor, `precise`, `half`, a one-iteration
-//     `[unroll]` loop, a `const float2`/`const float[2]`/`static` lane, and
-//     the same flip inside a helper taking the value by value, by inout or
-//     by out.
-//   * the two scale muls stay unmerged only when BOTH are lanes of masked
-//     vector writes: `output.distortion.xw = float2(dist.x, 0.0f) *
-//     float2(distortion_scale.x, 1.0f)` with `.yz` written the same way emits
-//     ship's `mul r0.y, ...` / `mul o0.x, ...` pair - 1,052 of 1,056 bytes.
+//   1. A SCALAR `x * -1.0f` is always folded into a neg modifier
+//      (`mov o0.y, -r0.y`), whatever the spelling - see the first pass's list
+//      at the bottom, and copy_image.vs, which ships that fold from the same
+//      `(...)*-1` idiom. The literal survives only when the -1 is a lane of a
+//      MULTI-LANE vector multiply that lives until fxc's late per-lane split.
+//   2. A masked write to o0 keeps its multiply a vector op (and so keeps the
+//      -1, or keeps the x scale from merging) only if the write owns lane w,
+//      or its constant vector has at least two NON-TRIVIAL lanes - a lane
+//      multiplied by 1.0f folds away and the write collapses to a scalar.
+//      Measured over all 32 (x-mask, y-mask) pairs of {x,xz,xw,xzw} x
+//      {y,yz,yw,yzw} in both statement orders: 1,040 bytes when neither
+//      survives, 1,044 when only the flip does, 1,052 when only the x scale
+//      does. This is the sharp form of the first pass's "five of four lanes":
+//      lane w is one resource and both halves wanted it.
+//   3. Two plain scalar scale muls ALWAYS merge into
+//      `mul r0.xy, r0.xyxx, cb0[1].xyxx` - they are lane-aligned, and nothing
+//      tried breaks that: mismatched operand order between the two, `precise`
+//      (which only splits the mad into mul+add, costing an instruction),
+//      scalar-times-float3 spellings, a hoisted temp, an in-place
+//      `dist_vector.y *= distortion_scale.y`, separating the two statements
+//      with the alpha or the zw write, or parking the x product in a dead lane
+//      of the y write.
+//   4. Giving BOTH writes a live multiplier DOES reach the shipped size with
+//      ship's exact instructions. Two ways: one mixed cbuffer/literal scale
+//      vector (what this file now does), or two separate writes whose spare
+//      lanes carry non-trivial constants, e.g. `.xz = float2(dist.x, 0.5f) *
+//      float2(distortion_scale.x, 2.0f)` beside `.yw = float2(y, 1.0f) *
+//      float2(-1.0f, 0.0f)`. Both land on 1,056 with the pair transposed.
+//   5. fxc emits the lanes of an o0 store in x,y,z,w order, and that is what
+//      leaves the two muls transposed. It did not move for any of: permuted
+//      write masks (`.yxz`, `.zyx`, `.yzx`, `.yx` - HLSL normalises them),
+//      either statement order, the alpha written before/between/after, the
+//      output struct's members declared in the other order (which DOES hoist
+//      `mov o1` to the top - declaration order is a scheduling lever, just not
+//      between two lanes of one register), `out` parameters instead of a
+//      returned struct, a local float4 assembled first, a helper function
+//      returning the packed vector, or swizzling the product out (`f.yxzw`).
 //
-// Having both at once needs five of the four lanes: whichever masked write
-// comes second kills a lane of the first, that write collapses to a scalar,
-// and the shape falls back to one half or the other. Everything else in this
-// file is byte-exact for all 15 permutations - the vertex-input dispatch, the
-// cbuffer layout, the signatures, the sample, the *2-1 remap, the zw
-// constants and the second render target: every permutation's disassembly
-// differs from ship in that one hunk and in nothing else.
+// So the open question is narrow: what makes fxc schedule the o0.y lane of a
+// store before the o0.x lane? Ship proves it can - `fill_sky_ao_map.ps` writes
+// o0.y, o0.z, o0.x, o0.w in that order, and `copy_image.vs` emits its whole y
+// chain before its x chain from source that writes x first - but in both of
+// those the lanes carry multi-instruction chains that cannot be vectorised
+// (dp2 with splat swizzles; integer unpacks), so the scheduler orders them by
+// chain instead of by lane. Here each lane is one mul and the tie breaks the
+// other way. Probes that replace the flip with `* 3.0f` or
+// `* distortion_scale.z` reproduce the same transposition, so this is
+// scheduling, not the -1: solve the order and the -1 is already solved.
+//
+// First pass's tried-list, still valid. Every scalar spelling of the flip
+// folds: `* -1.0f`, `-1.0f *`, `-(x)`, `* -1`, `/ -1.0f`, `*= -1.0f`,
+// `lerp(0,x,-1)`, `mad(x,-1,0)`, `x * -1 + 0`, `0 - x`, `mul(x,-1.0f)`,
+// `mul(float1x1(-1),x)`, `* sign(-1.0f)`, `* -sqrt(1.0f)`, `* cos(pi)`,
+// `* -exp2(0)`, `* -rsqrt(1)`, `* -abs(1)`, `* -floor(1.9)`,
+// `* -normalize(1)`, `* asfloat(0xbf800000)`, a `float1` or
+// `vector<float,1>` factor, `precise`, `half`, a one-iteration `[unroll]`
+// loop, a `const float2`/`const float[2]`/`static` lane, and the same flip
+// inside a helper taking the value by value, by inout or by out.
+//
+// Everything else in this file is byte-exact for all 15 permutations - the
+// vertex-input dispatch, the cbuffer layout, the signatures, the sample, the
+// *2-1 remap, the zw constants and the second render target.
 //
 // Fixed on the way there, and it affects every file carrying this dispatch:
 // CONFIG_VERTEX_INPUT_TYPE 12 was falling into the null branch and inheriting
@@ -240,8 +278,8 @@ pixel_output_struct	main	(in vertex_output_struct input)
 
 	float2 dist_vector 	= t_base.Sample(s_linear, parameters.tc).xy*2.0f - 1.0f;
 	pixel_output_struct output;
-	output.distortion.yzw = float3(dist_vector.y*distortion_scale.y, 1.0f, 0.0f) * float3(-1.0f, 1.0f, 1.0f);
-	output.distortion.x = dist_vector.x*distortion_scale.x;
+	output.distortion.xy = float2(dist_vector.x, dist_vector.y*distortion_scale.y) * float2(distortion_scale.x, -1.0f);
+	output.distortion.zw = float2(1.0f, 0.0f);
 	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return output;

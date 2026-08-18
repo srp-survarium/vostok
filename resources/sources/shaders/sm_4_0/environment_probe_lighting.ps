@@ -17,40 +17,20 @@
 //	gloss code out of the normal target's .z and its specular-intensity code
 //	out of the diffuse target's .w - both 7-bit fields over 127.
 //
-//	STATE: 0 of 32 permutations byte-identical.  All sixteen
-//	GLOBAL_LIGHTING_QUALITY=0 permutations - every combination of the three
-//	CONFIG_ENV_PROBE_* axes - compile to exactly 28 bytes less than their blob,
-//	and the missing 28 bytes are the SAME instruction in all sixteen: one
-//	`mul r, r, l(4.000000)`.  See PARKED, below.  The sixteen
-//	GLOBAL_LIGHTING_QUALITY=3 permutations are not written at all.
+//	STATE: 32 of 32 permutations byte-identical (18.08.2026).
 //
 //	Axis status:
 //
 //	  GLOBAL_SHADING_QUALITY (0, 3)      DEAD.  Every pair of blobs that
 //	                                     differs only in it is byte-identical;
 //	                                     the define is not read.
-//	  GLOBAL_LIGHTING_QUALITY (0, 3)     0 reconstructed to the one parked
-//	                                     instruction; 3 NOT WRITTEN.  At 3 the
-//	                                     diffuse becomes a cone gather - eight
-//	                                     hardcoded 3x3 rotations of the world
-//	                                     normal, each row a cyclic shift of the
-//	                                     one above it (0.997250/-0.029667/
-//	                                     0.067912, then 0.948293/-0.029853/
-//	                                     -0.315989, 0.895642/-0.095603/0.434380,
-//	                                     0.824255/0.554177/0.116152, 0.786356/
-//	                                     -0.617759/0.004355, 0.771697/0.406877/
-//	                                     -0.488809, 0.752597/-0.345348/
-//	                                     -0.560654, 0.723047/0.283888/0.629771),
-//	                                     each renormalised, sampled at
-//	                                     num_mips-2 through s_material1, summed
-//	                                     and scaled by 0.111111 - eight taps
-//	                                     over nine, not a typo in this note -
-//	                                     and the specular runs the full
-//	                                     forward_probe_lighting Beckmann
-//	                                     (255*(1-r), 2/(n+2)-0.00778, pow 0.48,
-//	                                     1/(m^2*pi), the |VdotN*NdotL| divide)
-//	                                     instead of the closed form below.
-//	                                     274 slots against 145.
+//	  GLOBAL_LIGHTING_QUALITY (0, 3)     the one live quality axis.  At 3 the
+//	                                     single diffuse tap becomes an eight-
+//	                                     direction cone gather and the closed-
+//	                                     form specular becomes the full
+//	                                     forward_probe_lighting Beckmann with a
+//	                                     Cook-Torrance geometry term on top.
+//	                                     273 slots against 144.
 //	  CONFIG_ENV_PROBE_GEOMETRY_TYPE     0 sphere, 1 box.  A box probe that
 //	                                     neither shadows nor clips drops the
 //	                                     dynamic_transforms and
@@ -65,14 +45,47 @@
 //	  GLOBAL_USE_SCREENSPACE_REFLECTIONS_MASK, CONFIG_SHADOWED_LIGHT
 //	                                     ship only as 0; unconstrained.
 //
-//	Everything else in the LIGHTING_QUALITY=0 arm matches the shipped listings
-//	instruction for instruction: the eye-ray prologue, both g-buffer reads
-//	(depth through s_position, the Lambert-azimuthal normal through s_normal,
-//	the gloss code through s_accumulator and the specular-intensity code
-//	through s_diffuse), the Schlick fresnel, the diffuse output and its 1/rsqrt
-//	packing, the range falloff, the box falloff, the depth-cube shadow, the
-//	normal clip, the roughness-blended reflection direction and the whole
-//	specular tail.
+//	==== the four things that were wrong, and how each was found ==========
+//
+//	1. THE ROUNDED CONSTANTS.  fxc's own listing prints every literal with
+//	   "%.6f", so `l(0.007874)` and `l(0.003333)` look settled and are not.
+//	   Five of this file's constants had to come out of the DXBC as raw float
+//	   bits (a word-level diff of ship against our compile, not a listing
+//	   diff, is the only thing that shows them):
+//	     0x3C010204  1.f/127.f         - NOT the literal 0.007874f
+//	     0x3BF6E7B0  1.f/(127.f*1.045f)- NOT 0.007535f.  The 1.045 keeps
+//	                                     specular_gloss off zero, which the
+//	                                     1/(specular_gloss*22) below divides by
+//	     0x37800080  1.f/65535.f       - NOT 0.000015f
+//	     0x3B5A740E  1.f/300.f         - NOT 0.003333f
+//	     0x3DE38E39  1.f/9.f           - the cone gather's average
+//	   `(1.f/127.f)*v` never reproduces the second one for any v; it has to be
+//	   spelled as a DIVISION, because fxc folds `A/B` and `A*(1/B)` to
+//	   different float32s.  point_light_accumulator.ps already recorded the
+//	   /127.f half of this.
+//
+//	2. THE MIP PRODUCT.  Given a named `gloss_attenuation` variable, fxc
+//	   reassociates `((1-m)*4)*gloss_attenuation*8` into a single `*32` and
+//	   drops one instruction.  Writing the view term INLINE into the product -
+//	   `roughness_mip*pow( saturate( view_dot_normal ), 0.2f )`, roughness
+//	   first, exactly forward_probe_lighting.ps's shape - stops the sinking and
+//	   restores ship's separate `mul r, r, l(4.000000)`.  See the comment at
+//	   the statement itself; nothing else moved it (barriers of every kind are
+//	   proved away, statement placement does not matter, and `precise` blocks
+//	   the fold only by poisoning half the shader).
+//
+//	3. THE FALLOFF ORDER.  The normal clip is applied BEFORE the depth-cube
+//	   shadow, and the two products take opposite operand orders.
+//
+//	4. THE LIGHTING_QUALITY=3 ARM, which had never been written.
+//
+//	Everything else matches the shipped listings instruction for instruction:
+//	the eye-ray prologue, both g-buffer reads (depth through s_position, the
+//	Lambert-azimuthal normal through s_normal, the gloss code through
+//	s_accumulator and the specular-intensity code through s_diffuse), the
+//	Schlick fresnel, the diffuse output and its 1/rsqrt packing, the range
+//	falloff, the box falloff, the depth-cube shadow, the normal clip, the
+//	roughness-blended reflection direction and the whole specular tail.
 //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -118,6 +131,26 @@ float3 pack_light_accumulator( float3 value )
 	return	1.f/rsqrt( saturate( value*0.125f ) );
 }
 
+#if GLOBAL_LIGHTING_QUALITY == 3
+//	The eight cone directions of the high-quality diffuse gather.  Each entry
+//	is the first row of a circulant 3x3 whose other two rows are its cyclic
+//	shifts, so one float3 spells a whole rotation; the world normal is turned
+//	by all eight, renormalised, and sampled at the same mip the cheap path
+//	takes its single tap at.  Eight taps are averaged over NINE - that is what
+//	the blobs hold, and it is a deliberate darkening, not a miscount.
+static const float3	cone_directions[8] =
+{
+	float3(  0.99725014f, -0.029667195f,  0.06791174f  ),
+	float3(  0.948293f,   -0.029853212f, -0.31598923f  ),
+	float3(  0.89564174f, -0.095602594f,  0.43438f     ),
+	float3(  0.8242554f,   0.55417657f,   0.11615242f  ),
+	float3(  0.7863557f,  -0.6177587f,    0.004354838f ),
+	float3(  0.7716971f,   0.4068773f,   -0.48880917f  ),
+	float3(  0.75259656f, -0.34534776f,  -0.56065434f  ),
+	float3(  0.7230467f,   0.28388765f,   0.6297708f   ),
+};
+#endif // #if GLOBAL_LIGHTING_QUALITY == 3
+
 struct environment_probe_output
 {
 	float4	diffuse		: SV_Target0;
@@ -154,8 +187,6 @@ environment_probe_output main( pixel_shader_input input )
 
 	float	view_dot_normal		= dot( view_direction, world_normal );
 	float3	reflection			= reflect( view_direction, world_normal );
-	float	gloss_attenuation	= pow( saturate( view_dot_normal ), 0.2f );
-	float	fresnel_power		= pow( 1.f - saturate( view_dot_normal ), 5.f );
 
 	float4	diffuse_target		= t_diffuse.SampleLevel( s_diffuse, tc, 0 );
 	float4	normal_target		= t_normal.SampleLevel( s_accumulator, tc, 0 );
@@ -164,15 +195,52 @@ environment_probe_output main( pixel_shader_input input )
 	float	specular_intensity	= (float)( ( (uint)( diffuse_target.w*255.f ) ) & 127 );
 
 	float	fresnel_at_0_degree	= specular_intensity/127.f;
-	float	fresnel_factor		= fresnel_at_0_degree + (1.f - specular_intensity/127.f)*fresnel_power;
 
 	float	diffuse_gloss		= 1.f - gloss/127.f;
 	float	specular_gloss		= 1.f - gloss/(127.f*1.045f);
 	float	roughness_mip		= (1.f - sqrt( 2.f/(gloss/127.f + 2.f) ))*4.f;
 
+	float3	half_direction		= normalize( world_normal - reflection );
+	float3	direction			= lerp( half_direction, -reflection, pow( diffuse_gloss, 0.8f ) );
+
+#if GLOBAL_LIGHTING_QUALITY == 3
+	//	The high-quality specular is forward_probe_lighting.ps's Beckmann with
+	//	a Cook-Torrance geometry term added, and it takes its light direction
+	//	from the roughness-blended `direction` bent back toward the normal by
+	//	the surface's own smoothness.  Its Fresnel is driven by the halfway
+	//	vector, not by view_dot_normal, which is why the whole fresnel block
+	//	has to sit below `direction` rather than beside `reflection`.
+	float3	mirror_direction	= normalize( direction );
+	float3	light_direction		= lerp( mirror_direction, normalize( world_normal + mirror_direction ), gloss/127.f );
+	float	light_dot_normal	= saturate( dot( light_direction, world_normal ) );
+
+	float3	halfway_direction	= normalize( light_direction + view_direction );
+	float	view_dot_halfway	= dot( view_direction, halfway_direction );
+	float	normal_dot_halfway	= dot( world_normal, halfway_direction );
+	float	view_dot_halfway_plus	= max( view_dot_halfway, 0.f );
+	float	specular_denominator	= 4.f*max( view_dot_halfway, 0.00001f );
+
+	float	fresnel_power		= pow( 1.f - view_dot_halfway_plus, 5.f );
+#else // #if GLOBAL_LIGHTING_QUALITY == 3
+	float	fresnel_power		= pow( 1.f - saturate( view_dot_normal ), 5.f );
+#endif // #if GLOBAL_LIGHTING_QUALITY == 3
+
+	float	fresnel_factor		= fresnel_at_0_degree + (1.f - specular_intensity/127.f)*fresnel_power;
+
 	float	diffuse_fresnel		= 1.f - fresnel_factor*diffuse_gloss;
 
+#if GLOBAL_LIGHTING_QUALITY == 3
+	float3	probe_diffuse		= 0.f;
+	[unroll]
+	for ( int i = 0; i < 8; ++i )
+	{
+		float3	cone			= cone_directions[i];
+		probe_diffuse			+= sample_probe_diffuse( normalize( mul( float3x3( cone, cone.zxy, cone.yzx ), world_normal ) ), (float)( num_mips - 2 ) );
+	}
+	probe_diffuse				= probe_diffuse*(1.f/9.f);
+#else // #if GLOBAL_LIGHTING_QUALITY == 3
 	float3	probe_diffuse		= sample_probe_diffuse( world_normal, (float)( num_mips - 2 ) );
+#endif // #if GLOBAL_LIGHTING_QUALITY == 3
 
 	float	occlusion			= t_ssao_accumulator.SampleLevel( s_linear, input.position.xy*screen_res.zw, 0 ).x*2.5f;
 
@@ -180,10 +248,7 @@ environment_probe_output main( pixel_shader_input input )
 	diffuse_lighting			= min( diffuse_lighting, 10.f );
 	diffuse_lighting			= diffuse_lighting*diffuse_fresnel;
 
-	//	The probe's own falloff, written into both targets' w.  Each of the
-	//	three arms below lands its permutation exactly 28 bytes - the one parked
-	//	mul - short of its blob, which is as close as anything in this file gets
-	//	until that mul is solved.
+	//	The probe's own falloff, written into both targets' w.
 #if CONFIG_ENV_PROBE_GEOMETRY_TYPE
 	//	Box probe: the falloff is a per-axis 1 - exp( -6*sqrt( 1 - |p| ) ) in
 	//	probe space, multiplied together and squared.  The sqrt is the same
@@ -197,54 +262,58 @@ environment_probe_output main( pixel_shader_input input )
 	attenuation					= square( square( attenuation ) );
 #endif // #if CONFIG_ENV_PROBE_GEOMETRY_TYPE
 
+	//	The clip comes FIRST and the shadow second: when both are set the blobs
+	//	multiply the range falloff by the clip and only then by the shadow, and
+	//	the two operand orders are each byte-forced the other way round -
+	//	`clip*attenuation` but `attenuation*shadow`.
+#if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+	attenuation					= saturate( dot( normalize( to_probe ), world_normal ) + 0.75f )*attenuation;
+#endif // #if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+
 #if CONFIG_ENV_PROBE_WITH_SHADOWS
 	//	The probe's own depth cube, packed as g*65025 + b*255 over 65535, read
 	//	along the direction from the probe to this pixel.
 	float4	probe_depth			= t_probe_cubemap_depth.SampleLevel( s_linear, -normalize( to_probe ), 0 );
-	float	stored_distance		= dot( probe_depth.yz, float2( 65025.f, 255.f ) )*0.000015f;
-	float	shadow				= distance_to_probe*0.003333f - stored_distance < 0.0005f ? 1.f : 0.f;
-	attenuation					= shadow*attenuation;
+	float	stored_distance		= dot( probe_depth.yz, float2( 65025.f, 255.f ) )/65535.f;
+	float	shadow				= distance_to_probe/300.f - stored_distance < 0.0005f ? 1.f : 0.f;
+	attenuation					= attenuation*shadow;
 #endif // #if CONFIG_ENV_PROBE_WITH_SHADOWS
 
-#if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
-	attenuation					= attenuation*saturate( dot( normalize( to_probe ), world_normal ) + 0.75f );
-#endif // #if CONFIG_ENV_PROBE_CLIP_BY_NORMAL
+#if GLOBAL_LIGHTING_QUALITY == 3
+	float	geometry			= min( min( (2.f*normal_dot_halfway*view_dot_normal)/view_dot_halfway,
+										   (2.f*normal_dot_halfway*light_dot_normal)/view_dot_halfway ), 1.f );
 
-	float3	half_direction		= normalize( world_normal - reflection );
-	float3	direction			= lerp( half_direction, -reflection, pow( diffuse_gloss, 0.8f ) );
+	float	specular_power		= 255.f*diffuse_gloss;
+	float	roughness			= pow( 2.f/(specular_power + 2.f) - 0.00778f, 0.48f );
+	float	normalized_distribution_function	= 1.f/(square( roughness )*pi);
 
+	float	specular			=
+		light_dot_normal > 0.f
+		?
+			(light_dot_normal*fresnel_factor)*geometry*normalized_distribution_function/
+			(
+				specular_denominator*ABS_TO_REMOVE_WARNING( light_dot_normal*view_dot_normal )
+			)
+		:
+			0.f;
+
+	float	specular_factor		= min( fresnel_factor*saturate( specular ), 100.f );
+#else // #if GLOBAL_LIGHTING_QUALITY == 3
 	float	specular_factor		= fresnel_factor*min( (1.f/(specular_gloss*22.f))*fresnel_factor*5.f, 1.f );
+#endif // #if GLOBAL_LIGHTING_QUALITY == 3
 	if ( dot( direction, world_normal ) < 0.f )
 		specular_factor			= 1.f;
 
-	//	PARKED - the one instruction every permutation of this file is short of
-	//	byte-identity.  Ship keeps the *4 on `roughness_mip` above as its own
-	//	`mul r, r, l(4.000000)` and applies a separate *8 to the finished mip;
-	//	here fxc hoists the 4 through the gloss_attenuation product and emits a
-	//	single *32, one instruction fewer, in all sixteen LIGHTING_QUALITY=0
-	//	permutations.
-	//
-	//	Tried, none of them moving it: both operand orders on each of the three
-	//	products; the *4 written constant-first; a named intermediate; a helper
-	//	function returning it; `roughness_mip` computed early (right after the
-	//	gloss decode, which is where the LIGHTING_QUALITY=3 blobs schedule it)
-	//	and late; the *8 moved into and out of the trunc/frac arguments;
-	//	`mad( mip, 8.f, 1.f )` spelled by hand; `1.f + mip*8.f`; `/0.25f` for
-	//	the 4 and `/0.125f` for the 8; and saturate/abs/min/max/
-	//	asfloat(asuint()) barriers on both sides of the *4 (fxc proves every
-	//	clamp away - the sqrt makes the range provable - and still hoists).
-	//
-	//	Two facts bound the search.  fxc does NOT always hoist this shape: a
-	//	minimal shader with exactly these three products, the same integer gloss
-	//	decode, the same two cube samples and the same gloss-cubed fade keeps
-	//	the *4 and the *8 apart.  And neutralising any single downstream block
-	//	of this shader - the specular factor, the horizon clip, the direction
-	//	lerp, the range falloff, the diffuse output, the specular scale, the
-	//	gloss cube, the min-4 - does not bring it back either.  So the trigger
-	//	is a shape difference somewhere in this file that costs no instruction
-	//	of its own, and all 32 shipped blobs hold the split, so it is a property
-	//	of the source rather than of scheduling.
-	float	mip					= gloss_attenuation*roughness_mip;
+	//	The view term is spelled INLINE here, and roughness first - exactly the
+	//	shape forward_probe_lighting.ps carries ( `(surface_roughness*saturate(
+	//	view_dot_normal ))*scale` ).  It is load-bearing.  With a NAMED
+	//	`gloss_attenuation` variable instead, fxc reassociates
+	//	`((1-m)*4)*gloss_attenuation*8` into one `*32` and this file comes out
+	//	28 bytes - one `mul r, r, l(4.000000)` - short of every shipped blob.
+	//	Swapping the two factors costs byte-identity too:
+	//	`pow(...)*roughness_mip` emits `mul r1.y, r1.y, r1.w` where ship has
+	//	`mul r1.y, r1.w, r1.y`.
+	float	mip					= roughness_mip*pow( saturate( view_dot_normal ), 0.2f );
 
 	float3	upper				= sample_probe( direction, trunc( mip*8.f + 1.f ) );
 	float3	lower				= sample_probe( direction, trunc( mip*8.f ) );

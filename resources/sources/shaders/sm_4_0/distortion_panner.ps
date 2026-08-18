@@ -22,12 +22,23 @@
 // The pan is spelled `move_direction.xy * scene_time`, vector first: writing
 // the scalar first emits `mad cb1[17].wwww, cb0[2].xyxx, ...` instead.
 //
-// PARKED, same residual as distortion_base and for the same reason: ship's
-// y flip is its own scalar `mul o0.y, r0.y, l(-1.000000)` with the two
-// distortion_scale muls left unmerged, and fxc 9.29 folds any scalar `* -1`
-// into a neg modifier and then vectorises. See the tried-list in the header
-// of distortion_base.ps. Everything else here is byte-exact for all 15
-// permutations; the residual is 16 bytes in each.
+// PARKED, same residual as distortion_base and for the same reason. As of the
+// 2026-08-18 second pass all 15 permutations compile to the shipped byte
+// LENGTH with the shipped instructions, and differ only by `mul o0.x` and
+// `mul o0.y` being transposed:
+//
+//	mul r0.y, r0.y, cb0[1].y
+//	mul o0.y, r0.y, l(-1.000000)	; ship emits the flip first ...
+//	mul o0.x, r0.x, cb0[1].x	; ... we emit it second
+//
+// The mixed cbuffer/literal scale vector below is what keeps both the literal
+// -1 and the un-merged x scale; what is left is fxc emitting the lanes of an
+// o0 store in x,y,z,w order. The full measurement and the tried-list live in
+// the header of distortion_base.ps - read it before trying anything here.
+// Note this shader stores z = 0 where the base stores z = 1, so its zw write
+// is `float2(0.0f, 0.0f)`: folding z into the mixed multiply as a `.xyz` write
+// costs an instruction here, because z = 0.0f * 1.0f then pairs with the y
+// lane as `mul o0.yz, ..., l(0, -1, 1, 0)`.
 #include "common.h"
 #include "gbuffer.h"
 #include "material.h"
@@ -226,7 +237,8 @@ pixel_output_struct	main	(in vertex_output_struct input)
 	float2 uv_moved 	= psf_move_tc(parameters.tc, move_direction.xy * scene_time);
 	float2 dist_vector 	= t_base.Sample(s_linear, uv_moved).xy*2.0f - 1.0f;
 	pixel_output_struct output;
-	output.distortion = float4(dist_vector.x*distortion_scale.x, dist_vector.y*distortion_scale.y * -1.0f, 0.0f, 0.0f);
+	output.distortion.xy = float2(dist_vector.x, dist_vector.y*distortion_scale.y) * float2(distortion_scale.x, -1.0f);
+	output.distortion.zw = float2(0.0f, 0.0f);
 	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return output;
