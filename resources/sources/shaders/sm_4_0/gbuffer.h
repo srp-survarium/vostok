@@ -2,6 +2,8 @@
 #define	g_buffer_h_included
 
 #include "common_samplers.h"
+#include "gamma_correction.h"
+#include "debug.h"
 
 #define UNORM_EPS									(0.0001f)
 
