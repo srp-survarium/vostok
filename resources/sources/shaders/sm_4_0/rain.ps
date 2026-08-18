@@ -34,10 +34,9 @@
 //	opposite way round from the emitted instruction (fxc reverses them), so
 //	`gain*drop_length` is what produces `mul drop_length, gain`.
 //
-//	s_shmap is a SamplerComparisonState and is declared here, not in
-//	common_samplers.h - it lands at sampler slot 4, after the four ordinary
-//	samplers this shader uses, which is what fixes it as the last
-//	declaration.
+//	s_shmap is a SamplerComparisonState and comes from common_samplers.h,
+//	where ship declares it last of all - after s_hemi - so it still lands at
+//	sampler slot 4, after the four ordinary samplers this shader uses.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
@@ -48,8 +47,6 @@ uniform float		rain_radius;
 uniform float		rain_density;
 uniform float		rain_speed;
 uniform float4x4	view_to_shadow;
-
-SamplerComparisonState	s_shmap;
 
 Texture2D	t_scroll_rain;
 Texture2D	t_frame_color;

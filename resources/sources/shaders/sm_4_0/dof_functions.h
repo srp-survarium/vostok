@@ -1,7 +1,7 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 21.12.2010
+//	Created		: 21.12.2012
 //	Author		: Nikolay Partas
-//	Copyright (C) GSC Game World - 2010
+//	Copyright (C) Vostok Games - 2012
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef	DOF_FUNCTIONS_H_INCLUDED
@@ -9,24 +9,19 @@
 
 float4 dof_height_lights;
 float4 dof_parameters;
-float4 blurriness_amount; // float4(1,1,0,0)
+float4 blurriness_amount; // half4(1,1,0,0)
 
-static const float  focus_distance 		= dof_parameters.x; 	// 0.0f
-static const float  focus_region   		= dof_parameters.y; 	// 20.0f
-static const float  focus_power    		= dof_parameters.z; 	// 4.0f
+static const float  focus_distance 		= dof_parameters.x; 	// 0.0h
+static const float  focus_region   		= dof_parameters.y; 	// 20.0h
+static const float  focus_power    		= 1.0h;//dof_parameters.z; 	// 4.0h
 static const float	blur_amount_near 	= blurriness_amount.x;
 static const float	blur_amount_far 	= blurriness_amount.y;
 
-float get_blurriness(float in_depth)
+half get_blurriness(half in_depth)
 {
-	// Ship shape, byte-proven by complex_post_process_blend.ps (12 blobs) and
-	// corroborated by gather_bloom.ps: no pow - focus_power is never read -
-	// and the ternary is spelled on `<`, so the compare emits `lt` with the
-	// movc arms in this order.
-	return min(
-		(in_depth-focus_distance) < 0.0f ? blur_amount_near : blur_amount_far,
-		saturate(abs(in_depth-focus_distance) / focus_region)
-	);
+	half relative_distance = in_depth - focus_distance;
+	half max_unfocused_percent = relative_distance < 0 ? blur_amount_near : blur_amount_far;
+	return min( max_unfocused_percent, pow( saturate(abs(relative_distance) / focus_region), focus_power ) );
 }
 
 #endif	// #ifndef DOF_FUNCTIONS_H_INCLUDED

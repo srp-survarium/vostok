@@ -1,20 +1,20 @@
 ////////////////////////////////////////////////////////////////////////////
-//	Created		: 05.05.2011
+//	Created		: 05.05.2012
 //	Author		: Dmitriy Iassenev
-//	Copyright (C) GSC Game World - 2011
+//	Copyright (C) Vostok Games - 2012
 ////////////////////////////////////////////////////////////////////////////
 
 #ifndef SHADERS_SM_4_0_LUMINANCE_H_INCLUDED
 #define SHADERS_SM_4_0_LUMINANCE_H_INCLUDED
 
-//static const float3 luminance_weights = float3(0.3576, 0.7152, 0.1192);
-static const float3 luminance_weights = float3(0.2125f, 0.7154f, 0.0721f);
-//static const float3 luminance_weights = float3(0.3390f, 0.6780f, 0.1130f);
+//static const float3 luminance_weights = half3(0.3576, 0.7152, 0.1192);
+static const float3 luminance_weights = half3(0.2125h, 0.7154h, 0.0721h);
+//static const float3 luminance_weights = half3(0.3390f, 0.6780f, 0.1130f);
 
-static const float  pixel_luminance_epsilon	= 0.001f;
-static const float  num_luminance_pixels 	= 256.0f * 256.0f;
+static const float  pixel_luminance_epsilon	= 0.001h;
+static const float  num_luminance_pixels 	= 256.0h * 256.0h;
 
-float get_luminance	( float3 color )
+half get_luminance	( half3 color )
 {
 	return dot( color, luminance_weights );
 }

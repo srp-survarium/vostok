@@ -27,7 +27,7 @@ uniform float4x4		view_to_shadow;
 uniform float			rain_offset;
 uniform float			rain_density;
 
-uniform SamplerComparisonState	s_shmap;
+//	s_shmap comes from common_samplers.h, which ship declares it in.
 
 Texture2D	t_rain_shadow_map;
 Texture3D	t_puddle_rings;

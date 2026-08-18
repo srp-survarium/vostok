@@ -10,7 +10,7 @@
 #include "common_defines.h"
 
 Texture2D					shadowmap_texture;
-SamplerComparisonState		s_shmap;
+//	s_shmap comes from common_samplers.h, which ship declares it in.
 
 float4x4					view_to_light_matrix;
 float						shadow_z_bias;

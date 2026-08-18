@@ -91,7 +91,7 @@ float3		clouds_offset;
 float		cloud_interp_alpha;
 
 Texture2D				t_cascaded_shadow_map;
-SamplerComparisonState	s_shmap;
+//	s_shmap comes from common_samplers.h, which ship declares it in.
 
 #include "gamma_correction.h"
 
@@ -261,14 +261,19 @@ struct v2p_sun_light
 	float2	tc		: TEXCOORD0;
 };
 
-struct sun_light_accumulator
+//	Ship's light_accumulator.h declares a semantic-free `sun_light_accumulator`
+//	(half4 diffuse, half4 specular, half2 depth_and_shadow) - the same three
+//	values this pass writes, in the same order.  A pixel shader's return type
+//	needs SV_Target semantics, so the render-target struct cannot be that one;
+//	it is named apart here so the ship header can keep its name.
+struct sun_light_accumulator_targets
 {
 	float4	diffuse		: SV_Target0;
 	float4	specular	: SV_Target1;
 	float2	shadow		: SV_Target2;
 };
 
-sun_light_accumulator main( v2p_sun_light I )
+sun_light_accumulator_targets main( v2p_sun_light I )
 {
 	float3	eye_ray;
 	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 );
@@ -359,7 +364,7 @@ sun_light_accumulator main( v2p_sun_light I )
 	float3	diffuse_color	= light_color_linear*diffuse*light_diffuse_influence_factor;
 	float3	specular_color	= light_color_linear*specular*light_specular_influence_factor;
 
-	sun_light_accumulator result;
+	sun_light_accumulator_targets result;
 	result.diffuse			= 1.f/rsqrt( saturate( float4( diffuse_color, 0.f )*0.125f ) );
 	result.specular			= 1.f/rsqrt( saturate( float4( specular_color, 0.f )*0.125f ) );
 

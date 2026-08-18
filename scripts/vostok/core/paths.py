@@ -51,6 +51,10 @@ REPO = _find_repo()
 
 SCRIPTS = REPO / "scripts"
 SOURCES = REPO / "sources"
+# Recovered HLSL shader sources (the tree the shipped blobs' dependency tables
+# name as `resources.sources/shaders/...`). 176 of the 261 shipped shader
+# names are present; vostok.shaders coverage reports the live figure.
+SHADER_SOURCES = REPO / "resources" / "sources" / "shaders"
 ENGINE = SOURCES / "vostok"
 SLN = SOURCES / "vostok v2.0.sln"
 README = REPO / "README.md"
@@ -64,6 +68,10 @@ NIX_STORE = BINARIES / "nix-store"
 NINJA_DIR = BINARIES / "ninja"
 WINEPREFIX = BINARIES / ".wineprefix"
 SETUP_STAMP = BINARIES / ".setup-stamp"
+
+# Era-exact disassembly of the shipped shader blobs (vostok.shaders disasm);
+# regenerable from resources.db + fxc, so it lives with the other artifacts.
+SHADER_DISASM = BINARIES / "shaders" / "disasm"
 
 WIN32_DIR = BINARIES / "Win32"
 BASE_PDB = WIN32_DIR / "survarium-dx11-win32-gold.pdb"

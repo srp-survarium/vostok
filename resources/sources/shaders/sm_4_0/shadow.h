@@ -15,7 +15,7 @@ Texture2D	t_shmap3;// : register(ps,t0);		// 2D/cube shadowmap
 Texture2D<float>	s_smap_minmax;		// 2D/cube shadowmap
 //#include "gather.ps"
 
-SamplerComparisonState		s_shmap;	//	Special comare sampler
+//	s_shmap comes from common_samplers.h, which ship declares it in.
 sampler		smp_jitter;
 
 Texture2D	jitter0;

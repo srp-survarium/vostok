@@ -5,11 +5,12 @@
 //	fxc /dumpbin listings of the 1,136 shipped permutations and judged by
 //	byte-identical recompilation (vostok.shaders roundtrip).
 //
-//	STATE: 1,131 of the 1,136 shipped permutations recompile byte-identical
-//	(`vostok.shaders roundtrip gbuffer_pass.ps`, 2026-08-18: "1131 identical,
-//	5 differ, 0 skipped"; the figure before that pass was 1,072).  The 5 that
-//	do not are one cluster, described at the foot of this header with what was
-//	tried.
+//	STATE: ALL 1,136 shipped permutations recompile byte-identical
+//	(`vostok.shaders roundtrip gbuffer_pass.ps`, 2026-08-18: "1136 identical,
+//	0 differ, 0 skipped"; the figures before this pass were 1,072 and then
+//	1,131).  The last cluster - CONFIG_PARALLAX at vertex-input type 1 - closed
+//	on 2026-08-18; what it was is recorded below, because the mechanism is
+//	reusable.
 //
 //	==== how to read this file ============================================
 //
@@ -62,38 +63,66 @@
 //	    CONFIG_VERTEX_BLENDED_NORMAL   91/91
 //	    (WIND_MOTION changes nothing in the pixel stage at all; LOD_INDEX
 //	     changes only the static vertex_output_struct - see below)
-//	  DIFF in their own right
-//	    CONFIG_PARALLAX                25/30    the one residual cluster
-//	  CONFIG_VERTEX_INPUT_TYPE: 967 of the 972 non-null permutations.  All
-//	  fifteen families decode and every family has byte-identical members;
-//	  the five failures are all input type 1 under CONFIG_PARALLAX.
+//	    CONFIG_PARALLAX                30/30
+//	  CONFIG_VERTEX_INPUT_TYPE: all 972 non-null permutations.  All fifteen
+//	  families decode and every family is byte-identical throughout.
 //
-//	==== the residual cluster =============================================
+//	==== how the last cluster closed, and the rule it earned ==============
 //
-//	CONFIG_PARALLAX (5 of 30).  All five are CONFIG_VERTEX_INPUT_TYPE 1, where
-//	view_position is an interpolant rather than an m_V product: fxc then proves
-//	`view_position.z < 12` inside the branch and weakens smoothstep's saturate
-//	to a bare `min`, where ship keeps `mul_sat`.  It is exactly one instruction
-//	(28 bytes) and nothing else differs - `opdiff` reports the two opcode
-//	streams identical apart from `mul_sat l(-0.25)` against
-//	`mul l(-0.25)` + `min l(1.0)`.  Tried and rejected, each measured on a
-//	four-permutation probe (two failing input-type-1 blobs, one passing
-//	input-type-13 parallax blob, one passing non-parallax blob):
+//	CONFIG_PARALLAX at CONFIG_VERTEX_INPUT_TYPE 1 (5 blobs) sat for two passes
+//	as "ship emits `mul_sat l(-0.25)` where we emit `mul l(-0.25)` + `min
+//	l(1.0)`" - exactly one instruction, 28 bytes, and nothing else differing.
+//	Type 1 is the family where view_position is an interpolant (`v5.z`) rather
+//	than an m_V product, and there fxc proved `view_position.z < 12` from the
+//	dominating branch, weakened smoothstep's saturate to a bare `min`, and so
+//	lost the fusion into the multiply's destination.
+//
+//	THE RULE (established on a five-line standalone shader, then applied here):
+//	fxc's range prover follows a *scalar* through a copy but NOT through a
+//	vector local.  Given `if (vp.z < 12) { ... smoothstep(12, 8, vp.z) ... }`:
+//	  * `smoothstep(..., vp.z)`                       -> prover folds, `min`
+//	  * `float d = vp.z;` before the if, use `d`      -> prover folds, `min`
+//	  * `float3 c = vp;` before the if, use `c.z`     -> PROVER BLIND, `mul_sat`
+//	  * the same `float3` declared INSIDE the if      -> prover folds, `min`
+//	  * `-(-vp.z)` written inline                     -> folds at parse, `min`
+//	So the blocker is a vector-typed local, defined in the block that DOMINATES
+//	the branch and read inside it, while the condition still names the original.
+//	A scalar copy is transparent; a vector one is opaque.  This is the third
+//	independent lever on fxc's range prover, after `saturate()`-as-node versus
+//	`clamp()`-as-`_sat` (ssao_filter_upsample) and a helper call
+//	(forward_lighting.ps's squared_length).
+//
+//	Applying it needed a second, separate move.  Ship's type-0 listing already
+//	held `mov r2.xyz, -r1.xyzx` - so ship's source really did name the negated
+//	view vector - but it emits that mov AFTER the `lt r0.w, r1.z, l(12.0)`.
+//	Declaring `parallax_view` above the `if` puts the mov first and breaks the
+//	types that were passing.  Naming the test in its own `bool` above the
+//	declaration restores ship's order, because fxc emits independent statement
+//	groups in source order.  Both moves are needed; either alone regresses.
+//	This is the same `bool`-before-the-block shape CONFIG_USE_OLTA needed.
+//
+//	Tried and rejected on the way, each measured on a five-permutation probe
+//	(three failing input-type-1 blobs, one passing type-13 parallax blob, one
+//	passing type-0 parallax blob):
 //	  * `[branch]` on the `if` - fxc refuses to compile it (the height-map taps
 //	    are gradient sampling inside divergent flow);
 //	  * the fade computed at the top of the branch, or one statement above the
 //	    second height tap - both break the input-type-13 parallax blob;
 //	  * the fade inlined into the `tc +=` expression - same, breaks type 13;
-//	  * smoothstep hand-expanded as `saturate((z-12)/(8-12))` and the cubic -
-//	    costs 4 bytes in EVERY parallax permutation (fxc stops folding the
-//	    divide);
 //	  * the fade routed through a function of its own - fxc inlines it and
 //	    nothing changes (so a call boundary does NOT block the range proof
 //	    here, unlike the squared_length() case in forward_lighting.ps);
 //	  * a local `float parallax_depth = view_position.z;` copy - propagated
-//	    away, byte-identical to not having it.
-//	Earlier passes also tried hoisting the fade out of the branch (restores
-//	`mul_sat`, costs the other 25) and spelling the saturate as min(max(..)).
+//	    away, byte-identical to not having it;
+//	  * hoisting the fade out of the branch (restores `mul_sat`, costs the
+//	    other 25);
+//	  * smoothstep hand-expanded with min(max(..)) around the ratio - the max
+//	    is folded anyway, so this does NOT reproduce the ssao finding here; and
+//	    the hand-written cubic costs 4 bytes in every parallax permutation
+//	    unless it is spelled `-2.0f*t + 3.0f` as its OWN statement (a negative
+//	    literal, not a negated register: `3.0f - 2.0f*t` emits `mad -t, 2, 3`,
+//	    whose source modifier is an extra operand token).  That measurement is
+//	    kept because it dates the "4 bytes" cost to the cubic, not the divide.
 //
 //	Everything else here is byte-proven by at least one shipped permutation,
 //	and most of it by hundreds.
@@ -447,9 +476,19 @@ void	main(in vertex_output_struct input,
 	// tangent-space eye vector, a two-tap intersection solve, and a smoothstep
 	// fade between 8 and 12 units of view depth.  It moves `tc` only - the
 	// normal tap keeps the coordinate snapshotted above.
-	if (view_position.z < 12.0f)
+	//
+	// These two declarations, in this order and above the `if`, are what makes
+	// the input-type-1 blobs byte-identical; see "how the last cluster closed"
+	// at the top.  `parallax_view` is a VECTOR local, which fxc's range prover
+	// will not follow into the branch, so the smoothstep below keeps ship's
+	// fused `mul_sat`; the `bool` puts the `lt` ahead of the negation's `mov`,
+	// which is the order every other input type's blob shows.
+	bool parallax_near			= view_position.z < 12.0f;
+	float3 parallax_view		= -view_position;
+
+	if (parallax_near)
 	{
-		float3 parallax_eye		= mul( transpose( tbn_matrix), -view_position);
+		float3 parallax_eye		= mul( transpose( tbn_matrix), parallax_view);
 		parallax_eye			= normalize( parallax_eye);
 
 		float parallax_step_size = 1.0f / lerp( 25.0f, 5.0f, parallax_eye.z);
@@ -473,7 +512,7 @@ void	main(in vertex_output_struct input,
 		float parallax_delta2	= (parallax_bound + parallax_step_size) - parallax_previous;
 		float parallax_delta1	= parallax_bound - parallax_height;
 		float parallax_amount	= (parallax_bound * parallax_delta2 - (parallax_bound + parallax_step_size) * parallax_delta1) / (parallax_delta2 - parallax_delta1);
-		float parallax_fade		= smoothstep( 12.0f, 8.0f, view_position.z);
+		float parallax_fade		= smoothstep( 12.0f, 8.0f, -parallax_view.z);
 
 		tc						+= parallax_delta * ((1.0f - parallax_amount) * parallax_fade);
 	}
