@@ -20,10 +20,60 @@
 //	reflections pass 1 wrote, and a refraction of the frame colour behind a
 //	depth-driven fog.
 //
+//	The blend at the end is two nested lerps: refraction is the fog colour
+//	crossfaded into the frame colour behind the surface, reflection is the
+//	cube map crossfaded into pass 1's four screen-space taps, and fresnel
+//	picks between refraction and the pair - so a fogged-out pixel (fog >= 1)
+//	loses its reflection entirely, which is what `max(1 - fog, 0)` is for.
+//
 //	Status by axis:
-//	  CONFIG_VERTEX_INPUT_TYPE  0..14 - all fifteen ship
+//	  CONFIG_VERTEX_INPUT_TYPE  0..14 - all fifteen byte-proven
 //	  CONFIG_TNORMAL            ships only as 1
 //	  every other define the mask records ships only as 0
+//
+//	Load-bearing shapes, each one earned against the blobs:
+//
+//	  * the four local-reflection taps are fetched in their OWN loop, ahead
+//	    of ddx/ddy and normalize(reflection); the reprojection loop that
+//	    consumes them is a second, flat, four-iteration loop.  Sampling
+//	    inside the reprojection loop compiles to exactly the same
+//	    instructions, but fxc then issues each Sample at its point of use
+//	    instead of the four-in-a-row batch every shipped blob opens the loop
+//	    region with, and the whole register numbering downstream follows;
+//	  * [branch] on the tc-containment test.  Without it fxc flattens the
+//	    arm into a movc chain - 202 instruction slots against ship's 219 for
+//	    type 12 - and the `local_weight = 0` initialiser stops appearing as
+//	    the else of the first iteration;
+//	  * the second puddle-ring octave is spelled
+//	    float3( rings_tc.xy*2.f, rings_tc.z ), NOT rings_tc*float3(2,2,1).
+//	    Both mean the same thing and the second is the obvious spelling, but
+//	    fxc simplifies its *1 lane away, then strength-reduces the remaining
+//	    *2 into an add - and to fill the third lane of that add it has to
+//	    rematerialise scene_time with a mov, one instruction more than ship.
+//	    Written as a constructor, the copied lane survives as a multiply by
+//	    one and the whole thing stays the single `mul r, r, l(2,2,1,0)` the
+//	    blobs carry.  This was the entire size delta;
+//	  * reflect(view_direction, normal) IS what ships here - the blobs
+//	    negate the doubled scalar in the mad, `mad r, normal, -2dot, view`.
+//	    That is the opposite of pass 1
+//	    (forward_simple_water_local_reflections.ps), which negates the
+//	    normal inside the dp3 and needs the written-out form;
+//	  * depth_fade is TWO statements: the saturate stays beside the depth
+//	    fetch, the 1.f/rsqrt moves down past fresnel and the cube tap to
+//	    where `fade` needs it.  1.f/rsqrt(x) emits rsq+div where sqrt(x)
+//	    would emit sqrt;
+//	  * dot(fade.xx, fade.xx) is its own statement, above the fog - inside
+//	    the refraction_tc expression fxc schedules it below;
+//	  * the fog exponent is spelled `...*-15.f + 2.f`, not `2.f - ...*15.f`:
+//	    the first folds the sign into the literal (`mad r, r, l(-15), l(2)`),
+//	    the second negates the register;
+//	  * the three weight taper multiplies alternate operand order, and the
+//	    alternation is real: tc.y's is `saturate(...)*weight`, tc.x's two are
+//	    `weight *= saturate(...)`.  The last one only shows in the seven
+//	    permutations whose world_view_position comes from m_V rather than an
+//	    interpolant (0, 7, 8, 9, 10, 13, 14) - there both operands land in
+//	    one register and the source order survives; everywhere else fxc
+//	    orders them by register index and hides the difference.
 //
 ////////////////////////////////////////////////////////////////////////////
 
@@ -326,6 +376,12 @@ float2 sample_water_waves( float2 tc )
 	return	t_normal_map.Sample( s_base, tc ).yw*2.f - 1.f;
 }
 
+//	One octave of puddle rings: the .wz pair, biased three levels up the chain.
+float2 sample_puddle_rings( float3 tc )
+{
+	return	(t_puddle_rings.SampleBias( s_base, tc, -3.f ).wz - 0.5f)*0.5f;
+}
+
 float4 	main			(in vertex_output_struct input): SV_TARGET0
 {
 	material_parameters parameters = get_material_parameters(input);
@@ -354,10 +410,10 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 
 		float3 rings_tc			= float3( parameters.world_position.xz*1.15f + rain_offset, scene_time*2.f );
 		float2 rings			=
-			(t_puddle_rings.SampleBias( s_base, rings_tc, -3.f ).wz - 0.5f)*0.5f +
-			(t_puddle_rings.SampleBias( s_base, rings_tc*float3( 2.f, 2.f, 1.f ), -3.f ).wz - 0.5f)*0.5f;
+			sample_puddle_rings( rings_tc ) +
+			sample_puddle_rings( float3( rings_tc.xy*2.f, rings_tc.z ) );
 
-		float3 rain_normal		= rain_shadow*float3( rings.x, 1.f, rings.y );
+		float3 rain_normal		= float3( rings.x, 1.f, rings.y )*rain_shadow;
 
 		normal					= normalize( normal + rain_normal*float3( 1.5f, 1.f, 1.5f ) );
 	}
@@ -368,17 +424,28 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 
 	float  pixel_depth		= parameters.world_view_position.z;
 	float  frame_depth		= t_position.SampleLevel( s_position, screen_tc, 0 ).x;
-	float  depth_fade		= 1.f/rsqrt( saturate( (frame_depth - pixel_depth)*0.001f ) );
+	float  depth_fade		= saturate( (frame_depth - pixel_depth)*0.001f );
 
 	float  fresnel			= saturate( pow( 1.f - view_dot_normal, 5.f )*0.98f + 0.02f );
 
 	float3 cube_reflection	= t_reflection.Sample( s_rtlinear, -reflection ).rgb;
 
-	float2 fade				= min( depth_fade*float2( 40.f, 20.f ), 1.f );
-	float  fog				= exp2( 2.f - fade.y*packed_water_parameters_0.w*15.f );
+	float2 fade				= min( (1.f/rsqrt( depth_fade ))*float2( 40.f, 20.f ), 1.f );
+	float  distortion		= dot( fade.xx, fade.xx );
+	float  fog				= exp2( fade.y*packed_water_parameters_0.w*-15.f + 2.f );
 
-	float2 refraction_tc	= saturate( input.homogeneous_position.xy*screen_res.zw + normal.xz*dot( fade.xx, fade.xx )/pixel_depth );
+	float2 refraction_tc	= saturate( input.homogeneous_position.xy*screen_res.zw + distortion*normal.xz/pixel_depth );
 	float3 refraction_color	= t_frame_color.Sample( s_accumulator, refraction_tc ).rgb;
+
+	float4 ray_length;
+
+	[unroll]
+	for ( int y = -1; y <= 0; ++y )
+	{
+		[unroll]
+		for ( int x = -1; x <= 0; ++x )
+			ray_length[(y + 1)*2 + x + 1] = t_local_reflections_result_params.Sample( s_base, screen_res.zw*float2( x*4.f, y*4.f ) + screen_tc ).w;
+	}
 
 	float2 screen_ddx		= ddx( screen_tc );
 	float2 screen_ddy		= ddy( screen_tc );
@@ -389,34 +456,28 @@ float4 	main			(in vertex_output_struct input): SV_TARGET0
 	float  local_weight		= 0.f;
 
 	[unroll]
-	for ( int y = -1; y <= 0; ++y )
+	for ( int i = 0; i < 4; ++i )
 	{
-		[unroll]
-		for ( int x = -1; x <= 0; ++x )
+		float4 projected	= mul( m_VP, float4( parameters.world_position - ray_length[i]*reflection_direction, 1.f ) );
+		float2 tc			= (projected.xy*float2( 1.f, -1.f ) + projected.w)*0.5f/projected.w;
+
+		local_color			+= t_frame_color.SampleGrad( s_accumulator, tc, screen_ddx, screen_ddy ).rgb;
+
+		[branch]
+		if ( all( tc >= 0.f ) && all( tc <= 1.f ) )
 		{
-			float2 tap_tc		= screen_res.zw*float2( x*4.f, y*4.f ) + screen_tc;
-			float  ray_length	= t_local_reflections_result_params.Sample( s_base, tap_tc ).w;
+			float weight	= saturate( dot( reflection, view_direction ) );
 
-			float4 projected	= mul( m_VP, float4( parameters.world_position - ray_length*reflection_direction, 1.f ) );
-			float2 tc			= (projected.xy*float2( 1.f, -1.f ) + projected.w)*0.5f/projected.w;
+			if ( tc.y <= 0.25f )
+				weight		= saturate( tc.y*4.f )*weight;
 
-			local_color			+= t_frame_color.SampleGrad( s_accumulator, tc, screen_ddx, screen_ddy ).rgb;
+			if ( tc.x <= 0.25f )
+				weight		*= saturate( tc.x*4.f );
 
-			if ( all( tc >= 0.f ) && all( tc <= 1.f ) )
-			{
-				float weight	= saturate( dot( reflection, view_direction ) );
+			if ( tc.x >= 0.25f )
+				weight		*= saturate( (1.f - tc.x)*4.f );
 
-				if ( tc.y <= 0.25f )
-					weight		*= saturate( tc.y*4.f );
-
-				if ( tc.x <= 0.25f )
-					weight		= saturate( tc.x*4.f )*weight;
-
-				if ( tc.x >= 0.25f )
-					weight		*= saturate( (1.f - tc.x)*4.f );
-
-				local_weight	= weight*2.f;
-			}
+			local_weight	= weight*2.f;
 		}
 	}
 
