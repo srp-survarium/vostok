@@ -224,13 +224,33 @@ Still open, with what is known about each:
 | --- | --- | --- |
 | `forward_lighting.ps` | 563/600 | residual clusters recorded in its header |
 | `gbuffer_pass.ps` | 1,072/1,136 | same |
-| `environment_probe_lighting.ps` | 0/32 | **lacks a `CONFIG_VERTEX_INPUT_TYPE == 12` arm** — see below |
-| `fill_reflective_shadow_map.ps` | 0/30 | |
-| `forward_simple_water.ps` | 0/15 | pass 0 of the water effect; uniform −292 bytes. **Pass 1, `forward_simple_water_local_reflections.ps`, is proven 15/15** and its header carries this family's conventions |
 | `ssao_filter_upsample.ps` / `_temporal.ps` | 0/1 each | one `max r0.x, r0.y, l(0.0)` short — see below |
-| `distortion_base.ps` / `distortion_panner.ps` | 0/15 each | one three-line hunk, ~80 spellings tried |
+| `distortion_base.ps` / `distortion_panner.ps` | 0/15 each | **at the shipped byte length**, one lane transposition — see below |
 | `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
 | `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
+
+**The distortion residual is fxc's output-store lane order.** Both files now
+compile to the shipped byte length with ship's exact instructions, literals and
+registers; the only difference across all 30 permutations is that fxc emits the
+two output multiplies in `x`-then-`y` order where ship has `y`-then-`x`. Two
+measured rules replaced the earlier "two competing mechanisms" reading: a masked
+`o0` write keeps its multiply a *vector* op — and so keeps either the literal
+`-1` or the un-merged `x` scale — only if it owns lane `w`, or its constant
+vector has two non-trivial lanes (a lane multiplied by `1.0f` folds away and the
+write collapses to a scalar). Lane `w` is the single contested resource, which is
+the real "five of four lanes". A **mixed cbuffer/literal scale vector** escapes
+that in one op, and is what both files carry now.
+
+The remainder is not the `-1` — probes using `*3.0f` or a cbuffer scale
+reproduce the same transposition. Ship proves the order is reachable
+(`fill_sky_ao_map.ps` writes `o0.y, o0.z, o0.x, o0.w`), but only where the lanes
+carry multi-instruction chains the scheduler must order by chain rather than by
+lane; here each lane is a single mul and the tie breaks the other way. Ruled out
+and measured: permuted write masks (HLSL normalises them), both statement orders,
+the alpha write in three positions, an alpha-first output struct (this *does*
+hoist `mov o1`, so declaration order is a scheduling lever — just not between two
+lanes of one register), `out` parameters, a pre-assembled local `float4`, a
+helper function, swizzling the product out, and `precise`.
 
 **The ssao_filter_upsample residual is fxc's non-negativity prover, not a
 spelling of `max()`**, and that has been established rather than guessed:
