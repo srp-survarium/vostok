@@ -267,6 +267,29 @@ Earned on the indirect-lighting family, and general enough to try first:
 * `mul r.xyz, v, l(1,2,-2)` is a genuine `v * float3(1,2,-2)`; writing the three
   component multiplies separately does not produce it.
 
+**The one that unlocks schedule-shaped residuals.** `if (cond) discard;` and
+`clip(cond ? -1.f : 1.f)` emit the *same* `discard_nz` instruction, and they are
+**not** interchangeable. With the `if` form fxc treats the discard as an
+early-out and hoists its entire dependency chain above independent work,
+re-scheduling and re-allocating everything around it; `clip()` emits the
+identical instruction and leaves the schedule alone. This single substitution
+took `decal_base.ps` from 0/30 to 30/30 — the `if` form had been costing a
+fifth temporary and pushing the tangent basis below the discard — and closed
+both parked clouds-blend residuals with one line each. Their file headers had
+recorded the residual as "one mov placement" around the alpha write; it was
+never the alpha write, it was the horizon cut above it, and five source shapes
+had been tried on the wrong statement. **If a parked residual has the shape
+"same instructions, same count, wrong register numbering or wrong statement
+order", and the shader contains a discard, try this first.**
+
+Two more from the same family:
+
+* `pow(x, 3.0f)` and `x*x*x` differ — the latter emits the second `mul` with
+  its operands reversed;
+* a clip-to-uv map spelled `(a.xy + a.w) * 0.5f / a.w` keeps its own divide;
+  spelled `a.xy/a.w*0.5f + 0.5f`, fxc shares one divide with a neighbouring
+  `normalize(a.xy/a.w)` and loses two instructions.
+
 Earned on `translucency.ps` and `subsurface_scattering.ps`:
 
 * **operand-order inversion is a first guess, not a law.** It held for
