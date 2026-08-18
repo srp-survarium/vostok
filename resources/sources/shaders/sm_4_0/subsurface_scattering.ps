@@ -1,0 +1,302 @@
+////////////////////////////////////////////////////////////////////////////
+//	subsurface_scattering.ps - reconstructed from the shipped blobs,
+//	2026-08-18
+//
+//	Ground truth	: the fifteen shipped permutations of
+//					  shaders/sm_4_0/subsurface_scattering.ps, disassembled
+//					  with fxc /dumpbin /Fc.  No source survived and no
+//					  pre-ship ancestor exists in old/ - the skin/organic
+//					  family there is a different, multi-pass generation.
+//	Acceptance		: python3 -m vostok.shaders roundtrip
+//					  subsurface_scattering.ps
+//	STATE			: 15 of 15 shipped permutations byte-identical.
+//
+//	What it is: the screen-space skin/organic resolve.  It runs per material
+//	(hence the CONFIG_VERTEX_INPUT_TYPE family - it is drawn with the
+//	object's own geometry, not full-screen), blurs the diffuse light
+//	accumulator under the surface, and writes the shaded result.
+//
+//	  * 49 taps of t_diffuse_lighting: one at the centre plus 16 Poisson
+//	    directions at three radii.  The directions are the same 16-entry disc
+//	    sun.ps filters its cascades with, scaled by 2, and the three radii are
+//	    that base times 1, 0.4 and 0.1 - the blobs' constants are exactly the
+//	    products, so the table is scaled, not tripled;
+//	  * the radius is divided by max( view_z*0.333, 0.125 ) before it is
+//	    turned into texels by screen_res.zw, so the kernel shrinks with
+//	    distance and stops shrinking at 3 m;
+//	  * each tap is bilateral: it reads the g-buffer depth at the tap and,
+//	    if it differs from the centre by more than 0.01, collapses back onto
+//	    the centre uv.  Emitted lt/and 0x3f800000/mad - a bool multiplied
+//	    into a float2, never a branch;
+//	  * the three radii feed the three channels of one float3 accumulator -
+//	    widest radius to red - which is the usual "red scatters furthest"
+//	    dipole approximation, done with three taps instead of a profile;
+//	  * every tap decodes the accumulator as saturate(x)^2*8, the exact
+//	    inverse of the 1.f/rsqrt(saturate(c*0.125)) store skylight.ps, sun.ps
+//	    and translucency.ps write;
+//	  * the sum is averaged over 16 and mixed half-and-half with the
+//	    undiffused centre tap, so half the light stays sharp;
+//	  * a rim term follows: pow( 1 - saturate( -V.N_world ), 5 ) times
+//	    pow( saturate( -V.L ), 12 ), scaled by the sun-translucency help
+//	    target and by sun_light_parameters.w - the silhouette glow you see
+//	    on an ear held against the sun;
+//	  * where the scattered light is dim, the LPV indirect accumulator is
+//	    faded back in by 1 - min( length( scattered ), 1 );
+//	  * the tail reads the same 5-bit translucency field translucency.ps
+//	    does, but forces it to 1 (rather than 0) when the diffuse alpha's
+//	    bit 7 flag is set, uses it to scale the decoded specular accumulator,
+//	    and returns albedo_linear*scattered + specular*translucency with
+//	    alpha 0.
+//
+//	Two of the nine defines the permutations carry name features that are
+//	not in the shipped code because both are 0 in all fifteen:
+//	CONFIG_USE_THICKNESS_MAP and CONFIG_USE_SUBSURFACE_SCATTERING_MASK_MAP.
+//	CONFIG_LOD_INDEX is likewise 0 throughout, so only the LOD-0 static
+//	vertex layout appears below.
+//
+//	fxc notes earned here: `pow( x, 5.f )` and `pow( x, 12.f )` are NOT the
+//	same shape - 5 expands to x*x, x2*x2, x*x4 while 12 stays log/mul/exp;
+//	writing the three channel taps into a named float3 and adding that once
+//	per direction is what collapses the register pressure from 38 temps to
+//	ship's 8 (three separate `sum.x +=` statements do not coalesce).
+////////////////////////////////////////////////////////////////////////////
+
+/*	$DEFINES$:
+		CONFIG_VERTEX_INPUT_TYPE,
+		CONFIG_USE_SUBUV,
+*/
+
+//	The per-type loose globals come first: $Globals binds at cbuffer slot 0
+//	and its members sit in declaration order, with gbuffer.h's
+//	near_far_invn_invf behind whatever the vertex-input header declared.
+#if CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+float3	up_view_vector;
+float3	right_view_vector;
+float	use_align_by_dir;
+float3	view_location;
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+float	locked_no_ratate_axis_index;
+#elif CONFIG_VERTEX_INPUT_TYPE == 11
+float4	patch_parameters;
+#endif
+
+#include "gbuffer.h"
+
+float4	sun_light_parameters;
+
+#include "material.h"
+#include "gamma_correction.h"
+
+Texture2D	t_diffuse_lighting;
+Texture2D	t_specular_lighting;
+Texture2D	t_lpv_accumulation;
+Texture2D	t_sun_translucensy_help_data;
+
+////////////////////////////////////////////////////////////////////////////
+// vertex input types (ship numbering), as gbuffer_pass.ps recovered them.
+// CONFIG_LOD_INDEX is 0 in all fifteen shipped permutations, so only the
+// LOD-0 static layout appears here.
+////////////////////////////////////////////////////////////////////////////
+
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	previous_position	: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3	tangent				: TEXCOORD2;
+	float3	binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4	homogeneous_position: SV_Position;
+	float4	patch_color			: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 14
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+#else	// 0 (null), 10 (decal), 12 (post process)
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////
+
+static const float2 poisson_disk[16] = {
+	float2( -0.94201624, -0.39906216 ),
+	float2( 0.94558609, -0.76890725 ),
+	float2( -0.094184101, -0.92938870 ),
+	float2( 0.34495938, 0.29387760 ),
+	float2( -0.91588581, 0.45771432 ),
+	float2( -0.81544232, -0.87912464 ),
+	float2( -0.38277543, 0.27676845 ),
+	float2( 0.97484398, 0.75648379 ),
+	float2( 0.44323325, -0.97511554 ),
+	float2( 0.53742981, -0.47373420 ),
+	float2( -0.26496911, -0.41893023 ),
+	float2( 0.79197514, 0.19090188 ),
+	float2( -0.24188840, 0.99706507 ),
+	float2( -0.81409955, 0.91437590 ),
+	float2( 0.19984126, 0.78641367 ),
+	float2( 0.14383161, -0.14100790 ),
+};
+
+static const float scattering_radius = 2.f;
+
+float3 decode_light_accumulator( float3 value )
+{
+	float3 saturated	= saturate( value );
+	return				saturated*saturated*8.f;
+}
+
+//	A tap that refuses to cross a depth discontinuity: too far from the centre
+//	in view depth and it collapses back onto the centre texel.
+float2 scattering_tc( float2 uv, float2 offset, float depth )
+{
+	float2 tc			= offset*screen_res.zw + uv;
+	float  tap_depth	= gbuffer_read_frame_depth( tc );
+	return				tc + (abs( depth - tap_depth ) > 0.01f)*(uv - tc);
+}
+
+float4 main( vertex_output_struct input ) : SV_Target
+{
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2 || (CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6) || CONFIG_VERTEX_INPUT_TYPE == 11
+	float3	view_position	= input.view_position;
+	float3	world_position	= input.position;
+#elif CONFIG_VERTEX_INPUT_TYPE == 12
+	float3	view_position	= float3( 0.f, 0.f, 0.f );
+	float3	world_position	= float3( 0.f, 0.f, 0.f );
+#else
+	float3	view_position	= mul( m_V, float4( input.position, 1.f ) );
+	float3	world_position	= input.position;
+#endif
+
+	float2	uv				= input.homogeneous_position.xy*screen_res.zw;
+	float	scale			= max( view_position.z*0.333f, 0.125f );
+	float	depth			= gbuffer_read_frame_depth( uv );
+
+	float3	scattered		= 0.f;
+	[unroll]
+	for ( int i = 0; i < 16; ++i )
+	{
+		float2 direction	= poisson_disk[i]*scattering_radius;
+
+		float3 tap;
+		tap.x				= decode_light_accumulator( t_diffuse_lighting.SampleLevel( s_material1, scattering_tc( uv, direction/scale, depth ), 0 ).xyz ).x;
+		tap.y				= decode_light_accumulator( t_diffuse_lighting.SampleLevel( s_material1, scattering_tc( uv, direction*0.4f/scale, depth ), 0 ).xyz ).y;
+		tap.z				= decode_light_accumulator( t_diffuse_lighting.SampleLevel( s_material1, scattering_tc( uv, direction*0.1f/scale, depth ), 0 ).xyz ).z;
+
+		scattered			+= tap;
+	}
+
+	scattered				/= 16.f;
+	scattered				= lerp( scattered, decode_light_accumulator( t_diffuse_lighting.SampleLevel( s_accumulator, uv, 0 ).xyz ), 0.5f );
+
+	float3	view_direction	= normalize( world_position - eye_position );
+
+	float3	normal			= gbuffer_read_frame_normal( uv );
+	normal.z				= -normal.z;
+
+	float	rim				= 1.f - saturate( dot( -view_direction, mul( (float3x3)m_V2W, normal ) ) );
+	float	sun_factor		= pow( saturate( dot( -view_direction, sun_light_parameters.xyz ) ), 12.f );
+	float	help			= t_sun_translucensy_help_data.SampleLevel( s_accumulator, uv, 0 ).y;
+
+	float3	result			= scattered + (sun_factor*(sun_light_parameters.w*help))*pow( rim, 5.f )*0.25f;
+
+	result					+= (1.f - min( length( scattered ), 1.f ))*t_lpv_accumulation.SampleLevel( s_linear, uv, 0 ).xyz;
+
+	float4	packed			= t_normal.SampleLevel( s_accumulator, uv, 0 );
+	uint	low				= ((uint)(packed.z*1023.f)) >> 7;
+	uint	high			= ((uint)(packed.w*3.f)) << 3;
+	float	translucency	= pow( min( float( low | high )*(1.f/31.f), 1.f ), 2.2f );
+
+	uint	translucent		= ((uint)(t_diffuse.SampleLevel( s_diffuse, uv, 0 ).w*255.f)) >> 7;
+	translucency			= translucent ? 1.f : translucency;
+
+	float3	specular		= decode_light_accumulator( t_specular_lighting.SampleLevel( s_accumulator, uv, 0 ).xyz );
+	float3	albedo			= convert_to_linear_space( t_diffuse.SampleLevel( s_accumulator, uv, 0 ).xyz );
+
+	return					float4( albedo*result + specular*translucency, 0.f );
+}
