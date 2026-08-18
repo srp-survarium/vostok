@@ -37,7 +37,14 @@
 // and the shape falls back to one half or the other. Everything else in this
 // file is byte-exact for all 15 permutations - the vertex-input dispatch, the
 // cbuffer layout, the signatures, the sample, the *2-1 remap, the zw
-// constants and the second render target.
+// constants and the second render target: every permutation's disassembly
+// differs from ship in that one hunk and in nothing else.
+//
+// Fixed on the way there, and it affects every file carrying this dispatch:
+// CONFIG_VERTEX_INPUT_TYPE 12 was falling into the null branch and inheriting
+// its planar tc. It has its own branch below - ship leaves tc at zero for
+// type 12 and planar-maps it only for type 0. The old code cost the same
+// number of bytes as the right code, so the size-only check missed it.
 #include "common.h"
 #include "gbuffer.h"
 #include "material.h"
@@ -164,6 +171,32 @@ material_parameters get_material_parameters(inout vertex_output_struct input)
 	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
 	parameters.tc 						= input.tc;
 	parameters.detail_tc 				= input.tc;
+
+	return parameters;
+}
+
+#elif CONFIG_VERTEX_INPUT_TYPE==12
+
+// ship: the same interpolants as the null input - SV_Position plus a float3
+// position at TEXCOORD0 - but the tc is NOT planar-mapped. The shipped VIT-12
+// blob samples t_base at l(0.000000, 0.000000, 0.000000, 0.000000) and leaves
+// TEXCOORD0 unused, where the VIT-0 blob samples v1.xz; so this type leaves
+// parameters.tc at the clear_material_parameters zero. (What it does with
+// world_position / world_view_position is invisible to these two shaders -
+// both are unread here - so those lines are carried over from the null case.)
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+material_parameters get_material_parameters(inout vertex_output_struct input)
+{
+	material_parameters 				parameters;
+	clear_material_parameters			(parameters);
+
+	parameters.world_position			= input.position;
+	parameters.world_view_position 		= float4(mul(m_V, float4( input.position, 1.f)), 1.0f);
 
 	return parameters;
 }

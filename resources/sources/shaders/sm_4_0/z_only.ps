@@ -34,9 +34,6 @@
 		CONFIG_USE_SUBUV,
 */
 
-// PENDING (7 of 50 perms DIFF): the static-mesh VIT=2 family - ship routes
-// z_only through the plain static input + wind, like gbuffer_emissive_pass;
-// fix lands with the gbuffer_pass static+wind struct reconstruction.
 // Ship layout, byte-proven: the alpha-test permutations' RDEF records
 // exactly these members at these offsets (alpha_ref_parameter at 476).
 cbuffer	material_parameters
@@ -93,13 +90,25 @@ struct vertex_output_struct
 };
 #define material_tc(input)		(input).position.xz
 
-#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh, shadow
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh (2 = + wind)
 
+// Ship's static_mesh_vertex_input.h layout, the same one gbuffer_pass.ps
+// carries: the tangent basis leads, world and view position follow, and the
+// VIT=2 (wind) variant adds vertex colour and occlusion.  Every z_only
+// permutation ships at LOD 0, so only that arm is spelled out here.
 struct vertex_output_struct
 {
 	float4  homogeneous_position: SV_Position;
-	float3	position			: TEXCOORD0;
-	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
 };
 #define material_tc(input)		(input).tc
 
