@@ -984,6 +984,33 @@ class ReadmeScoreProvenanceTests(unittest.TestCase):
             with self.assertRaises(readme.ScoreDataUnavailable):
                 self._stats(ledger)
 
+    def test_gfx_dependency_is_excluded_from_engine_rollup(self):
+        from vostok.ledger import readme, store
+        with tempfile.TemporaryDirectory() as d:
+            ledger = Path(d) / "state.tsv"
+            rows = {
+                "?engine@@": {
+                    "mangled": "?engine@@", "unit": "vostok/render/engine.cpp",
+                    "module": "render", "cur": 50.0, "max": 50.0,
+                    "size": 10, "hash": "engine",
+                },
+                "?gfx@@": {
+                    "mangled": "?gfx@@", "unit": "src/gfx/player.cpp",
+                    "module": "gfx", "cur": 100.0, "max": 100.0,
+                    "size": 1000, "hash": "vendor",
+                },
+            }
+            store.save(rows, str(ledger))
+            with mock.patch.object(readme, "MATCH_STATE", ledger), \
+                    mock.patch.object(
+                        readme, "_unit_counts", return_value={"render": 1, "gfx": 1}
+                    ):
+                stats = readme.module_stats()
+
+            self.assertNotIn("gfx", stats)
+            self.assertEqual(stats["OVERALL"]["total_funcs"], 1)
+            self.assertEqual(stats["OVERALL"]["fuzzy_cur"], 50.0)
+
 
 class LedgerProjectionTests(unittest.TestCase):
     """`store.project` is the build path: a fresh derivation folded ONTO the
