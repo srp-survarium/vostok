@@ -5,9 +5,11 @@
 //	fxc /dumpbin listings of the 1,136 shipped permutations and judged by
 //	byte-identical recompilation (vostok.shaders roundtrip).
 //
-//	STATE: 1,072 of the 1,136 shipped permutations recompile byte-identical.
-//	The 64 that do not fall into four clusters, each described at the foot of
-//	this header with what was tried.
+//	STATE: 1,131 of the 1,136 shipped permutations recompile byte-identical
+//	(`vostok.shaders roundtrip gbuffer_pass.ps`, 2026-08-18: "1131 identical,
+//	5 differ, 0 skipped"; the figure before that pass was 1,072).  The 5 that
+//	do not are one cluster, described at the foot of this header with what was
+//	tried.
 //
 //	==== how to read this file ============================================
 //
@@ -19,10 +21,18 @@
 //	    texture_diffuse_color`, but the translucency MAP that overrides it is
 //	    read after the normal block (that one move: 841 -> 964);
 //	  * CONFIG_USE_DIFFUSE_MASKED_COLOR runs after the alpha test, not before;
-//	  * the detail tap's coordinate is computed at the sample, not hoisted.
+//	  * the detail tap's coordinate is computed at the sample, not hoisted -
+//	    and so is the third normal-waves tap's (worth its whole 12);
+//	  * the whole CONFIG_USE_OLTA block sits at the FOOT of main, beside the
+//	    emissive write it feeds (with clip(), worth its whole 36).
 //	Binary operand order is not free either.  fxc does not simply keep source
 //	order for a commutative `mul`; where a choice mattered, the form in the
 //	file is the one the blobs force and the alternative is not a refactor.
+//	But two of the residuals closed on 2026-08-18 were not schedule at all -
+//	they were SEMANTICS this file had wrong: the detail-normal coordinate and
+//	the vertex blend's alpha, both below.  When a residual is the same size as
+//	ship and confined to one axis, read the operands before rearranging
+//	statements.
 //
 //	==== axis status ======================================================
 //
@@ -42,51 +52,87 @@
 //	    CONFIG_USE_UP_DIRECTIONAL_NORMALS 54/54 (a no-op in the pixel stage)
 //	  identical except where another axis in the same permutation is a
 //	  residual - none of these has a defect of its own
-//	    CONFIG_TFRESNEL      383/386   CONFIG_TSPECULAR_COLOR   190/194
-//	    CONFIG_USE_FUZZINESS 127/128   CONFIG_TDETAIL_NORMAL    165/173
-//	    CONFIG_TROUGHNESS    640/667   CONFIG_TNORMAL           578/612
-//	    CONFIG_TDIFFUSE     1000/1052  CONFIG_ALPHA_TEST        474/492
-//	    CONFIG_LOD_INDEX     393/417   CONFIG_WIND_MOTION       239/258
+//	    CONFIG_TFRESNEL      385/386   CONFIG_TSPECULAR_COLOR   194/194
+//	    CONFIG_USE_FUZZINESS 127/128   CONFIG_TDETAIL_NORMAL    172/173
+//	    CONFIG_TROUGHNESS    663/667   CONFIG_TNORMAL           607/612
+//	    CONFIG_TDIFFUSE     1047/1052  CONFIG_ALPHA_TEST        492/492
+//	    CONFIG_LOD_INDEX     417/417   CONFIG_WIND_MOTION       256/258
+//	    CONFIG_USE_OLTA        36/36   CONFIG_USE_NORMAL_WAVES    12/12
+//	    CONFIG_VERTEX_BLENDED_DIFFUSE 112/112
+//	    CONFIG_VERTEX_BLENDED_NORMAL   91/91
 //	    (WIND_MOTION changes nothing in the pixel stage at all; LOD_INDEX
 //	     changes only the static vertex_output_struct - see below)
 //	  DIFF in their own right
-//	    CONFIG_USE_OLTA                 0/36    cluster 1
-//	    CONFIG_USE_NORMAL_WAVES         0/12    cluster 2
-//	    CONFIG_PARALLAX                20/30    cluster 3
-//	    CONFIG_VERTEX_BLENDED_DIFFUSE 106/112   cluster 4
-//	    CONFIG_VERTEX_BLENDED_NORMAL   87/91    with cluster 4
-//	  CONFIG_VERTEX_INPUT_TYPE: 917 of the 972 non-null permutations.  All
+//	    CONFIG_PARALLAX                25/30    the one residual cluster
+//	  CONFIG_VERTEX_INPUT_TYPE: 967 of the 972 non-null permutations.  All
 //	  fifteen families decode and every family has byte-identical members;
-//	  each failure under it belongs to one of the four clusters.
+//	  the five failures are all input type 1 under CONFIG_PARALLAX.
 //
-//	==== the four residual clusters =======================================
+//	==== the residual cluster =============================================
 //
-//	1. CONFIG_USE_OLTA (36).  Same instruction count, same opcodes, same
-//	   operands - only the schedule differs: ship emits `mov o2.x` and the
-//	   whole o0 packing before the diffuse pow chain, this file after.  The
-//	   head of the function matches ship exactly, including both `lt` operand
-//	   orders and both `and`s; the divergence starts at the packing.  Tried
-//	   and rejected: the block before the diffuse block, after the alpha test,
-//	   and at either end of main; out_emissive_render_target initialised at
-//	   the top of main, written inside the OLTA block, and written before
-//	   out_diffuse_render_target; both orders of each `&&`; naming the
-//	   scanline test, the partial-alpha test, or neither.
-//	2. CONFIG_USE_NORMAL_WAVES (12).  Same size, same instruction count.
-//	   Ship defers the third tap's coordinate scaling to just before its
-//	   sample, and both accumulating `mad`s until after the third decode;
-//	   this file emits the first `mad` earlier.  Tried: eager and lazy
-//	   coordinate scaling, three sum associations, per-tap temporaries.
-//	3. CONFIG_PARALLAX (10 of 30).  All ten are CONFIG_VERTEX_INPUT_TYPE 1,
-//	   where view_position is an interpolant rather than an m_V product: fxc
-//	   then proves `view_position.z < 12` inside the branch and weakens
-//	   smoothstep's saturate to a bare `min`, where ship keeps `mul_sat`.
-//	   Hoisting the fade out of the branch restores `mul_sat` but costs the
-//	   other 20; so does spelling the saturate by hand, or as min(max(..)).
-//	4. CONFIG_VERTEX_BLENDED_DIFFUSE (6).  Same size; a register-allocation
-//	   difference around the two-tap blend at CONFIG_VERTEX_INPUT_TYPE 1/2.
+//	CONFIG_PARALLAX (5 of 30).  All five are CONFIG_VERTEX_INPUT_TYPE 1, where
+//	view_position is an interpolant rather than an m_V product: fxc then proves
+//	`view_position.z < 12` inside the branch and weakens smoothstep's saturate
+//	to a bare `min`, where ship keeps `mul_sat`.  It is exactly one instruction
+//	(28 bytes) and nothing else differs - `opdiff` reports the two opcode
+//	streams identical apart from `mul_sat l(-0.25)` against
+//	`mul l(-0.25)` + `min l(1.0)`.  Tried and rejected, each measured on a
+//	four-permutation probe (two failing input-type-1 blobs, one passing
+//	input-type-13 parallax blob, one passing non-parallax blob):
+//	  * `[branch]` on the `if` - fxc refuses to compile it (the height-map taps
+//	    are gradient sampling inside divergent flow);
+//	  * the fade computed at the top of the branch, or one statement above the
+//	    second height tap - both break the input-type-13 parallax blob;
+//	  * the fade inlined into the `tc +=` expression - same, breaks type 13;
+//	  * smoothstep hand-expanded as `saturate((z-12)/(8-12))` and the cubic -
+//	    costs 4 bytes in EVERY parallax permutation (fxc stops folding the
+//	    divide);
+//	  * the fade routed through a function of its own - fxc inlines it and
+//	    nothing changes (so a call boundary does NOT block the range proof
+//	    here, unlike the squared_length() case in forward_lighting.ps);
+//	  * a local `float parallax_depth = view_position.z;` copy - propagated
+//	    away, byte-identical to not having it.
+//	Earlier passes also tried hoisting the fade out of the branch (restores
+//	`mul_sat`, costs the other 25) and spelling the saturate as min(max(..)).
 //
 //	Everything else here is byte-proven by at least one shipped permutation,
 //	and most of it by hundreds.
+//
+//	==== what closed the other 59, 2026-08-18 =============================
+//
+//	Of the four clusters this header used to carry, three closed outright and
+//	the parallax one halved.  Each fix is listed with what it took, because
+//	none of the four is the kind of thing the listing announces.
+//
+//	1. CONFIG_USE_OLTA (36) - three things at once, none of which works alone:
+//	   the block moved to the FOOT of main beside the emissive write it feeds;
+//	   `if (cond) discard;` replaced by `clip(cond ? -1.f : 1.f)`; and the
+//	   range test named in its own `bool` declared *before* the scanline test,
+//	   with the `&&` written range-first.  The transparency sample must also
+//	   come before the scanline test.  With the block early, fxc hoisted the
+//	   whole packing around the discard; with `clip` and the block late it
+//	   leaves the schedule alone and input type 1 keeps the discard at the tail
+//	   the way its blob does, while types 0/10/12/13/14 hoist it to the head
+//	   the way theirs do - one source, both schedules.
+//	2. CONFIG_USE_NORMAL_WAVES (12) - the third tap's `*normal_waves_
+//	   parameters.z * 1.5f` computed AT the sample rather than hoisted, the
+//	   first two taps' `*z` split into a statement of its own after the third
+//	   tap's coordinate, and the three taps read into named per-tap float3s
+//	   summed in one final statement.  The per-tap temporaries were tried
+//	   before and did nothing; they only work together with the deferred
+//	   scaling.
+//	3. CONFIG_PARALLAX (5 of the 10) - a real semantic bug, not a schedule:
+//	   the CONFIG_TDETAIL_NORMAL tap samples at `normal_tc`, the coordinate
+//	   snapshotted before the parallax block, not at the parallax-shifted
+//	   `tc`.  The six blobs that set both show `mul r1.xy, v1.xzxx, ...`
+//	   against our parallax-shifted register.  CONFIG_TDETAIL_NORMAL and
+//	   CONFIG_USE_UV_SCROLLING never ship together, so nothing distinguishes
+//	   normal_tc from the pre-parallax tc.
+//	4. CONFIG_VERTEX_BLENDED_DIFFUSE (6) - also semantic: the vertex blend is
+//	   over all FOUR channels, and the alpha test reads the *lerped* alpha.
+//	   Ship emits `add r5.xyzw, -r4.xyzw, r5.xyzw` / `mad r4.xyzw, ...` and
+//	   tests r4.w; blending only rgb leaves the alpha test on the blend map's
+//	   own alpha.  Only the six alpha-tested static blobs can tell.
 //
 //	==== what this pass writes (the store side of gbuffer.h) ==============
 //
@@ -113,11 +159,17 @@
 //	==== headers the ship had that this tree does not =====================
 //
 //	* the loose `near_far_invn_invf` and `constant_parallax_scale` are
-//	  declared HERE, before common_cbuffers.h, because $Globals binds at
-//	  cbuffer slot 0 in the parallax permutations - ahead of
-//	  material_parameters and static_globals.  gbuffer.h declares
-//	  near_far_invn_invf itself, so including it would work but would put
-//	  $Globals in the wrong place unless included first.
+//	  declared HERE, before common_cbuffers.h.  The reason recorded earlier -
+//	  that $Globals would otherwise land at the wrong cbuffer slot - is WRONG,
+//	  and was disproved on 2026-08-18: moving both declarations below the
+//	  #include recompiles byte-identically on every permutation tried,
+//	  parallax ones included.  **$Globals always binds at cbuffer slot 0**,
+//	  ahead of material_parameters and static_globals, however late its
+//	  members are declared; the "a cbuffer's slot is its declaration index
+//	  among the used ones" rule governs the *named* cbuffers only.  The
+//	  placement is kept because it reads better, not because it is forced.
+//	  gbuffer.h declares near_far_invn_invf itself, so including it would work
+//	  as well.
 //	* the vertex_output_struct dispatch is local.  The recovered
 //	  vertex_input.h and the per-type *_vertex_input.h headers map
 //	  CONFIG_VERTEX_INPUT_TYPE differently from ship, and ship's gbuffer_pass
@@ -131,10 +183,11 @@
 //	  header's non-steep arm references an undeclared `parallax` uniform.
 ////////////////////////////////////////////////////////////////////////////
 
-// The loose globals come *before* the header's cbuffers: the parallax
-// permutations bind $Globals at cbuffer slot 0, ahead of material_parameters
-// and static_globals, and a cbuffer's slot is its declaration index among the
-// used ones.
+// The loose globals come before the header's cbuffers by convention only.
+// $Globals binds at cbuffer slot 0 wherever its members are declared - proven
+// by moving both lines below the #include and recompiling byte-identically -
+// so the "slot = declaration index among the used ones" rule applies to the
+// named cbuffers and not to $Globals.
 uniform float4 near_far_invn_invf;
 uniform float constant_parallax_scale;
 
@@ -426,18 +479,8 @@ void	main(in vertex_output_struct input,
 	}
 #endif
 
-	// CONFIG_USE_OLTA: the emissive target's x carries a transparency instead of
-	// the constant 1, and half-transparent pixels are stippled away on even
-	// scanlines - a one-bit order-independent transparency, resolved elsewhere.
-	float olta_transparency		= 1.0f;
-	if (CONFIG_USE_OLTA)
-	{
-		bool olta_even_scanline	= ((uint)input.homogeneous_position.y & 1) == 0;
-		olta_transparency		= t_transparency.Sample( s_linear, tc).w;
-
-		if (olta_even_scanline && (0.025f < olta_transparency && olta_transparency < 0.975f))
-			discard;
-	}
+	// CONFIG_USE_OLTA lives at the FOOT of main, beside the emissive write it
+	// feeds - see there.
 
 	float4 diffuse_color		= float4( pow( abs( solid_color_specular.xyz), 2.2f), 1.f);
 
@@ -451,15 +494,20 @@ void	main(in vertex_output_struct input,
 	// colored-static (2) TEXCOORD7 scalar, and - byte-forced, and very likely a
 	// slip in the original - plain static (1) reads tc.x in its place.  Every
 	// other family blends at weight 1, i.e. takes the blend map whole, which is
-	// why t_base drops out of their RDEF entirely.  Only rgb is blended; the
-	// alpha the alpha test sees is the blend map's.
+	// why t_base drops out of their RDEF entirely.  ALL FOUR channels are
+	// blended - the shipped alpha-tested static permutations show
+	// `add r5.xyzw, -r4.xyzw, r5.xyzw` / `mad r4.xyzw, ...` and then test
+	// r4.w, the *lerped* alpha, against alpha_ref_parameter.  Blending only
+	// rgb leaves the alpha test reading the blend map's own alpha and costs
+	// six permutations.  Outside those six the alpha is dead, so no other blob
+	// can tell the two apart.
 	float vertex_blend_weight	= 1.0f;
 
 	float4 texture_diffuse_color = float4(1.0f, 1.0f, 1.0f, 1.0f);
 	if (CONFIG_TDIFFUSE)
 	{
 #if CONFIG_VERTEX_BLENDED_DIFFUSE
-		float3 base_diffuse		= t_base.Sample( s_anisotropic, tc).xyz;
+		float4 base_diffuse		= t_base.Sample( s_anisotropic, tc);
 #if CONFIG_VERTEX_INPUT_TYPE == 2
 		vertex_blend_weight		= 1.0f - input.occlusion;
 #elif CONFIG_VERTEX_INPUT_TYPE == 1
@@ -468,7 +516,7 @@ void	main(in vertex_output_struct input,
 		vertex_blend_weight		= 1.0f;
 #endif
 		texture_diffuse_color	= t_vertex_blended_diffuse.Sample( s_base, tc);
-		texture_diffuse_color.xyz = lerp( base_diffuse, texture_diffuse_color.xyz, vertex_blend_weight);
+		texture_diffuse_color	= lerp( base_diffuse, texture_diffuse_color, vertex_blend_weight);
 #else
 		texture_diffuse_color	= t_base.Sample( s_anisotropic, tc);
 #endif
@@ -531,12 +579,15 @@ void	main(in vertex_output_struct input,
 	// taps share one float4 of coordinate arithmetic, which is what puts the
 	// four scroll constants in a single literal.
 	float  normal_waves_time	= normal_waves_parameters.x * scene_time;
-	float4 normal_waves_tc_ab	= (tc.xyxy + normal_waves_time * float4( 0.5f, 0.7f, -0.8f, -0.2f)) * normal_waves_parameters.z;
-	float2 normal_waves_tc_c	= (tc + normal_waves_time * float2( -0.1f, 0.1f)) * normal_waves_parameters.z * 1.5f;
+	float4 normal_waves_tc_ab	= tc.xyxy + normal_waves_time * float4( 0.5f, 0.7f, -0.8f, -0.2f);
+	float2 normal_waves_tc_c	= tc + normal_waves_time * float2( -0.1f, 0.1f);
+	normal_waves_tc_ab			*= normal_waves_parameters.z;
 
-	float3 normal_waves			= read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.xy)
-								+ read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.zw * 1.25f)
-								+ read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_c);
+	float3 normal_wave_a		= read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.xy);
+	float3 normal_wave_b		= read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_ab.zw * 1.25f);
+	float3 normal_wave_c		= read_normal_map( t_normal_waves, s_anisotropic, normal_waves_tc_c * normal_waves_parameters.z * 1.5f);
+
+	float3 normal_waves			= normal_wave_a + normal_wave_b + normal_wave_c;
 
 	normal						= mul( tbn_matrix, normalize( normal_waves) * normal_waves_parameters.y);
 
@@ -546,7 +597,14 @@ void	main(in vertex_output_struct input,
 	// detail slope is added to the already-normalized tangent-space normal and
 	// the sum is rotated as it stands.  Its strength is (1 - roughness) squared,
 	// sharing the `1 - roughness` that smoothness is built from.
-	float2 detail_normal_slope	= (t_detail_normal.Sample( s_linear, tc * detail_normal_parameters.zw).wy * 2.f - 1.f) * detail_normal_parameters.xy;
+	// The detail slope rides the NORMAL tap's coordinate, not the diffuse one:
+	// the six permutations that set CONFIG_PARALLAX with CONFIG_TDETAIL_NORMAL
+	// read the un-parallaxed tc here (`mul r1.xy, v1.xzxx, cb1[10].zwzz` against
+	// a parallax-shifted r1.xy), which is normal_tc.  CONFIG_TDETAIL_NORMAL and
+	// CONFIG_USE_UV_SCROLLING never ship together, so no blob can tell
+	// normal_tc from the pre-parallax tc - but normal_tc is the one that keeps
+	// the parallax families right.
+	float2 detail_normal_slope	= (t_detail_normal.Sample( s_linear, normal_tc * detail_normal_parameters.zw).wy * 2.f - 1.f) * detail_normal_parameters.xy;
 	float detail_normal_power	= (1.0f - roughness) * (1.0f - roughness);
 	float3 detail_normal		= detail_normal_power * float3( detail_normal_slope.x, -detail_normal_slope.y, 0.0f);
 
@@ -634,6 +692,19 @@ void	main(in vertex_output_struct input,
 		pow( abs( diffuse_color.xyz), 1.f/2.2f),
 		(float)fresnel_bits / 255.0f
 	);
+
+	// CONFIG_USE_OLTA: the emissive target's x carries a transparency instead of
+	// the constant 1, and half-transparent pixels are stippled away on even
+	// scanlines - a one-bit order-independent transparency, resolved elsewhere.
+	float olta_transparency		= 1.0f;
+	if (CONFIG_USE_OLTA)
+	{
+		olta_transparency		= t_transparency.Sample( s_linear, tc).w;
+		bool olta_partial		= 0.025f < olta_transparency && olta_transparency < 0.975f;
+		bool olta_even_scanline	= ((uint)input.homogeneous_position.y & 1) == 0;
+
+		clip( (olta_partial && olta_even_scanline) ? -1.f : 1.f);
+	}
 
 	out_emissive_render_target	= float4( olta_transparency, 0.0f, 0.0f, 0.0f);
 }
