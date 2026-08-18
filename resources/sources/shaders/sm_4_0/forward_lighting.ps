@@ -597,18 +597,21 @@ light_factors forward_brdf	(
 
 	//	The overflow guard is part of the normalised distribution, not a clamp
 	//	around the finished specular: the blobs divide 4e11 by the fresnel and
-	//	min it against the quotient, in that order and in that register.  A
-	//	lower half - clamp(., 0, .) - is what forty-two of the blobs look like,
-	//	but adding it costs more than it buys: it fixes eleven and breaks
-	//	nineteen, because fxc drops a max(x, 0) it can prove redundant and only
-	//	keeps it where the vectoriser paired it with the diffuse's own max
-	//	first.  See the PARKED note at the top.
+	//	min it against the quotient, in that order and in that register.  The
+	//	lower half is real and is written here: 35 of the 600 blobs emit
+	//	`max r, r, l(0.0)` between the 4e11 divide and the min, and fxc proves
+	//	it redundant in the other 565.  Written as min(max(q, 0), cap) - NOT as
+	//	clamp(), and not around the finished specular, both of which schedule
+	//	differently.
 	float distribution_function	= exp( -square_tangent_theta/square( roughness ) );
 	float normalized_distribution_function	=
 		min(
-			distribution_function/
-			(
-				square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+			max(
+				distribution_function/
+				(
+					square( roughness )*pi*max( square( square_cosine_theta ), 0.00001f )
+				),
+				0.f
 			),
 			400000000000.f/fresnel_factor
 		);

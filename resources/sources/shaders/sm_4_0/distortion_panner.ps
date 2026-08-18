@@ -22,21 +22,26 @@
 // The pan is spelled `move_direction.xy * scene_time`, vector first: writing
 // the scalar first emits `mad cb1[17].wwww, cb0[2].xyxx, ...` instead.
 //
-// PARKED, same residual as distortion_base and for the same reason. As of the
-// 2026-08-18 second pass all 15 permutations compile to the shipped byte
-// LENGTH with the shipped instructions, and differ only by `mul o0.x` and
-// `mul o0.y` being transposed:
+// CLOSED 2026-08-18 (third pass): 15/15 byte-identical, with the same one-line
+// change as distortion_base.ps and for the same reason.
+//
+// The residual was the order of the two output multiplies:
 //
 //	mul r0.y, r0.y, cb0[1].y
 //	mul o0.y, r0.y, l(-1.000000)	; ship emits the flip first ...
-//	mul o0.x, r0.x, cb0[1].x	; ... we emit it second
+//	mul o0.x, r0.x, cb0[1].x	; ... the mixed scale vector emitted it second
 //
-// The mixed cbuffer/literal scale vector below is what keeps both the literal
-// -1 and the un-merged x scale; what is left is fxc emitting the lanes of an
-// o0 store in x,y,z,w order. The full measurement and the tried-list live in
-// the header of distortion_base.ps - read it before trying anything here.
+// The earlier passes wrote the flip as a lane of a mixed cbuffer/literal scale
+// vector, and fxc splits such a vector cbuffer-lane-first regardless of
+// destination lane, so that spelling could never reach ship's order. Applying
+// the flip as its own `float2(1.0f, -1.0f)` BEFORE the scale leaves it a
+// one-lane immediate multiply at the tail of the y chain, which makes the y
+// store two deep against x's one and forces y out first. The full measurement,
+// the five rules and the tried-lists live in the header of distortion_base.ps
+// - read that before touching either file.
+//
 // Note this shader stores z = 0 where the base stores z = 1, so its zw write
-// is `float2(0.0f, 0.0f)`: folding z into the mixed multiply as a `.xyz` write
+// is `float2(0.0f, 0.0f)`: folding z into the xy multiply as a `.xyz` write
 // costs an instruction here, because z = 0.0f * 1.0f then pairs with the y
 // lane as `mul o0.yz, ..., l(0, -1, 1, 0)`.
 #include "common.h"
@@ -237,7 +242,7 @@ pixel_output_struct	main	(in vertex_output_struct input)
 	float2 uv_moved 	= psf_move_tc(parameters.tc, move_direction.xy * scene_time);
 	float2 dist_vector 	= t_base.Sample(s_linear, uv_moved).xy*2.0f - 1.0f;
 	pixel_output_struct output;
-	output.distortion.xy = float2(dist_vector.x, dist_vector.y*distortion_scale.y) * float2(distortion_scale.x, -1.0f);
+	output.distortion.xy = (dist_vector * float2(1.0f, -1.0f)) * distortion_scale.xy;
 	output.distortion.zw = float2(0.0f, 0.0f);
 	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
 
