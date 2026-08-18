@@ -163,12 +163,12 @@ environment_probe_output main( pixel_shader_input input )
 	float	gloss				= (float)( ( (uint)( normal_target.z*1023.f ) ) & 127 );
 	float	specular_intensity	= (float)( ( (uint)( diffuse_target.w*255.f ) ) & 127 );
 
-	float	fresnel_at_0_degree	= specular_intensity*0.007874f;
-	float	fresnel_factor		= fresnel_at_0_degree + (1.f - specular_intensity*0.007874f)*fresnel_power;
+	float	fresnel_at_0_degree	= specular_intensity/127.f;
+	float	fresnel_factor		= fresnel_at_0_degree + (1.f - specular_intensity/127.f)*fresnel_power;
 
-	float	diffuse_gloss		= 1.f - gloss*0.007874f;
-	float	specular_gloss		= 1.f - gloss*0.007535f;
-	float	roughness_mip		= (1.f - sqrt( 2.f/(gloss*0.007874f + 2.f) ))*4.f;
+	float	diffuse_gloss		= 1.f - gloss/127.f;
+	float	specular_gloss		= 1.f - gloss/(127.f*1.045f);
+	float	roughness_mip		= (1.f - sqrt( 2.f/(gloss/127.f + 2.f) ))*4.f;
 
 	float	diffuse_fresnel		= 1.f - fresnel_factor*diffuse_gloss;
 
@@ -250,7 +250,7 @@ environment_probe_output main( pixel_shader_input input )
 	float3	lower				= sample_probe( direction, trunc( mip*8.f ) );
 
 	float3	specular_lighting	= lerp( specular_factor*lower, specular_factor*upper, frac( mip*8.f ) );
-	specular_lighting			= lerp( specular_lighting, 0.f, (gloss*0.007874f)*((gloss*0.007874f)*(gloss*0.007874f)) );
+	specular_lighting			= lerp( specular_lighting, 0.f, (gloss/127.f)*((gloss/127.f)*(gloss/127.f)) );
 
 	float	saturated_occlusion	= saturate( occlusion );
 	float	specular_scale		= saturated_occlusion*square( square( saturated_occlusion ) )*color_parameters.y;

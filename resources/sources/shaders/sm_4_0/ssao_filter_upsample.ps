@@ -11,17 +11,36 @@
 //	saturate(value.x) bounds ao to [0,1] and 1 - saturate(...) bounds the
 //	weight to [0,1]. Removing either saturate keeps the max - but also
 //	loses the mov_sat/div_sat the blob shows, so the ship source blocked
-//	that proof some other way. Tried, all still dropped: statement order
-//	and `+=` vs `a = b + a` for both accumulators; ao spelled saturate(),
-//	clamp(x,0,1), min(max(x,0),1), in-place `value.x = saturate(value.x)`,
-//	and inline in the mad; the weight's saturate as clamp() and min(max());
-//	the max written max(0,x), `x < 0 ? 0 : x`, hoisted before the if, sunk
-//	after the endif, against a local and a `static const` zero, and with
-//	0, 0.f, 0.h; accumulators as float2 components, a struct, a float array
-//	(indexable temp - worse), half, and file-scope statics; the loop as
-//	while, with [loop], with the counter hoisted; the whole filter as a
-//	filters.h-style function taking Texture2D/sampler (different register
-//	allocation). saturate() on the ratio instead of max() lands on
+//	that proof some other way.
+//
+//	2026-08-18, sharpened - the residual is fxc's NON-NEGATIVITY PROVER, not
+//	a spelling of max(), and three measurements pin that down:
+//	  * `precise` on the ratio does stop the optimiser elsewhere (the loop
+//	    loses both mads and gains two instructions, 2152 bytes) and the max
+//	    is folded away anyway - so precision is not the lever;
+//	  * `-min(-a/b, 0.f)` is folded by the same proof, into `div -r1.y` plus
+//	    a negating mov (2124 bytes - ship's size, wrong instructions);
+//	  * dropping ONLY ao's saturate keeps the max and costs the mov_sat:
+//	    2104 = ship 2124 - 20. So the proof runs through ao, and any clamp
+//	    that reaches [0,1] is equally transparent to it - saturate(),
+//	    clamp(x,0,1), min(max(x,0),1) and max(min(x,1),0) all compile to the
+//	    same mov_sat AND all let the max fold.
+//	Also tried and still dropped: statement order and `+=` vs `a = b + a`
+//	for both accumulators, and ao's statement moved below the weight's; the
+//	max written max(0,x), `x > 0 ? x : 0`, `x >= 0 ? x : 0`, `x < 0 ? 0 : x`,
+//	as its own statement on a named ratio, through asfloat(asuint()) and
+//	asfloat(asint()), against a local and a `static const` zero, and with
+//	0, 0.f, 0.h; ao as half and through explicit (float) casts; the sums as
+//	float2 components, a struct, `(filter_sums)0`, a float array (indexable
+//	temp - worse), half, and file-scope statics; the tap body hoisted into an
+//	`inout filter_sums` helper; the loop as while, with [loop], with the
+//	counter hoisted; `[branch]` on the if; the if's operands swapped; the
+//	whole filter as a filters.h-style function taking Texture2D/sampler
+//	(different register allocation). Sinking the max below the endif DOES
+//	keep it - fxc cannot prove the centre-tap branch non-negative - but then
+//	fxc fuses it into the output write as `max o0.x, r0.x, l(0)`, one
+//	instruction short of ship and in the wrong place (2104 bytes).
+//	saturate() on the ratio instead of max() lands on
 //	`min r0.x, r0.y, l(1.0)` - fxc proves >= 0 and not <= 1, exactly the
 //	opposite of the blob. Everything else - the icb offset table, the whole
 //	loop body, both branches, RDEF and signatures - is identical. The same

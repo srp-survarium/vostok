@@ -1,16 +1,19 @@
 ////////////////////////////////////////////////////////////////////////////
 //	Reconstructed 2026-08-17 from the shipped v0.100b blob
 //	(shaders/sm_4_0/skylight.ps, plain permutation) - the file was absent
-//	from the recovered source drop. Byte-identity against the blob is the
-//	acceptance test: python3 -m vostok.shaders roundtrip skylight.ps
+//	from the recovered source drop. Byte-proven 2026-08-18:
+//	python3 -m vostok.shaders roundtrip skylight.ps
+//	-> 1 identical, 0 differ, 0 skipped.
 //
-//	PARKED one instruction-pair short: ship keeps the ssao *2.5 as its own
-//	mul before multiplying with ramp; every shape tried here (operand
-//	orders, parens, float4/vector forms, compound assigns, precise, dot(),
-//	mul(), asfloat(asuint()), helper statements) gets canonicalised to
-//	(ramp*ssao)*2.5. Same 56 slots, same registers, same RDEF; the residual
-//	is that single const placement. Everything else - cbuffer layouts,
-//	ambient cube selects, 1/rsqrt packing - is byte-identical.
+//	It had been parked one instruction-pair short: ship keeps the ssao *2.5
+//	as its own mul before multiplying with ramp, and every SPELLING tried
+//	(operand orders, parens, float4/vector forms, /0.4f, compound assigns,
+//	precise, dot(), mul(), asfloat(asuint())) was canonicalised by fxc to
+//	(ramp*ssao)*2.5. The constant was never the problem: it was where the
+//	sample statement SAT. Written below the ramp block, fxc folds the two
+//	scalar muls into one chain and sinks the constant to its end; written
+//	ABOVE the eye-ray/ramp block, as here, the scale stays on the sampled
+//	value and the schedule is ship's. Do not move it back.
 ////////////////////////////////////////////////////////////////////////////
 
 #include "common.h"
@@ -76,6 +79,8 @@ float4 	main	( v2p_skylight I ) : SV_TARGET
 
 	color					+= saturate( dot( world_normal, -skylight_parameters6.xyz))*skylight_parameters7.xyz;
 
+	float	occlusion		= t_ssao_accumulator.Sample( s_linear, I.tc ).x*2.5;
+
 	float3	eye_ray;
 	eye_ray.xy				= s_eye_ray_corner.xy*( 1 - I.tc*2 )/s_eye_ray_corner.z;
 	eye_ray.z				= 1;
@@ -83,8 +88,6 @@ float4 	main	( v2p_skylight I ) : SV_TARGET
 	float3	position		= eye_ray*gbuffer_read_frame_depth( I.tc );
 	float	height			= mul( m_V2W, float4( position, 1)).y;
 	float	ramp			= pow( saturate( ( height - skylight_parameters1.x )/skylight_parameters1.y ), skylight_parameters1.z );
-
-	float	occlusion		= t_ssao_accumulator.Sample( s_linear, I.tc ).x*2.5;
 
 	color					*= ramp*occlusion*skylight_parameters0.xyz;
 

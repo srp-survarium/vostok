@@ -4,13 +4,14 @@
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
 //	Reconstructed 2026-08-17 from the shipped v0.100b blobs
-//	(shaders/sm_4_0/gbuffer_emissive_pass.ps (blob-identical to depth_accumulate.ps per permutation), all 69 permutations). The recovered
-//	revision (in git history) returned distance-to-light and multiplied the
-//	alpha by parameters.color.a; the ship compile samples t_base with
-//	s_linear, clips against alpha_ref_parameter from the material_parameters
-//	cbuffer, and returns zero. Byte-proven 2026-08-17:
-//	python3 -m vostok.shaders roundtrip gbuffer_emissive_pass.ps (blob-identical to depth_accumulate.ps per permutation)
-//	-> 69 identical, 0 differ, 0 skipped.
+//	(shaders/sm_4_0/gbuffer_emissive_pass.ps, all 27 permutations). It writes
+//	the emissive g-buffer target only: nothing when CONFIG_EMISSIVE is 0, the
+//	linearised constant solid_emission_color when 1, and t_emission modulated
+//	by that constant when 2, with the alpha test clipping first.
+//	Byte-proven 2026-08-18, after the static-mesh (VIT 1/2) input struct was
+//	taken from ship's static_mesh_vertex_input.h shape:
+//	python3 -m vostok.shaders roundtrip gbuffer_emissive_pass.ps
+//	-> 27 identical, 0 differ, 0 skipped.
 //
 //	Self-contained on purpose: the shipped blobs' dependency lists name
 //	common.h / material.h / vertex_input.h revisions this tree does not
@@ -34,10 +35,6 @@
 		CONFIG_USE_SUBUV,
 */
 
-// PENDING (4 of 27 perms DIFF, each 96 bytes short): the VERTEX_INPUT_TYPE=2
-// permutations - ship routes this pass through the PLAIN static-mesh input
-// with wind uniforms, not the _shadow variant this depth-derived file carries.
-// Fix lands with the gbuffer_pass static+wind struct reconstruction.
 // Ship layout, byte-proven: the alpha-test permutations' RDEF records
 // exactly these members at these offsets (alpha_ref_parameter at 476).
 cbuffer	material_parameters
@@ -96,13 +93,25 @@ struct vertex_output_struct
 };
 #define material_tc(input)		(input).position.xz
 
-#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh, shadow
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh (2 = + wind)
 
+// Ship's static_mesh_vertex_input.h layout, the same one gbuffer_pass.ps and
+// z_only.ps carry: the tangent basis leads, world and view position follow,
+// and the VIT=2 (wind) variant adds vertex colour and occlusion.  Every
+// gbuffer_emissive_pass permutation ships at LOD 0, so only that arm is here.
 struct vertex_output_struct
 {
 	float4  homogeneous_position: SV_Position;
-	float3	position			: TEXCOORD0;
-	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
 };
 #define material_tc(input)		(input).tc
 

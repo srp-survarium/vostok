@@ -240,7 +240,8 @@ pixel_output_struct	main	(in vertex_output_struct input)
 
 	float2 dist_vector 	= t_base.Sample(s_linear, parameters.tc).xy*2.0f - 1.0f;
 	pixel_output_struct output;
-	output.distortion = float4(dist_vector.x*distortion_scale.x, dist_vector.y*distortion_scale.y * -1.0f, 1.0f, 0.0f);
+	output.distortion.yzw = float3(dist_vector.y*distortion_scale.y, 1.0f, 0.0f) * float3(-1.0f, 1.0f, 1.0f);
+	output.distortion.x = dist_vector.x*distortion_scale.x;
 	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return output;
