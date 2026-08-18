@@ -226,10 +226,24 @@ Still open, with what is known about each:
 | `gbuffer_pass.ps` | 1,072/1,136 | same |
 | `environment_probe_lighting.ps` | 0/32 | **lacks a `CONFIG_VERTEX_INPUT_TYPE == 12` arm** — see below |
 | `fill_reflective_shadow_map.ps` | 0/30 | |
-| `forward_simple_water.ps` | 0/15 | newly surfaced by the census; uniform −292 bytes |
+| `forward_simple_water.ps` | 0/15 | pass 0 of the water effect; uniform −292 bytes. **Pass 1, `forward_simple_water_local_reflections.ps`, is proven 15/15** and its header carries this family's conventions |
+| `ssao_filter_upsample.ps` / `_temporal.ps` | 0/1 each | one `max r0.x, r0.y, l(0.0)` short — see below |
 | `distortion_base.ps` / `distortion_panner.ps` | 0/15 each | one three-line hunk, ~80 spellings tried |
 | `reflection_mask.ps` | 0/1 | **byte-identical but for a `STAT` mov counter** |
 | `motion_blur.ps` | 0/2 | same class: constants in a different component rotation |
+
+**The ssao_filter_upsample residual is fxc's non-negativity prover, not a
+spelling of `max()`**, and that has been established rather than guessed:
+`precise` on the ratio visibly changes the optimiser yet the max is still
+folded, so precision is not the lever; `-min(-a/b, 0.f)` is folded by the same
+proof; dropping only `ao`'s saturate keeps the max and costs exactly the
+`mov_sat` (2104 = ship's 2124 − 20), so the proof runs through `ao`, and
+`saturate()`, `clamp(x,0,1)`, `min(max(x,0),1)` and `max(min(x,1),0)` all emit
+the same `mov_sat` and are all equally transparent to it; sinking the max below
+the `endif` does keep it — fxc cannot prove the centre-tap branch non-negative —
+but fuses it into the output write. What is needed is a construct that clamps
+to [0,1] for codegen while being opaque to the prover. About 30 shapes have been
+tried; both file headers carry the list.
 
 The last two are worth separating from the rest. `reflection_mask.ps` matches
 ship across RDEF, ISGN, OSGN and the whole 1,152-byte SHDR chunk — the only
@@ -338,6 +352,37 @@ Two more from the same family:
 * a clip-to-uv map spelled `(a.xy + a.w) * 0.5f / a.w` keeps its own divide;
   spelled `a.xy/a.w*0.5f + 0.5f`, fxc shares one divide with a neighbouring
   `normalize(a.xy/a.w)` and loses two instructions.
+
+**A parked "one constant in the wrong place" residual is usually statement
+placement, not spelling.** This is the second cross-cutting finding of the
+campaign, and it now has three independent confirmations —
+`wet_sufrace_normal_modify.ps`, `apply_indirect_lighting_diffuse.ps` and
+`skylight.ps`. Skylight had been parked since the first day with a tried-list
+of about ten spellings for its ssao `*2.5` (float4 forms, `/0.4f`, parentheses,
+operand orders); every one was irrelevant. With the ssao sample written *below*
+the ramp block, fxc folds the two scalar muls into one chain and sinks the
+constant to its end; moving that single statement **above** the eye-ray/ramp
+block keeps `mul r1.x, r1.x, l(2.5)` on the sampled value, and the file is
+byte-identical. **Whenever the ops and their count already match but a constant
+sits at the wrong end of a chain, move statements before rewriting
+expressions.**
+
+Three more from the g-buffer families:
+
+* **a NaN literal in a blob is a constant fold, not a written value.**
+  `l(0xffc00000)` in the no-material g-buffer blobs is `0/0`, arising from
+  encoding the identity normal `float3(0,0,1)` through `sqrt(-8*z+8)`. It is
+  what made "zero normal" look plausible and it is wrong — those permutations
+  store the *identity* normal. Never reconstruct such a literal as a written
+  NaN or as a zero vector;
+* **a cbuffer that appears in only some permutations of one shader tells you
+  which arm reads a constant.** `static_globals` shows up in
+  `gbuffer_nomaterial_pass.ps` only for vertex-input types 7 and 8, every
+  member `[unused]` — a 752-byte gap that identified `mul(m_V, normal)` as the
+  particle normal rule before a single instruction was read;
+* **fxc normalizes the interpolated tangent basis for grassmesh (type 11) and
+  for static meshes at LOD 1, but not at LOD 0.** That is a ship source fact in
+  `get_material_parameters`, now byte-proven from two families.
 
 Earned on `translucency.ps` and `subsurface_scattering.ps`:
 
