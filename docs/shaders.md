@@ -267,6 +267,45 @@ Earned on the indirect-lighting family, and general enough to try first:
 * `mul r.xyz, v, l(1,2,-2)` is a genuine `v * float3(1,2,-2)`; writing the three
   component multiplies separately does not produce it.
 
+Earned on `translucency.ps` and `subsurface_scattering.ps`:
+
+* **operand-order inversion is a first guess, not a law.** It held for
+  scalar × cbuffer-vector (`sun_color*x` emitting `mul x, sun_color`) and
+  failed for a final `mad` (`albedo*result` emitting `mad albedo, result`
+  directly). Four of seven residual fixes across those two files were single
+  operand swaps found by flipping one expression and recompiling — cheaper than
+  reasoning about it;
+* **the first `and` of a bool chain orders its operands by register, not by
+  source.** `translucency.ps`'s four cascade containment tests come from one
+  source function, yet the listing shows two different operand orders for the
+  leading `and`, purely because the `ge` results landed in different registers.
+  Do not chase that as a source difference;
+* **statement *grouping* is part of the register allocator**, not only
+  placement. Writing three channel taps into a named `float3` and adding it
+  once per direction collapsed 38 temps to ship's 8 and fixed the whole
+  schedule; three separate `sum.x += …; sum.y += …; sum.z += …` statements do
+  **not** coalesce into the `add r1.xyz` ship emits;
+* **`pow` with a small integer exponent expands, a large one does not**:
+  `pow(x,5.f)` becomes `x*x`, `x2*x2`, `x*x4` — three muls, no log/exp — while
+  `pow(x,12.f)` stays `log`/`mul`/`exp`. So a bare log/mul/exp means a
+  non-expandable exponent and a mul chain means a small integer one; neither
+  should be "fixed" into the other;
+* **`bool * int * float` is a literal ship idiom.** The cascade select is
+  `inside_n * outside_0 * … * t_n.z`, where `inside_n` is a `bool` and
+  `outside_n` is `int outside = inside ? 0 : 1;`. That exact typing is what
+  produces `and 1` / `imul` / `itof` for cascades 1–3 and `and 0x3f800000` for
+  cascade 0. `!c` would emit `not`; `c ? 0 : 1` emits the `movc` ship has;
+* **`convert_to_linear_space` is distinguishable from a raw `pow(x,2.2f)` by
+  the `abs`.** `MASTER_GOLD` is unset in these blobs, so
+  `ABS_TO_REMOVE_WARNING` expands to `abs`: the albedo conversion shows
+  `log |r3.xxyz|` while a gamma decode written inline shows a bare `log`. Both
+  files needed the raw `pow` in one place and the header function in another;
+* **the 16-entry Poisson disc is shared across families.** `subsurface_scattering.ps`
+  uses the same table `sun.ps` filters its cascades with, at exactly twice the
+  scale, and its ×0.4/×0.1 radii are exact products of it. That makes the disc
+  ship truth recovered twice over rather than a guess made while reconstructing
+  `sun.ps`.
+
 **Where the trail goes cold.** Two shaders are byte-identical except for a
 `STAT` counter, and that is a real limit rather than a near miss.
 `reflection_mask.ps` matches ship across RDEF, ISGN, OSGN and the entire
@@ -312,36 +351,57 @@ right shapes locally and a header edit would need its own verification pass:
   `sharpen_common.h`, `skeleton_{1..4}_bones_mesh_vertex_input.h`,
   `user_vertex_input.h`, `atmospheric_scattering_common.h`.
 
-## The last unreconstructed shader: `subsurface_scattering.ps`
+## Every shipped name now has a source
 
-15 permutations (VERTEX_INPUT_TYPE 0–14, plus SUBUV on type 8), ~598
-instructions, no pre-ship ancestor in `old/` — the skin/organic family there
-is a different, multi-pass generation. Structure decoded from the VIT-0
-listing, so the next worker starts here rather than from scratch:
+`subsurface_scattering.ps` was the last shader with no source at all; it and
+`translucency.ps` closed together, byte-identical across all 16 permutations.
+All 261 of build 802's shipped shader names now have a reconstruction, and what
+remains is per-permutation residue rather than blank files.
 
-* **screen-space gather, 49 taps**: a centre tap plus **16 Poisson
-  directions × 3 radii** (`×1`, `×0.4`, `×0.1` — the ×0.4/×0.1 constants in
-  the blob are exactly the base times those factors, so the source scales a
-  16-entry table rather than storing 48);
-* the radius is divided by `max(view_z * 0.333, 0.125)` and then multiplied
-  by `screen_res.zw`, so the kernel shrinks with distance and is expressed in
-  texels;
-* **each tap is bilateral**: sample `t_position` (through `s_position`) at
-  the tap, and if `|centre_depth − tap_depth| > 0.01` the tap collapses back
-  to the centre uv — emitted as `lt`/`and 0x3f800000`/`mad`, not a branch;
-* every tap reads `t_diffuse_lighting` through `s_material1` and **decodes
-  the light accumulator** as `saturate(x)² * 8` — the exact inverse of the
-  `1.f/rsqrt(saturate(c*0.125))` store that `skylight.ps` and the
-  accumulators write. The three radii feed three separate accumulator
-  channels (the sample swizzles rotate `t3.xyzw`/`t3.yxzw`/`t3.zxyw`), which
-  is the usual red-scatters-furthest arrangement;
-* the tail unpacks a 5-bit field from `t_normal` (`*1023`, `>>7`, `<<3`,
-  `*1/31`, `min 1`, `pow 2.2`), forces it to 1 when `t_diffuse.w*255 >> 7`
-  is set, reads `t_specular_lighting`, converts the albedo to linear, and
-  writes `albedo_linear * scattered + saturate(specular)² * 8 * factor`.
+The two are worth reading as a pair, because they are the engine's two answers
+to light that does not stop at a surface:
 
-Exact float bits for the 16 directions are recoverable the usual way (scan
-the blob's DXBC for words whose `%.6f` matches the listing).
+* **`translucency.ps`** is deferred *sun through thin geometry*. It rebuilds
+  view position from `s_eye_ray_corner` and g-buffer depth, projects through
+  the four cascade matrices, and takes the depth of the **first containing**
+  cascade minus `t_sun_translucensy_help_data.y` — the lit surface's own
+  cascade depth — as the thickness the light crossed. Material translucency is
+  a 5-bit field split across the normal target (3 bits from `.z`'s 10-bit word,
+  2 from `.w`), gamma-decoded and gated on bit 7 of the diffuse alpha.
+  Attenuation is `pow(1 - saturate(thickness/(translucency*0.035)), 10)`, and
+  the colour is a flat wrap term, a back-lit `N·L`, and a
+  `pow(saturate(-V·L),3)` forward-scatter lobe, packed
+  `1/rsqrt(saturate(c*0.125))`;
+* **`subsurface_scattering.ps`** is the screen-space skin resolve, drawn with
+  the object's own geometry: 49 bilateral taps of the diffuse light
+  accumulator — the centre plus **16 Poisson directions × 3 radii**, the radii
+  feeding R/G/B of one accumulator so the widest scatter lands in red. The
+  radius is divided by `max(view_z * 0.333, 0.125)` then multiplied by
+  `screen_res.zw`, so the kernel shrinks with distance and is expressed in
+  texels; a tap whose depth differs from the centre by more than 0.01 collapses
+  back to the centre uv, emitted as `lt`/`and 0x3f800000`/`mad` rather than a
+  branch. The average is mixed 50/50 with the undiffused centre, a rim term
+  `pow(1-saturate(-V·N_world),5) * pow(saturate(-V·L),12)` is added, LPV
+  indirect fades in where scatter is dim, and the result is
+  `albedo_linear*scattered + specular*translucency`.
+
+**Header truth these two pinned but did not apply.** The 5-bit translucency
+unpack (`.z*1023 >> 7 | .w*3 << 3`, `*1/31`, `min 1`, `pow 2.2`) is
+byte-identical in both and at ship almost certainly lived in `gbuffer.h`, whose
+read side it is; it is duplicated locally in both files because a `gbuffer.h`
+edit needs its own full-tree proof. `subsurface_scattering.ps`'s dep table names
+only `material.h`, `vertex_input.h`, `gamma_correction.h` and `gbuffer.h`, so
+the per-type `vertex_output_struct` and its loose globals came from ship's
+`*_vertex_input.h` headers — the recovered ones are drifted
+(`null_mesh_vertex_input.h` adds a `tc : TEXCOORD1` the shipped ISGN lacks), so
+the dispatch is local, exactly as `gbuffer_pass.ps` already does it. Two
+per-type `$Globals` layouts are now byte-pinned in that file's `#if` block:
+particle (VIT 7/8) declares `up_view_vector`, `right_view_vector`,
+`use_align_by_dir`, `view_location`, `use_fixed_axis`, `rotation_fixed_axis`,
+`locked_no_ratate_axis_index` ahead of `near_far_invn_invf`; grassmesh (VIT 11)
+declares `patch_parameters`. And skeleton types 3–6 putting world position at
+TEXCOORD5 and view position at TEXCOORD3 — listed above as proven but not
+applied — is now confirmed independently by a second family.
 
 ## What comes next
 
