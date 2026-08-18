@@ -8,30 +8,24 @@
 
 Texture2D t_distortion;
 
-#define USE_DISPERSION 0
+// The shipped blob has no distortion mask and no dispersion arm: it reads the
+// accumulated distortion once (through s_material1, not s_accumulator), adds
+// it to the screen uv, and re-samples the scene. The `.z` channel the two
+// distortion writers emit is never read back here.
+// Input signature is the apply_distortion.vs output: SV_POSITION + TEXCOORD0,
+// with no COLOR - so this is not v2p_TL.
+struct	v2p_distortion
+{
+	float4 	HPos	: SV_POSITION;	// Clip-space position 	(for rasterization)
+	float2 	Tex0	: TEXCOORD0;
+};
 
-
-float4 main( v2p_TL vin) : SV_TARGET
+float4 main( v2p_distortion vin) : SV_TARGET
 {
 	float2 screen_uv				= vin.Tex0;
-	float4 packed_distortion 		= t_distortion.Sample(s_accumulator, screen_uv);
-	
+	float4 packed_distortion 		= t_distortion.Sample(s_material1, screen_uv);
+
 	float2 tc_offset 				= unpack_distortion(packed_distortion);
-	
-	float distortion_mask 			= saturate(t_distortion.Sample(s_accumulator, screen_uv + tc_offset).z);
-	
-#if USE_DISPERSION
-	float2 distortion_offset		= tc_offset * distortion_mask;
-	float4 final_color				= float4(
-		t_base.Sample(s_accumulator, screen_uv + 2.0f * distortion_offset).r,
-		t_base.Sample(s_accumulator, screen_uv + 3.0f * distortion_offset).g,
-		t_base.Sample(s_accumulator, screen_uv + 1.0f * distortion_offset).b,
-		1.0f
-	);
-#else	
-	float2 distortion_offset		= tc_offset * distortion_mask;
-	float4 final_color				= t_base.Sample(s_accumulator, screen_uv + distortion_offset);
-#endif // #if USE_DISPERSION	
-	
-	return final_color;
+
+	return t_base.Sample(s_accumulator, tc_offset + screen_uv);
 }

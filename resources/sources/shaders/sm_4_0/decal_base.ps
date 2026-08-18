@@ -3,10 +3,51 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 2026-08-18, against the 30 shipped v0.100b blobs.
+//	STATE: all 30 recompile byte-identical (vostok.shaders roundtrip).
+//
+//	The recovered file was a much earlier revision: two render targets, no
+//	decal-box clip, no projection stretch, a linear-space diffuse write and
+//	no material target at all.  Ship writes three targets and gamma-encodes
+//	the diffuse; the shape below is the one the blobs force.
+//
+//	Every shipped permutation has CONFIG_TDIFFUSE = 1, CONFIG_REFLECTION = 0,
+//	CONFIG_DECAL_TYPE = 0 (ACCUMULATED_WITH_NORMAL) and CONFIG_LOD_INDEX = 0;
+//	only CONFIG_TNORMAL (0/1) and CONFIG_VERTEX_INPUT_TYPE (0..14, type 8
+//	carrying CONFIG_USE_SUBUV) vary.  Nothing here is written against the
+//	other values of the frozen axes.
+//
+//	==== what this pass is, in rendering terms ============================
+//
+//	A deferred decal.  It is drawn as the decal's own projector box; for each
+//	covered pixel it reads the g-buffer back (depth through t_position,
+//	normal through t_normal), rebuilds the receiving surface's view-space
+//	position from the eye ray, lifts it to world space, and projects it into
+//	decal space with world_to_decal.  Pixels outside the box are clipped, and
+//	the surviving decal-space xy becomes the texture coordinate.  The tangent
+//	basis is built from the projector's own tangent crossed with the receiving
+//	surface's normal, so a decal on a curved wall bends with it;
+//	blend_with_geometry_normals picks between the real g-buffer normal and the
+//	projector's own.  Coverage (`scattered_alpha`) fades with the angle
+//	between the surface and the projector and cuts off hard past
+//	decal_angle_parameters.y, which is what keeps a bullet hole off the
+//	wall it is nearly parallel to.  Output is three accumulation targets that
+//	apply_decal_diffuse_write / apply_decal_normals_* later resolve into the
+//	g-buffer: gamma-space colour + alpha, coverage-weighted normal, and a
+//	smoothness pair split around 0.5.
+//
+//	==== three fxc shapes this file is pinned to =========================
+//
+//	* the box clip is clip(), not `if (...) discard;` - see the note there;
+//	* the clip-to-uv map keeps its bias inside the numerator, so that fxc
+//	  does not share one divide with the stretch's normalize;
+//	* the stretch is pow(x, 3.0f).  Spelt x*x*x fxc emits the second mul with
+//	  its operands the other way round.
+////////////////////////////////////////////////////////////////////////////
 
 /*	$DEFINES$:
 		GLOBAL_USE_BRANCHING
-		
+
 		CONFIG_TDIFFUSE,
 		CONFIG_TNORMAL,
 		CONFIG_DECAL_MATERIAL,
@@ -22,10 +63,152 @@
 */
 #include "common.h"
 #include "gbuffer.h"
+#include "gamma_correction.h"
 #include "psf_normal.h"
 #include "psf_reflection.h"
 #include "material.h"
-#include "vertex_input.h"
+
+////////////////////////////////////////////////////////////////////////////
+//	ship's vertex_input.h, inlined.
+//
+//	The blobs' dependency tables spell the ship dispatch: 0 null, 1-2 static,
+//	3-6 skeleton_{4,3,2,1}_bones, 7-8 particle, 9 beamtrail, 10 decal,
+//	11 grassmesh, 12 postprocess, 13 wires, 14 user.  The tree's
+//	vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently and four of the
+//	per-type headers it names are missing entirely, so the dispatch is
+//	reproduced here rather than included - the same choice gbuffer_pass.ps
+//	made, and every struct below is byte-forced by a shipped input signature.
+//
+//	It sits between gbuffer.h and this file's own uniforms because that is
+//	where ship's `#include "vertex_input.h"` sat: $Globals opens with
+//	gbuffer.h's near_far_invn_invf, then the per-type uniforms (particle's
+//	seven, grassmesh's patch_parameters), then constant_diffuse onwards.
+////////////////////////////////////////////////////////////////////////////
+
+#if CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+
+// particle_vertex_input.h
+float3	up_view_vector;
+float3	right_view_vector;
+
+float	use_align_by_dir;
+float3	view_location;
+
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+
+float	locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3  tangent				: TEXCOORD2;
+	float3  binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9
+
+// particle_beamtrail_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2
+
+// static_mesh_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6
+
+// skeleton_{4,3,2,1}_bones_mesh_vertex_input.h (one shared output)
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4  homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	position			: TEXCOORD4;
+	float3	prev_position		: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11
+
+// grassmesh_vertex_input.h
+float4 patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4  homogeneous_position: SV_Position;
+	float4	params				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13
+
+// wires_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 14
+
+// user_vertex_input.h
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+
+#else // NULL_VERTEX_INPUT_TYPE (0), decal (10), postprocess (12)
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+
+#endif
+
+////////////////////////////////////////////////////////////////////////////
 
 float4 constant_diffuse;
 float3 constant_normal_multiplier;
@@ -49,124 +232,132 @@ static const float decal_clip_angle = decal_angle_parameters.y;
 
 TextureCube t_cubemap;
 
+float fresnel_multiplier;
+float smoothness_interpolation;
+float diffuse_alpha;
+
+//	Ship's normal-map decode is NOT psf_normal.h's psf_tnormal: it samples
+//	through s_anisotropic rather than s_normal, and clamps with max(...,0)
+//	where the header's saturate would have emitted add_sat.  Same divergence
+//	gbuffer_pass.ps records, so it is inlined here rather than repaired in a
+//	header other reconstructions are already leaning on.
+float3 read_normal_map( Texture2D _t_normal, sampler _sampler, float2 tc)
+{
+	float3 normal;
+	normal.xy	= _t_normal.Sample( _sampler, tc).wy * 2.f - 1.f;
+	normal.z	= sqrt( max( 1.0f - dot(normal.xy, normal.xy), 0.0f));
+	normal.y	= -normal.y;
+	return normalize( normal);
+}
 
 void main(in vertex_output_struct input,
-		  out float4 out_diffuse_target : SV_Target0
-#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
-		  ,
-		  out float4 out_normals_target : SV_Target1
-#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
+		  out float4 out_diffuse_target		: SV_Target0,
+		  out float4 out_normals_target		: SV_Target1,
+		  out float4 out_material_target	: SV_Target2
   )
 {
-	material_parameters parameters 		= get_material_parameters(input);
-	fill_material_parameters			(parameters);
-	
-	float2 screen_uv					= input.homogeneous_position.xy * screen_res.zw;
-	
-	float3 eye_ray; 
+	float2 screen_uv					= input.homogeneous_position.xy / screen_res.xy;
+
+	float3 eye_ray;
 	eye_ray.xy							= s_eye_ray_corner.xy * (1.0f - screen_uv.xy * 2.0f);
 	eye_ray.z							= s_eye_ray_corner.z;
-	
-	float3 scene_position;
-	float2 temp;
-	gbuffer_read_rt_position			(
-		screen_uv,
-		eye_ray, 
-		scene_position, 
-		temp.x, 
-		temp.y
-	);
-	
+
+	float3 scene_position				= gbuffer_read_frame_depth(screen_uv)*float3(eye_ray.xy / eye_ray.z, 1.0f);
+
+	float3 view_scene_normal			= gbuffer_read_frame_normal(screen_uv);
+	view_scene_normal.z					= -view_scene_normal.z;
+
 	float3 world_scene_normal_real		= mul(
-		m_V2W, 
-		//normalize(cross(ddx(scene_position), ddy(scene_position)))
-		float4(gbuffer_read_frame_normal(screen_uv), 0.0f)
+		m_V2W,
+		float4(view_scene_normal, 0.0f)
 	).xyz;
-	
+
 	float3 world_scene_normal			= -decal_tangent_to_view_space_matrix[2].xyz;
-	
-	BRANCH if (blend_with_geometry_normals > 0.0f)
+
+	//	Spelt [branch], not BRANCH.  GLOBAL_USE_BRANCHING is not one of the 82
+	//	registry defines, so it never reaches the compile and the macro is
+	//	empty; the bare `if` is then flattened into a movc and the blob loses
+	//	32 bytes against ship, which keeps if_nz/else/endif here.  Same reason
+	//	UNROLL is spelt [unroll] wherever ship actually unrolls.
+	[branch] if (blend_with_geometry_normals > 0.0f)
 		world_scene_normal				= world_scene_normal_real;
-	
+
 	const float3 decal_tangent			= decal_tangent_to_view_space_matrix[0].xyz;
 	const float3 decal_normal			= decal_tangent_to_view_space_matrix[2].xyz;
 	const float3 binormal				= -cross(decal_tangent, world_scene_normal);
 	const float3 tangent				= cross(binormal, world_scene_normal);
-	
-	parameters.tangent_to_viewspace		= mul(
-		(float3x3)m_V, 
+
+	float3x3 tangent_to_viewspace		= mul(
+		(float3x3)m_V,
 		transpose(
 			float3x3(
-				tangent, 
-				binormal, 
+				tangent,
+				binormal,
 				world_scene_normal
 			)
 		)
 	);
-	
+
 	float3 world_scene_position			= mul(m_V2W, float4(scene_position, 1.0f)).xyz;
 	float4 decal_projected_position 	= mul(world_to_decal, float4(world_scene_position, 1.0f));
-	
-	parameters.tc						= 
-		float2(1.0f, -1.0f) * decal_projected_position.xy / decal_projected_position.w * 0.5f + 0.5f;
-	
-	float3	 	normal 					= parameters.normal;
-	
-	float4 		diffuse_color			= constant_diffuse;
-	float		base_alpha				= 1.0f;
-	
-	//float3		surface_normal			= normalize(cross(ddx(scene_position), ddy(scene_position)));
-	//			world_scene_normal		= mul(m_V2W, surface_normal).xyz;
-	
+
+	//	Clip if out of decal box.  It has to be clip(), not `if (...) discard;`:
+	//	the two produce the same discard_nz, but the `if` form lets fxc treat
+	//	the discard as an early-out and pull its whole dependency chain - the
+	//	world transform and the projection - above the tangent basis, which
+	//	then costs a fifth temporary.  Ship schedules the basis first.
+	clip((decal_projected_position.x < -1.0f 	||
+		decal_projected_position.y < -1.0f 	||
+		decal_projected_position.x >  1.0f 	||
+		decal_projected_position.y >  1.0f 	||
+		decal_projected_position.z >= 1.0f 	||
+		decal_projected_position.z <  0.5f) ? -1.0f : 1.0f);
+
+	//	The clip-to-uv map is spelt with the bias inside the numerator - not as
+	//	`.xy/.w*0.5f + 0.5f` - and that is not cosmetic: the stretch below
+	//	normalises the same `float2(1,-1)*.xy/.w`, and the plain spelling lets
+	//	fxc share one divide between the two.  Ship divides twice.
+	float2 tc							=
+		(float2(1.0f, -1.0f) * decal_projected_position.xy + decal_projected_position.w) * 0.5f / decal_projected_position.w;
+
 	float scattered_alpha				= saturate(dot(world_scene_normal_real, -decal_normal) - decal_alpha_angle);
 	scattered_alpha						*=dot(world_scene_normal_real, -decal_normal) > decal_clip_angle ? 1.0f : 0.0f;
-	
-	if (CONFIG_TDIFFUSE)
-	{
-		diffuse_color					*= t_base.Sample(s_base, parameters.tc);
-		base_alpha						= t_base.Sample(s_base, parameters.tc).a;
-	}
-	
+
+	// The decal smears along its own projection as the receiving surface tips
+	// away from the projector: a unit step in the projected direction, scaled
+	// by the cube of how far past the box's half-depth the surface sits.
+	float stretch						= saturate(decal_projected_position.z - 0.5f);
+	stretch								= pow(stretch, 3.0f);
+
+	tc									= saturate(
+		normalize(float2(1.0f, -1.0f) * decal_projected_position.xy / decal_projected_position.w)*stretch + tc
+	);
+
+	float4 		diffuse_color			= t_base.Sample(s_linear, tc) * constant_diffuse;
+
+	float3	 	normal;
+
 	if (CONFIG_TNORMAL)
-		normal 							= psf_tnormal(
-			t_normal_map, 
-			parameters.tangent_to_viewspace, 
-			parameters.tc, 
-			constant_normal_multiplier
+		normal 							= normalize(
+			mul(
+				tangent_to_viewspace,
+				read_normal_map(t_normal_map, s_anisotropic, tc)*constant_normal_multiplier
+			)
 		);
 	else
-		normal							= normalize(mul(parameters.tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
-	
-	if (CONFIG_REFLECTION == 1)
-		diffuse_color.rgb				+= psf_reflection(
-			float3(0.0f, 0.0f, 0.0f),
-			t_cubemap,
-			normal,
-			scene_position
-		);
-	
-	diffuse_color.a 					*= scattered_alpha;
-	base_alpha 							*= scattered_alpha;
-	
+		normal							= normalize(mul(tangent_to_viewspace, float3(0.0f,0.0f,1.0f)) );
+
 	out_diffuse_target 					= float4(
-#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
-		diffuse_color.a * 
-#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE	
-		diffuse_color.rgb, 
-		diffuse_color.a
+		convert_from_linear_space(diffuse_color.rgb),
+		diffuse_color.a*diffuse_alpha
 	);
-	
-#if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE
-	out_normals_target					= float4(base_alpha * normal, base_alpha);
-#endif // #if CONFIG_DECAL_TYPE == ACCUMULATED_WITH_NORMAL_DECAL_TYPE	
-	
+
+	out_normals_target					= float4(scattered_alpha*normal*0.5f + 0.5f, scattered_alpha*diffuse_color.a);
+
+	out_material_target					= float4(
+		diffuse_color.a*saturate(1.0f - smoothness_interpolation*2.0f),
+		diffuse_color.a*saturate(smoothness_interpolation*2.0f - 1.0f),
+		1.0f,
+		1.0f
+	);
 }
-
-
-
-
-
-
-
-
-

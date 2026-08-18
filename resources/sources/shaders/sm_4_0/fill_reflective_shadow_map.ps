@@ -3,96 +3,293 @@
 //	Author		: Nikolay Partas
 //	Copyright (C) GSC Game World - 2011
 ////////////////////////////////////////////////////////////////////////////
+//	Reconstructed	: 18.08.2026, against all 30 shipped permutations of
+//					  shaders/sm_4_0/fill_reflective_shadow_map.ps.  The file
+//					  that arrived with the source drop is a LATER revision:
+//					  it includes light_ps_helper.h / spot_light.h /
+//					  parallel_light.h (none of which appears in any shipped
+//					  dependency table), declares an `int light_type` and a
+//					  commented-out per-light-type switch that ship does not
+//					  have, and reads the normal off the tangent basis where
+//					  ship reads parameters.normal.  It is kept below only as
+//					  the shape this reconstruction agrees with.
+//	Acceptance		: python3 -m vostok.shaders roundtrip fill_reflective_shadow_map.ps
+////////////////////////////////////////////////////////////////////////////
+//
+//	The *lit* reflective-shadow-map fill: the geometry pass a light runs into
+//	the RSM that later seeds the light-propagation volume.  Three targets, all
+//	with .w = 0:
+//	  SV_Target0.xyz  convert_to_linear_space( diffuse_color_parameter)
+//	                  [* t_base] * convert_to_linear_space( light_color)
+//	                  * light_intensity   - the flux this surface reflects
+//	  SV_Target1.xyz  normalize( mul( m_V2W, float4( normal, 0)))  - the
+//	                  world-space normal, from a VIEW-space source normal
+//	  SV_Target2.xyz  the world position
+//	Its two siblings write subsets of the same thing:
+//	fill_reflective_shadow_map_position.ps writes only target 2, and
+//	fill_reflective_shadow_map_backed.ps takes the albedo from a vertex colour
+//	instead of a texture and never binds a sampler.
+//
+//	==== axis status ======================================================
+//
+//	CONFIG_VERTEX_INPUT_TYPE (0..14, no 8 without subuv) x CONFIG_TDIFFUSE
+//	(0,1) = 30 permutations, and those are exactly the 30 that ship.
+//	CONFIG_USE_SUBUV=1 only alongside type 8; the other five defines in the
+//	permutation strings are 0 throughout.
+//	Byte-proven: 30 identical, 0 differ.
+//
+//	==== the per-family table =============================================
+//
+//	Byte-forced by the input signature and the instruction stream of each of
+//	the 30 blobs.  The `normal` column is the VIEW-space normal handed to
+//	m_V2W - i.e. exactly `material_parameters::normal` as the ship
+//	get_material_parameters left it, NOT the tangent basis' third column:
+//	particles (7/8) emit `mul( (float3x3)m_V, input.normal)` in full, which no
+//	transpose of the interpolated basis can produce, and wires (13) carry a
+//	real basis and still emit the cleared (0,0,1).
+//
+//	  0  null        normal (0,0,1);  tc is the world position's .xz (this
+//	                 family has NO tc interpolant - the shipped blob samples
+//	                 t_base at `v1.xzxx`)
+//	  1  static      normal = float3( tbn_x.z, tbn_y.z, tbn_z.z), unnormalized
+//	  2  static+     as 1, plus a colour at TEXCOORD6 and an occlusion scalar
+//	                 at TEXCOORD7 that this pass never reads
+//	  3-6 skeleton   as 1; world position at TEXCOORD5
+//	  7/8 particle   normal = mul( (float3x3)m_V, input.normal); the only
+//	                 family that reads m_V, and the only one with loose
+//	                 globals ahead of light_local_to_world in $Globals
+//	  9  beamtrail   normal (0,0,1)
+//	  10 decal       normal (0,0,1); no tc - samples at float2(0,0)
+//	  11 grassmesh   as 1 but NORMALIZED before the m_V2W product - the one
+//	                 family with a dp3/rsq/mul pair on each side of it
+//	  12 postprocess normal (0,0,1), no world position at all: target 2 is a
+//	                 single `mov o2.xyzw, l(0,0,0,0)`
+//	  13 wires       normal (0,0,1) despite the basis at TEXCOORD2..4
+//	  14 user        normal (0,0,1)
+//
+//	==== $Globals, and what ship did NOT include ==========================
+//
+//	Every blob's $Globals is: [the vertex input's own loose globals],
+//	light_local_to_world (unused in all 30, and still present), light_color,
+//	light_intensity, diffuse_color_parameter.  There is no
+//	near_far_invn_invf, no light_diffuse/specular_influence_factor and no
+//	light_type - so ship included neither gbuffer.h nor light_ps_helper.h nor
+//	colored_light.h here, and declared light_color/light_intensity itself.
+//	The shipped dependency table is exactly material.h, vertex_input.h,
+//	gamma_correction.h and their closures.
+//
+//	The recovered vertex_input.h maps CONFIG_VERTEX_INPUT_TYPE differently
+//	from ship (its common_defines.h numbering runs to 17 and has no
+//	skeleton-bone-count split), and the per-type headers have drifted too -
+//	the recovered null_mesh_vertex_input.h carries a tc interpolant ship does
+//	not have.  So the dispatch is local here, as it is in every other
+//	reconstruction of this family; the struct layouts match
+//	gbuffer_pass.ps's, which the same ship vertex_input.h produced.
+////////////////////////////////////////////////////////////////////////////
 
 /*	$DEFINES$:
 		CONFIG_VERTEX_INPUT_TYPE,
 		CONFIG_TDIFFUSE,
+		CONFIG_USE_SUBUV,
 */
 
-#include "material.h"
-#include "vertex_input.h"
+#include "common_cbuffers.h"
+#include "common_samplers.h"
 #include "gamma_correction.h"
+
+////////////////////////////////////////////////////////////////////////////
+//	vertex input types, ship numbering.  Each struct reproduces a shipped
+//	input signature exactly - semantic spelling, index and mask - and the
+//	three accessors below are the per-family table above.
+
+#if CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float3	position			: TEXCOORD3;
+	float3	view_position		: TEXCOORD4;
+	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3((input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	homogeneous_position: SV_Position;
+	float3	view_position		: TEXCOORD3;
+	float3	prev_position		: TEXCOORD4;
+	float3	position			: TEXCOORD5;
+	float2	tc					: TEXCOORD6;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3((input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8
+
+// particle_vertex_input.h's loose globals lead $Globals in these two.
+float3	up_view_vector;
+float3	right_view_vector;
+
+float	use_align_by_dir;
+float3	view_location;
+
+float	use_fixed_axis;
+float3	rotation_fixed_axis;
+
+float	locked_no_ratate_axis_index;
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	normal				: NORMAL;
+	float4	color				: COLOR;
+	float2	tc					: TEXCOORD1;
+	float3	tangent				: TEXCOORD2;
+	float3	binormal			: TEXCOORD3;
+#if CONFIG_USE_SUBUV
+	float4	tc1					: TEXCOORD4;
+#endif // #if CONFIG_USE_SUBUV
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		mul((float3x3)m_V, (input).normal)
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 9
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float4	color				: TEXCOORD1;
+	float2	tc					: TEXCOORD2;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 10
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 11
+
+// grassmesh_vertex_input.h's one loose global.
+float4	patch_parameters;
+
+struct vertex_output_struct
+{
+	float3	tbn_x				: TEXCOORD0;
+	float3	tbn_y				: TEXCOORD1;
+	float3	tbn_z				: TEXCOORD2;
+	float4	color				: TEXCOORD3;
+	float4	homogeneous_position: SV_Position;
+	float4	params				: TEXCOORD4;
+	float3	view_position		: TEXCOORD5;
+	float3	position			: TEXCOORD6;
+	float2	tc					: TEXCOORD7;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		normalize(float3((input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z))
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 12
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	float3(0.f, 0.f, 0.f)
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			float2(0.f, 0.f)
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 13
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+	float3	tbn_x				: TEXCOORD2;
+	float3	tbn_y				: TEXCOORD3;
+	float3	tbn_z				: TEXCOORD4;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			(input).tc
+
+#elif CONFIG_VERTEX_INPUT_TYPE == 14
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float2	tc					: TEXCOORD1;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			(input).tc
+
+#else // NULL_VERTEX_INPUT_TYPE
+
+struct vertex_output_struct
+{
+	float4	homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+};
+#define material_position(input)	(input).position
+#define material_normal(input)		float3(0.f, 0.f, 1.f)
+#define material_tc(input)			(input).position.xz
+
+#endif // #if CONFIG_VERTEX_INPUT_TYPE
+
+////////////////////////////////////////////////////////////////////////////
 
 float4x4  light_local_to_world;
 
-#include "light_ps_helper.h"
-#include "spot_light.h"
-#include "parallel_light.h"
+float3 light_color;
+float light_intensity;
 
 float3 diffuse_color_parameter;
-
-int light_type;
-
-#define LIGHT_TYPE_POINT 		0
-#define LIGHT_TYPE_SPOT 		1
-#define LIGHT_TYPE_OBB 			2
-#define LIGHT_TYPE_CAPSULE 		3
-#define LIGHT_TYPE_PARALLEL 	4
-#define LIGHT_TYPE_SPHERE 		5
-#define LIGHT_TYPE_PLANE_SPOT 	6
 
 void main(in vertex_output_struct input,
 		  out float4 out_rsm_albedo 	: SV_Target0,
 		  out float4 out_rsm_normal 	: SV_Target1,
 		  out float4 out_rsm_position 	: SV_Target2)
 {
-	material_parameters parameters 	= 	get_material_parameters(input);
-	fill_material_parameters		(parameters);
-	
-	float2 uv						= 	parameters.tc;
-	
+	float2 uv						= 	material_tc(input);
+
 	float3 diffuse_color			= 	convert_to_linear_space(diffuse_color_parameter);
-	
+
 	if (CONFIG_TDIFFUSE)
 		diffuse_color				*= 	t_base.Sample(s_base, uv).rgb;
-	
-	float3 normal					= 	normalize(mul(m_V2W, float4(transpose(parameters.tangent_to_viewspace)[2], 0.f)).xyz);
-	/*
-	light_factors light = (light_factors)0;
-	
-	float2 roughness				= 0.5f;
-	float fresnel_at_0_degree		= 0.2f;
-	
-	FORCECASE switch(light_type)
-	{
-		case LIGHT_TYPE_SPOT:
-		light = spot_light_impl(parameters.world_view_position.xyz,
-			normalize(transpose(parameters.tangent_to_viewspace)[2]),
-			light_position,
-			light_direction,
-			light_spot_falloff,
-			light_range,
-			roughness,
-			0.0f,
-			255.0f,
-			input.homogeneous_position.xy * screen_res.zw,
-			float4(fresnel_at_0_degree, 0.0f, 0.0f, 0.0f)
-		);
-		break;
-		case LIGHT_TYPE_PARALLEL:
-		light = parallel_light_impl		(
-			parameters.world_view_position.xyz,
-			normalize(transpose(parameters.tangent_to_viewspace)[2]),
-			light_direction, 
-			roughness, 
-			0.0f, 
-			255.0f, 
-			input.homogeneous_position.xy * screen_res.zw, 
-			float4(fresnel_at_0_degree, 0.0f, 0.0f, 0.0f)
-		);
-		break;
-	}; 
-	*/
-	
-	float2 rsm_uv					= 	input.homogeneous_position.xy * screen_res.zw;
-	
-	out_rsm_albedo					= 	float4(diffuse_color * /*light.diffuse * */convert_to_linear_space(light_color) * light_intensity, 0.0f);
+
+	float3 normal					= 	normalize(mul(m_V2W, float4(material_normal(input), 0.f)).xyz);
+
+	out_rsm_albedo					= 	float4(diffuse_color * convert_to_linear_space(light_color) * light_intensity, 0.0f);
 	out_rsm_normal					=	float4(normal, 0.0f);
-	out_rsm_position				= 	float4(parameters.world_position.xyz, 0.0f);
+	out_rsm_position				= 	float4(material_position(input), 0.0f);
 }
-
-
-
-
-
-

@@ -1,10 +1,43 @@
-// PARKED 2026-08-17 one instruction-shape from byte-identity: ship scales
-// dist_vector.y with a SCALAR mul then multiplies by a LITERAL -1.0 into
-// o0.y, and scales .x directly into o0.x; every source shape tried
-// (constructor, per-member writes in both orders, partial component
-// reassignment, compound *= -1, /-1.0f, lerp(0,v,-1) at several depths)
-// vectorizes the two scale muls and folds the -1 into a neg modifier.
-// Dispatch and semantics are ship-proven; only that split differs.
+// PARKED 2026-08-18: one instruction-shape from byte-identity, 16 bytes in
+// every one of the 15 permutations. Ship emits the y flip as its own scalar
+// multiply by a literal -1.0, and keeps the two scale muls apart:
+//
+//	mul r0.y, r0.y, cb0[1].y	; dist.y * distortion_scale.y
+//	mul o0.y, r0.y, l(-1.000000)	; the flip, unfolded
+//	mul o0.x, r0.x, cb0[1].x	; dist.x * distortion_scale.x
+//
+// fxc 9.29 canonicalises every scalar `* -1.0f` into a neg modifier and then
+// vectorises the two scale muls, giving `mul r0.xy, r0.xyxx, cb0[1].xyxx` /
+// `mov o0.y, -r0.y` / `mov o0.x, r0.x`. `mul ..., l(-1.000000)` appears in no
+// other shipped blob - only here and in distortion_panner.ps.
+//
+// About 80 spellings were tried against the VIT-0 permutation. Two mechanisms
+// reproduce one half each, and they compete for the four output lanes:
+//
+//   * the -1 survives only inside a constant-vector multiply that writes at
+//     least two output components directly. `output.distortion.yzw =
+//     float3(y, 1.0f, 0.0f) * float3(-1.0f, 1.0f, 1.0f)` emits ship's
+//     `mul o0.y, r0.y, l(-1.000000)` and lands on 1,044 of 1,056 bytes.
+//     Every scalar form folds instead: `* -1.0f`, `-1.0f *`, `-(x)`, `* -1`,
+//     `/ -1.0f`, `*= -1.0f`, `lerp(0,x,-1)`, `mad(x,-1,0)`, `x * -1 + 0`,
+//     `0 - x`, `mul(x,-1.0f)`, `mul(float1x1(-1),x)`, `* sign(-1.0f)`,
+//     `* -sqrt(1.0f)`, `* cos(pi)`, `* -exp2(0)`, `* -rsqrt(1)`, `* -abs(1)`,
+//     `* -floor(1.9)`, `* -normalize(1)`, `* asfloat(0xbf800000)`, a `float1`
+//     or `vector<float,1>` factor, `precise`, `half`, a one-iteration
+//     `[unroll]` loop, a `const float2`/`const float[2]`/`static` lane, and
+//     the same flip inside a helper taking the value by value, by inout or
+//     by out.
+//   * the two scale muls stay unmerged only when BOTH are lanes of masked
+//     vector writes: `output.distortion.xw = float2(dist.x, 0.0f) *
+//     float2(distortion_scale.x, 1.0f)` with `.yz` written the same way emits
+//     ship's `mul r0.y, ...` / `mul o0.x, ...` pair - 1,052 of 1,056 bytes.
+//
+// Having both at once needs five of the four lanes: whichever masked write
+// comes second kills a lane of the first, that write collapses to a scalar,
+// and the shape falls back to one half or the other. Everything else in this
+// file is byte-exact for all 15 permutations - the vertex-input dispatch, the
+// cbuffer layout, the signatures, the sample, the *2-1 remap, the zw
+// constants and the second render target.
 #include "common.h"
 #include "gbuffer.h"
 #include "material.h"
@@ -174,7 +207,7 @@ pixel_output_struct	main	(in vertex_output_struct input)
 
 	float2 dist_vector 	= t_base.Sample(s_linear, parameters.tc).xy*2.0f - 1.0f;
 	pixel_output_struct output;
-	output.distortion = float4(dist_vector.x*distortion_scale.x, lerp(0.0f, dist_vector.y*distortion_scale.y, -1.0f), 1.0f, 0.0f);
+	output.distortion = float4(dist_vector.x*distortion_scale.x, dist_vector.y*distortion_scale.y * -1.0f, 1.0f, 0.0f);
 	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
 
 	return output;
