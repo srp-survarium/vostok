@@ -2,18 +2,25 @@
 //	Reconstructed 2026-08-17 from the shipped v0.100b blobs - absent from the
 //	recovered source drop. Self-contained (the ship include closure names
 //	header revisions the tree does not have).
-//	The "no material" g-buffer pass: target 0 stores the interpolated normal
-//	(third TBN row) through the ship encode with a fixed material/gloss
-//	packing; inputs without a TBN store a zero normal, which the encode
-//	turns into the NaN pair the blobs show. Target 1 is the default texture
-//	with a constant 0.04 specular intensity.
-//	Byte-identity: python3 -m vostok.shaders roundtrip
+//	The "no material" g-buffer pass - what a visual with no material bound
+//	draws: target 0 stores the interpolated normal (third TBN row) through the
+//	ship Lambert-azimuthal encode with a fixed material id (31/1023) and gloss
+//	(2/3); target 1 is the default texture with a constant 0.04 specular
+//	intensity. Inputs with no tangent basis store the IDENTITY normal
+//	float3(0,0,1), whose encode divides 0 by sqrt(-8*1 + 8) - that is the NaN
+//	pair the blobs show, and it is a fold of 0/0, not a zero normal.
+//	Byte-proven 2026-08-18:
+//	python3 -m vostok.shaders roundtrip gbuffer_nomaterial_pass.ps
+//	-> 30 identical, 0 differ, 0 skipped.
 ////////////////////////////////////////////////////////////////////////////
 
-// PENDING (9 of 30 perms): the per-VIT interpolant layouts of THIS pass
-// differ from the depth-pass template reused below (particle puts tc at
-// TEXCOORD1/reg4, grassmesh carries eight TEXCOORDs, wires/user differ
-// again) - each arm needs its own struct read off its ISGN.
+// The per-type normal rule is ship's own get_material_parameters, read back
+// off these blobs: the identity normal float3(0,0,1) for the types with no
+// tangent basis (0, 9, 10, 12, 13, 14), the raw third column of the basis for
+// the static LOD-0 and skeleton types (1-6), that column NORMALIZED for
+// grassmesh (11) and for the static types at LOD 1, and the interpolated
+// vertex normal rotated into view space by m_V for the two particle types
+// (7, 8) - the only arms that reference a cbuffer at all.
 uniform sampler	s_base;
 Texture2D		t_default_texture;
 
@@ -25,9 +32,30 @@ struct vertex_output_struct
 	float3	position			: TEXCOORD0;
 };
 #define material_tc(input)		(input).position.xz
-#define HAS_TBN					0
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
-#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh
+#elif CONFIG_VERTEX_INPUT_TYPE == 1 || CONFIG_VERTEX_INPUT_TYPE == 2	// static mesh (2 = + wind)
+
+// Ship's static_mesh_vertex_input.h layout, the same one gbuffer_pass.ps
+// carries: at LOD 0 the tangent basis leads and a view position follows the
+// world one, at LOD 1 the position leads and the view position is gone; the
+// VIT=2 (wind) variant adds vertex colour and occlusion in both.
+#if CONFIG_LOD_INDEX
+
+struct vertex_output_struct
+{
+	float4  homogeneous_position: SV_Position;
+	float3	position			: TEXCOORD0;
+	float3	tbn_x				: TEXCOORD1;
+	float3	tbn_y				: TEXCOORD2;
+	float3	tbn_z				: TEXCOORD3;
+	float2	tc					: TEXCOORD4;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float	occlusion			: TEXCOORD5;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
+};
+
+#else // CONFIG_LOD_INDEX
 
 struct vertex_output_struct
 {
@@ -38,12 +66,24 @@ struct vertex_output_struct
 	float3	position			: TEXCOORD3;
 	float3	view_position		: TEXCOORD4;
 	float2	tc					: TEXCOORD5;
+#if CONFIG_VERTEX_INPUT_TYPE == 2
+	float3	color				: TEXCOORD6;
+	float	occlusion			: TEXCOORD7;
+#endif // #if CONFIG_VERTEX_INPUT_TYPE == 2
 };
+
+#endif // CONFIG_LOD_INDEX
+
 #define material_tc(input)		(input).tc
-#define HAS_TBN					1
+#if CONFIG_LOD_INDEX
+// The LOD 1 basis arrives unnormalized, exactly as grassmesh's does.
+#define material_normal(input)	normalize( float3( (input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z))
+#else // CONFIG_LOD_INDEX
+#define material_normal(input)	float3( (input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
+#endif // CONFIG_LOD_INDEX
 
 #elif CONFIG_VERTEX_INPUT_TYPE >= 3 && CONFIG_VERTEX_INPUT_TYPE <= 6	// skeleton mesh
-#define HAS_TBN					1
+#define material_normal(input)	float3( (input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z)
 struct vertex_output_struct
 {
 	float3	tbn_x				: TEXCOORD0;
@@ -59,6 +99,28 @@ struct vertex_output_struct
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 7 || CONFIG_VERTEX_INPUT_TYPE == 8	// particle / particle subuv
 
+// The particle arms are the only ones that read a constant: ship rotates the
+// interpolated normal into view space with m_V, so static_globals appears in
+// their RDEF whole (every other member [unused]).  Layout is the ship one,
+// byte-proven across 73 shipped static_globals RDEFs.
+cbuffer	static_globals
+{
+	uniform float4x4	m_P;
+	uniform float4x4	m_VP;
+	uniform float3x4	m_V;
+	uniform float3x4	m_V2W;
+
+	uniform float4		fog_params;
+
+	uniform float3		eye_position;
+	uniform float3		eye_position_view_space;
+	uniform float3		eye_direction;
+
+	uniform float		scene_time;
+
+	uniform float4		screen_res;
+}
+
 struct vertex_output_struct
 {
 	float4  homogeneous_position: SV_Position;
@@ -73,6 +135,7 @@ struct vertex_output_struct
 #endif // #if CONFIG_USE_SUBUV
 };
 #define material_tc(input)		(input).tc
+#define material_normal(input)	mul( m_V, float4( (input).normal, 0.f))
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 9		// particle beamtrail
 
@@ -84,6 +147,7 @@ struct vertex_output_struct
 	float2	tc					: TEXCOORD2;
 };
 #define material_tc(input)		(input).tc
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 10	// decal
 
@@ -93,6 +157,7 @@ struct vertex_output_struct
 	float3	position			: TEXCOORD0;
 };
 #define material_tc(input)		float2(0.f, 0.f)
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 11	// grass mesh
 
@@ -109,6 +174,7 @@ struct vertex_output_struct
 	float2	tc					: TEXCOORD7;
 };
 #define material_tc(input)		(input).tc
+#define material_normal(input)	normalize( float3( (input).tbn_x.z, (input).tbn_y.z, (input).tbn_z.z))
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 12	// post process
 
@@ -118,6 +184,7 @@ struct vertex_output_struct
 	float3	position			: TEXCOORD0;
 };
 #define material_tc(input)		float2(0.f, 0.f)
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
 #elif CONFIG_VERTEX_INPUT_TYPE == 13	// wires
 
@@ -131,6 +198,7 @@ struct vertex_output_struct
 	float3	tbn_z				: TEXCOORD4;
 };
 #define material_tc(input)		(input).tc
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
 #else	// CONFIG_VERTEX_INPUT_TYPE == 14	// user
 
@@ -141,12 +209,9 @@ struct vertex_output_struct
 	float2	tc					: TEXCOORD1;
 };
 #define material_tc(input)		(input).tc
+#define material_normal(input)	float3( 0.f, 0.f, 1.f)
 
 #endif // #if CONFIG_VERTEX_INPUT_TYPE
-
-#ifndef HAS_TBN
-#define HAS_TBN					0
-#endif
 
 struct ps_output
 {
@@ -158,11 +223,7 @@ ps_output 	main			(in vertex_output_struct input)
 {
 	ps_output	output;
 
-#if HAS_TBN
-	float3	normal			= float3( input.tbn_x.z, input.tbn_y.z, input.tbn_z.z);
-#else
-	float3	normal			= (float3)0;
-#endif
+	float3	normal			= material_normal(input);
 
 	output.normal_material	= float4( normal.xy/sqrt( normal.z*-8.f + 8.f) + 0.5f, 31.f/1023.f, 2.f/3.f);
 	output.color_specular	= float4( t_default_texture.Sample( s_base, material_tc(input)).xyz, 0.04f);

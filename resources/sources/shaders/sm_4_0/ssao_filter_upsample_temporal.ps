@@ -9,7 +9,12 @@
 //	ssao_filter_upsample.ps, whose header carries the tried-list: ship keeps
 //	`max r0.y, r0.z, l(0.0)` after the ao_sum/total_weight divide and this
 //	compile drops it, because fxc 9.29 can prove the ratio non-negative from
-//	the two saturates. Everything else is byte-identical, including the
+//	the two saturates. That prover, and not the spelling of max(), is what
+//	the 2026-08-18 pass pinned down over there: `precise`, `-min(-x,0)` and
+//	every [0,1] clamp spelling are transparent to it, and dropping ao's
+//	saturate is the only thing that keeps the max - at the cost of the
+//	mov_sat the blob shows. Fix one file and this one falls with it.
+//	Everything else is byte-identical, including the
 //	diagonal temporal-mask gather - whose OR chain really does fold the
 //	centre tap three times (initial value plus x == 0 in each of the two
 //	loops) while the AND chain folds its duplicates to one, exactly as the
