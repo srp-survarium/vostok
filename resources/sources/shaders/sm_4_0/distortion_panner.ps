@@ -9,14 +9,27 @@
 		CONFIG_VERTEX_INPUT_TYPE,
 */
 
-// PARKED 2026-08-17 one instruction-shape from byte-identity: ship scales
-// dist_vector.y with a SCALAR mul then multiplies by a LITERAL -1.0 into
-// o0.y, and scales .x directly into o0.x; every source shape tried
-// (constructor, per-member writes in both orders, partial component
-// reassignment, compound *= -1, /-1.0f, lerp(0,v,-1) at several depths)
-// vectorizes the two scale muls and folds the -1 into a neg modifier.
-// Dispatch and semantics are ship-proven; only that split differs.
+// Reconstructed 2026-08-18 from the shipped listings: this is distortion_base
+// with the sample panned, and it drifted much further than the base did. The
+// revision in the source drop returned a single float4, multiplied by
+// parameters.color, took a second sample for alpha and divided by 255; ship
+// writes the same two render targets as distortion_base (distortion +
+// an all-white alpha), reads t_base exactly once at the panned uv, ignores
+// vertex colour entirely, and stores z = 0 where the base stores z = 1.
+//
+//	mad r0.xy, cb0[2].xyxx, cb1[17].wwww, v1.xzxx	; tc + move * scene_time
+//
+// The pan is spelled `move_direction.xy * scene_time`, vector first: writing
+// the scalar first emits `mad cb1[17].wwww, cb0[2].xyxx, ...` instead.
+//
+// PARKED, same residual as distortion_base and for the same reason: ship's
+// y flip is its own scalar `mul o0.y, r0.y, l(-1.000000)` with the two
+// distortion_scale muls left unmerged, and fxc 9.29 folds any scalar `* -1`
+// into a neg modifier and then vectorises. See the tried-list in the header
+// of distortion_base.ps. Everything else here is byte-exact for all 15
+// permutations; the residual is 16 bytes in each.
 #include "common.h"
+#include "gbuffer.h"
 #include "material.h"
 // ship vertex-input dispatch (vertex_input.h in the tree is drifted; this
 // block is the byte-proven ship mapping, same as the editor family)
@@ -170,23 +183,25 @@ material_parameters get_material_parameters(inout vertex_output_struct input)
 #endif
 #include "psf_tc_modifiers.h"
 
-float3 distortion_scale;
-float3 move_direction;
+uniform float3 distortion_scale;
+uniform float3 move_direction;
 
-float4 	main			(in vertex_output_struct input) : SV_TARGET0
+struct pixel_output_struct
+{
+	float4	distortion	: SV_Target0;
+	float4	alpha		: SV_Target1;
+};
+
+pixel_output_struct	main	(in vertex_output_struct input)
 {
 	material_parameters parameters = get_material_parameters(input);
 	fill_material_parameters(parameters);
-	
-	float2 uv_moved = psf_move_tc(parameters.tc, move_direction.xy * scene_time);
-	float2 uv 		= parameters.tc;
-	
-	float3 dist_vector 	= t_base.Sample(s_linear, uv_moved).xyz;
-	float  dist_alpha	= parameters.color.a * t_base.Sample(s_linear, uv).a;
-	
-	float4 distortion_and_alpha	= parameters.color * float4( t_base.Sample(s_linear, uv_moved).xyz, t_base.Sample(s_linear, uv).a);
-	
-	return float4((dist_vector.xy * 2.0f - 1.0f) * parameters.color.rg * distortion_scale.xy * dist_alpha / 255.0f, 1, 1.0);/*pack_distortion(
-		(distortion_and_alpha.xy * 2.0f - 1.0f)// * distortion_scale.xy// * distortion_and_alpha.a
-	);*/
+
+	float2 uv_moved 	= psf_move_tc(parameters.tc, move_direction.xy * scene_time);
+	float2 dist_vector 	= t_base.Sample(s_linear, uv_moved).xy*2.0f - 1.0f;
+	pixel_output_struct output;
+	output.distortion = float4(dist_vector.x*distortion_scale.x, dist_vector.y*distortion_scale.y * -1.0f, 0.0f, 0.0f);
+	output.alpha		= float4(1.0f, 1.0f, 1.0f, 1.0f);
+
+	return output;
 }

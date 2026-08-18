@@ -3,10 +3,12 @@
 //	recovered source drop. Byte-identity: python3 -m vostok.shaders roundtrip
 ////////////////////////////////////////////////////////////////////////////
 
-// PARKED 2026-08-17 one mov-placement from byte-identity: ship emits the
-// o0.w write before the tinted/3 muls (its alpha register gets repacked);
-// five source shapes (out-param order, read-back, named tinted3 before/
-// after) all sink the w-write to the end. Algorithm is ship-proven.
+//	Closed 2026-08-18. The parked residual - ship writes o0.w before the
+//	tinted/3 muls, every source shape sank it to the end - was not about the
+//	alpha at all: it was the horizon cut. `if (...) discard;` lets fxc treat
+//	the discard as an early-out and re-order the rest of the shader around it;
+//	clip() of the same predicate emits the same discard_nz and leaves the
+//	schedule alone. Same fix landed decal_base.ps's 30 permutations.
 #include "common.h"
 
 uniform float4	sky_clouds_parameters0;	// rgb - tint, w - uv scale
@@ -24,8 +26,7 @@ struct v2p_sky_clouds
 
 void main( v2p_sky_clouds I, out float4 result : SV_Target )
 {
-	if ( I.tc.y >= 0.5f)
-		discard;
+	clip( I.tc.y >= 0.5f ? -1.0f : 1.0f);
 
 	float	fade		= min( pow( 1.0f - saturate( ( 1.0f - I.tc.y*2.0f)/sky_clouds_parameters1.y), sky_clouds_parameters1.x), 1.0f);
 
