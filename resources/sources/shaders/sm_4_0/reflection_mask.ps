@@ -41,6 +41,36 @@
 //	changes the code, and this shader's 1,152-byte SHDR is already exact, so
 //	the extra mov must be one that folds into an existing instruction.
 //
+//	2026-08-18, SECOND PASS: thirteen further shapes, same result (SHDR
+//	byte-identical, counter 3). The counter lives at STAT chunk dword 19,
+//	i.e. chunk+0x4c, ship 4 against our 3 - confirmed by a word-level diff of
+//	the two STAT chunks, which differ in that dword and nothing else.
+//
+//	The most informative negative: **fxc coalesces constant writes before it
+//	counts.** The shipped listing's single `mov r0.zw, l(0,0,1,1)` merges the
+//	eye_ray.z and the float4 w, so the obvious theory was that ship wrote two
+//	constant stores that merged 2->1, which is exactly the "counted but not
+//	shown" shape. It is not: adding a *third* constant write (declaring
+//	eye_ray as float4 and assigning .z and .w on separate lines, then feeding
+//	.w to the float4 constructor) leaves the counter at 3. Splitting the
+//	float4's .w onto its own statement, assigning .w before .xyz, and building
+//	eye_ray through a constructor all likewise leave it at 3.
+//
+//	Also ruled out, each SHDR-identical: naming the derivatives in locals;
+//	writing the bias as ddy(I.tc).x rather than relying on the implicit
+//	truncation; naming the depth tap as a float4 and taking .w; returning
+//	float4(1,1,1,1) in one arm and the scalar broadcast in the other; and
+//	naming a `float4 result = 1.f` returned from both arms.
+//
+//	Named negations do NOT produce a counted mov here - fxc folds them at
+//	parse. `-(world_position - eye_position)`, a named `-normal` fed to a
+//	written-out reflect, and `-scaled_tc` for the eye ray all changed the
+//	SHDR (so they are wrong anyway) without moving the counter.
+//
+//	Standing: this permutation is recovered in substance. All 2,300 bytes
+//	match except one statistics dword describing fxc's intermediate state,
+//	and roughly sixty source spellings now reproduce the shipped SHDR exactly.
+//
 //	TRIED, ~45 source shapes, each compiled and checked for (SHDR identical,
 //	STAT +0x4C). All left the SHDR byte-identical and the counter at 3:
 //	  * output shape: `float4 result` returned from both arms (declared at the
