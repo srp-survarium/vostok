@@ -26,7 +26,7 @@ bool   reader_writer_lock::lock_read_impl	(bool try_lock) const
 		{
 			if ( try_lock )
 				return						false;
-			threading::yield				();
+
 			continue;
 		}
 
@@ -39,7 +39,7 @@ bool   reader_writer_lock::lock_read_impl	(bool try_lock) const
 		{
 			if ( try_lock )
 				return						false;
-			threading::yield				();
+
 			continue;
 		} 
 
@@ -61,7 +61,7 @@ bool   reader_writer_lock::lock_write_impl	(bool try_lock) const
 		{
 			if ( try_lock )
 				return						false;
-			threading::yield				();
+
 			continue;
 		}
 
@@ -75,7 +75,7 @@ bool   reader_writer_lock::lock_write_impl	(bool try_lock) const
 		{
 			if ( try_lock )
 				return						false;
-			threading::yield				();
+
 			continue;
 		} 
 
