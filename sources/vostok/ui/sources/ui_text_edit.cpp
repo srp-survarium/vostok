@@ -63,9 +63,15 @@ bool ui_text_edit::on_focus(window* w, int p1, int p2)
 	VOSTOK_UNREFERENCED_PARAMETERS	(w, p1, p2);
 
 	if(p1)// just focused
+	{
+		m_last_action			= NULL;
 		get_root()->subscribe_event(ev_keyboard, ui_event_handler(this, &ui_text_edit::on_keyb_action));
+	}
 	else
+	{
 		get_root()->unsubscribe_event(ev_keyboard, ui_event_handler(this, &ui_text_edit::on_keyb_action));
+		m_last_action			= NULL;
+	}
 
 	return						true;
 }
@@ -193,10 +199,12 @@ void ui_text_edit::draw_cursor(vostok::render::ui::renderer& render, vostok::ren
 	pos.x					+= get_local_position(m_caret_pos);
 	pos.y					+= delta; //tmp
 
-	u32 clr = 0xffff7f00;
+	u32 clr = m_cursor_color;
 	vostok::render::ui::vertex const vertices[] = {
 		vostok::render::ui::vertex( pos.x,	pos.y,		0, clr, 0,0 ),
 		vostok::render::ui::vertex( pos.x,	pos.y+h,	0, clr, 0,0 ),
+		vostok::render::ui::vertex( pos.x+1,	pos.y,		0, clr, 0,0 ),
+		vostok::render::ui::vertex( pos.x+1,	pos.y+h,	0, clr, 0,0 ),
 	};
 
 	u32 const primitives_type	= 1; // 0-tri-list, 1-line-list

@@ -25,9 +25,6 @@ collision_shape_cook::collision_shape_cook( bool static_object ):
 	register_cook( this );
 }
 
-// * `set_length` didn't inline.
-// * virtual_path vs path differences (possibly also inlining problems).
-// * LTCG for `query_resources`.
 void collision_shape_cook::translate_query( resources::query_result_for_cook& parent )
 {
 	fs_new::virtual_path_string req_path = parent.get_requested_path( );

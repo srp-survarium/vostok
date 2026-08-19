@@ -12,11 +12,6 @@
 #include <vostok/game_core/ik_utils.h>
 #include <vostok/console_command.h>
 
-// get_rotation_matrix / change_matrix_orientation / get_bone_matrix_in_object_space are
-// out-of-line IK helpers declared in <vostok/game_core/ik_utils.h> with VOSTOK_GAME_CORE_API
-// (defined in legs_ik_processor.cpp / ik_processor.cpp). get_relative_matrix is the canonical
-// inline in math_float4x4_inline.h.
-
 namespace survarium {
 
 static float	s_aim_transition_time			= 0.3f;

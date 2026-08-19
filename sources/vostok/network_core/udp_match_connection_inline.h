@@ -23,9 +23,7 @@ inline void udp_match_connection::construct_packet(
 	packet.is_ordered				= info.is_ordered;
 
 	if ( packet.is_ordered )
-	{
 		packet.append				( u16( 0xFFFF ) );
-	}
 }
 
 template < typename Predicate >

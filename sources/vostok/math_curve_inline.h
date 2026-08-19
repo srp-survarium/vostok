@@ -269,11 +269,10 @@ inline void CURVE_LINE::recalculate_ranges()
 TEMPLATE_SIGNATURE
 inline void CURVE_LINE::reserve(u32 num, bool)
 {
-	if (!num)
-		return;
-	
 	clear		( );
 	num_points	= num;
+	if (!num)
+		return;
 
 	points		= MT_ALLOC(point_type,num);
 	

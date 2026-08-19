@@ -8,21 +8,6 @@
 namespace vostok {
 namespace network_core {
 
-// claude@NOTE: the packet< tcp_packet > / packet< udp_match_packet > append/resize/
-// ctor instantiations below are unpaired in the objdiff report (target COMDAT present,
-// base absent). Cause: in the shipped exe the linker kept the OPTIMIZED instances of
-// these primitives (e.g. tcp append(void*,u32) at 0xa72f0 = 0x78B, register-allocated,
-// no ebp frame; udp append(float2)/header_size likewise) - they came from /Ot consumer
-// TUs and survived /OPT:ICF. Our base compiles network_core /Od and inlines every
-// primitive at its (also /Od) call sites, so it emits no standalone COMDAT to pair with
-// the target's optimized one - a uniform-/Od build cannot reproduce a mixed-optimization
-// exe. The bodies here are the faithful deliverable; the missing pairing is the
-// optimization-level wall, NOT a structure defect. (The earlier synthetic address-of
-// anchors were dropped in 587b3077 because a single /Ot anchor TU still cannot mirror
-// the target's whole-program inlining.) A handful (e.g. resize(tcp) at 0x134ee0) stayed
-// /Od in the target but is reachable only via call sites our /Od build inlines, so it too
-// emits no standalone base COMDAT.
-
 template < typename T >
 inline packet< T >::packet( )
 {
@@ -50,11 +35,6 @@ inline void packet< T >::resize( u32 size )
 	m_buffer_size		= size;
 }
 
-// needed so send's clone() step emits. claude@MATCH: legacy's direct friend reads
-// (other.m_buffer/m_buffer_size) are DISPROVEN - the target clone row (0x123f08, 0x24B)
-// lowers the two operands as out-of-line CALLS (push call-result x2 before append), which
-// direct member reads can never produce; shipped clone() calls the accessors. The base
-// residual (our LTCG inlines them to field reads) is the accessor inline-vs-call wall.
 template < typename T >
 inline void packet< T >::clone( base_packet const& other )
 {

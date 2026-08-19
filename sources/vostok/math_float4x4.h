@@ -103,6 +103,8 @@ inline float4x4			create_rotation_z				( float4x4::type angle );
 inline float4x4			create_rotation					( float3 const& direction, float3 const& normal );
 //inline float4x4			create_rotation					( quaternion const& rotation );
 VOSTOK_CORE_API float4x4	create_rotation					( float3 const& axis, float angle );
+inline float4x4			get_rotation_matrix				( float3 const& original_dir, float3 const& target_dir );
+inline void				change_matrix_orientation		( float4x4 const& rotation, float4x4& matrix );
 inline float4x4			create_matrix					( quaternion const& rotation, float3 const& translation );
 
 inline float4x4			create_scale					( float3 const& scale );

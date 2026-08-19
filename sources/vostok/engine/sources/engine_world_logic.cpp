@@ -94,6 +94,9 @@ void engine_world::logic_dispatch_callbacks	( )
 
 void engine_world::logic_tick				( )
 {
+	if ( m_engine_user_world->is_loading() )
+		threading::yield					( 10 );
+
 	logic_dispatch_callbacks				( );
 
 	m_last_game_enabled_value			= m_game_enabled;

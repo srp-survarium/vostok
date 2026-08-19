@@ -321,7 +321,7 @@ float3 cylinder_geometry_instance::get_random_surface_point( math::random32& ran
 {
 	float const area1					= math::pi * math::sqr( radius() );
 	float const area2					= 2 * math::pi * radius() * half_length();
-	float const total_area				= 2 * area1 + area2; // sushi@NOTE: This is just get_surface_area
+	float const total_area				= 2 * area1 + area2;
 
 	typedef fixed_vector< float, 6 >	cylinder_planes_type;
 	cylinder_planes_type				cylinder_planes;
@@ -381,7 +381,7 @@ float3 cylinder_geometry_instance::get_closest_point_to	( float3 const& point, f
 	{
 		float3 height_vector_proj_point	= top_surface_center + proj_to_y_axis * height_vector;
 		float3 dir						= point - height_vector_proj_point;
-		// sushi@NOTE: Suboptimal impl, which does sqrt twice
+
 		if ( ( dir ).squared_length( ) < radius() * radius() )
 			return point;
 
@@ -397,7 +397,7 @@ float3 cylinder_geometry_instance::get_closest_point_to	( float3 const& point, f
 	float3 circle_point_dir		= point - surface_center;
 	float3 proj					= circle_point_dir.dot_product( y_axis ) * y_axis;
 	float3 circle_proj_vec		= circle_point_dir - proj;
-	if ( circle_proj_vec.squared_length( ) >  radius() * radius() )
+	if ( circle_proj_vec.squared_length( ) > radius() * radius() )
 		return surface_center + radius() * circle_proj_vec.normalize();
 	else
 		return surface_center + circle_proj_vec;

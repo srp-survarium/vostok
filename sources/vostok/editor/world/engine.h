@@ -45,6 +45,7 @@ struct VOSTOK_NOVTABLE engine {
 	virtual bool			is_application_active	( ) = 0;
 	virtual void			on_application_activate	( ) = 0;
 	virtual void			on_application_deactivate ( ) = 0;
+	virtual void			on_fullscreen_alttab		( bool first ) = 0;
 
 	virtual bool			is_closing_timeout_set	( ) const = 0;
 	virtual	int				get_exit_code			( ) const = 0;

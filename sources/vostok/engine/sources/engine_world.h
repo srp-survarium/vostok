@@ -74,9 +74,11 @@ public:
 	editor::world*			editor_world			( )	const	{ return m_editor;			}
 	virtual void			on_application_activate	( );
 	virtual void			on_application_deactivate ( );
+	virtual void			on_fullscreen_alttab		( bool first );
 
 	virtual bool			is_closing_timeout_set	( ) const;
 	inline	bool			is_destruction_started	( ) const { return m_destruction_started || m_early_destruction_started; }
+	virtual	void			exit					( int exit_code );
 
 private:
 	virtual	void			tick					( );
@@ -98,7 +100,6 @@ private:
 	virtual	void			enter_editor_mode		( );
 	virtual vostok::engine::console* create_editor_console( ui::world& uw );
 
-	virtual	void			exit					( int exit_code );
 	virtual	bool			command_line_editor_singlethread	( );
 
 	virtual vostok::engine::console* create_game_console	( ui::world& uw, input::world& iw );

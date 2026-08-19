@@ -55,11 +55,6 @@ vostok::ui::font const* ui_world::default_font()
 	return get_font_manager().get_font();
 }
 
-// claude@NOTE: structure is faithful (same VOSTOK_NEW_IMPL as the 100% create_* siblings,
-// alloc size 0x98 correct). Residual: target tail-jmps the ctor, our base does call+ret -
-// because our ui_progress_bar ctor keeps `this` in esi (callee-saved) to survive the
-// out-of-lined fixed_string<32> ctor call, so it can't be tail-called. Gated by the same
-// core fixed_string inline wall as the ctor; recovers once that inlines.
 progress_bar* ui_world::create_progress_bar( )
 {
 	return VOSTOK_NEW_IMPL		( allocator( ), ui_progress_bar )( *this );

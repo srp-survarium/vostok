@@ -41,14 +41,16 @@ extern "C" __declspec(dllimport) HRESULT __stdcall SHGetFolderPathA( HWND hwnd, 
 
 using vostok::engine::engine_world;
 
-static pcstr s_window_id					= VOSTOK_ENGINE_ID " DX10 Renderer Window";
-static pcstr s_window_class_id				= VOSTOK_ENGINE_ID " DX10 Renderer Window Class ID";
+static pcstr s_window_id					= VOSTOK_ENGINE_ID " DX11 Renderer Window";
+static pcstr s_window_class_id				= VOSTOK_ENGINE_ID " DX11 Renderer Window Class ID";
 
 vostok::command_line::key	s_no_log_file		("no_log_file", "no_log_file", "logging", "disables writing log to a file", "<no arguments>");
 
 static WNDCLASSEX s_window_class;
 
 static vostok::engine::engine_world*			s_world	= 0;
+static bool								s_deactivated;
+HICON									g_app_icon;
 
 static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id, WPARAM w_param, LPARAM l_param )
 {
@@ -57,6 +59,7 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 			if ( s_world->is_destruction_started() )
 				break;
 
+			s_world->exit	( 0 );
 			return			1;
 		}
 		case WM_DESTROY: {
@@ -73,26 +76,23 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 			if (active)
 			{
 				s_world->on_application_activate( );
+				if ( s_deactivated ) {
+					s_world->on_fullscreen_alttab( true );
+					s_deactivated	= false;
+				}
 				while (	ShowCursor( FALSE ) >= 0 );
 			}else
 			{
 				s_world->on_application_deactivate( );
+				s_deactivated	= true;
 				while (	ShowCursor( TRUE ) < 0 );
 			}
-			//if ( (w_param == WA_ACTIVE) || (w_param == WA_CLICKACTIVE) ) {
-			//	if ( !s_world->editor_world() )
-			//		while (	ShowCursor( FALSE ) >= 0 );
-
-			//	s_world->on_application_activate( );
-			//
-			//	break;
-			//}
-
-			//ASSERT			( w_param == WA_INACTIVE );
-			//if ( !s_world->editor_world() )
-			//	while (	ShowCursor( TRUE ) < 0 );
 
 			break;
+		}
+		case WM_INPUTLANGCHANGEREQUEST : {
+			ActivateKeyboardLayout	( (HKL)l_param, KLF_SETFORPROCESS );
+			return					( DefWindowProc(window_handle, message_id, w_param, l_param) );
 		}
 	}
 
@@ -101,6 +101,8 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 
 HWND new_window			( )
 {
+	g_app_icon				= LoadIcon( GetModuleHandle(0), MAKEINTRESOURCE(104) );
+
 	WNDCLASSEX const temp	=
 	{
 		sizeof( WNDCLASSEX ),
@@ -109,7 +111,7 @@ HWND new_window			( )
 		0L,
 		0L,
 		GetModuleHandle( 0 ),
-		NULL,
+		g_app_icon,
 		NULL,
 		NULL,
 		NULL,
@@ -123,30 +125,11 @@ HWND new_window			( )
 	u32 const screen_size_x	= GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_size_y	= GetSystemMetrics( SM_CYSCREEN );
 
-	DWORD const	window_style = WS_OVERLAPPED;// | WS_CAPTION;
-
-	u32 window_size_x		= 0;
-	u32 window_size_y		= 0;
-
-	u32 const window_sizes_x []	= { 1024, 800, 640 };
-	u32 const window_sizes_y []	= { 768, 600, 480 };
-	for ( u32 i=0; i<vostok::array_size(window_sizes_x); ++i ) {
-		if ( window_sizes_x[i] < screen_size_x &&
-			 window_sizes_y[i] < screen_size_y )
-		{
-			window_size_x	= window_sizes_x[i];
-			window_size_y	= window_sizes_y[i];
-			break;
-		}
-	}
-
-	R_ASSERT				(window_size_x);
-
-	RECT window_size		= { 0, 0, window_size_x, window_size_y };
+	DWORD const	window_style = WS_OVERLAPPEDWINDOW;
+	RECT window_size		= { 0, 0, 1280, 720 };
 	AdjustWindowRect		( &window_size, window_style, false );
 
-	HWND const result		=
-		CreateWindow (
+	return CreateWindow (
 			s_window_class_id,
 			s_window_id,
 			window_style,
@@ -159,8 +142,6 @@ HWND new_window			( )
 			s_window_class.hInstance,
 			0
 		);
-	R_ASSERT				( result );
-	return					result;
 }
 
 vostok::logging::log_file_usage_enum	engine_world::log_file_usage ( ) const
@@ -198,7 +179,7 @@ void engine_world::create_render	( vostok::configs::binary_config_ptr const& in_
 
 	m_render_world			= render::create_world (
 		m_engine_user_module_proxy.allocator(),
-		is_editor ? &m_editor_allocator : 0,
+		command_line_editor() ? &m_editor_allocator : 0,
 		in_config,
 		is_editor
 	);

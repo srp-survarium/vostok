@@ -161,9 +161,9 @@ void intersection_double_dispatcher::dispatch	( truncated_sphere_geometry_instan
 	if( ( closest_point - sphere_center ).squared_length( ) > math::sqr( testee.radius( ) + bounding_volume.radius( ) ) )
 		return;
 
-//#ifndef MASTER_GOLD
-//	m_renderer->draw_sphere_solid	( *m_scene, closest_point, 0.2f, math::color( 0, 0, 255, 255 ) );
-//#endif //#ifndef MASTER_GOLD
+
+
+
 
 	buffer_vector< float4 > const& planes	= bounding_volume.planes( );
 	float3 volume_to_closest_point			= closest_point - m_bounding_volume->get_matrix( ).c.xyz( );
@@ -176,11 +176,11 @@ void intersection_double_dispatcher::dispatch	( truncated_sphere_geometry_instan
 		sphere_matrix.transform			( plane.xyz( ) );
 		float	plane_projection		= volume_to_closest_point | plane.xyz( );
 
-//#ifndef MASTER_GOLD
-//		float3 relative_to_plane_point	= sphere_center + plane.xyz( ) * plane_projection;
-//		m_renderer->draw_sphere_solid	( *m_scene, relative_to_plane_point, 0.2f, math::color( 0, 0, 255, 255 ) );
-//		m_renderer->draw_line			( *m_scene, closest_point, relative_to_plane_point, math::color( 0, 0, 255, 255 ) );
-//#endif //#ifndef MASTER_GOLD
+
+
+
+
+
 
 		if( plane_projection > testee.radius( ) + plane.w * bounding_volume.radius( ) )
 			return;

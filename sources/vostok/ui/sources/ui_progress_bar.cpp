@@ -10,13 +10,6 @@
 namespace vostok {
 namespace ui {
 
-// claude@NOTE: member stores + color packing byte-match the target; residual is the
-// m_text fixed_string<32> default ctor, which the target inlines but our base out-of-lines
-// (call vostok::fixed_string<32>::fixed_string at 0x006870). That out-of-line call forces
-// the object pointer into a callee-saved reg (esi vs target's eax), cascading the whole
-// register allocation and blocking the create_progress_bar tail-call. The inline decision
-// lives in core fixed_string_inline.h/buffer_string_inline.h (out of ui scope; forceinline
-// there would touch every fixed_string consumer).
 ui_progress_bar::ui_progress_bar		( ui_world& world ) :
 	ui_window			( world.allocator( ) ),
 	m_ui_world			( world ),
@@ -218,11 +211,15 @@ void ui_progress_bar::draw_text					(
 	pcstr word					= NULL;
 	float text_width			= 0.0f;
 	ui_font const* fnt			= m_ui_world.get_font_manager().get_font();
-	fnt->parse_word				( m_text.c_str(), text_width, word );
-	float text_height			= fnt->get_height( );
+	word						= m_text.c_str( );
+	while ( *word ) {
+		float word_width		= 0.0f;
+		fnt->parse_word			( word, word_width, word );
+		text_width				+= word_width;
+	}
 	float2 font_pos				= pos;
 	font_pos.x					= ( size.x / 2.0f ) - text_width / 2.0f + pos.x;
-	font_pos.y					= ( size.y / 2.0f ) - text_height / 2.0f + pos.y;
+	font_pos.y					= ( size.y / 2.0f ) - fnt->get_height( ) / 2.0f + pos.y;
 
 	renderer.draw_text			(
 		scene_view,

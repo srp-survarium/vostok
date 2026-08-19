@@ -164,8 +164,7 @@ bool console_impl::on_keyboard_action( input::world* input_world, input::enum_ke
 
 			u16 tip_index			= 0xff;
 
-			bool b_next				= (key!=input::key_up);
-			pcstr tip				= make_next_tip(m_tips, current_text, tip_index, b_next, m_tips_mode);
+			pcstr tip				= make_next_tip(m_tips, current_text, tip_index, key!=input::key_up, m_tips_mode);
 			
 			if( tip!=m_current_command_info ) //tmp
 			{
@@ -227,4 +226,3 @@ bool console_impl::on_mouse_move( input::world* input_world, int x, int y, int z
 }
 
 } //namespace vostok
-

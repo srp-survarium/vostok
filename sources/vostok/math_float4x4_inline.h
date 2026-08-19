@@ -406,6 +406,32 @@ inline void remove_scale( float4x4 &in_out )
 	remove_scale( in_out, in_out );
 }
 
+inline float4x4 get_rotation_matrix( float3 const& original_dir, float3 const& target_dir )
+{
+	float3 const&	cp			= original_dir ^ target_dir;
+	float			sin_angle	= cp.length( );
+	float			cos_angle	= original_dir | target_dir;
+	clamp			( sin_angle, -1.0f, 1.0f );
+	clamp			( cos_angle, -1.0f, 1.0f );
+	float const		angle		= atan2( sin_angle, cos_angle );
+	if ( !is_zero( angle, epsilon_5 ) )
+	{
+		float3 const&	rot_axis	= normalize( cp );
+		float4x4		result		= create_rotation( rot_axis, -angle );
+		R_ASSERT		( result.valid( ) );
+		return			result;
+	}
+	return				float4x4( ).identity( );
+}
+
+inline void change_matrix_orientation( float4x4 const& rotation, float4x4& matrix )
+{
+	float3 const	pos		= matrix.c.xyz( );
+	matrix.c.xyz( )			= float3( 0.0f, 0.0f, 0.0f );
+	matrix					= matrix * rotation;
+	matrix.c.xyz( )			= pos;
+}
+
 inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 const& parent_matrix )
 {
 	float4x4 inverted_parent_matrix;
