@@ -31686,7 +31686,7 @@ _CRYPTO_num_locks	src/gfx/as2/as2_bevelfilter.h	gfx	done	MATCH	100	100	100	0	6	f
 _PrintInfo@8	vostok/core/sources/compressor_ppmd.cpp	core	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
 _WinMain@16	vostok/survarium/pc/sources/survarium_pc_entry_point.cpp	survarium	done	MATCH	100	100	100	1	52	f	134bc24ef546	
 ___FUnloadDelayLoadedDLL2@4	vostok/core/sources/delayhlp.cpp	core	done	MATCH	100	100	100	1	205	f	a5393757a1ff	auto: at 100% ceiling, demoted from queue
-___delayLoadHelper2@8	vostok/core/sources/delayhlp.cpp	core	inprogress	QUANTITY	98.5862	98.5862	98.5862	0	925		be4792e7d691	
+___delayLoadHelper2@8	vostok/core/sources/delayhlp.cpp	core	done	QUANTITY	100	100	100	1	925		1125e7d0e3a0	Restored target failure-block order: MessageBox, rgpdli declaration, log_error. Exact 0x39d bytes and 40-block CFG at 100%. Target retains one extra PDB row for the optimized-away idd.grAttrs initializer; spelling the later test as idd.grAttrs restores 77:77 but emits a stack copy/load absent from retail (0x39f, 96.77%), proving direct pidd->grAttrs is the byte-faithful source boundary.
 __aligned_free	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	0	1	f	137f554ee0f6	
 __aligned_malloc	vostok/core/sources/memory_override_operators.cpp	core	done	MATCH	100	100	100	0	10	f	137f554ee0f6	
 __book_maptype1_quantvals	vorbis/sources/lib/sharedbook.c	vorbis	done	MATCH	100	100	100	1	122		a670f6db8c84	auto: at 100% ceiling, demoted from queue
