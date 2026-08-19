@@ -17,6 +17,30 @@ namespace console_commands{
 extern console_command* s_console_command_root;
 
 static u32 s_console_commands_count = 0;
+static void show_help(console_command* command)
+{
+	console_command::info_str	info_buff;
+	command->info				(info_buff);
+	pcstr out_str				= NULL;
+	STR_JOINA					(out_str, command->name(), ":", info_buff);
+	LOG_INFO					(out_str);
+}
+
+
+
+
+console_command* find(pcstr str)
+{
+	console_command* current = s_console_command_root;
+	while(current)
+	{
+		if( strings::equal(current->name(), str) )
+			break;
+
+		current = current->prev();
+	}
+	return	current;
+}
 
 struct starts_from_predicate
 {
@@ -37,35 +61,19 @@ struct starts_from_predicate
 };
 
 
-static void show_help(console_command* command)
-{
-	console_command::info_str	info_buff;
-	command->info				(info_buff);
-	pcstr out_str				= NULL;
-	STR_JOINA					(out_str, command->name(), ":", info_buff);
-	LOG_INFO					(out_str);
-}
 
-console_command* find(pcstr str)
-{
-	console_command* current = s_console_command_root;
-	while(current)
-	{
-		if( strings::equal(current->name(), str) )
-			break;
 
-		current = current->prev();
-	}
-	return	current;
-}
+
+
+
+
 
 u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 {
-	u32 dst_count	= 10;
+	u32 dst_count	= dst_size;
 	if ( !s_console_commands_count )
 		for( console_command* current = s_console_command_root; current; current = current->prev() )
 			++s_console_commands_count;
-
 
 	console_command** commands		= (console_command**)ALLOCA( s_console_commands_count * sizeof(console_command*) );
 	console_command** commands_end	= commands;
@@ -74,7 +82,8 @@ u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 		if( strstr( current->name(), starts_from ) )
 			*commands_end++ = current;
 
-	dst_count	= math::min( u32(commands_end - commands), dst_count );
+
+	dst_count	= std::min( u32(commands_end - commands), dst_count );
 	std::partial_sort		( commands, commands+dst_count, commands_end, starts_from_predicate(starts_from) );
 	memcpy					( dst, commands, dst_count*sizeof(console_command*) );
 	return					dst_count;
@@ -158,6 +167,7 @@ void save_storage::save_to		( memory::writer& f )
 		f.write_string_CRLF( *it );
 }
 
+
 save_storage::~save_storage()
 {
 	vectora<pcstr>::iterator it = m_lines.begin();
@@ -165,7 +175,6 @@ save_storage::~save_storage()
 	for( ;it!=it_e; ++it)
 		VOSTOK_FREE_IMPL( m_allocator, *it );
 }
-
 void save_impl( pcstr file_name, command_type const command_type, memory::base_allocator& a )
 {
 	memory::writer			f(&a);
