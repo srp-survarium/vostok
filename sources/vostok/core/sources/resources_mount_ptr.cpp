@@ -10,10 +10,6 @@
 #include "game_resman.h"
 
 namespace vostok {
-	namespace vfs {
-		u32 get_global_unmounts_count	(); // for debug
-	} // namespace vfs
-
 namespace resources {
 
 void   intrusive_fs_task_unmount_base::destroy	(fs_task_unmount * object) const
@@ -63,11 +59,6 @@ void   fs_task_unmount::unmount_children	(vfs::vfs_mount * sub_fat)
 
 void   fs_task_unmount::execute_may_destroy_this	()
 {
-	static u32 s_iter = 0;
-++s_iter;
-	u32 const umount_count1				=	vfs::get_global_unmounts_count();
-	LOGI_INFO("resources:test", "running unmount_task");
-
 	unmount_children						(m_sub_fat_ptr->mount_ptr.c_ptr());
 
 	vfs_sub_fat_resource * sub_fat		=	m_sub_fat_ptr.c_ptr();
@@ -76,9 +67,6 @@ void   fs_task_unmount::execute_may_destroy_this	()
 
 	if ( is_captured )
 		g_game_resources_manager->release_sub_fat	(sub_fat);
-
-	u32 const umount_count2				=	vfs::get_global_unmounts_count();
-	R_ASSERT								(umount_count2 != umount_count1, "no unmount occured! Call Lain");
 
 	fs_task_unmount * this_ptr			=	this;
 	VOSTOK_DELETE_IMPL						(helper_allocator(), this_ptr);

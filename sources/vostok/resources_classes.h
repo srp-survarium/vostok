@@ -158,9 +158,7 @@ enum class_id_enum
 	composite_sound_class,
 	sound_collection_class,
 
-	// claude@MATCH: target pins this block at 300: weapon_core_inactive_state_cook ctor
-	// registers 0x12C, idle cook 0x12F, hide 0x12E, db_show 0x13A, pistol_show 0x141 -
-	// all consistent with a contiguous block starting at 300 (not 259).
+	// Target weapon class IDs begin at 300.
 	weapon_inactive_state_class = 300,             // [+]
 	weapon_show_state_class,                       // [+]
 	weapon_hide_state_class,                       // [+]

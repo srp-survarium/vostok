@@ -356,19 +356,14 @@ bool   initialized ()
 {
 	return							s_command_line_initialized;
 }
-
-void   initialize (
-	core::engine * engine,
-	pcstr const command_line,
-	command_line::contains_application_bool const contains_application
-)
+void   initialize (core::engine * engine, pcstr const command_line, command_line::contains_application_bool const contains_application)
 {
 	s_engine			=	engine;
 	typedef	vostok::fixed_string4096	string_type;
 	string_type	string	=	command_line;
-	//string.rtrim			(' ');
-	//if ( string.length() >= 2 && string[0] == '"' && string.last() == '"' )
-	//	string					=	string.substr(1, string.length()-2);
+
+
+
 
 	if ( contains_application == command_line::contains_application_true )
 	{
@@ -396,6 +391,7 @@ void   initialize (
 	s_command_line_initialized	=	true;
 }
 
+
 void   handle_help_key ( )
 {
 	if ( s_show_help )
@@ -406,9 +402,7 @@ typedef buffer_vector<key *>	keys_array;
 
 struct command_line_key_adder
 {
-	command_line_key_adder (keys_array * keys) :
-		keys_(keys), longest_short_key_name(0), longest_full_key_name(0)
-	{}
+	command_line_key_adder (keys_array * keys) : keys_(keys), longest_short_key_name(0), longest_full_key_name(0) {}
 	command_line_key_adder () {}
 	void operator () (key * const command_line_key)
 	{
@@ -433,7 +427,6 @@ struct key_compare_predicate
 			pcstr const right_name	=	* right->short_name() ? right->short_name() : right->full_name();
 			return						strings::compare(left_name, right_name) < 0;
 		}
-
 		return							category_compare < 0;
 	}
 };
@@ -452,8 +445,14 @@ void   show_help_and_exit ( )
 										 adder_predicate.longest_short_key_name +
 										 adder_predicate.longest_full_key_name + 5);
 
-	LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console,
-		"               " VOSTOK_ENGINE_ID ", build %d, %s\n                  Copyright(C) Vostok Games - 2013\n      Finger print info: %s", build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
+
+
+
+
+
+
+
+	LOGFD_FORCED						(logging::info, logging::format_message, core::log_to_console, "               " VOSTOK_ENGINE_ID ", build %d, %s\n                  Copyright(C) Vostok Games - 2013\n      Finger print info: %s", build::calculate_build_id(build::build_date()), build::build_date(),s_finger_print);
 
 	pcstr previous_category			=	"";
 
@@ -465,14 +464,12 @@ void   show_help_and_exit ( )
 		if ( it == keys.begin() || !strings::equal(key->category(), previous_category) )
 		{
 			fixed_string512	category	=	* key->category() ? key->category() : "global";
+
 			fixed_string512	first_char	=	category.substr(0, 1);
 			first_char.make_uppercase	();
 			category[0]				=	first_char[0];
 
-			LOGFD_FORCED				(logging::info,
-										 logging::format_message,
-										 core::log_to_console,
-										 "\n%s options: ", category.c_str() );
+			LOGFD_FORCED				(logging::info, logging::format_message, core::log_to_console, "\n%s options: ", category.c_str() );
 			previous_category		=	key->category();
 		}
 
@@ -486,8 +483,7 @@ void   show_help_and_exit ( )
 			key_name.appendf			(" = <%s>", key->argument_description());
 
 		LOGFD_FORCED					(logging::info, logging::format_message, core::log_to_console,
-											 format_string.c_str(),
-										 key_name.c_str(),
+										 format_string.c_str(), key_name.c_str(),
 										 * key->description() ? ":" : "",
 										 key->description());
 	}

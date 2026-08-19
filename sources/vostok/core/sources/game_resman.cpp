@@ -51,9 +51,6 @@ void   game_resources_manager::capture_resource (resource_base * resource)
 
 
 
-
-	LOGI_DEBUG								("grm", "captured %s", log_string(resource).c_str());
-
 	memory_type * const info			=	(memory_type *)resource->memory_usage().type;
 	if ( !info->in_list )
 	{
@@ -75,11 +72,11 @@ void   game_resources_manager::on_node_unmount (vfs::vfs_iterator & it)
 	resources::resource_base *			base_resource	=
 		unmanaged_resource ? (resources::resource_base *)unmanaged_resource.c_ptr() : managed_resource.c_ptr();
 
-	// sushi@TODO: target's R_ASSERT here LOGS the failure (logging::append, the gold
-	// "log up to 10 times" path) -> base_resource + assert are real statements (5 stmts).
-	// our R_ASSERT fully elides under MASTER_GOLD, so base_resource is DCE'd (2 stmts).
-	// the shipped assert macro did not elide; debug-macro/build-config, out of TU scope.
-	R_ASSERT								(!base_resource, "resource %s is still associated with fat-node %s! Call Lain",
+
+
+
+	if ( base_resource )
+		LOG_ERROR							("resource %s is still associated with fat-node %s! Call Lain",
 											 base_resource->log_string().c_str(), it.get_virtual_path().c_str());
 }
 

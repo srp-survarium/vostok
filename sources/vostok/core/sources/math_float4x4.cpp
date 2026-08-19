@@ -141,35 +141,59 @@ bool float4x4::try_invert								( float4x4 const& other )
 	return		( true );
 }
 
+
 float3 float4x4::get_angles				( vostok::math::axis_rotation_order const order ) const // zxy indeed
 {
 	ASSERT_U( order == rotation_zxy);
 	ASSERT	( !math::is_zero( i.xyz().length( ) ), "vector 'i' is 0 !" );
 	ASSERT	( !math::is_zero( j.xyz().length( ) ), "vector 'j' is 0 !" );
 	ASSERT	( !math::is_zero( k.xyz().length( ) ), "vector 'k' is 0 !" );
+	float3 result;
 
-	float	inv_scale_x	= 1/sqrt( i.xyz().squared_length( ) );
-	float	inv_scale_y	= 1/sqrt( j.xyz().squared_length( ) );	
-	float	inv_scale_z	= 1/sqrt( k.xyz().squared_length( ) );
 
-	float const	horde = sqrt( sqr( j.y*inv_scale_y ) + sqr( i.y*inv_scale_x ) );//z->x ->y
-    if ( horde > 16.f*type_epsilon<float>() )
-		return	(
-			float3(
-				atan2( -k.y*inv_scale_z, horde ),
-				atan2( k.x*inv_scale_z, k.z*inv_scale_z ),//y 3 
-				atan2( i.y*inv_scale_x, j.y*inv_scale_y ) //z 1
-			)
-		);
+	float inv_scale_z		=	1 / sqrt( k.xyz().squared_length( ) );
 
-	return		(
-		float3(
-			atan2( -k.y*inv_scale_z, horde ),
-			atan2( -i.z*inv_scale_x, i.x*inv_scale_x ),
-			0.f
-		)
-	);
+
+	float const ky_wo_scale	=	k.y * inv_scale_z;
+	if ( ky_wo_scale < 1.f ) {
+		if ( ky_wo_scale > -1.f ) {
+			result.x = asin(ky_wo_scale);
+			float inv_scale_y = 1 / sqrt(j.xyz().squared_length( ));
+			float inv_scale_x = 1 / sqrt(i.xyz().squared_length( ));
+			result.y = atan2(-k.x, k.z);
+			result.z = atan2(-i.y * inv_scale_x, j.y * inv_scale_y);
+		}
+		else {
+			result.x = -pi_d2;
+			result.y = 0.f;
+
+
+			result.z = -atan2(i.z, i.x);
+		}
+	}
+	else {
+		result.x = pi_d2;
+		result.y = 0.f;
+
+
+		result.z = atan2(i.z, i.x);
+	}
+
+	return result;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -179,17 +203,38 @@ float3 float4x4::get_angles_xyz				( ) const
 	ASSERT( !math::is_zero( j.xyz().length( ) ), "vector 'j' is 0 !" );
 	ASSERT( !math::is_zero( k.xyz().length( ) ), "vector 'k' is 0 !" );
 
-	float	inv_scale_x	= 1/sqrt( i.xyz().squared_length( ) );
-	float	inv_scale_y	= 1/sqrt( j.xyz().squared_length( ) );	
-	float	inv_scale_z	= 1/sqrt( k.xyz().squared_length( ) );
+	float inv_scale_x		=	1 / i.xyz().length( );
 
-	float const	horde = sqrt( sqr( j.z*inv_scale_y ) + sqr( k.z*inv_scale_z ) );
-	return
-		float3 (
-			atan2( -j.z*inv_scale_y, k.z*inv_scale_z ), //x 1
-			atan2( i.z*inv_scale_x, horde ),			//y 2
-			atan2( -i.y, i.x )							//z 3
-		);
+
+
+
+	float3 result;
+	float const iz_wo_scale	=	i.z * inv_scale_x;
+	if ( iz_wo_scale < 1.f ) {
+		if ( iz_wo_scale > -1.f ) {
+			result.x = atan2(-j.z * (1 / j.xyz().length( )), k.z * (1 / k.xyz().length( )));
+			result.y = asin(iz_wo_scale);
+
+
+			result.z = atan2(-i.y, i.x);
+		}
+		else {
+
+
+			result.x = -atan2(j.x, j.y);
+			result.y = -pi_d2;
+
+
+
+			result.z = 0.f;
+		}
+	} else {
+		result.x = atan2(j.x, j.y);
+		result.y = pi_d2;
+		result.z = 0.f;
+	}
+
+	return result;
 }
 
 DISABLE_LINKER_GL float4x4 vostok::math::mul4x3			( float4x4 const& left, float4x4 const& right )

@@ -61,26 +61,26 @@ float3 vostok::math::to_close_xyz( float3_pod const& angles, float3_pod const& t
 #endif // #if 0
 }
 
-float3 vostok::math::closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement )
+
+float3 closest_point_on_segment( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement )
 {
 	float domen_value	= ( ( point - segment_origin ) | segment_displacement ) / segment_displacement.squared_length( );
-	math::clamp			( domen_value, 0.f, 1.f );
+	vostok::math::clamp	( domen_value, 0.f, 1.f );
 
 	return segment_origin + segment_displacement * domen_value;
 }
 
-/*
-   Calculate the line segment PaPb that is the shortest route between
-   two lines P1P2 and P3P4. Calculate also the values of mua and mub where
-      Pa = P1 + mua (P2 - P1)
-      Pb = P3 + mub (P4 - P3)
-   Return FALSE if no solution exists.
-	https://paulbourke.net/geometry/pointlineplane/lineline.c
-*/
-bool vostok::math::line_line_intersect_non_parallel ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
+
+
+
+
+
+
+
+bool line_line_intersect_non_parallel ( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub )
 {
-	R_ASSERT( !math::is_zero( d1.x ) || !math::is_zero( d1.y ) || !math::is_zero( d1.z ) );
-	R_ASSERT( !math::is_zero( d2.x ) || !math::is_zero( d2.y ) || !math::is_zero( d2.z ) );
+	R_ASSERT( !vostok::math::is_zero( d1.x ) || !vostok::math::is_zero( d1.y ) || !vostok::math::is_zero( d1.z ) );
+	R_ASSERT( !vostok::math::is_zero( d2.x ) || !vostok::math::is_zero( d2.y ) || !vostok::math::is_zero( d2.z ) );
 
 	float3 const&	p34		= d2;
 	float3 const&	p12		= d1;
@@ -91,7 +91,7 @@ bool vostok::math::line_line_intersect_non_parallel ( float3 const& p1, float3 c
 	float const		d1212	= p12 | p12;
 
 	float const		denom	= d1212 * d3434 - d3412 * d3412;
-	R_ASSERT( !math::is_zero( denom ) );
+	R_ASSERT( !vostok::math::is_zero( denom ) );
 	
 	float const		d3134	= p31 | p34;
 	float const		d3112	= p31 | p12;
@@ -107,94 +107,6 @@ bool vostok::math::line_line_intersect_non_parallel ( float3 const& p1, float3 c
 	return true;
 }
 
-#if 0
-#define EPSILON 0.000001
-// dist3D_Segment_to_Segment():
-//    Input:  two 3D line segments S1 and S2
-//    Return: the shortest distance between S1 and S2
-//
-// @TODO: Understand the algorithm
-// https://web.archive.org/web/20111008212356/http://softsurfer.com/Archive/algorithm_0106/algorithm_0106.htm#dist3D_Segment_to_Segment()
-float vostok::math::segment_to_segment_distance ( 
-		float3 const& v0, 
-		float3 const& v1, 
-		float3 const& u0, 
-		float3 const& u1 
-	)
-{
-	float3   u = v1 - v0;
-	float3   v = u1 - u0;
-	float3   w = v0 - u0;
-
-	float a = u | u;
-	float b = u | v;
-	float c = v | v;
-	float d = u | w;
-	float e = v | w;
-	float D = a*c - b*b;
-    float    sc, sN, sD = D;      // sc = sN / sD, default sD = D >= 0
-    float    tc, tN, tD = D;      // tc = tN / tD, default tD = D >= 0
-
-    // compute the line parameters of the two closest points
-	if (D < EPSILON) { // the lines are almost parallel
-		sN = 0.0;        // force using point P0 on segment S1
-		sD = 1.0;        // to prevent possible division by 0.0 later
-		tN = e;
-		tD = c;
-	}
-	else {                // get the closest points on the infinite lines
-		sN = (b*e - c*d);
-		tN = (a*e - b*d);
-		if (sN < 0.0) {       // sc < 0 => the s=0 edge is visible
-			sN = 0.0;
-			tN = e;
-			tD = c;
-		}
-		else if (sN > sD) {  // sc > 1 => the s=1 edge is visible
-			sN = sD;
-			tN = e + b;
-			tD = c;
-		}
-	}
-
-	if (tN < 0.0) {           // tc < 0 => the t=0 edge is visible
-		tN = 0.0;
-		// recompute sc for this edge
-		if (-d < 0.0)
-			sN = 0.0;
-		else if (-d > a)
-			sN = sD;
-		else {
-			sN = -d;
-			sD = a;
-		}
-	}
-	else if (tN > tD) {      // tc > 1 => the t=1 edge is visible
-		tN = tD;
-		// recompute sc for this edge
-		if ((-d + b) < 0.0)
-			sN = 0;
-		else if ((-d + b) > a)
-			sN = sD;
-		else {
-			sN = (-d + b);
-			sD = a;
-		}
-	}
-	// finally do the division to get sc and tc
-	sc = (vostok::math::abs(sN) < EPSILON ? 0.0f : sN / sD);
-	tc = (vostok::math::abs(tN) < EPSILON ? 0.0f : tN / tD);
-
-	// get the difference of the two closest points
-	float3   dP = w + (sc * u) - (tc * v);  // = S1(sc) - S2(tc)
-
-	return length(dP);   // return the closest distance
-}
-#endif // #if 0
-
-// sushi@TODO: Doesn't seem to match exactly
-// sushi@TODO: We need a test framework for .obj functions to make a comparison
-// sushi@TODO: Squared distance is returned
 float vostok::math::segment_to_segment_distance ( float3 const& p1, float3 const& p2, float3 const& p3, float3 const& p4 )
 {
 	float3 const d1		= p2 - p1;

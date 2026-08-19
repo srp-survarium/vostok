@@ -8,9 +8,13 @@
 #define PLATFORM_EXTENSIONS_WIN_H_INCLUDED
 
 namespace vostok {
+
+extern pcstr g_delay_loading_libraries_reference_module;
+
 namespace platform {
 
 bool   unload_delay_loaded_library (pcstr dll_name);
+void   log_error (pcstr format, pcstr argument);
 
 } // namespace platform
 } // namespace vostok

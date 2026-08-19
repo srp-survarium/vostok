@@ -137,11 +137,11 @@ def load(declarations=True):
     }
     base = index_by_mangled(base_records, target_owners, target_primary_signatures)
     rich_pdb_aliases = normalize_objdiff_symbols.rich_pdb_aliases(
-        TARGET_IDX, BASE_IDX, source_prefix="vostok/render/",
+        TARGET_IDX, BASE_IDX, source_prefix="vostok/",
     )
     log(f"  target: {len(target)} functions, base: {len(base)} functions")
     if rich_pdb_aliases:
-        log(f"  render rich-PDB aliases: {len(rich_pdb_aliases)}")
+        log(f"  Vostok rich-PDB aliases: {len(rich_pdb_aliases)}")
 
     artifacts = Artifacts(
         target=target,

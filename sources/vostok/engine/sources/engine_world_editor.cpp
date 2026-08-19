@@ -33,6 +33,9 @@
 
 using vostok::engine::engine_world;
 
+
+
+
 void engine_world::try_load_editor			( )
 {
 #	if defined(DEBUG) && VOSTOK_PLATFORM_32_BIT
@@ -82,6 +85,9 @@ void engine_world::try_load_editor			( )
 	R_ASSERT			( m_main_window_handle );
 
 	m_editor->load		( );
+
+
+
 }
 
 void engine_world::unload_editor			( )

@@ -164,7 +164,7 @@ static math::quaternion mix_rotations(
 
 	if ( rotations.size( ) == 2 ) {
 		const float			total_weight	= rotations.front( ).second + rotations.back( ).second;
-		quaternion			mix				= math::slerp_optimized( rotations.front( ).first, rotations.back( ).first, rotations.back( ).second / total_weight );
+		quaternion			mix				= ::slerp_optimized( rotations.front( ).first, rotations.back( ).first, rotations.back( ).second / total_weight );
 		if ( do_normalization )
 			return			mix;
 
@@ -174,7 +174,7 @@ static math::quaternion mix_rotations(
 		return				quaternion( direction, angle * total_weight );
 	}
 
-	return					math::extrapolated_slerp( rotations.begin( ), rotations.end( ) );
+	return					::extrapolated_slerp( rotations.begin( ), rotations.end( ) );
 }
 
 static float3 mix_scales( buffer_vector< std::pair< float3, float > > const& transforms )

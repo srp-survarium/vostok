@@ -21,7 +21,6 @@ class binary_config;
 
 VOSTOK_CORE_API void				create_binary_config_buffer( lua_config_value value, vostok::memory::stream& fat );
 VOSTOK_CORE_API binary_config_ptr	create_binary_config( lua_config_value value );
-VOSTOK_CORE_API binary_config_ptr	create_binary_config( mutable_buffer const& buffer );
 
 class VOSTOK_CORE_API lua_config : public resources::unmanaged_resource {
 public:

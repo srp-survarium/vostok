@@ -45,21 +45,16 @@ STATIC_SIZE_ASSERT(mutex_mt_raii, 0x8);
 doug_lea_mt_allocator::doug_lea_mt_allocator(
 		bool const crash_after_out_of_memory,
 		bool const return_null_after_out_of_memory,
-		bool const use_guards
-#ifndef MASTER_GOLD
-		, bool const use_leak_detector
-#endif // #ifndef MASTER_GOLD
+		bool use_guards,
+		bool is_tasks_aware
 	) :
 	super	(
 		vostok::memory::thread_id_const_false,
 		crash_after_out_of_memory,
 		return_null_after_out_of_memory,
-		use_guards		
-#ifndef MASTER_GOLD
-		, use_leak_detector
-#endif // #ifndef MASTER_GOLD
+		use_guards
 	),
-	m_is_tasks_aware	( false )
+	m_is_tasks_aware	( is_tasks_aware )
 {
 }
 

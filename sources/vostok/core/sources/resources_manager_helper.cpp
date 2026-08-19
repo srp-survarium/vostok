@@ -421,4 +421,3 @@ bool   resources_manager::replicate_resource (vfs::vfs_iterator		fat_it,
 
 } // namespace resources
 } // namespace vostok
-

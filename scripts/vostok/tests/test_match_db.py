@@ -61,6 +61,11 @@ class CompilerNameTests(unittest.TestCase):
                     "mangled": "vostok::render::construct<int>",
                 },
                 {
+                    "file": "vostok/core/sources/math_quaternion.cpp",
+                    "name": "void core_placeholder()",
+                    "mangled": "core_placeholder",
+                },
+                {
                     "file": "first.cpp",
                     "name": "void duplicate<int>(int)",
                     "mangled": "duplicate<int>",
@@ -86,6 +91,11 @@ class CompilerNameTests(unittest.TestCase):
                     "file": "vostok/render/core/dx11/sources/custom_config.cpp",
                     "name": "void vostok::render::construct<int>(int)",
                     "mangled": "??$construct@H@render@vostok@@YAXH@Z",
+                },
+                {
+                    "file": "vostok/core/sources/math_quaternion.cpp",
+                    "name": "void core_placeholder()",
+                    "mangled": "?core_placeholder@@YAXXZ",
                 },
                 {
                     "file": "first.cpp",
@@ -115,13 +125,16 @@ class CompilerNameTests(unittest.TestCase):
                 "".join(json.dumps(record) + "\n" for record in base_records)
             )
 
-            aliases = NORMALIZE.rich_pdb_aliases(target_index, base_index)
+            aliases = NORMALIZE.rich_pdb_aliases(
+                target_index, base_index, source_prefix="vostok/"
+            )
 
         self.assertEqual(
             aliases,
             {
                 "vostok::render::construct<int>":
-                    "??$construct@H@render@vostok@@YAXH@Z"
+                    "??$construct@H@render@vostok@@YAXH@Z",
+                "core_placeholder": "?core_placeholder@@YAXXZ",
             },
         )
 

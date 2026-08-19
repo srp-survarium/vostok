@@ -119,8 +119,25 @@ binary_config_cook::binary_config_cook	( resources::class_id_enum cls_id ) :
 void binary_config_cook::translate_query	( query_result_for_cook & parent )
 {
 	fs_new::virtual_path_string const		converted_path	=	parent.get_requested_path();
+	R_ASSERT								(converted_path.length());
 	fs_new::virtual_path_string				source_path;
+
 	make_source_path							(& source_path, converted_path);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	request	fs_iterator_requests[]		=	{	{ source_path.c_str(), fs_iterator_class }, 
 												{ converted_path.c_str(), fs_iterator_class } };
@@ -141,22 +158,45 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 	fs_new::virtual_path_string				source_path;
 	make_source_path							(& source_path, converted_path);
 
-	vfs::vfs_iterator const & source_path_it	=	results[0].get_result_iterator();
-	vfs::vfs_iterator const & converted_path_it	=	results[1].get_result_iterator();
+	fs_new::physical_path_info const source_info	= get_physical_path_info(results[0].get_result_iterator());
+
+	#ifndef MASTER_GOLD
+	if ( !source_info.exists() )
+	{
+		parent->finish_query				(query_result_for_user::error_type_file_not_found, assert_on_fail_false);
+		return;
+	}
+	#endif // #ifndef MASTER_GOLD
+
+
+	vfs::vfs_iterator const&				converted_path_it	= results[1].get_result_iterator();
+
+
 	if ( !converted_path_it )
 	{
 		parent->finish_query				(query_result_for_user::error_type_file_not_found, assert_on_fail_false);
 		return;
 	}
 
-	fs_new::physical_path_info const source_info	=	get_physical_path_info(source_path_it);
+
+
 	fs_new::physical_path_info const converted_info	=	get_physical_path_info(converted_path_it);
+
+
+
+
+
+
+
+
+
 
 	 if	(
 			converted_info.exists() &&
  			(source_info.last_time_of_write() < converted_info.last_time_of_write()) 
 		)
 	 {
+
  		query_resource(
  			converted_path.c_str(),
 			binary_config_class,
@@ -192,7 +232,7 @@ void   binary_config_cook::on_lua_config_loaded	(queries_result & data, query_re
 
 	parent_query->save_generated_resource	(save_generated_data::create(buffer, true, physical_path, converted_path));
 
-	vostok::configs::binary_config_ptr resource_config_ptr	= vostok::configs::create_binary_config( buffer );
+	vostok::configs::binary_config_ptr resource_config_ptr	= vostok::configs::create_binary_config( buffer, debug::g_mt_allocator );
 
 	parent_query->set_unmanaged_resource	( resource_config_ptr.c_ptr(), nocache_memory, sizeof(binary_config) );
 	parent_query->finish_query				( result_success );

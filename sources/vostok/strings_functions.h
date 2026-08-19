@@ -19,6 +19,8 @@ inline int	compare_insensitive		( pcstr left, pcstr right );
 inline bool equal					( pcstr left, pcstr right ) { return !compare(left, right); }
 inline bool less					( pcstr left, pcstr right ) { return -1 == compare(left, right); }
 bool		compare_with_wildcards	( pcstr wild, pcstr string );
+bool		set_multibyte			( pstr dest, u32 dest_size_bytes, wchar_t const* src );
+bool		mbstowcs				( wchar_t* dest, u32 dest_size_bytes, pcstr src );
 
 template <class number_type>
 bool		convert_string_to_number	( pcstr const string, number_type * const out_result )

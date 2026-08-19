@@ -28,7 +28,7 @@ inline float4x4 mix_transformations(
 )
 {
 	float3 const			translation	= first.c.xyz( ) * position_coeff + second.c.xyz( ) * ( 1.f - position_coeff );
-	math::quaternion const	rotation	= math::slerp_optimized( math::quaternion( first ), math::quaternion( second ), orientation_coeff );
+	math::quaternion const	rotation	= ::slerp_optimized( math::quaternion( first ), math::quaternion( second ), orientation_coeff );
 	return					math::create_matrix( rotation, translation );
 }
 

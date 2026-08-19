@@ -20,7 +20,7 @@
 #include <vostok/os_include.h>
 #include <fcntl.h>
 
-// sushi@NOTE: Only exists on old VS builds and makes this file platform dependant
+// Required by the Visual Studio CRT used for the target build.
 extern "C" FILE* __iob_func(void);
 
 namespace vostok {
@@ -41,7 +41,7 @@ static	_iobuf*		get_stdstream_handle	( stdstream_enum stream );
 static	bool		is_logging_initialized	( );
 		bool		use_console_for_logging	( );
 
-		void		logging_preinitialize	( ); // sushi@NOTE: Called in other modules (sometimes even in unrelated dependencies like vobris) near allocators. Might be public.
+		void		logging_preinitialize	( );
 
 static	void		push_logging_filters	( );
 static	bool		initialize_console		( );
@@ -77,8 +77,6 @@ struct logging_preinitializer
 	}
 };
 
-// claude@NOTE: the five dynamic initializers below all exist in the base (??__E... symbols,
-// see the logging README) - their None scores are the objdiff ??__E demangle-pairing gap.
 static logging_preinitializer		s_logging_preinitializer;
 
 static vostok::command_line::key	s_log_verbosity				("log_verbosity",			"", "logging", "one of: [trace|debug|info|warning|error|silent]");
@@ -142,14 +140,13 @@ bool use_console_for_logging( )
 {
 	if ( is_logging_initialized( ) )
 		return false;
-	// claude@MATCH: target evaluates the key FIRST (cmp key-state,1 before call run_tests_command_line).
-	// Keep the operator-bool form: explicit is_set() inlines a different guard shape and drops 98 -> 50.
+	// Preserve target evaluation order: command-line key before the test flag.
 	static bool s_use_console_for_logging = s_use_console || testing::run_tests_command_line();
 	return						s_use_console_for_logging;
 }
 
 static void logging_callback(
-	void* const					user_data,			// claude@NOTE: a BITMASK (and 1 / shr 1) - debug_log_callback even passes &log_flags
+	void* const					user_data,			// log_flags_enum bitmask
 	pcstr const					file,
 	u32 const					line,
 	pcstr const					function_signature,
@@ -157,17 +154,17 @@ static void logging_callback(
 	logging::verbosity const	verbosity,
 	pcstr const					log_string,
 	u32 const					log_string_length,
-	logging::callback_flag const flag				// sushi@TODO: Linker removed this arg.
+	logging::callback_flag const flag
 )
 {
-	(void)file;	// sushi@NOTE: Unused arguments.
+	(void)file;
 	(void)line;
 	(void)function_signature;
 	(void)initiator;
 	(void)verbosity;
 
 	static bool first_time						= true;
-	static bool s_tried_to_initialize_console	= false; // sushi@NOTE: Conflicts with the one defined in the module
+	static bool s_tried_to_initialize_console	= false;
 	static bool s_initialized_console			= false;
 
 	if ( debug::is_debugger_present( ) )
@@ -187,7 +184,6 @@ static void logging_callback(
 	}
 
 
-	// claude@MATCH: target tests the BITS (and al,1 / shr,and 1), not equality - log_flags_enum is a mask
 	bool log_to_console_settings = ( (intptr_t)user_data & log_to_console ) != 0;
 	bool should_use_console_for_logging = use_console_for_logging( );
 
@@ -216,8 +212,6 @@ static void logging_callback(
 		}
 	}
 
-	// claude@MATCH: target gates the stderr write on the stderr bit being SET (test bl,bl; je skip),
-	// inside an outer g_log_filter_tree check; the stdout block re-checks the tree (redundant, original)
 	if ( g_log_filter_tree )
 	{
 		if ( log_to_stderr_settings )
@@ -230,15 +224,6 @@ static void logging_callback(
 	}
 }
 
-// claude@MATCH: spelled via __LOG_FORCED - the one macro that takes a RUNTIME initiator (the public
-// LOG*/LOGI* wrappers only concatenate literals) and expands argument-for-argument to the target's
-// append calls: callback temp, (void*)&log_flags, format, __FILE__/__LINE__/__FUNCSIG__, debug_log,
-// is_error ? error : info (sete; lea [ecx*2+2]), "%s", message. Line evidence (sushi, PR #286): the
-// __LINE__ pushes are 0C4h/0C8h = 196/200, the 0xa4 record at '196' covers the if-test PLUS the whole
-// first arm and the jmp-over-else is the lone 5-byte record at '198' - so the first call STARTED on
-// the if line and closed on 198, else on 199, second call at 200: each arm spanned <= 3 compact lines.
-// sushi@TODO: __LOG_FORCED vs a hand-expanded logging::append is byte-undecidable (textually identical
-// expansion); spelled as the macro since it is the one form that fits the 3-line layout naturally.
 void debug_log_callback(
 	pcstr		initiator,
 	bool		is_error_verbosity,
@@ -246,8 +231,6 @@ void debug_log_callback(
 	pcstr		message
 )
 {
-	// claude@MATCH: not-set arm is 0, not log_to_console(=1<<0): the target's dec;neg;sbb;and 2
-	// idiom can only yield {0,2}; a log_to_console arm ({1,2}) would need an extra inc/or after it
 	core::log_flags_enum const log_flags = s_write_errors_to_stderr.is_set( ) ?
 									core::log_to_stderr : core::log_flags_enum(0);
 	pstr debug_log = NULL;
@@ -290,7 +273,7 @@ static void push_logging_filters( )
 	//	logging::push_filter		( "core:resources", verbosity_for_resources, & memory::g_mt_allocator );
 	//	logging::push_filter		( "core:resources:test", verbosity_for_resources, & memory::g_mt_allocator );
 	//	logging::push_filter		( "core:resources:device_manager", verbosity_for_resources, & memory::g_mt_allocator );
-																															// <6> sushi@NOTE: New or empty line
+
 	fs_new::native_path_string	cfg_file_path;
 	if ( fs_new::convert_to_absolute_path(& cfg_file_path,
 										  fs_new::native_path_string::convert("../../user_data/user.cfg"),
@@ -304,7 +287,7 @@ void logging_initialize( )
 {
 	g_log_filter_tree = logging::new_filter_tree( memory::g_mt_allocator );
 
-	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(	// sushi@NOTE: This opens up into `pt3malloc`
+	s_logging_console_command = VOSTOK_NEW_IMPL( memory::g_mt_allocator, logging::logging_filters_console_command )(
 		*g_log_filter_tree,
 		"logging_rule",
 		true,
@@ -312,7 +295,7 @@ void logging_initialize( )
 		console_commands::execution_filter_early
 	);
 
-	push_logging_filters( );																							// sushi@NOTE: Initialized in `vostok::core::preinitialize`
+	push_logging_filters( );
 
 
 	if ( g_log_file_usage ) {
@@ -353,7 +336,7 @@ static bool initialize_console( )
 		int os_input_handle = _open_osfhandle( (intptr_t)input_handle, _O_TEXT );
 		if ( os_input_handle != -1 ) {
 			FILE input_file = *_fdopen(os_input_handle, "rt");
-			__iob_func()[2] = input_file;				// sushi@NOTE: Bug in target? `add eax, 40h`
+			__iob_func()[2] = input_file;				// Target assigns stdin to the stderr slot.
 			setvbuf(&__iob_func()[0], 0, _IONBF, 0);
 		}
 

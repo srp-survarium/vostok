@@ -348,17 +348,13 @@ bool lobby_client::read_player_skills( network_core::packet_reader& reader )
 	return true;
 }
 
-// claude@NOTE: PARKED - the recovered body is
-//   m_skills_tree_config = configs::create_binary_config(
-//       mutable_buffer( reader.pointer( ), reader.size_to_eof( ) ) );
-//   return true;
-// but configs::create_binary_config(mutable_buffer) is not linked into the
-// MASTER_GOLD exe (its provider configs_lua_config.cpp is excluded from the gold
-// core lib), so the call is an LNK2001 unresolved external. Restore once the gold
-// core lib exports create_binary_config (build-graph gap, not a source problem).
 bool lobby_client::read_player_skills_tree( network_core::packet_reader& reader )
 {
-	return false;
+	m_skills_tree_config = configs::create_binary_config(
+		mutable_buffer( reader.pointer(), reader.size_to_eof() ),
+		*g_allocator
+	);
+	return true;
 }
 
 lobby::client_state_enum lobby_client::status( fixed_string< 128 >& dest ) const

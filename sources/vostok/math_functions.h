@@ -25,12 +25,7 @@ inline T				sqr				( T const& left );
 
 template < typename T >
 inline T				min				( T const& left, T const& right );
-// claude@MATCH: the by-value float overloads must be DECLARED here, before
-// math_functions_inline.h pulls in math_float3.h, so float3_pod::min/max bind
-// them instead of the by-const-ref templates - retail's image has NO
-// vostok::math::min<float>/max<float> instantiation anywhere (only STLport's),
-// while our base emitted both, called from select_lod, when the declarations
-// were missing (see patterns/three-arg-max-template-vs-nested-byvalue.md).
+// Keep this before math_functions_inline.h so float vector helpers bind the by-value overload.
 inline float			min				( const float left, const float right );
 
 template < typename T >
@@ -118,8 +113,6 @@ class float3;
 VOSTOK_CORE_API	math::float3 to_close_xyz ( math::float3_pod const& angles, math::float3_pod const& to_angles, float const average_distance = pi );
 
 
-VOSTOK_CORE_API float3	closest_point_on_segment			( float3 const& point, float3 const& segment_origin, float3 const& segment_displacement );
-VOSTOK_CORE_API bool	line_line_intersect_non_parallel	( float3 const& p1, float3 const& d1, float3 const& p2, float3 const& d2, float3& pa, float3& pb, float& mua, float& mub );
 VOSTOK_CORE_API float	segment_to_segment_distance			( float3 const& v0, float3 const& v1, float3 const& u0, float3 const& u1 );
 
 enum intersection {
@@ -139,6 +132,11 @@ VOSTOK_CORE_API	float   table_cos		( int angle_in_degrees );
 
 } // namespace math
 } // namespace vostok
+
+VOSTOK_CORE_API vostok::math::float3 closest_point_on_segment
+	( vostok::math::float3 const& point, vostok::math::float3 const& segment_origin, vostok::math::float3 const& segment_displacement );
+VOSTOK_CORE_API bool line_line_intersect_non_parallel
+	( vostok::math::float3 const& p1, vostok::math::float3 const& d1, vostok::math::float3 const& p2, vostok::math::float3 const& d2, vostok::math::float3& pa, vostok::math::float3& pb, float& mua, float& mub );
 
 #include <vostok/math_functions_inline.h>
 

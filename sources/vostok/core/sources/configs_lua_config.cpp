@@ -940,7 +940,7 @@ binary_config_ptr vostok::configs::create_binary_config	( lua_config_value value
 {
 	vostok::memory::stream			stream( &debug::g_mt_allocator ); 
 	create_binary_config_buffer		( value, stream );
-	return							create_binary_config( mutable_buffer(stream.get_buffer(), stream.get_buffer_size()) );
+	return							create_binary_config( mutable_buffer(stream.get_buffer(), stream.get_buffer_size()), debug::g_mt_allocator );
 }
 
 template < typename StreamType >
@@ -962,23 +962,6 @@ void vostok::configs::lua_config_value::save_as_binary	( pcstr const file_name )
 void vostok::configs::lua_config::save_as_binary			( pcstr const file_name ) const
 {
 	m_root.save_as_binary( file_name );
-}
-
-binary_config_ptr vostok::configs::create_binary_config	( mutable_buffer const& buffer )
-{
-	lua_mutex_guard					mutex_guard;
-	vostok::core::configs::binary_config * const result = 
-		VOSTOK_NEW_IMPL( debug::g_mt_allocator, vostok::core::configs::binary_config ) (
-		(pcbyte)buffer.c_ptr(),
-		buffer.size(),
-		& debug::g_mt_allocator
-		);
-
-	resources::g_resources_manager->get_binary_config_cook().register_object_to_delete(result, threading::current_thread_id());
-	result->set_creation_source		(resources::resource_base::creation_source_created_by_user, 
-									 "user generated", 
-									 resources::memory_usage_type(resources::nocache_memory, buffer.size()));
-	return							result;
 }
 
 #include <luabind/luabind.hpp>

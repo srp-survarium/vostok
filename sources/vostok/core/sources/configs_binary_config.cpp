@@ -6,6 +6,8 @@
 
 #include "pch.h"
 #include "configs_binary_config.h"
+#include "configs_binary_config_cook.h"
+#include "resources_manager.h"
 #include <vostok/configs.h>
 #include <vostok/resources.h>
 
@@ -33,4 +35,22 @@ void binary_config::load			( pcbyte const buffer, u32 const buffer_size )
 	memory::copy	( m_root, buffer_size, reader, buffer_size );
 
 	m_root->fix_up	( horrible_cast<binary_config_value*,size_t>(m_root).second );
+}
+
+vostok::configs::binary_config_ptr vostok::configs::create_binary_config ( mutable_buffer const& buffer, memory::base_allocator& allocator )
+{
+	vostok::core::configs::binary_config* const result =
+		VOSTOK_NEW_IMPL( allocator, vostok::core::configs::binary_config ) (
+		(pcbyte)buffer.c_ptr(),
+		buffer.size(),
+		&allocator
+		);
+
+	resources::g_resources_manager->get_binary_config_cook().register_object_to_delete( result, threading::current_thread_id() );
+	result->set_creation_source (
+		resources::resource_base::creation_source_created_by_user,
+		"user generated",
+		resources::memory_usage_type( resources::nocache_memory, buffer.size() )
+	);
+	return result;
 }

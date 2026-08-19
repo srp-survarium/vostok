@@ -67,5 +67,21 @@ bool   compare_with_wildcards (pcstr wild, pcstr string)
 	return				!*wild;
 }
 
+bool set_multibyte ( pstr dest, const u32 dest_size_bytes, wchar_t const* src )
+{
+	VOSTOK_UNREFERENCED_PARAMETERS( dest, src );
+
+	return dest_size_bytes == STRUNCATE;
+}
+
+bool mbstowcs ( wchar_t* dest, u32 dest_size_bytes, pcstr src )
+{
+	u32 converted_chars = 0;
+
+	s32 const result = mbstowcs_s( &converted_chars, dest, dest_size_bytes / sizeof(wchar_t), src, _TRUNCATE );
+
+	return result == 0 || result == STRUNCATE;
+}
+
 } // namespace vostok
 } // namespace strings

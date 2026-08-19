@@ -12,6 +12,10 @@
 #include <vostok/configs_binary_config_value.h>
 
 namespace vostok {
+
+class mutable_buffer;
+namespace memory { class base_allocator; }
+
 namespace configs {
 
 class VOSTOK_CORE_API binary_config :
@@ -47,6 +51,8 @@ template class VOSTOK_CORE_API resources::resource_ptr <
 >;
 
 typedef std::pair< binary_config_value const*, binary_config_ptr > binary_config_value_ptr;
+
+VOSTOK_CORE_API binary_config_ptr create_binary_config( mutable_buffer const& buffer, memory::base_allocator& allocator );
 
 } // namespace configs
 } // namespace vostok

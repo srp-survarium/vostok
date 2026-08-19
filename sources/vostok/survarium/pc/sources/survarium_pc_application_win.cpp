@@ -264,8 +264,6 @@ void application::postinitialize				( )
 	PostMessage						( s_splash_screen, WM_DESTROY, 0, 0 );
 }
 
-// Target returns the live CreateMutexA result with setne al; this compiler
-// materializes the same bool through ecx before moving it to al.
 bool check_presence_mutex						( )
 {
 	s_presence_mutex				= OpenMutexA( READ_CONTROL, FALSE, "survarium_already_running" );
