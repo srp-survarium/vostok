@@ -26343,7 +26343,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?max@?$numeric_limits@M@stlp_std@@SAMXZ	stlport/stl/_limits.h	stlport	done	MATCH	100	100	100	1	9	f	6a50214b4bfc	auto: at 100% ceiling, demoted from queue
 ?max@Math@fl@Classes@AS3@GFx@Scaleform@@QAEXAAVValue@456@IQBV7456@@Z	src/gfx/as3/obj/as3_obj_math.cpp	gfx	done	MATCH	100	100	100	0	235	f		
 ?max@math@vostok@@YAHHH@Z	vostok/math_functions_inline.h	vostok	parked				0	0	31			[UNCHECKED] sushi@NOTE: Why not use templated function instead.
-?max@math@vostok@@YAIII@Z	vostok/math_functions_inline.h	vostok	parked	QUANTITY	45.3571	45.3571	45.3571	0	30		5aa81816026b	[UNCHECKED] sushi@NOTE: Why not use templated function instead.
+?max@math@vostok@@YAIII@Z	vostok/math_functions_inline.h	vostok	parked	QUANTITY	45.3571	45.3571	45.3571	1	30		5aa81816026b	Target source order and line geometry are exact and the branchless body is source-identical. Residual is optimized convention/inlining: target retains a framed cdecl body and call in buffer_string::replace; base emits a register-custom body and inlines it. No faithful per-function source change remains.
 ?max@math@vostok@@YAMMM@Z	vostok/math_functions_inline.h	vostok	done	MATCH	100	100	100	1	9	f	1954c89bb67b	[UNCHECKED] sushi@NOTE: Why not use templated function instead.
 ?max@math@vostok@@YA_K_K0@Z	vostok/math_functions_inline.h	vostok	done	MATCH	100	100	100	1	65	f	5aa81816026b	[UNCHECKED] sushi@NOTE: Why not use templated function instead.
 ?maxCharsGet@TextField@fl_text@Instances@AS3@GFx@Scaleform@@QAEXAAJ@Z	src/gfx/as3/obj/text/as3_obj_text_textfield.cpp	gfx	done	MATCH	100	100	100	0	34	f		
@@ -28579,7 +28579,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?render_triangles@scene@render@vostok@@AAEX_N@Z	vostok/render/engine/sources/scene.cpp	render	done	MATCH	100	100	100	1	118		b51c3e0ac5e0	
 ?renderer@base_game_scene@survarium@@QBEAAV0game@render@vostok@@XZ	vostok/game/sources/base_game_scene.cpp	game	done	MATCH	100	100	100	1	13	f	b4d468e27aa7	
 ?repeatCountSet@Timer@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@J@Z	src/gfx/as3/obj/utils/as3_obj_utils_timer.cpp	gfx	done	MATCH	100	100	100	0	10	f		
-?replace@buffer_string@vostok@@QAEAAV12@PBD0@Z	vostok/core/sources/buffer_string.cpp	core	inprogress	SPLIT	71.448	71.448	71.448	0	385		dd207262cd89	
+?replace@buffer_string@vostok@@QAEAAV12@PBD0@Z	vostok/core/sources/buffer_string.cpp	core	inprogress	SPLIT	71.448	71.448	71.448	1	385		dd207262cd89	Caller body matches archived developer source and target 13-statement structure. v0.100b direct find overload retained after testing later delegate form. Residual is opposite LTCG inline choice at find and u32 max call sites.
 ?replace@vfs_hashset@vfs@vostok@@QAEXIPAV?$base_node@$00@23@0I@Z	vostok/vfs/sources/hashset.cpp	vfs	done	MATCH	100	100	100	1	133		40620472dd2f	auto: at 100% ceiling, demoted from queue
 ?replaceContactPoint@btPersistentManifold@@QAEXABVbtManifoldPoint@@H@Z	bullet/bulletcollision/narrowphasecollision/btpersistentmanifold.h	bullet	done	MATCH	100	100	100	1	126	f		auto: at 100% ceiling, demoted from queue
 ?replaceMonotone@Tessellator@Render@Scaleform@@AAEXPAUScanChainType@123@I@Z	src/render/render_tessellator.cpp	gfx	done	MATCH	100	100	100	0	124	f		

@@ -26,8 +26,6 @@ inline T sqr			( T const& value )
 	R_ASSERT	( valid(value) );
 	return		( value * value );
 }
-
-// min
 template < typename T >
 inline T min			( T const& left, T const& right )
 {
@@ -55,11 +53,7 @@ inline T min			( T const& value1, T const& value2, T const& value3, T const& val
 	return		min(value1, min(value2, min(value3, value4)));
 }
 
-// sushi@TODO: remove __forceinline - inline-divergence hack, not original source.
-// Target INLINES min_integral/integer min (branchless) at call sites; our MSVC8
-// inliner lands just over threshold on the two-level min->min_integral and emits
-// an out-of-line __cdecl call instead. Bodies are byte-for-byte the target's, so
-// there is no source-level cause - forcing the inline matches the target.
+// sushi@TODO: remove the force-inline matching constraint when the compiler boundary is understood.
 template < typename T >
 __forceinline T min_integral	( T const& left, T const& right )
 {
@@ -106,10 +100,16 @@ __forceinline u64 min			( u64 left, u64 right )
 	return		( min_integral( left, right ) );
 }
 
-// max
 template < typename T >
 inline T max			( T const& left, T const& right )
 {
+	return		( left > right ? left : right );
+}
+
+inline float max		( float left, float right )
+{
+	R_ASSERT	( valid(left) );
+	R_ASSERT	( valid(right) );
 	return		( left > right ? left : right );
 }
 
@@ -130,13 +130,6 @@ inline T max_integral	( T const& left, T const& right )
 {
 	return		( left - ( ( left - right ) & -( left < right ) ) );
 }
-inline float max		( float left, float right )
-{
-	R_ASSERT	( valid(left) );
-	R_ASSERT	( valid(right) );
-	return		( left > right ? left : right );
-}
-
 
 inline s8 max			( s8 left, s8 right )
 {
