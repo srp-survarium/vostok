@@ -145,14 +145,14 @@ void   device_manager::on_query_processed	(query_result * query, bool result)
 	}
 	else if ( query->is_save_type() )
 	{
-
-		save_generated_data* const data			=	query->get_save_generated_data();
+		vfs::virtual_file_system * const file_system	=	g_resources_manager->get_vfs();
+		save_generated_data * const data	=	query->get_save_generated_data();
 
 		fs_new::native_path_string const physical_path	=	data->get_physical_path();
 		fs_new::virtual_path_string virtual_path		=	data->get_virtual_path();
 
 		vfs::vfs_locked_iterator			iterator;
-		query_hot_mount_and_wait			(* g_resources_manager->get_vfs(),
+		query_hot_mount_and_wait			(* file_system,
 											 physical_path, 
 											 & virtual_path, 
 											 & iterator, 
