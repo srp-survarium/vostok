@@ -34,7 +34,7 @@ void engine_world::initialize_network	( )
 		"network", 
 		"network", 
 		0,
-		3 % threading::core_count()
+		2 % threading::core_count()
 	);
 }
 
@@ -55,7 +55,7 @@ void engine_world::network				( )
 
 		network_tick				( );
 
-		threading::yield			( 10 );
+		threading::yield			( 1 );
 	}
 	
 	apc::process					( apc::network );

@@ -61,14 +61,11 @@ console_command* find(pcstr str)
 
 u32 get_similar(pcstr starts_from, console_command** dst, u32 dst_size)
 {
-	// sushi@TODO: target ignores dst_size and caps at literal 10 ([ebp+10h] never read);
-	// reproduced faithfully but verify the 10 is not a propagated dst_size default.
 	u32 dst_count	= 10;
 	if ( !s_console_commands_count )
-	{
 		for( console_command* current = s_console_command_root; current; current = current->prev() )
 			++s_console_commands_count;
-	}
+
 
 	console_command** commands		= (console_command**)ALLOCA( s_console_commands_count * sizeof(console_command*) );
 	console_command** commands_end	= commands;
@@ -251,10 +248,10 @@ bool execute_console_commands			( fs_new::native_path_string cfg_file_path, exec
 	using namespace  fs_new;
 	synchronous_device_interface const & device	=	core::get_core_synchronous_device( );
 	
+
 	file_size_type	file_size			=	0;
 	if ( !calculate_file_size(device, & file_size, cfg_file_path, assert_on_fail_false) )
 		return								false;
-
 	file_type_pointer	file				(cfg_file_path, device, file_mode::open_existing, file_access::read);
 	if ( !file )
 		return								false;

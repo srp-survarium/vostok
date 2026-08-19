@@ -13,17 +13,17 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,028 / 12,932 functions exact (69.81%) &middot; 9,280 / 12,932 functions exact-max (71.76%) &middot; 87.72% fuzzy &middot; 88.29% fuzzy-max.**
+**Overall: 9,060 / 12,932 functions exact (70.06%) &middot; 9,306 / 12,932 functions exact-max (71.96%) &middot; 88.00% fuzzy &middot; 88.54% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
 | `render`        |   351 | 1,666 / 2,653 (62.8%) | 1,666 / 2,653 (62.8%) |  86.3% |     86.3% |
-| `game`          |   141 |   832 / 1,528 (54.5%) |   834 / 1,528 (54.6%) |  73.4% |     73.4% |
-| `core`          |   136 |   962 / 1,325 (72.6%) | 1,020 / 1,325 (77.0%) |  87.7% |     90.0% |
-| `vostok`        |   112 |   860 / 1,252 (68.7%) |   933 / 1,252 (74.5%) |  85.8% |     89.0% |
-| `game_core`     |   189 |   763 / 1,181 (64.6%) |   771 / 1,181 (65.3%) |  92.8% |     93.0% |
+| `game`          |   141 |   836 / 1,528 (54.7%) |   836 / 1,528 (54.7%) |  73.6% |     73.6% |
+| `core`          |   136 |   981 / 1,325 (74.0%) | 1,038 / 1,325 (78.3%) |  90.9% |     93.2% |
+| `vostok`        |   112 |   862 / 1,252 (68.8%) |   933 / 1,252 (74.5%) |  86.0% |     89.0% |
+| `game_core`     |   189 |   765 / 1,181 (64.8%) |   772 / 1,181 (65.4%) |  92.9% |     93.1% |
 | `animation`     |   102 |     541 / 725 (74.6%) |     554 / 725 (76.4%) |  84.4% |     85.2% |
 | `ai`            |   124 |     542 / 691 (78.4%) |     580 / 691 (83.9%) |  94.1% |     94.9% |
 | `sound`         |    69 |     493 / 510 (96.7%) |     493 / 510 (96.7%) |  99.9% |     99.9% |
@@ -34,9 +34,9 @@ _All figures come from the ledger over every target function (paired plus inline
 | `ui`            |    27 |     213 / 227 (93.8%) |     214 / 227 (94.3%) |  98.6% |     99.1% |
 | `physics`       |    14 |     146 / 198 (73.7%) |     146 / 198 (73.7%) |  89.5% |     89.5% |
 | `fs`            |    25 |      99 / 165 (60.0%) |     102 / 165 (61.8%) |  86.7% |     87.6% |
-| `engine`        |    22 |     143 / 162 (88.3%) |     147 / 162 (90.7%) |  97.9% |     98.0% |
-| `network`       |    25 |      72 / 159 (45.3%) |      75 / 159 (47.2%) |  90.3% |     90.3% |
-| `network_core`  |    22 |      49 / 127 (38.6%) |      50 / 127 (39.4%) |  88.6% |     88.8% |
+| `engine`        |    22 |     147 / 162 (90.7%) |     151 / 162 (93.2%) |  97.9% |     98.0% |
+| `network`       |    25 |      72 / 159 (45.3%) |      75 / 159 (47.2%) |  90.5% |     90.5% |
+| `network_core`  |    22 |      50 / 127 (39.4%) |      51 / 127 (40.2%) |  89.1% |     89.2% |
 | `debug`         |    16 |     106 / 122 (86.9%) |     118 / 122 (96.7%) |  98.6% |     98.8% |
 | `logging`       |    10 |       48 / 72 (66.7%) |       49 / 72 (68.1%) |  94.5% |     94.8% |
 | `input`         |     9 |       51 / 53 (96.2%) |       51 / 53 (96.2%) |  99.8% |     99.8% |

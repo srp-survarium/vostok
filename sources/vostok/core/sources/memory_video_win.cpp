@@ -22,6 +22,8 @@
 #pragma comment( lib, "d3d9.lib" )
 #pragma comment( lib, "dxguid.lib" )
 
+static vostok::command_line::key s_max_video_memory("max_video_memory", "", "memory", "set maximum video memory limit, Mb");
+
 typedef BOOL ( WINAPI* PfnCoSetProxyBlanket )( IUnknown* pProxy, DWORD dwAuthnSvc, DWORD dwAuthzSvc,
                                                OLECHAR* pServerPrincName, DWORD dwAuthnLevel, DWORD dwImpLevel,
                                                RPC_AUTH_IDENTITY_HANDLE pAuthInfo, DWORD dwCapabilities );
@@ -389,13 +391,21 @@ static u64 get_local_video_memory_size_impl	( )
 
 u64 vostok::platform::get_local_video_memory_size	( )
 {
-	u64 const result	= get_local_video_memory_size_impl( );
+	u64 result		= get_local_video_memory_size_impl( );
+	u32 max_video_memory_size_in_mb;
+
+	if ( s_max_video_memory.is_set_as_number(&max_video_memory_size_in_mb) )
+		result		= math::min(result, math::max(256*Mb, (u64)max_video_memory_size_in_mb*Mb));
+
+
+	result			= math::min(result, (u64)1*Gb);
+
 	unload_delay_loaded_library	( "d3d9.dll" );
 
 	if ( !result )
 		return			get_minimal_local_video_memory_size();
 
-	CHECK_OR_EXIT		( result >= get_minimal_local_video_memory_size(), "X-Ray Engine v2.0 doesn't support video cards with onboard memory less than 256 Mb, please upgrade your hardware." );
+	CHECK_OR_EXIT		( result >= get_minimal_local_video_memory_size(), "Vostok Engine v1.0 doesn't support video cards with onboard memory less than 256 Mb, please upgrade your hardware." );
 	return				result;
 }
 

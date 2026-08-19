@@ -37,6 +37,7 @@ static u64 s_single_block_arena_size	= 0;
 static vostok::command_line::key	s_max_resources_size("max_resources_size", "", "resources", "setup maximum size for resource arenas, Mb");
 static vostok::command_line::key	s_fill_arenas_with_garbage("fill_arenas_with_garbage", "", "memory", "fills all the memory in all the arenas with garbage; could slowdown startup significantly!");
 static vostok::command_line::key	s_no_warning_on_page_file_size("no_warning_on_page_file_size", "", "memory", "suppress warning about too many programs open or not enough page file size");
+static vostok::command_line::key	s_minimum_resources_memory_size("minimum_resources_memory_size", "", "memory", "set up minimum resources memory size in Mb");
 
 pvoid allocate_region							( u64 const size, pvoid const address, u32 const additional_flags, bool assert_on_failure = true )
 {
@@ -302,8 +303,9 @@ static bool allocate_arenas					(
 	using vostok::memory::platform::regions_type;
 	using vostok::memory::platform::region;
 
-	regions_type				regions( ALLOCA((counter.m_region_count + 1)*sizeof(region)), counter.m_region_count + 1 );
-	regions_type				high_memory_regions( ALLOCA((counter.m_region_count + 1)*sizeof(region)), counter.m_region_count + 1 );
+	u32 const regions_count		= counter.m_region_count + 1;
+	regions_type				regions( ALLOCA(regions_count*sizeof(region)), regions_count );
+	regions_type				high_memory_regions( ALLOCA(regions_count*sizeof(region)), regions_count );
 	regions_filler				filler(regions, high_memory_regions);
 	iterate_regions				( start_address, allocation_granularity, min_buffer_size, filler );
 
@@ -323,11 +325,13 @@ static bool allocate_arenas					(
 			(*i).size			= ( ((*i).size - 1)/allocation_granularity + 1 )*allocation_granularity;
 
 			regions_type::iterator		regions_b	= high_memory_regions.begin();
-			regions_type::iterator		j			= std::lower_bound( regions_b, high_memory_regions.end(), *i );
+			regions_type::iterator		regions_e	= high_memory_regions.end();
+			regions_type::iterator		j			= std::lower_bound( regions_b, regions_e, *i );
 			regions_type*				container	= &high_memory_regions;
-			if ( (j == high_memory_regions.end()) || ((*j).size < (*i).size) ) {
+			if ( (j == regions_e) || ((*j).size < (*i).size) ) {
 				regions_b		= regions.begin();
-				j				= std::lower_bound( regions_b, regions.end(), *i );
+				regions_e		= regions.end();
+				j				= std::lower_bound( regions_b, regions_e, *i );
 				container		= &regions;
 			}
 
@@ -335,8 +339,9 @@ static bool allocate_arenas					(
 			R_ASSERT_CMP		( (*j).size, >=, (*i).size );
 
 			if ( !vostok::memory::g_use_resources_manager ) {
-				regions_type::iterator k	= j + 1;
-				if ( (k != container->end()) && ( (k + 1) == container->end()) )
+				regions_type::iterator k;
+				k				= j + 1;
+				if ( (k != regions_e) && ( (k + 1) == regions_e) )
 					j			= select_best_region( j == regions_b ? 0 : (*(j-1)).size, j, k, (*i).size, resource_arenas, allocation_granularity );
 			}
 
@@ -506,19 +511,24 @@ static bool try_to_allocate_arenas	(
 	)
 {
 	regions_type				resource_regions( ALLOCA(2*sizeof(region)), 2 );
-	resource_regions.push_back	( managed_arena );
-	resource_regions.push_back	( unmanaged_arena );
+	if ( vostok::memory::g_use_resources_manager ) {
+		resource_regions.push_back	( managed_arena );
+		resource_regions.push_back	( unmanaged_arena );
+	}
+
 	if ( !try_to_allocate_arenas( arenas, resource_regions, only_resources ) )
 		return					false;
 
-	if ( resource_regions.front().data == &managed_arena ) {
-		managed_arena			= resource_regions.front();
-		unmanaged_arena			= resource_regions.back();
-	}
-	else {
-		R_ASSERT_CMP			( resource_regions.front().data, ==, &unmanaged_arena );
-		managed_arena			= resource_regions.back();
-		unmanaged_arena			= resource_regions.front();
+	if ( vostok::memory::g_use_resources_manager ) {
+		if ( resource_regions.front().data == &managed_arena ) {
+			managed_arena			= resource_regions.front();
+			unmanaged_arena			= resource_regions.back();
+		}
+		else {
+			R_ASSERT_CMP			( resource_regions.front().data, ==, &unmanaged_arena );
+			managed_arena			= resource_regions.back();
+			unmanaged_arena			= resource_regions.front();
+		}
 	}
 
 	return						true;
@@ -574,26 +584,26 @@ static u64 calculate_desirable_resource_arenas	(
 
 	CHECK_OR_EXIT				(
 		useful_memory >= stats.current_kernel_memory,
-		"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+		"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 	);
 	useful_memory				-= stats.current_kernel_memory;
 
 	CHECK_OR_EXIT				(
 		useful_memory >= stats.engine_fixed_memory,
-		"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+		"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 	);
 	useful_memory				-= stats.engine_fixed_memory;
 
 	CHECK_OR_EXIT				(
 		useful_memory >= (minimum_video_memory_size + minimum_resources_size),
-		"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+		"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 	);
 
 	u64 useful_video			= stats.video_memory;
 	u64 address_space			= stats.available_address_space;
 	CHECK_OR_EXIT				(
 		address_space >= stats.engine_fixed_memory,
-		"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+		"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 	);
 
 	address_space				-= stats.engine_fixed_memory;
@@ -602,7 +612,7 @@ static u64 calculate_desirable_resource_arenas	(
 		if ( useful_video/address_space > maximum_video_share ) {
 			CHECK_OR_EXIT		(
 				address_space*maximum_video_share >= minimum_video_memory_size,
-				"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+				"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 			);
 			useful_video		= u64(address_space*maximum_video_share);
 		}
@@ -610,7 +620,7 @@ static u64 calculate_desirable_resource_arenas	(
 		if ( (address_space - useful_video) < minimum_resources_size ) {
 			CHECK_OR_EXIT		(
 				(address_space - minimum_resources_size) >= minimum_video_memory_size,
-				"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+				"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 			);
 			useful_video		= address_space - minimum_resources_size;
 		}
@@ -619,7 +629,7 @@ static u64 calculate_desirable_resource_arenas	(
 	if ( useful_video/useful_memory > maximum_video_share ) {
 		CHECK_OR_EXIT			(
 			useful_memory*maximum_video_share >= minimum_video_memory_size,
-			"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+			"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 		);
 		useful_video			= u64(useful_memory*maximum_video_share);
 	}
@@ -627,10 +637,12 @@ static u64 calculate_desirable_resource_arenas	(
 	if ( (useful_memory - useful_video) < minimum_resources_size ) {
 		CHECK_OR_EXIT			(
 			(useful_memory - minimum_resources_size) >= minimum_video_memory_size,
-			"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+			"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 		);
 		useful_video			= useful_memory - minimum_resources_size;
 	}
+	else
+		useful_video			+= 256*Mb;
 
 	if ( stats.does_os_use_process_address_space_for_duplicating_video_resources ) {
 		R_ASSERT_CMP			( address_space, >=, useful_video );
@@ -746,7 +758,7 @@ void vostok::memory::platform::allocate_arenas	(
 
 #if VOSTOK_PLATFORM_32_BIT
 	// due to the lack of address space
-	if ( !reserved_address_space )
+	if ( !reserved_address_space && g_use_resources_manager )
 		reserved_address_space		+= 128*Mb;
 #endif // #if VOSTOK_PLATFORM_32_BIT
 
@@ -763,7 +775,7 @@ void vostok::memory::platform::allocate_arenas	(
 	stats.engine_fixed_memory		= engine_fixed_memory;
 	
 	// all the OS we know do duplicate video resources in the process virtual address space
-	stats.does_os_use_process_address_space_for_duplicating_video_resources	= true;
+	stats.does_os_use_process_address_space_for_duplicating_video_resources	= g_use_video_memory;
 
 	// here we hope that page file will be increased with time
 	// therefore we do not limit our computations and setup current maximum
@@ -774,11 +786,12 @@ void vostok::memory::platform::allocate_arenas	(
 	// because we would like to get as many as possible contiguous memory
 	// since during local(onboard) memory detection there will be lots of libraries
 	// loads into our process address space, which can fragment it
-	u64 const minimal_local_video_memory_size = vostok::platform::get_minimal_local_video_memory_size( );
+	u64 const minimal_local_video_memory_size = g_use_video_memory ? vostok::platform::get_minimal_local_video_memory_size( ) : 0;
 	stats.video_memory				= minimal_local_video_memory_size;
 
 	float const video_memory_share	= .9f;
-	u64 const minimum_resources_memory_size	= 128*Mb;
+	u64 minimum_resources_memory_size_in_mb;
+	u64 const minimum_resources_memory_size	= (s_minimum_resources_memory_size && s_minimum_resources_memory_size.is_set_as_number(&minimum_resources_memory_size_in_mb) ? minimum_resources_memory_size_in_mb : 128)*Mb;
 	u64 const granularity		= allocation_granularity();
 	u64 desirable_resources_size	=
 		math::align_down(
@@ -791,7 +804,7 @@ void vostok::memory::platform::allocate_arenas	(
 			granularity
 		);
 
-	float const managed_to_unmanaged_share	= 4.f/1.f;
+	float const managed_to_unmanaged_share	= 2.f/1.f;
 
 	managed_arena.size			= math::align_up( u64( (managed_to_unmanaged_share/(managed_to_unmanaged_share+1.f))*desirable_resources_size ), granularity );
 	unmanaged_arena.size		= desirable_resources_size - managed_arena.size;
@@ -818,7 +831,7 @@ void vostok::memory::platform::allocate_arenas	(
 
 		CHECK_OR_EXIT				(
 			try_to_allocate_arenas(arenas, managed_arena, unmanaged_arena, true),
-			"Not enough memory to run X-Ray Engine v2.0\r\nClose all programs, increase paging file size or add memory bank and try again."
+			"Not enough memory to run Vostok Engine v1.0\r\nClose all programs, increase paging file size or add memory bank and try again."
 		);
 
 		if ( !s_no_warning_on_page_file_size.is_set() )
@@ -833,8 +846,8 @@ void vostok::memory::platform::allocate_arenas	(
 	// now when maximum memory is allocated we can start detecting real
 	// video memory size
 	for (;;) {
-		stats.video_memory		= vostok::platform::get_local_video_memory_size( );
-		if ( stats.video_memory )
+		stats.video_memory		= g_use_video_memory ? vostok::platform::get_local_video_memory_size( ) : 0;
+		if ( !g_use_video_memory || stats.video_memory )
 			break;
 
 		int const result		=
@@ -859,10 +872,14 @@ void vostok::memory::platform::allocate_arenas	(
 		break;
 	}
 	R_ASSERT					( stats.video_memory );
-	CHECK_OR_EXIT				(
-		stats.video_memory >= minimal_local_video_memory_size,
-		"Not enough video memory to run X-Ray Engine v2.0\r\nUpgrade your video card and try again."
-	);
+	if ( g_use_video_memory )
+		CHECK_OR_EXIT				(
+			stats.video_memory >= minimal_local_video_memory_size,
+			"Not enough video memory to run Vostok Engine v1.0\r\nUpgrade your video card and try again."
+		);
+
+	if ( !g_use_resources_manager )
+		return;
 
 	u64 const old_desirable_resources_size	= desirable_resources_size;
 	desirable_resources_size	=

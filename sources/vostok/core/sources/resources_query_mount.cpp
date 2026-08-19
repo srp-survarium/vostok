@@ -48,19 +48,7 @@ public:
 		m_success						(true), 
 		m_physical_mounts_left_count	(0) 
 	{
-		fs_new::virtual_path_string			path;
-		path.assignf						("mounts/%s.mount", mount_id);
-
-		request	requests[]				=	{ { path.c_str(), binary_config_class } };
-		
-		g_resources_manager->change_count_of_pending_helper_query_for_mount(+1);
-		
-		query_resource_params	params		(requests, NULL, 1, 
-											 boost::bind(& mount_by_config_helper::callback, this, _1),
-											 allocator, NULL, NULL, NULL, NULL, NULL, NULL, NULL, 0, query_type_helper_for_mount);
-
-		m_mount_composite_task					=	create_mount_composite_helper_task_and_lock(allocator);
-		g_resources_manager->query_resources_impl	(params);
+		query_db							();
 	}
 
 	void	callback					(queries_result & config_result)
@@ -93,9 +81,10 @@ private:
 	void	query_db						()
 	{
 		fs_new::native_path_string			path;
-		path.assignf_with_conversion		("mounts/%s.db", m_mount_id.c_str());
+		path.assignf_with_conversion		("../../%s.db", m_mount_id.c_str());
+		fs_new::virtual_path_string			virtual_path	= m_mount_id;
 
-		query_mount_archive					("", path, path, m_mount_id.c_str(), m_callback, m_allocator, m_mount_composite_task);
+		query_mount_archive					(virtual_path, path, path, m_mount_id.c_str(), m_callback, m_allocator, NULL);
 		delete_this							();
 	}
 
@@ -234,5 +223,3 @@ void   query_mount_archive 				(fs_new::virtual_path_string const &	virtual_path
 
 } // namespace resources
 } // namespace vostok
-
-

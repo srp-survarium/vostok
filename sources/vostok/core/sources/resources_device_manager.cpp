@@ -65,9 +65,6 @@ void   device_manager::on_pre_allocated_size_change (int size_delta, query_resul
 {
 	VOSTOK_UNREFERENCED_PARAMETER				(query);
 	R_ASSERT								(query->is_load_type());
-
-// 	LOGI_INFO								("resources:test", "pre_allocated_size = %d, increment = %d (resource: %s)", 
-// 											m_pre_allocated_size, size_delta, detail::make_query_logging_string (query).c_str());
 	R_ASSERT_CMP							(m_pre_allocated_size, >=, -size_delta);
 	m_pre_allocated_size				+=	size_delta;	
 }
@@ -145,20 +142,17 @@ void   device_manager::on_query_processed	(query_result * query, bool result)
 	{
 #pragma message(VOSTOK_TODO("implement replication here"))
 		NOT_IMPLEMENTED					("implement replication!");
-// 			vfs::vfs_iterator fat_it	=	finished->get_fat_it();
-// 			fs::g_fat->commit_replication	(fat_it.get_fat_node());
-// 			LOGI_INFO						("resources", "replicated %s ", detail::make_query_logging_string (finished).c_str());
 	}
 	else if ( query->is_save_type() )
 	{
-		vfs::virtual_file_system * const file_system	=	g_resources_manager->get_vfs();
-		save_generated_data * const data	=	query->get_save_generated_data();
+
+		save_generated_data* const data			=	query->get_save_generated_data();
 
 		fs_new::native_path_string const physical_path	=	data->get_physical_path();
 		fs_new::virtual_path_string virtual_path		=	data->get_virtual_path();
 
 		vfs::vfs_locked_iterator			iterator;
-		query_hot_mount_and_wait			(* file_system, 
+		query_hot_mount_and_wait			(* g_resources_manager->get_vfs(),
 											 physical_path, 
 											 & virtual_path, 
 											 & iterator, 

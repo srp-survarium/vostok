@@ -5,6 +5,15 @@
 ////////////////////////////////////////////////////////////////////////////
 
 #include "pch.h"
+
+// Temporary matching anchors for target-emitted bodies whose retail call path is not recovered yet.
+#pragma comment( linker, "/include:?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z" )
+#pragma comment( linker, "/include:?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z" )
+#pragma comment( linker, "/include:?set_multibyte@strings@vostok@@YA_NPADIPB_W@Z" )
+#pragma comment( linker, "/include:?mbstowcs@strings@vostok@@YA_NPA_WIPBD@Z" )
+#pragma comment( linker, "/include:?sqrt_safe@@YAMM@Z" )
+#pragma comment( linker, "/include:?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z" )
+#pragma comment( linker, "/include:?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z" )
 #include <vostok/core/core.h>
 
 #include "build_extensions.h"
@@ -64,8 +73,6 @@ namespace debug {
 
 namespace core {
 	bool initialized	( );
-
-		// sushi@TODO
 } // namespace core
 
 #ifndef	MASTER_GOLD
@@ -91,6 +98,8 @@ extern doug_lea_allocator_type				g_log_allocator;
 
 } // namespace vostok
 
+static vostok::command_line::key s_mount_mounts_path("mount_mounts_path", "", "vfs", "");
+
 void vostok::core::preinitialize		( core::engine *							engine,
 									  logging::log_file_usage_enum const			log_file_usage,
 									  pcstr const									command_line,
@@ -99,7 +108,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 									  pcstr	const									build_date
 									)
 {
-	g_log_file_usage		= log_file_usage; // sushi@TODO: Might have been hidden with an inlined function
+	g_log_file_usage		= log_file_usage;
 	s_engine				= engine;
 	setlocale				( LC_COLLATE, ".ACP" );
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
@@ -123,7 +132,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 	memory::preinitialize	( );
 	build::preinitialize	( build_date );
 
-	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true); // sushi@NOTE: Deleted. This should be handled when `fs_new` or `core` is matched.
+	fs_new::device_file_system_proxy	device(get_core_device_file_system(), fs_new::watcher_enabled_true);
 
 	g_log_format.set( logging::format_separator("{") +
 							  logging::format_thread_id +
@@ -144,7 +153,8 @@ bool vostok::core::initialized ( )
 void vostok::core::initialize			(
 		pcstr const lua_config_device_folder_to_save_to,
 		pcstr const debug_thread_id,
-		debug_initialization const debug_initialization
+		debug_initialization_enum debug_initialization,
+		const bool initialize_task_pool
 	)
 {
 	R_ASSERT				( !s_initialized, "you cannot initialize core when it has been initialized already" );
@@ -185,14 +195,16 @@ void vostok::core::initialize			(
 	VOSTOK_UNREFERENCED_PARAMETER	( lua_config_device_folder_to_save_to );
 #endif	// #ifndef MASTER_GOLD
 
-	tasks::initialize		(	2 * threading::core_count(),	// tasks thread count
-								64,								// user thread count
-								threading::core_count(), //1,								// minimum active task thread count
-								tasks::execute_while_wait_for_children_true,
-								tasks::do_logging_false
-							);
+	if ( initialize_task_pool )
+		tasks::initialize		(	2 * threading::core_count(),	// tasks thread count
+									64,								// user thread count
+									threading::core_count(), //1,								// minimum active task thread count
+									tasks::execute_while_wait_for_children_true,
+									tasks::do_logging_false
+								);
 	threading::set_current_thread_affinity	( 0 );
 	threading::on_thread_spawn	( threading::tasks_aware );
+	s_initialized			= true;
 }
 
 void	vostok::core::initialize_resources	(
@@ -205,9 +217,8 @@ void	vostok::core::initialize_resources	(
 
 	core_test_suite::singleton()->set_resources_path	( s_engine->get_resources_path() );
 
-	resources::mount_mounts_path			( s_engine->get_mounts_path( ) );
-
-	s_initialized						=	true;
+	if ( s_mount_mounts_path )
+		resources::mount_mounts_path		( s_engine->get_mounts_path( ) );
 
 	static resources::unmanaged_allocation_cook		s_unmanaged_allocation_cook;
 	register_cook							( &s_unmanaged_allocation_cook );
@@ -228,11 +239,12 @@ void   vostok::core::run_tests			( )
 	core_test_suite::run_tests	( );
 }
 
-void vostok::core::finalize			( )
+void vostok::core::finalize			( const bool finalize_task_pool )
 {
 	R_ASSERT				( s_initialized, "core library hasn't been initialized" );
 
-	tasks::finalize			( );
+	if ( finalize_task_pool )
+		tasks::finalize		( );
 	testing::finalize		( );
 
 #ifndef	MASTER_GOLD

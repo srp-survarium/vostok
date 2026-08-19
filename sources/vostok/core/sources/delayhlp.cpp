@@ -24,6 +24,8 @@
 #include <windows.h>
 
 #include "DelayImp.h"
+#include <vostok/type_extensions.h>
+#include "platform_extensions_win.h"
 
 //
 // Local copies of strlen, memcmp, and memcpy to make sure we do not need the CRT
@@ -249,8 +251,10 @@ __delayLoadHelper2(
         0
         };
 
-    if (0 == (idd.grAttrs & dlattrRva)) {
+    if (0 == (pidd->grAttrs & dlattrRva)) {
         PDelayLoadInfo  rgpdli[1] = { &dli };
+
+		vostok::platform::log_error("error during delay loading library %s", dli.szDll);
 
         RaiseException(
             VcppException(ERROR_SEVERITY_ERROR, ERROR_INVALID_PARAMETER),
@@ -300,9 +304,6 @@ __delayLoadHelper2(
         if (__pfnDliNotifyHook2) {
             hmod = HMODULE(((*__pfnDliNotifyHook2)(dliNotePreLoadLibrary, &dli)));
             }
-        if (hmod == 0) {
-            hmod = ::LoadLibrary(dli.szDll);
-            }
 		if (hmod == 0) {
 			#ifdef WIN64
 			#	define VOSTOK_PLATFORM_FOLDER "win64"
@@ -311,13 +312,26 @@ __delayLoadHelper2(
 			#endif // #ifdef WIN64
 			
 			char path[260];
-			strcpy_s(path, "../../binaries.prebuilt/" VOSTOK_PLATFORM_FOLDER "/" );
+			::GetModuleFileName(
+				::GetModuleHandle(vostok::g_delay_loading_libraries_reference_module),
+				path,
+				sizeof(path)
+			);
+			pstr const last_slash = strrchr(path, '\\');
+			if (last_slash)
+				*(last_slash + 1) = 0;
+
+			strcat_s(path, sizeof(path), "");
+			strcat_s(path, sizeof(path), "../../binaries.prebuilt/" VOSTOK_PLATFORM_FOLDER "/" );
 			
 			#undef VOSTOK_PLATFORM_FOLDER
 
-			strcat_s(path,dli.szDll);
+			strcat_s(path, sizeof(path), dli.szDll);
             hmod = ::LoadLibrary(path);
 		}
+        if (hmod == 0) {
+            hmod = ::LoadLibrary(dli.szDll);
+            }
         if (hmod == 0) {
             dli.dwLastError = ::GetLastError();
             if (__pfnDliFailureHook2) {
@@ -329,9 +343,11 @@ __delayLoadHelper2(
                 }
 
             if (hmod == 0) {
-                PDelayLoadInfo  rgpdli[1] = { &dli };
+				PDelayLoadInfo  rgpdli[1] = { &dli };
 
-                RaiseException(
+				::MessageBox(NULL, dli.szDll, "error during delay loading library", 0);
+				vostok::platform::log_error("error during delay loading library %s", dli.szDll);
+				RaiseException(
                     VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND),
                     0,
                     1,
@@ -404,6 +420,9 @@ __delayLoadHelper2(
             }
         if (pfnRet == 0) {
             PDelayLoadInfo  rgpdli[1] = { &dli };
+
+			vostok::platform::log_error("error during delay loading library %s", dli.szDll);
+			vostok::platform::log_error("cannot find procedure %s", dli.dlp.szProcName);
 
             RaiseException(
                 VcppException(ERROR_SEVERITY_ERROR, ERROR_PROC_NOT_FOUND),

@@ -196,11 +196,15 @@ void   on_exception (assert_enum			assert_type,
 	{
 		s_environment.caught_awaited_exception	=	true;
 
+	#if !VOSTOK_PLATFORM_PS3
 		RaiseException					(0xABCDEF, 0, 0, 0);
+	#endif // #if !VOSTOK_PLATFORM_PS3
 		return;
 	}
 
+	#if !VOSTOK_PLATFORM_PS3
 	__try {
+
 
 	fixed_string8192 description_string	=	*description == '\n' ? (description + 1) : description;
 
@@ -210,26 +214,29 @@ void   on_exception (assert_enum			assert_type,
 	{
 		description_string			+=	'\n';
 	}
-#if 0 // sushi@TODO
-	logging::helper	(__FILE__, __FUNCSIG__, __LINE__, "test", logging::error)
-										("-------------------------------------------------------------\n"
-										 "EXCEPTION #%d in test '%s', suite '%s'\n"
-										 "-------------------------------------------------------------\n"
-										 "%s",
-										 s_environment.exception_index+1,
-										 s_environment.current_test,
-										 s_environment.current_suite,
-										 description_string.c_str());
-#endif
-	debug::dump_call_stack				("test",
-										 true,
-										 is_assertion ? 3 : 0,
-										 s_environment.num_top_callstack_frames_to_skip,
-										 exception_information);
+
+
+
+
+
+
+
+
+
+
+
+	LOGIFD_FORCED("test", logging::error, &core::g_log_format, NULL, "-------------------------------------------------------------\nEXCEPTION #%d in test '%s', suite '%s'\n-------------------------------------------------------------\n%s", s_environment.exception_index+1, s_environment.current_test, s_environment.current_suite, description_string.c_str());
+
+
+
+
+	debug::dump_call_stack("test", true, is_assertion ? 3 : 0,
+		s_environment.num_top_callstack_frames_to_skip, exception_information);
 	}
 	__except ( execute_handler_filter( GetExceptionCode( ), GetExceptionInformation( ) ) ) {
 		(void)0;
 	}
+	#endif // #if !VOSTOK_PLATFORM_PS3
 
 	++s_environment.exception_index;
 }
@@ -297,16 +304,18 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 	{
 		result_string.appendf			("TEST SUITE '%s' : successfull %d tests", suite_name, num_tests);
 	}
-#if 0 // sushi@TODO
-	logging::helper						(__FILE__, __FUNCSIG__, __LINE__, "test", message_type)
-										(logging::format_message,
-										 "------------------------------------------------------------------------------\n"
-										 "%s (%d ms)\n"
-										 "------------------------------------------------------------------------------",
-										 result_string.c_str(), timer.get_elapsed_msec());
-#endif
+
+
+
+
+
+
+
+
+	LOGIFD_FORCED("test", message_type, logging::format_message, NULL, "------------------------------------------------------------------------------\n%s (%d ms)\n------------------------------------------------------------------------------", result_string.c_str(), timer.get_elapsed_msec());
 	s_environment.num_failed_tests	+=	num_failed_tests;
 	threading::interlocked_increment	(s_environment.num_suites_executed);
+
 
 	if ( s_environment.num_suites_executed == (long)s_environment.num_suites_total )
 	{
@@ -314,6 +323,9 @@ bool   run_tests_impl (test_base* test, pcstr suite_name)
 		if ( s_environment.engine )
 			new_exit_code			+=	s_environment.engine->get_exit_code();
 
+	#if VOSTOK_PLATFORM_XBOX_360
+		logging::write_exit_code_file	(new_exit_code);
+	#endif // #if VOSTOK_PLATFORM_XBOX_360
 
 		if ( g_run_tests_and_exit )
 		{

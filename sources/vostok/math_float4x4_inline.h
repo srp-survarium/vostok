@@ -437,7 +437,7 @@ inline float4x4 get_relative_matrix( float4x4 const& original_matrix, float4x4 c
 	float4x4 inverted_parent_matrix;
 	if ( !inverted_parent_matrix.try_invert( parent_matrix ) )
 	{
-		DEBUG_BREAK( );	// claude@MATCH: L411 is a 1-byte int3, not an empty ASSERT
+		DEBUG_BREAK( );	// Target emits a one-byte breakpoint here.
 		return float4x4( ).identity( );
 	}
 	else

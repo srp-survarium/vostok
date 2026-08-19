@@ -20,10 +20,8 @@ public:
 				doug_lea_mt_allocator	(
 						bool const crash_after_out_of_memory = true,
 						bool const return_null_after_out_of_memory = false,
-						bool use_guards = true
-#ifndef MASTER_GOLD
-						, bool const use_leak_detector = true
-#endif // #ifndef MASTER_GOLD
+						bool use_guards = true,
+						bool is_tasks_aware = false
 					);
 			pvoid	malloc_impl			( size_t size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );
 			pvoid	realloc_impl		( pvoid pointer, size_t new_size VOSTOK_CORE_DEBUG_PARAMETERS_DESCRIPTION_DECLARATION VOSTOK_CORE_DEBUG_PARAMETERS_DECLARATION );

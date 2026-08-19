@@ -104,13 +104,6 @@ namespace math {
 	inline u32	color_rgba	(u32 r, u32 g, u32 b, u32 a)	{	return ((a&0xff)<<24)|((b&0xff)<<16)|((g&0xff)<<8)|(r&0xff);	}
 	inline u32	color_xrgb	(u32 r, u32 g, u32 b)			{	return color_rgba(r, g, b, 255);	}
 
-	// claude@NOTE: compiled-out-assert inline-budget reconstruction was TRIED here and
-	// REVERTED (2026-08): neither 4x plain ASSERT (expression-discarded) nor 4x ASSERT_U
-	// (range exprs kept in the dead branch) made our LTCG stop inlining this at the 8
-	// renderer.cpp constant-arg sites where retail calls it - the constant-args inline
-	// bonus dominates the size estimate - while the ASSERT_U dead branches perturbed the
-	// already-inlined expansions (draw_luminance_picker_info cur 67.0->49.8). See
-	// patterns/compiled-out-assert-pays-inline-budget.md.
 	inline u32	color_rgba	(float r, float g, float b, float a)
 	{ return color_rgba( u32(math::floor(r*255) & 0xff), u32(math::floor(g*255) & 0xff), u32(math::floor(b*255) & 0xff), u32(math::floor(a*255) & 0xff) ); }
 

@@ -6,6 +6,8 @@
 
 #include "pch.h"
 
+
+
 using vostok::math::quaternion;
 using vostok::math::float4x4;
 
@@ -13,10 +15,88 @@ static float const zero_tolerance = 0.1f; // ?!
 
 inline float sqrt_safe( float val )
 {
-	return val<=0.f ? 0 : sqrt( val );	
+	return val<=0.f ? 0 : sqrt( val );
 }
 
-// sushi@NOTE: The target implementation has 80 empty lines here for whatever reason
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 quaternion::quaternion	( float4x4 const& matrix_raw )
 {
 	float4x4 matrix = matrix_raw;
@@ -39,6 +119,7 @@ quaternion::quaternion	( float4x4 const& matrix_raw )
 		E,
 		I
 	};
+
 
 	int biggest;
 	if (matrix.e00 > matrix.e11){
@@ -151,46 +232,10 @@ quaternion::quaternion	( float4x4 const& matrix_raw )
 			break;
 	}
 	R_ASSERT		( is_unit() );
+
 }
 
-quaternion vostok::math::slerp ( quaternion const& left, quaternion const& right, float const time_delta )
-{
-	R_ASSERT		( left.is_unit() );
-	R_ASSERT		( right.is_unit() );
-	R_ASSERT		( (time_delta >= 0.f) && (time_delta <= 1.f), "Quaternion::slerp - invalid 'time_delta' arrived: %f", time_delta );
-	
-	float cosom	=  left.vector.x * right.vector.x +  
-				   left.vector.y * right.vector.y +
-				   left.vector.z * right.vector.z +
-				   left.vector.w * right.vector.w;
-
-	float		Scale0, Scale1, sign;
-	if ( cosom < 0.f ) {
-		cosom	= -cosom;
-		sign	= -1.f;
-	} else {
-		sign	= 1.f;
-	}
-	
-	if ( (1.0f - cosom) > epsilon_5 ) {
-		float	omega	= acos( cosom );
-		float	i_sinom = 1.f / sin( omega );
-		float	t_omega	= time_delta*omega;
-		Scale0	= sin( omega - 	t_omega ) * i_sinom;
-		Scale1	= sin( t_omega			) * i_sinom;
-	}
-	else {
-		// has numerical difficulties around cosom == 0
-		// in this case degenerate to linear interpolation
-		Scale0	= 1.0f - time_delta;
-		Scale1	= time_delta;
-	}
-
-	Scale1		*= sign;
-	return		quaternion( left.vector*Scale0 + right.vector*Scale1 );
-}
-
-quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion const& q1, float const time_delta )
+quaternion slerp_optimized ( quaternion const& q0, quaternion const& q1, float const time_delta )
 {
 	float cosom	=  q0.x * q1.x +
 				   q0.y * q1.y +
@@ -205,7 +250,7 @@ quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion cons
 		sign	= 1.f;
 	}
 
-	if ( (1.0f - cosom) > epsilon_5 ) {
+	if ( (1.0f - cosom) > vostok::math::epsilon_5 ) {
 		const float	omega	= acos( cosom );
 		const float	i_sinom = 1.f / sin( omega );
 		const float	t_omega	= time_delta*omega;
@@ -213,6 +258,8 @@ quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion cons
 		Scale1	= sin( t_omega			) * i_sinom;
 	}
 	else {
+		// has numerical difficulties around cosom == 0
+		// in this case degenerate to linear interpolation
 		Scale0	= 1.0f - time_delta;
 		Scale1	= time_delta;
 	}
@@ -221,16 +268,35 @@ quaternion vostok::math::slerp_optimized ( quaternion const& q0, quaternion cons
 	return		quaternion( q0.vector*Scale0 + q1.vector*Scale1 );
 }
 
-quaternion vostok::math::extrapolated_slerp ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
+quaternion vostok::math::slerp ( quaternion const& q0, quaternion const& q1, const float t )
+{
+	R_ASSERT		( q0.is_unit() );
+	R_ASSERT		( q1.is_unit() );
+	R_ASSERT		( (t >= 0.f) && (t <= 1.f), "Quaternion::slerp - invalid 'time_delta' arrived: %f", t );
+
+	return slerp_optimized( q0, q1, t );
+}
+
+
+
+
+quaternion extrapolated_slerp ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
 {
 	quaternion	result	= begin->first;
 	float		weight	= begin->second;
 	for ( std::pair< quaternion, float > const* i = begin + 1; i != end; ++i ) {
-		if ( i->second > epsilon_5 ) {
-			result	= slerp_optimized( result, i->first, i->second / ( i->second + weight ) );
+		if ( i->second > vostok::math::epsilon_5 ) {
+			result	= slerp_optimized(
+				result, i->first, i->second / ( i->second + weight )
+			);
 			weight	+= i->second;
 		}
 	}
 
 	return		result;
+}
+
+quaternion vostok::math::weighted_blend ( std::pair< quaternion, float > const* const begin, std::pair< quaternion, float > const* const end )
+{
+	return extrapolated_slerp( begin, end );
 }

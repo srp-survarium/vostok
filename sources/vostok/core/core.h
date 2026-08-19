@@ -18,7 +18,7 @@ namespace core {
 
 struct engine;
 
-enum debug_initialization {
+enum debug_initialization_enum {
 	delay_debug_initialization,
 	perform_debug_initialization,
 }; // enum bugtrap_usage
@@ -34,7 +34,8 @@ VOSTOK_CORE_API	void	preinitialize	(
 VOSTOK_CORE_API	void	initialize	(
 							pcstr lua_config_device_folder_to_save_to,
 							pcstr debug_thread_id,
-							debug_initialization debug_initialization
+							debug_initialization_enum debug_initialization,
+							const bool initialize_task_pool = true
 						);
 VOSTOK_CORE_API	void	initialize_resources	(
 							fs_new::asynchronous_device_interface &	hdd,
@@ -42,7 +43,7 @@ VOSTOK_CORE_API	void	initialize_resources	(
 							resources::enable_fs_watcher_bool		enable_fs_watcher
 						);
 VOSTOK_CORE_API	void	finalize_resources ( );
-VOSTOK_CORE_API	void	finalize	( );
+VOSTOK_CORE_API	void	finalize	( const bool finalize_task_pool = true );
 VOSTOK_CORE_API	void	run_tests	( );
 
 } // namespace core

@@ -126,7 +126,7 @@ def _rich_pdb_aliases() -> dict[str, str]:
     return normalize_objdiff_symbols.rich_pdb_aliases(
         target_index,
         base_index,
-        source_prefix="vostok/render/",
+        source_prefix="vostok/",
     )
 
 

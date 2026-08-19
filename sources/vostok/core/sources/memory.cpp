@@ -173,7 +173,7 @@ void vostok::memory::allocate_region		( u64 const additional_memory_size, u64 co
 {
 	s_arena_size				= 0;
 
-	u32 const count				= s_allocators->size() + 2;
+	u32 const count				= s_allocators->size() + (g_use_resources_manager ? 2 : 0);
 	platform::regions_type		regions( ALLOCA(count*sizeof(platform::region)), count );
 
 	{
@@ -194,13 +194,16 @@ void vostok::memory::allocate_region		( u64 const additional_memory_size, u64 co
 
 	platform::allocate_arenas		( additional_memory_size, additional_address_space, regions, managed_arena, unmanaged_arena );
 
-	g_resources_managed_allocator.do_register	( managed_arena.size,	"resources (managed) allocator" );
-	managed_arena.data				= &s_allocators->back();
-	regions.push_back				( managed_arena );
+	if ( g_use_resources_manager )
+	{
+		g_resources_managed_allocator.do_register	( managed_arena.size,	"resources (managed) allocator" );
+		managed_arena.data				= &s_allocators->back();
+		regions.push_back				( managed_arena );
 
-	g_resources_unmanaged_allocator.do_register	( unmanaged_arena.size,	"resources (unmanaged) allocator" );
-	unmanaged_arena.data			= &s_allocators->back();
-	regions.push_back				( unmanaged_arena );
+		g_resources_unmanaged_allocator.do_register	( unmanaged_arena.size,	"resources (unmanaged) allocator" );
+		unmanaged_arena.data			= &s_allocators->back();
+		regions.push_back				( unmanaged_arena );
+	}
 
 	{
 		platform::regions_type::const_iterator i		= regions.begin( );
@@ -280,6 +283,28 @@ void vostok::memory::finalize				( )
 	VOSTOK_DESTROY_REFERENCE		( s_process_heap_walk );
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_as_well )
 {
 #if !VOSTOK_USE_CRT_MEMORY_ALLOCATOR
@@ -316,6 +341,18 @@ void vostok::memory::dump_statistics		( bool const dump_stats_for_empty_arenas_a
 
 	R_ASSERT_CMP				( allocated_size, >=, crt_allocated_size + process_allocated_size );
 	u64 const vostok_used			= allocated_size - (crt_allocated_size + process_allocated_size);
+
+
+
+
+
+
+
+
+
+
+
+
 	LOGF_INFO					( logging::format_message, "---------------overall memory stats---------------" );
 	LOGF_INFO					( logging::format_message, "vostok: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", vostok_used, total_size == 0.f ? 0.f : float(vostok_used)/float(total_size)*100.f );
 	LOGF_INFO					( logging::format_message, "used: " VOSTOK_PRINTF_SPEC_LONG_LONG(10) " (%6.2f%%)", allocated_size, total_size == 0.f ? 0.f : float(allocated_size)/float(total_size)*100.f );
