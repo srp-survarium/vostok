@@ -21,7 +21,7 @@ void platform::preinitialize( )
 
 void   set_application_name ( pcstr application_name )
 {
-	strings::copy							(s_application, application_name);
+	strings::copy							(s_application, sizeof(s_application), application_name);
 }
 
 pcstr   application_name ( )

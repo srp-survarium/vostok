@@ -11,12 +11,19 @@
 
 class btPairCachingGhostObject;
 
+namespace survarium {
+class booby_trap_set_core;
+}
+
 namespace vostok {
 namespace physics {
 
 typedef buffer_vector<base_physics_object *> base_physics_objects_type; // sushi@TODO: Find proper place for the typedef. Obviously in  base_physics_object module
 
 class bt_ghost_object : public base_physics_object {
+friend void destroy_ghost_object( bt_ghost_object* obj );
+friend class survarium::booby_trap_set_core;
+
 public:
 
 	bt_ghost_object( bt_collision_shape_ptr shape, btPairCachingGhostObject* obj );
@@ -35,19 +42,15 @@ public:
 	void		contact_test							( world* world, base_physics_object* object, contact_test_predicate& predicate );
 
 
-	// STATE[REMOVED]: no out-of-line body, no caller in any shipped TU (editor-only paths
-	// excluded from survarium.exe); absent from both binaries.
 	void		dbg_render								( world* world, math::color const& color ) const /* no source */;
 
-	// STATE[REMOVED]: not inlined into non_compound_shapes_centers (which calls the free
-	// get_non_compound_shapes_centers); no caller anywhere; absent from both binaries.
 	u32			non_compound_shapes_count				( ) const /* no source */;
 	void		non_compound_shapes_centers				( vectora<float3>& centres_results ) const;
 
 	virtual btCollisionObject*	get_bt_collision_obect	( )			override;
 	virtual u16					get_collision_group		( ) const	override;
 
-public: // cavenoji@TODO: `m_shape` is acccessed in `destroy_ghost_object`, which forced us to make those fields public. This is unlikely how this was in target.
+private:
 	/* 0x0000 */	/* base_physics_object */
 	/* 0x000c */	bt_collision_shape_ptr				m_shape;
 	/* 0x0010 */	btPairCachingGhostObject*			m_bt_object;

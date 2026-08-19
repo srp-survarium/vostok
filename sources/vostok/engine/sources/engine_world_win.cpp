@@ -90,7 +90,7 @@ static LRESULT APIENTRY message_processor	( HWND window_handle, UINT message_id,
 
 			break;
 		}
-		case WM_INPUTLANGCHANGEREQUEST : {
+		case WM_INPUTLANGCHANGE : {
 			ActivateKeyboardLayout	( (HKL)l_param, KLF_SETFORPROCESS );
 			return					( DefWindowProc(window_handle, message_id, w_param, l_param) );
 		}
@@ -125,7 +125,7 @@ HWND new_window			( )
 	u32 const screen_size_x	= GetSystemMetrics( SM_CXSCREEN );
 	u32 const screen_size_y	= GetSystemMetrics( SM_CYSCREEN );
 
-	DWORD const	window_style = WS_OVERLAPPEDWINDOW;
+	DWORD const	window_style = WS_OVERLAPPEDWINDOW & ~WS_MINIMIZEBOX & ~WS_MAXIMIZEBOX;
 	RECT window_size		= { 0, 0, 1280, 720 };
 	AdjustWindowRect		( &window_size, window_style, false );
 

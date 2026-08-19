@@ -101,6 +101,7 @@ void vostok::core::preinitialize		( core::engine *							engine,
 {
 	g_log_file_usage		= log_file_usage; // sushi@TODO: Might have been hidden with an inlined function
 	s_engine				= engine;
+	setlocale				( LC_COLLATE, ".ACP" );
 	R_ASSERT				( !s_initialized, "you cannot preinitialize core when it has been initialized already" );
 
 	using namespace			debug;
