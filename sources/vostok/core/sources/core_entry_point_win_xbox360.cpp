@@ -25,7 +25,7 @@ pcstr   get_command_line ( )
 
 	if ( ! s_initialized )
 	{
-		strings::copy						(s_command_line, GetCommandLine());
+		strings::copy						(s_command_line, sizeof(s_command_line), GetCommandLine());
 		s_initialized					=	true;
 	}
 
@@ -34,4 +34,3 @@ pcstr   get_command_line ( )
 
 } // namespace core
 } // namespace vostok
-

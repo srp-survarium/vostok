@@ -4,7 +4,7 @@
 // Game-module /OPT:REF reachability anchor for the game-skeleton symbols that no
 // engine-module anchor owns. The game_core/anchor_*.cpp files own every
 // use_game_core_* / use_<engine-module>_* symbol. Everything left over lives here:
-//   - use_engine_user_world_cone(): the ai/ui/animation/input/rtp world cone the
+//   - use_engine_user_world_cone(): the ai/animation/rtp world cone the
 //     game module pulls up,
 //   - use_inventory(): the (still-empty) inventory stub,
 //   - use_game_skeleton(): the game/menu/camera/scene/stats/key_binder object cone.
@@ -20,8 +20,6 @@
 #include <vostok/ai/api.h>
 #include <vostok/ai_navigation/api.h>
 #include <vostok/animation/api.h>
-#include <vostok/input/api.h>
-#include <vostok/ui/api.h>
 
 #include <vostok/render/facade/one_way_render_channel.h>
 #include <vostok/render/world.h>
@@ -163,13 +161,6 @@ namespace vostok
 		ai::world* ai_world = ai::create_world( *( ai::engine* )NULL );
 		ai::destroy_world( ai_world );
 		ai::set_memory_allocator( *( ai::allocator_type* )NULL );
-
-		ui::world* ui_world = ui::create_world( *( ui::engine* )NULL, *( render::ui::renderer* )NULL, *( memory::base_allocator* )NULL, NULL );
-		ui::destroy_world( ui_world );
-
-		input::world* input_world = input::create_world( *( input::engine* )NULL, NULL );
-		input::destroy_world( input_world );
-		input::set_memory_allocator( *( input::allocator_type* )NULL );
 
 		ai::navigation::world* ai_navigation_world = ai::navigation::create_world( *( ai::navigation::engine* )NULL, *( render::scene_ptr const* )NULL, *( render::debug::renderer* )NULL );
 		ai::navigation::destroy_world( ai_navigation_world );

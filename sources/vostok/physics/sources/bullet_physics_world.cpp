@@ -116,7 +116,6 @@ void bullet_physics_world::initialize( )
 	btVector3 worldMin			(-1000,-1000,-1000);
 	btVector3 worldMax			(1000,1000,1000);
 
-	//SoftDicsreteDynamicWorld
 	m_softBodyWorldInfo						= VOSTOK_NEW_IMPL( m_allocator, btSoftBodyWorldInfo );
 	m_softBodyWorldInfo->air_density		= (btScalar)1.2;
 	m_softBodyWorldInfo->water_density		= 0;
@@ -139,7 +138,7 @@ void bullet_physics_world::initialize( )
 																						m_constraintSolver,
 																						m_collisionConfiguration );
 
-	m_dynamicsWorld->getDispatchInfo().m_enableSPU = false;//true; //?
+	m_dynamicsWorld->getDispatchInfo().m_enableSPU = false;
 	m_dynamicsWorld->setGravity(btVector3(0,-10,0));
 	m_softBodyWorldInfo->m_gravity.setValue(0,-10,0);
 	m_softBodyWorldInfo->m_sparsesdf.Initialize();
@@ -148,8 +147,8 @@ void bullet_physics_world::initialize( )
 	m_ghost_pair_callback		= VOSTOK_NEW_IMPL( m_allocator, btGhostPairCallback );
 	m_dynamicsWorld->getBroadphase( )->getOverlappingPairCache( )->setInternalGhostPairCallback( m_ghost_pair_callback );
 
-	m_last_frame_delta = 0.0f;
 	m_last_frame_time = 0.0f;
+	m_last_frame_delta = 0.0f;
 	CProfileManager::set_log_callback( log_cb );
 }
 

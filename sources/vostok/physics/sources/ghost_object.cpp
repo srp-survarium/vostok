@@ -58,8 +58,8 @@ bt_ghost_object* create_ghost_object( bt_collision_shape_ptr shape, float4x4 con
 
 void destroy_ghost_object( bt_ghost_object* obj )
 {
-	bt_collision_shape* shape = obj->m_shape.c_ptr();
-	VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );
+	bt_collision_shape* shape = obj->m_shape.c_ptr( ); VOSTOK_DELETE_IMPL( *g_ph_allocator, shape );
+	VOSTOK_DELETE_IMPL( *g_ph_allocator, obj );
 }
 
 void bt_ghost_object::contact_test( world* world, base_physics_object* object, contact_test_predicate& predicate )

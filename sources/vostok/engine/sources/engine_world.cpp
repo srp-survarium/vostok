@@ -17,6 +17,12 @@
 
 using vostok::engine::engine_world;
 
+namespace vostok {
+namespace engine {
+	memory::pthreads3_allocator*			g_scaleform_allocator;
+} // namespace engine
+} // namespace vostok
+
 static vostok::command_line::key			s_editor_key			("editor", "", "", "run editor");
 static vostok::command_line::key			s_editor_st_key			("editor_single_thread", "editor_st", "", "run editor in single thread");
 static vostok::command_line::key			s_no_splash_screen_key	("no_splash_screen", "", "application", "suppress splash screen on startup");
@@ -70,8 +76,9 @@ engine_world::engine_world				(
 		logging::format_message
 	);
 	g_allocator.do_register				(  64*Kb,	"engine"	);
-	m_render_allocator.do_register		( 128*Mb,	"render"	);
-	m_network_allocator.do_register		(  64*Kb,	"network"	);
+	g_scaleform_allocator				= &memory::g_mt_allocator;
+	m_render_allocator.do_register		( 256*Mb,	"render"	);
+	m_network_allocator.do_register		(   8*Mb,	"network"	);
 	m_sound_allocator.do_register		(	1*Mb,	"sound"		);
 
 	m_engine_user_module_proxy.register_memory_allocators	( );
@@ -83,9 +90,8 @@ engine_world::engine_world				(
 	u64 additional_memory_size			= 0;
 	bool const is_command_line_editor	= command_line_editor( );
 	if ( is_command_line_editor ) {
-		// reserve memory for .NET stuff
-		additional_memory_size			= 384*Mb;
-		m_editor_allocator.do_register	( 8*Mb,	"editor"	);
+		additional_memory_size			= 320*Mb;
+		m_editor_allocator.do_register	( 128*Mb,	"editor"	);
 	}
 
 	memory::allocate_region				( additional_memory_size );

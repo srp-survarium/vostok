@@ -127,8 +127,8 @@ void   engine_world::finalize_resources ()
 	m_user_data_mount					= NULL;
 	m_test_resources_mount				= NULL;
 
+	debug::terminate						( "", 0 );
 	resources::finalize_thread_usage		( true );
-	resources::wait_and_dispatch_callbacks	( true );
 
 	threading::interlocked_exchange			( m_resources_destruction_started, true );
 	apc::run								( apc::res_man,	& resources::on_resources_thread_ending, apc::break_process_loop, apc::wait_for_completion);

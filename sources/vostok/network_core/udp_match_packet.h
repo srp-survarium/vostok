@@ -94,12 +94,7 @@ public:
 	}
 	inline	u32			buffer_to_send_size	( ) const { return buffer_size( ) + header_size( ); }
 
-	// STATE[UNMATCHABLE]: body unrecoverable - the out-of-line
-	// packet<udp_match_packet>::reallocate (0x112e20) is a never-called int3 stub, and
-	// append's grow path ends in an ICF-folded no-arg call (an eater/abort macro?) the
-	// LTCG emission can't disambiguate. No decodable inline site.
-	// sushi@TODO: revisit if a non-folded reallocate caller surfaces in a later build.
-	inline	void		reallocate			( u32 new_size ) { /* no source */ } // STATE[UNMATCHABLE]
+	inline	void		reallocate			( u32 new_size ) { UNREACHABLE_CODE( new_size ); }
 
 	// the channel's boost::intrusive::set names &udp_match_packet::set_member_hook and
 	// the connection's udp_match_packet_list names &udp_match_packet::next - both reach

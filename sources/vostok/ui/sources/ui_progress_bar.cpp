@@ -153,7 +153,7 @@ void ui_progress_bar::draw_back_rectangle			(
 													) const
 {
 	float2 pos				= get_position( );
-	client_to_screen		( *this, pos );		//need absolute position
+	client_to_screen		( *this, pos );
 	float2 size				= get_size( );
 
 	vostok::render::ui::vertex const back_vertices[] = {
@@ -174,10 +174,8 @@ void ui_progress_bar::draw_front_rectangle		(
 													vostok::render::scene_view_ptr const& scene_view
 												) const
 {
-	// inner rect
-
 	float2 pos										= get_position( );
-	client_to_screen								( *this, pos );		//need absolute position
+	client_to_screen								( *this, pos );
 	float2 size										= get_size( );
 	u32 diff										= m_maximum - m_minimum;
 	float2 inner_size								= float2( size.x - 2.0f * m_border_width, size.y - 2.0f * m_border_height );
@@ -199,13 +197,13 @@ void ui_progress_bar::draw_front_rectangle		(
 void ui_progress_bar::draw_text					(
 													vostok::render::ui::renderer& renderer,
 													vostok::render::scene_view_ptr const& scene_view
-												) const
+											) const
 {
 	if ( m_text.empty( ) )
 		return;
 
 	float2 pos					= get_position( );
-	client_to_screen			( *this, pos );		//need absolute position
+	client_to_screen			( *this, pos );
 	float2 size					= get_size( );
 
 	pcstr word					= NULL;
@@ -218,8 +216,8 @@ void ui_progress_bar::draw_text					(
 		text_width				+= word_width;
 	}
 	float2 font_pos				= pos;
-	font_pos.x					= ( size.x / 2.0f ) - text_width / 2.0f + pos.x;
-	font_pos.y					= ( size.y / 2.0f ) - fnt->get_height( ) / 2.0f + pos.y;
+	font_pos.x					= ( size.x - text_width ) / 2.0f + pos.x;
+	font_pos.y					= ( size.y - fnt->get_height( ) ) / 2.0f + pos.y;
 
 	renderer.draw_text			(
 		scene_view,

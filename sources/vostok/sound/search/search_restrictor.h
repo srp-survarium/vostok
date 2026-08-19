@@ -53,8 +53,9 @@ public:
 
 	inline void on_before_search( );
 
-	inline void on_after_search( bool const ) const
+	inline void on_after_search( bool const success ) const
 	{
+		ASSERT_U( !success );
 	}
 
 	template < typename priority_queue_impl_type >
