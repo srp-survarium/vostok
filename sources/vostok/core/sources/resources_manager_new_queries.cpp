@@ -70,8 +70,6 @@ void   resources_manager::init_query_with_no_fat_it (query_result & query)
 	if ( assert_on_not_found )
 	{
 		LOGI_WARNING						("resources", "cannot find file: '%s' (class id: %d)", query.get_requested_path(), query.get_class_id());
-		//if ( debug::is_debugger_present() && !s_skip_file_not_found )
-		//	DEBUG_BREAK						();
 	}
 #endif // #ifdef DEBUG
 
