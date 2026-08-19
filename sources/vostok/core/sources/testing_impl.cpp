@@ -76,6 +76,27 @@ struct environment
 
 static environment						s_environment;
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 void   test_watcher_thread_proc ()
 {
 	static const u32 max_time_allowed_for_one_test	=	100*1000;
@@ -186,6 +207,8 @@ static inline u32 execute_handler_filter( ... )
 	return						EXCEPTION_EXECUTE_HANDLER;
 }
 
+
+
 void   on_exception (assert_enum			assert_type,
 					 pcstr					description,
 					 _EXCEPTION_POINTERS*	exception_information,
@@ -206,7 +229,7 @@ void   on_exception (assert_enum			assert_type,
 	__try {
 
 
-	fixed_string8192 description_string	=	*description == '\n' ? (description + 1) : description;
+	fixed_string8192 description_string	(	*description == '\n' ? (description + 1) : description	);
 
 	u32 const description_size		=	description_string.length();
 
@@ -232,6 +255,7 @@ void   on_exception (assert_enum			assert_type,
 
 	debug::dump_call_stack("test", true, is_assertion ? 3 : 0,
 		s_environment.num_top_callstack_frames_to_skip, exception_information);
+
 	}
 	__except ( execute_handler_filter( GetExceptionCode( ), GetExceptionInformation( ) ) ) {
 		(void)0;

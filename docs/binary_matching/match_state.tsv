@@ -26892,7 +26892,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?on_event@?$npc_subscriptions_manager@Udamage_subscriber@sensors@ai@vostok@@Usensed_hit_object@34@@ai@vostok@@QBEXAAUnpc@23@ABUsensed_hit_object@23@@Z	vostok/ai/sources/npc_subscriptions_manager_inline.h	ai	done	MATCH	100	100	100	1	124		9dd6a3782223	auto: at 100% ceiling, demoted from queue
 ?on_event@?$subscriptions_manager@Ugame_object_subscriber@ai@vostok@@Ugame_object@23@@ai@vostok@@QBEXABUgame_object@23@@Z	vostok/ai/sources/subscriptions_manager_inline.h	ai	blocked				0	0	71			
 ?on_event@?$subscriptions_manager@Usensors_subscriber@perceptors@ai@vostok@@Usensed_object@sensors@34@@ai@vostok@@QBEXABUsensed_object@sensors@23@@Z	vostok/ai/sources/subscriptions_manager_inline.h	ai	blocked	MATCH			0	0	71			
-?on_exception@testing@vostok@@YAXW4assert_enum@2@PBDPAU_EXCEPTION_POINTERS@@_N@Z	vostok/core/sources/testing_impl.cpp	core	inprogress	SPLIT	78.2815	78.2815	78.2889	0	424		ef9577113bcb	
+?on_exception@testing@vostok@@YAXW4assert_enum@2@PBDPAU_EXCEPTION_POINTERS@@_N@Z	vostok/core/sources/testing_impl.cpp	core	parked	SIZE	78.2889	78.2889	78.2889	1	424		7325aa51cd3e	Retail inlines the fixed_string<8192>(pcstr) copy loop; candidate retains the constructor out of line after target statement and line geometry were restored
 ?on_file_loaded@wav_encoded_sound_interface_cook@sound@vostok@@AAEXAAVqueries_result@resources@3@@Z	vostok/sound/sources/wav_encoded_sound_interface_cook.cpp	sound	done	MATCH	100	100	100	0	391		6b81b8a8f783	
 ?on_file_operation_end@query_result@resources@vostok@@AAEXPAV123@@Z	vostok/core/sources/resources_query_result_finalization.cpp	core	done	MATCH	100	100	100	1	155	f	e0f89796a33c	auto: at 100% ceiling, demoted from queue
 ?on_finish_animation_playing@brain_unit@ai@vostok@@QAEXQBUanimation_item@23@@Z	vostok/ai/sources/brain_unit.cpp	ai	done	MATCH	100	100	100	1	31		c3f14c297c2e	auto: at 100% ceiling, demoted from queue
@@ -28882,7 +28882,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?run_tests@?$suite_base@Vengine_test_suite@vostok@@@testing@vostok@@SA_NXZ	vostok/testing_inline.h	vostok	done	MATCH	99.8809	100	100	0	128	f	f2203f5d8462	
 ?run_tests@core@vostok@@YAXXZ	vostok/core/sources/core_entry_point.cpp	core	done	SIZE	40	100	100	0	90	f	bdc5e2afcba9	
 ?run_tests_command_line@testing@vostok@@YA_NXZ	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	1	187	f	ad68826c1010	auto: at 100% ceiling, demoted from queue
-?run_tests_impl@detail@testing@vostok@@YA_NPAVtest_base@23@PBD@Z	vostok/core/sources/testing_impl.cpp	core	done	MATCH	99.9953	100	100	0	683	f	368fac01651b	
+?run_tests_impl@detail@testing@vostok@@YA_NPAVtest_base@23@PBD@Z	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	1	683	f	368fac01651b	Complete-TU target PDB, assembly, and source-line geometry audit
 ?run_thread@select_reactor@detail@asio@boost@@AAEXXZ	boost/asio/detail/impl/select_reactor.ipp	boost	done	MATCH	100	100	100	1	220		847bb9e80aef	auto: at 100% ceiling, demoted from queue
 ?runningGet@Timer@fl_utils@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/utils/as3_obj_utils_timer.cpp	gfx	done	MATCH	100	100	100	0	38	f		
 ?sameDomainGet@LoaderInfo@fl_display@Instances@AS3@GFx@Scaleform@@QAEXAA_N@Z	src/gfx/as3/obj/display/as3_obj_display_loaderinfo.cpp	gfx	done	MATCH	100	100	100	0	26	f		
@@ -30317,7 +30317,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?test_triangle@aabb_geometry@colliders@collision@vostok@@ABE_NI@Z	vostok/collision/sources/colliders_aabb_geometry_triangle_intersection.cpp	collision	done	MATCH	100	100	100	0	268	f	36d1ae805ae3	
 ?test_triangle@collision@vostok@@YA_NABVfloat3@math@2@0000MAAM@Z	vostok/collision/ray_collision_utils_inline.h	collision	done	MATCH	100	100	100	0	560	f	356955fa1d69	
 ?test_triangle@ray_geometry_base@colliders@collision@vostok@@IAE_NABIAAM@Z	vostok/collision/sources/colliders_ray_geometry_base.cpp	collision	done	MATCH	100	100	100	0	84	f	50ed52721865	
-?test_watcher_thread_proc@testing@vostok@@YAXXZ	vostok/core/sources/testing_impl.cpp	core	inprogress	SIZE	99.9902	99.9902	99.9902	0	727		63152cf3cdc4	
+?test_watcher_thread_proc@testing@vostok@@YAXXZ	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	1	727		63152cf3cdc4	Complete-TU target PDB, assembly, and source-line geometry audit
 ?textColorGet@TextField@fl_text@Instances@AS3@GFx@Scaleform@@QAEXAAK@Z	src/gfx/as3/obj/text/as3_obj_text_textfield.cpp	gfx	done	MATCH	100	100	100	0	17	f		
 ?textColorSet@TextField@fl_text@Instances@AS3@GFx@Scaleform@@QAEXABVValue@456@K@Z	src/gfx/as3/obj/text/as3_obj_text_textfield.cpp	gfx	done	MATCH	100	100	100	0	16	f		
 ?textGet@IOErrorEvent@fl_events@Instances@AS3@GFx@Scaleform@@QAEXAAVASString@56@@Z	src/gfx/as3/obj/events/as3_obj_events_ioerrorevent.cpp	gfx	done	MATCH	100	100	100	0	32	f		
@@ -35212,7 +35212,7 @@ vostok::tasks::`dynamic initializer for 's_mutex''	vostok/core/sources/tasks_thr
 vostok::tasks::`dynamic initializer for 's_spin_count_key''	vostok/core/sources/tasks_thread_pool_utils.cpp	core	done	MATCH	100	100	100	0	19	f	e962275171c3	
 vostok::tasks::`dynamic initializer for 's_task_manager''	vostok/core/sources/tasks_manager.cpp	core	done	MATCH	100	100	100	0	17	f	430c5b9e3e84	
 vostok::tasks::`dynamic initializer for 's_thread_pool''	vostok/core/sources/tasks_thread_pool_utils.cpp	core	done	MATCH	100	100	100	0	13	f	c49cc30d11ba	
-vostok::testing::`dynamic atexit destructor for 's_environment''	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	0	13	f	6c78209301fd	
+vostok::testing::`dynamic atexit destructor for 's_environment''	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	0	13	f	c3678ea5d8ac	
 vostok::testing::`dynamic initializer for 'g_run_tests''	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	0	19	f	96906fe2dfab	
 vostok::testing::`dynamic initializer for 'g_run_tests_and_exit''	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	0	19	f	b94571570277	
 vostok::testing::`dynamic initializer for 's_environment''	vostok/core/sources/testing_impl.cpp	core	done	MATCH	100	100	100	0	17	f	cd8814e5c539	
