@@ -6,7 +6,7 @@
 
 #include "pch.h"
 
-// Temporary matching anchors for target-emitted bodies whose retail call path is not recovered yet.
+// Temporary matching anchors for target-emitted bodies whose known retail uses were inlined.
 #pragma comment( linker, "/include:?slerp@math@vostok@@YA?AVquaternion@12@ABV312@0M@Z" )
 #pragma comment( linker, "/include:?weighted_blend@math@vostok@@YA?AVquaternion@12@PBU?$pair@Vquaternion@math@vostok@@M@stlp_std@@0@Z" )
 #pragma comment( linker, "/include:?set_multibyte@strings@vostok@@YA_NPADIPB_W@Z" )
@@ -14,6 +14,7 @@
 #pragma comment( linker, "/include:?sqrt_safe@@YAMM@Z" )
 #pragma comment( linker, "/include:?add_child@fs_task_composite@resources@vostok@@QAEXQAVfs_task@23@@Z" )
 #pragma comment( linker, "/include:?register_object_to_delete@cook_base@resources@vostok@@QAEXPAVunmanaged_resource@23@I@Z" )
+#pragma comment( linker, "/include:??Eiterator@?$hash_multiset@Vname_registry_entry@resources@vostok@@PAV123@$0M@V?$fixed_size_policy@$0IAAA@@detail@3@Uname_registry_hash@523@Uname_registry_equal@523@Vsingle_threading_policy@threading@3@@vostok@@QAE?AV012@XZ" )
 #include <vostok/core/core.h>
 
 #include "build_extensions.h"

@@ -6,6 +6,7 @@
 #include "resources_macros.h"
 #include "resources_allocators.h"
 #include "resources_thread_local_data.h"
+#include "memory.h"
 #include <vostok/resources_fs_task.h>
 
 #include <vostok/resources_resource_link.h>
@@ -97,13 +98,15 @@ void   resources_manager::dump_unmanaged_resource_leaks ()
 resources_manager::~resources_manager ()
 {
 	if ( !threading::g_debug_single_thread )
-	{
-		memory::g_resources_helper_allocator.user_current_thread_id( );
-		memory::g_resources_unmanaged_allocator.user_current_thread_id( );
-	}
+		if ( memory::g_use_resources_manager )
+		{
+			memory::g_resources_helper_allocator.user_current_thread_id( );
+			memory::g_resources_unmanaged_allocator.user_current_thread_id( );
+		}
 
 	dump_unmanaged_resource_leaks			();
-	memory::g_resources_managed_allocator.dump_resource_leaks	();
+	if ( memory::g_use_resources_manager )
+		memory::g_resources_managed_allocator.dump_resource_leaks	();
 
 	finalize_name_registry					();
 

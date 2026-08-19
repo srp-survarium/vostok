@@ -13,22 +13,22 @@ manual Windows/VS2008 setup, see [docs/windows-setup.md](docs/windows-setup.md).
 
 _Auto-generated from `docs/binary_matching/match_state.tsv` (the committed matching ledger) - refreshed by `vostok build` at the end of every build; do not hand-edit. Diff this block across commits to spot regressions._
 
-**Overall: 9,060 / 12,932 functions exact (70.06%) &middot; 9,306 / 12,932 functions exact-max (71.96%) &middot; 88.00% fuzzy &middot; 88.54% fuzzy-max.**
+**Overall: 9,060 / 12,932 functions exact (70.06%) &middot; 9,307 / 12,932 functions exact-max (71.97%) &middot; 88.00% fuzzy &middot; 88.55% fuzzy-max.**
 
 _All figures come from the ledger over every target function (paired plus inlined/folded target-only). **Functions exact** and **Fuzzy** describe the current build (`cur`). **Exact-max** and **Fuzzy-max** use `max`, the peak proven for the function's own source body (`hash`), which resets when that body changes; the all-time `hist` peak is never promoted into it, and a banked peak carrying no `hash` is not credited. Byte-weighted code view: `python3 -m vostok ledger readme --max-code`._
 
 | Module          | Units |       Functions exact |   Functions exact-max |  Fuzzy | Fuzzy-max |
 | :-------------- | ----: | --------------------: | --------------------: | -----: | --------: |
 | `render`        |   351 | 1,666 / 2,653 (62.8%) | 1,666 / 2,653 (62.8%) |  86.3% |     86.3% |
-| `game`          |   141 |   836 / 1,528 (54.7%) |   836 / 1,528 (54.7%) |  73.6% |     73.6% |
-| `core`          |   136 |   981 / 1,325 (74.0%) | 1,038 / 1,325 (78.3%) |  90.9% |     93.2% |
-| `vostok`        |   112 |   862 / 1,252 (68.8%) |   933 / 1,252 (74.5%) |  86.0% |     89.0% |
+| `game`          |   141 |   832 / 1,528 (54.5%) |   836 / 1,528 (54.7%) |  73.5% |     73.6% |
+| `core`          |   136 |   981 / 1,325 (74.0%) | 1,038 / 1,325 (78.3%) |  91.0% |     93.2% |
+| `vostok`        |   112 |   864 / 1,252 (69.0%) |   933 / 1,252 (74.5%) |  86.1% |     89.0% |
 | `game_core`     |   189 |   765 / 1,181 (64.8%) |   772 / 1,181 (65.4%) |  92.9% |     93.1% |
-| `animation`     |   102 |     541 / 725 (74.6%) |     554 / 725 (76.4%) |  84.4% |     85.2% |
+| `animation`     |   102 |     542 / 725 (74.8%) |     554 / 725 (76.4%) |  84.4% |     85.2% |
 | `ai`            |   124 |     542 / 691 (78.4%) |     580 / 691 (83.9%) |  94.1% |     94.9% |
 | `sound`         |    69 |     493 / 510 (96.7%) |     493 / 510 (96.7%) |  99.9% |     99.9% |
 | `collision`     |    52 |     434 / 503 (86.3%) |     453 / 503 (90.1%) |  93.9% |     97.0% |
-| `scaleform`     |    47 |     420 / 453 (92.7%) |     420 / 453 (92.7%) |  96.5% |     96.5% |
+| `scaleform`     |    47 |     421 / 453 (92.9%) |     421 / 453 (92.9%) |  96.6% |     96.6% |
 | `particle`      |    25 |     364 / 400 (91.0%) |     378 / 400 (94.5%) |  97.2% |     98.2% |
 | `vfs`           |    71 |     190 / 390 (48.7%) |     192 / 390 (49.2%) |  88.9% |     89.1% |
 | `ui`            |    27 |     213 / 227 (93.8%) |     214 / 227 (94.3%) |  98.6% |     99.1% |
