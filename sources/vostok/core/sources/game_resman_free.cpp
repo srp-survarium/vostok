@@ -19,9 +19,9 @@ struct action_logger
 {
 	action_logger	(pcstr action_message, test_resource * grm_test_resource) 
 		: result(false), grm_test_resource(grm_test_resource), action_message(action_message)
-	{ 
-// 		if ( grm_test_resource ) 
-// 			LOGI_INFO	("grm", "started %s for %s", action_message, grm_test_resource->name()); 
+	{
+
+
 	}
 	~action_logger	()	
 	{ 
@@ -86,9 +86,9 @@ bool   resource_freeing_functionality::try_collect_parents_to_free(resource_base
 	if ( parents.empty() )
 		return									true;
 
-	// uncomment when need debug of grm test
-	//if ( test_resource * grm_test_resource = dynamic_cast<test_resource *>(resource) )
-	//	LOGI_DEBUG								("grm", "trying to free parents of : %s", grm_test_resource->name());
+
+
+
 
 	resource_link_list::mutex_raii	raii		(parents);
 	resource_link * it_parent				=	resource_link_list_front_no_dying(parents);
@@ -156,10 +156,6 @@ void   resource_freeing_functionality::release_sub_fat_from_parents (vfs_sub_fat
 											 "LEAK: %s or one of its parents is held by user"
 											 "when its sub-fat being unmounted, leak?",
 											 parent->log_string().c_str());
-
-			// force unregister from fat-node
-			bool const unregistered		=	parent->try_unregister_from_fat_or_from_name_registry(u32(-1));
-			R_ASSERT_U						(unregistered);
 
 			parent->clean_sub_fat_and_fat_it	();
 		}
