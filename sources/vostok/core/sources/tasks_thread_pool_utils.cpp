@@ -136,11 +136,6 @@ thread_pool::~thread_pool ()
 	MT_FREE										(task_thread_tls_buffer);
 }
 
-// sushi@TODO: log/log_columns_header residual is (a) the LTCG custom-register
-// calling convention on this varargs member (this=eax, tls=ecx) and (b) the
-// LOGIFD __LINE__ immediate - this file's line layout is ~12 lines short of the
-// ship layout (target LOGIFD lands on src lines 175 / 197), unrecoverable
-// without the original file structure. Statement shape now matches (16/16, 9/9).
 void   thread_pool::log_columns_header ()
 {
 	if ( !m_do_logging )
