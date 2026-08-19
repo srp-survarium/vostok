@@ -158,10 +158,10 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 	fs_new::virtual_path_string				source_path;
 	make_source_path							(& source_path, converted_path);
 
-	vfs::vfs_iterator const & source_path_it	= results[0].get_result_iterator();
+	fs_new::physical_path_info const source_info	= get_physical_path_info(results[0].get_result_iterator());
 
 	#ifndef MASTER_GOLD
-	if ( !source_path_it )
+	if ( !source_info.exists() )
 	{
 		parent->finish_query				(query_result_for_user::error_type_file_not_found, assert_on_fail_false);
 		return;
@@ -180,8 +180,8 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
 
 
 
-	fs_new::physical_path_info const source_info	= get_physical_path_info(source_path_it);
 	fs_new::physical_path_info const converted_info	=	get_physical_path_info(converted_path_it);
+
 
 
 
@@ -205,7 +205,23 @@ void binary_config_cook::on_fs_iterators_ready	(queries_result & results)
  			helper_allocator(),
 			NULL,
 			parent
- 		);
+		);
+	 }
+	 else
+	 {
+#ifndef MASTER_GOLD
+	// load lua config
+		query_resource(
+			source_path.c_str(),
+			lua_config_class,
+			boost::bind(& binary_config_cook::on_lua_config_loaded, this, _1, parent),
+			helper_allocator(),
+			NULL,
+			parent
+			);
+#else // #ifndef MASTER_GOLD
+		FATAL( "cannot find binary config [%s]!", source_path.c_str() );
+#endif // #ifndef MASTER_GOLD
 	 }
 }
 
