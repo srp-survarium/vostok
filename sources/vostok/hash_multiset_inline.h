@@ -48,23 +48,21 @@ typename HASH_MULTISET::iterator
 		 HASH_MULTISET::iterator::operator ++ ()
 {
 	ASSERT(m_container);
-	if ( !m_value ) 
-	{
+	if ( !m_value )
 		return *this; // end
-	}
 
 	m_value			= get_next_of_object(m_value);
 
-	while ( !m_value )
+	if ( !m_value )
 	{
-		++m_index;
+		Value ** const begin	= m_container->m_buffer;
+		Value ** it			= begin + m_index + 1;
+		Value ** const end	= begin + SizePolicy::fixed_size;
+		while ( !*it && it != end )
+			++it;
 
-		if ( m_index >= SizePolicy::fixed_size )
-		{
-			break;
-		}
-
-		m_value		= m_container->m_buffer[m_index];
+		m_index			= int( it - begin );
+		m_value			= it != end ? *it : NULL;
 	}
 
 	return *this;
