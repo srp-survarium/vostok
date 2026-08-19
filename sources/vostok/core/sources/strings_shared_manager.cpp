@@ -142,18 +142,7 @@ void manager::collect_garbage			( )
 {
 	m_mutex.lock				( );
 
-#if 1
 	m_storage.clear				( remove_predicate( m_mutex) );
-#else // #if 0
-	m_storage.erase				(
-		std::remove_if(
-			m_storage.begin( ),
-			m_storage.end( ),
-			remove_predicate( m_mutex )
-		),
-		m_storage.end( )
-	);
-#endif // #if 0
 
 	m_mutex.unlock				( );
 }
@@ -162,7 +151,6 @@ int	manager::compute_stats				( Storage const& storage )
 {
 	int							result = 0;
 	result						-= sizeof( *this ) + 0;
-//	result						-= sizeof( Storage::allocator_type );
 	const int					node_size = 20;
 	Storage::const_iterator		i = storage.cbegin( );
 	Storage::const_iterator		e = storage.cend( );

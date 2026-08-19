@@ -152,7 +152,8 @@ typename HASH_MULTISET::reverse_iterator
 //-----------------------------------------------------------------------------------
 
 TEMPLATE_SIGNATURE
-HASH_MULTISET::hash_multiset ()
+HASH_MULTISET::hash_multiset () :
+	m_size			( 0 )
 {
 	memory::zero	(m_buffer, sizeof(m_buffer));
 }

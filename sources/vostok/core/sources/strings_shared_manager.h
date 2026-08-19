@@ -43,7 +43,6 @@ private:
 	}; // struct hash_function
 
 private:
-#if 1
 	typedef hash_multiset<
 		profile,
 		profile *,
@@ -52,13 +51,6 @@ private:
 		hash_function,
 		hash_function
 	>					Storage;
-#else // #if 0
-	typedef multiset<
-		profile_ptr,
-		hash_function
-	>					Storage;
-#endif // #if 0
-
 
 private:
 			int			compute_stats		( Storage const& storage );
