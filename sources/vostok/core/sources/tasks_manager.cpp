@@ -78,7 +78,6 @@ private:
 
 	typedef intrusive_queue<task, task, & task::m_next_task_in_full_queue>	tasks_full_queue;
 	tasks_full_queue					m_pending_tasks;
-//	char								m_cachel_line_pad[VOSTOK_MAX_CACHE_LINE_SIZE];
 	
 	threading::mutex_tasks_unaware		m_mutex_collect_garbage;
 	threading::atomic64_type			m_task_ordinal;
@@ -93,7 +92,6 @@ private:
 	VOSTOK_MAX_CACHE_LINE_PAD;
 	u32									m_current_thread_task_tls_key;
 
-//	threading::atomic32_type			m_grabbing_next_task_threads_count;
 	threading::atomic32_type			m_collecting_garbage;
 
 	friend class						task_queue;
@@ -108,7 +106,6 @@ task_manager::task_manager ()
 	m_task_ordinal							=	0;
 	m_oldest_task_ordinal					=	0;
 	m_collecting_garbage					=	false;
-//	m_grabbing_next_task_threads_count		=	0;
 	m_current_thread_task_tls_key			=	threading::tls_create_key();
 }
 
@@ -299,9 +296,6 @@ bool   zero_tasks ()
 
 void   check_all_free ()
 {
-#if 0
-	s_task_manager.check_all_free				();
-#endif // #ifndef USE_MPMC_QUEUE_FOR_TYPE
 }
 
 void   deallocate_task (task * const task)
