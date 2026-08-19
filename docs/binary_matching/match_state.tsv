@@ -25447,7 +25447,7 @@ mangled	unit	module	status	cls	cur	max	hist	tries	size	flags	hash	note
 ?malloc_impl@base_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_base_allocator.cpp	core	done	MATCH	100	100	100	1	7	f	137f554ee0f6	auto: at 100% ceiling, demoted from queue
 ?malloc_impl@bullet_functor_mt_allocator@bullet_manager@survarium@@QAEPAXI@Z	vostok/game_core/bullet_manager.h	game_core	parked				0	0	76			[UNCHECKED] sushi@TODO: Why unused | game_core loop-2 closeout: non-steerable residual on VERIFIED structure (named-locals + statement structure match the target; bytes capped by toolchain). SIZE/SPLIT/unpaired = inline-vs-call (intrusive_ptr operator*/base-ctor/packet r<>+append/reset()/delete_helper/has_animation_ended/COMDAT). QUANTITY parked = cross-module-blocked (cc_bool/console_command recoil trio+on_skeleton+process_finger; scheduler optimized-COMDAT; get_weapon_lexeme temp idiom; finalize/apply inline wall) or structure-match-at-byte-ceiling. Per-fn detail in claude@NOTE.
 ?malloc_impl@crt_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_crt_allocator.cpp	core	done	MATCH	100	100	100	1	10	f	11e35ca0523a	auto: at 100% ceiling, demoted from queue
-?malloc_impl@doug_lea_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_doug_lea_allocator.cpp	core	inprogress	MATCH	99.9899	99.9899	99.9899	0	294		ec52200e226b	
+?malloc_impl@doug_lea_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_doug_lea_allocator.cpp	core	done	MATCH	100	100	100	1	294		ec52200e226b	Recovered target PDB line geometry with zero-byte source gaps; corrected embedded LOG_ERROR line immediates and preserved exact CFG/statement structure.
 ?malloc_impl@doug_lea_mt_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_doug_lea_mt_allocator.cpp	core	done	MATCH	100	100	100	0	92		53832cf84a35	
 ?malloc_impl@process_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_process_allocator.cpp	core	done	MATCH	100	100	100	1	3	f	7d382fec8010	auto: at 100% ceiling, demoted from queue
 ?malloc_impl@pthreads3_allocator@memory@vostok@@QAEPAXI@Z	vostok/core/sources/memory_pthreads3_allocator.cpp	core	done	MATCH	100	100	100	1	12	f	b0ee42cb68f5	auto: at 100% ceiling, demoted from queue
@@ -34523,8 +34523,8 @@ on_shader_masks_ready	vostok/engine/sources/engine_world_initialize.cpp	engine	d
 out_of_memory	vostok/core/sources/memory_crt_allocator.cpp	core	done	MATCH	100	100	100	1	6	f	588d4052b9c8	auto: at 100% ceiling, demoted from queue
 out_of_memory@@pdb-overload:b851e523181c824a	vostok/core/sources/memory_pthreads3_allocator.cpp	core	done	MATCH	100	100	100	0	11	f	31943cae6c8f	
 out_of_memory_handler	vostok/debug/sources/initialize_win_xbox360.cpp	debug	done	MATCH	100	100	100	1	20		c996511d754b	auto: at 100% ceiling, demoted from queue
-out_of_memory_silent	vostok/core/sources/memory_doug_lea_allocator.cpp	core	done	MATCH	100	100	100	1	27	f	ea7ce0cd6256	auto: at 100% ceiling, demoted from queue
-out_of_memory_with_crash	vostok/core/sources/memory_doug_lea_allocator.cpp	core	inprogress	MATCH	99.9878	99.9878	99.9878	0	227		ace37ce55c5a	
+out_of_memory_silent	vostok/core/sources/memory_doug_lea_allocator.cpp	core	done	MATCH	100	100	100	1	27	f	414696dd698b	auto: at 100% ceiling, demoted from queue
+out_of_memory_with_crash	vostok/core/sources/memory_doug_lea_allocator.cpp	core	done	MATCH	100	100	100	1	227		fe25e4fd5a11	Recovered target PDB line geometry with zero-byte source gaps; corrected embedded LOG_ERROR line immediates and preserved exact CFG/statement structure.
 output	vostok/debug/sources/debug.cpp	debug	done	MATCH	100	100	100	0	238		4a2f65e418f2	
 pointCmp	bullet/linearmath/btconvexhullcomputer.cpp	bullet	done	MATCH	100	100	100	1	50	f		auto: at 100% ceiling, demoted from queue
 post_Y	vorbis/sources/lib/floor1.c	vorbis	done	MATCH	100	100	100	1	27	f	331fc27cb961	auto: at 100% ceiling, demoted from queue
