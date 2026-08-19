@@ -343,10 +343,12 @@ __delayLoadHelper2(
                 }
 
             if (hmod == 0) {
+				::MessageBox(NULL, dli.szDll, "error during delay loading library", 0);
+
 				PDelayLoadInfo  rgpdli[1] = { &dli };
 
-				::MessageBox(NULL, dli.szDll, "error during delay loading library", 0);
 				vostok::platform::log_error("error during delay loading library %s", dli.szDll);
+
 				RaiseException(
                     VcppException(ERROR_SEVERITY_ERROR, ERROR_MOD_NOT_FOUND),
                     0,
